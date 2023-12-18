@@ -1,6 +1,6 @@
 # Fork Testing
 
-Forge supports testing in a forked environment. Each test can fork the state of a specified real
+`snforge` supports testing in a forked environment. Each test can fork the state of a specified real
 network and perform actions on top of it.
 
 > 📝 **Note**
@@ -46,7 +46,7 @@ Once such a configuration is passed, it is possible to use state and contracts d
 Although passing named arguments works fine, you have to copy-paste it each time you want to use
 the same fork in tests.
 
-Forge solves this issue by allowing fork configuration inside the `Scarb.toml` file.
+`snforge` solves this issue by allowing fork configuration inside the `Scarb.toml` file.
 ```toml
 [[tool.snforge.fork]]
 name = "SOME_NAME"

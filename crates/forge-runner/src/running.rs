@@ -39,7 +39,6 @@ use cheatnet::state::{BlockInfoReader, CheatnetBlockInfo, CheatnetState, Extende
 use itertools::chain;
 use num_traits::ToPrimitive;
 use runtime::{ExtendedRuntime, StarknetRuntime};
-use starknet::core::types::BlockId;
 use starknet::core::utils::get_selector_from_name;
 use starknet_api::core::PatriciaKey;
 use starknet_api::core::{ContractAddress, EntryPointSelector};
@@ -350,8 +349,8 @@ fn get_fork_state_reader(
         .map(|ValidatedForkConfig { url, block_number }| {
             ForkStateReader::new(
                 url.clone(),
-                BlockId::Number(block_number.0),
-                Some(workspace_root.join(CACHE_DIR).as_ref()),
+                *block_number,
+                workspace_root.join(CACHE_DIR).as_ref(),
             )
         })
 }
