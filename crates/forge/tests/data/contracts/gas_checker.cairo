@@ -6,6 +6,9 @@ trait IGasChecker<TContractState> {
     fn pedersen(self: @TContractState);
     fn poseidon(self: @TContractState);
     fn ec_op(self: @TContractState);
+
+    fn change_balance(ref self: TContractState, new_balance: u64);
+    fn send_l1_message(self: @TContractState);
 }
 
 #[starknet::contract]
@@ -13,9 +16,11 @@ mod GasChecker {
     use core::{ec, ec::{EcPoint, EcPointTrait}};
 
     #[storage]
-    struct Storage {}
+    struct Storage {
+        balance: u64
+    }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl IGasCheckerImpl of super::IGasChecker<ContractState> {
         fn keccak(self: @ContractState) {
             keccak::keccak_u256s_le_inputs(array![1].span());
@@ -76,5 +81,12 @@ mod GasChecker {
             EcPointTrait::new_from_x(1).unwrap().mul(2);
         }
 
+        fn change_balance(ref self: ContractState, new_balance: u64) {
+            self.balance.write(new_balance);
+        }
+
+        fn send_l1_message(self: @ContractState) {
+            starknet::send_message_to_l1_syscall(1, array![1].span()).unwrap();
+        }
     }
 }

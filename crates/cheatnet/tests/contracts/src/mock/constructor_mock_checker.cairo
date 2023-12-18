@@ -27,7 +27,7 @@ mod ConstructorMockChecker {
         self.constructor_balance.write(hello_starknet.get_balance());
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl IConstructorMockCheckerImpl of super::IConstructorMockChecker<ContractState> {
         fn get_constructor_balance(ref self: ContractState) -> felt252 {
             self.constructor_balance.read()
