@@ -138,10 +138,31 @@ fn my_test(a: MyStruct) {
     // ...
 }
 ```
+
 ### Problems With Code Generation
 
 The code generation solution has some problems that will need to be addressed before it is implemented.
 See [section below](#possible-problems-with-code-generation) for details.
+
+## User Experience
+
+Unlike fuzz-tests, we should run and indicate the result of all parametrized cases.
+If some test cases fail, others should still be executed and their results should be displayed to the user.
+
+An example output could look similarly to this:
+
+```shell
+$ snforge test
+[PASS] tests::parametrized(a = 1, b = 2, c = my_fixture(1, 2))
+[PASS] tests::parametrized(a = 3, b = 5, c = my_fixture(4, 5))
+[FAIL] tests::parametrized(a = 4, b = 5, c = my_fixture(3, 2))
+
+Failure data:
+    original value: [344693033283], converted to a string: [PANIC]
+    
+[PASS] tests::parametrized(a = 5, b = 7, c = my_fixture(7, 8))
+# ...
+```
 
 ## Required Changes to Test Collector
 
