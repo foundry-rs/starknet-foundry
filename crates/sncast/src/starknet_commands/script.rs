@@ -202,7 +202,7 @@ impl CairoHintProcessor<'_> {
                     .expect("Failed to insert data length");
 
                 buffer
-                    .write_data(call_response.response.iter().map(|el| Felt252::from_(*el)))
+                    .write_data(call_response.response.iter().map(|el| Felt252::from_((*el).0)))
                     .expect("Failed to insert data");
 
                 Ok(())
@@ -248,11 +248,11 @@ impl CairoHintProcessor<'_> {
                 ))?;
 
                 buffer
-                    .write(Felt252::from_(declare_response.class_hash))
+                    .write(Felt252::from_(declare_response.class_hash.0))
                     .expect("Failed to insert class hash");
 
                 buffer
-                    .write(Felt252::from_(declare_response.transaction_hash))
+                    .write(Felt252::from_(declare_response.transaction_hash.0))
                     .expect("Failed to insert transaction hash");
 
                 Ok(())
@@ -316,11 +316,11 @@ impl CairoHintProcessor<'_> {
                 ))?;
 
                 buffer
-                    .write(Felt252::from_(deploy_response.contract_address))
+                    .write(Felt252::from_(deploy_response.contract_address.0))
                     .expect("Failed to insert contract address");
 
                 buffer
-                    .write(Felt252::from_(deploy_response.transaction_hash))
+                    .write(Felt252::from_(deploy_response.transaction_hash.0))
                     .expect("Failed to insert transaction hash");
 
                 Ok(())
@@ -376,7 +376,7 @@ impl CairoHintProcessor<'_> {
                 ))?;
 
                 buffer
-                    .write(Felt252::from_(invoke_response.transaction_hash))
+                    .write(Felt252::from_(invoke_response.transaction_hash.0))
                     .expect("Failed to insert transaction hash");
 
                 Ok(())

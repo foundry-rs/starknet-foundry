@@ -4,7 +4,7 @@ use helpers::constants::{KEYSTORE_PASSWORD_ENV_VAR, UDC_ADDRESS};
 use helpers::response_structs::CommandResponse;
 use rand::rngs::OsRng;
 use rand::RngCore;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, Serializer};
 use serde_json::Value;
 use starknet::core::utils::UdcUniqueness::{NotUnique, Unique};
 use starknet::core::utils::{UdcUniqueSettings, UdcUniqueness};
@@ -27,6 +27,7 @@ use starknet::{
     providers::{MaybeUnknownErrorCode, StarknetErrorWithMessage},
 };
 use std::collections::HashMap;
+use std::fmt::Display;
 use std::ops::Deref;
 use std::str::FromStr;
 use std::thread::sleep;
@@ -67,28 +68,25 @@ impl NumbersFormat {
     }
 }
 
-fn apply_numbers_formatting(value: Value, formatting: NumbersFormat) -> Value {
+fn apply_numbers_formatting(value: OutputValue, formatting: NumbersFormat) -> OutputValue {
     match value {
-        Value::String(input) => {
+        OutputValue::String(input) => {
             if let Ok(field) = FieldElement::from_str(&input) {
                 return match formatting {
-                    NumbersFormat::Decimal => Value::String(format!("{field:#}")),
-                    NumbersFormat::Hex => Value::String(format!("{field:#x}")),
-                    NumbersFormat::Default => Value::String(input),
+                    NumbersFormat::Decimal => OutputValue::String(format!("{field:#}")),
+                    NumbersFormat::Hex => OutputValue::String(format!("{field:#x}")),
+                    NumbersFormat::Default => OutputValue::String(input),
                 };
             }
-            Value::String(input.to_string())
+            OutputValue::String(input)
         }
-        Value::Array(arr) => {
+        OutputValue::Array(arr) => {
             let formatted_arr = arr
                 .into_iter()
                 .map(|item| apply_numbers_formatting(item, formatting))
                 .collect();
-            Value::Array(formatted_arr)
+            OutputValue::Array(formatted_arr)
         }
-        _ => panic!(
-            "Response value not supported, Response struct should serialize to arrays and strings"
-        ),
     }
 }
 
@@ -408,16 +406,58 @@ impl OutputFormat {
     }
 }
 
+
+
+#[derive(PartialEq, Eq, Debug)]
+pub enum OutputValue {
+    String(String),
+    Array(Vec<OutputValue>),
+}
+
+type OutputData = Vec<(String, OutputValue)>;
+
+impl Serialize for OutputValue {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        match &self {
+            &OutputValue::String(s) => serializer.serialize_str(s),
+            &OutputValue::Array(arr) => arr.serialize::<S>(serializer),
+        }
+    }
+}
+
+impl Display for OutputValue {
+    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match &self {
+            &OutputValue::String(s) => {
+                s.fmt(fmt)
+            },
+            &OutputValue::Array(arr) => {
+                let arr_as_string = arr
+                    .iter()
+                    .map(|item| item.to_string())
+                    .collect::<Vec<String>>()
+                    .join(", ");
+                write!(fmt, "[{}]", arr_as_string)
+            }
+        }
+    }
+}
+
+
 fn pretty_output(output: OutputData, output_format: &OutputFormat) -> Result<Vec<String>> {
     match output_format {
         OutputFormat::Json => {
-            let json_output: HashMap<String, Value> = output.into_iter().collect();
-            let pretty_string = serde_json::to_string_pretty(&json_output)?;
+            let json_output: HashMap<String, OutputValue> = output.into_iter().collect();
+            let pretty_string = serde_json::to_string(&json_output)?;
             Ok(vec![pretty_string])
         }
         OutputFormat::Human => {
             let mut result = vec![];
             for (key, value) in &output {
+                let value = value.to_string();
                 result.push(format!("{key}: {value}"));
             }
             Ok(result)
@@ -425,11 +465,25 @@ fn pretty_output(output: OutputData, output_format: &OutputFormat) -> Result<Vec
     }
 }
 
-type OutputData = Vec<(String, Value)>;
+
+fn value_to_output_value(json_value: Value) -> OutputValue {
+    match json_value {
+        Value::Array(a) => OutputValue::Array(a.into_iter().map(value_to_output_value).collect()),
+        Value::String(s) => { 
+            OutputValue::String(s.to_string())
+        },
+        s => panic!("{:?} cannot be auto-serialized to output", s)
+    }
+}
+
 
 fn json_value_to_output_data(json_value: Value) -> OutputData {
     match json_value {
-        Value::Object(obj) => obj.into_iter().collect(),
+        Value::Object(obj) => obj
+            .into_iter()
+            .filter(|(_, v)| !(matches!(v, Value::Null)))
+            .map(|(k,v)| (k, value_to_output_value(v)))
+            .collect(),
         _ => panic!("Expected an object"),
     }
 }
@@ -443,8 +497,8 @@ fn result_as_output_data<T: CommandResponse>(result: &mut Result<T>) -> OutputDa
         }
         Err(message) => {
             vec![(
-                String::from("command"),
-                Value::String(format!("{message:#}")),
+                String::from("error"),
+                OutputValue::String(format!("{message:#}")),
             )]
         }
     }
@@ -457,7 +511,7 @@ pub fn print_command_result<T: CommandResponse>(
     output_format: &OutputFormat,
 ) -> Result<()> {
     let mut output: OutputData = vec![];
-    output.push((String::from("command"), Value::String(command.to_string())));
+    output.push((String::from("command"), OutputValue::String(command.to_string())));
     output.extend(result_as_output_data(result));
     let formatted_output = output
         .into_iter()
@@ -524,10 +578,9 @@ pub fn apply_optional<T, R, F: FnOnce(T, R) -> T>(initial: T, option: Option<R>,
 mod tests {
     use crate::{
         apply_numbers_formatting, chain_id_to_network_name, extract_or_generate_salt,
-        get_account_from_accounts_file, get_block_id, udc_uniqueness, NumbersFormat,
+        get_account_from_accounts_file, get_block_id, udc_uniqueness, NumbersFormat, OutputValue,
     };
     use camino::Utf8PathBuf;
-    use serde_json::Value;
     use starknet::core::utils::UdcUniqueSettings;
     use starknet::core::utils::UdcUniqueness::{NotUnique, Unique};
     use starknet::{
@@ -638,24 +691,37 @@ mod tests {
 
     #[test]
     fn test_format_json_value_force_decimal() {
-        let json_value = Value::Array(vec![Value::String(String::from(
+        let json_value = OutputValue::Array(vec![OutputValue::String(String::from(
             "0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
         ))]);
 
         let actual = apply_numbers_formatting(json_value, NumbersFormat::Decimal);
         let v = "2087021424722619777119509474943472645767659996348769578120564519014510906823";
-        let expected = Value::Array(vec![Value::String(String::from(v))]);
+        let expected = OutputValue::Array(vec![OutputValue::String(String::from(v))]);
         assert_eq!(actual, expected);
     }
 
     #[test]
-    fn test_format_json_value_leave_default() {
-        let json_value = Value::Array(vec![Value::String(String::from(
+    fn test_format_json_value_leave_default_decimal() {
+        let json_value = OutputValue::Array(vec![OutputValue::String(String::from(
+            "2087021424722619777119509474943472645767659996348769578120564519014510906823",
+        ))]);
+
+        let actual = apply_numbers_formatting(json_value, NumbersFormat::Default);
+        let expected = OutputValue::Array(vec![OutputValue::String(String::from(
+            "2087021424722619777119509474943472645767659996348769578120564519014510906823",
+        ))]);
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn test_format_json_value_leave_default_hex() {
+        let json_value = OutputValue::Array(vec![OutputValue::String(String::from(
             "0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
         ))]);
 
         let actual = apply_numbers_formatting(json_value, NumbersFormat::Default);
-        let expected = Value::Array(vec![Value::String(String::from(
+        let expected = OutputValue::Array(vec![OutputValue::String(String::from(
             "0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
         ))]);
         assert_eq!(actual, expected);
@@ -663,12 +729,12 @@ mod tests {
 
     #[test]
     fn test_format_json_value_force_hex() {
-        let json_value = Value::Array(vec![Value::String(String::from(
+        let json_value = OutputValue::Array(vec![OutputValue::String(String::from(
             "2087021424722619777119509474943472645767659996348769578120564519014510906823",
         ))]);
 
         let actual = apply_numbers_formatting(json_value, NumbersFormat::Hex);
-        let expected = Value::Array(vec![Value::String(String::from(
+        let expected = OutputValue::Array(vec![OutputValue::String(String::from(
             "0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
         ))]);
         assert_eq!(actual, expected);

@@ -2,17 +2,10 @@ use camino::Utf8PathBuf;
 use serde::{Serialize, Serializer};
 use starknet::core::types::FieldElement;
 
-pub struct Decimal(u64);
+pub struct Decimal(pub u64);
 
-// FieldElement is serialized to hex string by default
-type Hex = FieldElement;
-
-impl Decimal {
-    #[must_use]
-    pub fn from(v: u64) -> Self {
-        Decimal(v)
-    }
-}
+#[derive(Clone)]
+pub struct Hex(pub FieldElement);
 
 impl Serialize for Decimal {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -20,6 +13,17 @@ impl Serialize for Decimal {
         S: Serializer,
     {
         serializer.serialize_str(&self.0.to_string())
+    }
+}
+
+
+impl Serialize for Hex {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let val = self.0;
+        serializer.serialize_str(&format!("{val:#x}"))
     }
 }
 
@@ -92,12 +96,12 @@ pub struct ShowConfigResponse {
     pub scarb_path: Option<Utf8PathBuf>,
     pub accounts_file_path: Option<Utf8PathBuf>,
     pub keystore: Option<Utf8PathBuf>,
-    pub wait_timeout: Option<u16>,
-    pub wait_retry_interval: Option<u8>,
+    pub wait_timeout: Option<Decimal>,
+    pub wait_retry_interval: Option<Decimal>,
 }
 impl CommandResponse for ShowConfigResponse {}
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub struct ScriptResponse {
     pub status: String,
     pub msg: Option<String>,
