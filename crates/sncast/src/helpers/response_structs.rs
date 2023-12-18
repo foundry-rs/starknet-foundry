@@ -16,7 +16,6 @@ impl Serialize for Decimal {
     }
 }
 
-
 impl Serialize for Hex {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where

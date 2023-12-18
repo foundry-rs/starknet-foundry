@@ -43,10 +43,13 @@ pub async fn call(
             .context("Failed to convert entry point selector to FieldElement")?,
         calldata,
     };
-    let res = provider.call(function_call, block_id).await.map(|v| v.into_iter().map(Hex).collect());
+    let res = provider
+        .call(function_call, block_id)
+        .await
+        .map(|v| v.into_iter().map(Hex).collect());
 
     match res {
-        Ok(response) => Ok(CallResponse { response: response  }),
+        Ok(response) => Ok(CallResponse { response }),
         Err(error) => handle_rpc_error(error),
     }
 }

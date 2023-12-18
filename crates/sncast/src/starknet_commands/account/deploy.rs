@@ -20,7 +20,7 @@ use sncast::{
     handle_wait_for_tx, parse_number, WaitForTx,
 };
 
-use sncast::helpers::response_structs::{InvokeResponse, Hex};
+use sncast::helpers::response_structs::{Hex, InvokeResponse};
 
 #[derive(Args, Debug)]
 #[command(about = "Deploy an account to the Starknet")]

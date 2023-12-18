@@ -406,8 +406,6 @@ impl OutputFormat {
     }
 }
 
-
-
 #[derive(PartialEq, Eq, Debug)]
 pub enum OutputValue {
     String(String),
@@ -422,8 +420,8 @@ impl Serialize for OutputValue {
         S: Serializer,
     {
         match &self {
-            &OutputValue::String(s) => serializer.serialize_str(s),
-            &OutputValue::Array(arr) => arr.serialize::<S>(serializer),
+            OutputValue::String(s) => serializer.serialize_str(s),
+            OutputValue::Array(arr) => arr.serialize::<S>(serializer),
         }
     }
 }
@@ -431,21 +429,18 @@ impl Serialize for OutputValue {
 impl Display for OutputValue {
     fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match &self {
-            &OutputValue::String(s) => {
-                s.fmt(fmt)
-            },
-            &OutputValue::Array(arr) => {
+            OutputValue::String(s) => s.fmt(fmt),
+            OutputValue::Array(arr) => {
                 let arr_as_string = arr
                     .iter()
-                    .map(|item| item.to_string())
+                    .map(ToString::to_string)
                     .collect::<Vec<String>>()
                     .join(", ");
-                write!(fmt, "[{}]", arr_as_string)
+                write!(fmt, "[{arr_as_string}]")
             }
         }
     }
 }
-
 
 fn pretty_output(output: OutputData, output_format: &OutputFormat) -> Result<Vec<String>> {
     match output_format {
@@ -465,24 +460,20 @@ fn pretty_output(output: OutputData, output_format: &OutputFormat) -> Result<Vec
     }
 }
 
-
-fn value_to_output_value(json_value: Value) -> OutputValue {
-    match json_value {
+fn value_to_output_value(value: Value) -> OutputValue {
+    match value {
         Value::Array(a) => OutputValue::Array(a.into_iter().map(value_to_output_value).collect()),
-        Value::String(s) => { 
-            OutputValue::String(s.to_string())
-        },
-        s => panic!("{:?} cannot be auto-serialized to output", s)
+        Value::String(s) => OutputValue::String(s.to_string()),
+        s => panic!("{s:?} cannot be auto-serialized to output"),
     }
 }
 
-
-fn json_value_to_output_data(json_value: Value) -> OutputData {
-    match json_value {
+fn struct_value_to_output_data(struct_value: Value) -> OutputData {
+    match struct_value {
         Value::Object(obj) => obj
             .into_iter()
             .filter(|(_, v)| !(matches!(v, Value::Null)))
-            .map(|(k,v)| (k, value_to_output_value(v)))
+            .map(|(k, v)| (k, value_to_output_value(v)))
             .collect(),
         _ => panic!("Expected an object"),
     }
@@ -491,9 +482,9 @@ fn json_value_to_output_data(json_value: Value) -> OutputData {
 fn result_as_output_data<T: CommandResponse>(result: &mut Result<T>) -> OutputData {
     match result {
         Ok(response) => {
-            let json_value =
+            let struct_value =
                 serde_json::to_value(response).expect("Failed to serialize CommandResponse");
-            json_value_to_output_data(json_value)
+            struct_value_to_output_data(struct_value)
         }
         Err(message) => {
             vec![(
@@ -511,7 +502,10 @@ pub fn print_command_result<T: CommandResponse>(
     output_format: &OutputFormat,
 ) -> Result<()> {
     let mut output: OutputData = vec![];
-    output.push((String::from("command"), OutputValue::String(command.to_string())));
+    output.push((
+        String::from("command"),
+        OutputValue::String(command.to_string()),
+    ));
     output.extend(result_as_output_data(result));
     let formatted_output = output
         .into_iter()

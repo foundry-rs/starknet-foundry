@@ -202,7 +202,7 @@ impl CairoHintProcessor<'_> {
                     .expect("Failed to insert data length");
 
                 buffer
-                    .write_data(call_response.response.iter().map(|el| Felt252::from_((*el).0)))
+                    .write_data(call_response.response.iter().map(|el| Felt252::from_(el.0)))
                     .expect("Failed to insert data");
 
                 Ok(())
