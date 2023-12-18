@@ -6,6 +6,8 @@ use forge_runner::test_crate_summary::TestCrateSummary;
 use indoc::formatdoc;
 use scarb_artifacts::{get_contracts_map, StarknetContractArtifacts};
 use scarb_metadata::MetadataCommand;
+use serde_json::Value;
+use sierra_casm::compile;
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -56,7 +58,6 @@ impl Contract {
 
                 [[target.starknet-contract]]
                 sierra = true
-                casm = true
 
                 [dependencies]
                 starknet = "2.4.0"
@@ -85,23 +86,16 @@ impl Contract {
             .find(|package| package.name == "contract")
             .unwrap();
 
-        // let sierra =
-        //     serde_json::to_string_pretty(&contract).with_context(|| "Serialization failed.")?;
-        //
-        // let casm = compile(serde_json::json!({
-        //     "sierra_program": contract.sierra_program,
-        //     "contract_class_version": "",
-        //     "entry_points_by_type": contract.entry_points_by_type
-        // }))
-        //     .unwrap();
-        // let casm = serde_json::to_string_pretty(&casm)?;
-        //
-        // Ok((sierra, casm))
-
         Ok(get_contracts_map(&scarb_metadata, &package.id)
             .unwrap()
             .into_values()
-            .map(|x| (x.sierra, x.casm))
+            .map(|x| {
+                let sierra: Value = serde_json::from_str(&x.sierra).unwrap();
+                (
+                    x.sierra,
+                    serde_json::to_string(&compile(sierra).unwrap()).unwrap(),
+                )
+            })
             .next()
             .unwrap())
     }

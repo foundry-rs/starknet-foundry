@@ -3047,6 +3047,7 @@ dependencies = [
  "schemars",
  "serde",
  "serde_json",
+ "sierra-casm",
  "smol_str 0.2.0",
  "snapbox",
  "starknet",
