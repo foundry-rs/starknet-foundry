@@ -24,17 +24,17 @@ fn max_steps_flag() {
         Collected 2 test(s) from max_steps package
         Running 0 test(s) from src/
         Running 2 test(s) from tests/
-        [FAIL] tests::ext_function_test::simple_test
+        [FAIL] tests::without_attr::simple_test
 
         Failure data: Max steps limit exceeded. Limit: 10. Executed: 117
-        [FAIL] tests::ext_function_test::hard_test
+        [FAIL] tests::without_attr::hard_test
 
         Failure data: Max steps limit exceeded. Limit: 10. Executed: 758639
-        Tests: 0 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
+        Tests: 0 passed, 2 failed, 0 skipped, 0 ignored, 2 filtered out
 
         Failures:
-            tests::ext_function_test::simple_test
-            tests::ext_function_test::hard_test
+            tests::without_attr::simple_test
+            tests::without_attr::hard_test
         "}
     );
 }
