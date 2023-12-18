@@ -315,7 +315,9 @@ mod tests {
     fn test_parse_scarb_config_not_found() {
         let config =
             parse_scarb_config(&None, &Some(Utf8PathBuf::from("whatever/Scarb.toml"))).unwrap_err();
-        assert!(config.to_string().contains("file does not exist!"));
+        assert!(config
+            .to_string()
+            .contains("Failed to locate file at path = whatever/Scarb.toml"));
     }
 
     #[test]
@@ -389,7 +391,7 @@ mod tests {
         let metadata_err = get_scarb_metadata(&"Scarb.toml".into()).unwrap_err();
         assert!(metadata_err
             .to_string()
-            .contains("Failed to read Scarb.toml manifest file"));
+            .contains("Failed to read the `Scarb.toml` manifest file."));
     }
 
     #[test]

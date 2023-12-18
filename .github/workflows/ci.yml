@@ -87,9 +87,7 @@ jobs:
         run: ./scripts/install_devnet.sh
       - uses: software-mansion/setup-scarb@v1.3.2
       - name: Run tests
-        run: cargo test --release -p sncast e2e::account::add::test_accept_only_one_private_key
-      - name: debug
-        run: cat crates/sncast/.env.devnet_hashes_and_addresses
+        run: cargo test --release -p sncast
 
   test-conversions:
     name: Test Conversions
