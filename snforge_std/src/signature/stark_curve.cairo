@@ -32,13 +32,11 @@ impl StarkCurveKeyPairImpl of KeyPairTrait<felt252, felt252> {
     }
 }
 
-impl StarkCurveSignerImpl<
-    H, +Drop<H>, impl HIntoFelt252: Into<H, felt252>
-> of SignerTrait<KeyPair<felt252, felt252>, H, felt252> {
-    fn sign(self: KeyPair<felt252, felt252>, message_hash: H) -> (felt252, felt252) {
+impl StarkCurveSignerImpl of SignerTrait<KeyPair<felt252, felt252>, felt252, (felt252, felt252)> {
+    fn sign(self: KeyPair<felt252, felt252>, message_hash: felt252) -> (felt252, felt252) {
         let output = cheatcode::<
             'stark_sign_message'
-        >(array![self.secret_key, message_hash.into()].span());
+        >(array![self.secret_key, message_hash].span());
         if *output[0] == 1 {
             panic_with_felt252(*output[1]);
         }
@@ -50,13 +48,11 @@ impl StarkCurveSignerImpl<
     }
 }
 
-impl StarkCurveVerifierImpl<
-    H, +Drop<H>, impl HIntoFelt252: Into<H, felt252>
-> of VerifierTrait<KeyPair<felt252, felt252>, H, felt252> {
+impl StarkCurveVerifierImpl of VerifierTrait<KeyPair<felt252, felt252>, felt252, (felt252, felt252)> {
     fn verify(
-        self: KeyPair<felt252, felt252>, message_hash: H, signature: (felt252, felt252)
+        self: KeyPair<felt252, felt252>, message_hash: felt252, signature: (felt252, felt252)
     ) -> bool {
         let (r, s) = signature;
-        check_ecdsa_signature(message_hash.into(), self.public_key, r, s)
+        check_ecdsa_signature(message_hash, self.public_key, r, s)
     }
 }

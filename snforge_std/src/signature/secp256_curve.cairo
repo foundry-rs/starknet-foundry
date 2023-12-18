@@ -46,15 +46,12 @@ impl Secp256CurveSignerImpl<
     +Drop<Secp256Point>,
     impl Secp256Impl: Secp256Trait<Secp256Point>,
     impl Secp256PointImpl: Secp256PointTrait<Secp256Point>,
-    H,
-    +Drop<H>,
-    impl HIntoU256: Into<H, u256>
-> of SignerTrait<KeyPair<u256, Secp256Point>, H, u256> {
-    fn sign(self: KeyPair<u256, Secp256Point>, message_hash: H) -> (u256, u256) {
+> of SignerTrait<KeyPair<u256, Secp256Point>, u256, (u256, u256)> {
+    fn sign(self: KeyPair<u256, Secp256Point>, message_hash: u256) -> (u256, u256) {
         let curve = match_supported_curve::<Secp256Point>();
 
         let (sk_low, sk_high) = from_u256(self.secret_key);
-        let (msg_hash_low, msg_hash_high) = from_u256(message_hash.into());
+        let (msg_hash_low, msg_hash_high) = from_u256(message_hash);
 
         let output = cheatcode::<
             'ecdsa_sign_message'
@@ -76,12 +73,10 @@ impl Secp256CurveVerifierImpl<
     +Drop<Secp256Point>,
     impl Secp256Impl: Secp256Trait<Secp256Point>,
     impl Secp256PointImpl: Secp256PointTrait<Secp256Point>,
-    H,
-    impl HIntoU256: Into<H, u256>
-> of VerifierTrait<KeyPair<u256, Secp256Point>, H, u256> {
-    fn verify(self: KeyPair<u256, Secp256Point>, message_hash: H, signature: (u256, u256)) -> bool {
+> of VerifierTrait<KeyPair<u256, Secp256Point>, u256, (u256, u256)> {
+    fn verify(self: KeyPair<u256, Secp256Point>, message_hash: u256, signature: (u256, u256)) -> bool {
         let (r, s) = signature;
-        is_valid_signature::<Secp256Point>(message_hash.into(), r, s, self.public_key)
+        is_valid_signature::<Secp256Point>(message_hash, r, s, self.public_key)
     }
 }
 

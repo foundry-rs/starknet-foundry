@@ -10,9 +10,9 @@ trait KeyPairTrait<SK, PK> {
 }
 
 trait SignerTrait<T, H, U> {
-    fn sign(self: T, message_hash: H) -> (U, U);
+    fn sign(self: T, message_hash: H) -> U;
 }
 
 trait VerifierTrait<T, H, U> {
-    fn verify(self: T, message_hash: H, signature: (U, U)) -> bool;
+    fn verify(self: T, message_hash: H, signature: U) -> bool;
 }
