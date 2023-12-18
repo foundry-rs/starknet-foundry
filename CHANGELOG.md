@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - maximum number of computational steps per call set to current Starknet limit (3M)
 - `mean` and `std deviation` fields are displayed for gas usage while running fuzzing tests 
 
+#### Fixed
+
+- Safe library dispatchers in test code no longer propagate errors when not intended to
+
 ## [0.13.1] - 2023-12-20
 
 ### Forge

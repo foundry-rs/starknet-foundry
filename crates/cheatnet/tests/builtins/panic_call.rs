@@ -1,8 +1,8 @@
+use crate::common::call_contract;
 use crate::common::state::create_cheatnet_state;
 use crate::common::{deploy_contract, felt_selector_from_name, state::create_cached_state};
 use crate::{assert_error, assert_panic};
 use cairo_felt::Felt252;
-use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::call_contract;
 use conversions::felt252::FromShortString;
 use num_traits::Bounded;
 
