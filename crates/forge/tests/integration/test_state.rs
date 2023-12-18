@@ -465,6 +465,9 @@ fn simple_cheatcodes() {
             TxInfoMockTrait,
             test_address
         };
+        use starknet::{
+            SyscallResultTrait, SyscallResult, syscalls::get_execution_info_v2_syscall,
+        };
 
         #[test]
         fn prank_test_state() {
@@ -527,22 +530,39 @@ fn simple_cheatcodes() {
         fn spoof_test_state() {
             let test_address: ContractAddress = test_address();
             let old_tx_info = starknet::get_tx_info().unbox();
+            let old_tx_info_v2 = get_tx_info_v2().unbox();
 
             let mut tx_info_mock = TxInfoMockTrait::default();
             tx_info_mock.transaction_hash = Option::Some(421);
 
             start_spoof(CheatTarget::One(test_address), tx_info_mock);
+
             let new_tx_info = starknet::get_tx_info().unbox();
+            let new_tx_info_v2 = get_tx_info_v2().unbox();
+
             assert(new_tx_info.nonce == old_tx_info.nonce, 'Wrong nonce');
+            assert(new_tx_info_v2.tip == old_tx_info_v2.tip, 'Wrong tip');
             assert(new_tx_info.transaction_hash == 421, 'Wrong transaction_hash');
 
             stop_spoof(CheatTarget::One(test_address));
+            
             let new_tx_info = starknet::get_tx_info().unbox();
+            let new_tx_info_v2 = get_tx_info_v2().unbox();
+
             assert(new_tx_info.nonce == old_tx_info.nonce, 'Wrong nonce');
+            assert(new_tx_info_v2.tip == old_tx_info_v2.tip, 'Wrong tip');
             assert(
                 new_tx_info.transaction_hash == old_tx_info.transaction_hash,
                 'Wrong transaction_hash'
             )
+        }
+
+        fn get_execution_info_v2() -> Box<starknet::info::v2::ExecutionInfo> {
+            get_execution_info_v2_syscall().unwrap_syscall()
+        }
+
+        fn get_tx_info_v2() -> Box<starknet::info::v2::TxInfo> {
+            get_execution_info_v2().unbox().tx_info
         }
     "
     ));
