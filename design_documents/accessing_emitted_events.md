@@ -85,7 +85,7 @@ mod HelloEvent {
         name: felt252
     }
     
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl IHelloEventImpl of super::IHelloEvent<ContractState> {
         fn emit_store_name(self: @ContractState, name: felt252) {
             // ...

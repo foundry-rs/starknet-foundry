@@ -15,7 +15,7 @@ fn simple_declare() {
         use snforge_std::declare;
 
         #[test]
-        fn test_declare_simple() {
+        fn simple_declare() {
             assert(1 == 1, 'simple check');
             let contract = declare('HelloStarknet');
             assert(contract.class_hash.into() != 0, 'proper class hash');
@@ -26,6 +26,12 @@ fn simple_declare() {
             "HelloStarknet",
             indoc!(
                 r"
+                #[starknet::interface]
+                trait IHelloStarknet<TContractState> {
+                    fn increase_balance(ref self: TContractState, amount: felt252);
+                    fn decrease_balance(ref self: TContractState, amount: felt252);
+                }
+
                 #[starknet::contract]
                 mod HelloStarknet {
                     #[storage]
@@ -34,15 +40,16 @@ fn simple_declare() {
                     }
         
                     // Increases the balance by the given amount.
-                    #[external(v0)]
-                    fn increase_balance(ref self: ContractState, amount: felt252) {
-                        self.balance.write(self.balance.read() + amount);
-                    }
-        
-                    // Decreases the balance by the given amount.
-                    #[external(v0)]
-                    fn decrease_balance(ref self: ContractState, amount: felt252) {
-                        self.balance.write(self.balance.read() - amount);
+                    #[abi(embed_v0)]
+                    impl HelloStarknetImpl of super::IHelloStarknet<ContractState> {
+                        fn increase_balance(ref self: ContractState, amount: felt252) {
+                            self.balance.write(self.balance.read() + amount);
+                        }
+
+                        // Decreases the balance by the given amount.
+                        fn decrease_balance(ref self: ContractState, amount: felt252) {
+                            self.balance.write(self.balance.read() - amount);
+                        }
                     }
                 }
                 "
@@ -56,7 +63,7 @@ fn simple_declare() {
 }
 
 #[test]
-fn simple_declare_from_contract_code() {
+fn declare_simple() {
     let contract = Contract::from_code_path(
         "Contract1".to_string(),
         Path::new("tests/data/contracts/hello_starknet.cairo"),
@@ -72,7 +79,7 @@ fn simple_declare_from_contract_code() {
         use snforge_std::declare;
 
         #[test]
-        fn test_declare_simple() {
+        fn declare_simple() {
             assert(1 == 1, 'simple check');
             let contract = declare('Contract1');
             let class_hash = contract.class_hash.into();

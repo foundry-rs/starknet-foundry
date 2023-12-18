@@ -2,6 +2,7 @@ mod declare;
 mod deploy;
 mod elect;
 mod get_class_hash;
+mod load;
 mod mock_call;
 mod prank;
 mod precalculate_address;

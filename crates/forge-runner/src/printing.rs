@@ -27,12 +27,6 @@ pub(crate) fn print_test_result(any_test_result: &AnyTestCaseSummary) {
     }
     let fuzzer_report = fuzzer_report.unwrap_or_else(String::new);
 
-    let block_number_message = match any_test_result.latest_block_number() {
-        None => String::new(),
-        Some(latest_block_number) => {
-            format!("\nNumber of the block used for fork testing = {latest_block_number}")
-        }
-    };
     let gas_usage = match any_test_result {
         AnyTestCaseSummary::Fuzzing(TestCaseSummary::Passed { gas_info, .. }) => {
             let mean = gas_info
@@ -56,9 +50,7 @@ pub(crate) fn print_test_result(any_test_result: &AnyTestCaseSummary) {
         }
         _ => String::new(),
     };
-    println!(
-        "{result_header} {result_name}{fuzzer_report}{gas_usage}{block_number_message}{result_msg}"
-    );
+    println!("{result_header} {result_name}{fuzzer_report}{gas_usage}{result_msg}");
 }
 
 fn result_message(any_test_result: &AnyTestCaseSummary) -> String {

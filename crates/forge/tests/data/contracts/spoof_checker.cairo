@@ -27,7 +27,7 @@ mod SpoofChecker {
         balance: felt252,
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl ISpoofChecker of super::ISpoofChecker<ContractState> {
         fn get_tx_hash(ref self: ContractState) -> felt252 {
             starknet::get_tx_info().unbox().transaction_hash

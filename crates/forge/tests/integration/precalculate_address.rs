@@ -17,7 +17,7 @@ fn precalculate_address() {
         use starknet::ContractAddressIntoFelt252;
 
         #[test]
-        fn get_contract_precalculate_address() {
+        fn precalculate_address() {
             let mut calldata = ArrayTrait::new();
 
             let contract = declare('HelloStarknet');

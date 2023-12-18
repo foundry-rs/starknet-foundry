@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-SCARB_VERSION="2.3.1"
+SCARB_VERSION="2.4.0"
 CONTRACTS_DIRECTORY="$(git rev-parse --show-toplevel)/crates/sncast/tests/data/contracts/"
 
 if ! scarb --version | grep -qF "$SCARB_VERSION"; then

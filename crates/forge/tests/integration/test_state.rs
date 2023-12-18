@@ -5,7 +5,7 @@ use test_utils::running_tests::run_test_case;
 use test_utils::{assert_case_output_contains, assert_failed, assert_passed, test_case};
 
 #[test]
-fn test_storage_access_from_tests() {
+fn storage_access_from_tests() {
     let test = test_case!(indoc!(
         r"
         #[starknet::contract]
@@ -26,7 +26,7 @@ fn test_storage_access_from_tests() {
         use tests::test_case::Contract::balanceContractMemberStateTrait;
 
         #[test]
-        fn test_internal() {
+        fn storage_access_from_tests() {
             let mut state = Contract::contract_state_for_testing();
             state.balance.write(10);
             
@@ -42,7 +42,7 @@ fn test_storage_access_from_tests() {
 }
 
 #[test]
-fn test_simple_syscalls() {
+fn simple_syscalls() {
     let test = test_case!(
         indoc!(
             r"
@@ -80,7 +80,7 @@ fn test_simple_syscalls() {
         }
 
         #[test]
-        fn test_get_execution_info() {
+        fn simple_syscalls() {
             let exec_info = get_execution_info().unbox();
             assert(exec_info.caller_address.into() == 0, 'Incorrect caller address');
             assert(exec_info.contract_address == test_address(), exec_info.contract_address.into());
@@ -148,7 +148,7 @@ fn test_simple_syscalls() {
 }
 
 #[test]
-fn test_get_block_hash_syscall() {
+fn get_block_hash_syscall_in_dispatcher() {
     let test = test_case!(
         indoc!(
             r"
@@ -167,7 +167,7 @@ fn test_get_block_hash_syscall() {
         }
 
         #[test]
-        fn test_get_block_hash() {
+        fn get_block_hash_syscall_in_dispatcher() {
             let block_hash_checker = declare('BlockHashChecker');
             let block_hash_checker_address = block_hash_checker.deploy(@ArrayTrait::new()).unwrap();
             let block_hash_checker_dispatcher = BlockHashCheckerDispatcher { contract_address: block_hash_checker_address };
@@ -192,7 +192,7 @@ fn test_get_block_hash_syscall() {
 }
 
 #[test]
-fn test_library_calls() {
+fn library_calls() {
     let test = test_case!(
         indoc!(
             r"
@@ -213,12 +213,12 @@ fn test_library_calls() {
         }
 
         #[test]
-        fn test_get_execution_info() {
+        fn library_calls() {
             let class_hash = declare('LibraryContract').class_hash;
             let lib_dispatcher = ILibraryContractSafeLibraryDispatcher { class_hash };
             let value = lib_dispatcher.get_value().unwrap();
             assert(value == 0, 'Incorrect state');
-            lib_dispatcher.set_value(10);
+            lib_dispatcher.set_value(10).unwrap();
             let value = lib_dispatcher.get_value().unwrap();
             assert(value == 10, 'Incorrect state');
         }
@@ -228,6 +228,17 @@ fn test_library_calls() {
             "LibraryContract",
             indoc!(
                 r"
+                #[starknet::interface]
+                trait ILibraryContract<TContractState> {
+                    fn get_value(
+                            self: @TContractState,
+                        ) -> felt252;
+                    fn set_value(
+                        ref self: TContractState,
+                        number: felt252
+                    );
+                }
+
                 #[starknet::contract]
                 mod LibraryContract {
                     use result::ResultTrait;
@@ -239,19 +250,20 @@ fn test_library_calls() {
                         value: felt252
                     }
 
-                    #[external(v0)]
-                    fn get_value(
-                        self: @ContractState,
-                    ) -> felt252 {
-                       self.value.read()
-                    }
+                    #[abi(embed_v0)]
+                    impl LibraryContractImpl of super::ILibraryContract<ContractState> {
+                        fn get_value(
+                            self: @ContractState,
+                        ) -> felt252 {
+                           self.value.read()
+                        }
 
-                    #[external(v0)]
-                    fn set_value(
-                        ref self: ContractState,
-                        number: felt252
-                    ) {
-                       self.value.write(number);
+                        fn set_value(
+                            ref self: ContractState,
+                            number: felt252
+                        ) {
+                           self.value.write(number);
+                        }
                     }
                 }
                 "
@@ -265,7 +277,7 @@ fn test_library_calls() {
 }
 
 #[test]
-fn test_disabled_syscalls() {
+fn disabled_syscalls() {
     let test = test_case!(
         indoc!(
             r"
@@ -274,9 +286,9 @@ fn test_disabled_syscalls() {
         use snforge_std::declare;
         
         #[test]
-        fn test_replace_class() {
+        fn disabled_syscalls() {
             let value : ClassHash = 'xd'.try_into().unwrap();
-            replace_class_syscall(value);
+            replace_class_syscall(value).unwrap();
         }
     "
         ),
@@ -292,13 +304,13 @@ fn test_disabled_syscalls() {
     assert_failed!(result);
     assert_case_output_contains!(
         result,
-        "test_replace_class",
+        "disabled_syscalls",
         "Replace class can't be used in tests"
     );
 }
 
 #[test]
-fn test_get_block_hash() {
+fn get_block_hash() {
     let test = test_case!(indoc!(
         r"
         use result::ResultTrait;
@@ -306,7 +318,7 @@ fn test_get_block_hash() {
         use starknet::{get_block_hash_syscall, get_block_info};
 
         #[test]
-        fn test_get_block_hash() {
+        fn get_block_hash() {
             let block_info = get_block_info().unbox();
             let hash = get_block_hash_syscall(block_info.block_number - 10).unwrap();
             assert(hash == 0, 'Hash not zero');
@@ -320,7 +332,7 @@ fn test_get_block_hash() {
 }
 
 #[test]
-fn test_cant_call_test_contract() {
+fn cant_call_test_contract() {
     let test = test_case!(
         indoc!(
             r"
@@ -334,7 +346,7 @@ fn test_cant_call_test_contract() {
         }
 
         #[test]
-        fn test_calling_test_fails() {
+        fn cant_call_test_contract() {
             let contract = declare('CallsBack');
             let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
             let dispatcher = ICallsBackDispatcher { contract_address: contract_address };
@@ -346,6 +358,13 @@ fn test_cant_call_test_contract() {
             "CallsBack",
             indoc!(
                 r"
+                use starknet::ContractAddress;
+
+                #[starknet::interface]
+                trait ICallsBack<TContractState> {
+                    fn call_back(ref self: TContractState, address: ContractAddress);
+                }
+
                 #[starknet::contract]
                 mod CallsBack {
                     use result::ResultTrait;
@@ -362,10 +381,12 @@ fn test_cant_call_test_contract() {
                     }
         
 
-                    #[external(v0)]
-                    fn call_back(ref self: ContractState, address: ContractAddress) {
-                        let dispatcher = IDontExistDispatcher{contract_address: address};
-                        dispatcher.test_calling_test_fails();
+                    #[abi(embed_v0)]
+                    impl CallsBackImpl of super::ICallsBack<ContractState> {
+                        fn call_back(ref self: ContractState, address: ContractAddress) {
+                            let dispatcher = IDontExistDispatcher{contract_address: address};
+                            dispatcher.test_calling_test_fails();
+                        }
                     }
                 }
                 "
@@ -376,12 +397,12 @@ fn test_cant_call_test_contract() {
     let result = run_test_case(&test);
 
     assert_failed!(result);
-    assert_case_output_contains!(result, "test_calling_test_fails", "Entry point");
-    assert_case_output_contains!(result, "test_calling_test_fails", "not found in contract");
+    assert_case_output_contains!(result, "cant_call_test_contract", "Entry point");
+    assert_case_output_contains!(result, "cant_call_test_contract", "not found in contract");
 }
 
 #[test]
-fn test_storage_access_default_values() {
+fn storage_access_default_values() {
     let test = test_case!(indoc!(
         r"
         #[starknet::contract]
@@ -404,7 +425,7 @@ fn test_storage_access_default_values() {
         use tests::test_case::Contract::custom_structContractMemberStateTrait;
 
         #[test]
-        fn testing_storage_defaults() {
+        fn storage_access_default_values() {
             let mut state = Contract::contract_state_for_testing();
             let default_felt252 = state.balance.read();
             assert(default_felt252 == 0, 'Incorrect storage value');
@@ -425,7 +446,7 @@ fn test_storage_access_default_values() {
 }
 
 #[test]
-fn test_simple_cheatcodes() {
+fn simple_cheatcodes() {
     let test = test_case!(indoc!(
         r"
         use result::ResultTrait;
@@ -446,7 +467,7 @@ fn test_simple_cheatcodes() {
         };
 
         #[test]
-        fn test_prank_test_state() {
+        fn prank_test_state() {
             let test_address: ContractAddress = test_address();
             let caller_addr_before = starknet::get_caller_address();
             let target_caller_address: ContractAddress = (123_felt252).try_into().unwrap();
@@ -461,7 +482,7 @@ fn test_simple_cheatcodes() {
         }
 
         #[test]
-        fn test_roll_test_state() {
+        fn roll_test_state() {
             let test_address: ContractAddress = test_address();
             let old_block_number = starknet::get_block_info().unbox().block_number;
 
@@ -475,7 +496,7 @@ fn test_simple_cheatcodes() {
         }
 
         #[test]
-        fn test_warp_test_state() {
+        fn warp_test_state() {
             let test_address: ContractAddress = test_address();
             let old_block_timestamp = starknet::get_block_info().unbox().block_timestamp;
 
@@ -489,7 +510,7 @@ fn test_simple_cheatcodes() {
         }
 
         #[test]
-        fn test_elect_test_state() {
+        fn elect_test_state() {
             let test_address: ContractAddress = test_address();
             let old_sequencer_address = starknet::get_block_info().unbox().sequencer_address;
 
@@ -503,7 +524,7 @@ fn test_simple_cheatcodes() {
         }
 
         #[test]
-        fn test_spoof_test_state() {
+        fn spoof_test_state() {
             let test_address: ContractAddress = test_address();
             let old_tx_info = starknet::get_tx_info().unbox();
 
@@ -532,7 +553,7 @@ fn test_simple_cheatcodes() {
 }
 
 #[test]
-fn test_spy_events_simple() {
+fn spy_events_simple() {
     let test = test_case!(indoc!(
         r"
             use array::ArrayTrait;
@@ -543,7 +564,7 @@ fn test_spy_events_simple() {
                 event_name_hash, EventAssertions, Event, SpyOn, test_address };
 
             #[test]
-            fn test_expect_events_simple() {
+            fn spy_events_simple() {
                 let contract_address = test_address();
                 let mut spy = spy_events(SpyOn::One(contract_address));
                 assert(spy._id == 0, 'Id should be 0');
@@ -568,7 +589,7 @@ fn test_spy_events_simple() {
 }
 
 #[test]
-fn test_spy_struct_events() {
+fn spy_struct_events() {
     let test = test_case!(indoc!(
         r"
             use array::ArrayTrait;
@@ -577,8 +598,13 @@ fn test_spy_struct_events() {
                 EventSpy, EventFetcher, 
                 EventAssertions, Event, SpyOn, test_address 
             };
+
+            #[starknet::interface]
+            trait IEmitter<TContractState> {
+              fn emit_event(ref self: TContractState);
+            }
                 
-           #[starknet::contract]
+            #[starknet::contract]
             mod Emitter {
                 use result::ResultTrait;
                 use starknet::ClassHash;
@@ -597,21 +623,23 @@ fn test_spy_struct_events() {
                 #[storage]
                 struct Storage {}
 
-                #[external(v0)]
-                fn emit_event(
-                    ref self: ContractState,
-                ) {
-                    self.emit(Event::ThingEmitted(ThingEmitted { thing: 420 }));
+                #[abi(embed_v0)]
+                impl EmitterImpl of super::IEmitter<ContractState> {
+                    fn emit_event(
+                        ref self: ContractState,
+                    ) {
+                        self.emit(Event::ThingEmitted(ThingEmitted { thing: 420 }));
+                    }
                 }
             }
 
             #[test]
-            fn test_expect_event_struct() {
+            fn spy_struct_events() {
                 let contract_address = test_address();
                 let mut spy = spy_events(SpyOn::One(contract_address));
                 
                 let mut testing_state = Emitter::contract_state_for_testing();
-                Emitter::emit_event(ref testing_state);
+                Emitter::EmitterImpl::emit_event(ref testing_state);
                 
                 spy.assert_emitted(
                     @array![
@@ -631,7 +659,7 @@ fn test_spy_struct_events() {
 }
 
 #[test]
-fn test_inconsistent_syscall_pointers() {
+fn inconsistent_syscall_pointers() {
     let test = test_case!(indoc!(
         r"
         use starknet::ContractAddress;
@@ -644,13 +672,13 @@ fn test_inconsistent_syscall_pointers() {
         }
 
         #[test]
-        fn test_deploy_error_handling() {
+        fn inconsistent_syscall_pointers() {
             // verifies if SyscallHandler.syscal_ptr is incremented correctly when calling a contract
             let address = 'address'.try_into().unwrap();
             start_mock_call(address, 'get_value', 55);
             let contract = IContractDispatcher { contract_address: address };
-            let value = contract.get_value(address);
-            let block_number = get_block_number();
+            contract.get_value(address);
+            get_block_number();
         }
     "
     ),);
@@ -660,7 +688,7 @@ fn test_inconsistent_syscall_pointers() {
 }
 
 #[test]
-fn test_caller_address_in_called_contract() {
+fn caller_address_in_called_contract() {
     let test = test_case!(
         indoc!(
             r"
@@ -683,7 +711,7 @@ fn test_caller_address_in_called_contract() {
         }
 
         #[test]
-        fn test_contract() {
+        fn caller_address_in_called_contract() {
             let prank_checker = declare('PrankChecker');
             let contract_address_prank_checker = prank_checker.deploy(@ArrayTrait::new()).unwrap();
             let dispatcher_prank_checker = IPrankCheckerDispatcher { contract_address: contract_address_prank_checker };
@@ -731,7 +759,7 @@ fn test_caller_address_in_called_contract() {
                     self.caller_address.write(address);
                 }
 
-                #[external(v0)]
+                #[abi(embed_v0)]
                 impl IConstructorPrankChecker of super::IConstructorPrankChecker<ContractState> {
                     fn get_stored_caller_address(ref self: ContractState) -> ContractAddress {
                         self.caller_address.read()

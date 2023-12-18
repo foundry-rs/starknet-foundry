@@ -48,7 +48,7 @@ mod HelloStarknet {
         self.blk_timestamp.write(starknet::get_block_info().unbox().block_timestamp);
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl IHelloStarknetImpl of super::IHelloStarknet<ContractState> {
         // Increases the balance by the given amount.
         fn increase_balance(ref self: ContractState, amount: felt252) {
@@ -200,7 +200,7 @@ Failures:
     tests::call_and_invoke
 ```
 
-### Pranking the constructor
+### Pranking the Constructor
 
 Most of the cheatcodes like `prank`, `mock_call`, `warp`, `roll`, `elect` do work in the constructor of the contracts.
 

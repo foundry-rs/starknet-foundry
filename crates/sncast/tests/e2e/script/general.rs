@@ -74,7 +74,7 @@ async fn test_run_script_from_different_directory_no_path_to_scarb_toml() {
     snapbox.assert().success().stderr_matches(indoc! {r"
         ...
         command: script
-        error: Path [..]Scarb.toml does not exist
+        error: The path = [..] does not exist
     "});
 }
 
@@ -98,6 +98,6 @@ async fn test_fail_when_using_starknet_syscall() {
     snapbox.assert().success().stderr_matches(indoc! {r"
         ...
         command: script
-        error: Got an exception while executing a hint: Hint Error: Starknet syscalls are not supported
+        error: Got an exception while executing a hint: Custom Hint Error: Starknet syscalls are not supported
     "});
 }
