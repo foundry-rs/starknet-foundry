@@ -8,5 +8,6 @@ mod env;
 mod forking;
 mod fuzzing;
 mod io_operations;
+mod max_steps;
 mod running;
 mod workspaces;
