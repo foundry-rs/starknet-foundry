@@ -52,6 +52,12 @@ impl<'a> ExtensionLogic for CallToBlockifierExtension<'a> {
             // This is redirected to drop ForgeRuntimeExtension
             // and to ensure it behaves closely to real on-chain environment
             DeprecatedSyscallSelector::CallContract => {
+                extended_runtime
+                    .extended_runtime
+                    .extension
+                    .cheatnet_state
+                    .trace_info
+                    .clear();
                 let call_args = CallContractArgs::read(vm, extended_runtime.get_mut_syscall_ptr())?;
                 let cheatable_starknet_runtime = &mut extended_runtime.extended_runtime;
                 let cheatnet_state: &mut _ = cheatable_starknet_runtime.extension.cheatnet_state;
@@ -68,6 +74,21 @@ impl<'a> ExtensionLogic for CallToBlockifierExtension<'a> {
                     call_result,
                 )?;
                 Ok(SyscallHandlingResult::Handled(()))
+            }
+            DeprecatedSyscallSelector::Deploy
+            | DeprecatedSyscallSelector::LibraryCall
+            | DeprecatedSyscallSelector::LibraryCallL1Handler => {
+                // We clear it here and in the first arm to ensure that on each
+                // new call, deploy syscall and library call made from test code
+                // we start with an empty trace
+                // Same case when handling l1_handler_execute and in `deploy_at`
+                extended_runtime
+                    .extended_runtime
+                    .extension
+                    .cheatnet_state
+                    .trace_info
+                    .clear();
+                Ok(SyscallHandlingResult::Forwarded)
             }
             _ => Ok(SyscallHandlingResult::Forwarded),
         }
