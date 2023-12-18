@@ -123,6 +123,23 @@ fn my_test_generated(a: felt252) {
 }
 ```
 
+### Parametrizing With Complex Types
+
+While it is technically possible to use complex types in attributes instead of defining fixtures, handling of them in
+code would be quite problematic based on my limited research.
+
+At least initially, we do not want to support syntax with complex types. For example, this would not be allowed:
+
+```cairo
+#[parametrize]
+#[case(MyStruct { a: 1, b: array![2, 3] })]
+#[test]
+fn my_test(a: MyStruct) {
+    // ...
+}
+```
+### Problems With Code Generation
+
 The code generation solution has some problems that will need to be addressed before it is implemented.
 See [section below](#possible-problems-with-code-generation) for details.
 
