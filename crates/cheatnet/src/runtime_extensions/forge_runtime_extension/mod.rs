@@ -11,6 +11,7 @@ use crate::state::{BlockifierState, CheatTarget};
 use anyhow::{Context, Result};
 use blockifier::execution::call_info::{CallExecution, CallInfo};
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
+use blockifier::execution::entry_point::{CallEntryPoint, CallType};
 use blockifier::execution::execution_utils::stark_felt_to_felt;
 use cairo_felt::Felt252;
 use cairo_vm::vm::errors::hint_errors::HintError;
@@ -31,6 +32,7 @@ use runtime::{
     SyscallHandlingResult,
 };
 use starknet::signers::SigningKey;
+use starknet_api::deprecated_contract_class::EntryPointType;
 
 use super::call_to_blockifier_runtime_extension::CallToBlockifierRuntime;
 use super::cheatable_starknet_runtime_extension::SyscallSelector;
@@ -377,18 +379,14 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 let payload = Vec::from(&inputs[4..inputs.len()]);
 
-                let cheatnet_runtime = &mut extended_runtime.extended_runtime;
-                let mut blockifier_state = BlockifierState::from(
-                    cheatnet_runtime
-                        .extended_runtime
-                        .extended_runtime
-                        .hint_handler
-                        .state,
-                );
+                let cheatnet_runtime = &mut extended_runtime.extended_runtime.extended_runtime;
+                let mut blockifier_state =
+                    BlockifierState::from(cheatnet_runtime.extended_runtime.hint_handler.state);
 
+                cheatnet_runtime.extension.cheatnet_state.trace_info.clear();
                 match blockifier_state
                     .l1_handler_execute(
-                        cheatnet_runtime.extended_runtime.extension.cheatnet_state,
+                        cheatnet_runtime.extension.cheatnet_state,
                         contract_address,
                         &function_name,
                         &from_address,
@@ -496,6 +494,20 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     ]))
                 }
             }
+            "get_last_call_trace" => {
+                let trace_info = &extended_runtime
+                    .extended_runtime
+                    .extended_runtime
+                    .extension
+                    .cheatnet_state
+                    .trace_info;
+                let mut output = vec![Felt252::from(trace_info.len())];
+
+                for call_entry_point in trace_info {
+                    output.append(&mut serialize_call_entry_point(call_entry_point));
+                }
+                Ok(CheatcodeHandlingResult::Handled(output))
+            }
             _ => Ok(CheatcodeHandlingResult::Forwarded),
         }?;
 
@@ -548,6 +560,36 @@ fn deserialize_cheat_target(inputs: &[Felt252]) -> (CheatTarget, usize) {
         }
         _ => unreachable!("Invalid CheatTarget variant"),
     }
+}
+
+fn serialize_call_entry_point(call_entry_point: &CallEntryPoint) -> Vec<Felt252> {
+    let mut output = vec![];
+
+    let entry_point_type = match call_entry_point.entry_point_type {
+        EntryPointType::Constructor => 0,
+        EntryPointType::External => 1,
+        EntryPointType::L1Handler => 2,
+    };
+    output.push(Felt252::from(entry_point_type));
+
+    output.push(call_entry_point.entry_point_selector.0.into_());
+
+    let calldata = call_entry_point.calldata.0.iter().collect::<Vec<_>>();
+    output.push(Felt252::from(calldata.len()));
+    for felt in calldata {
+        output.push(Felt252::from_bytes_be(felt.bytes()));
+    }
+
+    output.push(call_entry_point.storage_address.into_());
+    output.push(call_entry_point.caller_address.into_());
+
+    let call_type = match call_entry_point.call_type {
+        CallType::Call => 0,
+        CallType::Delegate => 1,
+    };
+    output.push(Felt252::from(call_type));
+
+    output
 }
 
 fn cheatcode_panic_result(panic_data: Vec<Felt252>) -> Vec<Felt252> {
