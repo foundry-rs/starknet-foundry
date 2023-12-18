@@ -2,11 +2,11 @@
 
 ## Overview
 
-Starknet Foundry cast supports deploying smart contracts to a given network with the `sncast deploy` command.
+Starknet Foundry `sncast` supports deploying smart contracts to a given network with the `sncast deploy` command.
 
 It works by invoking a [Universal Deployer Contract](https://docs.openzeppelin.com/contracts-cairo/0.6.1/udc), which deploys the contract with the given class hash and constructor arguments.
 
-For detailed CLI description, see [deploy command reference](../appendix/cast/deploy.md).
+For detailed CLI description, see [deploy command reference](../appendix/sncast/deploy.md).
 
 ## Usage Examples
 
