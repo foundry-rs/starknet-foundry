@@ -37,7 +37,7 @@ pub fn compile(mut sierra_json: Value) -> Result<CasmContractClass, String> {
     };
 }
 
-/// converts `CasmContractClass` from the old `cairo_lang_starknet` library version
+/// Converts `CasmContractClass` from the old `cairo_lang_starknet` library version
 /// to the `CasmContractClass` from the newest version
 fn old_casm_to_newest_casm<T>(value: &T) -> CasmContractClass
 where
@@ -47,6 +47,10 @@ where
     serde_json::from_value::<CasmContractClass>(serialized).unwrap()
 }
 
+/// Extracts sierra version from the program
+/// It will not be possible to convert sierra 0.1.0 version because it keeps its version only in the first felt252
+/// (as a shortstring) while other versions keep it on the first 3 (major, minor, patch)
+/// That's why it fallbacks to 0 when converting from Value to u8
 fn parse_sierra_version(sierra_json: &Value) -> Result<Vec<u8>, String> {
     let parsed_values: Vec<u8> = sierra_json["sierra_program"]
         .as_array()
