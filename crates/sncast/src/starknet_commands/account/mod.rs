@@ -74,13 +74,13 @@ pub fn write_account_to_accounts_file(
 
     let contents = std::fs::read_to_string(accounts_file.clone())?;
     let mut items: serde_json::Value = serde_json::from_str(&contents)
-        .map_err(|_| anyhow!("Failed to parse accounts file at {}", accounts_file))?;
+        .map_err(|_| anyhow!("Failed to parse accounts file at = {}", accounts_file))?;
 
     let network_name = chain_id_to_network_name(chain_id);
 
     if !items[&network_name][account].is_null() {
         bail!(
-            "Account with name {} already exists in network with chain_id {}",
+            "Account with name = {} already exists in network with chain_id = {}",
             account,
             decode_chain_id(chain_id)
         );
@@ -110,7 +110,7 @@ pub fn add_created_profile_to_configuration(
             .and_then(|profile_| profile_.get("account"));
         if property.is_some() {
             bail!(
-                "Failed to add {} profile to the Scarb.toml. Profile already exists",
+                "Failed to add profile = {} to the Scarb.toml. Profile already exists",
                 config.account
             );
         }
@@ -122,15 +122,12 @@ pub fn add_created_profile_to_configuration(
 
         new_profile.insert("url".to_string(), Value::String(config.rpc_url.clone()));
         new_profile.insert("account".to_string(), Value::String(config.account.clone()));
-        if config.keystore == Utf8PathBuf::default() {
+        if let Some(keystore) = config.keystore.clone() {
+            new_profile.insert("keystore".to_string(), Value::String(keystore.to_string()));
+        } else {
             new_profile.insert(
                 "accounts-file".to_string(),
                 Value::String(config.accounts_file.to_string()),
-            );
-        } else {
-            new_profile.insert(
-                "keystore".to_string(),
-                Value::String(config.keystore.to_string()),
             );
         }
 
@@ -144,16 +141,16 @@ pub fn add_created_profile_to_configuration(
         let mut config = toml::value::Table::new();
         config.insert("tool".to_string(), Value::Table(tool));
 
-        toml::to_string(&Value::Table(config)).context("Couldn't convert toml to string")?
+        toml::to_string(&Value::Table(config)).context("Failed to convert toml to string")?
     };
 
     let mut scarb_toml = OpenOptions::new()
         .append(true)
         .open(manifest_path)
-        .context("Couldn't open Scarb.toml")?;
+        .context("Failed to open Scarb.toml")?;
     scarb_toml
         .write_all(format!("\n{toml_string}").as_bytes())
-        .context("Couldn't write to the Scarb.toml")?;
+        .context("Failed to write to the Scarb.toml")?;
 
     Ok(())
 }
@@ -180,7 +177,7 @@ mod tests {
 
         assert!(res.is_ok());
 
-        let contents = fs::read_to_string("Scarb.toml").expect("Unable to read Scarb.toml");
+        let contents = fs::read_to_string("Scarb.toml").expect("Failed to read Scarb.toml");
         assert!(contents.contains("[tool.sncast.some-name]"));
         assert!(contents.contains("account = \"some-name\""));
         assert!(contents.contains("url = \"http://some-url\""));

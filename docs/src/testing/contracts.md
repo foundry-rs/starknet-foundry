@@ -3,11 +3,11 @@
 > ℹ️ **Info**
 > To use the library functions designed for testing smart contracts,
 > you need to add `snforge_std` package as a dependency in
-> your [`Scarb.toml`](https://docs.swmansion.com/scarb/docs/guides/dependencies.html#adding-a-dependency) 
+> your [`Scarb.toml`](https://docs.swmansion.com/scarb/docs/guides/dependencies.html#adding-a-dependency)
 > using appropriate release tag.
 >```toml
 > [dependencies]
-> snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.7.1" }
+> snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.12.0" }
 > ```
 
 Using unit testing as much as possible is a good practice, as it makes your test suites run faster. However, when
@@ -31,14 +31,14 @@ mod HelloStarknet {
         balance: felt252,
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl HelloStarknetImpl of super::IHelloStarknet<ContractState> {
         // Increases the balance by the given amount.
         fn increase_balance(ref self: ContractState, amount: felt252) {
             self.balance.write(self.balance.read() + amount);
         }
 
-        // Gets the balance. 
+        // Gets the balance.
         fn get_balance(self: @ContractState) -> felt252 {
             self.balance.read()
         }
@@ -61,7 +61,7 @@ fn call_and_invoke() {
     let contract = declare('HelloStarknet');
     // Alternatively we could use `deploy_syscall` here
     let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
-    
+
     // Create a Dispatcher object that will allow interacting with the deployed contract
     let dispatcher = IHelloStarknetDispatcher { contract_address };
 
@@ -108,8 +108,8 @@ mod HelloStarknet {
     use array::ArrayTrait;
 
     // ...
-    
-    #[external(v0)]
+
+    #[abi(embed_v0)]
     impl HelloStarknetImpl of super::IHelloStarknet<ContractState> {
         // ...
 
@@ -163,7 +163,7 @@ Using `SafeDispatcher` we can test that the function in fact panics with an expe
 #[test]
 fn handling_errors() {
     // ...
-    
+
     let contract_address = contract.deploy(@calldata).unwrap();
     let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
 

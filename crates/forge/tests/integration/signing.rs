@@ -12,7 +12,7 @@ fn test_stark_sign_msg_hash_range() {
             const UPPER_BOUND: felt252 = 0x800000000000000000000000000000000000000000000000000000000000000;
 
             #[test]
-            fn test_valid_range() {
+            fn valid_range() {
                 let key_pair = KeyPairTrait::<felt252, felt252>::generate();
                 
                 let msg_hash = UPPER_BOUND - 1;
@@ -24,7 +24,7 @@ fn test_stark_sign_msg_hash_range() {
 
             #[test]
             #[should_panic(expected: ('message_hash out of range', ))]
-            fn test_invalid_range() {
+            fn invalid_range() {
                 let key_pair = KeyPairTrait::<felt252, felt252>::generate();
                 
                 // message_hash should be smaller than UPPER_BOUND
@@ -48,7 +48,7 @@ fn test_stark_curve() {
         use snforge_std::signature::stark_curve::{StarkCurveKeyPairImpl, StarkCurveSignerImpl, StarkCurveVerifierImpl};
         
         #[test]
-        fn test() {
+        fn simple_signing_flow() {
             let key_pair = KeyPairTrait::<felt252, felt252>::generate();
             
             let msg_hash = 0xbadc0ffee;
@@ -79,7 +79,7 @@ fn test_secp256_k1_curve() {
             use core::starknet::SyscallResultTrait;
 
             #[test]
-            fn test() {
+            fn simple_signing_flow() {
                 let key_pair = KeyPairTrait::<u256, Secp256k1Point>::generate();
                 
                 let msg_hash = 0xbadc0ffee;
@@ -110,7 +110,7 @@ fn test_secp256_r1_curve() {
             use core::starknet::SyscallResultTrait;
 
             #[test]
-            fn test() {
+            fn simple_signing_flow() {
                 let key_pair = KeyPairTrait::<u256, Secp256r1Point>::generate();
                 
                 let msg_hash = 0xbadc0ffee;
@@ -142,7 +142,7 @@ fn test_secp256_curve() {
             use core::starknet::SyscallResultTrait;
 
             #[test]
-            fn test() {
+            fn simple_signing_flow() {
                 let secret_key = 554433;
 
                 let key_pair_k1 = KeyPairTrait::<u256, Secp256k1Point>::from_secret_key(secret_key);
@@ -183,7 +183,7 @@ fn test_stark_secp256_curves() {
             use core::starknet::SyscallResultTrait;
             
             #[test]
-            fn test() {
+            fn stark_secp256_curves() {
                 let secret_key = 554433;
             
                 let key_pair_stark = KeyPairTrait::<felt252, felt252>::from_secret_key(secret_key);
@@ -266,7 +266,7 @@ fn test_unsupported_curve() {
             
             #[test]
             #[should_panic(expected: ('Currently only Secp256k1 and', 'Secp256r1 curves are supported'))]
-            fn test() {
+            fn unsupported_curve() {
                 let key_pair = KeyPairTrait::<u256, UnsupportedCurvePoint>::generate();
             }
         "
@@ -291,32 +291,32 @@ fn test_invalid_secret_key() {
             
             #[test]
             #[should_panic(expected: ('invalid secret_key', ))]
-            fn test_from_secret_key_stark() {
+            fn from_secret_key_stark() {
                 let key_pair = KeyPairTrait::<felt252, felt252>::from_secret_key(0);
             }
             
             #[test]
             #[should_panic(expected: ('invalid secret_key', ))]
-            fn test_from_secret_key_secp256k1() {
+            fn from_secret_key_secp256k1() {
                 let key_pair = KeyPairTrait::<u256, Secp256k1Point>::from_secret_key(0);
             }
             
             #[test]
             #[should_panic(expected: ('invalid secret_key', ))]
-            fn test_from_secret_key_secp256r1() {
+            fn from_secret_key_secp256r1() {
                 let key_pair = KeyPairTrait::<u256, Secp256r1Point>::from_secret_key(0);
             }
             
             #[test]
             #[should_panic(expected: ('invalid secret_key', ))]
-            fn test_sign_stark() {
+            fn sign_stark() {
                 let key_pair = KeyPair { secret_key: 0, public_key: 0x321 } ;
                 let (r, s) = key_pair.sign(123);
             }
             
             #[test]
             #[should_panic(expected: ('invalid secret_key', ))]
-            fn test_sign_secp256k1() {
+            fn sign_secp256k1() {
                 let generator = Secp256k1Impl::get_generator_point();
                 let key_pair = KeyPair { secret_key: 0, public_key: generator } ;
                 let (r, s) = key_pair.sign(123);
@@ -324,7 +324,7 @@ fn test_invalid_secret_key() {
             
             #[test]
             #[should_panic(expected: ('invalid secret_key', ))]
-            fn test_sign_secp256r1() {
+            fn sign_secp256r1() {
                 let generator = Secp256r1Impl::get_generator_point();
                 let key_pair = KeyPair { secret_key: 0, public_key: generator } ;
                 let (r, s) = key_pair.sign(123);

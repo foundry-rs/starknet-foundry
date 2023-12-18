@@ -6,7 +6,7 @@ use test_utils::{assert_case_output_contains, assert_failed, assert_passed, test
 
 #[test]
 #[allow(clippy::too_many_lines)]
-fn library_call_syscall() {
+fn library_call_syscall_is_usable() {
     let test = test_case!(
         indoc!(
             r"
@@ -33,7 +33,7 @@ fn library_call_syscall() {
         }
 
         #[test]
-        fn test_library_call() {
+        fn library_call_syscall_is_usable() {
             let caller_address = deploy_contract('Caller');
             let caller_safe_dispatcher = ICallerSafeDispatcher {
                 contract_address: caller_address
@@ -62,6 +62,15 @@ fn library_call_syscall() {
             "Caller",
             indoc!(
                 r"
+                use starknet::ClassHash;
+
+                #[starknet::interface]
+                trait ICaller<TContractState> {
+                    fn call_add_two(
+                        self: @TContractState, class_hash: ClassHash, number: felt252
+                    ) -> felt252;
+                }
+
                 #[starknet::contract]
                 mod Caller {
                     use result::ResultTrait;
@@ -76,12 +85,14 @@ fn library_call_syscall() {
                     #[storage]
                     struct Storage {}
 
-                    #[external(v0)]
-                    fn call_add_two(
-                        self: @ContractState, class_hash: ClassHash, number: felt252
-                    ) -> felt252 {
-                        let safe_lib_dispatcher = IExecutorSafeLibraryDispatcher { class_hash };
-                        safe_lib_dispatcher.add_two(number).unwrap()
+                    #[abi(embed_v0)]
+                    impl CallerImpl of super::ICaller<ContractState> {
+                        fn call_add_two(
+                            self: @ContractState, class_hash: ClassHash, number: felt252
+                        ) -> felt252 {
+                            let safe_lib_dispatcher = IExecutorSafeLibraryDispatcher { class_hash };
+                            safe_lib_dispatcher.add_two(number).unwrap()
+                        }
                     }
                 }
                 "
@@ -91,6 +102,12 @@ fn library_call_syscall() {
             "Executor",
             indoc!(
                 r"
+                #[starknet::interface]
+                trait IExecutor<TContractState> {
+                    fn add_two(ref self: TContractState, number: felt252) -> felt252;
+                    fn get_thing(self: @TContractState) -> felt252;
+                }
+
                 #[starknet::contract]
                 mod Executor {
                     #[storage]
@@ -104,15 +121,16 @@ fn library_call_syscall() {
                         self.thing.write(5);
                     }
 
-                    #[external(v0)]
-                    fn add_two(ref self: ContractState, number: felt252) -> felt252 {
-                        self.thing.write(10);
-                        number + 2
-                    }
+                    #[abi(embed_v0)]
+                    impl ExecutorImpl of super::IExecutor<ContractState> {
+                        fn add_two(ref self: ContractState, number: felt252) -> felt252 {
+                            self.thing.write(10);
+                            number + 2
+                        }
 
-                    #[external(v0)]
-                    fn get_thing(self: @ContractState) -> felt252 {
-                        self.thing.read()
+                        fn get_thing(self: @ContractState) -> felt252 {
+                            self.thing.read()
+                        }
                     }
                 }
                 "
@@ -126,7 +144,7 @@ fn library_call_syscall() {
 }
 
 #[test]
-fn test_keccak_syscall() {
+fn keccak_syscall_is_usable() {
     let test = test_case!(indoc!(
         r"
         use array::ArrayTrait;
@@ -134,7 +152,7 @@ fn test_keccak_syscall() {
         use starknet::SyscallResultTrait;
 
         #[test]
-        fn test_execute_cairo_keccak() {
+        fn keccak_syscall_is_usable() {
             let input = array![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
             assert(
                 @keccak_syscall(input.span()).unwrap_syscall()
@@ -151,7 +169,7 @@ fn test_keccak_syscall() {
 }
 
 #[test]
-fn test_keccak_syscall_too_small_input() {
+fn keccak_syscall_too_small_input() {
     let test = test_case!(indoc!(
         r"
         use array::ArrayTrait;
@@ -159,7 +177,7 @@ fn test_keccak_syscall_too_small_input() {
         use starknet::SyscallResultTrait;
 
         #[test]
-        fn test_execute_cairo_keccak() {
+        fn keccak_syscall_too_small_input() {
             let input = array![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
             assert(
                 @keccak_syscall(input.span()).unwrap_syscall()
@@ -172,20 +190,24 @@ fn test_keccak_syscall_too_small_input() {
 
     let result = run_test_case(&test);
 
-    assert_case_output_contains!(result, "test_execute_cairo_keccak", "Invalid input length");
+    assert_case_output_contains!(
+        result,
+        "keccak_syscall_too_small_input",
+        "Invalid input length"
+    );
 
     assert_failed!(result);
 }
 
 #[test]
-fn test_cairo_keccak() {
+fn cairo_keccak_is_usable() {
     let test = test_case!(indoc!(
         r"
         use array::ArrayTrait;
         use keccak::cairo_keccak;
 
         #[test]
-        fn test_execute_cairo_keccak() {
+        fn cairo_keccak_is_usable() {
             let mut input = array![
                 0x0000000000000001,
                 0x0000000000000002,
@@ -220,7 +242,7 @@ fn test_cairo_keccak() {
 }
 
 #[test]
-fn test_keccak_syscall_in_contract() {
+fn keccak_syscall_in_contract() {
     let test = test_case!(
         indoc!(
             r"
@@ -237,7 +259,7 @@ fn test_keccak_syscall_in_contract() {
             }
 
             #[test]
-            fn test_keccak_simple() {
+            fn keccak_syscall_in_contract() {
                 let contract = declare('HelloKeccak');
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IHelloKeccakDispatcher { contract_address };
@@ -282,7 +304,7 @@ fn compare_keccak_from_contract_with_plain_keccak() {
             }
 
             #[test]
-            fn test_keccak_simple() {
+            fn compare_keccak_from_contract_with_plain_keccak() {
                 let contract = declare('HelloKeccak');
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IHelloKeccakDispatcher { contract_address };

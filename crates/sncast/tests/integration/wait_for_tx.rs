@@ -34,7 +34,7 @@ async fn test_rejected_transaction() {
         ACCOUNT,
         &Utf8PathBuf::from(ACCOUNT_FILE_PATH),
         &provider,
-        &Utf8PathBuf::default(),
+        None,
     )
     .await
     .expect("Could not get the account");
@@ -53,7 +53,7 @@ async fn test_rejected_transaction() {
 
 #[tokio::test]
 #[should_panic(
-    expected = "Could not get transaction with hash: 0x123456789. Transaction rejected, not received or sncast timed out."
+    expected = "Failed to get transaction with hash = 0x123456789; Transaction rejected, not received or sncast timed out"
 )]
 async fn test_wait_for_nonexistent_tx() {
     let provider = create_test_provider();

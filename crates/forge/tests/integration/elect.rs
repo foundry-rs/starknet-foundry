@@ -154,7 +154,6 @@ fn elect_complex() {
                 let elect_checker1 = IElectCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };
                 let elect_checker2 = IElectCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };
 
-                let old_seq_addr1 = elect_checker1.get_sequencer_address();
                 let old_seq_addr2 = elect_checker2.get_sequencer_address();
 
                 start_elect(CheatTarget::All, 123.try_into().unwrap());

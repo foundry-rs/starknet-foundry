@@ -38,7 +38,7 @@ fn mock_call_simple() {
         }
 
         #[test]
-        fn mock_call_before_dispatcher_created() {
+        fn mock_call_simple_before_dispatcher_created() {
             let calldata = array![420];
 
             let contract = declare('MockChecker');
@@ -66,7 +66,7 @@ fn mock_call_simple() {
 }
 
 #[test]
-fn mock_call_complex_dtypes() {
+fn mock_call_complex_types() {
     let test = test_case!(
         indoc!(
             r"

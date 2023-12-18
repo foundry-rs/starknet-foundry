@@ -1,12 +1,12 @@
 use anyhow::{anyhow, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
-use scarb_artifacts::get_contracts_map;
+use scarb_artifacts::{get_contracts_map, ScarbCommand};
 use sncast::helpers::scarb_utils::get_package_metadata;
 use sncast::helpers::{response_structs::DeclareResponse, scarb_utils::get_scarb_manifest};
-use sncast::{handle_rpc_error, handle_wait_for_tx, WaitForTx};
+use sncast::{apply_optional, handle_rpc_error, handle_wait_for_tx, WaitForTx};
 use starknet::accounts::AccountError::Provider;
-use starknet::accounts::ConnectedAccount;
+use starknet::accounts::{ConnectedAccount, Declaration};
 use starknet::core::types::FieldElement;
 use starknet::{
     accounts::{Account, SingleOwnerAccount},
@@ -14,7 +14,6 @@ use starknet::{
     providers::jsonrpc::{HttpTransport, JsonRpcClient},
     signers::LocalWallet,
 };
-use std::process::{Command, Stdio};
 use std::sync::Arc;
 
 #[derive(Args)]
@@ -33,76 +32,58 @@ pub struct Declare {
     pub nonce: Option<FieldElement>,
 }
 
+pub struct BuildConfig {
+    pub scarb_toml_path: Option<Utf8PathBuf>,
+    pub json: bool,
+}
+
 #[allow(clippy::too_many_lines)]
 pub async fn declare(
     contract_name: &str,
     max_fee: Option<FieldElement>,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
-    path_to_scarb_toml: &Option<Utf8PathBuf>,
     nonce: Option<FieldElement>,
+    build_config: BuildConfig,
     wait_config: WaitForTx,
 ) -> Result<DeclareResponse> {
     let contract_name: String = contract_name.to_string();
-    let manifest_path = match path_to_scarb_toml.clone() {
+    let manifest_path = match build_config.scarb_toml_path.clone() {
         Some(path) => path,
-        None => get_scarb_manifest().context("Failed to obtain manifest path from scarb")?,
+        None => get_scarb_manifest().context("Failed to obtain manifest path from Scarb")?,
     };
 
-    let command_result = Command::new("scarb")
-        .arg("--manifest-path")
-        .arg(&manifest_path)
-        .arg("build")
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .output()
-        .context("Failed to start building contracts with Scarb")?;
-    let result_code = command_result
-        .status
-        .code()
-        .context("Failed to obtain status code from scarb build")?;
-    let result_msg = String::from_utf8(command_result.stdout)?;
-    if result_code != 0 {
-        anyhow::bail!(
-            "Scarb build returned non-zero exit code: {} - error message: {}",
-            result_code,
-            result_msg
-        );
+    let mut cmd = ScarbCommand::new_with_stdio();
+    cmd.arg("build").manifest_path(&manifest_path);
+    if build_config.json {
+        cmd.json();
     }
+    cmd.run().context("Failed to build contracts with Scarb")?;
 
     let metadata = scarb_metadata::MetadataCommand::new()
         .manifest_path(&manifest_path)
         .inherit_stderr()
         .exec()
-        .context("Failed to obtain scarb metadata")?;
+        .context("Failed to get scarb metadata")?;
 
     let package = get_package_metadata(&metadata, &manifest_path)
-        .with_context(|| anyhow!("Failed to find package for contract {}", contract_name))?;
+        .with_context(|| anyhow!("Failed to find package for contract = {contract_name}"))?;
     let contracts = get_contracts_map(&metadata, &package.id)?;
 
     let contract_artifacts = contracts
         .get(&contract_name)
-        .ok_or(anyhow!("Failed to find artifacts in starknet_artifacts.json file. Make sure you have enabled sierra and casm code generation in Scarb.toml"))?;
+        .ok_or(anyhow!("Failed to find artifacts in starknet_artifacts.json file. Please ensure you have enabled sierra and casm code generation in Scarb.toml"))?;
 
     let contract_definition: SierraClass = serde_json::from_str(&contract_artifacts.sierra)
-        .with_context(|| "Failed to parse sierra artifact")?;
-    let casm_contract_definition: CompiledClass = serde_json::from_str(&contract_artifacts.casm)
-        .with_context(|| "Failed to parse casm artifact")?;
+        .context("Failed to parse sierra artifact")?;
+    let casm_contract_definition: CompiledClass =
+        serde_json::from_str(&contract_artifacts.casm).context("Failed to parse casm artifact")?;
 
     let casm_class_hash = casm_contract_definition.class_hash()?;
 
     let declaration = account.declare(Arc::new(contract_definition.flatten()?), casm_class_hash);
-    // todo: refactor setting max_fee and nonce
-    let execution_with_fee = if let Some(max_fee) = max_fee {
-        declaration.max_fee(max_fee)
-    } else {
-        declaration
-    };
-    let execution = if let Some(nonce) = nonce {
-        execution_with_fee.nonce(nonce)
-    } else {
-        execution_with_fee
-    };
-    let declared = execution.send().await;
+    let declaration = apply_optional(declaration, max_fee, Declaration::max_fee);
+    let declaration = apply_optional(declaration, nonce, Declaration::nonce);
+    let declared = declaration.send().await;
 
     match declared {
         Ok(result) => {
