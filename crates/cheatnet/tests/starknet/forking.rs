@@ -24,15 +24,12 @@ use starknet_api::core::ContractAddress;
 use std::path::PathBuf;
 use std::str::FromStr;
 use tempfile::TempDir;
-use tokio::runtime::Runtime;
 use url::Url;
 
 #[test]
 fn fork_simple() {
-    let rt = Runtime::new().unwrap();
     let cache_dir = TempDir::new().unwrap();
-    let mut cached_fork_state =
-        rt.block_on(create_fork_cached_state(cache_dir.path().to_str().unwrap()));
+    let mut cached_fork_state = create_fork_cached_state(cache_dir.path().to_str().unwrap());
     let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_fork_state);
 
     let contract_address = Felt252::from(
@@ -78,11 +75,8 @@ fn fork_simple() {
 
 #[test]
 fn try_calling_nonexistent_contract() {
-    let rt = Runtime::new().unwrap();
     let cache_dir = TempDir::new().unwrap();
-
-    let mut cached_fork_state =
-        rt.block_on(create_fork_cached_state(cache_dir.path().to_str().unwrap()));
+    let mut cached_fork_state = create_fork_cached_state(cache_dir.path().to_str().unwrap());
     let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_fork_state);
 
     let contract_address = ContractAddress::from(1_u8);
@@ -104,11 +98,8 @@ fn try_calling_nonexistent_contract() {
 
 #[test]
 fn try_deploying_undeclared_class() {
-    let rt = Runtime::new().unwrap();
     let cache_dir = TempDir::new().unwrap();
-
-    let mut cached_fork_state =
-        rt.block_on(create_fork_cached_state(cache_dir.path().to_str().unwrap()));
+    let mut cached_fork_state = create_fork_cached_state(cache_dir.path().to_str().unwrap());
     let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_fork_state);
 
     let class_hash = "1".to_owned().try_into_().unwrap();
@@ -194,11 +185,8 @@ fn test_forking_at_block_number() {
 
 #[test]
 fn call_forked_contract_from_other_contract() {
-    let rt = Runtime::new().unwrap();
     let cache_dir = TempDir::new().unwrap();
-
-    let mut cached_fork_state =
-        rt.block_on(create_fork_cached_state(cache_dir.path().to_str().unwrap()));
+    let mut cached_fork_state = create_fork_cached_state(cache_dir.path().to_str().unwrap());
     let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_fork_state);
 
     let forked_contract_address = Felt252::from(
@@ -229,11 +217,8 @@ fn call_forked_contract_from_other_contract() {
 
 #[test]
 fn library_call_on_forked_class_hash() {
-    let rt = Runtime::new().unwrap();
     let cache_dir = TempDir::new().unwrap();
-
-    let mut cached_fork_state =
-        rt.block_on(create_fork_cached_state(cache_dir.path().to_str().unwrap()));
+    let mut cached_fork_state = create_fork_cached_state(cache_dir.path().to_str().unwrap());
     let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_fork_state);
 
     let forked_class_hash = Felt252::from(
@@ -283,10 +268,8 @@ fn library_call_on_forked_class_hash() {
 
 #[test]
 fn call_forked_contract_from_constructor() {
-    let rt = Runtime::new().unwrap();
     let cache_dir = TempDir::new().unwrap();
-    let mut cached_fork_state =
-        rt.block_on(create_fork_cached_state(cache_dir.path().to_str().unwrap()));
+    let mut cached_fork_state = create_fork_cached_state(cache_dir.path().to_str().unwrap());
     let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_fork_state);
 
     let forked_class_hash = Felt252::from(
