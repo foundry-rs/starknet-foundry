@@ -14,12 +14,12 @@ fn test_script_init_files_created() {
         .current_dir(temp_dir.path())
         .args(["script", "init", script_name]);
 
-    snapbox.assert().stdout_eq(formatdoc! {r"
+    snapbox.assert().stdout_matches(formatdoc! {r"
         command: script init
-        status: Successfully initialized `{script_name}`
+        status: Successfully initialized `{script_name}` at [..]/{script_name}
     "});
 
-    let script_dir_path = temp_dir.path().join(SCRIPTS_DIR).join(script_name);
+    let script_dir_path = temp_dir.path().join(script_name);
 
     assert!(script_dir_path.exists());
     assert!(script_dir_path.join("Scarb.toml").exists());
@@ -39,12 +39,12 @@ fn test_script_init_files_content() {
         .current_dir(temp_dir.path())
         .args(["script", "init", script_name]);
 
-    snapbox.assert().stdout_eq(formatdoc! {r"
+    snapbox.assert().stdout_matches(formatdoc! {r"
         command: script init
-        status: Successfully initialized `{script_name}`
+        status: Successfully initialized `{script_name}` at [..]/{script_name}
     "});
 
-    let script_dir_path = temp_dir.path().join(SCRIPTS_DIR).join(script_name);
+    let script_dir_path = temp_dir.path().join(script_name);
     let scarb_toml_path = script_dir_path.join("Scarb.toml");
 
     let scarb_toml_content = std::fs::read_to_string(&scarb_toml_path).unwrap();
@@ -62,6 +62,7 @@ fn test_script_init_files_content() {
             [package]
             name = "{script_name}"
             version = "0.1.0"
+            edition = [..]
 
             # See more keys and their definitions at https://docs.swmansion.com/scarb/docs/reference/manifest.html
 
@@ -71,7 +72,8 @@ fn test_script_init_files_content() {
         "#
     );
 
-    assert_eq!(scarb_toml_content, expected_scarb_toml);
+    snapbox::assert_matches(expected_scarb_toml, scarb_toml_content);
+
     assert_eq!(
         lib_cairo_content,
         formatdoc! {r#"
@@ -92,63 +94,45 @@ fn test_script_init_files_content() {
 }
 
 #[test]
-fn test_init_creates_scripts_dir() {
+fn test_init_when_scripts_dir_exists_in_cwd() {
     let script_name = "my_script";
     let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
 
-    assert!(
-        !temp_dir.path().join(SCRIPTS_DIR).exists(),
-        "Scripts directory already exists in the current temp directory"
-    );
-
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(temp_dir.path())
-        .args(["script", "init", script_name]);
-
-    snapbox.assert().stdout_eq(formatdoc! {r"
-        command: script init
-        status: Successfully initialized `{script_name}`
-    "});
-
-    assert!(temp_dir.path().join(SCRIPTS_DIR).exists());
-    assert!(temp_dir.path().join(SCRIPTS_DIR).join(script_name).exists());
-}
-
-#[test]
-fn test_init_from_scripts_dir() {
-    let script_name = "my_script";
-    let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
-    let scripts_dir_path = temp_dir.path().join(SCRIPTS_DIR);
-
-    std::fs::create_dir_all(&scripts_dir_path)
+    std::fs::create_dir_all(temp_dir.path().join(SCRIPTS_DIR))
         .expect("Failed to create scripts directory in the current temp directory");
-    assert!(scripts_dir_path.exists());
 
     let snapbox = Command::new(cargo_bin!("sncast"))
         .current_dir(temp_dir.path())
         .args(["script", "init", script_name]);
 
-    snapbox.assert().stdout_eq(formatdoc! {r"
+    snapbox.assert().stdout_matches(formatdoc! {r"
         command: script init
-        status: Successfully initialized `{script_name}`
+        status: Successfully initialized `{script_name}` at [..]/{SCRIPTS_DIR}/{script_name}
     "});
 
-    assert!(scripts_dir_path.join(script_name).exists());
-    assert!(!scripts_dir_path
-        .join(SCRIPTS_DIR)
-        .join(script_name)
+    let script_dir_path = temp_dir.path().join(SCRIPTS_DIR).join(script_name);
+
+    assert!(script_dir_path.exists());
+    assert!(script_dir_path.join("Scarb.toml").exists());
+    assert!(script_dir_path.join("src").exists());
+    assert!(script_dir_path.join("src/lib.cairo").exists());
+    assert!(script_dir_path
+        .join(format!("src/{script_name}.cairo"))
         .exists());
 }
 
 #[test]
-fn test_init_fails_when_destination_exist() {
+fn test_init_twice_fails() {
     let script_name = "my_script";
     let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
-    let script_root_dir_path = temp_dir.path().join(SCRIPTS_DIR).join(script_name);
 
-    std::fs::create_dir_all(&script_root_dir_path)
-        .expect("Failed to create script root directory in the current temp directory");
-    assert!(script_root_dir_path.exists());
+    Command::new(cargo_bin!("sncast"))
+        .current_dir(temp_dir.path())
+        .args(["script", "init", script_name])
+        .assert()
+        .success();
+
+    assert!(temp_dir.path().join(script_name).exists());
 
     let snapbox = Command::new(cargo_bin!("sncast"))
         .current_dir(temp_dir.path())

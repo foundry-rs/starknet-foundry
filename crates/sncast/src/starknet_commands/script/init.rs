@@ -30,7 +30,10 @@ pub fn init(init_args: &Init) -> Result<ScriptInitResponse> {
 
     match modify_files_result {
         Result::Ok(()) => Ok(ScriptInitResponse {
-            status: format!("Successfully initialized `{}`", init_args.script_name),
+            status: format!(
+                "Successfully initialized `{}` at {}",
+                init_args.script_name, script_root_dir_path
+            ),
         }),
         Err(err) => {
             clean_created_dir_and_files(&script_root_dir_path);
@@ -41,18 +44,15 @@ pub fn init(init_args: &Init) -> Result<ScriptInitResponse> {
 
 fn get_script_root_dir_path(script_name: &str) -> Result<Utf8PathBuf> {
     let current_dir = std::env::current_dir()?;
+    let scripts_dir = current_dir.join(SCRIPTS_DIR);
 
-    let script_root_dir_path = current_dir
-        .file_name()
-        .and_then(|dir_name| dir_name.to_str())
-        .filter(|&dir_name| dir_name == SCRIPTS_DIR)
-        .map_or_else(
-            || current_dir.join(SCRIPTS_DIR).join(script_name),
-            |_| current_dir.join(script_name),
-        );
+    let script_root_dir_path = scripts_dir
+        .exists()
+        .then(|| scripts_dir.join(script_name))
+        .unwrap_or_else(|| current_dir.join(script_name));
 
     Utf8PathBuf::from_path_buf(script_root_dir_path)
-        .map_err(|_| anyhow!("Failed to obtain script root dir path"))
+        .map_err(|_| anyhow!("Failed to get script root dir path"))
 }
 
 fn init_scarb_project(script_name: &str, script_root_dir: &Utf8PathBuf) -> Result<()> {
@@ -102,7 +102,7 @@ fn add_sncast_std_dependency(script_root_dir: &Utf8PathBuf) -> Result<()> {
 fn add_starknet_dependency(script_root_dir: &Utf8PathBuf) -> Result<()> {
     let scarb_manifest_path = script_root_dir.join("Scarb.toml");
     let cairo_version =
-        get_cairo_version(&scarb_manifest_path).context("Failed to obtain cairo version")?;
+        get_cairo_version(&scarb_manifest_path).context("Failed to get cairo version")?;
     let starknet_dependency = format!("starknet@>={cairo_version}");
 
     ScarbCommand::new()
@@ -153,6 +153,6 @@ fn overwrite_lib_file(script_name: &str, script_root_dir: &Utf8PathBuf) -> Resul
 
 fn clean_created_dir_and_files(script_root_dir: &Utf8PathBuf) {
     if fs::remove_dir_all(script_root_dir).is_err() {
-        eprintln!("Failed to clean created files by init command in location {script_root_dir}");
+        eprintln!("Failed to clean created files by init command at {script_root_dir}");
     }
 }
