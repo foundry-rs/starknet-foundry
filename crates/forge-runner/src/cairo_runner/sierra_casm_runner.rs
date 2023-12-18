@@ -159,26 +159,8 @@ impl SierraCasmRunner {
             RunResultValue::Success(vec![])
         } else {
             let (ty, values) = results_data[0].clone();
-            let info = func
-                .signature
-                .ret_types
-                .iter()
-                .find_map(|rt| {
-                    let info = self.get_info(rt);
-                    if info.long_id.generic_id == ty {
-                        Some(info)
-                    } else {
-                        None
-                    }
-                })
-                .unwrap();
-
-            if ty == EnumType::ID
-                && matches!(&info.long_id.generic_args[0], GenericArg::UserType(ut)
-                if ut.debug_name.as_ref().unwrap().starts_with("core::panics::PanicResult::"))
-            {
-                let inner_ty = extract_matches!(&info.long_id.generic_args[1], GenericArg::Type);
-                let inner_ty_size = self.type_sizes[inner_ty];
+            if let Some(inner_ty) = self.maybe_inner_type(&ty, func) {
+                let inner_ty_size = self.type_sizes[&inner_ty];
                 Self::handle_main_return_value(Some(inner_ty_size), values, &cells)
             } else {
                 Self::handle_main_return_value(None, values, &cells)
@@ -190,6 +172,31 @@ impl SierraCasmRunner {
             memory: cells,
             value,
         })
+    }
+
+    /// Extract inner type if `ty` is a panic wrapper
+    fn maybe_inner_type(&self, ty: &GenericTypeId, func: &Function) -> Option<ConcreteTypeId> {
+        let info = func
+            .signature
+            .ret_types
+            .iter()
+            .find_map(|rt| {
+                let info = self.get_info(rt);
+                if info.long_id.generic_id == *ty {
+                    Some(info)
+                } else {
+                    None
+                }
+            })
+            .unwrap();
+
+        if *ty == EnumType::ID
+            && matches!(&info.long_id.generic_args[0], GenericArg::UserType(ut)
+                if ut.debug_name.as_ref().unwrap().starts_with("core::panics::PanicResult::"))
+        {
+            return Some(extract_matches!(&info.long_id.generic_args[1], GenericArg::Type).clone());
+        }
+        None
     }
 
     /// Runs the vm starting from a function with custom hint processor. Function may have
