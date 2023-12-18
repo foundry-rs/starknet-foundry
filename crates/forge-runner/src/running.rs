@@ -289,7 +289,12 @@ pub fn run_test_case(
     let block_context = get_context(&forge_runtime).block_context.clone();
     let execution_resources = get_all_execution_resources(forge_runtime);
 
-    check_max_steps_limit(&execution_resources, runner_config.max_steps)?;
+    let max_steps = if case.max_steps.is_some() {
+        case.max_steps
+    } else {
+        runner_config.max_steps
+    };
+    check_max_steps_limit(&execution_resources, max_steps)?;
     let gas = calculate_used_gas(&block_context, &mut blockifier_state, &execution_resources);
 
     Ok(RunResultWithInfo {
