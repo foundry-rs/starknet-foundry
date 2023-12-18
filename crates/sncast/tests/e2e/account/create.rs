@@ -202,7 +202,7 @@ pub async fn test_profile_already_exists() {
     let std_err =
         std::str::from_utf8(&out.stderr).expect("failed to convert command stderr to string");
     assert!(std_err.contains(
-        "error: Failed to add myprofile profile to the Scarb.toml. Profile already exists"
+        "error: Failed to add profile = myprofile to the Scarb.toml. Profile already exists"
     ));
 }
 
@@ -224,7 +224,7 @@ pub async fn test_account_already_exists() {
 
     snapbox.assert().stderr_matches(indoc! {r"
         command: account create
-        error: Account with name user1 already exists in network with chain_id SN_GOERLI
+        error: Account with name = user1 already exists in network with chain_id = SN_GOERLI
     "});
 }
 
@@ -346,7 +346,7 @@ pub async fn test_keystore_without_account() {
 
     snapbox.assert().stderr_matches(indoc! {r"
         command: account create
-        error: --account must be passed and be a path when using --keystore
+        error: Argument `--account` must be passed and be a path when using `--keystore`
     "});
 
     _ = fs::remove_file(keystore_path);

@@ -40,7 +40,7 @@ mod SpyEventsOrderChecker {
         data: felt252
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl ISpyEventsOrderCheckerImpl of super::ISpyEventsOrderChecker<ContractState> {
         fn emit_and_call_another(
             ref self: ContractState,
