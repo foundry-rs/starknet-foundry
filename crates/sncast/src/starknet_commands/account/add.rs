@@ -69,7 +69,7 @@ pub async fn add(
             .with_context(|| format!("Failed to obtain private key from the file {file_path}"))?,
         None => add
             .private_key
-            .expect("Could not parse provided private key"),
+            .expect("Failed to parse provided private key"),
     };
     let private_key = &SigningKey::from_secret_scalar(private_key);
     if let Some(public_key) = &add.public_key {

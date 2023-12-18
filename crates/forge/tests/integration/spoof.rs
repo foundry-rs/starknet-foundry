@@ -368,12 +368,8 @@ fn start_spoof_multiple() {
                 let contract_address_1 = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher_1 = ISpoofCheckerDispatcher { contract_address: contract_address_1 };
                 
-                let tx_hash_before_mock_1 = dispatcher_1.get_tx_hash();
-                
                 let contract_address_2 = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher_2 = ISpoofCheckerDispatcher { contract_address: contract_address_2 };
-                
-                let tx_hash_before_mock_2 = dispatcher_2.get_tx_hash();
 
                 let mut tx_info_mock = TxInfoMockTrait::default();
                 tx_info_mock.transaction_hash = Option::Some(421);
@@ -435,8 +431,6 @@ fn start_spoof_all() {
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ISpoofCheckerDispatcher { contract_address };
 
-                let tx_hash_before_mock = dispatcher.get_tx_hash();
-
                 let mut tx_info_mock = TxInfoMockTrait::default();
                 tx_info_mock.transaction_hash = Option::Some(421);
                 start_spoof(CheatTarget::All, tx_info_mock);
@@ -450,8 +444,6 @@ fn start_spoof_all() {
                 let contract = declare('SpoofChecker');
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ISpoofCheckerDispatcher { contract_address };
-
-                let tx_hash_before_mock = dispatcher.get_tx_hash();
 
                 let mut tx_info_mock = TxInfoMockTrait::default();
                 tx_info_mock.nonce = Option::Some(411);

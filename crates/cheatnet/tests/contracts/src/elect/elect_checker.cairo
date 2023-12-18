@@ -24,7 +24,7 @@ mod ElectChecker {
         sequencer_address: ContractAddress
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl IElectChecker of super::IElectChecker<ContractState> {
         fn get_sequencer_address(ref self: ContractState) -> ContractAddress {
             starknet::get_block_info().unbox().sequencer_address

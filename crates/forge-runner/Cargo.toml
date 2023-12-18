@@ -44,4 +44,4 @@ flatten-serde-json.workspace = true
 cheatnet = { path = "../cheatnet" }
 runtime = { path = "../runtime" }
 conversions = { path = "../conversions" }
-scarb-artifacts = { path = "../scarb-artifacts" }
+scarb-api = { path = "../scarb-api" }

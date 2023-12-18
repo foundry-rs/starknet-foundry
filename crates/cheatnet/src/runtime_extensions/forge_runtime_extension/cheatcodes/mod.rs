@@ -8,6 +8,7 @@ pub mod deploy;
 pub mod elect;
 pub mod get_class_hash;
 pub mod l1_handler_execute;
+pub mod load;
 pub mod mock_call;
 pub mod prank;
 pub mod precalculate_address;

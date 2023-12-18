@@ -166,7 +166,6 @@ fn warp_complex() {
                 let warp_checker1 = IWarpCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };
                 let warp_checker2 = IWarpCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };
 
-                let old_block_timestamp1 = warp_checker1.get_block_timestamp();
                 let old_block_timestamp2 = warp_checker2.get_block_timestamp();
 
                 start_warp(CheatTarget::All, 123);

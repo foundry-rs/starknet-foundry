@@ -1,7 +1,7 @@
 use crate::starknet_commands::account::{
     add_created_profile_to_configuration, prepare_account_json, write_account_to_accounts_file,
 };
-use anyhow::{anyhow, bail, Result};
+use anyhow::{bail, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
 use serde_json::json;
@@ -41,7 +41,7 @@ pub async fn create(
     rpc_url: &str,
     account: &str,
     accounts_file: &Utf8PathBuf,
-    keystore: &Utf8PathBuf,
+    keystore: Option<Utf8PathBuf>,
     provider: &JsonRpcClient<HttpTransport>,
     path_to_scarb_toml: Option<Utf8PathBuf>,
     chain_id: FieldElement,
@@ -62,23 +62,23 @@ pub async fn create(
     let address = parse_number(
         account_json["address"]
             .as_str()
-            .ok_or_else(|| anyhow!("Invalid address"))?,
+            .context("Invalid address")?,
     )?;
 
-    if keystore == &Utf8PathBuf::default() {
-        write_account_to_accounts_file(account, accounts_file, chain_id, account_json.clone())?;
-    } else {
+    if let Some(keystore) = keystore.clone() {
         let account_path = Utf8PathBuf::from(&account);
         if account_path == Utf8PathBuf::default() {
-            bail!("--account must be passed and be a path when using --keystore");
+            bail!("Argument `--account` must be passed and be a path when using `--keystore`");
         }
 
         let private_key = parse_number(
             account_json["private_key"]
                 .as_str()
-                .ok_or_else(|| anyhow!("Invalid private_key"))?,
+                .context("Invalid private_key")?,
         )?;
-        create_to_keystore(private_key, salt, class_hash, keystore, &account_path)?;
+        create_to_keystore(private_key, salt, class_hash, &keystore, &account_path)?;
+    } else {
+        write_account_to_accounts_file(account, accounts_file, chain_id, account_json.clone())?;
     }
 
     if add_profile {
@@ -86,7 +86,7 @@ pub async fn create(
             rpc_url: rpc_url.into(),
             account: account.into(),
             accounts_file: accounts_file.into(),
-            keystore: keystore.into(),
+            keystore,
             ..Default::default()
         };
         add_created_profile_to_configuration(&path_to_scarb_toml, &config)?;
