@@ -20,8 +20,8 @@ struct TxInfoMock {
     resource_bounds: Option<Span<ResourceBounds>>,
     tip: Option<u128>,
     paymaster_data: Option<Span<felt252>>,
-    nonce_data_availabilty_mode: Option<u32>,
-    fee_data_availabilty_mode: Option<u32>,
+    nonce_data_availability_mode: Option<u32>,
+    fee_data_availability_mode: Option<u32>,
     account_deployment_data: Option<Span<felt252>>,
 }
 
@@ -42,8 +42,8 @@ impl TxInfoMockImpl of TxInfoMockTrait {
             resource_bounds: Option::None(()),
             tip: Option::None(()),
             paymaster_data: Option::None(()),
-            nonce_data_availabilty_mode: Option::None(()),
-            fee_data_availabilty_mode: Option::None(()),
+            nonce_data_availability_mode: Option::None(()),
+            fee_data_availability_mode: Option::None(()),
             account_deployment_data: Option::None(()),
         }
     }

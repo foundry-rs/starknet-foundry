@@ -28,8 +28,8 @@ struct TxInfoMock {
     resource_bounds: Option<Span<ResourceBounds>>,
     tip: Option<u128>,
     paymaster_data: Option<Span<felt252>>,
-    nonce_data_availabilty_mode: Option<u32>,
-    fee_data_availabilty_mode: Option<u32>,
+    nonce_data_availability_mode: Option<u32>,
+    fee_data_availability_mode: Option<u32>,
     account_deployment_data: Option<Span<felt252>>,
 }
 

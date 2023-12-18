@@ -31,8 +31,8 @@ fn assert_all_mock_checker_getters(
     expected_resource_bounds: &[Felt252],
     expected_tip: &[Felt252],
     expected_paymaster_data: &[Felt252],
-    expected_nonce_data_availabilty_mode: &[Felt252],
-    expected_fee_data_availabilty_mode: &[Felt252],
+    expected_nonce_data_availability_mode: &[Felt252],
+    expected_fee_data_availability_mode: &[Felt252],
     expected_account_deployment_data: &[Felt252],
 ) {
     let tx_hash = call_contract_getter_by_name(
@@ -105,25 +105,25 @@ fn assert_all_mock_checker_getters(
         "get_paymaster_data",
     );
     assert_success!(paymaster_data, expected_paymaster_data);
-    let nonce_data_availabilty_mode = call_contract_getter_by_name(
+    let nonce_data_availability_mode = call_contract_getter_by_name(
         blockifier_state,
         cheatnet_state,
         contract_address,
-        "get_nonce_data_availabilty_mode",
+        "get_nonce_data_availability_mode",
     );
     assert_success!(
-        nonce_data_availabilty_mode,
-        expected_nonce_data_availabilty_mode
+        nonce_data_availability_mode,
+        expected_nonce_data_availability_mode
     );
-    let fee_data_availabilty_mode = call_contract_getter_by_name(
+    let fee_data_availability_mode = call_contract_getter_by_name(
         blockifier_state,
         cheatnet_state,
         contract_address,
-        "get_fee_data_availabilty_mode",
+        "get_fee_data_availability_mode",
     );
     assert_success!(
-        fee_data_availabilty_mode,
-        expected_fee_data_availabilty_mode
+        fee_data_availability_mode,
+        expected_fee_data_availability_mode
     );
     let account_deployment_data = call_contract_getter_by_name(
         blockifier_state,
@@ -225,20 +225,20 @@ fn call_mock_checker_getters(
         "get_paymaster_data",
     );
     let paymaster_data = recover_data(paymaster_data);
-    let nonce_data_availabilty_mode = call_contract_getter_by_name(
+    let nonce_data_availability_mode = call_contract_getter_by_name(
         blockifier_state,
         cheatnet_state,
         contract_address,
-        "get_nonce_data_availabilty_mode",
+        "get_nonce_data_availability_mode",
     );
-    let nonce_data_availabilty_mode = recover_data(nonce_data_availabilty_mode);
-    let fee_data_availabilty_mode = call_contract_getter_by_name(
+    let nonce_data_availability_mode = recover_data(nonce_data_availability_mode);
+    let fee_data_availability_mode = call_contract_getter_by_name(
         blockifier_state,
         cheatnet_state,
         contract_address,
-        "get_fee_data_availabilty_mode",
+        "get_fee_data_availability_mode",
     );
-    let fee_data_availabilty_mode = recover_data(fee_data_availabilty_mode);
+    let fee_data_availability_mode = recover_data(fee_data_availability_mode);
     let account_deployment_data = call_contract_getter_by_name(
         blockifier_state,
         cheatnet_state,
@@ -258,8 +258,8 @@ fn call_mock_checker_getters(
         resource_bounds,
         tip,
         paymaster_data,
-        nonce_data_availabilty_mode,
-        fee_data_availabilty_mode,
+        nonce_data_availability_mode,
+        fee_data_availability_mode,
         account_deployment_data,
     )
 }
@@ -287,8 +287,8 @@ fn spoof_simple() {
         resource_bounds_before,
         tip_before,
         paymaster_data_before,
-        nonce_data_availabilty_mode_before,
-        fee_data_availabilty_mode_before,
+        nonce_data_availability_mode_before,
+        fee_data_availability_mode_before,
         account_deployment_data_before,
     ) = call_mock_checker_getters(
         &mut blockifier_state,
@@ -327,8 +327,8 @@ fn spoof_simple() {
         &resource_bounds_before,
         &tip_before,
         &paymaster_data_before,
-        &nonce_data_availabilty_mode_before,
-        &fee_data_availabilty_mode_before,
+        &nonce_data_availability_mode_before,
+        &fee_data_availability_mode_before,
         &account_deployment_data_before,
     );
 }
@@ -357,8 +357,8 @@ fn start_spoof_multiple_times() {
         resource_bounds_before,
         tip_before,
         paymaster_data_before,
-        nonce_data_availabilty_mode_before,
-        fee_data_availabilty_mode_before,
+        nonce_data_availability_mode_before,
+        fee_data_availability_mode_before,
         account_deployment_data_before,
     ) = call_mock_checker_getters(
         &mut blockifier_state,
@@ -388,8 +388,8 @@ fn start_spoof_multiple_times() {
         Felt252::from(33),
         Felt252::from(44),
     ];
-    let expected_nonce_data_availabilty_mode = Felt252::from(55);
-    let expected_fee_data_availabilty_mode = Felt252::from(66);
+    let expected_nonce_data_availability_mode = Felt252::from(55);
+    let expected_fee_data_availability_mode = Felt252::from(66);
     let expected_account_deployment_data =
         vec![Felt252::from(777), Felt252::from(888), Felt252::from(999)];
 
@@ -405,8 +405,8 @@ fn start_spoof_multiple_times() {
         Some(expected_resource_bounds.clone()),
         Some(expected_tip.clone()),
         Some(expected_paymaster_data.clone()),
-        Some(expected_nonce_data_availabilty_mode.clone()),
-        Some(expected_fee_data_availabilty_mode.clone()),
+        Some(expected_nonce_data_availability_mode.clone()),
+        Some(expected_fee_data_availability_mode.clone()),
         Some(expected_account_deployment_data.clone()),
     );
 
@@ -424,8 +424,8 @@ fn start_spoof_multiple_times() {
         &[vec![Felt252::from(2)], expected_resource_bounds.clone()].concat(),
         &[expected_tip.clone()],
         &[vec![Felt252::from(4)], expected_paymaster_data.clone()].concat(),
-        &[expected_nonce_data_availabilty_mode.clone()],
-        &[expected_fee_data_availabilty_mode.clone()],
+        &[expected_nonce_data_availability_mode.clone()],
+        &[expected_fee_data_availability_mode.clone()],
         &[
             vec![Felt252::from(3)],
             expected_account_deployment_data.clone(),
@@ -446,7 +446,7 @@ fn start_spoof_multiple_times() {
         None,
         Some(expected_paymaster_data.clone()),
         None,
-        Some(expected_fee_data_availabilty_mode.clone()),
+        Some(expected_fee_data_availability_mode.clone()),
         None,
     );
 
@@ -464,8 +464,8 @@ fn start_spoof_multiple_times() {
         &[vec![Felt252::from(2)], expected_resource_bounds].concat(),
         &tip_before,
         &[vec![Felt252::from(4)], expected_paymaster_data].concat(),
-        &nonce_data_availabilty_mode_before,
-        &[expected_fee_data_availabilty_mode],
+        &nonce_data_availability_mode_before,
+        &[expected_fee_data_availability_mode],
         &account_deployment_data_before,
     );
 
@@ -481,7 +481,7 @@ fn start_spoof_multiple_times() {
         None,
         Some(expected_tip.clone()),
         None,
-        Some(expected_nonce_data_availabilty_mode.clone()),
+        Some(expected_nonce_data_availability_mode.clone()),
         None,
         Some(expected_account_deployment_data.clone()),
     );
@@ -500,8 +500,8 @@ fn start_spoof_multiple_times() {
         &resource_bounds_before,
         &[expected_tip],
         &paymaster_data_before,
-        &[expected_nonce_data_availabilty_mode],
-        &fee_data_availabilty_mode_before,
+        &[expected_nonce_data_availability_mode],
+        &fee_data_availability_mode_before,
         &[vec![Felt252::from(3)], expected_account_deployment_data].concat(),
     );
 }
@@ -529,8 +529,8 @@ fn spoof_start_stop() {
         resource_bounds_before,
         tip_before,
         paymaster_data_before,
-        nonce_data_availabilty_mode_before,
-        fee_data_availabilty_mode_before,
+        nonce_data_availability_mode_before,
+        fee_data_availability_mode_before,
         account_deployment_data_before,
     ) = call_mock_checker_getters(
         &mut blockifier_state,
@@ -569,8 +569,8 @@ fn spoof_start_stop() {
         &resource_bounds_before,
         &tip_before,
         &paymaster_data_before,
-        &nonce_data_availabilty_mode_before,
-        &fee_data_availabilty_mode_before,
+        &nonce_data_availability_mode_before,
+        &fee_data_availability_mode_before,
         &account_deployment_data_before,
     );
 
@@ -590,8 +590,8 @@ fn spoof_start_stop() {
         &resource_bounds_before,
         &tip_before,
         &paymaster_data_before,
-        &nonce_data_availabilty_mode_before,
-        &fee_data_availabilty_mode_before,
+        &nonce_data_availability_mode_before,
+        &fee_data_availability_mode_before,
         &account_deployment_data_before,
     );
 }
@@ -619,8 +619,8 @@ fn spoof_stop_no_effect() {
         resource_bounds_before,
         tip_before,
         paymaster_data_before,
-        nonce_data_availabilty_mode_before,
-        fee_data_availabilty_mode_before,
+        nonce_data_availability_mode_before,
+        fee_data_availability_mode_before,
         account_deployment_data_before,
     ) = call_mock_checker_getters(
         &mut blockifier_state,
@@ -644,8 +644,8 @@ fn spoof_stop_no_effect() {
         &resource_bounds_before,
         &tip_before,
         &paymaster_data_before,
-        &nonce_data_availabilty_mode_before,
-        &fee_data_availabilty_mode_before,
+        &nonce_data_availability_mode_before,
+        &fee_data_availability_mode_before,
         &account_deployment_data_before,
     );
 }
@@ -875,8 +875,8 @@ fn spoof_all_simple() {
         resource_bounds_before,
         tip_before,
         paymaster_data_before,
-        nonce_data_availabilty_mode_before,
-        fee_data_availabilty_mode_before,
+        nonce_data_availability_mode_before,
+        fee_data_availability_mode_before,
         account_deployment_data_before,
     ) = call_mock_checker_getters(
         &mut blockifier_state,
@@ -915,8 +915,8 @@ fn spoof_all_simple() {
         &resource_bounds_before,
         &tip_before,
         &paymaster_data_before,
-        &nonce_data_availabilty_mode_before,
-        &fee_data_availabilty_mode_before,
+        &nonce_data_availability_mode_before,
+        &fee_data_availability_mode_before,
         &account_deployment_data_before,
     );
 }
@@ -944,8 +944,8 @@ fn spoof_all_then_one() {
         resource_bounds_before,
         tip_before,
         paymaster_data_before,
-        nonce_data_availabilty_mode_before,
-        fee_data_availabilty_mode_before,
+        nonce_data_availability_mode_before,
+        fee_data_availability_mode_before,
         account_deployment_data_before,
     ) = call_mock_checker_getters(
         &mut blockifier_state,
@@ -1001,8 +1001,8 @@ fn spoof_all_then_one() {
         &resource_bounds_before,
         &tip_before,
         &paymaster_data_before,
-        &nonce_data_availabilty_mode_before,
-        &fee_data_availabilty_mode_before,
+        &nonce_data_availability_mode_before,
+        &fee_data_availability_mode_before,
         &account_deployment_data_before,
     );
 }
@@ -1030,8 +1030,8 @@ fn spoof_one_then_all() {
         resource_bounds_before,
         tip_before,
         paymaster_data_before,
-        nonce_data_availabilty_mode_before,
-        fee_data_availabilty_mode_before,
+        nonce_data_availability_mode_before,
+        fee_data_availability_mode_before,
         account_deployment_data_before,
     ) = call_mock_checker_getters(
         &mut blockifier_state,
@@ -1087,8 +1087,8 @@ fn spoof_one_then_all() {
         &resource_bounds_before,
         &tip_before,
         &paymaster_data_before,
-        &nonce_data_availabilty_mode_before,
-        &fee_data_availabilty_mode_before,
+        &nonce_data_availability_mode_before,
+        &fee_data_availability_mode_before,
         &account_deployment_data_before,
     );
 }
@@ -1116,8 +1116,8 @@ fn spoof_all_stop() {
         resource_bounds_before,
         tip_before,
         paymaster_data_before,
-        nonce_data_availabilty_mode_before,
-        fee_data_availabilty_mode_before,
+        nonce_data_availability_mode_before,
+        fee_data_availability_mode_before,
         account_deployment_data_before,
     ) = call_mock_checker_getters(
         &mut blockifier_state,
@@ -1158,8 +1158,8 @@ fn spoof_all_stop() {
         &resource_bounds_before,
         &tip_before,
         &paymaster_data_before,
-        &nonce_data_availabilty_mode_before,
-        &fee_data_availabilty_mode_before,
+        &nonce_data_availability_mode_before,
+        &fee_data_availability_mode_before,
         &account_deployment_data_before,
     );
 }
@@ -1192,8 +1192,8 @@ fn spoof_multiple() {
         resource_bounds_before_1,
         tip_before_1,
         paymaster_data_before_1,
-        nonce_data_availabilty_mode_before_1,
-        fee_data_availabilty_mode_before_1,
+        nonce_data_availability_mode_before_1,
+        fee_data_availability_mode_before_1,
         account_deployment_data_before_1,
     ) = call_mock_checker_getters(
         &mut blockifier_state,
@@ -1211,8 +1211,8 @@ fn spoof_multiple() {
         resource_bounds_before_2,
         tip_before_2,
         paymaster_data_before_2,
-        nonce_data_availabilty_mode_before_2,
-        fee_data_availabilty_mode_before_2,
+        nonce_data_availability_mode_before_2,
+        fee_data_availability_mode_before_2,
         account_deployment_data_before_2,
     ) = call_mock_checker_getters(
         &mut blockifier_state,
@@ -1250,8 +1250,8 @@ fn spoof_multiple() {
         &resource_bounds_before_1,
         &tip_before_1,
         &paymaster_data_before_1,
-        &nonce_data_availabilty_mode_before_1,
-        &fee_data_availabilty_mode_before_1,
+        &nonce_data_availability_mode_before_1,
+        &fee_data_availability_mode_before_1,
         &account_deployment_data_before_1,
     );
     assert_all_mock_checker_getters(
@@ -1268,8 +1268,8 @@ fn spoof_multiple() {
         &resource_bounds_before_2,
         &tip_before_2,
         &paymaster_data_before_2,
-        &nonce_data_availabilty_mode_before_2,
-        &fee_data_availabilty_mode_before_2,
+        &nonce_data_availability_mode_before_2,
+        &fee_data_availability_mode_before_2,
         &account_deployment_data_before_2,
     );
     cheatnet_state.stop_spoof(CheatTarget::All);
@@ -1288,8 +1288,8 @@ fn spoof_multiple() {
         &resource_bounds_before_1,
         &tip_before_1,
         &paymaster_data_before_1,
-        &nonce_data_availabilty_mode_before_1,
-        &fee_data_availabilty_mode_before_1,
+        &nonce_data_availability_mode_before_1,
+        &fee_data_availability_mode_before_1,
         &account_deployment_data_before_1,
     );
     assert_all_mock_checker_getters(
@@ -1306,8 +1306,8 @@ fn spoof_multiple() {
         &resource_bounds_before_2,
         &tip_before_2,
         &paymaster_data_before_2,
-        &nonce_data_availabilty_mode_before_2,
-        &fee_data_availabilty_mode_before_2,
+        &nonce_data_availability_mode_before_2,
+        &fee_data_availability_mode_before_2,
         &account_deployment_data_before_2,
     );
 }

@@ -30,8 +30,8 @@ fn start_and_stop_spoof_single_attribute() {
                 fn get_resource_bounds(ref self: TContractState) -> Span<ResourceBounds>;
                 fn get_tip(ref self: TContractState) -> u128;
                 fn get_paymaster_data(ref self: TContractState) -> Span<felt252>;
-                fn get_nonce_data_availabilty_mode(ref self: TContractState) -> u32;
-                fn get_fee_data_availabilty_mode(ref self: TContractState) -> u32;
+                fn get_nonce_data_availability_mode(ref self: TContractState) -> u32;
+                fn get_fee_data_availability_mode(ref self: TContractState) -> u32;
                 fn get_account_deployment_data(ref self: TContractState) -> Span<felt252>;
             }
 
@@ -52,8 +52,8 @@ fn start_and_stop_spoof_single_attribute() {
                 dispatcher.get_resource_bounds().serialize(ref resource_bounds_before_mock);
                 let tip_before_mock = dispatcher.get_tip();
                 let paymaster_data_before_mock = dispatcher.get_paymaster_data();
-                let nonce_data_availabilty_mode_before_mock = dispatcher.get_nonce_data_availabilty_mode();
-                let fee_data_availabilty_mode_before_mock = dispatcher.get_fee_data_availabilty_mode();
+                let nonce_data_availability_mode_before_mock = dispatcher.get_nonce_data_availability_mode();
+                let fee_data_availability_mode_before_mock = dispatcher.get_fee_data_availability_mode();
                 let account_deployment_data_before_mock = dispatcher.get_account_deployment_data();
 
                 let mut tx_info_mock = TxInfoMockTrait::default();
@@ -79,8 +79,8 @@ fn start_and_stop_spoof_single_attribute() {
                 assert(resource_bounds == resource_bounds_before_mock, 'Invalid resource bounds');
                 assert(dispatcher.get_tip() == tip_before_mock, 'Invalid tip');
                 assert(dispatcher.get_paymaster_data() == paymaster_data_before_mock, 'Invalid paymaster data');
-                assert(dispatcher.get_nonce_data_availabilty_mode() == nonce_data_availabilty_mode_before_mock, 'Invalid nonce data');
-                assert(dispatcher.get_fee_data_availabilty_mode() == fee_data_availabilty_mode_before_mock, 'Invalid fee data');
+                assert(dispatcher.get_nonce_data_availability_mode() == nonce_data_availability_mode_before_mock, 'Invalid nonce data');
+                assert(dispatcher.get_fee_data_availability_mode() == fee_data_availability_mode_before_mock, 'Invalid fee data');
                 assert(dispatcher.get_account_deployment_data() == account_deployment_data_before_mock, 'Invalid account deployment');
 
                 stop_spoof(CheatTarget::One(contract_address));
@@ -152,8 +152,8 @@ fn start_spoof_all_attributes_mocked() {
                 fn get_resource_bounds(ref self: TContractState) -> Span<ResourceBounds>;
                 fn get_tip(ref self: TContractState) -> u128;
                 fn get_paymaster_data(ref self: TContractState) -> Span<felt252>;
-                fn get_nonce_data_availabilty_mode(ref self: TContractState) -> u32;
-                fn get_fee_data_availabilty_mode(ref self: TContractState) -> u32;
+                fn get_nonce_data_availability_mode(ref self: TContractState) -> u32;
+                fn get_fee_data_availability_mode(ref self: TContractState) -> u32;
                 fn get_account_deployment_data(ref self: TContractState) -> Span<felt252>;
             }
 
@@ -174,8 +174,8 @@ fn start_spoof_all_attributes_mocked() {
                 tx_info_mock.resource_bounds = Option::Some(array![ResourceBounds { resource: 55, max_amount: 66, max_price_per_unit: 77 }, ResourceBounds { resource: 111, max_amount: 222, max_price_per_unit: 333 }].span());
                 tx_info_mock.tip = Option::Some(123);
                 tx_info_mock.paymaster_data = Option::Some(array![22, 33, 44].span());
-                tx_info_mock.nonce_data_availabilty_mode = Option::Some(99);
-                tx_info_mock.fee_data_availabilty_mode = Option::Some(88);
+                tx_info_mock.nonce_data_availability_mode = Option::Some(99);
+                tx_info_mock.fee_data_availability_mode = Option::Some(88);
                 tx_info_mock.account_deployment_data = Option::Some(array![111, 222].span());
 
                 start_spoof(CheatTarget::One(contract_address), tx_info_mock);
@@ -218,11 +218,11 @@ fn start_spoof_all_attributes_mocked() {
                 let paymaster_data = dispatcher.get_paymaster_data();
                 assert(paymaster_data == array![22, 33, 44].span(), 'Invalid paymaster_data');
 
-                let nonce_data_availabilty_mode = dispatcher.get_nonce_data_availabilty_mode();
-                assert(nonce_data_availabilty_mode == 99, 'Invalid nonce data');
+                let nonce_data_availability_mode = dispatcher.get_nonce_data_availability_mode();
+                assert(nonce_data_availability_mode == 99, 'Invalid nonce data');
 
-                let fee_data_availabilty_mode = dispatcher.get_fee_data_availabilty_mode();
-                assert(fee_data_availabilty_mode == 88, 'Invalid fee data');
+                let fee_data_availability_mode = dispatcher.get_fee_data_availability_mode();
+                assert(fee_data_availability_mode == 88, 'Invalid fee data');
 
                 let account_deployment_data = dispatcher.get_account_deployment_data();
                 assert(account_deployment_data == array![111, 222].span(), 'Invalid account deployment');
@@ -267,8 +267,8 @@ fn start_spoof_cancel_mock_by_setting_attribute_to_none() {
                 fn get_resource_bounds(ref self: TContractState) -> Span<ResourceBounds>;
                 fn get_tip(ref self: TContractState) -> u128;
                 fn get_paymaster_data(ref self: TContractState) -> Span<felt252>;
-                fn get_nonce_data_availabilty_mode(ref self: TContractState) -> u32;
-                fn get_fee_data_availabilty_mode(ref self: TContractState) -> u32;
+                fn get_nonce_data_availability_mode(ref self: TContractState) -> u32;
+                fn get_fee_data_availability_mode(ref self: TContractState) -> u32;
                 fn get_account_deployment_data(ref self: TContractState) -> Span<felt252>;
             }
 
@@ -289,8 +289,8 @@ fn start_spoof_cancel_mock_by_setting_attribute_to_none() {
                 dispatcher.get_resource_bounds().serialize(ref resource_bounds_before_mock);
                 let tip_before_mock = dispatcher.get_tip();
                 let paymaster_data_before_mock = dispatcher.get_paymaster_data();
-                let nonce_data_availabilty_mode_before_mock = dispatcher.get_nonce_data_availabilty_mode();
-                let fee_data_availabilty_mode_before_mock = dispatcher.get_fee_data_availabilty_mode();
+                let nonce_data_availability_mode_before_mock = dispatcher.get_nonce_data_availability_mode();
+                let fee_data_availability_mode_before_mock = dispatcher.get_fee_data_availability_mode();
                 let account_deployment_data_before_mock = dispatcher.get_account_deployment_data();
 
                 let mut tx_info_mock = TxInfoMockTrait::default();
@@ -321,8 +321,8 @@ fn start_spoof_cancel_mock_by_setting_attribute_to_none() {
                 assert(resource_bounds == resource_bounds_before_mock, 'Invalid resource bounds');
                 assert(dispatcher.get_tip() == tip_before_mock, 'Invalid tip');
                 assert(dispatcher.get_paymaster_data() == paymaster_data_before_mock, 'Invalid paymaster data');
-                assert(dispatcher.get_nonce_data_availabilty_mode() == nonce_data_availabilty_mode_before_mock, 'Invalid nonce data');
-                assert(dispatcher.get_fee_data_availabilty_mode() == fee_data_availabilty_mode_before_mock, 'Invalid fee data');
+                assert(dispatcher.get_nonce_data_availability_mode() == nonce_data_availability_mode_before_mock, 'Invalid nonce data');
+                assert(dispatcher.get_fee_data_availability_mode() == fee_data_availability_mode_before_mock, 'Invalid fee data');
                 assert(dispatcher.get_account_deployment_data() == account_deployment_data_before_mock, 'Invalid account deployment');
             }
         "
@@ -367,8 +367,8 @@ fn start_spoof_no_attributes_mocked() {
                 fn get_resource_bounds(ref self: TContractState) -> Span<ResourceBounds>;
                 fn get_tip(ref self: TContractState) -> u128;
                 fn get_paymaster_data(ref self: TContractState) -> Span<felt252>;
-                fn get_nonce_data_availabilty_mode(ref self: TContractState) -> u32;
-                fn get_fee_data_availabilty_mode(ref self: TContractState) -> u32;
+                fn get_nonce_data_availability_mode(ref self: TContractState) -> u32;
+                fn get_fee_data_availability_mode(ref self: TContractState) -> u32;
                 fn get_account_deployment_data(ref self: TContractState) -> Span<felt252>;
             }
 
@@ -390,8 +390,8 @@ fn start_spoof_no_attributes_mocked() {
                 dispatcher.get_resource_bounds().serialize(ref resource_bounds_before_mock);
                 let tip_before_mock = dispatcher.get_tip();
                 let paymaster_data_before_mock = dispatcher.get_paymaster_data();
-                let nonce_data_availabilty_mode_before_mock = dispatcher.get_nonce_data_availabilty_mode();
-                let fee_data_availabilty_mode_before_mock = dispatcher.get_fee_data_availabilty_mode();
+                let nonce_data_availability_mode_before_mock = dispatcher.get_nonce_data_availability_mode();
+                let fee_data_availability_mode_before_mock = dispatcher.get_fee_data_availability_mode();
                 let account_deployment_data_before_mock = dispatcher.get_account_deployment_data();
                 
                 let mut tx_info_mock = TxInfoMockTrait::default();
@@ -413,8 +413,8 @@ fn start_spoof_no_attributes_mocked() {
                 assert(resource_bounds == resource_bounds_before_mock, 'Invalid resource bounds');
                 assert(dispatcher.get_tip() == tip_before_mock, 'Invalid tip');
                 assert(dispatcher.get_paymaster_data() == paymaster_data_before_mock, 'Invalid paymaster data');
-                assert(dispatcher.get_nonce_data_availabilty_mode() == nonce_data_availabilty_mode_before_mock, 'Invalid nonce data');
-                assert(dispatcher.get_fee_data_availabilty_mode() == fee_data_availabilty_mode_before_mock, 'Invalid fee data');
+                assert(dispatcher.get_nonce_data_availability_mode() == nonce_data_availability_mode_before_mock, 'Invalid nonce data');
+                assert(dispatcher.get_fee_data_availability_mode() == fee_data_availability_mode_before_mock, 'Invalid fee data');
                 assert(dispatcher.get_account_deployment_data() == account_deployment_data_before_mock, 'Invalid account deployment');
 
             }
@@ -523,8 +523,8 @@ fn start_spoof_all() {
                 fn get_resource_bounds(ref self: TContractState) -> Span<ResourceBounds>;
                 fn get_tip(ref self: TContractState) -> u128;
                 fn get_paymaster_data(ref self: TContractState) -> Span<felt252>;
-                fn get_nonce_data_availabilty_mode(ref self: TContractState) -> u32;
-                fn get_fee_data_availabilty_mode(ref self: TContractState) -> u32;
+                fn get_nonce_data_availability_mode(ref self: TContractState) -> u32;
+                fn get_fee_data_availability_mode(ref self: TContractState) -> u32;
                 fn get_account_deployment_data(ref self: TContractState) -> Span<felt252>;
             }
 
@@ -563,8 +563,8 @@ fn start_spoof_all() {
                 tx_info_mock.resource_bounds = Option::Some(array![ResourceBounds { resource: 55, max_amount: 66, max_price_per_unit: 77 }, ResourceBounds { resource: 111, max_amount: 222, max_price_per_unit: 333 }].span());
                 tx_info_mock.tip = Option::Some(123);
                 tx_info_mock.paymaster_data = Option::Some(array![22, 33, 44].span());
-                tx_info_mock.nonce_data_availabilty_mode = Option::Some(99);
-                tx_info_mock.fee_data_availabilty_mode = Option::Some(88);
+                tx_info_mock.nonce_data_availability_mode = Option::Some(99);
+                tx_info_mock.fee_data_availability_mode = Option::Some(88);
                 tx_info_mock.account_deployment_data = Option::Some(array![111, 222].span());
 
                 start_spoof(CheatTarget::All, tx_info_mock);
@@ -607,11 +607,11 @@ fn start_spoof_all() {
                 let paymaster_data = dispatcher.get_paymaster_data();
                 assert(paymaster_data == array![22, 33, 44].span(), 'Invalid paymaster_data');
 
-                let nonce_data_availabilty_mode = dispatcher.get_nonce_data_availabilty_mode();
-                assert(nonce_data_availabilty_mode == 99, 'Invalid nonce data');
+                let nonce_data_availability_mode = dispatcher.get_nonce_data_availability_mode();
+                assert(nonce_data_availability_mode == 99, 'Invalid nonce data');
 
-                let fee_data_availabilty_mode = dispatcher.get_fee_data_availabilty_mode();
-                assert(fee_data_availabilty_mode == 88, 'Invalid fee data');
+                let fee_data_availability_mode = dispatcher.get_fee_data_availability_mode();
+                assert(fee_data_availability_mode == 88, 'Invalid fee data');
 
                 let account_deployment_data = dispatcher.get_account_deployment_data();
                 assert(account_deployment_data == array![111, 222].span(), 'Invalid account deployment');

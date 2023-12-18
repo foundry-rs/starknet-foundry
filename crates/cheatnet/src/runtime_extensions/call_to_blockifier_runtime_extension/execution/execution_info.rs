@@ -66,8 +66,8 @@ fn get_cheated_tx_info_ptr(
         resource_bounds,
         tip,
         paymaster_data,
-        nonce_data_availabilty_mode,
-        fee_data_availabilty_mode,
+        nonce_data_availability_mode,
+        fee_data_availability_mode,
         account_deployment_data,
     } = tx_info_mock;
 
@@ -111,11 +111,11 @@ fn get_cheated_tx_info_ptr(
         new_tx_info[11] = paymaster_data_start_ptr.into();
         new_tx_info[12] = paymaster_data_end_ptr.into();
     };
-    if let Some(nonce_data_availabilty_mode) = nonce_data_availabilty_mode {
-        new_tx_info[13] = MaybeRelocatable::Int(nonce_data_availabilty_mode);
+    if let Some(nonce_data_availability_mode) = nonce_data_availability_mode {
+        new_tx_info[13] = MaybeRelocatable::Int(nonce_data_availability_mode);
     };
-    if let Some(fee_data_availabilty_mode) = fee_data_availabilty_mode {
-        new_tx_info[14] = MaybeRelocatable::Int(fee_data_availabilty_mode);
+    if let Some(fee_data_availability_mode) = fee_data_availability_mode {
+        new_tx_info[14] = MaybeRelocatable::Int(fee_data_availability_mode);
     };
     if let Some(account_deployment_data) = account_deployment_data {
         let (account_deployment_data_start_ptr, account_deployment_data_end_ptr) =

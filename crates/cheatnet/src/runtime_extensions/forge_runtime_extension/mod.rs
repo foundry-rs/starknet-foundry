@@ -209,8 +209,8 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     });
                 let tip = read_option_felt(&inputs, &mut idx);
                 let paymaster_data = read_option_vec(&inputs, &mut idx);
-                let nonce_data_availabilty_mode = read_option_felt(&inputs, &mut idx);
-                let fee_data_availabilty_mode = read_option_felt(&inputs, &mut idx);
+                let nonce_data_availability_mode = read_option_felt(&inputs, &mut idx);
+                let fee_data_availability_mode = read_option_felt(&inputs, &mut idx);
                 let account_deployment_data = read_option_vec(&inputs, &mut idx);
 
                 extended_runtime
@@ -230,8 +230,8 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                         resource_bounds,
                         tip,
                         paymaster_data,
-                        nonce_data_availabilty_mode,
-                        fee_data_availabilty_mode,
+                        nonce_data_availability_mode,
+                        fee_data_availability_mode,
                         account_deployment_data,
                     );
                 Ok(CheatcodeHandlingResult::Handled(vec![]))

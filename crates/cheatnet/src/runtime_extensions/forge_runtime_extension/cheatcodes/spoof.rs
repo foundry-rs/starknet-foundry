@@ -14,8 +14,8 @@ pub struct TxInfoMock {
     pub resource_bounds: Option<Vec<Felt252>>,
     pub tip: Option<Felt252>,
     pub paymaster_data: Option<Vec<Felt252>>,
-    pub nonce_data_availabilty_mode: Option<Felt252>,
-    pub fee_data_availabilty_mode: Option<Felt252>,
+    pub nonce_data_availability_mode: Option<Felt252>,
+    pub fee_data_availability_mode: Option<Felt252>,
     pub account_deployment_data: Option<Vec<Felt252>>,
 }
 
@@ -34,8 +34,8 @@ impl CheatnetState {
         resource_bounds: Option<Vec<Felt252>>,
         tip: Option<Felt252>,
         paymaster_data: Option<Vec<Felt252>>,
-        nonce_data_availabilty_mode: Option<Felt252>,
-        fee_data_availabilty_mode: Option<Felt252>,
+        nonce_data_availability_mode: Option<Felt252>,
+        fee_data_availability_mode: Option<Felt252>,
         account_deployment_data: Option<Vec<Felt252>>,
     ) {
         let tx_info = TxInfoMock {
@@ -49,8 +49,8 @@ impl CheatnetState {
             resource_bounds,
             tip,
             paymaster_data,
-            nonce_data_availabilty_mode,
-            fee_data_availabilty_mode,
+            nonce_data_availability_mode,
+            fee_data_availability_mode,
             account_deployment_data,
         };
         start_cheat(

@@ -1,6 +1,5 @@
 [default.extend-words]
 ba = "ba"
-availabilty = "availabilty"
 
 [files]
 extend-exclude = ["docs/theme/head.hbs"]

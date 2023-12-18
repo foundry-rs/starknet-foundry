@@ -17,8 +17,8 @@ trait ISpoofChecker<TContractState> {
     fn get_resource_bounds(ref self: TContractState) -> Span<ResourceBounds>;
     fn get_tip(ref self: TContractState) -> u128;
     fn get_paymaster_data(ref self: TContractState) -> Span<felt252>;
-    fn get_nonce_data_availabilty_mode(ref self: TContractState) -> u32;
-    fn get_fee_data_availabilty_mode(ref self: TContractState) -> u32;
+    fn get_nonce_data_availability_mode(ref self: TContractState) -> u32;
+    fn get_fee_data_availability_mode(ref self: TContractState) -> u32;
     fn get_account_deployment_data(ref self: TContractState) -> Span<felt252>;
 }
 
@@ -78,12 +78,12 @@ mod SpoofChecker {
             get_tx_info_v2().unbox().paymaster_data
         }
 
-        fn get_nonce_data_availabilty_mode(ref self: ContractState) -> u32 {
-            get_tx_info_v2().unbox().nonce_data_availabilty_mode
+        fn get_nonce_data_availability_mode(ref self: ContractState) -> u32 {
+            get_tx_info_v2().unbox().nonce_data_availability_mode
         }
 
-        fn get_fee_data_availabilty_mode(ref self: ContractState) -> u32 {
-            get_tx_info_v2().unbox().fee_data_availabilty_mode
+        fn get_fee_data_availability_mode(ref self: ContractState) -> u32 {
+            get_tx_info_v2().unbox().fee_data_availability_mode
         }
 
         fn get_account_deployment_data(ref self: ContractState) -> Span<felt252> {
