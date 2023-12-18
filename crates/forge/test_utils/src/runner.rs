@@ -60,6 +60,9 @@ impl Contract {
     
                 [dependencies]
                 starknet = "2.4.0"
+
+                [cairo]
+                allow-warnings = true
                 "#,
             ))
             .unwrap();
@@ -135,6 +138,9 @@ impl<'a> TestCase {
                 [dependencies]
                 starknet = "2.4.0"
                 snforge_std = {{ path = "{}" }}
+
+                [cairo]
+                allow-warnings = true
                 "#,
                 snforge_std_path
             ))
