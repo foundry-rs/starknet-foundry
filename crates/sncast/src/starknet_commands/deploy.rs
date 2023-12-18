@@ -1,5 +1,6 @@
 use anyhow::{anyhow, Result};
 use clap::Args;
+use sncast::response::structs::{DeployResponse, Hex};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{Account, ConnectedAccount, SingleOwnerAccount};
 use starknet::contract::ContractFactory;
@@ -9,7 +10,6 @@ use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
 
-use sncast::helpers::response_structs::{DeployResponse, Hex};
 use sncast::{extract_or_generate_salt, udc_uniqueness};
 use sncast::{handle_rpc_error, handle_wait_for_tx, WaitForTx};
 

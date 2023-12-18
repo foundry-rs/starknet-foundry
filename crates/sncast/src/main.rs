@@ -5,6 +5,7 @@ use crate::starknet_commands::{
     script::Script,
 };
 use anyhow::{Context, Result};
+use sncast::response::print::{print_command_result, OutputFormat};
 
 use crate::starknet_commands::declare::BuildConfig;
 use camino::Utf8PathBuf;
@@ -13,7 +14,7 @@ use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTEN
 use sncast::helpers::scarb_utils::{parse_scarb_config, CastConfig};
 use sncast::{
     chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_nonce, get_provider,
-    print_command_result, NumbersFormat, OutputFormat, WaitForTx,
+    NumbersFormat, WaitForTx,
 };
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;

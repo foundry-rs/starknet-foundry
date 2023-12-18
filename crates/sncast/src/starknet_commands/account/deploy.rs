@@ -3,6 +3,7 @@ use camino::Utf8PathBuf;
 use clap::Args;
 use serde_json::Map;
 use sncast::helpers::constants::{KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH};
+use sncast::response::structs::{Hex, InvokeResponse};
 use starknet::accounts::AccountFactoryError;
 use starknet::accounts::{AccountFactory, OpenZeppelinAccountFactory};
 use starknet::core::types::BlockTag::Pending;
@@ -19,8 +20,6 @@ use sncast::{
     account_file_exists, chain_id_to_network_name, get_keystore_password, handle_rpc_error,
     handle_wait_for_tx, parse_number, WaitForTx,
 };
-
-use sncast::helpers::response_structs::{Hex, InvokeResponse};
 
 #[derive(Args, Debug)]
 #[command(about = "Deploy an account to the Starknet")]

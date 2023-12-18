@@ -1,8 +1,8 @@
 use anyhow::Result;
 use camino::Utf8PathBuf;
 use clap::Args;
-use sncast::helpers::response_structs::{Decimal, ShowConfigResponse};
 use sncast::helpers::scarb_utils::CastConfig;
+use sncast::response::structs::{Decimal, ShowConfigResponse};
 use sncast::{chain_id_to_network_name, get_chain_id};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;

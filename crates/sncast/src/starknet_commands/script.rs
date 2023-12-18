@@ -34,10 +34,10 @@ use itertools::chain;
 use num_traits::ToPrimitive;
 use runtime::EnhancedHintError;
 use scarb_artifacts::ScarbCommand;
-use sncast::helpers::response_structs::ScriptResponse;
 use sncast::helpers::scarb_utils::{
     get_package_metadata, get_scarb_manifest, get_scarb_metadata_with_deps, CastConfig,
 };
+use sncast::response::structs::ScriptResponse;
 use starknet::accounts::Account;
 use starknet::core::types::{BlockId, BlockTag::Pending, FieldElement};
 use starknet::providers::jsonrpc::HttpTransport;
