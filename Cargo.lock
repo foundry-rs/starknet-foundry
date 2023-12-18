@@ -5455,6 +5455,7 @@ dependencies = [
  "serde",
  "serde_json",
  "shellexpand",
+ "sierra-casm",
  "snapbox",
  "starknet",
  "tempfile",

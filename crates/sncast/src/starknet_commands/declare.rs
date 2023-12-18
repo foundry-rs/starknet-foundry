@@ -2,6 +2,8 @@ use anyhow::{anyhow, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
 use scarb_artifacts::{get_contracts_map, ScarbCommand};
+use serde_json::Value;
+use sierra_casm::compile;
 use sncast::helpers::scarb_utils::get_package_metadata;
 use sncast::helpers::{response_structs::DeclareResponse, scarb_utils::get_scarb_manifest};
 use sncast::{apply_optional, handle_rpc_error, handle_wait_for_tx, WaitForTx};
@@ -75,8 +77,14 @@ pub async fn declare(
 
     let contract_definition: SierraClass = serde_json::from_str(&contract_artifacts.sierra)
         .context("Failed to parse sierra artifact")?;
-    let casm_contract_definition: CompiledClass =
-        serde_json::from_str(&contract_artifacts.casm).context("Failed to parse casm artifact")?;
+    let casm_contract_definition: CompiledClass = if contract_artifacts.casm.is_empty() {
+        let sierra: Value = serde_json::from_str(&contract_artifacts.sierra).unwrap();
+        let casm = serde_json::to_string(&compile(sierra).unwrap()).unwrap();
+
+        serde_json::from_str(&casm).context("Failed to parse casm artifact")?
+    } else {
+        serde_json::from_str(&contract_artifacts.casm).context("Failed to parse casm artifact")?
+    };
 
     let casm_class_hash = casm_contract_definition.class_hash()?;
 
