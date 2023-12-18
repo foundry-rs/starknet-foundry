@@ -1,5 +1,5 @@
 [package]
-name = "exit_first"
+name = "max_steps"
 version = "0.1.0"
 
 [dependencies]

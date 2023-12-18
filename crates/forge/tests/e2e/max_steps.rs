@@ -3,7 +3,7 @@ use crate::e2e::common::runner::{setup_package, test_runner};
 use indoc::indoc;
 
 #[test]
-fn without_cache() {
+fn max_steps_flag() {
     let temp = setup_package("max_steps");
     let snapbox = test_runner();
 
@@ -20,7 +20,7 @@ fn without_cache() {
         [..]Finished[..]
 
 
-        Collected 2 test(s) from exit_first package
+        Collected 2 test(s) from max_steps package
         Running 0 test(s) from src/
         Running 2 test(s) from tests/
         [FAIL] tests::ext_function_test::simple_test

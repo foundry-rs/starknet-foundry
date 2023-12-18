@@ -1,4 +1,4 @@
-use exit_first::fib;
+use max_steps::fib;
 
 #[test]
 fn hard_test() {
