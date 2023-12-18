@@ -25,6 +25,7 @@ impl OutputFormat {
     }
 }
 
+/// Constrained subset of serde::json
 #[derive(PartialEq, Eq, Debug)]
 pub enum OutputValue {
     String(String),
@@ -164,7 +165,9 @@ fn apply_numbers_formatting(value: OutputValue, formatting: NumbersFormat) -> Ou
 
 #[cfg(test)]
 mod tests {
-    use crate::response::print::{apply_numbers_formatting, OutputValue};
+    use serde_json::{Value, Map};
+
+    use crate::response::print::{apply_numbers_formatting, OutputValue, OutputData, value_to_output_value, struct_value_to_output_data};
     use crate::NumbersFormat;
 
     #[test]
@@ -216,5 +219,17 @@ mod tests {
             "0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
         ))]);
         assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn test_struct_value_to_output_data() {
+        let mut json_value = Map::new();
+        json_value.insert(String::from("K"),  Value::Array(vec![Value::String(String::from("V"))]));
+        json_value.insert(String::from("K2"),  Value::Null);
+
+        let actual = struct_value_to_output_data(Value::Object(json_value));
+        let mut json_value_exp: OutputData = vec![];
+        json_value_exp.push((String::from("K"),  OutputValue::Array(vec![OutputValue::String(String::from("V"))])));
+        assert_eq!(actual, json_value_exp);
     }
 }
