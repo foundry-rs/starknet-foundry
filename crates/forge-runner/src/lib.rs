@@ -180,6 +180,7 @@ pub async fn run_tests_from_crate(
     tests_filter: &impl TestCaseFilter,
 ) -> Result<TestCrateRunResult> {
     let sierra_program = &tests.sierra_program;
+    // TODO remove casm compilation
     let casm_program = compile_sierra_to_casm(sierra_program);
 
     let casm_program = Arc::new(casm_program);
@@ -206,6 +207,7 @@ pub async fn run_tests_from_crate(
             continue;
         };
 
+        // TODO casm artifacts should also come with this information
         let function = sierra_program
             .funcs
             .iter()
