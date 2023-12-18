@@ -327,7 +327,7 @@ pub async fn wait_for_tx(
     }
 
     Err(anyhow!(
-        "Could not get transaction with hash = {tx_hash:#x}. Transaction rejected, not received or sncast timed out"
+        "Failed to get transaction with hash = {tx_hash:#x}; Transaction rejected, not received or sncast timed out"
     ))
 }
 
@@ -559,7 +559,7 @@ mod tests {
         let block = get_block_id("mariusz").unwrap_err();
         assert!(block
             .to_string()
-            .contains("No such block id mariusz! Possible values are pending, latest, block hash (hex) and block number (u64)."));
+            .contains("Incorrect value passed for block_id = mariusz. Possible values are pending, latest, block hash (hex) and block number (u64)"));
     }
 
     #[test]
@@ -616,7 +616,7 @@ mod tests {
         let err = account.unwrap_err();
         assert!(err
             .to_string()
-            .contains("Account user1 not found under network CUSTOM_CHAIN_ID"));
+            .contains("Account = user1 not found under network = CUSTOM_CHAIN_ID"));
     }
 
     #[test_case(

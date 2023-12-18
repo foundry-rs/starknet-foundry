@@ -80,5 +80,5 @@ fn stop_devnet() {
         ])
         .spawn()
         .expect("Failed to kill devnet processes");
-    //remove_devnet_env();
+    remove_devnet_env();
 }
