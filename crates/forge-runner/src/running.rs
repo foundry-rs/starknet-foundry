@@ -302,13 +302,11 @@ pub fn run_test_case(
         extended_runtime: call_to_blockifier_runtime,
     };
 
-    // copied from casm_run
     let mut vm = VirtualMachine::new(true);
     let data = build_program_data(instructions);
     let data_len = data.len();
-    // end of copied code
-
     let mut runner = casm_run::build_runner(data, builtins, hints_dict)?;
+
     let run_result = match casm_run::run_function_with_runner(
         &mut vm,
         data_len,
