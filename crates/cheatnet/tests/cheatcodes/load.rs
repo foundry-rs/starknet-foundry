@@ -174,7 +174,6 @@ fn load_state_map_complex_key() {
     )
     .unwrap();
 
-    // This can be abstracted in cairo code itself, without compromising load's interface simplicity
     let var_selector = felt_selector_from_name("values");
     let var_address = calculate_variable_address(var_selector, Some(&map_key));
 
