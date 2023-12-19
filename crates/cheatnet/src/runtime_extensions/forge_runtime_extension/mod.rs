@@ -473,10 +473,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let message_hash = inputs[1].clone();
 
                 if private_key == Felt252::from(0) {
-                    return Ok(CheatcodeHandlingResult::Handled(vec![
-                        Felt252::from(1),
-                        Felt252::from_short_string("invalid secret_key").unwrap(),
-                    ]));
+                    return Ok(handle_cheatcode_error("invalid secret_key"));
                 }
 
                 let key_pair = SigningKey::from_secret_scalar(private_key.into_());
@@ -488,10 +485,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                         Felt252::from_(signature.s),
                     ]))
                 } else {
-                    Ok(CheatcodeHandlingResult::Handled(vec![
-                        Felt252::from(1),
-                        Felt252::from_short_string("message_hash out of range").unwrap(),
-                    ]))
+                    Ok(handle_cheatcode_error("message_hash out of range"))
                 }
             }
             "generate_ecdsa_keys" => {
@@ -539,19 +533,16 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let msg_hash_low = inputs[3].clone();
                 let msg_hash_high = inputs[4].clone();
 
-                let secret_key = concat_felt_bytes(&sk_low.to_be_bytes(), &sk_high.to_be_bytes());
+                let secret_key = concat_u128_bytes(&sk_low.to_be_bytes(), &sk_high.to_be_bytes());
                 let msg_hash =
-                    concat_felt_bytes(&msg_hash_low.to_be_bytes(), &msg_hash_high.to_be_bytes());
+                    concat_u128_bytes(&msg_hash_low.to_be_bytes(), &msg_hash_high.to_be_bytes());
 
                 let (r_bytes, s_bytes) = {
                     match curve.as_deref() {
                         Some("Secp256k1") => {
                             let Ok(signing_key) = k256::ecdsa::SigningKey::from_slice(&secret_key)
                             else {
-                                return Ok(CheatcodeHandlingResult::Handled(vec![
-                                    Felt252::from(1),
-                                    Felt252::from_short_string("invalid secret_key").unwrap(),
-                                ]));
+                                return Ok(handle_cheatcode_error("invalid secret_key"));
                             };
 
                             let signature: k256::ecdsa::Signature =
@@ -566,10 +557,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                         Some("Secp256r1") => {
                             let Ok(signing_key) = p256::ecdsa::SigningKey::from_slice(&secret_key)
                             else {
-                                return Ok(CheatcodeHandlingResult::Handled(vec![
-                                    Felt252::from(1),
-                                    Felt252::from_short_string("invalid secret_key").unwrap(),
-                                ]));
+                                return Ok(handle_cheatcode_error("invalid secret_key"));
                             };
 
                             let signature: p256::ecdsa::Signature =
@@ -653,8 +641,17 @@ fn cheatcode_panic_result(panic_data: Vec<Felt252>) -> Vec<Felt252> {
     result
 }
 
-fn concat_felt_bytes(low: &[u8; 32], high: &[u8; 32]) -> [u8; 32] {
+fn handle_cheatcode_error(error_short_string: &str) -> CheatcodeHandlingResult {
+    CheatcodeHandlingResult::Handled(vec![
+        Felt252::from(1),
+        Felt252::from_short_string(error_short_string)
+            .expect("Should convert shortstring to Felt252"),
+    ])
+}
+
+fn concat_u128_bytes(low: &[u8; 32], high: &[u8; 32]) -> [u8; 32] {
     let mut result = [0; 32];
+    // the values of u128 are contained in the last 16 bytes
     result[..16].copy_from_slice(&high[16..32]);
     result[16..].copy_from_slice(&low[16..32]);
     result
