@@ -45,10 +45,9 @@ async fn test_rejected_transaction() {
         .deploy(Vec::new(), FieldElement::ONE, false)
         .max_fee(FieldElement::ONE);
     let resp = deployment.send().await.unwrap_err();
+    dbg!(&resp);
 
-    assert!(resp
-        .to_string()
-        .contains("Max fee is smaller than the minimal transaction cost"));
+    assert!(resp.to_string().contains("InsufficientMaxFee"));
 }
 
 #[tokio::test]

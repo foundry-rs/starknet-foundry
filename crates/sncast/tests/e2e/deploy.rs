@@ -76,10 +76,11 @@ fn test_wrong_calldata() {
     ]);
 
     let snapbox = runner(&args);
-    let output = String::from_utf8(snapbox.assert().success().get_output().stderr.clone()).unwrap();
 
-    assert!(output.contains("error: "));
-    assert!(output.contains("Contract error"));
+    snapbox.assert().stderr_matches(indoc! {r"
+        command: deploy
+        error: An error occurred in the called contract [..]
+    "});
 }
 
 #[tokio::test]
@@ -94,9 +95,11 @@ async fn test_contract_not_declared() {
     ]);
 
     let snapbox = runner(&args);
-    let output = String::from_utf8(snapbox.assert().get_output().stderr.clone()).unwrap();
 
-    assert!(output.contains("Contract error"));
+    snapbox.assert().stderr_matches(indoc! {r"
+        command: deploy
+        error: An error occurred in the called contract [..]
+    "});
 }
 
 #[test]
@@ -115,9 +118,11 @@ fn test_contract_already_deployed() {
     ]);
 
     let snapbox = runner(&args);
-    let output = String::from_utf8(snapbox.assert().get_output().stderr.clone()).unwrap();
 
-    assert!(output.contains("Contract error"));
+    snapbox.assert().stderr_matches(indoc! {r"
+        command: deploy
+        error: An error occurred in the called contract [..]
+    "});
 }
 
 #[test]
@@ -142,6 +147,6 @@ fn test_too_low_max_fee() {
 
     snapbox.assert().stderr_matches(indoc! {r"
         command: deploy
-        error: Max fee is smaller than the minimal transaction cost (validation plus fee transfer)
+        error: Max fee is smaller than the minimal transaction cost
     "});
 }
