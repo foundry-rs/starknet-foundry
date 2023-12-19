@@ -122,6 +122,7 @@ pub fn chain_id_to_network_name(chain_id: FieldElement) -> String {
         "SN_GOERLI" => "alpha-goerli".into(),
         "SN_GOERLI2" => "alpha-goerli2".into(),
         "SN_MAIN" => "alpha-mainnet".into(),
+        "SN_SEPOLIA" => "alpha-sepolia".into(),
         _ => decoded,
     }
 }
@@ -506,8 +507,12 @@ mod tests {
         let network_name_katana = chain_id_to_network_name(
             FieldElement::from_byte_slice_be("KATANA".as_bytes()).unwrap(),
         );
+        let network_name_sepolia = chain_id_to_network_name(
+            FieldElement::from_byte_slice_be("SN_SEPOLIA".as_bytes()).unwrap(),
+        );
         assert_eq!(network_name_goerli, "alpha-goerli");
         assert_eq!(network_name_katana, "KATANA");
+        assert_eq!(network_name_sepolia, "alpha-sepolia");
     }
 
     #[test]
