@@ -39,12 +39,12 @@ For test cases like this, we would generate two actual test cases:
 ```cairo
 #[test]
 fn my_test_case_1() {
-  let a: felt252 = 3;
-  let b: u32 = 1;
+  let a: felt252 = 1;
+  let b: u32 = 3;
 }
 
 #[test]
-fn my_test_case_1() {
+fn my_test_case_2() {
   let a: felt252 = 3;
   let b: u32 = 5;
 }
