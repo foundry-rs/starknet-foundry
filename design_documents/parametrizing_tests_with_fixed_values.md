@@ -128,7 +128,14 @@ fn my_test_generated(a: felt252) {
 While it is technically possible to use complex types in attributes instead of defining fixtures, handling of them in
 code would be quite problematic based on my limited research.
 
-At least initially, we do not want to support syntax with complex types. For example, this would not be allowed:
+Annotations do not seem to be type-checked at all.
+Arguments passed to annotations are returned as AST node in the compiler code.
+Handling and generating the necessary Cairo code from them is not trivial.
+
+Based on these conclusions, it is logical we limit our support only simple types or calls to functions, without support
+for nested calls, etc.
+
+For example, this syntax would not be allowed:
 
 ```cairo
 #[parametrize]
