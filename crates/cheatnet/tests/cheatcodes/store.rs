@@ -125,7 +125,7 @@ fn store_state_map_complex_value() {
         &[map_key],
     )
     .unwrap();
-    assert_success!(call_output, inserted_values)
+    assert_success!(call_output, inserted_values);
 }
 
 #[test]

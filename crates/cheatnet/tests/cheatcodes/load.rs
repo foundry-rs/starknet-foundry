@@ -79,7 +79,7 @@ fn load_state_map_simple_value() {
     .unwrap();
 
     let var_selector = felt_selector_from_name("values");
-    let var_address = calculate_variable_address(var_selector, Some(&vec![map_key]));
+    let var_address = calculate_variable_address(var_selector, Some(&[map_key]));
 
     let map_value = load(
         &mut blockifier_state,

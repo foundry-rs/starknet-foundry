@@ -49,6 +49,7 @@ fn normalize_storage_address(address: FieldElement) -> FieldElement {
     address % modulus.into_()
 }
 
+#[must_use]
 pub fn calculate_variable_address(selector: Felt252, key: Option<&[Felt252]>) -> Felt252 {
     let mut address: FieldElement = selector.into_();
     match key {
