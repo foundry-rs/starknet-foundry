@@ -374,7 +374,7 @@ pub fn handle_rpc_error<T>(error: ProviderError) -> std::result::Result<T, Error
         StarknetError(NonAccount) => Err(anyhow!("No account")),
         StarknetError(DuplicateTx) => Err(anyhow!("Transaction already exists")),
         StarknetError(CompiledClassHashMismatch) => Err(anyhow!("Compiled class hash mismatch")),
-        StarknetError(UnsupportedTxVersion) => Err(anyhow!("Unsupprted transaction version")),
+        StarknetError(UnsupportedTxVersion) => Err(anyhow!("Unsupported transaction version")),
         StarknetError(UnsupportedContractClassVersion) => {
             Err(anyhow!("Unsupported contract class version"))
         }
