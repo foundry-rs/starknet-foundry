@@ -5,28 +5,31 @@ use rand::rngs::OsRng;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use starknet::core::types::{
+    BlockId,
+    BlockTag::{Latest, Pending},
+    ExecutionResult, FieldElement,
+    StarknetError::{
+        BlockNotFound, ClassAlreadyDeclared, ClassHashNotFound, CompilationFailed,
+        CompiledClassHashMismatch, ContractClassSizeIsTooLarge, ContractError, ContractNotFound,
+        DuplicateTx, FailedToReceiveTransaction, InsufficientAccountBalance, InsufficientMaxFee,
+        InvalidTransactionIndex, InvalidTransactionNonce, NonAccount, TransactionExecutionError,
+        TransactionHashNotFound, UnsupportedContractClassVersion, UnsupportedTxVersion,
+        ValidationFailure,
+    },
+};
 use starknet::core::utils::UdcUniqueness::{NotUnique, Unique};
 use starknet::core::utils::{UdcUniqueSettings, UdcUniqueness};
-use starknet::providers::jsonrpc::RpcError::{Code, Unknown};
-use starknet::providers::ProviderError::Other;
 use starknet::{
     accounts::{ExecutionEncoding, SingleOwnerAccount},
     providers::{
         jsonrpc::{HttpTransport, JsonRpcClient},
         Provider, ProviderError,
+        ProviderError::StarknetError,
     },
     signers::{LocalWallet, SigningKey},
 };
-use starknet::{
-    core::types::{
-        BlockId,
-        BlockTag::{Latest, Pending},
-        ExecutionResult, FieldElement, StarknetError,
-    },
-    providers::{MaybeUnknownErrorCode, StarknetErrorWithMessage},
-};
 use std::collections::HashMap;
-use std::ops::Deref;
 use std::str::FromStr;
 use std::thread::sleep;
 use std::time::Duration;
@@ -225,13 +228,13 @@ fn get_account_from_keystore<'a>(
 
     let file_content = fs::read_to_string(path_to_account.clone())
         .with_context(|| format!("Failed to read a file = {}", &path_to_account))?;
-    let account_info: serde_json::Value = serde_json::from_str(&file_content)
+    let account_info: Value = serde_json::from_str(&file_content)
         .with_context(|| format!("Failed to parse file = {} to JSON", &path_to_account))?;
     let address = FieldElement::from_hex_be(
         account_info
             .get("deployment")
             .and_then(|deployment| deployment.get("address"))
-            .and_then(serde_json::Value::as_str)
+            .and_then(Value::as_str)
             .ok_or_else(|| anyhow::anyhow!("Failed to get address from account JSON file - make sure the account is deployed"))?
     )?;
 
@@ -305,18 +308,15 @@ pub async fn wait_for_tx(
     let retries = timeout / u16::from(retry_interval);
     for i in (1..retries).rev() {
         match provider.get_transaction_receipt(tx_hash).await {
-            Ok(receipt) => match receipt.execution_result() {
-                ExecutionResult::Succeeded => {
-                    return Ok("Transaction accepted");
+            Ok(receipt) => {
+                return match receipt.execution_result() {
+                    ExecutionResult::Succeeded => Ok("Transaction accepted"),
+                    ExecutionResult::Reverted { reason } => {
+                        Err(anyhow!("Transaction has been reverted = {reason}"))
+                    }
                 }
-                ExecutionResult::Reverted { reason } => {
-                    return Err(anyhow!("Transaction has been reverted = {reason}"));
-                }
-            },
-            Err(ProviderError::StarknetError(StarknetErrorWithMessage {
-                code: MaybeUnknownErrorCode::Known(StarknetError::TransactionHashNotFound),
-                message: _,
-            })) => {
+            }
+            Err(StarknetError(TransactionHashNotFound)) => {
                 let remaining_time = i * u16::from(retry_interval);
                 println!("Waiting for transaction to be accepted ({i} retries / {remaining_time}s left until timeout)");
             }
@@ -331,47 +331,52 @@ pub async fn wait_for_tx(
     ))
 }
 
-#[must_use]
-pub fn get_rpc_error_message(error: &StarknetError) -> &'static str {
-    match error {
-        StarknetError::FailedToReceiveTransaction => "Node failed to receive transaction",
-        StarknetError::ContractNotFound => "There is no contract at the specified address",
-        StarknetError::BlockNotFound => "Block was not found",
-        StarknetError::TransactionHashNotFound => {
-            "Transaction with provided hash was not found (does not exist)"
-        }
-        StarknetError::InvalidTransactionIndex => "There is no transaction with such an index",
-        StarknetError::ClassHashNotFound => "Provided class hash does not exist",
-        StarknetError::ContractError => "An error occurred in the called contract",
-        StarknetError::InvalidTransactionNonce => "Invalid transaction nonce",
-        StarknetError::InsufficientMaxFee => "Max fee is smaller then the minimal transaction cost",
-        StarknetError::InsufficientAccountBalance => {
-            "Account balance is too small to cover transaction fee"
-        }
-        StarknetError::ClassAlreadyDeclared => {
-            "Contract with the same class hash is already declared"
-        }
-        _ => "Unknown RPC error",
-    }
-}
-
 pub fn handle_rpc_error<T>(error: ProviderError) -> std::result::Result<T, Error> {
     match error {
-        Other(x) => {
-            if let Some(err) = x
-                .deref()
-                .as_any()
-                .downcast_ref::<starknet::providers::jsonrpc::RpcError>()
-            {
-                match err {
-                    Code(error) => Err(anyhow!(get_rpc_error_message(error))),
-                    Unknown(error) => Err(anyhow!(error.message.clone())),
-                }
-            } else {
-                Err(anyhow!("Unknown RPC error"))
-            }
+        StarknetError(FailedToReceiveTransaction) => {
+            Err(anyhow!("Node failed to receive transaction"))
         }
-        ProviderError::StarknetError(error) => Err(anyhow!(error.message)),
+        StarknetError(ContractNotFound) => {
+            Err(anyhow!("There is no contract at the specified address"))
+        }
+        StarknetError(BlockNotFound) => Err(anyhow!("Block was not found")),
+        StarknetError(TransactionHashNotFound) => Err(anyhow!(
+            "Transaction with provided hash was not found (does not exist)"
+        )),
+        StarknetError(InvalidTransactionIndex) => {
+            Err(anyhow!("There is no transaction with such an index"))
+        }
+        StarknetError(ClassHashNotFound) => Err(anyhow!("Provided class hash does not exist")),
+        StarknetError(ContractError(err)) => Err(anyhow!(
+            "An error occurred in the called contract = {err:?}"
+        )),
+        StarknetError(InvalidTransactionNonce) => Err(anyhow!("Invalid transaction nonce")),
+        StarknetError(InsufficientMaxFee) => Err(anyhow!(
+            "Max fee is smaller than the minimal transaction cost"
+        )),
+        StarknetError(InsufficientAccountBalance) => Err(anyhow!(
+            "Account balance is too small to cover transaction fee"
+        )),
+        StarknetError(ClassAlreadyDeclared) => Err(anyhow!(
+            "Contract with the same class hash is already declared"
+        )),
+        StarknetError(TransactionExecutionError(err)) => {
+            Err(anyhow!("Transaction execution error = {err:?}"))
+        }
+        StarknetError(ValidationFailure(err)) => {
+            Err(anyhow!("Contract failed the validation = {err}"))
+        }
+        StarknetError(CompilationFailed) => Err(anyhow!("Contract failed to compile in starknet")),
+        StarknetError(ContractClassSizeIsTooLarge) => {
+            Err(anyhow!("Contract class size is too large"))
+        }
+        StarknetError(NonAccount) => Err(anyhow!("No account")),
+        StarknetError(DuplicateTx) => Err(anyhow!("Transaction already exists")),
+        StarknetError(CompiledClassHashMismatch) => Err(anyhow!("Compiled class hash mismatch")),
+        StarknetError(UnsupportedTxVersion) => Err(anyhow!("Unsupprted transaction version")),
+        StarknetError(UnsupportedContractClassVersion) => {
+            Err(anyhow!("Unsupported contract class version"))
+        }
         _ => Err(anyhow!("Unknown RPC error")),
     }
 }
