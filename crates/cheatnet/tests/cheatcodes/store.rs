@@ -1,7 +1,6 @@
 use crate::assert_success;
 use crate::common::state::{create_cached_state, create_cheatnet_state};
 use crate::common::{felt_selector_from_name, get_contracts};
-use blockifier::abi::abi_utils::starknet_keccak;
 use cairo_felt::Felt252;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::call_contract;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::deploy;
@@ -26,7 +25,7 @@ fn store_simple_state() {
     store(
         &mut blockifier_state,
         contract_address,
-        &starknet_keccak("balance".as_ref()),
+        &felt_selector_from_name("balance"),
         &[Felt252::from(666)],
     )
     .unwrap();
