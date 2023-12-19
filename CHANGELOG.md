@@ -11,12 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Changed 
 
+- fields from `starknet::info::v2::TxInfo` are now part of `TxInfoMock` from `snforge_std::cheatcodes::tx_info`
 - consistent latest block numbers for each url are now used across the whole run when testing against forks
 
 ### Cast
 
 #### Added 
 
+- add support for sepolia network
 - `--yes` option to `account delete` command that allows to skip confirmation prompt
 
 #### Changed
@@ -148,7 +150,7 @@ PS: Credits to @bllu404 for the help with the new interfaces for cheats!
   - tests in `src` folder now have to be in a module annotated with `#[cfg(test)]`
 - `snforge_std::PrintTrait` will not convert values representing ASCII control characters to strings
 - separated `snforge` to subcommands: `snforge test`, `snforge init` and `snforge clean-cache`. 
-Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/forge.html).
+Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/snforge.html).
 - `starknet::get_block_info` now returns correct block info in a forked block
 
 ### Cast
