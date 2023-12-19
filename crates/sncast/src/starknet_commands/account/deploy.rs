@@ -7,13 +7,11 @@ use sncast::response::structs::{Hex, InvokeResponse};
 use starknet::accounts::AccountFactoryError;
 use starknet::accounts::{AccountFactory, OpenZeppelinAccountFactory};
 use starknet::core::types::BlockTag::Pending;
-use starknet::core::types::{BlockId, FieldElement, StarknetError};
+use starknet::core::types::{BlockId, FieldElement, StarknetError::ClassHashNotFound};
 use starknet::core::utils::get_contract_address;
 use starknet::providers::jsonrpc::HttpTransport;
-use starknet::providers::ProviderError::{self};
-use starknet::providers::{
-    JsonRpcClient, MaybeUnknownErrorCode, Provider, StarknetErrorWithMessage,
-};
+use starknet::providers::ProviderError::StarknetError;
+use starknet::providers::{JsonRpcClient, Provider};
 use starknet::signers::{LocalWallet, SigningKey};
 
 use sncast::{
@@ -274,7 +272,7 @@ async fn deploy_oz_account(
         max_fee
     } else {
         match deployment.estimate_fee().await {
-            Ok(max_fee) => FieldElement::from(max_fee.overall_fee),
+            Ok(max_fee) => max_fee.overall_fee,
             Err(AccountFactoryError::Provider(error)) => return handle_rpc_error(error),
             Err(error) => bail!(error),
         }
@@ -283,10 +281,7 @@ async fn deploy_oz_account(
 
     match result {
         Err(AccountFactoryError::Provider(error)) => match error {
-            ProviderError::StarknetError(StarknetErrorWithMessage {
-                code: MaybeUnknownErrorCode::Known(StarknetError::ClassHashNotFound),
-                message: _,
-            }) => Err(anyhow!(
+            StarknetError(ClassHashNotFound) => Err(anyhow!(
                 "Provided class hash {:#x} does not exist",
                 oz_class_hash,
             )),

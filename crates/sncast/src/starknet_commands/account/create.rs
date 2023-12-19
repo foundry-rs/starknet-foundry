@@ -129,7 +129,7 @@ async fn generate_account(
         .await?
         .overall_fee;
 
-    Ok((account_json, max_fee))
+    Ok((account_json, max_fee.try_into()?))
 }
 
 async fn get_account_deployment_fee(
