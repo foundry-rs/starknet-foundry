@@ -4,7 +4,7 @@ use crate::starknet_commands::{
     account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,
     script::Script,
 };
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 
 use crate::starknet_commands::declare::BuildConfig;
 use camino::Utf8PathBuf;
@@ -104,7 +104,7 @@ enum Commands {
     /// Show current configuration being used
     ShowConfig(ShowConfig),
 
-    /// Run a deployment script
+    /// Run or initialize a deployment script
     Script(Script),
 }
 
@@ -123,21 +123,12 @@ fn main() -> Result<()> {
     let mut config = parse_scarb_config(&cli.profile, &cli.path_to_scarb_toml)?;
     update_cast_config(&mut config, &cli);
 
-    let provider = get_provider(&config.rpc_url)?;
     let runtime = Runtime::new().expect("Failed to instantiate Runtime");
 
-    if let Commands::Script(script) = cli.command {
-        let mut result = starknet_commands::script::run(
-            &script.script_module_name,
-            &cli.path_to_scarb_toml,
-            &provider,
-            runtime,
-            &config,
-        );
-
-        print_command_result("script", &mut result, value_format, cli.json)?;
-        Ok(())
+    if let Commands::Script(script) = &cli.command {
+        run_script_command(&cli, runtime, &config, script, value_format)
     } else {
+        let provider = get_provider(&config.rpc_url)?;
         runtime.block_on(run_async_command(cli, config, provider, value_format))
     }
 }
@@ -373,6 +364,35 @@ async fn run_async_command(
         }
         Commands::Script(_) => unreachable!(),
     }
+}
+
+fn run_script_command(
+    cli: &Cli,
+    runtime: Runtime,
+    config: &CastConfig,
+    script: &Script,
+    value_format: ValueFormat,
+) -> Result<()> {
+    if let Some(starknet_commands::script::Commands::Init(init)) = &script.command {
+        let mut result = starknet_commands::script::init::init(init);
+        print_command_result("script init", &mut result, value_format, cli.json)?;
+    } else {
+        let provider = get_provider(&config.rpc_url)?;
+        let script_module_name = script.script_module_name.as_ref().ok_or_else(|| {
+            anyhow!("required positional argument SCRIPT_MODULE_NAME not provided")
+        })?;
+
+        let mut result = starknet_commands::script::run::run(
+            script_module_name,
+            &cli.path_to_scarb_toml,
+            &provider,
+            runtime,
+            config,
+        );
+
+        print_command_result("script", &mut result, value_format, cli.json)?;
+    }
+    Ok(())
 }
 
 fn update_cast_config(config: &mut CastConfig, cli: &Cli) {

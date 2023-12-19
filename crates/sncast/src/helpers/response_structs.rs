@@ -67,3 +67,8 @@ pub struct ScriptResponse {
     pub status: String,
     pub msg: Option<String>,
 }
+
+#[derive(Serialize)]
+pub struct ScriptInitResponse {
+    pub status: String,
+}
