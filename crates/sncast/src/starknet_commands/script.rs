@@ -60,7 +60,6 @@ pub struct CastExtension<'a> {
     pub config: &'a CastConfig,
 }
 
-// This runtime extension provides an implementation logic for functions from snforge_std library.
 impl<'a> ExtensionLogic for CastExtension<'a> {
     type Runtime = StarknetRuntime<'a>;
 
