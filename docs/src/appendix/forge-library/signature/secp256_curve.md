@@ -4,7 +4,7 @@ This module contains the implementation of `KeyPairTrait` for the `Secp256k1` an
 
 > ⚠️ **Security Warning**
 >
-> Please note that some parts of the internal code for the features in this module are still experimental and **have not been audited yet**.
+> Please note that cryptography in Starknet Foundry is still experimental and **has not been audited yet**.
 >
 > Use at your own risk!
 
