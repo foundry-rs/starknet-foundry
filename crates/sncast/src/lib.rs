@@ -21,7 +21,7 @@ use starknet::{
     core::types::{
         BlockId,
         BlockTag::{Latest, Pending},
-        ExecutionResult, FieldElement, StarknetError,
+        FieldElement, StarknetError,
     },
     providers::{MaybeUnknownErrorCode, StarknetErrorWithMessage},
 };
@@ -305,13 +305,25 @@ pub async fn wait_for_tx(
     }
     let retries = timeout / u16::from(retry_interval);
     for i in (1..retries).rev() {
-        match provider.get_transaction_receipt(tx_hash).await {
-            Ok(receipt) => match receipt.execution_result() {
-                ExecutionResult::Succeeded => {
-                    return Ok("Transaction accepted");
+        match provider.get_transaction_status(tx_hash).await {
+            Ok(status) => match status {
+                starknet::core::types::TransactionStatus::Received => {
+                    return Ok("Transaction has been received");
                 }
-                ExecutionResult::Reverted { reason } => {
-                    return Err(anyhow!("Transaction has been reverted = {reason}"));
+                starknet::core::types::TransactionStatus::Rejected => {
+                    return Err(anyhow!("Transaction has been rejected"));
+                }
+                starknet::core::types::TransactionStatus::AcceptedOnL2(execution_status)
+                | starknet::core::types::TransactionStatus::AcceptedOnL1(execution_status) => {
+                    match execution_status {
+                        starknet::core::types::TransactionExecutionStatus::Succeeded => {
+                            return Ok("Transaction accepted")
+                        }
+
+                        starknet::core::types::TransactionExecutionStatus::Reverted => {
+                            return Err(anyhow!("Transaction has been reverted"))
+                        }
+                    }
                 }
             },
             Err(ProviderError::StarknetError(StarknetErrorWithMessage {
