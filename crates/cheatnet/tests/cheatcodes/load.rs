@@ -127,7 +127,7 @@ fn load_state_map_complex_value() {
     .unwrap();
 
     let var_selector = felt_selector_from_name("values");
-    let variable_address = calculate_variable_address(var_selector, Some(&calldata));
+    let variable_address = calculate_variable_address(var_selector, Some(&[map_key]));
 
     let map_value = load(
         &mut blockifier_state,
