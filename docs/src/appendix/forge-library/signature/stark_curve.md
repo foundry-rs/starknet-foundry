@@ -23,7 +23,7 @@ struct KeyPair {
 A new key pair for the STARK curve can be obtained as follows:
 
 ```rust
-use snforge_std::signature::key_pair::{KeyPair, KeyPairTrait};
+use snforge_std::signature::{KeyPair, KeyPairTrait};
 use snforge_std::signature::stark_curve::StarkCurveKeyPairImpl;
 
 let key_pair = KeyPairTrait::<felt252, felt252>::generate();
@@ -32,7 +32,7 @@ let key_pair = KeyPairTrait::<felt252, felt252>::generate();
 Or, if the `secret_key` is known in advance:
 
 ```rust
-use snforge_std::signature::key_pair::{KeyPair, KeyPairTrait};
+use snforge_std::signature::{KeyPair, KeyPairTrait};
 use snforge_std::signature::stark_curve::StarkCurveKeyPairImpl;
 
 let secret_key = ...;
@@ -57,7 +57,7 @@ Implementation of the `VerifierTrait` for the STARK curve.
 ## Example
 
 ```rust
-use snforge_std::signature::key_pair::{KeyPair, KeyPairTrait, SignerTrait, VerifierTrait};
+use snforge_std::signature::{KeyPair, KeyPairTrait, SignerTrait, VerifierTrait};
 use snforge_std::signature::stark_curve::{StarkCurveKeyPairImpl, StarkCurveSignerImpl, StarkCurveVerifierImpl};
 
 #[test]
@@ -65,7 +65,7 @@ fn test_stark_curve() {
     let key_pair = KeyPairTrait::<felt252, felt252>::generate();
     
     let msg_hash = 123456;
-    let (r, s) = key_pair.sign(msg_hash);
+    let (r, s): (felt252, felt252) = key_pair.sign(msg_hash);
 
     let is_valid = key_pair.verify(msg_hash, (r, s));
     assert(is_valid, 'Signature should be valid');

@@ -5,7 +5,7 @@ use ec::{EcPointImpl};
 
 use starknet::testing::cheatcode;
 
-use snforge_std::signature::key_pair::{KeyPair, KeyPairTrait, SignerTrait, VerifierTrait};
+use snforge_std::signature::{KeyPair, KeyPairTrait, SignerTrait, VerifierTrait};
 
 impl StarkCurveKeyPairImpl of KeyPairTrait<felt252, felt252> {
     fn generate() -> KeyPair<felt252, felt252> {

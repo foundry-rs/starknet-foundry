@@ -25,7 +25,7 @@ struct KeyPair {
 A new key pair for the `Secp256r1` curve can be obtained as follows:
 
 ```rust
-use snforge_std::signature::key_pair::{KeyPair, KeyPairTrait, SignerTrait, VerifierTrait};
+use snforge_std::signature::{KeyPair, KeyPairTrait, SignerTrait, VerifierTrait};
 use snforge_std::signature::secp256_curve::{Secp256CurveKeyPairImpl, Secp256CurveSignerImpl, Secp256CurveVerifierImpl};
 use starknet::secp256r1::{Secp256r1Impl, Secp256r1Point, Secp256r1PointImpl};
 
@@ -35,7 +35,7 @@ let key_pair_secp256r1 = KeyPairTrait::<u256, Secp256r1Point>::generate();
 Or, if the `secret_key` is known in advance:
 
 ```rust
-use snforge_std::signature::key_pair::{KeyPair, KeyPairTrait, SignerTrait, VerifierTrait};
+use snforge_std::signature::{KeyPair, KeyPairTrait, SignerTrait, VerifierTrait};
 use snforge_std::signature::secp256_curve::{Secp256CurveKeyPairImpl, Secp256CurveSignerImpl, Secp256CurveVerifierImpl};
 use starknet::secp256r1::{Secp256r1Impl, Secp256r1Point, Secp256r1PointImpl};
 
@@ -60,7 +60,7 @@ Implementation of the `VerifierTrait` for the Secp256 curve.
 ## Example
 
 ```rust
-use snforge_std::signature::key_pair::{KeyPair, KeyPairTrait, SignerTrait, VerifierTrait};
+use snforge_std::signature::{KeyPair, KeyPairTrait, SignerTrait, VerifierTrait};
 use snforge_std::signature::secp256_curve::{Secp256CurveKeyPairImpl, Secp256CurveSignerImpl, Secp256CurveVerifierImpl};
 use starknet::secp256k1::{Secp256k1Impl, Secp256k1Point, Secp256k1PointImpl};
 use core::starknet::SyscallResultTrait;
@@ -70,7 +70,7 @@ fn test() {
     let key_pair = KeyPairTrait::<u256, Secp256k1Point>::generate();
     
     let msg_hash = 123456;
-    let (r, s) = key_pair.sign(msg_hash);
+    let (r, s): (u256, u256) = key_pair.sign(msg_hash);
 
     let is_valid = key_pair.verify(msg_hash, (r, s));
     assert(is_valid, 'Signature should be valid');

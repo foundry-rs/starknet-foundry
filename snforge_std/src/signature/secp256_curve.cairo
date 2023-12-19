@@ -7,7 +7,7 @@ use starknet::secp256r1::{Secp256r1Point, Secp256r1Impl};
 use starknet::{SyscallResult, SyscallResultTrait};
 use starknet::testing::cheatcode;
 
-use snforge_std::signature::key_pair::{KeyPair, KeyPairTrait, SignerTrait, VerifierTrait};
+use snforge_std::signature::{KeyPair, KeyPairTrait, SignerTrait, VerifierTrait};
 
 impl Secp256CurveKeyPairImpl<
     Secp256Point,
