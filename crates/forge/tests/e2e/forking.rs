@@ -133,7 +133,7 @@ fn printing_latest_block_number() {
         [PASS] forking::tests::print_block_number_when_latest,[..]
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 4 filtered out
 
-        Latest block number = [..] for url = http://188.34.188.184:9545/rpc/v0.5
+        Latest block number = [..] for url = http://188.34.188.184:9545/rpc/v0_6
         "}
     );
 }
