@@ -3,6 +3,7 @@ use camino::Utf8PathBuf;
 use clap::Args;
 use serde_json::Map;
 use sncast::helpers::constants::{KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH};
+use sncast::response::structs::{Hex, InvokeResponse};
 use starknet::accounts::AccountFactoryError;
 use starknet::accounts::{AccountFactory, OpenZeppelinAccountFactory};
 use starknet::core::types::BlockTag::Pending;
@@ -17,8 +18,6 @@ use sncast::{
     account_file_exists, chain_id_to_network_name, get_keystore_password, handle_rpc_error,
     handle_wait_for_tx, parse_number, WaitForTx,
 };
-
-use sncast::helpers::response_structs::InvokeResponse;
 
 #[derive(Args, Debug)]
 #[command(about = "Deploy an account to the Starknet")]
@@ -150,7 +149,7 @@ async fn deploy_from_keystore(
         .is_ok()
     {
         InvokeResponse {
-            transaction_hash: FieldElement::ZERO,
+            transaction_hash: Hex(FieldElement::ZERO),
         }
     } else {
         deploy_oz_account(
@@ -291,7 +290,7 @@ async fn deploy_oz_account(
         Err(_) => Err(anyhow!("Unknown RPC error")),
         Ok(result) => {
             let return_value = InvokeResponse {
-                transaction_hash: result.transaction_hash,
+                transaction_hash: Hex(result.transaction_hash),
             };
             if let Err(message) = handle_wait_for_tx(
                 provider,

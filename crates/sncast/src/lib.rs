@@ -30,13 +30,13 @@ use starknet::{
     signers::{LocalWallet, SigningKey},
 };
 use std::collections::HashMap;
-use std::str::FromStr;
 use std::thread::sleep;
 use std::time::Duration;
 use std::{env, fs};
 use url::Url;
 
 pub mod helpers;
+pub mod response;
 
 #[derive(Deserialize, Serialize, Clone)]
 struct Account {
@@ -49,55 +49,25 @@ struct Account {
 }
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
-pub enum ValueFormat {
-    // Addresses as hex, fees as int
+pub enum NumbersFormat {
     Default,
-    // everything as int
-    Int,
-    // everything as hex
+    Decimal,
     Hex,
 }
 
-impl ValueFormat {
+impl NumbersFormat {
     #[must_use]
-    pub fn format_u64(&self, input: u64) -> String {
-        match self {
-            ValueFormat::Default | ValueFormat::Int => format!("{input}"),
-            ValueFormat::Hex => format!("{input:#x}"),
-        }
-    }
-
-    #[must_use]
-    pub fn format_str(&self, input: &str) -> String {
-        if let Ok(field) = FieldElement::from_str(input) {
-            return match self {
-                ValueFormat::Int => format!("{field:#}"),
-                ValueFormat::Hex | ValueFormat::Default => format!("{field:#x}"),
-            };
-        }
-
-        input.to_string()
-    }
-
-    #[must_use]
-    pub fn format_json_value(&self, value: &Value) -> Option<String> {
-        match value {
-            Value::Number(n) => {
-                let n = n
-                    .as_u64()
-                    .unwrap_or_else(|| panic!("failed to convert {n} to u64"));
-                Some(self.format_u64(n))
-            }
-            Value::String(s) => Some(self.format_str(s)),
-            Value::Array(arr) => {
-                let arr_as_string = arr
-                    .iter()
-                    .filter_map(|item| self.format_json_value(item))
-                    .collect::<Vec<String>>()
-                    .join(", ");
-                Some(format!("[{arr_as_string}]"))
-            }
-            _ => None,
+    pub fn from_flags(hex_format: bool, dec_format: bool) -> Self {
+        assert!(
+            !(hex_format && dec_format),
+            "Exclusivity should be validated by clap"
+        );
+        if hex_format {
+            NumbersFormat::Hex
+        } else if dec_format {
+            NumbersFormat::Decimal
+        } else {
+            NumbersFormat::Default
         }
     }
 }
@@ -405,61 +375,6 @@ pub async fn handle_wait_for_tx<T>(
     Ok(return_value)
 }
 
-pub fn print_formatted(output: Vec<(&str, String)>, json: bool, error: bool) -> Result<()> {
-    if json {
-        let json_output: HashMap<&str, String> = output.into_iter().collect();
-        let json_value: Value = serde_json::to_value(json_output)?;
-
-        write_to_output(serde_json::to_string(&json_value)?, error);
-    } else {
-        for (key, value) in &output {
-            write_to_output(format!("{key}: {value}"), error);
-        }
-    }
-
-    Ok(())
-}
-
-pub fn print_command_result<T: Serialize>(
-    command: &str,
-    result: &mut Result<T>,
-    value_format: ValueFormat,
-    json: bool,
-) -> Result<()> {
-    let mut output = vec![("command", command.to_string())];
-    let json_value: Value;
-
-    let mut error = false;
-    match result {
-        Ok(result) => {
-            json_value = serde_json::to_value(result)
-                .map_err(|_| anyhow!("Failed to convert command result to serde_json::Value"))?;
-
-            output.extend(
-                json_value
-                    .as_object()
-                    .expect("Failed to parse JSON value")
-                    .iter()
-                    .filter_map(|(k, v)| value_format.format_json_value(v).map(|v| (k.as_str(), v)))
-                    .collect::<Vec<(&str, String)>>(),
-            );
-        }
-        Err(message) => {
-            output.push(("error", format!("{message:#}")));
-            error = true;
-        }
-    };
-    print_formatted(output, json, error)
-}
-
-fn write_to_output<T: std::fmt::Display>(value: T, error: bool) {
-    if error {
-        eprintln!("{value}");
-    } else {
-        println!("{value}");
-    }
-}
-
 pub fn parse_number(number_as_str: &str) -> Result<FieldElement> {
     let contract_address = match &number_as_str[..2] {
         "0x" => FieldElement::from_hex_be(number_as_str)?,
@@ -511,11 +426,9 @@ pub fn apply_optional<T, R, F: FnOnce(T, R) -> T>(initial: T, option: Option<R>,
 mod tests {
     use crate::{
         chain_id_to_network_name, extract_or_generate_salt, get_account_from_accounts_file,
-        get_block_id, udc_uniqueness, ValueFormat,
+        get_block_id, udc_uniqueness,
     };
     use camino::Utf8PathBuf;
-    use serde::Serialize;
-    use serde_json::json;
     use starknet::core::utils::UdcUniqueSettings;
     use starknet::core::utils::UdcUniqueness::{NotUnique, Unique};
     use starknet::{
@@ -526,7 +439,6 @@ mod tests {
         },
         providers::{jsonrpc::HttpTransport, JsonRpcClient},
     };
-    use test_case::test_case;
     use url::Url;
 
     #[test]
@@ -627,39 +539,5 @@ mod tests {
         assert!(err
             .to_string()
             .contains("Account = user1 not found under network = CUSTOM_CHAIN_ID"));
-    }
-
-    #[test_case(
-        "0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
-        "0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7";
-        "when value is hex"
-    )]
-    #[test_case("kapusta", "kapusta" ; "when value is string")]
-    #[test_case(132_435, "132435" ; "when value is uint")]
-    #[test_case([132_435, 121], "[132435, 121]" ; "when value is array of ints")]
-    #[test_case(
-        ["0x49d3657224e46f48e99674bd3fcc84644ddd6b96f7c221b1562b82f9e004dc7", "0x49d36333d4e46f48e99674bd3fcc84333ddd6b96f7c741b1562b82f9e004dc7"],
-        "[0x49d3657224e46f48e99674bd3fcc84644ddd6b96f7c221b1562b82f9e004dc7, 0x49d36333d4e46f48e99674bd3fcc84333ddd6b96f7c741b1562b82f9e004dc7]";
-        "when value is array of contract addresses"
-    )]
-    fn test_format_json_value_not_none<T: Serialize>(value: T, expected: &str) {
-        let value_format = ValueFormat::Default;
-        let json_value = serde_json::to_value(value).unwrap();
-
-        let actual = value_format.format_json_value(&json_value).unwrap();
-
-        assert_eq!(actual, expected);
-    }
-
-    #[test_case(true ; "when value is bool")]
-    #[test_case(json!({ "an": "object" }) ; "when value is an object")]
-    #[test_case(json!(null) ; "when value is null")]
-    fn test_format_json_value_is_none<T: Serialize>(value: T) {
-        let value_format = ValueFormat::Default;
-        let json_value = serde_json::to_value(value).unwrap();
-
-        let actual = value_format.format_json_value(&json_value);
-
-        assert_eq!(actual, None);
     }
 }
