@@ -25,13 +25,13 @@ impl OutputFormat {
     }
 }
 
-/// Constrained subset of `serde::json`
 #[derive(PartialEq, Eq, Debug)]
 pub enum OutputValue {
     String(String),
     Array(Vec<OutputValue>),
 }
 
+/// Constrained subset of `serde::json`. No nested maps allowed.
 type OutputData = Vec<(String, OutputValue)>;
 
 impl Serialize for OutputValue {
@@ -92,8 +92,8 @@ fn pretty_output(output: OutputData, output_format: &OutputFormat) -> Result<Vec
     match output_format {
         OutputFormat::Json => {
             let json_output: HashMap<String, OutputValue> = output.into_iter().collect();
-            let pretty_string = serde_json::to_string(&json_output)?;
-            Ok(vec![pretty_string])
+            let json_string = serde_json::to_string(&json_output)?;
+            Ok(vec![json_string])
         }
         OutputFormat::Human => {
             let mut result = vec![];

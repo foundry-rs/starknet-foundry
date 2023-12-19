@@ -54,7 +54,10 @@ pub enum NumbersFormat {
 impl NumbersFormat {
     #[must_use]
     pub fn from_flags(hex_format: bool, dec_format: bool) -> Self {
-        // Clap validates that both are not passed at same time
+        assert!(
+            !(hex_format && dec_format),
+            "Exclusivity should be validated by clap"
+        );
         if hex_format {
             NumbersFormat::Hex
         } else if dec_format {
