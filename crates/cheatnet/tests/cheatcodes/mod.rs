@@ -9,4 +9,5 @@ mod precalculate_address;
 mod roll;
 mod spoof;
 mod spy_events;
+mod store;
 mod warp;

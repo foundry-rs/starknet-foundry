@@ -15,6 +15,7 @@ pub mod precalculate_address;
 pub mod roll;
 pub mod spoof;
 pub mod spy_events;
+pub mod store;
 pub mod warp;
 
 /// A structure used for returning cheatcode errors in tests

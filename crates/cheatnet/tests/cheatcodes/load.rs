@@ -5,11 +5,9 @@ use cairo_felt::Felt252;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::call_contract;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::deploy;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::load::{
-    load, map_storage_address,
+    calculate_variable_address, load,
 };
 use conversions::felt252::FromShortString;
-use conversions::IntoConv;
-use starknet::core::crypto::pedersen_hash;
 
 #[test]
 fn load_simple_state() {
@@ -39,7 +37,7 @@ fn load_simple_state() {
     let balance_value = load(
         &mut blockifier_state,
         contract_address,
-        &starknet_keccak("balance".as_ref()),
+        &calculate_variable_address(felt_selector_from_name("balance"), None),
         &Felt252::from(1),
     )
     .unwrap();
@@ -80,15 +78,13 @@ fn load_state_map_simple_value() {
     )
     .unwrap();
 
-    // This can be abstracted in cairo code itself, without compromising load's interface simplicity
-    let variable_name_hashed = starknet_keccak("values".as_ref());
-    let value_address = pedersen_hash(&variable_name_hashed.into_(), &map_key.into_());
-    let value_address = map_storage_address(value_address);
+    let var_selector = felt_selector_from_name("values");
+    let var_address = calculate_variable_address(var_selector, Some(&vec![map_key]));
 
     let map_value = load(
         &mut blockifier_state,
         contract_address,
-        &value_address.into_(),
+        &var_address,
         &Felt252::from(1),
     )
     .unwrap();
@@ -130,15 +126,13 @@ fn load_state_map_complex_value() {
     )
     .unwrap();
 
-    // This can be abstracted in cairo code itself, without compromising load's interface simplicity
-    let variable_name_hashed = starknet_keccak("values".as_ref());
-    let value_address = pedersen_hash(&variable_name_hashed.into_(), &map_key.into_());
-    let value_address = map_storage_address(value_address);
+    let var_selector = felt_selector_from_name("values");
+    let variable_address = calculate_variable_address(var_selector, Some(&calldata));
 
     let map_value = load(
         &mut blockifier_state,
         contract_address,
-        &value_address.into_(),
+        &variable_address,
         &Felt252::from(2),
     )
     .unwrap();
@@ -181,17 +175,13 @@ fn load_state_map_complex_key() {
     .unwrap();
 
     // This can be abstracted in cairo code itself, without compromising load's interface simplicity
-    let variable_name_hashed = starknet_keccak("values".as_ref());
-    let value_address = pedersen_hash(
-        &pedersen_hash(&variable_name_hashed.into_(), &map_key[0].clone().into_()),
-        &map_key[1].clone().into_(),
-    );
-    let value_address = map_storage_address(value_address);
+    let var_selector = felt_selector_from_name("values");
+    let var_address = calculate_variable_address(var_selector, Some(&map_key));
 
     let map_value = load(
         &mut blockifier_state,
         contract_address,
-        &value_address.into_(),
+        &var_address,
         &Felt252::from(1),
     )
     .unwrap();
