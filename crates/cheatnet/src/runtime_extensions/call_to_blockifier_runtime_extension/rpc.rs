@@ -1,4 +1,7 @@
 use anyhow::Result;
+use blockifier::execution::execution_utils::stark_felt_to_felt;
+use cairo_lang_runner::casm_run::format_next_item;
+use cairo_lang_runner::short_string::as_cairo_short_string;
 use std::sync::Arc;
 
 use crate::constants::TEST_ADDRESS;
@@ -18,7 +21,6 @@ use blockifier::execution::{
 };
 use blockifier::state::errors::StateError;
 use cairo_felt::Felt252;
-use cairo_lang_runner::short_string::as_cairo_short_string;
 use starknet_api::core::PatriciaKey;
 use starknet_api::patricia_key;
 use starknet_api::{
@@ -82,11 +84,19 @@ impl CallContractFailure {
                     .map(|data| Felt252::from_bytes_be(data.bytes()))
                     .collect();
 
-                let err_data_str = err_data
-                    .iter()
-                    .map(|x| as_cairo_short_string(x).unwrap())
-                    .collect::<Vec<String>>()
-                    .join("\n");
+                // blockifier/src/execution_utils:274 (format_panic_data) (modified)
+                let err_data_str = {
+                    let mut felts = error_data.iter().map(|felt| stark_felt_to_felt(*felt));
+                    let mut items = Vec::new();
+                    while let Some(item) = format_next_item(&mut felts) {
+                        items.push(item.quote_if_string());
+                    }
+                    if let [item] = &items[..] {
+                        item.clone()
+                    } else {
+                        items.join("\n").to_string()
+                    }
+                };
 
                 for invalid_calldata_msg in [
                     "Failed to deserialize param #",
