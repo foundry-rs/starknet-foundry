@@ -1,12 +1,10 @@
+use crate::cheatcodes::{map_entry_address, variable_address};
 use crate::common::state::{create_cached_state, create_cheatnet_state};
 use crate::common::{felt_selector_from_name, get_contracts};
-use blockifier::abi::abi_utils::starknet_keccak;
 use cairo_felt::Felt252;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::call_contract;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::deploy;
-use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::load::{
-    calculate_variable_address, load,
-};
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::load::load;
 use conversions::felt252::FromShortString;
 
 #[test]
@@ -37,7 +35,7 @@ fn load_simple_state() {
     let balance_value = load(
         &mut blockifier_state,
         contract_address,
-        &calculate_variable_address(felt_selector_from_name("balance"), None),
+        &variable_address("balance"),
         &Felt252::from(1),
     )
     .unwrap();
@@ -78,9 +76,7 @@ fn load_state_map_simple_value() {
     )
     .unwrap();
 
-    let var_selector = felt_selector_from_name("values");
-    let var_address = calculate_variable_address(var_selector, Some(&[map_key]));
-
+    let var_address = map_entry_address("values", &[map_key]);
     let map_value = load(
         &mut blockifier_state,
         contract_address,
@@ -126,13 +122,12 @@ fn load_state_map_complex_value() {
     )
     .unwrap();
 
-    let var_selector = felt_selector_from_name("values");
-    let variable_address = calculate_variable_address(var_selector, Some(&[map_key]));
+    let entry_address = map_entry_address("values", &[map_key]);
 
     let map_value = load(
         &mut blockifier_state,
         contract_address,
-        &variable_address,
+        &entry_address,
         &Felt252::from(2),
     )
     .unwrap();
@@ -174,13 +169,11 @@ fn load_state_map_complex_key() {
     )
     .unwrap();
 
-    let var_selector = felt_selector_from_name("values");
-    let var_address = calculate_variable_address(var_selector, Some(&map_key));
-
+    let entry_address = map_entry_address("values", &map_key);
     let map_value = load(
         &mut blockifier_state,
         contract_address,
-        &var_address,
+        &entry_address,
         &Felt252::from(1),
     )
     .unwrap();
@@ -219,7 +212,7 @@ fn load_state_struct() {
     )
     .unwrap();
 
-    let variable_name_hashed = starknet_keccak("value".as_ref());
+    let variable_name_hashed = variable_address("value");
     let struct_value = load(
         &mut blockifier_state,
         contract_address,

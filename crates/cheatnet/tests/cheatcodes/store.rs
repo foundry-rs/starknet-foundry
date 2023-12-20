@@ -1,10 +1,10 @@
 use crate::assert_success;
+use crate::cheatcodes::{map_entry_address, variable_address};
 use crate::common::state::{create_cached_state, create_cheatnet_state};
 use crate::common::{felt_selector_from_name, get_contracts};
 use cairo_felt::Felt252;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::call_contract;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::deploy;
-use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::load::calculate_variable_address;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::store::store;
 use conversions::felt252::FromShortString;
 
@@ -25,7 +25,7 @@ fn store_simple_state() {
     store(
         &mut blockifier_state,
         contract_address,
-        &felt_selector_from_name("balance"),
+        &variable_address("balance"),
         &[Felt252::from(666)],
     )
     .unwrap();
@@ -61,11 +61,7 @@ fn store_state_map_simple_value() {
     let map_key = Felt252::from(420);
     let inserted_value = Felt252::from(69);
 
-    // This can be abstracted in cairo code itself, without compromising load's interface simplicity
-    let variable_name_selector = felt_selector_from_name("values");
-    let entry_address =
-        calculate_variable_address(variable_name_selector, Some(&[map_key.clone()]));
-
+    let entry_address = map_entry_address("values", &[map_key.clone()]);
     store(
         &mut blockifier_state,
         contract_address,
@@ -103,9 +99,7 @@ fn store_state_map_complex_value() {
 
     let map_key = Felt252::from(420);
     let inserted_values = vec![Felt252::from(68), Felt252::from(69)];
-    let variable_name_selector = felt_selector_from_name("values");
-    let entry_address =
-        calculate_variable_address(variable_name_selector, Some(&[map_key.clone()]));
+    let entry_address = map_entry_address("values", &[map_key.clone()]);
 
     store(
         &mut blockifier_state,
@@ -144,9 +138,7 @@ fn store_state_map_complex_key() {
     let map_key = vec![Felt252::from(68), Felt252::from(69)];
     let inserted_value = Felt252::from(420);
 
-    let variable_name_selector = felt_selector_from_name("values");
-    let entry_address = calculate_variable_address(variable_name_selector, Some(&map_key));
-
+    let entry_address = map_entry_address("values", &map_key);
     store(
         &mut blockifier_state,
         contract_address,
@@ -183,12 +175,11 @@ fn store_state_struct() {
 
     let inserted_values = vec![Felt252::from(68), Felt252::from(69)];
 
-    let variable_name_selector = felt_selector_from_name("value");
-    let variable_address = calculate_variable_address(variable_name_selector, None);
+    let var_address = variable_address("values");
     store(
         &mut blockifier_state,
         contract_address,
-        &variable_address,
+        &var_address,
         &inserted_values,
     )
     .unwrap();
