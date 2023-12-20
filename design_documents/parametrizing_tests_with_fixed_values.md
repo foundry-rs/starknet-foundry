@@ -106,7 +106,7 @@ Parallel test execution implementation in forge makes deterministic test executi
 For good user experience, we should aim to implement parametrized tests in such a way that cases results are displayed
 in deterministic order and grouped together.
 
-Test execution itself can be performed in any order as long as we display the results in grouped manner.
+Test execution itself can be performed in any order as long as we display the results in a grouped manner.
 We can follow the fuzzed tests implementation for this.
 
 ### Behavior of `--exit-first` Flag
