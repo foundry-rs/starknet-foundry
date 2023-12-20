@@ -7,12 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.1] - 2023-12-20
+
 ### Forge
 
 #### Changed 
 
 - fields from `starknet::info::v2::TxInfo` are now part of `TxInfoMock` from `snforge_std::cheatcodes::tx_info`
 - consistent latest block numbers for each url are now used across the whole run when testing against forks
+
+#### Fixed
+
+- Parsing panic data from call contract result
 
 ### Cast
 
@@ -24,10 +30,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - Argument `max-fee` in `account deploy` is now optional
-
-#### Fixed
-
-- Parsing panic data from call contract result
 
 ## [0.13.0] - 2023-12-14
 
