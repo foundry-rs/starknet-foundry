@@ -11,25 +11,18 @@ Propose a way of adding support for parametrized tests to Starknet Foundry's `sn
 
 ## Proposed Solution
 
-Introduce two new attributes: `parametrize` and `case`.
-
-- `parametrize` - defines a parametrized test.
-- `case` - defines a specific test case
+Introduce new attribute `test_case`.
 
 Generate code for each of the test cases so no handling of values injection, etc. is necessary.
 The compiler would then validate if the values for the generated code are actually valid.
 Thanks to that, we could have failures for invalid arguments early in the execution.
 
-### Parametrization With Simple Arguments
+### Parametrization With Arguments
 
 ```cairo
-#[parametrize]
-#[case(1, 3)]
-#[case(3, 5)]
-#[test]
+#[test_case(1, 3)]
+#[test_case(3, 5)]
 fn my_test(a: felt252, b: u32) {
-    // case a = 1, b = 3
-    // case a = 3, b = 5
     // ...
 }
 ```
@@ -41,107 +34,43 @@ For test cases like this, we would generate two actual test cases:
 fn my_test_case_1() {
   let a: felt252 = 1;
   let b: u32 = 3;
+  // ...
 }
 
 #[test]
 fn my_test_case_2() {
-  let a: felt252 = 3;
-  let b: u32 = 5;
+    let a: felt252 = 3;
+    let b: u32 = 5;
+  // ...
 }
 ```
 
-The explicit type annotations for each argument are necessary.
-This way, if the user provides invalid value for the type defined, the compiler will throw a relevant error.
+### Generated Cases Names
 
-### Parametrization With Fixtures
+Generated test cases should be named in such a way that we can automatically detect which tests are generated cases of
+the same base test.
 
-```cairo
-struct MyStruct {
-    a: felt252, 
-    b: Array<felt252>
-}
+Test in `snforge` can be filtered by name.
+It is important that generated test names do not break the test filtering logic.
 
-fn my_fixture() -> MyStruct {
-    MyStruct { a: 1, b: array![2, 3] }
-}
-
-#[parametrize]
-#[case(1, my_fixture())]
-#[case(3, my_fixture())]
-#[test]
-fn my_test(a: felt252, b: MyStruct) {
-    // case a = 1, b = MyStruct { a: 1, b: [2, 3] }
-    // case a = 3, b = MyStruct { a: 1, b: [2, 3] }
-    // ...
-}
-```
-
-For fixtures, we would generate code in the exactly same manner as for simple arguments.
-
-```cairo
-// ...
-#[test]
-fn my_test_1() {
-    let a = 1;
-    let b = my_fixture();
-    // ...
-}
-```
-
-### Parametrized Fixtures
-
-```cairo
-struct MyStruct {
-    a: felt252, 
-    b: Array<felt252>
-}
-
-fn my_fixture(a: felt252, b: felt252, c: felt252) -> MyStruct {
-    MyStruct { a: a, b: array![b, c] }
-}
-
-#[parametrize]
-#[case(1, my_fixture(2, 3, 4))]
-#[case(3, my_fixture(5, 6, 7))]
-#[test]
-fn my_test(a: felt252, b: MyStruct) {
-    // case a = 1, b = MyStruct { a: 2, b: [3, 4] }
-    // case a = 3, b = MyStruct { a: 5, b: [6, 7] }
-    // ...
-}
-```
-
-This could be handled in a very similar manner as the [non-parametrized fixture case](#parametrization-with-fixtures):
-
-```cairo
-// ...
-#[test]
-fn my_test_generated(a: felt252) {
-    let a = 1;
-    let b = my_fixture(2, 3, 4);
-    // ...
-}
-```
+This can be resolved by either using names for generated tests that still work with filters as the base test would do,
+or changing the filtering logic, so it can recognize generated test cases and treat them accordingly.
 
 ### Parametrizing With Complex Types
 
-While it is technically possible to use complex types in attributes instead of defining fixtures, handling of them in
-code would be quite problematic based on my limited research.
-
-Annotations do not seem to be type-checked at all.
-Arguments passed to annotations are returned as AST node in the compiler code.
-Handling and generating the necessary Cairo code from them is not trivial.
-
-Based on these conclusions, it is logical we limit our support only simple types or calls to functions, without support
-for nested calls, etc.
-
-For example, this syntax would not be allowed:
+Complex types would result in the same code generation as simple types:
 
 ```cairo
-#[parametrize]
-#[case(MyStruct { a: 1, b: array![2, 3] })]
-#[test]
+#[test_case(MyStruct { a: 1, b: array![2, 3] })]
 fn my_test(a: MyStruct) {
+    // ...
+}
+```
+
+```cairo
+#[test]
+fn my_test_1() {
+    let a = MyStruct { a: 1, b: array![2, 3] };
     // ...
 }
 ```
@@ -171,9 +100,18 @@ Failure data:
 # ...
 ```
 
+## Deterministic Test Execution Order
+
+Parallel test execution implementation in forge makes deterministic test execution order non-trivial.
+For good user experience, we should aim to implement parametrized tests in such a way that cases are executed in
+deterministic order directly after each other.
+
+This is not a technical requirement for implementing parametrized tests but will make for a much better UX, especially
+in case of displaying failures of some parametrized cases.
+
 ## Required Changes to Test Collector
 
-To support parametric test, we need to introduce some changes to the test collector in Scarb.
+To support parametric test, we need to introduce some changes to the test collector in Scarb as outlined below.
 
 ### Define the Necessary Attributes
 
@@ -182,18 +120,24 @@ This change is mostly straightforward: It can be done in the same manner as all 
 ### Code Generation
 
 If the parameterized test case uses different fixtures, we will have to generate several versions of the test case.
-Additionally, if we follow the alternative approach of handling [parameterized fixtures](#parametrized-fixtures),
-we will also need to generate the necessary argument definitions.
 
-## Possible Problems With Code Generation
+For this approach, my recommendation is to use plugins for code generation.
+We could create a separate plugin for just generating test cases from our attribute and make sure it is executed before
+the test collection.
+
+Cairo repository contains multiple examples of plugins that generate Cairo code which we could follow:
+
+- https://github.com/starkware-libs/cairo/blob/main/crates/cairo-lang-plugins/src/plugins/generate_trait.rs
+- https://github.com/starkware-libs/cairo/blob/main/crates/cairo-lang-plugins/src/plugins/panicable.rs
+- https://github.com/starkware-libs/cairo/blob/main/crates/cairo-lang-semantic/src/inline_macros/array.rs
+
+Details of this are for the implementer to investigate, but my recommendation would be to not attempt any approaches
+where we try to modify the test code in the compiler itself but generate the necessary test cases.
+
+### Possible Problems With Code Generation
 
 For each test case, we will have to generate multiple versions of the test.
-
 This is problematic because `snforge` would treat these generated tests as completely separate entities.
 
-Some possible solutions to this problem would be:
-
-- Modifying the `TestCaseRaw` so it contains some additional field that allows tests cases to reference each other: This
-  way would know which tests are just different cases of the same sour code.
-- Modify `TestCaseRaw` so it can contain references to multiple "implementations".
-  `snforge` would then find these implementations and run them in a bundle.
+Test collector should be modified, so that cases of the same test as a single bundle.
+This way we can handle execution of them more easily.
