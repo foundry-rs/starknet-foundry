@@ -175,7 +175,7 @@ fn store_state_struct() {
 
     let inserted_values = vec![Felt252::from(68), Felt252::from(69)];
 
-    let var_address = variable_address("values");
+    let var_address = variable_address("value");
     store(
         &mut blockifier_state,
         contract_address,
