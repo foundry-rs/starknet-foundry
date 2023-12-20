@@ -2621,7 +2621,7 @@ checksum = "00b0228411908ca8685dba7fc2cdd70ec9990a6e753e89b6ac91a84c40fbaf4b"
 
 [[package]]
 name = "forge"
-version = "0.13.0"
+version = "0.13.1"
 dependencies = [
  "anyhow",
  "ark-ff",
@@ -2685,7 +2685,7 @@ dependencies = [
 
 [[package]]
 name = "forge_runner"
-version = "0.13.0"
+version = "0.13.1"
 dependencies = [
  "anyhow",
  "blockifier",
@@ -5043,7 +5043,7 @@ dependencies = [
 
 [[package]]
 name = "sncast"
-version = "0.13.0"
+version = "0.13.1"
 dependencies = [
  "anyhow",
  "cairo-felt 0.8.3",
