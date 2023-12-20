@@ -109,6 +109,16 @@ in deterministic order and grouped together.
 Test execution itself can be performed in any order as long as we display the results in grouped manner.
 We can follow the fuzzed tests implementation for this.
 
+### Behavior of `--exit-first` Flag
+
+In case `--exit-first` flag is used we should try to have consistent behavior of parametrized tests.
+
+If some other test fails and there are cases of parametrized tests that did not finish execution,
+we should not display any results of parametrized test.
+
+In case a parametrized test case fails, we should display it.
+Other cases may not be displayed in this case.
+
 ## Required Changes to Test Collector
 
 To support parametric test, we need to introduce some changes to the test collector in Scarb as outlined below.
