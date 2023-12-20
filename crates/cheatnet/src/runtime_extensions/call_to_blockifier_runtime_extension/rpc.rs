@@ -1,7 +1,6 @@
 use anyhow::Result;
 use blockifier::execution::execution_utils::stark_felt_to_felt;
 use cairo_lang_runner::casm_run::format_next_item;
-use cairo_lang_runner::short_string::as_cairo_short_string;
 use std::sync::Arc;
 
 use crate::constants::TEST_ADDRESS;
