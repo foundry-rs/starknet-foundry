@@ -4,7 +4,7 @@ use camino::Utf8PathBuf;
 use clap::Args;
 use serde::Deserialize;
 use sncast::helpers::constants::UDC_ADDRESS;
-use sncast::helpers::response_structs::InvokeResponse;
+use sncast::response::structs::InvokeResponse;
 use sncast::{extract_or_generate_salt, parse_number, udc_uniqueness, WaitForTx};
 use starknet::accounts::{Account, Call, SingleOwnerAccount};
 use starknet::core::types::FieldElement;

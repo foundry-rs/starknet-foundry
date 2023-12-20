@@ -1,6 +1,6 @@
 # Writing Tests
 
-Forge lets you test standalone functions from your smart contracts. This technique is referred to as unit testing. You
+`snforge` lets you test standalone functions from your smart contracts. This technique is referred to as unit testing. You
 should write as many unit tests as possible as these are faster than integration tests.
 
 ## Writing Your First Test
@@ -26,9 +26,9 @@ mod tests {
 It is a common practice to keep your unit tests in the same file as the tested code. 
 Keep in mind that all tests in `src` folder have to be in a module annotated with `#[cfg(test)]`.
 When it comes to integration tests, you can keep them in separate files in the `tests` directory.
-You can find a detailed explanation of how Forge collects tests [here](test-collection.md).
+You can find a detailed explanation of how `snforge` collects tests [here](test-collection.md).
 
-Now run forge using a command:
+Now run `snforge` using a command:
 
 ```shell
 $ snforge test

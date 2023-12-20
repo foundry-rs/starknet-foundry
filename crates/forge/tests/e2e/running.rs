@@ -608,7 +608,7 @@ fn with_print() {
         original value: [152]
         original value: [124], converted to a string: [|]
         original value: [149]
-        original value: [439721161573], converted to a string: [false]
+        original value: [0]
         original value: [27]
         original value: [17]
         original value: [37], converted to a string: [%]

@@ -8,7 +8,7 @@ Starknet Foundry cast can be used to run deployment scripts written in Cairo, us
 It aims to provide similar functionality to Foundry's `forge script`.
 
 To start writing a deployment script in Cairo just add `cast_std` as a dependency to you scarb package and make sure to
-have a `main` function in the module you want to run. `cast_std` docs can be found [here](../appendix/cast-library.md).
+have a `main` function in the module you want to run. `cast_std` docs can be found [here](../appendix/sncast-library.md).
 
 Please note that **`sncast script` is in development**. While it is already possible to declare, deploy, invoke and call
 contracts from within Cairo, its interface, internals and feature set can change rapidly each version.
@@ -82,7 +82,7 @@ status: success
 
 ### Full Example (With Contract Deployment)
 
-This example script declares, deploys and interacts with an example [map contract](https://github.com/foundry-rs/starknet-foundry/tree/master/crates/cast/tests/data/contracts/map):
+This example script declares, deploys and interacts with an example [map contract](https://github.com/foundry-rs/starknet-foundry/tree/master/crates/sncast/tests/data/contracts/map):
 
 ```cairo
 use sncast_std::{

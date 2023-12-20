@@ -5,6 +5,7 @@ use crate::starknet_commands::{
     script::Script,
 };
 use anyhow::{Context, Result};
+use sncast::response::print::{print_command_result, OutputFormat};
 
 use crate::starknet_commands::declare::BuildConfig;
 use camino::Utf8PathBuf;
@@ -13,7 +14,7 @@ use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTEN
 use sncast::helpers::scarb_utils::{parse_scarb_config, CastConfig};
 use sncast::{
     chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_nonce, get_provider,
-    print_command_result, ValueFormat, WaitForTx,
+    NumbersFormat, WaitForTx,
 };
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
@@ -111,14 +112,8 @@ enum Commands {
 fn main() -> Result<()> {
     let cli = Cli::parse();
 
-    // Clap validates that both are not passed at same time
-    let value_format = if cli.hex_format {
-        ValueFormat::Hex
-    } else if cli.int_format {
-        ValueFormat::Int
-    } else {
-        ValueFormat::Default
-    };
+    let numbers_format = NumbersFormat::from_flags(cli.hex_format, cli.int_format);
+    let output_format = OutputFormat::from_flag(cli.json);
 
     let mut config = parse_scarb_config(&cli.profile, &cli.path_to_scarb_toml)?;
     update_cast_config(&mut config, &cli);
@@ -135,10 +130,16 @@ fn main() -> Result<()> {
             &config,
         );
 
-        print_command_result("script", &mut result, value_format, cli.json)?;
+        print_command_result("script", &mut result, numbers_format, &output_format)?;
         Ok(())
     } else {
-        runtime.block_on(run_async_command(cli, config, provider, value_format))
+        runtime.block_on(run_async_command(
+            cli,
+            config,
+            provider,
+            numbers_format,
+            output_format,
+        ))
     }
 }
 
@@ -147,7 +148,8 @@ async fn run_async_command(
     cli: Cli,
     config: CastConfig,
     provider: JsonRpcClient<HttpTransport>,
-    value_format: ValueFormat,
+    numbers_format: NumbersFormat,
+    output_format: OutputFormat,
 ) -> Result<()> {
     let wait_config = WaitForTx {
         wait: cli.wait,
@@ -177,7 +179,7 @@ async fn run_async_command(
             )
             .await;
 
-            print_command_result("declare", &mut result, value_format, cli.json)?;
+            print_command_result("declare", &mut result, numbers_format, &output_format)?;
             Ok(())
         }
         Commands::Deploy(deploy) => {
@@ -200,7 +202,7 @@ async fn run_async_command(
             )
             .await;
 
-            print_command_result("deploy", &mut result, value_format, cli.json)?;
+            print_command_result("deploy", &mut result, numbers_format, &output_format)?;
             Ok(())
         }
         Commands::Call(call) => {
@@ -215,7 +217,7 @@ async fn run_async_command(
             )
             .await;
 
-            print_command_result("call", &mut result, value_format, cli.json)?;
+            print_command_result("call", &mut result, numbers_format, &output_format)?;
             Ok(())
         }
         Commands::Invoke(invoke) => {
@@ -237,7 +239,7 @@ async fn run_async_command(
             )
             .await;
 
-            print_command_result("invoke", &mut result, value_format, cli.json)?;
+            print_command_result("invoke", &mut result, numbers_format, &output_format)?;
             Ok(())
         }
         Commands::Multicall(multicall) => {
@@ -246,7 +248,12 @@ async fn run_async_command(
                     if let Some(output_path) = &new.output_path {
                         let mut result =
                             starknet_commands::multicall::new::new(output_path, new.overwrite);
-                        print_command_result("multicall new", &mut result, value_format, cli.json)?;
+                        print_command_result(
+                            "multicall new",
+                            &mut result,
+                            numbers_format,
+                            &output_format,
+                        )?;
                     } else {
                         println!("{DEFAULT_MULTICALL_CONTENTS}");
                     }
@@ -267,7 +274,12 @@ async fn run_async_command(
                     )
                     .await;
 
-                    print_command_result("multicall run", &mut result, value_format, cli.json)?;
+                    print_command_result(
+                        "multicall run",
+                        &mut result,
+                        numbers_format,
+                        &output_format,
+                    )?;
                 }
             }
             Ok(())
@@ -284,7 +296,7 @@ async fn run_async_command(
                 )
                 .await;
 
-                print_command_result("account add", &mut result, value_format, cli.json)?;
+                print_command_result("account add", &mut result, numbers_format, &output_format)?;
                 Ok(())
             }
             account::Commands::Create(create) => {
@@ -310,7 +322,12 @@ async fn run_async_command(
                 )
                 .await;
 
-                print_command_result("account create", &mut result, value_format, cli.json)?;
+                print_command_result(
+                    "account create",
+                    &mut result,
+                    numbers_format,
+                    &output_format,
+                )?;
                 Ok(())
             }
             account::Commands::Deploy(deploy) => {
@@ -338,7 +355,12 @@ async fn run_async_command(
                 )
                 .await;
 
-                print_command_result("account deploy", &mut result, value_format, cli.json)?;
+                print_command_result(
+                    "account deploy",
+                    &mut result,
+                    numbers_format,
+                    &output_format,
+                )?;
                 Ok(())
             }
             account::Commands::Delete(delete) => {
@@ -356,7 +378,12 @@ async fn run_async_command(
                     delete.yes,
                 );
 
-                print_command_result("account delete", &mut result, value_format, cli.json)?;
+                print_command_result(
+                    "account delete",
+                    &mut result,
+                    numbers_format,
+                    &output_format,
+                )?;
                 Ok(())
             }
         },
@@ -368,7 +395,7 @@ async fn run_async_command(
                 cli.path_to_scarb_toml,
             )
             .await;
-            print_command_result("show-config", &mut result, value_format, cli.json)?;
+            print_command_result("show-config", &mut result, numbers_format, &output_format)?;
             Ok(())
         }
         Commands::Script(_) => unreachable!(),
