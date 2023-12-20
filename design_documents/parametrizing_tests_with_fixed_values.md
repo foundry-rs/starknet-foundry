@@ -100,14 +100,14 @@ Failure data:
 # ...
 ```
 
-## Deterministic Test Execution Order
+## Deterministic Test Output Order
 
 Parallel test execution implementation in forge makes deterministic test execution order non-trivial.
-For good user experience, we should aim to implement parametrized tests in such a way that cases are executed in
-deterministic order directly after each other.
+For good user experience, we should aim to implement parametrized tests in such a way that cases results are displayed
+in deterministic order and grouped together.
 
-This is not a technical requirement for implementing parametrized tests but will make for a much better UX, especially
-in case of displaying failures of some parametrized cases.
+Test execution itself can be performed in any order as long as we display the results in grouped manner.
+We can follow the fuzzed tests implementation for this.
 
 ## Required Changes to Test Collector
 
