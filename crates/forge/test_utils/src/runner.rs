@@ -6,8 +6,6 @@ use forge_runner::test_crate_summary::TestCrateSummary;
 use indoc::formatdoc;
 use scarb_artifacts::{get_contracts_map, StarknetContractArtifacts};
 use scarb_metadata::MetadataCommand;
-use serde_json::Value;
-use sierra_casm::compile;
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -89,13 +87,7 @@ impl Contract {
         Ok(get_contracts_map(&scarb_metadata, &package.id)
             .unwrap()
             .into_values()
-            .map(|x| {
-                let sierra: Value = serde_json::from_str(&x.sierra).unwrap();
-                (
-                    x.sierra,
-                    serde_json::to_string(&compile(sierra).unwrap()).unwrap(),
-                )
-            })
+            .map(|x| (x.sierra, x.casm))
             .next()
             .unwrap())
     }

@@ -26,4 +26,3 @@ tokio.workspace = true
 forge = { path = "../../forge" }
 scarb-api = { path = "../../scarb-api" }
 forge_runner = { path = "../../forge-runner" }
-sierra-casm = { path = "../../sierra-casm" }
