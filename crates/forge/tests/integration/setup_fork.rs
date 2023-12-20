@@ -276,7 +276,7 @@ fn fork_get_block_info_fails() {
 
 #[test]
 // found in: https://github.com/foundry-rs/starknet-foundry/issues/1175
-fn problematic_contract_fork() {
+fn incompatible_abi() {
     let test = test_case!(formatdoc!(
         r#"
             #[derive(Serde)]
@@ -294,6 +294,8 @@ fn problematic_contract_fork() {
             fn test_forking_functionality() {{
                 let gov_contract_addr: starknet::ContractAddress = 0x7ba1d4836a1142c09dde23cb39b2885fe350912591461b5764454a255bdbac6.try_into().unwrap();
                 let dispatcher = IGovernanceDispatcher {{ contract_address: gov_contract_addr }};
+                let propdetails = dispatcher.get_proposal_details(1);
+                assert(propdetails.payload==0x78b4ccacdc1c902281f6f13d94b6d17b1f4c44ff811c01dea504d43a264f611, 'payload not match');
             }}
         "#,
     )
