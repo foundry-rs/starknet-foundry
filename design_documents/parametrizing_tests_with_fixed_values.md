@@ -89,14 +89,14 @@ An example output could look similarly to this:
 
 ```shell
 $ snforge test
-[PASS] tests::parametrized(a = 1, b = 2, c = my_fixture(1, 2))
-[PASS] tests::parametrized(a = 3, b = 5, c = my_fixture(4, 5))
-[FAIL] tests::parametrized(a = 4, b = 5, c = my_fixture(3, 2))
+[PASS] tests::parametrized(a = 1, b = 2)
+[PASS] tests::parametrized(a = 3, b = 5)
+[FAIL] tests::parametrized(a = 4, b = 5)
 
 Failure data:
     original value: [344693033283], converted to a string: [PANIC]
     
-[PASS] tests::parametrized(a = 5, b = 7, c = my_fixture(7, 8))
+[PASS] tests::parametrized(a = 5, b = 7)
 # ...
 ```
 
@@ -118,8 +118,6 @@ To support parametric test, we need to introduce some changes to the test collec
 This change is mostly straightforward: It can be done in the same manner as all other attributes.
 
 ### Code Generation
-
-If the parameterized test case uses different fixtures, we will have to generate several versions of the test case.
 
 For this approach, my recommendation is to use plugins for code generation.
 We could create a separate plugin for just generating test cases from our attribute and make sure it is executed before
