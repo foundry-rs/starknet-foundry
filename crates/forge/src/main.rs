@@ -17,8 +17,6 @@ use scarb_metadata::{Metadata, MetadataCommand, PackageMetadata};
 use scarb_ui::args::PackagesFilter;
 
 use forge::block_number_map::BlockNumberMap;
-use serde_json::Value;
-use sierra_casm::compile;
 use std::env;
 use std::sync::Arc;
 use std::thread::available_parallelism;
@@ -185,15 +183,7 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                 env::set_current_dir(&package.root)?;
 
                 let forge_config = config_from_scarb_for_package(&scarb_metadata, &package.id)?;
-                let mut contracts =
-                    get_contracts_map(&scarb_metadata, &package.id).unwrap_or_default();
-
-                for (_, artifact) in &mut contracts.iter_mut() {
-                    if artifact.casm.is_empty() {
-                        let sierra: Value = serde_json::from_str(&artifact.sierra).unwrap();
-                        artifact.casm = serde_json::to_string(&compile(sierra).unwrap()).unwrap();
-                    }
-                }
+                let contracts = get_contracts_map(&scarb_metadata, &package.id).unwrap_or_default();
 
                 let runner_config = Arc::new(combine_configs(
                     &workspace_root,

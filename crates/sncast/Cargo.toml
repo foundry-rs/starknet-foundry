@@ -28,7 +28,6 @@ indoc.workspace = true
 tempfile.workspace = true
 runtime = { path = "../runtime" }
 conversions = { path = "../conversions" }
-sierra-casm = { path = "../sierra-casm" }
 cairo-lang-runner.workspace = true
 cairo-lang-casm.workspace = true
 cairo-lang-sierra-to-casm.workspace = true
