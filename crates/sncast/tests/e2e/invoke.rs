@@ -4,6 +4,7 @@ use crate::helpers::fixtures::{
 };
 use crate::helpers::runner::runner;
 use indoc::indoc;
+use sncast::helpers::constants::UDC_ADDRESS;
 use starknet::core::types::TransactionReceipt::Invoke;
 
 #[tokio::test]
@@ -33,6 +34,34 @@ async fn test_happy_case() {
     let receipt = get_transaction_receipt(hash).await;
 
     assert!(matches!(receipt, Invoke(_)));
+}
+#[tokio::test]
+async fn test_tx_reverted() {
+    let class_hash = from_env("CAST_MAP_CLASS_HASH").unwrap();
+    let mut args = default_cli_args();
+
+    args.append(&mut vec![
+        "--account",
+        "user2",
+        "--wait",
+        "invoke",
+        "--contract-address",
+        UDC_ADDRESS,
+        "--function",
+        "deployContract",
+        "--calldata",
+        &class_hash,
+        "0x2 0x01 0x03 0x2 0x1 0x1",
+        "--max-fee",
+        "99999999999999999",
+    ]);
+
+    let snapbox = runner(&args);
+
+    snapbox.assert().stderr_matches(indoc! {r"
+        command: invoke
+        error: Transaction has been reverted
+    "});
 }
 
 #[tokio::test]
