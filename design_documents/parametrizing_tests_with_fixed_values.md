@@ -139,8 +139,8 @@ Cairo repository contains multiple examples of plugins that generate Cairo code 
 - https://github.com/starkware-libs/cairo/blob/main/crates/cairo-lang-plugins/src/plugins/panicable.rs
 - https://github.com/starkware-libs/cairo/blob/main/crates/cairo-lang-semantic/src/inline_macros/array.rs
 
-Details of this are for the implementer to investigate, but my recommendation would be to not attempt any approaches
-where we try to modify the test code in the compiler itself but generate the necessary test cases.
+Details of this are for the implementer to investigate.
+My recommendation is to follow the implementations of other Cairo plugins and generate Cairo code for test cases.
 
 ### Possible Problems With Code Generation
 
