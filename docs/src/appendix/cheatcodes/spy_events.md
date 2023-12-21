@@ -165,6 +165,8 @@ The flow is much simpler (thanks to `EventAssertions` trait). Let's go through i
 
 - After the assertion, found events are removed from the spy. It stays clean and ready for the next events.
 
+In cases where you want to test an event was *not* emitted, use the `assert_not_emitted` function. It works similarly as `assert_emitted` with the only difference that it fails if an event was emitted during the execution.
+
 ## Splitting Events Between Multiple Spies
 
 Sometimes it is easier to split events between multiple spies. Let's do it.
