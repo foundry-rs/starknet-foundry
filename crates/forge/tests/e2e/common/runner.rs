@@ -44,7 +44,6 @@ pub(crate) fn setup_package_with_file_patterns(
     scarb_toml["dependencies"]["snforge_std"]["path"] = value(snforge_std_path);
     scarb_toml["dependencies"]["starknet"] = value("2.4.0");
     scarb_toml["target.starknet-contract"]["sierra"] = value(true);
-    scarb_toml["target.starknet-contract"]["casm"] = value(true);
 
     manifest_path.write_str(&scarb_toml.to_string()).unwrap();
 
