@@ -35,6 +35,7 @@ trait EventFetcher {
 
 trait EventAssertions<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>> {
     fn assert_emitted(ref self: EventSpy, events: @Array<(ContractAddress, T)>);
+    fn assert_not_emitted(ref self: EventSpy, events: @Array<(ContractAddress, T)>);
 }
 ```
 
@@ -67,7 +68,7 @@ mod SpyEventsChecker {
 ```rust
 use snforge_std::{declare, ContractClassTrait, spy_events, SpyOn, EventSpy, EventFetcher,
     event_name_hash, Event};
-    
+
 #[starknet::interface]
 trait ISpyEventsChecker<TContractState> {
     fn emit_one_event(ref self: TContractState, some_data: felt252);
@@ -84,15 +85,15 @@ fn test_complex_assertions() {
     dispatcher.emit_one_event(123);
 
     spy.fetch_events();
-    
+
     assert(spy.events.len() == 1, 'There should be one event');
-    
+
     let (from, event) = spy.events.at(0);
     assert(from == @contract_address, 'Emitted from wrong address');
     assert(event.keys.len() == 1, 'There should be one key');
     assert(event.keys.at(0) == @event_name_hash('FirstEvent'), 'Wrong event name');
     assert(event.data.len() == 1, 'There should be one data');
-    
+
     dispatcher.emit_one_event(123);
     assert(spy.events.len() == 1, 'There should be one event');
 
@@ -112,7 +113,7 @@ Let's go through important parts of the provided code:
 
 > 📝 **Note**
 > To assert the `name` property we have to hash a shortstring with the `event_name_hash` cheatcode.
-> 
+>
 > `fn event_name_hash(name: felt252) -> felt252`
 
 - It is worth noting that when we call the method which emits an event, `spy` is not updated immediately.
@@ -125,7 +126,7 @@ use snforge_std::{declare, ContractClassTrait, spy_events, SpyOn, EventSpy,
     EventAssertions};
 
 use SpyEventsChecker;
-    
+
 #[starknet::interface]
 trait ISpyEventsChecker<TContractState> {
     fn emit_one_event(ref self: TContractState, some_data: felt252);
@@ -172,7 +173,7 @@ Sometimes it is easier to split events between multiple spies. Let's do it.
 use snforge_std::{declare, ContractClassTrait, spy_events, SpyOn, EventSpy, EventAssertions};
 
 use SpyEventsChecker;
-    
+
 #[starknet::interface]
 trait ISpyEventsChecker<TContractState> {
     fn emit_one_event(ref self: TContractState, some_data: felt252);
@@ -184,7 +185,7 @@ fn test_simple_assertions() {
     let first_address = contract.deploy(array![]).unwrap();
     let second_address = contract.deploy(array![]).unwrap();
     let third_address = contract.deploy(array![]).unwrap();
-    
+
     let first_dispatcher = ISpyEventsCheckerDispatcher { first_address };
     let second_dispatcher = ISpyEventsCheckerDispatcher { second_address };
     let third_dispatcher = ISpyEventsCheckerDispatcher { third_address };

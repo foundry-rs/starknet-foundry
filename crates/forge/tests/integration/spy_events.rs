@@ -480,3 +480,145 @@ fn emit_unnamed_event() {
 
     assert_passed!(result);
 }
+
+#[test]
+fn assert_not_emitted_pass() {
+    let test = test_case!(
+        indoc!(
+            r"
+            use array::ArrayTrait;
+            use result::ResultTrait;
+            use starknet::ContractAddress;
+            use snforge_std::{ declare, ContractClassTrait, spy_events, EventSpy,
+                EventAssertions, SpyOn };
+
+            #[starknet::interface]
+            trait ISpyEventsChecker<TContractState> {
+                fn do_not_emit(ref self: TContractState);
+            }
+
+            #[starknet::contract]
+            mod SpyEventsChecker {
+                use starknet::ContractAddress;
+
+                #[storage]
+                struct Storage {}
+
+                #[event]
+                #[derive(Drop, starknet::Event)]
+                enum Event {
+                    FirstEvent: FirstEvent,
+                }
+
+                #[derive(Drop, starknet::Event)]
+                struct FirstEvent {
+                    some_data: felt252
+                }
+            }
+
+            #[test]
+            fn assert_not_emitted_pass() {
+                let contract = declare('SpyEventsChecker');
+                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+                let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
+
+                let mut spy = spy_events(SpyOn::One(contract_address));
+                dispatcher.do_not_emit();
+
+                spy.assert_not_emitted(@array![
+                    (
+                        contract_address,
+                        SpyEventsChecker::Event::FirstEvent(
+                            SpyEventsChecker::FirstEvent { some_data: 123 }
+                        )
+                    )
+                ]);
+            }
+        "
+        ),
+        Contract::from_code_path(
+            "SpyEventsChecker".to_string(),
+            Path::new("tests/data/contracts/spy_events_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test);
+
+    assert_passed!(result);
+}
+
+#[test]
+fn assert_not_emitted_fails() {
+    let test = test_case!(
+        indoc!(
+            r"
+            use array::ArrayTrait;
+            use result::ResultTrait;
+            use starknet::ContractAddress;
+            use snforge_std::{ declare, ContractClassTrait, spy_events, EventSpy, EventFetcher,
+                event_name_hash, EventAssertions, SpyOn };
+
+            #[starknet::interface]
+            trait ISpyEventsChecker<TContractState> {
+                fn emit_one_event(ref self: TContractState, some_data: felt252);
+            }
+
+            #[starknet::contract]
+            mod SpyEventsChecker {
+                use starknet::ContractAddress;
+
+                #[storage]
+                struct Storage {}
+
+                #[event]
+                #[derive(Drop, starknet::Event)]
+                enum Event {
+                    FirstEvent: FirstEvent
+                }
+
+                #[derive(Drop, starknet::Event)]
+                struct FirstEvent {
+                    some_data: felt252
+                }
+            }
+
+            #[test]
+            fn spy_events_simple() {
+                let contract = declare('SpyEventsChecker');
+                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+                let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
+
+                let mut spy = spy_events(SpyOn::One(contract_address));
+                assert(spy._id == 0, 'Id should be 0');
+
+                dispatcher.emit_one_event(123);
+
+                spy.assert_not_emitted(@array![
+                    (
+                        contract_address,
+                        SpyEventsChecker::Event::FirstEvent(
+                            SpyEventsChecker::FirstEvent { some_data: 123 }
+                        )
+                    )
+                ]);
+            }
+        "
+        ),
+        Contract::from_code_path(
+            "SpyEventsChecker".to_string(),
+            Path::new("tests/data/contracts/spy_events_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test);
+
+    assert_failed!(result);
+    assert_case_output_contains!(
+        result,
+        "assert_not_emitted_fails",
+        "Event with matching data and"
+    );
+    assert_case_output_contains!(result, "assert_not_emitted_fails", "keys was emitted");
+}
