@@ -62,6 +62,9 @@ the same base test.
 Test in `snforge` can be filtered by name.
 It is important that generated test names do not break the test filtering logic.
 
+For consistent UX, we should not allow filtering specific test cases.
+It should only be possible to filter the whole parametrized test.
+
 This can be resolved by either using names for generated tests that still work with filters as the base test would do,
 or changing the filtering logic, so it can recognize generated test cases and treat them accordingly.
 
