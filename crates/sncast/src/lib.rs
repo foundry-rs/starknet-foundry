@@ -8,7 +8,7 @@ use serde_json::Value;
 use starknet::core::types::{
     BlockId,
     BlockTag::{Latest, Pending},
-    ExecutionResult, FieldElement,
+    FieldElement,
     StarknetError::{
         BlockNotFound, ClassAlreadyDeclared, ClassHashNotFound, CompilationFailed,
         CompiledClassHashMismatch, ContractClassSizeIsTooLarge, ContractError, ContractNotFound,
@@ -28,15 +28,6 @@ use starknet::{
         ProviderError::StarknetError,
     },
     signers::{LocalWallet, SigningKey},
-};
-
-use starknet::{
-    core::types::{
-        BlockId,
-        BlockTag::{Latest, Pending},
-        FieldElement, StarknetError,
-    },
-    providers::{MaybeUnknownErrorCode, StarknetErrorWithMessage},
 };
 
 use std::collections::HashMap;
