@@ -107,9 +107,7 @@ impl EventAssertionsImpl<
 
             if emitted {
                 panic(
-                    array![
-                        'Event with matching data and', 'keys was emitted from', (*from).into()
-                    ]
+                    array!['Event with matching data and', 'keys was emitted from', (*from).into()]
                 );
             }
 
