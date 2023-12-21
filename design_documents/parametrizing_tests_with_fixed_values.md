@@ -160,6 +160,11 @@ In case `--rerun-failed` flag is used, only failed cases of a parametrized test 
 
 Rerun cases should still be displayed together: The behavior should be exactly the same as if just running test cases.
 
+### Behavior of `#[fuzzer]` Attribute
+
+It must not be possible to add `#[fuzzer]` attribute to parametrized test.
+It must not be possible to use fuzzing in parametrized test.
+
 ## Required Changes to Test Collector
 
 To support parametric test, we need to introduce some changes to the test collector in Scarb as outlined below.
