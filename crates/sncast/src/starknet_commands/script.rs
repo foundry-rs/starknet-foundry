@@ -34,10 +34,10 @@ use itertools::chain;
 use num_traits::ToPrimitive;
 use runtime::EnhancedHintError;
 use scarb_artifacts::ScarbCommand;
-use sncast::helpers::response_structs::ScriptResponse;
 use sncast::helpers::scarb_utils::{
     get_package_metadata, get_scarb_manifest, get_scarb_metadata_with_deps, CastConfig,
 };
+use sncast::response::structs::ScriptResponse;
 use starknet::accounts::Account;
 use starknet::core::types::{BlockId, BlockTag::Pending, FieldElement};
 use starknet::providers::jsonrpc::HttpTransport;
@@ -202,7 +202,7 @@ impl CairoHintProcessor<'_> {
                     .expect("Failed to insert data length");
 
                 buffer
-                    .write_data(call_response.response.iter().map(|el| Felt252::from_(*el)))
+                    .write_data(call_response.response.iter().map(|el| Felt252::from_(el.0)))
                     .expect("Failed to insert data");
 
                 Ok(())
@@ -248,11 +248,11 @@ impl CairoHintProcessor<'_> {
                 ))?;
 
                 buffer
-                    .write(Felt252::from_(declare_response.class_hash))
+                    .write(Felt252::from_(declare_response.class_hash.0))
                     .expect("Failed to insert class hash");
 
                 buffer
-                    .write(Felt252::from_(declare_response.transaction_hash))
+                    .write(Felt252::from_(declare_response.transaction_hash.0))
                     .expect("Failed to insert transaction hash");
 
                 Ok(())
@@ -316,11 +316,11 @@ impl CairoHintProcessor<'_> {
                 ))?;
 
                 buffer
-                    .write(Felt252::from_(deploy_response.contract_address))
+                    .write(Felt252::from_(deploy_response.contract_address.0))
                     .expect("Failed to insert contract address");
 
                 buffer
-                    .write(Felt252::from_(deploy_response.transaction_hash))
+                    .write(Felt252::from_(deploy_response.transaction_hash.0))
                     .expect("Failed to insert transaction hash");
 
                 Ok(())
@@ -376,7 +376,7 @@ impl CairoHintProcessor<'_> {
                 ))?;
 
                 buffer
-                    .write(Felt252::from_(invoke_response.transaction_hash))
+                    .write(Felt252::from_(invoke_response.transaction_hash.0))
                     .expect("Failed to insert transaction hash");
 
                 Ok(())

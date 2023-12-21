@@ -20,8 +20,8 @@ macro_rules! assert_panic {
         assert!(
             matches!(
                 $call_contract_output.result,
-                cheatnet::rpc::CallContractResult::Failure(
-                    cheatnet::rpc::CallContractFailure::Panic { panic_data, .. }
+                cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallContractResult::Failure(
+                    cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallContractFailure::Panic { panic_data, .. }
                 )
                 if panic_data == $expected_data
             )

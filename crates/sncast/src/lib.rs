@@ -5,18 +5,31 @@ use rand::rngs::OsRng;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use starknet::core::types::{
+    BlockId,
+    BlockTag::{Latest, Pending},
+    ExecutionResult, FieldElement,
+    StarknetError::{
+        BlockNotFound, ClassAlreadyDeclared, ClassHashNotFound, CompilationFailed,
+        CompiledClassHashMismatch, ContractClassSizeIsTooLarge, ContractError, ContractNotFound,
+        DuplicateTx, FailedToReceiveTransaction, InsufficientAccountBalance, InsufficientMaxFee,
+        InvalidTransactionIndex, InvalidTransactionNonce, NonAccount, TransactionExecutionError,
+        TransactionHashNotFound, UnsupportedContractClassVersion, UnsupportedTxVersion,
+        ValidationFailure,
+    },
+};
 use starknet::core::utils::UdcUniqueness::{NotUnique, Unique};
 use starknet::core::utils::{UdcUniqueSettings, UdcUniqueness};
-use starknet::providers::jsonrpc::RpcError::{Code, Unknown};
-use starknet::providers::ProviderError::Other;
 use starknet::{
     accounts::{ExecutionEncoding, SingleOwnerAccount},
     providers::{
         jsonrpc::{HttpTransport, JsonRpcClient},
         Provider, ProviderError,
+        ProviderError::StarknetError,
     },
     signers::{LocalWallet, SigningKey},
 };
+
 use starknet::{
     core::types::{
         BlockId,
@@ -25,15 +38,15 @@ use starknet::{
     },
     providers::{MaybeUnknownErrorCode, StarknetErrorWithMessage},
 };
+
 use std::collections::HashMap;
-use std::ops::Deref;
-use std::str::FromStr;
 use std::thread::sleep;
 use std::time::Duration;
 use std::{env, fs};
 use url::Url;
 
 pub mod helpers;
+pub mod response;
 
 #[derive(Deserialize, Serialize, Clone)]
 struct Account {
@@ -46,55 +59,25 @@ struct Account {
 }
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
-pub enum ValueFormat {
-    // Addresses as hex, fees as int
+pub enum NumbersFormat {
     Default,
-    // everything as int
-    Int,
-    // everything as hex
+    Decimal,
     Hex,
 }
 
-impl ValueFormat {
+impl NumbersFormat {
     #[must_use]
-    pub fn format_u64(&self, input: u64) -> String {
-        match self {
-            ValueFormat::Default | ValueFormat::Int => format!("{input}"),
-            ValueFormat::Hex => format!("{input:#x}"),
-        }
-    }
-
-    #[must_use]
-    pub fn format_str(&self, input: &str) -> String {
-        if let Ok(field) = FieldElement::from_str(input) {
-            return match self {
-                ValueFormat::Int => format!("{field:#}"),
-                ValueFormat::Hex | ValueFormat::Default => format!("{field:#x}"),
-            };
-        }
-
-        input.to_string()
-    }
-
-    #[must_use]
-    pub fn format_json_value(&self, value: &Value) -> Option<String> {
-        match value {
-            Value::Number(n) => {
-                let n = n
-                    .as_u64()
-                    .unwrap_or_else(|| panic!("failed to convert {n} to u64"));
-                Some(self.format_u64(n))
-            }
-            Value::String(s) => Some(self.format_str(s)),
-            Value::Array(arr) => {
-                let arr_as_string = arr
-                    .iter()
-                    .filter_map(|item| self.format_json_value(item))
-                    .collect::<Vec<String>>()
-                    .join(", ");
-                Some(format!("[{arr_as_string}]"))
-            }
-            _ => None,
+    pub fn from_flags(hex_format: bool, dec_format: bool) -> Self {
+        assert!(
+            !(hex_format && dec_format),
+            "Exclusivity should be validated by clap"
+        );
+        if hex_format {
+            NumbersFormat::Hex
+        } else if dec_format {
+            NumbersFormat::Decimal
+        } else {
+            NumbersFormat::Default
         }
     }
 }
@@ -226,13 +209,13 @@ fn get_account_from_keystore<'a>(
 
     let file_content = fs::read_to_string(path_to_account.clone())
         .with_context(|| format!("Failed to read a file = {}", &path_to_account))?;
-    let account_info: serde_json::Value = serde_json::from_str(&file_content)
+    let account_info: Value = serde_json::from_str(&file_content)
         .with_context(|| format!("Failed to parse file = {} to JSON", &path_to_account))?;
     let address = FieldElement::from_hex_be(
         account_info
             .get("deployment")
             .and_then(|deployment| deployment.get("address"))
-            .and_then(serde_json::Value::as_str)
+            .and_then(Value::as_str)
             .ok_or_else(|| anyhow::anyhow!("Failed to get address from account JSON file - make sure the account is deployed"))?
     )?;
 
@@ -326,10 +309,7 @@ pub async fn wait_for_tx(
                     }
                 }
             },
-            Err(ProviderError::StarknetError(StarknetErrorWithMessage {
-                code: MaybeUnknownErrorCode::Known(StarknetError::TransactionHashNotFound),
-                message: _,
-            })) => {
+            Err(StarknetError(TransactionHashNotFound)) => {
                 let remaining_time = i * u16::from(retry_interval);
                 println!("Waiting for transaction to be accepted ({i} retries / {remaining_time}s left until timeout)");
             }
@@ -344,47 +324,52 @@ pub async fn wait_for_tx(
     ))
 }
 
-#[must_use]
-pub fn get_rpc_error_message(error: &StarknetError) -> &'static str {
-    match error {
-        StarknetError::FailedToReceiveTransaction => "Node failed to receive transaction",
-        StarknetError::ContractNotFound => "There is no contract at the specified address",
-        StarknetError::BlockNotFound => "Block was not found",
-        StarknetError::TransactionHashNotFound => {
-            "Transaction with provided hash was not found (does not exist)"
-        }
-        StarknetError::InvalidTransactionIndex => "There is no transaction with such an index",
-        StarknetError::ClassHashNotFound => "Provided class hash does not exist",
-        StarknetError::ContractError => "An error occurred in the called contract",
-        StarknetError::InvalidTransactionNonce => "Invalid transaction nonce",
-        StarknetError::InsufficientMaxFee => "Max fee is smaller then the minimal transaction cost",
-        StarknetError::InsufficientAccountBalance => {
-            "Account balance is too small to cover transaction fee"
-        }
-        StarknetError::ClassAlreadyDeclared => {
-            "Contract with the same class hash is already declared"
-        }
-        _ => "Unknown RPC error",
-    }
-}
-
 pub fn handle_rpc_error<T>(error: ProviderError) -> std::result::Result<T, Error> {
     match error {
-        Other(x) => {
-            if let Some(err) = x
-                .deref()
-                .as_any()
-                .downcast_ref::<starknet::providers::jsonrpc::RpcError>()
-            {
-                match err {
-                    Code(error) => Err(anyhow!(get_rpc_error_message(error))),
-                    Unknown(error) => Err(anyhow!(error.message.clone())),
-                }
-            } else {
-                Err(anyhow!("Unknown RPC error"))
-            }
+        StarknetError(FailedToReceiveTransaction) => {
+            Err(anyhow!("Node failed to receive transaction"))
         }
-        ProviderError::StarknetError(error) => Err(anyhow!(error.message)),
+        StarknetError(ContractNotFound) => {
+            Err(anyhow!("There is no contract at the specified address"))
+        }
+        StarknetError(BlockNotFound) => Err(anyhow!("Block was not found")),
+        StarknetError(TransactionHashNotFound) => Err(anyhow!(
+            "Transaction with provided hash was not found (does not exist)"
+        )),
+        StarknetError(InvalidTransactionIndex) => {
+            Err(anyhow!("There is no transaction with such an index"))
+        }
+        StarknetError(ClassHashNotFound) => Err(anyhow!("Provided class hash does not exist")),
+        StarknetError(ContractError(err)) => Err(anyhow!(
+            "An error occurred in the called contract = {err:?}"
+        )),
+        StarknetError(InvalidTransactionNonce) => Err(anyhow!("Invalid transaction nonce")),
+        StarknetError(InsufficientMaxFee) => Err(anyhow!(
+            "Max fee is smaller than the minimal transaction cost"
+        )),
+        StarknetError(InsufficientAccountBalance) => Err(anyhow!(
+            "Account balance is too small to cover transaction fee"
+        )),
+        StarknetError(ClassAlreadyDeclared) => Err(anyhow!(
+            "Contract with the same class hash is already declared"
+        )),
+        StarknetError(TransactionExecutionError(err)) => {
+            Err(anyhow!("Transaction execution error = {err:?}"))
+        }
+        StarknetError(ValidationFailure(err)) => {
+            Err(anyhow!("Contract failed the validation = {err}"))
+        }
+        StarknetError(CompilationFailed) => Err(anyhow!("Contract failed to compile in starknet")),
+        StarknetError(ContractClassSizeIsTooLarge) => {
+            Err(anyhow!("Contract class size is too large"))
+        }
+        StarknetError(NonAccount) => Err(anyhow!("No account")),
+        StarknetError(DuplicateTx) => Err(anyhow!("Transaction already exists")),
+        StarknetError(CompiledClassHashMismatch) => Err(anyhow!("Compiled class hash mismatch")),
+        StarknetError(UnsupportedTxVersion) => Err(anyhow!("Unsupported transaction version")),
+        StarknetError(UnsupportedContractClassVersion) => {
+            Err(anyhow!("Unsupported contract class version"))
+        }
         _ => Err(anyhow!("Unknown RPC error")),
     }
 }
@@ -410,61 +395,6 @@ pub async fn handle_wait_for_tx<T>(
     }
 
     Ok(return_value)
-}
-
-pub fn print_formatted(output: Vec<(&str, String)>, json: bool, error: bool) -> Result<()> {
-    if json {
-        let json_output: HashMap<&str, String> = output.into_iter().collect();
-        let json_value: Value = serde_json::to_value(json_output)?;
-
-        write_to_output(serde_json::to_string(&json_value)?, error);
-    } else {
-        for (key, value) in &output {
-            write_to_output(format!("{key}: {value}"), error);
-        }
-    }
-
-    Ok(())
-}
-
-pub fn print_command_result<T: Serialize>(
-    command: &str,
-    result: &mut Result<T>,
-    value_format: ValueFormat,
-    json: bool,
-) -> Result<()> {
-    let mut output = vec![("command", command.to_string())];
-    let json_value: Value;
-
-    let mut error = false;
-    match result {
-        Ok(result) => {
-            json_value = serde_json::to_value(result)
-                .map_err(|_| anyhow!("Failed to convert command result to serde_json::Value"))?;
-
-            output.extend(
-                json_value
-                    .as_object()
-                    .expect("Failed to parse JSON value")
-                    .iter()
-                    .filter_map(|(k, v)| value_format.format_json_value(v).map(|v| (k.as_str(), v)))
-                    .collect::<Vec<(&str, String)>>(),
-            );
-        }
-        Err(message) => {
-            output.push(("error", format!("{message:#}")));
-            error = true;
-        }
-    };
-    print_formatted(output, json, error)
-}
-
-fn write_to_output<T: std::fmt::Display>(value: T, error: bool) {
-    if error {
-        eprintln!("{value}");
-    } else {
-        println!("{value}");
-    }
 }
 
 pub fn parse_number(number_as_str: &str) -> Result<FieldElement> {
@@ -518,11 +448,9 @@ pub fn apply_optional<T, R, F: FnOnce(T, R) -> T>(initial: T, option: Option<R>,
 mod tests {
     use crate::{
         chain_id_to_network_name, extract_or_generate_salt, get_account_from_accounts_file,
-        get_block_id, udc_uniqueness, ValueFormat,
+        get_block_id, udc_uniqueness,
     };
     use camino::Utf8PathBuf;
-    use serde::Serialize;
-    use serde_json::json;
     use starknet::core::utils::UdcUniqueSettings;
     use starknet::core::utils::UdcUniqueness::{NotUnique, Unique};
     use starknet::{
@@ -533,7 +461,6 @@ mod tests {
         },
         providers::{jsonrpc::HttpTransport, JsonRpcClient},
     };
-    use test_case::test_case;
     use url::Url;
 
     #[test]
@@ -634,39 +561,5 @@ mod tests {
         assert!(err
             .to_string()
             .contains("Account = user1 not found under network = CUSTOM_CHAIN_ID"));
-    }
-
-    #[test_case(
-        "0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
-        "0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7";
-        "when value is hex"
-    )]
-    #[test_case("kapusta", "kapusta" ; "when value is string")]
-    #[test_case(132_435, "132435" ; "when value is uint")]
-    #[test_case([132_435, 121], "[132435, 121]" ; "when value is array of ints")]
-    #[test_case(
-        ["0x49d3657224e46f48e99674bd3fcc84644ddd6b96f7c221b1562b82f9e004dc7", "0x49d36333d4e46f48e99674bd3fcc84333ddd6b96f7c741b1562b82f9e004dc7"],
-        "[0x49d3657224e46f48e99674bd3fcc84644ddd6b96f7c221b1562b82f9e004dc7, 0x49d36333d4e46f48e99674bd3fcc84333ddd6b96f7c741b1562b82f9e004dc7]";
-        "when value is array of contract addresses"
-    )]
-    fn test_format_json_value_not_none<T: Serialize>(value: T, expected: &str) {
-        let value_format = ValueFormat::Default;
-        let json_value = serde_json::to_value(value).unwrap();
-
-        let actual = value_format.format_json_value(&json_value).unwrap();
-
-        assert_eq!(actual, expected);
-    }
-
-    #[test_case(true ; "when value is bool")]
-    #[test_case(json!({ "an": "object" }) ; "when value is an object")]
-    #[test_case(json!(null) ; "when value is null")]
-    fn test_format_json_value_is_none<T: Serialize>(value: T) {
-        let value_format = ValueFormat::Default;
-        let json_value = serde_json::to_value(value).unwrap();
-
-        let actual = value_format.format_json_value(&json_value);
-
-        assert_eq!(actual, None);
     }
 }
