@@ -195,3 +195,11 @@ This is problematic because `snforge` would treat these generated tests as compl
 
 Test collector should be modified, so that cases of the same test as a single bundle.
 This way we can handle execution of them more easily.
+
+## Implementation Plan
+
+1. Prototype creating a plugin for test code generation.
+   Initially, it can support just simple arguments and unnamed test cases.
+2. If/Once code generation approach is proven viable, add support for complex types arguments and introduce necessary
+   test collection logic according to the document.
+3. Named test cases can be added after MVP is created.
