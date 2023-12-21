@@ -1,6 +1,6 @@
 use crate::common::felt_selector_from_name;
 use cairo_felt::Felt252;
-use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::load::calculate_variable_address;
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::storage::calculate_variable_address;
 
 mod declare;
 mod deploy;

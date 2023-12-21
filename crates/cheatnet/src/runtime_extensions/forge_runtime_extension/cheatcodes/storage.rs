@@ -14,6 +14,34 @@ use starknet_api::state::StorageKey;
 /// * `blockifier_state`: Blockifier state reader
 /// * `target`: The address of the contract we want to target
 /// * `storage_address`: Beginning of the storage of the variable
+/// * `values`: A vector of values to write starting at `storage_address`
+///
+/// returns: Result<(), Error> - a result containing the error if `store` failed  
+///
+pub fn store(
+    blockifier_state: &mut BlockifierState,
+    target: ContractAddress,
+    storage_address: &Felt252,
+    values: &[Felt252],
+) -> Result<(), anyhow::Error> {
+    for (i, value) in values.iter().enumerate() {
+        blockifier_state.blockifier_state.set_storage_at(
+            target,
+            StorageKey(PatriciaKey::try_from(StarkHash::from_(
+                storage_address.clone() + Felt252::from(i),
+            ))?),
+            value.clone().into_(),
+        );
+    }
+    Ok(())
+}
+
+///
+/// # Arguments
+///
+/// * `blockifier_state`: Blockifier state reader
+/// * `target`: The address of the contract we want to target
+/// * `storage_address`: Beginning of the storage of the variable
 /// * `size`: How many felts we want to read from the calculated offset (`target` + `storage_address`)
 ///
 /// returns: Result<Vec<Felt252>, Error> - a result containing the read data  

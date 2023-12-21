@@ -5,7 +5,7 @@ use crate::common::{felt_selector_from_name, get_contracts};
 use cairo_felt::Felt252;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::call_contract;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::deploy;
-use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::store::store;
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::storage::store;
 use conversions::felt252::FromShortString;
 
 #[test]
