@@ -150,6 +150,14 @@ we should not display any results of parametrized test.
 In case a parametrized test case fails, we should display it.
 Other cases may not be displayed in this case.
 
+### Behavior of `#[ignore]` Attribute
+
+Adding `#[ignore]` attribute to parametrized test should ignore all of it's test cases - test should not run at all.
+
+### Behavior of `--rerun-failed` Flag
+
+In case `--rerun-failed` flag is used, only failed cases of a parametrized test should be rerun.
+
 ## Required Changes to Test Collector
 
 To support parametric test, we need to introduce some changes to the test collector in Scarb as outlined below.
