@@ -78,8 +78,8 @@ Provided names must be unique and must not be the same as automatically generate
 For example:
 
 ```cairo
-#[test_case(1, 3, name: 'my_name')]
-#[test_case(3, 5, name: 'a_test')]
+#[test_case(1, 3, name: "my_name")]
+#[test_case(3, 5, name: "a_test")]
 fn my_test(a: felt252, b: u32) {
     // ...
 }
