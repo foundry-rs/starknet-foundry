@@ -3,24 +3,21 @@ use camino::Utf8PathBuf;
 use clap::Args;
 use serde_json::Map;
 use sncast::helpers::constants::{KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH};
+use sncast::response::structs::{Hex, InvokeResponse};
 use starknet::accounts::AccountFactoryError;
 use starknet::accounts::{AccountFactory, OpenZeppelinAccountFactory};
 use starknet::core::types::BlockTag::Pending;
-use starknet::core::types::{BlockId, FieldElement, StarknetError};
+use starknet::core::types::{BlockId, FieldElement, StarknetError::ClassHashNotFound};
 use starknet::core::utils::get_contract_address;
 use starknet::providers::jsonrpc::HttpTransport;
-use starknet::providers::ProviderError::{self};
-use starknet::providers::{
-    JsonRpcClient, MaybeUnknownErrorCode, Provider, StarknetErrorWithMessage,
-};
+use starknet::providers::ProviderError::StarknetError;
+use starknet::providers::{JsonRpcClient, Provider};
 use starknet::signers::{LocalWallet, SigningKey};
 
 use sncast::{
     account_file_exists, chain_id_to_network_name, get_keystore_password, handle_rpc_error,
     handle_wait_for_tx, parse_number, WaitForTx,
 };
-
-use sncast::helpers::response_structs::InvokeResponse;
 
 #[derive(Args, Debug)]
 #[command(about = "Deploy an account to the Starknet")]
@@ -152,7 +149,7 @@ async fn deploy_from_keystore(
         .is_ok()
     {
         InvokeResponse {
-            transaction_hash: FieldElement::ZERO,
+            transaction_hash: Hex(FieldElement::ZERO),
         }
     } else {
         deploy_oz_account(
@@ -275,7 +272,7 @@ async fn deploy_oz_account(
         max_fee
     } else {
         match deployment.estimate_fee().await {
-            Ok(max_fee) => FieldElement::from(max_fee.overall_fee),
+            Ok(max_fee) => max_fee.overall_fee,
             Err(AccountFactoryError::Provider(error)) => return handle_rpc_error(error),
             Err(error) => bail!(error),
         }
@@ -284,10 +281,7 @@ async fn deploy_oz_account(
 
     match result {
         Err(AccountFactoryError::Provider(error)) => match error {
-            ProviderError::StarknetError(StarknetErrorWithMessage {
-                code: MaybeUnknownErrorCode::Known(StarknetError::ClassHashNotFound),
-                message: _,
-            }) => Err(anyhow!(
+            StarknetError(ClassHashNotFound) => Err(anyhow!(
                 "Provided class hash {:#x} does not exist",
                 oz_class_hash,
             )),
@@ -296,7 +290,7 @@ async fn deploy_oz_account(
         Err(_) => Err(anyhow!("Unknown RPC error")),
         Ok(result) => {
             let return_value = InvokeResponse {
-                transaction_hash: result.transaction_hash,
+                transaction_hash: Hex(result.transaction_hash),
             };
             if let Err(message) = handle_wait_for_tx(
                 provider,

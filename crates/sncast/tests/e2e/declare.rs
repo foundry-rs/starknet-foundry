@@ -62,7 +62,7 @@ async fn contract_already_declared() {
 
     snapbox.assert().success().stderr_matches(indoc! {r"
         command: declare
-        error: Contract error
+        error: An error occurred in the called contract [..]
     "});
 }
 
@@ -142,7 +142,7 @@ fn test_too_low_max_fee() {
 
     snapbox.assert().success().stderr_matches(indoc! {r"
         command: declare
-        error: Max fee is smaller than the minimal transaction cost (validation plus fee transfer)
+        error: Max fee is smaller than the minimal transaction cost
     "});
 
     fs::remove_dir_all(contract_path).unwrap();

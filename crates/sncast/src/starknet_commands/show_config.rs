@@ -1,8 +1,8 @@
 use anyhow::Result;
 use camino::Utf8PathBuf;
 use clap::Args;
-use sncast::helpers::response_structs::ShowConfigResponse;
 use sncast::helpers::scarb_utils::CastConfig;
+use sncast::response::structs::{Decimal, ShowConfigResponse};
 use sncast::{chain_id_to_network_name, get_chain_id};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
@@ -39,7 +39,7 @@ pub async fn show_config(
         scarb_path,
         accounts_file_path,
         keystore,
-        wait_timeout,
-        wait_retry_interval,
+        wait_timeout: wait_timeout.map(|x| Decimal(u64::from(x))),
+        wait_retry_interval: wait_retry_interval.map(|x| Decimal(u64::from(x))),
     })
 }

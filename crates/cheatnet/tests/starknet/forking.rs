@@ -116,7 +116,7 @@ fn try_deploying_undeclared_class() {
 
 #[test]
 fn test_forking_at_block_number() {
-    let node_url: Url = "http://188.34.188.184:9545/rpc/v0.5".parse().unwrap();
+    let node_url: Url = "http://188.34.188.184:9545/rpc/v0_6".parse().unwrap();
     let cache_dir = TempDir::new().unwrap();
 
     {

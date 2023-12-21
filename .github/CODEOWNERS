@@ -1,14 +1,15 @@
 # chain-interactions
 /crates/sncast/             @foundry-rs/starknet-foundry-cast
+/sncast_std                 @foundry-rs/starknet-foundry-cast
 
-# snforge-cli
-/crates/forge               @foundry-rs/starknet-foundry-forge-cli
-/crates/forge-runner        @foundry-rs/starknet-foundry-forge-cli
+# snforge
+/crates/forge               @foundry-rs/starknet-foundry-forge
+/crates/forge-runner        @foundry-rs/starknet-foundry-forge
+/crates/cheatnet            @foundry-rs/starknet-foundry-forge
+/crates/sierra-casm         @foundry-rs/starknet-foundry-forge
+/starknet_forge_template    @foundry-rs/starknet-foundry-forge
+/snforge_std                @foundry-rs/starknet-foundry-forge
 
-# snforge-core
-/crates/runtime             @foundry-rs/starknet-foundry-forge-core
-/crates/cheatnet            @foundry-rs/starknet-foundry-forge-core
-/crates/forge/src/running.rs @foundry-rs/starknet-foundry-forge-core
-/crates/forge/src/cheatcodes_hint_processor.rs @foundry-rs/starknet-foundry-forge-core
-/crates/forge/tests/integration @foundry-rs/starknet-foundry-forge-core
-/crates/sierra-casm         @foundry-rs/starknet-foundry-forge-core
+# common
+/crates/runtime             @foundry-rs/starknet-foundry-forge @foundry-rs/starknet-foundry-cast
+/crates/conversions         @foundry-rs/starknet-foundry-forge @foundry-rs/starknet-foundry-cast
