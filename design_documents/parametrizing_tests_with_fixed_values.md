@@ -158,6 +158,8 @@ Adding `#[ignore]` attribute to parametrized test should ignore all of it's test
 
 In case `--rerun-failed` flag is used, only failed cases of a parametrized test should be rerun.
 
+Rerun cases should still be displayed together: The behavior should be exactly the same as if just running test cases.
+
 ## Required Changes to Test Collector
 
 To support parametric test, we need to introduce some changes to the test collector in Scarb as outlined below.
