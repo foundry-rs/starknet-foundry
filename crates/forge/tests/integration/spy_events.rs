@@ -584,7 +584,7 @@ fn assert_not_emitted_fails() {
             }
 
             #[test]
-            fn spy_events_simple() {
+            fn assert_not_emitted_fails() {
                 let contract = declare('SpyEventsChecker');
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
