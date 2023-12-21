@@ -1,12 +1,13 @@
 use crate::assert_stdout_contains;
 use assert_fs::fixture::PathCopy;
 use indoc::indoc;
+use test_utils::tempdir_with_tool_versions;
 
 use crate::e2e::common::runner::test_runner;
 
 #[test]
 fn collection_with_lib() {
-    let temp = assert_fs::TempDir::new().unwrap();
+    let temp = tempdir_with_tool_versions().unwrap();
     temp.copy_from(
         "tests/data/collection_with_lib",
         &["**/*.cairo", "**/*.toml"],
@@ -51,7 +52,7 @@ fn collection_with_lib() {
 
 #[test]
 fn collection_without_lib() {
-    let temp = assert_fs::TempDir::new().unwrap();
+    let temp = tempdir_with_tool_versions().unwrap();
     temp.copy_from(
         "tests/data/collection_without_lib",
         &["**/*.cairo", "**/*.toml"],

@@ -192,6 +192,7 @@ mod tests {
             &["**/*.cairo", "**/*.toml"],
         )
         .unwrap();
+        temp.copy_from("../../", &[".tool-versions"]).unwrap();
 
         let snforge_std_path = Utf8PathBuf::from_str("../../snforge_std")
             .unwrap()
@@ -378,6 +379,7 @@ mod tests {
     #[test]
     fn parsing_starknet_artifacts_on_invalid_file() {
         let temp = TempDir::new().unwrap();
+        temp.copy_from("../../", &[".tool-versions"]).unwrap();
         let path = temp.child("wrong.json");
         path.touch().unwrap();
         path.write_str("\"aa\": {}").unwrap();
