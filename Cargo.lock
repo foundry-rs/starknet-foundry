@@ -1880,6 +1880,7 @@ dependencies = [
  "scarb-metadata",
  "serde",
  "serde_json",
+ "sierra-casm",
  "starknet",
  "starknet_api",
  "tempfile",
@@ -4672,6 +4673,7 @@ dependencies = [
  "scarb-ui",
  "serde",
  "serde_json",
+ "sierra-casm",
  "thiserror",
  "which",
 ]
@@ -4957,6 +4959,7 @@ dependencies = [
 name = "sierra-casm"
 version = "1.0.0"
 dependencies = [
+ "anyhow",
  "cairo-lang-starknet 1.0.0-alpha.6",
  "cairo-lang-starknet 1.0.0-rc0",
  "cairo-lang-starknet 2.4.0",
