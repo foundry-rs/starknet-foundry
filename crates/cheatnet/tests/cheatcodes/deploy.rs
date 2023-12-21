@@ -246,7 +246,7 @@ fn deploy_missing_arguments_in_constructor() {
 
     assert!(match output {
         Err(CheatcodeError::Unrecoverable(EnhancedHintError::Hint(HintError::CustomHint(msg)))) =>
-            msg.as_ref() == "Failed to deserialize param #2",
+            msg.as_ref() == "0x4661696c656420746f20646573657269616c697a6520706172616d202332 ('Failed to deserialize param #2')",
         _ => false,
     });
 }
@@ -270,7 +270,7 @@ fn deploy_too_many_arguments_in_constructor() {
 
     assert!(match output {
         Err(CheatcodeError::Unrecoverable(EnhancedHintError::Hint(HintError::CustomHint(msg)))) =>
-            msg.as_ref() == "Input too long for arguments",
+            msg.as_ref() == "0x496e70757420746f6f206c6f6e6720666f7220617267756d656e7473 ('Input too long for arguments')",
         _ => false,
     });
 }

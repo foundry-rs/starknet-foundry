@@ -2,10 +2,12 @@ use anyhow::{anyhow, Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
 use scarb_metadata::{CompilationUnitMetadata, Metadata, PackageId};
 use serde::Deserialize;
+use serde_json::Value;
 use std::collections::HashMap;
 use std::fs;
 
 pub use command::*;
+use sierra_casm::compile;
 
 mod command;
 
@@ -28,7 +30,7 @@ struct StarknetContract {
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 struct StarknetContractArtifactPaths {
     sierra: Utf8PathBuf,
-    casm: Utf8PathBuf,
+    casm: Option<Utf8PathBuf>,
 }
 
 /// Contains compiled Starknet artifacts
@@ -46,9 +48,13 @@ impl StarknetContractArtifacts {
         base_path: &Utf8Path,
     ) -> Result<Self> {
         let sierra_path = base_path.join(starknet_contract.artifacts.sierra.clone());
-        let casm_path = base_path.join(starknet_contract.artifacts.casm.clone());
         let sierra = fs::read_to_string(sierra_path)?;
-        let casm = fs::read_to_string(casm_path)?;
+
+        let casm = match &starknet_contract.artifacts.casm {
+            None => String::new(),
+            Some(casm_path) => fs::read_to_string(base_path.join(casm_path))?,
+        };
+
         Ok(Self { sierra, casm })
     }
 }
@@ -63,7 +69,7 @@ fn artifacts_for_package(path: &Utf8Path) -> Result<StarknetArtifacts> {
         fs::read_to_string(path).with_context(|| format!("Failed to read {path:?} contents"))?;
     let starknet_artifacts: StarknetArtifacts =
         serde_json::from_str(starknet_artifacts.as_str())
-            .with_context(|| format!("Failed to parse {path:?} contents. Make sure you have enabled sierra and casm code generation in Scarb.toml"))?;
+            .with_context(|| format!("Failed to parse {path:?} contents. Make sure you have enabled sierra code generation in Scarb.toml"))?;
     Ok(starknet_artifacts)
 }
 
@@ -111,7 +117,18 @@ pub fn get_contracts_map(
         try_get_starknet_artifacts_path(&target_dir, &target_name, &metadata.current_profile)?;
 
     let map = match maybe_contracts_path {
-        Some(contracts_path) => load_contract_artifacts(&contracts_path)?,
+        Some(contracts_path) => {
+            let mut contracts = load_contract_artifacts(&contracts_path)?;
+
+            for (_, artifact) in &mut contracts.iter_mut() {
+                if artifact.casm.is_empty() {
+                    let sierra: Value = serde_json::from_str(&artifact.sierra)?;
+                    artifact.casm = serde_json::to_string(&compile(sierra)?)?;
+                }
+            }
+
+            contracts
+        }
         None => HashMap::default(),
     };
     Ok(map)
@@ -388,7 +405,7 @@ mod tests {
         let result = artifacts_for_package(&artifacts_path);
         let err = result.unwrap_err();
 
-        assert!(err.to_string().contains(&format!("Failed to parse {artifacts_path:?} contents. Make sure you have enabled sierra and casm code generation in Scarb.toml")));
+        assert!(err.to_string().contains(&format!("Failed to parse {artifacts_path:?} contents. Make sure you have enabled sierra code generation in Scarb.toml")));
     }
 
     #[test]
