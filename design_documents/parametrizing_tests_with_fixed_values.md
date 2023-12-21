@@ -13,11 +13,20 @@ Propose a way of adding support for parametrized tests to Starknet Foundry's `sn
 
 Introduce new attribute `test_case`.
 
+The attribute should accept arguments:
+
+- Optional, named argument `name`.
+- Unnamed, non-optional arguments, each corresponding to a test argument.
+
 Generate code for each of the test cases so no handling of values injection, etc. is necessary.
 The compiler would then validate if the values for the generated code are actually valid.
 Thanks to that, we could have failures for invalid arguments early in the execution.
 
 ### Parametrization With Arguments
+
+In the `test_case` attribute, user provides a list of unnamed arguments, each corresponding to test function argument.
+Arguments are handled in order: The first argument of the attribute corresponds to the first argument of a test
+function.
 
 ```cairo
 #[test_case(1, 3)]
@@ -56,6 +65,23 @@ It is important that generated test names do not break the test filtering logic.
 This can be resolved by either using names for generated tests that still work with filters as the base test would do,
 or changing the filtering logic, so it can recognize generated test cases and treat them accordingly.
 
+### Named Test Cases
+
+If `name` attribute is provided, instead of generating case name, it should be used instead.
+For `name` values to be suitable for generating case names, they are limited to lowercase letters, digits and
+underscore `_` character.
+Provided names must be unique and must not be the same as automatically generated names of any of the test cases.
+
+For example:
+
+```cairo
+#[test_case(1, 3, name: 'my_name')]
+#[test_case(3, 5, name: 'a_test')]
+fn my_test(a: felt252, b: u32) {
+    // ...
+}
+```
+
 ### Parametrizing With Complex Types
 
 Complex types would result in the same code generation as simple types:
@@ -85,13 +111,15 @@ See [section below](#possible-problems-with-code-generation) for details.
 Unlike fuzz-tests, we should run and indicate the result of all parametrized cases.
 If some test cases fail, others should still be executed and their results should be displayed to the user.
 
+If a test case has a custom name, it should be displayed to the user.
+
 An example output could look similarly to this:
 
 ```shell
 $ snforge test
-[PASS] tests::parametrized(a = 1, b = 2)
-[PASS] tests::parametrized(a = 3, b = 5)
-[FAIL] tests::parametrized(a = 4, b = 5)
+[PASS] tests::parametrized(a = 1, b = 2)              # unnamed test case
+[PASS] tests::parametrized[a_test](a = 3, b = 5)      # named test case
+[FAIL] tests::parametrized[my_case](a = 4, b = 5)     # named test case
 
 Failure data:
     original value: [344693033283], converted to a string: [PANIC]
