@@ -36,7 +36,7 @@ pub fn run_function_with_runner(
     Ok(())
 }
 
-pub fn build_runner(
+pub fn build_cairo_runner(
     data: Vec<MaybeRelocatable>,
     builtins: Vec<BuiltinName>,
     hints_dict: HashMap<usize, Vec<HintParams>>,
@@ -89,7 +89,7 @@ where
     let data = build_program_data(instructions);
 
     let data_len = data.len();
-    let mut runner = build_runner(data, builtins, hints_dict)?;
+    let mut runner = build_cairo_runner(data, builtins, hints_dict)?;
 
     run_function_with_runner(
         vm,

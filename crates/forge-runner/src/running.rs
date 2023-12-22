@@ -305,7 +305,7 @@ pub fn run_test_case(
     let mut vm = VirtualMachine::new(true);
     let data = build_program_data(instructions);
     let data_len = data.len();
-    let mut runner = casm_run::build_runner(data, builtins, hints_dict)?;
+    let mut runner = casm_run::build_cairo_runner(data, builtins, hints_dict)?;
 
     let run_result = match casm_run::run_function_with_runner(
         &mut vm,
