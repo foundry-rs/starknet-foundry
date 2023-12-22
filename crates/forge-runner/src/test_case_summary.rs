@@ -10,47 +10,37 @@ use std::option::Option;
 pub struct GasStatistics {
     pub min: u128,
     pub max: u128,
-    pub mean: Option<u128>,
-    pub std_deviation: Option<u128>,
+    pub mean: u128,
+    pub std_deviation: u128,
 }
 
 impl GasStatistics {
     #[must_use]
     pub fn new(gas_usages: &[u128]) -> Self {
         let mean = GasStatistics::mean(gas_usages);
-        let std_deviation = GasStatistics::std_deviation(mean, gas_usages);
 
         GasStatistics {
             min: gas_usages.iter().min().copied().unwrap(),
             max: gas_usages.iter().max().copied().unwrap(),
             mean,
-            std_deviation,
+            std_deviation: GasStatistics::std_deviation(mean, gas_usages),
         }
     }
 
-    fn mean(gas_usages: &[u128]) -> Option<u128> {
-        let n = gas_usages.len() as u128;
-        if n > 1 {
-            Some(gas_usages.iter().sum::<u128>() / n)
-        } else {
-            None
-        }
+    fn mean(gas_usages: &[u128]) -> u128 {
+        gas_usages.iter().sum::<u128>() / gas_usages.len() as u128
     }
 
-    fn std_deviation(mean: Option<u128>, gas_usages: &[u128]) -> Option<u128> {
-        if let Some(mean) = mean {
-            let sum_squared_diff = gas_usages
-                .iter()
-                .map(|&x| {
-                    let abs_difference = if x > mean { x - mean } else { mean - x };
-                    abs_difference.pow(2)
-                })
-                .sum::<u128>();
+    fn std_deviation(mean: u128, gas_usages: &[u128]) -> u128 {
+        let sum_squared_diff = gas_usages
+            .iter()
+            .map(|&x| {
+                let abs_difference = if x > mean { x - mean } else { mean - x };
+                abs_difference.pow(2)
+            })
+            .sum::<u128>();
 
-            Some((sum_squared_diff / gas_usages.len() as u128).sqrt())
-        } else {
-            None
-        }
+        (sum_squared_diff / gas_usages.len() as u128).sqrt()
     }
 }
 

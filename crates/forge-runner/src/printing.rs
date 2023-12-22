@@ -29,20 +29,9 @@ pub(crate) fn print_test_result(any_test_result: &AnyTestCaseSummary) {
 
     let gas_usage = match any_test_result {
         AnyTestCaseSummary::Fuzzing(TestCaseSummary::Passed { gas_info, .. }) => {
-            let mean = gas_info
-                .mean
-                .map(|mean| format!("mean = ~{mean}"))
-                .unwrap_or_default();
-            let std_deviation = gas_info
-                .std_deviation
-                .map(|std_dev| format!("std deviation = ~{std_dev}"))
-                .unwrap_or_default();
-
             format!(
-                ", gas = (max = ~{}, min = ~{}, {})",
-                gas_info.max,
-                gas_info.min,
-                [mean, std_deviation].join(", ")
+                ", gas = (max = ~{}, min = ~{}, mean = ~{}, std deviation = ~{})",
+                gas_info.max, gas_info.min, gas_info.mean, gas_info.std_deviation
             )
         }
         AnyTestCaseSummary::Single(TestCaseSummary::Passed { gas_info, .. }) => {
