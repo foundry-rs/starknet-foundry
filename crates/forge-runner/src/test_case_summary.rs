@@ -17,13 +17,13 @@ pub struct GasStatistics {
 impl GasStatistics {
     #[must_use]
     pub fn new(gas_usages: &[u128]) -> Self {
-        let mean = GasStatistics::mean(gas_usages);
+        let mean = Self::mean(gas_usages);
 
         GasStatistics {
             min: gas_usages.iter().min().copied().unwrap(),
             max: gas_usages.iter().max().copied().unwrap(),
             mean,
-            std_deviation: GasStatistics::std_deviation(mean, gas_usages),
+            std_deviation: Self::std_deviation(mean, gas_usages),
         }
     }
 
@@ -34,10 +34,7 @@ impl GasStatistics {
     fn std_deviation(mean: u128, gas_usages: &[u128]) -> u128 {
         let sum_squared_diff = gas_usages
             .iter()
-            .map(|&x| {
-                let abs_difference = if x > mean { x - mean } else { mean - x };
-                abs_difference.pow(2)
-            })
+            .map(|&x| x.abs_diff(mean).pow(2))
             .sum::<u128>();
 
         (sum_squared_diff / gas_usages.len() as u128).sqrt()
