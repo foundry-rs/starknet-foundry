@@ -76,8 +76,8 @@ fn fuzzed_loop() {
             gas_info: GasStatistics {
                 min: 1,
                 max: 126,
-                maybe_mean: Some(65),
-                maybe_std_deviation: Some(37),
+                mean: Some(65),
+                std_deviation: Some(37),
             },
             ..
         })

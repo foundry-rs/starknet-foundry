@@ -30,11 +30,11 @@ pub(crate) fn print_test_result(any_test_result: &AnyTestCaseSummary) {
     let gas_usage = match any_test_result {
         AnyTestCaseSummary::Fuzzing(TestCaseSummary::Passed { gas_info, .. }) => {
             let mean = gas_info
-                .maybe_mean
+                .mean
                 .map(|mean| format!("mean = ~{mean}"))
                 .unwrap_or_default();
             let std_deviation = gas_info
-                .maybe_std_deviation
+                .std_deviation
                 .map(|std_dev| format!("std deviation = ~{std_dev}"))
                 .unwrap_or_default();
 
