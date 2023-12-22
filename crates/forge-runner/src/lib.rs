@@ -3,7 +3,7 @@ use crate::fuzzer::RandomFuzzer;
 use crate::printing::print_test_result;
 use crate::running::{run_fuzz_test, run_test};
 use crate::sierra_casm_runner::SierraCasmRunner;
-use crate::test_case_summary::{GasStatistics, TestCaseSummary};
+use crate::test_case_summary::TestCaseSummary;
 use crate::test_crate_summary::TestCrateSummary;
 use anyhow::{anyhow, Context, Result};
 
@@ -23,7 +23,7 @@ use smol_str::SmolStr;
 use std::collections::HashMap;
 use std::default::Default;
 use std::sync::Arc;
-use test_case_summary::{AnyTestCaseSummary, Fuzzing, FuzzingStatistics, Single};
+use test_case_summary::{AnyTestCaseSummary, Fuzzing};
 use tokio::sync::mpsc::{channel, Sender};
 use tokio::task::JoinHandle;
 
@@ -226,59 +226,6 @@ fn choose_test_strategy_and_run(
                 run_with_fuzzing(args, case, runner, runner_config, runner_params, send).await??;
             Ok(AnyTestCaseSummary::Fuzzing(res))
         })
-    }
-}
-
-impl TestCaseSummary<Fuzzing> {
-    fn from(results: Vec<TestCaseSummary<Single>>) -> TestCaseSummary<Fuzzing> {
-        let last: TestCaseSummary<Single> = results
-            .iter()
-            .last()
-            .cloned()
-            .expect("Fuzz test should always run at least once");
-        // Only the last result matters as fuzzing is cancelled after first fail
-        match last {
-            TestCaseSummary::Passed {
-                name,
-                msg,
-                arguments,
-                gas_info: _,
-                test_statistics: (),
-            } => {
-                let runs = results.len();
-                let gas_usages_vec: Vec<u128> = results
-                    .into_iter()
-                    .filter(|item| matches!(item, TestCaseSummary::Passed { .. }))
-                    .map(|a| match a {
-                        TestCaseSummary::Passed { gas_info, .. } => gas_info,
-                        _ => unreachable!(),
-                    })
-                    .collect();
-
-                TestCaseSummary::Passed {
-                    name,
-                    msg,
-                    gas_info: GasStatistics::new(&gas_usages_vec),
-                    arguments,
-                    test_statistics: FuzzingStatistics { runs },
-                }
-            }
-            TestCaseSummary::Failed {
-                name,
-                msg,
-                arguments,
-                test_statistics: (),
-            } => TestCaseSummary::Failed {
-                name,
-                msg,
-                arguments,
-                test_statistics: FuzzingStatistics {
-                    runs: results.len(),
-                },
-            },
-            TestCaseSummary::Ignored { name } => TestCaseSummary::Ignored { name: name.clone() },
-            TestCaseSummary::Skipped {} => TestCaseSummary::Skipped {},
-        }
     }
 }
 

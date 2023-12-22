@@ -152,6 +152,58 @@ impl TestCaseSummary<Fuzzing> {
             _ => None,
         }
     }
+
+    #[must_use]
+    pub fn from(results: Vec<TestCaseSummary<Single>>) -> TestCaseSummary<Fuzzing> {
+        let last: TestCaseSummary<Single> = results
+            .iter()
+            .last()
+            .cloned()
+            .expect("Fuzz test should always run at least once");
+        // Only the last result matters as fuzzing is cancelled after first fail
+        match last {
+            TestCaseSummary::Passed {
+                name,
+                msg,
+                arguments,
+                gas_info: _,
+                test_statistics: (),
+            } => {
+                let runs = results.len();
+                let gas_usages_vec: Vec<u128> = results
+                    .into_iter()
+                    .filter(|item| matches!(item, TestCaseSummary::Passed { .. }))
+                    .map(|a| match a {
+                        TestCaseSummary::Passed { gas_info, .. } => gas_info,
+                        _ => unreachable!(),
+                    })
+                    .collect();
+
+                TestCaseSummary::Passed {
+                    name,
+                    msg,
+                    gas_info: GasStatistics::new(&gas_usages_vec),
+                    arguments,
+                    test_statistics: FuzzingStatistics { runs },
+                }
+            }
+            TestCaseSummary::Failed {
+                name,
+                msg,
+                arguments,
+                test_statistics: (),
+            } => TestCaseSummary::Failed {
+                name,
+                msg,
+                arguments,
+                test_statistics: FuzzingStatistics {
+                    runs: results.len(),
+                },
+            },
+            TestCaseSummary::Ignored { name } => TestCaseSummary::Ignored { name: name.clone() },
+            TestCaseSummary::Skipped {} => TestCaseSummary::Skipped {},
+        }
+    }
 }
 
 impl TestCaseSummary<Single> {
