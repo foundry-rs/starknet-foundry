@@ -160,7 +160,7 @@ impl SierraCasmRunner {
         } else {
             let (ty, values) = results_data[0].clone();
             let inner_ty = self
-                .maybe_inner_type(&ty, func)
+                .inner_type_from_panic_wrapper(&ty, func)
                 .map(|it| self.type_sizes[&it]);
             Self::handle_main_return_value(inner_ty, values, &cells)
         };
@@ -173,7 +173,11 @@ impl SierraCasmRunner {
     }
 
     /// Extract inner type if `ty` is a panic wrapper
-    fn maybe_inner_type(&self, ty: &GenericTypeId, func: &Function) -> Option<ConcreteTypeId> {
+    fn inner_type_from_panic_wrapper(
+        &self,
+        ty: &GenericTypeId,
+        func: &Function,
+    ) -> Option<ConcreteTypeId> {
         let info = func
             .signature
             .ret_types
