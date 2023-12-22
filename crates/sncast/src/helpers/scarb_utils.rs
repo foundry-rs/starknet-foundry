@@ -1,7 +1,7 @@
 use super::constants::{WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
 use anyhow::{anyhow, bail, Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
-use scarb_artifacts::ScarbCommand;
+use scarb_api::ScarbCommand;
 use scarb_metadata;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;

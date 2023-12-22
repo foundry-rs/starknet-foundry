@@ -12,7 +12,7 @@ use forge_runner::test_case_summary::{AnyTestCaseSummary, TestCaseSummary};
 use forge_runner::test_crate_summary::TestCrateSummary;
 use forge_runner::{RunnerConfig, RunnerParams, CACHE_DIR};
 use rand::{thread_rng, RngCore};
-use scarb_artifacts::{get_contracts_map, target_dir_for_workspace, ScarbCommand};
+use scarb_api::{get_contracts_map, target_dir_for_workspace, ScarbCommand};
 use scarb_metadata::{Metadata, MetadataCommand, PackageMetadata};
 use scarb_ui::args::PackagesFilter;
 

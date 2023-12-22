@@ -1,7 +1,7 @@
 use crate::collecting::CompiledTestCrateRaw;
 use anyhow::{Context, Result};
 use camino::Utf8Path;
-use scarb_artifacts::ScarbCommand;
+use scarb_api::ScarbCommand;
 use scarb_ui::args::PackagesFilter;
 
 pub fn load_test_artifacts(

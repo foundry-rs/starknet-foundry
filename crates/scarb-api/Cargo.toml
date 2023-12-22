@@ -15,6 +15,3 @@ serde_json.workspace = true
 thiserror.workspace = true
 which.workspace = true
 sierra-casm = { path="../sierra-casm" }
-
-[lib]
-name = "scarb_artifacts"
