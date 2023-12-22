@@ -14,7 +14,7 @@ When the test passes with no errors, estimated gas is displayed this way:
 [PASS] tests::simple_test, gas = ~1
 ```
 
-### Fuzzing tests
+### Fuzzed Tests
 
 While using the fuzzing feature additional gas statistics will be displayed:
 ```shell
