@@ -39,7 +39,7 @@ pub(crate) fn print_test_result(any_test_result: &AnyTestCaseSummary) {
                 .unwrap_or_default();
 
             format!(
-                ", (max = ~{}, min = ~{}, {})",
+                ", gas = (max = ~{}, min = ~{}, {})",
                 gas_info.max,
                 gas_info.min,
                 [mean, std_deviation].join(", ")

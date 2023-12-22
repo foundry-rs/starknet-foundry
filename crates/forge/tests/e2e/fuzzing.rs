@@ -28,7 +28,7 @@ fn fuzzing() {
 
         [PASS] fuzzing::tests::custom_fuzzer_config (fuzzer runs = 10),[..]
         [PASS] fuzzing::tests::uint8_arg (fuzzer runs = 256),[..]
-        [PASS] fuzzing::tests::fuzzed_loop (fuzzer runs = 256), (max = ~126, min = ~1, mean = ~65, std deviation = ~37)
+        [PASS] fuzzing::tests::fuzzed_loop (fuzzer runs = 256), gas = (max = ~126, min = ~1, mean = ~65, std deviation = ~37)
         [PASS] fuzzing::tests::uint16_arg (fuzzer runs = 256),[..]
         [PASS] fuzzing::tests::uint32_arg (fuzzer runs = 256),[..]
         [PASS] fuzzing::tests::uint64_arg (fuzzer runs = 256),[..]
@@ -74,7 +74,7 @@ fn fuzzing_set_runs() {
 
         [PASS] fuzzing::tests::custom_fuzzer_config (fuzzer runs = 10),[..]
         [PASS] fuzzing::tests::uint8_arg (fuzzer runs = 10),[..]
-        [PASS] fuzzing::tests::fuzzed_loop (fuzzer runs = 256), [..]
+        [PASS] fuzzing::tests::fuzzed_loop (fuzzer runs = 256),[..]
         [PASS] fuzzing::tests::uint16_arg (fuzzer runs = 10),[..]
         [PASS] fuzzing::tests::uint32_arg (fuzzer runs = 10),[..]
         [PASS] fuzzing::tests::uint64_arg (fuzzer runs = 10),[..]
@@ -120,7 +120,7 @@ fn fuzzing_set_seed() {
 
         [PASS] fuzzing::tests::custom_fuzzer_config (fuzzer runs = 10),[..]
         [PASS] fuzzing::tests::uint8_arg (fuzzer runs = 256),[..]
-        [PASS] fuzzing::tests::fuzzed_loop (fuzzer runs = 256), [..]
+        [PASS] fuzzing::tests::fuzzed_loop (fuzzer runs = 256),[..]
         [PASS] fuzzing::tests::uint16_arg (fuzzer runs = 256),[..]
         [PASS] fuzzing::tests::uint32_arg (fuzzer runs = 256),[..]
         [PASS] fuzzing::tests::uint64_arg (fuzzer runs = 256),[..]
@@ -198,7 +198,7 @@ fn fuzzing_exit_first() {
         Failure data:
             original value: [..], converted to a string: [2 + b == 2 + b]
 
-        Tests: 0 passed, 1 failed, 1 skipped, 0 ignored, 16 filtered out
+        Tests: 0 passed, 1 failed, 1 skipped, 0 ignored, 17 filtered out
 
         Fuzzer seed: [..]
         Failures:
@@ -231,7 +231,7 @@ fn fuzzing_exit_first_single_fail() {
         Failures:
             tests::exit_first_single_fail::exit_first_fails_test
 
-        Tests: 0 passed, 1 failed, 1 skipped, 0 ignored, 16 filtered out
+        Tests: 0 passed, 1 failed, 1 skipped, 0 ignored, 17 filtered out
         "}
     );
 }
