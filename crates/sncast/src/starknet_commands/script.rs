@@ -32,20 +32,20 @@ use clap::Args;
 use conversions::{FromConv, IntoConv};
 use itertools::chain;
 use num_traits::ToPrimitive;
-use serde::Serialize;
 use runtime::EnhancedHintError;
 use scarb_artifacts::ScarbCommand;
+use serde::Serialize;
 use sncast::helpers::scarb_utils::{
     get_package_metadata, get_scarb_manifest, get_scarb_metadata_with_deps, CastConfig,
 };
+use sncast::response::print::{print_result, OutputFormat, OutputValue};
 use sncast::response::structs::ScriptResponse;
+use sncast::NumbersFormat;
 use starknet::accounts::Account;
 use starknet::core::types::{BlockId, BlockTag::Pending, FieldElement};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use tokio::runtime::Runtime;
-use sncast::NumbersFormat;
-use sncast::response::print::{apply_numbers_formatting, OutputData, OutputFormat, OutputValue, pretty_output, value_to_output_data};
 
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd)]
 pub enum Verbosity {
@@ -90,26 +90,19 @@ impl UI {
     pub fn print_subcommand_response<T: Serialize>(
         &self,
         command: &str,
-        result: &T,
+        response: &T,
     ) -> Result<()> {
         if self.verbosity >= Verbosity::Normal {
-            let mut output: OutputData = vec![];
-            output.push((
+            let header = (
                 String::from("script_subcommand"),
                 OutputValue::String(command.to_string()),
-            ));
-            let struct_value =
-                serde_json::to_value(result).expect("Failed to serialize CommandResponse");
-            let temp = value_to_output_data(struct_value);
-            output.extend(temp);
-            let formatted_output = output
-                .into_iter()
-                .map(|(k, v)| (k, apply_numbers_formatting(v, self.numbers_format)))
-                .collect();
-
-            for val in pretty_output(formatted_output, &self.output_format)? {
-                println!("{val}");
-            }
+            );
+            print_result(
+                header,
+                &mut Ok(response),
+                self.numbers_format,
+                &self.output_format,
+            )?;
             println!();
             return Ok(());
         }

@@ -1,8 +1,8 @@
 use anyhow::Result;
+use indexmap::IndexMap;
 use serde_json::Value;
 use starknet::core::types::FieldElement;
 use std::{fmt::Display, str::FromStr};
-use indexmap::IndexMap;
 
 use serde::{Serialize, Serializer};
 
@@ -70,12 +70,21 @@ pub fn print_command_result<T: CommandResponse>(
     numbers_format: NumbersFormat,
     output_format: &OutputFormat,
 ) -> Result<()> {
-    let mut output: OutputData = vec![];
-    output.push((
+    let header = (
         String::from("command"),
         OutputValue::String(command.to_string()),
-    ));
-    output.extend(result_as_output_data(result));
+    );
+    print_result(header, result, numbers_format, output_format)
+}
+
+pub fn print_result<T: Serialize>(
+    header: (String, OutputValue),
+    result: &mut Result<T>,
+    numbers_format: NumbersFormat,
+    output_format: &OutputFormat,
+) -> Result<()> {
+    let mut output: OutputData = result_as_output_data(result);
+    output.insert(0, header);
     let formatted_output = output
         .into_iter()
         .map(|(k, v)| (k, apply_numbers_formatting(v, numbers_format)))
@@ -108,7 +117,7 @@ pub fn pretty_output(output: OutputData, output_format: &OutputFormat) -> Result
     }
 }
 
-pub fn result_as_output_data<T: CommandResponse>(result: &mut Result<T>) -> OutputData {
+pub fn result_as_output_data<T: Serialize>(result: &mut Result<T>) -> OutputData {
     match result {
         Ok(response) => {
             let struct_value =
@@ -131,7 +140,7 @@ pub fn value_to_output_data(json_value: Value) -> OutputData {
             .filter(|(_, v)| !(matches!(v, Value::Null)))
             .map(|(k, v)| (k, value_to_output_value(v)))
             .collect(),
-        _ => vec![(String::from("response"), value_to_output_value(json_value))]
+        _ => vec![(String::from("response"), value_to_output_value(json_value))],
     }
 }
 
