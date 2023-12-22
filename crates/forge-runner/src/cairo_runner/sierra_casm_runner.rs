@@ -159,12 +159,10 @@ impl SierraCasmRunner {
             RunResultValue::Success(vec![])
         } else {
             let (ty, values) = results_data[0].clone();
-            if let Some(inner_ty) = self.maybe_inner_type(&ty, func) {
-                let inner_ty_size = self.type_sizes[&inner_ty];
-                Self::handle_main_return_value(Some(inner_ty_size), values, &cells)
-            } else {
-                Self::handle_main_return_value(None, values, &cells)
-            }
+            let inner_ty = self
+                .maybe_inner_type(&ty, func)
+                .map(|it| self.type_sizes[&it]);
+            Self::handle_main_return_value(inner_ty, values, &cells)
         };
 
         Ok(RunResult {
