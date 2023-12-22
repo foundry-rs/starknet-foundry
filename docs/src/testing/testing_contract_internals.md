@@ -175,7 +175,7 @@ fn test_expect_events_simple() {
 }
 ```
 
-## Using Library Calls with the test state context
+## Using Library Calls With the Test State Context
 
 Using the above utilities, you can avoid deploying a mock contract, to test a `library_call` with a `LibraryCallDispatcher`.
 

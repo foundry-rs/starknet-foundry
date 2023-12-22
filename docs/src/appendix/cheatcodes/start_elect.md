@@ -17,7 +17,7 @@ struct Storage {
     stored_sequencer_address: ContractAddress
 }
 
-#[external(v0)]
+#[abi(embed_v0)]
 impl IContractImpl of IContract<ContractState> {
     fn set_sequencer_address(ref self: ContractState) {
         self.stored_sequencer_address.write(starknet::get_block_info().unbox().sequencer_address);

@@ -2,7 +2,7 @@
 
 ## Overview
 
-Starknet Foundry cast supports invoking smart contracts on a given network with the `sncast invoke` command.
+Starknet Foundry `sncast` supports invoking smart contracts on a given network with the `sncast invoke` command.
 
 In most cases, you have to provide:
 
@@ -10,11 +10,11 @@ In most cases, you have to provide:
 - Function name
 - Function arguments
 
-For detailed CLI description, see [invoke command reference](../appendix/cast/invoke.md).
+For detailed CLI description, see [invoke command reference](../appendix/sncast/invoke.md).
 
 ## Examples
 
-### General example
+### General Example
 
 ```shell
 $ sncast \
@@ -32,7 +32,7 @@ transaction_hash: 0x7ad0d6e449e33b6581a4bb8df866c0fce3919a5ee05a30840ba521dafee2
 > 💡 **Info**
 > Max fee will be automatically computed if `--max-fee <MAX_FEE>` is not passed.
 
-### Invoking function without arguments
+### Invoking Function Without Arguments
 
 Not every function accepts parameters. Here is how to call it.
 

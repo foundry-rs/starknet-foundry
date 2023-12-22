@@ -2,7 +2,7 @@
 
 ## Overview
 
-Sometimes, before executing any other cast command, one may want to make sure that the right
+Sometimes, before executing any other `sncast` command, one may want to make sure that the right
 configuration settings are being used (eg proper network or account is used).
 
 To see just that, a `show-config` subcommand can be used. You can just
@@ -11,7 +11,7 @@ replace any subcommand (and its parameters) with `show-config` and it will show 
 
 ## Examples
 
-### General example
+### General Example
 
 ```shell
 $ sncast \

@@ -1,23 +1,26 @@
 use indoc::formatdoc;
 use std::path::Path;
 use std::path::PathBuf;
+use std::process::Command;
+use std::process::Stdio;
 use std::sync::Arc;
 
 use camino::Utf8PathBuf;
+use forge::block_number_map::BlockNumberMap;
 use forge::run;
 use forge::scarb::config::ForkTarget;
 use forge::test_filter::TestsFilter;
 use tempfile::tempdir;
 use tokio::runtime::Runtime;
 
+use forge::compiled_raw::RawForkParams;
 use forge_runner::{RunnerConfig, RunnerParams};
-use test_collector::RawForkParams;
-use test_utils::corelib::corelib_path;
 use test_utils::runner::Contract;
 use test_utils::running_tests::run_test_case;
 use test_utils::{assert_case_output_contains, assert_failed, assert_passed, test_case};
 
-static CHEATNET_RPC_URL: &str = "http://188.34.188.184:9545/rpc/v0.4";
+static INTEGRATION_RPC_URL: &str = "http://188.34.188.184:9545/rpc/v0_6";
+static TESTNET_RPC_URL: &str = "http://188.34.188.184:6060/rpc";
 
 #[test]
 fn fork_simple_decorator() {
@@ -40,7 +43,7 @@ fn fork_simple_decorator() {
 
             #[test]
             #[fork(url: "{}", block_id: BlockId::Number(313388))]
-            fn test_fork_simple() {{
+            fn fork_simple_decorator() {{
                 let dispatcher = IHelloStarknetDispatcher {{
                     contract_address: contract_address_const::<3216637956526895219277698311134811322769343974163380838558193911733621219342>()
                 }};
@@ -54,7 +57,7 @@ fn fork_simple_decorator() {
                 assert(balance == 102, 'Balance should be 102');
             }}
         "#,
-        CHEATNET_RPC_URL
+        INTEGRATION_RPC_URL
     ).as_str());
 
     let result = run_test_case(&test);
@@ -82,7 +85,7 @@ fn fork_aliased_decorator() {
 
             #[test]
             #[fork("FORK_NAME_FROM_SCARB_TOML")]
-            fn test_fork_simple() {{
+            fn fork_aliased_decorator() {{
                 let dispatcher = IHelloStarknetDispatcher {{
                     contract_address: contract_address_const::<3216637956526895219277698311134811322769343974163380838558193911733621219342>()
                 }};
@@ -100,11 +103,19 @@ fn fork_aliased_decorator() {
 
     let rt = Runtime::new().expect("Could not instantiate Runtime");
 
+    let test_build_output = Command::new("scarb")
+        .current_dir(test.path().unwrap())
+        .arg("snforge-test-collector")
+        .stdout(Stdio::inherit())
+        .stderr(Stdio::inherit())
+        .output()
+        .unwrap();
+    assert!(test_build_output.status.success());
+
     let result = rt
         .block_on(run(
-            &test.path().unwrap(),
-            &String::from("src"),
-            &test.path().unwrap().join("src"),
+            &String::from("test_package"),
+            &test.path().unwrap().join("target/dev/snforge"),
             &TestsFilter::from_flags(None, false, false, false, false, Default::default()),
             Arc::new(RunnerConfig::new(
                 Utf8PathBuf::from_path_buf(PathBuf::from(tempdir().unwrap().path())).unwrap(),
@@ -113,19 +124,18 @@ fn fork_aliased_decorator() {
                 12345,
             )),
             Arc::new(RunnerParams::new(
-                corelib_path(),
-                test.contracts(&corelib_path()).unwrap(),
-                Default::default(),
-                test.linked_libraries(),
+                test.contracts().unwrap(),
+                test.env().clone(),
             )),
             &[ForkTarget::new(
                 "FORK_NAME_FROM_SCARB_TOML".to_string(),
                 RawForkParams {
-                    url: CHEATNET_RPC_URL.to_string(),
+                    url: INTEGRATION_RPC_URL.to_string(),
                     block_id_type: "Tag".to_string(),
                     block_id_value: "Latest".to_string(),
                 },
             )],
+            &mut BlockNumberMap::default(),
         ))
         .expect("Runner fail");
 
@@ -145,7 +155,7 @@ fn fork_cairo0_contract() {
 
             #[test]
             #[fork(url: "{}", block_id: BlockId::Number(313494))]
-            fn test_timestamp() {{
+            fn fork_cairo0_contract() {{
                 let contract_address = contract_address_const::<0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7>();
 
                 let dispatcher = IERC20CamelDispatcher {{ contract_address }};
@@ -154,7 +164,7 @@ fn fork_cairo0_contract() {
                 assert(total_supply == 1368798332311330795498, 'Wrong total supply');
             }}
         "#,
-        CHEATNET_RPC_URL
+        INTEGRATION_RPC_URL
     ).as_str());
 
     let result = run_test_case(&test);
@@ -179,7 +189,7 @@ fn get_block_info_in_forked_block() {
             }}
 
             #[test]
-            #[fork(url: "{CHEATNET_RPC_URL}", block_id: BlockId::Number(315887))]
+            #[fork(url: "{INTEGRATION_RPC_URL}", block_id: BlockId::Number(315887))]
             fn test_fork_get_block_info_contract_on_testnet() {{
                 let dispatcher = IBlockInfoCheckerDispatcher {{
                     contract_address: contract_address_const::<0x4bc9a2c302d2c704dbabe8fe396d9fe7b9ca65a46a3cf5d2edc6c57bddcf316>()
@@ -196,7 +206,7 @@ fn get_block_info_in_forked_block() {
             }}
 
             #[test]
-            #[fork(url: "{CHEATNET_RPC_URL}", block_id: BlockId::Number(315887))]
+            #[fork(url: "{INTEGRATION_RPC_URL}", block_id: BlockId::Number(315887))]
             fn test_fork_get_block_info_test_state() {{
                 let block_info = starknet::get_block_info().unbox();
                 assert(block_info.block_timestamp == 1697630072, block_info.block_timestamp.into());
@@ -206,7 +216,7 @@ fn get_block_info_in_forked_block() {
             }}
 
             #[test]
-            #[fork(url: "{CHEATNET_RPC_URL}", block_id: BlockId::Number(315887))]
+            #[fork(url: "{INTEGRATION_RPC_URL}", block_id: BlockId::Number(315887))]
             fn test_fork_get_block_info_contract_deployed() {{
                 let contract = declare('BlockInfoChecker');
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
@@ -223,7 +233,7 @@ fn get_block_info_in_forked_block() {
             }}
 
             #[test]
-            #[fork(url: "{CHEATNET_RPC_URL}", block_id: BlockId::Tag(BlockTag::Latest))]
+            #[fork(url: "{INTEGRATION_RPC_URL}", block_id: BlockId::Tag(BlockTag::Latest))]
             fn test_fork_get_block_info_latest_block() {{
                 let block_info = starknet::get_block_info().unbox();
                 assert(block_info.block_timestamp > 1697630072, block_info.block_timestamp.into());
@@ -242,13 +252,13 @@ fn get_block_info_in_forked_block() {
 }
 
 #[test]
-fn test_fork_get_block_info_fails() {
+fn fork_get_block_info_fails() {
     let test = test_case!(formatdoc!(
         r#"
             #[test]
-            #[fork(url: "{CHEATNET_RPC_URL}", block_id: BlockId::Number(999999999999))]
-            fn test_fork_get_block_info_fails() {{
-                let block_info = starknet::get_block_info().unbox();
+            #[fork(url: "{INTEGRATION_RPC_URL}", block_id: BlockId::Number(999999999999))]
+            fn fork_get_block_info_fails() {{
+                starknet::get_block_info().unbox();
             }}
         "#
     )
@@ -259,7 +269,39 @@ fn test_fork_get_block_info_fails() {
     assert_failed!(result);
     assert_case_output_contains!(
         result,
-        "test_fork_get_block_info_fails",
+        "fork_get_block_info_fails",
         "Unable to get block with tx hashes from fork"
     );
+}
+
+#[test]
+// found in: https://github.com/foundry-rs/starknet-foundry/issues/1175
+fn incompatible_abi() {
+    let test = test_case!(formatdoc!(
+        r#"
+            #[derive(Serde)]
+            struct Propdetails {{
+                payload: felt252,
+            }}
+
+            #[starknet::interface]
+            trait IGovernance<State> {{
+                fn get_proposal_details(self: @State, param: felt252) -> Propdetails;
+            }}
+
+            #[test]
+            #[fork(url: "{TESTNET_RPC_URL}", block_id: BlockId::Number(904597))]
+            fn test_forking_functionality() {{
+                let gov_contract_addr: starknet::ContractAddress = 0x7ba1d4836a1142c09dde23cb39b2885fe350912591461b5764454a255bdbac6.try_into().unwrap();
+                let dispatcher = IGovernanceDispatcher {{ contract_address: gov_contract_addr }};
+                let propdetails = dispatcher.get_proposal_details(1);
+                assert(propdetails.payload==0x78b4ccacdc1c902281f6f13d94b6d17b1f4c44ff811c01dea504d43a264f611, 'payload not match');
+            }}
+        "#,
+    )
+    .as_str());
+
+    let result = run_test_case(&test);
+
+    assert_passed!(result);
 }

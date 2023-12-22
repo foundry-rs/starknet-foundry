@@ -1,9 +1,9 @@
 # Writing Tests
 
-Forge lets you test standalone functions from your smart contracts. This technique is referred to as unit testing. You
+`snforge` lets you test standalone functions from your smart contracts. This technique is referred to as unit testing. You
 should write as many unit tests as possible as these are faster than integration tests.
 
-## Writing your first test
+## Writing Your First Test
 
 First, add the following code to the `src/lib.cairo` file:
 
@@ -14,6 +14,8 @@ fn sum(a: felt252, b: felt252) -> felt252 {
 
 #[cfg(test)]
 mod tests {
+    use super::sum;
+
     #[test]
     fn test_sum() {
         assert(sum(2, 3) == 5, 'sum incorrect');
@@ -24,9 +26,9 @@ mod tests {
 It is a common practice to keep your unit tests in the same file as the tested code. 
 Keep in mind that all tests in `src` folder have to be in a module annotated with `#[cfg(test)]`.
 When it comes to integration tests, you can keep them in separate files in the `tests` directory.
-You can find a detailed explanation of how Forge collects tests [here](test-collection.md).
+You can find a detailed explanation of how `snforge` collects tests [here](test-collection.md).
 
-Now run forge using a command:
+Now run `snforge` using a command:
 
 ```shell
 $ snforge test
@@ -36,7 +38,7 @@ Running 1 test(s) from src/
 Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ```
 
-## Failing tests
+## Failing Tests
 
 If your code panics, the test is considered failed. Here's an example of a failing test.
 
@@ -72,7 +74,7 @@ Failures:
     package_name::tests::failing
 ```
 
-## Expected failures
+## Expected Failures
 
 Sometimes you want to mark a test as expected to fail. This is useful when you want to verify that an action fails as
 expected.

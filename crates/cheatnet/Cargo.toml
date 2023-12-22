@@ -23,7 +23,7 @@ starknet.workspace = true
 thiserror.workspace = true
 serde_json.workspace = true
 serde.workspace = true
-flatten-serde-json = "0.1.0"
+flatten-serde-json.workspace = true
 num-traits.workspace = true
 url.workspace = true
 tokio.workspace = true
@@ -32,8 +32,9 @@ conversions.workspace = true
 scarb-metadata.workspace = true
 fs2 = "0.4.3"
 flate2 = "1.0.27"
-scarb-artifacts = { path = "../scarb-artifacts" }
+scarb-api = { path = "../scarb-api" }
 runtime = { path = "../runtime" }
+sierra-casm = { path = "../sierra-casm" }
 
 [dev-dependencies]
 ctor.workspace = true

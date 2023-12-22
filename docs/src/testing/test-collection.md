@@ -1,22 +1,22 @@
 ## Test Collection
 
-Forge considers all functions in your project marked with `#[test]` attribute as tests.
+`snforge` considers all functions in your project marked with `#[test]` attribute as tests.
 By default, test functions run without any arguments.
 However, adding any arguments to function signature will enable [fuzz testing](./advanced/fuzz-testing.md) for this
 test case.
 
-Starknet Forge will collect tests only from these places:
+`snforge` will collect tests only from these places:
 
 - any files reachable from the package root (declared as `mod` in `lib.cairo` or its children) - 
 these have to be in a module annotated with `#[cfg(test)]`
 - files inside the [`tests`](#the-tests-directory) directory
 
-## The *tests* Directory
+## The `tests` Directory
 
-Forge collects tests from `tests` directory.
+`snforge` collects tests from `tests` directory.
 Depending on the presence of `tests/lib.cairo` file, the behavior of the test collector will be different.
 
-### With *tests/lib.cairo*
+### With `tests/lib.cairo`
 
 If there is a `lib.cairo` file in `tests` folder,
 then it is treated as an entrypoint to the `tests` package from which tests are collected.
@@ -54,7 +54,7 @@ mod utils;
 tests from `tests/lib.cairo`, `tests/test_contract.cairo`, `tests/common.cairo`
 and `tests/common/utils.cairo` will be collected.
 
-### Without *tests/lib.cairo*
+### Without `tests/lib.cairo`
 
 When there is no `lib.cairo` present in `tests` folder, 
 all test files **directly** in `tests` directory (i.e., not in its subdirectories)

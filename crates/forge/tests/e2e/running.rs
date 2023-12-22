@@ -77,7 +77,7 @@ fn simple_package_with_git_dependency() {
             casm = true
 
             [dependencies]
-            starknet = "2.3.1"
+            starknet = "2.4.0"
             snforge_std = {{ git = "https://github.com/{}", branch = "{}" }}
             "#,
             remote_url,
@@ -145,12 +145,13 @@ fn with_failing_scarb_build() {
         ))
         .unwrap();
 
-    let snapbox = test_runner();
-
-    let result = snapbox.current_dir(&temp).assert().code(2);
-
-    let stdout = String::from_utf8_lossy(&result.get_output().stdout);
-    assert!(stdout.contains("scarb build did not succeed"));
+    test_runner()
+        .current_dir(&temp)
+        .assert()
+        .code(2)
+        .stdout_eq(indoc! {r"
+            [ERROR] Failed to build test artifacts with Scarb
+        "});
 }
 
 #[test]
@@ -255,7 +256,7 @@ fn with_gas_usage() {
         Collected 1 test(s) from simple_package package
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
-        [PASS] tests::test_simple::test_two, gas: ~0.1
+        [PASS] tests::test_simple::test_two, gas: ~1
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 12 filtered out
         "}
     );
@@ -607,7 +608,7 @@ fn with_print() {
         original value: [152]
         original value: [124], converted to a string: [|]
         original value: [149]
-        original value: [439721161573], converted to a string: [false]
+        original value: [0]
         original value: [27]
         original value: [17]
         original value: [37], converted to a string: [%]
@@ -676,7 +677,7 @@ fn with_exit_first() {
             version = "0.1.0"
 
             [dependencies]
-            starknet = "2.3.1"
+            starknet = "2.4.0"
             snforge_std = {{ path = "{}" }}
 
             [[target.starknet-contract]]
@@ -771,12 +772,13 @@ fn init_new_project_test() {
             [package]
             name = "test_name"
             version = "0.1.0"
+            edition = "2023_10"
 
             # See more keys and their definitions at https://docs.swmansion.com/scarb/docs/reference/manifest.html
 
             [dependencies]
             snforge_std = {{ git = "https://github.com/foundry-rs/starknet-foundry", tag = "v{}" }}
-            starknet = "2.3.1"
+            starknet = "2.4.0"
 
             [[target.starknet-contract]]
             casm = true
@@ -799,7 +801,7 @@ fn init_new_project_test() {
         casm = true
 
         [dependencies]
-        starknet = "2.3.1"
+        starknet = "2.4.0"
         snforge_std = {{ git = "https://github.com/{}", branch = "{}" }}
         "#,
             remote_url,

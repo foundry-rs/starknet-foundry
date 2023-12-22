@@ -1,4 +1,6 @@
 use anyhow::Result;
+use blockifier::execution::execution_utils::stark_felt_to_felt;
+use cairo_lang_runner::casm_run::format_next_item;
 use std::sync::Arc;
 
 use crate::constants::TEST_ADDRESS;
@@ -18,7 +20,6 @@ use blockifier::execution::{
 };
 use blockifier::state::errors::StateError;
 use cairo_felt::Felt252;
-use cairo_lang_runner::short_string::as_cairo_short_string;
 use starknet_api::core::PatriciaKey;
 use starknet_api::patricia_key;
 use starknet_api::{
@@ -28,11 +29,28 @@ use starknet_api::{
     transaction::Calldata,
 };
 
+#[derive(Debug, Default)]
+pub struct UsedResources {
+    pub execution_resources: ExecutionResources,
+    pub l2_to_l1_payloads_length: Vec<usize>,
+}
+
+impl UsedResources {
+    pub fn extend(self: &mut UsedResources, other: &UsedResources) {
+        self.execution_resources.vm_resources += &other.execution_resources.vm_resources;
+        self.execution_resources
+            .syscall_counter
+            .extend(&other.execution_resources.syscall_counter);
+        self.l2_to_l1_payloads_length
+            .extend(&other.l2_to_l1_payloads_length);
+    }
+}
+
 /// Represents contract output, along with the data and the resources consumed during execution
 #[derive(Debug)]
 pub struct CallContractOutput {
     pub result: CallContractResult,
-    pub used_resources: ExecutionResources,
+    pub used_resources: UsedResources,
 }
 
 /// Enum representing possible contract execution result, along with the data
@@ -65,11 +83,19 @@ impl CallContractFailure {
                     .map(|data| Felt252::from_bytes_be(data.bytes()))
                     .collect();
 
-                let err_data_str = err_data
-                    .iter()
-                    .map(|x| as_cairo_short_string(x).unwrap())
-                    .collect::<Vec<String>>()
-                    .join("\n");
+                // blockifier/src/execution_utils:274 (format_panic_data) (modified)
+                let err_data_str = {
+                    let mut felts = error_data.iter().map(|felt| stark_felt_to_felt(*felt));
+                    let mut items = Vec::new();
+                    while let Some(item) = format_next_item(&mut felts) {
+                        items.push(item.quote_if_string());
+                    }
+                    if let [item] = &items[..] {
+                        item.clone()
+                    } else {
+                        items.join("\n").to_string()
+                    }
+                };
 
                 for invalid_calldata_msg in [
                     "Failed to deserialize param #",
@@ -215,8 +241,13 @@ pub fn call_entry_point(
     let account_context = build_transaction_context();
     let block_context = build_block_context(cheatnet_state.block_info);
 
-    let mut context =
-        EntryPointExecutionContext::new(&block_context, &account_context, ExecutionMode::Execute);
+    let mut context = EntryPointExecutionContext::new(
+        &block_context,
+        &account_context,
+        ExecutionMode::Execute,
+        false,
+    )
+    .unwrap();
 
     let exec_result = execute_call_entry_point(
         &mut entry_point,
@@ -230,6 +261,11 @@ pub fn call_entry_point(
 
     Ok(CallContractOutput {
         result,
-        used_resources: resources,
+        used_resources: UsedResources {
+            execution_resources: resources,
+            l2_to_l1_payloads_length: exec_result.map_or(vec![], |call_info| {
+                call_info.get_sorted_l2_to_l1_payloads_length().unwrap()
+            }),
+        },
     })
 }

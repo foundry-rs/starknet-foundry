@@ -1,0 +1,20 @@
+[[call]]
+call_type = "deploy"
+class_hash = "0x7644be7f58307726aa836e945edede13e9e08c38eaf2186d4d48eca7dd435ac"
+inputs = []
+id = "map_contract"
+unique = false
+
+[[call]]
+call_type = "invoke"
+contract_address = "0x50e0fdc4feeb0cb85f175d40ec2f8d622a92ccac3e59419c773b4eaad2b5a2"
+function = "put"
+inputs = ["0x123", "map_contract"]
+
+[[call]]
+call_type = "deploy"
+class_hash = "0x5cadc0ecbc6e2a502a7a7e8e5b55400a1a92afccb68ed5dc5efad86c1fc4edb"
+inputs = ["map_contract", "0x1", "0x1"]
+id = "constructor-params"
+unique = false
+

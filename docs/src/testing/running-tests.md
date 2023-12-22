@@ -1,6 +1,6 @@
 # Running Tests
 
-To run tests with Forge, simply run the `snforge test` command from the package directory.
+To run tests with `snforge`, simply run the `snforge test` command from the package directory.
 
 ```shell
 $ snforge test
@@ -62,13 +62,13 @@ Failures:
     package_name::tests::failing
 ```
 
-## Scarb workspaces support
+## Scarb Workspaces Support
 
-Forge supports Scarb Workspaces.
+`snforge` supports Scarb Workspaces.
 To make sure you know how workspaces work,
 check Scarb documentation [here](https://docs.swmansion.com/scarb/docs/reference/workspaces.html).
 
-### Workspaces with root package
+### Workspaces With Root Package
 
 When running `snforge test` in a Scarb workspace with a root package, it will only run tests inside the root package.  
 
@@ -143,7 +143,7 @@ Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 
 `--package` and `--workspace` flags are mutually exclusive, adding both of them to a `snforge test` command will result in an error.
 
-### Virtual workspaces
+### Virtual Workspaces
 
 Running `snforge test` command in a virtual workspace (a workspace without a root package)
 outside any package will by default run tests for all the packages. 

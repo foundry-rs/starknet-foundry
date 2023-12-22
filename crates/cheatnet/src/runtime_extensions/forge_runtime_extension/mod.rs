@@ -1,13 +1,15 @@
 use std::collections::HashMap;
-use std::path::PathBuf;
 
-use crate::cheatcodes::deploy::{deploy, deploy_at, DeployCallPayload};
-use crate::cheatcodes::CheatcodeError;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
-    CallContractFailure, CallContractResult,
+    CallContractFailure, CallContractResult, UsedResources,
 };
+use crate::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::{
+    deploy, deploy_at, DeployCallPayload,
+};
+use crate::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
 use crate::state::{BlockifierState, CheatTarget};
 use anyhow::{Context, Result};
+use blockifier::execution::call_info::{CallExecution, CallInfo};
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::execution_utils::stark_felt_to_felt;
 use cairo_felt::Felt252;
@@ -17,12 +19,11 @@ use conversions::felt252::FromShortString;
 use conversions::{FromConv, IntoConv};
 use num_traits::{One, ToPrimitive};
 use scarb_artifacts::StarknetContractArtifacts;
-use serde::Deserialize;
 
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use starknet_api::core::ContractAddress;
 
-use crate::cheatcodes::spy_events::SpyTarget;
+use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::SpyTarget;
 use crate::runtime_extensions::forge_runtime_extension::file_operations::string_into_felt;
 use cairo_lang_starknet::contract::starknet_keccak;
 use runtime::{
@@ -34,6 +35,7 @@ use starknet::signers::SigningKey;
 use super::call_to_blockifier_runtime_extension::CallToBlockifierRuntime;
 use super::cheatable_starknet_runtime_extension::SyscallSelector;
 
+pub mod cheatcodes;
 mod file_operations;
 
 pub type ForgeRuntime<'a> = ExtendedRuntime<ForgeExtension<'a>>;
@@ -196,6 +198,19 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let transaction_hash = read_option_felt(&inputs, &mut idx);
                 let chain_id = read_option_felt(&inputs, &mut idx);
                 let nonce = read_option_felt(&inputs, &mut idx);
+                let resource_bounds =
+                    read_option_felt(&inputs, &mut idx).map(|resource_bounds_len| {
+                        read_vec(
+                            &inputs,
+                            &mut idx,
+                            3 * resource_bounds_len.to_usize().unwrap(), // ResourceBounds struct has 3 fields
+                        )
+                    });
+                let tip = read_option_felt(&inputs, &mut idx);
+                let paymaster_data = read_option_vec(&inputs, &mut idx);
+                let nonce_data_availability_mode = read_option_felt(&inputs, &mut idx);
+                let fee_data_availability_mode = read_option_felt(&inputs, &mut idx);
+                let account_deployment_data = read_option_vec(&inputs, &mut idx);
 
                 extended_runtime
                     .extended_runtime
@@ -211,6 +226,12 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                         transaction_hash,
                         chain_id,
                         nonce,
+                        resource_bounds,
+                        tip,
+                        paymaster_data,
+                        nonce_data_availability_mode,
+                        fee_data_availability_mode,
+                        account_deployment_data,
                     );
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
@@ -529,29 +550,6 @@ fn deserialize_cheat_target(inputs: &[Felt252]) -> (CheatTarget, usize) {
     }
 }
 
-#[allow(dead_code)]
-#[derive(Deserialize)]
-struct ScarbStarknetArtifacts {
-    version: u32,
-    contracts: Vec<ScarbStarknetContract>,
-}
-
-#[allow(dead_code)]
-#[derive(Deserialize)]
-struct ScarbStarknetContract {
-    id: String,
-    package_name: String,
-    contract_name: String,
-    artifacts: ScarbStarknetContractArtifact,
-}
-
-#[allow(dead_code)]
-#[derive(Deserialize)]
-struct ScarbStarknetContractArtifact {
-    sierra: PathBuf,
-    casm: Option<PathBuf>,
-}
-
 fn cheatcode_panic_result(panic_data: Vec<Felt252>) -> Vec<Felt252> {
     let mut result = vec![Felt252::from(1), Felt252::from(panic_data.len())];
     result.extend(panic_data);
@@ -575,4 +573,50 @@ fn read_option_felt(buffer: &[Felt252], idx: &mut usize) -> Option<Felt252> {
 
 fn read_option_vec(buffer: &[Felt252], idx: &mut usize) -> Option<Vec<Felt252>> {
     read_option_felt(buffer, idx).map(|count| read_vec(buffer, idx, count.to_usize().unwrap()))
+}
+
+#[must_use]
+pub fn get_all_execution_resources(runtime: ForgeRuntime) -> UsedResources {
+    let runtime_execution_resources = runtime
+        .extended_runtime
+        .extended_runtime
+        .extended_runtime
+        .extended_runtime
+        .hint_handler
+        .resources
+        .clone();
+    let runtime_l1_to_l2_messages = runtime
+        .extended_runtime
+        .extended_runtime
+        .extended_runtime
+        .extended_runtime
+        .hint_handler
+        .l2_to_l1_messages;
+
+    let runtime_call_info = CallInfo {
+        execution: CallExecution {
+            l2_to_l1_messages: runtime_l1_to_l2_messages,
+            ..Default::default()
+        },
+        ..Default::default()
+    };
+    let runtime_l2_to_l1_payloads_length = runtime_call_info
+        .get_sorted_l2_to_l1_payloads_length()
+        .unwrap();
+
+    let mut all_resources = UsedResources {
+        execution_resources: runtime_execution_resources,
+        l2_to_l1_payloads_length: runtime_l2_to_l1_payloads_length,
+    };
+
+    let cheatnet_used_resources = &runtime
+        .extended_runtime
+        .extended_runtime
+        .extended_runtime
+        .extension
+        .cheatnet_state
+        .used_resources;
+    all_resources.extend(cheatnet_used_resources);
+
+    all_resources
 }
