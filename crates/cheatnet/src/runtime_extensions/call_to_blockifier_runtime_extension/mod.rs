@@ -78,6 +78,10 @@ impl<'a> ExtensionLogic for CallToBlockifierExtension<'a> {
             DeprecatedSyscallSelector::Deploy
             | DeprecatedSyscallSelector::LibraryCall
             | DeprecatedSyscallSelector::LibraryCallL1Handler => {
+                // We clear it here and in the first arm to ensure that on each
+                // new call, deploy syscall and library call made from test code
+                // we start with an empty trace
+                // Same case when handling l1_handler_execute and in `deploy_at`
                 extended_runtime
                     .extended_runtime
                     .extension
