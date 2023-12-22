@@ -1,11 +1,9 @@
 use std::any::Any;
 use std::collections::HashMap;
-use std::fs;
 
-use crate::starknet_commands::declare::BuildConfig;
 use crate::starknet_commands::{call, declare, deploy, invoke};
 use crate::{get_account, get_nonce, WaitForTx};
-use anyhow::{anyhow, ensure, Context, Result};
+use anyhow::{anyhow, Context, Result};
 use cairo_felt::Felt252;
 use cairo_lang_casm::hints::{Hint, StarknetHint};
 use cairo_lang_casm::operand::{CellRef, ResOperand};
@@ -26,17 +24,16 @@ use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cairo_vm::vm::vm_core::VirtualMachine;
-use camino::Utf8PathBuf;
+use sncast::helpers::constants::LIB_CONTRACT_ARTIFACTS_NAME;
+// use sncast::helpers::response_structs::ScriptResponse;
 use clap::command;
 use clap::Args;
 use conversions::{FromConv, IntoConv};
 use itertools::chain;
 use num_traits::ToPrimitive;
 use runtime::EnhancedHintError;
-use scarb_artifacts::ScarbCommand;
-use sncast::helpers::scarb_utils::{
-    get_package_metadata, get_scarb_manifest, get_scarb_metadata_with_deps, CastConfig,
-};
+use scarb_artifacts::StarknetContractArtifacts;
+use sncast::helpers::scarb_utils::CastConfig;
 use sncast::response::structs::ScriptResponse;
 use starknet::accounts::Account;
 use starknet::core::types::{BlockId, BlockTag::Pending, FieldElement};
@@ -57,6 +54,7 @@ pub struct CairoHintProcessor<'a> {
     pub runtime: Runtime,
     pub run_resources: RunResources,
     pub config: &'a CastConfig,
+    pub artifacts: &'a HashMap<String, StarknetContractArtifacts>,
 }
 
 // cairo/crates/cairo-lang-runner/src/casm_run/mod.rs:457 (ResourceTracker for CairoHintProcessor)
@@ -235,11 +233,8 @@ impl CairoHintProcessor<'_> {
                     &contract_name,
                     max_fee,
                     &account,
+                    self.artifacts,
                     nonce,
-                    BuildConfig {
-                        scarb_toml_path: None,
-                        json: false,
-                    },
                     WaitForTx {
                         wait: true,
                         timeout: self.config.wait_timeout,
@@ -415,21 +410,20 @@ impl CairoHintProcessor<'_> {
 
 pub fn run(
     module_name: &str,
-    path_to_scarb_toml: &Option<Utf8PathBuf>,
     provider: &JsonRpcClient<HttpTransport>,
     runtime: Runtime,
     config: &CastConfig,
+    artifacts: &HashMap<String, StarknetContractArtifacts>,
 ) -> Result<ScriptResponse> {
-    let path = compile_script(path_to_scarb_toml.clone())?;
+    let contract_artifacts = artifacts
+        .get(LIB_CONTRACT_ARTIFACTS_NAME)
+        .ok_or(anyhow!("Failed to find artifacts in starknet_artifacts.json file. Make sure you have enabled sierra and casm code generation in Scarb.toml"))?;
 
-    let sierra_program = serde_json::from_str::<VersionedProgram>(
-        &fs::read_to_string(path.clone())
-            .with_context(|| format!("Failed to read Sierra file at path = {path}"))?,
-    )
-    .with_context(|| format!("Failed to deserialize Sierra program at path = {path}"))?
-    .into_v1()
-    .with_context(|| format!("Failed to load Sierra program at path = {path}"))?
-    .program;
+    let sierra_program = serde_json::from_str::<VersionedProgram>(&contract_artifacts.sierra)
+        .with_context(|| "failed to deserialize Sierra program")?
+        .into_v1()
+        .with_context(|| "failed to load Sierra program")?
+        .program;
 
     let runner = SierraCasmRunner::new(
         sierra_program,
@@ -458,6 +452,7 @@ pub fn run(
         runtime,
         run_resources: RunResources::default(),
         config,
+        artifacts,
     };
 
     match runner.run_function(
@@ -479,41 +474,6 @@ pub fn run(
         },
         Err(err) => Err(err.into()),
     }
-}
-
-fn compile_script(path_to_scarb_toml: Option<Utf8PathBuf>) -> Result<Utf8PathBuf> {
-    let scripts_manifest_path = path_to_scarb_toml.unwrap_or_else(|| {
-        get_scarb_manifest()
-            .context("Failed to retrieve manifest path from scarb")
-            .unwrap()
-    });
-    ensure!(
-        scripts_manifest_path.exists(),
-        "The path = {scripts_manifest_path} does not exist"
-    );
-
-    ScarbCommand::new_with_stdio()
-        .arg("build")
-        .manifest_path(&scripts_manifest_path)
-        .run()
-        .context("failed to compile script with scarb")?;
-
-    let metadata = get_scarb_metadata_with_deps(&scripts_manifest_path)?;
-    let package_metadata = get_package_metadata(&metadata, &scripts_manifest_path)?;
-
-    let filename = format!("{}.sierra.json", package_metadata.name);
-    let path = metadata
-        .target_dir
-        .unwrap_or(metadata.workspace.root.join("target"))
-        .join(metadata.current_profile)
-        .join(filename.clone());
-
-    ensure!(
-        path.exists(),
-        "The package has not been compiled, the file at path = {path} does not exist"
-    );
-
-    Ok(path)
 }
 
 // taken from starknet-foundry/crates/forge/src/test_case_summary.rs

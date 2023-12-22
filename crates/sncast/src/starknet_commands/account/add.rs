@@ -4,6 +4,7 @@ use crate::starknet_commands::account::{
 use anyhow::{ensure, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
+use scarb_metadata::PackageMetadata;
 use sncast::helpers::scarb_utils::CastConfig;
 use sncast::response::structs::AccountAddResponse;
 use sncast::{get_chain_id, parse_number};
@@ -60,9 +61,10 @@ pub async fn add(
     rpc_url: &str,
     account: &str,
     accounts_file: &Utf8PathBuf,
-    path_to_scarb_toml: &Option<Utf8PathBuf>,
+    path_to_scarb_toml: Result<Utf8PathBuf>,
     provider: &JsonRpcClient<HttpTransport>,
     add: &Add,
+    package: Result<PackageMetadata>,
 ) -> Result<AccountAddResponse> {
     let private_key = match &add.private_key_file_path {
         Some(file_path) => get_private_key_from_file(file_path)
@@ -98,7 +100,7 @@ pub async fn add(
             accounts_file: accounts_file.into(),
             ..Default::default()
         };
-        add_created_profile_to_configuration(path_to_scarb_toml, &config)?;
+        add_created_profile_to_configuration(&path_to_scarb_toml?, &config, &package?.clone())?;
     }
 
     Ok(AccountAddResponse {

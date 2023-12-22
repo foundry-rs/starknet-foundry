@@ -76,3 +76,7 @@ Prints out `sncast` version.
 ## `--help, -h`
 
 Prints out help.
+
+## `--package`
+
+Specifies which Scarb package the command should use.

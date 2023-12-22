@@ -4,6 +4,7 @@ use crate::starknet_commands::account::{
 use anyhow::{bail, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
+use scarb_metadata::PackageMetadata;
 use serde_json::json;
 use sncast::helpers::constants::{CREATE_KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH};
 use sncast::helpers::scarb_utils::CastConfig;
@@ -43,11 +44,12 @@ pub async fn create(
     accounts_file: &Utf8PathBuf,
     keystore: Option<Utf8PathBuf>,
     provider: &JsonRpcClient<HttpTransport>,
-    path_to_scarb_toml: Option<Utf8PathBuf>,
+    path_to_scarb_toml: Result<Utf8PathBuf>,
     chain_id: FieldElement,
     salt: Option<FieldElement>,
     add_profile: bool,
     class_hash: Option<String>,
+    package: Result<PackageMetadata>,
 ) -> Result<AccountCreateResponse> {
     let salt = extract_or_generate_salt(salt);
     let class_hash = {
@@ -89,7 +91,7 @@ pub async fn create(
             keystore,
             ..Default::default()
         };
-        add_created_profile_to_configuration(&path_to_scarb_toml, &config)?;
+        add_created_profile_to_configuration(&path_to_scarb_toml?, &config, &package?.clone())?;
     }
 
     Ok(AccountCreateResponse {

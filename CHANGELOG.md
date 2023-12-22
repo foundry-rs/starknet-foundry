@@ -58,6 +58,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - allow setting nonce in declare, deploy and invoke (using `--nonce` and in deployment scripts)
 - add `get_nonce` function to cast_std
 - `--private-key-file` option to `account add` command that allows to provide a path to the file holding account private key
+- Added Scarb workspaces support and `--package` flag
 
 ## [0.11.0] - 2023-11-22
 

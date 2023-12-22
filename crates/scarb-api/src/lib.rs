@@ -191,6 +191,14 @@ pub fn name_for_package(metadata: &Metadata, package: &PackageId) -> Result<Stri
     Ok(package.name.clone())
 }
 
+#[must_use]
+pub fn target_dir_for_package(metadata: &Metadata) -> Utf8PathBuf {
+    metadata
+        .target_dir
+        .clone()
+        .unwrap_or_else(|| metadata.workspace.root.join("target"))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

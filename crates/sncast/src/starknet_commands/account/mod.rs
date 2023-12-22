@@ -5,12 +5,11 @@ use crate::starknet_commands::account::deploy::Deploy;
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use clap::{Args, Subcommand};
+use scarb_metadata::PackageMetadata;
 use serde_json::json;
 use sncast::{
     chain_id_to_network_name, decode_chain_id,
-    helpers::scarb_utils::{
-        get_package_tool_sncast, get_scarb_manifest, get_scarb_metadata, CastConfig,
-    },
+    helpers::scarb_utils::{get_package_tool_sncast, CastConfig},
 };
 use starknet::{core::types::FieldElement, signers::SigningKey};
 use std::{fs::OpenOptions, io::Write};
@@ -95,16 +94,11 @@ pub fn write_account_to_accounts_file(
 }
 
 pub fn add_created_profile_to_configuration(
-    path_to_scarb_toml: &Option<Utf8PathBuf>,
+    path_to_scarb_toml: &Utf8PathBuf,
     config: &CastConfig,
+    package: &PackageMetadata,
 ) -> Result<()> {
-    let manifest_path = match path_to_scarb_toml.clone() {
-        Some(path) => path,
-        None => get_scarb_manifest().context("Failed to obtain manifest path from scarb")?,
-    };
-    let metadata = get_scarb_metadata(&manifest_path)?;
-
-    if let Ok(tool_sncast) = get_package_tool_sncast(&metadata) {
+    if let Ok(tool_sncast) = get_package_tool_sncast(package) {
         let property = tool_sncast
             .get(&config.account)
             .and_then(|profile_| profile_.get("account"));
@@ -146,8 +140,8 @@ pub fn add_created_profile_to_configuration(
 
     let mut scarb_toml = OpenOptions::new()
         .append(true)
-        .open(manifest_path)
-        .context("Failed to open Scarb.toml")?;
+        .open(path_to_scarb_toml)
+        .context("Couldn't open Scarb.toml")?;
     scarb_toml
         .write_all(format!("\n{toml_string}").as_bytes())
         .context("Failed to write to the Scarb.toml")?;
@@ -160,6 +154,9 @@ mod tests {
     use sealed_test::prelude::rusty_fork_test;
     use sealed_test::prelude::sealed_test;
     use sncast::helpers::constants::DEFAULT_ACCOUNTS_FILE;
+    use sncast::helpers::scarb_utils::get_first_package_from_metadata;
+    use sncast::helpers::scarb_utils::get_scarb_manifest;
+    use sncast::helpers::scarb_utils::get_scarb_metadata;
     use sncast::helpers::scarb_utils::CastConfig;
     use std::fs;
 
@@ -167,13 +164,17 @@ mod tests {
 
     #[sealed_test(files = ["tests/data/contracts/constructor_with_params/Scarb.toml"])]
     fn test_add_created_profile_to_configuration_happy_case() {
+        let path_to_scarb_toml = get_scarb_manifest().unwrap();
+        let metadata = get_scarb_metadata(&path_to_scarb_toml).unwrap();
+        let package = get_first_package_from_metadata(&metadata).unwrap();
+
         let config = CastConfig {
             rpc_url: String::from("http://some-url"),
             account: String::from("some-name"),
             accounts_file: "accounts".into(),
             ..Default::default()
         };
-        let res = add_created_profile_to_configuration(&None, &config);
+        let res = add_created_profile_to_configuration(&path_to_scarb_toml, &config, &package);
 
         assert!(res.is_ok());
 
@@ -186,13 +187,17 @@ mod tests {
 
     #[sealed_test(files = ["tests/data/contracts/constructor_with_params/Scarb.toml"])]
     fn test_add_created_profile_to_configuration_profile_already_exists() {
+        let path_to_scarb_toml = get_scarb_manifest().unwrap();
+        let metadata = get_scarb_metadata(&path_to_scarb_toml).unwrap();
+        let package = get_first_package_from_metadata(&metadata).unwrap();
+
         let config = CastConfig {
             rpc_url: String::from("http://some-url"),
             account: String::from("myprofile"),
             accounts_file: DEFAULT_ACCOUNTS_FILE.into(),
             ..Default::default()
         };
-        let res = add_created_profile_to_configuration(&None, &config);
+        let res = add_created_profile_to_configuration(&path_to_scarb_toml, &config, &package);
 
         assert!(res.is_err());
     }

@@ -240,6 +240,23 @@ pub fn duplicate_directory_with_salt(src_path: String, to_be_salted: &str, salt:
     temp_dir
 }
 
+#[must_use]
+pub fn copy_directory_to_tempdir(src_path: String) -> TempDir {
+    let src_dir = Utf8PathBuf::from(src_path);
+    let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
+
+    fs_extra::dir::copy(
+        src_dir,
+        &temp_dir,
+        &fs_extra::dir::CopyOptions::new()
+            .overwrite(true)
+            .content_only(true),
+    )
+    .expect("Unable to copy the directory");
+
+    temp_dir
+}
+
 pub fn remove_devnet_env() {
     if Utf8PathBuf::from(DEVNET_ENV_FILE).is_file() {
         fs::remove_file(DEVNET_ENV_FILE).unwrap();
@@ -315,12 +332,31 @@ pub fn get_accounts_path(relative_path_from_cargo_toml: &str) -> String {
         .expect("Failed to convert path to string")
         .to_string()
 }
+
 #[must_use]
 pub fn get_keystores_path(relative_path_from_cargo_toml: &str) -> String {
     use std::path::PathBuf;
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set");
     let binding = PathBuf::from(manifest_dir).join(relative_path_from_cargo_toml);
     binding
+        .to_str()
+        .expect("Failed to convert path to string")
+        .to_string()
+}
+
+#[must_use]
+pub fn create_basic_scarb_environment() -> String {
+    let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
+    let manifest_path = temp_dir.path().join("./Scarb.toml");
+
+    fs_extra::file::copy(
+        "tests/data/files/noconfig_Scarb.toml",
+        manifest_path.clone(),
+        &fs_extra::file::CopyOptions::new().overwrite(true),
+    )
+    .unwrap();
+
+    manifest_path
         .to_str()
         .expect("Failed to convert path to string")
         .to_string()

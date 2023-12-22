@@ -4,14 +4,17 @@ use crate::starknet_commands::{
     account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,
     script::Script,
 };
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 use sncast::response::print::{print_command_result, OutputFormat};
 
-use crate::starknet_commands::declare::BuildConfig;
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand};
+use sncast::helpers::build::build;
+use sncast::helpers::build::BuildConfig;
 use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
-use sncast::helpers::scarb_utils::{parse_scarb_config, CastConfig};
+use sncast::helpers::scarb_utils::{
+    get_scarb_config, get_scarb_manifest, get_scarb_metadata_with_deps, CastConfig,
+};
 use sncast::{
     chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_nonce, get_provider,
     NumbersFormat, WaitForTx,
@@ -19,6 +22,9 @@ use sncast::{
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use tokio::runtime::Runtime;
+
+use scarb_metadata::{Metadata, PackageMetadata};
+use scarb_ui::args::PackagesFilterLong;
 
 mod starknet_commands;
 
@@ -29,12 +35,15 @@ mod starknet_commands;
 #[allow(clippy::struct_excessive_bools)]
 struct Cli {
     /// Profile name in Scarb.toml config file
-    #[clap(short, long)]
+    #[clap(short = 'p', long)]
     profile: Option<String>,
 
-    /// Path to Scarb.toml that is to be used; overrides default behaviour of searching for scarb.toml in current or parent directories
+    /// Path to Scarb.toml that is to be used; overrides default behaviour of searching for Scarb.toml in current or parent directories
     #[clap(short = 's', long)]
     path_to_scarb_toml: Option<Utf8PathBuf>,
+
+    #[command(flatten)]
+    packages_filter: PackagesFilterLong,
 
     /// RPC provider url address; overrides url from Scarb.toml
     #[clap(short = 'u', long = "url")]
@@ -115,19 +124,34 @@ fn main() -> Result<()> {
     let numbers_format = NumbersFormat::from_flags(cli.hex_format, cli.int_format);
     let output_format = OutputFormat::from_flag(cli.json);
 
-    let mut config = parse_scarb_config(&cli.profile, &cli.path_to_scarb_toml)?;
+    let package_data = get_package_data(&cli);
+    let mut config = match &package_data.package {
+        Ok(package) => get_scarb_config(&cli.profile, Some(package))?,
+        Err(_) => get_scarb_config(&cli.profile, None)?,
+    };
+
     update_cast_config(&mut config, &cli);
 
     let provider = get_provider(&config.rpc_url)?;
     let runtime = Runtime::new().expect("Failed to instantiate Runtime");
 
     if let Commands::Script(script) = cli.command {
+        package_data.manifest_path?;
+        let package = package_data.package?;
+
+        let build_config = BuildConfig {
+            scarb_toml_path: cli.path_to_scarb_toml.clone(),
+            json: cli.json,
+        };
+
+        let artifacts = build(&package_data.metadata?, &package, true, &build_config)?;
+
         let mut result = starknet_commands::script::run(
             &script.script_module_name,
-            &cli.path_to_scarb_toml,
             &provider,
             runtime,
             &config,
+            &artifacts,
         );
 
         print_command_result("script", &mut result, numbers_format, &output_format)?;
@@ -139,6 +163,7 @@ fn main() -> Result<()> {
             provider,
             numbers_format,
             output_format,
+            package_data,
         ))
     }
 }
@@ -150,16 +175,19 @@ async fn run_async_command(
     provider: JsonRpcClient<HttpTransport>,
     numbers_format: NumbersFormat,
     output_format: OutputFormat,
+    package_data: PackageData,
 ) -> Result<()> {
     let wait_config = WaitForTx {
         wait: cli.wait,
         timeout: config.wait_timeout,
         retry_interval: config.wait_retry_interval,
     };
+
     let build_config = BuildConfig {
         scarb_toml_path: cli.path_to_scarb_toml.clone(),
         json: cli.json,
     };
+
     match cli.command {
         Commands::Declare(declare) => {
             let account = get_account(
@@ -169,12 +197,22 @@ async fn run_async_command(
                 config.keystore,
             )
             .await?;
+
+            package_data.manifest_path?;
+
+            let artifacts = build(
+                &package_data.metadata?,
+                &package_data.package?,
+                false,
+                &build_config,
+            )?;
+
             let mut result = starknet_commands::declare::declare(
                 &declare.contract,
                 declare.max_fee,
                 &account,
+                &artifacts,
                 declare.nonce,
-                build_config,
                 wait_config,
             )
             .await;
@@ -290,9 +328,10 @@ async fn run_async_command(
                     &config.rpc_url,
                     &add.name.clone(),
                     &config.accounts_file,
-                    &cli.path_to_scarb_toml,
+                    package_data.manifest_path,
                     &provider,
                     &add,
+                    package_data.package,
                 )
                 .await;
 
@@ -314,11 +353,12 @@ async fn run_async_command(
                     &config.accounts_file,
                     config.keystore,
                     &provider,
-                    cli.path_to_scarb_toml,
+                    package_data.manifest_path,
                     chain_id,
                     create.salt,
                     create.add_profile,
                     create.class_hash,
+                    package_data.package,
                 )
                 .await;
 
@@ -423,4 +463,58 @@ fn update_cast_config(config: &mut CastConfig, cli: &Cli) {
     config.wait_timeout = clone_or_else!(cli.wait_timeout, config.wait_timeout);
     config.wait_retry_interval =
         clone_or_else!(cli.wait_retry_interval, config.wait_retry_interval);
+}
+
+struct PackageData {
+    pub manifest_path: Result<Utf8PathBuf>,
+    pub metadata: Result<Metadata>,
+    pub package: Result<PackageMetadata>,
+}
+
+// Lazily get all the required package information from CLI
+fn get_package_data(cli: &Cli) -> PackageData {
+    let mut result = PackageData {
+        manifest_path: Err(anyhow!("Could not retrieve the manifest path")),
+        metadata: Err(anyhow!("Could not retrieve metadata")),
+        package: Err(anyhow!("Could not retrieve package metadata")),
+    };
+
+    let path = match cli.path_to_scarb_toml.clone() {
+        Some(path) => Ok(path),
+        None => get_scarb_manifest().context("Failed to obtain manifest path from scarb"),
+    };
+
+    // Check if the path is actually valid
+    result.manifest_path = match path {
+        Ok(path) => {
+            if path.exists() {
+                Ok(path)
+            } else {
+                Err(anyhow!(format!(
+                    "No manifest found at the given path ({})",
+                    path
+                )))
+            }
+        }
+        Err(x) => Err(x),
+    };
+
+    if result.manifest_path.is_err() {
+        return result;
+    }
+
+    let metadata = get_scarb_metadata_with_deps(result.manifest_path.as_ref().unwrap());
+
+    result.metadata = metadata;
+    if result.metadata.is_err() {
+        return result;
+    }
+
+    result.package = cli
+        .packages_filter
+        .clone()
+        .into_packages_filter()
+        .match_one(result.metadata.as_ref().unwrap());
+
+    result
 }
