@@ -21,6 +21,7 @@ use scarb_artifacts::StarknetContractArtifacts;
 use smol_str::SmolStr;
 
 use std::collections::HashMap;
+use std::default::Default;
 use std::sync::Arc;
 use test_case_summary::{AnyTestCaseSummary, Fuzzing, FuzzingStatistics, Single};
 use tokio::sync::mpsc::{channel, Sender};
@@ -257,7 +258,7 @@ impl TestCaseSummary<Fuzzing> {
                 TestCaseSummary::Passed {
                     name,
                     msg,
-                    gas_info: gas_usage_statistics(&gas_usages_vec),
+                    gas_info: GasStatistics::new(&gas_usages_vec),
                     arguments,
                     test_statistics: FuzzingStatistics { runs },
                 }
@@ -381,30 +382,4 @@ fn function_args<'a>(function: &'a Function, builtins: &[&str]) -> Vec<&'a Concr
         .iter()
         .filter(|pt| !builtins.contains(&pt.debug_name))
         .collect()
-}
-
-fn gas_usage_statistics(gas_usages: &[u128]) -> GasStatistics {
-    let max = gas_usages.iter().copied().reduce(u128::max).unwrap();
-    let min = gas_usages.iter().copied().reduce(u128::min).unwrap();
-
-    let n = gas_usages.len() as u128;
-    if n <= 1 {
-        return GasStatistics {
-            max,
-            min,
-            mean: None,
-            std_deviation: None,
-        };
-    }
-
-    let mean = gas_usages.iter().sum::<u128>() / n;
-
-    let sum_squared_diff = gas_usages.iter().map(|&x| (x - mean).pow(2)).sum::<u128>();
-
-    GasStatistics {
-        max,
-        min,
-        mean: Some(mean),
-        std_deviation: Some((sum_squared_diff / (n - 1)).sqrt()),
-    }
 }

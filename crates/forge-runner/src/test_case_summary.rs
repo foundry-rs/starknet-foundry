@@ -3,15 +3,40 @@ use crate::expected_result::{ExpectedPanicValue, ExpectedTestResult};
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{RunResult, RunResultValue};
+use num_integer::Roots;
 use std::option::Option;
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Default)]
 pub struct GasStatistics {
     pub min: u128,
     pub max: u128,
     pub mean: Option<u128>,
     pub std_deviation: Option<u128>,
 }
+
+impl GasStatistics {
+    pub fn new(gas_usages: &[u128]) -> Self {
+        let max = gas_usages.iter().copied().reduce(u128::max).unwrap();
+        let min = gas_usages.iter().copied().reduce(u128::min).unwrap();
+        let mut stats = GasStatistics {
+            min,
+            max,
+            ..Default::default()
+        };
+
+        let n = gas_usages.len() as u128;
+        if n > 1 {
+            let mean = gas_usages.iter().sum::<u128>() / n;
+            let sum_squared_diff = gas_usages.iter().map(|&x| (x - mean).pow(2)).sum::<u128>();
+
+            stats.mean = Some(mean);
+            stats.std_deviation = Some((sum_squared_diff / (n - 1)).sqrt());
+        }
+
+        stats
+    }
+}
+
 #[derive(Debug, PartialEq, Clone)]
 pub struct FuzzingStatistics {
     pub runs: usize,
