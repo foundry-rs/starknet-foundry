@@ -1,14 +1,15 @@
+use crate::assert_success;
 use crate::cheatcodes::{map_entry_address, variable_address};
 use crate::common::state::{create_cached_state, create_cheatnet_state};
 use crate::common::{felt_selector_from_name, get_contracts};
 use cairo_felt::Felt252;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::call_contract;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::deploy;
-use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::storage::load;
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::storage::store;
 use conversions::felt252::FromShortString;
 
 #[test]
-fn load_simple_state() {
+fn store_simple_state() {
     let mut cached_state = create_cached_state();
     let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
@@ -21,36 +22,30 @@ fn load_simple_state() {
         .unwrap()
         .contract_address;
 
-    let selector = felt_selector_from_name("increase_balance");
+    store(
+        &mut blockifier_state,
+        contract_address,
+        &variable_address("balance"),
+        &[Felt252::from(666)],
+    )
+    .unwrap();
 
-    call_contract(
+    let selector = felt_selector_from_name("get_balance");
+
+    let output = call_contract(
         &mut blockifier_state,
         &mut cheatnet_state,
         &contract_address,
         &selector,
-        &[Felt252::from(420)],
+        &[],
     )
     .unwrap();
 
-    let balance_value = load(
-        &mut blockifier_state,
-        contract_address,
-        &variable_address("balance"),
-        &Felt252::from(1),
-    )
-    .unwrap();
-
-    assert_eq!(balance_value.len(), 1, "Wrong data amount was returned");
-    let returned_balance_value = balance_value[0].clone();
-    assert_eq!(
-        returned_balance_value,
-        Felt252::from(420),
-        "Wrong data value was returned: {returned_balance_value}"
-    );
+    assert_success!(output, vec![Felt252::from(666)]);
 }
 
 #[test]
-fn load_state_map_simple_value() {
+fn store_state_map_simple_value() {
     let mut cached_state = create_cached_state();
     let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
@@ -63,38 +58,33 @@ fn load_state_map_simple_value() {
         .unwrap()
         .contract_address;
 
-    let selector = felt_selector_from_name("insert");
-
     let map_key = Felt252::from(420);
     let inserted_value = Felt252::from(69);
-    call_contract(
+
+    let entry_address = map_entry_address("values", &[map_key.clone()]);
+    store(
+        &mut blockifier_state,
+        contract_address,
+        &entry_address,
+        &[inserted_value.clone()],
+    )
+    .unwrap();
+
+    let selector = felt_selector_from_name("read");
+    let call_output = call_contract(
         &mut blockifier_state,
         &mut cheatnet_state,
         &contract_address,
         &selector,
-        &[map_key.clone(), inserted_value.clone()],
+        &[map_key],
     )
     .unwrap();
 
-    let var_address = map_entry_address("values", &[map_key]);
-    let map_value = load(
-        &mut blockifier_state,
-        contract_address,
-        &var_address,
-        &Felt252::from(1),
-    )
-    .unwrap();
-
-    assert_eq!(map_value.len(), 1, "Wrong data amount was returned");
-    let returned_map_value = map_value[0].clone();
-    assert_eq!(
-        returned_map_value, inserted_value,
-        "Wrong data value was returned: {returned_map_value}"
-    );
+    assert_success!(call_output, vec![inserted_value]);
 }
 
 #[test]
-fn load_state_map_complex_value() {
+fn store_state_map_complex_value() {
     let mut cached_state = create_cached_state();
     let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
@@ -107,41 +97,32 @@ fn load_state_map_complex_value() {
         .unwrap()
         .contract_address;
 
-    let selector = felt_selector_from_name("insert");
-
     let map_key = Felt252::from(420);
     let inserted_values = vec![Felt252::from(68), Felt252::from(69)];
-    let mut calldata = vec![map_key.clone()];
-    calldata.append(&mut inserted_values.clone());
-    call_contract(
+    let entry_address = map_entry_address("values", &[map_key.clone()]);
+
+    store(
+        &mut blockifier_state,
+        contract_address,
+        &entry_address,
+        &inserted_values,
+    )
+    .unwrap();
+
+    let selector = felt_selector_from_name("read");
+    let call_output = call_contract(
         &mut blockifier_state,
         &mut cheatnet_state,
         &contract_address,
         &selector,
-        &calldata,
+        &[map_key],
     )
     .unwrap();
-
-    let entry_address = map_entry_address("values", &[map_key]);
-
-    let map_value = load(
-        &mut blockifier_state,
-        contract_address,
-        &entry_address,
-        &Felt252::from(2),
-    )
-    .unwrap();
-
-    assert_eq!(map_value.len(), 2, "Wrong data amount was returned");
-
-    assert_eq!(
-        map_value, inserted_values,
-        "Wrong data value was returned: {map_value:?}"
-    );
+    assert_success!(call_output, inserted_values);
 }
 
 #[test]
-fn load_state_map_complex_key() {
+fn store_state_map_complex_key() {
     let mut cached_state = create_cached_state();
     let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
@@ -154,40 +135,32 @@ fn load_state_map_complex_key() {
         .unwrap()
         .contract_address;
 
-    let selector = felt_selector_from_name("insert");
-
     let map_key = vec![Felt252::from(68), Felt252::from(69)];
-    let mut calldata = map_key.clone();
     let inserted_value = Felt252::from(420);
-    calldata.push(inserted_value.clone());
-    call_contract(
+
+    let entry_address = map_entry_address("values", &map_key);
+    store(
+        &mut blockifier_state,
+        contract_address,
+        &entry_address,
+        &[inserted_value.clone()],
+    )
+    .unwrap();
+
+    let selector = felt_selector_from_name("read");
+    let call_output = call_contract(
         &mut blockifier_state,
         &mut cheatnet_state,
         &contract_address,
         &selector,
-        &calldata,
+        &map_key,
     )
     .unwrap();
-
-    let entry_address = map_entry_address("values", &map_key);
-    let map_value = load(
-        &mut blockifier_state,
-        contract_address,
-        &entry_address,
-        &Felt252::from(1),
-    )
-    .unwrap();
-
-    assert_eq!(map_value.len(), 1, "Wrong data amount was returned");
-    let returned_map_value = map_value[0].clone();
-    assert_eq!(
-        inserted_value, returned_map_value,
-        "Wrong data value was returned: {returned_map_value}"
-    );
+    assert_success!(call_output, vec![inserted_value]);
 }
 
 #[test]
-fn load_state_struct() {
+fn store_state_struct() {
     let mut cached_state = create_cached_state();
     let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
@@ -200,31 +173,26 @@ fn load_state_struct() {
         .unwrap()
         .contract_address;
 
-    let selector = felt_selector_from_name("insert");
+    let inserted_values = vec![Felt252::from(68), Felt252::from(69)];
 
-    let calldata = vec![Felt252::from(68), Felt252::from(69)];
-    call_contract(
+    let var_address = variable_address("value");
+    store(
+        &mut blockifier_state,
+        contract_address,
+        &var_address,
+        &inserted_values,
+    )
+    .unwrap();
+
+    let selector = felt_selector_from_name("read");
+    let call_output = call_contract(
         &mut blockifier_state,
         &mut cheatnet_state,
         &contract_address,
         &selector,
-        &calldata,
+        &[],
     )
     .unwrap();
 
-    let variable_name_hashed = variable_address("value");
-    let struct_value = load(
-        &mut blockifier_state,
-        contract_address,
-        &variable_name_hashed,
-        &Felt252::from(2),
-    )
-    .unwrap();
-
-    assert_eq!(struct_value.len(), 2, "Wrong data amount was returned");
-
-    assert_eq!(
-        calldata, struct_value,
-        "Wrong data value was returned: {struct_value:?}"
-    );
+    assert_success!(call_output, inserted_values);
 }
