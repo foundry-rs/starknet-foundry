@@ -27,7 +27,7 @@ async fn test_happy_case_from_scarb() {
 
     snapbox.assert().success().stderr_matches(indoc! {r"
         command: call
-        error: Contract not found
+        error: There is no contract at the specified address
     "});
 }
 
@@ -51,7 +51,7 @@ async fn test_happy_case_from_cli_no_scarb() {
 
     snapbox.assert().success().stderr_matches(indoc! {r"
         command: call
-        error: Contract not found
+        error: There is no contract at the specified address
     "});
 }
 

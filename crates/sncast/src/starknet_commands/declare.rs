@@ -3,7 +3,9 @@ use camino::Utf8PathBuf;
 use clap::Args;
 use scarb_artifacts::{get_contracts_map, ScarbCommand};
 use sncast::helpers::scarb_utils::get_package_metadata;
-use sncast::helpers::{response_structs::DeclareResponse, scarb_utils::get_scarb_manifest};
+use sncast::helpers::scarb_utils::get_scarb_manifest;
+use sncast::response::structs::DeclareResponse;
+use sncast::response::structs::Hex;
 use sncast::{apply_optional, handle_rpc_error, handle_wait_for_tx, WaitForTx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{ConnectedAccount, Declaration};
@@ -95,8 +97,8 @@ pub async fn declare(
                 account.provider(),
                 result.transaction_hash,
                 DeclareResponse {
-                    class_hash: result.class_hash,
-                    transaction_hash: result.transaction_hash,
+                    class_hash: Hex(result.class_hash),
+                    transaction_hash: Hex(result.transaction_hash),
                 },
                 wait_config,
             )

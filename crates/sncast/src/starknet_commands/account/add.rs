@@ -4,8 +4,8 @@ use crate::starknet_commands::account::{
 use anyhow::{ensure, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
-use sncast::helpers::response_structs::AccountAddResponse;
 use sncast::helpers::scarb_utils::CastConfig;
+use sncast::response::structs::AccountAddResponse;
 use sncast::{get_chain_id, parse_number};
 use starknet::core::types::BlockTag::Pending;
 use starknet::core::types::{BlockId, FieldElement};

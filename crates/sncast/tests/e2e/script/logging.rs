@@ -41,31 +41,31 @@ async fn test_default_verbosity() {
             Finished release target(s) in [..] seconds
 
 
-        cheatcode: get_nonce
+        script_subcommand: get_nonce
         response: [..]
 
            Compiling lib(map_script) map_script v0.1.0 [..]
            Compiling starknet-contract(map_script) map_script v0.1.0 [..]
             Finished release target(s) in [..] seconds
 
-        cheatcode: declare
+        script_subcommand: declare
         class_hash: 0x[..]
         transaction_hash: 0x[..]
 
-        cheatcode: get_nonce
+        script_subcommand: get_nonce
         response: [..]
 
-        cheatcode: deploy
+        script_subcommand: deploy
         contract_address: 0x[..]
         transaction_hash: 0x[..]
 
-        cheatcode: get_nonce
+        script_subcommand: get_nonce
         response: [..]
 
-        cheatcode: invoke
+        script_subcommand: invoke
         transaction_hash: 0x[..]
 
-        cheatcode: call
+        script_subcommand: call
         response: [0x2]
 
         command: script
@@ -101,23 +101,23 @@ async fn test_default_verbosity_with_json() {
         {"status":"finished","message":"release target(s) in [..] seconds"}
 
 
-        {"cheatcode":"get_nonce","response":"[..]"}
+        {"script_subcommand":"get_nonce","response":"[..]"}
 
         {"status":"compiling","message":"lib(map_script) map_script v0.1.0 ([..])"}
         {"status":"compiling","message":"starknet-contract(map_script) map_script v0.1.0 ([..])"}
         {"status":"finished","message":"release target(s) in [..] seconds"}
 
-        {"cheatcode":"declare","class_hash":"0x[..]","transaction_hash":"0x[..]"}
+        {"script_subcommand":"declare","class_hash":"0x[..]","transaction_hash":"0x[..]"}
 
-        {"cheatcode":"get_nonce","response":"[..]"}
+        {"script_subcommand":"get_nonce","response":"[..]"}
 
-        {"cheatcode":"deploy","contract_address":"0x[..]","transaction_hash":"0x[..]"}
+        {"script_subcommand":"deploy","contract_address":"0x[..]","transaction_hash":"0x[..]"}
 
-        {"cheatcode":"get_nonce","response":"[..]"}
+        {"script_subcommand":"get_nonce","response":"[..]"}
 
-        {"cheatcode":"invoke","transaction_hash":"0x[..]"}
+        {"script_subcommand":"invoke","transaction_hash":"0x[..]"}
 
-        {"cheatcode":"call","response":"[0x2]"}
+        {"script_subcommand":"call","response":["0x2"]}
 
         {"command":"script","status":"success"}
     "#});
@@ -180,34 +180,34 @@ async fn test_one_of_the_steps_failing() {
             Finished release target(s) in [..] seconds
 
 
-        cheatcode: get_nonce
+        script_subcommand: get_nonce
         response: [..]
 
            Compiling lib(map_script) map_script v0.1.0 [..]
            Compiling starknet-contract(map_script) map_script v0.1.0 [..]
             Finished release target(s) in [..] seconds
 
-        cheatcode: declare
+        script_subcommand: declare
         class_hash: 0x[..]
         transaction_hash: 0x[..]
 
-        cheatcode: get_nonce
+        script_subcommand: get_nonce
         response: [..]
 
-        cheatcode: deploy
+        script_subcommand: deploy
         contract_address: 0x[..]
         transaction_hash: 0x[..]
 
-        cheatcode: get_nonce
+        script_subcommand: get_nonce
         response: [..]
 
     "});
 
     result.stderr_matches(indoc! {r#"
-       Transaction hash: 0x[..]
+       Transaction hash = 0x[..]
 
        command: script
-       error: Got an exception while executing a hint: Custom Hint Error: Transaction has been reverted: Error in the called contract (0x[..]
+       error: Got an exception while executing a hint: Custom Hint Error: Transaction has been reverted = Error in the called contract (0x[..]
        [..]
        Got an exception while executing a hint: Custom Hint Error: Entry point EntryPointSelector(StarkFelt("0x[..]
        ...
