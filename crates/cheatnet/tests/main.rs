@@ -1,4 +1,4 @@
-use scarb_artifacts::ScarbCommand;
+use scarb_api::ScarbCommand;
 
 mod builtins;
 mod cheatcodes;

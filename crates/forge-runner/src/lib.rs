@@ -17,7 +17,7 @@ use futures::stream::FuturesUnordered;
 use futures::StreamExt;
 
 use once_cell::sync::Lazy;
-use scarb_artifacts::StarknetContractArtifacts;
+use scarb_api::StarknetContractArtifacts;
 use smol_str::SmolStr;
 
 use std::collections::HashMap;

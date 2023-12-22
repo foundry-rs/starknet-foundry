@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
-use scarb_artifacts::{get_contracts_map, ScarbCommand};
+use scarb_api::{get_contracts_map, ScarbCommand};
 use sncast::helpers::scarb_utils::get_package_metadata;
 use sncast::helpers::scarb_utils::get_scarb_manifest;
 use sncast::response::structs::DeclareResponse;

@@ -18,7 +18,7 @@ use cairo_vm::vm::vm_core::VirtualMachine;
 use conversions::felt252::FromShortString;
 use conversions::{FromConv, IntoConv};
 use num_traits::{One, ToPrimitive};
-use scarb_artifacts::StarknetContractArtifacts;
+use scarb_api::StarknetContractArtifacts;
 
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use starknet_api::core::ContractAddress;

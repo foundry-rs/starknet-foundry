@@ -4,7 +4,7 @@ use crate::compiled_raw::CompiledTestCrateRaw;
 use crate::scarb::config::{ForgeConfig, RawForgeConfig};
 use anyhow::{anyhow, Context, Result};
 use camino::Utf8Path;
-use scarb_artifacts::ScarbCommand;
+use scarb_api::ScarbCommand;
 use scarb_ui::args::PackagesFilter;
 
 pub mod config;

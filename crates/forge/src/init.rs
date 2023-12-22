@@ -3,7 +3,7 @@ use anyhow::{anyhow, Context, Ok, Result};
 use include_dir::{include_dir, Dir};
 
 use regex::Regex;
-use scarb_artifacts::ScarbCommand;
+use scarb_api::ScarbCommand;
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::Path;
