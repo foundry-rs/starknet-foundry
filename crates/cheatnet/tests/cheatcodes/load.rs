@@ -1,15 +1,11 @@
+use crate::cheatcodes::{map_entry_address, variable_address};
 use crate::common::state::{create_cached_state, create_cheatnet_state};
 use crate::common::{felt_selector_from_name, get_contracts};
-use blockifier::abi::abi_utils::starknet_keccak;
 use cairo_felt::Felt252;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::call_contract;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::deploy;
-use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::load::{
-    load, map_storage_address,
-};
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::storage::load;
 use conversions::felt252::FromShortString;
-use conversions::IntoConv;
-use starknet::core::crypto::pedersen_hash;
 
 #[test]
 fn load_simple_state() {
@@ -39,7 +35,7 @@ fn load_simple_state() {
     let balance_value = load(
         &mut blockifier_state,
         contract_address,
-        &starknet_keccak("balance".as_ref()),
+        &variable_address("balance"),
         &Felt252::from(1),
     )
     .unwrap();
@@ -80,15 +76,11 @@ fn load_state_map_simple_value() {
     )
     .unwrap();
 
-    // This can be abstracted in cairo code itself, without compromising load's interface simplicity
-    let variable_name_hashed = starknet_keccak("values".as_ref());
-    let value_address = pedersen_hash(&variable_name_hashed.into_(), &map_key.into_());
-    let value_address = map_storage_address(value_address);
-
+    let var_address = map_entry_address("values", &[map_key]);
     let map_value = load(
         &mut blockifier_state,
         contract_address,
-        &value_address.into_(),
+        &var_address,
         &Felt252::from(1),
     )
     .unwrap();
@@ -130,15 +122,12 @@ fn load_state_map_complex_value() {
     )
     .unwrap();
 
-    // This can be abstracted in cairo code itself, without compromising load's interface simplicity
-    let variable_name_hashed = starknet_keccak("values".as_ref());
-    let value_address = pedersen_hash(&variable_name_hashed.into_(), &map_key.into_());
-    let value_address = map_storage_address(value_address);
+    let entry_address = map_entry_address("values", &[map_key]);
 
     let map_value = load(
         &mut blockifier_state,
         contract_address,
-        &value_address.into_(),
+        &entry_address,
         &Felt252::from(2),
     )
     .unwrap();
@@ -180,18 +169,11 @@ fn load_state_map_complex_key() {
     )
     .unwrap();
 
-    // This can be abstracted in cairo code itself, without compromising load's interface simplicity
-    let variable_name_hashed = starknet_keccak("values".as_ref());
-    let value_address = pedersen_hash(
-        &pedersen_hash(&variable_name_hashed.into_(), &map_key[0].clone().into_()),
-        &map_key[1].clone().into_(),
-    );
-    let value_address = map_storage_address(value_address);
-
+    let entry_address = map_entry_address("values", &map_key);
     let map_value = load(
         &mut blockifier_state,
         contract_address,
-        &value_address.into_(),
+        &entry_address,
         &Felt252::from(1),
     )
     .unwrap();
@@ -230,7 +212,7 @@ fn load_state_struct() {
     )
     .unwrap();
 
-    let variable_name_hashed = starknet_keccak("value".as_ref());
+    let variable_name_hashed = variable_address("value");
     let struct_value = load(
         &mut blockifier_state,
         contract_address,

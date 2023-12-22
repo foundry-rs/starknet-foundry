@@ -5,13 +5,13 @@ edition.workspace = true
 
 
 [dependencies]
-cairo-lang-starknet-v1_0_0-alpha6 = {package = "cairo-lang-starknet", git = "https://github.com/starkware-libs/cairo.git", tag = "v1.0.0-alpha.6"}
-cairo-lang-starknet-v1_0_0-rc0 = { package = "cairo-lang-starknet", git = "https://github.com/starkware-libs/cairo", tag = "v1.0.0-rc0" }
-cairo-lang-starknet-v1_1_1 = { package = "cairo-lang-starknet", git = "https://github.com/starkware-libs/cairo", tag = "v1.1.1" }
+cairo-lang-starknet-sierra-0_1_0 = {package = "cairo-lang-starknet", git = "https://github.com/starkware-libs/cairo.git", tag = "v1.0.0-alpha.6"}
+cairo-lang-starknet-sierra-1_0_0 = { package = "cairo-lang-starknet", git = "https://github.com/starkware-libs/cairo", tag = "v1.0.0-rc0" }
 cairo-lang-starknet.workspace = true
-cairo-lang-casm.workspace = true
 serde_json.workspace = true
 serde.workspace = true
+test-case.workspace = true
+anyhow.workspace = true
 
 [lib]
 name = "sierra_casm"

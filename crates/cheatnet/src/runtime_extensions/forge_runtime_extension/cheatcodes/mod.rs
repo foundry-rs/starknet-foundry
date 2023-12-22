@@ -8,13 +8,13 @@ pub mod deploy;
 pub mod elect;
 pub mod get_class_hash;
 pub mod l1_handler_execute;
-pub mod load;
 pub mod mock_call;
 pub mod prank;
 pub mod precalculate_address;
 pub mod roll;
 pub mod spoof;
 pub mod spy_events;
+pub mod storage;
 pub mod warp;
 
 /// A structure used for returning cheatcode errors in tests
