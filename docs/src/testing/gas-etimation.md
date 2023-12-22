@@ -7,7 +7,7 @@ and gas-efficient.
 
 ## Displaying Estimated Gas
 
-### Single test
+### Single Test
 
 When the test passes with no errors, estimated gas is displayed this way:
 ```shell
