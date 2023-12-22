@@ -1,10 +1,10 @@
 use anyhow::{anyhow, Context, Result};
-use sncast::response::structs::DeclareResponse;
-use sncast::{handle_rpc_error, handle_wait_for_tx, WaitForTx};
 use clap::Args;
 use scarb_artifacts::StarknetContractArtifacts;
-use sncast::response::structs::Hex;
 use sncast::apply_optional;
+use sncast::response::structs::DeclareResponse;
+use sncast::response::structs::Hex;
+use sncast::{handle_rpc_error, handle_wait_for_tx, WaitForTx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{ConnectedAccount, Declaration};
 use starknet::core::types::FieldElement;

@@ -199,7 +199,6 @@ pub fn target_dir_for_package(metadata: &Metadata) -> Utf8PathBuf {
         .unwrap_or_else(|| metadata.workspace.root.join("target"))
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;

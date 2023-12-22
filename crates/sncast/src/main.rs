@@ -7,14 +7,14 @@ use crate::starknet_commands::{
 use anyhow::{anyhow, Context, Result};
 use sncast::response::print::{print_command_result, OutputFormat};
 
-use sncast::helpers::build::BuildConfig;
 use camino::Utf8PathBuf;
+use clap::{Parser, Subcommand};
 use sncast::helpers::build::build;
+use sncast::helpers::build::BuildConfig;
 use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
 use sncast::helpers::scarb_utils::{
     get_scarb_config, get_scarb_manifest, get_scarb_metadata_with_deps, CastConfig,
 };
-use clap::{Parser, Subcommand};
 use sncast::{
     chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_nonce, get_provider,
     NumbersFormat, WaitForTx,
@@ -144,7 +144,7 @@ fn main() -> Result<()> {
             json: cli.json,
         };
 
-        let artifacts = build(&package_data.metadata?, &package, true, build_config)?;
+        let artifacts = build(&package_data.metadata?, &package, true, &build_config)?;
 
         let mut result = starknet_commands::script::run(
             &script.script_module_name,
@@ -200,7 +200,12 @@ async fn run_async_command(
 
             package_data.manifest_path?;
 
-            let artifacts = build(&package_data.metadata?, &package_data.package?, false, build_config)?;
+            let artifacts = build(
+                &package_data.metadata?,
+                &package_data.package?,
+                false,
+                &build_config,
+            )?;
 
             let mut result = starknet_commands::declare::declare(
                 &declare.contract,

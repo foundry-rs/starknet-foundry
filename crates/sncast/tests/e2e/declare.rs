@@ -1,7 +1,7 @@
 use crate::helpers::constants::{CONTRACTS_DIR, URL};
 use crate::helpers::fixtures::{
-    copy_directory_to_tempdir, duplicate_directory_with_salt, get_accounts_path, get_transaction_hash,
-    get_transaction_receipt,
+    copy_directory_to_tempdir, duplicate_directory_with_salt, get_accounts_path,
+    get_transaction_hash, get_transaction_receipt,
 };
 use indoc::indoc;
 use snapbox::cmd::{cargo_bin, Command};
@@ -47,7 +47,8 @@ async fn test_happy_case() {
 
 #[tokio::test]
 async fn test_worskpaces_package_specified() {
-    let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/hello_workspaces_cast");
+    let contract_path =
+        copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/hello_workspaces_cast");
 
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
     let args = vec![
@@ -85,7 +86,8 @@ async fn test_worskpaces_package_specified() {
 
 #[tokio::test]
 async fn test_worskpaces_package_not_specified() {
-    let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/hello_workspaces_cast");
+    let contract_path =
+        copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/hello_workspaces_cast");
 
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
     let args = vec![

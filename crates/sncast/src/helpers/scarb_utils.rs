@@ -1,9 +1,9 @@
 use super::constants::{WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
 use anyhow::{anyhow, Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
-use scarb_metadata::{PackageMetadata, Metadata};
 use scarb_artifacts::ScarbCommand;
 use scarb_metadata;
+use scarb_metadata::{Metadata, PackageMetadata};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::default::Default;
