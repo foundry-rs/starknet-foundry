@@ -133,6 +133,7 @@ pub fn result_as_output_data<T: Serialize>(result: &mut Result<T>) -> OutputData
     }
 }
 
+#[must_use]
 pub fn value_to_output_data(json_value: Value) -> OutputData {
     match json_value {
         Value::Object(obj) => obj
@@ -152,6 +153,7 @@ fn value_to_output_value(value: Value) -> OutputValue {
     }
 }
 
+#[must_use]
 pub fn apply_numbers_formatting(value: OutputValue, formatting: NumbersFormat) -> OutputValue {
     match value {
         OutputValue::String(input) => {
