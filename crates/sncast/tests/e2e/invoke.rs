@@ -1,14 +1,14 @@
 use crate::helpers::constants::ACCOUNT;
 use crate::helpers::fixtures::{
-    default_cli_args, from_env, get_transaction_hash, get_transaction_receipt, create_test_provider,
+    create_test_provider, default_cli_args, from_env, get_transaction_hash, get_transaction_receipt,
 };
 use crate::helpers::runner::runner;
 use camino::Utf8PathBuf;
 use indoc::indoc;
-use sncast::{get_nonce, get_account};
 use sncast::helpers::constants::UDC_ADDRESS;
-use starknet::core::types::TransactionReceipt::Invoke;
+use sncast::{get_account, get_nonce};
 use starknet::accounts::Account;
+use starknet::core::types::TransactionReceipt::Invoke;
 
 #[tokio::test]
 async fn test_happy_case() {
@@ -76,13 +76,16 @@ async fn test_tx_rejected() {
         &provider,
         None,
     )
-    .await).unwrap();
+    .await)
+        .unwrap();
 
-    let nonce = get_nonce(&provider, "latest", account.address()).await.unwrap();
+    let nonce = get_nonce(&provider, "latest", account.address())
+        .await
+        .unwrap();
     let class_hash = from_env("CAST_MAP_CLASS_HASH").unwrap();
     let mut args = default_cli_args();
 
-    let nonce_str = format!("{:#02X}", nonce);
+    let nonce_str = format!("{nonce:#02X}",);
 
     args.append(&mut vec![
         "--account",
@@ -99,7 +102,7 @@ async fn test_tx_rejected() {
         "--max-fee",
         "99999999999999999",
         "--nonce",
-        &nonce_str
+        &nonce_str,
     ]);
 
     let snapbox = runner(&args);
