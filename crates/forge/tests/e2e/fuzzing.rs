@@ -13,10 +13,10 @@ fn fuzzing() {
         indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
-        
-        
-        Collected 12 test(s) from fuzzing package
-        Running 12 test(s) from src/
+
+
+        Collected 13 test(s) from fuzzing package
+        Running 13 test(s) from src/
         [PASS] fuzzing::tests::adding,[..]
         [PASS] fuzzing::tests::fuzzed_argument (fuzzer runs = 256),[..]
         [PASS] fuzzing::tests::fuzzed_both_arguments (fuzzer runs = 256),[..]
@@ -28,13 +28,14 @@ fn fuzzing() {
 
         [PASS] fuzzing::tests::custom_fuzzer_config (fuzzer runs = 10),[..]
         [PASS] fuzzing::tests::uint8_arg (fuzzer runs = 256),[..]
+        [PASS] fuzzing::tests::fuzzed_loop (fuzzer runs = 256), (max = ~126, min = ~1, mean = ~65, std deviation = ~37)
         [PASS] fuzzing::tests::uint16_arg (fuzzer runs = 256),[..]
         [PASS] fuzzing::tests::uint32_arg (fuzzer runs = 256),[..]
         [PASS] fuzzing::tests::uint64_arg (fuzzer runs = 256),[..]
         [PASS] fuzzing::tests::uint128_arg (fuzzer runs = 256),[..]
         [PASS] fuzzing::tests::uint256_arg (fuzzer runs = 256),[..]
         Running 0 test(s) from tests/
-        Tests: 11 passed, 1 failed, 0 skipped, 0 ignored, 6 filtered out
+        Tests: 12 passed, 1 failed, 0 skipped, 0 ignored, 6 filtered out
         Fuzzer seed: [..]
 
         Failures:
@@ -60,8 +61,8 @@ fn fuzzing_set_runs() {
         [..]Finished[..]
         
         
-        Collected 12 test(s) from fuzzing package
-        Running 12 test(s) from src/
+        Collected 13 test(s) from fuzzing package
+        Running 13 test(s) from src/
         [PASS] fuzzing::tests::adding,[..]
         [PASS] fuzzing::tests::fuzzed_argument (fuzzer runs = 10),[..]
         [PASS] fuzzing::tests::fuzzed_both_arguments (fuzzer runs = 10),[..]
@@ -73,13 +74,14 @@ fn fuzzing_set_runs() {
 
         [PASS] fuzzing::tests::custom_fuzzer_config (fuzzer runs = 10),[..]
         [PASS] fuzzing::tests::uint8_arg (fuzzer runs = 10),[..]
+        [PASS] fuzzing::tests::fuzzed_loop (fuzzer runs = 256), [..]
         [PASS] fuzzing::tests::uint16_arg (fuzzer runs = 10),[..]
         [PASS] fuzzing::tests::uint32_arg (fuzzer runs = 10),[..]
         [PASS] fuzzing::tests::uint64_arg (fuzzer runs = 10),[..]
         [PASS] fuzzing::tests::uint128_arg (fuzzer runs = 10),[..]
         [PASS] fuzzing::tests::uint256_arg (fuzzer runs = 10),[..]
         Running 0 test(s) from tests/
-        Tests: 11 passed, 1 failed, 0 skipped, 0 ignored, 6 filtered out
+        Tests: 12 passed, 1 failed, 0 skipped, 0 ignored, 6 filtered out
         Fuzzer seed: [..]
 
         Failures:
@@ -105,8 +107,8 @@ fn fuzzing_set_seed() {
         [..]Finished[..]
         
         
-        Collected 12 test(s) from fuzzing package
-        Running 12 test(s) from src/
+        Collected 13 test(s) from fuzzing package
+        Running 13 test(s) from src/
         [PASS] fuzzing::tests::adding,[..]
         [PASS] fuzzing::tests::fuzzed_argument (fuzzer runs = 256),[..]
         [PASS] fuzzing::tests::fuzzed_both_arguments (fuzzer runs = 256),[..]
@@ -118,13 +120,14 @@ fn fuzzing_set_seed() {
 
         [PASS] fuzzing::tests::custom_fuzzer_config (fuzzer runs = 10),[..]
         [PASS] fuzzing::tests::uint8_arg (fuzzer runs = 256),[..]
+        [PASS] fuzzing::tests::fuzzed_loop (fuzzer runs = 256), [..]
         [PASS] fuzzing::tests::uint16_arg (fuzzer runs = 256),[..]
         [PASS] fuzzing::tests::uint32_arg (fuzzer runs = 256),[..]
         [PASS] fuzzing::tests::uint64_arg (fuzzer runs = 256),[..]
         [PASS] fuzzing::tests::uint128_arg (fuzzer runs = 256),[..]
         [PASS] fuzzing::tests::uint256_arg (fuzzer runs = 256),[..]
         Running 0 test(s) from tests/
-        Tests: 11 passed, 1 failed, 0 skipped, 0 ignored, 6 filtered out
+        Tests: 12 passed, 1 failed, 0 skipped, 0 ignored, 6 filtered out
         Fuzzer seed: 1234
 
         Failures:

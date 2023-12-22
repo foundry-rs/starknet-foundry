@@ -1,4 +1,6 @@
+use forge_runner::test_case_summary::{AnyTestCaseSummary, GasStatistics, TestCaseSummary};
 use indoc::indoc;
+use test_utils::runner::TestCase;
 use test_utils::running_tests::run_test_case;
 use test_utils::{assert_passed, test_case};
 
@@ -42,4 +44,42 @@ fn fuzzer_different_types() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
+}
+
+#[test]
+fn fuzzed_loop() {
+    let test = test_case!(indoc!(
+        r"
+        #[test]
+        #[fuzzer(runs: 256, seed: 100)]
+        fn fuzzed_loop(a: u8) {
+            let mut i: u8 = 0;
+            loop {
+                if (i == a) {
+                    break;
+                }
+
+                i += 1;
+            };
+
+            assert(1 == 1, '');
+        }
+    "
+    ));
+
+    let result = run_test_case(&test);
+
+    let crate_summary = TestCase::find_test_result(&result);
+    assert!(matches!(
+        &crate_summary.test_case_summaries[0],
+        AnyTestCaseSummary::Fuzzing(TestCaseSummary::Passed {
+            gas_info: GasStatistics {
+                min: 1,
+                max: 126,
+                mean: Some(65),
+                std_deviation: Some(37),
+            },
+            ..
+        })
+    ));
 }

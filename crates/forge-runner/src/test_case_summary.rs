@@ -27,10 +27,16 @@ impl GasStatistics {
         let n = gas_usages.len() as u128;
         if n > 1 {
             let mean = gas_usages.iter().sum::<u128>() / n;
-            let sum_squared_diff = gas_usages.iter().map(|&x| (x - mean).pow(2)).sum::<u128>();
+            let sum_squared_diff = gas_usages
+                .iter()
+                .map(|&x| {
+                    let abs_difference = if x > mean { x - mean } else { mean - x };
+                    abs_difference.pow(2)
+                })
+                .sum::<u128>();
 
             stats.mean = Some(mean);
-            stats.std_deviation = Some((sum_squared_diff / (n - 1)).sqrt());
+            stats.std_deviation = Some((sum_squared_diff / n).sqrt());
         }
 
         stats
