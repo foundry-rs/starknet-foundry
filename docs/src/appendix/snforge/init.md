@@ -1,6 +1,6 @@
 # `snforge init`
 
-Create a new directory with a Forge project.
+Create a new directory with a `snforge` project.
 
 ## `<NAME>`
 

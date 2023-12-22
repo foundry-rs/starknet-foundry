@@ -62,7 +62,7 @@ async fn contract_already_declared() {
 
     snapbox.assert().success().stderr_matches(indoc! {r"
         command: declare
-        error: Contract error
+        error: An error occurred in the called contract [..]
     "});
 }
 
@@ -142,20 +142,19 @@ fn test_too_low_max_fee() {
 
     snapbox.assert().success().stderr_matches(indoc! {r"
         command: declare
-        error: Max fee is smaller than the minimal transaction cost (validation plus fee transfer)
+        error: Max fee is smaller than the minimal transaction cost
     "});
 
     fs::remove_dir_all(contract_path).unwrap();
 }
 
-#[test_case("/no_sierra", "../../accounts/accounts.json" ; "when there is no sierra artifact")]
-#[test_case("/no_casm", "../../accounts/accounts.json" ; "when there is no casm artifact")]
-fn scarb_no_artifacts(contract_path: &str, accounts_file_path: &str) {
+#[test]
+fn scarb_no_sierra_artifact() {
     let args = vec![
         "--url",
         URL,
         "--accounts-file",
-        accounts_file_path,
+        "../../accounts/accounts.json",
         "--account",
         "user1",
         "declare",
@@ -164,11 +163,36 @@ fn scarb_no_artifacts(contract_path: &str, accounts_file_path: &str) {
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(CONTRACTS_DIR.to_string() + contract_path)
+        .current_dir(CONTRACTS_DIR.to_string() + "/no_sierra")
         .args(args);
 
     snapbox.assert().success().stderr_matches(indoc! {r"
         command: declare
-        [..]Make sure you have enabled sierra and casm code generation in Scarb.toml[..]
+        [..]Make sure you have enabled sierra code generation in Scarb.toml[..]
     "});
+}
+
+#[test]
+fn scarb_no_casm_artifact() {
+    let args = vec![
+        "--url",
+        URL,
+        "--accounts-file",
+        "../../accounts/accounts.json",
+        "--account",
+        "user1",
+        "declare",
+        "--contract-name",
+        "minimal_contract",
+    ];
+
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(CONTRACTS_DIR.to_string() + "/no_casm")
+        .args(args);
+
+    assert!(
+        String::from_utf8(snapbox.assert().success().get_output().stdout.clone())
+            .unwrap()
+            .contains("class_hash")
+    );
 }

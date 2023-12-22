@@ -2,7 +2,7 @@
 
 ## Overview
 
-Starknet Foundry cast supports invoking smart contracts on a given network with the `sncast invoke` command.
+Starknet Foundry `sncast` supports invoking smart contracts on a given network with the `sncast invoke` command.
 
 In most cases, you have to provide:
 
@@ -10,7 +10,7 @@ In most cases, you have to provide:
 - Function name
 - Function arguments
 
-For detailed CLI description, see [invoke command reference](../appendix/cast/invoke.md).
+For detailed CLI description, see [invoke command reference](../appendix/sncast/invoke.md).
 
 ## Examples
 

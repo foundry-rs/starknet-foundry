@@ -10,7 +10,7 @@ Optional.
 
 Path to `Scarb.toml` file.
 
-If supplied, cast will not look for `Scarb.toml` file in current (or parent) directory, but will use this path instead.
+If supplied, `sncast` will not look for `Scarb.toml` file in current (or parent) directory, but will use this path instead.
 
 ## `--url, -u <RPC_URL>`
 Optional.
@@ -62,12 +62,12 @@ If passed, command will wait until transaction is accepted or rejected.
 ## `--wait-timeout <TIME_IN_SECONDS>`
 Optional.
 
-If `--wait` is passed, this will set the time after which cast times out. Defaults to 60s.
+If `--wait` is passed, this will set the time after which `sncast` times out. Defaults to 60s.
 
 ## `--wait-retry-timeout <TIME_IN_SECONDS>`
 Optional.
 
-If `--wait` is passed, this will set the retry interval - how often cast should fetch tx info from the node. Defaults to 5s.
+If `--wait` is passed, this will set the retry interval - how often `sncast` should fetch tx info from the node. Defaults to 5s.
 
 ## `--version, -v`
 

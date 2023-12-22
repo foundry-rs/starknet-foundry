@@ -10,4 +10,4 @@ sierra = true
 casm = false
 
 [lib]
-sierra = false
+sierra = true
