@@ -10,19 +10,17 @@ use std::option::Option;
 pub struct GasStatistics {
     pub min: u128,
     pub max: u128,
-    pub mean: Option<u128>,
-    pub std_deviation: Option<u128>,
+    pub maybe_mean: Option<u128>,
+    pub maybe_std_deviation: Option<u128>,
 }
 
 impl GasStatistics {
+    #[must_use]
     pub fn new(gas_usages: &[u128]) -> Self {
-        let max = gas_usages.iter().copied().reduce(u128::max).unwrap();
-        let min = gas_usages.iter().copied().reduce(u128::min).unwrap();
-        let mut stats = GasStatistics {
-            min,
-            max,
-            ..Default::default()
-        };
+        let min = gas_usages.iter().min().copied().unwrap();
+        let max = gas_usages.iter().max().copied().unwrap();
+        let mut maybe_mean = None;
+        let mut maybe_std_deviation = None;
 
         let n = gas_usages.len() as u128;
         if n > 1 {
@@ -35,11 +33,16 @@ impl GasStatistics {
                 })
                 .sum::<u128>();
 
-            stats.mean = Some(mean);
-            stats.std_deviation = Some((sum_squared_diff / n).sqrt());
+            maybe_mean = Some(mean);
+            maybe_std_deviation = Some((sum_squared_diff / n).sqrt());
         }
 
-        stats
+        GasStatistics {
+            min,
+            max,
+            maybe_mean,
+            maybe_std_deviation,
+        }
     }
 }
 
