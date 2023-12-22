@@ -165,7 +165,25 @@ The flow is much simpler (thanks to `EventAssertions` trait). Let's go through i
 
 - After the assertion, found events are removed from the spy. It stays clean and ready for the next events.
 
-In cases where you want to test an event was *not* emitted, use the `assert_not_emitted` function. It works similarly as `assert_emitted` with the only difference that it fails if an event was emitted during the execution.
+## Asserting event was not emitted
+
+In cases where you want to test an event was *not* emitted, use the `assert_not_emitted` function.
+It works similarly as `assert_emitted` with the only difference that it fails if an event was emitted during the execution.
+
+Given the example above, we can check that a different `FirstEvent` was not emitted:
+
+```rust
+spy.assert_not_emitted(@array![
+    (
+        contract_address,
+        SpyEventsChecker::Event::FirstEvent(
+            SpyEventsChecker::FirstEvent { some_data: 456 }
+        )
+    )
+]);
+```
+
+Note that both the event name and event data are checked. If a function emitted an event with the same name but a different payload, the `assert_not_emitted` function will pass.
 
 ## Splitting Events Between Multiple Spies
 
