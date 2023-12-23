@@ -37,9 +37,7 @@ use scarb_artifacts::ScarbCommand;
 use sncast::helpers::scarb_utils::{
     get_package_metadata, get_scarb_manifest, get_scarb_metadata_with_deps, CastConfig,
 };
-use sncast::response::print::{
-    print_command_result, print_formatted_scarb_command_output, OutputFormat, OutputValue,
-};
+use sncast::response::print::{print_command_result, OutputFormat, OutputValue};
 use sncast::response::structs::{ScriptCommandResponse, ScriptResponse};
 use sncast::NumbersFormat;
 use starknet::accounts::Account;
@@ -591,13 +589,11 @@ fn compile_script(path_to_scarb_toml: Option<Utf8PathBuf>, script_ui: &UI) -> Re
         scarb_args.insert(0, "--json");
     }
 
-    let scarb_output = ScarbCommand::new()
+    ScarbCommand::new()
         .args(scarb_args)
         .manifest_path(&scripts_manifest_path)
-        .command()
-        .output()
+        .run_with_stdout_footer("\n")
         .context("failed to compile script with scarb")?;
-    print_formatted_scarb_command_output(&scarb_output);
 
     let metadata = get_scarb_metadata_with_deps(&scripts_manifest_path)?;
     let package_metadata = get_package_metadata(&metadata, &scripts_manifest_path)?;

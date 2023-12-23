@@ -4,7 +4,6 @@ use clap::Args;
 use scarb_artifacts::{get_contracts_map, ScarbCommand};
 use sncast::helpers::scarb_utils::get_package_metadata;
 use sncast::helpers::scarb_utils::get_scarb_manifest;
-use sncast::response::print::print_formatted_scarb_command_output;
 use sncast::response::structs::DeclareResponse;
 use sncast::response::structs::Hex;
 use sncast::{apply_optional, handle_rpc_error, handle_wait_for_tx, WaitForTx};
@@ -64,11 +63,8 @@ pub async fn declare(
     if build_config.json {
         cmd.json();
     }
-    let output = cmd
-        .command()
-        .output()
+    cmd.run_with_stdout_footer("\n")
         .context("Failed to build contracts with Scarb")?;
-    print_formatted_scarb_command_output(&output);
 
     let metadata = scarb_metadata::MetadataCommand::new()
         .manifest_path(&manifest_path)

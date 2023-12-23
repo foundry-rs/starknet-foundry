@@ -2,7 +2,6 @@ use anyhow::Result;
 use indexmap::IndexMap;
 use serde_json::Value;
 use starknet::core::types::FieldElement;
-use std::process::Output;
 use std::{fmt::Display, str::FromStr};
 
 use serde::{Serialize, Serializer};
@@ -152,15 +151,6 @@ fn value_to_output_value(value: Value) -> OutputValue {
         Value::Array(a) => OutputValue::Array(a.into_iter().map(value_to_output_value).collect()),
         Value::String(s) => OutputValue::String(s.to_string()),
         s => panic!("{s:?} cannot be auto-serialized to output"),
-    }
-}
-
-pub fn print_formatted_scarb_command_output(output: &Output) {
-    if !output.stdout.is_empty() {
-        println!("{}", String::from_utf8_lossy(&output.stdout));
-    }
-    if !output.stderr.is_empty() {
-        eprintln!("{}", String::from_utf8_lossy(&output.stderr));
     }
 }
 
