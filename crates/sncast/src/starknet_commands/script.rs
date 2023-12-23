@@ -81,6 +81,10 @@ impl UI {
         self.verbosity < Verbosity::Normal
     }
 
+    pub fn is_json(&self) -> bool {
+        self.output_format == OutputFormat::Json
+    }
+
     pub fn print(&self, msg: &str) {
         if self.verbosity >= Verbosity::Normal {
             println!("{msg}");
@@ -312,7 +316,7 @@ impl CairoHintProcessor<'_> {
                     nonce,
                     BuildConfig {
                         scarb_toml_path: None,
-                        json: self.script_ui.output_format == OutputFormat::Json,
+                        json: self.script_ui.is_json(),
                     },
                     WaitForTx {
                         wait: true,
@@ -489,7 +493,7 @@ impl CairoHintProcessor<'_> {
 
                 Ok(())
             }
-            _ => Err(anyhow!("Unknown cheatcode selector: {selector}")),
+            _ => Err(anyhow!("Unknown subcommand selector: {selector}")),
         }?;
 
         let result_end = buffer.ptr;
@@ -587,7 +591,7 @@ fn compile_script(path_to_scarb_toml: Option<Utf8PathBuf>, script_ui: &UI) -> Re
     if script_ui.is_quiet() {
         scarb_args.push("--quiet");
     }
-    if script_ui.output_format == OutputFormat::Json {
+    if script_ui.is_json() {
         scarb_args.insert(0, "--json");
     }
 
