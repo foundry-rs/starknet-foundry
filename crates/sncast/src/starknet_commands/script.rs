@@ -49,8 +49,10 @@ use tokio::runtime::Runtime;
 
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd)]
 pub enum Verbosity {
+    /// Silence all script output except for errors
     Quiet,
 
+    /// Default verbosity level
     #[default]
     Normal,
 }
