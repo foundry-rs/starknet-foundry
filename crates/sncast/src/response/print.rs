@@ -6,6 +6,7 @@ use std::{fmt::Display, str::FromStr};
 
 use serde::{Serialize, Serializer};
 
+use crate::response::structs::CastCommandResponse;
 use crate::NumbersFormat;
 
 use super::structs::CommandResponse;
@@ -64,7 +65,7 @@ impl Display for OutputValue {
     }
 }
 
-pub fn print_command_result<T: CommandResponse>(
+pub fn print_cast_command_result<T: CastCommandResponse>(
     command: &str,
     result: &mut Result<T>,
     numbers_format: NumbersFormat,
@@ -74,10 +75,10 @@ pub fn print_command_result<T: CommandResponse>(
         String::from("command"),
         OutputValue::String(command.to_string()),
     );
-    print_result(header, result, numbers_format, output_format)
+    print_command_result(header, result, numbers_format, output_format)
 }
 
-pub fn print_result<T: Serialize>(
+pub fn print_command_result<T: CommandResponse>(
     header: (String, OutputValue),
     result: &mut Result<T>,
     numbers_format: NumbersFormat,

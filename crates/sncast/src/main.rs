@@ -5,7 +5,7 @@ use crate::starknet_commands::{
     script::Script,
 };
 use anyhow::{Context, Result};
-use sncast::response::print::{print_command_result, OutputFormat};
+use sncast::response::print::{print_cast_command_result, OutputFormat};
 
 use crate::starknet_commands::declare::BuildConfig;
 use crate::starknet_commands::script::UI as ScriptUI;
@@ -133,7 +133,7 @@ fn main() -> Result<()> {
             script_ui,
         );
 
-        print_command_result("script", &mut result, numbers_format, &output_format)?;
+        print_cast_command_result("script", &mut result, numbers_format, &output_format)?;
         Ok(())
     } else {
         runtime.block_on(run_async_command(
@@ -183,7 +183,7 @@ async fn run_async_command(
             )
             .await;
 
-            print_command_result("declare", &mut result, numbers_format, &output_format)?;
+            print_cast_command_result("declare", &mut result, numbers_format, &output_format)?;
             Ok(())
         }
         Commands::Deploy(deploy) => {
@@ -206,7 +206,7 @@ async fn run_async_command(
             )
             .await;
 
-            print_command_result("deploy", &mut result, numbers_format, &output_format)?;
+            print_cast_command_result("deploy", &mut result, numbers_format, &output_format)?;
             Ok(())
         }
         Commands::Call(call) => {
@@ -221,7 +221,7 @@ async fn run_async_command(
             )
             .await;
 
-            print_command_result("call", &mut result, numbers_format, &output_format)?;
+            print_cast_command_result("call", &mut result, numbers_format, &output_format)?;
             Ok(())
         }
         Commands::Invoke(invoke) => {
@@ -243,7 +243,7 @@ async fn run_async_command(
             )
             .await;
 
-            print_command_result("invoke", &mut result, numbers_format, &output_format)?;
+            print_cast_command_result("invoke", &mut result, numbers_format, &output_format)?;
             Ok(())
         }
         Commands::Multicall(multicall) => {
@@ -252,7 +252,7 @@ async fn run_async_command(
                     if let Some(output_path) = &new.output_path {
                         let mut result =
                             starknet_commands::multicall::new::new(output_path, new.overwrite);
-                        print_command_result(
+                        print_cast_command_result(
                             "multicall new",
                             &mut result,
                             numbers_format,
@@ -278,7 +278,7 @@ async fn run_async_command(
                     )
                     .await;
 
-                    print_command_result(
+                    print_cast_command_result(
                         "multicall run",
                         &mut result,
                         numbers_format,
@@ -300,7 +300,12 @@ async fn run_async_command(
                 )
                 .await;
 
-                print_command_result("account add", &mut result, numbers_format, &output_format)?;
+                print_cast_command_result(
+                    "account add",
+                    &mut result,
+                    numbers_format,
+                    &output_format,
+                )?;
                 Ok(())
             }
             account::Commands::Create(create) => {
@@ -326,7 +331,7 @@ async fn run_async_command(
                 )
                 .await;
 
-                print_command_result(
+                print_cast_command_result(
                     "account create",
                     &mut result,
                     numbers_format,
@@ -359,7 +364,7 @@ async fn run_async_command(
                 )
                 .await;
 
-                print_command_result(
+                print_cast_command_result(
                     "account deploy",
                     &mut result,
                     numbers_format,
@@ -382,7 +387,7 @@ async fn run_async_command(
                     delete.yes,
                 );
 
-                print_command_result(
+                print_cast_command_result(
                     "account delete",
                     &mut result,
                     numbers_format,
@@ -399,7 +404,7 @@ async fn run_async_command(
                 cli.path_to_scarb_toml,
             )
             .await;
-            print_command_result("show-config", &mut result, numbers_format, &output_format)?;
+            print_cast_command_result("show-config", &mut result, numbers_format, &output_format)?;
             Ok(())
         }
         Commands::Script(_) => unreachable!(),

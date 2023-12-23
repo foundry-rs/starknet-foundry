@@ -34,12 +34,11 @@ use itertools::chain;
 use num_traits::ToPrimitive;
 use runtime::EnhancedHintError;
 use scarb_artifacts::ScarbCommand;
-use serde::Serialize;
 use sncast::helpers::scarb_utils::{
     get_package_metadata, get_scarb_manifest, get_scarb_metadata_with_deps, CastConfig,
 };
-use sncast::response::print::{print_result, OutputFormat, OutputValue};
-use sncast::response::structs::ScriptResponse;
+use sncast::response::print::{print_command_result, OutputFormat, OutputValue};
+use sncast::response::structs::{ScriptCommandResponse, ScriptResponse};
 use sncast::NumbersFormat;
 use starknet::accounts::Account;
 use starknet::core::types::{BlockId, BlockTag::Pending, FieldElement};
@@ -93,17 +92,17 @@ impl UI {
         }
     }
 
-    pub fn print_subcommand_response<T: Serialize>(
+    pub fn print_subcommand_response<T: ScriptCommandResponse>(
         &self,
         command: &str,
-        response: &T,
+        response: T,
     ) -> Result<()> {
         if self.verbosity >= Verbosity::Normal {
             let header = (
                 String::from("script_subcommand"),
                 OutputValue::String(command.to_string()),
             );
-            print_result(
+            print_command_result(
                 header,
                 &mut Ok(response),
                 self.numbers_format,
@@ -283,7 +282,7 @@ impl CairoHintProcessor<'_> {
                     .expect("Failed to insert data");
 
                 self.script_ui
-                    .print_subcommand_response(selector, &call_response)?;
+                    .print_subcommand_response(selector, call_response)?;
 
                 Ok(())
             }
@@ -338,7 +337,7 @@ impl CairoHintProcessor<'_> {
 
                 self.script_ui.print("");
                 self.script_ui
-                    .print_subcommand_response(selector, &declare_response)?;
+                    .print_subcommand_response(selector, declare_response)?;
 
                 Ok(())
             }
@@ -409,7 +408,7 @@ impl CairoHintProcessor<'_> {
                     .expect("Failed to insert transaction hash");
 
                 self.script_ui
-                    .print_subcommand_response(selector, &deploy_response)?;
+                    .print_subcommand_response(selector, deploy_response)?;
 
                 Ok(())
             }
@@ -468,7 +467,7 @@ impl CairoHintProcessor<'_> {
                     .expect("Failed to insert transaction hash");
 
                 self.script_ui
-                    .print_subcommand_response(selector, &invoke_response)?;
+                    .print_subcommand_response(selector, invoke_response)?;
 
                 Ok(())
             }
@@ -482,16 +481,17 @@ impl CairoHintProcessor<'_> {
                     self.config.keystore.clone(),
                 ))?;
 
-                let nonce = self.runtime.block_on(get_nonce(
+                let nonce_response = self.runtime.block_on(get_nonce(
                     self.provider,
                     &block_id,
                     account.address(),
                 ))?;
                 buffer
-                    .write(Felt252::from_(nonce))
+                    .write(Felt252::from_(nonce_response.response))
                     .expect("Failed to insert nonce");
 
-                self.script_ui.print_subcommand_response(selector, &nonce)?;
+                self.script_ui
+                    .print_subcommand_response(selector, nonce_response)?;
 
                 Ok(())
             }
