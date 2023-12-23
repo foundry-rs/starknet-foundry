@@ -37,7 +37,9 @@ use scarb_artifacts::ScarbCommand;
 use sncast::helpers::scarb_utils::{
     get_package_metadata, get_scarb_manifest, get_scarb_metadata_with_deps, CastConfig,
 };
-use sncast::response::print::{print_command_result, OutputFormat, OutputValue};
+use sncast::response::print::{
+    print_command_result, print_formatted_scarb_command_output, OutputFormat, OutputValue,
+};
 use sncast::response::structs::{ScriptCommandResponse, ScriptResponse};
 use sncast::NumbersFormat;
 use starknet::accounts::Account;
@@ -84,12 +86,6 @@ impl UI {
 
     pub fn is_json(&self) -> bool {
         self.output_format == OutputFormat::Json
-    }
-
-    pub fn print(&self, msg: &str) {
-        if self.verbosity >= Verbosity::Normal {
-            println!("{msg}");
-        }
     }
 
     pub fn print_subcommand_response<T: ScriptCommandResponse>(
@@ -335,7 +331,6 @@ impl CairoHintProcessor<'_> {
                     .write(Felt252::from_(declare_response.transaction_hash.0))
                     .expect("Failed to insert transaction hash");
 
-                self.script_ui.print("");
                 self.script_ui
                     .print_subcommand_response(selector, declare_response)?;
 
@@ -555,7 +550,6 @@ pub fn run(
         script_ui,
     };
 
-    cairo_hint_processor.script_ui.print("\n");
     match runner.run_function(
         func,
         &mut cairo_hint_processor,
@@ -597,11 +591,13 @@ fn compile_script(path_to_scarb_toml: Option<Utf8PathBuf>, script_ui: &UI) -> Re
         scarb_args.insert(0, "--json");
     }
 
-    ScarbCommand::new_with_stdio()
+    let scarb_output = ScarbCommand::new()
         .args(scarb_args)
         .manifest_path(&scripts_manifest_path)
-        .run()
+        .command()
+        .output()
         .context("failed to compile script with scarb")?;
+    print_formatted_scarb_command_output(&scarb_output);
 
     let metadata = get_scarb_metadata_with_deps(&scripts_manifest_path)?;
     let package_metadata = get_package_metadata(&metadata, &scripts_manifest_path)?;

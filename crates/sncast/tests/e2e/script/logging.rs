@@ -40,7 +40,6 @@ async fn test_default_verbosity() {
            Compiling starknet-contract(map_script) map_script v0.1.0 [..]
             Finished release target(s) in [..] seconds
 
-
         script_subcommand: get_nonce
         response: [..]
 
@@ -99,7 +98,6 @@ async fn test_default_verbosity_with_json() {
         {"status":"compiling","message":"lib(map_script) map_script v0.1.0 ([..])"}
         {"status":"compiling","message":"starknet-contract(map_script) map_script v0.1.0 ([..])"}
         {"status":"finished","message":"release target(s) in [..] seconds"}
-
 
         {"script_subcommand":"get_nonce","response":"[..]"}
 
@@ -178,7 +176,6 @@ async fn test_one_of_the_steps_failing() {
            Compiling lib(map_script) map_script v0.1.0 [..]
            Compiling starknet-contract(map_script) map_script v0.1.0 [..]
             Finished release target(s) in [..] seconds
-
 
         script_subcommand: get_nonce
         response: [..]

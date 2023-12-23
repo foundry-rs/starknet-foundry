@@ -4,6 +4,7 @@ use clap::Args;
 use scarb_artifacts::{get_contracts_map, ScarbCommand};
 use sncast::helpers::scarb_utils::get_package_metadata;
 use sncast::helpers::scarb_utils::get_scarb_manifest;
+use sncast::response::print::print_formatted_scarb_command_output;
 use sncast::response::structs::DeclareResponse;
 use sncast::response::structs::Hex;
 use sncast::{apply_optional, handle_rpc_error, handle_wait_for_tx, WaitForTx};
@@ -55,7 +56,7 @@ pub async fn declare(
         None => get_scarb_manifest().context("Failed to obtain manifest path from Scarb")?,
     };
 
-    let mut cmd = ScarbCommand::new_with_stdio();
+    let mut cmd = ScarbCommand::new();
     cmd.arg("build").manifest_path(&manifest_path);
     if make_scarb_quiet {
         cmd.arg("--quiet");
@@ -63,7 +64,11 @@ pub async fn declare(
     if build_config.json {
         cmd.json();
     }
-    cmd.run().context("Failed to build contracts with Scarb")?;
+    let output = cmd
+        .command()
+        .output()
+        .context("Failed to build contracts with Scarb")?;
+    print_formatted_scarb_command_output(&output);
 
     let metadata = scarb_metadata::MetadataCommand::new()
         .manifest_path(&manifest_path)
