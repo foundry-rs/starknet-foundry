@@ -17,7 +17,7 @@ use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use conversions::felt252::FromShortString;
 use conversions::{FromConv, IntoConv};
-use num_traits::{One, ToPrimitive};
+use num_traits::ToPrimitive;
 use scarb_api::StarknetContractArtifacts;
 
 use cairo_lang_runner::short_string::as_cairo_short_string;
@@ -26,6 +26,9 @@ use starknet_api::core::ContractAddress;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::SpyTarget;
 use crate::runtime_extensions::forge_runtime_extension::file_operations::string_into_felt;
 use cairo_lang_starknet::contract::starknet_keccak;
+use runtime::utils::{
+    read_option_felt_and_increase_idx, read_option_vec_and_increase_idx, read_vec_and_increase_idx,
+};
 use runtime::{
     CheatcodeHandlingResult, EnhancedHintError, ExtendedRuntime, ExtensionLogic,
     SyscallHandlingResult,
@@ -191,26 +194,29 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let (target, inputs_start) = deserialize_cheat_target(&inputs);
                 let mut idx = inputs_start;
 
-                let version = read_option_felt(&inputs, &mut idx);
-                let account_contract_address = read_option_felt(&inputs, &mut idx);
-                let max_fee = read_option_felt(&inputs, &mut idx);
-                let signature = read_option_vec(&inputs, &mut idx);
-                let transaction_hash = read_option_felt(&inputs, &mut idx);
-                let chain_id = read_option_felt(&inputs, &mut idx);
-                let nonce = read_option_felt(&inputs, &mut idx);
-                let resource_bounds =
-                    read_option_felt(&inputs, &mut idx).map(|resource_bounds_len| {
-                        read_vec(
+                let version = read_option_felt_and_increase_idx(&inputs, &mut idx);
+                let account_contract_address = read_option_felt_and_increase_idx(&inputs, &mut idx);
+                let max_fee = read_option_felt_and_increase_idx(&inputs, &mut idx);
+                let signature = read_option_vec_and_increase_idx(&inputs, &mut idx);
+                let transaction_hash = read_option_felt_and_increase_idx(&inputs, &mut idx);
+                let chain_id = read_option_felt_and_increase_idx(&inputs, &mut idx);
+                let nonce = read_option_felt_and_increase_idx(&inputs, &mut idx);
+                let resource_bounds = read_option_felt_and_increase_idx(&inputs, &mut idx).map(
+                    |resource_bounds_len| {
+                        read_vec_and_increase_idx(
                             &inputs,
                             &mut idx,
                             3 * resource_bounds_len.to_usize().unwrap(), // ResourceBounds struct has 3 fields
                         )
-                    });
-                let tip = read_option_felt(&inputs, &mut idx);
-                let paymaster_data = read_option_vec(&inputs, &mut idx);
-                let nonce_data_availability_mode = read_option_felt(&inputs, &mut idx);
-                let fee_data_availability_mode = read_option_felt(&inputs, &mut idx);
-                let account_deployment_data = read_option_vec(&inputs, &mut idx);
+                    },
+                );
+                let tip = read_option_felt_and_increase_idx(&inputs, &mut idx);
+                let paymaster_data = read_option_vec_and_increase_idx(&inputs, &mut idx);
+                let nonce_data_availability_mode =
+                    read_option_felt_and_increase_idx(&inputs, &mut idx);
+                let fee_data_availability_mode =
+                    read_option_felt_and_increase_idx(&inputs, &mut idx);
+                let account_deployment_data = read_option_vec_and_increase_idx(&inputs, &mut idx);
 
                 extended_runtime
                     .extended_runtime
@@ -554,25 +560,6 @@ fn cheatcode_panic_result(panic_data: Vec<Felt252>) -> Vec<Felt252> {
     let mut result = vec![Felt252::from(1), Felt252::from(panic_data.len())];
     result.extend(panic_data);
     result
-}
-
-fn read_felt(buffer: &[Felt252], idx: &mut usize) -> Felt252 {
-    *idx += 1;
-    buffer[*idx - 1].clone()
-}
-
-fn read_vec(buffer: &[Felt252], idx: &mut usize, count: usize) -> Vec<Felt252> {
-    *idx += count;
-    buffer[*idx - count..*idx].to_vec()
-}
-
-fn read_option_felt(buffer: &[Felt252], idx: &mut usize) -> Option<Felt252> {
-    *idx += 1;
-    (!buffer[*idx - 1].is_one()).then(|| read_felt(buffer, idx))
-}
-
-fn read_option_vec(buffer: &[Felt252], idx: &mut usize) -> Option<Vec<Felt252>> {
-    read_option_felt(buffer, idx).map(|count| read_vec(buffer, idx, count.to_usize().unwrap()))
 }
 
 #[must_use]
