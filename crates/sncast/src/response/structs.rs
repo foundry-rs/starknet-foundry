@@ -27,8 +27,6 @@ impl Serialize for Hex {
 }
 
 pub trait CommandResponse: Serialize {}
-pub trait CastCommandResponse: CommandResponse {}
-pub trait ScriptCommandResponse: CommandResponse {}
 
 #[derive(Serialize, Clone)]
 pub struct CallResponse {
@@ -36,8 +34,6 @@ pub struct CallResponse {
 }
 
 impl CommandResponse for CallResponse {}
-impl CastCommandResponse for CallResponse {}
-impl ScriptCommandResponse for CallResponse {}
 
 #[derive(Serialize, Clone)]
 pub struct InvokeResponse {
@@ -45,8 +41,6 @@ pub struct InvokeResponse {
 }
 
 impl CommandResponse for InvokeResponse {}
-impl CastCommandResponse for InvokeResponse {}
-impl ScriptCommandResponse for InvokeResponse {}
 
 #[derive(Serialize)]
 pub struct DeployResponse {
@@ -54,8 +48,6 @@ pub struct DeployResponse {
     pub transaction_hash: Hex,
 }
 impl CommandResponse for DeployResponse {}
-impl CastCommandResponse for DeployResponse {}
-impl ScriptCommandResponse for DeployResponse {}
 
 #[derive(Serialize)]
 pub struct DeclareResponse {
@@ -63,8 +55,6 @@ pub struct DeclareResponse {
     pub transaction_hash: Hex,
 }
 impl CommandResponse for DeclareResponse {}
-impl CastCommandResponse for DeclareResponse {}
-impl ScriptCommandResponse for DeclareResponse {}
 
 #[derive(Serialize)]
 pub struct AccountCreateResponse {
@@ -75,8 +65,6 @@ pub struct AccountCreateResponse {
 }
 
 impl CommandResponse for AccountCreateResponse {}
-impl CastCommandResponse for AccountCreateResponse {}
-impl ScriptCommandResponse for AccountCreateResponse {}
 
 #[derive(Serialize)]
 pub struct AccountAddResponse {
@@ -84,8 +72,6 @@ pub struct AccountAddResponse {
 }
 
 impl CommandResponse for AccountAddResponse {}
-impl CastCommandResponse for AccountAddResponse {}
-impl ScriptCommandResponse for AccountAddResponse {}
 
 #[derive(Serialize)]
 pub struct AccountDeleteResponse {
@@ -94,8 +80,6 @@ pub struct AccountDeleteResponse {
 }
 
 impl CommandResponse for AccountDeleteResponse {}
-impl CastCommandResponse for AccountDeleteResponse {}
-impl ScriptCommandResponse for AccountDeleteResponse {}
 
 #[derive(Serialize)]
 pub struct MulticallNewResponse {
@@ -103,8 +87,6 @@ pub struct MulticallNewResponse {
     pub content: String,
 }
 impl CommandResponse for MulticallNewResponse {}
-impl CastCommandResponse for MulticallNewResponse {}
-impl ScriptCommandResponse for MulticallNewResponse {}
 
 #[derive(Serialize)]
 pub struct ShowConfigResponse {
@@ -119,8 +101,6 @@ pub struct ShowConfigResponse {
     pub wait_retry_interval: Option<Decimal>,
 }
 impl CommandResponse for ShowConfigResponse {}
-impl CastCommandResponse for ShowConfigResponse {}
-impl ScriptCommandResponse for ShowConfigResponse {}
 
 #[derive(Serialize, Debug)]
 pub struct ScriptResponse {
@@ -129,8 +109,6 @@ pub struct ScriptResponse {
 }
 
 impl CommandResponse for ScriptResponse {}
-impl CastCommandResponse for ScriptResponse {}
-impl ScriptCommandResponse for ScriptResponse {}
 
 #[derive(Serialize, Clone)]
 pub struct OneElementResponse<T: Serialize> {
@@ -138,5 +116,3 @@ pub struct OneElementResponse<T: Serialize> {
 }
 
 impl<T: Serialize> CommandResponse for OneElementResponse<T> {}
-impl<T: Serialize> CastCommandResponse for OneElementResponse<T> {}
-impl<T: Serialize> ScriptCommandResponse for OneElementResponse<T> {}

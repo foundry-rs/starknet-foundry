@@ -38,7 +38,7 @@ use sncast::helpers::scarb_utils::{
     get_package_metadata, get_scarb_manifest, get_scarb_metadata_with_deps, CastConfig,
 };
 use sncast::response::print::{print_command_result, OutputFormat, OutputValue};
-use sncast::response::structs::{ScriptCommandResponse, ScriptResponse};
+use sncast::response::structs::{CommandResponse, ScriptResponse};
 use sncast::NumbersFormat;
 use starknet::accounts::Account;
 use starknet::core::types::{BlockId, BlockTag::Pending, FieldElement};
@@ -86,7 +86,7 @@ impl UI {
         self.output_format == OutputFormat::Json
     }
 
-    pub fn print_subcommand_response<T: ScriptCommandResponse>(
+    pub fn print_subcommand_response<T: CommandResponse>(
         &self,
         command: &str,
         response: T,
