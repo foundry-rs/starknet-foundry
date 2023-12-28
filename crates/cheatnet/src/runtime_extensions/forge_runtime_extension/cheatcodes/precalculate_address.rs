@@ -30,7 +30,7 @@ impl CheatnetState {
     }
 }
 
-fn create_execute_calldata(calldata: &[Felt252]) -> Calldata {
+pub fn create_execute_calldata(calldata: &[Felt252]) -> Calldata {
     let calldata: Vec<StarkFelt> = calldata.iter().map(felt_to_stark_felt).collect();
     Calldata(calldata.into())
 }

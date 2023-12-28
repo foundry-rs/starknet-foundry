@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Fixed
+
+- Safe library dispatchers in test code no longer propagate errors when not intended to
+
 ## [0.13.1] - 2023-12-20
 
 ### Forge

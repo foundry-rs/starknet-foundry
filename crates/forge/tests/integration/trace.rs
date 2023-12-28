@@ -473,7 +473,6 @@ fn trace_library_call_from_test() {
 }
 
 #[test]
-#[ignore]
 fn trace_failed_library_call_from_test() {
     let test = test_case!(
         indoc!(
