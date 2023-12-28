@@ -260,7 +260,7 @@ pub fn parse_scarb_config(
 pub fn get_package_tool_sncast(metadata: &scarb_metadata::Metadata) -> Result<&Value> {
     let first_package = metadata
         .packages
-        .get(0)
+        .first()
         .ok_or_else(|| anyhow!("No package found in metadata"))?;
 
     let tool = first_package

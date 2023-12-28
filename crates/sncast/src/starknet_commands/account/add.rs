@@ -16,6 +16,7 @@ use starknet::providers::{
 use starknet::signers::SigningKey;
 
 #[derive(Args, Debug)]
+#[allow(clippy::struct_field_names)]
 #[command(about = "Add an account to the accounts file")]
 pub struct Add {
     /// Name of the account to be added

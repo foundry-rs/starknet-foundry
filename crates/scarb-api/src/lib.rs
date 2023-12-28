@@ -422,7 +422,7 @@ mod tests {
             .exec()
             .unwrap();
 
-        let package = metadata.packages.get(0).unwrap();
+        let package = metadata.packages.first().unwrap();
         let contracts = get_contracts_map(&metadata, &package.id).unwrap();
 
         assert!(contracts.contains_key("ERC20"));
