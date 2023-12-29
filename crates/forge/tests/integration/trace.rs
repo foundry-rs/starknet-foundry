@@ -25,9 +25,6 @@ fn trace_deploy() {
                 fn from_proxy(self: @T, a_data: felt252) -> felt252;
             }
             
-            const CONSTRUCTOR_SELECTOR: felt252 =
-                1159040026212278395030414237414753050475174923702621880048416706425641521556;
-            
             #[test]
             fn test_deploy_trace_info() {
                 assert_eq!(get_last_call_trace().len(), 0);
@@ -62,7 +59,7 @@ fn trace_deploy() {
                 let expected_trace = array![
                     CallEntryPoint {
                         entry_point_type: EntryPointType::Constructor,
-                        entry_point_selector: CONSTRUCTOR_SELECTOR,
+                        entry_point_selector: selector!("constructor"),
                         calldata: array![checker_address.into()],
                         storage_address: proxy_address,
                         caller_address: test_address(),
