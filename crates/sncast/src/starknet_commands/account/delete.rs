@@ -10,6 +10,7 @@ use std::io::Read;
 use std::io::Write;
 
 #[derive(Args, Debug)]
+#[allow(clippy::struct_field_names)]
 #[command(about = "Delete account information from the accounts file")]
 pub struct Delete {
     /// Name of the account to be deleted
