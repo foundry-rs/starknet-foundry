@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Changed
+
+- maximum number of computational steps per call set to current Starknet limit (3M)
+
 ## [0.13.1] - 2023-12-20
 
 ### Forge
