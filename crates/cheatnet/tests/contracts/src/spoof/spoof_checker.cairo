@@ -14,14 +14,14 @@ trait ISpoofChecker<TContractState> {
     fn get_transaction_hash(ref self: TContractState) -> felt252;
     fn get_chain_id(ref self: TContractState) -> felt252;
     fn get_nonce(ref self: TContractState) -> felt252;
-    
+
     fn get_resource_bounds(ref self: TContractState) -> Span<ResourceBounds>;
     fn get_tip(ref self: TContractState) -> u128;
     fn get_paymaster_data(ref self: TContractState) -> Span<felt252>;
     fn get_nonce_data_availability_mode(ref self: TContractState) -> u32;
     fn get_fee_data_availability_mode(ref self: TContractState) -> u32;
     fn get_account_deployment_data(ref self: TContractState) -> Span<felt252>;
-    
+
     fn get_tx_hash_and_emit_event(ref self: TContractState) -> felt252;
     fn get_tx_info(ref self: TContractState) -> starknet::info::v2::TxInfo;
 }

@@ -551,6 +551,7 @@ fn deserialize_cheat_target(inputs: &[Felt252]) -> (CheatTarget, usize) {
     }
 }
 
+#[must_use]
 pub fn cheatcode_panic_result(panic_data: Vec<Felt252>) -> Vec<Felt252> {
     let mut result = vec![Felt252::from(1), Felt252::from(panic_data.len())];
     result.extend(panic_data);

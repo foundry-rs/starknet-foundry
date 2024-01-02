@@ -48,7 +48,7 @@ impl TxInfo {
             };
         }
 
-        TxInfo {
+        Self {
             version: clone_field!(version),
             account_contract_address: clone_field!(account_contract_address),
             max_fee: clone_field!(max_fee),
@@ -65,29 +65,29 @@ impl TxInfo {
         }
     }
 
-    fn deserialize(data: Vec<Felt252>) -> TxInfo {
+    fn deserialize(data: &[Felt252]) -> Self {
         let mut idx = 0;
 
-        let version = read_felt(&data, &mut idx);
-        let account_contract_address = read_felt(&data, &mut idx);
-        let max_fee = read_felt(&data, &mut idx);
-        let signature = read_vec(&data, &mut idx);
-        let transaction_hash = read_felt(&data, &mut idx);
-        let chain_id = read_felt(&data, &mut idx);
-        let nonce = read_felt(&data, &mut idx);
-        let resource_bounds_len = read_felt(&data, &mut idx);
+        let version = read_felt(data, &mut idx);
+        let account_contract_address = read_felt(data, &mut idx);
+        let max_fee = read_felt(data, &mut idx);
+        let signature = read_vec(data, &mut idx);
+        let transaction_hash = read_felt(data, &mut idx);
+        let chain_id = read_felt(data, &mut idx);
+        let nonce = read_felt(data, &mut idx);
+        let resource_bounds_len = read_felt(data, &mut idx);
         let resource_bounds = read_vec_count(
-            &data,
+            data,
             &mut idx,
             3 * resource_bounds_len.to_usize().unwrap(), // ResourceBounds struct has 3 fields
         );
-        let tip = read_felt(&data, &mut idx);
-        let paymaster_data = read_vec(&data, &mut idx);
-        let nonce_data_availability_mode = read_felt(&data, &mut idx);
-        let fee_data_availability_mode = read_felt(&data, &mut idx);
-        let account_deployment_data = read_vec(&data, &mut idx);
+        let tip = read_felt(data, &mut idx);
+        let paymaster_data = read_vec(data, &mut idx);
+        let nonce_data_availability_mode = read_felt(data, &mut idx);
+        let fee_data_availability_mode = read_felt(data, &mut idx);
+        let account_deployment_data = read_vec(data, &mut idx);
 
-        TxInfo {
+        Self {
             version,
             account_contract_address,
             max_fee,
@@ -109,10 +109,10 @@ fn assert_tx_info(
     blockifier_state: &mut BlockifierState,
     cheatnet_state: &mut CheatnetState,
     contract_address: &ContractAddress,
-    expected_tx_info: TxInfo,
+    expected_tx_info: &TxInfo,
 ) {
     let tx_info = get_tx_info(blockifier_state, cheatnet_state, contract_address);
-    assert_eq!(tx_info, expected_tx_info);
+    assert_eq!(tx_info, expected_tx_info.to_owned());
 }
 
 fn get_tx_info(
@@ -127,7 +127,7 @@ fn get_tx_info(
         "get_tx_info",
     );
     let tx_info_data = recover_data(get_tx_info_output);
-    TxInfo::deserialize(tx_info_data)
+    TxInfo::deserialize(&tx_info_data)
 }
 
 #[test]
@@ -161,7 +161,7 @@ fn spoof_simple() {
         &mut blockifier_state,
         &mut cheatnet_state,
         &contract_address,
-        expected_tx_info,
+        &expected_tx_info,
     );
 }
 
@@ -225,7 +225,7 @@ fn start_spoof_multiple_times() {
         &mut blockifier_state,
         &mut cheatnet_state,
         &contract_address,
-        expected_tx_info,
+        &expected_tx_info,
     );
 
     let tx_info_mock = TxInfoMock {
@@ -246,7 +246,7 @@ fn start_spoof_multiple_times() {
         &mut blockifier_state,
         &mut cheatnet_state,
         &contract_address,
-        expected_tx_info,
+        &expected_tx_info,
     );
 
     let tx_info_mock = TxInfoMock {
@@ -266,7 +266,7 @@ fn start_spoof_multiple_times() {
         &mut blockifier_state,
         &mut cheatnet_state,
         &contract_address,
-        expected_tx_info,
+        &expected_tx_info,
     );
 }
 
@@ -301,7 +301,7 @@ fn spoof_start_stop() {
         &mut blockifier_state,
         &mut cheatnet_state,
         &contract_address,
-        expected_tx_info,
+        &expected_tx_info,
     );
 
     cheatnet_state.stop_spoof(CheatTarget::One(contract_address));
@@ -310,7 +310,7 @@ fn spoof_start_stop() {
         &mut blockifier_state,
         &mut cheatnet_state,
         &contract_address,
-        tx_info_before,
+        &tx_info_before,
     );
 }
 
@@ -338,7 +338,7 @@ fn spoof_stop_no_effect() {
         &mut blockifier_state,
         &mut cheatnet_state,
         &contract_address,
-        tx_info_before,
+        &tx_info_before,
     );
 }
 
@@ -535,7 +535,7 @@ fn spoof_all_simple() {
         &mut blockifier_state,
         &mut cheatnet_state,
         &contract_address,
-        expected_tx_info,
+        &expected_tx_info,
     );
 }
 
@@ -573,7 +573,7 @@ fn spoof_all_then_one() {
         &mut blockifier_state,
         &mut cheatnet_state,
         &contract_address,
-        expected_tx_info,
+        &expected_tx_info,
     );
 }
 
@@ -611,7 +611,7 @@ fn spoof_one_then_all() {
         &mut blockifier_state,
         &mut cheatnet_state,
         &contract_address,
-        expected_tx_info,
+        &expected_tx_info,
     );
 }
 
@@ -646,7 +646,7 @@ fn spoof_all_stop() {
         &mut blockifier_state,
         &mut cheatnet_state,
         &contract_address,
-        tx_info_before,
+        &tx_info_before,
     );
 }
 
@@ -694,13 +694,13 @@ fn spoof_multiple() {
         &mut blockifier_state,
         &mut cheatnet_state,
         &contract_address_1,
-        expected_tx_info_1,
+        &expected_tx_info_1,
     );
     assert_tx_info(
         &mut blockifier_state,
         &mut cheatnet_state,
         &contract_address_2,
-        expected_tx_info_2,
+        &expected_tx_info_2,
     );
 
     cheatnet_state.stop_spoof(CheatTarget::All);
@@ -709,12 +709,12 @@ fn spoof_multiple() {
         &mut blockifier_state,
         &mut cheatnet_state,
         &contract_address_1,
-        tx_info_before_1,
+        &tx_info_before_1,
     );
     assert_tx_info(
         &mut blockifier_state,
         &mut cheatnet_state,
         &contract_address_2,
-        tx_info_before_2,
+        &tx_info_before_2,
     );
 }
