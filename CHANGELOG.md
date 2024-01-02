@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
+#### Added
+
+- `assert_not_emitted` assert to check if an event was not emitted
+
 #### Changed 
 
 - fields from `starknet::info::v2::TxInfo` are now part of `TxInfoMock` from `snforge_std::cheatcodes::tx_info`
