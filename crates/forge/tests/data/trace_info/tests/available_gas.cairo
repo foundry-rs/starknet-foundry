@@ -1,5 +1,5 @@
 use snforge_std::{declare, ContractClassTrait, PrintTrait};
-use snforge_std::trace::get_last_call_trace;
+use snforge_std::trace::{get_last_call_trace, DisplayArrayCallEntryPoint};
 
 use trace_info::{ISimpleContractDispatcherTrait, ISimpleContractDispatcher};
 
@@ -9,5 +9,5 @@ fn test_trace_info_print() {
 
     ISimpleContractDispatcher { contract_address }.simple_call(10);
 
-    get_last_call_trace().print();
+    println!("{}", get_last_call_trace());
 }

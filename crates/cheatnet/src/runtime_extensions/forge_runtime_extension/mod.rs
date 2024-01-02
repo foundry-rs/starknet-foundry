@@ -508,6 +508,37 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 }
                 Ok(CheatcodeHandlingResult::Handled(output))
             }
+            "print_call_entry_point" => {
+                let mut idx = 0;
+                let entry_point_type = match read_felt(&inputs, &mut idx).to_u8() {
+                    Some(0) => EntryPointType::Constructor,
+                    Some(1) => EntryPointType::External,
+                    Some(2) => EntryPointType::L1Handler,
+                    _ => unreachable!("Invalid EntryPointType variant"),
+                };
+                let entry_point_selector = read_felt(&inputs, &mut idx);
+
+                let calldata_length = read_felt(&inputs, &mut idx).to_usize().unwrap();
+                let calldata = read_vec(&inputs, &mut idx, calldata_length);
+
+                let storage_address = read_felt(&inputs, &mut idx);
+                let caller_address = read_felt(&inputs, &mut idx);
+
+                let call_type = match read_felt(&inputs, &mut idx).to_u8() {
+                    Some(0) => CallType::Call,
+                    Some(1) => CallType::Delegate,
+                    _ => unreachable!("Invalid CallType variant"),
+                };
+
+                println!("\nEntry Point Type: {entry_point_type:?}");
+                println!("Selector: 0x{:x}", entry_point_selector.to_bigint());
+                println!("Calldata: {calldata:?}");
+                println!("Storage Address: 0x{:x}", storage_address.to_bigint());
+                println!("Caller Address: 0x{:x}", caller_address.to_bigint());
+                println!("Call Type: {call_type:?}\n");
+
+                Ok(CheatcodeHandlingResult::Handled(vec![]))
+            }
             _ => Ok(CheatcodeHandlingResult::Forwarded),
         }?;
 
