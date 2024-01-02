@@ -91,6 +91,5 @@ tests from `tests/test_contract.cairo`, `tests/common.cairo` and `tests/common/u
 Sometimes you may want a share some code between tests to organize them. 
 The package structure of tests makes it easy! 
 In both of the above examples, you can
-make the functions from `tests/common/utils.cairo` available in `tests/test_contract.cairo` by using:
-- an absolute import: `use tests::common::utils;`
-- a relative import: `use super::common::utils;`
+make the functions from `tests/common/utils.cairo` available in `tests/test_contract.cairo` 
+by using a relative import: `use super::common::utils;`.
