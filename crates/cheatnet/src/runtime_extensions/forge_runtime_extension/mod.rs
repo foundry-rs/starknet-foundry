@@ -200,7 +200,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let nonce = read_option_felt(&inputs, &mut idx);
                 let resource_bounds =
                     read_option_felt(&inputs, &mut idx).map(|resource_bounds_len| {
-                        read_vec(
+                        read_vec_count(
                             &inputs,
                             &mut idx,
                             3 * resource_bounds_len.to_usize().unwrap(), // ResourceBounds struct has 3 fields
@@ -212,27 +212,28 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let fee_data_availability_mode = read_option_felt(&inputs, &mut idx);
                 let account_deployment_data = read_option_vec(&inputs, &mut idx);
 
+                let tx_info_mock = cheatcodes::spoof::TxInfoMock {
+                    version,
+                    account_contract_address,
+                    max_fee,
+                    signature,
+                    transaction_hash,
+                    chain_id,
+                    nonce,
+                    resource_bounds,
+                    tip,
+                    paymaster_data,
+                    nonce_data_availability_mode,
+                    fee_data_availability_mode,
+                    account_deployment_data,
+                };
+
                 extended_runtime
                     .extended_runtime
                     .extended_runtime
                     .extension
                     .cheatnet_state
-                    .start_spoof(
-                        target,
-                        version,
-                        account_contract_address,
-                        max_fee,
-                        signature,
-                        transaction_hash,
-                        chain_id,
-                        nonce,
-                        resource_bounds,
-                        tip,
-                        paymaster_data,
-                        nonce_data_availability_mode,
-                        fee_data_availability_mode,
-                        account_deployment_data,
-                    );
+                    .start_spoof(target, tx_info_mock);
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
             "stop_spoof" => {
@@ -550,29 +551,35 @@ fn deserialize_cheat_target(inputs: &[Felt252]) -> (CheatTarget, usize) {
     }
 }
 
-fn cheatcode_panic_result(panic_data: Vec<Felt252>) -> Vec<Felt252> {
+pub fn cheatcode_panic_result(panic_data: Vec<Felt252>) -> Vec<Felt252> {
     let mut result = vec![Felt252::from(1), Felt252::from(panic_data.len())];
     result.extend(panic_data);
     result
 }
 
-fn read_felt(buffer: &[Felt252], idx: &mut usize) -> Felt252 {
+pub fn read_felt(buffer: &[Felt252], idx: &mut usize) -> Felt252 {
     *idx += 1;
     buffer[*idx - 1].clone()
 }
 
-fn read_vec(buffer: &[Felt252], idx: &mut usize, count: usize) -> Vec<Felt252> {
+pub fn read_vec(buffer: &[Felt252], idx: &mut usize) -> Vec<Felt252> {
+    let count = read_felt(buffer, idx).to_usize().unwrap();
+    read_vec_count(buffer, idx, count)
+}
+
+pub fn read_vec_count(buffer: &[Felt252], idx: &mut usize, count: usize) -> Vec<Felt252> {
     *idx += count;
     buffer[*idx - count..*idx].to_vec()
 }
 
-fn read_option_felt(buffer: &[Felt252], idx: &mut usize) -> Option<Felt252> {
+pub fn read_option_felt(buffer: &[Felt252], idx: &mut usize) -> Option<Felt252> {
     *idx += 1;
     (!buffer[*idx - 1].is_one()).then(|| read_felt(buffer, idx))
 }
 
-fn read_option_vec(buffer: &[Felt252], idx: &mut usize) -> Option<Vec<Felt252>> {
-    read_option_felt(buffer, idx).map(|count| read_vec(buffer, idx, count.to_usize().unwrap()))
+pub fn read_option_vec(buffer: &[Felt252], idx: &mut usize) -> Option<Vec<Felt252>> {
+    read_option_felt(buffer, idx)
+        .map(|count| read_vec_count(buffer, idx, count.to_usize().unwrap()))
 }
 
 #[must_use]
