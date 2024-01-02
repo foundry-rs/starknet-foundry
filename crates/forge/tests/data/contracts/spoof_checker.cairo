@@ -20,6 +20,7 @@ trait ISpoofChecker<TContractState> {
     fn get_nonce_data_availability_mode(ref self: TContractState) -> u32;
     fn get_fee_data_availability_mode(ref self: TContractState) -> u32;
     fn get_account_deployment_data(ref self: TContractState) -> Span<felt252>;
+    fn get_tx_info(ref self: TContractState) -> starknet::info::v2::TxInfo;
 }
 
 #[starknet::contract]
@@ -88,6 +89,10 @@ mod SpoofChecker {
 
         fn get_account_deployment_data(ref self: ContractState) -> Span<felt252> {
             get_tx_info_v2().unbox().account_deployment_data
+        }
+
+        fn get_tx_info(ref self: ContractState) -> starknet::info::v2::TxInfo {
+            get_tx_info_v2().unbox()
         }
     }
 
