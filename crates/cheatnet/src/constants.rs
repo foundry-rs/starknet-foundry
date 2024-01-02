@@ -93,7 +93,7 @@ pub fn build_block_context(block_info: CheatnetBlockInfo) -> BlockContext {
         block_timestamp: block_info.timestamp,
         sequencer_address: block_info.sequencer_address,
         vm_resource_fee_cost,
-        invoke_tx_max_n_steps: 1_000_000,
+        invoke_tx_max_n_steps: 3_000_000,
         validate_max_n_steps: 1_000_000,
         max_recursion_depth: 50,
         fee_token_addresses: FeeTokenAddresses {
