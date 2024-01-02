@@ -63,9 +63,6 @@ futures.workspace = true
 num-integer.workspace = true
 url.workspace = true
 
-[lib]
-name = "forge"
-
 [[bin]]
 name = "snforge"
 path = "src/main.rs"

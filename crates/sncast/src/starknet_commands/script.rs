@@ -33,7 +33,7 @@ use conversions::{FromConv, IntoConv};
 use itertools::chain;
 use num_traits::ToPrimitive;
 use runtime::EnhancedHintError;
-use scarb_artifacts::ScarbCommand;
+use scarb_api::ScarbCommand;
 use sncast::helpers::scarb_utils::{
     get_package_metadata, get_scarb_manifest, get_scarb_metadata_with_deps, CastConfig,
 };

@@ -26,6 +26,3 @@ num-traits.workspace = true
 [dev-dependencies]
 ctor.workspace = true
 indoc.workspace = true
-
-[lib]
-name = "conversions"

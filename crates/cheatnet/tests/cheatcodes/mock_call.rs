@@ -542,7 +542,7 @@ fn mock_call_in_constructor() {
     .unwrap();
     let output_data = recover_data(output);
     assert_eq!(output_data.len(), 1);
-    assert_eq!(output_data.get(0).unwrap().clone(), Felt252::from(223));
+    assert_eq!(output_data.first().unwrap().clone(), Felt252::from(223));
 }
 
 #[test]

@@ -7,7 +7,7 @@ use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::deploy;
 use cheatnet::state::{BlockifierState, CheatnetState};
 use conversions::felt252::FromShortString;
-use scarb_artifacts::{get_contracts_map, StarknetContractArtifacts};
+use scarb_api::{get_contracts_map, StarknetContractArtifacts};
 use starknet::core::utils::get_selector_from_name;
 use starknet_api::core::ContractAddress;
 use std::collections::HashMap;
@@ -33,7 +33,7 @@ pub fn get_contracts() -> HashMap<String, StarknetContractArtifacts> {
         .exec()
         .unwrap();
 
-    let package = scarb_metadata.packages.get(0).unwrap();
+    let package = scarb_metadata.packages.first().unwrap();
     get_contracts_map(&scarb_metadata, &package.id).unwrap()
 }
 
