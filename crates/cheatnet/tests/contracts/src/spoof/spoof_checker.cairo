@@ -7,20 +7,23 @@ use starknet::info::v2::ResourceBounds;
 
 #[starknet::interface]
 trait ISpoofChecker<TContractState> {
-    fn get_tx_hash(ref self: TContractState) -> felt252;
-    fn get_nonce(ref self: TContractState) -> felt252;
-    fn get_account_contract_address(ref self: TContractState) -> ContractAddress;
-    fn get_signature(ref self: TContractState) -> Span<felt252>;
     fn get_version(ref self: TContractState) -> felt252;
+    fn get_account_contract_address(ref self: TContractState) -> ContractAddress;
     fn get_max_fee(ref self: TContractState) -> u128;
+    fn get_signature(ref self: TContractState) -> Span<felt252>;
+    fn get_transaction_hash(ref self: TContractState) -> felt252;
     fn get_chain_id(ref self: TContractState) -> felt252;
+    fn get_nonce(ref self: TContractState) -> felt252;
+    
     fn get_resource_bounds(ref self: TContractState) -> Span<ResourceBounds>;
     fn get_tip(ref self: TContractState) -> u128;
     fn get_paymaster_data(ref self: TContractState) -> Span<felt252>;
     fn get_nonce_data_availability_mode(ref self: TContractState) -> u32;
     fn get_fee_data_availability_mode(ref self: TContractState) -> u32;
     fn get_account_deployment_data(ref self: TContractState) -> Span<felt252>;
+    
     fn get_tx_hash_and_emit_event(ref self: TContractState) -> felt252;
+    fn get_tx_info(ref self: TContractState) -> starknet::info::v2::TxInfo;
 }
 
 #[starknet::contract]
@@ -33,9 +36,7 @@ mod SpoofChecker {
     use starknet::{SyscallResultTrait, SyscallResult, syscalls::get_execution_info_v2_syscall};
 
     #[storage]
-    struct Storage {
-        balance: felt252,
-    }
+    struct Storage {}
 
     #[event]
     #[derive(Drop, starknet::Event)]
@@ -50,7 +51,7 @@ mod SpoofChecker {
 
     #[abi(embed_v0)]
     impl ISpoofChecker of super::ISpoofChecker<ContractState> {
-        fn get_tx_hash(ref self: ContractState) -> felt252 {
+        fn get_transaction_hash(ref self: ContractState) -> felt252 {
             starknet::get_tx_info().unbox().transaction_hash
         }
 
@@ -106,6 +107,10 @@ mod SpoofChecker {
             let tx_hash = starknet::get_tx_info().unbox().transaction_hash;
             self.emit(Event::TxHashEmitted(TxHashEmitted { tx_hash }));
             tx_hash
+        }
+
+        fn get_tx_info(ref self: ContractState) -> starknet::info::v2::TxInfo {
+            get_tx_info_v2().unbox()
         }
     }
 

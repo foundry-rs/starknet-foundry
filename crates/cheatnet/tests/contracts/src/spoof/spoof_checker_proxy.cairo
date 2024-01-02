@@ -2,7 +2,7 @@ use starknet::ContractAddress;
 
 #[starknet::interface]
 trait ISpoofChecker<TContractState> {
-    fn get_tx_hash(ref self: TContractState) -> felt252;
+    fn get_transaction_hash(ref self: TContractState) -> felt252;
 }
 
 
@@ -26,7 +26,7 @@ mod SpoofCheckerProxy {
             ref self: ContractState, address: ContractAddress
         ) -> felt252 {
             let spoof_checker = ISpoofCheckerDispatcher { contract_address: address };
-            spoof_checker.get_tx_hash()
+            spoof_checker.get_transaction_hash()
         }
     }
 }
