@@ -3,7 +3,7 @@ use blockifier::execution::execution_utils::stark_felt_to_felt;
 use cairo_lang_runner::casm_run::format_next_item;
 
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::panic_data::try_extract_panic_data;
-use crate::runtime_extensions::forge_runtime_extension::cheatcodes::precalculate_address::create_execute_calldata;
+use crate::runtime_extensions::common::create_execute_calldata;
 use crate::state::BlockifierState;
 use crate::{
     constants::{build_block_context, build_transaction_context},

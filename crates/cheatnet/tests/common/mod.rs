@@ -8,8 +8,8 @@ use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     CallFailure, CallResult,
 };
+use cheatnet::runtime_extensions::common::create_execute_calldata;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::deploy;
-use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::precalculate_address::create_execute_calldata;
 use cheatnet::state::{BlockifierState, CheatnetState};
 use conversions::felt252::FromShortString;
 use conversions::IntoConv;
