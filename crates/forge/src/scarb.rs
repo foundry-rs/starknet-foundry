@@ -75,9 +75,10 @@ mod tests {
     use indoc::{formatdoc, indoc};
     use scarb_metadata::MetadataCommand;
     use std::str::FromStr;
+    use test_utils::tempdir_with_tool_versions;
 
     fn setup_package(package_name: &str) -> TempDir {
-        let temp = TempDir::new().unwrap();
+        let temp = tempdir_with_tool_versions().unwrap();
         temp.copy_from(
             format!("tests/data/{package_name}"),
             &["**/*.cairo", "**/*.toml"],

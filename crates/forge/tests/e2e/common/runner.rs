@@ -8,6 +8,7 @@ use snapbox::cmd::{cargo_bin, Command as SnapboxCommand};
 use std::process::Command;
 use std::str::FromStr;
 use std::{env, fs};
+use test_utils::tempdir_with_tool_versions;
 use toml_edit::{value, Document};
 
 pub(crate) fn runner() -> SnapboxCommand {
@@ -24,7 +25,7 @@ pub(crate) fn setup_package_with_file_patterns(
     package_name: &str,
     file_patterns: &[&str],
 ) -> TempDir {
-    let temp = TempDir::new().unwrap();
+    let temp = tempdir_with_tool_versions().unwrap();
     temp.copy_from(format!("tests/data/{package_name}"), file_patterns)
         .unwrap();
 
@@ -55,7 +56,7 @@ pub(crate) fn setup_package(package_name: &str) -> TempDir {
 }
 
 pub(crate) fn setup_hello_workspace() -> TempDir {
-    let temp = TempDir::new().unwrap();
+    let temp = tempdir_with_tool_versions().unwrap();
     temp.copy_from("tests/data/hello_workspaces", &["**/*.cairo", "**/*.toml"])
         .unwrap();
 
@@ -115,7 +116,7 @@ pub(crate) fn setup_hello_workspace() -> TempDir {
 }
 
 pub(crate) fn setup_virtual_workspace() -> TempDir {
-    let temp = TempDir::new().unwrap();
+    let temp = tempdir_with_tool_versions().unwrap();
     temp.copy_from("tests/data/virtual_workspace", &["**/*.cairo", "**/*.toml"])
         .unwrap();
 

@@ -1,12 +1,12 @@
 use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
 use camino::Utf8PathBuf;
 use indoc::{formatdoc, indoc};
+use test_utils::tempdir_with_tool_versions;
 
 use crate::assert_stdout_contains;
 use crate::e2e::common::runner::{
     get_current_branch, get_remote_url, runner, setup_package, test_runner,
 };
-use assert_fs::TempDir;
 use std::{path::Path, str::FromStr};
 
 #[test]
@@ -57,8 +57,8 @@ fn simple_package() {
 
 #[test]
 fn simple_package_with_git_dependency() {
-    let temp = TempDir::new().unwrap();
-    let temp_scarb = TempDir::new().unwrap();
+    let temp = tempdir_with_tool_versions().unwrap();
+    let temp_scarb = tempdir_with_tool_versions().unwrap();
 
     temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
         .unwrap();
@@ -753,8 +753,8 @@ fn with_exit_first_flag() {
 
 #[test]
 fn init_new_project_test() {
-    let temp = TempDir::new().unwrap();
-    let temp_scarb = TempDir::new().unwrap();
+    let temp = tempdir_with_tool_versions().unwrap();
+    let temp_scarb = tempdir_with_tool_versions().unwrap();
 
     let snapbox = runner();
     snapbox
@@ -834,7 +834,7 @@ fn init_new_project_test() {
 
 #[test]
 fn should_panic() {
-    let temp = TempDir::new().unwrap();
+    let temp = tempdir_with_tool_versions().unwrap();
     temp.copy_from("tests/data/should_panic_test", &["**/*.cairo", "**/*.toml"])
         .unwrap();
 

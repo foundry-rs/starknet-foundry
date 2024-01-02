@@ -12,6 +12,8 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::str::FromStr;
 
+use crate::tempdir_with_tool_versions;
+
 /// Represents a dependency of a Cairo project
 #[derive(Debug, Clone)]
 pub struct LinkedLibrary {
@@ -40,7 +42,7 @@ impl Contract {
     }
 
     fn generate_sierra_and_casm(self) -> Result<(String, String)> {
-        let dir = TempDir::new()?;
+        let dir = tempdir_with_tool_versions()?;
 
         let contract_path = dir.child("src/lib.cairo");
         contract_path.touch()?;
@@ -105,7 +107,7 @@ impl<'a> TestCase {
     const PACKAGE_NAME: &'a str = "my_package";
 
     pub fn from(test_code: &str, contracts: Vec<Contract>) -> Result<Self> {
-        let dir = TempDir::new()?;
+        let dir = tempdir_with_tool_versions()?;
         let test_file = dir.child(Self::TEST_PATH);
         test_file.touch()?;
         test_file.write_str(test_code)?;
