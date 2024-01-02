@@ -1,18 +1,11 @@
-use crate::assert_stdout_contains;
-use assert_fs::fixture::PathCopy;
+use crate::{assert_stdout_contains, e2e::common::runner::setup_package};
 use indoc::indoc;
-use test_utils::tempdir_with_tool_versions;
 
 use crate::e2e::common::runner::test_runner;
 
 #[test]
 fn collection_with_lib() {
-    let temp = tempdir_with_tool_versions().unwrap();
-    temp.copy_from(
-        "tests/data/collection_with_lib",
-        &["**/*.cairo", "**/*.toml"],
-    )
-    .unwrap();
+    let temp = setup_package("collection_with_lib");
 
     let snapbox = test_runner();
 
@@ -52,12 +45,7 @@ fn collection_with_lib() {
 
 #[test]
 fn collection_without_lib() {
-    let temp = tempdir_with_tool_versions().unwrap();
-    temp.copy_from(
-        "tests/data/collection_without_lib",
-        &["**/*.cairo", "**/*.toml"],
-    )
-    .unwrap();
+    let temp = setup_package("collection_without_lib");
 
     let snapbox = test_runner();
 
