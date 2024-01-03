@@ -3,15 +3,15 @@ use crate::expected_result::{ExpectedPanicValue, ExpectedTestResult};
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{RunResult, RunResultValue};
-use num_integer::Roots;
+use num_traits::Pow;
 use std::option::Option;
 
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct GasStatistics {
     pub min: u128,
     pub max: u128,
-    pub mean: u128,
-    pub std_deviation: u128,
+    pub mean: f64,
+    pub std_deviation: f64,
 }
 
 impl GasStatistics {
@@ -27,17 +27,19 @@ impl GasStatistics {
         }
     }
 
-    fn mean(gas_usages: &[u128]) -> u128 {
-        gas_usages.iter().sum::<u128>() / gas_usages.len() as u128
+    #[allow(clippy::cast_precision_loss)]
+    fn mean(gas_usages: &[u128]) -> f64 {
+        (gas_usages.iter().sum::<u128>() / gas_usages.len() as u128) as f64
     }
 
-    fn std_deviation(mean: u128, gas_usages: &[u128]) -> u128 {
+    #[allow(clippy::cast_precision_loss)]
+    fn std_deviation(mean: f64, gas_usages: &[u128]) -> f64 {
         let sum_squared_diff = gas_usages
             .iter()
-            .map(|&x| x.abs_diff(mean).pow(2))
-            .sum::<u128>();
+            .map(|&x| (x as f64 - mean).abs().pow(2))
+            .sum::<f64>();
 
-        (sum_squared_diff / gas_usages.len() as u128).sqrt()
+        (sum_squared_diff / gas_usages.len() as f64).sqrt()
     }
 }
 
@@ -126,35 +128,11 @@ impl<T: TestType> TestCaseSummary<T> {
             _ => None,
         }
     }
-
-    #[must_use]
-    pub fn arguments(&self) -> Vec<Felt252> {
-        match self {
-            TestCaseSummary::Failed { arguments, .. }
-            | TestCaseSummary::Passed { arguments, .. } => arguments.clone(),
-            TestCaseSummary::Ignored { .. } | TestCaseSummary::Skipped { .. } => vec![],
-        }
-    }
 }
 
 impl TestCaseSummary<Fuzzing> {
     #[must_use]
-    pub fn runs(&self) -> Option<usize> {
-        match self {
-            TestCaseSummary::Passed {
-                test_statistics: FuzzingStatistics { runs },
-                ..
-            }
-            | TestCaseSummary::Failed {
-                test_statistics: FuzzingStatistics { runs },
-                ..
-            } => Some(*runs),
-            _ => None,
-        }
-    }
-
-    #[must_use]
-    pub fn from(results: Vec<TestCaseSummary<Single>>) -> TestCaseSummary<Fuzzing> {
+    pub fn from(results: Vec<TestCaseSummary<Single>>) -> Self {
         let last: TestCaseSummary<Single> = results
             .iter()
             .last()
