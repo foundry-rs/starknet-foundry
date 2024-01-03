@@ -76,7 +76,7 @@ impl CallFailure {
     #[must_use]
     pub fn from_execution_error(
         err: &EntryPointExecutionError,
-        address_or_class_hash: &AddressOrClassHash,
+        starknet_identifier: &AddressOrClassHash,
     ) -> Self {
         match err {
             EntryPointExecutionError::ExecutionFailed { error_data } => {
@@ -123,7 +123,7 @@ impl CallFailure {
                 selector,
             )) => {
                 let selector_hash = selector.0;
-                let msg = match address_or_class_hash {
+                let msg = match starknet_identifier {
                     AddressOrClassHash::ContractAddress(address) => format!(
                         "Entry point selector {selector_hash} not found in contract {}",
                         address.0.key()
@@ -154,7 +154,7 @@ impl CallFailure {
 impl CallResult {
     fn from_execution_result(
         result: &EntryPointExecutionResult<CallInfo>,
-        address_or_class_hash: &AddressOrClassHash,
+        starknet_identifier: &AddressOrClassHash,
     ) -> Self {
         match result {
             Ok(call_info) => {
@@ -169,10 +169,9 @@ impl CallResult {
                     ret_data: return_data,
                 }
             }
-            Err(err) => CallResult::Failure(CallFailure::from_execution_error(
-                err,
-                address_or_class_hash,
-            )),
+            Err(err) => {
+                CallResult::Failure(CallFailure::from_execution_error(err, starknet_identifier))
+            }
         }
     }
 }
@@ -211,7 +210,7 @@ pub fn call_entry_point(
     blockifier_state: &mut BlockifierState,
     cheatnet_state: &mut CheatnetState,
     mut entry_point: CallEntryPoint,
-    address_or_class_hash: &AddressOrClassHash,
+    starknet_identifier: &AddressOrClassHash,
 ) -> Result<CallOutput> {
     let mut resources = ExecutionResources::default();
     let account_context = build_transaction_context();
@@ -233,7 +232,7 @@ pub fn call_entry_point(
         &mut context,
     );
 
-    let result = CallResult::from_execution_result(&exec_result, address_or_class_hash);
+    let result = CallResult::from_execution_result(&exec_result, starknet_identifier);
 
     Ok(CallOutput {
         result,
