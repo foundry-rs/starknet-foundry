@@ -13,12 +13,14 @@ pub(crate) fn print_test_result(any_test_result: &AnyTestCaseSummary) {
     let mut fuzzer_report = None;
     if let AnyTestCaseSummary::Fuzzing(test_result) = any_test_result {
         fuzzer_report = match test_result {
-            TestCaseSummary::Passed { test_statistics: FuzzingStatistics { runs }, gas_info, .. } => {
-                Some(format!(
-                    " (runs: {runs}, gas: {{max: ~{}, min: ~{}, mean: ~{:.2}, std deviation: ~{:.2}}})",
-                    gas_info.max, gas_info.min, gas_info.mean, gas_info.std_deviation
-                ))
-            },
+            TestCaseSummary::Passed {
+                test_statistics: FuzzingStatistics { runs },
+                gas_info,
+                ..
+            } => Some(format!(
+                " (runs: {runs}, gas: {{max: ~{}, min: ~{}, mean: ~{:.2}, std deviation: ~{:.2}}})",
+                gas_info.max, gas_info.min, gas_info.mean, gas_info.std_deviation
+            )),
             TestCaseSummary::Failed {
                 arguments,
                 test_statistics: FuzzingStatistics { runs },
