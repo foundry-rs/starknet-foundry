@@ -26,7 +26,7 @@ use starknet_api::core::ContractAddress;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::SpyTarget;
 use crate::runtime_extensions::forge_runtime_extension::file_operations::string_into_felt;
 use cairo_lang_starknet::contract::starknet_keccak;
-use runtime::utils::Reader;
+use runtime::utils::BufferReader;
 use runtime::{
     CheatcodeHandlingResult, EnhancedHintError, ExtendedRuntime, ExtensionLogic,
     SyscallHandlingResult,
@@ -46,11 +46,11 @@ pub struct ForgeExtension<'a> {
     pub contracts: &'a HashMap<String, StarknetContractArtifacts>,
 }
 
-trait ReaderExt {
+trait BufferReaderExt {
     fn read_cheat_target(&mut self) -> CheatTarget;
 }
 
-impl ReaderExt for Reader<'_> {
+impl BufferReaderExt for BufferReader<'_> {
     fn read_cheat_target(&mut self) -> CheatTarget {
         let cheat_target_variant = self.read_felt().to_u8();
         match cheat_target_variant {
@@ -80,7 +80,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
         inputs: Vec<Felt252>,
         extended_runtime: &mut Self::Runtime,
     ) -> Result<CheatcodeHandlingResult, EnhancedHintError> {
-        let mut reader = Reader::new(&inputs);
+        let mut reader = BufferReader::new(&inputs);
 
         let res = match selector {
             "start_roll" => {

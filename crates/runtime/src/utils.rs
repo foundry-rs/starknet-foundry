@@ -3,15 +3,15 @@ use cairo_lang_runner::short_string::as_cairo_short_string;
 use num_traits::cast::ToPrimitive;
 use num_traits::identities::One;
 
-pub struct Reader<'a> {
+pub struct BufferReader<'a> {
     pub buffer: &'a [Felt252],
     pub idx: usize,
 }
 
-impl Reader<'_> {
+impl BufferReader<'_> {
     #[must_use]
-    pub fn new<'a>(buffer: &'a [Felt252]) -> Reader<'a> {
-        Reader::<'a> { buffer, idx: 0 }
+    pub fn new<'a>(buffer: &'a [Felt252]) -> BufferReader<'a> {
+        BufferReader::<'a> { buffer, idx: 0 }
     }
 
     pub fn read_felt(&mut self) -> Felt252 {

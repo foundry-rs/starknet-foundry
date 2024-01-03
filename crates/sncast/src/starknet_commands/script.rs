@@ -31,7 +31,7 @@ use clap::command;
 use clap::Args;
 use conversions::{FromConv, IntoConv};
 use itertools::chain;
-use runtime::utils::Reader;
+use runtime::utils::BufferReader;
 use runtime::EnhancedHintError;
 use scarb_api::ScarbCommand;
 use sncast::helpers::scarb_utils::{
@@ -175,7 +175,7 @@ impl CairoHintProcessor<'_> {
         let mut buffer = MemBuffer::new_segment(vm);
         let result_start = buffer.ptr;
 
-        let mut reader = Reader::new(inputs);
+        let mut reader = BufferReader::new(inputs);
 
         match selector {
             "call" => {
