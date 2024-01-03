@@ -22,9 +22,7 @@ mod SpoofCheckerProxy {
 
     #[abi(embed_v0)]
     impl ISpoofCheckerProxy of super::ISpoofCheckerProxy<ContractState> {
-        fn get_spoof_checkers_tx_hash(
-            self: @ContractState, address: ContractAddress
-        ) -> felt252 {
+        fn get_spoof_checkers_tx_hash(self: @ContractState, address: ContractAddress) -> felt252 {
             let spoof_checker = ISpoofCheckerDispatcher { contract_address: address };
             spoof_checker.get_transaction_hash()
         }
