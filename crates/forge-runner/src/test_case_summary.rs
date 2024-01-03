@@ -36,7 +36,7 @@ impl GasStatistics {
     fn std_deviation(mean: f64, gas_usages: &[u128]) -> f64 {
         let sum_squared_diff = gas_usages
             .iter()
-            .map(|&x| (x as f64 - mean).abs().pow(2))
+            .map(|&x| (x as f64 - mean).pow(2))
             .sum::<f64>();
 
         (sum_squared_diff / gas_usages.len() as f64).sqrt()
@@ -148,9 +148,8 @@ impl TestCaseSummary<Fuzzing> {
                 test_statistics: (),
             } => {
                 let runs = results.len();
-                let gas_usages_vec: Vec<u128> = results
+                let gas_usages: Vec<u128> = results
                     .into_iter()
-                    .filter(|item| matches!(item, TestCaseSummary::Passed { .. }))
                     .map(|a| match a {
                         TestCaseSummary::Passed { gas_info, .. } => gas_info,
                         _ => unreachable!(),
@@ -160,7 +159,7 @@ impl TestCaseSummary<Fuzzing> {
                 TestCaseSummary::Passed {
                     name,
                     msg,
-                    gas_info: GasStatistics::new(&gas_usages_vec),
+                    gas_info: GasStatistics::new(&gas_usages),
                     arguments,
                     test_statistics: FuzzingStatistics { runs },
                 }
