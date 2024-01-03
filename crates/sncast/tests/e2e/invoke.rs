@@ -6,8 +6,6 @@ use crate::helpers::runner::runner;
 
 use indoc::indoc;
 
-
-
 use starknet::core::types::TransactionReceipt::Invoke;
 
 #[tokio::test]

@@ -159,7 +159,7 @@ pub async fn invoke_udc_contract(
     for value in constructor_calldata {
         let value = parse_number(value).expect("Could not parse the calldata");
         calldata.push(value);
-    };
+    }
 
     let call = Call {
         to: parse_number(UDC_ADDRESS).expect("Could not parse the contract address"),
