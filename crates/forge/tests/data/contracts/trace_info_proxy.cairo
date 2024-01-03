@@ -2,7 +2,7 @@ use starknet::{ContractAddress, ClassHash};
 
 #[starknet::interface]
 trait ITraceInfoProxy<T> {
-    fn with_libcall(ref self: T, class_hash: ClassHash) -> felt252;
+    fn with_libcall(self: @T, class_hash: ClassHash) -> felt252;
     fn regular_call(self: @T, contract_address: ContractAddress) -> felt252;
     fn with_panic(self: @T, contract_address: ContractAddress);
 }
@@ -35,7 +35,7 @@ mod TraceInfoProxy {
             ITraceInfoCheckerDispatcher { contract_address }.from_proxy(2)
         }
 
-        fn with_libcall(ref self: ContractState, class_hash: ClassHash) -> felt252 {
+        fn with_libcall(self: @ContractState, class_hash: ClassHash) -> felt252 {
             ITraceInfoCheckerLibraryDispatcher { class_hash }.from_proxy(3)
         }
 

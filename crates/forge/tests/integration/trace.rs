@@ -109,7 +109,7 @@ fn trace_call() {
             
             #[starknet::interface]
             trait ITraceInfoProxy<T> {
-                fn with_libcall(ref self: T, class_hash: ClassHash) -> felt252;
+                fn with_libcall(self: @T, class_hash: ClassHash) -> felt252;
                 fn regular_call(self: @T, contract_address: ContractAddress) -> felt252;
                 fn with_panic(self: @T, contract_address: ContractAddress);
             }
@@ -241,7 +241,7 @@ fn trace_failed_call() {
             
             #[starknet::interface]
             trait ITraceInfoProxy<T> {
-                fn with_libcall(ref self: T, class_hash: ClassHash) -> felt252;
+                fn with_libcall(self: @T, class_hash: ClassHash) -> felt252;
                 fn regular_call(self: @T, contract_address: ContractAddress) -> felt252;
                 fn with_panic(self: @T, contract_address: ContractAddress);
             }
@@ -356,7 +356,7 @@ fn trace_library_call_from_test() {
             
             #[starknet::interface]
             trait ITraceInfoProxy<T> {
-                fn with_libcall(ref self: T, class_hash: ClassHash) -> felt252;
+                fn with_libcall(self: @T, class_hash: ClassHash) -> felt252;
                 fn regular_call(self: @T, contract_address: ContractAddress) -> felt252;
                 fn with_panic(self: @T, contract_address: ContractAddress);
             }
@@ -485,7 +485,7 @@ fn trace_failed_library_call_from_test() {
             
             #[starknet::interface]
             trait ITraceInfoProxy<T> {
-                fn with_libcall(ref self: T, class_hash: ClassHash) -> felt252;
+                fn with_libcall(self: @T, class_hash: ClassHash) -> felt252;
                 fn regular_call(self: @T, contract_address: ContractAddress) -> felt252;
                 fn with_panic(self: @T, contract_address: ContractAddress);
             }

@@ -563,30 +563,32 @@ fn deserialize_cheat_target(inputs: &[Felt252]) -> (CheatTarget, usize) {
 }
 
 fn serialize_call_entry_point(call_entry_point: &CallEntryPoint) -> Vec<Felt252> {
-    let mut output = vec![];
-
     let entry_point_type = match call_entry_point.entry_point_type {
         EntryPointType::Constructor => 0,
         EntryPointType::External => 1,
         EntryPointType::L1Handler => 2,
     };
-    output.push(Felt252::from(entry_point_type));
 
-    output.push(call_entry_point.entry_point_selector.0.into_());
-
-    let calldata = call_entry_point.calldata.0.iter().collect::<Vec<_>>();
-    output.push(Felt252::from(calldata.len()));
-    for felt in calldata {
-        output.push(Felt252::from_bytes_be(felt.bytes()));
-    }
-
-    output.push(call_entry_point.storage_address.into_());
-    output.push(call_entry_point.caller_address.into_());
+    let calldata = call_entry_point
+        .calldata
+        .0
+        .iter()
+        .copied()
+        .map(IntoConv::into_)
+        .collect::<Vec<_>>();
 
     let call_type = match call_entry_point.call_type {
         CallType::Call => 0,
         CallType::Delegate => 1,
     };
+
+    let mut output = vec![];
+    output.push(Felt252::from(entry_point_type));
+    output.push(call_entry_point.entry_point_selector.0.into_());
+    output.push(Felt252::from(calldata.len()));
+    output.extend(calldata);
+    output.push(call_entry_point.storage_address.into_());
+    output.push(call_entry_point.caller_address.into_());
     output.push(Felt252::from(call_type));
 
     output
