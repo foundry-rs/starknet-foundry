@@ -31,7 +31,6 @@ use clap::command;
 use clap::Args;
 use conversions::{FromConv, IntoConv};
 use itertools::chain;
-use num_traits::ToPrimitive;
 use runtime::utils::Reader;
 use runtime::EnhancedHintError;
 use scarb_api::ScarbCommand;
@@ -176,21 +175,15 @@ impl CairoHintProcessor<'_> {
         let mut buffer = MemBuffer::new_segment(vm);
         let result_start = buffer.ptr;
 
-        let mut reader = Reader {
-            buffer: inputs,
-            idx: &mut 0,
-        };
+        let mut reader = Reader::new(inputs);
+
         match selector {
             "call" => {
                 let contract_address = reader.read_felt().into_();
                 let function_name = reader
                     .read_short_string()
                     .expect("Failed to convert function name to short string");
-                let calldata_length = reader
-                    .read_felt()
-                    .to_usize()
-                    .expect("Failed to convert calldata length to usize");
-                let calldata = reader.read_vec(calldata_length);
+                let calldata = reader.read_vec();
                 let calldata_felts: Vec<FieldElement> = calldata
                     .iter()
                     .map(|el| FieldElement::from_(el.clone()))
@@ -256,17 +249,11 @@ impl CairoHintProcessor<'_> {
             }
             "deploy" => {
                 let class_hash = reader.read_felt().into_();
-                let calldata_length = reader
-                    .read_felt()
-                    .to_usize()
-                    .expect("Failed to convert calldata length to usize");
-                let constructor_calldata: Vec<FieldElement> = {
-                    let calldata = reader.read_vec(calldata_length);
-                    calldata
-                        .iter()
-                        .map(|el| FieldElement::from_(el.clone()))
-                        .collect()
-                };
+                let constructor_calldata: Vec<FieldElement> = reader
+                    .read_vec()
+                    .iter()
+                    .map(|el| FieldElement::from_(el.clone()))
+                    .collect();
 
                 let salt = reader.read_option_felt().map(conversions::IntoConv::into_);
                 let unique = reader.read_bool();
@@ -310,17 +297,11 @@ impl CairoHintProcessor<'_> {
                 let entry_point_name = reader
                     .read_short_string()
                     .expect("Failed to convert entry point name to short string");
-                let calldata_length = reader
-                    .read_felt()
-                    .to_usize()
-                    .expect("Failed to convert calldata length to usize");
-                let calldata: Vec<FieldElement> = {
-                    let calldata = reader.read_vec(calldata_length);
-                    calldata
-                        .iter()
-                        .map(|el| FieldElement::from_(el.clone()))
-                        .collect()
-                };
+                let calldata: Vec<FieldElement> = reader
+                    .read_vec()
+                    .iter()
+                    .map(|el| FieldElement::from_(el.clone()))
+                    .collect();
                 let max_fee = reader.read_option_felt().map(conversions::IntoConv::into_);
                 let nonce = reader.read_option_felt().map(conversions::IntoConv::into_);
 

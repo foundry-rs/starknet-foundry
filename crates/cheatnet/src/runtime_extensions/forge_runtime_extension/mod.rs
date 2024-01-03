@@ -57,9 +57,8 @@ impl ReaderExt for Reader<'_> {
             Some(0) => CheatTarget::All,
             Some(1) => CheatTarget::One(self.read_felt().into_()),
             Some(2) => {
-                let n_targets = self.read_felt().to_usize().unwrap();
                 let contract_addresses: Vec<_> = self
-                    .read_vec(n_targets)
+                    .read_vec()
                     .iter()
                     .map(|el| ContractAddress::from_(el.clone()))
                     .collect();
@@ -81,10 +80,8 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
         inputs: Vec<Felt252>,
         extended_runtime: &mut Self::Runtime,
     ) -> Result<CheatcodeHandlingResult, EnhancedHintError> {
-        let mut reader = Reader {
-            buffer: &inputs,
-            idx: &mut 0,
-        };
+        let mut reader = Reader::new(&inputs);
+
         let res = match selector {
             "start_roll" => {
                 let target = reader.read_cheat_target();
@@ -182,12 +179,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let contract_address = reader.read_felt().into_();
                 let function_name = reader.read_felt();
 
-                let ret_data_length = reader
-                    .read_felt()
-                    .to_usize()
-                    .expect("Missing ret_data len in inputs");
-
-                let ret_data = reader.read_vec(ret_data_length);
+                let ret_data = reader.read_vec();
 
                 extended_runtime
                     .extended_runtime
@@ -220,7 +212,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let chain_id = reader.read_option_felt();
                 let nonce = reader.read_option_felt();
                 let resource_bounds = reader.read_option_felt().map(|resource_bounds_len| {
-                    reader.read_vec(
+                    reader.read_vec_body(
                         3 * resource_bounds_len.to_usize().unwrap(), // ResourceBounds struct has 3 fields
                     )
                 });
@@ -289,8 +281,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
             }
             "deploy" => {
                 let class_hash = reader.read_felt().into_();
-                let calldata_length = reader.read_felt().to_usize().unwrap();
-                let calldata = reader.read_vec(calldata_length);
+                let calldata = reader.read_vec();
                 let cheatable_starknet_runtime = &mut extended_runtime.extended_runtime;
                 let mut blockifier_state = BlockifierState::from(
                     cheatable_starknet_runtime
@@ -312,8 +303,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
             }
             "deploy_at" => {
                 let class_hash = reader.read_felt().into_();
-                let calldata_length = reader.read_felt().to_usize().unwrap();
-                let calldata = reader.read_vec(calldata_length);
+                let calldata = reader.read_vec();
                 let contract_address = reader.read_felt().into_();
                 let cheatnet_runtime = &mut extended_runtime.extended_runtime;
                 let mut blockifier_state = BlockifierState::from(
@@ -334,8 +324,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
             }
             "precalculate_address" => {
                 let class_hash = reader.read_felt().into_();
-                let calldata_length = reader.read_felt().to_usize().unwrap();
-                let calldata = reader.read_vec(calldata_length);
+                let calldata = reader.read_vec();
 
                 let contract_address = extended_runtime
                     .extended_runtime
@@ -392,11 +381,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let function_name = reader.read_felt();
                 let from_address = reader.read_felt();
 
-                let payload_len = reader
-                    .read_felt()
-                    .to_usize()
-                    .expect("Missing payload len in inputs");
-                let payload = reader.read_vec(payload_len);
+                let payload = reader.read_vec();
 
                 let cheatnet_runtime = &mut extended_runtime.extended_runtime;
                 let mut blockifier_state = BlockifierState::from(
@@ -448,9 +433,8 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     0 => SpyTarget::All,
                     1 => SpyTarget::One(reader.read_felt().into_()),
                     _ => {
-                        let addresses_length = reader.read_felt().to_usize().unwrap();
                         let addresses = reader
-                            .read_vec(addresses_length)
+                            .read_vec()
                             .iter()
                             .map(|el| ContractAddress::from_(el.clone()))
                             .collect();
