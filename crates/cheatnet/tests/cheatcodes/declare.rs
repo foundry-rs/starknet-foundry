@@ -7,7 +7,7 @@ use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
 use conversions::felt252::FromShortString;
 use runtime::EnhancedHintError;
-use scarb_artifacts::StarknetContractArtifacts;
+use scarb_api::StarknetContractArtifacts;
 use starknet_api::core::ClassHash;
 
 fn get_contract_class_hash(

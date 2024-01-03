@@ -1,7 +1,7 @@
 use super::constants::{WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
 use anyhow::{anyhow, bail, Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
-use scarb_artifacts::ScarbCommand;
+use scarb_api::ScarbCommand;
 use scarb_metadata;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -260,7 +260,7 @@ pub fn parse_scarb_config(
 pub fn get_package_tool_sncast(metadata: &scarb_metadata::Metadata) -> Result<&Value> {
     let first_package = metadata
         .packages
-        .get(0)
+        .first()
         .ok_or_else(|| anyhow!("No package found in metadata"))?;
 
     let tool = first_package
