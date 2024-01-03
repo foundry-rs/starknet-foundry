@@ -26,7 +26,7 @@ use starknet_api::core::ContractAddress;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::SpyTarget;
 use crate::runtime_extensions::forge_runtime_extension::file_operations::string_into_felt;
 use cairo_lang_starknet::contract::starknet_keccak;
-use runtime::utils::{read_option_felt, read_option_vec, read_vec};
+use runtime::utils::Reader;
 use runtime::{
     CheatcodeHandlingResult, EnhancedHintError, ExtendedRuntime, ExtensionLogic,
     SyscallHandlingResult,
@@ -189,29 +189,29 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
             "start_spoof" => {
-                let (target, inputs_start) = deserialize_cheat_target(&inputs);
-                let mut idx = inputs_start;
+                let (target, mut inputs_start) = deserialize_cheat_target(&inputs);
 
-                let version = read_option_felt(&inputs, &mut idx);
-                let account_contract_address = read_option_felt(&inputs, &mut idx);
-                let max_fee = read_option_felt(&inputs, &mut idx);
-                let signature = read_option_vec(&inputs, &mut idx);
-                let transaction_hash = read_option_felt(&inputs, &mut idx);
-                let chain_id = read_option_felt(&inputs, &mut idx);
-                let nonce = read_option_felt(&inputs, &mut idx);
-                let resource_bounds =
-                    read_option_felt(&inputs, &mut idx).map(|resource_bounds_len| {
-                        read_vec(
-                            &inputs,
-                            &mut idx,
-                            3 * resource_bounds_len.to_usize().unwrap(), // ResourceBounds struct has 3 fields
-                        )
-                    });
-                let tip = read_option_felt(&inputs, &mut idx);
-                let paymaster_data = read_option_vec(&inputs, &mut idx);
-                let nonce_data_availability_mode = read_option_felt(&inputs, &mut idx);
-                let fee_data_availability_mode = read_option_felt(&inputs, &mut idx);
-                let account_deployment_data = read_option_vec(&inputs, &mut idx);
+                let mut reader = Reader {
+                    buffer: &inputs,
+                    idx: &mut inputs_start,
+                };
+                let version = reader.read_option_felt();
+                let account_contract_address = reader.read_option_felt();
+                let max_fee = reader.read_option_felt();
+                let signature = reader.read_option_vec();
+                let transaction_hash = reader.read_option_felt();
+                let chain_id = reader.read_option_felt();
+                let nonce = reader.read_option_felt();
+                let resource_bounds = reader.read_option_felt().map(|resource_bounds_len| {
+                    reader.read_vec(
+                        3 * resource_bounds_len.to_usize().unwrap(), // ResourceBounds struct has 3 fields
+                    )
+                });
+                let tip = reader.read_option_felt();
+                let paymaster_data = reader.read_option_vec();
+                let nonce_data_availability_mode = reader.read_option_felt();
+                let fee_data_availability_mode = reader.read_option_felt();
+                let account_deployment_data = reader.read_option_vec();
 
                 extended_runtime
                     .extended_runtime
