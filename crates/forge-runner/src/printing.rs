@@ -1,4 +1,4 @@
-use crate::test_case_summary::{AnyTestCaseSummary, TestCaseSummary};
+use crate::test_case_summary::{AnyTestCaseSummary, FuzzingStatistics, TestCaseSummary};
 use console::style;
 
 pub(crate) fn print_test_result(any_test_result: &AnyTestCaseSummary) {
@@ -12,30 +12,26 @@ pub(crate) fn print_test_result(any_test_result: &AnyTestCaseSummary) {
 
     let mut fuzzer_report = None;
     if let AnyTestCaseSummary::Fuzzing(test_result) = any_test_result {
-        if let Some(runs) = test_result.runs() {
-            fuzzer_report = {
-                if matches!(test_result, TestCaseSummary::Failed { .. }) {
-                    let arguments = test_result.arguments();
-                    Some(format!(
-                        " (fuzzer runs = {runs}, arguments = {arguments:?})"
-                    ))
-                } else {
-                    Some(format!(" (fuzzer runs = {runs})"))
-                }
-            }
+        fuzzer_report = match test_result {
+            TestCaseSummary::Passed { test_statistics: FuzzingStatistics { runs }, gas_info, .. } => {
+                Some(format!(
+                    " (runs = {runs}, gas = {{max = ~{}, min = ~{}, mean = ~{:.2}, std deviation = ~{:.2}}})",
+                    gas_info.max, gas_info.min, gas_info.mean, gas_info.std_deviation
+                ))
+            },
+            TestCaseSummary::Failed {
+                arguments,
+                test_statistics: FuzzingStatistics { runs },
+                ..
+            } => Some(format!(" (runs = {runs}, arguments = {arguments:?})")),
+            _ => None,
         };
     }
     let fuzzer_report = fuzzer_report.unwrap_or_else(String::new);
 
     let gas_usage = match any_test_result {
-        AnyTestCaseSummary::Fuzzing(TestCaseSummary::Passed { gas_info, .. }) => {
-            format!(
-                ", gas = (max = ~{}, min = ~{}, mean = ~{}, std deviation = ~{})",
-                gas_info.max, gas_info.min, gas_info.mean, gas_info.std_deviation
-            )
-        }
         AnyTestCaseSummary::Single(TestCaseSummary::Passed { gas_info, .. }) => {
-            format!(", gas = ~{gas_info}")
+            format!(" (gas = ~{gas_info})")
         }
         _ => String::new(),
     };
