@@ -1,4 +1,4 @@
-use forge_runner::test_case_summary::{AnyTestCaseSummary, GasStatistics, TestCaseSummary};
+use forge_runner::test_case_summary::{AnyTestCaseSummary, TestCaseSummary};
 use indoc::indoc;
 use test_utils::runner::TestCase;
 use test_utils::running_tests::run_test_case;
@@ -70,16 +70,14 @@ fn fuzzed_loop() {
     let result = run_test_case(&test);
 
     let crate_summary = TestCase::find_test_result(&result);
-    assert!(matches!(
-        &crate_summary.test_case_summaries[0],
-        AnyTestCaseSummary::Fuzzing(TestCaseSummary::Passed {
-            gas_info: GasStatistics {
-                min: 1,
-                max: 126,
-                mean: 65,
-                std_deviation: 37,
-            },
-            ..
-        })
-    ));
+    let AnyTestCaseSummary::Fuzzing(TestCaseSummary::Passed { gas_info, .. }) =
+        &crate_summary.test_case_summaries[0]
+    else {
+        panic!()
+    };
+
+    assert_eq!(gas_info.min, 1);
+    assert_eq!(gas_info.max, 126);
+    assert!((gas_info.mean - 65.).abs() < f64::EPSILON);
+    assert!((gas_info.std_deviation - 37.308).abs() < 0.01);
 }
