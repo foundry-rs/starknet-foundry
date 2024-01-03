@@ -9,7 +9,7 @@ use crate::{
 use cairo_felt::Felt252;
 use cheatnet::runtime_extensions::forge_runtime_extension::{
     cheatcodes::{deploy::deploy, spoof::TxInfoMock},
-    read_felt, read_vec, read_vec_count,
+    read_felt, read_vec, read_vec_sized,
 };
 use cheatnet::state::CheatTarget;
 use cheatnet::{
@@ -38,13 +38,13 @@ pub struct TxInfo {
 }
 
 impl TxInfo {
-    fn apply_mock_fields(tx_info_mock: &TxInfoMock, default_tx_info: &Self) -> Self {
+    fn apply_mock_fields(tx_info_mock: &TxInfoMock, tx_info: &Self) -> Self {
         macro_rules! clone_field {
             ($field:ident) => {
                 tx_info_mock
                     .$field
                     .clone()
-                    .unwrap_or(default_tx_info.$field.clone())
+                    .unwrap_or(tx_info.$field.clone())
             };
         }
 
@@ -76,7 +76,7 @@ impl TxInfo {
         let chain_id = read_felt(data, &mut idx);
         let nonce = read_felt(data, &mut idx);
         let resource_bounds_len = read_felt(data, &mut idx);
-        let resource_bounds = read_vec_count(
+        let resource_bounds = read_vec_sized(
             data,
             &mut idx,
             3 * resource_bounds_len.to_usize().unwrap(), // ResourceBounds struct has 3 fields

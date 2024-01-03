@@ -200,7 +200,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let nonce = read_option_felt(&inputs, &mut idx);
                 let resource_bounds =
                     read_option_felt(&inputs, &mut idx).map(|resource_bounds_len| {
-                        read_vec_count(
+                        read_vec_sized(
                             &inputs,
                             &mut idx,
                             3 * resource_bounds_len.to_usize().unwrap(), // ResourceBounds struct has 3 fields
@@ -564,13 +564,13 @@ pub fn read_felt(buffer: &[Felt252], idx: &mut usize) -> Felt252 {
 }
 
 pub fn read_vec(buffer: &[Felt252], idx: &mut usize) -> Vec<Felt252> {
-    let count = read_felt(buffer, idx).to_usize().unwrap();
-    read_vec_count(buffer, idx, count)
+    let size = read_felt(buffer, idx).to_usize().unwrap();
+    read_vec_sized(buffer, idx, size)
 }
 
-pub fn read_vec_count(buffer: &[Felt252], idx: &mut usize, count: usize) -> Vec<Felt252> {
-    *idx += count;
-    buffer[*idx - count..*idx].to_vec()
+pub fn read_vec_sized(buffer: &[Felt252], idx: &mut usize, size: usize) -> Vec<Felt252> {
+    *idx += size;
+    buffer[*idx - size..*idx].to_vec()
 }
 
 pub fn read_option_felt(buffer: &[Felt252], idx: &mut usize) -> Option<Felt252> {
@@ -579,8 +579,7 @@ pub fn read_option_felt(buffer: &[Felt252], idx: &mut usize) -> Option<Felt252> 
 }
 
 pub fn read_option_vec(buffer: &[Felt252], idx: &mut usize) -> Option<Vec<Felt252>> {
-    read_option_felt(buffer, idx)
-        .map(|count| read_vec_count(buffer, idx, count.to_usize().unwrap()))
+    read_option_felt(buffer, idx).map(|size| read_vec_sized(buffer, idx, size.to_usize().unwrap()))
 }
 
 #[must_use]
