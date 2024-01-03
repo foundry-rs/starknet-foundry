@@ -7,11 +7,13 @@ network and perform actions on top of it.
 >
 > Actions are performed on top of the `forked` state which means real network is not affected.
 
+## Fork Configuration
+
 There are two ways of configuring a fork:
 - by specifying `url` and `block_id` parameters in the `#[fork(...)]` attribute
 - or by passing a fork name defined in your `Scarb.toml` to the `#[fork(...)]` attribute
 
-## Configure a Fork in the Attribute
+### Configure a Fork in the Attribute
 
 It is possible to pass `url` and `block_id` arguments to the `fork` attribute:
 - `url` - RPC URL (short string)
@@ -41,7 +43,7 @@ fn test_using_forked_state() {
 
 Once such a configuration is passed, it is possible to use state and contracts defined on the specified network.
 
-## Configure Fork in the `Scarb.toml`
+### Configure Fork in `Scarb.toml`
 
 Although passing named arguments works fine, you have to copy-paste it each time you want to use
 the same fork in tests.
@@ -81,3 +83,9 @@ fn test_using_second_fork() {
 
 // ...
 ```
+
+## Testing Forked Contracts
+
+Once the fork is configured, the test will run on top of the forked state, meaning that it will have access to every contract deployed on the real network.
+
+With that, you can now interact with any contract from the chain [the same way you would in a standard test](./contracts.md).
