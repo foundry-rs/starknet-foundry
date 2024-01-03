@@ -15,7 +15,7 @@ pub(crate) fn print_test_result(any_test_result: &AnyTestCaseSummary) {
         fuzzer_report = match test_result {
             TestCaseSummary::Passed { test_statistics: FuzzingStatistics { runs }, gas_info, .. } => {
                 Some(format!(
-                    " (runs = {runs}, gas = {{max = ~{}, min = ~{}, mean = ~{:.2}, std deviation = ~{:.2}}})",
+                    " (runs: {runs}, gas: {{max: ~{}, min: ~{}, mean: ~{:.2}, std deviation: ~{:.2}}})",
                     gas_info.max, gas_info.min, gas_info.mean, gas_info.std_deviation
                 ))
             },
@@ -23,7 +23,7 @@ pub(crate) fn print_test_result(any_test_result: &AnyTestCaseSummary) {
                 arguments,
                 test_statistics: FuzzingStatistics { runs },
                 ..
-            } => Some(format!(" (runs = {runs}, arguments = {arguments:?})")),
+            } => Some(format!(" (runs: {runs}, arguments: {arguments:?})")),
             _ => None,
         };
     }
@@ -31,7 +31,7 @@ pub(crate) fn print_test_result(any_test_result: &AnyTestCaseSummary) {
 
     let gas_usage = match any_test_result {
         AnyTestCaseSummary::Single(TestCaseSummary::Passed { gas_info, .. }) => {
-            format!(" (gas = ~{gas_info})")
+            format!(" (gas: ~{gas_info})")
         }
         _ => String::new(),
     };
