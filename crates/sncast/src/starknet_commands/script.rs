@@ -32,7 +32,7 @@ use clap::Args;
 use conversions::{FromConv, IntoConv};
 use itertools::chain;
 use num_traits::ToPrimitive;
-use runtime::utils::read_option_felt_and_increase_idx;
+use runtime::utils::read_option_felt;
 use runtime::EnhancedHintError;
 use scarb_api::ScarbCommand;
 use sncast::helpers::scarb_utils::{
@@ -212,10 +212,9 @@ impl CairoHintProcessor<'_> {
                 let contract_name = as_cairo_short_string(&inputs[0])
                     .expect("Failed to convert contract name to string");
                 let mut offset = 1;
-                let max_fee = read_option_felt_and_increase_idx(inputs, &mut offset)
-                    .map(conversions::IntoConv::into_);
-                let nonce = read_option_felt_and_increase_idx(inputs, &mut offset)
-                    .map(conversions::IntoConv::into_);
+                let max_fee =
+                    read_option_felt(inputs, &mut offset).map(conversions::IntoConv::into_);
+                let nonce = read_option_felt(inputs, &mut offset).map(conversions::IntoConv::into_);
 
                 let account = self.runtime.block_on(get_account(
                     &self.config.account,
@@ -263,14 +262,12 @@ impl CairoHintProcessor<'_> {
                         .collect()
                 };
                 let mut offset = 2 + calldata_length;
-                let salt = read_option_felt_and_increase_idx(inputs, &mut offset)
-                    .map(conversions::IntoConv::into_);
+                let salt = read_option_felt(inputs, &mut offset).map(conversions::IntoConv::into_);
                 let unique = { inputs[offset] == 1.into() };
                 offset += 1;
-                let max_fee = read_option_felt_and_increase_idx(inputs, &mut offset)
-                    .map(conversions::IntoConv::into_);
-                let nonce = read_option_felt_and_increase_idx(inputs, &mut offset)
-                    .map(conversions::IntoConv::into_);
+                let max_fee =
+                    read_option_felt(inputs, &mut offset).map(conversions::IntoConv::into_);
+                let nonce = read_option_felt(inputs, &mut offset).map(conversions::IntoConv::into_);
 
                 let account = self.runtime.block_on(get_account(
                     &self.config.account,
@@ -319,10 +316,9 @@ impl CairoHintProcessor<'_> {
                         .collect()
                 };
                 let mut offset = 3 + calldata_length;
-                let max_fee = read_option_felt_and_increase_idx(inputs, &mut offset)
-                    .map(conversions::IntoConv::into_);
-                let nonce = read_option_felt_and_increase_idx(inputs, &mut offset)
-                    .map(conversions::IntoConv::into_);
+                let max_fee =
+                    read_option_felt(inputs, &mut offset).map(conversions::IntoConv::into_);
+                let nonce = read_option_felt(inputs, &mut offset).map(conversions::IntoConv::into_);
 
                 let account = self.runtime.block_on(get_account(
                     &self.config.account,
