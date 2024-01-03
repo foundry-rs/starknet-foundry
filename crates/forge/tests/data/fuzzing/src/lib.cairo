@@ -116,4 +116,19 @@ mod tests {
             assert(x == a - 5_u256, 'x != a - 5');
         }
     }
+
+    #[test]
+    #[fuzzer(runs: 256, seed: 100)]
+    fn fuzzed_loop(a: u8) {
+        let mut i: u8 = 0;
+        loop {
+            if (i == a) {
+                break;
+            }
+
+            i += 1;
+        };
+
+        assert(1 == 1, '');
+    }
 }
