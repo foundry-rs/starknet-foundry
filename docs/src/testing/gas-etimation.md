@@ -11,14 +11,14 @@ and gas-efficient.
 
 When the test passes with no errors, estimated gas is displayed this way:
 ```shell
-[PASS] tests::simple_test, gas = ~1
+[PASS] tests::simple_test (gas: ~1)
 ```
 
 ### Fuzzed Tests
 
 While using the fuzzing feature additional gas statistics will be displayed:
 ```shell
-[PASS] tests::fuzzing_test (fuzzer runs = 256), gas = (max = ~126, min = ~1, mean = ~65, std deviation = ~37)
+[PASS] tests::fuzzing_test (runs: 256, gas: {max: ~126, min: ~1, mean: ~65.00, std deviation: ~37.31})
 ```
 
 > 📝 **Note**
