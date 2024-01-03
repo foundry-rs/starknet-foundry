@@ -99,12 +99,7 @@ pub async fn declare_deploy_contract(account: &str, path: &str, shortname: &str)
     };
 }
 
-pub async fn invoke_map_contract(
-    key: &str,
-    value: &str,
-    account: &str,
-    contract_address: &str,
-) -> InvokeTransactionResult {
+pub async fn invoke_map_contract(key: &str, value: &str, account: &str, contract_address: &str) {
     let provider = get_provider(URL).expect("Could not get the provider");
     let account = get_account(
         account,
@@ -125,7 +120,7 @@ pub async fn invoke_map_contract(
     };
     let execution = account.execute(vec![call]);
 
-    execution.send().await.unwrap()
+    execution.send().await.unwrap();
 }
 
 pub async fn invoke_udc_contract(
