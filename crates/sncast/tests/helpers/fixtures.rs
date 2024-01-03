@@ -142,7 +142,6 @@ pub async fn invoke_udc_contract(
         .expect("Could not parse salt");
     let unique: u8 = 1;
     let max_fee: u64 = 332_323_232_324_342;
-    let max_fee: FieldElement = max_fee.into();
 
     let mut calldata = vec![
         parse_number(class_hash).expect("Could not parse the key"),
@@ -164,7 +163,7 @@ pub async fn invoke_udc_contract(
     };
 
     let execution = account.execute(vec![call]);
-    let execution = apply_optional(execution, Some(max_fee), Execution::max_fee);
+    let execution = apply_optional(execution, Some(max_fee.into()), Execution::max_fee);
 
     execution.send().await.unwrap()
 }
