@@ -1,7 +1,10 @@
+use std::{thread::sleep, time::Duration};
+
 use crate::helpers::{
     constants::{ACCOUNT, ACCOUNT_FILE_PATH},
-    fixtures::{create_test_provider, from_env},
+    fixtures::{create_test_provider, from_env, invoke_udc_contract},
 };
+
 use camino::Utf8PathBuf;
 use sncast::{
     get_account,
@@ -48,6 +51,20 @@ async fn test_rejected_transaction() {
     dbg!(&resp);
 
     assert!(resp.to_string().contains("InsufficientMaxFee"));
+}
+
+#[tokio::test]
+#[should_panic(expected = "Transaction has been reverted")]
+async fn test_wait_for_reverted_transaction() {
+    let provider = create_test_provider();
+    let class_hash = from_env("CAST_WITH_CONSTRUCTOR_CLASS_HASH").unwrap();
+
+    let transaction_hash = invoke_udc_contract(ACCOUNT, &class_hash, 2, &["43", "41", "0x1"], None)
+        .await
+        .transaction_hash;
+    wait_for_tx(&provider, transaction_hash, 3, 1)
+        .await
+        .unwrap();
 }
 
 #[tokio::test]

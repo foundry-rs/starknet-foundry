@@ -4,13 +4,14 @@ use primitive_types::U256;
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
 use serde_json::{json, Map, Value};
-use sncast::get_keystore_password;
+use sncast::helpers::constants::UDC_ADDRESS;
+use sncast::{apply_optional, get_keystore_password};
 use sncast::{get_account, get_provider, parse_number};
-use starknet::accounts::{Account, Call};
+use starknet::accounts::{Account, Call, Execution};
 use starknet::contract::ContractFactory;
 use starknet::core::types::contract::{CompiledClass, SierraClass};
-use starknet::core::types::FieldElement;
 use starknet::core::types::TransactionReceipt;
+use starknet::core::types::{FieldElement, InvokeTransactionResult};
 use starknet::core::utils::get_contract_address;
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::jsonrpc::HttpTransport;
@@ -98,7 +99,12 @@ pub async fn declare_deploy_contract(account: &str, path: &str, shortname: &str)
     };
 }
 
-pub async fn invoke_map_contract(key: &str, value: &str, account: &str, contract_address: &str) {
+pub async fn invoke_map_contract(
+    key: &str,
+    value: &str,
+    account: &str,
+    contract_address: &str,
+) -> InvokeTransactionResult {
     let provider = get_provider(URL).expect("Could not get the provider");
     let account = get_account(
         account,
@@ -119,7 +125,55 @@ pub async fn invoke_map_contract(key: &str, value: &str, account: &str, contract
     };
     let execution = account.execute(vec![call]);
 
-    execution.send().await.unwrap();
+    execution.send().await.unwrap()
+}
+
+pub async fn invoke_udc_contract(
+    account: &str,
+    class_hash: &str,
+    calldata_len: u8,
+    constructor_calldata: &[&str],
+    nonce: Option<FieldElement>
+) -> InvokeTransactionResult {
+    let provider = get_provider(URL).expect("Could not get the provider");
+    let account = get_account(
+        account,
+        &Utf8PathBuf::from(ACCOUNT_FILE_PATH),
+        &provider,
+        None,
+    )
+    .await
+    .expect("Could not get the account");
+    let salt = parse_number("0x029c81e6487b5f9278faa6f454cda3c8eca259f99877faab823b3704327cd695")
+        .expect("msg");
+    let unique: u8 = 1;
+
+    let mut calldata = vec![
+        parse_number(class_hash).expect("Could not parse the key"),
+        salt,
+        unique.into(),
+        calldata_len.into(),
+    ];
+
+    constructor_calldata.iter().for_each(|value| {
+        let value = parse_number(value).expect("Could not parse the calldata");
+        calldata.push(value)
+    });
+
+    let call = Call {
+        to: parse_number(UDC_ADDRESS).expect("Could not parse the contract address"),
+        selector: get_selector_from_name("deployContract")
+            .expect("Could not get selector from deployContract"),
+        calldata: calldata,
+    };
+    let n: u64 = 332323232324342;
+    let max_fee: FieldElement = n.into();
+    let executiona = account.execute(vec![call]);
+    let execution = apply_optional(executiona, Some(max_fee), Execution::max_fee);
+    let execution = apply_optional(execution, nonce, Execution::nonce);
+
+    let c = execution.send().await;
+    c.unwrap()
 }
 
 // devnet-rs accepts an amount as u128

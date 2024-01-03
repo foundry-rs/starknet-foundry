@@ -282,7 +282,7 @@ pub async fn wait_for_tx(
         match provider.get_transaction_status(tx_hash).await {
             Ok(status) => match status {
                 starknet::core::types::TransactionStatus::Received => {
-                    return Ok("Transaction has been received");
+                    println!("Transaction has been received. Waiting...");
                 }
                 starknet::core::types::TransactionStatus::Rejected => {
                     return Err(anyhow!("Transaction has been rejected"));
