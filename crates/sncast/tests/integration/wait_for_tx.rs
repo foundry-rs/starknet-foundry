@@ -1,5 +1,3 @@
-use std::{thread::sleep, time::Duration};
-
 use crate::helpers::{
     constants::{ACCOUNT, ACCOUNT_FILE_PATH},
     fixtures::{create_test_provider, from_env, invoke_udc_contract},
@@ -59,7 +57,7 @@ async fn test_wait_for_reverted_transaction() {
     let provider = create_test_provider();
     let class_hash = from_env("CAST_WITH_CONSTRUCTOR_CLASS_HASH").unwrap();
 
-    let transaction_hash = invoke_udc_contract(ACCOUNT, &class_hash, 2, &["43", "41", "0x1"], None)
+    let transaction_hash = invoke_udc_contract(ACCOUNT, &class_hash, 2, &["43", "41", "0x1"])
         .await
         .transaction_hash;
     wait_for_tx(&provider, transaction_hash, 3, 1)

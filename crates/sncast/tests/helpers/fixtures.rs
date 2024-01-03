@@ -133,7 +133,6 @@ pub async fn invoke_udc_contract(
     class_hash: &str,
     calldata_len: u8,
     constructor_calldata: &[&str],
-    nonce: Option<FieldElement>
 ) -> InvokeTransactionResult {
     let provider = get_provider(URL).expect("Could not get the provider");
     let account = get_account(
@@ -145,8 +144,10 @@ pub async fn invoke_udc_contract(
     .await
     .expect("Could not get the account");
     let salt = parse_number("0x029c81e6487b5f9278faa6f454cda3c8eca259f99877faab823b3704327cd695")
-        .expect("msg");
+        .expect("Could not parse salt");
     let unique: u8 = 1;
+    let max_fee: u64 = 332_323_232_324_342;
+    let max_fee: FieldElement = max_fee.into();
 
     let mut calldata = vec![
         parse_number(class_hash).expect("Could not parse the key"),
@@ -155,25 +156,22 @@ pub async fn invoke_udc_contract(
         calldata_len.into(),
     ];
 
-    constructor_calldata.iter().for_each(|value| {
+    for value in constructor_calldata {
         let value = parse_number(value).expect("Could not parse the calldata");
-        calldata.push(value)
-    });
+        calldata.push(value);
+    };
 
     let call = Call {
         to: parse_number(UDC_ADDRESS).expect("Could not parse the contract address"),
         selector: get_selector_from_name("deployContract")
             .expect("Could not get selector from deployContract"),
-        calldata: calldata,
+        calldata,
     };
-    let n: u64 = 332323232324342;
-    let max_fee: FieldElement = n.into();
-    let executiona = account.execute(vec![call]);
-    let execution = apply_optional(executiona, Some(max_fee), Execution::max_fee);
-    let execution = apply_optional(execution, nonce, Execution::nonce);
 
-    let c = execution.send().await;
-    c.unwrap()
+    let execution = account.execute(vec![call]);
+    let execution = apply_optional(execution, Some(max_fee), Execution::max_fee);
+
+    execution.send().await.unwrap()
 }
 
 // devnet-rs accepts an amount as u128

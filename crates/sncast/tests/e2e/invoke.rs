@@ -1,13 +1,13 @@
 use crate::helpers::constants::ACCOUNT;
 use crate::helpers::fixtures::{
-    create_test_provider, default_cli_args, from_env, get_transaction_hash, get_transaction_receipt,
+    default_cli_args, from_env, get_transaction_hash, get_transaction_receipt,
 };
 use crate::helpers::runner::runner;
-use camino::Utf8PathBuf;
+
 use indoc::indoc;
-use sncast::helpers::constants::UDC_ADDRESS;
-use sncast::{get_account, get_nonce};
-use starknet::accounts::Account;
+
+
+
 use starknet::core::types::TransactionReceipt::Invoke;
 
 #[tokio::test]
