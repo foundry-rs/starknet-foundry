@@ -2,7 +2,7 @@ use crate::state::{start_cheat, stop_cheat, CheatTarget};
 use crate::CheatnetState;
 use cairo_felt::Felt252;
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct TxInfoMock {
     pub version: Option<Felt252>,
     pub account_contract_address: Option<Felt252>,
@@ -21,43 +21,12 @@ pub struct TxInfoMock {
 
 impl CheatnetState {
     #[allow(clippy::too_many_arguments)]
-    pub fn start_spoof(
-        &mut self,
-        target: CheatTarget,
-        version: Option<Felt252>,
-        account_contract_address: Option<Felt252>,
-        max_fee: Option<Felt252>,
-        signature: Option<Vec<Felt252>>,
-        transaction_hash: Option<Felt252>,
-        chain_id: Option<Felt252>,
-        nonce: Option<Felt252>,
-        resource_bounds: Option<Vec<Felt252>>,
-        tip: Option<Felt252>,
-        paymaster_data: Option<Vec<Felt252>>,
-        nonce_data_availability_mode: Option<Felt252>,
-        fee_data_availability_mode: Option<Felt252>,
-        account_deployment_data: Option<Vec<Felt252>>,
-    ) {
-        let tx_info = TxInfoMock {
-            version,
-            account_contract_address,
-            max_fee,
-            signature,
-            transaction_hash,
-            chain_id,
-            nonce,
-            resource_bounds,
-            tip,
-            paymaster_data,
-            nonce_data_availability_mode,
-            fee_data_availability_mode,
-            account_deployment_data,
-        };
+    pub fn start_spoof(&mut self, target: CheatTarget, tx_info_mock: TxInfoMock) {
         start_cheat(
             &mut self.global_spoof,
             &mut self.spoofed_contracts,
             target,
-            tx_info,
+            tx_info_mock,
         );
     }
 
