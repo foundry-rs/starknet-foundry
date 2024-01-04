@@ -8,7 +8,7 @@ use test_utils::running_tests::run_test_case;
 fn store_load_simple() {
     let test = test_utils::test_case!(
         indoc!(
-            r###"
+            r#"
             use array::ArrayTrait;
             use result::ResultTrait;
             use starknet::ContractAddress;
@@ -44,7 +44,7 @@ fn store_load_simple() {
                 let loaded = load(deployed.contract_address, selector!("balance"), 1);
                 assert(*loaded.at(0) == 421, 'wrong balance stored');
             }
-        "###
+        "#
         ),
         Contract::from_code_path(
             "HelloStarknet".to_string(),
@@ -62,7 +62,7 @@ fn store_load_simple() {
 fn store_load_structure() {
     let test = test_utils::test_case!(
         indoc!(
-            r###"
+            r#"
             use traits::Into;
             use serde::Serde;
             use array::ArrayTrait;
@@ -122,7 +122,7 @@ fn store_load_structure() {
                 let loaded = load(deployed.contract_address, selector!("structure"), 2);
                 assert(loaded == stored_structure.into(), 'wrong structure stored');
             }
-        "###
+        "#
         ),
         Contract::from_code_path(
             "StorageTester".to_string(),
@@ -140,7 +140,7 @@ fn store_load_structure() {
 fn store_load_felt_to_structure() {
     let test = test_utils::test_case!(
         indoc!(
-            r###"
+            r#"
             use traits::Into;
             use array::ArrayTrait;
             use result::ResultTrait;
@@ -207,7 +207,7 @@ fn store_load_felt_to_structure() {
                 );
                 assert(loaded == stored_structure.into(), 'wrong structure stored');
             }
-        "###
+        "#
         ),
         Contract::from_code_path(
             "StorageTester".to_string(),
@@ -225,7 +225,7 @@ fn store_load_felt_to_structure() {
 fn store_load_structure_to_felt() {
     let test = test_utils::test_case!(
         indoc!(
-            r###"
+            r#"
             use traits::Into;
             use array::ArrayTrait;
             use result::ResultTrait;
@@ -290,7 +290,7 @@ fn store_load_structure_to_felt() {
                 );
                 assert(loaded == array![123].span(), 'wrong felt stored');
             }
-        "###
+        "#
         ),
         Contract::from_code_path(
             "StorageTester".to_string(),
@@ -308,7 +308,7 @@ fn store_load_structure_to_felt() {
 fn store_load_felt_to_felt() {
     let test = test_utils::test_case!(
         indoc!(
-            r###"
+            r#"
             use array::ArrayTrait;
             use result::ResultTrait;
             use starknet::ContractAddress;
@@ -351,7 +351,7 @@ fn store_load_felt_to_felt() {
                 );
                 assert(loaded == array![123].span(), 'wrong felt stored');
             }
-        "###
+        "#
         ),
         Contract::from_code_path(
             "StorageTester".to_string(),
