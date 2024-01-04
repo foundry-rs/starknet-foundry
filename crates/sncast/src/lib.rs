@@ -282,7 +282,7 @@ pub async fn wait_for_tx(
         match provider.get_transaction_status(tx_hash).await {
             Ok(status) => match status {
                 starknet::core::types::TransactionStatus::Received => {
-                    println!("Transaction has been received. Waiting...");
+                    println!("Transaction has been received");
                 }
                 starknet::core::types::TransactionStatus::Rejected => {
                     return Err(anyhow!("Transaction has been rejected"));
@@ -301,11 +301,13 @@ pub async fn wait_for_tx(
                 }
             },
             Err(StarknetError(TransactionHashNotFound)) => {
-                let remaining_time = i * u16::from(retry_interval);
-                println!("Waiting for transaction to be accepted ({i} retries / {remaining_time}s left until timeout)");
+                println!("Transaction has not be found");
             }
             Err(err) => return Err(err.into()),
         };
+
+        let remaining_time = i * u16::from(retry_interval);
+        println!("Waiting for transaction to be accepted ({i} retries / {remaining_time}s left until timeout)");
 
         sleep(Duration::from_secs(retry_interval.into()));
     }
