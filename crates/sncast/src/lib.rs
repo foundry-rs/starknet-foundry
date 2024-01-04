@@ -301,7 +301,7 @@ pub async fn wait_for_tx(
                 }
             },
             Err(StarknetError(TransactionHashNotFound)) => {
-                println!("Transaction has not be found");
+                println!("Transaction not received yet - transaction hash not found");
             }
             Err(err) => return Err(err.into()),
         };
