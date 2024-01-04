@@ -109,3 +109,22 @@ fn stop_mock_call(contract_address: ContractAddress, function_name: felt252) {
     let contract_address_felt: felt252 = contract_address.into();
     cheatcode::<'stop_mock_call'>(array![contract_address_felt, function_name].span());
 }
+
+
+fn store(target: ContractAddress, storage_address: felt252, serialized_value: Span<felt252>) {
+    let mut inputs = array![target.into(), storage_address];
+    inputs.append_span(serialized_value);
+
+    cheatcode::<'store'>(inputs.span());
+}
+
+fn load(target: ContractAddress, storage_address: felt252, size: felt252) -> Span<felt252> {
+    let inputs = array![target.into(), storage_address, size];
+    cheatcode::<'load'>(inputs.span())
+}
+
+fn map_entry_address(map_selector: felt252, keys: Array<felt252>) -> felt252 {
+    let mut inputs = array![map_selector];
+    inputs.append_span(keys.span());
+    *cheatcode::<'map_entry_address'>(inputs.span()).at(0)
+}

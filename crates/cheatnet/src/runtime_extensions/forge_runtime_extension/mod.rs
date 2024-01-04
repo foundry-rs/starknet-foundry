@@ -24,6 +24,9 @@ use cairo_lang_runner::short_string::as_cairo_short_string;
 use starknet_api::core::ContractAddress;
 
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::SpyTarget;
+use crate::runtime_extensions::forge_runtime_extension::cheatcodes::storage::{
+    calculate_variable_address, load, store,
+};
 use crate::runtime_extensions::forge_runtime_extension::file_operations::string_into_felt;
 use cairo_lang_starknet::contract::starknet_keccak;
 use runtime::{
@@ -496,6 +499,48 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                         Felt252::from_short_string("message_hash out of range").unwrap(),
                     ]))
                 }
+            }
+            "store" => {
+                let mut blockifier_state = BlockifierState::from(
+                    extended_runtime
+                        .extended_runtime
+                        .extended_runtime
+                        .extended_runtime
+                        .hint_handler
+                        .state,
+                );
+                let target = ContractAddress::from_(inputs[0].clone());
+                let storage_address = inputs[1].clone();
+                store(
+                    &mut blockifier_state,
+                    target,
+                    &storage_address,
+                    &inputs[2..inputs.len()],
+                )
+                .expect("Failed to store");
+                Ok(CheatcodeHandlingResult::Handled(vec![]))
+            }
+            "load" => {
+                let mut blockifier_state = BlockifierState::from(
+                    extended_runtime
+                        .extended_runtime
+                        .extended_runtime
+                        .extended_runtime
+                        .hint_handler
+                        .state,
+                );
+                let target = ContractAddress::from_(inputs[0].clone());
+                let storage_address = &inputs[1];
+                let size = &inputs[2];
+                let loaded_values = load(&mut blockifier_state, target, storage_address, size)
+                    .expect("Failed to load");
+                Ok(CheatcodeHandlingResult::Handled(loaded_values))
+            }
+            "map_entry_address" => {
+                let map_selector = &inputs[0];
+                let keys = &inputs[1..inputs.len()];
+                let map_entry_address = calculate_variable_address(map_selector, Some(keys));
+                Ok(CheatcodeHandlingResult::Handled(vec![map_entry_address]))
             }
             _ => Ok(CheatcodeHandlingResult::Forwarded),
         }?;
