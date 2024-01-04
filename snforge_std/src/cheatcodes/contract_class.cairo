@@ -1,7 +1,7 @@
 use starknet::{ContractAddress, ClassHash, testing::cheatcode};
-use array::ArrayTrait;
-use traits::Into;
-use clone::Clone;
+use core::array::ArrayTrait;
+use core::traits::Into;
+use core::clone::Clone;
 
 
 #[derive(Drop, Clone)]

@@ -1,4 +1,4 @@
-use serde::Serde;
+use core::serde::Serde;
 
 
 #[derive(Drop, Copy, Serde)]

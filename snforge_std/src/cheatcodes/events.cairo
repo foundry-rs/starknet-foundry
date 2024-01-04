@@ -1,9 +1,9 @@
-use array::ArrayTrait;
-use array::SpanTrait;
-use clone::Clone;
-use serde::Serde;
-use option::OptionTrait;
-use traits::Into;
+use core::array::ArrayTrait;
+use core::array::SpanTrait;
+use core::clone::Clone;
+use core::serde::Serde;
+use core::option::OptionTrait;
+use core::traits::Into;
 
 use starknet::testing::cheatcode;
 use starknet::ContractAddress;

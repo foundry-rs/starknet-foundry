@@ -1,11 +1,11 @@
-use core::clone::Clone;
 use starknet::{ContractAddress, testing::cheatcode, contract_address_const};
 use starknet::info::v2::ResourceBounds;
-use option::OptionTrait;
-use array::ArrayTrait;
-use array::SpanTrait;
+use core::clone::Clone;
+use core::option::OptionTrait;
+use core::array::ArrayTrait;
+use core::array::SpanTrait;
+use core::serde::Serde;
 use snforge_std::CheatTarget;
-use serde::Serde;
 
 #[derive(Copy, Drop, Serde)]
 struct TxInfoMock {

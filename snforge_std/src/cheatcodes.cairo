@@ -1,8 +1,8 @@
-use array::ArrayTrait;
-use array::SpanTrait;
-use traits::Into;
-use traits::TryInto;
-use serde::Serde;
+use core::array::ArrayTrait;
+use core::array::SpanTrait;
+use core::traits::Into;
+use core::traits::TryInto;
+use core::serde::Serde;
 
 use starknet::{
     testing::cheatcode, ClassHash, ContractAddress, ClassHashIntoFelt252,
@@ -80,7 +80,7 @@ fn stop_elect(target: CheatTarget) {
     cheatcode::<'stop_elect'>(inputs.span());
 }
 
-fn start_mock_call<T, impl TSerde: serde::Serde<T>, impl TDestruct: Destruct<T>>(
+fn start_mock_call<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: Destruct<T>>(
     contract_address: ContractAddress, function_name: felt252, ret_data: T
 ) {
     let contract_address_felt: felt252 = contract_address.into();

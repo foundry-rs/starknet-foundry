@@ -1,8 +1,8 @@
-use array::ArrayTrait;
-use array::SpanTrait;
-use clone::Clone;
-use option::OptionTrait;
-use serde::Serde;
+use core::array::ArrayTrait;
+use core::array::SpanTrait;
+use core::clone::Clone;
+use core::option::OptionTrait;
+use core::serde::Serde;
 
 use starknet::testing::cheatcode;
 

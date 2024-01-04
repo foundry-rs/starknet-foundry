@@ -1,5 +1,5 @@
 use starknet::testing::cheatcode;
-use ecdsa::check_ecdsa_signature;
+use core::ecdsa::check_ecdsa_signature;
 use super::interface::Signer;
 use super::interface::Verifier;
 
@@ -37,7 +37,7 @@ impl StarkCurveKeyPairSigner of Signer<StarkCurveKeyPair> {
         } else if *output[0] == 1 {
             Result::Err(*output[1])
         } else {
-            panic_with_felt252('Should not be reached')
+            core::panic_with_felt252('Should not be reached')
         }
     }
 }
