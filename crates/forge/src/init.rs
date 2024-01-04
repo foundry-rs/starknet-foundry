@@ -8,7 +8,9 @@ use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::Path;
 use std::str::from_utf8;
-use toml_edit::{ArrayOfTables, Document, Item, Table};
+use toml_edit::{value, ArrayOfTables, Document, Item, Table};
+
+const CAIRO_EDITION: &str = "2023_10";
 
 static TEMPLATE: Dir = include_dir!("starknet_forge_template");
 
@@ -55,6 +57,17 @@ fn add_target_to_toml(path: &Path) -> Result<()> {
     array_of_tables.push(casm);
     contract.insert("starknet-contract", Item::ArrayOfTables(array_of_tables));
     doc.insert("target", Item::Table(contract));
+
+    fs::write(path, doc.to_string())?;
+
+    Ok(())
+}
+
+fn set_cairo_edition(path: &Path, cairo_edition: &str) -> Result<()> {
+    let config_file = fs::read_to_string(path)?;
+    let mut doc = config_file.parse::<Document>().expect("invalid document");
+
+    doc["package"]["edition"] = value(cairo_edition);
 
     fs::write(path, doc.to_string())?;
 
@@ -123,6 +136,7 @@ pub fn run(project_name: &str) -> Result<()> {
         .context("Failed to add starknet")?;
 
     add_target_to_toml(&project_path.join("Scarb.toml"))?;
+    set_cairo_edition(&project_path.join("Scarb.toml"), CAIRO_EDITION)?;
     extend_gitignore(&project_path)?;
     overwrite_files_from_scarb_template("src", &project_path, project_name)?;
     overwrite_files_from_scarb_template("tests", &project_path, project_name)?;
