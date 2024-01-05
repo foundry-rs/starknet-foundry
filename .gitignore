@@ -10,4 +10,4 @@ Scarb.lock
 !sncast_std/Scarb.lock
 */node_modules
 .spr.yml
-.snfoundry-cache/
+.snfoundry_cache/
