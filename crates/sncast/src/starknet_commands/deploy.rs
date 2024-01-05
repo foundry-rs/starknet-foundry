@@ -10,7 +10,7 @@ use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
 
-use sncast::{extract_or_generate_salt, udc_uniqueness, get_nonce_for_tx};
+use sncast::{extract_or_generate_salt, get_nonce_for_tx, udc_uniqueness};
 use sncast::{handle_rpc_error, handle_wait_for_tx, WaitForTx};
 
 #[derive(Args)]
@@ -65,9 +65,8 @@ pub async fn deploy(
         execution
     };
 
-    let nonce = get_nonce_for_tx(account, "pending",  nonce).await?;
+    let nonce = get_nonce_for_tx(account, "pending", nonce).await?;
     let execution = execution.nonce(nonce);
-
 
     let result = execution.send().await;
 
