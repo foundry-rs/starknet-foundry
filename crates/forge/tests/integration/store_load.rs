@@ -9,11 +9,8 @@ fn store_load_simple() {
     let test = test_utils::test_case!(
         indoc!(
             r#"
-            use array::ArrayTrait;
-            use result::ResultTrait;
             use starknet::ContractAddress;
             use snforge_std::{ declare, ContractClassTrait, store, load };
-            
             
             #[starknet::interface]
             trait IHelloStarknet<TContractState> {
@@ -63,10 +60,6 @@ fn store_load_structure() {
     let test = test_utils::test_case!(
         indoc!(
             r#"
-            use traits::Into;
-            use serde::Serde;
-            use array::ArrayTrait;
-            use result::ResultTrait;
             use starknet::ContractAddress;
             use snforge_std::{ declare, ContractClassTrait, store, load };
             
@@ -141,9 +134,6 @@ fn store_load_felt_to_structure() {
     let test = test_utils::test_case!(
         indoc!(
             r#"
-            use traits::Into;
-            use array::ArrayTrait;
-            use result::ResultTrait;
             use starknet::ContractAddress;
             use snforge_std::{ declare, ContractClassTrait, store, load, map_entry_address };
             
@@ -226,9 +216,6 @@ fn store_load_structure_to_felt() {
     let test = test_utils::test_case!(
         indoc!(
             r#"
-            use traits::Into;
-            use array::ArrayTrait;
-            use result::ResultTrait;
             use starknet::ContractAddress;
             use snforge_std::{ declare, ContractClassTrait, store, load, map_entry_address };
             
@@ -309,8 +296,6 @@ fn store_load_felt_to_felt() {
     let test = test_utils::test_case!(
         indoc!(
             r#"
-            use array::ArrayTrait;
-            use result::ResultTrait;
             use starknet::ContractAddress;
             use snforge_std::{ declare, ContractClassTrait, store, load, map_entry_address };
 
@@ -369,13 +354,7 @@ static INTEGRATION_RPC_URL: &str = "http://188.34.188.184:9545/rpc/v0_6";
 fn fork_store_load() {
     let test = test_utils::test_case!(formatdoc!(
         r#"
-            use result::ResultTrait;
-            use array::ArrayTrait;
-            use option::OptionTrait;
-            use traits::TryInto;
-            use starknet::ContractAddress;
-            use starknet::Felt252TryIntoContractAddress;
-            use starknet::contract_address_const;
+            use starknet::{{ ContractAddress, contract_address_const }};
             use snforge_std::{{ BlockTag, BlockId, load, store }};
 
             #[starknet::interface]
