@@ -1,5 +1,5 @@
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
-    call_l1_handler, CallContractOutput,
+    call_l1_handler, CallOutput,
 };
 use crate::state::{BlockifierState, CheatnetState};
 use blockifier::abi::abi_utils::starknet_keccak;
@@ -14,7 +14,7 @@ impl BlockifierState<'_> {
         function_name: &Felt252,
         from_address: &Felt252,
         payload: &[Felt252],
-    ) -> CallContractOutput {
+    ) -> CallOutput {
         let selector = starknet_keccak(&function_name.to_bytes_be());
 
         let mut calldata = vec![from_address.clone()];

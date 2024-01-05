@@ -1,3 +1,4 @@
+use crate::common::call_contract;
 use crate::{
     assert_success,
     common::{
@@ -11,10 +12,7 @@ use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::{
     deploy::deploy, spoof::TxInfoMock,
 };
 use cheatnet::state::CheatTarget;
-use cheatnet::{
-    runtime_extensions::call_to_blockifier_runtime_extension::rpc::call_contract,
-    state::{BlockifierState, CheatnetState},
-};
+use cheatnet::state::{BlockifierState, CheatnetState};
 use conversions::{felt252::FromShortString, IntoConv};
 use num_traits::ToPrimitive;
 use runtime::utils::BufferReader;

@@ -566,7 +566,6 @@ fn trace_library_call_from_test() {
 }
 
 #[test]
-#[ignore]
 fn trace_failed_library_call_from_test() {
     let test = test_case!(
         indoc!(
@@ -714,7 +713,7 @@ fn trace_l1_handler() {
                         entry_point_selector: selector!("handle_l1_message"),
                         calldata: array![123, proxy_address.into()],
                         contract_address: checker_address,
-                        caller_address: test_address(),
+                        caller_address: 0.try_into().unwrap(),
                         call_type: CallType::Call,
                     },
                     CallEntryPoint {

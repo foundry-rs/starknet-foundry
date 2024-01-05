@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
-    CallContractFailure, CallContractResult, UsedResources,
+    CallFailure, CallResult, UsedResources,
 };
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::{
     deploy, deploy_at, DeployCallPayload,
@@ -401,13 +401,13 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     )
                     .result
                 {
-                    CallContractResult::Success { .. } => {
+                    CallResult::Success { .. } => {
                         Ok(CheatcodeHandlingResult::Handled(vec![Felt252::from(0)]))
                     }
-                    CallContractResult::Failure(CallContractFailure::Panic { panic_data }) => Ok(
+                    CallResult::Failure(CallFailure::Panic { panic_data }) => Ok(
                         CheatcodeHandlingResult::Handled(cheatcode_panic_result(panic_data)),
                     ),
-                    CallContractResult::Failure(CallContractFailure::Error { msg }) => Err(
+                    CallResult::Failure(CallFailure::Error { msg }) => Err(
                         EnhancedHintError::from(HintError::CustomHint(Box::from(msg))),
                     ),
                 }

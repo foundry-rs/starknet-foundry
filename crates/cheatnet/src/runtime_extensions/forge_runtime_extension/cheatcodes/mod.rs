@@ -1,4 +1,4 @@
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallContractFailure;
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallFailure;
 use cairo_felt::Felt252;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use runtime::EnhancedHintError;
@@ -30,11 +30,11 @@ impl From<EnhancedHintError> for CheatcodeError {
     }
 }
 
-impl From<CallContractFailure> for CheatcodeError {
-    fn from(value: CallContractFailure) -> Self {
+impl From<CallFailure> for CheatcodeError {
+    fn from(value: CallFailure) -> Self {
         match value {
-            CallContractFailure::Panic { panic_data } => CheatcodeError::Recoverable(panic_data),
-            CallContractFailure::Error { msg } => {
+            CallFailure::Panic { panic_data } => CheatcodeError::Recoverable(panic_data),
+            CallFailure::Error { msg } => {
                 CheatcodeError::Unrecoverable(HintError::CustomHint(Box::from(msg)).into())
             }
         }
