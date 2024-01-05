@@ -10,7 +10,7 @@ use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
 
-use sncast::{extract_or_generate_salt, udc_uniqueness};
+use sncast::{extract_or_generate_salt, udc_uniqueness, get_nonce_for_tx};
 use sncast::{handle_rpc_error, handle_wait_for_tx, WaitForTx};
 
 #[derive(Args)]
@@ -55,21 +55,19 @@ pub async fn deploy(
     let salt = extract_or_generate_salt(salt);
 
     let factory = ContractFactory::new(class_hash, account);
-    let deployment = factory.deploy(constructor_calldata.clone(), salt, unique);
+    let execution = factory.deploy(constructor_calldata.clone(), salt, unique);
 
     // TODO(#1396): use apply_optional here when `Deployment` in starknet-rs is public
     //  otherwise we cannot pass the necessary reference to a function
-    let execution_with_fee = if let Some(max_fee) = max_fee {
-        deployment.max_fee(max_fee)
+    let execution = if let Some(max_fee) = max_fee {
+        execution.max_fee(max_fee)
     } else {
-        deployment
+        execution
     };
 
-    let execution = if let Some(nonce) = nonce {
-        execution_with_fee.nonce(nonce)
-    } else {
-        execution_with_fee
-    };
+    let nonce = get_nonce_for_tx(account, "pending",  nonce).await?;
+    let execution = execution.nonce(nonce);
+
 
     let result = execution.send().await;
 

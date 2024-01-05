@@ -5,7 +5,7 @@ use rand::rngs::OsRng;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use starknet::core::types::{
+use starknet::{core::types::{
     BlockId,
     BlockTag::{Latest, Pending},
     FieldElement,
@@ -17,7 +17,7 @@ use starknet::core::types::{
         TransactionHashNotFound, UnsupportedContractClassVersion, UnsupportedTxVersion,
         ValidationFailure,
     },
-};
+}, accounts::{ConnectedAccount, Account}};
 use starknet::core::utils::UdcUniqueness::{NotUnique, Unique};
 use starknet::core::utils::{UdcUniqueSettings, UdcUniqueness};
 use starknet::{
@@ -159,6 +159,17 @@ pub async fn get_nonce(
         )
         .await
         .expect("Failed to get a nonce"))
+}
+pub async fn get_nonce_for_tx(
+    account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
+    block_id: &str,
+    flag_nonce: Option<FieldElement>,
+) -> Result<FieldElement> {
+    if let Some(nonce) = flag_nonce {
+        return Ok(nonce);
+    }
+
+    get_nonce(account.provider(), block_id, account.address()).await
 }
 
 pub async fn get_account<'a>(
@@ -326,7 +337,7 @@ async fn get_revert_reason(
                 Err(anyhow!("Transaction has been reverted = {reason}"))
             }
         },
-        Err(err) => return Err(err.into()),
+        Err(err) => Err(err.into()),
     }
 }
 

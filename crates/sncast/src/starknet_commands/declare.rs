@@ -2,6 +2,7 @@ use anyhow::{anyhow, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
 use scarb_api::{get_contracts_map, ScarbCommand};
+use sncast::get_nonce_for_tx;
 use sncast::helpers::scarb_utils::get_package_metadata;
 use sncast::helpers::scarb_utils::get_scarb_manifest;
 use sncast::response::structs::DeclareResponse;
@@ -82,9 +83,11 @@ pub async fn declare(
 
     let casm_class_hash = casm_contract_definition.class_hash()?;
 
+    let nonce = get_nonce_for_tx( account, "latest", nonce).await?;
+
     let declaration = account.declare(Arc::new(contract_definition.flatten()?), casm_class_hash);
     let declaration = apply_optional(declaration, max_fee, Declaration::max_fee);
-    let declaration = apply_optional(declaration, nonce, Declaration::nonce);
+    let declaration = apply_optional(declaration, Some(nonce), Declaration::nonce);
     let declared = declaration.send().await;
 
     match declared {
