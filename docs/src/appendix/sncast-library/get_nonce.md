@@ -11,7 +11,7 @@ use sncast_std::{get_nonce};
 use debug::PrintTrait;
 
 fn main() {
-    let nonce = get_once('latest');
+    let nonce = get_nonce('latest');
     nonce.print();
 }
 ```
