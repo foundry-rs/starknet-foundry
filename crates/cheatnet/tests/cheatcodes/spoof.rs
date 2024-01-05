@@ -7,261 +7,125 @@ use crate::{
     },
 };
 use cairo_felt::Felt252;
-use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::deploy;
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::{
+    deploy::deploy, spoof::TxInfoMock,
+};
 use cheatnet::state::CheatTarget;
 use cheatnet::{
     runtime_extensions::call_to_blockifier_runtime_extension::rpc::call_contract,
     state::{BlockifierState, CheatnetState},
 };
 use conversions::{felt252::FromShortString, IntoConv};
+use num_traits::ToPrimitive;
+use runtime::utils::BufferReader;
 use starknet_api::core::ContractAddress;
 
-#[allow(clippy::too_many_arguments)]
-fn assert_all_mock_checker_getters(
-    blockifier_state: &mut BlockifierState,
-    cheatnet_state: &mut CheatnetState,
-    contract_address: &ContractAddress,
-    expected_version: &[Felt252],
-    expected_account_address: &[Felt252],
-    expected_max_fee: &[Felt252],
-    expected_signature: &[Felt252],
-    expected_tx_hash: &[Felt252],
-    expected_chain_id: &[Felt252],
-    expected_nonce: &[Felt252],
-    expected_resource_bounds: &[Felt252],
-    expected_tip: &[Felt252],
-    expected_paymaster_data: &[Felt252],
-    expected_nonce_data_availability_mode: &[Felt252],
-    expected_fee_data_availability_mode: &[Felt252],
-    expected_account_deployment_data: &[Felt252],
-) {
-    let tx_hash = call_contract_getter_by_name(
-        blockifier_state,
-        cheatnet_state,
-        contract_address,
-        "get_tx_hash",
-    );
-    assert_success!(tx_hash, expected_tx_hash);
-    let nonce = call_contract_getter_by_name(
-        blockifier_state,
-        cheatnet_state,
-        contract_address,
-        "get_nonce",
-    );
-    assert_success!(nonce, expected_nonce);
-    let account_address = call_contract_getter_by_name(
-        blockifier_state,
-        cheatnet_state,
-        contract_address,
-        "get_account_contract_address",
-    );
-    assert_success!(account_address, expected_account_address);
-    let version = call_contract_getter_by_name(
-        blockifier_state,
-        cheatnet_state,
-        contract_address,
-        "get_version",
-    );
-    assert_success!(version, expected_version);
-    let chain_id = call_contract_getter_by_name(
-        blockifier_state,
-        cheatnet_state,
-        contract_address,
-        "get_chain_id",
-    );
-    assert_success!(chain_id, expected_chain_id);
-    let max_fee = call_contract_getter_by_name(
-        blockifier_state,
-        cheatnet_state,
-        contract_address,
-        "get_max_fee",
-    );
-    assert_success!(max_fee, expected_max_fee);
-    let signature = call_contract_getter_by_name(
-        blockifier_state,
-        cheatnet_state,
-        contract_address,
-        "get_signature",
-    );
-    assert_success!(signature, expected_signature);
-    let resource_bounds = call_contract_getter_by_name(
-        blockifier_state,
-        cheatnet_state,
-        contract_address,
-        "get_resource_bounds",
-    );
-    assert_success!(resource_bounds, expected_resource_bounds);
-    let tip = call_contract_getter_by_name(
-        blockifier_state,
-        cheatnet_state,
-        contract_address,
-        "get_tip",
-    );
-    assert_success!(tip, expected_tip);
-    let paymaster_data = call_contract_getter_by_name(
-        blockifier_state,
-        cheatnet_state,
-        contract_address,
-        "get_paymaster_data",
-    );
-    assert_success!(paymaster_data, expected_paymaster_data);
-    let nonce_data_availability_mode = call_contract_getter_by_name(
-        blockifier_state,
-        cheatnet_state,
-        contract_address,
-        "get_nonce_data_availability_mode",
-    );
-    assert_success!(
-        nonce_data_availability_mode,
-        expected_nonce_data_availability_mode
-    );
-    let fee_data_availability_mode = call_contract_getter_by_name(
-        blockifier_state,
-        cheatnet_state,
-        contract_address,
-        "get_fee_data_availability_mode",
-    );
-    assert_success!(
-        fee_data_availability_mode,
-        expected_fee_data_availability_mode
-    );
-    let account_deployment_data = call_contract_getter_by_name(
-        blockifier_state,
-        cheatnet_state,
-        contract_address,
-        "get_account_deployment_data",
-    );
-    assert_success!(account_deployment_data, expected_account_deployment_data);
+#[derive(Clone, Default, Debug, PartialEq)]
+pub struct TxInfo {
+    pub version: Felt252,
+    pub account_contract_address: Felt252,
+    pub max_fee: Felt252,
+    pub signature: Vec<Felt252>,
+    pub transaction_hash: Felt252,
+    pub chain_id: Felt252,
+    pub nonce: Felt252,
+    pub resource_bounds: Vec<Felt252>,
+    pub tip: Felt252,
+    pub paymaster_data: Vec<Felt252>,
+    pub nonce_data_availability_mode: Felt252,
+    pub fee_data_availability_mode: Felt252,
+    pub account_deployment_data: Vec<Felt252>,
 }
 
-#[allow(clippy::type_complexity)]
-#[allow(clippy::too_many_lines)]
-fn call_mock_checker_getters(
+impl TxInfo {
+    fn apply_mock_fields(tx_info_mock: &TxInfoMock, tx_info: &Self) -> Self {
+        macro_rules! clone_field {
+            ($field:ident) => {
+                tx_info_mock
+                    .$field
+                    .clone()
+                    .unwrap_or(tx_info.$field.clone())
+            };
+        }
+
+        Self {
+            version: clone_field!(version),
+            account_contract_address: clone_field!(account_contract_address),
+            max_fee: clone_field!(max_fee),
+            signature: clone_field!(signature),
+            transaction_hash: clone_field!(transaction_hash),
+            chain_id: clone_field!(chain_id),
+            nonce: clone_field!(nonce),
+            resource_bounds: clone_field!(resource_bounds),
+            tip: clone_field!(tip),
+            paymaster_data: clone_field!(paymaster_data),
+            nonce_data_availability_mode: clone_field!(nonce_data_availability_mode),
+            fee_data_availability_mode: clone_field!(fee_data_availability_mode),
+            account_deployment_data: clone_field!(account_deployment_data),
+        }
+    }
+
+    fn deserialize(data: &[Felt252]) -> Self {
+        let mut reader = BufferReader::new(data);
+
+        let version = reader.read_felt();
+        let account_contract_address = reader.read_felt();
+        let max_fee = reader.read_felt();
+        let signature = reader.read_vec();
+        let transaction_hash = reader.read_felt();
+        let chain_id = reader.read_felt();
+        let nonce = reader.read_felt();
+        let resource_bounds_len = reader.read_felt();
+        let resource_bounds = reader.read_vec_body(
+            3 * resource_bounds_len.to_usize().unwrap(), // ResourceBounds struct has 3 fields
+        );
+        let tip = reader.read_felt();
+        let paymaster_data = reader.read_vec();
+        let nonce_data_availability_mode = reader.read_felt();
+        let fee_data_availability_mode = reader.read_felt();
+        let account_deployment_data = reader.read_vec();
+
+        Self {
+            version,
+            account_contract_address,
+            max_fee,
+            signature,
+            transaction_hash,
+            chain_id,
+            nonce,
+            resource_bounds,
+            tip,
+            paymaster_data,
+            nonce_data_availability_mode,
+            fee_data_availability_mode,
+            account_deployment_data,
+        }
+    }
+}
+
+fn assert_tx_info(
     blockifier_state: &mut BlockifierState,
     cheatnet_state: &mut CheatnetState,
     contract_address: &ContractAddress,
-) -> (
-    Vec<Felt252>,
-    Vec<Felt252>,
-    Vec<Felt252>,
-    Vec<Felt252>,
-    Vec<Felt252>,
-    Vec<Felt252>,
-    Vec<Felt252>,
-    Vec<Felt252>,
-    Vec<Felt252>,
-    Vec<Felt252>,
-    Vec<Felt252>,
-    Vec<Felt252>,
-    Vec<Felt252>,
+    expected_tx_info: &TxInfo,
 ) {
-    let nonce = call_contract_getter_by_name(
-        blockifier_state,
-        cheatnet_state,
-        contract_address,
-        "get_nonce",
-    );
-    let nonce = recover_data(nonce);
-    let account_address = call_contract_getter_by_name(
-        blockifier_state,
-        cheatnet_state,
-        contract_address,
-        "get_account_contract_address",
-    );
-    let account_address = recover_data(account_address);
-    let version = call_contract_getter_by_name(
-        blockifier_state,
-        cheatnet_state,
-        contract_address,
-        "get_version",
-    );
-    let version = recover_data(version);
-    let chain_id = call_contract_getter_by_name(
-        blockifier_state,
-        cheatnet_state,
-        contract_address,
-        "get_chain_id",
-    );
-    let chain_id = recover_data(chain_id);
-    let max_fee = call_contract_getter_by_name(
-        blockifier_state,
-        cheatnet_state,
-        contract_address,
-        "get_max_fee",
-    );
-    let max_fee = recover_data(max_fee);
-    let signature = call_contract_getter_by_name(
-        blockifier_state,
-        cheatnet_state,
-        contract_address,
-        "get_signature",
-    );
-    let signature = recover_data(signature);
-    let tx_hash = call_contract_getter_by_name(
-        blockifier_state,
-        cheatnet_state,
-        contract_address,
-        "get_tx_hash",
-    );
-    let tx_hash = recover_data(tx_hash);
-    let resource_bounds = call_contract_getter_by_name(
-        blockifier_state,
-        cheatnet_state,
-        contract_address,
-        "get_resource_bounds",
-    );
-    let resource_bounds = recover_data(resource_bounds);
-    let tip = call_contract_getter_by_name(
-        blockifier_state,
-        cheatnet_state,
-        contract_address,
-        "get_tip",
-    );
-    let tip = recover_data(tip);
-    let paymaster_data = call_contract_getter_by_name(
-        blockifier_state,
-        cheatnet_state,
-        contract_address,
-        "get_paymaster_data",
-    );
-    let paymaster_data = recover_data(paymaster_data);
-    let nonce_data_availability_mode = call_contract_getter_by_name(
-        blockifier_state,
-        cheatnet_state,
-        contract_address,
-        "get_nonce_data_availability_mode",
-    );
-    let nonce_data_availability_mode = recover_data(nonce_data_availability_mode);
-    let fee_data_availability_mode = call_contract_getter_by_name(
-        blockifier_state,
-        cheatnet_state,
-        contract_address,
-        "get_fee_data_availability_mode",
-    );
-    let fee_data_availability_mode = recover_data(fee_data_availability_mode);
-    let account_deployment_data = call_contract_getter_by_name(
-        blockifier_state,
-        cheatnet_state,
-        contract_address,
-        "get_account_deployment_data",
-    );
-    let account_deployment_data = recover_data(account_deployment_data);
+    let tx_info = get_tx_info(blockifier_state, cheatnet_state, contract_address);
+    assert_eq!(tx_info, expected_tx_info.to_owned());
+}
 
-    (
-        nonce,
-        account_address,
-        version,
-        chain_id,
-        max_fee,
-        signature,
-        tx_hash,
-        resource_bounds,
-        tip,
-        paymaster_data,
-        nonce_data_availability_mode,
-        fee_data_availability_mode,
-        account_deployment_data,
-    )
+fn get_tx_info(
+    blockifier_state: &mut BlockifierState,
+    cheatnet_state: &mut CheatnetState,
+    contract_address: &ContractAddress,
+) -> TxInfo {
+    let get_tx_info_output = call_contract_getter_by_name(
+        blockifier_state,
+        cheatnet_state,
+        contract_address,
+        "get_tx_info",
+    );
+    let tx_info_data = recover_data(get_tx_info_output);
+    TxInfo::deserialize(&tx_info_data)
 }
 
 #[test]
@@ -276,65 +140,30 @@ fn spoof_simple() {
         vec![].as_slice(),
     );
 
-    let (
-        nonce_before,
-        account_address_before,
-        version_before,
-        chain_id_before,
-        max_fee_before,
-        signature_before,
-        _,
-        resource_bounds_before,
-        tip_before,
-        paymaster_data_before,
-        nonce_data_availability_mode_before,
-        fee_data_availability_mode_before,
-        account_deployment_data_before,
-    ) = call_mock_checker_getters(
+    let tx_info_before = get_tx_info(
         &mut blockifier_state,
         &mut cheatnet_state,
         &contract_address,
     );
 
-    cheatnet_state.start_spoof(
-        CheatTarget::One(contract_address),
-        None,
-        None,
-        None,
-        None,
-        Some(Felt252::from(123)),
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-    );
+    let tx_info_mock = TxInfoMock {
+        transaction_hash: Some(Felt252::from(123)),
+        ..Default::default()
+    };
 
-    assert_all_mock_checker_getters(
+    let expected_tx_info = TxInfo::apply_mock_fields(&tx_info_mock, &tx_info_before);
+
+    cheatnet_state.start_spoof(CheatTarget::One(contract_address), tx_info_mock);
+
+    assert_tx_info(
         &mut blockifier_state,
         &mut cheatnet_state,
         &contract_address,
-        &version_before,
-        &account_address_before,
-        &max_fee_before,
-        &signature_before,
-        &[Felt252::from(123)],
-        &chain_id_before,
-        &nonce_before,
-        &resource_bounds_before,
-        &tip_before,
-        &paymaster_data_before,
-        &nonce_data_availability_mode_before,
-        &fee_data_availability_mode_before,
-        &account_deployment_data_before,
+        &expected_tx_info,
     );
 }
 
 #[test]
-#[allow(clippy::too_many_lines)]
 fn start_spoof_multiple_times() {
     let mut cached_state = create_cached_state();
     let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
@@ -346,163 +175,96 @@ fn start_spoof_multiple_times() {
         vec![].as_slice(),
     );
 
-    let (
-        nonce_before,
-        account_address_before,
-        version_before,
-        chain_id_before,
-        max_fee_before,
-        signature_before,
-        tx_hash_before,
-        resource_bounds_before,
-        tip_before,
-        paymaster_data_before,
-        nonce_data_availability_mode_before,
-        fee_data_availability_mode_before,
-        account_deployment_data_before,
-    ) = call_mock_checker_getters(
+    let tx_info_before = get_tx_info(
         &mut blockifier_state,
         &mut cheatnet_state,
         &contract_address,
     );
 
-    let expected_version = Felt252::from(13);
-    let expected_account_address = Felt252::from(66);
-    let expected_max_fee = Felt252::from(77);
-    let expected_signature = vec![Felt252::from(88), Felt252::from(89)];
-    let expected_tx_hash = Felt252::from(123);
-    let expected_chain_id = Felt252::from(22);
-    let expected_nonce = Felt252::from(33);
-    let expected_resource_bounds = vec![
-        Felt252::from(111),
-        Felt252::from(222),
-        Felt252::from(333),
-        Felt252::from(444),
-        Felt252::from(555),
-        Felt252::from(666),
-    ];
-    let expected_tip = Felt252::from(777);
-    let expected_paymaster_data = vec![
-        Felt252::from(11),
-        Felt252::from(22),
-        Felt252::from(33),
-        Felt252::from(44),
-    ];
-    let expected_nonce_data_availability_mode = Felt252::from(55);
-    let expected_fee_data_availability_mode = Felt252::from(66);
-    let expected_account_deployment_data =
-        vec![Felt252::from(777), Felt252::from(888), Felt252::from(999)];
+    let initial_tx_info_mock = TxInfoMock {
+        version: Some(Felt252::from(13)),
+        account_contract_address: Some(Felt252::from(66)),
+        max_fee: Some(Felt252::from(77)),
+        signature: Some(vec![Felt252::from(88), Felt252::from(89)]),
+        transaction_hash: Some(Felt252::from(123)),
+        chain_id: Some(Felt252::from(22)),
+        nonce: Some(Felt252::from(33)),
+        resource_bounds: Some(vec![
+            Felt252::from(111),
+            Felt252::from(222),
+            Felt252::from(333),
+            Felt252::from(444),
+            Felt252::from(555),
+            Felt252::from(666),
+        ]),
+        tip: Some(Felt252::from(777)),
+        paymaster_data: Some(vec![
+            Felt252::from(11),
+            Felt252::from(22),
+            Felt252::from(33),
+            Felt252::from(44),
+        ]),
+        nonce_data_availability_mode: Some(Felt252::from(55)),
+        fee_data_availability_mode: Some(Felt252::from(66)),
+        account_deployment_data: Some(vec![
+            Felt252::from(777),
+            Felt252::from(888),
+            Felt252::from(999),
+        ]),
+    };
+    let expected_tx_info = TxInfo::apply_mock_fields(&initial_tx_info_mock, &tx_info_before);
 
     cheatnet_state.start_spoof(
         CheatTarget::One(contract_address),
-        Some(expected_version.clone()),
-        Some(expected_account_address.clone()),
-        Some(expected_max_fee.clone()),
-        Some(expected_signature.clone()),
-        Some(expected_tx_hash.clone()),
-        Some(expected_chain_id.clone()),
-        Some(expected_nonce.clone()),
-        Some(expected_resource_bounds.clone()),
-        Some(expected_tip.clone()),
-        Some(expected_paymaster_data.clone()),
-        Some(expected_nonce_data_availability_mode.clone()),
-        Some(expected_fee_data_availability_mode.clone()),
-        Some(expected_account_deployment_data.clone()),
+        initial_tx_info_mock.clone(),
     );
 
-    assert_all_mock_checker_getters(
+    assert_tx_info(
         &mut blockifier_state,
         &mut cheatnet_state,
         &contract_address,
-        &[expected_version.clone()],
-        &[expected_account_address.clone()],
-        &[expected_max_fee.clone()],
-        &[vec![Felt252::from(2)], expected_signature.clone()].concat(),
-        &[expected_tx_hash.clone()],
-        &[expected_chain_id.clone()],
-        &[expected_nonce.clone()],
-        &[vec![Felt252::from(2)], expected_resource_bounds.clone()].concat(),
-        &[expected_tip.clone()],
-        &[vec![Felt252::from(4)], expected_paymaster_data.clone()].concat(),
-        &[expected_nonce_data_availability_mode.clone()],
-        &[expected_fee_data_availability_mode.clone()],
-        &[
-            vec![Felt252::from(3)],
-            expected_account_deployment_data.clone(),
-        ]
-        .concat(),
+        &expected_tx_info,
     );
 
-    cheatnet_state.start_spoof(
-        CheatTarget::One(contract_address),
-        None,
-        Some(expected_account_address.clone()),
-        None,
-        Some(expected_signature.clone()),
-        None,
-        Some(expected_chain_id.clone()),
-        None,
-        Some(expected_resource_bounds.clone()),
-        None,
-        Some(expected_paymaster_data.clone()),
-        None,
-        Some(expected_fee_data_availability_mode.clone()),
-        None,
-    );
+    let tx_info_mock = TxInfoMock {
+        version: None,
+        max_fee: None,
+        transaction_hash: None,
+        nonce: None,
+        tip: None,
+        nonce_data_availability_mode: None,
+        account_deployment_data: None,
+        ..initial_tx_info_mock
+    };
+    let expected_tx_info = TxInfo::apply_mock_fields(&tx_info_mock, &tx_info_before);
 
-    assert_all_mock_checker_getters(
+    cheatnet_state.start_spoof(CheatTarget::One(contract_address), tx_info_mock);
+
+    assert_tx_info(
         &mut blockifier_state,
         &mut cheatnet_state,
         &contract_address,
-        &version_before,
-        &[expected_account_address],
-        &max_fee_before,
-        &[vec![Felt252::from(2)], expected_signature].concat(),
-        &tx_hash_before,
-        &[expected_chain_id],
-        &nonce_before,
-        &[vec![Felt252::from(2)], expected_resource_bounds].concat(),
-        &tip_before,
-        &[vec![Felt252::from(4)], expected_paymaster_data].concat(),
-        &nonce_data_availability_mode_before,
-        &[expected_fee_data_availability_mode],
-        &account_deployment_data_before,
+        &expected_tx_info,
     );
 
-    cheatnet_state.start_spoof(
-        CheatTarget::One(contract_address),
-        Some(expected_version.clone()),
-        None,
-        Some(expected_max_fee.clone()),
-        None,
-        Some(expected_tx_hash.clone()),
-        None,
-        Some(expected_nonce.clone()),
-        None,
-        Some(expected_tip.clone()),
-        None,
-        Some(expected_nonce_data_availability_mode.clone()),
-        None,
-        Some(expected_account_deployment_data.clone()),
-    );
+    let tx_info_mock = TxInfoMock {
+        account_contract_address: None,
+        signature: None,
+        chain_id: None,
+        resource_bounds: None,
+        paymaster_data: None,
+        fee_data_availability_mode: None,
+        ..initial_tx_info_mock
+    };
+    let expected_tx_info = TxInfo::apply_mock_fields(&tx_info_mock, &tx_info_before);
 
-    assert_all_mock_checker_getters(
+    cheatnet_state.start_spoof(CheatTarget::One(contract_address), tx_info_mock);
+
+    assert_tx_info(
         &mut blockifier_state,
         &mut cheatnet_state,
         &contract_address,
-        &[expected_version],
-        &account_address_before,
-        &[expected_max_fee],
-        &signature_before,
-        &[expected_tx_hash],
-        &chain_id_before,
-        &[expected_nonce],
-        &resource_bounds_before,
-        &[expected_tip],
-        &paymaster_data_before,
-        &[expected_nonce_data_availability_mode],
-        &fee_data_availability_mode_before,
-        &[vec![Felt252::from(3)], expected_account_deployment_data].concat(),
+        &expected_tx_info,
     );
 }
 
@@ -518,81 +280,35 @@ fn spoof_start_stop() {
         vec![].as_slice(),
     );
 
-    let (
-        nonce_before,
-        account_address_before,
-        version_before,
-        chain_id_before,
-        max_fee_before,
-        signature_before,
-        tx_hash_before,
-        resource_bounds_before,
-        tip_before,
-        paymaster_data_before,
-        nonce_data_availability_mode_before,
-        fee_data_availability_mode_before,
-        account_deployment_data_before,
-    ) = call_mock_checker_getters(
+    let tx_info_before = get_tx_info(
         &mut blockifier_state,
         &mut cheatnet_state,
         &contract_address,
     );
 
-    cheatnet_state.start_spoof(
-        CheatTarget::One(contract_address),
-        None,
-        None,
-        None,
-        None,
-        Some(Felt252::from(123)),
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-    );
+    let tx_info_mock = TxInfoMock {
+        transaction_hash: Some(Felt252::from(123)),
+        ..Default::default()
+    };
 
-    assert_all_mock_checker_getters(
+    let expected_tx_info = TxInfo::apply_mock_fields(&tx_info_mock, &tx_info_before);
+
+    cheatnet_state.start_spoof(CheatTarget::One(contract_address), tx_info_mock);
+
+    assert_tx_info(
         &mut blockifier_state,
         &mut cheatnet_state,
         &contract_address,
-        &version_before,
-        &account_address_before,
-        &max_fee_before,
-        &signature_before,
-        &[Felt252::from(123)],
-        &chain_id_before,
-        &nonce_before,
-        &resource_bounds_before,
-        &tip_before,
-        &paymaster_data_before,
-        &nonce_data_availability_mode_before,
-        &fee_data_availability_mode_before,
-        &account_deployment_data_before,
+        &expected_tx_info,
     );
 
     cheatnet_state.stop_spoof(CheatTarget::One(contract_address));
 
-    assert_all_mock_checker_getters(
+    assert_tx_info(
         &mut blockifier_state,
         &mut cheatnet_state,
         &contract_address,
-        &version_before,
-        &account_address_before,
-        &max_fee_before,
-        &signature_before,
-        &tx_hash_before,
-        &chain_id_before,
-        &nonce_before,
-        &resource_bounds_before,
-        &tip_before,
-        &paymaster_data_before,
-        &nonce_data_availability_mode_before,
-        &fee_data_availability_mode_before,
-        &account_deployment_data_before,
+        &tx_info_before,
     );
 }
 
@@ -608,21 +324,7 @@ fn spoof_stop_no_effect() {
         vec![].as_slice(),
     );
 
-    let (
-        nonce_before,
-        account_address_before,
-        version_before,
-        chain_id_before,
-        max_fee_before,
-        signature_before,
-        tx_hash_before,
-        resource_bounds_before,
-        tip_before,
-        paymaster_data_before,
-        nonce_data_availability_mode_before,
-        fee_data_availability_mode_before,
-        account_deployment_data_before,
-    ) = call_mock_checker_getters(
+    let tx_info_before = get_tx_info(
         &mut blockifier_state,
         &mut cheatnet_state,
         &contract_address,
@@ -630,23 +332,11 @@ fn spoof_stop_no_effect() {
 
     cheatnet_state.stop_spoof(CheatTarget::One(contract_address));
 
-    assert_all_mock_checker_getters(
+    assert_tx_info(
         &mut blockifier_state,
         &mut cheatnet_state,
         &contract_address,
-        &version_before,
-        &account_address_before,
-        &max_fee_before,
-        &signature_before,
-        &tx_hash_before,
-        &chain_id_before,
-        &nonce_before,
-        &resource_bounds_before,
-        &tip_before,
-        &paymaster_data_before,
-        &nonce_data_availability_mode_before,
-        &fee_data_availability_mode_before,
-        &account_deployment_data_before,
+        &tx_info_before,
     );
 }
 
@@ -662,22 +352,12 @@ fn spoof_with_other_syscall() {
         vec![].as_slice(),
     );
 
-    cheatnet_state.start_spoof(
-        CheatTarget::One(contract_address),
-        None,
-        None,
-        None,
-        None,
-        Some(Felt252::from(123)),
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-    );
+    let tx_info_mock = TxInfoMock {
+        transaction_hash: Some(Felt252::from(123)),
+        ..Default::default()
+    };
+
+    cheatnet_state.start_spoof(CheatTarget::One(contract_address), tx_info_mock);
 
     let selector = felt_selector_from_name("get_tx_hash_and_emit_event");
 
@@ -706,22 +386,12 @@ fn spoof_in_constructor() {
         .unwrap();
     let precalculated_address = cheatnet_state.precalculate_address(&class_hash, vec![].as_slice());
 
-    cheatnet_state.start_spoof(
-        CheatTarget::One(precalculated_address),
-        None,
-        None,
-        None,
-        None,
-        Some(Felt252::from(123)),
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-    );
+    let tx_info_mock = TxInfoMock {
+        transaction_hash: Some(Felt252::from(123)),
+        ..Default::default()
+    };
+
+    cheatnet_state.start_spoof(CheatTarget::One(precalculated_address), tx_info_mock);
 
     let contract_address = deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[])
         .unwrap()
@@ -755,24 +425,14 @@ fn spoof_proxy() {
         vec![].as_slice(),
     );
 
-    cheatnet_state.start_spoof(
-        CheatTarget::One(contract_address),
-        None,
-        None,
-        None,
-        None,
-        Some(Felt252::from(123)),
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-    );
+    let tx_info_mock = TxInfoMock {
+        transaction_hash: Some(Felt252::from(123)),
+        ..Default::default()
+    };
 
-    let selector = felt_selector_from_name("get_tx_hash");
+    cheatnet_state.start_spoof(CheatTarget::One(contract_address), tx_info_mock);
+
+    let selector = felt_selector_from_name("get_transaction_hash");
 
     let output = call_contract(
         &mut blockifier_state,
@@ -822,22 +482,12 @@ fn spoof_library_call() {
         vec![].as_slice(),
     );
 
-    cheatnet_state.start_spoof(
-        CheatTarget::One(lib_call_address),
-        None,
-        None,
-        None,
-        None,
-        Some(Felt252::from(123)),
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-    );
+    let tx_info_mock = TxInfoMock {
+        transaction_hash: Some(Felt252::from(123)),
+        ..Default::default()
+    };
+
+    cheatnet_state.start_spoof(CheatTarget::One(lib_call_address), tx_info_mock);
 
     let lib_call_selector = felt_selector_from_name("get_tx_hash_with_lib_call");
     let output = call_contract(
@@ -864,60 +514,26 @@ fn spoof_all_simple() {
         &[],
     );
 
-    let (
-        nonce_before,
-        account_address_before,
-        version_before,
-        chain_id_before,
-        max_fee_before,
-        signature_before,
-        _,
-        resource_bounds_before,
-        tip_before,
-        paymaster_data_before,
-        nonce_data_availability_mode_before,
-        fee_data_availability_mode_before,
-        account_deployment_data_before,
-    ) = call_mock_checker_getters(
+    let tx_info_before = get_tx_info(
         &mut blockifier_state,
         &mut cheatnet_state,
         &contract_address,
     );
 
-    cheatnet_state.start_spoof(
-        CheatTarget::All,
-        None,
-        None,
-        None,
-        None,
-        Some(Felt252::from(123)),
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-    );
+    let tx_info_mock = TxInfoMock {
+        transaction_hash: Some(Felt252::from(123)),
+        ..Default::default()
+    };
 
-    assert_all_mock_checker_getters(
+    let expected_tx_info = TxInfo::apply_mock_fields(&tx_info_mock, &tx_info_before);
+
+    cheatnet_state.start_spoof(CheatTarget::All, tx_info_mock);
+
+    assert_tx_info(
         &mut blockifier_state,
         &mut cheatnet_state,
         &contract_address,
-        &version_before,
-        &account_address_before,
-        &max_fee_before,
-        &signature_before,
-        &[Felt252::from(123)],
-        &chain_id_before,
-        &nonce_before,
-        &resource_bounds_before,
-        &tip_before,
-        &paymaster_data_before,
-        &nonce_data_availability_mode_before,
-        &fee_data_availability_mode_before,
-        &account_deployment_data_before,
+        &expected_tx_info,
     );
 }
 
@@ -933,77 +549,29 @@ fn spoof_all_then_one() {
         &[],
     );
 
-    let (
-        nonce_before,
-        account_address_before,
-        version_before,
-        chain_id_before,
-        max_fee_before,
-        signature_before,
-        _,
-        resource_bounds_before,
-        tip_before,
-        paymaster_data_before,
-        nonce_data_availability_mode_before,
-        fee_data_availability_mode_before,
-        account_deployment_data_before,
-    ) = call_mock_checker_getters(
+    let tx_info_before = get_tx_info(
         &mut blockifier_state,
         &mut cheatnet_state,
         &contract_address,
     );
 
-    cheatnet_state.start_spoof(
-        CheatTarget::All,
-        None,
-        None,
-        None,
-        None,
-        Some(Felt252::from(123)),
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-    );
+    let mut tx_info_mock = TxInfoMock {
+        transaction_hash: Some(Felt252::from(123)),
+        ..Default::default()
+    };
 
-    cheatnet_state.start_spoof(
-        CheatTarget::One(contract_address),
-        None,
-        None,
-        None,
-        None,
-        Some(Felt252::from(321)),
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-    );
+    cheatnet_state.start_spoof(CheatTarget::All, tx_info_mock.clone());
 
-    assert_all_mock_checker_getters(
+    tx_info_mock.transaction_hash = Some(Felt252::from(321));
+    let expected_tx_info = TxInfo::apply_mock_fields(&tx_info_mock, &tx_info_before);
+
+    cheatnet_state.start_spoof(CheatTarget::One(contract_address), tx_info_mock);
+
+    assert_tx_info(
         &mut blockifier_state,
         &mut cheatnet_state,
         &contract_address,
-        &version_before,
-        &account_address_before,
-        &max_fee_before,
-        &signature_before,
-        &[Felt252::from(321)],
-        &chain_id_before,
-        &nonce_before,
-        &resource_bounds_before,
-        &tip_before,
-        &paymaster_data_before,
-        &nonce_data_availability_mode_before,
-        &fee_data_availability_mode_before,
-        &account_deployment_data_before,
+        &expected_tx_info,
     );
 }
 
@@ -1019,77 +587,29 @@ fn spoof_one_then_all() {
         &[],
     );
 
-    let (
-        nonce_before,
-        account_address_before,
-        version_before,
-        chain_id_before,
-        max_fee_before,
-        signature_before,
-        _,
-        resource_bounds_before,
-        tip_before,
-        paymaster_data_before,
-        nonce_data_availability_mode_before,
-        fee_data_availability_mode_before,
-        account_deployment_data_before,
-    ) = call_mock_checker_getters(
+    let tx_info_before = get_tx_info(
         &mut blockifier_state,
         &mut cheatnet_state,
         &contract_address,
     );
 
-    cheatnet_state.start_spoof(
-        CheatTarget::One(contract_address),
-        None,
-        None,
-        None,
-        None,
-        Some(Felt252::from(123)),
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-    );
+    let mut tx_info_mock = TxInfoMock {
+        transaction_hash: Some(Felt252::from(123)),
+        ..Default::default()
+    };
 
-    cheatnet_state.start_spoof(
-        CheatTarget::All,
-        None,
-        None,
-        None,
-        None,
-        Some(Felt252::from(321)),
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-    );
+    cheatnet_state.start_spoof(CheatTarget::One(contract_address), tx_info_mock.clone());
 
-    assert_all_mock_checker_getters(
+    tx_info_mock.transaction_hash = Some(Felt252::from(321));
+    let expected_tx_info = TxInfo::apply_mock_fields(&tx_info_mock, &tx_info_before);
+
+    cheatnet_state.start_spoof(CheatTarget::All, tx_info_mock);
+
+    assert_tx_info(
         &mut blockifier_state,
         &mut cheatnet_state,
         &contract_address,
-        &version_before,
-        &account_address_before,
-        &max_fee_before,
-        &signature_before,
-        &[Felt252::from(321)],
-        &chain_id_before,
-        &nonce_before,
-        &resource_bounds_before,
-        &tip_before,
-        &paymaster_data_before,
-        &nonce_data_availability_mode_before,
-        &fee_data_availability_mode_before,
-        &account_deployment_data_before,
+        &expected_tx_info,
     );
 }
 
@@ -1105,66 +625,29 @@ fn spoof_all_stop() {
         &[],
     );
 
-    let (
-        nonce_before,
-        account_address_before,
-        version_before,
-        chain_id_before,
-        max_fee_before,
-        signature_before,
-        txn_hash_before,
-        resource_bounds_before,
-        tip_before,
-        paymaster_data_before,
-        nonce_data_availability_mode_before,
-        fee_data_availability_mode_before,
-        account_deployment_data_before,
-    ) = call_mock_checker_getters(
+    let tx_info_before = get_tx_info(
         &mut blockifier_state,
         &mut cheatnet_state,
         &contract_address,
     );
 
-    cheatnet_state.start_spoof(
-        CheatTarget::All,
-        None,
-        None,
-        None,
-        None,
-        Some(Felt252::from(123)),
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-    );
+    let tx_info_mock = TxInfoMock {
+        transaction_hash: Some(Felt252::from(123)),
+        ..Default::default()
+    };
+
+    cheatnet_state.start_spoof(CheatTarget::All, tx_info_mock);
 
     cheatnet_state.stop_spoof(CheatTarget::All);
 
-    assert_all_mock_checker_getters(
+    assert_tx_info(
         &mut blockifier_state,
         &mut cheatnet_state,
         &contract_address,
-        &version_before,
-        &account_address_before,
-        &max_fee_before,
-        &signature_before,
-        &txn_hash_before,
-        &chain_id_before,
-        &nonce_before,
-        &resource_bounds_before,
-        &tip_before,
-        &paymaster_data_before,
-        &nonce_data_availability_mode_before,
-        &fee_data_availability_mode_before,
-        &account_deployment_data_before,
+        &tx_info_before,
     );
 }
 
-#[allow(clippy::too_many_lines)]
 #[test]
 fn spoof_multiple() {
     let mut cached_state = create_cached_state();
@@ -1181,133 +664,55 @@ fn spoof_multiple() {
     let contract_address_2 = deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[])
         .unwrap()
         .contract_address;
-    let (
-        nonce_before_1,
-        account_address_before_1,
-        version_before_1,
-        chain_id_before_1,
-        max_fee_before_1,
-        signature_before_1,
-        txn_hash_before_1,
-        resource_bounds_before_1,
-        tip_before_1,
-        paymaster_data_before_1,
-        nonce_data_availability_mode_before_1,
-        fee_data_availability_mode_before_1,
-        account_deployment_data_before_1,
-    ) = call_mock_checker_getters(
+
+    let tx_info_before_1 = get_tx_info(
         &mut blockifier_state,
         &mut cheatnet_state,
         &contract_address_1,
     );
-    let (
-        nonce_before_2,
-        account_address_before_2,
-        version_before_2,
-        chain_id_before_2,
-        max_fee_before_2,
-        signature_before_2,
-        txn_hash_before_2,
-        resource_bounds_before_2,
-        tip_before_2,
-        paymaster_data_before_2,
-        nonce_data_availability_mode_before_2,
-        fee_data_availability_mode_before_2,
-        account_deployment_data_before_2,
-    ) = call_mock_checker_getters(
+    let tx_info_before_2 = get_tx_info(
         &mut blockifier_state,
         &mut cheatnet_state,
         &contract_address_2,
     );
+
+    let tx_info_mock = TxInfoMock {
+        transaction_hash: Some(Felt252::from(123)),
+        ..Default::default()
+    };
+    let expected_tx_info_1 = TxInfo::apply_mock_fields(&tx_info_mock, &tx_info_before_1);
+    let expected_tx_info_2 = TxInfo::apply_mock_fields(&tx_info_mock, &tx_info_before_2);
 
     cheatnet_state.start_spoof(
         CheatTarget::Multiple(vec![contract_address_1, contract_address_2]),
-        None,
-        None,
-        None,
-        None,
-        Some(Felt252::from(123)),
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
+        tx_info_mock,
     );
-    assert_all_mock_checker_getters(
+
+    assert_tx_info(
         &mut blockifier_state,
         &mut cheatnet_state,
         &contract_address_1,
-        &version_before_1,
-        &account_address_before_1,
-        &max_fee_before_1,
-        &signature_before_1,
-        &[Felt252::from(123)],
-        &chain_id_before_1,
-        &nonce_before_1,
-        &resource_bounds_before_1,
-        &tip_before_1,
-        &paymaster_data_before_1,
-        &nonce_data_availability_mode_before_1,
-        &fee_data_availability_mode_before_1,
-        &account_deployment_data_before_1,
+        &expected_tx_info_1,
     );
-    assert_all_mock_checker_getters(
+    assert_tx_info(
         &mut blockifier_state,
         &mut cheatnet_state,
         &contract_address_2,
-        &version_before_2,
-        &account_address_before_2,
-        &max_fee_before_2,
-        &signature_before_2,
-        &[Felt252::from(123)],
-        &chain_id_before_2,
-        &nonce_before_2,
-        &resource_bounds_before_2,
-        &tip_before_2,
-        &paymaster_data_before_2,
-        &nonce_data_availability_mode_before_2,
-        &fee_data_availability_mode_before_2,
-        &account_deployment_data_before_2,
+        &expected_tx_info_2,
     );
+
     cheatnet_state.stop_spoof(CheatTarget::All);
 
-    assert_all_mock_checker_getters(
+    assert_tx_info(
         &mut blockifier_state,
         &mut cheatnet_state,
         &contract_address_1,
-        &version_before_1,
-        &account_address_before_1,
-        &max_fee_before_1,
-        &signature_before_1,
-        &txn_hash_before_1,
-        &chain_id_before_1,
-        &nonce_before_1,
-        &resource_bounds_before_1,
-        &tip_before_1,
-        &paymaster_data_before_1,
-        &nonce_data_availability_mode_before_1,
-        &fee_data_availability_mode_before_1,
-        &account_deployment_data_before_1,
+        &tx_info_before_1,
     );
-    assert_all_mock_checker_getters(
+    assert_tx_info(
         &mut blockifier_state,
         &mut cheatnet_state,
         &contract_address_2,
-        &version_before_2,
-        &account_address_before_2,
-        &max_fee_before_2,
-        &signature_before_2,
-        &txn_hash_before_2,
-        &chain_id_before_2,
-        &nonce_before_2,
-        &resource_bounds_before_2,
-        &tip_before_2,
-        &paymaster_data_before_2,
-        &nonce_data_availability_mode_before_2,
-        &fee_data_availability_mode_before_2,
-        &account_deployment_data_before_2,
+        &tx_info_before_2,
     );
 }

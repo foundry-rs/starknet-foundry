@@ -222,27 +222,28 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let fee_data_availability_mode = reader.read_option_felt();
                 let account_deployment_data = reader.read_option_vec();
 
+                let tx_info_mock = cheatcodes::spoof::TxInfoMock {
+                    version,
+                    account_contract_address,
+                    max_fee,
+                    signature,
+                    transaction_hash,
+                    chain_id,
+                    nonce,
+                    resource_bounds,
+                    tip,
+                    paymaster_data,
+                    nonce_data_availability_mode,
+                    fee_data_availability_mode,
+                    account_deployment_data,
+                };
+
                 extended_runtime
                     .extended_runtime
                     .extended_runtime
                     .extension
                     .cheatnet_state
-                    .start_spoof(
-                        target,
-                        version,
-                        account_contract_address,
-                        max_fee,
-                        signature,
-                        transaction_hash,
-                        chain_id,
-                        nonce,
-                        resource_bounds,
-                        tip,
-                        paymaster_data,
-                        nonce_data_availability_mode,
-                        fee_data_availability_mode,
-                        account_deployment_data,
-                    );
+                    .start_spoof(target, tx_info_mock);
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
             "stop_spoof" => {
@@ -542,7 +543,8 @@ fn handle_deploy_result(
     }
 }
 
-fn cheatcode_panic_result(panic_data: Vec<Felt252>) -> Vec<Felt252> {
+#[must_use]
+pub fn cheatcode_panic_result(panic_data: Vec<Felt252>) -> Vec<Felt252> {
     let mut result = vec![Felt252::from(1), Felt252::from(panic_data.len())];
     result.extend(panic_data);
     result

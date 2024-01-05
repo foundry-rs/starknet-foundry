@@ -8,5 +8,11 @@ rm CHANGELOG.md.bak 2> /dev/null
 sed -i.bak "/\[workspace.package\]/,/version =/ s/version = \".*/version = \"${VERSION}\"/" Cargo.toml
 rm Cargo.toml.bak 2> /dev/null
 
+sed -i.bak "/\[package\]/,/version =/ s/version = \".*/version = \"${VERSION}\"/" sncast_std/Scarb.toml
+rm sncast_std/Scarb.toml.bak 2> /dev/null
+
+sed -i.bak "/\[package\]/,/version =/ s/version = \".*/version = \"${VERSION}\"/" snforge_std/Scarb.toml
+rm snforge_std/Scarb.toml.bak 2> /dev/null
+
 cargo update -p forge
 cargo update -p sncast
