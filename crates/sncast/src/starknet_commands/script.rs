@@ -53,14 +53,14 @@ pub struct Script {
     pub script_module_name: String,
 }
 
-pub struct CastExtension<'a> {
+pub struct CastScriptExtension<'a> {
     pub hints: &'a HashMap<String, Hint>,
     pub provider: &'a JsonRpcClient<HttpTransport>,
     pub tokio_runtime: Runtime,
     pub config: &'a CastConfig,
 }
 
-impl<'a> ExtensionLogic for CastExtension<'a> {
+impl<'a> ExtensionLogic for CastScriptExtension<'a> {
     type Runtime = StarknetRuntime<'a>;
 
     #[allow(clippy::too_many_lines)]
@@ -317,7 +317,7 @@ pub fn run(
         ReadOnlySegments::default(),
     );
 
-    let cast_extension = CastExtension {
+    let cast_extension = CastScriptExtension {
         hints: &string_to_hint,
         provider,
         tokio_runtime,
