@@ -293,7 +293,7 @@ pub async fn wait_for_tx(
                         }
 
                         starknet::core::types::TransactionExecutionStatus::Reverted => {
-                            return Err(anyhow!("Transaction has been reverted"))
+                            return get_revert_reason(provider, tx_hash).await
                         }
                     }
                 }
@@ -311,6 +311,16 @@ pub async fn wait_for_tx(
     Err(anyhow!(
         "Failed to get transaction with hash = {tx_hash:#x}; Transaction rejected, not received or sncast timed out"
     ))
+}
+
+async fn get_revert_reason(provider: &JsonRpcClient<HttpTransport>,tx_hash: FieldElement) -> Result<&str> {
+    match provider.get_transaction_receipt(tx_hash).await {
+        Ok(receipt) => match receipt.execution_result() {
+            starknet::core::types::ExecutionResult::Succeeded => { unreachable!() }
+            starknet::core::types::ExecutionResult::Reverted { reason } => Err(anyhow!("Transaction has been reverted = {reason}")),
+        }
+        Err(err) => return Err(err.into()),
+    }
 }
 
 pub fn handle_rpc_error<T>(error: ProviderError) -> std::result::Result<T, Error> {
