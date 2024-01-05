@@ -3,9 +3,7 @@ use crate::helpers::fixtures::{
     default_cli_args, from_env, get_transaction_hash, get_transaction_receipt,
 };
 use crate::helpers::runner::runner;
-
 use indoc::indoc;
-
 use starknet::core::types::TransactionReceipt::Invoke;
 
 #[tokio::test]
