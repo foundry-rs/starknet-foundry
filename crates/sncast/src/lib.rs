@@ -281,9 +281,7 @@ pub async fn wait_for_tx(
     for i in (1..retries).rev() {
         match provider.get_transaction_status(tx_hash).await {
             Ok(status) => match status {
-                starknet::core::types::TransactionStatus::Received => {
-                    println!("Transaction has been received");
-                }
+                starknet::core::types::TransactionStatus::Received => {}
                 starknet::core::types::TransactionStatus::Rejected => {
                     return Err(anyhow!("Transaction has been rejected"));
                 }
@@ -300,9 +298,7 @@ pub async fn wait_for_tx(
                     }
                 }
             },
-            Err(StarknetError(TransactionHashNotFound)) => {
-                println!("Transaction not received yet - transaction hash not found");
-            }
+            Err(StarknetError(TransactionHashNotFound)) => {}
             Err(err) => return Err(err.into()),
         };
 
