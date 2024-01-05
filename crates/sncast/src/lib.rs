@@ -313,13 +313,20 @@ pub async fn wait_for_tx(
     ))
 }
 
-async fn get_revert_reason(provider: &JsonRpcClient<HttpTransport>,tx_hash: FieldElement) -> Result<&str> {
+async fn get_revert_reason(
+    provider: &JsonRpcClient<HttpTransport>,
+    tx_hash: FieldElement,
+) -> Result<&str> {
     match provider.get_transaction_receipt(tx_hash).await {
         Ok(receipt) => match receipt.execution_result() {
-            starknet::core::types::ExecutionResult::Succeeded => { unreachable!() }
-            starknet::core::types::ExecutionResult::Reverted { reason } => Err(anyhow!("Transaction has been reverted = {reason}")),
-        }
-        Err(err) => return Err(err.into()),
+            starknet::core::types::ExecutionResult::Succeeded => {
+                unreachable!()
+            }
+            starknet::core::types::ExecutionResult::Reverted { reason } => {
+                Err(anyhow!("Transaction has been reverted = {reason}"))
+            }
+        },
+        Err(err) => Err(err.into()),
     }
 }
 
