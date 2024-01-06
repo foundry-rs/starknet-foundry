@@ -1,11 +1,6 @@
-use core::clone::Clone;
 use starknet::{ContractAddress, testing::cheatcode, contract_address_const};
 use starknet::info::v2::ResourceBounds;
-use option::OptionTrait;
-use array::ArrayTrait;
-use array::SpanTrait;
 use snforge_std::CheatTarget;
-use serde::Serde;
 
 #[derive(Copy, Drop, Serde)]
 struct TxInfoMock {
@@ -70,10 +65,5 @@ fn stop_spoof(target: CheatTarget) {
 }
 
 fn extend_array(ref array: Array<felt252>, mut span: Span<felt252>) {
-    loop {
-        match span.pop_front() {
-            Option::Some(x) => { array.append(x.clone()); },
-            Option::None => { break; }
-        };
-    };
+    ArrayTrait::append_span(ref array, span);
 }
