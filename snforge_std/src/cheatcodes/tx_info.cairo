@@ -65,5 +65,5 @@ fn stop_spoof(target: CheatTarget) {
 }
 
 fn extend_array(ref array: Array<felt252>, mut span: Span<felt252>) {
-    ArrayTrait::append_span(ref array, span);
+    array.append_span(span);
 }
