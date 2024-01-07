@@ -1,4 +1,3 @@
-use core::array::ArrayTrait;
 use starknet::{ContractAddress, testing::cheatcode, contract_address_const};
 use starknet::info::v2::ResourceBounds;
 use snforge_std::CheatTarget;
