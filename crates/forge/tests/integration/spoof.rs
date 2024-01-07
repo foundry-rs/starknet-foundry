@@ -137,7 +137,7 @@ fn start_spoof_all_attributes_mocked() {
             use starknet::ContractAddressIntoFelt252;
             use starknet::Felt252TryIntoContractAddress;
             use array::SpanTrait;
-            use snforge_std::{ declare, ContractClassTrait, start_spoof, stop_spoof, TxInfoMock, TxInfoMockTrait, CheatTarget, cheatcodes::tx_info::extend_array };
+            use snforge_std::{ declare, ContractClassTrait, start_spoof, stop_spoof, TxInfoMock, TxInfoMockTrait, CheatTarget };
             use starknet::info::v2::ResourceBounds;
 
             #[starknet::interface]
