@@ -15,7 +15,7 @@ fn start_and_stop_spoof_single_attribute() {
             use serde::Serde;
             use starknet::ContractAddress;
             use array::SpanTrait;
-            use snforge_std::{ declare, ContractClassTrait, start_spoof, stop_spoof, TxInfoMock, TxInfoMockTrait, CheatTarget, cheatcodes::tx_info::extend_array };
+            use snforge_std::{ declare, ContractClassTrait, start_spoof, stop_spoof, TxInfoMock, TxInfoMockTrait, CheatTarget };
             use starknet::info::v2::ResourceBounds;
 
             #[starknet::interface]
@@ -252,7 +252,7 @@ fn start_spoof_cancel_mock_by_setting_attribute_to_none() {
             use serde::Serde;
             use starknet::ContractAddress;
             use array::SpanTrait;
-            use snforge_std::{ declare, ContractClassTrait, start_spoof, stop_spoof, TxInfoMock, TxInfoMockTrait, CheatTarget, cheatcodes::tx_info::extend_array };
+            use snforge_std::{ declare, ContractClassTrait, start_spoof, stop_spoof, TxInfoMock, TxInfoMockTrait, CheatTarget };
             use starknet::info::v2::ResourceBounds;
 
             #[starknet::interface]
@@ -352,7 +352,7 @@ fn start_spoof_no_attributes_mocked() {
             use starknet::ContractAddress;
             use starknet::ContractAddressIntoFelt252;
             use array::SpanTrait;
-            use snforge_std::{ declare, ContractClassTrait, start_spoof, stop_spoof, TxInfoMock, TxInfoMockTrait, CheatTarget, cheatcodes::tx_info::extend_array };
+            use snforge_std::{ declare, ContractClassTrait, start_spoof, stop_spoof, TxInfoMock, TxInfoMockTrait, CheatTarget };
             use starknet::info::v2::ResourceBounds;
 
             #[starknet::interface]
@@ -504,7 +504,7 @@ fn start_spoof_all() {
             use starknet::ContractAddress;
             use starknet::ContractAddressIntoFelt252;
             use array::SpanTrait;
-            use snforge_std::{ declare, ContractClassTrait, start_spoof, stop_spoof, TxInfoMock, TxInfoMockTrait, CheatTarget, cheatcodes::tx_info::extend_array };
+            use snforge_std::{ declare, ContractClassTrait, start_spoof, stop_spoof, TxInfoMock, TxInfoMockTrait, CheatTarget };
             use starknet::info::v2::ResourceBounds;
 
             #[starknet::interface]
