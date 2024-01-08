@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - maximum number of computational steps per call set to current Starknet limit (3M)
 - `mean` and `std deviation` fields are displayed for gas usage while running fuzzing tests 
-- Cairo edition in `snforge_std` set to `2023_10`
+- Cairo edition in `snforge_std` and `sncast_std` set to `2023_10`
 
 ## [0.13.1] - 2023-12-20
 
