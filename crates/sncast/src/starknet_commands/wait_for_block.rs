@@ -17,26 +17,23 @@ pub struct ShowConfig {}
 pub async fn wait_for_block(
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
 ) -> Result<()> {
-
     loop {
         let timeout: u8 = 30;
         let nonce_latest = get_nonce_for_tx(account, "latest", None).await;
         let nonce_pending = get_nonce_for_tx(account, "pending", None).await;
-        if nonce_latest.is_ok() & nonce_pending.is_ok() {
-            if nonce_pending.unwrap() == nonce_latest.unwrap() {
-                break;
-            }
-        } else {
-            if let Err(message) = nonce_latest {
+        if let Ok(nonce_latest) = nonce_latest {
+            if let Ok(nonce_pending) = nonce_pending {
+                if nonce_pending == nonce_latest {
+                    break;
+                }
+            } else if let Err(message) = nonce_pending {
                 println!("{message}");
-            }
-            if let Err(message) = nonce_pending {
-                println!("{message}");
-            }
+            };
+        } else if let Err(message) = nonce_latest {
+            println!("{message}");
         }
         println!("Waiting...");
         sleep(Duration::from_secs(timeout.into()));
-
     }
 
     Ok(())

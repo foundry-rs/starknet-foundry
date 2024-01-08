@@ -364,11 +364,9 @@ impl CairoHintProcessor<'_> {
                     self.config.keystore.clone(),
                 ))?;
 
-                self.runtime.block_on(wait_for_block(
-                    &account
-                ))?;
+                self.runtime.block_on(wait_for_block(&account))?;
 
-            Ok(())
+                Ok(())
             }
             _ => Err(anyhow!("Unknown cheatcode selector: {selector}")),
         }?;
