@@ -38,6 +38,9 @@ use cheatcodes::start_elect;
 use cheatcodes::stop_elect;
 use cheatcodes::start_mock_call;
 use cheatcodes::stop_mock_call;
+use cheatcodes::store;
+use cheatcodes::load;
+use cheatcodes::map_entry_address;
 
 mod forge_print;
 
