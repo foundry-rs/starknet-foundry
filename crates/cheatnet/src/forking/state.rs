@@ -28,7 +28,7 @@ use std::collections::HashMap;
 use std::io::{Read, Write};
 use std::ops::Deref;
 use std::process::Command;
-use tempfile::NamedTempFile;
+use tempfile::Builder;
 use tokio::runtime::Runtime;
 use url::Url;
 
@@ -254,7 +254,7 @@ impl StateReader for ForkStateReader {
 }
 
 fn generate_casm(sierra_contract_class: &Value) -> CasmContractClass {
-    let mut temp_sierra_file = NamedTempFile::new().unwrap();
+    let mut temp_sierra_file = Builder::new().tempfile().unwrap();
     let _ = temp_sierra_file
         .write(
             serde_json::to_vec(sierra_contract_class)
