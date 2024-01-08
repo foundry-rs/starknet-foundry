@@ -3,4 +3,4 @@ version = 1
 
 [[package]]
 name = "snforge_std"
-version = "0.1.0"
+version = "0.13.1"
