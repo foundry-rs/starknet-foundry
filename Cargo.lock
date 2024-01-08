@@ -5062,6 +5062,7 @@ dependencies = [
  "ctor",
  "dotenv",
  "fs_extra",
+ "indexmap 2.1.0",
  "indoc 2.0.4",
  "itertools 0.11.0",
  "num-traits 0.2.17",

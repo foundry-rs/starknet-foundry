@@ -1,7 +1,8 @@
 use anyhow::Result;
+use indexmap::IndexMap;
 use serde_json::Value;
 use starknet::core::types::FieldElement;
-use std::{collections::HashMap, fmt::Display, str::FromStr};
+use std::{fmt::Display, str::FromStr};
 
 use serde::{Serialize, Serializer};
 
@@ -9,6 +10,7 @@ use crate::NumbersFormat;
 
 use super::structs::CommandResponse;
 
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub enum OutputFormat {
     Json,
     Human,
@@ -32,7 +34,7 @@ pub enum OutputValue {
 }
 
 /// Constrained subset of `serde::json`. No nested maps allowed.
-type OutputData = Vec<(String, OutputValue)>;
+pub type OutputData = Vec<(String, OutputValue)>;
 
 impl Serialize for OutputValue {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -62,18 +64,27 @@ impl Display for OutputValue {
     }
 }
 
-pub fn print_command_result<T: CommandResponse>(
+pub fn print_cast_command_result<T: CommandResponse>(
     command: &str,
     result: &mut Result<T>,
     numbers_format: NumbersFormat,
     output_format: &OutputFormat,
 ) -> Result<()> {
-    let mut output: OutputData = vec![];
-    output.push((
+    let header = (
         String::from("command"),
         OutputValue::String(command.to_string()),
-    ));
-    output.extend(result_as_output_data(result));
+    );
+    print_command_result(header, result, numbers_format, output_format)
+}
+
+pub fn print_command_result<T: CommandResponse>(
+    header: (String, OutputValue),
+    result: &mut Result<T>,
+    numbers_format: NumbersFormat,
+    output_format: &OutputFormat,
+) -> Result<()> {
+    let mut output: OutputData = result_as_output_data(result);
+    output.insert(0, header);
     let formatted_output = output
         .into_iter()
         .map(|(k, v)| (k, apply_numbers_formatting(v, numbers_format)))
@@ -88,10 +99,10 @@ pub fn print_command_result<T: CommandResponse>(
     Ok(())
 }
 
-fn pretty_output(output: OutputData, output_format: &OutputFormat) -> Result<Vec<String>> {
+pub fn pretty_output(output: OutputData, output_format: &OutputFormat) -> Result<Vec<String>> {
     match output_format {
         OutputFormat::Json => {
-            let json_output: HashMap<String, OutputValue> = output.into_iter().collect();
+            let json_output: IndexMap<String, OutputValue> = output.into_iter().collect();
             let json_string = serde_json::to_string(&json_output)?;
             Ok(vec![json_string])
         }
@@ -106,12 +117,12 @@ fn pretty_output(output: OutputData, output_format: &OutputFormat) -> Result<Vec
     }
 }
 
-fn result_as_output_data<T: CommandResponse>(result: &mut Result<T>) -> OutputData {
+pub fn result_as_output_data<T: Serialize>(result: &mut Result<T>) -> OutputData {
     match result {
         Ok(response) => {
             let struct_value =
                 serde_json::to_value(response).expect("Failed to serialize CommandResponse");
-            struct_value_to_output_data(struct_value)
+            value_to_output_data(struct_value)
         }
         Err(message) => {
             vec![(
@@ -122,14 +133,15 @@ fn result_as_output_data<T: CommandResponse>(result: &mut Result<T>) -> OutputDa
     }
 }
 
-fn struct_value_to_output_data(struct_value: Value) -> OutputData {
-    match struct_value {
+#[must_use]
+pub fn value_to_output_data(json_value: Value) -> OutputData {
+    match json_value {
         Value::Object(obj) => obj
             .into_iter()
             .filter(|(_, v)| !(matches!(v, Value::Null)))
             .map(|(k, v)| (k, value_to_output_value(v)))
             .collect(),
-        _ => panic!("Expected an object"),
+        _ => vec![(String::from("response"), value_to_output_value(json_value))],
     }
 }
 
@@ -141,7 +153,8 @@ fn value_to_output_value(value: Value) -> OutputValue {
     }
 }
 
-fn apply_numbers_formatting(value: OutputValue, formatting: NumbersFormat) -> OutputValue {
+#[must_use]
+pub fn apply_numbers_formatting(value: OutputValue, formatting: NumbersFormat) -> OutputValue {
     match value {
         OutputValue::String(input) => {
             if let Ok(field) = FieldElement::from_str(&input) {
@@ -168,7 +181,7 @@ mod tests {
     use serde_json::{Map, Value};
 
     use crate::response::print::{
-        apply_numbers_formatting, struct_value_to_output_data, OutputData, OutputValue,
+        apply_numbers_formatting, value_to_output_data, OutputData, OutputValue,
     };
     use crate::NumbersFormat;
 
@@ -232,7 +245,7 @@ mod tests {
         );
         json_value.insert(String::from("K2"), Value::Null);
 
-        let actual = struct_value_to_output_data(Value::Object(json_value));
+        let actual = value_to_output_data(Value::Object(json_value));
         let json_value_exp: OutputData = vec![(
             String::from("K"),
             OutputValue::Array(vec![OutputValue::String(String::from("V"))]),

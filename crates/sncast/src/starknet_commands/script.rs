@@ -37,18 +37,87 @@ use scarb_api::ScarbCommand;
 use sncast::helpers::scarb_utils::{
     get_package_metadata, get_scarb_manifest, get_scarb_metadata_with_deps, CastConfig,
 };
-use sncast::response::structs::ScriptResponse;
+use sncast::response::print::{print_command_result, OutputFormat, OutputValue};
+use sncast::response::structs::{CommandResponse, ScriptResponse};
+use sncast::NumbersFormat;
 use starknet::accounts::Account;
 use starknet::core::types::{BlockId, BlockTag::Pending, FieldElement};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use tokio::runtime::Runtime;
 
+#[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd)]
+pub enum Verbosity {
+    /// Silence all script output except for errors
+    Quiet,
+
+    /// Default verbosity level
+    #[default]
+    Normal,
+}
+
+#[derive(Debug)]
+pub struct UI {
+    verbosity: Verbosity,
+    numbers_format: NumbersFormat,
+    output_format: OutputFormat,
+}
+
+impl UI {
+    pub fn new(is_quiet: bool, numbers_format: NumbersFormat, output_format: OutputFormat) -> Self {
+        let verbosity = if is_quiet {
+            Verbosity::Quiet
+        } else {
+            Verbosity::Normal
+        };
+
+        Self {
+            verbosity,
+            numbers_format,
+            output_format,
+        }
+    }
+
+    pub fn is_quiet(&self) -> bool {
+        self.verbosity < Verbosity::Normal
+    }
+
+    pub fn is_json(&self) -> bool {
+        self.output_format == OutputFormat::Json
+    }
+
+    pub fn print_subcommand_response<T: CommandResponse>(
+        &self,
+        command: &str,
+        response: T,
+    ) -> Result<()> {
+        if self.verbosity >= Verbosity::Normal {
+            let header = (
+                String::from("script_subcommand"),
+                OutputValue::String(command.to_string()),
+            );
+            print_command_result(
+                header,
+                &mut Ok(response),
+                self.numbers_format,
+                &self.output_format,
+            )?;
+            println!();
+            return Ok(());
+        }
+        Ok(())
+    }
+}
+
 #[derive(Args)]
 #[command(about = "Execute a deployment script")]
 pub struct Script {
     /// Module name that contains the `main` function, which will be executed
     pub script_module_name: String,
+
+    /// Silence script output
+    #[clap(long)]
+    pub quiet: bool,
 }
 
 pub struct CairoHintProcessor<'a> {
@@ -57,6 +126,7 @@ pub struct CairoHintProcessor<'a> {
     pub runtime: Runtime,
     pub run_resources: RunResources,
     pub config: &'a CastConfig,
+    pub script_ui: UI,
 }
 
 // cairo/crates/cairo-lang-runner/src/casm_run/mod.rs:457 (ResourceTracker for CairoHintProcessor)
@@ -205,6 +275,9 @@ impl CairoHintProcessor<'_> {
                     .write_data(call_response.response.iter().map(|el| Felt252::from_(el.0)))
                     .expect("Failed to insert data");
 
+                self.script_ui
+                    .print_subcommand_response(selector, call_response)?;
+
                 Ok(())
             }
             "declare" => {
@@ -228,13 +301,14 @@ impl CairoHintProcessor<'_> {
                     nonce,
                     BuildConfig {
                         scarb_toml_path: None,
-                        json: false,
+                        json: self.script_ui.is_json(),
                     },
                     WaitForTx {
                         wait: true,
                         timeout: self.config.wait_timeout,
                         retry_interval: self.config.wait_retry_interval,
                     },
+                    self.script_ui.is_quiet(),
                 ))?;
 
                 buffer
@@ -244,6 +318,9 @@ impl CairoHintProcessor<'_> {
                 buffer
                     .write(Felt252::from_(declare_response.transaction_hash.0))
                     .expect("Failed to insert transaction hash");
+
+                self.script_ui
+                    .print_subcommand_response(selector, declare_response)?;
 
                 Ok(())
             }
@@ -290,6 +367,9 @@ impl CairoHintProcessor<'_> {
                     .write(Felt252::from_(deploy_response.transaction_hash.0))
                     .expect("Failed to insert transaction hash");
 
+                self.script_ui
+                    .print_subcommand_response(selector, deploy_response)?;
+
                 Ok(())
             }
             "invoke" => {
@@ -330,6 +410,9 @@ impl CairoHintProcessor<'_> {
                     .write(Felt252::from_(invoke_response.transaction_hash.0))
                     .expect("Failed to insert transaction hash");
 
+                self.script_ui
+                    .print_subcommand_response(selector, invoke_response)?;
+
                 Ok(())
             }
             "get_nonce" => {
@@ -343,18 +426,21 @@ impl CairoHintProcessor<'_> {
                     self.config.keystore.clone(),
                 ))?;
 
-                let nonce = self.runtime.block_on(get_nonce(
+                let nonce_response = self.runtime.block_on(get_nonce(
                     self.provider,
                     &block_id,
                     account.address(),
                 ))?;
                 buffer
-                    .write(Felt252::from_(nonce))
+                    .write(Felt252::from_(nonce_response.response))
                     .expect("Failed to insert nonce");
+
+                self.script_ui
+                    .print_subcommand_response(selector, nonce_response)?;
 
                 Ok(())
             }
-            _ => Err(anyhow!("Unknown cheatcode selector: {selector}")),
+            _ => Err(anyhow!("Unknown subcommand selector: {selector}")),
         }?;
 
         let result_end = buffer.ptr;
@@ -371,8 +457,9 @@ pub fn run(
     provider: &JsonRpcClient<HttpTransport>,
     runtime: Runtime,
     config: &CastConfig,
+    script_ui: UI,
 ) -> Result<ScriptResponse> {
-    let path = compile_script(path_to_scarb_toml.clone())?;
+    let path = compile_script(path_to_scarb_toml.clone(), &script_ui)?;
 
     let sierra_program = serde_json::from_str::<VersionedProgram>(
         &fs::read_to_string(path.clone())
@@ -410,6 +497,7 @@ pub fn run(
         runtime,
         run_resources: RunResources::default(),
         config,
+        script_ui,
     };
 
     match runner.run_function(
@@ -433,21 +521,30 @@ pub fn run(
     }
 }
 
-fn compile_script(path_to_scarb_toml: Option<Utf8PathBuf>) -> Result<Utf8PathBuf> {
+fn compile_script(path_to_scarb_toml: Option<Utf8PathBuf>, script_ui: &UI) -> Result<Utf8PathBuf> {
     let scripts_manifest_path = path_to_scarb_toml.unwrap_or_else(|| {
         get_scarb_manifest()
             .context("Failed to retrieve manifest path from scarb")
             .unwrap()
     });
+
     ensure!(
         scripts_manifest_path.exists(),
         "The path = {scripts_manifest_path} does not exist"
     );
 
-    ScarbCommand::new_with_stdio()
-        .arg("build")
+    let mut scarb_args = vec!["build"];
+    if script_ui.is_quiet() {
+        scarb_args.push("--quiet");
+    }
+    if script_ui.is_json() {
+        scarb_args.insert(0, "--json");
+    }
+
+    ScarbCommand::new()
+        .args(scarb_args)
         .manifest_path(&scripts_manifest_path)
-        .run()
+        .run_with_stdout_footer("\n")
         .context("failed to compile script with scarb")?;
 
     let metadata = get_scarb_metadata_with_deps(&scripts_manifest_path)?;

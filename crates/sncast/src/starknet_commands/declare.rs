@@ -47,6 +47,7 @@ pub async fn declare(
     nonce: Option<FieldElement>,
     build_config: BuildConfig,
     wait_config: WaitForTx,
+    make_scarb_quiet: bool,
 ) -> Result<DeclareResponse> {
     let contract_name: String = contract_name.to_string();
     let manifest_path = match build_config.scarb_toml_path.clone() {
@@ -54,12 +55,16 @@ pub async fn declare(
         None => get_scarb_manifest().context("Failed to obtain manifest path from Scarb")?,
     };
 
-    let mut cmd = ScarbCommand::new_with_stdio();
+    let mut cmd = ScarbCommand::new();
     cmd.arg("build").manifest_path(&manifest_path);
+    if make_scarb_quiet {
+        cmd.arg("--quiet");
+    }
     if build_config.json {
         cmd.json();
     }
-    cmd.run().context("Failed to build contracts with Scarb")?;
+    cmd.run_with_stdout_footer("\n")
+        .context("Failed to build contracts with Scarb")?;
 
     let metadata = scarb_metadata::MetadataCommand::new()
         .manifest_path(&manifest_path)

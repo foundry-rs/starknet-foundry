@@ -1,3 +1,4 @@
+use crate::response::structs::OneElementResponse;
 use anyhow::{anyhow, bail, Context, Error, Result};
 use camino::Utf8PathBuf;
 use helpers::constants::{KEYSTORE_PASSWORD_ENV_VAR, UDC_ADDRESS};
@@ -150,14 +151,15 @@ pub async fn get_nonce(
     provider: &JsonRpcClient<HttpTransport>,
     block_id: &str,
     address: FieldElement,
-) -> Result<FieldElement> {
-    Ok(provider
+) -> Result<OneElementResponse<FieldElement>> {
+    let response = provider
         .get_nonce(
             get_block_id(block_id).expect("Failed to obtain block id"),
             address,
         )
         .await
-        .expect("Failed to get a nonce"))
+        .expect("Failed to get a nonce");
+    Ok(OneElementResponse { response })
 }
 
 pub async fn get_account<'a>(
@@ -271,8 +273,6 @@ pub async fn wait_for_tx(
     timeout: u16,
     retry_interval: u8,
 ) -> Result<&str> {
-    println!("Transaction hash = {tx_hash:#x}");
-
     if retry_interval == 0 || timeout == 0 || u16::from(retry_interval) > timeout {
         return Err(anyhow!("Invalid values for retry_interval and/or timeout!"));
     }
@@ -368,7 +368,10 @@ pub async fn handle_wait_for_tx<T>(
         .await
         {
             Ok(_) => Ok(return_value),
-            Err(message) => Err(anyhow!(message)),
+            Err(message) => {
+                eprintln!("Transaction hash = {transaction_hash:#x}\n");
+                Err(anyhow!(message))
+            }
         };
     }
 

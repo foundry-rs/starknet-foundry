@@ -32,12 +32,14 @@ pub trait CommandResponse: Serialize {}
 pub struct CallResponse {
     pub response: Vec<Hex>,
 }
+
 impl CommandResponse for CallResponse {}
 
 #[derive(Serialize, Clone)]
 pub struct InvokeResponse {
     pub transaction_hash: Hex,
 }
+
 impl CommandResponse for InvokeResponse {}
 
 #[derive(Serialize)]
@@ -107,3 +109,10 @@ pub struct ScriptResponse {
 }
 
 impl CommandResponse for ScriptResponse {}
+
+#[derive(Serialize, Clone)]
+pub struct OneElementResponse<T: Serialize> {
+    pub response: T,
+}
+
+impl<T: Serialize> CommandResponse for OneElementResponse<T> {}
