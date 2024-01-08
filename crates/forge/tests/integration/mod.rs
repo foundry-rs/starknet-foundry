@@ -23,4 +23,5 @@ mod spoof;
 mod spy_events;
 mod syscalls;
 mod test_state;
+mod trace;
 mod warp;
