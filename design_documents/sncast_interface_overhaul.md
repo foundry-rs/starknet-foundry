@@ -31,8 +31,8 @@ $ sncast script script_module
 
 $ # this is the same contract
 $ sncast declare package_namea::path::to::contract
-$ sncast to::contract
-$ sncast script script_module
+$ sncast declare to::contract
+$ sncast declare script_module
 ```
 
 In case there is only one script module/contract with specified name in workspace, only this name can be used to target it.
