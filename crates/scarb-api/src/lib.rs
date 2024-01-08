@@ -1,6 +1,7 @@
 use anyhow::{anyhow, Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
 use scarb_metadata::{CompilationUnitMetadata, Metadata, PackageId};
+use semver::VersionReq;
 use serde::Deserialize;
 use serde_json::Value;
 use std::collections::HashMap;
@@ -191,6 +192,27 @@ pub fn name_for_package(metadata: &Metadata, package: &PackageId) -> Result<Stri
     Ok(package.name.clone())
 }
 
+/// Checks if any of the compilation units has an incompatible version of a package as a component
+pub fn check_lib_version(metadata: &Metadata, name: &str, version_req: &VersionReq) -> Result<()> {
+    let packages: Vec<&scarb_metadata::PackageMetadata> = metadata
+        .packages
+        .iter()
+        .filter(|package| package.name == name)
+        .collect();
+    match packages[..] {
+        [] => Ok(()),
+        [package] => {
+            let package_version = &package.version;
+            if version_req.matches(&package.version) {
+                Ok(())
+            } else {
+                Err(anyhow!("Package {name} version {package_version} doesn't match requirement {version_req}"))
+            }
+        }
+        _ => Err(anyhow!("Package {name} is duplicated in dependencies")),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -278,6 +300,51 @@ mod tests {
             temp.path()
                 .join("target/dev/basic_package.starknet_artifacts.json")
         );
+    }
+
+    #[test]
+    fn check_lib_version_test() {
+        let temp = setup_package("basic_package");
+
+        let manifest_path = temp.child("Scarb.toml");
+        manifest_path
+            .write_str(&formatdoc!(
+                r#"
+                [package]
+                name = "version_checker"
+                version = "0.1.0"
+
+                [[target.starknet-contract]]
+                sierra = true
+                casm = true
+
+                [dependencies]
+                starknet = "2.4.0"
+                "#,
+            ))
+            .unwrap();
+
+        let scarb_metadata = MetadataCommand::new()
+            .inherit_stderr()
+            .current_dir(temp.path())
+            .exec()
+            .unwrap();
+
+        check_lib_version(
+            &scarb_metadata,
+            "starknet",
+            &VersionReq::parse("2.4").unwrap(),
+        )
+        .unwrap();
+        if check_lib_version(
+            &scarb_metadata,
+            "starknet",
+            &VersionReq::parse("2.5").unwrap(),
+        )
+        .is_ok()
+        {
+            panic!("Expected no match");
+        }
     }
 
     #[test]
