@@ -11,6 +11,7 @@ use cairo_lang_utils::bigint::BigUintAsHex;
 use conversions::{FromConv, IntoConv};
 use flate2::read::GzDecoder;
 use num_bigint::BigUint;
+use serde_json::Value;
 use starknet::core::types::{
     BlockId, ContractClass as ContractClassStarknet, FieldElement, MaybePendingBlockWithTxHashes,
 };
@@ -27,7 +28,6 @@ use std::collections::HashMap;
 use std::io::{Read, Write};
 use std::ops::Deref;
 use std::process::Command;
-use serde_json::Value;
 use tempfile::NamedTempFile;
 use tokio::runtime::Runtime;
 use url::Url;
@@ -214,7 +214,7 @@ impl StateReader for ForkStateReader {
                     "entry_points_by_type": flattened_class.entry_points_by_type
                 });
 
-                let casm_contract_class = generate_casm(sierra_contract_class);
+                let casm_contract_class = generate_casm(&sierra_contract_class);
 
                 Ok(ContractClassBlockifier::V1(
                     ContractClassV1::try_from(casm_contract_class).unwrap(),
@@ -253,11 +253,11 @@ impl StateReader for ForkStateReader {
     }
 }
 
-fn generate_casm(sierra_contract_class: Value) -> CasmContractClass {
+fn generate_casm(sierra_contract_class: &Value) -> CasmContractClass {
     let mut temp_sierra_file = NamedTempFile::new().unwrap();
     let _ = temp_sierra_file
         .write(
-            serde_json::to_vec(&sierra_contract_class)
+            serde_json::to_vec(sierra_contract_class)
                 .unwrap()
                 .as_slice(),
         )
