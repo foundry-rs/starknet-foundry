@@ -44,6 +44,8 @@ use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use tokio::runtime::Runtime;
 
+use super::wait_for_block::wait_for_block;
+
 #[derive(Args)]
 #[command(about = "Execute a deployment script")]
 pub struct Script {
@@ -353,6 +355,20 @@ impl CairoHintProcessor<'_> {
                     .expect("Failed to insert nonce");
 
                 Ok(())
+            }
+            "wait_for_block" => {
+                let account = self.runtime.block_on(get_account(
+                    &self.config.account,
+                    &self.config.accounts_file,
+                    self.provider,
+                    self.config.keystore.clone(),
+                ))?;
+
+                self.runtime.block_on(wait_for_block(
+                    &account
+                ))?;
+
+            Ok(())
             }
             _ => Err(anyhow!("Unknown cheatcode selector: {selector}")),
         }?;
