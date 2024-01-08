@@ -56,6 +56,103 @@ fn store_load_simple() {
 }
 
 #[test]
+fn store_load_wrong_selector() {
+    let test = test_utils::test_case!(
+        indoc!(
+            r#"
+            use starknet::ContractAddress;
+            use snforge_std::{ declare, ContractClassTrait, store, load };
+            
+            #[starknet::interface]
+            trait IHelloStarknet<TContractState> {
+                fn get_balance(ref self: TContractState) -> felt252;
+                fn increase_balance(ref self: TContractState, amount: felt252);
+            }
+            
+            fn deploy_contract() -> IHelloStarknetDispatcher {
+                let contract = declare('HelloStarknet');
+                let contract_address = contract.deploy(@array![]).unwrap();
+                IHelloStarknetDispatcher { contract_address }
+            }
+
+            #[test]
+            fn store_load_wrong_selector() {
+                let deployed = deploy_contract();
+                store(deployed.contract_address, selector!("i_made_a_typo"), array![420].span());
+                
+                let stored_balance = deployed.get_balance();
+                assert(stored_balance == 0, 'wrong balance stored'); // No change expected
+                
+                let loaded = load(deployed.contract_address, selector!("i_made_a_typo"), 1);
+                 // Even though non-existing var selector is called, memory should be set
+                assert(*loaded.at(0) == 420, 'wrong storage value');
+                
+                // Uninitialized memory is expected on wrong selector
+                let loaded = load(deployed.contract_address, selector!("i_made_another_typo"), 1);
+                assert(*loaded.at(0) == 0, 'wrong storage value');
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "HelloStarknet".to_string(),
+            Path::new("tests/data/contracts/hello_starknet.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test);
+
+    assert_passed!(result);
+}
+
+#[test]
+fn store_load_wrong_data_length() {
+    let test = test_utils::test_case!(
+        indoc!(
+            r#"
+            use starknet::ContractAddress;
+            use snforge_std::{ declare, ContractClassTrait, store, load };
+            
+            #[starknet::interface]
+            trait IHelloStarknet<TContractState> {
+                fn get_balance(ref self: TContractState) -> felt252;
+                fn increase_balance(ref self: TContractState, amount: felt252);
+            }
+            
+            fn deploy_contract() -> IHelloStarknetDispatcher {
+                let contract = declare('HelloStarknet');
+                let contract_address = contract.deploy(@array![]).unwrap();
+                IHelloStarknetDispatcher { contract_address }
+            }
+
+            #[test]
+            fn store_load_wrong_selector() {
+                let deployed = deploy_contract();
+                
+                let stored_balance = deployed.get_balance();
+                assert(stored_balance == 0, 'wrong balance stored'); // No change expected
+                deployed.increase_balance(420);
+                
+                let loaded = load(deployed.contract_address, selector!("balance"), 2);
+                 // Even though wrong length is called, the first felt will be correct and second one uninitialized
+                assert(*loaded.at(0) == 420, 'wrong storage value');
+                assert(*loaded.at(1) == 0, 'wrong storage value');
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "HelloStarknet".to_string(),
+            Path::new("tests/data/contracts/hello_starknet.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test);
+
+    assert_passed!(result);
+}
+
+#[test]
 fn store_load_structure() {
     let test = test_utils::test_case!(
         indoc!(
