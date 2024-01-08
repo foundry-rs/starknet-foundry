@@ -4,13 +4,13 @@ use primitive_types::U256;
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
 use serde_json::{json, Map, Value};
-use sncast::get_keystore_password;
+use sncast::{apply_optional, get_keystore_password};
 use sncast::{get_account, get_provider, parse_number};
-use starknet::accounts::{Account, Call};
+use starknet::accounts::{Account, Call, Execution};
 use starknet::contract::ContractFactory;
 use starknet::core::types::contract::{CompiledClass, SierraClass};
-use starknet::core::types::FieldElement;
 use starknet::core::types::TransactionReceipt;
+use starknet::core::types::{FieldElement, InvokeTransactionResult};
 use starknet::core::utils::get_contract_address;
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::jsonrpc::HttpTransport;
@@ -98,7 +98,13 @@ pub async fn declare_deploy_contract(account: &str, path: &str, shortname: &str)
     };
 }
 
-pub async fn invoke_map_contract(key: &str, value: &str, account: &str, contract_address: &str) {
+pub async fn invoke_contract(
+    account: &str,
+    contract_address: &str,
+    entry_point_name: &str,
+    max_fee: Option<FieldElement>,
+    constructor_calldata: &[&str],
+) -> InvokeTransactionResult {
     let provider = get_provider(URL).expect("Could not get the provider");
     let account = get_account(
         account,
@@ -109,17 +115,24 @@ pub async fn invoke_map_contract(key: &str, value: &str, account: &str, contract
     .await
     .expect("Could not get the account");
 
+    let mut calldata: Vec<FieldElement> = vec![];
+
+    for value in constructor_calldata {
+        let value: FieldElement = parse_number(value).expect("Could not parse the calldata");
+        calldata.push(value);
+    }
+
     let call = Call {
         to: parse_number(contract_address).expect("Could not parse the contract address"),
-        selector: get_selector_from_name("put").expect("Could not get selector from put"),
-        calldata: vec![
-            parse_number(key).expect("Could not parse the key"),
-            parse_number(value).expect("Could not parse the value"),
-        ],
+        selector: get_selector_from_name(entry_point_name)
+            .unwrap_or_else(|_| panic!("Could not get selector from {entry_point_name}")),
+        calldata,
     };
-    let execution = account.execute(vec![call]);
 
-    execution.send().await.unwrap();
+    let execution = account.execute(vec![call]);
+    let execution = apply_optional(execution, max_fee, Execution::max_fee);
+
+    execution.send().await.unwrap()
 }
 
 // devnet-rs accepts an amount as u128
