@@ -1,6 +1,5 @@
 use starknet::{testing::cheatcode, ContractAddress, contract_address_const};
 
-
 mod events;
 mod l1_handler;
 mod contract_class;
@@ -70,7 +69,7 @@ fn stop_elect(target: CheatTarget) {
     cheatcode::<'stop_elect'>(inputs.span());
 }
 
-fn start_mock_call<T, impl TSerde: serde::Serde<T>, impl TDestruct: Destruct<T>>(
+fn start_mock_call<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: Destruct<T>>(
     contract_address: ContractAddress, function_name: felt252, ret_data: T
 ) {
     let contract_address_felt: felt252 = contract_address.into();
