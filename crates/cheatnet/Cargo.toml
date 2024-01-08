@@ -34,7 +34,6 @@ fs2 = "0.4.3"
 flate2 = "1.0.27"
 scarb-api = { path = "../scarb-api" }
 runtime = { path = "../runtime" }
-sierra-casm = { path = "../sierra-casm" }
 
 [dev-dependencies]
 ctor.workspace = true
