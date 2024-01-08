@@ -9,6 +9,6 @@ Module containing struct and interface for creating `ecdsa` signatures
 
 > ⚠️ **Security Warning**
 >
-> Please note that cryptography in Starknet Foundry is still experimental and **has not been audited yet**.
+> Please note that cryptography in Starknet Foundry is still experimental and **has not been audited**.
 >
 > Use at your own risk!
