@@ -6,7 +6,7 @@ use test_utils::{assert_passed, test_case};
 fn test_stark_sign_msg_hash_range() {
     let test = test_case!(indoc!(
         r"
-            use snforge_std::signature::{KeyPair, KeyPairTrait, SignerTrait, VerifierTrait};
+            use snforge_std::signature::KeyPairTrait;
             use snforge_std::signature::stark_curve::{StarkCurveKeyPairImpl, StarkCurveSignerImpl, StarkCurveVerifierImpl};
             
             const UPPER_BOUND: felt252 = 0x800000000000000000000000000000000000000000000000000000000000000;
@@ -44,7 +44,7 @@ fn test_stark_sign_msg_hash_range() {
 fn test_stark_curve() {
     let test = test_case!(indoc!(
         r"
-        use snforge_std::signature::{KeyPair, KeyPairTrait, SignerTrait, VerifierTrait};
+        use snforge_std::signature::KeyPairTrait;
         use snforge_std::signature::stark_curve::{StarkCurveKeyPairImpl, StarkCurveSignerImpl, StarkCurveVerifierImpl};
         
         #[test]
@@ -70,12 +70,12 @@ fn test_stark_curve() {
 }
 
 #[test]
-fn test_secp256_k1_curve() {
+fn test_secp256k1_curve() {
     let test = test_case!(indoc!(
         r"
-            use snforge_std::signature::{KeyPair, KeyPairTrait, SignerTrait, VerifierTrait};
-            use snforge_std::signature::secp256_curve::{Secp256CurveKeyPairImpl, Secp256CurveSignerImpl, Secp256CurveVerifierImpl};
-            use starknet::secp256k1::{Secp256k1Impl, Secp256k1Point, Secp256k1PointImpl};
+            use snforge_std::signature::KeyPairTrait;
+            use snforge_std::signature::secp256k1_curve::{Secp256k1CurveKeyPairImpl, Secp256k1CurveSignerImpl, Secp256k1CurveVerifierImpl};
+            use starknet::secp256k1::{Secp256k1Point, Secp256k1PointImpl};
             use core::starknet::SyscallResultTrait;
 
             #[test]
@@ -101,12 +101,12 @@ fn test_secp256_k1_curve() {
 }
 
 #[test]
-fn test_secp256_r1_curve() {
+fn test_secp256r1_curve() {
     let test = test_case!(indoc!(
         r"
-            use snforge_std::signature::{KeyPair, KeyPairTrait, SignerTrait, VerifierTrait};
-            use snforge_std::signature::secp256_curve::{Secp256CurveKeyPairImpl, Secp256CurveSignerImpl, Secp256CurveVerifierImpl};
-            use starknet::secp256r1::{Secp256r1Impl, Secp256r1Point, Secp256r1PointImpl};
+            use snforge_std::signature::KeyPairTrait;
+            use snforge_std::signature::secp256r1_curve::{Secp256r1CurveKeyPairImpl, Secp256r1CurveSignerImpl, Secp256r1CurveVerifierImpl};
+            use starknet::secp256r1::{Secp256r1Point, Secp256r1PointImpl};
             use core::starknet::SyscallResultTrait;
 
             #[test]
@@ -132,17 +132,18 @@ fn test_secp256_r1_curve() {
 }
 
 #[test]
-fn test_secp256_curve() {
+fn test_secp256_curves() {
     let test = test_case!(indoc!(
         r"
-            use snforge_std::signature::{KeyPair, KeyPairTrait, SignerTrait, VerifierTrait};
-            use snforge_std::signature::secp256_curve::{Secp256CurveKeyPairImpl, Secp256CurveSignerImpl, Secp256CurveVerifierImpl};
-            use starknet::secp256k1::{Secp256k1Impl, Secp256k1Point, Secp256k1PointImpl};
-            use starknet::secp256r1::{Secp256r1Impl, Secp256r1Point, Secp256r1PointImpl};
+            use snforge_std::signature::KeyPairTrait;
+            use snforge_std::signature::secp256k1_curve::{Secp256k1CurveKeyPairImpl, Secp256k1CurveSignerImpl, Secp256k1CurveVerifierImpl};
+            use snforge_std::signature::secp256r1_curve::{Secp256r1CurveKeyPairImpl, Secp256r1CurveSignerImpl, Secp256r1CurveVerifierImpl};
+            use starknet::secp256k1::{Secp256k1Point, Secp256k1PointImpl};
+            use starknet::secp256r1::{Secp256r1Point, Secp256r1PointImpl};
             use core::starknet::SyscallResultTrait;
 
             #[test]
-            fn simple_signing_flow() {
+            fn secp256_curves() {
                 let secret_key = 554433;
 
                 let key_pair_k1 = KeyPairTrait::<u256, Secp256k1Point>::from_secret_key(secret_key);
@@ -173,101 +174,40 @@ fn test_secp256_curve() {
 }
 
 #[test]
-fn test_stark_secp256_curves() {
+fn test_stark_secp256k1_curves() {
     let test = test_case!(indoc!(
         r"
-            use snforge_std::signature::{KeyPair, KeyPairTrait, SignerTrait, VerifierTrait};
+            use snforge_std::signature::KeyPairTrait;
             use snforge_std::signature::stark_curve::{StarkCurveKeyPairImpl, StarkCurveSignerImpl, StarkCurveVerifierImpl};
-            use snforge_std::signature::secp256_curve::{Secp256CurveKeyPairImpl, Secp256CurveSignerImpl, Secp256CurveVerifierImpl};
-            use starknet::secp256k1::{Secp256k1Impl, Secp256k1Point, Secp256k1PointImpl};
+            use snforge_std::signature::secp256k1_curve::{Secp256k1CurveKeyPairImpl, Secp256k1CurveSignerImpl, Secp256k1CurveVerifierImpl};
+            use starknet::secp256k1::{Secp256k1Point, Secp256k1PointImpl};
             use core::starknet::SyscallResultTrait;
             
             #[test]
-            fn stark_secp256_curves() {
+            fn stark_secp256k1_curves() {
                 let secret_key = 554433;
             
                 let key_pair_stark = KeyPairTrait::<felt252, felt252>::from_secret_key(secret_key);
-                let key_pair_secp256 = KeyPairTrait::<u256, Secp256k1Point>::from_secret_key(secret_key.into());
+                let key_pair_secp256k1 = KeyPairTrait::<u256, Secp256k1Point>::from_secret_key(secret_key.into());
                 
-                assert(key_pair_stark.secret_key.into() == key_pair_secp256.secret_key, 'Secret keys should equal');
+                assert(key_pair_stark.secret_key.into() == key_pair_secp256k1.secret_key, 'Secret keys should equal');
             
-                let (pk_x_secp256, pk_y_secp256) = key_pair_secp256.public_key.get_coordinates().unwrap_syscall();
+                let (pk_x_secp256k1, pk_y_secp256k1) = key_pair_secp256k1.public_key.get_coordinates().unwrap_syscall();
             
-                assert(key_pair_stark.public_key.into() != pk_x_secp256, 'Public keys should be different');
+                assert(key_pair_stark.public_key.into() != pk_x_secp256k1, 'Public keys should be different');
             
                 let msg_hash = 0xbadc0ffee;
             
                 let (r_stark, s_stark): (felt252, felt252) = key_pair_stark.sign(msg_hash);
-                let (r_secp256, s_secp256): (u256, u256) = key_pair_secp256.sign(msg_hash.into());
+                let (r_secp256k1, s_secp256k1): (u256, u256) = key_pair_secp256k1.sign(msg_hash.into());
                 
-                assert(r_stark.into() != r_secp256, 'Signatures should be different');
-                assert(s_stark.into() != s_secp256, 'Signatures should be different');
+                assert(r_stark.into() != r_secp256k1, 'Signatures should be different');
+                assert(s_stark.into() != s_secp256k1, 'Signatures should be different');
             
                 assert(key_pair_stark.verify(msg_hash, (r_stark, s_stark)) == true, 'Signature should be valid');
-                assert(key_pair_secp256.verify(msg_hash.into(), (r_secp256, s_secp256)) == true, 'Signature should be valid');
+                assert(key_pair_secp256k1.verify(msg_hash.into(), (r_secp256k1, s_secp256k1)) == true, 'Signature should be valid');
                 
-                assert(key_pair_secp256.verify(msg_hash.into(), (r_stark.into(), s_stark.into())) == false, 'Signature should be invalid');
-            }
-        "
-    ));
-
-    let result = run_test_case(&test);
-
-    assert_passed!(result);
-}
-
-#[test]
-fn test_unsupported_curve() {
-    let test = test_case!(indoc!(
-        r"
-            use snforge_std::signature::{KeyPair, KeyPairTrait, SignerTrait, VerifierTrait};
-            use snforge_std::signature::secp256_curve::{Secp256CurveKeyPairImpl, Secp256CurveSignerImpl, Secp256CurveVerifierImpl};
-            use starknet::secp256k1::{Secp256k1Impl, Secp256k1Point, Secp256k1PointImpl};
-            use starknet::secp256r1::{Secp256r1Impl, Secp256r1Point, Secp256r1PointImpl};
-            use starknet::secp256_trait::{Secp256Trait, Secp256PointTrait};
-            use starknet::{SyscallResult, SyscallResultTrait};
-            
-            #[derive(Copy, Drop)]
-            struct UnsupportedCurvePoint {
-                inner: Secp256k1Point
-            }
-            
-            impl UnsupportedCurveImpl of Secp256Trait<UnsupportedCurvePoint> {
-                fn get_curve_size() -> u256 {
-                    0x123.into()
-                }
-                fn get_generator_point() -> UnsupportedCurvePoint {
-                    UnsupportedCurvePoint { inner: Secp256k1Impl::get_generator_point() }
-                }
-            
-                fn secp256_ec_new_syscall(x: u256, y: u256) -> SyscallResult<Option<UnsupportedCurvePoint>> {
-                    let point = UnsupportedCurvePoint { inner: Secp256k1Impl::get_generator_point() };
-                    SyscallResult::Ok(Option::Some(point))
-                }
-                fn secp256_ec_get_point_from_x_syscall(
-                    x: u256, y_parity: bool
-                ) -> SyscallResult<Option<UnsupportedCurvePoint>> {
-                    let point = UnsupportedCurvePoint { inner: Secp256k1Impl::get_generator_point() };
-                    SyscallResult::Ok(Option::Some(point))
-                }
-            }
-            
-            impl UnsupportedCurvePointImpl of Secp256PointTrait<UnsupportedCurvePoint> {
-                fn get_coordinates(self: UnsupportedCurvePoint) -> SyscallResult<(u256, u256)> {
-                    SyscallResult::Ok((1.into(), 1.into()))
-                }
-                fn add(self: UnsupportedCurvePoint, other: UnsupportedCurvePoint) -> SyscallResult<UnsupportedCurvePoint> {
-                    SyscallResult::Ok(self)
-                }
-                fn mul(self: UnsupportedCurvePoint, scalar: u256) -> SyscallResult<UnsupportedCurvePoint> {
-                    SyscallResult::Ok(self)
-                }
-            }
-            
-            #[test]
-            #[should_panic(expected: ('Currently only Secp256k1 and', 'Secp256r1 curves are supported'))]
-            fn unsupported_curve() {
-                let key_pair = KeyPairTrait::<u256, UnsupportedCurvePoint>::generate();
+                assert(key_pair_secp256k1.verify(msg_hash.into(), (r_stark.into(), s_stark.into())) == false, 'Signature should be invalid');
             }
         "
     ));
@@ -281,13 +221,12 @@ fn test_unsupported_curve() {
 fn test_invalid_secret_key() {
     let test = test_case!(indoc!(
         r"
-            use core::traits::TryInto;
-            use snforge_std::signature::{KeyPair, KeyPairTrait, SignerTrait, VerifierTrait};
-            use snforge_std::signature::stark_curve::{StarkCurveKeyPairImpl, StarkCurveSignerImpl, StarkCurveVerifierImpl};
-            use snforge_std::signature::secp256_curve::{Secp256CurveKeyPairImpl, Secp256CurveSignerImpl, Secp256CurveVerifierImpl};
-            use starknet::secp256k1::{Secp256k1Impl, Secp256k1Point, Secp256k1PointImpl};
-            use starknet::secp256r1::{Secp256r1Impl, Secp256r1Point, Secp256r1PointImpl};
-            use starknet::secp256_trait::{Secp256Trait, Secp256PointTrait};
+            use snforge_std::signature::{KeyPair, KeyPairTrait};
+            use snforge_std::signature::stark_curve::{StarkCurveKeyPairImpl, StarkCurveSignerImpl};
+            use snforge_std::signature::secp256k1_curve::{Secp256k1CurveKeyPairImpl, Secp256k1CurveSignerImpl};
+            use snforge_std::signature::secp256r1_curve::{Secp256r1CurveKeyPairImpl, Secp256r1CurveSignerImpl};
+            use starknet::secp256k1::{Secp256k1Impl, Secp256k1Point};
+            use starknet::secp256r1::{Secp256r1Impl, Secp256r1Point};
             
             #[test]
             #[should_panic(expected: ('invalid secret_key', ))]
