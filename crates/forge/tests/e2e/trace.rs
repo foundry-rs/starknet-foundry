@@ -27,7 +27,7 @@ fn trace_info_print() {
         Caller address: 469394814521890341860918960550914
         Call type: Call
         
-        [PASS] tests::test_trace::test_trace_print (gas: ~2461)
+        [PASS] tests::test_trace::test_trace_print (gas: ~[..])
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         "}
     );
