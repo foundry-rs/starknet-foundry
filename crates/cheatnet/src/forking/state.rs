@@ -1,5 +1,6 @@
 use crate::forking::cache::ForkCache;
 use crate::state::{BlockInfoReader, CheatnetBlockInfo};
+use anyhow::Context;
 use blockifier::execution::contract_class::{
     ContractClass as ContractClassBlockifier, ContractClassV0, ContractClassV1,
 };
@@ -227,6 +228,7 @@ impl StateReader for ForkStateReader {
                         temp_sierra_file.path().to_str().unwrap(),
                     ])
                     .output()
+                    .context("Error while compiling Sierra of forked contract")
                     .unwrap()
                     .stdout;
                 let casm_contract_class: CasmContractClass = serde_json::from_slice(&casm).unwrap();

@@ -2,10 +2,10 @@ use anyhow::{anyhow, Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
 use scarb_metadata::{CompilationUnitMetadata, Metadata, PackageId};
 use serde::Deserialize;
+use serde_json::Value;
 use std::collections::HashMap;
 use std::fs;
 use std::process::Command;
-use serde_json::Value;
 
 pub use command::*;
 
@@ -61,7 +61,7 @@ impl StarknetContractArtifacts {
                     .output()
                     .unwrap()
                     .stdout;
-                let casm : Value = serde_json::from_slice(&casm).unwrap();
+                let casm: Value = serde_json::from_slice(&casm).unwrap();
                 casm.to_string()
             }
             Some(casm_path) => fs::read_to_string(base_path.join(casm_path))?,
