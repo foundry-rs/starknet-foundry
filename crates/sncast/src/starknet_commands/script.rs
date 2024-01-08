@@ -24,12 +24,11 @@ use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use camino::Utf8PathBuf;
-use cheatnet::constants::{build_block_context, build_transaction_context};
-use cheatnet::state::{CheatnetBlockInfo, DictStateReader};
 use clap::command;
 use clap::Args;
 use conversions::{FromConv, IntoConv};
 use itertools::chain;
+use runtime::context::{build_default_block_context, build_transaction_context, DictStateReader};
 use runtime::utils::BufferReader;
 use runtime::{
     CheatcodeHandlingResult, EnhancedHintError, ExtendedRuntime, ExtensionLogic, StarknetRuntime,
@@ -288,7 +287,7 @@ pub fn run(
     let (hints_dict, string_to_hint) = build_hints_dict(instructions.clone());
 
     // hint processor
-    let block_context = build_block_context(CheatnetBlockInfo::default());
+    let block_context = build_default_block_context();
     let account_context = build_transaction_context();
     let mut context = EntryPointExecutionContext::new(
         &block_context.clone(),

@@ -1,5 +1,4 @@
 use crate::constants::TEST_ADDRESS;
-use crate::constants::{build_block_context, build_transaction_context};
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     AddressOrClassHash, CallFailure,
 };
@@ -11,6 +10,7 @@ use blockifier::execution::entry_point::{
     ConstructorContext, EntryPointExecutionContext, ExecutionResources,
 };
 use blockifier::execution::execution_utils::felt_to_stark_felt;
+use runtime::context::{build_block_context, build_transaction_context};
 use runtime::EnhancedHintError;
 use std::sync::Arc;
 
