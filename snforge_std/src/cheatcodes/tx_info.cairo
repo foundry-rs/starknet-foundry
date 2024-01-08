@@ -1,10 +1,5 @@
 use starknet::{ContractAddress, testing::cheatcode, contract_address_const};
 use starknet::info::v2::ResourceBounds;
-use core::clone::Clone;
-use core::option::OptionTrait;
-use core::array::ArrayTrait;
-use core::array::SpanTrait;
-use core::serde::Serde;
 use snforge_std::CheatTarget;
 
 #[derive(Copy, Drop, Serde)]
@@ -57,8 +52,8 @@ fn start_spoof(target: CheatTarget, tx_info_mock: TxInfoMock) {
     tx_info_mock.serialize(ref tx_info_serialized);
 
     let mut inputs: Array<felt252> = array![];
-    extend_array(ref inputs, cheat_target_serialized.span());
-    extend_array(ref inputs, tx_info_serialized.span());
+    inputs.append_span(cheat_target_serialized.span());
+    inputs.append_span(tx_info_serialized.span());
 
     cheatcode::<'start_spoof'>(inputs.span());
 }
@@ -69,11 +64,3 @@ fn stop_spoof(target: CheatTarget) {
     cheatcode::<'stop_spoof'>(inputs.span());
 }
 
-fn extend_array(ref array: Array<felt252>, mut span: Span<felt252>) {
-    loop {
-        match span.pop_front() {
-            Option::Some(x) => { array.append(x.clone()); },
-            Option::None => { break; }
-        };
-    };
-}
