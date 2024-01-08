@@ -22,6 +22,7 @@ toml = "0.8.8"
 rpassword = "7.3.1"
 promptly = "0.3.1"
 scarb-api = { path = "../scarb-api" }
+cheatnet = { path = "../cheatnet" }
 # Freeze reqwest dependency, because newer versions cause cast tests to fail on macs
 reqwest = "=0.11.18"
 indoc.workspace = true
@@ -37,6 +38,7 @@ itertools.workspace = true
 num-traits.workspace = true
 cairo-felt.workspace = true
 cairo-vm.workspace = true
+blockifier.workspace = true
 
 [dev-dependencies]
 ctor.workspace = true
