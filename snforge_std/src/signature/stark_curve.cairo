@@ -1,10 +1,9 @@
 use core::ecdsa::check_ecdsa_signature;
-use core::ec::{EcPointImpl, EcPoint};
+use core::ec::{EcPointImpl, EcPoint, stark_curve};
 
 use starknet::testing::cheatcode;
 
 use snforge_std::signature::{KeyPair, KeyPairTrait, SignerTrait, VerifierTrait};
-
 
 impl StarkCurveKeyPairImpl of KeyPairTrait<felt252, felt252> {
     fn generate() -> KeyPair<felt252, felt252> {
@@ -21,7 +20,8 @@ impl StarkCurveKeyPairImpl of KeyPairTrait<felt252, felt252> {
             core::panic_with_felt252('invalid secret_key');
         }
 
-        let generator = EcPointImpl::new(core::ec::stark_curve::GEN_X, core::ec::stark_curve::GEN_Y).unwrap();
+        let generator = EcPointImpl::new(stark_curve::GEN_X, stark_curve::GEN_Y)
+            .unwrap();
 
         let public_key: EcPoint = EcPointImpl::mul(generator, secret_key);
 
@@ -47,7 +47,9 @@ impl StarkCurveSignerImpl of SignerTrait<KeyPair<felt252, felt252>, felt252, (fe
     }
 }
 
-impl StarkCurveVerifierImpl of VerifierTrait<KeyPair<felt252, felt252>, felt252, (felt252, felt252)> {
+impl StarkCurveVerifierImpl of VerifierTrait<
+    KeyPair<felt252, felt252>, felt252, (felt252, felt252)
+> {
     fn verify(
         self: KeyPair<felt252, felt252>, message_hash: felt252, signature: (felt252, felt252)
     ) -> bool {
