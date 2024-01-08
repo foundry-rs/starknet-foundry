@@ -1,6 +1,3 @@
-use serde::Serde;
-
-
 #[derive(Drop, Copy, Serde)]
 enum BlockTag {
     Latest,
