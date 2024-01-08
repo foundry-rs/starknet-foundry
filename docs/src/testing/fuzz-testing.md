@@ -5,7 +5,7 @@ While it is possible to come up with these cases on your own, it is often imprac
 against a large number of possible arguments.
 
 > ℹ️ **Info**
-> Currently, Forge fuzzer only supports using randomly generated values.
+> Currently, `snforge` fuzzer only supports using randomly generated values.
 > This way of fuzzing doesn't support any kind of value generation based on code analysis, test coverage or results of
 > other fuzzer runs.
 > In the future, more advanced fuzzing execution modes will be added.
@@ -34,7 +34,7 @@ $ snforge test
 Collected 1 test(s) from package_name package
 Running 0 test(s) from src/
 Running 1 test(s) from tests/
-[PASS] tests::test_sum (fuzzer runs = 256)
+[PASS] tests::test_sum (runs: 256)
 Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 Fuzzer seed: [..]
 ```

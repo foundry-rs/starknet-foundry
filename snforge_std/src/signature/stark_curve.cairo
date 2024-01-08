@@ -1,11 +1,10 @@
-use array::{ArrayTrait, SpanTrait};
-use ecdsa::check_ecdsa_signature;
-use traits::{Into, TryInto};
-use ec::{EcPointImpl};
+use core::ecdsa::check_ecdsa_signature;
+use core::ec::{EcPointImpl, EcPoint};
 
 use starknet::testing::cheatcode;
 
 use snforge_std::signature::{KeyPair, KeyPairTrait, SignerTrait, VerifierTrait};
+
 
 impl StarkCurveKeyPairImpl of KeyPairTrait<felt252, felt252> {
     fn generate() -> KeyPair<felt252, felt252> {
@@ -19,10 +18,10 @@ impl StarkCurveKeyPairImpl of KeyPairTrait<felt252, felt252> {
 
     fn from_secret_key(secret_key: felt252) -> KeyPair<felt252, felt252> {
         if (secret_key == 0) {
-            panic_with_felt252('invalid secret_key');
+            core::panic_with_felt252('invalid secret_key');
         }
 
-        let generator = EcPointImpl::new(ec::stark_curve::GEN_X, ec::stark_curve::GEN_Y).unwrap();
+        let generator = EcPointImpl::new(core::ec::stark_curve::GEN_X, core::ec::stark_curve::GEN_Y).unwrap();
 
         let public_key: EcPoint = EcPointImpl::mul(generator, secret_key);
 
@@ -38,7 +37,7 @@ impl StarkCurveSignerImpl of SignerTrait<KeyPair<felt252, felt252>, felt252, (fe
             'stark_sign_message'
         >(array![self.secret_key, message_hash].span());
         if *output[0] == 1 {
-            panic_with_felt252(*output[1]);
+            core::panic_with_felt252(*output[1]);
         }
 
         let r = *output[1];

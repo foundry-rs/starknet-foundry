@@ -2,14 +2,23 @@
 
 Transaction gas cost is always important for the users. Developers need to know if their contracts are well-optimised
 and gas-efficient.
-Forge supports gas estimation for each test case. All computations are based on the official
+`snforge` supports gas estimation for each test case. All computations are based on the official
 [Starknet docs](https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/fee-mechanism/#how_much_fee_is_charged_high_level_overview).
 
 ## Displaying Estimated Gas
 
+### Single Test
+
 When the test passes with no errors, estimated gas is displayed this way:
 ```shell
-[PASS] tests::simple_test, gas: ~1
+[PASS] tests::simple_test (gas: ~1)
+```
+
+### Fuzzed Tests
+
+While using the fuzzing feature additional gas statistics will be displayed:
+```shell
+[PASS] tests::fuzzing_test (runs: 256, gas: {max: ~126, min: ~1, mean: ~65.00, std deviation: ~37.31})
 ```
 
 > 📝 **Note**

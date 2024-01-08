@@ -9,4 +9,5 @@ mod elect;
 mod starknet;
 mod warp;
 mod segment_arena_user;
+mod panic_call;
 mod store_load;

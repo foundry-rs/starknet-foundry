@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use clap::Args;
 use sncast::handle_rpc_error;
-use sncast::helpers::response_structs::CallResponse;
+use sncast::response::structs::{CallResponse, Hex};
 use starknet::core::types::{BlockId, FieldElement, FunctionCall};
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::jsonrpc::HttpTransport;
@@ -43,7 +43,10 @@ pub async fn call(
             .context("Failed to convert entry point selector to FieldElement")?,
         calldata,
     };
-    let res = provider.call(function_call, block_id).await;
+    let res = provider
+        .call(function_call, block_id)
+        .await
+        .map(|v| v.into_iter().map(Hex).collect());
 
     match res {
         Ok(response) => Ok(CallResponse { response }),

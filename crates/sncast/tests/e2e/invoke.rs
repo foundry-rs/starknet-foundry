@@ -49,9 +49,11 @@ async fn test_contract_does_not_exist() {
     ]);
 
     let snapbox = runner(&args);
-    let output = String::from_utf8(snapbox.assert().success().get_output().stderr.clone()).unwrap();
 
-    assert!(output.contains("Contract error"));
+    snapbox.assert().stderr_matches(indoc! {r"
+        command: invoke
+        error: An error occurred in the called contract [..]
+    "});
 }
 
 #[test]
@@ -69,9 +71,11 @@ fn test_wrong_function_name() {
     ]);
 
     let snapbox = runner(&args);
-    let output = String::from_utf8(snapbox.assert().success().get_output().stderr.clone()).unwrap();
 
-    assert!(output.contains("Contract error"));
+    snapbox.assert().stderr_matches(indoc! {r"
+        command: invoke
+        error: An error occurred in the called contract [..]
+    "});
 }
 
 #[test]
@@ -91,13 +95,11 @@ fn test_wrong_calldata() {
     ]);
 
     let snapbox = runner(&args);
-    let bdg = snapbox.assert();
-    let out = bdg.get_output();
 
-    let stderr_str =
-        std::str::from_utf8(&out.stderr).expect("failed to convert command output to string");
-
-    assert!(stderr_str.contains("Contract error"));
+    snapbox.assert().stderr_matches(indoc! {r"
+        command: invoke
+        error: An error occurred in the called contract [..]
+    "});
 }
 
 #[test]
@@ -124,6 +126,6 @@ fn test_too_low_max_fee() {
 
     snapbox.assert().stderr_matches(indoc! {r"
         command: invoke
-        error: Max fee is smaller than the minimal transaction cost (validation plus fee transfer)
+        error: Max fee is smaller than the minimal transaction cost
     "});
 }

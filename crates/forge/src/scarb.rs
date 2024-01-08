@@ -4,7 +4,7 @@ use crate::compiled_raw::CompiledTestCrateRaw;
 use crate::scarb::config::{ForgeConfig, RawForgeConfig};
 use anyhow::{anyhow, Context, Result};
 use camino::Utf8Path;
-use scarb_artifacts::ScarbCommand;
+use scarb_api::ScarbCommand;
 use scarb_ui::args::PackagesFilter;
 
 pub mod config;
@@ -75,9 +75,10 @@ mod tests {
     use indoc::{formatdoc, indoc};
     use scarb_metadata::MetadataCommand;
     use std::str::FromStr;
+    use test_utils::tempdir_with_tool_versions;
 
     fn setup_package(package_name: &str) -> TempDir {
-        let temp = TempDir::new().unwrap();
+        let temp = tempdir_with_tool_versions().unwrap();
         temp.copy_from(
             format!("tests/data/{package_name}"),
             &["**/*.cairo", "**/*.toml"],

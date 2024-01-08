@@ -57,7 +57,7 @@ Make sure that the version in `tag` matches `snforge`. You can check the current
 
 ```shell
 $ snforge --version
-forge 0.12.0
+snforge 0.12.0
 ```
 
 It is also possible to add this dependency

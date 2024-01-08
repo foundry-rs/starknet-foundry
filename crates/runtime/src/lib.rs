@@ -34,6 +34,8 @@ use cairo_vm::vm::errors::memory_errors::MemoryError;
 use starknet_api::StarknetApiError;
 use thiserror::Error;
 
+pub mod utils;
+
 pub trait SyscallPtrAccess {
     fn get_mut_syscall_ptr(&mut self) -> &mut Relocatable;
 

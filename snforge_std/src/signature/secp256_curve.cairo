@@ -1,6 +1,3 @@
-use array::{ArrayTrait, SpanTrait};
-use traits::{Into, TryInto};
-
 use starknet::secp256_trait::{Secp256Trait, Secp256PointTrait, is_valid_signature};
 use starknet::secp256k1::{Secp256k1Point, Secp256k1Impl};
 use starknet::secp256r1::{Secp256r1Point, Secp256r1Impl};
@@ -30,7 +27,7 @@ impl Secp256CurveKeyPairImpl<
 
     fn from_secret_key(secret_key: u256) -> KeyPair<u256, Secp256Point> {
         if (secret_key == 0_u256 || secret_key >= Secp256Impl::get_curve_size()) {
-            panic_with_felt252('invalid secret_key');
+            core::panic_with_felt252('invalid secret_key');
         }
 
         let generator = Secp256Impl::get_generator_point();
@@ -58,7 +55,7 @@ impl Secp256CurveSignerImpl<
         >(array![*curve[0], sk_low, sk_high, msg_hash_low, msg_hash_high].span());
 
         if *output[0] == 1 {
-            panic_with_felt252(*output[1]);
+            core::panic_with_felt252(*output[1]);
         }
 
         let r = to_u256(*output[1], *output[2]);

@@ -154,7 +154,7 @@ fn parse_output<T: DeserializeOwned>(output: &[u8]) -> T {
             Err(_) => continue,
         }
     }
-    panic!("Failed to deserialize stdout to JSON");
+    panic!("Failed to deserialize stdout JSON to struct");
 }
 
 #[derive(Deserialize)]

@@ -1,10 +1,3 @@
-use array::ArrayTrait;
-use array::SpanTrait;
-use clone::Clone;
-use serde::Serde;
-use option::OptionTrait;
-use traits::Into;
-
 use starknet::testing::cheatcode;
 use starknet::ContractAddress;
 
@@ -63,6 +56,7 @@ impl EventFetcherImpl of EventFetcher {
 
 trait EventAssertions<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>> {
     fn assert_emitted(ref self: EventSpy, events: @Array<(ContractAddress, T)>);
+    fn assert_not_emitted(ref self: EventSpy, events: @Array<(ContractAddress, T)>);
 }
 
 impl EventAssertionsImpl<
@@ -78,7 +72,7 @@ impl EventAssertionsImpl<
             }
 
             let (from, event) = events.at(i);
-            let emitted = assert_if_emitted(ref self, from, event);
+            let emitted = is_emitted(ref self, from, event);
 
             if !emitted {
                 panic(
@@ -91,9 +85,31 @@ impl EventAssertionsImpl<
             i += 1;
         };
     }
+
+    fn assert_not_emitted(ref self: EventSpy, events: @Array<(ContractAddress, T)>) {
+        self.fetch_events();
+
+        let mut i = 0;
+        loop {
+            if i >= events.len() {
+                break;
+            }
+
+            let (from, event) = events.at(i);
+            let emitted = is_emitted(ref self, from, event);
+
+            if emitted {
+                panic(
+                    array!['Event with matching data and', 'keys was emitted from', (*from).into()]
+                );
+            }
+
+            i += 1;
+        };
+    }
 }
 
-fn assert_if_emitted<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>>(
+fn is_emitted<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>>(
     ref self: EventSpy, expected_from: @ContractAddress, expected_event: @T
 ) -> bool {
     let emitted_events = @self.events;

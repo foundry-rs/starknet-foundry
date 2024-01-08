@@ -31,13 +31,13 @@ use clap::command;
 use clap::Args;
 use conversions::{FromConv, IntoConv};
 use itertools::chain;
-use num_traits::ToPrimitive;
+use runtime::utils::BufferReader;
 use runtime::EnhancedHintError;
-use scarb_artifacts::ScarbCommand;
-use sncast::helpers::response_structs::ScriptResponse;
+use scarb_api::ScarbCommand;
 use sncast::helpers::scarb_utils::{
     get_package_metadata, get_scarb_manifest, get_scarb_metadata_with_deps, CastConfig,
 };
+use sncast::response::structs::ScriptResponse;
 use starknet::accounts::Account;
 use starknet::core::types::{BlockId, BlockTag::Pending, FieldElement};
 use starknet::providers::jsonrpc::HttpTransport;
@@ -175,15 +175,15 @@ impl CairoHintProcessor<'_> {
         let mut buffer = MemBuffer::new_segment(vm);
         let result_start = buffer.ptr;
 
+        let mut reader = BufferReader::new(inputs);
+
         match selector {
             "call" => {
-                let contract_address = inputs[0].clone().into_();
-                let function_name = as_cairo_short_string(&inputs[1])
+                let contract_address = reader.read_felt().into_();
+                let function_name = reader
+                    .read_short_string()
                     .expect("Failed to convert function name to short string");
-                let calldata_length = inputs[2]
-                    .to_usize()
-                    .expect("Failed to convert calldata length to usize");
-                let calldata = Vec::from(&inputs[3..(3 + calldata_length)]);
+                let calldata = reader.read_vec();
                 let calldata_felts: Vec<FieldElement> = calldata
                     .iter()
                     .map(|el| FieldElement::from_(el.clone()))
@@ -202,28 +202,18 @@ impl CairoHintProcessor<'_> {
                     .expect("Failed to insert data length");
 
                 buffer
-                    .write_data(call_response.response.iter().map(|el| Felt252::from_(*el)))
+                    .write_data(call_response.response.iter().map(|el| Felt252::from_(el.0)))
                     .expect("Failed to insert data");
 
                 Ok(())
             }
             "declare" => {
-                let contract_name = as_cairo_short_string(&inputs[0])
+                let contract_name = reader
+                    .read_short_string()
                     .expect("Failed to convert contract name to string");
-                let mut offset = 1;
-                let max_fee = if inputs[offset] == 0.into() {
-                    offset += 1;
-                    Some(inputs[offset].clone().into_())
-                } else {
-                    None
-                };
-                offset += 1;
-                let nonce = if inputs[offset] == 0.into() {
-                    offset += 1;
-                    Some(inputs[offset].clone().into_())
-                } else {
-                    None
-                };
+                let max_fee = reader.read_option_felt().map(conversions::IntoConv::into_);
+                let nonce = reader.read_option_felt().map(conversions::IntoConv::into_);
+
                 let account = self.runtime.block_on(get_account(
                     &self.config.account,
                     &self.config.accounts_file,
@@ -248,50 +238,27 @@ impl CairoHintProcessor<'_> {
                 ))?;
 
                 buffer
-                    .write(Felt252::from_(declare_response.class_hash))
+                    .write(Felt252::from_(declare_response.class_hash.0))
                     .expect("Failed to insert class hash");
 
                 buffer
-                    .write(Felt252::from_(declare_response.transaction_hash))
+                    .write(Felt252::from_(declare_response.transaction_hash.0))
                     .expect("Failed to insert transaction hash");
 
                 Ok(())
             }
             "deploy" => {
-                let class_hash = inputs[0].clone().into_();
-                let calldata_length = inputs[1]
-                    .to_usize()
-                    .expect("Failed to convert calldata length to usize");
-                let constructor_calldata: Vec<FieldElement> = {
-                    let calldata = Vec::from(&inputs[2..(2 + calldata_length)]);
-                    calldata
-                        .iter()
-                        .map(|el| FieldElement::from_(el.clone()))
-                        .collect()
-                };
-                let mut offset = 2 + calldata_length;
-                let salt = if inputs[offset] == 0.into() {
-                    offset += 1;
-                    Some(inputs[offset].clone().into_())
-                } else {
-                    None
-                };
-                offset += 1;
-                let unique = { inputs[offset] == 1.into() };
-                offset += 1;
-                let max_fee = if inputs[offset] == 0.into() {
-                    offset += 1;
-                    Some(inputs[offset].clone().into_())
-                } else {
-                    None
-                };
-                offset += 1;
-                let nonce = if inputs[offset] == 0.into() {
-                    offset += 1;
-                    Some(inputs[offset].clone().into_())
-                } else {
-                    None
-                };
+                let class_hash = reader.read_felt().into_();
+                let constructor_calldata: Vec<FieldElement> = reader
+                    .read_vec()
+                    .iter()
+                    .map(|el| FieldElement::from_(el.clone()))
+                    .collect();
+
+                let salt = reader.read_option_felt().map(conversions::IntoConv::into_);
+                let unique = reader.read_bool();
+                let max_fee = reader.read_option_felt().map(conversions::IntoConv::into_);
+                let nonce = reader.read_option_felt().map(conversions::IntoConv::into_);
 
                 let account = self.runtime.block_on(get_account(
                     &self.config.account,
@@ -316,43 +283,27 @@ impl CairoHintProcessor<'_> {
                 ))?;
 
                 buffer
-                    .write(Felt252::from_(deploy_response.contract_address))
+                    .write(Felt252::from_(deploy_response.contract_address.0))
                     .expect("Failed to insert contract address");
 
                 buffer
-                    .write(Felt252::from_(deploy_response.transaction_hash))
+                    .write(Felt252::from_(deploy_response.transaction_hash.0))
                     .expect("Failed to insert transaction hash");
 
                 Ok(())
             }
             "invoke" => {
-                let contract_address = FieldElement::from_(inputs[0].clone());
-                let entry_point_name = as_cairo_short_string(&inputs[1])
+                let contract_address = reader.read_felt().into_();
+                let entry_point_name = reader
+                    .read_short_string()
                     .expect("Failed to convert entry point name to short string");
-                let calldata_length = inputs[2]
-                    .to_usize()
-                    .expect("Failed to convert calldata length to usize");
-                let calldata: Vec<FieldElement> = {
-                    let calldata = Vec::from(&inputs[3..(3 + calldata_length)]);
-                    calldata
-                        .iter()
-                        .map(|el| FieldElement::from_(el.clone()))
-                        .collect()
-                };
-                let mut offset = 3 + calldata_length;
-                let max_fee = if inputs[offset] == 0.into() {
-                    offset += 1;
-                    Some(inputs[offset].clone().into_())
-                } else {
-                    None
-                };
-                offset += 1;
-                let nonce = if inputs[offset] == 0.into() {
-                    offset += 1;
-                    Some(inputs[offset].clone().into_())
-                } else {
-                    None
-                };
+                let calldata: Vec<FieldElement> = reader
+                    .read_vec()
+                    .iter()
+                    .map(|el| FieldElement::from_(el.clone()))
+                    .collect();
+                let max_fee = reader.read_option_felt().map(conversions::IntoConv::into_);
+                let nonce = reader.read_option_felt().map(conversions::IntoConv::into_);
 
                 let account = self.runtime.block_on(get_account(
                     &self.config.account,
@@ -376,13 +327,14 @@ impl CairoHintProcessor<'_> {
                 ))?;
 
                 buffer
-                    .write(Felt252::from_(invoke_response.transaction_hash))
+                    .write(Felt252::from_(invoke_response.transaction_hash.0))
                     .expect("Failed to insert transaction hash");
 
                 Ok(())
             }
             "get_nonce" => {
-                let block_id = as_cairo_short_string(&inputs[0])
+                let block_id = reader
+                    .read_short_string()
                     .expect("Failed to convert entry point name to short string");
                 let account = self.runtime.block_on(get_account(
                     &self.config.account,

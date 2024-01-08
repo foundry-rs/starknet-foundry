@@ -2,7 +2,7 @@
 
 ## Overview
 
-Starknet Foundry cast supports executing multiple deployments or calls with the `sncast multicall run` command.
+Starknet Foundry `sncast` supports executing multiple deployments or calls with the `sncast multicall run` command.
 
 > 📝 **Note**
 > `sncast multicall run` executes only one transaction containing all the prepared calls. Which means the fee is paid once.
@@ -11,7 +11,7 @@ You need to provide a **path** to a `.toml` file with declarations of desired op
 
 You can also compose such config `.toml` file with the `sncast multicall new` command.
 
-For a detailed CLI description, see the [multicall command reference](../appendix/cast/multicall/multicall.md).
+For a detailed CLI description, see the [multicall command reference](../appendix/sncast/multicall/multicall.md).
 
 ## Example
 
