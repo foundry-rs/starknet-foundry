@@ -7,7 +7,6 @@ members = [
     "crates/cheatnet",
     "crates/conversions",
     "crates/runtime",
-    "crates/sierra-casm",
     "crates/scarb-api"
 ]
 
