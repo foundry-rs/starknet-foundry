@@ -295,12 +295,12 @@ pub async fn wait_for_tx(
                 }
             },
             Ok(starknet::core::types::TransactionStatus::Received)
-            | Err(StarknetError(TransactionHashNotFound)) => {}
+            | Err(StarknetError(TransactionHashNotFound)) => {
+                let remaining_time = i * u16::from(retry_interval);
+                println!("Waiting for transaction to be accepted ({i} retries / {remaining_time}s left until timeout)");
+            }
             Err(err) => return Err(err.into()),
         };
-
-        let remaining_time = i * u16::from(retry_interval);
-        println!("Waiting for transaction to be accepted ({i} retries / {remaining_time}s left until timeout)");
 
         sleep(Duration::from_secs(retry_interval.into()));
     }
