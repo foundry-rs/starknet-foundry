@@ -10,9 +10,9 @@ fn main() {
     'Mapw'.print();
     'declare'.print();
 
-
-
-    let declare_with_params = declare('ConstructorWithParamssd', Option::Some(max_fee), Option::None);
+    let declare_with_params = declare(
+        'ConstructorWithParamssd', Option::Some(max_fee), Option::None
+    );
     'ConstructorWithParams'.print();
     'declare'.print();
 
@@ -20,15 +20,24 @@ fn main() {
     invoke_nonce.print();
     let salt = 0x3;
     let deploy_result = deploy(
-        declare_map.class_hash, ArrayTrait::new(), Option::Some(salt), true, Option::Some(max_fee), Option::None
+        declare_map.class_hash,
+        ArrayTrait::new(),
+        Option::Some(salt),
+        true,
+        Option::Some(max_fee),
+        Option::None
     );
 
     let invoke_nonce = get_nonce('pending');
     invoke_nonce.print();
     let salt = 0x4;
 
-
     let deploy_result = deploy(
-        declare_with_params.class_hash, array![0x2, 0x2, 0x0], Option::Some(salt), true, Option::Some(max_fee), Option::None
+        declare_with_params.class_hash,
+        array![0x2, 0x2, 0x0],
+        Option::Some(salt),
+        true,
+        Option::Some(max_fee),
+        Option::None
     );
 }

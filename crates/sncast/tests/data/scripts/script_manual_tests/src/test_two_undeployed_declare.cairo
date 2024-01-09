@@ -16,7 +16,9 @@ fn main() {
     let invoke_nonce = get_nonce('pending');
     invoke_nonce.print();
 
-    let declare_with_params = declare('ConstructorWithParams', Option::Some(max_fee), Option::Some(invoke_nonce));
+    let declare_with_params = declare(
+        'ConstructorWithParams', Option::Some(max_fee), Option::Some(invoke_nonce)
+    );
     'ConstructorWithParams'.print();
     'declare'.print();
 }
