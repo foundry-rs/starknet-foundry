@@ -1,29 +1,36 @@
 use std::marker::PhantomData;
 
+use blockifier::execution::entry_point::{CallEntryPoint, CallType};
+use blockifier::execution::execution_utils::felt_from_ptr;
+use blockifier::execution::syscalls::{
+    CallContractRequest, LibraryCallRequest, SyscallRequestWrapper,
+};
 use blockifier::execution::{
     deprecated_syscalls::DeprecatedSyscallSelector,
-    execution_utils::{stark_felt_from_ptr, ReadOnlySegment},
+    execution_utils::ReadOnlySegment,
     syscalls::{
-        hint_processor::{read_felt_array, SyscallExecutionError, SyscallHintProcessor},
-        SyscallRequest, SyscallResponse, SyscallResponseWrapper, SyscallResult,
+        hint_processor::SyscallHintProcessor, SyscallRequest, SyscallResponse,
+        SyscallResponseWrapper,
     },
 };
 
-use cairo_felt::Felt252;
-use cairo_vm::{
-    types::relocatable::Relocatable,
-    vm::{errors::hint_errors::HintError, vm_core::VirtualMachine},
-};
-use conversions::{FromConv, IntoConv};
-use num_traits::ToPrimitive;
+use crate::constants::TEST_ADDRESS;
+use cairo_vm::vm::{errors::hint_errors::HintError, vm_core::VirtualMachine};
+use conversions::FromConv;
 use runtime::{ExtendedRuntime, ExtensionLogic, SyscallHandlingResult, SyscallPtrAccess};
-use starknet_api::{core::ContractAddress, hash::StarkFelt};
+use starknet_api::core::PatriciaKey;
+use starknet_api::deprecated_contract_class::EntryPointType;
+use starknet_api::hash::StarkHash;
+use starknet_api::{core::ContractAddress, hash::StarkFelt, patricia_key};
 
 use crate::state::{BlockifierState, CheatnetState};
 
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
+    call_entry_point, AddressOrClassHash,
+};
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::{
     execution::cheated_syscalls::SingleSegmentResponse,
-    rpc::{call_contract, CallContractFailure, CallContractOutput, CallContractResult},
+    rpc::{CallFailure, CallOutput, CallResult},
 };
 
 use super::io_runtime_extension::IORuntime;
@@ -48,88 +55,147 @@ impl<'a> ExtensionLogic for CallToBlockifierExtension<'a> {
         extended_runtime: &mut IORuntime<'a>,
     ) -> Result<SyscallHandlingResult, HintError> {
         match selector {
-            // We execute contract calls with modified blockifier
+            // We clear it here to ensure that on each new contract call
+            // deploy syscall and library call made from test code
+            // we start with an empty trace
+            // Same case when handling l1_handler_execute and in `deploy_at`
+            DeprecatedSyscallSelector::CallContract
+            | DeprecatedSyscallSelector::LibraryCall
+            | DeprecatedSyscallSelector::LibraryCallL1Handler
+            | DeprecatedSyscallSelector::Deploy => extended_runtime
+                .extended_runtime
+                .extension
+                .cheatnet_state
+                .trace_info
+                .clear(),
+            _ => (),
+        }
+        match selector {
+            // We execute contract calls and library calls with modified blockifier
             // This is redirected to drop ForgeRuntimeExtension
-            // and to ensure it behaves closely to real on-chain environment
+            // and to enable handling call errors with safe dispatchers in the test code
+            // since call errors cannot be handled on real starknet
+            // https://docs.starknet.io/documentation/architecture_and_concepts/Smart_Contracts/system-calls-cairo1/#call_contract
             DeprecatedSyscallSelector::CallContract => {
-                let call_args = CallContractArgs::read(vm, extended_runtime.get_mut_syscall_ptr())?;
-                let cheatable_starknet_runtime = &mut extended_runtime.extended_runtime;
-                let cheatnet_state: &mut _ = cheatable_starknet_runtime.extension.cheatnet_state;
-                let syscall_handler = &mut cheatable_starknet_runtime.extended_runtime.hint_handler;
-                let mut blockifier_state = BlockifierState::from(syscall_handler.state);
-
-                let call_result =
-                    execute_call_contract(&mut blockifier_state, cheatnet_state, &call_args);
-                write_call_contract_response(
-                    syscall_handler,
-                    cheatnet_state,
-                    vm,
-                    &call_args,
-                    call_result,
-                )?;
+                execute_syscall::<CallContractRequest>(vm, extended_runtime)?;
+                Ok(SyscallHandlingResult::Handled(()))
+            }
+            DeprecatedSyscallSelector::LibraryCall => {
+                execute_syscall::<LibraryCallRequest>(vm, extended_runtime)?;
                 Ok(SyscallHandlingResult::Handled(()))
             }
             _ => Ok(SyscallHandlingResult::Forwarded),
         }
     }
 }
-struct CallContractArgs {
-    _selector: Felt252,
-    gas_counter: u64,
-    contract_address: ContractAddress,
-    entry_point_selector: Felt252,
-    calldata: Vec<Felt252>,
+
+trait ExecuteCall
+where
+    Self: SyscallRequest,
+{
+    fn execute_call(
+        self,
+        blockifier_state: &mut BlockifierState,
+        cheatnet_state: &mut CheatnetState,
+    ) -> CallOutput;
 }
 
-impl SyscallRequest for CallContractArgs {
-    fn read(vm: &VirtualMachine, ptr: &mut Relocatable) -> SyscallResult<CallContractArgs> {
-        let selector = stark_felt_from_ptr(vm, ptr)?.into_();
-        let gas_counter = Felt252::from_(stark_felt_from_ptr(vm, ptr)?)
-            .to_u64()
-            .unwrap();
+impl ExecuteCall for CallContractRequest {
+    fn execute_call(
+        self: CallContractRequest,
+        blockifier_state: &mut BlockifierState,
+        cheatnet_state: &mut CheatnetState,
+    ) -> CallOutput {
+        let contract_address = self.contract_address;
 
-        let contract_address = stark_felt_from_ptr(vm, ptr)?.into_();
-        let entry_point_selector = stark_felt_from_ptr(vm, ptr)?.into_();
+        let entry_point = CallEntryPoint {
+            class_hash: None,
+            code_address: Some(contract_address),
+            entry_point_type: EntryPointType::External,
+            entry_point_selector: self.function_selector,
+            calldata: self.calldata,
+            storage_address: contract_address,
+            caller_address: ContractAddress(patricia_key!(TEST_ADDRESS)),
+            call_type: CallType::Call,
+            initial_gas: u64::MAX,
+        };
 
-        let calldata = read_felt_array::<SyscallExecutionError>(vm, ptr)?
-            .iter()
-            .map(|el| (*el).into_())
-            .collect();
-
-        Ok(CallContractArgs {
-            _selector: selector,
-            gas_counter,
-            contract_address,
-            entry_point_selector,
-            calldata,
-        })
+        call_entry_point(
+            blockifier_state,
+            cheatnet_state,
+            entry_point,
+            &AddressOrClassHash::ContractAddress(contract_address),
+        )
+        .unwrap_or_else(|err| panic!("Transaction execution error: {err}"))
     }
 }
 
-fn execute_call_contract(
-    blockifier_state: &mut BlockifierState,
-    cheatnet_state: &mut CheatnetState,
-    call_args: &CallContractArgs,
-) -> CallContractOutput {
-    call_contract(
-        blockifier_state,
-        cheatnet_state,
-        &call_args.contract_address,
-        &call_args.entry_point_selector,
-        &call_args.calldata,
-    )
-    .unwrap_or_else(|err| panic!("Transaction execution error: {err}"))
+impl ExecuteCall for LibraryCallRequest {
+    fn execute_call(
+        self: LibraryCallRequest,
+        blockifier_state: &mut BlockifierState,
+        cheatnet_state: &mut CheatnetState,
+    ) -> CallOutput {
+        let class_hash = self.class_hash;
+
+        let entry_point = CallEntryPoint {
+            class_hash: Some(class_hash),
+            code_address: None,
+            entry_point_type: EntryPointType::External,
+            entry_point_selector: self.function_selector,
+            calldata: self.calldata,
+            storage_address: ContractAddress(patricia_key!(TEST_ADDRESS)),
+            caller_address: ContractAddress::default(),
+            call_type: CallType::Delegate,
+            initial_gas: u64::MAX,
+        };
+
+        call_entry_point(
+            blockifier_state,
+            cheatnet_state,
+            entry_point,
+            &AddressOrClassHash::ClassHash(class_hash),
+        )
+        .unwrap_or_else(|err| panic!("Transaction execution error: {err}"))
+    }
 }
 
-fn write_call_contract_response(
+fn execute_syscall<Request: ExecuteCall + SyscallRequest>(
+    vm: &mut VirtualMachine,
+    io_runtime: &mut IORuntime,
+) -> Result<(), HintError> {
+    let _selector = felt_from_ptr(vm, io_runtime.get_mut_syscall_ptr())?;
+
+    let SyscallRequestWrapper {
+        gas_counter,
+        request,
+    } = SyscallRequestWrapper::<Request>::read(vm, io_runtime.get_mut_syscall_ptr())?;
+
+    let cheatable_starknet_runtime = &mut io_runtime.extended_runtime;
+    let cheatnet_state: &mut _ = cheatable_starknet_runtime.extension.cheatnet_state;
+    let syscall_handler = &mut cheatable_starknet_runtime.extended_runtime.hint_handler;
+    let mut blockifier_state = BlockifierState::from(syscall_handler.state);
+
+    let call_result = request.execute_call(&mut blockifier_state, cheatnet_state);
+    write_call_response(
+        syscall_handler,
+        cheatnet_state,
+        vm,
+        gas_counter,
+        call_result,
+    )?;
+    Ok(())
+}
+
+fn write_call_response(
     syscall_handler: &mut SyscallHintProcessor<'_>,
     cheatnet_state: &mut CheatnetState,
     vm: &mut VirtualMachine,
-    call_args: &CallContractArgs,
-    call_output: CallContractOutput,
+    gas_counter: u64,
+    call_output: CallOutput,
 ) -> Result<(), HintError> {
     let response_wrapper: SyscallResponseWrapper<SingleSegmentResponse> = match call_output.result {
-        CallContractResult::Success { ret_data, .. } => {
+        CallResult::Success { ret_data, .. } => {
             let memory_segment_start_ptr = syscall_handler
                 .read_only_segments
                 .allocate(vm, &ret_data.iter().map(Into::into).collect())?;
@@ -140,7 +206,7 @@ fn write_call_contract_response(
                 .extend(&call_output.used_resources);
 
             SyscallResponseWrapper::Success {
-                gas_counter: call_args.gas_counter,
+                gas_counter,
                 response: SingleSegmentResponse {
                     segment: ReadOnlySegment {
                         start_ptr: memory_segment_start_ptr,
@@ -149,17 +215,15 @@ fn write_call_contract_response(
                 },
             }
         }
-        CallContractResult::Failure(failure_type) => match failure_type {
-            CallContractFailure::Panic { panic_data, .. } => SyscallResponseWrapper::Failure {
-                gas_counter: call_args.gas_counter,
+        CallResult::Failure(failure_type) => match failure_type {
+            CallFailure::Panic { panic_data, .. } => SyscallResponseWrapper::Failure {
+                gas_counter,
                 error_data: panic_data
                     .iter()
                     .map(|el| StarkFelt::from_(el.clone()))
                     .collect(),
             },
-            CallContractFailure::Error { msg, .. } => {
-                return Err(HintError::CustomHint(Box::from(msg)))
-            }
+            CallFailure::Error { msg, .. } => return Err(HintError::CustomHint(Box::from(msg))),
         },
     };
 

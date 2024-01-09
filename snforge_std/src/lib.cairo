@@ -48,3 +48,5 @@ mod fs;
 mod env;
 
 mod signature;
+
+mod trace;
