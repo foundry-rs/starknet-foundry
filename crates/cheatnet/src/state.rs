@@ -5,6 +5,7 @@ use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spoof::TxInf
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::{
     Event, SpyTarget,
 };
+use blockifier::execution::entry_point::CallEntryPoint;
 use blockifier::state::state_api::State;
 use blockifier::{
     execution::contract_class::ContractClass,
@@ -236,6 +237,8 @@ pub struct CheatnetState {
     pub block_info: CheatnetBlockInfo,
     // execution resources used by all contract calls
     pub used_resources: UsedResources,
+    // trace info of the last call
+    pub trace_info: Vec<CallEntryPoint>,
 }
 
 impl CheatnetState {

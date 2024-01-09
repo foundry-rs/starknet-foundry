@@ -1,6 +1,7 @@
 use anyhow::{anyhow, Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
 use scarb_metadata::{CompilationUnitMetadata, Metadata, PackageId};
+use semver::VersionReq;
 use serde::Deserialize;
 use serde_json::Value;
 use std::collections::HashMap;
@@ -191,6 +192,24 @@ pub fn name_for_package(metadata: &Metadata, package: &PackageId) -> Result<Stri
     Ok(package.name.clone())
 }
 
+/// Checks if the specified package has version compatible with the specified requirement
+pub fn package_matches_version_requirement(
+    metadata: &Metadata,
+    name: &str,
+    version_req: &VersionReq,
+) -> Result<bool> {
+    let packages: Vec<&scarb_metadata::PackageMetadata> = metadata
+        .packages
+        .iter()
+        .filter(|package| package.name == name)
+        .collect();
+    match packages[..] {
+        [] => Ok(true),
+        [package] => Ok(version_req.matches(&package.version)),
+        _ => Err(anyhow!("Package {name} is duplicated in dependencies")),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -278,6 +297,53 @@ mod tests {
             temp.path()
                 .join("target/dev/basic_package.starknet_artifacts.json")
         );
+    }
+
+    #[test]
+    fn package_matches_version_requirement_test() {
+        let temp = setup_package("basic_package");
+
+        let manifest_path = temp.child("Scarb.toml");
+        manifest_path
+            .write_str(&formatdoc!(
+                r#"
+                [package]
+                name = "version_checker"
+                version = "0.1.0"
+
+                [[target.starknet-contract]]
+                sierra = true
+
+                [dependencies]
+                starknet = "2.4.0"
+                "#,
+            ))
+            .unwrap();
+
+        let scarb_metadata = MetadataCommand::new()
+            .inherit_stderr()
+            .current_dir(temp.path())
+            .exec()
+            .unwrap();
+
+        assert!(package_matches_version_requirement(
+            &scarb_metadata,
+            "starknet",
+            &VersionReq::parse("2.4").unwrap(),
+        )
+        .unwrap());
+        assert!(package_matches_version_requirement(
+            &scarb_metadata,
+            "not_existing",
+            &VersionReq::parse("2.4").unwrap(),
+        )
+        .unwrap());
+        assert!(!package_matches_version_requirement(
+            &scarb_metadata,
+            "starknet",
+            &VersionReq::parse("2.5").unwrap(),
+        )
+        .unwrap());
     }
 
     #[test]

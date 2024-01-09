@@ -294,30 +294,27 @@ pub async fn wait_for_tx(
     let retries = timeout / u16::from(retry_interval);
     for i in (1..retries).rev() {
         match provider.get_transaction_status(tx_hash).await {
-            Ok(status) => match status {
-                starknet::core::types::TransactionStatus::Received => {}
-                starknet::core::types::TransactionStatus::Rejected => {
-                    return Err(anyhow!("Transaction has been rejected"));
-                }
+            Ok(starknet::core::types::TransactionStatus::Rejected) => {
+                return Err(anyhow!("Transaction has been rejected"));
+            }
+            Ok(
                 starknet::core::types::TransactionStatus::AcceptedOnL2(execution_status)
-                | starknet::core::types::TransactionStatus::AcceptedOnL1(execution_status) => {
-                    match execution_status {
-                        starknet::core::types::TransactionExecutionStatus::Succeeded => {
-                            return Ok("Transaction accepted")
-                        }
-
-                        starknet::core::types::TransactionExecutionStatus::Reverted => {
-                            return get_revert_reason(provider, tx_hash).await
-                        }
-                    }
+                | starknet::core::types::TransactionStatus::AcceptedOnL1(execution_status),
+            ) => match execution_status {
+                starknet::core::types::TransactionExecutionStatus::Succeeded => {
+                    return Ok("Transaction accepted")
+                }
+                starknet::core::types::TransactionExecutionStatus::Reverted => {
+                    return get_revert_reason(provider, tx_hash).await
                 }
             },
-            Err(StarknetError(TransactionHashNotFound)) => {}
+            Ok(starknet::core::types::TransactionStatus::Received)
+            | Err(StarknetError(TransactionHashNotFound)) => {
+                let remaining_time = i * u16::from(retry_interval);
+                println!("Waiting for transaction to be accepted ({i} retries / {remaining_time}s left until timeout)");
+            }
             Err(err) => return Err(err.into()),
         };
-
-        let remaining_time = i * u16::from(retry_interval);
-        println!("Waiting for transaction to be accepted ({i} retries / {remaining_time}s left until timeout)");
 
         sleep(Duration::from_secs(retry_interval.into()));
     }
