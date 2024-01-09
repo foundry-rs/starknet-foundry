@@ -4819,6 +4819,7 @@ dependencies = [
  "indoc 2.0.4",
  "scarb-metadata",
  "scarb-ui",
+ "semver",
  "serde",
  "serde_json",
  "sierra-casm",
