@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-- `Secp256k1` and `Secp256r1` support for `KeyPair` in `snforge_std`
+- `Secp256k1` and `Secp256r1` curves support for `KeyPair` in `snforge_std`
 
 #### Changed
 
