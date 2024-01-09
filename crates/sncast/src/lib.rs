@@ -283,17 +283,17 @@ pub async fn wait_for_tx(
             Ok(starknet::core::types::TransactionStatus::Rejected) => {
                 return Err(anyhow!("Transaction has been rejected"));
             }
-            Ok(starknet::core::types::TransactionStatus::AcceptedOnL2(execution_status)
-            | starknet::core::types::TransactionStatus::AcceptedOnL1(execution_status)) => {
-                match execution_status {
-                    starknet::core::types::TransactionExecutionStatus::Succeeded => {
-                        return Ok("Transaction accepted")
-                    }
-                    starknet::core::types::TransactionExecutionStatus::Reverted => {
-                        return get_revert_reason(provider, tx_hash).await
-                    }
+            Ok(
+                starknet::core::types::TransactionStatus::AcceptedOnL2(execution_status)
+                | starknet::core::types::TransactionStatus::AcceptedOnL1(execution_status),
+            ) => match execution_status {
+                starknet::core::types::TransactionExecutionStatus::Succeeded => {
+                    return Ok("Transaction accepted")
                 }
-            }
+                starknet::core::types::TransactionExecutionStatus::Reverted => {
+                    return get_revert_reason(provider, tx_hash).await
+                }
+            },
             Ok(starknet::core::types::TransactionStatus::Received)
             | Err(StarknetError(TransactionHashNotFound)) => {}
             Err(err) => return Err(err.into()),
