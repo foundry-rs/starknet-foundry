@@ -126,7 +126,7 @@ fn store_load_wrong_data_length() {
             }
 
             #[test]
-            fn store_load_wrong_selector() {
+            fn store_load_wrong_data_length() {
                 let deployed = deploy_contract();
                 
                 let stored_balance = deployed.get_balance();
