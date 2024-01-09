@@ -138,8 +138,3 @@ fn get_nonce(block_tag: felt252) -> felt252 {
     let buf = cheatcode::<'get_nonce'>(inputs.span());
     *buf[0]
 }
-
-fn wait_for_block() -> () {
-    let inputs = array![];
-    cheatcode::<'wait_for_block'>(inputs.span());
-}
