@@ -1,10 +1,10 @@
 use crate::assert_success;
 use crate::common::state::{create_cached_state, create_cheatnet_state};
-use crate::common::{deploy_contract, felt_selector_from_name, get_contracts};
+use crate::common::{call_contract, deploy_contract, felt_selector_from_name, get_contracts};
 use cairo_felt::Felt252;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
-    call_contract, CallContractFailure, CallContractResult,
+    CallFailure, CallResult,
 };
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::{
     deploy, deploy_at,
@@ -147,7 +147,7 @@ fn deploy_contract_on_predefined_address_after_its_usage() {
     assert!(
         matches!(
             output.result,
-            CallContractResult::Failure(CallContractFailure::Error { msg, .. })
+            CallResult::Failure(CallFailure::Error { msg, .. })
             if msg.contains("Requested contract address") && msg.contains("is not deployed")
         ),
         "Wrong error message"

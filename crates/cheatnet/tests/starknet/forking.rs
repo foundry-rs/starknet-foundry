@@ -2,14 +2,13 @@ use crate::common::cache::{purge_cache, read_cache};
 use crate::common::state::{
     create_cheatnet_state, create_fork_cached_state, create_fork_cached_state_at,
 };
-use crate::common::{deploy_contract, felt_selector_from_name};
+use crate::common::{call_contract, deploy_contract, felt_selector_from_name};
 use crate::{assert_error, assert_success};
 use blockifier::state::cached_state::{CachedState, GlobalContractCache};
 use cairo_felt::Felt252;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cheatnet::constants::build_testing_state;
 use cheatnet::forking::state::ForkStateReader;
-use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::call_contract;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::deploy;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
 use cheatnet::state::{BlockInfoReader, BlockifierState, CheatnetState, ExtendedStateReader};
