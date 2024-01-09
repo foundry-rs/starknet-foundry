@@ -1,6 +1,6 @@
 # `STARK Curve`
 
-This module contains the implementation of `KeyPairTrait` for the [STARK Curve](https://docs.starknet.io/documentation/architecture_and_concepts/Cryptography/stark-curve/).
+Module containing the implementation of `KeyPairTrait` for the [STARK Curve](https://docs.starknet.io/documentation/architecture_and_concepts/Cryptography/stark-curve/).
 
 > ⚠️ **Security Warning**
 >
@@ -11,7 +11,7 @@ This module contains the implementation of `KeyPairTrait` for the [STARK Curve](
 
 ## `StarkCurveKeyPairImpl`
 
-The `StarkCurveKeyPairImpl` is an implementation of `KeyPair` with both the secret and private keys being of type `felt252`.
+Implementation of `KeyPair` for the STARK curve.
 
 ```rust
 struct KeyPair {
@@ -20,44 +20,25 @@ struct KeyPair {
 }
 ```
 
-A new key pair for the STARK curve can be obtained as follows:
-
-```rust
-use snforge_std::signature::{KeyPair, KeyPairTrait};
-use snforge_std::signature::stark_curve::StarkCurveKeyPairImpl;
-
-let key_pair = KeyPairTrait::<felt252, felt252>::generate();
-```
-
-Or, if the `secret_key` is known in advance:
-
-```rust
-use snforge_std::signature::{KeyPair, KeyPairTrait};
-use snforge_std::signature::stark_curve::StarkCurveKeyPairImpl;
-
-let secret_key = ...;
-let key_pair = KeyPairTrait::<felt252, felt252>::from_secret_key(secret_key);
-```
-
 
 ## `StarkCurveSignerImpl`
 
 Implementation of the `SignerTrait` for the STARK curve.
 
-> fn sign(self: KeyPair<felt252, felt252>, message_hash: H) -> (felt252, felt252)
+> fn sign(self: KeyPair<felt252, felt252>, message_hash: felt252) -> (felt252, felt252)
 
 
 ## `StarkCurveVerifierImpl`
 
 Implementation of the `VerifierTrait` for the STARK curve.
 
-> fn verify(self: KeyPair<felt252, felt252>, message_hash: H, signature: (felt252, felt252)) -> bool
+> fn verify(self: KeyPair<felt252, felt252>, message_hash: felt252, signature: (felt252, felt252)) -> bool
 
 
 ## Example
 
 ```rust
-use snforge_std::signature::{KeyPair, KeyPairTrait, SignerTrait, VerifierTrait};
+use snforge_std::signature::KeyPairTrait;
 use snforge_std::signature::stark_curve::{StarkCurveKeyPairImpl, StarkCurveSignerImpl, StarkCurveVerifierImpl};
 
 #[test]
