@@ -10,9 +10,7 @@ fn main() {
     'Map'.print();
     'declare'.print();
 
-    let declare_with_params = declare(
-        'ConstructorWithParams', Option::Some(max_fee), Option::None
-    );
+    let declare_with_params = declare('ConstructorWithParams', Option::Some(max_fee), Option::None);
     'ConstructorWithParams'.print();
     'declare'.print();
 
@@ -44,5 +42,4 @@ fn main() {
     let invoke_result = invoke(
         deploy_result.contract_address, 'put', array![0x1, 0x2], Option::Some(max_fee), Option::None
     );
-
 }
