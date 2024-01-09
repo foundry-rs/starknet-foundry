@@ -65,8 +65,11 @@ pub async fn deploy(
         execution
     };
 
-    let nonce = get_nonce_for_tx(account, "pending", nonce).await?;
-    let execution = execution.nonce(nonce);
+    let execution = if let Some(nonce) = get_nonce_for_tx(account, "pending", nonce).await {
+        execution.nonce(nonce)
+    } else {
+        execution
+    };
 
     let result = execution.send().await;
 

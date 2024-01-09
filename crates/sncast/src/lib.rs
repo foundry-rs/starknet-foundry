@@ -167,12 +167,23 @@ pub async fn get_nonce_for_tx(
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     block_id: &str,
     flag_nonce: Option<FieldElement>,
-) -> Result<FieldElement> {
-    if let Some(nonce) = flag_nonce {
-        return Ok(nonce);
+) -> Option<FieldElement> {
+    if flag_nonce.is_some() {
+        return flag_nonce;
     }
 
-    get_nonce(account.provider(), block_id, account.address()).await
+    let nonce = account
+        .provider()
+        .get_nonce(
+            get_block_id(block_id).expect("Failed to obtain block id"),
+            account.address(),
+        )
+        .await;
+
+    match nonce {
+        Ok(result) => Some(result),
+        Err(_) => None,
+    }
 }
 
 pub async fn get_account<'a>(

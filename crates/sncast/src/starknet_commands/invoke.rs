@@ -60,12 +60,12 @@ pub async fn execute_calls(
     nonce: Option<FieldElement>,
     wait_config: WaitForTx,
 ) -> Result<InvokeResponse> {
-    let nonce = get_nonce_for_tx(account, "pending", nonce).await?;
+    let nonce = get_nonce_for_tx(account, "pending", nonce).await;
 
     let execution_calls = account.execute(calls);
 
     let execution = apply_optional(execution_calls, max_fee, Execution::max_fee);
-    let execution = apply_optional(execution, Some(nonce), Execution::nonce);
+    let execution = apply_optional(execution, nonce, Execution::nonce);
 
     match execution.send().await {
         Ok(result) => {
