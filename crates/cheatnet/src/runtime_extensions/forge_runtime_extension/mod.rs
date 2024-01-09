@@ -530,13 +530,13 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                         .hint_handler
                         .state,
                 );
-                let target = ContractAddress::from_(inputs[0].clone());
-                let storage_address = inputs[1].clone();
+                let target = ContractAddress::from_(reader.read_felt());
+                let storage_address = reader.read_felt();
                 store(
                     &mut blockifier_state,
                     target,
                     &storage_address,
-                    &inputs[2..inputs.len()],
+                    &reader.read_vec(),
                 )
                 .expect("Failed to store");
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
@@ -550,16 +550,16 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                         .hint_handler
                         .state,
                 );
-                let target = ContractAddress::from_(inputs[0].clone());
-                let storage_address = &inputs[1];
-                let size = &inputs[2];
+                let target = ContractAddress::from_(reader.read_felt());
+                let storage_address = &reader.read_felt();
+                let size = &reader.read_felt();
                 let loaded_values = load(&mut blockifier_state, target, storage_address, size)
                     .expect("Failed to load");
                 Ok(CheatcodeHandlingResult::Handled(loaded_values))
             }
             "map_entry_address" => {
-                let map_selector = &inputs[0];
-                let keys = &inputs[1..inputs.len()];
+                let map_selector = &reader.read_felt();
+                let keys = &reader.read_vec();
                 let map_entry_address = calculate_variable_address(map_selector, Some(keys));
                 Ok(CheatcodeHandlingResult::Handled(vec![map_entry_address]))
             }

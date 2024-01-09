@@ -172,9 +172,16 @@ fn store_load_structure() {
             
             impl ToSerialized of Into<StoredStructure, Span<felt252>> {
                 fn into(self: StoredStructure) -> Span<felt252> {
+                    let mut serialized_struct: Array<felt252> = self.into();
+                    serialized_struct.span()
+                }
+            }
+            
+            impl ToArray of Into<StoredStructure, Array<felt252>> {
+                fn into(self: StoredStructure) -> Array<felt252> {
                     let mut serialized_struct: Array<felt252> = array![];
                     self.serialize(ref serialized_struct);
-                    serialized_struct.span()
+                    serialized_struct
                 }
             }
             
@@ -246,10 +253,17 @@ fn store_load_felt_to_structure() {
             
             impl ToSerialized of Into<StoredStructure, Span<felt252>> {
                 fn into(self: StoredStructure) -> Span<felt252> {
-                    let mut serialized_struct: Array<felt252> = array![];
-                    self.serialize(ref serialized_struct);
+                    let mut serialized_struct: Array<felt252> = self.into();
                     serialized_struct.span()
                 }
+            }
+            
+            impl ToArray of Into<StoredStructure, Array<felt252>> {
+                  fn into(self: StoredStructure) -> Array<felt252> {
+                      let mut serialized_struct: Array<felt252> = array![];
+                      self.serialize(ref serialized_struct);
+                      serialized_struct
+                  }
             }
             
             #[starknet::interface]
@@ -271,7 +285,7 @@ fn store_load_felt_to_structure() {
                 
                 store(
                     deployed.contract_address, 
-                    map_entry_address(selector!("felt_to_structure"), array![421]), 
+                    map_entry_address(selector!("felt_to_structure"), array![421].span()), 
                     stored_structure.into(),
                 );
                 
@@ -289,7 +303,7 @@ fn store_load_felt_to_structure() {
                 
                 let loaded = load(
                     deployed.contract_address, 
-                    map_entry_address(selector!("felt_to_structure"), array![421]), 
+                    map_entry_address(selector!("felt_to_structure"), array![421].span()), 
                     2
                 );
                 assert(loaded == stored_structure.into(), 'wrong structure stored');
@@ -326,11 +340,11 @@ fn store_load_structure_to_felt() {
                 b: NestedKey,
             }
             
-            impl ToSerialized of Into<StructuredKey, Array<felt252>> {
-                fn into(self: StructuredKey) -> Array<felt252> {
+            impl ToSerialized of Into<StructuredKey, Span<felt252>> {
+                fn into(self: StructuredKey) -> Span<felt252> {
                     let mut serialized_struct: Array<felt252> = array![];
                     self.serialize(ref serialized_struct);
-                    serialized_struct
+                    serialized_struct.span()
                 }
             }
 
@@ -372,7 +386,7 @@ fn store_load_structure_to_felt() {
                     map_entry_address(selector!("structure_to_felt"), map_key.into()), 
                     1
                 );
-                assert(loaded == array![123].span(), 'wrong felt stored');
+                assert(loaded == array![123], 'wrong felt stored');
             }
         "#
         ),
@@ -413,7 +427,7 @@ fn store_load_felt_to_felt() {
                 let deployed = deploy_contract();
                 store(
                     deployed.contract_address, 
-                    map_entry_address(selector!("felt_to_felt"), array![420]), 
+                    map_entry_address(selector!("felt_to_felt"), array![420].span()), 
                     array![123].span()
                 );
                 
@@ -428,10 +442,10 @@ fn store_load_felt_to_felt() {
                 
                 let loaded = load(
                     deployed.contract_address, 
-                    map_entry_address(selector!("felt_to_felt"), array![420]), 
+                    map_entry_address(selector!("felt_to_felt"), array![420].span()), 
                     1
                 );
-                assert(loaded == array![123].span(), 'wrong felt stored');
+                assert(loaded == array![123], 'wrong felt stored');
             }
         "#
         ),

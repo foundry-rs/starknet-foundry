@@ -102,18 +102,21 @@ fn stop_mock_call(contract_address: ContractAddress, function_name: felt252) {
 
 fn store(target: ContractAddress, storage_address: felt252, serialized_value: Span<felt252>) {
     let mut inputs = array![target.into(), storage_address];
-    inputs.append_span(serialized_value);
+    serialized_value.serialize(ref inputs);
 
     cheatcode::<'store'>(inputs.span());
 }
 
-fn load(target: ContractAddress, storage_address: felt252, size: felt252) -> Span<felt252> {
+fn load(target: ContractAddress, storage_address: felt252, size: felt252) -> Array<felt252> {
     let inputs = array![target.into(), storage_address, size];
-    cheatcode::<'load'>(inputs.span())
+    let outputs_span = cheatcode::<'load'>(inputs.span());
+    let mut output_array: Array<felt252> = array![];
+    output_array.append_span(outputs_span);
+    output_array
 }
 
-fn map_entry_address(map_selector: felt252, keys: Array<felt252>) -> felt252 {
+fn map_entry_address(map_selector: felt252, keys: Span<felt252>) -> felt252 {
     let mut inputs = array![map_selector];
-    inputs.append_span(keys.span());
+    keys.serialize(ref inputs);
     *cheatcode::<'map_entry_address'>(inputs.span()).at(0)
 }
