@@ -53,7 +53,7 @@ async fn test_rejected_transaction() {
 }
 
 #[tokio::test]
-#[should_panic(expected = "Transaction has been reverted = Insufficient max")]
+#[should_panic(expected = "Transaction has been reverted = Insufficient max fee:")]
 async fn test_wait_for_reverted_transaction() {
     let provider = create_test_provider();
     let class_hash = from_env("CAST_WITH_CONSTRUCTOR_CLASS_HASH").unwrap();
