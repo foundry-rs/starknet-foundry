@@ -314,9 +314,10 @@ async fn get_revert_reason(
     provider: &JsonRpcClient<HttpTransport>,
     tx_hash: FieldElement,
 ) -> Result<&str> {
-     let receipt = provider.get_transaction_receipt(tx_hash).await?;
+    let receipt = provider.get_transaction_receipt(tx_hash).await?;
 
-    if let starknet::core::types::ExecutionResult::Reverted { reason } = receipt.execution_result() {
+    if let starknet::core::types::ExecutionResult::Reverted { reason } = receipt.execution_result()
+    {
         Err(anyhow!("Transaction has been reverted = {reason}"))
     } else {
         unreachable!();
