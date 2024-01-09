@@ -1,0 +1,1 @@
+fn some_func() {}
