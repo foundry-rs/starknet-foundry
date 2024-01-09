@@ -1,5 +1,3 @@
-use core::array::ArrayTrait;
-use core::serde::Serde;
 use starknet::{testing::cheatcode, ContractAddress, ClassHash};
 
 #[derive(Drop, Clone)]

@@ -1,5 +1,4 @@
 use starknet::{ContractAddress, testing::cheatcode};
-use traits::Into;
 use snforge_std::cheatcodes::contract_class::RevertedTransaction;
 
 #[derive(Drop, Clone)]
