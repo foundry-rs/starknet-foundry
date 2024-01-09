@@ -20,8 +20,7 @@ impl StarkCurveKeyPairImpl of KeyPairTrait<felt252, felt252> {
             core::panic_with_felt252('invalid secret_key');
         }
 
-        let generator = EcPointImpl::new(stark_curve::GEN_X, stark_curve::GEN_Y)
-            .unwrap();
+        let generator = EcPointImpl::new(stark_curve::GEN_X, stark_curve::GEN_Y).unwrap();
 
         let public_key: EcPoint = EcPointImpl::mul(generator, secret_key);
 
