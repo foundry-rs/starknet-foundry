@@ -83,7 +83,7 @@ pub async fn declare(
 
     let casm_class_hash = casm_contract_definition.class_hash()?;
 
-    let nonce = get_nonce_for_tx(account, "latest", nonce).await?;
+    let nonce = get_nonce_for_tx(account, "pending", nonce).await?;
 
     let declaration = account.declare(Arc::new(contract_definition.flatten()?), casm_class_hash);
     let declaration = apply_optional(declaration, max_fee, Declaration::max_fee);
