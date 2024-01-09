@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - maximum number of computational steps per call set to current Starknet limit (3M)
 - `mean` and `std deviation` fields are displayed for gas usage while running fuzzing tests 
 - Cairo edition in `snforge_std` and `sncast_std` set to `2023_10`
+- `snforge_std::signature` module with `stark_curve`, `secp256k1_curve` and `secp256r1_curve` submodules
 
 #### Fixed
 
@@ -33,7 +34,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Changed 
 
-- `snforge_std::signature` module with `key_pair`, `stark_curve` and `secp_256_curve` submodules
 - fields from `starknet::info::v2::TxInfo` are now part of `TxInfoMock` from `snforge_std::cheatcodes::tx_info`
 - consistent latest block numbers for each url are now used across the whole run when testing against forks
 
