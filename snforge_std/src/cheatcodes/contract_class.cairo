@@ -1,8 +1,4 @@
 use starknet::{ContractAddress, ClassHash, testing::cheatcode};
-use array::ArrayTrait;
-use traits::Into;
-use clone::Clone;
-
 
 #[derive(Drop, Clone)]
 struct RevertedTransaction {

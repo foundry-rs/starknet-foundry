@@ -1,3 +1,4 @@
+use crate::common::call_contract;
 use crate::{
     assert_success,
     common::{
@@ -7,17 +8,14 @@ use crate::{
     },
 };
 use cairo_felt::Felt252;
-use cheatnet::runtime_extensions::forge_runtime_extension::{
-    cheatcodes::{deploy::deploy, spoof::TxInfoMock},
-    read_felt, read_vec, read_vec_sized,
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::{
+    deploy::deploy, spoof::TxInfoMock,
 };
 use cheatnet::state::CheatTarget;
-use cheatnet::{
-    runtime_extensions::call_to_blockifier_runtime_extension::rpc::call_contract,
-    state::{BlockifierState, CheatnetState},
-};
+use cheatnet::state::{BlockifierState, CheatnetState};
 use conversions::{felt252::FromShortString, IntoConv};
 use num_traits::ToPrimitive;
+use runtime::utils::BufferReader;
 use starknet_api::core::ContractAddress;
 
 #[derive(Clone, Default, Debug, PartialEq)]
@@ -66,26 +64,24 @@ impl TxInfo {
     }
 
     fn deserialize(data: &[Felt252]) -> Self {
-        let mut idx = 0;
+        let mut reader = BufferReader::new(data);
 
-        let version = read_felt(data, &mut idx);
-        let account_contract_address = read_felt(data, &mut idx);
-        let max_fee = read_felt(data, &mut idx);
-        let signature = read_vec(data, &mut idx);
-        let transaction_hash = read_felt(data, &mut idx);
-        let chain_id = read_felt(data, &mut idx);
-        let nonce = read_felt(data, &mut idx);
-        let resource_bounds_len = read_felt(data, &mut idx);
-        let resource_bounds = read_vec_sized(
-            data,
-            &mut idx,
+        let version = reader.read_felt();
+        let account_contract_address = reader.read_felt();
+        let max_fee = reader.read_felt();
+        let signature = reader.read_vec();
+        let transaction_hash = reader.read_felt();
+        let chain_id = reader.read_felt();
+        let nonce = reader.read_felt();
+        let resource_bounds_len = reader.read_felt();
+        let resource_bounds = reader.read_vec_body(
             3 * resource_bounds_len.to_usize().unwrap(), // ResourceBounds struct has 3 fields
         );
-        let tip = read_felt(data, &mut idx);
-        let paymaster_data = read_vec(data, &mut idx);
-        let nonce_data_availability_mode = read_felt(data, &mut idx);
-        let fee_data_availability_mode = read_felt(data, &mut idx);
-        let account_deployment_data = read_vec(data, &mut idx);
+        let tip = reader.read_felt();
+        let paymaster_data = reader.read_vec();
+        let nonce_data_availability_mode = reader.read_felt();
+        let fee_data_availability_mode = reader.read_felt();
+        let account_deployment_data = reader.read_vec();
 
         Self {
             version,
