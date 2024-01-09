@@ -7,7 +7,7 @@ fn main() {
     let max_fee = 99999999999999999;
 
     let declare_map = declare('Map', Option::Some(max_fee), Option::None);
-    'Mapw'.print();
+    'Map'.print();
     'declare'.print();
 
     let nonce_latest = get_nonce('latest');

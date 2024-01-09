@@ -6,12 +6,12 @@ use starknet::{ContractAddress};
 fn main() {
     let max_fee = 99999999999999999;
 
-    let declare_map = declare('Mapsd', Option::Some(max_fee), Option::None);
-    'Mapw'.print();
+    let declare_map = declare('Map', Option::Some(max_fee), Option::None);
+    'Map'.print();
     'declare'.print();
 
     let declare_with_params = declare(
-        'ConstructorWithParamssd', Option::Some(max_fee), Option::None
+        'ConstructorWithParams', Option::Some(max_fee), Option::None
     );
     'ConstructorWithParams'.print();
     'declare'.print();
@@ -40,4 +40,9 @@ fn main() {
         Option::Some(max_fee),
         Option::None
     );
+
+    let invoke_result = invoke(
+        deploy_result.contract_address, 'put', array![0x1, 0x2], Option::Some(max_fee), Option::None
+    );
+
 }

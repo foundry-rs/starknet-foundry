@@ -19,7 +19,7 @@ fn main() {
     invoke_nonce.print();
 
     let declare_map = declare('Map', Option::Some(max_fee), Option::None);
-    'Mapw'.print();
+    'Map'.print();
     'declare'.print();
 
     let invoke_nonce = get_nonce('pending');
