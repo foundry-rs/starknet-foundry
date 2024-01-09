@@ -15,7 +15,7 @@ body:
   - type: textarea
     id: what-happened
     attributes:
-      label: What happened
+      label: Description
       description: Describe the issue here.
     validations:
       required: true
