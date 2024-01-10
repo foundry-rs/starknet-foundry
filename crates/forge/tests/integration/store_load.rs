@@ -172,7 +172,6 @@ fn store_load_max_boundaries_input() {
                 IHelloStarknetDispatcher { contract_address }
             }
             
-            const MAX_FELT: felt252    = 3618502788666131213697322783095070105623107215331596699973092056135872020480;
             const MAX_STORAGE: felt252 = 3618502788666131106986593281521497120414687020801267626233049500247285301248;
 
             #[test]
