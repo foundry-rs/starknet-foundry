@@ -52,6 +52,10 @@ Control when colored output is used. Valid values:
 - `always`: always display colors.
 - `never`: never display colors.
 
+## `--detailed-resources`
+
+Display additional info about used resources.
+
 ## `--use_scarb_collector`
 
 Uses Scarb to find and compile tests. Requires at least Scarb nightly-2023-12-04
