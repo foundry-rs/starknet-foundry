@@ -17,6 +17,9 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@3cf7f8cc28d1b4e7d01e3783be10a97d55d483c8
       - uses: software-mansion/setup-scarb@v1.3.2
+      - name: Install universal-sierra-compiler
+        run: |
+          curl -L https://raw.githubusercontent.com/war-in/universal-sierra-compiler/master/scripts/install.sh | sh
       - run: cargo test --release --lib -p forge
       - run: cargo test --release integration -p forge
 
@@ -50,6 +53,9 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@3cf7f8cc28d1b4e7d01e3783be10a97d55d483c8
       - uses: software-mansion/setup-scarb@v1.3.2
+      - name: Install universal-sierra-compiler
+        run: |
+          curl -L https://raw.githubusercontent.com/war-in/universal-sierra-compiler/master/scripts/install.sh | sh
       - run: cargo test --release e2e -p forge
 
   test-forge-runner:
@@ -69,12 +75,11 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@3cf7f8cc28d1b4e7d01e3783be10a97d55d483c8
       - uses: software-mansion/setup-scarb@v1.3.2
-      - name: Run Cheatnet tests
-        shell: bash
-        run: |          
+      - name: Install universal-sierra-compiler
+        run: |
           curl -L https://raw.githubusercontent.com/war-in/universal-sierra-compiler/master/scripts/install.sh | sh
-          command -v universal-sierra-compiler
-          
+      - name: Run Cheatnet tests
+        run: |                    
           cargo test -p cheatnet
 
   test-cast:
@@ -90,6 +95,9 @@ jobs:
           cache-directories: crates/sncast/tests/utils/devnet
       - name: Install starknet-devnet-rs
         run: ./scripts/install_devnet.sh
+      - name: Install universal-sierra-compiler
+        run: |
+          curl -L https://raw.githubusercontent.com/war-in/universal-sierra-compiler/master/scripts/install.sh | sh
       - uses: software-mansion/setup-scarb@v1.3.2
       - name: Run tests
         run: cargo test --release -p sncast
