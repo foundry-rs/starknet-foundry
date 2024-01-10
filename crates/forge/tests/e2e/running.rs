@@ -967,6 +967,7 @@ fn incompatible_snforge_std_version_warning() {
         output,
         indoc! {r"
         [WARNING] Package snforge_std version does not meet the recommended version requirement =0.14.0, [..]
+
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -1001,5 +1002,32 @@ fn incompatible_snforge_std_version_warning() {
             tests::test_simple::test_failing
             tests::test_simple::test_another_failing
         "}
+    );
+}
+
+#[test]
+fn detailed_resources_flag() {
+    let temp = setup_package("complex_package");
+    let snapbox = test_runner().arg("--detailed-resources");
+    let output = snapbox.current_dir(&temp).assert();
+
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+        
+        Collected 1 test(s) from complex_package package
+        Running 0 test(s) from src/
+        Running 1 test(s) from tests/
+        [PASS] tests::test_contract::test_transfer[..]
+                steps: 6727
+                memory holes: 436
+                builtins: ("range_check_builtin": 215, "pedersen_builtin": 19)
+                syscalls: (CallContract: 5, StorageWrite: 4, GetExecutionInfo: 3, StorageRead: 2, EmitEvent: 1)
+
+        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+        "#}
     );
 }
