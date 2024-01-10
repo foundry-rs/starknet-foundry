@@ -5050,6 +5050,7 @@ name = "sncast"
 version = "0.13.1"
 dependencies = [
  "anyhow",
+ "blockifier",
  "cairo-felt 0.8.3",
  "cairo-lang-casm 2.4.0",
  "cairo-lang-runner",
@@ -5058,6 +5059,7 @@ dependencies = [
  "cairo-lang-utils 2.4.0",
  "cairo-vm",
  "camino",
+ "cheatnet",
  "clap",
  "conversions",
  "ctor",
