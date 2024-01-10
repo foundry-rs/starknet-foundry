@@ -46,8 +46,6 @@ pub(crate) fn print_test_result(
 
     let used_resources = match any_test_result {
         AnyTestCaseSummary::Single(TestCaseSummary::Passed { used_resources, .. }) => {
-            let vm_res = &used_resources.execution_resources.vm_resources;
-
             fn sort_by_value<K, V>(map: &std::collections::HashMap<K, V>) -> Vec<(&K, &V)>
             where
                 V: Ord,
@@ -64,10 +62,12 @@ pub(crate) fn print_test_result(
             {
                 items
                     .iter()
-                    .map(|(key, value)| format!("{:?}: {}", key, value))
+                    .map(|(key, value)| format!("{key:?}: {value}"))
                     .collect::<Vec<String>>()
                     .join(", ")
             }
+
+            let vm_res = &used_resources.execution_resources.vm_resources;
 
             let sorted_builtins = sort_by_value(&vm_res.builtin_instance_counter);
             let sorted_syscalls =
