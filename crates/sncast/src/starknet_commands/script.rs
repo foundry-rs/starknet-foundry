@@ -4,7 +4,7 @@ use std::fs;
 use crate::starknet_commands::declare::BuildConfig;
 use crate::starknet_commands::{call, declare, deploy, invoke};
 use crate::{get_account, get_nonce, WaitForTx};
-use anyhow::{anyhow, ensure, Context, Result};
+use anyhow::{ensure, Context, Result};
 use blockifier::execution::common_hints::ExecutionMode;
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::entry_point::{
@@ -230,12 +230,10 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 let res: Vec<Felt252> = vec![Felt252::from_(nonce)];
                 Ok(CheatcodeHandlingResult::Handled(res))
             }
-            _ => Err(EnhancedHintError::from(anyhow!(
-                "Cheatcode {selector} not implemented"
-            ))),
-        }?;
+            _ => Ok(CheatcodeHandlingResult::Forwarded),
+        };
 
-        Ok(res)
+        res
     }
 
     fn override_system_call(
