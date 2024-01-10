@@ -200,7 +200,7 @@ impl TestCaseSummary<Single> {
                         if gas > available_gas as u128 {
                             return TestCaseSummary::Failed {
                                 name,
-                                msg: Some("available_gas exceeded".to_string()),
+                                msg: Some("\n\tavailable_gas exceeded".to_string()),
                                 arguments,
                                 test_statistics: (),
                             };

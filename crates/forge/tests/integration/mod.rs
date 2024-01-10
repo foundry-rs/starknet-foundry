@@ -25,3 +25,4 @@ mod syscalls;
 mod test_state;
 mod trace;
 mod warp;
+mod available_gas;
