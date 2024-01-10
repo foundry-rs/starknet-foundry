@@ -2668,6 +2668,7 @@ dependencies = [
  "scarb-metadata",
  "scarb-ui",
  "schemars",
+ "semver",
  "serde",
  "serde_json",
  "smol_str 0.2.0",
