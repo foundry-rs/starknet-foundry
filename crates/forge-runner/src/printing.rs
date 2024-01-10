@@ -1,7 +1,13 @@
-use crate::test_case_summary::{AnyTestCaseSummary, FuzzingStatistics, TestCaseSummary};
+use crate::{
+    test_case_summary::{AnyTestCaseSummary, FuzzingStatistics, TestCaseSummary},
+    RunnerConfig,
+};
 use console::style;
 
-pub(crate) fn print_test_result(any_test_result: &AnyTestCaseSummary) {
+pub(crate) fn print_test_result(
+    any_test_result: &AnyTestCaseSummary,
+    runner_config: &RunnerConfig,
+) {
     if any_test_result.is_skipped() {
         return;
     }
@@ -37,7 +43,60 @@ pub(crate) fn print_test_result(any_test_result: &AnyTestCaseSummary) {
         }
         _ => String::new(),
     };
-    println!("{result_header} {result_name}{fuzzer_report}{gas_usage}{result_msg}");
+
+    let used_resources = match any_test_result {
+        AnyTestCaseSummary::Single(TestCaseSummary::Passed { used_resources, .. }) => {
+            let vm_res = &used_resources.execution_resources.vm_resources;
+
+            fn sort_by_value<K, V>(map: &std::collections::HashMap<K, V>) -> Vec<(&K, &V)>
+            where
+                V: Ord,
+            {
+                let mut sorted: Vec<_> = map.iter().collect();
+                sorted.sort_by(|a, b| b.1.cmp(a.1));
+                sorted
+            }
+
+            fn format_items<K, V>(items: &[(K, V)]) -> String
+            where
+                K: std::fmt::Debug,
+                V: std::fmt::Display,
+            {
+                items
+                    .iter()
+                    .map(|(key, value)| format!("{:?}: {}", key, value))
+                    .collect::<Vec<String>>()
+                    .join(", ")
+            }
+
+            let sorted_builtins = sort_by_value(&vm_res.builtin_instance_counter);
+            let sorted_syscalls =
+                sort_by_value(&used_resources.execution_resources.syscall_counter);
+
+            let builtins = format_items(&sorted_builtins);
+            let syscalls = format_items(&sorted_syscalls);
+
+            format!(
+                "
+        steps: {}
+        memory holes: {}
+        builtins: ({})
+        syscalls: ({})
+            ",
+                vm_res.n_steps, vm_res.n_memory_holes, builtins, syscalls,
+            )
+        }
+        _ => String::new(),
+    };
+
+    println!(
+        "{result_header} {result_name}{fuzzer_report}{gas_usage}{}{result_msg}",
+        if runner_config.detailed_resources {
+            &used_resources
+        } else {
+            ""
+        }
+    );
 }
 
 fn result_message(any_test_result: &AnyTestCaseSummary) -> String {

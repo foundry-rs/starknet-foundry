@@ -28,6 +28,7 @@ use cairo_vm::vm::vm_core::VirtualMachine;
 use camino::Utf8Path;
 use cheatnet::constants as cheatnet_constants;
 use cheatnet::forking::state::ForkStateReader;
+use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::CallToBlockifierExtension;
 use cheatnet::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
 use cheatnet::runtime_extensions::forge_runtime_extension::{
@@ -187,6 +188,7 @@ fn build_syscall_handler<'a>(
 pub struct RunResultWithInfo {
     pub(crate) run_result: Result<RunResult, RunnerError>,
     pub(crate) gas_used: u128,
+    pub(crate) used_resources: UsedResources,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -293,6 +295,7 @@ pub fn run_test_case(
     Ok(RunResultWithInfo {
         run_result,
         gas_used: gas,
+        used_resources: execution_resources,
     })
 }
 
@@ -309,6 +312,7 @@ fn extract_test_case_summary(
                     case,
                     args,
                     result_with_info.gas_used,
+                    result_with_info.used_resources,
                 )),
                 // CairoRunError comes from VirtualMachineError which may come from HintException that originates in TestExecutionSyscallHandler
                 Err(RunnerError::CairoRunError(error)) => Ok(TestCaseSummary::Failed {

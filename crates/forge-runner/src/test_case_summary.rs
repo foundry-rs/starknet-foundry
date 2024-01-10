@@ -3,6 +3,7 @@ use crate::expected_result::{ExpectedPanicValue, ExpectedTestResult};
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{RunResult, RunResultValue};
+use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use num_traits::Pow;
 use std::option::Option;
 
@@ -80,6 +81,8 @@ pub enum TestCaseSummary<T: TestType> {
         arguments: Vec<Felt252>,
         /// Information on used gas
         gas_info: <T as TestType>::GasInfo,
+        /// Resources used during test
+        used_resources: UsedResources,
         /// Statistics of the test run
         test_statistics: <T as TestType>::TestStatistics,
     },
@@ -145,6 +148,7 @@ impl TestCaseSummary<Fuzzing> {
                 msg,
                 arguments,
                 gas_info: _,
+                used_resources: _,
                 test_statistics: (),
             } => {
                 let runs = results.len();
@@ -159,8 +163,9 @@ impl TestCaseSummary<Fuzzing> {
                 TestCaseSummary::Passed {
                     name,
                     msg,
-                    gas_info: GasStatistics::new(&gas_usages),
                     arguments,
+                    gas_info: GasStatistics::new(&gas_usages),
+                    used_resources: UsedResources::default(),
                     test_statistics: FuzzingStatistics { runs },
                 }
             }
@@ -190,6 +195,7 @@ impl TestCaseSummary<Single> {
         test_case: &TestCaseRunnable,
         arguments: Vec<Felt252>,
         gas: u128,
+        used_resources: UsedResources,
     ) -> Self {
         let name = test_case.name.to_string();
         let msg = extract_result_data(&run_result, &test_case.expected_result);
@@ -201,6 +207,7 @@ impl TestCaseSummary<Single> {
                     arguments,
                     test_statistics: (),
                     gas_info: gas,
+                    used_resources,
                 },
                 ExpectedTestResult::Panics(_) => TestCaseSummary::Failed {
                     name,
@@ -231,6 +238,7 @@ impl TestCaseSummary<Single> {
                         arguments,
                         test_statistics: (),
                         gas_info: gas,
+                        used_resources,
                     },
                 },
             },

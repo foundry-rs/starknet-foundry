@@ -91,6 +91,10 @@ struct TestArgs {
     #[arg(long, conflicts_with = "only_ignored")]
     include_ignored: bool,
 
+    /// Display more detailed info about used resources
+    #[arg(long)]
+    detailed_resources: bool,
+
     /// Control when colored output is used
     #[arg(value_enum, long, default_value_t = ColorOption::Auto, value_name="WHEN")]
     color: ColorOption,
@@ -129,6 +133,7 @@ fn combine_configs(
     exit_first: bool,
     fuzzer_runs: Option<u32>,
     fuzzer_seed: Option<u64>,
+    detailed_resources: bool,
     forge_config: &ForgeConfig,
 ) -> RunnerConfig {
     RunnerConfig::new(
@@ -140,6 +145,7 @@ fn combine_configs(
         fuzzer_seed
             .or(forge_config.fuzzer_seed)
             .unwrap_or_else(|| thread_rng().next_u64()),
+        detailed_resources,
     )
 }
 
@@ -222,6 +228,7 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                     args.exit_first,
                     args.fuzzer_runs,
                     args.fuzzer_seed,
+                    args.detailed_resources,
                     &forge_config,
                 ));
                 let runner_params = Arc::new(RunnerParams::new(contracts, env::vars().collect()));
@@ -299,8 +306,22 @@ mod tests {
     #[test]
     fn fuzzer_default_seed() {
         let workspace_root: Utf8PathBuf = Default::default();
-        let config = combine_configs(&workspace_root, false, None, None, &Default::default());
-        let config2 = combine_configs(&workspace_root, false, None, None, &Default::default());
+        let config = combine_configs(
+            &workspace_root,
+            false,
+            None,
+            None,
+            false,
+            &Default::default(),
+        );
+        let config2 = combine_configs(
+            &workspace_root,
+            false,
+            None,
+            None,
+            false,
+            &Default::default(),
+        );
 
         assert_ne!(config.fuzzer_seed, 0);
         assert_ne!(config2.fuzzer_seed, 0);
@@ -310,7 +331,14 @@ mod tests {
     #[test]
     fn runner_config_default_arguments() {
         let workspace_root: Utf8PathBuf = Default::default();
-        let config = combine_configs(&workspace_root, false, None, None, &Default::default());
+        let config = combine_configs(
+            &workspace_root,
+            false,
+            None,
+            None,
+            false,
+            &Default::default(),
+        );
         assert_eq!(
             config,
             RunnerConfig::new(
@@ -318,6 +346,7 @@ mod tests {
                 false,
                 FUZZER_RUNS_DEFAULT,
                 config.fuzzer_seed,
+                false,
             )
         );
     }
@@ -332,8 +361,11 @@ mod tests {
         };
         let workspace_root: Utf8PathBuf = Default::default();
 
-        let config = combine_configs(&workspace_root, false, None, None, &config_from_scarb);
-        assert_eq!(config, RunnerConfig::new(workspace_root, true, 1234, 500));
+        let config = combine_configs(&workspace_root, false, None, None, true, &config_from_scarb);
+        assert_eq!(
+            config,
+            RunnerConfig::new(workspace_root, true, 1234, 500, true)
+        );
     }
 
     #[test]
@@ -351,9 +383,13 @@ mod tests {
             true,
             Some(100),
             Some(32),
+            true,
             &config_from_scarb,
         );
 
-        assert_eq!(config, RunnerConfig::new(workspace_root, true, 100, 32,));
+        assert_eq!(
+            config,
+            RunnerConfig::new(workspace_root, true, 100, 32, true)
+        );
     }
 }

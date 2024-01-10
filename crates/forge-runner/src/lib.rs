@@ -62,6 +62,7 @@ pub struct RunnerConfig {
     pub exit_first: bool,
     pub fuzzer_runs: u32,
     pub fuzzer_seed: u64,
+    pub detailed_resources: bool,
 }
 
 impl RunnerConfig {
@@ -72,12 +73,14 @@ impl RunnerConfig {
         exit_first: bool,
         fuzzer_runs: u32,
         fuzzer_seed: u64,
+        detailed_resources: bool,
     ) -> Self {
         Self {
             workspace_root,
             exit_first,
             fuzzer_runs,
             fuzzer_seed,
+            detailed_resources,
         }
     }
 }
@@ -184,7 +187,7 @@ pub async fn run_tests_from_crate(
     while let Some(task) = tasks.next().await {
         let result = task??;
 
-        print_test_result(&result);
+        print_test_result(&result, &runner_config);
 
         if result.is_failed() && runner_config.exit_first {
             interrupted = true;

@@ -22,7 +22,7 @@ use runtime::starknet::context::{build_block_context, build_transaction_context}
 use starknet_api::core::ClassHash;
 use starknet_api::{core::ContractAddress, deprecated_contract_class::EntryPointType};
 
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default)]
 pub struct UsedResources {
     pub execution_resources: ExecutionResources,
     pub l2_to_l1_payloads_length: Vec<usize>,
