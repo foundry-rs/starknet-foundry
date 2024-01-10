@@ -536,7 +536,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     &mut blockifier_state,
                     target,
                     &storage_address,
-                    &reader.read_vec(),
+                    reader.read_felt(),
                 )
                 .expect("Failed to store");
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
@@ -552,10 +552,9 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 );
                 let target = ContractAddress::from_(reader.read_felt());
                 let storage_address = &reader.read_felt();
-                let size = &reader.read_felt();
-                let loaded_values = load(&mut blockifier_state, target, storage_address, size)
-                    .expect("Failed to load");
-                Ok(CheatcodeHandlingResult::Handled(loaded_values))
+                let loaded =
+                    load(&mut blockifier_state, target, storage_address).expect("Failed to load"); // Should not happen
+                Ok(CheatcodeHandlingResult::Handled(vec![loaded]))
             }
             "map_entry_address" => {
                 let map_selector = &reader.read_felt();

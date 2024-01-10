@@ -1,8 +1,8 @@
 use indoc::{formatdoc, indoc};
 use std::path::Path;
-use test_utils::assert_passed;
 use test_utils::runner::Contract;
 use test_utils::running_tests::run_test_case;
+use test_utils::{assert_case_output_contains, assert_failed, assert_passed};
 
 #[test]
 fn store_load_simple() {
@@ -150,6 +150,102 @@ fn store_load_wrong_data_length() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
+}
+
+#[test]
+fn store_load_max_boundaries_input() {
+    let test = test_utils::test_case!(
+        indoc!(
+            r"
+            use starknet::ContractAddress;
+            use snforge_std::{ declare, ContractClassTrait, store, load };
+            
+            #[starknet::interface]
+            trait IHelloStarknet<TContractState> {
+                fn get_balance(ref self: TContractState) -> felt252;
+                fn increase_balance(ref self: TContractState, amount: felt252);
+            }
+            
+            fn deploy_contract() -> IHelloStarknetDispatcher {
+                let contract = declare('HelloStarknet');
+                let contract_address = contract.deploy(@array![]).unwrap();
+                IHelloStarknetDispatcher { contract_address }
+            }
+            
+            const MAX_FELT: felt252    = 3618502788666131213697322783095070105623107215331596699973092056135872020480;
+            const MAX_STORAGE: felt252 = 3618502788666131106986593281521497120414687020801267626233049500247285301248;
+
+            #[test]
+            fn load_boundaries_max() {
+                let deployed = deploy_contract();
+                let loaded = load(
+                    deployed.contract_address, 
+                    MAX_STORAGE + 1, 
+                    1
+                );
+            }
+            
+             #[test]
+            fn store_boundaries_max() {
+                let deployed = deploy_contract();
+                let loaded = store(
+                    deployed.contract_address, 
+                    MAX_STORAGE + 1, 
+                    array![420].span()
+                );
+            }
+            
+            #[test]
+            fn load_boundaries_max_overflow() {
+                let deployed = deploy_contract();
+                let loaded = load(
+                    deployed.contract_address, 
+                    MAX_STORAGE - 1, 
+                    5
+                );
+            }
+            
+             #[test]
+            fn store_boundaries_max_overflow() {
+                let deployed = deploy_contract();
+                let loaded = store(
+                    deployed.contract_address, 
+                    MAX_STORAGE - 1, 
+                    array![420, 421, 422].span()
+                );
+            }
+        "
+        ),
+        Contract::from_code_path(
+            "HelloStarknet".to_string(),
+            Path::new("tests/data/contracts/hello_starknet.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test);
+
+    assert_failed!(result);
+    assert_case_output_contains!(
+        result,
+        "load_boundaries_max",
+        "storage_address out of range"
+    );
+    assert_case_output_contains!(
+        result,
+        "store_boundaries_max",
+        "storage_address out of range"
+    );
+    assert_case_output_contains!(
+        result,
+        "load_boundaries_max_overflow",
+        "storage_address out of range"
+    );
+    assert_case_output_contains!(
+        result,
+        "store_boundaries_max_overflow",
+        "storage_address out of range"
+    );
 }
 
 #[test]

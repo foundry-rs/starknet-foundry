@@ -5,6 +5,7 @@ mod l1_handler;
 mod contract_class;
 mod tx_info;
 mod fork;
+mod storage;
 
 #[derive(Drop, Serde)]
 enum CheatTarget {
@@ -97,26 +98,4 @@ fn start_mock_call<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: Destru
 fn stop_mock_call(contract_address: ContractAddress, function_name: felt252) {
     let contract_address_felt: felt252 = contract_address.into();
     cheatcode::<'stop_mock_call'>(array![contract_address_felt, function_name].span());
-}
-
-
-fn store(target: ContractAddress, storage_address: felt252, serialized_value: Span<felt252>) {
-    let mut inputs = array![target.into(), storage_address];
-    serialized_value.serialize(ref inputs);
-
-    cheatcode::<'store'>(inputs.span());
-}
-
-fn load(target: ContractAddress, storage_address: felt252, size: felt252) -> Array<felt252> {
-    let inputs = array![target.into(), storage_address, size];
-    let outputs_span = cheatcode::<'load'>(inputs.span());
-    let mut output_array: Array<felt252> = array![];
-    output_array.append_span(outputs_span);
-    output_array
-}
-
-fn map_entry_address(map_selector: felt252, keys: Span<felt252>) -> felt252 {
-    let mut inputs = array![map_selector];
-    keys.serialize(ref inputs);
-    *cheatcode::<'map_entry_address'>(inputs.span()).at(0)
 }
