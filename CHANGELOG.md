@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Added
+
+- `--detailed-resources` flag for displaying additional info about used resources
+
 ## [0.14.0] - 2024-01-11
 
 ### Forge
