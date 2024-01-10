@@ -380,6 +380,7 @@ impl SierraCasmRunner {
 
     /// Returns the initial value for the gas counter.
     /// If `available_gas` is None returns 0.
+    #[allow(dead_code)]
     pub fn get_initial_available_gas(
         &self,
         func: &Function,
@@ -401,6 +402,7 @@ impl SierraCasmRunner {
             .ok_or(RunnerError::NotEnoughGasToCall)
     }
 
+    #[allow(dead_code)]
     pub fn initial_required_gas(&self, func: &Function) -> Option<usize> {
         if self.metadata.gas_info.function_costs.is_empty() {
             return None;
