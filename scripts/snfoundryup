@@ -202,8 +202,7 @@ ignore() {
 }
 
 download_universal_sierra_compiler() {
-  #TODO: change to master branch
-  curl -L https://raw.githubusercontent.com/software-mansion/universal-sierra-compiler/war-in/installation-script/scripts/install.sh | sh
+  curl -L https://raw.githubusercontent.com/software-mansion/universal-sierra-compiler/master/scripts/install.sh | sh
 }
 
 # This function has been copied verbatim from rustup install script.
