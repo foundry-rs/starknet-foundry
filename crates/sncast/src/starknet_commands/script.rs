@@ -28,7 +28,8 @@ use clap::command;
 use clap::Args;
 use conversions::{FromConv, IntoConv};
 use itertools::chain;
-use runtime::context::{build_default_block_context, build_transaction_context, DictStateReader};
+use runtime::starknet::context::{build_default_block_context, build_transaction_context};
+use runtime::starknet::state::DictStateReader;
 use runtime::utils::BufferReader;
 use runtime::{
     CheatcodeHandlingResult, EnhancedHintError, ExtendedRuntime, ExtensionLogic, StarknetRuntime,

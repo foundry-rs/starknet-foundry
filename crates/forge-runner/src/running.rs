@@ -36,8 +36,8 @@ use cheatnet::runtime_extensions::forge_runtime_extension::{
 use cheatnet::runtime_extensions::io_runtime_extension::IORuntimeExtension;
 use cheatnet::state::{BlockInfoReader, CheatnetState, ExtendedStateReader};
 use itertools::chain;
-use runtime::context;
-use runtime::context::BlockInfo;
+use runtime::starknet::context;
+use runtime::starknet::context::BlockInfo;
 use runtime::{ExtendedRuntime, StarknetRuntime};
 use starknet::core::utils::get_selector_from_name;
 use starknet_api::core::PatriciaKey;

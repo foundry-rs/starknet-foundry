@@ -18,7 +18,7 @@ use blockifier::execution::{
 };
 use blockifier::state::errors::StateError;
 use cairo_felt::Felt252;
-use runtime::context::{build_block_context, build_transaction_context};
+use runtime::starknet::context::{build_block_context, build_transaction_context};
 use starknet_api::core::ClassHash;
 use starknet_api::{core::ContractAddress, deprecated_contract_class::EntryPointType};
 

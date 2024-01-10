@@ -4,7 +4,7 @@ use conversions::{FromConv, IntoConv, TryIntoConv};
 use fs2::FileExt;
 use num_bigint::BigUint;
 use regex::Regex;
-use runtime::context::BlockInfo;
+use runtime::starknet::context::BlockInfo;
 use serde::{Deserialize, Serialize};
 use starknet::core::types::ContractClass;
 use starknet_api::block::BlockNumber;

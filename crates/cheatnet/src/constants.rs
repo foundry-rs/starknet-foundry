@@ -8,7 +8,8 @@ use cairo_vm::types::program::Program;
 
 use starknet_api::deprecated_contract_class::EntryPointType;
 
-use runtime::context::{DictStateReader, ERC20_CONTRACT_ADDRESS};
+use runtime::starknet::context::ERC20_CONTRACT_ADDRESS;
+use runtime::starknet::state::DictStateReader;
 use starknet_api::{
     core::{ClassHash, ContractAddress, Nonce, PatriciaKey},
     hash::{StarkFelt, StarkHash},

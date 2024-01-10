@@ -9,7 +9,7 @@ use cairo_lang_utils::bigint::BigUintAsHex;
 use conversions::{FromConv, IntoConv};
 use flate2::read::GzDecoder;
 use num_bigint::BigUint;
-use runtime::context::BlockInfo;
+use runtime::starknet::context::BlockInfo;
 use sierra_casm::compile;
 use starknet::core::types::{
     BlockId, ContractClass as ContractClassStarknet, FieldElement, MaybePendingBlockWithTxHashes,

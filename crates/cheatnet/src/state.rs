@@ -14,7 +14,8 @@ use blockifier::{
     },
 };
 use cairo_felt::Felt252;
-use runtime::context::{BlockInfo, DictStateReader};
+use runtime::starknet::context::BlockInfo;
+use runtime::starknet::state::DictStateReader;
 
 use starknet_api::core::EntryPointSelector;
 
