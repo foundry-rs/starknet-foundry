@@ -17,7 +17,7 @@ fn main() {
     let invoke_nonce = get_nonce('pending');
     invoke_nonce.print();
     let salt = 0x3;
-    let deploy_result = deploy(
+    let map_deploy_result = deploy(
         declare_map.class_hash,
         ArrayTrait::new(),
         Option::Some(salt),
@@ -40,6 +40,6 @@ fn main() {
     );
 
     let invoke_result = invoke(
-        deploy_result.contract_address, 'put', array![0x1, 0x2], Option::Some(max_fee), Option::None
+        map_deploy_result.contract_address, 'put', array![0x1, 0x2], Option::Some(max_fee), Option::None
     );
 }

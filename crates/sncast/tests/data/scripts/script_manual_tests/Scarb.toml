@@ -19,6 +19,6 @@ sierra = true
 casm = true
 
 build-external-contracts = [
-    "map::Mapn",
-    "constructor_with_params::ConstructorWithParamsn"
+    "map::Map",
+    "constructor_with_params::ConstructorWithParams"
 ]
