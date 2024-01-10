@@ -6,7 +6,6 @@ use crate::runtime_extensions::call_to_blockifier_runtime_extension::panic_data:
 use crate::runtime_extensions::common::{create_entry_point_selector, create_execute_calldata};
 use crate::state::BlockifierState;
 use crate::{
-    constants::{build_block_context, build_transaction_context},
     runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::execute_call_entry_point,
     CheatnetState,
 };
@@ -19,6 +18,7 @@ use blockifier::execution::{
 };
 use blockifier::state::errors::StateError;
 use cairo_felt::Felt252;
+use runtime::starknet::context::{build_block_context, build_transaction_context};
 use starknet_api::core::ClassHash;
 use starknet_api::{core::ContractAddress, deprecated_contract_class::EntryPointType};
 

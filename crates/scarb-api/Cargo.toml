@@ -14,4 +14,5 @@ serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
 which.workspace = true
+semver.workspace = true
 sierra-casm = { path="../sierra-casm" }

@@ -2668,6 +2668,7 @@ dependencies = [
  "scarb-metadata",
  "scarb-ui",
  "schemars",
+ "semver",
  "serde",
  "serde_json",
  "smol_str 0.2.0",
@@ -4671,6 +4672,7 @@ dependencies = [
  "indoc 2.0.4",
  "scarb-metadata",
  "scarb-ui",
+ "semver",
  "serde",
  "serde_json",
  "sierra-casm",
@@ -5049,6 +5051,7 @@ name = "sncast"
 version = "0.13.1"
 dependencies = [
  "anyhow",
+ "blockifier",
  "cairo-felt 0.8.3",
  "cairo-lang-casm 2.4.0",
  "cairo-lang-runner",

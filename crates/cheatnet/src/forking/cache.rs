@@ -1,10 +1,10 @@
-use crate::state::CheatnetBlockInfo;
 use cairo_felt::Felt252;
 use camino::Utf8PathBuf;
 use conversions::{FromConv, IntoConv, TryIntoConv};
 use fs2::FileExt;
 use num_bigint::BigUint;
 use regex::Regex;
+use runtime::starknet::context::BlockInfo;
 use serde::{Deserialize, Serialize};
 use starknet::core::types::ContractClass;
 use starknet_api::block::BlockNumber;
@@ -25,7 +25,7 @@ struct ForkCacheContent {
     class_hash_at: HashMap<String, String>,
     compiled_contract_class: HashMap<String, String>,
     compiled_class_hash: HashMap<String, String>,
-    block_info: Option<CheatnetBlockInfo>,
+    block_info: Option<BlockInfo>,
 }
 
 impl ForkCacheContent {
@@ -263,11 +263,11 @@ impl ForkCache {
             .insert(class_hash_str, contract_class_str);
     }
 
-    pub(crate) fn get_block_info(&self) -> Option<CheatnetBlockInfo> {
+    pub(crate) fn get_block_info(&self) -> Option<BlockInfo> {
         self.fork_cache_content.block_info
     }
 
-    pub(crate) fn cache_get_block_info(&mut self, block_info: CheatnetBlockInfo) {
+    pub(crate) fn cache_get_block_info(&mut self, block_info: BlockInfo) {
         self.fork_cache_content.block_info = Some(block_info);
     }
 }
