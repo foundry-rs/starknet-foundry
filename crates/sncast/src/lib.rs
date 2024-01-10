@@ -8,7 +8,7 @@ use serde_json::Value;
 use starknet::core::types::{
     BlockId,
     BlockTag::{Latest, Pending},
-    ExecutionResult, FieldElement,
+    FieldElement,
     StarknetError::{
         BlockNotFound, ClassAlreadyDeclared, ClassHashNotFound, CompilationFailed,
         CompiledClassHashMismatch, ContractClassSizeIsTooLarge, ContractError, ContractNotFound,
@@ -29,6 +29,7 @@ use starknet::{
     },
     signers::{LocalWallet, SigningKey},
 };
+
 use std::collections::HashMap;
 use std::thread::sleep;
 use std::time::Duration;
@@ -278,16 +279,23 @@ pub async fn wait_for_tx(
     }
     let retries = timeout / u16::from(retry_interval);
     for i in (1..retries).rev() {
-        match provider.get_transaction_receipt(tx_hash).await {
-            Ok(receipt) => {
-                return match receipt.execution_result() {
-                    ExecutionResult::Succeeded => Ok("Transaction accepted"),
-                    ExecutionResult::Reverted { reason } => {
-                        Err(anyhow!("Transaction has been reverted = {reason}"))
-                    }
-                }
+        match provider.get_transaction_status(tx_hash).await {
+            Ok(starknet::core::types::TransactionStatus::Rejected) => {
+                return Err(anyhow!("Transaction has been rejected"));
             }
-            Err(StarknetError(TransactionHashNotFound)) => {
+            Ok(
+                starknet::core::types::TransactionStatus::AcceptedOnL2(execution_status)
+                | starknet::core::types::TransactionStatus::AcceptedOnL1(execution_status),
+            ) => match execution_status {
+                starknet::core::types::TransactionExecutionStatus::Succeeded => {
+                    return Ok("Transaction accepted")
+                }
+                starknet::core::types::TransactionExecutionStatus::Reverted => {
+                    return get_revert_reason(provider, tx_hash).await
+                }
+            },
+            Ok(starknet::core::types::TransactionStatus::Received)
+            | Err(StarknetError(TransactionHashNotFound)) => {
                 let remaining_time = i * u16::from(retry_interval);
                 println!("Waiting for transaction to be accepted ({i} retries / {remaining_time}s left until timeout)");
             }
@@ -300,6 +308,20 @@ pub async fn wait_for_tx(
     Err(anyhow!(
         "Failed to get transaction with hash = {tx_hash:#x}; Transaction rejected, not received or sncast timed out"
     ))
+}
+
+async fn get_revert_reason(
+    provider: &JsonRpcClient<HttpTransport>,
+    tx_hash: FieldElement,
+) -> Result<&str> {
+    let receipt = provider.get_transaction_receipt(tx_hash).await?;
+
+    if let starknet::core::types::ExecutionResult::Reverted { reason } = receipt.execution_result()
+    {
+        Err(anyhow!("Transaction has been reverted = {reason}"))
+    } else {
+        unreachable!();
+    }
 }
 
 pub fn handle_rpc_error<T>(error: ProviderError) -> std::result::Result<T, Error> {
