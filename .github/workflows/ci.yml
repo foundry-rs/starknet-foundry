@@ -73,6 +73,8 @@ jobs:
         shell: bash
         run: |          
           curl -L https://raw.githubusercontent.com/war-in/universal-sierra-compiler/master/scripts/install.sh | sh
+          command -v universal-sierra-compiler
+          
           cargo test -p cheatnet
 
   test-cast:
