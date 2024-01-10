@@ -72,6 +72,9 @@ jobs:
       - name: Run Cheatnet tests
         shell: bash
         run: |
+          
+          command -v curl
+          
           curl -L https://raw.githubusercontent.com/software-mansion/universal-sierra-compiler/master/scripts/install.sh | sh
           cargo test -p cheatnet
 
