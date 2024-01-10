@@ -1009,7 +1009,7 @@ fn incompatible_snforge_std_version_warning() {
 fn detailed_resources_flag() {
     let temp = setup_package("complex_package");
     let snapbox = test_runner().arg("--detailed-resources");
-    let output = snapbox.current_dir(&temp).assert();
+    let output = snapbox.current_dir(&temp).assert().success();
 
     assert_stdout_contains!(
         output,
@@ -1026,8 +1026,8 @@ fn detailed_resources_flag() {
                 memory holes: 436
                 builtins: ("range_check_builtin": 215, "pedersen_builtin": 19)
                 syscalls: (CallContract: 5, StorageWrite: 4, GetExecutionInfo: 3, StorageRead: 2, EmitEvent: 1)
-
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+        [..]
         "#}
     );
 }
