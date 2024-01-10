@@ -29,7 +29,7 @@ pub fn store(
         StorageKey(PatriciaKey::try_from(StarkHash::from_(
             storage_address.clone(),
         ))?),
-        value.clone().into_(),
+        value.into_(),
     );
     Ok(())
 }

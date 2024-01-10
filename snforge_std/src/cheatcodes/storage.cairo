@@ -8,13 +8,8 @@ use core::panic_with_felt252;
 fn validate_storage_address_felt(storage_address_felt: felt252) {
     match storage_address_try_from_felt252(storage_address_felt) {
         Option::Some(_) => {},
-         // Panics in order not to leave inconsistencies in the state
-        Option::None(()) => panic(
-            array![
-                'storage_address out of range', 
-                storage_address_felt
-            ]
-        ),
+        // Panics in order not to leave inconsistencies in the state
+        Option::None(()) => panic(array!['storage_address out of range', storage_address_felt]),
     }
 }
 
@@ -32,7 +27,7 @@ fn load_felt252(target: ContractAddress, storage_address: felt252) -> felt252 {
 
 fn store(target: ContractAddress, storage_address: felt252, serialized_value: Span<felt252>) {
     let mut offset: usize = 0;
-    loop { 
+    loop {
         if offset == serialized_value.len() {
             break;
         }
@@ -44,7 +39,7 @@ fn store(target: ContractAddress, storage_address: felt252, serialized_value: Sp
 fn load(target: ContractAddress, storage_address: felt252, size: felt252) -> Array<felt252> {
     let mut output_array: Array<felt252> = array![];
     let mut offset: usize = 0;
-    
+
     loop {
         if offset.into() == size {
             break;
