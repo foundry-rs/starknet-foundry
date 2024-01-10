@@ -9,11 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
+#### Added
+
+- `Secp256k1` and `Secp256r1` curves support for `KeyPair` in `snforge_std`
+
 #### Changed
 
 - maximum number of computational steps per call set to current Starknet limit (3M)
 - `mean` and `std deviation` fields are displayed for gas usage while running fuzzing tests 
 - Cairo edition in `snforge_std` and `sncast_std` set to `2023_10`
+- `snforge_std::signature` module with `stark_curve`, `secp256k1_curve` and `secp256r1_curve` submodules
 
 #### Fixed
 
