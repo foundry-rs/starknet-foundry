@@ -1,6 +1,6 @@
 use indoc::indoc;
-use test_utils::{assert_case_output_contains, assert_failed, assert_passed};
 use test_utils::running_tests::run_test_case;
+use test_utils::{assert_case_output_contains, assert_failed, assert_passed};
 
 #[test]
 fn correct_available_gas() {

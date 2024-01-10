@@ -1,3 +1,4 @@
+mod available_gas;
 mod benchmarks;
 mod cheat_fork;
 mod declare;
@@ -25,4 +26,3 @@ mod syscalls;
 mod test_state;
 mod trace;
 mod warp;
-mod available_gas;
