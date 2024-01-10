@@ -1,5 +1,5 @@
 use crate::forking::cache::ForkCache;
-use crate::state::{BlockInfoReader, CheatnetBlockInfo};
+use crate::state::BlockInfoReader;
 use blockifier::execution::contract_class::{
     ContractClass as ContractClassBlockifier, ContractClassV0, ContractClassV1,
 };
@@ -9,6 +9,7 @@ use cairo_lang_utils::bigint::BigUintAsHex;
 use conversions::{FromConv, IntoConv};
 use flate2::read::GzDecoder;
 use num_bigint::BigUint;
+use runtime::starknet::context::BlockInfo;
 use sierra_casm::compile;
 use starknet::core::types::{
     BlockId, ContractClass as ContractClassStarknet, FieldElement, MaybePendingBlockWithTxHashes,
@@ -53,7 +54,7 @@ impl ForkStateReader {
 }
 
 impl BlockInfoReader for ForkStateReader {
-    fn get_block_info(&mut self) -> StateResult<CheatnetBlockInfo> {
+    fn get_block_info(&mut self) -> StateResult<BlockInfo> {
         if let Some(cache_hit) = self.cache.get_block_info() {
             return Ok(cache_hit);
         }
@@ -63,7 +64,7 @@ impl BlockInfoReader for ForkStateReader {
             .block_on(self.client.get_block_with_tx_hashes(self.block_id()))
         {
             Ok(MaybePendingBlockWithTxHashes::Block(block)) => {
-                let block_info = CheatnetBlockInfo {
+                let block_info = BlockInfo {
                     block_number: BlockNumber(block.block_number),
                     timestamp: BlockTimestamp(block.timestamp),
                     sequencer_address: block.sequencer_address.into_(),
