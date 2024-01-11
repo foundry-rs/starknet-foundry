@@ -184,7 +184,7 @@ fn store_load_max_boundaries_input() {
                 );
             }
             
-             #[test]
+            #[test]
             fn store_boundaries_max() {
                 let deployed = deploy_contract();
                 let loaded = store(
@@ -204,7 +204,7 @@ fn store_load_max_boundaries_input() {
                 );
             }
             
-             #[test]
+            #[test]
             fn store_boundaries_max_overflow() {
                 let deployed = deploy_contract();
                 let loaded = store(
