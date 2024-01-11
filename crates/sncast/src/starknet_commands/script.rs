@@ -49,6 +49,8 @@ use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use tokio::runtime::Runtime;
 
+use super::wait_for_block::wait_for_block;
+
 #[derive(Args)]
 #[command(about = "Execute a deployment script")]
 pub struct Script {

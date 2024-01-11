@@ -6,3 +6,4 @@ pub mod invoke;
 pub mod multicall;
 pub mod script;
 pub mod show_config;
+pub mod wait_for_block;
