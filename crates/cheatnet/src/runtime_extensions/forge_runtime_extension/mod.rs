@@ -638,7 +638,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let target = ContractAddress::from_(reader.read_felt());
                 let storage_address = &reader.read_felt();
                 let loaded =
-                    load(&mut blockifier_state, target, storage_address).expect("Failed to load"); // Should not happen
+                    load(&mut blockifier_state, target, storage_address).expect("Failed to load");
                 Ok(CheatcodeHandlingResult::Handled(vec![loaded]))
             }
             "map_entry_address" => {
