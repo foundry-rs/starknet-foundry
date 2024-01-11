@@ -4,7 +4,7 @@ use std::fs;
 use crate::starknet_commands::declare::BuildConfig;
 use crate::starknet_commands::{call, declare, deploy, invoke};
 use crate::{get_account, get_nonce, WaitForTx};
-use anyhow::{ensure, Context, Result};
+use anyhow::{anyhow, ensure, Context, Result};
 use blockifier::execution::common_hints::ExecutionMode;
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::entry_point::{
@@ -35,10 +35,13 @@ use runtime::{
     CheatcodeHandlingResult, EnhancedHintError, ExtendedRuntime, ExtensionLogic, StarknetRuntime,
     SyscallHandlingResult,
 };
-use scarb_api::ScarbCommand;
+use scarb_api::{package_matches_version_requirement, ScarbCommand};
+use scarb_metadata::Metadata;
+use semver::{Comparator, Op, Version, VersionReq};
 use sncast::helpers::scarb_utils::{
     get_package_metadata, get_scarb_manifest, get_scarb_metadata_with_deps, CastConfig,
 };
+use sncast::response::print::print_as_warning;
 use sncast::response::structs::ScriptResponse;
 use starknet::accounts::Account;
 use starknet::core::types::{BlockId, BlockTag::Pending, FieldElement};
@@ -352,6 +355,32 @@ pub fn run(
     }
 }
 
+fn sncast_std_version_requirement() -> VersionReq {
+    let version = Version::parse(env!("CARGO_PKG_VERSION")).unwrap();
+    let comparator = Comparator {
+        op: Op::Exact,
+        major: version.major,
+        minor: Some(version.minor),
+        patch: Some(version.patch),
+        pre: version.pre,
+    };
+    VersionReq {
+        comparators: vec![comparator],
+    }
+}
+
+fn warn_if_sncast_std_not_compatible(scarb_metadata: &Metadata) -> Result<()> {
+    let sncast_std_version_requirement = sncast_std_version_requirement();
+    if !package_matches_version_requirement(
+        scarb_metadata,
+        "sncast_std",
+        &sncast_std_version_requirement,
+    )? {
+        print_as_warning(&anyhow!("Package sncast_std version does not meet the recommended version requirement {sncast_std_version_requirement}, it might result in unexpected behaviour"));
+    }
+    Ok(())
+}
+
 fn compile_script(path_to_scarb_toml: Option<Utf8PathBuf>) -> Result<Utf8PathBuf> {
     let scripts_manifest_path = path_to_scarb_toml.unwrap_or_else(|| {
         get_scarb_manifest()
@@ -370,6 +399,9 @@ fn compile_script(path_to_scarb_toml: Option<Utf8PathBuf>) -> Result<Utf8PathBuf
         .context("failed to compile script with scarb")?;
 
     let metadata = get_scarb_metadata_with_deps(&scripts_manifest_path)?;
+
+    warn_if_sncast_std_not_compatible(&metadata)?;
+
     let package_metadata = get_package_metadata(&metadata, &scripts_manifest_path)?;
 
     let filename = format!("{}.sierra.json", package_metadata.name);

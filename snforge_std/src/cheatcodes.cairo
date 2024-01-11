@@ -5,6 +5,7 @@ mod l1_handler;
 mod contract_class;
 mod tx_info;
 mod fork;
+mod storage;
 
 #[derive(Drop, Serde)]
 enum CheatTarget {
