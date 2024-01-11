@@ -471,7 +471,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 Ok(CheatcodeHandlingResult::Handled(vec![Felt252::from(hash)]))
             }
-            "generate_ecdsa_keys" => {
+            "generate_stark_keys" => {
                 let key_pair = SigningKey::from_random();
 
                 Ok(CheatcodeHandlingResult::Handled(vec![
@@ -479,18 +479,13 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     key_pair.verifying_key().scalar().into_(),
                 ]))
             }
-            "get_public_key" => {
-                let private_key = reader.read_felt();
-                let key_pair = SigningKey::from_secret_scalar(private_key.into_());
-
-                Ok(CheatcodeHandlingResult::Handled(vec![key_pair
-                    .verifying_key()
-                    .scalar()
-                    .into_()]))
-            }
-            "ecdsa_sign_message" => {
+            "stark_sign_message" => {
                 let private_key = reader.read_felt();
                 let message_hash = reader.read_felt();
+
+                if private_key == Felt252::from(0) {
+                    return Ok(handle_cheatcode_error("invalid secret_key"));
+                }
 
                 let key_pair = SigningKey::from_secret_scalar(private_key.into_());
 
@@ -501,11 +496,101 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                         Felt252::from_(signature.s),
                     ]))
                 } else {
-                    Ok(CheatcodeHandlingResult::Handled(vec![
-                        Felt252::from(1),
-                        Felt252::from_short_string("message_hash out of range").unwrap(),
-                    ]))
+                    Ok(handle_cheatcode_error("message_hash out of range"))
                 }
+            }
+            "generate_ecdsa_keys" => {
+                let curve = as_cairo_short_string(&reader.read_felt());
+
+                let (signing_key_bytes, verifying_key_bytes) = {
+                    match curve.as_deref() {
+                        Some("Secp256k1") => {
+                            let signing_key = k256::ecdsa::SigningKey::random(
+                                &mut k256::elliptic_curve::rand_core::OsRng,
+                            );
+                            let verifying_key = signing_key.verifying_key();
+                            (
+                                signing_key.to_bytes(),
+                                verifying_key.to_encoded_point(false).to_bytes(),
+                            )
+                        }
+                        Some("Secp256r1") => {
+                            let signing_key = p256::ecdsa::SigningKey::random(
+                                &mut p256::elliptic_curve::rand_core::OsRng,
+                            );
+                            let verifying_key = signing_key.verifying_key();
+                            (
+                                signing_key.to_bytes(),
+                                verifying_key.to_encoded_point(false).to_bytes(),
+                            )
+                        }
+                        _ => return Ok(CheatcodeHandlingResult::Forwarded),
+                    }
+                };
+
+                Ok(CheatcodeHandlingResult::Handled(vec![
+                    Felt252::from_bytes_be(&signing_key_bytes[16..32]), // 16 low  bytes of secret_key
+                    Felt252::from_bytes_be(&signing_key_bytes[0..16]), // 16 high bytes of secret_key
+                    Felt252::from_bytes_be(&verifying_key_bytes[17..33]), // 16 low  bytes of public_key's x-coordinate
+                    Felt252::from_bytes_be(&verifying_key_bytes[1..17]), // 16 high bytes of public_key's x-coordinate
+                    Felt252::from_bytes_be(&verifying_key_bytes[49..65]), // 16 low  bytes of public_key's y-coordinate
+                    Felt252::from_bytes_be(&verifying_key_bytes[33..49]), // 16 high bytes of public_key's y-coordinate
+                ]))
+            }
+            "ecdsa_sign_message" => {
+                let curve = as_cairo_short_string(&reader.read_felt());
+                let sk_low = reader.read_felt();
+                let sk_high = reader.read_felt();
+                let msg_hash_low = reader.read_felt();
+                let msg_hash_high = reader.read_felt();
+
+                let secret_key = concat_u128_bytes(&sk_low.to_be_bytes(), &sk_high.to_be_bytes());
+                let msg_hash =
+                    concat_u128_bytes(&msg_hash_low.to_be_bytes(), &msg_hash_high.to_be_bytes());
+
+                let (r_bytes, s_bytes) = {
+                    match curve.as_deref() {
+                        Some("Secp256k1") => {
+                            let Ok(signing_key) = k256::ecdsa::SigningKey::from_slice(&secret_key)
+                            else {
+                                return Ok(handle_cheatcode_error("invalid secret_key"));
+                            };
+
+                            let signature: k256::ecdsa::Signature =
+                                k256::ecdsa::signature::hazmat::PrehashSigner::sign_prehash(
+                                    &signing_key,
+                                    &msg_hash,
+                                )
+                                .unwrap();
+
+                            signature.split_bytes()
+                        }
+                        Some("Secp256r1") => {
+                            let Ok(signing_key) = p256::ecdsa::SigningKey::from_slice(&secret_key)
+                            else {
+                                return Ok(handle_cheatcode_error("invalid secret_key"));
+                            };
+
+                            let signature: p256::ecdsa::Signature =
+                                p256::ecdsa::signature::hazmat::PrehashSigner::sign_prehash(
+                                    &signing_key,
+                                    &msg_hash,
+                                )
+                                .unwrap();
+
+                            signature.split_bytes()
+                        }
+                        _ => return Ok(CheatcodeHandlingResult::Forwarded),
+                    }
+                };
+
+                Ok(CheatcodeHandlingResult::Handled(vec![
+                    Felt252::from(0),
+                    Felt252::from_bytes_be(&r_bytes[16..32]), // 16 low  bytes of r
+                    Felt252::from_bytes_be(&r_bytes[0..16]),  // 16 high bytes of r
+                    Felt252::from_bytes_be(&s_bytes[16..32]), // 16 low  bytes of s
+                    Felt252::from_bytes_be(&s_bytes[0..16]),  // 16 high bytes of s
+                ]))
             }
             "get_last_call_trace" => {
                 let trace_info = &extended_runtime
@@ -635,6 +720,22 @@ fn serialize_call_entry_point(call_entry_point: &CallEntryPoint) -> Vec<Felt252>
 pub fn cheatcode_panic_result(panic_data: Vec<Felt252>) -> Vec<Felt252> {
     let mut result = vec![Felt252::from(1), Felt252::from(panic_data.len())];
     result.extend(panic_data);
+    result
+}
+
+fn handle_cheatcode_error(error_short_string: &str) -> CheatcodeHandlingResult {
+    CheatcodeHandlingResult::Handled(vec![
+        Felt252::from(1),
+        Felt252::from_short_string(error_short_string)
+            .expect("Should convert shortstring to Felt252"),
+    ])
+}
+
+fn concat_u128_bytes(low: &[u8; 32], high: &[u8; 32]) -> [u8; 32] {
+    let mut result = [0; 32];
+    // the values of u128 are contained in the last 16 bytes
+    result[..16].copy_from_slice(&high[16..32]);
+    result[16..].copy_from_slice(&low[16..32]);
     result
 }
 
