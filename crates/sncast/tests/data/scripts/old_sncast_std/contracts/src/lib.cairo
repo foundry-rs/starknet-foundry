@@ -1,1 +1,0 @@
-fn some_func() {}
