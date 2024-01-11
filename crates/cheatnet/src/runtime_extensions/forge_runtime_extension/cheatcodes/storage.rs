@@ -13,7 +13,7 @@ use starknet_api::state::StorageKey;
 ///
 /// * `blockifier_state`: Blockifier state reader
 /// * `target`: The address of the contract we want to target
-/// * `storage_address`: Storage address of the felt
+/// * `storage_address`: Storage address of the felt value we want to store
 /// * `value`: A felt value to write at `storage_address`
 ///
 /// returns: Result<(), Error> - a result containing the error if `store` failed  
@@ -37,7 +37,7 @@ pub fn store(
 ///
 /// * `blockifier_state`: Blockifier state reader
 /// * `target`: The address of the contract we want to target
-/// * `storage_address`: Storage address of the felt
+/// * `storage_address`: Storage address of the felt value we want to load
 ///
 /// returns: Result<Vec<Felt252>, Error> - a result containing the read data  
 ///
