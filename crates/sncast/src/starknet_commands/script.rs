@@ -235,6 +235,18 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 let res: Vec<Felt252> = vec![Felt252::from_(nonce)];
                 Ok(CheatcodeHandlingResult::Handled(res))
             }
+            "wait_for_block" => {
+                let account = self.tokio_runtime.block_on(get_account(
+                    &self.config.account,
+                    &self.config.accounts_file,
+                    self.provider,
+                    self.config.keystore.clone(),
+                ))?;
+
+                self.tokio_runtime.block_on(wait_for_block(&account))?;
+
+                Ok(CheatcodeHandlingResult::Handled(vec![]))
+            }
             _ => Ok(CheatcodeHandlingResult::Forwarded),
         };
 
