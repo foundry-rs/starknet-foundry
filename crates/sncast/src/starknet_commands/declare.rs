@@ -88,9 +88,8 @@ pub async fn declare(
     let nonce = get_nonce_for_tx(account, "pending", nonce).await;
 
     let declaration = apply_optional(declaration, max_fee, Declaration::max_fee);
-    let declaration = apply_optional(declaration, nonce, Declaration::nonce);
+    let declaration = declaration.nonce(nonce);
     let declared = declaration.send().await;
-
     match declared {
         Ok(result) => {
             handle_wait_for_tx(

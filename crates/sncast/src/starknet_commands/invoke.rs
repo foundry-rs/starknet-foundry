@@ -65,7 +65,7 @@ pub async fn execute_calls(
     let execution_calls = account.execute(calls);
 
     let execution = apply_optional(execution_calls, max_fee, Execution::max_fee);
-    let execution = apply_optional(execution, nonce, Execution::nonce);
+    let execution = execution.nonce(nonce);
 
     match execution.send().await {
         Ok(result) => {
