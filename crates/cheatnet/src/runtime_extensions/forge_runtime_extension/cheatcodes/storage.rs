@@ -26,9 +26,7 @@ pub fn store(
 ) -> Result<(), anyhow::Error> {
     blockifier_state.blockifier_state.set_storage_at(
         target,
-        StorageKey(PatriciaKey::try_from(StarkHash::from_(
-            storage_address.clone(),
-        ))?),
+        storage_key(storage_address)?,
         value.into_(),
     );
     Ok(())
@@ -48,13 +46,9 @@ pub fn load(
     target: ContractAddress,
     storage_address: &Felt252,
 ) -> Result<Felt252, anyhow::Error> {
-    let storage_key = StorageKey(PatriciaKey::try_from(StarkHash::from_(
-        storage_address.clone(),
-    ))?);
-
     Ok(blockifier_state
         .blockifier_state
-        .get_storage_at(target, storage_key)?
+        .get_storage_at(target, storage_key(storage_address)?)?
         .into_())
 }
 
@@ -79,4 +73,10 @@ pub fn calculate_variable_address(selector: &Felt252, key: Option<&[Felt252]>) -
             normalize_storage_address(address).into_()
         }
     }
+}
+
+fn storage_key(storage_address: &Felt252) -> Result<StorageKey, anyhow::Error> {
+    Ok(StorageKey(PatriciaKey::try_from(StarkHash::from_(
+        storage_address.clone(),
+    ))?))
 }
