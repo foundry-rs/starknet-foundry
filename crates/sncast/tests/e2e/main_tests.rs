@@ -247,6 +247,7 @@ async fn test_keystore_undeployed_account() {
 }
 
 #[tokio::test]
+#[ignore = "Account should be deployed before run this test"]
 async fn test_keystore_declare() {
     let contract_path =
         duplicate_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "999");
@@ -269,7 +270,12 @@ async fn test_keystore_declare() {
         .current_dir(contract_path.path())
         .args(args);
 
-    snapbox.assert().success().get_output().stderr.is_empty();
+    assert!(dbg!(snapbox
+        .assert()
+        .success()
+        .get_output()
+        .stderr
+        .is_empty()));
 
     fs::remove_dir_all(contract_path).unwrap();
 }
