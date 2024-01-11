@@ -25,6 +25,9 @@ use cairo_lang_runner::short_string::as_cairo_short_string;
 use starknet_api::core::ContractAddress;
 
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::SpyTarget;
+use crate::runtime_extensions::forge_runtime_extension::cheatcodes::storage::{
+    calculate_variable_address, load, store,
+};
 use crate::runtime_extensions::forge_runtime_extension::file_operations::string_into_felt;
 use cairo_lang_starknet::contract::starknet_keccak;
 use runtime::utils::BufferReader;
@@ -602,6 +605,47 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     output.append(&mut serialize_call_entry_point(call_entry_point));
                 }
                 Ok(CheatcodeHandlingResult::Handled(output))
+            }
+            "store" => {
+                let mut blockifier_state = BlockifierState::from(
+                    extended_runtime
+                        .extended_runtime
+                        .extended_runtime
+                        .extended_runtime
+                        .hint_handler
+                        .state,
+                );
+                let target = ContractAddress::from_(reader.read_felt());
+                let storage_address = reader.read_felt();
+                store(
+                    &mut blockifier_state,
+                    target,
+                    &storage_address,
+                    reader.read_felt(),
+                )
+                .expect("Failed to store");
+                Ok(CheatcodeHandlingResult::Handled(vec![]))
+            }
+            "load" => {
+                let mut blockifier_state = BlockifierState::from(
+                    extended_runtime
+                        .extended_runtime
+                        .extended_runtime
+                        .extended_runtime
+                        .hint_handler
+                        .state,
+                );
+                let target = ContractAddress::from_(reader.read_felt());
+                let storage_address = &reader.read_felt();
+                let loaded =
+                    load(&mut blockifier_state, target, storage_address).expect("Failed to load");
+                Ok(CheatcodeHandlingResult::Handled(vec![loaded]))
+            }
+            "map_entry_address" => {
+                let map_selector = &reader.read_felt();
+                let keys = &reader.read_vec();
+                let map_entry_address = calculate_variable_address(map_selector, Some(keys));
+                Ok(CheatcodeHandlingResult::Handled(vec![map_entry_address]))
             }
             _ => Ok(CheatcodeHandlingResult::Forwarded),
         }?;
