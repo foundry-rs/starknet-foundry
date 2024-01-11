@@ -5,24 +5,22 @@ use rand::rngs::OsRng;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use starknet::core::utils::UdcUniqueness::{NotUnique, Unique};
-use starknet::core::utils::{UdcUniqueSettings, UdcUniqueness};
-use starknet::{
-    accounts::{Account as StarknetAccount, ConnectedAccount},
-    core::types::{
-        BlockId,
-        BlockTag::{Latest, Pending},
-        FieldElement,
-        StarknetError::{
-            BlockNotFound, ClassAlreadyDeclared, ClassHashNotFound, CompilationFailed,
-            CompiledClassHashMismatch, ContractClassSizeIsTooLarge, ContractError,
-            ContractNotFound, DuplicateTx, FailedToReceiveTransaction, InsufficientAccountBalance,
-            InsufficientMaxFee, InvalidTransactionIndex, InvalidTransactionNonce, NonAccount,
-            TransactionExecutionError, TransactionHashNotFound, UnsupportedContractClassVersion,
-            UnsupportedTxVersion, ValidationFailure,
-        },
+use starknet::core::types::{
+    BlockId,
+    BlockTag::{Latest, Pending},
+    FieldElement,
+    StarknetError::{
+        BlockNotFound, ClassAlreadyDeclared, ClassHashNotFound, CompilationFailed,
+        CompiledClassHashMismatch, ContractClassSizeIsTooLarge, ContractError, ContractNotFound,
+        DuplicateTx, FailedToReceiveTransaction, InsufficientAccountBalance, InsufficientMaxFee,
+        InvalidTransactionIndex, InvalidTransactionNonce, NonAccount, TransactionExecutionError,
+        TransactionHashNotFound, UnsupportedContractClassVersion, UnsupportedTxVersion,
+        ValidationFailure,
     },
 };
+use starknet::core::utils::UdcUniqueness::{NotUnique, Unique};
+use starknet::core::utils::{UdcUniqueSettings, UdcUniqueness};
+use starknet::accounts::{Account as StarknetAccount, ConnectedAccount};
 use starknet::{
     accounts::{ExecutionEncoding, SingleOwnerAccount},
     providers::{

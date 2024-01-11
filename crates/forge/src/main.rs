@@ -1,6 +1,7 @@
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8Path;
 use clap::{Parser, Subcommand, ValueEnum};
+use forge::pretty_printing::print_warning;
 use forge::scarb::config::ForgeConfig;
 use forge::scarb::{
     build_contracts_with_scarb, build_test_artifacts_with_scarb, config_from_scarb_for_package,
@@ -12,11 +13,14 @@ use forge_runner::test_case_summary::{AnyTestCaseSummary, TestCaseSummary};
 use forge_runner::test_crate_summary::TestCrateSummary;
 use forge_runner::{RunnerConfig, RunnerParams, CACHE_DIR};
 use rand::{thread_rng, RngCore};
-use scarb_api::{get_contracts_map, target_dir_for_workspace, ScarbCommand};
+use scarb_api::{
+    get_contracts_map, package_matches_version_requirement, target_dir_for_workspace, ScarbCommand,
+};
 use scarb_metadata::{Metadata, MetadataCommand, PackageMetadata};
 use scarb_ui::args::PackagesFilter;
 
 use forge::block_number_map::BlockNumberMap;
+use semver::{Comparator, Op, Version, VersionReq};
 use std::env;
 use std::sync::Arc;
 use std::thread::available_parallelism;
@@ -139,6 +143,32 @@ fn combine_configs(
     )
 }
 
+fn snforge_std_version_requirement() -> VersionReq {
+    let version = Version::parse(env!("CARGO_PKG_VERSION")).unwrap();
+    let comparator = Comparator {
+        op: Op::Exact,
+        major: version.major,
+        minor: Some(version.minor),
+        patch: Some(version.patch),
+        pre: version.pre,
+    };
+    VersionReq {
+        comparators: vec![comparator],
+    }
+}
+
+fn warn_if_snforge_std_not_compatible(scarb_metadata: &Metadata) -> Result<()> {
+    let snforge_std_version_requirement = snforge_std_version_requirement();
+    if !package_matches_version_requirement(
+        scarb_metadata,
+        "snforge_std",
+        &snforge_std_version_requirement,
+    )? {
+        print_warning(&anyhow!("Package snforge_std version does not meet the recommended version requirement {snforge_std_version_requirement}, it might result in unexpected behaviour"));
+    }
+    Ok(())
+}
+
 #[allow(clippy::too_many_lines)]
 fn test_workspace(args: TestArgs) -> Result<bool> {
     match args.color {
@@ -148,6 +178,8 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
     }
 
     let scarb_metadata = MetadataCommand::new().inherit_stderr().exec()?;
+    warn_if_snforge_std_not_compatible(&scarb_metadata)?;
+
     let workspace_root = scarb_metadata.workspace.root.clone();
     let snforge_target_dir_path = target_dir_for_workspace(&scarb_metadata)
         .join(&scarb_metadata.current_profile)
