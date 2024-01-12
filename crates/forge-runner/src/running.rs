@@ -4,7 +4,7 @@ use std::marker::PhantomData;
 use std::sync::Arc;
 
 use crate::compiled_runnable::ValidatedForkConfig;
-use crate::gas::{check_available_gas, calculate_used_gas};
+use crate::gas::{calculate_used_gas, check_available_gas};
 use crate::sierra_casm_runner::SierraCasmRunner;
 use crate::test_case_summary::{Single, TestCaseSummary};
 use crate::{RunnerConfig, RunnerParams, TestCaseRunnable, CACHE_DIR};

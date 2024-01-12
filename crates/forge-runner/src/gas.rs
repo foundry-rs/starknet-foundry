@@ -124,9 +124,9 @@ pub fn check_available_gas(
             .map_or(false, |available_gas| gas_info > available_gas as u128) =>
         {
             TestCaseSummary::Failed {
-                name: name.clone(),
+                name,
                 msg: Some("\n\tTest cost exceeded the available gas".to_string()),
-                arguments: arguments.clone(),
+                arguments,
                 test_statistics: (),
             }
         }
