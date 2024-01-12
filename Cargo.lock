@@ -5177,6 +5177,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "usc-api"
+version = "1.0.0"
+dependencies = [
+ "anyhow",
+ "assert_fs",
+ "camino",
+ "indoc",
+ "scarb-metadata",
+ "scarb-ui",
+ "semver",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "which",
+]
+
+[[package]]
 name = "utf8parse"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
