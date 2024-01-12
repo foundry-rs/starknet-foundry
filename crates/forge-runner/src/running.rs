@@ -199,13 +199,10 @@ pub fn run_test_case(
     runner_params: &Arc<RunnerParams>,
 ) -> Result<RunResultWithInfo> {
     let func = runner.find_function(case.name.as_str()).unwrap();
-    let initial_gas = runner
-        .get_initial_available_gas(func, case.available_gas)
-        .unwrap();
     let runner_args: Vec<Arg> = args.into_iter().map(Arg::Value).collect();
 
     let (entry_code, builtins) = runner
-        .create_entry_code(func, &runner_args, initial_gas)
+        .create_entry_code(func, &runner_args, usize::MAX)
         .unwrap();
     let footer = SierraCasmRunner::create_code_footer();
     let instructions = chain!(
