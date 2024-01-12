@@ -37,6 +37,9 @@ itertools.workspace = true
 num-traits.workspace = true
 cairo-felt.workspace = true
 cairo-vm.workspace = true
+blockifier.workspace = true
+semver.workspace = true
+console.workspace = true
 
 [dev-dependencies]
 ctor.workspace = true

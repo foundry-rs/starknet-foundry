@@ -42,7 +42,7 @@ jobs:
         run: mdbook build
         working-directory: ./docs
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v2
+        uses: actions/upload-pages-artifact@v3
         with:
           path: ./docs/book
   # Deployment job

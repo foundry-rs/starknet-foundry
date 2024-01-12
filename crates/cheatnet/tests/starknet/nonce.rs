@@ -1,3 +1,4 @@
+use crate::common::call_contract;
 use crate::{
     assert_success,
     common::{
@@ -7,10 +8,7 @@ use crate::{
 };
 use cairo_felt::Felt252;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::deploy;
-use cheatnet::{
-    runtime_extensions::call_to_blockifier_runtime_extension::rpc::call_contract,
-    state::{BlockifierState, CheatnetState},
-};
+use cheatnet::state::{BlockifierState, CheatnetState};
 use conversions::felt252::FromShortString;
 use starknet_api::core::ContractAddress;
 

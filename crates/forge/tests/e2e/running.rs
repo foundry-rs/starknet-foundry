@@ -2,11 +2,13 @@ use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
 use camino::Utf8PathBuf;
 use indoc::{formatdoc, indoc};
 use test_utils::tempdir_with_tool_versions;
+use toml_edit::{value, Document, Item};
 
 use crate::assert_stdout_contains;
 use crate::e2e::common::runner::{
     get_current_branch, get_remote_url, runner, setup_package, test_runner,
 };
+use std::fs;
 use std::{path::Path, str::FromStr};
 
 #[test]
@@ -939,6 +941,65 @@ fn available_gas_error() {
         
         Failures:
             tests::available_gas::available_gas
+        "}
+    );
+}
+
+#[test]
+fn incompatible_snforge_std_version_warning() {
+    let temp = setup_package("simple_package");
+    let manifest_path = temp.child("Scarb.toml");
+
+    let mut scarb_toml = fs::read_to_string(&manifest_path)
+        .unwrap()
+        .parse::<Document>()
+        .unwrap();
+    scarb_toml["dependencies"]["snforge_std"]["path"] = Item::None;
+    scarb_toml["dependencies"]["snforge_std"]["git"] =
+        value("https://github.com/foundry-rs/starknet-foundry.git");
+    scarb_toml["dependencies"]["snforge_std"]["tag"] = value("v0.10.1");
+    manifest_path.write_str(&scarb_toml.to_string()).unwrap();
+
+    let snapbox = test_runner();
+
+    let output = snapbox.current_dir(&temp).assert().failure();
+    assert_stdout_contains!(
+        output,
+        indoc! {r"
+        [WARNING] Package snforge_std version does not meet the recommended version requirement =0.14.0, [..]
+        [..]Compiling[..]
+        [..]Finished[..]
+
+
+        Collected 13 test(s) from simple_package package
+        Running 2 test(s) from src/
+        [PASS] simple_package::tests::test_fib [..]
+        [IGNORE] simple_package::tests::ignored_test
+        Running 11 test(s) from tests/
+        [PASS] tests::contract::call_and_invoke [..]
+        [PASS] tests::ext_function_test::test_my_test [..]
+        [IGNORE] tests::ext_function_test::ignored_test
+        [PASS] tests::ext_function_test::test_simple [..]
+        [PASS] tests::test_simple::test_simple [..]
+        [PASS] tests::test_simple::test_simple2 [..]
+        [PASS] tests::test_simple::test_two [..]
+        [PASS] tests::test_simple::test_two_and_two [..]
+        [FAIL] tests::test_simple::test_failing
+        
+        Failure data:
+            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+        
+        [FAIL] tests::test_simple::test_another_failing
+        
+        Failure data:
+            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+        
+        [PASS] tests::without_prefix::five [..]
+        Tests: 9 passed, 2 failed, 0 skipped, 2 ignored, 0 filtered out
+        
+        Failures:
+            tests::test_simple::test_failing
+            tests::test_simple::test_another_failing
         "}
     );
 }

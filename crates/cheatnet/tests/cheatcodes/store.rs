@@ -1,9 +1,9 @@
 use crate::assert_success;
 use crate::cheatcodes::{map_entry_address, variable_address};
+use crate::common::call_contract;
 use crate::common::state::{create_cached_state, create_cheatnet_state};
 use crate::common::{felt_selector_from_name, get_contracts};
 use cairo_felt::Felt252;
-use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::call_contract;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::deploy;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::storage::store;
 use conversions::felt252::FromShortString;
@@ -26,7 +26,7 @@ fn store_simple_state() {
         &mut blockifier_state,
         contract_address,
         &variable_address("balance"),
-        &[Felt252::from(666)],
+        Felt252::from(666),
     )
     .unwrap();
 
@@ -66,7 +66,7 @@ fn store_state_map_simple_value() {
         &mut blockifier_state,
         contract_address,
         &entry_address,
-        &[inserted_value.clone()],
+        inserted_value.clone(),
     )
     .unwrap();
 
@@ -81,118 +81,4 @@ fn store_state_map_simple_value() {
     .unwrap();
 
     assert_success!(call_output, vec![inserted_value]);
-}
-
-#[test]
-fn store_state_map_complex_value() {
-    let mut cached_state = create_cached_state();
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
-
-    let contract = Felt252::from_short_string("MapComplexValueSimpleKey").unwrap();
-    let contracts = get_contracts();
-
-    let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
-
-    let contract_address = deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[])
-        .unwrap()
-        .contract_address;
-
-    let map_key = Felt252::from(420);
-    let inserted_values = vec![Felt252::from(68), Felt252::from(69)];
-    let entry_address = map_entry_address("values", &[map_key.clone()]);
-
-    store(
-        &mut blockifier_state,
-        contract_address,
-        &entry_address,
-        &inserted_values,
-    )
-    .unwrap();
-
-    let selector = felt_selector_from_name("read");
-    let call_output = call_contract(
-        &mut blockifier_state,
-        &mut cheatnet_state,
-        &contract_address,
-        &selector,
-        &[map_key],
-    )
-    .unwrap();
-    assert_success!(call_output, inserted_values);
-}
-
-#[test]
-fn store_state_map_complex_key() {
-    let mut cached_state = create_cached_state();
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
-
-    let contract = Felt252::from_short_string("MapSimpleValueComplexKey").unwrap();
-    let contracts = get_contracts();
-
-    let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
-
-    let contract_address = deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[])
-        .unwrap()
-        .contract_address;
-
-    let map_key = vec![Felt252::from(68), Felt252::from(69)];
-    let inserted_value = Felt252::from(420);
-
-    let entry_address = map_entry_address("values", &map_key);
-    store(
-        &mut blockifier_state,
-        contract_address,
-        &entry_address,
-        &[inserted_value.clone()],
-    )
-    .unwrap();
-
-    let selector = felt_selector_from_name("read");
-    let call_output = call_contract(
-        &mut blockifier_state,
-        &mut cheatnet_state,
-        &contract_address,
-        &selector,
-        &map_key,
-    )
-    .unwrap();
-    assert_success!(call_output, vec![inserted_value]);
-}
-
-#[test]
-fn store_state_struct() {
-    let mut cached_state = create_cached_state();
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
-
-    let contract = Felt252::from_short_string("FlatStateStruct").unwrap();
-    let contracts = get_contracts();
-
-    let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
-
-    let contract_address = deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[])
-        .unwrap()
-        .contract_address;
-
-    let inserted_values = vec![Felt252::from(68), Felt252::from(69)];
-
-    let var_address = variable_address("value");
-    store(
-        &mut blockifier_state,
-        contract_address,
-        &var_address,
-        &inserted_values,
-    )
-    .unwrap();
-
-    let selector = felt_selector_from_name("read");
-    let call_output = call_contract(
-        &mut blockifier_state,
-        &mut cheatnet_state,
-        &contract_address,
-        &selector,
-        &[],
-    )
-    .unwrap();
-
-    assert_success!(call_output, inserted_values);
 }
