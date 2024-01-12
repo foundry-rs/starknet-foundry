@@ -4,7 +4,7 @@ use std::marker::PhantomData;
 use std::sync::Arc;
 
 use crate::compiled_runnable::ValidatedForkConfig;
-use crate::gas::calculate_used_gas;
+use crate::gas::{check_available_gas, calculate_used_gas};
 use crate::sierra_casm_runner::SierraCasmRunner;
 use crate::test_case_summary::{Single, TestCaseSummary};
 use crate::{RunnerConfig, RunnerParams, TestCaseRunnable, CACHE_DIR};
@@ -304,12 +304,15 @@ fn extract_test_case_summary(
     match run_result {
         Ok(result_with_info) => {
             match result_with_info.run_result {
-                Ok(run_result) => Ok(TestCaseSummary::from_run_result_and_info(
-                    run_result,
-                    case,
-                    args,
-                    result_with_info.gas_used,
-                )),
+                Ok(run_result) => {
+                    let summary = TestCaseSummary::from_run_result_and_info(
+                        run_result,
+                        case,
+                        args,
+                        result_with_info.gas_used,
+                    );
+                    Ok(check_available_gas(case, summary))
+                }
                 // CairoRunError comes from VirtualMachineError which may come from HintException that originates in TestExecutionSyscallHandler
                 Err(RunnerError::CairoRunError(error)) => Ok(TestCaseSummary::Failed {
                     name: case.name.clone(),

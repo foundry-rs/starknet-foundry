@@ -195,26 +195,13 @@ impl TestCaseSummary<Single> {
         let msg = extract_result_data(&run_result, &test_case.expected_result);
         match run_result.value {
             RunResultValue::Success(_) => match &test_case.expected_result {
-                ExpectedTestResult::Success => {
-                    if let Some(available_gas) = test_case.available_gas {
-                        if gas > available_gas as u128 {
-                            return TestCaseSummary::Failed {
-                                name,
-                                msg: Some("\n\tTest cost exceeded the available gas".to_string()),
-                                arguments,
-                                test_statistics: (),
-                            };
-                        }
-                    }
-
-                    TestCaseSummary::Passed {
-                        name,
-                        msg,
-                        arguments,
-                        test_statistics: (),
-                        gas_info: gas,
-                    }
-                }
+                ExpectedTestResult::Success => TestCaseSummary::Passed {
+                    name,
+                    msg,
+                    arguments,
+                    test_statistics: (),
+                    gas_info: gas,
+                },
                 ExpectedTestResult::Panics(_) => TestCaseSummary::Failed {
                     name,
                     msg,
