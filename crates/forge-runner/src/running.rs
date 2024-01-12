@@ -201,7 +201,7 @@ pub fn run_test_case(
     // we need to do this "trick" to be compatible with the older scarb versions
     ensure!(
         case.available_gas != Some(0),
-        "\n    Make sure you use the scarb version where `available_gas` attribute is supported\n"
+        "\n    `available_gas` attribute was probably specified when using Scarb ~2.4. Make sure to use Scarb >=2.5.0\n"
     );
 
     let func = runner.find_function(case.name.as_str()).unwrap();
@@ -321,7 +321,7 @@ fn extract_test_case_summary(
             }
         }
         // `ForkStateReader.get_block_info`, `get_fork_state_reader` may return an error
-        // older scarb version where `available_gas` attribute was not supported may be used
+        // `available_gas` may be specified with Scarb ~2.4
         Err(error) => Ok(TestCaseSummary::Failed {
             name: case.name.clone(),
             msg: Some(error.to_string()),

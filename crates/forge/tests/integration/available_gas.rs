@@ -34,5 +34,9 @@ fn available_gas_exceeded() {
     let result = run_test_case(&test);
 
     assert_failed!(result);
-    assert_case_output_contains!(result, "keccak_cost", "available_gas exceeded");
+    assert_case_output_contains!(
+        result,
+        "keccak_cost",
+        "Test cost exceeded the available gas"
+    );
 }
