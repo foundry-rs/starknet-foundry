@@ -5,7 +5,9 @@ use anyhow::{bail, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
 use serde_json::json;
-use sncast::helpers::constants::{CREATE_KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH};
+use sncast::helpers::constants::{
+    CREATE_KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH, OZ_CLASS_HASH_V1,
+};
 use sncast::helpers::scarb_utils::CastConfig;
 use sncast::response::structs::{AccountCreateResponse, Decimal, Hex};
 use sncast::{extract_or_generate_salt, get_chain_id, get_keystore_password, parse_number};
@@ -50,9 +52,18 @@ pub async fn create(
     class_hash: Option<String>,
 ) -> Result<AccountCreateResponse> {
     let salt = extract_or_generate_salt(salt);
+
     let class_hash = {
         let ch = match &class_hash {
-            Some(class_hash) => class_hash,
+            Some(class_hash) => {
+                if class_hash == "cairo_v1" {
+                    OZ_CLASS_HASH_V1
+                } else if class_hash == "cairo_v0" {
+                    OZ_CLASS_HASH
+                } else {
+                    class_hash
+                }
+            }
             None => OZ_CLASS_HASH,
         };
         parse_number(ch)?
