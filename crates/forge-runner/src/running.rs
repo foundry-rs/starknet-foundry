@@ -8,7 +8,7 @@ use crate::gas::{calculate_used_gas, check_available_gas};
 use crate::sierra_casm_runner::SierraCasmRunner;
 use crate::test_case_summary::{Single, TestCaseSummary};
 use crate::{RunnerConfig, RunnerParams, TestCaseRunnable, CACHE_DIR};
-use anyhow::{bail, ensure, Result};
+use anyhow::{bail, Result};
 use blockifier::execution::common_hints::ExecutionMode;
 use blockifier::execution::entry_point::{
     CallEntryPoint, CallType, EntryPointExecutionContext, ExecutionResources,
@@ -198,12 +198,6 @@ pub fn run_test_case(
     runner_config: &Arc<RunnerConfig>,
     runner_params: &Arc<RunnerParams>,
 ) -> Result<RunResultWithInfo> {
-    // we need to do this "trick" to be compatible with the older scarb versions
-    ensure!(
-        case.available_gas != Some(0),
-        "\n    `available_gas` attribute was probably specified when using Scarb ~2.4. Make sure to use Scarb >=2.5.0\n"
-    );
-
     let func = runner.find_function(case.name.as_str()).unwrap();
     let initial_gas = runner
         .get_initial_available_gas(func, case.available_gas)

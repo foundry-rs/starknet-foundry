@@ -2,12 +2,10 @@ use anyhow::{anyhow, Context, Ok, Result};
 
 use include_dir::{include_dir, Dir};
 
-use regex::Regex;
-use scarb_api::ScarbCommand;
+use scarb_api::{scarb_version, ScarbCommand};
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::Path;
-use std::str::from_utf8;
 use toml_edit::{value, ArrayOfTables, Document, Item, Table};
 
 const CAIRO_EDITION: &str = "2023_10";
@@ -106,30 +104,13 @@ pub fn run(project_name: &str) -> Result<()> {
         .run()
         .context("Failed to add snforge_std")?;
 
-    let scarb_version = ScarbCommand::new()
-        .arg("--version")
-        .inherit_stderr()
-        .command()
-        .output()
-        .context("Failed to execute `scarb --version`")?;
-    let version_output = from_utf8(&scarb_version.stdout)
-        .context("Failed to parse `scarb --version` output to UTF-8")?;
-
-    let cairo_version_regex = Regex::new(r"(?:cairo:?\s*)([0-9]+.[0-9]+.[0-9]+)")
-        .expect("Could not create cairo version matching regex");
-    let cairo_version_capture = cairo_version_regex
-        .captures(version_output)
-        .expect("Could not find cairo version");
-    let cairo_version = cairo_version_capture
-        .get(1)
-        .expect("Could not find cairo version")
-        .as_str();
-
+    // We can assume Cairo and Scarb versions are the same
+    let scarb_version = scarb_version();
     ScarbCommand::new_with_stdio()
         .current_dir(&project_path)
         .offline()
         .arg("add")
-        .arg(format!("starknet@{cairo_version}"))
+        .arg(format!("starknet@{scarb_version}"))
         .run()
         .context("Failed to add starknet")?;
 
