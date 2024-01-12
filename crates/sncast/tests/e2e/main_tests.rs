@@ -270,12 +270,7 @@ async fn test_keystore_declare() {
         .current_dir(contract_path.path())
         .args(args);
 
-    assert!(snapbox
-        .assert()
-        .success()
-        .get_output()
-        .stderr
-        .is_empty());
+    assert!(snapbox.assert().success().get_output().stderr.is_empty());
 
     fs::remove_dir_all(contract_path).unwrap();
 }
