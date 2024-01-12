@@ -40,3 +40,20 @@ fn available_gas_exceeded() {
         "Test cost exceeded the available gas"
     );
 }
+
+#[test]
+fn available_gas_fuzzing() {
+    let test = test_utils::test_case!(indoc!(
+        r"
+            #[test]
+            #[available_gas(21)]
+            fn keccak_cost(x: u256) {
+                keccak::keccak_u256s_le_inputs(array![x].span());
+            }
+        "
+    ));
+
+    let result = run_test_case(&test);
+
+    assert_passed!(result);
+}
