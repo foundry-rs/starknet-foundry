@@ -1098,7 +1098,7 @@ dependencies = [
  "flatten-serde-json",
  "fs2",
  "glob",
- "indoc 2.0.4",
+ "indoc",
  "k256",
  "num-bigint",
  "num-traits 0.2.17",
@@ -3405,16 +3405,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pretty_assertions"
-version = "1.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "af7cee1a6c8a5b9208b3cb1061f10c0cb689087b3d8ce85fb9d2dd7a29b6ba66"
-dependencies = [
- "diff",
- "yansi",
-]
-
-[[package]]
 name = "primeorder"
 version = "0.13.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4339,8 +4329,8 @@ version = "0.14.0"
 dependencies = [
  "anyhow",
  "blockifier",
- "cairo-felt 0.8.3",
- "cairo-lang-casm 2.4.0",
+ "cairo-felt",
+ "cairo-lang-casm",
  "cairo-lang-runner",
  "cairo-lang-sierra",
  "cairo-lang-sierra-to-casm",
