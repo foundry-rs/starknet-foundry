@@ -59,8 +59,8 @@ fn deploy_syscall_cost() {
     assert_passed!(result);
     // 1224 = 2 * cost per 32-byte word (contract_address and contract modification info)
     // 612 = updated class_hash (through deploy)
-    // 11 = gas cost from steps
-    assert_gas!(result, "deploy_syscall_cost", 1224 + 612 + 11);
+    // 6 = gas cost from steps
+    assert_gas!(result, "deploy_syscall_cost", 1224 + 612 + 6);
 }
 
 #[test]
@@ -77,7 +77,7 @@ fn keccak_cost() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
-    assert_gas!(result, "keccak_cost", 21);
+    assert_gas!(result, "keccak_cost", 11);
 }
 
 #[test]
@@ -113,8 +113,8 @@ fn contract_keccak_cost() {
 
     assert_passed!(result);
     // 1836 = 3 * cost per 32-byte word (deploy)
-    // 21 = cost of single keccak builtin
-    assert_gas!(result, "contract_keccak_cost", 1836 + 21);
+    // 11 = cost of single keccak builtin
+    assert_gas!(result, "contract_keccak_cost", 1836 + 11);
 }
 
 #[test]
@@ -171,8 +171,8 @@ fn contract_range_check_cost() {
 
     assert_passed!(result);
     // 1836 = 3 * cost per 32-byte word (deploy)
-    // 4 = cost of 22 range check builtins
-    assert_gas!(result, "contract_range_check_cost", 1836 + 4);
+    // 2 = cost of 22 range check builtins
+    assert_gas!(result, "contract_range_check_cost", 1836 + 2);
 }
 
 #[test]
@@ -227,8 +227,8 @@ fn contract_bitwise_cost() {
 
     assert_passed!(result);
     // 1836 = 3 * cost per 32-byte word (deploy)
-    // 4 = cost of 6 bitwise builtins
-    assert_gas!(result, "contract_bitwise_cost", 1836 + 4);
+    // 2 = cost of 6 bitwise builtins
+    assert_gas!(result, "contract_bitwise_cost", 1836 + 2);
 }
 
 #[test]
@@ -283,8 +283,8 @@ fn contract_pedersen_cost() {
 
     assert_passed!(result);
     // 1836 = 3 * cost per 32-byte word (deploy)
-    // 4 = cost of 12 pedersen builtins
-    assert_gas!(result, "contract_pedersen_cost", 1836 + 4);
+    // 2 = cost of 12 pedersen builtins
+    assert_gas!(result, "contract_pedersen_cost", 1836 + 2);
 }
 
 #[test]
@@ -339,8 +339,8 @@ fn contract_poseidon_cost() {
 
     assert_passed!(result);
     // 1836 = 3 * cost per 32-byte word (deploy)
-    // 4 = cost of 12 poseidon builtins
-    assert_gas!(result, "contract_poseidon_cost", 1836 + 4);
+    // 2 = cost of 12 poseidon builtins
+    assert_gas!(result, "contract_poseidon_cost", 1836 + 2);
 }
 
 #[test]
@@ -360,7 +360,7 @@ fn ec_op_cost() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
-    assert_gas!(result, "ec_op_cost", 11);
+    assert_gas!(result, "ec_op_cost", 6);
 }
 
 #[test]
@@ -396,8 +396,8 @@ fn contract_ec_op_cost() {
 
     assert_passed!(result);
     // 1836 = 3 * cost per 32-byte word (deploy)
-    // 11 = cost of single ec_op builtin
-    assert_gas!(result, "contract_ec_op_cost", 1836 + 11);
+    // 6 = cost of single ec_op builtin
+    assert_gas!(result, "contract_ec_op_cost", 1836 + 6);
 }
 
 #[test]
@@ -434,8 +434,8 @@ fn storage_write_cost() {
     assert_passed!(result);
     // 1836 = 3 * cost per 32-byte word (deploy)
     // 1224 = 2 * cost per 32-byte word (storage write)
-    // 5 = gas cost of steps
-    assert_gas!(result, "storage_write_cost", 1836 + 1224 + 5);
+    // 3 = gas cost of steps
+    assert_gas!(result, "storage_write_cost", 1836 + 1224 + 3);
 }
 
 #[test]
@@ -504,8 +504,8 @@ fn multiple_storage_writes_cost() {
     assert_passed!(result);
     // 1836 = 3 * cost per 32-byte word (deploy)
     // 1224 = 2 * cost per 32-byte word (storage write)
-    // 6 = gas cost of steps
-    assert_gas!(result, "multiple_storage_writes_cost", 1836 + 1224 + 6);
+    // 3 = gas cost of steps
+    assert_gas!(result, "multiple_storage_writes_cost", 1836 + 1224 + 3);
 }
 
 #[test]
@@ -542,8 +542,8 @@ fn l1_message_cost() {
     assert_passed!(result);
     // 1836 = 3 * cost per 32-byte word (deploy)
     // 2448 = 4 * cost per 32-byte word (l2_l1_message, header is of length 3 and payload size is 1)
-    // 5 = gas cost of steps
-    assert_gas!(result, "l1_message_cost", 1836 + 2448 + 5);
+    // 3 = gas cost of steps
+    assert_gas!(result, "l1_message_cost", 1836 + 2448 + 3);
 }
 
 #[test]
@@ -561,8 +561,8 @@ fn l1_message_from_test_cost() {
 
     assert_passed!(result);
     // 2448 = 4 * cost per 32-byte word (l2_l1_message, header is of length 3 and payload size is 1)
-    // 2 = gas cost of steps
-    assert_gas!(result, "l1_message_from_test_cost", 2448 + 2);
+    // 1 = gas cost of steps
+    assert_gas!(result, "l1_message_from_test_cost", 2448 + 1);
 }
 
 #[test]
@@ -612,6 +612,6 @@ fn l1_message_cost_for_proxy() {
     // 1836 = 3 * cost per 32-byte word (deploy)
     // 1836 = 3 * cost per 32-byte word (deploy)
     // 2448 = 4 * cost per 32-byte word (l2_l1_message, header is of length 3 and payload size is 1)
-    // 15 = gas cost of steps
-    assert_gas!(result, "l1_message_cost_for_proxy", 1836 + 1836 + 2448 + 15);
+    // 8 = gas cost of steps
+    assert_gas!(result, "l1_message_cost_for_proxy", 1836 + 1836 + 2448 + 8);
 }
