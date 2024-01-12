@@ -302,7 +302,7 @@ fn extract_test_case_summary(
                         args,
                         result_with_info.gas_used,
                     );
-                    Ok(check_available_gas(case, summary))
+                    Ok(check_available_gas(&case.available_gas, summary))
                 }
                 // CairoRunError comes from VirtualMachineError which may come from HintException that originates in TestExecutionSyscallHandler
                 Err(RunnerError::CairoRunError(error)) => Ok(TestCaseSummary::Failed {

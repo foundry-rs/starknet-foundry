@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use crate::compiled_runnable::TestCaseRunnable;
 use crate::test_case_summary::{Single, TestCaseSummary};
 use blockifier::fee::eth_gas_constants;
 use blockifier::fee::fee_utils::calculate_tx_l1_gas_usage;
@@ -110,7 +109,7 @@ fn get_onchain_data_segment_length(state_changes_count: StateChangesCount) -> us
 }
 
 pub fn check_available_gas(
-    case: &TestCaseRunnable,
+    available_gas: &Option<usize>,
     summary: TestCaseSummary<Single>,
 ) -> TestCaseSummary<Single> {
     match summary {
@@ -119,10 +118,7 @@ pub fn check_available_gas(
             arguments,
             gas_info,
             ..
-        } if case
-            .available_gas
-            .map_or(false, |available_gas| gas_info > available_gas as u128) =>
-        {
+        } if available_gas.map_or(false, |available_gas| gas_info > available_gas as u128) => {
             TestCaseSummary::Failed {
                 name,
                 msg: Some("\n\tTest cost exceeded the available gas".to_string()),
