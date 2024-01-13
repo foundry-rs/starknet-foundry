@@ -43,10 +43,22 @@ use sncast::response::structs::ScriptResponse;
 use starknet::accounts::Account;
 use starknet::core::types::{BlockId, BlockTag::Pending, FieldElement};
 use starknet::providers::jsonrpc::HttpTransport;
-use starknet::providers::JsonRpcClient;
+use starknet::providers::{JsonRpcClient, ProviderError};
 use tokio::runtime::Runtime;
 
 type ScriptStarknetContractArtifacts = StarknetContractArtifacts;
+
+enum ScriptCommandError {
+    RPCError(ProviderError),
+    SNCastError,
+}
+
+fn serialize_script_command_err(err: ScriptCommandError) -> Felt252 {
+    match err {
+        ScriptCommandError::RPCError(_) => Felt252::from(0),
+        ScriptCommandError::SNCastError => Felt252::from(1),
+    }
+}
 
 #[derive(Args)]
 #[command(about = "Execute a deployment script")]
@@ -87,17 +99,29 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     .map(|el| FieldElement::from_(el.clone()))
                     .collect();
 
-                let call_response = self.tokio_runtime.block_on(call::call(
+                match self.tokio_runtime.block_on(call::call(
                     contract_address,
                     &function_name,
                     calldata_felts,
                     self.provider,
                     &BlockId::Tag(Pending),
-                ))?;
+                )) {
+                    Ok(call_response) => {
+                        let mut res: Vec<Felt252> = vec![
+                            Felt252::from(0),
+                            Felt252::from(call_response.response.len()),
+                        ];
+                        res.extend(call_response.response.iter().map(|el| Felt252::from_(el.0)));
+                        Ok(CheatcodeHandlingResult::Handled(res))
+                    }
+                    Err(err) => {
+                        let error_msg_serialized =
+                            serialize_script_command_err(ScriptCommandError::SNCastError);
 
-                let mut res: Vec<Felt252> = vec![Felt252::from(call_response.response.len())];
-                res.extend(call_response.response.iter().map(|el| Felt252::from_(el.0)));
-                Ok(CheatcodeHandlingResult::Handled(res))
+                        let mut res: Vec<Felt252> = vec![Felt252::from(1), error_msg_serialized];
+                        Ok(CheatcodeHandlingResult::Handled(res))
+                    }
+                }
             }
             "declare" => {
                 let contract_name = reader

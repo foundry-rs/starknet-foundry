@@ -1,4 +1,28 @@
+
+use core::array::ArrayTrait;
+use core::serde::Serde;
+use core::debug::PrintTrait;
 use starknet::{testing::cheatcode, ContractAddress, ClassHash};
+
+#[derive(Copy, Drop, Serde, PartialEq)]
+enum ScriptCommandError {
+    RPCError,
+    SNCastError,
+}
+
+impl ScriptCommandErrorTrait of PrintTrait<ScriptCommandError> {
+    #[inline(always)]
+    fn print(self: ScriptCommandError) {
+        match self {
+            ScriptCommandError::RPCError => {
+                'RPCError'.print();
+            },
+            ScriptCommandError::SNCastError => {
+                'SNCastError'.print();
+            },
+        }
+    }
+}
 
 #[derive(Drop, Clone)]
 struct CallResult {
@@ -7,7 +31,7 @@ struct CallResult {
 
 fn call(
     contract_address: ContractAddress, function_name: felt252, calldata: Array::<felt252>
-) -> CallResult {
+) -> Result<CallResult, ScriptCommandError> {
     let contract_address_felt: felt252 = contract_address.into();
     let mut inputs = array![contract_address_felt, function_name];
 
@@ -18,9 +42,11 @@ fn call(
 
     let mut buf = cheatcode::<'call'>(inputs.span());
 
-    let result_data: Array::<felt252> = Serde::<Array<felt252>>::deserialize(ref buf).unwrap();
-
-    CallResult { data: result_data }
+    let mut result_data: Result<Array::<felt252>, ScriptCommandError> = Serde::<Result<Array<felt252>>>::deserialize(ref buf).expect('call deserialize failed');
+    match result_data {
+        Result::Ok(data) => Result::Ok( CallResult { data: data } ),
+        Result::Err(err) => Result::Err(err),
+    }
 }
 
 #[derive(Drop, Clone)]

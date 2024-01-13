@@ -1,11 +1,12 @@
-use anyhow::{Context, Result};
+use crate::starknet_commands::commands::StarknetCommandError;
+use anyhow::{bail, Context, Result};
 use clap::Args;
 use sncast::handle_rpc_error;
 use sncast::response::structs::{CallResponse, Hex};
 use starknet::core::types::{BlockId, FieldElement, FunctionCall};
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::jsonrpc::HttpTransport;
-use starknet::providers::{JsonRpcClient, Provider};
+use starknet::providers::{JsonRpcClient, Provider, ProviderError};
 
 #[derive(Args)]
 #[command(about = "Call a contract instance on Starknet", long_about = None)]
@@ -36,7 +37,7 @@ pub async fn call(
     calldata: Vec<FieldElement>,
     provider: &JsonRpcClient<HttpTransport>,
     block_id: &BlockId,
-) -> Result<CallResponse> {
+) -> Result<CallResponse, StarknetCommandError> {
     let function_call = FunctionCall {
         contract_address,
         entry_point_selector: get_selector_from_name(func_name)
@@ -50,6 +51,6 @@ pub async fn call(
 
     match res {
         Ok(response) => Ok(CallResponse { response }),
-        Err(error) => handle_rpc_error(error),
+        Err(error) => Err(StarknetCommandError::Handleable(error)),
     }
 }

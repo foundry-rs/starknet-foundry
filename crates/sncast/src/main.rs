@@ -7,6 +7,7 @@ use crate::starknet_commands::{
 use anyhow::{Context, Result};
 use sncast::response::print::{print_command_result, OutputFormat};
 
+use crate::starknet_commands::commands::handle_starknet_command_error;
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand};
 use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
@@ -16,7 +17,7 @@ use sncast::helpers::scarb_utils::{
 };
 use sncast::{
     chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_nonce, get_provider,
-    NumbersFormat, WaitForTx,
+    handle_rpc_error, NumbersFormat, WaitForTx,
 };
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
@@ -236,7 +237,8 @@ async fn run_async_command(
                 &provider,
                 block_id.as_ref(),
             )
-            .await;
+            .await
+            .map_err(handle_starknet_command_error);
 
             print_command_result("call", &mut result, numbers_format, &output_format)?;
             Ok(())
