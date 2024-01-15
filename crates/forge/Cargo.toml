@@ -19,6 +19,7 @@ cheatnet = { path = "../cheatnet" }
 conversions = { path = "../conversions" }
 scarb-api = { path = "../scarb-api" }
 forge_runner = { path = "../forge-runner" }
+universal-sierra-compiler-api = { path = "../universal-sierra-compiler-api" }
 cairo-lang-runner.workspace = true
 cairo-lang-casm.workspace = true
 cairo-lang-sierra-to-casm.workspace = true

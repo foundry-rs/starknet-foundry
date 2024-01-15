@@ -1116,6 +1116,7 @@ dependencies = [
  "test-case",
  "thiserror",
  "tokio",
+ "universal-sierra-compiler-api",
  "url",
 ]
 
@@ -1960,6 +1961,7 @@ dependencies = [
  "tokio",
  "tokio-util",
  "toml_edit 0.20.7",
+ "universal-sierra-compiler-api",
  "url",
  "walkdir",
 ]
@@ -3941,6 +3943,7 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror",
+ "universal-sierra-compiler-api",
  "which",
 ]
 
@@ -5158,6 +5161,23 @@ name = "unicode-xid"
 version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f962df74c8c05a667b5ee8bcf162993134c104e96440b663c8daa176dc772d8c"
+
+[[package]]
+name = "universal-sierra-compiler-api"
+version = "1.0.0"
+dependencies = [
+ "anyhow",
+ "assert_fs",
+ "camino",
+ "indoc",
+ "scarb-metadata",
+ "scarb-ui",
+ "semver",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "which",
+]
 
 [[package]]
 name = "untrusted"

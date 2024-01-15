@@ -1,6 +1,6 @@
 use crate::forking::cache::ForkCache;
 use crate::state::BlockInfoReader;
-use anyhow::Context;
+use anyhow::Result;
 use blockifier::execution::contract_class::{
     ContractClass as ContractClassBlockifier, ContractClassV0, ContractClassV1,
 };
@@ -28,9 +28,9 @@ use starknet_api::state::StorageKey;
 use std::collections::HashMap;
 use std::io::{Read, Write};
 use std::ops::Deref;
-use std::process::Command;
 use tempfile::Builder;
 use tokio::runtime::Runtime;
+use universal_sierra_compiler_api::compile_sierra;
 use url::Url;
 
 #[derive(Debug)]
@@ -215,11 +215,12 @@ impl StateReader for ForkStateReader {
                     "entry_points_by_type": flattened_class.entry_points_by_type
                 });
 
-                let casm_contract_class = generate_casm(&sierra_contract_class);
-
-                Ok(ContractClassBlockifier::V1(
-                    ContractClassV1::try_from(casm_contract_class).unwrap(),
-                ))
+                match generate_casm(&sierra_contract_class) {
+                    Ok(casm_contract_class) => Ok(ContractClassBlockifier::V1(
+                        ContractClassV1::try_from(casm_contract_class).unwrap(),
+                    )),
+                    Err(err) => Err(StateReadError(err.to_string())),
+                }
             }
             ContractClassStarknet::Legacy(legacy_class) => {
                 let converted_entry_points: HashMap<EntryPointType, Vec<EntryPoint>> =
@@ -254,7 +255,7 @@ impl StateReader for ForkStateReader {
     }
 }
 
-fn generate_casm(sierra_contract_class: &Value) -> CasmContractClass {
+fn generate_casm(sierra_contract_class: &Value) -> Result<CasmContractClass> {
     let mut temp_sierra_file = Builder::new().tempfile().unwrap();
     let _ = temp_sierra_file
         .write(
@@ -264,14 +265,6 @@ fn generate_casm(sierra_contract_class: &Value) -> CasmContractClass {
         )
         .unwrap();
 
-    let casm = Command::new("universal-sierra-compiler")
-        .args(vec![
-            "--sierra-input-path",
-            temp_sierra_file.path().to_str().unwrap(),
-        ])
-        .output()
-        .context("Error while compiling Sierra of forked contract")
-        .unwrap()
-        .stdout;
-    serde_json::from_slice(&casm).unwrap()
+    let casm = compile_sierra(temp_sierra_file.path().to_str().unwrap(), None)?;
+    Ok(serde_json::from_str(&casm).unwrap())
 }
