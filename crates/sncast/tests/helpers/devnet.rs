@@ -1,16 +1,16 @@
-use crate::helpers::constants::{DEVNET_ENV_FILE, SEED, URL, DEVNET_OZ_CLASS_HASH};
+use super::fixtures::{convert_to_hex, get_address_from_keystore, mint_token};
+use crate::helpers::constants::{DEVNET_ENV_FILE, DEVNET_OZ_CLASS_HASH, SEED, URL};
 use crate::helpers::fixtures::{declare_contract, declare_deploy_contract, remove_devnet_env};
 use ctor::{ctor, dtor};
 use snapbox::cmd::cargo_bin;
-use std::{env, fs};
+use sncast::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
 use std::net::TcpStream;
 use std::process::{Command, Stdio};
 use std::string::ToString;
 use std::time::{Duration, Instant};
+use std::{env, fs};
 use tokio::runtime::Runtime;
 use url::Url;
-use sncast::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
-use super::fixtures::{get_address_from_keystore, mint_token, convert_to_hex};
 
 #[cfg(test)]
 #[ctor]
@@ -80,11 +80,7 @@ async fn deploy_keystore_account() {
     let keystore_path = "tests/data/keystore/deployed_key.json";
     let account_path = "tests/data/keystore/deployed_account_copy.json";
 
-    fs::copy(
-        "tests/data/keystore/deployed_account.json",
-        account_path,
-    )
-    .unwrap();
+    fs::copy("tests/data/keystore/deployed_account.json", account_path).unwrap();
     env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
 
     let address = get_address_from_keystore(keystore_path, account_path, KEYSTORE_PASSWORD_ENV_VAR);
@@ -110,8 +106,10 @@ async fn deploy_keystore_account() {
         DEVNET_OZ_CLASS_HASH,
     ];
 
-    Command::new(cargo_bin!("sncast")).args(args).output().unwrap();
-
+    Command::new(cargo_bin!("sncast"))
+        .args(args)
+        .output()
+        .unwrap();
 }
 
 #[cfg(test)]
