@@ -1,4 +1,4 @@
-use anyhow::{anyhow, ensure, Result};
+use anyhow::{anyhow, Result};
 use camino::Utf8Path;
 
 use crate::scarb::load_test_artifacts;
@@ -11,6 +11,7 @@ use forge_runner::test_crate_summary::TestCrateSummary;
 use forge_runner::{RunnerConfig, RunnerParams, TestCrateRunResult};
 
 use crate::block_number_map::BlockNumberMap;
+use crate::pretty_printing::print_warning;
 use forge_runner::compiled_runnable::{CompiledTestCrateRunnable, TestCaseRunnable};
 use scarb_api::scarb_version;
 
@@ -107,7 +108,7 @@ pub async fn run(
     let not_filtered: usize = test_crates.iter().map(|tc| tc.test_cases.len()).sum();
     let filtered = all_tests - not_filtered;
 
-    verify_scarb_version_if_available_gas_used(&test_crates)?;
+    warn_if_available_gas_used_with_incompatible_scarb_version(&test_crates);
 
     pretty_printing::print_collected_tests_count(
         test_crates.iter().map(|tests| tests.test_cases.len()).sum(),
@@ -168,23 +169,19 @@ pub async fn run(
     Ok(summaries)
 }
 
-fn verify_scarb_version_if_available_gas_used(
+fn warn_if_available_gas_used_with_incompatible_scarb_version(
     test_crates: &Vec<CompiledTestCrateRaw>,
-) -> Result<()> {
+) {
     for test_crate in test_crates {
         for case in &test_crate.test_cases {
-            if case.available_gas == Some(0) {
-                let scarb_version = scarb_version();
-
-                ensure!(
-                    scarb_version >= Version::new(2, 5, 0),
-                    "\n    `available_gas` attribute was probably specified when using Scarb ~2.4. Make sure to use Scarb >=2.5.0\n"
-                );
+            if case.available_gas == Some(0) && scarb_version() <= Version::new(2, 5, 0) {
+                print_warning(&anyhow!(
+                    "`available_gas` attribute was probably specified when using Scarb ~2.4. \
+                    Make sure to use Scarb >=2.5.0"
+                ));
             }
         }
     }
-
-    Ok(())
 }
 
 #[cfg(test)]
