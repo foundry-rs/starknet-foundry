@@ -71,10 +71,10 @@ Starknet Foundry is under active development! Expect a lot of new features to ap
 - [x] Fuzz testing
 - [x] Parallel tests execution
 - [x] Performance improvements
-- [ ] Deployment scripts written in Cairo
-- [ ] Advanced debugging utilities
+- [x] Deployment scripts written in Cairo
+- [ ] Transactions profiling 🏗️
+- [ ] Debugging utilities 🏗️
 - [ ] L1 ↔ L2 messaging and cross-chain testing
-- [ ] Transactions profiling
 - [ ] Test coverage reports
 
 ## Performance
