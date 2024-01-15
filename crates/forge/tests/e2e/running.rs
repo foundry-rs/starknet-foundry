@@ -967,7 +967,6 @@ fn incompatible_snforge_std_version_warning() {
         output,
         indoc! {r"
         [WARNING] Package snforge_std version does not meet the recommended version requirement =0.14.0, [..]
-
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -1027,7 +1026,6 @@ fn detailed_resources_flag() {
                 builtins: ("range_check_builtin": 215, "pedersen_builtin": 19)
                 syscalls: (CallContract: 5, StorageWrite: 4, GetExecutionInfo: 3, StorageRead: 2, EmitEvent: 1)
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
-        [..]
         "#}
     );
 }
