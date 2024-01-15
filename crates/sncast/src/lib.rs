@@ -171,9 +171,12 @@ pub async fn get_nonce_for_tx(
         return nonce;
     }
 
-    get_nonce(account.provider(), block_id, account.address())
-        .await
-        .expect("Failed to get a nonce")
+    match get_nonce(account.provider(), block_id, account.address()).await {
+        Ok(result) => result,
+        Err(_) => get_nonce(account.provider(), "latest", account.address())
+            .await
+            .expect("Failed to get a nonce"),
+    }
 }
 
 pub async fn get_account<'a>(
