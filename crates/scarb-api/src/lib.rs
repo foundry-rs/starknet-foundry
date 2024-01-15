@@ -54,7 +54,7 @@ impl StarknetContractArtifacts {
             None => compile_sierra(
                 starknet_contract.artifacts.sierra.as_str(),
                 Some(base_path.as_std_path()),
-            ),
+            )?,
             Some(casm_path) => fs::read_to_string(base_path.join(casm_path))?,
         };
 
