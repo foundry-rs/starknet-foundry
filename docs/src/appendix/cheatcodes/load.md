@@ -2,14 +2,14 @@
 
 > `fn load(target: ContractAddress, storage_address: felt252, size: felt252) -> Array<felt252> `
 
-Loads a `Array` of felts from `target` contract's storage, starting at `storage_address`.
+Loads `size` felts from `target` contract's storage into an `Array`, starting at `storage_address`.
 
 - `target` - Address of the contract, which storage you want to modify
 - `storage_address` - Offset of the data in the contract's storage 
 - `size` - How many felts will be loaded into the result `Array` 
 
 
-Those examples present the usage in practise:
+## Example usage
 
 ```rust
 mod Contract {
@@ -21,21 +21,22 @@ mod Contract {
 }
 
 // ...
-use snforge_std::{ store, load, map_entry_address };
+use snforge_std::{ load, map_entry_address };
 
 #[test]
 fn load_plain_felt() {
-    let deployed = deploy_contract();
-    let loaded = load(deployed.contract_address, selector!("plain_felt"), 1);
+    // ...
+    
+    let loaded = load(contract_address, selector!("plain_felt"), 1);
     assert(loaded.len() == 1, 'Wrong loaded vector');
     assert(*loaded.at(0) == 0, 'Wrong loaded value');
 }
 
 #[test]
 fn load_map_entry() {
-    let deployed = deploy_contract();
+    // ...
     load(
-        deployed.contract_address, 
+        contract_address, 
         map_entry_address(
             selector!("mapping"), // Providing variable name
             array![123].span(),   // Providing mapping key 
@@ -43,14 +44,14 @@ fn load_map_entry() {
         1,
     );
     
-    assert(loaded.len() == 1, 'Wrong loaded vector');
-    assert(*loaded.at(0) == 0, 'Wrong loaded value');
+    assert(loaded.len() == 1, 'Expected 1 felt loaded');
+    assert(*loaded.at(0) == 0, 'Expected 0 value loaded');
 }
 ```
 
 > 📝 **Note** 
 > 
-> The cheatcode will return 0s for uninitialized memory, which is a default storage value for starknet contracts.
+> The cheatcode will return 0s for uninitialized memory, which is a default storage value for Starknet contracts.
 
 
 > ⚠️ **Warning**

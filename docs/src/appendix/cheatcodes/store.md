@@ -10,10 +10,10 @@ Stores a `Span` of felts in `target` contract's storage, starting at `storage_ad
 
 
 In order to obtain the variable address that you'd like to write to, you need to use either:
-- `selector!` macro - if the variable is a plain variable
-- `map_entry_address` function in tandem with `selector!` - if the variable is a mapping, and you want to insert a key-value pair
+- `selector!` macro - if the variable is not a mapping
+- `map_entry_address` function in tandem with `selector!` - for inserting key-value pair into a map variable
 
-Those examples present the usage in practise:
+## Example usage
 
 ```rust
 mod Contract {
@@ -29,21 +29,24 @@ use snforge_std::{ store, map_entry_address };
 
 #[test]
 fn store_plain_felt() {
-    let deployed = deploy_contract();
-    store(deployed.contract_address, selector!("plain_felt"), array![123].span());
+    // ...
+    store(contract_address, selector!("plain_felt"), array![123].span());
+    // plain_felt = 123
 }
 
 #[test]
 fn store_map_entry() {
-    let deployed = deploy_contract();
+    // ...
     store(
-        deployed.contract_address, 
+        contract_address, 
         map_entry_address(
             selector!("mapping"), // Providing variable name
             array![123].span(),   // Providing mapping key 
         ),
         array![321].span()
     );
+    
+    // mapping = { 123: 321 }
 }
 ```
 
