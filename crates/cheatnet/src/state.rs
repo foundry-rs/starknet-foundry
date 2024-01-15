@@ -19,14 +19,17 @@ use runtime::starknet::state::DictStateReader;
 
 use starknet_api::core::EntryPointSelector;
 
+use crate::constants::build_test_entry_point;
 use starknet_api::transaction::ContractAddressSalt;
 use starknet_api::{
     core::{ClassHash, CompiledClassHash, ContractAddress, Nonce},
     hash::StarkFelt,
     state::StorageKey,
 };
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::hash::BuildHasher;
+use std::rc::Rc;
 
 // Specifies which contracts to target
 // with a cheatcode function
@@ -136,7 +139,12 @@ pub enum CheatStatus<T> {
     Uncheated,
 }
 
-#[derive(Default)]
+/// Tree structure representing trace of a call.
+pub struct CallTrace {
+    pub entry_point: CallEntryPoint,
+    pub nested_calls: Vec<Rc<RefCell<CallTrace>>>,
+}
+
 pub struct CheatnetState {
     pub rolled_contracts: HashMap<ContractAddress, CheatStatus<Felt252>>,
     pub global_roll: Option<Felt252>,
@@ -155,8 +163,40 @@ pub struct CheatnetState {
     pub block_info: BlockInfo,
     // execution resources used by all contract calls
     pub used_resources: UsedResources,
-    // trace info of the last call
-    pub trace_info: Vec<CallEntryPoint>,
+    /// Trace of calls made in a test.
+    /// The root `CallTrace` symbolizes calling the test code.
+    pub call_trace: Rc<RefCell<CallTrace>>,
+    /// Pointer to the call we are currently in.
+    pub current_call: Rc<RefCell<CallTrace>>,
+}
+
+impl Default for CheatnetState {
+    fn default() -> Self {
+        let call_trace = Rc::new(RefCell::new(CallTrace {
+            entry_point: build_test_entry_point(),
+            nested_calls: vec![],
+        }));
+        Self {
+            rolled_contracts: Default::default(),
+            global_roll: None,
+            pranked_contracts: Default::default(),
+            global_prank: None,
+            warped_contracts: Default::default(),
+            global_warp: None,
+            elected_contracts: Default::default(),
+            global_elect: None,
+            mocked_functions: Default::default(),
+            spoofed_contracts: Default::default(),
+            global_spoof: None,
+            spies: vec![],
+            detected_events: vec![],
+            deploy_salt_base: 0,
+            block_info: Default::default(),
+            used_resources: Default::default(),
+            call_trace: call_trace.clone(),
+            current_call: call_trace,
+        }
+    }
 }
 
 impl CheatnetState {
@@ -221,6 +261,19 @@ impl CheatnetState {
     #[must_use]
     pub fn get_cheated_caller_address(&self, address: &ContractAddress) -> Option<ContractAddress> {
         get_cheat_for_contract(&self.global_prank, &self.pranked_contracts, address)
+    }
+
+    pub fn add_new_call_and_update_current_call(&mut self, entry_point: CallEntryPoint) {
+        let new_call = Rc::new(RefCell::new(CallTrace {
+            entry_point,
+            nested_calls: vec![],
+        }));
+        self.current_call
+            .borrow_mut()
+            .nested_calls
+            .push(new_call.clone());
+
+        self.current_call = new_call;
     }
 }
 
