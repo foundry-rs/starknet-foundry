@@ -54,7 +54,7 @@ Control when colored output is used. Valid values:
 
 ## `--detailed-resources`
 
-Display additional info about used resources.
+Display additional info about used resources for each test.
 
 ## `--use_scarb_collector`
 
