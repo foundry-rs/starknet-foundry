@@ -8,7 +8,7 @@ members = [
     "crates/conversions",
     "crates/runtime",
     "crates/scarb-api",
-    "crates/usc-api"
+    "crates/universal-sierra-compiler-api"
 ]
 
 [workspace.package]

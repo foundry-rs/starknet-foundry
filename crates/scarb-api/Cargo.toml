@@ -15,4 +15,4 @@ serde_json.workspace = true
 thiserror.workspace = true
 which.workspace = true
 semver.workspace = true
-usc-api = { path = "../usc-api" }
+universal-sierra-compiler-api = { path = "../universal-sierra-compiler-api" }

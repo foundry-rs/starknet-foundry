@@ -29,8 +29,8 @@ use std::io::{Read, Write};
 use std::ops::Deref;
 use tempfile::Builder;
 use tokio::runtime::Runtime;
+use universal_sierra_compiler_api::compile_sierra;
 use url::Url;
-use usc_api::compile_sierra;
 
 #[derive(Debug)]
 pub struct ForkStateReader {

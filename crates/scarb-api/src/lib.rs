@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use std::fs;
 
 pub use command::*;
-use usc_api::compile_sierra;
+use universal_sierra_compiler_api::compile_sierra;
 
 mod command;
 

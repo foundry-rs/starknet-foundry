@@ -1,5 +1,5 @@
 [package]
-name = "usc-api"
+name = "universal-sierra-compiler-api"
 version = "1.0.0"
 edition.workspace = true
 

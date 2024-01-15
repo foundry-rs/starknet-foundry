@@ -18,7 +18,7 @@ use scarb_api::{
 };
 use scarb_metadata::{Metadata, MetadataCommand, PackageMetadata};
 use scarb_ui::args::PackagesFilter;
-use usc_api::UniversalSierraCompilerCommand;
+use universal_sierra_compiler_api::UniversalSierraCompilerCommand;
 
 use forge::block_number_map::BlockNumberMap;
 use semver::{Comparator, Op, Version, VersionReq};
