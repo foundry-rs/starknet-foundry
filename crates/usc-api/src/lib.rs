@@ -26,6 +26,5 @@ pub fn compile_sierra(sierra_file_name: &str, current_dir: Option<&Path>) -> Str
         )
         .unwrap();
 
-    let casm = from_utf8(&usc_output.stdout).unwrap();
-    casm.to_string()
+    from_utf8(&usc_output.stdout).unwrap().to_string()
 }
