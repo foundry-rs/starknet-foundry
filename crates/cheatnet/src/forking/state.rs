@@ -1,6 +1,5 @@
 use crate::forking::cache::ForkCache;
 use crate::state::BlockInfoReader;
-use anyhow::Context;
 use blockifier::execution::contract_class::{
     ContractClass as ContractClassBlockifier, ContractClassV0, ContractClassV1,
 };
@@ -28,10 +27,10 @@ use starknet_api::state::StorageKey;
 use std::collections::HashMap;
 use std::io::{Read, Write};
 use std::ops::Deref;
-use std::process::Command;
 use tempfile::Builder;
 use tokio::runtime::Runtime;
 use url::Url;
+use usc_api::compile_sierra;
 
 #[derive(Debug)]
 pub struct ForkStateReader {
@@ -264,14 +263,6 @@ fn generate_casm(sierra_contract_class: &Value) -> CasmContractClass {
         )
         .unwrap();
 
-    let casm = Command::new("universal-sierra-compiler")
-        .args(vec![
-            "--sierra-input-path",
-            temp_sierra_file.path().to_str().unwrap(),
-        ])
-        .output()
-        .context("Error while compiling Sierra of forked contract")
-        .unwrap()
-        .stdout;
-    serde_json::from_slice(&casm).unwrap()
+    let casm = compile_sierra(temp_sierra_file.path().to_str().unwrap(), None);
+    serde_json::from_str(&casm).unwrap()
 }

@@ -3,12 +3,11 @@ use camino::{Utf8Path, Utf8PathBuf};
 use scarb_metadata::{CompilationUnitMetadata, Metadata, PackageId};
 use semver::VersionReq;
 use serde::Deserialize;
-use serde_json::Value;
 use std::collections::HashMap;
 use std::fs;
-use std::process::Command;
 
 pub use command::*;
+use usc_api::compile_sierra;
 
 mod command;
 
@@ -52,19 +51,10 @@ impl StarknetContractArtifacts {
         let sierra = fs::read_to_string(sierra_path)?;
 
         let casm = match &starknet_contract.artifacts.casm {
-            None => {
-                let casm = Command::new("universal-sierra-compiler")
-                    .current_dir(base_path)
-                    .args(vec![
-                        "--sierra-input-path",
-                        starknet_contract.artifacts.sierra.as_str(),
-                    ])
-                    .output()
-                    .unwrap()
-                    .stdout;
-                let casm: Value = serde_json::from_slice(&casm).unwrap();
-                casm.to_string()
-            }
+            None => compile_sierra(
+                starknet_contract.artifacts.sierra.as_str(),
+                Some(base_path.as_std_path()),
+            ),
             Some(casm_path) => fs::read_to_string(base_path.join(casm_path))?,
         };
 
