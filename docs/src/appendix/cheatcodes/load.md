@@ -47,6 +47,29 @@ fn load_map_entry() {
     assert(loaded.len() == 1, 'Expected 1 felt loaded');
     assert(*loaded.at(0) == 0, 'Expected 0 value loaded');
 }
+
+#[derive(starknet::Store)]
+struct ElaborateStructure {
+    a: felt252,
+    b: felt252,
+    // ...
+}
+
+#[test]
+fn load_elaborate_struct() {
+    // ...
+    load(
+        contract_address, 
+        map_entry_address(
+            selector!("mapping"), // Providing variable name
+            array![123].span(),   // Providing mapping key 
+        ),
+        StoreElaborateStructure::size().into(), // Auto-generated trait for starknet::Store deriving structs
+    );
+    
+    assert(loaded.len() == 1, 'Expected 1 felt loaded');
+    assert(*loaded.at(0) == 0, 'Expected 0 value loaded');
+}
 ```
 
 > 📝 **Note** 
