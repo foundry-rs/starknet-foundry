@@ -31,23 +31,31 @@ mod Contract {
             self.balance.read()
         }
     }
+
+    fn other_internal_function(self: @ContractState) -> felt252 {
+        self.balance.read() + 5
+    }
 }
 
 use Contract::balanceContractMemberStateTrait;   // <--- Ad. 1
+use Contract::{ InternalTrait, other_internal_function };   // <--- Ad. 2
 
 #[test]
 fn test_internal() {
     let mut state = Contract::contract_state_for_testing();        // <--- Ad. 3
     state.balance.write(10);
     
-    let value = Contract::InternalImpl::internal_function(@state); // <--- Ad. 2
+    let value = state.internal_function();
     assert(value == 10, 'Incorrect storage value');
+    
+    let other_value = other_internal_function(@state);
+    assert(value == 15, 'Incorrect return value');
 }
 ```
 
 This code contains some caveats:
 1. To access `read/write` methods of the state fields (in this case it's `balance`) you need to also import `<member_name>ContractMemberStateTrait` from your contract, where `<member_name>` is the name of the storage variable inside `Storage` struct.
-2. To test internal functions, you need to pass the created state explicitly to the function, since `self` context is not available (we're using it as a static function).
+2. To access functions implemented directly on the state you need to also import an appropriate trait or function.
 3. This function will always return the struct keeping track of the state of the test. It means that within one test every result of `contract_state_for_testing` actually points to the same state.
 
 ### `snforge_std::test_address()` - Address of Test Contract

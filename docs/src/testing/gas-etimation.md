@@ -29,23 +29,23 @@ While using the fuzzing feature additional gas statistics will be displayed:
 
 ### From Used VM Resources
 
-[Starknet documentation](https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/fee-mechanism/#general_case)
+[Starknet documentation](https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/fee-mechanism/#calculation_of_computation_costs)
 mentions that the gas cost is connected to the most costly component. What does it mean?
 
 Let's assume we have a function which uses 100 `Cairo steps`, 12 `range check builtins` and one `keccak builtin`.
-[Table](https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/fee-mechanism/#general_case:~:text=and%20builtins%20used.-,The%20weights%20are%3A,-Step) (from the `Starknet documentation`) has gas cost defined
+[Table](https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/fee-mechanism/#gas_cost_per_cairo_step_or_builtin_step) (from the `Starknet documentation`) has gas cost defined
 for all builtins.
 In our case:
-- `Cairo step` - 0.01
-- `range check builtin` - 0.16
-- `keccak builtin` - 20.48
+- `Cairo step` - 0.005
+- `range check builtin` - 0.08
+- `keccak builtin` - 10.24
 
 Multiplication of those values gives us a gas cost for each component:
-- `Cairo steps` - 100 * 0.01 = 1
-- `range check builtins` - 12 * 0.16 = 1.92
-- `keccak builtin` - 1 * 20.48 = 20.48
+- `Cairo steps` - 100 * 0.005 = 0.5
+- `range check builtins` - 12 * 0.08 = 0.96
+- `keccak builtin` - 1 * 10.24 = 10.24
 
-We should remember that only the most expensive factor will be taken into account, so our overall gas cost is `20.48`.
+We should remember that only the most expensive factor will be taken into account, so our overall gas cost is `10.24`.
 
 ### From Used Onchain Data
 

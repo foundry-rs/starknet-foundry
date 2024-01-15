@@ -28,11 +28,10 @@ use starknet_api::{
 
 pub const SEQUENCER_ADDRESS: &str = "0x1000";
 pub const ERC20_CONTRACT_ADDRESS: &str = "0x1001";
-pub const STEP_RESOURCE_COST: f64 = 0.01_f64;
+pub const STEP_RESOURCE_COST: f64 = 0.005_f64;
 
 // HOW TO FIND:
-// 1. https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/fee-mechanism/#general_case
-// 2. src/starkware/cairo/lang/instances.py::starknet_with_keccak_instance
+// 1. https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/fee-mechanism/#calculation_of_computation_costs
 #[must_use]
 pub fn build_default_block_context() -> BlockContext {
     build_block_context(BlockInfo::default())
