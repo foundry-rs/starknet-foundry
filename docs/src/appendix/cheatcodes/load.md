@@ -63,7 +63,7 @@ fn load_elaborate_struct() {
     let loaded = load(
         contract_address, 
         selector!("elaborate_struct"), // Providing variable name
-        StoreElaborateStructure::size().into(), // using StoreElaborateStructure trait to get struct size
+        StoreElaborateStructure::size().into(), // using generated StoreElaborateStructure impl to get struct size
     );
     
     assert(loaded.len() == 1, 'Expected 1 felt loaded');
