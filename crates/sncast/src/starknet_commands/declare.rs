@@ -10,6 +10,8 @@ use sncast::response::structs::Hex;
 use sncast::{apply_optional, handle_rpc_error, handle_wait_for_tx, WaitForTx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{ConnectedAccount, Declaration};
+use starknet::core::types::BlockId;
+use starknet::core::types::BlockTag;
 use starknet::core::types::FieldElement;
 use starknet::{
     accounts::{Account, SingleOwnerAccount},
@@ -44,7 +46,7 @@ pub struct BuildConfig {
 pub async fn declare(
     contract_name: &str,
     max_fee: Option<FieldElement>,
-    account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
+    account: &mut SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     nonce: Option<FieldElement>,
     build_config: BuildConfig,
     wait_config: WaitForTx,
@@ -83,12 +85,12 @@ pub async fn declare(
 
     let casm_class_hash = casm_contract_definition.class_hash()?;
 
+    let account = account.set_block_id(BlockId::Tag(BlockTag::Pending));
+
     let declaration = account.declare(Arc::new(contract_definition.flatten()?), casm_class_hash);
 
-    let nonce = get_nonce_for_tx(account, "pending", nonce).await;
-
     let declaration = apply_optional(declaration, max_fee, Declaration::max_fee);
-    let declaration = declaration.nonce(nonce);
+    let declaration = apply_optional(declaration, nonce, Declaration::nonce);
     let declared = declaration.send().await;
     match declared {
         Ok(result) => {

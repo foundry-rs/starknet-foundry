@@ -5,7 +5,7 @@ use sncast::response::structs::{Hex, InvokeResponse};
 use sncast::{apply_optional, get_nonce_for_tx, handle_rpc_error, handle_wait_for_tx, WaitForTx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{Account, Call, ConnectedAccount, Execution, SingleOwnerAccount};
-use starknet::core::types::FieldElement;
+use starknet::core::types::{BlockId, BlockTag, FieldElement};
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
@@ -40,7 +40,7 @@ pub async fn invoke(
     entry_point_name: &str,
     calldata: Vec<FieldElement>,
     max_fee: Option<FieldElement>,
-    account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
+    account: &mut SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     nonce: Option<FieldElement>,
     wait_config: WaitForTx,
 ) -> Result<InvokeResponse> {
@@ -54,18 +54,18 @@ pub async fn invoke(
 }
 
 pub async fn execute_calls(
-    account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
+    account: &mut SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     calls: Vec<Call>,
     max_fee: Option<FieldElement>,
     nonce: Option<FieldElement>,
     wait_config: WaitForTx,
 ) -> Result<InvokeResponse> {
-    let nonce = get_nonce_for_tx(account, "pending", nonce).await;
+    let account = account.set_block_id(BlockId::Tag(BlockTag::Pending));
 
     let execution_calls = account.execute(calls);
 
     let execution = apply_optional(execution_calls, max_fee, Execution::max_fee);
-    let execution = execution.nonce(nonce);
+    let execution = apply_optional(execution, nonce, Execution::nonce);
 
     match execution.send().await {
         Ok(result) => {

@@ -162,7 +162,7 @@ async fn run_async_command(
     };
     match cli.command {
         Commands::Declare(declare) => {
-            let account = get_account(
+            let mut account = get_account(
                 &config.account,
                 &config.accounts_file,
                 &provider,
@@ -172,7 +172,7 @@ async fn run_async_command(
             let mut result = starknet_commands::declare::declare(
                 &declare.contract,
                 declare.max_fee,
-                &account,
+                &mut account,
                 declare.nonce,
                 build_config,
                 wait_config,
@@ -183,7 +183,7 @@ async fn run_async_command(
             Ok(())
         }
         Commands::Deploy(deploy) => {
-            let account = get_account(
+            let mut account = get_account(
                 &config.account,
                 &config.accounts_file,
                 &provider,
@@ -196,7 +196,7 @@ async fn run_async_command(
                 deploy.salt,
                 deploy.unique,
                 deploy.max_fee,
-                &account,
+                &mut account,
                 deploy.nonce,
                 wait_config,
             )
@@ -221,7 +221,7 @@ async fn run_async_command(
             Ok(())
         }
         Commands::Invoke(invoke) => {
-            let account = get_account(
+            let mut account = get_account(
                 &config.account,
                 &config.accounts_file,
                 &provider,
@@ -233,7 +233,7 @@ async fn run_async_command(
                 &invoke.function,
                 invoke.calldata,
                 invoke.max_fee,
-                &account,
+                &mut account,
                 invoke.nonce,
                 wait_config,
             )
@@ -259,7 +259,7 @@ async fn run_async_command(
                     }
                 }
                 starknet_commands::multicall::Commands::Run(run) => {
-                    let account = get_account(
+                    let mut account = get_account(
                         &config.account,
                         &config.accounts_file,
                         &provider,
@@ -268,7 +268,7 @@ async fn run_async_command(
                     .await?;
                     let mut result = starknet_commands::multicall::run::run(
                         &run.path,
-                        &account,
+                        &mut account,
                         run.max_fee,
                         wait_config,
                     )

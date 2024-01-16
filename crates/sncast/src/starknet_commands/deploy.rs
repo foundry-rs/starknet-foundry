@@ -4,7 +4,7 @@ use sncast::response::structs::{DeployResponse, Hex};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{Account, ConnectedAccount, SingleOwnerAccount};
 use starknet::contract::ContractFactory;
-use starknet::core::types::FieldElement;
+use starknet::core::types::{BlockId, BlockTag, FieldElement};
 use starknet::core::utils::get_udc_deployed_address;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
@@ -48,12 +48,12 @@ pub async fn deploy(
     salt: Option<FieldElement>,
     unique: bool,
     max_fee: Option<FieldElement>,
-    account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
+    account: &mut SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     nonce: Option<FieldElement>,
     wait_config: WaitForTx,
 ) -> Result<DeployResponse> {
     let salt = extract_or_generate_salt(salt);
-
+    let account = account.set_block_id(BlockId::Tag(BlockTag::Pending));
     let factory = ContractFactory::new(class_hash, account);
     let execution = factory.deploy(constructor_calldata.clone(), salt, unique);
 
@@ -65,7 +65,11 @@ pub async fn deploy(
         execution
     };
 
-    let execution = execution.nonce(get_nonce_for_tx(account, "pending", nonce).await);
+    let execution = if let Some(nonce) = nonce {
+        execution.max_fee(nonce)
+    } else {
+        execution
+    };
 
     let result = execution.send().await;
 
