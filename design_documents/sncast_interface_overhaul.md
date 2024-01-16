@@ -25,19 +25,22 @@ to look like this:
 
 ```bash
 $ # this is the same module
-$ sncast script package_namea::path::to::script_module
+$ sncast script path::to::script_module
 $ sncast script to::script_module
 $ sncast script script_module
 
 $ # this is the same contract
-$ sncast declare package_namea::path::to::contract
+$ sncast declare path::to::contract
 $ sncast declare to::contract
-$ sncast declare script_module
+$ sncast declare contract
+
+$ # contract is ambiguous - there are multiple contracts named 'contract' in multiple packages
+$ sncast --package packagea declare contract
 ```
 
 In case there is only one script module/contract with specified name in workspace, only this name can be used to target it.
-Otherwise, if it is ambiguous in the context of workspace, we should show all matches with full paths, to let user decide
-which one to use.
+Otherwise, if it is ambiguous in the context of workspace, we should show all matches with full paths (along with package names),
+to let user decide which one to use. The `--package` flag would then be required, and would indicate which package to use.
 
 This change would mean that from now on we will have unified interface for declare/script, always assume we're in some workspace/package, 
 the `--path-to-scarb-toml` flag can be removed.
