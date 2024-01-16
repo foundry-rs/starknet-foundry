@@ -4,9 +4,9 @@
 
 Loads `size` felts from `target` contract's storage into an `Array`, starting at `storage_address`.
 
-- `target` - Address of the contract, which storage you want to modify
-- `storage_address` - Offset of the data in the contract's storage 
-- `size` - How many felts will be loaded into the result `Array` 
+- `target` - address of the contract, which storage you want to modify
+- `storage_address` - offset of the data in the contract's storage 
+- `size` - how many felts will be loaded into the result `Array` 
 
 
 ## Example usage
@@ -16,6 +16,7 @@ mod Contract {
     #[storage]
     struct Storage {
         plain_felt: felt252,
+        elaborate_struct: ElaborateStruct,
         mapping: LegacyMap<felt252, felt252>,
     }
 }
@@ -35,7 +36,7 @@ fn load_plain_felt() {
 #[test]
 fn load_map_entry() {
     // ...
-    load(
+    let loaded = load(
         contract_address, 
         map_entry_address(
             selector!("mapping"), // Providing variable name
@@ -58,12 +59,9 @@ struct ElaborateStructure {
 #[test]
 fn load_elaborate_struct() {
     // ...
-    load(
+    let loaded = load(
         contract_address, 
-        map_entry_address(
-            selector!("mapping"), // Providing variable name
-            array![123].span(),   // Providing mapping key 
-        ),
+        selector!("elaborate_struct"), // Providing variable name
         StoreElaborateStructure::size().into(), // Auto-generated trait for starknet::Store deriving structs
     );
     
@@ -74,12 +72,12 @@ fn load_elaborate_struct() {
 
 > 📝 **Note** 
 > 
-> The cheatcode will return 0s for uninitialized memory, which is a default storage value for Starknet contracts.
+> The cheatcode will return zeros for memory you haven't written into yet (it is a default storage value for Starknet contracts' storage).
 
 
 > ⚠️ **Warning**
 > 
-> Complex data can often times be packed in a custom manner (see [this pattern](https://book.cairo-lang.org/ch99-01-03-05-optimizing-storage.html#storage-optimization-with-storepacking)) to optimize costs
-> Using different lengths for packed data might result in incorrect deserialization.
+> Complex data can often times be packed in a custom manner (see [this pattern](https://book.cairo-lang.org/ch99-01-03-05-optimizing-storage.html#storage-optimization-with-storepacking)) to optimize costs.
+> If that's the case for your contract, make sure to handle deserialization properly - standard methods might not work.
 > **Use this cheatcode as a last-resort, for cases that cannot be handled via contract's API!**
 

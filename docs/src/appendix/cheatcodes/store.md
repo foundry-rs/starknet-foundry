@@ -2,11 +2,11 @@
 
 > `fn store(target: ContractAddress, storage_address: felt252, serialized_value: Span<felt252>)`
 
-Stores a `Span` of felts in `target` contract's storage, starting at `storage_address`. 
+Stores felts from `serialized_value` in `target` contract's storage, starting at `storage_address`. 
 
-- `target` - Address of the contract, which storage you want to modify
-- `storage_address` - Offset of the data in the contract's storage 
-- `serialized_value` - A sequence of felts that will be inserted starting at `storage_address` 
+- `target` - address of the contract, which storage you want to modify
+- `storage_address` - offset of the data in the contract's storage 
+- `serialized_value` - a sequence of felts that will be inserted starting at `storage_address` 
 
 
 In order to obtain the variable address that you'd like to write to, you need to use either:
@@ -46,7 +46,7 @@ fn store_map_entry() {
         array![321].span()
     );
     
-    // mapping = { 123: 321 }
+    // mapping = { 123: 321, ... }
 }
 ```
 
