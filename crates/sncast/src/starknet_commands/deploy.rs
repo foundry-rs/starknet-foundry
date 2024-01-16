@@ -66,7 +66,7 @@ pub async fn deploy(
     };
 
     let execution = if let Some(nonce) = nonce {
-        execution.max_fee(nonce)
+        execution.nonce(nonce)
     } else {
         execution
     };
