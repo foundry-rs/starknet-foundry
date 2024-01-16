@@ -49,6 +49,7 @@ fn load_map_entry() {
     assert(*loaded.at(0) == 0, 'Expected 0 value loaded');
 }
 
+// Generates `impl StoreElaborateStructure of starknet::Store<ElaborateStructure>` needed for size retrieval 
 #[derive(starknet::Store)]
 struct ElaborateStructure {
     a: felt252,
@@ -62,7 +63,7 @@ fn load_elaborate_struct() {
     let loaded = load(
         contract_address, 
         selector!("elaborate_struct"), // Providing variable name
-        StoreElaborateStructure::size().into(), // Auto-generated trait for starknet::Store deriving structs
+        StoreElaborateStructure::size().into(), // using StoreElaborateStructure trait to get struct size
     );
     
     assert(loaded.len() == 1, 'Expected 1 felt loaded');
