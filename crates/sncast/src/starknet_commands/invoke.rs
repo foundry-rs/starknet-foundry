@@ -2,7 +2,7 @@ use anyhow::{anyhow, Result};
 use clap::Args;
 
 use sncast::response::structs::{Hex, InvokeResponse};
-use sncast::{apply_optional, get_nonce_for_tx, handle_rpc_error, handle_wait_for_tx, WaitForTx};
+use sncast::{apply_optional, handle_rpc_error, handle_wait_for_tx, WaitForTx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{Account, Call, ConnectedAccount, Execution, SingleOwnerAccount};
 use starknet::core::types::{BlockId, BlockTag, FieldElement};

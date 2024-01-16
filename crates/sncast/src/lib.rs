@@ -5,7 +5,6 @@ use rand::rngs::OsRng;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use starknet::accounts::{Account as StarknetAccount, ConnectedAccount};
 use starknet::core::types::{
     BlockId,
     BlockTag::{Latest, Pending},
@@ -160,23 +159,6 @@ pub async fn get_nonce(
         )
         .await
         .expect("Failed to get a nonce"))
-}
-
-pub async fn get_nonce_for_tx(
-    account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
-    block_id: &str,
-    flag_nonce: Option<FieldElement>,
-) -> FieldElement {
-    if let Some(nonce) = flag_nonce {
-        return nonce;
-    }
-
-    match get_nonce(account.provider(), block_id, account.address()).await {
-        Ok(result) => result,
-        Err(_) => get_nonce(account.provider(), "latest", account.address())
-            .await
-            .expect("Failed to get a nonce"),
-    }
 }
 
 pub async fn get_account<'a>(
