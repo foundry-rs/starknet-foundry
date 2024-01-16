@@ -19,6 +19,8 @@ contracts from within Cairo, its interface, internals and feature set can change
 > The most common problems with RPC are:
 > - poll-interval set on to high value
 > - no access to pending block throw RPC
+>
+> In both cases it can be resolved by manual set `nonce` and `max_fee`
 
 Some of the planned features that will be included in future versions are:
 
