@@ -19,8 +19,12 @@ updates:
           - major
           - minor
       prod-deps:
+        exclude-patterns:
+          - "reqwest*"
         dependency-type: production
       dev-deps:
+        exclude-patterns:
+          - "reqwest*"
         dependency-type: development
 
 
