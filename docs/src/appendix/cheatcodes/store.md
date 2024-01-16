@@ -56,7 +56,6 @@ fn store_map_entry() {
 This example uses a complex key and value, with `serde` as default serialization method.
 
 ```rust
-// ...
 #[starknet::contract]
 mod Contract {
     #[derive(Serde)]
@@ -80,8 +79,8 @@ mod Contract {
     }
     
     // Serialization of key with `Serde` (other methods are possible)
-    impl ToArray of Into<MapKey, Array<felt252>> {
-        fn into(self: MapKey) -> Array<felt252> {
+    impl MapKeyIntoSpan of Into<MapKey, Span<felt252>> {
+        fn into(self: MapKey) -> Span<felt252> {
             let mut serialized_struct: Array<felt252> = array![];
             self.serialize(ref serialized_struct);
             serialized_struct.span()
@@ -89,8 +88,8 @@ mod Contract {
     }
     
      // Serialization of value with `Serde` (other methods are possible)
-    impl ToArray of Into<MapValue, Span<felt252>> {
-        fn into(self: MapValue) -> Array<felt252> {
+    impl MapValueIntoSpan of Into<MapValue, Span<felt252>> {
+        fn into(self: MapValue) -> Span<felt252> {
             let mut serialized_struct: Array<felt252> = array![];
             self.serialize(ref serialized_struct);
             serialized_struct.span()
@@ -102,6 +101,8 @@ mod Contract {
         complex_mapping: LegacyMap<MapKey, MapValue>,
     }
 }
+
+// ...
 
 #[test]
 fn store_in_complex_mapping() {
