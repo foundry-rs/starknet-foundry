@@ -13,9 +13,11 @@ In order to obtain the variable address that you'd like to write to, you need to
 - `selector!` macro - if the variable is not a mapping
 - `map_entry_address` function in tandem with `selector!` - for inserting key-value pair into a map variable
 
-## Example usage
+## Example: Felt-only storage
+This example uses only felts for simplicity
 
 ```rust
+#[starknet::contract]
 mod Contract {
     #[storage]
     struct Storage {
@@ -47,6 +49,80 @@ fn store_map_entry() {
     );
     
     // mapping = { 123: 321, ... }
+}
+```
+
+# Example: Complex structures in storage
+This example uses a complex key and value, with `serde` as default serialization method.
+
+```rust
+// ...
+#[starknet::contract]
+mod Contract {
+    #[derive(Serde)]
+    struct MapKey {
+        a: felt252,
+        b: felt252,
+    }
+
+    // Required for indexing of complex_mapping
+    impl StructuredKeyHash of LegacyHash<MapKey> {
+        fn hash(state: felt252, value: MapKey) -> felt252 {
+            let state = LegacyHash::<felt252>::hash(state, value.a);
+            LegacyHash::<felt252>::hash(state, value.b)
+        }
+    }
+
+    #[derive(Serde, starknet::Store)]
+    struct MapValue {
+        a: felt252,
+        b: felt252,
+    }
+    
+    // Serialization of key with `Serde` (other methods are possible)
+    impl ToArray of Into<MapKey, Array<felt252>> {
+        fn into(self: MapKey) -> Array<felt252> {
+            let mut serialized_struct: Array<felt252> = array![];
+            self.serialize(ref serialized_struct);
+            serialized_struct.span()
+        }
+    }
+    
+     // Serialization of value with `Serde` (other methods are possible)
+    impl ToArray of Into<MapValue, Span<felt252>> {
+        fn into(self: MapValue) -> Array<felt252> {
+            let mut serialized_struct: Array<felt252> = array![];
+            self.serialize(ref serialized_struct);
+            serialized_struct.span()
+        }
+    }
+    
+    #[storage]
+    struct Storage {
+        complex_mapping: LegacyMap<MapKey, MapValue>,
+    }
+}
+
+#[test]
+fn store_in_complex_mapping() {
+    // ...
+    let k = MapKey { a: 111, b: 222 };
+    let v = MapValue { a: 123, b: 456 };
+    
+    store(
+        contract_address, 
+        map_entry_address(
+            selector!("mapping"), // Providing variable name
+            k.into()              // Providing mapping key
+        ),
+        v.into()
+    );
+    
+    // complex_mapping = { 
+    //     hash(k): 123,
+    //     hash(k) + 1: 456 
+    //     ...
+    // }
 }
 ```
 
