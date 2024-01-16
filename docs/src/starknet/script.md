@@ -13,6 +13,13 @@ have a `main` function in the module you want to run. `cast_std` docs can be fou
 Please note that **`sncast script` is in development**. While it is already possible to declare, deploy, invoke and call
 contracts from within Cairo, its interface, internals and feature set can change rapidly each version.
 
+> ⚠️⚠️⚠️ Nonce for each transaction is taken from pending block (default)  ⚠️⚠️⚠️
+>
+> Because in a script, functions are executed one by one for some RPC (Node). It might not work.
+> The most common problems with RPC are:
+> - poll-interval set on to high value
+> - no access to pending block throw RPC
+
 Some of the planned features that will be included in future versions are:
 
 - scripts idempotency
