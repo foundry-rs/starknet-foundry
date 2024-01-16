@@ -35,7 +35,7 @@ pub fn execute_call_entry_point(
     // region: Modified blockifier code
     // We skip recursion depth validation here.
     let parent_call = cheatnet_state.current_call.clone();
-    cheatnet_state.add_new_call_and_update_current_call(entry_point.clone());
+    cheatnet_state.add_new_call_and_update_current_call(entry_point.clone().into());
 
     if let Some(ret_data) = get_ret_data_by_call_entry_point(entry_point, cheatnet_state) {
         return Ok(mocked_call_info(entry_point.clone(), ret_data.clone()));

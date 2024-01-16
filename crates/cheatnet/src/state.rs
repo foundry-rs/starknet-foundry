@@ -4,7 +4,6 @@ use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spoof::TxInf
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::{
     Event, SpyTarget,
 };
-use blockifier::execution::entry_point::CallEntryPoint;
 use blockifier::state::state_api::State;
 use blockifier::{
     execution::contract_class::ContractClass,
@@ -20,6 +19,7 @@ use runtime::starknet::state::DictStateReader;
 use starknet_api::core::EntryPointSelector;
 
 use crate::constants::build_test_entry_point;
+use serde::{Deserialize, Serialize};
 use starknet_api::transaction::ContractAddressSalt;
 use starknet_api::{
     core::{ClassHash, CompiledClassHash, ContractAddress, Nonce},
@@ -140,8 +140,9 @@ pub enum CheatStatus<T> {
 }
 
 /// Tree structure representing trace of a call.
+#[derive(Serialize, Deserialize)]
 pub struct CallTrace {
-    pub entry_point: CallEntryPoint,
+    pub entry_point: crate::blockifier_structs::CallEntryPoint,
     pub nested_calls: Vec<Rc<RefCell<CallTrace>>>,
 }
 
@@ -173,7 +174,7 @@ pub struct CheatnetState {
 impl Default for CheatnetState {
     fn default() -> Self {
         let call_trace = Rc::new(RefCell::new(CallTrace {
-            entry_point: build_test_entry_point(),
+            entry_point: build_test_entry_point().into(),
             nested_calls: vec![],
         }));
         Self {
@@ -263,7 +264,10 @@ impl CheatnetState {
         get_cheat_for_contract(&self.global_prank, &self.pranked_contracts, address)
     }
 
-    pub fn add_new_call_and_update_current_call(&mut self, entry_point: CallEntryPoint) {
+    pub fn add_new_call_and_update_current_call(
+        &mut self,
+        entry_point: crate::blockifier_structs::CallEntryPoint,
+    ) {
         let new_call = Rc::new(RefCell::new(CallTrace {
             entry_point,
             nested_calls: vec![],

@@ -11,7 +11,6 @@ use crate::state::{BlockifierState, CallTrace, CheatTarget};
 use anyhow::{Context, Result};
 use blockifier::execution::call_info::{CallExecution, CallInfo};
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
-use blockifier::execution::entry_point::{CallEntryPoint, CallType};
 use blockifier::execution::execution_utils::stark_felt_to_felt;
 use cairo_felt::Felt252;
 use cairo_vm::vm::errors::hint_errors::HintError;
@@ -693,7 +692,9 @@ fn serialize_call_trace(call_trace: &CallTrace) -> Vec<Felt252> {
     output
 }
 
-fn serialize_call_entry_point(call_entry_point: &CallEntryPoint) -> Vec<Felt252> {
+fn serialize_call_entry_point(
+    call_entry_point: &crate::blockifier_structs::CallEntryPoint,
+) -> Vec<Felt252> {
     let entry_point_type = match call_entry_point.entry_point_type {
         EntryPointType::Constructor => 0,
         EntryPointType::External => 1,
@@ -709,8 +710,8 @@ fn serialize_call_entry_point(call_entry_point: &CallEntryPoint) -> Vec<Felt252>
         .collect::<Vec<_>>();
 
     let call_type = match call_entry_point.call_type {
-        CallType::Call => 0,
-        CallType::Delegate => 1,
+        crate::blockifier_structs::CallType::Call => 0,
+        crate::blockifier_structs::CallType::Delegate => 1,
     };
 
     let mut output = vec![];

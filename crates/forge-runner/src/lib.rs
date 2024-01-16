@@ -40,6 +40,7 @@ mod sierra_casm_runner;
 mod sierra_casm_runner_gas;
 
 pub const CACHE_DIR: &str = ".snfoundry_cache";
+pub const TRACE_DIR: &str = ".snfoundry_trace";
 
 pub static BUILTINS: Lazy<Vec<&str>> = Lazy::new(|| {
     vec![
@@ -62,6 +63,7 @@ pub struct RunnerConfig {
     pub exit_first: bool,
     pub fuzzer_runs: u32,
     pub fuzzer_seed: u64,
+    pub save_call_trace: bool,
 }
 
 impl RunnerConfig {
@@ -72,12 +74,14 @@ impl RunnerConfig {
         exit_first: bool,
         fuzzer_runs: u32,
         fuzzer_seed: u64,
+        save_call_trace: bool,
     ) -> Self {
         Self {
             workspace_root,
             exit_first,
             fuzzer_runs,
             fuzzer_seed,
+            save_call_trace,
         }
     }
 }

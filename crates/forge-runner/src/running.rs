@@ -1,13 +1,15 @@
 use std::collections::HashMap;
 use std::default::Default;
+use std::fs;
 use std::marker::PhantomData;
+use std::path::PathBuf;
 use std::sync::Arc;
 
 use crate::compiled_runnable::ValidatedForkConfig;
 use crate::gas::calculate_used_gas;
 use crate::sierra_casm_runner::SierraCasmRunner;
 use crate::test_case_summary::{Single, TestCaseSummary};
-use crate::{RunnerConfig, RunnerParams, TestCaseRunnable, CACHE_DIR};
+use crate::{RunnerConfig, RunnerParams, TestCaseRunnable, CACHE_DIR, TRACE_DIR};
 use anyhow::{bail, ensure, Result};
 use blockifier::execution::common_hints::ExecutionMode;
 use blockifier::execution::entry_point::{EntryPointExecutionContext, ExecutionResources};
@@ -267,6 +269,10 @@ pub fn run_test_case(
 
     let gas = calculate_used_gas(&block_context, &mut blockifier_state, &execution_resources);
 
+    if runner_config.save_call_trace {
+        save_call_trace(&cheatnet_state, &case.name);
+    }
+
     Ok(RunResultWithInfo {
         run_result,
         gas_used: gas,
@@ -334,4 +340,17 @@ fn get_context<'a>(runtime: &'a ForgeRuntime) -> &'a EntryPointExecutionContext 
         .extended_runtime
         .hint_handler
         .context
+}
+
+fn save_call_trace(cheatnet_state: &CheatnetState, test_case_name: &str) {
+    let call_trace_serialized =
+        serde_json::to_string(&cheatnet_state.call_trace).expect("Failed to serialize call trace");
+
+    let dir_to_save_trace = PathBuf::from(TRACE_DIR);
+    fs::create_dir_all(&dir_to_save_trace).expect("Failed to create a file to save call trace to");
+    fs::write(
+        dir_to_save_trace.join(test_case_name),
+        call_trace_serialized,
+    )
+    .expect("Failed to write call trace to a file");
 }
