@@ -19,6 +19,7 @@ cheatnet = { path = "../cheatnet" }
 conversions = { path = "../conversions" }
 scarb-api = { path = "../scarb-api" }
 forge_runner = { path = "../forge-runner" }
+universal-sierra-compiler-api = { path = "../universal-sierra-compiler-api" }
 cairo-lang-runner.workspace = true
 cairo-lang-casm.workspace = true
 cairo-lang-sierra-to-casm.workspace = true
@@ -55,7 +56,7 @@ ark-std = "0.4.0"
 ark-secp256k1 = "0.4.0"
 ark-secp256r1 = "0.4.0"
 openssl = { version = "0.10", features = ["vendored"] }
-toml_edit = "0.20.7"
+toml_edit = "0.21.0"
 flatten-serde-json.workspace = true
 smol_str.workspace = true
 tokio.workspace = true
