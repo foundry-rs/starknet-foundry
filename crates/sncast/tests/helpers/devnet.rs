@@ -1,5 +1,7 @@
 use crate::helpers::constants::{DEVNET_ENV_FILE, SEED, URL};
-use crate::helpers::fixtures::{declare_contract, declare_deploy_contract, remove_devnet_env};
+use crate::helpers::fixtures::{
+    declare_contract, declare_deploy_contract, deploy_keystore_account, remove_devnet_env,
+};
 use ctor::{ctor, dtor};
 use std::net::TcpStream;
 use std::process::{Command, Stdio};
@@ -66,6 +68,9 @@ fn start_devnet() {
         "/constructor_with_params/target/dev/constructor_with_params_ConstructorWithParams",
         "CAST_WITH_CONSTRUCTOR",
     ));
+
+    rt.block_on(deploy_keystore_account());
+
     dotenv::from_filename(DEVNET_ENV_FILE).unwrap();
 }
 

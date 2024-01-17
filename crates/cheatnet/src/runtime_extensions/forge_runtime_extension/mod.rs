@@ -7,7 +7,7 @@ use crate::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::{
     deploy, deploy_at, DeployCallPayload,
 };
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
-use crate::state::{BlockifierState, CheatTarget};
+use crate::state::{BlockifierState, CallTrace, CheatTarget};
 use anyhow::{Context, Result};
 use blockifier::execution::call_info::{CallExecution, CallInfo};
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
@@ -393,7 +393,6 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let mut blockifier_state =
                     BlockifierState::from(cheatnet_runtime.extended_runtime.hint_handler.state);
 
-                cheatnet_runtime.extension.cheatnet_state.trace_info.clear();
                 match blockifier_state
                     .l1_handler_execute(
                         cheatnet_runtime.extension.cheatnet_state,
@@ -592,18 +591,17 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     Felt252::from_bytes_be(&s_bytes[0..16]),  // 16 high bytes of s
                 ]))
             }
-            "get_last_call_trace" => {
-                let trace_info = &extended_runtime
+            "get_call_trace" => {
+                let call_trace = &extended_runtime
                     .extended_runtime
                     .extended_runtime
                     .extension
                     .cheatnet_state
-                    .trace_info;
-                let mut output = vec![Felt252::from(trace_info.len())];
+                    .trace_data
+                    .current_call_stack
+                    .borrow_full_trace();
+                let output = serialize_call_trace(call_trace);
 
-                for call_entry_point in trace_info {
-                    output.append(&mut serialize_call_entry_point(call_entry_point));
-                }
                 Ok(CheatcodeHandlingResult::Handled(output))
             }
             "store" => {
@@ -682,6 +680,19 @@ fn handle_deploy_result(
         )),
         Err(CheatcodeError::Unrecoverable(err)) => Err(err),
     }
+}
+
+fn serialize_call_trace(call_trace: &CallTrace) -> Vec<Felt252> {
+    let mut output = vec![];
+    output.append(&mut serialize_call_entry_point(&call_trace.entry_point));
+
+    output.push(Felt252::from(call_trace.nested_calls.len()));
+
+    for call_trace in &call_trace.nested_calls {
+        output.append(&mut serialize_call_trace(&call_trace.borrow()));
+    }
+
+    output
 }
 
 fn serialize_call_entry_point(call_entry_point: &CallEntryPoint) -> Vec<Felt252> {
