@@ -81,7 +81,7 @@ pub async fn deploy_keystore_account() {
     let provider = get_provider(URL).expect("Could not get the provider");
     let chain_id = get_chain_id(&provider).await.expect("msg");
 
-    let contents = std::fs::read_to_string(account_path).expect("Failed to read accounts file");
+    let contents = std::fs::read_to_string(account_path).expect("Failed to read keystore account file");
     let items: serde_json::Value = serde_json::from_str(&contents)
         .with_context(|| format!("Failed to parse accounts file at = {account_path}"))
         .expect("msg");
