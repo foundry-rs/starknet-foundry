@@ -83,7 +83,7 @@ pub async fn deploy_keystore_account() {
 
     let contents = std::fs::read_to_string(account_path).expect("Failed to read keystore account file");
     let items: serde_json::Value = serde_json::from_str(&contents)
-        .with_context(|| format!("Failed to parse accounts file at = {account_path}"))
+        .with_context(|| format!("Failed to parse keystore account file at = {account_path}"))
         .expect("msg");
 
     let factory = OpenZeppelinAccountFactory::new(
