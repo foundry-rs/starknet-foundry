@@ -79,7 +79,7 @@ pub async fn deploy_keystore_account() {
         SigningKey::from_keystore(keystore_path, "123").expect("Could not get the private_key");
 
     let provider = get_provider(URL).expect("Could not get the provider");
-    let chain_id = get_chain_id(&provider).await.expect("msg");
+    let chain_id = get_chain_id(&provider).await.expect("Could not get chain_id from provider");
 
     let contents = std::fs::read_to_string(account_path).expect("Failed to read keystore account file");
     let items: serde_json::Value = serde_json::from_str(&contents)
