@@ -311,7 +311,7 @@ fn store_load_structure() {
                 
                 deployed.insert_structure(stored_structure);
                 
-                let loaded = load(deployed.contract_address, selector!("structure"), 2);
+                let loaded = load(deployed.contract_address, selector!("structure"), StoreStoredStructure::size().into());
                 assert(loaded == stored_structure.into(), 'wrong structure stored');
             }
         "#
@@ -399,7 +399,7 @@ fn store_load_felt_to_structure() {
                 let loaded = load(
                     deployed.contract_address, 
                     map_entry_address(selector!("felt_to_structure"), array![421].span()), 
-                    2
+                    StoreStoredStructure::size().into()
                 );
                 assert(loaded == stored_structure.into(), 'wrong structure stored');
             }
