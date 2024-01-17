@@ -73,8 +73,8 @@ pub async fn declare_contract(account: &str, path: &str, shortname: &str) -> Fie
 }
 
 pub async fn deploy_keystore_account() {
-    let keystore_path = "tests/data/keystore/deployed_key.json";
-    let account_path = "tests/data/keystore/deployed_account.json";
+    let keystore_path = "tests/data/keystore/my_deployed_key.json";
+    let account_path = "tests/data/keystore/my_deployed_account.json";
     let private_key =
         SigningKey::from_keystore(keystore_path, "123").expect("Could not get the private_key");
 
@@ -83,8 +83,7 @@ pub async fn deploy_keystore_account() {
 
     let contents = std::fs::read_to_string(account_path).expect("Failed to read keystore account file");
     let items: serde_json::Value = serde_json::from_str(&contents)
-        .with_context(|| format!("Failed to parse keystore account file at = {account_path}"))
-        .expect("msg");
+        .expect( &format!("Failed to parse keystore account file at = {account_path}"));
 
     let factory = OpenZeppelinAccountFactory::new(
         parse_number(DEVNET_OZ_CLASS_HASH).expect("Could not parse DEVNET_OZ_CLASS_HASH"),
@@ -93,7 +92,7 @@ pub async fn deploy_keystore_account() {
         provider,
     )
     .await
-    .expect("");
+    .expect("Could not create Account Factory");
 
     mint_token(
         items["deployment"]["address"]
