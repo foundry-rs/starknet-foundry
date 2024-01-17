@@ -72,8 +72,8 @@ pub async fn declare_contract(account: &str, path: &str, shortname: &str) -> Fie
 }
 
 pub async fn deploy_keystore_account() {
-    let keystore_path = "tests/data/keystore/my_deployed_key.json";
-    let account_path = "tests/data/keystore/my_deployed_account.json";
+    let keystore_path = "tests/data/keystore/predeployed_key.json";
+    let account_path = "tests/data/keystore/predeployed_account.json";
     let private_key =
         SigningKey::from_keystore(keystore_path, "123").expect("Could not get the private_key");
 
