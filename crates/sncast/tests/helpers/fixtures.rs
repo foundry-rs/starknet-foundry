@@ -1,9 +1,11 @@
-use crate::helpers::constants::{ACCOUNT_FILE_PATH, CONTRACTS_DIR, DEVNET_ENV_FILE, URL};
+use crate::helpers::constants::{ACCOUNT_FILE_PATH, CONTRACTS_DIR, DEVNET_ENV_FILE, URL, DEVNET_OZ_CLASS_HASH};
 use camino::Utf8PathBuf;
 use primitive_types::U256;
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
 use serde_json::{json, Map, Value};
+use snapbox::cmd::cargo_bin;
+use sncast::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
 use sncast::{apply_optional, get_keystore_password};
 use sncast::{get_account, get_provider, parse_number};
 use starknet::accounts::{Account, Call, Execution};
@@ -20,6 +22,7 @@ use std::env;
 use std::fs;
 use std::fs::OpenOptions;
 use std::io::{BufRead, Write};
+use std::process::Command;
 use std::sync::Arc;
 use tempfile::TempDir;
 use url::Url;
@@ -67,6 +70,42 @@ pub async fn declare_contract(account: &str, path: &str, shortname: &str) -> Fie
     write_devnet_env(format!("{shortname}_CLASS_HASH").as_str(), &class_hash);
     write_devnet_env(format!("{shortname}_DECLARE_HASH").as_str(), &tx_hash);
     class_hash
+}
+
+pub async fn deploy_keystore_account() {
+    let keystore_path = "tests/data/keystore/deployed_key.json";
+    let account_path = "tests/data/keystore/deployed_account_copy.json";
+
+    fs::copy("tests/data/keystore/deployed_account.json", account_path).unwrap();
+    env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
+
+    let address = get_address_from_keystore(keystore_path, account_path, KEYSTORE_PASSWORD_ENV_VAR);
+
+    mint_token(
+        &convert_to_hex(&address.to_string()),
+        9_999_999_999_999_999_999,
+    )
+    .await;
+
+    let args = vec![
+        "--url",
+        URL,
+        "--keystore",
+        keystore_path,
+        "--account",
+        account_path,
+        "account",
+        "deploy",
+        "--max-fee",
+        "99999999999999999",
+        "--class-hash",
+        DEVNET_OZ_CLASS_HASH,
+    ];
+
+    Command::new(cargo_bin!("sncast"))
+        .args(args)
+        .output()
+        .unwrap();
 }
 
 pub async fn declare_deploy_contract(account: &str, path: &str, shortname: &str) {
