@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast
+
+#### Changed
+
+- the 'pending' block is used instead of 'latest' as the default when obtaining the nonce
+
 ## [0.14.0] - 2024-01-11
 
 ### Forge

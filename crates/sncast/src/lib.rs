@@ -168,11 +168,12 @@ pub async fn get_account<'a>(
     keystore: Option<Utf8PathBuf>,
 ) -> Result<SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, LocalWallet>> {
     let chain_id = get_chain_id(provider).await?;
-    let account = if let Some(keystore) = keystore {
+    let mut account = if let Some(keystore) = keystore {
         get_account_from_keystore(provider, chain_id, &keystore, account)?
     } else {
         get_account_from_accounts_file(account, accounts_file, provider, chain_id)?
     };
+    let account = account.set_block_id(get_block_id("pending")?).clone();
     Ok(account)
 }
 

@@ -106,7 +106,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 let max_fee = reader.read_option_felt().map(conversions::IntoConv::into_);
                 let nonce = reader.read_option_felt().map(conversions::IntoConv::into_);
 
-                let mut account = self.tokio_runtime.block_on(get_account(
+                let account = self.tokio_runtime.block_on(get_account(
                     &self.config.account,
                     &self.config.accounts_file,
                     self.provider,
@@ -116,7 +116,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 let declare_response = self.tokio_runtime.block_on(declare::declare(
                     &contract_name,
                     max_fee,
-                    &mut account,
+                    &account,
                     nonce,
                     BuildConfig {
                         scarb_toml_path: None,
@@ -148,7 +148,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 let max_fee = reader.read_option_felt().map(conversions::IntoConv::into_);
                 let nonce = reader.read_option_felt().map(conversions::IntoConv::into_);
 
-                let mut account = self.tokio_runtime.block_on(get_account(
+                let account = self.tokio_runtime.block_on(get_account(
                     &self.config.account,
                     &self.config.accounts_file,
                     self.provider,
@@ -161,7 +161,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     salt,
                     unique,
                     max_fee,
-                    &mut account,
+                    &account,
                     nonce,
                     WaitForTx {
                         wait: true,
@@ -189,7 +189,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 let max_fee = reader.read_option_felt().map(conversions::IntoConv::into_);
                 let nonce = reader.read_option_felt().map(conversions::IntoConv::into_);
 
-                let mut account = self.tokio_runtime.block_on(get_account(
+                let account = self.tokio_runtime.block_on(get_account(
                     &self.config.account,
                     &self.config.accounts_file,
                     self.provider,
@@ -201,7 +201,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     &entry_point_name,
                     calldata,
                     max_fee,
-                    &mut account,
+                    &account,
                     nonce,
                     WaitForTx {
                         wait: true,

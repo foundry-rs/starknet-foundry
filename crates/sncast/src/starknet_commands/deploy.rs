@@ -10,7 +10,7 @@ use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
 
-use sncast::{extract_or_generate_salt, udc_uniqueness};
+use sncast::{extract_or_generate_salt, get_block_id, udc_uniqueness};
 use sncast::{handle_rpc_error, handle_wait_for_tx, WaitForTx};
 
 #[derive(Args)]
@@ -48,12 +48,11 @@ pub async fn deploy(
     salt: Option<FieldElement>,
     unique: bool,
     max_fee: Option<FieldElement>,
-    account: &mut SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
+    account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     nonce: Option<FieldElement>,
     wait_config: WaitForTx,
 ) -> Result<DeployResponse> {
     let salt = extract_or_generate_salt(salt);
-    let account = account.set_block_id(BlockId::Tag(BlockTag::Pending));
     let factory = ContractFactory::new(class_hash, account);
     let execution = factory.deploy(constructor_calldata.clone(), salt, unique);
 

@@ -2,6 +2,7 @@ use anyhow::{anyhow, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
 use scarb_api::{get_contracts_map, ScarbCommand};
+use sncast::get_block_id;
 use sncast::helpers::scarb_utils::get_package_metadata;
 use sncast::helpers::scarb_utils::get_scarb_manifest;
 use sncast::response::structs::DeclareResponse;
@@ -45,7 +46,7 @@ pub struct BuildConfig {
 pub async fn declare(
     contract_name: &str,
     max_fee: Option<FieldElement>,
-    account: &mut SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
+    account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     nonce: Option<FieldElement>,
     build_config: BuildConfig,
     wait_config: WaitForTx,
@@ -83,8 +84,6 @@ pub async fn declare(
         serde_json::from_str(&contract_artifacts.casm).context("Failed to parse casm artifact")?;
 
     let casm_class_hash = casm_contract_definition.class_hash()?;
-
-    let account = account.set_block_id(BlockId::Tag(BlockTag::Pending));
 
     let declaration = account.declare(Arc::new(contract_definition.flatten()?), casm_class_hash);
 
