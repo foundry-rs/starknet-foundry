@@ -295,7 +295,13 @@ macro_rules! assert_gas {
                     panic!("Cannot use assert_gas! for fuzzing tests")
                 }
                 AnyTestCaseSummary::Single(case) => match case {
-                    TestCaseSummary::Passed { gas_info: gas, .. } => *gas == $asserted_gas,
+                    TestCaseSummary::Passed { gas_info: gas, .. } => {
+                        *gas == $asserted_gas
+                            && any_case
+                                .name()
+                                .unwrap()
+                                .ends_with(test_name_suffix.as_str())
+                    }
                     _ => false,
                 },
             }
