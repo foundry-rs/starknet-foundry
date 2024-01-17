@@ -7,8 +7,6 @@ use primitive_types::U256;
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
 use serde_json::{json, Map, Value};
-use snapbox::cmd::cargo_bin;
-use sncast::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
 use sncast::{apply_optional, get_chain_id, get_keystore_password};
 use sncast::{get_account, get_provider, parse_number};
 use starknet::accounts::{Account, AccountFactory, Call, Execution, OpenZeppelinAccountFactory};
@@ -25,7 +23,6 @@ use std::env;
 use std::fs;
 use std::fs::OpenOptions;
 use std::io::{BufRead, Write};
-use std::process::Command;
 use std::sync::Arc;
 use tempfile::TempDir;
 use url::Url;
@@ -99,7 +96,7 @@ pub async fn deploy_keystore_account() {
     .expect("");
 
     mint_token(
-        &items["deployment"]["address"]
+        items["deployment"]["address"]
             .as_str()
             .expect("Could not get address"),
         9_999_999_999_999_999_999,
