@@ -4,7 +4,7 @@ use sncast::response::structs::{DeployResponse, Hex};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{Account, ConnectedAccount, SingleOwnerAccount};
 use starknet::contract::ContractFactory;
-use starknet::core::types::{FieldElement};
+use starknet::core::types::FieldElement;
 use starknet::core::utils::get_udc_deployed_address;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
