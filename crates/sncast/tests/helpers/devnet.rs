@@ -3,7 +3,6 @@ use crate::helpers::fixtures::{
     declare_contract, declare_deploy_contract, deploy_keystore_account, remove_devnet_env,
 };
 use ctor::{ctor, dtor};
-use std::fs;
 use std::net::TcpStream;
 use std::process::{Command, Stdio};
 use std::string::ToString;
@@ -86,6 +85,5 @@ fn stop_devnet() {
         ])
         .spawn()
         .expect("Failed to kill devnet processes");
-    fs::remove_file("tests/data/keystore/deployed_account_copy.json").unwrap();
     remove_devnet_env();
 }

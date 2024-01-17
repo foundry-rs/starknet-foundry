@@ -1,6 +1,7 @@
 use crate::helpers::constants::{
     ACCOUNT_FILE_PATH, CONTRACTS_DIR, DEVNET_ENV_FILE, DEVNET_OZ_CLASS_HASH, URL,
 };
+use anyhow::Context;
 use camino::Utf8PathBuf;
 use primitive_types::U256;
 use serde::de::DeserializeOwned;
@@ -8,9 +9,9 @@ use serde::Deserialize;
 use serde_json::{json, Map, Value};
 use snapbox::cmd::cargo_bin;
 use sncast::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
-use sncast::{apply_optional, get_keystore_password};
+use sncast::{apply_optional, get_chain_id, get_keystore_password};
 use sncast::{get_account, get_provider, parse_number};
-use starknet::accounts::{Account, Call, Execution};
+use starknet::accounts::{Account, AccountFactory, Call, Execution, OpenZeppelinAccountFactory};
 use starknet::contract::ContractFactory;
 use starknet::core::types::contract::{CompiledClass, SierraClass};
 use starknet::core::types::TransactionReceipt;
@@ -19,7 +20,7 @@ use starknet::core::utils::get_contract_address;
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
-use starknet::signers::SigningKey;
+use starknet::signers::{LocalWallet, SigningKey};
 use std::env;
 use std::fs;
 use std::fs::OpenOptions;
@@ -76,38 +77,40 @@ pub async fn declare_contract(account: &str, path: &str, shortname: &str) -> Fie
 
 pub async fn deploy_keystore_account() {
     let keystore_path = "tests/data/keystore/deployed_key.json";
-    let account_path = "tests/data/keystore/deployed_account_copy.json";
+    let account_path = "tests/data/keystore/deployed_account.json";
+    let private_key =
+        SigningKey::from_keystore(keystore_path, "123").expect("Could not get the private_key");
 
-    fs::copy("tests/data/keystore/deployed_account.json", account_path).unwrap();
-    env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
+    let provider = get_provider(URL).expect("Could not get the provider");
+    let chain_id = get_chain_id(&provider).await.expect("msg");
 
-    let address = get_address_from_keystore(keystore_path, account_path, KEYSTORE_PASSWORD_ENV_VAR);
+    let contents = std::fs::read_to_string(account_path).expect("Failed to read accounts file");
+    let items: serde_json::Value = serde_json::from_str(&contents)
+        .with_context(|| format!("Failed to parse accounts file at = {account_path}"))
+        .expect("msg");
+
+    let factory = OpenZeppelinAccountFactory::new(
+        parse_number(DEVNET_OZ_CLASS_HASH).expect("Could not parse DEVNET_OZ_CLASS_HASH"),
+        chain_id,
+        LocalWallet::from_signing_key(private_key),
+        provider,
+    )
+    .await
+    .expect("");
 
     mint_token(
-        &convert_to_hex(&address.to_string()),
+        &items["deployment"]["address"]
+            .as_str()
+            .expect("Could not get address"),
         9_999_999_999_999_999_999,
     )
     .await;
 
-    let args = vec![
-        "--url",
-        URL,
-        "--keystore",
-        keystore_path,
-        "--account",
-        account_path,
-        "account",
-        "deploy",
-        "--max-fee",
-        "99999999999999999",
-        "--class-hash",
-        DEVNET_OZ_CLASS_HASH,
-    ];
-
-    Command::new(cargo_bin!("sncast"))
-        .args(args)
-        .output()
-        .unwrap();
+    factory
+        .deploy(parse_number("0xa5d90c65b1b1339").expect("Could not parse salt"))
+        .send()
+        .await
+        .expect("Could not deploy");
 }
 
 pub async fn declare_deploy_contract(account: &str, path: &str, shortname: &str) {
