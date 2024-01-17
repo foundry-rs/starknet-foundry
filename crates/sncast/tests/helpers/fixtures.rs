@@ -1,4 +1,6 @@
-use crate::helpers::constants::{ACCOUNT_FILE_PATH, CONTRACTS_DIR, DEVNET_ENV_FILE, URL, DEVNET_OZ_CLASS_HASH};
+use crate::helpers::constants::{
+    ACCOUNT_FILE_PATH, CONTRACTS_DIR, DEVNET_ENV_FILE, DEVNET_OZ_CLASS_HASH, URL,
+};
 use camino::Utf8PathBuf;
 use primitive_types::U256;
 use serde::de::DeserializeOwned;

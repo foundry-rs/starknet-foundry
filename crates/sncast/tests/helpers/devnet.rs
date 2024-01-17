@@ -1,11 +1,13 @@
 use crate::helpers::constants::{DEVNET_ENV_FILE, SEED, URL};
-use crate::helpers::fixtures::{declare_contract, declare_deploy_contract, remove_devnet_env, deploy_keystore_account};
+use crate::helpers::fixtures::{
+    declare_contract, declare_deploy_contract, deploy_keystore_account, remove_devnet_env,
+};
 use ctor::{ctor, dtor};
+use std::fs;
 use std::net::TcpStream;
 use std::process::{Command, Stdio};
 use std::string::ToString;
 use std::time::{Duration, Instant};
-use std::fs;
 use tokio::runtime::Runtime;
 use url::Url;
 
