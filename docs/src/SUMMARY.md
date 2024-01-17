@@ -60,6 +60,8 @@
     * [spy_events](appendix/cheatcodes/spy_events.md)
     * [start_spoof](appendix/cheatcodes/start_spoof.md)
     * [stop_spoof](appendix/cheatcodes/stop_spoof.md)
+    * [store](appendix/cheatcodes/store.md)
+    * [load](appendix/cheatcodes/load.md)
 * [`snforge` Library Functions References](appendix/snforge-library.md)
     * [declare](appendix/snforge-library/declare.md)
     * [precalculate_address](appendix/snforge-library/precalculate_address.md)
