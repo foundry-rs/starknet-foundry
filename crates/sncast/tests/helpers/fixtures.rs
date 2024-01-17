@@ -107,7 +107,7 @@ pub async fn deploy_keystore_account() {
         .deploy(parse_number("0xa5d90c65b1b1339").expect("Could not parse salt"))
         .send()
         .await
-        .expect("Could not deploy");
+        .expect("Could not deploy keystore account");
 }
 
 pub async fn declare_deploy_contract(account: &str, path: &str, shortname: &str) {
