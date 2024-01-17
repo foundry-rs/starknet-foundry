@@ -2,7 +2,7 @@ use anyhow::{anyhow, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
 use scarb_api::{get_contracts_map, ScarbCommand};
-use sncast::get_block_id;
+
 use sncast::helpers::scarb_utils::get_package_metadata;
 use sncast::helpers::scarb_utils::get_scarb_manifest;
 use sncast::response::structs::DeclareResponse;
@@ -10,8 +10,8 @@ use sncast::response::structs::Hex;
 use sncast::{apply_optional, handle_rpc_error, handle_wait_for_tx, WaitForTx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{ConnectedAccount, Declaration};
-use starknet::core::types::BlockId;
-use starknet::core::types::BlockTag;
+
+
 use starknet::core::types::FieldElement;
 use starknet::{
     accounts::{Account, SingleOwnerAccount},
