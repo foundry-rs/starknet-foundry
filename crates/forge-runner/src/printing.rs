@@ -46,27 +46,6 @@ pub(crate) fn print_test_result(
 
     let used_resources = match any_test_result {
         AnyTestCaseSummary::Single(TestCaseSummary::Passed { used_resources, .. }) => {
-            fn sort_by_value<K, V>(map: &std::collections::HashMap<K, V>) -> Vec<(&K, &V)>
-            where
-                V: Ord,
-            {
-                let mut sorted: Vec<_> = map.iter().collect();
-                sorted.sort_by(|a, b| b.1.cmp(a.1));
-                sorted
-            }
-
-            fn format_items<K, V>(items: &[(K, V)]) -> String
-            where
-                K: std::fmt::Debug,
-                V: std::fmt::Display,
-            {
-                items
-                    .iter()
-                    .map(|(key, value)| format!("{key:?}: {value}"))
-                    .collect::<Vec<String>>()
-                    .join(", ")
-            }
-
             let vm_res = &used_resources.execution_resources.vm_resources;
 
             let sorted_builtins = sort_by_value(&vm_res.builtin_instance_counter);
@@ -97,6 +76,27 @@ pub(crate) fn print_test_result(
             ""
         }
     );
+}
+
+fn sort_by_value<K, V>(map: &std::collections::HashMap<K, V>) -> Vec<(&K, &V)>
+where
+    V: Ord,
+{
+    let mut sorted: Vec<_> = map.iter().collect();
+    sorted.sort_by(|a, b| b.1.cmp(a.1));
+    sorted
+}
+
+fn format_items<K, V>(items: &[(K, V)]) -> String
+where
+    K: std::fmt::Debug,
+    V: std::fmt::Display,
+{
+    items
+        .iter()
+        .map(|(key, value)| format!("{key:?}: {value}"))
+        .collect::<Vec<String>>()
+        .join(", ")
 }
 
 fn result_message(any_test_result: &AnyTestCaseSummary) -> String {
