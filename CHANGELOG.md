@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - `store` and `load` cheatcodes
+- dependency on [universal-sierra-compiler](https://github.com/software-mansion/universal-sierra-compiler/blob/master/scripts/install.sh) binary
 
 ## [0.14.0] - 2024-01-11
 
