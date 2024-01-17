@@ -851,10 +851,20 @@ fn should_panic() {
         [..]Finished[..]
 
 
-        Collected 6 test(s) from should_panic_test package
+        Collected 8 test(s) from should_panic_test package
         Running 0 test(s) from src/
-        Running 6 test(s) from tests/
+        Running 8 test(s) from tests/
+        [FAIL] tests::should_panic_test::expected_panic_but_didnt
+        
+        Failure data:
+            Expected to panic but didn't
         [PASS] tests::should_panic_test::should_panic_check_data (gas: ~1)
+        [PASS] tests::should_panic_test::should_panic_multiple_messages (gas: ~1)
+        [PASS] tests::should_panic_test::should_panic_no_data (gas: ~1)
+        
+        Success data:
+            original value: [0], converted to a string: []
+        
         [FAIL] tests::should_panic_test::should_panic_with_non_matching_data
         
         Failure data:
@@ -862,28 +872,30 @@ fn should_panic() {
             Actual:    [8111420071579136082810415440747] (failing check)
             Expected:  [0] ()
         
-        [PASS] tests::should_panic_test::should_panic_multiple_messages (gas: ~1)
-        [FAIL] tests::should_panic_test::expected_panic_but_didnt
+        [FAIL] tests::should_panic_test::expected_panic_but_didnt_with_expected
         
         Failure data:
-            Expected to panic with data
-            Expected:  [0] ()
+            Expected to panic but didn't
+            Expected panic data:  [8903707727067478891290643490661] (panic message)
+        
+        [FAIL] tests::should_panic_test::expected_panic_but_didnt_with_expected_multiple
+        
+        Failure data:
+            Expected to panic but didn't
+            Expected panic data:  [8903707727067478891290643490661, 2340509922561928411394884117817189] (panic message, second message)
         
         [FAIL] tests::should_panic_test::didnt_expect_panic
         
         Failure data:
             original value: [156092886226808350968498952598218238307], converted to a string: [unexpected panic]
         
-        [PASS] tests::should_panic_test::should_panic_no_data (gas: ~1)
-        
-        Success data:
-            original value: [0], converted to a string: []
-        
-        Tests: 3 passed, 3 failed, 0 skipped, 0 ignored, 0 filtered out
+        Tests: 3 passed, 5 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:
-            tests::should_panic_test::should_panic_with_non_matching_data
             tests::should_panic_test::expected_panic_but_didnt
+            tests::should_panic_test::should_panic_with_non_matching_data
+            tests::should_panic_test::expected_panic_but_didnt_with_expected
+            tests::should_panic_test::expected_panic_but_didnt_with_expected_multiple
             tests::should_panic_test::didnt_expect_panic
         "}
     );

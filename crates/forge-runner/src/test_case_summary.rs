@@ -270,18 +270,18 @@ fn join_short_strings(data: &[Felt252]) -> String {
 #[must_use]
 fn extract_result_data(run_result: &RunResult, expectation: &ExpectedTestResult) -> Option<String> {
     match &run_result.value {
-        RunResultValue::Success(_) => match expectation {
+        RunResultValue::Success(data) => match expectation {
             ExpectedTestResult::Panics(panic_expectation) => match panic_expectation {
                 ExpectedPanicValue::Exact(panic_data) => {
                     let panic_string = join_short_strings(panic_data);
 
                     Some(format!(
-                        "\n    Expected to panic with data\n    Expected:  {panic_data:?} ({panic_string})\n"
+                        "\n    Expected to panic but didn't\n    Expected panic data:  {panic_data:?} ({panic_string})\n"
                     ))
                 }
-                ExpectedPanicValue::Any => Some("\n    Expected to panic".into()),
+                ExpectedPanicValue::Any => Some("\n    Expected to panic but didn't".into()),
             },
-            ExpectedTestResult::Success => None,
+            ExpectedTestResult::Success => build_readable_text(data),
         },
         RunResultValue::Panic(panic_data) => {
             let expected_data = match expectation {
