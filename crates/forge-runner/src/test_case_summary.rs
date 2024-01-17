@@ -279,7 +279,7 @@ fn extract_result_data(run_result: &RunResult, expectation: &ExpectedTestResult)
                         "\n    Expected to panic but didn't\n    Expected panic data:  {panic_data:?} ({panic_string})\n"
                     ))
                 }
-                ExpectedPanicValue::Any => Some("\n    Expected to panic but didn't".into()),
+                ExpectedPanicValue::Any => Some("\n    Expected to panic but didn't\n".into()),
             },
             ExpectedTestResult::Success => build_readable_text(data),
         },

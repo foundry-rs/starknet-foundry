@@ -858,9 +858,10 @@ fn should_panic() {
         
         Failure data:
             Expected to panic but didn't
+
         [PASS] tests::should_panic_test::should_panic_check_data [..]
-        [PASS] tests::should_panic_test::should_panic_multiple_messages (gas: ~1)
-        [PASS] tests::should_panic_test::should_panic_no_data (gas: ~1)
+        [PASS] tests::should_panic_test::should_panic_multiple_messages [..]
+        [PASS] tests::should_panic_test::should_panic_no_data [..]
         
         Success data:
             original value: [0], converted to a string: []
