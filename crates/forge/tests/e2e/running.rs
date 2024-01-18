@@ -1006,11 +1006,8 @@ fn incompatible_snforge_std_version_warning() {
 
 #[test]
 fn detailed_resources_flag() {
-    let temp = setup_package("simple_package");
-    let snapbox = test_runner()
-        .arg("--detailed-resources")
-        .arg("--exact")
-        .arg("tests::test_complex::complex");
+    let temp = setup_package("erc20_package");
+    let snapbox = test_runner().arg("--detailed-resources");
     let output = snapbox.current_dir(&temp).assert().success();
 
     assert_stdout_contains!(
@@ -1019,8 +1016,8 @@ fn detailed_resources_flag() {
         [..]Compiling[..]
         [..]Finished[..]
         
-        
-        Collected 1 test(s) from simple_package package
+
+        Collected 1 test(s) from erc20_package package
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
         [PASS] tests::test_complex::complex[..]
@@ -1028,7 +1025,7 @@ fn detailed_resources_flag() {
                 memory holes: 330
                 builtins: ("range_check_builtin": 186, "pedersen_builtin": 23)
                 syscalls: (StorageRead: 22, StorageWrite: 12, EmitEvent: 4, GetExecutionInfo: 3)
-        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 13 filtered out
+        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         "#}
     );
 }
