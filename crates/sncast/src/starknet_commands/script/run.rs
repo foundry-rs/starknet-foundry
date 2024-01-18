@@ -49,7 +49,7 @@ use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use tokio::runtime::Runtime;
 
-#[derive(Args)]
+#[derive(Args, Debug)]
 #[command(about = "Execute a deployment script")]
 pub struct Run {
     /// Module name that contains the `main` function, which will be executed
