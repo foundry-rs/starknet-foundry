@@ -58,6 +58,8 @@ main() {
   esac
   done
 
+  download_universal_sierra_compiler
+
   local _requested_ref="latest"
   local _requested_version="latest"
   local _do_modify_path=1
@@ -197,6 +199,10 @@ ensure() {
 # Usually, because it's being executed as part of error handling.
 ignore() {
   "$@"
+}
+
+download_universal_sierra_compiler() {
+  curl -L https://raw.githubusercontent.com/software-mansion/universal-sierra-compiler/master/scripts/install.sh | sh
 }
 
 # This function has been copied verbatim from rustup install script.

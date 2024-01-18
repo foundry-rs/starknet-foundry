@@ -1,6 +1,7 @@
+use crate::assert_success;
+use crate::common::call_contract;
 use crate::common::state::create_cheatnet_state;
 use crate::common::{deploy_contract, felt_selector_from_name, state::create_cached_state};
-use cheatnet::rpc::call_contract;
 
 #[test]
 fn segment_arena_simple() {
@@ -19,7 +20,8 @@ fn segment_arena_simple() {
         &contract_address,
         &selector,
         &[],
-    );
+    )
+    .unwrap();
 
-    assert!(matches!(output, Result::Ok(_)));
+    assert_success!(output, &[]);
 }

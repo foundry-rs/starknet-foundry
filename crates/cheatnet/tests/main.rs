@@ -1,3 +1,5 @@
+use scarb_api::ScarbCommand;
+
 mod builtins;
 mod cheatcodes;
 pub(crate) mod common;
@@ -10,9 +12,10 @@ fn init() {
     use camino::Utf8PathBuf;
     let contracts_path = Utf8PathBuf::from("tests").join("contracts");
 
-    let output = std::process::Command::new("scarb")
+    let output = ScarbCommand::new()
         .current_dir(contracts_path)
         .arg("build")
+        .command()
         .output()
         .unwrap();
     if !output.status.success() {

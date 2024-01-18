@@ -2,7 +2,7 @@
 
 ## Overview
 
-Starknet Foundry cast supports executing multiple deployments or calls with the `sncast multicall run` command.
+Starknet Foundry `sncast` supports executing multiple deployments or calls with the `sncast multicall run` command.
 
 > 📝 **Note**
 > `sncast multicall run` executes only one transaction containing all the prepared calls. Which means the fee is paid once.
@@ -11,11 +11,11 @@ You need to provide a **path** to a `.toml` file with declarations of desired op
 
 You can also compose such config `.toml` file with the `sncast multicall new` command.
 
-For a detailed CLI description, see the [multicall command reference](../appendix/cast/multicall/multicall.md).
+For a detailed CLI description, see the [multicall command reference](../appendix/sncast/multicall/multicall.md).
 
 ## Example
 
-### `multicall run` example
+### `multicall run` Example
 
 Example file:
 
@@ -51,7 +51,7 @@ transaction_hash: 0x38fb8a0432f71bf2dae746a1b4f159a75a862e253002b48599c9611fa271
 > Max fee will be automatically computed if `--max-fee <MAX_FEE>` is not passed.
 
 
-### `multicall new` example
+### `multicall new` Example
 
 You can also generate multicall template with `multicall new` command.
 
@@ -72,7 +72,7 @@ function = ""
 inputs = []
 ```
 
-### `multicall new` with `output-path` argument
+### `multicall new` With `output-path` Argument
 
 Template can be automatically saved to file.
 
@@ -83,7 +83,7 @@ $ sncast multicall new \
 Multicall template successfully saved in ./new_multicall_template.toml
 ```
 
-### `multicall new` with `overwrite` argument
+### `multicall new` With `overwrite` Argument
 
 If there is a file with the same name as passed in the `--output-path` argument it can be overwritten.
 

@@ -16,6 +16,8 @@
 - [`stop_mock_call`](cheatcodes/stop_mock_call.md) - cancels the `start_mock_call` for the function `function_name` of a contract
 - [`l1_handler_execute`](cheatcodes/l1_handler_execute.md) - executes a `#[l1_handler]` function to mock a message arriving from Ethereum
 - [`spy_events`](cheatcodes/spy_events.md) - creates `EventSpy` instance which spies on events emitted by contracts
+- [`store`](cheatcodes/store.md) - stores values in targeted contact's storage
+- [`load`](cheatcodes/load.md) - loads values directly from targeted contact's storage
 
 > ℹ️ **Info**
 > To use cheatcodes you need to add `snforge_std` package as a dependency in
@@ -24,5 +26,5 @@
 >
 > ```toml
 > [dependencies]
-> snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.7.1" }
+> snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.12.0" }
 > ```

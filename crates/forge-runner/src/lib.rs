@@ -1,34 +1,34 @@
+use crate::compiled_runnable::{CompiledTestCrateRunnable, FuzzerConfig, TestCaseRunnable};
 use crate::fuzzer::RandomFuzzer;
 use crate::printing::print_test_result;
 use crate::running::{run_fuzz_test, run_test};
 use crate::sierra_casm_runner::SierraCasmRunner;
 use crate::test_case_summary::TestCaseSummary;
 use crate::test_crate_summary::TestCrateSummary;
-use anyhow::{anyhow, bail, Context, Result};
-use cairo_felt::Felt252;
+use anyhow::{anyhow, Context, Result};
+
 use cairo_lang_sierra::ids::ConcreteTypeId;
-use cairo_lang_sierra::program::{Function, Program};
+use cairo_lang_sierra::program::Function;
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use camino::Utf8PathBuf;
-use conversions::IntoConv;
+
 use futures::stream::FuturesUnordered;
 use futures::StreamExt;
-use num_bigint::BigInt;
+
 use once_cell::sync::Lazy;
-use scarb_artifacts::StarknetContractArtifacts;
+use scarb_api::StarknetContractArtifacts;
 use smol_str::SmolStr;
-use starknet::core::types::BlockId;
-use starknet::core::types::BlockTag::Latest;
+
 use std::collections::HashMap;
+use std::default::Default;
 use std::sync::Arc;
-use test_case_summary::FuzzingGasUsage;
-use test_collector::{ExpectedTestResult, FuzzerConfig};
-use test_collector::{LinkedLibrary, RawForkParams};
+use test_case_summary::{AnyTestCaseSummary, Fuzzing};
 use tokio::sync::mpsc::{channel, Sender};
 use tokio::task::JoinHandle;
-use url::Url;
 
+pub mod compiled_runnable;
+pub mod expected_result;
 pub mod test_case_summary;
 pub mod test_crate_summary;
 
@@ -85,35 +85,20 @@ impl RunnerConfig {
 #[non_exhaustive]
 #[derive(Debug, Clone)]
 pub struct RunnerParams {
-    corelib_path: Utf8PathBuf,
     contracts: HashMap<String, StarknetContractArtifacts>,
     environment_variables: HashMap<String, String>,
-    linked_libraries: Vec<LinkedLibrary>,
 }
 
 impl RunnerParams {
     #[must_use]
     pub fn new(
-        corelib_path: Utf8PathBuf,
         contracts: HashMap<String, StarknetContractArtifacts>,
         environment_variables: HashMap<String, String>,
-        linked_libraries: Vec<LinkedLibrary>,
     ) -> Self {
         Self {
-            corelib_path,
             contracts,
             environment_variables,
-            linked_libraries,
         }
-    }
-
-    #[must_use]
-    pub fn linked_libraries(&self) -> &Vec<LinkedLibrary> {
-        &self.linked_libraries
-    }
-    #[must_use]
-    pub fn corelib_path(&self) -> &Utf8PathBuf {
-        &self.corelib_path
     }
 }
 
@@ -127,69 +112,6 @@ pub enum RunnerStatus {
     TestFailed,
     /// Runner did not run, e.g. when test cases got skipped
     DidNotRun,
-}
-
-#[derive(Debug, Clone)]
-pub struct TestCaseRunnable {
-    pub name: String,
-    pub available_gas: Option<usize>,
-    pub ignored: bool,
-    pub expected_result: ExpectedTestResult,
-    pub fork_config: Option<ValidatedForkConfig>,
-    pub fuzzer_config: Option<FuzzerConfig>,
-}
-
-#[derive(Debug, Clone)]
-#[non_exhaustive]
-pub struct ValidatedForkConfig {
-    url: Url,
-    block_id: BlockId,
-}
-
-impl ValidatedForkConfig {
-    #[must_use]
-    pub fn new(url: Url, block_id: BlockId) -> Self {
-        Self { url, block_id }
-    }
-}
-
-impl TryFrom<RawForkParams> for ValidatedForkConfig {
-    type Error = anyhow::Error;
-
-    fn try_from(value: RawForkParams) -> Result<Self, Self::Error> {
-        let block_id = match value.block_id_type.to_lowercase().as_str() {
-            "number" => BlockId::Number(value.block_id_value.parse().unwrap()),
-            "hash" => BlockId::Hash(
-                Felt252::from(value.block_id_value.parse::<BigInt>().unwrap()).into_(),
-            ),
-            "tag" => {
-                assert_eq!(value.block_id_value, "Latest");
-                BlockId::Tag(Latest)
-            }
-            value => bail!("Invalid value passed for block_id = {value}"),
-        };
-        Ok(ValidatedForkConfig {
-            url: value.url.parse()?,
-            block_id,
-        })
-    }
-}
-
-#[derive(Debug, Clone)]
-#[non_exhaustive]
-pub struct CompiledTestCrateRunnable {
-    sierra_program: Program,
-    test_cases: Vec<TestCaseRunnable>,
-}
-
-impl CompiledTestCrateRunnable {
-    #[must_use]
-    pub fn new(sierra_program: Program, test_cases: Vec<TestCaseRunnable>) -> Self {
-        Self {
-            sierra_program,
-            test_cases,
-        }
-    }
 }
 
 pub trait TestCaseFilter {
@@ -231,7 +153,10 @@ pub async fn run_tests_from_crate(
 
         if !tests_filter.should_be_run(case) {
             tasks.push(tokio::task::spawn(async {
-                Ok(TestCaseSummary::Ignored { name: case_name })
+                // TODO TestCaseType should also be encoded in the test case definition
+                Ok(AnyTestCaseSummary::Single(TestCaseSummary::Ignored {
+                    name: case_name,
+                }))
             }));
             continue;
         };
@@ -249,7 +174,7 @@ pub async fn run_tests_from_crate(
             runner,
             runner_config.clone(),
             runner_params.clone(),
-            &send,
+            send.clone(),
         ));
     }
 
@@ -261,21 +186,17 @@ pub async fn run_tests_from_crate(
 
         print_test_result(&result);
 
-        if let TestCaseSummary::Failed { .. } = result {
-            if runner_config.exit_first {
-                interrupted = true;
-                rec.close();
-            }
+        if result.is_failed() && runner_config.exit_first {
+            interrupted = true;
+            rec.close();
         }
 
         results.push(result);
     }
 
-    let contained_fuzzed_tests = results.iter().any(|summary| summary.runs().is_some());
     let summary = TestCrateSummary {
         test_case_summaries: results,
         runner_exit_status: RunnerStatus::Default,
-        contained_fuzzed_tests,
     };
 
     if interrupted {
@@ -292,19 +213,19 @@ fn choose_test_strategy_and_run(
     runner: Arc<SierraCasmRunner>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
-    send: &Sender<()>,
-) -> JoinHandle<Result<TestCaseSummary>> {
+    send: Sender<()>,
+) -> JoinHandle<Result<AnyTestCaseSummary>> {
     if args.is_empty() {
-        run_test(case, runner, runner_config, runner_params, send.clone())
+        tokio::task::spawn(async move {
+            let res = run_test(case, runner, runner_config, runner_params, send).await??;
+            Ok(AnyTestCaseSummary::Single(res))
+        })
     } else {
-        run_with_fuzzing(
-            args,
-            case,
-            runner,
-            runner_config,
-            runner_params,
-            send.clone(),
-        )
+        tokio::task::spawn(async move {
+            let res =
+                run_with_fuzzing(args, case, runner, runner_config, runner_params, send).await??;
+            Ok(AnyTestCaseSummary::Fuzzing(res))
+        })
     }
 }
 
@@ -315,7 +236,7 @@ fn run_with_fuzzing(
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     send: Sender<()>,
-) -> JoinHandle<Result<TestCaseSummary>> {
+) -> JoinHandle<Result<TestCaseSummary<Fuzzing>>> {
     tokio::task::spawn(async move {
         if send.is_closed() {
             return Ok(TestCaseSummary::Skipped {});
@@ -358,7 +279,6 @@ fn run_with_fuzzing(
         }
 
         let mut results = vec![];
-        let mut gas_usages = None;
         while let Some(task) = tasks.next().await {
             let result = task??;
 
@@ -369,10 +289,6 @@ fn run_with_fuzzing(
                 break;
             }
         }
-
-        let final_result = results
-            .last()
-            .expect("Test should always run at least once");
 
         let runs = u32::try_from(
             results
@@ -386,41 +302,18 @@ fn run_with_fuzzing(
                 .count(),
         )?;
 
-        if let TestCaseSummary::Passed { .. } = final_result {
+        let fuzzing_run_summary: TestCaseSummary<Fuzzing> = TestCaseSummary::from(results);
+
+        if let TestCaseSummary::Passed { .. } = fuzzing_run_summary {
             // Because we execute tests parallel, it's possible to
             // get Passed after Skipped. To treat fuzzing a test as Passed
             // we have to ensure that all fuzzing subtests Passed
             if runs != fuzzer_runs {
                 return Ok(TestCaseSummary::Skipped {});
             };
-
-            let gas_usages_vec: Vec<&f64> = results
-                .iter()
-                .filter(|item| matches!(item, TestCaseSummary::Passed { .. }))
-                .map(|a| match a {
-                    TestCaseSummary::Passed { gas_used, .. } => gas_used,
-                    _ => unreachable!(),
-                })
-                .collect();
-
-            let max = gas_usages_vec
-                .clone()
-                .into_iter()
-                .copied()
-                .reduce(f64::max)
-                .unwrap();
-            let min = gas_usages_vec
-                .into_iter()
-                .copied()
-                .reduce(f64::min)
-                .unwrap();
-
-            gas_usages = Some(FuzzingGasUsage { min, max });
         };
 
-        Ok(final_result
-            .clone()
-            .with_runs_and_gas_usage(runs, gas_usages))
+        Ok(fuzzing_run_summary)
     })
 }
 

@@ -50,14 +50,14 @@ Add the following line under `[dependencies]` section in the `Scarb.toml` file.
 # ...
 
 [dependencies]
-snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.7.1" }
+snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.12.0" }
 ```
 
 Make sure that the version in `tag` matches `snforge`. You can check the currently installed version with
 
 ```shell
 $ snforge --version
-forge 0.7.1
+snforge 0.12.0
 ```
 
 It is also possible to add this dependency
@@ -67,7 +67,7 @@ command.
 ```shell
 $ scarb add snforge_std \
  --git https://github.com/foundry-rs/starknet-foundry.git \
- --tag v0.7.1
+ --tag v0.12.0
 ```
 
 Additionally, ensure that `casm` codegen is enabled in the `Scarb.toml` file.

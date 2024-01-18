@@ -1,3 +1,4 @@
+use crate::common::call_contract;
 use crate::common::state::create_cached_state;
 use crate::common::{felt_selector_from_name, recover_data};
 use crate::{
@@ -5,8 +6,7 @@ use crate::{
     common::{deploy_contract, get_contracts, state::create_cheatnet_state},
 };
 use cairo_felt::Felt252;
-use cheatnet::cheatcodes::deploy::deploy;
-use cheatnet::rpc::call_contract;
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::deploy;
 use conversions::felt252::FromShortString;
 use conversions::IntoConv;
 use starknet_api::core::ContractAddress;
@@ -542,7 +542,7 @@ fn mock_call_in_constructor() {
     .unwrap();
     let output_data = recover_data(output);
     assert_eq!(output_data.len(), 1);
-    assert_eq!(output_data.get(0).unwrap().clone(), Felt252::from(223));
+    assert_eq!(output_data.first().unwrap().clone(), Felt252::from(223));
 }
 
 #[test]

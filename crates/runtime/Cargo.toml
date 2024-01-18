@@ -23,7 +23,4 @@ serde_json.workspace = true
 serde.workspace = true
 thiserror.workspace = true
 conversions = { path = "../conversions" }
-scarb-artifacts = { path = "../scarb-artifacts" }
-
-[lib]
-name = "runtime"
+scarb-api = { path = "../scarb-api" }

@@ -1,6 +1,6 @@
 # Creating And Deploying Accounts
 
-Account is required to perform interactions with Starknet (only calls can be done without it). Starknet Foundry cast supports
+Account is required to perform interactions with Starknet (only calls can be done without it). Starknet Foundry `sncast` supports
 entire account management flow with the `sncast account create` and `sncast account deploy` commands.
 
 Difference between those two commands is that the first one creates account information (private key, address and more)
@@ -13,7 +13,7 @@ To remove an account from the accounts file, you can use  `sncast account delete
 
 ## Examples
 
-### General example
+### General Example
 
 Do the following to start interacting with the Starknet:
 
@@ -33,7 +33,7 @@ Do the following to start interacting with the Starknet:
 
     You can also pass common `--accounts-file` argument with a path to (existing or not existing) file where you want to save account info.
     
-    For a detailed CLI description, see [account create command reference](../appendix/cast/account/create.md).
+    For a detailed CLI description, see [account create command reference](../appendix/sncast/account/create.md).
 
 
 - prefund generated address with tokens
@@ -57,10 +57,10 @@ Do the following to start interacting with the Starknet:
     Note that you don't have to pass `url`, `accounts-file` and `network` parameters if `add-profile` flag
     was set in the `account create` command. Just pass `profile` argument with the account name.
     
-    For a detailed CLI description, see [account deploy command reference](../appendix/cast/account/deploy.md).
+    For a detailed CLI description, see [account deploy command reference](../appendix/sncast/account/deploy.md).
 
 
-### `account create` with salt argument
+### `account create` With Salt Argument
 
 Salt will not be randomly generated if it's specified with `--salt`.
 
@@ -96,9 +96,9 @@ result: Account successfully removed
 > 💡 **Info**
 > Note that you can pass `--delete-profile false` argument to persist the associated profile in Scarb.toml.
 
-For a detailed CLI description, see [account delete command reference](../appendix/cast/account/delete.md).
+For a detailed CLI description, see [account delete command reference](../appendix/sncast/account/delete.md).
 
-### Custom account contract
+### Custom Account Contract
 
 By default, `sncast` creates/deploys an account using [openzeppelin contract's class hash](https://starkscan.co/class/0x058d97f7d76e78f44905cc30cb65b91ea49a4b908a76703c54197bca90f81773).
 It is possible to create an account using custom openzeppelin contract declared to starknet. This can be achieved
@@ -124,9 +124,9 @@ command: account deploy
 transaction_hash: 0x20b20896ce63371ef015d66b4dd89bf18c5510a840b4a85a43a983caa6e2579
 ```
 
-### Using keystore and starkli account
+### Using Keystore and Starkli Account
 
-Accounts created and deployed with [starkli](https://book.starkli.rs/accounts#accounts) can be used by specifying the [`--keystore` argument](../appendix/cast/common.md#--keystore--k-path_to_keystore_file).
+Accounts created and deployed with [starkli](https://book.starkli.rs/accounts#accounts) can be used by specifying the [`--keystore` argument](../appendix/sncast/common.md#--keystore--k-path_to_keystore_file).
 
 > 💡 **Info**
 > When passing the `--keystore` argument, `--account` argument must be a path to the starkli account JSON file.
@@ -140,7 +140,7 @@ $ sncast \
     --contract-name my_contract
 ```
 
-#### Importing an account
+#### Importing an Account
 
 To import an account into the file holding the accounts info (`~/.starknet_accounts/starknet_open_zeppelin_accounts.json` by default), use the `account add` command.
 
@@ -155,9 +155,9 @@ $ sncast \
     --deployed
 ```
 
-For a detailed CLI description, see [account add command reference](../appendix/cast/account/add.md).
+For a detailed CLI description, see [account add command reference](../appendix/sncast/account/add.md).
 
-### Creating an account with starkli-style keystore
+### Creating an Account With Starkli-Style Keystore
 
 It is possible to create an openzeppelin account with keystore in a similar way [starkli](https://book.starkli.rs/accounts#accounts) does.
 

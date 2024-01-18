@@ -3,11 +3,11 @@ use std::collections::HashMap;
 use crate::common::state::create_cheatnet_state;
 use crate::common::{get_contracts, state::create_cached_state};
 use cairo_felt::Felt252;
-use cheatnet::cheatcodes::declare::get_class_hash;
-use cheatnet::cheatcodes::CheatcodeError;
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::get_class_hash;
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
 use conversions::felt252::FromShortString;
 use runtime::EnhancedHintError;
-use scarb_artifacts::StarknetContractArtifacts;
+use scarb_api::StarknetContractArtifacts;
 use starknet_api::core::ClassHash;
 
 fn get_contract_class_hash(

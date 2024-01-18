@@ -1,0 +1,13 @@
+[package]
+name = "build_fails_no_casm"
+version = "0.1.0"
+
+[dependencies]
+starknet = ">=2.0.2"
+
+[[target.starknet-contract]]
+sierra = true
+casm = false
+
+[lib]
+sierra = true

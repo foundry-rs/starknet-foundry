@@ -35,10 +35,11 @@ trait EventFetcher {
 
 trait EventAssertions<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>> {
     fn assert_emitted(ref self: EventSpy, events: @Array<(ContractAddress, T)>);
+    fn assert_not_emitted(ref self: EventSpy, events: @Array<(ContractAddress, T)>);
 }
 ```
 
-## There are two ways of interaction with emitted events
+## There Are Two Ways of Interaction With Emitted Events
 
 Examples are based on `SpyEventsChecker` contract implementation.
 
@@ -62,12 +63,12 @@ mod SpyEventsChecker {
 }
 ```
 
-### Complex one in which user asserts manually
+### Complex One in Which User Asserts Manually
 
 ```rust
 use snforge_std::{declare, ContractClassTrait, spy_events, SpyOn, EventSpy, EventFetcher,
     event_name_hash, Event};
-    
+
 #[starknet::interface]
 trait ISpyEventsChecker<TContractState> {
     fn emit_one_event(ref self: TContractState, some_data: felt252);
@@ -84,15 +85,15 @@ fn test_complex_assertions() {
     dispatcher.emit_one_event(123);
 
     spy.fetch_events();
-    
+
     assert(spy.events.len() == 1, 'There should be one event');
-    
+
     let (from, event) = spy.events.at(0);
     assert(from == @contract_address, 'Emitted from wrong address');
     assert(event.keys.len() == 1, 'There should be one key');
     assert(event.keys.at(0) == @event_name_hash('FirstEvent'), 'Wrong event name');
     assert(event.data.len() == 1, 'There should be one data');
-    
+
     dispatcher.emit_one_event(123);
     assert(spy.events.len() == 1, 'There should be one event');
 
@@ -112,20 +113,20 @@ Let's go through important parts of the provided code:
 
 > 📝 **Note**
 > To assert the `name` property we have to hash a shortstring with the `event_name_hash` cheatcode.
-> 
+>
 > `fn event_name_hash(name: felt252) -> felt252`
 
 - It is worth noting that when we call the method which emits an event, `spy` is not updated immediately.
   (See the last 5 lines)
 
-### Simple one in which user asserts with `assert_emitted` method
+### Simple One in Which User Asserts With `assert_emitted` Method
 
 ```rust
 use snforge_std::{declare, ContractClassTrait, spy_events, SpyOn, EventSpy,
     EventAssertions};
 
 use SpyEventsChecker;
-    
+
 #[starknet::interface]
 trait ISpyEventsChecker<TContractState> {
     fn emit_one_event(ref self: TContractState, some_data: felt252);
@@ -164,7 +165,27 @@ The flow is much simpler (thanks to `EventAssertions` trait). Let's go through i
 
 - After the assertion, found events are removed from the spy. It stays clean and ready for the next events.
 
-## Splitting events between multiple spies
+## Asserting event was not emitted
+
+In cases where you want to test an event was *not* emitted, use the `assert_not_emitted` function.
+It works similarly as `assert_emitted` with the only difference that it fails if an event was emitted during the execution.
+
+Given the example above, we can check that a different `FirstEvent` was not emitted:
+
+```rust
+spy.assert_not_emitted(@array![
+    (
+        contract_address,
+        SpyEventsChecker::Event::FirstEvent(
+            SpyEventsChecker::FirstEvent { some_data: 456 }
+        )
+    )
+]);
+```
+
+Note that both the event name and event data are checked. If a function emitted an event with the same name but a different payload, the `assert_not_emitted` function will pass.
+
+## Splitting Events Between Multiple Spies
 
 Sometimes it is easier to split events between multiple spies. Let's do it.
 
@@ -172,7 +193,7 @@ Sometimes it is easier to split events between multiple spies. Let's do it.
 use snforge_std::{declare, ContractClassTrait, spy_events, SpyOn, EventSpy, EventAssertions};
 
 use SpyEventsChecker;
-    
+
 #[starknet::interface]
 trait ISpyEventsChecker<TContractState> {
     fn emit_one_event(ref self: TContractState, some_data: felt252);
@@ -184,7 +205,7 @@ fn test_simple_assertions() {
     let first_address = contract.deploy(array![]).unwrap();
     let second_address = contract.deploy(array![]).unwrap();
     let third_address = contract.deploy(array![]).unwrap();
-    
+
     let first_dispatcher = ISpyEventsCheckerDispatcher { first_address };
     let second_dispatcher = ISpyEventsCheckerDispatcher { second_address };
     let third_dispatcher = ISpyEventsCheckerDispatcher { third_address };
@@ -223,7 +244,7 @@ fn test_simple_assertions() {
 
 The first spy gets events emitted by the first contract only. Second one gets events emitted by the rest.
 
-## Asserting events emitted with `emit_event_syscall`
+## Asserting Events Emitted With `emit_event_syscall`
 
 Events emitted with `emit_event_syscall` could have nonstandard (not defined anywhere) keys and data.
 They can also be asserted with `spy.assert_emitted` method.

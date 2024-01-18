@@ -1,0 +1,57 @@
+[package]
+name = "sncast"
+description = "sncast - a Starknet Foundry CLI client"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+camino.workspace = true
+clap.workspace = true
+serde_json.workspace = true
+serde.workspace = true
+starknet.workspace = true
+tokio.workspace = true
+url.workspace = true
+rand.workspace = true
+project-root.workspace = true
+scarb-metadata.workspace = true
+primitive-types = "0.12.1"
+shellexpand = "3.1.0"
+toml = "0.8.8"
+rpassword = "7.3.1"
+promptly = "0.3.1"
+scarb-api = { path = "../scarb-api" }
+# Freeze reqwest dependency, because newer versions cause cast tests to fail on macs
+reqwest = "=0.11.18"
+indoc.workspace = true
+tempfile.workspace = true
+runtime = { path = "../runtime" }
+conversions = { path = "../conversions" }
+cairo-lang-runner.workspace = true
+cairo-lang-casm.workspace = true
+cairo-lang-sierra-to-casm.workspace = true
+cairo-lang-utils.workspace = true
+cairo-lang-sierra.workspace = true
+itertools.workspace = true
+num-traits.workspace = true
+cairo-felt.workspace = true
+cairo-vm.workspace = true
+blockifier.workspace = true
+semver.workspace = true
+console.workspace = true
+
+[dev-dependencies]
+ctor.workspace = true
+snapbox.workspace = true
+indoc.workspace = true
+reqwest = "0.11.18"
+tempfile = "3.9.0"
+test-case.workspace = true
+fs_extra = "1.3.0"
+sealed_test = "1.0.0"
+dotenv = "0.15.0"
+
+[[bin]]
+name = "sncast"
+path = "src/main.rs"

@@ -1,8 +1,14 @@
-use crate::CrateLocation;
+use crate::compiled_raw::CrateLocation;
 use anyhow::Error;
 use console::style;
-use forge_runner::test_case_summary::TestCaseSummary;
-use forge_runner::test_crate_summary::TestCrateSummary;
+use forge_runner::{test_case_summary::AnyTestCaseSummary, test_crate_summary::TestCrateSummary};
+use starknet_api::block::BlockNumber;
+use std::collections::HashMap;
+
+pub fn print_warning(error: &Error) {
+    let warning_tag = style("WARNING").color256(11);
+    println!("[{warning_tag}] {error}");
+}
 
 pub fn print_error_message(error: &Error) {
     let error_tag = style("ERROR").red();
@@ -45,23 +51,27 @@ pub(crate) fn print_test_seed(seed: u64) {
     println!("{}: {seed}", style("Fuzzer seed").bold());
 }
 
-pub fn print_failures(all_failed_tests: &[TestCaseSummary]) {
+pub fn print_failures(all_failed_tests: &[AnyTestCaseSummary]) {
     if all_failed_tests.is_empty() {
         return;
     }
-
     let failed_tests_names: Vec<&String> = all_failed_tests
         .iter()
-        .map(|test_case_summary| match test_case_summary {
-            TestCaseSummary::Failed { name, .. } => name,
-            TestCaseSummary::Passed { .. }
-            | TestCaseSummary::Ignored { .. }
-            | TestCaseSummary::Skipped {} => unreachable!(),
-        })
+        .map(|any_test_case_summary| any_test_case_summary.name().unwrap())
         .collect();
 
     println!("\nFailures:");
     for name in failed_tests_names {
         println!("    {name}");
+    }
+}
+
+#[allow(clippy::implicit_hasher)]
+pub fn print_latest_blocks_numbers(url_to_latest_block_number_map: &HashMap<String, BlockNumber>) {
+    if !url_to_latest_block_number_map.is_empty() {
+        println!();
+    }
+    for (url, latest_block_number) in url_to_latest_block_number_map {
+        println!("Latest block number = {latest_block_number} for url = {url}");
     }
 }

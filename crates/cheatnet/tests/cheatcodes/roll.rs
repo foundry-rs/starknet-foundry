@@ -1,4 +1,5 @@
 use crate::common::assertions::assert_outputs;
+use crate::common::call_contract;
 use crate::{
     assert_success,
     common::{
@@ -7,8 +8,7 @@ use crate::{
     },
 };
 use cairo_felt::Felt252;
-use cheatnet::cheatcodes::deploy::deploy;
-use cheatnet::rpc::call_contract;
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::deploy;
 use cheatnet::state::CheatTarget;
 use conversions::felt252::FromShortString;
 use conversions::IntoConv;
