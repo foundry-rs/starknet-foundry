@@ -18,6 +18,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Error message for tests that should panic but pass
 
+### Cast
+
+#### Added
+
+- `script init` command to generate a template file structure for deployment scripts
+
 ## [0.14.0] - 2024-01-11
 
 ### Forge
@@ -60,7 +66,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - add support for sepolia network
 - `--yes` option to `account delete` command that allows to skip confirmation prompt
-- `script init` command to create template files structure for deployment script
 
 #### Changed
 
