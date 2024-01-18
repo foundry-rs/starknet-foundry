@@ -3,8 +3,8 @@ use starknet::Felt252TryIntoContractAddress;
 
 use snforge_std::{declare, ContractClassTrait, test_address, start_prank, stop_prank, CheatTarget};
 
-use simple_package::erc20::IERC20Dispatcher;
-use simple_package::erc20::IERC20DispatcherTrait;
+use erc20_package::erc20::IERC20Dispatcher;
+use erc20_package::erc20::IERC20DispatcherTrait;
 
 const NAME: felt252 = 'TOKEN';
 const SYMBOL: felt252 = 'TKN';
