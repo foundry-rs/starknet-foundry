@@ -121,10 +121,23 @@ fn main() -> Result<()> {
     let runtime = Runtime::new().expect("Failed to instantiate Runtime");
 
     if let Commands::Script(script) = &cli.command {
-        run_script_command(&cli, runtime, &config, script, numbers_format, output_format)
+        run_script_command(
+            &cli,
+            runtime,
+            &config,
+            script,
+            numbers_format,
+            &output_format,
+        )
     } else {
         let provider = get_provider(&config.rpc_url)?;
-        runtime.block_on(run_async_command(cli, config, provider, numbers_format, output_format))
+        runtime.block_on(run_async_command(
+            cli,
+            config,
+            provider,
+            numbers_format,
+            output_format,
+        ))
     }
 }
 
@@ -393,11 +406,11 @@ fn run_script_command(
     config: &CastConfig,
     script: &Script,
     numbers_format: NumbersFormat,
-    output_format: OutputFormat,
+    output_format: &OutputFormat,
 ) -> Result<()> {
     if let Some(starknet_commands::script::Commands::Init(init)) = &script.command {
         let mut result = starknet_commands::script::init::init(init);
-        print_command_result("script init", &mut result, numbers_format, &output_format)?;
+        print_command_result("script init", &mut result, numbers_format, output_format)?;
     } else {
         let provider = get_provider(&config.rpc_url)?;
         let script_module_name = script.script_module_name.as_ref().ok_or_else(|| {
@@ -412,7 +425,7 @@ fn run_script_command(
             config,
         );
 
-        print_command_result("script", &mut result, numbers_format, &output_format)?;
+        print_command_result("script", &mut result, numbers_format, output_format)?;
     }
     Ok(())
 }

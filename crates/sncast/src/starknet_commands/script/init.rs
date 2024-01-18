@@ -1,4 +1,4 @@
-use anyhow::{anyhow, ensure, Context, Ok, Result};
+use anyhow::{ensure, Context, Ok, Result};
 use camino::Utf8PathBuf;
 use std::fs;
 
@@ -6,8 +6,8 @@ use clap::Args;
 use indoc::{formatdoc, indoc};
 use scarb_metadata::ScarbCommand;
 use sncast::helpers::constants::SCRIPTS_DIR;
-use sncast::response::structs::ScriptInitResponse;
 use sncast::helpers::scarb_utils::get_cairo_version;
+use sncast::response::structs::ScriptInitResponse;
 
 #[derive(Args, Debug)]
 pub struct Init {
@@ -17,11 +17,6 @@ pub struct Init {
 
 pub fn init(init_args: &Init) -> Result<ScriptInitResponse> {
     let script_root_dir_path = get_script_root_dir_path(&init_args.script_name)?;
-
-    ensure!(
-        !script_root_dir_path.exists(),
-        "Script destination `{script_root_dir_path}` already exists"
-    );
 
     init_scarb_project(&init_args.script_name, &script_root_dir_path)?;
 
@@ -43,16 +38,17 @@ pub fn init(init_args: &Init) -> Result<ScriptInitResponse> {
 }
 
 fn get_script_root_dir_path(script_name: &str) -> Result<Utf8PathBuf> {
-    let current_dir = std::env::current_dir()?;
+    let current_dir = Utf8PathBuf::from_path_buf(std::env::current_dir()?)
+        .expect("Failed to create Utf8PathBuf for the current directory");
+
     let scripts_dir = current_dir.join(SCRIPTS_DIR);
 
-    let script_root_dir_path = scripts_dir
-        .exists()
-        .then(|| scripts_dir.join(script_name))
-        .unwrap_or_else(|| current_dir.join(script_name));
+    ensure!(
+        !scripts_dir.exists(),
+        "Scripts directory already exists at `{scripts_dir}`"
+    );
 
-    Utf8PathBuf::from_path_buf(script_root_dir_path)
-        .map_err(|_| anyhow!("Failed to get script root dir path"))
+    Ok(scripts_dir.join(script_name))
 }
 
 fn init_scarb_project(script_name: &str, script_root_dir: &Utf8PathBuf) -> Result<()> {

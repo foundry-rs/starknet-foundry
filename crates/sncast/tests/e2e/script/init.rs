@@ -19,7 +19,7 @@ fn test_script_init_files_created() {
         status: Successfully initialized `{script_name}` at [..]/{script_name}
     "});
 
-    let script_dir_path = temp_dir.path().join(script_name);
+    let script_dir_path = temp_dir.path().join(SCRIPTS_DIR).join(script_name);
 
     assert!(script_dir_path.exists());
     assert!(script_dir_path.join("Scarb.toml").exists());
@@ -41,10 +41,10 @@ fn test_script_init_files_content() {
 
     snapbox.assert().stdout_matches(formatdoc! {r"
         command: script init
-        status: Successfully initialized `{script_name}` at [..]/{script_name}
+        status: Successfully initialized `{script_name}` at [..]/scripts/{script_name}
     "});
 
-    let script_dir_path = temp_dir.path().join(script_name);
+    let script_dir_path = temp_dir.path().join(SCRIPTS_DIR).join(script_name);
     let scarb_toml_path = script_dir_path.join("Scarb.toml");
 
     let scarb_toml_content = std::fs::read_to_string(&scarb_toml_path).unwrap();
@@ -94,7 +94,7 @@ fn test_script_init_files_content() {
 }
 
 #[test]
-fn test_init_when_scripts_dir_exists_in_cwd() {
+fn test_init_fails_when_scripts_dir_exists_in_cwd() {
     let script_name = "my_script";
     let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
 
@@ -105,20 +105,10 @@ fn test_init_when_scripts_dir_exists_in_cwd() {
         .current_dir(temp_dir.path())
         .args(["script", "init", script_name]);
 
-    snapbox.assert().stdout_matches(formatdoc! {r"
+    snapbox.assert().stderr_matches(formatdoc! {r"
         command: script init
-        status: Successfully initialized `{script_name}` at [..]/{SCRIPTS_DIR}/{script_name}
+        error: Scripts directory already exists at [..]
     "});
-
-    let script_dir_path = temp_dir.path().join(SCRIPTS_DIR).join(script_name);
-
-    assert!(script_dir_path.exists());
-    assert!(script_dir_path.join("Scarb.toml").exists());
-    assert!(script_dir_path.join("src").exists());
-    assert!(script_dir_path.join("src/lib.cairo").exists());
-    assert!(script_dir_path
-        .join(format!("src/{script_name}.cairo"))
-        .exists());
 }
 
 #[test]
@@ -132,7 +122,7 @@ fn test_init_twice_fails() {
         .assert()
         .success();
 
-    assert!(temp_dir.path().join(script_name).exists());
+    assert!(temp_dir.path().join(SCRIPTS_DIR).exists());
 
     let snapbox = Command::new(cargo_bin!("sncast"))
         .current_dir(temp_dir.path())
@@ -140,6 +130,6 @@ fn test_init_twice_fails() {
 
     snapbox.assert().stderr_matches(formatdoc! {r#"
         command: script init
-        error: Script destination [..] already exists
+        error: Scripts directory already exists at [..]
     "#});
 }
