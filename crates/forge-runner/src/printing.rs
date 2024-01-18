@@ -60,8 +60,7 @@ pub(crate) fn print_test_result(
         steps: {}
         memory holes: {}
         builtins: ({})
-        syscalls: ({})
-            ",
+        syscalls: ({})",
                 vm_res.n_steps, vm_res.n_memory_holes, builtins, syscalls,
             )
         }
