@@ -31,9 +31,19 @@ pub struct UsedResources {
 impl UsedResources {
     pub fn extend(self: &mut UsedResources, other: &UsedResources) {
         self.execution_resources.vm_resources += &other.execution_resources.vm_resources;
-        self.execution_resources
+
+        other
+            .execution_resources
             .syscall_counter
-            .extend(&other.execution_resources.syscall_counter);
+            .iter()
+            .for_each(|(syscall, count)| {
+                *self
+                    .execution_resources
+                    .syscall_counter
+                    .entry(*syscall)
+                    .or_insert(0) += count;
+            });
+
         self.l2_to_l1_payloads_length
             .extend(&other.l2_to_l1_payloads_length);
     }
