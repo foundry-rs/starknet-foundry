@@ -1,10 +1,6 @@
-use core::clone::Clone;
 use starknet::{ContractAddress, testing::cheatcode, contract_address_const};
-use option::OptionTrait;
-use array::ArrayTrait;
-use array::SpanTrait;
+use starknet::info::v2::ResourceBounds;
 use snforge_std::CheatTarget;
-use serde::Serde;
 
 #[derive(Copy, Drop, Serde)]
 struct TxInfoMock {
@@ -15,6 +11,13 @@ struct TxInfoMock {
     transaction_hash: Option<felt252>,
     chain_id: Option<felt252>,
     nonce: Option<felt252>,
+    // starknet::info::v2::TxInfo fields
+    resource_bounds: Option<Span<ResourceBounds>>,
+    tip: Option<u128>,
+    paymaster_data: Option<Span<felt252>>,
+    nonce_data_availability_mode: Option<u32>,
+    fee_data_availability_mode: Option<u32>,
+    account_deployment_data: Option<Span<felt252>>,
 }
 
 trait TxInfoMockTrait {
@@ -31,6 +34,12 @@ impl TxInfoMockImpl of TxInfoMockTrait {
             transaction_hash: Option::None(()),
             chain_id: Option::None(()),
             nonce: Option::None(()),
+            resource_bounds: Option::None(()),
+            tip: Option::None(()),
+            paymaster_data: Option::None(()),
+            nonce_data_availability_mode: Option::None(()),
+            fee_data_availability_mode: Option::None(()),
+            account_deployment_data: Option::None(()),
         }
     }
 }
@@ -43,8 +52,8 @@ fn start_spoof(target: CheatTarget, tx_info_mock: TxInfoMock) {
     tx_info_mock.serialize(ref tx_info_serialized);
 
     let mut inputs: Array<felt252> = array![];
-    extend_array(ref inputs, cheat_target_serialized.span());
-    extend_array(ref inputs, tx_info_serialized.span());
+    inputs.append_span(cheat_target_serialized.span());
+    inputs.append_span(tx_info_serialized.span());
 
     cheatcode::<'start_spoof'>(inputs.span());
 }
@@ -55,11 +64,3 @@ fn stop_spoof(target: CheatTarget) {
     cheatcode::<'stop_spoof'>(inputs.span());
 }
 
-fn extend_array(ref array: Array<felt252>, mut span: Span<felt252>) {
-    loop {
-        match span.pop_front() {
-            Option::Some(x) => { array.append(x.clone()); },
-            Option::None => { break; }
-        };
-    };
-}

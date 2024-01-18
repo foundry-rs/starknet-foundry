@@ -1,0 +1,22 @@
+name: Work item
+description: Submit an actionable task
+body:
+  - type: dropdown
+    id: tool-name
+    attributes:
+      label: Which components does the task require to be changed? (think hard pls)
+      multiple: true
+      options:
+        - snforge
+        - sncast
+        - other (describe below)
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Describe the issue here.
+    validations:
+      required: true

@@ -1,30 +1,28 @@
-use crate::constants::TEST_SEQUENCER_ADDRESS;
 use crate::forking::state::ForkStateReader;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spoof::TxInfoMock;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::{
     Event, SpyTarget,
 };
+use blockifier::execution::entry_point::CallEntryPoint;
 use blockifier::state::state_api::State;
 use blockifier::{
     execution::contract_class::ContractClass,
     state::{
-        cached_state::ContractStorageKey,
         errors::StateError,
         state_api::{StateReader, StateResult},
     },
 };
 use cairo_felt::Felt252;
-use serde::{Deserialize, Serialize};
-use starknet_api::block::{BlockNumber, BlockTimestamp};
+use runtime::starknet::context::BlockInfo;
+use runtime::starknet::state::DictStateReader;
+
 use starknet_api::core::EntryPointSelector;
-use starknet_api::core::PatriciaKey;
-use starknet_api::hash::StarkHash;
+
 use starknet_api::transaction::ContractAddressSalt;
 use starknet_api::{
     core::{ClassHash, CompiledClassHash, ContractAddress, Nonce},
     hash::StarkFelt,
-    patricia_key,
     state::StorageKey,
 };
 use std::collections::HashMap;
@@ -45,38 +43,21 @@ pub struct ExtendedStateReader {
 }
 
 pub trait BlockInfoReader {
-    fn get_block_info(&mut self) -> StateResult<CheatnetBlockInfo>;
+    fn get_block_info(&mut self) -> StateResult<BlockInfo>;
 }
 
 impl BlockInfoReader for ExtendedStateReader {
-    fn get_block_info(&mut self) -> StateResult<CheatnetBlockInfo> {
+    fn get_block_info(&mut self) -> StateResult<BlockInfo> {
         if let Some(ref mut fork_state_reader) = self.fork_state_reader {
             return fork_state_reader.get_block_info();
         }
 
-        Ok(CheatnetBlockInfo::default())
+        Ok(BlockInfo::default())
     }
 }
 
 pub struct BlockifierState<'a> {
     pub blockifier_state: &'a mut dyn State,
-}
-
-#[derive(Copy, Clone, Serialize, Deserialize, Debug)]
-pub struct CheatnetBlockInfo {
-    pub block_number: BlockNumber,
-    pub timestamp: BlockTimestamp,
-    pub sequencer_address: ContractAddress,
-}
-
-impl Default for CheatnetBlockInfo {
-    fn default() -> Self {
-        Self {
-            block_number: BlockNumber(2000),
-            timestamp: BlockTimestamp::default(),
-            sequencer_address: ContractAddress(patricia_key!(TEST_SEQUENCER_ADDRESS)),
-        }
-    }
 }
 
 impl<'a> BlockifierState<'a> {
@@ -150,68 +131,6 @@ impl StateReader for ExtendedStateReader {
     }
 }
 
-/// A simple implementation of `StateReader` using `HashMap`s as storage.
-#[derive(Debug, Default)]
-pub struct DictStateReader {
-    pub storage_view: HashMap<ContractStorageKey, StarkFelt>,
-    pub address_to_nonce: HashMap<ContractAddress, Nonce>,
-    pub address_to_class_hash: HashMap<ContractAddress, ClassHash>,
-    pub class_hash_to_class: HashMap<ClassHash, ContractClass>,
-    pub class_hash_to_compiled_class_hash: HashMap<ClassHash, CompiledClassHash>,
-}
-
-impl StateReader for DictStateReader {
-    fn get_storage_at(
-        &mut self,
-        contract_address: ContractAddress,
-        key: StorageKey,
-    ) -> StateResult<StarkFelt> {
-        let contract_storage_key = (contract_address, key);
-        self.storage_view
-            .get(&contract_storage_key)
-            .copied()
-            .ok_or(StateError::StateReadError(format!(
-                "Unable to get storage at address: {contract_address:?} and key: {key:?} form DictStateReader"
-            )))
-    }
-
-    fn get_nonce_at(&mut self, contract_address: ContractAddress) -> StateResult<Nonce> {
-        self.address_to_nonce
-            .get(&contract_address)
-            .copied()
-            .ok_or(StateError::StateReadError(format!(
-                "Unable to get nonce at {contract_address:?} from DictStateReader"
-            )))
-    }
-
-    fn get_class_hash_at(&mut self, contract_address: ContractAddress) -> StateResult<ClassHash> {
-        self.address_to_class_hash
-            .get(&contract_address)
-            .copied()
-            .ok_or(StateError::UnavailableContractAddress(contract_address))
-    }
-
-    fn get_compiled_contract_class(
-        &mut self,
-        class_hash: &ClassHash,
-    ) -> StateResult<ContractClass> {
-        let contract_class = self.class_hash_to_class.get(class_hash).cloned();
-        match contract_class {
-            Some(contract_class) => Ok(contract_class),
-            _ => Err(StateError::UndeclaredClassHash(*class_hash)),
-        }
-    }
-
-    fn get_compiled_class_hash(&mut self, class_hash: ClassHash) -> StateResult<CompiledClassHash> {
-        let compiled_class_hash = self
-            .class_hash_to_compiled_class_hash
-            .get(&class_hash)
-            .copied()
-            .unwrap_or_default();
-        Ok(compiled_class_hash)
-    }
-}
-
 pub enum CheatStatus<T> {
     Cheated(T),
     Uncheated,
@@ -233,9 +152,11 @@ pub struct CheatnetState {
     pub spies: Vec<SpyTarget>,
     pub detected_events: Vec<Event>,
     pub deploy_salt_base: u32,
-    pub block_info: CheatnetBlockInfo,
+    pub block_info: BlockInfo,
     // execution resources used by all contract calls
     pub used_resources: UsedResources,
+    // trace info of the last call
+    pub trace_info: Vec<CallEntryPoint>,
 }
 
 impl CheatnetState {

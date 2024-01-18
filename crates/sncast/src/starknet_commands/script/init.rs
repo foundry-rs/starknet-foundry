@@ -6,7 +6,7 @@ use clap::Args;
 use indoc::{formatdoc, indoc};
 use scarb_metadata::ScarbCommand;
 use sncast::helpers::constants::SCRIPTS_DIR;
-use sncast::helpers::response_structs::ScriptInitResponse;
+use sncast::response::structs::ScriptInitResponse;
 use sncast::helpers::scarb_utils::get_cairo_version;
 
 #[derive(Args, Debug)]

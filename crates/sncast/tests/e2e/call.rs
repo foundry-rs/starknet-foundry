@@ -1,4 +1,4 @@
-use crate::helpers::fixtures::{default_cli_args, from_env, invoke_map_contract};
+use crate::helpers::fixtures::{default_cli_args, from_env, invoke_contract};
 use crate::helpers::runner::runner;
 use indoc::indoc;
 
@@ -29,8 +29,7 @@ fn test_happy_case() {
 #[tokio::test]
 async fn test_call_after_storage_changed() {
     let contract_address = from_env("CAST_MAP_ADDRESS").unwrap();
-    invoke_map_contract("0x2", "0x3", "user2", &contract_address).await;
-
+    invoke_contract("user2", &contract_address, "put", None, &["0x2", "0x3"]).await;
     let mut args = default_cli_args();
     args.append(&mut vec![
         "call",
@@ -65,7 +64,7 @@ async fn test_contract_does_not_exist() {
 
     snapbox.assert().stderr_matches(indoc! {r"
         command: call
-        error: Contract not found
+        error: There is no contract at the specified address
     "});
 }
 
@@ -85,7 +84,7 @@ fn test_wrong_function_name() {
 
     snapbox.assert().stderr_matches(indoc! {r"
         command: call
-        error: Contract error
+        error: An error occurred in the called contract [..]
     "});
 }
 
@@ -108,7 +107,7 @@ fn test_wrong_calldata() {
 
     snapbox.assert().stderr_matches(indoc! {r"
         command: call
-        error: Contract error
+        error: An error occurred in the called contract [..]
     "});
 }
 

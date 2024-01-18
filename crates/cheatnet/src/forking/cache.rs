@@ -1,12 +1,13 @@
-use crate::state::CheatnetBlockInfo;
 use cairo_felt::Felt252;
 use camino::Utf8PathBuf;
 use conversions::{FromConv, IntoConv, TryIntoConv};
 use fs2::FileExt;
 use num_bigint::BigUint;
 use regex::Regex;
+use runtime::starknet::context::BlockInfo;
 use serde::{Deserialize, Serialize};
-use starknet::core::types::{BlockId, BlockTag, ContractClass};
+use starknet::core::types::ContractClass;
+use starknet_api::block::BlockNumber;
 use starknet_api::core::{ClassHash, ContractAddress, Nonce};
 use starknet_api::hash::StarkFelt;
 use starknet_api::state::StorageKey;
@@ -24,7 +25,7 @@ struct ForkCacheContent {
     class_hash_at: HashMap<String, String>,
     compiled_contract_class: HashMap<String, String>,
     compiled_class_hash: HashMap<String, String>,
-    block_info: Option<CheatnetBlockInfo>,
+    block_info: Option<BlockInfo>,
 }
 
 impl ForkCacheContent {
@@ -79,35 +80,19 @@ impl ToString for ForkCacheContent {
 pub struct ForkCache {
     fork_cache_content: ForkCacheContent,
     cache_file: Option<String>,
-    block_id: BlockId,
 }
 
 impl Drop for ForkCache {
     fn drop(&mut self) {
-        if !matches!(self.block_id, BlockId::Tag(_)) {
-            self.save();
-        }
-    }
-}
-
-fn block_id_to_string(block_id: BlockId) -> String {
-    match block_id {
-        BlockId::Hash(x) => Felt252::from_(x).to_str_radix(16),
-        BlockId::Number(x) => x.to_string(),
-        BlockId::Tag(x) => match x {
-            BlockTag::Latest => "latest".to_string(),
-            BlockTag::Pending => unreachable!(),
-        },
+        self.save();
     }
 }
 
 impl ForkCache {
     #[must_use]
-    pub(crate) fn load_or_new(url: &Url, block_id: BlockId, cache_dir: Option<&str>) -> Self {
-        let (fork_cache_content, cache_file) = if let BlockId::Tag(_) = block_id {
-            (ForkCacheContent::new(), None)
-        } else {
-            let cache_file_path = cache_file_path_from_fork_config(url, block_id, cache_dir);
+    pub(crate) fn load_or_new(url: &Url, block_number: BlockNumber, cache_dir: &str) -> Self {
+        let (fork_cache_content, cache_file) = {
+            let cache_file_path = cache_file_path_from_fork_config(url, block_number, cache_dir);
             let mut file = OpenOptions::new()
                 .write(true)
                 .read(true)
@@ -132,7 +117,6 @@ impl ForkCache {
         ForkCache {
             fork_cache_content,
             cache_file,
-            block_id,
         }
     }
 
@@ -279,30 +263,27 @@ impl ForkCache {
             .insert(class_hash_str, contract_class_str);
     }
 
-    pub(crate) fn get_block_info(&self) -> Option<CheatnetBlockInfo> {
+    pub(crate) fn get_block_info(&self) -> Option<BlockInfo> {
         self.fork_cache_content.block_info
     }
 
-    pub(crate) fn cache_get_block_info(&mut self, block_info: CheatnetBlockInfo) {
+    pub(crate) fn cache_get_block_info(&mut self, block_info: BlockInfo) {
         self.fork_cache_content.block_info = Some(block_info);
     }
 }
 
 fn cache_file_path_from_fork_config(
     url: &Url,
-    block_id: BlockId,
-    cache_dir: Option<&str>,
+    block_number: BlockNumber,
+    cache_dir: &str,
 ) -> Utf8PathBuf {
-    let cache_dir = cache_dir.unwrap_or_else(|| {
-        panic!("cache_dir has to be provided if working at a concrete block_number/block_hash")
-    });
     let re = Regex::new(r"[^a-zA-Z0-9]").unwrap();
 
     // Use the replace_all method to replace non-alphanumeric characters with underscores
     let sanitized_path = re.replace_all(url.as_str(), "_").to_string();
 
     let cache_file_path = Utf8PathBuf::from(cache_dir)
-        .join(sanitized_path + "_" + block_id_to_string(block_id).as_str() + ".json");
+        .join(sanitized_path + "_" + block_number.0.to_string().as_str() + ".json");
 
     fs::create_dir_all(cache_file_path.parent().unwrap())
         .expect("Fork cache directory could not be created");

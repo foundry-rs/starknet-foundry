@@ -1,6 +1,7 @@
 use crate::constants::TEST_ADDRESS;
-use crate::constants::{build_block_context, build_transaction_context};
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallContractFailure;
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
+    AddressOrClassHash, CallFailure,
+};
 use crate::state::BlockifierState;
 use crate::CheatnetState;
 use anyhow::Result;
@@ -9,6 +10,7 @@ use blockifier::execution::entry_point::{
     ConstructorContext, EntryPointExecutionContext, ExecutionResources,
 };
 use blockifier::execution::execution_utils::felt_to_stark_felt;
+use runtime::starknet::context::{build_block_context, build_transaction_context};
 use runtime::EnhancedHintError;
 use std::sync::Arc;
 
@@ -38,6 +40,7 @@ pub fn deploy_at(
     calldata: &[Felt252],
     contract_address: ContractAddress,
 ) -> Result<DeployCallPayload, CheatcodeError> {
+    cheatnet_state.trace_info.clear();
     let blockifier_state_raw: &mut dyn State = blockifier_state.blockifier_state;
 
     if let Ok(class_hash) = blockifier_state_raw.get_class_hash_at(contract_address) {
@@ -82,8 +85,10 @@ pub fn deploy_at(
         contract_address,
     })
     .map_err(|err| {
-        let call_contract_failure =
-            CallContractFailure::from_execution_error(&err, &contract_address);
+        let call_contract_failure = CallFailure::from_execution_error(
+            &err,
+            &AddressOrClassHash::ContractAddress(contract_address),
+        );
         CheatcodeError::from(call_contract_failure)
     });
     cheatnet_state.increment_deploy_salt_base();

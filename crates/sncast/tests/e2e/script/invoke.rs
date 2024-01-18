@@ -22,7 +22,7 @@ async fn test_max_fee_too_low() {
     snapbox.assert().success().stderr_matches(indoc! {r"
         ...
         command: script
-        error: Got an exception while executing a hint: Custom Hint Error: Max fee is smaller than the minimal transaction cost (validation plus fee transfer)
+        error: Got an exception while executing a hint: Custom Hint Error: Max fee is smaller than the minimal transaction cost
     "});
 }
 
@@ -46,7 +46,7 @@ async fn test_contract_does_not_exist() {
     snapbox.assert().success().stderr_matches(indoc! {r"
         ...
         command: script
-        error: Got an exception while executing a hint: Custom Hint Error: Contract error
+        error: Got an exception while executing a hint: Custom Hint Error: An error occurred in the called contract [..]
     "});
 }
 
@@ -70,7 +70,7 @@ fn test_wrong_function_name() {
     snapbox.assert().success().stderr_matches(indoc! {r"
         ...
         command: script
-        error: Got an exception while executing a hint: Custom Hint Error: Contract error
+        error: Got an exception while executing a hint: Custom Hint Error: An error occurred in the called contract [..]
     "});
 }
 
@@ -94,6 +94,6 @@ fn test_wrong_calldata() {
     snapbox.assert().success().stderr_matches(indoc! {r"
         ...
         command: script
-        error: Got an exception while executing a hint: Custom Hint Error: Contract error
+        error: Got an exception while executing a hint: Custom Hint Error: An error occurred in the called contract [..]
     "});
 }

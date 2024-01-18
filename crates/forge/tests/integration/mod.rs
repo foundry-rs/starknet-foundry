@@ -21,6 +21,8 @@ mod should_panic;
 mod signing;
 mod spoof;
 mod spy_events;
+mod store_load;
 mod syscalls;
 mod test_state;
+mod trace;
 mod warp;
