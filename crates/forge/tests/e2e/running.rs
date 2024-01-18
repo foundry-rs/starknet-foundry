@@ -1019,6 +1019,7 @@ fn detailed_resources_flag() {
         [..]Compiling[..]
         [..]Finished[..]
         
+        
         Collected 1 test(s) from simple_package package
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
