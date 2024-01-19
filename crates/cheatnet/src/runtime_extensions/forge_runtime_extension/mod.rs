@@ -695,9 +695,7 @@ fn serialize_call_trace(call_trace: &CallTrace) -> Vec<Felt252> {
     output
 }
 
-fn serialize_call_entry_point(
-    call_entry_point: &CallEntryPoint,
-) -> Vec<Felt252> {
+fn serialize_call_entry_point(call_entry_point: &CallEntryPoint) -> Vec<Felt252> {
     let entry_point_type = match call_entry_point.entry_point_type {
         EntryPointType::Constructor => 0,
         EntryPointType::External => 1,
