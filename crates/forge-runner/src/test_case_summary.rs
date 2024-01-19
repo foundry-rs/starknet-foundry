@@ -1,5 +1,6 @@
 use crate::compiled_runnable::TestCaseRunnable;
 use crate::expected_result::{ExpectedPanicValue, ExpectedTestResult};
+use crate::gas::check_available_gas;
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{RunResult, RunResultValue};
@@ -195,13 +196,16 @@ impl TestCaseSummary<Single> {
         let msg = extract_result_data(&run_result, &test_case.expected_result);
         match run_result.value {
             RunResultValue::Success(_) => match &test_case.expected_result {
-                ExpectedTestResult::Success => TestCaseSummary::Passed {
-                    name,
-                    msg,
-                    arguments,
-                    test_statistics: (),
-                    gas_info: gas,
-                },
+                ExpectedTestResult::Success => {
+                    let summary = TestCaseSummary::Passed {
+                        name,
+                        msg,
+                        arguments,
+                        test_statistics: (),
+                        gas_info: gas,
+                    };
+                    check_available_gas(&test_case.available_gas, summary)
+                }
                 ExpectedTestResult::Panics(_) => TestCaseSummary::Failed {
                     name,
                     msg,
