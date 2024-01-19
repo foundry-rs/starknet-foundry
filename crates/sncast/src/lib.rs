@@ -56,6 +56,11 @@ pub enum NumbersFormat {
     Hex,
 }
 
+pub struct BuildConfig {
+    pub scarb_toml_path: Utf8PathBuf,
+    pub json: bool,
+}
+
 impl NumbersFormat {
     #[must_use]
     pub fn from_flags(hex_format: bool, dec_format: bool) -> Self {
