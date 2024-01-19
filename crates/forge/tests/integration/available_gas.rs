@@ -7,7 +7,7 @@ fn correct_available_gas() {
     let test = test_utils::test_case!(indoc!(
         r"
             #[test]
-            #[available_gas(21)]
+            #[available_gas(11)]
             fn keccak_cost() {
                 keccak::keccak_u256s_le_inputs(array![1].span());
             }
@@ -24,7 +24,7 @@ fn available_gas_exceeded() {
     let test = test_utils::test_case!(indoc!(
         r"
             #[test]
-            #[available_gas(20)]
+            #[available_gas(10)]
             fn keccak_cost() {
                 keccak::keccak_u256s_le_inputs(array![1].span());
             }
@@ -46,7 +46,7 @@ fn available_gas_fuzzing() {
     let test = test_utils::test_case!(indoc!(
         r"
             #[test]
-            #[available_gas(21)]
+            #[available_gas(11)]
             fn keccak_cost(x: u256) {
                 keccak::keccak_u256s_le_inputs(array![x].span());
             }
