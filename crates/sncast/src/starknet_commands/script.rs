@@ -415,6 +415,44 @@ fn inject_lib_artifact(
     Ok(artifacts.clone())
 }
 
+// fn compile_script(path_to_scarb_toml: Option<Utf8PathBuf>) -> Result<Utf8PathBuf> {
+//     // let scripts_manifest_path = path_to_scarb_toml.unwrap_or_else(|| {
+//     //     get_scarb_manifest()
+//     //         .context("Failed to retrieve manifest path from scarb")
+//     //         .unwrap()
+//     // });
+//     // ensure!(
+//     //     scripts_manifest_path.exists(),
+//     //     "The path = {scripts_manifest_path} does not exist"
+//     // );
+//
+//     // ScarbCommand::new_with_stdio()
+//     //     .arg("build")
+//     //     .manifest_path(&scripts_manifest_path)
+//     //     .run()
+//     //     .context("failed to compile script with scarb")?;
+//
+//     let metadata = get_scarb_metadata_with_deps(&scripts_manifest_path)?;
+//
+//     warn_if_sncast_std_not_compatible(&metadata)?;
+//
+//     let package_metadata = get_package_metadata(&metadata, &scripts_manifest_path)?;
+//
+//     let filename = format!("{}.sierra.json", package_metadata.name);
+//     let path = metadata
+//         .target_dir
+//         .unwrap_or(metadata.workspace.root.join("target"))
+//         .join(metadata.current_profile)
+//         .join(filename.clone());
+//
+//     ensure!(
+//         path.exists(),
+//         "The package has not been compiled, the file at path = {path} does not exist"
+//     );
+//
+//     Ok(path)
+// }
+
 // taken from starknet-foundry/crates/forge/src/test_case_summary.rs
 /// Helper function to build `readable_text` from a run data.
 // TODO #1127
