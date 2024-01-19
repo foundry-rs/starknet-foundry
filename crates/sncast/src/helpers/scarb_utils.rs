@@ -1,5 +1,4 @@
 use super::constants::{WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
-use crate::BuildConfig;
 use anyhow::{anyhow, bail, Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
 use scarb_api::{get_contracts_map, ScarbCommand, StarknetContractArtifacts};
@@ -51,6 +50,11 @@ impl Default for CastConfig {
             wait_retry_interval: WAIT_RETRY_INTERVAL,
         }
     }
+}
+
+pub struct BuildConfig {
+    pub scarb_toml_path: Utf8PathBuf,
+    pub json: bool,
 }
 
 pub trait PropertyFromCastConfig: Sized {
@@ -192,7 +196,7 @@ pub fn get_scarb_metadata_with_deps(
     execute_scarb_metadata_command(&command)
 }
 
-#[must_use]
+#[must_use] //todo :remove
 pub fn verify_or_determine_scarb_manifest_path(
     path_to_scarb_toml: &Option<Utf8PathBuf>,
 ) -> Option<Utf8PathBuf> {
