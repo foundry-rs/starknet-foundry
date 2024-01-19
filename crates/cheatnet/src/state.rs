@@ -157,6 +157,13 @@ impl NotEmptyCallStack {
         self.0.push(elem);
     }
 
+    pub fn top(&mut self) -> Rc<RefCell<CallTrace>> {
+        let top_val = self.0.pop().unwrap();
+        let borrowed_ref = top_val.clone();
+        self.0.push(top_val);
+        borrowed_ref
+    }
+
     pub fn pop(&mut self) -> Rc<RefCell<CallTrace>> {
         assert!(self.0.len() > 1, "You cannot make NotEmptyCallStack empty");
         self.0.pop().unwrap()
@@ -295,14 +302,13 @@ impl TraceData {
             entry_point,
             nested_calls: vec![],
         }));
-        let current_call = self.current_call_stack.pop();
+        let current_call = self.current_call_stack.top();
 
         current_call
             .borrow_mut()
             .nested_calls
             .push(new_call.clone());
 
-        self.current_call_stack.push(current_call);
         self.current_call_stack.push(new_call);
     }
 
