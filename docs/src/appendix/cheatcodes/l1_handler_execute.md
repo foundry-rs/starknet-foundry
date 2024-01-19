@@ -11,7 +11,7 @@ arriving from Ethereum.
 > Execution of the `#[l1_handler]` function may panic like any other function.
 > If you'd like to assert the panic data, use `RevertedTransaction` returned by the function.
 > It works like a regular `SafeDispatcher` would with a function call.
-> For more info check out [handling panic errors](../../testing/contracts.html#handling-errors)
+> For more info check out [handling panic errors](../../testing/contracts.md#handling-errors)
 
 
 ```rust

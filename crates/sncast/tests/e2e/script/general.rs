@@ -101,3 +101,28 @@ async fn test_fail_when_using_starknet_syscall() {
         error: Got an exception while executing a hint: Custom Hint Error: Starknet syscalls are not supported
     "});
 }
+
+#[tokio::test]
+async fn test_incompatible_sncast_std_version() {
+    let script_name = "map_script";
+    let args = vec![
+        "--accounts-file",
+        "../../../accounts/accounts.json",
+        "--account",
+        "user4",
+        "--url",
+        URL,
+        "script",
+        &script_name,
+    ];
+
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(SCRIPTS_DIR.to_owned() + "/old_sncast_std/scripts")
+        .args(args);
+
+    snapbox.assert().success().stdout_matches(indoc! {r"
+        ...
+        Warning: Package sncast_std version does not meet the recommended version requirement =0.14.0, it might result in unexpected behaviour
+        ...
+    "});
+}

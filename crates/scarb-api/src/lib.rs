@@ -3,14 +3,13 @@ use camino::{Utf8Path, Utf8PathBuf};
 use scarb_metadata::{CompilationUnitMetadata, Metadata, PackageId};
 use semver::{Version, VersionReq};
 use serde::Deserialize;
-use serde_json::Value;
 use std::collections::HashMap;
 use std::fs;
 use std::str::from_utf8;
 
 pub use command::*;
 use regex::Regex;
-use sierra_casm::compile;
+use universal_sierra_compiler_api::compile_sierra;
 
 mod command;
 
@@ -54,7 +53,10 @@ impl StarknetContractArtifacts {
         let sierra = fs::read_to_string(sierra_path)?;
 
         let casm = match &starknet_contract.artifacts.casm {
-            None => String::new(),
+            None => compile_sierra(
+                starknet_contract.artifacts.sierra.as_str(),
+                Some(base_path.as_std_path()),
+            )?,
             Some(casm_path) => fs::read_to_string(base_path.join(casm_path))?,
         };
 
@@ -120,18 +122,7 @@ pub fn get_contracts_map(
         try_get_starknet_artifacts_path(&target_dir, &target_name, &metadata.current_profile)?;
 
     let map = match maybe_contracts_path {
-        Some(contracts_path) => {
-            let mut contracts = load_contract_artifacts(&contracts_path)?;
-
-            for (_, artifact) in &mut contracts.iter_mut() {
-                if artifact.casm.is_empty() {
-                    let sierra: Value = serde_json::from_str(&artifact.sierra)?;
-                    artifact.casm = serde_json::to_string(&compile(sierra)?)?;
-                }
-            }
-
-            contracts
-        }
+        Some(contracts_path) => load_contract_artifacts(&contracts_path)?,
         None => HashMap::default(),
     };
     Ok(map)

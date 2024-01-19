@@ -1,7 +1,8 @@
 use std::collections::HashMap;
 
 use blockifier::execution::contract_class::ContractClass;
-use blockifier::state::cached_state::ContractStorageKey;
+use blockifier::state::cached_state::StorageEntry;
+
 use blockifier::state::errors::StateError;
 use blockifier::state::state_api::{StateReader, StateResult};
 
@@ -15,7 +16,7 @@ use starknet_api::{
 /// A simple implementation of `StateReader` using `HashMap`s as storage.
 #[derive(Debug, Default)]
 pub struct DictStateReader {
-    pub storage_view: HashMap<ContractStorageKey, StarkFelt>,
+    pub storage_view: HashMap<StorageEntry, StarkFelt>,
     pub address_to_nonce: HashMap<ContractAddress, Nonce>,
     pub address_to_class_hash: HashMap<ContractAddress, ClassHash>,
     pub class_hash_to_class: HashMap<ClassHash, ContractClass>,
@@ -28,9 +29,8 @@ impl StateReader for DictStateReader {
         contract_address: ContractAddress,
         key: StorageKey,
     ) -> StateResult<StarkFelt> {
-        let contract_storage_key = (contract_address, key);
         self.storage_view
-            .get(&contract_storage_key)
+            .get(&(contract_address, key))
             .copied()
             .ok_or(StateError::StateReadError(format!(
                 "Unable to get storage at address: {contract_address:?} and key: {key:?} form DictStateReader"

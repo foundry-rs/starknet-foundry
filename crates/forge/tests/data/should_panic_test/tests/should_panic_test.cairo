@@ -33,7 +33,19 @@ fn didnt_expect_panic() {
 }
 
 #[test]
-#[should_panic(expected: (0,))]
+#[should_panic]
 fn expected_panic_but_didnt() {
+    assert(1 == 1, 'err');
+}
+
+#[test]
+#[should_panic(expected: 'panic message')]
+fn expected_panic_but_didnt_with_expected() {
+    assert(1 == 1, 'err');
+}
+
+#[test]
+#[should_panic(expected: ('panic message', 'second message',))]
+fn expected_panic_but_didnt_with_expected_multiple() {
     assert(1 == 1, 'err');
 }

@@ -19,6 +19,7 @@ cheatnet = { path = "../cheatnet" }
 conversions = { path = "../conversions" }
 scarb-api = { path = "../scarb-api" }
 forge_runner = { path = "../forge-runner" }
+universal-sierra-compiler-api = { path = "../universal-sierra-compiler-api" }
 cairo-lang-runner.workspace = true
 cairo-lang-casm.workspace = true
 cairo-lang-sierra-to-casm.workspace = true
@@ -49,13 +50,13 @@ schemars = { version = "0.8.12", features = ["preserve_order"] }
 parity-scale-codec = "3.5.0"
 parity-scale-codec-derive = "3.6.5"
 snapbox.workspace = true
-cairo-vm = "0.8.1"
+cairo-vm.workspace = true
 ark-ff = "0.4.0-alpha.7"
 ark-std = "0.4.0"
 ark-secp256k1 = "0.4.0"
 ark-secp256r1 = "0.4.0"
 openssl = { version = "0.10", features = ["vendored"] }
-toml_edit = "0.20.7"
+toml_edit = "0.21.0"
 flatten-serde-json.workspace = true
 smol_str.workspace = true
 tokio.workspace = true

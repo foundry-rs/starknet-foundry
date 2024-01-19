@@ -4,11 +4,12 @@ body:
   - type: dropdown
     id: tool-name
     attributes:
-      label: Which components does the task require to be changed?
+      label: Which components does the task require to be changed? (think hard pls)
       multiple: true
       options:
         - snforge
         - sncast
+        - other (describe below)
     validations:
       required: true
 

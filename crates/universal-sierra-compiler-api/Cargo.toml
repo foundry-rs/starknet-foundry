@@ -1,5 +1,5 @@
 [package]
-name = "scarb-api"
+name = "universal-sierra-compiler-api"
 version = "1.0.0"
 edition.workspace = true
 
@@ -15,5 +15,3 @@ serde_json.workspace = true
 thiserror.workspace = true
 which.workspace = true
 semver.workspace = true
-universal-sierra-compiler-api = { path = "../universal-sierra-compiler-api" }
-regex.workspace = true
