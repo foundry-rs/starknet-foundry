@@ -10,7 +10,10 @@ use sncast::response::print::{print_command_result, OutputFormat};
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand};
 use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
-use sncast::helpers::scarb_utils::{build, get_scarb_manifest, parse_scarb_config, BuildConfig, CastConfig, get_scarb_metadata_with_deps, get_package_metadata};
+use sncast::helpers::scarb_utils::{
+    build, get_package_metadata, get_scarb_manifest, get_scarb_metadata_with_deps,
+    parse_scarb_config, BuildConfig, CastConfig,
+};
 use sncast::{
     chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_nonce, get_provider,
     NumbersFormat, WaitForTx,
@@ -130,11 +133,12 @@ fn main() -> Result<()> {
         let mut artifacts = build(&BuildConfig {
             scarb_toml_path: manifest_path.clone(),
             json: cli.json,
-        }).expect("Failed to build script");
+        })
+        .expect("Failed to build script");
         let mut result = starknet_commands::script::run(
             &script.script_module_name,
             &metadata,
-            &package_metadata,
+            package_metadata,
             &mut artifacts,
             &provider,
             runtime,

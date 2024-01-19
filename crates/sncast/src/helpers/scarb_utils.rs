@@ -196,7 +196,7 @@ pub fn get_scarb_metadata_with_deps(
     execute_scarb_metadata_command(&command)
 }
 
-#[must_use] //todo :remove
+#[must_use]
 pub fn verify_or_determine_scarb_manifest_path(
     path_to_scarb_toml: &Option<Utf8PathBuf>,
 ) -> Option<Utf8PathBuf> {

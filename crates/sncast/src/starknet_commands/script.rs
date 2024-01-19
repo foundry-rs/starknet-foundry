@@ -22,7 +22,6 @@ use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::vm_core::VirtualMachine;
-use camino::Utf8PathBuf;
 use clap::command;
 use clap::Args;
 use conversions::{FromConv, IntoConv};
@@ -37,9 +36,8 @@ use runtime::{
 use scarb_api::{package_matches_version_requirement, StarknetContractArtifacts};
 use scarb_metadata::{Metadata, PackageMetadata};
 use semver::{Comparator, Op, Version, VersionReq};
-use sncast::helpers::scarb_utils::{
-    build, get_package_metadata, get_scarb_manifest, get_scarb_metadata_with_deps, BuildConfig, CastConfig,
-};
+use sncast::helpers::constants::SCRIPT_LIB_ARTIFACT_NAME;
+use sncast::helpers::scarb_utils::CastConfig;
 use sncast::response::print::print_as_warning;
 use sncast::response::structs::ScriptResponse;
 use starknet::accounts::Account;
@@ -259,11 +257,12 @@ pub fn run(
     tokio_runtime: Runtime,
     config: &CastConfig,
 ) -> Result<ScriptResponse> {
-    warn_if_sncast_std_not_compatible(&metadata)?;
-    ensure_lib_artifact(&metadata, package_metadata, artifacts)?;
+    warn_if_sncast_std_not_compatible(metadata)?;
+    ensure_lib_artifact(metadata, package_metadata, artifacts)?;
 
-    let artifact = artifacts.get("__sncast_script_lib")
-        .ok_or(anyhow!("Failed to find script artifact."))?;
+    let artifact = artifacts
+        .get(SCRIPT_LIB_ARTIFACT_NAME)
+        .ok_or(anyhow!("Failed to find script artifact"))?;
 
     let sierra_program = serde_json::from_str::<VersionedProgram>(&artifact.sierra)
         .with_context(|| "Failed to deserialize Sierra program")?
@@ -325,7 +324,7 @@ pub fn run(
         provider,
         tokio_runtime,
         config,
-        artifacts: &artifacts,
+        artifacts,
     };
 
     let mut cast_runtime = ExtendedRuntime {
@@ -404,7 +403,7 @@ fn ensure_lib_artifact(
         casm: String::new(),
     };
 
-    artifacts.insert("__sncast_script_lib".to_string(), lib_artifacts);
+    artifacts.insert(SCRIPT_LIB_ARTIFACT_NAME.to_string(), lib_artifacts);
     Ok(artifacts.clone())
 }
 
