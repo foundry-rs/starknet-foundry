@@ -1,17 +1,16 @@
 use anyhow::{anyhow, Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
 use scarb_metadata::{CompilationUnitMetadata, Metadata, PackageId};
-use semver::{Version, VersionReq};
+use semver::VersionReq;
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::fs;
-use std::str::from_utf8;
 
 pub use command::*;
-use regex::Regex;
 use universal_sierra_compiler_api::compile_sierra;
 
 mod command;
+pub mod version;
 
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 struct StarknetArtifacts {
@@ -201,30 +200,6 @@ pub fn package_matches_version_requirement(
         [package] => Ok(version_req.matches(&package.version)),
         _ => Err(anyhow!("Package {name} is duplicated in dependencies")),
     }
-}
-
-#[must_use]
-pub fn scarb_version() -> Version {
-    let scarb_version = ScarbCommand::new()
-        .arg("--version")
-        .command()
-        .output()
-        .context("Failed to execute `scarb --version`")
-        .unwrap();
-    let version_output = from_utf8(&scarb_version.stdout)
-        .context("Failed to parse `scarb --version` output to UTF-8")
-        .unwrap();
-
-    let scarb_version_regex = Regex::new(r"(?:scarb?\s*)([0-9]+.[0-9]+.[0-9]+)")
-        .expect("Could not create scarb version matching regex");
-    let scarb_version_capture = scarb_version_regex
-        .captures(version_output)
-        .expect("Could not find scarb version");
-    let scarb_version = scarb_version_capture
-        .get(1)
-        .expect("Could not find scarb version")
-        .as_str();
-    Version::parse(scarb_version).expect("Failed to parse scarb version")
 }
 
 #[cfg(test)]

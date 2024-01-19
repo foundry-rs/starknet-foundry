@@ -2,7 +2,8 @@ use anyhow::{anyhow, Context, Ok, Result};
 
 use include_dir::{include_dir, Dir};
 
-use scarb_api::{scarb_version, ScarbCommand};
+use scarb_api::version::scarb_version_command;
+use scarb_api::ScarbCommand;
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::Path;
@@ -104,13 +105,12 @@ pub fn run(project_name: &str) -> Result<()> {
         .run()
         .context("Failed to add snforge_std")?;
 
-    // We can assume Cairo and Scarb versions are the same
-    let scarb_version = scarb_version();
+    let cairo_version = scarb_version_command().cairo;
     ScarbCommand::new_with_stdio()
         .current_dir(&project_path)
         .offline()
         .arg("add")
-        .arg(format!("starknet@{scarb_version}"))
+        .arg(format!("starknet@{cairo_version}"))
         .run()
         .context("Failed to add starknet")?;
 
