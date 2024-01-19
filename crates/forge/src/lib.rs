@@ -176,8 +176,8 @@ fn warn_if_available_gas_used_with_incompatible_scarb_version(
         for case in &test_crate.test_cases {
             if case.available_gas == Some(0) && scarb_version() <= Version::new(2, 5, 0) {
                 print_warning(&anyhow!(
-                    "`available_gas` attribute was probably specified when using Scarb ~2.4. \
-                    Make sure to use Scarb >=2.5.0"
+                    "`available_gas` attribute was probably specified when using Scarb ~2.4.3 \
+                    Make sure to use Scarb >=2.4.4"
                 ));
             }
         }

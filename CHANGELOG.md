@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `store` and `load` cheatcodes
 - dependency on [universal-sierra-compiler](https://github.com/software-mansion/universal-sierra-compiler/blob/master/scripts/install.sh) binary
 
+#### Changed
+
+- `available_gas` attribute is now supported (Scarb >= 2.4.4 is required)
+
 #### Fixed
 
 - Error message for tests that should panic but pass
@@ -32,7 +36,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `mean` and `std deviation` fields are displayed for gas usage while running fuzzing tests 
 - Cairo edition in `snforge_std` and `sncast_std` set to `2023_10`
 - `snforge_std::signature` module with `stark_curve`, `secp256k1_curve` and `secp256r1_curve` submodules
-- `available_gas` attribute is now supported
 
 #### Fixed
 

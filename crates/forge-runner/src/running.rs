@@ -200,7 +200,7 @@ pub fn run_test_case(
 ) -> Result<RunResultWithInfo> {
     ensure!(
         case.available_gas != Some(0),
-        "\n\t`available_gas` attribute was incorrectly configured. Make sure you use scarb >= 2.5.0\n"
+        "\n\t`available_gas` attribute was incorrectly configured. Make sure you use scarb >= 2.4.4\n"
     );
 
     let func = runner.find_function(case.name.as_str()).unwrap();

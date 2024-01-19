@@ -3938,6 +3938,7 @@ dependencies = [
  "assert_fs",
  "camino",
  "indoc",
+ "regex",
  "scarb-metadata",
  "scarb-ui",
  "semver",
