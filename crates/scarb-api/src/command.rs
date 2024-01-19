@@ -2,10 +2,14 @@ use anyhow::Context;
 use scarb_ui::args::PackagesFilter;
 use std::collections::HashMap;
 use std::ffi::{OsStr, OsString};
+use std::marker::PhantomData;
 use std::path::PathBuf;
-use std::process::{Command, Stdio};
+use std::process::{Command, Output};
 use std::{env, io};
 use thiserror::Error;
+
+use crate::output_transform::{PassByPrint, PrintOutput};
+use crate::ScarbMetadataCommand;
 
 /// Error thrown while trying to execute `scarb` command.
 #[derive(Error, Debug)]
@@ -16,25 +20,28 @@ pub enum ScarbCommandError {
     Io(#[from] io::Error),
     /// Error during execution of `scarb` command.
     #[error("`scarb` exited with error")]
-    ScarbError,
+    ScarbError { stdout: String, stderr: String },
 }
 
 /// A builder for `scarb` command invocation.
 #[derive(Clone, Debug, Default)]
 #[allow(clippy::struct_excessive_bools)]
-pub struct ScarbCommand {
+pub struct ScarbCommand<Stdout, Stderr> {
     args: Vec<OsString>,
     current_dir: Option<PathBuf>,
     env: HashMap<OsString, Option<OsString>>,
-    inherit_stderr: bool,
-    inherit_stdout: bool,
+    env_clear: bool,
+    print_stderr: bool,
+    print_stdout: bool,
     json: bool,
     offline: bool,
     manifest_path: Option<PathBuf>,
     scarb_path: Option<PathBuf>,
+    stdout_print: PhantomData<Stdout>,
+    stderr_print: PhantomData<Stderr>,
 }
 
-impl ScarbCommand {
+impl ScarbCommand<PassByPrint, PassByPrint> {
     /// Creates a default `scarb` command, which will look for `scarb` in `$PATH` and
     /// for `Scarb.toml` in the current directory or its ancestors.
     #[must_use]
@@ -46,9 +53,60 @@ impl ScarbCommand {
     #[must_use]
     pub fn new_with_stdio() -> Self {
         let mut cmd = Self::new();
-        cmd.inherit_stderr();
-        cmd.inherit_stdout();
+
+        cmd.print_stderr().print_stdout();
+
         cmd
+    }
+}
+
+macro_rules! impl_print {
+    ($self:expr) => {
+        ScarbCommand {
+            args: $self.args,
+            current_dir: $self.current_dir,
+            env: $self.env,
+            env_clear: $self.env_clear,
+            print_stderr: $self.print_stderr,
+            print_stdout: $self.print_stdout,
+            json: $self.json,
+            manifest_path: $self.manifest_path,
+            offline: $self.offline,
+            scarb_path: $self.scarb_path,
+            stderr_print: PhantomData,
+            stdout_print: PhantomData,
+        }
+    };
+}
+
+impl<Stdout, Stderr> ScarbCommand<Stdout, Stderr> {
+    /// Print standard output, i.e. captures and format Scarb output, then writes in this process's standard output
+    pub fn use_custom_print_stdout<T>(mut self) -> ScarbCommand<T, Stderr>
+    where
+        T: PrintOutput,
+    {
+        self.print_stdout();
+
+        impl_print!(self)
+    }
+
+    /// Print standard error, i.e. captures and format Scarb error, then writes in this process's standard error
+    pub fn use_custom_print_stderr<T>(mut self) -> ScarbCommand<Stdout, T>
+    where
+        T: PrintOutput,
+    {
+        self.print_stderr();
+
+        impl_print!(self)
+    }
+
+    /// Creates [`ScarbMetadataCommand`] from this command
+    pub fn metadata(&self) -> ScarbMetadataCommand<Stdout, Stderr>
+    where
+        Stdout: PrintOutput,
+        Stderr: PrintOutput,
+    {
+        ScarbMetadataCommand::new(self.clone())
     }
 
     /// Ensures that `scarb` binary is available in the system.
@@ -133,15 +191,24 @@ impl ScarbCommand {
         self
     }
 
-    /// Inherit standard error, i.e. show Scarb errors in this process's standard error.
-    pub fn inherit_stderr(&mut self) -> &mut Self {
-        self.inherit_stderr = true;
+    /// Clears the entire environment map for the child process.
+    pub fn env_clear(&mut self) -> &mut Self {
+        self.env.clear();
+        self.env_clear = true;
         self
     }
 
-    /// Inherit standard output, i.e. show Scarb output in this process's standard output.
-    pub fn inherit_stdout(&mut self) -> &mut Self {
-        self.inherit_stdout = true;
+    /// Enable manipulation of standard error
+    /// if not set with [`Self::use_custom_print_stderr()`] writes to this process standard error
+    pub fn print_stderr(&mut self) -> &mut Self {
+        self.print_stderr = true;
+        self
+    }
+
+    /// Enable manipulation of standard output
+    /// if not set with [`Self::use_custom_print_stdout()`] writes to this process standard output
+    pub fn print_stdout(&mut self) -> &mut Self {
+        self.print_stdout = true;
         self
     }
 
@@ -190,12 +257,8 @@ impl ScarbCommand {
             }
         }
 
-        if self.inherit_stderr {
-            cmd.stderr(Stdio::inherit());
-        }
-
-        if self.inherit_stdout {
-            cmd.stdout(Stdio::inherit());
+        if self.env_clear {
+            cmd.env_clear();
         }
 
         cmd
@@ -209,12 +272,27 @@ impl ScarbCommand {
     }
 
     /// Runs configured `scarb` command.
-    pub fn run(&self) -> Result<(), ScarbCommandError> {
-        let mut cmd = self.command();
-        if cmd.status()?.success() {
-            Ok(())
+    pub fn run(&self) -> Result<Output, ScarbCommandError>
+    where
+        Stdout: PrintOutput,
+        Stderr: PrintOutput,
+    {
+        let output = self.command().output()?;
+
+        if output.status.success() {
+            if self.print_stdout {
+                Stdout::print_stdout(&output.stdout)?;
+            }
+            if self.print_stderr {
+                Stderr::print_stderr(&output.stderr)?;
+            }
+
+            Ok(output)
         } else {
-            Err(ScarbCommandError::ScarbError)
+            Err(ScarbCommandError::ScarbError {
+                stdout: String::from_utf8_lossy(&output.stdout).into(),
+                stderr: String::from_utf8_lossy(&output.stderr).into(),
+            })
         }
     }
 }

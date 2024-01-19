@@ -108,7 +108,7 @@ pub fn run(project_name: &str) -> Result<()> {
 
     let scarb_version = ScarbCommand::new()
         .arg("--version")
-        .inherit_stderr()
+        .print_stderr()
         .command()
         .output()
         .context("Failed to execute `scarb --version`")?;

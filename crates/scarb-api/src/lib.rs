@@ -7,9 +7,12 @@ use std::collections::HashMap;
 use std::fs;
 
 pub use command::*;
+pub use metadata_command::*;
 use universal_sierra_compiler_api::compile_sierra;
 
 mod command;
+mod metadata_command;
+mod output_transform;
 
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 struct StarknetArtifacts {
