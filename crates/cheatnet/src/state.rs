@@ -157,6 +157,7 @@ impl NotEmptyCallStack {
     }
 
     pub fn pop(&mut self) -> Rc<RefCell<CallTrace>> {
+        assert!(self.0.len() > 1, "You cannot make NotEmptyCallStack empty");
         self.0.pop().unwrap()
     }
 
