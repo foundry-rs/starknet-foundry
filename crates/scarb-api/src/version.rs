@@ -21,7 +21,7 @@ pub fn scarb_version_command() -> Result<ScarbVersionOutput> {
 
     Ok(ScarbVersionOutput {
         scarb: extract_version(version_output, "scarb")?,
-        cairo: extract_version(version_output, "cairo")?,
+        cairo: extract_version(version_output, "cairo:")?,
     })
 }
 
@@ -33,10 +33,10 @@ fn extract_version(version_output: &str, tool: &str) -> Result<Version> {
         .captures(version_output)
         .context(format!("Could not find {tool} version"))?;
 
-    let scarb_version = version_capture
+    let version = version_capture
         .get(1)
-        .context("Could not find {tool} version")?
+        .context(format!("Could not find {tool} version"))?
         .as_str();
 
-    Version::parse(scarb_version).context(format!("Failed to parse {tool} version"))
+    Version::parse(version).context(format!("Failed to parse {tool} version"))
 }
