@@ -145,12 +145,27 @@ pub struct CallTrace {
     pub nested_calls: Vec<Rc<RefCell<CallTrace>>>,
 }
 
+struct NotEmptyCallStack(Vec<Rc<RefCell<CallTrace>>>);
+
+impl NotEmptyCallStack {
+    pub fn from(elem: Rc<RefCell<CallTrace>>) -> Self {
+        NotEmptyCallStack(vec![elem])
+    }
+
+    pub fn push(&mut self, elem: Rc<RefCell<CallTrace>>)  {
+        self.0.push(elem)
+    }
+
+    pub fn pop(&mut self) -> Rc<RefCell<CallTrace>> {
+        self.0.pop().unwrap()
+    }
+}
+
 pub struct TraceData {
     /// Trace of calls made in a test.
     /// The root `CallTrace` symbolizes calling the test code.
     pub call_trace: Rc<RefCell<CallTrace>>,
-    /// Pointer to the call we are currently in.
-    pub current_call: Rc<RefCell<CallTrace>>,
+    pub current_call_stack: NotEmptyCallStack,
 }
 
 pub struct CheatnetState {
@@ -177,7 +192,7 @@ pub struct CheatnetState {
 
 impl Default for CheatnetState {
     fn default() -> Self {
-        let call_trace = Rc::new(RefCell::new(CallTrace {
+        let test_call = Rc::new(RefCell::new(CallTrace {
             entry_point: build_test_entry_point(),
             nested_calls: vec![],
         }));
@@ -199,8 +214,8 @@ impl Default for CheatnetState {
             block_info: Default::default(),
             used_resources: Default::default(),
             trace_data: TraceData {
-                call_trace: call_trace.clone(),
-                current_call: call_trace,
+                call_trace: test_call.clone(),
+                current_call_stack: NotEmptyCallStack::from(test_call),
             }
         }
     }
@@ -269,19 +284,27 @@ impl CheatnetState {
     pub fn get_cheated_caller_address(&self, address: &ContractAddress) -> Option<ContractAddress> {
         get_cheat_for_contract(&self.global_prank, &self.pranked_contracts, address)
     }
+}
 
+impl TraceData {
     pub fn enter_nested_call(&mut self, entry_point: CallEntryPoint) {
         let new_call = Rc::new(RefCell::new(CallTrace {
             entry_point,
             nested_calls: vec![],
         }));
-        self.trace_data
-            .current_call
+        let current_call = self.current_call_stack.pop();
+
+        current_call
             .borrow_mut()
             .nested_calls
-            .push(new_call.clone());
+            .push(new_call);
+        
+        self.current_call_stack.push(current_call);
+        self.current_call_stack.push(new_call.clone());
+    }
 
-        self.trace_data.current_call = new_call;
+    pub fn exit_nested_call(&mut self) {
+        self.current_call_stack.pop();
     }
 }
 
