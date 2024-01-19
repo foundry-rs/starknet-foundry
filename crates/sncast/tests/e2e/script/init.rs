@@ -6,7 +6,7 @@ use sncast::helpers::scarb_utils::get_cairo_version;
 use tempfile::TempDir;
 
 #[test]
-fn test_script_init_files_created() {
+fn test_script_happy_case() {
     let script_name = "my_script";
     let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
 
