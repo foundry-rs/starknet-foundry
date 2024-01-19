@@ -1,10 +1,12 @@
 use super::constants::{WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
+use crate::BuildConfig;
 use anyhow::{anyhow, bail, Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
-use scarb_api::ScarbCommand;
+use scarb_api::{get_contracts_map, ScarbCommand, StarknetContractArtifacts};
 use scarb_metadata;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::collections::HashMap;
 use std::default::Default;
 use std::env;
 use std::fs::canonicalize;
@@ -274,6 +276,23 @@ pub fn get_package_tool_sncast(metadata: &scarb_metadata::Metadata) -> Result<&V
         .ok_or_else(|| anyhow!("No field [tool.sncast] found in package"))?;
 
     Ok(tool_sncast)
+}
+
+pub fn build(config: &BuildConfig) -> Result<HashMap<String, StarknetContractArtifacts>> {
+    let mut cmd = ScarbCommand::new_with_stdio();
+    cmd.arg("build").manifest_path(&config.scarb_toml_path);
+    if config.json {
+        cmd.json();
+    }
+    cmd.run()
+        .map_err(|e| anyhow!(format!("Failed to build using scarb; {e}")))?;
+
+    let metadata = get_scarb_metadata_command(&config.scarb_toml_path)?
+        .exec()
+        .expect("Failed to obtain metadata");
+    let package = get_package_metadata(&metadata, &config.scarb_toml_path)
+        .with_context(|| anyhow!("Failed to find package"))?;
+    get_contracts_map(&metadata, &package.id)
 }
 
 #[cfg(test)]

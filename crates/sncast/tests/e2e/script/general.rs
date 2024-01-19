@@ -74,7 +74,8 @@ async fn test_run_script_from_different_directory_no_path_to_scarb_toml() {
     snapbox.assert().success().stderr_matches(indoc! {r"
         ...
         command: script
-        error: The path = [..] does not exist
+        error: Failed to read the `Scarb.toml` manifest file. Doesn't exist in the current or parent directories[..]
+        ...
     "});
 }
 
