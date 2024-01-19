@@ -5,16 +5,10 @@ In this section, we will walk through the process of installing Starknet Foundry
 
 ### Requirements
 
-To use Starknet Foundry, you need:
-
-- [Scarb](https://docs.swmansion.com/scarb/download.html)
-- [Universal-Sierra-Compiler](https://github.com/software-mansion/universal-sierra-compiler)
-
-both installed and added to your `PATH` environment variable.
-
-> 📝 **Note**
-> 
-> `Universal-Sierra-Compiler` will be automatically installed if you use `snfoundryup` or `asdf`
+To use Starknet Foundry, you need [Scarb](https://docs.swmansion.com/scarb/download.html) installed
+and added to your `PATH` environment variable.
+You can find what version of Scarb is compatible with your version of Starknet Foundry
+in [release notes](https://github.com/foundry-rs/starknet-foundry/releases).
 
 ### Install via `snfoundryup`
 
@@ -51,14 +45,6 @@ asdf install starknet-foundry latest
 ```
 
 See [asdf guide](https://asdf-vm.com/guide/getting-started.html) for more details.
-
-### Universal-Sierra-Compiler update
-
-If you would like to bump the USC manually (e.g. when the new Sierra version is released) you can do it by running:
-
-```shell
-curl -L https://raw.githubusercontent.com/software-mansion/universal-sierra-compiler/master/scripts/install.sh | sh
-```
 
 ## How to build Starknet Foundry from source code
 

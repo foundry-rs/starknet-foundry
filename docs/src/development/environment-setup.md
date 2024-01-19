@@ -26,7 +26,6 @@ $ cargo check
 > Make sure you run `./scripts/install_devnet.sh`
 > and then set [Scarb](https://docs.swmansion.com/scarb/) version 
 > [compatible](https://github.com/foundry-rs/starknet-foundry/releases) with both `snforge` and `sncast`
-> and use the newest [universal-sierra-compiler](https://github.com/software-mansion/universal-sierra-compiler)
 > after setting up the development environment, otherwise the tests will fail.
 
 Tests can be run with:
