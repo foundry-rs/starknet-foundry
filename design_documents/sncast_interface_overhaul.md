@@ -35,16 +35,16 @@ $ sncast declare to::contract
 $ sncast declare contract
 
 $ # contract is ambiguous - there are multiple contracts named 'contract' in multiple packages
-$ sncast --package packagea declare contract
+$ sncast declare --package packagea contract
 ```
 
 In case there is only one script module/contract with specified name in workspace, only this name can be used to target it.
 Otherwise, if it is ambiguous in the context of workspace, we should show all matches with full paths (along with package names),
-to let user decide which one to use. The `--package` flag would then be required, and would indicate which package to use.
+to let user decide which one to use.
 
 This change would mean that from now on we will have unified interface for declare/script, always assume we're in some workspace/package, 
 the `--path-to-scarb-toml` flag can be removed.
 
 ## Implementation
-As much things as possible should be imported from scarb-api crate. The mechanism for path matching could use scarb's 
-package filter mechanism underneath, but probably shouldn't be exposed to the cast interface.
+As much things as possible should be imported from scarb-api crate. The mechanism for path matching should take under
+account whole words between `::`, so (having examples above in mind) `contract` should be matched, but `tract` shouldn't.  
