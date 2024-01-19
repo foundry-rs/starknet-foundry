@@ -140,7 +140,6 @@ pub enum CheatStatus<T> {
 }
 
 /// Tree structure representing trace of a call.
-#[derive(Serialize, Deserialize)]
 pub struct CallTrace {
     pub entry_point: crate::blockifier_structs::CallEntryPoint,
     pub nested_calls: Vec<Rc<RefCell<CallTrace>>>,
