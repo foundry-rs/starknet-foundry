@@ -10,7 +10,7 @@ fn trace_deploy() {
     let test = test_case!(
         indoc!(
             r#"
-            use snforge_std::{declare, ContractClassTrait, test_address};
+            use snforge_std::{declare, ContractClassTrait, test_address, test_selector};
             use snforge_std::trace::{CallEntryPoint, CallType, EntryPointType, get_call_trace, CallTrace};
             
             use starknet::{SyscallResultTrait, deploy_syscall, ContractAddress};
@@ -48,7 +48,7 @@ fn trace_deploy() {
                 let expected_trace = CallTrace {
                     entry_point: CallEntryPoint {
                         entry_point_type: EntryPointType::External,
-                        entry_point_selector: selector!("TEST_CONTRACT_SELECTOR"),
+                        entry_point_selector: test_selector(),
                         calldata: array![],
                         contract_address: test_address(),
                         caller_address: 0.try_into().unwrap(),
@@ -154,7 +154,7 @@ fn trace_call() {
     let test = test_case!(
         indoc!(
             r#"
-            use snforge_std::{declare, ContractClassTrait, test_address, start_prank, CheatTarget};
+            use snforge_std::{declare, ContractClassTrait, test_address, test_selector, start_prank, CheatTarget};
             use snforge_std::trace::{CallTrace, CallEntryPoint, CallType, EntryPointType, get_call_trace};
             
             use starknet::{ContractAddress, ClassHash};
@@ -212,7 +212,7 @@ fn trace_call() {
                 let expected = CallTrace {
                     entry_point: CallEntryPoint {
                         entry_point_type: EntryPointType::External,
-                        entry_point_selector: selector!("TEST_CONTRACT_SELECTOR"),
+                        entry_point_selector: test_selector(),
                         calldata: array![],
                         contract_address: test_address(),
                         caller_address: 0.try_into().unwrap(),
@@ -368,7 +368,7 @@ fn trace_failed_call() {
     let test = test_case!(
         indoc!(
             r#"
-            use snforge_std::{declare, ContractClassTrait, test_address};
+            use snforge_std::{declare, ContractClassTrait, test_address, test_selector};
             use snforge_std::trace::{CallEntryPoint, CallType, EntryPointType, get_call_trace, CallTrace};
             
             use starknet::{ContractAddress, ClassHash};
@@ -417,7 +417,7 @@ fn trace_failed_call() {
                 let expected = CallTrace {
                     entry_point: CallEntryPoint {
                         entry_point_type: EntryPointType::External,
-                        entry_point_selector: selector!("TEST_CONTRACT_SELECTOR"),
+                        entry_point_selector: test_selector(),
                         calldata: array![],
                         contract_address: test_address(),
                         caller_address: 0.try_into().unwrap(),
@@ -511,7 +511,7 @@ fn trace_library_call_from_test() {
     let test = test_case!(
         indoc!(
             r#"
-            use snforge_std::{declare, ContractClassTrait, test_address};
+            use snforge_std::{declare, ContractClassTrait, test_address, test_selector};
             use snforge_std::trace::{CallEntryPoint, CallType, EntryPointType, get_call_trace, CallTrace};
             
             use starknet::{ContractAddress, ClassHash};
@@ -568,7 +568,7 @@ fn trace_library_call_from_test() {
                 let expected = CallTrace {
                     entry_point: CallEntryPoint {
                         entry_point_type: EntryPointType::External,
-                        entry_point_selector: selector!("TEST_CONTRACT_SELECTOR"),
+                        entry_point_selector: test_selector(),
                         calldata: array![],
                         contract_address: test_address(),
                         caller_address: 0.try_into().unwrap(),
@@ -701,7 +701,7 @@ fn trace_failed_library_call_from_test() {
     let test = test_case!(
         indoc!(
             r#"
-            use snforge_std::{declare, ContractClassTrait, test_address};
+            use snforge_std::{declare, ContractClassTrait, test_address, test_selector};
             use snforge_std::trace::{CallEntryPoint, CallType, EntryPointType, get_call_trace, CallTrace};
             
             use starknet::{ContractAddress, ClassHash};
@@ -750,7 +750,7 @@ fn trace_failed_library_call_from_test() {
                 let expected = CallTrace {
                     entry_point: CallEntryPoint {
                         entry_point_type: EntryPointType::External,
-                        entry_point_selector: selector!("TEST_CONTRACT_SELECTOR"),
+                        entry_point_selector: test_selector(),
                         calldata: array![],
                         contract_address: test_address(),
                         caller_address: 0.try_into().unwrap(),
@@ -844,7 +844,7 @@ fn trace_l1_handler() {
     let test = test_case!(
         indoc!(
             r#"
-            use snforge_std::{declare, ContractClassTrait, test_address, L1HandlerTrait,};
+            use snforge_std::{declare, ContractClassTrait, test_address, test_selector, L1HandlerTrait,};
             use snforge_std::trace::{CallEntryPoint, CallType, EntryPointType, get_call_trace, CallTrace};
             
             use starknet::ContractAddress;
@@ -872,7 +872,7 @@ fn trace_l1_handler() {
                 let expected_trace = CallTrace {
                     entry_point: CallEntryPoint {
                         entry_point_type: EntryPointType::External,
-                        entry_point_selector: selector!("TEST_CONTRACT_SELECTOR"),
+                        entry_point_selector: test_selector(),
                         calldata: array![],
                         contract_address: test_address(),
                         caller_address: 0.try_into().unwrap(),

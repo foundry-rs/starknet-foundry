@@ -596,8 +596,10 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .extended_runtime
                     .extension
                     .cheatnet_state
-                    .call_trace;
-                let output = serialize_call_trace(&call_trace.borrow());
+                    .trace_data
+                    .current_call_stack
+                    .borrow_full_trace();
+                let output = serialize_call_trace(call_trace);
 
                 Ok(CheatcodeHandlingResult::Handled(output))
             }

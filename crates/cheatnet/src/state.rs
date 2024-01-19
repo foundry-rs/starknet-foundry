@@ -26,7 +26,7 @@ use starknet_api::{
     hash::StarkFelt,
     state::StorageKey,
 };
-use std::cell::RefCell;
+use std::cell::{Ref, RefCell};
 use std::collections::HashMap;
 use std::hash::BuildHasher;
 use std::rc::Rc;
@@ -146,6 +146,32 @@ pub struct CallTrace {
     pub nested_calls: Vec<Rc<RefCell<CallTrace>>>,
 }
 
+pub struct NotEmptyCallStack(Vec<Rc<RefCell<CallTrace>>>);
+
+impl NotEmptyCallStack {
+    pub fn from(elem: Rc<RefCell<CallTrace>>) -> Self {
+        NotEmptyCallStack(vec![elem])
+    }
+
+    pub fn push(&mut self, elem: Rc<RefCell<CallTrace>>) {
+        self.0.push(elem);
+    }
+
+    pub fn pop(&mut self) -> Rc<RefCell<CallTrace>> {
+        assert!(self.0.len() > 1, "You cannot make NotEmptyCallStack empty");
+        self.0.pop().unwrap()
+    }
+
+    #[must_use]
+    pub fn borrow_full_trace(&self) -> Ref<'_, CallTrace> {
+        self.0.first().unwrap().borrow()
+    }
+}
+
+pub struct TraceData {
+    pub current_call_stack: NotEmptyCallStack,
+}
+
 pub struct CheatnetState {
     pub rolled_contracts: HashMap<ContractAddress, CheatStatus<Felt252>>,
     pub global_roll: Option<Felt252>,
@@ -164,17 +190,14 @@ pub struct CheatnetState {
     pub block_info: BlockInfo,
     // execution resources used by all contract calls
     pub used_resources: UsedResources,
-    /// Trace of calls made in a test.
-    /// The root `CallTrace` symbolizes calling the test code.
-    pub call_trace: Rc<RefCell<CallTrace>>,
-    /// Pointer to the call we are currently in.
-    pub current_call: Rc<RefCell<CallTrace>>,
+
+    pub trace_data: TraceData,
 }
 
 impl Default for CheatnetState {
     fn default() -> Self {
-        let call_trace = Rc::new(RefCell::new(CallTrace {
-            entry_point: build_test_entry_point().into(),
+        let test_call = Rc::new(RefCell::new(CallTrace {
+            entry_point: build_test_entry_point(),
             nested_calls: vec![],
         }));
         Self {
@@ -194,8 +217,9 @@ impl Default for CheatnetState {
             deploy_salt_base: 0,
             block_info: Default::default(),
             used_resources: Default::default(),
-            call_trace: call_trace.clone(),
-            current_call: call_trace,
+            trace_data: TraceData {
+                current_call_stack: NotEmptyCallStack::from(test_call),
+            },
         }
     }
 }
@@ -263,21 +287,27 @@ impl CheatnetState {
     pub fn get_cheated_caller_address(&self, address: &ContractAddress) -> Option<ContractAddress> {
         get_cheat_for_contract(&self.global_prank, &self.pranked_contracts, address)
     }
+}
 
-    pub fn add_new_call_and_update_current_call(
-        &mut self,
-        entry_point: crate::blockifier_structs::CallEntryPoint,
-    ) {
+impl TraceData {
+    pub fn enter_nested_call(&mut self, entry_point: CallEntryPoint) {
         let new_call = Rc::new(RefCell::new(CallTrace {
             entry_point,
             nested_calls: vec![],
         }));
-        self.current_call
+        let current_call = self.current_call_stack.pop();
+
+        current_call
             .borrow_mut()
             .nested_calls
             .push(new_call.clone());
 
-        self.current_call = new_call;
+        self.current_call_stack.push(current_call);
+        self.current_call_stack.push(new_call);
+    }
+
+    pub fn exit_nested_call(&mut self) {
+        self.current_call_stack.pop();
     }
 }
 
