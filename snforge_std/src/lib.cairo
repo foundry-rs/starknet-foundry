@@ -32,6 +32,7 @@ use cheatcodes::storage::map_entry_address;
 
 use cheatcodes::CheatTarget;
 use cheatcodes::test_address;
+use cheatcodes::test_selector;
 use cheatcodes::start_prank;
 use cheatcodes::stop_prank;
 use cheatcodes::start_roll;
