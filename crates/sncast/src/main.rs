@@ -17,7 +17,7 @@ use sncast::helpers::scarb_utils::{
 };
 use sncast::{
     chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_nonce, get_provider,
-    BuildConfig, NumbersFormat, WaitForTx,
+    NumbersFormat, WaitForTx,
 };
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
