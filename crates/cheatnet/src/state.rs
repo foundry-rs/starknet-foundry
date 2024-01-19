@@ -26,7 +26,7 @@ use starknet_api::{
     hash::StarkFelt,
     state::StorageKey,
 };
-use std::cell::RefCell;
+use std::cell::{Ref, RefCell};
 use std::collections::HashMap;
 use std::hash::BuildHasher;
 use std::rc::Rc;
@@ -145,7 +145,7 @@ pub struct CallTrace {
     pub nested_calls: Vec<Rc<RefCell<CallTrace>>>,
 }
 
-struct NotEmptyCallStack(Vec<Rc<RefCell<CallTrace>>>);
+pub struct NotEmptyCallStack(Vec<Rc<RefCell<CallTrace>>>);
 
 impl NotEmptyCallStack {
     pub fn from(elem: Rc<RefCell<CallTrace>>) -> Self {
@@ -159,13 +159,15 @@ impl NotEmptyCallStack {
     pub fn pop(&mut self) -> Rc<RefCell<CallTrace>> {
         self.0.pop().unwrap()
     }
+
+    #[must_use]
+    pub fn borrow_full_trace(&self) -> Ref<'_, CallTrace> {
+        self.0.first().unwrap().borrow()
+    }
 }
 
 pub struct TraceData {
-    /// Trace of calls made in a test.
-    /// The root `CallTrace` symbolizes calling the test code.
-    pub call_trace: Rc<RefCell<CallTrace>>,
-    current_call_stack: NotEmptyCallStack,
+    pub current_call_stack: NotEmptyCallStack,
 }
 
 pub struct CheatnetState {
@@ -214,7 +216,6 @@ impl Default for CheatnetState {
             block_info: Default::default(),
             used_resources: Default::default(),
             trace_data: TraceData {
-                call_trace: test_call.clone(),
                 current_call_stack: NotEmptyCallStack::from(test_call),
             },
         }
