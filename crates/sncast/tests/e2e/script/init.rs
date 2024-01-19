@@ -6,32 +6,7 @@ use sncast::helpers::scarb_utils::get_cairo_version;
 use tempfile::TempDir;
 
 #[test]
-fn test_script_happy_case() {
-    let script_name = "my_script";
-    let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
-
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(temp_dir.path())
-        .args(["script", "init", script_name]);
-
-    snapbox.assert().stdout_matches(formatdoc! {r"
-        command: script init
-        status: Successfully initialized `{script_name}` at [..]/{script_name}
-    "});
-
-    let script_dir_path = temp_dir.path().join(SCRIPTS_DIR).join(script_name);
-
-    assert!(script_dir_path.exists());
-    assert!(script_dir_path.join("Scarb.toml").exists());
-    assert!(script_dir_path.join("src").exists());
-    assert!(script_dir_path.join("src/lib.cairo").exists());
-    assert!(script_dir_path
-        .join(format!("src/{script_name}.cairo"))
-        .exists());
-}
-
-#[test]
-fn test_script_init_files_content() {
+fn test_script_init_happy_case() {
     let script_name = "my_script";
     let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
 
