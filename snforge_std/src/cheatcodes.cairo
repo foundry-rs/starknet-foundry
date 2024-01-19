@@ -14,6 +14,10 @@ enum CheatTarget {
     Multiple: Array<ContractAddress>
 }
 
+fn test_selector() -> felt252 {
+    selector!("TEST_CONTRACT_SELECTOR")
+}
+
 fn test_address() -> ContractAddress {
     contract_address_const::<469394814521890341860918960550914>()
 }
