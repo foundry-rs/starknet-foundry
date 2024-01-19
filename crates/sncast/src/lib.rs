@@ -173,8 +173,8 @@ pub async fn get_account<'a>(
     } else {
         get_account_from_accounts_file(account, accounts_file, provider, chain_id)?
     };
-    let account = account.set_block_id(get_block_id("pending")?).clone();
-    Ok(account)
+
+    Ok(account.set_block_id(get_block_id("pending")?).clone())
 }
 
 fn get_account_from_keystore<'a>(

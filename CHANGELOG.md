@@ -35,12 +35,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Cairo edition in `snforge_std` and `sncast_std` set to `2023_10`
 - `snforge_std::signature` module with `stark_curve`, `secp256k1_curve` and `secp256r1_curve` submodules
 
-### Cast
-
-#### Changed
-
-- get nonce for transaction from pending block instead of latest
-
 #### Fixed
 
 - Safe library dispatchers in test code no longer propagate errors when not intended to
