@@ -152,8 +152,8 @@ impl NotEmptyCallStack {
         NotEmptyCallStack(vec![elem])
     }
 
-    pub fn push(&mut self, elem: Rc<RefCell<CallTrace>>)  {
-        self.0.push(elem)
+    pub fn push(&mut self, elem: Rc<RefCell<CallTrace>>) {
+        self.0.push(elem);
     }
 
     pub fn pop(&mut self) -> Rc<RefCell<CallTrace>> {
@@ -165,7 +165,7 @@ pub struct TraceData {
     /// Trace of calls made in a test.
     /// The root `CallTrace` symbolizes calling the test code.
     pub call_trace: Rc<RefCell<CallTrace>>,
-    pub current_call_stack: NotEmptyCallStack,
+    current_call_stack: NotEmptyCallStack,
 }
 
 pub struct CheatnetState {
@@ -216,7 +216,7 @@ impl Default for CheatnetState {
             trace_data: TraceData {
                 call_trace: test_call.clone(),
                 current_call_stack: NotEmptyCallStack::from(test_call),
-            }
+            },
         }
     }
 }
@@ -297,10 +297,10 @@ impl TraceData {
         current_call
             .borrow_mut()
             .nested_calls
-            .push(new_call);
-        
+            .push(new_call.clone());
+
         self.current_call_stack.push(current_call);
-        self.current_call_stack.push(new_call.clone());
+        self.current_call_stack.push(new_call);
     }
 
     pub fn exit_nested_call(&mut self) {
