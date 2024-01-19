@@ -105,7 +105,7 @@ pub fn run(project_name: &str) -> Result<()> {
         .run()
         .context("Failed to add snforge_std")?;
 
-    let cairo_version = scarb_version_command().cairo;
+    let cairo_version = scarb_version_command()?.cairo;
     ScarbCommand::new_with_stdio()
         .current_dir(&project_path)
         .offline()
