@@ -40,6 +40,7 @@ use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::SCRIPT_LIB_ARTIFACT_NAME;
 use sncast::response::print::print_as_warning;
 use sncast::response::structs::ScriptResponse;
+use sncast::BuildConfig;
 use starknet::accounts::Account;
 use starknet::core::types::{BlockId, BlockTag::Pending, FieldElement};
 use starknet::providers::jsonrpc::HttpTransport;
