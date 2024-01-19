@@ -5,7 +5,6 @@ use crate::helpers::fixtures::{
 use indoc::indoc;
 use snapbox::cmd::{cargo_bin, Command};
 use starknet::core::types::TransactionReceipt::Declare;
-use std::fs;
 use test_case::test_case;
 
 #[tokio::test]
@@ -38,8 +37,6 @@ async fn test_happy_case() {
     let receipt = get_transaction_receipt(hash).await;
 
     assert!(matches!(receipt, Declare(_)));
-
-    fs::remove_dir_all(contract_path).unwrap();
 }
 
 #[tokio::test]
@@ -144,8 +141,6 @@ fn test_too_low_max_fee() {
         command: declare
         error: Max fee is smaller than the minimal transaction cost
     "});
-
-    fs::remove_dir_all(contract_path).unwrap();
 }
 
 #[test]
