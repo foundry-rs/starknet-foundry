@@ -221,7 +221,6 @@ mod tests {
     use assert_fs::TempDir;
     use camino::Utf8PathBuf;
     use indoc::{formatdoc, indoc};
-    use scarb_metadata::MetadataCommand;
     use std::str::FromStr;
 
     fn setup_package(package_name: &str) -> TempDir {
@@ -323,10 +322,11 @@ mod tests {
             ))
             .unwrap();
 
-        let scarb_metadata = MetadataCommand::new()
-            .inherit_stderr()
+        let scarb_metadata = ScarbCommand::new()
+            .print_stderr()
             .current_dir(temp.path())
-            .exec()
+            .metadata()
+            .run()
             .unwrap();
 
         assert!(package_matches_version_requirement(
@@ -487,10 +487,11 @@ mod tests {
             .run()
             .unwrap();
 
-        let metadata = MetadataCommand::new()
-            .inherit_stderr()
+        let metadata = ScarbCommand::new()
+            .print_stderr()
             .manifest_path(temp.join("Scarb.toml"))
-            .exec()
+            .metadata()
+            .run()
             .unwrap();
 
         let package = metadata.packages.first().unwrap();
@@ -526,10 +527,11 @@ mod tests {
     #[test]
     fn get_name_for_package() {
         let temp = setup_package("basic_package");
-        let scarb_metadata = MetadataCommand::new()
-            .inherit_stderr()
+        let scarb_metadata = ScarbCommand::new()
+            .print_stderr()
             .current_dir(temp.path())
-            .exec()
+            .metadata()
+            .run()
             .unwrap();
 
         let package_name =
@@ -541,10 +543,11 @@ mod tests {
     #[test]
     fn get_target_name_for_package() {
         let temp = setup_package("basic_package");
-        let scarb_metadata = MetadataCommand::new()
-            .inherit_stderr()
+        let scarb_metadata = ScarbCommand::new()
+            .print_stderr()
             .current_dir(temp.path())
-            .exec()
+            .metadata()
+            .run()
             .unwrap();
 
         let target_name =

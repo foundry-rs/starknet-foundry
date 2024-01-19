@@ -2,13 +2,14 @@ use anyhow::Context;
 use scarb_ui::args::PackagesFilter;
 use std::collections::HashMap;
 use std::ffi::{OsStr, OsString};
+use std::io::{stderr, stdout, Write};
 use std::marker::PhantomData;
 use std::path::PathBuf;
 use std::process::{Command, Output};
 use std::{env, io};
 use thiserror::Error;
 
-use crate::output_transform::{PassByPrint, PrintOutput};
+use crate::output_transform::{OutputTransform, PassByPrint};
 use crate::ScarbMetadataCommand;
 
 /// Error thrown while trying to execute `scarb` command.
@@ -81,9 +82,10 @@ macro_rules! impl_print {
 
 impl<Stdout, Stderr> ScarbCommand<Stdout, Stderr> {
     /// Print standard output, i.e. captures and format Scarb output, then writes in this process's standard output
+    #[must_use]
     pub fn use_custom_print_stdout<T>(mut self) -> ScarbCommand<T, Stderr>
     where
-        T: PrintOutput,
+        T: OutputTransform,
     {
         self.print_stdout();
 
@@ -91,9 +93,10 @@ impl<Stdout, Stderr> ScarbCommand<Stdout, Stderr> {
     }
 
     /// Print standard error, i.e. captures and format Scarb error, then writes in this process's standard error
+    #[must_use]
     pub fn use_custom_print_stderr<T>(mut self) -> ScarbCommand<Stdout, T>
     where
-        T: PrintOutput,
+        T: OutputTransform,
     {
         self.print_stderr();
 
@@ -101,10 +104,11 @@ impl<Stdout, Stderr> ScarbCommand<Stdout, Stderr> {
     }
 
     /// Creates [`ScarbMetadataCommand`] from this command
+    #[must_use]
     pub fn metadata(&self) -> ScarbMetadataCommand<Stdout, Stderr>
     where
-        Stdout: PrintOutput,
-        Stderr: PrintOutput,
+        Stdout: OutputTransform,
+        Stderr: OutputTransform,
     {
         ScarbMetadataCommand::new(self.clone())
     }
@@ -274,19 +278,19 @@ impl<Stdout, Stderr> ScarbCommand<Stdout, Stderr> {
     /// Runs configured `scarb` command.
     pub fn run(&self) -> Result<Output, ScarbCommandError>
     where
-        Stdout: PrintOutput,
-        Stderr: PrintOutput,
+        Stdout: OutputTransform,
+        Stderr: OutputTransform,
     {
         let output = self.command().output()?;
 
-        if output.status.success() {
-            if self.print_stdout {
-                Stdout::print_stdout(&output.stdout)?;
-            }
-            if self.print_stderr {
-                Stderr::print_stderr(&output.stderr)?;
-            }
+        if self.print_stdout {
+            stdout().write_all(&Stdout::transform_stdout(&output.stdout))?;
+        }
+        if self.print_stderr {
+            stderr().write_all(&Stderr::transform_stderr(&output.stderr))?;
+        }
 
+        if output.status.success() {
             Ok(output)
         } else {
             Err(ScarbCommandError::ScarbError {

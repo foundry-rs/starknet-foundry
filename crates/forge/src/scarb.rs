@@ -73,7 +73,6 @@ mod tests {
     use assert_fs::TempDir;
     use camino::Utf8PathBuf;
     use indoc::{formatdoc, indoc};
-    use scarb_metadata::MetadataCommand;
     use std::str::FromStr;
     use test_utils::tempdir_with_tool_versions;
 
@@ -134,10 +133,11 @@ mod tests {
     #[test]
     fn get_forge_config_for_package() {
         let temp = setup_package("simple_package");
-        let scarb_metadata = MetadataCommand::new()
-            .inherit_stderr()
+        let scarb_metadata = ScarbCommand::new()
+            .print_stderr()
             .current_dir(temp.path())
-            .exec()
+            .metadata()
+            .run()
             .unwrap();
 
         let config =
@@ -183,10 +183,11 @@ mod tests {
     #[test]
     fn get_forge_config_for_package_err_on_invalid_package() {
         let temp = setup_package("simple_package");
-        let scarb_metadata = MetadataCommand::new()
-            .inherit_stderr()
+        let scarb_metadata = ScarbCommand::new()
+            .print_stderr()
             .current_dir(temp.path())
-            .exec()
+            .metadata()
+            .run()
             .unwrap();
 
         let result = config_from_scarb_for_package(
@@ -212,10 +213,11 @@ mod tests {
         );
         temp.child("Scarb.toml").write_str(content).unwrap();
 
-        let scarb_metadata = MetadataCommand::new()
-            .inherit_stderr()
+        let scarb_metadata = ScarbCommand::new()
+            .print_stderr()
             .current_dir(temp.path())
-            .exec()
+            .metadata()
+            .run()
             .unwrap();
 
         let config =
@@ -247,10 +249,11 @@ mod tests {
         );
         temp.child("Scarb.toml").write_str(content).unwrap();
 
-        let scarb_metadata = MetadataCommand::new()
-            .inherit_stderr()
+        let scarb_metadata = ScarbCommand::new()
+            .print_stderr()
             .current_dir(temp.path())
-            .exec()
+            .metadata()
+            .run()
             .unwrap();
         let err =
             config_from_scarb_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
@@ -277,10 +280,11 @@ mod tests {
         );
         temp.child("Scarb.toml").write_str(content).unwrap();
 
-        let scarb_metadata = MetadataCommand::new()
-            .inherit_stderr()
+        let scarb_metadata = ScarbCommand::new()
+            .print_stderr()
             .current_dir(temp.path())
-            .exec()
+            .metadata()
+            .run()
             .unwrap();
         let err =
             config_from_scarb_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
@@ -305,10 +309,11 @@ mod tests {
         );
         temp.child("Scarb.toml").write_str(content).unwrap();
 
-        let scarb_metadata = MetadataCommand::new()
-            .inherit_stderr()
+        let scarb_metadata = ScarbCommand::new()
+            .print_stderr()
             .current_dir(temp.path())
-            .exec()
+            .metadata()
+            .run()
             .unwrap();
 
         let err =
@@ -336,10 +341,11 @@ mod tests {
         );
         temp.child("Scarb.toml").write_str(content).unwrap();
 
-        let scarb_metadata = MetadataCommand::new()
-            .inherit_stderr()
+        let scarb_metadata = ScarbCommand::new()
+            .print_stderr()
             .current_dir(temp.path())
-            .exec()
+            .metadata()
+            .run()
             .unwrap();
 
         let err =

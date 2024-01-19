@@ -61,10 +61,11 @@ pub async fn declare(
     }
     cmd.run().context("Failed to build contracts with Scarb")?;
 
-    let metadata = scarb_metadata::MetadataCommand::new()
+    let metadata = ScarbCommand::new()
         .manifest_path(&manifest_path)
-        .inherit_stderr()
-        .exec()
+        .print_stderr()
+        .metadata()
+        .run()
         .context("Failed to get scarb metadata")?;
 
     let package = get_package_metadata(&metadata, &manifest_path)

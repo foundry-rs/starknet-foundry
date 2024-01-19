@@ -1,7 +1,7 @@
 use super::constants::{WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
 use anyhow::{anyhow, bail, Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
-use scarb_api::ScarbCommand;
+use scarb_api::{ScarbCommand, ScarbMetadataCommand};
 use scarb_metadata;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -154,20 +154,19 @@ pub fn get_scarb_manifest_for(dir: &Utf8Path) -> Result<Utf8PathBuf> {
     Ok(path)
 }
 
-fn get_scarb_metadata_command(
-    manifest_path: &Utf8PathBuf,
-) -> Result<scarb_metadata::MetadataCommand> {
+fn get_scarb_metadata_command(manifest_path: &Utf8PathBuf) -> Result<ScarbMetadataCommand> {
     ScarbCommand::new().ensure_available()?;
 
-    let mut command = scarb_metadata::MetadataCommand::new();
-    command.inherit_stderr().manifest_path(manifest_path);
-    Ok(command)
+    Ok(ScarbCommand::new()
+        .print_stderr()
+        .manifest_path(manifest_path)
+        .metadata())
 }
 
 fn execute_scarb_metadata_command(
-    command: &scarb_metadata::MetadataCommand,
+    command: ScarbMetadataCommand,
 ) -> Result<scarb_metadata::Metadata> {
-    command.exec().context(format!(
+    command.run().context(format!(
         "Failed to read the `Scarb.toml` manifest file. Doesn't exist in the current or parent directories = {}",
         env::current_dir()
             .expect("Failed to access the current directory")
@@ -179,7 +178,7 @@ fn execute_scarb_metadata_command(
 
 pub fn get_scarb_metadata(manifest_path: &Utf8PathBuf) -> Result<scarb_metadata::Metadata> {
     let mut command = get_scarb_metadata_command(manifest_path)?;
-    let command = command.no_deps();
+    command.no_deps();
     execute_scarb_metadata_command(command)
 }
 
@@ -187,7 +186,7 @@ pub fn get_scarb_metadata_with_deps(
     manifest_path: &Utf8PathBuf,
 ) -> Result<scarb_metadata::Metadata> {
     let command = get_scarb_metadata_command(manifest_path)?;
-    execute_scarb_metadata_command(&command)
+    execute_scarb_metadata_command(command)
 }
 
 #[must_use]

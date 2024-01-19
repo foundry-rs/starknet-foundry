@@ -16,7 +16,7 @@ use rand::{thread_rng, RngCore};
 use scarb_api::{
     get_contracts_map, package_matches_version_requirement, target_dir_for_workspace, ScarbCommand,
 };
-use scarb_metadata::{Metadata, MetadataCommand, PackageMetadata};
+use scarb_metadata::{Metadata, PackageMetadata};
 use scarb_ui::args::PackagesFilter;
 
 use forge::block_number_map::BlockNumberMap;
@@ -177,7 +177,7 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
         ColorOption::Auto => (),
     }
 
-    let scarb_metadata = MetadataCommand::new().inherit_stderr().exec()?;
+    let scarb_metadata = ScarbCommand::new().print_stderr().metadata().run()?;
     warn_if_snforge_std_not_compatible(&scarb_metadata)?;
 
     let workspace_root = scarb_metadata.workspace.root.clone();
