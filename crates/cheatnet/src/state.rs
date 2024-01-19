@@ -4,6 +4,7 @@ use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spoof::TxInf
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::{
     Event, SpyTarget,
 };
+use blockifier::execution::entry_point::CallEntryPoint;
 use blockifier::state::state_api::State;
 use blockifier::{
     execution::contract_class::ContractClass,
@@ -19,7 +20,7 @@ use runtime::starknet::state::DictStateReader;
 use starknet_api::core::EntryPointSelector;
 
 use crate::constants::build_test_entry_point;
-use serde::{Deserialize, Serialize};
+
 use starknet_api::transaction::ContractAddressSalt;
 use starknet_api::{
     core::{ClassHash, CompiledClassHash, ContractAddress, Nonce},
@@ -141,7 +142,7 @@ pub enum CheatStatus<T> {
 
 /// Tree structure representing trace of a call.
 pub struct CallTrace {
-    pub entry_point: crate::blockifier_structs::CallEntryPoint,
+    pub entry_point: CallEntryPoint,
     pub nested_calls: Vec<Rc<RefCell<CallTrace>>>,
 }
 

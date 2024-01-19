@@ -4,10 +4,10 @@ use std::sync::Arc;
 use blockifier::execution::contract_class::{ContractClassV1, ContractClassV1Inner};
 
 use blockifier::execution::contract_class::ContractClass;
+use blockifier::execution::entry_point::{CallEntryPoint, CallType};
 use cairo_vm::types::program::Program;
 
 use crate::runtime_extensions::common::create_entry_point_selector;
-use blockifier::execution::entry_point::{CallEntryPoint, CallType};
 use conversions::IntoConv;
 use starknet::core::utils::get_selector_from_name;
 use starknet_api::deprecated_contract_class::EntryPointType;

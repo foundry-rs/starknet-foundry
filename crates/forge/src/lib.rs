@@ -21,6 +21,7 @@ pub mod pretty_printing;
 pub mod scarb;
 pub mod shared_cache;
 pub mod test_filter;
+pub mod trace_data;
 
 fn replace_id_with_params(
     raw_fork_config: RawForkConfig,

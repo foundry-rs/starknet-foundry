@@ -1,8 +1,18 @@
-// structs copied from blockifier to make CallEntryPoint serializable
+use std::cell::RefCell;
+use std::rc::Rc;
+
+// will be provided by profiler crate in the future 
 use serde::{Deserialize, Serialize};
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector};
 use starknet_api::deprecated_contract_class::EntryPointType;
 use starknet_api::transaction::Calldata;
+
+/// Tree structure representing trace of a call.
+pub struct CallTrace {
+    pub entry_point: CallEntryPoint,
+    pub nested_calls: Vec<Rc<RefCell<CallTrace>>>,
+}
+
 
 #[derive(Clone, Debug, Default, Eq, PartialEq, Deserialize, Serialize)]
 pub struct CallEntryPoint {
@@ -45,6 +55,14 @@ impl From<blockifier::execution::entry_point::CallEntryPoint> for CallEntryPoint
     }
 }
 
+
+#[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq, Deserialize, Serialize)]
+pub enum CallType {
+    #[default]
+    Call = 0,
+    Delegate = 1,
+}
+
 impl From<blockifier::execution::entry_point::CallType> for CallType {
     fn from(value: blockifier::execution::entry_point::CallType) -> Self {
         match value {
@@ -54,9 +72,15 @@ impl From<blockifier::execution::entry_point::CallType> for CallType {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq, Deserialize, Serialize)]
-pub enum CallType {
-    #[default]
-    Call = 0,
-    Delegate = 1,
-}
+// fn save_call_trace(cheatnet_state: &CheatnetState, test_case_name: &str) {
+//     let call_trace_serialized =
+//         serde_json::to_string(&cheatnet_state.call_trace).expect("Failed to serialize call trace");
+
+//     let dir_to_save_trace = PathBuf::from(TRACE_DIR);
+//     fs::create_dir_all(&dir_to_save_trace).expect("Failed to create a file to save call trace to");
+//     fs::write(
+//         dir_to_save_trace.join(test_case_name),
+//         call_trace_serialized,
+//     )
+//     .expect("Failed to write call trace to a file");
+// }
