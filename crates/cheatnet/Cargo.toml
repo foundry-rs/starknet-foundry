@@ -33,10 +33,10 @@ scarb-metadata.workspace = true
 fs2 = "0.4.3"
 flate2 = "1.0.27"
 scarb-api = { path = "../scarb-api" }
-universal-sierra-compiler-api = { path = "../universal-sierra-compiler-api" }
 runtime = { path = "../runtime" }
 k256 = { version = "0.13.2", features = ["sha256", "ecdsa", "serde"] }
 p256 = { version = "0.13.2", features = ["sha256", "ecdsa", "serde"] }
+sierra-casm = { path = "../sierra-casm" }
 
 [dev-dependencies]
 ctor.workspace = true
