@@ -69,7 +69,8 @@ fn format_detailed_resources(used_resources: &UsedResources) -> String {
         steps: {}
         memory holes: {}
         builtins: ({})
-        syscalls: ({})",
+        syscalls: ({})
+        ",
         vm_resources.n_steps, vm_resources.n_memory_holes, builtins, syscalls,
     )
 }
