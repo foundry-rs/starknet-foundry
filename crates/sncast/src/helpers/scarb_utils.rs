@@ -1,7 +1,7 @@
 use super::constants::{WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
 use anyhow::{anyhow, bail, Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
-use scarb_api::{ScarbCommand, ScarbMetadataCommand};
+use scarb_api::{ScarbCommand, ScarbErrorPrettyPrint, ScarbMetadataCommand};
 use scarb_metadata;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -154,17 +154,19 @@ pub fn get_scarb_manifest_for(dir: &Utf8Path) -> Result<Utf8PathBuf> {
     Ok(path)
 }
 
-fn get_scarb_metadata_command(manifest_path: &Utf8PathBuf) -> Result<ScarbMetadataCommand> {
+fn get_scarb_metadata_command(
+    manifest_path: &Utf8PathBuf,
+) -> Result<ScarbMetadataCommand<ScarbErrorPrettyPrint, ScarbErrorPrettyPrint>> {
     ScarbCommand::new().ensure_available()?;
 
     Ok(ScarbCommand::new()
-        .print_stderr()
         .manifest_path(manifest_path)
-        .metadata())
+        .metadata()
+        .error_pretty_print())
 }
 
 fn execute_scarb_metadata_command(
-    command: ScarbMetadataCommand,
+    command: ScarbMetadataCommand<ScarbErrorPrettyPrint, ScarbErrorPrettyPrint>,
 ) -> Result<scarb_metadata::Metadata> {
     command.run().context(format!(
         "Failed to read the `Scarb.toml` manifest file. Doesn't exist in the current or parent directories = {}",

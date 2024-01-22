@@ -101,7 +101,10 @@ impl<Stdout, Stderr> ScarbMetadataCommand<Stdout, Stderr> {
         self.inner
             .json()
             .args(["metadata", "--format-version"])
-            .arg(VersionPin.numeric().to_string());
+            .arg(VersionPin.numeric().to_string())
+            // we want to try parse it at first
+            // because scarb returns errors in stdout
+            .skip_print();
 
         if self.no_deps {
             self.inner.arg("--no-deps");
@@ -110,6 +113,17 @@ impl<Stdout, Stderr> ScarbMetadataCommand<Stdout, Stderr> {
         let output = self.inner.run()?;
         let data = output.stdout.as_slice();
 
+        let result = Self::try_parse(data);
+
+        // we could not parse it so pretty print it
+        if result.is_err() {
+            self.inner.print_anyway(&output.stdout, &output.stderr)?;
+        }
+
+        result
+    }
+
+    fn try_parse(data: &[u8]) -> Result<Metadata, MetadataCommandError> {
         // copied from: https://github.com/software-mansion/scarb/blob/b54a1b1cd7b854111e527b50bb85a2c1e69bed32/scarb-metadata/src/command/metadata_command.rs#L154-L184
         let mut err = None;
         for line in BufRead::split(data, b'\n') {

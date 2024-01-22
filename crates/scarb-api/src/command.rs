@@ -35,6 +35,7 @@ pub struct ScarbCommand<Stdout, Stderr> {
     env_clear: bool,
     print_stderr: bool,
     print_stdout: bool,
+    skip_print: bool,
     json: bool,
     offline: bool,
     manifest_path: Option<PathBuf>,
@@ -71,6 +72,7 @@ macro_rules! impl_print {
             env_clear: $self.env_clear,
             print_stderr: $self.print_stderr,
             print_stdout: $self.print_stdout,
+            skip_print: $self.skip_print,
             json: $self.json,
             manifest_path: $self.manifest_path,
             offline: $self.offline,
@@ -294,12 +296,7 @@ impl<Stdout, Stderr> ScarbCommand<Stdout, Stderr> {
     {
         let output = self.command().output()?;
 
-        if self.print_stdout {
-            stdout().write_all(&Stdout::transform_stdout(&output.stdout))?;
-        }
-        if self.print_stderr {
-            stderr().write_all(&Stderr::transform_stderr(&output.stderr))?;
-        }
+        self.print(&output.stdout, &output.stderr, false)?;
 
         if output.status.success() {
             Ok(output)
@@ -309,5 +306,44 @@ impl<Stdout, Stderr> ScarbCommand<Stdout, Stderr> {
                 stderr: String::from_utf8_lossy(&output.stderr).into(),
             })
         }
+    }
+
+    fn print(
+        &self,
+        stdout_buffer: &[u8],
+        stderr_buffer: &[u8],
+        ignore_skip: bool,
+    ) -> std::io::Result<()>
+    where
+        Stdout: OutputTransform,
+        Stderr: OutputTransform,
+    {
+        if !self.skip_print || ignore_skip {
+            if self.print_stdout {
+                stdout().write_all(&Stdout::transform_stdout(&stdout_buffer))?;
+            }
+            if self.print_stderr {
+                stderr().write_all(&Stderr::transform_stderr(&stderr_buffer))?;
+            }
+        }
+
+        Ok(())
+    }
+
+    pub(crate) fn skip_print(&mut self) -> &mut Self {
+        self.skip_print = true;
+        self
+    }
+
+    pub(crate) fn print_anyway(
+        &self,
+        stdout_buffer: &[u8],
+        stderr_buffer: &[u8],
+    ) -> std::io::Result<()>
+    where
+        Stdout: OutputTransform,
+        Stderr: OutputTransform,
+    {
+        self.print(stdout_buffer, stderr_buffer, true)
     }
 }

@@ -47,7 +47,7 @@ pub fn set_cached_failed_tests_names(
 }
 
 pub fn clean_cache() -> Result<()> {
-    let scarb_metadata = ScarbCommand::new().print_stderr().metadata().run()?;
+    let scarb_metadata = ScarbCommand::new().metadata().error_pretty_print().run()?;
     let workspace_root = scarb_metadata.workspace.root.clone();
     let cache_dir = workspace_root.join(CACHE_DIR);
     if cache_dir.exists() {

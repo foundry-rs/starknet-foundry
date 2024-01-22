@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - `available_gas` attribute is now supported (Scarb >= 2.4.4 is required)
+- Included `MetadataCommand` into `ScarbCommand`
+- `scarb` errors are now pretty printed
 
 #### Fixed
 

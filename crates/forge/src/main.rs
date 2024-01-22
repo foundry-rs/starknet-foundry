@@ -177,7 +177,7 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
         ColorOption::Auto => (),
     }
 
-    let scarb_metadata = ScarbCommand::new().print_stderr().metadata().run()?;
+    let scarb_metadata = ScarbCommand::new().metadata().error_pretty_print().run()?;
     warn_if_snforge_std_not_compatible(&scarb_metadata)?;
 
     let workspace_root = scarb_metadata.workspace.root.clone();

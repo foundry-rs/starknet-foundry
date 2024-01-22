@@ -325,9 +325,9 @@ mod tests {
             .unwrap();
 
         let scarb_metadata = ScarbCommand::new()
-            .print_stderr()
             .current_dir(temp.path())
             .metadata()
+            .error_pretty_print()
             .run()
             .unwrap();
 
@@ -490,9 +490,9 @@ mod tests {
             .unwrap();
 
         let metadata = ScarbCommand::new()
-            .print_stderr()
             .manifest_path(temp.join("Scarb.toml"))
             .metadata()
+            .error_pretty_print()
             .run()
             .unwrap();
 
@@ -530,9 +530,9 @@ mod tests {
     fn get_name_for_package() {
         let temp = setup_package("basic_package");
         let scarb_metadata = ScarbCommand::new()
-            .print_stderr()
             .current_dir(temp.path())
             .metadata()
+            .error_pretty_print()
             .run()
             .unwrap();
 
@@ -546,9 +546,9 @@ mod tests {
     fn get_target_name_for_package() {
         let temp = setup_package("basic_package");
         let scarb_metadata = ScarbCommand::new()
-            .print_stderr()
             .current_dir(temp.path())
             .metadata()
+            .error_pretty_print()
             .run()
             .unwrap();
 

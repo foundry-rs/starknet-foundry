@@ -37,9 +37,9 @@ pub fn recover_data(output: CallOutput) -> Vec<Felt252> {
 
 pub fn get_contracts() -> HashMap<String, StarknetContractArtifacts> {
     let scarb_metadata = ScarbCommand::new()
-        .print_stderr()
         .manifest_path(Utf8PathBuf::from("tests/contracts/Scarb.toml"))
         .metadata()
+        .error_pretty_print()
         .run()
         .unwrap();
 

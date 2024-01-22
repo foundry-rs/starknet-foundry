@@ -77,8 +77,8 @@ impl Contract {
 
         let scarb_metadata = ScarbCommand::new()
             .current_dir(dir.path())
-            .print_stderr()
             .metadata()
+            .error_pretty_print()
             .run()?;
         let package = scarb_metadata
             .packages

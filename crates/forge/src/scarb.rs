@@ -134,9 +134,9 @@ mod tests {
     fn get_forge_config_for_package() {
         let temp = setup_package("simple_package");
         let scarb_metadata = ScarbCommand::new()
-            .print_stderr()
             .current_dir(temp.path())
             .metadata()
+            .error_pretty_print()
             .run()
             .unwrap();
 
@@ -184,9 +184,9 @@ mod tests {
     fn get_forge_config_for_package_err_on_invalid_package() {
         let temp = setup_package("simple_package");
         let scarb_metadata = ScarbCommand::new()
-            .print_stderr()
             .current_dir(temp.path())
             .metadata()
+            .error_pretty_print()
             .run()
             .unwrap();
 
@@ -214,9 +214,9 @@ mod tests {
         temp.child("Scarb.toml").write_str(content).unwrap();
 
         let scarb_metadata = ScarbCommand::new()
-            .print_stderr()
             .current_dir(temp.path())
             .metadata()
+            .error_pretty_print()
             .run()
             .unwrap();
 
@@ -250,9 +250,9 @@ mod tests {
         temp.child("Scarb.toml").write_str(content).unwrap();
 
         let scarb_metadata = ScarbCommand::new()
-            .print_stderr()
             .current_dir(temp.path())
             .metadata()
+            .error_pretty_print()
             .run()
             .unwrap();
         let err =
@@ -281,9 +281,9 @@ mod tests {
         temp.child("Scarb.toml").write_str(content).unwrap();
 
         let scarb_metadata = ScarbCommand::new()
-            .print_stderr()
             .current_dir(temp.path())
             .metadata()
+            .error_pretty_print()
             .run()
             .unwrap();
         let err =
@@ -310,9 +310,9 @@ mod tests {
         temp.child("Scarb.toml").write_str(content).unwrap();
 
         let scarb_metadata = ScarbCommand::new()
-            .print_stderr()
             .current_dir(temp.path())
             .metadata()
+            .error_pretty_print()
             .run()
             .unwrap();
 
@@ -342,9 +342,9 @@ mod tests {
         temp.child("Scarb.toml").write_str(content).unwrap();
 
         let scarb_metadata = ScarbCommand::new()
-            .print_stderr()
             .current_dir(temp.path())
             .metadata()
+            .error_pretty_print()
             .run()
             .unwrap();
 
