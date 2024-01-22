@@ -320,10 +320,10 @@ impl<Stdout, Stderr> ScarbCommand<Stdout, Stderr> {
     {
         if !self.skip_print || ignore_skip {
             if self.print_stdout {
-                stdout().write_all(&Stdout::transform_stdout(&stdout_buffer))?;
+                stdout().write_all(&Stdout::transform_stdout(stdout_buffer))?;
             }
             if self.print_stderr {
-                stderr().write_all(&Stderr::transform_stderr(&stderr_buffer))?;
+                stderr().write_all(&Stderr::transform_stderr(stderr_buffer))?;
             }
         }
 
