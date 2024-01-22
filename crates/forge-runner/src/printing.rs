@@ -74,11 +74,12 @@ fn format_detailed_resources(used_resources: &UsedResources) -> String {
     )
 }
 
-fn sort_by_value<K, V>(map: &std::collections::HashMap<K, V>) -> Vec<(&K, &V)>
+fn sort_by_value<'a, K, V, M>(map: M) -> Vec<(&'a K, &'a V)>
 where
+    M: IntoIterator<Item = (&'a K, &'a V)>,
     V: Ord,
 {
-    let mut sorted: Vec<_> = map.iter().collect();
+    let mut sorted: Vec<_> = map.into_iter().collect();
     sorted.sort_by(|a, b| b.1.cmp(a.1));
     sorted
 }
