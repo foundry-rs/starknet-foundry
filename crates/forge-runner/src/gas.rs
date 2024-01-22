@@ -121,7 +121,9 @@ pub fn check_available_gas(
         } if available_gas.map_or(false, |available_gas| gas_info > available_gas as u128) => {
             TestCaseSummary::Failed {
                 name,
-                msg: Some("\n\tTest cost exceeded the available gas".to_string()),
+                msg: Some(format!(
+                    "\n\tTest cost exceeded the available gas. Gas consumed: ~{gas_info}"
+                )),
                 arguments,
                 test_statistics: (),
             }
