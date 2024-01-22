@@ -186,7 +186,7 @@ mod tests {
     #[test]
     fn invalid_type_should_pretty_print_json() {
         let message = json!({
-            "type": "definitly not error",
+            "type": "definitely not error",
             "message": formatdoc!(r#"
                 multiline
                 message
@@ -203,7 +203,7 @@ mod tests {
                 Scarb returned error:
                 Scarb error:    {{
                 Scarb error:      "message": "multiline\nmessage\n",
-                Scarb error:      "type": "definitly not error"
+                Scarb error:      "type": "definitely not error"
                 Scarb error:    }}
 
             "#
