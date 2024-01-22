@@ -39,6 +39,39 @@ async fn test_happy_case() {
 }
 
 #[tokio::test]
+async fn test_happy_case_specify_package() {
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
+    let args = vec![
+        "--url",
+        URL,
+        "--accounts-file",
+        accounts_json_path.as_str(),
+        "--account",
+        "user8",
+        "--int-format",
+        "--json",
+        "--package",
+        "main_workspace",
+        "declare",
+        "--contract-name",
+        "supercomplexcode",
+        "--max-fee",
+        "99999999999999999",
+    ];
+
+    // todo: (1247) Execute tests in temp dirs
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(CONTRACTS_DIR.to_string() + "/multiple_packages")
+        .args(args);
+    let output = snapbox.assert().success().get_output().stdout.clone();
+
+    let hash = get_transaction_hash(&output);
+    let receipt = get_transaction_receipt(hash).await;
+
+    assert!(matches!(receipt, Declare(_)));
+}
+
+#[tokio::test]
 async fn contract_already_declared() {
     let args = vec![
         "--url",
@@ -233,4 +266,34 @@ fn scarb_no_casm_artifact() {
             .unwrap()
             .contains("class_hash")
     );
+}
+
+#[tokio::test]
+async fn test_many_packages_default() {
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
+    let args = vec![
+        "--url",
+        URL,
+        "--accounts-file",
+        accounts_json_path.as_str(),
+        "--account",
+        "user8",
+        "--int-format",
+        "--json",
+        "declare",
+        "--contract-name",
+        "supercomplexcode",
+        "--max-fee",
+        "99999999999999999",
+    ];
+
+    // todo: (1247) Execute tests in temp dirs
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(CONTRACTS_DIR.to_string() + "/multiple_packages")
+        .args(args);
+    snapbox.assert().failure().stderr_matches(indoc! {r"
+        ...
+        Failed to fetch package metadata: More than one package found in metadata - specify package using --package flag
+        ...
+    "});
 }
