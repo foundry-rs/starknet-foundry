@@ -39,7 +39,7 @@ fn complex() {
     // GetExecutionInfo: 1, StorageRead: 4, StorageWrite: 4, EmitEvent: 1
     dispatcher.transfer(spender, 2.into());
 
-    // // StorageRead: 2
+    // StorageRead: 2
     let spender_balance = dispatcher.balance_of(spender);
     assert(spender_balance == 2, 'invalid spender balance');
 
