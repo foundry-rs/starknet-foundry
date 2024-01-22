@@ -5,6 +5,7 @@ use crate::starknet_commands::account::deploy::Deploy;
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use clap::{Args, Subcommand};
+use scarb_metadata::PackageMetadata;
 use serde_json::json;
 use sncast::helpers::configuration::{
     find_config_file, load_config, search_config_upwards_relative_to,
