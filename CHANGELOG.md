@@ -27,6 +27,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - sncast tool configuration is now moved away from `Scarb.toml` to `snfoundry.toml` file. This file must be present in current or any parent directories in order to use profiles.
 
+#### Added
+
+- `--package` flag to specify scarb package to work with
+
 ## [0.16.0] - 2024-01-26
 
 ### Forge
