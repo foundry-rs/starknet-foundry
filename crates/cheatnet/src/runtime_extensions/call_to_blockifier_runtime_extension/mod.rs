@@ -55,22 +55,6 @@ impl<'a> ExtensionLogic for CallToBlockifierExtension<'a> {
         extended_runtime: &mut IORuntime<'a>,
     ) -> Result<SyscallHandlingResult, HintError> {
         match selector {
-            // We clear it here to ensure that on each new contract call
-            // deploy syscall and library call made from test code
-            // we start with an empty trace
-            // Same case when handling l1_handler_execute and in `deploy_at`
-            DeprecatedSyscallSelector::CallContract
-            | DeprecatedSyscallSelector::LibraryCall
-            | DeprecatedSyscallSelector::LibraryCallL1Handler
-            | DeprecatedSyscallSelector::Deploy => extended_runtime
-                .extended_runtime
-                .extension
-                .cheatnet_state
-                .trace_info
-                .clear(),
-            _ => (),
-        }
-        match selector {
             // We execute contract calls and library calls with modified blockifier
             // This is redirected to drop ForgeRuntimeExtension
             // and to enable handling call errors with safe dispatchers in the test code
