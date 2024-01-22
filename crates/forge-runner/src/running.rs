@@ -10,9 +10,7 @@ use crate::test_case_summary::{Single, TestCaseSummary};
 use crate::{RunnerConfig, RunnerParams, TestCaseRunnable, CACHE_DIR};
 use anyhow::{bail, ensure, Result};
 use blockifier::execution::common_hints::ExecutionMode;
-use blockifier::execution::entry_point::{
-    CallEntryPoint, CallType, EntryPointExecutionContext, ExecutionResources,
-};
+use blockifier::execution::entry_point::{EntryPointExecutionContext, ExecutionResources};
 use blockifier::execution::execution_utils::ReadOnlySegments;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::state::cached_state::CachedState;
@@ -27,6 +25,7 @@ use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use camino::Utf8Path;
 use cheatnet::constants as cheatnet_constants;
+use cheatnet::constants::build_test_entry_point;
 use cheatnet::forking::state::ForkStateReader;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::CallToBlockifierExtension;
@@ -40,13 +39,6 @@ use itertools::chain;
 use runtime::starknet::context;
 use runtime::starknet::context::BlockInfo;
 use runtime::{ExtendedRuntime, StarknetRuntime};
-use starknet::core::utils::get_selector_from_name;
-use starknet_api::core::PatriciaKey;
-use starknet_api::core::{ContractAddress, EntryPointSelector};
-use starknet_api::deprecated_contract_class::EntryPointType;
-use starknet_api::hash::StarkHash;
-use starknet_api::patricia_key;
-use starknet_api::transaction::Calldata;
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
 
@@ -153,22 +145,7 @@ fn build_syscall_handler<'a>(
     execution_resources: &'a mut ExecutionResources,
     context: &'a mut EntryPointExecutionContext,
 ) -> SyscallHintProcessor<'a> {
-    let test_selector = get_selector_from_name("TEST_CONTRACT_SELECTOR").unwrap();
-    let entry_point_selector =
-        EntryPointSelector(StarkHash::new(test_selector.to_bytes_be()).unwrap());
-    let entry_point = CallEntryPoint {
-        class_hash: None,
-        code_address: Some(ContractAddress(patricia_key!(
-            cheatnet_constants::TEST_ADDRESS
-        ))),
-        entry_point_type: EntryPointType::External,
-        entry_point_selector,
-        calldata: Calldata(Arc::new(vec![])),
-        storage_address: ContractAddress(patricia_key!(cheatnet_constants::TEST_ADDRESS)),
-        caller_address: ContractAddress::default(),
-        call_type: CallType::Call,
-        initial_gas: u64::MAX,
-    };
+    let entry_point = build_test_entry_point();
 
     SyscallHintProcessor::new(
         blockifier_state,

@@ -40,7 +40,6 @@ pub fn deploy_at(
     calldata: &[Felt252],
     contract_address: ContractAddress,
 ) -> Result<DeployCallPayload, CheatcodeError> {
-    cheatnet_state.trace_info.clear();
     let blockifier_state_raw: &mut dyn State = blockifier_state.blockifier_state;
 
     if let Ok(class_hash) = blockifier_state_raw.get_class_hash_at(contract_address) {

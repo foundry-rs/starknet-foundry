@@ -265,13 +265,32 @@ fn build_readable_text(data: &Vec<Felt252>) -> Option<String> {
     }
 }
 
+fn join_short_strings(data: &[Felt252]) -> String {
+    data.iter()
+        .map(|felt| as_cairo_short_string(felt).unwrap_or_default())
+        .collect::<Vec<String>>()
+        .join(", ")
+}
+
 /// Returns a string with the data that was produced by the test case.
 /// If the test was expected to fail with specific data e.g. `#[should_panic(expected: ('data',))]`
 /// and failed to do so, it returns a string comparing the panic data and the expected data.
 #[must_use]
 fn extract_result_data(run_result: &RunResult, expectation: &ExpectedTestResult) -> Option<String> {
     match &run_result.value {
-        RunResultValue::Success(data) => build_readable_text(data),
+        RunResultValue::Success(data) => match expectation {
+            ExpectedTestResult::Panics(panic_expectation) => match panic_expectation {
+                ExpectedPanicValue::Exact(panic_data) => {
+                    let panic_string = join_short_strings(panic_data);
+
+                    Some(format!(
+                        "\n    Expected to panic but didn't\n    Expected panic data:  {panic_data:?} ({panic_string})\n"
+                    ))
+                }
+                ExpectedPanicValue::Any => Some("\n    Expected to panic but didn't\n".into()),
+            },
+            ExpectedTestResult::Success => build_readable_text(data),
+        },
         RunResultValue::Panic(panic_data) => {
             let expected_data = match expectation {
                 ExpectedTestResult::Panics(panic_expectation) => match panic_expectation {
@@ -281,20 +300,11 @@ fn extract_result_data(run_result: &RunResult, expectation: &ExpectedTestResult)
                 ExpectedTestResult::Success => None,
             };
 
-            let panic_string: String = panic_data
-                .iter()
-                .map(|felt| as_cairo_short_string(felt).unwrap_or_default())
-                .collect::<Vec<String>>()
-                .join(", ");
-
             match expected_data {
                 Some(expected) if expected == panic_data => None,
                 Some(expected) => {
-                    let expected_string = expected
-                        .iter()
-                        .map(|felt| as_cairo_short_string(felt).unwrap_or_default())
-                        .collect::<Vec<String>>()
-                        .join(", ");
+                    let panic_string = join_short_strings(panic_data);
+                    let expected_string = join_short_strings(expected);
 
                     Some(format!(
                         "\n    Incorrect panic data\n    {}\n    {}\n",
