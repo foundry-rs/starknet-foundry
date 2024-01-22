@@ -122,7 +122,7 @@ pub fn check_available_gas(
             TestCaseSummary::Failed {
                 name,
                 msg: Some(format!(
-                    "\n\tTest cost exceeded the available gas. Gas consumed: ~{gas_info}"
+                    "\n\tTest cost exceeded the available gas. Consumed gas: ~{gas_info}"
                 )),
                 arguments,
                 test_statistics: (),

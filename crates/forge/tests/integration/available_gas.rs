@@ -37,7 +37,7 @@ fn available_gas_exceeded() {
     assert_case_output_contains!(
         result,
         "keccak_cost",
-        "Test cost exceeded the available gas. Gas consumed: ~11"
+        "Test cost exceeded the available gas. Consumed gas: ~11"
     );
 }
 
