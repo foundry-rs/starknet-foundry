@@ -15,5 +15,5 @@ serde_json.workspace = true
 thiserror.workspace = true
 which.workspace = true
 semver.workspace = true
-universal-sierra-compiler-api = { path = "../universal-sierra-compiler-api" }
+sierra-casm = { path="../sierra-casm" }
 regex.workspace = true

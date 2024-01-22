@@ -17,9 +17,6 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
       - uses: software-mansion/setup-scarb@v1.3.2
-      - name: Install universal-sierra-compiler
-        run: |
-          curl -L https://raw.githubusercontent.com/software-mansion/universal-sierra-compiler/master/scripts/install.sh | sh
       - run: cargo test --release --lib -p forge
       - run: cargo test --release integration -p forge
 
@@ -53,9 +50,6 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
       - uses: software-mansion/setup-scarb@v1.3.2
-      - name: Install universal-sierra-compiler
-        run: |
-          curl -L https://raw.githubusercontent.com/software-mansion/universal-sierra-compiler/master/scripts/install.sh | sh
       - run: cargo test --release e2e -p forge
 
   test-forge-runner:
@@ -75,9 +69,6 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
       - uses: software-mansion/setup-scarb@v1.3.2
-      - name: Install universal-sierra-compiler
-        run: |
-          curl -L https://raw.githubusercontent.com/software-mansion/universal-sierra-compiler/master/scripts/install.sh | sh
       - name: Run Cheatnet tests
         run: cargo test -p cheatnet
 
@@ -94,9 +85,6 @@ jobs:
           cache-directories: crates/sncast/tests/utils/devnet
       - name: Install starknet-devnet-rs
         run: ./scripts/install_devnet.sh
-      - name: Install universal-sierra-compiler
-        run: |
-          curl -L https://raw.githubusercontent.com/software-mansion/universal-sierra-compiler/master/scripts/install.sh | sh
       - uses: software-mansion/setup-scarb@v1.3.2
       - name: Run tests
         run: cargo test --release -p sncast
@@ -112,6 +100,18 @@ jobs:
       - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
       - name: Run tests
         run: cargo test --release -p conversions
+
+  test-sierra-casm:
+    name: Test Sierra Casm
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@be73d7920c329f220ce78e0234b8f96b7ae60248
+        with:
+          toolchain: stable
+      - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
+      - name: Run tests
+        run: cargo test --release -p sierra-casm
 
   test-scarb-api:
     name: Test Scarb Api
