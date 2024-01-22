@@ -13,7 +13,7 @@ use forge_runner::{RunnerConfig, RunnerParams, TestCrateRunResult};
 use crate::block_number_map::BlockNumberMap;
 use crate::pretty_printing::print_warning;
 use forge_runner::compiled_runnable::{CompiledTestCrateRunnable, TestCaseRunnable};
-use scarb_api::version::scarb_version_command;
+use scarb_api::ScarbCommand;
 
 use crate::scarb::config::ForkTarget;
 use crate::test_filter::TestsFilter;
@@ -175,7 +175,7 @@ fn warn_if_available_gas_used_with_incompatible_scarb_version(
     for test_crate in test_crates {
         for case in &test_crate.test_cases {
             if case.available_gas == Some(0)
-                && scarb_version_command()?.scarb <= Version::new(2, 4, 3)
+                && ScarbCommand::new().version().run()?.scarb <= Version::new(2, 4, 3)
             {
                 print_warning(&anyhow!(
                     "`available_gas` attribute was probably specified when using Scarb ~2.4.3 \

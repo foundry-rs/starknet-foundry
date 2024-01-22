@@ -2,7 +2,6 @@ use anyhow::{anyhow, Context, Ok, Result};
 
 use include_dir::{include_dir, Dir};
 
-use scarb_api::version::scarb_version_command;
 use scarb_api::ScarbCommand;
 use std::fs::{self, OpenOptions};
 use std::io::Write;
@@ -105,7 +104,7 @@ pub fn run(project_name: &str) -> Result<()> {
         .run()
         .context("Failed to add snforge_std")?;
 
-    let cairo_version = scarb_version_command()?.cairo;
+    let cairo_version = ScarbCommand::new().version().run()?.cairo;
     ScarbCommand::new_with_stdio()
         .current_dir(&project_path)
         .offline()

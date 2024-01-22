@@ -4,17 +4,18 @@ use scarb_metadata::{CompilationUnitMetadata, Metadata, PackageId};
 use semver::VersionReq;
 use serde::Deserialize;
 use serde_json::Value;
+use sierra_casm::compile;
 use std::collections::HashMap;
 use std::fs;
 
 pub use command::*;
 pub use metadata_command::*;
-use sierra_casm::compile;
+pub use version_command::*;
 
 mod command;
 mod metadata_command;
 mod output_transform;
-pub mod version;
+mod version_command;
 
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 struct StarknetArtifacts {

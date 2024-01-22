@@ -10,6 +10,7 @@ use std::{env, io};
 use thiserror::Error;
 
 use crate::output_transform::{OutputTransform, PassByPrint};
+use crate::version_command::ScarbVersionCommand;
 use crate::ScarbMetadataCommand;
 
 /// Error thrown while trying to execute `scarb` command.
@@ -111,6 +112,16 @@ impl<Stdout, Stderr> ScarbCommand<Stdout, Stderr> {
         Stderr: OutputTransform,
     {
         ScarbMetadataCommand::new(self.clone())
+    }
+
+    /// Creates [`ScarbVersionCommand`] from this command
+    #[must_use]
+    pub fn version(&self) -> ScarbVersionCommand<Stdout, Stderr>
+    where
+        Stdout: OutputTransform,
+        Stderr: OutputTransform,
+    {
+        ScarbVersionCommand::new(self.clone())
     }
 
     /// Ensures that `scarb` binary is available in the system.
