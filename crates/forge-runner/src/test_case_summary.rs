@@ -5,7 +5,10 @@ use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{RunResult, RunResultValue};
 use num_traits::Pow;
+use std::cell::RefCell;
 use std::option::Option;
+use std::rc::Rc;
+use cheatnet::state::CallTrace as InternalCallTrace;
 
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct GasStatistics {
@@ -198,6 +201,7 @@ impl TestCaseSummary<Single> {
         test_case: &TestCaseRunnable,
         arguments: Vec<Felt252>,
         gas: u128,
+        call_trace: Rc<RefCell<InternalCallTrace>>,
     ) -> Self {
         let name = test_case.name.to_string();
         let msg = extract_result_data(&run_result, &test_case.expected_result);
@@ -209,6 +213,7 @@ impl TestCaseSummary<Single> {
                     arguments,
                     test_statistics: (),
                     gas_info: gas,
+                    trace_data: CallTrace::from(call_trace.borrow().clone())
                 },
                 ExpectedTestResult::Panics(_) => TestCaseSummary::Failed {
                     name,
@@ -239,6 +244,7 @@ impl TestCaseSummary<Single> {
                         arguments,
                         test_statistics: (),
                         gas_info: gas,
+                        trace_data: CallTrace::from(call_trace.borrow().clone())
                     },
                 },
             },

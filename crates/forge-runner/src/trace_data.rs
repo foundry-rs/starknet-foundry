@@ -1,15 +1,30 @@
+
 // Will be provided by profiler crate in the future
 // This module will be removed!
 use serde::{Deserialize, Serialize};
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector};
 use starknet_api::deprecated_contract_class::EntryPointType;
 use starknet_api::transaction::Calldata;
+use cheatnet::state::CallTrace as InternalCallTrace;
 
 /// Tree structure representing trace of a call.
 #[derive(Debug, Clone)]
 pub struct CallTrace {
     pub entry_point: CallEntryPoint,
     pub nested_calls: Vec<CallTrace>,
+}
+
+impl From<InternalCallTrace> for CallTrace {
+    fn from(value: InternalCallTrace) -> Self {
+        CallTrace {
+            entry_point: CallEntryPoint::from(value.entry_point),
+            nested_calls: value
+                .nested_calls
+                .into_iter()
+                .map(|c| CallTrace::from(c.borrow().clone()))
+                .collect()
+        }
+    }
 }
 
 #[derive(Clone, Debug, Default, Eq, PartialEq, Deserialize, Serialize)]

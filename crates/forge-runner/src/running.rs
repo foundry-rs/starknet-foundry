@@ -292,6 +292,7 @@ fn extract_test_case_summary(
                     case,
                     args,
                     result_with_info.gas_used,
+                    result_with_info.call_trace,
                 )),
                 // CairoRunError comes from VirtualMachineError which may come from HintException that originates in TestExecutionSyscallHandler
                 Err(RunnerError::CairoRunError(error)) => Ok(TestCaseSummary::Failed {
