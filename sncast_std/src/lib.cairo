@@ -4,21 +4,90 @@ use core::serde::Serde;
 use core::debug::PrintTrait;
 use starknet::{testing::cheatcode, ContractAddress, ClassHash};
 
+
+#[derive(Copy, Drop, Serde, PartialEq)]
+enum StarknetError {
+    UnknownError,
+    ContractNotFound,
+    BlockNotFound,
+    ClassHashNotFound,
+    ClassAlreadyDeclared,
+    InsufficientMaxFee,
+    InsufficientAccountBalance,
+    ContractError,
+}
+
+impl StarknetErrorTrait of PrintTrait<StarknetError> {
+    #[inline(always)]
+    fn print(self: StarknetError) {
+        match self {
+            StarknetError::UnknownError => {
+                'StarknetUnknownError'.print();
+            },
+            StarknetError::ContractNotFound => {
+                'ContractNotFound'.print();
+            },
+            StarknetError::BlockNotFound => {
+                'BlockNotFound'.print();
+            },
+            StarknetError::ClassHashNotFound => {
+                'ClassHashNotFound'.print();
+            },
+            StarknetError::ClassAlreadyDeclared => {
+                'ClassAlreadyDeclared'.print();
+            },
+            StarknetError::InsufficientMaxFee => {
+                'InsufficientMaxFee'.print();
+            },
+            StarknetError::InsufficientAccountBalance => {
+                'InsufficientAccountBalance'.print();
+            },
+            StarknetError::ContractError => {
+                'ContractError'.print();
+            },
+        }
+    }
+}
+
+#[derive(Copy, Drop, Serde, PartialEq)]
+enum RPCError {
+    UnknownError,
+    RateLimited,
+    StarknetError: StarknetError,
+}
+
+impl RPCErrorTrait of PrintTrait<RPCError> {
+    #[inline(always)]
+    fn print(self: RPCError) {
+        match self {
+            RPCError::UnknownError => {
+                'RPCUnknownError'.print();
+            },
+            RPCError::RateLimited => {
+                'RateLimited'.print();
+            },
+            RPCError::StarknetError(err) => {
+                err.print();
+            },
+        }
+    }
+}
+
 #[derive(Copy, Drop, Serde, PartialEq)]
 enum ScriptCommandError {
-    RPCError,
     SNCastError,
+    RPCError: RPCError,
 }
 
 impl ScriptCommandErrorTrait of PrintTrait<ScriptCommandError> {
     #[inline(always)]
     fn print(self: ScriptCommandError) {
         match self {
-            ScriptCommandError::RPCError => {
-                'RPCError'.print();
-            },
             ScriptCommandError::SNCastError => {
                 'SNCastError'.print();
+            },
+            ScriptCommandError::RPCError(err) => {
+                err.print();
             },
         }
     }

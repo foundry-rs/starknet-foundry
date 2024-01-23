@@ -10,6 +10,7 @@ use starknet::core::types::StarknetError::{
 use starknet::providers::ProviderError;
 use starknet::providers::ProviderError::StarknetError;
 
+#[derive(Debug)]
 pub enum StarknetCommandError {
     Unhandleable(anyhow::Error),
     Handleable(ProviderError),

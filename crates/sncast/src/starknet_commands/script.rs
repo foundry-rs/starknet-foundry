@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::fs;
 
+use crate::starknet_commands::commands::StarknetCommandError;
 use crate::starknet_commands::{call, declare, deploy, invoke};
 use crate::{get_account, get_nonce, WaitForTx};
 use anyhow::{anyhow, Context, Result};
@@ -41,6 +42,7 @@ use sncast::helpers::scarb_utils::CastConfig;
 use sncast::response::print::print_as_warning;
 use sncast::response::structs::ScriptResponse;
 use starknet::accounts::Account;
+use starknet::core::types::StarknetError as RPCStarknetError;
 use starknet::core::types::{BlockId, BlockTag::Pending, FieldElement};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::{JsonRpcClient, ProviderError};
@@ -49,14 +51,81 @@ use tokio::runtime::Runtime;
 type ScriptStarknetContractArtifacts = StarknetContractArtifacts;
 
 enum ScriptCommandError {
-    RPCError(ProviderError),
     SNCastError,
+    RPCError(RPCError),
 }
 
-fn serialize_script_command_err(err: ScriptCommandError) -> Felt252 {
+enum RPCError {
+    UnknownError,
+    RateLimited,
+    StarknetError(StarknetError),
+}
+
+enum StarknetError {
+    UnknownError,
+    ContractNotFound,
+    BlockNotFound,
+    ClassHashNotFound,
+    ClassAlreadyDeclared,
+    InsufficientMaxFee,
+    InsufficientAccountBalance,
+    ContractError,
+}
+
+fn sn_command_error_to_script_command_error(err: StarknetCommandError) -> ScriptCommandError {
     match err {
-        ScriptCommandError::RPCError(_) => Felt252::from(0),
-        ScriptCommandError::SNCastError => Felt252::from(1),
+        StarknetCommandError::Unhandleable(err) => panic!("{}", err),
+        StarknetCommandError::Handleable(err) => {
+            let res = match err {
+                ProviderError::RateLimited => RPCError::RateLimited,
+                ProviderError::StarknetError(err) => {
+                    let res = match err {
+                        RPCStarknetError::ContractNotFound => StarknetError::ContractNotFound,
+                        RPCStarknetError::BlockNotFound => StarknetError::BlockNotFound,
+                        RPCStarknetError::ClassHashNotFound => StarknetError::ClassHashNotFound,
+                        RPCStarknetError::ClassAlreadyDeclared => {
+                            StarknetError::ClassAlreadyDeclared
+                        }
+                        RPCStarknetError::InsufficientMaxFee => StarknetError::InsufficientMaxFee,
+                        RPCStarknetError::InsufficientAccountBalance => {
+                            StarknetError::InsufficientAccountBalance
+                        }
+                        RPCStarknetError::ContractError(_) => StarknetError::ContractError,
+                        _ => StarknetError::UnknownError,
+                    };
+                    RPCError::StarknetError(res)
+                }
+                _ => RPCError::UnknownError,
+            };
+            ScriptCommandError::RPCError(res)
+        }
+    }
+}
+
+fn serialize_script_command_err(err: ScriptCommandError) -> Vec<Felt252> {
+    match err {
+        ScriptCommandError::SNCastError => vec![Felt252::from(0)],
+        ScriptCommandError::RPCError(err) => {
+            let mut res = vec![Felt252::from(1)];
+            match err {
+                RPCError::UnknownError => res.push(Felt252::from(0)),
+                RPCError::RateLimited => res.push(Felt252::from(1)),
+                RPCError::StarknetError(err) => {
+                    res.push(Felt252::from(2));
+                    match err {
+                        StarknetError::UnknownError => res.push(Felt252::from(0)),
+                        StarknetError::ContractNotFound => res.push(Felt252::from(1)),
+                        StarknetError::BlockNotFound => res.push(Felt252::from(2)),
+                        StarknetError::ClassHashNotFound => res.push(Felt252::from(3)),
+                        StarknetError::ClassAlreadyDeclared => res.push(Felt252::from(4)),
+                        StarknetError::InsufficientMaxFee => res.push(Felt252::from(5)),
+                        StarknetError::InsufficientAccountBalance => res.push(Felt252::from(6)),
+                        StarknetError::ContractError => res.push(Felt252::from(7)),
+                    }
+                }
+            }
+            res
+        }
     }
 }
 
@@ -115,10 +184,11 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                         Ok(CheatcodeHandlingResult::Handled(res))
                     }
                     Err(err) => {
-                        let error_msg_serialized =
-                            serialize_script_command_err(ScriptCommandError::SNCastError);
+                        let err = sn_command_error_to_script_command_error(err);
+                        let error_msg_serialized = serialize_script_command_err(err);
 
-                        let mut res: Vec<Felt252> = vec![Felt252::from(1), error_msg_serialized];
+                        let mut res: Vec<Felt252> = vec![Felt252::from(1)];
+                        res.extend(error_msg_serialized);
                         Ok(CheatcodeHandlingResult::Handled(res))
                     }
                 }

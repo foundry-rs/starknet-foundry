@@ -1,12 +1,11 @@
 use crate::starknet_commands::commands::StarknetCommandError;
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result};
 use clap::Args;
-use sncast::handle_rpc_error;
 use sncast::response::structs::{CallResponse, Hex};
 use starknet::core::types::{BlockId, FieldElement, FunctionCall};
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::jsonrpc::HttpTransport;
-use starknet::providers::{JsonRpcClient, Provider, ProviderError};
+use starknet::providers::{JsonRpcClient, Provider};
 
 #[derive(Args)]
 #[command(about = "Call a contract instance on Starknet", long_about = None)]

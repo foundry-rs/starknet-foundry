@@ -25,8 +25,12 @@ async fn test_failing() {
     let snapbox = Command::new(cargo_bin!("sncast"))
         .current_dir(SCRIPTS_DIR.to_owned() + "/misc")
         .args(args);
-    snapbox.assert().success().stderr_matches(indoc! {r"
+    snapbox.assert().success().stdout_matches(indoc! {r"
+        ...
         command: script
-        error: Got an exception while executing a hint: Hint Error: An error occurred in the called contract [..]
+        msg:[..]
+            original value: [120143725730386528430744932], converted to a string: [call failed]
+
+        status: script panicked
     "});
 }
