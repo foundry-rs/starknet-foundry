@@ -273,6 +273,7 @@ pub fn run(
         sierra_program,
         Some(MetadataComputationConfig::default()),
         OrderedHashMap::default(),
+        false,
     )
     .with_context(|| "Failed to set up runner")?;
 
@@ -280,15 +281,18 @@ pub fn run(
     let func = runner.find_function(name_suffix.as_str())?;
 
     let (entry_code, builtins) = runner.create_entry_code(func, &Vec::new(), usize::MAX)?;
-    let footer = runner.create_code_footer();
+    let footer = SierraCasmRunner::create_code_footer();
     let instructions = chain!(
         entry_code.iter(),
         runner.get_casm_program().instructions.iter(),
-        footer.iter()
     );
 
     // import from cairo-lang-runner
     let (hints_dict, string_to_hint) = build_hints_dict(instructions.clone());
+    let assembled_program = runner
+        .get_casm_program()
+        .clone()
+        .assemble_ex(&entry_code, &footer);
 
     // hint processor
     let block_context = build_default_block_context();
@@ -338,7 +342,7 @@ pub fn run(
         &mut vm,
         &mut cast_runtime,
         hints_dict,
-        instructions,
+        assembled_program.bytecode.iter(),
         builtins,
     ) {
         Ok(result) => match result.value {

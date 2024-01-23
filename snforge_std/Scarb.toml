@@ -4,4 +4,4 @@ version = "0.14.0"
 edition = "2023_10"
 
 [dependencies]
-starknet = "2.4.0"
+starknet = "2.5.0"
