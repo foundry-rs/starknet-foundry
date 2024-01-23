@@ -11,7 +11,7 @@ use starknet_api::transaction::Calldata;
 
 use crate::test_case_summary::{Single, TestCaseSummary};
 
-pub const TRACE_DIR: &str = ".snfoundry_trace";
+pub const TRACE_DIR: &str = "snfoundry_trace";
 
 /// Tree structure representing trace of a call.
 #[derive(Debug, Clone, Serialize)]
@@ -101,7 +101,8 @@ pub fn save_trace_data(summary: &TestCaseSummary<Single>) {
         fs::create_dir_all(&dir_to_save_trace)
             .expect("Failed to create a file to save call trace to");
 
-        fs::write(dir_to_save_trace.join(name), serialized_trace)
+        let filename = format!("{}.json", name);
+        fs::write(dir_to_save_trace.join(filename), serialized_trace)
             .expect("Failed to write call trace to a file");
     }
 }
