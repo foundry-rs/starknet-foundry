@@ -101,7 +101,7 @@ pub fn save_trace_data(summary: &TestCaseSummary<Single>) {
         fs::create_dir_all(&dir_to_save_trace)
             .expect("Failed to create a file to save call trace to");
 
-        let filename = format!("{}.json", name);
+        let filename = format!("{name}.json");
         fs::write(dir_to_save_trace.join(filename), serialized_trace)
             .expect("Failed to write call trace to a file");
     }
