@@ -1,4 +1,3 @@
-
 use core::array::ArrayTrait;
 use core::serde::Serde;
 use core::debug::PrintTrait;
@@ -21,30 +20,14 @@ impl StarknetErrorTrait of PrintTrait<StarknetError> {
     #[inline(always)]
     fn print(self: StarknetError) {
         match self {
-            StarknetError::UnknownError => {
-                'StarknetUnknownError'.print();
-            },
-            StarknetError::ContractNotFound => {
-                'ContractNotFound'.print();
-            },
-            StarknetError::BlockNotFound => {
-                'BlockNotFound'.print();
-            },
-            StarknetError::ClassHashNotFound => {
-                'ClassHashNotFound'.print();
-            },
-            StarknetError::ClassAlreadyDeclared => {
-                'ClassAlreadyDeclared'.print();
-            },
-            StarknetError::InsufficientMaxFee => {
-                'InsufficientMaxFee'.print();
-            },
-            StarknetError::InsufficientAccountBalance => {
-                'InsufficientAccountBalance'.print();
-            },
-            StarknetError::ContractError => {
-                'ContractError'.print();
-            },
+            StarknetError::UnknownError => { 'StarknetUnknownError'.print(); },
+            StarknetError::ContractNotFound => { 'ContractNotFound'.print(); },
+            StarknetError::BlockNotFound => { 'BlockNotFound'.print(); },
+            StarknetError::ClassHashNotFound => { 'ClassHashNotFound'.print(); },
+            StarknetError::ClassAlreadyDeclared => { 'ClassAlreadyDeclared'.print(); },
+            StarknetError::InsufficientMaxFee => { 'InsufficientMaxFee'.print(); },
+            StarknetError::InsufficientAccountBalance => { 'InsufficientAccountBalance'.print(); },
+            StarknetError::ContractError => { 'ContractError'.print(); },
         }
     }
 }
@@ -60,15 +43,9 @@ impl RPCErrorTrait of PrintTrait<RPCError> {
     #[inline(always)]
     fn print(self: RPCError) {
         match self {
-            RPCError::UnknownError => {
-                'RPCUnknownError'.print();
-            },
-            RPCError::RateLimited => {
-                'RateLimited'.print();
-            },
-            RPCError::StarknetError(err) => {
-                err.print();
-            },
+            RPCError::UnknownError => { 'RPCUnknownError'.print(); },
+            RPCError::RateLimited => { 'RateLimited'.print(); },
+            RPCError::StarknetError(err) => { err.print(); },
         }
     }
 }
@@ -83,12 +60,8 @@ impl ScriptCommandErrorTrait of PrintTrait<ScriptCommandError> {
     #[inline(always)]
     fn print(self: ScriptCommandError) {
         match self {
-            ScriptCommandError::SNCastError => {
-                'SNCastError'.print();
-            },
-            ScriptCommandError::RPCError(err) => {
-                err.print();
-            },
+            ScriptCommandError::SNCastError => { 'SNCastError'.print(); },
+            ScriptCommandError::RPCError(err) => { err.print(); },
         }
     }
 }
@@ -111,9 +84,12 @@ fn call(
 
     let mut buf = cheatcode::<'call'>(inputs.span());
 
-    let mut result_data: Result<Array::<felt252>, ScriptCommandError> = Serde::<Result<Array<felt252>>>::deserialize(ref buf).expect('call deserialize failed');
+    let mut result_data: Result<Array<felt252>, ScriptCommandError> = Serde::<
+        Result<Array<felt252>>
+    >::deserialize(ref buf)
+        .expect('call deserialize failed');
     match result_data {
-        Result::Ok(data) => Result::Ok( CallResult { data: data } ),
+        Result::Ok(data) => Result::Ok(CallResult { data: data }),
         Result::Err(err) => Result::Err(err),
     }
 }
