@@ -88,7 +88,24 @@ async fn get_latest_block_number(url: &Url) -> Result<BlockNumber> {
         .await?
     {
         Ok(MaybePendingBlockWithTxHashes::Block(block)) => Ok(BlockNumber(block.block_number)),
-        _ => Err(anyhow!("Could not get the latest block number".to_string())),
+        Ok(MaybePendingBlockWithTxHashes::PendingBlock(block)) => {
+            let client = JsonRpcClient::new(HttpTransport::new(url.clone()));
+            match Handle::current()
+                .spawn(async move {
+                    client
+                        .get_block_with_tx_hashes(BlockId::Hash(block.parent_hash))
+                        .await
+                })
+                .await?
+            {
+                Ok(MaybePendingBlockWithTxHashes::Block(block)) => {
+                    Ok(BlockNumber(block.block_number))
+                }
+                Err(x) => Err(anyhow!(x.to_string())),
+                _ => Err(anyhow!("Parent of pending block is pending as well")),
+            }
+        }
+        Err(x) => Err(anyhow!(x.to_string())),
     }
 }
 

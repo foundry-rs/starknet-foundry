@@ -6,7 +6,7 @@ use blockifier::fee::fee_utils::calculate_tx_l1_gas_usage;
 use blockifier::fee::gas_usage::get_message_segment_length;
 use blockifier::fee::os_resources::OS_RESOURCES;
 use blockifier::fee::os_usage::get_additional_os_resources;
-use blockifier::state::cached_state::{CachedState, StateChangesCount};
+use blockifier::state::cached_state::{CachedState, StateChanges, StateChangesCount};
 use blockifier::transaction::transaction_types::TransactionType;
 use blockifier::{
     abi::constants, block_context::BlockContext, execution::entry_point::ExecutionResources,
@@ -23,12 +23,14 @@ pub fn calculate_used_gas(
     resources: &UsedResources,
 ) -> u128 {
     let total_vm_usage = get_total_vm_usage(&resources.execution_resources);
-    let mut state_changes = state
-        .get_actual_state_changes_for_fee_charge(
-            block_context.fee_token_addresses.eth_fee_token_address,
-            None,
-        )
-        .unwrap();
+    // FIXME: This crashes
+    // let mut state_changes = state
+    //     .get_actual_state_changes_for_fee_charge(
+    //         block_context.fee_token_addresses.eth_fee_token_address,
+    //         None,
+    //     )
+    //     .unwrap();
+    let mut state_changes = StateChanges::default();
     // compiled_class_hash_updates is used only for keeping track of declares
     // which we don't want to include in gas cost
     state_changes.compiled_class_hash_updates.clear();

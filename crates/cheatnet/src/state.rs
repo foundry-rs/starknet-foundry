@@ -71,6 +71,7 @@ impl<'a> BlockifierState<'a> {
     }
 }
 
+// TODO: Standardize (refactor) cascading flow (dict -> fork -> error)
 impl StateReader for ExtendedStateReader {
     fn get_storage_at(
         &mut self,
@@ -80,11 +81,11 @@ impl StateReader for ExtendedStateReader {
         self.dict_state_reader
             .get_storage_at(contract_address, key)
             .or_else(|_| {
-                self.fork_state_reader
-                    .as_mut()
-                    .map_or(Ok(StarkFelt::default()), |reader| {
-                        match_node_response(reader.get_storage_at(contract_address, key))
-                    })
+                let fork_state_reader = self.fork_state_reader.as_mut();
+                if let Some(reader) = fork_state_reader {
+                    return match_node_response(reader.get_storage_at(contract_address, key));
+                }
+                panic!("Unable to obtain fork state reader");
             })
     }
 
@@ -92,11 +93,12 @@ impl StateReader for ExtendedStateReader {
         self.dict_state_reader
             .get_nonce_at(contract_address)
             .or_else(|_| {
-                self.fork_state_reader
-                    .as_mut()
-                    .map_or(Ok(Nonce::default()), |reader| {
-                        match_node_response(reader.get_nonce_at(contract_address))
-                    })
+                let fork_state_reader = self.fork_state_reader.as_mut();
+
+                if let Some(reader) = fork_state_reader {
+                    return match_node_response(reader.get_nonce_at(contract_address));
+                }
+                panic!("Unable to obtain fork state reader");
             })
     }
 
@@ -104,11 +106,11 @@ impl StateReader for ExtendedStateReader {
         self.dict_state_reader
             .get_class_hash_at(contract_address)
             .or_else(|_| {
-                self.fork_state_reader
-                    .as_mut()
-                    .map_or(Ok(ClassHash::default()), |reader| {
-                        match_node_response(reader.get_class_hash_at(contract_address))
-                    })
+                let fork_state_reader = self.fork_state_reader.as_mut();
+                if let Some(reader) = fork_state_reader {
+                    return match_node_response(reader.get_class_hash_at(contract_address));
+                }
+                panic!("Unable to obtain fork state reader");
             })
     }
 
@@ -119,10 +121,11 @@ impl StateReader for ExtendedStateReader {
         self.dict_state_reader
             .get_compiled_contract_class(class_hash)
             .or_else(|_| {
-                self.fork_state_reader.as_mut().map_or(
-                    Err(StateError::UndeclaredClassHash(*class_hash)),
-                    |reader| reader.get_compiled_contract_class(class_hash),
-                )
+                let fork_state_reader = self.fork_state_reader.as_mut();
+                if let Some(reader) = fork_state_reader {
+                    return match_node_response(reader.get_compiled_contract_class(class_hash));
+                }
+                panic!("Unable to obtain fork state reader");
             })
     }
 
@@ -316,13 +319,13 @@ impl TraceData {
     }
 }
 
-fn match_node_response<T: Default>(result: StateResult<T>) -> StateResult<T> {
+fn match_node_response<T>(result: StateResult<T>) -> StateResult<T> {
     match result {
         Ok(class_hash) => Ok(class_hash),
         Err(StateError::StateReadError(msg)) if msg.contains("node") => {
             Err(StateError::StateReadError(msg))
         }
-        _ => Ok(Default::default()),
+        Err(x) => Err(StateError::StateReadError(x.to_string())),
     }
 }
 
