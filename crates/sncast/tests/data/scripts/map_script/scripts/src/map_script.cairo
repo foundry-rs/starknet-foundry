@@ -19,7 +19,8 @@ fn second_contract() {
     );
     assert(invoke_result.transaction_hash != 0, invoke_result.transaction_hash);
 
-    let call_result = call(deploy_result.contract_address, 'get', array![0x1]).expect('mapa2 call failed');
+    let call_result = call(deploy_result.contract_address, 'get', array![0x1])
+        .expect('mapa2 call failed');
     assert(call_result.data == array![0x3], *call_result.data.at(0));
 }
 
@@ -52,7 +53,8 @@ fn main() {
     );
     assert(invoke_result.transaction_hash != 0, invoke_result.transaction_hash);
 
-    let call_result = call(deploy_result.contract_address, 'get', array![0x1]).expect('mapa call failed');
+    let call_result = call(deploy_result.contract_address, 'get', array![0x1])
+        .expect('mapa call failed');
     assert(call_result.data == array![0x2], *call_result.data.at(0));
 
     second_contract();
