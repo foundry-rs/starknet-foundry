@@ -99,7 +99,7 @@ struct TestArgs {
     #[arg(long)]
     rerun_failed: bool,
 
-    /// Save call traces of all tests
+    /// Save execution traces of all test which have passed and are not fuzz tests
     #[arg(long)]
     save_trace_data: bool,
 }
