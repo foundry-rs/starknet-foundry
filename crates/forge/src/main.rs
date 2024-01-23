@@ -145,7 +145,7 @@ fn combine_configs(
         fuzzer_seed
             .or(forge_config.fuzzer_seed)
             .unwrap_or_else(|| thread_rng().next_u64()),
-            save_trace_data || forge_config.save_trace_data,
+        save_trace_data || forge_config.save_trace_data,
     )
 }
 
