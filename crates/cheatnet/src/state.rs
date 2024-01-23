@@ -140,6 +140,7 @@ pub enum CheatStatus<T> {
 }
 
 /// Tree structure representing trace of a call.
+#[derive(Clone)]
 pub struct CallTrace {
     pub entry_point: CallEntryPoint,
     pub nested_calls: Vec<Rc<RefCell<CallTrace>>>,
