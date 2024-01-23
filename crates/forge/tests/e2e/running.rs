@@ -780,7 +780,7 @@ fn init_new_project_test() {
 
             [dependencies]
             snforge_std = {{ git = "https://github.com/foundry-rs/starknet-foundry", tag = "v{}" }}
-            starknet = "2.4.0"
+            starknet = "2.4.4"
 
             [[target.starknet-contract]]
             casm = true
@@ -803,7 +803,7 @@ fn init_new_project_test() {
         casm = true
 
         [dependencies]
-        starknet = "2.4.0"
+        starknet = "2.4.4"
         snforge_std = {{ git = "https://github.com/{}", branch = "{}" }}
         "#,
             remote_url,
@@ -930,37 +930,6 @@ fn printing_in_contracts() {
         [PASS] tests::test_contract::test_cannot_increase_balance_with_zero_value [..]
         Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         "#}
-    );
-}
-
-#[test]
-fn available_gas_error() {
-    let temp = setup_package("available_gas");
-    let snapbox = test_runner();
-
-    let output = snapbox.current_dir(&temp).assert().failure();
-    assert_stdout_contains!(
-        output,
-        indoc! {r"
-        [..]Compiling[..]
-        [..]Finished[..]
-        
-        
-        Collected 3 test(s) from available_gas package
-        Running 0 test(s) from src/
-        Running 3 test(s) from tests/
-        [FAIL] tests::available_gas::available_gas
-        
-        Failure data:
-            Attribute `available_gas` is not supported
-        
-        [PASS] tests::available_gas::aa_test [..]
-        [PASS] tests::available_gas::test [..]
-        Tests: 2 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
-        
-        Failures:
-            tests::available_gas::available_gas
-        "}
     );
 }
 

@@ -176,19 +176,15 @@ pub fn run_test_case(
     runner_params: &Arc<RunnerParams>,
 ) -> Result<RunResultWithInfo> {
     ensure!(
-        case.available_gas.is_none(),
-        "\n    Attribute `available_gas` is not supported\n"
+        case.available_gas != Some(0),
+        "\n\t`available_gas` attribute was incorrectly configured. Make sure you use scarb >= 2.4.4\n"
     );
-    let available_gas = Some(usize::MAX);
 
     let func = runner.find_function(case.name.as_str()).unwrap();
-    let initial_gas = runner
-        .get_initial_available_gas(func, available_gas)
-        .unwrap();
     let runner_args: Vec<Arg> = args.into_iter().map(Arg::Value).collect();
 
     let (entry_code, builtins) = runner
-        .create_entry_code(func, &runner_args, initial_gas)
+        .create_entry_code(func, &runner_args, usize::MAX)
         .unwrap();
     let footer = SierraCasmRunner::create_code_footer();
     let instructions = chain!(
@@ -301,7 +297,7 @@ fn extract_test_case_summary(
             }
         }
         // `ForkStateReader.get_block_info`, `get_fork_state_reader` may return an error
-        // unsupported `available_gas` attribute may be specified
+        // `available_gas` may be specified with Scarb ~2.4
         Err(error) => Ok(TestCaseSummary::Failed {
             name: case.name.clone(),
             msg: Some(error.to_string()),
