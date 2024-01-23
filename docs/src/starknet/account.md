@@ -9,7 +9,10 @@ and the second one deploys it to the network. After deployment, account can be u
 To remove an account from the accounts file, you can use  `sncast account delete`. Please note this only removes the account information stored locally - this will not remove the account from Starknet.
 
 > 💡 **Info**
-> Currently, only OpenZeppelin account creation is supported.
+> Currently, only OpenZeppelin account (cairo 0) creation is supported.
+
+> ⚠️ **Warning**
+> Due to differences between mainnet/goerli and sepolia, the account creation on sepolia network requires users to specify an account contract class hash. This can be any custom class hash, eg `0x05c478ee27f2112411f86f207605b2e2c58cdb647bac0df27f660ef2252359c6` (use this hash at your own risk!).
 
 ## Examples
 
