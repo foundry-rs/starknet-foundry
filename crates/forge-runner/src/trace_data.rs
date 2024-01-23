@@ -1,14 +1,20 @@
+use std::fs;
+use std::path::PathBuf;
 
 // Will be provided by profiler crate in the future
 // This module will be removed!
+use cheatnet::state::CallTrace as InternalCallTrace;
 use serde::{Deserialize, Serialize};
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector};
 use starknet_api::deprecated_contract_class::EntryPointType;
 use starknet_api::transaction::Calldata;
-use cheatnet::state::CallTrace as InternalCallTrace;
+
+use crate::test_case_summary::{Single, TestCaseSummary};
+
+pub const TRACE_DIR: &str = ".snfoundry_trace";
 
 /// Tree structure representing trace of a call.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct CallTrace {
     pub entry_point: CallEntryPoint,
     pub nested_calls: Vec<CallTrace>,
@@ -22,7 +28,7 @@ impl From<InternalCallTrace> for CallTrace {
                 .nested_calls
                 .into_iter()
                 .map(|c| CallTrace::from(c.borrow().clone()))
-                .collect()
+                .collect(),
         }
     }
 }
@@ -84,15 +90,18 @@ impl From<blockifier::execution::entry_point::CallType> for CallType {
     }
 }
 
-// fn save_call_trace(cheatnet_state: &CheatnetState, test_case_name: &str) {
-//     let call_trace_serialized =
-//         serde_json::to_string(&cheatnet_state.call_trace).expect("Failed to serialize call trace");
+pub fn save_trace_data(summary: &TestCaseSummary<Single>) {
+    if let TestCaseSummary::Passed {
+        name, trace_data, ..
+    } = summary
+    {
+        let serialized_trace =
+            serde_json::to_string(trace_data).expect("Failed to serialize call trace");
+        let dir_to_save_trace = PathBuf::from(TRACE_DIR);
+        fs::create_dir_all(&dir_to_save_trace)
+            .expect("Failed to create a file to save call trace to");
 
-//     let dir_to_save_trace = PathBuf::from(TRACE_DIR);
-//     fs::create_dir_all(&dir_to_save_trace).expect("Failed to create a file to save call trace to");
-//     fs::write(
-//         dir_to_save_trace.join(test_case_name),
-//         call_trace_serialized,
-//     )
-//     .expect("Failed to write call trace to a file");
-// }
+        fs::write(dir_to_save_trace.join(name), serialized_trace)
+            .expect("Failed to write call trace to a file");
+    }
+}

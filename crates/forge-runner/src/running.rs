@@ -35,7 +35,7 @@ use cheatnet::runtime_extensions::forge_runtime_extension::{
     get_all_execution_resources, ForgeExtension, ForgeRuntime,
 };
 use cheatnet::runtime_extensions::io_runtime_extension::IORuntimeExtension;
-use cheatnet::state::{BlockInfoReader, CheatnetState, ExtendedStateReader, CallTrace};
+use cheatnet::state::{BlockInfoReader, CallTrace, CheatnetState, ExtendedStateReader};
 use itertools::chain;
 use runtime::starknet::context;
 use runtime::starknet::context::BlockInfo;
@@ -271,11 +271,10 @@ pub fn run_test_case(
 
     let gas = calculate_used_gas(&block_context, &mut blockifier_state, &execution_resources);
 
-
     Ok(RunResultWithInfo {
         run_result,
         gas_used: gas,
-        call_trace: call_trace_ref 
+        call_trace: call_trace_ref,
     })
 }
 
@@ -292,7 +291,7 @@ fn extract_test_case_summary(
                     case,
                     args,
                     result_with_info.gas_used,
-                    result_with_info.call_trace,
+                    &result_with_info.call_trace,
                 )),
                 // CairoRunError comes from VirtualMachineError which may come from HintException that originates in TestExecutionSyscallHandler
                 Err(RunnerError::CairoRunError(error)) => Ok(TestCaseSummary::Failed {
@@ -343,7 +342,7 @@ fn get_context<'a>(runtime: &'a ForgeRuntime) -> &'a EntryPointExecutionContext 
         .context
 }
 
-fn get_call_trace_ref<'a>(runtime: &'a mut ForgeRuntime) -> Rc<RefCell<CallTrace>> {
+fn get_call_trace_ref(runtime: &mut ForgeRuntime) -> Rc<RefCell<CallTrace>> {
     runtime
         .extended_runtime
         .extended_runtime

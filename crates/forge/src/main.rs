@@ -101,7 +101,7 @@ struct TestArgs {
 
     /// Save call traces of all tests
     #[arg(long)]
-    save_call_trace: bool,
+    save_trace_data: bool,
 }
 
 fn validate_fuzzer_runs_value(val: &str) -> Result<u32> {
@@ -133,7 +133,7 @@ fn combine_configs(
     exit_first: bool,
     fuzzer_runs: Option<u32>,
     fuzzer_seed: Option<u64>,
-    save_call_trace: bool,
+    save_trace_data: bool,
     forge_config: &ForgeConfig,
 ) -> RunnerConfig {
     RunnerConfig::new(
@@ -145,7 +145,7 @@ fn combine_configs(
         fuzzer_seed
             .or(forge_config.fuzzer_seed)
             .unwrap_or_else(|| thread_rng().next_u64()),
-        save_call_trace || forge_config.save_call_trace,
+            save_trace_data || forge_config.save_trace_data,
     )
 }
 
@@ -228,7 +228,7 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                     args.exit_first,
                     args.fuzzer_runs,
                     args.fuzzer_seed,
-                    args.save_call_trace,
+                    args.save_trace_data,
                     &forge_config,
                 ));
                 let runner_params = Arc::new(RunnerParams::new(contracts, env::vars().collect()));
@@ -358,7 +358,7 @@ mod tests {
             fork: vec![],
             fuzzer_runs: Some(1234),
             fuzzer_seed: Some(500),
-            save_call_trace: true,
+            save_trace_data: true,
         };
         let workspace_root: Utf8PathBuf = Default::default();
 
@@ -385,7 +385,7 @@ mod tests {
             fork: vec![],
             fuzzer_runs: Some(1234),
             fuzzer_seed: Some(1000),
-            save_call_trace: false,
+            save_trace_data: false,
         };
         let config = combine_configs(
             &workspace_root,

@@ -4,11 +4,11 @@ use crate::trace_data::CallTrace;
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{RunResult, RunResultValue};
+use cheatnet::state::CallTrace as InternalCallTrace;
 use num_traits::Pow;
 use std::cell::RefCell;
 use std::option::Option;
 use std::rc::Rc;
-use cheatnet::state::CallTrace as InternalCallTrace;
 
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct GasStatistics {
@@ -155,7 +155,7 @@ impl TestCaseSummary<Fuzzing> {
                 arguments,
                 gas_info: _,
                 test_statistics: (),
-                trace_data: _
+                trace_data: _,
             } => {
                 let runs = results.len();
                 let gas_usages: Vec<u128> = results
@@ -172,7 +172,7 @@ impl TestCaseSummary<Fuzzing> {
                     gas_info: GasStatistics::new(&gas_usages),
                     arguments,
                     test_statistics: FuzzingStatistics { runs },
-                    trace_data: ()
+                    trace_data: (),
                 }
             }
             TestCaseSummary::Failed {
@@ -201,7 +201,7 @@ impl TestCaseSummary<Single> {
         test_case: &TestCaseRunnable,
         arguments: Vec<Felt252>,
         gas: u128,
-        call_trace: Rc<RefCell<InternalCallTrace>>,
+        call_trace: &Rc<RefCell<InternalCallTrace>>,
     ) -> Self {
         let name = test_case.name.to_string();
         let msg = extract_result_data(&run_result, &test_case.expected_result);
@@ -213,7 +213,7 @@ impl TestCaseSummary<Single> {
                     arguments,
                     test_statistics: (),
                     gas_info: gas,
-                    trace_data: CallTrace::from(call_trace.borrow().clone())
+                    trace_data: CallTrace::from(call_trace.borrow().clone()),
                 },
                 ExpectedTestResult::Panics(_) => TestCaseSummary::Failed {
                     name,
@@ -244,7 +244,7 @@ impl TestCaseSummary<Single> {
                         arguments,
                         test_statistics: (),
                         gas_info: gas,
-                        trace_data: CallTrace::from(call_trace.borrow().clone())
+                        trace_data: CallTrace::from(call_trace.borrow().clone()),
                     },
                 },
             },

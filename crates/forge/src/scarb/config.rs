@@ -13,7 +13,7 @@ pub struct ForgeConfig {
     pub fuzzer_runs: Option<u32>,
     /// Seed to be used by fuzzer
     pub fuzzer_seed: Option<u64>,
-    pub save_call_trace: bool,
+    pub save_trace_data: bool,
 
     pub fork: Vec<ForkTarget>,
 }
@@ -52,7 +52,7 @@ pub(crate) struct RawForgeConfig {
     /// Seed to be used by fuzzer
     pub fuzzer_seed: Option<u64>,
     #[serde(default)]
-    pub save_call_trace: bool,
+    pub save_trace_data: bool,
 
     #[serde(default)]
     pub fork: Vec<RawForkTarget>,
@@ -120,7 +120,7 @@ impl TryFrom<RawForgeConfig> for ForgeConfig {
             exit_first: value.exit_first,
             fuzzer_runs: value.fuzzer_runs,
             fuzzer_seed: value.fuzzer_seed,
-            save_call_trace: value.save_call_trace,
+            save_trace_data: value.save_trace_data,
             fork: fork_targets,
         })
     }
