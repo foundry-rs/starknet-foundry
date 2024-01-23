@@ -68,7 +68,7 @@ pub async fn declare(
         .context("Failed to get scarb metadata")?;
 
     let package = get_package_metadata(&metadata, &manifest_path)
-        .with_context(|| anyhow!("Failed to find package for contract = {contract_name}"))?;
+        .with_context(|| anyhow!("Failed to find package for manifest path = {manifest_path}"))?;
     let contracts = get_contracts_map(&metadata, &package.id)?;
 
     let contract_artifacts = contracts
