@@ -14,19 +14,19 @@ fn simple_package_save_trace() {
 
     assert!(temp
         .join(TRACE_DIR)
-        .join("simple_package::tests::test_fib")
+        .join("simple_package::tests::test_fib.json")
         .exists());
     assert!(!temp
         .join(TRACE_DIR)
-        .join("tests::test_simple::test_failing")
+        .join("tests::test_simple::test_failing.json")
         .exists());
     assert!(!temp
         .join(TRACE_DIR)
-        .join("simple_package::tests::ignored_test")
+        .join("simple_package::tests::ignored_test.json")
         .exists());
     assert!(temp
         .join(TRACE_DIR)
-        .join("tests::ext_function_test::test_simple")
+        .join("tests::ext_function_test::test_simple.json")
         .exists());
 
     // Check if it doesn't crash in case some data already exists
