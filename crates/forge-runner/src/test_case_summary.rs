@@ -1,7 +1,7 @@
 use crate::compiled_runnable::TestCaseRunnable;
 use crate::expected_result::{ExpectedPanicValue, ExpectedTestResult};
-use crate::trace_data::CallTrace;
 use crate::gas::check_available_gas;
+use crate::trace_data::CallTrace;
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{RunResult, RunResultValue};
