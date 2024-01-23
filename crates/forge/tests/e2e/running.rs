@@ -10,6 +10,7 @@ use crate::e2e::common::runner::{
 };
 use std::fs;
 use std::{path::Path, str::FromStr};
+use tempfile::TempDir;
 
 #[test]
 fn simple_package() {
@@ -937,6 +938,7 @@ fn printing_in_contracts() {
 fn incompatible_snforge_std_version_warning() {
     let temp = setup_package("simple_package");
     let manifest_path = temp.child("Scarb.toml");
+    let tempdir = TempDir::new().expect("Failed to create a temporary directory");
 
     let mut scarb_toml = fs::read_to_string(&manifest_path)
         .unwrap()
@@ -950,7 +952,11 @@ fn incompatible_snforge_std_version_warning() {
 
     let snapbox = test_runner();
 
-    let output = snapbox.current_dir(&temp).assert().failure();
+    let output = snapbox
+        .current_dir(&temp)
+        .env("SCARB_CACHE", tempdir.path())
+        .assert()
+        .failure();
     assert_stdout_contains!(
         output,
         indoc! {r"
