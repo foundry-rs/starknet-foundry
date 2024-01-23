@@ -11,6 +11,7 @@ pub use command::*;
 use sierra_casm::compile;
 
 mod command;
+pub mod version;
 
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 struct StarknetArtifacts {
