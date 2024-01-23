@@ -1,5 +1,6 @@
 use crate::compiled_runnable::TestCaseRunnable;
 use crate::expected_result::{ExpectedPanicValue, ExpectedTestResult};
+use crate::trace_data::CallTrace;
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{RunResult, RunResultValue};
@@ -51,6 +52,7 @@ pub struct FuzzingStatistics {
 pub trait TestType {
     type GasInfo: std::fmt::Debug + Clone;
     type TestStatistics: std::fmt::Debug + Clone;
+    type TraceData: std::fmt::Debug + Clone;
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -58,6 +60,7 @@ pub struct Fuzzing;
 impl TestType for Fuzzing {
     type GasInfo = GasStatistics;
     type TestStatistics = FuzzingStatistics;
+    type TraceData = ();
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -65,6 +68,7 @@ pub struct Single;
 impl TestType for Single {
     type GasInfo = u128;
     type TestStatistics = ();
+    type TraceData = CallTrace;
 }
 
 /// Summary of running a single test case
@@ -82,6 +86,8 @@ pub enum TestCaseSummary<T: TestType> {
         gas_info: <T as TestType>::GasInfo,
         /// Statistics of the test run
         test_statistics: <T as TestType>::TestStatistics,
+        /// Test trace data
+        trace_data: <T as TestType>::TraceData,
     },
     /// Test case failed
     Failed {
@@ -146,6 +152,7 @@ impl TestCaseSummary<Fuzzing> {
                 arguments,
                 gas_info: _,
                 test_statistics: (),
+                trace_data: _
             } => {
                 let runs = results.len();
                 let gas_usages: Vec<u128> = results
@@ -162,6 +169,7 @@ impl TestCaseSummary<Fuzzing> {
                     gas_info: GasStatistics::new(&gas_usages),
                     arguments,
                     test_statistics: FuzzingStatistics { runs },
+                    trace_data: ()
                 }
             }
             TestCaseSummary::Failed {

@@ -1,6 +1,8 @@
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::default::Default;
 use std::marker::PhantomData;
+use std::rc::Rc;
 use std::sync::Arc;
 
 use crate::compiled_runnable::ValidatedForkConfig;
@@ -33,7 +35,7 @@ use cheatnet::runtime_extensions::forge_runtime_extension::{
     get_all_execution_resources, ForgeExtension, ForgeRuntime,
 };
 use cheatnet::runtime_extensions::io_runtime_extension::IORuntimeExtension;
-use cheatnet::state::{BlockInfoReader, CheatnetState, ExtendedStateReader};
+use cheatnet::state::{BlockInfoReader, CheatnetState, ExtendedStateReader, CallTrace};
 use itertools::chain;
 use runtime::starknet::context;
 use runtime::starknet::context::BlockInfo;
@@ -163,6 +165,7 @@ fn build_syscall_handler<'a>(
 
 pub struct RunResultWithInfo {
     pub(crate) run_result: Result<RunResult, RunnerError>,
+    pub(crate) call_trace: Rc<RefCell<CallTrace>>,
     pub(crate) gas_used: u128,
 }
 
@@ -263,17 +266,16 @@ pub fn run_test_case(
     );
 
     let block_context = get_context(&forge_runtime).block_context.clone();
+    let call_trace_ref = get_call_trace_ref(&mut forge_runtime);
     let execution_resources = get_all_execution_resources(forge_runtime);
 
     let gas = calculate_used_gas(&block_context, &mut blockifier_state, &execution_resources);
 
-    // if runner_config.save_call_trace {
-    //     save_call_trace(&cheatnet_state, &case.name);
-    // }
 
     Ok(RunResultWithInfo {
         run_result,
         gas_used: gas,
+        call_trace: call_trace_ref 
     })
 }
 
@@ -338,4 +340,16 @@ fn get_context<'a>(runtime: &'a ForgeRuntime) -> &'a EntryPointExecutionContext 
         .extended_runtime
         .hint_handler
         .context
+}
+
+fn get_call_trace_ref<'a>(runtime: &'a mut ForgeRuntime) -> Rc<RefCell<CallTrace>> {
+    runtime
+        .extended_runtime
+        .extended_runtime
+        .extended_runtime
+        .extension
+        .cheatnet_state
+        .trace_data
+        .current_call_stack
+        .top()
 }
