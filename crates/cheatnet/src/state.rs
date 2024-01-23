@@ -20,6 +20,7 @@ use runtime::starknet::state::DictStateReader;
 use starknet_api::core::EntryPointSelector;
 
 use crate::constants::build_test_entry_point;
+use blockifier::state::errors::StateError::StateReadError;
 use starknet_api::transaction::ContractAddressSalt;
 use starknet_api::{
     core::{ClassHash, CompiledClassHash, ContractAddress, Nonce},
@@ -319,10 +320,9 @@ impl TraceData {
 fn match_node_response<T>(result: StateResult<T>) -> StateResult<T> {
     match result {
         Ok(class_hash) => Ok(class_hash),
-        Err(StateError::StateReadError(msg)) if msg.contains("node") => {
-            Err(StateError::StateReadError(msg))
-        }
-        Err(x) => Err(StateError::StateReadError(x.to_string())),
+        Err(StateReadError(msg)) if msg.contains("node") => Err(StateReadError(msg)),
+        Err(StateError::UndeclaredClassHash(x)) => Err(StateError::UndeclaredClassHash(x)),
+        Err(x) => Err(StateReadError(x.to_string())),
     }
 }
 

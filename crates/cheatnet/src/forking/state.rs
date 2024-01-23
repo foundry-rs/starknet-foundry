@@ -3,7 +3,7 @@ use crate::state::BlockInfoReader;
 use blockifier::execution::contract_class::{
     ContractClass as ContractClassBlockifier, ContractClassV0, ContractClassV1,
 };
-use blockifier::state::errors::StateError::StateReadError;
+use blockifier::state::errors::StateError::{StateReadError, UndeclaredClassHash};
 use blockifier::state::state_api::{StateReader, StateResult};
 use cairo_lang_utils::bigint::BigUintAsHex;
 use conversions::{FromConv, IntoConv};
@@ -99,7 +99,6 @@ impl BlockInfoReader for ForkStateReader {
     }
 }
 
-// FIXME: Investigate defaults returned here
 impl StateReader for ForkStateReader {
     fn get_storage_at(
         &mut self,
@@ -196,9 +195,9 @@ impl StateReader for ForkStateReader {
 
                         Ok(contract_class)
                     }
-                    // Err(ProviderError::StarknetError(StarknetError::ClassHashNotFound)) => {
-                    //     Err(UndeclaredClassHash(*class_hash))
-                    // }
+                    Err(ProviderError::StarknetError(StarknetError::ClassHashNotFound)) => {
+                        Err(UndeclaredClassHash(*class_hash))
+                    }
                     Err(ProviderError::Other(boxed)) => other_provider_error!(boxed),
                     Err(x) => Err(StateReadError(format!(
                         "Unable to get compiled class at {class_hash} from fork ({x})"
