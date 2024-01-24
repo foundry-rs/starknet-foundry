@@ -1,4 +1,6 @@
-use forge_runner::trace_data::TRACE_DIR;
+use std::fs;
+
+use forge_runner::trace_data::{CallTrace, TRACE_DIR};
 
 use crate::e2e::common::runner::{setup_package, test_runner};
 
@@ -28,6 +30,17 @@ fn simple_package_save_trace() {
         .join(TRACE_DIR)
         .join("tests::ext_function_test::test_simple.json")
         .exists());
+
+    let trace_data = fs::read_to_string(
+        temp.join(TRACE_DIR)
+            .join("tests::ext_function_test::test_simple.json"),
+    )
+    .unwrap();
+
+    let call_trace: CallTrace =
+        serde_json::from_str(&trace_data).expect("Failed to parse call_trace");
+
+    assert!(call_trace.nested_calls.is_empty());
 
     // Check if it doesn't crash in case some data already exists
     let snapbox = test_runner();

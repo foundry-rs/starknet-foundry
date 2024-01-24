@@ -14,7 +14,7 @@ use crate::test_case_summary::{Single, TestCaseSummary};
 pub const TRACE_DIR: &str = "snfoundry_trace";
 
 /// Tree structure representing trace of a call.
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct CallTrace {
     pub entry_point: CallEntryPoint,
     pub nested_calls: Vec<CallTrace>,
