@@ -52,11 +52,6 @@ impl Default for CastConfig {
     }
 }
 
-pub struct BuildConfig {
-    pub scarb_toml_path: Utf8PathBuf,
-    pub json: bool,
-}
-
 pub trait PropertyFromCastConfig: Sized {
     fn from_toml_value(value: &Value) -> Option<Self>;
     fn default_value() -> Self;
@@ -280,6 +275,11 @@ pub fn get_package_tool_sncast(metadata: &scarb_metadata::Metadata) -> Result<&V
         .ok_or_else(|| anyhow!("No field [tool.sncast] found in package"))?;
 
     Ok(tool_sncast)
+}
+
+pub struct BuildConfig {
+    pub scarb_toml_path: Utf8PathBuf,
+    pub json: bool,
 }
 
 pub fn build(config: &BuildConfig) -> Result<HashMap<String, StarknetContractArtifacts>> {
