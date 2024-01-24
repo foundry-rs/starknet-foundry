@@ -98,7 +98,7 @@ async fn test_fail_when_using_starknet_syscall() {
     snapbox.assert().success().stderr_matches(indoc! {r"
         ...
         command: script
-        error: Got an exception while executing a hint: Custom Hint Error: Starknet syscalls are not supported
+        error: Got an exception while executing a hint: Hint Error: Starknet syscalls are not supported
     "});
 }
 
