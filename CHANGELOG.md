@@ -7,11 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.0] - 2024-01-24
+
 ### Forge
 
 #### Added
 
 - `store` and `load` cheatcodes
+- `--save-trace-data` flag to `snforge test` command. Traces can be used for profiling purposes.
 
 #### Changed
 
@@ -20,6 +23,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Fixed
 
 - Error message for tests that should panic but pass
+
+### Cast
+
+#### Changed
+
+- the 'pending' block is used instead of 'latest' as the default when obtaining the nonce
 
 ## [0.14.0] - 2024-01-11
 

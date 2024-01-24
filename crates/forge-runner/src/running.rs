@@ -1,6 +1,8 @@
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::default::Default;
 use std::marker::PhantomData;
+use std::rc::Rc;
 use std::sync::Arc;
 
 use crate::compiled_runnable::ValidatedForkConfig;
@@ -33,7 +35,7 @@ use cheatnet::runtime_extensions::forge_runtime_extension::{
     get_all_execution_resources, ForgeExtension, ForgeRuntime,
 };
 use cheatnet::runtime_extensions::io_runtime_extension::IORuntimeExtension;
-use cheatnet::state::{BlockInfoReader, CheatnetState, ExtendedStateReader};
+use cheatnet::state::{BlockInfoReader, CallTrace, CheatnetState, ExtendedStateReader};
 use itertools::chain;
 use runtime::starknet::context;
 use runtime::starknet::context::BlockInfo;
@@ -163,6 +165,7 @@ fn build_syscall_handler<'a>(
 
 pub struct RunResultWithInfo {
     pub(crate) run_result: Result<RunResult, RunnerError>,
+    pub(crate) call_trace: Rc<RefCell<CallTrace>>,
     pub(crate) gas_used: u128,
 }
 
@@ -262,6 +265,7 @@ pub fn run_test_case(
     );
 
     let block_context = get_context(&forge_runtime).block_context.clone();
+    let call_trace_ref = get_call_trace_ref(&mut forge_runtime);
     let execution_resources = get_all_execution_resources(forge_runtime);
 
     let gas = calculate_used_gas(&block_context, &mut blockifier_state, &execution_resources);
@@ -269,6 +273,7 @@ pub fn run_test_case(
     Ok(RunResultWithInfo {
         run_result,
         gas_used: gas,
+        call_trace: call_trace_ref,
     })
 }
 
@@ -285,6 +290,7 @@ fn extract_test_case_summary(
                     case,
                     args,
                     result_with_info.gas_used,
+                    &result_with_info.call_trace,
                 )),
                 // CairoRunError comes from VirtualMachineError which may come from HintException that originates in TestExecutionSyscallHandler
                 Err(RunnerError::CairoRunError(error)) => Ok(TestCaseSummary::Failed {
@@ -333,4 +339,16 @@ fn get_context<'a>(runtime: &'a ForgeRuntime) -> &'a EntryPointExecutionContext 
         .extended_runtime
         .hint_handler
         .context
+}
+
+fn get_call_trace_ref(runtime: &mut ForgeRuntime) -> Rc<RefCell<CallTrace>> {
+    runtime
+        .extended_runtime
+        .extended_runtime
+        .extended_runtime
+        .extension
+        .cheatnet_state
+        .trace_data
+        .current_call_stack
+        .top()
 }
