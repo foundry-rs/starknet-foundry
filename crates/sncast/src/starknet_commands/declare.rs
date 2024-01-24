@@ -2,6 +2,7 @@ use anyhow::{anyhow, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
 use scarb_api::{get_contracts_map, ScarbCommand};
+
 use sncast::helpers::scarb_utils::get_package_metadata;
 use sncast::helpers::scarb_utils::get_scarb_manifest;
 use sncast::response::structs::DeclareResponse;
@@ -9,6 +10,7 @@ use sncast::response::structs::Hex;
 use sncast::{apply_optional, handle_rpc_error, handle_wait_for_tx, WaitForTx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{ConnectedAccount, Declaration};
+
 use starknet::core::types::FieldElement;
 use starknet::{
     accounts::{Account, SingleOwnerAccount},
@@ -83,10 +85,10 @@ pub async fn declare(
     let casm_class_hash = casm_contract_definition.class_hash()?;
 
     let declaration = account.declare(Arc::new(contract_definition.flatten()?), casm_class_hash);
+
     let declaration = apply_optional(declaration, max_fee, Declaration::max_fee);
     let declaration = apply_optional(declaration, nonce, Declaration::nonce);
     let declared = declaration.send().await;
-
     match declared {
         Ok(result) => {
             handle_wait_for_tx(
