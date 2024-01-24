@@ -91,7 +91,7 @@ fn deploy_resources_with_constructor() {
         payload.used_resources,
         ExecutionResources {
             vm_resources: VmExecutionResources {
-                n_steps: 86,
+                n_steps: 87,
                 n_memory_holes: 0,
                 builtin_instance_counter: HashMap::from([("range_check_builtin".to_owned(), 2)]),
             },

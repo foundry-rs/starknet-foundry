@@ -32,6 +32,7 @@ fn declare_cost_is_omitted() {
     assert_gas!(result, "declare_cost_is_omitted", 1);
 }
 
+// FIXME: Code (steps) was added but the cost did not change
 #[test]
 fn deploy_syscall_cost() {
     let test = test_case!(
@@ -43,7 +44,8 @@ fn deploy_syscall_cost() {
             #[test]
             fn deploy_syscall_cost() {
                 let contract = declare('GasChecker');
-                deploy_syscall(contract.class_hash, 0, array![].span(), false);
+                let (address, _) = deploy_syscall(contract.class_hash, 0, array![].span(), false).unwrap();
+                assert(address != 0.try_into().unwrap(), 'wrong deployed addr');
             }
         "
         ),
