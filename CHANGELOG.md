@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Added
+- Bump to cairo 2.5.0
+
+#### Changed
+
+- `SafeDispatcher`s usages need to be tagged with `#[feature("safe_dispatcher)]` (directly before usage)
+
 ## [0.15.0] - 2024-01-24
 
 ### Forge
