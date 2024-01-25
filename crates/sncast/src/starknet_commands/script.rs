@@ -258,7 +258,7 @@ pub fn run(
     config: &CastConfig,
 ) -> Result<ScriptResponse> {
     warn_if_sncast_std_not_compatible(metadata)?;
-    let artifacts = ensure_lib_artifact(metadata, package_metadata, artifacts)?;
+    let artifacts = inject_lib_artifact(metadata, package_metadata, artifacts)?;
 
     let artifact = artifacts
         .get(SCRIPT_LIB_ARTIFACT_NAME)
@@ -383,7 +383,7 @@ fn warn_if_sncast_std_not_compatible(scarb_metadata: &Metadata) -> Result<()> {
     Ok(())
 }
 
-fn ensure_lib_artifact(
+fn inject_lib_artifact(
     metadata: &Metadata,
     package_metadata: &PackageMetadata,
     artifacts: &mut HashMap<String, StarknetContractArtifacts>,
