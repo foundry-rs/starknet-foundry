@@ -2,13 +2,11 @@ use crate::starknet_commands::account::Account;
 use crate::starknet_commands::show_config::ShowConfig;
 use crate::starknet_commands::{
     account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,
-    script::Script,
 };
 use anyhow::{Context, Result};
 use sncast::response::print::{print_cast_command_result, OutputFormat};
 
 use crate::starknet_commands::declare::BuildConfig;
-use crate::starknet_commands::script::UI as ScriptUI;
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand};
 use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
@@ -20,6 +18,8 @@ use sncast::{
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use tokio::runtime::Runtime;
+use crate::starknet_commands::script::logger::ScriptLogger;
+use crate::starknet_commands::script::Script;
 
 mod starknet_commands;
 
@@ -123,7 +123,7 @@ fn main() -> Result<()> {
     let runtime = Runtime::new().expect("Failed to instantiate Runtime");
 
     if let Commands::Script(script) = cli.command {
-        let script_ui = ScriptUI::new(script.quiet, numbers_format, output_format);
+        let script_ui = ScriptLogger::new(script.quiet, numbers_format, output_format);
         let mut result = starknet_commands::script::run(
             &script.script_module_name,
             &cli.path_to_scarb_toml,

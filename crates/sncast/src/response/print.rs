@@ -100,7 +100,7 @@ pub fn print_command_result<T: CommandResponse>(
     Ok(())
 }
 
-pub fn pretty_output(output: OutputData, output_format: &OutputFormat) -> Result<Vec<String>> {
+fn pretty_output(output: OutputData, output_format: &OutputFormat) -> Result<Vec<String>> {
     match output_format {
         OutputFormat::Json => {
             let json_output: IndexMap<String, OutputValue> = output.into_iter().collect();
