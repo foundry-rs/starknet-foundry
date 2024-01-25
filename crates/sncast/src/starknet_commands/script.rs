@@ -258,7 +258,7 @@ pub fn run(
     config: &CastConfig,
 ) -> Result<ScriptResponse> {
     warn_if_sncast_std_not_compatible(metadata)?;
-    ensure_lib_artifact(metadata, package_metadata, artifacts)?;
+    let artifacts = ensure_lib_artifact(metadata, package_metadata, artifacts)?;
 
     let artifact = artifacts
         .get(SCRIPT_LIB_ARTIFACT_NAME)
@@ -324,7 +324,7 @@ pub fn run(
         provider,
         tokio_runtime,
         config,
-        artifacts,
+        artifacts: &artifacts,
     };
 
     let mut cast_runtime = ExtendedRuntime {
