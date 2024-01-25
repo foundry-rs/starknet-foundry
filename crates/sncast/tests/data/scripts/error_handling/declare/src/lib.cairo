@@ -1,0 +1,2 @@
+mod declare_missing_contract;
+mod declare_same_contract_twice;

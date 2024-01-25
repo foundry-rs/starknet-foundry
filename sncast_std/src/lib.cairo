@@ -53,6 +53,7 @@ impl RPCErrorTrait of PrintTrait<RPCError> {
 #[derive(Copy, Drop, Serde, PartialEq)]
 enum ScriptCommandError {
     SNCastError,
+    ContractArtifactsNotFound,
     RPCError: RPCError,
 }
 
@@ -61,6 +62,7 @@ impl ScriptCommandErrorTrait of PrintTrait<ScriptCommandError> {
     fn print(self: ScriptCommandError) {
         match self {
             ScriptCommandError::SNCastError => { 'SNCastError'.print(); },
+            ScriptCommandError::ContractArtifactsNotFound => { 'ContractArtifactsNotFound'.print(); },
             ScriptCommandError::RPCError(err) => { err.print(); },
         }
     }
@@ -94,7 +96,7 @@ fn call(
     }
 }
 
-#[derive(Drop, Clone)]
+#[derive(Drop, Clone, Serde)]
 struct DeclareResult {
     class_hash: ClassHash,
     transaction_hash: felt252,
@@ -102,7 +104,7 @@ struct DeclareResult {
 
 fn declare(
     contract_name: felt252, max_fee: Option<felt252>, nonce: Option<felt252>
-) -> DeclareResult {
+) -> Result<DeclareResult, ScriptCommandError> {
     let mut inputs = array![contract_name];
 
     let mut max_fee_serialized = array![];
@@ -114,12 +116,14 @@ fn declare(
     inputs.append_span(max_fee_serialized.span());
     inputs.append_span(nonce_serialized.span());
 
-    let buf = cheatcode::<'declare'>(inputs.span());
+    let mut buf = cheatcode::<'declare'>(inputs.span());
 
-    let class_hash: ClassHash = (*buf[0]).try_into().expect('Invalid class hash value');
-    let transaction_hash = *buf[1];
+    let mut result_data: Result<DeclareResult, ScriptCommandError> = Serde::<
+        Result<DeclareResult>
+    >::deserialize(ref buf)
+        .expect('declare deserialize failed');
 
-    DeclareResult { class_hash, transaction_hash }
+    result_data
 }
 
 #[derive(Drop, Clone)]

@@ -13,6 +13,7 @@ use starknet::providers::ProviderError::StarknetError;
 #[derive(Debug)]
 pub enum StarknetCommandError {
     Unhandleable(anyhow::Error),
+    ContractArtifactsNotFound,
     Handleable(ProviderError),
 }
 
@@ -25,6 +26,7 @@ impl From<anyhow::Error> for StarknetCommandError {
 pub fn handle_starknet_command_error(error: StarknetCommandError) -> anyhow::Error {
     match error {
         StarknetCommandError::Unhandleable(error) => error,
+        StarknetCommandError::ContractArtifactsNotFound => anyhow::anyhow!("Failed to find artifacts in starknet_artifacts.json file. Please ensure you have enabled sierra and casm code generation in Scarb.toml"),
         StarknetCommandError::Handleable(error) => match error {
             StarknetError(FailedToReceiveTransaction) => {
                 anyhow::anyhow!("Node failed to receive transaction")

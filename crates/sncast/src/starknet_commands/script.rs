@@ -52,6 +52,7 @@ type ScriptStarknetContractArtifacts = StarknetContractArtifacts;
 
 enum ScriptCommandError {
     SNCastError,
+    ContractArtifactsNotFound,
     RPCError(RPCError),
 }
 
@@ -75,6 +76,9 @@ enum StarknetError {
 fn sn_command_error_to_script_command_error(err: StarknetCommandError) -> ScriptCommandError {
     match err {
         StarknetCommandError::Unhandleable(err) => panic!("{}", err),
+        StarknetCommandError::ContractArtifactsNotFound => {
+            ScriptCommandError::ContractArtifactsNotFound
+        }
         StarknetCommandError::Handleable(err) => {
             let res = match err {
                 ProviderError::RateLimited => RPCError::RateLimited,
@@ -95,6 +99,12 @@ fn sn_command_error_to_script_command_error(err: StarknetCommandError) -> Script
                     };
                     RPCError::StarknetError(res)
                 }
+                ProviderError::Other(err) => {
+                    let err_msg = err.to_string();
+                    dbg!(err_msg);
+
+                    RPCError::UnknownError
+                }
                 _ => RPCError::UnknownError,
             };
             ScriptCommandError::RPCError(res)
@@ -105,8 +115,9 @@ fn sn_command_error_to_script_command_error(err: StarknetCommandError) -> Script
 fn serialize_script_command_err(err: ScriptCommandError) -> Vec<Felt252> {
     match err {
         ScriptCommandError::SNCastError => vec![Felt252::from(0)],
+        ScriptCommandError::ContractArtifactsNotFound => vec![Felt252::from(1)],
         ScriptCommandError::RPCError(err) => {
-            let mut res = vec![Felt252::from(1)];
+            let mut res = vec![Felt252::from(2)];
             match err {
                 RPCError::UnknownError => res.push(Felt252::from(0)),
                 RPCError::RateLimited => res.push(Felt252::from(1)),
@@ -127,6 +138,15 @@ fn serialize_script_command_err(err: ScriptCommandError) -> Vec<Felt252> {
             res
         }
     }
+}
+
+fn serialize_script_err_to_felt_vec(err: StarknetCommandError) -> Vec<Felt252> {
+    let err = sn_command_error_to_script_command_error(err);
+    let error_msg_serialized = serialize_script_command_err(err);
+
+    let mut res: Vec<Felt252> = vec![Felt252::from(1)];
+    res.extend(error_msg_serialized);
+    res
 }
 
 #[derive(Args)]
@@ -184,11 +204,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                         Ok(CheatcodeHandlingResult::Handled(res))
                     }
                     Err(err) => {
-                        let err = sn_command_error_to_script_command_error(err);
-                        let error_msg_serialized = serialize_script_command_err(err);
-
-                        let mut res: Vec<Felt252> = vec![Felt252::from(1)];
-                        res.extend(error_msg_serialized);
+                        let res = serialize_script_err_to_felt_vec(err);
                         Ok(CheatcodeHandlingResult::Handled(res))
                     }
                 }
@@ -207,7 +223,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     self.config.keystore.clone(),
                 ))?;
 
-                let declare_response = self.tokio_runtime.block_on(declare::declare(
+                match self.tokio_runtime.block_on(declare::declare(
                     &contract_name,
                     max_fee,
                     &account,
@@ -218,13 +234,21 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                         timeout: self.config.wait_timeout,
                         retry_interval: self.config.wait_retry_interval,
                     },
-                ))?;
-
-                let res: Vec<Felt252> = vec![
-                    Felt252::from_(declare_response.class_hash.0),
-                    Felt252::from_(declare_response.transaction_hash.0),
-                ];
-                Ok(CheatcodeHandlingResult::Handled(res))
+                )) {
+                    Ok(declare_response) => {
+                        let res: Vec<Felt252> = vec![
+                            Felt252::from(0),
+                            Felt252::from_(declare_response.class_hash.0),
+                            Felt252::from_(declare_response.transaction_hash.0),
+                        ];
+                        Ok(CheatcodeHandlingResult::Handled(res))
+                    }
+                    Err(err) => {
+                        dbg!(&err);
+                        let res = serialize_script_err_to_felt_vec(err);
+                        Ok(CheatcodeHandlingResult::Handled(res))
+                    }
+                }
             }
             "deploy" => {
                 let class_hash = reader.read_felt().into_();
