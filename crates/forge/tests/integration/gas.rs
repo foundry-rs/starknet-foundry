@@ -32,7 +32,7 @@ fn declare_cost_is_omitted() {
     assert_gas!(result, "declare_cost_is_omitted", 1);
 }
 
-// FIXME: Code (steps) was added but the cost did not change
+// FIXME(#1596): Code (steps) was added but the cost did not change
 #[test]
 fn deploy_syscall_cost() {
     let test = test_case!(

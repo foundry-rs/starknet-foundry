@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Changed
 
-- `SafeDispatcher`s usages need to be tagged with `#[feature("safe_dispatcher)]` (directly before usage)
+- `SafeDispatcher`s usages need to be tagged with `#[feature("safe_dispatcher)]` (directly before usage), see [the shamans post](https://community.starknet.io/t/cairo-v2-5-0-is-out/112807#safe-dispatchers-15)
 
 ## [0.15.0] - 2024-01-24
 

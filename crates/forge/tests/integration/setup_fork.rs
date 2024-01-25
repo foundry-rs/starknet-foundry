@@ -259,7 +259,7 @@ fn fork_get_block_info_fails() {
             #[test]
             #[fork(url: "{INTEGRATION_RPC_URL}", block_id: BlockId::Number(999999999999))]
             fn fork_get_block_info_fails() {{
-                let _bx_i = starknet::get_block_info().unbox();
+                starknet::get_block_info();
             }}
         "#
     )
