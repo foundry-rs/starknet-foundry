@@ -13,7 +13,7 @@ mod Mapa {
         storage: LegacyMap::<felt252, felt252>,
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl Map of super::IMap<ContractState> {
         fn put(ref self: ContractState, key: felt252, value: felt252) {
             self.storage.write(key, value);
@@ -36,7 +36,7 @@ mod Mapa2 {
         storage: LegacyMap::<felt252, felt252>,
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl Map of super::IMap<ContractState> {
         fn put(ref self: ContractState, key: felt252, value: felt252) {
             self.storage.write(key, value);

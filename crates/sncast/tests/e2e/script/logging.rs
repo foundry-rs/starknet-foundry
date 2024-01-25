@@ -204,7 +204,7 @@ async fn test_one_of_the_steps_failing() {
        Transaction hash = 0x[..]
 
        command: script
-       error: Got an exception while executing a hint: Custom Hint Error: Transaction has been reverted = Error in the called contract (0x[..]
+       error: Got an exception while executing a hint: Hint Error: Transaction has been reverted = Error in the called contract (0x[..]
        [..]
        Got an exception while executing a hint: Custom Hint Error: Entry point EntryPointSelector(StarkFelt("0x[..]
        ...
