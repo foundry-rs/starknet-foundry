@@ -193,7 +193,6 @@ pub fn run_test_case(
     let instructions = chain!(
         entry_code.iter(),
         runner.get_casm_program().instructions.iter(),
-        footer.iter()
     );
     let (hints_dict, string_to_hint) = build_hints_dict(instructions.clone());
 
@@ -257,7 +256,11 @@ pub fn run_test_case(
         &mut vm,
         &mut forge_runtime,
         hints_dict,
-        instructions,
+        runner
+            .get_casm_program()
+            .assemble_ex(&entry_code, &footer)
+            .bytecode
+            .iter(),
         builtins,
     );
 

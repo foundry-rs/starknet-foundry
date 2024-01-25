@@ -140,6 +140,7 @@ pub async fn run_tests_from_crate(
             tests.sierra_program.clone(),
             Some(MetadataComputationConfig::default()),
             OrderedHashMap::default(),
+            false,
         )
         .context("Failed setting up runner.")?,
     );

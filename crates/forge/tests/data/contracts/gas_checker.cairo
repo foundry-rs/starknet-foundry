@@ -39,12 +39,12 @@ mod GasChecker {
         }
 
         fn bitwise(self: @ContractState) {
-            let bitwise = 1_u8 & 1_u8;
-            let bitwise = 1_u8 & 1_u8;
-            let bitwise = 1_u8 & 1_u8;
-            let bitwise = 1_u8 & 1_u8;
-            let bitwise = 1_u8 & 1_u8;
-            let bitwise = 1_u8 & 1_u8;
+            1_u8 & 1_u8;
+            1_u8 & 1_u8;
+            1_u8 & 1_u8;
+            1_u8 & 1_u8;
+            1_u8 & 1_u8;
+            1_u8 & 1_u8;
         }
 
         fn pedersen(self: @ContractState) {

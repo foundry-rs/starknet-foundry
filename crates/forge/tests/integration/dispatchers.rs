@@ -130,7 +130,7 @@ fn advanced_types() {
 fn handling_errors() {
     let test = test_case!(
         indoc!(
-            r"
+            r#"
         use array::ArrayTrait;
         use result::ResultTrait;
         use option::OptionTrait;
@@ -154,6 +154,7 @@ fn handling_errors() {
             let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
         
         
+            #[feature("safe_dispatcher")]
             match safe_dispatcher.do_a_panic() {
                 Result::Ok(_) => panic_with_felt252('shouldve panicked'),
                 Result::Err(panic_data) => {
@@ -164,6 +165,8 @@ fn handling_errors() {
         
             let mut panic_data = ArrayTrait::new();
             panic_data.append('capybara');
+
+            #[feature("safe_dispatcher")]
             match safe_dispatcher.do_a_panic_with(panic_data) {
                 Result::Ok(_) => panic_with_felt252('shouldve panicked'),
                 Result::Err(panic_data) => {
@@ -171,7 +174,8 @@ fn handling_errors() {
                     assert(*panic_data.at(0) == 'capybara', *panic_data.at(0));
                 }
             };
-        
+            
+            #[feature("safe_dispatcher")]
             match safe_dispatcher.do_a_panic_with(ArrayTrait::new()) {
                 Result::Ok(_) => panic_with_felt252('shouldve panicked'),
                 Result::Err(panic_data) => {
@@ -179,7 +183,7 @@ fn handling_errors() {
                 }
             };
         }
-    "
+    "#
         ),
         Contract::from_code_path(
             "HelloStarknet".to_string(),
@@ -441,6 +445,7 @@ fn proxy_storage() {
 
 #[test]
 #[allow(clippy::too_many_lines)]
+#[ignore] // Not doable right now in production
 fn proxy_dispatcher_panic() {
     let test = test_case!(
         indoc!(
@@ -583,12 +588,8 @@ fn nonexistent_method_call() {
         fn nonexistent_method_call() {
             let contract_address = deploy_contract('Contract', @ArrayTrait::new());
         
-            let caller_dispatcher = ICallerSafeDispatcher { contract_address };
-        
-            match caller_dispatcher.invoke_nonexistent() {
-                Result::Ok(_) => panic_with_felt252('should have panicked'),
-                Result::Err(x) => assert(*x.at(0) == 'panic_msg', 'wrong panic msg')
-            }
+            let caller_dispatcher = ICallerDispatcher { contract_address };
+            caller_dispatcher.invoke_nonexistent();
         }
     "
         ),
@@ -613,7 +614,7 @@ fn nonexistent_method_call() {
     assert_case_output_contains!(
         result,
         "nonexistent_method_call",
-        "Entry point selector 0x01fdb214e1495025fa4baf660d34f03c0d8b5037cf10311d2a3202a806aa9485 not found in contract 0x03749985f03821f0537e3a65dd37d6e3a24ef7822042fd03d33141c698ae0de0"
+        "Entry point selector 0x01fdb214e1495025fa4baf660d34f03c0d8b5037cf10311d2a3202a806aa9485 not found in contract"
     );
 }
 
@@ -680,12 +681,9 @@ fn nonexistent_libcall_function() {
                     #[abi(embed_v0)]
                     impl ContractImpl of super::IContract<ContractState> {
                         fn invoke_nonexistent_libcall_from_contract(ref self: ContractState, class_hash: ClassHash) {
-                            let lib_dispatcher = ICallerSafeLibraryDispatcher { class_hash };
+                            let lib_dispatcher = ICallerLibraryDispatcher { class_hash };
 
-                            match lib_dispatcher.invoke_nonexistent() {
-                                Result::Ok(_) => panic_with_felt252('should have panicked'),
-                                Result::Err(x) => assert(*x.at(0) == 'panic_msg', 'wrong panic msg')
-                            }
+                            lib_dispatcher.invoke_nonexistent();
                         }
                     }
                 }
@@ -808,7 +806,7 @@ fn nonexistent_class_libcall() {
                     impl ContractImpl of super::IContract<ContractState> {
                         fn invoke_nonexistent_libcall_from_contract(ref self: ContractState) {
                             let target_class_hash: ClassHash = class_hash_try_from_felt252(5_felt252).unwrap();
-                            let lib_dispatcher = ICallerSafeLibraryDispatcher { class_hash: target_class_hash  };
+                            let lib_dispatcher = ICallerLibraryDispatcher { class_hash: target_class_hash  };
                             lib_dispatcher.invoke_nonexistent();
                         }
                     }
