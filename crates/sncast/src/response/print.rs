@@ -35,7 +35,7 @@ pub enum OutputValue {
 }
 
 /// Constrained subset of `serde::json`. No nested maps allowed.
-pub type OutputData = Vec<(String, OutputValue)>;
+type OutputData = Vec<(String, OutputValue)>;
 
 impl Serialize for OutputValue {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -84,8 +84,9 @@ pub fn print_command_result<T: CommandResponse>(
     numbers_format: NumbersFormat,
     output_format: &OutputFormat,
 ) -> Result<()> {
-    let mut output: OutputData = result_as_output_data(result);
-    output.insert(0, header);
+    let mut output: OutputData = vec![header];
+    output.extend(result_as_output_data(result));
+
     let formatted_output = output
         .into_iter()
         .map(|(k, v)| (k, apply_numbers_formatting(v, numbers_format)))
