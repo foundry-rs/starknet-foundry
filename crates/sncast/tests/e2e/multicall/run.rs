@@ -23,7 +23,13 @@ async fn test_happy_case() {
     let stdout_str =
         std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
 
-    assert!(out.stderr.is_empty());
+    let stderr_str =
+        std::str::from_utf8(&out.stderr).expect("failed to convert command stderr to string");
+    assert!(
+        stderr_str.is_empty(),
+        "Multicall error, stderr: \n{stderr_str}",
+    );
+
     assert!(stdout_str.contains("command: multicall"));
 }
 
@@ -47,7 +53,12 @@ async fn test_calldata_ids() {
     let stdout_str =
         std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
 
-    assert!(out.stderr.is_empty());
+    let stderr_str =
+        std::str::from_utf8(&out.stderr).expect("failed to convert command stderr to string");
+    assert!(
+        stderr_str.is_empty(),
+        "Multicall error, stderr: \n{stderr_str}",
+    );
     assert!(stdout_str.contains("command: multicall"));
 }
 

@@ -1,6 +1,8 @@
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::default::Default;
 use std::marker::PhantomData;
+use std::rc::Rc;
 use std::sync::Arc;
 
 use crate::compiled_runnable::ValidatedForkConfig;
@@ -10,9 +12,7 @@ use crate::test_case_summary::{Single, TestCaseSummary};
 use crate::{RunnerConfig, RunnerParams, TestCaseRunnable, CACHE_DIR};
 use anyhow::{bail, ensure, Result};
 use blockifier::execution::common_hints::ExecutionMode;
-use blockifier::execution::entry_point::{
-    CallEntryPoint, CallType, EntryPointExecutionContext, ExecutionResources,
-};
+use blockifier::execution::entry_point::{EntryPointExecutionContext, ExecutionResources};
 use blockifier::execution::execution_utils::ReadOnlySegments;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::state::cached_state::CachedState;
@@ -27,6 +27,7 @@ use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use camino::Utf8Path;
 use cheatnet::constants as cheatnet_constants;
+use cheatnet::constants::build_test_entry_point;
 use cheatnet::forking::state::ForkStateReader;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::CallToBlockifierExtension;
 use cheatnet::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
@@ -34,16 +35,11 @@ use cheatnet::runtime_extensions::forge_runtime_extension::{
     get_all_execution_resources, ForgeExtension, ForgeRuntime,
 };
 use cheatnet::runtime_extensions::io_runtime_extension::IORuntimeExtension;
-use cheatnet::state::{BlockInfoReader, CheatnetBlockInfo, CheatnetState, ExtendedStateReader};
+use cheatnet::state::{BlockInfoReader, CallTrace, CheatnetState, ExtendedStateReader};
 use itertools::chain;
+use runtime::starknet::context;
+use runtime::starknet::context::BlockInfo;
 use runtime::{ExtendedRuntime, StarknetRuntime};
-use starknet::core::utils::get_selector_from_name;
-use starknet_api::core::PatriciaKey;
-use starknet_api::core::{ContractAddress, EntryPointSelector};
-use starknet_api::deprecated_contract_class::EntryPointType;
-use starknet_api::hash::StarkHash;
-use starknet_api::patricia_key;
-use starknet_api::transaction::Calldata;
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
 
@@ -131,9 +127,9 @@ pub(crate) fn run_fuzz_test(
     })
 }
 
-fn build_context(block_info: CheatnetBlockInfo) -> EntryPointExecutionContext {
-    let block_context = cheatnet_constants::build_block_context(block_info);
-    let account_context = cheatnet_constants::build_transaction_context();
+fn build_context(block_info: BlockInfo) -> EntryPointExecutionContext {
+    let block_context = context::build_block_context(block_info);
+    let account_context = context::build_transaction_context();
 
     EntryPointExecutionContext::new(
         &block_context,
@@ -150,22 +146,7 @@ fn build_syscall_handler<'a>(
     execution_resources: &'a mut ExecutionResources,
     context: &'a mut EntryPointExecutionContext,
 ) -> SyscallHintProcessor<'a> {
-    let test_selector = get_selector_from_name("TEST_CONTRACT_SELECTOR").unwrap();
-    let entry_point_selector =
-        EntryPointSelector(StarkHash::new(test_selector.to_bytes_be()).unwrap());
-    let entry_point = CallEntryPoint {
-        class_hash: None,
-        code_address: Some(ContractAddress(patricia_key!(
-            cheatnet_constants::TEST_ADDRESS
-        ))),
-        entry_point_type: EntryPointType::External,
-        entry_point_selector,
-        calldata: Calldata(Arc::new(vec![])),
-        storage_address: ContractAddress(patricia_key!(cheatnet_constants::TEST_ADDRESS)),
-        caller_address: ContractAddress::default(),
-        call_type: CallType::Call,
-        initial_gas: u64::MAX,
-    };
+    let entry_point = build_test_entry_point();
 
     SyscallHintProcessor::new(
         blockifier_state,
@@ -184,6 +165,7 @@ fn build_syscall_handler<'a>(
 
 pub struct RunResultWithInfo {
     pub(crate) run_result: Result<RunResult, RunnerError>,
+    pub(crate) call_trace: Rc<RefCell<CallTrace>>,
     pub(crate) gas_used: u128,
 }
 
@@ -197,25 +179,20 @@ pub fn run_test_case(
     runner_params: &Arc<RunnerParams>,
 ) -> Result<RunResultWithInfo> {
     ensure!(
-        case.available_gas.is_none(),
-        "\n    Attribute `available_gas` is not supported\n"
+        case.available_gas != Some(0),
+        "\n\t`available_gas` attribute was incorrectly configured. Make sure you use scarb >= 2.4.4\n"
     );
-    let available_gas = Some(usize::MAX);
 
     let func = runner.find_function(case.name.as_str()).unwrap();
-    let initial_gas = runner
-        .get_initial_available_gas(func, available_gas)
-        .unwrap();
     let runner_args: Vec<Arg> = args.into_iter().map(Arg::Value).collect();
 
     let (entry_code, builtins) = runner
-        .create_entry_code(func, &runner_args, initial_gas)
+        .create_entry_code(func, &runner_args, usize::MAX)
         .unwrap();
     let footer = SierraCasmRunner::create_code_footer();
     let instructions = chain!(
         entry_code.iter(),
         runner.get_casm_program().instructions.iter(),
-        footer.iter()
     );
     let (hints_dict, string_to_hint) = build_hints_dict(instructions.clone());
 
@@ -279,11 +256,16 @@ pub fn run_test_case(
         &mut vm,
         &mut forge_runtime,
         hints_dict,
-        instructions,
+        runner
+            .get_casm_program()
+            .assemble_ex(&entry_code, &footer)
+            .bytecode
+            .iter(),
         builtins,
     );
 
     let block_context = get_context(&forge_runtime).block_context.clone();
+    let call_trace_ref = get_call_trace_ref(&mut forge_runtime);
     let execution_resources = get_all_execution_resources(forge_runtime);
 
     let gas = calculate_used_gas(&block_context, &mut blockifier_state, &execution_resources);
@@ -291,6 +273,7 @@ pub fn run_test_case(
     Ok(RunResultWithInfo {
         run_result,
         gas_used: gas,
+        call_trace: call_trace_ref,
     })
 }
 
@@ -307,6 +290,7 @@ fn extract_test_case_summary(
                     case,
                     args,
                     result_with_info.gas_used,
+                    &result_with_info.call_trace,
                 )),
                 // CairoRunError comes from VirtualMachineError which may come from HintException that originates in TestExecutionSyscallHandler
                 Err(RunnerError::CairoRunError(error)) => Ok(TestCaseSummary::Failed {
@@ -322,7 +306,7 @@ fn extract_test_case_summary(
             }
         }
         // `ForkStateReader.get_block_info`, `get_fork_state_reader` may return an error
-        // unsupported `available_gas` attribute may be specified
+        // `available_gas` may be specified with Scarb ~2.4
         Err(error) => Ok(TestCaseSummary::Failed {
             name: case.name.clone(),
             msg: Some(error.to_string()),
@@ -355,4 +339,16 @@ fn get_context<'a>(runtime: &'a ForgeRuntime) -> &'a EntryPointExecutionContext 
         .extended_runtime
         .hint_handler
         .context
+}
+
+fn get_call_trace_ref(runtime: &mut ForgeRuntime) -> Rc<RefCell<CallTrace>> {
+    runtime
+        .extended_runtime
+        .extended_runtime
+        .extended_runtime
+        .extension
+        .cheatnet_state
+        .trace_data
+        .current_call_stack
+        .top()
 }

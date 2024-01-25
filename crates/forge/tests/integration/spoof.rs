@@ -15,24 +15,12 @@ fn start_and_stop_spoof_single_attribute() {
             use serde::Serde;
             use starknet::ContractAddress;
             use array::SpanTrait;
-            use snforge_std::{ declare, ContractClassTrait, start_spoof, stop_spoof, TxInfoMock, TxInfoMockTrait, CheatTarget, cheatcodes::tx_info::extend_array };
+            use snforge_std::{ declare, ContractClassTrait, start_spoof, stop_spoof, TxInfoMock, TxInfoMockTrait, CheatTarget };
             use starknet::info::v2::ResourceBounds;
 
             #[starknet::interface]
             trait ISpoofChecker<TContractState> {
-                fn get_tx_hash(ref self: TContractState) -> felt252;
-                fn get_nonce(ref self: TContractState) -> felt252;
-                fn get_account_contract_address(ref self: TContractState) -> ContractAddress;
-                fn get_signature(ref self: TContractState) -> Span<felt252>;
-                fn get_version(ref self: TContractState) -> felt252;
-                fn get_max_fee(ref self: TContractState) -> u128;
-                fn get_chain_id(ref self: TContractState) -> felt252;
-                fn get_resource_bounds(ref self: TContractState) -> Span<ResourceBounds>;
-                fn get_tip(ref self: TContractState) -> u128;
-                fn get_paymaster_data(ref self: TContractState) -> Span<felt252>;
-                fn get_nonce_data_availability_mode(ref self: TContractState) -> u32;
-                fn get_fee_data_availability_mode(ref self: TContractState) -> u32;
-                fn get_account_deployment_data(ref self: TContractState) -> Span<felt252>;
+                fn get_tx_info(ref self: TContractState) -> starknet::info::v2::TxInfo;
             }
 
             #[test]
@@ -41,52 +29,21 @@ fn start_and_stop_spoof_single_attribute() {
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ISpoofCheckerDispatcher { contract_address };
 
-                let nonce_before_mock = dispatcher.get_nonce();
-                let account_address_before_mock = dispatcher.get_account_contract_address();
-                let version_before_mock = dispatcher.get_version();
-                let max_fee_before_mock = dispatcher.get_max_fee();
-                let chain_id_before_mock = dispatcher.get_chain_id();
-                let signature_before_mock = dispatcher.get_signature();
-                let tx_hash_before_mock = dispatcher.get_tx_hash();
-                let mut resource_bounds_before_mock = array![];
-                dispatcher.get_resource_bounds().serialize(ref resource_bounds_before_mock);
-                let tip_before_mock = dispatcher.get_tip();
-                let paymaster_data_before_mock = dispatcher.get_paymaster_data();
-                let nonce_data_availability_mode_before_mock = dispatcher.get_nonce_data_availability_mode();
-                let fee_data_availability_mode_before_mock = dispatcher.get_fee_data_availability_mode();
-                let account_deployment_data_before_mock = dispatcher.get_account_deployment_data();
+                let tx_info_before = dispatcher.get_tx_info();
 
                 let mut tx_info_mock = TxInfoMockTrait::default();
                 tx_info_mock.transaction_hash = Option::Some(421);
+
                 start_spoof(CheatTarget::One(contract_address), tx_info_mock);
 
-                let transaction_hash = dispatcher.get_tx_hash();
-                assert(transaction_hash == 421, 'Invalid tx hash');
+                let mut expected_tx_info = tx_info_before;
+                expected_tx_info.transaction_hash = 421;
 
-                assert(dispatcher.get_nonce() == nonce_before_mock, 'Invalid nonce');
-                assert(
-                    dispatcher.get_account_contract_address() == account_address_before_mock,
-                    'Invalid account address'
-                );
-                assert(dispatcher.get_version() == version_before_mock, 'Invalid version');
-                assert(dispatcher.get_max_fee() == max_fee_before_mock, 'Invalid max_fee');
-                assert(dispatcher.get_chain_id() == chain_id_before_mock, 'Invalid chain_id');
-                assert(dispatcher.get_signature() == signature_before_mock, 'Invalid signature');
-
-                let mut resource_bounds = array![];
-                dispatcher.get_resource_bounds().serialize(ref resource_bounds);
-
-                assert(resource_bounds == resource_bounds_before_mock, 'Invalid resource bounds');
-                assert(dispatcher.get_tip() == tip_before_mock, 'Invalid tip');
-                assert(dispatcher.get_paymaster_data() == paymaster_data_before_mock, 'Invalid paymaster data');
-                assert(dispatcher.get_nonce_data_availability_mode() == nonce_data_availability_mode_before_mock, 'Invalid nonce data');
-                assert(dispatcher.get_fee_data_availability_mode() == fee_data_availability_mode_before_mock, 'Invalid fee data');
-                assert(dispatcher.get_account_deployment_data() == account_deployment_data_before_mock, 'Invalid account deployment');
+                assert_tx_info(dispatcher.get_tx_info(), expected_tx_info);
 
                 stop_spoof(CheatTarget::One(contract_address));
 
-                let transaction_hash = dispatcher.get_tx_hash();
-                assert(transaction_hash == tx_hash_before_mock, 'Invalid tx hash');
+                assert_tx_info(dispatcher.get_tx_info(), tx_info_before);
             }
 
             #[test]
@@ -95,19 +52,45 @@ fn start_and_stop_spoof_single_attribute() {
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ISpoofCheckerDispatcher { contract_address };
 
-                let tx_hash_before_mock = dispatcher.get_tx_hash();
+                let tx_info_before = dispatcher.get_tx_info();
 
                 let mut tx_info_mock = TxInfoMockTrait::default();
                 tx_info_mock.transaction_hash = Option::Some(421);
+
                 start_spoof(CheatTarget::All, tx_info_mock);
 
-                let transaction_hash = dispatcher.get_tx_hash();
-                assert(transaction_hash == 421, 'Invalid tx hash');
+                let mut expected_tx_info = tx_info_before;
+                expected_tx_info.transaction_hash = 421;
+
+                assert_tx_info(dispatcher.get_tx_info(), expected_tx_info);
 
                 stop_spoof(CheatTarget::One(contract_address));
 
-                let transaction_hash = dispatcher.get_tx_hash();
-                assert(tx_hash_before_mock == transaction_hash, 'Tx hash did not change back');
+                assert_tx_info(dispatcher.get_tx_info(), tx_info_before);
+            }
+
+            fn assert_tx_info(tx_info: starknet::info::v2::TxInfo, expected_tx_info: starknet::info::v2::TxInfo) {
+                assert(tx_info.version == expected_tx_info.version, 'Invalid version');
+                assert(tx_info.account_contract_address == expected_tx_info.account_contract_address, 'Invalid account_contract_addr');
+                assert(tx_info.max_fee == expected_tx_info.max_fee, 'Invalid max_fee');
+                assert(tx_info.signature == expected_tx_info.signature, 'Invalid signature');
+                assert(tx_info.transaction_hash == expected_tx_info.transaction_hash, 'Invalid transaction_hash');
+                assert(tx_info.chain_id == expected_tx_info.chain_id, 'Invalid chain_id');
+                assert(tx_info.nonce == expected_tx_info.nonce, 'Invalid nonce');
+
+                let mut resource_bounds = array![];
+                tx_info.resource_bounds.serialize(ref resource_bounds);
+
+                let mut expected_resource_bounds = array![];
+                expected_tx_info.resource_bounds.serialize(ref expected_resource_bounds);
+
+                assert(resource_bounds == expected_resource_bounds, 'Invalid resource bounds');
+                
+                assert(tx_info.tip == expected_tx_info.tip, 'Invalid tip');
+                assert(tx_info.paymaster_data == expected_tx_info.paymaster_data, 'Invalid paymaster_data');
+                assert(tx_info.nonce_data_availability_mode == expected_tx_info.nonce_data_availability_mode, 'Invalid nonce_data_av_mode');
+                assert(tx_info.fee_data_availability_mode == expected_tx_info.fee_data_availability_mode, 'Invalid fee_data_av_mode');
+                assert(tx_info.account_deployment_data == expected_tx_info.account_deployment_data, 'Invalid account_deployment_data');
             }
         "
         ),
@@ -137,7 +120,7 @@ fn start_spoof_all_attributes_mocked() {
             use starknet::ContractAddressIntoFelt252;
             use starknet::Felt252TryIntoContractAddress;
             use array::SpanTrait;
-            use snforge_std::{ declare, ContractClassTrait, start_spoof, stop_spoof, TxInfoMock, TxInfoMockTrait, CheatTarget, cheatcodes::tx_info::extend_array };
+            use snforge_std::{ declare, ContractClassTrait, start_spoof, stop_spoof, TxInfoMock, TxInfoMockTrait, CheatTarget };
             use starknet::info::v2::ResourceBounds;
 
             #[starknet::interface]
@@ -252,24 +235,12 @@ fn start_spoof_cancel_mock_by_setting_attribute_to_none() {
             use serde::Serde;
             use starknet::ContractAddress;
             use array::SpanTrait;
-            use snforge_std::{ declare, ContractClassTrait, start_spoof, stop_spoof, TxInfoMock, TxInfoMockTrait, CheatTarget, cheatcodes::tx_info::extend_array };
+            use snforge_std::{ declare, ContractClassTrait, start_spoof, stop_spoof, TxInfoMock, TxInfoMockTrait, CheatTarget };
             use starknet::info::v2::ResourceBounds;
 
             #[starknet::interface]
             trait ISpoofChecker<TContractState> {
-                fn get_tx_hash(ref self: TContractState) -> felt252;
-                fn get_nonce(ref self: TContractState) -> felt252;
-                fn get_account_contract_address(ref self: TContractState) -> ContractAddress;
-                fn get_signature(ref self: TContractState) -> Span<felt252>;
-                fn get_version(ref self: TContractState) -> felt252;
-                fn get_max_fee(ref self: TContractState) -> u128;
-                fn get_chain_id(ref self: TContractState) -> felt252;
-                fn get_resource_bounds(ref self: TContractState) -> Span<ResourceBounds>;
-                fn get_tip(ref self: TContractState) -> u128;
-                fn get_paymaster_data(ref self: TContractState) -> Span<felt252>;
-                fn get_nonce_data_availability_mode(ref self: TContractState) -> u32;
-                fn get_fee_data_availability_mode(ref self: TContractState) -> u32;
-                fn get_account_deployment_data(ref self: TContractState) -> Span<felt252>;
+                fn get_tx_info(ref self: TContractState) -> starknet::info::v2::TxInfo;
             }
 
             #[test]
@@ -278,52 +249,45 @@ fn start_spoof_cancel_mock_by_setting_attribute_to_none() {
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ISpoofCheckerDispatcher { contract_address };
 
-                let nonce_before_mock = dispatcher.get_nonce();
-                let account_address_before_mock = dispatcher.get_account_contract_address();
-                let version_before_mock = dispatcher.get_version();
-                let max_fee_before_mock = dispatcher.get_max_fee();
-                let chain_id_before_mock = dispatcher.get_chain_id();
-                let signature_before_mock = dispatcher.get_signature();
-                let tx_hash_before_mock = dispatcher.get_tx_hash();
-                let mut resource_bounds_before_mock = array![];
-                dispatcher.get_resource_bounds().serialize(ref resource_bounds_before_mock);
-                let tip_before_mock = dispatcher.get_tip();
-                let paymaster_data_before_mock = dispatcher.get_paymaster_data();
-                let nonce_data_availability_mode_before_mock = dispatcher.get_nonce_data_availability_mode();
-                let fee_data_availability_mode_before_mock = dispatcher.get_fee_data_availability_mode();
-                let account_deployment_data_before_mock = dispatcher.get_account_deployment_data();
+                let tx_info_before_mock = dispatcher.get_tx_info();
 
                 let mut tx_info_mock = TxInfoMockTrait::default();
                 tx_info_mock.transaction_hash = Option::Some(421);
+
                 start_spoof(CheatTarget::One(contract_address), tx_info_mock);
 
-                let transaction_hash = dispatcher.get_tx_hash();
-                assert(transaction_hash == 421, 'Invalid tx hash');
+                let mut expected_tx_info = tx_info_before_mock;
+                expected_tx_info.transaction_hash = 421;
+
+                assert_tx_info(dispatcher.get_tx_info(), expected_tx_info);
 
                 start_spoof(CheatTarget::One(contract_address), TxInfoMockTrait::default());
 
-                let transaction_hash = dispatcher.get_tx_hash();
-                assert(transaction_hash == tx_hash_before_mock, 'Invalid tx hash');
+                assert_tx_info(dispatcher.get_tx_info(), tx_info_before_mock);
+            }
 
-                assert(dispatcher.get_nonce() == nonce_before_mock, 'Invalid nonce');
-                assert(
-                    dispatcher.get_account_contract_address() == account_address_before_mock,
-                    'Invalid account address'
-                );
-                assert(dispatcher.get_version() == version_before_mock, 'Invalid version');
-                assert(dispatcher.get_max_fee() == max_fee_before_mock, 'Invalid max_fee');
-                assert(dispatcher.get_chain_id() == chain_id_before_mock, 'Invalid chain_id');
-                assert(dispatcher.get_signature() == signature_before_mock, 'Invalid signature');
+            fn assert_tx_info(tx_info: starknet::info::v2::TxInfo, expected_tx_info: starknet::info::v2::TxInfo) {
+                assert(tx_info.version == expected_tx_info.version, 'Invalid version');
+                assert(tx_info.account_contract_address == expected_tx_info.account_contract_address, 'Invalid account_contract_addr');
+                assert(tx_info.max_fee == expected_tx_info.max_fee, 'Invalid max_fee');
+                assert(tx_info.signature == expected_tx_info.signature, 'Invalid signature');
+                assert(tx_info.transaction_hash == expected_tx_info.transaction_hash, 'Invalid transaction_hash');
+                assert(tx_info.chain_id == expected_tx_info.chain_id, 'Invalid chain_id');
+                assert(tx_info.nonce == expected_tx_info.nonce, 'Invalid nonce');
 
                 let mut resource_bounds = array![];
-                dispatcher.get_resource_bounds().serialize(ref resource_bounds);
+                tx_info.resource_bounds.serialize(ref resource_bounds);
 
-                assert(resource_bounds == resource_bounds_before_mock, 'Invalid resource bounds');
-                assert(dispatcher.get_tip() == tip_before_mock, 'Invalid tip');
-                assert(dispatcher.get_paymaster_data() == paymaster_data_before_mock, 'Invalid paymaster data');
-                assert(dispatcher.get_nonce_data_availability_mode() == nonce_data_availability_mode_before_mock, 'Invalid nonce data');
-                assert(dispatcher.get_fee_data_availability_mode() == fee_data_availability_mode_before_mock, 'Invalid fee data');
-                assert(dispatcher.get_account_deployment_data() == account_deployment_data_before_mock, 'Invalid account deployment');
+                let mut expected_resource_bounds = array![];
+                expected_tx_info.resource_bounds.serialize(ref expected_resource_bounds);
+
+                assert(resource_bounds == expected_resource_bounds, 'Invalid resource bounds');
+                
+                assert(tx_info.tip == expected_tx_info.tip, 'Invalid tip');
+                assert(tx_info.paymaster_data == expected_tx_info.paymaster_data, 'Invalid paymaster_data');
+                assert(tx_info.nonce_data_availability_mode == expected_tx_info.nonce_data_availability_mode, 'Invalid nonce_data_av_mode');
+                assert(tx_info.fee_data_availability_mode == expected_tx_info.fee_data_availability_mode, 'Invalid fee_data_av_mode');
+                assert(tx_info.account_deployment_data == expected_tx_info.account_deployment_data, 'Invalid account_deployment_data');
             }
         "
         ),
@@ -352,24 +316,12 @@ fn start_spoof_no_attributes_mocked() {
             use starknet::ContractAddress;
             use starknet::ContractAddressIntoFelt252;
             use array::SpanTrait;
-            use snforge_std::{ declare, ContractClassTrait, start_spoof, stop_spoof, TxInfoMock, TxInfoMockTrait, CheatTarget, cheatcodes::tx_info::extend_array };
+            use snforge_std::{ declare, ContractClassTrait, start_spoof, stop_spoof, TxInfoMock, TxInfoMockTrait, CheatTarget };
             use starknet::info::v2::ResourceBounds;
 
             #[starknet::interface]
             trait ISpoofChecker<TContractState> {
-                fn get_tx_hash(ref self: TContractState) -> felt252;
-                fn get_nonce(ref self: TContractState) -> felt252;
-                fn get_account_contract_address(ref self: TContractState) -> ContractAddress;
-                fn get_signature(ref self: TContractState) -> Span<felt252>;
-                fn get_version(ref self: TContractState) -> felt252;
-                fn get_max_fee(ref self: TContractState) -> u128;
-                fn get_chain_id(ref self: TContractState) -> felt252;
-                fn get_resource_bounds(ref self: TContractState) -> Span<ResourceBounds>;
-                fn get_tip(ref self: TContractState) -> u128;
-                fn get_paymaster_data(ref self: TContractState) -> Span<felt252>;
-                fn get_nonce_data_availability_mode(ref self: TContractState) -> u32;
-                fn get_fee_data_availability_mode(ref self: TContractState) -> u32;
-                fn get_account_deployment_data(ref self: TContractState) -> Span<felt252>;
+                fn get_tx_info(ref self: TContractState) -> starknet::info::v2::TxInfo;
             }
 
             #[test]
@@ -378,45 +330,36 @@ fn start_spoof_no_attributes_mocked() {
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ISpoofCheckerDispatcher { contract_address };
 
-                let nonce_before_mock = dispatcher.get_nonce();
-                let tx_hash_before_mock = dispatcher.get_tx_hash();
-                let account_address_before_mock = dispatcher.get_account_contract_address();
-                let version_before_mock = dispatcher.get_version();
-                let max_fee_before_mock = dispatcher.get_max_fee();
-                let chain_id_before_mock = dispatcher.get_chain_id();
-                let signature_before_mock = dispatcher.get_signature();
+                let tx_info_before_mock = dispatcher.get_tx_info();
 
-                let mut resource_bounds_before_mock = array![];
-                dispatcher.get_resource_bounds().serialize(ref resource_bounds_before_mock);
-                let tip_before_mock = dispatcher.get_tip();
-                let paymaster_data_before_mock = dispatcher.get_paymaster_data();
-                let nonce_data_availability_mode_before_mock = dispatcher.get_nonce_data_availability_mode();
-                let fee_data_availability_mode_before_mock = dispatcher.get_fee_data_availability_mode();
-                let account_deployment_data_before_mock = dispatcher.get_account_deployment_data();
-                
                 let mut tx_info_mock = TxInfoMockTrait::default();
                 start_spoof(CheatTarget::One(contract_address), tx_info_mock);
 
-                assert(dispatcher.get_tx_hash() == tx_hash_before_mock, 'Invalid tx hash');
-                assert(dispatcher.get_nonce() == nonce_before_mock, 'Invalid nonce');
-                assert(
-                    dispatcher.get_account_contract_address() == account_address_before_mock,
-                    'Invalid account address'
-                );
-                assert(dispatcher.get_version() == version_before_mock, 'Invalid version');
-                assert(dispatcher.get_max_fee() == max_fee_before_mock, 'Invalid max_fee');
-                assert(dispatcher.get_chain_id() == chain_id_before_mock, 'Invalid chain_id');
-                assert(dispatcher.get_signature() == signature_before_mock, 'Invalid signature');
+                assert_tx_info(dispatcher.get_tx_info(), tx_info_before_mock);
+            }
+
+            fn assert_tx_info(tx_info: starknet::info::v2::TxInfo, expected_tx_info: starknet::info::v2::TxInfo) {
+                assert(tx_info.version == expected_tx_info.version, 'Invalid version');
+                assert(tx_info.account_contract_address == expected_tx_info.account_contract_address, 'Invalid account_contract_addr');
+                assert(tx_info.max_fee == expected_tx_info.max_fee, 'Invalid max_fee');
+                assert(tx_info.signature == expected_tx_info.signature, 'Invalid signature');
+                assert(tx_info.transaction_hash == expected_tx_info.transaction_hash, 'Invalid transaction_hash');
+                assert(tx_info.chain_id == expected_tx_info.chain_id, 'Invalid chain_id');
+                assert(tx_info.nonce == expected_tx_info.nonce, 'Invalid nonce');
+
                 let mut resource_bounds = array![];
-                dispatcher.get_resource_bounds().serialize(ref resource_bounds);
+                tx_info.resource_bounds.serialize(ref resource_bounds);
 
-                assert(resource_bounds == resource_bounds_before_mock, 'Invalid resource bounds');
-                assert(dispatcher.get_tip() == tip_before_mock, 'Invalid tip');
-                assert(dispatcher.get_paymaster_data() == paymaster_data_before_mock, 'Invalid paymaster data');
-                assert(dispatcher.get_nonce_data_availability_mode() == nonce_data_availability_mode_before_mock, 'Invalid nonce data');
-                assert(dispatcher.get_fee_data_availability_mode() == fee_data_availability_mode_before_mock, 'Invalid fee data');
-                assert(dispatcher.get_account_deployment_data() == account_deployment_data_before_mock, 'Invalid account deployment');
+                let mut expected_resource_bounds = array![];
+                expected_tx_info.resource_bounds.serialize(ref expected_resource_bounds);
 
+                assert(resource_bounds == expected_resource_bounds, 'Invalid resource bounds');
+                
+                assert(tx_info.tip == expected_tx_info.tip, 'Invalid tip');
+                assert(tx_info.paymaster_data == expected_tx_info.paymaster_data, 'Invalid paymaster_data');
+                assert(tx_info.nonce_data_availability_mode == expected_tx_info.nonce_data_availability_mode, 'Invalid nonce_data_av_mode');
+                assert(tx_info.fee_data_availability_mode == expected_tx_info.fee_data_availability_mode, 'Invalid fee_data_av_mode');
+                assert(tx_info.account_deployment_data == expected_tx_info.account_deployment_data, 'Invalid account_deployment_data');
             }
         "
         ),
@@ -504,7 +447,7 @@ fn start_spoof_all() {
             use starknet::ContractAddress;
             use starknet::ContractAddressIntoFelt252;
             use array::SpanTrait;
-            use snforge_std::{ declare, ContractClassTrait, start_spoof, stop_spoof, TxInfoMock, TxInfoMockTrait, CheatTarget, cheatcodes::tx_info::extend_array };
+            use snforge_std::{ declare, ContractClassTrait, start_spoof, stop_spoof, TxInfoMock, TxInfoMockTrait, CheatTarget };
             use starknet::info::v2::ResourceBounds;
 
             #[starknet::interface]

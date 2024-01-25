@@ -1,21 +1,23 @@
-use crate::helpers::constants::{ACCOUNT_FILE_PATH, CONTRACTS_DIR, DEVNET_ENV_FILE, URL};
+use crate::helpers::constants::{
+    ACCOUNT_FILE_PATH, CONTRACTS_DIR, DEVNET_ENV_FILE, DEVNET_OZ_CLASS_HASH, URL,
+};
 use camino::Utf8PathBuf;
 use primitive_types::U256;
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
 use serde_json::{json, Map, Value};
-use sncast::get_keystore_password;
+use sncast::{apply_optional, get_chain_id, get_keystore_password};
 use sncast::{get_account, get_provider, parse_number};
-use starknet::accounts::{Account, Call};
+use starknet::accounts::{Account, AccountFactory, Call, Execution, OpenZeppelinAccountFactory};
 use starknet::contract::ContractFactory;
 use starknet::core::types::contract::{CompiledClass, SierraClass};
-use starknet::core::types::FieldElement;
 use starknet::core::types::TransactionReceipt;
+use starknet::core::types::{FieldElement, InvokeTransactionResult};
 use starknet::core::utils::get_contract_address;
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
-use starknet::signers::SigningKey;
+use starknet::signers::{LocalWallet, SigningKey};
 use std::env;
 use std::fs;
 use std::fs::OpenOptions;
@@ -69,6 +71,46 @@ pub async fn declare_contract(account: &str, path: &str, shortname: &str) -> Fie
     class_hash
 }
 
+pub async fn deploy_keystore_account() {
+    let keystore_path = "tests/data/keystore/predeployed_key.json";
+    let account_path = "tests/data/keystore/predeployed_account.json";
+    let private_key =
+        SigningKey::from_keystore(keystore_path, "123").expect("Could not get the private_key");
+
+    let provider = get_provider(URL).expect("Could not get the provider");
+    let chain_id = get_chain_id(&provider)
+        .await
+        .expect("Could not get chain_id from provider");
+
+    let contents =
+        std::fs::read_to_string(account_path).expect("Failed to read keystore account file");
+    let items: serde_json::Value = serde_json::from_str(&contents)
+        .unwrap_or_else(|_| panic!("Failed to parse keystore account file at = {account_path}"));
+
+    let factory = OpenZeppelinAccountFactory::new(
+        parse_number(DEVNET_OZ_CLASS_HASH).expect("Could not parse DEVNET_OZ_CLASS_HASH"),
+        chain_id,
+        LocalWallet::from_signing_key(private_key),
+        provider,
+    )
+    .await
+    .expect("Could not create Account Factory");
+
+    mint_token(
+        items["deployment"]["address"]
+            .as_str()
+            .expect("Could not get address"),
+        9_999_999_999_999_999_999,
+    )
+    .await;
+
+    factory
+        .deploy(parse_number("0xa5d90c65b1b1339").expect("Could not parse salt"))
+        .send()
+        .await
+        .expect("Could not deploy keystore account");
+}
+
 pub async fn declare_deploy_contract(account: &str, path: &str, shortname: &str) {
     let class_hash = declare_contract(account, path, shortname).await;
 
@@ -98,7 +140,13 @@ pub async fn declare_deploy_contract(account: &str, path: &str, shortname: &str)
     };
 }
 
-pub async fn invoke_map_contract(key: &str, value: &str, account: &str, contract_address: &str) {
+pub async fn invoke_contract(
+    account: &str,
+    contract_address: &str,
+    entry_point_name: &str,
+    max_fee: Option<FieldElement>,
+    constructor_calldata: &[&str],
+) -> InvokeTransactionResult {
     let provider = get_provider(URL).expect("Could not get the provider");
     let account = get_account(
         account,
@@ -109,17 +157,24 @@ pub async fn invoke_map_contract(key: &str, value: &str, account: &str, contract
     .await
     .expect("Could not get the account");
 
+    let mut calldata: Vec<FieldElement> = vec![];
+
+    for value in constructor_calldata {
+        let value: FieldElement = parse_number(value).expect("Could not parse the calldata");
+        calldata.push(value);
+    }
+
     let call = Call {
         to: parse_number(contract_address).expect("Could not parse the contract address"),
-        selector: get_selector_from_name("put").expect("Could not get selector from put"),
-        calldata: vec![
-            parse_number(key).expect("Could not parse the key"),
-            parse_number(value).expect("Could not parse the value"),
-        ],
+        selector: get_selector_from_name(entry_point_name)
+            .unwrap_or_else(|_| panic!("Could not get selector from {entry_point_name}")),
+        calldata,
     };
-    let execution = account.execute(vec![call]);
 
-    execution.send().await.unwrap();
+    let execution = account.execute(vec![call]);
+    let execution = apply_optional(execution, max_fee, Execution::max_fee);
+
+    execution.send().await.unwrap()
 }
 
 // devnet-rs accepts an amount as u128

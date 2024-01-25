@@ -2,7 +2,7 @@
 
 `snforge` considers all functions in your project marked with `#[test]` attribute as tests.
 By default, test functions run without any arguments.
-However, adding any arguments to function signature will enable [fuzz testing](./advanced/fuzz-testing.md) for this
+However, adding any arguments to function signature will enable [fuzz testing](./fuzz-testing.md) for this
 test case.
 
 `snforge` will collect tests only from these places:
@@ -91,6 +91,5 @@ tests from `tests/test_contract.cairo`, `tests/common.cairo` and `tests/common/u
 Sometimes you may want a share some code between tests to organize them. 
 The package structure of tests makes it easy! 
 In both of the above examples, you can
-make the functions from `tests/common/utils.cairo` available in `tests/test_contract.cairo` by using:
-- an absolute import: `use tests::common::utils;`
-- a relative import: `use super::common::utils;`
+make the functions from `tests/common/utils.cairo` available in `tests/test_contract.cairo` 
+by using a relative import: `use super::common::utils;`.

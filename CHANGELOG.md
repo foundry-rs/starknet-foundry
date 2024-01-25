@@ -9,10 +9,71 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
+#### Added
+- Bump to cairo 2.5.0
+
+#### Changed
+
+- `SafeDispatcher`s usages need to be tagged with `#[feature("safe_dispatcher)]` (directly before usage), see [the shamans post](https://community.starknet.io/t/cairo-v2-5-0-is-out/112807#safe-dispatchers-15)
+
+## [0.15.0] - 2024-01-24
+
+### Forge
+
+#### Added
+
+- `store` and `load` cheatcodes
+- `--save-trace-data` flag to `snforge test` command. Traces can be used for profiling purposes.
+
+#### Changed
+
+- `available_gas` attribute is now supported (Scarb >= 2.4.4 is required)
+
+#### Fixed
+
+- Error message for tests that should panic but pass
+
+### Cast
+
+#### Changed
+
+- the 'pending' block is used instead of 'latest' as the default when obtaining the nonce
+
+## [0.14.0] - 2024-01-11
+
+### Forge
+
+#### Added
+
+- `Secp256k1` and `Secp256r1` curves support for `KeyPair` in `snforge_std`
+
+#### Changed
+
+- maximum number of computational steps per call set to current Starknet limit (3M)
+- `mean` and `std deviation` fields are displayed for gas usage while running fuzzing tests 
+- Cairo edition in `snforge_std` and `sncast_std` set to `2023_10`
+- `snforge_std::signature` module with `stark_curve`, `secp256k1_curve` and `secp256r1_curve` submodules
+
+#### Fixed
+
+- Safe library dispatchers in test code no longer propagate errors when not intended to
+
+## [0.13.1] - 2023-12-20
+
+### Forge
+
+#### Added
+
+- `assert_not_emitted` assert to check if an event was not emitted
+
 #### Changed 
 
 - fields from `starknet::info::v2::TxInfo` are now part of `TxInfoMock` from `snforge_std::cheatcodes::tx_info`
 - consistent latest block numbers for each url are now used across the whole run when testing against forks
+
+#### Fixed
+
+- Parsing panic data from call contract result
 
 ### Cast
 
@@ -226,7 +287,7 @@ from now on the only officially supported cairo compiler version is 2
 
 - `var` library function for reading environmental variables
 
-### Fixed
+#### Fixed
 - Using any concrete `block_id` when using forking mode, would lead to crashes 
 
 ## [0.7.0] - 2023-09-27
@@ -268,7 +329,7 @@ from now on the only officially supported cairo compiler version is 2
 - printing failures summary at the end of an execution
 - filtering tests now uses an absolute module tree path — it is possible to filter tests by module names, etc.
 
-### Fixed
+#### Fixed
 
 - non-zero exit code is returned when any tests fail
 - mock_call works with dispatchers if contract does not exists

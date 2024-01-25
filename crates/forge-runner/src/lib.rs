@@ -3,7 +3,7 @@ use crate::fuzzer::RandomFuzzer;
 use crate::printing::print_test_result;
 use crate::running::{run_fuzz_test, run_test};
 use crate::sierra_casm_runner::SierraCasmRunner;
-use crate::test_case_summary::{GasStatistics, TestCaseSummary};
+use crate::test_case_summary::TestCaseSummary;
 use crate::test_crate_summary::TestCrateSummary;
 use anyhow::{anyhow, Context, Result};
 
@@ -17,12 +17,14 @@ use futures::stream::FuturesUnordered;
 use futures::StreamExt;
 
 use once_cell::sync::Lazy;
-use scarb_artifacts::StarknetContractArtifacts;
+use scarb_api::StarknetContractArtifacts;
 use smol_str::SmolStr;
+use trace_data::save_trace_data;
 
 use std::collections::HashMap;
+use std::default::Default;
 use std::sync::Arc;
-use test_case_summary::{AnyTestCaseSummary, Fuzzing, FuzzingStatistics, Single};
+use test_case_summary::{AnyTestCaseSummary, Fuzzing};
 use tokio::sync::mpsc::{channel, Sender};
 use tokio::task::JoinHandle;
 
@@ -30,6 +32,7 @@ pub mod compiled_runnable;
 pub mod expected_result;
 pub mod test_case_summary;
 pub mod test_crate_summary;
+pub mod trace_data;
 
 mod fuzzer;
 mod gas;
@@ -61,6 +64,7 @@ pub struct RunnerConfig {
     pub exit_first: bool,
     pub fuzzer_runs: u32,
     pub fuzzer_seed: u64,
+    pub save_trace_data: bool,
 }
 
 impl RunnerConfig {
@@ -71,12 +75,14 @@ impl RunnerConfig {
         exit_first: bool,
         fuzzer_runs: u32,
         fuzzer_seed: u64,
+        save_trace_data: bool,
     ) -> Self {
         Self {
             workspace_root,
             exit_first,
             fuzzer_runs,
             fuzzer_seed,
+            save_trace_data,
         }
     }
 }
@@ -134,6 +140,7 @@ pub async fn run_tests_from_crate(
             tests.sierra_program.clone(),
             Some(MetadataComputationConfig::default()),
             OrderedHashMap::default(),
+            false,
         )
         .context("Failed setting up runner.")?,
     );
@@ -185,6 +192,12 @@ pub async fn run_tests_from_crate(
 
         print_test_result(&result);
 
+        if runner_config.save_trace_data {
+            if let AnyTestCaseSummary::Single(result) = &result {
+                save_trace_data(result);
+            }
+        }
+
         if result.is_failed() && runner_config.exit_first {
             interrupted = true;
             rec.close();
@@ -225,61 +238,6 @@ fn choose_test_strategy_and_run(
                 run_with_fuzzing(args, case, runner, runner_config, runner_params, send).await??;
             Ok(AnyTestCaseSummary::Fuzzing(res))
         })
-    }
-}
-
-impl TestCaseSummary<Fuzzing> {
-    fn from(results: Vec<TestCaseSummary<Single>>) -> TestCaseSummary<Fuzzing> {
-        let last: TestCaseSummary<Single> = results
-            .iter()
-            .last()
-            .cloned()
-            .expect("Fuzz test should always run at least once");
-        // Only the last result matters as fuzzing is cancelled after first fail
-        match last {
-            TestCaseSummary::Passed {
-                name,
-                msg,
-                arguments,
-                gas_info: _,
-                test_statistics: (),
-            } => {
-                let runs = results.len();
-                let gas_usages_vec = results
-                    .into_iter()
-                    .filter(|item| matches!(item, TestCaseSummary::Passed { .. }))
-                    .map(|a| match a {
-                        TestCaseSummary::Passed { gas_info, .. } => gas_info,
-                        _ => unreachable!(),
-                    });
-
-                let max = gas_usages_vec.clone().reduce(u128::max).unwrap();
-                let min = gas_usages_vec.reduce(u128::min).unwrap();
-
-                TestCaseSummary::Passed {
-                    name,
-                    msg,
-                    gas_info: GasStatistics { min, max },
-                    arguments,
-                    test_statistics: FuzzingStatistics { runs },
-                }
-            }
-            TestCaseSummary::Failed {
-                name,
-                msg,
-                arguments,
-                test_statistics: (),
-            } => TestCaseSummary::Failed {
-                name,
-                msg,
-                arguments,
-                test_statistics: FuzzingStatistics {
-                    runs: results.len(),
-                },
-            },
-            TestCaseSummary::Ignored { name } => TestCaseSummary::Ignored { name: name.clone() },
-            TestCaseSummary::Skipped {} => TestCaseSummary::Skipped {},
-        }
     }
 }
 

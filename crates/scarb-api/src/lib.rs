@@ -1,13 +1,17 @@
 use anyhow::{anyhow, Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
 use scarb_metadata::{CompilationUnitMetadata, Metadata, PackageId};
+use semver::VersionReq;
 use serde::Deserialize;
+use serde_json::Value;
 use std::collections::HashMap;
 use std::fs;
 
 pub use command::*;
+use sierra_casm::compile;
 
 mod command;
+pub mod version;
 
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 struct StarknetArtifacts {
@@ -28,7 +32,7 @@ struct StarknetContract {
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 struct StarknetContractArtifactPaths {
     sierra: Utf8PathBuf,
-    casm: Utf8PathBuf,
+    casm: Option<Utf8PathBuf>,
 }
 
 /// Contains compiled Starknet artifacts
@@ -46,9 +50,13 @@ impl StarknetContractArtifacts {
         base_path: &Utf8Path,
     ) -> Result<Self> {
         let sierra_path = base_path.join(starknet_contract.artifacts.sierra.clone());
-        let casm_path = base_path.join(starknet_contract.artifacts.casm.clone());
         let sierra = fs::read_to_string(sierra_path)?;
-        let casm = fs::read_to_string(casm_path)?;
+
+        let casm = match &starknet_contract.artifacts.casm {
+            None => String::new(),
+            Some(casm_path) => fs::read_to_string(base_path.join(casm_path))?,
+        };
+
         Ok(Self { sierra, casm })
     }
 }
@@ -63,7 +71,7 @@ fn artifacts_for_package(path: &Utf8Path) -> Result<StarknetArtifacts> {
         fs::read_to_string(path).with_context(|| format!("Failed to read {path:?} contents"))?;
     let starknet_artifacts: StarknetArtifacts =
         serde_json::from_str(starknet_artifacts.as_str())
-            .with_context(|| format!("Failed to parse {path:?} contents. Make sure you have enabled sierra and casm code generation in Scarb.toml"))?;
+            .with_context(|| format!("Failed to parse {path:?} contents. Make sure you have enabled sierra code generation in Scarb.toml"))?;
     Ok(starknet_artifacts)
 }
 
@@ -111,7 +119,18 @@ pub fn get_contracts_map(
         try_get_starknet_artifacts_path(&target_dir, &target_name, &metadata.current_profile)?;
 
     let map = match maybe_contracts_path {
-        Some(contracts_path) => load_contract_artifacts(&contracts_path)?,
+        Some(contracts_path) => {
+            let mut contracts = load_contract_artifacts(&contracts_path)?;
+
+            for (_, artifact) in &mut contracts.iter_mut() {
+                if artifact.casm.is_empty() {
+                    let sierra: Value = serde_json::from_str(&artifact.sierra)?;
+                    artifact.casm = serde_json::to_string(&compile(sierra)?)?;
+                }
+            }
+
+            contracts
+        }
         None => HashMap::default(),
     };
     Ok(map)
@@ -174,6 +193,24 @@ pub fn name_for_package(metadata: &Metadata, package: &PackageId) -> Result<Stri
     Ok(package.name.clone())
 }
 
+/// Checks if the specified package has version compatible with the specified requirement
+pub fn package_matches_version_requirement(
+    metadata: &Metadata,
+    name: &str,
+    version_req: &VersionReq,
+) -> Result<bool> {
+    let packages: Vec<&scarb_metadata::PackageMetadata> = metadata
+        .packages
+        .iter()
+        .filter(|package| package.name == name)
+        .collect();
+    match packages[..] {
+        [] => Ok(true),
+        [package] => Ok(version_req.matches(&package.version)),
+        _ => Err(anyhow!("Package {name} is duplicated in dependencies")),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -192,6 +229,7 @@ mod tests {
             &["**/*.cairo", "**/*.toml"],
         )
         .unwrap();
+        temp.copy_from("../../", &[".tool-versions"]).unwrap();
 
         let snforge_std_path = Utf8PathBuf::from_str("../../snforge_std")
             .unwrap()
@@ -260,6 +298,53 @@ mod tests {
             temp.path()
                 .join("target/dev/basic_package.starknet_artifacts.json")
         );
+    }
+
+    #[test]
+    fn package_matches_version_requirement_test() {
+        let temp = setup_package("basic_package");
+
+        let manifest_path = temp.child("Scarb.toml");
+        manifest_path
+            .write_str(&formatdoc!(
+                r#"
+                [package]
+                name = "version_checker"
+                version = "0.1.0"
+
+                [[target.starknet-contract]]
+                sierra = true
+
+                [dependencies]
+                starknet = "2.5.0"
+                "#,
+            ))
+            .unwrap();
+
+        let scarb_metadata = MetadataCommand::new()
+            .inherit_stderr()
+            .current_dir(temp.path())
+            .exec()
+            .unwrap();
+
+        assert!(package_matches_version_requirement(
+            &scarb_metadata,
+            "starknet",
+            &VersionReq::parse("2.5").unwrap(),
+        )
+        .unwrap());
+        assert!(package_matches_version_requirement(
+            &scarb_metadata,
+            "not_existing",
+            &VersionReq::parse("2.5").unwrap(),
+        )
+        .unwrap());
+        assert!(!package_matches_version_requirement(
+            &scarb_metadata,
+            "starknet",
+            &VersionReq::parse("2.6").unwrap(),
+        )
+        .unwrap());
     }
 
     #[test]
@@ -378,6 +463,7 @@ mod tests {
     #[test]
     fn parsing_starknet_artifacts_on_invalid_file() {
         let temp = TempDir::new().unwrap();
+        temp.copy_from("../../", &[".tool-versions"]).unwrap();
         let path = temp.child("wrong.json");
         path.touch().unwrap();
         path.write_str("\"aa\": {}").unwrap();
@@ -386,7 +472,7 @@ mod tests {
         let result = artifacts_for_package(&artifacts_path);
         let err = result.unwrap_err();
 
-        assert!(err.to_string().contains(&format!("Failed to parse {artifacts_path:?} contents. Make sure you have enabled sierra and casm code generation in Scarb.toml")));
+        assert!(err.to_string().contains(&format!("Failed to parse {artifacts_path:?} contents. Make sure you have enabled sierra code generation in Scarb.toml")));
     }
 
     #[test]
@@ -405,7 +491,7 @@ mod tests {
             .exec()
             .unwrap();
 
-        let package = metadata.packages.get(0).unwrap();
+        let package = metadata.packages.first().unwrap();
         let contracts = get_contracts_map(&metadata, &package.id).unwrap();
 
         assert!(contracts.contains_key("ERC20"));

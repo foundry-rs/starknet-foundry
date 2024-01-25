@@ -13,6 +13,19 @@ have a `main` function in the module you want to run. `cast_std` docs can be fou
 Please note that **`sncast script` is in development**. While it is already possible to declare, deploy, invoke and call
 contracts from within Cairo, its interface, internals and feature set can change rapidly each version.
 
+> ⚠️⚠️ By default, the nonce for each transaction is being taken from the pending block ⚠️⚠️
+>
+> Some RPC nodes can be configured with higher poll itervals, which means they may return "older" nonces
+> in pending blocks, or even not be able to obtain pending blocks at all. When running a script you get an error like
+> "Invalid transaction nonce", this might be the case and you may need to manually set both nonce and max_fee for
+> transactions.
+>
+> Example:
+>
+>```cairo
+>  let declare_result = declare('Map', Option::Some(max_fee), Option::Some(nonce));
+>```
+
 Some of the planned features that will be included in future versions are:
 
 - scripts idempotency

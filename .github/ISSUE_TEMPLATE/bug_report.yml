@@ -8,8 +8,8 @@ body:
       label: Which component is your bug related to?
       multiple: true
       options:
-        - `snforge`
-        - `sncast`
+        - snforge
+        - sncast
     validations:
       required: true
 

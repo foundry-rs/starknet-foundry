@@ -1,15 +1,53 @@
 use crate::compiled_runnable::TestCaseRunnable;
 use crate::expected_result::{ExpectedPanicValue, ExpectedTestResult};
+use crate::gas::check_available_gas;
+use crate::trace_data::CallTrace;
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{RunResult, RunResultValue};
+use cheatnet::state::CallTrace as InternalCallTrace;
+use num_traits::Pow;
+use std::cell::RefCell;
 use std::option::Option;
+use std::rc::Rc;
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Default)]
 pub struct GasStatistics {
     pub min: u128,
     pub max: u128,
+    pub mean: f64,
+    pub std_deviation: f64,
 }
+
+impl GasStatistics {
+    #[must_use]
+    pub fn new(gas_usages: &[u128]) -> Self {
+        let mean = Self::mean(gas_usages);
+
+        GasStatistics {
+            min: gas_usages.iter().min().copied().unwrap(),
+            max: gas_usages.iter().max().copied().unwrap(),
+            mean,
+            std_deviation: Self::std_deviation(mean, gas_usages),
+        }
+    }
+
+    #[allow(clippy::cast_precision_loss)]
+    fn mean(gas_usages: &[u128]) -> f64 {
+        (gas_usages.iter().sum::<u128>() / gas_usages.len() as u128) as f64
+    }
+
+    #[allow(clippy::cast_precision_loss)]
+    fn std_deviation(mean: f64, gas_usages: &[u128]) -> f64 {
+        let sum_squared_diff = gas_usages
+            .iter()
+            .map(|&x| (x as f64 - mean).pow(2))
+            .sum::<f64>();
+
+        (sum_squared_diff / gas_usages.len() as f64).sqrt()
+    }
+}
+
 #[derive(Debug, PartialEq, Clone)]
 pub struct FuzzingStatistics {
     pub runs: usize,
@@ -18,6 +56,7 @@ pub struct FuzzingStatistics {
 pub trait TestType {
     type GasInfo: std::fmt::Debug + Clone;
     type TestStatistics: std::fmt::Debug + Clone;
+    type TraceData: std::fmt::Debug + Clone;
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -25,6 +64,7 @@ pub struct Fuzzing;
 impl TestType for Fuzzing {
     type GasInfo = GasStatistics;
     type TestStatistics = FuzzingStatistics;
+    type TraceData = ();
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -32,6 +72,7 @@ pub struct Single;
 impl TestType for Single {
     type GasInfo = u128;
     type TestStatistics = ();
+    type TraceData = CallTrace;
 }
 
 /// Summary of running a single test case
@@ -49,6 +90,8 @@ pub enum TestCaseSummary<T: TestType> {
         gas_info: <T as TestType>::GasInfo,
         /// Statistics of the test run
         test_statistics: <T as TestType>::TestStatistics,
+        /// Test trace data
+        trace_data: <T as TestType>::TraceData,
     },
     /// Test case failed
     Failed {
@@ -95,30 +138,59 @@ impl<T: TestType> TestCaseSummary<T> {
             _ => None,
         }
     }
-
-    #[must_use]
-    pub fn arguments(&self) -> Vec<Felt252> {
-        match self {
-            TestCaseSummary::Failed { arguments, .. }
-            | TestCaseSummary::Passed { arguments, .. } => arguments.clone(),
-            TestCaseSummary::Ignored { .. } | TestCaseSummary::Skipped { .. } => vec![],
-        }
-    }
 }
 
 impl TestCaseSummary<Fuzzing> {
     #[must_use]
-    pub fn runs(&self) -> Option<usize> {
-        match self {
+    pub fn from(results: Vec<TestCaseSummary<Single>>) -> Self {
+        let last: TestCaseSummary<Single> = results
+            .iter()
+            .last()
+            .cloned()
+            .expect("Fuzz test should always run at least once");
+        // Only the last result matters as fuzzing is cancelled after first fail
+        match last {
             TestCaseSummary::Passed {
-                test_statistics: FuzzingStatistics { runs },
-                ..
+                name,
+                msg,
+                arguments,
+                gas_info: _,
+                test_statistics: (),
+                trace_data: _,
+            } => {
+                let runs = results.len();
+                let gas_usages: Vec<u128> = results
+                    .into_iter()
+                    .map(|a| match a {
+                        TestCaseSummary::Passed { gas_info, .. } => gas_info,
+                        _ => unreachable!(),
+                    })
+                    .collect();
+
+                TestCaseSummary::Passed {
+                    name,
+                    msg,
+                    gas_info: GasStatistics::new(&gas_usages),
+                    arguments,
+                    test_statistics: FuzzingStatistics { runs },
+                    trace_data: (),
+                }
             }
-            | TestCaseSummary::Failed {
-                test_statistics: FuzzingStatistics { runs },
-                ..
-            } => Some(*runs),
-            _ => None,
+            TestCaseSummary::Failed {
+                name,
+                msg,
+                arguments,
+                test_statistics: (),
+            } => TestCaseSummary::Failed {
+                name,
+                msg,
+                arguments,
+                test_statistics: FuzzingStatistics {
+                    runs: results.len(),
+                },
+            },
+            TestCaseSummary::Ignored { name } => TestCaseSummary::Ignored { name: name.clone() },
+            TestCaseSummary::Skipped {} => TestCaseSummary::Skipped {},
         }
     }
 }
@@ -130,18 +202,23 @@ impl TestCaseSummary<Single> {
         test_case: &TestCaseRunnable,
         arguments: Vec<Felt252>,
         gas: u128,
+        call_trace: &Rc<RefCell<InternalCallTrace>>,
     ) -> Self {
         let name = test_case.name.to_string();
         let msg = extract_result_data(&run_result, &test_case.expected_result);
         match run_result.value {
             RunResultValue::Success(_) => match &test_case.expected_result {
-                ExpectedTestResult::Success => TestCaseSummary::Passed {
-                    name,
-                    msg,
-                    arguments,
-                    test_statistics: (),
-                    gas_info: gas,
-                },
+                ExpectedTestResult::Success => {
+                    let summary = TestCaseSummary::Passed {
+                        name,
+                        msg,
+                        arguments,
+                        test_statistics: (),
+                        gas_info: gas,
+                        trace_data: CallTrace::from(call_trace.borrow().clone()),
+                    };
+                    check_available_gas(&test_case.available_gas, summary)
+                }
                 ExpectedTestResult::Panics(_) => TestCaseSummary::Failed {
                     name,
                     msg,
@@ -171,6 +248,7 @@ impl TestCaseSummary<Single> {
                         arguments,
                         test_statistics: (),
                         gas_info: gas,
+                        trace_data: CallTrace::from(call_trace.borrow().clone()),
                     },
                 },
             },
@@ -197,13 +275,32 @@ fn build_readable_text(data: &Vec<Felt252>) -> Option<String> {
     }
 }
 
+fn join_short_strings(data: &[Felt252]) -> String {
+    data.iter()
+        .map(|felt| as_cairo_short_string(felt).unwrap_or_default())
+        .collect::<Vec<String>>()
+        .join(", ")
+}
+
 /// Returns a string with the data that was produced by the test case.
 /// If the test was expected to fail with specific data e.g. `#[should_panic(expected: ('data',))]`
 /// and failed to do so, it returns a string comparing the panic data and the expected data.
 #[must_use]
 fn extract_result_data(run_result: &RunResult, expectation: &ExpectedTestResult) -> Option<String> {
     match &run_result.value {
-        RunResultValue::Success(data) => build_readable_text(data),
+        RunResultValue::Success(data) => match expectation {
+            ExpectedTestResult::Panics(panic_expectation) => match panic_expectation {
+                ExpectedPanicValue::Exact(panic_data) => {
+                    let panic_string = join_short_strings(panic_data);
+
+                    Some(format!(
+                        "\n    Expected to panic but didn't\n    Expected panic data:  {panic_data:?} ({panic_string})\n"
+                    ))
+                }
+                ExpectedPanicValue::Any => Some("\n    Expected to panic but didn't\n".into()),
+            },
+            ExpectedTestResult::Success => build_readable_text(data),
+        },
         RunResultValue::Panic(panic_data) => {
             let expected_data = match expectation {
                 ExpectedTestResult::Panics(panic_expectation) => match panic_expectation {
@@ -213,20 +310,11 @@ fn extract_result_data(run_result: &RunResult, expectation: &ExpectedTestResult)
                 ExpectedTestResult::Success => None,
             };
 
-            let panic_string: String = panic_data
-                .iter()
-                .map(|felt| as_cairo_short_string(felt).unwrap_or_default())
-                .collect::<Vec<String>>()
-                .join(", ");
-
             match expected_data {
                 Some(expected) if expected == panic_data => None,
                 Some(expected) => {
-                    let expected_string = expected
-                        .iter()
-                        .map(|felt| as_cairo_short_string(felt).unwrap_or_default())
-                        .collect::<Vec<String>>()
-                        .join(", ");
+                    let panic_string = join_short_strings(panic_data);
+                    let expected_string = join_short_strings(expected);
 
                     Some(format!(
                         "\n    Incorrect panic data\n    {}\n    {}\n",

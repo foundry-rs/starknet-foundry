@@ -1,4 +1,5 @@
-use anyhow::Result;
+use anyhow::{Error, Result};
+use console::style;
 use indexmap::IndexMap;
 use serde_json::Value;
 use starknet::core::types::FieldElement;
@@ -174,6 +175,11 @@ pub fn apply_numbers_formatting(value: OutputValue, formatting: NumbersFormat) -
             OutputValue::Array(formatted_arr)
         }
     }
+}
+
+pub fn print_as_warning(error: &Error) {
+    let warning_tag = style("Warning:").color256(11);
+    println!("{warning_tag} {error}");
 }
 
 #[cfg(test)]

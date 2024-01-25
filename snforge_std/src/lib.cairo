@@ -26,8 +26,13 @@ use cheatcodes::events::EventAssertions;
 use cheatcodes::events::spy_events;
 use cheatcodes::events::event_name_hash;
 
+use cheatcodes::storage::store;
+use cheatcodes::storage::load;
+use cheatcodes::storage::map_entry_address;
+
 use cheatcodes::CheatTarget;
 use cheatcodes::test_address;
+use cheatcodes::test_selector;
 use cheatcodes::start_prank;
 use cheatcodes::stop_prank;
 use cheatcodes::start_roll;
@@ -48,3 +53,5 @@ mod fs;
 mod env;
 
 mod signature;
+
+mod trace;

@@ -7,11 +7,10 @@ use conversions::felt252::FromShortString;
 use std::collections::HashMap;
 
 use crate::common::{
-    deploy_contract, felt_selector_from_name, get_contracts,
+    call_contract, deploy_contract, felt_selector_from_name, get_contracts,
     state::{create_cached_state, create_cheatnet_state},
 };
 use cairo_felt::Felt252;
-use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::call_contract;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::deploy;
 
 // TODO (834): Verify values in this test
@@ -42,7 +41,7 @@ fn call_resources_simple() {
         output.used_resources.execution_resources,
         ExecutionResources {
             vm_resources: VmExecutionResources {
-                n_steps: 126,
+                n_steps: 123,
                 n_memory_holes: 0,
                 builtin_instance_counter: HashMap::from([("range_check_builtin".to_owned(), 2)]),
             },
@@ -92,7 +91,7 @@ fn deploy_resources_with_constructor() {
         payload.used_resources,
         ExecutionResources {
             vm_resources: VmExecutionResources {
-                n_steps: 88,
+                n_steps: 87,
                 n_memory_holes: 0,
                 builtin_instance_counter: HashMap::from([("range_check_builtin".to_owned(), 2)]),
             },

@@ -34,6 +34,7 @@ pub struct CallResponse {
 }
 
 impl CommandResponse for CallResponse {}
+impl<'a> CommandResponse for &'a CallResponse {}
 
 #[derive(Serialize, Clone)]
 pub struct InvokeResponse {
@@ -41,6 +42,7 @@ pub struct InvokeResponse {
 }
 
 impl CommandResponse for InvokeResponse {}
+impl<'a> CommandResponse for &'a InvokeResponse {}
 
 #[derive(Serialize)]
 pub struct DeployResponse {
@@ -48,6 +50,7 @@ pub struct DeployResponse {
     pub transaction_hash: Hex,
 }
 impl CommandResponse for DeployResponse {}
+impl<'a> CommandResponse for &'a DeployResponse {}
 
 #[derive(Serialize)]
 pub struct DeclareResponse {
@@ -55,6 +58,7 @@ pub struct DeclareResponse {
     pub transaction_hash: Hex,
 }
 impl CommandResponse for DeclareResponse {}
+impl<'a> CommandResponse for &'a DeclareResponse {}
 
 #[derive(Serialize)]
 pub struct AccountCreateResponse {
@@ -116,3 +120,4 @@ pub struct OneElementResponse<T: Serialize> {
 }
 
 impl<T: Serialize> CommandResponse for OneElementResponse<T> {}
+impl<'a, T: Serialize> CommandResponse for &'a OneElementResponse<T> {}

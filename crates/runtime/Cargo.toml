@@ -24,6 +24,3 @@ serde.workspace = true
 thiserror.workspace = true
 conversions = { path = "../conversions" }
 scarb-api = { path = "../scarb-api" }
-
-[lib]
-name = "runtime"
