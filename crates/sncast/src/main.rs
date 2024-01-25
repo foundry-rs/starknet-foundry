@@ -11,7 +11,7 @@ use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand};
 use sncast::helpers::configuration::{load_config, CastConfig};
 use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
-use sncast::helpers::scarb_utils::{build, get_package_metadata, get_scarb_manifest, get_scarb_metadata_with_deps, BuildConfig, ensure_scarb_manifest_path};
+use sncast::helpers::scarb_utils::{build, get_package_metadata, get_scarb_manifest, get_scarb_metadata_with_deps, BuildConfig, ensure_scarb_manifest_path, build_and_load_artifacts};
 use sncast::{
     chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_nonce, get_provider,
     NumbersFormat, WaitForTx,
@@ -128,7 +128,7 @@ fn main() -> Result<()> {
     if let Commands::Script(script) = cli.command {
         let manifest_path = ensure_scarb_manifest_path(&cli.path_to_scarb_toml)?;
         let package_metadata = get_package_metadata(&manifest_path, &cli.package)?;
-        let mut artifacts = build(&package_metadata, &BuildConfig {
+        let mut artifacts = build_and_load_artifacts(&package_metadata, &BuildConfig {
             scarb_toml_path: manifest_path.clone(),
             json: cli.json,
             profile: cli.profile.unwrap_or("dev".to_string()),
@@ -182,7 +182,7 @@ async fn run_async_command(
             .await?;
             let manifest_path = ensure_scarb_manifest_path(&cli.path_to_scarb_toml)?;
             let package_metadata = get_package_metadata(&manifest_path, &cli.package)?;
-            let artifacts = build(&package_metadata, &BuildConfig {
+            let artifacts = build_and_load_artifacts(&package_metadata, &BuildConfig {
                 scarb_toml_path: manifest_path,
                 json: cli.json,
                 profile: cli.profile.unwrap_or("dev".to_string()),

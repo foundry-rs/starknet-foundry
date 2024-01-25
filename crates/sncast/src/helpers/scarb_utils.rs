@@ -3,7 +3,7 @@ use camino::{Utf8Path, Utf8PathBuf};
 use scarb_api::{
     get_contracts_map,
     metadata::{Metadata, MetadataCommand, PackageMetadata},
-    ScarbCommand, StarknetContractArtifacts,
+    ScarbCommand, ScarbCommandError, StarknetContractArtifacts,
 };
 use scarb_ui::args::PackagesFilter;
 use serde::{Deserialize, Serialize};
@@ -124,10 +124,7 @@ pub struct BuildConfig {
     pub profile: String,
 }
 
-pub fn build(
-    package: &PackageMetadata,
-    config: &BuildConfig,
-) -> Result<HashMap<String, StarknetContractArtifacts>> {
+pub fn build(package: &PackageMetadata, config: &BuildConfig) -> Result<(), ScarbCommandError> {
     let filter = PackagesFilter::generate_for::<Metadata>([package].into_iter());
 
     let mut cmd = ScarbCommand::new_with_stdio();
@@ -147,7 +144,15 @@ pub fn build(
         cmd.json();
     }
     cmd.run()
-        .map_err(|e| anyhow!(format!("Failed to build using scarb; {e}")))?;
+}
+
+pub fn build_and_load_artifacts(
+    package: &PackageMetadata,
+    config: &BuildConfig,
+) -> Result<HashMap<String, StarknetContractArtifacts>> {
+    build(package, config).map_err(|e| anyhow!(format!("Failed to build using scarb; {e}")))?;
+
+    let metadata = get_scarb_metadata_with_deps(&config.scarb_toml_path)?;
     get_contracts_map(&metadata, &package.id, Some(profile))
 }
 
