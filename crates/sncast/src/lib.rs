@@ -1,4 +1,4 @@
-use crate::response::structs::OneElementResponse;
+use crate::response::structs::GetNonceResponse;
 use anyhow::{anyhow, bail, Context, Error, Result};
 use camino::Utf8PathBuf;
 use helpers::constants::{KEYSTORE_PASSWORD_ENV_VAR, UDC_ADDRESS};
@@ -152,7 +152,7 @@ pub async fn get_nonce(
     provider: &JsonRpcClient<HttpTransport>,
     block_id: &str,
     address: FieldElement,
-) -> Result<OneElementResponse<FieldElement>> {
+) -> Result<GetNonceResponse<FieldElement>> {
     let response = provider
         .get_nonce(
             get_block_id(block_id).expect("Failed to obtain block id"),
@@ -160,7 +160,7 @@ pub async fn get_nonce(
         )
         .await
         .expect("Failed to get a nonce");
-    Ok(OneElementResponse { response })
+    Ok(GetNonceResponse { nonce: response })
 }
 
 pub async fn get_account<'a>(

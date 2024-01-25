@@ -4,7 +4,7 @@ use std::fs;
 use crate::starknet_commands::declare::BuildConfig;
 use crate::starknet_commands::{call, declare, deploy, invoke};
 use crate::{get_account, get_nonce, WaitForTx};
-use anyhow::{anyhow, Context, ensure, Result};
+use anyhow::{anyhow, ensure, Context, Result};
 use blockifier::execution::common_hints::ExecutionMode;
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::entry_point::{
@@ -39,7 +39,7 @@ use scarb_api::{package_matches_version_requirement, ScarbCommand};
 use scarb_metadata::Metadata;
 use semver::{Comparator, Op, Version, VersionReq};
 use sncast::helpers::scarb_utils::{
-    CastConfig, get_package_metadata, get_scarb_manifest, get_scarb_metadata_with_deps,
+    get_package_metadata, get_scarb_manifest, get_scarb_metadata_with_deps, CastConfig,
 };
 use sncast::response::print::print_as_warning;
 use sncast::response::structs::ScriptResponse;
@@ -253,7 +253,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 self.script_ui
                     .print_subcommand_response(selector, &nonce_response)?;
 
-                let res: Vec<Felt252> = vec![Felt252::from_(nonce_response.response)];
+                let res: Vec<Felt252> = vec![Felt252::from_(nonce_response.nonce)];
                 Ok(CheatcodeHandlingResult::Handled(res))
             }
             _ => Ok(CheatcodeHandlingResult::Forwarded),
@@ -410,7 +410,10 @@ fn warn_if_sncast_std_not_compatible(scarb_metadata: &Metadata) -> Result<()> {
     Ok(())
 }
 
-fn compile_script(path_to_scarb_toml: Option<Utf8PathBuf>, script_ui: &logger::ScriptLogger) -> Result<Utf8PathBuf> {
+fn compile_script(
+    path_to_scarb_toml: Option<Utf8PathBuf>,
+    script_ui: &logger::ScriptLogger,
+) -> Result<Utf8PathBuf> {
     let scripts_manifest_path = path_to_scarb_toml.unwrap_or_else(|| {
         get_scarb_manifest()
             .context("Failed to retrieve manifest path from scarb")

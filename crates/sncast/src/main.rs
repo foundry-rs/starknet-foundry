@@ -7,6 +7,8 @@ use anyhow::{Context, Result};
 use sncast::response::print::{print_cast_command_result, OutputFormat};
 
 use crate::starknet_commands::declare::BuildConfig;
+use crate::starknet_commands::script::logger::ScriptLogger;
+use crate::starknet_commands::script::Script;
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand};
 use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
@@ -18,8 +20,6 @@ use sncast::{
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use tokio::runtime::Runtime;
-use crate::starknet_commands::script::logger::ScriptLogger;
-use crate::starknet_commands::script::Script;
 
 mod starknet_commands;
 

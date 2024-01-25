@@ -1,7 +1,7 @@
 use anyhow::Result;
-use sncast::NumbersFormat;
-use sncast::response::print::{OutputFormat, OutputValue, print_command_result};
+use sncast::response::print::{print_command_result, OutputFormat, OutputValue};
 use sncast::response::structs::CommandResponse;
+use sncast::NumbersFormat;
 
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd)]
 pub enum Verbosity {

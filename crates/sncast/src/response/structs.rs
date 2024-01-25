@@ -115,9 +115,9 @@ pub struct ScriptResponse {
 impl CommandResponse for ScriptResponse {}
 
 #[derive(Serialize, Clone)]
-pub struct OneElementResponse<T: Serialize> {
-    pub response: T,
+pub struct GetNonceResponse<T: Serialize> {
+    pub nonce: T,
 }
 
-impl<T: Serialize> CommandResponse for OneElementResponse<T> {}
-impl<'a, T: Serialize> CommandResponse for &'a OneElementResponse<T> {}
+impl<T: Serialize> CommandResponse for GetNonceResponse<T> {}
+impl<'a, T: Serialize> CommandResponse for &'a GetNonceResponse<T> {}

@@ -41,7 +41,7 @@ async fn test_default_verbosity() {
             Finished release target(s) in [..] seconds
 
         script_subcommand: get_nonce
-        response: [..]
+        nonce: [..]
 
            Compiling lib(map_script) map_script v0.1.0 [..]
            Compiling starknet-contract(map_script) map_script v0.1.0 [..]
@@ -52,14 +52,14 @@ async fn test_default_verbosity() {
         transaction_hash: 0x[..]
 
         script_subcommand: get_nonce
-        response: [..]
+        nonce: [..]
 
         script_subcommand: deploy
         contract_address: 0x[..]
         transaction_hash: 0x[..]
 
         script_subcommand: get_nonce
-        response: [..]
+        nonce: [..]
 
         script_subcommand: invoke
         transaction_hash: 0x[..]
@@ -99,7 +99,7 @@ async fn test_default_verbosity_with_json() {
         {"status":"compiling","message":"starknet-contract(map_script) map_script v0.1.0 ([..])"}
         {"status":"finished","message":"release target(s) in [..] seconds"}
 
-        {"script_subcommand":"get_nonce","response":"[..]"}
+        {"script_subcommand":"get_nonce","nonce":"[..]"}
 
         {"status":"compiling","message":"lib(map_script) map_script v0.1.0 ([..])"}
         {"status":"compiling","message":"starknet-contract(map_script) map_script v0.1.0 ([..])"}
@@ -107,11 +107,11 @@ async fn test_default_verbosity_with_json() {
 
         {"script_subcommand":"declare","class_hash":"0x[..]","transaction_hash":"0x[..]"}
 
-        {"script_subcommand":"get_nonce","response":"[..]"}
+        {"script_subcommand":"get_nonce","nonce":"[..]"}
 
         {"script_subcommand":"deploy","contract_address":"0x[..]","transaction_hash":"0x[..]"}
 
-        {"script_subcommand":"get_nonce","response":"[..]"}
+        {"script_subcommand":"get_nonce","nonce":"[..]"}
 
         {"script_subcommand":"invoke","transaction_hash":"0x[..]"}
 
@@ -178,7 +178,7 @@ async fn test_one_of_the_steps_failing() {
             Finished release target(s) in [..] seconds
 
         script_subcommand: get_nonce
-        response: [..]
+        nonce: [..]
 
            Compiling lib(map_script) map_script v0.1.0 [..]
            Compiling starknet-contract(map_script) map_script v0.1.0 [..]
@@ -189,14 +189,14 @@ async fn test_one_of_the_steps_failing() {
         transaction_hash: 0x[..]
 
         script_subcommand: get_nonce
-        response: [..]
+        nonce: [..]
 
         script_subcommand: deploy
         contract_address: 0x[..]
         transaction_hash: 0x[..]
 
         script_subcommand: get_nonce
-        response: [..]
+        nonce: [..]
 
     "});
 

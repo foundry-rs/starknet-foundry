@@ -143,7 +143,7 @@ pub fn value_to_output_data(json_value: Value) -> OutputData {
             .filter(|(_, v)| !(matches!(v, Value::Null)))
             .map(|(k, v)| (k, value_to_output_value(v)))
             .collect(),
-        _ => vec![(String::from("response"), value_to_output_value(json_value))],
+        _ => panic!("Expected an object"),
     }
 }
 
