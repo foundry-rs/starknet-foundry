@@ -1,6 +1,5 @@
 use anyhow::{anyhow, Context, Result};
 use clap::Args;
-use scarb_api::{get_contracts_map, ScarbCommand};
 use scarb_api::StarknetContractArtifacts;
 use sncast::response::structs::DeclareResponse;
 use sncast::response::structs::Hex;
