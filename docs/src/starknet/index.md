@@ -5,6 +5,9 @@ Starknet Foundry `sncast` is a command line tool for performing Starknet RPC cal
 > 💡 **Info**
 > At the moment, `sncast` only supports contracts written in [Cairo](https://github.com/starkware-libs/cairo) v1 and v2.
 
+> ⚠️ **Warning**
+> Currently, only OpenZeppelin accounts (cairo 0) are supported.
+
 ## How to Use `sncast`
 
 To use `sncast`, run the `sncast` command followed by a subcommand (see [available commands](../appendix/sncast.md)):
