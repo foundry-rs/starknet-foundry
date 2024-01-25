@@ -46,7 +46,6 @@ fn library_call_syscall_is_usable() {
             let executor_safe_dispatcher = IExecutorDispatcher {
                 contract_address: executor_address
             };
-            
             let thing = executor_safe_dispatcher.get_thing();
             assert(thing == 5, 'invalid thing');
 
