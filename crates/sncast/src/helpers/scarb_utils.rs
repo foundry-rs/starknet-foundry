@@ -65,7 +65,7 @@ pub fn get_scarb_metadata_with_deps(manifest_path: &Utf8PathBuf) -> Result<Metad
     execute_scarb_metadata_command(&command)
 }
 
-pub fn ensure_scarb_manifest_path(path_to_scarb_toml: &Option<Utf8PathBuf>) -> Result<Utf8PathBuf> {
+pub fn assert_manifest_path_exists(path_to_scarb_toml: &Option<Utf8PathBuf>) -> Result<Utf8PathBuf> {
     if let Some(path) = path_to_scarb_toml {
         assert!(path.exists(), "Failed to locate file at path = {path}");
     }
