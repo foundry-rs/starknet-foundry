@@ -8,7 +8,6 @@ fn trace_info_print() {
     let snapbox = test_runner();
 
     let output = snapbox.current_dir(&temp).assert().success();
-    let stdout = std::str::from_utf8(&output.get_output().stdout).unwrap();
 
     assert_stdout_contains!(
         output,

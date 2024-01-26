@@ -89,14 +89,27 @@ struct IndentedEntryPoint {
 
 
 impl DisplayIndentedCallTrace of Display<IndentedCallTrace> {
-    fn fmt(self: @IndentedCallTrace, ref f: Formatter)  -> Result<(), Error>  {
-        Display::fmt(@IndentedEntryPoint { base_indents: *self.base_indents, struct_ref: *self.struct_ref.entry_point }, ref f).unwrap();
+    fn fmt(self: @IndentedCallTrace, ref f: Formatter) -> Result<(), Error> {
+        Display::fmt(
+            @IndentedEntryPoint {
+                base_indents: *self.base_indents, struct_ref: *self.struct_ref.entry_point
+            },
+            ref f
+        )
+            .unwrap();
         write!(f, "\n").unwrap();
         write_indents_to_formatter(*self.base_indents, ref f);
         write!(f, "Nested Calls: [").unwrap();
         if (*self.struct_ref.nested_calls).len() > 0 {
             write!(f, "\n").unwrap();
-            Display::fmt(@IndentedCallTraceArray { base_indents: (*self.base_indents) + 1, struct_ref: *self.struct_ref.nested_calls }, ref f).unwrap();
+            Display::fmt(
+                @IndentedCallTraceArray {
+                    base_indents: (*self.base_indents) + 1,
+                    struct_ref: *self.struct_ref.nested_calls
+                },
+                ref f
+            )
+                .unwrap();
             write!(f, "\n").unwrap();
             write_indents_to_formatter(*self.base_indents, ref f);
         }
@@ -107,14 +120,20 @@ impl DisplayIndentedCallTrace of Display<IndentedCallTrace> {
 }
 
 impl DisplayIndentedCallTraceArray of Display<IndentedCallTraceArray> {
-    fn fmt(self: @IndentedCallTraceArray, ref f: Formatter)  -> Result<(), Error>  {
+    fn fmt(self: @IndentedCallTraceArray, ref f: Formatter) -> Result<(), Error> {
         let mut i: u32 = 0;
         let trace_len = (*self.struct_ref).len();
         while i < trace_len {
             write_indents_to_formatter(*self.base_indents, ref f);
             write!(f, "(\n").unwrap();
 
-            Display::fmt(@IndentedCallTrace { base_indents: *self.base_indents + 1, struct_ref: (*self.struct_ref)[i] }, ref f).unwrap();
+            Display::fmt(
+                @IndentedCallTrace {
+                    base_indents: *self.base_indents + 1, struct_ref: (*self.struct_ref)[i]
+                },
+                ref f
+            )
+                .unwrap();
             write!(f, "\n").unwrap();
             write_indents_to_formatter(*self.base_indents, ref f);
             write!(f, ")").unwrap();
@@ -129,9 +148,8 @@ impl DisplayIndentedCallTraceArray of Display<IndentedCallTraceArray> {
     }
 }
 
-impl DisplayIndentedEntryPoint of Display<IndentedEntryPoint> { 
-    fn fmt(self: @IndentedEntryPoint, ref f: Formatter)  -> Result<(), Error> {
-
+impl DisplayIndentedEntryPoint of Display<IndentedEntryPoint> {
+    fn fmt(self: @IndentedEntryPoint, ref f: Formatter) -> Result<(), Error> {
         write_indents_to_formatter(*self.base_indents, ref f);
         write!(f, "Entry point type: ")?;
         Display::fmt(*self.struct_ref.entry_point_type, ref f)?;
