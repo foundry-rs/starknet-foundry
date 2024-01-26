@@ -13,13 +13,6 @@ Path to `Scarb.toml` file.
 
 If supplied, `sncast` will not look for `Scarb.toml` file in current (or parent) directory, but will use this path instead.
 
-## `--package <NAME>`
-Optional.
-
-Name of the package that should be used.
-
-If supplied, this package will be used for all operations. Required if more than one package exists in a workspace.
-
 ## `--url, -u <RPC_URL>`
 Optional.
 
