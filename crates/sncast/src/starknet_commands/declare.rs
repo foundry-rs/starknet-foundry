@@ -1,10 +1,6 @@
 use anyhow::{anyhow, Context, Result};
-use camino::Utf8PathBuf;
 use clap::Args;
-use scarb_api::{get_contracts_map, ScarbCommand};
-
-use sncast::helpers::scarb_utils::get_package_metadata;
-use sncast::helpers::scarb_utils::get_scarb_manifest;
+use scarb_api::StarknetContractArtifacts;
 use sncast::response::structs::DeclareResponse;
 use sncast::response::structs::Hex;
 use sncast::{apply_optional, handle_rpc_error, handle_wait_for_tx, WaitForTx};
@@ -18,6 +14,7 @@ use starknet::{
     providers::jsonrpc::{HttpTransport, JsonRpcClient},
     signers::LocalWallet,
 };
+use std::collections::HashMap;
 use std::sync::Arc;
 
 #[derive(Args)]
@@ -36,44 +33,17 @@ pub struct Declare {
     pub nonce: Option<FieldElement>,
 }
 
-pub struct BuildConfig {
-    pub scarb_toml_path: Option<Utf8PathBuf>,
-    pub json: bool,
-}
-
 #[allow(clippy::too_many_lines)]
 pub async fn declare(
     contract_name: &str,
     max_fee: Option<FieldElement>,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     nonce: Option<FieldElement>,
-    build_config: BuildConfig,
+    artifacts: &HashMap<String, StarknetContractArtifacts>,
     wait_config: WaitForTx,
 ) -> Result<DeclareResponse> {
     let contract_name: String = contract_name.to_string();
-    let manifest_path = match build_config.scarb_toml_path.clone() {
-        Some(path) => path,
-        None => get_scarb_manifest().context("Failed to obtain manifest path from Scarb")?,
-    };
-
-    let mut cmd = ScarbCommand::new_with_stdio();
-    cmd.arg("build").manifest_path(&manifest_path);
-    if build_config.json {
-        cmd.json();
-    }
-    cmd.run().context("Failed to build contracts with Scarb")?;
-
-    let metadata = scarb_metadata::MetadataCommand::new()
-        .manifest_path(&manifest_path)
-        .inherit_stderr()
-        .exec()
-        .context("Failed to get scarb metadata")?;
-
-    let package = get_package_metadata(&metadata, &manifest_path)
-        .with_context(|| anyhow!("Failed to find package for contract = {contract_name}"))?;
-    let contracts = get_contracts_map(&metadata, &package.id)?;
-
-    let contract_artifacts = contracts
+    let contract_artifacts = artifacts
         .get(&contract_name)
         .ok_or(anyhow!("Failed to find artifacts in starknet_artifacts.json file. Please ensure you have enabled sierra and casm code generation in Scarb.toml"))?;
 
