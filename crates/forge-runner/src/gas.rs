@@ -66,10 +66,8 @@ fn used_resources_to_resource_mapping(
 /// Unfortunately `get_additional_os_resources` function adds resources used by os,
 /// so we have to subtract them
 fn get_total_vm_usage(resources: &ExecutionResources) -> VmExecutionResources {
-    let unnecessary_added_resources = OS_RESOURCES
-        .execute_txs_inner()
-        .get(&TransactionType::InvokeFunction)
-        .expect("`OS_RESOURCES` must contain all transaction types.");
+    let unnecessary_added_resources =
+        OS_RESOURCES.resources_for_tx_type(&TransactionType::InvokeFunction);
 
     let total_vm_usage = &resources.vm_resources
         + &(&get_additional_os_resources(

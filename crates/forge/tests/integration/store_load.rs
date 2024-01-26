@@ -177,7 +177,7 @@ fn store_load_max_boundaries_input() {
             #[test]
             fn load_boundaries_max() {
                 let deployed = deploy_contract();
-                let loaded = load(
+                load(
                     deployed.contract_address, 
                     MAX_STORAGE + 1, 
                     1
@@ -187,7 +187,7 @@ fn store_load_max_boundaries_input() {
             #[test]
             fn store_boundaries_max() {
                 let deployed = deploy_contract();
-                let loaded = store(
+                store(
                     deployed.contract_address, 
                     MAX_STORAGE + 1, 
                     array![420].span()
@@ -197,7 +197,7 @@ fn store_load_max_boundaries_input() {
             #[test]
             fn load_boundaries_max_overflow() {
                 let deployed = deploy_contract();
-                let loaded = load(
+                load(
                     deployed.contract_address, 
                     MAX_STORAGE - 1, 
                     5
@@ -207,7 +207,7 @@ fn store_load_max_boundaries_input() {
             #[test]
             fn store_boundaries_max_overflow() {
                 let deployed = deploy_contract();
-                let loaded = store(
+                store(
                     deployed.contract_address, 
                     MAX_STORAGE - 1, 
                     array![420, 421, 422].span()

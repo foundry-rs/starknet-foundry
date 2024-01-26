@@ -71,10 +71,9 @@ async fn test_run_script_from_different_directory_no_path_to_scarb_toml() {
     let snapbox = Command::new(cargo_bin!("sncast"))
         .current_dir(SCRIPTS_DIR)
         .args(args);
-    snapbox.assert().success().stderr_matches(indoc! {r"
+    snapbox.assert().failure().stderr_matches(indoc! {r"
+        Error: Failed to read the `Scarb.toml` manifest file. Doesn't exist in the current or parent directories[..]
         ...
-        command: script
-        error: The path = [..] does not exist
     "});
 }
 
@@ -98,7 +97,7 @@ async fn test_fail_when_using_starknet_syscall() {
     snapbox.assert().success().stderr_matches(indoc! {r"
         ...
         command: script
-        error: Got an exception while executing a hint: Custom Hint Error: Starknet syscalls are not supported
+        error: Got an exception while executing a hint: Hint Error: Starknet syscalls are not supported
     "});
 }
 
@@ -122,7 +121,7 @@ async fn test_incompatible_sncast_std_version() {
 
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
-        Warning: Package sncast_std version does not meet the recommended version requirement =0.14.0, it might result in unexpected behaviour
+        Warning: Package sncast_std version does not meet the recommended version requirement =0.16.0, it might result in unexpected behaviour
         ...
     "});
 }

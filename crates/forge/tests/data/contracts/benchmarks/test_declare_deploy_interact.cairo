@@ -20,15 +20,15 @@ fn declare_and_interact() {
     let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
     let dispatcher = IHelloStarknetDispatcher { contract_address };
 
-    let balance = dispatcher.get_balance();
+    dispatcher.get_balance();
     dispatcher.increase_balance(100);
-    let balance = dispatcher.get_balance();
+    dispatcher.get_balance();
     dispatcher.decrease_balance(100);
-    let balance = dispatcher.get_balance();
+    dispatcher.get_balance();
 
     start_prank(CheatTarget::One(contract_address), 1234.try_into().unwrap());
     start_roll(CheatTarget::One(contract_address), 234);
     start_warp(CheatTarget::One(contract_address), 123);
 
-    let (x, y, z) = dispatcher.interact_with_state();
+    dispatcher.interact_with_state();
 }

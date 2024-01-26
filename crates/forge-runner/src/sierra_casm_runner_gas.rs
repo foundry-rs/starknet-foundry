@@ -1,67 +1,46 @@
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use cairo_felt::Felt252;
-use cairo_lang_runner::casm_run::RunFunctionContext;
-use cairo_vm::serde::deserialize_program::{BuiltinName, HintParams, ReferenceManager};
-use cairo_vm::types::program::Program;
+use cairo_lang_runner::casm_run::{
+    build_cairo_runner, run_function_with_runner, RunFunctionContext,
+};
+use cairo_vm::serde::deserialize_program::{BuiltinName, HintParams};
 use cairo_vm::types::relocatable::MaybeRelocatable;
 use cairo_vm::vm::errors::cairo_run_errors::CairoRunError;
-use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::runners::cairo_runner::CairoRunner;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use cheatnet::runtime_extensions::forge_runtime_extension::ForgeRuntime;
 use std::collections::HashMap;
 
-use cairo_lang_casm::instructions::Instruction;
+use num_bigint::BigInt;
 
 // casm_run::run_function
-pub fn run_function<'a, 'b: 'a, Instructions>(
+type RunFunctionRes = (Vec<Option<Felt252>>, usize);
+/// Runs `bytecode` on layout with prime, and returns the memory layout and ap value.
+/// Allows injecting custom `HintProcessor`.
+pub fn run_function<'a, 'b: 'a>(
     vm: &mut VirtualMachine,
-    instructions: Instructions,
+    bytecode: impl Iterator<Item = &'a BigInt> + Clone,
     builtins: Vec<BuiltinName>,
     additional_initialization: fn(
         context: RunFunctionContext<'_>,
     ) -> Result<(), Box<CairoRunError>>,
     runtime: &mut ForgeRuntime,
     hints_dict: HashMap<usize, Vec<HintParams>>,
-) -> Result<(Vec<Option<Felt252>>, usize), Box<CairoRunError>>
-where
-    Instructions: Iterator<Item = &'a Instruction> + Clone,
-{
-    let data: Vec<MaybeRelocatable> = instructions
-        .flat_map(|inst| inst.assemble().encode())
+) -> Result<RunFunctionRes, Box<CairoRunError>> {
+    let data: Vec<MaybeRelocatable> = bytecode
         .map(Felt252::from)
         .map(MaybeRelocatable::from)
         .collect();
-
     let data_len = data.len();
-    let program = Program::new(
-        builtins,
-        data,
-        Some(0),
-        hints_dict,
-        ReferenceManager {
-            references: Vec::new(),
-        },
-        HashMap::new(),
-        vec![],
-        None,
-    )
-    .map_err(CairoRunError::from)?;
-    let mut runner = CairoRunner::new(&program, "starknet", false)
-        .map_err(CairoRunError::from)
-        .map_err(Box::new)?;
+    let mut runner = build_cairo_runner(data, builtins, hints_dict)?;
 
-    let end = runner.initialize(vm).map_err(CairoRunError::from)?;
-
-    additional_initialization(RunFunctionContext { vm, data_len })?;
-
-    runner
-        .run_until_pc(end, vm, runtime)
-        .map_err(CairoRunError::from)?;
-    runner
-        .end_run(true, false, vm, runtime)
-        .map_err(CairoRunError::from)?;
-    runner.relocate(vm, true).map_err(CairoRunError::from)?;
+    run_function_with_runner(
+        vm,
+        data_len,
+        additional_initialization,
+        runtime,
+        &mut runner,
+    )?;
 
     // changed region
     finalize(
@@ -113,7 +92,6 @@ fn finalize(
 
     let vm_resources_without_inner_calls = runner
         .get_execution_resources(vm)
-        .map_err(VirtualMachineError::TracerError)
         .unwrap()
         .filter_unused_builtins();
     syscall_handler.resources.vm_resources += &vm_resources_without_inner_calls;

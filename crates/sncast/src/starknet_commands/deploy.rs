@@ -53,22 +53,21 @@ pub async fn deploy(
     wait_config: WaitForTx,
 ) -> Result<DeployResponse> {
     let salt = extract_or_generate_salt(salt);
-
     let factory = ContractFactory::new(class_hash, account);
-    let deployment = factory.deploy(constructor_calldata.clone(), salt, unique);
+    let execution = factory.deploy(constructor_calldata.clone(), salt, unique);
 
     // TODO(#1396): use apply_optional here when `Deployment` in starknet-rs is public
     //  otherwise we cannot pass the necessary reference to a function
-    let execution_with_fee = if let Some(max_fee) = max_fee {
-        deployment.max_fee(max_fee)
+    let execution = if let Some(max_fee) = max_fee {
+        execution.max_fee(max_fee)
     } else {
-        deployment
+        execution
     };
 
     let execution = if let Some(nonce) = nonce {
-        execution_with_fee.nonce(nonce)
+        execution.nonce(nonce)
     } else {
-        execution_with_fee
+        execution
     };
 
     let result = execution.send().await;

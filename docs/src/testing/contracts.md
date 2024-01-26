@@ -94,6 +94,13 @@ Sometimes we want to test contracts functions that can panic, like testing that 
 panics on invalid address. For that purpose Starknet also provides a `SafeDispatcher`, that returns a `Result` instead of
 panicking.
 
+> ⚠️ **Warning**
+>
+> As of Cairo 2.5.0, the `SafeDispatcher` need special marking with `#[feature("safe_dispatcher")]` before **each** call made with it.
+> For the detailed explanation of this behavior, refer to [the shamans post](https://community.starknet.io/t/cairo-v2-5-0-is-out/112807#safe-dispatchers-15).
+> For the implementation, check the example below.
+
+
 First, let's add a new, panicking function to our contract.
 
 ```rust
@@ -166,7 +173,8 @@ fn handling_errors() {
 
     let contract_address = contract.deploy(@calldata).unwrap();
     let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
-
+    
+    #[feature("safe_dispatcher")] // Mandatory tag since cairo 2.5.0
     match safe_dispatcher.do_a_panic() {
         Result::Ok(_) => panic_with_felt252('shouldve panicked'),
         Result::Err(panic_data) => {
