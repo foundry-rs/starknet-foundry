@@ -50,11 +50,11 @@ async fn test_happy_case_specify_package() {
         "user8",
         "--int-format",
         "--json",
-        "--package",
-        "main_workspace",
         "declare",
         "--contract-name",
         "supercomplexcode",
+        "--package",
+        "main_workspace",
         "--max-fee",
         "99999999999999999",
     ];
@@ -282,7 +282,7 @@ async fn test_many_packages_default() {
         "--json",
         "declare",
         "--contract-name",
-        "supercomplexcode",
+        "supercomplexcode2",
         "--max-fee",
         "99999999999999999",
     ];
@@ -293,7 +293,6 @@ async fn test_many_packages_default() {
         .args(args);
     snapbox.assert().failure().stderr_matches(indoc! {r"
         ...
-        Failed to fetch package metadata: More than one package found in metadata - specify package using --package flag
-        ...
+        Error: More than one package found in metadata - specify package using --package flag
     "});
 }

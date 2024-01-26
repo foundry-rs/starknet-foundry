@@ -78,10 +78,6 @@ struct Cli {
     #[clap(long)]
     wait_retry_interval: Option<u8>,
 
-    /// Specifies scarb packages to be used
-    #[clap(long)]
-    package: Option<String>,
-
     #[command(subcommand)]
     command: Commands,
 }
@@ -127,7 +123,7 @@ fn main() -> Result<()> {
 
     if let Commands::Script(script) = cli.command {
         let manifest_path = ensure_scarb_manifest_path(&cli.path_to_scarb_toml)?;
-        let package_metadata = get_package_metadata(&manifest_path, &cli.package)?;
+        let package_metadata = get_package_metadata(&manifest_path, &script.package)?;
         let mut artifacts = build_and_load_artifacts(&package_metadata, &BuildConfig {
             scarb_toml_path: manifest_path.clone(),
             json: cli.json,
@@ -181,7 +177,7 @@ async fn run_async_command(
             )
             .await?;
             let manifest_path = ensure_scarb_manifest_path(&cli.path_to_scarb_toml)?;
-            let package_metadata = get_package_metadata(&manifest_path, &cli.package)?;
+            let package_metadata = get_package_metadata(&manifest_path, &declare.package)?;
             let artifacts = build_and_load_artifacts(&package_metadata, &BuildConfig {
                 scarb_toml_path: manifest_path,
                 json: cli.json,
@@ -308,7 +304,6 @@ async fn run_async_command(
                     &config.rpc_url,
                     &add.name.clone(),
                     &config.accounts_file,
-                    &cli.package,
                     &provider,
                     &add,
                 )
@@ -332,7 +327,6 @@ async fn run_async_command(
                     &config.accounts_file,
                     config.keystore,
                     &provider,
-                    &cli.package,
                     chain_id,
                     create.salt,
                     create.add_profile,

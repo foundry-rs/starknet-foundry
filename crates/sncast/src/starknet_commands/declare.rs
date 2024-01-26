@@ -31,6 +31,10 @@ pub struct Declare {
     /// Nonce of the transaction. If not provided, nonce will be set automatically
     #[clap(short, long)]
     pub nonce: Option<FieldElement>,
+
+    /// Specifies scarb package to be used
+    #[clap(long)]
+    pub package: Option<String>,
 }
 
 #[allow(clippy::too_many_lines)]
