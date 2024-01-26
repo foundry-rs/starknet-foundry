@@ -960,7 +960,7 @@ fn incompatible_snforge_std_version_warning() {
     assert_stdout_contains!(
         output,
         indoc! {r"
-        [WARNING] Package snforge_std version does not meet the recommended version requirement =0.15.0, [..]
+        [WARNING] Package snforge_std version does not meet the recommended version requirement =0.16.0, [..]
         [..]Compiling[..]
         [..]Finished[..]
 
