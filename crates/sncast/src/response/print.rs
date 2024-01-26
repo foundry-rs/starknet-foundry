@@ -119,7 +119,7 @@ fn pretty_output(output: OutputData, output_format: &OutputFormat) -> Result<Vec
     }
 }
 
-pub fn result_as_output_data<T: Serialize>(result: &mut Result<T>) -> OutputData {
+pub fn result_as_output_data<T: CommandResponse>(result: &mut Result<T>) -> OutputData {
     match result {
         Ok(response) => {
             let struct_value =
