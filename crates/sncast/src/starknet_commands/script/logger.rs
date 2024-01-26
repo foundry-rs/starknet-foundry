@@ -35,14 +35,6 @@ impl ScriptLogger {
         }
     }
 
-    pub fn is_quiet(&self) -> bool {
-        self.verbosity < Verbosity::Normal
-    }
-
-    pub fn is_json(&self) -> bool {
-        self.output_format == OutputFormat::Json
-    }
-
     pub fn print_subcommand_response<T: CommandResponse>(
         &self,
         command: &str,
