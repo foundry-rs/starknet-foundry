@@ -235,7 +235,8 @@ mod tests {
     use serde_json::{Map, Value};
 
     use crate::response::print::{
-        apply_numbers_formatting, struct_value_to_output_data, NumbersFormat, OutputData, OutputValue,
+        apply_numbers_formatting, struct_value_to_output_data, NumbersFormat, OutputData,
+        OutputValue,
     };
     #[test]
     fn test_format_json_value_force_decimal() {
