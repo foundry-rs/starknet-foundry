@@ -166,12 +166,12 @@ fn pretty_output(output: OutputData, output_format: OutputFormat) -> Result<Vec<
     }
 }
 
-pub fn result_as_output_data<T: CommandResponse>(result: &mut Result<T>) -> OutputData {
+fn result_as_output_data<T: CommandResponse>(result: &mut Result<T>) -> OutputData {
     match result {
         Ok(response) => {
             let struct_value =
                 serde_json::to_value(response).expect("Failed to serialize CommandResponse");
-            value_to_output_data(struct_value)
+            struct_value_to_output_data(struct_value)
         }
         Err(message) => {
             vec![(
@@ -183,7 +183,7 @@ pub fn result_as_output_data<T: CommandResponse>(result: &mut Result<T>) -> Outp
 }
 
 #[must_use]
-pub fn value_to_output_data(json_value: Value) -> OutputData {
+fn struct_value_to_output_data(json_value: Value) -> OutputData {
     match json_value {
         Value::Object(obj) => obj
             .into_iter()
@@ -203,7 +203,7 @@ fn value_to_output_value(value: Value) -> OutputValue {
 }
 
 #[must_use]
-pub fn apply_numbers_formatting(value: OutputValue, formatting: NumbersFormat) -> OutputValue {
+fn apply_numbers_formatting(value: OutputValue, formatting: NumbersFormat) -> OutputValue {
     match value {
         OutputValue::String(input) => {
             if let Ok(field) = FieldElement::from_str(&input) {
@@ -235,7 +235,7 @@ mod tests {
     use serde_json::{Map, Value};
 
     use crate::response::print::{
-        apply_numbers_formatting, value_to_output_data, NumbersFormat, OutputData, OutputValue,
+        apply_numbers_formatting, struct_value_to_output_data, NumbersFormat, OutputData, OutputValue,
     };
     #[test]
     fn test_format_json_value_force_decimal() {
@@ -297,7 +297,7 @@ mod tests {
         );
         json_value.insert(String::from("K2"), Value::Null);
 
-        let actual = value_to_output_data(Value::Object(json_value));
+        let actual = struct_value_to_output_data(Value::Object(json_value));
         let json_value_exp: OutputData = vec![(
             String::from("K"),
             OutputValue::Array(vec![OutputValue::String(String::from("V"))]),
