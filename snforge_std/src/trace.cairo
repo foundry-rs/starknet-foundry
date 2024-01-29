@@ -68,26 +68,18 @@ impl DisplayCallTrace of Display<CallTrace> {
 }
 
 #[derive(Drop)]
-struct IndentedCallTrace {
-    struct_ref: @CallTrace,
+struct Indented<T> {
+    struct_ref: @T,
     base_indents: u8,
 }
 
-#[derive(Drop)]
-struct IndentedCallTraceArray {
-    struct_ref: @Array<CallTrace>,
-    base_indents: u8,
-}
-
-#[derive(Drop)]
-struct IndentedEntryPoint {
-    struct_ref: @CallEntryPoint,
-    base_indents: u8,
-}
+type IndentedEntryPoint = Indented<CallEntryPoint>;
+type IndentedCallTraceArray = Indented<Array<CallTrace>>;
+type IndentedCallTrace = Indented<CallTrace>;
 
 
-impl DisplayIndentedCallTrace of Display<IndentedCallTrace> {
-    fn fmt(self: @IndentedCallTrace, ref f: Formatter) -> Result<(), Error> {
+impl DisplayIndentedCallTrace of Display<Indented<CallTrace>> {
+    fn fmt(self: @Indented<CallTrace>, ref f: Formatter) -> Result<(), Error> {
         Display::fmt(
             @IndentedEntryPoint {
                 base_indents: *self.base_indents, struct_ref: *self.struct_ref.entry_point
