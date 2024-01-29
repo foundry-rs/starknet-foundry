@@ -194,7 +194,7 @@ async fn test_run_script_display_debug_traits() {
         .current_dir(SCRIPTS_DIR.to_owned() + "/map_script/scripts")
         .args(args);
 
-    snapbox.assert().success().stdout_matches(indoc! {r#"
+    snapbox.assert().success().stdout_matches(indoc! {r"
         ...
         declare_nonce: 1
         debug declare_nonce: 1
@@ -211,5 +211,5 @@ async fn test_run_script_display_debug_traits() {
         debug call_result: CallResult { data: [2] }
         command: script
         status: success
-    "#});
+    "});
 }
