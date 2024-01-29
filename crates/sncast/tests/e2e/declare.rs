@@ -107,8 +107,8 @@ fn scarb_build_fails(contract_path: &str, accounts_file_path: &str) {
         .args(args);
 
     snapbox.assert().stderr_matches(indoc! {r"
-        command: declare
-        error: Failed to build contracts with Scarb: `scarb` exited with error
+        ...
+        Error: Failed to build using scarb; `scarb` exited with error
     "});
 }
 
@@ -161,9 +161,9 @@ fn scarb_no_sierra_artifact() {
         .current_dir(CONTRACTS_DIR.to_string() + "/no_sierra")
         .args(args);
 
-    snapbox.assert().success().stderr_matches(indoc! {r"
-        command: declare
-        [..]Make sure you have enabled sierra code generation in Scarb.toml[..]
+    snapbox.assert().failure().stderr_matches(indoc! {r"
+        [..]Make sure you have enabled sierra code generation in Scarb.toml
+        ...
     "});
 }
 

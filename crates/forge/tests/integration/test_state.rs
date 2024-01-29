@@ -215,11 +215,11 @@ fn library_calls() {
         #[test]
         fn library_calls() {
             let class_hash = declare('LibraryContract').class_hash;
-            let lib_dispatcher = ILibraryContractSafeLibraryDispatcher { class_hash };
-            let value = lib_dispatcher.get_value().unwrap();
+            let lib_dispatcher = ILibraryContractLibraryDispatcher { class_hash };
+            let value = lib_dispatcher.get_value();
             assert(value == 0, 'Incorrect state');
-            lib_dispatcher.set_value(10).unwrap();
-            let value = lib_dispatcher.get_value().unwrap();
+            lib_dispatcher.set_value(10);
+            let value = lib_dispatcher.get_value();
             assert(value == 10, 'Incorrect state');
         }
     "

@@ -1,10 +1,9 @@
 use std::collections::HashMap;
 use std::fs;
 
-use crate::starknet_commands::declare::BuildConfig;
 use crate::starknet_commands::{call, declare, deploy, invoke};
 use crate::{get_account, get_nonce, WaitForTx};
-use anyhow::{anyhow, ensure, Context, Result};
+use anyhow::{anyhow, Context, Result};
 use blockifier::execution::common_hints::ExecutionMode;
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::entry_point::{
@@ -23,7 +22,6 @@ use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::vm_core::VirtualMachine;
-use camino::Utf8PathBuf;
 use clap::command;
 use clap::Args;
 use conversions::{FromConv, IntoConv};
@@ -35,12 +33,11 @@ use runtime::{
     CheatcodeHandlingResult, EnhancedHintError, ExtendedRuntime, ExtensionLogic, StarknetRuntime,
     SyscallHandlingResult,
 };
-use scarb_api::{package_matches_version_requirement, ScarbCommand};
-use scarb_metadata::Metadata;
+use scarb_api::{package_matches_version_requirement, StarknetContractArtifacts};
+use scarb_metadata::{Metadata, PackageMetadata};
 use semver::{Comparator, Op, Version, VersionReq};
-use sncast::helpers::scarb_utils::{
-    get_package_metadata, get_scarb_manifest, get_scarb_metadata_with_deps, CastConfig,
-};
+use sncast::helpers::constants::SCRIPT_LIB_ARTIFACT_NAME;
+use sncast::helpers::scarb_utils::CastConfig;
 use sncast::response::print::print_as_warning;
 use sncast::response::structs::ScriptResponse;
 use starknet::accounts::Account;
@@ -48,6 +45,8 @@ use starknet::core::types::{BlockId, BlockTag::Pending, FieldElement};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use tokio::runtime::Runtime;
+
+type ScriptStarknetContractArtifacts = StarknetContractArtifacts;
 
 #[derive(Args)]
 #[command(about = "Execute a deployment script")]
@@ -61,6 +60,7 @@ pub struct CastScriptExtension<'a> {
     pub provider: &'a JsonRpcClient<HttpTransport>,
     pub tokio_runtime: Runtime,
     pub config: &'a CastConfig,
+    pub artifacts: &'a HashMap<String, StarknetContractArtifacts>,
 }
 
 impl<'a> ExtensionLogic for CastScriptExtension<'a> {
@@ -118,10 +118,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     max_fee,
                     &account,
                     nonce,
-                    BuildConfig {
-                        scarb_toml_path: None,
-                        json: false,
-                    },
+                    self.artifacts,
                     WaitForTx {
                         wait: true,
                         timeout: self.config.wait_timeout,
@@ -253,26 +250,31 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
 
 pub fn run(
     module_name: &str,
-    path_to_scarb_toml: &Option<Utf8PathBuf>,
+    metadata: &Metadata,
+    package_metadata: &PackageMetadata,
+    artifacts: &mut HashMap<String, StarknetContractArtifacts>,
     provider: &JsonRpcClient<HttpTransport>,
     tokio_runtime: Runtime,
     config: &CastConfig,
 ) -> Result<ScriptResponse> {
-    let path = compile_script(path_to_scarb_toml.clone())?;
+    warn_if_sncast_std_not_compatible(metadata)?;
+    let artifacts = inject_lib_artifact(metadata, package_metadata, artifacts)?;
 
-    let sierra_program = serde_json::from_str::<VersionedProgram>(
-        &fs::read_to_string(path.clone())
-            .with_context(|| format!("Failed to read Sierra file at path = {path}"))?,
-    )
-    .with_context(|| format!("Failed to deserialize Sierra program at path = {path}"))?
-    .into_v1()
-    .with_context(|| format!("Failed to load Sierra program at path = {path}"))?
-    .program;
+    let artifact = artifacts
+        .get(SCRIPT_LIB_ARTIFACT_NAME)
+        .ok_or(anyhow!("Failed to find script artifact"))?;
+
+    let sierra_program = serde_json::from_str::<VersionedProgram>(&artifact.sierra)
+        .with_context(|| "Failed to deserialize Sierra program")?
+        .into_v1()
+        .with_context(|| "Failed to load Sierra program")?
+        .program;
 
     let runner = SierraCasmRunner::new(
         sierra_program,
         Some(MetadataComputationConfig::default()),
         OrderedHashMap::default(),
+        false,
     )
     .with_context(|| "Failed to set up runner")?;
 
@@ -280,15 +282,18 @@ pub fn run(
     let func = runner.find_function(name_suffix.as_str())?;
 
     let (entry_code, builtins) = runner.create_entry_code(func, &Vec::new(), usize::MAX)?;
-    let footer = runner.create_code_footer();
+    let footer = SierraCasmRunner::create_code_footer();
     let instructions = chain!(
         entry_code.iter(),
         runner.get_casm_program().instructions.iter(),
-        footer.iter()
     );
 
     // import from cairo-lang-runner
     let (hints_dict, string_to_hint) = build_hints_dict(instructions.clone());
+    let assembled_program = runner
+        .get_casm_program()
+        .clone()
+        .assemble_ex(&entry_code, &footer);
 
     // hint processor
     let block_context = build_default_block_context();
@@ -323,6 +328,7 @@ pub fn run(
         provider,
         tokio_runtime,
         config,
+        artifacts: &artifacts,
     };
 
     let mut cast_runtime = ExtendedRuntime {
@@ -338,7 +344,7 @@ pub fn run(
         &mut vm,
         &mut cast_runtime,
         hints_dict,
-        instructions,
+        assembled_program.bytecode.iter(),
         builtins,
     ) {
         Ok(result) => match result.value {
@@ -381,42 +387,28 @@ fn warn_if_sncast_std_not_compatible(scarb_metadata: &Metadata) -> Result<()> {
     Ok(())
 }
 
-fn compile_script(path_to_scarb_toml: Option<Utf8PathBuf>) -> Result<Utf8PathBuf> {
-    let scripts_manifest_path = path_to_scarb_toml.unwrap_or_else(|| {
-        get_scarb_manifest()
-            .context("Failed to retrieve manifest path from scarb")
-            .unwrap()
-    });
-    ensure!(
-        scripts_manifest_path.exists(),
-        "The path = {scripts_manifest_path} does not exist"
-    );
+fn inject_lib_artifact(
+    metadata: &Metadata,
+    package_metadata: &PackageMetadata,
+    artifacts: &mut HashMap<String, StarknetContractArtifacts>,
+) -> Result<HashMap<String, StarknetContractArtifacts>> {
+    let sierra_filename = format!("{}.sierra.json", package_metadata.name);
 
-    ScarbCommand::new_with_stdio()
-        .arg("build")
-        .manifest_path(&scripts_manifest_path)
-        .run()
-        .context("failed to compile script with scarb")?;
-
-    let metadata = get_scarb_metadata_with_deps(&scripts_manifest_path)?;
-
-    warn_if_sncast_std_not_compatible(&metadata)?;
-
-    let package_metadata = get_package_metadata(&metadata, &scripts_manifest_path)?;
-
-    let filename = format!("{}.sierra.json", package_metadata.name);
-    let path = metadata
+    let target_dir = &metadata
         .target_dir
-        .unwrap_or(metadata.workspace.root.join("target"))
-        .join(metadata.current_profile)
-        .join(filename.clone());
+        .clone()
+        .unwrap_or_else(|| metadata.workspace.root.join("target"));
+    let sierra_path = &target_dir
+        .join(&metadata.current_profile)
+        .join(sierra_filename);
 
-    ensure!(
-        path.exists(),
-        "The package has not been compiled, the file at path = {path} does not exist"
-    );
+    let lib_artifacts = ScriptStarknetContractArtifacts {
+        sierra: fs::read_to_string(sierra_path)?,
+        casm: String::new(),
+    };
 
-    Ok(path)
+    artifacts.insert(SCRIPT_LIB_ARTIFACT_NAME.to_string(), lib_artifacts);
+    Ok(artifacts.clone())
 }
 
 // taken from starknet-foundry/crates/forge/src/test_case_summary.rs

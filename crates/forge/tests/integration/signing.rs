@@ -30,7 +30,7 @@ fn test_stark_sign_msg_hash_range() {
                 // message_hash should be smaller than UPPER_BOUND
                 // https://github.com/starkware-libs/crypto-cpp/blob/78e3ed8dc7a0901fe6d62f4e99becc6e7936adfd/src/starkware/crypto/ecdsa.cc#L65
                 let msg_hash = UPPER_BOUND;
-                let (r, s): (felt252, felt252) = key_pair.sign(msg_hash);
+                key_pair.sign(msg_hash);
             }
         "
     ));
@@ -192,7 +192,7 @@ fn test_stark_secp256k1_curves() {
                 
                 assert(key_pair_stark.secret_key.into() == key_pair_secp256k1.secret_key, 'Secret keys should equal');
             
-                let (pk_x_secp256k1, pk_y_secp256k1) = key_pair_secp256k1.public_key.get_coordinates().unwrap_syscall();
+                let (pk_x_secp256k1, _pk_y_secp256k1) = key_pair_secp256k1.public_key.get_coordinates().unwrap_syscall();
             
                 assert(key_pair_stark.public_key.into() != pk_x_secp256k1, 'Public keys should be different');
             
@@ -231,26 +231,26 @@ fn test_invalid_secret_key() {
             #[test]
             #[should_panic(expected: ('invalid secret_key', ))]
             fn from_secret_key_stark() {
-                let key_pair = KeyPairTrait::<felt252, felt252>::from_secret_key(0);
+                KeyPairTrait::<felt252, felt252>::from_secret_key(0);
             }
             
             #[test]
             #[should_panic(expected: ('invalid secret_key', ))]
             fn from_secret_key_secp256k1() {
-                let key_pair = KeyPairTrait::<u256, Secp256k1Point>::from_secret_key(0);
+                KeyPairTrait::<u256, Secp256k1Point>::from_secret_key(0);
             }
             
             #[test]
             #[should_panic(expected: ('invalid secret_key', ))]
             fn from_secret_key_secp256r1() {
-                let key_pair = KeyPairTrait::<u256, Secp256r1Point>::from_secret_key(0);
+                KeyPairTrait::<u256, Secp256r1Point>::from_secret_key(0);
             }
             
             #[test]
             #[should_panic(expected: ('invalid secret_key', ))]
             fn sign_stark() {
                 let key_pair = KeyPair { secret_key: 0, public_key: 0x321 } ;
-                let (r, s): (felt252, felt252) = key_pair.sign(123);
+                key_pair.sign(123);
             }
             
             #[test]
@@ -258,7 +258,7 @@ fn test_invalid_secret_key() {
             fn sign_secp256k1() {
                 let generator = Secp256k1Impl::get_generator_point();
                 let key_pair = KeyPair { secret_key: 0, public_key: generator } ;
-                let (r, s): (u256, u256) = key_pair.sign(123);
+                key_pair.sign(123);
             }
             
             #[test]
@@ -266,7 +266,7 @@ fn test_invalid_secret_key() {
             fn sign_secp256r1() {
                 let generator = Secp256r1Impl::get_generator_point();
                 let key_pair = KeyPair { secret_key: 0, public_key: generator } ;
-                let (r, s): (u256, u256) = key_pair.sign(123);
+                key_pair.sign(123);
             }
         "
     ));

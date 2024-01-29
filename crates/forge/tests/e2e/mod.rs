@@ -9,4 +9,5 @@ mod forking;
 mod fuzzing;
 mod io_operations;
 mod running;
+mod trace_data;
 mod workspaces;

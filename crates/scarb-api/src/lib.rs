@@ -316,7 +316,7 @@ mod tests {
                 sierra = true
 
                 [dependencies]
-                starknet = "2.4.0"
+                starknet = "2.5.0"
                 "#,
             ))
             .unwrap();
@@ -330,19 +330,19 @@ mod tests {
         assert!(package_matches_version_requirement(
             &scarb_metadata,
             "starknet",
-            &VersionReq::parse("2.4").unwrap(),
+            &VersionReq::parse("2.5").unwrap(),
         )
         .unwrap());
         assert!(package_matches_version_requirement(
             &scarb_metadata,
             "not_existing",
-            &VersionReq::parse("2.4").unwrap(),
+            &VersionReq::parse("2.5").unwrap(),
         )
         .unwrap());
         assert!(!package_matches_version_requirement(
             &scarb_metadata,
             "starknet",
-            &VersionReq::parse("2.5").unwrap(),
+            &VersionReq::parse("2.6").unwrap(),
         )
         .unwrap());
     }

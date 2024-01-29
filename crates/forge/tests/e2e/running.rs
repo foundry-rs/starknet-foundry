@@ -80,7 +80,7 @@ fn simple_package_with_git_dependency() {
             casm = true
 
             [dependencies]
-            starknet = "2.4.0"
+            starknet = "2.5.0"
             snforge_std = {{ git = "https://github.com/{}", branch = "{}" }}
             "#,
             remote_url,
@@ -781,7 +781,7 @@ fn init_new_project_test() {
 
             [dependencies]
             snforge_std = {{ git = "https://github.com/foundry-rs/starknet-foundry", tag = "v{}" }}
-            starknet = "2.4.4"
+            starknet = "2.5.0"
 
             [[target.starknet-contract]]
             casm = true
@@ -804,7 +804,7 @@ fn init_new_project_test() {
         casm = true
 
         [dependencies]
-        starknet = "2.4.4"
+        starknet = "2.5.0"
         snforge_std = {{ git = "https://github.com/{}", branch = "{}" }}
         "#,
             remote_url,
@@ -960,7 +960,7 @@ fn incompatible_snforge_std_version_warning() {
     assert_stdout_contains!(
         output,
         indoc! {r"
-        [WARNING] Package snforge_std version does not meet the recommended version requirement =0.14.0, [..]
+        [WARNING] Package snforge_std version does not meet the recommended version requirement =0.16.0, [..]
         [..]Compiling[..]
         [..]Finished[..]
 

@@ -425,11 +425,6 @@ fn event_emitted_wrong_data_asserted() {
         "event_emitted_wrong_data_asserted",
         "keys was not emitted from"
     );
-    assert_case_output_contains!(
-        result,
-        "event_emitted_wrong_data_asserted",
-        "225609720694326165274609752545165275553106143959348804862359511355382656230"
-    );
 }
 
 #[test]

@@ -396,6 +396,7 @@ fn trace_failed_call() {
             
                 let proxy_dispatcher = ITraceInfoProxySafeDispatcher { contract_address: proxy_address };
             
+                #[feature("safe_dispatcher")]
                 match proxy_dispatcher.with_panic(checker_address) {
                     Result::Ok(_) => panic_with_felt252('shouldve panicked'),
                     Result::Err(panic_data) => { assert(*panic_data.at(0) == 'panic', *panic_data.at(0)); }
@@ -403,6 +404,7 @@ fn trace_failed_call() {
             
                 let chcecker_dispatcher = ITraceInfoCheckerSafeDispatcher { contract_address: checker_address };
             
+                #[feature("safe_dispatcher")]
                 match chcecker_dispatcher.panic() {
                     Result::Ok(_) => panic_with_felt252('shouldve panicked'),
                     Result::Err(panic_data) => { assert(*panic_data.at(0) == 'panic', *panic_data.at(0)); }
@@ -729,13 +731,15 @@ fn trace_failed_library_call_from_test() {
             
                 let proxy_dispatcher = ITraceInfoProxySafeDispatcher { contract_address: proxy_address };
             
+                #[feature("safe_dispatcher")]
                 match proxy_dispatcher.with_panic(checker_address) {
                     Result::Ok(_) => panic_with_felt252('shouldve panicked'),
                     Result::Err(panic_data) => { assert(*panic_data.at(0) == 'panic', *panic_data.at(0)); }
                 }
             
                 let chcecker_dispatcher = ITraceInfoCheckerSafeDispatcher { contract_address: checker_address };
-            
+                
+                #[feature("safe_dispatcher")]
                 match chcecker_dispatcher.panic() {
                     Result::Ok(_) => panic_with_felt252('shouldve panicked'),
                     Result::Err(panic_data) => { assert(*panic_data.at(0) == 'panic', *panic_data.at(0)); }

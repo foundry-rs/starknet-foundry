@@ -7,11 +7,13 @@ use crate::starknet_commands::{
 use anyhow::{Context, Result};
 use sncast::response::print::{print_command_result, OutputFormat};
 
-use crate::starknet_commands::declare::BuildConfig;
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand};
 use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
-use sncast::helpers::scarb_utils::{parse_scarb_config, CastConfig};
+use sncast::helpers::scarb_utils::{
+    build, get_package_metadata, get_scarb_manifest, get_scarb_metadata_with_deps,
+    parse_scarb_config, BuildConfig, CastConfig,
+};
 use sncast::{
     chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_nonce, get_provider,
     NumbersFormat, WaitForTx,
@@ -122,9 +124,22 @@ fn main() -> Result<()> {
     let runtime = Runtime::new().expect("Failed to instantiate Runtime");
 
     if let Commands::Script(script) = cli.command {
+        let manifest_path = match cli.path_to_scarb_toml {
+            Some(path) => path,
+            None => get_scarb_manifest().context("Failed to obtain manifest path from Scarb")?,
+        };
+        let metadata = get_scarb_metadata_with_deps(&manifest_path)?;
+        let package_metadata = get_package_metadata(&metadata, &manifest_path)?;
+        let mut artifacts = build(&BuildConfig {
+            scarb_toml_path: manifest_path.clone(),
+            json: cli.json,
+        })
+        .expect("Failed to build script");
         let mut result = starknet_commands::script::run(
             &script.script_module_name,
-            &cli.path_to_scarb_toml,
+            &metadata,
+            package_metadata,
+            &mut artifacts,
             &provider,
             runtime,
             &config,
@@ -156,10 +171,6 @@ async fn run_async_command(
         timeout: config.wait_timeout,
         retry_interval: config.wait_retry_interval,
     };
-    let build_config = BuildConfig {
-        scarb_toml_path: cli.path_to_scarb_toml.clone(),
-        json: cli.json,
-    };
     match cli.command {
         Commands::Declare(declare) => {
             let account = get_account(
@@ -169,12 +180,22 @@ async fn run_async_command(
                 config.keystore,
             )
             .await?;
+            let manifest_path = match cli.path_to_scarb_toml.clone() {
+                Some(path) => path,
+                None => {
+                    get_scarb_manifest().context("Failed to obtain manifest path from Scarb")?
+                }
+            };
+            let artifacts = build(&BuildConfig {
+                scarb_toml_path: manifest_path,
+                json: cli.json,
+            })?;
             let mut result = starknet_commands::declare::declare(
                 &declare.contract,
                 declare.max_fee,
                 &account,
                 declare.nonce,
-                build_config,
+                &artifacts,
                 wait_config,
             )
             .await;
