@@ -176,6 +176,7 @@ mod tests {
                 ],
                 fuzzer_runs: None,
                 fuzzer_seed: None,
+                save_trace_data: false
             }
         );
     }

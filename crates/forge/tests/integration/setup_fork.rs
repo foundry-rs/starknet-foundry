@@ -123,6 +123,7 @@ fn fork_aliased_decorator() {
                 256,
                 12345,
                 false,
+                false,
             )),
             Arc::new(RunnerParams::new(
                 test.contracts().unwrap(),
@@ -259,7 +260,7 @@ fn fork_get_block_info_fails() {
             #[test]
             #[fork(url: "{INTEGRATION_RPC_URL}", block_id: BlockId::Number(999999999999))]
             fn fork_get_block_info_fails() {{
-                starknet::get_block_info().unbox();
+                starknet::get_block_info();
             }}
         "#
     )

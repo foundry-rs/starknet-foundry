@@ -19,6 +19,7 @@ use futures::StreamExt;
 use once_cell::sync::Lazy;
 use scarb_api::StarknetContractArtifacts;
 use smol_str::SmolStr;
+use trace_data::save_trace_data;
 
 use std::collections::HashMap;
 use std::default::Default;
@@ -31,6 +32,7 @@ pub mod compiled_runnable;
 pub mod expected_result;
 pub mod test_case_summary;
 pub mod test_crate_summary;
+pub mod trace_data;
 
 mod fuzzer;
 mod gas;
@@ -63,6 +65,7 @@ pub struct RunnerConfig {
     pub fuzzer_runs: u32,
     pub fuzzer_seed: u64,
     pub detailed_resources: bool,
+    pub save_trace_data: bool,
 }
 
 impl RunnerConfig {
@@ -74,6 +77,7 @@ impl RunnerConfig {
         fuzzer_runs: u32,
         fuzzer_seed: u64,
         detailed_resources: bool,
+        save_trace_data: bool,
     ) -> Self {
         Self {
             workspace_root,
@@ -81,6 +85,7 @@ impl RunnerConfig {
             fuzzer_runs,
             fuzzer_seed,
             detailed_resources,
+            save_trace_data,
         }
     }
 }
@@ -138,6 +143,7 @@ pub async fn run_tests_from_crate(
             tests.sierra_program.clone(),
             Some(MetadataComputationConfig::default()),
             OrderedHashMap::default(),
+            false,
         )
         .context("Failed setting up runner.")?,
     );
@@ -188,6 +194,12 @@ pub async fn run_tests_from_crate(
         let result = task??;
 
         print_test_result(&result, &runner_config);
+
+        if runner_config.save_trace_data {
+            if let AnyTestCaseSummary::Single(result) = &result {
+                save_trace_data(result);
+            }
+        }
 
         if result.is_failed() && runner_config.exit_first {
             interrupted = true;

@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
-use blockifier::fee::eth_gas_constants;
+use crate::test_case_summary::{Single, TestCaseSummary};
 use blockifier::fee::fee_utils::calculate_tx_l1_gas_usage;
-use blockifier::fee::gas_usage::get_message_segment_length;
+use blockifier::fee::gas_usage::calculate_tx_gas_usage;
 use blockifier::fee::os_resources::OS_RESOURCES;
 use blockifier::fee::os_usage::get_additional_os_resources;
 use blockifier::state::cached_state::{CachedState, StateChangesCount};
@@ -32,12 +32,14 @@ pub fn calculate_used_gas(
     // which we don't want to include in gas cost
     state_changes.compiled_class_hash_updates.clear();
 
-    let l1_gas_usage = get_l1_gas_usage(
+    let l1_gas_usage = calculate_tx_gas_usage(
         &resources.l2_to_l1_payloads_length,
         StateChangesCount::from(&state_changes),
+        None,
     );
 
     let resource_mapping = used_resources_to_resource_mapping(&total_vm_usage, l1_gas_usage);
+
     calculate_tx_l1_gas_usage(&resource_mapping, block_context)
         .expect("Calculating gas failed, some resources were not included.")
 }
@@ -63,10 +65,8 @@ fn used_resources_to_resource_mapping(
 /// Unfortunately `get_additional_os_resources` function adds resources used by os,
 /// so we have to subtract them
 fn get_total_vm_usage(resources: &ExecutionResources) -> VmExecutionResources {
-    let unnecessary_added_resources = OS_RESOURCES
-        .execute_txs_inner()
-        .get(&TransactionType::InvokeFunction)
-        .expect("`OS_RESOURCES` must contain all transaction types.");
+    let unnecessary_added_resources =
+        OS_RESOURCES.resources_for_tx_type(&TransactionType::InvokeFunction);
 
     let total_vm_usage = &resources.vm_resources
         + &(&get_additional_os_resources(
@@ -78,31 +78,26 @@ fn get_total_vm_usage(resources: &ExecutionResources) -> VmExecutionResources {
     total_vm_usage.filter_unused_builtins()
 }
 
-fn get_l1_gas_usage(
-    l2_to_l1_payloads_length: &[usize],
-    state_changes_count: StateChangesCount,
-) -> usize {
-    let message_segment_length = get_message_segment_length(l2_to_l1_payloads_length, None);
-    let onchain_data_segment_length = get_onchain_data_segment_length(state_changes_count);
-
-    message_segment_length * eth_gas_constants::SHARP_GAS_PER_MEMORY_WORD
-        + onchain_data_segment_length * eth_gas_constants::SHARP_GAS_PER_MEMORY_WORD
-}
-
-// TODO::copied from blockifier, because it became private
-fn get_onchain_data_segment_length(state_changes_count: StateChangesCount) -> usize {
-    // For each newly modified contract:
-    // contract address (1 word).
-    // + 1 word with the following info: A flag indicating whether the class hash was updated, the
-    // number of entry updates, and the new nonce.
-    let mut onchain_data_segment_length = state_changes_count.n_modified_contracts * 2;
-    // For each class updated (through a deploy or a class replacement).
-    onchain_data_segment_length +=
-        state_changes_count.n_class_hash_updates * constants::CLASS_UPDATE_SIZE;
-    // For each modified storage cell: key, new value.
-    onchain_data_segment_length += state_changes_count.n_storage_updates * 2;
-    // For each compiled class updated (through declare): class_hash, compiled_class_hash
-    onchain_data_segment_length += state_changes_count.n_compiled_class_hash_updates * 2;
-
-    onchain_data_segment_length
+pub fn check_available_gas(
+    available_gas: &Option<usize>,
+    summary: TestCaseSummary<Single>,
+) -> TestCaseSummary<Single> {
+    match summary {
+        TestCaseSummary::Passed {
+            name,
+            arguments,
+            gas_info,
+            ..
+        } if available_gas.map_or(false, |available_gas| gas_info > available_gas as u128) => {
+            TestCaseSummary::Failed {
+                name,
+                msg: Some(format!(
+                    "\n\tTest cost exceeded the available gas. Consumed gas: ~{gas_info}"
+                )),
+                arguments,
+                test_statistics: (),
+            }
+        }
+        _ => summary,
+    }
 }

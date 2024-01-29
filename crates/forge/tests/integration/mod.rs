@@ -1,3 +1,4 @@
+mod available_gas;
 mod benchmarks;
 mod cheat_fork;
 mod declare;

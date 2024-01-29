@@ -31,7 +31,7 @@ fn main() {
     let declare_result = declare('Mapa', Option::Some(max_fee), Option::Some(declare_nonce));
 
     let class_hash = declare_result.class_hash;
-    let deploy_nonce = get_nonce('latest');
+    let deploy_nonce = get_nonce('pending');
     let deploy_result = deploy(
         class_hash,
         ArrayTrait::new(),
