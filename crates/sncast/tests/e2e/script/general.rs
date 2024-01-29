@@ -175,3 +175,41 @@ async fn test_multiple_packages_happy_case() {
         status: success
     "});
 }
+
+#[tokio::test]
+async fn test_run_script_display_debug_traits() {
+    let script_name = "display_debug_traits_for_subcommand_responses";
+    let args = vec![
+        "--accounts-file",
+        "../../../accounts/accounts.json",
+        "--account",
+        "user4",
+        "--url",
+        URL,
+        "script",
+        &script_name,
+    ];
+
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(SCRIPTS_DIR.to_owned() + "/map_script/scripts")
+        .args(args);
+
+    snapbox.assert().success().stdout_matches(indoc! {r#"
+        ...
+        declare_nonce: 1
+        debug declare_nonce: 1
+        Transaction hash = 0x[..]
+        declare_result: class_hash: [..], transaction_hash: [..]
+        debug declare_result: DeclareResult { class_hash: [..], transaction_hash: [..] }
+        Transaction hash = 0x[..]
+        deploy_result: contract_address: [..], transaction_hash: [..]
+        debug deploy_result: DeployResult { contract_address: [..], transaction_hash: [..] }
+        Transaction hash = 0x[..]
+        invoke_result: [..]
+        debug invoke_result: InvokeResult { transaction_hash: [..] }
+        call_result: [2]
+        debug call_result: CallResult { data: [2] }
+        command: script
+        status: success
+    "#});
+}
