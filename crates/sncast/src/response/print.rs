@@ -7,8 +7,6 @@ use std::{fmt::Display, str::FromStr};
 
 use serde::{Serialize, Serializer};
 
-use crate::NumbersFormat;
-
 use super::structs::CommandResponse;
 
 #[derive(Copy, Clone, Debug)]
@@ -30,6 +28,30 @@ impl OutputFormat {
             OutputFormat::Json
         } else {
             OutputFormat::Human
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Copy, Clone)]
+pub enum NumbersFormat {
+    Default,
+    Decimal,
+    Hex,
+}
+
+impl NumbersFormat {
+    #[must_use]
+    pub fn from_flags(hex_format: bool, dec_format: bool) -> Self {
+        assert!(
+            !(hex_format && dec_format),
+            "Exclusivity should be validated by clap"
+        );
+        if hex_format {
+            NumbersFormat::Hex
+        } else if dec_format {
+            NumbersFormat::Decimal
+        } else {
+            NumbersFormat::Default
         }
     }
 }
@@ -213,10 +235,8 @@ mod tests {
     use serde_json::{Map, Value};
 
     use crate::response::print::{
-        apply_numbers_formatting, value_to_output_data, OutputData, OutputValue,
+        apply_numbers_formatting, value_to_output_data, NumbersFormat, OutputData, OutputValue,
     };
-    use crate::NumbersFormat;
-
     #[test]
     fn test_format_json_value_force_decimal() {
         let json_value = OutputValue::Array(vec![OutputValue::String(String::from(

@@ -4,7 +4,9 @@ use crate::starknet_commands::{
     account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,
 };
 use anyhow::{Context, Result};
-use sncast::response::print::{print_cast_command_result, OutputFormat, OutputFormattingConfig};
+use sncast::response::print::{
+    print_cast_command_result, NumbersFormat, OutputFormat, OutputFormattingConfig,
+};
 
 use crate::starknet_commands::script::logger::ScriptLogger;
 use crate::starknet_commands::script::Script;
@@ -17,7 +19,7 @@ use sncast::helpers::scarb_utils::{
 };
 use sncast::{
     chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_nonce, get_provider,
-    NumbersFormat, WaitForTx,
+    WaitForTx,
 };
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
