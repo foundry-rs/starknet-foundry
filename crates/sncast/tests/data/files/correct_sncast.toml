@@ -1,0 +1,11 @@
+[default]
+url = "http://127.0.0.1:5055/rpc"
+account = "user1"
+
+[profile1]
+url = "http://127.0.0.1:5050/rpc"
+account = "user3"
+
+[profile2]
+url = "http://127.0.0.1:5055/rpc"
+account = "user100"
