@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Changed
+
+- Gas estimation is now aligned with the Starknet v0.13
+
 ## [0.16.0] - 2024-01-26
 
 ### Forge
