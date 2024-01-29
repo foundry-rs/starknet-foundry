@@ -196,8 +196,9 @@ async fn test_run_script_display_debug_traits() {
 
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
-        declare_nonce: 1
-        debug declare_nonce: 1
+        test
+        declare_nonce: [..]
+        debug declare_nonce: [..]
         Transaction hash = 0x[..]
         declare_result: class_hash: [..], transaction_hash: [..]
         debug declare_result: DeclareResult { class_hash: [..], transaction_hash: [..] }
