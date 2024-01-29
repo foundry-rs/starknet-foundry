@@ -1015,10 +1015,10 @@ fn detailed_resources_flag() {
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
         [PASS] tests::test_complex::complex[..]
-                steps: 5911
-                memory holes: 346
-                builtins: ("range_check_builtin": 198, "pedersen_builtin": 24)
-                syscalls: (StorageRead: 22, StorageWrite: 19, EmitEvent: 5, GetExecutionInfo: 3, Deploy: 1)
+                steps: 5360
+                memory holes: 330
+                builtins: ("range_check_builtin": 186, "pedersen_builtin": 23)
+                syscalls: (StorageRead: 22, StorageWrite: 12, EmitEvent: 4, GetExecutionInfo: 3)
                 
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         "#}

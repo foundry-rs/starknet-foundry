@@ -39,7 +39,7 @@ impl UsedResources {
             .extend(&other.l2_to_l1_payloads_length);
     }
 
-    pub fn update_syscall_counter(self: &mut UsedResources, syscall_counter: &SyscallCounter) {
+    fn update_syscall_counter(self: &mut UsedResources, syscall_counter: &SyscallCounter) {
         for (syscall, count) in syscall_counter {
             *self
                 .execution_resources
