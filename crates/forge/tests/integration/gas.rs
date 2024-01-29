@@ -532,9 +532,9 @@ fn multiple_storage_writes_cost() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
-    // 3 = gas cost of steps
+    // 4 = gas cost of steps
     // 2203 = gas cost of onchain data
-    assert_gas!(result, "multiple_storage_writes_cost", 3 + 2203);
+    assert_gas!(result, "multiple_storage_writes_cost", 4 + 2203);
 }
 
 #[test]
