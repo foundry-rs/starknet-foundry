@@ -12,7 +12,8 @@ use cheatnet::runtime_extensions::common::{create_entry_point_selector, create_e
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::deploy;
 use cheatnet::state::{BlockifierState, CheatnetState};
 use conversions::felt252::FromShortString;
-use scarb_api::{get_contracts_map, StarknetContractArtifacts};
+use scarb_api::metadata::MetadataCommandExt;
+use scarb_api::{get_contracts_map, ScarbCommand, StarknetContractArtifacts};
 use starknet::core::utils::get_selector_from_name;
 use starknet_api::core::ContractAddress;
 use starknet_api::core::PatriciaKey;
@@ -36,10 +37,10 @@ pub fn recover_data(output: CallOutput) -> Vec<Felt252> {
 }
 
 pub fn get_contracts() -> HashMap<String, StarknetContractArtifacts> {
-    let scarb_metadata = scarb_metadata::MetadataCommand::new()
+    let scarb_metadata = ScarbCommand::metadata()
         .inherit_stderr()
         .manifest_path(Utf8PathBuf::from("tests/contracts/Scarb.toml"))
-        .exec()
+        .run()
         .unwrap();
 
     let package = scarb_metadata.packages.first().unwrap();
