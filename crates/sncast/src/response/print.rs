@@ -11,6 +11,12 @@ use crate::NumbersFormat;
 
 use super::structs::CommandResponse;
 
+#[derive(Copy, Clone, Debug)]
+pub struct OutputFormattingConfig {
+    pub output_format: OutputFormat,
+    pub numbers_format: NumbersFormat,
+}
+
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum OutputFormat {
     Json,
@@ -68,31 +74,15 @@ impl Display for OutputValue {
 pub fn print_cast_command_result<T: CommandResponse>(
     command: &str,
     result: &mut Result<T>,
-    numbers_format: NumbersFormat,
-    output_format: &OutputFormat,
+    output_config: OutputFormattingConfig,
 ) -> Result<()> {
-    let header = (
+    let formatted_output = get_formatted_output(
+        result,
         String::from("command"),
-        OutputValue::String(command.to_string()),
-    );
-    print_command_result(header, result, numbers_format, output_format)
-}
-
-pub fn print_command_result<T: CommandResponse>(
-    header: (String, OutputValue),
-    result: &mut Result<T>,
-    numbers_format: NumbersFormat,
-    output_format: &OutputFormat,
-) -> Result<()> {
-    let mut output: OutputData = vec![header];
-    output.extend(result_as_output_data(result));
-
-    let formatted_output = output
-        .into_iter()
-        .map(|(k, v)| (k, apply_numbers_formatting(v, numbers_format)))
-        .collect();
-
-    for val in pretty_output(formatted_output, output_format)? {
+        command.to_string(),
+        output_config,
+    )?;
+    for val in formatted_output {
         match result {
             Ok(_) => println!("{val}"),
             Err(_) => eprintln!("{val}"),
@@ -101,7 +91,42 @@ pub fn print_command_result<T: CommandResponse>(
     Ok(())
 }
 
-fn pretty_output(output: OutputData, output_format: &OutputFormat) -> Result<Vec<String>> {
+pub fn get_formatted_output<T: CommandResponse>(
+    result: &mut Result<T>,
+    command_type: String,
+    command: String,
+    output_config: OutputFormattingConfig,
+) -> Result<Vec<String>> {
+    let output = get_output(result, command_type, command);
+    format_output(output, output_config)
+}
+
+pub fn get_output<T: CommandResponse>(
+    result: &mut Result<T>,
+    command_type: String,
+    command: String,
+) -> OutputData {
+    let header = (command_type, OutputValue::String(command));
+
+    let mut output: OutputData = vec![header];
+    output.extend(result_as_output_data(result));
+
+    output
+}
+
+pub fn format_output(
+    output: OutputData,
+    output_config: OutputFormattingConfig,
+) -> Result<Vec<String>> {
+    let formatted_output = output
+        .into_iter()
+        .map(|(k, v)| (k, apply_numbers_formatting(v, output_config.numbers_format)))
+        .collect();
+
+    pretty_output(formatted_output, output_config.output_format)
+}
+
+fn pretty_output(output: OutputData, output_format: OutputFormat) -> Result<Vec<String>> {
     match output_format {
         OutputFormat::Json => {
             let json_output: IndexMap<String, OutputValue> = output.into_iter().collect();

@@ -1,7 +1,6 @@
 use anyhow::Result;
-use sncast::response::print::{print_command_result, OutputFormat, OutputValue};
+use sncast::response::print::{get_formatted_output, OutputFormattingConfig};
 use sncast::response::structs::CommandResponse;
-use sncast::NumbersFormat;
 
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd)]
 pub enum Verbosity {
@@ -16,12 +15,11 @@ pub enum Verbosity {
 #[derive(Debug)]
 pub struct ScriptLogger {
     verbosity: Verbosity,
-    numbers_format: NumbersFormat,
-    output_format: OutputFormat,
+    output_config: OutputFormattingConfig,
 }
 
 impl ScriptLogger {
-    pub fn new(is_quiet: bool, numbers_format: NumbersFormat, output_format: OutputFormat) -> Self {
+    pub fn new(is_quiet: bool, output_config: OutputFormattingConfig) -> Self {
         let verbosity = if is_quiet {
             Verbosity::Quiet
         } else {
@@ -30,8 +28,7 @@ impl ScriptLogger {
 
         Self {
             verbosity,
-            numbers_format,
-            output_format,
+            output_config,
         }
     }
 
@@ -41,18 +38,17 @@ impl ScriptLogger {
         response: T,
     ) -> Result<()> {
         if self.verbosity >= Verbosity::Normal {
-            let header = (
-                String::from("script_subcommand"),
-                OutputValue::String(command.to_string()),
-            );
-            print_command_result(
-                header,
+            let formatted_output = get_formatted_output(
                 &mut Ok(response),
-                self.numbers_format,
-                &self.output_format,
+                String::from("script_subcommand"),
+                command.to_string(),
+                self.output_config,
             )?;
+
+            for val in formatted_output {
+                println!("{val}");
+            }
             println!();
-            return Ok(());
         }
         Ok(())
     }
