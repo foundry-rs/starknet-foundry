@@ -102,7 +102,7 @@ async fn get_latest_block_number(url: &Url) -> Result<BlockNumber> {
                     Ok(BlockNumber(block.block_number))
                 }
                 Err(x) => Err(anyhow!(x.to_string())),
-                _ => Err(anyhow!("Parent of pending block is pending as well")),
+                _ => Err(anyhow!("Parent of latest block is pending as well")),
             }
         }
         Err(x) => Err(anyhow!(x.to_string())),
