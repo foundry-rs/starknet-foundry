@@ -71,6 +71,22 @@ mod tests {
     }
 
     #[test]
+    fn find_config_in_parent_dir_available_in_multiple_parents() {
+        let tempdir =
+            copy_config_to_tempdir("tests/data/files/correct_sncast.toml", Some("childdir1"));
+        fs::copy(
+            "tests/data/files/correct_sncast.toml",
+            tempdir.path().join("childdir1").join(CONFIG_FILENAME),
+        )
+        .expect("Failed to copy config file to temp dir");
+        let path = find_config_file_relative_to(
+            &Utf8PathBuf::try_from(tempdir.path().to_path_buf().join("childdir1")).unwrap(),
+        )
+        .unwrap();
+        assert_eq!(path, tempdir.path().join("childdir1").join(CONFIG_FILENAME));
+    }
+
+    #[test]
     fn no_config_in_current_nor_parent_dir() {
         let tempdir = TempDir::new().expect("Failed to create a temporary directory");
         assert!(
