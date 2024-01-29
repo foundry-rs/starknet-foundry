@@ -217,22 +217,4 @@ impl ScarbCommand {
             Err(ScarbCommandError::ScarbError)
         }
     }
-
-    /// Runs configured `scarb` command with stdout footer provided.
-    pub fn run_with_stdout_footer(&self, stdout_footer: &str) -> Result<(), ScarbCommandError> {
-        let cmd = self.command().output()?;
-
-        if !cmd.stdout.is_empty() {
-            print!("{}{}", String::from_utf8_lossy(&cmd.stdout), stdout_footer);
-        }
-        if !cmd.stderr.is_empty() {
-            eprint!("{}", String::from_utf8_lossy(&cmd.stderr));
-        }
-
-        if cmd.status.success() {
-            Ok(())
-        } else {
-            Err(ScarbCommandError::ScarbError)
-        }
-    }
 }
