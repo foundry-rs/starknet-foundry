@@ -37,8 +37,6 @@ fn get_call_trace() -> CallTrace {
 
 use core::fmt::{Display, Formatter, Error, Debug};
 
-// Display
-
 impl DisplayEntryPointType of Display<EntryPointType> {
     fn fmt(self: @EntryPointType, ref f: Formatter) -> Result<(), Error> {
         let str: ByteArray = match self {
