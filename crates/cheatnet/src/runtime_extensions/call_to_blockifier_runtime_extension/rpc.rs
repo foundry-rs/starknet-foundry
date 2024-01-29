@@ -40,13 +40,13 @@ impl UsedResources {
     }
 
     pub fn update_syscall_counter(self: &mut UsedResources, syscall_counter: &SyscallCounter) {
-        syscall_counter.iter().for_each(|(syscall, count)| {
+        for (syscall, count) in syscall_counter {
             *self
                 .execution_resources
                 .syscall_counter
                 .entry(*syscall)
                 .or_insert(0) += count;
-        });
+        }
     }
 }
 

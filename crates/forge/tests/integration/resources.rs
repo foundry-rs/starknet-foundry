@@ -60,7 +60,7 @@ fn builtins_count() {
 fn syscalls_count() {
     let test = test_case!(
         indoc!(
-            r##"
+            r#"
             use starknet::syscalls::{
                 call_contract_syscall, keccak_syscall, deploy_syscall, get_block_hash_syscall, emit_event_syscall,
                 send_message_to_l1_syscall, get_execution_info_syscall, get_execution_info_v2_syscall,
@@ -124,7 +124,7 @@ fn syscalls_count() {
             fn emit_event() {
                 emit_event_syscall(array![1].span(), array![2].span()).unwrap_syscall();
             }
-        "##
+        "#
         ),
         Contract::from_code_path(
             "HelloStarknet".to_string(),
