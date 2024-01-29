@@ -1,17 +1,19 @@
 use crate::constants::TEST_ADDRESS;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
-    AddressOrClassHash, CallFailure,
+    AddressOrClassHash, CallFailure, UsedResources,
 };
 use crate::state::BlockifierState;
 use crate::CheatnetState;
 use anyhow::Result;
 use blockifier::execution::common_hints::ExecutionMode;
+use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::entry_point::{
     ConstructorContext, EntryPointExecutionContext, ExecutionResources,
 };
 use blockifier::execution::execution_utils::felt_to_stark_felt;
 use runtime::starknet::context::{build_block_context, build_transaction_context};
 use runtime::EnhancedHintError;
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use blockifier::state::state_api::State;
@@ -91,6 +93,16 @@ pub fn deploy_at(
         CheatcodeError::from(call_contract_failure)
     });
     cheatnet_state.increment_deploy_salt_base();
+
+    // Save resources used in constructor
+    cheatnet_state.used_resources.extend(&UsedResources {
+        execution_resources: resources.clone(),
+        l2_to_l1_payloads_length: vec![],
+    });
+    cheatnet_state
+        .used_resources
+        .update_syscall_counter(&HashMap::from([(DeprecatedSyscallSelector::Deploy, 1)]));
+
     result
 }
 

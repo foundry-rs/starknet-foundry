@@ -27,10 +27,10 @@ fn deploy_erc20(
     contract.deploy(@constructor_calldata).unwrap()
 }
 
-// Syscalls from constructor are not counted
-// StorageRead: 22, StorageWrite: 12, EmitEvent: 4, GetExecutionInfo: 3
+// StorageRead: 22, StorageWrite: 19, EmitEvent: 5, GetExecutionInfo: 3, Deploy: 1
 #[test]
 fn complex() {
+    // StorageWrite: 7, EmitEvent: 1, Deploy: 1
     let erc20_address = deploy_erc20(NAME, SYMBOL, DECIMALS, INITIAL_SUPPLY, test_address());
     let dispatcher = IERC20Dispatcher { contract_address: erc20_address };
 

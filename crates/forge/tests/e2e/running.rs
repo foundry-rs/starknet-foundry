@@ -1018,7 +1018,7 @@ fn detailed_resources_flag() {
                 steps: 5911
                 memory holes: 346
                 builtins: ("range_check_builtin": 198, "pedersen_builtin": 24)
-                syscalls: (StorageRead: 22, StorageWrite: 19, EmitEvent: 5, GetExecutionInfo: 3)
+                syscalls: (StorageRead: 22, StorageWrite: 19, EmitEvent: 5, GetExecutionInfo: 3, Deploy: 1)
                 
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         "#}
