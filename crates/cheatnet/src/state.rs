@@ -8,10 +8,7 @@ use blockifier::execution::entry_point::CallEntryPoint;
 use blockifier::state::state_api::State;
 use blockifier::{
     execution::contract_class::ContractClass,
-    state::{
-        errors::StateError,
-        state_api::{StateReader, StateResult},
-    },
+    state::state_api::{StateReader, StateResult},
 };
 use cairo_felt::Felt252;
 use runtime::starknet::context::BlockInfo;
@@ -20,7 +17,7 @@ use runtime::starknet::state::DictStateReader;
 use starknet_api::core::EntryPointSelector;
 
 use crate::constants::build_test_entry_point;
-use blockifier::state::errors::StateError::StateReadError;
+use blockifier::state::errors::StateError::UndeclaredClassHash;
 use starknet_api::transaction::ContractAddressSalt;
 use starknet_api::{
     core::{ClassHash, CompiledClassHash, ContractAddress, Nonce},
@@ -84,7 +81,7 @@ impl StateReader for ExtendedStateReader {
                 self.fork_state_reader
                     .as_mut()
                     .map_or(Ok(Default::default()), {
-                        |reader| match_node_response(reader.get_storage_at(contract_address, key))
+                        |reader| reader.get_storage_at(contract_address, key)
                     })
             })
     }
@@ -96,7 +93,7 @@ impl StateReader for ExtendedStateReader {
                 self.fork_state_reader
                     .as_mut()
                     .map_or(Ok(Default::default()), {
-                        |reader| match_node_response(reader.get_nonce_at(contract_address))
+                        |reader| reader.get_nonce_at(contract_address)
                     })
             })
     }
@@ -108,7 +105,7 @@ impl StateReader for ExtendedStateReader {
                 self.fork_state_reader
                     .as_mut()
                     .map_or(Ok(Default::default()), {
-                        |reader| match_node_response(reader.get_class_hash_at(contract_address))
+                        |reader| reader.get_class_hash_at(contract_address)
                     })
             })
     }
@@ -120,10 +117,11 @@ impl StateReader for ExtendedStateReader {
         self.dict_state_reader
             .get_compiled_contract_class(class_hash)
             .or_else(|_| {
-                self.fork_state_reader.as_mut().map_or(
-                    Err(StateError::UndeclaredClassHash(*class_hash)),
-                    |reader| match_node_response(reader.get_compiled_contract_class(class_hash)),
-                )
+                self.fork_state_reader
+                    .as_mut()
+                    .map_or(Err(UndeclaredClassHash(*class_hash)), |reader| {
+                        reader.get_compiled_contract_class(class_hash)
+                    })
             })
     }
 
@@ -315,15 +313,6 @@ impl TraceData {
 
     pub fn exit_nested_call(&mut self) {
         self.current_call_stack.pop();
-    }
-}
-
-fn match_node_response<T>(result: StateResult<T>) -> StateResult<T> {
-    match result {
-        Ok(class_hash) => Ok(class_hash),
-        Err(StateReadError(msg)) if msg.contains("node") => Err(StateReadError(msg)),
-        Err(StateError::UndeclaredClassHash(x)) => Err(StateError::UndeclaredClassHash(x)),
-        Err(x) => Err(StateReadError(x.to_string())),
     }
 }
 

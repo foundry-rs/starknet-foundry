@@ -4,7 +4,6 @@ use cairo_felt::Felt252;
 use conversions::IntoConv;
 use forge_runner::compiled_runnable::ValidatedForkConfig;
 use num_bigint::BigInt;
-use starknet::core::types::BlockTag::Latest;
 use starknet::core::types::{BlockId, MaybePendingBlockWithTxHashes};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::{JsonRpcClient, Provider};
@@ -83,30 +82,11 @@ impl BlockNumberMap {
 async fn get_latest_block_number(url: &Url) -> Result<BlockNumber> {
     let client = JsonRpcClient::new(HttpTransport::new(url.clone()));
 
-    match Handle::current()
-        .spawn(async move { client.get_block_with_tx_hashes(BlockId::Tag(Latest)).await })
+    Handle::current()
+        .spawn(async move { client.block_number().await })
         .await?
-    {
-        Ok(MaybePendingBlockWithTxHashes::Block(block)) => Ok(BlockNumber(block.block_number)),
-        Ok(MaybePendingBlockWithTxHashes::PendingBlock(block)) => {
-            let client = JsonRpcClient::new(HttpTransport::new(url.clone()));
-            match Handle::current()
-                .spawn(async move {
-                    client
-                        .get_block_with_tx_hashes(BlockId::Hash(block.parent_hash))
-                        .await
-                })
-                .await?
-            {
-                Ok(MaybePendingBlockWithTxHashes::Block(block)) => {
-                    Ok(BlockNumber(block.block_number))
-                }
-                Err(x) => Err(anyhow!(x.to_string())),
-                _ => Err(anyhow!("Parent of latest block is pending as well")),
-            }
-        }
-        Err(x) => Err(anyhow!(x.to_string())),
-    }
+        .map(BlockNumber)
+        .map_err(|x| anyhow!(x.to_string()))
 }
 
 async fn get_block_number_from_hash(url: &Url, block_hash: &Felt252) -> Result<BlockNumber> {
