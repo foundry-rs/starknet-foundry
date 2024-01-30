@@ -140,7 +140,7 @@ fn syscalls_count() {
     assert_syscalls!(result, "keccak", Keccak, 1);
     assert_syscalls!(result, "deploy", Deploy, 1);
     assert_syscalls!(result, "storage_read", StorageRead, 1);
-    assert_syscalls!(result, "storage_write", StorageRead, 1);
+    assert_syscalls!(result, "storage_write", StorageWrite, 1);
     assert_syscalls!(result, "get_block_hash", GetBlockHash, 1);
     assert_syscalls!(result, "get_execution_info", GetExecutionInfo, 1);
     assert_syscalls!(result, "get_execution_info_v2", GetExecutionInfo, 1);
