@@ -6,6 +6,7 @@ use primitive_types::U256;
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
 use serde_json::{json, Map, Value};
+use sncast::helpers::constants::CONFIG_FILENAME;
 use sncast::{apply_optional, get_chain_id, get_keystore_password};
 use sncast::{get_account, get_provider, parse_number};
 use starknet::accounts::{Account, AccountFactory, Call, Execution, OpenZeppelinAccountFactory};
@@ -379,4 +380,17 @@ pub fn get_keystores_path(relative_path_from_cargo_toml: &str) -> String {
         .to_str()
         .expect("Failed to convert path to string")
         .to_string()
+}
+
+#[must_use]
+pub fn copy_config_to_tempdir(src_path: &str, additional_path: Option<&str>) -> TempDir {
+    // todo: nie duplikuj mordo
+    let temp_dir = TempDir::new().expect("Failed to create a temporary directory");
+    if let Some(dir) = additional_path {
+        let path = temp_dir.path().join(dir);
+        fs::create_dir_all(path).expect("Failed to create directories in temp dir");
+    };
+    let temp_dir_file_path = temp_dir.path().join(CONFIG_FILENAME);
+    fs::copy(src_path, temp_dir_file_path).expect("Failed to copy config file to temp dir");
+    temp_dir
 }
