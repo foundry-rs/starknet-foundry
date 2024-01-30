@@ -1,4 +1,5 @@
 use crate::helpers::constants::{SCRIPTS_DIR, URL};
+use crate::helpers::fixtures::duplicate_directory_and_salt_file;
 use indoc::indoc;
 use snapbox::cmd::{cargo_bin, Command};
 
@@ -178,12 +179,20 @@ async fn test_multiple_packages_happy_case() {
 
 #[tokio::test]
 async fn test_run_script_display_debug_traits() {
+    let current_dir = duplicate_directory_and_salt_file(
+        SCRIPTS_DIR.to_owned() + "/map_script",
+        Some(SCRIPTS_DIR.to_owned()),
+        "dummy",
+        "contracts/src/lib.cairo",
+        "45",
+    );
+
     let script_name = "display_debug_traits_for_subcommand_responses";
     let args = vec![
         "--accounts-file",
         "../../../accounts/accounts.json",
         "--account",
-        "user4",
+        "user6",
         "--url",
         URL,
         "script",
@@ -191,7 +200,7 @@ async fn test_run_script_display_debug_traits() {
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(SCRIPTS_DIR.to_owned() + "/map_script/scripts")
+        .current_dir(current_dir.path().join("scripts"))
         .args(args);
 
     snapbox.assert().success().stdout_matches(indoc! {r"
