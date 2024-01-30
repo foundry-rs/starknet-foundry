@@ -36,7 +36,7 @@ use runtime::{
 use starknet::signers::SigningKey;
 use starknet_api::deprecated_contract_class::EntryPointType;
 
-use super::call_to_blockifier_runtime_extension::CallToBlockifierRuntime;
+use super::call_to_blockifier_runtime_extension::{CallToBlockifierRuntime, RuntimeState};
 use super::cheatable_starknet_runtime_extension::SyscallSelector;
 
 pub mod cheatcodes;
@@ -297,7 +297,9 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 handle_deploy_result(deploy(
                     &mut blockifier_state,
-                    cheatnet_runtime.extended_runtime.extension.cheatnet_state,
+                    &mut RuntimeState {
+                        cheatnet_state: cheatnet_runtime.extended_runtime.extension.cheatnet_state,
+                    },
                     &class_hash,
                     &calldata,
                 ))
@@ -317,7 +319,9 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 handle_deploy_result(deploy_at(
                     &mut blockifier_state,
-                    cheatnet_runtime.extended_runtime.extension.cheatnet_state,
+                    &mut RuntimeState {
+                        cheatnet_state: cheatnet_runtime.extended_runtime.extension.cheatnet_state,
+                    },
                     &class_hash,
                     &calldata,
                     contract_address,
@@ -388,8 +392,11 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let mut blockifier_state =
                     BlockifierState::from(cheatnet_runtime.extended_runtime.hint_handler.state);
 
+                let mut runtime_state = RuntimeState {
+                    cheatnet_state: cheatnet_runtime.extension.cheatnet_state,
+                };
                 match blockifier_state.l1_handler_execute(
-                    cheatnet_runtime.extension.cheatnet_state,
+                    &mut runtime_state,
                     contract_address,
                     &function_name,
                     &from_address,

@@ -16,7 +16,7 @@ use starknet_api::{
     transaction::Calldata,
 };
 
-use crate::state::CheatnetState;
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeState;
 
 use super::entry_point::execute_call_entry_point;
 
@@ -25,14 +25,14 @@ pub fn execute_inner_call(
     call: &mut CallEntryPoint,
     vm: &mut VirtualMachine,
     syscall_handler: &mut SyscallHintProcessor<'_>,
-    cheatnet_state: &mut CheatnetState,
+    runtime_state: &mut RuntimeState,
     remaining_gas: &mut u64,
 ) -> SyscallResult<ReadOnlySegment> {
     // region: Modified blockifier code
     let call_info = execute_call_entry_point(
         call,
         syscall_handler.state,
-        cheatnet_state,
+        runtime_state,
         syscall_handler.resources,
         syscall_handler.context,
     )?;
@@ -60,7 +60,7 @@ pub fn execute_inner_call(
 #[allow(clippy::too_many_arguments)]
 pub fn execute_library_call(
     syscall_handler: &mut SyscallHintProcessor<'_>,
-    cheatnet_state: &mut CheatnetState,
+    runtime_state: &mut RuntimeState,
     vm: &mut VirtualMachine,
     class_hash: ClassHash,
     call_to_external: bool,
@@ -90,7 +90,7 @@ pub fn execute_library_call(
         &mut entry_point,
         vm,
         syscall_handler,
-        cheatnet_state,
+        runtime_state,
         remaining_gas,
     )
 }
