@@ -1,5 +1,4 @@
-use crate::helpers::constants::{CONTRACTS_DIR, DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS, URL};
-use crate::helpers::fixtures::duplicate_directory_with_salt;
+use crate::helpers::constants::{DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS, URL};
 use crate::helpers::runner::runner;
 use camino::Utf8PathBuf;
 use indoc::indoc;
@@ -33,7 +32,7 @@ pub async fn test_happy_case() {
 
     snapbox.assert().stdout_matches(indoc! {r"
         command: account add
-        add_profile: --add-profile flag was not set. No profile added to Scarb.toml
+        add_profile: --add-profile flag was not set. No profile added to sncast.toml
     "});
 
     let contents = fs::read_to_string(accounts_file).expect("Unable to read created file");
@@ -59,9 +58,7 @@ pub async fn test_happy_case() {
 
 #[tokio::test]
 pub async fn test_happy_case_add_profile() {
-    let current_dir =
-        duplicate_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "30");
-
+    let tempdir = TempDir::new().expect("Failed to create a temporary directory");
     let accounts_file = "./accounts.json";
 
     let args = vec![
@@ -84,22 +81,21 @@ pub async fn test_happy_case_add_profile() {
         "--class-hash",
         "0x4",
         "--add-profile",
+        "my_account_add",
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(current_dir.path())
+        .current_dir(tempdir.path())
         .args(args);
 
     snapbox.assert().stdout_matches(indoc! {r"
         command: account add
-        add_profile: Profile successfully added to Scarb.toml
+        add_profile: Profile successfully added to sncast.toml
     "});
-    let current_dir_utf8 =
-        Utf8PathBuf::from_path_buf(current_dir.into_path()).expect("Path contains invalid UTF-8");
-    let mut file = current_dir_utf8.clone();
-    file.push(Utf8PathBuf::from(accounts_file));
+    let current_dir_utf8 = Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap();
 
-    let contents = fs::read_to_string(file).expect("Unable to read created file");
+    let contents = fs::read_to_string(current_dir_utf8.join(accounts_file))
+        .expect("Unable to read created file");
     let contents_json: serde_json::Value = serde_json::from_str(&contents).unwrap();
     assert_eq!(
         contents_json,
@@ -119,9 +115,9 @@ pub async fn test_happy_case_add_profile() {
         )
     );
 
-    let contents =
-        fs::read_to_string(current_dir_utf8.join("Scarb.toml")).expect("Unable to read Scarb.toml");
-    assert!(contents.contains("[tool.sncast.my_account_add]"));
+    let contents = fs::read_to_string(current_dir_utf8.join("sncast.toml"))
+        .expect("Unable to read sncast.toml");
+    assert!(contents.contains("[my_account_add]"));
     assert!(contents.contains("account = \"my_account_add\""));
 }
 
@@ -149,7 +145,7 @@ pub async fn test_detect_deployed() {
 
     snapbox.assert().stdout_matches(indoc! {r"
         command: account add
-        add_profile: --add-profile flag was not set. No profile added to Scarb.toml
+        add_profile: --add-profile flag was not set. No profile added to sncast.toml
     "});
 
     let contents = fs::read_to_string(accounts_file).expect("Unable to read created file");
@@ -250,7 +246,7 @@ pub async fn test_private_key_from_file() {
 
     snapbox.assert().stdout_matches(indoc! {r"
         command: account add
-        add_profile: --add-profile flag was not set. No profile added to Scarb.toml
+        add_profile: --add-profile flag was not set. No profile added to sncast.toml
     "});
 
     let contents = fs::read_to_string(temp_dir.path().join(accounts_file))

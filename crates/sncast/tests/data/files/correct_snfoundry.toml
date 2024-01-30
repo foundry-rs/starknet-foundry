@@ -1,5 +1,6 @@
 [sncast.default]
 url = "http://127.0.0.1:5055/rpc"
+accounts-file = "../account-file"
 account = "user1"
 
 [sncast.profile1]
@@ -8,4 +9,15 @@ account = "user3"
 
 [sncast.profile2]
 url = "http://127.0.0.1:5055/rpc"
+accounts-file = "../account-file"
 account = "user100"
+
+[profile3]
+url = "http://127.0.0.1:5055/rpc"
+account = "/path/to/account.json"
+keystore = "../keystore"
+
+[profile4]
+url = "http://127.0.0.1:5055/rpc"
+accounts-file = "../account-file"
+account = "user3"

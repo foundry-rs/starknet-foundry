@@ -27,7 +27,7 @@ For more details on Starknet Foundry `sncast`, please visit [our docs](https://f
 
 ## Example usages
 
-All subcommand usages are shown for two scenarios - when all necessary arguments are supplied using CLI, and when `url`, `accounts-file` and `account` arguments are taken from `Scarb.toml`. To learn more about configuring profiles with parameters in `Scarb.toml` file, please refer to the [documentation](https://foundry-rs.github.io/starknet-foundry/projects/configuration.html#defining-profiles-in-scarbtoml).
+All subcommand usages are shown for two scenarios - when all necessary arguments are supplied using CLI, and when `url`, `accounts-file` and `account` arguments are taken from `sncast.toml`. To learn more about configuring profiles with parameters in `sncast.toml` file, please refer to the [documentation](https://foundry-rs.github.io/starknet-foundry/projects/configuration.html#defining-profiles-in-foundrytoml).
 
 ### Declare a contract
 
@@ -43,7 +43,7 @@ transaction_hash: 0x7ad0d6e449e33b6581a4bb8df866c0fce3919a5ee05a30840ba521dafee2
 ```
 
 
-With arguments taken from `Scarb.toml` file (default profile name):
+With arguments taken from `sncast.toml` file (default profile name):
 
 ```shell
 $ sncast declare \
@@ -67,7 +67,7 @@ transaction_hash: 0x64a62a000240e034d1862c2bbfa154aac6a8195b4b2e570f38bf4fd47a5a
 ```
 
 
-With arguments taken from `Scarb.toml` file (default profile name):
+With arguments taken from `sncast.toml` file (default profile name):
 
 ```shell
 $ sncast deploy --class-hash 0x8448a68b5ea1affc45e3fd4b8b480ea36a51dc34e337a16d2567d32d0c6f8a
@@ -93,7 +93,7 @@ transaction_hash: 0x7ad0d6e449e33b6581a4bb8df866c0fce3919a5ee05a30840ba521dafee2
 ```
 
 
-With arguments taken from `Scarb.toml` file (default profile name):
+With arguments taken from `sncast.toml` file (default profile name):
 
 ```shell
 $ sncast invoke \
@@ -119,7 +119,7 @@ response: [0x0]
 ```
 
 
-With arguments taken from `Scarb.toml` file (default profile name):
+With arguments taken from `sncast.toml` file (default profile name):
 
 ```shell
 $ sncast call \

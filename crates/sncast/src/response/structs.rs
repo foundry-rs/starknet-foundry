@@ -74,7 +74,6 @@ impl CommandResponse for AccountAddResponse {}
 #[derive(Serialize)]
 pub struct AccountDeleteResponse {
     pub result: String,
-    pub scarb_result: String,
 }
 
 impl CommandResponse for AccountDeleteResponse {}

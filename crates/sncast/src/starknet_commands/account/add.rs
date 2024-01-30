@@ -4,7 +4,7 @@ use crate::starknet_commands::account::{
 use anyhow::{ensure, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
-use sncast::helpers::scarb_utils::CastConfig;
+use sncast::helpers::configuration::CastConfig;
 use sncast::response::structs::AccountAddResponse;
 use sncast::{get_chain_id, parse_number};
 use starknet::core::types::BlockTag::Pending;
@@ -16,7 +16,6 @@ use starknet::providers::{
 use starknet::signers::SigningKey;
 
 #[derive(Args, Debug)]
-#[allow(clippy::struct_field_names)]
 #[command(about = "Add an account to the accounts file")]
 pub struct Add {
     /// Name of the account to be added
@@ -52,16 +51,15 @@ pub struct Add {
     #[clap(short, long)]
     pub salt: Option<FieldElement>,
 
-    /// If passed, a profile with corresponding data will be created in Scarb.toml
+    /// If passed, a profile with corresponding data will be created in sncast.toml
     #[clap(long)]
-    pub add_profile: bool,
+    pub add_profile: Option<String>,
 }
 
 pub async fn add(
     rpc_url: &str,
     account: &str,
     accounts_file: &Utf8PathBuf,
-    path_to_scarb_toml: &Option<Utf8PathBuf>,
     provider: &JsonRpcClient<HttpTransport>,
     add: &Add,
 ) -> Result<AccountAddResponse> {
@@ -92,21 +90,21 @@ pub async fn add(
     let chain_id = get_chain_id(provider).await?;
     write_account_to_accounts_file(account, accounts_file, chain_id, account_json.clone())?;
 
-    if add.add_profile {
+    if add.add_profile.is_some() {
         let config = CastConfig {
             rpc_url: rpc_url.into(),
             account: account.into(),
             accounts_file: accounts_file.into(),
             ..Default::default()
         };
-        add_created_profile_to_configuration(path_to_scarb_toml, &config)?;
+        add_created_profile_to_configuration(&add.add_profile, &config, &None)?;
     }
 
     Ok(AccountAddResponse {
-        add_profile: if add.add_profile {
-            "Profile successfully added to Scarb.toml".to_string()
+        add_profile: if add.add_profile.is_some() {
+            "Profile successfully added to sncast.toml".to_string()
         } else {
-            "--add-profile flag was not set. No profile added to Scarb.toml".to_string()
+            "--add-profile flag was not set. No profile added to sncast.toml".to_string()
         },
     })
 }
