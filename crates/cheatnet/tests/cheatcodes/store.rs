@@ -18,9 +18,8 @@ fn store_simple_state() {
 
     let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
 
-    let contract_address = deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[])
-        .unwrap()
-        .contract_address;
+    let contract_address =
+        deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[]).unwrap();
 
     store(
         &mut blockifier_state,
@@ -38,8 +37,7 @@ fn store_simple_state() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     assert_success!(output, vec![Felt252::from(666)]);
 }
@@ -54,9 +52,8 @@ fn store_state_map_simple_value() {
 
     let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
 
-    let contract_address = deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[])
-        .unwrap()
-        .contract_address;
+    let contract_address =
+        deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[]).unwrap();
 
     let map_key = Felt252::from(420);
     let inserted_value = Felt252::from(69);
@@ -77,8 +74,7 @@ fn store_state_map_simple_value() {
         &contract_address,
         &selector,
         &[map_key],
-    )
-    .unwrap();
+    );
 
     assert_success!(call_output, vec![inserted_value]);
 }

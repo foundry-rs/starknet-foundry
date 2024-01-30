@@ -17,9 +17,8 @@ fn load_simple_state() {
 
     let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
 
-    let contract_address = deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[])
-        .unwrap()
-        .contract_address;
+    let contract_address =
+        deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[]).unwrap();
 
     let selector = felt_selector_from_name("increase_balance");
 
@@ -29,8 +28,7 @@ fn load_simple_state() {
         &contract_address,
         &selector,
         &[Felt252::from(420)],
-    )
-    .unwrap();
+    );
 
     let balance_value = load(
         &mut blockifier_state,
@@ -56,9 +54,8 @@ fn load_state_map_simple_value() {
 
     let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
 
-    let contract_address = deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[])
-        .unwrap()
-        .contract_address;
+    let contract_address =
+        deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[]).unwrap();
 
     let selector = felt_selector_from_name("insert");
 
@@ -70,8 +67,7 @@ fn load_state_map_simple_value() {
         &contract_address,
         &selector,
         &[map_key.clone(), inserted_value.clone()],
-    )
-    .unwrap();
+    );
 
     let var_address = map_entry_address("values", &[map_key]);
     let map_value = load(&mut blockifier_state, contract_address, &var_address).unwrap();

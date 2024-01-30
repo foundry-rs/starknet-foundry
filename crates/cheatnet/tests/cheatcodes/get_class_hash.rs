@@ -16,9 +16,8 @@ fn get_class_hash_simple() {
     let class_hash = blockifier_state
         .declare(&contract_name, &contracts)
         .unwrap();
-    let contract_address = deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[])
-        .unwrap()
-        .contract_address;
+    let contract_address =
+        deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[]).unwrap();
 
     assert_eq!(
         class_hash,
@@ -36,9 +35,8 @@ fn get_class_hash_upgrade() {
     let class_hash = blockifier_state
         .declare(&contract_name, &contracts)
         .unwrap();
-    let contract_address = deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[])
-        .unwrap()
-        .contract_address;
+    let contract_address =
+        deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[]).unwrap();
 
     assert_eq!(
         class_hash,
@@ -57,8 +55,7 @@ fn get_class_hash_upgrade() {
         &contract_address,
         &selector,
         &[hello_starknet_class_hash.into_()],
-    )
-    .unwrap();
+    );
 
     assert_eq!(
         hello_starknet_class_hash,
