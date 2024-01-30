@@ -312,7 +312,7 @@ pub fn run_test_case(
     let call_trace_ref = get_call_trace_ref(&mut forge_runtime);
     let execution_resources = get_all_execution_resources(forge_runtime);
 
-    let gas = calculate_used_gas(&block_context, &mut blockifier_state, &execution_resources);
+    let gas = calculate_used_gas(&block_context, &mut blockifier_state, &execution_resources)?;
 
     Ok(RunResultWithInfo {
         run_result,
@@ -349,7 +349,7 @@ fn extract_test_case_summary(
                 Err(err) => bail!(err),
             }
         }
-        // `ForkStateReader.get_block_info`, `get_fork_state_reader` may return an error
+        // `ForkStateReader.get_block_info`, `get_fork_state_reader, `calculate_used_gas` may return an error
         // `available_gas` may be specified with Scarb ~2.4
         Err(error) => Ok(TestCaseSummary::Failed {
             name: case.name.clone(),
