@@ -1,3 +1,4 @@
+use crate::helpers::fixtures::copy_config_to_tempdir;
 use crate::helpers::runner::runner;
 use indoc::indoc;
 use sncast::helpers::configuration::copy_config_to_tempdir;
