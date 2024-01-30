@@ -6,6 +6,7 @@ use blockifier::fee::gas_usage::calculate_tx_gas_usage;
 use blockifier::fee::os_resources::OS_RESOURCES;
 use blockifier::fee::os_usage::get_additional_os_resources;
 use blockifier::state::cached_state::{CachedState, StateChangesCount};
+use blockifier::state::errors::StateError;
 use blockifier::transaction::transaction_types::TransactionType;
 use blockifier::{
     abi::constants, block_context::BlockContext, execution::entry_point::ExecutionResources,
@@ -15,19 +16,16 @@ use cairo_vm::vm::runners::cairo_runner::ExecutionResources as VmExecutionResour
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::state::ExtendedStateReader;
 
-#[must_use]
 pub fn calculate_used_gas(
     block_context: &BlockContext,
     state: &mut CachedState<ExtendedStateReader>,
     resources: &UsedResources,
-) -> u128 {
+) -> Result<u128, StateError> {
     let total_vm_usage = get_total_vm_usage(&resources.execution_resources);
-    let mut state_changes = state
-        .get_actual_state_changes_for_fee_charge(
-            block_context.fee_token_addresses.eth_fee_token_address,
-            None,
-        )
-        .unwrap();
+    let mut state_changes = state.get_actual_state_changes_for_fee_charge(
+        block_context.fee_token_addresses.eth_fee_token_address,
+        None,
+    )?;
     // compiled_class_hash_updates is used only for keeping track of declares
     // which we don't want to include in gas cost
     state_changes.compiled_class_hash_updates.clear();
@@ -40,8 +38,8 @@ pub fn calculate_used_gas(
 
     let resource_mapping = used_resources_to_resource_mapping(&total_vm_usage, l1_gas_usage);
 
-    calculate_tx_l1_gas_usage(&resource_mapping, block_context)
-        .expect("Calculating gas failed, some resources were not included.")
+    Ok(calculate_tx_l1_gas_usage(&resource_mapping, block_context)
+        .expect("Calculating gas failed, some resources were not included."))
 }
 
 #[must_use]
