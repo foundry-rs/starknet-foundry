@@ -20,6 +20,12 @@ mod GasChecker {
         balance: u64
     }
 
+    #[constructor]
+    fn constructor(ref self: ContractState) {
+        keccak::keccak_u256s_le_inputs(array![1].span());
+        keccak::keccak_u256s_le_inputs(array![1].span());
+    }
+
     #[abi(embed_v0)]
     impl IGasCheckerImpl of super::IGasChecker<ContractState> {
         fn keccak(self: @ContractState) {
@@ -88,5 +94,13 @@ mod GasChecker {
         fn send_l1_message(self: @ContractState) {
             starknet::send_message_to_l1_syscall(1, array![1].span()).unwrap();
         }
+    }
+
+    #[l1_handler]
+    fn handle_l1_message(ref self: ContractState, from_address: felt252) {
+        keccak::keccak_u256s_le_inputs(array![1].span());
+        keccak::keccak_u256s_le_inputs(array![1].span());
+        keccak::keccak_u256s_le_inputs(array![1].span());
+        keccak::keccak_u256s_le_inputs(array![1].span());
     }
 }

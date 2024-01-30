@@ -35,8 +35,7 @@ fn roll_simple() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     assert_success!(output, vec![Felt252::from(123)]);
 }
@@ -63,8 +62,7 @@ fn roll_with_other_syscall() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     assert_success!(output, vec![Felt252::from(123)]);
 }
@@ -87,9 +85,8 @@ fn roll_in_constructor() {
         Felt252::from(123_u128),
     );
 
-    let contract_address = deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[])
-        .unwrap()
-        .contract_address;
+    let contract_address =
+        deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[]).unwrap();
 
     assert_eq!(precalculated_address, contract_address);
 
@@ -101,8 +98,7 @@ fn roll_in_constructor() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     assert_success!(output, vec![Felt252::from(123)]);
 }
@@ -127,8 +123,7 @@ fn roll_stop() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     let old_block_number = recover_data(output);
 
@@ -140,8 +135,7 @@ fn roll_stop() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     let new_block_number = recover_data(output);
     assert_eq!(new_block_number, vec![Felt252::from(123)]);
@@ -155,8 +149,7 @@ fn roll_stop() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
     let changed_back_block_number = recover_data(output);
 
     assert_eq!(old_block_number, changed_back_block_number);
@@ -182,8 +175,7 @@ fn roll_double() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     let old_block_number = recover_data(output);
 
@@ -196,8 +188,7 @@ fn roll_double() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     let new_block_number = recover_data(output);
     assert_eq!(new_block_number, vec![Felt252::from(123)]);
@@ -211,8 +202,7 @@ fn roll_double() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
     let changed_back_block_number = recover_data(output);
 
     assert_eq!(old_block_number, changed_back_block_number);
@@ -244,8 +234,7 @@ fn roll_proxy() {
         &proxy_address,
         &proxy_selector,
         &[contract_address.into_()],
-    )
-    .unwrap();
+    );
 
     cheatnet_state.start_roll(CheatTarget::One(contract_address), Felt252::from(123_u128));
 
@@ -255,8 +244,7 @@ fn roll_proxy() {
         &proxy_address,
         &proxy_selector,
         &[contract_address.into_()],
-    )
-    .unwrap();
+    );
 
     assert_success!(after_roll_output, vec![Felt252::from(123)]);
 
@@ -268,8 +256,7 @@ fn roll_proxy() {
         &proxy_address,
         &proxy_selector,
         &[contract_address.into_()],
-    )
-    .unwrap();
+    );
 
     assert_outputs(before_roll_output, after_roll_cancellation_output);
 }
@@ -299,8 +286,7 @@ fn roll_library_call() {
         &lib_call_address,
         &lib_call_selector,
         &[class_hash.into_()],
-    )
-    .unwrap();
+    );
 
     cheatnet_state.start_roll(CheatTarget::One(lib_call_address), Felt252::from(123_u128));
 
@@ -310,8 +296,7 @@ fn roll_library_call() {
         &lib_call_address,
         &lib_call_selector,
         &[class_hash.into_()],
-    )
-    .unwrap();
+    );
 
     assert_success!(after_roll_output, vec![Felt252::from(123)]);
 
@@ -323,8 +308,7 @@ fn roll_library_call() {
         &lib_call_address,
         &lib_call_selector,
         &[class_hash.into_()],
-    )
-    .unwrap();
+    );
 
     assert_outputs(before_roll_output, after_roll_cancellation_output);
 }
@@ -351,8 +335,7 @@ fn roll_all_simple() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     assert_success!(output, vec![Felt252::from(123)]);
 }
@@ -380,8 +363,7 @@ fn roll_all_then_one() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     assert_success!(output, vec![Felt252::from(123)]);
 }
@@ -409,8 +391,7 @@ fn roll_one_then_all() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     assert_success!(output, vec![Felt252::from(321)]);
 }
@@ -435,8 +416,7 @@ fn roll_all_stop() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     let old_block_number = recover_data(output);
 
@@ -448,8 +428,7 @@ fn roll_all_stop() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     let new_block_number = recover_data(output);
     assert_eq!(new_block_number, vec![Felt252::from(123)]);
@@ -463,8 +442,7 @@ fn roll_all_stop() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
     let changed_back_block_number = recover_data(output);
 
     assert_eq!(old_block_number, changed_back_block_number);
@@ -479,13 +457,11 @@ fn roll_multiple() {
     let contracts = get_contracts();
     let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
 
-    let contract_address1 = deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[])
-        .unwrap()
-        .contract_address;
+    let contract_address1 =
+        deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[]).unwrap();
 
-    let contract_address2 = deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[])
-        .unwrap()
-        .contract_address;
+    let contract_address2 =
+        deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[]).unwrap();
 
     let selector = felt_selector_from_name("get_block_number");
 
@@ -495,8 +471,7 @@ fn roll_multiple() {
         &contract_address1,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     let old_block_number1 = recover_data(output);
 
@@ -506,8 +481,7 @@ fn roll_multiple() {
         &contract_address2,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     let old_block_number2 = recover_data(output);
 
@@ -522,8 +496,7 @@ fn roll_multiple() {
         &contract_address1,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     let new_block_number1 = recover_data(output);
 
@@ -533,8 +506,7 @@ fn roll_multiple() {
         &contract_address2,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     let new_block_number2 = recover_data(output);
 
@@ -552,8 +524,7 @@ fn roll_multiple() {
         &contract_address1,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     let changed_back_block_number1 = recover_data(output);
 
@@ -563,8 +534,7 @@ fn roll_multiple() {
         &contract_address2,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     let changed_back_block_number2 = recover_data(output);
 

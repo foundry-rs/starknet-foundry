@@ -38,8 +38,7 @@ fn mock_call_simple() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     assert_success!(output, ret_data);
 }
@@ -71,8 +70,7 @@ fn mock_call_stop() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     assert_success!(output, ret_data);
 
@@ -87,8 +85,7 @@ fn mock_call_stop() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     assert_success!(output, vec![Felt252::from(420)]);
 }
@@ -118,8 +115,7 @@ fn mock_call_stop_no_start() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     assert_success!(output, vec![Felt252::from(420)]);
 }
@@ -158,8 +154,7 @@ fn mock_call_double() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     assert_success!(output, ret_data);
 
@@ -174,8 +169,7 @@ fn mock_call_double() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     assert_success!(output, vec![Felt252::from(420)]);
 }
@@ -207,8 +201,7 @@ fn mock_call_double_call() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     assert_success!(output, ret_data);
 
@@ -218,8 +211,7 @@ fn mock_call_double_call() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     assert_success!(output, ret_data);
 }
@@ -250,8 +242,7 @@ fn mock_call_proxy() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     assert_success!(output, ret_data);
 
@@ -268,8 +259,7 @@ fn mock_call_proxy() {
         &proxy_address,
         &proxy_selector,
         &[contract_address.into_()],
-    )
-    .unwrap();
+    );
 
     assert_success!(output, ret_data);
 }
@@ -300,8 +290,7 @@ fn mock_call_proxy_with_other_syscall() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     assert_success!(output, ret_data);
 
@@ -318,8 +307,7 @@ fn mock_call_proxy_with_other_syscall() {
         &proxy_address,
         &proxy_selector,
         &[contract_address.into_()],
-    )
-    .unwrap();
+    );
 
     assert_success!(output, ret_data);
 }
@@ -351,8 +339,7 @@ fn mock_call_inner_call_no_effect() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     assert_success!(output, ret_data);
 
@@ -364,8 +351,7 @@ fn mock_call_inner_call_no_effect() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     assert_success!(output, vec![Felt252::from(420)]);
 }
@@ -387,8 +373,7 @@ fn mock_call_library_call_no_effect() {
         &class_hash,
         &[Felt252::from(420)],
     )
-    .unwrap()
-    .contract_address;
+    .unwrap();
 
     let lib_call_address = deploy_contract(
         &mut blockifier_state,
@@ -411,8 +396,7 @@ fn mock_call_library_call_no_effect() {
         &lib_call_address,
         &lib_call_selector,
         &[class_hash.into_()],
-    )
-    .unwrap();
+    );
 
     assert_success!(output, vec![Felt252::from(13)]);
 }
@@ -445,8 +429,7 @@ fn mock_call_before_deployment() {
         &class_hash,
         &[Felt252::from(420)],
     )
-    .unwrap()
-    .contract_address;
+    .unwrap();
 
     assert_eq!(precalculated_address, contract_address);
 
@@ -456,8 +439,7 @@ fn mock_call_before_deployment() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     assert_success!(output, ret_data);
 }
@@ -489,8 +471,7 @@ fn mock_call_not_implemented() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     assert_success!(output, ret_data);
 }
@@ -507,9 +488,7 @@ fn mock_call_in_constructor() {
         .declare(&contract_name, &contracts)
         .unwrap();
     let balance_contract_address =
-        deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[])
-            .unwrap()
-            .contract_address;
+        deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[]).unwrap();
     let ret_data = vec![Felt252::from(223)];
     cheatnet_state.start_mock_call(
         balance_contract_address,
@@ -527,8 +506,7 @@ fn mock_call_in_constructor() {
         &class_hash,
         &[balance_contract_address.into_()],
     )
-    .unwrap()
-    .contract_address;
+    .unwrap();
 
     let selector = felt_selector_from_name("get_constructor_balance");
 
@@ -538,8 +516,7 @@ fn mock_call_in_constructor() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
     let output_data = recover_data(output);
     assert_eq!(output_data.len(), 1);
     assert_eq!(output_data.first().unwrap().clone(), Felt252::from(223));
@@ -579,8 +556,7 @@ fn mock_call_two_methods() {
         &contract_address,
         &selector1,
         &[],
-    )
-    .unwrap();
+    );
 
     assert_success!(output, ret_data);
 
@@ -590,8 +566,7 @@ fn mock_call_two_methods() {
         &contract_address,
         &selector2,
         &[],
-    )
-    .unwrap();
+    );
 
     assert_success!(output, ret_data);
 }
@@ -618,8 +593,7 @@ fn mock_call_nonexisting_contract() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     assert_success!(output, ret_data);
 }

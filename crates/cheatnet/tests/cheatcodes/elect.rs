@@ -39,8 +39,7 @@ fn elect_simple() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     assert_success!(output, vec![Felt252::from(123)]);
 }
@@ -70,8 +69,7 @@ fn elect_with_other_syscall() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
     assert_success!(output, vec![Felt252::from(123)]);
 }
 
@@ -93,9 +91,8 @@ fn elect_in_constructor() {
         ContractAddress::from(123_u128),
     );
 
-    let contract_address = deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[])
-        .unwrap()
-        .contract_address;
+    let contract_address =
+        deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[]).unwrap();
 
     assert_eq!(precalculated_address, contract_address);
 
@@ -107,8 +104,7 @@ fn elect_in_constructor() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     assert_success!(output, vec![Felt252::from(123)]);
 }
@@ -133,8 +129,7 @@ fn elect_stop() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     let old_sequencer_address = recover_data(output);
 
@@ -149,8 +144,7 @@ fn elect_stop() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     let new_sequencer_address = recover_data(output);
     assert_eq!(new_sequencer_address, vec![Felt252::from(123)]);
@@ -164,8 +158,7 @@ fn elect_stop() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
     let changed_back_sequencer_address = recover_data(output);
 
     assert_eq!(old_sequencer_address, changed_back_sequencer_address);
@@ -191,8 +184,7 @@ fn elect_double() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     let old_sequencer_address = recover_data(output);
 
@@ -211,8 +203,7 @@ fn elect_double() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     let new_sequencer_address = recover_data(output);
     assert_eq!(new_sequencer_address, vec![Felt252::from(123)]);
@@ -226,8 +217,7 @@ fn elect_double() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
     let changed_back_sequencer_address = recover_data(output);
 
     assert_eq!(old_sequencer_address, changed_back_sequencer_address);
@@ -259,8 +249,7 @@ fn elect_proxy() {
         &proxy_address,
         &proxy_selector,
         &[contract_address.into_()],
-    )
-    .unwrap();
+    );
 
     cheatnet_state.start_elect(
         CheatTarget::One(contract_address),
@@ -273,8 +262,7 @@ fn elect_proxy() {
         &proxy_address,
         &proxy_selector,
         &[contract_address.into_()],
-    )
-    .unwrap();
+    );
 
     assert_success!(after_elect_output, vec![Felt252::from(123)]);
 
@@ -286,8 +274,7 @@ fn elect_proxy() {
         &proxy_address,
         &proxy_selector,
         &[contract_address.into_()],
-    )
-    .unwrap();
+    );
 
     assert_outputs(before_elect_output, after_elect_cancellation_output);
 }
@@ -317,8 +304,7 @@ fn elect_library_call() {
         &lib_call_address,
         &lib_call_selector,
         &[class_hash.into_()],
-    )
-    .unwrap();
+    );
 
     cheatnet_state.start_elect(
         CheatTarget::One(lib_call_address),
@@ -331,8 +317,7 @@ fn elect_library_call() {
         &lib_call_address,
         &lib_call_selector,
         &[class_hash.into_()],
-    )
-    .unwrap();
+    );
 
     assert_success!(after_elect_output, vec![Felt252::from(123)]);
 
@@ -344,8 +329,7 @@ fn elect_library_call() {
         &lib_call_address,
         &lib_call_selector,
         &[class_hash.into_()],
-    )
-    .unwrap();
+    );
 
     assert_outputs(before_elect_output, after_elect_cancellation_output);
 }
@@ -372,8 +356,7 @@ fn elect_all_simple() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     assert_success!(output, vec![Felt252::from(123)]);
 }
@@ -404,8 +387,7 @@ fn elect_all_then_one() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     assert_success!(output, vec![Felt252::from(123)]);
 }
@@ -436,8 +418,7 @@ fn elect_one_then_all() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     assert_success!(output, vec![Felt252::from(321)]);
 }
@@ -462,8 +443,7 @@ fn elect_all_stop() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     let old_sequencer_address = recover_data(output);
 
@@ -475,8 +455,7 @@ fn elect_all_stop() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     let new_sequencer_address = recover_data(output);
     assert_eq!(new_sequencer_address, vec![Felt252::from(123)]);
@@ -490,8 +469,7 @@ fn elect_all_stop() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
     let changed_back_sequencer_address = recover_data(output);
 
     assert_eq!(old_sequencer_address, changed_back_sequencer_address);
@@ -506,13 +484,11 @@ fn elect_multiple() {
     let contracts = get_contracts();
     let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
 
-    let contract_address1 = deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[])
-        .unwrap()
-        .contract_address;
+    let contract_address1 =
+        deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[]).unwrap();
 
-    let contract_address2 = deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[])
-        .unwrap()
-        .contract_address;
+    let contract_address2 =
+        deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[]).unwrap();
 
     let selector = felt_selector_from_name("get_sequencer_address");
 
@@ -522,8 +498,7 @@ fn elect_multiple() {
         &contract_address1,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     let old_sequencer_address1 = recover_data(output);
 
@@ -533,8 +508,7 @@ fn elect_multiple() {
         &contract_address2,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     let old_sequencer_address2 = recover_data(output);
 
@@ -549,8 +523,7 @@ fn elect_multiple() {
         &contract_address1,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     let new_sequencer_address1 = recover_data(output);
 
@@ -560,8 +533,7 @@ fn elect_multiple() {
         &contract_address2,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     let new_sequencer_address2 = recover_data(output);
 
@@ -579,8 +551,7 @@ fn elect_multiple() {
         &contract_address1,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     let changed_back_sequencer_address1 = recover_data(output);
 
@@ -590,8 +561,7 @@ fn elect_multiple() {
         &contract_address2,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     let changed_back_sequencer_address2 = recover_data(output);
 

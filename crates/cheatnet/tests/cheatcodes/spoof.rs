@@ -365,8 +365,7 @@ fn spoof_with_other_syscall() {
         &contract_address,
         &selector,
         vec![].as_slice(),
-    )
-    .unwrap();
+    );
 
     assert_success!(output, vec![Felt252::from(123)]);
 }
@@ -391,9 +390,8 @@ fn spoof_in_constructor() {
 
     cheatnet_state.start_spoof(CheatTarget::One(precalculated_address), tx_info_mock);
 
-    let contract_address = deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[])
-        .unwrap()
-        .contract_address;
+    let contract_address =
+        deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[]).unwrap();
 
     assert_eq!(precalculated_address, contract_address);
 
@@ -405,8 +403,7 @@ fn spoof_in_constructor() {
         &contract_address,
         &selector,
         vec![].as_slice(),
-    )
-    .unwrap();
+    );
 
     assert_success!(output, vec![Felt252::from(123)]);
 }
@@ -438,8 +435,7 @@ fn spoof_proxy() {
         &contract_address,
         &selector,
         vec![].as_slice(),
-    )
-    .unwrap();
+    );
 
     assert_success!(output, vec![Felt252::from(123)]);
 
@@ -456,8 +452,7 @@ fn spoof_proxy() {
         &proxy_address,
         &proxy_selector,
         &[contract_address.into_()],
-    )
-    .unwrap();
+    );
 
     assert_success!(output, vec![Felt252::from(123)]);
 }
@@ -494,8 +489,7 @@ fn spoof_library_call() {
         &lib_call_address,
         &lib_call_selector,
         &[class_hash.into_()],
-    )
-    .unwrap();
+    );
 
     assert_success!(output, vec![Felt252::from(123)]);
 }
@@ -655,13 +649,11 @@ fn spoof_multiple() {
     let contracts = get_contracts();
     let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
 
-    let contract_address_1 = deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[])
-        .unwrap()
-        .contract_address;
+    let contract_address_1 =
+        deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[]).unwrap();
 
-    let contract_address_2 = deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[])
-        .unwrap()
-        .contract_address;
+    let contract_address_2 =
+        deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[]).unwrap();
 
     let tx_info_before_1 = get_tx_info(
         &mut blockifier_state,

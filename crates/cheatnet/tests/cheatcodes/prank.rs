@@ -39,8 +39,7 @@ fn prank_simple() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     assert_success!(output, vec![Felt252::from(123)]);
 }
@@ -70,8 +69,7 @@ fn prank_with_other_syscall() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     assert_success!(output, vec![Felt252::from(123)]);
 }
@@ -94,9 +92,8 @@ fn prank_in_constructor() {
         ContractAddress::from(123_u128),
     );
 
-    let contract_address = deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[])
-        .unwrap()
-        .contract_address;
+    let contract_address =
+        deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[]).unwrap();
 
     assert_eq!(precalculated_address, contract_address);
 
@@ -108,8 +105,7 @@ fn prank_in_constructor() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     assert_success!(output, vec![Felt252::from(123)]);
 }
@@ -134,8 +130,7 @@ fn prank_stop() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     let old_address = recover_data(output);
 
@@ -150,8 +145,7 @@ fn prank_stop() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     let new_address = recover_data(output);
     assert_eq!(new_address, vec![Felt252::from(123)]);
@@ -165,8 +159,7 @@ fn prank_stop() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
     let changed_back_address = recover_data(output);
 
     assert_eq!(old_address, changed_back_address);
@@ -192,8 +185,7 @@ fn prank_double() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     let old_address = recover_data(output);
 
@@ -212,8 +204,7 @@ fn prank_double() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     let new_address = recover_data(output);
     assert_eq!(new_address, vec![Felt252::from(123)]);
@@ -227,8 +218,7 @@ fn prank_double() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
     let changed_back_address = recover_data(output);
 
     assert_eq!(old_address, changed_back_address);
@@ -260,8 +250,7 @@ fn prank_proxy() {
         &proxy_address,
         &proxy_selector,
         &[contract_address.into_()],
-    )
-    .unwrap();
+    );
 
     cheatnet_state.start_prank(
         CheatTarget::One(contract_address),
@@ -274,8 +263,7 @@ fn prank_proxy() {
         &proxy_address,
         &proxy_selector,
         &[contract_address.into_()],
-    )
-    .unwrap();
+    );
 
     assert_success!(after_prank_output, vec![Felt252::from(123)]);
 
@@ -287,8 +275,7 @@ fn prank_proxy() {
         &proxy_address,
         &proxy_selector,
         &[contract_address.into_()],
-    )
-    .unwrap();
+    );
 
     assert_outputs(before_prank_output, after_prank_cancellation_output);
 }
@@ -318,8 +305,7 @@ fn prank_library_call() {
         &lib_call_address,
         &lib_call_selector,
         &[class_hash.into_()],
-    )
-    .unwrap();
+    );
 
     cheatnet_state.start_prank(
         CheatTarget::One(lib_call_address),
@@ -332,8 +318,7 @@ fn prank_library_call() {
         &lib_call_address,
         &lib_call_selector,
         &[class_hash.into_()],
-    )
-    .unwrap();
+    );
 
     assert_success!(after_prank_output, vec![Felt252::from(123)]);
 
@@ -345,8 +330,7 @@ fn prank_library_call() {
         &lib_call_address,
         &lib_call_selector,
         &[class_hash.into_()],
-    )
-    .unwrap();
+    );
 
     assert_outputs(before_prank_output, after_prank_cancellation_output);
 }
@@ -371,8 +355,7 @@ fn prank_all() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     let old_address = recover_data(output);
 
@@ -384,8 +367,7 @@ fn prank_all() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     let new_address = recover_data(output);
     assert_eq!(new_address, vec![Felt252::from(123)]);
@@ -399,8 +381,7 @@ fn prank_all() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
     let changed_back_address = recover_data(output);
 
     assert_eq!(old_address, changed_back_address);
@@ -415,13 +396,11 @@ fn prank_multiple() {
     let contracts = get_contracts();
     let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
 
-    let contract_address1 = deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[])
-        .unwrap()
-        .contract_address;
+    let contract_address1 =
+        deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[]).unwrap();
 
-    let contract_address2 = deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[])
-        .unwrap()
-        .contract_address;
+    let contract_address2 =
+        deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[]).unwrap();
 
     let output = call_contract(
         &mut blockifier_state,
@@ -429,8 +408,7 @@ fn prank_multiple() {
         &contract_address1,
         &felt_selector_from_name("get_caller_address"),
         &[],
-    )
-    .unwrap();
+    );
 
     let old_address1 = recover_data(output);
 
@@ -440,8 +418,7 @@ fn prank_multiple() {
         &contract_address2,
         &felt_selector_from_name("get_caller_address"),
         &[],
-    )
-    .unwrap();
+    );
 
     let old_address2 = recover_data(output);
 
@@ -456,8 +433,7 @@ fn prank_multiple() {
         &contract_address1,
         &felt_selector_from_name("get_caller_address"),
         &[],
-    )
-    .unwrap();
+    );
 
     let new_address1 = recover_data(output);
 
@@ -467,8 +443,7 @@ fn prank_multiple() {
         &contract_address2,
         &felt_selector_from_name("get_caller_address"),
         &[],
-    )
-    .unwrap();
+    );
 
     let new_address2 = recover_data(output);
 
@@ -486,8 +461,7 @@ fn prank_multiple() {
         &contract_address1,
         &felt_selector_from_name("get_caller_address"),
         &[],
-    )
-    .unwrap();
+    );
 
     let changed_back_address1 = recover_data(output);
 
@@ -497,8 +471,7 @@ fn prank_multiple() {
         &contract_address2,
         &felt_selector_from_name("get_caller_address"),
         &[],
-    )
-    .unwrap();
+    );
 
     let changed_back_address2 = recover_data(output);
 
@@ -532,8 +505,7 @@ fn prank_all_then_one() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     assert_eq!(recover_data(output), vec![Felt252::from(123)]);
 }
@@ -564,8 +536,7 @@ fn prank_one_then_all() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     assert_eq!(recover_data(output), vec![Felt252::from(321)]);
 }

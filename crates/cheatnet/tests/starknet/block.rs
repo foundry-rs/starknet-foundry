@@ -27,8 +27,7 @@ fn check_block(
         contract_address,
         &write_block,
         &[],
-    )
-    .unwrap();
+    );
 
     assert_success!(output, vec![]);
 
@@ -38,8 +37,7 @@ fn check_block(
         contract_address,
         &read_block_number,
         &[],
-    )
-    .unwrap();
+    );
 
     let block_number = &recover_data(output)[0];
 
@@ -49,8 +47,7 @@ fn check_block(
         contract_address,
         &read_block_timestamp,
         &[],
-    )
-    .unwrap();
+    );
 
     let block_timestamp = &recover_data(output)[0];
 
@@ -60,8 +57,7 @@ fn check_block(
         contract_address,
         &read_sequencer_address,
         &[],
-    )
-    .unwrap();
+    );
 
     let sequencer_address = &recover_data(output)[0];
 
@@ -71,8 +67,7 @@ fn check_block(
         contract_address,
         &read_block_hash,
         &[],
-    )
-    .unwrap();
+    );
 
     let block_hash = &recover_data(output)[0];
 

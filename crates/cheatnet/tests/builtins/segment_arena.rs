@@ -20,8 +20,7 @@ fn segment_arena_simple() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     assert_success!(output, &[]);
 }
