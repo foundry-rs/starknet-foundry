@@ -4,9 +4,8 @@ use crate::printing::print_test_result;
 use crate::running::{run_fuzz_test, run_test};
 use crate::test_case_summary::TestCaseSummary;
 use crate::test_crate_summary::TestCrateSummary;
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, Result};
 
-use cairo_lang_runner::SierraCasmRunner;
 use cairo_lang_sierra::extensions::core::{CoreLibfunc, CoreType};
 use cairo_lang_sierra::ids::ConcreteTypeId;
 use cairo_lang_sierra::program::{Function, Program};
@@ -14,7 +13,6 @@ use cairo_lang_sierra::program_registry::ProgramRegistry;
 use cairo_lang_sierra_to_casm::compiler::CairoProgram;
 use cairo_lang_sierra_to_casm::metadata::{calc_metadata, MetadataComputationConfig};
 use cairo_lang_sierra_type_size::get_type_size_map;
-use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use camino::Utf8PathBuf;
 
 use futures::stream::FuturesUnordered;
@@ -43,7 +41,6 @@ mod fuzzer;
 mod gas;
 mod printing;
 mod running;
-mod sierra_casm_runner_gas;
 
 pub const CACHE_DIR: &str = ".snfoundry_cache";
 
