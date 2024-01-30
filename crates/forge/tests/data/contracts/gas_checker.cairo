@@ -20,12 +20,6 @@ mod GasChecker {
         balance: u64
     }
 
-    #[constructor]
-    fn constructor(ref self: ContractState) {
-        keccak::keccak_u256s_le_inputs(array![1].span());
-        keccak::keccak_u256s_le_inputs(array![1].span());
-    }
-
     #[abi(embed_v0)]
     impl IGasCheckerImpl of super::IGasChecker<ContractState> {
         fn keccak(self: @ContractState) {

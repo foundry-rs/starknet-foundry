@@ -44,15 +44,15 @@ fn deploy_syscall_cost() {
 
             #[test]
             fn deploy_syscall_cost() {
-                let contract = declare('GasChecker');
+                let contract = declare('GasConstructorChecker');
                 let (address, _) = deploy_syscall(contract.class_hash, 0, array![].span(), false).unwrap();
                 assert(address != 0.try_into().unwrap(), 'wrong deployed addr');
             }
         "
         ),
         Contract::from_code_path(
-            "GasChecker".to_string(),
-            Path::new("tests/data/contracts/gas_checker.cairo"),
+            "GasConstructorChecker".to_string(),
+            Path::new("tests/data/contracts/gas_constructor_checker.cairo"),
         )
         .unwrap()
     );
@@ -74,15 +74,15 @@ fn snforge_std_deploy_cost() {
             
             #[test]
             fn deploy_cost() {
-                let contract = declare('GasChecker');
+                let contract = declare('GasConstructorChecker');
                 let address = contract.deploy(@array![]).unwrap();
                 assert(address != 0.try_into().unwrap(), 'wrong deployed addr');
             }
         "
         ),
         Contract::from_code_path(
-            "GasChecker".to_string(),
-            Path::new("tests/data/contracts/gas_checker.cairo"),
+            "GasConstructorChecker".to_string(),
+            Path::new("tests/data/contracts/gas_constructor_checker.cairo"),
         )
         .unwrap()
     );
