@@ -165,6 +165,7 @@ mod tests {
     use sncast::helpers::configuration::{copy_config_to_tempdir, CastConfig};
     use sncast::helpers::constants::DEFAULT_ACCOUNTS_FILE;
     use std::fs;
+    use tempfile::TempDir;
 
     use crate::starknet_commands::account::add_created_profile_to_configuration;
 
