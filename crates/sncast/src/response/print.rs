@@ -93,7 +93,7 @@ impl Display for OutputValue {
     }
 }
 
-pub fn print_cast_command_result<T: CommandResponse>(
+pub fn print_sncast_command_result<T: CommandResponse>(
     command: &str,
     result: &mut Result<T>,
     output_config: OutputFormattingConfig,
