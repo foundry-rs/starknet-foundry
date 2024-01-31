@@ -117,7 +117,7 @@ pub async fn test_happy_case_add_profile() {
 
     let contents = fs::read_to_string(current_dir_utf8.join("sncast.toml"))
         .expect("Unable to read sncast.toml");
-    assert!(contents.contains("[my_account_add]"));
+    assert!(contents.contains("[sncast.my_account_add]"));
     assert!(contents.contains("account = \"my_account_add\""));
 }
 

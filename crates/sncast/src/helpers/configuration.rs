@@ -105,8 +105,11 @@ where
 
 pub fn get_profile(sncast_config: &Value, profile: &Option<String>) -> Result<Value> {
     let profile_name = profile.as_deref().unwrap_or("default");
+    let config = sncast_config
+        .get("sncast")
+        .expect("Failed to find sncast config in foundry.toml file");
 
-    match sncast_config.get(profile_name) {
+    match config.get(profile_name) {
         Some(profile_value) => Ok(profile_value.clone()),
         None if profile_name == "default" => Ok(Value::Table(Default::default())),
         None => Err(anyhow!("Profile [{}] not found in config", profile_name)),

@@ -117,12 +117,11 @@ pub async fn test_happy_case_add_profile() {
 
     let stdout_str =
         std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
-    dbg!(&stdout_str);
     assert!(stdout_str.contains("add_profile: Profile successfully added to sncast.toml"));
 
     let contents =
         fs::read_to_string(tempdir.path().join("sncast.toml")).expect("Unable to read sncast.toml");
-    assert!(contents.contains("[my_account]"));
+    assert!(contents.contains("[sncast.my_account]"));
     assert!(contents.contains("account = \"my_account\""));
 }
 
@@ -199,7 +198,6 @@ pub async fn test_profile_already_exists() {
 
     let std_err =
         std::str::from_utf8(&out.stderr).expect("failed to convert command stderr to string");
-    dbg!(&std_err);
     assert!(std_err.contains(
         "error: Failed to add profile = default to the sncast.toml. Profile already exists"
     ));
@@ -310,7 +308,7 @@ pub async fn test_happy_case_keystore_add_profile() {
 
     let contents =
         fs::read_to_string(tempdir.path().join("sncast.toml")).expect("Unable to read sncast.toml");
-    assert!(contents.contains(r"[with_keystore]"));
+    assert!(contents.contains(r"[sncast.with_keystore]"));
     assert!(contents.contains(r#"account = "my_account.json""#));
     assert!(!contents.contains(r#"accounts-file = "accounts.json""#));
     assert!(contents.contains(r#"keystore = "my_key.json""#));

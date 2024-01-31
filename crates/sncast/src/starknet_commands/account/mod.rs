@@ -110,7 +110,6 @@ pub fn add_created_profile_to_configuration(
     }
 
     let toml_string = {
-        let mut config = toml::value::Table::new();
         let mut new_profile = toml::value::Table::new();
 
         new_profile.insert(
@@ -129,12 +128,16 @@ pub fn add_created_profile_to_configuration(
                 Value::String(cast_config.accounts_file.to_string()),
             );
         }
-        config.insert(
-            profile.clone().unwrap_or(cast_config.account.clone()),
+        let mut profile_config = toml::value::Table::new();
+        profile_config.insert(
+            profile.clone().unwrap_or_else(|| cast_config.account.clone()),
             Value::Table(new_profile),
         );
 
-        toml::to_string(&Value::Table(config)).context("Failed to convert toml to string")?
+        let mut sncast_config = toml::value::Table::new();
+        sncast_config.insert(String::from("sncast"), Value::Table(profile_config));
+
+        toml::to_string(&Value::Table(sncast_config)).context("Failed to convert toml to string")?
     };
 
     let config_path = match path.as_ref() {
@@ -195,7 +198,7 @@ mod tests {
 
         let contents =
             fs::read_to_string(path.join("sncast.toml")).expect("Failed to read sncast.toml");
-        assert!(contents.contains("[some-name]"));
+        assert!(contents.contains("[sncast.some-name]"));
         assert!(contents.contains("account = \"some-name\""));
         assert!(contents.contains("url = \"http://some-url\""));
         assert!(contents.contains("accounts-file = \"accounts\""));
