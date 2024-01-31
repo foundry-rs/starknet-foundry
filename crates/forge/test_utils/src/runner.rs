@@ -310,7 +310,7 @@ macro_rules! assert_gas {
 }
 
 #[macro_export]
-macro_rules! assert_syscalls {
+macro_rules! assert_syscall {
     ($result:expr, $test_case_name:expr, $syscall:expr, $expected_count:expr) => {{
         use forge_runner::test_case_summary::{AnyTestCaseSummary, TestCaseSummary};
         use $crate::runner::TestCase;
@@ -323,7 +323,7 @@ macro_rules! assert_syscalls {
         assert!(result.test_case_summaries.iter().any(|any_case| {
             match any_case {
                 AnyTestCaseSummary::Fuzzing(_) => {
-                    panic!("Cannot use assert_syscalls! for fuzzing tests")
+                    panic!("Cannot use assert_syscall! for fuzzing tests")
                 }
                 AnyTestCaseSummary::Single(case) => match case {
                     TestCaseSummary::Passed { used_resources, .. } => {
@@ -346,7 +346,7 @@ macro_rules! assert_syscalls {
 }
 
 #[macro_export]
-macro_rules! assert_builtins {
+macro_rules! assert_builtin {
     ($result:expr, $test_case_name:expr, $builtin:expr, $expected_count:expr) => {{
         use forge_runner::test_case_summary::{AnyTestCaseSummary, TestCaseSummary};
         use $crate::runner::TestCase;
@@ -359,7 +359,7 @@ macro_rules! assert_builtins {
         assert!(result.test_case_summaries.iter().any(|any_case| {
             match any_case {
                 AnyTestCaseSummary::Fuzzing(_) => {
-                    panic!("Cannot use assert_builtins! for fuzzing tests")
+                    panic!("Cannot use assert_builtin! for fuzzing tests")
                 }
                 AnyTestCaseSummary::Single(case) => match case {
                     TestCaseSummary::Passed { used_resources, .. } => {
