@@ -133,6 +133,7 @@ fn main() -> Result<()> {
         let mut artifacts = build(&BuildConfig {
             scarb_toml_path: manifest_path.clone(),
             json: cli.json,
+            profile: cli.profile.unwrap_or("dev".to_string()),
         })
         .expect("Failed to build script");
         let mut result = starknet_commands::script::run(
@@ -189,6 +190,7 @@ async fn run_async_command(
             let artifacts = build(&BuildConfig {
                 scarb_toml_path: manifest_path,
                 json: cli.json,
+                profile: cli.profile.unwrap_or("dev".to_string()),
             })?;
             let mut result = starknet_commands::declare::declare(
                 &declare.contract,
