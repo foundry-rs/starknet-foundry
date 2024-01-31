@@ -189,6 +189,28 @@ fn scarb_build_fails_manifest_does_not_exist() {
     "});
 }
 
+#[should_panic(expected = "Failed to obtain metadata")]
+#[test]
+fn scarb_build_fails_scarb_toml_does_not_exist() {
+    let args = vec![
+        "--url",
+        URL,
+        "--accounts-file",
+        "../accounts/accounts.json",
+        "--account",
+        "user1",
+        "declare",
+        "--contract-name",
+        "BuildFails",
+    ];
+
+    Command::new(cargo_bin!("sncast"))
+        .current_dir(CONTRACTS_DIR.to_string() + "/")
+        .args(args)
+        .assert()
+        .success();
+}
+
 #[test]
 fn test_too_low_max_fee() {
     let contract_path =
