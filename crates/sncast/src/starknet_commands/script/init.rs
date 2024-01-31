@@ -121,14 +121,19 @@ fn create_script_main_file(script_name: &str, script_root_dir: &Utf8PathBuf) -> 
 
     fs::write(
         script_main_file_path,
-        indoc! {r"
-            use sncast_std;
-            use debug::PrintTrait;
+        indoc! {r#"
+            use sncast_std::{call, CallResult};
 
+            // The example below uses a contract deployed to the Goerli testnet
             fn main() {
-                'Put your code here!'.print();
+                let contract_address = 0x7ad10abd2cc24c2e066a2fee1e435cd5fa60a37f9268bfbaf2e98ce5ca3c436;
+                let call_result = call(contract_address.try_into().unwrap(), 'get_greeting', array![]);
+                let call_result = *call_result.data[0];
+                let mut greeting: ByteArray = "";
+                greeting.append_word(call_result, 16);
+                println!("{greeting:?}");
             }
-        "},
+        "#},
     )?;
 
     Ok(())
