@@ -21,8 +21,9 @@ fn main() {
     );
     assert(deploy_result.transaction_hash != 0, deploy_result.transaction_hash);
 
-    // Supposed to fail
     let invoke_nonce = get_nonce('latest');
+
+    // Supposed to fail - entry point does not exist
     let invoke_result = invoke(
         deploy_result.contract_address,
         'ohno',
@@ -30,8 +31,4 @@ fn main() {
         Option::Some(max_fee),
         Option::Some(invoke_nonce)
     );
-    assert(invoke_result.transaction_hash != 0, invoke_result.transaction_hash);
-
-    let call_result = call(deploy_result.contract_address, 'get', array![0x1]);
-    assert(call_result.data == array![0x2], *call_result.data.at(0));
 }
