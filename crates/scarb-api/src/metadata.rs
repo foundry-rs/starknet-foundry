@@ -6,8 +6,14 @@ pub trait MetadataCommandExt {
 
 impl MetadataCommandExt for MetadataCommand {
     fn run(&mut self) -> Result<Metadata, MetadataCommandError> {
-        // logic will go here
-        // keep it now this way to don't rename method calls later
-        self.exec()
+        self.inherit_stdout();
+
+        let result = self.exec();
+
+        if result.is_err() {
+            println!("error: could not gather project metadata from Scarb due to previous error");
+        }
+
+        result
     }
 }
