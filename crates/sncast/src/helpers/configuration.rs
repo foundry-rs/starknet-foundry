@@ -9,7 +9,9 @@ pub fn find_config_file_relative_to(current_dir: &Utf8PathBuf) -> Result<Utf8Pat
         .find(|path| fs::metadata(path.join(CONFIG_FILENAME)).is_ok())
         .map(|path| path.join(CONFIG_FILENAME))
         .ok_or_else(|| {
-            anyhow!("Failed to find snfoundry.toml - not found in current nor any parent directories")
+            anyhow!(
+                "Failed to find snfoundry.toml - not found in current nor any parent directories"
+            )
         })
 }
 
