@@ -125,7 +125,7 @@ Tests: 0 passed, 0 failed, 0 skipped, 1 ignored, 0 filtered out
 To run only tests marked with the  `#[ignore]` attribute use `snforge test --ignored`. 
 To run all tests regardless of the `#[ignore]` attribute use `snforge test --include-ignored`.
 
-## Displaying Resources Used During Test
+## Displaying Resources Used During Tests
 
 To track resources like `builtins` / `syscalls` that are used when running tests, use `snforge test --detailed-resources`.
 
