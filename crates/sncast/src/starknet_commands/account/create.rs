@@ -27,7 +27,7 @@ pub struct Create {
     #[clap(short, long)]
     pub salt: Option<FieldElement>,
 
-    /// If passed, a profile with corresponding data will be created in sncast.toml
+    /// If passed, a profile with corresponding data will be created in snfoundry.toml
     #[clap(long)]
     pub add_profile: Option<String>,
     // TODO (#253): think about supporting different account providers
@@ -95,9 +95,9 @@ pub async fn create(
         address: Hex(address),
         max_fee: Decimal(max_fee),
         add_profile: if add_profile.is_some() {
-            "Profile successfully added to sncast.toml".to_string()
+            "Profile successfully added to snfoundry.toml".to_string()
         } else {
-            "--add-profile flag was not set. No profile added to sncast.toml".to_string()
+            "--add-profile flag was not set. No profile added to snfoundry.toml".to_string()
         },
         message: if account_json["deployed"] == json!(false) {
             "Account successfully created. Prefund generated address with at least <max_fee> tokens. It is good to send more in the case of higher demand.".to_string()

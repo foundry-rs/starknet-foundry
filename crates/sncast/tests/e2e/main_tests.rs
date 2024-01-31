@@ -11,7 +11,7 @@ use std::fs;
 
 #[tokio::test]
 async fn test_happy_case_from_sncast_config() {
-    let tempdir = copy_config_to_tempdir("tests/data/files/correct_sncast.toml", None);
+    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
@@ -56,7 +56,7 @@ async fn test_happy_case_from_cli_no_scarb() {
 
 #[tokio::test]
 async fn test_happy_case_from_cli_with_sncast_config() {
-    let tempdir = copy_config_to_tempdir("tests/data/files/correct_sncast.toml", None);
+    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
     let address = from_env("CAST_MAP_ADDRESS").unwrap();
     let args = vec![
         "--accounts-file",
@@ -88,7 +88,7 @@ async fn test_happy_case_from_cli_with_sncast_config() {
 
 #[tokio::test]
 async fn test_happy_case_mixed() {
-    let tempdir = copy_config_to_tempdir("tests/data/files/correct_sncast.toml", None);
+    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
     let address = from_env("CAST_MAP_ADDRESS").unwrap();
     let args = vec![
         "--accounts-file",
@@ -129,7 +129,7 @@ async fn test_missing_account() {
     let snapbox = runner(&args);
 
     snapbox.assert().stderr_matches(indoc! {r"
-        Error: Account name not passed nor found in sncast.toml
+        Error: Account name not passed nor found in snfoundry.toml
     "});
 }
 
@@ -148,7 +148,7 @@ async fn test_missing_url() {
     let snapbox = runner(&args);
 
     snapbox.assert().stderr_matches(indoc! {r"
-        Error: RPC url not passed nor found in sncast.toml
+        Error: RPC url not passed nor found in snfoundry.toml
     "});
 }
 

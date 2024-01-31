@@ -30,7 +30,7 @@ mod starknet_commands;
 #[clap(name = "sncast")]
 #[allow(clippy::struct_excessive_bools)]
 struct Cli {
-    /// Profile name in sncast.toml config file
+    /// Profile name in snfoundry.toml config file
     #[clap(short, long)]
     profile: Option<String>,
 
@@ -38,7 +38,7 @@ struct Cli {
     #[clap(short = 's', long)]
     path_to_scarb_toml: Option<Utf8PathBuf>,
 
-    /// RPC provider url address; overrides url from sncast.toml
+    /// RPC provider url address; overrides url from snfoundry.toml
     #[clap(short = 'u', long = "url")]
     rpc_url: Option<String>,
 

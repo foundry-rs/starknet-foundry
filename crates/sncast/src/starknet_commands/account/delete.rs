@@ -3,12 +3,7 @@ use camino::Utf8PathBuf;
 use clap::Args;
 use promptly::prompt;
 use serde_json::Map;
-use sncast::helpers::configuration::find_config_file;
-use sncast::helpers::scarb_utils::get_scarb_manifest;
 use sncast::response::structs::AccountDeleteResponse;
-use std::fs::File;
-use std::io::Read;
-use std::io::Write;
 
 #[derive(Args, Debug)]
 #[command(about = "Delete account information from the accounts file")]

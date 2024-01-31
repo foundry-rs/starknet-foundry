@@ -139,9 +139,9 @@ pub fn parse_config(profile: &Option<String>, path: &Option<Utf8PathBuf>) -> Res
     match config_path {
         Some(path) => {
             let config = fs::read_to_string(path)
-                .expect("Failed to read sncast.toml config file")
+                .expect("Failed to read snfoundry.toml config file")
                 .parse::<Value>()
-                .expect("Failed to parse sncast.toml config file");
+                .expect("Failed to parse snfoundry.toml config file");
 
             CastConfig::from_sncast_config(&config, profile)
         }
@@ -249,7 +249,7 @@ mod tests {
 
     #[test]
     fn parse_config_happy_case_with_profile() {
-        let tempdir = copy_config_to_tempdir("tests/data/files/correct_sncast.toml", None);
+        let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
         let config = parse_config(
             &Some(String::from("profile1")),
             &Some(Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
@@ -262,7 +262,7 @@ mod tests {
 
     #[test]
     fn parse_config_happy_case_default_profile() {
-        let tempdir = copy_config_to_tempdir("tests/data/files/correct_sncast.toml", None);
+        let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
         let config = parse_config(
             &None,
             &Some(Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),

@@ -104,7 +104,7 @@ pub fn add_created_profile_to_configuration(
         .is_empty()
     {
         bail!(
-            "Failed to add profile = {} to the sncast.toml. Profile already exists",
+            "Failed to add profile = {} to the snfoundry.toml. Profile already exists",
             profile.as_ref().unwrap_or(&"default".to_string())
         );
     }
@@ -130,7 +130,9 @@ pub fn add_created_profile_to_configuration(
         }
         let mut profile_config = toml::value::Table::new();
         profile_config.insert(
-            profile.clone().unwrap_or_else(|| cast_config.account.clone()),
+            profile
+                .clone()
+                .unwrap_or_else(|| cast_config.account.clone()),
             Value::Table(new_profile),
         );
 
@@ -149,10 +151,10 @@ pub fn add_created_profile_to_configuration(
         .create(true)
         .append(true)
         .open(config_path)
-        .context("Failed to open sncast.toml")?;
+        .context("Failed to open snfoundry.toml")?;
     sncast_toml
         .write_all(format!("\n{toml_string}").as_bytes())
-        .context("Failed to write to the sncast.toml")?;
+        .context("Failed to write to the snfoundry.toml")?;
 
     Ok(())
 }
@@ -181,7 +183,7 @@ mod tests {
 
     #[test]
     fn test_add_created_profile_to_configuration_happy_case() {
-        let tempdir = copy_config_to_tempdir("tests/data/files/correct_sncast.toml", None);
+        let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
         let path = Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap();
         let config = CastConfig {
             rpc_url: String::from("http://some-url"),
@@ -197,7 +199,7 @@ mod tests {
         assert!(res.is_ok());
 
         let contents =
-            fs::read_to_string(path.join("sncast.toml")).expect("Failed to read sncast.toml");
+            fs::read_to_string(path.join("snfoundry.toml")).expect("Failed to read snfoundry.toml");
         assert!(contents.contains("[sncast.some-name]"));
         assert!(contents.contains("account = \"some-name\""));
         assert!(contents.contains("url = \"http://some-url\""));
@@ -206,7 +208,7 @@ mod tests {
 
     #[test]
     fn test_add_created_profile_to_configuration_profile_already_exists() {
-        let tempdir = copy_config_to_tempdir("tests/data/files/correct_sncast.toml", None);
+        let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
         let config = CastConfig {
             rpc_url: String::from("http://127.0.0.1:5055/rpc"),
             account: String::from("user1"),

@@ -51,7 +51,7 @@ pub struct Add {
     #[clap(short, long)]
     pub salt: Option<FieldElement>,
 
-    /// If passed, a profile with corresponding data will be created in sncast.toml
+    /// If passed, a profile with corresponding data will be created in snfoundry.toml
     #[clap(long)]
     pub add_profile: Option<String>,
 }
@@ -102,9 +102,9 @@ pub async fn add(
 
     Ok(AccountAddResponse {
         add_profile: if add.add_profile.is_some() {
-            "Profile successfully added to sncast.toml".to_string()
+            "Profile successfully added to snfoundry.toml".to_string()
         } else {
-            "--add-profile flag was not set. No profile added to sncast.toml".to_string()
+            "--add-profile flag was not set. No profile added to snfoundry.toml".to_string()
         },
     })
 }
