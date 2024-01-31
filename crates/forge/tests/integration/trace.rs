@@ -5,66 +5,129 @@ use test_utils::running_tests::run_test_case;
 use test_utils::{assert_passed, test_case};
 
 #[test]
+#[allow(clippy::too_many_lines)]
 fn trace_deploy() {
     let test = test_case!(
         indoc!(
             r#"
-            use snforge_std::{declare, ContractClassTrait, test_address};
-            use snforge_std::trace::{CallEntryPoint, CallType, EntryPointType, get_last_call_trace};
+            use snforge_std::{declare, ContractClassTrait, test_address, test_selector};
+            use snforge_std::trace::{CallEntryPoint, CallType, EntryPointType, get_call_trace, CallTrace};
             
             use starknet::{SyscallResultTrait, deploy_syscall, ContractAddress};
             
             #[test]
             fn test_deploy_trace_info() {
-                assert_eq!(get_last_call_trace().len(), 0);
-            
                 let proxy = declare('TraceInfoProxy');
-                assert_eq!(get_last_call_trace().len(), 0);
-            
                 let checker = declare('TraceInfoChecker');
-                assert_eq!(get_last_call_trace().len(), 0);
             
                 let checker_address = checker.deploy(@array![]).unwrap();
-                assert_eq!(get_last_call_trace().len(), 0); // no constructor
             
-                let proxy_address = proxy.deploy(@array![checker_address.into()]).unwrap();
-                assert_trace_after_proxy_deploy(get_last_call_trace(), proxy_address, checker_address);
+                let proxy_address1 = proxy.deploy(@array![checker_address.into()]).unwrap();
             
-                let (proxy_address_2, _) = deploy_syscall(
+                let (proxy_address2, _) = deploy_syscall(
                     proxy.class_hash, 0, array![checker_address.into()].span(), false
                 )
                     .unwrap_syscall();
-                assert_trace_after_proxy_deploy(get_last_call_trace(), proxy_address_2, checker_address);
             
                 let proxy_address_3 = proxy
                     .deploy_at(@array![checker_address.into()], 123.try_into().unwrap())
                     .unwrap();
-                assert_trace_after_proxy_deploy(get_last_call_trace(), proxy_address_3, checker_address);
+            
+                assert_trace(
+                    get_call_trace(), proxy_address1, proxy_address2, proxy_address_3, checker_address
+                );
             }
             
-            fn assert_trace_after_proxy_deploy(
-                trace: Array<CallEntryPoint>, proxy_address: ContractAddress, checker_address: ContractAddress
+            fn assert_trace(
+                trace: CallTrace,
+                proxy_address1: ContractAddress,
+                proxy_address2: ContractAddress,
+                proxy_address3: ContractAddress,
+                checker_address: ContractAddress
             ) {
-                let expected_trace = array![
-                    CallEntryPoint {
-                        entry_point_type: EntryPointType::Constructor,
-                        entry_point_selector: selector!("constructor"),
-                        calldata: array![checker_address.into()],
-                        contract_address: proxy_address,
-                        caller_address: test_address(),
-                        call_type: CallType::Call,
-                    },
-                    CallEntryPoint {
+                let expected_trace = CallTrace {
+                    entry_point: CallEntryPoint {
                         entry_point_type: EntryPointType::External,
-                        entry_point_selector: selector!("from_proxy"),
-                        calldata: array![1],
-                        contract_address: checker_address,
-                        caller_address: proxy_address,
+                        entry_point_selector: test_selector(),
+                        calldata: array![],
+                        contract_address: test_address(),
+                        caller_address: 0.try_into().unwrap(),
                         call_type: CallType::Call,
                     },
-                ];
+                    nested_calls: array![
+                        CallTrace {
+                            entry_point: CallEntryPoint {
+                                entry_point_type: EntryPointType::Constructor,
+                                entry_point_selector: selector!("constructor"),
+                                calldata: array![checker_address.into()],
+                                contract_address: proxy_address1,
+                                caller_address: test_address(),
+                                call_type: CallType::Call,
+                            },
+                            nested_calls: array![
+                                CallTrace {
+                                    entry_point: CallEntryPoint {
+                                        entry_point_type: EntryPointType::External,
+                                        entry_point_selector: selector!("from_proxy"),
+                                        calldata: array![1],
+                                        contract_address: checker_address,
+                                        caller_address: proxy_address1,
+                                        call_type: CallType::Call,
+                                    },
+                                    nested_calls: array![]
+                                }
+                            ],
+                        },
+                        CallTrace {
+                            entry_point: CallEntryPoint {
+                                entry_point_type: EntryPointType::Constructor,
+                                entry_point_selector: selector!("constructor"),
+                                calldata: array![checker_address.into()],
+                                contract_address: proxy_address2,
+                                caller_address: test_address(),
+                                call_type: CallType::Call,
+                            },
+                            nested_calls: array![
+                                CallTrace {
+                                    entry_point: CallEntryPoint {
+                                        entry_point_type: EntryPointType::External,
+                                        entry_point_selector: selector!("from_proxy"),
+                                        calldata: array![1],
+                                        contract_address: checker_address,
+                                        caller_address: proxy_address2,
+                                        call_type: CallType::Call,
+                                    },
+                                    nested_calls: array![]
+                                }
+                            ],
+                        },
+                        CallTrace {
+                            entry_point: CallEntryPoint {
+                                entry_point_type: EntryPointType::Constructor,
+                                entry_point_selector: selector!("constructor"),
+                                calldata: array![checker_address.into()],
+                                contract_address: proxy_address3,
+                                caller_address: test_address(),
+                                call_type: CallType::Call,
+                            },
+                            nested_calls: array![
+                                CallTrace {
+                                    entry_point: CallEntryPoint {
+                                        entry_point_type: EntryPointType::External,
+                                        entry_point_selector: selector!("from_proxy"),
+                                        calldata: array![1],
+                                        contract_address: checker_address,
+                                        caller_address: proxy_address3,
+                                        call_type: CallType::Call,
+                                    },
+                                    nested_calls: array![]
+                                }
+                            ],
+                        }
+                    ]
+                };
             
-                assert(trace == expected_trace, 'proxy deploy');
+                assert(trace == expected_trace, '');
             }
         "#
         ),
@@ -91,8 +154,8 @@ fn trace_call() {
     let test = test_case!(
         indoc!(
             r#"
-            use snforge_std::{declare, ContractClassTrait, test_address};
-            use snforge_std::trace::{CallEntryPoint, CallType, EntryPointType, get_last_call_trace};
+            use snforge_std::{declare, ContractClassTrait, test_address, test_selector, start_prank, CheatTarget};
+            use snforge_std::trace::{CallTrace, CallEntryPoint, CallType, EntryPointType, get_call_trace};
             
             use starknet::{ContractAddress, ClassHash};
             
@@ -128,125 +191,152 @@ fn trace_call() {
                 let proxy_dispatcher = ITraceInfoProxyDispatcher { contract_address: proxy_address };
             
                 proxy_dispatcher.regular_call(checker_address);
-                assert_trace_after_proxy_regular_call(get_last_call_trace(), proxy_address, checker_address);
-            
                 proxy_dispatcher.with_libcall(checker.class_hash);
-                assert_trace_after_proxy_call_with_libcall(
-                    get_last_call_trace(), proxy_address, checker.class_hash
-                );
-            
                 proxy_dispatcher.call_two(checker_address, dummy_address);
-                assert_trace_after_proxy_call_two(
-                    get_last_call_trace(), proxy_address, checker_address, dummy_address
-                );
             
                 let chcecker_dispatcher = ITraceInfoCheckerDispatcher { contract_address: checker_address };
-            
                 chcecker_dispatcher.from_proxy(4);
-                assert_trace_after_checker_call_from_test(get_last_call_trace(), checker_address);
+            
+                assert_trace(
+                    get_call_trace(), proxy_address, checker_address, dummy_address, checker.class_hash
+                );
             }
             
-            fn assert_trace_after_proxy_regular_call(
-                trace: Array<CallEntryPoint>, proxy_address: ContractAddress, checker_address: ContractAddress
-            ) {
-                let expected_trace = array![
-                    CallEntryPoint {
-                        entry_point_type: EntryPointType::External,
-                        entry_point_selector: selector!("regular_call"),
-                        calldata: array![checker_address.into()],
-                        contract_address: proxy_address,
-                        caller_address: test_address(),
-                        call_type: CallType::Call,
-                    },
-                    CallEntryPoint {
-                        entry_point_type: EntryPointType::External,
-                        entry_point_selector: selector!("from_proxy"),
-                        calldata: array![2],
-                        contract_address: checker_address,
-                        caller_address: proxy_address,
-                        call_type: CallType::Call,
-                    },
-                ];
-            
-                assert(trace == expected_trace, 'proxy regular_call');
-            }
-            
-            fn assert_trace_after_proxy_call_with_libcall(
-                trace: Array<CallEntryPoint>, proxy_address: ContractAddress, checker_class_hash: ClassHash
-            ) {
-                let expected_trace = array![
-                    CallEntryPoint {
-                        entry_point_type: EntryPointType::External,
-                        entry_point_selector: selector!("with_libcall"),
-                        calldata: array![checker_class_hash.into()],
-                        contract_address: proxy_address,
-                        caller_address: test_address(),
-                        call_type: CallType::Call,
-                    },
-                    CallEntryPoint {
-                        entry_point_type: EntryPointType::External,
-                        entry_point_selector: selector!("from_proxy"),
-                        calldata: array![3],
-                        contract_address: proxy_address,
-                        caller_address: test_address(),
-                        call_type: CallType::Delegate,
-                    },
-                ];
-            
-                assert(trace == expected_trace, 'proxy with_libcall');
-            }
-            
-            fn assert_trace_after_proxy_call_two(
-                trace: Array<CallEntryPoint>,
+            fn assert_trace(
+                trace: CallTrace,
                 proxy_address: ContractAddress,
                 checker_address: ContractAddress,
-                dummy_address: ContractAddress
+                dummy_address: ContractAddress,
+                checker_class_hash: ClassHash
             ) {
-                let expected_trace = array![
-                    CallEntryPoint {
+                let expected = CallTrace {
+                    entry_point: CallEntryPoint {
                         entry_point_type: EntryPointType::External,
-                        entry_point_selector: selector!("call_two"),
-                        calldata: array![checker_address.into(), dummy_address.into()],
-                        contract_address: proxy_address,
-                        caller_address: test_address(),
-                        call_type: CallType::Call,
-                    },
-                    CallEntryPoint {
-                        entry_point_type: EntryPointType::External,
-                        entry_point_selector: selector!("from_proxy"),
-                        calldata: array![42],
-                        contract_address: checker_address,
-                        caller_address: proxy_address,
-                        call_type: CallType::Call,
-                    },
-                    CallEntryPoint {
-                        entry_point_type: EntryPointType::External,
-                        entry_point_selector: selector!("from_proxy_dummy"),
+                        entry_point_selector: test_selector(),
                         calldata: array![],
-                        contract_address: dummy_address,
-                        caller_address: proxy_address,
+                        contract_address: test_address(),
+                        caller_address: 0.try_into().unwrap(),
                         call_type: CallType::Call,
                     },
-                ];
+                    nested_calls: array![
+                        CallTrace {
+                            entry_point: CallEntryPoint {
+                                entry_point_type: EntryPointType::Constructor,
+                                entry_point_selector: selector!("constructor"),
+                                calldata: array![checker_address.into()],
+                                contract_address: proxy_address,
+                                caller_address: test_address(),
+                                call_type: CallType::Call,
+                            },
+                            nested_calls: array![
+                                CallTrace {
+                                    entry_point: CallEntryPoint {
+                                        entry_point_type: EntryPointType::External,
+                                        entry_point_selector: selector!("from_proxy"),
+                                        calldata: array![1],
+                                        contract_address: checker_address,
+                                        caller_address: proxy_address,
+                                        call_type: CallType::Call,
+                                    },
+                                    nested_calls: array![],
+                                },
+                            ]
+                        },
+                        CallTrace {
+                            entry_point: CallEntryPoint {
+                                entry_point_type: EntryPointType::External,
+                                entry_point_selector: selector!("regular_call"),
+                                calldata: array![checker_address.into()],
+                                contract_address: proxy_address,
+                                caller_address: test_address(),
+                                call_type: CallType::Call,
+                            },
+                            nested_calls: array![
+                                CallTrace {
+                                    entry_point: CallEntryPoint {
+                                        entry_point_type: EntryPointType::External,
+                                        entry_point_selector: selector!("from_proxy"),
+                                        calldata: array![2],
+                                        contract_address: checker_address,
+                                        caller_address: proxy_address,
+                                        call_type: CallType::Call,
+                                    },
+                                    nested_calls: array![]
+                                }
+                            ]
+                        },
+                        CallTrace {
+                            entry_point: CallEntryPoint {
+                                entry_point_type: EntryPointType::External,
+                                entry_point_selector: selector!("with_libcall"),
+                                calldata: array![checker_class_hash.into()],
+                                contract_address: proxy_address,
+                                caller_address: test_address(),
+                                call_type: CallType::Call,
+                            },
+                            nested_calls: array![
+                                CallTrace {
+                                    entry_point: CallEntryPoint {
+                                        entry_point_type: EntryPointType::External,
+                                        entry_point_selector: selector!("from_proxy"),
+                                        calldata: array![3],
+                                        contract_address: proxy_address,
+                                        caller_address: test_address(),
+                                        call_type: CallType::Delegate,
+                                    },
+                                    nested_calls: array![]
+                                }
+                            ]
+                        },
+                        CallTrace {
+                            entry_point: CallEntryPoint {
+                                entry_point_type: EntryPointType::External,
+                                entry_point_selector: selector!("call_two"),
+                                calldata: array![checker_address.into(), dummy_address.into()],
+                                contract_address: proxy_address,
+                                caller_address: test_address(),
+                                call_type: CallType::Call,
+                            },
+                            nested_calls: array![
+                                CallTrace {
+                                    entry_point: CallEntryPoint {
+                                        entry_point_type: EntryPointType::External,
+                                        entry_point_selector: selector!("from_proxy"),
+                                        calldata: array![42],
+                                        contract_address: checker_address,
+                                        caller_address: proxy_address,
+                                        call_type: CallType::Call,
+                                    },
+                                    nested_calls: array![]
+                                },
+                                CallTrace {
+                                    entry_point: CallEntryPoint {
+                                        entry_point_type: EntryPointType::External,
+                                        entry_point_selector: selector!("from_proxy_dummy"),
+                                        calldata: array![],
+                                        contract_address: dummy_address,
+                                        caller_address: proxy_address,
+                                        call_type: CallType::Call,
+                                    },
+                                    nested_calls: array![]
+                                }
+                            ]
+                        },
+                        CallTrace {
+                            entry_point: CallEntryPoint {
+                                entry_point_type: EntryPointType::External,
+                                entry_point_selector: selector!("from_proxy"),
+                                calldata: array![4],
+                                contract_address: checker_address,
+                                caller_address: test_address(),
+                                call_type: CallType::Call,
+                            },
+                            nested_calls: array![]
+                        }
+                    ]
+                };
             
-                assert(trace == expected_trace, 'proxy call_two');
-            }
-            
-            fn assert_trace_after_checker_call_from_test(
-                trace: Array<CallEntryPoint>, checker_address: ContractAddress
-            ) {
-                let expected_trace = array![
-                    CallEntryPoint {
-                        entry_point_type: EntryPointType::External,
-                        entry_point_selector: selector!("from_proxy"),
-                        calldata: array![4],
-                        contract_address: checker_address,
-                        caller_address: test_address(),
-                        call_type: CallType::Call,
-                    },
-                ];
-            
-                assert(trace == expected_trace, 'checker from_proxy');
+                assert(expected == trace, '');
             }
         "#
         ),
@@ -273,12 +363,13 @@ fn trace_call() {
 }
 
 #[test]
+#[allow(clippy::too_many_lines)]
 fn trace_failed_call() {
     let test = test_case!(
         indoc!(
             r#"
-            use snforge_std::{declare, ContractClassTrait, test_address};
-            use snforge_std::trace::{CallEntryPoint, CallType, EntryPointType, get_last_call_trace};
+            use snforge_std::{declare, ContractClassTrait, test_address, test_selector};
+            use snforge_std::trace::{CallEntryPoint, CallType, EntryPointType, get_call_trace, CallTrace};
             
             use starknet::{ContractAddress, ClassHash};
             
@@ -305,67 +396,97 @@ fn trace_failed_call() {
             
                 let proxy_dispatcher = ITraceInfoProxySafeDispatcher { contract_address: proxy_address };
             
+                #[feature("safe_dispatcher")]
                 match proxy_dispatcher.with_panic(checker_address) {
                     Result::Ok(_) => panic_with_felt252('shouldve panicked'),
-                    Result::Err(panic_data) => {
-                        assert(*panic_data.at(0) == 'panic', *panic_data.at(0));
-                        assert_trace_after_proxy_with_panic_call(
-                            get_last_call_trace(), proxy_address, checker_address
-                        );
-                    }
+                    Result::Err(panic_data) => { assert(*panic_data.at(0) == 'panic', *panic_data.at(0)); }
                 }
             
                 let chcecker_dispatcher = ITraceInfoCheckerSafeDispatcher { contract_address: checker_address };
             
+                #[feature("safe_dispatcher")]
                 match chcecker_dispatcher.panic() {
                     Result::Ok(_) => panic_with_felt252('shouldve panicked'),
-                    Result::Err(panic_data) => {
-                        assert(*panic_data.at(0) == 'panic', *panic_data.at(0));
-                        assert_trace_after_checker_panic_call_from_test(get_last_call_trace(), checker_address);
-                    }
+                    Result::Err(panic_data) => { assert(*panic_data.at(0) == 'panic', *panic_data.at(0)); }
                 }
+            
+                assert_trace(get_call_trace(), proxy_address, checker_address);
             }
             
-            fn assert_trace_after_checker_panic_call_from_test(
-                trace: Array<CallEntryPoint>, checker_address: ContractAddress
+            fn assert_trace(
+                trace: CallTrace, proxy_address: ContractAddress, checker_address: ContractAddress
             ) {
-                let expected_trace = array![
-                    CallEntryPoint {
+                let expected = CallTrace {
+                    entry_point: CallEntryPoint {
                         entry_point_type: EntryPointType::External,
-                        entry_point_selector: selector!("panic"),
+                        entry_point_selector: test_selector(),
                         calldata: array![],
-                        contract_address: checker_address,
-                        caller_address: test_address(),
+                        contract_address: test_address(),
+                        caller_address: 0.try_into().unwrap(),
                         call_type: CallType::Call,
                     },
-                ];
+                    nested_calls: array![
+                        CallTrace {
+                            entry_point: CallEntryPoint {
+                                entry_point_type: EntryPointType::Constructor,
+                                entry_point_selector: selector!("constructor"),
+                                calldata: array![checker_address.into()],
+                                contract_address: proxy_address,
+                                caller_address: test_address(),
+                                call_type: CallType::Call,
+                            },
+                            nested_calls: array![
+                                CallTrace {
+                                    entry_point: CallEntryPoint {
+                                        entry_point_type: EntryPointType::External,
+                                        entry_point_selector: selector!("from_proxy"),
+                                        calldata: array![1],
+                                        contract_address: checker_address,
+                                        caller_address: proxy_address,
+                                        call_type: CallType::Call,
+                                    },
+                                    nested_calls: array![],
+                                },
+                            ]
+                        },
+                        CallTrace {
+                            entry_point: CallEntryPoint {
+                                entry_point_type: EntryPointType::External,
+                                entry_point_selector: selector!("with_panic"),
+                                calldata: array![checker_address.into()],
+                                contract_address: proxy_address,
+                                caller_address: test_address(),
+                                call_type: CallType::Call,
+                            },
+                            nested_calls: array![
+                                CallTrace {
+                                    entry_point: CallEntryPoint {
+                                        entry_point_type: EntryPointType::External,
+                                        entry_point_selector: selector!("panic"),
+                                        calldata: array![],
+                                        contract_address: checker_address,
+                                        caller_address: proxy_address,
+                                        call_type: CallType::Call,
+                                    },
+                                    nested_calls: array![]
+                                }
+                            ]
+                        },
+                        CallTrace {
+                            entry_point: CallEntryPoint {
+                                entry_point_type: EntryPointType::External,
+                                entry_point_selector: selector!("panic"),
+                                calldata: array![],
+                                contract_address: checker_address,
+                                caller_address: test_address(),
+                                call_type: CallType::Call,
+                            },
+                            nested_calls: array![]
+                        }
+                    ]
+                };
             
-                assert(trace == expected_trace, 'checker panic');
-            }
-            
-            fn assert_trace_after_proxy_with_panic_call(
-                trace: Array<CallEntryPoint>, proxy_address: ContractAddress, checker_address: ContractAddress
-            ) {
-                let expected_trace = array![
-                    CallEntryPoint {
-                        entry_point_type: EntryPointType::External,
-                        entry_point_selector: selector!("with_panic"),
-                        calldata: array![checker_address.into()],
-                        contract_address: proxy_address,
-                        caller_address: test_address(),
-                        call_type: CallType::Call,
-                    },
-                    CallEntryPoint {
-                        entry_point_type: EntryPointType::External,
-                        entry_point_selector: selector!("panic"),
-                        calldata: array![],
-                        contract_address: checker_address,
-                        caller_address: proxy_address,
-                        call_type: CallType::Call,
-                    },
-                ];
-            
-                assert(trace == expected_trace, 'proxy with_panic');
+                assert(expected == trace, '');
             }
         "#
         ),
@@ -392,8 +513,8 @@ fn trace_library_call_from_test() {
     let test = test_case!(
         indoc!(
             r#"
-            use snforge_std::{declare, ContractClassTrait, test_address};
-            use snforge_std::trace::{CallEntryPoint, CallType, EntryPointType, get_last_call_trace};
+            use snforge_std::{declare, ContractClassTrait, test_address, test_selector};
+            use snforge_std::trace::{CallEntryPoint, CallType, EntryPointType, get_call_trace, CallTrace};
             
             use starknet::{ContractAddress, ClassHash};
             
@@ -428,118 +549,129 @@ fn trace_library_call_from_test() {
                 let proxy_lib_dispatcher = ITraceInfoProxyLibraryDispatcher { class_hash: proxy_hash };
             
                 proxy_lib_dispatcher.regular_call(checker_address);
-                assert_trace_after_proxy_regular_call(get_last_call_trace(), checker_address);
-            
                 proxy_lib_dispatcher.with_libcall(checker.class_hash);
-                assert_trace_after_proxy_call_with_libcall(get_last_call_trace(), checker.class_hash);
-            
                 proxy_lib_dispatcher.call_two(checker_address, dummy_address);
-                assert_trace_after_proxy_call_two(get_last_call_trace(), checker_address, dummy_address);
             
                 let chcecker_lib_dispatcher = ITraceInfoCheckerLibraryDispatcher {
                     class_hash: checker.class_hash
                 };
             
                 chcecker_lib_dispatcher.from_proxy(4);
-                assert_trace_after_checker_call_from_test(get_last_call_trace());
+            
+                assert_trace(get_call_trace(), checker_address, dummy_address, checker.class_hash);
             }
             
-            fn assert_trace_after_proxy_regular_call(
-                trace: Array<CallEntryPoint>, checker_address: ContractAddress
+            fn assert_trace(
+                trace: CallTrace,
+                checker_address: ContractAddress,
+                dummy_address: ContractAddress,
+                checker_class_hash: ClassHash
             ) {
-                let expected_trace = array![
-                    CallEntryPoint {
+                let expected = CallTrace {
+                    entry_point: CallEntryPoint {
                         entry_point_type: EntryPointType::External,
-                        entry_point_selector: selector!("regular_call"),
-                        calldata: array![checker_address.into()],
-                        contract_address: test_address(),
-                        caller_address: 0.try_into().unwrap(),
-                        call_type: CallType::Delegate,
-                    },
-                    CallEntryPoint {
-                        entry_point_type: EntryPointType::External,
-                        entry_point_selector: selector!("from_proxy"),
-                        calldata: array![2],
-                        contract_address: checker_address,
-                        caller_address: test_address(),
-                        call_type: CallType::Call,
-                    },
-                ];
-            
-                assert(trace == expected_trace, 'proxy libcall regular_call');
-            }
-            
-            fn assert_trace_after_proxy_call_with_libcall(
-                trace: Array<CallEntryPoint>, checker_class_hash: ClassHash
-            ) {
-                let expected_trace = array![
-                    CallEntryPoint {
-                        entry_point_type: EntryPointType::External,
-                        entry_point_selector: selector!("with_libcall"),
-                        calldata: array![checker_class_hash.into()],
-                        contract_address: test_address(),
-                        caller_address: 0.try_into().unwrap(),
-                        call_type: CallType::Delegate,
-                    },
-                    CallEntryPoint {
-                        entry_point_type: EntryPointType::External,
-                        entry_point_selector: selector!("from_proxy"),
-                        calldata: array![3],
-                        contract_address: test_address(),
-                        caller_address: 0.try_into().unwrap(),
-                        call_type: CallType::Delegate,
-                    },
-                ];
-            
-                assert(trace == expected_trace, 'proxy libcall with_libcall');
-            }
-            
-            fn assert_trace_after_proxy_call_two(
-                trace: Array<CallEntryPoint>, checker_address: ContractAddress, dummy_address: ContractAddress
-            ) {
-                let expected_trace = array![
-                    CallEntryPoint {
-                        entry_point_type: EntryPointType::External,
-                        entry_point_selector: selector!("call_two"),
-                        calldata: array![checker_address.into(), dummy_address.into()],
-                        contract_address: test_address(),
-                        caller_address: 0.try_into().unwrap(),
-                        call_type: CallType::Delegate,
-                    },
-                    CallEntryPoint {
-                        entry_point_type: EntryPointType::External,
-                        entry_point_selector: selector!("from_proxy"),
-                        calldata: array![42],
-                        contract_address: checker_address,
-                        caller_address: test_address(),
-                        call_type: CallType::Call,
-                    },
-                    CallEntryPoint {
-                        entry_point_type: EntryPointType::External,
-                        entry_point_selector: selector!("from_proxy_dummy"),
+                        entry_point_selector: test_selector(),
                         calldata: array![],
-                        contract_address: dummy_address,
-                        caller_address: test_address(),
-                        call_type: CallType::Call,
-                    },
-                ];
-            
-                assert(trace == expected_trace, 'proxy libcall call_two');
-            }
-            
-            fn assert_trace_after_checker_call_from_test(trace: Array<CallEntryPoint>) {
-                let expected_trace = array![
-                    CallEntryPoint {
-                        entry_point_type: EntryPointType::External,
-                        entry_point_selector: selector!("from_proxy"),
-                        calldata: array![4],
                         contract_address: test_address(),
                         caller_address: 0.try_into().unwrap(),
-                        call_type: CallType::Delegate,
+                        call_type: CallType::Call,
                     },
-                ];
+                    nested_calls: array![
+                        CallTrace {
+                            entry_point: CallEntryPoint {
+                                entry_point_type: EntryPointType::External,
+                                entry_point_selector: selector!("regular_call"),
+                                calldata: array![checker_address.into()],
+                                contract_address: test_address(),
+                                caller_address: 0.try_into().unwrap(),
+                                call_type: CallType::Delegate,
+                            },
+                            nested_calls: array![
+                                CallTrace {
+                                    entry_point: CallEntryPoint {
+                                        entry_point_type: EntryPointType::External,
+                                        entry_point_selector: selector!("from_proxy"),
+                                        calldata: array![2],
+                                        contract_address: checker_address,
+                                        caller_address: test_address(),
+                                        call_type: CallType::Call,
+                                    },
+                                    nested_calls: array![]
+                                }
+                            ]
+                        },
+                        CallTrace {
+                            entry_point: CallEntryPoint {
+                                entry_point_type: EntryPointType::External,
+                                entry_point_selector: selector!("with_libcall"),
+                                calldata: array![checker_class_hash.into()],
+                                contract_address: test_address(),
+                                caller_address: 0.try_into().unwrap(),
+                                call_type: CallType::Delegate,
+                            },
+                            nested_calls: array![
+                                CallTrace {
+                                    entry_point: CallEntryPoint {
+                                        entry_point_type: EntryPointType::External,
+                                        entry_point_selector: selector!("from_proxy"),
+                                        calldata: array![3],
+                                        contract_address: test_address(),
+                                        caller_address: 0.try_into().unwrap(),
+                                        call_type: CallType::Delegate,
+                                    },
+                                    nested_calls: array![]
+                                }
+                            ]
+                        },
+                        CallTrace {
+                            entry_point: CallEntryPoint {
+                                entry_point_type: EntryPointType::External,
+                                entry_point_selector: selector!("call_two"),
+                                calldata: array![checker_address.into(), dummy_address.into()],
+                                contract_address: test_address(),
+                                caller_address: 0.try_into().unwrap(),
+                                call_type: CallType::Delegate,
+                            },
+                            nested_calls: array![
+                                CallTrace {
+                                    entry_point: CallEntryPoint {
+                                        entry_point_type: EntryPointType::External,
+                                        entry_point_selector: selector!("from_proxy"),
+                                        calldata: array![42],
+                                        contract_address: checker_address,
+                                        caller_address: test_address(),
+                                        call_type: CallType::Call,
+                                    },
+                                    nested_calls: array![]
+                                },
+                                CallTrace {
+                                    entry_point: CallEntryPoint {
+                                        entry_point_type: EntryPointType::External,
+                                        entry_point_selector: selector!("from_proxy_dummy"),
+                                        calldata: array![],
+                                        contract_address: dummy_address,
+                                        caller_address: test_address(),
+                                        call_type: CallType::Call,
+                                    },
+                                    nested_calls: array![]
+                                }
+                            ]
+                        },
+                        CallTrace {
+                            entry_point: CallEntryPoint {
+                                entry_point_type: EntryPointType::External,
+                                entry_point_selector: selector!("from_proxy"),
+                                calldata: array![4],
+                                contract_address: test_address(),
+                                caller_address: 0.try_into().unwrap(),
+                                call_type: CallType::Delegate,
+                            },
+                            nested_calls: array![]
+                        }
+                    ]
+                };
             
-                assert(trace == expected_trace, 'checker libcall from_proxy');
+                assert(expected == trace, '');
             }
         "#
         ),
@@ -566,12 +698,13 @@ fn trace_library_call_from_test() {
 }
 
 #[test]
+#[allow(clippy::too_many_lines)]
 fn trace_failed_library_call_from_test() {
     let test = test_case!(
         indoc!(
             r#"
-            use snforge_std::{declare, ContractClassTrait, test_address};
-            use snforge_std::trace::{CallEntryPoint, CallType, EntryPointType, get_last_call_trace};
+            use snforge_std::{declare, ContractClassTrait, test_address, test_selector};
+            use snforge_std::trace::{CallEntryPoint, CallType, EntryPointType, get_call_trace, CallTrace};
             
             use starknet::{ContractAddress, ClassHash};
             
@@ -589,74 +722,106 @@ fn trace_failed_library_call_from_test() {
             }
             
             #[test]
-            fn test_failed_library_call_trace_info() {
-                let proxy_hash = declare('TraceInfoProxy').class_hash;
+            fn test_failed_call_trace_info() {
+                let proxy = declare('TraceInfoProxy');
                 let checker = declare('TraceInfoChecker');
+            
                 let checker_address = checker.deploy(@array![]).unwrap();
+                let proxy_address = proxy.deploy(@array![checker_address.into()]).unwrap();
             
-                let proxy_lib_dispatcher = ITraceInfoProxySafeLibraryDispatcher { class_hash: proxy_hash };
+                let proxy_dispatcher = ITraceInfoProxySafeDispatcher { contract_address: proxy_address };
             
-                match proxy_lib_dispatcher.with_panic(checker_address) {
+                #[feature("safe_dispatcher")]
+                match proxy_dispatcher.with_panic(checker_address) {
                     Result::Ok(_) => panic_with_felt252('shouldve panicked'),
-                    Result::Err(panic_data) => {
-                        assert(*panic_data.at(0) == 'panic', *panic_data.at(0));
-                        assert_trace_after_proxy_with_panic_call(get_last_call_trace(), checker_address);
-                    }
+                    Result::Err(panic_data) => { assert(*panic_data.at(0) == 'panic', *panic_data.at(0)); }
                 }
             
-                let chcecker_lib_dispatcher = ITraceInfoCheckerSafeLibraryDispatcher {
-                    class_hash: checker.class_hash
-                };
-            
-                match chcecker_lib_dispatcher.panic() {
+                let chcecker_dispatcher = ITraceInfoCheckerSafeDispatcher { contract_address: checker_address };
+                
+                #[feature("safe_dispatcher")]
+                match chcecker_dispatcher.panic() {
                     Result::Ok(_) => panic_with_felt252('shouldve panicked'),
-                    Result::Err(panic_data) => {
-                        assert(*panic_data.at(0) == 'panic', *panic_data.at(0));
-                        assert_trace_after_checker_panic_call_from_test(get_last_call_trace(), checker_address);
-                    }
+                    Result::Err(panic_data) => { assert(*panic_data.at(0) == 'panic', *panic_data.at(0)); }
                 }
+            
+                assert_trace(get_call_trace(), proxy_address, checker_address);
             }
             
-            fn assert_trace_after_proxy_with_panic_call(
-                trace: Array<CallEntryPoint>, checker_address: ContractAddress
+            fn assert_trace(
+                trace: CallTrace, proxy_address: ContractAddress, checker_address: ContractAddress
             ) {
-                let expected_trace = array![
-                    CallEntryPoint {
+                let expected = CallTrace {
+                    entry_point: CallEntryPoint {
                         entry_point_type: EntryPointType::External,
-                        entry_point_selector: selector!("with_panic"),
-                        calldata: array![checker_address.into()],
+                        entry_point_selector: test_selector(),
+                        calldata: array![],
                         contract_address: test_address(),
                         caller_address: 0.try_into().unwrap(),
-                        call_type: CallType::Delegate,
-                    },
-                    CallEntryPoint {
-                        entry_point_type: EntryPointType::External,
-                        entry_point_selector: selector!("panic"),
-                        calldata: array![],
-                        contract_address: checker_address,
-                        caller_address: test_address(),
                         call_type: CallType::Call,
                     },
-                ];
+                    nested_calls: array![
+                        CallTrace {
+                            entry_point: CallEntryPoint {
+                                entry_point_type: EntryPointType::Constructor,
+                                entry_point_selector: selector!("constructor"),
+                                calldata: array![checker_address.into()],
+                                contract_address: proxy_address,
+                                caller_address: test_address(),
+                                call_type: CallType::Call,
+                            },
+                            nested_calls: array![
+                                CallTrace {
+                                    entry_point: CallEntryPoint {
+                                        entry_point_type: EntryPointType::External,
+                                        entry_point_selector: selector!("from_proxy"),
+                                        calldata: array![1],
+                                        contract_address: checker_address,
+                                        caller_address: proxy_address,
+                                        call_type: CallType::Call,
+                                    },
+                                    nested_calls: array![],
+                                },
+                            ]
+                        },
+                        CallTrace {
+                            entry_point: CallEntryPoint {
+                                entry_point_type: EntryPointType::External,
+                                entry_point_selector: selector!("with_panic"),
+                                calldata: array![checker_address.into()],
+                                contract_address: proxy_address,
+                                caller_address: test_address(),
+                                call_type: CallType::Call,
+                            },
+                            nested_calls: array![
+                                CallTrace {
+                                    entry_point: CallEntryPoint {
+                                        entry_point_type: EntryPointType::External,
+                                        entry_point_selector: selector!("panic"),
+                                        calldata: array![],
+                                        contract_address: checker_address,
+                                        caller_address: proxy_address,
+                                        call_type: CallType::Call,
+                                    },
+                                    nested_calls: array![]
+                                }
+                            ]
+                        },
+                        CallTrace {
+                            entry_point: CallEntryPoint {
+                                entry_point_type: EntryPointType::External,
+                                entry_point_selector: selector!("panic"),
+                                calldata: array![],
+                                contract_address: checker_address,
+                                caller_address: test_address(),
+                                call_type: CallType::Call,
+                            },
+                            nested_calls: array![]
+                        }
+                    ]
+                };
             
-                assert(trace == expected_trace, 'proxy libcall with_panic');
-            }
-            
-            fn assert_trace_after_checker_panic_call_from_test(
-                trace: Array<CallEntryPoint>, checker_address: ContractAddress
-            ) {
-                let expected_trace = array![
-                    CallEntryPoint {
-                        entry_point_type: EntryPointType::External,
-                        entry_point_selector: selector!("panic"),
-                        calldata: array![],
-                        contract_address: test_address(),
-                        caller_address: 0.try_into().unwrap(),
-                        call_type: CallType::Delegate,
-                    },
-                ];
-            
-                assert(trace == expected_trace, 'checker libcall panic');
+                assert(expected == trace, '');
             }
         "#
         ),
@@ -678,12 +843,13 @@ fn trace_failed_library_call_from_test() {
 }
 
 #[test]
+#[allow(clippy::too_many_lines)]
 fn trace_l1_handler() {
     let test = test_case!(
         indoc!(
             r#"
-            use snforge_std::{declare, ContractClassTrait, test_address, L1HandlerTrait,};
-            use snforge_std::trace::{CallEntryPoint, CallType, EntryPointType, get_last_call_trace};
+            use snforge_std::{declare, ContractClassTrait, test_address, test_selector, L1HandlerTrait,};
+            use snforge_std::trace::{CallEntryPoint, CallType, EntryPointType, get_call_trace, CallTrace};
             
             use starknet::ContractAddress;
             
@@ -701,40 +867,84 @@ fn trace_l1_handler() {
                 l1_handler.payload = array![proxy_address.into()].span();
             
                 l1_handler.execute().unwrap();
-                assert_trace_after_l1_handler_call(get_last_call_trace(), proxy_address, checker_address);
+                assert_trace(get_call_trace(), proxy_address, checker_address);
             }
             
-            fn assert_trace_after_l1_handler_call(
-                trace: Array<CallEntryPoint>, proxy_address: ContractAddress, checker_address: ContractAddress
+            fn assert_trace(
+                trace: CallTrace, proxy_address: ContractAddress, checker_address: ContractAddress
             ) {
-                let expected_trace = array![
-                    CallEntryPoint {
-                        entry_point_type: EntryPointType::L1Handler,
-                        entry_point_selector: selector!("handle_l1_message"),
-                        calldata: array![123, proxy_address.into()],
-                        contract_address: checker_address,
+                let expected_trace = CallTrace {
+                    entry_point: CallEntryPoint {
+                        entry_point_type: EntryPointType::External,
+                        entry_point_selector: test_selector(),
+                        calldata: array![],
+                        contract_address: test_address(),
                         caller_address: 0.try_into().unwrap(),
                         call_type: CallType::Call,
                     },
-                    CallEntryPoint {
-                        entry_point_type: EntryPointType::External,
-                        entry_point_selector: selector!("regular_call"),
-                        calldata: array![checker_address.into()],
-                        contract_address: proxy_address,
-                        caller_address: checker_address,
-                        call_type: CallType::Call,
-                    },
-                    CallEntryPoint {
-                        entry_point_type: EntryPointType::External,
-                        entry_point_selector: selector!("from_proxy"),
-                        calldata: array![2],
-                        contract_address: checker_address,
-                        caller_address: proxy_address,
-                        call_type: CallType::Call,
-                    },
-                ];
+                    nested_calls: array![
+                        CallTrace {
+                            entry_point: CallEntryPoint {
+                                entry_point_type: EntryPointType::Constructor,
+                                entry_point_selector: selector!("constructor"),
+                                calldata: array![checker_address.into()],
+                                contract_address: proxy_address,
+                                caller_address: test_address(),
+                                call_type: CallType::Call,
+                            },
+                            nested_calls: array![
+                                CallTrace {
+                                    entry_point: CallEntryPoint {
+                                        entry_point_type: EntryPointType::External,
+                                        entry_point_selector: selector!("from_proxy"),
+                                        calldata: array![1],
+                                        contract_address: checker_address,
+                                        caller_address: proxy_address,
+                                        call_type: CallType::Call,
+                                    },
+                                    nested_calls: array![]
+                                }
+                            ],
+                        },
+                        CallTrace {
+                            entry_point: CallEntryPoint {
+                                entry_point_type: EntryPointType::L1Handler,
+                                entry_point_selector: selector!("handle_l1_message"),
+                                calldata: array![123, proxy_address.into()],
+                                contract_address: checker_address,
+                                caller_address: 0.try_into().unwrap(),
+                                call_type: CallType::Call,
+                            },
+                            nested_calls: array![
+                                CallTrace {
+                                    entry_point: CallEntryPoint {
+                                        entry_point_type: EntryPointType::External,
+                                        entry_point_selector: selector!("regular_call"),
+                                        calldata: array![checker_address.into()],
+                                        contract_address: proxy_address,
+                                        caller_address: checker_address,
+                                        call_type: CallType::Call,
+                                    },
+                                    nested_calls: array![
+                                        CallTrace {
+                                            entry_point: CallEntryPoint {
+                                                entry_point_type: EntryPointType::External,
+                                                entry_point_selector: selector!("from_proxy"),
+                                                calldata: array![2],
+                                                contract_address: checker_address,
+                                                caller_address: proxy_address,
+                                                call_type: CallType::Call,
+                                            },
+                                            nested_calls: array![]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                };
             
-                assert(trace == expected_trace, 'checker l1 handler');
+                assert(trace == expected_trace, '');
             }
         "#
         ),

@@ -59,8 +59,7 @@ fn spy_events_complex() {
         &contract_address,
         &selector,
         &[Felt252::from(123)],
-    )
-    .unwrap();
+    );
 
     let (length, serialized_events) = cheatnet_state.fetch_events(&Felt252::from(id));
     let events = felt_vec_to_event_vec(&serialized_events);
@@ -88,8 +87,7 @@ fn spy_events_complex() {
         &contract_address,
         &selector,
         &[Felt252::from(123)],
-    )
-    .unwrap();
+    );
 
     let (length, _) = cheatnet_state.fetch_events(&Felt252::from(id));
     assert_eq!(length, 1, "There should be one new event");
@@ -130,8 +128,7 @@ fn check_events_order() {
             Felt252::from(345),
             spy_events_checker_address.into_(),
         ],
-    )
-    .unwrap();
+    );
 
     let (length, serialized_events) = cheatnet_state.fetch_events(&Felt252::from(id));
     let events = felt_vec_to_event_vec(&serialized_events);
@@ -185,8 +182,7 @@ fn check_events_captured_only_for_spied_contracts() {
         &spy_events_checker_address,
         &selector,
         &[Felt252::from(123)],
-    )
-    .unwrap();
+    );
 
     let id = cheatnet_state.spy_events(SpyTarget::One(spy_events_checker_address));
     call_contract(
@@ -195,8 +191,7 @@ fn check_events_captured_only_for_spied_contracts() {
         &spy_events_checker_address,
         &selector,
         &[Felt252::from(123)],
-    )
-    .unwrap();
+    );
 
     let (length, serialized_events) = cheatnet_state.fetch_events(&Felt252::from(id));
     let events = felt_vec_to_event_vec(&serialized_events);
@@ -240,8 +235,7 @@ fn duplicate_spies_on_one_address() {
         &contract_address,
         &selector,
         &[Felt252::from(123)],
-    )
-    .unwrap();
+    );
 
     let (length1, serialized_events1) = cheatnet_state.fetch_events(&Felt252::from(id1));
     let (length2, _) = cheatnet_state.fetch_events(&Felt252::from(id2));
@@ -286,8 +280,7 @@ fn library_call_emits_event() {
         &contract_address,
         &selector,
         &[Felt252::from(123), class_hash.into_()],
-    )
-    .unwrap();
+    );
 
     let (length, serialized_events) = cheatnet_state.fetch_events(&Felt252::from(id));
     let events = felt_vec_to_event_vec(&serialized_events);
@@ -351,13 +344,9 @@ fn check_if_there_is_no_interference() {
         .unwrap();
 
     let spy_events_checker_address =
-        deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[])
-            .unwrap()
-            .contract_address;
+        deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[]).unwrap();
     let other_spy_events_checker_address =
-        deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[])
-            .unwrap()
-            .contract_address;
+        deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[]).unwrap();
 
     let id1 = cheatnet_state.spy_events(SpyTarget::One(spy_events_checker_address));
     let id2 = cheatnet_state.spy_events(SpyTarget::One(other_spy_events_checker_address));
@@ -369,8 +358,7 @@ fn check_if_there_is_no_interference() {
         &spy_events_checker_address,
         &selector,
         &[Felt252::from(123)],
-    )
-    .unwrap();
+    );
 
     let (length1, serialized_events1) = cheatnet_state.fetch_events(&Felt252::from(id1));
     let (length2, _) = cheatnet_state.fetch_events(&Felt252::from(id2));
@@ -414,16 +402,14 @@ fn test_nested_calls() {
         &class_hash,
         &[spy_events_checker_address.into_()],
     )
-    .unwrap()
-    .contract_address;
+    .unwrap();
     let spy_events_checker_top_proxy_address = deploy(
         &mut blockifier_state,
         &mut cheatnet_state,
         &class_hash,
         &[spy_events_checker_proxy_address.into_()],
     )
-    .unwrap()
-    .contract_address;
+    .unwrap();
 
     let id = cheatnet_state.spy_events(SpyTarget::All);
 
@@ -434,8 +420,7 @@ fn test_nested_calls() {
         &spy_events_checker_top_proxy_address,
         &selector,
         &[Felt252::from(123)],
-    )
-    .unwrap();
+    );
 
     let (length, serialized_events) = cheatnet_state.fetch_events(&Felt252::from(id));
     let events = felt_vec_to_event_vec(&serialized_events);
@@ -495,16 +480,14 @@ fn use_multiple_spies() {
         &class_hash,
         &[spy_events_checker_address.into_()],
     )
-    .unwrap()
-    .contract_address;
+    .unwrap();
     let spy_events_checker_top_proxy_address = deploy(
         &mut blockifier_state,
         &mut cheatnet_state,
         &class_hash,
         &[spy_events_checker_proxy_address.into_()],
     )
-    .unwrap()
-    .contract_address;
+    .unwrap();
 
     let id1 = cheatnet_state.spy_events(SpyTarget::One(spy_events_checker_address));
     let id2 = cheatnet_state.spy_events(SpyTarget::One(spy_events_checker_proxy_address));
@@ -517,8 +500,7 @@ fn use_multiple_spies() {
         &spy_events_checker_top_proxy_address,
         &selector,
         &[Felt252::from(123)],
-    )
-    .unwrap();
+    );
 
     let (length1, serialized_events1) = cheatnet_state.fetch_events(&Felt252::from(id1));
     let (length2, serialized_events2) = cheatnet_state.fetch_events(&Felt252::from(id2));
@@ -581,8 +563,7 @@ fn test_emitted_by_emit_events_syscall() {
         &contract_address,
         &selector,
         &[Felt252::from(123), Felt252::from(456)],
-    )
-    .unwrap();
+    );
 
     let (length, serialized_events) = cheatnet_state.fetch_events(&Felt252::from(id));
     let events = felt_vec_to_event_vec(&serialized_events);

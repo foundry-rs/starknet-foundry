@@ -1,20 +1,19 @@
 use crate::forking::cache::ForkCache;
 use crate::state::BlockInfoReader;
-use anyhow::Result;
 use blockifier::execution::contract_class::{
     ContractClass as ContractClassBlockifier, ContractClassV0, ContractClassV1,
 };
 use blockifier::state::errors::StateError::{StateReadError, UndeclaredClassHash};
 use blockifier::state::state_api::{StateReader, StateResult};
-use cairo_lang_starknet::casm_contract_class::CasmContractClass;
 use cairo_lang_utils::bigint::BigUintAsHex;
 use conversions::{FromConv, IntoConv};
 use flate2::read::GzDecoder;
 use num_bigint::BigUint;
 use runtime::starknet::context::BlockInfo;
-use serde_json::Value;
+use sierra_casm::compile;
 use starknet::core::types::{
     BlockId, ContractClass as ContractClassStarknet, FieldElement, MaybePendingBlockWithTxHashes,
+    StarknetError,
 };
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::{JsonRpcClient, Provider, ProviderError};
@@ -26,11 +25,9 @@ use starknet_api::deprecated_contract_class::{
 use starknet_api::hash::StarkFelt;
 use starknet_api::state::StorageKey;
 use std::collections::HashMap;
-use std::io::{Read, Write};
+use std::io::Read;
 use std::ops::Deref;
-use tempfile::Builder;
 use tokio::runtime::Runtime;
-use universal_sierra_compiler_api::compile_sierra;
 use url::Url;
 
 #[derive(Debug)]
@@ -57,6 +54,19 @@ impl ForkStateReader {
     }
 }
 
+#[macro_export]
+macro_rules! other_provider_error {
+    ( $boxed:expr ) => {{
+        let err_str = $boxed.deref().to_string();
+        if err_str.contains("error sending request for url") {
+            return Err(StateReadError(
+                "Unable to reach the node. Check your internet connection and node url".to_string(),
+            ));
+        }
+        Err(StateReadError(format!("JsonRpc provider error: {err_str}")))
+    }};
+}
+
 impl BlockInfoReader for ForkStateReader {
     fn get_block_info(&mut self) -> StateResult<BlockInfo> {
         if let Some(cache_hit) = self.cache.get_block_info() {
@@ -81,28 +91,12 @@ impl BlockInfoReader for ForkStateReader {
             Ok(MaybePendingBlockWithTxHashes::PendingBlock(_)) => {
                 unreachable!("Pending block is not be allowed at the configuration level")
             }
+            Err(ProviderError::Other(boxed)) => other_provider_error!(boxed),
             Err(err) => Err(StateReadError(format!(
-                "Unable to get block with tx hashes from fork, err: {err:?}"
+                "Unable to get block with tx hashes from fork ({err})"
             ))),
         }
     }
-}
-
-#[macro_export]
-macro_rules! other_provider_error {
-    ( $boxed:expr ) => {{
-        let err_str = $boxed.deref().to_string();
-        if err_str.contains("error sending request for url") {
-            return node_connection_error();
-        }
-        Err(StateReadError(format!("JsonRpc provider error: {err_str}")))
-    }};
-}
-
-fn node_connection_error<T>() -> StateResult<T> {
-    Err(StateReadError(
-        "Unable to reach the node. Check your internet connection and node url".to_string(),
-    ))
 }
 
 impl StateReader for ForkStateReader {
@@ -127,8 +121,9 @@ impl StateReader for ForkStateReader {
                 Ok(value_sf)
             }
             Err(ProviderError::Other(boxed)) => other_provider_error!(boxed),
-            Err(_) => Err(StateReadError(format!(
-                "Unable to get storage at address: {contract_address:?} and key: {key:?} from fork"
+            Err(ProviderError::StarknetError(StarknetError::ContractNotFound)) => Ok(Default::default()),
+            Err(x) => Err(StateReadError(format!(
+                "Unable to get storage at address: {contract_address:?} and key: {key:?} from fork ({x})"
             ))),
         }
     }
@@ -148,8 +143,11 @@ impl StateReader for ForkStateReader {
                 Ok(nonce)
             }
             Err(ProviderError::Other(boxed)) => other_provider_error!(boxed),
-            Err(_) => Err(StateReadError(format!(
-                "Unable to get nonce at {contract_address:?} from fork"
+            Err(ProviderError::StarknetError(StarknetError::ContractNotFound)) => {
+                Ok(Default::default())
+            }
+            Err(x) => Err(StateReadError(format!(
+                "Unable to get nonce at {contract_address:?} from fork ({x})"
             ))),
         }
     }
@@ -169,9 +167,12 @@ impl StateReader for ForkStateReader {
                     .cache_get_class_hash_at(contract_address, class_hash);
                 Ok(class_hash)
             }
+            Err(ProviderError::StarknetError(StarknetError::ContractNotFound)) => {
+                Ok(Default::default())
+            }
             Err(ProviderError::Other(boxed)) => other_provider_error!(boxed),
-            Err(_) => Err(StateReadError(format!(
-                "Unable to get class hash at {contract_address:?} from fork"
+            Err(x) => Err(StateReadError(format!(
+                "Unable to get class hash at {contract_address:?} from fork ({x})"
             ))),
         }
     }
@@ -194,8 +195,13 @@ impl StateReader for ForkStateReader {
 
                         Ok(contract_class)
                     }
+                    Err(ProviderError::StarknetError(StarknetError::ClassHashNotFound)) => {
+                        Err(UndeclaredClassHash(*class_hash))
+                    }
                     Err(ProviderError::Other(boxed)) => other_provider_error!(boxed),
-                    Err(_) => Err(UndeclaredClassHash(*class_hash)),
+                    Err(x) => Err(StateReadError(format!(
+                        "Unable to get compiled class at {class_hash} from fork ({x})"
+                    ))),
                 }
             };
 
@@ -215,12 +221,11 @@ impl StateReader for ForkStateReader {
                     "entry_points_by_type": flattened_class.entry_points_by_type
                 });
 
-                match generate_casm(&sierra_contract_class) {
-                    Ok(casm_contract_class) => Ok(ContractClassBlockifier::V1(
-                        ContractClassV1::try_from(casm_contract_class).unwrap(),
-                    )),
-                    Err(err) => Err(StateReadError(err.to_string())),
-                }
+                let casm_contract_class = compile(sierra_contract_class).unwrap();
+
+                Ok(ContractClassBlockifier::V1(
+                    ContractClassV1::try_from(casm_contract_class).unwrap(),
+                ))
             }
             ContractClassStarknet::Legacy(legacy_class) => {
                 let converted_entry_points: HashMap<EntryPointType, Vec<EntryPoint>> =
@@ -253,18 +258,4 @@ impl StateReader for ForkStateReader {
             "Unable to get compiled class hash from the fork".to_string(),
         ))
     }
-}
-
-fn generate_casm(sierra_contract_class: &Value) -> Result<CasmContractClass> {
-    let mut temp_sierra_file = Builder::new().tempfile().unwrap();
-    let _ = temp_sierra_file
-        .write(
-            serde_json::to_vec(sierra_contract_class)
-                .unwrap()
-                .as_slice(),
-        )
-        .unwrap();
-
-    let casm = compile_sierra(temp_sierra_file.path().to_str().unwrap(), None)?;
-    Ok(serde_json::from_str(&casm).unwrap())
 }

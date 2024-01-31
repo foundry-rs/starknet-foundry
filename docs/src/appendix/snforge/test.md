@@ -52,6 +52,10 @@ Control when colored output is used. Valid values:
 - `always`: always display colors.
 - `never`: never display colors.
 
+## `--save-trace-data`
+Saves execution traces of test cases which have passed and are not fuzz tests to files. Traces can be used for profiling purposes.
+
+
 ## `--use_scarb_collector`
 
 Uses Scarb to find and compile tests. Requires at least Scarb nightly-2023-12-04

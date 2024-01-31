@@ -39,12 +39,12 @@ mod GasChecker {
         }
 
         fn bitwise(self: @ContractState) {
-            let bitwise = 1_u8 & 1_u8;
-            let bitwise = 1_u8 & 1_u8;
-            let bitwise = 1_u8 & 1_u8;
-            let bitwise = 1_u8 & 1_u8;
-            let bitwise = 1_u8 & 1_u8;
-            let bitwise = 1_u8 & 1_u8;
+            1_u8 & 1_u8;
+            1_u8 & 1_u8;
+            1_u8 & 1_u8;
+            1_u8 & 1_u8;
+            1_u8 & 1_u8;
+            1_u8 & 1_u8;
         }
 
         fn pedersen(self: @ContractState) {
@@ -88,5 +88,13 @@ mod GasChecker {
         fn send_l1_message(self: @ContractState) {
             starknet::send_message_to_l1_syscall(1, array![1].span()).unwrap();
         }
+    }
+
+    #[l1_handler]
+    fn handle_l1_message(ref self: ContractState, from_address: felt252) {
+        keccak::keccak_u256s_le_inputs(array![1].span());
+        keccak::keccak_u256s_le_inputs(array![1].span());
+        keccak::keccak_u256s_le_inputs(array![1].span());
+        keccak::keccak_u256s_le_inputs(array![1].span());
     }
 }

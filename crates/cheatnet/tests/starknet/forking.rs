@@ -46,8 +46,7 @@ fn fork_simple() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
     assert_success!(output, vec![Felt252::from(2)]);
 
     let selector = felt_selector_from_name("increase_balance");
@@ -57,8 +56,7 @@ fn fork_simple() {
         &contract_address,
         &selector,
         &[Felt252::from(100)],
-    )
-    .unwrap();
+    );
 
     let selector = felt_selector_from_name("get_balance");
     let output = call_contract(
@@ -67,8 +65,7 @@ fn fork_simple() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
     assert_success!(output, vec![Felt252::from(102)]);
 }
 
@@ -87,8 +84,7 @@ fn try_calling_nonexistent_contract() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
     assert_error!(
         output,
         "Contract not deployed at address: 0x0000000000000000000000000000000000000000000000000000000000000001"
@@ -161,8 +157,8 @@ fn test_forking_at_block_number() {
             &contract_address,
             &selector,
             &[],
-        )
-        .unwrap();
+        );
+
         assert_error!(
             output,
             "Contract not deployed at address: 0x071c8d74edc89330f314f3b1109059d68ebfa68874aa91e9c425a6378ffde00e"
@@ -175,8 +171,8 @@ fn test_forking_at_block_number() {
             &contract_address,
             &selector,
             &[],
-        )
-        .unwrap();
+        );
+
         assert_success!(output, vec![Felt252::from(0)]);
     }
     purge_cache(cache_dir.path().to_str().unwrap());
@@ -209,8 +205,7 @@ fn call_forked_contract_from_other_contract() {
         &contract_address,
         &selector,
         &[forked_contract_address],
-    )
-    .unwrap();
+    );
     assert_success!(output, vec![Felt252::from(2)]);
 }
 
@@ -241,8 +236,7 @@ fn library_call_on_forked_class_hash() {
         &contract_address,
         &selector,
         &[forked_class_hash.clone()],
-    )
-    .unwrap();
+    );
     assert_success!(output, vec![Felt252::from(0)]);
 
     call_contract(
@@ -251,8 +245,7 @@ fn library_call_on_forked_class_hash() {
         &contract_address,
         &felt_selector_from_name("set_balance"),
         &[Felt252::from(100)],
-    )
-    .unwrap();
+    );
 
     let output = call_contract(
         &mut blockifier_state,
@@ -260,8 +253,7 @@ fn library_call_on_forked_class_hash() {
         &contract_address,
         &selector,
         &[forked_class_hash],
-    )
-    .unwrap();
+    );
     assert_success!(output, vec![Felt252::from(100)]);
 }
 
@@ -299,8 +291,7 @@ fn call_forked_contract_from_constructor() {
         &contract_address,
         &selector,
         &[forked_class_hash],
-    )
-    .unwrap();
+    );
     assert_success!(output, vec![Felt252::from(2)]);
 }
 
@@ -334,8 +325,7 @@ fn call_forked_contract_get_block_info_via_proxy() {
         &contract_address,
         &selector,
         &[forked_contract_address.clone()],
-    )
-    .unwrap();
+    );
     assert_success!(output, vec![Felt252::from(315_887)]);
 
     let selector = felt_selector_from_name("read_block_timestamp");
@@ -345,8 +335,7 @@ fn call_forked_contract_get_block_info_via_proxy() {
         &contract_address,
         &selector,
         &[forked_contract_address.clone()],
-    )
-    .unwrap();
+    );
     assert_success!(output, vec![Felt252::from(1_697_630_072)]);
 
     let selector = felt_selector_from_name("read_sequencer_address");
@@ -356,8 +345,7 @@ fn call_forked_contract_get_block_info_via_proxy() {
         &contract_address,
         &selector,
         &[forked_contract_address],
-    )
-    .unwrap();
+    );
     assert_success!(
         output,
         vec![Felt252::from(
@@ -401,8 +389,7 @@ fn call_forked_contract_get_block_info_via_libcall() {
         &contract_address,
         &selector,
         &[forked_class_hash.clone()],
-    )
-    .unwrap();
+    );
     assert_success!(output, vec![Felt252::from(315_887)]);
 
     let selector = felt_selector_from_name("read_block_timestamp_with_lib_call");
@@ -412,8 +399,7 @@ fn call_forked_contract_get_block_info_via_libcall() {
         &contract_address,
         &selector,
         &[forked_class_hash.clone()],
-    )
-    .unwrap();
+    );
     assert_success!(output, vec![Felt252::from(1_697_630_072)]);
 
     let selector = felt_selector_from_name("read_sequencer_address_with_lib_call");
@@ -423,8 +409,7 @@ fn call_forked_contract_get_block_info_via_libcall() {
         &contract_address,
         &selector,
         &[forked_class_hash],
-    )
-    .unwrap();
+    );
     assert_success!(
         output,
         vec![Felt252::from(
@@ -461,8 +446,8 @@ fn using_specified_block_nb_is_cached() {
             &contract_address,
             &selector,
             &[],
-        )
-        .unwrap();
+        );
+
         assert_success!(output, vec![Felt252::from(2)]);
     };
 
@@ -539,8 +524,8 @@ fn test_cache_merging() {
             &contract_address,
             &selector,
             &[],
-        )
-        .unwrap();
+        );
+
         assert_success!(output, vec![Felt252::from(balance)]);
     }
 
@@ -651,8 +636,8 @@ fn test_cached_block_info_merging() {
             &contract_address,
             &selector,
             &[],
-        )
-        .unwrap();
+        );
+
         assert_success!(output, vec![Felt252::from(balance)]);
     }
 
@@ -733,8 +718,7 @@ fn test_calling_nonexistent_url() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     assert_error!(
         output,

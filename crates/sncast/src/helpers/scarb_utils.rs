@@ -1,10 +1,14 @@
 use super::constants::{WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
 use anyhow::{anyhow, bail, Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
-use scarb_api::ScarbCommand;
-use scarb_metadata;
+use scarb_api::{
+    get_contracts_map,
+    metadata::{Metadata, MetadataCommand, PackageMetadata},
+    ScarbCommand, StarknetContractArtifacts,
+};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::collections::HashMap;
 use std::default::Default;
 use std::env;
 use std::fs::canonicalize;
@@ -154,19 +158,15 @@ pub fn get_scarb_manifest_for(dir: &Utf8Path) -> Result<Utf8PathBuf> {
     Ok(path)
 }
 
-fn get_scarb_metadata_command(
-    manifest_path: &Utf8PathBuf,
-) -> Result<scarb_metadata::MetadataCommand> {
+fn get_scarb_metadata_command(manifest_path: &Utf8PathBuf) -> Result<MetadataCommand> {
     ScarbCommand::new().ensure_available()?;
 
-    let mut command = scarb_metadata::MetadataCommand::new();
+    let mut command = ScarbCommand::metadata();
     command.inherit_stderr().manifest_path(manifest_path);
     Ok(command)
 }
 
-fn execute_scarb_metadata_command(
-    command: &scarb_metadata::MetadataCommand,
-) -> Result<scarb_metadata::Metadata> {
+fn execute_scarb_metadata_command(command: &MetadataCommand) -> Result<Metadata> {
     command.exec().context(format!(
         "Failed to read the `Scarb.toml` manifest file. Doesn't exist in the current or parent directories = {}",
         env::current_dir()
@@ -177,15 +177,13 @@ fn execute_scarb_metadata_command(
     ))
 }
 
-pub fn get_scarb_metadata(manifest_path: &Utf8PathBuf) -> Result<scarb_metadata::Metadata> {
+pub fn get_scarb_metadata(manifest_path: &Utf8PathBuf) -> Result<Metadata> {
     let mut command = get_scarb_metadata_command(manifest_path)?;
     let command = command.no_deps();
     execute_scarb_metadata_command(command)
 }
 
-pub fn get_scarb_metadata_with_deps(
-    manifest_path: &Utf8PathBuf,
-) -> Result<scarb_metadata::Metadata> {
+pub fn get_scarb_metadata_with_deps(manifest_path: &Utf8PathBuf) -> Result<Metadata> {
     let command = get_scarb_metadata_command(manifest_path)?;
     execute_scarb_metadata_command(&command)
 }
@@ -218,9 +216,9 @@ pub fn verify_or_determine_scarb_manifest_path(
 }
 
 pub fn get_package_metadata<'a>(
-    metadata: &'a scarb_metadata::Metadata,
+    metadata: &'a Metadata,
     manifest_path: &'a Utf8PathBuf,
-) -> Result<&'a scarb_metadata::PackageMetadata> {
+) -> Result<&'a PackageMetadata> {
     let manifest_path = canonicalize(manifest_path.clone())
         .unwrap_or_else(|err| panic!("Failed to canonicalize {manifest_path}, error: {err:?}"));
 
@@ -263,7 +261,7 @@ pub fn parse_scarb_config(
     }
 }
 
-pub fn get_package_tool_sncast(metadata: &scarb_metadata::Metadata) -> Result<&Value> {
+pub fn get_package_tool_sncast(metadata: &Metadata) -> Result<&Value> {
     let first_package = metadata
         .packages
         .first()
@@ -280,6 +278,28 @@ pub fn get_package_tool_sncast(metadata: &scarb_metadata::Metadata) -> Result<&V
         .ok_or_else(|| anyhow!("No field [tool.sncast] found in package"))?;
 
     Ok(tool_sncast)
+}
+
+pub struct BuildConfig {
+    pub scarb_toml_path: Utf8PathBuf,
+    pub json: bool,
+}
+
+pub fn build(config: &BuildConfig) -> Result<HashMap<String, StarknetContractArtifacts>> {
+    let mut cmd = ScarbCommand::new_with_stdio();
+    cmd.arg("build").manifest_path(&config.scarb_toml_path);
+    if config.json {
+        cmd.json();
+    }
+    cmd.run()
+        .map_err(|e| anyhow!(format!("Failed to build using scarb; {e}")))?;
+
+    let metadata = get_scarb_metadata_command(&config.scarb_toml_path)?
+        .exec()
+        .expect("Failed to obtain metadata");
+    let package = get_package_metadata(&metadata, &config.scarb_toml_path)
+        .with_context(|| anyhow!("Failed to find package"))?;
+    get_contracts_map(&metadata, &package.id)
 }
 
 #[cfg(test)]

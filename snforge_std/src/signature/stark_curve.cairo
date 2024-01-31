@@ -24,7 +24,7 @@ impl StarkCurveKeyPairImpl of KeyPairTrait<felt252, felt252> {
 
         let public_key: EcPoint = EcPointImpl::mul(generator, secret_key);
 
-        let (pk_x, pk_y) = public_key.try_into().unwrap().coordinates();
+        let (pk_x, _pk_y) = public_key.try_into().unwrap().coordinates();
 
         KeyPair { secret_key, public_key: pk_x }
     }

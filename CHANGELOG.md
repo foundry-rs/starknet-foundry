@@ -9,10 +9,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
+#### Changed
+
+- Gas estimation is now aligned with the Starknet v0.13
+
+### Fixed
+
+- Gas used in constructors and handling of L1 messages is now properly included in total gas cost
+
+### Cast
+
+#### Added
+
+- `script init` command to generate a template file structure for deployment scripts
+
+## [0.16.0] - 2024-01-26
+
+### Forge
+
+#### Added
+- Bump to cairo 2.5.0
+
+#### Changed
+
+- `SafeDispatcher`s usages need to be tagged with `#[feature("safe_dispatcher)]` (directly before usage), see [the shamans post](https://community.starknet.io/t/cairo-v2-5-0-is-out/112807#safe-dispatchers-15)
+
+## [0.15.0] - 2024-01-24
+
+### Forge
+
 #### Added
 
 - `store` and `load` cheatcodes
-- dependency on [universal-sierra-compiler](https://github.com/software-mansion/universal-sierra-compiler/blob/master/scripts/install.sh) binary
+- `--save-trace-data` flag to `snforge test` command. Traces can be used for profiling purposes.
+
+#### Changed
+
+- `available_gas` attribute is now supported (Scarb >= 2.4.4 is required)
 
 #### Fixed
 
@@ -20,9 +53,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Cast
 
-#### Added
+#### Changed
 
-- `script init` command to generate a template file structure for deployment scripts
+- the 'pending' block is used instead of 'latest' as the default when obtaining the nonce
 
 ## [0.14.0] - 2024-01-11
 

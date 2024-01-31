@@ -5,7 +5,6 @@ use crate::helpers::fixtures::{
 use indoc::indoc;
 use snapbox::cmd::{cargo_bin, Command};
 use starknet::core::types::TransactionReceipt::Declare;
-use std::fs;
 use test_case::test_case;
 
 #[tokio::test]
@@ -38,8 +37,6 @@ async fn test_happy_case() {
     let receipt = get_transaction_receipt(hash).await;
 
     assert!(matches!(receipt, Declare(_)));
-
-    fs::remove_dir_all(contract_path).unwrap();
 }
 
 #[tokio::test]
@@ -110,8 +107,8 @@ fn scarb_build_fails(contract_path: &str, accounts_file_path: &str) {
         .args(args);
 
     snapbox.assert().stderr_matches(indoc! {r"
-        command: declare
-        error: Failed to build contracts with Scarb: `scarb` exited with error
+        ...
+        Error: Failed to build using scarb; `scarb` exited with error
     "});
 }
 
@@ -144,8 +141,6 @@ fn test_too_low_max_fee() {
         command: declare
         error: Max fee is smaller than the minimal transaction cost
     "});
-
-    fs::remove_dir_all(contract_path).unwrap();
 }
 
 #[test]
@@ -166,9 +161,9 @@ fn scarb_no_sierra_artifact() {
         .current_dir(CONTRACTS_DIR.to_string() + "/no_sierra")
         .args(args);
 
-    snapbox.assert().success().stderr_matches(indoc! {r"
-        command: declare
-        [..]Make sure you have enabled sierra code generation in Scarb.toml[..]
+    snapbox.assert().failure().stderr_matches(indoc! {r"
+        [..]Make sure you have enabled sierra code generation in Scarb.toml
+        ...
     "});
 }
 

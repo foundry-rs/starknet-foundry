@@ -14,11 +14,11 @@ use forge_runner::test_crate_summary::TestCrateSummary;
 use forge_runner::{RunnerConfig, RunnerParams, CACHE_DIR};
 use rand::{thread_rng, RngCore};
 use scarb_api::{
-    get_contracts_map, package_matches_version_requirement, target_dir_for_workspace, ScarbCommand,
+    get_contracts_map,
+    metadata::{Metadata, MetadataCommandExt, PackageMetadata},
+    package_matches_version_requirement, target_dir_for_workspace, ScarbCommand,
 };
-use scarb_metadata::{Metadata, MetadataCommand, PackageMetadata};
 use scarb_ui::args::PackagesFilter;
-use universal_sierra_compiler_api::UniversalSierraCompilerCommand;
 
 use forge::block_number_map::BlockNumberMap;
 use semver::{Comparator, Op, Version, VersionReq};
@@ -99,6 +99,10 @@ struct TestArgs {
     /// Run tests that failed during the last run
     #[arg(long)]
     rerun_failed: bool,
+
+    /// Save execution traces of all test which have passed and are not fuzz tests
+    #[arg(long)]
+    save_trace_data: bool,
 }
 
 fn validate_fuzzer_runs_value(val: &str) -> Result<u32> {
@@ -130,6 +134,7 @@ fn combine_configs(
     exit_first: bool,
     fuzzer_runs: Option<u32>,
     fuzzer_seed: Option<u64>,
+    save_trace_data: bool,
     forge_config: &ForgeConfig,
 ) -> RunnerConfig {
     RunnerConfig::new(
@@ -141,6 +146,7 @@ fn combine_configs(
         fuzzer_seed
             .or(forge_config.fuzzer_seed)
             .unwrap_or_else(|| thread_rng().next_u64()),
+        save_trace_data || forge_config.save_trace_data,
     )
 }
 
@@ -178,7 +184,7 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
         ColorOption::Auto => (),
     }
 
-    let scarb_metadata = MetadataCommand::new().inherit_stderr().exec()?;
+    let scarb_metadata = ScarbCommand::metadata().inherit_stderr().run()?;
     warn_if_snforge_std_not_compatible(&scarb_metadata)?;
 
     let workspace_root = scarb_metadata.workspace.root.clone();
@@ -223,6 +229,7 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                     args.exit_first,
                     args.fuzzer_runs,
                     args.fuzzer_seed,
+                    args.save_trace_data,
                     &forge_config,
                 ));
                 let runner_params = Arc::new(RunnerParams::new(contracts, env::vars().collect()));
@@ -267,7 +274,6 @@ fn main_execution() -> Result<bool> {
     let cli = Cli::parse();
 
     ScarbCommand::new().ensure_available()?;
-    UniversalSierraCompilerCommand::ensure_available()?;
 
     match cli.subcommand {
         ForgeSubcommand::Init { name } => {
@@ -301,8 +307,22 @@ mod tests {
     #[test]
     fn fuzzer_default_seed() {
         let workspace_root: Utf8PathBuf = Default::default();
-        let config = combine_configs(&workspace_root, false, None, None, &Default::default());
-        let config2 = combine_configs(&workspace_root, false, None, None, &Default::default());
+        let config = combine_configs(
+            &workspace_root,
+            false,
+            None,
+            None,
+            false,
+            &Default::default(),
+        );
+        let config2 = combine_configs(
+            &workspace_root,
+            false,
+            None,
+            None,
+            false,
+            &Default::default(),
+        );
 
         assert_ne!(config.fuzzer_seed, 0);
         assert_ne!(config2.fuzzer_seed, 0);
@@ -312,7 +332,14 @@ mod tests {
     #[test]
     fn runner_config_default_arguments() {
         let workspace_root: Utf8PathBuf = Default::default();
-        let config = combine_configs(&workspace_root, false, None, None, &Default::default());
+        let config = combine_configs(
+            &workspace_root,
+            false,
+            None,
+            None,
+            false,
+            &Default::default(),
+        );
         assert_eq!(
             config,
             RunnerConfig::new(
@@ -320,6 +347,7 @@ mod tests {
                 false,
                 FUZZER_RUNS_DEFAULT,
                 config.fuzzer_seed,
+                false,
             )
         );
     }
@@ -331,11 +359,22 @@ mod tests {
             fork: vec![],
             fuzzer_runs: Some(1234),
             fuzzer_seed: Some(500),
+            save_trace_data: true,
         };
         let workspace_root: Utf8PathBuf = Default::default();
 
-        let config = combine_configs(&workspace_root, false, None, None, &config_from_scarb);
-        assert_eq!(config, RunnerConfig::new(workspace_root, true, 1234, 500));
+        let config = combine_configs(
+            &workspace_root,
+            false,
+            None,
+            None,
+            false,
+            &config_from_scarb,
+        );
+        assert_eq!(
+            config,
+            RunnerConfig::new(workspace_root, true, 1234, 500, true)
+        );
     }
 
     #[test]
@@ -347,15 +386,20 @@ mod tests {
             fork: vec![],
             fuzzer_runs: Some(1234),
             fuzzer_seed: Some(1000),
+            save_trace_data: false,
         };
         let config = combine_configs(
             &workspace_root,
             true,
             Some(100),
             Some(32),
+            true,
             &config_from_scarb,
         );
 
-        assert_eq!(config, RunnerConfig::new(workspace_root, true, 100, 32,));
+        assert_eq!(
+            config,
+            RunnerConfig::new(workspace_root, true, 100, 32, true)
+        );
     }
 }

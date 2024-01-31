@@ -6,15 +6,19 @@ use blockifier::execution::contract_class::{ContractClassV1, ContractClassV1Inne
 use blockifier::execution::contract_class::ContractClass;
 use cairo_vm::types::program::Program;
 
+use crate::runtime_extensions::common::create_entry_point_selector;
+use blockifier::execution::entry_point::{CallEntryPoint, CallType};
+use conversions::IntoConv;
+use starknet::core::utils::get_selector_from_name;
 use starknet_api::deprecated_contract_class::EntryPointType;
 
 use runtime::starknet::context::ERC20_CONTRACT_ADDRESS;
 use runtime::starknet::state::DictStateReader;
 use starknet_api::{
-    core::{ClassHash, ContractAddress, Nonce, PatriciaKey},
+    core::{ClassHash, ContractAddress, PatriciaKey},
     hash::{StarkFelt, StarkHash},
     patricia_key, stark_felt,
-    transaction::{Calldata, DeclareTransactionV2, InvokeTransactionV1},
+    transaction::Calldata,
 };
 
 pub const MAX_FEE: u128 = 1_000_000 * 100_000_000_000; // 1000000 * min_gas_price.
@@ -31,32 +35,6 @@ pub const TEST_ERC20_CONTRACT_CLASS_HASH: &str = "0x1010";
 pub const TEST_CONTRACT_CLASS_HASH: &str = "0x117";
 // snforge_std/src/cheatcodes.cairo::test_address
 pub const TEST_ADDRESS: &str = "0x01724987234973219347210837402";
-
-#[must_use]
-pub fn build_declare_transaction(
-    nonce: Nonce,
-    class_hash: ClassHash,
-    sender_address: ContractAddress,
-) -> DeclareTransactionV2 {
-    DeclareTransactionV2 {
-        nonce,
-        class_hash,
-        sender_address,
-        ..Default::default()
-    }
-}
-
-#[must_use]
-pub fn build_invoke_transaction(
-    calldata: Calldata,
-    sender_address: ContractAddress,
-) -> InvokeTransactionV1 {
-    InvokeTransactionV1 {
-        sender_address,
-        calldata,
-        ..Default::default()
-    }
-}
 
 fn contract_class_no_entrypoints() -> ContractClass {
     let inner = ContractClassV1Inner {
@@ -97,5 +75,24 @@ pub fn build_testing_state() -> DictStateReader {
         address_to_class_hash,
         class_hash_to_class,
         ..Default::default()
+    }
+}
+
+#[must_use]
+pub fn build_test_entry_point() -> CallEntryPoint {
+    let test_selector = get_selector_from_name("TEST_CONTRACT_SELECTOR")
+        .unwrap()
+        .into_();
+    let entry_point_selector = create_entry_point_selector(&test_selector);
+    CallEntryPoint {
+        class_hash: None,
+        code_address: Some(ContractAddress(patricia_key!(TEST_ADDRESS))),
+        entry_point_type: EntryPointType::External,
+        entry_point_selector,
+        calldata: Calldata(Arc::new(vec![])),
+        storage_address: ContractAddress(patricia_key!(TEST_ADDRESS)),
+        caller_address: ContractAddress::default(),
+        call_type: CallType::Call,
+        initial_gas: u64::MAX,
     }
 }

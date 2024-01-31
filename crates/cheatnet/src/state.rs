@@ -8,10 +8,7 @@ use blockifier::execution::entry_point::CallEntryPoint;
 use blockifier::state::state_api::State;
 use blockifier::{
     execution::contract_class::ContractClass,
-    state::{
-        errors::StateError,
-        state_api::{StateReader, StateResult},
-    },
+    state::state_api::{StateReader, StateResult},
 };
 use cairo_felt::Felt252;
 use runtime::starknet::context::BlockInfo;
@@ -19,14 +16,18 @@ use runtime::starknet::state::DictStateReader;
 
 use starknet_api::core::EntryPointSelector;
 
+use crate::constants::build_test_entry_point;
+use blockifier::state::errors::StateError::UndeclaredClassHash;
 use starknet_api::transaction::ContractAddressSalt;
 use starknet_api::{
     core::{ClassHash, CompiledClassHash, ContractAddress, Nonce},
     hash::StarkFelt,
     state::StorageKey,
 };
+use std::cell::{Ref, RefCell};
 use std::collections::HashMap;
 use std::hash::BuildHasher;
+use std::rc::Rc;
 
 // Specifies which contracts to target
 // with a cheatcode function
@@ -79,8 +80,8 @@ impl StateReader for ExtendedStateReader {
             .or_else(|_| {
                 self.fork_state_reader
                     .as_mut()
-                    .map_or(Ok(StarkFelt::default()), |reader| {
-                        match_node_response(reader.get_storage_at(contract_address, key))
+                    .map_or(Ok(Default::default()), {
+                        |reader| reader.get_storage_at(contract_address, key)
                     })
             })
     }
@@ -91,8 +92,8 @@ impl StateReader for ExtendedStateReader {
             .or_else(|_| {
                 self.fork_state_reader
                     .as_mut()
-                    .map_or(Ok(Nonce::default()), |reader| {
-                        match_node_response(reader.get_nonce_at(contract_address))
+                    .map_or(Ok(Default::default()), {
+                        |reader| reader.get_nonce_at(contract_address)
                     })
             })
     }
@@ -103,8 +104,8 @@ impl StateReader for ExtendedStateReader {
             .or_else(|_| {
                 self.fork_state_reader
                     .as_mut()
-                    .map_or(Ok(ClassHash::default()), |reader| {
-                        match_node_response(reader.get_class_hash_at(contract_address))
+                    .map_or(Ok(Default::default()), {
+                        |reader| reader.get_class_hash_at(contract_address)
                     })
             })
     }
@@ -116,10 +117,11 @@ impl StateReader for ExtendedStateReader {
         self.dict_state_reader
             .get_compiled_contract_class(class_hash)
             .or_else(|_| {
-                self.fork_state_reader.as_mut().map_or(
-                    Err(StateError::UndeclaredClassHash(*class_hash)),
-                    |reader| reader.get_compiled_contract_class(class_hash),
-                )
+                self.fork_state_reader
+                    .as_mut()
+                    .map_or(Err(UndeclaredClassHash(*class_hash)), |reader| {
+                        reader.get_compiled_contract_class(class_hash)
+                    })
             })
     }
 
@@ -136,7 +138,46 @@ pub enum CheatStatus<T> {
     Uncheated,
 }
 
-#[derive(Default)]
+/// Tree structure representing trace of a call.
+#[derive(Clone)]
+pub struct CallTrace {
+    pub entry_point: CallEntryPoint,
+    pub nested_calls: Vec<Rc<RefCell<CallTrace>>>,
+}
+
+pub struct NotEmptyCallStack(Vec<Rc<RefCell<CallTrace>>>);
+
+impl NotEmptyCallStack {
+    pub fn from(elem: Rc<RefCell<CallTrace>>) -> Self {
+        NotEmptyCallStack(vec![elem])
+    }
+
+    pub fn push(&mut self, elem: Rc<RefCell<CallTrace>>) {
+        self.0.push(elem);
+    }
+
+    pub fn top(&mut self) -> Rc<RefCell<CallTrace>> {
+        let top_val = self.0.pop().unwrap();
+        let borrowed_ref = top_val.clone();
+        self.0.push(top_val);
+        borrowed_ref
+    }
+
+    pub fn pop(&mut self) -> Rc<RefCell<CallTrace>> {
+        assert!(self.0.len() > 1, "You cannot make NotEmptyCallStack empty");
+        self.0.pop().unwrap()
+    }
+
+    #[must_use]
+    pub fn borrow_full_trace(&self) -> Ref<'_, CallTrace> {
+        self.0.first().unwrap().borrow()
+    }
+}
+
+pub struct TraceData {
+    pub current_call_stack: NotEmptyCallStack,
+}
+
 pub struct CheatnetState {
     pub rolled_contracts: HashMap<ContractAddress, CheatStatus<Felt252>>,
     pub global_roll: Option<Felt252>,
@@ -155,8 +196,38 @@ pub struct CheatnetState {
     pub block_info: BlockInfo,
     // execution resources used by all contract calls
     pub used_resources: UsedResources,
-    // trace info of the last call
-    pub trace_info: Vec<CallEntryPoint>,
+
+    pub trace_data: TraceData,
+}
+
+impl Default for CheatnetState {
+    fn default() -> Self {
+        let test_call = Rc::new(RefCell::new(CallTrace {
+            entry_point: build_test_entry_point(),
+            nested_calls: vec![],
+        }));
+        Self {
+            rolled_contracts: Default::default(),
+            global_roll: None,
+            pranked_contracts: Default::default(),
+            global_prank: None,
+            warped_contracts: Default::default(),
+            global_warp: None,
+            elected_contracts: Default::default(),
+            global_elect: None,
+            mocked_functions: Default::default(),
+            spoofed_contracts: Default::default(),
+            global_spoof: None,
+            spies: vec![],
+            detected_events: vec![],
+            deploy_salt_base: 0,
+            block_info: Default::default(),
+            used_resources: Default::default(),
+            trace_data: TraceData {
+                current_call_stack: NotEmptyCallStack::from(test_call),
+            },
+        }
+    }
 }
 
 impl CheatnetState {
@@ -224,13 +295,24 @@ impl CheatnetState {
     }
 }
 
-fn match_node_response<T: Default>(result: StateResult<T>) -> StateResult<T> {
-    match result {
-        Ok(class_hash) => Ok(class_hash),
-        Err(StateError::StateReadError(msg)) if msg.contains("node") => {
-            Err(StateError::StateReadError(msg))
-        }
-        _ => Ok(Default::default()),
+impl TraceData {
+    pub fn enter_nested_call(&mut self, entry_point: CallEntryPoint) {
+        let new_call = Rc::new(RefCell::new(CallTrace {
+            entry_point,
+            nested_calls: vec![],
+        }));
+        let current_call = self.current_call_stack.top();
+
+        current_call
+            .borrow_mut()
+            .nested_calls
+            .push(new_call.clone());
+
+        self.current_call_stack.push(new_call);
+    }
+
+    pub fn exit_nested_call(&mut self) {
+        self.current_call_stack.pop();
     }
 }
 

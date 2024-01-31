@@ -31,8 +31,7 @@ fn deploy_at_predefined_address() {
         &[],
         ContractAddress::from(1_u8),
     )
-    .unwrap()
-    .contract_address;
+    .unwrap();
 
     assert_eq!(contract_address, ContractAddress::from(1_u8));
 
@@ -43,8 +42,7 @@ fn deploy_at_predefined_address() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     assert_success!(output, vec![Felt252::from(0)]);
 }
@@ -98,8 +96,7 @@ fn call_predefined_contract_from_proxy_contract() {
         &[],
         ContractAddress::from(1_u8),
     )
-    .unwrap()
-    .contract_address;
+    .unwrap();
 
     assert_eq!(prank_checker_address, ContractAddress::from(1_u8));
 
@@ -116,8 +113,7 @@ fn call_predefined_contract_from_proxy_contract() {
         &proxy_address,
         &proxy_selector,
         &[prank_checker_address.into_()],
-    )
-    .unwrap();
+    );
 
     assert_success!(output, vec![proxy_address.into_()]);
 }
@@ -141,12 +137,11 @@ fn deploy_contract_on_predefined_address_after_its_usage() {
         &proxy_address,
         &proxy_selector,
         &[Felt252::from(323)],
-    )
-    .unwrap();
+    );
 
     assert!(
         matches!(
-            output.result,
+            output,
             CallResult::Failure(CallFailure::Error { msg, .. })
             if msg.contains("Requested contract address") && msg.contains("is not deployed")
         ),
@@ -172,8 +167,7 @@ fn deploy_contract_on_predefined_address_after_its_usage() {
         &proxy_address,
         &proxy_selector,
         &[Felt252::from(323)],
-    )
-    .unwrap();
+    );
 
     assert_success!(output, vec![]);
 }
@@ -318,8 +312,7 @@ fn deploy_invokes_constructor() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     assert_success!(output, vec![Felt252::from(123)]);
 }
@@ -341,8 +334,7 @@ fn deploy_at_invokes_constructor() {
         &[Felt252::from(123)],
         Felt252::from(420).into_(),
     )
-    .unwrap()
-    .contract_address;
+    .unwrap();
 
     let selector = felt_selector_from_name("get_number");
 
@@ -352,8 +344,7 @@ fn deploy_at_invokes_constructor() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     assert_success!(output, vec![Felt252::from(123)]);
 }

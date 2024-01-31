@@ -1,3 +1,5 @@
+use crate::metadata::MetadataCommand;
+use crate::version::VersionCommand;
 use anyhow::Context;
 use scarb_ui::args::PackagesFilter;
 use std::collections::HashMap;
@@ -49,6 +51,18 @@ impl ScarbCommand {
         cmd.inherit_stderr();
         cmd.inherit_stdout();
         cmd
+    }
+
+    /// Creates [`MetadataCommand`] command
+    #[must_use]
+    pub fn metadata() -> MetadataCommand {
+        MetadataCommand::new()
+    }
+
+    /// Creates [`VersionCommand`] command
+    #[must_use]
+    pub fn version() -> VersionCommand {
+        VersionCommand
     }
 
     /// Ensures that `scarb` binary is available in the system.
