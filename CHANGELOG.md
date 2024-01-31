@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
+#### Added
+- Warning when rpc version in fork is incompatible
+
 #### Changed
 
 - Gas estimation is now aligned with the Starknet v0.13
