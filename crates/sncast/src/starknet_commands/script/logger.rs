@@ -20,9 +20,10 @@ pub struct ScriptLogger {
 
 impl ScriptLogger {
     pub fn new(is_quiet: bool, output_config: OutputFormattingConfig) -> Self {
-        let verbosity = match is_quiet {
-            true => Verbosity::Quiet,
-            false => Verbosity::Normal,
+        let verbosity = if is_quiet {
+            Verbosity::Quiet
+        } else {
+            Verbosity::Normal
         };
 
         Self {
