@@ -1,10 +1,16 @@
 use anyhow::{anyhow, Result};
 use camino::Utf8Path;
+use indoc::formatdoc;
 use scarb_api::ScarbCommand;
+use starknet::providers::jsonrpc::HttpTransport;
+use starknet::providers::{JsonRpcClient, Provider};
+use url::Url;
 
 use crate::scarb::load_test_artifacts;
 use forge_runner::test_case_summary::AnyTestCaseSummary;
-use semver::Version;
+use semver::{Version, VersionReq};
+use std::collections::HashMap;
+use std::ops::Not;
 use std::sync::Arc;
 
 use compiled_raw::{CompiledTestCrateRaw, RawForkConfig, RawForkParams};
@@ -25,10 +31,10 @@ pub mod scarb;
 pub mod shared_cache;
 pub mod test_filter;
 
-fn replace_id_with_params(
-    raw_fork_config: RawForkConfig,
-    fork_targets: &[ForkTarget],
-) -> Result<RawForkParams> {
+pub(crate) fn replace_id_with_params<'a>(
+    raw_fork_config: &'a RawForkConfig,
+    fork_targets: &'a [ForkTarget],
+) -> Result<&'a RawForkParams> {
     match raw_fork_config {
         RawForkConfig::Params(raw_fork_params) => Ok(raw_fork_params),
         RawForkConfig::Id(name) => {
@@ -39,7 +45,7 @@ fn replace_id_with_params(
                     anyhow!("Fork configuration named = {name} not found in the Scarb.toml")
                 })?;
 
-            Ok(fork_target_from_runner_config.params().clone())
+            Ok(fork_target_from_runner_config.params())
         }
     }
 }
@@ -53,9 +59,9 @@ async fn to_runnable(
 
     for case in compiled_test_crate.test_cases {
         let fork_config = if let Some(fc) = case.fork_config {
-            let raw_fork_params = replace_id_with_params(fc, fork_targets)?;
+            let raw_fork_params = replace_id_with_params(&fc, fork_targets)?;
             let fork_config = block_number_map
-                .validated_fork_config_from_fork_params(&raw_fork_params)
+                .validated_fork_config_from_fork_params(raw_fork_params)
                 .await?;
             Some(fork_config)
         } else {
@@ -109,6 +115,7 @@ pub async fn run(
     let filtered = all_tests - not_filtered;
 
     warn_if_available_gas_used_with_incompatible_scarb_version(&test_crates)?;
+    warn_if_incompatible_rpc_version(&test_crates, fork_targets).await?;
 
     pretty_printing::print_collected_tests_count(
         test_crates.iter().map(|tests| tests.test_cases.len()).sum(),
@@ -182,6 +189,81 @@ fn warn_if_available_gas_used_with_incompatible_scarb_version(
                     Make sure to use Scarb >=2.4.4"
                 ));
             }
+        }
+    }
+
+    Ok(())
+}
+
+#[derive(Default)]
+struct RpcDescriptor<'a> {
+    scarb_names: Vec<&'a str>,
+    test_paths: Vec<&'a str>,
+}
+
+async fn warn_if_incompatible_rpc_version(
+    test_crates: &[CompiledTestCrateRaw],
+    fork_targets: &[ForkTarget],
+) -> Result<()> {
+    let mut descriptors = HashMap::<&str, RpcDescriptor>::new();
+
+    for (raw_fork_config, test_case_name) in test_crates.iter().flat_map(|ctc| {
+        ctc.test_cases
+            .iter()
+            .filter(|tc| !tc.ignored)
+            .filter_map(|tc| tc.fork_config.as_ref().map(|fc| (fc, tc.name.as_str())))
+    }) {
+        let params = replace_id_with_params(raw_fork_config, fork_targets)?;
+        let descriptor = descriptors.entry(&params.url).or_default();
+
+        match raw_fork_config {
+            RawForkConfig::Id(name) => {
+                descriptor.scarb_names.push(name);
+            }
+            RawForkConfig::Params(_) => {
+                descriptor.test_paths.push(test_case_name);
+            }
+        };
+    }
+
+    for (url, descriptor) in descriptors {
+        const EXPECTED: &str = "0.6.0";
+
+        let client = JsonRpcClient::new(HttpTransport::new(url.parse::<Url>().unwrap()));
+        let version = client.spec_version().await?.parse::<Version>()?;
+
+        if !VersionReq::parse(EXPECTED)?.matches(&version) {
+            const NEW_LINE_INDENTED: &str = "\n    ";
+
+            let defined_in_scarb = descriptor
+                .scarb_names
+                .is_empty()
+                .not()
+                .then(|| {
+                    let scarb_names = descriptor.scarb_names.join(NEW_LINE_INDENTED);
+
+                    format!("Defined in Scarb.toml profiles:{NEW_LINE_INDENTED}{scarb_names}")
+                })
+                .unwrap_or_default();
+
+            let defined_with_fork = descriptor
+                .test_paths
+                .is_empty()
+                .not()
+                .then(|| {
+                    let test_paths = descriptor.test_paths.join(NEW_LINE_INDENTED);
+
+                    format!("Defined with #[fork] in:{NEW_LINE_INDENTED}{test_paths}")
+                })
+                .unwrap_or_default();
+
+            print_warning(&anyhow!(formatdoc!(
+                r#"
+                    RPC {url} has unsupported version ({version}), expected {EXPECTED}
+                    {defined_in_scarb}
+                    {defined_with_fork}
+                "#
+            )));
         }
     }
 
