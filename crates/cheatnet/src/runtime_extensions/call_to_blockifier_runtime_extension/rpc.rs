@@ -46,6 +46,31 @@ impl UsedResources {
                 .or_insert(0) += count;
         }
     }
+
+    pub(crate) fn subtract_syscall_counter(
+        self: &mut UsedResources,
+        syscall_counter: &SyscallCounter,
+    ) {
+        for (syscall, count) in syscall_counter {
+            let old_syscall_count = self
+                .execution_resources
+                .syscall_counter
+                .get(syscall)
+                .unwrap_or_else(|| panic!("Missing SyscallCounter entry {syscall:?}"));
+
+            let new_count = old_syscall_count.checked_sub(*count).unwrap_or_else(|| {
+                panic!("Underflow when subtracting syscall counts for {syscall:?}")
+            });
+
+            if new_count != 0 {
+                self.execution_resources
+                    .syscall_counter
+                    .insert(*syscall, new_count);
+            } else {
+                self.execution_resources.syscall_counter.remove(syscall);
+            }
+        }
+    }
 }
 
 /// Enum representing possible call execution result, along with the data
@@ -238,9 +263,15 @@ pub fn call_entry_point(
             call_info.get_sorted_l2_to_l1_payloads_length().unwrap()
         }),
     };
-    // add execution resources used by call contract, library call or l1 handler execution to all used resources
+
+    // add execution resources used by call contract, library call or l1 handler execution
+    // to resources used by the top call (representing test execution)
     runtime_state
         .cheatnet_state
+        .trace_data
+        .current_call_stack
+        .top()
+        .borrow_mut()
         .used_resources
         .extend(&used_resources);
 

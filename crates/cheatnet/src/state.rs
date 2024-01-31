@@ -142,6 +142,8 @@ pub enum CheatStatus<T> {
 #[derive(Clone)]
 pub struct CallTrace {
     pub entry_point: CallEntryPoint,
+    // These include resources used by internal calls
+    pub used_resources: UsedResources,
     pub nested_calls: Vec<Rc<RefCell<CallTrace>>>,
 }
 
@@ -194,9 +196,6 @@ pub struct CheatnetState {
     pub detected_events: Vec<Event>,
     pub deploy_salt_base: u32,
     pub block_info: BlockInfo,
-    // execution resources used by all contract calls
-    pub used_resources: UsedResources,
-
     pub trace_data: TraceData,
 }
 
@@ -204,6 +203,7 @@ impl Default for CheatnetState {
     fn default() -> Self {
         let test_call = Rc::new(RefCell::new(CallTrace {
             entry_point: build_test_entry_point(),
+            used_resources: Default::default(),
             nested_calls: vec![],
         }));
         Self {
@@ -222,7 +222,6 @@ impl Default for CheatnetState {
             detected_events: vec![],
             deploy_salt_base: 0,
             block_info: Default::default(),
-            used_resources: Default::default(),
             trace_data: TraceData {
                 current_call_stack: NotEmptyCallStack::from(test_call),
             },
@@ -299,6 +298,7 @@ impl TraceData {
     pub fn enter_nested_call(&mut self, entry_point: CallEntryPoint) {
         let new_call = Rc::new(RefCell::new(CallTrace {
             entry_point,
+            used_resources: Default::default(),
             nested_calls: vec![],
         }));
         let current_call = self.current_call_stack.top();
@@ -311,8 +311,9 @@ impl TraceData {
         self.current_call_stack.push(new_call);
     }
 
-    pub fn exit_nested_call(&mut self) {
-        self.current_call_stack.pop();
+    pub fn exit_nested_call(&mut self, resources: UsedResources) {
+        let last_call = self.current_call_stack.pop();
+        last_call.borrow_mut().used_resources = resources;
     }
 }
 

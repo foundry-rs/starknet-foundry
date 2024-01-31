@@ -72,27 +72,33 @@ pub fn deploy_at(
         ctor_context,
         calldata,
         u64::MAX,
-    )
-    .map(|_call_info| contract_address)
-    .map_err(|err| {
+    );
+    runtime_state.cheatnet_state.increment_deploy_salt_base();
+
+    let used_resources = UsedResources {
+        execution_resources: resources,
+        l2_to_l1_payloads_length: result.as_ref().map_or(vec![], |call_info| {
+            call_info.get_sorted_l2_to_l1_payloads_length().unwrap()
+        }),
+    };
+    // add execution resources used by call deploy
+    // to resources used by the top call (representing test execution)
+    runtime_state
+        .cheatnet_state
+        .trace_data
+        .current_call_stack
+        .top()
+        .borrow_mut()
+        .used_resources
+        .extend(&used_resources);
+
+    result.map(|_call_info| contract_address).map_err(|err| {
         let call_contract_failure = CallFailure::from_execution_error(
             &err,
             &AddressOrClassHash::ContractAddress(contract_address),
         );
         CheatcodeError::from(call_contract_failure)
-    });
-    runtime_state.cheatnet_state.increment_deploy_salt_base();
-
-    // add execution resources used by deploy to all used resources
-    runtime_state
-        .cheatnet_state
-        .used_resources
-        .extend(&UsedResources {
-            execution_resources: resources,
-            l2_to_l1_payloads_length: vec![],
-        });
-
-    result
+    })
 }
 
 pub fn deploy(

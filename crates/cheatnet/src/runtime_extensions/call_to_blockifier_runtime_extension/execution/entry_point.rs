@@ -24,6 +24,7 @@ use starknet_api::{
     transaction::{Calldata, TransactionVersion},
 };
 use std::collections::HashSet;
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 
 // blockifier/src/execution/entry_point.rs:180 (CallEntryPoint::execute)
 pub fn execute_call_entry_point(
@@ -35,7 +36,7 @@ pub fn execute_call_entry_point(
 ) -> EntryPointExecutionResult<CallInfo> {
     // region: Modified blockifier code
     // We skip recursion depth validation here.
-
+    let resources_before_call = resources.clone();
     runtime_state
         .cheatnet_state
         .trace_data
@@ -44,6 +45,10 @@ pub fn execute_call_entry_point(
     if let Some(ret_data) =
         get_ret_data_by_call_entry_point(entry_point, runtime_state.cheatnet_state)
     {
+        runtime_state
+            .cheatnet_state
+            .trace_data
+            .exit_nested_call(UsedResources::default());
         return Ok(mocked_call_info(entry_point.clone(), ret_data.clone()));
     }
 
@@ -93,7 +98,19 @@ pub fn execute_call_entry_point(
         ),
     };
 
-    runtime_state.cheatnet_state.trace_data.exit_nested_call();
+    let mut resources = UsedResources {
+        execution_resources: ExecutionResources {
+            vm_resources: &resources.vm_resources - &resources_before_call.vm_resources,
+            syscall_counter: resources.syscall_counter.clone(),
+        },
+        l2_to_l1_payloads_length: vec![],
+    };
+    resources.subtract_syscall_counter(&resources_before_call.syscall_counter);
+
+    runtime_state
+        .cheatnet_state
+        .trace_data
+        .exit_nested_call(resources);
 
     result.map_err(|error| {
         // endregion
@@ -160,15 +177,17 @@ pub fn execute_constructor_entry_point(
     // endregion
 }
 
-fn get_ret_data_by_call_entry_point<'a>(
+fn get_ret_data_by_call_entry_point(
     call: &CallEntryPoint,
-    cheatnet_state: &'a CheatnetState,
-) -> Option<&'a Vec<StarkFelt>> {
+    cheatnet_state: &CheatnetState,
+) -> Option<Vec<StarkFelt>> {
     if let Some(contract_address) = call.code_address {
         if let Some(contract_functions) = cheatnet_state.mocked_functions.get(&contract_address) {
             let entrypoint_selector = call.entry_point_selector;
 
-            let ret_data = contract_functions.get(&entrypoint_selector);
+            let ret_data = contract_functions
+                .get(&entrypoint_selector)
+                .map(std::clone::Clone::clone);
             return ret_data;
         }
     }

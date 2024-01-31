@@ -1,6 +1,6 @@
 use std::fs;
 
-use forge_runner::trace_data::{CallTrace, TRACE_DIR};
+use forge_runner::trace_data::{ProfilerCallTrace, TRACE_DIR};
 
 use crate::e2e::common::runner::{setup_package, test_runner};
 
@@ -37,7 +37,7 @@ fn simple_package_save_trace() {
     )
     .unwrap();
 
-    let call_trace: CallTrace =
+    let call_trace: ProfilerCallTrace =
         serde_json::from_str(&trace_data).expect("Failed to parse call_trace");
 
     assert!(call_trace.nested_calls.is_empty());

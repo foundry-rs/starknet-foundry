@@ -750,47 +750,47 @@ fn concat_u128_bytes(low: &[u8; 32], high: &[u8; 32]) -> [u8; 32] {
 }
 
 #[must_use]
-pub fn get_all_execution_resources(runtime: ForgeRuntime) -> UsedResources {
-    let runtime_execution_resources = runtime
+pub fn update_top_call_execution_resources(runtime: ForgeRuntime) -> UsedResources {
+    let starknet_runtime = runtime
         .extended_runtime
         .extended_runtime
         .extended_runtime
-        .extended_runtime
-        .hint_handler
-        .resources
-        .clone();
-    let runtime_l1_to_l2_messages = runtime
-        .extended_runtime
-        .extended_runtime
-        .extended_runtime
-        .extended_runtime
-        .hint_handler
-        .l2_to_l1_messages;
+        .extended_runtime;
+    let test_code_execution_resources = starknet_runtime.hint_handler.resources.clone();
+    let test_code_l1_to_l2_messages = starknet_runtime.hint_handler.l2_to_l1_messages;
 
     let runtime_call_info = CallInfo {
         execution: CallExecution {
-            l2_to_l1_messages: runtime_l1_to_l2_messages,
+            l2_to_l1_messages: test_code_l1_to_l2_messages,
             ..Default::default()
         },
+        inner_calls: starknet_runtime.hint_handler.inner_calls,
         ..Default::default()
     };
-    let runtime_l2_to_l1_payloads_length = runtime_call_info
+    let test_code_l2_to_l1_payloads_length = runtime_call_info
         .get_sorted_l2_to_l1_payloads_length()
         .unwrap();
 
-    let mut all_resources = UsedResources {
-        execution_resources: runtime_execution_resources,
-        l2_to_l1_payloads_length: runtime_l2_to_l1_payloads_length,
+    let test_code_resources = UsedResources {
+        execution_resources: test_code_execution_resources,
+        l2_to_l1_payloads_length: test_code_l2_to_l1_payloads_length,
     };
 
-    let cheatnet_used_resources = &runtime
+    let top_call = runtime
         .extended_runtime
         .extended_runtime
         .extended_runtime
         .extension
         .cheatnet_state
-        .used_resources;
-    all_resources.extend(cheatnet_used_resources);
+        .trace_data
+        .current_call_stack
+        .top();
+    top_call
+        .borrow_mut()
+        .used_resources
+        .extend(&test_code_resources);
+
+    let all_resources = top_call.borrow().used_resources.clone();
 
     all_resources
 }
