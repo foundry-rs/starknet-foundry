@@ -30,8 +30,7 @@ fn check_nonce(
         contract_address,
         &write_nonce,
         &[],
-    )
-    .unwrap();
+    );
 
     assert_success!(output, vec![]);
 
@@ -41,8 +40,7 @@ fn check_nonce(
         contract_address,
         &read_nonce,
         &[],
-    )
-    .unwrap();
+    );
 
     recover_data(output)[0].clone()
 }

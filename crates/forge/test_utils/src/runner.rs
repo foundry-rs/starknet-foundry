@@ -4,8 +4,9 @@ use assert_fs::TempDir;
 use camino::Utf8PathBuf;
 use forge_runner::test_crate_summary::TestCrateSummary;
 use indoc::formatdoc;
-use scarb_api::{get_contracts_map, StarknetContractArtifacts};
-use scarb_metadata::MetadataCommand;
+use scarb_api::{
+    get_contracts_map, metadata::MetadataCommandExt, ScarbCommand, StarknetContractArtifacts,
+};
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -76,10 +77,10 @@ impl Contract {
             bail!("scarb build did not succeed")
         }
 
-        let scarb_metadata = MetadataCommand::new()
+        let scarb_metadata = ScarbCommand::metadata()
             .current_dir(dir.path())
             .inherit_stderr()
-            .exec()?;
+            .run()?;
         let package = scarb_metadata
             .packages
             .iter()

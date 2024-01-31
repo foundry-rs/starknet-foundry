@@ -1,6 +1,6 @@
 use crate::constants::TEST_ADDRESS;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
-    AddressOrClassHash, CallFailure,
+    AddressOrClassHash, CallFailure, UsedResources,
 };
 use crate::state::BlockifierState;
 use crate::CheatnetState;
@@ -27,19 +27,13 @@ use starknet_api::transaction::Calldata;
 
 use super::CheatcodeError;
 
-#[derive(Debug)]
-pub struct DeployCallPayload {
-    pub used_resources: ExecutionResources,
-    pub contract_address: ContractAddress,
-}
-
 pub fn deploy_at(
     blockifier_state: &mut BlockifierState,
     cheatnet_state: &mut CheatnetState,
     class_hash: &ClassHash,
     calldata: &[Felt252],
     contract_address: ContractAddress,
-) -> Result<DeployCallPayload, CheatcodeError> {
+) -> Result<ContractAddress, CheatcodeError> {
     let blockifier_state_raw: &mut dyn State = blockifier_state.blockifier_state;
 
     if let Ok(class_hash) = blockifier_state_raw.get_class_hash_at(contract_address) {
@@ -69,20 +63,17 @@ pub fn deploy_at(
         calldata.to_vec().iter().map(felt_to_stark_felt).collect(),
     ));
 
-    let resources = &mut ExecutionResources::default();
+    let mut resources = ExecutionResources::default();
     let result = cheated_syscalls::execute_deployment(
         blockifier_state_raw,
-        resources,
+        &mut resources,
         entry_point_execution_ctx,
         ctor_context,
         calldata,
         u64::MAX,
         cheatnet_state,
     )
-    .map(|_call_info| DeployCallPayload {
-        used_resources: resources.clone(),
-        contract_address,
-    })
+    .map(|_call_info| contract_address)
     .map_err(|err| {
         let call_contract_failure = CallFailure::from_execution_error(
             &err,
@@ -92,6 +83,12 @@ pub fn deploy_at(
     });
     cheatnet_state.increment_deploy_salt_base();
 
+    // add execution resources used by deploy to all used resources
+    cheatnet_state.used_resources.extend(&UsedResources {
+        execution_resources: resources,
+        l2_to_l1_payloads_length: vec![],
+    });
+
     result
 }
 
@@ -100,7 +97,7 @@ pub fn deploy(
     cheatnet_state: &mut CheatnetState,
     class_hash: &ClassHash,
     calldata: &[Felt252],
-) -> Result<DeployCallPayload, CheatcodeError> {
+) -> Result<ContractAddress, CheatcodeError> {
     let contract_address = cheatnet_state.precalculate_address(class_hash, calldata);
 
     deploy_at(

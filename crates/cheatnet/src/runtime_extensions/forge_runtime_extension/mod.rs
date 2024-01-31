@@ -3,9 +3,7 @@ use std::collections::HashMap;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     CallFailure, CallResult, UsedResources,
 };
-use crate::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::{
-    deploy, deploy_at, DeployCallPayload,
-};
+use crate::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::{deploy, deploy_at};
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
 use crate::state::{BlockifierState, CallTrace, CheatTarget};
 use anyhow::{Context, Result};
@@ -288,9 +286,9 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
             "deploy" => {
                 let class_hash = reader.read_felt().into_();
                 let calldata = reader.read_vec();
-                let cheatable_starknet_runtime = &mut extended_runtime.extended_runtime;
+                let cheatnet_runtime = &mut extended_runtime.extended_runtime;
                 let mut blockifier_state = BlockifierState::from(
-                    cheatable_starknet_runtime
+                    cheatnet_runtime
                         .extended_runtime
                         .extended_runtime
                         .hint_handler
@@ -299,10 +297,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 handle_deploy_result(deploy(
                     &mut blockifier_state,
-                    cheatable_starknet_runtime
-                        .extended_runtime
-                        .extension
-                        .cheatnet_state,
+                    cheatnet_runtime.extended_runtime.extension.cheatnet_state,
                     &class_hash,
                     &calldata,
                 ))
@@ -393,16 +388,13 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let mut blockifier_state =
                     BlockifierState::from(cheatnet_runtime.extended_runtime.hint_handler.state);
 
-                match blockifier_state
-                    .l1_handler_execute(
-                        cheatnet_runtime.extension.cheatnet_state,
-                        contract_address,
-                        &function_name,
-                        &from_address,
-                        &payload,
-                    )
-                    .result
-                {
+                match blockifier_state.l1_handler_execute(
+                    cheatnet_runtime.extension.cheatnet_state,
+                    contract_address,
+                    &function_name,
+                    &from_address,
+                    &payload,
+                ) {
                     CallResult::Success { .. } => {
                         Ok(CheatcodeHandlingResult::Handled(vec![Felt252::from(0)]))
                     }
@@ -667,11 +659,11 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 }
 
 fn handle_deploy_result(
-    deploy_result: Result<DeployCallPayload, CheatcodeError>,
+    deploy_result: Result<ContractAddress, CheatcodeError>,
 ) -> Result<CheatcodeHandlingResult, EnhancedHintError> {
     match deploy_result {
-        Ok(deploy_payload) => {
-            let felt_contract_address: Felt252 = deploy_payload.contract_address.into_();
+        Ok(contract_address) => {
+            let felt_contract_address = contract_address.into_();
             let result = vec![Felt252::from(0), felt_contract_address];
             Ok(CheatcodeHandlingResult::Handled(result))
         }

@@ -1,4 +1,3 @@
-use anyhow::Result;
 use blockifier::execution::deprecated_syscalls::hint_processor::SyscallCounter;
 use blockifier::execution::execution_utils::stark_felt_to_felt;
 use cairo_lang_runner::casm_run::format_next_item;
@@ -48,13 +47,6 @@ impl UsedResources {
                 .or_insert(0) += count;
         }
     }
-}
-
-/// Represents call output, along with the data and the resources consumed during execution
-#[derive(Debug)]
-pub struct CallOutput {
-    pub result: CallResult,
-    pub used_resources: UsedResources,
 }
 
 /// Enum representing possible call execution result, along with the data
@@ -189,7 +181,7 @@ pub fn call_l1_handler(
     contract_address: &ContractAddress,
     entry_point_selector: &Felt252,
     calldata: &[Felt252],
-) -> Result<CallOutput> {
+) -> CallResult {
     let entry_point_selector = create_entry_point_selector(entry_point_selector);
     let calldata = create_execute_calldata(calldata);
 
@@ -218,7 +210,7 @@ pub fn call_entry_point(
     cheatnet_state: &mut CheatnetState,
     mut entry_point: CallEntryPoint,
     starknet_identifier: &AddressOrClassHash,
-) -> Result<CallOutput> {
+) -> CallResult {
     let mut resources = ExecutionResources::default();
     let account_context = build_transaction_context();
     let block_context = build_block_context(cheatnet_state.block_info);
@@ -239,15 +231,16 @@ pub fn call_entry_point(
         &mut context,
     );
 
-    let result = CallResult::from_execution_result(&exec_result, starknet_identifier);
+    let call_result = CallResult::from_execution_result(&exec_result, starknet_identifier);
 
-    Ok(CallOutput {
-        result,
-        used_resources: UsedResources {
-            execution_resources: resources,
-            l2_to_l1_payloads_length: exec_result.map_or(vec![], |call_info| {
-                call_info.get_sorted_l2_to_l1_payloads_length().unwrap()
-            }),
-        },
-    })
+    let used_resources = UsedResources {
+        execution_resources: resources,
+        l2_to_l1_payloads_length: exec_result.map_or(vec![], |call_info| {
+            call_info.get_sorted_l2_to_l1_payloads_length().unwrap()
+        }),
+    };
+    // add execution resources used by call contract, library call or l1 handler execution to all used resources
+    cheatnet_state.used_resources.extend(&used_resources);
+
+    call_result
 }

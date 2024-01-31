@@ -18,14 +18,10 @@ fn precalculate_address_simple() {
         .unwrap();
 
     let precalculated1 = cheatnet_state.precalculate_address(&class_hash, &[]);
-    let actual1 = deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[])
-        .unwrap()
-        .contract_address;
+    let actual1 = deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[]).unwrap();
 
     let precalculated2 = cheatnet_state.precalculate_address(&class_hash, &[]);
-    let actual2 = deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[])
-        .unwrap()
-        .contract_address;
+    let actual2 = deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[]).unwrap();
 
     assert_eq!(precalculated1, actual1);
     assert_eq!(precalculated2, actual2);
@@ -55,8 +51,7 @@ fn precalculate_address_calldata() {
         &class_hash,
         &calldata1,
     )
-    .unwrap()
-    .contract_address;
+    .unwrap();
 
     let precalculated2_post_deploy = cheatnet_state.precalculate_address(&class_hash, &calldata2);
 
@@ -66,8 +61,7 @@ fn precalculate_address_calldata() {
         &class_hash,
         &calldata2,
     )
-    .unwrap()
-    .contract_address;
+    .unwrap();
 
     assert_eq!(precalculated1, actual1);
     assert_ne!(precalculated1, precalculated2);

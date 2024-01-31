@@ -14,9 +14,10 @@ use forge_runner::test_crate_summary::TestCrateSummary;
 use forge_runner::{RunnerConfig, RunnerParams, CACHE_DIR};
 use rand::{thread_rng, RngCore};
 use scarb_api::{
-    get_contracts_map, package_matches_version_requirement, target_dir_for_workspace, ScarbCommand,
+    get_contracts_map,
+    metadata::{Metadata, MetadataCommandExt, PackageMetadata},
+    package_matches_version_requirement, target_dir_for_workspace, ScarbCommand,
 };
-use scarb_metadata::{Metadata, MetadataCommand, PackageMetadata};
 use scarb_ui::args::PackagesFilter;
 
 use forge::block_number_map::BlockNumberMap;
@@ -189,7 +190,7 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
         ColorOption::Auto => (),
     }
 
-    let scarb_metadata = MetadataCommand::new().inherit_stderr().exec()?;
+    let scarb_metadata = ScarbCommand::metadata().inherit_stderr().run()?;
     warn_if_snforge_std_not_compatible(&scarb_metadata)?;
 
     let workspace_root = scarb_metadata.workspace.root.clone();
