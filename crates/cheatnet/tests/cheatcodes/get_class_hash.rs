@@ -1,6 +1,6 @@
 use crate::common::call_contract;
-use crate::common::state::create_cached_state;
-use crate::common::{felt_selector_from_name, get_contracts, state::create_cheatnet_state};
+use crate::common::state::{build_runtime_state, create_cached_state};
+use crate::common::{felt_selector_from_name, get_contracts, state::create_runtime_states};
 use cairo_felt::Felt252;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::deploy;
 use conversions::felt252::FromShortString;
@@ -9,7 +9,8 @@ use conversions::IntoConv;
 #[test]
 fn get_class_hash_simple() {
     let mut cached_state = create_cached_state();
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
+    let (mut blockifier_state, mut runtime_state_raw) = create_runtime_states(&mut cached_state);
+    let mut runtime_state = build_runtime_state(&mut runtime_state_raw);
 
     let contracts = get_contracts();
     let contract_name = Felt252::from_short_string("HelloStarknet").unwrap();
@@ -17,7 +18,7 @@ fn get_class_hash_simple() {
         .declare(&contract_name, &contracts)
         .unwrap();
     let contract_address =
-        deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[]).unwrap();
+        deploy(&mut blockifier_state, &mut runtime_state, &class_hash, &[]).unwrap();
 
     assert_eq!(
         class_hash,
@@ -28,7 +29,8 @@ fn get_class_hash_simple() {
 #[test]
 fn get_class_hash_upgrade() {
     let mut cached_state = create_cached_state();
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
+    let (mut blockifier_state, mut runtime_state_raw) = create_runtime_states(&mut cached_state);
+    let mut runtime_state = build_runtime_state(&mut runtime_state_raw);
 
     let contracts = get_contracts();
     let contract_name = Felt252::from_short_string("GetClassHashCheckerUpg").unwrap();
@@ -36,7 +38,7 @@ fn get_class_hash_upgrade() {
         .declare(&contract_name, &contracts)
         .unwrap();
     let contract_address =
-        deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[]).unwrap();
+        deploy(&mut blockifier_state, &mut runtime_state, &class_hash, &[]).unwrap();
 
     assert_eq!(
         class_hash,
@@ -51,7 +53,7 @@ fn get_class_hash_upgrade() {
     let selector = felt_selector_from_name("upgrade");
     call_contract(
         &mut blockifier_state,
-        &mut cheatnet_state,
+        &mut runtime_state,
         &contract_address,
         &selector,
         &[hello_starknet_class_hash.into_()],

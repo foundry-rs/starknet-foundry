@@ -1,7 +1,8 @@
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     call_l1_handler, CallResult,
 };
-use crate::state::{BlockifierState, CheatnetState};
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeState;
+use crate::state::BlockifierState;
 use blockifier::abi::abi_utils::starknet_keccak;
 use cairo_felt::Felt252;
 use starknet_api::core::ContractAddress;
@@ -9,7 +10,7 @@ use starknet_api::core::ContractAddress;
 impl BlockifierState<'_> {
     pub fn l1_handler_execute(
         &mut self,
-        cheatable_state: &mut CheatnetState,
+        runtime_state: &mut RuntimeState,
         contract_address: ContractAddress,
         function_name: &Felt252,
         from_address: &Felt252,
@@ -22,7 +23,7 @@ impl BlockifierState<'_> {
 
         call_l1_handler(
             self,
-            cheatable_state,
+            runtime_state,
             &contract_address,
             &selector,
             calldata.as_slice(),

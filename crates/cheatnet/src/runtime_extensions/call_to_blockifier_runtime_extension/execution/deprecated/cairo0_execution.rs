@@ -1,5 +1,5 @@
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::deprecated::syscalls::CheatableSyscallHandler;
-use crate::state::CheatnetState;
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeState;
 use blockifier::execution::call_info::CallInfo;
 use blockifier::execution::contract_class::ContractClassV0;
 use blockifier::execution::deprecated_entry_point_execution::{
@@ -20,7 +20,7 @@ pub fn execute_entry_point_call_cairo0(
     call: CallEntryPoint,
     contract_class: ContractClassV0,
     state: &mut dyn State,
-    cheatnet_state: &mut CheatnetState, // Added parameter
+    runtime_state: &mut RuntimeState,
     resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
 ) -> EntryPointExecutionResult<CallInfo> {
@@ -46,7 +46,7 @@ pub fn execute_entry_point_call_cairo0(
     // region: Modified blockifier code
     let mut cheatable_syscall_handler = CheatableSyscallHandler {
         child: syscall_handler,
-        cheatnet_state,
+        cheatnet_state: runtime_state.cheatnet_state,
     };
 
     // Execute.
