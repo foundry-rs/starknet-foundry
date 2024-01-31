@@ -1006,7 +1006,7 @@ fn detailed_resources_flag() {
 
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
         
@@ -1021,6 +1021,6 @@ fn detailed_resources_flag() {
                 syscalls: ([..])
                 
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
-        "#}
+        "}
     );
 }

@@ -151,7 +151,7 @@ fn combine_configs(
         fuzzer_seed
             .or(forge_config.fuzzer_seed)
             .unwrap_or_else(|| thread_rng().next_u64()),
-        detailed_resources,
+        detailed_resources || forge_config.detailed_resources,
         save_trace_data || forge_config.save_trace_data,
     )
 }
@@ -370,6 +370,7 @@ mod tests {
             fork: vec![],
             fuzzer_runs: Some(1234),
             fuzzer_seed: Some(500),
+            detailed_resources: true,
             save_trace_data: true,
         };
         let workspace_root: Utf8PathBuf = Default::default();
@@ -379,7 +380,7 @@ mod tests {
             false,
             None,
             None,
-            true,
+            false,
             false,
             &config_from_scarb,
         );
@@ -398,6 +399,7 @@ mod tests {
             fork: vec![],
             fuzzer_runs: Some(1234),
             fuzzer_seed: Some(1000),
+            detailed_resources: false,
             save_trace_data: false,
         };
         let config = combine_configs(
