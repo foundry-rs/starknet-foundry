@@ -4,7 +4,7 @@ pub const PREV_TESTS_FAILED: &str = ".prev_tests_failed";
 use anyhow::{Ok, Result};
 use camino::Utf8PathBuf;
 use forge_runner::test_case_summary::AnyTestCaseSummary;
-use scarb_metadata::MetadataCommand;
+use scarb_api::{metadata::MetadataCommandExt, ScarbCommand};
 use std::fs::{self, File};
 use std::io::{BufRead, BufReader, BufWriter, Write};
 
@@ -47,7 +47,7 @@ pub fn set_cached_failed_tests_names(
 }
 
 pub fn clean_cache() -> Result<()> {
-    let scarb_metadata = MetadataCommand::new().inherit_stderr().exec()?;
+    let scarb_metadata = ScarbCommand::metadata().inherit_stderr().run()?;
     let workspace_root = scarb_metadata.workspace.root.clone();
     let cache_dir = workspace_root.join(CACHE_DIR);
     if cache_dir.exists() {

@@ -29,9 +29,8 @@ fn prank_cairo0_contract(selector: &str) {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
-    let CallResult::Success { ret_data } = output.result else {
+    );
+    let CallResult::Success { ret_data } = output else {
         panic!("Wrong call output")
     };
     let caller = &ret_data[0];
@@ -47,9 +46,8 @@ fn prank_cairo0_contract(selector: &str) {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
-    let CallResult::Success { ret_data } = output.result else {
+    );
+    let CallResult::Success { ret_data } = output else {
         panic!("Wrong call output")
     };
     let pranked_caller = &ret_data[0];
@@ -62,9 +60,8 @@ fn prank_cairo0_contract(selector: &str) {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
-    let CallResult::Success { ret_data } = output.result else {
+    );
+    let CallResult::Success { ret_data } = output else {
         panic!("Wrong call output")
     };
     let unpranked_caller = &ret_data[0];
@@ -89,9 +86,8 @@ fn roll_cairo0_contract(selector: &str) {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
-    let CallResult::Success { ret_data } = output.result else {
+    );
+    let CallResult::Success { ret_data } = output else {
         panic!("Wrong call output")
     };
     let block_number = &ret_data[0];
@@ -104,9 +100,8 @@ fn roll_cairo0_contract(selector: &str) {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
-    let CallResult::Success { ret_data } = output.result else {
+    );
+    let CallResult::Success { ret_data } = output else {
         panic!("Wrong call output")
     };
     let rolled_block_number = &ret_data[0];
@@ -119,9 +114,8 @@ fn roll_cairo0_contract(selector: &str) {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
-    let CallResult::Success { ret_data } = output.result else {
+    );
+    let CallResult::Success { ret_data } = output else {
         panic!("Wrong call output")
     };
     let unrolled_block_number = &ret_data[0];
@@ -146,9 +140,8 @@ fn warp_cairo0_contract(selector: &str) {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
-    let CallResult::Success { ret_data } = output.result else {
+    );
+    let CallResult::Success { ret_data } = output else {
         panic!("Wrong call output")
     };
     let block_timestamp = &ret_data[0];
@@ -160,9 +153,8 @@ fn warp_cairo0_contract(selector: &str) {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
-    let CallResult::Success { ret_data } = output.result else {
+    );
+    let CallResult::Success { ret_data } = output else {
         panic!("Wrong call output")
     };
     let warped_block_timestamp = &ret_data[0];
@@ -175,9 +167,8 @@ fn warp_cairo0_contract(selector: &str) {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
-    let CallResult::Success { ret_data } = output.result else {
+    );
+    let CallResult::Success { ret_data } = output else {
         panic!("Wrong call output")
     };
     let unwarped_block_timestamp = &ret_data[0];

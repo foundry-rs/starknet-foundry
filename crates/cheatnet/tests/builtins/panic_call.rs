@@ -22,8 +22,7 @@ fn call_contract_error() {
         &contract_address,
         &selector,
         &[Felt252::from(420)],
-    )
-    .unwrap();
+    );
 
     assert_error!(output, "0x496e70757420746f6f206c6f6e6720666f7220617267756d656e7473 ('Input too long for arguments')");
 }
@@ -44,8 +43,7 @@ fn call_contract_panic() {
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     assert_panic!(
         output,

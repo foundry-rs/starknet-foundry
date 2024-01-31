@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Gas estimation is now aligned with the Starknet v0.13
 
+### Fixed
+
+- Gas used in constructors and handling of L1 messages is now properly included in total gas cost
+
 ## [0.16.0] - 2024-01-26
 
 ### Forge

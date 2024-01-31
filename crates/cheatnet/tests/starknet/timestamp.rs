@@ -24,8 +24,7 @@ fn check_timestamp(
         contract_address,
         &write_timestamp,
         &[],
-    )
-    .unwrap();
+    );
 
     assert_success!(output, vec![]);
 
@@ -35,9 +34,7 @@ fn check_timestamp(
         contract_address,
         &read_timestamp,
         &[],
-    )
-    .unwrap();
-
+    );
     recover_data(output)[0].clone()
 }
 
