@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Changed
 
+- Use `scarb metadata` regular output instead of json
 - Gas estimation is now aligned with the Starknet v0.13
 
 ### Fixed
