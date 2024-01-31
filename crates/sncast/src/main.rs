@@ -443,7 +443,7 @@ fn run_script_command(
             &mut artifacts,
             &provider,
             runtime,
-            &config,
+            config,
         );
 
         print_command_result("script", &mut result, numbers_format, output_format)?;
