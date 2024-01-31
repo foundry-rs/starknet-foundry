@@ -113,13 +113,15 @@ pub fn build(config: &BuildConfig) -> Result<HashMap<String, StarknetContractArt
     let metadata = get_scarb_metadata_command(&config.scarb_toml_path)?
         .exec()
         .expect("Failed to obtain metadata");
+    let profile = if metadata.profiles.contains(&config.profile) {
+        &config.profile
+    } else {
+        "dev"
+    };
     cmd.arg("--profile")
-        .arg(if metadata.profiles.contains(&config.profile) {
-            &config.profile
-        } else {
-            "dev"
-        });
-    cmd.arg("build").manifest_path(&config.scarb_toml_path);
+        .arg(&profile)
+        .arg("build")
+        .manifest_path(&config.scarb_toml_path);
     if config.json {
         cmd.json();
     }
@@ -127,7 +129,7 @@ pub fn build(config: &BuildConfig) -> Result<HashMap<String, StarknetContractArt
         .map_err(|e| anyhow!(format!("Failed to build using scarb; {e}")))?;
     let package = get_package_metadata(&metadata, &config.scarb_toml_path)
         .with_context(|| anyhow!("Failed to find package"))?;
-    get_contracts_map(&metadata, &package.id)
+    get_contracts_map(&metadata, &package.id, Some(&profile))
 }
 
 #[cfg(test)]
