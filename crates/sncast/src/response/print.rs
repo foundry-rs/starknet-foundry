@@ -115,11 +115,11 @@ pub fn print_sncast_command_result<T: CommandResponse>(
 
 pub fn get_formatted_output<T: CommandResponse>(
     result: &mut Result<T>,
-    command_type: String,
-    command: String,
+    header_key: String,
+    header_value: String,
     output_config: OutputFormattingConfig,
 ) -> Result<Vec<String>> {
-    let output = get_output(result, command_type, command);
+    let output = get_output(result, header_key, header_value);
     format_output(output, output_config)
 }
 
