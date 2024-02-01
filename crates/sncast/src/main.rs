@@ -11,7 +11,10 @@ use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand};
 use sncast::helpers::configuration::{load_config, CastConfig};
 use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
-use sncast::helpers::scarb_utils::{build, get_package_metadata, get_scarb_manifest, get_scarb_metadata_with_deps, BuildConfig, ensure_scarb_manifest_path, build_and_load_artifacts, assert_manifest_path_exists};
+use sncast::helpers::scarb_utils::{
+    assert_manifest_path_exists, build_and_load_artifacts, get_package_metadata,
+    get_scarb_metadata_with_deps, BuildConfig,
+};
 use sncast::{
     chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_nonce, get_provider,
     NumbersFormat, WaitForTx,
@@ -124,11 +127,14 @@ fn main() -> Result<()> {
     if let Commands::Script(script) = cli.command {
         let manifest_path = assert_manifest_path_exists(&cli.path_to_scarb_toml)?;
         let package_metadata = get_package_metadata(&manifest_path, &script.package)?;
-        let mut artifacts = build_and_load_artifacts(&package_metadata, &BuildConfig {
-            scarb_toml_path: manifest_path.clone(),
-            json: cli.json,
-            profile: cli.profile.unwrap_or("dev".to_string()),
-        })
+        let mut artifacts = build_and_load_artifacts(
+            &package_metadata,
+            &BuildConfig {
+                scarb_toml_path: manifest_path.clone(),
+                json: cli.json,
+                profile: cli.profile.unwrap_or("dev".to_string()),
+            },
+        )
         .expect("Failed to build script");
         let metadata_with_deps = get_scarb_metadata_with_deps(&manifest_path)?;
         let mut result = starknet_commands::script::run(
@@ -178,11 +184,15 @@ async fn run_async_command(
             .await?;
             let manifest_path = assert_manifest_path_exists(&cli.path_to_scarb_toml)?;
             let package_metadata = get_package_metadata(&manifest_path, &declare.package)?;
-            let artifacts = build_and_load_artifacts(&package_metadata, &BuildConfig {
-                scarb_toml_path: manifest_path,
-                json: cli.json,
-                profile: cli.profile.unwrap_or("dev".to_string()),
-            }).expect("Failed to build contract");;
+            let artifacts = build_and_load_artifacts(
+                &package_metadata,
+                &BuildConfig {
+                    scarb_toml_path: manifest_path,
+                    json: cli.json,
+                    profile: cli.profile.unwrap_or("dev".to_string()),
+                },
+            )
+            .expect("Failed to build contract");
             let mut result = starknet_commands::declare::declare(
                 &declare.contract,
                 declare.max_fee,

@@ -6,8 +6,6 @@ use scarb_api::{
     ScarbCommand, ScarbCommandError, StarknetContractArtifacts,
 };
 use scarb_ui::args::PackagesFilter;
-use serde::{Deserialize, Serialize};
-use serde_json::Value;
 use std::collections::HashMap;
 use std::env;
 use std::str::FromStr;
@@ -130,7 +128,8 @@ pub fn build(package: &PackageMetadata, config: &BuildConfig) -> Result<(), Scar
     let filter = PackagesFilter::generate_for::<Metadata>([package].into_iter());
 
     let mut cmd = ScarbCommand::new_with_stdio();
-    let metadata = get_scarb_metadata_with_deps(&config.scarb_toml_path)?;
+    let metadata =
+        get_scarb_metadata_with_deps(&config.scarb_toml_path).expect("Failed to obtain metadata");
     let profile = if metadata.profiles.contains(&config.profile) {
         &config.profile
     } else {
@@ -155,16 +154,12 @@ pub fn build_and_load_artifacts(
     build(package, config).map_err(|e| anyhow!(format!("Failed to build using scarb; {e}")))?;
 
     let metadata = get_scarb_metadata_with_deps(&config.scarb_toml_path)?;
-    get_contracts_map(&metadata, &package.id, Some(profile))
+    get_contracts_map(&metadata, &package.id, Some(&config.profile))
 }
 
 #[cfg(test)]
 mod tests {
     use crate::helpers::scarb_utils::{get_package_metadata, get_scarb_metadata};
-    use crate::helpers::scarb_utils::{WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
-    use camino::Utf8PathBuf;
-    use sealed_test::prelude::rusty_fork_test;
-    use sealed_test::prelude::sealed_test;
 
     #[test]
     fn test_get_scarb_metadata() {

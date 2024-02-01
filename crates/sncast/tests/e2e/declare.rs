@@ -139,11 +139,12 @@ fn scarb_build_fails_when_wrong_cairo_path() {
 
     snapbox.assert().stderr_matches(indoc! {r"
         ...
-        Error: Failed to build using scarb; `scarb` exited with error
+        Failed to build contract: Failed to build using scarb; `scarb` exited with error
+        ...
     "});
 }
 
-#[should_panic(expected = "Failed to obtain metadata")]
+#[should_panic(expected = "Path to Scarb.toml manifest does not exist")]
 #[test]
 fn scarb_build_fails_scarb_toml_does_not_exist() {
     let args = vec![
@@ -219,6 +220,7 @@ fn test_too_low_max_fee() {
     "});
 }
 
+#[should_panic(expected = "Make sure you have enabled sierra code generation in Scarb.toml")]
 #[test]
 fn scarb_no_sierra_artifact() {
     let args = vec![
@@ -233,14 +235,11 @@ fn scarb_no_sierra_artifact() {
         "minimal_contract",
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
+    Command::new(cargo_bin!("sncast"))
         .current_dir(CONTRACTS_DIR.to_string() + "/no_sierra")
-        .args(args);
-
-    snapbox.assert().failure().stderr_matches(indoc! {r"
-        [..]Make sure you have enabled sierra code generation in Scarb.toml
-        ...
-    "});
+        .args(args)
+        .assert()
+        .success();
 }
 
 #[test]
