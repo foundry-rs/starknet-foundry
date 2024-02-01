@@ -213,29 +213,6 @@ fn scarb_build_fails_scarb_toml_does_not_exist() {
 }
 
 #[test]
-fn scarb_build_fails_manifest_does_not_exist() {
-    let args = vec![
-        "--url",
-        URL,
-        "--accounts-file",
-        "../accounts/accounts.json",
-        "--account",
-        "user1",
-        "declare",
-        "--contract-name",
-        "BuildFails",
-    ];
-
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(CONTRACTS_DIR.to_string() + "/")
-        .args(args);
-
-    snapbox.assert().stderr_matches(indoc! {r"
-        Error: Path to Scarb.toml manifest does not exist =[..]
-    "});
-}
-
-#[test]
 fn test_too_low_max_fee() {
     let contract_path =
         duplicate_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "2");
@@ -370,7 +347,6 @@ async fn test_worskpaces_package_specified_virtual_fibonacci() {
 
     let output = snapbox.assert().success().get_output().clone();
     let output = output.stdout.clone();
-
     let hash = get_transaction_hash(&output);
     let receipt = get_transaction_receipt(hash).await;
     assert!(matches!(receipt, Declare(_)));

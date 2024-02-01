@@ -214,44 +214,4 @@ mod tests {
         .unwrap();
         assert_eq!(metadata.name, "package2");
     }
-
-    #[test]
-    fn test_get_package_metadata_happy_default() {
-        let metadata =
-            get_package_metadata(&"tests/data/contracts/map/Scarb.toml".into(), &None).unwrap();
-        assert_eq!(metadata.name, "map");
-    }
-
-    #[test]
-    fn test_get_package_metadata_happy_by_name() {
-        let metadata = get_package_metadata(
-            &"tests/data/contracts/multiple_packages/Scarb.toml".into(),
-            &Some("package2".into()),
-        )
-        .unwrap();
-        assert_eq!(metadata.name, "package2");
-    }
-
-    #[test]
-    #[should_panic(
-        expected = "More than one package found in metadata - specify package using --package flag"
-    )]
-    fn test_get_package_metadata_more_than_one_default() {
-        get_package_metadata(
-            &"tests/data/contracts/multiple_packages/Scarb.toml".into(),
-            &None,
-        )
-        .unwrap();
-    }
-
-    #[test]
-    #[should_panic(expected = "Package whatever not found in scarb metadata")]
-    fn test_get_package_metadata_no_such_package() {
-        let metadata = get_package_metadata(
-            &"tests/data/contracts/multiple_packages/Scarb.toml".into(),
-            &Some("whatever".into()),
-        )
-        .unwrap();
-        assert_eq!(metadata.name, "package2");
-    }
 }
