@@ -6,12 +6,12 @@ use crate::helpers::fixtures::{
 use indoc::indoc;
 use serde_json::Value;
 use snapbox::cmd::{cargo_bin, Command};
+use sncast::helpers::configuration::copy_config_to_tempdir;
 use sncast::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
 use starknet::core::types::TransactionReceipt::DeployAccount;
 use std::{env, fs};
 use tempfile::TempDir;
 use test_case::test_case;
-use sncast::helpers::configuration::copy_config_to_tempdir;
 
 #[tokio::test]
 pub async fn test_happy_case() {
