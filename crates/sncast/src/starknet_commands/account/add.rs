@@ -52,6 +52,7 @@ pub struct Add {
     pub salt: Option<FieldElement>,
 
     /// If passed, a profile with corresponding data will be created in snfoundry.toml
+    #[allow(clippy::struct_field_names)]
     #[clap(long)]
     pub add_profile: Option<String>,
 }
