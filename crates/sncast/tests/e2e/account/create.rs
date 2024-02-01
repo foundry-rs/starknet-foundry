@@ -9,7 +9,6 @@ use sncast::helpers::constants::CREATE_KEYSTORE_PASSWORD_ENV_VAR;
 use std::{env, fs};
 use tempfile::TempDir;
 use test_case::test_case;
-use sncast::helpers::configuration::copy_config_to_tempdir;
 
 #[tokio::test]
 pub async fn test_happy_case() {
