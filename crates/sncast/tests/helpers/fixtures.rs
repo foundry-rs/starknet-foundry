@@ -293,17 +293,12 @@ pub fn duplicate_directory_and_salt_file(
     let dest_dir = Utf8PathBuf::from_path_buf(temp_dir.path().to_path_buf())
         .expect("Failed to create Utf8PathBuf from PathBuf");
 
-    let paths = fs::read_dir(src_dir.clone())
-        .unwrap()
-        .filter_map(Result::ok)
-        .map(|dir_entry| dir_entry.path())
-        .collect::<Vec<_>>();
-    fs_extra::copy_items(
-        &paths,
+    fs_extra::dir::copy(
+        &src_dir,
         &dest_dir,
-        &fs_extra::dir::CopyOptions::new().overwrite(true),
+        &fs_extra::dir::CopyOptions::new().content_only(true),
     )
-    .unwrap();
+    .expect("Unable to copy directory");
 
     let contract_code =
         fs::read_to_string(src_dir.join(file_to_be_salted)).expect("Unable to get contract code");
