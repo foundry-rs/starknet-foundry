@@ -21,7 +21,7 @@ use starknet_api::{core::ContractAddress, deprecated_contract_class::EntryPointT
 
 use super::RuntimeState;
 
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default)]
 pub struct UsedResources {
     pub execution_resources: ExecutionResources,
     pub l2_to_l1_payloads_length: Vec<usize>,
