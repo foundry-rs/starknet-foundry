@@ -22,6 +22,8 @@ use cairo_lang_runner::casm_run::{build_cairo_runner, run_function_with_runner};
 use cairo_lang_runner::{
     build_hints_dict, initialize_vm, Arg, RunResult, RunnerError, SierraCasmRunner,
 };
+use cairo_lang_sierra::extensions::segment_arena::SegmentArenaType;
+use cairo_lang_sierra::extensions::NoGenericArgsGenericType;
 use cairo_lang_sierra::ids::GenericTypeId;
 use cairo_lang_sierra_to_casm::compiler::CairoProgram;
 use cairo_vm::types::relocatable::{MaybeRelocatable, Relocatable};
@@ -137,16 +139,26 @@ fn build_syscall_handler<'a>(
     string_to_hint: &'a HashMap<String, Hint>,
     execution_resources: &'a mut ExecutionResources,
     context: &'a mut EntryPointExecutionContext,
+    test_param_types: &[(GenericTypeId, i16)],
 ) -> SyscallHintProcessor<'a> {
     let entry_point = build_test_entry_point();
+
+    // Segment arena is allocated conditionally, so segment index is automatically moved (+2 segments)
+    let segment_index = if test_param_types
+        .iter()
+        .any(|(ty, _)| ty == &SegmentArenaType::ID)
+    {
+        12
+    } else {
+        10
+    };
 
     SyscallHintProcessor::new(
         blockifier_state,
         execution_resources,
         context,
-        // This segment is created by SierraCasmRunner
         Relocatable {
-            segment_index: 10,
+            segment_index,
             offset: 0,
         },
         entry_point,
@@ -211,6 +223,7 @@ pub fn run_test_case(
         &string_to_hint,
         &mut execution_resources,
         &mut context,
+        &test_details.parameter_types,
     );
 
     let mut cheatnet_state = CheatnetState {

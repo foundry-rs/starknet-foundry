@@ -4,6 +4,7 @@ mod cheat_fork;
 mod declare;
 mod deploy;
 mod deploy_at;
+mod dict;
 mod dispatchers;
 mod elect;
 mod env;
