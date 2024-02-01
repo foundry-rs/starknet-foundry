@@ -386,7 +386,7 @@ mod tests {
         );
         assert_eq!(
             config,
-            RunnerConfig::new(workspace_root, true, 1234, 500, true, false)
+            RunnerConfig::new(workspace_root, true, 1234, 500, true, true)
         );
     }
 
