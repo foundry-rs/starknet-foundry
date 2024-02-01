@@ -409,7 +409,6 @@ async fn run_async_command(
                 &provider,
                 config,
                 cli.profile,
-                cli.path_to_scarb_toml,
             )
             .await;
             print_command_result("show-config", &mut result, numbers_format, &output_format)?;

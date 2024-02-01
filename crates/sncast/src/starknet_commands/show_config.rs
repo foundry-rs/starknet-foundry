@@ -16,7 +16,6 @@ pub async fn show_config(
     provider: &JsonRpcClient<HttpTransport>,
     cast_config: CastConfig,
     profile: Option<String>,
-    scarb_path: Option<Utf8PathBuf>,
 ) -> Result<ShowConfigResponse> {
     let chain_id_field = get_chain_id(provider).await?;
     let chain_id = chain_id_to_network_name(chain_id_field);
@@ -36,7 +35,6 @@ pub async fn show_config(
         chain_id,
         rpc_url,
         account,
-        scarb_path,
         accounts_file_path,
         keystore,
         wait_timeout: wait_timeout.map(|x| Decimal(u64::from(x))),
