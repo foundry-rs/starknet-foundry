@@ -15,6 +15,7 @@ mod mock_call;
 mod prank;
 mod precalculate_address;
 mod pure_cairo;
+mod resources;
 mod roll;
 mod runtime;
 mod setup_fork;

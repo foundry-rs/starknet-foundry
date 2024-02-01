@@ -296,7 +296,86 @@ macro_rules! assert_gas {
                     panic!("Cannot use assert_gas! for fuzzing tests")
                 }
                 AnyTestCaseSummary::Single(case) => match case {
-                    TestCaseSummary::Passed { gas_info: gas, .. } => *gas == $asserted_gas,
+                    TestCaseSummary::Passed { gas_info: gas, .. } => {
+                        *gas == $asserted_gas
+                            && any_case
+                                .name()
+                                .unwrap()
+                                .ends_with(test_name_suffix.as_str())
+                    }
+                    _ => false,
+                },
+            }
+        }));
+    }};
+}
+
+#[macro_export]
+macro_rules! assert_syscall {
+    ($result:expr, $test_case_name:expr, $syscall:expr, $expected_count:expr) => {{
+        use forge_runner::test_case_summary::{AnyTestCaseSummary, TestCaseSummary};
+        use $crate::runner::TestCase;
+
+        let test_case_name = $test_case_name;
+        let test_name_suffix = format!("::{test_case_name}");
+
+        let result = TestCase::find_test_result(&$result);
+
+        assert!(result.test_case_summaries.iter().any(|any_case| {
+            match any_case {
+                AnyTestCaseSummary::Fuzzing(_) => {
+                    panic!("Cannot use assert_syscall! for fuzzing tests")
+                }
+                AnyTestCaseSummary::Single(case) => match case {
+                    TestCaseSummary::Passed { used_resources, .. } => {
+                        used_resources
+                            .execution_resources
+                            .syscall_counter
+                            .get(&$syscall)
+                            .unwrap_or(&0)
+                            == &$expected_count
+                            && any_case
+                                .name()
+                                .unwrap()
+                                .ends_with(test_name_suffix.as_str())
+                    }
+                    _ => false,
+                },
+            }
+        }));
+    }};
+}
+
+#[macro_export]
+macro_rules! assert_builtin {
+    ($result:expr, $test_case_name:expr, $builtin:expr, $expected_count:expr) => {{
+        use forge_runner::test_case_summary::{AnyTestCaseSummary, TestCaseSummary};
+        use $crate::runner::TestCase;
+
+        let test_case_name = $test_case_name;
+        let test_name_suffix = format!("::{test_case_name}");
+
+        let result = TestCase::find_test_result(&$result);
+
+        assert!(result.test_case_summaries.iter().any(|any_case| {
+            match any_case {
+                AnyTestCaseSummary::Fuzzing(_) => {
+                    panic!("Cannot use assert_builtin! for fuzzing tests")
+                }
+                AnyTestCaseSummary::Single(case) => match case {
+                    TestCaseSummary::Passed { used_resources, .. } => {
+                        used_resources
+                            .execution_resources
+                            .vm_resources
+                            .builtin_instance_counter
+                            .get($builtin)
+                            .unwrap_or(&0)
+                            == &$expected_count
+                            && any_case
+                                .name()
+                                .unwrap()
+                                .ends_with(test_name_suffix.as_str())
+                    }
                     _ => false,
                 },
             }

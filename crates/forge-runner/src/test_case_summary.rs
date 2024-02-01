@@ -5,6 +5,7 @@ use crate::trace_data::CallTrace;
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{RunResult, RunResultValue};
+use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::state::CallTrace as InternalCallTrace;
 use num_traits::Pow;
 use std::cell::RefCell;
@@ -88,6 +89,8 @@ pub enum TestCaseSummary<T: TestType> {
         arguments: Vec<Felt252>,
         /// Information on used gas
         gas_info: <T as TestType>::GasInfo,
+        /// Resources used during test
+        used_resources: UsedResources,
         /// Statistics of the test run
         test_statistics: <T as TestType>::TestStatistics,
         /// Test trace data
@@ -155,6 +158,7 @@ impl TestCaseSummary<Fuzzing> {
                 msg,
                 arguments,
                 gas_info: _,
+                used_resources: _,
                 test_statistics: (),
                 trace_data: _,
             } => {
@@ -170,8 +174,9 @@ impl TestCaseSummary<Fuzzing> {
                 TestCaseSummary::Passed {
                     name,
                     msg,
-                    gas_info: GasStatistics::new(&gas_usages),
                     arguments,
+                    gas_info: GasStatistics::new(&gas_usages),
+                    used_resources: UsedResources::default(),
                     test_statistics: FuzzingStatistics { runs },
                     trace_data: (),
                 }
@@ -202,6 +207,7 @@ impl TestCaseSummary<Single> {
         test_case: &TestCaseRunnable,
         arguments: Vec<Felt252>,
         gas: u128,
+        used_resources: UsedResources,
         call_trace: &Rc<RefCell<InternalCallTrace>>,
     ) -> Self {
         let name = test_case.name.to_string();
@@ -215,6 +221,7 @@ impl TestCaseSummary<Single> {
                         arguments,
                         test_statistics: (),
                         gas_info: gas,
+                        used_resources,
                         trace_data: CallTrace::from(call_trace.borrow().clone()),
                     };
                     check_available_gas(&test_case.available_gas, summary)
@@ -248,6 +255,7 @@ impl TestCaseSummary<Single> {
                         arguments,
                         test_statistics: (),
                         gas_info: gas,
+                        used_resources,
                         trace_data: CallTrace::from(call_trace.borrow().clone()),
                     },
                 },
