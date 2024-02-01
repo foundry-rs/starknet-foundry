@@ -1,10 +1,11 @@
 use crate::common::assertions::assert_outputs;
 use crate::common::call_contract;
+use crate::common::state::build_runtime_state;
 use crate::{
     assert_success,
     common::{
         deploy_contract, felt_selector_from_name, get_contracts, recover_data,
-        state::{create_cached_state, create_cheatnet_state},
+        state::{create_cached_state, create_runtime_states},
     },
 };
 use cairo_felt::Felt252;
@@ -17,16 +18,17 @@ use starknet_api::core::ContractAddress;
 #[test]
 fn elect_simple() {
     let mut cached_state = create_cached_state();
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
+    let (mut blockifier_state, mut runtime_state_raw) = create_runtime_states(&mut cached_state);
+    let mut runtime_state = build_runtime_state(&mut runtime_state_raw);
 
     let contract_address = deploy_contract(
         &mut blockifier_state,
-        &mut cheatnet_state,
+        &mut runtime_state,
         "ElectChecker",
         &[],
     );
 
-    cheatnet_state.start_elect(
+    runtime_state.cheatnet_state.start_elect(
         CheatTarget::One(contract_address),
         ContractAddress::from(123_u128),
     );
@@ -35,7 +37,7 @@ fn elect_simple() {
 
     let output = call_contract(
         &mut blockifier_state,
-        &mut cheatnet_state,
+        &mut runtime_state,
         &contract_address,
         &selector,
         &[],
@@ -47,16 +49,17 @@ fn elect_simple() {
 #[test]
 fn elect_with_other_syscall() {
     let mut cached_state = create_cached_state();
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
+    let (mut blockifier_state, mut runtime_state_raw) = create_runtime_states(&mut cached_state);
+    let mut runtime_state = build_runtime_state(&mut runtime_state_raw);
 
     let contract_address = deploy_contract(
         &mut blockifier_state,
-        &mut cheatnet_state,
+        &mut runtime_state,
         "ElectChecker",
         &[],
     );
 
-    cheatnet_state.start_elect(
+    runtime_state.cheatnet_state.start_elect(
         CheatTarget::One(contract_address),
         ContractAddress::from(123_u128),
     );
@@ -65,7 +68,7 @@ fn elect_with_other_syscall() {
 
     let output = call_contract(
         &mut blockifier_state,
-        &mut cheatnet_state,
+        &mut runtime_state,
         &contract_address,
         &selector,
         &[],
@@ -76,7 +79,8 @@ fn elect_with_other_syscall() {
 #[test]
 fn elect_in_constructor() {
     let mut cached_state = create_cached_state();
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
+    let (mut blockifier_state, mut runtime_state_raw) = create_runtime_states(&mut cached_state);
+    let mut runtime_state = build_runtime_state(&mut runtime_state_raw);
 
     let contracts = get_contracts();
 
@@ -84,15 +88,17 @@ fn elect_in_constructor() {
     let class_hash = blockifier_state
         .declare(&contract_name, &contracts)
         .unwrap();
-    let precalculated_address = cheatnet_state.precalculate_address(&class_hash, &[]);
+    let precalculated_address = runtime_state
+        .cheatnet_state
+        .precalculate_address(&class_hash, &[]);
 
-    cheatnet_state.start_elect(
+    runtime_state.cheatnet_state.start_elect(
         CheatTarget::One(precalculated_address),
         ContractAddress::from(123_u128),
     );
 
     let contract_address =
-        deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[]).unwrap();
+        deploy(&mut blockifier_state, &mut runtime_state, &class_hash, &[]).unwrap();
 
     assert_eq!(precalculated_address, contract_address);
 
@@ -100,7 +106,7 @@ fn elect_in_constructor() {
 
     let output = call_contract(
         &mut blockifier_state,
-        &mut cheatnet_state,
+        &mut runtime_state,
         &contract_address,
         &selector,
         &[],
@@ -112,11 +118,12 @@ fn elect_in_constructor() {
 #[test]
 fn elect_stop() {
     let mut cached_state = create_cached_state();
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
+    let (mut blockifier_state, mut runtime_state_raw) = create_runtime_states(&mut cached_state);
+    let mut runtime_state = build_runtime_state(&mut runtime_state_raw);
 
     let contract_address = deploy_contract(
         &mut blockifier_state,
-        &mut cheatnet_state,
+        &mut runtime_state,
         "ElectChecker",
         &[],
     );
@@ -125,7 +132,7 @@ fn elect_stop() {
 
     let output = call_contract(
         &mut blockifier_state,
-        &mut cheatnet_state,
+        &mut runtime_state,
         &contract_address,
         &selector,
         &[],
@@ -133,14 +140,14 @@ fn elect_stop() {
 
     let old_sequencer_address = recover_data(output);
 
-    cheatnet_state.start_elect(
+    runtime_state.cheatnet_state.start_elect(
         CheatTarget::One(contract_address),
         ContractAddress::from(123_u128),
     );
 
     let output = call_contract(
         &mut blockifier_state,
-        &mut cheatnet_state,
+        &mut runtime_state,
         &contract_address,
         &selector,
         &[],
@@ -150,11 +157,13 @@ fn elect_stop() {
     assert_eq!(new_sequencer_address, vec![Felt252::from(123)]);
     assert_ne!(old_sequencer_address, new_sequencer_address);
 
-    cheatnet_state.stop_elect(CheatTarget::One(contract_address));
+    runtime_state
+        .cheatnet_state
+        .stop_elect(CheatTarget::One(contract_address));
 
     let output = call_contract(
         &mut blockifier_state,
-        &mut cheatnet_state,
+        &mut runtime_state,
         &contract_address,
         &selector,
         &[],
@@ -167,11 +176,12 @@ fn elect_stop() {
 #[test]
 fn elect_double() {
     let mut cached_state = create_cached_state();
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
+    let (mut blockifier_state, mut runtime_state_raw) = create_runtime_states(&mut cached_state);
+    let mut runtime_state = build_runtime_state(&mut runtime_state_raw);
 
     let contract_address = deploy_contract(
         &mut blockifier_state,
-        &mut cheatnet_state,
+        &mut runtime_state,
         "ElectChecker",
         &[],
     );
@@ -180,7 +190,7 @@ fn elect_double() {
 
     let output = call_contract(
         &mut blockifier_state,
-        &mut cheatnet_state,
+        &mut runtime_state,
         &contract_address,
         &selector,
         &[],
@@ -188,18 +198,18 @@ fn elect_double() {
 
     let old_sequencer_address = recover_data(output);
 
-    cheatnet_state.start_elect(
+    runtime_state.cheatnet_state.start_elect(
         CheatTarget::One(contract_address),
         ContractAddress::from(123_u128),
     );
-    cheatnet_state.start_elect(
+    runtime_state.cheatnet_state.start_elect(
         CheatTarget::One(contract_address),
         ContractAddress::from(123_u128),
     );
 
     let output = call_contract(
         &mut blockifier_state,
-        &mut cheatnet_state,
+        &mut runtime_state,
         &contract_address,
         &selector,
         &[],
@@ -209,11 +219,13 @@ fn elect_double() {
     assert_eq!(new_sequencer_address, vec![Felt252::from(123)]);
     assert_ne!(old_sequencer_address, new_sequencer_address);
 
-    cheatnet_state.stop_elect(CheatTarget::One(contract_address));
+    runtime_state
+        .cheatnet_state
+        .stop_elect(CheatTarget::One(contract_address));
 
     let output = call_contract(
         &mut blockifier_state,
-        &mut cheatnet_state,
+        &mut runtime_state,
         &contract_address,
         &selector,
         &[],
@@ -226,18 +238,19 @@ fn elect_double() {
 #[test]
 fn elect_proxy() {
     let mut cached_state = create_cached_state();
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
+    let (mut blockifier_state, mut runtime_state_raw) = create_runtime_states(&mut cached_state);
+    let mut runtime_state = build_runtime_state(&mut runtime_state_raw);
 
     let contract_address = deploy_contract(
         &mut blockifier_state,
-        &mut cheatnet_state,
+        &mut runtime_state,
         "ElectChecker",
         &[],
     );
 
     let proxy_address = deploy_contract(
         &mut blockifier_state,
-        &mut cheatnet_state,
+        &mut runtime_state,
         "ElectCheckerProxy",
         &[],
     );
@@ -245,20 +258,20 @@ fn elect_proxy() {
     let proxy_selector = felt_selector_from_name("get_elect_checkers_seq_addr");
     let before_elect_output = call_contract(
         &mut blockifier_state,
-        &mut cheatnet_state,
+        &mut runtime_state,
         &proxy_address,
         &proxy_selector,
         &[contract_address.into_()],
     );
 
-    cheatnet_state.start_elect(
+    runtime_state.cheatnet_state.start_elect(
         CheatTarget::One(contract_address),
         ContractAddress::from(123_u128),
     );
 
     let after_elect_output = call_contract(
         &mut blockifier_state,
-        &mut cheatnet_state,
+        &mut runtime_state,
         &proxy_address,
         &proxy_selector,
         &[contract_address.into_()],
@@ -266,11 +279,13 @@ fn elect_proxy() {
 
     assert_success!(after_elect_output, vec![Felt252::from(123)]);
 
-    cheatnet_state.stop_elect(CheatTarget::One(contract_address));
+    runtime_state
+        .cheatnet_state
+        .stop_elect(CheatTarget::One(contract_address));
 
     let after_elect_cancellation_output = call_contract(
         &mut blockifier_state,
-        &mut cheatnet_state,
+        &mut runtime_state,
         &proxy_address,
         &proxy_selector,
         &[contract_address.into_()],
@@ -282,7 +297,8 @@ fn elect_proxy() {
 #[test]
 fn elect_library_call() {
     let mut cached_state = create_cached_state();
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
+    let (mut blockifier_state, mut runtime_state_raw) = create_runtime_states(&mut cached_state);
+    let mut runtime_state = build_runtime_state(&mut runtime_state_raw);
 
     let contracts = get_contracts();
     let contract_name = Felt252::from_short_string("ElectChecker").unwrap();
@@ -292,7 +308,7 @@ fn elect_library_call() {
 
     let lib_call_address = deploy_contract(
         &mut blockifier_state,
-        &mut cheatnet_state,
+        &mut runtime_state,
         "ElectCheckerLibCall",
         &[],
     );
@@ -300,20 +316,20 @@ fn elect_library_call() {
     let lib_call_selector = felt_selector_from_name("get_sequencer_address_with_lib_call");
     let before_elect_output = call_contract(
         &mut blockifier_state,
-        &mut cheatnet_state,
+        &mut runtime_state,
         &lib_call_address,
         &lib_call_selector,
         &[class_hash.into_()],
     );
 
-    cheatnet_state.start_elect(
+    runtime_state.cheatnet_state.start_elect(
         CheatTarget::One(lib_call_address),
         ContractAddress::from(123_u128),
     );
 
     let after_elect_output = call_contract(
         &mut blockifier_state,
-        &mut cheatnet_state,
+        &mut runtime_state,
         &lib_call_address,
         &lib_call_selector,
         &[class_hash.into_()],
@@ -321,11 +337,13 @@ fn elect_library_call() {
 
     assert_success!(after_elect_output, vec![Felt252::from(123)]);
 
-    cheatnet_state.stop_elect(CheatTarget::One(lib_call_address));
+    runtime_state
+        .cheatnet_state
+        .stop_elect(CheatTarget::One(lib_call_address));
 
     let after_elect_cancellation_output = call_contract(
         &mut blockifier_state,
-        &mut cheatnet_state,
+        &mut runtime_state,
         &lib_call_address,
         &lib_call_selector,
         &[class_hash.into_()],
@@ -337,22 +355,25 @@ fn elect_library_call() {
 #[test]
 fn elect_all_simple() {
     let mut cached_state = create_cached_state();
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
+    let (mut blockifier_state, mut runtime_state_raw) = create_runtime_states(&mut cached_state);
+    let mut runtime_state = build_runtime_state(&mut runtime_state_raw);
 
     let contract_address = deploy_contract(
         &mut blockifier_state,
-        &mut cheatnet_state,
+        &mut runtime_state,
         "ElectChecker",
         &[],
     );
 
-    cheatnet_state.start_elect(CheatTarget::All, ContractAddress::from(123_u128));
+    runtime_state
+        .cheatnet_state
+        .start_elect(CheatTarget::All, ContractAddress::from(123_u128));
 
     let selector = felt_selector_from_name("get_sequencer_address");
 
     let output = call_contract(
         &mut blockifier_state,
-        &mut cheatnet_state,
+        &mut runtime_state,
         &contract_address,
         &selector,
         &[],
@@ -364,17 +385,20 @@ fn elect_all_simple() {
 #[test]
 fn elect_all_then_one() {
     let mut cached_state = create_cached_state();
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
+    let (mut blockifier_state, mut runtime_state_raw) = create_runtime_states(&mut cached_state);
+    let mut runtime_state = build_runtime_state(&mut runtime_state_raw);
 
     let contract_address = deploy_contract(
         &mut blockifier_state,
-        &mut cheatnet_state,
+        &mut runtime_state,
         "ElectChecker",
         &[],
     );
 
-    cheatnet_state.start_elect(CheatTarget::All, ContractAddress::from(321_u128));
-    cheatnet_state.start_elect(
+    runtime_state
+        .cheatnet_state
+        .start_elect(CheatTarget::All, ContractAddress::from(321_u128));
+    runtime_state.cheatnet_state.start_elect(
         CheatTarget::One(contract_address),
         ContractAddress::from(123_u128),
     );
@@ -383,7 +407,7 @@ fn elect_all_then_one() {
 
     let output = call_contract(
         &mut blockifier_state,
-        &mut cheatnet_state,
+        &mut runtime_state,
         &contract_address,
         &selector,
         &[],
@@ -395,26 +419,29 @@ fn elect_all_then_one() {
 #[test]
 fn elect_one_then_all() {
     let mut cached_state = create_cached_state();
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
+    let (mut blockifier_state, mut runtime_state_raw) = create_runtime_states(&mut cached_state);
+    let mut runtime_state = build_runtime_state(&mut runtime_state_raw);
 
     let contract_address = deploy_contract(
         &mut blockifier_state,
-        &mut cheatnet_state,
+        &mut runtime_state,
         "ElectChecker",
         &[],
     );
 
-    cheatnet_state.start_elect(
+    runtime_state.cheatnet_state.start_elect(
         CheatTarget::One(contract_address),
         ContractAddress::from(123_u128),
     );
-    cheatnet_state.start_elect(CheatTarget::All, ContractAddress::from(321_u128));
+    runtime_state
+        .cheatnet_state
+        .start_elect(CheatTarget::All, ContractAddress::from(321_u128));
 
     let selector = felt_selector_from_name("get_sequencer_address");
 
     let output = call_contract(
         &mut blockifier_state,
-        &mut cheatnet_state,
+        &mut runtime_state,
         &contract_address,
         &selector,
         &[],
@@ -426,11 +453,12 @@ fn elect_one_then_all() {
 #[test]
 fn elect_all_stop() {
     let mut cached_state = create_cached_state();
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
+    let (mut blockifier_state, mut runtime_state_raw) = create_runtime_states(&mut cached_state);
+    let mut runtime_state = build_runtime_state(&mut runtime_state_raw);
 
     let contract_address = deploy_contract(
         &mut blockifier_state,
-        &mut cheatnet_state,
+        &mut runtime_state,
         "ElectChecker",
         &[],
     );
@@ -439,7 +467,7 @@ fn elect_all_stop() {
 
     let output = call_contract(
         &mut blockifier_state,
-        &mut cheatnet_state,
+        &mut runtime_state,
         &contract_address,
         &selector,
         &[],
@@ -447,11 +475,13 @@ fn elect_all_stop() {
 
     let old_sequencer_address = recover_data(output);
 
-    cheatnet_state.start_elect(CheatTarget::All, ContractAddress::from(123_u128));
+    runtime_state
+        .cheatnet_state
+        .start_elect(CheatTarget::All, ContractAddress::from(123_u128));
 
     let output = call_contract(
         &mut blockifier_state,
-        &mut cheatnet_state,
+        &mut runtime_state,
         &contract_address,
         &selector,
         &[],
@@ -461,11 +491,11 @@ fn elect_all_stop() {
     assert_eq!(new_sequencer_address, vec![Felt252::from(123)]);
     assert_ne!(old_sequencer_address, new_sequencer_address);
 
-    cheatnet_state.stop_elect(CheatTarget::All);
+    runtime_state.cheatnet_state.stop_elect(CheatTarget::All);
 
     let output = call_contract(
         &mut blockifier_state,
-        &mut cheatnet_state,
+        &mut runtime_state,
         &contract_address,
         &selector,
         &[],
@@ -478,23 +508,24 @@ fn elect_all_stop() {
 #[test]
 fn elect_multiple() {
     let mut cached_state = create_cached_state();
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
+    let (mut blockifier_state, mut runtime_state_raw) = create_runtime_states(&mut cached_state);
+    let mut runtime_state = build_runtime_state(&mut runtime_state_raw);
 
     let contract = Felt252::from_short_string("ElectChecker").unwrap();
     let contracts = get_contracts();
     let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
 
     let contract_address1 =
-        deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[]).unwrap();
+        deploy(&mut blockifier_state, &mut runtime_state, &class_hash, &[]).unwrap();
 
     let contract_address2 =
-        deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[]).unwrap();
+        deploy(&mut blockifier_state, &mut runtime_state, &class_hash, &[]).unwrap();
 
     let selector = felt_selector_from_name("get_sequencer_address");
 
     let output = call_contract(
         &mut blockifier_state,
-        &mut cheatnet_state,
+        &mut runtime_state,
         &contract_address1,
         &selector,
         &[],
@@ -504,7 +535,7 @@ fn elect_multiple() {
 
     let output = call_contract(
         &mut blockifier_state,
-        &mut cheatnet_state,
+        &mut runtime_state,
         &contract_address2,
         &selector,
         &[],
@@ -512,14 +543,14 @@ fn elect_multiple() {
 
     let old_sequencer_address2 = recover_data(output);
 
-    cheatnet_state.start_elect(
+    runtime_state.cheatnet_state.start_elect(
         CheatTarget::Multiple(vec![contract_address1, contract_address2]),
         ContractAddress::from(123_u128),
     );
 
     let output = call_contract(
         &mut blockifier_state,
-        &mut cheatnet_state,
+        &mut runtime_state,
         &contract_address1,
         &selector,
         &[],
@@ -529,7 +560,7 @@ fn elect_multiple() {
 
     let output = call_contract(
         &mut blockifier_state,
-        &mut cheatnet_state,
+        &mut runtime_state,
         &contract_address2,
         &selector,
         &[],
@@ -540,14 +571,16 @@ fn elect_multiple() {
     assert_eq!(new_sequencer_address1, vec![Felt252::from(123)]);
     assert_eq!(new_sequencer_address2, vec![Felt252::from(123)]);
 
-    cheatnet_state.stop_elect(CheatTarget::Multiple(vec![
-        contract_address1,
-        contract_address2,
-    ]));
+    runtime_state
+        .cheatnet_state
+        .stop_elect(CheatTarget::Multiple(vec![
+            contract_address1,
+            contract_address2,
+        ]));
 
     let output = call_contract(
         &mut blockifier_state,
-        &mut cheatnet_state,
+        &mut runtime_state,
         &contract_address1,
         &selector,
         &[],
@@ -557,7 +590,7 @@ fn elect_multiple() {
 
     let output = call_contract(
         &mut blockifier_state,
-        &mut cheatnet_state,
+        &mut runtime_state,
         &contract_address2,
         &selector,
         &[],

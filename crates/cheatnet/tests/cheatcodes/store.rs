@@ -1,7 +1,7 @@
 use crate::assert_success;
 use crate::cheatcodes::{map_entry_address, variable_address};
 use crate::common::call_contract;
-use crate::common::state::{create_cached_state, create_cheatnet_state};
+use crate::common::state::{build_runtime_state, create_cached_state, create_runtime_states};
 use crate::common::{felt_selector_from_name, get_contracts};
 use cairo_felt::Felt252;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::deploy;
@@ -11,7 +11,8 @@ use conversions::felt252::FromShortString;
 #[test]
 fn store_simple_state() {
     let mut cached_state = create_cached_state();
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
+    let (mut blockifier_state, mut runtime_state_raw) = create_runtime_states(&mut cached_state);
+    let mut runtime_state = build_runtime_state(&mut runtime_state_raw);
 
     let contract = Felt252::from_short_string("HelloStarknet").unwrap();
     let contracts = get_contracts();
@@ -19,7 +20,7 @@ fn store_simple_state() {
     let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
 
     let contract_address =
-        deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[]).unwrap();
+        deploy(&mut blockifier_state, &mut runtime_state, &class_hash, &[]).unwrap();
 
     store(
         &mut blockifier_state,
@@ -33,7 +34,7 @@ fn store_simple_state() {
 
     let output = call_contract(
         &mut blockifier_state,
-        &mut cheatnet_state,
+        &mut runtime_state,
         &contract_address,
         &selector,
         &[],
@@ -45,7 +46,8 @@ fn store_simple_state() {
 #[test]
 fn store_state_map_simple_value() {
     let mut cached_state = create_cached_state();
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
+    let (mut blockifier_state, mut runtime_state_raw) = create_runtime_states(&mut cached_state);
+    let mut runtime_state = build_runtime_state(&mut runtime_state_raw);
 
     let contract = Felt252::from_short_string("MapSimpleValueSimpleKey").unwrap();
     let contracts = get_contracts();
@@ -53,7 +55,7 @@ fn store_state_map_simple_value() {
     let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
 
     let contract_address =
-        deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[]).unwrap();
+        deploy(&mut blockifier_state, &mut runtime_state, &class_hash, &[]).unwrap();
 
     let map_key = Felt252::from(420);
     let inserted_value = Felt252::from(69);
@@ -70,7 +72,7 @@ fn store_state_map_simple_value() {
     let selector = felt_selector_from_name("read");
     let call_output = call_contract(
         &mut blockifier_state,
-        &mut cheatnet_state,
+        &mut runtime_state,
         &contract_address,
         &selector,
         &[map_key],

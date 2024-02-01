@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::common::state::create_cheatnet_state;
+use crate::common::state::create_runtime_states;
 use crate::common::{get_contracts, state::create_cached_state};
 use cairo_felt::Felt252;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::get_class_hash;
@@ -23,7 +23,7 @@ fn declare_simple() {
     let contract_name = "HelloStarknet";
 
     let mut cached_state = create_cached_state();
-    let (mut blockifier_state, _) = create_cheatnet_state(&mut cached_state);
+    let (mut blockifier_state, _) = create_runtime_states(&mut cached_state);
 
     let contract = Felt252::from_short_string(contract_name).unwrap();
     let contracts = get_contracts();
@@ -39,7 +39,7 @@ fn declare_multiple() {
     let contract_names = vec!["HelloStarknet", "ConstructorSimple"];
 
     let mut cached_state = create_cached_state();
-    let (mut blockifier_state, _) = create_cheatnet_state(&mut cached_state);
+    let (mut blockifier_state, _) = create_runtime_states(&mut cached_state);
 
     let contracts = get_contracts();
 
@@ -56,7 +56,7 @@ fn declare_same_contract() {
     let contract_name = "HelloStarknet";
 
     let mut cached_state = create_cached_state();
-    let (mut blockifier_state, _) = create_cheatnet_state(&mut cached_state);
+    let (mut blockifier_state, _) = create_runtime_states(&mut cached_state);
 
     let contract = Felt252::from_short_string(contract_name).unwrap();
     let contracts = get_contracts();
@@ -80,7 +80,7 @@ fn declare_non_existent() {
     let contract_name = "GoodbyeStarknet";
 
     let mut cached_state = create_cached_state();
-    let (mut blockifier_state, _) = create_cheatnet_state(&mut cached_state);
+    let (mut blockifier_state, _) = create_runtime_states(&mut cached_state);
 
     let contract = Felt252::from_short_string(contract_name).unwrap();
     let contracts = get_contracts();

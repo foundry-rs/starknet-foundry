@@ -60,14 +60,6 @@ Display additional info about used resources for passed tests.
 
 Saves execution traces of test cases which have passed and are not fuzz tests to files. Traces can be used for profiling purposes.
 
-## `--use_scarb_collector`
-
-Uses Scarb to find and compile tests. Requires at least Scarb nightly-2023-12-04
-
-> ⚠️ **Warning**
-> 
-> This is an experimental feature. Some functionalities might not work.
-
 ## `-h`, `--help`
 
 Print help.
