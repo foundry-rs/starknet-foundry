@@ -23,7 +23,7 @@ rpassword = "7.3.1"
 promptly = "0.3.1"
 scarb-api = { path = "../scarb-api" }
 # Freeze reqwest dependency, because newer versions cause cast tests to fail on macs
-reqwest = "=0.11.18"
+reqwest = "=0.11.24"
 indoc.workspace = true
 tempfile.workspace = true
 runtime = { path = "../runtime" }
@@ -45,7 +45,7 @@ console.workspace = true
 ctor.workspace = true
 snapbox.workspace = true
 indoc.workspace = true
-reqwest = "0.11.18"
+reqwest = "0.11.24"
 tempfile = "3.9.0"
 test-case.workspace = true
 fs_extra = "1.3.0"
