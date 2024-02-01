@@ -298,7 +298,7 @@ pub fn duplicate_directory_and_salt_file(
         &dest_dir,
         &fs_extra::dir::CopyOptions::new().content_only(true),
     )
-    .expect("Unable to copy directory");
+    .expect("Unable to copy directory content");
 
     let contract_code =
         fs::read_to_string(src_dir.join(file_to_be_salted)).expect("Unable to get contract code");
