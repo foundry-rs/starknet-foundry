@@ -412,12 +412,8 @@ async fn run_async_command(
             }
         },
         Commands::ShowConfig(_) => {
-            let mut result = starknet_commands::show_config::show_config(
-                &provider,
-                config,
-                cli.profile,
-            )
-            .await;
+            let mut result =
+                starknet_commands::show_config::show_config(&provider, config, cli.profile).await;
             print_command_result("show-config", &mut result, numbers_format, &output_format)?;
             Ok(())
         }
