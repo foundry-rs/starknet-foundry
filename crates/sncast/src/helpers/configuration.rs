@@ -3,6 +3,7 @@ use anyhow::{anyhow, Result};
 use camino::Utf8PathBuf;
 use serde::{Deserialize, Serialize};
 use std::fs;
+use tempfile::TempDir;
 use toml::Value;
 
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq)]
@@ -167,12 +168,6 @@ pub fn find_config_file() -> Result<Utf8PathBuf> {
     )?)
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use tempfile::TempDir;
-
-    #[allow(dead_code)]
     pub fn copy_config_to_tempdir(src_path: &str, additional_path: Option<&str>) -> TempDir {
         let temp_dir = TempDir::new().expect("Failed to create a temporary directory");
         if let Some(dir) = additional_path {
@@ -183,6 +178,10 @@ mod tests {
         fs::copy(src_path, temp_dir_file_path).expect("Failed to copy config file to temp dir");
         temp_dir
     }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
 
     #[test]
     fn find_config_in_current_dir() {

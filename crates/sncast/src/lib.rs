@@ -1,6 +1,6 @@
 use anyhow::{anyhow, bail, Context, Error, Result};
 use camino::Utf8PathBuf;
-use helpers::constants::{CONFIG_FILENAME, KEYSTORE_PASSWORD_ENV_VAR, UDC_ADDRESS};
+use helpers::constants::{KEYSTORE_PASSWORD_ENV_VAR, UDC_ADDRESS};
 use rand::rngs::OsRng;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
@@ -408,7 +408,7 @@ pub fn parse_number(number_as_str: &str) -> Result<FieldElement> {
 
 pub fn raise_if_empty(value: &str, value_name: &str) -> Result<()> {
     if value.is_empty() {
-        bail!("{value_name} not passed nor found in {CONFIG_FILENAME}")
+        bail!("{value_name} not passed nor found in snfoundry.toml")
     }
     Ok(())
 }

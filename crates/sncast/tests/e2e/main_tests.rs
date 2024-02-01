@@ -1,6 +1,6 @@
 use crate::helpers::constants::{ACCOUNT, ACCOUNT_FILE_PATH, CONTRACTS_DIR, URL};
 use crate::helpers::fixtures::{
-    copy_config_to_tempdir, duplicate_directory_with_salt, from_env, get_keystores_path,
+    duplicate_directory_with_salt, from_env, get_keystores_path,
 };
 use crate::helpers::runner::runner;
 use indoc::indoc;
@@ -8,6 +8,7 @@ use snapbox::cmd::{cargo_bin, Command};
 use sncast::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
 use std::env;
 use std::fs;
+use sncast::helpers::configuration::copy_config_to_tempdir;
 
 #[tokio::test]
 async fn test_happy_case_from_sncast_config() {

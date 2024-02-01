@@ -1,5 +1,5 @@
 use crate::helpers::constants::{DEVNET_OZ_CLASS_HASH, URL};
-use crate::helpers::fixtures::{convert_to_hex, copy_config_to_tempdir};
+use crate::helpers::fixtures::convert_to_hex;
 use crate::helpers::fixtures::{
     get_address_from_keystore, get_transaction_hash, get_transaction_receipt, mint_token,
 };
@@ -11,6 +11,7 @@ use starknet::core::types::TransactionReceipt::DeployAccount;
 use std::{env, fs};
 use tempfile::TempDir;
 use test_case::test_case;
+use sncast::helpers::configuration::copy_config_to_tempdir;
 
 #[tokio::test]
 pub async fn test_happy_case() {

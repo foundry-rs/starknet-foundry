@@ -162,24 +162,11 @@ pub fn add_created_profile_to_configuration(
 #[cfg(test)]
 mod tests {
     use camino::Utf8PathBuf;
-    use sncast::helpers::configuration::CastConfig;
-    use sncast::helpers::constants::{CONFIG_FILENAME, DEFAULT_ACCOUNTS_FILE};
+    use sncast::helpers::configuration::{CastConfig, copy_config_to_tempdir};
+    use sncast::helpers::constants::DEFAULT_ACCOUNTS_FILE;
     use std::fs;
-    use tempfile::TempDir;
 
     use crate::starknet_commands::account::add_created_profile_to_configuration;
-
-    fn copy_config_to_tempdir(src_path: &str, additional_path: Option<&str>) -> TempDir {
-        // todo: nie duplikuj mordo
-        let temp_dir = TempDir::new().expect("Failed to create a temporary directory");
-        if let Some(dir) = additional_path {
-            let path = temp_dir.path().join(dir);
-            fs::create_dir_all(path).expect("Failed to create directories in temp dir");
-        };
-        let temp_dir_file_path = temp_dir.path().join(CONFIG_FILENAME);
-        fs::copy(src_path, temp_dir_file_path).expect("Failed to copy config file to temp dir");
-        temp_dir
-    }
 
     #[test]
     fn test_add_created_profile_to_configuration_happy_case() {

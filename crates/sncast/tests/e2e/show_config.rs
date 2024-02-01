@@ -1,6 +1,6 @@
-use crate::helpers::fixtures::copy_config_to_tempdir;
 use crate::helpers::runner::runner;
 use indoc::indoc;
+use sncast::helpers::configuration::copy_config_to_tempdir;
 
 #[tokio::test]
 async fn test_show_config_from_scast_toml() {
