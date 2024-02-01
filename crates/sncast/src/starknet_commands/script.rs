@@ -71,6 +71,7 @@ enum StarknetError {
     InsufficientMaxFee,
     InsufficientAccountBalance,
     ContractError,
+    InvalidTransactionNonce,
 }
 
 fn sn_command_error_to_script_command_error(err: StarknetCommandError) -> ScriptCommandError {
@@ -94,6 +95,7 @@ fn sn_command_error_to_script_command_error(err: StarknetCommandError) -> Script
                         RPCStarknetError::InsufficientAccountBalance => {
                             StarknetError::InsufficientAccountBalance
                         }
+                        RPCStarknetError::InvalidTransactionNonce => StarknetError::InvalidTransactionNonce,
                         RPCStarknetError::ContractError(_) => StarknetError::ContractError,
                         _ => StarknetError::UnknownError,
                     };
@@ -101,9 +103,11 @@ fn sn_command_error_to_script_command_error(err: StarknetCommandError) -> Script
                 }
                 ProviderError::Other(err) => {
                     let err_msg = err.to_string();
-                    dbg!(err_msg);
-
-                    RPCError::UnknownError
+                    if err_msg.contains("Class with hash ClassHash(StarkFelt") && err_msg.contains("is already declared") {
+                        RPCError::StarknetError(StarknetError::ClassAlreadyDeclared)
+                    } else {
+                        RPCError::UnknownError
+                    }
                 }
                 _ => RPCError::UnknownError,
             };
@@ -132,6 +136,7 @@ fn serialize_script_command_err(err: ScriptCommandError) -> Vec<Felt252> {
                         StarknetError::InsufficientMaxFee => res.push(Felt252::from(5)),
                         StarknetError::InsufficientAccountBalance => res.push(Felt252::from(6)),
                         StarknetError::ContractError => res.push(Felt252::from(7)),
+                        StarknetError::InvalidTransactionNonce => res.push(Felt252::from(8)),
                     }
                 }
             }

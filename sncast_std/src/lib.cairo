@@ -14,6 +14,7 @@ enum StarknetError {
     InsufficientMaxFee,
     InsufficientAccountBalance,
     ContractError,
+    InvalidTransactionNonce,
 }
 
 impl StarknetErrorTrait of PrintTrait<StarknetError> {
@@ -28,6 +29,7 @@ impl StarknetErrorTrait of PrintTrait<StarknetError> {
             StarknetError::InsufficientMaxFee => { 'InsufficientMaxFee'.print(); },
             StarknetError::InsufficientAccountBalance => { 'InsufficientAccountBalance'.print(); },
             StarknetError::ContractError => { 'ContractError'.print(); },
+            StarknetError::InvalidTransactionNonce => { 'InvalidTransactionNonce'.print(); },
         }
     }
 }
