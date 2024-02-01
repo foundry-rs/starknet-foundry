@@ -18,6 +18,7 @@ jobs:
       - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
       - uses: software-mansion/setup-scarb@v1.3.2
       - run: cargo test --release --lib -p forge
+      - run: cargo test --release --bin snforge
       - run: cargo test --release integration -p forge
 
   test-forge-e2e:
