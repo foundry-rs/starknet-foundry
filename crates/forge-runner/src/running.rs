@@ -241,7 +241,6 @@ pub fn run_test_case(
         },
         extended_runtime: io_runtime,
     };
-
     let forge_extension = ForgeExtension {
         environment_variables: &runner_params.environment_variables,
         contracts: &runner_params.contracts,
