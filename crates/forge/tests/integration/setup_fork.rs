@@ -123,6 +123,7 @@ fn fork_aliased_decorator() {
                 256,
                 12345,
                 false,
+                false,
             )),
             Arc::new(RunnerParams::new(
                 test.contracts().unwrap(),

@@ -44,15 +44,15 @@ fn deploy_syscall_cost() {
 
             #[test]
             fn deploy_syscall_cost() {
-                let contract = declare('GasChecker');
+                let contract = declare('GasConstructorChecker');
                 let (address, _) = deploy_syscall(contract.class_hash, 0, array![].span(), false).unwrap();
                 assert(address != 0.try_into().unwrap(), 'wrong deployed addr');
             }
         "
         ),
         Contract::from_code_path(
-            "GasChecker".to_string(),
-            Path::new("tests/data/contracts/gas_checker.cairo"),
+            "GasConstructorChecker".to_string(),
+            Path::new("tests/data/contracts/gas_constructor_checker.cairo"),
         )
         .unwrap()
     );
@@ -60,9 +60,9 @@ fn deploy_syscall_cost() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
-    // 6 = gas cost from steps
     // 1101 = gas cost of onchain data (deploy cost)
-    assert_gas!(result, "deploy_syscall_cost", 6 + 1101);
+    // int(10.24 * 2) = 21 = keccak cost from constructor
+    assert_gas!(result, "deploy_syscall_cost", 1101 + 21);
 }
 
 #[test]
@@ -74,15 +74,15 @@ fn snforge_std_deploy_cost() {
             
             #[test]
             fn deploy_cost() {
-                let contract = declare('GasChecker');
+                let contract = declare('GasConstructorChecker');
                 let address = contract.deploy(@array![]).unwrap();
                 assert(address != 0.try_into().unwrap(), 'wrong deployed addr');
             }
         "
         ),
         Contract::from_code_path(
-            "GasChecker".to_string(),
-            Path::new("tests/data/contracts/gas_checker.cairo"),
+            "GasConstructorChecker".to_string(),
+            Path::new("tests/data/contracts/gas_constructor_checker.cairo"),
         )
         .unwrap()
     );
@@ -90,9 +90,9 @@ fn snforge_std_deploy_cost() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
-    // 2 = gas cost from steps
     // 1101 = gas cost of onchain data (deploy cost)
-    assert_gas!(result, "deploy_cost", 2 + 1101);
+    // int(10.24 * 2) = 21 = keccak cost from constructor
+    assert_gas!(result, "deploy_cost", 1101 + 21);
 }
 
 #[test]
@@ -532,9 +532,9 @@ fn multiple_storage_writes_cost() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
-    // 3 = gas cost of steps
+    // 4 = gas cost of steps
     // 2203 = gas cost of onchain data
-    assert_gas!(result, "multiple_storage_writes_cost", 3 + 2203);
+    assert_gas!(result, "multiple_storage_writes_cost", 4 + 2203);
 }
 
 #[test]
@@ -640,4 +640,40 @@ fn l1_message_cost_for_proxy() {
     // 8 = gas cost of steps
     // 29206 = gas cost of onchain data
     assert_gas!(result, "l1_message_cost_for_proxy", 8 + 29206);
+}
+
+#[test]
+fn l1_handler_cost() {
+    let test = test_case!(
+        indoc!(
+            r"
+            use snforge_std::{ declare, ContractClassTrait, L1HandlerTrait };
+
+            #[test]
+            fn l1_message_cost() {
+                let contract = declare('GasChecker');
+                let contract_address = contract.deploy(@array![]).unwrap();
+                
+                let mut l1_handler = L1HandlerTrait::new(contract_address, function_name: 'handle_l1_message');
+
+                l1_handler.from_address = 123;
+                l1_handler.payload = array![].span();
+            
+                l1_handler.execute().unwrap();
+            }
+        "
+        ),
+        Contract::from_code_path(
+            "GasChecker".to_string(),
+            Path::new("tests/data/contracts/gas_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test);
+
+    assert_passed!(result);
+    // 1101 = gas cost of onchain data (deploy cost)
+    // int(10.24 * 4) = 41 = keccak cost from l1 handler
+    assert_gas!(result, "l1_message_cost", 1101 + 41);
 }

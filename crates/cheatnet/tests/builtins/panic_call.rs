@@ -1,5 +1,5 @@
 use crate::common::call_contract;
-use crate::common::state::create_cheatnet_state;
+use crate::common::state::{build_runtime_state, create_runtime_states};
 use crate::common::{deploy_contract, felt_selector_from_name, state::create_cached_state};
 use crate::{assert_error, assert_panic};
 use cairo_felt::Felt252;
@@ -9,21 +9,21 @@ use num_traits::Bounded;
 #[test]
 fn call_contract_error() {
     let mut cached_state = create_cached_state();
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
+    let (mut blockifier_state, mut runtime_state_raw) = create_runtime_states(&mut cached_state);
+    let mut runtime_state = build_runtime_state(&mut runtime_state_raw);
 
     let contract_address =
-        deploy_contract(&mut blockifier_state, &mut cheatnet_state, "PanicCall", &[]);
+        deploy_contract(&mut blockifier_state, &mut runtime_state, "PanicCall", &[]);
 
     let selector = felt_selector_from_name("panic_call");
 
     let output = call_contract(
         &mut blockifier_state,
-        &mut cheatnet_state,
+        &mut runtime_state,
         &contract_address,
         &selector,
         &[Felt252::from(420)],
-    )
-    .unwrap();
+    );
 
     assert_error!(output, "0x496e70757420746f6f206c6f6e6720666f7220617267756d656e7473 ('Input too long for arguments')");
 }
@@ -31,21 +31,21 @@ fn call_contract_error() {
 #[test]
 fn call_contract_panic() {
     let mut cached_state = create_cached_state();
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
+    let (mut blockifier_state, mut runtime_state_raw) = create_runtime_states(&mut cached_state);
+    let mut runtime_state = build_runtime_state(&mut runtime_state_raw);
 
     let contract_address =
-        deploy_contract(&mut blockifier_state, &mut cheatnet_state, "PanicCall", &[]);
+        deploy_contract(&mut blockifier_state, &mut runtime_state, "PanicCall", &[]);
 
     let selector = felt_selector_from_name("panic_call");
 
     let output = call_contract(
         &mut blockifier_state,
-        &mut cheatnet_state,
+        &mut runtime_state,
         &contract_address,
         &selector,
         &[],
-    )
-    .unwrap();
+    );
 
     assert_panic!(
         output,

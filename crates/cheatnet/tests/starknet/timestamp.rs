@@ -1,18 +1,20 @@
 use crate::common::call_contract;
+use crate::common::state::build_runtime_state;
 use crate::{
     assert_success,
     common::{
         deploy_contract, felt_selector_from_name, recover_data,
-        state::{create_cached_state, create_cheatnet_state},
+        state::{create_cached_state, create_runtime_states},
     },
 };
 use cairo_felt::Felt252;
-use cheatnet::state::{BlockifierState, CheatnetState};
+use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeState;
+use cheatnet::state::BlockifierState;
 use starknet_api::core::ContractAddress;
 
 fn check_timestamp(
     blockifier_state: &mut BlockifierState,
-    cheatnet_state: &mut CheatnetState,
+    runtime_state: &mut RuntimeState,
     contract_address: &ContractAddress,
 ) -> Felt252 {
     let write_timestamp = felt_selector_from_name("write_timestamp");
@@ -20,49 +22,41 @@ fn check_timestamp(
 
     let output = call_contract(
         blockifier_state,
-        cheatnet_state,
+        runtime_state,
         contract_address,
         &write_timestamp,
         &[],
-    )
-    .unwrap();
+    );
 
     assert_success!(output, vec![]);
 
     let output = call_contract(
         blockifier_state,
-        cheatnet_state,
+        runtime_state,
         contract_address,
         &read_timestamp,
         &[],
-    )
-    .unwrap();
-
+    );
     recover_data(output)[0].clone()
 }
 
 #[test]
 fn timestamp_does_not_decrease() {
     let mut cached_state = create_cached_state();
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
+    let (mut blockifier_state, mut runtime_state_raw) = create_runtime_states(&mut cached_state);
+    let mut runtime_state = build_runtime_state(&mut runtime_state_raw);
 
     let contract_address = deploy_contract(
         &mut blockifier_state,
-        &mut cheatnet_state,
+        &mut runtime_state,
         "Timestamper",
         &[],
     );
 
-    let old_timestamp = check_timestamp(
-        &mut blockifier_state,
-        &mut cheatnet_state,
-        &contract_address,
-    );
-    let new_timestamp = check_timestamp(
-        &mut blockifier_state,
-        &mut cheatnet_state,
-        &contract_address,
-    );
+    let old_timestamp =
+        check_timestamp(&mut blockifier_state, &mut runtime_state, &contract_address);
+    let new_timestamp =
+        check_timestamp(&mut blockifier_state, &mut runtime_state, &contract_address);
 
     assert!(old_timestamp <= new_timestamp);
 }

@@ -65,6 +65,7 @@ pub struct RunnerConfig {
     pub exit_first: bool,
     pub fuzzer_runs: u32,
     pub fuzzer_seed: u64,
+    pub detailed_resources: bool,
     pub save_trace_data: bool,
 }
 
@@ -76,6 +77,7 @@ impl RunnerConfig {
         exit_first: bool,
         fuzzer_runs: u32,
         fuzzer_seed: u64,
+        detailed_resources: bool,
         save_trace_data: bool,
     ) -> Self {
         Self {
@@ -83,6 +85,7 @@ impl RunnerConfig {
             exit_first,
             fuzzer_runs,
             fuzzer_seed,
+            detailed_resources,
             save_trace_data,
         }
     }
@@ -246,7 +249,7 @@ pub async fn run_tests_from_crate(
     while let Some(task) = tasks.next().await {
         let result = task??;
 
-        print_test_result(&result);
+        print_test_result(&result, &runner_config);
 
         if runner_config.save_trace_data {
             if let AnyTestCaseSummary::Single(result) = &result {

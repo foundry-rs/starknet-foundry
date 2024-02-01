@@ -1,5 +1,6 @@
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::deprecated::syscalls::CheatableSyscallHandler;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::execute_call_entry_point;
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeState;
 use blockifier::abi::constants;
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallResult;
 use blockifier::execution::entry_point::{CallEntryPoint, CallType};
@@ -18,11 +19,14 @@ pub fn execute_inner_call(
     vm: &mut VirtualMachine,
     syscall_handler: &mut CheatableSyscallHandler<'_>,
 ) -> DeprecatedSyscallResult<ReadOnlySegment> {
+    let mut runtime_state = RuntimeState {
+        cheatnet_state: syscall_handler.cheatnet_state,
+    };
     // region: Modified blockifier code
     let call_info = execute_call_entry_point(
         call,
         syscall_handler.child.state,
-        syscall_handler.cheatnet_state,
+        &mut runtime_state,
         syscall_handler.child.resources,
         syscall_handler.child.context,
     )?;

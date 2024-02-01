@@ -1,8 +1,8 @@
 use std::marker::PhantomData;
 
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeState;
 use crate::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
 use crate::runtime_extensions::io_runtime_extension::IORuntimeExtension;
-use crate::state::CheatnetState;
 use blockifier::execution::call_info::CallInfo;
 use blockifier::execution::entry_point_execution::{
     finalize_execution, initialize_execution_context, prepare_call_arguments, VmExecutionContext,
@@ -33,10 +33,12 @@ pub fn execute_entry_point_call_cairo1(
     call: CallEntryPoint,
     contract_class: &ContractClassV1,
     state: &mut dyn State,
-    cheatnet_state: &mut CheatnetState, // Added parameter
+    runtime_state: &mut RuntimeState, // Added parameter
     resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
 ) -> EntryPointExecutionResult<CallInfo> {
+    let RuntimeState { cheatnet_state } = runtime_state;
+
     let VmExecutionContext {
         mut runner,
         mut vm,
