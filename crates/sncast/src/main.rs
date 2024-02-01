@@ -81,10 +81,6 @@ struct Cli {
     #[clap(long)]
     wait_retry_interval: Option<u8>,
 
-    /// Scarb package that should be used for artifacts compilation
-    #[clap(long)]
-    package: Option<String>,
-
     #[command(subcommand)]
     command: Commands,
 }
