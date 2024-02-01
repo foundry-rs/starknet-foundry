@@ -45,6 +45,7 @@ async fn test_call_invalid_calldata() {
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
         [DEBUG]	0x436f6e74726163744572726f72 ('ContractError')
+        [DEBUG]	0x436f6e74726163744572726f72 ('ContractError')
         command: script
         status: success
     "});

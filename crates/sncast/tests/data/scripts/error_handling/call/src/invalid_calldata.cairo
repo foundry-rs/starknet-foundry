@@ -17,5 +17,19 @@ fn main() {
             RPCError::StarknetError(StarknetError::ContractError)
         ) == call_err,
         'ohno'
+    );
+
+    let call_err: ScriptCommandError = call(
+        eth.try_into().expect('bad address'), 'allowance', array![0x12]
+    )
+        .unwrap_err();
+
+    call_err.print();
+
+    assert(
+        ScriptCommandError::RPCError(
+            RPCError::StarknetError(StarknetError::ContractError)
+        ) == call_err,
+        'ohno'
     )
 }
