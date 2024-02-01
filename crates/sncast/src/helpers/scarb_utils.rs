@@ -160,10 +160,6 @@ pub fn build_and_load_artifacts(
 #[cfg(test)]
 mod tests {
     use crate::helpers::scarb_utils::{get_package_metadata, get_scarb_metadata};
-    use crate::helpers::scarb_utils::{WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
-    use camino::Utf8PathBuf;
-    use sealed_test::prelude::rusty_fork_test;
-    use sealed_test::prelude::sealed_test;
 
     #[test]
     fn test_get_scarb_metadata() {
