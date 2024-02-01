@@ -228,7 +228,8 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                 env::set_current_dir(&package.root)?;
 
                 let forge_config = config_from_scarb_for_package(&scarb_metadata, &package.id)?;
-                let contracts = get_contracts_map(&scarb_metadata, &package.id, None).unwrap_or_default();
+                let contracts =
+                    get_contracts_map(&scarb_metadata, &package.id, None).unwrap_or_default();
 
                 let runner_config = Arc::new(combine_configs(
                     &workspace_root,
