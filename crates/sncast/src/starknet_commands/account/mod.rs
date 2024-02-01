@@ -162,7 +162,7 @@ pub fn add_created_profile_to_configuration(
 #[cfg(test)]
 mod tests {
     use camino::Utf8PathBuf;
-    use sncast::helpers::configuration::{copy_config_to_tempdir, CastConfig};
+    use sncast::helpers::configuration::{CastConfig, copy_config_to_tempdir};
     use sncast::helpers::constants::DEFAULT_ACCOUNTS_FILE;
     use std::fs;
 
