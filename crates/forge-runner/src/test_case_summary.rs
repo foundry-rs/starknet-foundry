@@ -2,9 +2,7 @@ use crate::compiled_runnable::TestCaseRunnable;
 use crate::expected_result::{ExpectedPanicValue, ExpectedTestResult};
 use crate::gas::check_available_gas;
 use crate::trace_data::CallTrace;
-use blockifier::execution::execution_utils::format_panic_data;
 use cairo_felt::{felt_str, Felt252};
-use cairo_lang_runner::casm_run::format_next_item;
 use cairo_lang_runner::short_string::{as_cairo_short_string, as_cairo_short_string_ex};
 use cairo_lang_runner::{RunResult, RunResultValue};
 use cairo_lang_utils::byte_array::{BYTES_IN_WORD, BYTE_ARRAY_MAGIC};
@@ -268,22 +266,21 @@ impl TestCaseSummary<Single> {
     }
 }
 
-/// Helper function to build readable_text from a run data.
-fn build_readable_text(data: &Vec<Felt252>) -> Option<String> {
-    let mut data_iter = data.clone().into_iter().peekable();
+/// Helper function to build readable text from a run data.
+fn build_readable_text(data: &[Felt252]) -> Option<String> {
+    let mut data_iter = data.iter().cloned();
     let mut items = Vec::new();
 
     while let Some(item) = format_next_felt(&mut data_iter) {
         items.push(format!("\n{item}"));
     }
 
-    match items[..] {
-        [] => None,
-        _ => {
-            let mut result = items.join("").to_string().replace('\n', "\n    ");
-            result.push('\n');
-            Some(result)
-        }
+    if items.is_empty() {
+        None
+    } else {
+        let mut result = items.join("").to_string().replace('\n', "\n    ");
+        result.push('\n');
+        Some(result)
     }
 }
 
@@ -310,7 +307,7 @@ where
 // https://github.com/starkware-libs/cairo/blob/1a4ccb01f6fb0a74bfc23238ca1088fe2659d087/crates/cairo-lang-runner/src/casm_run/mod.rs#L2227
 
 /// Tries to format a string, represented as a sequence of `Felt252`s.
-/// If the sequence is not a valid serialization of a ByteArray, returns None and doesn't change the
+/// If the sequence is not a valid serialization of a `ByteArray`, returns None and doesn't change the
 /// given iterator (`values`).
 fn try_format_string<T>(values: &mut T) -> Option<String>
 where
