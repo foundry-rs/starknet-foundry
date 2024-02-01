@@ -638,9 +638,9 @@ fn with_panic_data_decoding() {
         [..]Finished[..]
 
 
-        Collected 4 test(s) from panic_decoding package
+        Collected 8 test(s) from panic_decoding package
         Running 0 test(s) from src/
-        Running 4 test(s) from tests/
+        Running 8 test(s) from tests/
         [PASS] tests::test_panic_decoding::test_simple [..]
         [FAIL] tests::test_panic_decoding::test_panic_decoding
         
@@ -658,11 +658,39 @@ fn with_panic_data_decoding() {
             original value: [128]
         
         [PASS] tests::test_panic_decoding::test_simple2 [..]
-        Tests: 2 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
+        [FAIL] tests::test_panic_decoding::test_assert_message
+        
+        Failure data:
+            Another identifiable and meaningful error message
+        
+        [FAIL] tests::test_panic_decoding::test_assert
+
+        Failure data:
+            assertion failed: `x`.
+        
+        [FAIL] tests::test_panic_decoding::test_assert_eq
+        
+        Failure data:
+            assertion `x == y` failed.
+            x: 5
+            y: 6
+        
+        [FAIL] tests::test_panic_decoding::test_assert_eq_message
+        
+        Failure data:
+            assertion `x == y` failed: An identifiable and meaningful error message
+            x: 5
+            y: 6
+
+        Tests: 2 passed, 6 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:
             tests::test_panic_decoding::test_panic_decoding
             tests::test_panic_decoding::test_panic_decoding2
+            tests::test_panic_decoding::test_assert_message
+            tests::test_panic_decoding::test_assert
+            tests::test_panic_decoding::test_assert_eq
+            tests::test_panic_decoding::test_assert_eq_message
         "}
     );
 }
