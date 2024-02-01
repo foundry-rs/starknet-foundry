@@ -3,7 +3,7 @@ use indoc::indoc;
 use snapbox::cmd::{cargo_bin, Command};
 
 #[tokio::test]
-async fn test_call_invalid_entry_point() {
+async fn test_call_invalid_entry_point() {  //TODO: Consider better error
     let script_name = "invalid_entry_point";
     let args = vec!["--url", URL, "script", &script_name];
 
@@ -35,7 +35,7 @@ async fn test_call_invalid_address() {
 }
 
 #[tokio::test]
-async fn test_call_invalid_calldata() {
+async fn test_call_invalid_calldata() {  //TODO: Consider better error
     let script_name = "invalid_calldata";
     let args = vec!["--url", URL, "script", &script_name];
 
