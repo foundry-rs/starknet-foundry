@@ -70,7 +70,7 @@ jobs:
       - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
       - uses: software-mansion/setup-scarb@v1.3.2
       - name: Run Cheatnet tests
-        run: cargo test -p cheatnet
+        run: cargo test --release -p cheatnet
 
   test-cast:
     name: Test Cast
