@@ -27,7 +27,7 @@ For more details on Starknet Foundry `sncast`, please visit [our docs](https://f
 
 ## Example usages
 
-All subcommand usages are shown for two scenarios - when all necessary arguments are supplied using CLI, and when `url`, `accounts-file` and `account` arguments are taken from `snfoundry.toml`. To learn more about configuring profiles with parameters in `snfoundry.toml` file, please refer to the [documentation](https://foundry-rs.github.io/starknet-foundry/projects/configuration.html#defining-profiles-in-foundrytoml).
+All subcommand usages are shown for two scenarios - when all necessary arguments are supplied using CLI, and when `url`, `accounts-file` and `account` arguments are taken from `snfoundry.toml`. To learn more about configuring profiles with parameters in `snfoundry.toml` file, please refer to the [documentation](https://foundry-rs.github.io/starknet-foundry/projects/configuration.html#defining-profiles-in-snfoundrytoml).
 
 ### Declare a contract
 

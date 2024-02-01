@@ -3,7 +3,8 @@
 ## `--profile, -p <PROFILE_NAME>`
 Optional.
 
-Profile name in `Scarb.toml` config file.
+Used for both `snfoundry.toml` and `Scarb.toml` if specified (defaulting to `dev` in `Scarb.toml` if absent).
+Defaults to `default`.
 
 ## `--path-to-scarb-toml, -s <PATH>`
 Optional.

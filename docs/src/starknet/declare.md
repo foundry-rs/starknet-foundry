@@ -32,8 +32,8 @@ transaction_hash: 0x7ad0d6e449e33b6581a4bb8df866c0fce3919a5ee05a30840ba521dafee2
 > Contract name is a part after the `mod` keyword in your contract file. It may differ from package name defined in `Scarb.toml` file.
 
 > 📝 **Note**
-> In the above example we supply `sncast` with `--account` and `--url` flags. If `Scarb.toml` is present, and has
-> the properties set, values provided using these flags will override values from `Scarb.toml`. Learn more about `Scarb.toml`
+> In the above example we supply `sncast` with `--account` and `--url` flags. If `snfoundry.toml` is present, and has
+> the properties set, values provided using these flags will override values from `snfoundry.toml`. Learn more about `snfoundry.toml`
 > configuration [here](../projects/configuration.md#sncast).
 
 > 💡 **Info**

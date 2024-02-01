@@ -18,29 +18,32 @@ exit_first = true
 
 ## `sncast`
 
-### Defining Profiles in `Scarb.toml`
+### Defining Profiles in `snfoundry.toml`
 
 To be able to work with the network, you need to supply `sncast` with a few parameters —
 namely the rpc node url and an account name that should be used to interact with it.
 This can be done
 by either supplying `sncast` with those parameters directly [see more detailed CLI description,](../appendix/sncast.md)
-or you can put them into `Scarb.toml` file:
+or you can put them into `snfoundry.toml` file:
 
 ```toml
 # ...
-[tool.sncast.myprofile]
+[sncast.myprofile]
 account = "user"
 accounts-file = "~/my_accounts.json"
 url = "http://127.0.0.1:5050/rpc"
 # ...
 ```
 
-With `Scarb.toml` configured this way, we can just pass `--profile myprofile` argument to make sure `sncast` uses parameters
+With `snfoundry.toml` configured this way, we can just pass `--profile myprofile` argument to make sure `sncast` uses parameters
 defined in the profile.
 
 > 📝 **Note**
 > `Scarb.toml` file has to be present in current or any of the parent directories.
 > Alternatively, you can also point to `Scarb.toml` path with `--path-to-scarb-toml <PATH>` flag.
+
+> 📝 **Note**
+> If there is a profile with the same name in Scarb.toml, scarb will use this profile. If not, scarb will default to using the dev profile.
 
 > 💡 **Info**
 > Not all parameters have to be present in the configuration - you can choose to include only some of them and supply
@@ -60,22 +63,22 @@ response: [0x0]
 
 ### Multiple Profiles
 
-You can have multiple profiles defined in the `Scarb.toml`.
+You can have multiple profiles defined in the `snfoundry.toml`.
 
 ### Default Profile
 
-If you don't need multiple profiles, you can define the parameters without specifying one:
+There is also an option to set up a default profile, which can be utilized without the need to specify a `--profile`. Here's an example:
 
 ```toml
 # ...
-[tool.sncast]
+[sncast.default]
 account = "user123"
 accounts-file = "~/my_accounts.json"
 url = "http://127.0.0.1:5050/rpc"
 # ...
 ```
 
-That way, you can omit passing `--profile` parameter:
+With this, there's no need to include the `--profile` argument when using `sncast`.
 
 ```shell
 $ sncast call \
