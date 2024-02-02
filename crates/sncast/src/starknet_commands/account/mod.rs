@@ -7,7 +7,7 @@ use camino::Utf8PathBuf;
 use clap::{Args, Subcommand};
 use serde_json::json;
 use sncast::helpers::configuration::{
-    find_config_file, find_config_file_relative_to, parse_config,
+    find_config_file, load_config, search_config_upwards_relative_to,
 };
 use sncast::helpers::constants::CONFIG_FILENAME;
 use sncast::{chain_id_to_network_name, decode_chain_id, helpers::configuration::CastConfig};
@@ -98,7 +98,7 @@ pub fn add_created_profile_to_configuration(
     cast_config: &CastConfig,
     path: &Option<Utf8PathBuf>,
 ) -> Result<()> {
-    if !parse_config(profile, path)
+    if !load_config(profile, path)
         .unwrap_or_default()
         .account
         .is_empty()
@@ -143,7 +143,7 @@ pub fn add_created_profile_to_configuration(
     };
 
     let config_path = match path.as_ref() {
-        Some(p) => find_config_file_relative_to(p)?,
+        Some(p) => search_config_upwards_relative_to(p)?,
         None => find_config_file().unwrap_or(Utf8PathBuf::from(CONFIG_FILENAME)),
     };
 

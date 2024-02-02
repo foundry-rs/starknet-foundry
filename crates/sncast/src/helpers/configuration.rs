@@ -108,7 +108,7 @@ pub fn get_profile(sncast_config: &Value, profile: &Option<String>) -> Result<Va
     let profile_name = profile.as_deref().unwrap_or("default");
     let config = sncast_config
         .get("sncast")
-        .expect("Failed to find sncast config in foundry.toml file");
+        .expect("Failed to find sncast config in snfoundry.toml file");
 
     match config.get(profile_name) {
         Some(profile_value) => Ok(profile_value.clone()),
@@ -131,10 +131,10 @@ where
     entries.get(field).and_then(T::from_toml_value)
 }
 
-pub fn parse_config(profile: &Option<String>, path: &Option<Utf8PathBuf>) -> Result<CastConfig> {
+pub fn load_config(profile: &Option<String>, path: &Option<Utf8PathBuf>) -> Result<CastConfig> {
     let config_path = path
         .as_ref()
-        .and_then(|p| find_config_file_relative_to(p).ok())
+        .and_then(|p| search_config_upwards_relative_to(p).ok())
         .or_else(|| find_config_file().ok());
 
     match config_path {
@@ -250,7 +250,7 @@ mod tests {
     #[test]
     fn parse_config_happy_case_with_profile() {
         let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
-        let config = parse_config(
+        let config = load_config(
             &Some(String::from("profile1")),
             &Some(Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
         )
@@ -263,7 +263,7 @@ mod tests {
     #[test]
     fn parse_config_happy_case_default_profile() {
         let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
-        let config = parse_config(
+        let config = load_config(
             &None,
             &Some(Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
         )
@@ -275,7 +275,7 @@ mod tests {
     #[test]
     fn parse_config_not_found() {
         let tempdir = TempDir::new().expect("Failed to create a temporary directory");
-        let config = parse_config(
+        let config = load_config(
             &None,
             &Some(Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
         )

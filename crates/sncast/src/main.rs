@@ -9,7 +9,7 @@ use sncast::response::print::{print_command_result, OutputFormat};
 
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand};
-use sncast::helpers::configuration::{parse_config, CastConfig};
+use sncast::helpers::configuration::{load_config, CastConfig};
 use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
 use sncast::helpers::scarb_utils::{
     build, get_package_metadata, get_scarb_manifest, get_scarb_metadata_with_deps, BuildConfig,
@@ -117,7 +117,7 @@ fn main() -> Result<()> {
     let numbers_format = NumbersFormat::from_flags(cli.hex_format, cli.int_format);
     let output_format = OutputFormat::from_flag(cli.json);
 
-    let mut config = parse_config(&cli.profile, &None)?;
+    let mut config = load_config(&cli.profile, &None)?;
     update_cast_config(&mut config, &cli);
 
     let provider = get_provider(&config.rpc_url)?;
