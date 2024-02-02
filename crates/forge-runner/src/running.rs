@@ -134,31 +134,33 @@ fn build_context(block_info: BlockInfo) -> EntryPointExecutionContext {
     .unwrap()
 }
 
-fn build_syscall_handler<'a>(
-    blockifier_state: &'a mut dyn State,
-    string_to_hint: &'a HashMap<String, Hint>,
-    execution_resources: &'a mut ExecutionResources,
-    context: &'a mut EntryPointExecutionContext,
-    test_param_types: &[(GenericTypeId, i16)],
-) -> SyscallHintProcessor<'a> {
-    let entry_point = build_test_entry_point();
-
+fn get_syscall_segment_index(test_param_types: &[(GenericTypeId, i16)]) -> isize {
     // Segment arena is allocated conditionally, so segment index is automatically moved (+2 segments)
-    let segment_index = if test_param_types
+    if test_param_types
         .iter()
         .any(|(ty, _)| ty == &SegmentArenaType::ID)
     {
         12
     } else {
         10
-    };
+    }
+}
+
+fn build_syscall_handler<'a>(
+    blockifier_state: &'a mut dyn State,
+    string_to_hint: &'a HashMap<String, Hint>,
+    execution_resources: &'a mut ExecutionResources,
+    context: &'a mut EntryPointExecutionContext,
+    syscall_segment_index: isize,
+) -> SyscallHintProcessor<'a> {
+    let entry_point = build_test_entry_point();
 
     SyscallHintProcessor::new(
         blockifier_state,
         execution_resources,
         context,
         Relocatable {
-            segment_index,
+            segment_index: syscall_segment_index,
             offset: 0,
         },
         entry_point,
@@ -223,7 +225,7 @@ pub fn run_test_case(
         &string_to_hint,
         &mut execution_resources,
         &mut context,
-        &test_details.parameter_types,
+        get_syscall_segment_index(&test_details.parameter_types),
     );
 
     let mut cheatnet_state = CheatnetState {
