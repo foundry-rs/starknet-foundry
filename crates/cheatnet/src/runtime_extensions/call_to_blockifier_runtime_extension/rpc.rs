@@ -15,6 +15,7 @@ use blockifier::execution::{
 };
 use blockifier::state::errors::StateError;
 use cairo_felt::Felt252;
+use cairo_vm::vm::runners::cairo_runner::RunResources;
 use runtime::starknet::context::{build_block_context, build_transaction_context};
 use starknet_api::core::ClassHash;
 use starknet_api::{core::ContractAddress, deprecated_contract_class::EntryPointType};
@@ -221,6 +222,7 @@ pub fn call_entry_point(
         false,
     )
     .unwrap();
+    context.vm_run_resources = RunResources::new(usize::MAX);
 
     let exec_result = execute_call_entry_point(
         &mut entry_point,
