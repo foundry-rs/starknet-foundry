@@ -3,7 +3,7 @@ use anyhow::{anyhow, Result};
 use camino::Utf8PathBuf;
 use std::fs;
 
-pub fn find_config_file_relative_to(current_dir: &Utf8PathBuf) -> Result<Utf8PathBuf> {
+pub fn search_config_upwards_relative_to(current_dir: &Utf8PathBuf) -> Result<Utf8PathBuf> {
     current_dir
         .ancestors()
         .find(|path| fs::metadata(path.join(CONFIG_FILENAME)).is_ok())
@@ -16,7 +16,7 @@ pub fn find_config_file_relative_to(current_dir: &Utf8PathBuf) -> Result<Utf8Pat
 }
 
 pub fn find_config_file() -> Result<Utf8PathBuf> {
-    find_config_file_relative_to(&Utf8PathBuf::try_from(
+    search_config_upwards_relative_to(&Utf8PathBuf::try_from(
         std::env::current_dir().expect("Failed to get current directory"),
     )?)
 }
@@ -40,7 +40,7 @@ mod tests {
     #[test]
     fn find_config_in_current_dir() {
         let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
-        let path = find_config_file_relative_to(
+        let path = search_config_upwards_relative_to(
             &Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap(),
         )
         .unwrap();
@@ -51,7 +51,7 @@ mod tests {
     fn find_config_in_parent_dir() {
         let tempdir =
             copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", Some("childdir"));
-        let path = find_config_file_relative_to(
+        let path = search_config_upwards_relative_to(
             &Utf8PathBuf::try_from(tempdir.path().to_path_buf().join("childdir")).unwrap(),
         )
         .unwrap();
@@ -64,7 +64,7 @@ mod tests {
             "tests/data/files/correct_snfoundry.toml",
             Some("childdir1/childdir2"),
         );
-        let path = find_config_file_relative_to(
+        let path = search_config_upwards_relative_to(
             &Utf8PathBuf::try_from(tempdir.path().to_path_buf().join("childdir1/childdir2"))
                 .unwrap(),
         )
@@ -81,7 +81,7 @@ mod tests {
             tempdir.path().join("childdir1").join(CONFIG_FILENAME),
         )
         .expect("Failed to copy config file to temp dir");
-        let path = find_config_file_relative_to(
+        let path = search_config_upwards_relative_to(
             &Utf8PathBuf::try_from(tempdir.path().to_path_buf().join("childdir1")).unwrap(),
         )
         .unwrap();
@@ -92,7 +92,7 @@ mod tests {
     fn no_config_in_current_nor_parent_dir() {
         let tempdir = TempDir::new().expect("Failed to create a temporary directory");
         assert!(
-            find_config_file_relative_to(
+            search_config_upwards_relative_to(
                 &Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()
             )
             .is_err(),
