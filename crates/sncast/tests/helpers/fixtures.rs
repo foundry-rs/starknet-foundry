@@ -285,10 +285,9 @@ pub fn duplicate_directory_and_salt_file(
 ) -> TempDir {
     let src_dir = Utf8PathBuf::from(src_path);
     let temp_dir = match dst_path {
-        Some(dst_path) => TempDir::new_in(dst_path),
-        None => TempDir::new(),
+        Some(dst_path) => TempDir::new_in(dst_path).expect("Unable to create a temporary directory in the specified path"),
+        None => TempDir::new().expect("Unable to create a temporary directory"),
     };
-    let temp_dir = temp_dir.expect("Unable to create a temporary directory");
 
     let dest_dir = Utf8PathBuf::from_path_buf(temp_dir.path().to_path_buf())
         .expect("Failed to create Utf8PathBuf from PathBuf");
