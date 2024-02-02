@@ -39,11 +39,11 @@ With `snfoundry.toml` configured this way, we can just pass `--profile myprofile
 defined in the profile.
 
 > 📝 **Note**
-> `Scarb.toml` file has to be present in current or any of the parent directories.
-> Alternatively, you can also point to `Scarb.toml` path with `--path-to-scarb-toml <PATH>` flag.
+> `snfoundry.toml` file has to be present in current or any of the parent directories.
 
 > 📝 **Note**
 > If there is a profile with the same name in Scarb.toml, scarb will use this profile. If not, scarb will default to using the dev profile.
+> (This applies only to subcommands using scarb - namely `declare` and `script`).
 
 > 💡 **Info**
 > Not all parameters have to be present in the configuration - you can choose to include only some of them and supply
