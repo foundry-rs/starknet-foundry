@@ -21,10 +21,11 @@ use cairo_vm::{
         vm_core::VirtualMachine,
     },
 };
-use runtime::{ExtendedRuntime, ExtensionLogic, StarknetRuntime, SyscallHandlingResult};
+use runtime::{ExtendedRuntime, ExtensionLogic, SyscallHandlingResult};
 use starknet_api::hash::StarkFelt;
 
 use super::call_to_blockifier_runtime_extension::RuntimeState;
+use super::observer_extension::{ObserverRuntime, ObserverState};
 
 pub type SyscallSelector = DeprecatedSyscallSelector;
 
@@ -35,7 +36,7 @@ pub struct CheatableStarknetRuntimeExtension<'a> {
 pub type CheatableStarknetRuntime<'a> = ExtendedRuntime<CheatableStarknetRuntimeExtension<'a>>;
 
 impl<'a> ExtensionLogic for CheatableStarknetRuntimeExtension<'a> {
-    type Runtime = StarknetRuntime<'a>;
+    type Runtime = ObserverRuntime<'a>;
 
     fn override_system_call(
         &mut self,
@@ -43,12 +44,13 @@ impl<'a> ExtensionLogic for CheatableStarknetRuntimeExtension<'a> {
         vm: &mut VirtualMachine,
         extended_runtime: &mut Self::Runtime,
     ) -> Result<SyscallHandlingResult, HintError> {
-        let syscall_handler = &mut extended_runtime.hint_handler;
+        let syscall_handler = &mut extended_runtime.extended_runtime.hint_handler;
 
         match selector {
             SyscallSelector::GetExecutionInfo => self
                 .execute_syscall(
                     syscall_handler,
+                    extended_runtime.extension.observer_state,
                     vm,
                     cheated_syscalls::get_execution_info_syscall,
                     SyscallSelector::GetExecutionInfo,
@@ -58,6 +60,7 @@ impl<'a> ExtensionLogic for CheatableStarknetRuntimeExtension<'a> {
             SyscallSelector::CallContract => self
                 .execute_syscall(
                     syscall_handler,
+                    extended_runtime.extension.observer_state,
                     vm,
                     cheated_syscalls::call_contract_syscall,
                     SyscallSelector::CallContract,
@@ -66,6 +69,7 @@ impl<'a> ExtensionLogic for CheatableStarknetRuntimeExtension<'a> {
             SyscallSelector::LibraryCall => self
                 .execute_syscall(
                     syscall_handler,
+                    extended_runtime.extension.observer_state,
                     vm,
                     cheated_syscalls::library_call_syscall,
                     SyscallSelector::LibraryCall,
@@ -74,6 +78,7 @@ impl<'a> ExtensionLogic for CheatableStarknetRuntimeExtension<'a> {
             SyscallSelector::Deploy => self
                 .execute_syscall(
                     syscall_handler,
+                    extended_runtime.extension.observer_state,
                     vm,
                     cheated_syscalls::deploy_syscall,
                     SyscallSelector::Deploy,
@@ -88,7 +93,7 @@ impl<'a> ExtensionLogic for CheatableStarknetRuntimeExtension<'a> {
         selector: &DeprecatedSyscallSelector,
         extended_runtime: &mut Self::Runtime,
     ) {
-        let syscall_handler = &mut extended_runtime.hint_handler;
+        let syscall_handler = &mut extended_runtime.extended_runtime.hint_handler;
         if let SyscallSelector::EmitEvent = selector {
             syscall_hooks::emit_event_hook(syscall_handler, self.cheatnet_state);
         }
@@ -126,6 +131,7 @@ impl CheatableStarknetRuntimeExtension<'_> {
     fn execute_syscall<Request, Response, ExecuteCallback>(
         &mut self,
         syscall_handler: &mut SyscallHintProcessor,
+        observer_state: &mut ObserverState,
         vm: &mut VirtualMachine,
         execute_callback: ExecuteCallback,
         selector: SyscallSelector,
@@ -167,6 +173,7 @@ impl CheatableStarknetRuntimeExtension<'_> {
         // Execute.
         let mut runtime_state = RuntimeState {
             cheatnet_state: self.cheatnet_state,
+            observer_state,
         };
         let mut remaining_gas = gas_counter - base_gas_cost;
         let original_response = execute_callback(

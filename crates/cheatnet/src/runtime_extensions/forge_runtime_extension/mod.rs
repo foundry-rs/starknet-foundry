@@ -255,6 +255,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     extended_runtime
                         .extended_runtime
                         .extended_runtime
+                        .extended_runtime
                         .hint_handler
                         .state,
                 );
@@ -274,13 +275,19 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let class_hash = reader.read_felt().into_();
                 let calldata = reader.read_vec();
                 let cheatnet_runtime = &mut extended_runtime.extended_runtime;
-                let mut blockifier_state =
-                    BlockifierState::from(cheatnet_runtime.extended_runtime.hint_handler.state);
+                let mut blockifier_state = BlockifierState::from(
+                    cheatnet_runtime
+                        .extended_runtime
+                        .extended_runtime
+                        .hint_handler
+                        .state,
+                );
 
                 handle_deploy_result(deploy(
                     &mut blockifier_state,
                     &mut RuntimeState {
                         cheatnet_state: cheatnet_runtime.extension.cheatnet_state,
+                        observer_state: cheatnet_runtime.extended_runtime.extension.observer_state,
                     },
                     &class_hash,
                     &calldata,
@@ -291,13 +298,19 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let calldata = reader.read_vec();
                 let contract_address = reader.read_felt().into_();
                 let cheatnet_runtime = &mut extended_runtime.extended_runtime;
-                let mut blockifier_state =
-                    BlockifierState::from(cheatnet_runtime.extended_runtime.hint_handler.state);
+                let mut blockifier_state = BlockifierState::from(
+                    cheatnet_runtime
+                        .extended_runtime
+                        .extended_runtime
+                        .hint_handler
+                        .state,
+                );
 
                 handle_deploy_result(deploy_at(
                     &mut blockifier_state,
                     &mut RuntimeState {
                         cheatnet_state: cheatnet_runtime.extension.cheatnet_state,
+                        observer_state: cheatnet_runtime.extended_runtime.extension.observer_state,
                     },
                     &class_hash,
                     &calldata,
@@ -342,6 +355,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     extended_runtime
                         .extended_runtime
                         .extended_runtime
+                        .extended_runtime
                         .hint_handler
                         .state,
                 );
@@ -364,11 +378,17 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let payload = reader.read_vec();
 
                 let cheatnet_runtime = &mut extended_runtime.extended_runtime;
-                let mut blockifier_state =
-                    BlockifierState::from(cheatnet_runtime.extended_runtime.hint_handler.state);
+                let mut blockifier_state = BlockifierState::from(
+                    cheatnet_runtime
+                        .extended_runtime
+                        .extended_runtime
+                        .hint_handler
+                        .state,
+                );
 
                 let mut runtime_state = RuntimeState {
                     cheatnet_state: cheatnet_runtime.extension.cheatnet_state,
+                    observer_state: cheatnet_runtime.extended_runtime.extension.observer_state,
                 };
                 match blockifier_state.l1_handler_execute(
                     &mut runtime_state,
@@ -580,6 +600,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     extended_runtime
                         .extended_runtime
                         .extended_runtime
+                        .extended_runtime
                         .hint_handler
                         .state,
                 );
@@ -597,6 +618,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
             "load" => {
                 let mut blockifier_state = BlockifierState::from(
                     extended_runtime
+                        .extended_runtime
                         .extended_runtime
                         .extended_runtime
                         .hint_handler
@@ -725,10 +747,12 @@ pub fn get_all_execution_resources(runtime: ForgeRuntime) -> UsedResources {
         .extended_runtime
         .extended_runtime
         .extended_runtime
+        .extended_runtime
         .hint_handler
         .resources
         .clone();
     let runtime_l1_to_l2_messages = runtime
+        .extended_runtime
         .extended_runtime
         .extended_runtime
         .extended_runtime

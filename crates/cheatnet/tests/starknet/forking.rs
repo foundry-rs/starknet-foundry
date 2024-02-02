@@ -13,6 +13,7 @@ use cheatnet::forking::state::ForkStateReader;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeState;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::deploy;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
+use cheatnet::runtime_extensions::observer_extension::ObserverState;
 use cheatnet::state::{BlockInfoReader, BlockifierState, CheatnetState, ExtendedStateReader};
 use conversions::{IntoConv, TryIntoConv};
 use num_bigint::BigUint;
@@ -124,6 +125,7 @@ fn test_forking_at_block_number() {
 
     {
         let mut cheatnet_state = CheatnetState::default();
+        let mut observer_state = ObserverState::default();
         let mut cached_state_before_delopy = CachedState::new(
             ExtendedStateReader {
                 dict_state_reader: build_testing_state(),
@@ -163,6 +165,7 @@ fn test_forking_at_block_number() {
             &mut state_before_deploy,
             &mut RuntimeState {
                 cheatnet_state: &mut cheatnet_state,
+                observer_state: &mut observer_state,
             },
             &contract_address,
             &selector,
@@ -179,6 +182,7 @@ fn test_forking_at_block_number() {
             &mut state_after_deploy,
             &mut RuntimeState {
                 cheatnet_state: &mut cheatnet_state,
+                observer_state: &mut observer_state,
             },
             &contract_address,
             &selector,

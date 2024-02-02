@@ -1,5 +1,6 @@
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeState;
 use crate::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
+use crate::runtime_extensions::observer_extension::ObserverExtension;
 use blockifier::execution::call_info::CallInfo;
 use blockifier::execution::entry_point_execution::{
     finalize_execution, initialize_execution_context, prepare_call_arguments, VmExecutionContext,
@@ -34,8 +35,6 @@ pub fn execute_entry_point_call_cairo1(
     resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
 ) -> EntryPointExecutionResult<CallInfo> {
-    let RuntimeState { cheatnet_state } = runtime_state;
-
     let VmExecutionContext {
         mut runner,
         mut vm,
@@ -59,11 +58,20 @@ pub fn execute_entry_point_call_cairo1(
 
     // region: Modified blockifier code
 
-    let mut cheatable_runtime = ExtendedRuntime {
-        extension: CheatableStarknetRuntimeExtension { cheatnet_state },
+    let observer_runtime = ExtendedRuntime {
+        extension: ObserverExtension {
+            observer_state: runtime_state.observer_state,
+        },
         extended_runtime: StarknetRuntime {
             hint_handler: syscall_handler,
         },
+    };
+
+    let mut cheatable_runtime = ExtendedRuntime {
+        extension: CheatableStarknetRuntimeExtension {
+            cheatnet_state: runtime_state.cheatnet_state,
+        },
+        extended_runtime: observer_runtime,
     };
 
     // Execute.
@@ -80,7 +88,10 @@ pub fn execute_entry_point_call_cairo1(
     let call_info = finalize_execution(
         vm,
         runner,
-        cheatable_runtime.extended_runtime.hint_handler,
+        cheatable_runtime
+            .extended_runtime
+            .extended_runtime
+            .hint_handler,
         previous_vm_resources,
         n_total_args,
         program_extra_data_length,

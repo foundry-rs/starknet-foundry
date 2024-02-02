@@ -24,7 +24,7 @@ use super::entry_point::execute_call_entry_point;
 pub fn execute_inner_call(
     call: &mut CallEntryPoint,
     vm: &mut VirtualMachine,
-    syscall_handler: &mut SyscallHintProcessor<'_>,
+    syscall_handler: &mut SyscallHintProcessor,
     runtime_state: &mut RuntimeState,
     remaining_gas: &mut u64,
 ) -> SyscallResult<ReadOnlySegment> {

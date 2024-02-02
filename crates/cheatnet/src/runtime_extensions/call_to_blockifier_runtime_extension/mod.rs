@@ -34,6 +34,7 @@ use crate::runtime_extensions::call_to_blockifier_runtime_extension::{
 };
 
 use super::cheatable_starknet_runtime_extension::CheatableStarknetRuntime;
+use super::observer_extension::ObserverState;
 
 pub mod execution;
 pub mod panic_data;
@@ -157,9 +158,14 @@ fn execute_syscall<Request: ExecuteCall + SyscallRequest>(
     )?;
 
     let cheatnet_state: &mut _ = cheatable_starknet_runtime.extension.cheatnet_state;
-    let syscall_handler = &mut cheatable_starknet_runtime.extended_runtime.hint_handler;
+    let observer_runtime = &mut cheatable_starknet_runtime.extended_runtime;
+    let observer_state: &mut _ = observer_runtime.extension.observer_state;
+    let syscall_handler = &mut observer_runtime.extended_runtime.hint_handler;
     let mut blockifier_state = BlockifierState::from(syscall_handler.state);
-    let mut runtime_state = RuntimeState { cheatnet_state };
+    let mut runtime_state = RuntimeState {
+        cheatnet_state,
+        observer_state,
+    };
 
     let call_result = request.execute_call(&mut blockifier_state, &mut runtime_state);
     write_call_response(syscall_handler, vm, gas_counter, call_result)?;
@@ -168,6 +174,7 @@ fn execute_syscall<Request: ExecuteCall + SyscallRequest>(
 
 pub struct RuntimeState<'a> {
     pub cheatnet_state: &'a mut CheatnetState,
+    pub observer_state: &'a mut ObserverState,
 }
 
 fn write_call_response(

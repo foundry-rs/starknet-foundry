@@ -3,6 +3,9 @@ use crate::runtime_extensions::deprecated_cheatable_starknet_extension::runtime:
     DeprecatedExtendedRuntime, DeprecatedStarknetRuntime,
 };
 use crate::runtime_extensions::deprecated_cheatable_starknet_extension::DeprecatedCheatableStarknetRuntimeExtension;
+use crate::runtime_extensions::deprecated_observer_extension::{
+    DeprecatedObserverExtension, DeprecatedObserverRuntime,
+};
 use blockifier::execution::call_info::CallInfo;
 use blockifier::execution::contract_class::ContractClassV0;
 use blockifier::execution::deprecated_entry_point_execution::{
@@ -50,11 +53,19 @@ pub fn execute_entry_point_call_cairo0(
     let cheatable_extension = DeprecatedCheatableStarknetRuntimeExtension {
         cheatnet_state: runtime_state.cheatnet_state,
     };
-    let mut cheatable_syscall_handler = DeprecatedExtendedRuntime {
-        extension: cheatable_extension,
+
+    let observer_runtime = DeprecatedObserverRuntime {
+        extension: DeprecatedObserverExtension {
+            observer_state: runtime_state.observer_state,
+        },
         extended_runtime: DeprecatedStarknetRuntime {
             hint_handler: syscall_handler,
         },
+    };
+
+    let mut cheatable_syscall_handler = DeprecatedExtendedRuntime {
+        extension: cheatable_extension,
+        extended_runtime: observer_runtime,
     };
 
     // Execute.
@@ -70,7 +81,10 @@ pub fn execute_entry_point_call_cairo0(
     Ok(finalize_execution(
         vm,
         runner,
-        cheatable_syscall_handler.extended_runtime.hint_handler,
+        cheatable_syscall_handler
+            .extended_runtime
+            .extended_runtime
+            .hint_handler,
         call,
         previous_vm_resources,
         implicit_args,

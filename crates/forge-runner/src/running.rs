@@ -38,6 +38,7 @@ use cheatnet::runtime_extensions::cheatable_starknet_runtime_extension::Cheatabl
 use cheatnet::runtime_extensions::forge_runtime_extension::{
     get_all_execution_resources, ForgeExtension, ForgeRuntime,
 };
+use cheatnet::runtime_extensions::observer_extension::{ObserverExtension, ObserverState};
 use cheatnet::state::{BlockInfoReader, CallTrace, CheatnetState, ExtendedStateReader};
 use itertools::chain;
 use runtime::starknet::context;
@@ -232,13 +233,25 @@ pub fn run_test_case(
         ..Default::default()
     };
 
-    let cheatable_runtime = ExtendedRuntime {
-        extension: CheatableStarknetRuntimeExtension {
-            cheatnet_state: &mut cheatnet_state,
+    let mut observer_state = ObserverState {
+        contract_name_to_class_hash: HashMap::new(),
+        contracts: runner_params.contracts.clone(),
+    };
+
+    let observer_runtime = ExtendedRuntime {
+        extension: ObserverExtension {
+            observer_state: &mut observer_state,
         },
         extended_runtime: StarknetRuntime {
             hint_handler: syscall_handler,
         },
+    };
+
+    let cheatable_runtime = ExtendedRuntime {
+        extension: CheatableStarknetRuntimeExtension {
+            cheatnet_state: &mut cheatnet_state,
+        },
+        extended_runtime: observer_runtime,
     };
 
     let call_to_blockifier_runtime = ExtendedRuntime {
@@ -281,6 +294,7 @@ pub fn run_test_case(
                 .unwrap()
                 .filter_unused_builtins();
             forge_runtime
+                .extended_runtime
                 .extended_runtime
                 .extended_runtime
                 .extended_runtime
@@ -386,6 +400,7 @@ fn get_fork_state_reader(
 
 fn get_context<'a>(runtime: &'a ForgeRuntime) -> &'a EntryPointExecutionContext {
     runtime
+        .extended_runtime
         .extended_runtime
         .extended_runtime
         .extended_runtime

@@ -22,12 +22,12 @@ use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector};
 use starknet_api::deprecated_contract_class::EntryPointType;
 use starknet_api::transaction::Calldata;
 
-use self::runtime::{
-    DeprecatedExtendedRuntime, DeprecatedExtensionLogic, DeprecatedStarknetRuntime,
-};
+use self::runtime::{DeprecatedExtendedRuntime, DeprecatedExtensionLogic};
 
 use super::call_to_blockifier_runtime_extension::execution::entry_point::execute_call_entry_point;
 use super::call_to_blockifier_runtime_extension::RuntimeState;
+use super::deprecated_observer_extension::DeprecatedObserverRuntime;
+use super::observer_extension::ObserverState;
 
 pub mod runtime;
 
@@ -55,7 +55,7 @@ pub type DeprecatedCheatableStarknetRuntime<'a> =
     DeprecatedExtendedRuntime<DeprecatedCheatableStarknetRuntimeExtension<'a>>;
 
 impl<'a> DeprecatedExtensionLogic for DeprecatedCheatableStarknetRuntimeExtension<'a> {
-    type Runtime = DeprecatedStarknetRuntime<'a>;
+    type Runtime = DeprecatedObserverRuntime<'a>;
 
     fn override_system_call(
         &mut self,
@@ -63,7 +63,7 @@ impl<'a> DeprecatedExtensionLogic for DeprecatedCheatableStarknetRuntimeExtensio
         vm: &mut VirtualMachine,
         extended_runtime: &mut Self::Runtime,
     ) -> Result<SyscallHandlingResult, HintError> {
-        let syscall_handler = &mut extended_runtime.hint_handler;
+        let syscall_handler = &mut extended_runtime.extended_runtime.hint_handler;
         let contract_address = syscall_handler.storage_address;
         match selector {
             DeprecatedSyscallSelector::GetCallerAddress => {
@@ -125,14 +125,24 @@ impl<'a> DeprecatedExtensionLogic for DeprecatedCheatableStarknetRuntimeExtensio
                 syscall_handler.syscall_ptr += 1;
                 increment_syscall_count(syscall_handler, selector);
 
-                self.execute_syscall(vm, delegate_call, syscall_handler)?;
+                self.execute_syscall(
+                    vm,
+                    delegate_call,
+                    syscall_handler,
+                    extended_runtime.extension.observer_state,
+                )?;
                 Ok(SyscallHandlingResult::Handled(()))
             }
             DeprecatedSyscallSelector::LibraryCall => {
                 syscall_handler.syscall_ptr += 1;
                 increment_syscall_count(syscall_handler, selector);
 
-                self.execute_syscall(vm, library_call, syscall_handler)?;
+                self.execute_syscall(
+                    vm,
+                    library_call,
+                    syscall_handler,
+                    extended_runtime.extension.observer_state,
+                )?;
                 Ok(SyscallHandlingResult::Handled(()))
             }
             _ => Ok(SyscallHandlingResult::Forwarded),
@@ -147,6 +157,7 @@ impl<'a> DeprecatedCheatableStarknetRuntimeExtension<'a> {
         vm: &mut VirtualMachine,
         execute_callback: ExecuteCallback,
         syscall_handler: &mut DeprecatedSyscallHintProcessor,
+        observer_state: &mut ObserverState,
     ) -> HintExecutionResult
     where
         Request: SyscallRequest,
@@ -155,12 +166,17 @@ impl<'a> DeprecatedCheatableStarknetRuntimeExtension<'a> {
             Request,
             &mut VirtualMachine,
             &mut DeprecatedSyscallHintProcessor,
-            &mut CheatnetState,
+            &mut RuntimeState,
         ) -> DeprecatedSyscallResult<Response>,
     {
         let request = Request::read(vm, &mut syscall_handler.syscall_ptr)?;
 
-        let response = execute_callback(request, vm, syscall_handler, self.cheatnet_state)?;
+        let mut runtime_state = RuntimeState {
+            cheatnet_state: self.cheatnet_state,
+            observer_state,
+        };
+
+        let response = execute_callback(request, vm, syscall_handler, &mut runtime_state)?;
         response.write(vm, &mut syscall_handler.syscall_ptr)?;
 
         Ok(())
@@ -185,14 +201,14 @@ pub fn delegate_call(
     request: CallContractRequest,
     vm: &mut VirtualMachine,
     syscall_handler: &mut DeprecatedSyscallHintProcessor<'_>,
-    cheatnet_state: &mut CheatnetState,
+    runtime_state: &mut RuntimeState,
 ) -> DeprecatedSyscallResult<SingleSegmentResponse> {
     let call_to_external = true;
     let storage_address = request.contract_address;
     let class_hash = syscall_handler.state.get_class_hash_at(storage_address)?;
     let retdata_segment = execute_library_call(
         syscall_handler,
-        cheatnet_state,
+        runtime_state,
         vm,
         class_hash,
         Some(storage_address),
@@ -211,12 +227,12 @@ pub fn library_call(
     request: LibraryCallRequest,
     vm: &mut VirtualMachine,
     syscall_handler: &mut DeprecatedSyscallHintProcessor<'_>,
-    cheatnet_state: &mut CheatnetState,
+    runtime_state: &mut RuntimeState,
 ) -> DeprecatedSyscallResult<SingleSegmentResponse> {
     let call_to_external = true;
     let retdata_segment = execute_library_call(
         syscall_handler,
-        cheatnet_state,
+        runtime_state,
         vm,
         request.class_hash,
         None,
@@ -300,14 +316,13 @@ pub fn execute_inner_call(
     call: &mut CallEntryPoint,
     vm: &mut VirtualMachine,
     syscall_handler: &mut DeprecatedSyscallHintProcessor<'_>,
-    cheatnet_state: &mut CheatnetState,
+    runtime_state: &mut RuntimeState,
 ) -> DeprecatedSyscallResult<ReadOnlySegment> {
-    let mut runtime_state = RuntimeState { cheatnet_state };
     // region: Modified blockifier code
     let call_info = execute_call_entry_point(
         call,
         syscall_handler.state,
-        &mut runtime_state,
+        runtime_state,
         syscall_handler.resources,
         syscall_handler.context,
     )?;
@@ -331,7 +346,7 @@ pub fn execute_inner_call(
 #[allow(clippy::too_many_arguments)]
 pub fn execute_library_call(
     syscall_handler: &mut DeprecatedSyscallHintProcessor<'_>,
-    cheatnet_state: &mut CheatnetState,
+    runtime_state: &mut RuntimeState,
     vm: &mut VirtualMachine,
     class_hash: ClassHash,
     code_address: Option<ContractAddress>,
@@ -357,5 +372,5 @@ pub fn execute_library_call(
         initial_gas: constants::INITIAL_GAS_COST,
     };
 
-    execute_inner_call(&mut entry_point, vm, syscall_handler, cheatnet_state)
+    execute_inner_call(&mut entry_point, vm, syscall_handler, runtime_state)
 }
