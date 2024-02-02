@@ -118,15 +118,16 @@ fn main() -> Result<()> {
     let numbers_format = NumbersFormat::from_flags(cli.hex_format, cli.int_format);
     let output_format = OutputFormat::from_flag(cli.json);
 
-    let mut config = load_config(&cli.profile, &None)?;
-    update_cast_config(&mut config, &cli);
-
-    let provider = get_provider(&config.rpc_url)?;
     let runtime = Runtime::new().expect("Failed to instantiate Runtime");
 
-    if let Commands::Script(script) = cli.command {
+    if let Commands::Script(script) = &cli.command {
         let manifest_path = assert_manifest_path_exists(&cli.path_to_scarb_toml)?;
         let package_metadata = get_package_metadata(&manifest_path, &script.package)?;
+
+        let mut config = load_config(&cli.profile, &Some(package_metadata.root.clone()))?;
+        update_cast_config(&mut config, &cli);
+        let provider = get_provider(&config.rpc_url)?;
+
         let mut artifacts = build_and_load_artifacts(
             &package_metadata,
             &BuildConfig {
@@ -150,6 +151,9 @@ fn main() -> Result<()> {
         print_command_result("script", &mut result, numbers_format, &output_format)?;
         Ok(())
     } else {
+        let mut config = load_config(&cli.profile, &None)?;
+        update_cast_config(&mut config, &cli);
+        let provider = get_provider(&config.rpc_url)?;
         runtime.block_on(run_async_command(
             cli,
             config,
