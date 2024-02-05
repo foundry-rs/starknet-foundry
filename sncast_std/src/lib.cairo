@@ -1,11 +1,11 @@
 use starknet::{testing::cheatcode, ContractAddress, ClassHash};
 
 #[derive(Drop, Clone)]
-struct CallResult {
+pub struct CallResult {
     data: Array::<felt252>,
 }
 
-fn call(
+pub fn call(
     contract_address: ContractAddress, function_name: felt252, calldata: Array::<felt252>
 ) -> CallResult {
     let contract_address_felt: felt252 = contract_address.into();
@@ -24,12 +24,12 @@ fn call(
 }
 
 #[derive(Drop, Clone)]
-struct DeclareResult {
+pub struct DeclareResult {
     class_hash: ClassHash,
     transaction_hash: felt252,
 }
 
-fn declare(
+pub fn declare(
     contract_name: felt252, max_fee: Option<felt252>, nonce: Option<felt252>
 ) -> DeclareResult {
     let mut inputs = array![contract_name];
@@ -52,12 +52,12 @@ fn declare(
 }
 
 #[derive(Drop, Clone)]
-struct DeployResult {
+pub struct DeployResult {
     contract_address: ContractAddress,
     transaction_hash: felt252,
 }
 
-fn deploy(
+pub fn deploy(
     class_hash: ClassHash,
     constructor_calldata: Array::<felt252>,
     salt: Option<felt252>,
@@ -97,11 +97,11 @@ fn deploy(
 }
 
 #[derive(Drop, Clone)]
-struct InvokeResult {
+pub struct InvokeResult {
     transaction_hash: felt252,
 }
 
-fn invoke(
+pub fn invoke(
     contract_address: ContractAddress,
     entry_point_selector: felt252,
     calldata: Array::<felt252>,
@@ -131,7 +131,7 @@ fn invoke(
     InvokeResult { transaction_hash }
 }
 
-fn get_nonce(block_tag: felt252) -> felt252 {
+pub fn get_nonce(block_tag: felt252) -> felt252 {
     let inputs = array![block_tag];
     let buf = cheatcode::<'get_nonce'>(inputs.span());
     *buf[0]
