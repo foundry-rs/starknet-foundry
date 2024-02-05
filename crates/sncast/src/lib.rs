@@ -38,6 +38,7 @@ use url::Url;
 
 pub mod helpers;
 pub mod response;
+pub mod state;
 
 #[derive(Deserialize, Serialize, Clone)]
 struct Account {
