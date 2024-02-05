@@ -1,5 +1,3 @@
-use std::marker::PhantomData;
-
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeState;
 use crate::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
 use blockifier::execution::call_info::CallInfo;
