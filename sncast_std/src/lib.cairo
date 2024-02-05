@@ -2,7 +2,7 @@ use starknet::{testing::cheatcode, ContractAddress, ClassHash};
 
 #[derive(Drop, Clone)]
 pub struct CallResult {
-    data: Array::<felt252>,
+    pub data: Array::<felt252>,
 }
 
 pub fn call(
@@ -25,8 +25,8 @@ pub fn call(
 
 #[derive(Drop, Clone)]
 pub struct DeclareResult {
-    class_hash: ClassHash,
-    transaction_hash: felt252,
+    pub class_hash: ClassHash,
+    pub transaction_hash: felt252,
 }
 
 pub fn declare(
@@ -53,8 +53,8 @@ pub fn declare(
 
 #[derive(Drop, Clone)]
 pub struct DeployResult {
-    contract_address: ContractAddress,
-    transaction_hash: felt252,
+    pub contract_address: ContractAddress,
+    pub transaction_hash: felt252,
 }
 
 pub fn deploy(
@@ -98,7 +98,7 @@ pub fn deploy(
 
 #[derive(Drop, Clone)]
 pub struct InvokeResult {
-    transaction_hash: felt252,
+    pub transaction_hash: felt252,
 }
 
 pub fn invoke(
