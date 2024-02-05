@@ -584,7 +584,7 @@ fn with_print() {
 
     assert_stdout_contains!(
         output,
-        indoc! {r"
+        indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -592,35 +592,29 @@ fn with_print() {
         Collected 1 test(s) from print_test package
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
-        original value: [123], converted to a string: [{]
-        original value: [3618502788666131213697322783095070105623107215331596699973092056135872020480]
-        original value: [6381921], converted to a string: [aaa]
-        original value: [12]
-        original value: [1234]
-        original value: [123456]
-        original value: [1233456789]
-        original value: [123345678910]
-        original value: [0]
-        original value: [10633823966279327296825105735305134080]
-        original value: [2]
-        original value: [11]
-        original value: [1234]
-        original value: [123456]
-        original value: [123456789]
-        original value: [12345612342]
-        original value: [152]
-        original value: [124], converted to a string: [|]
-        original value: [149]
-        original value: [0]
-        original value: [27]
-        original value: [17]
-        original value: [37], converted to a string: [%]
-        original value: [127]
-        original value: [32], converted to a string: [ ]
-        original value: [166906514068638843492736773029576256], converted to a string: [ % abc 123 !?>@]
+        123
+        3618502788666131213697322783095070105623107215331596699973092056135872020480
+        6381921
+        12
+        1234
+        123456
+        1233456789
+        123345678910
+        3618502788666131213697322783095070105623107215331596699973092056135872020480
+        2
+        [152, 124, 149]
+        false
+        27
+        17
+        37
+        127
+        32
+        166906514068638843492736773029576256
+        5,hello,5
+        5hello55"hello"5
         [PASS] tests::test_print::test_print [..]
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
-        "}
+        "#}
     );
 }
 

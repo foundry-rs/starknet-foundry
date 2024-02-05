@@ -1,80 +1,69 @@
-use array::ArrayTrait;
-use snforge_std::PrintTrait;
-
 #[test]
 fn test_print() {
     let felt252: felt252 = 123;
-    felt252.print();
+    println!("{}", felt252);
 
     let felt252_2: felt252 =
         3618502788666131213697322783095070105623107215331596699973092056135872020480;
-    felt252_2.print();
+    println!("{}", felt252_2);
 
     let string = 'aaa';
-    string.print();
+    println!("{}", string);
 
     let u8: u8 = 12;
-    u8.print();
+    println!("{}", u8);
 
     let u16: u16 = 1234;
-    u16.print();
+    println!("{}", u16);
 
     let u32: u32 = 123456;
-    u32.print();
+    println!("{}", u32);
 
     let u64: u64 = 1233456789;
-    u64.print();
+    println!("{}", u64);
 
     let u128: u128 = 123345678910;
-    u128.print();
+    println!("{}", u128);
 
     let u256: u256 = 3618502788666131213697322783095070105623107215331596699973092056135872020480;
-    u256.print();
+    println!("{}", u256);
 
     let usize: usize = 2;
-    usize.print();
-
-    let i8: i8 = 11;
-    i8.print();
-
-    let i16: i16 = 1234;
-    i16.print();
-
-    let i32: i32 = 123456;
-    i32.print();
-
-    let i64: i64 = 123456789;
-    i64.print();
-
-    let i128: i128 = 12345612342;
-    i128.print();
+    println!("{}", usize);
 
     let mut arr = ArrayTrait::new();
     arr.append(152);
     arr.append(124);
     arr.append(149);
-    arr.print();
+    println!("{:?}", arr);
 
     let bool: bool = 1 == 5;
-    bool.print();
+    println!("{}", bool);
 
     let esc = 27;
-    esc.print();
+    println!("{}", esc);
 
     let dc1 = 17;
-    dc1.print();
+    println!("{}", dc1);
 
     let percent = 37;
-    percent.print();
+    println!("{}", percent);
 
     let del = 127;
-    del.print();
+    println!("{}", del);
 
     let space = 32;
-    space.print();
+    println!("{}", space);
 
     let complex = ' % abc 123 !?>@';
-    complex.print();
+    println!("{}", complex);
+
+    let var1 = 5;
+    let var2: ByteArray = "hello";
+    let var3 = 5_u32;
+    println!("{},{},{}", var1, var2, var3);
+    print!("{var1}{var2}{var3}");
+    println!("{var1:?}{var2:?}{var3:?}");
 
     assert(1 == 1, 'simple check');
 }
