@@ -50,7 +50,7 @@ async fn test_show_config_from_cli() {
 }
 
 #[tokio::test]
-async fn test_show_config_from_cli_and_sncast_toml() {
+async fn test_show_config_from_cli_and_snfoundry_toml() {
     let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
     let args = vec!["--account", "user2", "--profile", "profile2", "show-config"];
 

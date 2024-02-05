@@ -147,12 +147,12 @@ pub fn add_created_profile_to_configuration(
         None => find_config_file().unwrap_or(Utf8PathBuf::from(CONFIG_FILENAME)),
     };
 
-    let mut sncast_toml = OpenOptions::new()
+    let mut snfoundry_toml = OpenOptions::new()
         .create(true)
         .append(true)
         .open(config_path)
         .context("Failed to open snfoundry.toml")?;
-    sncast_toml
+    snfoundry_toml
         .write_all(format!("\n{toml_string}").as_bytes())
         .context("Failed to write to the snfoundry.toml")?;
 
