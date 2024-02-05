@@ -145,7 +145,7 @@ async fn test_multiple_packages_not_picked() {
 
     snapbox.assert().failure().stderr_matches(indoc! {r"
         ...
-        Error: More than one package found in metadata - specify package using --package flag
+        Error: More than one package found in scarb metadata - specify package using --package flag
     "});
 }
 
