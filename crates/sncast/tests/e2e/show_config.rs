@@ -3,7 +3,7 @@ use indoc::indoc;
 use sncast::helpers::configuration::copy_config_to_tempdir;
 
 #[tokio::test]
-async fn test_show_config_from_scast_toml() {
+async fn test_show_config_from_snfoundry_toml() {
     let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
     let args = vec!["show-config"];
 
