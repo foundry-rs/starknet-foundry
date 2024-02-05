@@ -11,7 +11,7 @@ if ! scarb --version | grep -qF "$SCARB_VERSION"; then
 fi
 
 if [ ! -d "${REPO_ROOT}/crates/sncast/tests/utils/devnet/bin" ]; then
-  echo "Devnet not found - please run ${REPO_ROOT}/install_devnet.sh script first!"
+  echo "Devnet not found - please run ${REPO_ROOT}/scripts/install_devnet.sh script first!"
   exit 1
 fi
 
