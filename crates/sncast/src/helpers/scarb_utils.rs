@@ -1,6 +1,10 @@
 use anyhow::{anyhow, Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
-use scarb_api::{get_contracts_map, ScarbCommand, StarknetContractArtifacts};
+use scarb_api::{
+    get_contracts_map,
+    metadata::{Metadata, MetadataCommand, PackageMetadata},
+    ScarbCommand, StarknetContractArtifacts,
+};
 use std::collections::HashMap;
 use std::env;
 use std::fs::canonicalize;
