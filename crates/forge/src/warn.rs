@@ -2,7 +2,7 @@ use crate::{
     compiled_raw::CompiledTestCrateRaw, pretty_printing::print_warning, replace_id_with_params,
     scarb::config::ForkTarget,
 };
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
 use scarb_api::ScarbCommand;
 use semver::{Version, VersionReq};
 use starknet::providers::{jsonrpc::HttpTransport, JsonRpcClient, Provider};
@@ -54,14 +54,21 @@ pub(crate) async fn warn_if_incompatible_rpc_version(
 
     // call rpc's
     for url in urls {
-        let client = JsonRpcClient::new(HttpTransport::new(Url::parse(url)?));
+        let client = JsonRpcClient::new(HttpTransport::new(
+            Url::parse(url).with_context(|| format!("could not parse url: {url}"))?,
+        ));
 
         handles.push(async move {
             (
                 client
                     .spec_version()
                     .await
-                    .map(|version| version.parse::<Version>()),
+                    .map(|version| {
+                        version
+                            .parse::<Version>()
+                            .with_context(|| format!("could not parse version: {version}"))
+                    })
+                    .context("error while calling rpc node"),
                 url,
             )
         });
@@ -74,7 +81,7 @@ pub(crate) async fn warn_if_incompatible_rpc_version(
 
         if !expected_version.matches(&version) {
             print_warning(&anyhow!(
-                "RPC {url} has unsupported version ({version}), expected {EXPECTED_RPC_VERSION}"
+                "The RPC node with url = {url} has unsupported version = ({version}), use node supporting RPC version {EXPECTED_RPC_VERSION}"
             ));
         }
     }
