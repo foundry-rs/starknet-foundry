@@ -930,7 +930,7 @@ fn printing_in_contracts() {
         output,
         indoc! {r#"
         [..]Compiling[..]
-        warn: libfunc `cheatcode` is not allowed in the libfuncs list `Default libfunc list`
+        warn: libfunc `print` is not allowed in the libfuncs list `Default libfunc list`
          --> contract: HelloStarknet
         help: try compiling with the `experimental` list
          --> Scarb.toml
@@ -943,7 +943,7 @@ fn printing_in_contracts() {
         Collected 2 test(s) from contract_printing package
         Running 0 test(s) from src/
         Running 2 test(s) from tests/
-        original value: [22405534230753963835153736737], converted to a string: [Hello world!]
+        Hello world!
         [PASS] tests::test_contract::test_increase_balance [..]
         [PASS] tests::test_contract::test_cannot_increase_balance_with_zero_value [..]
         Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
