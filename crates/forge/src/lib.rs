@@ -1,6 +1,5 @@
 use anyhow::{anyhow, Result};
 use camino::Utf8Path;
-use indoc::formatdoc;
 use scarb_api::ScarbCommand;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::{JsonRpcClient, Provider};
@@ -9,8 +8,7 @@ use url::Url;
 use crate::scarb::load_test_artifacts;
 use forge_runner::test_case_summary::AnyTestCaseSummary;
 use semver::{Version, VersionReq};
-use std::collections::HashMap;
-use std::ops::Not;
+use std::collections::HashSet;
 use std::sync::Arc;
 
 use compiled_raw::{CompiledTestCrateRaw, RawForkConfig, RawForkParams};
@@ -195,75 +193,35 @@ fn warn_if_available_gas_used_with_incompatible_scarb_version(
     Ok(())
 }
 
-#[derive(Default)]
-struct RpcDescriptor<'a> {
-    scarb_names: Vec<&'a str>,
-    test_paths: Vec<&'a str>,
-}
+const EXPECTED: &str = "0.6.0";
 
 async fn warn_if_incompatible_rpc_version(
     test_crates: &[CompiledTestCrateRaw],
     fork_targets: &[ForkTarget],
 ) -> Result<()> {
-    let mut descriptors = HashMap::<&str, RpcDescriptor>::new();
+    let mut urls = HashSet::<&str>::new();
+    let expected_version = VersionReq::parse(EXPECTED)?;
 
-    for (raw_fork_config, test_case_name) in test_crates.iter().flat_map(|ctc| {
-        ctc.test_cases
+    for ctc in test_crates {
+        for raw_fork_config in ctc
+            .test_cases
             .iter()
-            .filter(|tc| !tc.ignored)
-            .filter_map(|tc| tc.fork_config.as_ref().map(|fc| (fc, tc.name.as_str())))
-    }) {
-        let params = replace_id_with_params(raw_fork_config, fork_targets)?;
-        let descriptor = descriptors.entry(&params.url).or_default();
+            .filter_map(|tc| tc.fork_config.as_ref())
+        {
+            let params = replace_id_with_params(raw_fork_config, fork_targets)?;
 
-        match raw_fork_config {
-            RawForkConfig::Id(name) => {
-                descriptor.scarb_names.push(name);
-            }
-            RawForkConfig::Params(_) => {
-                descriptor.test_paths.push(test_case_name);
-            }
-        };
+            urls.insert(&params.url);
+        }
     }
 
-    for (url, descriptor) in descriptors {
-        const EXPECTED: &str = "0.6.0";
-
+    for url in urls {
         let client = JsonRpcClient::new(HttpTransport::new(url.parse::<Url>().unwrap()));
         let version = client.spec_version().await?.parse::<Version>()?;
 
-        if !VersionReq::parse(EXPECTED)?.matches(&version) {
-            const NEW_LINE_INDENTED: &str = "\n    ";
-
-            let defined_in_scarb = descriptor
-                .scarb_names
-                .is_empty()
-                .not()
-                .then(|| {
-                    let scarb_names = descriptor.scarb_names.join(NEW_LINE_INDENTED);
-
-                    format!("Defined in Scarb.toml profiles:{NEW_LINE_INDENTED}{scarb_names}")
-                })
-                .unwrap_or_default();
-
-            let defined_with_fork = descriptor
-                .test_paths
-                .is_empty()
-                .not()
-                .then(|| {
-                    let test_paths = descriptor.test_paths.join(NEW_LINE_INDENTED);
-
-                    format!("Defined with #[fork] in:{NEW_LINE_INDENTED}{test_paths}")
-                })
-                .unwrap_or_default();
-
-            print_warning(&anyhow!(formatdoc!(
-                r#"
-                    RPC {url} has unsupported version ({version}), expected {EXPECTED}
-                    {defined_in_scarb}
-                    {defined_with_fork}
-                "#
-            )));
+        if !expected_version.matches(&version) {
+            print_warning(&anyhow!(
+                "RPC {url} has unsupported version ({version}), expected {EXPECTED}"
+            ));
         }
     }
 
