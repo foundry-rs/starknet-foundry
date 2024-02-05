@@ -273,12 +273,9 @@ pub fn create_test_provider() -> JsonRpcClient<HttpTransport> {
 fn copy_dir_into_temp_dir(src_dir: &Utf8PathBuf) -> TempDir {
     let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
 
-    let dest_dir = Utf8PathBuf::from_path_buf(temp_dir.path().to_path_buf())
-        .expect("Failed to create Utf8PathBuf from PathBuf");
-
     fs_extra::dir::copy(
         src_dir,
-        dest_dir,
+        temp_dir.as_ref(),
         &fs_extra::dir::CopyOptions::new().content_only(true),
     )
     .expect("Unable to copy directory content");
