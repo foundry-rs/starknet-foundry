@@ -45,9 +45,6 @@ defined in the profile.
 > If there is a profile with the same name in Scarb.toml, scarb will use this profile. If not, scarb will default to using the dev profile.
 > (This applies only to subcommands using scarb - namely `declare` and `script`).
 
-> 📝 **Note**
-> If there is a profile with the same name in Scarb.toml, scarb will use this profile. If not, scarb will default to using the dev profile.
-
 > 💡 **Info**
 > Not all parameters have to be present in the configuration - you can choose to include only some of them and supply
 > the rest of them using CLI flags. You can also override parameters from the configuration using CLI flags.
