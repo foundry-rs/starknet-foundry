@@ -6,6 +6,7 @@ use crate::test_case_summary::TestCaseSummary;
 use crate::test_crate_summary::TestCrateSummary;
 use anyhow::{anyhow, Result};
 
+use cairo_lang_runner::RunnerError;
 use cairo_lang_sierra::extensions::core::{CoreLibfunc, CoreType};
 use cairo_lang_sierra::ids::ConcreteTypeId;
 use cairo_lang_sierra::program::{Function, Program};
@@ -195,8 +196,7 @@ pub async fn run_tests_from_crate(
     tests_filter: &impl TestCaseFilter,
 ) -> Result<TestCrateRunResult> {
     let sierra_program = &tests.sierra_program;
-    let casm_program = compile_sierra_to_casm(sierra_program);
-    let casm_program = Arc::new(casm_program);
+    let casm_program = Arc::new(compile_sierra_to_casm(sierra_program));
 
     let mut tasks = FuturesUnordered::new();
     let test_cases = &tests.test_cases;
@@ -224,7 +224,9 @@ pub async fn run_tests_from_crate(
             .funcs
             .iter()
             .find(|f| f.id.debug_name.clone().unwrap().ends_with(&case_name))
-            .unwrap();
+            .ok_or_else(|| RunnerError::MissingFunction {
+                suffix: case_name.clone(),
+            })?;
 
         let args = function_args(function, &BUILTINS);
 
