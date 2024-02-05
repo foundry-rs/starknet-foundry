@@ -2,14 +2,13 @@ use crate::compiled_runnable::TestCaseRunnable;
 use crate::expected_result::{ExpectedPanicValue, ExpectedTestResult};
 use crate::gas::check_available_gas;
 use crate::trace_data::CallTrace;
-use cairo_felt::{felt_str, Felt252};
-use cairo_lang_runner::short_string::{as_cairo_short_string, as_cairo_short_string_ex};
+use cairo_felt::Felt252;
+use cairo_lang_runner::casm_run::format_next_item;
+use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{RunResult, RunResultValue};
-use cairo_lang_utils::byte_array::{BYTES_IN_WORD, BYTE_ARRAY_MAGIC};
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::state::CallTrace as InternalCallTrace;
-use itertools::Itertools;
-use num_traits::{Pow, ToPrimitive};
+use num_traits::Pow;
 use std::cell::RefCell;
 use std::option::Option;
 use std::rc::Rc;
@@ -271,72 +270,40 @@ fn build_readable_text(data: &[Felt252]) -> Option<String> {
     let mut data_iter = data.iter().cloned();
     let mut items = Vec::new();
 
-    while let Some(item) = format_next_felt(&mut data_iter) {
-        items.push(format!("\n{item}"));
+    while let Some(item) = format_next_item(&mut data_iter) {
+        items.push(item.quote_if_string());
     }
 
     if items.is_empty() {
-        None
+        return None;
+    };
+
+    let string = if let [item] = &items[..] {
+        item.clone()
     } else {
-        let mut result = items.join("").to_string().replace('\n', "\n    ");
-        result.push('\n');
-        Some(result)
-    }
+        items.join(", ")
+    };
+
+    let mut result = indent_string(&format!("\n{string}"));
+    result.push('\n');
+    Some(result)
 }
 
-fn format_next_felt<T>(values: &mut T) -> Option<String>
-where
-    T: Iterator<Item = Felt252> + Clone,
-{
-    let first_felt = values.next()?;
+fn indent_string(string: &str) -> String {
+    let mut modified_string = string.to_string();
+    let trailing_newline = if string.ends_with('\n') {
+        modified_string.pop();
+        true
+    } else {
+        false
+    };
 
-    if first_felt == felt_str!(BYTE_ARRAY_MAGIC, 16) {
-        if let Some(string) = try_format_string(values) {
-            return Some(string);
-        }
+    modified_string = modified_string.replace('\n', "\n    ");
+    if trailing_newline {
+        modified_string.push('\n');
     }
 
-    if let Some(short_string) = as_cairo_short_string(&first_felt) {
-        return Some(format!(
-            "original value: [{first_felt}], converted to a string: [{short_string}]"
-        ));
-    }
-    Some(format!("original value: [{first_felt}]"))
-}
-
-// https://github.com/starkware-libs/cairo/blob/1a4ccb01f6fb0a74bfc23238ca1088fe2659d087/crates/cairo-lang-runner/src/casm_run/mod.rs#L2227
-
-/// Tries to format a string, represented as a sequence of `Felt252`s.
-/// If the sequence is not a valid serialization of a `ByteArray`, returns None and doesn't change the
-/// given iterator (`values`).
-fn try_format_string<T>(values: &mut T) -> Option<String>
-where
-    T: Iterator<Item = Felt252> + Clone,
-{
-    // Clone the iterator and work with the clone. If the extraction of the string is successful,
-    // change the original iterator to the one we worked with. If not, continue with the
-    // original iterator at the original point.
-    let mut cloned_values_iter = values.clone();
-
-    let num_full_words = cloned_values_iter.next()?.to_usize()?;
-    let full_words = cloned_values_iter
-        .by_ref()
-        .take(num_full_words)
-        .collect_vec();
-    let pending_word = cloned_values_iter.next()?;
-    let pending_word_len = cloned_values_iter.next()?.to_usize()?;
-
-    let full_words_string = full_words
-        .into_iter()
-        .map(|word| as_cairo_short_string_ex(&word, BYTES_IN_WORD))
-        .collect::<Option<Vec<String>>>()?
-        .join("");
-    let pending_word_string = as_cairo_short_string_ex(&pending_word, pending_word_len)?;
-
-    // Extraction was successful, change the original iterator to the one we worked with.
-    *values = cloned_values_iter;
-
-    Some(format!("{full_words_string}{pending_word_string}"))
+    modified_string
 }
 
 fn join_short_strings(data: &[Felt252]) -> String {
@@ -443,5 +410,22 @@ impl AnyTestCaseSummary {
             AnyTestCaseSummary::Single(TestCaseSummary::Ignored { .. })
                 | AnyTestCaseSummary::Fuzzing(TestCaseSummary::Ignored { .. })
         )
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::indent_string;
+
+    #[test]
+    fn test_indent_string() {
+        let s = indent_string("\nabc\n");
+        assert_eq!(s, "\n    abc\n");
+
+        let s = indent_string("\nabc");
+        assert_eq!(s, "\n    abc");
+
+        let s = indent_string("\nabc\nd");
+        assert_eq!(s, "\n    abc\n    d");
     }
 }
