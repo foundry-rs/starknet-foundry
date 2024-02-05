@@ -1,11 +1,13 @@
 use crate::helpers::constants::{
     ACCOUNT_FILE_PATH, CONTRACTS_DIR, DEVNET_ENV_FILE, DEVNET_OZ_CLASS_HASH, URL,
 };
+use anyhow::Context;
 use camino::Utf8PathBuf;
 use primitive_types::U256;
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
 use serde_json::{json, Map, Value};
+use sncast::helpers::scarb_utils::{get_package_metadata, get_scarb_metadata};
 use sncast::{apply_optional, get_chain_id, get_keystore_password};
 use sncast::{get_account, get_provider, parse_number};
 use starknet::accounts::{Account, AccountFactory, Call, Execution, OpenZeppelinAccountFactory};
@@ -18,12 +20,14 @@ use starknet::core::utils::get_selector_from_name;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::{LocalWallet, SigningKey};
+use std::collections::HashMap;
 use std::env;
 use std::fs;
-use std::fs::OpenOptions;
+use std::fs::{File, OpenOptions};
 use std::io::{BufRead, Write};
 use std::sync::Arc;
 use tempfile::TempDir;
+use toml::Table;
 use url::Url;
 
 pub async fn declare_contract(account: &str, path: &str, shortname: &str) -> FieldElement {
@@ -266,40 +270,36 @@ pub fn create_test_provider() -> JsonRpcClient<HttpTransport> {
     JsonRpcClient::new(HttpTransport::new(parsed_url))
 }
 
-#[must_use]
-pub fn duplicate_contract_directory_with_salt(
-    src_path: String,
-    to_be_salted: &str,
-    salt: &str,
-) -> TempDir {
-    duplicate_directory_and_salt_file(src_path, None, to_be_salted, "src/lib.cairo", salt)
-}
-
-#[must_use]
-pub fn duplicate_directory_and_salt_file(
-    src_path: String,
-    dst_path: Option<String>,
-    code_to_be_salted: &str,
-    file_to_be_salted: &str,
-    salt: &str,
-) -> TempDir {
-    let src_dir = Utf8PathBuf::from(src_path);
-    let temp_dir = match dst_path {
-        Some(dst_path) => TempDir::new_in(dst_path)
-            .expect("Unable to create a temporary directory in the specified path"),
-        None => TempDir::new().expect("Unable to create a temporary directory"),
-    };
+fn copy_dir_into_temp_dir(src_dir: &Utf8PathBuf) -> TempDir {
+    let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
 
     let dest_dir = Utf8PathBuf::from_path_buf(temp_dir.path().to_path_buf())
         .expect("Failed to create Utf8PathBuf from PathBuf");
 
     fs_extra::dir::copy(
-        &src_dir,
-        &dest_dir,
+        src_dir,
+        dest_dir,
         &fs_extra::dir::CopyOptions::new().content_only(true),
     )
     .expect("Unable to copy directory content");
 
+    temp_dir
+}
+
+#[must_use]
+pub fn duplicate_contract_directory_with_salt(
+    src_dir: String,
+    code_to_be_salted: &str,
+    salt: &str,
+) -> TempDir {
+    let src_dir = Utf8PathBuf::from(src_dir);
+
+    let temp_dir = copy_dir_into_temp_dir(&src_dir);
+
+    let dest_dir = Utf8PathBuf::from_path_buf(temp_dir.path().to_path_buf())
+        .expect("Failed to create Utf8PathBuf from PathBuf");
+
+    let file_to_be_salted = "src/lib.cairo";
     let contract_code =
         fs::read_to_string(src_dir.join(file_to_be_salted)).expect("Unable to get contract code");
     let updated_code =
@@ -325,6 +325,66 @@ pub fn copy_directory_to_tempdir(src_path: String) -> TempDir {
     .expect("Failed to copy the directory");
 
     temp_dir
+}
+
+pub fn duplicate_script_directory<S: ::std::hash::BuildHasher>(
+    src_dir: String,
+    deps: &mut HashMap<String, Utf8PathBuf, S>,
+) -> TempDir {
+    let src_dir = Utf8PathBuf::from(src_dir);
+
+    let temp_dir = copy_dir_into_temp_dir(&src_dir);
+
+    let dest_dir = Utf8PathBuf::from_path_buf(temp_dir.path().to_path_buf())
+        .expect("Failed to create Utf8PathBuf from PathBuf");
+
+    let manifest_dir = env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set");
+    let sncast_std_path = Utf8PathBuf::from(manifest_dir).join("../../sncast_std/");
+    deps.insert(String::from("sncast_std"), sncast_std_path);
+
+    let manifest_path = dest_dir.join("Scarb.toml");
+    let contents = fs::read_to_string(&manifest_path).unwrap();
+    let mut parsed_toml: Table = toml::from_str(&contents)
+        .with_context(|| format!("Failed to parse {manifest_path}"))
+        .unwrap();
+
+    let deps_toml = parsed_toml
+        .get_mut("dependencies")
+        .unwrap()
+        .as_table_mut()
+        .unwrap();
+
+    for (key, value) in deps {
+        let pkg = deps_toml.get_mut(key).unwrap().as_table_mut().unwrap();
+        pkg.insert("path".to_string(), toml::Value::String(value.to_string()));
+    }
+
+    let modified_toml = toml::to_string(&parsed_toml).expect("Failed to serialize TOML");
+
+    let mut file = File::create(manifest_path).expect("Failed to create file");
+    file.write_all(modified_toml.as_bytes())
+        .expect("Failed to write to file");
+
+    temp_dir
+}
+
+#[must_use]
+pub fn get_deps_map_from_paths(
+    paths: Vec<impl AsRef<std::path::Path>>,
+) -> HashMap<String, Utf8PathBuf> {
+    let mut deps = HashMap::<String, Utf8PathBuf>::new();
+
+    for path in paths {
+        let path = Utf8PathBuf::from_path_buf(path.as_ref().to_path_buf())
+            .expect("Failed to create Utf8PathBuf from PathBuf");
+        let manifest_path = path.join("Scarb.toml");
+        let metadata = get_scarb_metadata(&manifest_path).expect("Failed to get scarb metadata");
+        let package = get_package_metadata(&metadata, &manifest_path)
+            .expect("Failed to get package metadata");
+        deps.insert(package.name.clone(), path);
+    }
+
+    deps
 }
 
 pub fn remove_devnet_env() {
