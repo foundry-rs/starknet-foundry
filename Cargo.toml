@@ -74,7 +74,7 @@ project-root = "0.2.2"
 which = "5.0.0"
 conversions = { path = "./crates/conversions" }
 test-case = "3.1.0"
-scarb-metadata = "1.11.0"
+scarb-metadata = "=1.10.0"
 flatten-serde-json = "0.1.0"
 snapbox = "0.4.16"
 smol_str = "0.2.1"
