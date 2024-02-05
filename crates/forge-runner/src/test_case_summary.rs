@@ -281,7 +281,7 @@ fn build_readable_text(data: &[Felt252]) -> Option<String> {
     let string = if let [item] = &items[..] {
         item.clone()
     } else {
-        items.join(", ")
+        format!("({})", items.join(", "))
     };
 
     let mut result = indent_string(&format!("\n{string}"));

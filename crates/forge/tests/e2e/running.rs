@@ -654,7 +654,7 @@ fn with_panic_data_decoding() {
         [FAIL] tests::test_panic_decoding::test_panic_decoding
         
         Failure data:
-            0x7b ('{'), 0x616161 ('aaa'), 0x800000000000011000000000000000000000000000000000000000000000000, 0x98, 0x7c ('|'), 0x95
+            (0x7b ('{'), 0x616161 ('aaa'), 0x800000000000011000000000000000000000000000000000000000000000000, 0x98, 0x7c ('|'), 0x95)
         
         [PASS] tests::test_panic_decoding::test_simple2 (gas: ~1)
         [PASS] tests::test_panic_decoding::test_simple (gas: ~1)
