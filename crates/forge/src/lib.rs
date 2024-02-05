@@ -1,14 +1,11 @@
 use anyhow::{anyhow, Result};
 use camino::Utf8Path;
-use scarb_api::ScarbCommand;
-use starknet::providers::jsonrpc::HttpTransport;
-use starknet::providers::{JsonRpcClient, Provider};
-use url::Url;
+use warn::{
+    warn_if_available_gas_used_with_incompatible_scarb_version, warn_if_incompatible_rpc_version,
+};
 
 use crate::scarb::load_test_artifacts;
 use forge_runner::test_case_summary::AnyTestCaseSummary;
-use semver::{Version, VersionReq};
-use std::collections::HashSet;
 use std::sync::Arc;
 
 use compiled_raw::{CompiledTestCrateRaw, RawForkConfig, RawForkParams};
@@ -16,7 +13,6 @@ use forge_runner::test_crate_summary::TestCrateSummary;
 use forge_runner::{RunnerConfig, RunnerParams, TestCrateRunResult};
 
 use crate::block_number_map::BlockNumberMap;
-use crate::pretty_printing::print_warning;
 use forge_runner::compiled_runnable::{CompiledTestCrateRunnable, TestCaseRunnable};
 
 use crate::scarb::config::ForkTarget;
@@ -28,6 +24,7 @@ pub mod pretty_printing;
 pub mod scarb;
 pub mod shared_cache;
 pub mod test_filter;
+mod warn;
 
 pub(crate) fn replace_id_with_params<'a>(
     raw_fork_config: &'a RawForkConfig,
@@ -172,79 +169,6 @@ pub async fn run(
     }
 
     Ok(summaries)
-}
-
-fn warn_if_available_gas_used_with_incompatible_scarb_version(
-    test_crates: &Vec<CompiledTestCrateRaw>,
-) -> Result<()> {
-    for test_crate in test_crates {
-        for case in &test_crate.test_cases {
-            if case.available_gas == Some(0)
-                && ScarbCommand::version().run()?.scarb <= Version::new(2, 4, 3)
-            {
-                print_warning(&anyhow!(
-                    "`available_gas` attribute was probably specified when using Scarb ~2.4.3 \
-                    Make sure to use Scarb >=2.4.4"
-                ));
-            }
-        }
-    }
-
-    Ok(())
-}
-
-const EXPECTED: &str = "0.6.0";
-
-async fn warn_if_incompatible_rpc_version(
-    test_crates: &[CompiledTestCrateRaw],
-    fork_targets: &[ForkTarget],
-) -> Result<()> {
-    let mut urls = HashSet::<&str>::new();
-    let expected_version = VersionReq::parse(EXPECTED)?;
-
-    // collect urls
-    for test_crate in test_crates {
-        for raw_fork_config in test_crate
-            .test_cases
-            .iter()
-            .filter_map(|tc| tc.fork_config.as_ref())
-        {
-            let params = replace_id_with_params(raw_fork_config, fork_targets)?;
-
-            urls.insert(&params.url);
-        }
-    }
-
-    let mut handles = Vec::with_capacity(urls.len());
-
-    // call rpc's
-    for url in urls {
-        let client = JsonRpcClient::new(HttpTransport::new(url.parse::<Url>()?));
-
-        handles.push(async move {
-            (
-                client
-                    .spec_version()
-                    .await
-                    .map(|version| version.parse::<Version>()),
-                url,
-            )
-        });
-    }
-
-    // assert version
-    for handle in handles {
-        let (version, url) = handle.await;
-        let version = version??;
-
-        if !expected_version.matches(&version) {
-            print_warning(&anyhow!(
-                "RPC {url} has unsupported version ({version}), expected {EXPECTED}"
-            ));
-        }
-    }
-
-    Ok(())
 }
 
 #[cfg(test)]
