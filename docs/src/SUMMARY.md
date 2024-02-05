@@ -17,7 +17,6 @@
 * [Testing Contracts' Internals](testing/testing_contract_internals.md)
 * [Fork Testing](testing/fork-testing.md)
 * [Using Cheatcodes](testing/using-cheatcodes.md)
-* [Debugging](testing/debugging.md)
 * [Fuzz Testing](testing/fuzz-testing.md)
 * [Test Collection](testing/test-collection.md)
 * [Gas Estimation](testing/gas-etimation.md)
