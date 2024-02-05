@@ -41,12 +41,12 @@ fn simple_package() {
     [FAIL] tests::test_simple::test_failing
     
     Failure data:
-        original value: [8111420071579136082810415440747], converted to a string: [failing check]
+        0x6661696c696e6720636865636b ('failing check')
     
     [FAIL] tests::test_simple::test_another_failing
     
     Failure data:
-        original value: [8111420071579136082810415440747], converted to a string: [failing check]
+        0x6661696c696e6720636865636b ('failing check')
     
     [PASS] tests::without_prefix::five [..]
     Tests: 9 passed, 2 failed, 0 skipped, 2 ignored, 0 filtered out
@@ -118,12 +118,12 @@ fn simple_package_with_git_dependency() {
         [FAIL] tests::test_simple::test_failing
         
         Failure data:
-            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+            0x6661696c696e6720636865636b ('failing check')
         
         [FAIL] tests::test_simple::test_another_failing
         
         Failure data:
-            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+            0x6661696c696e6720636865636b ('failing check')
         
         [PASS] tests::without_prefix::five [..]
         Tests: 9 passed, 2 failed, 0 skipped, 2 ignored, 0 filtered out
@@ -308,7 +308,7 @@ fn with_ignored_flag() {
         [FAIL] tests::ext_function_test::ignored_test
         
         Failure data:
-            original value: [133508164996995645235097191], converted to a string: [not passing]
+            0x6e6f742070617373696e67 ('not passing')
         
         Tests: 1 passed, 1 failed, 0 skipped, 0 ignored, 11 filtered out
         
@@ -346,7 +346,7 @@ fn with_include_ignored_flag() {
         [FAIL] tests::ext_function_test::ignored_test
         
         Failure data:
-            original value: [133508164996995645235097191], converted to a string: [not passing]
+            0x6e6f742070617373696e67 ('not passing')
         
         [PASS] tests::ext_function_test::test_simple [..]
         [PASS] tests::test_simple::test_simple [..]
@@ -356,12 +356,12 @@ fn with_include_ignored_flag() {
         [FAIL] tests::test_simple::test_failing
         
         Failure data:
-            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+            0x6661696c696e6720636865636b ('failing check')
         
         [FAIL] tests::test_simple::test_another_failing
         
         Failure data:
-            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+            0x6661696c696e6720636865636b ('failing check')
         
         [PASS] tests::without_prefix::five [..]
         Tests: 10 passed, 3 failed, 0 skipped, 0 ignored, 0 filtered out
@@ -399,7 +399,7 @@ fn with_ignored_flag_and_filter() {
         [FAIL] tests::ext_function_test::ignored_test
  
         Failure data:
-            original value: [133508164996995645235097191], converted to a string: [not passing]
+            0x6e6f742070617373696e67 ('not passing')
         
         Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 12 filtered out
         
@@ -435,7 +435,7 @@ fn with_include_ignored_flag_and_filter() {
         [FAIL] tests::ext_function_test::ignored_test
         
         Failure data:
-            original value: [133508164996995645235097191], converted to a string: [not passing]
+            0x6e6f742070617373696e67 ('not passing')
 
         Tests: 1 passed, 1 failed, 0 skipped, 0 ignored, 11 filtered out
         
@@ -478,7 +478,7 @@ fn with_rerun_failed_flag_without_cache() {
         [FAIL] tests::test_simple::test_failing
 
         Failure data:
-            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+            0x6661696c696e6720636865636b ('failing check')
 
         [FAIL] tests::test_simple::test_another_failing
 
@@ -490,7 +490,7 @@ fn with_rerun_failed_flag_without_cache() {
         [IGNORE] tests::ext_function_test::ignored_test
         Tests: 9 passed, 2 failed, 0 skipped, 2 ignored, 0 filtered out
         Failure data:
-            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+            0x6661696c696e6720636865636b ('failing check')
 
         "}
     );
@@ -522,7 +522,7 @@ fn with_rerun_failed_flag_and_name_filter() {
         [FAIL] tests::test_simple::test_another_failing
 
         Failure data:
-            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+            0x6661696c696e6720636865636b ('failing check')
 
         Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 12 filtered out
 
@@ -558,12 +558,12 @@ fn with_rerun_failed_flag() {
         [FAIL] tests::test_simple::test_another_failing
 
         Failure data:
-            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+            0x6661696c696e6720636865636b ('failing check')
 
         [FAIL] tests::test_simple::test_failing
 
         Failure data:
-            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+            0x6661696c696e6720636865636b ('failing check')
 
         Tests: 0 passed, 2 failed, 0 skipped, 0 ignored, 11 filtered out
 
@@ -738,7 +738,7 @@ fn with_exit_first() {
         [FAIL] tests::ext_function_test::simple_test
 
         Failure data:
-            original value: [35718230152306872753561363307], converted to a string: [simple check]
+            0x73696d706c6520636865636b ('simple check')
 
         Tests: 0 passed, 1 failed, 1 skipped, 0 ignored, 0 filtered out
 
@@ -767,7 +767,7 @@ fn with_exit_first_flag() {
         [FAIL] tests::ext_function_test::simple_test
 
         Failure data:
-            original value: [35718230152306872753561363307], converted to a string: [simple check]
+            0x73696d706c6520636865636b ('simple check')
 
         Tests: 0 passed, 1 failed, 1 skipped, 0 ignored, 0 filtered out
 
@@ -888,7 +888,7 @@ fn should_panic() {
         [PASS] tests::should_panic_test::should_panic_no_data [..]
         
         Success data:
-            original value: [0], converted to a string: []
+            0x0 ('')
         
         [FAIL] tests::should_panic_test::should_panic_with_non_matching_data
         
@@ -912,7 +912,7 @@ fn should_panic() {
         [FAIL] tests::should_panic_test::didnt_expect_panic
         
         Failure data:
-            original value: [156092886226808350968498952598218238307], converted to a string: [unexpected panic]
+            0x756e65787065637465642070616e6963 ('unexpected panic')
         
         Tests: 3 passed, 5 failed, 0 skipped, 0 ignored, 0 filtered out
         
@@ -1004,12 +1004,12 @@ fn incompatible_snforge_std_version_warning() {
         [FAIL] tests::test_simple::test_failing
         
         Failure data:
-            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+            0x6661696c696e6720636865636b ('failing check')
         
         [FAIL] tests::test_simple::test_another_failing
         
         Failure data:
-            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+            0x6661696c696e6720636865636b ('failing check')
         
         [PASS] tests::without_prefix::five [..]
         Tests: 9 passed, 2 failed, 0 skipped, 2 ignored, 0 filtered out
