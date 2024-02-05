@@ -202,6 +202,7 @@ async fn warn_if_incompatible_rpc_version(
     let mut urls = HashSet::<&str>::new();
     let expected_version = VersionReq::parse(EXPECTED)?;
 
+    // collect urls
     for test_crate in test_crates {
         for raw_fork_config in test_crate
             .test_cases
@@ -214,9 +215,27 @@ async fn warn_if_incompatible_rpc_version(
         }
     }
 
+    let mut handles = Vec::with_capacity(urls.len());
+
+    // call rpc's
     for url in urls {
-        let client = JsonRpcClient::new(HttpTransport::new(url.parse::<Url>().unwrap()));
-        let version = client.spec_version().await?.parse::<Version>()?;
+        let client = JsonRpcClient::new(HttpTransport::new(url.parse::<Url>()?));
+
+        handles.push(async move {
+            (
+                client
+                    .spec_version()
+                    .await
+                    .map(|version| version.parse::<Version>()),
+                url,
+            )
+        });
+    }
+
+    // assert version
+    for handle in handles {
+        let (version, url) = handle.await;
+        let version = version??;
 
         if !expected_version.matches(&version) {
             print_warning(&anyhow!(
