@@ -633,7 +633,7 @@ fn with_panic_data_decoding() {
 
     assert_stdout_contains!(
         output,
-        indoc! {r"
+        indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -641,57 +641,52 @@ fn with_panic_data_decoding() {
         Collected 8 test(s) from panic_decoding package
         Running 0 test(s) from src/
         Running 8 test(s) from tests/
-        [PASS] tests::test_panic_decoding::test_simple [..]
-        [FAIL] tests::test_panic_decoding::test_panic_decoding
-        
-        Failure data:
-            original value: [123], converted to a string: [{]
-            original value: [6381921], converted to a string: [aaa]
-            original value: [3618502788666131213697322783095070105623107215331596699973092056135872020480]
-            original value: [152]
-            original value: [124], converted to a string: [|]
-            original value: [149]
-        
         [FAIL] tests::test_panic_decoding::test_panic_decoding2
         
         Failure data:
-            original value: [128]
-        
-        [PASS] tests::test_panic_decoding::test_simple2 [..]
-        [FAIL] tests::test_panic_decoding::test_assert_message
-        
-        Failure data:
-            Another identifiable and meaningful error message
+            0x80
         
         [FAIL] tests::test_panic_decoding::test_assert
-
-        Failure data:
-            assertion failed: `x`.
         
+        Failure data:
+            "assertion failed: `x`."
+        
+        [FAIL] tests::test_panic_decoding::test_panic_decoding
+        
+        Failure data:
+            0x7b ('{'), 0x616161 ('aaa'), 0x800000000000011000000000000000000000000000000000000000000000000, 0x98, 0x7c ('|'), 0x95
+        
+        [PASS] tests::test_panic_decoding::test_simple2 (gas: ~1)
+        [PASS] tests::test_panic_decoding::test_simple (gas: ~1)
         [FAIL] tests::test_panic_decoding::test_assert_eq
         
         Failure data:
-            assertion `x == y` failed.
+            "assertion `x == y` failed.
             x: 5
-            y: 6
+            y: 6"
+        
+        [FAIL] tests::test_panic_decoding::test_assert_message
+        
+        Failure data:
+            "Another identifiable and meaningful error message"
         
         [FAIL] tests::test_panic_decoding::test_assert_eq_message
         
         Failure data:
-            assertion `x == y` failed: An identifiable and meaningful error message
+            "assertion `x == y` failed: An identifiable and meaningful error message
             x: 5
-            y: 6
-
+            y: 6"
+        
         Tests: 2 passed, 6 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:
-            tests::test_panic_decoding::test_panic_decoding
             tests::test_panic_decoding::test_panic_decoding2
-            tests::test_panic_decoding::test_assert_message
             tests::test_panic_decoding::test_assert
+            tests::test_panic_decoding::test_panic_decoding
             tests::test_panic_decoding::test_assert_eq
+            tests::test_panic_decoding::test_assert_message
             tests::test_panic_decoding::test_assert_eq_message
-        "}
+        "#}
     );
 }
 
