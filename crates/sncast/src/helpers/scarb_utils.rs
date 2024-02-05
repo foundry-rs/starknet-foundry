@@ -100,9 +100,9 @@ fn get_package_metadata_by_name<'a>(
 fn get_default_package_metadata(metadata: &Metadata) -> Result<&PackageMetadata> {
     match metadata.packages.iter().collect::<Vec<_>>().as_slice() {
         [package] => Ok(package),
-        [] => Err(anyhow!("No package found in metadata")),
+        [] => Err(anyhow!("No package found in scarb metadata")),
         _ => Err(anyhow!(
-            "More than one package found in metadata - specify package using --package flag"
+            "More than one package found in scarb metadata - specify package using --package flag"
         )),
     }
 }
@@ -194,7 +194,7 @@ mod tests {
 
     #[test]
     #[should_panic(
-        expected = "More than one package found in metadata - specify package using --package flag"
+        expected = "More than one package found in scarb metadata - specify package using --package flag"
     )]
     fn test_get_package_metadata_more_than_one_default() {
         get_package_metadata(

@@ -115,7 +115,7 @@ async fn wrong_contract_name_passed() {
 
     snapbox.assert().success().stderr_matches(indoc! {r"
         command: declare
-        error: Failed to find artifacts in starknet_artifacts.json file[..]
+        error: Failed to find nonexistent artifact in starknet_artifacts.json file[..]
     "});
 }
 
@@ -292,6 +292,6 @@ async fn test_many_packages_default() {
         .args(args);
     snapbox.assert().failure().stderr_matches(indoc! {r"
         ...
-        Error: More than one package found in metadata - specify package using --package flag
+        Error: More than one package found in scarb metadata - specify package using --package flag
     "});
 }

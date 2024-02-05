@@ -202,7 +202,6 @@ pub async fn test_profile_already_exists() {
 
     let std_err =
         std::str::from_utf8(&out.stderr).expect("failed to convert command stderr to string");
-    dbg!(&std_err);
     assert!(std_err.contains(
         "error: Failed to add profile = default to the snfoundry.toml. Profile already exists"
     ));
