@@ -1001,3 +1001,30 @@ fn incompatible_snforge_std_version_warning() {
         "}
     );
 }
+
+#[test]
+fn detailed_resources_flag() {
+    let temp = setup_package("erc20_package");
+    let snapbox = test_runner().arg("--detailed-resources");
+    let output = snapbox.current_dir(&temp).assert().success();
+
+    assert_stdout_contains!(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+        
+
+        Collected 1 test(s) from erc20_package package
+        Running 0 test(s) from src/
+        Running 1 test(s) from tests/
+        [PASS] tests::test_complex::complex[..]
+                steps: [..]
+                memory holes: [..]
+                builtins: ([..])
+                syscalls: ([..])
+                
+        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+        "}
+    );
+}
