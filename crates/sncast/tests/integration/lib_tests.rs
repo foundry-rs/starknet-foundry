@@ -25,7 +25,7 @@ async fn test_get_provider_empty_url() {
     let err = provider.unwrap_err();
     assert!(err
         .to_string()
-        .contains("RPC url not passed nor found in Scarb.toml"));
+        .contains("RPC url not passed nor found in snfoundry.toml"));
 }
 
 #[tokio::test]
@@ -90,7 +90,7 @@ async fn test_get_account_no_account() {
     let err = account.unwrap_err();
     assert!(err
         .to_string()
-        .contains("Account name not passed nor found in Scarb.toml"));
+        .contains("Account name not passed nor found in snfoundry.toml"));
 }
 
 #[tokio::test]
