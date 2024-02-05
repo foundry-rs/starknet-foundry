@@ -14,9 +14,10 @@ use forge_runner::test_crate_summary::TestCrateSummary;
 use forge_runner::{RunnerConfig, RunnerParams, CACHE_DIR};
 use rand::{thread_rng, RngCore};
 use scarb_api::{
-    get_contracts_map, package_matches_version_requirement, target_dir_for_workspace, ScarbCommand,
+    get_contracts_map,
+    metadata::{Metadata, MetadataCommandExt, PackageMetadata},
+    package_matches_version_requirement, target_dir_for_workspace, ScarbCommand,
 };
-use scarb_metadata::{Metadata, MetadataCommand, PackageMetadata};
 use scarb_ui::args::PackagesFilter;
 
 use forge::block_number_map::BlockNumberMap;
@@ -91,6 +92,10 @@ struct TestArgs {
     #[arg(long, conflicts_with = "only_ignored")]
     include_ignored: bool,
 
+    /// Display more detailed info about used resources
+    #[arg(long)]
+    detailed_resources: bool,
+
     /// Control when colored output is used
     #[arg(value_enum, long, default_value_t = ColorOption::Auto, value_name="WHEN")]
     color: ColorOption,
@@ -133,6 +138,7 @@ fn combine_configs(
     exit_first: bool,
     fuzzer_runs: Option<u32>,
     fuzzer_seed: Option<u64>,
+    detailed_resources: bool,
     save_trace_data: bool,
     forge_config: &ForgeConfig,
 ) -> RunnerConfig {
@@ -145,6 +151,7 @@ fn combine_configs(
         fuzzer_seed
             .or(forge_config.fuzzer_seed)
             .unwrap_or_else(|| thread_rng().next_u64()),
+        detailed_resources || forge_config.detailed_resources,
         save_trace_data || forge_config.save_trace_data,
     )
 }
@@ -183,7 +190,7 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
         ColorOption::Auto => (),
     }
 
-    let scarb_metadata = MetadataCommand::new().inherit_stderr().exec()?;
+    let scarb_metadata = ScarbCommand::metadata().inherit_stderr().run()?;
     warn_if_snforge_std_not_compatible(&scarb_metadata)?;
 
     let workspace_root = scarb_metadata.workspace.root.clone();
@@ -228,6 +235,7 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                     args.exit_first,
                     args.fuzzer_runs,
                     args.fuzzer_seed,
+                    args.detailed_resources,
                     args.save_trace_data,
                     &forge_config,
                 ));
@@ -312,6 +320,7 @@ mod tests {
             None,
             None,
             false,
+            false,
             &Default::default(),
         );
         let config2 = combine_configs(
@@ -319,6 +328,7 @@ mod tests {
             false,
             None,
             None,
+            false,
             false,
             &Default::default(),
         );
@@ -337,6 +347,7 @@ mod tests {
             None,
             None,
             false,
+            false,
             &Default::default(),
         );
         assert_eq!(
@@ -346,6 +357,7 @@ mod tests {
                 false,
                 FUZZER_RUNS_DEFAULT,
                 config.fuzzer_seed,
+                false,
                 false,
             )
         );
@@ -358,6 +370,7 @@ mod tests {
             fork: vec![],
             fuzzer_runs: Some(1234),
             fuzzer_seed: Some(500),
+            detailed_resources: true,
             save_trace_data: true,
         };
         let workspace_root: Utf8PathBuf = Default::default();
@@ -368,11 +381,12 @@ mod tests {
             None,
             None,
             false,
+            false,
             &config_from_scarb,
         );
         assert_eq!(
             config,
-            RunnerConfig::new(workspace_root, true, 1234, 500, true)
+            RunnerConfig::new(workspace_root, true, 1234, 500, true, true)
         );
     }
 
@@ -385,6 +399,7 @@ mod tests {
             fork: vec![],
             fuzzer_runs: Some(1234),
             fuzzer_seed: Some(1000),
+            detailed_resources: false,
             save_trace_data: false,
         };
         let config = combine_configs(
@@ -393,12 +408,13 @@ mod tests {
             Some(100),
             Some(32),
             true,
+            true,
             &config_from_scarb,
         );
 
         assert_eq!(
             config,
-            RunnerConfig::new(workspace_root, true, 100, 32, true)
+            RunnerConfig::new(workspace_root, true, 100, 32, true, true)
         );
     }
 }

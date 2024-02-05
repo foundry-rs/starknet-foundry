@@ -1,7 +1,6 @@
 use anyhow::{anyhow, Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
 use scarb_api::{get_contracts_map, ScarbCommand, StarknetContractArtifacts};
-use scarb_metadata;
 use std::collections::HashMap;
 use std::env;
 use std::fs::canonicalize;
@@ -30,19 +29,15 @@ pub fn get_scarb_manifest_for(dir: &Utf8Path) -> Result<Utf8PathBuf> {
     Ok(path)
 }
 
-fn get_scarb_metadata_command(
-    manifest_path: &Utf8PathBuf,
-) -> Result<scarb_metadata::MetadataCommand> {
+fn get_scarb_metadata_command(manifest_path: &Utf8PathBuf) -> Result<MetadataCommand> {
     ScarbCommand::new().ensure_available()?;
 
-    let mut command = scarb_metadata::MetadataCommand::new();
+    let mut command = ScarbCommand::metadata();
     command.inherit_stderr().manifest_path(manifest_path);
     Ok(command)
 }
 
-fn execute_scarb_metadata_command(
-    command: &scarb_metadata::MetadataCommand,
-) -> Result<scarb_metadata::Metadata> {
+fn execute_scarb_metadata_command(command: &MetadataCommand) -> Result<Metadata> {
     command.exec().context(format!(
         "Failed to read the `Scarb.toml` manifest file. Doesn't exist in the current or parent directories = {}",
         env::current_dir()
@@ -53,15 +48,13 @@ fn execute_scarb_metadata_command(
     ))
 }
 
-pub fn get_scarb_metadata(manifest_path: &Utf8PathBuf) -> Result<scarb_metadata::Metadata> {
+pub fn get_scarb_metadata(manifest_path: &Utf8PathBuf) -> Result<Metadata> {
     let mut command = get_scarb_metadata_command(manifest_path)?;
     let command = command.no_deps();
     execute_scarb_metadata_command(command)
 }
 
-pub fn get_scarb_metadata_with_deps(
-    manifest_path: &Utf8PathBuf,
-) -> Result<scarb_metadata::Metadata> {
+pub fn get_scarb_metadata_with_deps(manifest_path: &Utf8PathBuf) -> Result<Metadata> {
     let command = get_scarb_metadata_command(manifest_path)?;
     execute_scarb_metadata_command(&command)
 }
@@ -88,9 +81,9 @@ pub fn verify_or_determine_scarb_manifest_path(
 }
 
 pub fn get_package_metadata<'a>(
-    metadata: &'a scarb_metadata::Metadata,
+    metadata: &'a Metadata,
     manifest_path: &'a Utf8PathBuf,
-) -> Result<&'a scarb_metadata::PackageMetadata> {
+) -> Result<&'a PackageMetadata> {
     let manifest_path = canonicalize(manifest_path.clone())
         .unwrap_or_else(|err| panic!("Failed to canonicalize {manifest_path}, error: {err:?}"));
 

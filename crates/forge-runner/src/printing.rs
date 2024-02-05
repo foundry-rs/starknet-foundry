@@ -1,7 +1,14 @@
-use crate::test_case_summary::{AnyTestCaseSummary, FuzzingStatistics, TestCaseSummary};
+use crate::{
+    test_case_summary::{AnyTestCaseSummary, FuzzingStatistics, TestCaseSummary},
+    RunnerConfig,
+};
+use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use console::style;
 
-pub(crate) fn print_test_result(any_test_result: &AnyTestCaseSummary) {
+pub(crate) fn print_test_result(
+    any_test_result: &AnyTestCaseSummary,
+    runner_config: &RunnerConfig,
+) {
     if any_test_result.is_skipped() {
         return;
     }
@@ -37,7 +44,57 @@ pub(crate) fn print_test_result(any_test_result: &AnyTestCaseSummary) {
         }
         _ => String::new(),
     };
-    println!("{result_header} {result_name}{fuzzer_report}{gas_usage}{result_msg}");
+
+    let used_resources = match (runner_config.detailed_resources, any_test_result) {
+        (true, AnyTestCaseSummary::Single(TestCaseSummary::Passed { used_resources, .. })) => {
+            format_detailed_resources(used_resources)
+        }
+        _ => String::new(),
+    };
+
+    println!("{result_header} {result_name}{fuzzer_report}{gas_usage}{used_resources}{result_msg}");
+}
+
+fn format_detailed_resources(used_resources: &UsedResources) -> String {
+    let vm_resources = &used_resources.execution_resources.vm_resources;
+
+    let sorted_builtins = sort_by_value(&vm_resources.builtin_instance_counter);
+    let sorted_syscalls = sort_by_value(&used_resources.execution_resources.syscall_counter);
+
+    let builtins = format_items(&sorted_builtins);
+    let syscalls = format_items(&sorted_syscalls);
+
+    format!(
+        "
+        steps: {}
+        memory holes: {}
+        builtins: ({})
+        syscalls: ({})
+        ",
+        vm_resources.n_steps, vm_resources.n_memory_holes, builtins, syscalls,
+    )
+}
+
+fn sort_by_value<'a, K, V, M>(map: M) -> Vec<(&'a K, &'a V)>
+where
+    M: IntoIterator<Item = (&'a K, &'a V)>,
+    V: Ord,
+{
+    let mut sorted: Vec<_> = map.into_iter().collect();
+    sorted.sort_by(|a, b| b.1.cmp(a.1));
+    sorted
+}
+
+fn format_items<K, V>(items: &[(K, V)]) -> String
+where
+    K: std::fmt::Debug,
+    V: std::fmt::Display,
+{
+    items
+        .iter()
+        .map(|(key, value)| format!("{key:?}: {value}"))
+        .collect::<Vec<String>>()
+        .join(", ")
 }
 
 fn result_message(any_test_result: &AnyTestCaseSummary) -> String {

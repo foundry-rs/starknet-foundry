@@ -1,5 +1,8 @@
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::deprecated::syscalls::CheatableSyscallHandler;
-use crate::state::CheatnetState;
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeState;
+use crate::runtime_extensions::deprecated_cheatable_starknet_extension::runtime::{
+    DeprecatedExtendedRuntime, DeprecatedStarknetRuntime,
+};
+use crate::runtime_extensions::deprecated_cheatable_starknet_extension::DeprecatedCheatableStarknetRuntimeExtension;
 use blockifier::execution::call_info::CallInfo;
 use blockifier::execution::contract_class::ContractClassV0;
 use blockifier::execution::deprecated_entry_point_execution::{
@@ -20,7 +23,7 @@ pub fn execute_entry_point_call_cairo0(
     call: CallEntryPoint,
     contract_class: ContractClassV0,
     state: &mut dyn State,
-    cheatnet_state: &mut CheatnetState, // Added parameter
+    runtime_state: &mut RuntimeState,
     resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
 ) -> EntryPointExecutionResult<CallInfo> {
@@ -44,9 +47,14 @@ pub fn execute_entry_point_call_cairo0(
     let previous_vm_resources = syscall_handler.resources.vm_resources.clone();
 
     // region: Modified blockifier code
-    let mut cheatable_syscall_handler = CheatableSyscallHandler {
-        child: syscall_handler,
-        cheatnet_state,
+    let cheatable_extension = DeprecatedCheatableStarknetRuntimeExtension {
+        cheatnet_state: runtime_state.cheatnet_state,
+    };
+    let mut cheatable_syscall_handler = DeprecatedExtendedRuntime {
+        extension: cheatable_extension,
+        extended_runtime: DeprecatedStarknetRuntime {
+            hint_handler: syscall_handler,
+        },
     };
 
     // Execute.
@@ -62,7 +70,7 @@ pub fn execute_entry_point_call_cairo0(
     Ok(finalize_execution(
         vm,
         runner,
-        cheatable_syscall_handler.child,
+        cheatable_syscall_handler.extended_runtime.hint_handler,
         call,
         previous_vm_resources,
         implicit_args,

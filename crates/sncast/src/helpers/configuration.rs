@@ -183,6 +183,7 @@ pub fn copy_config_to_tempdir(src_path: &str, additional_path: Option<&str>) -> 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use tempfile::TempDir;
 
     #[test]
     fn find_config_in_current_dir() {
