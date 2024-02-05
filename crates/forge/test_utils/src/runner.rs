@@ -87,7 +87,7 @@ impl Contract {
             .find(|package| package.name == "contract")
             .unwrap();
 
-        Ok(get_contracts_map(&scarb_metadata, &package.id)
+        Ok(get_contracts_map(&scarb_metadata, &package.id, None)
             .unwrap()
             .into_values()
             .map(|x| (x.sierra, x.casm))

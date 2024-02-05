@@ -105,23 +105,31 @@ pub fn get_package_metadata<'a>(
 pub struct BuildConfig {
     pub scarb_toml_path: Utf8PathBuf,
     pub json: bool,
+    pub profile: String,
 }
 
 pub fn build(config: &BuildConfig) -> Result<HashMap<String, StarknetContractArtifacts>> {
     let mut cmd = ScarbCommand::new_with_stdio();
-    cmd.arg("build").manifest_path(&config.scarb_toml_path);
+    let metadata = get_scarb_metadata_command(&config.scarb_toml_path)?
+        .exec()
+        .expect("Failed to obtain metadata");
+    let profile = if metadata.profiles.contains(&config.profile) {
+        &config.profile
+    } else {
+        "dev"
+    };
+    cmd.arg("--profile")
+        .arg(profile)
+        .arg("build")
+        .manifest_path(&config.scarb_toml_path);
     if config.json {
         cmd.json();
     }
     cmd.run()
         .map_err(|e| anyhow!(format!("Failed to build using scarb; {e}")))?;
-
-    let metadata = get_scarb_metadata_command(&config.scarb_toml_path)?
-        .exec()
-        .expect("Failed to obtain metadata");
     let package = get_package_metadata(&metadata, &config.scarb_toml_path)
         .with_context(|| anyhow!("Failed to find package"))?;
-    get_contracts_map(&metadata, &package.id)
+    get_contracts_map(&metadata, &package.id, Some(profile))
 }
 
 #[cfg(test)]

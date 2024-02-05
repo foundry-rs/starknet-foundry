@@ -113,11 +113,15 @@ fn try_get_starknet_artifacts_path(
 pub fn get_contracts_map(
     metadata: &Metadata,
     package: &PackageId,
+    profile: Option<&str>,
 ) -> Result<HashMap<String, StarknetContractArtifacts>> {
     let target_name = target_name_for_package(metadata, package)?;
     let target_dir = target_dir_for_workspace(metadata);
-    let maybe_contracts_path =
-        try_get_starknet_artifacts_path(&target_dir, &target_name, &metadata.current_profile)?;
+    let maybe_contracts_path = try_get_starknet_artifacts_path(
+        &target_dir,
+        &target_name,
+        profile.unwrap_or(metadata.current_profile.as_str()),
+    )?;
 
     let map = match maybe_contracts_path {
         Some(contracts_path) => {
@@ -493,7 +497,7 @@ mod tests {
             .unwrap();
 
         let package = metadata.packages.first().unwrap();
-        let contracts = get_contracts_map(&metadata, &package.id).unwrap();
+        let contracts = get_contracts_map(&metadata, &package.id, None).unwrap();
 
         assert!(contracts.contains_key("ERC20"));
         assert!(contracts.contains_key("HelloStarknet"));
