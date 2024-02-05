@@ -63,7 +63,7 @@ fn with_cache() {
         [FAIL] forking::tests::test_fork_simple
 
         Failure data:
-            original value: [1480335954842313548834020101284630397133856818], converted to a string: [Balance should be 2]
+            0x42616c616e63652073686f756c642062652032 ('Balance should be 2')
 
         Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 4 filtered out
 
