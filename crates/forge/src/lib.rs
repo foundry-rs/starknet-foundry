@@ -202,8 +202,8 @@ async fn warn_if_incompatible_rpc_version(
     let mut urls = HashSet::<&str>::new();
     let expected_version = VersionReq::parse(EXPECTED)?;
 
-    for ctc in test_crates {
-        for raw_fork_config in ctc
+    for test_crate in test_crates {
+        for raw_fork_config in test_crate
             .test_cases
             .iter()
             .filter_map(|tc| tc.fork_config.as_ref())
