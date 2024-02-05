@@ -27,7 +27,7 @@ pub struct Create {
     #[clap(short, long)]
     pub salt: Option<FieldElement>,
 
-    /// If passed, a profile with corresponding data will be created in snfoundry.toml
+    /// If passed, a profile with provided name and corresponding data will be created in snfoundry.toml
     #[clap(long)]
     pub add_profile: Option<String>,
     // TODO (#253): think about supporting different account providers

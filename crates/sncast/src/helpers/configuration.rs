@@ -248,7 +248,7 @@ mod tests {
     }
 
     #[test]
-    fn parse_config_happy_case_with_profile() {
+    fn load_config_happy_case_with_profile() {
         let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
         let config = load_config(
             &Some(String::from("profile1")),
@@ -261,7 +261,7 @@ mod tests {
     }
 
     #[test]
-    fn parse_config_happy_case_default_profile() {
+    fn load_config_happy_case_default_profile() {
         let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
         let config = load_config(
             &None,
@@ -273,7 +273,7 @@ mod tests {
     }
 
     #[test]
-    fn parse_config_not_found() {
+    fn load_config_not_found() {
         let tempdir = TempDir::new().expect("Failed to create a temporary directory");
         let config = load_config(
             &None,
