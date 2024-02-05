@@ -29,3 +29,29 @@ fn test_panic_decoding2() {
 fn test_simple2() {
     assert(2 == 2, 'simple check');
 }
+
+#[test]
+fn test_assert_eq() {
+    let x = 5;
+    let y = 6;
+    assert_eq!(x, y);
+}
+
+#[test]
+fn test_assert_eq_message() {
+    let x = 5;
+    let y = 6;
+    assert_eq!(x, y, "An identifiable and meaningful error message");
+}
+
+#[test]
+fn test_assert() {
+    let x = false;
+    assert!(x);
+}
+
+#[test]
+fn test_assert_message() {
+    let x = false;
+    assert!(x, "Another identifiable and meaningful error message");
+}
