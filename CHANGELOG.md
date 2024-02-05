@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
+- `--detailed-resources` flag for displaying additional info about used resources
 - `store` and `load` cheatcodes
 - `--save-trace-data` flag to `snforge test` command. Traces can be used for profiling purposes.
 

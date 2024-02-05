@@ -8,9 +8,10 @@ use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     CallFailure, CallResult,
 };
+use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeState;
 use cheatnet::runtime_extensions::common::{create_entry_point_selector, create_execute_calldata};
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::deploy;
-use cheatnet::state::{BlockifierState, CheatnetState};
+use cheatnet::state::BlockifierState;
 use conversions::felt252::FromShortString;
 use scarb_api::metadata::MetadataCommandExt;
 use scarb_api::{get_contracts_map, ScarbCommand, StarknetContractArtifacts};
@@ -49,7 +50,7 @@ pub fn get_contracts() -> HashMap<String, StarknetContractArtifacts> {
 
 pub fn deploy_contract(
     blockifier_state: &mut BlockifierState,
-    cheatnet_state: &mut CheatnetState,
+    runtime_state: &mut RuntimeState,
     contract_name: &str,
     calldata: &[Felt252],
 ) -> ContractAddress {
@@ -57,19 +58,19 @@ pub fn deploy_contract(
     let contracts = get_contracts();
 
     let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
-    deploy(blockifier_state, cheatnet_state, &class_hash, calldata).unwrap()
+    deploy(blockifier_state, runtime_state, &class_hash, calldata).unwrap()
 }
 
 pub fn call_contract_getter_by_name(
     blockifier_state: &mut BlockifierState,
-    cheatnet_state: &mut CheatnetState,
+    runtime_state: &mut RuntimeState,
     contract_address: &ContractAddress,
     fn_name: &str,
 ) -> CallResult {
     let selector = felt_selector_from_name(fn_name);
     let result = call_contract(
         blockifier_state,
-        cheatnet_state,
+        runtime_state,
         contract_address,
         &selector,
         vec![].as_slice(),
@@ -82,7 +83,7 @@ pub fn call_contract_getter_by_name(
 // `call` and `invoke` on the transactional layer use such method under the hood.
 pub fn call_contract(
     blockifier_state: &mut BlockifierState,
-    cheatnet_state: &mut CheatnetState,
+    runtime_state: &mut RuntimeState,
     contract_address: &ContractAddress,
     entry_point_selector: &Felt252,
     calldata: &[Felt252],
@@ -104,7 +105,7 @@ pub fn call_contract(
 
     call_entry_point(
         blockifier_state,
-        cheatnet_state,
+        runtime_state,
         entry_point,
         &AddressOrClassHash::ContractAddress(*contract_address),
     )

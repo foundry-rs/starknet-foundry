@@ -18,7 +18,7 @@ project-root.workspace = true
 scarb-metadata.workspace = true
 primitive-types = "0.12.1"
 shellexpand = "3.1.0"
-toml = "0.8.8"
+toml = "0.8.9"
 rpassword = "7.3.1"
 promptly = "0.3.1"
 scarb-api = { path = "../scarb-api" }

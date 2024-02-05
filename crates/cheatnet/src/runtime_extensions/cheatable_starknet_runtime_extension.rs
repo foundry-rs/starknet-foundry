@@ -24,6 +24,8 @@ use cairo_vm::{
 use runtime::{ExtendedRuntime, ExtensionLogic, StarknetRuntime, SyscallHandlingResult};
 use starknet_api::hash::StarkFelt;
 
+use super::call_to_blockifier_runtime_extension::RuntimeState;
+
 pub type SyscallSelector = DeprecatedSyscallSelector;
 
 pub struct CheatableStarknetRuntimeExtension<'a> {
@@ -135,7 +137,7 @@ impl CheatableStarknetRuntimeExtension<'_> {
             Request,
             &mut VirtualMachine,
             &mut SyscallHintProcessor<'_>,
-            &mut CheatnetState,
+            &mut RuntimeState,
             &mut u64, // Remaining gas.
         ) -> SyscallResult<Response>,
     {
@@ -163,12 +165,15 @@ impl CheatableStarknetRuntimeExtension<'_> {
         }
 
         // Execute.
+        let mut runtime_state = RuntimeState {
+            cheatnet_state: self.cheatnet_state,
+        };
         let mut remaining_gas = gas_counter - base_gas_cost;
         let original_response = execute_callback(
             request,
             vm,
             syscall_handler,
-            self.cheatnet_state,
+            &mut runtime_state,
             &mut remaining_gas,
         );
         let response = match original_response {

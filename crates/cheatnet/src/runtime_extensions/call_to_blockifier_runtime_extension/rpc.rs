@@ -1,13 +1,11 @@
+use blockifier::execution::deprecated_syscalls::hint_processor::SyscallCounter;
 use blockifier::execution::execution_utils::stark_felt_to_felt;
 use cairo_lang_runner::casm_run::format_next_item;
 
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::execute_call_entry_point;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::panic_data::try_extract_panic_data;
 use crate::runtime_extensions::common::{create_entry_point_selector, create_execute_calldata};
 use crate::state::BlockifierState;
-use crate::{
-    runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::execute_call_entry_point,
-    CheatnetState,
-};
 use blockifier::execution::call_info::CallInfo;
 use blockifier::execution::common_hints::ExecutionMode;
 use blockifier::execution::entry_point::EntryPointExecutionResult;
@@ -21,7 +19,9 @@ use runtime::starknet::context::{build_block_context, build_transaction_context}
 use starknet_api::core::ClassHash;
 use starknet_api::{core::ContractAddress, deprecated_contract_class::EntryPointType};
 
-#[derive(Debug, Default)]
+use super::RuntimeState;
+
+#[derive(Clone, Debug, Default)]
 pub struct UsedResources {
     pub execution_resources: ExecutionResources,
     pub l2_to_l1_payloads_length: Vec<usize>,
@@ -30,11 +30,21 @@ pub struct UsedResources {
 impl UsedResources {
     pub fn extend(self: &mut UsedResources, other: &UsedResources) {
         self.execution_resources.vm_resources += &other.execution_resources.vm_resources;
-        self.execution_resources
-            .syscall_counter
-            .extend(&other.execution_resources.syscall_counter);
+
+        self.update_syscall_counter(&other.execution_resources.syscall_counter);
+
         self.l2_to_l1_payloads_length
             .extend(&other.l2_to_l1_payloads_length);
+    }
+
+    fn update_syscall_counter(self: &mut UsedResources, syscall_counter: &SyscallCounter) {
+        for (syscall, count) in syscall_counter {
+            *self
+                .execution_resources
+                .syscall_counter
+                .entry(*syscall)
+                .or_insert(0) += count;
+        }
     }
 }
 
@@ -166,7 +176,7 @@ impl CallResult {
 
 pub fn call_l1_handler(
     blockifier_state: &mut BlockifierState,
-    cheatnet_state: &mut CheatnetState,
+    runtime_state: &mut RuntimeState,
     contract_address: &ContractAddress,
     entry_point_selector: &Felt252,
     calldata: &[Felt252],
@@ -188,7 +198,7 @@ pub fn call_l1_handler(
 
     call_entry_point(
         blockifier_state,
-        cheatnet_state,
+        runtime_state,
         entry_point,
         &AddressOrClassHash::ContractAddress(*contract_address),
     )
@@ -196,13 +206,13 @@ pub fn call_l1_handler(
 
 pub fn call_entry_point(
     blockifier_state: &mut BlockifierState,
-    cheatnet_state: &mut CheatnetState,
+    runtime_state: &mut RuntimeState,
     mut entry_point: CallEntryPoint,
     starknet_identifier: &AddressOrClassHash,
 ) -> CallResult {
     let mut resources = ExecutionResources::default();
     let account_context = build_transaction_context();
-    let block_context = build_block_context(cheatnet_state.block_info);
+    let block_context = build_block_context(runtime_state.cheatnet_state.block_info);
 
     let mut context = EntryPointExecutionContext::new(
         &block_context,
@@ -215,7 +225,7 @@ pub fn call_entry_point(
     let exec_result = execute_call_entry_point(
         &mut entry_point,
         blockifier_state.blockifier_state,
-        cheatnet_state,
+        runtime_state,
         &mut resources,
         &mut context,
     );
@@ -229,7 +239,10 @@ pub fn call_entry_point(
         }),
     };
     // add execution resources used by call contract, library call or l1 handler execution to all used resources
-    cheatnet_state.used_resources.extend(&used_resources);
+    runtime_state
+        .cheatnet_state
+        .used_resources
+        .extend(&used_resources);
 
     call_result
 }
