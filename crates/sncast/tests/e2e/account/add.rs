@@ -90,7 +90,7 @@ pub async fn test_happy_case_add_profile() {
 
     snapbox.assert().stdout_matches(indoc! {r"
         command: account add
-        add_profile: Profile successfully added to snfoundry.toml
+        add_profile: Profile my_account_add successfully added to snfoundry.toml
     "});
     let current_dir_utf8 = Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap();
 

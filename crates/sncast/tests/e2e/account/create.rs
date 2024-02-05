@@ -119,7 +119,9 @@ pub async fn test_happy_case_add_profile() {
 
     let stdout_str =
         std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
-    assert!(stdout_str.contains("add_profile: Profile successfully added to snfoundry.toml"));
+    assert!(
+        stdout_str.contains("add_profile: Profile my_account successfully added to snfoundry.toml")
+    );
 
     let contents = fs::read_to_string(tempdir.path().join("snfoundry.toml"))
         .expect("Unable to read snfoundry.toml");
@@ -300,7 +302,8 @@ pub async fn test_happy_case_keystore_add_profile() {
 
     let stdout_str =
         std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
-    assert!(stdout_str.contains("add_profile: Profile successfully added to snfoundry.toml"));
+    assert!(stdout_str
+        .contains("add_profile: Profile with_keystore successfully added to snfoundry.toml"));
 
     let contents =
         fs::read_to_string(tempdir.path().join(account_path)).expect("Unable to read created file");

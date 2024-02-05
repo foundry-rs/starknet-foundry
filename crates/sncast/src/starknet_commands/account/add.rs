@@ -103,7 +103,10 @@ pub async fn add(
 
     Ok(AccountAddResponse {
         add_profile: if add.add_profile.is_some() {
-            "Profile successfully added to snfoundry.toml".to_string()
+            format!(
+                "Profile {} successfully added to snfoundry.toml",
+                add.add_profile.clone().expect("Failed to get profile name")
+            )
         } else {
             "--add-profile flag was not set. No profile added to snfoundry.toml".to_string()
         },

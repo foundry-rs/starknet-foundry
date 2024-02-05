@@ -95,7 +95,10 @@ pub async fn create(
         address: Hex(address),
         max_fee: Decimal(max_fee),
         add_profile: if add_profile.is_some() {
-            "Profile successfully added to snfoundry.toml".to_string()
+            format!(
+                "Profile {} successfully added to snfoundry.toml",
+                add_profile.clone().expect("Failed to get profile name")
+            )
         } else {
             "--add-profile flag was not set. No profile added to snfoundry.toml".to_string()
         },
