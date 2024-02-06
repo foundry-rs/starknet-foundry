@@ -66,6 +66,7 @@
     * [precalculate_address](appendix/snforge-library/precalculate_address.md)
     * [deploy](appendix/snforge-library/deploy.md)
     * [deploy_at](appendix/snforge-library/deploy_at.md)
+    * [get_call_trace](appendix/snforge-library/get_call_trace.md)
     * [fs](appendix/snforge-library/fs.md)
         * [read_txt](appendix/snforge-library/fs/read_txt.md)
         * [parse_txt](appendix/snforge-library/fs/parse_txt.md)
