@@ -57,7 +57,7 @@ impl CommandResponse for DeclareResponse {}
 #[derive(Serialize)]
 pub struct AccountCreateResponse {
     pub address: Felt,
-    pub max_fee: Decimal,
+    pub max_fee: Felt,
     pub add_profile: String,
     pub message: String,
 }

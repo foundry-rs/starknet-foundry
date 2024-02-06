@@ -7,7 +7,7 @@ use clap::Args;
 use serde_json::json;
 use sncast::helpers::constants::{CREATE_KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH};
 use sncast::helpers::scarb_utils::CastConfig;
-use sncast::response::structs::{AccountCreateResponse, Decimal, Felt};
+use sncast::response::structs::{AccountCreateResponse, Felt};
 use sncast::{extract_or_generate_salt, get_chain_id, get_keystore_password, parse_number};
 use starknet::accounts::{AccountFactory, OpenZeppelinAccountFactory};
 use starknet::core::types::{FeeEstimate, FieldElement};
@@ -94,7 +94,7 @@ pub async fn create(
 
     Ok(AccountCreateResponse {
         address: Felt(address),
-        max_fee: Decimal(max_fee),
+        max_fee: Felt(max_fee),
         add_profile: if add_profile {
             "Profile successfully added to Scarb.toml".to_string()
         } else {
@@ -112,7 +112,7 @@ async fn generate_account(
     provider: &JsonRpcClient<HttpTransport>,
     salt: FieldElement,
     class_hash: FieldElement,
-) -> Result<(serde_json::Value, u64)> {
+) -> Result<(serde_json::Value, FieldElement)> {
     let private_key = SigningKey::from_random();
 
     let address: FieldElement = get_contract_address(
@@ -129,7 +129,7 @@ async fn generate_account(
         .await?
         .overall_fee;
 
-    Ok((account_json, max_fee.try_into()?))
+    Ok((account_json, max_fee))
 }
 
 async fn get_account_deployment_fee(
