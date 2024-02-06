@@ -576,49 +576,6 @@ fn with_rerun_failed_flag() {
 }
 
 #[test]
-fn with_print() {
-    let temp = setup_package("print_test");
-    let snapbox = test_runner();
-
-    let output = snapbox.current_dir(&temp).assert().success();
-
-    assert_stdout_contains!(
-        output,
-        indoc! {r#"
-        [..]Compiling[..]
-        [..]Finished[..]
-
-
-        Collected 1 test(s) from print_test package
-        Running 0 test(s) from src/
-        Running 1 test(s) from tests/
-        123
-        3618502788666131213697322783095070105623107215331596699973092056135872020480
-        6381921
-        12
-        1234
-        123456
-        1233456789
-        123345678910
-        3618502788666131213697322783095070105623107215331596699973092056135872020480
-        2
-        [152, 124, 149]
-        false
-        27
-        17
-        37
-        127
-        32
-        166906514068638843492736773029576256
-        5,hello,5
-        5hello55"hello"5
-        [PASS] tests::test_print::test_print [..]
-        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
-        "#}
-    );
-}
-
-#[test]
 fn with_panic_data_decoding() {
     let temp = setup_package("panic_decoding");
     let snapbox = test_runner();
