@@ -92,13 +92,15 @@ pub fn deploy_at(
         .used_resources
         .extend(&used_resources);
 
-    result.map(|_call_info| contract_address).map_err(|err| {
+    result.map_err(|err| {
         let call_contract_failure = CallFailure::from_execution_error(
             &err,
             &AddressOrClassHash::ContractAddress(contract_address),
         );
         CheatcodeError::from(call_contract_failure)
-    })
+    })?;
+
+    Ok(contract_address)
 }
 
 pub fn deploy(

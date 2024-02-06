@@ -1,10 +1,12 @@
 use crate::forking::state::ForkStateReader;
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
+    subtract_syscall_counters, UsedResources,
+};
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spoof::TxInfoMock;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::{
     Event, SpyTarget,
 };
-use blockifier::execution::entry_point::CallEntryPoint;
+use blockifier::execution::entry_point::{CallEntryPoint, ExecutionResources};
 use blockifier::state::state_api::State;
 use blockifier::{
     execution::contract_class::ContractClass,
@@ -142,7 +144,7 @@ pub enum CheatStatus<T> {
 #[derive(Clone)]
 pub struct CallTrace {
     pub entry_point: CallEntryPoint,
-    // These include resources used by internal calls
+    // These also include resources used by internal calls
     pub used_resources: UsedResources,
     pub nested_calls: Vec<Rc<RefCell<CallTrace>>>,
 }
@@ -178,6 +180,7 @@ impl NotEmptyCallStack {
 
 pub struct TraceData {
     pub current_call_stack: NotEmptyCallStack,
+    pub stack_of_resources_used_before_calls: Vec<ExecutionResources>,
 }
 
 pub struct CheatnetState {
@@ -224,6 +227,7 @@ impl Default for CheatnetState {
             block_info: Default::default(),
             trace_data: TraceData {
                 current_call_stack: NotEmptyCallStack::from(test_call),
+                stack_of_resources_used_before_calls: vec![],
             },
         }
     }
@@ -295,7 +299,11 @@ impl CheatnetState {
 }
 
 impl TraceData {
-    pub fn enter_nested_call(&mut self, entry_point: CallEntryPoint) {
+    pub fn enter_nested_call(
+        &mut self,
+        entry_point: CallEntryPoint,
+        resources_used_before_call: ExecutionResources,
+    ) {
         let new_call = Rc::new(RefCell::new(CallTrace {
             entry_point,
             used_resources: Default::default(),
@@ -309,14 +317,28 @@ impl TraceData {
             .push(new_call.clone());
 
         self.current_call_stack.push(new_call);
+        self.stack_of_resources_used_before_calls
+            .push(resources_used_before_call);
     }
 
-    pub fn set_resources_used_by_last_call(&mut self, resources: UsedResources) {
-        self.current_call_stack.last().borrow_mut().used_resources = resources;
-    }
+    pub fn exit_nested_call(&mut self, resources_used_after_call: &ExecutionResources) {
+        let last_call = self.current_call_stack.pop();
+        let resources_used_before_call = self
+            .stack_of_resources_used_before_calls
+            .pop()
+            .expect("Resources used before the call were None when exiting the call");
 
-    pub fn exit_nested_call(&mut self) {
-        self.current_call_stack.pop();
+        last_call.borrow_mut().used_resources = UsedResources {
+            execution_resources: ExecutionResources {
+                vm_resources: &resources_used_after_call.vm_resources
+                    - &resources_used_before_call.vm_resources,
+                syscall_counter: subtract_syscall_counters(
+                    &resources_used_after_call.syscall_counter,
+                    &resources_used_before_call.syscall_counter,
+                ),
+            },
+            l2_to_l1_payloads_length: vec![],
+        };
     }
 }
 

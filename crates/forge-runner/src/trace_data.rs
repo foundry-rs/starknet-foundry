@@ -23,6 +23,7 @@ pub const TRACE_DIR: &str = ".snfoundry_trace";
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct ProfilerCallTrace {
     pub entry_point: ProfilerCallEntryPoint,
+    // These also include resources used by internal calls
     pub used_resources: ProfilerUsedResources,
     pub nested_calls: Vec<ProfilerCallTrace>,
 }

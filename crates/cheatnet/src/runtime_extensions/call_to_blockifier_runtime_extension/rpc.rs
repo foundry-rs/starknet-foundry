@@ -46,31 +46,31 @@ impl UsedResources {
                 .or_insert(0) += count;
         }
     }
+}
 
-    pub(crate) fn subtract_syscall_counter(
-        self: &mut UsedResources,
-        syscall_counter: &SyscallCounter,
-    ) {
-        for (syscall, count) in syscall_counter {
-            let old_syscall_count = self
-                .execution_resources
-                .syscall_counter
-                .get(syscall)
-                .unwrap_or_else(|| panic!("Missing SyscallCounter entry {syscall:?}"));
+pub(crate) fn subtract_syscall_counters(
+    syscall_counter: &SyscallCounter,
+    subtrahend: &SyscallCounter,
+) -> SyscallCounter {
+    let mut result = syscall_counter.clone();
 
-            let new_count = old_syscall_count.checked_sub(*count).unwrap_or_else(|| {
-                panic!("Underflow when subtracting syscall counts for {syscall:?}")
-            });
+    for (syscall, count) in subtrahend {
+        let old_syscall_count = syscall_counter
+            .get(syscall)
+            .unwrap_or_else(|| panic!("Missing SyscallCounter entry {syscall:?}"));
 
-            if new_count != 0 {
-                self.execution_resources
-                    .syscall_counter
-                    .insert(*syscall, new_count);
-            } else {
-                self.execution_resources.syscall_counter.remove(syscall);
-            }
+        let new_count = old_syscall_count
+            .checked_sub(*count)
+            .unwrap_or_else(|| panic!("Underflow when subtracting syscall counts for {syscall:?}"));
+
+        if new_count != 0 {
+            result.insert(*syscall, new_count);
+        } else {
+            result.remove(syscall);
         }
     }
+
+    result
 }
 
 /// Enum representing possible call execution result, along with the data
