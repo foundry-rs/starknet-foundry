@@ -91,11 +91,17 @@ pub(crate) async fn warn_if_incompatible_rpc_version(
 
 #[cfg(test)]
 mod tests {
+    use super::warn_if_incompatible_rpc_version;
     use crate::compiled_raw::{
         CompiledTestCrateRaw, CrateLocation, RawForkConfig, RawForkParams, TestCaseRaw,
     };
+    use axum::{http::StatusCode, routing::post, Json, Router};
     use cairo_lang_sierra::program::Program;
     use forge_runner::expected_result::ExpectedTestResult;
+    use gag::BufferRedirect;
+    use indoc::indoc;
+    use serde_json::{json, Value};
+    use std::io::read_to_string;
 
     fn prepare_input<const L: usize>(urls: &[&str; L]) -> [CompiledTestCrateRaw; L] {
         urls.map(|url| CompiledTestCrateRaw {
@@ -107,17 +113,124 @@ mod tests {
             },
             tests_location: CrateLocation::Tests,
             test_cases: vec![TestCaseRaw {
-                name: "".into(),
+                name: String::new(),
                 available_gas: None,
                 expected_result: ExpectedTestResult::Success,
                 fuzzer_config: None,
                 ignored: false,
                 fork_config: Some(RawForkConfig::Params(RawForkParams {
                     url: url.into(),
-                    block_id_type: "".into(),
-                    block_id_value: "".into(),
+                    block_id_type: String::new(),
+                    block_id_value: String::new(),
                 })),
             }],
         })
+    }
+
+    async fn handler(Json(input): Json<Value>) -> (StatusCode, String) {
+        let id = input.as_object().unwrap().get("id");
+
+        (
+            StatusCode::OK,
+            json!({
+                "id": id,
+                "result": "0.5.0"
+            })
+            .to_string(),
+        )
+    }
+
+    fn setup_fake_node(address: impl Into<String>) {
+        let address = address.into();
+
+        tokio::spawn(async {
+            let app = Router::new().route("/rpc", post(handler));
+
+            let listener = tokio::net::TcpListener::bind(address).await.unwrap();
+            axum::serve(listener, app).await.unwrap();
+        });
+    }
+
+    // must be run with --nocapture or will fail
+    #[tokio::test(flavor = "multi_thread")]
+    async fn should_print_warning() {
+        setup_fake_node("127.0.0.1:3030");
+
+        let test_crates = prepare_input(&["http://127.0.0.1:3030/rpc"]);
+        let buffer = BufferRedirect::stdout().unwrap();
+
+        warn_if_incompatible_rpc_version(&test_crates, &[])
+            .await
+            .unwrap();
+
+        let stdout = read_to_string(buffer.into_inner()).unwrap();
+
+        assert!(stdout == "[WARNING] The RPC node with url = http://127.0.0.1:3030/rpc has unsupported version = (0.5.0), use node supporting RPC version 0.6.0\n");
+    }
+
+    // must be run with --nocapture or will fail
+    #[tokio::test(flavor = "multi_thread")]
+    async fn should_dedup_urls() {
+        setup_fake_node("127.0.0.1:3030");
+
+        let test_crates =
+            prepare_input(&["http://127.0.0.1:3030/rpc", "http://127.0.0.1:3030/rpc"]);
+        let buffer = BufferRedirect::stdout().unwrap();
+
+        warn_if_incompatible_rpc_version(&test_crates, &[])
+            .await
+            .unwrap();
+
+        let stdout = read_to_string(buffer.into_inner()).unwrap();
+
+        assert!(stdout == "[WARNING] The RPC node with url = http://127.0.0.1:3030/rpc has unsupported version = (0.5.0), use node supporting RPC version 0.6.0\n");
+    }
+
+    // must be run with --nocapture or will fail
+    #[tokio::test(flavor = "multi_thread")]
+    async fn should_print_for_each() {
+        setup_fake_node("127.0.0.1:3030");
+        setup_fake_node("127.0.0.1:3035");
+
+        let test_crates =
+            prepare_input(&["http://127.0.0.1:3030/rpc", "http://127.0.0.1:3035/rpc"]);
+        let buffer = BufferRedirect::stdout().unwrap();
+
+        warn_if_incompatible_rpc_version(&test_crates, &[])
+            .await
+            .unwrap();
+
+        let stdout = read_to_string(buffer.into_inner()).unwrap();
+
+        //TODO use assert_stdout_contains!()
+        assert!(
+            stdout
+                == indoc!(
+                    r#"
+                    [WARNING] The RPC node with url = http://127.0.0.1:3030/rpc has unsupported version = (0.5.0), use node supporting RPC version 0.6.0
+                    [WARNING] The RPC node with url = http://127.0.0.1:3035/rpc has unsupported version = (0.5.0), use node supporting RPC version 0.6.0
+                    "#
+                )
+                || stdout
+                    == indoc!(
+                        r#"
+                    [WARNING] The RPC node with url = http://127.0.0.1:3035/rpc has unsupported version = (0.5.0), use node supporting RPC version 0.6.0
+                    [WARNING] The RPC node with url = http://127.0.0.1:3030/rpc has unsupported version = (0.5.0), use node supporting RPC version 0.6.0
+                    "#
+                    )
+        );
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn should_fail_calling_rpc() {
+        setup_fake_node("127.0.0.1:3030");
+
+        let test_crates = prepare_input(&["http://not.exist:3030/rpc"]);
+
+        let err = warn_if_incompatible_rpc_version(&test_crates, &[])
+            .await
+            .unwrap_err();
+
+        assert!(err.to_string().contains("error while calling rpc node"));
     }
 }
