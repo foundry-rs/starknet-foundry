@@ -45,11 +45,6 @@ pub fn execute_call_entry_point(
     if let Some(ret_data) =
         get_ret_data_by_call_entry_point(entry_point, runtime_state.cheatnet_state)
     {
-        runtime_state
-            .cheatnet_state
-            .trace_data
-            .set_resources_used_by_last_call(UsedResources::default());
-        runtime_state.cheatnet_state.trace_data.exit_nested_call();
         return Ok(mocked_call_info(entry_point.clone(), ret_data.clone()));
     }
 
@@ -179,17 +174,15 @@ pub fn execute_constructor_entry_point(
     // endregion
 }
 
-fn get_ret_data_by_call_entry_point(
+fn get_ret_data_by_call_entry_point<'a>(
     call: &CallEntryPoint,
-    cheatnet_state: &CheatnetState,
-) -> Option<Vec<StarkFelt>> {
+    cheatnet_state: &'a CheatnetState,
+) -> Option<&'a Vec<StarkFelt>> {
     if let Some(contract_address) = call.code_address {
         if let Some(contract_functions) = cheatnet_state.mocked_functions.get(&contract_address) {
             let entrypoint_selector = call.entry_point_selector;
 
-            let ret_data = contract_functions
-                .get(&entrypoint_selector)
-                .map(std::clone::Clone::clone);
+            let ret_data = contract_functions.get(&entrypoint_selector);
             return ret_data;
         }
     }
