@@ -88,3 +88,36 @@ pub(crate) async fn warn_if_incompatible_rpc_version(
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::compiled_raw::{
+        CompiledTestCrateRaw, CrateLocation, RawForkConfig, RawForkParams, TestCaseRaw,
+    };
+    use cairo_lang_sierra::program::Program;
+    use forge_runner::expected_result::ExpectedTestResult;
+
+    fn prepare_input<const L: usize>(urls: &[&str; L]) -> [CompiledTestCrateRaw; L] {
+        urls.map(|url| CompiledTestCrateRaw {
+            sierra_program: Program {
+                funcs: Vec::new(),
+                libfunc_declarations: Vec::new(),
+                statements: Vec::new(),
+                type_declarations: Vec::new(),
+            },
+            tests_location: CrateLocation::Tests,
+            test_cases: vec![TestCaseRaw {
+                name: "".into(),
+                available_gas: None,
+                expected_result: ExpectedTestResult::Success,
+                fuzzer_config: None,
+                ignored: false,
+                fork_config: Some(RawForkConfig::Params(RawForkParams {
+                    url: url.into(),
+                    block_id_type: "".into(),
+                    block_id_value: "".into(),
+                })),
+            }],
+        })
+    }
+}
