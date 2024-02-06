@@ -38,7 +38,6 @@ use cheatnet::runtime_extensions::cheatable_starknet_runtime_extension::Cheatabl
 use cheatnet::runtime_extensions::forge_runtime_extension::{
     update_test_execution_resources_and_get_them, ForgeExtension, ForgeRuntime,
 };
-use cheatnet::runtime_extensions::io_runtime_extension::IORuntimeExtension;
 use cheatnet::state::{BlockInfoReader, CallTrace, CheatnetState, ExtendedStateReader};
 use itertools::chain;
 use runtime::starknet::context;
@@ -242,18 +241,11 @@ pub fn run_test_case(
         },
     };
 
-    let io_runtime = ExtendedRuntime {
-        extension: IORuntimeExtension {
-            lifetime: &PhantomData,
-        },
-        extended_runtime: cheatable_runtime,
-    };
-
     let call_to_blockifier_runtime = ExtendedRuntime {
         extension: CallToBlockifierExtension {
             lifetime: &PhantomData,
         },
-        extended_runtime: io_runtime,
+        extended_runtime: cheatable_runtime,
     };
     let forge_extension = ForgeExtension {
         environment_variables: &runner_params.environment_variables,
@@ -289,7 +281,6 @@ pub fn run_test_case(
                 .unwrap()
                 .filter_unused_builtins();
             forge_runtime
-                .extended_runtime
                 .extended_runtime
                 .extended_runtime
                 .extended_runtime
@@ -398,14 +389,12 @@ fn get_context<'a>(runtime: &'a ForgeRuntime) -> &'a EntryPointExecutionContext 
         .extended_runtime
         .extended_runtime
         .extended_runtime
-        .extended_runtime
         .hint_handler
         .context
 }
 
 fn get_call_trace_ref(runtime: &mut ForgeRuntime) -> Rc<RefCell<CallTrace>> {
     runtime
-        .extended_runtime
         .extended_runtime
         .extended_runtime
         .extension

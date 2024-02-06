@@ -5,8 +5,8 @@ use anyhow::{bail, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
 use serde_json::json;
+use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{CREATE_KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH};
-use sncast::helpers::scarb_utils::CastConfig;
 use sncast::response::structs::{AccountCreateResponse, Decimal, Hex};
 use sncast::{extract_or_generate_salt, get_chain_id, get_keystore_password, parse_number};
 use starknet::accounts::{AccountFactory, OpenZeppelinAccountFactory};
@@ -27,9 +27,9 @@ pub struct Create {
     #[clap(short, long)]
     pub salt: Option<FieldElement>,
 
-    /// If passed, a profile with corresponding data will be created in Scarb.toml
+    /// If passed, a profile with provided name and corresponding data will be created in snfoundry.toml
     #[clap(long)]
-    pub add_profile: bool,
+    pub add_profile: Option<String>,
     // TODO (#253): think about supporting different account providers
     /// Custom open zeppelin contract class hash of declared contract
     #[clap(short, long)]
@@ -43,10 +43,9 @@ pub async fn create(
     accounts_file: &Utf8PathBuf,
     keystore: Option<Utf8PathBuf>,
     provider: &JsonRpcClient<HttpTransport>,
-    path_to_scarb_toml: Option<Utf8PathBuf>,
     chain_id: FieldElement,
     salt: Option<FieldElement>,
-    add_profile: bool,
+    add_profile: Option<String>,
     class_hash: Option<String>,
 ) -> Result<AccountCreateResponse> {
     let salt = extract_or_generate_salt(salt);
@@ -81,7 +80,7 @@ pub async fn create(
         write_account_to_accounts_file(account, accounts_file, chain_id, account_json.clone())?;
     }
 
-    if add_profile {
+    if add_profile.is_some() {
         let config = CastConfig {
             rpc_url: rpc_url.into(),
             account: account.into(),
@@ -89,16 +88,19 @@ pub async fn create(
             keystore,
             ..Default::default()
         };
-        add_created_profile_to_configuration(&path_to_scarb_toml, &config)?;
+        add_created_profile_to_configuration(&add_profile, &config, &None)?;
     }
 
     Ok(AccountCreateResponse {
         address: Hex(address),
         max_fee: Decimal(max_fee),
-        add_profile: if add_profile {
-            "Profile successfully added to Scarb.toml".to_string()
+        add_profile: if add_profile.is_some() {
+            format!(
+                "Profile {} successfully added to snfoundry.toml",
+                add_profile.clone().expect("Failed to get profile name")
+            )
         } else {
-            "--add-profile flag was not set. No profile added to Scarb.toml".to_string()
+            "--add-profile flag was not set. No profile added to snfoundry.toml".to_string()
         },
         message: if account_json["deployed"] == json!(false) {
             "Account successfully created. Prefund generated address with at least <max_fee> tokens. It is good to send more in the case of higher demand.".to_string()
