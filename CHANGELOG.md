@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-- `get_trace_info` library function for retrieving call trace in tests
+- `get_call_trace` library function for retrieving call trace in tests
 
 
 #### Changed
