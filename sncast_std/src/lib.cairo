@@ -1,9 +1,9 @@
-use starknet::{testing::cheatcode, ContractAddress, ClassHash, class_hash_to_felt252};
-use core::fmt::{Debug, Display, DisplayInteger, Error, Formatter};
+use starknet::{testing::cheatcode, ContractAddress, ClassHash};
+use core::fmt::{Debug, Display, Error, Formatter};
 
 impl DisplayClassHash of Display<ClassHash> {
     fn fmt(self: @ClassHash, ref f: Formatter) -> Result<(), Error> {
-        let class_hash: felt252 = class_hash_to_felt252(*self);
+        let class_hash: felt252 = (*self).into();
         Display::fmt(@class_hash, ref f)
     }
 }
