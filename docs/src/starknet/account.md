@@ -96,8 +96,6 @@ Account removed from Scarb
 command: account delete
 result: Account successfully removed
 ```
-> 💡 **Info**
-> Note that you can pass `--delete-profile false` argument to persist the associated profile in Scarb.toml.
 
 For a detailed CLI description, see [account delete command reference](../appendix/sncast/account/delete.md).
 

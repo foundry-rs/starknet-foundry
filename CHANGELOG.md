@@ -21,6 +21,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Gas used in constructors and handling of L1 messages is now properly included in total gas cost
 
+### Cast
+
+#### Changed
+
+- sncast tool configuration is now moved away from `Scarb.toml` to `snfoundry.toml` file. This file must be present in current or any parent directories in order to use profiles.
+
 ## [0.16.0] - 2024-01-26
 
 ### Forge
