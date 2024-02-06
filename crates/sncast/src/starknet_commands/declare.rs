@@ -31,6 +31,10 @@ pub struct Declare {
     /// Nonce of the transaction. If not provided, nonce will be set automatically
     #[clap(short, long)]
     pub nonce: Option<FieldElement>,
+
+    /// Specifies scarb package to be used
+    #[clap(long)]
+    pub package: Option<String>,
 }
 
 #[allow(clippy::too_many_lines)]
@@ -45,7 +49,7 @@ pub async fn declare(
     let contract_name: String = contract_name.to_string();
     let contract_artifacts = artifacts
         .get(&contract_name)
-        .ok_or(anyhow!("Failed to find artifacts in starknet_artifacts.json file. Please ensure you have enabled sierra and casm code generation in Scarb.toml"))?;
+        .ok_or(anyhow!(format!("Failed to find {contract_name} artifact in starknet_artifacts.json file. Please make sure you have specified correct package using `--package` flag and that you have enabled sierra and casm code generation in Scarb.toml.")))?;
 
     let contract_definition: SierraClass = serde_json::from_str(&contract_artifacts.sierra)
         .context("Failed to parse sierra artifact")?;

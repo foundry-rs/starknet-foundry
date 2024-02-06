@@ -39,6 +39,39 @@ async fn test_happy_case() {
 }
 
 #[tokio::test]
+async fn test_happy_case_specify_package() {
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
+    let args = vec![
+        "--url",
+        URL,
+        "--accounts-file",
+        accounts_json_path.as_str(),
+        "--account",
+        "user8",
+        "--int-format",
+        "--json",
+        "declare",
+        "--contract-name",
+        "supercomplexcode",
+        "--package",
+        "main_workspace",
+        "--max-fee",
+        "99999999999999999",
+    ];
+
+    // todo: (1247) Execute tests in temp dirs
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(CONTRACTS_DIR.to_string() + "/multiple_packages")
+        .args(args);
+    let output = snapbox.assert().success().get_output().stdout.clone();
+
+    let hash = get_transaction_hash(&output);
+    let receipt = get_transaction_receipt(hash).await;
+
+    assert!(matches!(receipt, Declare(_)));
+}
+
+#[tokio::test]
 async fn contract_already_declared() {
     let args = vec![
         "--url",
@@ -82,7 +115,7 @@ async fn wrong_contract_name_passed() {
 
     snapbox.assert().success().stderr_matches(indoc! {r"
         command: declare
-        error: Failed to find artifacts in starknet_artifacts.json file[..]
+        error: Failed to find nonexistent artifact in starknet_artifacts.json file[..]
     "});
 }
 
@@ -106,11 +139,12 @@ fn scarb_build_fails_when_wrong_cairo_path() {
 
     snapbox.assert().stderr_matches(indoc! {r"
         ...
-        Error: Failed to build using scarb; `scarb` exited with error
+        Failed to build contract: Failed to build using scarb; `scarb` exited with error
+        ...
     "});
 }
 
-#[should_panic(expected = "Failed to obtain metadata")]
+#[should_panic(expected = "Path to Scarb.toml manifest does not exist")]
 #[test]
 fn scarb_build_fails_scarb_toml_does_not_exist() {
     let args = vec![
@@ -130,6 +164,29 @@ fn scarb_build_fails_scarb_toml_does_not_exist() {
         .args(args)
         .assert()
         .success();
+}
+
+#[test]
+fn scarb_build_fails_manifest_does_not_exist() {
+    let args = vec![
+        "--url",
+        URL,
+        "--accounts-file",
+        "../accounts/accounts.json",
+        "--account",
+        "user1",
+        "declare",
+        "--contract-name",
+        "BuildFails",
+    ];
+
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(CONTRACTS_DIR.to_string() + "/")
+        .args(args);
+
+    snapbox.assert().stderr_matches(indoc! {r"
+        Error: Path to Scarb.toml manifest does not exist =[..]
+    "});
 }
 
 #[test]
@@ -163,6 +220,7 @@ fn test_too_low_max_fee() {
     "});
 }
 
+#[should_panic(expected = "Make sure you have enabled sierra code generation in Scarb.toml")]
 #[test]
 fn scarb_no_sierra_artifact() {
     let args = vec![
@@ -177,14 +235,11 @@ fn scarb_no_sierra_artifact() {
         "minimal_contract",
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
+    Command::new(cargo_bin!("sncast"))
         .current_dir(CONTRACTS_DIR.to_string() + "/no_sierra")
-        .args(args);
-
-    snapbox.assert().failure().stderr_matches(indoc! {r"
-        [..]Make sure you have enabled sierra code generation in Scarb.toml
-        ...
-    "});
+        .args(args)
+        .assert()
+        .success();
 }
 
 #[test]
@@ -210,4 +265,33 @@ fn scarb_no_casm_artifact() {
             .unwrap()
             .contains("class_hash")
     );
+}
+
+#[tokio::test]
+async fn test_many_packages_default() {
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
+    let args = vec![
+        "--url",
+        URL,
+        "--accounts-file",
+        accounts_json_path.as_str(),
+        "--account",
+        "user8",
+        "--int-format",
+        "--json",
+        "declare",
+        "--contract-name",
+        "supercomplexcode2",
+        "--max-fee",
+        "99999999999999999",
+    ];
+
+    // todo: (1247) Execute tests in temp dirs
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(CONTRACTS_DIR.to_string() + "/multiple_packages")
+        .args(args);
+    snapbox.assert().failure().stderr_matches(indoc! {r"
+        ...
+        Error: More than one package found in scarb metadata - specify package using --package flag
+    "});
 }

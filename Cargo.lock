@@ -5288,6 +5288,7 @@ dependencies = [
  "runtime",
  "scarb-api",
  "scarb-metadata",
+ "scarb-ui",
  "sealed_test",
  "semver",
  "serde",
