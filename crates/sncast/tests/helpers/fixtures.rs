@@ -337,10 +337,6 @@ pub fn duplicate_script_directory(
     let dest_dir = Utf8PathBuf::from_path_buf(temp_dir.path().to_path_buf())
         .expect("Failed to create Utf8PathBuf from PathBuf");
 
-    let manifest_dir = env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set");
-    let sncast_std_path = Utf8PathBuf::from(manifest_dir).join("../../sncast_std/");
-    deps.insert(String::from("sncast_std"), sncast_std_path);
-
     let manifest_path = dest_dir.join("Scarb.toml");
     let contents = fs::read_to_string(&manifest_path).unwrap();
     let mut parsed_toml: Table = toml::from_str(&contents)
@@ -352,6 +348,17 @@ pub fn duplicate_script_directory(
         .unwrap()
         .as_table_mut()
         .unwrap();
+
+    if let Some(sncast_std) = deps_toml.get_mut("sncast_std") {
+        if let Some(sncast_std_path) = sncast_std.get_mut("path") {
+            let sncast_std_path = Utf8PathBuf::from(sncast_std_path.as_str().expect("Failed to extract string"));
+            if sncast_std_path.is_relative() {
+                let sncast_std_path = src_dir.join(sncast_std_path);
+                let sncast_std_path_absolute = sncast_std_path.canonicalize_utf8().expect("Failed to canonicalize sncast_std path");
+                deps.insert(String::from("sncast_std"), sncast_std_path_absolute);
+            }
+        }
+    }
 
     for (key, value) in deps {
         let pkg = deps_toml.get_mut(&key).unwrap().as_table_mut().unwrap();
