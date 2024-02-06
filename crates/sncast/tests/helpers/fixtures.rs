@@ -2,7 +2,7 @@ use crate::helpers::constants::{
     ACCOUNT_FILE_PATH, CONTRACTS_DIR, DEVNET_ENV_FILE, DEVNET_OZ_CLASS_HASH, URL,
 };
 use anyhow::Context;
-use camino::Utf8PathBuf;
+use camino::{Utf8Path, Utf8PathBuf};
 use primitive_types::U256;
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
@@ -270,11 +270,11 @@ pub fn create_test_provider() -> JsonRpcClient<HttpTransport> {
     JsonRpcClient::new(HttpTransport::new(parsed_url))
 }
 
-fn copy_dir_to_temp_dir(src_dir: &Utf8PathBuf) -> TempDir {
+fn copy_dir_to_temp_dir(src_dir: impl AsRef<Utf8Path>) -> TempDir {
     let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
 
     fs_extra::dir::copy(
-        src_dir,
+        src_dir.as_ref(),
         temp_dir.as_ref(),
         &fs_extra::dir::CopyOptions::new().content_only(true),
     )
@@ -285,11 +285,11 @@ fn copy_dir_to_temp_dir(src_dir: &Utf8PathBuf) -> TempDir {
 
 #[must_use]
 pub fn duplicate_contract_directory_with_salt(
-    src_dir: String,
+    src_dir: impl AsRef<Utf8Path>,
     code_to_be_salted: &str,
     salt: &str,
 ) -> TempDir {
-    let src_dir = Utf8PathBuf::from(src_dir);
+    let src_dir = Utf8PathBuf::from(src_dir.as_ref());
 
     let temp_dir = copy_dir_to_temp_dir(&src_dir);
 
@@ -325,12 +325,12 @@ pub fn copy_directory_to_tempdir(src_path: String) -> TempDir {
 }
 
 pub fn duplicate_script_directory(
-    src_dir: String,
+    src_dir: impl AsRef<Utf8Path>,
     deps: Vec<impl AsRef<std::path::Path>>,
 ) -> TempDir {
     let mut deps = get_deps_map_from_paths(deps);
 
-    let src_dir = Utf8PathBuf::from(src_dir);
+    let src_dir = Utf8PathBuf::from(src_dir.as_ref());
 
     let temp_dir = copy_dir_to_temp_dir(&src_dir);
 
