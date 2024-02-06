@@ -721,11 +721,7 @@ fn concat_u128_bytes(low: &[u8; 32], high: &[u8; 32]) -> [u8; 32] {
 
 #[must_use]
 pub fn update_test_execution_resources_and_get_them(runtime: ForgeRuntime) -> UsedResources {
-    let starknet_runtime = runtime
-        .extended_runtime
-        .extended_runtime
-        .extended_runtime
-        .extended_runtime;
+    let starknet_runtime = runtime.extended_runtime.extended_runtime.extended_runtime;
     let test_code_execution_resources = starknet_runtime.hint_handler.resources.clone();
     let test_code_l1_to_l2_messages = starknet_runtime.hint_handler.l2_to_l1_messages;
 
