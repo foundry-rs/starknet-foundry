@@ -154,9 +154,9 @@ mod tests {
     // must be run with --nocapture or will fail
     #[tokio::test(flavor = "multi_thread")]
     async fn should_print_warning() {
-        setup_fake_node("127.0.0.1:3030");
+        setup_fake_node("127.0.0.1:60030");
 
-        let test_crates = prepare_input(&["http://127.0.0.1:3030/rpc"]);
+        let test_crates = prepare_input(&["http://127.0.0.1:60030/rpc"]);
         let buffer = BufferRedirect::stdout().unwrap();
 
         warn_if_incompatible_rpc_version(&test_crates, &[])
@@ -165,16 +165,16 @@ mod tests {
 
         let stdout = read_to_string(buffer.into_inner()).unwrap();
 
-        assert!(stdout == "[WARNING] The RPC node with url = http://127.0.0.1:3030/rpc has unsupported version = (0.5.0), use node supporting RPC version 0.6.0\n");
+        assert!(stdout == "[WARNING] The RPC node with url = http://127.0.0.1:60030/rpc has unsupported version = (0.5.0), use node supporting RPC version 0.6.0\n");
     }
 
     // must be run with --nocapture or will fail
     #[tokio::test(flavor = "multi_thread")]
     async fn should_dedup_urls() {
-        setup_fake_node("127.0.0.1:3030");
+        setup_fake_node("127.0.0.1:60030");
 
         let test_crates =
-            prepare_input(&["http://127.0.0.1:3030/rpc", "http://127.0.0.1:3030/rpc"]);
+            prepare_input(&["http://127.0.0.1:60030/rpc", "http://127.0.0.1:60030/rpc"]);
         let buffer = BufferRedirect::stdout().unwrap();
 
         warn_if_incompatible_rpc_version(&test_crates, &[])
@@ -183,17 +183,17 @@ mod tests {
 
         let stdout = read_to_string(buffer.into_inner()).unwrap();
 
-        assert!(stdout == "[WARNING] The RPC node with url = http://127.0.0.1:3030/rpc has unsupported version = (0.5.0), use node supporting RPC version 0.6.0\n");
+        assert!(stdout == "[WARNING] The RPC node with url = http://127.0.0.1:60030/rpc has unsupported version = (0.5.0), use node supporting RPC version 0.6.0\n");
     }
 
     // must be run with --nocapture or will fail
     #[tokio::test(flavor = "multi_thread")]
     async fn should_print_for_each() {
-        setup_fake_node("127.0.0.1:3030");
-        setup_fake_node("127.0.0.1:3035");
+        setup_fake_node("127.0.0.1:60030");
+        setup_fake_node("127.0.0.1:60035");
 
         let test_crates =
-            prepare_input(&["http://127.0.0.1:3030/rpc", "http://127.0.0.1:3035/rpc"]);
+            prepare_input(&["http://127.0.0.1:60030/rpc", "http://127.0.0.1:60035/rpc"]);
         let buffer = BufferRedirect::stdout().unwrap();
 
         warn_if_incompatible_rpc_version(&test_crates, &[])
@@ -207,15 +207,15 @@ mod tests {
             stdout
                 == indoc!(
                     r"
-                    [WARNING] The RPC node with url = http://127.0.0.1:3030/rpc has unsupported version = (0.5.0), use node supporting RPC version 0.6.0
-                    [WARNING] The RPC node with url = http://127.0.0.1:3035/rpc has unsupported version = (0.5.0), use node supporting RPC version 0.6.0
+                    [WARNING] The RPC node with url = http://127.0.0.1:60030/rpc has unsupported version = (0.5.0), use node supporting RPC version 0.6.0
+                    [WARNING] The RPC node with url = http://127.0.0.1:60035/rpc has unsupported version = (0.5.0), use node supporting RPC version 0.6.0
                     "
                 )
                 || stdout
                     == indoc!(
                         r"
-                    [WARNING] The RPC node with url = http://127.0.0.1:3035/rpc has unsupported version = (0.5.0), use node supporting RPC version 0.6.0
-                    [WARNING] The RPC node with url = http://127.0.0.1:3030/rpc has unsupported version = (0.5.0), use node supporting RPC version 0.6.0
+                    [WARNING] The RPC node with url = http://127.0.0.1:60035/rpc has unsupported version = (0.5.0), use node supporting RPC version 0.6.0
+                    [WARNING] The RPC node with url = http://127.0.0.1:60030/rpc has unsupported version = (0.5.0), use node supporting RPC version 0.6.0
                     "
                     )
         );
@@ -223,9 +223,9 @@ mod tests {
 
     #[tokio::test(flavor = "multi_thread")]
     async fn should_fail_calling_rpc() {
-        setup_fake_node("127.0.0.1:3030");
+        setup_fake_node("127.0.0.1:60030");
 
-        let test_crates = prepare_input(&["http://not.exist:3030/rpc"]);
+        let test_crates = prepare_input(&["http://not.exist:60030/rpc"]);
 
         let err = warn_if_incompatible_rpc_version(&test_crates, &[])
             .await
