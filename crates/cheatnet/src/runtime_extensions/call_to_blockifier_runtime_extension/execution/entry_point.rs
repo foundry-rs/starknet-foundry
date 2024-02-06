@@ -48,7 +48,8 @@ pub fn execute_call_entry_point(
         runtime_state
             .cheatnet_state
             .trace_data
-            .exit_nested_call(UsedResources::default());
+            .set_resources_used_by_last_call(UsedResources::default());
+        runtime_state.cheatnet_state.trace_data.exit_nested_call();
         return Ok(mocked_call_info(entry_point.clone(), ret_data.clone()));
     }
 
@@ -110,7 +111,8 @@ pub fn execute_call_entry_point(
     runtime_state
         .cheatnet_state
         .trace_data
-        .exit_nested_call(resources);
+        .set_resources_used_by_last_call(resources);
+    runtime_state.cheatnet_state.trace_data.exit_nested_call();
 
     result.map_err(|error| {
         // endregion

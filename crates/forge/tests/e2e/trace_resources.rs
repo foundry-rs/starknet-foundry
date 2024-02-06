@@ -65,7 +65,7 @@ fn ensure_resources_are_correct(call_trace: &ProfilerCallTrace) -> &ProfilerExec
     let resource_diff = current_resources - &sum_child_resources;
     assert_correct_diff_for_easily_countable_syscalls(&resource_diff);
 
-    &call_trace.used_resources.execution_resources
+    current_resources
 }
 
 fn assert_correct_diff_for_easily_countable_syscalls(resource_diff: &ProfilerExecutionResources) {

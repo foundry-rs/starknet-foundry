@@ -750,7 +750,7 @@ fn concat_u128_bytes(low: &[u8; 32], high: &[u8; 32]) -> [u8; 32] {
 }
 
 #[must_use]
-pub fn update_top_call_execution_resources(runtime: ForgeRuntime) -> UsedResources {
+pub fn update_test_execution_resources_and_get_them(runtime: ForgeRuntime) -> UsedResources {
     let starknet_runtime = runtime
         .extended_runtime
         .extended_runtime
@@ -776,6 +776,7 @@ pub fn update_top_call_execution_resources(runtime: ForgeRuntime) -> UsedResourc
         l2_to_l1_payloads_length: test_code_l2_to_l1_payloads_length,
     };
 
+    // call representing the test code
     let top_call = runtime
         .extended_runtime
         .extended_runtime
@@ -784,7 +785,7 @@ pub fn update_top_call_execution_resources(runtime: ForgeRuntime) -> UsedResourc
         .cheatnet_state
         .trace_data
         .current_call_stack
-        .top();
+        .last();
     top_call
         .borrow_mut()
         .used_resources

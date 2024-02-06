@@ -158,7 +158,7 @@ impl NotEmptyCallStack {
         self.0.push(elem);
     }
 
-    pub fn top(&mut self) -> Rc<RefCell<CallTrace>> {
+    pub fn last(&mut self) -> Rc<RefCell<CallTrace>> {
         let top_val = self.0.pop().unwrap();
         let borrowed_ref = top_val.clone();
         self.0.push(top_val);
@@ -301,7 +301,7 @@ impl TraceData {
             used_resources: Default::default(),
             nested_calls: vec![],
         }));
-        let current_call = self.current_call_stack.top();
+        let current_call = self.current_call_stack.last();
 
         current_call
             .borrow_mut()
@@ -311,9 +311,12 @@ impl TraceData {
         self.current_call_stack.push(new_call);
     }
 
-    pub fn exit_nested_call(&mut self, resources: UsedResources) {
-        let last_call = self.current_call_stack.pop();
-        last_call.borrow_mut().used_resources = resources;
+    pub fn set_resources_used_by_last_call(&mut self, resources: UsedResources) {
+        self.current_call_stack.last().borrow_mut().used_resources = resources;
+    }
+
+    pub fn exit_nested_call(&mut self) {
+        self.current_call_stack.pop();
     }
 }
 
