@@ -1,13 +1,12 @@
-use crate::helpers::constants::{CONTRACTS_DIR, DEVNET_OZ_CLASS_HASH, URL};
+use crate::helpers::constants::{DEVNET_OZ_CLASS_HASH, URL};
 use crate::helpers::fixtures::convert_to_hex;
 use crate::helpers::fixtures::{
-    duplicate_directory_with_salt, get_address_from_keystore, get_transaction_hash,
-    get_transaction_receipt, mint_token,
+    get_address_from_keystore, get_transaction_hash, get_transaction_receipt, mint_token,
 };
-use camino::Utf8PathBuf;
 use indoc::indoc;
 use serde_json::Value;
 use snapbox::cmd::{cargo_bin, Command};
+use sncast::helpers::configuration::copy_config_to_tempdir;
 use sncast::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
 use starknet::core::types::TransactionReceipt::DeployAccount;
 use std::{env, fs};
@@ -16,7 +15,8 @@ use test_case::test_case;
 
 #[tokio::test]
 pub async fn test_happy_case() {
-    let (created_dir, accounts_file) = create_account("3", false).await;
+    let tempdir = create_account(false).await;
+    let accounts_file = "./accounts.json";
 
     let args = vec![
         "--url",
@@ -35,7 +35,7 @@ pub async fn test_happy_case() {
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(&created_dir)
+        .current_dir(tempdir.path())
         .args(&args);
     let bdg = snapbox.assert();
     let out = bdg.get_output();
@@ -50,21 +50,20 @@ pub async fn test_happy_case() {
     assert!(stdout_str.contains("account deploy"));
     assert!(stdout_str.contains("transaction_hash"));
 
-    let contents = fs::read_to_string(created_dir.join(accounts_file)).unwrap();
+    let contents = fs::read_to_string(tempdir.path().join(accounts_file)).unwrap();
     let items: serde_json::Value =
         serde_json::from_str(&contents).expect("Failed to parse accounts file at ");
     assert_eq!(items["alpha-goerli"]["my_account"]["deployed"], true);
-
-    fs::remove_dir_all(created_dir).unwrap();
 }
 
 #[tokio::test]
 pub async fn test_happy_case_add_profile() {
-    let (created_dir, accounts_file) = create_account("4", true).await;
+    let tempdir = create_account(true).await;
+    let accounts_file = "./accounts.json";
 
     let args = vec![
         "--profile",
-        "my_account",
+        "deploy_profile",
         "--accounts-file",
         accounts_file,
         "--json",
@@ -79,7 +78,7 @@ pub async fn test_happy_case_add_profile() {
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(&created_dir)
+        .current_dir(tempdir.path())
         .args(&args);
     let bdg = snapbox.assert();
     let out = bdg.get_output();
@@ -93,8 +92,6 @@ pub async fn test_happy_case_add_profile() {
         std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
     assert!(stdout_str.contains("account deploy"));
     assert!(stdout_str.contains("transaction_hash"));
-
-    fs::remove_dir_all(created_dir).unwrap();
 }
 
 #[test_case("{}", "error: No accounts defined for network alpha-goerli" ; "when empty file")]
@@ -133,7 +130,8 @@ fn test_account_deploy_error(accounts_content: &str, error: &str) {
 
 #[tokio::test]
 async fn test_too_low_max_fee() {
-    let (created_dir, accounts_file) = create_account("5", false).await;
+    let tempdir = create_account(false).await;
+    let accounts_file = "./accounts.json";
 
     let args = vec![
         "--url",
@@ -152,24 +150,23 @@ async fn test_too_low_max_fee() {
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(&created_dir)
+        .current_dir(&tempdir)
         .args(args);
 
     snapbox.assert().success().stderr_matches(indoc! {r"
         command: account deploy
         error: Max fee is smaller than the minimal transaction cost
     "});
-
-    fs::remove_dir_all(created_dir).unwrap();
 }
 
 #[tokio::test]
 pub async fn test_invalid_class_hash() {
-    let (created_dir, accounts_file) = create_account("9", true).await;
+    let tempdir = create_account(true).await;
+    let accounts_file = "./accounts.json";
 
     let args = vec![
         "--profile",
-        "my_account",
+        "deploy_profile",
         "--accounts-file",
         accounts_file,
         "account",
@@ -183,24 +180,23 @@ pub async fn test_invalid_class_hash() {
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(&created_dir)
+        .current_dir(&tempdir)
         .args(args);
 
     snapbox.assert().success().stderr_matches(indoc! {r"
         command: account deploy
         error: Provided class hash 0x123 does not exist
     "});
-
-    fs::remove_dir_all(created_dir).unwrap();
 }
 
 #[tokio::test]
 pub async fn test_valid_class_hash() {
-    let (created_dir, accounts_file) = create_account("10", true).await;
+    let tempdir = create_account(true).await;
+    let accounts_file = "./accounts.json";
 
     let args = vec![
         "--profile",
-        "my_account",
+        "deploy_profile",
         "--accounts-file",
         accounts_file,
         "account",
@@ -212,26 +208,25 @@ pub async fn test_valid_class_hash() {
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(&created_dir)
+        .current_dir(&tempdir)
         .args(args);
 
     snapbox.assert().success().stdout_matches(indoc! {r"
         command: account deploy
         transaction_hash: [..]
     "});
-
-    fs::remove_dir_all(created_dir).unwrap();
 }
 
 #[tokio::test]
 pub async fn test_valid_no_max_fee() {
-    let (created_dir, accounts_file) = create_account("11", true).await;
+    let tempdir = create_account(true).await;
+    let accounts_file = "./accounts.json";
 
     let args = vec![
         "--url",
         URL,
         "--profile",
-        "my_account",
+        "deploy_profile",
         "--accounts-file",
         accounts_file,
         "account",
@@ -241,24 +236,19 @@ pub async fn test_valid_no_max_fee() {
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(&created_dir)
+        .current_dir(&tempdir)
         .args(args);
 
     snapbox.assert().success().stdout_matches(indoc! {r"
         command: account deploy
         transaction_hash: [..]
     "});
-
-    fs::remove_dir_all(created_dir).unwrap();
 }
 
-pub async fn create_account(salt: &str, add_profile: bool) -> (Utf8PathBuf, &str) {
-    let created_dir = duplicate_directory_with_salt(
-        CONTRACTS_DIR.to_string() + "/constructor_with_params",
-        "put",
-        salt,
-    );
+pub async fn create_account(add_profile: bool) -> TempDir {
+    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
     let accounts_file = "./accounts.json";
+
     let mut args = vec![
         "--url",
         URL,
@@ -273,15 +263,16 @@ pub async fn create_account(salt: &str, add_profile: bool) -> (Utf8PathBuf, &str
     ];
     if add_profile {
         args.push("--add-profile");
+        args.push("deploy_profile");
     }
 
     Command::new(cargo_bin!("sncast"))
-        .current_dir(created_dir.path())
+        .current_dir(tempdir.path())
         .args(&args)
         .assert()
         .success();
 
-    let contents = fs::read_to_string(created_dir.path().join(accounts_file)).unwrap();
+    let contents = fs::read_to_string(tempdir.path().join(accounts_file)).unwrap();
     let items: Value =
         serde_json::from_str(&contents).expect("Failed to parse accounts file at {path}");
 
@@ -292,9 +283,7 @@ pub async fn create_account(salt: &str, add_profile: bool) -> (Utf8PathBuf, &str
         9_999_999_999_999_999_999,
     )
     .await;
-    let created_dir_utf8 =
-        Utf8PathBuf::from_path_buf(created_dir.into_path()).expect("Path contains invalid UTF-8");
-    (created_dir_utf8, accounts_file)
+    tempdir
 }
 
 #[tokio::test]
