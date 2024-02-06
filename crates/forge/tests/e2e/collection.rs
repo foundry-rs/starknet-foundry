@@ -9,7 +9,11 @@ fn collection_with_lib() {
 
     let snapbox = test_runner();
 
-    let output = snapbox.current_dir(&temp).assert().success();
+    let output = snapbox
+        .env("SCARB_CACHE", temp.path())
+        .current_dir(&temp)
+        .assert()
+        .success();
 
     assert_stdout_contains!(
         output,
@@ -49,7 +53,12 @@ fn collection_without_lib() {
 
     let snapbox = test_runner();
 
-    let output = snapbox.current_dir(&temp).assert().success();
+    let output = snapbox
+        .env("SCARB_CACHE", temp.path())
+        .current_dir(&temp)
+        .assert()
+        .success();
+
     assert_stdout_contains!(
         output,
         indoc! {r"
