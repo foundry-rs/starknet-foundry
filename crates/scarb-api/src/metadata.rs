@@ -1,13 +1,14 @@
+use anyhow::{Context, Result};
 pub use scarb_metadata::{Metadata, MetadataCommand, MetadataCommandError, PackageMetadata};
 
 pub trait MetadataCommandExt {
-    fn run(&mut self) -> Result<Metadata, MetadataCommandError>;
+    fn run(&mut self) -> Result<Metadata>;
 }
 
 impl MetadataCommandExt for MetadataCommand {
-    fn run(&mut self) -> Result<Metadata, MetadataCommandError> {
-        // logic will go here
-        // keep it now this way to don't rename method calls later
-        self.exec()
+    fn run(&mut self) -> Result<Metadata> {
+        self.inherit_stdout()
+            .exec()
+            .context("error: could not gather project metadata from Scarb due to previous error")
     }
 }

@@ -98,6 +98,7 @@ fn simple_package_with_git_dependency() {
     assert_stdout_contains!(
         output,
         indoc! {r"
+        [..]Updating git repository https://github.com/foundry-rs/starknet-foundry
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -795,6 +796,7 @@ fn init_new_project_test() {
     assert_stdout_contains!(
         output,
         indoc! {r"
+        [..]Updating git repository https://github.com/foundry-rs/starknet-foundry
         [..]Compiling test_name v0.1.0[..]
         [..]Finished[..]
 
@@ -931,9 +933,11 @@ fn incompatible_snforge_std_version_warning() {
         .env("SCARB_CACHE", tempdir.path())
         .assert()
         .failure();
+
     assert_stdout_contains!(
         output,
         indoc! {r"
+        [..]Updating git repository https://github.com/foundry-rs/starknet-foundry
         [WARNING] Package snforge_std version does not meet the recommended version requirement =0.16.0, [..]
         [..]Compiling[..]
         [..]Finished[..]
