@@ -576,55 +576,6 @@ fn with_rerun_failed_flag() {
 }
 
 #[test]
-fn with_print() {
-    let temp = setup_package("print_test");
-    let snapbox = test_runner();
-
-    let output = snapbox.current_dir(&temp).assert().success();
-
-    assert_stdout_contains!(
-        output,
-        indoc! {r"
-        [..]Compiling[..]
-        [..]Finished[..]
-
-
-        Collected 1 test(s) from print_test package
-        Running 0 test(s) from src/
-        Running 1 test(s) from tests/
-        original value: [123], converted to a string: [{]
-        original value: [3618502788666131213697322783095070105623107215331596699973092056135872020480]
-        original value: [6381921], converted to a string: [aaa]
-        original value: [12]
-        original value: [1234]
-        original value: [123456]
-        original value: [1233456789]
-        original value: [123345678910]
-        original value: [0]
-        original value: [10633823966279327296825105735305134080]
-        original value: [2]
-        original value: [11]
-        original value: [1234]
-        original value: [123456]
-        original value: [123456789]
-        original value: [12345612342]
-        original value: [152]
-        original value: [124], converted to a string: [|]
-        original value: [149]
-        original value: [0]
-        original value: [27]
-        original value: [17]
-        original value: [37], converted to a string: [%]
-        original value: [127]
-        original value: [32], converted to a string: [ ]
-        original value: [166906514068638843492736773029576256], converted to a string: [ % abc 123 !?>@]
-        [PASS] tests::test_print::test_print [..]
-        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
-        "}
-    );
-}
-
-#[test]
 fn with_panic_data_decoding() {
     let temp = setup_package("panic_decoding");
     let snapbox = test_runner();
@@ -936,7 +887,7 @@ fn printing_in_contracts() {
         output,
         indoc! {r#"
         [..]Compiling[..]
-        warn: libfunc `cheatcode` is not allowed in the libfuncs list `Default libfunc list`
+        warn: libfunc `print` is not allowed in the libfuncs list `Default libfunc list`
          --> contract: HelloStarknet
         help: try compiling with the `experimental` list
          --> Scarb.toml
@@ -949,7 +900,7 @@ fn printing_in_contracts() {
         Collected 2 test(s) from contract_printing package
         Running 0 test(s) from src/
         Running 2 test(s) from tests/
-        original value: [22405534230753963835153736737], converted to a string: [Hello world!]
+        Hello world!
         [PASS] tests::test_contract::test_increase_balance [..]
         [PASS] tests::test_contract::test_cannot_increase_balance_with_zero_value [..]
         Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out

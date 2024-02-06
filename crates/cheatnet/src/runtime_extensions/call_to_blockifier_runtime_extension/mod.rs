@@ -33,7 +33,7 @@ use crate::runtime_extensions::call_to_blockifier_runtime_extension::{
     rpc::{CallFailure, CallResult},
 };
 
-use super::io_runtime_extension::IORuntime;
+use super::cheatable_starknet_runtime_extension::CheatableStarknetRuntime;
 
 pub mod execution;
 pub mod panic_data;
@@ -46,13 +46,13 @@ pub struct CallToBlockifierExtension<'a> {
 pub type CallToBlockifierRuntime<'a> = ExtendedRuntime<CallToBlockifierExtension<'a>>;
 
 impl<'a> ExtensionLogic for CallToBlockifierExtension<'a> {
-    type Runtime = IORuntime<'a>;
+    type Runtime = CheatableStarknetRuntime<'a>;
 
     fn override_system_call(
         &mut self,
         selector: DeprecatedSyscallSelector,
         vm: &mut VirtualMachine,
-        extended_runtime: &mut IORuntime<'a>,
+        extended_runtime: &mut Self::Runtime,
     ) -> Result<SyscallHandlingResult, HintError> {
         match selector {
             // We execute contract calls and library calls with modified blockifier
@@ -144,16 +144,18 @@ impl ExecuteCall for LibraryCallRequest {
 
 fn execute_syscall<Request: ExecuteCall + SyscallRequest>(
     vm: &mut VirtualMachine,
-    io_runtime: &mut IORuntime,
+    cheatable_starknet_runtime: &mut CheatableStarknetRuntime,
 ) -> Result<(), HintError> {
-    let _selector = felt_from_ptr(vm, io_runtime.get_mut_syscall_ptr())?;
+    let _selector = felt_from_ptr(vm, cheatable_starknet_runtime.get_mut_syscall_ptr())?;
 
     let SyscallRequestWrapper {
         gas_counter,
         request,
-    } = SyscallRequestWrapper::<Request>::read(vm, io_runtime.get_mut_syscall_ptr())?;
+    } = SyscallRequestWrapper::<Request>::read(
+        vm,
+        cheatable_starknet_runtime.get_mut_syscall_ptr(),
+    )?;
 
-    let cheatable_starknet_runtime = &mut io_runtime.extended_runtime;
     let cheatnet_state: &mut _ = cheatable_starknet_runtime.extension.cheatnet_state;
     let syscall_handler = &mut cheatable_starknet_runtime.extended_runtime.hint_handler;
     let mut blockifier_state = BlockifierState::from(syscall_handler.state);
