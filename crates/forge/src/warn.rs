@@ -206,17 +206,17 @@ mod tests {
         assert!(
             stdout
                 == indoc!(
-                    r#"
+                    r"
                     [WARNING] The RPC node with url = http://127.0.0.1:3030/rpc has unsupported version = (0.5.0), use node supporting RPC version 0.6.0
                     [WARNING] The RPC node with url = http://127.0.0.1:3035/rpc has unsupported version = (0.5.0), use node supporting RPC version 0.6.0
-                    "#
+                    "
                 )
                 || stdout
                     == indoc!(
-                        r#"
+                        r"
                     [WARNING] The RPC node with url = http://127.0.0.1:3035/rpc has unsupported version = (0.5.0), use node supporting RPC version 0.6.0
                     [WARNING] The RPC node with url = http://127.0.0.1:3030/rpc has unsupported version = (0.5.0), use node supporting RPC version 0.6.0
-                    "#
+                    "
                     )
         );
     }
