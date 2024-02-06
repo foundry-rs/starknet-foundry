@@ -270,7 +270,7 @@ pub fn create_test_provider() -> JsonRpcClient<HttpTransport> {
     JsonRpcClient::new(HttpTransport::new(parsed_url))
 }
 
-fn copy_dir_into_temp_dir(src_dir: &Utf8PathBuf) -> TempDir {
+fn copy_dir_to_temp_dir(src_dir: &Utf8PathBuf) -> TempDir {
     let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
 
     fs_extra::dir::copy(
@@ -278,7 +278,7 @@ fn copy_dir_into_temp_dir(src_dir: &Utf8PathBuf) -> TempDir {
         temp_dir.as_ref(),
         &fs_extra::dir::CopyOptions::new().content_only(true),
     )
-    .expect("Unable to copy directory content");
+    .expect("Failed to copy directory content");
 
     temp_dir
 }
@@ -291,7 +291,7 @@ pub fn duplicate_contract_directory_with_salt(
 ) -> TempDir {
     let src_dir = Utf8PathBuf::from(src_dir);
 
-    let temp_dir = copy_dir_into_temp_dir(&src_dir);
+    let temp_dir = copy_dir_to_temp_dir(&src_dir);
 
     let dest_dir = Utf8PathBuf::from_path_buf(temp_dir.path().to_path_buf())
         .expect("Failed to create Utf8PathBuf from PathBuf");
@@ -324,13 +324,15 @@ pub fn copy_directory_to_tempdir(src_path: String) -> TempDir {
     temp_dir
 }
 
-pub fn duplicate_script_directory<S: ::std::hash::BuildHasher>(
+pub fn duplicate_script_directory(
     src_dir: String,
-    deps: &mut HashMap<String, Utf8PathBuf, S>,
+    deps: Vec<impl AsRef<std::path::Path>>,
 ) -> TempDir {
+    let mut deps = get_deps_map_from_paths(deps);
+
     let src_dir = Utf8PathBuf::from(src_dir);
 
-    let temp_dir = copy_dir_into_temp_dir(&src_dir);
+    let temp_dir = copy_dir_to_temp_dir(&src_dir);
 
     let dest_dir = Utf8PathBuf::from_path_buf(temp_dir.path().to_path_buf())
         .expect("Failed to create Utf8PathBuf from PathBuf");
@@ -352,7 +354,7 @@ pub fn duplicate_script_directory<S: ::std::hash::BuildHasher>(
         .unwrap();
 
     for (key, value) in deps {
-        let pkg = deps_toml.get_mut(key).unwrap().as_table_mut().unwrap();
+        let pkg = deps_toml.get_mut(&key).unwrap().as_table_mut().unwrap();
         pkg.insert("path".to_string(), toml::Value::String(value.to_string()));
     }
 

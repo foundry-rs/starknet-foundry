@@ -1,7 +1,6 @@
 use crate::helpers::constants::{SCRIPTS_DIR, URL};
 use crate::helpers::fixtures::{
     duplicate_contract_directory_with_salt, duplicate_script_directory, get_accounts_path,
-    get_deps_map_from_paths,
 };
 use indoc::indoc;
 use snapbox::cmd::{cargo_bin, Command};
@@ -187,9 +186,10 @@ async fn test_run_script_display_debug_traits() {
         "dummy",
         "45",
     );
-    let mut deps = get_deps_map_from_paths(vec![contract_dir.as_ref()]);
-    let script_dir =
-        duplicate_script_directory(SCRIPTS_DIR.to_owned() + "/map_script/scripts/", &mut deps);
+    let script_dir = duplicate_script_directory(
+        SCRIPTS_DIR.to_owned() + "/map_script/scripts/",
+        vec![contract_dir.as_ref()],
+    );
 
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
