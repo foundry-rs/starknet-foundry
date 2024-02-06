@@ -45,7 +45,7 @@ pub fn get_contracts() -> HashMap<String, StarknetContractArtifacts> {
         .unwrap();
 
     let package = scarb_metadata.packages.first().unwrap();
-    get_contracts_map(&scarb_metadata, &package.id).unwrap()
+    get_contracts_map(&scarb_metadata, &package.id, None).unwrap()
 }
 
 pub fn deploy_contract(

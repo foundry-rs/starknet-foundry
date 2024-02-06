@@ -24,7 +24,7 @@ fn fuzzing() {
         [FAIL] fuzzing::tests::failing_fuzz (runs: 1, arguments: [[..], [..]])
 
         Failure data:
-            original value: [593979512822486835600413552099926114], converted to a string: [result == a + b]
+            0x726573756c74203d3d2061202b2062 ('result == a + b')
 
         [PASS] fuzzing::tests::custom_fuzzer_config (runs: 10, [..]
         [PASS] fuzzing::tests::uint8_arg (runs: 256, [..]
@@ -70,7 +70,7 @@ fn fuzzing_set_runs() {
         [FAIL] fuzzing::tests::failing_fuzz (runs: 1, arguments: [[..], [..]])
 
         Failure data:
-            original value: [593979512822486835600413552099926114], converted to a string: [result == a + b]
+            0x726573756c74203d3d2061202b2062 ('result == a + b')
 
         [PASS] fuzzing::tests::custom_fuzzer_config (runs: 10, [..]
         [PASS] fuzzing::tests::uint8_arg (runs: 10, [..]
@@ -116,7 +116,7 @@ fn fuzzing_set_seed() {
         [FAIL] fuzzing::tests::failing_fuzz (runs: 1, arguments: [[..], [..]])
 
         Failure data:
-            original value: [..], converted to a string: [result == a + b]
+            0x726573756c74203d3d2061202b2062 ('result == a + b')
 
         [PASS] fuzzing::tests::custom_fuzzer_config (runs: 10, [..]
         [PASS] fuzzing::tests::uint8_arg (runs: 256, [..]
@@ -196,7 +196,7 @@ fn fuzzing_exit_first() {
         [FAIL] tests::exit_first_fuzz::exit_first_fails_test (runs: 1, arguments: [..])
 
         Failure data:
-            original value: [..], converted to a string: [2 + b == 2 + b]
+            0x32202b2062203d3d2032202b2062 ('2 + b == 2 + b')
 
         Tests: 0 passed, 1 failed, 1 skipped, 0 ignored, 17 filtered out
 
@@ -226,7 +226,7 @@ fn fuzzing_exit_first_single_fail() {
         [FAIL] tests::exit_first_single_fail::exit_first_fails_test
 
         Failure data:
-            original value: [..], converted to a string: [2 + b == 2 + b]
+            0x32202b2062203d3d2032202b2062 ('2 + b == 2 + b')
 
         Failures:
             tests::exit_first_single_fail::exit_first_fails_test

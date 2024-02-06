@@ -18,10 +18,10 @@ Optional.
 
 Salt for the account address. If omitted random one will be generated.
 
-## `--add-profile`
+## `--add-profile <NAME>`
 Optional.
 
-If passed, a profile with corresponding data will be added to Scarb.toml.
+If passed, a profile with corresponding name will be added to snfoundry.toml.
 
 ## `--class-hash, -c`
 Optional.
