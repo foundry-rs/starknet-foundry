@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Result};
 use clap::Args;
-use sncast::response::structs::{DeployResponse, Hex};
+use sncast::response::structs::{DeployResponse, Felt};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{Account, ConnectedAccount, SingleOwnerAccount};
 use starknet::contract::ContractFactory;
@@ -78,13 +78,13 @@ pub async fn deploy(
                 account.provider(),
                 result.transaction_hash,
                 DeployResponse {
-                    contract_address: Hex(get_udc_deployed_address(
+                    contract_address: Felt(get_udc_deployed_address(
                         salt,
                         class_hash,
                         &udc_uniqueness(unique, account.address()),
                         &constructor_calldata,
                     )),
-                    transaction_hash: Hex(result.transaction_hash),
+                    transaction_hash: Felt(result.transaction_hash),
                 },
                 wait_config,
             )

@@ -7,7 +7,7 @@ use clap::Args;
 use serde_json::json;
 use sncast::helpers::constants::{CREATE_KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH};
 use sncast::helpers::scarb_utils::CastConfig;
-use sncast::response::structs::{AccountCreateResponse, Decimal, Hex};
+use sncast::response::structs::{AccountCreateResponse, Decimal, Felt};
 use sncast::{extract_or_generate_salt, get_chain_id, get_keystore_password, parse_number};
 use starknet::accounts::{AccountFactory, OpenZeppelinAccountFactory};
 use starknet::core::types::{FeeEstimate, FieldElement};
@@ -93,7 +93,7 @@ pub async fn create(
     }
 
     Ok(AccountCreateResponse {
-        address: Hex(address),
+        address: Felt(address),
         max_fee: Decimal(max_fee),
         add_profile: if add_profile {
             "Profile successfully added to Scarb.toml".to_string()

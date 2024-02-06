@@ -2,7 +2,7 @@ use anyhow::{anyhow, Context, Result};
 use clap::Args;
 use scarb_api::StarknetContractArtifacts;
 use sncast::response::structs::DeclareResponse;
-use sncast::response::structs::Hex;
+use sncast::response::structs::Felt;
 use sncast::{apply_optional, handle_rpc_error, handle_wait_for_tx, WaitForTx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{ConnectedAccount, Declaration};
@@ -65,8 +65,8 @@ pub async fn declare(
                 account.provider(),
                 result.transaction_hash,
                 DeclareResponse {
-                    class_hash: Hex(result.class_hash),
-                    transaction_hash: Hex(result.transaction_hash),
+                    class_hash: Felt(result.class_hash),
+                    transaction_hash: Felt(result.transaction_hash),
                 },
                 wait_config,
             )

@@ -5,7 +5,7 @@ use starknet::core::types::FieldElement;
 pub struct Decimal(pub u64);
 
 #[derive(Clone)]
-pub struct Hex(pub FieldElement);
+pub struct Felt(pub FieldElement);
 
 impl Serialize for Decimal {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -16,7 +16,7 @@ impl Serialize for Decimal {
     }
 }
 
-impl Serialize for Hex {
+impl Serialize for Felt {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -30,33 +30,33 @@ pub trait CommandResponse: Serialize {}
 
 #[derive(Serialize, Clone)]
 pub struct CallResponse {
-    pub response: Vec<Hex>,
+    pub response: Vec<Felt>,
 }
 impl CommandResponse for CallResponse {}
 
 #[derive(Serialize, Clone)]
 pub struct InvokeResponse {
-    pub transaction_hash: Hex,
+    pub transaction_hash: Felt,
 }
 impl CommandResponse for InvokeResponse {}
 
 #[derive(Serialize)]
 pub struct DeployResponse {
-    pub contract_address: Hex,
-    pub transaction_hash: Hex,
+    pub contract_address: Felt,
+    pub transaction_hash: Felt,
 }
 impl CommandResponse for DeployResponse {}
 
 #[derive(Serialize)]
 pub struct DeclareResponse {
-    pub class_hash: Hex,
-    pub transaction_hash: Hex,
+    pub class_hash: Felt,
+    pub transaction_hash: Felt,
 }
 impl CommandResponse for DeclareResponse {}
 
 #[derive(Serialize)]
 pub struct AccountCreateResponse {
-    pub address: Hex,
+    pub address: Felt,
     pub max_fee: Decimal,
     pub add_profile: String,
     pub message: String,
