@@ -6,10 +6,10 @@
 * [`precalculate_address`](snforge-library/precalculate_address.md) - calculates a contract address that would be returned
   when calling [`deploy`](snforge-library/deploy.md)
 * [`deploy`](snforge-library/deploy.md) - deploys a contract and returns its address
+* [`get_call_trace`](snforge-library/get_call_trace.md) - gets latest test call trace (with contracts interactions included)
 * [`fs`](snforge-library/fs.md) - module containing functions for interacting with the filesystem
 * [`env`](snforge-library/env.md) - module containing functions for interacting with the system environment
 * [`signature`](snforge-library/signature.md) - module containing struct and trait for creating `ecdsa` signatures
-* [`get_call_trace`](snforge-library/get_call_trace.md) - gets latest test call trace (with contracts interactions included)
 
 > ℹ️ **Info**
 > To use the library functions you need to add `snforge_std` package as a dependency in
