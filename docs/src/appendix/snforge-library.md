@@ -9,6 +9,7 @@
 * [`fs`](snforge-library/fs.md) - module containing functions for interacting with the filesystem
 * [`env`](snforge-library/env.md) - module containing functions for interacting with the system environment
 * [`signature`](snforge-library/signature.md) - module containing struct and trait for creating `ecdsa` signatures
+* [`get_call_trace`](snforge-library/get_call_trace.md) - gets latest test call trace (with contracts interactions included)
 
 > ℹ️ **Info**
 > To use the library functions you need to add `snforge_std` package as a dependency in
