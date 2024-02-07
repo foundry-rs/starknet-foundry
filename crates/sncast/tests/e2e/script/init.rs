@@ -65,9 +65,7 @@ fn test_script_init_happy_case() {
                 let contract_address = 0x7ad10abd2cc24c2e066a2fee1e435cd5fa60a37f9268bfbaf2e98ce5ca3c436;
                 let call_result = call(contract_address.try_into().unwrap(), 'get_greeting', array![]);
                 let call_result = *call_result.data[0];
-                let mut greeting: ByteArray = "";
-                greeting.append_word(call_result, 16);
-                println!("{greeting:?}");
+                assert(call_result=='Hello, Starknet!', '');
             }
         "#}
     );
