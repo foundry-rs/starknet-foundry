@@ -247,6 +247,6 @@ mod tests {
             .await
             .unwrap_err();
 
-        assert!(err.to_string().contains("error while calling rpc node"));
+        assert!(err.to_string().contains("error while calling rpc node"))
     }
 }
