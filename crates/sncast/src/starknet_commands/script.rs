@@ -53,6 +53,10 @@ type ScriptStarknetContractArtifacts = StarknetContractArtifacts;
 pub struct Script {
     /// Module name that contains the `main` function, which will be executed
     pub script_module_name: String,
+
+    /// Specifies scarb package to be used
+    #[clap(long)]
+    pub package: Option<String>,
 }
 
 pub struct CastScriptExtension<'a> {

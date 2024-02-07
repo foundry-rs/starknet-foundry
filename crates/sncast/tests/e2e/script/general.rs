@@ -72,8 +72,7 @@ async fn test_run_script_from_different_directory_no_path_to_scarb_toml() {
         .current_dir(SCRIPTS_DIR)
         .args(args);
     snapbox.assert().failure().stderr_matches(indoc! {r"
-        Error: Failed to read the `Scarb.toml` manifest file. Doesn't exist in the current or parent directories[..]
-        ...
+        Error: Path to Scarb.toml manifest does not exist =[..]
     "});
 }
 
@@ -123,5 +122,56 @@ async fn test_incompatible_sncast_std_version() {
         ...
         Warning: Package sncast_std version does not meet the recommended version requirement =0.16.0, it might result in unexpected behaviour
         ...
+    "});
+}
+
+#[tokio::test]
+async fn test_multiple_packages_not_picked() {
+    let script_name = "script1";
+    let args = vec![
+        "--accounts-file",
+        "../../accounts/accounts.json",
+        "--account",
+        "user4",
+        "--url",
+        URL,
+        "script",
+        &script_name,
+    ];
+
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(SCRIPTS_DIR.to_owned() + "/packages")
+        .args(args);
+
+    snapbox.assert().failure().stderr_matches(indoc! {r"
+        ...
+        Error: More than one package found in scarb metadata - specify package using --package flag
+    "});
+}
+
+#[tokio::test]
+async fn test_multiple_packages_happy_case() {
+    let script_name = "script1";
+    let args = vec![
+        "--accounts-file",
+        "../../accounts/accounts.json",
+        "--account",
+        "user4",
+        "--url",
+        URL,
+        "script",
+        "--package",
+        &script_name,
+        &script_name,
+    ];
+
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(SCRIPTS_DIR.to_owned() + "/packages")
+        .args(args);
+
+    snapbox.assert().success().stdout_matches(indoc! {r"
+        ...
+        command: script
+        status: success
     "});
 }

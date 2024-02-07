@@ -1,0 +1,14 @@
+[package]
+name = "cast_fibonacci"
+version = "0.1.0"
+
+[dependencies]
+cast_addition = { path = "../cast_addition" }
+starknet.workspace = true
+
+[[target.starknet-contract]]
+sierra = true
+casm = true
+build-external-contracts = ["cast_addition::AdditionContract"]
+
+[lib]

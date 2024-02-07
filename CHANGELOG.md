@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
+#### Added
+
+- `get_call_trace` library function for retrieving call trace in tests
+
+
 #### Changed
 
 - Gas estimation is now aligned with the Starknet v0.13
@@ -26,6 +31,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - sncast tool configuration is now moved away from `Scarb.toml` to `snfoundry.toml` file. This file must be present in current or any parent directories in order to use profiles.
+
+#### Added
+
+- `--package` flag for `declare` and `script` subcommands, that specifies scarb package to work with
 
 ## [0.16.0] - 2024-01-26
 

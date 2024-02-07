@@ -1,0 +1,23 @@
+[workspace]
+members = [
+    "crates/*",
+]
+
+[workspace.dependencies]
+starknet = "2.4.0"
+
+[workspace.package]
+version = "0.1.0"
+
+[package]
+name = "main_workspace"
+version.workspace = true
+
+[dependencies]
+starknet.workspace = true
+package1 = { path = "crates/package1" }
+package2 = { path = "crates/package2" }
+
+[[target.starknet-contract]]
+sierra = true
+casm = true
