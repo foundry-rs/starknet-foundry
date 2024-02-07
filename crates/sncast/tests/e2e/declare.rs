@@ -1,6 +1,6 @@
 use crate::helpers::constants::{CONTRACTS_DIR, URL};
 use crate::helpers::fixtures::{
-    copy_directory_to_tempdir, duplicate_directory_with_salt, get_accounts_path,
+    copy_directory_to_tempdir, duplicate_contract_directory_with_salt, get_accounts_path,
     get_transaction_hash, get_transaction_receipt,
 };
 use indoc::indoc;
@@ -10,7 +10,7 @@ use starknet::core::types::TransactionReceipt::Declare;
 #[tokio::test]
 async fn test_happy_case() {
     let contract_path =
-        duplicate_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "1");
+        duplicate_contract_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "1");
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
     let args = vec![
         "--url",
@@ -193,7 +193,7 @@ fn scarb_build_fails_manifest_does_not_exist() {
 #[test]
 fn test_too_low_max_fee() {
     let contract_path =
-        duplicate_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "2");
+        duplicate_contract_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "2");
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
     let args = vec![

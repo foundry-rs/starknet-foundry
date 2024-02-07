@@ -5,10 +5,10 @@
 Declares a contract and returns `DeclareResult`.
 
 ```rust
-#[derive(Drop, Clone)]
-struct DeclareResult {
-    class_hash: ClassHash,
-    transaction_hash: felt252,
+#[derive(Drop, Clone, Debug)]
+pub struct DeclareResult {
+    pub class_hash: ClassHash,
+    pub transaction_hash: felt252,
 }
 ```
 
@@ -18,8 +18,6 @@ struct DeclareResult {
 
 ```rust
 use sncast_std::{declare, DeclareResult};
-use debug::PrintTrait;
-use starknet::class_hash_to_felt252
 
 fn main() {
     let max_fee = 9999999;
@@ -27,5 +25,8 @@ fn main() {
 
     let class_hash = declare_result.class_hash;
     class_hash_to_felt252(class_hash).print();
+    
+    println!("declare_result: {}", declare_result);
+    println!("debug declare_result: {:?}", declare_result);
 }
 ```
