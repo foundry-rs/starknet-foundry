@@ -223,7 +223,7 @@ async fn deploy_from_accounts_file(
             FieldElement::from_hex_be(class_hash_)
                 .expect("Failed to parse account class hash from accounts file")
         } else {
-            FieldElement::from_hex_be(OZ_CLASS_HASH).unwrap()
+            FieldElement::from_hex_be(OZ_CLASS_HASH).expect("Failed to parse OZ class hash")
         }
     };
 

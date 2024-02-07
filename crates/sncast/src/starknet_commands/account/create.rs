@@ -50,8 +50,9 @@ pub async fn create(
     class_hash: Option<FieldElement>,
 ) -> Result<AccountCreateResponse> {
     let salt = extract_or_generate_salt(salt);
-    let class_hash =
-        class_hash.unwrap_or_else(|| FieldElement::from_hex_be(OZ_CLASS_HASH).unwrap());
+    let class_hash = class_hash.unwrap_or_else(|| {
+        FieldElement::from_hex_be(OZ_CLASS_HASH).expect("Failed to parse OZ class hash")
+    });
     let (account_json, max_fee) = generate_account(provider, salt, class_hash).await?;
 
     let address = parse_number(
