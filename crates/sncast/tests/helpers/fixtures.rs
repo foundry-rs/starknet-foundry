@@ -7,7 +7,7 @@ use primitive_types::U256;
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
 use serde_json::{json, Map, Value};
-use sncast::helpers::scarb_utils::{get_package_metadata, get_scarb_metadata};
+use sncast::helpers::scarb_utils::get_package_metadata;
 use sncast::{apply_optional, get_chain_id, get_keystore_password};
 use sncast::{get_account, get_provider, parse_number};
 use starknet::accounts::{Account, AccountFactory, Call, Execution, OpenZeppelinAccountFactory};
@@ -349,7 +349,9 @@ pub fn duplicate_script_directory(
         .as_table_mut()
         .unwrap();
 
-    let sncast_std = deps_toml.get_mut("sncast_std").expect("sncast_std not found");
+    let sncast_std = deps_toml
+        .get_mut("sncast_std")
+        .expect("sncast_std not found");
     if let Some(sncast_std_path) = sncast_std.get_mut("path") {
         let sncast_std_path =
             Utf8PathBuf::from(sncast_std_path.as_str().expect("Failed to extract string"));
@@ -361,7 +363,6 @@ pub fn duplicate_script_directory(
             deps.insert(String::from("sncast_std"), sncast_std_path_absolute);
         }
     }
-
 
     for (key, value) in deps {
         let pkg = deps_toml.get_mut(&key).unwrap().as_table_mut().unwrap();
@@ -387,9 +388,8 @@ pub fn get_deps_map_from_paths(
         let path = Utf8PathBuf::from_path_buf(path.as_ref().to_path_buf())
             .expect("Failed to create Utf8PathBuf from PathBuf");
         let manifest_path = path.join("Scarb.toml");
-        let metadata = get_scarb_metadata(&manifest_path).expect("Failed to get scarb metadata");
-        let package = get_package_metadata(&metadata, &manifest_path)
-            .expect("Failed to get package metadata");
+        let package =
+            get_package_metadata(&manifest_path, &None).expect("Failed to get package metadata");
         deps.insert(package.name.clone(), path);
     }
 
