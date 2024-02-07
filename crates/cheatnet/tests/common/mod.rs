@@ -1,10 +1,10 @@
-use blockifier::execution::common_hints::ExecutionMode;
 use blockifier::execution::entry_point::{
     CallEntryPoint, CallType, EntryPointExecutionContext, ExecutionResources,
 };
 use blockifier::execution::execution_utils::ReadOnlySegments;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use cairo_felt::Felt252;
+use cairo_lang_casm::hints::Hint;
 use cairo_vm::types::relocatable::Relocatable;
 use camino::Utf8PathBuf;
 use cheatnet::constants::TEST_ADDRESS;
@@ -22,7 +22,7 @@ use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::{
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
 use cheatnet::state::BlockifierState;
 use conversions::felt252::FromShortString;
-use runtime::starknet::context::{build_block_context, build_transaction_context};
+use runtime::starknet::context::build_context;
 use scarb_api::metadata::MetadataCommandExt;
 use scarb_api::{get_contracts_map, ScarbCommand, StarknetContractArtifacts};
 use starknet::core::utils::get_selector_from_name;
@@ -37,6 +37,26 @@ pub mod assertions;
 pub mod cache;
 pub mod state;
 
+fn build_syscall_hint_processor<'a>(
+    call_entry_point: CallEntryPoint,
+    blockifier_state: &'a mut BlockifierState,
+    execution_resources: &'a mut ExecutionResources,
+    entry_point_execution_context: &'a mut EntryPointExecutionContext,
+    hints: &'a HashMap<String, Hint>,
+) -> SyscallHintProcessor<'a> {
+    SyscallHintProcessor::new(
+        blockifier_state.blockifier_state,
+        execution_resources,
+        entry_point_execution_context,
+        Relocatable {
+            segment_index: 0,
+            offset: 0,
+        },
+        call_entry_point,
+        hints,
+        ReadOnlySegments::default(),
+    )
+}
 pub fn recover_data(output: CallResult) -> Vec<Felt252> {
     match output {
         CallResult::Success { ret_data, .. } => ret_data,
@@ -70,26 +90,15 @@ pub fn deploy_contract(
     let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
 
     let mut execution_resources = ExecutionResources::default();
-    let mut entry_point_execution_context = EntryPointExecutionContext::new(
-        &build_block_context(runtime_state.cheatnet_state.block_info),
-        &build_transaction_context(),
-        ExecutionMode::Execute,
-        false,
-    )
-    .unwrap();
+    let mut entry_point_execution_context = build_context(runtime_state.cheatnet_state.block_info);
     let hints = HashMap::new();
 
-    let mut syscall_hint_processor = SyscallHintProcessor::new(
-        blockifier_state.blockifier_state,
+    let mut syscall_hint_processor = build_syscall_hint_processor(
+        CallEntryPoint::default(),
+        blockifier_state,
         &mut execution_resources,
         &mut entry_point_execution_context,
-        Relocatable {
-            segment_index: 0,
-            offset: 0,
-        },
-        CallEntryPoint::default(),
         &hints,
-        ReadOnlySegments::default(),
     );
 
     deploy(
@@ -108,26 +117,15 @@ pub fn deploy_wrapper(
     calldata: &[Felt252],
 ) -> Result<ContractAddress, CheatcodeError> {
     let mut execution_resources = ExecutionResources::default();
-    let mut entry_point_execution_context = EntryPointExecutionContext::new(
-        &build_block_context(runtime_state.cheatnet_state.block_info),
-        &build_transaction_context(),
-        ExecutionMode::Execute,
-        false,
-    )
-    .unwrap();
+    let mut entry_point_execution_context = build_context(runtime_state.cheatnet_state.block_info);
     let hints = HashMap::new();
 
-    let mut syscall_hint_processor = SyscallHintProcessor::new(
-        blockifier_state.blockifier_state,
+    let mut syscall_hint_processor = build_syscall_hint_processor(
+        CallEntryPoint::default(),
+        blockifier_state,
         &mut execution_resources,
         &mut entry_point_execution_context,
-        Relocatable {
-            segment_index: 0,
-            offset: 0,
-        },
-        CallEntryPoint::default(),
         &hints,
-        ReadOnlySegments::default(),
     );
 
     deploy(
@@ -146,26 +144,15 @@ pub fn deploy_at_wrapper(
     contract_address: ContractAddress,
 ) -> Result<ContractAddress, CheatcodeError> {
     let mut execution_resources = ExecutionResources::default();
-    let mut entry_point_execution_context = EntryPointExecutionContext::new(
-        &build_block_context(runtime_state.cheatnet_state.block_info),
-        &build_transaction_context(),
-        ExecutionMode::Execute,
-        false,
-    )
-    .unwrap();
+    let mut entry_point_execution_context = build_context(runtime_state.cheatnet_state.block_info);
     let hints = HashMap::new();
 
-    let mut syscall_hint_processor = SyscallHintProcessor::new(
-        blockifier_state.blockifier_state,
+    let mut syscall_hint_processor = build_syscall_hint_processor(
+        CallEntryPoint::default(),
+        blockifier_state,
         &mut execution_resources,
         &mut entry_point_execution_context,
-        Relocatable {
-            segment_index: 0,
-            offset: 0,
-        },
-        CallEntryPoint::default(),
         &hints,
-        ReadOnlySegments::default(),
     );
 
     deploy_at(
@@ -220,26 +207,15 @@ pub fn call_contract(
     };
 
     let mut execution_resources = ExecutionResources::default();
-    let mut entry_point_execution_context = EntryPointExecutionContext::new(
-        &build_block_context(runtime_state.cheatnet_state.block_info),
-        &build_transaction_context(),
-        ExecutionMode::Execute,
-        false,
-    )
-    .unwrap();
+    let mut entry_point_execution_context = build_context(runtime_state.cheatnet_state.block_info);
     let hints = HashMap::new();
 
-    let mut syscall_hint_processor = SyscallHintProcessor::new(
-        blockifier_state.blockifier_state,
+    let mut syscall_hint_processor = build_syscall_hint_processor(
+        entry_point.clone(),
+        blockifier_state,
         &mut execution_resources,
         &mut entry_point_execution_context,
-        Relocatable {
-            segment_index: 0,
-            offset: 0,
-        },
-        entry_point.clone(),
         &hints,
-        ReadOnlySegments::default(),
     );
 
     call_entry_point(
