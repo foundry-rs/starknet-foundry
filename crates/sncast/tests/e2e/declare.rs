@@ -1,6 +1,7 @@
 use crate::helpers::constants::{CONTRACTS_DIR, URL};
 use crate::helpers::fixtures::{
-    duplicate_directory_with_salt, get_accounts_path, get_transaction_hash, get_transaction_receipt,
+    copy_directory_to_tempdir, duplicate_contract_directory_with_salt, get_accounts_path,
+    get_transaction_hash, get_transaction_receipt,
 };
 use indoc::indoc;
 use snapbox::cmd::{cargo_bin, Command};
@@ -9,7 +10,7 @@ use starknet::core::types::TransactionReceipt::Declare;
 #[tokio::test]
 async fn test_happy_case() {
     let contract_path =
-        duplicate_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "1");
+        duplicate_contract_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "1");
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
     let args = vec![
         "--url",
@@ -40,6 +41,7 @@ async fn test_happy_case() {
 
 #[tokio::test]
 async fn test_happy_case_specify_package() {
+    let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/multiple_packages");
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
     let args = vec![
         "--url",
@@ -59,9 +61,8 @@ async fn test_happy_case_specify_package() {
         "99999999999999999",
     ];
 
-    // todo: (1247) Execute tests in temp dirs
     let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(CONTRACTS_DIR.to_string() + "/multiple_packages")
+        .current_dir(tempdir.path())
         .args(args);
     let output = snapbox.assert().success().get_output().stdout.clone();
 
@@ -192,7 +193,7 @@ fn scarb_build_fails_manifest_does_not_exist() {
 #[test]
 fn test_too_low_max_fee() {
     let contract_path =
-        duplicate_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "2");
+        duplicate_contract_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "2");
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
     let args = vec![
@@ -269,6 +270,7 @@ fn scarb_no_casm_artifact() {
 
 #[tokio::test]
 async fn test_many_packages_default() {
+    let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/multiple_packages");
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
     let args = vec![
         "--url",
@@ -286,12 +288,75 @@ async fn test_many_packages_default() {
         "99999999999999999",
     ];
 
-    // todo: (1247) Execute tests in temp dirs
     let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(CONTRACTS_DIR.to_string() + "/multiple_packages")
+        .current_dir(tempdir.path())
         .args(args);
     snapbox.assert().failure().stderr_matches(indoc! {r"
         ...
         Error: More than one package found in scarb metadata - specify package using --package flag
+    "});
+}
+
+#[tokio::test]
+async fn test_worskpaces_package_specified_virtual_fibonacci() {
+    let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/virtual_workspace");
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
+    let args = vec![
+        "--url",
+        URL,
+        "--accounts-file",
+        accounts_json_path.as_str(),
+        "--account",
+        "user8",
+        "--int-format",
+        "--json",
+        "declare",
+        "--package",
+        "cast_fibonacci",
+        "--contract-name",
+        "FibonacciContract",
+        "--max-fee",
+        "99999999999999999",
+    ];
+
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(tempdir.path())
+        .args(args);
+
+    let output = snapbox.assert().success().get_output().clone();
+    let output = output.stdout.clone();
+    let hash = get_transaction_hash(&output);
+    let receipt = get_transaction_receipt(hash).await;
+    assert!(matches!(receipt, Declare(_)));
+}
+
+#[tokio::test]
+async fn test_worskpaces_package_no_contract() {
+    let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/virtual_workspace");
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
+    let args = vec![
+        "--url",
+        URL,
+        "--accounts-file",
+        accounts_json_path.as_str(),
+        "--account",
+        "user8",
+        "--int-format",
+        "declare",
+        "--package",
+        "cast_addition",
+        "--contract-name",
+        "whatever",
+        "--max-fee",
+        "99999999999999999",
+    ];
+
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(tempdir.path())
+        .args(args);
+    snapbox.assert().success().stderr_matches(indoc! {r"
+        ...
+        command: declare
+        error: Failed to find whatever artifact in starknet_artifacts.json file[..]
     "});
 }

@@ -1,8 +1,29 @@
 use starknet::{testing::cheatcode, ContractAddress, ClassHash};
+use core::fmt::{Debug, Display, Error, Formatter};
 
-#[derive(Drop, Clone)]
+pub impl DisplayClassHash of Display<ClassHash> {
+    fn fmt(self: @ClassHash, ref f: Formatter) -> Result<(), Error> {
+        let class_hash: felt252 = (*self).into();
+        Display::fmt(@class_hash, ref f)
+    }
+}
+
+pub impl DisplayContractAddress of Display<ContractAddress> {
+    fn fmt(self: @ContractAddress, ref f: Formatter) -> Result<(), Error> {
+        let addr: felt252 = (*self).into();
+        Display::fmt(@addr, ref f)
+    }
+}
+
+#[derive(Drop, Clone, Debug)]
 pub struct CallResult {
     pub data: Array::<felt252>,
+}
+
+impl DisplayCallResult of Display<CallResult> {
+    fn fmt(self: @CallResult, ref f: Formatter) -> Result<(), Error> {
+        Debug::fmt(self.data, ref f)
+    }
 }
 
 pub fn call(
@@ -23,10 +44,16 @@ pub fn call(
     CallResult { data: result_data }
 }
 
-#[derive(Drop, Clone)]
+#[derive(Drop, Clone, Debug)]
 pub struct DeclareResult {
     pub class_hash: ClassHash,
     pub transaction_hash: felt252,
+}
+
+impl DisplayDeclareResult of Display<DeclareResult> {
+    fn fmt(self: @DeclareResult, ref f: Formatter) -> Result<(), Error> {
+        write!(f, "class_hash: {}, transaction_hash: {}", *self.class_hash, *self.transaction_hash)
+    }
 }
 
 pub fn declare(
@@ -51,10 +78,21 @@ pub fn declare(
     DeclareResult { class_hash, transaction_hash }
 }
 
-#[derive(Drop, Clone)]
+#[derive(Drop, Clone, Debug)]
 pub struct DeployResult {
     pub contract_address: ContractAddress,
     pub transaction_hash: felt252,
+}
+
+impl DisplayDeployResult of Display<DeployResult> {
+    fn fmt(self: @DeployResult, ref f: Formatter) -> Result<(), Error> {
+        write!(
+            f,
+            "contract_address: {}, transaction_hash: {}",
+            *self.contract_address,
+            *self.transaction_hash
+        )
+    }
 }
 
 pub fn deploy(
@@ -96,9 +134,15 @@ pub fn deploy(
     DeployResult { contract_address, transaction_hash }
 }
 
-#[derive(Drop, Clone)]
+#[derive(Drop, Clone, Debug)]
 pub struct InvokeResult {
     pub transaction_hash: felt252,
+}
+
+impl DisplayInvokeResult of Display<InvokeResult> {
+    fn fmt(self: @InvokeResult, ref f: Formatter) -> Result<(), Error> {
+        write!(f, "{}", *self.transaction_hash)
+    }
 }
 
 pub fn invoke(

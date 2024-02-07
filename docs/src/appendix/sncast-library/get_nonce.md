@@ -8,10 +8,10 @@ Gets nonce of an account for a given block tag (`pending` or `latest`) and retur
 
 ```rust
 use sncast_std::{get_nonce};
-use debug::PrintTrait;
 
 fn main() {
     let nonce = get_nonce('latest');
-    nonce.print();
+    println!("nonce: {}", nonce);
+    println!("debug nonce: {:?}", nonce);
 }
 ```
