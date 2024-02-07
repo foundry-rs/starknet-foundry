@@ -15,3 +15,10 @@ Max fee for transaction. If not provided, max fee will be automatically estimate
 Optional.
 
 Nonce for transaction. If not provided, nonce will be set automatically.
+
+## `--package <NAME>`
+Optional.
+
+Name of the package that should be used.
+
+If supplied, a contract from this package will be used. Required if more than one package exists in a workspace.

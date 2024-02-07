@@ -1,0 +1,12 @@
+[package]
+name = "package2"
+version.workspace = true
+
+[dependencies]
+starknet.workspace = true
+
+[[target.starknet-contract]]
+sierra = true
+casm = true
+
+[lib]
