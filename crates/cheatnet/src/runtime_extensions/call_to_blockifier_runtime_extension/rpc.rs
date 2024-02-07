@@ -270,7 +270,7 @@ pub fn call_entry_point(
         .cheatnet_state
         .trace_data
         .current_call_stack
-        .last()
+        .top()
         .borrow_mut()
         .used_resources
         .extend(&used_resources);

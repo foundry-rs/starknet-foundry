@@ -401,5 +401,5 @@ fn get_call_trace_ref(runtime: &mut ForgeRuntime) -> Rc<RefCell<CallTrace>> {
         .cheatnet_state
         .trace_data
         .current_call_stack
-        .last()
+        .top()
 }

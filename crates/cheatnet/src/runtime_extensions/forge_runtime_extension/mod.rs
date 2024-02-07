@@ -750,7 +750,7 @@ pub fn update_test_execution_resources_and_get_them(runtime: ForgeRuntime) -> Us
         .cheatnet_state
         .trace_data
         .current_call_stack
-        .last();
+        .top();
     top_call
         .borrow_mut()
         .used_resources

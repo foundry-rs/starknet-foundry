@@ -87,7 +87,7 @@ pub fn deploy_at(
         .cheatnet_state
         .trace_data
         .current_call_stack
-        .last()
+        .top()
         .borrow_mut()
         .used_resources
         .extend(&used_resources);
