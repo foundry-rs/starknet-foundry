@@ -72,11 +72,36 @@ enum StarknetError {
     InsufficientAccountBalance,
     ContractError,
     InvalidTransactionNonce,
+    ContractAddressUnavailableForDeployment,
+    ClassNotDeclared,
+    TransactionReverted,
 }
 
 fn sn_command_error_to_script_command_error(err: StarknetCommandError) -> ScriptCommandError {
+    dbg!(&err);
     match err {
-        StarknetCommandError::Unhandleable(err) => panic!("{}", err),
+        StarknetCommandError::Unhandleable(err) => {
+            let err_msg = err.to_string(); // TODO: Transaction reverted
+            if err_msg.contains("Requested ContractAddress(PatriciaKey(StarkFelt")
+                && err_msg.contains("is unavailable for deployment")
+            {
+                return ScriptCommandError::RPCError(RPCError::StarknetError(
+                    StarknetError::ContractAddressUnavailableForDeployment,
+                ));
+            }
+            if err_msg.contains("Class with hash ClassHash(") && err_msg.contains("is not declared")
+            {
+                return ScriptCommandError::RPCError(RPCError::StarknetError(
+                    StarknetError::ClassNotDeclared,
+                ));
+            }
+            if err_msg.contains("Transaction has been reverted =") {
+                return ScriptCommandError::RPCError(RPCError::StarknetError(
+                    StarknetError::TransactionReverted,
+                ));
+            }
+            panic!("{}", err)
+        }
         StarknetCommandError::ContractArtifactsNotFound => {
             ScriptCommandError::ContractArtifactsNotFound
         }
@@ -95,7 +120,9 @@ fn sn_command_error_to_script_command_error(err: StarknetCommandError) -> Script
                         RPCStarknetError::InsufficientAccountBalance => {
                             StarknetError::InsufficientAccountBalance
                         }
-                        RPCStarknetError::InvalidTransactionNonce => StarknetError::InvalidTransactionNonce,
+                        RPCStarknetError::InvalidTransactionNonce => {
+                            StarknetError::InvalidTransactionNonce
+                        }
                         RPCStarknetError::ContractError(_) => StarknetError::ContractError,
                         _ => StarknetError::UnknownError,
                     };
@@ -103,7 +130,9 @@ fn sn_command_error_to_script_command_error(err: StarknetCommandError) -> Script
                 }
                 ProviderError::Other(err) => {
                     let err_msg = err.to_string();
-                    if err_msg.contains("Class with hash ClassHash(StarkFelt") && err_msg.contains("is already declared") {
+                    if err_msg.contains("Class with hash ClassHash(StarkFelt")
+                        && err_msg.contains("is already declared")
+                    {
                         RPCError::StarknetError(StarknetError::ClassAlreadyDeclared)
                     } else {
                         RPCError::UnknownError
@@ -137,6 +166,11 @@ fn serialize_script_command_err(err: ScriptCommandError) -> Vec<Felt252> {
                         StarknetError::InsufficientAccountBalance => res.push(Felt252::from(6)),
                         StarknetError::ContractError => res.push(Felt252::from(7)),
                         StarknetError::InvalidTransactionNonce => res.push(Felt252::from(8)),
+                        StarknetError::ContractAddressUnavailableForDeployment => {
+                            res.push(Felt252::from(9))
+                        }
+                        StarknetError::ClassNotDeclared => res.push(Felt252::from(10)),
+                        StarknetError::TransactionReverted => res.push(Felt252::from(11)),
                     }
                 }
             }
@@ -249,7 +283,6 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                         Ok(CheatcodeHandlingResult::Handled(res))
                     }
                     Err(err) => {
-                        dbg!(&err);
                         let res = serialize_script_err_to_felt_vec(err);
                         Ok(CheatcodeHandlingResult::Handled(res))
                     }
@@ -275,7 +308,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     self.config.keystore.clone(),
                 ))?;
 
-                let deploy_response = self.tokio_runtime.block_on(deploy::deploy(
+                match self.tokio_runtime.block_on(deploy::deploy(
                     class_hash,
                     constructor_calldata,
                     salt,
@@ -288,13 +321,20 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                         timeout: self.config.wait_timeout,
                         retry_interval: self.config.wait_retry_interval,
                     },
-                ))?;
-
-                let res: Vec<Felt252> = vec![
-                    Felt252::from_(deploy_response.contract_address.0),
-                    Felt252::from_(deploy_response.transaction_hash.0),
-                ];
-                Ok(CheatcodeHandlingResult::Handled(res))
+                )) {
+                    Ok(deploy_response) => {
+                        let res: Vec<Felt252> = vec![
+                            Felt252::from(0),
+                            Felt252::from_(deploy_response.contract_address.0),
+                            Felt252::from_(deploy_response.transaction_hash.0),
+                        ];
+                        Ok(CheatcodeHandlingResult::Handled(res))
+                    }
+                    Err(err) => {
+                        let res = serialize_script_err_to_felt_vec(err);
+                        Ok(CheatcodeHandlingResult::Handled(res))
+                    }
+                }
             }
             "invoke" => {
                 let contract_address = reader.read_felt().into_();

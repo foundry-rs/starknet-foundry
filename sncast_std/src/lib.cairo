@@ -15,6 +15,9 @@ enum StarknetError {
     InsufficientAccountBalance,
     ContractError,
     InvalidTransactionNonce,
+    ContractAddressUnavailableForDeployment,
+    ClassNotDeclared,
+    TransactionReverted,
 }
 
 impl StarknetErrorTrait of PrintTrait<StarknetError> {
@@ -30,6 +33,9 @@ impl StarknetErrorTrait of PrintTrait<StarknetError> {
             StarknetError::InsufficientAccountBalance => { 'InsufficientAccountBalance'.print(); },
             StarknetError::ContractError => { 'ContractError'.print(); },
             StarknetError::InvalidTransactionNonce => { 'InvalidTransactionNonce'.print(); },
+            StarknetError::ContractAddressUnavailableForDeployment => { 'AddrUnavailableForDeployment'.print(); },
+            StarknetError::ClassNotDeclared => { 'ClassNotDeclared'.print(); },
+            StarknetError::TransactionReverted => { 'TransactionReverted'.print(); },
         }
     }
 }
@@ -128,7 +134,7 @@ fn declare(
     result_data
 }
 
-#[derive(Drop, Clone)]
+#[derive(Drop, Clone, Serde)]
 struct DeployResult {
     contract_address: ContractAddress,
     transaction_hash: felt252,
@@ -141,7 +147,7 @@ fn deploy(
     unique: bool,
     max_fee: Option<felt252>,
     nonce: Option<felt252>
-) -> DeployResult {
+) -> Result<DeployResult, ScriptCommandError> {
     let class_hash_felt: felt252 = class_hash.into();
     let mut inputs = array![class_hash_felt];
 
@@ -163,14 +169,14 @@ fn deploy(
     inputs.append_span(max_fee_serialized.span());
     inputs.append_span(nonce_serialized.span());
 
-    let buf = cheatcode::<'deploy'>(inputs.span());
+    let mut buf = cheatcode::<'deploy'>(inputs.span());
 
-    let contract_address: ContractAddress = (*buf[0])
-        .try_into()
-        .expect('Invalid contract address value');
-    let transaction_hash = *buf[1];
+    let mut result_data: Result<DeployResult, ScriptCommandError> = Serde::<
+        Result<DeployResult>
+    >::deserialize(ref buf)
+        .expect('deploy deserialize failed');
 
-    DeployResult { contract_address, transaction_hash }
+    result_data
 }
 
 #[derive(Drop, Clone)]
