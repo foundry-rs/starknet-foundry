@@ -240,6 +240,7 @@ mod tests {
     }
 
     #[tokio_shared_rt::test]
+    #[allow(clippy::needless_return)]
     async fn should_fail_calling_rpc() {
         let test_crates = prepare_input(&["http://not.exist:3034/rpc"]);
 
@@ -247,6 +248,6 @@ mod tests {
             .await
             .unwrap_err();
 
-        assert!(err.to_string().contains("error while calling rpc node"))
+        assert!(err.to_string().contains("error while calling rpc node"));
     }
 }
