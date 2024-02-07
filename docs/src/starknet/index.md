@@ -15,7 +15,7 @@ To use `sncast`, run the `sncast` command followed by a subcommand (see [availab
 $ sncast <subcommand>
 ```
 
-If `Scarb.toml` is present and configured with `[tool.sncast]`, `url`, `accounts-file` and `account` name will be taken from it.
+If `snfoundry.toml` is present and configured with `[sncast.default]`, `url`, `accounts-file` and `account` name will be taken from it.
 You can, however, overwrite their values by supplying them as flags directly to `sncast` cli.
 
 > 💡 **Info**
@@ -41,7 +41,7 @@ response: [0x0]
 ```
 
 > 📝 **Note**
-> In the above example we supply `sncast` with `--account` and `--url` flags. If `Scarb.toml` is present, and have these properties set, values provided using these flags will override values from `Scarb.toml`. Learn more about `Scarb.toml` configuration [here](../projects/configuration.md#sncast).
+> In the above example we supply `sncast` with `--account` and `--url` flags. If `snfoundry.toml` is present, and have these properties set, values provided using these flags will override values from `snfoundry.toml`. Learn more about `snfoundry.toml` configuration [here](../projects/configuration.md#sncast).
 
 ### How to Use `--wait` Flag
 

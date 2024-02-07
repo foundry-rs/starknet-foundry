@@ -1,11 +1,32 @@
 use starknet::{testing::cheatcode, ContractAddress, ClassHash};
+use core::fmt::{Debug, Display, Error, Formatter};
 
-#[derive(Drop, Clone)]
-struct CallResult {
-    data: Array::<felt252>,
+pub impl DisplayClassHash of Display<ClassHash> {
+    fn fmt(self: @ClassHash, ref f: Formatter) -> Result<(), Error> {
+        let class_hash: felt252 = (*self).into();
+        Display::fmt(@class_hash, ref f)
+    }
 }
 
-fn call(
+pub impl DisplayContractAddress of Display<ContractAddress> {
+    fn fmt(self: @ContractAddress, ref f: Formatter) -> Result<(), Error> {
+        let addr: felt252 = (*self).into();
+        Display::fmt(@addr, ref f)
+    }
+}
+
+#[derive(Drop, Clone, Debug)]
+pub struct CallResult {
+    pub data: Array::<felt252>,
+}
+
+impl DisplayCallResult of Display<CallResult> {
+    fn fmt(self: @CallResult, ref f: Formatter) -> Result<(), Error> {
+        Debug::fmt(self.data, ref f)
+    }
+}
+
+pub fn call(
     contract_address: ContractAddress, function_name: felt252, calldata: Array::<felt252>
 ) -> CallResult {
     let contract_address_felt: felt252 = contract_address.into();
@@ -23,13 +44,19 @@ fn call(
     CallResult { data: result_data }
 }
 
-#[derive(Drop, Clone)]
-struct DeclareResult {
-    class_hash: ClassHash,
-    transaction_hash: felt252,
+#[derive(Drop, Clone, Debug)]
+pub struct DeclareResult {
+    pub class_hash: ClassHash,
+    pub transaction_hash: felt252,
 }
 
-fn declare(
+impl DisplayDeclareResult of Display<DeclareResult> {
+    fn fmt(self: @DeclareResult, ref f: Formatter) -> Result<(), Error> {
+        write!(f, "class_hash: {}, transaction_hash: {}", *self.class_hash, *self.transaction_hash)
+    }
+}
+
+pub fn declare(
     contract_name: felt252, max_fee: Option<felt252>, nonce: Option<felt252>
 ) -> DeclareResult {
     let mut inputs = array![contract_name];
@@ -51,13 +78,24 @@ fn declare(
     DeclareResult { class_hash, transaction_hash }
 }
 
-#[derive(Drop, Clone)]
-struct DeployResult {
-    contract_address: ContractAddress,
-    transaction_hash: felt252,
+#[derive(Drop, Clone, Debug)]
+pub struct DeployResult {
+    pub contract_address: ContractAddress,
+    pub transaction_hash: felt252,
 }
 
-fn deploy(
+impl DisplayDeployResult of Display<DeployResult> {
+    fn fmt(self: @DeployResult, ref f: Formatter) -> Result<(), Error> {
+        write!(
+            f,
+            "contract_address: {}, transaction_hash: {}",
+            *self.contract_address,
+            *self.transaction_hash
+        )
+    }
+}
+
+pub fn deploy(
     class_hash: ClassHash,
     constructor_calldata: Array::<felt252>,
     salt: Option<felt252>,
@@ -96,12 +134,18 @@ fn deploy(
     DeployResult { contract_address, transaction_hash }
 }
 
-#[derive(Drop, Clone)]
-struct InvokeResult {
-    transaction_hash: felt252,
+#[derive(Drop, Clone, Debug)]
+pub struct InvokeResult {
+    pub transaction_hash: felt252,
 }
 
-fn invoke(
+impl DisplayInvokeResult of Display<InvokeResult> {
+    fn fmt(self: @InvokeResult, ref f: Formatter) -> Result<(), Error> {
+        write!(f, "{}", *self.transaction_hash)
+    }
+}
+
+pub fn invoke(
     contract_address: ContractAddress,
     entry_point_selector: felt252,
     calldata: Array::<felt252>,
@@ -131,7 +175,7 @@ fn invoke(
     InvokeResult { transaction_hash }
 }
 
-fn get_nonce(block_tag: felt252) -> felt252 {
+pub fn get_nonce(block_tag: felt252) -> felt252 {
     let inputs = array![block_tag];
     let buf = cheatcode::<'get_nonce'>(inputs.span());
     *buf[0]

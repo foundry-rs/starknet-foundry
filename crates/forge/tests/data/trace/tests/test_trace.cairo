@@ -1,4 +1,4 @@
-use snforge_std::{declare, ContractClassTrait, PrintTrait};
+use snforge_std::{declare, ContractClassTrait};
 use snforge_std::trace::{get_call_trace};
 
 use trace_info::{RecursiveCallerDispatcher, RecursiveCallerDispatcherTrait, RecursiveCall};

@@ -7,9 +7,9 @@
 Calls a contract and returns `CallResult`.
 
 ```rust
-#[derive(Drop, Clone)]
-struct CallResult {
-    data: Array::<felt252>,
+#[derive(Drop, Clone, Debug)]
+pub struct CallResult {
+    pub data: Array::<felt252>,
 }
 ```
 
@@ -19,8 +19,7 @@ struct CallResult {
 
 ```rust
 use sncast_std::{call, CallResult};
-use starknet::{ContractAddress, Felt252TryIntoContractAddress};
-use debug::PrintTrait;
+use starknet::{ContractAddress};
 
 fn main() {
     let contract_address: ContractAddress = 0x1e52f6ebc3e594d2a6dc2a0d7d193cb50144cfdfb7fdd9519135c29b67e427
@@ -28,7 +27,7 @@ fn main() {
         .expect('Invalid contract address value');
 
     let call_result = call(contract_address, 'get', array![0x1]);
-    let first_item = *call_result.data[0];
-    first_item.print();
+    println!("call_result: {}", call_result);
+    println!("debug call_result: {:?}", call_result);
 }
 ```

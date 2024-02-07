@@ -408,7 +408,7 @@ pub fn parse_number(number_as_str: &str) -> Result<FieldElement> {
 
 pub fn raise_if_empty(value: &str, value_name: &str) -> Result<()> {
     if value.is_empty() {
-        bail!("{value_name} not passed nor found in Scarb.toml")
+        bail!("{value_name} not passed nor found in snfoundry.toml")
     }
     Ok(())
 }

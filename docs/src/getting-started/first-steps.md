@@ -25,7 +25,7 @@ $ tree . -L 1
 
 * `src/` contains source code of all your contracts.
 * `tests/` contains tests.
-* `Scarb.toml` contains configuration of the project as well as of `snforge`, `sncast` etc.
+* `Scarb.toml` contains configuration of the project as well as of `snforge`
 
 And run tests with `snforge test`
 

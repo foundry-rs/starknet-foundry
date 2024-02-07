@@ -9,10 +9,11 @@ use sncast::response::print::{print_command_result, OutputFormat};
 
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand};
+use sncast::helpers::configuration::{load_config, CastConfig};
 use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
 use sncast::helpers::scarb_utils::{
-    build, get_package_metadata, get_scarb_manifest, get_scarb_metadata_with_deps,
-    parse_scarb_config, BuildConfig, CastConfig,
+    assert_manifest_path_exists, build_and_load_artifacts, get_package_metadata,
+    get_scarb_metadata_with_deps, BuildConfig,
 };
 use sncast::{
     chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_nonce, get_provider,
@@ -30,7 +31,7 @@ mod starknet_commands;
 #[clap(name = "sncast")]
 #[allow(clippy::struct_excessive_bools)]
 struct Cli {
-    /// Profile name in Scarb.toml config file
+    /// Profile name in snfoundry.toml config file
     #[clap(short, long)]
     profile: Option<String>,
 
@@ -38,7 +39,7 @@ struct Cli {
     #[clap(short = 's', long)]
     path_to_scarb_toml: Option<Utf8PathBuf>,
 
-    /// RPC provider url address; overrides url from Scarb.toml
+    /// RPC provider url address; overrides url from snfoundry.toml
     #[clap(short = 'u', long = "url")]
     rpc_url: Option<String>,
 
@@ -117,21 +118,13 @@ fn main() -> Result<()> {
     let numbers_format = NumbersFormat::from_flags(cli.hex_format, cli.int_format);
     let output_format = OutputFormat::from_flag(cli.json);
 
-    let mut config = parse_scarb_config(&cli.profile, &cli.path_to_scarb_toml)?;
-    update_cast_config(&mut config, &cli);
-
     let runtime = Runtime::new().expect("Failed to instantiate Runtime");
 
     if let Commands::Script(script) = &cli.command {
-        run_script_command(
-            &cli,
-            runtime,
-            &config,
-            script,
-            numbers_format,
-            &output_format,
-        )
+        run_script_command(&cli, runtime, script, numbers_format, &output_format)
     } else {
+        let mut config = load_config(&cli.profile, &None)?;
+        update_cast_config(&mut config, &cli);
         let provider = get_provider(&config.rpc_url)?;
         runtime.block_on(run_async_command(
             cli,
@@ -165,16 +158,17 @@ async fn run_async_command(
                 config.keystore,
             )
             .await?;
-            let manifest_path = match cli.path_to_scarb_toml.clone() {
-                Some(path) => path,
-                None => {
-                    get_scarb_manifest().context("Failed to obtain manifest path from Scarb")?
-                }
-            };
-            let artifacts = build(&BuildConfig {
-                scarb_toml_path: manifest_path,
-                json: cli.json,
-            })?;
+            let manifest_path = assert_manifest_path_exists(&cli.path_to_scarb_toml)?;
+            let package_metadata = get_package_metadata(&manifest_path, &declare.package)?;
+            let artifacts = build_and_load_artifacts(
+                &package_metadata,
+                &BuildConfig {
+                    scarb_toml_path: manifest_path,
+                    json: cli.json,
+                    profile: cli.profile.unwrap_or("dev".to_string()),
+                },
+            )
+            .expect("Failed to build contract");
             let mut result = starknet_commands::declare::declare(
                 &declare.contract,
                 declare.max_fee,
@@ -296,7 +290,6 @@ async fn run_async_command(
                     &config.rpc_url,
                     &add.name.clone(),
                     &config.accounts_file,
-                    &cli.path_to_scarb_toml,
                     &provider,
                     &add,
                 )
@@ -320,7 +313,6 @@ async fn run_async_command(
                     &config.accounts_file,
                     config.keystore,
                     &provider,
-                    cli.path_to_scarb_toml,
                     chain_id,
                     create.salt,
                     create.add_profile,
@@ -378,8 +370,6 @@ async fn run_async_command(
                 let mut result = starknet_commands::account::delete::delete(
                     &delete.name,
                     &config.accounts_file,
-                    &cli.path_to_scarb_toml,
-                    delete.delete_profile,
                     &network_name,
                     delete.yes,
                 );
@@ -394,13 +384,8 @@ async fn run_async_command(
             }
         },
         Commands::ShowConfig(_) => {
-            let mut result = starknet_commands::show_config::show_config(
-                &provider,
-                config,
-                cli.profile,
-                cli.path_to_scarb_toml,
-            )
-            .await;
+            let mut result =
+                starknet_commands::show_config::show_config(&provider, config, cli.profile).await;
             print_command_result("show-config", &mut result, numbers_format, &output_format)?;
             Ok(())
         }
@@ -411,7 +396,6 @@ async fn run_async_command(
 fn run_script_command(
     cli: &Cli,
     runtime: Runtime,
-    config: &CastConfig,
     script: &Script,
     numbers_format: NumbersFormat,
     output_format: &OutputFormat,
@@ -420,30 +404,36 @@ fn run_script_command(
         let mut result = starknet_commands::script::init::init(init);
         print_command_result("script init", &mut result, numbers_format, output_format)?;
     } else {
+        let manifest_path = assert_manifest_path_exists(&cli.path_to_scarb_toml)?;
+        let package_metadata = get_package_metadata(&manifest_path, &script.package)?;
+
+        let mut config = load_config(&cli.profile, &Some(package_metadata.root.clone()))?;
+        update_cast_config(&mut config, cli);
         let provider = get_provider(&config.rpc_url)?;
-        let script_module_name = script.script_module_name.as_ref().ok_or_else(|| {
-            anyhow!("required positional argument SCRIPT_MODULE_NAME not provided")
-        })?;
-        let manifest_path = match &cli.path_to_scarb_toml {
-            Some(path) => path.clone(),
-            None => get_scarb_manifest().context("Failed to obtain manifest path from Scarb")?,
-        };
-        let metadata = get_scarb_metadata_with_deps(&manifest_path)?;
-        let package_metadata = get_package_metadata(&metadata, &manifest_path)?;
-        let mut artifacts = build(&BuildConfig {
-            scarb_toml_path: manifest_path.clone(),
-            json: cli.json,
-        })
+
+        let mut artifacts = build_and_load_artifacts(
+            &package_metadata,
+            &BuildConfig {
+                scarb_toml_path: manifest_path.clone(),
+                json: cli.json,
+                profile: cli.profile.clone().unwrap_or("dev".to_string()),
+            },
+        )
         .expect("Failed to build script");
+        let metadata_with_deps = get_scarb_metadata_with_deps(&manifest_path)?;
+
+        let script_module_name = script.script_module_name.as_ref().ok_or_else(|| {
+            anyhow!("Required positional argument SCRIPT_MODULE_NAME not provided")
+        })?;
 
         let mut result = starknet_commands::script::run::run(
             script_module_name,
-            &metadata,
-            package_metadata,
+            &metadata_with_deps,
+            &package_metadata,
             &mut artifacts,
             &provider,
             runtime,
-            config,
+            &config,
         );
 
         print_command_result("script", &mut result, numbers_format, output_format)?;

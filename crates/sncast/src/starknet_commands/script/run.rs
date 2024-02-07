@@ -22,8 +22,6 @@ use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::vm_core::VirtualMachine;
-use clap::command;
-use clap::Args;
 use conversions::{FromConv, IntoConv};
 use itertools::chain;
 use runtime::starknet::context::{build_default_block_context, build_transaction_context};
@@ -36,8 +34,8 @@ use runtime::{
 use scarb_api::{package_matches_version_requirement, StarknetContractArtifacts};
 use scarb_metadata::{Metadata, PackageMetadata};
 use semver::{Comparator, Op, Version, VersionReq};
+use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::SCRIPT_LIB_ARTIFACT_NAME;
-use sncast::helpers::scarb_utils::CastConfig;
 use sncast::response::print::print_as_warning;
 use sncast::response::structs::ScriptResponse;
 use starknet::accounts::Account;
@@ -47,13 +45,6 @@ use starknet::providers::JsonRpcClient;
 use tokio::runtime::Runtime;
 
 type ScriptStarknetContractArtifacts = StarknetContractArtifacts;
-
-#[derive(Args)]
-#[command(about = "Execute a deployment script")]
-pub struct Script {
-    /// Module name that contains the `main` function, which will be executed
-    pub script_module_name: String,
-}
 
 pub struct CastScriptExtension<'a> {
     pub hints: &'a HashMap<String, Hint>,

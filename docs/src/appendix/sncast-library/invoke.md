@@ -11,9 +11,9 @@
 Invokes a contract and returns `InvokeResult`.
 
 ```rust
-#[derive(Drop, Clone)]
-struct InvokeResult {
-    transaction_hash: felt252,
+#[derive(Drop, Clone, Debug)]
+pub struct InvokeResult {
+    pub transaction_hash: felt252,
 }
 ```
 
@@ -25,7 +25,7 @@ struct InvokeResult {
 
 ```rust
 use sncast_std::{invoke, InvokeResult};
-use starknet::{ContractAddress, Felt252TryIntoContractAddress};
+use starknet::{ContractAddress};
 
 fn main() {
     let contract_address: ContractAddress = 0x1e52f6ebc3e594d2a6dc2a0d7d193cb50144cfdfb7fdd9519135c29b67e427
@@ -35,6 +35,8 @@ fn main() {
     let invoke_result = invoke(
         contract_address, 'put', array![0x1, 0x2], Option::None, Option::None
     );
-
+    
+    println!("invoke_result: {}", invoke_result);
+    println!("debug invoke_result: {:?}", invoke_result);
 }
 ```

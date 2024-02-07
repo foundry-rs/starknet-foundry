@@ -25,12 +25,12 @@ fn root_workspace_without_arguments() {
         [FAIL] tests::test_failing::test_failing
         
         Failure data:
-            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+            0x6661696c696e6720636865636b ('failing check')
         
         [FAIL] tests::test_failing::test_another_failing
 
         Failure data:
-            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+            0x6661696c696e6720636865636b ('failing check')
         
         Tests: 1 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
         
@@ -93,7 +93,7 @@ fn root_workspace_specific_package2() {
         [FAIL] tests::abc::efg::failing_test
         
         Failure data:
-            original value: [0], converted to a string: []
+            0x0 ('')
         
         Tests: 5 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
         
@@ -146,12 +146,12 @@ fn root_workspace_specify_root_package() {
         [FAIL] tests::test_failing::test_failing
         
         Failure data:
-            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+            0x6661696c696e6720636865636b ('failing check')
         
         [FAIL] tests::test_failing::test_another_failing
 
         Failure data:
-            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+            0x6661696c696e6720636865636b ('failing check')
         
         Tests: 1 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
         
@@ -230,7 +230,7 @@ fn root_workspace_for_entire_workspace() {
         [FAIL] tests::abc::efg::failing_test
         
         Failure data:
-            original value: [0], converted to a string: []
+            0x0 ('')
         
         Tests: 5 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
         
@@ -242,12 +242,12 @@ fn root_workspace_for_entire_workspace() {
         [FAIL] tests::test_failing::test_failing
         
         Failure data:
-            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+            0x6661696c696e6720636865636b ('failing check')
         
         [FAIL] tests::test_failing::test_another_failing
 
         Failure data:
-            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+            0x6661696c696e6720636865636b ('failing check')
         
         Tests: 1 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
         
@@ -299,7 +299,7 @@ fn root_workspace_for_entire_workspace_inside_package() {
         [FAIL] tests::abc::efg::failing_test
         
         Failure data:
-            original value: [0], converted to a string: []
+            0x0 ('')
         
         Tests: 5 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
         
@@ -311,12 +311,12 @@ fn root_workspace_for_entire_workspace_inside_package() {
         [FAIL] tests::test_failing::test_failing
         
         Failure data:
-            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+            0x6661696c696e6720636865636b ('failing check')
         
         [FAIL] tests::test_failing::test_another_failing
 
         Failure data:
-            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+            0x6661696c696e6720636865636b ('failing check')
         
         Tests: 1 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
         
@@ -381,7 +381,7 @@ fn virtual_workspace_without_arguments() {
         [FAIL] tests::abc::efg::failing_test
         
         Failure data:
-            original value: [0], converted to a string: []
+            0x0 ('')
         
         Tests: 5 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
 
@@ -453,7 +453,7 @@ fn virtual_workspace_specific_package2() {
         [FAIL] tests::abc::efg::failing_test
         
         Failure data:
-            original value: [0], converted to a string: []
+            0x0 ('')
         
         Tests: 5 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
         
@@ -544,7 +544,7 @@ fn virtual_workspace_for_entire_workspace() {
         [FAIL] tests::abc::efg::failing_test
         
         Failure data:
-            original value: [0], converted to a string: []
+            0x0 ('')
         
         Tests: 5 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
 
@@ -592,7 +592,7 @@ fn virtual_workspace_for_entire_workspace_inside_package() {
         [FAIL] tests::abc::efg::failing_test
         
         Failure data:
-            original value: [0], converted to a string: []
+            0x0 ('')
         
         Tests: 5 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
 
