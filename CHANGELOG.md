@@ -35,7 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - `--package` flag for `declare` and `script` subcommands, that specifies scarb package to work with
-- `Debug` and `Display` impls for script subcommand responses
+- `Debug` and `Display` impls for script subcommand responses - use `print!`, `println!` macros instead of calling `.print()`
 
 ## [0.16.0] - 2024-01-26
 
