@@ -422,7 +422,7 @@ fn run_script_command(
         .expect("Failed to build script");
         let metadata_with_deps = get_scarb_metadata_with_deps(&manifest_path)?;
 
-        let script_module_name = script.script_module_name.as_ref().ok_or_else(|| {
+        let script_module_name = script.module_name.as_ref().ok_or_else(|| {
             anyhow!("Required positional argument SCRIPT_MODULE_NAME not provided")
         })?;
 

@@ -7,7 +7,7 @@ pub mod run;
 #[derive(Args)]
 pub struct Script {
     /// Module name that contains the `main` function, which will be executed
-    pub script_module_name: Option<String>,
+    pub module_name: Option<String>,
 
     /// Specifies scarb package to be used
     #[clap(long)]
