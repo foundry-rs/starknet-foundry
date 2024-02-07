@@ -12,10 +12,10 @@
 Deploys a contract and returns `DeployResult`.
 
 ```rust
-#[derive(Drop, Clone)]
-struct DeployResult {
-    contract_address: ContractAddress,
-    transaction_hash: felt252,
+#[derive(Drop, Clone, Debug)]
+pub struct DeployResult {
+    pub contract_address: ContractAddress,
+    pub transaction_hash: felt252,
 }
 ```
 
@@ -28,8 +28,6 @@ struct DeployResult {
 
 ```rust
 use sncast_std::{deploy, DeployResult};
-use starknet::{ClassHash, Felt252TryIntoClassHash};
-use debug::PrintTrait;
 
 fn main() {
     let max_fee = 9999999;
@@ -48,6 +46,7 @@ fn main() {
         Option::Some(nonce)
     );
 
-    deploy_result.contract_address.print();
+    println!("deploy_result: {}", deploy_result);
+    println!("debug deploy_result: {:?}", deploy_result);
 }
 ```
