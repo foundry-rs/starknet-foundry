@@ -338,17 +338,16 @@ pub fn duplicate_script_directory(
     let sncast_std = deps_toml
         .get_mut("sncast_std")
         .expect("sncast_std not found");
-    if let Some(sncast_std_path) = sncast_std.get_mut("path") {
-        let sncast_std_path =
-            Utf8PathBuf::from(sncast_std_path.as_str().expect("Failed to extract string"));
-        if sncast_std_path.is_relative() {
-            let sncast_std_path = src_dir.join(sncast_std_path);
-            let sncast_std_path_absolute = sncast_std_path
-                .canonicalize_utf8()
-                .expect("Failed to canonicalize sncast_std path");
-            deps.insert(String::from("sncast_std"), sncast_std_path_absolute);
-        }
-    }
+
+    let sncast_std_path = sncast_std.get_mut("path").expect("No path to sncast_std");
+    let sncast_std_path =
+        Utf8PathBuf::from(sncast_std_path.as_str().expect("Failed to extract string"));
+
+    let sncast_std_path = src_dir.join(sncast_std_path);
+    let sncast_std_path_absolute = sncast_std_path
+        .canonicalize_utf8()
+        .expect("Failed to canonicalize sncast_std path");
+    deps.insert(String::from("sncast_std"), sncast_std_path_absolute);
 
     for (key, value) in deps {
         let pkg = deps_toml.get_mut(&key).unwrap().as_table_mut().unwrap();
