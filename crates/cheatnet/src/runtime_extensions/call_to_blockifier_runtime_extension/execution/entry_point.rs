@@ -43,7 +43,10 @@ pub fn execute_call_entry_point(
     if let Some(ret_data) =
         get_ret_data_by_call_entry_point(entry_point, runtime_state.cheatnet_state)
     {
-        runtime_state.cheatnet_state.trace_data.exit_nested_call();
+        runtime_state
+            .cheatnet_state
+            .trace_data
+            .exit_nested_call(resources);
         return Ok(mocked_call_info(entry_point.clone(), ret_data.clone()));
     }
 
