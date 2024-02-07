@@ -105,7 +105,7 @@ mod tests {
     use std::{io::read_to_string, sync::Once, time::Duration};
 
     /**
-     * all tests using BufferRedirect must be run with --nocapture
+     * all tests using [`BufferRedirect`] must be run with --nocapture
      */
 
     static SERVERS: Once = Once::new();
