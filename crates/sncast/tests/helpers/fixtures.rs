@@ -270,19 +270,6 @@ pub fn create_test_provider() -> JsonRpcClient<HttpTransport> {
     JsonRpcClient::new(HttpTransport::new(parsed_url))
 }
 
-fn copy_dir_to_temp_dir(src_dir: impl AsRef<Utf8Path>) -> TempDir {
-    let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
-
-    fs_extra::dir::copy(
-        src_dir.as_ref(),
-        temp_dir.as_ref(),
-        &fs_extra::dir::CopyOptions::new().content_only(true),
-    )
-    .expect("Failed to copy directory content");
-
-    temp_dir
-}
-
 #[must_use]
 pub fn duplicate_contract_directory_with_salt(
     src_dir: impl AsRef<Utf8Path>,
@@ -291,7 +278,7 @@ pub fn duplicate_contract_directory_with_salt(
 ) -> TempDir {
     let src_dir = Utf8PathBuf::from(src_dir.as_ref());
 
-    let temp_dir = copy_dir_to_temp_dir(&src_dir);
+    let temp_dir = copy_directory_to_tempdir(&src_dir);
 
     let dest_dir = Utf8PathBuf::from_path_buf(temp_dir.path().to_path_buf())
         .expect("Failed to create Utf8PathBuf from PathBuf");
@@ -308,13 +295,12 @@ pub fn duplicate_contract_directory_with_salt(
 }
 
 #[must_use]
-pub fn copy_directory_to_tempdir(src_path: String) -> TempDir {
-    let src_dir = Utf8PathBuf::from(src_path);
-    let temp_dir = TempDir::new().expect("Failed to create a temporary directory");
+pub fn copy_directory_to_tempdir(src_dir: impl AsRef<Utf8Path>) -> TempDir {
+    let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
 
     fs_extra::dir::copy(
-        src_dir,
-        &temp_dir,
+        src_dir.as_ref(),
+        temp_dir.as_ref(),
         &fs_extra::dir::CopyOptions::new()
             .overwrite(true)
             .content_only(true),
@@ -332,7 +318,7 @@ pub fn duplicate_script_directory(
 
     let src_dir = Utf8PathBuf::from(src_dir.as_ref());
 
-    let temp_dir = copy_dir_to_temp_dir(&src_dir);
+    let temp_dir = copy_directory_to_tempdir(&src_dir);
 
     let dest_dir = Utf8PathBuf::from_path_buf(temp_dir.path().to_path_buf())
         .expect("Failed to create Utf8PathBuf from PathBuf");
