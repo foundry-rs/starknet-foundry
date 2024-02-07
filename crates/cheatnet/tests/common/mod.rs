@@ -16,15 +16,18 @@ use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
 };
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeState;
 use cheatnet::runtime_extensions::common::{create_entry_point_selector, create_execute_calldata};
-use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::deploy;
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::{
+    deploy, deploy_at,
+};
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
 use cheatnet::state::BlockifierState;
 use conversions::felt252::FromShortString;
 use runtime::starknet::context::{build_block_context, build_transaction_context};
 use scarb_api::metadata::MetadataCommandExt;
 use scarb_api::{get_contracts_map, ScarbCommand, StarknetContractArtifacts};
 use starknet::core::utils::get_selector_from_name;
-use starknet_api::core::ContractAddress;
 use starknet_api::core::PatriciaKey;
+use starknet_api::core::{ClassHash, ContractAddress};
 use starknet_api::deprecated_contract_class::EntryPointType;
 use starknet_api::hash::StarkHash;
 use starknet_api::patricia_key;
@@ -65,7 +68,113 @@ pub fn deploy_contract(
     let contracts = get_contracts();
 
     let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
-    deploy(blockifier_state, runtime_state, &class_hash, calldata).unwrap()
+
+    let mut execution_resources = ExecutionResources::default();
+    let mut entry_point_execution_context = EntryPointExecutionContext::new(
+        &build_block_context(runtime_state.cheatnet_state.block_info),
+        &build_transaction_context(),
+        ExecutionMode::Execute,
+        false,
+    )
+    .unwrap();
+    let hints = HashMap::new();
+
+    let mut syscall_hint_processor = SyscallHintProcessor::new(
+        blockifier_state.blockifier_state,
+        &mut execution_resources,
+        &mut entry_point_execution_context,
+        Relocatable {
+            segment_index: 0,
+            offset: 0,
+        },
+        CallEntryPoint::default(),
+        &hints,
+        ReadOnlySegments::default(),
+    );
+
+    deploy(
+        &mut syscall_hint_processor,
+        runtime_state,
+        &class_hash,
+        calldata,
+    )
+    .unwrap()
+}
+
+pub fn deploy_wrapper(
+    blockifier_state: &mut BlockifierState,
+    runtime_state: &mut RuntimeState,
+    class_hash: &ClassHash,
+    calldata: &[Felt252],
+) -> Result<ContractAddress, CheatcodeError> {
+    let mut execution_resources = ExecutionResources::default();
+    let mut entry_point_execution_context = EntryPointExecutionContext::new(
+        &build_block_context(runtime_state.cheatnet_state.block_info),
+        &build_transaction_context(),
+        ExecutionMode::Execute,
+        false,
+    )
+    .unwrap();
+    let hints = HashMap::new();
+
+    let mut syscall_hint_processor = SyscallHintProcessor::new(
+        blockifier_state.blockifier_state,
+        &mut execution_resources,
+        &mut entry_point_execution_context,
+        Relocatable {
+            segment_index: 0,
+            offset: 0,
+        },
+        CallEntryPoint::default(),
+        &hints,
+        ReadOnlySegments::default(),
+    );
+
+    deploy(
+        &mut syscall_hint_processor,
+        runtime_state,
+        class_hash,
+        calldata,
+    )
+}
+
+pub fn deploy_at_wrapper(
+    blockifier_state: &mut BlockifierState,
+    runtime_state: &mut RuntimeState,
+    class_hash: &ClassHash,
+    calldata: &[Felt252],
+    contract_address: ContractAddress,
+) -> Result<ContractAddress, CheatcodeError> {
+    let mut execution_resources = ExecutionResources::default();
+    let mut entry_point_execution_context = EntryPointExecutionContext::new(
+        &build_block_context(runtime_state.cheatnet_state.block_info),
+        &build_transaction_context(),
+        ExecutionMode::Execute,
+        false,
+    )
+    .unwrap();
+    let hints = HashMap::new();
+
+    let mut syscall_hint_processor = SyscallHintProcessor::new(
+        blockifier_state.blockifier_state,
+        &mut execution_resources,
+        &mut entry_point_execution_context,
+        Relocatable {
+            segment_index: 0,
+            offset: 0,
+        },
+        CallEntryPoint::default(),
+        &hints,
+        ReadOnlySegments::default(),
+    );
+
+    deploy_at(
+        &mut syscall_hint_processor,
+        runtime_state,
+        class_hash,
+        calldata,
+        contract_address,
+    )
 }
 
 pub fn call_contract_getter_by_name(

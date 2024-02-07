@@ -1,12 +1,11 @@
-use crate::common::call_contract;
 use crate::common::state::{build_runtime_state, create_cached_state};
+use crate::common::{call_contract, deploy_wrapper};
 use crate::common::{felt_selector_from_name, recover_data};
 use crate::{
     assert_success,
     common::{deploy_contract, get_contracts, state::create_runtime_states},
 };
 use cairo_felt::Felt252;
-use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::deploy;
 use conversions::felt252::FromShortString;
 use conversions::IntoConv;
 use starknet_api::core::ContractAddress;
@@ -376,7 +375,7 @@ fn mock_call_library_call_no_effect() {
         .declare(&contract_name, &contracts)
         .unwrap();
 
-    let contract_address = deploy(
+    let contract_address = deploy_wrapper(
         &mut blockifier_state,
         &mut runtime_state,
         &class_hash,
@@ -434,7 +433,7 @@ fn mock_call_before_deployment() {
         &ret_data,
     );
 
-    let contract_address = deploy(
+    let contract_address = deploy_wrapper(
         &mut blockifier_state,
         &mut runtime_state,
         &class_hash,
@@ -501,7 +500,7 @@ fn mock_call_in_constructor() {
         .declare(&contract_name, &contracts)
         .unwrap();
     let balance_contract_address =
-        deploy(&mut blockifier_state, &mut runtime_state, &class_hash, &[]).unwrap();
+        deploy_wrapper(&mut blockifier_state, &mut runtime_state, &class_hash, &[]).unwrap();
     let ret_data = vec![Felt252::from(223)];
     runtime_state.cheatnet_state.start_mock_call(
         balance_contract_address,
@@ -513,7 +512,7 @@ fn mock_call_in_constructor() {
     let class_hash = blockifier_state
         .declare(&contract_name, &contracts)
         .unwrap();
-    let contract_address = deploy(
+    let contract_address = deploy_wrapper(
         &mut blockifier_state,
         &mut runtime_state,
         &class_hash,

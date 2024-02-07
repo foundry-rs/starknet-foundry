@@ -1,5 +1,5 @@
-use crate::common::call_contract;
 use crate::common::state::build_runtime_state;
+use crate::common::{call_contract, deploy_wrapper};
 use crate::{
     assert_success,
     common::{
@@ -9,7 +9,6 @@ use crate::{
 };
 use cairo_felt::Felt252;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeState;
-use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::deploy;
 use cheatnet::state::BlockifierState;
 use conversions::felt252::FromShortString;
 use starknet_api::core::ContractAddress;
@@ -82,7 +81,7 @@ fn nonce_declare_deploy() {
 
     let nonce2 = check_nonce(&mut blockifier_state, &mut runtime_state, &contract_address);
 
-    deploy(&mut blockifier_state, &mut runtime_state, &class_hash, &[]).unwrap();
+    deploy_wrapper(&mut blockifier_state, &mut runtime_state, &class_hash, &[]).unwrap();
 
     let nonce3 = check_nonce(&mut blockifier_state, &mut runtime_state, &contract_address);
 

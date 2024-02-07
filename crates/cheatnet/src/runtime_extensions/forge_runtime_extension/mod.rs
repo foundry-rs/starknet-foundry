@@ -275,11 +275,10 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let class_hash = reader.read_felt().into_();
                 let calldata = reader.read_vec();
                 let cheatnet_runtime = &mut extended_runtime.extended_runtime;
-                let mut blockifier_state =
-                    BlockifierState::from(cheatnet_runtime.extended_runtime.hint_handler.state);
+                let syscall_handler = &mut cheatnet_runtime.extended_runtime.hint_handler;
 
                 handle_deploy_result(deploy(
-                    &mut blockifier_state,
+                    syscall_handler,
                     &mut RuntimeState {
                         cheatnet_state: cheatnet_runtime.extension.cheatnet_state,
                     },
@@ -292,11 +291,10 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let calldata = reader.read_vec();
                 let contract_address = reader.read_felt().into_();
                 let cheatnet_runtime = &mut extended_runtime.extended_runtime;
-                let mut blockifier_state =
-                    BlockifierState::from(cheatnet_runtime.extended_runtime.hint_handler.state);
+                let syscall_handler = &mut cheatnet_runtime.extended_runtime.hint_handler;
 
                 handle_deploy_result(deploy_at(
-                    &mut blockifier_state,
+                    syscall_handler,
                     &mut RuntimeState {
                         cheatnet_state: cheatnet_runtime.extension.cheatnet_state,
                     },
