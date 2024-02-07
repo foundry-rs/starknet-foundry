@@ -1,5 +1,7 @@
 use crate::helpers::constants::{ACCOUNT, ACCOUNT_FILE_PATH, CONTRACTS_DIR, URL};
-use crate::helpers::fixtures::{duplicate_directory_with_salt, from_env, get_keystores_path};
+use crate::helpers::fixtures::{
+    duplicate_contract_directory_with_salt, from_env, get_keystores_path,
+};
 use crate::helpers::runner::runner;
 use indoc::indoc;
 use snapbox::cmd::{cargo_bin, Command};
@@ -213,7 +215,7 @@ async fn test_keystore_inexistent_account() {
 #[tokio::test]
 async fn test_keystore_undeployed_account() {
     let contract_path =
-        duplicate_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "8");
+        duplicate_contract_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "8");
     let my_key_path = get_keystores_path("tests/data/keystore/my_key.json");
     let my_account_undeployed_path =
         get_keystores_path("tests/data/keystore/my_account_undeployed.json");
@@ -245,7 +247,7 @@ async fn test_keystore_undeployed_account() {
 #[tokio::test]
 async fn test_keystore_declare() {
     let contract_path =
-        duplicate_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "999");
+        duplicate_contract_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "999");
     let my_key_path = get_keystores_path("tests/data/keystore/predeployed_key.json");
     let my_account_path = get_keystores_path("tests/data/keystore/predeployed_account.json");
     let args = vec![

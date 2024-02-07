@@ -1,4 +1,7 @@
 use crate::helpers::constants::{SCRIPTS_DIR, URL};
+use crate::helpers::fixtures::{
+    duplicate_contract_directory_with_salt, duplicate_script_directory, get_accounts_path,
+};
 use indoc::indoc;
 use snapbox::cmd::{cargo_bin, Command};
 
@@ -120,7 +123,7 @@ async fn test_incompatible_sncast_std_version() {
 
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
-        Warning: Package sncast_std version does not meet the recommended version requirement =0.16.0, it might result in unexpected behaviour
+        Warning: Package sncast_std version does not meet the recommended version requirement =0.17.0, it might result in unexpected behaviour
         ...
     "});
 }
@@ -171,6 +174,57 @@ async fn test_multiple_packages_happy_case() {
 
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
+        command: script
+        status: success
+    "});
+}
+
+#[tokio::test]
+async fn test_run_script_display_debug_traits() {
+    let contract_dir = duplicate_contract_directory_with_salt(
+        SCRIPTS_DIR.to_owned() + "/map_script/contracts/",
+        "dummy",
+        "45",
+    );
+    let script_dir = duplicate_script_directory(
+        SCRIPTS_DIR.to_owned() + "/map_script/scripts/",
+        vec![contract_dir.as_ref()],
+    );
+
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
+
+    let script_name = "display_debug_traits_for_subcommand_responses";
+    let args = vec![
+        "--accounts-file",
+        accounts_json_path.as_str(),
+        "--account",
+        "user6",
+        "--url",
+        URL,
+        "script",
+        &script_name,
+    ];
+
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(script_dir.path())
+        .args(args);
+
+    snapbox.assert().success().stdout_matches(indoc! {r"
+        ...
+        test
+        declare_nonce: [..]
+        debug declare_nonce: [..]
+        Transaction hash = 0x[..]
+        declare_result: class_hash: [..], transaction_hash: [..]
+        debug declare_result: DeclareResult { class_hash: [..], transaction_hash: [..] }
+        Transaction hash = 0x[..]
+        deploy_result: contract_address: [..], transaction_hash: [..]
+        debug deploy_result: DeployResult { contract_address: [..], transaction_hash: [..] }
+        Transaction hash = 0x[..]
+        invoke_result: [..]
+        debug invoke_result: InvokeResult { transaction_hash: [..] }
+        call_result: [2]
+        debug call_result: CallResult { data: [2] }
         command: script
         status: success
     "});
