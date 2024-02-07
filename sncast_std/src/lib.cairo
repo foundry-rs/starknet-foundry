@@ -1,14 +1,14 @@
 use starknet::{testing::cheatcode, ContractAddress, ClassHash};
 use core::fmt::{Debug, Display, Error, Formatter};
 
-impl DisplayClassHash of Display<ClassHash> {
+pub impl DisplayClassHash of Display<ClassHash> {
     fn fmt(self: @ClassHash, ref f: Formatter) -> Result<(), Error> {
         let class_hash: felt252 = (*self).into();
         Display::fmt(@class_hash, ref f)
     }
 }
 
-impl DisplayContractAddress of Display<ContractAddress> {
+pub impl DisplayContractAddress of Display<ContractAddress> {
     fn fmt(self: @ContractAddress, ref f: Formatter) -> Result<(), Error> {
         let addr: felt252 = (*self).into();
         Display::fmt(@addr, ref f)
