@@ -1,5 +1,11 @@
-use blockifier::execution::entry_point::{CallEntryPoint, CallType};
+use blockifier::execution::common_hints::ExecutionMode;
+use blockifier::execution::entry_point::{
+    CallEntryPoint, CallType, EntryPointExecutionContext, ExecutionResources,
+};
+use blockifier::execution::execution_utils::ReadOnlySegments;
+use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use cairo_felt::Felt252;
+use cairo_vm::types::relocatable::Relocatable;
 use camino::Utf8PathBuf;
 use cheatnet::constants::TEST_ADDRESS;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
@@ -13,6 +19,7 @@ use cheatnet::runtime_extensions::common::{create_entry_point_selector, create_e
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::deploy;
 use cheatnet::state::BlockifierState;
 use conversions::felt252::FromShortString;
+use runtime::starknet::context::{build_block_context, build_transaction_context};
 use scarb_api::metadata::MetadataCommandExt;
 use scarb_api::{get_contracts_map, ScarbCommand, StarknetContractArtifacts};
 use starknet::core::utils::get_selector_from_name;
@@ -103,8 +110,31 @@ pub fn call_contract(
         initial_gas: u64::MAX,
     };
 
+    let mut execution_resources = ExecutionResources::default();
+    let mut entry_point_execution_context = EntryPointExecutionContext::new(
+        &build_block_context(runtime_state.cheatnet_state.block_info),
+        &build_transaction_context(),
+        ExecutionMode::Execute,
+        false,
+    )
+    .unwrap();
+    let hints = HashMap::new();
+
+    let mut syscall_hint_processor = SyscallHintProcessor::new(
+        blockifier_state.blockifier_state,
+        &mut execution_resources,
+        &mut entry_point_execution_context,
+        Relocatable {
+            segment_index: 0,
+            offset: 0,
+        },
+        entry_point.clone(),
+        &hints,
+        ReadOnlySegments::default(),
+    );
+
     call_entry_point(
-        blockifier_state,
+        &mut syscall_hint_processor,
         runtime_state,
         entry_point,
         &AddressOrClassHash::ContractAddress(*contract_address),

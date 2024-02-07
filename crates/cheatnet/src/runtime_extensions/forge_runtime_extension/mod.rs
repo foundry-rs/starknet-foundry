@@ -22,6 +22,7 @@ use scarb_api::StarknetContractArtifacts;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use starknet_api::core::ContractAddress;
 
+use crate::runtime_extensions::forge_runtime_extension::cheatcodes::l1_handler_execute::l1_handler_execute;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::SpyTarget;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::storage::{
     calculate_variable_address, load, store,
@@ -364,13 +365,13 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let payload = reader.read_vec();
 
                 let cheatnet_runtime = &mut extended_runtime.extended_runtime;
-                let mut blockifier_state =
-                    BlockifierState::from(cheatnet_runtime.extended_runtime.hint_handler.state);
 
                 let mut runtime_state = RuntimeState {
                     cheatnet_state: cheatnet_runtime.extension.cheatnet_state,
                 };
-                match blockifier_state.l1_handler_execute(
+                let syscall_handler = &mut cheatnet_runtime.extended_runtime.hint_handler;
+                match l1_handler_execute(
+                    syscall_handler,
                     &mut runtime_state,
                     contract_address,
                     &function_name,
@@ -721,25 +722,16 @@ fn concat_u128_bytes(low: &[u8; 32], high: &[u8; 32]) -> [u8; 32] {
 
 #[must_use]
 pub fn get_all_execution_resources(runtime: ForgeRuntime) -> UsedResources {
-    let runtime_execution_resources = runtime
-        .extended_runtime
-        .extended_runtime
-        .extended_runtime
-        .hint_handler
-        .resources
-        .clone();
-    let runtime_l1_to_l2_messages = runtime
-        .extended_runtime
-        .extended_runtime
-        .extended_runtime
-        .hint_handler
-        .l2_to_l1_messages;
+    let starknet_runtime = runtime.extended_runtime.extended_runtime.extended_runtime;
+    let runtime_execution_resources = starknet_runtime.hint_handler.resources.clone();
+    let runtime_l1_to_l2_messages = starknet_runtime.hint_handler.l2_to_l1_messages;
 
     let runtime_call_info = CallInfo {
         execution: CallExecution {
             l2_to_l1_messages: runtime_l1_to_l2_messages,
             ..Default::default()
         },
+        inner_calls: starknet_runtime.hint_handler.inner_calls,
         ..Default::default()
     };
     let runtime_l2_to_l1_payloads_length = runtime_call_info
