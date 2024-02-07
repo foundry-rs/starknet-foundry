@@ -51,3 +51,5 @@ mod env;
 mod signature;
 
 mod trace;
+
+mod errors;

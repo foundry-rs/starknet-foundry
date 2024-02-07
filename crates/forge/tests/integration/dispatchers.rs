@@ -198,6 +198,56 @@ fn handling_errors() {
 }
 
 #[test]
+fn handling_bytearray_based_errors() {
+    let test = test_case!(
+        indoc!(
+            r#"
+        use starknet::ContractAddress;
+        use snforge_std::{ declare, ContractClassTrait };
+        use snforge_std::errors::{ SyscallResultStringErrorTrait, PanicDataOrString };
+
+        #[starknet::interface]
+        trait IHelloStarknet<TContractState> {
+            fn do_a_panic_with_bytearray(self: @TContractState);
+        }
+
+        #[test]
+        fn handling_errors() {
+            let contract = declare('HelloStarknet');
+            let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+            let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
+        
+            #[feature("safe_dispatcher")]
+            match safe_dispatcher.do_a_panic_with_bytearray().map_string_errors() {
+                Result::Ok(_) => panic_with_felt252('shouldve panicked'),
+                Result::Err(x) => {
+                        match x {
+                            PanicDataOrString::PanicData(_) => panic_with_felt252('wrong format'),
+                            PanicDataOrString::String(str) => {
+                                assert(
+                                    str == "This is a very long\n and multiline message that is certain to fill the buffer", 
+                                    'wrong string received'
+                                );
+                        }
+                    }
+                }
+            };
+        }
+    "#
+        ),
+        Contract::from_code_path(
+            "HelloStarknet".to_string(),
+            Path::new("tests/data/contracts/hello_starknet.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test);
+
+    assert_passed!(result);
+}
+
+#[test]
 fn serding() {
     let test = test_case!(
         indoc!(

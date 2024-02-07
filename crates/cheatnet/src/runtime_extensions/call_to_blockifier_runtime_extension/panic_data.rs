@@ -1,12 +1,16 @@
 use cairo_felt::Felt252;
+use conversions::byte_array::ByteArray;
 use regex::Regex;
 
 #[must_use]
 pub fn try_extract_panic_data(err: &str) -> Option<Vec<Felt252>> {
-    let re = Regex::new(r"Got an exception while executing a hint: Hint Error: Execution failed. Failure reason:\s\w*\s\(\'(.*)\'\)\.")
+    let re_felt_array = Regex::new(r"Got an exception while executing a hint: Hint Error: Execution failed\. Failure reason:\s\w*\s\('(.*)'\)\.")
         .expect("Could not create panic_data matching regex");
 
-    if let Some(captures) = re.captures(err) {
+    let re_string = Regex::new(r#"(?s)Got an exception while executing a hint: Hint Error: Execution failed\. Failure reason: "(.*)"\."#)
+        .expect("Could not create panic_data matching regex");
+
+    if let Some(captures) = re_felt_array.captures(err) {
         if let Some(panic_data_match) = captures.get(1) {
             if panic_data_match.as_str().is_empty() {
                 return Some(vec![]);
@@ -20,6 +24,15 @@ pub fn try_extract_panic_data(err: &str) -> Option<Vec<Felt252>> {
             return Some(panic_data_felts);
         }
     }
+
+    if let Some(captures) = re_string.captures(err) {
+        if let Some(string_match) = captures.get(1) {
+            let panic_data_felts: Vec<Felt252> =
+                ByteArray::from(string_match.as_str().to_string()).serialize();
+            return Some(panic_data_felts);
+        }
+    }
+
     None
 }
 

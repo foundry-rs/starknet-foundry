@@ -3,8 +3,10 @@ use crate::common::state::{build_runtime_state, create_runtime_states};
 use crate::common::{deploy_contract, felt_selector_from_name, state::create_cached_state};
 use crate::{assert_error, assert_panic};
 use cairo_felt::Felt252;
+use cairo_lang_utils::byte_array::BYTE_ARRAY_MAGIC;
 use conversions::felt252::FromShortString;
-use num_traits::Bounded;
+use conversions::IntoConv;
+use num_traits::{Bounded, Num};
 
 #[test]
 fn call_contract_error() {
@@ -54,6 +56,44 @@ fn call_contract_panic() {
             Felt252::from(0),
             Felt252::max_value(),
             Felt252::from_short_string("shortstring2").unwrap()
+        ]
+    );
+}
+
+#[test]
+fn call_proxied_contract_bytearray_panic() {
+    let mut cached_state = create_cached_state();
+    let (mut blockifier_state, mut runtime_state_raw) = create_runtime_states(&mut cached_state);
+    let mut runtime_state = build_runtime_state(&mut runtime_state_raw);
+
+    let proxy = deploy_contract(
+        &mut blockifier_state,
+        &mut runtime_state,
+        "ProxyForBAPC",
+        &[],
+    );
+    let bytearray_panicking_contract =
+        deploy_contract(&mut blockifier_state, &mut runtime_state, "BAPC", &[]);
+
+    let selector = felt_selector_from_name("call_bytearray_panicking_contract");
+
+    let output = call_contract(
+        &mut blockifier_state,
+        &mut runtime_state,
+        &proxy,
+        &selector,
+        &[bytearray_panicking_contract.into_()],
+    );
+
+    assert_panic!(
+        output,
+        vec![
+            Felt252::from_str_radix(BYTE_ARRAY_MAGIC, 16).unwrap(),
+            Felt252::from(2),
+            Felt252::from_short_string("This is a very long\n and multil").unwrap(),
+            Felt252::from_short_string("ine string, that will for sure ").unwrap(),
+            Felt252::from_short_string("saturate the pending_word").unwrap(),
+            Felt252::from(25),
         ]
     );
 }
