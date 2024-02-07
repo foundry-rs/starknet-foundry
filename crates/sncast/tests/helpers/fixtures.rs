@@ -295,6 +295,23 @@ pub fn duplicate_directory_with_salt(src_path: String, to_be_salted: &str, salt:
     temp_dir
 }
 
+#[must_use]
+pub fn copy_directory_to_tempdir(src_path: String) -> TempDir {
+    let src_dir = Utf8PathBuf::from(src_path);
+    let temp_dir = TempDir::new().expect("Failed to create a temporary directory");
+
+    fs_extra::dir::copy(
+        src_dir,
+        &temp_dir,
+        &fs_extra::dir::CopyOptions::new()
+            .overwrite(true)
+            .content_only(true),
+    )
+    .expect("Failed to copy the directory");
+
+    temp_dir
+}
+
 pub fn remove_devnet_env() {
     if Utf8PathBuf::from(DEVNET_ENV_FILE).is_file() {
         fs::remove_file(DEVNET_ENV_FILE).unwrap();

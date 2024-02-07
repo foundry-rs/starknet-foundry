@@ -1,12 +1,12 @@
 [package]
-name = "noconfig"
+name = "cast_addition"
 version = "0.1.0"
 
 [dependencies]
-starknet = ">=2.0.2"
+starknet.workspace = true
 
 [[target.starknet-contract]]
+sierra = true
 casm = true
 
 [lib]
-sierra = false

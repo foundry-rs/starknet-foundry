@@ -6,8 +6,6 @@ trait IHelloStarknet<TContractState> {
 
 #[starknet::contract]
 mod HelloStarknet {
-    use snforge_std::PrintTrait;
-
     #[storage]
     struct Storage {
         balance: felt252,
@@ -18,7 +16,7 @@ mod HelloStarknet {
         fn increase_balance(ref self: ContractState, amount: felt252) {
             assert(amount != 0, 'Amount cannot be 0');
             self.balance.write(self.balance.read() + amount);
-            'Hello world!'.print();
+            println!("Hello world!");
         }
 
         fn get_balance(self: @ContractState) -> felt252 {

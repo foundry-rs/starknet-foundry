@@ -74,7 +74,6 @@ impl CommandResponse for AccountAddResponse {}
 #[derive(Serialize)]
 pub struct AccountDeleteResponse {
     pub result: String,
-    pub scarb_result: String,
 }
 
 impl CommandResponse for AccountDeleteResponse {}
@@ -92,7 +91,6 @@ pub struct ShowConfigResponse {
     pub chain_id: String,
     pub rpc_url: Option<String>,
     pub account: Option<String>,
-    pub scarb_path: Option<Utf8PathBuf>,
     pub accounts_file_path: Option<Utf8PathBuf>,
     pub keystore: Option<Utf8PathBuf>,
     pub wait_timeout: Option<Decimal>,
