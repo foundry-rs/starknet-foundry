@@ -32,7 +32,7 @@ pub struct Deploy {
 
     /// Custom open zeppelin contract class hash of declared contract
     #[clap(short, long)]
-    pub class_hash: Option<String>,
+    pub class_hash: Option<FieldElement>,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -43,7 +43,7 @@ pub async fn deploy(
     chain_id: FieldElement,
     max_fee: Option<FieldElement>,
     wait_config: WaitForTx,
-    class_hash: Option<String>,
+    class_hash: Option<FieldElement>,
     keystore_path: Option<Utf8PathBuf>,
     account_path: Option<Utf8PathBuf>,
 ) -> Result<InvokeResponse> {
@@ -186,7 +186,7 @@ async fn deploy_from_accounts_file(
     chain_id: FieldElement,
     max_fee: Option<FieldElement>,
     wait_config: WaitForTx,
-    class_hash: Option<String>,
+    class_hash: Option<FieldElement>,
 ) -> Result<InvokeResponse> {
     let network_name = chain_id_to_network_name(chain_id);
 
@@ -214,21 +214,22 @@ async fn deploy_from_accounts_file(
     );
 
     let oz_class_hash = {
-        if let Some(class_hash_) = &class_hash {
-            class_hash_.as_str()
+        if let Some(class_hash_) = class_hash {
+            class_hash_
         } else if let Some(class_hash_) = account
             .get("class_hash")
             .and_then(serde_json::Value::as_str)
         {
-            class_hash_
+            FieldElement::from_hex_be(class_hash_)
+                .expect("Failed to parse account class hash from accounts file")
         } else {
-            OZ_CLASS_HASH
+            FieldElement::from_hex_be(OZ_CLASS_HASH).unwrap()
         }
     };
 
     let result = deploy_oz_account(
         provider,
-        parse_number(oz_class_hash).context("Failed to parse account class hash")?,
+        oz_class_hash,
         private_key,
         parse_number(
             account
