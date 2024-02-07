@@ -14,7 +14,10 @@ mod BAPC {
     #[abi(embed_v0)]
     impl Impl of super::IByteArrayPanickingContract<ContractState> {
         fn do_panic(self: @ContractState) {
-            assert!(false, "This is a very long\n and multiline string, that will for sure saturate the pending_word");
+            assert!(
+                false,
+                "This is a very long\n and multiline string, that will for sure saturate the pending_word"
+            );
         }
     }
 }
@@ -34,7 +37,9 @@ mod ProxyForBAPC {
 
     #[abi(embed_v0)]
     impl Impl of super::IProxyForBAPC<ContractState> {
-        fn call_bytearray_panicking_contract(self: @ContractState, contract_address: ContractAddress) {
+        fn call_bytearray_panicking_contract(
+            self: @ContractState, contract_address: ContractAddress
+        ) {
             IByteArrayPanickingContractDispatcher { contract_address }.do_panic();
         }
     }
