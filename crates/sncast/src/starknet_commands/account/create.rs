@@ -33,7 +33,7 @@ pub struct Create {
     // TODO (#253): think about supporting different account providers
     /// Custom open zeppelin contract class hash of declared contract
     #[clap(short, long)]
-    pub class_hash: Option<String>,
+    pub class_hash: Option<FieldElement>,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -47,16 +47,11 @@ pub async fn create(
     chain_id: FieldElement,
     salt: Option<FieldElement>,
     add_profile: bool,
-    class_hash: Option<String>,
+    class_hash: Option<FieldElement>,
 ) -> Result<AccountCreateResponse> {
     let salt = extract_or_generate_salt(salt);
-    let class_hash = {
-        let ch = match &class_hash {
-            Some(class_hash) => class_hash,
-            None => OZ_CLASS_HASH,
-        };
-        parse_number(ch)?
-    };
+    let class_hash =
+        class_hash.unwrap_or_else(|| FieldElement::from_hex_be(OZ_CLASS_HASH).unwrap());
     let (account_json, max_fee) = generate_account(provider, salt, class_hash).await?;
 
     let address = parse_number(
