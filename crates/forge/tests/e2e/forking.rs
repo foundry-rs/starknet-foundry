@@ -1,9 +1,9 @@
-use crate::assert_stdout_contains;
 use crate::e2e::common::runner::{
     runner, setup_package, setup_package_with_file_patterns, test_runner, BASE_FILE_PATTERNS,
 };
 use forge::shared_cache::CACHE_DIR;
 use indoc::indoc;
+use test_utils::output_assert::assert_stdout_contains;
 
 #[test]
 fn without_cache() {
@@ -15,7 +15,7 @@ fn without_cache() {
         .args(["forking::tests::test_fork_simple"])
         .assert()
         .code(0);
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
         indoc! {r"
         [..]Compiling[..]
@@ -29,7 +29,7 @@ fn without_cache() {
         [PASS] forking::tests::test_fork_simple_hash_hex [..]
         [PASS] forking::tests::test_fork_simple_hash_number [..]
         Tests: 4 passed, 0 failed, 0 skipped, 0 ignored, 1 filtered out
-        "}
+        "},
     );
 }
 
@@ -51,7 +51,7 @@ fn with_cache() {
         .assert()
         .code(1);
 
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
         indoc! {r"
         [..]Compiling[..]
@@ -69,7 +69,7 @@ fn with_cache() {
 
         Failures:
             forking::tests::test_fork_simple
-        "}
+        "},
     );
 }
 
@@ -92,7 +92,7 @@ fn with_clean_cache() {
         .assert()
         .code(0);
 
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
         indoc! {r"
         [..]Compiling[..]
@@ -103,7 +103,7 @@ fn with_clean_cache() {
         Running 1 test(s) from src/
         [PASS] forking::tests::test_fork_simple [..]
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 4 filtered out
-        "}
+        "},
     );
 }
 
@@ -121,7 +121,7 @@ fn printing_latest_block_number() {
         .assert()
         .code(0);
 
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
         indoc! {r"
         [..]Compiling[..]
@@ -134,6 +134,6 @@ fn printing_latest_block_number() {
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 4 filtered out
 
         Latest block number = [..] for url = http://188.34.188.184:9545/rpc/v0_6
-        "}
+        "},
     );
 }

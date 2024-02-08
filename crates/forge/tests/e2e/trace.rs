@@ -1,6 +1,6 @@
-use crate::assert_stdout_contains;
 use crate::e2e::common::runner::{setup_package, test_runner};
 use indoc::indoc;
+use test_utils::output_assert::assert_stdout_contains;
 
 #[test]
 fn trace_info_print() {
@@ -9,7 +9,7 @@ fn trace_info_print() {
 
     let output = snapbox.current_dir(&temp).assert().success();
 
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
         indoc! {r"
         [..]Compiling[..]
@@ -76,6 +76,6 @@ fn trace_info_print() {
         
         [PASS] tests::test_trace::test_trace_print (gas: [..]
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
-        "}
+        "},
     );
 }

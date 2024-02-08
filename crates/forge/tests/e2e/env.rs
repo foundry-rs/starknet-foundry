@@ -1,6 +1,6 @@
-use crate::assert_stdout_contains;
 use crate::e2e::common::runner::{setup_package, test_runner};
 use indoc::indoc;
+use test_utils::output_assert::assert_stdout_contains;
 
 #[test]
 fn env_var_reading() {
@@ -13,7 +13,7 @@ fn env_var_reading() {
         .env("STRING_ENV_VAR", "'abcde'")
         .assert()
         .code(0);
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
         indoc! {r"
         [..]Compiling[..]
@@ -24,6 +24,6 @@ fn env_var_reading() {
         Running 1 test(s) from src/
         [PASS] env::tests::reading_env_vars [..]
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
-        "}
+        "},
     );
 }

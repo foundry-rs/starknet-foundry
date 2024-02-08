@@ -1,7 +1,6 @@
-use crate::assert_stderr_contains;
-use indoc::formatdoc;
-
 use crate::e2e::common::runner::{setup_package, test_runner};
+use indoc::formatdoc;
+use test_utils::output_assert::assert_stderr_contains;
 
 #[test]
 fn print_error_if_attributes_incorrect() {
@@ -12,7 +11,7 @@ fn print_error_if_attributes_incorrect() {
     let snapbox = test_runner();
 
     let output = snapbox.current_dir(&mock_tests_dir).assert().code(2);
-    assert_stderr_contains!(
+    assert_stderr_contains(
         output,
         &formatdoc! {r#"
         error: Plugin diagnostic: Expected fork config must be of the form `url: <double quote string>, block_id: <snforge_std::BlockId>`.
@@ -126,6 +125,6 @@ fn print_error_if_attributes_incorrect() {
          --> {mock_tests_dir_path_str}/tests/test_fork.cairo:95:7
         #[fork(url: "http://188.34.188.184:9545/rpc/v0_6", block_id: BlockId::Tag(sumting::Latest))]
               ^***********************************************************************************^
-    "#}
+    "#},
     );
 }
