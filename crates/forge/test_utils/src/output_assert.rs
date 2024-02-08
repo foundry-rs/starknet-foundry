@@ -1,36 +1,35 @@
-use std::borrow::Cow;
-
 use regex::Regex;
 use snapbox::cmd::OutputAssert;
+use std::borrow::Cow;
 
-pub trait IntoOutput {
-    fn into_stdout<'a>(&'a self) -> Cow<'a, str>;
-    fn into_stderr<'a>(&'a self) -> Cow<'a, str>;
+pub trait AsOutput {
+    fn as_stdout(&self) -> Cow<'_, str>;
+    fn as_stderr(&self) -> Cow<'_, str>;
 }
 
-impl IntoOutput for OutputAssert {
-    fn into_stdout<'a>(&'a self) -> Cow<'a, str> {
+impl AsOutput for OutputAssert {
+    fn as_stdout(&self) -> Cow<'_, str> {
         String::from_utf8(self.get_output().stdout.clone())
             .unwrap()
             .into()
     }
-    fn into_stderr<'a>(&'a self) -> Cow<'a, str> {
+    fn as_stderr(&self) -> Cow<'_, str> {
         String::from_utf8(self.get_output().stderr.clone())
             .unwrap()
             .into()
     }
 }
 
-impl IntoOutput for String {
-    fn into_stdout<'a>(&'a self) -> Cow<'a, str> {
+impl AsOutput for String {
+    fn as_stdout(&self) -> Cow<'_, str> {
         self.into()
     }
-    fn into_stderr<'a>(&'a self) -> Cow<'a, str> {
+    fn as_stderr(&self) -> Cow<'_, str> {
         self.into()
     }
 }
 
-fn find_with_wildcard(line: &str, actual: &Vec<String>) -> Option<usize> {
+fn find_with_wildcard(line: &str, actual: &[String]) -> Option<usize> {
     let escaped = regex::escape(line);
     let replaced = escaped.replace("\\[\\.\\.\\]", ".*");
     let wrapped = format!("^{replaced}$");
@@ -75,13 +74,13 @@ fn assert_output_contains(output: &str, lines: &str) {
     assert!(matches, "Stdout does not match:\n\n{out}");
 }
 
-pub fn assert_stdout_contains(output: impl IntoOutput, lines: impl AsRef<str>) {
-    let stdout = output.into_stdout();
+pub fn assert_stdout_contains(output: impl AsOutput, lines: impl AsRef<str>) {
+    let stdout = output.as_stdout();
 
     assert_output_contains(&stdout, lines.as_ref());
 }
-pub fn assert_stderr_contains(output: impl IntoOutput, lines: impl AsRef<str>) {
-    let stderr = output.into_stderr();
+pub fn assert_stderr_contains(output: impl AsOutput, lines: impl AsRef<str>) {
+    let stderr = output.as_stderr();
 
     assert_output_contains(&stderr, lines.as_ref());
 }
