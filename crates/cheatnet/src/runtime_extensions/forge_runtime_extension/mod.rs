@@ -710,24 +710,25 @@ fn concat_u128_bytes(low: &[u8; 32], high: &[u8; 32]) -> [u8; 32] {
 #[must_use]
 pub fn update_test_execution_resources_and_get_them(runtime: ForgeRuntime) -> UsedResources {
     let starknet_runtime = runtime.extended_runtime.extended_runtime.extended_runtime;
-    let test_code_execution_resources = starknet_runtime.hint_handler.resources.clone();
-    let test_code_l1_to_l2_messages = starknet_runtime.hint_handler.l2_to_l1_messages;
+    let execution_resources = starknet_runtime.hint_handler.resources.clone();
+    let top_call_l1_to_l2_messages = starknet_runtime.hint_handler.l2_to_l1_messages;
 
+    // used just to obtain payloads of L2 -> L1 messages
     let runtime_call_info = CallInfo {
         execution: CallExecution {
-            l2_to_l1_messages: test_code_l1_to_l2_messages,
+            l2_to_l1_messages: top_call_l1_to_l2_messages,
             ..Default::default()
         },
         inner_calls: starknet_runtime.hint_handler.inner_calls,
         ..Default::default()
     };
-    let test_code_l2_to_l1_payloads_length = runtime_call_info
+    let l2_to_l1_payloads_length = runtime_call_info
         .get_sorted_l2_to_l1_payloads_length()
         .unwrap();
 
-    let test_code_resources = UsedResources {
-        execution_resources: test_code_execution_resources,
-        l2_to_l1_payloads_length: test_code_l2_to_l1_payloads_length,
+    let all_resources = UsedResources {
+        execution_resources,
+        l2_to_l1_payloads_length,
     };
 
     // call representing the test code
@@ -739,12 +740,7 @@ pub fn update_test_execution_resources_and_get_them(runtime: ForgeRuntime) -> Us
         .trace_data
         .current_call_stack
         .top();
-    top_call
-        .borrow_mut()
-        .used_resources
-        .extend(&test_code_resources);
-
-    let all_resources = top_call.borrow().used_resources.clone();
+    top_call.borrow_mut().used_resources = all_resources.clone();
 
     all_resources
 }
