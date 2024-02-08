@@ -61,7 +61,7 @@ fn ensure_resources_are_correct(call_trace: &ProfilerCallTrace) -> &ProfilerExec
         sum_child_resources += resource;
     }
 
-    let current_resources = &call_trace.used_resources.execution_resources;
+    let current_resources = &call_trace.used_execution_resources;
     assert!(current_resources.gt_eq_than(&sum_child_resources));
     let resource_diff = current_resources - &sum_child_resources;
     assert_correct_diff_for_easily_countable_syscalls(&resource_diff);
@@ -197,7 +197,7 @@ fn assert_not_easily_countable_syscalls(
     call_contract_count: usize,
     library_call_count: usize,
 ) {
-    let syscall_counter = &call.used_resources.execution_resources.syscall_counter;
+    let syscall_counter = &call.used_execution_resources.syscall_counter;
 
     let expected_counts: HashMap<_, _> = [
         (Deploy, deploy_count),

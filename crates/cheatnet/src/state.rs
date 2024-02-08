@@ -1,7 +1,5 @@
 use crate::forking::state::ForkStateReader;
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
-    subtract_syscall_counters, UsedResources,
-};
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::subtract_syscall_counters;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spoof::TxInfoMock;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::{
     Event, SpyTarget,
@@ -132,7 +130,7 @@ pub enum CheatStatus<T> {
 pub struct CallTrace {
     pub entry_point: CallEntryPoint,
     // These also include resources used by internal calls
-    pub used_resources: UsedResources,
+    pub used_execution_resources: ExecutionResources,
     pub nested_calls: Vec<Rc<RefCell<CallTrace>>>,
 }
 
@@ -193,7 +191,7 @@ impl Default for CheatnetState {
     fn default() -> Self {
         let test_call = Rc::new(RefCell::new(CallTrace {
             entry_point: build_test_entry_point(),
-            used_resources: Default::default(),
+            used_execution_resources: Default::default(),
             nested_calls: vec![],
         }));
         Self {
@@ -293,7 +291,7 @@ impl TraceData {
     ) {
         let new_call = Rc::new(RefCell::new(CallTrace {
             entry_point,
-            used_resources: Default::default(),
+            used_execution_resources: Default::default(),
             nested_calls: vec![],
         }));
         let current_call = self.current_call_stack.top();
@@ -315,16 +313,13 @@ impl TraceData {
             .pop()
             .expect("Resources used before the call were None when exiting the call");
 
-        last_call.borrow_mut().used_resources = UsedResources {
-            execution_resources: ExecutionResources {
-                vm_resources: &resources_used_after_call.vm_resources
-                    - &resources_used_before_call.vm_resources,
-                syscall_counter: subtract_syscall_counters(
-                    &resources_used_after_call.syscall_counter,
-                    &resources_used_before_call.syscall_counter,
-                ),
-            },
-            l2_to_l1_payloads_length: vec![],
+        last_call.borrow_mut().used_execution_resources = ExecutionResources {
+            vm_resources: &resources_used_after_call.vm_resources
+                - &resources_used_before_call.vm_resources,
+            syscall_counter: subtract_syscall_counters(
+                &resources_used_after_call.syscall_counter,
+                &resources_used_before_call.syscall_counter,
+            ),
         };
     }
 }

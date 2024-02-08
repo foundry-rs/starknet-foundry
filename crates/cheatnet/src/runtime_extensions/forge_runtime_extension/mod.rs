@@ -726,11 +726,6 @@ pub fn update_test_execution_resources_and_get_them(runtime: ForgeRuntime) -> Us
         .get_sorted_l2_to_l1_payloads_length()
         .unwrap();
 
-    let all_resources = UsedResources {
-        execution_resources,
-        l2_to_l1_payloads_length,
-    };
-
     // call representing the test code
     let top_call = runtime
         .extended_runtime
@@ -740,7 +735,10 @@ pub fn update_test_execution_resources_and_get_them(runtime: ForgeRuntime) -> Us
         .trace_data
         .current_call_stack
         .top();
-    top_call.borrow_mut().used_resources = all_resources.clone();
+    top_call.borrow_mut().used_execution_resources = execution_resources.clone();
 
-    all_resources
+    UsedResources {
+        execution_resources,
+        l2_to_l1_payloads_length,
+    }
 }

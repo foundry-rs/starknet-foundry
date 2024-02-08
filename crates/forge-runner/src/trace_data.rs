@@ -8,7 +8,6 @@ use std::path::PathBuf;
 // This module will be removed!
 use blockifier::execution::entry_point::{CallEntryPoint, CallType, ExecutionResources};
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources as VmExecutionResources;
-use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::state::CallTrace;
 use serde::{Deserialize, Serialize};
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector};
@@ -24,7 +23,7 @@ pub const TRACE_DIR: &str = ".snfoundry_trace";
 pub struct ProfilerCallTrace {
     pub entry_point: ProfilerCallEntryPoint,
     // These also include resources used by internal calls
-    pub used_resources: ProfilerUsedResources,
+    pub used_execution_resources: ProfilerExecutionResources,
     pub nested_calls: Vec<ProfilerCallTrace>,
 }
 
@@ -32,7 +31,9 @@ impl From<CallTrace> for ProfilerCallTrace {
     fn from(value: CallTrace) -> Self {
         ProfilerCallTrace {
             entry_point: ProfilerCallEntryPoint::from(value.entry_point),
-            used_resources: ProfilerUsedResources::from(value.used_resources),
+            used_execution_resources: ProfilerExecutionResources::from(
+                value.used_execution_resources,
+            ),
             nested_calls: value
                 .nested_calls
                 .into_iter()
@@ -95,21 +96,6 @@ impl From<CallType> for ProfilerCallType {
         match value {
             CallType::Call => ProfilerCallType::Call,
             CallType::Delegate => ProfilerCallType::Delegate,
-        }
-    }
-}
-
-#[derive(Debug, Default, Clone, Serialize, Deserialize)]
-pub struct ProfilerUsedResources {
-    pub execution_resources: ProfilerExecutionResources,
-    pub l2_to_l1_payloads_length: Vec<usize>,
-}
-
-impl From<UsedResources> for ProfilerUsedResources {
-    fn from(value: UsedResources) -> Self {
-        ProfilerUsedResources {
-            execution_resources: ProfilerExecutionResources::from(value.execution_resources),
-            l2_to_l1_payloads_length: value.l2_to_l1_payloads_length,
         }
     }
 }
