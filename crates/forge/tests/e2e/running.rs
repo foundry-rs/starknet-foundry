@@ -1,16 +1,15 @@
-use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
-use camino::Utf8PathBuf;
-use indoc::{formatdoc, indoc};
-use test_utils::tempdir_with_tool_versions;
-use toml_edit::{value, Document, Item};
-
-use crate::assert_stdout_contains;
 use crate::e2e::common::runner::{
     get_current_branch, get_remote_url, runner, setup_package, test_runner,
 };
+use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
+use camino::Utf8PathBuf;
+use indoc::{formatdoc, indoc};
 use std::fs;
 use std::{path::Path, str::FromStr};
 use tempfile::TempDir;
+use test_utils::output_assert::assert_stdout_contains;
+use test_utils::tempdir_with_tool_versions;
+use toml_edit::{value, Document, Item};
 
 #[test]
 fn simple_package() {
@@ -18,7 +17,7 @@ fn simple_package() {
     let snapbox = test_runner();
     let output = snapbox.current_dir(&temp).assert().code(1);
 
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
         indoc! {r"
     [..]Compiling[..]
@@ -54,7 +53,7 @@ fn simple_package() {
     Failures:
         tests::test_simple::test_failing
         tests::test_simple::test_another_failing
-    "}
+    "},
     );
 }
 
@@ -95,7 +94,7 @@ fn simple_package_with_git_dependency() {
         .assert()
         .code(1);
 
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
         indoc! {r"
         [..]Updating git repository https://github.com/foundry-rs/starknet-foundry
@@ -132,7 +131,7 @@ fn simple_package_with_git_dependency() {
         Failures:
             tests::test_simple::test_failing
             tests::test_simple::test_another_failing
-        "}
+        "},
     );
 }
 
@@ -165,7 +164,7 @@ fn with_filter() {
 
     let output = snapbox.current_dir(&temp).arg("two").assert().success();
 
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
         indoc! {r"
         [..]Compiling[..]
@@ -178,7 +177,7 @@ fn with_filter() {
         [PASS] tests::test_simple::test_two [..]
         [PASS] tests::test_simple::test_two_and_two [..]
         Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 11 filtered out
-        "}
+        "},
     );
 }
 
@@ -193,7 +192,7 @@ fn with_filter_matching_module() {
         .assert()
         .success();
 
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
         indoc! {r"
         [..]Compiling[..]
@@ -207,7 +206,7 @@ fn with_filter_matching_module() {
         [IGNORE] tests::ext_function_test::ignored_test
         [PASS] tests::ext_function_test::test_simple [..]
         Tests: 2 passed, 0 failed, 0 skipped, 1 ignored, 10 filtered out
-        "}
+        "},
     );
 }
 
@@ -223,7 +222,7 @@ fn with_exact_filter() {
         .assert()
         .success();
 
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
         indoc! {r"
         [..]Compiling[..]
@@ -235,7 +234,7 @@ fn with_exact_filter() {
         Running 1 test(s) from tests/
         [PASS] tests::test_simple::test_two [..]
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 12 filtered out
-        "}
+        "},
     );
 }
 #[test]
@@ -250,7 +249,7 @@ fn with_gas_usage() {
         .assert()
         .success();
 
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
         indoc! {r"
         [..]Compiling[..]
@@ -262,7 +261,7 @@ fn with_gas_usage() {
         Running 1 test(s) from tests/
         [PASS] tests::test_simple::test_two (gas: ~1)
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 12 filtered out
-        "}
+        "},
     );
 }
 
@@ -273,7 +272,7 @@ fn with_non_matching_filter() {
 
     let output = snapbox.current_dir(&temp).arg("qwerty").assert().success();
 
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
         indoc! {r"
         [..]Compiling[..]
@@ -284,7 +283,7 @@ fn with_non_matching_filter() {
         Running 0 test(s) from src/
         Running 0 test(s) from tests/
         Tests: 0 passed, 0 failed, 0 skipped, 0 ignored, 13 filtered out
-        "}
+        "},
     );
 }
 
@@ -295,7 +294,7 @@ fn with_ignored_flag() {
 
     let output = snapbox.current_dir(&temp).arg("--ignored").assert().code(1);
 
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
         indoc! {r"
         [..]Compiling[..]
@@ -315,7 +314,7 @@ fn with_ignored_flag() {
         
         Failures:
             tests::ext_function_test::ignored_test
-        "}
+        "},
     );
 }
 
@@ -330,7 +329,7 @@ fn with_include_ignored_flag() {
         .assert()
         .code(1);
 
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
         indoc! {r"
         [..]Compiling[..]
@@ -371,7 +370,7 @@ fn with_include_ignored_flag() {
             tests::ext_function_test::ignored_test
             tests::test_simple::test_failing
             tests::test_simple::test_another_failing
-        "}
+        "},
     );
 }
 
@@ -387,7 +386,7 @@ fn with_ignored_flag_and_filter() {
         .assert()
         .code(1);
 
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
         indoc! {r"
         [..]Compiling[..]
@@ -406,7 +405,7 @@ fn with_ignored_flag_and_filter() {
         
         Failures:
             tests::ext_function_test::ignored_test
-        "}
+        "},
     );
 }
 
@@ -422,7 +421,7 @@ fn with_include_ignored_flag_and_filter() {
         .assert()
         .code(1);
 
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
         indoc! {r"
         [..]Compiling[..]
@@ -442,7 +441,7 @@ fn with_include_ignored_flag_and_filter() {
         
         Failures:
             tests::ext_function_test::ignored_test
-        "}
+        "},
     );
 }
 
@@ -457,7 +456,7 @@ fn with_rerun_failed_flag_without_cache() {
         .assert()
         .code(1);
 
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
         indoc! {r"
         [..]Compiling[..]
@@ -493,7 +492,7 @@ fn with_rerun_failed_flag_without_cache() {
         Failure data:
             0x6661696c696e6720636865636b ('failing check')
 
-        "}
+        "},
     );
 }
 
@@ -511,7 +510,7 @@ fn with_rerun_failed_flag_and_name_filter() {
         .assert()
         .code(1);
 
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
         indoc! {r"
         [..]Compiling[..]
@@ -530,7 +529,7 @@ fn with_rerun_failed_flag_and_name_filter() {
         Failures:
             tests::test_simple::test_another_failing
 
-        "}
+        "},
     );
 }
 
@@ -547,7 +546,7 @@ fn with_rerun_failed_flag() {
         .assert()
         .code(1);
 
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
         indoc! {r"
         [..]Compiling[..]
@@ -572,7 +571,7 @@ fn with_rerun_failed_flag() {
             tests::test_simple::test_another_failing
             tests::test_simple::test_failing
 
-        "}
+        "},
     );
 }
 
@@ -583,7 +582,7 @@ fn with_panic_data_decoding() {
 
     let output = snapbox.current_dir(&temp).assert().code(1);
 
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
         indoc! {r#"
         [..]Compiling[..]
@@ -638,7 +637,7 @@ fn with_panic_data_decoding() {
             tests::test_panic_decoding::test_assert_eq
             tests::test_panic_decoding::test_assert_message
             tests::test_panic_decoding::test_assert_eq_message
-        "#}
+        "#},
     );
 }
 
@@ -677,7 +676,7 @@ fn with_exit_first() {
     let snapbox = test_runner();
 
     let output = snapbox.current_dir(&temp).assert().code(1);
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
         indoc! {r"
         [..]Compiling[..]
@@ -696,7 +695,7 @@ fn with_exit_first() {
 
         Failures:
             tests::ext_function_test::simple_test
-        "}
+        "},
     );
 }
 
@@ -706,7 +705,7 @@ fn with_exit_first_flag() {
     let snapbox = test_runner().arg("--exit-first");
 
     let output = snapbox.current_dir(&temp).assert().code(1);
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
         indoc! {r"
         [..]Compiling[..]
@@ -725,7 +724,7 @@ fn with_exit_first_flag() {
 
         Failures:
             tests::ext_function_test::simple_test
-        "}
+        "},
     );
 }
 
@@ -793,7 +792,7 @@ fn init_new_project_test() {
         .current_dir(temp.child(Path::new("test_name")))
         .assert()
         .success();
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
         indoc! {r"
         [..]Updating git repository https://github.com/foundry-rs/starknet-foundry
@@ -807,7 +806,7 @@ fn init_new_project_test() {
         [PASS] tests::test_contract::test_increase_balance [..]
         [PASS] tests::test_contract::test_cannot_increase_balance_with_zero_value [..]
         Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
-    "}
+    "},
     );
 }
 
@@ -821,7 +820,7 @@ fn should_panic() {
 
     let output = snapbox.current_dir(&temp).assert().code(1);
 
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
         indoc! { r"
         [..]Compiling[..]
@@ -875,7 +874,7 @@ fn should_panic() {
             tests::should_panic_test::expected_panic_but_didnt_with_expected
             tests::should_panic_test::expected_panic_but_didnt_with_expected_multiple
             tests::should_panic_test::didnt_expect_panic
-        "}
+        "},
     );
 }
 
@@ -885,7 +884,7 @@ fn printing_in_contracts() {
     let snapbox = test_runner();
 
     let output = snapbox.current_dir(&temp).assert().success();
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
         indoc! {r#"
         [..]Compiling[..]
@@ -906,7 +905,7 @@ fn printing_in_contracts() {
         [PASS] tests::test_contract::test_increase_balance [..]
         [PASS] tests::test_contract::test_cannot_increase_balance_with_zero_value [..]
         Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
-        "#}
+        "#},
     );
 }
 
@@ -934,7 +933,7 @@ fn incompatible_snforge_std_version_warning() {
         .assert()
         .failure();
 
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
         indoc! {r"
         [..]Updating git repository https://github.com/foundry-rs/starknet-foundry
@@ -972,7 +971,7 @@ fn incompatible_snforge_std_version_warning() {
         Failures:
             tests::test_simple::test_failing
             tests::test_simple::test_another_failing
-        "}
+        "},
     );
 }
 
@@ -982,7 +981,7 @@ fn detailed_resources_flag() {
     let snapbox = test_runner().arg("--detailed-resources");
     let output = snapbox.current_dir(&temp).assert().success();
 
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
         indoc! {r"
         [..]Compiling[..]
@@ -999,6 +998,6 @@ fn detailed_resources_flag() {
                 syscalls: ([..])
                 
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
-        "}
+        "},
     );
 }
