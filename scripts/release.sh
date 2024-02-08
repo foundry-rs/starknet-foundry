@@ -2,6 +2,15 @@
 
 VERSION=$1
 
+parent_path=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
+echo "Was starknet.rs package updated during this release cycle?"
+select yn in "Yes" "No"; do
+    case $yn in
+        Yes ) echo "What is the spec version it supports?";read spec_version;echo $spec_version > "$parent_path/../crates/forge/expected-version";break;;
+        No ) break;;
+    esac
+done
+
 sed -i.bak "s/## \[Unreleased\]/## \[Unreleased\]\n\n## \[${VERSION}\] - $(TZ=Europe/Krakow date '+%Y-%m-%d')/" CHANGELOG.md
 rm CHANGELOG.md.bak 2> /dev/null
 
