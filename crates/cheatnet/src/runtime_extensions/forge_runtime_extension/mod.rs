@@ -725,18 +725,8 @@ pub fn get_all_execution_resources(runtime: ForgeRuntime) -> UsedResources {
         .get_sorted_l2_to_l1_payloads_length()
         .unwrap();
 
-    let mut all_resources = UsedResources {
+    UsedResources {
         execution_resources: runtime_execution_resources,
         l2_to_l1_payloads_length: runtime_l2_to_l1_payloads_length,
-    };
-
-    let cheatnet_used_resources = &runtime
-        .extended_runtime
-        .extended_runtime
-        .extension
-        .cheatnet_state
-        .used_resources;
-    all_resources.extend(cheatnet_used_resources);
-
-    all_resources
+    }
 }
