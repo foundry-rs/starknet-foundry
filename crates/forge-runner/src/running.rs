@@ -8,7 +8,10 @@ use std::sync::Arc;
 use crate::compiled_runnable::ValidatedForkConfig;
 use crate::gas::calculate_used_gas;
 use crate::test_case_summary::{Single, TestCaseSummary};
-use crate::{RunnerConfig, RunnerParams, TestCaseRunnable, CACHE_DIR};
+use crate::{
+    AssembledCairoProgram2, AssembledProgramWithDebugInfo, RunnerConfig, RunnerParams,
+    TestCaseRunnable, CACHE_DIR,
+};
 use anyhow::{bail, ensure, Result};
 use blockifier::execution::common_hints::ExecutionMode;
 use blockifier::execution::entry_point::{EntryPointExecutionContext, ExecutionResources};
@@ -18,14 +21,15 @@ use blockifier::state::cached_state::CachedState;
 use blockifier::state::state_api::State;
 use cairo_felt::Felt252;
 use cairo_lang_casm::hints::Hint;
-use cairo_lang_runner::casm_run::{build_cairo_runner, run_function_with_runner};
-use cairo_lang_runner::{
-    build_hints_dict, initialize_vm, Arg, RunResult, RunnerError, SierraCasmRunner,
+use cairo_lang_casm::instructions::Instruction;
+use cairo_lang_runner::casm_run::{
+    build_cairo_runner, hint_to_hint_params, run_function_with_runner,
 };
+use cairo_lang_runner::{initialize_vm, Arg, RunResult, RunnerError, SierraCasmRunner};
 use cairo_lang_sierra::extensions::segment_arena::SegmentArenaType;
 use cairo_lang_sierra::extensions::NoGenericArgsGenericType;
 use cairo_lang_sierra::ids::GenericTypeId;
-use cairo_lang_sierra_to_casm::compiler::CairoProgram;
+use cairo_vm::serde::deserialize_program::HintParams;
 use cairo_vm::types::relocatable::{MaybeRelocatable, Relocatable};
 use cairo_vm::vm::vm_core::VirtualMachine;
 use camino::Utf8Path;
@@ -39,7 +43,6 @@ use cheatnet::runtime_extensions::forge_runtime_extension::{
     get_all_execution_resources, ForgeExtension, ForgeRuntime,
 };
 use cheatnet::state::{BlockInfoReader, CallTrace, CheatnetState, ExtendedStateReader};
-use itertools::chain;
 use runtime::starknet::context;
 use runtime::starknet::context::BlockInfo;
 use runtime::{ExtendedRuntime, StarknetRuntime};
@@ -48,7 +51,7 @@ use tokio::task::JoinHandle;
 
 pub fn run_test(
     case: Arc<TestCaseRunnable>,
-    casm_program: Arc<CairoProgram>,
+    casm_program: Arc<AssembledProgramWithDebugInfo>,
     test_details: Arc<TestDetails>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
@@ -85,7 +88,7 @@ pub fn run_test(
 pub(crate) fn run_fuzz_test(
     args: Vec<Felt252>,
     case: Arc<TestCaseRunnable>,
-    casm_program: Arc<CairoProgram>,
+    casm_program: Arc<AssembledProgramWithDebugInfo>,
     test_details: Arc<TestDetails>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
@@ -186,7 +189,7 @@ pub struct TestDetails {
 pub fn run_test_case(
     args: Vec<Felt252>,
     case: &TestCaseRunnable,
-    casm_program: &CairoProgram,
+    casm_program: &AssembledProgramWithDebugInfo,
     test_details: &TestDetails,
     runner_config: &Arc<RunnerConfig>,
     runner_params: &Arc<RunnerParams>,
@@ -202,13 +205,34 @@ pub fn run_test_case(
         &test_details.parameter_types,
         &runner_args,
         initial_gas,
-        casm_program.debug_info.sierra_statement_info[test_details.entry_point_offset].code_offset,
+        casm_program.debug_info[test_details.entry_point_offset].0,
     )
     .unwrap();
     let footer = SierraCasmRunner::create_code_footer();
-    let instructions = chain!(entry_code.iter(), casm_program.instructions.iter());
-    let (hints_dict, string_to_hint) = build_hints_dict(instructions.clone());
-    let assembled_program = casm_program.assemble_ex(&entry_code, &footer);
+
+    let assembled_program = &mut casm_program.assembled_cairo_program.clone();
+    add_header(entry_code, assembled_program);
+    add_footer(footer, assembled_program);
+
+    let string_to_hint: HashMap<String, Hint> = assembled_program
+        .hints
+        .iter()
+        .flat_map(|(_, hints)| hints.iter().cloned())
+        .map(|hint| (hint.representing_string(), hint))
+        .collect();
+    let hints_dict = assembled_program
+        .hints
+        .iter()
+        .map(|(offset, hints)| {
+            (
+                *offset,
+                hints
+                    .iter()
+                    .map(hint_to_hint_params)
+                    .collect::<Vec<HintParams>>(),
+            )
+        })
+        .collect();
 
     let mut state_reader = ExtendedStateReader {
         dict_state_reader: cheatnet_constants::build_testing_state(),
@@ -262,6 +286,7 @@ pub fn run_test_case(
     let data: Vec<MaybeRelocatable> = assembled_program
         .bytecode
         .iter()
+        .cloned()
         .map(Felt252::from)
         .map(MaybeRelocatable::from)
         .collect();
@@ -402,4 +427,34 @@ fn get_call_trace_ref(runtime: &mut ForgeRuntime) -> Rc<RefCell<CallTrace>> {
         .trace_data
         .current_call_stack
         .top()
+}
+
+fn add_header(entry_code: Vec<Instruction>, assembled_program: &mut AssembledCairoProgram2) {
+    let mut new_bytecode = vec![];
+    let mut new_hints = vec![];
+    for instruction in entry_code {
+        if !instruction.hints.is_empty() {
+            new_hints.push((new_bytecode.len(), instruction.hints.clone()));
+        }
+        new_bytecode.extend(instruction.assemble().encode().into_iter());
+    }
+
+    assembled_program.bytecode =
+        [new_bytecode.clone(), assembled_program.bytecode.clone()].concat();
+
+    assembled_program.hints = assembled_program
+        .hints
+        .iter()
+        .map(|(v, hint)| (v + new_bytecode.len(), hint.clone()))
+        .collect();
+
+    assembled_program.hints = [new_hints, assembled_program.hints.clone()].concat();
+}
+
+fn add_footer(footer: Vec<Instruction>, assembled_program: &mut AssembledCairoProgram2) {
+    for instruction in footer {
+        assembled_program
+            .bytecode
+            .extend(instruction.assemble().encode().into_iter());
+    }
 }
