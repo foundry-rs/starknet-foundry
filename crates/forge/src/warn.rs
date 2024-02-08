@@ -103,6 +103,7 @@ mod tests {
     use serde_json::{json, Value};
     use serial_test::serial;
     use std::{io::read_to_string, sync::Once, time::Duration};
+    use test_utils::output_assert::assert_stdout_contains;
 
     /**
      * all tests using [`BufferRedirect`] must be run with --nocapture
@@ -183,7 +184,14 @@ mod tests {
 
         let stdout = read_to_string(buffer.into_inner()).unwrap();
 
-        assert!(stdout == "[WARNING] The RPC node with url = http://127.0.0.1:3030/rpc has unsupported version = (0.5.0), use node supporting RPC version 0.6.0\n");
+        assert_stdout_contains(
+            stdout,
+            indoc!(
+                r"
+                    [WARNING] The RPC node with url = http://127.0.0.1:3030/rpc has unsupported version = (0.5.0), use node supporting RPC version 0.6.0
+                "
+            ),
+        );
     }
 
     // must be run with --nocapture or will fail
@@ -201,7 +209,14 @@ mod tests {
 
         let stdout = read_to_string(buffer.into_inner()).unwrap();
 
-        assert!(stdout == "[WARNING] The RPC node with url = http://127.0.0.1:3030/rpc has unsupported version = (0.5.0), use node supporting RPC version 0.6.0\n");
+        assert_stdout_contains(
+            stdout,
+            indoc!(
+                r"
+                    [WARNING] The RPC node with url = http://127.0.0.1:3030/rpc has unsupported version = (0.5.0), use node supporting RPC version 0.6.0
+                "
+            ),
+        );
     }
 
     // must be run with --nocapture or will fail
@@ -220,22 +235,14 @@ mod tests {
 
         let stdout = read_to_string(buffer.into_inner()).unwrap();
 
-        //TODO use assert_stdout_contains!()
-        assert!(
-            stdout
-                == indoc!(
-                    r"
+        assert_stdout_contains(
+            stdout,
+            indoc!(
+                r"
                     [WARNING] The RPC node with url = http://127.0.0.1:3030/rpc has unsupported version = (0.5.0), use node supporting RPC version 0.6.0
                     [WARNING] The RPC node with url = http://127.0.0.1:3035/rpc has unsupported version = (0.5.0), use node supporting RPC version 0.6.0
-                    "
-                )
-                || stdout
-                    == indoc!(
-                        r"
-                    [WARNING] The RPC node with url = http://127.0.0.1:3035/rpc has unsupported version = (0.5.0), use node supporting RPC version 0.6.0
-                    [WARNING] The RPC node with url = http://127.0.0.1:3030/rpc has unsupported version = (0.5.0), use node supporting RPC version 0.6.0
-                    "
-                    )
+                "
+            ),
         );
     }
 

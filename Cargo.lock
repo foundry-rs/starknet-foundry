@@ -6035,10 +6035,12 @@ dependencies = [
  "forge_runner",
  "indoc 2.0.4",
  "project-root",
+ "regex",
  "scarb-api",
  "scarb-metadata",
  "serde",
  "serde_json",
+ "snapbox",
  "tempfile",
  "tokio",
 ]
