@@ -1,5 +1,5 @@
-use crate::common::call_contract;
 use crate::common::state::build_runtime_state;
+use crate::common::{call_contract, deploy_wrapper};
 use crate::{
     assert_success,
     common::{
@@ -10,9 +10,7 @@ use crate::{
 };
 use cairo_felt::Felt252;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeState;
-use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::{
-    deploy::deploy, spoof::TxInfoMock,
-};
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::spoof::TxInfoMock;
 use cheatnet::state::BlockifierState;
 use cheatnet::state::CheatTarget;
 use conversions::{felt252::FromShortString, IntoConv};
@@ -401,7 +399,7 @@ fn spoof_in_constructor() {
         .start_spoof(CheatTarget::One(precalculated_address), tx_info_mock);
 
     let contract_address =
-        deploy(&mut blockifier_state, &mut runtime_state, &class_hash, &[]).unwrap();
+        deploy_wrapper(&mut blockifier_state, &mut runtime_state, &class_hash, &[]).unwrap();
 
     assert_eq!(precalculated_address, contract_address);
 
@@ -667,10 +665,10 @@ fn spoof_multiple() {
     let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
 
     let contract_address_1 =
-        deploy(&mut blockifier_state, &mut runtime_state, &class_hash, &[]).unwrap();
+        deploy_wrapper(&mut blockifier_state, &mut runtime_state, &class_hash, &[]).unwrap();
 
     let contract_address_2 =
-        deploy(&mut blockifier_state, &mut runtime_state, &class_hash, &[]).unwrap();
+        deploy_wrapper(&mut blockifier_state, &mut runtime_state, &class_hash, &[]).unwrap();
 
     let tx_info_before_1 = get_tx_info(
         &mut blockifier_state,

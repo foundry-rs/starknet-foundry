@@ -1,8 +1,7 @@
-use crate::common::call_contract;
 use crate::common::state::{build_runtime_state, create_cached_state};
+use crate::common::{call_contract, deploy_wrapper};
 use crate::common::{felt_selector_from_name, get_contracts, state::create_runtime_states};
 use cairo_felt::Felt252;
-use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::deploy;
 use conversions::felt252::FromShortString;
 use conversions::IntoConv;
 
@@ -18,7 +17,7 @@ fn get_class_hash_simple() {
         .declare(&contract_name, &contracts)
         .unwrap();
     let contract_address =
-        deploy(&mut blockifier_state, &mut runtime_state, &class_hash, &[]).unwrap();
+        deploy_wrapper(&mut blockifier_state, &mut runtime_state, &class_hash, &[]).unwrap();
 
     assert_eq!(
         class_hash,
@@ -38,7 +37,7 @@ fn get_class_hash_upgrade() {
         .declare(&contract_name, &contracts)
         .unwrap();
     let contract_address =
-        deploy(&mut blockifier_state, &mut runtime_state, &class_hash, &[]).unwrap();
+        deploy_wrapper(&mut blockifier_state, &mut runtime_state, &class_hash, &[]).unwrap();
 
     assert_eq!(
         class_hash,

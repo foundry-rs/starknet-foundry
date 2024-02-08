@@ -1,9 +1,8 @@
 use crate::cheatcodes::{map_entry_address, variable_address};
-use crate::common::call_contract;
 use crate::common::state::{build_runtime_state, create_cached_state, create_runtime_states};
+use crate::common::{call_contract, deploy_wrapper};
 use crate::common::{felt_selector_from_name, get_contracts};
 use cairo_felt::Felt252;
-use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::deploy;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::storage::load;
 use conversions::felt252::FromShortString;
 
@@ -19,7 +18,7 @@ fn load_simple_state() {
     let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
 
     let contract_address =
-        deploy(&mut blockifier_state, &mut runtime_state, &class_hash, &[]).unwrap();
+        deploy_wrapper(&mut blockifier_state, &mut runtime_state, &class_hash, &[]).unwrap();
 
     let selector = felt_selector_from_name("increase_balance");
 
@@ -57,7 +56,7 @@ fn load_state_map_simple_value() {
     let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
 
     let contract_address =
-        deploy(&mut blockifier_state, &mut runtime_state, &class_hash, &[]).unwrap();
+        deploy_wrapper(&mut blockifier_state, &mut runtime_state, &class_hash, &[]).unwrap();
 
     let selector = felt_selector_from_name("insert");
 
