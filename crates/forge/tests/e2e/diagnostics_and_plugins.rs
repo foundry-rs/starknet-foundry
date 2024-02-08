@@ -13,7 +13,7 @@ fn print_error_if_attributes_incorrect() {
     let output = snapbox.current_dir(&mock_tests_dir).assert().code(2);
     assert_stderr_contains(
         output,
-        &formatdoc! {r#"
+        formatdoc! {r#"
         error: Plugin diagnostic: Expected fork config must be of the form `url: <double quote string>, block_id: <snforge_std::BlockId>`.
          --> {mock_tests_dir_path_str}/src/lib.cairo:4:11
             #[fork(url: "https://lib.com")]
