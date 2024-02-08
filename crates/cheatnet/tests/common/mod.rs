@@ -3,6 +3,7 @@ use blockifier::execution::entry_point::{
 };
 use blockifier::execution::execution_utils::ReadOnlySegments;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
+use blockifier::state::state_api::State;
 use cairo_felt::Felt252;
 use cairo_lang_casm::hints::Hint;
 use cairo_vm::types::relocatable::Relocatable;
@@ -16,11 +17,11 @@ use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
 };
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeState;
 use cheatnet::runtime_extensions::common::{create_entry_point_selector, create_execute_calldata};
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::{
     deploy, deploy_at,
 };
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
-use cheatnet::state::BlockifierState;
 use conversions::felt252::FromShortString;
 use runtime::starknet::context::build_context;
 use scarb_api::metadata::MetadataCommandExt;
@@ -39,13 +40,13 @@ pub mod state;
 
 fn build_syscall_hint_processor<'a>(
     call_entry_point: CallEntryPoint,
-    blockifier_state: &'a mut BlockifierState,
+    state: &'a mut dyn State,
     execution_resources: &'a mut ExecutionResources,
     entry_point_execution_context: &'a mut EntryPointExecutionContext,
     hints: &'a HashMap<String, Hint>,
 ) -> SyscallHintProcessor<'a> {
     SyscallHintProcessor::new(
-        blockifier_state.blockifier_state,
+        state,
         execution_resources,
         entry_point_execution_context,
         Relocatable {
@@ -79,7 +80,7 @@ pub fn get_contracts() -> HashMap<String, StarknetContractArtifacts> {
 }
 
 pub fn deploy_contract(
-    blockifier_state: &mut BlockifierState,
+    state: &mut dyn State,
     runtime_state: &mut RuntimeState,
     contract_name: &str,
     calldata: &[Felt252],
@@ -87,7 +88,7 @@ pub fn deploy_contract(
     let contract = Felt252::from_short_string(contract_name).unwrap();
     let contracts = get_contracts();
 
-    let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
+    let class_hash = declare(state, &contract, &contracts).unwrap();
 
     let mut execution_resources = ExecutionResources::default();
     let mut entry_point_execution_context = build_context(runtime_state.cheatnet_state.block_info);
@@ -95,7 +96,7 @@ pub fn deploy_contract(
 
     let mut syscall_hint_processor = build_syscall_hint_processor(
         CallEntryPoint::default(),
-        blockifier_state,
+        state,
         &mut execution_resources,
         &mut entry_point_execution_context,
         &hints,
@@ -111,7 +112,7 @@ pub fn deploy_contract(
 }
 
 pub fn deploy_wrapper(
-    blockifier_state: &mut BlockifierState,
+    state: &mut dyn State,
     runtime_state: &mut RuntimeState,
     class_hash: &ClassHash,
     calldata: &[Felt252],
@@ -122,7 +123,7 @@ pub fn deploy_wrapper(
 
     let mut syscall_hint_processor = build_syscall_hint_processor(
         CallEntryPoint::default(),
-        blockifier_state,
+        state,
         &mut execution_resources,
         &mut entry_point_execution_context,
         &hints,
@@ -137,7 +138,7 @@ pub fn deploy_wrapper(
 }
 
 pub fn deploy_at_wrapper(
-    blockifier_state: &mut BlockifierState,
+    state: &mut dyn State,
     runtime_state: &mut RuntimeState,
     class_hash: &ClassHash,
     calldata: &[Felt252],
@@ -149,7 +150,7 @@ pub fn deploy_at_wrapper(
 
     let mut syscall_hint_processor = build_syscall_hint_processor(
         CallEntryPoint::default(),
-        blockifier_state,
+        state,
         &mut execution_resources,
         &mut entry_point_execution_context,
         &hints,
@@ -165,14 +166,14 @@ pub fn deploy_at_wrapper(
 }
 
 pub fn call_contract_getter_by_name(
-    blockifier_state: &mut BlockifierState,
+    state: &mut dyn State,
     runtime_state: &mut RuntimeState,
     contract_address: &ContractAddress,
     fn_name: &str,
 ) -> CallResult {
     let selector = felt_selector_from_name(fn_name);
     let result = call_contract(
-        blockifier_state,
+        state,
         runtime_state,
         contract_address,
         &selector,
@@ -185,7 +186,7 @@ pub fn call_contract_getter_by_name(
 // This does contract call without the transaction layer. This way `call_contract` can return data and modify state.
 // `call` and `invoke` on the transactional layer use such method under the hood.
 pub fn call_contract(
-    blockifier_state: &mut BlockifierState,
+    state: &mut dyn State,
     runtime_state: &mut RuntimeState,
     contract_address: &ContractAddress,
     entry_point_selector: &Felt252,
@@ -212,7 +213,7 @@ pub fn call_contract(
 
     let mut syscall_hint_processor = build_syscall_hint_processor(
         entry_point.clone(),
-        blockifier_state,
+        state,
         &mut execution_resources,
         &mut entry_point_execution_context,
         &hints,
