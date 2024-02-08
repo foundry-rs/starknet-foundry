@@ -1,10 +1,11 @@
 use anyhow::{anyhow, Result};
 use camino::Utf8Path;
-use scarb_api::ScarbCommand;
+use warn::{
+    warn_if_available_gas_used_with_incompatible_scarb_version, warn_if_incompatible_rpc_version,
+};
 
 use crate::scarb::load_test_artifacts;
 use forge_runner::test_case_summary::AnyTestCaseSummary;
-use semver::Version;
 use std::sync::Arc;
 
 use compiled_raw::{CompiledTestCrateRaw, RawForkConfig, RawForkParams};
@@ -12,7 +13,6 @@ use forge_runner::test_crate_summary::TestCrateSummary;
 use forge_runner::{RunnerConfig, RunnerParams, TestCrateRunResult};
 
 use crate::block_number_map::BlockNumberMap;
-use crate::pretty_printing::print_warning;
 use forge_runner::compiled_runnable::{CompiledTestCrateRunnable, TestCaseRunnable};
 
 use crate::scarb::config::ForkTarget;
@@ -24,11 +24,12 @@ pub mod pretty_printing;
 pub mod scarb;
 pub mod shared_cache;
 pub mod test_filter;
+mod warn;
 
-fn replace_id_with_params(
-    raw_fork_config: RawForkConfig,
-    fork_targets: &[ForkTarget],
-) -> Result<RawForkParams> {
+pub(crate) fn replace_id_with_params<'a>(
+    raw_fork_config: &'a RawForkConfig,
+    fork_targets: &'a [ForkTarget],
+) -> Result<&'a RawForkParams> {
     match raw_fork_config {
         RawForkConfig::Params(raw_fork_params) => Ok(raw_fork_params),
         RawForkConfig::Id(name) => {
@@ -39,7 +40,7 @@ fn replace_id_with_params(
                     anyhow!("Fork configuration named = {name} not found in the Scarb.toml")
                 })?;
 
-            Ok(fork_target_from_runner_config.params().clone())
+            Ok(fork_target_from_runner_config.params())
         }
     }
 }
@@ -53,9 +54,9 @@ async fn to_runnable(
 
     for case in compiled_test_crate.test_cases {
         let fork_config = if let Some(fc) = case.fork_config {
-            let raw_fork_params = replace_id_with_params(fc, fork_targets)?;
+            let raw_fork_params = replace_id_with_params(&fc, fork_targets)?;
             let fork_config = block_number_map
-                .validated_fork_config_from_fork_params(&raw_fork_params)
+                .validated_fork_config_from_fork_params(raw_fork_params)
                 .await?;
             Some(fork_config)
         } else {
@@ -109,6 +110,7 @@ pub async fn run(
     let filtered = all_tests - not_filtered;
 
     warn_if_available_gas_used_with_incompatible_scarb_version(&test_crates)?;
+    warn_if_incompatible_rpc_version(&test_crates, fork_targets).await?;
 
     pretty_printing::print_collected_tests_count(
         test_crates.iter().map(|tests| tests.test_cases.len()).sum(),
@@ -167,25 +169,6 @@ pub async fn run(
     }
 
     Ok(summaries)
-}
-
-fn warn_if_available_gas_used_with_incompatible_scarb_version(
-    test_crates: &Vec<CompiledTestCrateRaw>,
-) -> Result<()> {
-    for test_crate in test_crates {
-        for case in &test_crate.test_cases {
-            if case.available_gas == Some(0)
-                && ScarbCommand::version().run()?.scarb <= Version::new(2, 4, 3)
-            {
-                print_warning(&anyhow!(
-                    "`available_gas` attribute was probably specified when using Scarb ~2.4.3 \
-                    Make sure to use Scarb >=2.4.4"
-                ));
-            }
-        }
-    }
-
-    Ok(())
 }
 
 #[cfg(test)]
