@@ -7,7 +7,6 @@ use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::
     Event, SpyTarget,
 };
 use blockifier::execution::entry_point::{CallEntryPoint, ExecutionResources};
-use blockifier::state::state_api::State;
 use blockifier::{
     execution::contract_class::ContractClass,
     state::state_api::{StateReader, StateResult},
@@ -56,18 +55,6 @@ impl BlockInfoReader for ExtendedStateReader {
         }
 
         Ok(BlockInfo::default())
-    }
-}
-
-pub struct BlockifierState<'a> {
-    pub blockifier_state: &'a mut dyn State,
-}
-
-impl<'a> BlockifierState<'a> {
-    pub fn from(state: &'a mut dyn State) -> Self {
-        BlockifierState {
-            blockifier_state: state,
-        }
     }
 }
 

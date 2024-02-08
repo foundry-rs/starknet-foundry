@@ -7,12 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.0] - 2024-02-07
+
 ### Forge
 
 #### Added
 
+- Warning in fork testing is emitted, when node JSON-RPC version is incompatible
 - `get_call_trace` library function for retrieving call trace in tests
-
 
 #### Changed
 
@@ -35,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - `--package` flag for `declare` and `script` subcommands, that specifies scarb package to work with
+- `Debug` and `Display` impls for script subcommand responses - use `print!`, `println!` macros instead of calling `.print()`
 
 ## [0.16.0] - 2024-01-26
 

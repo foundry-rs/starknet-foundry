@@ -5,17 +5,15 @@ use cairo_lang_runner::casm_run::format_next_item;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::execute_call_entry_point;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::panic_data::try_extract_panic_data;
 use crate::runtime_extensions::common::{create_entry_point_selector, create_execute_calldata};
-use crate::state::BlockifierState;
 use blockifier::execution::call_info::CallInfo;
-use blockifier::execution::common_hints::ExecutionMode;
 use blockifier::execution::entry_point::EntryPointExecutionResult;
+use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::execution::{
-    entry_point::{CallEntryPoint, CallType, EntryPointExecutionContext, ExecutionResources},
+    entry_point::{CallEntryPoint, CallType, ExecutionResources},
     errors::{EntryPointExecutionError, PreExecutionError},
 };
 use blockifier::state::errors::StateError;
 use cairo_felt::Felt252;
-use runtime::starknet::context::{build_block_context, build_transaction_context};
 use starknet_api::core::ClassHash;
 use starknet_api::{core::ContractAddress, deprecated_contract_class::EntryPointType};
 
@@ -200,7 +198,7 @@ impl CallResult {
 }
 
 pub fn call_l1_handler(
-    blockifier_state: &mut BlockifierState,
+    syscall_handler: &mut SyscallHintProcessor,
     runtime_state: &mut RuntimeState,
     contract_address: &ContractAddress,
     entry_point_selector: &Felt252,
@@ -222,7 +220,7 @@ pub fn call_l1_handler(
     };
 
     call_entry_point(
-        blockifier_state,
+        syscall_handler,
         runtime_state,
         entry_point,
         &AddressOrClassHash::ContractAddress(*contract_address),
@@ -230,50 +228,24 @@ pub fn call_l1_handler(
 }
 
 pub fn call_entry_point(
-    blockifier_state: &mut BlockifierState,
+    syscall_handler: &mut SyscallHintProcessor,
     runtime_state: &mut RuntimeState,
     mut entry_point: CallEntryPoint,
     starknet_identifier: &AddressOrClassHash,
 ) -> CallResult {
-    let mut resources = ExecutionResources::default();
-    let account_context = build_transaction_context();
-    let block_context = build_block_context(runtime_state.cheatnet_state.block_info);
-
-    let mut context = EntryPointExecutionContext::new(
-        &block_context,
-        &account_context,
-        ExecutionMode::Execute,
-        false,
-    )
-    .unwrap();
-
     let exec_result = execute_call_entry_point(
         &mut entry_point,
-        blockifier_state.blockifier_state,
+        syscall_handler.state,
         runtime_state,
-        &mut resources,
-        &mut context,
+        syscall_handler.resources,
+        syscall_handler.context,
     );
 
-    let call_result = CallResult::from_execution_result(&exec_result, starknet_identifier);
+    let result = CallResult::from_execution_result(&exec_result, starknet_identifier);
 
-    let used_resources = UsedResources {
-        execution_resources: resources,
-        l2_to_l1_payloads_length: exec_result.map_or(vec![], |call_info| {
-            call_info.get_sorted_l2_to_l1_payloads_length().unwrap()
-        }),
+    if let Ok(call_info) = exec_result {
+        syscall_handler.inner_calls.push(call_info);
     };
 
-    // add execution resources used by call contract, library call or l1 handler execution
-    // to resources used by the top call (representing test execution)
-    runtime_state
-        .cheatnet_state
-        .trace_data
-        .current_call_stack
-        .top()
-        .borrow_mut()
-        .used_resources
-        .extend(&used_resources);
-
-    call_result
+    result
 }

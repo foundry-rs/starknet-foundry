@@ -10,7 +10,6 @@ use crate::gas::calculate_used_gas;
 use crate::test_case_summary::{Single, TestCaseSummary};
 use crate::{RunnerConfig, RunnerParams, TestCaseRunnable, CACHE_DIR};
 use anyhow::{bail, ensure, Result};
-use blockifier::execution::common_hints::ExecutionMode;
 use blockifier::execution::entry_point::{EntryPointExecutionContext, ExecutionResources};
 use blockifier::execution::execution_utils::ReadOnlySegments;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
@@ -40,8 +39,7 @@ use cheatnet::runtime_extensions::forge_runtime_extension::{
 };
 use cheatnet::state::{BlockInfoReader, CallTrace, CheatnetState, ExtendedStateReader};
 use itertools::chain;
-use runtime::starknet::context;
-use runtime::starknet::context::BlockInfo;
+use runtime::starknet::context::build_context;
 use runtime::{ExtendedRuntime, StarknetRuntime};
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
@@ -118,19 +116,6 @@ pub(crate) fn run_fuzz_test(
 
         extract_test_case_summary(run_result, &case, args)
     })
-}
-
-fn build_context(block_info: BlockInfo) -> EntryPointExecutionContext {
-    let block_context = context::build_block_context(block_info);
-    let account_context = context::build_transaction_context();
-
-    EntryPointExecutionContext::new(
-        &block_context,
-        &account_context,
-        ExecutionMode::Execute,
-        false,
-    )
-    .unwrap()
 }
 
 fn get_syscall_segment_index(test_param_types: &[(GenericTypeId, i16)]) -> isize {
@@ -218,9 +203,9 @@ pub fn run_test_case(
 
     let mut context = build_context(block_info);
     let mut execution_resources = ExecutionResources::default();
-    let mut blockifier_state = CachedState::from(state_reader);
+    let mut cached_state = CachedState::from(state_reader);
     let syscall_handler = build_syscall_handler(
-        &mut blockifier_state,
+        &mut cached_state,
         &string_to_hint,
         &mut execution_resources,
         &mut context,
@@ -319,7 +304,7 @@ pub fn run_test_case(
     let call_trace_ref = get_call_trace_ref(&mut forge_runtime);
     let execution_resources = update_test_execution_resources_and_get_them(forge_runtime);
 
-    let gas = calculate_used_gas(&block_context, &mut blockifier_state, &execution_resources)?;
+    let gas = calculate_used_gas(&block_context, &mut cached_state, &execution_resources)?;
 
     Ok(RunResultWithInfo {
         run_result,
