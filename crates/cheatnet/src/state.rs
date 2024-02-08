@@ -1,5 +1,4 @@
 use crate::forking::state::ForkStateReader;
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spoof::TxInfoMock;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::{
     Event, SpyTarget,
@@ -181,9 +180,6 @@ pub struct CheatnetState {
     pub detected_events: Vec<Event>,
     pub deploy_salt_base: u32,
     pub block_info: BlockInfo,
-    // execution resources used by all contract calls
-    pub used_resources: UsedResources,
-
     pub trace_data: TraceData,
 }
 
@@ -209,7 +205,6 @@ impl Default for CheatnetState {
             detected_events: vec![],
             deploy_salt_base: 0,
             block_info: Default::default(),
-            used_resources: Default::default(),
             trace_data: TraceData {
                 current_call_stack: NotEmptyCallStack::from(test_call),
             },
