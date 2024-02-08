@@ -1,4 +1,4 @@
-use crate::state::BlockifierState;
+use blockifier::state::state_api::State;
 use cairo_felt::Felt252;
 use conversions::{FromConv, IntoConv};
 use num_traits::Pow;
@@ -19,16 +19,12 @@ use starknet_api::state::StorageKey;
 /// returns: Result<(), Error> - a result containing the error if `store` failed  
 ///
 pub fn store(
-    blockifier_state: &mut BlockifierState,
+    state: &mut dyn State,
     target: ContractAddress,
     storage_address: &Felt252,
     value: Felt252,
 ) -> Result<(), anyhow::Error> {
-    blockifier_state.blockifier_state.set_storage_at(
-        target,
-        storage_key(storage_address)?,
-        value.into_(),
-    );
+    state.set_storage_at(target, storage_key(storage_address)?, value.into_());
     Ok(())
 }
 
@@ -42,12 +38,11 @@ pub fn store(
 /// returns: Result<Vec<Felt252>, Error> - a result containing the read data  
 ///
 pub fn load(
-    blockifier_state: &mut BlockifierState,
+    state: &mut dyn State,
     target: ContractAddress,
     storage_address: &Felt252,
 ) -> Result<Felt252, anyhow::Error> {
-    Ok(blockifier_state
-        .blockifier_state
+    Ok(state
         .get_storage_at(target, storage_key(storage_address)?)?
         .into_())
 }
