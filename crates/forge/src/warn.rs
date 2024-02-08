@@ -92,6 +92,7 @@ pub(crate) async fn warn_if_incompatible_rpc_version(
 #[cfg(test)]
 mod tests {
     use super::warn_if_incompatible_rpc_version;
+    use super::EXPECTED_RPC_VERSION;
     use crate::compiled_raw::{
         CompiledTestCrateRaw, CrateLocation, RawForkConfig, RawForkParams, TestCaseRaw,
     };
@@ -99,7 +100,7 @@ mod tests {
     use cairo_lang_sierra::program::Program;
     use forge_runner::expected_result::ExpectedTestResult;
     use gag::BufferRedirect;
-    use indoc::indoc;
+    use indoc::formatdoc;
     use serde_json::{json, Value};
     use serial_test::serial;
     use std::{io::read_to_string, sync::Once, time::Duration};
@@ -186,9 +187,9 @@ mod tests {
 
         assert_stdout_contains(
             stdout,
-            indoc!(
+            formatdoc!(
                 r"
-                    [WARNING] The RPC node with url = http://127.0.0.1:3030/rpc has unsupported version = (0.5.0), use node supporting RPC version 0.6.0
+                    [WARNING] The RPC node with url = http://127.0.0.1:3030/rpc has unsupported version = (0.5.0), use node supporting RPC version {EXPECTED_RPC_VERSION}
                 "
             ),
         );
@@ -211,9 +212,9 @@ mod tests {
 
         assert_stdout_contains(
             stdout,
-            indoc!(
+            formatdoc!(
                 r"
-                    [WARNING] The RPC node with url = http://127.0.0.1:3030/rpc has unsupported version = (0.5.0), use node supporting RPC version 0.6.0
+                    [WARNING] The RPC node with url = http://127.0.0.1:3030/rpc has unsupported version = (0.5.0), use node supporting RPC version {EXPECTED_RPC_VERSION}
                 "
             ),
         );
@@ -237,10 +238,10 @@ mod tests {
 
         assert_stdout_contains(
             stdout,
-            indoc!(
+            formatdoc!(
                 r"
-                    [WARNING] The RPC node with url = http://127.0.0.1:3030/rpc has unsupported version = (0.5.0), use node supporting RPC version 0.6.0
-                    [WARNING] The RPC node with url = http://127.0.0.1:3035/rpc has unsupported version = (0.5.0), use node supporting RPC version 0.6.0
+                    [WARNING] The RPC node with url = http://127.0.0.1:3030/rpc has unsupported version = (0.5.0), use node supporting RPC version {EXPECTED_RPC_VERSION}
+                    [WARNING] The RPC node with url = http://127.0.0.1:3035/rpc has unsupported version = (0.5.0), use node supporting RPC version {EXPECTED_RPC_VERSION}
                 "
             ),
         );
