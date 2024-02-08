@@ -1,6 +1,7 @@
 name: Check benchmarks
 
 on:
+  merge_group:
   push:
     branches:
       - master
