@@ -3,7 +3,7 @@ use crate::common::state::{
     build_runtime_state, create_fork_cached_state, create_fork_cached_state_at,
     create_runtime_states,
 };
-use crate::common::{call_contract, deploy_contract, felt_selector_from_name};
+use crate::common::{call_contract, deploy_contract, deploy_wrapper, felt_selector_from_name};
 use crate::{assert_error, assert_success};
 use blockifier::state::cached_state::{CachedState, GlobalContractCache};
 use cairo_felt::Felt252;
@@ -11,7 +11,6 @@ use cairo_vm::vm::errors::hint_errors::HintError;
 use cheatnet::constants::build_testing_state;
 use cheatnet::forking::state::ForkStateReader;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeState;
-use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::deploy;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
 use cheatnet::state::{BlockInfoReader, BlockifierState, CheatnetState, ExtendedStateReader};
 use conversions::{IntoConv, TryIntoConv};
@@ -108,7 +107,7 @@ fn try_deploying_undeclared_class() {
     let class_hash = "1".to_owned().try_into_().unwrap();
 
     assert!(
-        match deploy(&mut blockifier_state, &mut runtime_state, &class_hash, &[]) {
+        match deploy_wrapper(&mut blockifier_state, &mut runtime_state, &class_hash, &[]) {
             Err(CheatcodeError::Unrecoverable(EnhancedHintError::Hint(HintError::CustomHint(
                 msg,
             )))) => msg.as_ref().contains(class_hash.to_string().as_str()),

@@ -23,7 +23,7 @@ use starknet_api::deprecated_contract_class::EntryPointType;
 use starknet_api::hash::StarkHash;
 use starknet_api::{core::ContractAddress, hash::StarkFelt, patricia_key};
 
-use crate::state::{BlockifierState, CheatnetState};
+use crate::state::CheatnetState;
 
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     call_entry_point, AddressOrClassHash,
@@ -79,7 +79,7 @@ where
 {
     fn execute_call(
         self,
-        blockifier_state: &mut BlockifierState,
+        syscall_handler: &mut SyscallHintProcessor,
         runtime_state: &mut RuntimeState,
     ) -> CallResult;
 }
@@ -87,7 +87,7 @@ where
 impl ExecuteCall for CallContractRequest {
     fn execute_call(
         self: CallContractRequest,
-        blockifier_state: &mut BlockifierState,
+        syscall_handler: &mut SyscallHintProcessor,
         runtime_state: &mut RuntimeState,
     ) -> CallResult {
         let contract_address = self.contract_address;
@@ -105,7 +105,7 @@ impl ExecuteCall for CallContractRequest {
         };
 
         call_entry_point(
-            blockifier_state,
+            syscall_handler,
             runtime_state,
             entry_point,
             &AddressOrClassHash::ContractAddress(contract_address),
@@ -116,7 +116,7 @@ impl ExecuteCall for CallContractRequest {
 impl ExecuteCall for LibraryCallRequest {
     fn execute_call(
         self: LibraryCallRequest,
-        blockifier_state: &mut BlockifierState,
+        syscall_handler: &mut SyscallHintProcessor,
         runtime_state: &mut RuntimeState,
     ) -> CallResult {
         let class_hash = self.class_hash;
@@ -134,7 +134,7 @@ impl ExecuteCall for LibraryCallRequest {
         };
 
         call_entry_point(
-            blockifier_state,
+            syscall_handler,
             runtime_state,
             entry_point,
             &AddressOrClassHash::ClassHash(class_hash),
@@ -158,10 +158,9 @@ fn execute_syscall<Request: ExecuteCall + SyscallRequest>(
 
     let cheatnet_state: &mut _ = cheatable_starknet_runtime.extension.cheatnet_state;
     let syscall_handler = &mut cheatable_starknet_runtime.extended_runtime.hint_handler;
-    let mut blockifier_state = BlockifierState::from(syscall_handler.state);
     let mut runtime_state = RuntimeState { cheatnet_state };
 
-    let call_result = request.execute_call(&mut blockifier_state, &mut runtime_state);
+    let call_result = request.execute_call(syscall_handler, &mut runtime_state);
     write_call_response(syscall_handler, vm, gas_counter, call_result)?;
     Ok(())
 }

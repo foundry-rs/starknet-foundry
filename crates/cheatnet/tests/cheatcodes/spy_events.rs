@@ -1,10 +1,9 @@
-use crate::common::call_contract;
 use crate::common::state::{build_runtime_state, create_cached_state, create_runtime_states};
+use crate::common::{call_contract, deploy_wrapper};
 use crate::common::{deploy_contract, felt_selector_from_name, get_contracts};
 use cairo_felt::Felt252;
 use cairo_lang_starknet::contract::starknet_keccak;
 use cairo_vm::hint_processor::hint_processor_utils::felt_to_usize;
-use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::deploy;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::{
     Event, SpyTarget,
 };
@@ -375,9 +374,9 @@ fn check_if_there_is_no_interference() {
         .unwrap();
 
     let spy_events_checker_address =
-        deploy(&mut blockifier_state, &mut runtime_state, &class_hash, &[]).unwrap();
+        deploy_wrapper(&mut blockifier_state, &mut runtime_state, &class_hash, &[]).unwrap();
     let other_spy_events_checker_address =
-        deploy(&mut blockifier_state, &mut runtime_state, &class_hash, &[]).unwrap();
+        deploy_wrapper(&mut blockifier_state, &mut runtime_state, &class_hash, &[]).unwrap();
 
     let id1 = runtime_state
         .cheatnet_state
@@ -436,14 +435,14 @@ fn test_nested_calls() {
         .declare(&contract_name, &contracts)
         .unwrap();
 
-    let spy_events_checker_proxy_address = deploy(
+    let spy_events_checker_proxy_address = deploy_wrapper(
         &mut blockifier_state,
         &mut runtime_state,
         &class_hash,
         &[spy_events_checker_address.into_()],
     )
     .unwrap();
-    let spy_events_checker_top_proxy_address = deploy(
+    let spy_events_checker_top_proxy_address = deploy_wrapper(
         &mut blockifier_state,
         &mut runtime_state,
         &class_hash,
@@ -517,14 +516,14 @@ fn use_multiple_spies() {
         .declare(&contract_name, &contracts)
         .unwrap();
 
-    let spy_events_checker_proxy_address = deploy(
+    let spy_events_checker_proxy_address = deploy_wrapper(
         &mut blockifier_state,
         &mut runtime_state,
         &class_hash,
         &[spy_events_checker_address.into_()],
     )
     .unwrap();
-    let spy_events_checker_top_proxy_address = deploy(
+    let spy_events_checker_top_proxy_address = deploy_wrapper(
         &mut blockifier_state,
         &mut runtime_state,
         &class_hash,

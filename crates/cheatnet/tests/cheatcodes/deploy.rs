@@ -1,13 +1,13 @@
 use crate::assert_success;
 use crate::common::state::{build_runtime_state, create_cached_state, create_runtime_states};
-use crate::common::{call_contract, deploy_contract, felt_selector_from_name, get_contracts};
+use crate::common::{
+    call_contract, deploy_at_wrapper, deploy_contract, deploy_wrapper, felt_selector_from_name,
+    get_contracts,
+};
 use cairo_felt::Felt252;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     CallFailure, CallResult,
-};
-use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::{
-    deploy, deploy_at,
 };
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
 use conversions::felt252::FromShortString;
@@ -25,7 +25,7 @@ fn deploy_at_predefined_address() {
     let contracts = get_contracts();
 
     let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
-    let contract_address = deploy_at(
+    let contract_address = deploy_at_wrapper(
         &mut blockifier_state,
         &mut runtime_state,
         &class_hash,
@@ -58,7 +58,7 @@ fn deploy_two_at_the_same_address() {
     let contracts = get_contracts();
 
     let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
-    deploy_at(
+    deploy_at_wrapper(
         &mut blockifier_state,
         &mut runtime_state,
         &class_hash,
@@ -67,7 +67,7 @@ fn deploy_two_at_the_same_address() {
     )
     .unwrap();
 
-    let result = deploy_at(
+    let result = deploy_at_wrapper(
         &mut blockifier_state,
         &mut runtime_state,
         &class_hash,
@@ -92,7 +92,7 @@ fn call_predefined_contract_from_proxy_contract() {
     let contracts = get_contracts();
 
     let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
-    let prank_checker_address = deploy_at(
+    let prank_checker_address = deploy_at_wrapper(
         &mut blockifier_state,
         &mut runtime_state,
         &class_hash,
@@ -156,7 +156,7 @@ fn deploy_contract_on_predefined_address_after_its_usage() {
     let contracts = get_contracts();
 
     let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
-    deploy_at(
+    deploy_at_wrapper(
         &mut blockifier_state,
         &mut runtime_state,
         &class_hash,
@@ -186,7 +186,7 @@ fn try_to_deploy_at_0() {
     let contracts = get_contracts();
 
     let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
-    let output = deploy_at(
+    let output = deploy_at_wrapper(
         &mut blockifier_state,
         &mut runtime_state,
         &class_hash,
@@ -212,7 +212,7 @@ fn deploy_calldata_no_constructor() {
 
     let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
 
-    let output = deploy(
+    let output = deploy_wrapper(
         &mut blockifier_state,
         &mut runtime_state,
         &class_hash,
@@ -238,7 +238,7 @@ fn deploy_missing_arguments_in_constructor() {
 
     let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
 
-    let output = deploy(
+    let output = deploy_wrapper(
         &mut blockifier_state,
         &mut runtime_state,
         &class_hash,
@@ -263,7 +263,7 @@ fn deploy_too_many_arguments_in_constructor() {
 
     let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
 
-    let output = deploy(
+    let output = deploy_wrapper(
         &mut blockifier_state,
         &mut runtime_state,
         &class_hash,
@@ -287,7 +287,7 @@ fn deploy_invalid_class_hash() {
         .unwrap()
         .into_();
 
-    let output = deploy(
+    let output = deploy_wrapper(
         &mut blockifier_state,
         &mut runtime_state,
         &class_hash,
@@ -338,7 +338,7 @@ fn deploy_at_invokes_constructor() {
 
     let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
 
-    let contract_address = deploy_at(
+    let contract_address = deploy_at_wrapper(
         &mut blockifier_state,
         &mut runtime_state,
         &class_hash,
