@@ -1,9 +1,8 @@
 use crate::common::{
-    get_contracts,
+    deploy_wrapper, get_contracts,
     state::{build_runtime_state, create_cached_state, create_runtime_states},
 };
 use cairo_felt::Felt252;
-use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::deploy;
 use conversions::felt252::FromShortString;
 
 #[test]
@@ -21,12 +20,14 @@ fn precalculate_address_simple() {
     let precalculated1 = runtime_state
         .cheatnet_state
         .precalculate_address(&class_hash, &[]);
-    let actual1 = deploy(&mut blockifier_state, &mut runtime_state, &class_hash, &[]).unwrap();
+    let actual1 =
+        deploy_wrapper(&mut blockifier_state, &mut runtime_state, &class_hash, &[]).unwrap();
 
     let precalculated2 = runtime_state
         .cheatnet_state
         .precalculate_address(&class_hash, &[]);
-    let actual2 = deploy(&mut blockifier_state, &mut runtime_state, &class_hash, &[]).unwrap();
+    let actual2 =
+        deploy_wrapper(&mut blockifier_state, &mut runtime_state, &class_hash, &[]).unwrap();
 
     assert_eq!(precalculated1, actual1);
     assert_eq!(precalculated2, actual2);
@@ -55,7 +56,7 @@ fn precalculate_address_calldata() {
         .cheatnet_state
         .precalculate_address(&class_hash, &calldata2);
 
-    let actual1 = deploy(
+    let actual1 = deploy_wrapper(
         &mut blockifier_state,
         &mut runtime_state,
         &class_hash,
@@ -67,7 +68,7 @@ fn precalculate_address_calldata() {
         .cheatnet_state
         .precalculate_address(&class_hash, &calldata2);
 
-    let actual2 = deploy(
+    let actual2 = deploy_wrapper(
         &mut blockifier_state,
         &mut runtime_state,
         &class_hash,
