@@ -9,7 +9,7 @@ use starknet::providers::{jsonrpc::HttpTransport, JsonRpcClient, Provider};
 use std::collections::HashSet;
 use url::Url;
 
-pub const EXPECTED_RPC_VERSION: &str = include_str!("../expected-version");
+pub const EXPECTED_RPC_VERSION: &str = include_str!("../expected-rpc-version");
 
 pub(crate) fn warn_if_available_gas_used_with_incompatible_scarb_version(
     test_crates: &Vec<CompiledTestCrateRaw>,
