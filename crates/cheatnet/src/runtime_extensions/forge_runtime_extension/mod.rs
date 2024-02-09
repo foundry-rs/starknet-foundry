@@ -711,12 +711,12 @@ fn concat_u128_bytes(low: &[u8; 32], high: &[u8; 32]) -> [u8; 32] {
 pub fn update_test_execution_resources_and_get_them(runtime: ForgeRuntime) -> UsedResources {
     let starknet_runtime = runtime.extended_runtime.extended_runtime.extended_runtime;
     let execution_resources = starknet_runtime.hint_handler.resources.clone();
-    let top_call_l1_to_l2_messages = starknet_runtime.hint_handler.l2_to_l1_messages;
+    let top_call_l2_to_l1_messages = starknet_runtime.hint_handler.l2_to_l1_messages;
 
     // used just to obtain payloads of L2 -> L1 messages
     let runtime_call_info = CallInfo {
         execution: CallExecution {
-            l2_to_l1_messages: top_call_l1_to_l2_messages,
+            l2_to_l1_messages: top_call_l2_to_l1_messages,
             ..Default::default()
         },
         inner_calls: starknet_runtime.hint_handler.inner_calls,
