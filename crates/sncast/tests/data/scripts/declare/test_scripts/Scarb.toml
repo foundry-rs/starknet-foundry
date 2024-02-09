@@ -1,5 +1,5 @@
 [package]
-name = "error_handling"
+name = "declare_test_scripts"
 version = "0.1.0"
 
 [dependencies]
@@ -16,5 +16,4 @@ sierra = true
 casm = true
 build-external-contracts = [
     "map::Mapa",
-    "map::Mapa2"
 ]

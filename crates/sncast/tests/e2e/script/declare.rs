@@ -41,7 +41,7 @@ async fn test_wrong_contract_name() {
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(SCRIPTS_DIR.to_owned() + "/declare/no_contract")
+        .current_dir(SCRIPTS_DIR.to_owned() + "/declare/test_scripts")
         .args(args);
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
@@ -50,3 +50,104 @@ async fn test_wrong_contract_name() {
         status: success
     "});
 }
+
+#[tokio::test]
+async fn test_same_contract_twice() {
+    let script_name = "same_contract_twice";
+    let args = vec![
+        "--accounts-file",
+        "../../../accounts/accounts.json",
+        "--account",
+        "user4",
+        "--url",
+        URL,
+        "script",
+        &script_name,
+    ];
+
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(SCRIPTS_DIR.to_owned() + "/declare/test_scripts")
+        .args(args);
+    snapbox.assert().success().stdout_matches(indoc! {r"
+        ...
+        ScriptCommandError::RPCError(RPCError::StarknetError(StarknetError::ClassAlreadyDeclared(())))
+        command: script
+        status: success
+    "});
+}
+
+#[tokio::test]
+async fn test_with_invalid_max_fee() {
+    let script_name = "with_invalid_max_fee";
+    let args = vec![
+        "--accounts-file",
+        "../../../accounts/accounts.json",
+        "--account",
+        "user2",
+        "--url",
+        URL,
+        "script",
+        &script_name,
+    ];
+
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(SCRIPTS_DIR.to_owned() + "/declare/test_scripts")
+        .args(args);
+    snapbox.assert().success().stdout_matches(indoc! {r"
+        ...
+        ScriptCommandError::RPCError(RPCError::StarknetError(StarknetError::InsufficientMaxFee(())))
+        command: script
+        status: success
+    "});
+}
+
+#[tokio::test]
+async fn test_with_invalid_nonce() {
+    let script_name = "with_invalid_nonce";
+    let args = vec![
+        "--accounts-file",
+        "../../../accounts/accounts.json",
+        "--account",
+        "user4",
+        "--url",
+        URL,
+        "script",
+        &script_name,
+    ];
+
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(SCRIPTS_DIR.to_owned() + "/declare/test_scripts")
+        .args(args);
+    snapbox.assert().success().stdout_matches(indoc! {r"
+        ...
+        ScriptCommandError::RPCError(RPCError::StarknetError(StarknetError::InvalidTransactionNonce(())))
+        command: script
+        status: success
+    "});
+}
+
+#[tokio::test]
+async fn test_insufficient_account_balance() {
+    let script_name = "insufficient_account_balance";
+    let args = vec![
+        "--accounts-file",
+        "../../../accounts/accounts.json",
+        "--account",
+        "user6",
+        "--url",
+        URL,
+        "script",
+        &script_name,
+    ];
+
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(SCRIPTS_DIR.to_owned() + "/declare/test_scripts")
+        .args(args);
+    snapbox.assert().success().stdout_matches(indoc! {r"
+        ...
+        ScriptCommandError::RPCError(RPCError::StarknetError(StarknetError::InsufficientAccountBalance(())))
+        command: script
+        status: success
+    "});
+}
+

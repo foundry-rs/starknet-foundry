@@ -34,3 +34,54 @@ async fn test_failing() {
         status: script panicked
     "});
 }
+
+#[tokio::test]
+async fn test_call_invalid_entry_point() {
+    //TODO: Consider better error
+    let script_name = "invalid_entry_point";
+    let args = vec!["--url", URL, "script", &script_name];
+
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(SCRIPTS_DIR.to_owned() + "/call")
+        .args(args);
+    snapbox.assert().success().stdout_matches(indoc! {r"
+        ...
+        ScriptCommandError::RPCError(RPCError::StarknetError(StarknetError::ContractError(())))
+        command: script
+        status: success
+    "});
+}
+
+#[tokio::test]
+async fn test_call_invalid_address() {
+    let script_name = "invalid_address";
+    let args = vec!["--url", URL, "script", &script_name];
+
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(SCRIPTS_DIR.to_owned() + "/call")
+        .args(args);
+    snapbox.assert().success().stdout_matches(indoc! {r"
+        ...
+        ScriptCommandError::RPCError(RPCError::StarknetError(StarknetError::ContractNotFound(())))
+        command: script
+        status: success
+    "});
+}
+
+#[tokio::test]
+async fn test_call_invalid_calldata() {
+    //TODO: Consider better error
+    let script_name = "invalid_calldata";
+    let args = vec!["--url", URL, "script", &script_name];
+
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(SCRIPTS_DIR.to_owned() + "/call")
+        .args(args);
+    snapbox.assert().success().stdout_matches(indoc! {r"
+        ...
+        ScriptCommandError::RPCError(RPCError::StarknetError(StarknetError::ContractError(())))
+        ScriptCommandError::RPCError(RPCError::StarknetError(StarknetError::ContractError(())))
+        command: script
+        status: success
+    "});
+}
