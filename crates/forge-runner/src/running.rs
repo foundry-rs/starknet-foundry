@@ -409,16 +409,13 @@ fn add_header(
         new_bytecode.extend(instruction.assemble().encode().into_iter());
     }
 
-    assembled_program.bytecode =
-        [new_bytecode.clone(), assembled_program.bytecode.clone()].concat();
-
-    assembled_program.hints = assembled_program
-        .hints
-        .iter()
-        .map(|(v, hint)| (v + new_bytecode.len(), hint.clone()))
-        .collect();
+    let new_bytecode_len = new_bytecode.len();
+    assembled_program.hints.iter_mut().for_each(|hint| {
+        hint.0 += new_bytecode_len;
+    });
 
     assembled_program.hints = [new_hints, assembled_program.hints.clone()].concat();
+    assembled_program.bytecode = [new_bytecode, assembled_program.bytecode.clone()].concat();
 }
 
 fn add_footer(footer: Vec<Instruction>, assembled_program: &mut AssembledCairoProgramWithSerde) {
