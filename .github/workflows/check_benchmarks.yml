@@ -1,6 +1,7 @@
 name: Check benchmarks
 
 on:
+  merge_group:
   push:
     branches:
       - master
@@ -21,4 +22,4 @@ jobs:
         run: |
           curl -L https://raw.githubusercontent.com/software-mansion/universal-sierra-compiler/master/scripts/install.sh | sh
 
-      - run: cargo test --benches
+      - run: cargo bench --bench forge_bench

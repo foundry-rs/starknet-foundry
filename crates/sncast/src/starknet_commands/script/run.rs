@@ -4,11 +4,8 @@ use std::fs;
 use crate::starknet_commands::{call, declare, deploy, invoke};
 use crate::{get_account, get_nonce, WaitForTx};
 use anyhow::{anyhow, Context, Result};
-use blockifier::execution::common_hints::ExecutionMode;
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
-use blockifier::execution::entry_point::{
-    CallEntryPoint, EntryPointExecutionContext, ExecutionResources,
-};
+use blockifier::execution::entry_point::{CallEntryPoint, ExecutionResources};
 use blockifier::execution::execution_utils::ReadOnlySegments;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::state::cached_state::CachedState;
@@ -24,7 +21,7 @@ use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use conversions::{FromConv, IntoConv};
 use itertools::chain;
-use runtime::starknet::context::{build_default_block_context, build_transaction_context};
+use runtime::starknet::context::{build_context, BlockInfo};
 use runtime::starknet::state::DictStateReader;
 use runtime::utils::BufferReader;
 use runtime::{
@@ -287,15 +284,7 @@ pub fn run(
         .assemble_ex(&entry_code, &footer);
 
     // hint processor
-    let block_context = build_default_block_context();
-    let account_context = build_transaction_context();
-    let mut context = EntryPointExecutionContext::new(
-        &block_context.clone(),
-        &account_context,
-        ExecutionMode::Execute,
-        false,
-    )
-    .unwrap();
+    let mut context = build_context(BlockInfo::default());
 
     let mut blockifier_state = CachedState::from(DictStateReader::default());
     let mut execution_resources = ExecutionResources::default();
