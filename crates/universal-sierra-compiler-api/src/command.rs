@@ -47,6 +47,17 @@ impl UniversalSierraCompilerCommand {
         self
     }
 
+    /// Adds multiple arguments to pass to `universal-sierra-compiler`.
+    pub fn args<I, S>(&mut self, args: I) -> &mut Self
+    where
+        I: IntoIterator<Item = S>,
+        S: AsRef<OsStr>,
+    {
+        self.args
+            .extend(args.into_iter().map(|s| s.as_ref().to_os_string()));
+        self
+    }
+
     /// Build executable `universal-sierra-compiler` command.
     #[must_use]
     pub fn command(&self) -> Command {
