@@ -19,10 +19,11 @@ async fn test_max_fee_too_low() {
     let snapbox = Command::new(cargo_bin!("sncast"))
         .current_dir(SCRIPTS_DIR.to_owned() + "/invoke")
         .args(args);
-    snapbox.assert().success().stderr_matches(indoc! {r"
+    snapbox.assert().success().stdout_matches(indoc! {r"
         ...
+        [DEBUG]	0x496e73756666696369656e744d6178466565 ('InsufficientMaxFee')
         command: script
-        error: Got an exception while executing a hint: Hint Error: Max fee is smaller than the minimal transaction cost
+        status: success
     "});
 }
 
@@ -43,15 +44,16 @@ async fn test_contract_does_not_exist() {
     let snapbox = Command::new(cargo_bin!("sncast"))
         .current_dir(SCRIPTS_DIR.to_owned() + "/invoke")
         .args(args);
-    snapbox.assert().success().stderr_matches(indoc! {r"
+    snapbox.assert().success().stdout_matches(indoc! {r"
         ...
+        [DEBUG]	0x436f6e74726163744572726f72 ('ContractError')
         command: script
-        error: Got an exception while executing a hint: Hint Error: An error occurred in the called contract [..]
+        status: success
     "});
 }
 
 #[test]
-fn test_wrong_function_name() {
+fn test_wrong_function_name() {  //TODO: not working, check other ContractError tests
     let script_name = "wrong_function_name";
     let args = vec![
         "--accounts-file",
@@ -67,10 +69,11 @@ fn test_wrong_function_name() {
     let snapbox = Command::new(cargo_bin!("sncast"))
         .current_dir(SCRIPTS_DIR.to_owned() + "/invoke")
         .args(args);
-    snapbox.assert().success().stderr_matches(indoc! {r"
+    snapbox.assert().success().stdout_matches(indoc! {r"
         ...
+        [DEBUG]	0x436f6e74726163744572726f72 ('ContractError')
         command: script
-        error: Got an exception while executing a hint: Hint Error: An error occurred in the called contract [..]
+        status: success
     "});
 }
 
@@ -91,9 +94,10 @@ fn test_wrong_calldata() {
     let snapbox = Command::new(cargo_bin!("sncast"))
         .current_dir(SCRIPTS_DIR.to_owned() + "/invoke")
         .args(args);
-    snapbox.assert().success().stderr_matches(indoc! {r"
+    snapbox.assert().success().stdout_matches(indoc! {r"
         ...
+        [DEBUG]	0x436f6e74726163744572726f72 ('ContractError')
         command: script
-        error: Got an exception while executing a hint: Hint Error: An error occurred in the called contract [..]
+        status: success
     "});
 }

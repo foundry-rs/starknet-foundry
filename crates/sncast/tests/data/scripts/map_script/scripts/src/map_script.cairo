@@ -16,7 +16,7 @@ fn second_contract() {
 
     let invoke_result = invoke(
         deploy_result.contract_address, 'put', array![0x1, 0x3], Option::None, Option::None
-    );
+    ).expect('mapa2 invoke failed');
     assert(invoke_result.transaction_hash != 0, invoke_result.transaction_hash);
 
     let call_result = call(deploy_result.contract_address, 'get', array![0x1])
@@ -50,7 +50,7 @@ fn main() {
         array![0x1, 0x2],
         Option::Some(max_fee),
         Option::Some(invoke_nonce)
-    );
+    ).expect('mapa invoke failed');
     assert(invoke_result.transaction_hash != 0, invoke_result.transaction_hash);
 
     let call_result = call(deploy_result.contract_address, 'get', array![0x1])

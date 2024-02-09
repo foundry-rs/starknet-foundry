@@ -13,6 +13,7 @@ use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
 use std::collections::HashMap;
+use crate::starknet_commands::commands::handle_starknet_command_error;
 
 #[derive(Args, Debug)]
 #[command(about = "Execute a multicall from a .toml file", long_about = None)]
@@ -119,7 +120,7 @@ pub async fn run(
         }
     }
 
-    execute_calls(account, parsed_calls, max_fee, None, wait_config).await
+    execute_calls(account, parsed_calls, max_fee, None, wait_config).await.map_err(handle_starknet_command_error)
 }
 
 fn parse_inputs(

@@ -356,7 +356,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     self.config.keystore.clone(),
                 ))?;
 
-                let invoke_response = self.tokio_runtime.block_on(invoke::invoke(
+                match self.tokio_runtime.block_on(invoke::invoke(
                     contract_address,
                     &entry_point_name,
                     calldata,
@@ -368,10 +368,19 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                         timeout: self.config.wait_timeout,
                         retry_interval: self.config.wait_retry_interval,
                     },
-                ))?;
-
-                let res: Vec<Felt252> = vec![Felt252::from_(invoke_response.transaction_hash.0)];
-                Ok(CheatcodeHandlingResult::Handled(res))
+                )) {
+                    Ok(invoke_response) => {
+                        let res: Vec<Felt252> = vec![
+                            Felt252::from(0),
+                            Felt252::from_(invoke_response.transaction_hash.0),
+                        ];
+                        Ok(CheatcodeHandlingResult::Handled(res))
+                    }
+                    Err(err) => {
+                        let res = serialize_script_err_to_felt_vec(err);
+                        Ok(CheatcodeHandlingResult::Handled(res))
+                    }
+                }
             }
             "get_nonce" => {
                 let block_id = reader
