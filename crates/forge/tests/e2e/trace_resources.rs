@@ -11,33 +11,54 @@ use forge_runner::trace_data::{ProfilerCallTrace, ProfilerExecutionResources, TR
 use crate::e2e::common::runner::{setup_package, test_runner};
 
 #[test]
-fn trace_resources() {
+fn trace_resources_call() {
+    assert_resources_for_test("test_call", check_call);
+}
+
+#[test]
+fn trace_resources_deploy() {
+    assert_resources_for_test("test_deploy", check_deploy);
+}
+
+#[test]
+fn trace_resources_l1_handler() {
+    assert_resources_for_test("test_l1_handler", check_l1_handler);
+}
+
+#[test]
+fn trace_resources_lib_call() {
+    assert_resources_for_test("test_lib_call", check_libcall);
+}
+
+#[test]
+#[ignore] // TODO(#1657)
+fn trace_resources_failed_call() {
+    assert_resources_for_test("test_failed_call", |_| ());
+}
+
+#[test]
+#[ignore] // TODO(#1657)
+fn trace_resources_failed_lib_call() {
+    assert_resources_for_test("test_failed_lib_call", |_| ());
+}
+
+fn assert_resources_for_test(
+    test_name: &str,
+    check_not_easily_unifiable_syscalls: fn(&ProfilerCallTrace),
+) {
     let temp = setup_package("trace_resources");
     let snapbox = test_runner();
     snapbox
         .current_dir(&temp)
+        .arg(test_name)
         .arg("--save-trace-data")
         .assert()
         .success();
 
-    for test_name in [
-        "test_call",
-        "test_deploy",
-        // TODO(#1657):
-        //  "test_failed_call",
-        //  "test_failed_lib_call",
-        "test_l1_handler",
-        "test_lib_call",
-    ] {
-        let call_trace = deserialize_call_trace(test_name, &temp);
-        ensure_resources_are_correct(&call_trace);
-    }
-
-    // tests for Deploy, CallContract and LibraryCall syscalls as they cannot be tested as easily as the rest
-    ensure_test_call_not_easily_countable_syscalls(&temp);
-    ensure_test_deploy_not_easily_countable_syscalls(&temp);
-    ensure_test_l1_handler_not_easily_countable_syscalls(&temp);
-    ensure_test_libcall_not_easily_countable_syscalls(&temp);
+    let call_trace = deserialize_call_trace(test_name, &temp);
+    check_vm_resources_and_easily_unifiable_syscalls(&call_trace);
+    // test Deploy, CallContract and LibraryCall syscalls as their counts cannot be unified as easily as the rest
+    check_not_easily_unifiable_syscalls(&call_trace);
 }
 
 fn deserialize_call_trace(test_name: &str, temp_dir: &TempDir) -> ProfilerCallTrace {
@@ -50,10 +71,12 @@ fn deserialize_call_trace(test_name: &str, temp_dir: &TempDir) -> ProfilerCallTr
     serde_json::from_str(&trace_data).expect("Failed to parse call trace")
 }
 
-fn ensure_resources_are_correct(call_trace: &ProfilerCallTrace) -> &ProfilerExecutionResources {
+fn check_vm_resources_and_easily_unifiable_syscalls(
+    call_trace: &ProfilerCallTrace,
+) -> &ProfilerExecutionResources {
     let mut child_resources = vec![];
     for call in &call_trace.nested_calls {
-        child_resources.push(ensure_resources_are_correct(call));
+        child_resources.push(check_vm_resources_and_easily_unifiable_syscalls(call));
     }
 
     let mut sum_child_resources = ProfilerExecutionResources::default();
@@ -64,12 +87,14 @@ fn ensure_resources_are_correct(call_trace: &ProfilerCallTrace) -> &ProfilerExec
     let current_resources = &call_trace.used_execution_resources;
     assert!(current_resources.gt_eq_than(&sum_child_resources));
     let resource_diff = current_resources - &sum_child_resources;
-    assert_correct_diff_for_easily_countable_syscalls(&resource_diff);
+    assert_correct_diff_for_builtins_and_easily_unifiable_syscalls(&resource_diff);
 
     current_resources
 }
 
-fn assert_correct_diff_for_easily_countable_syscalls(resource_diff: &ProfilerExecutionResources) {
+fn assert_correct_diff_for_builtins_and_easily_unifiable_syscalls(
+    resource_diff: &ProfilerExecutionResources,
+) {
     for syscall in [
         EmitEvent,
         GetBlockHash,
@@ -110,88 +135,84 @@ fn assert_correct_diff_for_easily_countable_syscalls(resource_diff: &ProfilerExe
 // When sth fails in the functions below and you didn't change anything in the cairo code it is a BUG.
 // If you changed the corresponding cairo code count the expected occurrences of syscalls manually first, then assert them.
 // TL;DR: DON't mindlessly change numbers to fix the tests if they ever fail.
-fn ensure_test_call_not_easily_countable_syscalls(temp_dir: &TempDir) {
-    let test_call_trace = deserialize_call_trace("test_call", temp_dir);
-    assert_not_easily_countable_syscalls(&test_call_trace, 11, 4, 1); // FIXME in #1631 (should be 14, 8, 1)
+fn check_call(test_call_trace: &ProfilerCallTrace) {
+    assert_not_easily_unifiable_syscalls(test_call_trace, 11, 4, 1); // FIXME in #1631 (should be 14, 8, 1)
 
     let regular_call = &test_call_trace.nested_calls[1];
-    assert_not_easily_countable_syscalls(regular_call, 2, 1, 0);
+    assert_not_easily_unifiable_syscalls(regular_call, 2, 1, 0);
 
     let from_proxy = &regular_call.nested_calls[0];
-    assert_not_easily_countable_syscalls(from_proxy, 1, 0, 0);
+    assert_not_easily_unifiable_syscalls(from_proxy, 1, 0, 0);
 
     let with_libcall = &test_call_trace.nested_calls[2];
-    assert_not_easily_countable_syscalls(with_libcall, 2, 0, 1);
+    assert_not_easily_unifiable_syscalls(with_libcall, 2, 0, 1);
 
     let from_proxy = &with_libcall.nested_calls[0];
-    assert_not_easily_countable_syscalls(from_proxy, 1, 0, 0);
+    assert_not_easily_unifiable_syscalls(from_proxy, 1, 0, 0);
 
     let call_two = &test_call_trace.nested_calls[3];
-    assert_not_easily_countable_syscalls(call_two, 3, 2, 0);
+    assert_not_easily_unifiable_syscalls(call_two, 3, 2, 0);
 
     let from_proxy = &call_two.nested_calls[0];
-    assert_not_easily_countable_syscalls(from_proxy, 1, 0, 0);
+    assert_not_easily_unifiable_syscalls(from_proxy, 1, 0, 0);
 
     let from_proxy_dummy = &call_two.nested_calls[1];
-    assert_not_easily_countable_syscalls(from_proxy_dummy, 1, 0, 0);
+    assert_not_easily_unifiable_syscalls(from_proxy_dummy, 1, 0, 0);
 
     let from_proxy = &test_call_trace.nested_calls[4];
-    assert_not_easily_countable_syscalls(from_proxy, 1, 0, 0);
+    assert_not_easily_unifiable_syscalls(from_proxy, 1, 0, 0);
 }
 
-fn ensure_test_deploy_not_easily_countable_syscalls(temp_dir: &TempDir) {
-    let test_call_trace = deserialize_call_trace("test_deploy", temp_dir);
-    assert_not_easily_countable_syscalls(&test_call_trace, 11, 4, 0); // FIXME in #1631 (should be 14, 4, 0)
+fn check_deploy(test_call_trace: &ProfilerCallTrace) {
+    assert_not_easily_unifiable_syscalls(test_call_trace, 11, 4, 0); // FIXME in #1631 (should be 14, 4, 0)
 
-    for deploy_proxy in test_call_trace.nested_calls {
-        assert_not_easily_countable_syscalls(&deploy_proxy, 2, 1, 0);
+    for deploy_proxy in &test_call_trace.nested_calls {
+        assert_not_easily_unifiable_syscalls(deploy_proxy, 2, 1, 0);
 
         let from_proxy = &deploy_proxy.nested_calls[0];
-        assert_not_easily_countable_syscalls(from_proxy, 1, 0, 0);
+        assert_not_easily_unifiable_syscalls(from_proxy, 1, 0, 0);
     }
 }
 
-fn ensure_test_l1_handler_not_easily_countable_syscalls(temp_dir: &TempDir) {
-    let test_call_trace = deserialize_call_trace("test_l1_handler", temp_dir);
-    assert_not_easily_countable_syscalls(&test_call_trace, 6, 3, 0); // FIXME in #1631 (should be 8, 3, 0)
+fn check_l1_handler(test_call_trace: &ProfilerCallTrace) {
+    assert_not_easily_unifiable_syscalls(test_call_trace, 6, 3, 0); // FIXME in #1631 (should be 8, 3, 0)
 
     let handle_l1 = &test_call_trace.nested_calls[1];
-    assert_not_easily_countable_syscalls(handle_l1, 3, 2, 0);
+    assert_not_easily_unifiable_syscalls(handle_l1, 3, 2, 0);
 
     let regular_call = &handle_l1.nested_calls[0];
-    assert_not_easily_countable_syscalls(regular_call, 2, 1, 0);
+    assert_not_easily_unifiable_syscalls(regular_call, 2, 1, 0);
 
     let from_proxy = &regular_call.nested_calls[0];
-    assert_not_easily_countable_syscalls(from_proxy, 1, 0, 0);
+    assert_not_easily_unifiable_syscalls(from_proxy, 1, 0, 0);
 }
 
-fn ensure_test_libcall_not_easily_countable_syscalls(temp_dir: &TempDir) {
-    let test_call_trace = deserialize_call_trace("test_lib_call", temp_dir);
-    assert_not_easily_countable_syscalls(&test_call_trace, 9, 3, 1); // FIXME in #1631 (should be 11, 3, 5)
+fn check_libcall(test_call_trace: &ProfilerCallTrace) {
+    assert_not_easily_unifiable_syscalls(test_call_trace, 9, 3, 1); // FIXME in #1631 (should be 11, 3, 5)
 
     let regular_call = &test_call_trace.nested_calls[0];
-    assert_not_easily_countable_syscalls(regular_call, 2, 1, 0);
+    assert_not_easily_unifiable_syscalls(regular_call, 2, 1, 0);
 
     let from_proxy = &regular_call.nested_calls[0];
-    assert_not_easily_countable_syscalls(from_proxy, 1, 0, 0);
+    assert_not_easily_unifiable_syscalls(from_proxy, 1, 0, 0);
 
     let with_libcall = &test_call_trace.nested_calls[1];
-    assert_not_easily_countable_syscalls(with_libcall, 2, 0, 1);
+    assert_not_easily_unifiable_syscalls(with_libcall, 2, 0, 1);
 
     let call_two = &test_call_trace.nested_calls[2];
-    assert_not_easily_countable_syscalls(call_two, 3, 2, 0);
+    assert_not_easily_unifiable_syscalls(call_two, 3, 2, 0);
 
     let from_proxy = &call_two.nested_calls[0];
-    assert_not_easily_countable_syscalls(from_proxy, 1, 0, 0);
+    assert_not_easily_unifiable_syscalls(from_proxy, 1, 0, 0);
 
     let from_proxy_dummy = &call_two.nested_calls[1];
-    assert_not_easily_countable_syscalls(from_proxy_dummy, 1, 0, 0);
+    assert_not_easily_unifiable_syscalls(from_proxy_dummy, 1, 0, 0);
 
     let from_proxy = &test_call_trace.nested_calls[3];
-    assert_not_easily_countable_syscalls(from_proxy, 1, 0, 0);
+    assert_not_easily_unifiable_syscalls(from_proxy, 1, 0, 0);
 }
 
-fn assert_not_easily_countable_syscalls(
+fn assert_not_easily_unifiable_syscalls(
     call: &ProfilerCallTrace,
     deploy_count: usize,
     call_contract_count: usize,
