@@ -102,18 +102,6 @@ jobs:
       - name: Run tests
         run: cargo test --release -p conversions
 
-  test-sierra-casm:
-    name: Test Sierra Casm
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@be73d7920c329f220ce78e0234b8f96b7ae60248
-        with:
-          toolchain: stable
-      - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
-      - name: Run tests
-        run: cargo test --release -p sierra-casm
-
   test-scarb-api:
     name: Test Scarb Api
     runs-on: ubuntu-latest
