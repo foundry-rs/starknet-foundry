@@ -1,6 +1,5 @@
 use crate::forking::cache::ForkCache;
 use crate::state::BlockInfoReader;
-use anyhow::Result;
 use blockifier::execution::contract_class::{
     ContractClass as ContractClassBlockifier, ContractClassV0, ContractClassV1,
 };
@@ -12,7 +11,6 @@ use conversions::{FromConv, IntoConv};
 use flate2::read::GzDecoder;
 use num_bigint::BigUint;
 use runtime::starknet::context::BlockInfo;
-use serde_json::Value;
 use starknet::core::types::{
     BlockId, ContractClass as ContractClassStarknet, FieldElement, MaybePendingBlockWithTxHashes,
     StarknetError,
@@ -27,11 +25,10 @@ use starknet_api::deprecated_contract_class::{
 use starknet_api::hash::StarkFelt;
 use starknet_api::state::StorageKey;
 use std::collections::HashMap;
-use std::io::{Read, Write};
+use std::io::Read;
 use std::ops::Deref;
-use tempfile::Builder;
 use tokio::runtime::Runtime;
-use universal_sierra_compiler_api::compile_sierra_contract;
+use universal_sierra_compiler_api::{compile_sierra, SierraType};
 use url::Url;
 
 #[derive(Debug)]
@@ -225,10 +222,15 @@ impl StateReader for ForkStateReader {
                     "entry_points_by_type": flattened_class.entry_points_by_type
                 });
 
-                match generate_casm(&sierra_contract_class) {
-                    Ok(casm_contract_class) => Ok(ContractClassBlockifier::V1(
-                        ContractClassV1::try_from(casm_contract_class).unwrap(),
-                    )),
+                match compile_sierra(&sierra_contract_class, None, &SierraType::Contract) {
+                    Ok(casm_contract_class_raw) => {
+                        let casm_contract_class: CasmContractClass =
+                            serde_json::from_str(&casm_contract_class_raw).unwrap();
+
+                        Ok(ContractClassBlockifier::V1(
+                            ContractClassV1::try_from(casm_contract_class).unwrap(),
+                        ))
+                    }
                     Err(err) => Err(StateReadError(err.to_string())),
                 }
             }
@@ -263,18 +265,4 @@ impl StateReader for ForkStateReader {
             "Unable to get compiled class hash from the fork".to_string(),
         ))
     }
-}
-
-fn generate_casm(sierra_contract_class: &Value) -> Result<CasmContractClass> {
-    let mut temp_sierra_file = Builder::new().tempfile().unwrap();
-    let _ = temp_sierra_file
-        .write(
-            serde_json::to_vec(sierra_contract_class)
-                .unwrap()
-                .as_slice(),
-        )
-        .unwrap();
-
-    let casm = compile_sierra_contract(temp_sierra_file.path().to_str().unwrap(), None)?;
-    Ok(serde_json::from_str(&casm).unwrap())
 }

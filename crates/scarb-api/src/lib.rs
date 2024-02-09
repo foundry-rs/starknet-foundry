@@ -5,7 +5,7 @@ use semver::VersionReq;
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::fs;
-use universal_sierra_compiler_api::compile_sierra_contract;
+use universal_sierra_compiler_api::{compile_sierra_at_path, SierraType};
 
 pub use command::*;
 
@@ -53,9 +53,10 @@ impl StarknetContractArtifacts {
         let sierra = fs::read_to_string(sierra_path)?;
 
         let casm = match &starknet_contract.artifacts.casm {
-            None => compile_sierra_contract(
+            None => compile_sierra_at_path(
                 starknet_contract.artifacts.sierra.as_str(),
                 Some(base_path.as_std_path()),
+                &SierraType::Contract,
             )?,
             Some(casm_path) => fs::read_to_string(base_path.join(casm_path))?,
         };
