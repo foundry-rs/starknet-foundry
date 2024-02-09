@@ -94,31 +94,20 @@ mod tests {
     use crate::compiled_raw::{
         CompiledTestCrateRaw, CrateLocation, RawForkConfig, RawForkParams, TestCaseRaw,
     };
-    use axum::{http::StatusCode, routing::post, Json, Router};
+    use axum::{extract::Query, response::Redirect, routing::any, Router};
     use cairo_lang_sierra::program::Program;
     use forge_runner::expected_result::ExpectedTestResult;
     use gag::BufferRedirect;
     use indoc::formatdoc;
-    use serde_json::{json, Value};
     use serial_test::serial;
     use shared::consts::EXPECTED_RPC_VERSION;
     use std::{io::read_to_string, sync::Once, time::Duration};
     use test_utils::output_assert::assert_stdout_contains;
+    use tokio::net::TcpListener;
 
     /**
      * all tests using [`BufferRedirect`] must be run with --nocapture
      */
-
-    static SERVERS: Once = Once::new();
-
-    async fn setup_fake_nodes() {
-        SERVERS.call_once(|| {
-            setup_fake_node("127.0.0.1:3030");
-            setup_fake_node("127.0.0.1:3035");
-        });
-
-        tokio::time::sleep(Duration::from_secs(1)).await;
-    }
 
     fn prepare_input<const L: usize>(urls: &[&str; L]) -> [CompiledTestCrateRaw; L] {
         urls.map(|url| CompiledTestCrateRaw {
@@ -144,38 +133,40 @@ mod tests {
         })
     }
 
-    async fn handler(Json(input): Json<Value>) -> (StatusCode, String) {
-        let id = input.as_object().unwrap().get("id");
+    static SERVER: Once = Once::new();
 
-        (
-            StatusCode::OK,
-            json!({
-                "id": id,
-                "result": "0.5.0"
-            })
-            .to_string(),
-        )
+    #[derive(serde::Deserialize)]
+    struct Params {
+        url: String,
     }
 
-    fn setup_fake_node(address: impl Into<String>) {
-        let address = address.into();
+    // to make one url look like different ones
+    async fn setup_redirect_server() {
+        SERVER.call_once(|| {
+            tokio::spawn(async {
+                let app = Router::new().route(
+                    "/",
+                    any(|params: Query<Params>| async move { Redirect::permanent(&params.url) }),
+                );
 
-        tokio::spawn(async {
-            let app = Router::new().route("/rpc", post(handler));
+                let listener = TcpListener::bind("127.0.0.1:3030").await.unwrap();
 
-            let listener = tokio::net::TcpListener::bind(address).await.unwrap();
-            axum::serve(listener, app).await.unwrap();
+                axum::serve(listener, app).await.unwrap();
+            });
         });
+
+        // if test uses server make it wait for a second before it's ready
+        tokio::time::sleep(Duration::from_secs(1)).await;
     }
 
     // must be run with --nocapture or will fail
     #[tokio_shared_rt::test]
     #[serial]
     async fn should_dedup_urls() {
-        setup_fake_nodes().await;
-
-        let test_crates =
-            prepare_input(&["http://127.0.0.1:3030/rpc", "http://127.0.0.1:3030/rpc"]);
+        let test_crates = prepare_input(&[
+            "http://188.34.188.184:9545/rpc/v0_5",
+            "http://188.34.188.184:9545/rpc/v0_5",
+        ]);
         let buffer = BufferRedirect::stdout().unwrap();
 
         warn_if_incompatible_rpc_version(&test_crates, &[])
@@ -188,7 +179,7 @@ mod tests {
             stdout,
             formatdoc!(
                 r"
-                    [WARNING] The RPC node with url = http://127.0.0.1:3030/rpc has unsupported version = (0.5.0), use node supporting RPC version {EXPECTED_RPC_VERSION}
+                    [WARNING] The RPC node with url = http://188.34.188.184:9545/rpc/v0_5 has unsupported version = (0.5.1), use node supporting RPC version {EXPECTED_RPC_VERSION}
                 "
             ),
         );
@@ -198,9 +189,7 @@ mod tests {
     #[tokio_shared_rt::test]
     #[serial]
     async fn should_print_warning() {
-        setup_fake_nodes().await;
-
-        let test_crates = prepare_input(&["http://127.0.0.1:3030/rpc"]);
+        let test_crates = prepare_input(&["http://188.34.188.184:9545/rpc/v0_5"]);
         let buffer = BufferRedirect::stdout().unwrap();
 
         warn_if_incompatible_rpc_version(&test_crates, &[])
@@ -213,7 +202,7 @@ mod tests {
             stdout,
             formatdoc!(
                 r"
-                    [WARNING] The RPC node with url = http://127.0.0.1:3030/rpc has unsupported version = (0.5.0), use node supporting RPC version {EXPECTED_RPC_VERSION}
+                    [WARNING] The RPC node with url = http://188.34.188.184:9545/rpc/v0_5 has unsupported version = (0.5.1), use node supporting RPC version {EXPECTED_RPC_VERSION}
                 "
             ),
         );
@@ -223,10 +212,12 @@ mod tests {
     #[tokio_shared_rt::test]
     #[serial]
     async fn should_print_for_each() {
-        setup_fake_nodes().await;
+        setup_redirect_server().await;
 
-        let test_crates =
-            prepare_input(&["http://127.0.0.1:3030/rpc", "http://127.0.0.1:3035/rpc"]);
+        let test_crates = prepare_input(&[
+            "http://127.0.0.1:3030?url=http://188.34.188.184:9545/rpc/v0_5",
+            "http://188.34.188.184:9545/rpc/v0_5",
+        ]);
         let buffer = BufferRedirect::stdout().unwrap();
 
         warn_if_incompatible_rpc_version(&test_crates, &[])
@@ -239,8 +230,8 @@ mod tests {
             stdout,
             formatdoc!(
                 r"
-                    [WARNING] The RPC node with url = http://127.0.0.1:3030/rpc has unsupported version = (0.5.0), use node supporting RPC version {EXPECTED_RPC_VERSION}
-                    [WARNING] The RPC node with url = http://127.0.0.1:3035/rpc has unsupported version = (0.5.0), use node supporting RPC version {EXPECTED_RPC_VERSION}
+                    [WARNING] The RPC node with url = http://127.0.0.1:3030?url=http://188.34.188.184:9545/rpc/v0_5 has unsupported version = (0.5.1), use node supporting RPC version {EXPECTED_RPC_VERSION}
+                    [WARNING] The RPC node with url = http://188.34.188.184:9545/rpc/v0_5 has unsupported version = (0.5.1), use node supporting RPC version {EXPECTED_RPC_VERSION}
                 "
             ),
         );
