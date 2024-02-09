@@ -11,8 +11,6 @@ use cairo_lang_sierra::extensions::core::{CoreLibfunc, CoreType};
 use cairo_lang_sierra::ids::ConcreteTypeId;
 use cairo_lang_sierra::program::{Function, Program};
 use cairo_lang_sierra::program_registry::ProgramRegistry;
-use cairo_lang_sierra_to_casm::compiler::CairoProgram;
-use cairo_lang_sierra_to_casm::metadata::{calc_metadata, MetadataComputationConfig};
 use cairo_lang_sierra_type_size::get_type_size_map;
 use camino::Utf8PathBuf;
 
@@ -25,12 +23,15 @@ use scarb_api::StarknetContractArtifacts;
 use smol_str::SmolStr;
 use trace_data::save_trace_data;
 
+use cairo_lang_casm::hints::Hint;
+use num_bigint::BigInt;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::default::Default;
 use std::sync::Arc;
 use test_case_summary::{AnyTestCaseSummary, Fuzzing};
 use tokio::sync::mpsc::{channel, Sender};
 use tokio::task::JoinHandle;
+use universal_sierra_compiler_api::{compile_sierra, SierraType};
 
 pub mod compiled_runnable;
 pub mod expected_result;
@@ -183,10 +184,28 @@ fn build_test_details(test_name: &str, sierra_program: &Program) -> TestDetails 
     }
 }
 
-fn compile_sierra_to_casm(sierra_program: &Program) -> CairoProgram {
-    let metadata_config = MetadataComputationConfig::default();
-    let metadata = calc_metadata(sierra_program, metadata_config).unwrap();
-    cairo_lang_sierra_to_casm::compiler::compile(sierra_program, &metadata, true).unwrap()
+#[derive(Serialize, Deserialize)]
+pub struct AssembledProgramWithDebugInfo {
+    pub assembled_cairo_program: AssembledCairoProgramWithSerde,
+    pub debug_info: Vec<(usize, usize)>,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct AssembledCairoProgramWithSerde {
+    pub bytecode: Vec<BigInt>,
+    pub hints: Vec<(usize, Vec<Hint>)>,
+}
+
+fn compile_sierra_to_casm(sierra_program: &Program) -> Result<AssembledProgramWithDebugInfo> {
+    let assembled_with_info_raw = compile_sierra(
+        &serde_json::to_value(sierra_program).unwrap(),
+        None,
+        &SierraType::Raw,
+    )?;
+    let assmebled_with_info: AssembledProgramWithDebugInfo =
+        serde_json::from_str(&assembled_with_info_raw)?;
+
+    Ok(assmebled_with_info)
 }
 
 pub async fn run_tests_from_crate(
@@ -196,7 +215,7 @@ pub async fn run_tests_from_crate(
     tests_filter: &impl TestCaseFilter,
 ) -> Result<TestCrateRunResult> {
     let sierra_program = &tests.sierra_program;
-    let casm_program = Arc::new(compile_sierra_to_casm(sierra_program));
+    let casm_program = Arc::new(compile_sierra_to_casm(sierra_program)?);
 
     let mut tasks = FuturesUnordered::new();
     let test_cases = &tests.test_cases;
@@ -283,7 +302,7 @@ pub async fn run_tests_from_crate(
 fn choose_test_strategy_and_run(
     args: Vec<ConcreteTypeId>,
     case: Arc<TestCaseRunnable>,
-    casm_program: Arc<CairoProgram>,
+    casm_program: Arc<AssembledProgramWithDebugInfo>,
     test_details: Arc<TestDetails>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
@@ -322,7 +341,7 @@ fn choose_test_strategy_and_run(
 fn run_with_fuzzing(
     args: Vec<ConcreteTypeId>,
     case: Arc<TestCaseRunnable>,
-    casm_program: Arc<CairoProgram>,
+    casm_program: Arc<AssembledProgramWithDebugInfo>,
     test_details: Arc<TestDetails>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,

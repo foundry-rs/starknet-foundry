@@ -2090,9 +2090,11 @@ dependencies = [
  "smol_str",
  "starknet",
  "starknet_api",
+ "tempfile",
  "thiserror",
  "tokio",
  "tokio-util",
+ "universal-sierra-compiler-api",
  "url",
 ]
 
@@ -5500,6 +5502,7 @@ dependencies = [
  "semver",
  "serde",
  "serde_json",
+ "tempfile",
  "thiserror",
  "which",
 ]
