@@ -35,6 +35,7 @@
 # Foundry Development
 
 * [Environment Setup](development/environment-setup.md)
+* [RPC Version](development/rpc-version.md)
 
 # Appendix
 
