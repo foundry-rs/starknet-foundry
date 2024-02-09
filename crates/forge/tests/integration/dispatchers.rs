@@ -218,7 +218,7 @@ fn handling_bytearray_based_errors() {
             let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
         
             #[feature("safe_dispatcher")]
-            match safe_dispatcher.do_a_panic_with_bytearray().map_string_errors() {
+            match safe_dispatcher.do_a_panic_with_bytearray().map_string_error() {
                 Result::Ok(_) => panic_with_felt252('shouldve panicked'),
                 Result::Err(x) => {
                         match x {

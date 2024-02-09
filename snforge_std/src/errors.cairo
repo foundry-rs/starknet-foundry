@@ -10,11 +10,11 @@ pub enum PanicDataOrString {
 type ExtendedSyscallResult<T> = Result<T, PanicDataOrString>;
 
 trait SyscallResultStringErrorTrait<T> {
-    fn map_string_errors(self: SyscallResult<T>) -> ExtendedSyscallResult<T>;
+    fn map_string_error(self: SyscallResult<T>) -> ExtendedSyscallResult<T>;
 }
 
 impl SyscallResultStringErrorTraitImpl<T> of SyscallResultStringErrorTrait<T> {
-    fn map_string_errors(self: SyscallResult<T>) -> ExtendedSyscallResult<T> {
+    fn map_string_error(self: SyscallResult<T>) -> ExtendedSyscallResult<T> {
         match self {
             Result::Ok(x) => Result::Ok(x),
             Result::Err(panic_data) => {
