@@ -202,10 +202,10 @@ fn compile_sierra_to_casm(sierra_program: &Program) -> Result<AssembledProgramWi
         None,
         &SierraType::Raw,
     )?;
-    let assmebled_with_info: AssembledProgramWithDebugInfo =
+    let assembled_with_info: AssembledProgramWithDebugInfo =
         serde_json::from_str(&assembled_with_info_raw)?;
 
-    Ok(assmebled_with_info)
+    Ok(assembled_with_info)
 }
 
 pub async fn run_tests_from_crate(
