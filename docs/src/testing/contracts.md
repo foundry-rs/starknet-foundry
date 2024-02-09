@@ -108,6 +108,7 @@ First, let's add a new, panicking function to our contract.
 trait IHelloStarknet<TContractState> {
     // ...
     fn do_a_panic(self: @TContractState);
+    fn do_a_string_panic(self: @TContractState);
 }
 
 #[starknet::contract]
@@ -126,6 +127,10 @@ mod HelloStarknet {
             arr.append('PANIC');
             arr.append('DAYTAH');
             panic(arr);
+        }
+
+        fn do_a_string_panic(self: @ContractState) {
+            assert!(false, "This a panicking with a string, which can be longer");
         }
     }
 }
@@ -195,6 +200,38 @@ Running 1 test(s) from tests/
 [PASS] tests::handling_errors
 Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ```
+
+Similarly, you can handle the panics which use string as an argument (like an `assert!` macro)
+
+```rust
+// Necessary struct and trait imports for string errors mapping
+use snforge_std::errors::{ SyscallResultStringErrorTrait, PanicDataOrString };
+// ...
+#[test]
+fn handling_string_errors() {
+    // ...
+    let contract_address = contract.deploy(@calldata).unwrap();
+    let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
+    
+    // Notice the `map_string_error` helper usage here, and different error type
+    #[feature("safe_dispatcher")]
+    match safe_dispatcher.do_a_string_panic().map_string_error() { 
+        Result::Ok(_) => panic_with_felt252('shouldve panicked'),
+        Result::Err(panic_data) => {
+            match x { 
+                PanicDataOrString::PanicData(_) => panic_with_felt252('wrong format'),
+                PanicDataOrString::String(str) => {
+                    assert(
+                        str == "This a panicking with a string, which can be longer", 
+                        'wrong string received'
+                    );
+                }
+            }
+        }
+    };
+}
+```
+You also could skip the de-serialization of the `panic_data`, and not use `map_string_error`, but this way you can actually use assertions on the `ByteArray` that was used to panic. 
 
 ### Expecting Test Failure
 
