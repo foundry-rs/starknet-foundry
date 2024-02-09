@@ -42,7 +42,7 @@ fn should_print_warning() {
     let temp = setup_package("empty");
 
     temp.child("tests/test.cairo")
-        .write_str(&indoc!(
+        .write_str(indoc!(
             r#"
                 #[fork(url: "http://188.34.188.184:9545/rpc/v0_5", block_id: BlockId::Tag(BlockTag::Latest))]
                 #[test]
@@ -91,7 +91,7 @@ fn should_dedup_urls() {
     let temp = setup_package("empty");
 
     temp.child("tests/test.cairo")
-        .write_str(&indoc!(
+        .write_str(indoc!(
             r#"
                 #[fork(url: "http://188.34.188.184:9545/rpc/v0_5", block_id: BlockId::Tag(BlockTag::Latest))]
                 #[test]
@@ -151,7 +151,7 @@ fn should_print_foreach() {
     let temp = setup_package("empty");
 
     temp.child("tests/test.cairo")
-        .write_str(&indoc!(
+        .write_str(indoc!(
             r#"
                 #[fork(url: "http://127.0.0.1:3030?url=http://188.34.188.184:9545/rpc/v0_5", block_id: BlockId::Tag(BlockTag::Latest))]
                 #[test]
