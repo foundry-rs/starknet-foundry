@@ -35,11 +35,20 @@ Some of the planned features that will be included in future versions are:
 - account creation/deployment
 - multicall support
 - dry running the scripts
-- init subcommand
 
 and more!
 
 ## Examples
+
+### Initialize a script
+
+To get started, a deployment script with all required elements can be initialized using the following command:
+
+```shell
+$ sncast script init my_script
+```
+
+For more details, see [init command](../appendix/sncast/script/init.md).
 
 ### Minimal Example (Without Contract Deployment)
 
