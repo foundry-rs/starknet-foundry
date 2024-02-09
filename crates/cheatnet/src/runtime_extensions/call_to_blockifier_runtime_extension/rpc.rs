@@ -1,4 +1,3 @@
-use blockifier::execution::deprecated_syscalls::hint_processor::SyscallCounter;
 use blockifier::execution::execution_utils::stark_felt_to_felt;
 use cairo_lang_runner::casm_run::format_next_item;
 
@@ -23,27 +22,6 @@ use super::RuntimeState;
 pub struct UsedResources {
     pub execution_resources: ExecutionResources,
     pub l2_to_l1_payloads_length: Vec<usize>,
-}
-
-impl UsedResources {
-    pub fn extend(self: &mut UsedResources, other: &UsedResources) {
-        self.execution_resources.vm_resources += &other.execution_resources.vm_resources;
-
-        self.update_syscall_counter(&other.execution_resources.syscall_counter);
-
-        self.l2_to_l1_payloads_length
-            .extend(&other.l2_to_l1_payloads_length);
-    }
-
-    fn update_syscall_counter(self: &mut UsedResources, syscall_counter: &SyscallCounter) {
-        for (syscall, count) in syscall_counter {
-            *self
-                .execution_resources
-                .syscall_counter
-                .entry(*syscall)
-                .or_insert(0) += count;
-        }
-    }
 }
 
 /// Enum representing possible call execution result, along with the data
