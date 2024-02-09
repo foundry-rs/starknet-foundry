@@ -27,6 +27,6 @@ async fn test_failing() {
         .args(args);
     snapbox.assert().success().stderr_matches(indoc! {r"
         command: script
-        error: Got an exception while executing a hint: Hint Error: An error occurred in the called contract [..]
+        error: Got an exception while executing a hint: Hint Error: An error [..]Entry point EntryPointSelector(StarkFelt[..]not found in contract[..]
     "});
 }
