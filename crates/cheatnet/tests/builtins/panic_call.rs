@@ -1,9 +1,10 @@
 use crate::common::call_contract;
-use crate::common::state::{build_runtime_state, create_runtime_states};
+use crate::common::state::build_runtime_state;
 use crate::common::{deploy_contract, felt_selector_from_name, state::create_cached_state};
 use crate::{assert_error, assert_panic};
 use cairo_felt::Felt252;
 use cairo_lang_utils::byte_array::BYTE_ARRAY_MAGIC;
+use cheatnet::state::CheatnetState;
 use conversions::felt252::FromShortString;
 use conversions::IntoConv;
 use num_traits::{Bounded, Num};
@@ -11,16 +12,15 @@ use num_traits::{Bounded, Num};
 #[test]
 fn call_contract_error() {
     let mut cached_state = create_cached_state();
-    let (mut blockifier_state, mut runtime_state_raw) = create_runtime_states(&mut cached_state);
-    let mut runtime_state = build_runtime_state(&mut runtime_state_raw);
+    let mut cheatnet_state = CheatnetState::default();
+    let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
-    let contract_address =
-        deploy_contract(&mut blockifier_state, &mut runtime_state, "PanicCall", &[]);
+    let contract_address = deploy_contract(&mut cached_state, &mut runtime_state, "PanicCall", &[]);
 
     let selector = felt_selector_from_name("panic_call");
 
     let output = call_contract(
-        &mut blockifier_state,
+        &mut cached_state,
         &mut runtime_state,
         &contract_address,
         &selector,
@@ -33,16 +33,15 @@ fn call_contract_error() {
 #[test]
 fn call_contract_panic() {
     let mut cached_state = create_cached_state();
-    let (mut blockifier_state, mut runtime_state_raw) = create_runtime_states(&mut cached_state);
-    let mut runtime_state = build_runtime_state(&mut runtime_state_raw);
+    let mut cheatnet_state = CheatnetState::default();
+    let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
-    let contract_address =
-        deploy_contract(&mut blockifier_state, &mut runtime_state, "PanicCall", &[]);
+    let contract_address = deploy_contract(&mut cached_state, &mut runtime_state, "PanicCall", &[]);
 
     let selector = felt_selector_from_name("panic_call");
 
     let output = call_contract(
-        &mut blockifier_state,
+        &mut cached_state,
         &mut runtime_state,
         &contract_address,
         &selector,

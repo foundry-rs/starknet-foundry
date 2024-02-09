@@ -5,7 +5,7 @@ use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
 };
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::{deploy, deploy_at};
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
-use crate::state::{BlockifierState, CallTrace, CheatTarget};
+use crate::state::{CallTrace, CheatTarget};
 use anyhow::{Context, Result};
 use blockifier::execution::call_info::{CallExecution, CallInfo};
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
@@ -22,6 +22,9 @@ use scarb_api::StarknetContractArtifacts;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use starknet_api::core::ContractAddress;
 
+use crate::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
+use crate::runtime_extensions::forge_runtime_extension::cheatcodes::get_class_hash::get_class_hash;
+use crate::runtime_extensions::forge_runtime_extension::cheatcodes::l1_handler_execute::l1_handler_execute;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::SpyTarget;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::storage::{
     calculate_variable_address, load, store,
@@ -249,16 +252,15 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
             "declare" => {
+                let state = &mut extended_runtime
+                    .extended_runtime
+                    .extended_runtime
+                    .hint_handler
+                    .state;
+
                 let contract_name = reader.read_felt();
                 let contracts = self.contracts;
-                let mut blockifier_state = BlockifierState::from(
-                    extended_runtime
-                        .extended_runtime
-                        .extended_runtime
-                        .hint_handler
-                        .state,
-                );
-                match blockifier_state.declare(&contract_name, contracts) {
+                match declare(*state, &contract_name, contracts) {
                     Ok(class_hash) => {
                         let felt_class_hash = stark_felt_to_felt(class_hash.0);
                         let result = vec![Felt252::from(0), felt_class_hash];
@@ -274,11 +276,10 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let class_hash = reader.read_felt().into_();
                 let calldata = reader.read_vec();
                 let cheatnet_runtime = &mut extended_runtime.extended_runtime;
-                let mut blockifier_state =
-                    BlockifierState::from(cheatnet_runtime.extended_runtime.hint_handler.state);
+                let syscall_handler = &mut cheatnet_runtime.extended_runtime.hint_handler;
 
                 handle_deploy_result(deploy(
-                    &mut blockifier_state,
+                    syscall_handler,
                     &mut RuntimeState {
                         cheatnet_state: cheatnet_runtime.extension.cheatnet_state,
                     },
@@ -291,11 +292,10 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let calldata = reader.read_vec();
                 let contract_address = reader.read_felt().into_();
                 let cheatnet_runtime = &mut extended_runtime.extended_runtime;
-                let mut blockifier_state =
-                    BlockifierState::from(cheatnet_runtime.extended_runtime.hint_handler.state);
+                let syscall_handler = &mut cheatnet_runtime.extended_runtime.hint_handler;
 
                 handle_deploy_result(deploy_at(
-                    &mut blockifier_state,
+                    syscall_handler,
                     &mut RuntimeState {
                         cheatnet_state: cheatnet_runtime.extension.cheatnet_state,
                     },
@@ -338,15 +338,13 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
             "get_class_hash" => {
                 let contract_address = reader.read_felt().into_();
 
-                let mut blockifier_state = BlockifierState::from(
-                    extended_runtime
-                        .extended_runtime
-                        .extended_runtime
-                        .hint_handler
-                        .state,
-                );
+                let state = &mut extended_runtime
+                    .extended_runtime
+                    .extended_runtime
+                    .hint_handler
+                    .state;
 
-                match blockifier_state.get_class_hash(contract_address) {
+                match get_class_hash(*state, contract_address) {
                     Ok(class_hash) => {
                         let felt_class_hash = stark_felt_to_felt(class_hash.0);
 
@@ -364,13 +362,13 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let payload = reader.read_vec();
 
                 let cheatnet_runtime = &mut extended_runtime.extended_runtime;
-                let mut blockifier_state =
-                    BlockifierState::from(cheatnet_runtime.extended_runtime.hint_handler.state);
 
                 let mut runtime_state = RuntimeState {
                     cheatnet_state: cheatnet_runtime.extension.cheatnet_state,
                 };
-                match blockifier_state.l1_handler_execute(
+                let syscall_handler = &mut cheatnet_runtime.extended_runtime.hint_handler;
+                match l1_handler_execute(
+                    syscall_handler,
                     &mut runtime_state,
                     contract_address,
                     &function_name,
@@ -576,36 +574,26 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 Ok(CheatcodeHandlingResult::Handled(output))
             }
             "store" => {
-                let mut blockifier_state = BlockifierState::from(
-                    extended_runtime
-                        .extended_runtime
-                        .extended_runtime
-                        .hint_handler
-                        .state,
-                );
+                let state = &mut extended_runtime
+                    .extended_runtime
+                    .extended_runtime
+                    .hint_handler
+                    .state;
                 let target = ContractAddress::from_(reader.read_felt());
                 let storage_address = reader.read_felt();
-                store(
-                    &mut blockifier_state,
-                    target,
-                    &storage_address,
-                    reader.read_felt(),
-                )
-                .expect("Failed to store");
+                store(*state, target, &storage_address, reader.read_felt())
+                    .expect("Failed to store");
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
             "load" => {
-                let mut blockifier_state = BlockifierState::from(
-                    extended_runtime
-                        .extended_runtime
-                        .extended_runtime
-                        .hint_handler
-                        .state,
-                );
+                let state = &mut extended_runtime
+                    .extended_runtime
+                    .extended_runtime
+                    .hint_handler
+                    .state;
                 let target = ContractAddress::from_(reader.read_felt());
                 let storage_address = &reader.read_felt();
-                let loaded =
-                    load(&mut blockifier_state, target, storage_address).expect("Failed to load");
+                let loaded = load(*state, target, storage_address).expect("Failed to load");
                 Ok(CheatcodeHandlingResult::Handled(vec![loaded]))
             }
             "map_entry_address" => {
@@ -721,43 +709,24 @@ fn concat_u128_bytes(low: &[u8; 32], high: &[u8; 32]) -> [u8; 32] {
 
 #[must_use]
 pub fn get_all_execution_resources(runtime: ForgeRuntime) -> UsedResources {
-    let runtime_execution_resources = runtime
-        .extended_runtime
-        .extended_runtime
-        .extended_runtime
-        .hint_handler
-        .resources
-        .clone();
-    let runtime_l1_to_l2_messages = runtime
-        .extended_runtime
-        .extended_runtime
-        .extended_runtime
-        .hint_handler
-        .l2_to_l1_messages;
+    let starknet_runtime = runtime.extended_runtime.extended_runtime.extended_runtime;
+    let runtime_execution_resources = starknet_runtime.hint_handler.resources.clone();
+    let runtime_l1_to_l2_messages = starknet_runtime.hint_handler.l2_to_l1_messages;
 
     let runtime_call_info = CallInfo {
         execution: CallExecution {
             l2_to_l1_messages: runtime_l1_to_l2_messages,
             ..Default::default()
         },
+        inner_calls: starknet_runtime.hint_handler.inner_calls,
         ..Default::default()
     };
     let runtime_l2_to_l1_payloads_length = runtime_call_info
         .get_sorted_l2_to_l1_payloads_length()
         .unwrap();
 
-    let mut all_resources = UsedResources {
+    UsedResources {
         execution_resources: runtime_execution_resources,
         l2_to_l1_payloads_length: runtime_l2_to_l1_payloads_length,
-    };
-
-    let cheatnet_used_resources = &runtime
-        .extended_runtime
-        .extended_runtime
-        .extension
-        .cheatnet_state
-        .used_resources;
-    all_resources.extend(cheatnet_used_resources);
-
-    all_resources
+    }
 }

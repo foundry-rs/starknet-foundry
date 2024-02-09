@@ -17,8 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
+- Warning in fork testing is emitted, when node JSON-RPC version is incompatible
 - `get_call_trace` library function for retrieving call trace in tests
-
 
 #### Changed
 
