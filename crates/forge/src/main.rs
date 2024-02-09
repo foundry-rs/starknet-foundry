@@ -26,6 +26,7 @@ use std::env;
 use std::sync::Arc;
 use std::thread::available_parallelism;
 use tokio::runtime::Builder;
+use universal_sierra_compiler_api::UniversalSierraCompilerCommand;
 
 mod init;
 
@@ -282,6 +283,7 @@ fn main_execution() -> Result<bool> {
     let cli = Cli::parse();
 
     ScarbCommand::new().ensure_available()?;
+    UniversalSierraCompilerCommand::ensure_available()?;
 
     match cli.subcommand {
         ForgeSubcommand::Init { name } => {
