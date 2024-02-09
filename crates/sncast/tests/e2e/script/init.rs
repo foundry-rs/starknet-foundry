@@ -57,7 +57,7 @@ fn test_script_init_happy_case() {
     );
     assert_eq!(
         main_file_content,
-        indoc! {r"
+        indoc! {r#"
             use sncast_std::{call, CallResult};
 
             // The example below uses a contract deployed to the Goerli testnet
@@ -66,8 +66,9 @@ fn test_script_init_happy_case() {
                 let call_result = call(contract_address.try_into().unwrap(), 'get_greeting', array![]);
                 let call_result = *call_result.data[0];
                 assert(call_result=='Hello, Starknet!', '');
+                println!("{:?}", call_result);
             }
-        "}
+        "#}
     );
 }
 

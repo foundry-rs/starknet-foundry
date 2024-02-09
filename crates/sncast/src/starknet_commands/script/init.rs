@@ -121,7 +121,7 @@ fn create_script_main_file(script_name: &str, script_root_dir: &Utf8PathBuf) -> 
 
     fs::write(
         script_main_file_path,
-        indoc! {r"
+        indoc! {r#"
             use sncast_std::{call, CallResult};
 
             // The example below uses a contract deployed to the Goerli testnet
@@ -130,8 +130,9 @@ fn create_script_main_file(script_name: &str, script_root_dir: &Utf8PathBuf) -> 
                 let call_result = call(contract_address.try_into().unwrap(), 'get_greeting', array![]);
                 let call_result = *call_result.data[0];
                 assert(call_result=='Hello, Starknet!', '');
+                println!("{:?}", call_result);
             }
-        "},
+        "#},
     )?;
 
     Ok(())
