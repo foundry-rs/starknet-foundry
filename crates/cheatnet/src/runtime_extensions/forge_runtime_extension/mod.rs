@@ -707,10 +707,30 @@ fn concat_u128_bytes(low: &[u8; 32], high: &[u8; 32]) -> [u8; 32] {
     result
 }
 
+pub fn update_top_call_execution_resources(runtime: &mut ForgeRuntime) {
+    let all_execution_resources = runtime
+        .extended_runtime
+        .extended_runtime
+        .extended_runtime
+        .hint_handler
+        .resources
+        .clone();
+
+    // call representing the test code
+    let top_call = runtime
+        .extended_runtime
+        .extended_runtime
+        .extension
+        .cheatnet_state
+        .trace_data
+        .current_call_stack
+        .top();
+    top_call.borrow_mut().used_execution_resources = all_execution_resources;
+}
+
 #[must_use]
-pub fn update_test_execution_resources_and_get_them(runtime: ForgeRuntime) -> UsedResources {
+pub fn get_all_used_resources(runtime: ForgeRuntime) -> UsedResources {
     let starknet_runtime = runtime.extended_runtime.extended_runtime.extended_runtime;
-    let execution_resources = starknet_runtime.hint_handler.resources.clone();
     let top_call_l2_to_l1_messages = starknet_runtime.hint_handler.l2_to_l1_messages;
 
     // used just to obtain payloads of L2 -> L1 messages
@@ -735,7 +755,7 @@ pub fn update_test_execution_resources_and_get_them(runtime: ForgeRuntime) -> Us
         .trace_data
         .current_call_stack
         .top();
-    top_call.borrow_mut().used_execution_resources = execution_resources.clone();
+    let execution_resources = top_call.borrow().used_execution_resources.clone();
 
     UsedResources {
         execution_resources,
