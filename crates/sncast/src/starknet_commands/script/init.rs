@@ -5,7 +5,7 @@ use std::fs;
 use clap::Args;
 use indoc::{formatdoc, indoc};
 use scarb_api::ScarbCommand;
-use sncast::helpers::constants::SCRIPTS_DIR;
+use sncast::helpers::constants::INIT_SCRIPTS_DIR;
 use sncast::helpers::scarb_utils::get_cairo_version;
 use sncast::response::structs::ScriptInitResponse;
 
@@ -41,7 +41,7 @@ fn get_script_root_dir_path(script_name: &str) -> Result<Utf8PathBuf> {
     let current_dir = Utf8PathBuf::from_path_buf(std::env::current_dir()?)
         .expect("Failed to create Utf8PathBuf for the current directory");
 
-    let scripts_dir = current_dir.join(SCRIPTS_DIR);
+    let scripts_dir = current_dir.join(INIT_SCRIPTS_DIR);
 
     ensure!(
         !scripts_dir.exists(),

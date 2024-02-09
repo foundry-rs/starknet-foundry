@@ -1,7 +1,7 @@
 use camino::Utf8PathBuf;
 use indoc::{formatdoc, indoc};
 use snapbox::cmd::{cargo_bin, Command};
-use sncast::helpers::constants::SCRIPTS_DIR;
+use sncast::helpers::constants::INIT_SCRIPTS_DIR;
 use sncast::helpers::scarb_utils::get_cairo_version;
 use tempfile::TempDir;
 
@@ -19,7 +19,7 @@ fn test_script_init_happy_case() {
         status: Successfully initialized `{script_name}` at [..]/scripts/{script_name}
     "});
 
-    let script_dir_path = temp_dir.path().join(SCRIPTS_DIR).join(script_name);
+    let script_dir_path = temp_dir.path().join(INIT_SCRIPTS_DIR).join(script_name);
     let scarb_toml_path = script_dir_path.join("Scarb.toml");
 
     let scarb_toml_content = std::fs::read_to_string(&scarb_toml_path).unwrap();
@@ -76,7 +76,7 @@ fn test_init_fails_when_scripts_dir_exists_in_cwd() {
     let script_name = "my_script";
     let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
 
-    std::fs::create_dir_all(temp_dir.path().join(SCRIPTS_DIR))
+    std::fs::create_dir_all(temp_dir.path().join(INIT_SCRIPTS_DIR))
         .expect("Failed to create scripts directory in the current temp directory");
 
     let snapbox = Command::new(cargo_bin!("sncast"))
@@ -100,7 +100,7 @@ fn test_init_twice_fails() {
         .assert()
         .success();
 
-    assert!(temp_dir.path().join(SCRIPTS_DIR).exists());
+    assert!(temp_dir.path().join(INIT_SCRIPTS_DIR).exists());
 
     let snapbox = Command::new(cargo_bin!("sncast"))
         .current_dir(temp_dir.path())
