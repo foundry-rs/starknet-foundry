@@ -69,11 +69,15 @@ fn call_proxied_contract_bytearray_panic() {
     let proxy = deploy_contract(
         &mut blockifier_state,
         &mut runtime_state,
-        "ProxyForBAPC",
+        "ByteArrayPanickingContractProxy",
         &[],
     );
-    let bytearray_panicking_contract =
-        deploy_contract(&mut blockifier_state, &mut runtime_state, "BAPC", &[]);
+    let bytearray_panicking_contract = deploy_contract(
+        &mut blockifier_state,
+        &mut runtime_state,
+        "ByteArrayPanickingContract",
+        &[],
+    );
 
     let selector = felt_selector_from_name("call_bytearray_panicking_contract");
 

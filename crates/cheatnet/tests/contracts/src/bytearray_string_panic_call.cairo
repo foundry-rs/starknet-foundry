@@ -5,9 +5,8 @@ trait IByteArrayPanickingContract<TContractState> {
     fn do_panic(self: @TContractState);
 }
 
-// ByteArrayPanickingContract
 #[starknet::contract]
-mod BAPC {
+mod ByteArrayPanickingContract {
     #[storage]
     struct Storage {}
 
@@ -23,12 +22,12 @@ mod BAPC {
 }
 
 #[starknet::interface]
-trait IProxyForBAPC<TContractState> {
+trait IByteArrayPanickingContractProxy<TContractState> {
     fn call_bytearray_panicking_contract(self: @TContractState, contract_address: ContractAddress);
 }
 
 #[starknet::contract]
-mod ProxyForBAPC {
+mod ByteArrayPanickingContractProxy {
     use starknet::ContractAddress;
     use super::{IByteArrayPanickingContractDispatcherTrait, IByteArrayPanickingContractDispatcher};
 
@@ -36,7 +35,7 @@ mod ProxyForBAPC {
     struct Storage {}
 
     #[abi(embed_v0)]
-    impl Impl of super::IProxyForBAPC<ContractState> {
+    impl Impl of super::IByteArrayPanickingContractProxy<ContractState> {
         fn call_bytearray_panicking_contract(
             self: @ContractState, contract_address: ContractAddress
         ) {
