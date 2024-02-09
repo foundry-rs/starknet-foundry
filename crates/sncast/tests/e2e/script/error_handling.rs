@@ -186,7 +186,7 @@ async fn test_deploy_same_salt_and_class_hash_deployed_twice() {
         "--accounts-file",
         "../../../accounts/accounts.json",
         "--account",
-        "user4",
+        "user3",
         "--url",
         URL,
         "script",
