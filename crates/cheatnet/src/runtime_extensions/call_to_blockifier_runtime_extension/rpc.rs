@@ -6,7 +6,7 @@ use crate::runtime_extensions::call_to_blockifier_runtime_extension::panic_data:
 use crate::runtime_extensions::common::{create_entry_point_selector, create_execute_calldata};
 use blockifier::execution::call_info::CallInfo;
 use blockifier::execution::entry_point::EntryPointExecutionResult;
-use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
+use blockifier::execution::syscalls::hint_processor::{SyscallCounter, SyscallHintProcessor};
 use blockifier::execution::{
     entry_point::{CallEntryPoint, CallType, ExecutionResources},
     errors::{EntryPointExecutionError, PreExecutionError},
@@ -22,6 +22,44 @@ use super::RuntimeState;
 pub struct UsedResources {
     pub execution_resources: ExecutionResources,
     pub l2_to_l1_payloads_length: Vec<usize>,
+}
+
+pub(crate) fn subtract_execution_resources(
+    minuend: &ExecutionResources,
+    subtrahend: &ExecutionResources,
+) -> ExecutionResources {
+    ExecutionResources {
+        vm_resources: &minuend.vm_resources - &subtrahend.vm_resources,
+        syscall_counter: subtract_syscall_counters(
+            &minuend.syscall_counter,
+            &subtrahend.syscall_counter,
+        ),
+    }
+}
+
+fn subtract_syscall_counters(
+    minuend: &SyscallCounter,
+    subtrahend: &SyscallCounter,
+) -> SyscallCounter {
+    let mut result = minuend.clone();
+
+    for (syscall, count) in subtrahend {
+        let old_syscall_count = minuend
+            .get(syscall)
+            .unwrap_or_else(|| panic!("Missing SyscallCounter entry {syscall:?}"));
+
+        let new_count = old_syscall_count
+            .checked_sub(*count)
+            .unwrap_or_else(|| panic!("Underflow when subtracting syscall counts for {syscall:?}"));
+
+        if new_count != 0 {
+            result.insert(*syscall, new_count);
+        } else {
+            result.remove(syscall);
+        }
+    }
+
+    result
 }
 
 /// Enum representing possible call execution result, along with the data
