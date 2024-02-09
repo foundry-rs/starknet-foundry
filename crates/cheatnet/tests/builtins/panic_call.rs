@@ -62,17 +62,17 @@ fn call_contract_panic() {
 #[test]
 fn call_proxied_contract_bytearray_panic() {
     let mut cached_state = create_cached_state();
-    let (mut blockifier_state, mut runtime_state_raw) = create_runtime_states(&mut cached_state);
-    let mut runtime_state = build_runtime_state(&mut runtime_state_raw);
+    let mut cheatnet_state = CheatnetState::default();
+    let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
     let proxy = deploy_contract(
-        &mut blockifier_state,
+        &mut cached_state,
         &mut runtime_state,
         "ByteArrayPanickingContractProxy",
         &[],
     );
     let bytearray_panicking_contract = deploy_contract(
-        &mut blockifier_state,
+        &mut cached_state,
         &mut runtime_state,
         "ByteArrayPanickingContract",
         &[],
@@ -81,7 +81,7 @@ fn call_proxied_contract_bytearray_panic() {
     let selector = felt_selector_from_name("call_bytearray_panicking_contract");
 
     let output = call_contract(
-        &mut blockifier_state,
+        &mut cached_state,
         &mut runtime_state,
         &proxy,
         &selector,
