@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Added
+
+- dependency on [universal-sierra-compiler](https://github.com/software-mansion/universal-sierra-compiler) binary
+
 ## [0.17.0] - 2024-02-07
 
 ### Forge
