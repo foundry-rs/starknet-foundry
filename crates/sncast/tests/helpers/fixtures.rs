@@ -135,6 +135,7 @@ pub async fn declare_deploy_contract(account: &str, path: &str, shortname: &str)
     let receipt = get_transaction_receipt(transaction_hash).await;
     match receipt {
         TransactionReceipt::Deploy(deploy_receipt) => {
+            dbg!(&deploy_receipt);
             let address = deploy_receipt.contract_address;
             write_devnet_env(format!("{shortname}_ADDRESS").as_str(), &address);
         }

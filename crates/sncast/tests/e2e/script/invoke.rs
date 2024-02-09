@@ -46,7 +46,7 @@ async fn test_contract_does_not_exist() {
     snapbox.assert().success().stderr_matches(indoc! {r"
         ...
         command: script
-        error: Got an exception while executing a hint: Hint Error: An error occurred in the called contract [..]
+        error: Got an exception while executing a hint: Hint Error: An error [..]Requested contract address[..]is not deployed[..]
     "});
 }
 
@@ -70,7 +70,7 @@ fn test_wrong_function_name() {
     snapbox.assert().success().stderr_matches(indoc! {r"
         ...
         command: script
-        error: Got an exception while executing a hint: Hint Error: An error occurred in the called contract [..]
+        error: Got an exception while executing a hint: Hint Error: An error [..] Entry point EntryPointSelector(StarkFelt[..]not found in contract[..]
     "});
 }
 
@@ -94,6 +94,6 @@ fn test_wrong_calldata() {
     snapbox.assert().success().stderr_matches(indoc! {r"
         ...
         command: script
-        error: Got an exception while executing a hint: Hint Error: An error occurred in the called contract [..]
+        error: Got an exception while executing a hint: Hint Error: An error [..]Failed to deserialize param #2[..]
     "});
 }
