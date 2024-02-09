@@ -1,5 +1,5 @@
 use crate::forking::state::ForkStateReader;
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::subtract_syscall_counters;
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::subtract_execution_resources;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spoof::TxInfoMock;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::{
     Event, SpyTarget,
@@ -134,38 +134,54 @@ pub struct CallTrace {
     pub nested_calls: Vec<Rc<RefCell<CallTrace>>>,
 }
 
-pub struct NotEmptyCallStack(Vec<Rc<RefCell<CallTrace>>>);
+#[derive(Clone)]
+struct CallStackElement {
+    // when we exit the call we use it to calculate resources used by the call
+    resources_used_before_call: ExecutionResources,
+    call_trace: Rc<RefCell<CallTrace>>,
+}
+
+pub struct NotEmptyCallStack(Vec<CallStackElement>);
 
 impl NotEmptyCallStack {
     pub fn from(elem: Rc<RefCell<CallTrace>>) -> Self {
-        NotEmptyCallStack(vec![elem])
+        NotEmptyCallStack(vec![CallStackElement {
+            resources_used_before_call: ExecutionResources::default(),
+            call_trace: elem,
+        }])
     }
 
-    pub fn push(&mut self, elem: Rc<RefCell<CallTrace>>) {
-        self.0.push(elem);
+    pub fn push(
+        &mut self,
+        elem: Rc<RefCell<CallTrace>>,
+        resources_used_before_call: ExecutionResources,
+    ) {
+        self.0.push(CallStackElement {
+            resources_used_before_call,
+            call_trace: elem,
+        });
     }
 
     pub fn top(&mut self) -> Rc<RefCell<CallTrace>> {
         let top_val = self.0.pop().unwrap();
-        let borrowed_ref = top_val.clone();
+        let borrowed_ref = top_val.call_trace.clone();
         self.0.push(top_val);
         borrowed_ref
     }
 
-    pub fn pop(&mut self) -> Rc<RefCell<CallTrace>> {
+    fn pop(&mut self) -> CallStackElement {
         assert!(self.0.len() > 1, "You cannot make NotEmptyCallStack empty");
         self.0.pop().unwrap()
     }
 
     #[must_use]
     pub fn borrow_full_trace(&self) -> Ref<'_, CallTrace> {
-        self.0.first().unwrap().borrow()
+        self.0.first().unwrap().call_trace.borrow()
     }
 }
 
 pub struct TraceData {
     pub current_call_stack: NotEmptyCallStack,
-    pub stack_of_resources_used_before_calls: Vec<ExecutionResources>,
 }
 
 pub struct CheatnetState {
@@ -212,7 +228,6 @@ impl Default for CheatnetState {
             block_info: Default::default(),
             trace_data: TraceData {
                 current_call_stack: NotEmptyCallStack::from(test_call),
-                stack_of_resources_used_before_calls: vec![],
             },
         }
     }
@@ -301,26 +316,18 @@ impl TraceData {
             .nested_calls
             .push(new_call.clone());
 
-        self.current_call_stack.push(new_call);
-        self.stack_of_resources_used_before_calls
-            .push(resources_used_before_call);
+        self.current_call_stack
+            .push(new_call, resources_used_before_call);
     }
 
     pub fn exit_nested_call(&mut self, resources_used_after_call: &ExecutionResources) {
-        let last_call = self.current_call_stack.pop();
-        let resources_used_before_call = self
-            .stack_of_resources_used_before_calls
-            .pop()
-            .expect("Resources used before the call were None when exiting the call");
+        let CallStackElement {
+            resources_used_before_call,
+            call_trace: last_call,
+        } = self.current_call_stack.pop();
 
-        last_call.borrow_mut().used_execution_resources = ExecutionResources {
-            vm_resources: &resources_used_after_call.vm_resources
-                - &resources_used_before_call.vm_resources,
-            syscall_counter: subtract_syscall_counters(
-                &resources_used_after_call.syscall_counter,
-                &resources_used_before_call.syscall_counter,
-            ),
-        };
+        last_call.borrow_mut().used_execution_resources =
+            subtract_execution_resources(resources_used_after_call, &resources_used_before_call);
     }
 }
 

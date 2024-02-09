@@ -24,14 +24,27 @@ pub struct UsedResources {
     pub l2_to_l1_payloads_length: Vec<usize>,
 }
 
-pub(crate) fn subtract_syscall_counters(
-    syscall_counter: &SyscallCounter,
+pub(crate) fn subtract_execution_resources(
+    minuend: &ExecutionResources,
+    subtrahend: &ExecutionResources,
+) -> ExecutionResources {
+    ExecutionResources {
+        vm_resources: &minuend.vm_resources - &subtrahend.vm_resources,
+        syscall_counter: subtract_syscall_counters(
+            &minuend.syscall_counter,
+            &subtrahend.syscall_counter,
+        ),
+    }
+}
+
+fn subtract_syscall_counters(
+    minuend: &SyscallCounter,
     subtrahend: &SyscallCounter,
 ) -> SyscallCounter {
-    let mut result = syscall_counter.clone();
+    let mut result = minuend.clone();
 
     for (syscall, count) in subtrahend {
-        let old_syscall_count = syscall_counter
+        let old_syscall_count = minuend
             .get(syscall)
             .unwrap_or_else(|| panic!("Missing SyscallCounter entry {syscall:?}"));
 
