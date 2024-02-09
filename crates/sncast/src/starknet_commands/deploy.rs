@@ -72,7 +72,6 @@ pub async fn deploy(
     };
 
     let result = execution.send().await;
-    dbg!(&result);
     match result {
         Ok(result) => handle_wait_for_tx(
             account.provider(),
