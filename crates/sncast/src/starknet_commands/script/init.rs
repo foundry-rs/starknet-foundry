@@ -128,8 +128,7 @@ fn create_script_main_file(script_name: &str, script_root_dir: &Utf8PathBuf) -> 
             fn main() {
                 let contract_address = 0x7ad10abd2cc24c2e066a2fee1e435cd5fa60a37f9268bfbaf2e98ce5ca3c436;
                 let call_result = call(contract_address.try_into().unwrap(), 'get_greeting', array![]);
-                let call_result = *call_result.data[0];
-                assert(call_result=='Hello, Starknet!', '');
+                assert(*call_result.data[0]=='Hello, Starknet!', '');
                 println!("{:?}", call_result);
             }
         "#},
