@@ -4,7 +4,7 @@ use axum::{extract::Query, response::Redirect, routing::any, Router};
 use indoc::{formatdoc, indoc};
 use lazy_static::lazy_static;
 use shared::consts::EXPECTED_RPC_VERSION;
-use std::time::Duration;
+use std::{thread::sleep, time::Duration};
 use test_utils::output_assert::assert_stdout_contains;
 use tokio::{
     net::TcpListener,
@@ -34,7 +34,7 @@ fn setup_redirect_server() {
     });
 
     // if test uses server make it wait for a second before it's ready
-    std::thread::sleep(Duration::from_secs(1));
+    sleep(Duration::from_secs(1));
 }
 
 #[test]
@@ -58,7 +58,7 @@ fn should_print_warning() {
     let output = snapbox
         .env("SCARB_CACHE", temp.path())
         .current_dir(&temp)
-        .assert(); //.success();
+        .assert();
 
     assert_stdout_contains(
         output,
@@ -112,7 +112,7 @@ fn should_dedup_urls() {
     let output = snapbox
         .env("SCARB_CACHE", temp.path())
         .current_dir(&temp)
-        .assert(); //.success();
+        .assert();
 
     assert_stdout_contains(
         output,
@@ -172,7 +172,7 @@ fn should_print_foreach() {
     let output = snapbox
         .env("SCARB_CACHE", temp.path())
         .current_dir(&temp)
-        .assert(); //.success();
+        .assert();
 
     assert_stdout_contains(
         output,
