@@ -5512,7 +5512,6 @@ dependencies = [
  "cairo-lang-utils 2.5.0",
  "cairo-vm",
  "camino",
- "cheatnet",
  "clap",
  "console",
  "conversions",
