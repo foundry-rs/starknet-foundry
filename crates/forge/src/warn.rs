@@ -5,11 +5,10 @@ use crate::{
 use anyhow::{anyhow, Context, Result};
 use scarb_api::ScarbCommand;
 use semver::{Version, VersionReq};
+use shared::consts::EXPECTED_RPC_VERSION;
 use starknet::providers::{jsonrpc::HttpTransport, JsonRpcClient, Provider};
 use std::collections::HashSet;
 use url::Url;
-
-pub const EXPECTED_RPC_VERSION: &str = include_str!("../expected-rpc-version");
 
 pub(crate) fn warn_if_available_gas_used_with_incompatible_scarb_version(
     test_crates: &Vec<CompiledTestCrateRaw>,
@@ -92,7 +91,6 @@ pub(crate) async fn warn_if_incompatible_rpc_version(
 #[cfg(test)]
 mod tests {
     use super::warn_if_incompatible_rpc_version;
-    use super::EXPECTED_RPC_VERSION;
     use crate::compiled_raw::{
         CompiledTestCrateRaw, CrateLocation, RawForkConfig, RawForkParams, TestCaseRaw,
     };
@@ -103,6 +101,7 @@ mod tests {
     use indoc::formatdoc;
     use serde_json::{json, Value};
     use serial_test::serial;
+    use shared::consts::EXPECTED_RPC_VERSION;
     use std::{io::read_to_string, sync::Once, time::Duration};
     use test_utils::output_assert::assert_stdout_contains;
 

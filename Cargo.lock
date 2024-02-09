@@ -2834,6 +2834,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serial_test",
+ "shared",
  "smol_str 0.2.1",
  "snapbox",
  "starknet",
@@ -5389,6 +5390,10 @@ dependencies = [
  "digest",
  "keccak",
 ]
+
+[[package]]
+name = "shared"
+version = "0.1.0"
 
 [[package]]
 name = "shellexpand"
