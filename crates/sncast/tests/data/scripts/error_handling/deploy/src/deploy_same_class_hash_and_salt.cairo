@@ -1,5 +1,5 @@
-use sncast_std::{get_nonce, deploy, DeployResult, ScriptCommandError, RPCError, StarknetError, ScriptCommandErrorTrait};
-use core::debug::PrintTrait;
+use sncast_std::{get_nonce, deploy, DeployResult, ScriptCommandError, RPCError, StarknetError};
+
 use starknet::{ClassHash, Felt252TryIntoClassHash};
 use traits::Into;
 
@@ -37,7 +37,7 @@ fn main() {
         Option::Some(deploy_nonce)
     ).unwrap_err();
 
-    deploy_result.print();
+    println!("{:?}", deploy_result);
 
     assert(
         ScriptCommandError::RPCError(

@@ -3,7 +3,7 @@ use sncast_std::{
 };
 
 fn second_contract() {
-    let declare_result = declare('Mapa2', Option::None, Option::None).expect('mapa declare failed');
+    let declare_result = declare('Mapa2', Option::None, Option::None).expect('mapa2 declare failed');
     let deploy_result = deploy(
         declare_result.class_hash,
         ArrayTrait::new(),
@@ -11,7 +11,7 @@ fn second_contract() {
         false,
         Option::None,
         Option::None
-    ).expect('mapa deploy failed');
+    ).expect('mapa2 deploy failed');
     assert(deploy_result.transaction_hash != 0, deploy_result.transaction_hash);
 
     let invoke_result = invoke(

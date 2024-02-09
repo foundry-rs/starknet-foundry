@@ -18,7 +18,6 @@ fn fib(a: felt252, b: felt252, n: felt252) -> felt252 {
 mod tests {
     use super::adder;
     use super::always_five;
-    use snforge_std::PrintTrait;
 
     #[test]
     fn adding() {

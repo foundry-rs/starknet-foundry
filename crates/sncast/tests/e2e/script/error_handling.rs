@@ -13,7 +13,7 @@ async fn test_call_invalid_entry_point() {
         .args(args);
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
-        [DEBUG]	0x436f6e74726163744572726f72 ('ContractError')
+        ScriptCommandError::RPCError(RPCError::StarknetError(StarknetError::ContractError(())))
         command: script
         status: success
     "});
@@ -46,8 +46,8 @@ async fn test_call_invalid_calldata() {
         .args(args);
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
-        [DEBUG]	0x436f6e74726163744572726f72 ('ContractError')
-        [DEBUG]	0x436f6e74726163744572726f72 ('ContractError')
+        ScriptCommandError::RPCError(RPCError::StarknetError(StarknetError::ContractError(())))
+        ScriptCommandError::RPCError(RPCError::StarknetError(StarknetError::ContractError(())))
         command: script
         status: success
     "});
@@ -123,7 +123,7 @@ async fn test_declare_with_invalid_max_fee() {
         .args(args);
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
-        [DEBUG]	0x496e73756666696369656e744d6178466565 ('InsufficientMaxFee')
+        ScriptCommandError::RPCError(RPCError::StarknetError(StarknetError::InsufficientMaxFee(())))
         command: script
         status: success
     "});

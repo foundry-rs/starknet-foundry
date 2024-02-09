@@ -89,3 +89,11 @@ fn test_using_second_fork() {
 Once the fork is configured, the test will run on top of the forked state, meaning that it will have access to every contract deployed on the real network.
 
 With that, you can now interact with any contract from the chain [the same way you would in a standard test](./contracts.md).
+
+> ⚠️ **Warning**
+> 
+> The following cheatcodes won't work for forked contracts written in **Cairo 0**:
+>
+> - start_spoof / stop_spoof
+> - spy_events
+>

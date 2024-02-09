@@ -7,15 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.0] - 2024-02-07
+
 ### Forge
+
+#### Added
+
+- Warning in fork testing is emitted, when node JSON-RPC version is incompatible
+- `get_call_trace` library function for retrieving call trace in tests
 
 #### Changed
 
 - Gas estimation is now aligned with the Starknet v0.13
 
-### Fixed
+#### Removed
+
+- `snforge_std::PrintTrait` - use `print!`, `println!` macros and / or `core::debug::PrintTrait` instead
+
+#### Fixed
 
 - Gas used in constructors and handling of L1 messages is now properly included in total gas cost
+
+### Cast
+
+#### Changed
+
+- sncast tool configuration is now moved away from `Scarb.toml` to `snfoundry.toml` file. This file must be present in current or any parent directories in order to use profiles.
+
+#### Added
+
+- `--package` flag for `declare` and `script` subcommands, that specifies scarb package to work with
+- `Debug` and `Display` impls for script subcommand responses - use `print!`, `println!` macros instead of calling `.print()`
 
 ## [0.16.0] - 2024-01-26
 

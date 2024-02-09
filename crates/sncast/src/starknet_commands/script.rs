@@ -5,11 +5,8 @@ use crate::starknet_commands::commands::StarknetCommandError;
 use crate::starknet_commands::{call, declare, deploy, invoke};
 use crate::{get_account, get_nonce, WaitForTx};
 use anyhow::{anyhow, Context, Result};
-use blockifier::execution::common_hints::ExecutionMode;
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
-use blockifier::execution::entry_point::{
-    CallEntryPoint, EntryPointExecutionContext, ExecutionResources,
-};
+use blockifier::execution::entry_point::{CallEntryPoint, ExecutionResources};
 use blockifier::execution::execution_utils::ReadOnlySegments;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::state::cached_state::CachedState;
@@ -27,7 +24,7 @@ use clap::command;
 use clap::Args;
 use conversions::{FromConv, IntoConv};
 use itertools::chain;
-use runtime::starknet::context::{build_default_block_context, build_transaction_context};
+use runtime::starknet::context::{build_context, BlockInfo};
 use runtime::starknet::state::DictStateReader;
 use runtime::utils::BufferReader;
 use runtime::{
@@ -37,8 +34,8 @@ use runtime::{
 use scarb_api::{package_matches_version_requirement, StarknetContractArtifacts};
 use scarb_metadata::{Metadata, PackageMetadata};
 use semver::{Comparator, Op, Version, VersionReq};
+use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::SCRIPT_LIB_ARTIFACT_NAME;
-use sncast::helpers::scarb_utils::CastConfig;
 use sncast::response::print::print_as_warning;
 use sncast::response::structs::ScriptResponse;
 use starknet::accounts::Account;
@@ -102,7 +99,7 @@ fn sn_command_error_to_script_command_error(err: StarknetCommandError) -> Script
             }
             panic!("{}", err)
         }
-        StarknetCommandError::ContractArtifactsNotFound => {
+        StarknetCommandError::ContractArtifactsNotFound(_) => {
             ScriptCommandError::ContractArtifactsNotFound
         }
         StarknetCommandError::Handleable(err) => {
@@ -167,7 +164,7 @@ fn serialize_script_command_err(err: ScriptCommandError) -> Vec<Felt252> {
                         StarknetError::ContractError => res.push(Felt252::from(7)),
                         StarknetError::InvalidTransactionNonce => res.push(Felt252::from(8)),
                         StarknetError::ContractAddressUnavailableForDeployment => {
-                            res.push(Felt252::from(9))
+                            res.push(Felt252::from(9));
                         }
                         StarknetError::ClassNotDeclared => res.push(Felt252::from(10)),
                         StarknetError::TransactionReverted => res.push(Felt252::from(11)),
@@ -193,6 +190,10 @@ fn serialize_script_err_to_felt_vec(err: StarknetCommandError) -> Vec<Felt252> {
 pub struct Script {
     /// Module name that contains the `main` function, which will be executed
     pub script_module_name: String,
+
+    /// Specifies scarb package to be used
+    #[clap(long)]
+    pub package: Option<String>,
 }
 
 pub struct CastScriptExtension<'a> {
@@ -468,15 +469,7 @@ pub fn run(
         .assemble_ex(&entry_code, &footer);
 
     // hint processor
-    let block_context = build_default_block_context();
-    let account_context = build_transaction_context();
-    let mut context = EntryPointExecutionContext::new(
-        &block_context.clone(),
-        &account_context,
-        ExecutionMode::Execute,
-        false,
-    )
-    .unwrap();
+    let mut context = build_context(BlockInfo::default());
 
     let mut blockifier_state = CachedState::from(DictStateReader::default());
     let mut execution_resources = ExecutionResources::default();

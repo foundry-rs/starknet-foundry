@@ -1,9 +1,9 @@
-use sncast_std::{declare, DeclareResult, ScriptCommandError, RPCError, StarknetError, ScriptCommandErrorTrait};
-use core::debug::PrintTrait;
+use sncast_std::{declare, DeclareResult, ScriptCommandError, RPCError, StarknetError};
+
 
 fn main() {
     let declare_result = declare('Mapaaaa', Option::None, Option::None).unwrap_err();
-    declare_result.print();
+    println!("{:?}", declare_result);
 
     assert(
         ScriptCommandError::ContractArtifactsNotFound == declare_result,

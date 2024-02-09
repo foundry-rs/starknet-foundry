@@ -7,7 +7,7 @@ use sncast::{apply_optional, handle_wait_for_tx, WaitForTx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{ConnectedAccount, Declaration};
 
-use crate::starknet_commands::commands::StarknetCommandError;
+use crate::starknet_commands::commands::{ContractArtifactsNotFoundData, StarknetCommandError};
 use starknet::core::types::FieldElement;
 use starknet::{
     accounts::{Account, SingleOwnerAccount},
@@ -32,6 +32,10 @@ pub struct Declare {
     /// Nonce of the transaction. If not provided, nonce will be set automatically
     #[clap(short, long)]
     pub nonce: Option<FieldElement>,
+
+    /// Specifies scarb package to be used
+    #[clap(long)]
+    pub package: Option<String>,
 }
 
 #[allow(clippy::too_many_lines)]
@@ -44,9 +48,12 @@ pub async fn declare(
     wait_config: WaitForTx,
 ) -> Result<DeclareResponse, StarknetCommandError> {
     let contract_name: String = contract_name.to_string();
-    let contract_artifacts = artifacts
-        .get(&contract_name)
-        .ok_or(StarknetCommandError::ContractArtifactsNotFound)?;
+    let contract_artifacts =
+        artifacts
+            .get(&contract_name)
+            .ok_or(StarknetCommandError::ContractArtifactsNotFound(
+                ContractArtifactsNotFoundData { contract_name },
+            ))?;
 
     let contract_definition: SierraClass = serde_json::from_str(&contract_artifacts.sierra)
         .context("Failed to parse sierra artifact")?;

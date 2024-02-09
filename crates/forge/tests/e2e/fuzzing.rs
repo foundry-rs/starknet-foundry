@@ -1,6 +1,6 @@
 use crate::e2e::common::runner::{setup_package, test_runner};
-use crate::{assert_stderr_contains, assert_stdout_contains};
 use indoc::indoc;
+use test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 
 #[test]
 fn fuzzing() {
@@ -8,7 +8,7 @@ fn fuzzing() {
     let snapbox = test_runner().arg("fuzzing");
 
     let output = snapbox.current_dir(&temp).assert().code(1);
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
         indoc! {r"
         [..]Compiling[..]
@@ -24,7 +24,7 @@ fn fuzzing() {
         [FAIL] fuzzing::tests::failing_fuzz (runs: 1, arguments: [[..], [..]])
 
         Failure data:
-            original value: [593979512822486835600413552099926114], converted to a string: [result == a + b]
+            0x726573756c74203d3d2061202b2062 ('result == a + b')
 
         [PASS] fuzzing::tests::custom_fuzzer_config (runs: 10, [..]
         [PASS] fuzzing::tests::uint8_arg (runs: 256, [..]
@@ -40,7 +40,7 @@ fn fuzzing() {
 
         Failures:
             fuzzing::tests::failing_fuzz
-        "}
+        "},
     );
 }
 
@@ -54,7 +54,7 @@ fn fuzzing_set_runs() {
         .args(["--fuzzer-runs", "10"])
         .assert()
         .code(1);
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
         indoc! {r"
         [..]Compiling[..]
@@ -70,7 +70,7 @@ fn fuzzing_set_runs() {
         [FAIL] fuzzing::tests::failing_fuzz (runs: 1, arguments: [[..], [..]])
 
         Failure data:
-            original value: [593979512822486835600413552099926114], converted to a string: [result == a + b]
+            0x726573756c74203d3d2061202b2062 ('result == a + b')
 
         [PASS] fuzzing::tests::custom_fuzzer_config (runs: 10, [..]
         [PASS] fuzzing::tests::uint8_arg (runs: 10, [..]
@@ -86,7 +86,7 @@ fn fuzzing_set_runs() {
 
         Failures:
             fuzzing::tests::failing_fuzz
-        "}
+        "},
     );
 }
 
@@ -100,7 +100,7 @@ fn fuzzing_set_seed() {
         .args(["--fuzzer-seed", "1234"])
         .assert()
         .code(1);
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
         indoc! {r"
         [..]Compiling[..]
@@ -116,7 +116,7 @@ fn fuzzing_set_seed() {
         [FAIL] fuzzing::tests::failing_fuzz (runs: 1, arguments: [[..], [..]])
 
         Failure data:
-            original value: [..], converted to a string: [result == a + b]
+            0x726573756c74203d3d2061202b2062 ('result == a + b')
 
         [PASS] fuzzing::tests::custom_fuzzer_config (runs: 10, [..]
         [PASS] fuzzing::tests::uint8_arg (runs: 256, [..]
@@ -132,7 +132,7 @@ fn fuzzing_set_seed() {
 
         Failures:
             fuzzing::tests::failing_fuzz
-        "}
+        "},
     );
 }
 
@@ -146,13 +146,13 @@ fn fuzzing_incorrect_runs() {
         .args(["--fuzzer-runs", "0"])
         .assert()
         .code(2);
-    assert_stderr_contains!(
+    assert_stderr_contains(
         output,
         indoc! {r"
         error: invalid value '0' for '--fuzzer-runs <FUZZER_RUNS>': Number of fuzzer runs must be greater than or equal to 3
 
         For more information, try '--help'.
-        "}
+        "},
     );
 }
 
@@ -162,7 +162,7 @@ fn fuzzing_incorrect_function_args() {
     let snapbox = test_runner().arg("incorrect_args");
 
     let output = snapbox.current_dir(&temp).assert().code(2);
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
         indoc! {r"
         [..]Compiling[..]
@@ -173,7 +173,7 @@ fn fuzzing_incorrect_function_args() {
         Running 0 test(s) from src/
         Running 2 test(s) from tests/
         [ERROR] Tried to use incorrect type for fuzzing. Type = tests::incorrect_args::MyStruct is not supported
-        "}
+        "},
     );
 }
 
@@ -183,7 +183,7 @@ fn fuzzing_exit_first() {
     let snapbox = test_runner().arg("exit_first_fuzz").arg("-x");
 
     let output = snapbox.current_dir(&temp).assert().code(1);
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
         indoc! {r"
         [..]Compiling[..]
@@ -196,14 +196,14 @@ fn fuzzing_exit_first() {
         [FAIL] tests::exit_first_fuzz::exit_first_fails_test (runs: 1, arguments: [..])
 
         Failure data:
-            original value: [..], converted to a string: [2 + b == 2 + b]
+            0x32202b2062203d3d2032202b2062 ('2 + b == 2 + b')
 
         Tests: 0 passed, 1 failed, 1 skipped, 0 ignored, 17 filtered out
 
         Fuzzer seed: [..]
         Failures:
             tests::exit_first_fuzz::exit_first_fails_test
-        "}
+        "},
     );
 }
 
@@ -213,7 +213,7 @@ fn fuzzing_exit_first_single_fail() {
     let snapbox = test_runner().arg("exit_first_single_fail").arg("-x");
 
     let output = snapbox.current_dir(&temp).assert().code(1);
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
         indoc! {r"
         [..]Compiling[..]
@@ -226,12 +226,12 @@ fn fuzzing_exit_first_single_fail() {
         [FAIL] tests::exit_first_single_fail::exit_first_fails_test
 
         Failure data:
-            original value: [..], converted to a string: [2 + b == 2 + b]
+            0x32202b2062203d3d2032202b2062 ('2 + b == 2 + b')
 
         Failures:
             tests::exit_first_single_fail::exit_first_fails_test
 
         Tests: 0 passed, 1 failed, 1 skipped, 0 ignored, 17 filtered out
-        "}
+        "},
     );
 }

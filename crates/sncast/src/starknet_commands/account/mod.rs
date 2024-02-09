@@ -6,12 +6,11 @@ use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use clap::{Args, Subcommand};
 use serde_json::json;
-use sncast::{
-    chain_id_to_network_name, decode_chain_id,
-    helpers::scarb_utils::{
-        get_package_tool_sncast, get_scarb_manifest, get_scarb_metadata, CastConfig,
-    },
+use sncast::helpers::configuration::{
+    find_config_file, load_config, search_config_upwards_relative_to,
 };
+use sncast::helpers::constants::CONFIG_FILENAME;
+use sncast::{chain_id_to_network_name, decode_chain_id, helpers::configuration::CastConfig};
 use starknet::{core::types::FieldElement, signers::SigningKey};
 use std::{fs::OpenOptions, io::Write};
 use toml::Value;
@@ -95,105 +94,119 @@ pub fn write_account_to_accounts_file(
 }
 
 pub fn add_created_profile_to_configuration(
-    path_to_scarb_toml: &Option<Utf8PathBuf>,
-    config: &CastConfig,
+    profile: &Option<String>,
+    cast_config: &CastConfig,
+    path: &Option<Utf8PathBuf>,
 ) -> Result<()> {
-    let manifest_path = match path_to_scarb_toml.clone() {
-        Some(path) => path,
-        None => get_scarb_manifest().context("Failed to obtain manifest path from scarb")?,
-    };
-    let metadata = get_scarb_metadata(&manifest_path)?;
-
-    if let Ok(tool_sncast) = get_package_tool_sncast(&metadata) {
-        let property = tool_sncast
-            .get(&config.account)
-            .and_then(|profile_| profile_.get("account"));
-        if property.is_some() {
-            bail!(
-                "Failed to add profile = {} to the Scarb.toml. Profile already exists",
-                config.account
-            );
-        }
+    if !load_config(profile, path)
+        .unwrap_or_default()
+        .account
+        .is_empty()
+    {
+        bail!(
+            "Failed to add profile = {} to the snfoundry.toml. Profile already exists",
+            profile.as_ref().unwrap_or(&"default".to_string())
+        );
     }
 
     let toml_string = {
-        let mut tool_sncast = toml::value::Table::new();
         let mut new_profile = toml::value::Table::new();
 
-        new_profile.insert("url".to_string(), Value::String(config.rpc_url.clone()));
-        new_profile.insert("account".to_string(), Value::String(config.account.clone()));
-        if let Some(keystore) = config.keystore.clone() {
+        new_profile.insert(
+            "url".to_string(),
+            Value::String(cast_config.rpc_url.clone()),
+        );
+        new_profile.insert(
+            "account".to_string(),
+            Value::String(cast_config.account.clone()),
+        );
+        if let Some(keystore) = cast_config.keystore.clone() {
             new_profile.insert("keystore".to_string(), Value::String(keystore.to_string()));
         } else {
             new_profile.insert(
                 "accounts-file".to_string(),
-                Value::String(config.accounts_file.to_string()),
+                Value::String(cast_config.accounts_file.to_string()),
             );
         }
+        let mut profile_config = toml::value::Table::new();
+        profile_config.insert(
+            profile
+                .clone()
+                .unwrap_or_else(|| cast_config.account.clone()),
+            Value::Table(new_profile),
+        );
 
-        let account_path = Utf8PathBuf::from(&config.account);
-        let profile_name = account_path.file_stem().unwrap_or(&config.account);
-        tool_sncast.insert(profile_name.into(), Value::Table(new_profile));
+        let mut sncast_config = toml::value::Table::new();
+        sncast_config.insert(String::from("sncast"), Value::Table(profile_config));
 
-        let mut tool = toml::value::Table::new();
-        tool.insert("sncast".to_string(), Value::Table(tool_sncast));
-
-        let mut config = toml::value::Table::new();
-        config.insert("tool".to_string(), Value::Table(tool));
-
-        toml::to_string(&Value::Table(config)).context("Failed to convert toml to string")?
+        toml::to_string(&Value::Table(sncast_config)).context("Failed to convert toml to string")?
     };
 
-    let mut scarb_toml = OpenOptions::new()
+    let config_path = match path.as_ref() {
+        Some(p) => search_config_upwards_relative_to(p)?,
+        None => find_config_file().unwrap_or(Utf8PathBuf::from(CONFIG_FILENAME)),
+    };
+
+    let mut snfoundry_toml = OpenOptions::new()
+        .create(true)
         .append(true)
-        .open(manifest_path)
-        .context("Failed to open Scarb.toml")?;
-    scarb_toml
+        .open(config_path)
+        .context("Failed to open snfoundry.toml")?;
+    snfoundry_toml
         .write_all(format!("\n{toml_string}").as_bytes())
-        .context("Failed to write to the Scarb.toml")?;
+        .context("Failed to write to the snfoundry.toml")?;
 
     Ok(())
 }
 
 #[cfg(test)]
 mod tests {
-    use sealed_test::prelude::rusty_fork_test;
-    use sealed_test::prelude::sealed_test;
+    use camino::Utf8PathBuf;
+    use sncast::helpers::configuration::{copy_config_to_tempdir, CastConfig};
     use sncast::helpers::constants::DEFAULT_ACCOUNTS_FILE;
-    use sncast::helpers::scarb_utils::CastConfig;
     use std::fs;
 
     use crate::starknet_commands::account::add_created_profile_to_configuration;
 
-    #[sealed_test(files = ["tests/data/contracts/constructor_with_params/Scarb.toml"])]
+    #[test]
     fn test_add_created_profile_to_configuration_happy_case() {
+        let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
+        let path = Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap();
         let config = CastConfig {
             rpc_url: String::from("http://some-url"),
             account: String::from("some-name"),
             accounts_file: "accounts".into(),
             ..Default::default()
         };
-        let res = add_created_profile_to_configuration(&None, &config);
-
+        let res = add_created_profile_to_configuration(
+            &Some(String::from("some-name")),
+            &config,
+            &Some(path.clone()),
+        );
         assert!(res.is_ok());
 
-        let contents = fs::read_to_string("Scarb.toml").expect("Failed to read Scarb.toml");
-        assert!(contents.contains("[tool.sncast.some-name]"));
+        let contents =
+            fs::read_to_string(path.join("snfoundry.toml")).expect("Failed to read snfoundry.toml");
+        assert!(contents.contains("[sncast.some-name]"));
         assert!(contents.contains("account = \"some-name\""));
         assert!(contents.contains("url = \"http://some-url\""));
         assert!(contents.contains("accounts-file = \"accounts\""));
     }
 
-    #[sealed_test(files = ["tests/data/contracts/constructor_with_params/Scarb.toml"])]
+    #[test]
     fn test_add_created_profile_to_configuration_profile_already_exists() {
+        let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
         let config = CastConfig {
-            rpc_url: String::from("http://some-url"),
-            account: String::from("myprofile"),
+            rpc_url: String::from("http://127.0.0.1:5055/rpc"),
+            account: String::from("user1"),
             accounts_file: DEFAULT_ACCOUNTS_FILE.into(),
             ..Default::default()
         };
-        let res = add_created_profile_to_configuration(&None, &config);
-
+        let res = add_created_profile_to_configuration(
+            &Some(String::from("default")),
+            &config,
+            &Some(Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
+        );
         assert!(res.is_err());
     }
 }

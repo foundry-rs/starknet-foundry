@@ -86,7 +86,7 @@ impl<'a> SignalPropagator for StarknetRuntime<'a> {
     fn propagate_cheatcode_signal(&mut self, _selector: &str, _inputs: Vec<Felt252>) {}
 }
 
-fn parse_selector(selector: &BigIntAsHex) -> Result<String, HintError> {
+pub fn parse_selector(selector: &BigIntAsHex) -> Result<String, HintError> {
     let selector = &selector.value.to_bytes_be().1;
     let selector = std::str::from_utf8(selector).map_err(|_| {
         CustomHint(Box::from(
@@ -187,6 +187,7 @@ impl<Extension: ExtensionLogic> HintProcessorLogic for ExtendedRuntime<Extension
                 return self.execute_syscall_hint(vm, exec_scopes, hint_data, constants, system);
             }
         }
+
         self.extended_runtime
             .execute_hint(vm, exec_scopes, hint_data, constants)
     }
@@ -222,7 +223,6 @@ impl<Extension: ExtensionLogic> ExtendedRuntime<Extension> {
     ) -> Result<(), HintError> {
         let selector = parse_selector(selector)?;
         let inputs = fetch_cheatcode_input(vm, vm_io_ptrs.input_start, vm_io_ptrs.input_end)?;
-
         if let CheatcodeHandlingResult::Handled(res) = self.extension.handle_cheatcode(
             &selector,
             inputs.clone(),

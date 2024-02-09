@@ -1,6 +1,7 @@
 use anyhow::{anyhow, Context, Result};
 use clap::Args;
 
+use crate::starknet_commands::commands::StarknetCommandError;
 use sncast::response::structs::{Hex, InvokeResponse};
 use sncast::{apply_optional, handle_wait_for_tx, WaitForTx};
 use starknet::accounts::AccountError::Provider;
@@ -10,7 +11,6 @@ use starknet::core::utils::get_selector_from_name;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
-use crate::starknet_commands::commands::StarknetCommandError;
 
 #[derive(Args)]
 #[command(about = "Invoke a contract on Starknet")]
@@ -47,7 +47,8 @@ pub async fn invoke(
 ) -> Result<InvokeResponse, StarknetCommandError> {
     let call = Call {
         to: contract_address,
-        selector: get_selector_from_name(entry_point_name).context("Failed to convert entry point selector to FieldElement")?,
+        selector: get_selector_from_name(entry_point_name)
+            .context("Failed to convert entry point selector to FieldElement")?,
         calldata,
     };
 
@@ -67,17 +68,16 @@ pub async fn execute_calls(
     let execution = apply_optional(execution, nonce, Execution::nonce);
 
     match execution.send().await {
-        Ok(result) => {
-            handle_wait_for_tx(
-                account.provider(),
-                result.transaction_hash,
-                InvokeResponse {
-                    transaction_hash: Hex(result.transaction_hash),
-                },
-                wait_config,
-            )
-            .await.map_err(StarknetCommandError::from)
-        }
+        Ok(result) => handle_wait_for_tx(
+            account.provider(),
+            result.transaction_hash,
+            InvokeResponse {
+                transaction_hash: Hex(result.transaction_hash),
+            },
+            wait_config,
+        )
+        .await
+        .map_err(StarknetCommandError::from),
         Err(Provider(error)) => Err(StarknetCommandError::Handleable(error)),
         _ => Err(anyhow!("Unknown RPC error").into()),
     }

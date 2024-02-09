@@ -72,7 +72,6 @@ fn set_cairo_edition(document: &mut Document, cairo_edition: &str) {
 
 fn extend_gitignore(path: &Path) -> Result<()> {
     let mut file = OpenOptions::new()
-        .write(true)
         .append(true)
         .open(path.join(".gitignore"))?;
     writeln!(file, ".snfoundry_cache/")?;

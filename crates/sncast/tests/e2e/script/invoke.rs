@@ -21,7 +21,7 @@ async fn test_max_fee_too_low() {
         .args(args);
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
-        [DEBUG]	0x496e73756666696369656e744d6178466565 ('InsufficientMaxFee')
+        ScriptCommandError::RPCError(RPCError::StarknetError(StarknetError::InsufficientMaxFee(())))
         command: script
         status: success
     "});
@@ -46,14 +46,15 @@ async fn test_contract_does_not_exist() {
         .args(args);
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
-        [DEBUG]	0x436f6e74726163744572726f72 ('ContractError')
+        ScriptCommandError::RPCError(RPCError::StarknetError(StarknetError::ContractError(())))
         command: script
         status: success
     "});
 }
 
 #[test]
-fn test_wrong_function_name() {  //TODO: not working, check other ContractError tests
+fn test_wrong_function_name() {
+    //TODO: not working, check other ContractError tests
     let script_name = "wrong_function_name";
     let args = vec![
         "--accounts-file",
@@ -71,7 +72,7 @@ fn test_wrong_function_name() {  //TODO: not working, check other ContractError 
         .args(args);
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
-        [DEBUG]	0x436f6e74726163744572726f72 ('ContractError')
+        ScriptCommandError::RPCError(RPCError::StarknetError(StarknetError::ContractError(())))
         command: script
         status: success
     "});
@@ -96,7 +97,7 @@ fn test_wrong_calldata() {
         .args(args);
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
-        [DEBUG]	0x436f6e74726163744572726f72 ('ContractError')
+        ScriptCommandError::RPCError(RPCError::StarknetError(StarknetError::ContractError(())))
         command: script
         status: success
     "});

@@ -1,7 +1,7 @@
 use sncast_std::{
-    call, CallResult, ScriptCommandError, RPCError, StarknetError, ScriptCommandErrorTrait
+    call, CallResult, ScriptCommandError, RPCError, StarknetError
 };
-use core::debug::PrintTrait;
+
 
 fn main() {
     let eth = 0x049;
@@ -10,7 +10,7 @@ fn main() {
     )
         .unwrap_err();
 
-    call_err.print();
+    println!("{:?}", call_err);
 
     assert(
         ScriptCommandError::RPCError(

@@ -17,7 +17,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
       - uses: software-mansion/setup-scarb@v1.3.2
-      - run: cargo test --release --lib -p forge
+      - run: cargo test --release --lib -p forge -- --nocapture
       - run: cargo test --release --bin snforge
       - run: cargo test --release integration -p forge
 
@@ -189,4 +189,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: typos-action
-        uses: crate-ci/typos@v1.17.1
+        uses: crate-ci/typos@v1.17.2

@@ -1,11 +1,11 @@
 use core::array::ArrayTrait;
 use core::serde::Serde;
-use core::debug::PrintTrait;
 use starknet::{testing::cheatcode, ContractAddress, ClassHash};
+use core::fmt::{Debug, Display, Error, Formatter};
 
 
-#[derive(Copy, Drop, Serde, PartialEq)]
-enum StarknetError {
+#[derive(Copy, Drop, Serde, PartialEq, Debug)]
+pub enum StarknetError {
     UnknownError,
     ContractNotFound,
     BlockNotFound,
@@ -20,68 +20,46 @@ enum StarknetError {
     TransactionReverted,
 }
 
-impl StarknetErrorTrait of PrintTrait<StarknetError> {
-    #[inline(always)]
-    fn print(self: StarknetError) {
-        match self {
-            StarknetError::UnknownError => { 'StarknetUnknownError'.print(); },
-            StarknetError::ContractNotFound => { 'ContractNotFound'.print(); },
-            StarknetError::BlockNotFound => { 'BlockNotFound'.print(); },
-            StarknetError::ClassHashNotFound => { 'ClassHashNotFound'.print(); },
-            StarknetError::ClassAlreadyDeclared => { 'ClassAlreadyDeclared'.print(); },
-            StarknetError::InsufficientMaxFee => { 'InsufficientMaxFee'.print(); },
-            StarknetError::InsufficientAccountBalance => { 'InsufficientAccountBalance'.print(); },
-            StarknetError::ContractError => { 'ContractError'.print(); },
-            StarknetError::InvalidTransactionNonce => { 'InvalidTransactionNonce'.print(); },
-            StarknetError::ContractAddressUnavailableForDeployment => { 'AddrUnavailableForDeployment'.print(); },
-            StarknetError::ClassNotDeclared => { 'ClassNotDeclared'.print(); },
-            StarknetError::TransactionReverted => { 'TransactionReverted'.print(); },
-        }
-    }
-}
-
-#[derive(Copy, Drop, Serde, PartialEq)]
-enum RPCError {
+#[derive(Copy, Drop, Serde, PartialEq, Debug)]
+pub enum RPCError {
     UnknownError,
     RateLimited,
     StarknetError: StarknetError,
 }
 
-impl RPCErrorTrait of PrintTrait<RPCError> {
-    #[inline(always)]
-    fn print(self: RPCError) {
-        match self {
-            RPCError::UnknownError => { 'RPCUnknownError'.print(); },
-            RPCError::RateLimited => { 'RateLimited'.print(); },
-            RPCError::StarknetError(err) => { err.print(); },
-        }
-    }
-}
-
-#[derive(Copy, Drop, Serde, PartialEq)]
-enum ScriptCommandError {
+#[derive(Copy, Drop, Serde, PartialEq, Debug)]
+pub enum ScriptCommandError {
     SNCastError,
     ContractArtifactsNotFound,
     RPCError: RPCError,
 }
 
-impl ScriptCommandErrorTrait of PrintTrait<ScriptCommandError> {
-    #[inline(always)]
-    fn print(self: ScriptCommandError) {
-        match self {
-            ScriptCommandError::SNCastError => { 'SNCastError'.print(); },
-            ScriptCommandError::ContractArtifactsNotFound => { 'ContractArtifactsNotFound'.print(); },
-            ScriptCommandError::RPCError(err) => { err.print(); },
-        }
+pub impl DisplayClassHash of Display<ClassHash> {
+    fn fmt(self: @ClassHash, ref f: Formatter) -> Result<(), Error> {
+        let class_hash: felt252 = (*self).into();
+        Display::fmt(@class_hash, ref f)
     }
 }
 
-#[derive(Drop, Clone)]
-struct CallResult {
-    data: Array::<felt252>,
+pub impl DisplayContractAddress of Display<ContractAddress> {
+    fn fmt(self: @ContractAddress, ref f: Formatter) -> Result<(), Error> {
+        let addr: felt252 = (*self).into();
+        Display::fmt(@addr, ref f)
+    }
 }
 
-fn call(
+#[derive(Drop, Clone, Debug, Serde)]
+pub struct CallResult {
+    pub data: Array::<felt252>,
+}
+
+impl DisplayCallResult of Display<CallResult> {
+    fn fmt(self: @CallResult, ref f: Formatter) -> Result<(), Error> {
+        Debug::fmt(self.data, ref f)
+    }
+}
+
+pub fn call(
     contract_address: ContractAddress, function_name: felt252, calldata: Array::<felt252>
 ) -> Result<CallResult, ScriptCommandError> {
     let contract_address_felt: felt252 = contract_address.into();
@@ -104,13 +82,19 @@ fn call(
     }
 }
 
-#[derive(Drop, Clone, Serde)]
-struct DeclareResult {
-    class_hash: ClassHash,
-    transaction_hash: felt252,
+#[derive(Drop, Clone, Debug, Serde)]
+pub struct DeclareResult {
+    pub class_hash: ClassHash,
+    pub transaction_hash: felt252,
 }
 
-fn declare(
+impl DisplayDeclareResult of Display<DeclareResult> {
+    fn fmt(self: @DeclareResult, ref f: Formatter) -> Result<(), Error> {
+        write!(f, "class_hash: {}, transaction_hash: {}", *self.class_hash, *self.transaction_hash)
+    }
+}
+
+pub fn declare(
     contract_name: felt252, max_fee: Option<felt252>, nonce: Option<felt252>
 ) -> Result<DeclareResult, ScriptCommandError> {
     let mut inputs = array![contract_name];
@@ -134,13 +118,24 @@ fn declare(
     result_data
 }
 
-#[derive(Drop, Clone, Serde)]
-struct DeployResult {
-    contract_address: ContractAddress,
-    transaction_hash: felt252,
+#[derive(Drop, Clone, Debug, Serde)]
+pub struct DeployResult {
+    pub contract_address: ContractAddress,
+    pub transaction_hash: felt252,
 }
 
-fn deploy(
+impl DisplayDeployResult of Display<DeployResult> {
+    fn fmt(self: @DeployResult, ref f: Formatter) -> Result<(), Error> {
+        write!(
+            f,
+            "contract_address: {}, transaction_hash: {}",
+            *self.contract_address,
+            *self.transaction_hash
+        )
+    }
+}
+
+pub fn deploy(
     class_hash: ClassHash,
     constructor_calldata: Array::<felt252>,
     salt: Option<felt252>,
@@ -179,12 +174,18 @@ fn deploy(
     result_data
 }
 
-#[derive(Drop, Clone, Serde)]
-struct InvokeResult {
-    transaction_hash: felt252,
+#[derive(Drop, Clone, Debug, Serde)]
+pub struct InvokeResult {
+    pub transaction_hash: felt252,
 }
 
-fn invoke(
+impl DisplayInvokeResult of Display<InvokeResult> {
+    fn fmt(self: @InvokeResult, ref f: Formatter) -> Result<(), Error> {
+        write!(f, "{}", *self.transaction_hash)
+    }
+}
+
+pub fn invoke(
     contract_address: ContractAddress,
     entry_point_selector: felt252,
     calldata: Array::<felt252>,
@@ -217,7 +218,7 @@ fn invoke(
     result_data
 }
 
-fn get_nonce(block_tag: felt252) -> felt252 {
+pub fn get_nonce(block_tag: felt252) -> felt252 {
     let inputs = array![block_tag];
     let buf = cheatcode::<'get_nonce'>(inputs.span());
     *buf[0]

@@ -1,7 +1,6 @@
-use crate::{assert_stdout_contains, e2e::common::runner::setup_package};
+use crate::e2e::common::runner::{setup_package, test_runner};
 use indoc::indoc;
-
-use crate::e2e::common::runner::test_runner;
+use test_utils::output_assert::assert_stdout_contains;
 
 #[test]
 fn collection_with_lib() {
@@ -9,9 +8,13 @@ fn collection_with_lib() {
 
     let snapbox = test_runner();
 
-    let output = snapbox.current_dir(&temp).assert().success();
+    let output = snapbox
+        .env("SCARB_CACHE", temp.path())
+        .current_dir(&temp)
+        .assert()
+        .success();
 
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
         indoc! {r"
         [..]Compiling[..]
@@ -39,7 +42,7 @@ fn collection_with_lib() {
         [PASS] tests::fibfabfob::test_fib [..]
         [PASS] tests::fibfabfob::test_fab [..]
         Tests: 17 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
-        "}
+        "},
     );
 }
 
@@ -49,8 +52,13 @@ fn collection_without_lib() {
 
     let snapbox = test_runner();
 
-    let output = snapbox.current_dir(&temp).assert().success();
-    assert_stdout_contains!(
+    let output = snapbox
+        .env("SCARB_CACHE", temp.path())
+        .current_dir(&temp)
+        .assert()
+        .success();
+
+    assert_stdout_contains(
         output,
         indoc! {r"
         [..]Compiling[..]
@@ -78,6 +86,6 @@ fn collection_without_lib() {
         [PASS] tests::fibfabfob::test_fob [..]
         [PASS] tests::fibfabfob::test_fib [..]
         Tests: 17 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
-        "}
+        "},
     );
 }
