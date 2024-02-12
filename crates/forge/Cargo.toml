@@ -50,6 +50,7 @@ ark-ff = "0.4.0-alpha.7"
 ark-std = "0.4.0"
 ark-secp256k1 = "0.4.0"
 ark-secp256r1 = "0.4.0"
+openssl = { version = "0.10", features = ["vendored"] }
 toml_edit = "0.21.1"
 flatten-serde-json.workspace = true
 smol_str.workspace = true
