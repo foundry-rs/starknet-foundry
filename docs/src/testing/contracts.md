@@ -130,7 +130,7 @@ mod HelloStarknet {
         }
 
         fn do_a_string_panic(self: @ContractState) {
-            assert!(false, "This a panicking with a string, which can be longer");
+            assert!(false, "This is panicking with a string, which can be longer than 31 characters");
         }
     }
 }
