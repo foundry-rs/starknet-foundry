@@ -45,6 +45,6 @@ async fn test_wrong_contract_name() {
         .args(args);
     snapbox.assert().success().stderr_matches(indoc! {r"
         command: script
-        error: Got an exception while executing a hint: [..]
+        error: Got an exception [..] Failed to find Mapaaaa artifact in starknet_artifacts.json file. Please make sure you have specified correct package using `--package` flag and that you have enabled sierra and casm code generation in Scarb.toml.
     "});
 }

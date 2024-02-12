@@ -4,6 +4,7 @@ trait IHelloStarknet<TContractState> {
     fn get_balance(self: @TContractState) -> felt252;
     fn do_a_panic(self: @TContractState);
     fn do_a_panic_with(self: @TContractState, panic_data: Array<felt252>);
+    fn do_a_panic_with_bytearray(self: @TContractState);
 }
 
 #[starknet::contract]
@@ -38,6 +39,11 @@ mod HelloStarknet {
         // Panics with given array data
         fn do_a_panic_with(self: @ContractState, panic_data: Array<felt252>) {
             panic(panic_data);
+        }
+
+        // Panics with a bytearray
+        fn do_a_panic_with_bytearray(self: @ContractState) {
+            assert!(false, "This is a very long\n and multiline message that is certain to fill the buffer");
         }
     }
 }

@@ -7,7 +7,6 @@ edition.workspace = true
 
 [dependencies]
 anyhow.workspace = true
-assert_fs.workspace = true
 blockifier.workspace = true
 camino.workspace = true
 include_dir.workspace = true
@@ -15,6 +14,7 @@ indoc.workspace = true
 starknet_api.workspace = true
 tempfile.workspace = true
 rayon.workspace = true
+shared.workspace = true
 cheatnet = { path = "../cheatnet" }
 conversions = { path = "../conversions" }
 scarb-api = { path = "../scarb-api" }
@@ -37,7 +37,6 @@ starknet.workspace = true
 thiserror.workspace = true
 num-traits.workspace = true
 once_cell.workspace = true
-walkdir.workspace = true
 num-bigint.workspace = true
 clap.workspace = true
 console.workspace = true
@@ -46,15 +45,11 @@ scarb-metadata.workspace = true
 scarb-ui.workspace = true
 semver.workspace = true
 schemars = { version = "0.8.12", features = ["preserve_order"] }
-parity-scale-codec = "3.5.0"
-parity-scale-codec-derive = "3.6.5"
-snapbox.workspace = true
 cairo-vm.workspace = true
 ark-ff = "0.4.0-alpha.7"
 ark-std = "0.4.0"
 ark-secp256k1 = "0.4.0"
 ark-secp256r1 = "0.4.0"
-openssl = { version = "0.10", features = ["vendored"] }
 toml_edit = "0.21.1"
 flatten-serde-json.workspace = true
 smol_str.workspace = true
@@ -69,8 +64,12 @@ name = "snforge"
 path = "src/main.rs"
 
 [dev-dependencies]
+assert_fs.workspace = true
+snapbox.workspace = true
 criterion = { version = "0.5.1", features = ["html_reports"] }
 test_utils = { path = "test_utils" }
+axum = "0.7.4"
+lazy_static = "1.4.0"
 
 [[bench]]
 name = "forge_bench"

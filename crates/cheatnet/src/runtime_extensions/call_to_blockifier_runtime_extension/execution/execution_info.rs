@@ -185,7 +185,7 @@ pub fn get_cheated_exec_info_ptr(
 }
 
 fn add_vec_memory_segment(
-    vector: &Vec<Felt252>,
+    vector: &[Felt252],
     vm: &mut VirtualMachine,
 ) -> (Relocatable, Relocatable) {
     let vector_len = vector.len();

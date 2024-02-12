@@ -6,7 +6,7 @@ fn get_call_trace() -> CallTrace;
 
 (For whole structure definition, please refer to [`snforge-std` source](https://github.com/foundry-rs/starknet-foundry/tree/v0.16.0/snforge_std))
 
-Gets latest call trace of the test, including the last call made to a contract.
+Gets current call trace of the test, up to the last call made to a contract.
 
 ## Example call trace
 ```cairo
@@ -64,13 +64,7 @@ let ctrace = CallTrace {
 The topmost-call is representing the test call, which will always be present if you're running a test.
 It can have nested `CallTrace` - it's an array of subsequent traces made in scope of the call.
 
-The whole structure is represented as a tree of calls, in which each contract interaction (`constructor` call, `l1_handler` call, or a regular contract `call` via dispatcher) is a new execution scope - thus resulting in a new nested trace.
-
-
-> 📝 **Note**
-> 
-> Failed (panicked) entrypoints will also register in the trace, 
-> if you handle the panic gracefully in the test. 
+The whole structure is represented as a tree of calls, in which each contract interaction (`constructor` call, `l1_handler` call, library or a regular contract `call` via dispatcher) is a new execution scope - thus resulting in a new nested trace.
 
 ## Displaying the trace
 
