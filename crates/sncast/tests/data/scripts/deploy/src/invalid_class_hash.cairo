@@ -1,9 +1,10 @@
-use sncast_std::{get_nonce, deploy, DeployResult, ScriptCommandError, RPCError, StarknetError};
+use sncast_std::{get_nonce, deploy, DeployResult, ScriptCommandError, ProviderError, StarknetError};
 
 use starknet::{ClassHash, Felt252TryIntoClassHash};
 use traits::Into;
 
 fn main() {
+    println!("test");
     let max_fee = 99999999999999999;
     let salt = 0x3;
 

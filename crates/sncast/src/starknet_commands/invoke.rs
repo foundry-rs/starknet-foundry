@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Context, Result};
 use clap::Args;
 
-use crate::starknet_commands::commands::StarknetCommandError;
+use crate::starknet_commands::commands::{RecoverableStarknetCommandError, StarknetCommandError};
 use sncast::response::structs::{Hex, InvokeResponse};
 use sncast::{apply_optional, handle_wait_for_tx, WaitForTx};
 use starknet::accounts::AccountError::Provider;
@@ -78,7 +78,9 @@ pub async fn execute_calls(
         )
         .await
         .map_err(StarknetCommandError::from),
-        Err(Provider(error)) => Err(StarknetCommandError::Handleable(error)),
+        Err(Provider(error)) => Err(StarknetCommandError::Recoverable(
+            RecoverableStarknetCommandError::ProviderError(error),
+        )),
         _ => Err(anyhow!("Unknown RPC error").into()),
     }
 }

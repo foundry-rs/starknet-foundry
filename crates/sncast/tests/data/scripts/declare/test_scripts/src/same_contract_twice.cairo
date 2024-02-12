@@ -1,5 +1,4 @@
-use sncast_std::{get_nonce, declare, DeclareResult, ScriptCommandError, RPCError, StarknetError};
-
+use sncast_std::{get_nonce, declare, DeclareResult, ScriptCommandError, ProviderError, StarknetError};
 
 fn main() {
     let max_fee = 99999999999999999;
@@ -12,11 +11,4 @@ fn main() {
     let declare_result = declare('Mapa', Option::Some(max_fee), Option::Some(declare_nonce)).unwrap_err();
 
     println!("{:?}", declare_result);
-
-    assert(
-        ScriptCommandError::RPCError(
-            RPCError::StarknetError(StarknetError::ClassAlreadyDeclared)
-        ) == declare_result,
-        'ohno'
-    )
 }

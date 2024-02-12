@@ -1,4 +1,4 @@
-use sncast_std::{invoke, InvokeResult, ScriptCommandError, RPCError, StarknetError};
+use sncast_std::{invoke, InvokeResult, ScriptCommandError, ProviderError, StarknetError};
 use starknet::{ContractAddress, Felt252TryIntoContractAddress};
 use traits::Into;
 

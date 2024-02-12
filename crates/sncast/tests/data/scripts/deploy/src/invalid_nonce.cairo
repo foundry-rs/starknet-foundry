@@ -1,4 +1,4 @@
-use sncast_std::{get_nonce, deploy, DeployResult, ScriptCommandError, RPCError, StarknetError};
+use sncast_std::{get_nonce, deploy, DeployResult, ScriptCommandError, ProviderError, StarknetError};
 
 use starknet::{ClassHash, Felt252TryIntoClassHash};
 use traits::Into;
@@ -24,8 +24,8 @@ fn main() {
     println!("{:?}", deploy_result);
 
     assert(
-        ScriptCommandError::RPCError(
-            RPCError::StarknetError(StarknetError::InvalidTransactionNonce)
+        ScriptCommandError::ProviderError(
+            ProviderError::StarknetError(StarknetError::InvalidTransactionNonce)
         ) == deploy_result,
         'ohno'
     )

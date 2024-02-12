@@ -21,7 +21,7 @@ async fn test_max_fee_too_low() {
         .args(args);
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
-        ScriptCommandError::RPCError(RPCError::StarknetError(StarknetError::InsufficientMaxFee(())))
+        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::InsufficientMaxFee(())))
         command: script
         status: success
     "});
@@ -47,7 +47,7 @@ async fn test_contract_does_not_exist() {
     snapbox.assert().success().stdout_matches(indoc! {r#"
         ...
         test
-        ScriptCommandError::RPCError(RPCError::StarknetError(StarknetError::ContractError(ErrorData { msg: "Error in the called contract ([..]):
+        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::ContractError(ErrorData { msg: "Error in the called contract ([..]):
         Error at pc=0:81:
         Got an exception while executing a hint: Custom Hint Error: Requested contract address ContractAddress(PatriciaKey(StarkFelt("[..]"))) is not deployed.
         Cairo traceback (most recent call last):
@@ -81,7 +81,7 @@ fn test_wrong_function_name() {
     snapbox.assert().success().stdout_matches(indoc! {r#"
         ...
         test
-        ScriptCommandError::RPCError(RPCError::StarknetError(StarknetError::ContractError(ErrorData { msg: "Error in the called contract ([..]):
+        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::ContractError(ErrorData { msg: "Error in the called contract ([..]):
         Error at pc=0:81:
         Got an exception while executing a hint: Custom Hint Error: Entry point EntryPointSelector(StarkFelt("[..]")) not found in contract.
         Cairo traceback (most recent call last):
@@ -115,7 +115,7 @@ fn test_wrong_calldata() {
     snapbox.assert().success().stdout_matches(indoc! {r#"
         ...
         test
-        ScriptCommandError::RPCError(RPCError::StarknetError(StarknetError::ContractError(ErrorData { msg: "Error in the called contract ([..]):
+        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::ContractError(ErrorData { msg: "Error in the called contract ([..]):
         Error at pc=0:81:
         Got an exception while executing a hint: Custom Hint Error: Execution failed. Failure reason: [..] ('Failed to deserialize param #2').
         Cairo traceback (most recent call last):

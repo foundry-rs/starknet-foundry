@@ -1,5 +1,5 @@
 use sncast_std::{
-    call, CallResult, ScriptCommandError, RPCError, StarknetError, ErrorData
+    call, CallResult, ScriptCommandError, ProviderError, StarknetError, ErrorData
 };
 
 fn main() {

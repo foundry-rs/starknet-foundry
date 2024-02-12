@@ -1,5 +1,4 @@
-use sncast_std::{get_nonce, declare, DeclareResult, ScriptCommandError, RPCError, StarknetError};
-
+use sncast_std::{get_nonce, declare, DeclareResult, ScriptCommandError, ProviderError, StarknetError};
 
 fn main() {
     let max_fee = 9999999999999999999999999999999999;
@@ -9,8 +8,8 @@ fn main() {
     println!("{:?}", declare_result);
 
     assert(
-        ScriptCommandError::RPCError(
-            RPCError::StarknetError(StarknetError::InsufficientAccountBalance)
+        ScriptCommandError::ProviderError(
+            ProviderError::StarknetError(StarknetError::InsufficientAccountBalance)
         ) == declare_result,
         'ohno'
     )

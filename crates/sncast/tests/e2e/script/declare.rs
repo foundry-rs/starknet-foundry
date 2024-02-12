@@ -46,12 +46,12 @@ async fn test_wrong_contract_name() {
     let snapbox = Command::new(cargo_bin!("sncast"))
         .current_dir(SCRIPTS_DIR.to_owned() + "/declare/test_scripts")
         .args(args);
-    snapbox.assert().success().stdout_matches(indoc! {r"
+    snapbox.assert().success().stdout_matches(indoc! {r#"
         ...
-        ScriptCommandError::ContractArtifactsNotFound(())
+        ScriptCommandError::ContractArtifactsNotFound(ErrorData { msg: "Mapaaaa" })
         command: script
         status: success
-    "});
+    "#});
 }
 
 #[tokio::test]
@@ -83,12 +83,13 @@ async fn test_same_contract_twice() {
     let snapbox = Command::new(cargo_bin!("sncast"))
         .current_dir(script_dir.path())
         .args(args);
-    snapbox.assert().success().stdout_matches(indoc! {r"
+    snapbox.assert().success().stdout_matches(indoc! {r#"
         ...
-        ScriptCommandError::RPCError(RPCError::StarknetError(StarknetError::ClassAlreadyDeclared(())))
+        success
+        ScriptCommandError::ProviderError(ProviderError::Other(ErrorData { msg: "JSON-RPC error: code=-1, message="Class with hash ClassHash(StarkFelt("[..]")) is already declared."" }))
         command: script
         status: success
-    "});
+    "#});
 }
 
 #[tokio::test]
@@ -110,7 +111,7 @@ async fn test_with_invalid_max_fee() {
         .args(args);
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
-        ScriptCommandError::RPCError(RPCError::StarknetError(StarknetError::InsufficientMaxFee(())))
+        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::InsufficientMaxFee(())))
         command: script
         status: success
     "});
@@ -135,7 +136,7 @@ async fn test_with_invalid_nonce() {
         .args(args);
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
-        ScriptCommandError::RPCError(RPCError::StarknetError(StarknetError::InvalidTransactionNonce(())))
+        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::InvalidTransactionNonce(())))
         command: script
         status: success
     "});
@@ -160,7 +161,7 @@ async fn test_insufficient_account_balance() {
         .args(args);
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
-        ScriptCommandError::RPCError(RPCError::StarknetError(StarknetError::InsufficientAccountBalance(())))
+        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::InsufficientAccountBalance(())))
         command: script
         status: success
     "});

@@ -1,12 +1,7 @@
-use sncast_std::{declare, DeclareResult, ScriptCommandError, RPCError, StarknetError};
+use sncast_std::{declare, DeclareResult, ScriptCommandError, ProviderError, StarknetError};
 
 fn main() {
     let declare_result = declare('Mapaaaa', Option::None, Option::None).unwrap_err();
     println!("{:?}", declare_result);
-
-    assert(
-        ScriptCommandError::ContractArtifactsNotFound == declare_result,
-        'ohno'
-    )
 }
 

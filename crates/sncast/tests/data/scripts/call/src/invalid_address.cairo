@@ -1,5 +1,5 @@
 use sncast_std::{
-    call, CallResult, ScriptCommandError, RPCError, StarknetError
+    call, CallResult, ScriptCommandError, ProviderError, StarknetError
 };
 
 fn main() {
@@ -13,8 +13,8 @@ fn main() {
     println!("{:?}", call_err);
 
     assert(
-        ScriptCommandError::RPCError(
-            RPCError::StarknetError(StarknetError::ContractNotFound)
+        ScriptCommandError::ProviderError(
+            ProviderError::StarknetError(StarknetError::ContractNotFound)
         ) == call_err,
         'ohno'
     )

@@ -1,4 +1,4 @@
-use crate::starknet_commands::commands::StarknetCommandError;
+use crate::starknet_commands::commands::{RecoverableStarknetCommandError, StarknetCommandError};
 use anyhow::{Context, Result};
 use clap::Args;
 use sncast::response::structs::{CallResponse, Hex};
@@ -50,6 +50,8 @@ pub async fn call(
 
     match res {
         Ok(response) => Ok(CallResponse { response }),
-        Err(error) => Err(StarknetCommandError::Handleable(error)),
+        Err(error) => Err(StarknetCommandError::Recoverable(
+            RecoverableStarknetCommandError::ProviderError(error),
+        )),
     }
 }

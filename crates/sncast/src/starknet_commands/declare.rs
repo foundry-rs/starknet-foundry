@@ -3,11 +3,11 @@ use clap::Args;
 use scarb_api::StarknetContractArtifacts;
 use sncast::response::structs::DeclareResponse;
 use sncast::response::structs::Hex;
-use sncast::{apply_optional, handle_wait_for_tx, WaitForTx};
+use sncast::{apply_optional, handle_wait_for_tx, ErrorData, WaitForTx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{ConnectedAccount, Declaration};
 
-use crate::starknet_commands::commands::{ContractArtifactsNotFoundData, StarknetCommandError};
+use crate::starknet_commands::commands::{RecoverableStarknetCommandError, StarknetCommandError};
 use starknet::core::types::FieldElement;
 use starknet::{
     accounts::{Account, SingleOwnerAccount},
@@ -51,8 +51,10 @@ pub async fn declare(
     let contract_artifacts =
         artifacts
             .get(&contract_name)
-            .ok_or(StarknetCommandError::ContractArtifactsNotFound(
-                ContractArtifactsNotFoundData { contract_name },
+            .ok_or(StarknetCommandError::Recoverable(
+                RecoverableStarknetCommandError::ContractArtifactsNotFound(ErrorData::new(
+                    contract_name,
+                )),
             ))?;
 
     let contract_definition: SierraClass = serde_json::from_str(&contract_artifacts.sierra)
@@ -84,7 +86,9 @@ pub async fn declare(
         )
         .await
         .map_err(StarknetCommandError::from),
-        Err(Provider(error)) => Err(StarknetCommandError::Handleable(error)),
+        Err(Provider(error)) => Err(StarknetCommandError::Recoverable(
+            RecoverableStarknetCommandError::ProviderError(error),
+        )),
         _ => Err(anyhow!("Unknown RPC error").into()),
     }
 }

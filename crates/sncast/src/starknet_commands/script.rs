@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::fs;
 
-use crate::starknet_commands::commands::StarknetCommandError;
+use crate::starknet_commands::commands::{RecoverableStarknetCommandError, StarknetCommandError};
 use crate::starknet_commands::{call, declare, deploy, invoke};
 use crate::{get_account, get_nonce, WaitForTx};
 use anyhow::{anyhow, Context, Result};
@@ -24,7 +24,7 @@ use clap::command;
 use clap::Args;
 use conversions::byte_array::ByteArray;
 use conversions::{FromConv, IntoConv};
-use itertools::{chain};
+use itertools::chain;
 use runtime::starknet::context::{build_context, BlockInfo};
 use runtime::starknet::state::DictStateReader;
 use runtime::utils::BufferReader;
@@ -39,151 +39,174 @@ use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::SCRIPT_LIB_ARTIFACT_NAME;
 use sncast::response::print::print_as_warning;
 use sncast::response::structs::ScriptResponse;
+use sncast::{ErrorData, TransactionError};
 use starknet::accounts::Account;
+use starknet::core::types::StarknetError;
 use starknet::core::types::{BlockId, BlockTag::Pending, FieldElement};
-use starknet::core::types::{
-    StarknetError as RPCStarknetError,
-};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::{JsonRpcClient, ProviderError};
 use tokio::runtime::Runtime;
-use sncast::{ErrorData, TransactionError};
 
 type ScriptStarknetContractArtifacts = StarknetContractArtifacts;
 
+pub trait SerializeAsFelt252 {
+    fn serialize_as_felt252(&self) -> Vec<Felt252>;
+}
+
+#[derive(Debug)]
 enum ScriptCommandError {
-    SNCastError,
-    ContractArtifactsNotFound,
-    RPCError(RPCError),
+    ContractArtifactsNotFound(ErrorData),
+    ScriptProviderError(ScriptProviderError),
 }
 
-enum RPCError {
-    UnknownError,
+impl From<RecoverableStarknetCommandError> for ScriptCommandError {
+    fn from(value: RecoverableStarknetCommandError) -> Self {
+        match value {
+            RecoverableStarknetCommandError::ContractArtifactsNotFound(err_data) => {
+                ScriptCommandError::ContractArtifactsNotFound(err_data)
+            }
+            RecoverableStarknetCommandError::TransactionError(error) => match error {
+                TransactionError::Rejected => ScriptCommandError::ScriptProviderError(
+                    ScriptProviderError::StarknetError(ScriptStarknetError::TransactionRejected),
+                ),
+                TransactionError::Reverted(err_data) => {
+                    ScriptCommandError::ScriptProviderError(ScriptProviderError::StarknetError(
+                        ScriptStarknetError::TransactionReverted(err_data),
+                    ))
+                }
+            },
+            RecoverableStarknetCommandError::ProviderError(error) => {
+                ScriptCommandError::ScriptProviderError(error.into())
+            }
+        }
+    }
+}
+
+impl SerializeAsFelt252 for ScriptCommandError {
+    fn serialize_as_felt252(&self) -> Vec<Felt252> {
+        match self {
+            ScriptCommandError::ContractArtifactsNotFound(err) => {
+                let mut res = vec![Felt252::from(0)];
+                res.extend(ByteArray::from(err.data.clone()).serialize());
+                res
+            }
+            ScriptCommandError::ScriptProviderError(err) => {
+                let mut res = vec![Felt252::from(1)];
+                res.extend(err.serialize_as_felt252());
+                res
+            }
+        }
+    }
+}
+
+#[derive(Debug)]
+enum ScriptProviderError {
+    Other(ErrorData),
     RateLimited,
-    StarknetError(StarknetError),
+    StarknetError(ScriptStarknetError),
 }
 
-enum StarknetError {
-    UnknownError,
+impl From<ProviderError> for ScriptProviderError {
+    fn from(value: ProviderError) -> Self {
+        match value {
+            ProviderError::StarknetError(error) => ScriptProviderError::StarknetError(error.into()),
+            ProviderError::RateLimited => ScriptProviderError::RateLimited,
+            err => ScriptProviderError::Other(ErrorData::new(err.to_string())),
+        }
+    }
+}
+
+impl SerializeAsFelt252 for ScriptProviderError {
+    fn serialize_as_felt252(&self) -> Vec<Felt252> {
+        match self {
+            ScriptProviderError::Other(err) => {
+                let mut res = vec![Felt252::from(0)];
+                res.extend(ByteArray::from(err.data.clone()).serialize());
+                res
+            }
+            ScriptProviderError::RateLimited => {
+                vec![Felt252::from(1)]
+            }
+            ScriptProviderError::StarknetError(err) => {
+                let mut res = vec![Felt252::from(2)];
+                res.extend(err.serialize_as_felt252());
+                res
+            }
+        }
+    }
+}
+
+#[derive(Debug)]
+enum ScriptStarknetError {
+    Other(ErrorData),
     ContractNotFound,
-    BlockNotFound,
-    ClassHashNotFound,
     ClassAlreadyDeclared,
     InsufficientMaxFee,
     InsufficientAccountBalance,
     ContractError(ErrorData),
     InvalidTransactionNonce,
-    ContractAddressUnavailableForDeployment,
-    ClassNotDeclared,
     TransactionReverted(ErrorData),
     TransactionRejected,
 }
 
-fn sn_command_error_to_script_command_error(err: StarknetCommandError) -> ScriptCommandError {
-    dbg!(&err);
-    match err {
-        StarknetCommandError::Unhandleable(err) => {
-            panic!("{}", err)
-        }
-        StarknetCommandError::ContractArtifactsNotFound(_) => {
-            ScriptCommandError::ContractArtifactsNotFound
-        }
-        StarknetCommandError::Handleable(err) => {
-            let res = match err {
-                ProviderError::RateLimited => RPCError::RateLimited,
-                ProviderError::StarknetError(err) => {
-                    let res = match err {
-                        RPCStarknetError::ContractNotFound => StarknetError::ContractNotFound,
-                        RPCStarknetError::BlockNotFound => StarknetError::BlockNotFound,
-                        RPCStarknetError::ClassHashNotFound => StarknetError::ClassHashNotFound,
-                        RPCStarknetError::ClassAlreadyDeclared => {
-                            StarknetError::ClassAlreadyDeclared
-                        }
-                        RPCStarknetError::InsufficientMaxFee => StarknetError::InsufficientMaxFee,
-                        RPCStarknetError::InsufficientAccountBalance => {
-                            StarknetError::InsufficientAccountBalance
-                        }
-                        RPCStarknetError::InvalidTransactionNonce => {
-                            StarknetError::InvalidTransactionNonce
-                        }
-                        RPCStarknetError::ContractError(data) => StarknetError::ContractError(data.into()),
-                        _ => StarknetError::UnknownError,
-                    };
-                    RPCError::StarknetError(res)
-                }
-                ProviderError::Other(err) => {
-                    let err_msg = err.to_string();
-                    if err_msg.contains("Class with hash ClassHash(StarkFelt")
-                        && err_msg.contains("is already declared")
-                    {
-                        RPCError::StarknetError(StarknetError::ClassAlreadyDeclared)
-                    } else {
-                        RPCError::UnknownError
-                    }
-                }
-                _ => RPCError::UnknownError,
-            };
-            ScriptCommandError::RPCError(res)
-        }
-        StarknetCommandError::TransactionError(err) => {
-            match err {
-                TransactionError::Rejected => {
-                    ScriptCommandError::RPCError(RPCError::StarknetError(StarknetError::TransactionRejected))
-                }
-                TransactionError::Reverted(data) => {
-                    ScriptCommandError::RPCError(RPCError::StarknetError(StarknetError::TransactionReverted(data)))
-                }
+impl From<StarknetError> for ScriptStarknetError {
+    fn from(value: StarknetError) -> Self {
+        match value {
+            StarknetError::ContractNotFound => ScriptStarknetError::ContractNotFound,
+            StarknetError::ContractError(err_data) => {
+                ScriptStarknetError::ContractError(err_data.into())
             }
+            StarknetError::ClassAlreadyDeclared => ScriptStarknetError::ClassAlreadyDeclared,
+            StarknetError::InvalidTransactionNonce => ScriptStarknetError::InvalidTransactionNonce,
+            StarknetError::InsufficientMaxFee => ScriptStarknetError::InsufficientMaxFee,
+            StarknetError::InsufficientAccountBalance => {
+                ScriptStarknetError::InsufficientAccountBalance
+            }
+            other_err => ScriptStarknetError::Other(ErrorData::new(other_err.to_string())),
         }
     }
 }
 
-fn serialize_script_command_err(err: ScriptCommandError) -> Vec<Felt252> {
-    match err {
-        ScriptCommandError::SNCastError => vec![Felt252::from(0)],
-        ScriptCommandError::ContractArtifactsNotFound => vec![Felt252::from(1)],
-        ScriptCommandError::RPCError(err) => {
-            let mut res = vec![Felt252::from(2)];
-            match err {
-                RPCError::UnknownError => res.push(Felt252::from(0)),
-                RPCError::RateLimited => res.push(Felt252::from(1)),
-                RPCError::StarknetError(err) => {
-                    res.push(Felt252::from(2));
-                    match err {
-                        StarknetError::UnknownError => res.push(Felt252::from(0)),
-                        StarknetError::ContractNotFound => res.push(Felt252::from(1)),
-                        StarknetError::BlockNotFound => res.push(Felt252::from(2)),
-                        StarknetError::ClassHashNotFound => res.push(Felt252::from(3)),
-                        StarknetError::ClassAlreadyDeclared => res.push(Felt252::from(4)),
-                        StarknetError::InsufficientMaxFee => res.push(Felt252::from(5)),
-                        StarknetError::InsufficientAccountBalance => res.push(Felt252::from(6)),
-                        StarknetError::ContractError(err_data) => {
-                            res.push(Felt252::from(7));
-                            let bytearray = ByteArray::from(err_data.data).serialize();
-                            res.extend(bytearray)
-                        }
-                        StarknetError::InvalidTransactionNonce => res.push(Felt252::from(8)),
-                        StarknetError::ContractAddressUnavailableForDeployment => {
-                            res.push(Felt252::from(9));
-                        }
-                        StarknetError::ClassNotDeclared => res.push(Felt252::from(10)),
-                        StarknetError::TransactionReverted(err_data) => {
-                            res.push(Felt252::from(11));
-                            let bytearray = ByteArray::from(err_data.data).serialize();
-                            res.extend(bytearray)
-                        },
-                        StarknetError::TransactionRejected => res.push(Felt252::from(12)),
-                    }
-                }
+impl SerializeAsFelt252 for ScriptStarknetError {
+    fn serialize_as_felt252(&self) -> Vec<Felt252> {
+        match self {
+            ScriptStarknetError::Other(err) => {
+                let mut res = vec![Felt252::from(0)];
+                res.extend(ByteArray::from(err.data.clone()).serialize());
+                res
             }
-            res
+            ScriptStarknetError::ContractNotFound => vec![Felt252::from(1)],
+            ScriptStarknetError::ClassAlreadyDeclared => vec![Felt252::from(2)],
+            ScriptStarknetError::InsufficientMaxFee => vec![Felt252::from(3)],
+            ScriptStarknetError::InsufficientAccountBalance => vec![Felt252::from(4)],
+            ScriptStarknetError::ContractError(err) => {
+                let mut res = vec![Felt252::from(5)];
+                res.extend(ByteArray::from(err.data.clone()).serialize());
+                res
+            }
+            ScriptStarknetError::InvalidTransactionNonce => vec![Felt252::from(6)],
+            ScriptStarknetError::TransactionReverted(err) => {
+                let mut res = vec![Felt252::from(7)];
+                res.extend(ByteArray::from(err.data.clone()).serialize());
+                res
+            }
+            ScriptStarknetError::TransactionRejected => vec![Felt252::from(8)],
         }
+    }
+}
+
+fn sn_command_error_to_script_command_error(err: StarknetCommandError) -> ScriptCommandError {
+    match err {
+        StarknetCommandError::Unrecoverable(err) => {
+            panic!("{}", err)
+        }
+        StarknetCommandError::Recoverable(err) => ScriptCommandError::from(err),
     }
 }
 
 fn serialize_script_err_to_felt_vec(err: StarknetCommandError) -> Vec<Felt252> {
     let err = sn_command_error_to_script_command_error(err);
-    let error_msg_serialized = serialize_script_command_err(err);
+    let error_msg_serialized = err.serialize_as_felt252();
 
     let mut res: Vec<Felt252> = vec![Felt252::from(1)];
     res.extend(error_msg_serialized);

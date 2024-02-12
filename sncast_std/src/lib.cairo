@@ -10,33 +10,28 @@ pub struct ErrorData {
 
 #[derive(Drop, Serde, PartialEq, Debug)]
 pub enum StarknetError {
-    UnknownError,
+    Other: ErrorData,
     ContractNotFound,
-    BlockNotFound,
-    ClassHashNotFound,
     ClassAlreadyDeclared,
     InsufficientMaxFee,
     InsufficientAccountBalance,
     ContractError: ErrorData,
     InvalidTransactionNonce,
-    ContractAddressUnavailableForDeployment,
-    ClassNotDeclared,
     TransactionReverted: ErrorData,
     TransactionRejected
 }
 
 #[derive(Drop, Serde, PartialEq, Debug)]
-pub enum RPCError {
-    UnknownError,
+pub enum ProviderError {
+    Other: ErrorData,
     RateLimited,
     StarknetError: StarknetError,
 }
 
 #[derive(Drop, Serde, PartialEq, Debug)]
 pub enum ScriptCommandError {
-    SNCastError,
-    ContractArtifactsNotFound,
-    RPCError: RPCError,
+    ContractArtifactsNotFound: ErrorData,
+    ProviderError: ProviderError,
 }
 
 pub impl DisplayClassHash of Display<ClassHash> {

@@ -273,7 +273,7 @@ async fn deploy_oz_account(
     } else {
         match deployment.estimate_fee().await {
             Ok(max_fee) => max_fee.overall_fee,
-            Err(AccountFactoryError::Provider(error)) => return handle_rpc_error(error),
+            Err(AccountFactoryError::Provider(error)) => return Err(handle_rpc_error(error)),
             Err(error) => bail!(error),
         }
     };
@@ -285,7 +285,7 @@ async fn deploy_oz_account(
                 "Provided class hash {:#x} does not exist",
                 oz_class_hash,
             )),
-            _ => handle_rpc_error(error),
+            _ => Err(handle_rpc_error(error)),
         },
         Err(_) => Err(anyhow!("Unknown RPC error")),
         Ok(result) => {
