@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast
+
+#### Changed
+
+- fixed a bug where a profile was passed to scarb even when it did not exist
+
 ## [0.17.0] - 2024-02-07
 
 ### Forge
