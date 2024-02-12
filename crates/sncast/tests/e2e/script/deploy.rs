@@ -26,10 +26,8 @@ async fn test_with_calldata() {
     "});
 }
 
-
 #[tokio::test]
 async fn test_same_salt_and_class_hash_deployed_twice() {
-    //TODO: Consider better error (ContractAddressUnavailableForDeployment)
     let script_name = "same_class_hash_and_salt";
     let args = vec![
         "--accounts-file",
@@ -127,4 +125,3 @@ async fn test_invalid_nonce() {
         status: success
     "});
 }
-

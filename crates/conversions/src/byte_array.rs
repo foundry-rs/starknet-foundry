@@ -28,12 +28,18 @@ impl From<String> for ByteArray {
 
 impl ByteArray {
     #[must_use]
+    pub fn serialize_with_magic(self) -> Vec<Felt252> {
+        chain!(
+            [Felt252::from_str_radix(BYTE_ARRAY_MAGIC, 16).unwrap(),],
+            self.serialize().into_iter()
+        )
+        .collect()
+    }
+
+    #[must_use]
     pub fn serialize(self) -> Vec<Felt252> {
         chain!(
-            [
-                Felt252::from_str_radix(BYTE_ARRAY_MAGIC, 16).unwrap(),
-                self.words.len().into()
-            ],
+            [self.words.len().into()],
             self.words.into_iter(),
             [self.pending_word, self.pending_word_len.into()]
         )

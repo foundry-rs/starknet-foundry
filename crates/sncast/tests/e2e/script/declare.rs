@@ -1,7 +1,9 @@
 use crate::helpers::constants::{SCRIPTS_DIR, URL};
+use crate::helpers::fixtures::{
+    duplicate_contract_directory_with_salt, duplicate_script_directory, get_accounts_path,
+};
 use indoc::indoc;
 use snapbox::cmd::{cargo_bin, Command};
-use crate::helpers::fixtures::{duplicate_contract_directory_with_salt, duplicate_script_directory, get_accounts_path};
 
 #[tokio::test]
 async fn test_missing_field() {
@@ -163,4 +165,3 @@ async fn test_insufficient_account_balance() {
         status: success
     "});
 }
-

@@ -22,8 +22,9 @@ use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use clap::command;
 use clap::Args;
+use conversions::byte_array::ByteArray;
 use conversions::{FromConv, IntoConv};
-use itertools::chain;
+use itertools::{chain, Itertools};
 use runtime::starknet::context::{build_context, BlockInfo};
 use runtime::starknet::state::DictStateReader;
 use runtime::utils::BufferReader;
@@ -39,8 +40,10 @@ use sncast::helpers::constants::SCRIPT_LIB_ARTIFACT_NAME;
 use sncast::response::print::print_as_warning;
 use sncast::response::structs::ScriptResponse;
 use starknet::accounts::Account;
-use starknet::core::types::StarknetError as RPCStarknetError;
 use starknet::core::types::{BlockId, BlockTag::Pending, FieldElement};
+use starknet::core::types::{
+    ContractErrorData, FromByteArrayError, StarknetError as RPCStarknetError,
+};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::{JsonRpcClient, ProviderError};
 use tokio::runtime::Runtime;
@@ -67,7 +70,7 @@ enum StarknetError {
     ClassAlreadyDeclared,
     InsufficientMaxFee,
     InsufficientAccountBalance,
-    ContractError,
+    ContractError(ContractErrorData),
     InvalidTransactionNonce,
     ContractAddressUnavailableForDeployment,
     ClassNotDeclared,
@@ -120,7 +123,7 @@ fn sn_command_error_to_script_command_error(err: StarknetCommandError) -> Script
                         RPCStarknetError::InvalidTransactionNonce => {
                             StarknetError::InvalidTransactionNonce
                         }
-                        RPCStarknetError::ContractError(_) => StarknetError::ContractError,
+                        RPCStarknetError::ContractError(err) => StarknetError::ContractError(err),
                         _ => StarknetError::UnknownError,
                     };
                     RPCError::StarknetError(res)
@@ -161,7 +164,11 @@ fn serialize_script_command_err(err: ScriptCommandError) -> Vec<Felt252> {
                         StarknetError::ClassAlreadyDeclared => res.push(Felt252::from(4)),
                         StarknetError::InsufficientMaxFee => res.push(Felt252::from(5)),
                         StarknetError::InsufficientAccountBalance => res.push(Felt252::from(6)),
-                        StarknetError::ContractError => res.push(Felt252::from(7)),
+                        StarknetError::ContractError(data) => {
+                            res.push(Felt252::from(7));
+                            let bytearray = ByteArray::from(data.revert_error).serialize();
+                            res.extend(bytearray)
+                        }
                         StarknetError::InvalidTransactionNonce => res.push(Felt252::from(8)),
                         StarknetError::ContractAddressUnavailableForDeployment => {
                             res.push(Felt252::from(9));

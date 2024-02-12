@@ -2,8 +2,8 @@ use sncast_std::{
     call, CallResult, ScriptCommandError, RPCError, StarknetError
 };
 
-
 fn main() {
+    println!("test");
     let eth = 0x049;
     let call_err: ScriptCommandError = call(
         eth.try_into().expect('bad address'), 'decimals', array![]

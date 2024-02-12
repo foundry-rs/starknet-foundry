@@ -37,19 +37,19 @@ async fn test_failing() {
 
 #[tokio::test]
 async fn test_call_invalid_entry_point() {
-    //TODO: Consider better error
     let script_name = "invalid_entry_point";
     let args = vec!["--url", URL, "script", &script_name];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
         .current_dir(SCRIPTS_DIR.to_owned() + "/call")
         .args(args);
-    snapbox.assert().success().stdout_matches(indoc! {r"
+    snapbox.assert().success().stdout_matches(indoc! {r#"
         ...
-        ScriptCommandError::RPCError(RPCError::StarknetError(StarknetError::ContractError(())))
+        test
+        ScriptCommandError::RPCError(RPCError::StarknetError(StarknetError::ContractError(ContractErrorData { msg: "Entry point EntryPointSelector(StarkFelt([..])) not found in contract." })))
         command: script
         status: success
-    "});
+    "#});
 }
 
 #[tokio::test]
@@ -70,18 +70,22 @@ async fn test_call_invalid_address() {
 
 #[tokio::test]
 async fn test_call_invalid_calldata() {
-    //TODO: Consider better error
     let script_name = "invalid_calldata";
     let args = vec!["--url", URL, "script", &script_name];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
         .current_dir(SCRIPTS_DIR.to_owned() + "/call")
         .args(args);
-    snapbox.assert().success().stdout_matches(indoc! {r"
+    snapbox.assert().success().stdout_matches(indoc! {r#"
         ...
-        ScriptCommandError::RPCError(RPCError::StarknetError(StarknetError::ContractError(())))
-        ScriptCommandError::RPCError(RPCError::StarknetError(StarknetError::ContractError(())))
+        test
+        ScriptCommandError::RPCError(RPCError::StarknetError(StarknetError::ContractError(ContractErrorData { msg: "Error at pc=0:1401:
+        An ASSERT_EQ instruction failed: 5:2 != 5:5.
+        " })))
+        ScriptCommandError::RPCError(RPCError::StarknetError(StarknetError::ContractError(ContractErrorData { msg: "Error at pc=0:1401:
+        An ASSERT_EQ instruction failed: 5:2 != 5:1.
+        " })))
         command: script
         status: success
-    "});
+    "#});
 }

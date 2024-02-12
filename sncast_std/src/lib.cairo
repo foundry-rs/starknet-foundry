@@ -3,8 +3,12 @@ use core::serde::Serde;
 use starknet::{testing::cheatcode, ContractAddress, ClassHash};
 use core::fmt::{Debug, Display, Error, Formatter};
 
+#[derive(Drop, PartialEq, Serde, Debug)]
+pub struct ContractErrorData {
+    msg: ByteArray
+}
 
-#[derive(Copy, Drop, Serde, PartialEq, Debug)]
+#[derive(Drop, Serde, PartialEq, Debug)]
 pub enum StarknetError {
     UnknownError,
     ContractNotFound,
@@ -13,21 +17,21 @@ pub enum StarknetError {
     ClassAlreadyDeclared,
     InsufficientMaxFee,
     InsufficientAccountBalance,
-    ContractError,
+    ContractError: ContractErrorData,
     InvalidTransactionNonce,
     ContractAddressUnavailableForDeployment,
     ClassNotDeclared,
     TransactionReverted,
 }
 
-#[derive(Copy, Drop, Serde, PartialEq, Debug)]
+#[derive(Drop, Serde, PartialEq, Debug)]
 pub enum RPCError {
     UnknownError,
     RateLimited,
     StarknetError: StarknetError,
 }
 
-#[derive(Copy, Drop, Serde, PartialEq, Debug)]
+#[derive(Drop, Serde, PartialEq, Debug)]
 pub enum ScriptCommandError {
     SNCastError,
     ContractArtifactsNotFound,

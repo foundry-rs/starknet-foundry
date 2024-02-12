@@ -28,7 +28,7 @@ pub fn try_extract_panic_data(err: &str) -> Option<Vec<Felt252>> {
     if let Some(captures) = re_string.captures(err) {
         if let Some(string_match) = captures.get(1) {
             let panic_data_felts: Vec<Felt252> =
-                ByteArray::from(string_match.as_str().to_string()).serialize();
+                ByteArray::from(string_match.as_str().to_string()).serialize_with_magic();
             return Some(panic_data_felts);
         }
     }
