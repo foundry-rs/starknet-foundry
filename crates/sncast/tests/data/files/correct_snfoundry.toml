@@ -21,3 +21,7 @@ keystore = "../keystore"
 url = "http://127.0.0.1:5055/rpc"
 accounts-file = "../account-file"
 account = "user3"
+
+[sncast.profile5]
+url = "http://127.0.0.1:5055/rpc"
+account = "user8"
