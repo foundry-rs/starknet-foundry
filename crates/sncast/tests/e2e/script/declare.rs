@@ -1,6 +1,7 @@
 use crate::helpers::constants::{SCRIPTS_DIR, URL};
 use indoc::indoc;
 use snapbox::cmd::{cargo_bin, Command};
+use crate::helpers::fixtures::{duplicate_contract_directory_with_salt, duplicate_script_directory, get_accounts_path};
 
 #[tokio::test]
 async fn test_missing_field() {
@@ -53,10 +54,22 @@ async fn test_wrong_contract_name() {
 
 #[tokio::test]
 async fn test_same_contract_twice() {
+    let contract_dir = duplicate_contract_directory_with_salt(
+        SCRIPTS_DIR.to_owned() + "/map_script/contracts/",
+        "dummy",
+        "45",
+    );
+    let script_dir = duplicate_script_directory(
+        SCRIPTS_DIR.to_owned() + "/declare/test_scripts",
+        vec![contract_dir.as_ref()],
+    );
+
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
+
     let script_name = "same_contract_twice";
     let args = vec![
         "--accounts-file",
-        "../../../accounts/accounts.json",
+        accounts_json_path.as_str(),
         "--account",
         "user4",
         "--url",
@@ -66,7 +79,7 @@ async fn test_same_contract_twice() {
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(SCRIPTS_DIR.to_owned() + "/declare/test_scripts")
+        .current_dir(script_dir.path())
         .args(args);
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
