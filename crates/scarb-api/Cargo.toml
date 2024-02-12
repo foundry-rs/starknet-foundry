@@ -5,7 +5,6 @@ edition.workspace = true
 
 [dependencies]
 anyhow.workspace = true
-assert_fs.workspace = true
 camino.workspace = true
 indoc.workspace = true
 scarb-metadata.workspace = true
@@ -17,3 +16,6 @@ which.workspace = true
 semver.workspace = true
 sierra-casm = { path="../sierra-casm" }
 regex.workspace = true
+
+[dev-dependencies]
+assert_fs.workspace = true
