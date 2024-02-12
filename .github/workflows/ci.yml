@@ -20,7 +20,7 @@ jobs:
       - name: Install universal-sierra-compiler
         run: |
           curl -L https://raw.githubusercontent.com/software-mansion/universal-sierra-compiler/master/scripts/install.sh | sh -s v2.0.0-rc.0
-      - run: cargo test --release --lib -p forge -- --nocapture
+      - run: cargo test --release --lib -p forge
       - run: cargo test --release --bin snforge
       - run: cargo test --release integration -p forge
 

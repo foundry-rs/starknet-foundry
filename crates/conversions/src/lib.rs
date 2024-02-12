@@ -1,5 +1,6 @@
 use std::convert::Infallible;
 
+pub mod byte_array;
 pub mod class_hash;
 pub mod contract_address;
 pub mod dec_string;

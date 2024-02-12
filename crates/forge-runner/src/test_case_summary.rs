@@ -1,7 +1,7 @@
 use crate::compiled_runnable::TestCaseRunnable;
 use crate::expected_result::{ExpectedPanicValue, ExpectedTestResult};
 use crate::gas::check_available_gas;
-use crate::trace_data::CallTrace;
+use crate::trace_data::ProfilerCallTrace;
 use cairo_felt::Felt252;
 use cairo_lang_runner::casm_run::format_next_item;
 use cairo_lang_runner::short_string::as_cairo_short_string;
@@ -74,7 +74,7 @@ pub struct Single;
 impl TestType for Single {
     type GasInfo = u128;
     type TestStatistics = ();
-    type TraceData = CallTrace;
+    type TraceData = ProfilerCallTrace;
 }
 
 /// Summary of running a single test case
@@ -117,6 +117,7 @@ pub enum TestCaseSummary<T: TestType> {
     Skipped {},
 }
 
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug)]
 pub enum AnyTestCaseSummary {
     Fuzzing(TestCaseSummary<Fuzzing>),
@@ -223,7 +224,7 @@ impl TestCaseSummary<Single> {
                         test_statistics: (),
                         gas_info: gas,
                         used_resources,
-                        trace_data: CallTrace::from(call_trace.borrow().clone()),
+                        trace_data: ProfilerCallTrace::from(call_trace.borrow().clone()),
                     };
                     check_available_gas(&test_case.available_gas, summary)
                 }
@@ -257,7 +258,7 @@ impl TestCaseSummary<Single> {
                         test_statistics: (),
                         gas_info: gas,
                         used_resources,
-                        trace_data: CallTrace::from(call_trace.borrow().clone()),
+                        trace_data: ProfilerCallTrace::from(call_trace.borrow().clone()),
                     },
                 },
             },
