@@ -70,7 +70,7 @@ async fn test_wait_for_reverted_transaction() {
     .transaction_hash;
 
     wait_for_tx(&provider, transaction_hash, 3, 1)
-        .await
+        .await.map_err(std::convert::Into::<anyhow::Error>::into)
         .unwrap();
 }
 
