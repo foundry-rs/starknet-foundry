@@ -57,7 +57,7 @@ async fn test_same_contract_twice() {
     let contract_dir = duplicate_contract_directory_with_salt(
         SCRIPTS_DIR.to_owned() + "/map_script/contracts/",
         "dummy",
-        "45",
+        "69",
     );
     let script_dir = duplicate_script_directory(
         SCRIPTS_DIR.to_owned() + "/declare/test_scripts",
