@@ -5,7 +5,9 @@ use crate::helpers::fixtures::{
 };
 use indoc::indoc;
 use snapbox::cmd::{cargo_bin, Command};
+use sncast::helpers::constants::CONFIG_FILENAME;
 use starknet::core::types::TransactionReceipt::Declare;
+use std::fs;
 
 #[tokio::test]
 async fn test_happy_case() {
@@ -358,5 +360,41 @@ async fn test_worskpaces_package_no_contract() {
         ...
         command: declare
         error: Failed to find whatever artifact in starknet_artifacts.json file[..]
+    "});
+}
+
+#[tokio::test]
+async fn test_no_scarb_profile() {
+    let contract_path =
+        duplicate_contract_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "69");
+    fs::copy(
+        "tests/data/files/correct_snfoundry.toml",
+        contract_path.path().join(CONFIG_FILENAME),
+    )
+    .expect("Failed to copy config file to temp dir");
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
+    let args = vec![
+        "--url",
+        URL,
+        "--accounts-file",
+        accounts_json_path.as_str(),
+        "--profile",
+        "profile5",
+        "declare",
+        "--contract-name",
+        "Map",
+        "--max-fee",
+        "99999999999999999",
+    ];
+
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(contract_path.path())
+        .args(args);
+    snapbox.assert().success().stdout_matches(indoc! {r"
+        ...
+        Warning: Profile profile5 does not exist in scarb, using default 'dev' profile.
+        command: declare
+        class_hash: [..]
+        transaction_hash: [..]
     "});
 }

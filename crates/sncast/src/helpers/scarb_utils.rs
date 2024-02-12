@@ -1,3 +1,4 @@
+use crate::response::print::print_as_warning;
 use anyhow::{anyhow, Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
 use scarb_api::{
@@ -154,7 +155,15 @@ pub fn build_and_load_artifacts(
     build(package, config).map_err(|e| anyhow!(format!("Failed to build using scarb; {e}")))?;
 
     let metadata = get_scarb_metadata_with_deps(&config.scarb_toml_path)?;
-    get_contracts_map(&metadata, &package.id, Some(&config.profile))
+    if metadata.profiles.contains(&config.profile) {
+        get_contracts_map(&metadata, &package.id, Some(&config.profile))
+    } else {
+        let profile = &config.profile;
+        print_as_warning(&anyhow!(
+            "Profile {profile} does not exist in scarb, using default 'dev' profile."
+        ));
+        get_contracts_map(&metadata, &package.id, None)
+    }
 }
 
 #[cfg(test)]
