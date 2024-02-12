@@ -1,37 +1,13 @@
 use camino::Utf8PathBuf;
 use indoc::{formatdoc, indoc};
+use scarb_api::ScarbCommand;
 use snapbox::cmd::{cargo_bin, Command};
-use sncast::helpers::constants::SCRIPTS_DIR;
+use sncast::helpers::constants::INIT_SCRIPTS_DIR;
 use sncast::helpers::scarb_utils::get_cairo_version;
 use tempfile::TempDir;
 
 #[test]
-fn test_script_init_files_created() {
-    let script_name = "my_script";
-    let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
-
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(temp_dir.path())
-        .args(["script", "init", script_name]);
-
-    snapbox.assert().stdout_matches(formatdoc! {r"
-        command: script init
-        status: Successfully initialized `{script_name}` at [..]/{script_name}
-    "});
-
-    let script_dir_path = temp_dir.path().join(SCRIPTS_DIR).join(script_name);
-
-    assert!(script_dir_path.exists());
-    assert!(script_dir_path.join("Scarb.toml").exists());
-    assert!(script_dir_path.join("src").exists());
-    assert!(script_dir_path.join("src/lib.cairo").exists());
-    assert!(script_dir_path
-        .join(format!("src/{script_name}.cairo"))
-        .exists());
-}
-
-#[test]
-fn test_script_init_files_content() {
+fn test_script_init_happy_case() {
     let script_name = "my_script";
     let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
 
@@ -44,7 +20,7 @@ fn test_script_init_files_content() {
         status: Successfully initialized `{script_name}` at [..]/scripts/{script_name}
     "});
 
-    let script_dir_path = temp_dir.path().join(SCRIPTS_DIR).join(script_name);
+    let script_dir_path = temp_dir.path().join(INIT_SCRIPTS_DIR).join(script_name);
     let scarb_toml_path = script_dir_path.join("Scarb.toml");
 
     let scarb_toml_content = std::fs::read_to_string(&scarb_toml_path).unwrap();
@@ -82,14 +58,17 @@ fn test_script_init_files_content() {
     );
     assert_eq!(
         main_file_content,
-        indoc! {r"
-            use sncast_std;
-            use debug::PrintTrait;
+        indoc! {r#"
+            use sncast_std::{call, CallResult};
 
+            // The example below uses a contract deployed to the Goerli testnet
             fn main() {
-                'Put your code here!'.print();
+                let contract_address = 0x7ad10abd2cc24c2e066a2fee1e435cd5fa60a37f9268bfbaf2e98ce5ca3c436;
+                let call_result = call(contract_address.try_into().unwrap(), 'get_greeting', array![]);
+                assert(*call_result.data[0]=='Hello, Starknet!', '');
+                println!("{:?}", call_result);
             }
-        "}
+        "#}
     );
 }
 
@@ -98,7 +77,7 @@ fn test_init_fails_when_scripts_dir_exists_in_cwd() {
     let script_name = "my_script";
     let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
 
-    std::fs::create_dir_all(temp_dir.path().join(SCRIPTS_DIR))
+    std::fs::create_dir_all(temp_dir.path().join(INIT_SCRIPTS_DIR))
         .expect("Failed to create scripts directory in the current temp directory");
 
     let snapbox = Command::new(cargo_bin!("sncast"))
@@ -122,7 +101,7 @@ fn test_init_twice_fails() {
         .assert()
         .success();
 
-    assert!(temp_dir.path().join(SCRIPTS_DIR).exists());
+    assert!(temp_dir.path().join(INIT_SCRIPTS_DIR).exists());
 
     let snapbox = Command::new(cargo_bin!("sncast"))
         .current_dir(temp_dir.path())
@@ -132,4 +111,27 @@ fn test_init_twice_fails() {
         command: script init
         error: Scripts directory already exists at [..]
     "#});
+}
+
+#[test]
+fn test_initialized_script_compiles() {
+    let script_name = "my_script";
+    let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
+
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(temp_dir.path())
+        .args(["script", "init", script_name]);
+
+    snapbox.assert().stdout_matches(formatdoc! {r"
+        command: script init
+        status: Successfully initialized `{script_name}` at [..]/scripts/{script_name}
+    "});
+
+    let script_dir_path = temp_dir.path().join(INIT_SCRIPTS_DIR).join(script_name);
+
+    ScarbCommand::new_with_stdio()
+        .current_dir(script_dir_path)
+        .arg("build")
+        .run()
+        .expect("Failed to compile the initialized script");
 }

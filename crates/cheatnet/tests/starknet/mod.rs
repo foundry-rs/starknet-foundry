@@ -3,5 +3,4 @@ mod block;
 mod cheat_fork;
 mod forking;
 mod nonce;
-mod resources;
 mod timestamp;

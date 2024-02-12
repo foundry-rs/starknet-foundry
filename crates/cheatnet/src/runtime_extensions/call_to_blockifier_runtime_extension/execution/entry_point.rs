@@ -1,5 +1,6 @@
 use super::cairo1_execution::execute_entry_point_call_cairo1;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::deprecated::cairo0_execution::execute_entry_point_call_cairo0;
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeState;
 use crate::state::CheatnetState;
 use blockifier::execution::call_info::{CallExecution, Retdata};
 use blockifier::{
@@ -28,17 +29,26 @@ use std::collections::HashSet;
 pub fn execute_call_entry_point(
     entry_point: &mut CallEntryPoint, // Instead of 'self'
     state: &mut dyn State,
-    cheatnet_state: &mut CheatnetState, // Added parameter
+    runtime_state: &mut RuntimeState,
     resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
 ) -> EntryPointExecutionResult<CallInfo> {
     // region: Modified blockifier code
     // We skip recursion depth validation here.
-    cheatnet_state.trace_info.push(entry_point.clone());
-    if let Some(ret_data) = get_ret_data_by_call_entry_point(entry_point, cheatnet_state) {
+    runtime_state
+        .cheatnet_state
+        .trace_data
+        .enter_nested_call(entry_point.clone(), resources.clone());
+
+    if let Some(ret_data) =
+        get_ret_data_by_call_entry_point(entry_point, runtime_state.cheatnet_state)
+    {
+        runtime_state
+            .cheatnet_state
+            .trace_data
+            .exit_nested_call(resources);
         return Ok(mocked_call_info(entry_point.clone(), ret_data.clone()));
     }
-    // endregion
 
     // Validate contract is deployed.
     let storage_address = entry_point.storage_address;
@@ -72,7 +82,7 @@ pub fn execute_call_entry_point(
             entry_point.clone(),
             deprecated_class,
             state,
-            cheatnet_state,
+            runtime_state,
             resources,
             context,
         ),
@@ -80,11 +90,16 @@ pub fn execute_call_entry_point(
             entry_point.clone(),
             &contract_class,
             state,
-            cheatnet_state,
+            runtime_state,
             resources,
             context,
         ),
     };
+
+    runtime_state
+        .cheatnet_state
+        .trace_data
+        .exit_nested_call(resources);
 
     result.map_err(|error| {
         // endregion
@@ -115,12 +130,12 @@ pub fn execute_call_entry_point(
 // blockifier/src/execution/entry_point.rs:366 (execute_constructor_entry_point)
 pub fn execute_constructor_entry_point(
     state: &mut dyn State,
+    runtime_state: &mut RuntimeState,
     resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
     ctor_context: ConstructorContext,
     calldata: Calldata,
     remaining_gas: u64,
-    cheatnet_state: &mut CheatnetState,
 ) -> EntryPointExecutionResult<CallInfo> {
     // Ensure the class is declared (by reading it).
     let contract_class = state.get_compiled_contract_class(&ctor_context.class_hash)?;
@@ -144,22 +159,24 @@ pub fn execute_constructor_entry_point(
     execute_call_entry_point(
         &mut constructor_call,
         state,
-        cheatnet_state,
+        runtime_state,
         resources,
         context,
     )
     // endregion
 }
 
-fn get_ret_data_by_call_entry_point<'a>(
+fn get_ret_data_by_call_entry_point(
     call: &CallEntryPoint,
-    cheatnet_state: &'a CheatnetState,
-) -> Option<&'a Vec<StarkFelt>> {
+    cheatnet_state: &CheatnetState,
+) -> Option<Vec<StarkFelt>> {
     if let Some(contract_address) = call.code_address {
         if let Some(contract_functions) = cheatnet_state.mocked_functions.get(&contract_address) {
             let entrypoint_selector = call.entry_point_selector;
 
-            let ret_data = contract_functions.get(&entrypoint_selector);
+            let ret_data = contract_functions
+                .get(&entrypoint_selector)
+                .map(std::clone::Clone::clone);
             return ret_data;
         }
     }

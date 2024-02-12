@@ -13,6 +13,19 @@ have a `main` function in the module you want to run. `cast_std` docs can be fou
 Please note that **`sncast script` is in development**. While it is already possible to declare, deploy, invoke and call
 contracts from within Cairo, its interface, internals and feature set can change rapidly each version.
 
+> ⚠️⚠️ By default, the nonce for each transaction is being taken from the pending block ⚠️⚠️
+>
+> Some RPC nodes can be configured with higher poll itervals, which means they may return "older" nonces
+> in pending blocks, or even not be able to obtain pending blocks at all. When running a script you get an error like
+> "Invalid transaction nonce", this might be the case and you may need to manually set both nonce and max_fee for
+> transactions.
+>
+> Example:
+>
+>```cairo
+>  let declare_result = declare('Map', Option::Some(max_fee), Option::Some(nonce));
+>```
+
 Some of the planned features that will be included in future versions are:
 
 - scripts idempotency
@@ -22,11 +35,20 @@ Some of the planned features that will be included in future versions are:
 - account creation/deployment
 - multicall support
 - dry running the scripts
-- init subcommand
 
 and more!
 
 ## Examples
+
+### Initialize a script
+
+To get started, a deployment script with all required elements can be initialized using the following command:
+
+```shell
+$ sncast script init my_script
+```
+
+For more details, see [init command](../appendix/sncast/script/init.md).
 
 ### Minimal Example (Without Contract Deployment)
 
@@ -86,9 +108,8 @@ This example script declares, deploys and interacts with an example [map contrac
 
 ```cairo
 use sncast_std::{
-    declare, deploy, invoke, call, DeclareResult, DeployResult, InvokeResult, CallResult, get_nonce
+    declare, deploy, invoke, call, DeclareResult, DeployResult, InvokeResult, CallResult, get_nonce, DisplayContractAddress, DisplayClassHash
 };
-use debug::PrintTrait;
 
 fn main() {
     let max_fee = 99999999999999999;
@@ -98,22 +119,25 @@ fn main() {
 
     let nonce = get_nonce('latest');
     let class_hash = declare_result.class_hash;
+
+    println!("Class hash of the declared contract: {}", declare_result.class_hash);
+
     let deploy_result = deploy(
         class_hash, ArrayTrait::new(), Option::Some(salt), true, Option::Some(max_fee), Option::Some(nonce)
     );
 
-    'Deployed the contract to address'.print();
-    deploy_result.contract_address.print();
+    println!("Deployed the contract to address: {}", deploy_result.contract_address);
 
     let invoke_nonce = get_nonce('pending');
     let invoke_result = invoke(
         deploy_result.contract_address, 'put', array![0x1, 0x2], Option::Some(max_fee), Option::Some(invoke_nonce)
     );
 
-    'Invoke tx hash is'.print();
-    invoke_result.transaction_hash.print();
+    println!("Invoke tx hash is: {}", invoke_result.transaction_hash);
 
     let call_result = call(deploy_result.contract_address, 'get', array![0x1]);
+
+    println!("Call result: {}", call_result);
     assert(call_result.data == array![0x2], *call_result.data.at(0));
 }
 ```
@@ -166,10 +190,12 @@ $ sncast \
   --account example_user \
   script run map_script
 
-[DEBUG]	Contract address               	(raw: 0x436f6e74726163742061646472657373
-[DEBUG]	                               	(raw: 0x6f9492c9c2751ba5ccab5b7611068a6347d7b313c6f073d2edea864f062d730
-[DEBUG]	Invoke tx hash                 	(raw: 0x496e766f6b652074782068617368
-[DEBUG]	                               	(raw: 0x60175b3fca296fedc38f1a0ca30337ae666bb996a43beb2f6fe3a3fa90d3e6b
+Class hash of the declared contract: 685896493695476540388232336434993540241192267040651919145140488413686992233
+...
+Deployed the contract to address: 2993684914933159551622723238457226804366654523161908704282792530334498925876
+...
+Invoke tx hash is: 2455538849277152825594824366964313930331085452149746033747086127466991639149
+Call result: [2]
 
 command: script run
 status: success

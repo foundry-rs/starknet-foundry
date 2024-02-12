@@ -3,11 +3,9 @@ use std::collections::HashMap;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     CallFailure, CallResult, UsedResources,
 };
-use crate::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::{
-    deploy, deploy_at, DeployCallPayload,
-};
+use crate::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::{deploy, deploy_at};
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
-use crate::state::{BlockifierState, CheatTarget};
+use crate::state::{CallTrace, CheatTarget};
 use anyhow::{Context, Result};
 use blockifier::execution::call_info::{CallExecution, CallInfo};
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
@@ -24,6 +22,9 @@ use scarb_api::StarknetContractArtifacts;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use starknet_api::core::ContractAddress;
 
+use crate::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
+use crate::runtime_extensions::forge_runtime_extension::cheatcodes::get_class_hash::get_class_hash;
+use crate::runtime_extensions::forge_runtime_extension::cheatcodes::l1_handler_execute::l1_handler_execute;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::SpyTarget;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::storage::{
     calculate_variable_address, load, store,
@@ -38,7 +39,7 @@ use runtime::{
 use starknet::signers::SigningKey;
 use starknet_api::deprecated_contract_class::EntryPointType;
 
-use super::call_to_blockifier_runtime_extension::CallToBlockifierRuntime;
+use super::call_to_blockifier_runtime_extension::{CallToBlockifierRuntime, RuntimeState};
 use super::cheatable_starknet_runtime_extension::SyscallSelector;
 
 pub mod cheatcodes;
@@ -93,7 +94,6 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let block_number = reader.read_felt();
                 extended_runtime
                     .extended_runtime
-                    .extended_runtime
                     .extension
                     .cheatnet_state
                     .start_roll(target, block_number);
@@ -103,7 +103,6 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let target = reader.read_cheat_target();
 
                 extended_runtime
-                    .extended_runtime
                     .extended_runtime
                     .extension
                     .cheatnet_state
@@ -116,7 +115,6 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 extended_runtime
                     .extended_runtime
-                    .extended_runtime
                     .extension
                     .cheatnet_state
                     .start_warp(target, warp_timestamp);
@@ -127,7 +125,6 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let target = reader.read_cheat_target();
 
                 extended_runtime
-                    .extended_runtime
                     .extended_runtime
                     .extension
                     .cheatnet_state
@@ -140,7 +137,6 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 extended_runtime
                     .extended_runtime
-                    .extended_runtime
                     .extension
                     .cheatnet_state
                     .start_elect(target, sequencer_address);
@@ -149,7 +145,6 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
             "stop_elect" => {
                 let target = reader.read_cheat_target();
                 extended_runtime
-                    .extended_runtime
                     .extended_runtime
                     .extension
                     .cheatnet_state
@@ -163,7 +158,6 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 extended_runtime
                     .extended_runtime
-                    .extended_runtime
                     .extension
                     .cheatnet_state
                     .start_prank(target, caller_address);
@@ -173,7 +167,6 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let target = reader.read_cheat_target();
 
                 extended_runtime
-                    .extended_runtime
                     .extended_runtime
                     .extension
                     .cheatnet_state
@@ -188,7 +181,6 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 extended_runtime
                     .extended_runtime
-                    .extended_runtime
                     .extension
                     .cheatnet_state
                     .start_mock_call(contract_address, &function_name, &ret_data);
@@ -199,7 +191,6 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let function_name = reader.read_felt();
 
                 extended_runtime
-                    .extended_runtime
                     .extended_runtime
                     .extension
                     .cheatnet_state
@@ -245,7 +236,6 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 extended_runtime
                     .extended_runtime
-                    .extended_runtime
                     .extension
                     .cheatnet_state
                     .start_spoof(target, tx_info_mock);
@@ -256,24 +246,21 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 extended_runtime
                     .extended_runtime
-                    .extended_runtime
                     .extension
                     .cheatnet_state
                     .stop_spoof(target);
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
             "declare" => {
+                let state = &mut extended_runtime
+                    .extended_runtime
+                    .extended_runtime
+                    .hint_handler
+                    .state;
+
                 let contract_name = reader.read_felt();
                 let contracts = self.contracts;
-                let mut blockifier_state = BlockifierState::from(
-                    extended_runtime
-                        .extended_runtime
-                        .extended_runtime
-                        .extended_runtime
-                        .hint_handler
-                        .state,
-                );
-                match blockifier_state.declare(&contract_name, contracts) {
+                match declare(*state, &contract_name, contracts) {
                     Ok(class_hash) => {
                         let felt_class_hash = stark_felt_to_felt(class_hash.0);
                         let result = vec![Felt252::from(0), felt_class_hash];
@@ -288,21 +275,14 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
             "deploy" => {
                 let class_hash = reader.read_felt().into_();
                 let calldata = reader.read_vec();
-                let cheatable_starknet_runtime = &mut extended_runtime.extended_runtime;
-                let mut blockifier_state = BlockifierState::from(
-                    cheatable_starknet_runtime
-                        .extended_runtime
-                        .extended_runtime
-                        .hint_handler
-                        .state,
-                );
+                let cheatnet_runtime = &mut extended_runtime.extended_runtime;
+                let syscall_handler = &mut cheatnet_runtime.extended_runtime.hint_handler;
 
                 handle_deploy_result(deploy(
-                    &mut blockifier_state,
-                    cheatable_starknet_runtime
-                        .extended_runtime
-                        .extension
-                        .cheatnet_state,
+                    syscall_handler,
+                    &mut RuntimeState {
+                        cheatnet_state: cheatnet_runtime.extension.cheatnet_state,
+                    },
                     &class_hash,
                     &calldata,
                 ))
@@ -312,17 +292,13 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let calldata = reader.read_vec();
                 let contract_address = reader.read_felt().into_();
                 let cheatnet_runtime = &mut extended_runtime.extended_runtime;
-                let mut blockifier_state = BlockifierState::from(
-                    cheatnet_runtime
-                        .extended_runtime
-                        .extended_runtime
-                        .hint_handler
-                        .state,
-                );
+                let syscall_handler = &mut cheatnet_runtime.extended_runtime.hint_handler;
 
                 handle_deploy_result(deploy_at(
-                    &mut blockifier_state,
-                    cheatnet_runtime.extended_runtime.extension.cheatnet_state,
+                    syscall_handler,
+                    &mut RuntimeState {
+                        cheatnet_state: cheatnet_runtime.extension.cheatnet_state,
+                    },
                     &class_hash,
                     &calldata,
                     contract_address,
@@ -333,7 +309,6 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let calldata = reader.read_vec();
 
                 let contract_address = extended_runtime
-                    .extended_runtime
                     .extended_runtime
                     .extension
                     .cheatnet_state
@@ -363,16 +338,13 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
             "get_class_hash" => {
                 let contract_address = reader.read_felt().into_();
 
-                let mut blockifier_state = BlockifierState::from(
-                    extended_runtime
-                        .extended_runtime
-                        .extended_runtime
-                        .extended_runtime
-                        .hint_handler
-                        .state,
-                );
+                let state = &mut extended_runtime
+                    .extended_runtime
+                    .extended_runtime
+                    .hint_handler
+                    .state;
 
-                match blockifier_state.get_class_hash(contract_address) {
+                match get_class_hash(*state, contract_address) {
                     Ok(class_hash) => {
                         let felt_class_hash = stark_felt_to_felt(class_hash.0);
 
@@ -389,21 +361,20 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 let payload = reader.read_vec();
 
-                let cheatnet_runtime = &mut extended_runtime.extended_runtime.extended_runtime;
-                let mut blockifier_state =
-                    BlockifierState::from(cheatnet_runtime.extended_runtime.hint_handler.state);
+                let cheatnet_runtime = &mut extended_runtime.extended_runtime;
 
-                cheatnet_runtime.extension.cheatnet_state.trace_info.clear();
-                match blockifier_state
-                    .l1_handler_execute(
-                        cheatnet_runtime.extension.cheatnet_state,
-                        contract_address,
-                        &function_name,
-                        &from_address,
-                        &payload,
-                    )
-                    .result
-                {
+                let mut runtime_state = RuntimeState {
+                    cheatnet_state: cheatnet_runtime.extension.cheatnet_state,
+                };
+                let syscall_handler = &mut cheatnet_runtime.extended_runtime.hint_handler;
+                match l1_handler_execute(
+                    syscall_handler,
+                    &mut runtime_state,
+                    contract_address,
+                    &function_name,
+                    &from_address,
+                    &payload,
+                ) {
                     CallResult::Success { .. } => {
                         Ok(CheatcodeHandlingResult::Handled(vec![Felt252::from(0)]))
                     }
@@ -447,7 +418,6 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 let id = extended_runtime
                     .extended_runtime
-                    .extended_runtime
                     .extension
                     .cheatnet_state
                     .spy_events(spy_on);
@@ -456,7 +426,6 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
             "fetch_events" => {
                 let id = &reader.read_felt();
                 let (emitted_events_len, serialized_events) = extended_runtime
-                    .extended_runtime
                     .extended_runtime
                     .extension
                     .cheatnet_state
@@ -592,53 +561,39 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     Felt252::from_bytes_be(&s_bytes[0..16]),  // 16 high bytes of s
                 ]))
             }
-            "get_last_call_trace" => {
-                let trace_info = &extended_runtime
-                    .extended_runtime
+            "get_call_trace" => {
+                let call_trace = &extended_runtime
                     .extended_runtime
                     .extension
                     .cheatnet_state
-                    .trace_info;
-                let mut output = vec![Felt252::from(trace_info.len())];
+                    .trace_data
+                    .current_call_stack
+                    .borrow_full_trace();
+                let output = serialize_call_trace(call_trace);
 
-                for call_entry_point in trace_info {
-                    output.append(&mut serialize_call_entry_point(call_entry_point));
-                }
                 Ok(CheatcodeHandlingResult::Handled(output))
             }
             "store" => {
-                let mut blockifier_state = BlockifierState::from(
-                    extended_runtime
-                        .extended_runtime
-                        .extended_runtime
-                        .extended_runtime
-                        .hint_handler
-                        .state,
-                );
+                let state = &mut extended_runtime
+                    .extended_runtime
+                    .extended_runtime
+                    .hint_handler
+                    .state;
                 let target = ContractAddress::from_(reader.read_felt());
                 let storage_address = reader.read_felt();
-                store(
-                    &mut blockifier_state,
-                    target,
-                    &storage_address,
-                    reader.read_felt(),
-                )
-                .expect("Failed to store");
+                store(*state, target, &storage_address, reader.read_felt())
+                    .expect("Failed to store");
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
             "load" => {
-                let mut blockifier_state = BlockifierState::from(
-                    extended_runtime
-                        .extended_runtime
-                        .extended_runtime
-                        .extended_runtime
-                        .hint_handler
-                        .state,
-                );
+                let state = &mut extended_runtime
+                    .extended_runtime
+                    .extended_runtime
+                    .hint_handler
+                    .state;
                 let target = ContractAddress::from_(reader.read_felt());
                 let storage_address = &reader.read_felt();
-                let loaded =
-                    load(&mut blockifier_state, target, storage_address).expect("Failed to load");
+                let loaded = load(*state, target, storage_address).expect("Failed to load");
                 Ok(CheatcodeHandlingResult::Handled(vec![loaded]))
             }
             "map_entry_address" => {
@@ -669,11 +624,11 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 }
 
 fn handle_deploy_result(
-    deploy_result: Result<DeployCallPayload, CheatcodeError>,
+    deploy_result: Result<ContractAddress, CheatcodeError>,
 ) -> Result<CheatcodeHandlingResult, EnhancedHintError> {
     match deploy_result {
-        Ok(deploy_payload) => {
-            let felt_contract_address: Felt252 = deploy_payload.contract_address.into_();
+        Ok(contract_address) => {
+            let felt_contract_address = contract_address.into_();
             let result = vec![Felt252::from(0), felt_contract_address];
             Ok(CheatcodeHandlingResult::Handled(result))
         }
@@ -682,6 +637,19 @@ fn handle_deploy_result(
         )),
         Err(CheatcodeError::Unrecoverable(err)) => Err(err),
     }
+}
+
+fn serialize_call_trace(call_trace: &CallTrace) -> Vec<Felt252> {
+    let mut output = vec![];
+    output.append(&mut serialize_call_entry_point(&call_trace.entry_point));
+
+    output.push(Felt252::from(call_trace.nested_calls.len()));
+
+    for call_trace in &call_trace.nested_calls {
+        output.append(&mut serialize_call_trace(&call_trace.borrow()));
+    }
+
+    output
 }
 
 fn serialize_call_entry_point(call_entry_point: &CallEntryPoint) -> Vec<Felt252> {
@@ -739,48 +707,58 @@ fn concat_u128_bytes(low: &[u8; 32], high: &[u8; 32]) -> [u8; 32] {
     result
 }
 
-#[must_use]
-pub fn get_all_execution_resources(runtime: ForgeRuntime) -> UsedResources {
-    let runtime_execution_resources = runtime
-        .extended_runtime
+pub fn update_top_call_execution_resources(runtime: &mut ForgeRuntime) {
+    let all_execution_resources = runtime
         .extended_runtime
         .extended_runtime
         .extended_runtime
         .hint_handler
         .resources
         .clone();
-    let runtime_l1_to_l2_messages = runtime
-        .extended_runtime
-        .extended_runtime
-        .extended_runtime
-        .extended_runtime
-        .hint_handler
-        .l2_to_l1_messages;
 
-    let runtime_call_info = CallInfo {
-        execution: CallExecution {
-            l2_to_l1_messages: runtime_l1_to_l2_messages,
-            ..Default::default()
-        },
-        ..Default::default()
-    };
-    let runtime_l2_to_l1_payloads_length = runtime_call_info
-        .get_sorted_l2_to_l1_payloads_length()
-        .unwrap();
-
-    let mut all_resources = UsedResources {
-        execution_resources: runtime_execution_resources,
-        l2_to_l1_payloads_length: runtime_l2_to_l1_payloads_length,
-    };
-
-    let cheatnet_used_resources = &runtime
-        .extended_runtime
+    // call representing the test code
+    let top_call = runtime
         .extended_runtime
         .extended_runtime
         .extension
         .cheatnet_state
-        .used_resources;
-    all_resources.extend(cheatnet_used_resources);
+        .trace_data
+        .current_call_stack
+        .top();
+    top_call.borrow_mut().used_execution_resources = all_execution_resources;
+}
 
-    all_resources
+#[must_use]
+pub fn get_all_used_resources(runtime: ForgeRuntime) -> UsedResources {
+    let starknet_runtime = runtime.extended_runtime.extended_runtime.extended_runtime;
+    let top_call_l2_to_l1_messages = starknet_runtime.hint_handler.l2_to_l1_messages;
+
+    // used just to obtain payloads of L2 -> L1 messages
+    let runtime_call_info = CallInfo {
+        execution: CallExecution {
+            l2_to_l1_messages: top_call_l2_to_l1_messages,
+            ..Default::default()
+        },
+        inner_calls: starknet_runtime.hint_handler.inner_calls,
+        ..Default::default()
+    };
+    let l2_to_l1_payloads_length = runtime_call_info
+        .get_sorted_l2_to_l1_payloads_length()
+        .unwrap();
+
+    // call representing the test code
+    let top_call = runtime
+        .extended_runtime
+        .extended_runtime
+        .extension
+        .cheatnet_state
+        .trace_data
+        .current_call_stack
+        .top();
+    let execution_resources = top_call.borrow().used_execution_resources.clone();
+
+    UsedResources {
+        execution_resources,
+        l2_to_l1_payloads_length,
+    }
 }

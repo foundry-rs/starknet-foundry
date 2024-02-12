@@ -7,12 +7,82 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast
+
+#### Added
+
+- `script init` command to generate a template file structure for deployment scripts
+
+## [0.17.1] - 2024-02-12
+
+### Cast
+
+#### Changed
+
+- fixed a bug where a profile was passed to scarb even when it did not exist
+
 ### Forge
 
 #### Added
 
+- `map_string_error` for use with dispatchers, which automatically converts string errors from the syscall result (read more [here](https://foundry-rs.github.io/starknet-foundry/testing/contracts#handling-errors))
+
+## [0.17.0] - 2024-02-07
+
+### Forge
+
+#### Added
+
+- Warning in fork testing is emitted, when node JSON-RPC version is incompatible
+- `get_call_trace` library function for retrieving call trace in tests
+
+#### Changed
+
+- Gas estimation is now aligned with the Starknet v0.13
+
+#### Removed
+
+- `snforge_std::PrintTrait` - use `print!`, `println!` macros and / or `core::debug::PrintTrait` instead
+
+#### Fixed
+
+- Gas used in constructors and handling of L1 messages is now properly included in total gas cost
+
+### Cast
+
+#### Changed
+
+- sncast tool configuration is now moved away from `Scarb.toml` to `snfoundry.toml` file. This file must be present in current or any parent directories in order to use profiles.
+
+#### Added
+
+- `--package` flag for `declare` and `script` subcommands, that specifies scarb package to work with
+- `Debug` and `Display` impls for script subcommand responses - use `print!`, `println!` macros instead of calling `.print()`
+
+## [0.16.0] - 2024-01-26
+
+### Forge
+
+#### Added
+- Bump to cairo 2.5.0
+
+#### Changed
+
+- `SafeDispatcher`s usages need to be tagged with `#[feature("safe_dispatcher)]` (directly before usage), see [the shamans post](https://community.starknet.io/t/cairo-v2-5-0-is-out/112807#safe-dispatchers-15)
+
+## [0.15.0] - 2024-01-24
+
+### Forge
+
+#### Added
+
+- `--detailed-resources` flag for displaying additional info about used resources
 - `store` and `load` cheatcodes
-- dependency on [universal-sierra-compiler](https://github.com/software-mansion/universal-sierra-compiler/blob/master/scripts/install.sh) binary
+- `--save-trace-data` flag to `snforge test` command. Traces can be used for profiling purposes.
+
+#### Changed
+
+- `available_gas` attribute is now supported (Scarb >= 2.4.4 is required)
 
 #### Fixed
 
@@ -20,9 +90,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Cast
 
-#### Added
+#### Changed
 
-- `script init` command to generate a template file structure for deployment scripts
+- the 'pending' block is used instead of 'latest' as the default when obtaining the nonce
 
 #### Changed
 

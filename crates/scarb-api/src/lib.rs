@@ -3,13 +3,16 @@ use camino::{Utf8Path, Utf8PathBuf};
 use scarb_metadata::{CompilationUnitMetadata, Metadata, PackageId};
 use semver::VersionReq;
 use serde::Deserialize;
+use serde_json::Value;
 use std::collections::HashMap;
 use std::fs;
 
 pub use command::*;
-use universal_sierra_compiler_api::compile_sierra;
+use sierra_casm::compile;
 
 mod command;
+pub mod metadata;
+pub mod version;
 
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 struct StarknetArtifacts {
@@ -51,10 +54,7 @@ impl StarknetContractArtifacts {
         let sierra = fs::read_to_string(sierra_path)?;
 
         let casm = match &starknet_contract.artifacts.casm {
-            None => compile_sierra(
-                starknet_contract.artifacts.sierra.as_str(),
-                Some(base_path.as_std_path()),
-            )?,
+            None => String::new(),
             Some(casm_path) => fs::read_to_string(base_path.join(casm_path))?,
         };
 
@@ -113,14 +113,29 @@ fn try_get_starknet_artifacts_path(
 pub fn get_contracts_map(
     metadata: &Metadata,
     package: &PackageId,
+    profile: Option<&str>,
 ) -> Result<HashMap<String, StarknetContractArtifacts>> {
     let target_name = target_name_for_package(metadata, package)?;
     let target_dir = target_dir_for_workspace(metadata);
-    let maybe_contracts_path =
-        try_get_starknet_artifacts_path(&target_dir, &target_name, &metadata.current_profile)?;
+    let maybe_contracts_path = try_get_starknet_artifacts_path(
+        &target_dir,
+        &target_name,
+        profile.unwrap_or(metadata.current_profile.as_str()),
+    )?;
 
     let map = match maybe_contracts_path {
-        Some(contracts_path) => load_contract_artifacts(&contracts_path)?,
+        Some(contracts_path) => {
+            let mut contracts = load_contract_artifacts(&contracts_path)?;
+
+            for (_, artifact) in &mut contracts.iter_mut() {
+                if artifact.casm.is_empty() {
+                    let sierra: Value = serde_json::from_str(&artifact.sierra)?;
+                    artifact.casm = serde_json::to_string(&compile(sierra)?)?;
+                }
+            }
+
+            contracts
+        }
         None => HashMap::default(),
     };
     Ok(map)
@@ -204,12 +219,12 @@ pub fn package_matches_version_requirement(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::metadata::MetadataCommandExt;
     use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
     use assert_fs::prelude::FileTouch;
     use assert_fs::TempDir;
     use camino::Utf8PathBuf;
     use indoc::{formatdoc, indoc};
-    use scarb_metadata::MetadataCommand;
     use std::str::FromStr;
 
     fn setup_package(package_name: &str) -> TempDir {
@@ -306,33 +321,33 @@ mod tests {
                 sierra = true
 
                 [dependencies]
-                starknet = "2.4.0"
+                starknet = "2.5.0"
                 "#,
             ))
             .unwrap();
 
-        let scarb_metadata = MetadataCommand::new()
+        let scarb_metadata = ScarbCommand::metadata()
             .inherit_stderr()
             .current_dir(temp.path())
-            .exec()
+            .run()
             .unwrap();
 
         assert!(package_matches_version_requirement(
             &scarb_metadata,
             "starknet",
-            &VersionReq::parse("2.4").unwrap(),
+            &VersionReq::parse("2.5").unwrap(),
         )
         .unwrap());
         assert!(package_matches_version_requirement(
             &scarb_metadata,
             "not_existing",
-            &VersionReq::parse("2.4").unwrap(),
+            &VersionReq::parse("2.5").unwrap(),
         )
         .unwrap());
         assert!(!package_matches_version_requirement(
             &scarb_metadata,
             "starknet",
-            &VersionReq::parse("2.5").unwrap(),
+            &VersionReq::parse("2.6").unwrap(),
         )
         .unwrap());
     }
@@ -475,14 +490,14 @@ mod tests {
             .run()
             .unwrap();
 
-        let metadata = MetadataCommand::new()
+        let metadata = ScarbCommand::metadata()
             .inherit_stderr()
             .manifest_path(temp.join("Scarb.toml"))
-            .exec()
+            .run()
             .unwrap();
 
         let package = metadata.packages.first().unwrap();
-        let contracts = get_contracts_map(&metadata, &package.id).unwrap();
+        let contracts = get_contracts_map(&metadata, &package.id, None).unwrap();
 
         assert!(contracts.contains_key("ERC20"));
         assert!(contracts.contains_key("HelloStarknet"));
@@ -514,10 +529,10 @@ mod tests {
     #[test]
     fn get_name_for_package() {
         let temp = setup_package("basic_package");
-        let scarb_metadata = MetadataCommand::new()
+        let scarb_metadata = ScarbCommand::metadata()
             .inherit_stderr()
             .current_dir(temp.path())
-            .exec()
+            .run()
             .unwrap();
 
         let package_name =
@@ -529,10 +544,10 @@ mod tests {
     #[test]
     fn get_target_name_for_package() {
         let temp = setup_package("basic_package");
-        let scarb_metadata = MetadataCommand::new()
+        let scarb_metadata = ScarbCommand::metadata()
             .inherit_stderr()
             .current_dir(temp.path())
-            .exec()
+            .run()
             .unwrap();
 
         let target_name =

@@ -1,8 +1,8 @@
 use blockifier::state::cached_state::{CachedState, GlobalContractCache};
-use blockifier::state::state_api::State;
 use cheatnet::constants::build_testing_state;
 use cheatnet::forking::state::ForkStateReader;
-use cheatnet::state::{BlockifierState, CheatnetState, ExtendedStateReader};
+use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeState;
+use cheatnet::state::{CheatnetState, ExtendedStateReader};
 use starknet_api::block::BlockNumber;
 
 pub fn create_cached_state() -> CachedState<ExtendedStateReader> {
@@ -44,8 +44,6 @@ pub fn create_fork_cached_state_at(
     )
 }
 
-pub fn create_cheatnet_state(state: &mut dyn State) -> (BlockifierState, CheatnetState) {
-    let blockifier_state = BlockifierState::from(state);
-    let cheatnet_state = CheatnetState::default();
-    (blockifier_state, cheatnet_state)
+pub fn build_runtime_state(cheatnet_state: &mut CheatnetState) -> RuntimeState {
+    RuntimeState { cheatnet_state }
 }

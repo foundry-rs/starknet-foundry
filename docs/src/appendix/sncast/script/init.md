@@ -1,14 +1,15 @@
 # `init`
-Create script template and directories structure.
+Create a deployment script template.
 
-The command creates the following structure inside `scripts` directory:
+The command creates the following file and directory structure:
 ```
 .
-└── my_script
-    ├── Scarb.toml
-    └── src
-        ├── lib.cairo
-        └── my_script.cairo
+└── scripts
+    └── my_script
+        ├── Scarb.toml
+        └── src
+            ├── lib.cairo
+            └── my_script.cairo
 ```
 
 ## `<SCRIPT_NAME>`

@@ -4,6 +4,8 @@ use std::sync::Arc;
 
 use blockifier::block_context::{FeeTokenAddresses, GasPrices};
 
+use blockifier::execution::common_hints::ExecutionMode;
+use blockifier::execution::entry_point::EntryPointExecutionContext;
 use blockifier::transaction::objects::{CommonAccountFields, CurrentAccountTransactionContext};
 use blockifier::{
     abi::constants, block_context::BlockContext, transaction::objects::AccountTransactionContext,
@@ -32,11 +34,6 @@ pub const STEP_RESOURCE_COST: f64 = 0.005_f64;
 
 // HOW TO FIND:
 // 1. https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/fee-mechanism/#calculation_of_computation_costs
-#[must_use]
-pub fn build_default_block_context() -> BlockContext {
-    build_block_context(BlockInfo::default())
-}
-
 #[must_use]
 pub fn build_block_context(block_info: BlockInfo) -> BlockContext {
     // blockifier::test_utils::create_for_account_testing
@@ -127,6 +124,20 @@ pub fn build_transaction_context() -> AccountTransactionContext {
         paymaster_data: Default::default(),
         account_deployment_data: Default::default(),
     })
+}
+
+#[must_use]
+pub fn build_context(block_info: BlockInfo) -> EntryPointExecutionContext {
+    let block_context = build_block_context(block_info);
+    let account_context = build_transaction_context();
+
+    EntryPointExecutionContext::new(
+        &block_context,
+        &account_context,
+        ExecutionMode::Execute,
+        false,
+    )
+    .unwrap()
 }
 
 #[derive(Copy, Clone, Serialize, Deserialize, Debug)]

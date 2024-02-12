@@ -1,6 +1,6 @@
 # Benchmarking
 
-Benchmarks from these files can be with the following command:
+Benchmarks from these files can be ran with the following command:
 
 ```shell
 cargo bench

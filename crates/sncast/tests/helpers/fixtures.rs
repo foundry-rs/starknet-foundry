@@ -1,12 +1,16 @@
-use crate::helpers::constants::{ACCOUNT_FILE_PATH, CONTRACTS_DIR, DEVNET_ENV_FILE, URL};
-use camino::Utf8PathBuf;
+use crate::helpers::constants::{
+    ACCOUNT_FILE_PATH, CONTRACTS_DIR, DEVNET_ENV_FILE, DEVNET_OZ_CLASS_HASH, URL,
+};
+use anyhow::Context;
+use camino::{Utf8Path, Utf8PathBuf};
 use primitive_types::U256;
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
 use serde_json::{json, Map, Value};
-use sncast::{apply_optional, get_keystore_password};
+use sncast::helpers::scarb_utils::get_package_metadata;
+use sncast::{apply_optional, get_chain_id, get_keystore_password};
 use sncast::{get_account, get_provider, parse_number};
-use starknet::accounts::{Account, Call, Execution};
+use starknet::accounts::{Account, AccountFactory, Call, Execution, OpenZeppelinAccountFactory};
 use starknet::contract::ContractFactory;
 use starknet::core::types::contract::{CompiledClass, SierraClass};
 use starknet::core::types::TransactionReceipt;
@@ -15,13 +19,15 @@ use starknet::core::utils::get_contract_address;
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
-use starknet::signers::SigningKey;
+use starknet::signers::{LocalWallet, SigningKey};
+use std::collections::HashMap;
 use std::env;
 use std::fs;
-use std::fs::OpenOptions;
+use std::fs::{File, OpenOptions};
 use std::io::{BufRead, Write};
 use std::sync::Arc;
 use tempfile::TempDir;
+use toml::Table;
 use url::Url;
 
 pub async fn declare_contract(account: &str, path: &str, shortname: &str) -> FieldElement {
@@ -67,6 +73,46 @@ pub async fn declare_contract(account: &str, path: &str, shortname: &str) -> Fie
     write_devnet_env(format!("{shortname}_CLASS_HASH").as_str(), &class_hash);
     write_devnet_env(format!("{shortname}_DECLARE_HASH").as_str(), &tx_hash);
     class_hash
+}
+
+pub async fn deploy_keystore_account() {
+    let keystore_path = "tests/data/keystore/predeployed_key.json";
+    let account_path = "tests/data/keystore/predeployed_account.json";
+    let private_key =
+        SigningKey::from_keystore(keystore_path, "123").expect("Could not get the private_key");
+
+    let provider = get_provider(URL).expect("Could not get the provider");
+    let chain_id = get_chain_id(&provider)
+        .await
+        .expect("Could not get chain_id from provider");
+
+    let contents =
+        std::fs::read_to_string(account_path).expect("Failed to read keystore account file");
+    let items: serde_json::Value = serde_json::from_str(&contents)
+        .unwrap_or_else(|_| panic!("Failed to parse keystore account file at = {account_path}"));
+
+    let factory = OpenZeppelinAccountFactory::new(
+        parse_number(DEVNET_OZ_CLASS_HASH).expect("Could not parse DEVNET_OZ_CLASS_HASH"),
+        chain_id,
+        LocalWallet::from_signing_key(private_key),
+        provider,
+    )
+    .await
+    .expect("Could not create Account Factory");
+
+    mint_token(
+        items["deployment"]["address"]
+            .as_str()
+            .expect("Could not get address"),
+        9_999_999_999_999_999_999,
+    )
+    .await;
+
+    factory
+        .deploy(parse_number("0xa5d90c65b1b1339").expect("Could not parse salt"))
+        .send()
+        .await
+        .expect("Could not deploy keystore account");
 }
 
 pub async fn declare_deploy_contract(account: &str, path: &str, shortname: &str) {
@@ -225,32 +271,114 @@ pub fn create_test_provider() -> JsonRpcClient<HttpTransport> {
 }
 
 #[must_use]
-pub fn duplicate_directory_with_salt(src_path: String, to_be_salted: &str, salt: &str) -> TempDir {
-    let src_dir = Utf8PathBuf::from(src_path);
-    let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
+pub fn duplicate_contract_directory_with_salt(
+    src_dir: impl AsRef<Utf8Path>,
+    code_to_be_salted: &str,
+    salt: &str,
+) -> TempDir {
+    let src_dir = Utf8PathBuf::from(src_dir.as_ref());
+
+    let temp_dir = copy_directory_to_tempdir(&src_dir);
+
     let dest_dir = Utf8PathBuf::from_path_buf(temp_dir.path().to_path_buf())
         .expect("Failed to create Utf8PathBuf from PathBuf");
 
-    fs_extra::dir::copy(
-        src_dir.join("src"),
-        &dest_dir,
-        &fs_extra::dir::CopyOptions::new().overwrite(true),
-    )
-    .expect("Unable to copy the src directory");
-    fs_extra::file::copy(
-        src_dir.join("Scarb.toml"),
-        dest_dir.join("Scarb.toml"),
-        &fs_extra::file::CopyOptions::new().overwrite(true),
-    )
-    .expect("Unable to copy Scarb.toml");
-
+    let file_to_be_salted = "src/lib.cairo";
     let contract_code =
-        fs::read_to_string(src_dir.join("src/lib.cairo")).expect("Unable to get contract code");
-    let updated_code = contract_code.replace(to_be_salted, &(to_be_salted.to_string() + salt));
-    fs::write(dest_dir.join("src/lib.cairo"), updated_code)
+        fs::read_to_string(src_dir.join(file_to_be_salted)).expect("Unable to get contract code");
+    let updated_code =
+        contract_code.replace(code_to_be_salted, &(code_to_be_salted.to_string() + salt));
+    fs::write(dest_dir.join(file_to_be_salted), updated_code)
         .expect("Unable to change contract code");
 
     temp_dir
+}
+
+#[must_use]
+pub fn copy_directory_to_tempdir(src_dir: impl AsRef<Utf8Path>) -> TempDir {
+    let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
+
+    fs_extra::dir::copy(
+        src_dir.as_ref(),
+        temp_dir.as_ref(),
+        &fs_extra::dir::CopyOptions::new()
+            .overwrite(true)
+            .content_only(true),
+    )
+    .expect("Failed to copy the directory");
+
+    temp_dir
+}
+
+pub fn duplicate_script_directory(
+    src_dir: impl AsRef<Utf8Path>,
+    deps: Vec<impl AsRef<std::path::Path>>,
+) -> TempDir {
+    let mut deps = get_deps_map_from_paths(deps);
+
+    let src_dir = Utf8PathBuf::from(src_dir.as_ref());
+
+    let temp_dir = copy_directory_to_tempdir(&src_dir);
+
+    let dest_dir = Utf8PathBuf::from_path_buf(temp_dir.path().to_path_buf())
+        .expect("Failed to create Utf8PathBuf from PathBuf");
+
+    let manifest_path = dest_dir.join("Scarb.toml");
+    let contents = fs::read_to_string(&manifest_path).unwrap();
+    let mut parsed_toml: Table = toml::from_str(&contents)
+        .with_context(|| format!("Failed to parse {manifest_path}"))
+        .unwrap();
+
+    let deps_toml = parsed_toml
+        .get_mut("dependencies")
+        .unwrap()
+        .as_table_mut()
+        .unwrap();
+
+    let sncast_std = deps_toml
+        .get_mut("sncast_std")
+        .expect("sncast_std not found");
+
+    let sncast_std_path = sncast_std.get_mut("path").expect("No path to sncast_std");
+    let sncast_std_path =
+        Utf8PathBuf::from(sncast_std_path.as_str().expect("Failed to extract string"));
+
+    let sncast_std_path = src_dir.join(sncast_std_path);
+    let sncast_std_path_absolute = sncast_std_path
+        .canonicalize_utf8()
+        .expect("Failed to canonicalize sncast_std path");
+    deps.insert(String::from("sncast_std"), sncast_std_path_absolute);
+
+    for (key, value) in deps {
+        let pkg = deps_toml.get_mut(&key).unwrap().as_table_mut().unwrap();
+        pkg.insert("path".to_string(), toml::Value::String(value.to_string()));
+    }
+
+    let modified_toml = toml::to_string(&parsed_toml).expect("Failed to serialize TOML");
+
+    let mut file = File::create(manifest_path).expect("Failed to create file");
+    file.write_all(modified_toml.as_bytes())
+        .expect("Failed to write to file");
+
+    temp_dir
+}
+
+#[must_use]
+pub fn get_deps_map_from_paths(
+    paths: Vec<impl AsRef<std::path::Path>>,
+) -> HashMap<String, Utf8PathBuf> {
+    let mut deps = HashMap::<String, Utf8PathBuf>::new();
+
+    for path in paths {
+        let path = Utf8PathBuf::from_path_buf(path.as_ref().to_path_buf())
+            .expect("Failed to create Utf8PathBuf from PathBuf");
+        let manifest_path = path.join("Scarb.toml");
+        let package =
+            get_package_metadata(&manifest_path, &None).expect("Failed to get package metadata");
+        deps.insert(package.name.clone(), path);
+    }
+
+    deps
 }
 
 pub fn remove_devnet_env() {

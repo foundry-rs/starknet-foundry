@@ -1,9 +1,7 @@
-use std::path::PathBuf;
-
-use crate::assert_stdout_contains;
-use indoc::indoc;
-
 use crate::e2e::common::runner::{setup_hello_workspace, setup_virtual_workspace, test_runner};
+use indoc::indoc;
+use std::path::PathBuf;
+use test_utils::output_assert::assert_stdout_contains;
 
 #[test]
 fn root_workspace_without_arguments() {
@@ -11,7 +9,7 @@ fn root_workspace_without_arguments() {
 
     let snapbox = test_runner();
     let output = snapbox.current_dir(&temp).assert().code(1);
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
         indoc! {r"
         [..]Compiling[..]
@@ -25,19 +23,19 @@ fn root_workspace_without_arguments() {
         [FAIL] tests::test_failing::test_failing
         
         Failure data:
-            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+            0x6661696c696e6720636865636b ('failing check')
         
         [FAIL] tests::test_failing::test_another_failing
 
         Failure data:
-            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+            0x6661696c696e6720636865636b ('failing check')
         
         Tests: 1 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:
             tests::test_failing::test_failing
             tests::test_failing::test_another_failing
-        "}
+        "},
     );
 }
 
@@ -47,7 +45,7 @@ fn root_workspace_specific_package() {
     let snapbox = test_runner().arg("--package").arg("addition");
 
     let output = snapbox.current_dir(&temp).assert().success();
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
         indoc! {r"
         [..]Compiling[..]
@@ -64,7 +62,7 @@ fn root_workspace_specific_package() {
         [PASS] tests::nested::test_nested::test_two [..]
         [PASS] tests::nested::test_nested::test_two_and_two [..]
         Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
-        "}
+        "},
     );
 }
 
@@ -74,7 +72,7 @@ fn root_workspace_specific_package2() {
     let snapbox = test_runner().arg("--package").arg("fibonacci");
 
     let output = snapbox.current_dir(&temp).assert().code(1);
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
         indoc! {r"
         [..]Compiling[..]
@@ -93,13 +91,13 @@ fn root_workspace_specific_package2() {
         [FAIL] tests::abc::efg::failing_test
         
         Failure data:
-            original value: [0], converted to a string: []
+            0x0 ('')
         
         Tests: 5 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:
             tests::abc::efg::failing_test
-        "}
+        "},
     );
 }
 
@@ -109,7 +107,7 @@ fn root_workspace_specific_package_and_name() {
     let snapbox = test_runner().arg("simple").arg("--package").arg("addition");
 
     let output = snapbox.current_dir(&temp).assert().success();
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
         indoc! {r"
         [..]Compiling[..]
@@ -122,7 +120,7 @@ fn root_workspace_specific_package_and_name() {
         Running 1 test(s) from tests/
         [PASS] tests::nested::simple_case [..]
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 4 filtered out
-        "}
+        "},
     );
 }
 
@@ -132,7 +130,7 @@ fn root_workspace_specify_root_package() {
     let snapbox = test_runner().arg("--package").arg("hello_workspaces");
 
     let output = snapbox.current_dir(&temp).assert().code(1);
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
         indoc! {r"
         [..]Compiling[..]
@@ -146,19 +144,19 @@ fn root_workspace_specify_root_package() {
         [FAIL] tests::test_failing::test_failing
         
         Failure data:
-            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+            0x6661696c696e6720636865636b ('failing check')
         
         [FAIL] tests::test_failing::test_another_failing
 
         Failure data:
-            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+            0x6661696c696e6720636865636b ('failing check')
         
         Tests: 1 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:
             tests::test_failing::test_failing
             tests::test_failing::test_another_failing
-        "}
+        "},
     );
 }
 
@@ -170,7 +168,7 @@ fn root_workspace_inside_nested_package() {
     let snapbox = test_runner();
 
     let output = snapbox.current_dir(package_dir).assert().success();
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
         indoc! {r"
         [..]Compiling[..]
@@ -187,7 +185,7 @@ fn root_workspace_inside_nested_package() {
         [PASS] tests::nested::test_nested::test_two [..]
         [PASS] tests::nested::test_nested::test_two_and_two [..]
         Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
-        "}
+        "},
     );
 }
 
@@ -197,7 +195,7 @@ fn root_workspace_for_entire_workspace() {
     let snapbox = test_runner().arg("--workspace");
 
     let output = snapbox.current_dir(&temp).assert().code(1);
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
         indoc! {r"
         [..]Compiling[..]
@@ -230,7 +228,7 @@ fn root_workspace_for_entire_workspace() {
         [FAIL] tests::abc::efg::failing_test
         
         Failure data:
-            original value: [0], converted to a string: []
+            0x0 ('')
         
         Tests: 5 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
         
@@ -242,12 +240,12 @@ fn root_workspace_for_entire_workspace() {
         [FAIL] tests::test_failing::test_failing
         
         Failure data:
-            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+            0x6661696c696e6720636865636b ('failing check')
         
         [FAIL] tests::test_failing::test_another_failing
 
         Failure data:
-            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+            0x6661696c696e6720636865636b ('failing check')
         
         Tests: 1 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
         
@@ -255,7 +253,7 @@ fn root_workspace_for_entire_workspace() {
             tests::abc::efg::failing_test
             tests::test_failing::test_failing
             tests::test_failing::test_another_failing
-        "}
+        "},
     );
 }
 
@@ -266,7 +264,7 @@ fn root_workspace_for_entire_workspace_inside_package() {
 
     let snapbox = test_runner().arg("--workspace");
     let output = snapbox.current_dir(package_dir).assert().code(1);
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
         indoc! {r"
         [..]Compiling[..]
@@ -299,7 +297,7 @@ fn root_workspace_for_entire_workspace_inside_package() {
         [FAIL] tests::abc::efg::failing_test
         
         Failure data:
-            original value: [0], converted to a string: []
+            0x0 ('')
         
         Tests: 5 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
         
@@ -311,12 +309,12 @@ fn root_workspace_for_entire_workspace_inside_package() {
         [FAIL] tests::test_failing::test_failing
         
         Failure data:
-            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+            0x6661696c696e6720636865636b ('failing check')
         
         [FAIL] tests::test_failing::test_another_failing
 
         Failure data:
-            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+            0x6661696c696e6720636865636b ('failing check')
         
         Tests: 1 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
         
@@ -324,7 +322,7 @@ fn root_workspace_for_entire_workspace_inside_package() {
             tests::abc::efg::failing_test
             tests::test_failing::test_failing
             tests::test_failing::test_another_failing
-        "}
+        "},
     );
 }
 
@@ -361,7 +359,7 @@ fn virtual_workspace_without_arguments() {
     let snapbox = test_runner();
 
     let output = snapbox.current_dir(&temp).assert().code(1);
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
         indoc! {r"
         [..]Compiling[..]
@@ -381,7 +379,7 @@ fn virtual_workspace_without_arguments() {
         [FAIL] tests::abc::efg::failing_test
         
         Failure data:
-            original value: [0], converted to a string: []
+            0x0 ('')
         
         Tests: 5 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
 
@@ -398,7 +396,7 @@ fn virtual_workspace_without_arguments() {
         
         Failures:
             tests::abc::efg::failing_test
-        "}
+        "},
     );
 }
 
@@ -408,7 +406,7 @@ fn virtual_workspace_specify_package() {
     let snapbox = test_runner().arg("--package").arg("subtraction");
 
     let output = snapbox.current_dir(&temp).assert().success();
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
         indoc! {r"
         [..]Compiling[..]
@@ -425,7 +423,7 @@ fn virtual_workspace_specify_package() {
         [PASS] tests::nested::test_nested::test_two [..]
         [PASS] tests::nested::test_nested::test_two_and_two [..]
         Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
-        "}
+        "},
     );
 }
 
@@ -435,7 +433,7 @@ fn virtual_workspace_specific_package2() {
     let snapbox = test_runner().arg("--package").arg("fibonacci2");
 
     let output = snapbox.current_dir(&temp).assert().code(1);
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
         indoc! {r"
         [..]Compiling[..]
@@ -453,13 +451,13 @@ fn virtual_workspace_specific_package2() {
         [FAIL] tests::abc::efg::failing_test
         
         Failure data:
-            original value: [0], converted to a string: []
+            0x0 ('')
         
         Tests: 5 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:
             tests::abc::efg::failing_test
-        "}
+        "},
     );
 }
 
@@ -472,7 +470,7 @@ fn virtual_workspace_specific_package_and_name() {
         .arg("subtraction");
 
     let output = snapbox.current_dir(&temp).assert().success();
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
         indoc! {r"
         [..]Compiling[..]
@@ -485,7 +483,7 @@ fn virtual_workspace_specific_package_and_name() {
         Running 1 test(s) from tests/
         [PASS] tests::nested::simple_case [..]
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 4 filtered out
-        "}
+        "},
     );
 }
 
@@ -497,7 +495,7 @@ fn virtual_workspace_inside_nested_package() {
     let snapbox = test_runner();
 
     let output = snapbox.current_dir(package_dir).assert().success();
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
         indoc! {r"
         [..]Compiling[..]
@@ -514,7 +512,7 @@ fn virtual_workspace_inside_nested_package() {
         [PASS] tests::nested::test_nested::test_two [..]
         [PASS] tests::nested::test_nested::test_two_and_two [..]
         Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
-        "}
+        "},
     );
 }
 
@@ -524,7 +522,7 @@ fn virtual_workspace_for_entire_workspace() {
     let snapbox = test_runner().arg("--workspace");
 
     let output = snapbox.current_dir(&temp).assert().code(1);
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
         indoc! {r"
         [..]Compiling[..]
@@ -544,7 +542,7 @@ fn virtual_workspace_for_entire_workspace() {
         [FAIL] tests::abc::efg::failing_test
         
         Failure data:
-            original value: [0], converted to a string: []
+            0x0 ('')
         
         Tests: 5 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
 
@@ -561,7 +559,7 @@ fn virtual_workspace_for_entire_workspace() {
         
         Failures:
             tests::abc::efg::failing_test
-        "}
+        "},
     );
 }
 
@@ -572,7 +570,7 @@ fn virtual_workspace_for_entire_workspace_inside_package() {
 
     let snapbox = test_runner().arg("--workspace");
     let output = snapbox.current_dir(package_dir).assert().code(1);
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
         indoc! {r"
         [..]Compiling[..]
@@ -592,7 +590,7 @@ fn virtual_workspace_for_entire_workspace_inside_package() {
         [FAIL] tests::abc::efg::failing_test
         
         Failure data:
-            original value: [0], converted to a string: []
+            0x0 ('')
         
         Tests: 5 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
 
@@ -609,7 +607,7 @@ fn virtual_workspace_for_entire_workspace_inside_package() {
         
         Failures:
             tests::abc::efg::failing_test
-        "}
+        "},
     );
 }
 

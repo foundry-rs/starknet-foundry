@@ -1,5 +1,8 @@
 use anyhow::{anyhow, Result};
 use camino::Utf8Path;
+use warn::{
+    warn_if_available_gas_used_with_incompatible_scarb_version, warn_if_incompatible_rpc_version,
+};
 
 use crate::scarb::load_test_artifacts;
 use forge_runner::test_case_summary::AnyTestCaseSummary;
@@ -21,11 +24,12 @@ pub mod pretty_printing;
 pub mod scarb;
 pub mod shared_cache;
 pub mod test_filter;
+mod warn;
 
-fn replace_id_with_params(
-    raw_fork_config: RawForkConfig,
-    fork_targets: &[ForkTarget],
-) -> Result<RawForkParams> {
+pub(crate) fn replace_id_with_params<'a>(
+    raw_fork_config: &'a RawForkConfig,
+    fork_targets: &'a [ForkTarget],
+) -> Result<&'a RawForkParams> {
     match raw_fork_config {
         RawForkConfig::Params(raw_fork_params) => Ok(raw_fork_params),
         RawForkConfig::Id(name) => {
@@ -36,7 +40,7 @@ fn replace_id_with_params(
                     anyhow!("Fork configuration named = {name} not found in the Scarb.toml")
                 })?;
 
-            Ok(fork_target_from_runner_config.params().clone())
+            Ok(fork_target_from_runner_config.params())
         }
     }
 }
@@ -50,9 +54,9 @@ async fn to_runnable(
 
     for case in compiled_test_crate.test_cases {
         let fork_config = if let Some(fc) = case.fork_config {
-            let raw_fork_params = replace_id_with_params(fc, fork_targets)?;
+            let raw_fork_params = replace_id_with_params(&fc, fork_targets)?;
             let fork_config = block_number_map
-                .validated_fork_config_from_fork_params(&raw_fork_params)
+                .validated_fork_config_from_fork_params(raw_fork_params)
                 .await?;
             Some(fork_config)
         } else {
@@ -104,6 +108,9 @@ pub async fn run(
         .collect::<Result<Vec<CompiledTestCrateRaw>>>()?;
     let not_filtered: usize = test_crates.iter().map(|tc| tc.test_cases.len()).sum();
     let filtered = all_tests - not_filtered;
+
+    warn_if_available_gas_used_with_incompatible_scarb_version(&test_crates)?;
+    warn_if_incompatible_rpc_version(&test_crates, fork_targets).await?;
 
     pretty_printing::print_collected_tests_count(
         test_crates.iter().map(|tests| tests.test_cases.len()).sum(),

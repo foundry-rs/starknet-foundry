@@ -4,8 +4,8 @@ use std::fs;
 
 use clap::Args;
 use indoc::{formatdoc, indoc};
-use scarb_metadata::ScarbCommand;
-use sncast::helpers::constants::SCRIPTS_DIR;
+use scarb_api::ScarbCommand;
+use sncast::helpers::constants::INIT_SCRIPTS_DIR;
 use sncast::helpers::scarb_utils::get_cairo_version;
 use sncast::response::structs::ScriptInitResponse;
 
@@ -41,7 +41,7 @@ fn get_script_root_dir_path(script_name: &str) -> Result<Utf8PathBuf> {
     let current_dir = Utf8PathBuf::from_path_buf(std::env::current_dir()?)
         .expect("Failed to create Utf8PathBuf for the current directory");
 
-    let scripts_dir = current_dir.join(SCRIPTS_DIR);
+    let scripts_dir = current_dir.join(INIT_SCRIPTS_DIR);
 
     ensure!(
         !scripts_dir.exists(),
@@ -121,14 +121,17 @@ fn create_script_main_file(script_name: &str, script_root_dir: &Utf8PathBuf) -> 
 
     fs::write(
         script_main_file_path,
-        indoc! {r"
-            use sncast_std;
-            use debug::PrintTrait;
+        indoc! {r#"
+            use sncast_std::{call, CallResult};
 
+            // The example below uses a contract deployed to the Goerli testnet
             fn main() {
-                'Put your code here!'.print();
+                let contract_address = 0x7ad10abd2cc24c2e066a2fee1e435cd5fa60a37f9268bfbaf2e98ce5ca3c436;
+                let call_result = call(contract_address.try_into().unwrap(), 'get_greeting', array![]);
+                assert(*call_result.data[0]=='Hello, Starknet!', '');
+                println!("{:?}", call_result);
             }
-        "},
+        "#},
     )?;
 
     Ok(())

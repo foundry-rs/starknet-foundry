@@ -10,11 +10,6 @@ Required.
 
 Account name which is going to be deleted.
 
-## `--delete-profile false`
-Optional.
-
-If passed, the account's associated profile won't be removed from Scarb.toml.
-
 ## `--network`
 Optional.
 

@@ -52,13 +52,13 @@ Control when colored output is used. Valid values:
 - `always`: always display colors.
 - `never`: never display colors.
 
-## `--use_scarb_collector`
+## `--detailed-resources`
 
-Uses Scarb to find and compile tests. Requires at least Scarb nightly-2023-12-04
+Display additional info about used resources for passed tests.
 
-> ⚠️ **Warning**
-> 
-> This is an experimental feature. Some functionalities might not work.
+## `--save-trace-data`
+
+Saves execution traces of test cases which have passed and are not fuzz tests to files. Traces can be used for profiling purposes.
 
 ## `-h`, `--help`
 

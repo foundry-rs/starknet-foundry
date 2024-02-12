@@ -35,7 +35,7 @@ fn library_call_syscall_is_usable() {
         #[test]
         fn library_call_syscall_is_usable() {
             let caller_address = deploy_contract('Caller');
-            let caller_safe_dispatcher = ICallerSafeDispatcher {
+            let caller_safe_dispatcher = ICallerDispatcher {
                 contract_address: caller_address
             };
 
@@ -43,17 +43,16 @@ fn library_call_syscall_is_usable() {
             let executor_class_hash = executor_contract.class_hash;
 
             let executor_address = executor_contract.deploy(@ArrayTrait::new()).unwrap();
-            let executor_safe_dispatcher = IExecutorSafeDispatcher {
+            let executor_safe_dispatcher = IExecutorDispatcher {
                 contract_address: executor_address
             };
-
-            let thing = executor_safe_dispatcher.get_thing().unwrap();
+            let thing = executor_safe_dispatcher.get_thing();
             assert(thing == 5, 'invalid thing');
 
-            let result = caller_safe_dispatcher.call_add_two(executor_class_hash, 420).unwrap();
+            let result = caller_safe_dispatcher.call_add_two(executor_class_hash, 420);
             assert(result == 422, 'invalid result');
 
-            let thing = executor_safe_dispatcher.get_thing().unwrap();
+            let thing = executor_safe_dispatcher.get_thing();
             assert(thing == 5, 'invalid thing');
         }
         "
@@ -90,8 +89,8 @@ fn library_call_syscall_is_usable() {
                         fn call_add_two(
                             self: @ContractState, class_hash: ClassHash, number: felt252
                         ) -> felt252 {
-                            let safe_lib_dispatcher = IExecutorSafeLibraryDispatcher { class_hash };
-                            safe_lib_dispatcher.add_two(number).unwrap()
+                            let safe_lib_dispatcher = IExecutorLibraryDispatcher { class_hash };
+                            safe_lib_dispatcher.add_two(number)
                         }
                     }
                 }

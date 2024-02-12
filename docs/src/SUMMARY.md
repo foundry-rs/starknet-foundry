@@ -17,7 +17,6 @@
 * [Testing Contracts' Internals](testing/testing_contract_internals.md)
 * [Fork Testing](testing/fork-testing.md)
 * [Using Cheatcodes](testing/using-cheatcodes.md)
-* [Debugging](testing/debugging.md)
 * [Fuzz Testing](testing/fuzz-testing.md)
 * [Test Collection](testing/test-collection.md)
 * [Gas Estimation](testing/gas-etimation.md)
@@ -36,6 +35,7 @@
 # Foundry Development
 
 * [Environment Setup](development/environment-setup.md)
+* [RPC Version](development/rpc-version.md)
 
 # Appendix
 
@@ -67,7 +67,7 @@
     * [precalculate_address](appendix/snforge-library/precalculate_address.md)
     * [deploy](appendix/snforge-library/deploy.md)
     * [deploy_at](appendix/snforge-library/deploy_at.md)
-    * [print](appendix/snforge-library/print.md)
+    * [get_call_trace](appendix/snforge-library/get_call_trace.md)
     * [fs](appendix/snforge-library/fs.md)
         * [read_txt](appendix/snforge-library/fs/read_txt.md)
         * [parse_txt](appendix/snforge-library/fs/parse_txt.md)

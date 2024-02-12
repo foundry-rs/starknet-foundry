@@ -23,17 +23,17 @@ use starknet_api::deprecated_contract_class::EntryPointType;
 use starknet_api::hash::StarkHash;
 use starknet_api::{core::ContractAddress, hash::StarkFelt, patricia_key};
 
-use crate::state::{BlockifierState, CheatnetState};
+use crate::state::CheatnetState;
 
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     call_entry_point, AddressOrClassHash,
 };
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::{
     execution::cheated_syscalls::SingleSegmentResponse,
-    rpc::{CallFailure, CallOutput, CallResult},
+    rpc::{CallFailure, CallResult},
 };
 
-use super::io_runtime_extension::IORuntime;
+use super::cheatable_starknet_runtime_extension::CheatableStarknetRuntime;
 
 pub mod execution;
 pub mod panic_data;
@@ -46,30 +46,14 @@ pub struct CallToBlockifierExtension<'a> {
 pub type CallToBlockifierRuntime<'a> = ExtendedRuntime<CallToBlockifierExtension<'a>>;
 
 impl<'a> ExtensionLogic for CallToBlockifierExtension<'a> {
-    type Runtime = IORuntime<'a>;
+    type Runtime = CheatableStarknetRuntime<'a>;
 
     fn override_system_call(
         &mut self,
         selector: DeprecatedSyscallSelector,
         vm: &mut VirtualMachine,
-        extended_runtime: &mut IORuntime<'a>,
+        extended_runtime: &mut Self::Runtime,
     ) -> Result<SyscallHandlingResult, HintError> {
-        match selector {
-            // We clear it here to ensure that on each new contract call
-            // deploy syscall and library call made from test code
-            // we start with an empty trace
-            // Same case when handling l1_handler_execute and in `deploy_at`
-            DeprecatedSyscallSelector::CallContract
-            | DeprecatedSyscallSelector::LibraryCall
-            | DeprecatedSyscallSelector::LibraryCallL1Handler
-            | DeprecatedSyscallSelector::Deploy => extended_runtime
-                .extended_runtime
-                .extension
-                .cheatnet_state
-                .trace_info
-                .clear(),
-            _ => (),
-        }
         match selector {
             // We execute contract calls and library calls with modified blockifier
             // This is redirected to drop ForgeRuntimeExtension
@@ -95,17 +79,17 @@ where
 {
     fn execute_call(
         self,
-        blockifier_state: &mut BlockifierState,
-        cheatnet_state: &mut CheatnetState,
-    ) -> CallOutput;
+        syscall_handler: &mut SyscallHintProcessor,
+        runtime_state: &mut RuntimeState,
+    ) -> CallResult;
 }
 
 impl ExecuteCall for CallContractRequest {
     fn execute_call(
         self: CallContractRequest,
-        blockifier_state: &mut BlockifierState,
-        cheatnet_state: &mut CheatnetState,
-    ) -> CallOutput {
+        syscall_handler: &mut SyscallHintProcessor,
+        runtime_state: &mut RuntimeState,
+    ) -> CallResult {
         let contract_address = self.contract_address;
 
         let entry_point = CallEntryPoint {
@@ -121,21 +105,20 @@ impl ExecuteCall for CallContractRequest {
         };
 
         call_entry_point(
-            blockifier_state,
-            cheatnet_state,
+            syscall_handler,
+            runtime_state,
             entry_point,
             &AddressOrClassHash::ContractAddress(contract_address),
         )
-        .unwrap_or_else(|err| panic!("Transaction execution error: {err}"))
     }
 }
 
 impl ExecuteCall for LibraryCallRequest {
     fn execute_call(
         self: LibraryCallRequest,
-        blockifier_state: &mut BlockifierState,
-        cheatnet_state: &mut CheatnetState,
-    ) -> CallOutput {
+        syscall_handler: &mut SyscallHintProcessor,
+        runtime_state: &mut RuntimeState,
+    ) -> CallResult {
         let class_hash = self.class_hash;
 
         let entry_point = CallEntryPoint {
@@ -151,59 +134,52 @@ impl ExecuteCall for LibraryCallRequest {
         };
 
         call_entry_point(
-            blockifier_state,
-            cheatnet_state,
+            syscall_handler,
+            runtime_state,
             entry_point,
             &AddressOrClassHash::ClassHash(class_hash),
         )
-        .unwrap_or_else(|err| panic!("Transaction execution error: {err}"))
     }
 }
 
 fn execute_syscall<Request: ExecuteCall + SyscallRequest>(
     vm: &mut VirtualMachine,
-    io_runtime: &mut IORuntime,
+    cheatable_starknet_runtime: &mut CheatableStarknetRuntime,
 ) -> Result<(), HintError> {
-    let _selector = felt_from_ptr(vm, io_runtime.get_mut_syscall_ptr())?;
+    let _selector = felt_from_ptr(vm, cheatable_starknet_runtime.get_mut_syscall_ptr())?;
 
     let SyscallRequestWrapper {
         gas_counter,
         request,
-    } = SyscallRequestWrapper::<Request>::read(vm, io_runtime.get_mut_syscall_ptr())?;
+    } = SyscallRequestWrapper::<Request>::read(
+        vm,
+        cheatable_starknet_runtime.get_mut_syscall_ptr(),
+    )?;
 
-    let cheatable_starknet_runtime = &mut io_runtime.extended_runtime;
     let cheatnet_state: &mut _ = cheatable_starknet_runtime.extension.cheatnet_state;
     let syscall_handler = &mut cheatable_starknet_runtime.extended_runtime.hint_handler;
-    let mut blockifier_state = BlockifierState::from(syscall_handler.state);
+    let mut runtime_state = RuntimeState { cheatnet_state };
 
-    let call_result = request.execute_call(&mut blockifier_state, cheatnet_state);
-    write_call_response(
-        syscall_handler,
-        cheatnet_state,
-        vm,
-        gas_counter,
-        call_result,
-    )?;
+    let call_result = request.execute_call(syscall_handler, &mut runtime_state);
+    write_call_response(syscall_handler, vm, gas_counter, call_result)?;
     Ok(())
+}
+
+pub struct RuntimeState<'a> {
+    pub cheatnet_state: &'a mut CheatnetState,
 }
 
 fn write_call_response(
     syscall_handler: &mut SyscallHintProcessor<'_>,
-    cheatnet_state: &mut CheatnetState,
     vm: &mut VirtualMachine,
     gas_counter: u64,
-    call_output: CallOutput,
+    call_result: CallResult,
 ) -> Result<(), HintError> {
-    let response_wrapper: SyscallResponseWrapper<SingleSegmentResponse> = match call_output.result {
+    let response_wrapper: SyscallResponseWrapper<SingleSegmentResponse> = match call_result {
         CallResult::Success { ret_data, .. } => {
             let memory_segment_start_ptr = syscall_handler
                 .read_only_segments
                 .allocate(vm, &ret_data.iter().map(Into::into).collect())?;
-
-            // add execution resources used by call to all used resources
-            cheatnet_state
-                .used_resources
-                .extend(&call_output.used_resources);
 
             SyscallResponseWrapper::Success {
                 gas_counter,

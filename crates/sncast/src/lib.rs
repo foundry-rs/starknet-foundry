@@ -168,12 +168,13 @@ pub async fn get_account<'a>(
     keystore: Option<Utf8PathBuf>,
 ) -> Result<SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, LocalWallet>> {
     let chain_id = get_chain_id(provider).await?;
-    let account = if let Some(keystore) = keystore {
+    let mut account = if let Some(keystore) = keystore {
         get_account_from_keystore(provider, chain_id, &keystore, account)?
     } else {
         get_account_from_accounts_file(account, accounts_file, provider, chain_id)?
     };
-    Ok(account)
+
+    Ok(account.set_block_id(get_block_id("pending")?).clone())
 }
 
 fn get_account_from_keystore<'a>(
@@ -407,7 +408,7 @@ pub fn parse_number(number_as_str: &str) -> Result<FieldElement> {
 
 pub fn raise_if_empty(value: &str, value_name: &str) -> Result<()> {
     if value.is_empty() {
-        bail!("{value_name} not passed nor found in Scarb.toml")
+        bail!("{value_name} not passed nor found in snfoundry.toml")
     }
     Ok(())
 }

@@ -14,14 +14,14 @@ starknet.workspace = true
 tokio.workspace = true
 url.workspace = true
 rand.workspace = true
-project-root.workspace = true
 scarb-metadata.workspace = true
 primitive-types = "0.12.1"
 shellexpand = "3.1.0"
-toml = "0.8.8"
+toml = "0.8.9"
 rpassword = "7.3.1"
 promptly = "0.3.1"
 scarb-api = { path = "../scarb-api" }
+scarb-ui.workspace = true
 # Freeze reqwest dependency, because newer versions cause cast tests to fail on macs
 reqwest = "=0.11.18"
 indoc.workspace = true
@@ -45,6 +45,7 @@ console.workspace = true
 ctor.workspace = true
 snapbox.workspace = true
 indoc.workspace = true
+project-root.workspace = true
 reqwest = "0.11.18"
 tempfile = "3.9.0"
 test-case.workspace = true

@@ -1,12 +1,17 @@
 #!/bin/bash
 set -e
 
-SCARB_VERSION="2.4.0"
-CONTRACTS_DIRECTORY="$(git rev-parse --show-toplevel)/crates/sncast/tests/data/contracts/"
+SCARB_VERSION="2.5.0"
+REPO_ROOT=$(git rev-parse --show-toplevel)
+CONTRACTS_DIRECTORY="${REPO_ROOT}/crates/sncast/tests/data/contracts/"
 
 if ! scarb --version | grep -qF "$SCARB_VERSION"; then
-  echo "Please run tests/utils/install_devnet.sh script first!"
-  echo "wrong version of scarb found, required version is $SCARB_VERSION"
+  echo "Wrong version of scarb found, required version is $SCARB_VERSION"
+  exit 1
+fi
+
+if [ ! -d "${REPO_ROOT}/crates/sncast/tests/utils/devnet/bin" ]; then
+  echo "Devnet not found - please run ${REPO_ROOT}/scripts/install_devnet.sh script first!"
   exit 1
 fi
 

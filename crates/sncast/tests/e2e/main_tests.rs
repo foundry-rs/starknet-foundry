@@ -1,19 +1,21 @@
 use crate::helpers::constants::{ACCOUNT, ACCOUNT_FILE_PATH, CONTRACTS_DIR, URL};
-use crate::helpers::fixtures::{duplicate_directory_with_salt, from_env, get_keystores_path};
+use crate::helpers::fixtures::{
+    duplicate_contract_directory_with_salt, from_env, get_keystores_path,
+};
 use crate::helpers::runner::runner;
 use indoc::indoc;
 use snapbox::cmd::{cargo_bin, Command};
+use sncast::helpers::configuration::copy_config_to_tempdir;
 use sncast::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
 use std::env;
 use std::fs;
 
 #[tokio::test]
-async fn test_happy_case_from_scarb() {
+async fn test_happy_case_from_sncast_config() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
-        "--path-to-scarb-toml",
-        "tests/data/files/correct_Scarb.toml",
         "call",
         "--contract-address",
         "0x0",
@@ -21,7 +23,7 @@ async fn test_happy_case_from_scarb() {
         "doesnotmatter",
     ];
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().success().stderr_matches(indoc! {r"
         command: call
@@ -54,15 +56,14 @@ async fn test_happy_case_from_cli_no_scarb() {
 }
 
 #[tokio::test]
-async fn test_happy_case_from_cli_with_scarb() {
+async fn test_happy_case_from_cli_with_sncast_config() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
     let address = from_env("CAST_MAP_ADDRESS").unwrap();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
-        "--path-to-scarb-toml",
-        "tests/data/files/correct_Scarb.toml",
         "--profile",
-        "profile1",
+        "default",
         "--url",
         URL,
         "--account",
@@ -78,7 +79,7 @@ async fn test_happy_case_from_cli_with_scarb() {
         "latest",
     ];
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().success().stdout_eq(indoc! {r"
         command: call
@@ -88,14 +89,11 @@ async fn test_happy_case_from_cli_with_scarb() {
 
 #[tokio::test]
 async fn test_happy_case_mixed() {
+    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
     let address = from_env("CAST_MAP_ADDRESS").unwrap();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
-        "--path-to-scarb-toml",
-        "tests/data/files/correct_Scarb.toml",
-        "--profile",
-        "profile2",
         "--account",
         ACCOUNT,
         "call",
@@ -109,7 +107,7 @@ async fn test_happy_case_mixed() {
         "latest",
     ];
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().success().stdout_eq(indoc! {r"
         command: call
@@ -132,7 +130,7 @@ async fn test_missing_account() {
     let snapbox = runner(&args);
 
     snapbox.assert().stderr_matches(indoc! {r"
-        Error: Account name not passed nor found in Scarb.toml
+        Error: Account name not passed nor found in snfoundry.toml
     "});
 }
 
@@ -151,7 +149,7 @@ async fn test_missing_url() {
     let snapbox = runner(&args);
 
     snapbox.assert().stderr_matches(indoc! {r"
-        Error: RPC url not passed nor found in Scarb.toml
+        Error: RPC url not passed nor found in snfoundry.toml
     "});
 }
 
@@ -217,7 +215,7 @@ async fn test_keystore_inexistent_account() {
 #[tokio::test]
 async fn test_keystore_undeployed_account() {
     let contract_path =
-        duplicate_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "8");
+        duplicate_contract_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "8");
     let my_key_path = get_keystores_path("tests/data/keystore/my_key.json");
     let my_account_undeployed_path =
         get_keystores_path("tests/data/keystore/my_account_undeployed.json");
@@ -249,9 +247,9 @@ async fn test_keystore_undeployed_account() {
 #[tokio::test]
 async fn test_keystore_declare() {
     let contract_path =
-        duplicate_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "999");
-    let my_key_path = get_keystores_path("tests/data/keystore/my_key.json");
-    let my_account_path = get_keystores_path("tests/data/keystore/my_account.json");
+        duplicate_contract_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "999");
+    let my_key_path = get_keystores_path("tests/data/keystore/predeployed_key.json");
+    let my_account_path = get_keystores_path("tests/data/keystore/predeployed_account.json");
     let args = vec![
         "--url",
         URL,
@@ -269,7 +267,5 @@ async fn test_keystore_declare() {
         .current_dir(contract_path.path())
         .args(args);
 
-    snapbox.assert().success().get_output().stderr.is_empty();
-
-    fs::remove_dir_all(contract_path).unwrap();
+    assert!(snapbox.assert().success().get_output().stderr.is_empty());
 }

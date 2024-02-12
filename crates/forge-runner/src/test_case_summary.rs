@@ -1,10 +1,17 @@
 use crate::compiled_runnable::TestCaseRunnable;
 use crate::expected_result::{ExpectedPanicValue, ExpectedTestResult};
+use crate::gas::check_available_gas;
+use crate::trace_data::ProfilerCallTrace;
 use cairo_felt::Felt252;
+use cairo_lang_runner::casm_run::format_next_item;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{RunResult, RunResultValue};
+use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
+use cheatnet::state::CallTrace as InternalCallTrace;
 use num_traits::Pow;
+use std::cell::RefCell;
 use std::option::Option;
+use std::rc::Rc;
 
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct GasStatistics {
@@ -51,6 +58,7 @@ pub struct FuzzingStatistics {
 pub trait TestType {
     type GasInfo: std::fmt::Debug + Clone;
     type TestStatistics: std::fmt::Debug + Clone;
+    type TraceData: std::fmt::Debug + Clone;
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -58,6 +66,7 @@ pub struct Fuzzing;
 impl TestType for Fuzzing {
     type GasInfo = GasStatistics;
     type TestStatistics = FuzzingStatistics;
+    type TraceData = ();
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -65,6 +74,7 @@ pub struct Single;
 impl TestType for Single {
     type GasInfo = u128;
     type TestStatistics = ();
+    type TraceData = ProfilerCallTrace;
 }
 
 /// Summary of running a single test case
@@ -80,8 +90,12 @@ pub enum TestCaseSummary<T: TestType> {
         arguments: Vec<Felt252>,
         /// Information on used gas
         gas_info: <T as TestType>::GasInfo,
+        /// Resources used during test
+        used_resources: UsedResources,
         /// Statistics of the test run
         test_statistics: <T as TestType>::TestStatistics,
+        /// Test trace data
+        trace_data: <T as TestType>::TraceData,
     },
     /// Test case failed
     Failed {
@@ -103,6 +117,7 @@ pub enum TestCaseSummary<T: TestType> {
     Skipped {},
 }
 
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug)]
 pub enum AnyTestCaseSummary {
     Fuzzing(TestCaseSummary<Fuzzing>),
@@ -145,7 +160,9 @@ impl TestCaseSummary<Fuzzing> {
                 msg,
                 arguments,
                 gas_info: _,
+                used_resources: _,
                 test_statistics: (),
+                trace_data: _,
             } => {
                 let runs = results.len();
                 let gas_usages: Vec<u128> = results
@@ -159,9 +176,11 @@ impl TestCaseSummary<Fuzzing> {
                 TestCaseSummary::Passed {
                     name,
                     msg,
-                    gas_info: GasStatistics::new(&gas_usages),
                     arguments,
+                    gas_info: GasStatistics::new(&gas_usages),
+                    used_resources: UsedResources::default(),
                     test_statistics: FuzzingStatistics { runs },
+                    trace_data: (),
                 }
             }
             TestCaseSummary::Failed {
@@ -190,18 +209,25 @@ impl TestCaseSummary<Single> {
         test_case: &TestCaseRunnable,
         arguments: Vec<Felt252>,
         gas: u128,
+        used_resources: UsedResources,
+        call_trace: &Rc<RefCell<InternalCallTrace>>,
     ) -> Self {
         let name = test_case.name.to_string();
         let msg = extract_result_data(&run_result, &test_case.expected_result);
         match run_result.value {
             RunResultValue::Success(_) => match &test_case.expected_result {
-                ExpectedTestResult::Success => TestCaseSummary::Passed {
-                    name,
-                    msg,
-                    arguments,
-                    test_statistics: (),
-                    gas_info: gas,
-                },
+                ExpectedTestResult::Success => {
+                    let summary = TestCaseSummary::Passed {
+                        name,
+                        msg,
+                        arguments,
+                        test_statistics: (),
+                        gas_info: gas,
+                        used_resources,
+                        trace_data: ProfilerCallTrace::from(call_trace.borrow().clone()),
+                    };
+                    check_available_gas(&test_case.available_gas, summary)
+                }
                 ExpectedTestResult::Panics(_) => TestCaseSummary::Failed {
                     name,
                     msg,
@@ -231,6 +257,8 @@ impl TestCaseSummary<Single> {
                         arguments,
                         test_statistics: (),
                         gas_info: gas,
+                        used_resources,
+                        trace_data: ProfilerCallTrace::from(call_trace.borrow().clone()),
                     },
                 },
             },
@@ -238,23 +266,45 @@ impl TestCaseSummary<Single> {
     }
 }
 
-/// Helper function to build `readable_text` from a run data.
-fn build_readable_text(data: &Vec<Felt252>) -> Option<String> {
-    let mut readable_text = String::new();
+/// Helper function to build readable text from a run data.
+fn build_readable_text(data: &[Felt252]) -> Option<String> {
+    let mut data_iter = data.iter().cloned();
+    let mut items = Vec::new();
 
-    for felt in data {
-        readable_text.push_str(&format!("\n    original value: [{felt}]"));
-        if let Some(short_string) = as_cairo_short_string(felt) {
-            readable_text.push_str(&format!(", converted to a string: [{short_string}]"));
-        }
+    while let Some(item) = format_next_item(&mut data_iter) {
+        items.push(item.quote_if_string());
     }
 
-    if readable_text.is_empty() {
-        None
+    if items.is_empty() {
+        return None;
+    };
+
+    let string = if let [item] = &items[..] {
+        item.clone()
     } else {
-        readable_text.push('\n');
-        Some(readable_text)
+        format!("({})", items.join(", "))
+    };
+
+    let mut result = indent_string(&format!("\n{string}"));
+    result.push('\n');
+    Some(result)
+}
+
+fn indent_string(string: &str) -> String {
+    let mut modified_string = string.to_string();
+    let trailing_newline = if string.ends_with('\n') {
+        modified_string.pop();
+        true
+    } else {
+        false
+    };
+
+    modified_string = modified_string.replace('\n', "\n    ");
+    if trailing_newline {
+        modified_string.push('\n');
     }
+
+    modified_string
 }
 
 fn join_short_strings(data: &[Felt252]) -> String {
@@ -361,5 +411,22 @@ impl AnyTestCaseSummary {
             AnyTestCaseSummary::Single(TestCaseSummary::Ignored { .. })
                 | AnyTestCaseSummary::Fuzzing(TestCaseSummary::Ignored { .. })
         )
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::indent_string;
+
+    #[test]
+    fn test_indent_string() {
+        let s = indent_string("\nabc\n");
+        assert_eq!(s, "\n    abc\n");
+
+        let s = indent_string("\nabc");
+        assert_eq!(s, "\n    abc");
+
+        let s = indent_string("\nabc\nd");
+        assert_eq!(s, "\n    abc\n    d");
     }
 }
