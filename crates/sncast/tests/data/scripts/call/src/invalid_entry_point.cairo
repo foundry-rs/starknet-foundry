@@ -1,6 +1,4 @@
-use sncast_std::{
-    call, CallResult, ScriptCommandError, ProviderError, StarknetError, ErrorData
-};
+use sncast_std::{call, CallResult, ScriptCommandError, ProviderError, StarknetError, ErrorData};
 
 fn main() {
     println!("test");

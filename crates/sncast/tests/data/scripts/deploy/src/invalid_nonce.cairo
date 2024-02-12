@@ -19,7 +19,8 @@ fn main() {
         true,
         Option::Some(max_fee),
         Option::Some(deploy_nonce)
-    ).unwrap_err();
+    )
+        .unwrap_err();
 
     println!("{:?}", deploy_result);
 

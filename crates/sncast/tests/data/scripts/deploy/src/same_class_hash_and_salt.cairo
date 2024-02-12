@@ -18,7 +18,8 @@ fn main() {
         true,
         Option::Some(max_fee),
         Option::Some(deploy_nonce)
-    ).expect('1st deploy failed');
+    )
+        .expect('1st deploy failed');
 
     let class_hash: ClassHash = 0x6d5e0eea81df9a6b03b9be2319a096d5322bd78ff1d2e6e315a91e9a4ac02ed
         .try_into()
@@ -32,7 +33,8 @@ fn main() {
         true,
         Option::Some(max_fee),
         Option::Some(deploy_nonce)
-    ).unwrap_err();
+    )
+        .unwrap_err();
 
     println!("test");
     println!("{:?}", deploy_result);

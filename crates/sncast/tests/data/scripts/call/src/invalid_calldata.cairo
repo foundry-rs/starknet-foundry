@@ -1,6 +1,4 @@
-use sncast_std::{
-    call, CallResult, ScriptCommandError, ProviderError, StarknetError, ErrorData
-};
+use sncast_std::{call, CallResult, ScriptCommandError, ProviderError, StarknetError, ErrorData};
 
 fn main() {
     println!("test");
@@ -12,12 +10,10 @@ fn main() {
 
     println!("{:?}", call_err);
 
-
     let call_err: ScriptCommandError = call(
         eth.try_into().expect('bad address'), 'allowance', array![0x12]
     )
         .unwrap_err();
 
     println!("{:?}", call_err);
-
 }

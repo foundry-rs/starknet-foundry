@@ -11,7 +11,8 @@ fn main() {
     println!("declare_nonce: {}", declare_nonce);
     println!("debug declare_nonce: {:?}", declare_nonce);
 
-    let declare_result = declare('Mapa', Option::Some(max_fee), Option::Some(declare_nonce)).expect('declare failed');
+    let declare_result = declare('Mapa', Option::Some(max_fee), Option::Some(declare_nonce))
+        .expect('declare failed');
     println!("declare_result: {}", declare_result);
     println!("debug declare_result: {:?}", declare_result);
 
@@ -24,7 +25,8 @@ fn main() {
         true,
         Option::Some(max_fee),
         Option::Some(deploy_nonce)
-    ).expect('deploy failed');
+    )
+        .expect('deploy failed');
     println!("deploy_result: {}", deploy_result);
     println!("debug deploy_result: {:?}", deploy_result);
 
@@ -37,13 +39,15 @@ fn main() {
         array![0x1, 0x2],
         Option::Some(max_fee),
         Option::Some(invoke_nonce)
-    ).expect('invoke failed');
+    )
+        .expect('invoke failed');
     println!("invoke_result: {}", invoke_result);
     println!("debug invoke_result: {:?}", invoke_result);
 
     assert(invoke_result.transaction_hash != 0, invoke_result.transaction_hash);
 
-    let call_result = call(deploy_result.contract_address, 'get', array![0x1]).expect('call failed');
+    let call_result = call(deploy_result.contract_address, 'get', array![0x1])
+        .expect('call failed');
     println!("call_result: {}", call_result);
     println!("debug call_result: {:?}", call_result);
 

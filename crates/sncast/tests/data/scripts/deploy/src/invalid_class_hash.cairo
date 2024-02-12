@@ -7,9 +7,7 @@ fn main() {
     let max_fee = 99999999999999999;
     let salt = 0x3;
 
-    let class_hash: ClassHash = 0xdddd
-        .try_into()
-        .expect('Invalid class hash value');
+    let class_hash: ClassHash = 0xdddd.try_into().expect('Invalid class hash value');
 
     let deploy_nonce = get_nonce('pending');
     let deploy_result = deploy(
@@ -19,7 +17,8 @@ fn main() {
         true,
         Option::Some(max_fee),
         Option::Some(deploy_nonce)
-    ).unwrap_err();
+    )
+        .unwrap_err();
 
     println!("test");
     println!("{:?}", deploy_result);

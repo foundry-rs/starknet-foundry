@@ -8,7 +8,10 @@ fn main() {
         .try_into()
         .expect('Invalid contract address value');
 
-    let invoke_result = invoke(map_contract_address, 'put', array![0x10, 0x1], Option::Some(1), Option::None).unwrap_err();
+    let invoke_result = invoke(
+        map_contract_address, 'put', array![0x10, 0x1], Option::Some(1), Option::None
+    )
+        .unwrap_err();
     println!("{:?}", invoke_result);
 }
 

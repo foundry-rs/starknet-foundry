@@ -16,7 +16,8 @@ fn main() {
         true,
         Option::Some(max_fee),
         Option::None
-    ).expect('deploy failed');
+    )
+        .expect('deploy failed');
 
     assert(deploy_result.transaction_hash != 0, deploy_result.transaction_hash);
 }
