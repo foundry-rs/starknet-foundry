@@ -6,7 +6,6 @@ fn main() {
     let max_fee = 99999999999999999;
     let salt = 0x34542;
 
-    println!("test");
     let class_hash: ClassHash = 0x6d5e0eea81df9a6b03b9be2319a096d5322bd78ff1d2e6e315a91e9a4ac02ed
         .try_into()
         .expect('Invalid class hash value');
@@ -35,5 +34,6 @@ fn main() {
         Option::Some(deploy_nonce)
     ).unwrap_err();
 
+    println!("test");
     println!("{:?}", deploy_result);
 }

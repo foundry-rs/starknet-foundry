@@ -4,7 +4,6 @@ use starknet::{ClassHash, Felt252TryIntoClassHash};
 use traits::Into;
 
 fn main() {
-    println!("test");
     let max_fee = 99999999999999999;
     let salt = 0x3;
 
@@ -22,5 +21,6 @@ fn main() {
         Option::Some(deploy_nonce)
     ).unwrap_err();
 
+    println!("test");
     println!("{:?}", deploy_result);
 }
