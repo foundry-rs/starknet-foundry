@@ -154,7 +154,10 @@ pub fn build_and_load_artifacts(
     build(package, config).map_err(|e| anyhow!(format!("Failed to build using scarb; {e}")))?;
 
     let metadata = get_scarb_metadata_with_deps(&config.scarb_toml_path)?;
-    get_contracts_map(&metadata, &package.id, Some(&config.profile))
+    match &metadata.profiles.contains(&config.profile) {
+        true => get_contracts_map(&metadata, &package.id, Some(&config.profile)),
+        false => get_contracts_map(&metadata, &package.id, None),
+    }
 }
 
 #[cfg(test)]
