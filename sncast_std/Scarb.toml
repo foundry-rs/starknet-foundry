@@ -1,6 +1,6 @@
 [package]
 name = "sncast_std"
-version = "0.17.0"
+version = "0.17.1"
 edition = "2023_11"
 
 [dependencies]
