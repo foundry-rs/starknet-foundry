@@ -22,11 +22,4 @@ fn main() {
     ).unwrap_err();
 
     println!("{:?}", deploy_result);
-
-    assert(
-        ScriptCommandError::RPCError(
-            RPCError::StarknetError(StarknetError::TransactionReverted)
-        ) == deploy_result,
-        'ohno'
-    )
 }

@@ -4,7 +4,7 @@ use starknet::{testing::cheatcode, ContractAddress, ClassHash};
 use core::fmt::{Debug, Display, Error, Formatter};
 
 #[derive(Drop, PartialEq, Serde, Debug)]
-pub struct ContractErrorData {
+pub struct ErrorData {
     msg: ByteArray
 }
 
@@ -17,11 +17,12 @@ pub enum StarknetError {
     ClassAlreadyDeclared,
     InsufficientMaxFee,
     InsufficientAccountBalance,
-    ContractError: ContractErrorData,
+    ContractError: ErrorData,
     InvalidTransactionNonce,
     ContractAddressUnavailableForDeployment,
     ClassNotDeclared,
-    TransactionReverted,
+    TransactionReverted: ErrorData,
+    TransactionRejected
 }
 
 #[derive(Drop, Serde, PartialEq, Debug)]

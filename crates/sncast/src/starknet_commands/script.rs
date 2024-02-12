@@ -24,7 +24,7 @@ use clap::command;
 use clap::Args;
 use conversions::byte_array::ByteArray;
 use conversions::{FromConv, IntoConv};
-use itertools::{chain, Itertools};
+use itertools::{chain};
 use runtime::starknet::context::{build_context, BlockInfo};
 use runtime::starknet::state::DictStateReader;
 use runtime::utils::BufferReader;
@@ -42,11 +42,12 @@ use sncast::response::structs::ScriptResponse;
 use starknet::accounts::Account;
 use starknet::core::types::{BlockId, BlockTag::Pending, FieldElement};
 use starknet::core::types::{
-    ContractErrorData, FromByteArrayError, StarknetError as RPCStarknetError,
+    StarknetError as RPCStarknetError,
 };
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::{JsonRpcClient, ProviderError};
 use tokio::runtime::Runtime;
+use sncast::{ErrorData, TransactionError};
 
 type ScriptStarknetContractArtifacts = StarknetContractArtifacts;
 
@@ -70,36 +71,18 @@ enum StarknetError {
     ClassAlreadyDeclared,
     InsufficientMaxFee,
     InsufficientAccountBalance,
-    ContractError(ContractErrorData),
+    ContractError(ErrorData),
     InvalidTransactionNonce,
     ContractAddressUnavailableForDeployment,
     ClassNotDeclared,
-    TransactionReverted,
+    TransactionReverted(ErrorData),
+    TransactionRejected,
 }
 
 fn sn_command_error_to_script_command_error(err: StarknetCommandError) -> ScriptCommandError {
     dbg!(&err);
     match err {
         StarknetCommandError::Unhandleable(err) => {
-            let err_msg = err.to_string(); // TODO: Transaction reverted
-            if err_msg.contains("Requested ContractAddress(PatriciaKey(StarkFelt")
-                && err_msg.contains("is unavailable for deployment")
-            {
-                return ScriptCommandError::RPCError(RPCError::StarknetError(
-                    StarknetError::ContractAddressUnavailableForDeployment,
-                ));
-            }
-            if err_msg.contains("Class with hash ClassHash(") && err_msg.contains("is not declared")
-            {
-                return ScriptCommandError::RPCError(RPCError::StarknetError(
-                    StarknetError::ClassNotDeclared,
-                ));
-            }
-            if err_msg.contains("Transaction has been reverted =") {
-                return ScriptCommandError::RPCError(RPCError::StarknetError(
-                    StarknetError::TransactionReverted,
-                ));
-            }
             panic!("{}", err)
         }
         StarknetCommandError::ContractArtifactsNotFound(_) => {
@@ -123,7 +106,7 @@ fn sn_command_error_to_script_command_error(err: StarknetCommandError) -> Script
                         RPCStarknetError::InvalidTransactionNonce => {
                             StarknetError::InvalidTransactionNonce
                         }
-                        RPCStarknetError::ContractError(err) => StarknetError::ContractError(err),
+                        RPCStarknetError::ContractError(data) => StarknetError::ContractError(data.into()),
                         _ => StarknetError::UnknownError,
                     };
                     RPCError::StarknetError(res)
@@ -141,6 +124,16 @@ fn sn_command_error_to_script_command_error(err: StarknetCommandError) -> Script
                 _ => RPCError::UnknownError,
             };
             ScriptCommandError::RPCError(res)
+        }
+        StarknetCommandError::TransactionError(err) => {
+            match err {
+                TransactionError::Rejected => {
+                    ScriptCommandError::RPCError(RPCError::StarknetError(StarknetError::TransactionRejected))
+                }
+                TransactionError::Reverted(data) => {
+                    ScriptCommandError::RPCError(RPCError::StarknetError(StarknetError::TransactionReverted(data)))
+                }
+            }
         }
     }
 }
@@ -164,9 +157,9 @@ fn serialize_script_command_err(err: ScriptCommandError) -> Vec<Felt252> {
                         StarknetError::ClassAlreadyDeclared => res.push(Felt252::from(4)),
                         StarknetError::InsufficientMaxFee => res.push(Felt252::from(5)),
                         StarknetError::InsufficientAccountBalance => res.push(Felt252::from(6)),
-                        StarknetError::ContractError(data) => {
+                        StarknetError::ContractError(err_data) => {
                             res.push(Felt252::from(7));
-                            let bytearray = ByteArray::from(data.revert_error).serialize();
+                            let bytearray = ByteArray::from(err_data.data).serialize();
                             res.extend(bytearray)
                         }
                         StarknetError::InvalidTransactionNonce => res.push(Felt252::from(8)),
@@ -174,7 +167,12 @@ fn serialize_script_command_err(err: ScriptCommandError) -> Vec<Felt252> {
                             res.push(Felt252::from(9));
                         }
                         StarknetError::ClassNotDeclared => res.push(Felt252::from(10)),
-                        StarknetError::TransactionReverted => res.push(Felt252::from(11)),
+                        StarknetError::TransactionReverted(err_data) => {
+                            res.push(Felt252::from(11));
+                            let bytearray = ByteArray::from(err_data.data).serialize();
+                            res.extend(bytearray)
+                        },
+                        StarknetError::TransactionRejected => res.push(Felt252::from(12)),
                     }
                 }
             }

@@ -46,7 +46,7 @@ async fn test_call_invalid_entry_point() {
     snapbox.assert().success().stdout_matches(indoc! {r#"
         ...
         test
-        ScriptCommandError::RPCError(RPCError::StarknetError(StarknetError::ContractError(ContractErrorData { msg: "Entry point EntryPointSelector(StarkFelt([..])) not found in contract." })))
+        ScriptCommandError::RPCError(RPCError::StarknetError(StarknetError::ContractError(ErrorData { msg: "Entry point EntryPointSelector(StarkFelt([..])) not found in contract." })))
         command: script
         status: success
     "#});
@@ -79,10 +79,10 @@ async fn test_call_invalid_calldata() {
     snapbox.assert().success().stdout_matches(indoc! {r#"
         ...
         test
-        ScriptCommandError::RPCError(RPCError::StarknetError(StarknetError::ContractError(ContractErrorData { msg: "Error at pc=0:1401:
+        ScriptCommandError::RPCError(RPCError::StarknetError(StarknetError::ContractError(ErrorData { msg: "Error at pc=0:1401:
         An ASSERT_EQ instruction failed: 5:2 != 5:5.
         " })))
-        ScriptCommandError::RPCError(RPCError::StarknetError(StarknetError::ContractError(ContractErrorData { msg: "Error at pc=0:1401:
+        ScriptCommandError::RPCError(RPCError::StarknetError(StarknetError::ContractError(ErrorData { msg: "Error at pc=0:1401:
         An ASSERT_EQ instruction failed: 5:2 != 5:1.
         " })))
         command: script

@@ -5,19 +5,14 @@ use rand::rngs::OsRng;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use starknet::core::types::{
-    BlockId,
-    BlockTag::{Latest, Pending},
-    FieldElement,
-    StarknetError::{
-        BlockNotFound, ClassAlreadyDeclared, ClassHashNotFound, CompilationFailed,
-        CompiledClassHashMismatch, ContractClassSizeIsTooLarge, ContractError, ContractNotFound,
-        DuplicateTx, FailedToReceiveTransaction, InsufficientAccountBalance, InsufficientMaxFee,
-        InvalidTransactionIndex, InvalidTransactionNonce, NonAccount, TransactionExecutionError,
-        TransactionHashNotFound, UnsupportedContractClassVersion, UnsupportedTxVersion,
-        ValidationFailure,
-    },
-};
+use starknet::core::types::{BlockId, BlockTag::{Latest, Pending}, ContractErrorData, FieldElement, StarknetError::{
+    BlockNotFound, ClassAlreadyDeclared, ClassHashNotFound, CompilationFailed,
+    CompiledClassHashMismatch, ContractClassSizeIsTooLarge, ContractError, ContractNotFound,
+    DuplicateTx, FailedToReceiveTransaction, InsufficientAccountBalance, InsufficientMaxFee,
+    InvalidTransactionIndex, InvalidTransactionNonce, NonAccount, TransactionExecutionError,
+    TransactionHashNotFound, UnsupportedContractClassVersion, UnsupportedTxVersion,
+    ValidationFailure,
+}};
 use starknet::core::utils::UdcUniqueness::{NotUnique, Unique};
 use starknet::core::utils::{UdcUniqueSettings, UdcUniqueness};
 use starknet::{
@@ -267,22 +262,67 @@ pub fn get_block_id(value: &str) -> Result<BlockId> {
     }
 }
 
+#[derive(Debug)]
+pub struct ErrorData {
+    pub data: String
+}
+
+impl From<ContractErrorData> for ErrorData {
+    fn from(value: ContractErrorData) -> Self {
+        ErrorData { data: value.revert_error }
+    }
+}
+
+#[derive(Debug)]
+pub enum TransactionError {
+    Rejected,
+    Reverted(ErrorData),
+}
+
+#[derive(Debug)]
+pub enum WaitForTransactionError {
+    TransactionError(TransactionError),
+    Other(Error)
+}
+
+impl From<Error> for WaitForTransactionError {
+    fn from(value: Error) -> Self {
+        WaitForTransactionError::Other(value)
+    }
+}
+
+impl From<WaitForTransactionError> for Error {
+    fn from(value: WaitForTransactionError) -> Self {
+        match value {
+            WaitForTransactionError::Other(error) => error,
+            WaitForTransactionError::TransactionError(error) => match error {
+                TransactionError::Rejected => {
+                    anyhow!("Transaction has been rejected")
+                }
+                TransactionError::Reverted(ErrorData {data: reason}) => {
+                    anyhow!("Transaction has been reverted = {reason}")
+                }
+            }
+        }
+    }
+}
+
 pub async fn wait_for_tx(
     provider: &JsonRpcClient<HttpTransport>,
     tx_hash: FieldElement,
     timeout: u16,
     retry_interval: u8,
-) -> Result<&str> {
+) -> Result<&str, WaitForTransactionError> {
     println!("Transaction hash = {tx_hash:#x}");
 
     if retry_interval == 0 || timeout == 0 || u16::from(retry_interval) > timeout {
-        return Err(anyhow!("Invalid values for retry_interval and/or timeout!"));
+        return Err(WaitForTransactionError::Other(anyhow!("Invalid values for retry_interval and/or timeout!")));
     }
     let retries = timeout / u16::from(retry_interval);
     for i in (1..retries).rev() {
         match provider.get_transaction_status(tx_hash).await {
             Ok(starknet::core::types::TransactionStatus::Rejected) => {
-                return Err(anyhow!("Transaction has been rejected"));
+                return Err(WaitForTransactionError::Other(anyhow!("Transaction has been rejected")));
             }
             Ok(
                 starknet::core::types::TransactionStatus::AcceptedOnL2(execution_status)
@@ -300,26 +340,26 @@ pub async fn wait_for_tx(
                 let remaining_time = i * u16::from(retry_interval);
                 println!("Waiting for transaction to be accepted ({i} retries / {remaining_time}s left until timeout)");
             }
-            Err(err) => return Err(err.into()),
+            Err(err) => return Err(WaitForTransactionError::Other(err.into())),
         };
 
         sleep(Duration::from_secs(retry_interval.into()));
     }
 
-    Err(anyhow!(
+    Err(WaitForTransactionError::Other(anyhow!(
         "Failed to get transaction with hash = {tx_hash:#x}; Transaction rejected, not received or sncast timed out"
-    ))
+    )))
 }
 
 async fn get_revert_reason(
     provider: &JsonRpcClient<HttpTransport>,
     tx_hash: FieldElement,
-) -> Result<&str> {
-    let receipt = provider.get_transaction_receipt(tx_hash).await?;
+) -> Result<&str, WaitForTransactionError> {
+    let receipt = provider.get_transaction_receipt(tx_hash).await.context("Unexpected provider error")?;
 
     if let starknet::core::types::ExecutionResult::Reverted { reason } = receipt.execution_result()
     {
-        Err(anyhow!("Transaction has been reverted = {reason}"))
+        Err(WaitForTransactionError::TransactionError(TransactionError::Reverted(ErrorData {data: reason.clone() })))
     } else {
         unreachable!();
     }
@@ -380,7 +420,7 @@ pub async fn handle_wait_for_tx<T>(
     transaction_hash: FieldElement,
     return_value: T,
     wait_config: WaitForTx,
-) -> Result<T> {
+) -> Result<T, WaitForTransactionError> {
     if wait_config.wait {
         return match wait_for_tx(
             provider,
@@ -391,7 +431,7 @@ pub async fn handle_wait_for_tx<T>(
         .await
         {
             Ok(_) => Ok(return_value),
-            Err(message) => Err(anyhow!(message)),
+            Err(error) => Err(error),
         };
     }
 

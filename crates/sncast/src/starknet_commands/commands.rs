@@ -9,11 +9,13 @@ use starknet::core::types::StarknetError::{
 };
 use starknet::providers::ProviderError;
 use starknet::providers::ProviderError::StarknetError;
+use sncast::{ErrorData, TransactionError, WaitForTransactionError};
 
 #[derive(Debug)]
 pub enum StarknetCommandError {
     Unhandleable(anyhow::Error),
     ContractArtifactsNotFound(ContractArtifactsNotFoundData),
+    TransactionError(TransactionError),
     Handleable(ProviderError),
 }
 
@@ -25,6 +27,15 @@ pub struct ContractArtifactsNotFoundData {
 impl From<anyhow::Error> for StarknetCommandError {
     fn from(value: anyhow::Error) -> Self {
         StarknetCommandError::Unhandleable(value)
+    }
+}
+
+impl From<WaitForTransactionError> for StarknetCommandError {
+    fn from(value: WaitForTransactionError) -> Self {
+        match value {
+            WaitForTransactionError::TransactionError(error) => StarknetCommandError::TransactionError(error),
+            WaitForTransactionError::Other(error) => StarknetCommandError::Unhandleable(error),
+        }
     }
 }
 
@@ -87,5 +98,9 @@ pub fn handle_starknet_command_error(error: StarknetCommandError) -> anyhow::Err
             }
             _ => anyhow::anyhow!("Unknown RPC error"),
         },
+        StarknetCommandError::TransactionError(error) => match error {
+            TransactionError::Rejected => anyhow::anyhow!("Transaction has been rejected"),
+            TransactionError::Reverted( ErrorData { data: reason } ) => anyhow::anyhow!("Transaction has been reverted = {reason}"),
+        }
     }
 }
