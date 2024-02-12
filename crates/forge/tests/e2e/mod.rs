@@ -12,4 +12,5 @@ mod io_operations;
 mod running;
 mod trace;
 mod trace_data;
+mod trace_resources;
 mod workspaces;
