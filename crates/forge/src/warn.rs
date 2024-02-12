@@ -97,7 +97,7 @@ mod tests {
     };
     use axum::{http::StatusCode, routing::post, Json, Router};
     use cairo_lang_sierra::program::Program;
-    use forge_runner::expected_result::ExpectedTestResult;
+    use forge_runner::{compiled_runnable::TestDetails, expected_result::ExpectedTestResult};
     use gag::BufferRedirect;
     use indoc::indoc;
     use serde_json::{json, Value};
@@ -140,6 +140,7 @@ mod tests {
                     block_id_type: String::new(),
                     block_id_value: String::new(),
                 })),
+                test_details: TestDetails::default(),
             }],
         })
     }

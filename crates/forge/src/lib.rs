@@ -70,6 +70,7 @@ async fn to_runnable(
             expected_result: case.expected_result,
             fork_config,
             fuzzer_config: case.fuzzer_config,
+            test_details: case.test_details,
         });
     }
 
@@ -175,8 +176,8 @@ pub async fn run(
 mod tests {
     use super::*;
     use crate::compiled_raw::{CompiledTestCrateRaw, CrateLocation, TestCaseRaw};
-    use cairo_lang_sierra::program::Program;
-    use forge_runner::expected_result::ExpectedTestResult;
+    use cairo_lang_sierra::{ids::GenericTypeId, program::Program};
+    use forge_runner::{compiled_runnable::TestDetails, expected_result::ExpectedTestResult};
 
     #[tokio::test]
     async fn to_runnable_unparsable_url() {
@@ -198,6 +199,18 @@ mod tests {
                     block_id_value: "Latest".to_string(),
                 })),
                 fuzzer_config: None,
+                test_details: TestDetails {
+                    entry_point_offset: 100,
+                    parameter_types: vec![
+                        (GenericTypeId("RangeCheck".into()), 1),
+                        (GenericTypeId("GasBuiltin".into()), 1),
+                    ],
+                    return_types: vec![
+                        (GenericTypeId("RangeCheck".into()), 1),
+                        (GenericTypeId("GasBuiltin".into()), 1),
+                        (GenericTypeId("Enum".into()), 3),
+                    ],
+                },
             }],
             tests_location: CrateLocation::Lib,
         };
@@ -225,6 +238,18 @@ mod tests {
                 expected_result: ExpectedTestResult::Success,
                 fork_config: Some(RawForkConfig::Id("non_existent".to_string())),
                 fuzzer_config: None,
+                test_details: TestDetails {
+                    entry_point_offset: 100,
+                    parameter_types: vec![
+                        (GenericTypeId("RangeCheck".into()), 1),
+                        (GenericTypeId("GasBuiltin".into()), 1),
+                    ],
+                    return_types: vec![
+                        (GenericTypeId("RangeCheck".into()), 1),
+                        (GenericTypeId("GasBuiltin".into()), 1),
+                        (GenericTypeId("Enum".into()), 3),
+                    ],
+                },
             }],
             tests_location: CrateLocation::Lib,
         };
