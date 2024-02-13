@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-- dependency on [universal-sierra-compiler](https://github.com/software-mansion/universal-sierra-compiler) binary
+- dependency on the [universal-sierra-compiler](https://github.com/software-mansion/universal-sierra-compiler) binary, which will allow forge to be independent of sierra version
 
 ## [0.17.1] - 2024-02-12
 
