@@ -1,4 +1,4 @@
-use crate::state::{start_cheat, stop_cheat, CheatTarget};
+use crate::state::{start_cheat, stop_cheat, CheatSpan, CheatTarget};
 use crate::CheatnetState;
 use cairo_felt::Felt252;
 
@@ -27,6 +27,7 @@ impl CheatnetState {
             &mut self.spoofed_contracts,
             target,
             tx_info_mock,
+            CheatSpan::Indefinite,
         );
     }
 
