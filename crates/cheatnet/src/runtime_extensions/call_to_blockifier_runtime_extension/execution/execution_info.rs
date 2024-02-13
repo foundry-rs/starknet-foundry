@@ -13,7 +13,7 @@ use crate::{
 };
 
 fn get_cheated_block_info_ptr(
-    cheatnet_state: &CheatnetState,
+    cheatnet_state: &mut CheatnetState,
     vm: &mut VirtualMachine,
     original_block_info: &[MaybeRelocatable],
     contract_address: &ContractAddress,
@@ -23,15 +23,21 @@ fn get_cheated_block_info_ptr(
 
     let mut new_block_info = original_block_info.to_owned();
 
-    if let Some(rolled_number) = cheatnet_state.get_cheated_block_number(contract_address) {
+    if let Some(rolled_number) =
+        cheatnet_state.get_and_update_cheated_block_number(contract_address)
+    {
         new_block_info[0] = MaybeRelocatable::Int(rolled_number);
     };
 
-    if let Some(warped_timestamp) = cheatnet_state.get_cheated_block_timestamp(contract_address) {
+    if let Some(warped_timestamp) =
+        cheatnet_state.get_and_update_cheated_block_timestamp(contract_address)
+    {
         new_block_info[1] = MaybeRelocatable::Int(warped_timestamp);
     }
 
-    if let Some(elected_address) = cheatnet_state.get_cheated_sequencer_address(contract_address) {
+    if let Some(elected_address) =
+        cheatnet_state.get_and_update_cheated_sequencer_address(contract_address)
+    {
         new_block_info[2] = MaybeRelocatable::Int(Felt252::from_(elected_address));
     };
 
@@ -41,7 +47,7 @@ fn get_cheated_block_info_ptr(
 }
 
 fn get_cheated_tx_info_ptr(
-    cheatnet_state: &CheatnetState,
+    cheatnet_state: &mut CheatnetState,
     vm: &mut VirtualMachine,
     original_tx_info: &[MaybeRelocatable],
     contract_address: &ContractAddress,
@@ -52,7 +58,7 @@ fn get_cheated_tx_info_ptr(
     let mut new_tx_info = original_tx_info.to_owned();
 
     let tx_info_mock = cheatnet_state
-        .get_cheated_tx_info(contract_address)
+        .get_and_update_cheated_tx_info(contract_address)
         .unwrap();
 
     let TxInfoMock {
@@ -129,7 +135,7 @@ fn get_cheated_tx_info_ptr(
 }
 
 pub fn get_cheated_exec_info_ptr(
-    cheatnet_state: &CheatnetState,
+    cheatnet_state: &mut CheatnetState,
     vm: &mut VirtualMachine,
     execution_info_ptr: Relocatable,
     contract_address: &ContractAddress,
@@ -172,7 +178,7 @@ pub fn get_cheated_exec_info_ptr(
     if cheatnet_state.address_is_pranked(contract_address) {
         new_exec_info[2] = MaybeRelocatable::Int(stark_felt_to_felt(
             *cheatnet_state
-                .get_cheated_caller_address(contract_address)
+                .get_and_update_cheated_caller_address(contract_address)
                 .expect("No caller address value found for the pranked contract address")
                 .0
                 .key(),

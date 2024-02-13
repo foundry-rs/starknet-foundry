@@ -238,7 +238,7 @@ pub fn get_caller_address(
     Ok(GetContractAddressResponse {
         address: syscall_handler
             .cheatnet_state
-            .get_cheated_caller_address(&contract_address)
+            .get_and_update_cheated_caller_address(&contract_address)
             .unwrap(),
     })
 }
@@ -252,7 +252,7 @@ pub fn get_block_number(
         block_number: BlockNumber(
             syscall_handler
                 .cheatnet_state
-                .get_cheated_block_number(&contract_address)
+                .get_and_update_cheated_block_number(&contract_address)
                 .unwrap()
                 .to_u64()
                 .unwrap(),
@@ -269,7 +269,7 @@ pub fn get_block_timestamp(
         block_timestamp: BlockTimestamp(
             syscall_handler
                 .cheatnet_state
-                .get_cheated_block_timestamp(&contract_address)
+                .get_and_update_cheated_block_timestamp(&contract_address)
                 .unwrap()
                 .to_u64()
                 .unwrap(),
@@ -290,7 +290,7 @@ pub fn get_sequencer_address(
     Ok(GetSequencerAddressResponse {
         address: cheatable_syscall_handler
             .cheatnet_state
-            .get_cheated_sequencer_address(&contract_address)
+            .get_and_update_cheated_sequencer_address(&contract_address)
             .unwrap(),
     })
 }
