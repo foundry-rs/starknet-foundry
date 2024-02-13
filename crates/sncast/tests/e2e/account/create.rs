@@ -310,8 +310,8 @@ pub async fn test_happy_case_keystore_add_profile() {
     assert!(stdout_str
         .contains("add_profile: Profile with_keystore successfully added to snfoundry.toml"));
 
-    let contents =
-        fs::read_to_string(temp_dir.path().join(account_path)).expect("Unable to read created file");
+    let contents = fs::read_to_string(temp_dir.path().join(account_path))
+        .expect("Unable to read created file");
     assert!(contents.contains("\"deployment\": {"));
     assert!(contents.contains("\"variant\": {"));
     assert!(contents.contains("\"version\": 1"));
