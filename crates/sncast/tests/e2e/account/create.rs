@@ -99,7 +99,7 @@ pub async fn test_happy_case_generate_salt() {
 
 #[tokio::test]
 pub async fn test_happy_case_add_profile() {
-    let tempdir = TempDir::new().expect("Failed to create a temporary directory");
+    let temp_dir = TempDir::new().expect("Failed to create a temporary directory");
     let accounts_file = "./accounts.json";
 
     let args = vec![
@@ -118,7 +118,7 @@ pub async fn test_happy_case_add_profile() {
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(tempdir.path())
+        .current_dir(temp_dir.path())
         .args(args);
     let bdg = snapbox.assert();
     let out = bdg.get_output();
@@ -129,7 +129,7 @@ pub async fn test_happy_case_add_profile() {
         stdout_str.contains("add_profile: Profile my_account successfully added to snfoundry.toml")
     );
 
-    let contents = fs::read_to_string(tempdir.path().join("snfoundry.toml"))
+    let contents = fs::read_to_string(temp_dir.path().join("snfoundry.toml"))
         .expect("Unable to read snfoundry.toml");
     assert!(contents.contains("[sncast.my_account]"));
     assert!(contents.contains("account = \"my_account\""));
@@ -182,7 +182,7 @@ pub async fn test_happy_case_accounts_file_already_exists() {
 
 #[tokio::test]
 pub async fn test_profile_already_exists() {
-    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
+    let temp_dir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
     let accounts_file = "./accounts.json";
 
     let args = vec![
@@ -201,7 +201,7 @@ pub async fn test_profile_already_exists() {
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(tempdir.path())
+        .current_dir(temp_dir.path())
         .args(args);
     let bdg = snapbox.assert();
     let out = bdg.get_output();
@@ -276,7 +276,7 @@ pub async fn test_happy_case_keystore() {
 
 #[tokio::test]
 pub async fn test_happy_case_keystore_add_profile() {
-    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
+    let temp_dir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
     let keystore_path = "my_key.json";
     let account_path = "my_account.json";
     let accounts_file = "accounts.json";
@@ -300,7 +300,7 @@ pub async fn test_happy_case_keystore_add_profile() {
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(tempdir.path())
+        .current_dir(temp_dir.path())
         .args(args);
     let bdg = snapbox.assert().success();
     let out = bdg.get_output();
@@ -311,12 +311,12 @@ pub async fn test_happy_case_keystore_add_profile() {
         .contains("add_profile: Profile with_keystore successfully added to snfoundry.toml"));
 
     let contents =
-        fs::read_to_string(tempdir.path().join(account_path)).expect("Unable to read created file");
+        fs::read_to_string(temp_dir.path().join(account_path)).expect("Unable to read created file");
     assert!(contents.contains("\"deployment\": {"));
     assert!(contents.contains("\"variant\": {"));
     assert!(contents.contains("\"version\": 1"));
 
-    let contents = fs::read_to_string(tempdir.path().join("snfoundry.toml"))
+    let contents = fs::read_to_string(temp_dir.path().join("snfoundry.toml"))
         .expect("Unable to read snfoundry.toml");
     assert!(contents.contains(r"[sncast.with_keystore]"));
     assert!(contents.contains(r#"account = "my_account.json""#));
