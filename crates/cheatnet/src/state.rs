@@ -26,6 +26,7 @@ use starknet_api::{
 use std::cell::{Ref, RefCell};
 use std::collections::HashMap;
 use std::hash::BuildHasher;
+use std::ops::Add;
 use std::rc::Rc;
 
 // Specifies which contracts to target
@@ -34,6 +35,24 @@ pub enum CheatTarget {
     All,
     One(ContractAddress),
     Multiple(Vec<ContractAddress>),
+}
+
+// Specifies the duration of the cheat
+#[derive(Clone)]
+pub enum CheatSpan {
+    Indefinite,
+    Number(usize),
+}
+
+impl Add<usize> for CheatSpan {
+    type Output = Self;
+
+    fn add(self, rhs: usize) -> Self::Output {
+        match self {
+            CheatSpan::Indefinite => CheatSpan::Indefinite,
+            CheatSpan::Number(value) => CheatSpan::Number(value + rhs),
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -121,8 +140,19 @@ impl StateReader for ExtendedStateReader {
 }
 
 pub enum CheatStatus<T> {
-    Cheated(T),
+    Cheated(T, CheatSpan),
     Uncheated,
+}
+
+impl<T> CheatStatus<T> {
+    pub fn decrement_cheat_span(&mut self) {
+        if let CheatStatus::Cheated(_, CheatSpan::Number(n)) = self {
+            *n -= 1;
+            if *n == 0 {
+                *self = CheatStatus::Uncheated;
+            }
+        }
+    }
 }
 
 /// Tree structure representing trace of a call.
@@ -186,16 +216,16 @@ pub struct TraceData {
 
 pub struct CheatnetState {
     pub rolled_contracts: HashMap<ContractAddress, CheatStatus<Felt252>>,
-    pub global_roll: Option<Felt252>,
+    pub global_roll: Option<(Felt252, CheatSpan)>,
     pub pranked_contracts: HashMap<ContractAddress, CheatStatus<ContractAddress>>,
-    pub global_prank: Option<ContractAddress>,
+    pub global_prank: Option<(ContractAddress, CheatSpan)>,
     pub warped_contracts: HashMap<ContractAddress, CheatStatus<Felt252>>,
-    pub global_warp: Option<Felt252>,
+    pub global_warp: Option<(Felt252, CheatSpan)>,
     pub elected_contracts: HashMap<ContractAddress, CheatStatus<ContractAddress>>,
-    pub global_elect: Option<ContractAddress>,
+    pub global_elect: Option<(ContractAddress, CheatSpan)>,
     pub mocked_functions: HashMap<ContractAddress, HashMap<EntryPointSelector, Vec<StarkFelt>>>,
     pub spoofed_contracts: HashMap<ContractAddress, CheatStatus<TxInfoMock>>,
-    pub global_spoof: Option<TxInfoMock>,
+    pub global_spoof: Option<(TxInfoMock, CheatSpan)>,
     pub spies: Vec<SpyTarget>,
     pub detected_events: Vec<Event>,
     pub deploy_salt_base: u32,
@@ -274,9 +304,23 @@ impl CheatnetState {
         get_cheat_for_contract(&self.global_roll, &self.rolled_contracts, address)
     }
 
+    pub fn get_and_update_cheated_block_number(
+        &mut self,
+        address: &ContractAddress,
+    ) -> Option<Felt252> {
+        get_and_update_cheat_for_contract(&self.global_roll, &mut self.rolled_contracts, address)
+    }
+
     #[must_use]
     pub fn get_cheated_block_timestamp(&self, address: &ContractAddress) -> Option<Felt252> {
         get_cheat_for_contract(&self.global_warp, &self.warped_contracts, address)
+    }
+
+    pub fn get_and_update_cheated_block_timestamp(
+        &mut self,
+        address: &ContractAddress,
+    ) -> Option<Felt252> {
+        get_and_update_cheat_for_contract(&self.global_warp, &mut self.warped_contracts, address)
     }
 
     #[must_use]
@@ -287,14 +331,35 @@ impl CheatnetState {
         get_cheat_for_contract(&self.global_elect, &self.elected_contracts, address)
     }
 
+    pub fn get_and_update_cheated_sequencer_address(
+        &mut self,
+        address: &ContractAddress,
+    ) -> Option<ContractAddress> {
+        get_and_update_cheat_for_contract(&self.global_elect, &mut self.elected_contracts, address)
+    }
+
     #[must_use]
     pub fn get_cheated_tx_info(&self, address: &ContractAddress) -> Option<TxInfoMock> {
         get_cheat_for_contract(&self.global_spoof, &self.spoofed_contracts, address)
     }
 
+    pub fn get_and_update_cheated_tx_info(
+        &mut self,
+        address: &ContractAddress,
+    ) -> Option<TxInfoMock> {
+        get_and_update_cheat_for_contract(&self.global_spoof, &mut self.spoofed_contracts, address)
+    }
+
     #[must_use]
     pub fn get_cheated_caller_address(&self, address: &ContractAddress) -> Option<ContractAddress> {
         get_cheat_for_contract(&self.global_prank, &self.pranked_contracts, address)
+    }
+
+    pub fn get_and_update_cheated_caller_address(
+        &mut self,
+        address: &ContractAddress,
+    ) -> Option<ContractAddress> {
+        get_and_update_cheat_for_contract(&self.global_prank, &mut self.pranked_contracts, address)
     }
 }
 
@@ -331,48 +396,75 @@ impl TraceData {
     }
 }
 
+fn get_and_update_cheat_for_contract<T: Clone>(
+    global_cheat: &Option<(T, CheatSpan)>,
+    contract_cheats: &mut HashMap<ContractAddress, CheatStatus<T>>,
+    contract: &ContractAddress,
+) -> Option<T> {
+    let cheated_value = get_cheat_for_contract(global_cheat, contract_cheats, contract);
+    update_cheat_for_contract(global_cheat, contract_cheats, contract);
+    cheated_value
+}
+
 fn get_cheat_for_contract<T: Clone>(
-    global_cheat: &Option<T>,
+    global_cheat: &Option<(T, CheatSpan)>,
     contract_cheats: &HashMap<ContractAddress, CheatStatus<T>>,
     contract: &ContractAddress,
 ) -> Option<T> {
-    if let Some(cheated_contract) = contract_cheats.get(contract) {
-        match cheated_contract {
-            CheatStatus::Cheated(contract_cheat) => Some(contract_cheat.clone()),
+    if let Some(cheat_status) = contract_cheats.get(contract) {
+        match cheat_status {
+            CheatStatus::Cheated(contract_cheat, _) => Some(contract_cheat.clone()),
             CheatStatus::Uncheated => None,
         }
     } else {
-        global_cheat.clone()
+        global_cheat.as_ref().map(|(cheat, _)| cheat.clone())
+    }
+}
+
+fn update_cheat_for_contract<T: Clone>(
+    global_cheat: &Option<(T, CheatSpan)>,
+    contract_cheats: &mut HashMap<ContractAddress, CheatStatus<T>>,
+    contract: &ContractAddress,
+) {
+    if let Some(cheat_status) = contract_cheats.get_mut(contract) {
+        cheat_status.decrement_cheat_span();
+    } else if let Some((cheat, span)) = global_cheat {
+        let mut cheat_status = CheatStatus::Cheated(cheat.clone(), span.clone());
+        cheat_status.decrement_cheat_span();
+        contract_cheats.insert(*contract, cheat_status);
     }
 }
 
 pub fn start_cheat<T: Clone, S: BuildHasher>(
-    global_cheat: &mut Option<T>,
+    global_cheat: &mut Option<(T, CheatSpan)>,
     contract_cheats: &mut HashMap<ContractAddress, CheatStatus<T>, S>,
     target: CheatTarget,
     cheat_value: T,
+    span: CheatSpan,
 ) {
     match target {
         CheatTarget::All => {
-            *global_cheat = Some(cheat_value);
+            *global_cheat = Some((cheat_value, span));
             // Clear individual cheats so that `All`
             // contracts are affected by this cheat
             contract_cheats.clear();
         }
         CheatTarget::One(contract_address) => {
-            (*contract_cheats).insert(contract_address, CheatStatus::Cheated(cheat_value));
+            (*contract_cheats).insert(contract_address, CheatStatus::Cheated(cheat_value, span));
         }
         CheatTarget::Multiple(contract_addresses) => {
             for contract_address in contract_addresses {
-                (*contract_cheats)
-                    .insert(contract_address, CheatStatus::Cheated(cheat_value.clone()));
+                (*contract_cheats).insert(
+                    contract_address,
+                    CheatStatus::Cheated(cheat_value.clone(), span.clone()),
+                );
             }
         }
-    }
+    };
 }
 
 pub fn stop_cheat<T, S: BuildHasher>(
-    global_cheat: &mut Option<T>,
+    global_cheat: &mut Option<(T, CheatSpan)>,
     contract_cheats: &mut HashMap<ContractAddress, CheatStatus<T>, S>,
     target: CheatTarget,
 ) {
