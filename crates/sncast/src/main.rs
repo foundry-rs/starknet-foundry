@@ -35,10 +35,6 @@ struct Cli {
     #[clap(short, long)]
     profile: Option<String>,
 
-    /// Path to Scarb.toml that is to be used; overrides default behaviour of searching for scarb.toml in current or parent directories
-    #[clap(short = 's', long)]
-    path_to_scarb_toml: Option<Utf8PathBuf>,
-
     /// RPC provider url address; overrides url from snfoundry.toml
     #[clap(short = 'u', long = "url")]
     rpc_url: Option<String>,
@@ -121,7 +117,7 @@ fn main() -> Result<()> {
     let runtime = Runtime::new().expect("Failed to instantiate Runtime");
 
     if let Commands::Script(script) = &cli.command {
-        let manifest_path = assert_manifest_path_exists(&cli.path_to_scarb_toml)?;
+        let manifest_path = assert_manifest_path_exists()?;
         let package_metadata = get_package_metadata(&manifest_path, &script.package)?;
 
         let mut config = load_config(&cli.profile, &Some(package_metadata.root.clone()))?;
@@ -186,7 +182,7 @@ async fn run_async_command(
                 config.keystore,
             )
             .await?;
-            let manifest_path = assert_manifest_path_exists(&cli.path_to_scarb_toml)?;
+            let manifest_path = assert_manifest_path_exists()?;
             let package_metadata = get_package_metadata(&manifest_path, &declare.package)?;
             let artifacts = build_and_load_artifacts(
                 &package_metadata,
