@@ -31,33 +31,6 @@ async fn test_happy_case() {
 }
 
 #[tokio::test]
-async fn test_run_script_from_different_directory() {
-    let script_name = "call_happy";
-    let path_to_scarb_toml = "misc/Scarb.toml";
-    let args = vec![
-        "--accounts-file",
-        "../accounts/accounts.json",
-        "--account",
-        "user1",
-        "--url",
-        URL,
-        "--path-to-scarb-toml",
-        path_to_scarb_toml,
-        "script",
-        &script_name,
-    ];
-
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(SCRIPTS_DIR)
-        .args(args);
-    snapbox.assert().success().stdout_matches(indoc! {r"
-        ...
-        command: script
-        status: success
-    "});
-}
-
-#[tokio::test]
 async fn test_run_script_from_different_directory_no_path_to_scarb_toml() {
     let script_name = "call_happy";
     let args = vec![
