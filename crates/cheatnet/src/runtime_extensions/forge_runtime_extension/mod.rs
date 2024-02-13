@@ -278,6 +278,8 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let cheatnet_runtime = &mut extended_runtime.extended_runtime;
                 let syscall_handler = &mut cheatnet_runtime.extended_runtime.hint_handler;
 
+                syscall_handler.increment_syscall_count_by(&DeprecatedSyscallSelector::Deploy, 1);
+
                 handle_deploy_result(deploy(
                     syscall_handler,
                     &mut RuntimeState {
@@ -293,6 +295,8 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let contract_address = reader.read_felt().into_();
                 let cheatnet_runtime = &mut extended_runtime.extended_runtime;
                 let syscall_handler = &mut cheatnet_runtime.extended_runtime.hint_handler;
+
+                syscall_handler.increment_syscall_count_by(&DeprecatedSyscallSelector::Deploy, 1);
 
                 handle_deploy_result(deploy_at(
                     syscall_handler,
