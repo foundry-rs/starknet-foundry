@@ -27,10 +27,18 @@ impl From<&str> for ByteArray {
 
 impl ByteArray {
     #[must_use]
-    pub fn serialize(self) -> Vec<Felt252> {
-        let mut result = Vec::with_capacity(self.words.len() + 4);
+    pub fn serialize_with_magic(self) -> Vec<Felt252> {
+        chain!(
+            [Felt252::from_str_radix(BYTE_ARRAY_MAGIC, 16).unwrap(),],
+            self.serialize().into_iter()
+        )
+        .collect()
+    }
 
-        result.push(Felt252::from_str_radix(BYTE_ARRAY_MAGIC, 16).unwrap());
+    #[must_use]
+    pub fn serialize(self) -> Vec<Felt252> {
+        let mut result = Vec::with_capacity(self.words.len() + 3);
+
         result.push(self.words.len().into());
         result.extend(self.words);
         result.push(self.pending_word);

@@ -1,6 +1,92 @@
+use core::array::ArrayTrait;
 use core::serde::Serde;
 use starknet::{testing::cheatcode, ContractAddress, ClassHash};
 use core::fmt::{Debug, Display, Error, Formatter};
+
+#[derive(Drop, PartialEq, Serde, Debug)]
+pub struct ErrorData {
+    msg: ByteArray
+}
+
+#[derive(Drop, PartialEq, Serde, Debug)]
+pub struct TransactionExecutionErrorData {
+    transaction_index: felt252,
+    execution_error: ByteArray,
+}
+
+#[derive(Drop, Serde, PartialEq, Debug)]
+pub enum StarknetError {
+    /// Failed to write transaction
+    FailedToReceiveTransaction,
+    /// Contract not found
+    ContractNotFound,
+    /// Block not found
+    BlockNotFound,
+    /// Invalid transaction index in a block
+    InvalidTransactionIndex,
+    /// Class hash not found
+    ClassHashNotFound,
+    /// Transaction hash not found
+    TransactionHashNotFound,
+    /// Contract error
+    ContractError: ErrorData,
+    /// Transaction execution error
+    TransactionExecutionError: TransactionExecutionErrorData,
+    /// Class already declared
+    ClassAlreadyDeclared,
+    /// Invalid transaction nonce
+    InvalidTransactionNonce,
+    /// Max fee is smaller than the minimal transaction cost (validation plus fee transfer)
+    InsufficientMaxFee,
+    /// Account balance is smaller than the transaction's max_fee
+    InsufficientAccountBalance,
+    /// Account validation failed
+    ValidationFailure: ErrorData,
+    /// Compilation failed
+    CompilationFailed,
+    /// Contract class size it too large
+    ContractClassSizeIsTooLarge,
+    /// Sender address in not an account contract
+    NonAccount,
+    /// A transaction with the same hash already exists in the mempool
+    DuplicateTx,
+    /// the compiled class hash did not match the one supplied in the transaction
+    CompiledClassHashMismatch,
+    /// the transaction version is not supported
+    UnsupportedTxVersion,
+    /// the contract class version is not supported
+    UnsupportedContractClassVersion,
+    /// An unexpected error occurred
+    UnexpectedError: ErrorData,
+}
+
+#[derive(Drop, Serde, PartialEq, Debug)]
+pub enum ProviderError {
+    StarknetError: StarknetError,
+    RateLimited,
+    UnknownError: ErrorData,
+}
+
+#[derive(Drop, Serde, PartialEq, Debug)]
+pub enum TransactionError {
+    Rejected,
+    Reverted: ErrorData,
+}
+
+#[derive(Drop, Serde, PartialEq, Debug)]
+pub enum WaitForTransactionError {
+    TransactionError: TransactionError,
+    TimedOut,
+    ProviderError: ProviderError,
+}
+
+#[derive(Drop, Serde, PartialEq, Debug)]
+pub enum ScriptCommandError {
+    UnknownError: ErrorData,
+    ContractArtifactsNotFound: ErrorData,
+    WaitForTransactionError: WaitForTransactionError,
+    ProviderError: ProviderError,
+}
 
 pub impl DisplayClassHash of Display<ClassHash> {
     fn fmt(self: @ClassHash, ref f: Formatter) -> Result<(), Error> {
@@ -45,7 +131,7 @@ pub fn call(
     CallResult { data: result_data }
 }
 
-#[derive(Drop, Clone, Debug)]
+#[derive(Drop, Clone, Debug, Serde)]
 pub struct DeclareResult {
     pub class_hash: ClassHash,
     pub transaction_hash: felt252,
@@ -59,7 +145,7 @@ impl DisplayDeclareResult of Display<DeclareResult> {
 
 pub fn declare(
     contract_name: ByteArray, max_fee: Option<felt252>, nonce: Option<felt252>
-) -> DeclareResult {
+) -> Result<DeclareResult, ScriptCommandError> {
     // it's in fact core::byte_array::BYTE_ARRAY_MAGIC but it can't be imported here
     let mut inputs = array![0x46a6158a16a947e5916b2a2ca68501a45e93d7110e81aa2d6438b1c57c879a3];
 
@@ -74,12 +160,14 @@ pub fn declare(
     inputs.append_span(max_fee_serialized.span());
     inputs.append_span(nonce_serialized.span());
 
-    let buf = cheatcode::<'declare'>(inputs.span());
+    let mut buf = cheatcode::<'declare'>(inputs.span());
 
-    let class_hash: ClassHash = (*buf[0]).try_into().expect('Invalid class hash value');
-    let transaction_hash = *buf[1];
+    let mut result_data: Result<DeclareResult, ScriptCommandError> = Serde::<
+        Result<DeclareResult>
+    >::deserialize(ref buf)
+        .expect('declare deserialize failed');
 
-    DeclareResult { class_hash, transaction_hash }
+    result_data
 }
 
 #[derive(Drop, Clone, Debug)]
