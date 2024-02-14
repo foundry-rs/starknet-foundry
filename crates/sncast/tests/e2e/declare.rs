@@ -5,7 +5,6 @@ use crate::helpers::fixtures::{
 };
 use crate::helpers::runner::runner;
 use indoc::indoc;
-use snapbox::cmd::{cargo_bin, Command};
 use sncast::helpers::constants::CONFIG_FILENAME;
 use starknet::core::types::TransactionReceipt::Declare;
 use std::fs;
@@ -31,9 +30,7 @@ async fn test_happy_case() {
         "99999999999999999",
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(contract_path.path())
-        .args(args);
+    let snapbox = runner(&args).current_dir(contract_path.path());
     let output = snapbox.assert().success().get_output().stdout.clone();
 
     let hash = get_transaction_hash(&output);
@@ -64,9 +61,8 @@ async fn test_happy_case_specify_package() {
         "99999999999999999",
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(tempdir.path())
-        .args(args);
+    let snapbox = runner(&args).current_dir(tempdir.path());
+
     let output = snapbox.assert().success().get_output().stdout.clone();
 
     let hash = get_transaction_hash(&output);
@@ -216,9 +212,7 @@ fn test_too_low_max_fee() {
         "1",
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(contract_path.path())
-        .args(args);
+    let snapbox = runner(&args).current_dir(contract_path.path());
 
     snapbox.assert().success().stderr_matches(indoc! {r"
         command: declare
@@ -293,9 +287,7 @@ async fn test_many_packages_default() {
         "99999999999999999",
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(tempdir.path())
-        .args(args);
+    let snapbox = runner(&args).current_dir(tempdir.path());
     snapbox.assert().failure().stderr_matches(indoc! {r"
         ...
         Error: More than one package found in scarb metadata - specify package using --package flag
@@ -324,9 +316,7 @@ async fn test_worskpaces_package_specified_virtual_fibonacci() {
         "99999999999999999",
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(tempdir.path())
-        .args(args);
+    let snapbox = runner(&args).current_dir(tempdir.path());
 
     let output = snapbox.assert().success().get_output().clone();
     let output = output.stdout.clone();
@@ -356,9 +346,7 @@ async fn test_worskpaces_package_no_contract() {
         "99999999999999999",
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(tempdir.path())
-        .args(args);
+    let snapbox = runner(&args).current_dir(tempdir.path());
     snapbox.assert().success().stderr_matches(indoc! {r"
         ...
         command: declare
@@ -390,9 +378,7 @@ async fn test_no_scarb_profile() {
         "99999999999999999",
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(contract_path.path())
-        .args(args);
+    let snapbox = runner(&args).current_dir(contract_path.path());
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
         Warning: Profile profile5 does not exist in scarb, using default 'dev' profile.
