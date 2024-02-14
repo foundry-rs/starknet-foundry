@@ -14,6 +14,7 @@ use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector};
 use starknet_api::deprecated_contract_class::EntryPointType;
 use starknet_api::transaction::Calldata;
 
+use crate::contracts_data::ContractsData;
 use crate::test_case_summary::{Single, TestCaseSummary};
 
 pub const TRACE_DIR: &str = ".snfoundry_trace";
@@ -27,20 +28,21 @@ pub struct ProfilerCallTrace {
     pub nested_calls: Vec<ProfilerCallTrace>,
 }
 
-impl From<CallTrace> for ProfilerCallTrace {
-    fn from(value: CallTrace) -> Self {
+impl ProfilerCallTrace {
+    pub fn from_call_trace(value: CallTrace, contracts_data: &ContractsData) -> Self {
         ProfilerCallTrace {
-            entry_point: ProfilerCallEntryPoint::from(value.entry_point),
+            entry_point: ProfilerCallEntryPoint::from(value.entry_point, contracts_data),
             used_execution_resources: ProfilerExecutionResources::from(
                 value.used_execution_resources,
             ),
             nested_calls: value
                 .nested_calls
                 .into_iter()
-                .map(|c| ProfilerCallTrace::from(c.borrow().clone()))
+                .map(|c| ProfilerCallTrace::from_call_trace(c.borrow().clone(), contracts_data))
                 .collect(),
         }
     }
+
 }
 
 #[derive(Clone, Debug, Default, Eq, PartialEq, Deserialize, Serialize)]
@@ -54,10 +56,15 @@ pub struct ProfilerCallEntryPoint {
     pub caller_address: ContractAddress,
     pub call_type: ProfilerCallType,
     pub initial_gas: u64,
+
+    /// Contract name to display instead of contract address
+    pub contract_name: Option<String>,
+    /// Function name to display instead of entry point selector
+    pub function_name: Option<String>,
 }
 
-impl From<CallEntryPoint> for ProfilerCallEntryPoint {
-    fn from(value: CallEntryPoint) -> Self {
+impl ProfilerCallEntryPoint {
+    fn from(value: CallEntryPoint, contracts_data: &ContractsData) -> Self {
         let CallEntryPoint {
             class_hash,
             code_address,
@@ -70,6 +77,9 @@ impl From<CallEntryPoint> for ProfilerCallEntryPoint {
             initial_gas,
         } = value;
 
+        let contract_name = class_hash.map(|class_hash| contracts_data.class_hashes.get_by_right(&class_hash)).flatten().cloned();
+        let function_name = contracts_data.selectors.get_by_right(&entry_point_selector).cloned();
+
         ProfilerCallEntryPoint {
             class_hash,
             code_address,
@@ -80,6 +90,8 @@ impl From<CallEntryPoint> for ProfilerCallEntryPoint {
             caller_address,
             call_type: call_type.into(),
             initial_gas,
+            contract_name,
+            function_name,
         }
     }
 }

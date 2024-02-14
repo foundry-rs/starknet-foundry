@@ -452,6 +452,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "bimap"
+version = "0.6.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "230c5f1ca6a325a32553f8640d31ac9b49f2411e901e427570154868b46da4f7"
+
+[[package]]
 name = "bincode"
 version = "2.0.0-rc.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2827,6 +2833,7 @@ name = "forge_runner"
 version = "0.17.1"
 dependencies = [
  "anyhow",
+ "bimap",
  "blockifier",
  "cairo-felt 0.9.1",
  "cairo-lang-casm 2.5.0",

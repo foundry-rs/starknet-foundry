@@ -16,12 +16,12 @@ use cairo_lang_sierra_to_casm::metadata::{calc_metadata, MetadataComputationConf
 use cairo_lang_sierra_type_size::get_type_size_map;
 use camino::Utf8PathBuf;
 
+use contracts_data::ContractsData;
 use futures::stream::FuturesUnordered;
 use futures::StreamExt;
 
 use once_cell::sync::Lazy;
 use running::TestDetails;
-use scarb_api::StarknetContractArtifacts;
 use smol_str::SmolStr;
 use trace_data::save_trace_data;
 
@@ -37,6 +37,7 @@ pub mod expected_result;
 pub mod test_case_summary;
 pub mod test_crate_summary;
 pub mod trace_data;
+pub mod contracts_data;
 
 mod fuzzer;
 mod gas;
@@ -95,18 +96,18 @@ impl RunnerConfig {
 #[non_exhaustive]
 #[derive(Debug, Clone)]
 pub struct RunnerParams {
-    contracts: HashMap<String, StarknetContractArtifacts>,
+    contracts_data: ContractsData,
     environment_variables: HashMap<String, String>,
 }
 
 impl RunnerParams {
     #[must_use]
     pub fn new(
-        contracts: HashMap<String, StarknetContractArtifacts>,
+        contracts_data: ContractsData,
         environment_variables: HashMap<String, String>,
     ) -> Self {
         Self {
-            contracts,
+            contracts_data,
             environment_variables,
         }
     }
@@ -233,6 +234,7 @@ pub async fn run_tests_from_crate(
         let case = Arc::new(case.clone());
         let args: Vec<ConcreteTypeId> = args.into_iter().cloned().collect();
         let test_details = Arc::new(build_test_details(&case.name, sierra_program));
+
 
         tasks.push(choose_test_strategy_and_run(
             args,
