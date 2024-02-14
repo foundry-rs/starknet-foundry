@@ -4,7 +4,6 @@ use crate::helpers::fixtures::{
 };
 use crate::helpers::runner::runner;
 use indoc::indoc;
-use snapbox::cmd::{cargo_bin, Command};
 use sncast::helpers::configuration::copy_config_to_tempdir;
 use sncast::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
 use std::env;
@@ -235,15 +234,11 @@ async fn test_keystore_undeployed_account() {
     ];
 
     env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(contract_path.path())
-        .args(args);
+    let snapbox = runner(&args).current_dir(contract_path.path());
 
     snapbox.assert().stderr_matches(indoc! {r"
         Error: [..] make sure the account is deployed
     "});
-
-    fs::remove_dir_all(contract_path).unwrap();
 }
 
 #[tokio::test]
@@ -265,9 +260,7 @@ async fn test_keystore_declare() {
     ];
 
     env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(contract_path.path())
-        .args(args);
+    let snapbox = runner(&args).current_dir(contract_path.path());
 
     assert!(snapbox.assert().success().get_output().stderr.is_empty());
 }
