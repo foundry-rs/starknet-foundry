@@ -30,9 +30,7 @@ pub async fn test_happy_case() {
         DEVNET_OZ_CLASS_HASH,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(temp_dir.path())
-        .args(args);
+    let snapbox = runner(&args).current_dir(temp_dir.path());
     let bdg = snapbox.assert();
     let out = bdg.get_output();
 
@@ -74,9 +72,7 @@ pub async fn test_happy_case_generate_salt() {
         DEVNET_OZ_CLASS_HASH,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(temp_dir.path())
-        .args(args);
+    let snapbox = runner(&args).current_dir(temp_dir.path());
     let bdg = snapbox.assert();
     let out = bdg.get_output();
 
@@ -117,9 +113,7 @@ pub async fn test_happy_case_add_profile() {
         DEVNET_OZ_CLASS_HASH,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(temp_dir.path())
-        .args(args);
+    let snapbox = runner(&args).current_dir(temp_dir.path());
     let bdg = snapbox.assert();
     let out = bdg.get_output();
 
@@ -162,9 +156,7 @@ pub async fn test_happy_case_accounts_file_already_exists() {
         DEVNET_OZ_CLASS_HASH,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(temp_dir.path())
-        .args(args);
+    let snapbox = runner(&args).current_dir(temp_dir.path());
     let bdg = snapbox.assert();
     let out = bdg.get_output();
 
@@ -200,9 +192,7 @@ pub async fn test_profile_already_exists() {
         DEVNET_OZ_CLASS_HASH,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(temp_dir.path())
-        .args(args);
+    let snapbox = runner(&args).current_dir(temp_dir.path());
     let bdg = snapbox.assert();
     let out = bdg.get_output();
 
@@ -255,9 +245,7 @@ pub async fn test_happy_case_keystore() {
         DEVNET_OZ_CLASS_HASH,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(temp_dir.path())
-        .args(args);
+    let snapbox = runner(&args).current_dir(temp_dir.path());
 
     snapbox.assert().stdout_matches(indoc! {r"
         command: account create
@@ -299,9 +287,7 @@ pub async fn test_happy_case_keystore_add_profile() {
         "with_keystore",
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(temp_dir.path())
-        .args(args);
+    let snapbox = runner(&args).current_dir(temp_dir.path());
     let bdg = snapbox.assert().success();
     let out = bdg.get_output();
 
@@ -343,9 +329,7 @@ pub async fn test_keystore_without_account() {
         DEVNET_OZ_CLASS_HASH,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(temp_dir.path())
-        .args(args);
+    let snapbox = runner(&args).current_dir(temp_dir.path());
 
     snapbox.assert().stderr_matches(indoc! {r"
         command: account create
@@ -390,9 +374,7 @@ pub fn test_keystore_already_exists(keystore_path_str: &str, account_path_str: &
         DEVNET_OZ_CLASS_HASH,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(temp_dir.path())
-        .args(args);
+    let snapbox = runner(&args).current_dir(temp_dir.path());
     let bdg = snapbox.assert();
     let out = bdg.get_output();
     let stderr_str =
@@ -423,9 +405,7 @@ pub async fn test_happy_case_keystore_int_format() {
         DEVNET_OZ_CLASS_HASH,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(temp_dir.path())
-        .args(args);
+    let snapbox = runner(&args).current_dir(temp_dir.path());
 
     snapbox.assert().stdout_matches(indoc! {r"
         command: account create
@@ -464,9 +444,7 @@ pub async fn test_happy_case_keystore_hex_format() {
         DEVNET_OZ_CLASS_HASH,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(temp_dir.path())
-        .args(args);
+    let snapbox = runner(&args).current_dir(temp_dir.path());
 
     snapbox.assert().stdout_matches(indoc! {r"
         command: account create

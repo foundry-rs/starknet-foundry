@@ -167,9 +167,7 @@ pub async fn test_happy_case_with_yes_flag() {
     ];
 
     // Run test with no additional user input
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(temp_dir.path())
-        .args(args);
+    let snapbox = runner(&args).current_dir(temp_dir.path());
     let bdg = snapbox.assert();
     let out = bdg.get_output();
     let stdout_str =

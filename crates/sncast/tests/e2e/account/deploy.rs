@@ -13,6 +13,7 @@ use std::path::Path;
 use std::{env, fs};
 use tempfile::{TempDir, tempdir};
 use test_case::test_case;
+use crate::helpers::runner::runner;
 
 #[tokio::test]
 pub async fn test_happy_case() {
@@ -118,9 +119,7 @@ fn test_account_deploy_error(accounts_content: &str, error: &str) {
         "10000000000000000",
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(temp_dir.path())
-        .args(args);
+    let snapbox = runner(&args).current_dir(temp_dir.path());
     let bdg = snapbox.assert();
     let out = bdg.get_output();
 

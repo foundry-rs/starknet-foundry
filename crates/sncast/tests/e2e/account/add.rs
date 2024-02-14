@@ -240,9 +240,7 @@ pub async fn test_private_key_from_file() {
         "--deployed",
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(temp_dir.path())
-        .args(args);
+    let snapbox = runner(&args).current_dir(temp_dir.path());
 
     snapbox.assert().stdout_matches(indoc! {r"
         command: account add
@@ -341,9 +339,7 @@ pub async fn test_invalid_private_key_in_file() {
         private_key_file,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(temp_dir.path())
-        .args(args);
+    let snapbox = runner(&args).current_dir(temp_dir.path());
 
     snapbox.assert().stderr_matches(indoc! {r"
         command: account add
