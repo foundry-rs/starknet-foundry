@@ -44,17 +44,6 @@ pub enum CheatSpan {
     Number(usize),
 }
 
-impl Add<usize> for CheatSpan {
-    type Output = Self;
-
-    fn add(self, rhs: usize) -> Self::Output {
-        match self {
-            CheatSpan::Indefinite => CheatSpan::Indefinite,
-            CheatSpan::Number(value) => CheatSpan::Number(value + rhs),
-        }
-    }
-}
-
 #[derive(Debug)]
 pub struct ExtendedStateReader {
     pub dict_state_reader: DictStateReader,
