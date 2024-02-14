@@ -4,10 +4,15 @@ use sncast_std::{
 
 fn second_contract() {
 <<<<<<< HEAD
+<<<<<<< HEAD
     let declare_result = declare("Mapa2", Option::None, Option::None);
 =======
     let declare_result = declare('Mapa2', Option::None, Option::None).expect('mapa2 declare failed');
 >>>>>>> 7f0c05e5 (Error handling for declare subcommand)
+=======
+    let declare_result = declare('Mapa2', Option::None, Option::None)
+        .expect('mapa2 declare failed');
+>>>>>>> c44c9852 (Scarb fmt)
     let deploy_result = deploy(
         declare_result.class_hash,
         ArrayTrait::new(),
@@ -32,7 +37,8 @@ fn main() {
     let salt = 0x3;
 
     let declare_nonce = get_nonce('latest');
-    let declare_result = declare("Mapa", Option::Some(max_fee), Option::Some(declare_nonce)).expect('mapa declare failed');
+    let declare_result = declare("Mapa", Option::Some(max_fee), Option::Some(declare_nonce))
+        .expect('mapa declare failed');
 
     let class_hash = declare_result.class_hash;
     let deploy_nonce = get_nonce('pending');
