@@ -5317,6 +5317,11 @@ dependencies = [
 [[package]]
 name = "shared"
 version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "semver",
+ "starknet",
+]
 
 [[package]]
 name = "shellexpand"
@@ -5463,6 +5468,7 @@ dependencies = [
  "semver",
  "serde",
  "serde_json",
+ "shared",
  "shellexpand",
  "snapbox",
  "starknet",

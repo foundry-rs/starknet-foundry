@@ -17,7 +17,7 @@ use sncast::helpers::scarb_utils::{
 };
 use sncast::{
     chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_nonce, get_provider,
-    NumbersFormat, WaitForTx,
+    warn_if_incompatible_rpc_version, NumbersFormat, WaitForTx,
 };
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
@@ -138,6 +138,9 @@ fn main() -> Result<()> {
         )
         .expect("Failed to build script");
         let metadata_with_deps = get_scarb_metadata_with_deps(&manifest_path)?;
+
+        runtime.block_on(warn_if_incompatible_rpc_version(&provider, &config.rpc_url))?;
+
         let mut result = starknet_commands::script::run(
             &script.script_module_name,
             &metadata_with_deps,
@@ -172,6 +175,8 @@ async fn run_async_command(
     numbers_format: NumbersFormat,
     output_format: OutputFormat,
 ) -> Result<()> {
+    warn_if_incompatible_rpc_version(&provider, &config.rpc_url).await?;
+
     let wait_config = WaitForTx {
         wait: cli.wait,
         timeout: config.wait_timeout,

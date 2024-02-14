@@ -30,6 +30,8 @@ use starknet::{
     signers::{LocalWallet, SigningKey},
 };
 
+use crate::response::print::print_as_warning;
+use shared::{consts::EXPECTED_RPC_VERSION, get_and_parse_spec_version, is_supported_version};
 use std::collections::HashMap;
 use std::thread::sleep;
 use std::time::Duration;
@@ -84,6 +86,20 @@ pub fn get_provider(url: &str) -> Result<JsonRpcClient<HttpTransport>> {
     let parsed_url = Url::parse(url)?;
     let provider = JsonRpcClient::new(HttpTransport::new(parsed_url));
     Ok(provider)
+}
+
+pub async fn warn_if_incompatible_rpc_version(
+    provider: &JsonRpcClient<HttpTransport>,
+    url: &str,
+) -> Result<()> {
+    let node_spec_version = get_and_parse_spec_version(provider).await?;
+    if !is_supported_version(&node_spec_version) {
+        print_as_warning(&anyhow!(
+            "The RPC node with the url {url} is using an unsupported version {node_spec_version}. The current version supported by sncast is {EXPECTED_RPC_VERSION}"
+        ));
+    }
+
+    Ok(())
 }
 
 pub async fn get_chain_id(provider: &JsonRpcClient<HttpTransport>) -> Result<FieldElement> {
