@@ -571,8 +571,8 @@ pub async fn test_deploy_keystore_other_args() {
     env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
 
     let address = get_address_from_keystore(
-        tempdir.path().join(keystore_path).to_str().unwrap(),
-        tempdir.path().join(account_path).to_str().unwrap(),
+        tempdir.path().join(keystore_path),
+        tempdir.path().join(account_path),
         KEYSTORE_PASSWORD_ENV_VAR,
     );
 

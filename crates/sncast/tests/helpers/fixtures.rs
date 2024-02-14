@@ -411,8 +411,8 @@ pub fn from_env(name: &str) -> Result<String, String> {
 }
 
 pub fn get_address_from_keystore(
-    keystore_path: &str,
-    account_path: &str,
+    keystore_path: impl AsRef<std::path::Path>,
+    account_path: impl AsRef<std::path::Path>,
     password: &str,
 ) -> FieldElement {
     let contents = std::fs::read_to_string(account_path).unwrap();
