@@ -4,7 +4,7 @@ use crate::helpers::runner::runner;
 use indoc::indoc;
 use snapbox::cmd::{cargo_bin, Command};
 use std::path::Path;
-use tempfile::{TempDir, tempdir};
+use tempfile::{tempdir, TempDir};
 use tokio::fs::File;
 use tokio::io::AsyncWriteExt;
 

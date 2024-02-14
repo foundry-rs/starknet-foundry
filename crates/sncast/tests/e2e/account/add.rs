@@ -5,7 +5,7 @@ use indoc::indoc;
 use serde_json::json;
 use snapbox::cmd::{cargo_bin, Command};
 use std::fs;
-use tempfile::{TempDir, tempdir};
+use tempfile::{tempdir, TempDir};
 
 #[tokio::test]
 pub async fn test_happy_case() {

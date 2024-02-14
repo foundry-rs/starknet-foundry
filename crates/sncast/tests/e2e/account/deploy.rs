@@ -3,6 +3,7 @@ use crate::helpers::fixtures::convert_to_hex;
 use crate::helpers::fixtures::{
     get_address_from_keystore, get_transaction_hash, get_transaction_receipt, mint_token,
 };
+use crate::helpers::runner::runner;
 use indoc::indoc;
 use serde_json::Value;
 use snapbox::cmd::{cargo_bin, Command};
@@ -11,9 +12,8 @@ use sncast::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
 use starknet::core::types::TransactionReceipt::DeployAccount;
 use std::path::Path;
 use std::{env, fs};
-use tempfile::{TempDir, tempdir};
+use tempfile::{tempdir, TempDir};
 use test_case::test_case;
-use crate::helpers::runner::runner;
 
 #[tokio::test]
 pub async fn test_happy_case() {

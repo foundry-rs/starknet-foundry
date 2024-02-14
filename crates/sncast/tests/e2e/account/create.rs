@@ -7,7 +7,7 @@ use sncast::helpers::configuration::copy_config_to_tempdir;
 use sncast::helpers::constants::CREATE_KEYSTORE_PASSWORD_ENV_VAR;
 use std::path::Path;
 use std::{env, fs};
-use tempfile::{TempDir, tempdir};
+use tempfile::{tempdir, TempDir};
 use test_case::test_case;
 
 #[tokio::test]
