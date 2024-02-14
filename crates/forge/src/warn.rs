@@ -4,9 +4,9 @@ use crate::{
 };
 use anyhow::{anyhow, Context, Result};
 use scarb_api::ScarbCommand;
-use semver::{Version, VersionReq};
-use shared::consts::EXPECTED_RPC_VERSION;
-use starknet::providers::{jsonrpc::HttpTransport, JsonRpcClient, Provider};
+use semver::Version;
+use shared::{consts::EXPECTED_RPC_VERSION, get_and_parse_spec_version, is_supported_version};
+use starknet::providers::{jsonrpc::HttpTransport, JsonRpcClient};
 use std::collections::HashSet;
 use url::Url;
 
@@ -34,7 +34,6 @@ pub(crate) async fn warn_if_incompatible_rpc_version(
     fork_targets: &[ForkTarget],
 ) -> Result<()> {
     let mut urls = HashSet::<&str>::new();
-    let expected_version = VersionReq::parse(EXPECTED_RPC_VERSION)?;
 
     // collect urls
     for test_crate in test_crates {
@@ -57,28 +56,15 @@ pub(crate) async fn warn_if_incompatible_rpc_version(
             Url::parse(url).with_context(|| format!("could not parse url: {url}"))?,
         ));
 
-        handles.push(async move {
-            (
-                client
-                    .spec_version()
-                    .await
-                    .map(|version| {
-                        version
-                            .parse::<Version>()
-                            .with_context(|| format!("could not parse version: {version}"))
-                    })
-                    .context("error while calling rpc node"),
-                url,
-            )
-        });
+        handles.push(async move { (get_and_parse_spec_version(&client).await, url) });
     }
 
     // assert version
     for handle in handles {
         let (version, url) = handle.await;
-        let version = version??;
+        let version = version?;
 
-        if !expected_version.matches(&version) {
+        if !is_supported_version(&version) {
             print_warning(&anyhow!(
                 "The RPC node with url = {url} has unsupported version = ({version}), use node supporting RPC version ({EXPECTED_RPC_VERSION})"
             ));
