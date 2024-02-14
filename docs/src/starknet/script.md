@@ -7,8 +7,8 @@
 Starknet Foundry cast can be used to run deployment scripts written in Cairo, using `script run` subcommand.
 It aims to provide similar functionality to Foundry's `forge script`.
 
-To start writing a deployment script in Cairo just add `cast_std` as a dependency to you scarb package and make sure to
-have a `main` function in the module you want to run. `cast_std` docs can be found [here](../appendix/sncast-library.md).
+To start writing a deployment script in Cairo just add `sncast_std` as a dependency to you scarb package and make sure to
+have a `main` function in the module you want to run. `sncast_std` docs can be found [here](../appendix/sncast-library.md).
 
 Please note that **`sncast script` is in development**. While it is already possible to declare, deploy, invoke and call
 contracts from within Cairo, its interface, internals and feature set can change rapidly each version.
@@ -23,14 +23,13 @@ contracts from within Cairo, its interface, internals and feature set can change
 > Example:
 >
 >```cairo
->  let declare_result = declare("Map", Option::Some(max_fee), Option::Some(nonce));
+>  let declare_result = declare("Map", Option::Some(max_fee), Option::Some(nonce)).expect('declare failed');
 >```
 
 Some of the planned features that will be included in future versions are:
 
 - scripts idempotency
 - dispatchers support
-- better error handling
 - logging
 - account creation/deployment
 - multicall support
@@ -59,16 +58,16 @@ For more details, see [init command](../appendix/sncast/script/init.md).
 This example shows how to call an already deployed contract. Please find full example with contract deployment [here](#full-example-with-contract-deployment).
 
 ```cairo
-use sncast_std::{invoke, call, InvokeResult, CallResult};
+use sncast_std::{invoke, call, CallResult};
 
 fn main() {
     let eth = 0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7;
     let addr = 0x0089496091c660345BaA480dF76c1A900e57cf34759A899eFd1EADb362b20DB5;
-    let call_result = call(eth.try_into().unwrap(), 'allowance', array![addr, addr]);
+    let call_result = call(eth.try_into().unwrap(), selector!("allowance"), array![addr, addr]).expect('call failed');
     let call_result = *call_result.data[0];
     assert(call_result == 0, call_result);
 
-    let call_result = call(eth.try_into().unwrap(), 'decimals', array![]);
+    let call_result = call(eth.try_into().unwrap(), selector!("decimals"), array![]).expect('call failed');
     let call_result = *call_result.data[0];
     assert(call_result == 18, call_result);
 }
@@ -119,7 +118,7 @@ fn main() {
     let max_fee = 99999999999999999;
     let salt = 0x3;
 
-    let declare_result = declare("Map", Option::Some(max_fee), Option::None);
+    let declare_result = declare("Map", Option::Some(max_fee), Option::None).expect('declare failed');
 
     let nonce = get_nonce('latest');
     let class_hash = declare_result.class_hash;
@@ -128,18 +127,18 @@ fn main() {
 
     let deploy_result = deploy(
         class_hash, ArrayTrait::new(), Option::Some(salt), true, Option::Some(max_fee), Option::Some(nonce)
-    );
+    ).expect('deploy failed');
 
     println!("Deployed the contract to address: {}", deploy_result.contract_address);
 
     let invoke_nonce = get_nonce('pending');
     let invoke_result = invoke(
         deploy_result.contract_address, selector!("put"), array![0x1, 0x2], Option::Some(max_fee), Option::Some(invoke_nonce)
-    );
+    ).expect('invoke failed');
 
     println!("Invoke tx hash is: {}", invoke_result.transaction_hash);
 
-    let call_result = call(deploy_result.contract_address, 'get', array![0x1]);
+    let call_result = call(deploy_result.contract_address, selector!("put"), array![0x1]).expect('call failed');
 
     println!("Call result: {}", call_result);
     assert(call_result.data == array![0x2], *call_result.data.at(0));
@@ -204,3 +203,68 @@ Call result: [2]
 command: script run
 status: success
 ```
+
+## Error handling
+
+Each of `declare`, `deploy`, `invoke`, `call` subcommands return `Result<T, ScriptCommandError>`, where `T` is a corresponding response struct. 
+This allows for various script errors to be handled programmatically. 
+Script errors implement `Debug` trait, allowing the error to be printed to stdout.
+
+### Minimal example with assert and print
+
+```rust
+use sncast_std::{
+    get_nonce, declare, DeclareResult, ScriptCommandError, ProviderError, StarknetError
+};
+
+fn main() {
+    let max_fee = 9999999999999999999999999999999999;
+
+    let declare_nonce = get_nonce('latest');
+    let declare_result = declare("Map", Option::Some(max_fee), Option::Some(declare_nonce))
+        .unwrap_err();
+    println!("{:?}", declare_result);
+
+    assert(
+        ScriptCommandError::ProviderError(
+            ProviderError::StarknetError(StarknetError::InsufficientAccountBalance)
+        ) == declare_result,
+        'ohno'
+    )
+}
+```
+
+stdout:
+```shell
+...
+ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::InsufficientAccountBalance(())))
+command: script
+status: success
+```
+
+Some errors may contain an error message in the form of `ByteArray`
+
+### Minimal example with an error msg:
+
+```rust
+use sncast_std::{call, CallResult, ScriptCommandError, ProviderError, StarknetError, ErrorData};
+
+fn main() {
+    let eth = 0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7.try_into().expect('bad address');
+    let call_err: ScriptCommandError = call(
+        eth, selector!("gimme_money"), array![]
+    )
+        .unwrap_err();
+
+    println!("{:?}", call_err);
+}
+```
+stdout:
+```shell
+...
+ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::ContractError(ErrorData { msg: "Entry point EntryPointSelector(StarkFelt( ... )) not found in contract." })))
+command: script
+status: success
+```
+
+More on deployment scripts errors [here](#../appendix/sncast-library/errors.md).
