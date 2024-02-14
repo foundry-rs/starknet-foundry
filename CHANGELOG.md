@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast
+
+#### Added
+
+- Warning is emitted when executing sncast commands if the node's JSON-RPC version is incompatible
+
 ## [0.17.1] - 2024-02-12
 
 ### Cast
