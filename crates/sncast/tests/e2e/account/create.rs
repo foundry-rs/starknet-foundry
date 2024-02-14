@@ -2,12 +2,12 @@ use crate::helpers::constants::{DEVNET_OZ_CLASS_HASH, URL};
 use crate::helpers::fixtures::default_cli_args;
 use crate::helpers::runner::runner;
 use indoc::indoc;
-use snapbox::cmd::{cargo_bin, Command};
+
 use sncast::helpers::configuration::copy_config_to_tempdir;
 use sncast::helpers::constants::CREATE_KEYSTORE_PASSWORD_ENV_VAR;
 use std::path::Path;
 use std::{env, fs};
-use tempfile::{tempdir, TempDir};
+use tempfile::{tempdir};
 use test_case::test_case;
 
 #[tokio::test]
