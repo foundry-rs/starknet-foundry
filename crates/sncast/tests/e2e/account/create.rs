@@ -7,12 +7,12 @@ use sncast::helpers::configuration::copy_config_to_tempdir;
 use sncast::helpers::constants::CREATE_KEYSTORE_PASSWORD_ENV_VAR;
 use std::path::Path;
 use std::{env, fs};
-use tempfile::TempDir;
+use tempfile::{TempDir, tempdir};
 use test_case::test_case;
 
 #[tokio::test]
 pub async fn test_happy_case() {
-    let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
+    let temp_dir = tempdir().expect("Unable to create a temporary directory");
     let accounts_file = "./accounts.json";
 
     let args = vec![
@@ -58,7 +58,7 @@ pub async fn test_happy_case() {
 
 #[tokio::test]
 pub async fn test_happy_case_generate_salt() {
-    let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
+    let temp_dir = tempdir().expect("Unable to create a temporary directory");
     let accounts_file = "./accounts.json";
 
     let args = vec![
@@ -99,7 +99,7 @@ pub async fn test_happy_case_generate_salt() {
 
 #[tokio::test]
 pub async fn test_happy_case_add_profile() {
-    let temp_dir = TempDir::new().expect("Failed to create a temporary directory");
+    let temp_dir = tempdir().expect("Failed to create a temporary directory");
     let accounts_file = "./accounts.json";
 
     let args = vec![
@@ -138,7 +138,7 @@ pub async fn test_happy_case_add_profile() {
 #[tokio::test]
 pub async fn test_happy_case_accounts_file_already_exists() {
     let accounts_file = "./accounts.json";
-    let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
+    let temp_dir = tempdir().expect("Unable to create a temporary directory");
 
     fs_extra::file::copy(
         "tests/data/accounts/accounts.json",
@@ -237,7 +237,7 @@ pub async fn test_account_already_exists() {
 
 #[tokio::test]
 pub async fn test_happy_case_keystore() {
-    let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
+    let temp_dir = tempdir().expect("Unable to create a temporary directory");
     let keystore_path = "./my_key.json";
     let account_path = "./my_account.json";
     env::set_var(CREATE_KEYSTORE_PASSWORD_ENV_VAR, "123");
@@ -327,7 +327,7 @@ pub async fn test_happy_case_keystore_add_profile() {
 
 #[tokio::test]
 pub async fn test_keystore_without_account() {
-    let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
+    let temp_dir = tempdir().expect("Unable to create a temporary directory");
     let keystore_path = "my_key.json";
 
     env::set_var(CREATE_KEYSTORE_PASSWORD_ENV_VAR, "123");
@@ -356,7 +356,7 @@ pub async fn test_keystore_without_account() {
 #[test_case("./tests/data/keystore/my_key.json", "./tests/data/keystore/my_account_new.json", "error: Keystore file my_key.json already exists" ; "when keystore exists")]
 #[test_case("./tests/data/keystore/my_key_new.json", "./tests/data/keystore/my_account.json", "error: Account file my_account.json already exists" ; "when account exists")]
 pub fn test_keystore_already_exists(keystore_path_str: &str, account_path_str: &str, error: &str) {
-    let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
+    let temp_dir = tempdir().expect("Unable to create a temporary directory");
 
     let keystore_path = Path::new(keystore_path_str);
     if keystore_path.exists() {
@@ -403,7 +403,7 @@ pub fn test_keystore_already_exists(keystore_path_str: &str, account_path_str: &
 
 #[tokio::test]
 pub async fn test_happy_case_keystore_int_format() {
-    let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
+    let temp_dir = tempdir().expect("Unable to create a temporary directory");
     let keystore_path = "./my_key_int.json";
     let account_path = "./my_account_int.json";
 
@@ -444,7 +444,7 @@ pub async fn test_happy_case_keystore_int_format() {
 
 #[tokio::test]
 pub async fn test_happy_case_keystore_hex_format() {
-    let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
+    let temp_dir = tempdir().expect("Unable to create a temporary directory");
     let keystore_path = "./my_key_hex.json";
     let account_path = "./my_account_hex.json";
 

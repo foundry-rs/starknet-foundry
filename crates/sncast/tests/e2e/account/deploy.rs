@@ -11,7 +11,7 @@ use sncast::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
 use starknet::core::types::TransactionReceipt::DeployAccount;
 use std::path::Path;
 use std::{env, fs};
-use tempfile::TempDir;
+use tempfile::{TempDir, tempdir};
 use test_case::test_case;
 
 #[tokio::test]
@@ -100,7 +100,7 @@ pub async fn test_happy_case_add_profile() {
 #[test_case("{\"alpha-goerli\": {\"my_account\" : {}}}", "error: Failed to get private key from accounts file" ; "when private key not present")]
 #[test_case("{\"alpha-goerli\": {\"my_account\" : {\"private_key\": \"0x1\"}}}", "error: Failed to get salt from accounts file" ; "when salt not present")]
 fn test_account_deploy_error(accounts_content: &str, error: &str) {
-    let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
+    let temp_dir = tempdir().expect("Unable to create a temporary directory");
 
     let accounts_file = "./accounts.json";
     fs::write(temp_dir.path().join(accounts_file), accounts_content).unwrap();
@@ -289,7 +289,7 @@ pub async fn create_account(add_profile: bool) -> TempDir {
 
 #[tokio::test]
 pub async fn test_happy_case_keystore() {
-    let tempdir = TempDir::new().expect("Unable to create a temporary directory");
+    let tempdir = tempdir().expect("Unable to create a temporary directory");
 
     let keystore_path = "./my_key.json";
     let account_path = "./my_account_undeployed_happy_case.json";
@@ -357,7 +357,7 @@ pub async fn test_happy_case_keystore() {
 
 #[tokio::test]
 pub async fn test_keystore_already_deployed() {
-    let tempdir = TempDir::new().expect("Unable to create a temporary directory");
+    let tempdir = tempdir().expect("Unable to create a temporary directory");
 
     let keystore_path = "./my_key.json";
     let account_path = "./account.json";
@@ -403,7 +403,7 @@ pub async fn test_keystore_already_deployed() {
 
 #[tokio::test]
 pub async fn test_keystore_key_mismatch() {
-    let tempdir = TempDir::new().expect("Unable to create a temporary directory");
+    let tempdir = tempdir().expect("Unable to create a temporary directory");
 
     let keystore_path = "./my_key_invalid.json";
     let account_path = "./my_account_undeployed.json";
@@ -454,7 +454,7 @@ pub fn test_deploy_keystore_inexistent_file(
     account_path_str: &str,
     error: &str,
 ) {
-    let tempdir = TempDir::new().expect("Unable to create a temporary directory");
+    let tempdir = tempdir().expect("Unable to create a temporary directory");
 
     let keystore_path = Path::new(keystore_path_str);
     if keystore_path.exists() {
@@ -504,7 +504,7 @@ pub fn test_deploy_keystore_inexistent_file(
 
 #[tokio::test]
 pub async fn test_deploy_keystore_no_status() {
-    let tempdir = TempDir::new().expect("Unable to create a temporary directory");
+    let tempdir = tempdir().expect("Unable to create a temporary directory");
 
     let keystore_path = "./my_key.json";
     let account_path = "./my_account_invalid.json";
@@ -550,7 +550,7 @@ pub async fn test_deploy_keystore_no_status() {
 
 #[tokio::test]
 pub async fn test_deploy_keystore_other_args() {
-    let tempdir = TempDir::new().expect("Unable to create a temporary directory");
+    let tempdir = tempdir().expect("Unable to create a temporary directory");
 
     let keystore_path = "./my_key.json";
     let account_path = "./my_account_undeployed_happy_case_other_args.json";

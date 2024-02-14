@@ -4,7 +4,7 @@ use crate::helpers::runner::runner;
 use indoc::indoc;
 use snapbox::cmd::{cargo_bin, Command};
 use std::path::Path;
-use tempfile::TempDir;
+use tempfile::{TempDir, tempdir};
 use tokio::fs::File;
 use tokio::io::AsyncWriteExt;
 
@@ -43,7 +43,7 @@ pub async fn test_account_does_not_exist() {
 
 #[tokio::test]
 pub async fn test_delete_abort() {
-    let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
+    let temp_dir = tempdir().expect("Unable to create a temporary directory");
 
     // Creating dummy accounts test file
     let accounts_file_path = temp_dir.path().join("temp_accounts.json");
@@ -77,7 +77,7 @@ pub async fn test_delete_abort() {
 
 #[tokio::test]
 pub async fn test_happy_case() {
-    let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
+    let temp_dir = tempdir().expect("Unable to create a temporary directory");
 
     // Creating dummy accounts test file
     let accounts_file_path = temp_dir.path().join("temp_accounts.json");
@@ -112,7 +112,7 @@ pub async fn test_happy_case() {
 
 #[tokio::test]
 pub async fn test_happy_case_without_network_args() {
-    let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
+    let temp_dir = tempdir().expect("Unable to create a temporary directory");
 
     // Creating dummy accounts test file
     let accounts_file_path = temp_dir.path().join("temp_accounts.json");
@@ -145,7 +145,7 @@ pub async fn test_happy_case_without_network_args() {
 
 #[tokio::test]
 pub async fn test_happy_case_with_yes_flag() {
-    let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
+    let temp_dir = tempdir().expect("Unable to create a temporary directory");
 
     // Creating dummy accounts test file
     let accounts_file_path = temp_dir.path().join("temp_accounts.json");

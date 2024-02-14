@@ -5,7 +5,7 @@ use indoc::indoc;
 use serde_json::json;
 use snapbox::cmd::{cargo_bin, Command};
 use std::fs;
-use tempfile::TempDir;
+use tempfile::{TempDir, tempdir};
 
 #[tokio::test]
 pub async fn test_happy_case() {
@@ -58,7 +58,7 @@ pub async fn test_happy_case() {
 
 #[tokio::test]
 pub async fn test_happy_case_add_profile() {
-    let tempdir = TempDir::new().expect("Failed to create a temporary directory");
+    let tempdir = tempdir().expect("Failed to create a temporary directory");
     let accounts_file = "./accounts.json";
 
     let args = vec![
@@ -218,7 +218,7 @@ pub async fn test_missing_arguments() {
 
 #[tokio::test]
 pub async fn test_private_key_from_file() {
-    let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
+    let temp_dir = tempdir().expect("Unable to create a temporary directory");
     let accounts_file = "./accounts.json";
     let private_key_file = "./my_private_key";
 
@@ -317,7 +317,7 @@ pub async fn test_invalid_private_key_file_path() {
 
 #[tokio::test]
 pub async fn test_invalid_private_key_in_file() {
-    let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
+    let temp_dir = tempdir().expect("Unable to create a temporary directory");
     let private_key_file = "./my_private_key";
 
     fs::write(
@@ -353,7 +353,7 @@ pub async fn test_invalid_private_key_in_file() {
 
 #[tokio::test]
 pub async fn test_private_key_as_int_in_file() {
-    let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
+    let temp_dir = tempdir().expect("Unable to create a temporary directory");
     let accounts_file = "./accounts.json";
     let private_key_file = "./my_private_key";
 
