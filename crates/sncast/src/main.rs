@@ -7,6 +7,7 @@ use crate::starknet_commands::{
 use anyhow::{Context, Result};
 use sncast::response::print::{print_command_result, OutputFormat};
 
+use crate::starknet_commands::commands::handle_starknet_command_error;
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand};
 use shared::verify_and_warn_if_incompatible_rpc_version;
@@ -180,7 +181,8 @@ async fn run_async_command(
                 &artifacts,
                 wait_config,
             )
-            .await;
+            .await
+            .map_err(handle_starknet_command_error);
 
             print_command_result("declare", &mut result, numbers_format, &output_format)?;
             Ok(())
@@ -203,7 +205,8 @@ async fn run_async_command(
                 deploy.nonce,
                 wait_config,
             )
-            .await;
+            .await
+            .map_err(handle_starknet_command_error);
 
             print_command_result("deploy", &mut result, numbers_format, &output_format)?;
             Ok(())
@@ -218,7 +221,8 @@ async fn run_async_command(
                 &provider,
                 block_id.as_ref(),
             )
-            .await;
+            .await
+            .map_err(handle_starknet_command_error);
 
             print_command_result("call", &mut result, numbers_format, &output_format)?;
             Ok(())
@@ -240,7 +244,8 @@ async fn run_async_command(
                 invoke.nonce,
                 wait_config,
             )
-            .await;
+            .await
+            .map_err(handle_starknet_command_error);
 
             print_command_result("invoke", &mut result, numbers_format, &output_format)?;
             Ok(())

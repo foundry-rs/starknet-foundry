@@ -3,10 +3,11 @@ use clap::Args;
 use scarb_api::StarknetContractArtifacts;
 use sncast::response::structs::DeclareResponse;
 use sncast::response::structs::Felt;
-use sncast::{apply_optional, handle_rpc_error, handle_wait_for_tx, WaitForTx};
+use sncast::{apply_optional, handle_wait_for_tx, ErrorData, WaitForTx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{ConnectedAccount, Declaration};
 
+use crate::starknet_commands::commands::{RecoverableStarknetCommandError, StarknetCommandError};
 use starknet::core::types::FieldElement;
 use starknet::{
     accounts::{Account, SingleOwnerAccount},
@@ -45,38 +46,49 @@ pub async fn declare(
     nonce: Option<FieldElement>,
     artifacts: &HashMap<String, StarknetContractArtifacts>,
     wait_config: WaitForTx,
-) -> Result<DeclareResponse> {
+) -> Result<DeclareResponse, StarknetCommandError> {
     let contract_name: String = contract_name.to_string();
-    let contract_artifacts = artifacts
-        .get(&contract_name)
-        .ok_or(anyhow!(format!("Failed to find {contract_name} artifact in starknet_artifacts.json file. Please make sure you have specified correct package using `--package` flag and that you have enabled sierra and casm code generation in Scarb.toml.")))?;
+    let contract_artifacts =
+        artifacts
+            .get(&contract_name)
+            .ok_or(StarknetCommandError::Recoverable(
+                RecoverableStarknetCommandError::ContractArtifactsNotFound(ErrorData::new(
+                    contract_name,
+                )),
+            ))?;
 
     let contract_definition: SierraClass = serde_json::from_str(&contract_artifacts.sierra)
         .context("Failed to parse sierra artifact")?;
     let casm_contract_definition: CompiledClass =
         serde_json::from_str(&contract_artifacts.casm).context("Failed to parse casm artifact")?;
 
-    let casm_class_hash = casm_contract_definition.class_hash()?;
+    let casm_class_hash = casm_contract_definition
+        .class_hash()
+        .map_err(anyhow::Error::from)?;
 
-    let declaration = account.declare(Arc::new(contract_definition.flatten()?), casm_class_hash);
+    let declaration = account.declare(
+        Arc::new(contract_definition.flatten().map_err(anyhow::Error::from)?),
+        casm_class_hash,
+    );
 
     let declaration = apply_optional(declaration, max_fee, Declaration::max_fee);
     let declaration = apply_optional(declaration, nonce, Declaration::nonce);
     let declared = declaration.send().await;
     match declared {
-        Ok(result) => {
-            handle_wait_for_tx(
-                account.provider(),
-                result.transaction_hash,
-                DeclareResponse {
-                    class_hash: Felt(result.class_hash),
-                    transaction_hash: Felt(result.transaction_hash),
-                },
-                wait_config,
-            )
-            .await
-        }
-        Err(Provider(error)) => handle_rpc_error(error),
-        _ => Err(anyhow!("Unknown RPC error")),
+        Ok(result) => handle_wait_for_tx(
+            account.provider(),
+            result.transaction_hash,
+            DeclareResponse {
+                class_hash: Felt(result.class_hash),
+                transaction_hash: Felt(result.transaction_hash),
+            },
+            wait_config,
+        )
+        .await
+        .map_err(StarknetCommandError::from),
+        Err(Provider(error)) => Err(StarknetCommandError::Recoverable(
+            RecoverableStarknetCommandError::ProviderError(error),
+        )),
+        _ => Err(anyhow!("Unknown RPC error").into()),
     }
 }
