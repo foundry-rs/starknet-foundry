@@ -195,17 +195,19 @@ impl SerializeAsFelt252 for ScriptStarknetError {
     }
 }
 
-fn sn_command_error_to_script_command_error(err: StarknetCommandError) -> ScriptCommandError {
-    match err {
-        StarknetCommandError::Unrecoverable(err) => {
-            panic!("{}", err)
+impl TryFrom<StarknetCommandError> for ScriptCommandError {
+    type Error = String;
+
+    fn try_from(value: StarknetCommandError) -> std::result::Result<Self, Self::Error> {
+        match value {
+            StarknetCommandError::Unrecoverable(err) => Err(err.to_string()),
+            StarknetCommandError::Recoverable(err) => Ok(ScriptCommandError::from(err)),
         }
-        StarknetCommandError::Recoverable(err) => ScriptCommandError::from(err),
     }
 }
 
-fn serialize_script_err_to_felt_vec(err: StarknetCommandError) -> Vec<Felt252> {
-    let err = sn_command_error_to_script_command_error(err);
+fn handle_starknet_command_error_in_script(err: StarknetCommandError) -> Vec<Felt252> {
+    let err = ScriptCommandError::try_from(err).expect("Could not convert to script command error");
     let error_msg_serialized = err.serialize_as_felt252();
 
     let mut res: Vec<Felt252> = vec![Felt252::from(1)];
@@ -272,7 +274,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                         Ok(CheatcodeHandlingResult::Handled(res))
                     }
                     Err(err) => {
-                        let res = serialize_script_err_to_felt_vec(err);
+                        let res = handle_starknet_command_error_in_script(err);
                         Ok(CheatcodeHandlingResult::Handled(res))
                     }
                 }
@@ -312,7 +314,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                         Ok(CheatcodeHandlingResult::Handled(res))
                     }
                     Err(err) => {
-                        let res = serialize_script_err_to_felt_vec(err);
+                        let res = handle_starknet_command_error_in_script(err);
                         Ok(CheatcodeHandlingResult::Handled(res))
                     }
                 }
@@ -360,7 +362,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                         Ok(CheatcodeHandlingResult::Handled(res))
                     }
                     Err(err) => {
-                        let res = serialize_script_err_to_felt_vec(err);
+                        let res = handle_starknet_command_error_in_script(err);
                         Ok(CheatcodeHandlingResult::Handled(res))
                     }
                 }
@@ -406,7 +408,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                         Ok(CheatcodeHandlingResult::Handled(res))
                     }
                     Err(err) => {
-                        let res = serialize_script_err_to_felt_vec(err);
+                        let res = handle_starknet_command_error_in_script(err);
                         Ok(CheatcodeHandlingResult::Handled(res))
                     }
                 }
