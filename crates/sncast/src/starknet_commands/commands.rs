@@ -36,7 +36,7 @@ pub fn handle_starknet_command_error(error: StarknetCommandError) -> anyhow::Err
     match error {
         StarknetCommandError::Unrecoverable(error) => error,
         StarknetCommandError::Recoverable(error) => match error {
-            RecoverableStarknetCommandError::ContractArtifactsNotFound(ErrorData { data: contract_name }) => anyhow::anyhow!("Failed to find {contract_name} artifact in starknet_artifacts.json file. Please make sure you have specified correct package using `--package` flag and that you have enabled sierra and casm code generation in Scarb.toml"),
+            RecoverableStarknetCommandError::ContractArtifactsNotFound(ErrorData { data: contract_name }) => anyhow::anyhow!("Failed to find {contract_name} artifact in starknet_artifacts.json file. Please make sure you have specified correct package using `--package` flag and that you have enabled sierra and casm code generation in Scarb.toml."),
             RecoverableStarknetCommandError::TransactionError(error) => match error {
                 TransactionError::Rejected => anyhow::anyhow!("Transaction has been rejected"),
                 TransactionError::Reverted(ErrorData { data: reason }) => anyhow::anyhow!("Transaction has been reverted = {reason}"),

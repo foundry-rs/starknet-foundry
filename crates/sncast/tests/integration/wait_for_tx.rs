@@ -67,6 +67,7 @@ async fn test_wait_for_reverted_transaction() {
 
     wait_for_tx(&provider, transaction_hash, ValidatedWaitParams::new(1, 3))
         .await
+        .map_err(std::convert::Into::<anyhow::Error>::into)
         .unwrap();
 }
 
