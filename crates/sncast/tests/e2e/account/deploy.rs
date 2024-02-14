@@ -9,6 +9,7 @@ use snapbox::cmd::{cargo_bin, Command};
 use sncast::helpers::configuration::copy_config_to_tempdir;
 use sncast::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
 use starknet::core::types::TransactionReceipt::DeployAccount;
+use std::path::Path;
 use std::{env, fs};
 use tempfile::TempDir;
 use test_case::test_case;
@@ -288,17 +289,31 @@ pub async fn create_account(add_profile: bool) -> TempDir {
 
 #[tokio::test]
 pub async fn test_happy_case_keystore() {
-    let keystore_path = "tests/data/keystore/my_key.json";
-    let account_path = "tests/data/keystore/my_account_undeployed_happy_case_copy.json";
+    let tempdir = TempDir::new().expect("Unable to create a temporary directory");
 
-    fs::copy(
-        "tests/data/keystore/my_account_undeployed_happy_case.json",
-        account_path,
+    let keystore_path = "./my_key.json";
+    let account_path = "./my_account_undeployed_happy_case.json";
+
+    fs_extra::file::copy(
+        "tests/data/keystore/my_key.json",
+        tempdir.path().join(keystore_path),
+        &fs_extra::file::CopyOptions::new().overwrite(true),
     )
-    .unwrap();
+    .expect("Unable to copy keystore file");
+    fs_extra::file::copy(
+        "tests/data/keystore/my_account_undeployed_happy_case.json",
+        tempdir.path().join(account_path),
+        &fs_extra::file::CopyOptions::new().overwrite(true),
+    )
+    .expect("Unable to copy account file");
+
     env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
 
-    let address = get_address_from_keystore(keystore_path, account_path, KEYSTORE_PASSWORD_ENV_VAR);
+    let address = get_address_from_keystore(
+        tempdir.path().join(keystore_path).to_str().unwrap(),
+        tempdir.path().join(account_path).to_str().unwrap(),
+        KEYSTORE_PASSWORD_ENV_VAR,
+    );
 
     mint_token(
         &convert_to_hex(&address.to_string()),
@@ -321,7 +336,9 @@ pub async fn test_happy_case_keystore() {
         DEVNET_OZ_CLASS_HASH,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast")).args(args);
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(tempdir.path())
+        .args(args);
     let bdg = snapbox.assert();
     let out = bdg.get_output();
 
@@ -330,22 +347,34 @@ pub async fn test_happy_case_keystore() {
     assert!(stdout_str.contains("account deploy"));
     assert!(stdout_str.contains("transaction_hash"));
 
-    let contents = fs::read_to_string(account_path).unwrap();
+    let contents = fs::read_to_string(tempdir.path().join(account_path)).unwrap();
     let items: serde_json::Value =
         serde_json::from_str(&contents).expect("Failed to parse accounts file at ");
     assert_eq!(items["deployment"]["status"], "deployed");
     assert!(!items["deployment"]["address"].is_null());
     assert!(items["deployment"]["salt"].is_null());
-
-    _ = fs::remove_file(account_path);
 }
 
 #[tokio::test]
 pub async fn test_keystore_already_deployed() {
-    let keystore_path = "tests/data/keystore/my_key.json";
-    let account_path = "tests/data/keystore/account_copy.json";
+    let tempdir = TempDir::new().expect("Unable to create a temporary directory");
 
-    fs::copy("tests/data/keystore/my_account.json", account_path).unwrap();
+    let keystore_path = "./my_key.json";
+    let account_path = "./account.json";
+
+    fs_extra::file::copy(
+        "tests/data/keystore/my_key.json",
+        tempdir.path().join(keystore_path),
+        &fs_extra::file::CopyOptions::new().overwrite(true),
+    )
+    .expect("Unable to copy keystore file");
+    fs_extra::file::copy(
+        "tests/data/keystore/my_account.json",
+        tempdir.path().join(account_path),
+        &fs_extra::file::CopyOptions::new().overwrite(true),
+    )
+    .expect("Unable to copy account file");
+
     env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
 
     let args = vec![
@@ -363,25 +392,35 @@ pub async fn test_keystore_already_deployed() {
         DEVNET_OZ_CLASS_HASH,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast")).args(args);
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(tempdir.path())
+        .args(args);
     snapbox.assert().stderr_matches(indoc! {r"
         command: account deploy
         error: Account already deployed
     "});
-
-    _ = fs::remove_file(account_path);
 }
 
 #[tokio::test]
 pub async fn test_keystore_key_mismatch() {
-    let keystore_path = "tests/data/keystore/my_key_invalid.json";
-    let account_path = "tests/data/keystore/my_account_copy.json";
+    let tempdir = TempDir::new().expect("Unable to create a temporary directory");
 
-    fs::copy(
-        "tests/data/keystore/my_account_undeployed.json",
-        account_path,
+    let keystore_path = "./my_key_invalid.json";
+    let account_path = "./my_account_undeployed.json";
+
+    fs_extra::file::copy(
+        "tests/data/keystore/my_key_invalid.json",
+        tempdir.path().join(keystore_path),
+        &fs_extra::file::CopyOptions::new().overwrite(true),
     )
-    .unwrap();
+    .expect("Unable to copy keystore file");
+    fs_extra::file::copy(
+        "tests/data/keystore/my_account_undeployed.json",
+        tempdir.path().join(account_path),
+        &fs_extra::file::CopyOptions::new().overwrite(true),
+    )
+    .expect("Unable to copy account file");
+
     env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
 
     let args = vec![
@@ -399,26 +438,51 @@ pub async fn test_keystore_key_mismatch() {
         DEVNET_OZ_CLASS_HASH,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast")).args(args);
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(tempdir.path())
+        .args(args);
     snapbox.assert().stderr_matches(indoc! {r"
         command: account deploy
         error: Public key and private key from keystore do not match
     "});
-
-    _ = fs::remove_file(account_path);
 }
 
 #[test_case("tests/data/keystore/my_key_inexistent.json", "tests/data/keystore/my_account_undeployed.json", "error: Failed to read keystore file" ; "when inexistent keystore")]
 #[test_case("tests/data/keystore/my_key.json", "tests/data/keystore/my_account_inexistent.json", "error: Failed to read account file" ; "when inexistent account")]
-pub fn test_deploy_keystore_inexistent_file(keystore_path: &str, account_path: &str, error: &str) {
+pub fn test_deploy_keystore_inexistent_file(
+    keystore_path_str: &str,
+    account_path_str: &str,
+    error: &str,
+) {
+    let tempdir = TempDir::new().expect("Unable to create a temporary directory");
+
+    let keystore_path = Path::new(keystore_path_str);
+    if keystore_path.exists() {
+        fs_extra::file::copy(
+            keystore_path,
+            tempdir.path().join(keystore_path.file_name().unwrap()),
+            &fs_extra::file::CopyOptions::new().overwrite(true),
+        )
+        .expect("Unable to copy keystore file");
+    }
+    let account_path = Path::new(account_path_str);
+    if account_path.exists() {
+        fs_extra::file::copy(
+            account_path,
+            tempdir.path().join(account_path.file_name().unwrap()),
+            &fs_extra::file::CopyOptions::new().overwrite(true),
+        )
+        .expect("Unable to copy account file");
+    }
+
     env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
     let args = vec![
         "--url",
         URL,
         "--keystore",
-        keystore_path,
+        keystore_path.file_name().unwrap().to_str().unwrap(),
         "--account",
-        account_path,
+        account_path.file_name().unwrap().to_str().unwrap(),
         "account",
         "deploy",
         "--max-fee",
@@ -427,7 +491,9 @@ pub fn test_deploy_keystore_inexistent_file(keystore_path: &str, account_path: &
         DEVNET_OZ_CLASS_HASH,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast")).args(args);
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(tempdir.path())
+        .args(args);
     let bdg = snapbox.assert();
     let out = bdg.get_output();
     let stderr_str =
@@ -438,9 +504,26 @@ pub fn test_deploy_keystore_inexistent_file(keystore_path: &str, account_path: &
 
 #[tokio::test]
 pub async fn test_deploy_keystore_no_status() {
-    let keystore_path = "tests/data/keystore/my_key.json";
-    let account_path = "tests/data/keystore/my_account_invalid.json";
+    let tempdir = TempDir::new().expect("Unable to create a temporary directory");
+
+    let keystore_path = "./my_key.json";
+    let account_path = "./my_account_invalid.json";
+
+    fs_extra::file::copy(
+        "tests/data/keystore/my_key.json",
+        tempdir.path().join(keystore_path),
+        &fs_extra::file::CopyOptions::new().overwrite(true),
+    )
+    .expect("Unable to copy keystore file");
+    fs_extra::file::copy(
+        "tests/data/keystore/my_account_invalid.json",
+        tempdir.path().join(account_path),
+        &fs_extra::file::CopyOptions::new().overwrite(true),
+    )
+    .expect("Unable to copy account file");
+
     env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
+
     let args = vec![
         "--url",
         URL,
@@ -456,7 +539,9 @@ pub async fn test_deploy_keystore_no_status() {
         DEVNET_OZ_CLASS_HASH,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast")).args(args);
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(tempdir.path())
+        .args(args);
     snapbox.assert().stderr_matches(indoc! {r"
         command: account deploy
         error: Failed to get status from account JSON file
@@ -465,18 +550,31 @@ pub async fn test_deploy_keystore_no_status() {
 
 #[tokio::test]
 pub async fn test_deploy_keystore_other_args() {
-    let keystore_path = "tests/data/keystore/my_key.json";
-    let account_path = "tests/data/keystore/my_account_undeployed_happy_case_other_args_copy.json";
+    let tempdir = TempDir::new().expect("Unable to create a temporary directory");
+
+    let keystore_path = "./my_key.json";
+    let account_path = "./my_account_undeployed_happy_case_other_args.json";
+
+    fs_extra::file::copy(
+        "tests/data/keystore/my_key.json",
+        tempdir.path().join(keystore_path),
+        &fs_extra::file::CopyOptions::new().overwrite(true),
+    )
+    .expect("Unable to copy keystore file");
+    fs_extra::file::copy(
+        "tests/data/keystore/my_account_undeployed_happy_case_other_args.json",
+        tempdir.path().join(account_path),
+        &fs_extra::file::CopyOptions::new().overwrite(true),
+    )
+    .expect("Unable to copy account file");
 
     env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
 
-    fs::copy(
-        "tests/data/keystore/my_account_undeployed_happy_case_other_args.json",
-        account_path,
-    )
-    .unwrap();
-
-    let address = get_address_from_keystore(keystore_path, account_path, KEYSTORE_PASSWORD_ENV_VAR);
+    let address = get_address_from_keystore(
+        tempdir.path().join(keystore_path).to_str().unwrap(),
+        tempdir.path().join(account_path).to_str().unwrap(),
+        KEYSTORE_PASSWORD_ENV_VAR,
+    );
 
     mint_token(
         &convert_to_hex(&address.to_string()),
@@ -503,11 +601,11 @@ pub async fn test_deploy_keystore_other_args() {
         DEVNET_OZ_CLASS_HASH,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast")).args(args);
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(tempdir.path())
+        .args(args);
     snapbox.assert().stdout_matches(indoc! {r"
         command: account deploy
         transaction_hash: 0x[..]
     "});
-
-    _ = fs::remove_file(account_path);
 }
