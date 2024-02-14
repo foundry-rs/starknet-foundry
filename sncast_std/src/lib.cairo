@@ -72,14 +72,12 @@ pub fn call(
 
     let mut buf = cheatcode::<'call'>(inputs.span());
 
-    let mut result_data: Result<Array<felt252>, ScriptCommandError> = Serde::<
-        Result<Array<felt252>>
+    let mut result_data: Result<CallResult, ScriptCommandError> = Serde::<
+        Result<CallResult>
     >::deserialize(ref buf)
         .expect('call deserialize failed');
-    match result_data {
-        Result::Ok(data) => Result::Ok(CallResult { data: data }),
-        Result::Err(err) => Result::Err(err),
-    }
+
+    result_data
 }
 
 #[derive(Drop, Clone, Debug, Serde)]
