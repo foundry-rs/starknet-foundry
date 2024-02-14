@@ -8,7 +8,7 @@ use snapbox::cmd::{cargo_bin, Command};
 use sncast::helpers::configuration::copy_config_to_tempdir;
 use sncast::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
 use std::env;
-use std::fs;
+use tempfile::tempdir;
 
 #[tokio::test]
 async fn test_happy_case_from_sncast_config() {
@@ -33,6 +33,8 @@ async fn test_happy_case_from_sncast_config() {
 
 #[tokio::test]
 async fn test_happy_case_from_cli_no_scarb() {
+    let tempdir = tempdir().expect("Unable to create temporary directory");
+
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
@@ -47,7 +49,7 @@ async fn test_happy_case_from_cli_no_scarb() {
         "doesnotmatter",
     ];
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().success().stderr_matches(indoc! {r"
         command: call
