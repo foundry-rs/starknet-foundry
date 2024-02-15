@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Context, Result};
 use clap::Args;
 
-use crate::starknet_commands::commands::{RecoverableStarknetCommandError, StarknetCommandError};
+use sncast::response::errors::{RecoverableStarknetCommandError, StarknetCommandError};
 use sncast::response::structs::{Felt, InvokeResponse};
 use sncast::{apply_optional, handle_wait_for_tx, WaitForTx};
 use starknet::accounts::AccountError::Provider;

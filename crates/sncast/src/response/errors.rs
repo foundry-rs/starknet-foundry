@@ -1,5 +1,5 @@
+use crate::{handle_rpc_error, ErrorData, TransactionError, WaitForTransactionError};
 use anyhow;
-use sncast::{handle_rpc_error, ErrorData, TransactionError, WaitForTransactionError};
 use starknet::providers::ProviderError;
 
 #[derive(Debug)]
@@ -32,6 +32,7 @@ impl From<WaitForTransactionError> for StarknetCommandError {
     }
 }
 
+#[must_use]
 pub fn handle_starknet_command_error(error: StarknetCommandError) -> anyhow::Error {
     match error {
         StarknetCommandError::Unrecoverable(error) => error,

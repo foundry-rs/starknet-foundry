@@ -7,7 +7,7 @@ use sncast::{apply_optional, handle_wait_for_tx, ErrorData, WaitForTx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{ConnectedAccount, Declaration};
 
-use crate::starknet_commands::commands::{RecoverableStarknetCommandError, StarknetCommandError};
+use sncast::response::errors::{RecoverableStarknetCommandError, StarknetCommandError};
 use starknet::core::types::FieldElement;
 use starknet::{
     accounts::{Account, SingleOwnerAccount},

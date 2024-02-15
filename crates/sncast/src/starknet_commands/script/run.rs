@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use std::fs;
 
-use crate::starknet_commands::commands::handle_starknet_command_error;
 use crate::starknet_commands::{call, declare, deploy, invoke};
 use crate::{get_account, get_nonce, WaitForTx};
 use anyhow::{anyhow, Context, Result};
@@ -36,6 +35,7 @@ use shared::print::print_as_warning;
 use shared::utils::build_readable_text;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::SCRIPT_LIB_ARTIFACT_NAME;
+use sncast::response::errors::handle_starknet_command_error;
 use sncast::response::structs::ScriptRunResponse;
 use starknet::accounts::Account;
 use starknet::core::types::{BlockId, BlockTag::Pending, FieldElement};

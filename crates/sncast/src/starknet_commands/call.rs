@@ -1,6 +1,6 @@
-use crate::starknet_commands::commands::{RecoverableStarknetCommandError, StarknetCommandError};
 use anyhow::{Context, Result};
 use clap::Args;
+use sncast::response::errors::{RecoverableStarknetCommandError, StarknetCommandError};
 use sncast::response::structs::{CallResponse, Felt};
 use starknet::core::types::{BlockId, FieldElement, FunctionCall};
 use starknet::core::utils::get_selector_from_name;

@@ -7,7 +7,6 @@ use crate::starknet_commands::{
 use anyhow::{Context, Result};
 use sncast::response::print::{print_command_result, OutputFormat};
 
-use crate::starknet_commands::commands::handle_starknet_command_error;
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand};
 use shared::verify_and_warn_if_incompatible_rpc_version;
@@ -17,6 +16,7 @@ use sncast::helpers::scarb_utils::{
     assert_manifest_path_exists, build_and_load_artifacts, get_package_metadata,
     get_scarb_metadata_with_deps, BuildConfig,
 };
+use sncast::response::errors::handle_starknet_command_error;
 use sncast::{
     chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_nonce, get_provider,
     NumbersFormat, ValidatedWaitParams, WaitForTx,
