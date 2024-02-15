@@ -2858,6 +2858,7 @@ dependencies = [
  "scarb-api",
  "serde",
  "serde_json",
+ "shared",
  "smol_str 0.2.1",
  "starknet",
  "starknet_api",
@@ -5328,6 +5329,10 @@ dependencies = [
 [[package]]
 name = "shared"
 version = "0.1.0"
+dependencies = [
+ "cairo-felt 0.9.1",
+ "cairo-lang-runner",
+]
 
 [[package]]
 name = "shellexpand"
@@ -5474,6 +5479,7 @@ dependencies = [
  "semver",
  "serde",
  "serde_json",
+ "shared",
  "shellexpand",
  "snapbox",
  "starknet",
