@@ -2,7 +2,7 @@ use crate::helpers::constants::URL;
 use crate::helpers::fixtures::create_test_provider;
 
 use camino::Utf8PathBuf;
-use shared::{get_and_parse_spec_version, is_supported_version};
+use shared::{get_rpc_version, is_supported_version};
 use sncast::{get_account, get_provider};
 use std::fs;
 use url::ParseError;
@@ -141,6 +141,6 @@ async fn test_get_account_failed_to_convert_field_elements() {
 #[tokio::test]
 async fn test_supported_rpc_version_matches_devnet_version() {
     let provider = create_test_provider();
-    let devnet_spec_version = get_and_parse_spec_version(&provider).await.unwrap();
+    let devnet_spec_version = get_rpc_version(&provider).await.unwrap();
     assert!(is_supported_version(&devnet_spec_version));
 }

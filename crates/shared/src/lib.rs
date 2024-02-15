@@ -13,7 +13,7 @@ pub fn is_supported_version(version: &Version) -> bool {
     *version == expected_version
 }
 
-pub async fn get_and_parse_spec_version(client: &JsonRpcClient<HttpTransport>) -> Result<Version> {
+pub async fn get_rpc_version(client: &JsonRpcClient<HttpTransport>) -> Result<Version> {
     client
         .spec_version()
         .await

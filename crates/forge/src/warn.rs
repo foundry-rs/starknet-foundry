@@ -5,7 +5,7 @@ use crate::{
 use anyhow::{anyhow, Context, Result};
 use scarb_api::ScarbCommand;
 use semver::Version;
-use shared::{consts::EXPECTED_RPC_VERSION, get_and_parse_spec_version, is_supported_version};
+use shared::{consts::EXPECTED_RPC_VERSION, get_rpc_version, is_supported_version};
 use starknet::providers::{jsonrpc::HttpTransport, JsonRpcClient};
 use std::collections::HashSet;
 use url::Url;
@@ -56,7 +56,7 @@ pub(crate) async fn warn_if_incompatible_rpc_version(
             Url::parse(url).with_context(|| format!("could not parse url: {url}"))?,
         ));
 
-        handles.push(async move { (get_and_parse_spec_version(&client).await, url) });
+        handles.push(async move { (get_rpc_version(&client).await, url) });
     }
 
     // assert version
