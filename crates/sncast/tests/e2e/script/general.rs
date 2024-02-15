@@ -151,7 +151,7 @@ async fn test_multiple_packages_not_picked() {
     let workspace_dir = duplicate_workspace_directory(
         SCRIPTS_DIR.to_owned() + "/packages",
         vec!["crates/scripts/script1", "crates/scripts/script2"],
-        Vec::<String>::new(),
+        Vec::<String>::new().as_ref(),
     );
     let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
 
@@ -180,7 +180,7 @@ async fn test_multiple_packages_happy_case() {
     let workspace_dir = duplicate_workspace_directory(
         SCRIPTS_DIR.to_owned() + "/packages",
         vec!["crates/scripts/script1", "crates/scripts/script2"],
-        Vec::<String>::new(),
+        Vec::<String>::new().as_ref(),
     );
     let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
 

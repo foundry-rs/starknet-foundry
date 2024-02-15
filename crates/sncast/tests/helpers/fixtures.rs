@@ -313,7 +313,7 @@ pub fn copy_directory_to_tempdir(src_dir: impl AsRef<Utf8Path>) -> TempDir {
 fn copy_script_directory(
     src_dir: impl AsRef<Utf8Path>,
     dest_dir: impl AsRef<Utf8Path>,
-    deps: &Vec<impl AsRef<std::path::Path>>,
+    deps: Vec<impl AsRef<std::path::Path>>,
 ) {
     let src_dir = Utf8PathBuf::from(src_dir.as_ref());
     let dest_dir = Utf8PathBuf::from(dest_dir.as_ref());
@@ -366,7 +366,7 @@ pub fn duplicate_script_directory(
     let dest_dir = Utf8PathBuf::from_path_buf(temp_dir.path().to_path_buf())
         .expect("Failed to create Utf8PathBuf from PathBuf");
 
-    copy_script_directory(&src_dir, dest_dir, &deps);
+    copy_script_directory(&src_dir, dest_dir, deps);
 
     temp_dir
 }
@@ -374,7 +374,7 @@ pub fn duplicate_script_directory(
 pub fn duplicate_workspace_directory(
     src_dir: impl AsRef<Utf8Path>,
     members: Vec<impl AsRef<std::path::Path>>,
-    deps: Vec<impl AsRef<std::path::Path>>,
+    deps: &[impl AsRef<std::path::Path> + Clone],
 ) -> TempDir {
     let src_dir = Utf8PathBuf::from(src_dir.as_ref());
 
@@ -388,7 +388,7 @@ pub fn duplicate_workspace_directory(
         let src_member_path = src_dir.join(member);
         let dest_member_path = dest_dir.join(member);
         fs::create_dir_all(&dest_member_path).expect("Failed to create directories in temp dir");
-        copy_script_directory(&src_member_path, dest_member_path, &deps);
+        copy_script_directory(&src_member_path, dest_member_path, deps.to_vec());
     }
 
     temp_dir
@@ -396,7 +396,7 @@ pub fn duplicate_workspace_directory(
 
 #[must_use]
 pub fn get_deps_map_from_paths(
-    paths: &Vec<impl AsRef<std::path::Path>>,
+    paths: Vec<impl AsRef<std::path::Path>>,
 ) -> HashMap<String, Utf8PathBuf> {
     let mut deps = HashMap::<String, Utf8PathBuf>::new();
 
