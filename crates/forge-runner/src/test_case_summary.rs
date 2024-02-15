@@ -3,12 +3,12 @@ use crate::expected_result::{ExpectedPanicValue, ExpectedTestResult};
 use crate::gas::check_available_gas;
 use crate::trace_data::ProfilerCallTrace;
 use cairo_felt::Felt252;
-use cairo_lang_runner::casm_run::format_next_item;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{RunResult, RunResultValue};
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::state::CallTrace as InternalCallTrace;
 use num_traits::Pow;
+use shared::utils::build_readable_text;
 use std::cell::RefCell;
 use std::option::Option;
 use std::rc::Rc;
@@ -266,47 +266,6 @@ impl TestCaseSummary<Single> {
     }
 }
 
-/// Helper function to build readable text from a run data.
-fn build_readable_text(data: &[Felt252]) -> Option<String> {
-    let mut data_iter = data.iter().cloned();
-    let mut items = Vec::new();
-
-    while let Some(item) = format_next_item(&mut data_iter) {
-        items.push(item.quote_if_string());
-    }
-
-    if items.is_empty() {
-        return None;
-    };
-
-    let string = if let [item] = &items[..] {
-        item.clone()
-    } else {
-        format!("({})", items.join(", "))
-    };
-
-    let mut result = indent_string(&format!("\n{string}"));
-    result.push('\n');
-    Some(result)
-}
-
-fn indent_string(string: &str) -> String {
-    let mut modified_string = string.to_string();
-    let trailing_newline = if string.ends_with('\n') {
-        modified_string.pop();
-        true
-    } else {
-        false
-    };
-
-    modified_string = modified_string.replace('\n', "\n    ");
-    if trailing_newline {
-        modified_string.push('\n');
-    }
-
-    modified_string
-}
-
 fn join_short_strings(data: &[Felt252]) -> String {
     data.iter()
         .map(|felt| as_cairo_short_string(felt).unwrap_or_default())
@@ -411,22 +370,5 @@ impl AnyTestCaseSummary {
             AnyTestCaseSummary::Single(TestCaseSummary::Ignored { .. })
                 | AnyTestCaseSummary::Fuzzing(TestCaseSummary::Ignored { .. })
         )
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::indent_string;
-
-    #[test]
-    fn test_indent_string() {
-        let s = indent_string("\nabc\n");
-        assert_eq!(s, "\n    abc\n");
-
-        let s = indent_string("\nabc");
-        assert_eq!(s, "\n    abc");
-
-        let s = indent_string("\nabc\nd");
-        assert_eq!(s, "\n    abc\n    d");
     }
 }
