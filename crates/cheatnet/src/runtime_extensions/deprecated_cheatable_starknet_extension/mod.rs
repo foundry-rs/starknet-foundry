@@ -209,9 +209,10 @@ pub fn deploy(
     _cheatnet_state: &mut CheatnetState,
 ) -> DeprecatedSyscallResult<DeployResponse> {
     let deployer_address = syscall_handler.storage_address;
-    let deployer_address_for_calculation = match request.deploy_from_zero {
-        true => ContractAddress::default(),
-        false => deployer_address,
+    let deployer_address_for_calculation = if request.deploy_from_zero {
+        ContractAddress::default()
+    } else {
+        deployer_address
     };
     let deployed_contract_address = calculate_contract_address(
         request.contract_address_salt,
