@@ -339,10 +339,10 @@ pub async fn test_keystore_without_account() {
 
 #[test_case("./tests/data/keystore/my_key.json", "./tests/data/keystore/my_account_new.json", "error: Keystore file my_key.json already exists" ; "when keystore exists")]
 #[test_case("./tests/data/keystore/my_key_new.json", "./tests/data/keystore/my_account.json", "error: Account file my_account.json already exists" ; "when account exists")]
-pub fn test_keystore_already_exists(keystore_path_str: &str, account_path_str: &str, error: &str) {
+pub fn test_keystore_already_exists(keystore_path: &str, account_path: &str, error: &str) {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
 
-    let keystore_path = Path::new(keystore_path_str);
+    let keystore_path = Path::new(keystore_path);
     if keystore_path.exists() {
         fs_extra::file::copy(
             keystore_path,
@@ -351,7 +351,7 @@ pub fn test_keystore_already_exists(keystore_path_str: &str, account_path_str: &
         )
         .expect("Unable to copy keystore file");
     }
-    let account_path = Path::new(account_path_str);
+    let account_path = Path::new(account_path);
     if account_path.exists() {
         fs_extra::file::copy(
             account_path,
