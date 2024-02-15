@@ -1,13 +1,18 @@
-use crate::helpers::constants::{SCRIPTS_DIR, URL};
+use crate::helpers::constants::{ACCOUNT_FILE_PATH, SCRIPTS_DIR, URL};
+use crate::helpers::fixtures::{duplicate_script_directory, get_accounts_path};
+use crate::helpers::runner::runner;
 use indoc::indoc;
-use snapbox::cmd::{cargo_bin, Command};
 
 #[tokio::test]
 async fn test_with_calldata() {
+    let tempdir =
+        duplicate_script_directory(SCRIPTS_DIR.to_owned() + "/deploy", Vec::<String>::new());
+    let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
+
     let script_name = "with_calldata";
     let args = vec![
         "--accounts-file",
-        "../../accounts/accounts.json",
+        accounts_json_path.as_str(),
         "--account",
         "user4",
         "--url",
@@ -16,9 +21,7 @@ async fn test_with_calldata() {
         &script_name,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(SCRIPTS_DIR.to_owned() + "/deploy")
-        .args(args);
+    let snapbox = runner(&args).current_dir(tempdir.path());
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
         command: script
