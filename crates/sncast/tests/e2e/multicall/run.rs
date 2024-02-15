@@ -1,5 +1,5 @@
 use crate::helpers::constants::{ACCOUNT_FILE_PATH, MULTICALL_CONFIGS_DIR, URL};
-use crate::helpers::fixtures::default_cli_args;
+use crate::helpers::fixtures::{default_cli_args, get_accounts_path};
 use crate::helpers::runner::runner;
 use std::path::Path;
 use tempfile::tempdir;
@@ -9,8 +9,7 @@ async fn test_happy_case() {
     let temp_dir = tempdir().expect("Unable to create temporary directory");
 
     let config_path = "./deploy_invoke.toml";
-    let account_path = "./accounts.json";
-
+    let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
     let root_path = project_root::get_project_root().expect("failed to get project root path");
 
     fs_extra::file::copy(
@@ -22,18 +21,11 @@ async fn test_happy_case() {
     )
     .expect("Unable to copy config file");
 
-    fs_extra::file::copy(
-        ACCOUNT_FILE_PATH,
-        temp_dir.path().join(account_path),
-        &fs_extra::file::CopyOptions::new().overwrite(true),
-    )
-    .expect("Unable to copy accounts file");
-
     let args = vec![
         "--url",
         URL,
         "--accounts-file",
-        account_path,
+        accounts_json_path.as_str(),
         "--account",
         "user2",
         "multicall",
@@ -63,7 +55,7 @@ async fn test_calldata_ids() {
     let temp_dir = tempdir().expect("Unable to create temporary directory");
 
     let config_path = "./deploy_invoke_calldata_ids.toml";
-    let account_path = "./accounts.json";
+    let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
 
     let root_path = project_root::get_project_root().expect("failed to get project root path");
 
@@ -76,18 +68,11 @@ async fn test_calldata_ids() {
     )
     .expect("Unable to copy config file");
 
-    fs_extra::file::copy(
-        ACCOUNT_FILE_PATH,
-        temp_dir.path().join(account_path),
-        &fs_extra::file::CopyOptions::new().overwrite(true),
-    )
-    .expect("Unable to copy accounts file");
-
     let args = vec![
         "--url",
         URL,
         "--accounts-file",
-        account_path,
+        accounts_json_path.as_str(),
         "--account",
         "user5",
         "multicall",
@@ -133,7 +118,7 @@ async fn test_deploy_fail() {
     let temp_dir = tempdir().expect("Unable to create temporary directory");
 
     let config_path = "./deploy_invalid.toml";
-    let account_path = "./accounts.json";
+    let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
 
     let root_path = project_root::get_project_root().expect("failed to get project root path");
 
@@ -146,18 +131,11 @@ async fn test_deploy_fail() {
     )
     .expect("Unable to copy config file");
 
-    fs_extra::file::copy(
-        ACCOUNT_FILE_PATH,
-        temp_dir.path().join(account_path),
-        &fs_extra::file::CopyOptions::new().overwrite(true),
-    )
-    .expect("Unable to copy accounts file");
-
     let args = vec![
         "--url",
         URL,
         "--accounts-file",
-        account_path,
+        accounts_json_path.as_str(),
         "--account",
         "user2",
         "multicall",
@@ -181,7 +159,7 @@ async fn test_invoke_fail() {
     let temp_dir = tempdir().expect("Unable to create temporary directory");
 
     let config_path = "./invoke_invalid.toml";
-    let account_path = "./accounts.json";
+    let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
 
     let root_path = project_root::get_project_root().expect("failed to get project root path");
 
@@ -193,18 +171,12 @@ async fn test_invoke_fail() {
         &fs_extra::file::CopyOptions::new().overwrite(true),
     )
     .expect("Unable to copy config file");
-    fs_extra::file::copy(
-        ACCOUNT_FILE_PATH,
-        temp_dir.path().join(account_path),
-        &fs_extra::file::CopyOptions::new().overwrite(true),
-    )
-    .expect("Unable to copy accounts file");
 
     let args = vec![
         "--url",
         URL,
         "--accounts-file",
-        account_path,
+        accounts_json_path.as_str(),
         "--account",
         "user2",
         "multicall",
@@ -229,7 +201,7 @@ async fn test_deploy_success_invoke_fails() {
     let temp_dir = tempdir().expect("Unable to create temporary directory");
 
     let config_path = "./deploy_succ_invoke_fail.toml";
-    let account_path = "./accounts.json";
+    let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
 
     let root_path = project_root::get_project_root().expect("failed to get project root path");
 
@@ -241,18 +213,12 @@ async fn test_deploy_success_invoke_fails() {
         &fs_extra::file::CopyOptions::new().overwrite(true),
     )
     .expect("Unable to copy config file");
-    fs_extra::file::copy(
-        ACCOUNT_FILE_PATH,
-        temp_dir.path().join(account_path),
-        &fs_extra::file::CopyOptions::new().overwrite(true),
-    )
-    .expect("Unable to copy accounts file");
 
     let args = vec![
         "--url",
         URL,
         "--accounts-file",
-        account_path,
+        accounts_json_path.as_str(),
         "--account",
         "user3",
         "multicall",
