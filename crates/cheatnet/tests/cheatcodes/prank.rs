@@ -1,3 +1,4 @@
+use crate::cheatcodes::spy_events::felt_vec_to_event_vec;
 use crate::common::assertions::assert_outputs;
 use crate::common::state::build_runtime_state;
 use crate::common::{call_contract, deploy_wrapper};
@@ -10,9 +11,13 @@ use crate::{
 };
 use blockifier::state::cached_state::{CachedState, GlobalContractCache};
 use cairo_felt::{felt_str, Felt252};
+use cairo_lang_starknet::contract::starknet_keccak;
 use cheatnet::constants::build_testing_state;
 use cheatnet::forking::state::ForkStateReader;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::{
+    Event, SpyTarget,
+};
 use cheatnet::state::{CheatTarget, CheatnetState, ExtendedStateReader};
 use conversions::felt252::FromShortString;
 use conversions::IntoConv;
@@ -568,6 +573,9 @@ fn prank_cairo0_callback() {
         CheatTarget::One(contract_address),
         ContractAddress::from(123_u128),
     );
+    let id = runtime_state.cheatnet_state.spy_events(SpyTarget::All);
+
+    let expected_caller_address = Felt252::from(123_u128);
 
     let output = call_contract(
         &mut cached_state,
@@ -580,8 +588,25 @@ fn prank_cairo0_callback() {
                 "034dad9a1512fcb0d33032c65f4605a073bdc42f70e61524510e5760c2b4f544",
                 16
             ),
-            Felt252::from(123_u128),
+            expected_caller_address.clone(),
         ],
+    );
+
+    let (_, events) = runtime_state
+        .cheatnet_state
+        .fetch_events(&Felt252::from(id));
+
+    let events = felt_vec_to_event_vec(&events);
+
+    // make sure end() was called by cairo0 contract
+    assert_eq!(
+        events[0],
+        Event {
+            from: contract_address,
+            keys: vec![starknet_keccak("End".as_ref()).into()],
+            data: vec![expected_caller_address]
+        },
+        "Wrong event"
     );
 
     assert_success!(output, vec![]);
