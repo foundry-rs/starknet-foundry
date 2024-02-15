@@ -2,7 +2,7 @@ use crate::helpers::constants::URL;
 use crate::helpers::fixtures::create_test_provider;
 
 use camino::Utf8PathBuf;
-use shared::{get_rpc_version, is_supported_version};
+use shared::rpc::{get_rpc_version, is_supported_version};
 use sncast::{get_account, get_provider};
 use std::fs;
 use url::ParseError;

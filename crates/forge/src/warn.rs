@@ -5,7 +5,8 @@ use crate::{
 use anyhow::{anyhow, Context, Result};
 use scarb_api::ScarbCommand;
 use semver::Version;
-use shared::{consts::EXPECTED_RPC_VERSION, get_rpc_version, is_supported_version};
+use shared::consts::EXPECTED_RPC_VERSION;
+use shared::rpc::{get_rpc_version, is_supported_version};
 use starknet::providers::{jsonrpc::HttpTransport, JsonRpcClient};
 use std::collections::HashSet;
 use url::Url;
