@@ -226,7 +226,10 @@ impl TestCaseSummary<Single> {
                         test_statistics: (),
                         gas_info: gas,
                         used_resources,
-                        trace_data: ProfilerCallTrace::from_call_trace(call_trace.borrow().clone(), contracts_data),
+                        trace_data: ProfilerCallTrace::from_call_trace(
+                            call_trace.borrow().clone(),
+                            contracts_data,
+                        ),
                     };
                     check_available_gas(&test_case.available_gas, summary)
                 }
@@ -260,7 +263,10 @@ impl TestCaseSummary<Single> {
                         test_statistics: (),
                         gas_info: gas,
                         used_resources,
-                        trace_data: ProfilerCallTrace::from_call_trace(call_trace.borrow().clone(), contracts_data),
+                        trace_data: ProfilerCallTrace::from_call_trace(
+                            call_trace.borrow().clone(),
+                            contracts_data,
+                        ),
                     },
                 },
             },

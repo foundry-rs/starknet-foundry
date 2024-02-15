@@ -29,6 +29,7 @@ pub struct ProfilerCallTrace {
 }
 
 impl ProfilerCallTrace {
+    #[must_use]
     pub fn from_call_trace(value: CallTrace, contracts_data: &ContractsData) -> Self {
         ProfilerCallTrace {
             entry_point: ProfilerCallEntryPoint::from(value.entry_point, contracts_data),
@@ -42,7 +43,6 @@ impl ProfilerCallTrace {
                 .collect(),
         }
     }
-
 }
 
 #[derive(Clone, Debug, Default, Eq, PartialEq, Deserialize, Serialize)]
@@ -77,8 +77,13 @@ impl ProfilerCallEntryPoint {
             initial_gas,
         } = value;
 
-        let contract_name = class_hash.map(|class_hash| contracts_data.class_hashes.get_by_right(&class_hash)).flatten().cloned();
-        let function_name = contracts_data.selectors.get_by_right(&entry_point_selector).cloned();
+        let contract_name = class_hash
+            .and_then(|class_hash| contracts_data.class_hashes.get_by_right(&class_hash))
+            .cloned();
+        let function_name = contracts_data
+            .selectors
+            .get_by_right(&entry_point_selector)
+            .cloned();
 
         ProfilerCallEntryPoint {
             class_hash,

@@ -2861,6 +2861,7 @@ dependencies = [
  "num-traits 0.2.17",
  "once_cell",
  "rand",
+ "rayon",
  "runtime",
  "scarb-api",
  "serde",

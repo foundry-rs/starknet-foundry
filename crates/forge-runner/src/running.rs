@@ -75,7 +75,7 @@ pub fn run_test(
         if send.is_closed() {
             return Ok(TestCaseSummary::Skipped {});
         }
-    
+
         extract_test_case_summary(run_result, &case, vec![], &runner_params.contracts_data)
     })
 }

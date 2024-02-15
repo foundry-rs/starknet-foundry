@@ -33,11 +33,11 @@ use tokio::sync::mpsc::{channel, Sender};
 use tokio::task::JoinHandle;
 
 pub mod compiled_runnable;
+pub mod contracts_data;
 pub mod expected_result;
 pub mod test_case_summary;
 pub mod test_crate_summary;
 pub mod trace_data;
-pub mod contracts_data;
 
 mod fuzzer;
 mod gas;
@@ -234,7 +234,6 @@ pub async fn run_tests_from_crate(
         let case = Arc::new(case.clone());
         let args: Vec<ConcreteTypeId> = args.into_iter().cloned().collect();
         let test_details = Arc::new(build_test_details(&case.name, sierra_program));
-
 
         tasks.push(choose_test_strategy_and_run(
             args,

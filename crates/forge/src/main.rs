@@ -9,10 +9,10 @@ use forge::scarb::{
 use forge::shared_cache::{clean_cache, set_cached_failed_tests_names};
 use forge::test_filter::TestsFilter;
 use forge::{pretty_printing, run};
+use forge_runner::contracts_data::ContractsData;
 use forge_runner::test_case_summary::{AnyTestCaseSummary, TestCaseSummary};
 use forge_runner::test_crate_summary::TestCrateSummary;
 use forge_runner::{RunnerConfig, RunnerParams, CACHE_DIR};
-use forge_runner::contracts_data::ContractsData;
 use rand::{thread_rng, RngCore};
 use scarb_api::{
     get_contracts_map,
@@ -231,7 +231,7 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                 let forge_config = config_from_scarb_for_package(&scarb_metadata, &package.id)?;
                 let contracts =
                     get_contracts_map(&scarb_metadata, &package.id, None).unwrap_or_default();
-                
+
                 let contracts_data = ContractsData::try_from(contracts)?;
 
                 let runner_config = Arc::new(combine_configs(
@@ -243,7 +243,8 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                     args.save_trace_data,
                     &forge_config,
                 ));
-                let runner_params = Arc::new(RunnerParams::new(contracts_data, env::vars().collect()));
+                let runner_params =
+                    Arc::new(RunnerParams::new(contracts_data, env::vars().collect()));
 
                 let tests_file_summaries = run(
                     &package.name,
@@ -279,8 +280,6 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
 
     Ok(all_failed_tests.is_empty())
 }
-
-
 
 #[allow(clippy::too_many_lines)]
 fn main_execution() -> Result<bool> {
