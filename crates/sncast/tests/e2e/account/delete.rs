@@ -2,8 +2,7 @@ use crate::helpers::constants::URL;
 use crate::helpers::fixtures::default_cli_args;
 use crate::helpers::runner::runner;
 use indoc::indoc;
-use std::path::Path;
-use tempfile::tempdir;
+use tempfile::{tempdir, TempDir};
 use tokio::fs::File;
 use tokio::io::AsyncWriteExt;
 
@@ -42,18 +41,16 @@ pub async fn test_account_does_not_exist() {
 
 #[tokio::test]
 pub async fn test_delete_abort() {
-    let temp_dir = tempdir().expect("Unable to create a temporary directory");
-
     // Creating dummy accounts test file
-    let accounts_file_path = temp_dir.path().join("temp_accounts.json");
-    create_dummy_accounts_file(&accounts_file_path).await;
+    let accounts_file_name = "temp_accounts.json";
+    let temp_dir = create_tempdir_with_accounts_file(accounts_file_name).await;
 
     // Now delete dummy account
     let args = vec![
         "--url",
         URL,
         "--accounts-file",
-        "temp_accounts.json",
+        &accounts_file_name,
         "account",
         "delete",
         "--name",
@@ -73,18 +70,16 @@ pub async fn test_delete_abort() {
 
 #[tokio::test]
 pub async fn test_happy_case() {
-    let temp_dir = tempdir().expect("Unable to create a temporary directory");
-
     // Creating dummy accounts test file
-    let accounts_file_path = temp_dir.path().join("temp_accounts.json");
-    create_dummy_accounts_file(&accounts_file_path).await;
+    let accounts_file_name = "temp_accounts.json";
+    let temp_dir = create_tempdir_with_accounts_file(accounts_file_name).await;
 
     // Now delete dummy account
     let args = vec![
         "--url",
         URL,
         "--accounts-file",
-        "temp_accounts.json",
+        &accounts_file_name,
         "account",
         "delete",
         "--name",
@@ -105,18 +100,16 @@ pub async fn test_happy_case() {
 
 #[tokio::test]
 pub async fn test_happy_case_without_network_args() {
-    let temp_dir = tempdir().expect("Unable to create a temporary directory");
-
     // Creating dummy accounts test file
-    let accounts_file_path = temp_dir.path().join("temp_accounts.json");
-    create_dummy_accounts_file(&accounts_file_path).await;
+    let accounts_file_name = "temp_accounts.json";
+    let temp_dir = create_tempdir_with_accounts_file(accounts_file_name).await;
 
     // Now delete dummy account
     let args = vec![
         "--url",
         URL,
         "--accounts-file",
-        "temp_accounts.json",
+        &accounts_file_name,
         "account",
         "delete",
         "--name",
@@ -135,18 +128,16 @@ pub async fn test_happy_case_without_network_args() {
 
 #[tokio::test]
 pub async fn test_happy_case_with_yes_flag() {
-    let temp_dir = tempdir().expect("Unable to create a temporary directory");
-
     // Creating dummy accounts test file
-    let accounts_file_path = temp_dir.path().join("temp_accounts.json");
-    create_dummy_accounts_file(&accounts_file_path).await;
+    let accounts_file_name = "temp_accounts.json";
+    let temp_dir = create_tempdir_with_accounts_file(accounts_file_name).await;
 
     // Now delete dummy account
     let args = vec![
         "--url",
         URL,
         "--accounts-file",
-        "temp_accounts.json",
+        &accounts_file_name,
         "account",
         "delete",
         "--name",
@@ -167,7 +158,10 @@ pub async fn test_happy_case_with_yes_flag() {
     assert!(stdout_str.contains("Account successfully removed"));
 }
 
-async fn create_dummy_accounts_file(file_path: &Path) {
+#[must_use]
+async fn create_tempdir_with_accounts_file(file_name: &str) -> TempDir {
+    let tempdir = tempdir().expect("Unable to create temporary directory");
+
     let json_data = indoc! {r#"
     {
         "alpha-goerli": {
@@ -194,11 +188,13 @@ async fn create_dummy_accounts_file(file_path: &Path) {
     }
     "#};
 
-    let mut file = File::create(file_path)
+    let mut file = File::create(tempdir.path().join(file_name))
         .await
         .expect("Could not create temporary accounts file!");
     file.write_all(json_data.as_bytes())
         .await
         .expect("Could not write temporary testing accounts");
     let _ = file.flush().await;
+
+    tempdir
 }
