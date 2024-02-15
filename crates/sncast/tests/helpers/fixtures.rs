@@ -310,18 +310,14 @@ pub fn copy_directory_to_tempdir(src_dir: impl AsRef<Utf8Path>) -> TempDir {
     temp_dir
 }
 
-pub fn duplicate_script_directory(
+fn copy_script_directory(
     src_dir: impl AsRef<Utf8Path>,
-    deps: Vec<impl AsRef<std::path::Path>>,
-) -> TempDir {
-    let mut deps = get_deps_map_from_paths(deps);
-
+    dest_dir: impl AsRef<Utf8Path>,
+    deps: &Vec<impl AsRef<std::path::Path>>,
+) {
     let src_dir = Utf8PathBuf::from(src_dir.as_ref());
-
-    let temp_dir = copy_directory_to_tempdir(&src_dir);
-
-    let dest_dir = Utf8PathBuf::from_path_buf(temp_dir.path().to_path_buf())
-        .expect("Failed to create Utf8PathBuf from PathBuf");
+    let dest_dir = Utf8PathBuf::from(dest_dir.as_ref());
+    let mut deps = get_deps_map_from_paths(deps);
 
     let manifest_path = dest_dir.join("Scarb.toml");
     let contents = fs::read_to_string(&manifest_path).unwrap();
@@ -359,13 +355,48 @@ pub fn duplicate_script_directory(
     let mut file = File::create(manifest_path).expect("Failed to create file");
     file.write_all(modified_toml.as_bytes())
         .expect("Failed to write to file");
+}
+
+pub fn duplicate_script_directory(
+    src_dir: impl AsRef<Utf8Path>,
+    deps: Vec<impl AsRef<std::path::Path>>,
+) -> TempDir {
+    let temp_dir = copy_directory_to_tempdir(&src_dir);
+
+    let dest_dir = Utf8PathBuf::from_path_buf(temp_dir.path().to_path_buf())
+        .expect("Failed to create Utf8PathBuf from PathBuf");
+
+    copy_script_directory(&src_dir, dest_dir, &deps);
+
+    temp_dir
+}
+
+pub fn duplicate_workspace_directory(
+    src_dir: impl AsRef<Utf8Path>,
+    members: Vec<impl AsRef<std::path::Path>>,
+    deps: Vec<impl AsRef<std::path::Path>>,
+) -> TempDir {
+    let src_dir = Utf8PathBuf::from(src_dir.as_ref());
+
+    let temp_dir = copy_directory_to_tempdir(&src_dir);
+
+    let dest_dir = Utf8PathBuf::from_path_buf(temp_dir.path().to_path_buf())
+        .expect("Failed to create Utf8PathBuf from PathBuf");
+
+    for member in members {
+        let member = member.as_ref().to_str().unwrap();
+        let src_member_path = src_dir.join(member);
+        let dest_member_path = dest_dir.join(member);
+        fs::create_dir_all(&dest_member_path).expect("Failed to create directories in temp dir");
+        copy_script_directory(&src_member_path, dest_member_path, &deps);
+    }
 
     temp_dir
 }
 
 #[must_use]
 pub fn get_deps_map_from_paths(
-    paths: Vec<impl AsRef<std::path::Path>>,
+    paths: &Vec<impl AsRef<std::path::Path>>,
 ) -> HashMap<String, Utf8PathBuf> {
     let mut deps = HashMap::<String, Utf8PathBuf>::new();
 
