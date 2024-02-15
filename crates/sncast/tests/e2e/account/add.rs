@@ -9,8 +9,8 @@ use tempfile::tempdir;
 
 #[tokio::test]
 pub async fn test_happy_case() {
-    let accounts_file = "./tmp-a1/accounts.json";
-    _ = fs::remove_file(accounts_file);
+    let tempdir = tempdir().expect("Unable to create a temporary directory");
+    let accounts_file = "./accounts.json";
 
     let args = vec![
         "--url",
@@ -28,14 +28,15 @@ pub async fn test_happy_case() {
         "--deployed",
     ];
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().stdout_matches(indoc! {r"
         command: account add
         add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
     "});
 
-    let contents = fs::read_to_string(accounts_file).expect("Unable to read created file");
+    let contents = fs::read_to_string(tempdir.path().join(accounts_file))
+        .expect("Unable to read created file");
     let contents_json: serde_json::Value = serde_json::from_str(&contents).unwrap();
     assert_eq!(
         contents_json,
@@ -52,8 +53,6 @@ pub async fn test_happy_case() {
             }
         )
     );
-
-    fs::remove_dir_all(Utf8PathBuf::from(accounts_file).parent().unwrap()).unwrap();
 }
 
 #[tokio::test]
@@ -123,8 +122,8 @@ pub async fn test_happy_case_add_profile() {
 
 #[tokio::test]
 pub async fn test_detect_deployed() {
-    let accounts_file = "./tmp-a2/accounts.json";
-    _ = fs::remove_file(accounts_file);
+    let tempdir = tempdir().expect("Unable to create a temporary directory");
+    let accounts_file = "./accounts.json";
 
     let args = vec![
         "--url",
@@ -141,14 +140,15 @@ pub async fn test_detect_deployed() {
         "0x5",
     ];
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().stdout_matches(indoc! {r"
         command: account add
         add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
     "});
 
-    let contents = fs::read_to_string(accounts_file).expect("Unable to read created file");
+    let contents = fs::read_to_string(tempdir.path().join(accounts_file))
+        .expect("Unable to read created file");
     let contents_json: serde_json::Value = serde_json::from_str(&contents).unwrap();
     assert_eq!(
         contents_json,
@@ -165,8 +165,6 @@ pub async fn test_detect_deployed() {
             }
         )
     );
-
-    fs::remove_dir_all(Utf8PathBuf::from(accounts_file).parent().unwrap()).unwrap();
 }
 
 #[tokio::test]
