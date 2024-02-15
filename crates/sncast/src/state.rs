@@ -8,18 +8,18 @@ use std::collections::HashMap;
 use std::fs;
 
 #[derive(Deserialize, Serialize, Debug)]
-pub struct StateFile {
+pub struct ScriptTransactionsSchema {
     pub version: u8,
     pub transactions: Option<ScriptTransactionEntries>,
 }
 
-impl StateFile {
+impl ScriptTransactionsSchema {
     pub fn append_transaction_entries(&mut self, tx_entries: ScriptTransactionEntries) {
         match self.transactions {
             Some(ref mut existing_entries) => {
                 existing_entries
                     .transactions
-                    .extend(tx_entries.transactions.into_iter());
+                    .extend(tx_entries.transactions);
             }
             None => {
                 self.transactions = Some(tx_entries);
@@ -28,18 +28,19 @@ impl StateFile {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq)]
+#[derive(Clone, Deserialize, Serialize, Debug, PartialEq)]
 pub struct ScriptTransactionEntries {
     pub transactions: HashMap<String, ScriptTransactionEntry>,
 }
 
 impl ScriptTransactionEntries {
+    #[must_use]
     pub fn get(&self, key: &str) -> Option<&ScriptTransactionEntry> {
         self.transactions.get(key)
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq)]
+#[derive(Clone, Deserialize, Serialize, Debug, PartialEq)]
 pub struct ScriptTransactionEntry {
     pub name: String,
     pub output: ScriptTransactionOutput,
@@ -48,7 +49,7 @@ pub struct ScriptTransactionEntry {
     pub misc: Option<HashMap<String, Value>>,
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq)]
+#[derive(Clone, Deserialize, Serialize, Debug, PartialEq)]
 #[serde(tag = "type")]
 pub enum ScriptTransactionOutput {
     InvokeResponse(InvokeResponse),
@@ -57,12 +58,12 @@ pub enum ScriptTransactionOutput {
     ErrorResponse(ErrorResponse),
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq)]
+#[derive(Clone, Deserialize, Serialize, Debug, PartialEq)]
 pub struct ErrorResponse {
     pub message: String,
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq)]
+#[derive(Clone, Deserialize, Serialize, Debug, PartialEq)]
 pub enum ScriptTransactionStatus {
     // script executed successfully, transaction accepted/succeeded
     Success,
@@ -72,51 +73,72 @@ pub enum ScriptTransactionStatus {
     Error,
 }
 
-pub fn load_or_create_state_file(path: &Utf8PathBuf) -> Result<StateFile> {
+pub fn load_or_create_state_file(path: &Utf8PathBuf) -> Result<ScriptTransactionsSchema> {
     if path.exists() {
         let content = fs::read_to_string(path).expect("Failed to read state file");
-        match serde_json::from_str::<StateFile>(&content) {
-            Ok(state_file) => Ok(state_file),
+        match serde_json::from_str::<ScriptTransactionsSchema>(&content) {
+            Ok(state_file) => {
+                verify_version(state_file.version)?;
+                Ok(state_file)
+            }
             Err(_) => Err(anyhow!("Failed to parse state file - it may be corrupt")),
         }
     } else {
-        let default_state = StateFile {
+        let default_state = ScriptTransactionsSchema {
             version: STATE_FILE_VERSION,
             transactions: None,
         };
         fs::write(
-            &path,
+            path,
             serde_json::to_string_pretty(&default_state)
-                .expect("Failed to convert StateFile to json"),
+                .expect("Failed to convert ScriptTransactionsSchema to json"),
         )
         .expect("Failed to write initial state to state file");
         Ok(default_state)
     }
 }
 
-// pub fn generate_transaction_entry(tx_entry: ScriptTransactionEntry) -> ScriptTransactionEntries {
-//     // todo (1545): Implement hashing function for unique ids
-//     let id = format!("{}-{}", tx_entry.name, tx_entry.timestamp);
-//     ScriptTransactionEntries
-// }
+// todo (1233): remove must_use attribute when it's no longer needed
+#[must_use]
+pub fn generate_transaction_entry_with_id(
+    tx_entry: ScriptTransactionEntry,
+) -> ScriptTransactionEntries {
+    // todo (1545): Implement hashing function for unique ids
+    let id = format!("{}-{}", tx_entry.name, tx_entry.timestamp);
+    let transaction = HashMap::from([(id, tx_entry)]);
+    ScriptTransactionEntries {
+        transactions: transaction,
+    }
+}
 
 pub fn write_txs_to_state_file(
     state_file_path: &Utf8PathBuf,
     tx_entries: ScriptTransactionEntries,
 ) -> Result<()> {
     let mut state_file = load_or_create_state_file(state_file_path)
-        .expect(&format!("Failed to write to state file {state_file_path}"));
+        .unwrap_or_else(|_| panic!("Failed to write to state file {state_file_path}"));
     state_file.append_transaction_entries(tx_entries);
+    fs::write(
+        state_file_path,
+        serde_json::to_string_pretty(&state_file)
+            .expect("Failed to convert ScriptTransactionsSchema to json"),
+    )
+    .unwrap_or_else(|_| panic!("Failed to write new transactions to state file {state_file_path}"));
     Ok(())
 }
 
-// sprawdzanie wersji
-// zapisywanie do pliku przy użyciu pliku .bcp
-// pozwolić userom zapisywać coś do misc
+// todo: add support for multiple state file versions (when needed)
+fn verify_version(version: u8) -> Result<()> {
+    match version {
+        STATE_FILE_VERSION => Ok(()),
+        _ => Err(anyhow!(format!("Unsupported state file version {version}"))),
+    }
+}
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::response::structs::Hex;
     use crate::state::ScriptTransactionOutput::ErrorResponse;
     use camino::Utf8PathBuf;
     use tempfile::TempDir;
@@ -127,8 +149,7 @@ mod tests {
         let state_file = Utf8PathBuf::from_path_buf(
             tempdir
                 .path()
-                .join("test_load_or_create_state_file_new_happy.json")
-                .into(),
+                .join("test_load_or_create_state_file_new_happy.json"),
         )
         .unwrap();
 
@@ -179,7 +200,7 @@ mod tests {
                 error.message,
                 "Max fee is smaller than the minimal transaction cost"
             ),
-            _ => assert!(false, "Expected an ErrorResponse for the transaction"),
+            _ => unreachable!(),
         }
     }
 
@@ -193,33 +214,111 @@ mod tests {
         );
     }
 
-    // #[test]
-    // fn test_write_to_file_no_file() {
-    //     let tempdir = TempDir::new().unwrap();
-    //     let state_file_path = Utf8PathBuf::from_path_buf(
-    //         tempdir
-    //             .path()
-    //             .join("write_state_nofile.json")
-    //             .into(),
-    //     )
-    //     .unwrap();
-    //
-    //     HashMap.
-    //     let result = write_txs_to_state_file(&state_file_path).unwrap();
-    // }
+    #[test]
+    fn test_version_mismatch() {
+        let state_file = Utf8PathBuf::from("tests/data/files/state_wrong_version.json");
+        let result = load_or_create_state_file(&state_file).unwrap_err();
+        assert_eq!(result.to_string(), "Unsupported state file version 0");
+    }
 
-    // #[test]
-    // fn test_write_to_file_txs_existed() {
-    //
-    // }
+    #[test]
+    fn test_write_to_file() {
+        let tempdir = TempDir::new().unwrap();
+        let state_file_path =
+            Utf8PathBuf::from_path_buf(tempdir.path().join("write_state_nofile.json")).unwrap();
 
-    // #[test]
-    // fn test_write_to_file_wrong_entries???() {
-    //
-    // }
+        let transaction = ScriptTransactionEntry {
+            name: "declare".to_string(),
+            output: ScriptTransactionOutput::DeclareResponse(DeclareResponse {
+                class_hash: Hex("0x123".parse().unwrap()),
+                transaction_hash: Hex("0x321".parse().unwrap()),
+            }),
+            status: ScriptTransactionStatus::Success,
+            timestamp: 0,
+            misc: None,
+        };
 
-    // #[test]
-    // fn test_load_or_create_state_file_exists_version_mismatch() {
-    //
-    // }
+        let tx_entry = generate_transaction_entry_with_id(transaction.clone());
+        write_txs_to_state_file(&state_file_path, tx_entry).unwrap();
+        let content = fs::read_to_string(state_file_path).unwrap();
+        let parsed_content = serde_json::from_str::<ScriptTransactionsSchema>(&content).unwrap();
+
+        assert_eq!(parsed_content.version, 1);
+        assert_eq!(
+            parsed_content
+                .transactions
+                .unwrap()
+                .transactions
+                .iter()
+                .next()
+                .unwrap()
+                .1,
+            &transaction
+        );
+    }
+
+    #[test]
+    fn test_write_to_file_append() {
+        let tempdir = TempDir::new().unwrap();
+        let state_file_path =
+            Utf8PathBuf::from_path_buf(tempdir.path().join("write_state_append.json")).unwrap();
+
+        let transaction1 = ScriptTransactionEntry {
+            name: "declare".to_string(),
+            output: ScriptTransactionOutput::DeclareResponse(DeclareResponse {
+                class_hash: Hex("0x1".parse().unwrap()),
+                transaction_hash: Hex("0x2".parse().unwrap()),
+            }),
+            status: ScriptTransactionStatus::Success,
+            timestamp: 0,
+            misc: None,
+        };
+
+        let tx1_entry = generate_transaction_entry_with_id(transaction1.clone());
+        write_txs_to_state_file(&state_file_path, tx1_entry).unwrap();
+
+        let transaction2 = ScriptTransactionEntry {
+            name: "invoke".to_string(),
+            output: ScriptTransactionOutput::InvokeResponse(InvokeResponse {
+                transaction_hash: Hex("0x3".parse().unwrap()),
+            }),
+            status: ScriptTransactionStatus::Success,
+            timestamp: 1,
+            misc: None,
+        };
+
+        let tx2_entry = generate_transaction_entry_with_id(transaction2.clone());
+        write_txs_to_state_file(&state_file_path, tx2_entry).unwrap();
+
+        let content = fs::read_to_string(state_file_path).unwrap();
+        let parsed_content = serde_json::from_str::<ScriptTransactionsSchema>(&content).unwrap();
+
+        assert_eq!(
+            parsed_content
+                .transactions
+                .clone()
+                .unwrap()
+                .transactions
+                .len(),
+            2
+        );
+        assert_eq!(
+            parsed_content
+                .transactions
+                .clone()
+                .unwrap()
+                .get("declare-0")
+                .unwrap(),
+            &transaction1
+        );
+        assert_eq!(
+            parsed_content
+                .transactions
+                .clone()
+                .unwrap()
+                .get("invoke-1")
+                .unwrap(),
+            &transaction2
+        );
+    }
 }

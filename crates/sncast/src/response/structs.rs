@@ -40,14 +40,14 @@ pub struct InvokeResponse {
 }
 impl CommandResponse for InvokeResponse {}
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub struct DeployResponse {
     pub contract_address: Hex,
     pub transaction_hash: Hex,
 }
 impl CommandResponse for DeployResponse {}
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub struct DeclareResponse {
     pub class_hash: Hex,
     pub transaction_hash: Hex,
