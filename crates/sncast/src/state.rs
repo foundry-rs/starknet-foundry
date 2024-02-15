@@ -1,4 +1,5 @@
 use crate::helpers::constants::STATE_FILE_VERSION;
+use crate::response::structs::{DeclareResponse, DeployResponse, InvokeResponse};
 use anyhow::{anyhow, Result};
 use camino::Utf8PathBuf;
 use serde::{Deserialize, Serialize};
@@ -16,8 +17,10 @@ impl StateFile {
     pub fn append_transaction_entries(&mut self, tx_entries: ScriptTransactionEntries) {
         match self.transactions {
             Some(ref mut existing_entries) => {
-                existing_entries.transactions.extend(tx_entries.transactions.into_iter());
-            },
+                existing_entries
+                    .transactions
+                    .extend(tx_entries.transactions.into_iter());
+            }
             None => {
                 self.transactions = Some(tx_entries);
             }
@@ -27,7 +30,7 @@ impl StateFile {
 
 #[derive(Deserialize, Serialize, Debug, PartialEq)]
 pub struct ScriptTransactionEntries {
-    pub transactions: HashMap<String, ScriptTransactionEntry>, // todo: get rid of hashmaps
+    pub transactions: HashMap<String, ScriptTransactionEntry>,
 }
 
 impl ScriptTransactionEntries {
@@ -46,15 +49,17 @@ pub struct ScriptTransactionEntry {
 }
 
 #[derive(Deserialize, Serialize, Debug, PartialEq)]
-pub struct ScriptTransactionOutput {
-    #[serde(flatten)]
-    pub output: HashMap<String, Value>, // todo: get rid of hashmaps
+#[serde(tag = "type")]
+pub enum ScriptTransactionOutput {
+    InvokeResponse(InvokeResponse),
+    DeclareResponse(DeclareResponse),
+    DeployResponse(DeployResponse),
+    ErrorResponse(ErrorResponse),
 }
 
-impl ScriptTransactionOutput {
-    pub fn get(&self, key: &str) -> Result<&Value, &'static str> {
-        self.output.get(key).ok_or("Key not found in outputs struct")
-    }
+#[derive(Deserialize, Serialize, Debug, PartialEq)]
+pub struct ErrorResponse {
+    pub message: String,
 }
 
 #[derive(Deserialize, Serialize, Debug, PartialEq)]
@@ -95,8 +100,12 @@ pub fn load_or_create_state_file(path: &Utf8PathBuf) -> Result<StateFile> {
 //     ScriptTransactionEntries
 // }
 
-pub fn write_txs_to_state_file(state_file_path: &Utf8PathBuf, tx_entries: ScriptTransactionEntries) -> Result<()> {
-    let mut state_file = load_or_create_state_file(state_file_path).expect("Failed to load state file");
+pub fn write_txs_to_state_file(
+    state_file_path: &Utf8PathBuf,
+    tx_entries: ScriptTransactionEntries,
+) -> Result<()> {
+    let mut state_file = load_or_create_state_file(state_file_path)
+        .expect(&format!("Failed to write to state file {state_file_path}"));
     state_file.append_transaction_entries(tx_entries);
     Ok(())
 }
@@ -108,6 +117,7 @@ pub fn write_txs_to_state_file(state_file_path: &Utf8PathBuf, tx_entries: Script
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::state::ScriptTransactionOutput::ErrorResponse;
     use camino::Utf8PathBuf;
     use tempfile::TempDir;
 
@@ -142,7 +152,15 @@ mod tests {
         let state_file = Utf8PathBuf::from("tests/data/files/state_with_tx.json");
         let result = load_or_create_state_file(&state_file).unwrap();
 
-        assert_eq!(result.transactions.unwrap().get("123-abc-789").unwrap().name, "declare");
+        assert_eq!(
+            result
+                .transactions
+                .unwrap()
+                .get("123-abc-789")
+                .unwrap()
+                .name,
+            "declare"
+        );
     }
 
     #[test]
@@ -150,14 +168,29 @@ mod tests {
         let state_file = Utf8PathBuf::from("tests/data/files/state_with_txs.json");
         let result = load_or_create_state_file(&state_file).unwrap();
 
-        assert_eq!(result.transactions.unwrap().get("789-def-420").unwrap().output.get("error").unwrap().as_str().unwrap(), "Max fee is smaller than the minimal transaction cost");
+        let transaction_entry = result
+            .transactions
+            .as_ref()
+            .and_then(|tx| tx.get("789-def-420"))
+            .unwrap();
+
+        match &transaction_entry.output {
+            ErrorResponse(error) => assert_eq!(
+                error.message,
+                "Max fee is smaller than the minimal transaction cost"
+            ),
+            _ => assert!(false, "Expected an ErrorResponse for the transaction"),
+        }
     }
 
     #[test]
     fn test_load_or_create_state_file_exists_corrupt() {
         let state_file = Utf8PathBuf::from("tests/data/files/state_corrupt_missing_field.json");
         let result = load_or_create_state_file(&state_file).unwrap_err();
-        assert_eq!(result.to_string(), "Failed to parse state file - it may be corrupt");
+        assert_eq!(
+            result.to_string(),
+            "Failed to parse state file - it may be corrupt"
+        );
     }
 
     // #[test]

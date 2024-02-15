@@ -4,6 +4,7 @@
     "123-abc-789": {
       "name": "declare",
       "output": {
+        "type": "DeclareResponse",
         "class_hash": "0x123",
         "transaction_hash": "0x321"
       },
