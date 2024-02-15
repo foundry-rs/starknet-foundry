@@ -15,12 +15,13 @@ use runtime::starknet::state::DictStateReader;
 
 use starknet_api::core::EntryPointSelector;
 
-use crate::constants::build_test_entry_point;
+use crate::constants::{build_test_entry_point, TEST_CONTRACT_CLASS_HASH};
 use blockifier::state::errors::StateError::UndeclaredClassHash;
 use starknet_api::transaction::ContractAddressSalt;
 use starknet_api::{
     core::{ClassHash, CompiledClassHash, ContractAddress, Nonce},
     hash::StarkFelt,
+    stark_felt,
     state::StorageKey,
 };
 use std::cell::{Ref, RefCell};
@@ -129,6 +130,8 @@ pub enum CheatStatus<T> {
 #[derive(Clone)]
 pub struct CallTrace {
     pub entry_point: CallEntryPoint,
+    // Used to ensure on type level that we always have a class hash info
+    pub class_hash: ClassHash,
     // These also include resources used by internal calls
     pub used_execution_resources: ExecutionResources,
     pub nested_calls: Vec<Rc<RefCell<CallTrace>>>,
@@ -207,6 +210,7 @@ impl Default for CheatnetState {
     fn default() -> Self {
         let test_call = Rc::new(RefCell::new(CallTrace {
             entry_point: build_test_entry_point(),
+            class_hash: ClassHash(stark_felt!(TEST_CONTRACT_CLASS_HASH)),
             used_execution_resources: Default::default(),
             nested_calls: vec![],
         }));
@@ -303,9 +307,11 @@ impl TraceData {
         &mut self,
         entry_point: CallEntryPoint,
         resources_used_before_call: ExecutionResources,
+        class_hash: ClassHash,
     ) {
         let new_call = Rc::new(RefCell::new(CallTrace {
             entry_point,
+            class_hash,
             used_execution_resources: Default::default(),
             nested_calls: vec![],
         }));

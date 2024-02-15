@@ -35,10 +35,19 @@ pub fn execute_call_entry_point(
 ) -> EntryPointExecutionResult<CallInfo> {
     // region: Modified blockifier code
     // We skip recursion depth validation here.
-    runtime_state
-        .cheatnet_state
-        .trace_data
-        .enter_nested_call(entry_point.clone(), resources.clone());
+    let class_hash = if let Some(class_hash) = entry_point.class_hash {
+        class_hash
+    } else {
+        state
+            .get_class_hash_at(entry_point.storage_address)
+            .unwrap()
+    };
+
+    runtime_state.cheatnet_state.trace_data.enter_nested_call(
+        entry_point.clone(),
+        resources.clone(),
+        class_hash,
+    );
 
     if let Some(ret_data) =
         get_ret_data_by_call_entry_point(entry_point, runtime_state.cheatnet_state)
