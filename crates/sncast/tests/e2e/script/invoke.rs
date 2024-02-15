@@ -73,7 +73,7 @@ fn test_wrong_function_name() {
         &script_name,
     ];
 
-    let snapbox = runner(&args).current_dir(script_dir);
+    let snapbox = runner(&args).current_dir(script_dir.path());
     snapbox.assert().success().stderr_matches(indoc! {r"
         ...
         command: script
@@ -99,7 +99,7 @@ fn test_wrong_calldata() {
         &script_name,
     ];
 
-    let snapbox = runner(&args).current_dir(script_dir);
+    let snapbox = runner(&args).current_dir(script_dir.path());
     snapbox.assert().success().stderr_matches(indoc! {r"
         ...
         command: script
