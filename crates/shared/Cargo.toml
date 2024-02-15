@@ -5,5 +5,7 @@ edition.workspace = true
 
 [dependencies]
 anyhow.workspace = true
+cairo-felt.workspace = true
+cairo-lang-runner.workspace = true
 semver.workspace = true
 starknet.workspace = true

@@ -4,6 +4,7 @@ use semver::Version;
 use starknet::providers::{jsonrpc::HttpTransport, JsonRpcClient, Provider};
 
 pub mod consts;
+pub mod utils;
 
 #[must_use]
 pub fn is_supported_version(version: &Version) -> bool {
