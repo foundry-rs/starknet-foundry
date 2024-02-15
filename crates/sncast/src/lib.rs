@@ -433,7 +433,7 @@ async fn get_revert_reason(
     let receipt = provider
         .get_transaction_receipt(tx_hash)
         .await
-        .context("Unexpected provider error")?;
+        .context("Unexpected provider error while fetching transaction receipt")?;
 
     if let starknet::core::types::ExecutionResult::Reverted { reason } = receipt.execution_result()
     {
