@@ -6,7 +6,6 @@ use crate::helpers::fixtures::{
 use crate::helpers::runner::runner;
 use indoc::indoc;
 use serde_json::Value;
-use snapbox::cmd::{cargo_bin, Command};
 use sncast::helpers::configuration::copy_config_to_tempdir;
 use sncast::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
 use starknet::core::types::TransactionReceipt::DeployAccount;
@@ -36,9 +35,7 @@ pub async fn test_happy_case() {
         DEVNET_OZ_CLASS_HASH,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(tempdir.path())
-        .args(&args);
+    let snapbox = runner(&args).current_dir(tempdir.path());
     let bdg = snapbox.assert();
     let out = bdg.get_output();
 
@@ -79,9 +76,7 @@ pub async fn test_happy_case_add_profile() {
         DEVNET_OZ_CLASS_HASH,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(tempdir.path())
-        .args(&args);
+    let snapbox = runner(&args).current_dir(tempdir.path());
     let bdg = snapbox.assert();
     let out = bdg.get_output();
 
@@ -149,9 +144,7 @@ async fn test_too_low_max_fee() {
         DEVNET_OZ_CLASS_HASH,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(&tempdir)
-        .args(args);
+    let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().success().stderr_matches(indoc! {r"
         command: account deploy
@@ -179,9 +172,7 @@ pub async fn test_invalid_class_hash() {
         "0x123",
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(&tempdir)
-        .args(args);
+    let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().success().stderr_matches(indoc! {r"
         command: account deploy
@@ -207,9 +198,7 @@ pub async fn test_valid_class_hash() {
         "10000000000000000",
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(&tempdir)
-        .args(args);
+    let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().success().stdout_matches(indoc! {r"
         command: account deploy
@@ -235,9 +224,7 @@ pub async fn test_valid_no_max_fee() {
         "my_account",
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(&tempdir)
-        .args(args);
+    let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().success().stdout_matches(indoc! {r"
         command: account deploy
@@ -266,9 +253,8 @@ pub async fn create_account(add_profile: bool) -> TempDir {
         args.push("deploy_profile");
     }
 
-    Command::new(cargo_bin!("sncast"))
+    runner(&args)
         .current_dir(tempdir.path())
-        .args(&args)
         .assert()
         .success();
 
@@ -335,9 +321,7 @@ pub async fn test_happy_case_keystore() {
         DEVNET_OZ_CLASS_HASH,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(tempdir.path())
-        .args(args);
+    let snapbox = runner(&args).current_dir(tempdir.path());
     let bdg = snapbox.assert();
     let out = bdg.get_output();
 
@@ -391,9 +375,7 @@ pub async fn test_keystore_already_deployed() {
         DEVNET_OZ_CLASS_HASH,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(tempdir.path())
-        .args(args);
+    let snapbox = runner(&args).current_dir(tempdir.path());
     snapbox.assert().stderr_matches(indoc! {r"
         command: account deploy
         error: Account already deployed
@@ -437,9 +419,7 @@ pub async fn test_keystore_key_mismatch() {
         DEVNET_OZ_CLASS_HASH,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(tempdir.path())
-        .args(args);
+    let snapbox = runner(&args).current_dir(tempdir.path());
     snapbox.assert().stderr_matches(indoc! {r"
         command: account deploy
         error: Public key and private key from keystore do not match
@@ -490,9 +470,7 @@ pub fn test_deploy_keystore_inexistent_file(
         DEVNET_OZ_CLASS_HASH,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(tempdir.path())
-        .args(args);
+    let snapbox = runner(&args).current_dir(tempdir.path());
     let bdg = snapbox.assert();
     let out = bdg.get_output();
     let stderr_str =
@@ -538,9 +516,7 @@ pub async fn test_deploy_keystore_no_status() {
         DEVNET_OZ_CLASS_HASH,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(tempdir.path())
-        .args(args);
+    let snapbox = runner(&args).current_dir(tempdir.path());
     snapbox.assert().stderr_matches(indoc! {r"
         command: account deploy
         error: Failed to get status from account JSON file
@@ -600,9 +576,7 @@ pub async fn test_deploy_keystore_other_args() {
         DEVNET_OZ_CLASS_HASH,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(tempdir.path())
-        .args(args);
+    let snapbox = runner(&args).current_dir(tempdir.path());
     snapbox.assert().stdout_matches(indoc! {r"
         command: account deploy
         transaction_hash: 0x[..]

@@ -2,7 +2,6 @@ use crate::helpers::constants::URL;
 use crate::helpers::fixtures::default_cli_args;
 use crate::helpers::runner::runner;
 use indoc::indoc;
-use snapbox::cmd::{cargo_bin, Command};
 use std::path::Path;
 use tempfile::tempdir;
 use tokio::fs::File;
@@ -64,11 +63,10 @@ pub async fn test_delete_abort() {
     ];
 
     // Run test with a negative user input
-    let snapbox = Command::new(cargo_bin!("sncast"))
+    let snapbox = runner(&args)
         .current_dir(temp_dir.path())
-        .args(args)
         .stdin("n");
-
+    
     snapbox.assert().stderr_matches(indoc! {r"
     command: account delete
     error: Delete aborted
@@ -98,9 +96,8 @@ pub async fn test_happy_case() {
     ];
 
     // Run test with an affirmative user input
-    let snapbox = Command::new(cargo_bin!("sncast"))
+    let snapbox = runner(&args)
         .current_dir(temp_dir.path())
-        .args(args)
         .stdin("Y");
     let bdg = snapbox.assert();
     let out = bdg.get_output();
@@ -131,9 +128,8 @@ pub async fn test_happy_case_without_network_args() {
     ];
 
     // Run test with an affirmative user input
-    let snapbox = Command::new(cargo_bin!("sncast"))
+    let snapbox = runner(&args)
         .current_dir(temp_dir.path())
-        .args(args)
         .stdin("Y");
     let bdg = snapbox.assert();
     let out = bdg.get_output();

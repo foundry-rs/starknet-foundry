@@ -3,7 +3,6 @@ use crate::helpers::runner::runner;
 use camino::Utf8PathBuf;
 use indoc::indoc;
 use serde_json::json;
-use snapbox::cmd::{cargo_bin, Command};
 use std::fs;
 use tempfile::tempdir;
 
@@ -83,9 +82,7 @@ pub async fn test_happy_case_add_profile() {
         "my_account_add",
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(tempdir.path())
-        .args(args);
+    let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().stdout_matches(indoc! {r"
         command: account add
@@ -368,9 +365,8 @@ pub async fn test_private_key_as_int_in_file() {
         private_key_file,
     ];
 
-    Command::new(cargo_bin!("sncast"))
+    runner(&args)
         .current_dir(temp_dir.path())
-        .args(args)
         .assert()
         .success();
 
