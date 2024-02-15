@@ -63,10 +63,8 @@ pub async fn test_delete_abort() {
     ];
 
     // Run test with a negative user input
-    let snapbox = runner(&args)
-        .current_dir(temp_dir.path())
-        .stdin("n");
-    
+    let snapbox = runner(&args).current_dir(temp_dir.path()).stdin("n");
+
     snapbox.assert().stderr_matches(indoc! {r"
     command: account delete
     error: Delete aborted
@@ -96,9 +94,7 @@ pub async fn test_happy_case() {
     ];
 
     // Run test with an affirmative user input
-    let snapbox = runner(&args)
-        .current_dir(temp_dir.path())
-        .stdin("Y");
+    let snapbox = runner(&args).current_dir(temp_dir.path()).stdin("Y");
     let bdg = snapbox.assert();
     let out = bdg.get_output();
     let stdout_str =
@@ -128,9 +124,7 @@ pub async fn test_happy_case_without_network_args() {
     ];
 
     // Run test with an affirmative user input
-    let snapbox = runner(&args)
-        .current_dir(temp_dir.path())
-        .stdin("Y");
+    let snapbox = runner(&args).current_dir(temp_dir.path()).stdin("Y");
     let bdg = snapbox.assert();
     let out = bdg.get_output();
     let stdout_str =

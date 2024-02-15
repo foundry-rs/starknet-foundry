@@ -253,10 +253,7 @@ pub async fn create_account(add_profile: bool) -> TempDir {
         args.push("deploy_profile");
     }
 
-    runner(&args)
-        .current_dir(tempdir.path())
-        .assert()
-        .success();
+    runner(&args).current_dir(tempdir.path()).assert().success();
 
     let contents = fs::read_to_string(tempdir.path().join(accounts_file)).unwrap();
     let items: Value =
