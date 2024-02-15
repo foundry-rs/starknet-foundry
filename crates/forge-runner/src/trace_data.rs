@@ -102,7 +102,7 @@ impl ProfilerCallEntryPoint {
             && class_hash == ClassHash(stark_felt!(TEST_CONTRACT_CLASS_HASH))
         {
             contract_name = Some(String::from("SNFORGE_TEST_CODE"));
-            function_name = Some(String::from("SNFORGE_TEST_CODE_SELECTOR"));
+            function_name = Some(String::from("SNFORGE_TEST_CODE_FUNCTION"));
         }
 
         ProfilerCallEntryPoint {
