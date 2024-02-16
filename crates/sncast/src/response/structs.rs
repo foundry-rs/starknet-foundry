@@ -7,9 +7,6 @@ pub struct Decimal(pub u64);
 #[derive(Clone)]
 pub struct Felt(pub FieldElement);
 
-#[derive(Clone)]
-pub struct FeltAsDecimal(pub FieldElement);
-
 impl Serialize for Decimal {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -29,14 +26,12 @@ impl Serialize for Felt {
     }
 }
 
-impl Serialize for FeltAsDecimal {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let val = self.0;
-        serializer.serialize_str(&format!("{val:#}"))
-    }
+fn serialize_as_decimal<S>(value: &Felt, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    let val = value.0;
+    serializer.serialize_str(&format!("{val:#}"))
 }
 
 pub trait CommandResponse: Serialize {}
@@ -70,7 +65,8 @@ impl CommandResponse for DeclareResponse {}
 #[derive(Serialize)]
 pub struct AccountCreateResponse {
     pub address: Felt,
-    pub max_fee: FeltAsDecimal,
+    #[serde(serialize_with = "crate::response::structs::serialize_as_decimal")]
+    pub max_fee: Felt,
     pub add_profile: String,
     pub message: String,
 }

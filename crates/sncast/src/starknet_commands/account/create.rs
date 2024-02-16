@@ -7,7 +7,7 @@ use clap::Args;
 use serde_json::json;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{CREATE_KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH};
-use sncast::response::structs::{AccountCreateResponse, Felt, FeltAsDecimal};
+use sncast::response::structs::{AccountCreateResponse, Felt};
 use sncast::{extract_or_generate_salt, get_chain_id, get_keystore_password, parse_number};
 use starknet::accounts::{AccountFactory, OpenZeppelinAccountFactory};
 use starknet::core::types::{FeeEstimate, FieldElement};
@@ -89,7 +89,7 @@ pub async fn create(
 
     Ok(AccountCreateResponse {
         address: Felt(address),
-        max_fee: FeltAsDecimal(max_fee),
+        max_fee: Felt(max_fee),
         add_profile: if add_profile.is_some() {
             format!(
                 "Profile {} successfully added to snfoundry.toml",
