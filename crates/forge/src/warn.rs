@@ -1,11 +1,11 @@
 use crate::{
-    compiled_raw::CompiledTestCrateRaw, pretty_printing::print_warning, replace_id_with_params,
-    scarb::config::ForkTarget,
+    compiled_raw::CompiledTestCrateRaw, replace_id_with_params, scarb::config::ForkTarget,
 };
 use anyhow::{anyhow, Context, Result};
 use scarb_api::ScarbCommand;
 use semver::Version;
 use shared::consts::EXPECTED_RPC_VERSION;
+use shared::print::print_as_warning;
 use shared::rpc::{get_rpc_version, is_supported_version};
 use starknet::providers::{jsonrpc::HttpTransport, JsonRpcClient};
 use std::collections::HashSet;
@@ -19,7 +19,7 @@ pub(crate) fn warn_if_available_gas_used_with_incompatible_scarb_version(
             if case.available_gas == Some(0)
                 && ScarbCommand::version().run()?.scarb <= Version::new(2, 4, 3)
             {
-                print_warning(&anyhow!(
+                print_as_warning(&anyhow!(
                     "`available_gas` attribute was probably specified when using Scarb ~2.4.3 \
                     Make sure to use Scarb >=2.4.4"
                 ));
@@ -66,7 +66,7 @@ pub(crate) async fn warn_if_incompatible_rpc_version(
         let version = version?;
 
         if !is_supported_version(&version) {
-            print_warning(&anyhow!(
+            print_as_warning(&anyhow!(
                 "The RPC node with url = {url} has unsupported version = ({version}), use node supporting RPC version ({EXPECTED_RPC_VERSION})"
             ));
         }

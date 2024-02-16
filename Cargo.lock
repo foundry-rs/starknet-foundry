@@ -5333,6 +5333,7 @@ dependencies = [
  "anyhow",
  "cairo-felt 0.9.1",
  "cairo-lang-runner",
+ "console",
  "semver",
  "starknet",
 ]

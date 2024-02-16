@@ -1,5 +1,5 @@
 use crate::consts::EXPECTED_RPC_VERSION;
-use anyhow::Context;
+use anyhow::{Context, Result};
 use semver::Version;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::{JsonRpcClient, Provider};
@@ -11,7 +11,7 @@ pub fn is_supported_version(version: &Version) -> bool {
     *version == expected_version
 }
 
-pub async fn get_rpc_version(client: &JsonRpcClient<HttpTransport>) -> anyhow::Result<Version> {
+pub async fn get_rpc_version(client: &JsonRpcClient<HttpTransport>) -> Result<Version> {
     client
         .spec_version()
         .await

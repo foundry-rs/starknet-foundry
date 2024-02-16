@@ -30,8 +30,8 @@ use starknet::{
     signers::{LocalWallet, SigningKey},
 };
 
-use crate::response::print::print_as_warning;
 use shared::consts::EXPECTED_RPC_VERSION;
+use shared::print::print_as_warning;
 use shared::rpc::{get_rpc_version, is_supported_version};
 use std::collections::HashMap;
 use std::thread::sleep;
