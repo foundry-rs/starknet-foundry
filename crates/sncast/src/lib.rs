@@ -359,6 +359,7 @@ pub enum TransactionError {
 #[derive(Debug)]
 pub enum WaitForTransactionError {
     TransactionError(TransactionError),
+    TimedOut,
     Other(Error),
 }
 
@@ -372,6 +373,9 @@ impl From<WaitForTransactionError> for Error {
     fn from(value: WaitForTransactionError) -> Self {
         match value {
             WaitForTransactionError::Other(error) => error,
+            WaitForTransactionError::TimedOut => {
+                anyhow!("sncast timed out while waiting for transaction to succeed")
+            }
             WaitForTransactionError::TransactionError(error) => match error {
                 TransactionError::Rejected => {
                     anyhow!("Transaction has been rejected")
@@ -421,9 +425,7 @@ pub async fn wait_for_tx(
         sleep(Duration::from_secs(wait_params.get_retry_interval().into()));
     }
 
-    Err(WaitForTransactionError::Other(anyhow!(
-        "Failed to get transaction with hash = {tx_hash:#x}; Transaction rejected, not received or sncast timed out"
-    )))
+    Err(WaitForTransactionError::TimedOut)
 }
 
 async fn get_revert_reason(

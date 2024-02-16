@@ -11,6 +11,7 @@ pub enum StarknetCommandError {
 #[derive(Debug)]
 pub enum RecoverableStarknetCommandError {
     ContractArtifactsNotFound(ErrorData),
+    TimedOut,
     TransactionError(TransactionError),
     ProviderError(ProviderError),
 }
@@ -27,6 +28,9 @@ impl From<WaitForTransactionError> for StarknetCommandError {
             WaitForTransactionError::TransactionError(error) => StarknetCommandError::Recoverable(
                 RecoverableStarknetCommandError::TransactionError(error),
             ),
+            WaitForTransactionError::TimedOut => {
+                StarknetCommandError::Recoverable(RecoverableStarknetCommandError::TimedOut)
+            }
             WaitForTransactionError::Other(error) => StarknetCommandError::Unrecoverable(error),
         }
     }
@@ -43,6 +47,7 @@ pub fn handle_starknet_command_error(error: StarknetCommandError) -> anyhow::Err
                 TransactionError::Reverted(ErrorData { data: reason }) => anyhow::anyhow!("Transaction has been reverted = {reason}"),
             }
             RecoverableStarknetCommandError::ProviderError(err) => handle_rpc_error(err),
+            RecoverableStarknetCommandError::TimedOut => anyhow::anyhow!("sncast timed out while waiting for transaction to succeed"),
         }
     }
 }
