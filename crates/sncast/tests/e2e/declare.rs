@@ -150,7 +150,7 @@ fn scarb_build_fails_when_wrong_cairo_path() {
 #[should_panic(expected = "Path to Scarb.toml manifest does not exist")]
 #[test]
 fn scarb_build_fails_scarb_toml_does_not_exist() {
-    let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/");
+    let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR);
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
     let args = vec![
@@ -170,7 +170,7 @@ fn scarb_build_fails_scarb_toml_does_not_exist() {
 
 #[test]
 fn scarb_build_fails_manifest_does_not_exist() {
-    let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/");
+    let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR);
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
     let args = vec![

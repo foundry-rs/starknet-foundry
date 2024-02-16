@@ -25,8 +25,6 @@ async fn test_happy_case_file() {
     let mut args = default_cli_args();
     let tmp_dir = tempdir().expect("failed to create temporary directory");
     let multicall_toml_path = "./multicall.toml";
-    let tmp_path = tmp_dir.path().join(multicall_toml_path);
-    let tmp_path = tmp_path.to_str().expect("failed to convert path to string");
 
     args.append(&mut vec![
         "multicall",
@@ -39,8 +37,8 @@ async fn test_happy_case_file() {
     let bdg = snapbox.assert();
     let out = bdg.get_output();
 
-    let contents =
-        std::fs::read_to_string(tmp_path).expect("Should have been able to read the file");
+    let contents = std::fs::read_to_string(tmp_dir.path().join(multicall_toml_path))
+        .expect("Should have been able to read the file");
     assert!(out.stderr.is_empty());
 
     let stdout_str =

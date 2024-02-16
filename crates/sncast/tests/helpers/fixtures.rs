@@ -373,7 +373,7 @@ pub fn duplicate_script_directory(
 
 pub fn duplicate_workspace_directory(
     src_dir: impl AsRef<Utf8Path>,
-    members: Vec<impl AsRef<std::path::Path>>,
+    relative_member_paths: Vec<impl AsRef<std::path::Path>>,
     deps: &[impl AsRef<std::path::Path> + Clone],
 ) -> TempDir {
     let src_dir = Utf8PathBuf::from(src_dir.as_ref());
@@ -383,7 +383,7 @@ pub fn duplicate_workspace_directory(
     let dest_dir = Utf8PathBuf::from_path_buf(temp_dir.path().to_path_buf())
         .expect("Failed to create Utf8PathBuf from PathBuf");
 
-    for member in members {
+    for member in relative_member_paths {
         let member = member.as_ref().to_str().unwrap();
         let src_member_path = src_dir.join(member);
         let dest_member_path = dest_dir.join(member);
