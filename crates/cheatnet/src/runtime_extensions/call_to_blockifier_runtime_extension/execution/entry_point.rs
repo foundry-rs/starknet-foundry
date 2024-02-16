@@ -38,9 +38,15 @@ pub fn execute_call_entry_point(
     let class_hash = if let Some(class_hash) = entry_point.class_hash {
         class_hash
     } else {
-        state
-            .get_class_hash_at(entry_point.storage_address)
-            .expect("Failed to get a class hash for a contract address")
+        let class_hash = state.get_class_hash_at(entry_point.storage_address)?;
+
+        assert_ne!(
+            class_hash,
+            ClassHash::default(),
+            "Class hash for the contract address {:?} not found",
+            entry_point.storage_address
+        );
+        class_hash
     };
 
     runtime_state.cheatnet_state.trace_data.enter_nested_call(
