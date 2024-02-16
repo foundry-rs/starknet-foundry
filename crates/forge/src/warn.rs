@@ -67,7 +67,7 @@ pub(crate) async fn warn_if_incompatible_rpc_version(
 
         if !is_supported_version(&version) {
             print_as_warning(&anyhow!(
-                "The RPC node with url = {url} has unsupported version = ({version}), use node supporting RPC version ({EXPECTED_RPC_VERSION})"
+                "RPC node with the url {url} uses incompatible version {version}. Expected version: {EXPECTED_RPC_VERSION}"
             ));
         }
     }

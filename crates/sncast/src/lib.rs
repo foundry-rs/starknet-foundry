@@ -96,7 +96,7 @@ pub async fn warn_if_incompatible_rpc_version(
     let node_spec_version = get_rpc_version(provider).await?;
     if !is_supported_version(&node_spec_version) {
         print_as_warning(&anyhow!(
-            "The RPC node with the url {url} is using an unsupported version {node_spec_version}. The current version supported by sncast is {EXPECTED_RPC_VERSION}"
+            "RPC node with the url {url} uses incompatible version {node_spec_version}. Expected version: {EXPECTED_RPC_VERSION}"
         ));
     }
 
