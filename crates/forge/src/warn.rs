@@ -1,14 +1,13 @@
 use crate::{
     compiled_raw::CompiledTestCrateRaw, replace_id_with_params, scarb::config::ForkTarget,
 };
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, Result};
 use scarb_api::ScarbCommand;
 use semver::Version;
 use shared::print::print_as_warning;
+use shared::rpc::create_rpc_client;
 use shared::verify_and_warn_if_incompatible_rpc_version;
-use starknet::providers::{jsonrpc::HttpTransport, JsonRpcClient};
 use std::collections::HashSet;
-use url::Url;
 
 pub(crate) fn warn_if_available_gas_used_with_incompatible_scarb_version(
     test_crates: &Vec<CompiledTestCrateRaw>,
@@ -51,9 +50,7 @@ pub(crate) async fn warn_if_incompatible_rpc_version(
     let mut handles = Vec::with_capacity(urls.len());
 
     for url in urls {
-        let client = JsonRpcClient::new(HttpTransport::new(
-            Url::parse(url).with_context(|| format!("could not parse url: {url}"))?,
-        ));
+        let client = create_rpc_client(url)?;
 
         handles
             .push(async move { verify_and_warn_if_incompatible_rpc_version(&client, url).await });

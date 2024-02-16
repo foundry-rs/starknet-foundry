@@ -30,11 +30,11 @@ use starknet::{
     signers::{LocalWallet, SigningKey},
 };
 
+use shared::rpc::create_rpc_client;
 use std::collections::HashMap;
 use std::thread::sleep;
 use std::time::Duration;
 use std::{env, fs};
-use url::Url;
 
 pub mod helpers;
 pub mod response;
@@ -81,9 +81,7 @@ pub struct WaitForTx {
 
 pub fn get_provider(url: &str) -> Result<JsonRpcClient<HttpTransport>> {
     raise_if_empty(url, "RPC url")?;
-    let parsed_url = Url::parse(url)?;
-    let provider = JsonRpcClient::new(HttpTransport::new(parsed_url));
-    Ok(provider)
+    create_rpc_client(url)
 }
 
 pub async fn get_chain_id(provider: &JsonRpcClient<HttpTransport>) -> Result<FieldElement> {

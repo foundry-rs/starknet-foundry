@@ -5336,6 +5336,7 @@ dependencies = [
  "console",
  "semver",
  "starknet",
+ "url",
 ]
 
 [[package]]

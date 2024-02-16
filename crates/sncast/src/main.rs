@@ -129,6 +129,11 @@ fn main() -> Result<()> {
         update_cast_config(&mut config, &cli);
         let provider = get_provider(&config.rpc_url)?;
 
+        runtime.block_on(verify_and_warn_if_incompatible_rpc_version(
+            &provider,
+            &config.rpc_url,
+        ))?;
+
         let mut artifacts = build_and_load_artifacts(
             &package_metadata,
             &BuildConfig {
@@ -139,11 +144,6 @@ fn main() -> Result<()> {
         )
         .expect("Failed to build script");
         let metadata_with_deps = get_scarb_metadata_with_deps(&manifest_path)?;
-
-        runtime.block_on(verify_and_warn_if_incompatible_rpc_version(
-            &provider,
-            &config.rpc_url,
-        ))?;
 
         let mut result = starknet_commands::script::run(
             &script.script_module_name,
