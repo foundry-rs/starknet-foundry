@@ -52,7 +52,7 @@ fn simple_package_save_trace() {
 }
 
 #[test]
-fn trace_has_contract_names() {
+fn trace_has_contract_and_function_names() {
     let temp = setup_package("trace");
     let snapbox = test_runner();
 
@@ -75,17 +75,25 @@ fn trace_has_contract_names() {
         call_trace.entry_point.contract_name,
         Some(String::from("SNFORGE_TEST_CODE"))
     );
-    assert_contract_names(&call_trace.nested_calls[0]);
+    assert_eq!(
+        call_trace.entry_point.function_name,
+        Some(String::from("SNFORGE_TEST_CODE_FUNCTION"))
+    );
+    assert_contract_and_function_names(&call_trace.nested_calls[0]);
 }
 
-fn assert_contract_names(trace: &ProfilerCallTrace) {
-    // every call in this package uses the same contract
+fn assert_contract_and_function_names(trace: &ProfilerCallTrace) {
+    // every call in this package uses the same contract and function
     assert_eq!(
         trace.entry_point.contract_name,
         Some(String::from("SimpleContract"))
     );
+    assert_eq!(
+        trace.entry_point.function_name,
+        Some(String::from("execute_calls"))
+    );
 
     for sub_trace in &trace.nested_calls {
-        assert_contract_names(sub_trace);
+        assert_contract_and_function_names(sub_trace);
     }
 }
