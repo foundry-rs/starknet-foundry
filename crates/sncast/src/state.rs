@@ -1,6 +1,6 @@
 use crate::helpers::constants::STATE_FILE_VERSION;
 use crate::response::structs::{DeclareResponse, DeployResponse, InvokeResponse};
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
 use camino::Utf8PathBuf;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -116,7 +116,7 @@ pub fn write_txs_to_state_file(
     tx_entries: ScriptTransactionEntries,
 ) -> Result<()> {
     let mut state_file = load_or_create_state_file(state_file_path)
-        .unwrap_or_else(|_| panic!("Failed to write to state file {state_file_path}"));
+        .with_context(|| anyhow!(format!("Failed to write to state file {state_file_path}")))?;
     state_file.append_transaction_entries(tx_entries);
     fs::write(
         state_file_path,
