@@ -72,9 +72,7 @@ async fn test_wait_for_reverted_transaction() {
 }
 
 #[tokio::test]
-#[should_panic(
-    expected = "Failed to get transaction with hash = 0x123456789; Transaction rejected, not received or sncast timed out"
-)]
+#[should_panic(expected = "sncast timed out while waiting for transaction to succeed")]
 async fn test_wait_for_nonexistent_tx() {
     let provider = create_test_provider();
     wait_for_tx(
@@ -83,6 +81,7 @@ async fn test_wait_for_nonexistent_tx() {
         ValidatedWaitParams::new(1, 3),
     )
     .await
+    .map_err(anyhow::Error::from)
     .unwrap();
 }
 
