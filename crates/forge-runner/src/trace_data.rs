@@ -37,11 +37,7 @@ impl ProfilerCallTrace {
     #[must_use]
     pub fn from_call_trace(value: CallTrace, contracts_data: &ContractsData) -> Self {
         ProfilerCallTrace {
-            entry_point: ProfilerCallEntryPoint::from(
-                value.entry_point,
-                value.class_hash,
-                contracts_data,
-            ),
+            entry_point: ProfilerCallEntryPoint::from(value.entry_point, contracts_data),
             used_execution_resources: ProfilerExecutionResources::from(
                 value.used_execution_resources,
             ),
@@ -73,9 +69,9 @@ pub struct ProfilerCallEntryPoint {
 }
 
 impl ProfilerCallEntryPoint {
-    fn from(value: CallEntryPoint, class_hash: ClassHash, contracts_data: &ContractsData) -> Self {
+    fn from(value: CallEntryPoint, contracts_data: &ContractsData) -> Self {
         let CallEntryPoint {
-            class_hash: maybe_class_hash,
+            class_hash,
             code_address,
             entry_point_type,
             entry_point_selector,
@@ -86,9 +82,8 @@ impl ProfilerCallEntryPoint {
             initial_gas,
         } = value;
 
-        let mut contract_name = contracts_data
-            .class_hashes
-            .get_by_right(&class_hash)
+        let mut contract_name = class_hash
+            .and_then(|c| contracts_data.class_hashes.get_by_right(&c))
             .cloned();
         let mut function_name = contracts_data.selectors.get(&entry_point_selector).cloned();
 
@@ -96,14 +91,14 @@ impl ProfilerCallEntryPoint {
             == get_selector_from_name(TEST_ENTRY_POINT_SELECTOR)
                 .unwrap()
                 .into_()
-            && class_hash == ClassHash(stark_felt!(TEST_CONTRACT_CLASS_HASH))
+            && class_hash == Some(ClassHash(stark_felt!(TEST_CONTRACT_CLASS_HASH)))
         {
             contract_name = Some(String::from("SNFORGE_TEST_CODE"));
             function_name = Some(String::from("SNFORGE_TEST_CODE_FUNCTION"));
         }
 
         ProfilerCallEntryPoint {
-            class_hash: maybe_class_hash,
+            class_hash,
             code_address,
             entry_point_type,
             entry_point_selector,

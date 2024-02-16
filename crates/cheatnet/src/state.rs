@@ -130,8 +130,6 @@ pub enum CheatStatus<T> {
 #[derive(Clone)]
 pub struct CallTrace {
     pub entry_point: CallEntryPoint,
-    // Used to ensure on type level that we always have a class hash info
-    pub class_hash: ClassHash,
     // These also include resources used by internal calls
     pub used_execution_resources: ExecutionResources,
     pub nested_calls: Vec<Rc<RefCell<CallTrace>>>,
@@ -208,9 +206,10 @@ pub struct CheatnetState {
 
 impl Default for CheatnetState {
     fn default() -> Self {
+        let mut test_code_entry_point = build_test_entry_point();
+        test_code_entry_point.class_hash = Some(ClassHash(stark_felt!(TEST_CONTRACT_CLASS_HASH)));
         let test_call = Rc::new(RefCell::new(CallTrace {
-            entry_point: build_test_entry_point(),
-            class_hash: ClassHash(stark_felt!(TEST_CONTRACT_CLASS_HASH)),
+            entry_point: test_code_entry_point,
             used_execution_resources: Default::default(),
             nested_calls: vec![],
         }));
@@ -310,7 +309,6 @@ impl TraceData {
     ) {
         let new_call = Rc::new(RefCell::new(CallTrace {
             entry_point,
-            class_hash: Default::default(),
             used_execution_resources: Default::default(),
             nested_calls: vec![],
         }));
@@ -325,9 +323,9 @@ impl TraceData {
             .push(new_call, resources_used_before_call);
     }
 
-    pub fn add_class_hash_to_current_call(&mut self, class_hash: ClassHash) {
+    pub fn set_class_hash_for_current_call(&mut self, class_hash: ClassHash) {
         let current_call = self.current_call_stack.top();
-        current_call.borrow_mut().class_hash = class_hash;
+        current_call.borrow_mut().entry_point.class_hash = Some(class_hash);
     }
 
     pub fn exit_nested_call(&mut self, resources_used_after_call: &ExecutionResources) {

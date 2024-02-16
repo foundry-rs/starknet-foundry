@@ -69,7 +69,7 @@ pub fn execute_call_entry_point(
     runtime_state
         .cheatnet_state
         .trace_data
-        .add_class_hash_to_current_call(class_hash);
+        .set_class_hash_for_current_call(class_hash);
     // endregion
 
     // Hack to prevent version 0 attack on argent accounts.
