@@ -35,25 +35,10 @@ pub fn execute_call_entry_point(
 ) -> EntryPointExecutionResult<CallInfo> {
     // region: Modified blockifier code
     // We skip recursion depth validation here.
-    let class_hash = if let Some(class_hash) = entry_point.class_hash {
-        class_hash
-    } else {
-        let class_hash = state.get_class_hash_at(entry_point.storage_address)?;
-
-        assert_ne!(
-            class_hash,
-            ClassHash::default(),
-            "Class hash for the contract address {:?} not found",
-            entry_point.storage_address
-        );
-        class_hash
-    };
-
-    runtime_state.cheatnet_state.trace_data.enter_nested_call(
-        entry_point.clone(),
-        resources.clone(),
-        class_hash,
-    );
+    runtime_state
+        .cheatnet_state
+        .trace_data
+        .enter_nested_call(entry_point.clone(), resources.clone());
 
     if let Some(ret_data) =
         get_ret_data_by_call_entry_point(entry_point, runtime_state.cheatnet_state)
@@ -64,6 +49,7 @@ pub fn execute_call_entry_point(
             .exit_nested_call(resources);
         return Ok(mocked_call_info(entry_point.clone(), ret_data.clone()));
     }
+    // endregion
 
     // Validate contract is deployed.
     let storage_address = entry_point.storage_address;
@@ -78,6 +64,14 @@ pub fn execute_call_entry_point(
         Some(class_hash) => class_hash,
         None => storage_class_hash, // If not given, take the storage contract class hash.
     };
+
+    // region: Modified blockifier code
+    runtime_state
+        .cheatnet_state
+        .trace_data
+        .add_class_hash_to_current_call(class_hash);
+    // endregion
+
     // Hack to prevent version 0 attack on argent accounts.
     if context.account_tx_context.version() == TransactionVersion(StarkFelt::from(0_u8))
         && class_hash

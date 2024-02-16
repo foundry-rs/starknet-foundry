@@ -307,11 +307,10 @@ impl TraceData {
         &mut self,
         entry_point: CallEntryPoint,
         resources_used_before_call: ExecutionResources,
-        class_hash: ClassHash,
     ) {
         let new_call = Rc::new(RefCell::new(CallTrace {
             entry_point,
-            class_hash,
+            class_hash: Default::default(),
             used_execution_resources: Default::default(),
             nested_calls: vec![],
         }));
@@ -324,6 +323,11 @@ impl TraceData {
 
         self.current_call_stack
             .push(new_call, resources_used_before_call);
+    }
+
+    pub fn add_class_hash_to_current_call(&mut self, class_hash: ClassHash) {
+        let current_call = self.current_call_stack.top();
+        current_call.borrow_mut().class_hash = class_hash;
     }
 
     pub fn exit_nested_call(&mut self, resources_used_after_call: &ExecutionResources) {
