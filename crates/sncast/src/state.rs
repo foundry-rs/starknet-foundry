@@ -67,7 +67,7 @@ pub struct ErrorResponse {
 pub enum ScriptTransactionStatus {
     // script executed successfully, transaction accepted/succeeded
     Success,
-    // script executed successfully, transaction not rejected/reverted
+    // script executed successfully, transaction rejected/reverted
     Fail,
     // script error
     Error,
@@ -127,7 +127,6 @@ pub fn write_txs_to_state_file(
     Ok(())
 }
 
-// todo: add support for multiple state file versions (when needed)
 fn verify_version(version: u8) -> Result<()> {
     match version {
         STATE_FILE_VERSION => Ok(()),
@@ -317,6 +316,75 @@ mod tests {
                 .clone()
                 .unwrap()
                 .get("invoke-1")
+                .unwrap(),
+            &transaction2
+        );
+    }
+
+    #[test]
+    fn test_write_to_file_multiple_at_once() {
+        let tempdir = TempDir::new().unwrap();
+        let state_file_path =
+            Utf8PathBuf::from_path_buf(tempdir.path().join("write_state_multiple.json")).unwrap();
+        let mut state = ScriptTransactionsSchema {
+            version: STATE_FILE_VERSION,
+            transactions: None,
+        };
+
+        let transaction1 = ScriptTransactionEntry {
+            name: "declare".to_string(),
+            output: ScriptTransactionOutput::DeclareResponse(DeclareResponse {
+                class_hash: Hex("0x1".parse().unwrap()),
+                transaction_hash: Hex("0x2".parse().unwrap()),
+            }),
+            status: ScriptTransactionStatus::Success,
+            timestamp: 2,
+            misc: None,
+        };
+        let tx1_entry = generate_transaction_entry_with_id(transaction1.clone());
+        state.append_transaction_entries(tx1_entry);
+
+        let transaction2 = ScriptTransactionEntry {
+            name: "invoke".to_string(),
+            output: ScriptTransactionOutput::InvokeResponse(InvokeResponse {
+                transaction_hash: Hex("0x3".parse().unwrap()),
+            }),
+            status: ScriptTransactionStatus::Success,
+            timestamp: 3,
+            misc: None,
+        };
+        let tx2_entry = generate_transaction_entry_with_id(transaction2.clone());
+        state.append_transaction_entries(tx2_entry);
+
+        write_txs_to_state_file(&state_file_path, state.transactions.unwrap()).unwrap();
+
+        let content = fs::read_to_string(state_file_path).unwrap();
+        let parsed_content = serde_json::from_str::<ScriptTransactionsSchema>(&content).unwrap();
+
+        assert_eq!(
+            parsed_content
+                .transactions
+                .clone()
+                .unwrap()
+                .transactions
+                .len(),
+            2
+        );
+        assert_eq!(
+            parsed_content
+                .transactions
+                .clone()
+                .unwrap()
+                .get("declare-2")
+                .unwrap(),
+            &transaction1
+        );
+        assert_eq!(
+            parsed_content
+                .transactions
+                .clone()
+                .unwrap()
+                .get("invoke-3")
                 .unwrap(),
             &transaction2
         );
