@@ -13,6 +13,8 @@ trait ICairo1Contract<TContractState> {
 //https://testnet.starkscan.co/contract/0x034dad9a1512fcb0d33032c65f4605a073bdc42f70e61524510e5760c2b4f544
 #[starknet::interface]
 trait ICairo0Contract<TContractState> {
+    // this function only job is to call `ICairo1Contract::end()`
+    // `contract_address` is `Cairo1Contract_v1` address
     fn callback(ref self: TContractState, contract_address: felt252);
 }
 

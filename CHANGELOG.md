@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Fixed
 
-- Calling Cairo 0 contract does not longer cancel cheatcodes in further calls
+- Calling Cairo 0 contract no longer cancels cheatcodes in further calls
 
 ## [0.17.1] - 2024-02-12
 
