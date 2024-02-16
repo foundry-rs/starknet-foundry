@@ -1,4 +1,4 @@
-use anyhow::{ensure, Context, Ok, Result};
+use anyhow::{anyhow, ensure, Context, Ok, Result};
 use camino::Utf8PathBuf;
 use std::fs;
 
@@ -7,6 +7,7 @@ use indoc::{formatdoc, indoc};
 use scarb_api::ScarbCommand;
 use sncast::helpers::constants::INIT_SCRIPTS_DIR;
 use sncast::helpers::scarb_utils::get_cairo_version;
+use sncast::response::print::print_as_warning;
 use sncast::response::structs::ScriptInitResponse;
 
 #[derive(Args, Debug)]
@@ -22,6 +23,10 @@ pub fn init(init_args: &Init) -> Result<ScriptInitResponse> {
 
     let modify_files_result = add_dependencies(&script_root_dir_path)
         .and_then(|()| modify_files_in_src_dir(&init_args.script_name, &script_root_dir_path));
+
+    print_as_warning(
+        &anyhow!("The newly created script isn't auto-added to the workspace. You may need to manually add it to your workspace configuration in Scarb.toml")
+    );
 
     match modify_files_result {
         Result::Ok(()) => Ok(ScriptInitResponse {

@@ -16,6 +16,7 @@ fn test_script_init_happy_case() {
         .args(["script", "init", script_name]);
 
     snapbox.assert().stdout_matches(formatdoc! {r"
+        Warning: [..]
         command: script init
         status: Successfully initialized `{script_name}` at [..]/scripts/{script_name}
     "});
@@ -123,6 +124,7 @@ fn test_initialized_script_compiles() {
         .args(["script", "init", script_name]);
 
     snapbox.assert().stdout_matches(formatdoc! {r"
+        Warning: [..]
         command: script init
         status: Successfully initialized `{script_name}` at [..]/scripts/{script_name}
     "});
