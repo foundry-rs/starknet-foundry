@@ -90,10 +90,7 @@ impl ProfilerCallEntryPoint {
             .class_hashes
             .get_by_right(&class_hash)
             .cloned();
-        let mut function_name = contracts_data
-            .selectors
-            .get_by_right(&entry_point_selector)
-            .cloned();
+        let mut function_name = contracts_data.selectors.get(&entry_point_selector).cloned();
 
         if entry_point_selector.0
             == get_selector_from_name(TEST_ENTRY_POINT_SELECTOR)

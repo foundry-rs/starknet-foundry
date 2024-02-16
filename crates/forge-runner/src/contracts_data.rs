@@ -11,7 +11,7 @@ use starknet_api::core::{ClassHash, EntryPointSelector};
 pub struct ContractsData {
     pub contracts: HashMap<String, StarknetContractArtifacts>,
     pub class_hashes: BiMap<String, ClassHash>,
-    pub selectors: BiMap<String, EntryPointSelector>,
+    pub selectors: HashMap<EntryPointSelector, String>,
 }
 
 impl ContractsData {
@@ -21,7 +21,7 @@ impl ContractsData {
             .map(|(name, artifact)| Ok((name.clone(), get_class_hash(artifact.sierra.as_str())?)))
             .collect::<Result<_>>()?;
 
-        let selectors = BiMap::new();
+        let selectors = HashMap::new();
 
         Ok(ContractsData {
             contracts,
