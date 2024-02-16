@@ -40,7 +40,7 @@ pub fn execute_call_entry_point(
     } else {
         state
             .get_class_hash_at(entry_point.storage_address)
-            .unwrap()
+            .expect("Failed to get a class hash for a contract address")
     };
 
     runtime_state.cheatnet_state.trace_data.enter_nested_call(
