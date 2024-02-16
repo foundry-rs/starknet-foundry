@@ -5,10 +5,7 @@ use crate::helpers::{
 use sncast::helpers::constants::UDC_ADDRESS;
 
 use camino::Utf8PathBuf;
-use sncast::{
-    get_account,
-    helpers::constants::{WAIT_RETRY_INTERVAL, WAIT_TIMEOUT},
-};
+use sncast::{get_account, ValidatedWaitParams};
 use sncast::{handle_wait_for_tx, parse_number, wait_for_tx, WaitForTx};
 use starknet::contract::ContractFactory;
 use starknet::core::types::FieldElement;
@@ -20,8 +17,7 @@ async fn test_happy_path() {
     let res = wait_for_tx(
         &provider,
         parse_number(&hash).unwrap(),
-        WAIT_TIMEOUT,
-        WAIT_RETRY_INTERVAL,
+        ValidatedWaitParams::default(),
     )
     .await;
 
@@ -69,7 +65,7 @@ async fn test_wait_for_reverted_transaction() {
     .await
     .transaction_hash;
 
-    wait_for_tx(&provider, transaction_hash, 3, 1)
+    wait_for_tx(&provider, transaction_hash, ValidatedWaitParams::new(1, 3))
         .await
         .unwrap();
 }
@@ -83,8 +79,7 @@ async fn test_wait_for_nonexistent_tx() {
     wait_for_tx(
         &provider,
         parse_number("0x123456789").expect("Could not parse a number"),
-        3,
-        1,
+        ValidatedWaitParams::new(1, 3),
     )
     .await
     .unwrap();
@@ -100,8 +95,7 @@ async fn test_happy_path_handle_wait_for_tx() {
         1,
         WaitForTx {
             wait: true,
-            timeout: 63,
-            retry_interval: 5,
+            wait_params: ValidatedWaitParams::new(5, 63),
         },
     )
     .await;
@@ -114,9 +108,13 @@ async fn test_happy_path_handle_wait_for_tx() {
 async fn test_wait_for_wrong_retry_values() {
     let provider = create_test_provider();
     let hash = from_env("CAST_MAP_DECLARE_HASH").unwrap();
-    wait_for_tx(&provider, FieldElement::from_dec_str(&hash).unwrap(), 1, 2)
-        .await
-        .unwrap();
+    wait_for_tx(
+        &provider,
+        FieldElement::from_dec_str(&hash).unwrap(),
+        ValidatedWaitParams::new(2, 1),
+    )
+    .await
+    .unwrap();
 }
 
 #[tokio::test]
@@ -124,9 +122,13 @@ async fn test_wait_for_wrong_retry_values() {
 async fn test_wait_for_wrong_retry_values_timeout_zero() {
     let provider = create_test_provider();
     let hash = from_env("CAST_MAP_DECLARE_HASH").unwrap();
-    wait_for_tx(&provider, FieldElement::from_dec_str(&hash).unwrap(), 0, 2)
-        .await
-        .unwrap();
+    wait_for_tx(
+        &provider,
+        FieldElement::from_dec_str(&hash).unwrap(),
+        ValidatedWaitParams::new(2, 0),
+    )
+    .await
+    .unwrap();
 }
 
 #[tokio::test]
@@ -134,7 +136,11 @@ async fn test_wait_for_wrong_retry_values_timeout_zero() {
 async fn test_wait_for_wrong_retry_values_interval_zero() {
     let provider = create_test_provider();
     let hash = from_env("CAST_MAP_DECLARE_HASH").unwrap();
-    wait_for_tx(&provider, FieldElement::from_dec_str(&hash).unwrap(), 1, 0)
-        .await
-        .unwrap();
+    wait_for_tx(
+        &provider,
+        FieldElement::from_dec_str(&hash).unwrap(),
+        ValidatedWaitParams::new(0, 1),
+    )
+    .await
+    .unwrap();
 }

@@ -45,4 +45,5 @@ cheatnet = { path = "../cheatnet" }
 runtime = { path = "../runtime" }
 conversions = { path = "../conversions" }
 scarb-api = { path = "../scarb-api" }
+shared = { path = "../shared" }
 universal-sierra-compiler-api = { path = "../universal-sierra-compiler-api" }
