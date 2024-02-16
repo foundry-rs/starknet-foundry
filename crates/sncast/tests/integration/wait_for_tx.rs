@@ -5,7 +5,7 @@ use crate::helpers::{
 use sncast::helpers::constants::UDC_ADDRESS;
 
 use camino::Utf8PathBuf;
-use sncast::{get_account, ValidWaitParams};
+use sncast::{get_account, ValidatedWaitParams};
 use sncast::{handle_wait_for_tx, parse_number, wait_for_tx, WaitForTx};
 use starknet::contract::ContractFactory;
 use starknet::core::types::FieldElement;
@@ -17,7 +17,7 @@ async fn test_happy_path() {
     let res = wait_for_tx(
         &provider,
         parse_number(&hash).unwrap(),
-        ValidWaitParams::default(),
+        ValidatedWaitParams::default(),
     )
     .await;
 
@@ -65,7 +65,7 @@ async fn test_wait_for_reverted_transaction() {
     .await
     .transaction_hash;
 
-    wait_for_tx(&provider, transaction_hash, ValidWaitParams::new(1, 3))
+    wait_for_tx(&provider, transaction_hash, ValidatedWaitParams::new(1, 3))
         .await
         .unwrap();
 }
@@ -79,7 +79,7 @@ async fn test_wait_for_nonexistent_tx() {
     wait_for_tx(
         &provider,
         parse_number("0x123456789").expect("Could not parse a number"),
-        ValidWaitParams::new(1, 3),
+        ValidatedWaitParams::new(1, 3),
     )
     .await
     .unwrap();
@@ -95,7 +95,7 @@ async fn test_happy_path_handle_wait_for_tx() {
         1,
         WaitForTx {
             wait: true,
-            wait_params: ValidWaitParams::new(5, 63),
+            wait_params: ValidatedWaitParams::new(5, 63),
         },
     )
     .await;
@@ -111,7 +111,7 @@ async fn test_wait_for_wrong_retry_values() {
     wait_for_tx(
         &provider,
         FieldElement::from_dec_str(&hash).unwrap(),
-        ValidWaitParams::new(2, 1),
+        ValidatedWaitParams::new(2, 1),
     )
     .await
     .unwrap();
@@ -125,7 +125,7 @@ async fn test_wait_for_wrong_retry_values_timeout_zero() {
     wait_for_tx(
         &provider,
         FieldElement::from_dec_str(&hash).unwrap(),
-        ValidWaitParams::new(2, 0),
+        ValidatedWaitParams::new(2, 0),
     )
     .await
     .unwrap();
@@ -139,7 +139,7 @@ async fn test_wait_for_wrong_retry_values_interval_zero() {
     wait_for_tx(
         &provider,
         FieldElement::from_dec_str(&hash).unwrap(),
-        ValidWaitParams::new(0, 1),
+        ValidatedWaitParams::new(0, 1),
     )
     .await
     .unwrap();

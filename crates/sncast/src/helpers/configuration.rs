@@ -1,5 +1,5 @@
 use super::constants::{CONFIG_FILENAME, WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
-use crate::ValidWaitParams;
+use crate::ValidatedWaitParams;
 use anyhow::{anyhow, Result};
 use camino::Utf8PathBuf;
 use serde::{Deserialize, Serialize};
@@ -13,7 +13,7 @@ pub struct CastConfig {
     pub account: String,
     pub accounts_file: Utf8PathBuf,
     pub keystore: Option<Utf8PathBuf>,
-    pub wait_params: ValidWaitParams,
+    pub wait_params: ValidatedWaitParams,
 }
 
 impl CastConfig {
@@ -28,7 +28,7 @@ impl CastConfig {
             account: get_property(&entries, "account"),
             accounts_file: get_property(&entries, "accounts-file"),
             keystore: get_property_optional(&entries, "keystore"),
-            wait_params: ValidWaitParams::new(
+            wait_params: ValidatedWaitParams::new(
                 get_property(&entries, "wait-retry-interval"),
                 get_property(&entries, "wait-timeout"),
             ),

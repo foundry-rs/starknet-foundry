@@ -76,16 +76,16 @@ impl NumbersFormat {
 
 pub struct WaitForTx {
     pub wait: bool,
-    pub wait_params: ValidWaitParams,
+    pub wait_params: ValidatedWaitParams,
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug, Copy, PartialEq)]
-pub struct ValidWaitParams {
+pub struct ValidatedWaitParams {
     timeout: u16,
     retry_interval: u8,
 }
 
-impl ValidWaitParams {
+impl ValidatedWaitParams {
     #[must_use]
     pub fn new(retry_interval: u8, timeout: u16) -> Self {
         assert!(
@@ -120,7 +120,7 @@ impl ValidWaitParams {
     }
 }
 
-impl Default for ValidWaitParams {
+impl Default for ValidatedWaitParams {
     fn default() -> Self {
         Self::new(WAIT_RETRY_INTERVAL, WAIT_TIMEOUT)
     }
@@ -317,7 +317,7 @@ pub fn get_block_id(value: &str) -> Result<BlockId> {
 pub async fn wait_for_tx(
     provider: &JsonRpcClient<HttpTransport>,
     tx_hash: FieldElement,
-    wait_params: ValidWaitParams,
+    wait_params: ValidatedWaitParams,
 ) -> Result<&str> {
     println!("Transaction hash = {tx_hash:#x}");
 
