@@ -4,9 +4,8 @@ use crate::{
 use anyhow::{anyhow, Context, Result};
 use scarb_api::ScarbCommand;
 use semver::Version;
-use shared::consts::EXPECTED_RPC_VERSION;
 use shared::print::print_as_warning;
-use shared::rpc::{get_rpc_version, is_supported_version};
+use shared::verify_and_warn_if_incompatible_rpc_version;
 use starknet::providers::{jsonrpc::HttpTransport, JsonRpcClient};
 use std::collections::HashSet;
 use url::Url;
@@ -51,25 +50,17 @@ pub(crate) async fn warn_if_incompatible_rpc_version(
 
     let mut handles = Vec::with_capacity(urls.len());
 
-    // call rpc's
     for url in urls {
         let client = JsonRpcClient::new(HttpTransport::new(
             Url::parse(url).with_context(|| format!("could not parse url: {url}"))?,
         ));
 
-        handles.push(async move { (get_rpc_version(&client).await, url) });
+        handles
+            .push(async move { verify_and_warn_if_incompatible_rpc_version(&client, url).await });
     }
 
-    // assert version
     for handle in handles {
-        let (version, url) = handle.await;
-        let version = version?;
-
-        if !is_supported_version(&version) {
-            print_as_warning(&anyhow!(
-                "RPC node with the url {url} uses incompatible version {version}. Expected version: {EXPECTED_RPC_VERSION}"
-            ));
-        }
+        handle.await?;
     }
 
     Ok(())

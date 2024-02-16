@@ -30,9 +30,6 @@ use starknet::{
     signers::{LocalWallet, SigningKey},
 };
 
-use shared::consts::EXPECTED_RPC_VERSION;
-use shared::print::print_as_warning;
-use shared::rpc::{get_rpc_version, is_supported_version};
 use std::collections::HashMap;
 use std::thread::sleep;
 use std::time::Duration;
@@ -87,20 +84,6 @@ pub fn get_provider(url: &str) -> Result<JsonRpcClient<HttpTransport>> {
     let parsed_url = Url::parse(url)?;
     let provider = JsonRpcClient::new(HttpTransport::new(parsed_url));
     Ok(provider)
-}
-
-pub async fn warn_if_incompatible_rpc_version(
-    provider: &JsonRpcClient<HttpTransport>,
-    url: &str,
-) -> Result<()> {
-    let node_spec_version = get_rpc_version(provider).await?;
-    if !is_supported_version(&node_spec_version) {
-        print_as_warning(&anyhow!(
-            "RPC node with the url {url} uses incompatible version {node_spec_version}. Expected version: {EXPECTED_RPC_VERSION}"
-        ));
-    }
-
-    Ok(())
 }
 
 pub async fn get_chain_id(provider: &JsonRpcClient<HttpTransport>) -> Result<FieldElement> {

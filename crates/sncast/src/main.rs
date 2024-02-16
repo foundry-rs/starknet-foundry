@@ -9,6 +9,7 @@ use sncast::response::print::{print_command_result, OutputFormat};
 
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand};
+use shared::verify_and_warn_if_incompatible_rpc_version;
 use sncast::helpers::configuration::{load_config, CastConfig};
 use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
 use sncast::helpers::scarb_utils::{
@@ -17,7 +18,7 @@ use sncast::helpers::scarb_utils::{
 };
 use sncast::{
     chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_nonce, get_provider,
-    warn_if_incompatible_rpc_version, NumbersFormat, WaitForTx,
+    NumbersFormat, WaitForTx,
 };
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
@@ -139,7 +140,10 @@ fn main() -> Result<()> {
         .expect("Failed to build script");
         let metadata_with_deps = get_scarb_metadata_with_deps(&manifest_path)?;
 
-        runtime.block_on(warn_if_incompatible_rpc_version(&provider, &config.rpc_url))?;
+        runtime.block_on(verify_and_warn_if_incompatible_rpc_version(
+            &provider,
+            &config.rpc_url,
+        ))?;
 
         let mut result = starknet_commands::script::run(
             &script.script_module_name,
@@ -175,7 +179,7 @@ async fn run_async_command(
     numbers_format: NumbersFormat,
     output_format: OutputFormat,
 ) -> Result<()> {
-    warn_if_incompatible_rpc_version(&provider, &config.rpc_url).await?;
+    verify_and_warn_if_incompatible_rpc_version(&provider, &config.rpc_url).await?;
 
     let wait_config = WaitForTx {
         wait: cli.wait,
