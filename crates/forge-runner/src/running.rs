@@ -201,7 +201,7 @@ pub fn run_test_case(
     };
     let block_info = state_reader.get_block_info()?;
 
-    let mut context = build_context(block_info);
+    let mut context = build_context(block_info, case.max_n_steps);
     let mut execution_resources = ExecutionResources::default();
     let mut cached_state = CachedState::from(state_reader);
     let syscall_handler = build_syscall_handler(

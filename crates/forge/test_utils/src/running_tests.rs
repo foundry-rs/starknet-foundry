@@ -42,6 +42,7 @@ pub fn run_test_case(test: &TestCase) -> Vec<TestCrateSummary> {
             test.env().clone(),
         )),
         &[],
+        None,
         &mut BlockNumberMap::default(),
     ))
     .expect("Runner fail")

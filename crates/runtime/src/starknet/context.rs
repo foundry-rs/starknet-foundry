@@ -35,7 +35,7 @@ pub const STEP_RESOURCE_COST: f64 = 0.005_f64;
 // HOW TO FIND:
 // 1. https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/fee-mechanism/#calculation_of_computation_costs
 #[must_use]
-pub fn build_block_context(block_info: BlockInfo) -> BlockContext {
+pub fn build_block_context(block_info: BlockInfo, max_n_steps: Option<u32>) -> BlockContext {
     // blockifier::test_utils::create_for_account_testing
     let vm_resource_fee_cost = Arc::new(HashMap::from([
         (constants::N_STEPS_RESOURCE.to_string(), STEP_RESOURCE_COST),
@@ -77,7 +77,7 @@ pub fn build_block_context(block_info: BlockInfo) -> BlockContext {
         block_timestamp: block_info.timestamp,
         sequencer_address: block_info.sequencer_address,
         vm_resource_fee_cost,
-        invoke_tx_max_n_steps: 3_000_000,
+        invoke_tx_max_n_steps: max_n_steps.unwrap_or(3_000_000),
         validate_max_n_steps: 1_000_000,
         max_recursion_depth: 50,
         fee_token_addresses: FeeTokenAddresses {
@@ -127,8 +127,11 @@ pub fn build_transaction_context() -> AccountTransactionContext {
 }
 
 #[must_use]
-pub fn build_context(block_info: BlockInfo) -> EntryPointExecutionContext {
-    let block_context = build_block_context(block_info);
+pub fn build_context(
+    block_info: BlockInfo,
+    max_n_steps: Option<u32>,
+) -> EntryPointExecutionContext {
+    let block_context = build_block_context(block_info, max_n_steps);
     let account_context = build_transaction_context();
 
     EntryPointExecutionContext::new(

@@ -107,6 +107,10 @@ struct TestArgs {
     /// Save execution traces of all test which have passed and are not fuzz tests
     #[arg(long)]
     save_trace_data: bool,
+
+    /// Max steps per test
+    #[arg(long)]
+    max_n_steps: Option<u32>,
 }
 
 fn validate_fuzzer_runs_value(val: &str) -> Result<u32> {
@@ -256,6 +260,7 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                     runner_config,
                     runner_params,
                     &forge_config.fork,
+                    args.max_n_steps,
                     &mut block_number_map,
                 )
                 .await?;

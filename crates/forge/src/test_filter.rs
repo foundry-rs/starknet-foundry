@@ -166,6 +166,7 @@ mod tests {
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
                     fuzzer_config: None,
+                    max_n_steps: None,
                 },
                 TestCaseRaw {
                     name: "crate2::run_other_thing".to_string(),
@@ -174,6 +175,7 @@ mod tests {
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
                     fuzzer_config: None,
+                    max_n_steps: None,
                 },
                 TestCaseRaw {
                     name: "outer::crate2::execute_next_thing".to_string(),
@@ -182,6 +184,7 @@ mod tests {
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
                     fuzzer_config: None,
+                    max_n_steps: None,
                 },
                 TestCaseRaw {
                     name: "thing".to_string(),
@@ -190,6 +193,7 @@ mod tests {
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
                     fuzzer_config: None,
+                    max_n_steps: None,
                 },
             ],
             tests_location: CrateLocation::Lib,
@@ -212,7 +216,8 @@ mod tests {
                 ignored: false,
                 expected_result: ExpectedTestResult::Success,
                 fork_config: None,
-                fuzzer_config: None
+                fuzzer_config: None,
+                max_n_steps: None
             },]
         );
 
@@ -233,7 +238,8 @@ mod tests {
                 ignored: true,
                 expected_result: ExpectedTestResult::Success,
                 fork_config: None,
-                fuzzer_config: None
+                fuzzer_config: None,
+                max_n_steps: None
             },]
         );
 
@@ -256,6 +262,7 @@ mod tests {
                     ignored: false,
                     fork_config: None,
                     fuzzer_config: None,
+                    max_n_steps: None
                 },
                 TestCaseRaw {
                     name: "crate2::run_other_thing".to_string(),
@@ -264,6 +271,7 @@ mod tests {
                     ignored: true,
                     fork_config: None,
                     fuzzer_config: None,
+                    max_n_steps: None
                 },
                 TestCaseRaw {
                     name: "outer::crate2::execute_next_thing".to_string(),
@@ -272,6 +280,7 @@ mod tests {
                     ignored: true,
                     fork_config: None,
                     fuzzer_config: None,
+                    max_n_steps: None
                 },
                 TestCaseRaw {
                     name: "thing".to_string(),
@@ -280,6 +289,7 @@ mod tests {
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
                     fuzzer_config: None,
+                    max_n_steps: None
                 },
             ]
         );
@@ -314,6 +324,7 @@ mod tests {
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
                     fuzzer_config: None,
+                    max_n_steps: None
                 },
                 TestCaseRaw {
                     name: "crate2::run_other_thing".to_string(),
@@ -322,6 +333,7 @@ mod tests {
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
                     fuzzer_config: None,
+                    max_n_steps: None
                 },
                 TestCaseRaw {
                     name: "outer::crate2::execute_next_thing".to_string(),
@@ -330,6 +342,7 @@ mod tests {
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
                     fuzzer_config: None,
+                    max_n_steps: None
                 },
                 TestCaseRaw {
                     name: "thing".to_string(),
@@ -338,6 +351,7 @@ mod tests {
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
                     fuzzer_config: None,
+                    max_n_steps: None
                 },
             ]
         );
@@ -387,6 +401,7 @@ mod tests {
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
                     fuzzer_config: None,
+                    max_n_steps: None,
                 },
                 TestCaseRaw {
                     name: "crate2::run_other_thing".to_string(),
@@ -395,6 +410,7 @@ mod tests {
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
                     fuzzer_config: None,
+                    max_n_steps: None,
                 },
                 TestCaseRaw {
                     name: "outer::crate3::run_other_thing".to_string(),
@@ -403,6 +419,7 @@ mod tests {
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
                     fuzzer_config: None,
+                    max_n_steps: None,
                 },
                 TestCaseRaw {
                     name: "do_thing".to_string(),
@@ -411,6 +428,7 @@ mod tests {
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
                     fuzzer_config: None,
+                    max_n_steps: None,
                 },
             ],
             tests_location: CrateLocation::Tests,
@@ -456,6 +474,7 @@ mod tests {
                 expected_result: ExpectedTestResult::Success,
                 fork_config: None,
                 fuzzer_config: None,
+                max_n_steps: None
             },]
         );
 
@@ -477,6 +496,7 @@ mod tests {
                 expected_result: ExpectedTestResult::Success,
                 fork_config: None,
                 fuzzer_config: None,
+                max_n_steps: None
             },]
         );
 
@@ -509,6 +529,7 @@ mod tests {
                 expected_result: ExpectedTestResult::Success,
                 fork_config: None,
                 fuzzer_config: None,
+                max_n_steps: None
             },]
         );
     }
@@ -525,6 +546,7 @@ mod tests {
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
                     fuzzer_config: None,
+                    max_n_steps: None,
                 },
                 TestCaseRaw {
                     name: "crate2::run_other_thing".to_string(),
@@ -533,6 +555,7 @@ mod tests {
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
                     fuzzer_config: None,
+                    max_n_steps: None,
                 },
                 TestCaseRaw {
                     name: "outer::crate3::run_other_thing".to_string(),
@@ -541,6 +564,7 @@ mod tests {
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
                     fuzzer_config: None,
+                    max_n_steps: None,
                 },
                 TestCaseRaw {
                     name: "do_thing".to_string(),
@@ -549,6 +573,7 @@ mod tests {
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
                     fuzzer_config: None,
+                    max_n_steps: None,
                 },
             ],
             tests_location: CrateLocation::Tests,
@@ -567,6 +592,7 @@ mod tests {
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
                     fuzzer_config: None,
+                    max_n_steps: None
                 },
                 TestCaseRaw {
                     name: "outer::crate3::run_other_thing".to_string(),
@@ -575,6 +601,7 @@ mod tests {
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
                     fuzzer_config: None,
+                    max_n_steps: None
                 },
             ]
         );
@@ -592,6 +619,7 @@ mod tests {
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
                     fuzzer_config: None,
+                    max_n_steps: None,
                 },
                 TestCaseRaw {
                     name: "crate2::run_other_thing".to_string(),
@@ -600,6 +628,7 @@ mod tests {
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
                     fuzzer_config: None,
+                    max_n_steps: None,
                 },
                 TestCaseRaw {
                     name: "outer::crate3::run_other_thing".to_string(),
@@ -608,6 +637,7 @@ mod tests {
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
                     fuzzer_config: None,
+                    max_n_steps: None,
                 },
                 TestCaseRaw {
                     name: "do_thing".to_string(),
@@ -616,6 +646,7 @@ mod tests {
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
                     fuzzer_config: None,
+                    max_n_steps: None,
                 },
             ],
             tests_location: CrateLocation::Tests,
@@ -634,6 +665,7 @@ mod tests {
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
                     fuzzer_config: None,
+                    max_n_steps: None
                 },
                 TestCaseRaw {
                     name: "crate2::run_other_thing".to_string(),
@@ -642,6 +674,7 @@ mod tests {
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
                     fuzzer_config: None,
+                    max_n_steps: None
                 },
                 TestCaseRaw {
                     name: "outer::crate3::run_other_thing".to_string(),
@@ -650,6 +683,7 @@ mod tests {
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
                     fuzzer_config: None,
+                    max_n_steps: None
                 },
                 TestCaseRaw {
                     name: "do_thing".to_string(),
@@ -658,6 +692,7 @@ mod tests {
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
                     fuzzer_config: None,
+                    max_n_steps: None
                 },
             ]
         );

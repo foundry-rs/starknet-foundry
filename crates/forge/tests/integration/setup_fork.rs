@@ -137,6 +137,7 @@ fn fork_aliased_decorator() {
                     block_id_value: "Latest".to_string(),
                 },
             )],
+            None,
             &mut BlockNumberMap::default(),
         ))
         .expect("Runner fail");
