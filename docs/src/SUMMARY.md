@@ -95,6 +95,8 @@
         * [run](appendix/sncast/multicall/run.md)
     * [show-config](appendix/sncast/show_config.md)
     * [script](appendix/sncast/script/script.md)
+        * [init](appendix/sncast/script/init.md)
+        * [run](appendix/sncast/script/run.md)
 * [`sncast` Library Functions References](appendix/sncast-library.md)
     * [declare](appendix/sncast-library/declare.md)
     * [deploy](appendix/sncast-library/deploy.md)
