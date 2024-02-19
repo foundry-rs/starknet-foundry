@@ -35,7 +35,7 @@ use shared::utils::build_readable_text;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::SCRIPT_LIB_ARTIFACT_NAME;
 use sncast::response::print::print_as_warning;
-use sncast::response::structs::ScriptResponse;
+use sncast::response::structs::ScriptRunResponse;
 use starknet::accounts::Account;
 use starknet::core::types::{BlockId, BlockTag::Pending, FieldElement};
 use starknet::providers::jsonrpc::HttpTransport;
@@ -252,7 +252,7 @@ pub fn run(
     provider: &JsonRpcClient<HttpTransport>,
     tokio_runtime: Runtime,
     config: &CastConfig,
-) -> Result<ScriptResponse> {
+) -> Result<ScriptRunResponse> {
     warn_if_sncast_std_not_compatible(metadata)?;
     let artifacts = inject_lib_artifact(metadata, package_metadata, artifacts)?;
 
@@ -336,11 +336,11 @@ pub fn run(
         builtins,
     ) {
         Ok(result) => match result.value {
-            RunResultValue::Success(data) => Ok(ScriptResponse {
+            RunResultValue::Success(data) => Ok(ScriptRunResponse {
                 status: "success".to_string(),
                 msg: build_readable_text(&data),
             }),
-            RunResultValue::Panic(panic_data) => Ok(ScriptResponse {
+            RunResultValue::Panic(panic_data) => Ok(ScriptRunResponse {
                 status: "script panicked".to_string(),
                 msg: build_readable_text(&panic_data),
             }),
