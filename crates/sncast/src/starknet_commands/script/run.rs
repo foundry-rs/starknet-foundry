@@ -18,8 +18,6 @@ use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::vm_core::VirtualMachine;
-use clap::command;
-use clap::Args;
 use conversions::{FromConv, IntoConv};
 use itertools::chain;
 use runtime::starknet::context::{build_context, BlockInfo};
@@ -44,17 +42,6 @@ use starknet::providers::JsonRpcClient;
 use tokio::runtime::Runtime;
 
 type ScriptStarknetContractArtifacts = StarknetContractArtifacts;
-
-#[derive(Args)]
-#[command(about = "Execute a deployment script")]
-pub struct Script {
-    /// Module name that contains the `main` function, which will be executed
-    pub script_module_name: String,
-
-    /// Specifies scarb package to be used
-    #[clap(long)]
-    pub package: Option<String>,
-}
 
 pub struct CastScriptExtension<'a> {
     pub hints: &'a HashMap<String, Hint>,

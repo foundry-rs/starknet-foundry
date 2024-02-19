@@ -1,10 +1,10 @@
 # `script`
-Compile and run a cairo deployment script.
+Compile and run a cairo deployment script or initialize a script template by using subcommand [`init`](./init.md)
 
 ## `<MODULE_NAME>`
 Required.
 
-Module name that contains the 'main' function that will be executed.
+Script module name that contains the 'main' function that will be executed.
 
 ## `--package <NAME>`
 Optional.

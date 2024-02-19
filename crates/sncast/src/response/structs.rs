@@ -105,3 +105,10 @@ pub struct ScriptResponse {
 }
 
 impl CommandResponse for ScriptResponse {}
+
+#[derive(Serialize)]
+pub struct ScriptInitResponse {
+    pub status: String,
+}
+
+impl CommandResponse for ScriptInitResponse {}
