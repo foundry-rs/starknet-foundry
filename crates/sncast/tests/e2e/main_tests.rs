@@ -32,8 +32,6 @@ async fn test_happy_case_from_sncast_config() {
 
 #[tokio::test]
 async fn test_happy_case_from_cli_no_scarb() {
-    let tempdir = tempdir().expect("Unable to create temporary directory");
-
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
@@ -48,7 +46,7 @@ async fn test_happy_case_from_cli_no_scarb() {
         "doesnotmatter",
     ];
 
-    let snapbox = runner(&args).current_dir(tempdir.path());
+    let snapbox = runner(&args);
 
     snapbox.assert().success().stderr_matches(indoc! {r"
         command: call
