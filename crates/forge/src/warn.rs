@@ -32,7 +32,7 @@ pub(crate) async fn warn_if_incompatible_rpc_version(
     test_crates: &[CompiledTestCrateRaw],
     fork_targets: &[ForkTarget],
 ) -> Result<()> {
-    let mut urls = HashSet::<&str>::new();
+    let mut urls = HashSet::<String>::new();
 
     // collect urls
     for test_crate in test_crates {
@@ -43,21 +43,22 @@ pub(crate) async fn warn_if_incompatible_rpc_version(
         {
             let params = replace_id_with_params(raw_fork_config, fork_targets)?;
 
-            urls.insert(&params.url);
+            urls.insert(params.url.clone());
         }
     }
 
     let mut handles = Vec::with_capacity(urls.len());
 
     for url in urls {
-        let client = create_rpc_client(url)?;
+        handles.push(tokio::spawn(async move {
+            let client = create_rpc_client(&url)?;
 
-        handles
-            .push(async move { verify_and_warn_if_incompatible_rpc_version(&client, url).await });
+            verify_and_warn_if_incompatible_rpc_version(&client, &url).await
+        }));
     }
 
     for handle in handles {
-        handle.await?;
+        handle.await??;
     }
 
     Ok(())
