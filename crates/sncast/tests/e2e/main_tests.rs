@@ -1,7 +1,5 @@
 use crate::helpers::constants::{ACCOUNT, ACCOUNT_FILE_PATH, CONTRACTS_DIR, URL};
-use crate::helpers::fixtures::{
-    duplicate_contract_directory_with_salt, from_env, get_keystores_path,
-};
+use crate::helpers::fixtures::{duplicate_contract_directory_with_salt, from_env, get_accounts_path, get_keystores_path};
 use crate::helpers::runner::runner;
 use indoc::indoc;
 use snapbox::cmd::{cargo_bin, Command};
@@ -116,7 +114,34 @@ async fn test_happy_case_mixed() {
 }
 
 #[tokio::test]
-async fn test_missing_account() {
+async fn test_nonexistent_account_address() {
+    let contract_path =
+        duplicate_contract_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "dummy", "101");
+    let accounts_json_path = get_accounts_path("tests/data/accounts/faulty_accounts.json");
+    let args = vec![
+        "--accounts-file",
+        accounts_json_path.as_str(),
+        "--account",
+        "with_nonexistent_address",
+        "--url",
+        URL,
+        "declare",
+        "--contract-name",
+        "Map",
+    ];
+
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(contract_path.path())
+        .args(args);
+
+    snapbox.assert().failure().stderr_matches(indoc! {r"
+        Error: Invalid account address
+        ...
+    "});
+}
+
+#[tokio::test]
+async fn test_missing_account_flag() {
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
