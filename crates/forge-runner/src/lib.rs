@@ -18,8 +18,6 @@ use futures::stream::FuturesUnordered;
 use futures::StreamExt;
 
 use once_cell::sync::Lazy;
-use scarb_api::StarknetContractArtifacts;
-use running::TestDetails;
 use smol_str::SmolStr;
 use trace_data::save_trace_data;
 
