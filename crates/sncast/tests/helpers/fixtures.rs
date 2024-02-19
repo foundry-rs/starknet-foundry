@@ -71,8 +71,6 @@ pub async fn declare_contract(account: &str, path: &str, shortname: &str) -> Fie
     let class_hash = tx.class_hash;
     let tx_hash = tx.transaction_hash;
     write_devnet_env(format!("{shortname}_CLASS_HASH").as_str(), &class_hash);
-    dbg!(&format!("{shortname}_CLASS_HASH").as_str());
-    dbg!(&class_hash);
     write_devnet_env(format!("{shortname}_DECLARE_HASH").as_str(), &tx_hash);
     class_hash
 }
@@ -139,8 +137,6 @@ pub async fn declare_deploy_contract(account: &str, path: &str, shortname: &str)
         TransactionReceipt::Deploy(deploy_receipt) => {
             let address = deploy_receipt.contract_address;
             write_devnet_env(format!("{shortname}_ADDRESS").as_str(), &address);
-            dbg!(&format!("{shortname}_ADDRESS").as_str());
-            dbg!(&address);
         }
         _ => {
             panic!("Unexpected TransactionReceipt variant");
