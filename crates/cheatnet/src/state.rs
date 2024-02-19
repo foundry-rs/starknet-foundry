@@ -15,12 +15,13 @@ use runtime::starknet::state::DictStateReader;
 
 use starknet_api::core::EntryPointSelector;
 
-use crate::constants::build_test_entry_point;
+use crate::constants::{build_test_entry_point, TEST_CONTRACT_CLASS_HASH};
 use blockifier::state::errors::StateError::UndeclaredClassHash;
 use starknet_api::transaction::ContractAddressSalt;
 use starknet_api::{
     core::{ClassHash, CompiledClassHash, ContractAddress, Nonce},
     hash::StarkFelt,
+    stark_felt,
     state::StorageKey,
 };
 use std::cell::{Ref, RefCell};
@@ -205,8 +206,10 @@ pub struct CheatnetState {
 
 impl Default for CheatnetState {
     fn default() -> Self {
+        let mut test_code_entry_point = build_test_entry_point();
+        test_code_entry_point.class_hash = Some(ClassHash(stark_felt!(TEST_CONTRACT_CLASS_HASH)));
         let test_call = Rc::new(RefCell::new(CallTrace {
-            entry_point: build_test_entry_point(),
+            entry_point: test_code_entry_point,
             used_execution_resources: Default::default(),
             nested_calls: vec![],
         }));
@@ -318,6 +321,11 @@ impl TraceData {
 
         self.current_call_stack
             .push(new_call, resources_used_before_call);
+    }
+
+    pub fn set_class_hash_for_current_call(&mut self, class_hash: ClassHash) {
+        let current_call = self.current_call_stack.top();
+        current_call.borrow_mut().entry_point.class_hash = Some(class_hash);
     }
 
     pub fn exit_nested_call(&mut self, resources_used_after_call: &ExecutionResources) {
