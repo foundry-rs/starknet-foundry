@@ -16,6 +16,7 @@ use cairo_vm::vm::runners::builtin_runner::{
     OUTPUT_BUILTIN_NAME, POSEIDON_BUILTIN_NAME, RANGE_CHECK_BUILTIN_NAME,
     SEGMENT_ARENA_BUILTIN_NAME, SIGNATURE_BUILTIN_NAME,
 };
+use cairo_vm::vm::runners::cairo_runner::RunResources;
 use serde::{Deserialize, Serialize};
 use starknet_api::data_availability::DataAvailabilityMode;
 
@@ -134,13 +135,19 @@ pub fn build_context(
     let block_context = build_block_context(block_info, max_n_steps);
     let account_context = build_transaction_context();
 
-    EntryPointExecutionContext::new(
+    let mut entry_point_ctx = EntryPointExecutionContext::new(
         &block_context,
         &account_context,
         ExecutionMode::Execute,
         false,
     )
-    .unwrap()
+    .unwrap();
+
+    // override it to omit [`EntryPointExecutionContext::max_steps`] restrictions
+    entry_point_ctx.vm_run_resources =
+        RunResources::new(block_context.invoke_tx_max_n_steps as usize);
+
+    entry_point_ctx
 }
 
 #[derive(Copy, Clone, Serialize, Deserialize, Debug)]
