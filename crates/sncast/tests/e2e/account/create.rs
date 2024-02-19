@@ -5,10 +5,8 @@ use indoc::indoc;
 
 use sncast::helpers::configuration::copy_config_to_tempdir;
 use sncast::helpers::constants::CREATE_KEYSTORE_PASSWORD_ENV_VAR;
-use std::path::Path;
 use std::{env, fs};
 use tempfile::tempdir;
-use test_case::test_case;
 
 #[tokio::test]
 pub async fn test_happy_case() {
@@ -337,37 +335,29 @@ pub async fn test_keystore_without_account() {
     "});
 }
 
-#[test_case("tests/data/keystore/my_key.json", "tests/data/keystore/my_account_new.json", "error: Keystore file my_key.json already exists" ; "when keystore exists")]
-#[test_case("tests/data/keystore/my_key_new.json", "tests/data/keystore/my_account.json", "error: Account file my_account.json already exists" ; "when account exists")]
-pub fn test_keystore_already_exists(keystore_file: &str, account_file: &str, error: &str) {
+#[tokio::test]
+pub async fn test_keystore_file_already_exists() {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
 
-    let keystore_file = Path::new(keystore_file);
-    if keystore_file.exists() {
-        fs_extra::file::copy(
-            keystore_file,
-            temp_dir.path().join(keystore_file.file_name().unwrap()),
-            &fs_extra::file::CopyOptions::new().overwrite(true),
-        )
-        .expect("Unable to copy keystore file");
-    }
-    let account_file = Path::new(account_file);
-    if account_file.exists() {
-        fs_extra::file::copy(
-            account_file,
-            temp_dir.path().join(account_file.file_name().unwrap()),
-            &fs_extra::file::CopyOptions::new().overwrite(true),
-        )
-        .expect("Unable to copy account file");
-    }
+    let keystore_file = "my_key.json";
+    let account_file = "my_account_new.json";
+
+    fs_extra::file::copy(
+        "tests/data/keystore/my_key.json",
+        temp_dir.path().join(keystore_file),
+        &fs_extra::file::CopyOptions::new().overwrite(true),
+    )
+    .expect("Unable to copy keystore file");
+
+    env::set_var(CREATE_KEYSTORE_PASSWORD_ENV_VAR, "123");
 
     let args = vec![
         "--url",
         URL,
         "--keystore",
-        keystore_file.file_name().unwrap().to_str().unwrap(),
+        keystore_file,
         "--account",
-        account_file.file_name().unwrap().to_str().unwrap(),
+        account_file,
         "account",
         "create",
         "--class-hash",
@@ -380,7 +370,45 @@ pub fn test_keystore_already_exists(keystore_file: &str, account_file: &str, err
     let stderr_str =
         std::str::from_utf8(&out.stderr).expect("failed to convert command output to string");
 
-    assert!(stderr_str.contains(error));
+    assert!(stderr_str.contains("error: Keystore file my_key.json already exists"));
+}
+
+#[tokio::test]
+pub async fn test_account_file_already_exists() {
+    let temp_dir = tempdir().expect("Unable to create a temporary directory");
+
+    let keystore_file = "my_key_new.json";
+    let account_file = "my_account.json";
+
+    fs_extra::file::copy(
+        "tests/data/keystore/my_account.json",
+        temp_dir.path().join(account_file),
+        &fs_extra::file::CopyOptions::new().overwrite(true),
+    )
+    .expect("Unable to copy account file");
+
+    env::set_var(CREATE_KEYSTORE_PASSWORD_ENV_VAR, "123");
+
+    let args = vec![
+        "--url",
+        URL,
+        "--keystore",
+        keystore_file,
+        "--account",
+        account_file,
+        "account",
+        "create",
+        "--class-hash",
+        DEVNET_OZ_CLASS_HASH,
+    ];
+
+    let snapbox = runner(&args).current_dir(temp_dir.path());
+    let bdg = snapbox.assert();
+    let out = bdg.get_output();
+    let stderr_str =
+        std::str::from_utf8(&out.stderr).expect("failed to convert command output to string");
+
+    assert!(stderr_str.contains("error: Account file my_account.json already exists"));
 }
 
 #[tokio::test]
