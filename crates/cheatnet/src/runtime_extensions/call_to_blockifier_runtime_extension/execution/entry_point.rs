@@ -1,7 +1,7 @@
 use super::cairo1_execution::execute_entry_point_call_cairo1;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::deprecated::cairo0_execution::execute_entry_point_call_cairo0;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeState;
-use crate::state::CheatnetState;
+use crate::state::{CheatnetState, CheatedData};
 use blockifier::execution::call_info::{CallExecution, Retdata};
 use blockifier::{
     execution::{
@@ -33,12 +33,24 @@ pub fn execute_call_entry_point(
     resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
 ) -> EntryPointExecutionResult<CallInfo> {
+    let cheated_data = if let Some(contract_address) = &entry_point.code_address {
+        CheatedData::new(runtime_state.cheatnet_state, contract_address)
+    } else {
+        runtime_state
+            .cheatnet_state
+            .trace_data
+            .current_call_stack
+            .top_cheated_data()
+            .clone()
+    };
+
     // region: Modified blockifier code
     // We skip recursion depth validation here.
-    runtime_state
-        .cheatnet_state
-        .trace_data
-        .enter_nested_call(entry_point.clone(), resources.clone());
+    runtime_state.cheatnet_state.trace_data.enter_nested_call(
+        entry_point.clone(),
+        resources.clone(),
+        cheated_data,
+    );
 
     if let Some(ret_data) =
         get_ret_data_by_call_entry_point(entry_point, runtime_state.cheatnet_state)

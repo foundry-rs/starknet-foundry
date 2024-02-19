@@ -2,7 +2,7 @@ use crate::state::{start_cheat, stop_cheat, CheatSpan, CheatTarget};
 use crate::CheatnetState;
 use cairo_felt::Felt252;
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, Debug)]
 pub struct TxInfoMock {
     pub version: Option<Felt252>,
     pub account_contract_address: Option<Felt252>,

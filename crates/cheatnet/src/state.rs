@@ -157,6 +157,7 @@ struct CallStackElement {
     // when we exit the call we use it to calculate resources used by the call
     resources_used_before_call: ExecutionResources,
     call_trace: Rc<RefCell<CallTrace>>,
+    cheated_data: CheatedData,
 }
 
 pub struct NotEmptyCallStack(Vec<CallStackElement>);
@@ -166,6 +167,7 @@ impl NotEmptyCallStack {
         NotEmptyCallStack(vec![CallStackElement {
             resources_used_before_call: ExecutionResources::default(),
             call_trace: elem,
+            cheated_data: Default::default(),
         }])
     }
 
@@ -173,16 +175,25 @@ impl NotEmptyCallStack {
         &mut self,
         elem: Rc<RefCell<CallTrace>>,
         resources_used_before_call: ExecutionResources,
+        cheated_data: CheatedData,
     ) {
         self.0.push(CallStackElement {
             resources_used_before_call,
             call_trace: elem,
+            cheated_data,
         });
     }
 
     pub fn top(&mut self) -> Rc<RefCell<CallTrace>> {
         let top_val = self.0.pop().unwrap();
         let borrowed_ref = top_val.call_trace.clone();
+        self.0.push(top_val);
+        borrowed_ref
+    }
+
+    pub fn top_cheated_data(&mut self) -> CheatedData {
+        let top_val = self.0.pop().unwrap();
+        let borrowed_ref = top_val.cheated_data.clone();
         self.0.push(top_val);
         borrowed_ref
     }
@@ -351,11 +362,35 @@ impl CheatnetState {
     }
 }
 
+#[derive(Clone, Default, Debug)]
+pub struct CheatedData {
+    pub block_number: Option<Felt252>,
+    pub block_timestamp: Option<Felt252>,
+    pub caller_address: Option<ContractAddress>,
+    pub sequencer_address: Option<ContractAddress>,
+    pub tx_info: Option<TxInfoMock>,
+}
+
+impl CheatedData {
+    pub fn new(cheatnet_state: &mut CheatnetState, contract_address: &ContractAddress) -> Self {
+        Self {
+            block_number: cheatnet_state.get_and_update_cheated_block_number(contract_address),
+            block_timestamp: cheatnet_state
+                .get_and_update_cheated_block_timestamp(contract_address),
+            caller_address: cheatnet_state.get_and_update_cheated_caller_address(contract_address),
+            sequencer_address: cheatnet_state
+                .get_and_update_cheated_sequencer_address(contract_address),
+            tx_info: cheatnet_state.get_and_update_cheated_tx_info(contract_address),
+        }
+    }
+}
+
 impl TraceData {
     pub fn enter_nested_call(
         &mut self,
         entry_point: CallEntryPoint,
         resources_used_before_call: ExecutionResources,
+        cheated_data: CheatedData,
     ) {
         let new_call = Rc::new(RefCell::new(CallTrace {
             entry_point,
@@ -370,13 +405,14 @@ impl TraceData {
             .push(new_call.clone());
 
         self.current_call_stack
-            .push(new_call, resources_used_before_call);
+            .push(new_call, resources_used_before_call, cheated_data);
     }
 
     pub fn exit_nested_call(&mut self, resources_used_after_call: &ExecutionResources) {
         let CallStackElement {
             resources_used_before_call,
             call_trace: last_call,
+            ..
         } = self.current_call_stack.pop();
 
         last_call.borrow_mut().used_execution_resources =
