@@ -40,7 +40,9 @@ thiserror.workspace = true
 serde_json.workspace = true
 console.workspace = true
 serde.workspace = true
+bimap.workspace = true
 flatten-serde-json.workspace = true
+rayon.workspace = true
 cheatnet = { path = "../cheatnet" }
 runtime = { path = "../runtime" }
 conversions = { path = "../conversions" }
