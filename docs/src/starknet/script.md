@@ -50,8 +50,9 @@ $ sncast script init my_script
 
 For more details, see [init command](../appendix/sncast/script/init.md).
 
-Note: To include a newly created script in an existing workspace, it must be manually added to the members list in the `Scarb.toml` file, under the defined workspace.
-For more detailed information about workspaces, please refer to the [Scarb documentation](https://docs.swmansion.com/scarb/docs/reference/workspaces.html).
+> 📝 **Note**
+> To include a newly created script in an existing workspace, it must be manually added to the members list in the `Scarb.toml` file, under the defined workspace.
+> For more detailed information about workspaces, please refer to the [Scarb documentation](https://docs.swmansion.com/scarb/docs/reference/workspaces.html).
 
 ### Minimal Example (Without Contract Deployment)
 
