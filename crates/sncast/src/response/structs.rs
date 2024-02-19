@@ -1,10 +1,10 @@
 use camino::Utf8PathBuf;
-use serde::{Serialize, Serializer};
+use serde::{Deserialize, Serialize, Serializer};
 use starknet::core::types::FieldElement;
 
 pub struct Decimal(pub u64);
 
-#[derive(Clone)]
+#[derive(Clone, Debug, Deserialize, PartialEq)]
 pub struct Felt(pub FieldElement);
 
 impl Serialize for Decimal {
@@ -42,20 +42,20 @@ pub struct CallResponse {
 }
 impl CommandResponse for CallResponse {}
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct InvokeResponse {
     pub transaction_hash: Felt,
 }
 impl CommandResponse for InvokeResponse {}
 
-#[derive(Serialize)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub struct DeployResponse {
     pub contract_address: Felt,
     pub transaction_hash: Felt,
 }
 impl CommandResponse for DeployResponse {}
 
-#[derive(Serialize)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub struct DeclareResponse {
     pub class_hash: Felt,
     pub transaction_hash: Felt,
