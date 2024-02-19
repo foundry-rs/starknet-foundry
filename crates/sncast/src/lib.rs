@@ -30,6 +30,7 @@ use starknet::{
     signers::{LocalWallet, SigningKey},
 };
 
+use crate::helpers::constants::{WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
 use std::collections::HashMap;
 use std::thread::sleep;
 use std::time::Duration;
@@ -38,6 +39,7 @@ use url::Url;
 
 pub mod helpers;
 pub mod response;
+pub mod state;
 
 #[derive(Deserialize, Serialize, Clone)]
 struct Account {
@@ -75,8 +77,54 @@ impl NumbersFormat {
 
 pub struct WaitForTx {
     pub wait: bool,
-    pub timeout: u16,
-    pub retry_interval: u8,
+    pub wait_params: ValidatedWaitParams,
+}
+
+#[derive(Deserialize, Serialize, Clone, Debug, Copy, PartialEq)]
+pub struct ValidatedWaitParams {
+    timeout: u16,
+    retry_interval: u8,
+}
+
+impl ValidatedWaitParams {
+    #[must_use]
+    pub fn new(retry_interval: u8, timeout: u16) -> Self {
+        assert!(
+            !(retry_interval == 0 || timeout == 0 || u16::from(retry_interval) > timeout),
+            "Invalid values for retry_interval and/or timeout!"
+        );
+
+        Self {
+            timeout,
+            retry_interval,
+        }
+    }
+
+    #[must_use]
+    pub fn get_retries(&self) -> u16 {
+        self.timeout / u16::from(self.retry_interval)
+    }
+
+    #[must_use]
+    pub fn remaining_time(&self, steps_done: u16) -> u16 {
+        steps_done * u16::from(self.retry_interval)
+    }
+
+    #[must_use]
+    pub fn get_retry_interval(&self) -> u8 {
+        self.retry_interval
+    }
+
+    #[must_use]
+    pub fn get_timeout(&self) -> u16 {
+        self.timeout
+    }
+}
+
+impl Default for ValidatedWaitParams {
+    fn default() -> Self {
+        Self::new(WAIT_RETRY_INTERVAL, WAIT_TIMEOUT)
+    }
 }
 
 pub fn get_provider(url: &str) -> Result<JsonRpcClient<HttpTransport>> {
@@ -270,15 +318,11 @@ pub fn get_block_id(value: &str) -> Result<BlockId> {
 pub async fn wait_for_tx(
     provider: &JsonRpcClient<HttpTransport>,
     tx_hash: FieldElement,
-    timeout: u16,
-    retry_interval: u8,
+    wait_params: ValidatedWaitParams,
 ) -> Result<&str> {
     println!("Transaction hash = {tx_hash:#x}");
 
-    if retry_interval == 0 || timeout == 0 || u16::from(retry_interval) > timeout {
-        return Err(anyhow!("Invalid values for retry_interval and/or timeout!"));
-    }
-    let retries = timeout / u16::from(retry_interval);
+    let retries = wait_params.get_retries();
     for i in (1..retries).rev() {
         match provider.get_transaction_status(tx_hash).await {
             Ok(starknet::core::types::TransactionStatus::Rejected) => {
@@ -297,13 +341,13 @@ pub async fn wait_for_tx(
             },
             Ok(starknet::core::types::TransactionStatus::Received)
             | Err(StarknetError(TransactionHashNotFound)) => {
-                let remaining_time = i * u16::from(retry_interval);
+                let remaining_time = wait_params.remaining_time(i);
                 println!("Waiting for transaction to be accepted ({i} retries / {remaining_time}s left until timeout)");
             }
             Err(err) => return Err(err.into()),
         };
 
-        sleep(Duration::from_secs(retry_interval.into()));
+        sleep(Duration::from_secs(wait_params.get_retry_interval().into()));
     }
 
     Err(anyhow!(
@@ -382,14 +426,7 @@ pub async fn handle_wait_for_tx<T>(
     wait_config: WaitForTx,
 ) -> Result<T> {
     if wait_config.wait {
-        return match wait_for_tx(
-            provider,
-            transaction_hash,
-            wait_config.timeout,
-            wait_config.retry_interval,
-        )
-        .await
-        {
+        return match wait_for_tx(provider, transaction_hash, wait_config.wait_params).await {
             Ok(_) => Ok(return_value),
             Err(message) => Err(anyhow!(message)),
         };

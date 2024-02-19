@@ -120,8 +120,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     self.artifacts,
                     WaitForTx {
                         wait: true,
-                        timeout: self.config.wait_timeout,
-                        retry_interval: self.config.wait_retry_interval,
+                        wait_params: self.config.wait_params,
                     },
                 ))?;
 
@@ -161,8 +160,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     nonce,
                     WaitForTx {
                         wait: true,
-                        timeout: self.config.wait_timeout,
-                        retry_interval: self.config.wait_retry_interval,
+                        wait_params: self.config.wait_params,
                     },
                 ))?;
 
@@ -201,8 +199,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     nonce,
                     WaitForTx {
                         wait: true,
-                        timeout: self.config.wait_timeout,
-                        retry_interval: self.config.wait_retry_interval,
+                        wait_params: self.config.wait_params,
                     },
                 ))?;
 
