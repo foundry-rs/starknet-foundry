@@ -1,5 +1,7 @@
 use crate::helpers::constants::{ACCOUNT, ACCOUNT_FILE_PATH, CONTRACTS_DIR, URL};
-use crate::helpers::fixtures::{duplicate_contract_directory_with_salt, from_env, get_accounts_path, get_keystores_path};
+use crate::helpers::fixtures::{
+    duplicate_contract_directory_with_salt, from_env, get_accounts_path, get_keystores_path,
+};
 use crate::helpers::runner::runner;
 use indoc::indoc;
 use snapbox::cmd::{cargo_bin, Command};

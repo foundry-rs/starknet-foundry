@@ -31,11 +31,11 @@ use starknet::{
 };
 
 use crate::helpers::constants::{WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
+use starknet::accounts::ConnectedAccount;
 use std::collections::HashMap;
 use std::thread::sleep;
 use std::time::Duration;
 use std::{env, fs};
-use starknet::accounts::ConnectedAccount;
 use url::Url;
 
 pub mod helpers;
@@ -229,19 +229,17 @@ pub async fn get_account<'a>(
     Ok(account)
 }
 
-async fn verify_account_address(account: impl ConnectedAccount + std::marker::Sync) -> Result<()>
-{
+async fn verify_account_address(account: impl ConnectedAccount + std::marker::Sync) -> Result<()> {
     match account.get_nonce().await {
-        Ok(_) => {}
+        Ok(_) => Ok(()),
         Err(error) => {
-            return if let StarknetError(ContractNotFound) = error {
+            if let StarknetError(ContractNotFound) = error {
                 Err(anyhow!("Invalid account address"))
             } else {
                 handle_rpc_error::<()>(error)
             }
         }
     }
-    Ok(())
 }
 
 fn get_account_from_keystore<'a>(
