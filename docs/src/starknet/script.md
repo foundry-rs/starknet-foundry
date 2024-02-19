@@ -35,11 +35,24 @@ Some of the planned features that will be included in future versions are:
 - account creation/deployment
 - multicall support
 - dry running the scripts
-- init subcommand
 
 and more!
 
 ## Examples
+
+### Initialize a script
+
+To get started, a deployment script with all required elements can be initialized using the following command:
+
+```shell
+$ sncast script init my_script
+```
+
+For more details, see [init command](../appendix/sncast/script/init.md).
+
+> 📝 **Note**
+> To include a newly created script in an existing workspace, it must be manually added to the members list in the `Scarb.toml` file, under the defined workspace.
+> For more detailed information about workspaces, please refer to the [Scarb documentation](https://docs.swmansion.com/scarb/docs/reference/workspaces.html).
 
 ### Minimal Example (Without Contract Deployment)
 

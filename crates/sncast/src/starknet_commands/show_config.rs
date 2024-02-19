@@ -27,8 +27,8 @@ pub async fn show_config(
     if keystore.is_some() {
         accounts_file_path = None;
     }
-    let wait_timeout = Some(cast_config.wait_timeout);
-    let wait_retry_interval = Some(cast_config.wait_retry_interval);
+    let wait_timeout = Some(cast_config.wait_params.get_timeout());
+    let wait_retry_interval = Some(cast_config.wait_params.get_retry_interval());
 
     Ok(ShowConfigResponse {
         profile,

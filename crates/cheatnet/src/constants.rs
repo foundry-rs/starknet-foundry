@@ -33,6 +33,7 @@ pub const SECURITY_TEST_CLASS_HASH: &str = "0x114";
 pub const TEST_ERC20_CONTRACT_CLASS_HASH: &str = "0x1010";
 
 pub const TEST_CONTRACT_CLASS_HASH: &str = "0x117";
+pub const TEST_ENTRY_POINT_SELECTOR: &str = "TEST_CONTRACT_SELECTOR";
 // snforge_std/src/cheatcodes.cairo::test_address
 pub const TEST_ADDRESS: &str = "0x01724987234973219347210837402";
 
@@ -80,7 +81,7 @@ pub fn build_testing_state() -> DictStateReader {
 
 #[must_use]
 pub fn build_test_entry_point() -> CallEntryPoint {
-    let test_selector = get_selector_from_name("TEST_CONTRACT_SELECTOR")
+    let test_selector = get_selector_from_name(TEST_ENTRY_POINT_SELECTOR)
         .unwrap()
         .into_();
     let entry_point_selector = create_entry_point_selector(&test_selector);

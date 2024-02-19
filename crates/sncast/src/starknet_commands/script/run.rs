@@ -11,7 +11,6 @@ use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::state::cached_state::CachedState;
 use cairo_felt::Felt252;
 use cairo_lang_casm::hints::Hint;
-use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{build_hints_dict, RunResultValue, SierraCasmRunner};
 use cairo_lang_sierra::program::VersionedProgram;
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
@@ -19,8 +18,6 @@ use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::vm_core::VirtualMachine;
-use clap::command;
-use clap::Args;
 use conversions::{FromConv, IntoConv};
 use itertools::chain;
 use runtime::starknet::context::{build_context, BlockInfo};
@@ -33,6 +30,7 @@ use runtime::{
 use scarb_api::{package_matches_version_requirement, StarknetContractArtifacts};
 use scarb_metadata::{Metadata, PackageMetadata};
 use semver::{Comparator, Op, Version, VersionReq};
+use shared::utils::build_readable_text;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::SCRIPT_LIB_ARTIFACT_NAME;
 use sncast::response::print::print_as_warning;
@@ -44,17 +42,6 @@ use starknet::providers::JsonRpcClient;
 use tokio::runtime::Runtime;
 
 type ScriptStarknetContractArtifacts = StarknetContractArtifacts;
-
-#[derive(Args)]
-#[command(about = "Execute a deployment script")]
-pub struct Script {
-    /// Module name that contains the `main` function, which will be executed
-    pub script_module_name: String,
-
-    /// Specifies scarb package to be used
-    #[clap(long)]
-    pub package: Option<String>,
-}
 
 pub struct CastScriptExtension<'a> {
     pub hints: &'a HashMap<String, Hint>,
@@ -122,8 +109,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     self.artifacts,
                     WaitForTx {
                         wait: true,
-                        timeout: self.config.wait_timeout,
-                        retry_interval: self.config.wait_retry_interval,
+                        wait_params: self.config.wait_params,
                     },
                 ))?;
 
@@ -163,8 +149,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     nonce,
                     WaitForTx {
                         wait: true,
-                        timeout: self.config.wait_timeout,
-                        retry_interval: self.config.wait_retry_interval,
+                        wait_params: self.config.wait_params,
                     },
                 ))?;
 
@@ -203,8 +188,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     nonce,
                     WaitForTx {
                         wait: true,
-                        timeout: self.config.wait_timeout,
-                        retry_interval: self.config.wait_retry_interval,
+                        wait_params: self.config.wait_params,
                     },
                 ))?;
 
@@ -402,25 +386,4 @@ fn inject_lib_artifact(
 
     artifacts.insert(SCRIPT_LIB_ARTIFACT_NAME.to_string(), lib_artifacts);
     Ok(artifacts.clone())
-}
-
-// taken from starknet-foundry/crates/forge/src/test_case_summary.rs
-/// Helper function to build `readable_text` from a run data.
-// TODO #1127
-fn build_readable_text(data: &Vec<Felt252>) -> Option<String> {
-    let mut readable_text = String::new();
-
-    for felt in data {
-        readable_text.push_str(&format!("\n    original value: [{felt}]"));
-        if let Some(short_string) = as_cairo_short_string(felt) {
-            readable_text.push_str(&format!(", converted to a string: [{short_string}]"));
-        }
-    }
-
-    if readable_text.is_empty() {
-        None
-    } else {
-        readable_text.push('\n');
-        Some(readable_text)
-    }
 }
