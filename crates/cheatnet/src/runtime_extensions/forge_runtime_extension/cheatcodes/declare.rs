@@ -36,8 +36,9 @@ pub fn declare(
         .expect("Failed to read contract class from json");
     let contract_class = BlockifierContractClass::V1(contract_class);
 
-    let class_hash =
-        get_class_hash(contract_artifact.sierra.as_str()).expect("Failed to get class hash");
+    let sierra_class = serde_json::from_str(&contract_artifact.sierra)
+        .expect("Failed to parse sierra contract code");
+    let class_hash = get_class_hash(&sierra_class).expect("Failed to get class hash");
 
     match state.get_compiled_contract_class(&class_hash) {
         Err(StateError::UndeclaredClassHash(_)) => {
@@ -68,8 +69,7 @@ pub fn declare(
     }
 }
 
-pub fn get_class_hash(sierra_contract: &str) -> Result<ClassHash> {
-    let sierra_class: SierraClass = serde_json::from_str(sierra_contract)?;
+pub fn get_class_hash(sierra_class: &SierraClass) -> Result<ClassHash> {
     let class_hash = sierra_class.class_hash()?;
     let class_hash = StarkFelt::new(class_hash.to_bytes_be())?;
     Ok(ClassHash(class_hash))

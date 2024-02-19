@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
+#### Added
+
+- contract names to call trace
+
 #### Changed
 
 - Bump cairo to 2.5.4

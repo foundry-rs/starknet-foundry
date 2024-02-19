@@ -6,6 +6,7 @@ use std::rc::Rc;
 use std::sync::Arc;
 
 use crate::compiled_runnable::ValidatedForkConfig;
+use crate::contracts_data::ContractsData;
 use crate::gas::calculate_used_gas;
 use crate::test_case_summary::{Single, TestCaseSummary};
 use crate::{RunnerConfig, RunnerParams, TestCaseRunnable, CACHE_DIR};
@@ -68,7 +69,7 @@ pub fn run_test(
             return Ok(TestCaseSummary::Skipped {});
         }
 
-        extract_test_case_summary(run_result, &case, vec![])
+        extract_test_case_summary(run_result, &case, vec![], &runner_params.contracts_data)
     })
 }
 
@@ -105,7 +106,7 @@ pub(crate) fn run_fuzz_test(
             return Ok(TestCaseSummary::Skipped {});
         }
 
-        extract_test_case_summary(run_result, &case, args)
+        extract_test_case_summary(run_result, &case, args, &runner_params.contracts_data)
     })
 }
 
@@ -219,7 +220,7 @@ pub fn run_test_case(
     };
     let forge_extension = ForgeExtension {
         environment_variables: &runner_params.environment_variables,
-        contracts: &runner_params.contracts,
+        contracts: &runner_params.contracts_data.contracts,
     };
 
     let mut forge_runtime = ExtendedRuntime {
@@ -304,6 +305,7 @@ fn extract_test_case_summary(
     run_result: Result<RunResultWithInfo>,
     case: &TestCaseRunnable,
     args: Vec<Felt252>,
+    contracts_data: &ContractsData,
 ) -> Result<TestCaseSummary<Single>> {
     match run_result {
         Ok(result_with_info) => {
@@ -315,6 +317,7 @@ fn extract_test_case_summary(
                     result_with_info.gas_used,
                     result_with_info.used_resources,
                     &result_with_info.call_trace,
+                    contracts_data,
                 )),
                 // CairoRunError comes from VirtualMachineError which may come from HintException that originates in TestExecutionSyscallHandler
                 Err(RunnerError::CairoRunError(error)) => Ok(TestCaseSummary::Failed {
