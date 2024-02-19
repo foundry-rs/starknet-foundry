@@ -1,6 +1,8 @@
 use std::fs;
 
-use forge_runner::trace_data::{ProfilerCallTrace, TRACE_DIR};
+use forge_runner::trace_data::{
+    ProfilerCallTrace, TEST_CODE_CONTRACT_NAME, TEST_CODE_FUNCTION_NAME, TRACE_DIR,
+};
 
 use crate::e2e::common::runner::{setup_package, test_runner};
 
@@ -73,11 +75,11 @@ fn trace_has_contract_and_function_names() {
 
     assert_eq!(
         call_trace.entry_point.contract_name,
-        Some(String::from("SNFORGE_TEST_CODE"))
+        Some(String::from(TEST_CODE_CONTRACT_NAME))
     );
     assert_eq!(
         call_trace.entry_point.function_name,
-        Some(String::from("SNFORGE_TEST_CODE_FUNCTION"))
+        Some(String::from(TEST_CODE_FUNCTION_NAME))
     );
     assert_contract_and_function_names(&call_trace.nested_calls[0]);
 }

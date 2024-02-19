@@ -23,6 +23,8 @@ use crate::contracts_data::ContractsData;
 use crate::test_case_summary::{Single, TestCaseSummary};
 
 pub const TRACE_DIR: &str = ".snfoundry_trace";
+pub const TEST_CODE_CONTRACT_NAME: &str = "SNFORGE_TEST_CODE";
+pub const TEST_CODE_FUNCTION_NAME: &str = "SNFORGE_TEST_CODE_FUNCTION";
 
 /// Tree structure representing trace of a call.
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -93,8 +95,8 @@ impl ProfilerCallEntryPoint {
                 .into_()
             && class_hash == Some(ClassHash(stark_felt!(TEST_CONTRACT_CLASS_HASH)))
         {
-            contract_name = Some(String::from("SNFORGE_TEST_CODE"));
-            function_name = Some(String::from("SNFORGE_TEST_CODE_FUNCTION"));
+            contract_name = Some(String::from(TEST_CODE_CONTRACT_NAME));
+            function_name = Some(String::from(TEST_CODE_FUNCTION_NAME));
         }
 
         ProfilerCallEntryPoint {
