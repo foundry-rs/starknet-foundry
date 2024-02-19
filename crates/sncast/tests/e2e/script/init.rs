@@ -18,7 +18,7 @@ fn test_script_init_happy_case() {
     snapbox.assert().stdout_matches(formatdoc! {r"
         Warning: [..]
         command: script init
-        status: Successfully initialized `{script_name}` at [..]/scripts/{script_name}
+        message: Successfully initialized `{script_name}` at [..]/scripts/{script_name}
     "});
 
     let script_dir_path = temp_dir.path().join(INIT_SCRIPTS_DIR).join(script_name);
@@ -126,7 +126,7 @@ fn test_initialized_script_compiles() {
     snapbox.assert().stdout_matches(formatdoc! {r"
         Warning: [..]
         command: script init
-        status: Successfully initialized `{script_name}` at [..]/scripts/{script_name}
+        message: Successfully initialized `{script_name}` at [..]/scripts/{script_name}
     "});
 
     let script_dir_path = temp_dir.path().join(INIT_SCRIPTS_DIR).join(script_name);

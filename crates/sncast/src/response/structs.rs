@@ -108,7 +108,7 @@ impl CommandResponse for ScriptRunResponse {}
 
 #[derive(Serialize)]
 pub struct ScriptInitResponse {
-    pub status: String,
+    pub message: String,
 }
 
 impl CommandResponse for ScriptInitResponse {}
