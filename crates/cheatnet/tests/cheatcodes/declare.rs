@@ -15,8 +15,9 @@ fn get_contract_class_hash(
     contract_name: &str,
     contracts: &HashMap<String, StarknetContractArtifacts>,
 ) -> ClassHash {
-    let sierra = contracts.get(contract_name).unwrap();
-    get_class_hash(sierra.sierra.as_str()).unwrap()
+    let contract = contracts.get(contract_name).unwrap();
+    let sierra_class = serde_json::from_str(&contract.sierra).unwrap();
+    get_class_hash(&sierra_class).unwrap()
 }
 
 #[test]
