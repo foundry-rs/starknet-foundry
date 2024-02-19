@@ -338,11 +338,11 @@ pub fn run(
         Ok(result) => match result.value {
             RunResultValue::Success(data) => Ok(ScriptRunResponse {
                 status: "success".to_string(),
-                msg: build_readable_text(&data),
+                message: build_readable_text(&data),
             }),
             RunResultValue::Panic(panic_data) => Ok(ScriptRunResponse {
                 status: "script panicked".to_string(),
-                msg: build_readable_text(&panic_data),
+                message: build_readable_text(&panic_data),
             }),
         },
         Err(err) => Err(err.into()),

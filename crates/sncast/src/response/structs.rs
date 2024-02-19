@@ -101,7 +101,7 @@ impl CommandResponse for ShowConfigResponse {}
 #[derive(Serialize, Debug)]
 pub struct ScriptRunResponse {
     pub status: String,
-    pub msg: Option<String>,
+    pub message: Option<String>,
 }
 
 impl CommandResponse for ScriptRunResponse {}
