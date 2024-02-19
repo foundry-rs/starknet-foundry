@@ -49,6 +49,7 @@ pub fn execute_call_entry_point(
             .exit_nested_call(resources);
         return Ok(mocked_call_info(entry_point.clone(), ret_data.clone()));
     }
+    // endregion
 
     // Validate contract is deployed.
     let storage_address = entry_point.storage_address;
@@ -63,6 +64,14 @@ pub fn execute_call_entry_point(
         Some(class_hash) => class_hash,
         None => storage_class_hash, // If not given, take the storage contract class hash.
     };
+
+    // region: Modified blockifier code
+    runtime_state
+        .cheatnet_state
+        .trace_data
+        .set_class_hash_for_current_call(class_hash);
+    // endregion
+
     // Hack to prevent version 0 attack on argent accounts.
     if context.account_tx_context.version() == TransactionVersion(StarkFelt::from(0_u8))
         && class_hash

@@ -9,6 +9,7 @@ use forge::scarb::{
 use forge::shared_cache::{clean_cache, set_cached_failed_tests_names};
 use forge::test_filter::TestsFilter;
 use forge::{pretty_printing, run};
+use forge_runner::contracts_data::ContractsData;
 use forge_runner::test_case_summary::{AnyTestCaseSummary, TestCaseSummary};
 use forge_runner::test_crate_summary::TestCrateSummary;
 use forge_runner::{RunnerConfig, RunnerParams, CACHE_DIR};
@@ -231,6 +232,8 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                 let contracts =
                     get_contracts_map(&scarb_metadata, &package.id, None).unwrap_or_default();
 
+                let contracts_data = ContractsData::try_from(contracts)?;
+
                 let runner_config = Arc::new(combine_configs(
                     &workspace_root,
                     args.exit_first,
@@ -240,7 +243,8 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                     args.save_trace_data,
                     &forge_config,
                 ));
-                let runner_params = Arc::new(RunnerParams::new(contracts, env::vars().collect()));
+                let runner_params =
+                    Arc::new(RunnerParams::new(contracts_data, env::vars().collect()));
 
                 let tests_file_summaries = run(
                     &package.name,
