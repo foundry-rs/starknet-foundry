@@ -8,15 +8,15 @@ use tempfile::tempdir;
 async fn test_happy_case() {
     let temp_dir = tempdir().expect("Unable to create temporary directory");
 
-    let config_path = "./deploy_invoke.toml";
+    let config_file = "deploy_invoke.toml";
     let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
     let root_path = project_root::get_project_root().expect("failed to get project root path");
 
     fs_extra::file::copy(
         Path::new(&root_path)
             .join(MULTICALL_CONFIGS_DIR)
-            .join(config_path),
-        temp_dir.path().join(config_path),
+            .join(config_file),
+        temp_dir.path().join(config_file),
         &fs_extra::file::CopyOptions::new().overwrite(true),
     )
     .expect("Unable to copy config file");
@@ -31,7 +31,7 @@ async fn test_happy_case() {
         "multicall",
         "run",
         "--path",
-        config_path,
+        config_file,
     ];
     let snapbox = runner(&args).current_dir(temp_dir.path());
     let bdg = snapbox.assert();
@@ -54,7 +54,7 @@ async fn test_happy_case() {
 async fn test_calldata_ids() {
     let temp_dir = tempdir().expect("Unable to create temporary directory");
 
-    let config_path = "./deploy_invoke_calldata_ids.toml";
+    let config_file = "deploy_invoke_calldata_ids.toml";
     let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
 
     let root_path = project_root::get_project_root().expect("failed to get project root path");
@@ -62,8 +62,8 @@ async fn test_calldata_ids() {
     fs_extra::file::copy(
         Path::new(&root_path)
             .join(MULTICALL_CONFIGS_DIR)
-            .join(config_path),
-        temp_dir.path().join(config_path),
+            .join(config_file),
+        temp_dir.path().join(config_file),
         &fs_extra::file::CopyOptions::new().overwrite(true),
     )
     .expect("Unable to copy config file");
@@ -78,7 +78,7 @@ async fn test_calldata_ids() {
         "multicall",
         "run",
         "--path",
-        config_path,
+        config_file,
     ];
     let snapbox = runner(&args).current_dir(temp_dir.path());
     let bdg = snapbox.assert();
@@ -117,7 +117,7 @@ async fn test_invalid_path() {
 async fn test_deploy_fail() {
     let temp_dir = tempdir().expect("Unable to create temporary directory");
 
-    let config_path = "./deploy_invalid.toml";
+    let config_file = "deploy_invalid.toml";
     let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
 
     let root_path = project_root::get_project_root().expect("failed to get project root path");
@@ -125,8 +125,8 @@ async fn test_deploy_fail() {
     fs_extra::file::copy(
         Path::new(&root_path)
             .join(MULTICALL_CONFIGS_DIR)
-            .join(config_path),
-        temp_dir.path().join(config_path),
+            .join(config_file),
+        temp_dir.path().join(config_file),
         &fs_extra::file::CopyOptions::new().overwrite(true),
     )
     .expect("Unable to copy config file");
@@ -141,7 +141,7 @@ async fn test_deploy_fail() {
         "multicall",
         "run",
         "--path",
-        config_path,
+        config_file,
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
@@ -158,7 +158,7 @@ async fn test_deploy_fail() {
 async fn test_invoke_fail() {
     let temp_dir = tempdir().expect("Unable to create temporary directory");
 
-    let config_path = "./invoke_invalid.toml";
+    let config_file = "invoke_invalid.toml";
     let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
 
     let root_path = project_root::get_project_root().expect("failed to get project root path");
@@ -166,8 +166,8 @@ async fn test_invoke_fail() {
     fs_extra::file::copy(
         Path::new(&root_path)
             .join(MULTICALL_CONFIGS_DIR)
-            .join(config_path),
-        temp_dir.path().join(config_path),
+            .join(config_file),
+        temp_dir.path().join(config_file),
         &fs_extra::file::CopyOptions::new().overwrite(true),
     )
     .expect("Unable to copy config file");
@@ -182,7 +182,7 @@ async fn test_invoke_fail() {
         "multicall",
         "run",
         "--path",
-        config_path,
+        config_file,
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
@@ -200,7 +200,7 @@ async fn test_invoke_fail() {
 async fn test_deploy_success_invoke_fails() {
     let temp_dir = tempdir().expect("Unable to create temporary directory");
 
-    let config_path = "./deploy_succ_invoke_fail.toml";
+    let config_file = "deploy_succ_invoke_fail.toml";
     let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
 
     let root_path = project_root::get_project_root().expect("failed to get project root path");
@@ -208,8 +208,8 @@ async fn test_deploy_success_invoke_fails() {
     fs_extra::file::copy(
         Path::new(&root_path)
             .join(MULTICALL_CONFIGS_DIR)
-            .join(config_path),
-        temp_dir.path().join(config_path),
+            .join(config_file),
+        temp_dir.path().join(config_file),
         &fs_extra::file::CopyOptions::new().overwrite(true),
     )
     .expect("Unable to copy config file");
@@ -224,7 +224,7 @@ async fn test_deploy_success_invoke_fails() {
         "multicall",
         "run",
         "--path",
-        config_path,
+        config_file,
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());

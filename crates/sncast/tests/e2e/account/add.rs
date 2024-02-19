@@ -9,7 +9,7 @@ use tempfile::tempdir;
 #[tokio::test]
 pub async fn test_happy_case() {
     let tempdir = tempdir().expect("Unable to create a temporary directory");
-    let accounts_file = "./accounts.json";
+    let accounts_file = "accounts.json";
 
     let args = vec![
         "--url",
@@ -57,7 +57,7 @@ pub async fn test_happy_case() {
 #[tokio::test]
 pub async fn test_happy_case_add_profile() {
     let tempdir = tempdir().expect("Failed to create a temporary directory");
-    let accounts_file = "./accounts.json";
+    let accounts_file = "accounts.json";
 
     let args = vec![
         "--url",
@@ -120,7 +120,7 @@ pub async fn test_happy_case_add_profile() {
 #[tokio::test]
 pub async fn test_detect_deployed() {
     let tempdir = tempdir().expect("Unable to create a temporary directory");
-    let accounts_file = "./accounts.json";
+    let accounts_file = "accounts.json";
 
     let args = vec![
         "--url",
@@ -214,8 +214,8 @@ pub async fn test_missing_arguments() {
 #[tokio::test]
 pub async fn test_private_key_from_file() {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
-    let accounts_file = "./accounts.json";
-    let private_key_file = "./my_private_key";
+    let accounts_file = "accounts.json";
+    let private_key_file = "my_private_key";
 
     fs::write(temp_dir.path().join(private_key_file), "0x456").unwrap();
 
@@ -274,7 +274,7 @@ pub async fn test_accept_only_one_private_key() {
         "--private-key",
         "0x456",
         "--private-key-file",
-        "./my_private_key",
+        "my_private_key",
     ];
 
     let snapbox = runner(&args);
@@ -296,7 +296,7 @@ pub async fn test_invalid_private_key_file_path() {
         "--address",
         "0x123",
         "--private-key-file",
-        "./my_private_key",
+        "my_private_key",
         "--deployed",
     ];
 
@@ -311,7 +311,7 @@ pub async fn test_invalid_private_key_file_path() {
 #[tokio::test]
 pub async fn test_invalid_private_key_in_file() {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
-    let private_key_file = "./my_private_key";
+    let private_key_file = "my_private_key";
 
     fs::write(
         temp_dir.path().join(private_key_file),
@@ -323,7 +323,7 @@ pub async fn test_invalid_private_key_in_file() {
         "--url",
         URL,
         "--accounts-file",
-        "./accounts.json",
+        "accounts.json",
         "account",
         "add",
         "--name",
@@ -338,15 +338,15 @@ pub async fn test_invalid_private_key_in_file() {
 
     snapbox.assert().stderr_matches(indoc! {r"
         command: account add
-        error: Failed to obtain private key from the file ./my_private_key: invalid character
+        error: Failed to obtain private key from the file my_private_key: invalid character
     "});
 }
 
 #[tokio::test]
 pub async fn test_private_key_as_int_in_file() {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
-    let accounts_file = "./accounts.json";
-    let private_key_file = "./my_private_key";
+    let accounts_file = "accounts.json";
+    let private_key_file = "my_private_key";
 
     fs::write(temp_dir.path().join(private_key_file), "1110").unwrap();
 

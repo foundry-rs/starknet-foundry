@@ -17,7 +17,7 @@ use test_case::test_case;
 #[tokio::test]
 pub async fn test_happy_case() {
     let tempdir = create_account(false).await;
-    let accounts_file = "./accounts.json";
+    let accounts_file = "accounts.json";
 
     let args = vec![
         "--url",
@@ -58,7 +58,7 @@ pub async fn test_happy_case() {
 #[tokio::test]
 pub async fn test_happy_case_add_profile() {
     let tempdir = create_account(true).await;
-    let accounts_file = "./accounts.json";
+    let accounts_file = "accounts.json";
 
     let args = vec![
         "--profile",
@@ -98,7 +98,7 @@ pub async fn test_happy_case_add_profile() {
 fn test_account_deploy_error(accounts_content: &str, error: &str) {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
 
-    let accounts_file = "./accounts.json";
+    let accounts_file = "accounts.json";
     fs::write(temp_dir.path().join(accounts_file), accounts_content).unwrap();
 
     let args = vec![
@@ -126,7 +126,7 @@ fn test_account_deploy_error(accounts_content: &str, error: &str) {
 #[tokio::test]
 async fn test_too_low_max_fee() {
     let tempdir = create_account(false).await;
-    let accounts_file = "./accounts.json";
+    let accounts_file = "accounts.json";
 
     let args = vec![
         "--url",
@@ -155,7 +155,7 @@ async fn test_too_low_max_fee() {
 #[tokio::test]
 pub async fn test_invalid_class_hash() {
     let tempdir = create_account(true).await;
-    let accounts_file = "./accounts.json";
+    let accounts_file = "accounts.json";
 
     let args = vec![
         "--profile",
@@ -183,7 +183,7 @@ pub async fn test_invalid_class_hash() {
 #[tokio::test]
 pub async fn test_valid_class_hash() {
     let tempdir = create_account(true).await;
-    let accounts_file = "./accounts.json";
+    let accounts_file = "accounts.json";
 
     let args = vec![
         "--profile",
@@ -209,7 +209,7 @@ pub async fn test_valid_class_hash() {
 #[tokio::test]
 pub async fn test_valid_no_max_fee() {
     let tempdir = create_account(true).await;
-    let accounts_file = "./accounts.json";
+    let accounts_file = "accounts.json";
 
     let args = vec![
         "--url",
@@ -234,7 +234,7 @@ pub async fn test_valid_no_max_fee() {
 
 pub async fn create_account(add_profile: bool) -> TempDir {
     let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
-    let accounts_file = "./accounts.json";
+    let accounts_file = "accounts.json";
 
     let mut args = vec![
         "--url",
@@ -273,18 +273,18 @@ pub async fn create_account(add_profile: bool) -> TempDir {
 pub async fn test_happy_case_keystore() {
     let tempdir = tempdir().expect("Unable to create a temporary directory");
 
-    let keystore_path = "./my_key.json";
-    let account_path = "./my_account_undeployed_happy_case.json";
+    let keystore_file = "my_key.json";
+    let account_file = "my_account_undeployed_happy_case.json";
 
     fs_extra::file::copy(
         "tests/data/keystore/my_key.json",
-        tempdir.path().join(keystore_path),
+        tempdir.path().join(keystore_file),
         &fs_extra::file::CopyOptions::new().overwrite(true),
     )
     .expect("Unable to copy keystore file");
     fs_extra::file::copy(
         "tests/data/keystore/my_account_undeployed_happy_case.json",
-        tempdir.path().join(account_path),
+        tempdir.path().join(account_file),
         &fs_extra::file::CopyOptions::new().overwrite(true),
     )
     .expect("Unable to copy account file");
@@ -292,8 +292,8 @@ pub async fn test_happy_case_keystore() {
     env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
 
     let address = get_address_from_keystore(
-        tempdir.path().join(keystore_path).to_str().unwrap(),
-        tempdir.path().join(account_path).to_str().unwrap(),
+        tempdir.path().join(keystore_file).to_str().unwrap(),
+        tempdir.path().join(account_file).to_str().unwrap(),
         KEYSTORE_PASSWORD_ENV_VAR,
     );
 
@@ -307,9 +307,9 @@ pub async fn test_happy_case_keystore() {
         "--url",
         URL,
         "--keystore",
-        keystore_path,
+        keystore_file,
         "--account",
-        account_path,
+        account_file,
         "account",
         "deploy",
         "--max-fee",
@@ -327,7 +327,7 @@ pub async fn test_happy_case_keystore() {
     assert!(stdout_str.contains("account deploy"));
     assert!(stdout_str.contains("transaction_hash"));
 
-    let contents = fs::read_to_string(tempdir.path().join(account_path)).unwrap();
+    let contents = fs::read_to_string(tempdir.path().join(account_file)).unwrap();
     let items: serde_json::Value =
         serde_json::from_str(&contents).expect("Failed to parse accounts file at ");
     assert_eq!(items["deployment"]["status"], "deployed");
@@ -339,18 +339,18 @@ pub async fn test_happy_case_keystore() {
 pub async fn test_keystore_already_deployed() {
     let tempdir = tempdir().expect("Unable to create a temporary directory");
 
-    let keystore_path = "./my_key.json";
-    let account_path = "./account.json";
+    let keystore_file = "my_key.json";
+    let account_file = "account.json";
 
     fs_extra::file::copy(
         "tests/data/keystore/my_key.json",
-        tempdir.path().join(keystore_path),
+        tempdir.path().join(keystore_file),
         &fs_extra::file::CopyOptions::new().overwrite(true),
     )
     .expect("Unable to copy keystore file");
     fs_extra::file::copy(
         "tests/data/keystore/my_account.json",
-        tempdir.path().join(account_path),
+        tempdir.path().join(account_file),
         &fs_extra::file::CopyOptions::new().overwrite(true),
     )
     .expect("Unable to copy account file");
@@ -361,9 +361,9 @@ pub async fn test_keystore_already_deployed() {
         "--url",
         URL,
         "--keystore",
-        keystore_path,
+        keystore_file,
         "--account",
-        account_path,
+        account_file,
         "account",
         "deploy",
         "--max-fee",
@@ -383,18 +383,18 @@ pub async fn test_keystore_already_deployed() {
 pub async fn test_keystore_key_mismatch() {
     let tempdir = tempdir().expect("Unable to create a temporary directory");
 
-    let keystore_path = "./my_key_invalid.json";
-    let account_path = "./my_account_undeployed.json";
+    let keystore_file = "my_key_invalid.json";
+    let account_file = "my_account_undeployed.json";
 
     fs_extra::file::copy(
         "tests/data/keystore/my_key_invalid.json",
-        tempdir.path().join(keystore_path),
+        tempdir.path().join(keystore_file),
         &fs_extra::file::CopyOptions::new().overwrite(true),
     )
     .expect("Unable to copy keystore file");
     fs_extra::file::copy(
         "tests/data/keystore/my_account_undeployed.json",
-        tempdir.path().join(account_path),
+        tempdir.path().join(account_file),
         &fs_extra::file::CopyOptions::new().overwrite(true),
     )
     .expect("Unable to copy account file");
@@ -405,9 +405,9 @@ pub async fn test_keystore_key_mismatch() {
         "--url",
         URL,
         "--keystore",
-        keystore_path,
+        keystore_file,
         "--account",
-        account_path,
+        account_file,
         "account",
         "deploy",
         "--max-fee",
@@ -426,26 +426,26 @@ pub async fn test_keystore_key_mismatch() {
 #[test_case("tests/data/keystore/my_key_inexistent.json", "tests/data/keystore/my_account_undeployed.json", "error: Failed to read keystore file" ; "when inexistent keystore")]
 #[test_case("tests/data/keystore/my_key.json", "tests/data/keystore/my_account_inexistent.json", "error: Failed to read account file" ; "when inexistent account")]
 pub fn test_deploy_keystore_inexistent_file(
-    keystore_path_str: &str,
-    account_path_str: &str,
+    keystore_file_str: &str,
+    account_file_str: &str,
     error: &str,
 ) {
     let tempdir = tempdir().expect("Unable to create a temporary directory");
 
-    let keystore_path = Path::new(keystore_path_str);
-    if keystore_path.exists() {
+    let keystore_file = Path::new(keystore_file_str);
+    if keystore_file.exists() {
         fs_extra::file::copy(
-            keystore_path,
-            tempdir.path().join(keystore_path.file_name().unwrap()),
+            keystore_file,
+            tempdir.path().join(keystore_file.file_name().unwrap()),
             &fs_extra::file::CopyOptions::new().overwrite(true),
         )
         .expect("Unable to copy keystore file");
     }
-    let account_path = Path::new(account_path_str);
-    if account_path.exists() {
+    let account_file = Path::new(account_file_str);
+    if account_file.exists() {
         fs_extra::file::copy(
-            account_path,
-            tempdir.path().join(account_path.file_name().unwrap()),
+            account_file,
+            tempdir.path().join(account_file.file_name().unwrap()),
             &fs_extra::file::CopyOptions::new().overwrite(true),
         )
         .expect("Unable to copy account file");
@@ -456,9 +456,9 @@ pub fn test_deploy_keystore_inexistent_file(
         "--url",
         URL,
         "--keystore",
-        keystore_path.file_name().unwrap().to_str().unwrap(),
+        keystore_file.file_name().unwrap().to_str().unwrap(),
         "--account",
-        account_path.file_name().unwrap().to_str().unwrap(),
+        account_file.file_name().unwrap().to_str().unwrap(),
         "account",
         "deploy",
         "--max-fee",
@@ -480,18 +480,18 @@ pub fn test_deploy_keystore_inexistent_file(
 pub async fn test_deploy_keystore_no_status() {
     let tempdir = tempdir().expect("Unable to create a temporary directory");
 
-    let keystore_path = "./my_key.json";
-    let account_path = "./my_account_invalid.json";
+    let keystore_file = "my_key.json";
+    let account_file = "my_account_invalid.json";
 
     fs_extra::file::copy(
         "tests/data/keystore/my_key.json",
-        tempdir.path().join(keystore_path),
+        tempdir.path().join(keystore_file),
         &fs_extra::file::CopyOptions::new().overwrite(true),
     )
     .expect("Unable to copy keystore file");
     fs_extra::file::copy(
         "tests/data/keystore/my_account_invalid.json",
-        tempdir.path().join(account_path),
+        tempdir.path().join(account_file),
         &fs_extra::file::CopyOptions::new().overwrite(true),
     )
     .expect("Unable to copy account file");
@@ -502,9 +502,9 @@ pub async fn test_deploy_keystore_no_status() {
         "--url",
         URL,
         "--keystore",
-        keystore_path,
+        keystore_file,
         "--account",
-        account_path,
+        account_file,
         "account",
         "deploy",
         "--max-fee",
@@ -524,18 +524,18 @@ pub async fn test_deploy_keystore_no_status() {
 pub async fn test_deploy_keystore_other_args() {
     let tempdir = tempdir().expect("Unable to create a temporary directory");
 
-    let keystore_path = "./my_key.json";
-    let account_path = "./my_account_undeployed_happy_case_other_args.json";
+    let keystore_file = "my_key.json";
+    let account_file = "my_account_undeployed_happy_case_other_args.json";
 
     fs_extra::file::copy(
         "tests/data/keystore/my_key.json",
-        tempdir.path().join(keystore_path),
+        tempdir.path().join(keystore_file),
         &fs_extra::file::CopyOptions::new().overwrite(true),
     )
     .expect("Unable to copy keystore file");
     fs_extra::file::copy(
         "tests/data/keystore/my_account_undeployed_happy_case_other_args.json",
-        tempdir.path().join(account_path),
+        tempdir.path().join(account_file),
         &fs_extra::file::CopyOptions::new().overwrite(true),
     )
     .expect("Unable to copy account file");
@@ -543,8 +543,8 @@ pub async fn test_deploy_keystore_other_args() {
     env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
 
     let address = get_address_from_keystore(
-        tempdir.path().join(keystore_path),
-        tempdir.path().join(account_path),
+        tempdir.path().join(keystore_file),
+        tempdir.path().join(account_file),
         KEYSTORE_PASSWORD_ENV_VAR,
     );
 
@@ -560,9 +560,9 @@ pub async fn test_deploy_keystore_other_args() {
         "--accounts-file",
         "accounts.json",
         "--keystore",
-        keystore_path,
+        keystore_file,
         "--account",
-        account_path,
+        account_file,
         "account",
         "deploy",
         "--name",
