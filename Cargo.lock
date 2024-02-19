@@ -2759,7 +2759,7 @@ checksum = "00b0228411908ca8685dba7fc2cdd70ec9990a6e753e89b6ac91a84c40fbaf4b"
 
 [[package]]
 name = "forge"
-version = "0.17.0"
+version = "0.17.1"
 dependencies = [
  "anyhow",
  "ark-ff",
@@ -2797,6 +2797,7 @@ dependencies = [
  "num-integer",
  "num-traits 0.2.17",
  "once_cell",
+ "openssl",
  "rand",
  "rayon",
  "regex",
@@ -2823,7 +2824,7 @@ dependencies = [
 
 [[package]]
 name = "forge_runner"
-version = "0.17.0"
+version = "0.17.1"
 dependencies = [
  "anyhow",
  "blockifier",
@@ -2857,6 +2858,7 @@ dependencies = [
  "scarb-api",
  "serde",
  "serde_json",
+ "shared",
  "smol_str 0.2.1",
  "starknet",
  "starknet_api",
@@ -4114,6 +4116,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ff011a302c396a5197692431fc1948019154afc178baf7d8e37367442a4601cf"
 
 [[package]]
+name = "openssl-src"
+version = "300.2.2+3.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8bbfad0063610ac26ee79f7484739e2b07555a75c42453b89263830b5c8103bc"
+dependencies = [
+ "cc",
+]
+
+[[package]]
 name = "openssl-sys"
 version = "0.9.99"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4121,6 +4132,7 @@ checksum = "22e1bf214306098e4832460f797824c05d25aacdf896f64a985fb0fd992454ae"
 dependencies = [
  "cc",
  "libc",
+ "openssl-src",
  "pkg-config",
  "vcpkg",
 ]
@@ -5317,6 +5329,10 @@ dependencies = [
 [[package]]
 name = "shared"
 version = "0.1.0"
+dependencies = [
+ "cairo-felt 0.9.1",
+ "cairo-lang-runner",
+]
 
 [[package]]
 name = "shellexpand"
@@ -5428,7 +5444,7 @@ dependencies = [
 
 [[package]]
 name = "sncast"
-version = "0.17.0"
+version = "0.17.1"
 dependencies = [
  "anyhow",
  "blockifier",
@@ -5463,6 +5479,7 @@ dependencies = [
  "semver",
  "serde",
  "serde_json",
+ "shared",
  "shellexpand",
  "snapbox",
  "starknet",

@@ -30,3 +30,4 @@ pub const CREATE_KEYSTORE_PASSWORD_ENV_VAR: &str = "CREATE_KEYSTORE_PASSWORD";
 
 pub const SCRIPT_LIB_ARTIFACT_NAME: &str = "__sncast_script_lib";
 pub const CONFIG_FILENAME: &str = "snfoundry.toml";
+pub const STATE_FILE_VERSION: u8 = 1;

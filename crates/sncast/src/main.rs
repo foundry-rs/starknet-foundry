@@ -17,7 +17,7 @@ use sncast::helpers::scarb_utils::{
 };
 use sncast::{
     chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_nonce, get_provider,
-    NumbersFormat, WaitForTx,
+    NumbersFormat, ValidatedWaitParams, WaitForTx,
 };
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
@@ -174,9 +174,9 @@ async fn run_async_command(
 ) -> Result<()> {
     let wait_config = WaitForTx {
         wait: cli.wait,
-        timeout: config.wait_timeout,
-        retry_interval: config.wait_retry_interval,
+        wait_params: config.wait_params,
     };
+
     match cli.command {
         Commands::Declare(declare) => {
             let account = get_account(
@@ -439,7 +439,11 @@ fn update_cast_config(config: &mut CastConfig, cli: &Cli) {
 
     config.accounts_file = Utf8PathBuf::from(shellexpand::tilde(&new_accounts_file).to_string());
 
-    config.wait_timeout = clone_or_else!(cli.wait_timeout, config.wait_timeout);
-    config.wait_retry_interval =
-        clone_or_else!(cli.wait_retry_interval, config.wait_retry_interval);
+    config.wait_params = ValidatedWaitParams::new(
+        clone_or_else!(
+            cli.wait_retry_interval,
+            config.wait_params.get_retry_interval()
+        ),
+        clone_or_else!(cli.wait_timeout, config.wait_params.get_timeout()),
+    );
 }
