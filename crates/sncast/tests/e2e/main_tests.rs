@@ -138,7 +138,6 @@ async fn test_nonexistent_account_address() {
 
     snapbox.assert().failure().stderr_matches(indoc! {r"
         Error: Invalid account address
-        ...
     "});
 }
 
