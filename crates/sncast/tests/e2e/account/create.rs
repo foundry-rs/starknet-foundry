@@ -265,14 +265,14 @@ pub async fn test_happy_case_keystore_add_profile() {
     let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
     let keystore_file = "my_key.json";
     let account_file = "my_account.json";
-    let accounts_file = "accounts.json";
+    let accounts_json_file = "accounts.json";
     env::set_var(CREATE_KEYSTORE_PASSWORD_ENV_VAR, "123");
 
     let args = vec![
         "--url",
         URL,
         "--accounts-file",
-        accounts_file,
+        accounts_json_file,
         "--keystore",
         keystore_file,
         "--account",
