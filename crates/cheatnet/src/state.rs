@@ -204,6 +204,11 @@ impl NotEmptyCallStack {
     }
 
     #[must_use]
+    pub fn size(&self) -> usize {
+        self.0.len()
+    }
+
+    #[must_use]
     pub fn borrow_full_trace(&self) -> Ref<'_, CallTrace> {
         self.0.first().unwrap().call_trace.borrow()
     }

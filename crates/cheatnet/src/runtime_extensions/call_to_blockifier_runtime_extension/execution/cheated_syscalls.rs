@@ -1,5 +1,6 @@
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::execute_constructor_entry_point;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeState;
+use crate::state::CheatedData;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::execution::syscalls::{
     DeployRequest, DeployResponse, LibraryCallRequest, SyscallResponse, SyscallResult,
@@ -47,12 +48,16 @@ pub fn get_execution_info_syscall(
     _remaining_gas: &mut u64,
 ) -> SyscallResult<GetExecutionInfoResponse> {
     let execution_info_ptr = syscall_handler.get_or_allocate_execution_info_segment(vm)?;
+    let current_call_stack = &mut runtime_state.cheatnet_state.trace_data.current_call_stack;
 
-    let cheated_data = runtime_state
-        .cheatnet_state
-        .trace_data
-        .current_call_stack
-        .top_cheated_data();
+    let cheated_data = if current_call_stack.size() == 1 {
+        CheatedData::new(
+            runtime_state.cheatnet_state,
+            &syscall_handler.storage_address(),
+        )
+    } else {
+        current_call_stack.top_cheated_data()
+    };
 
     let ptr_cheated_exec_info = get_cheated_exec_info_ptr(vm, execution_info_ptr, &cheated_data);
 
