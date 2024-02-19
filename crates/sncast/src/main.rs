@@ -108,7 +108,7 @@ enum Commands {
     /// Show current configuration being used
     ShowConfig(ShowConfig),
 
-    /// Run a deployment script
+    /// Run or initialize a deployment script
     Script(Script),
 }
 
@@ -121,35 +121,7 @@ fn main() -> Result<()> {
     let runtime = Runtime::new().expect("Failed to instantiate Runtime");
 
     if let Commands::Script(script) = &cli.command {
-        let manifest_path = assert_manifest_path_exists(&cli.path_to_scarb_toml)?;
-        let package_metadata = get_package_metadata(&manifest_path, &script.package)?;
-
-        let mut config = load_config(&cli.profile, &Some(package_metadata.root.clone()))?;
-        update_cast_config(&mut config, &cli);
-        let provider = get_provider(&config.rpc_url)?;
-
-        let mut artifacts = build_and_load_artifacts(
-            &package_metadata,
-            &BuildConfig {
-                scarb_toml_path: manifest_path.clone(),
-                json: cli.json,
-                profile: cli.profile.unwrap_or("dev".to_string()),
-            },
-        )
-        .expect("Failed to build script");
-        let metadata_with_deps = get_scarb_metadata_with_deps(&manifest_path)?;
-        let mut result = starknet_commands::script::run(
-            &script.script_module_name,
-            &metadata_with_deps,
-            &package_metadata,
-            &mut artifacts,
-            &provider,
-            runtime,
-            &config,
-        );
-
-        print_command_result("script", &mut result, numbers_format, &output_format)?;
-        Ok(())
+        run_script_command(&cli, runtime, script, numbers_format, &output_format)
     } else {
         let mut config = load_config(&cli.profile, &None)?;
         update_cast_config(&mut config, &cli);
@@ -419,6 +391,54 @@ async fn run_async_command(
         }
         Commands::Script(_) => unreachable!(),
     }
+}
+
+fn run_script_command(
+    cli: &Cli,
+    runtime: Runtime,
+    script: &Script,
+    numbers_format: NumbersFormat,
+    output_format: &OutputFormat,
+) -> Result<()> {
+    match &script.command {
+        starknet_commands::script::Commands::Init(init) => {
+            let mut result = starknet_commands::script::init::init(init);
+            print_command_result("script init", &mut result, numbers_format, output_format)?;
+        }
+        starknet_commands::script::Commands::Run(run) => {
+            let manifest_path = assert_manifest_path_exists(&cli.path_to_scarb_toml)?;
+            let package_metadata = get_package_metadata(&manifest_path, &run.package)?;
+
+            let mut config = load_config(&cli.profile, &Some(package_metadata.root.clone()))?;
+            update_cast_config(&mut config, cli);
+            let provider = get_provider(&config.rpc_url)?;
+
+            let mut artifacts = build_and_load_artifacts(
+                &package_metadata,
+                &BuildConfig {
+                    scarb_toml_path: manifest_path.clone(),
+                    json: cli.json,
+                    profile: cli.profile.clone().unwrap_or("dev".to_string()),
+                },
+            )
+            .expect("Failed to build script");
+            let metadata_with_deps = get_scarb_metadata_with_deps(&manifest_path)?;
+
+            let mut result = starknet_commands::script::run::run(
+                &run.script_name,
+                &metadata_with_deps,
+                &package_metadata,
+                &mut artifacts,
+                &provider,
+                runtime,
+                &config,
+            );
+
+            print_command_result("script run", &mut result, numbers_format, output_format)?;
+        }
+    }
+
+    Ok(())
 }
 
 fn update_cast_config(config: &mut CastConfig, cli: &Cli) {

@@ -99,9 +99,16 @@ pub struct ShowConfigResponse {
 impl CommandResponse for ShowConfigResponse {}
 
 #[derive(Serialize, Debug)]
-pub struct ScriptResponse {
+pub struct ScriptRunResponse {
     pub status: String,
-    pub msg: Option<String>,
+    pub message: Option<String>,
 }
 
-impl CommandResponse for ScriptResponse {}
+impl CommandResponse for ScriptRunResponse {}
+
+#[derive(Serialize)]
+pub struct ScriptInitResponse {
+    pub message: String,
+}
+
+impl CommandResponse for ScriptInitResponse {}

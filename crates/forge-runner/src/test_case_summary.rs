@@ -1,4 +1,5 @@
 use crate::compiled_runnable::TestCaseRunnable;
+use crate::contracts_data::ContractsData;
 use crate::expected_result::{ExpectedPanicValue, ExpectedTestResult};
 use crate::gas::check_available_gas;
 use crate::trace_data::ProfilerCallTrace;
@@ -211,6 +212,7 @@ impl TestCaseSummary<Single> {
         gas: u128,
         used_resources: UsedResources,
         call_trace: &Rc<RefCell<InternalCallTrace>>,
+        contracts_data: &ContractsData,
     ) -> Self {
         let name = test_case.name.to_string();
         let msg = extract_result_data(&run_result, &test_case.expected_result);
@@ -224,7 +226,10 @@ impl TestCaseSummary<Single> {
                         test_statistics: (),
                         gas_info: gas,
                         used_resources,
-                        trace_data: ProfilerCallTrace::from(call_trace.borrow().clone()),
+                        trace_data: ProfilerCallTrace::from_call_trace(
+                            call_trace.borrow().clone(),
+                            contracts_data,
+                        ),
                     };
                     check_available_gas(&test_case.available_gas, summary)
                 }
@@ -258,7 +263,10 @@ impl TestCaseSummary<Single> {
                         test_statistics: (),
                         gas_info: gas,
                         used_resources,
-                        trace_data: ProfilerCallTrace::from(call_trace.borrow().clone()),
+                        trace_data: ProfilerCallTrace::from_call_trace(
+                            call_trace.borrow().clone(),
+                            contracts_data,
+                        ),
                     },
                 },
             },
