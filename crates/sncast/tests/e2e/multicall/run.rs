@@ -1,39 +1,22 @@
-use crate::helpers::constants::{ACCOUNT_FILE_PATH, MULTICALL_CONFIGS_DIR, URL};
-use crate::helpers::fixtures::{default_cli_args, get_accounts_path};
+use crate::helpers::constants::MULTICALL_CONFIGS_DIR;
+use crate::helpers::fixtures::default_cli_args;
 use crate::helpers::runner::runner;
 use std::path::Path;
-use tempfile::tempdir;
 
 #[tokio::test]
 async fn test_happy_case() {
-    let temp_dir = tempdir().expect("Unable to create temporary directory");
+    let mut args = default_cli_args();
+    args.append(&mut vec!["--account", "user2"]);
 
-    let config_file = "deploy_invoke.toml";
-    let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
-    let root_path = project_root::get_project_root().expect("failed to get project root path");
+    let path = project_root::get_project_root().expect("failed to get project root path");
+    let path = Path::new(&path)
+        .join(MULTICALL_CONFIGS_DIR)
+        .join("deploy_invoke.toml");
+    let path_str = path.to_str().expect("failed converting path to str");
 
-    fs_extra::file::copy(
-        Path::new(&root_path)
-            .join(MULTICALL_CONFIGS_DIR)
-            .join(config_file),
-        temp_dir.path().join(config_file),
-        &fs_extra::file::CopyOptions::new().overwrite(true),
-    )
-    .expect("Unable to copy config file");
+    args.append(&mut vec!["multicall", "run", "--path", path_str]);
 
-    let args = vec![
-        "--url",
-        URL,
-        "--accounts-file",
-        accounts_json_path.as_str(),
-        "--account",
-        "user2",
-        "multicall",
-        "run",
-        "--path",
-        config_file,
-    ];
-    let snapbox = runner(&args).current_dir(temp_dir.path());
+    let snapbox = runner(&args);
     let bdg = snapbox.assert();
     let out = bdg.get_output();
 
@@ -52,35 +35,18 @@ async fn test_happy_case() {
 
 #[tokio::test]
 async fn test_calldata_ids() {
-    let temp_dir = tempdir().expect("Unable to create temporary directory");
+    let mut args = default_cli_args();
+    args.append(&mut vec!["--account", "user5"]);
 
-    let config_file = "deploy_invoke_calldata_ids.toml";
-    let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
+    let path = project_root::get_project_root().expect("failed to get project root path");
+    let path = Path::new(&path)
+        .join(MULTICALL_CONFIGS_DIR)
+        .join("deploy_invoke_calldata_ids.toml");
+    let path_str = path.to_str().expect("failed converting path to str");
 
-    let root_path = project_root::get_project_root().expect("failed to get project root path");
+    args.append(&mut vec!["multicall", "run", "--path", path_str]);
 
-    fs_extra::file::copy(
-        Path::new(&root_path)
-            .join(MULTICALL_CONFIGS_DIR)
-            .join(config_file),
-        temp_dir.path().join(config_file),
-        &fs_extra::file::CopyOptions::new().overwrite(true),
-    )
-    .expect("Unable to copy config file");
-
-    let args = vec![
-        "--url",
-        URL,
-        "--accounts-file",
-        accounts_json_path.as_str(),
-        "--account",
-        "user5",
-        "multicall",
-        "run",
-        "--path",
-        config_file,
-    ];
-    let snapbox = runner(&args).current_dir(temp_dir.path());
+    let snapbox = runner(&args);
     let bdg = snapbox.assert();
     let out = bdg.get_output();
 
@@ -115,36 +81,18 @@ async fn test_invalid_path() {
 
 #[tokio::test]
 async fn test_deploy_fail() {
-    let temp_dir = tempdir().expect("Unable to create temporary directory");
+    let mut args = default_cli_args();
+    args.append(&mut vec!["--account", "user2"]);
 
-    let config_file = "deploy_invalid.toml";
-    let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
+    let path = project_root::get_project_root().expect("failed to get project root path");
+    let path = Path::new(&path)
+        .join(MULTICALL_CONFIGS_DIR)
+        .join("deploy_invalid.toml");
+    let path_str = path.to_str().expect("failed converting path to str");
 
-    let root_path = project_root::get_project_root().expect("failed to get project root path");
+    args.append(&mut vec!["multicall", "run", "--path", path_str]);
 
-    fs_extra::file::copy(
-        Path::new(&root_path)
-            .join(MULTICALL_CONFIGS_DIR)
-            .join(config_file),
-        temp_dir.path().join(config_file),
-        &fs_extra::file::CopyOptions::new().overwrite(true),
-    )
-    .expect("Unable to copy config file");
-
-    let args = vec![
-        "--url",
-        URL,
-        "--accounts-file",
-        accounts_json_path.as_str(),
-        "--account",
-        "user2",
-        "multicall",
-        "run",
-        "--path",
-        config_file,
-    ];
-
-    let snapbox = runner(&args).current_dir(temp_dir.path());
+    let snapbox = runner(&args);
     let bdg = snapbox.assert();
     let out = bdg.get_output();
 
@@ -156,36 +104,18 @@ async fn test_deploy_fail() {
 
 #[tokio::test]
 async fn test_invoke_fail() {
-    let temp_dir = tempdir().expect("Unable to create temporary directory");
+    let mut args = default_cli_args();
+    args.append(&mut vec!["--account", "user2"]);
 
-    let config_file = "invoke_invalid.toml";
-    let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
+    let path = project_root::get_project_root().expect("failed to get project root path");
+    let path = Path::new(&path)
+        .join(MULTICALL_CONFIGS_DIR)
+        .join("invoke_invalid.toml");
+    let path_str = path.to_str().expect("failed converting path to str");
 
-    let root_path = project_root::get_project_root().expect("failed to get project root path");
+    args.append(&mut vec!["multicall", "run", "--path", path_str]);
 
-    fs_extra::file::copy(
-        Path::new(&root_path)
-            .join(MULTICALL_CONFIGS_DIR)
-            .join(config_file),
-        temp_dir.path().join(config_file),
-        &fs_extra::file::CopyOptions::new().overwrite(true),
-    )
-    .expect("Unable to copy config file");
-
-    let args = vec![
-        "--url",
-        URL,
-        "--accounts-file",
-        accounts_json_path.as_str(),
-        "--account",
-        "user2",
-        "multicall",
-        "run",
-        "--path",
-        config_file,
-    ];
-
-    let snapbox = runner(&args).current_dir(temp_dir.path());
+    let snapbox = runner(&args);
     let bdg = snapbox.assert();
     let out = bdg.get_output();
 
@@ -198,36 +128,18 @@ async fn test_invoke_fail() {
 
 #[tokio::test]
 async fn test_deploy_success_invoke_fails() {
-    let temp_dir = tempdir().expect("Unable to create temporary directory");
+    let mut args = default_cli_args();
+    args.append(&mut vec!["--account", "user3"]);
 
-    let config_file = "deploy_succ_invoke_fail.toml";
-    let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
+    let path = project_root::get_project_root().expect("failed to get project root path");
+    let path = Path::new(&path)
+        .join(MULTICALL_CONFIGS_DIR)
+        .join("deploy_succ_invoke_fail.toml");
+    let path_str = path.to_str().expect("failed converting path to str");
 
-    let root_path = project_root::get_project_root().expect("failed to get project root path");
+    args.append(&mut vec!["multicall", "run", "--path", path_str]);
 
-    fs_extra::file::copy(
-        Path::new(&root_path)
-            .join(MULTICALL_CONFIGS_DIR)
-            .join(config_file),
-        temp_dir.path().join(config_file),
-        &fs_extra::file::CopyOptions::new().overwrite(true),
-    )
-    .expect("Unable to copy config file");
-
-    let args = vec![
-        "--url",
-        URL,
-        "--accounts-file",
-        accounts_json_path.as_str(),
-        "--account",
-        "user3",
-        "multicall",
-        "run",
-        "--path",
-        config_file,
-    ];
-
-    let snapbox = runner(&args).current_dir(temp_dir.path());
+    let snapbox = runner(&args);
     let output = String::from_utf8(snapbox.assert().success().get_output().stderr.clone()).unwrap();
 
     assert!(output.contains("An error occurred in the called contract"));
