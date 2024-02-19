@@ -1,10 +1,5 @@
-<<<<<<<< HEAD:docs/src/appendix/sncast/script/run.md
 # `run`
 Compile and run a cairo deployment script.
-========
-# `script`
-Compile and run a cairo deployment script or initialize a script template by using subcommand [`init`](./init.md)
->>>>>>>> master:docs/src/appendix/sncast/script/script.md
 
 ## `<MODULE_NAME>`
 Required.
