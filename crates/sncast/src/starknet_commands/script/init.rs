@@ -24,8 +24,8 @@ pub fn init(init_args: &Init) -> Result<ScriptInitResponse> {
     let modify_files_result = add_dependencies(&script_root_dir_path)
         .and_then(|()| modify_files_in_src_dir(&init_args.script_name, &script_root_dir_path));
 
-    print_as_warning(
-        &anyhow!("The newly created script isn't auto-added to the workspace. You may need to manually add it to your workspace configuration in Scarb.toml")
+    print_as_warning(&anyhow!(
+        "The newly created script isn't auto-added to the workspace. For more details, please see https://foundry-rs.github.io/starknet-foundry/starknet/script.html#initialize-a-script")
     );
 
     match modify_files_result {
