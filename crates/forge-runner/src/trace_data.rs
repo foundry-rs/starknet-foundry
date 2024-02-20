@@ -8,15 +8,23 @@ use std::path::PathBuf;
 // This module will be removed!
 use blockifier::execution::entry_point::{CallEntryPoint, CallType, ExecutionResources};
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources as VmExecutionResources;
+use cheatnet::constants::{TEST_CONTRACT_CLASS_HASH, TEST_ENTRY_POINT_SELECTOR};
 use cheatnet::state::CallTrace;
+use conversions::IntoConv;
 use serde::{Deserialize, Serialize};
+use starknet::core::utils::get_selector_from_name;
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector};
 use starknet_api::deprecated_contract_class::EntryPointType;
+use starknet_api::hash::StarkFelt;
+use starknet_api::stark_felt;
 use starknet_api::transaction::Calldata;
 
+use crate::contracts_data::ContractsData;
 use crate::test_case_summary::{Single, TestCaseSummary};
 
 pub const TRACE_DIR: &str = ".snfoundry_trace";
+pub const TEST_CODE_CONTRACT_NAME: &str = "SNFORGE_TEST_CODE";
+pub const TEST_CODE_FUNCTION_NAME: &str = "SNFORGE_TEST_CODE_FUNCTION";
 
 /// Tree structure representing trace of a call.
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -27,17 +35,18 @@ pub struct ProfilerCallTrace {
     pub nested_calls: Vec<ProfilerCallTrace>,
 }
 
-impl From<CallTrace> for ProfilerCallTrace {
-    fn from(value: CallTrace) -> Self {
+impl ProfilerCallTrace {
+    #[must_use]
+    pub fn from_call_trace(value: CallTrace, contracts_data: &ContractsData) -> Self {
         ProfilerCallTrace {
-            entry_point: ProfilerCallEntryPoint::from(value.entry_point),
+            entry_point: ProfilerCallEntryPoint::from(value.entry_point, contracts_data),
             used_execution_resources: ProfilerExecutionResources::from(
                 value.used_execution_resources,
             ),
             nested_calls: value
                 .nested_calls
                 .into_iter()
-                .map(|c| ProfilerCallTrace::from(c.borrow().clone()))
+                .map(|c| ProfilerCallTrace::from_call_trace(c.borrow().clone(), contracts_data))
                 .collect(),
         }
     }
@@ -54,10 +63,15 @@ pub struct ProfilerCallEntryPoint {
     pub caller_address: ContractAddress,
     pub call_type: ProfilerCallType,
     pub initial_gas: u64,
+
+    /// Contract name to display instead of contract address
+    pub contract_name: Option<String>,
+    /// Function name to display instead of entry point selector
+    pub function_name: Option<String>,
 }
 
-impl From<CallEntryPoint> for ProfilerCallEntryPoint {
-    fn from(value: CallEntryPoint) -> Self {
+impl ProfilerCallEntryPoint {
+    fn from(value: CallEntryPoint, contracts_data: &ContractsData) -> Self {
         let CallEntryPoint {
             class_hash,
             code_address,
@@ -70,6 +84,21 @@ impl From<CallEntryPoint> for ProfilerCallEntryPoint {
             initial_gas,
         } = value;
 
+        let mut contract_name = class_hash
+            .and_then(|c| contracts_data.class_hashes.get_by_right(&c))
+            .cloned();
+        let mut function_name = contracts_data.selectors.get(&entry_point_selector).cloned();
+
+        if entry_point_selector.0
+            == get_selector_from_name(TEST_ENTRY_POINT_SELECTOR)
+                .unwrap()
+                .into_()
+            && class_hash == Some(ClassHash(stark_felt!(TEST_CONTRACT_CLASS_HASH)))
+        {
+            contract_name = Some(String::from(TEST_CODE_CONTRACT_NAME));
+            function_name = Some(String::from(TEST_CODE_FUNCTION_NAME));
+        }
+
         ProfilerCallEntryPoint {
             class_hash,
             code_address,
@@ -80,6 +109,8 @@ impl From<CallEntryPoint> for ProfilerCallEntryPoint {
             caller_address,
             call_type: call_type.into(),
             initial_gas,
+            contract_name,
+            function_name,
         }
     }
 }

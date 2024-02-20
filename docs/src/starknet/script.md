@@ -4,7 +4,7 @@
 
 > ⚠️⚠️⚠️ Highly experimental code, a subject to change  ⚠️⚠️⚠️
 
-Starknet Foundry cast can be used to run deployment scripts written in Cairo, using `script` subcommand.
+Starknet Foundry cast can be used to run deployment scripts written in Cairo, using `script run` subcommand.
 It aims to provide similar functionality to Foundry's `forge script`.
 
 To start writing a deployment script in Cairo just add `cast_std` as a dependency to you scarb package and make sure to
@@ -35,11 +35,24 @@ Some of the planned features that will be included in future versions are:
 - account creation/deployment
 - multicall support
 - dry running the scripts
-- init subcommand
 
 and more!
 
 ## Examples
+
+### Initialize a script
+
+To get started, a deployment script with all required elements can be initialized using the following command:
+
+```shell
+$ sncast script init my_script
+```
+
+For more details, see [init command](../appendix/sncast/script/init.md).
+
+> 📝 **Note**
+> To include a newly created script in an existing workspace, it must be manually added to the members list in the `Scarb.toml` file, under the defined workspace.
+> For more detailed information about workspaces, please refer to the [Scarb documentation](https://docs.swmansion.com/scarb/docs/reference/workspaces.html).
 
 ### Minimal Example (Without Contract Deployment)
 
@@ -87,9 +100,9 @@ To run the script, do:
 ```shell
 $ sncast \
   --url http://127.0.0.1:5050 \
-  script my_script
+  script run my_script
 
-command: script
+command: script run
 status: success
 ```
 
@@ -179,7 +192,7 @@ To run the script, do:
 $ sncast \
   --url http://127.0.0.1:5050 \
   --account example_user \
-  script map_script
+  script run map_script
 
 Class hash of the declared contract: 685896493695476540388232336434993540241192267040651919145140488413686992233
 ...
@@ -188,6 +201,6 @@ Deployed the contract to address: 2993684914933159551622723238457226804366654523
 Invoke tx hash is: 2455538849277152825594824366964313930331085452149746033747086127466991639149
 Call result: [2]
 
-command: script
+command: script run
 status: success
 ```

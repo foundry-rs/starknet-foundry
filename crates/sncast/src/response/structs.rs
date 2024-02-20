@@ -1,11 +1,11 @@
 use camino::Utf8PathBuf;
-use serde::{Serialize, Serializer};
+use serde::{Deserialize, Serialize, Serializer};
 use starknet::core::types::FieldElement;
 
 pub struct Decimal(pub u64);
 
-#[derive(Clone)]
-pub struct Hex(pub FieldElement);
+#[derive(Clone, Debug, Deserialize, PartialEq)]
+pub struct Felt(pub FieldElement);
 
 impl Serialize for Decimal {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -16,7 +16,7 @@ impl Serialize for Decimal {
     }
 }
 
-impl Serialize for Hex {
+impl Serialize for Felt {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -26,38 +26,47 @@ impl Serialize for Hex {
     }
 }
 
+fn serialize_as_decimal<S>(value: &Felt, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    let val = value.0;
+    serializer.serialize_str(&format!("{val:#}"))
+}
+
 pub trait CommandResponse: Serialize {}
 
 #[derive(Serialize, Clone)]
 pub struct CallResponse {
-    pub response: Vec<Hex>,
+    pub response: Vec<Felt>,
 }
 impl CommandResponse for CallResponse {}
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct InvokeResponse {
-    pub transaction_hash: Hex,
+    pub transaction_hash: Felt,
 }
 impl CommandResponse for InvokeResponse {}
 
-#[derive(Serialize)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub struct DeployResponse {
-    pub contract_address: Hex,
-    pub transaction_hash: Hex,
+    pub contract_address: Felt,
+    pub transaction_hash: Felt,
 }
 impl CommandResponse for DeployResponse {}
 
-#[derive(Serialize)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub struct DeclareResponse {
-    pub class_hash: Hex,
-    pub transaction_hash: Hex,
+    pub class_hash: Felt,
+    pub transaction_hash: Felt,
 }
 impl CommandResponse for DeclareResponse {}
 
 #[derive(Serialize)]
 pub struct AccountCreateResponse {
-    pub address: Hex,
-    pub max_fee: Decimal,
+    pub address: Felt,
+    #[serde(serialize_with = "crate::response::structs::serialize_as_decimal")]
+    pub max_fee: Felt,
     pub add_profile: String,
     pub message: String,
 }
@@ -99,9 +108,16 @@ pub struct ShowConfigResponse {
 impl CommandResponse for ShowConfigResponse {}
 
 #[derive(Serialize, Debug)]
-pub struct ScriptResponse {
+pub struct ScriptRunResponse {
     pub status: String,
-    pub msg: Option<String>,
+    pub message: Option<String>,
 }
 
-impl CommandResponse for ScriptResponse {}
+impl CommandResponse for ScriptRunResponse {}
+
+#[derive(Serialize)]
+pub struct ScriptInitResponse {
+    pub message: String,
+}
+
+impl CommandResponse for ScriptInitResponse {}

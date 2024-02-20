@@ -18,7 +18,6 @@ use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::vm_core::VirtualMachine;
-use clap::command;
 use clap::Args;
 use conversions::{FromConv, IntoConv};
 use itertools::chain;
@@ -36,25 +35,24 @@ use shared::print::print_as_warning;
 use shared::utils::build_readable_text;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::SCRIPT_LIB_ARTIFACT_NAME;
-use sncast::response::structs::ScriptResponse;
+use sncast::response::structs::ScriptRunResponse;
 use starknet::accounts::Account;
 use starknet::core::types::{BlockId, BlockTag::Pending, FieldElement};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use tokio::runtime::Runtime;
 
-type ScriptStarknetContractArtifacts = StarknetContractArtifacts;
-
-#[derive(Args)]
+#[derive(Args, Debug)]
 #[command(about = "Execute a deployment script")]
-pub struct Script {
+pub struct Run {
     /// Module name that contains the `main` function, which will be executed
-    pub script_module_name: String,
+    pub script_name: String,
 
     /// Specifies scarb package to be used
     #[clap(long)]
     pub package: Option<String>,
 }
+type ScriptStarknetContractArtifacts = StarknetContractArtifacts;
 
 pub struct CastScriptExtension<'a> {
     pub hints: &'a HashMap<String, Hint>,
@@ -122,8 +120,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     self.artifacts,
                     WaitForTx {
                         wait: true,
-                        timeout: self.config.wait_timeout,
-                        retry_interval: self.config.wait_retry_interval,
+                        wait_params: self.config.wait_params,
                     },
                 ))?;
 
@@ -163,8 +160,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     nonce,
                     WaitForTx {
                         wait: true,
-                        timeout: self.config.wait_timeout,
-                        retry_interval: self.config.wait_retry_interval,
+                        wait_params: self.config.wait_params,
                     },
                 ))?;
 
@@ -203,8 +199,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     nonce,
                     WaitForTx {
                         wait: true,
-                        timeout: self.config.wait_timeout,
-                        retry_interval: self.config.wait_retry_interval,
+                        wait_params: self.config.wait_params,
                     },
                 ))?;
 
@@ -257,7 +252,7 @@ pub fn run(
     provider: &JsonRpcClient<HttpTransport>,
     tokio_runtime: Runtime,
     config: &CastConfig,
-) -> Result<ScriptResponse> {
+) -> Result<ScriptRunResponse> {
     warn_if_sncast_std_not_compatible(metadata)?;
     let artifacts = inject_lib_artifact(metadata, package_metadata, artifacts)?;
 
@@ -341,13 +336,13 @@ pub fn run(
         builtins,
     ) {
         Ok(result) => match result.value {
-            RunResultValue::Success(data) => Ok(ScriptResponse {
+            RunResultValue::Success(data) => Ok(ScriptRunResponse {
                 status: "success".to_string(),
-                msg: build_readable_text(&data),
+                message: build_readable_text(&data),
             }),
-            RunResultValue::Panic(panic_data) => Ok(ScriptResponse {
+            RunResultValue::Panic(panic_data) => Ok(ScriptRunResponse {
                 status: "script panicked".to_string(),
-                msg: build_readable_text(&panic_data),
+                message: build_readable_text(&panic_data),
             }),
         },
         Err(err) => Err(err.into()),
