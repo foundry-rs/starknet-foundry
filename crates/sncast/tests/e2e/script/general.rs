@@ -1,7 +1,7 @@
 use crate::helpers::constants::{ACCOUNT_FILE_PATH, SCRIPTS_DIR, URL};
 use crate::helpers::fixtures::{
-    copy_directory_to_tempdir, duplicate_contract_directory_with_salt, duplicate_script_directory,
-    duplicate_workspace_directory, get_accounts_path,
+    copy_directory_to_tempdir, copy_script_directory_to_tempdir,
+    copy_workspace_directory_to_tempdir, duplicate_contract_directory_with_salt, get_accounts_path,
 };
 use crate::helpers::runner::runner;
 use indoc::indoc;
@@ -14,7 +14,7 @@ async fn test_happy_case() {
         "dummy",
         "21",
     );
-    let script_dir = duplicate_script_directory(
+    let script_dir = copy_script_directory_to_tempdir(
         SCRIPTS_DIR.to_owned() + "/map_script/scripts/",
         vec![contract_dir.as_ref()],
     );
@@ -45,7 +45,7 @@ async fn test_happy_case() {
 #[tokio::test]
 async fn test_run_script_from_different_directory() {
     let script_dir =
-        duplicate_script_directory(SCRIPTS_DIR.to_owned() + "/misc", Vec::<String>::new());
+        copy_script_directory_to_tempdir(SCRIPTS_DIR.to_owned() + "/misc", Vec::<String>::new());
     let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
     let path_to_scarb_toml = script_dir.path().join("Scarb.toml");
 
@@ -97,7 +97,7 @@ async fn test_run_script_from_different_directory_no_path_to_scarb_toml() {
 #[tokio::test]
 async fn test_fail_when_using_starknet_syscall() {
     let script_dir =
-        duplicate_script_directory(SCRIPTS_DIR.to_owned() + "/misc", Vec::<String>::new());
+        copy_script_directory_to_tempdir(SCRIPTS_DIR.to_owned() + "/misc", Vec::<String>::new());
     let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
 
     let script_name = "using_starknet_syscall";
@@ -148,7 +148,7 @@ async fn test_incompatible_sncast_std_version() {
 
 #[tokio::test]
 async fn test_multiple_packages_not_picked() {
-    let workspace_dir = duplicate_workspace_directory(
+    let workspace_dir = copy_workspace_directory_to_tempdir(
         SCRIPTS_DIR.to_owned() + "/packages",
         vec!["crates/scripts/script1", "crates/scripts/script2"],
         Vec::<String>::new().as_ref(),
@@ -177,7 +177,7 @@ async fn test_multiple_packages_not_picked() {
 
 #[tokio::test]
 async fn test_multiple_packages_happy_case() {
-    let workspace_dir = duplicate_workspace_directory(
+    let workspace_dir = copy_workspace_directory_to_tempdir(
         SCRIPTS_DIR.to_owned() + "/packages",
         vec!["crates/scripts/script1", "crates/scripts/script2"],
         Vec::<String>::new().as_ref(),
@@ -214,7 +214,7 @@ async fn test_run_script_display_debug_traits() {
         "dummy",
         "45",
     );
-    let script_dir = duplicate_script_directory(
+    let script_dir = copy_script_directory_to_tempdir(
         SCRIPTS_DIR.to_owned() + "/map_script/scripts/",
         vec![contract_dir.as_ref()],
     );

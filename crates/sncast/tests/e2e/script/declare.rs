@@ -1,11 +1,11 @@
 use crate::helpers::constants::{ACCOUNT_FILE_PATH, SCRIPTS_DIR, URL};
-use crate::helpers::fixtures::{duplicate_script_directory, get_accounts_path};
+use crate::helpers::fixtures::{copy_script_directory_to_tempdir, get_accounts_path};
 use crate::helpers::runner::runner;
 use indoc::indoc;
 
 #[tokio::test]
 async fn test_missing_field() {
-    let tempdir = duplicate_script_directory(
+    let tempdir = copy_script_directory_to_tempdir(
         SCRIPTS_DIR.to_owned() + "/declare/missing_field",
         Vec::<String>::new(),
     );
@@ -33,7 +33,7 @@ async fn test_missing_field() {
 
 #[tokio::test]
 async fn test_wrong_contract_name() {
-    let tempdir = duplicate_script_directory(
+    let tempdir = copy_script_directory_to_tempdir(
         SCRIPTS_DIR.to_owned() + "/declare/no_contract",
         Vec::<String>::new(),
     );
