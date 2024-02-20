@@ -138,6 +138,7 @@ async fn test_get_account_failed_to_convert_field_elements() {
         .contains("Failed to convert account address = address to FieldElement"));
 }
 
+// TODO (#1690): Move this test to the shared crate and execute it for a real node
 #[tokio::test]
 async fn test_supported_rpc_version_matches_devnet_version() {
     let provider = create_test_provider();
