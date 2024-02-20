@@ -292,7 +292,7 @@ pub fn run(
         .assemble_ex(&entry_code, &footer);
 
     // hint processor
-    let mut context = build_context(BlockInfo::default(), None);
+    let mut context = build_context(BlockInfo::default());
 
     let mut blockifier_state = CachedState::from(DictStateReader::default());
     let mut execution_resources = ExecutionResources::default();

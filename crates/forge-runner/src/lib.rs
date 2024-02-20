@@ -44,6 +44,8 @@ mod gas;
 mod printing;
 mod running;
 
+pub use runtime::starknet::context::DEFAULT_MAX_N_STEPS;
+
 pub const CACHE_DIR: &str = ".snfoundry_cache";
 
 pub static BUILTINS: Lazy<Vec<&str>> = Lazy::new(|| {
@@ -69,6 +71,7 @@ pub struct RunnerConfig {
     pub fuzzer_seed: u64,
     pub detailed_resources: bool,
     pub save_trace_data: bool,
+    pub max_n_steps: u32,
 }
 
 impl RunnerConfig {
@@ -81,6 +84,7 @@ impl RunnerConfig {
         fuzzer_seed: u64,
         detailed_resources: bool,
         save_trace_data: bool,
+        max_n_steps: u32,
     ) -> Self {
         Self {
             workspace_root,
@@ -89,6 +93,7 @@ impl RunnerConfig {
             fuzzer_seed,
             detailed_resources,
             save_trace_data,
+            max_n_steps,
         }
     }
 }

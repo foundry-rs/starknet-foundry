@@ -40,7 +40,7 @@ use cheatnet::runtime_extensions::forge_runtime_extension::{
 };
 use cheatnet::state::{BlockInfoReader, CallTrace, CheatnetState, ExtendedStateReader};
 use itertools::chain;
-use runtime::starknet::context::build_context;
+use runtime::starknet::context::build_context_with_max_steps;
 use runtime::{ExtendedRuntime, StarknetRuntime};
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
@@ -202,7 +202,7 @@ pub fn run_test_case(
     };
     let block_info = state_reader.get_block_info()?;
 
-    let mut context = build_context(block_info, case.max_n_steps);
+    let mut context = build_context_with_max_steps(block_info, runner_config.max_n_steps);
     let mut execution_resources = ExecutionResources::default();
     let mut cached_state = CachedState::from(state_reader);
     let syscall_handler = build_syscall_handler(

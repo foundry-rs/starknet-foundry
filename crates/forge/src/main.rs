@@ -12,7 +12,7 @@ use forge::{pretty_printing, run};
 use forge_runner::contracts_data::ContractsData;
 use forge_runner::test_case_summary::{AnyTestCaseSummary, TestCaseSummary};
 use forge_runner::test_crate_summary::TestCrateSummary;
-use forge_runner::{RunnerConfig, RunnerParams, CACHE_DIR};
+use forge_runner::{RunnerConfig, RunnerParams, CACHE_DIR, DEFAULT_MAX_N_STEPS};
 use rand::{thread_rng, RngCore};
 use scarb_api::{
     get_contracts_map,
@@ -145,6 +145,7 @@ fn combine_configs(
     fuzzer_seed: Option<u64>,
     detailed_resources: bool,
     save_trace_data: bool,
+    max_n_steps: Option<u32>,
     forge_config: &ForgeConfig,
 ) -> RunnerConfig {
     RunnerConfig::new(
@@ -158,6 +159,9 @@ fn combine_configs(
             .unwrap_or_else(|| thread_rng().next_u64()),
         detailed_resources || forge_config.detailed_resources,
         save_trace_data || forge_config.save_trace_data,
+        max_n_steps
+            .or(forge_config.max_n_steps)
+            .unwrap_or(DEFAULT_MAX_N_STEPS),
     )
 }
 
@@ -245,6 +249,7 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                     args.fuzzer_seed,
                     args.detailed_resources,
                     args.save_trace_data,
+                    args.max_n_steps,
                     &forge_config,
                 ));
                 let runner_params =
@@ -264,7 +269,6 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                     runner_config,
                     runner_params,
                     &forge_config.fork,
-                    args.max_n_steps,
                     &mut block_number_map,
                 )
                 .await?;
@@ -331,6 +335,7 @@ mod tests {
             None,
             false,
             false,
+            None,
             &Default::default(),
         );
         let config2 = combine_configs(
@@ -340,6 +345,7 @@ mod tests {
             None,
             false,
             false,
+            None,
             &Default::default(),
         );
 
@@ -358,6 +364,7 @@ mod tests {
             None,
             false,
             false,
+            None,
             &Default::default(),
         );
         assert_eq!(
@@ -369,6 +376,7 @@ mod tests {
                 config.fuzzer_seed,
                 false,
                 false,
+                DEFAULT_MAX_N_STEPS
             )
         );
     }
@@ -382,6 +390,7 @@ mod tests {
             fuzzer_seed: Some(500),
             detailed_resources: true,
             save_trace_data: true,
+            max_n_steps: Some(1_000_000),
         };
         let workspace_root: Utf8PathBuf = Default::default();
 
@@ -392,11 +401,12 @@ mod tests {
             None,
             false,
             false,
+            None,
             &config_from_scarb,
         );
         assert_eq!(
             config,
-            RunnerConfig::new(workspace_root, true, 1234, 500, true, true)
+            RunnerConfig::new(workspace_root, true, 1234, 500, true, true, 1_000_000)
         );
     }
 
@@ -411,6 +421,7 @@ mod tests {
             fuzzer_seed: Some(1000),
             detailed_resources: false,
             save_trace_data: false,
+            max_n_steps: Some(1234),
         };
         let config = combine_configs(
             &workspace_root,
@@ -419,12 +430,13 @@ mod tests {
             Some(32),
             true,
             true,
+            Some(1_000_000),
             &config_from_scarb,
         );
 
         assert_eq!(
             config,
-            RunnerConfig::new(workspace_root, true, 100, 32, true, true)
+            RunnerConfig::new(workspace_root, true, 100, 32, true, true, 1_000_000)
         );
     }
 }

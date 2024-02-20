@@ -18,7 +18,6 @@ pub(crate) struct TestCaseRaw {
     pub expected_result: ExpectedTestResult,
     pub fork_config: Option<RawForkConfig>,
     pub fuzzer_config: Option<FuzzerConfig>,
-    pub max_n_steps: Option<u32>,
 }
 
 #[derive(Debug, PartialEq, Clone, Copy, Deserialize)]

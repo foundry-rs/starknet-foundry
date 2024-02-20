@@ -18,6 +18,7 @@ use cairo_vm::vm::runners::builtin_runner::{
 };
 use cairo_vm::vm::runners::cairo_runner::RunResources;
 use serde::{Deserialize, Serialize};
+use starknet_api::contract_address;
 use starknet_api::data_availability::DataAvailabilityMode;
 
 use starknet_api::block::{BlockNumber, BlockTimestamp};
@@ -32,11 +33,12 @@ use starknet_api::{
 pub const SEQUENCER_ADDRESS: &str = "0x1000";
 pub const ERC20_CONTRACT_ADDRESS: &str = "0x1001";
 pub const STEP_RESOURCE_COST: f64 = 0.005_f64;
+pub const DEFAULT_MAX_N_STEPS: u32 = 3_000_000;
 
 // HOW TO FIND:
 // 1. https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/fee-mechanism/#calculation_of_computation_costs
 #[must_use]
-pub fn build_block_context(block_info: BlockInfo, max_n_steps: Option<u32>) -> BlockContext {
+fn build_block_context(block_info: BlockInfo) -> BlockContext {
     // blockifier::test_utils::create_for_account_testing
     let vm_resource_fee_cost = Arc::new(HashMap::from([
         (constants::N_STEPS_RESOURCE.to_string(), STEP_RESOURCE_COST),
@@ -78,12 +80,12 @@ pub fn build_block_context(block_info: BlockInfo, max_n_steps: Option<u32>) -> B
         block_timestamp: block_info.timestamp,
         sequencer_address: block_info.sequencer_address,
         vm_resource_fee_cost,
-        invoke_tx_max_n_steps: max_n_steps.unwrap_or(3_000_000),
+        invoke_tx_max_n_steps: DEFAULT_MAX_N_STEPS,
         validate_max_n_steps: 1_000_000,
         max_recursion_depth: 50,
         fee_token_addresses: FeeTokenAddresses {
-            strk_fee_token_address: ContractAddress(patricia_key!(ERC20_CONTRACT_ADDRESS)),
-            eth_fee_token_address: ContractAddress(patricia_key!(ERC20_CONTRACT_ADDRESS)),
+            strk_fee_token_address: contract_address!(ERC20_CONTRACT_ADDRESS),
+            eth_fee_token_address: contract_address!(ERC20_CONTRACT_ADDRESS),
         },
         gas_prices: GasPrices {
             eth_l1_gas_price: 100 * u128::pow(10, 9),
@@ -128,24 +130,30 @@ pub fn build_transaction_context() -> AccountTransactionContext {
 }
 
 #[must_use]
-pub fn build_context(
-    block_info: BlockInfo,
-    max_n_steps: Option<u32>,
-) -> EntryPointExecutionContext {
-    let block_context = build_block_context(block_info, max_n_steps);
+pub fn build_context(block_info: BlockInfo) -> EntryPointExecutionContext {
+    let block_context = build_block_context(block_info);
     let account_context = build_transaction_context();
 
-    let mut entry_point_ctx = EntryPointExecutionContext::new(
+    EntryPointExecutionContext::new(
         &block_context,
         &account_context,
         ExecutionMode::Execute,
         false,
     )
-    .unwrap();
+    .unwrap()
+}
+
+#[must_use]
+pub fn build_context_with_max_steps(
+    block_info: BlockInfo,
+    max_n_steps: u32,
+) -> EntryPointExecutionContext {
+    let mut entry_point_ctx = build_context(block_info);
+
+    entry_point_ctx.block_context.invoke_tx_max_n_steps = max_n_steps;
 
     // override it to omit [`EntryPointExecutionContext::max_steps`] restrictions
-    entry_point_ctx.vm_run_resources =
-        RunResources::new(block_context.invoke_tx_max_n_steps as usize);
+    entry_point_ctx.vm_run_resources = RunResources::new(max_n_steps as usize);
 
     entry_point_ctx
 }

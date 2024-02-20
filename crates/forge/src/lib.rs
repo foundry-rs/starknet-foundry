@@ -70,7 +70,6 @@ async fn to_runnable(
             expected_result: case.expected_result,
             fork_config,
             fuzzer_config: case.fuzzer_config,
-            max_n_steps: case.max_n_steps,
         });
     }
 
@@ -89,7 +88,6 @@ async fn to_runnable(
 /// * `tests_filter` - `TestFilter` structure used to determine what tests to run
 /// * `runner_config` - A configuration of the test runner
 /// * `runner_params` - A struct with parameters required to run tests e.g. map with contracts
-/// * `max_n_steps` - A max steps value
 /// * `fork_target` - A configuration of forks used in tests
 #[allow(clippy::implicit_hasher)]
 pub async fn run(
@@ -99,20 +97,10 @@ pub async fn run(
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     fork_targets: &[ForkTarget],
-    max_n_steps: Option<u32>,
     block_number_map: &mut BlockNumberMap,
 ) -> Result<Vec<TestCrateSummary>> {
-    let mut test_crates = load_test_artifacts(snforge_target_dir_path, package_name)?;
+    let test_crates = load_test_artifacts(snforge_target_dir_path, package_name)?;
     let all_tests: usize = test_crates.iter().map(|tc| tc.test_cases.len()).sum();
-
-    // this can be removed if we take max_n_steps from #[max_n_steps] instead of --max_n_steps
-    // we use here fact that deserializing Option work when field is missing
-    // and override it with value from cli arguments
-    for case in &mut test_crates {
-        for case in &mut case.test_cases {
-            case.max_n_steps = max_n_steps;
-        }
-    }
 
     let test_crates = test_crates
         .into_iter()
@@ -210,7 +198,6 @@ mod tests {
                     block_id_value: "Latest".to_string(),
                 })),
                 fuzzer_config: None,
-                max_n_steps: None,
             }],
             tests_location: CrateLocation::Lib,
         };
@@ -238,7 +225,6 @@ mod tests {
                 expected_result: ExpectedTestResult::Success,
                 fork_config: Some(RawForkConfig::Id("non_existent".to_string())),
                 fuzzer_config: None,
-                max_n_steps: None,
             }],
             tests_location: CrateLocation::Lib,
         };

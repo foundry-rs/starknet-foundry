@@ -18,7 +18,6 @@ pub struct TestCaseRunnable {
     pub expected_result: ExpectedTestResult,
     pub fork_config: Option<ValidatedForkConfig>,
     pub fuzzer_config: Option<FuzzerConfig>,
-    pub max_n_steps: Option<u32>,
 }
 
 #[derive(Debug, Clone)]
