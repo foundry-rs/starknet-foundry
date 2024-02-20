@@ -9,7 +9,6 @@ use serde_json::Value;
 use sncast::helpers::configuration::copy_config_to_tempdir;
 use sncast::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
 use starknet::core::types::TransactionReceipt::DeployAccount;
-use std::path::Path;
 use std::{env, fs};
 use tempfile::{tempdir, TempDir};
 use test_case::test_case;
@@ -384,7 +383,7 @@ pub async fn test_keystore_key_mismatch() {
         "tests/data/keystore/my_account_undeployed.json",
         tempdir.path().join(account_file),
     );
-    
+
     env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
 
     let args = vec![
@@ -409,38 +408,26 @@ pub async fn test_keystore_key_mismatch() {
     "});
 }
 
-#[test_case("tests/data/keystore/my_key_inexistent.json", "tests/data/keystore/my_account_undeployed.json", "error: Failed to read keystore file" ; "when inexistent keystore")]
-#[test_case("tests/data/keystore/my_key.json", "tests/data/keystore/my_account_inexistent.json", "error: Failed to read account file" ; "when inexistent account")]
-pub fn test_deploy_keystore_inexistent_file(
-    keystore_file_str: &str,
-    account_file_str: &str,
-    error: &str,
-) {
+#[tokio::test]
+pub async fn test_deploy_keystore_inexistent_keystore_file() {
     let tempdir = tempdir().expect("Unable to create a temporary directory");
 
-    let keystore_file = Path::new(keystore_file_str);
-    if keystore_file.exists() {
-        copy_file_to(
-            keystore_file,
-            tempdir.path().join(keystore_file.file_name().unwrap()),
-        ); 
-    }
-    let account_file = Path::new(account_file_str);
-    if account_file.exists() {
-        copy_file_to(
-            account_file,
-            tempdir.path().join(account_file.file_name().unwrap()),
-        );
-    }
+    let keystore_file = "my_key_inexistent.json";
+    let account_file = "my_account_undeployed.json";
 
+    copy_file_to(
+        "tests/data/keystore/my_account_undeployed.json",
+        tempdir.path().join(account_file),
+    );
     env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
+
     let args = vec![
         "--url",
         URL,
         "--keystore",
-        keystore_file.file_name().unwrap().to_str().unwrap(),
+        keystore_file,
         "--account",
-        account_file.file_name().unwrap().to_str().unwrap(),
+        account_file,
         "account",
         "deploy",
         "--max-fee",
@@ -450,12 +437,45 @@ pub fn test_deploy_keystore_inexistent_file(
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    let bdg = snapbox.assert();
-    let out = bdg.get_output();
-    let stderr_str =
-        std::str::from_utf8(&out.stderr).expect("failed to convert command output to string");
+    snapbox.assert().stderr_matches(indoc! {r"
+        command: account deploy
+        error: Failed to read keystore file
+    "});
+}
 
-    assert!(stderr_str.contains(error));
+#[tokio::test]
+pub async fn test_deploy_keystore_inexistent_account_file() {
+    let tempdir = tempdir().expect("Unable to create a temporary directory");
+
+    let keystore_file = "my_key.json";
+    let account_file = "my_account_inexistent.json";
+
+    copy_file_to(
+        "tests/data/keystore/my_key.json",
+        tempdir.path().join(keystore_file),
+    );
+    env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
+
+    let args = vec![
+        "--url",
+        URL,
+        "--keystore",
+        keystore_file,
+        "--account",
+        account_file,
+        "account",
+        "deploy",
+        "--max-fee",
+        "10000000000000000",
+        "--class-hash",
+        DEVNET_OZ_CLASS_HASH,
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    snapbox.assert().stderr_matches(indoc! {r"
+        command: account deploy
+        error: Failed to read account file: No such file or directory (os error 2)
+    "});
 }
 
 #[tokio::test]
