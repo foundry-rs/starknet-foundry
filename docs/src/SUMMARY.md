@@ -20,6 +20,7 @@
 * [Fuzz Testing](testing/fuzz-testing.md)
 * [Test Collection](testing/test-collection.md)
 * [Gas Estimation](testing/gas-etimation.md)
+* [Profiling](testing/profiling.md)
 
 # `sncast` Overview
 
