@@ -13,11 +13,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - contract names to call trace
 
+#### Fixed
+
+- Calling Cairo 0 contract no longer cancels cheatcodes in further calls
+
 ### Cast
 
 #### Added
 
 - `script init` command to generate a template file structure for deployment scripts
+
+#### Changed
+
+- to run a deployment script it is required to use `script run` subcommand
 
 ## [0.17.1] - 2024-02-12
 

@@ -4,7 +4,7 @@ use crate::starknet_commands::{
     account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,
     script::Script,
 };
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result};
 use sncast::response::print::{print_command_result, OutputFormat};
 
 use camino::Utf8PathBuf;
@@ -400,44 +400,44 @@ fn run_script_command(
     numbers_format: NumbersFormat,
     output_format: &OutputFormat,
 ) -> Result<()> {
-    if let Some(starknet_commands::script::Commands::Init(init)) = &script.command {
-        let mut result = starknet_commands::script::init::init(init);
-        print_command_result("script init", &mut result, numbers_format, output_format)?;
-    } else {
-        let manifest_path = assert_manifest_path_exists(&cli.path_to_scarb_toml)?;
-        let package_metadata = get_package_metadata(&manifest_path, &script.package)?;
+    match &script.command {
+        starknet_commands::script::Commands::Init(init) => {
+            let mut result = starknet_commands::script::init::init(init);
+            print_command_result("script init", &mut result, numbers_format, output_format)?;
+        }
+        starknet_commands::script::Commands::Run(run) => {
+            let manifest_path = assert_manifest_path_exists(&cli.path_to_scarb_toml)?;
+            let package_metadata = get_package_metadata(&manifest_path, &run.package)?;
 
-        let mut config = load_config(&cli.profile, &Some(package_metadata.root.clone()))?;
-        update_cast_config(&mut config, cli);
-        let provider = get_provider(&config.rpc_url)?;
+            let mut config = load_config(&cli.profile, &Some(package_metadata.root.clone()))?;
+            update_cast_config(&mut config, cli);
+            let provider = get_provider(&config.rpc_url)?;
 
-        let mut artifacts = build_and_load_artifacts(
-            &package_metadata,
-            &BuildConfig {
-                scarb_toml_path: manifest_path.clone(),
-                json: cli.json,
-                profile: cli.profile.clone().unwrap_or("dev".to_string()),
-            },
-        )
-        .expect("Failed to build script");
-        let metadata_with_deps = get_scarb_metadata_with_deps(&manifest_path)?;
+            let mut artifacts = build_and_load_artifacts(
+                &package_metadata,
+                &BuildConfig {
+                    scarb_toml_path: manifest_path.clone(),
+                    json: cli.json,
+                    profile: cli.profile.clone().unwrap_or("dev".to_string()),
+                },
+            )
+            .expect("Failed to build script");
+            let metadata_with_deps = get_scarb_metadata_with_deps(&manifest_path)?;
 
-        let script_module_name = script.module_name.as_ref().ok_or_else(|| {
-            anyhow!("Required positional argument SCRIPT_MODULE_NAME not provided")
-        })?;
+            let mut result = starknet_commands::script::run::run(
+                &run.script_name,
+                &metadata_with_deps,
+                &package_metadata,
+                &mut artifacts,
+                &provider,
+                runtime,
+                &config,
+            );
 
-        let mut result = starknet_commands::script::run::run(
-            script_module_name,
-            &metadata_with_deps,
-            &package_metadata,
-            &mut artifacts,
-            &provider,
-            runtime,
-            &config,
-        );
-
-        print_command_result("script", &mut result, numbers_format, output_format)?;
+            print_command_result("script run", &mut result, numbers_format, output_format)?;
+        }
     }
+
     Ok(())
 }
 

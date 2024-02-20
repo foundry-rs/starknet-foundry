@@ -18,6 +18,7 @@ use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::vm_core::VirtualMachine;
+use clap::Args;
 use conversions::{FromConv, IntoConv};
 use itertools::chain;
 use runtime::starknet::context::{build_context, BlockInfo};
@@ -34,13 +35,23 @@ use shared::utils::build_readable_text;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::SCRIPT_LIB_ARTIFACT_NAME;
 use sncast::response::print::print_as_warning;
-use sncast::response::structs::ScriptResponse;
+use sncast::response::structs::ScriptRunResponse;
 use starknet::accounts::Account;
 use starknet::core::types::{BlockId, BlockTag::Pending, FieldElement};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use tokio::runtime::Runtime;
 
+#[derive(Args, Debug)]
+#[command(about = "Execute a deployment script")]
+pub struct Run {
+    /// Module name that contains the `main` function, which will be executed
+    pub script_name: String,
+
+    /// Specifies scarb package to be used
+    #[clap(long)]
+    pub package: Option<String>,
+}
 type ScriptStarknetContractArtifacts = StarknetContractArtifacts;
 
 pub struct CastScriptExtension<'a> {
@@ -241,7 +252,7 @@ pub fn run(
     provider: &JsonRpcClient<HttpTransport>,
     tokio_runtime: Runtime,
     config: &CastConfig,
-) -> Result<ScriptResponse> {
+) -> Result<ScriptRunResponse> {
     warn_if_sncast_std_not_compatible(metadata)?;
     let artifacts = inject_lib_artifact(metadata, package_metadata, artifacts)?;
 
@@ -325,13 +336,13 @@ pub fn run(
         builtins,
     ) {
         Ok(result) => match result.value {
-            RunResultValue::Success(data) => Ok(ScriptResponse {
+            RunResultValue::Success(data) => Ok(ScriptRunResponse {
                 status: "success".to_string(),
-                msg: build_readable_text(&data),
+                message: build_readable_text(&data),
             }),
-            RunResultValue::Panic(panic_data) => Ok(ScriptResponse {
+            RunResultValue::Panic(panic_data) => Ok(ScriptRunResponse {
                 status: "script panicked".to_string(),
-                msg: build_readable_text(&panic_data),
+                message: build_readable_text(&panic_data),
             }),
         },
         Err(err) => Err(err.into()),
