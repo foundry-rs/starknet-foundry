@@ -7,7 +7,6 @@ use indoc::indoc;
 use sncast::helpers::configuration::copy_config_to_tempdir;
 use sncast::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
 use std::env;
-use tempfile::tempdir;
 
 #[tokio::test]
 async fn test_happy_case_from_sncast_config() {
