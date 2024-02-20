@@ -1,6 +1,6 @@
 # Profiling
 
-Profiling is what allow developers to get more insight into how the transaction is executed.
+Profiling is what allows developers to get more insight into how the transaction is executed.
 You can inspect the call tree, see how many resources are used for different parts of the execution and more!
 
 ## Integration with [cairo-profiler](https://github.com/software-mansion/cairo-profiler)
