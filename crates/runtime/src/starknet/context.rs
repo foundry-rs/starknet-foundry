@@ -143,19 +143,11 @@ pub fn build_context(block_info: BlockInfo) -> EntryPointExecutionContext {
     .unwrap()
 }
 
-#[must_use]
-pub fn build_context_with_max_steps(
-    block_info: BlockInfo,
-    max_n_steps: u32,
-) -> EntryPointExecutionContext {
-    let mut entry_point_ctx = build_context(block_info);
-
+pub fn set_max_steps(entry_point_ctx: &mut EntryPointExecutionContext, max_n_steps: u32) {
     entry_point_ctx.block_context.invoke_tx_max_n_steps = max_n_steps;
 
     // override it to omit [`EntryPointExecutionContext::max_steps`] restrictions
     entry_point_ctx.vm_run_resources = RunResources::new(max_n_steps as usize);
-
-    entry_point_ctx
 }
 
 #[derive(Copy, Clone, Serialize, Deserialize, Debug)]

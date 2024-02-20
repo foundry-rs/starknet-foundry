@@ -5,7 +5,7 @@ use forge::run;
 use forge::test_filter::TestsFilter;
 use forge_runner::contracts_data::ContractsData;
 use forge_runner::test_crate_summary::TestCrateSummary;
-use forge_runner::{RunnerConfig, RunnerParams, DEFAULT_MAX_N_STEPS};
+use forge_runner::{RunnerConfig, RunnerParams};
 use std::path::PathBuf;
 use std::process::Command;
 use std::process::Stdio;
@@ -37,7 +37,7 @@ pub fn run_test_case(test: &TestCase) -> Vec<TestCrateSummary> {
             12345,
             false,
             false,
-            DEFAULT_MAX_N_STEPS,
+            None,
         )),
         Arc::new(RunnerParams::new(
             ContractsData::try_from(test.contracts().unwrap()).unwrap(),

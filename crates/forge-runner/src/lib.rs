@@ -20,7 +20,6 @@ use contracts_data::ContractsData;
 use futures::stream::FuturesUnordered;
 use futures::StreamExt;
 
-use once_cell::sync::Lazy;
 use running::TestDetails;
 use smol_str::SmolStr;
 use trace_data::save_trace_data;
@@ -44,22 +43,18 @@ mod gas;
 mod printing;
 mod running;
 
-pub use runtime::starknet::context::DEFAULT_MAX_N_STEPS;
-
 pub const CACHE_DIR: &str = ".snfoundry_cache";
 
-pub static BUILTINS: Lazy<Vec<&str>> = Lazy::new(|| {
-    vec![
-        "Pedersen",
-        "RangeCheck",
-        "Bitwise",
-        "EcOp",
-        "Poseidon",
-        "SegmentArena",
-        "GasBuiltin",
-        "System",
-    ]
-});
+pub const BUILTINS: [&str; 8] = [
+    "Pedersen",
+    "RangeCheck",
+    "Bitwise",
+    "EcOp",
+    "Poseidon",
+    "SegmentArena",
+    "GasBuiltin",
+    "System",
+];
 
 /// Configuration of the test runner
 #[derive(Debug, PartialEq)]
@@ -71,7 +66,7 @@ pub struct RunnerConfig {
     pub fuzzer_seed: u64,
     pub detailed_resources: bool,
     pub save_trace_data: bool,
-    pub max_n_steps: u32,
+    pub max_n_steps: Option<u32>,
 }
 
 impl RunnerConfig {
@@ -84,7 +79,7 @@ impl RunnerConfig {
         fuzzer_seed: u64,
         detailed_resources: bool,
         save_trace_data: bool,
-        max_n_steps: u32,
+        max_n_steps: Option<u32>,
     ) -> Self {
         Self {
             workspace_root,

@@ -12,7 +12,7 @@ use forge::{pretty_printing, run};
 use forge_runner::contracts_data::ContractsData;
 use forge_runner::test_case_summary::{AnyTestCaseSummary, TestCaseSummary};
 use forge_runner::test_crate_summary::TestCrateSummary;
-use forge_runner::{RunnerConfig, RunnerParams, CACHE_DIR, DEFAULT_MAX_N_STEPS};
+use forge_runner::{RunnerConfig, RunnerParams, CACHE_DIR};
 use rand::{thread_rng, RngCore};
 use scarb_api::{
     get_contracts_map,
@@ -159,9 +159,7 @@ fn combine_configs(
             .unwrap_or_else(|| thread_rng().next_u64()),
         detailed_resources || forge_config.detailed_resources,
         save_trace_data || forge_config.save_trace_data,
-        max_n_steps
-            .or(forge_config.max_n_steps)
-            .unwrap_or(DEFAULT_MAX_N_STEPS),
+        max_n_steps.or(forge_config.max_n_steps),
     )
 }
 
@@ -376,7 +374,7 @@ mod tests {
                 config.fuzzer_seed,
                 false,
                 false,
-                DEFAULT_MAX_N_STEPS
+                None
             )
         );
     }
@@ -406,7 +404,7 @@ mod tests {
         );
         assert_eq!(
             config,
-            RunnerConfig::new(workspace_root, true, 1234, 500, true, true, 1_000_000)
+            RunnerConfig::new(workspace_root, true, 1234, 500, true, true, Some(1_000_000))
         );
     }
 
@@ -436,7 +434,7 @@ mod tests {
 
         assert_eq!(
             config,
-            RunnerConfig::new(workspace_root, true, 100, 32, true, true, 1_000_000)
+            RunnerConfig::new(workspace_root, true, 100, 32, true, true, Some(1_000_000))
         );
     }
 }
