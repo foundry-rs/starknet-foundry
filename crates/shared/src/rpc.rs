@@ -12,7 +12,7 @@ pub fn create_rpc_client(url: &str) -> Result<JsonRpcClient<HttpTransport>> {
 }
 
 #[must_use]
-pub fn is_supported_version(version: &Version) -> bool {
+pub fn is_expected_version(version: &Version) -> bool {
     let expected_version =
         Version::parse(EXPECTED_RPC_VERSION).expect("Failed to parse the expected RPC version");
     *version == expected_version
