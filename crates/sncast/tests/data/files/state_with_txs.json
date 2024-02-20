@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "transactions": [{
+    "123-abc-456": {
+      "name": "declare",
+      "output": {
+        "type": "DeclareResponse",
+        "class_hash": "0x123",
+        "transaction_hash": "0x321"
+      },
+      "status": "Success",
+      "timestamp": 1706093159,
+      "misc": null
+    },
+    "789-def-420": {
+      "name": "deploy",
+      "output": {
+        "type": "ErrorResponse",
+        "message": "Max fee is smaller than the minimal transaction cost"
+      },
+      "status": "Fail",
+      "timestamp": 1706093160,
+      "misc": null
+    }
+  }]
+}

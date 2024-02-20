@@ -13,7 +13,7 @@ use conversions::felt252::FromShortString;
 use conversions::IntoConv;
 use std::vec;
 
-fn felt_vec_to_event_vec(felts: &[Felt252]) -> Vec<Event> {
+pub fn felt_vec_to_event_vec(felts: &[Felt252]) -> Vec<Event> {
     let mut events = vec![];
     let mut i = 0;
     while i < felts.len() {

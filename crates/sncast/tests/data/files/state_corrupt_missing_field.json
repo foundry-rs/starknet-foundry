@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "transactions": {
+    "123-abc-789": {
+      "name": "declare",
+      "output": {
+        "class_hash": "0x123",
+        "transaction_hash": "0x321"
+      },
+      "status": "success",
+      "misc": null
+    }
+  }
+}

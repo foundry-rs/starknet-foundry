@@ -18,13 +18,14 @@ async fn test_max_fee_too_low() {
         "--url",
         URL,
         "script",
+        "run",
         &script_name,
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
     snapbox.assert().success().stderr_matches(indoc! {r"
         ...
-        command: script
+        command: script run
         error: Got an exception while executing a hint: Hint Error: Max fee is smaller than the minimal transaction cost
     "});
 }
@@ -44,13 +45,14 @@ async fn test_contract_does_not_exist() {
         "--url",
         URL,
         "script",
+        "run",
         &script_name,
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
     snapbox.assert().success().stderr_matches(indoc! {r"
         ...
-        command: script
+        command: script run
         error: Got an exception while executing a hint: Hint Error: An error [..]Requested contract address[..]is not deployed[..]
     "});
 }
@@ -70,13 +72,14 @@ fn test_wrong_function_name() {
         "--url",
         URL,
         "script",
+        "run",
         &script_name,
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
     snapbox.assert().success().stderr_matches(indoc! {r"
         ...
-        command: script
+        command: script run
         error: Got an exception while executing a hint: Hint Error: An error [..] Entry point EntryPointSelector(StarkFelt[..]not found in contract[..]
     "});
 }
@@ -96,13 +99,14 @@ fn test_wrong_calldata() {
         "--url",
         URL,
         "script",
+        "run",
         &script_name,
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
     snapbox.assert().success().stderr_matches(indoc! {r"
         ...
-        command: script
+        command: script run
         error: Got an exception while executing a hint: Hint Error: An error [..]Failed to deserialize param #2[..]
     "});
 }

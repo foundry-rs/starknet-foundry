@@ -18,13 +18,14 @@ async fn test_with_calldata() {
         "--url",
         URL,
         "script",
+        "run",
         &script_name,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
-        command: script
+        command: script run
         status: success
     "});
 }

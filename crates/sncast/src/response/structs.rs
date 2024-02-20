@@ -1,10 +1,10 @@
 use camino::Utf8PathBuf;
-use serde::{Serialize, Serializer};
+use serde::{Deserialize, Serialize, Serializer};
 use starknet::core::types::FieldElement;
 
 pub struct Decimal(pub u64);
 
-#[derive(Clone)]
+#[derive(Clone, Debug, Deserialize, PartialEq)]
 pub struct Hex(pub FieldElement);
 
 impl Serialize for Decimal {
@@ -34,20 +34,20 @@ pub struct CallResponse {
 }
 impl CommandResponse for CallResponse {}
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct InvokeResponse {
     pub transaction_hash: Hex,
 }
 impl CommandResponse for InvokeResponse {}
 
-#[derive(Serialize)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub struct DeployResponse {
     pub contract_address: Hex,
     pub transaction_hash: Hex,
 }
 impl CommandResponse for DeployResponse {}
 
-#[derive(Serialize)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub struct DeclareResponse {
     pub class_hash: Hex,
     pub transaction_hash: Hex,
@@ -99,9 +99,16 @@ pub struct ShowConfigResponse {
 impl CommandResponse for ShowConfigResponse {}
 
 #[derive(Serialize, Debug)]
-pub struct ScriptResponse {
+pub struct ScriptRunResponse {
     pub status: String,
-    pub msg: Option<String>,
+    pub message: Option<String>,
 }
 
-impl CommandResponse for ScriptResponse {}
+impl CommandResponse for ScriptRunResponse {}
+
+#[derive(Serialize)]
+pub struct ScriptInitResponse {
+    pub message: String,
+}
+
+impl CommandResponse for ScriptInitResponse {}
