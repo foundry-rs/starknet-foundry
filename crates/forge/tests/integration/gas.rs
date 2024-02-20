@@ -427,7 +427,7 @@ fn contract_ec_op_cost() {
 
     assert_passed!(result);
     // 1101 = cost of deploy (see snforge_std_deploy_cost test)
-    // 52 = cost of 10x ec_op builtin
+    // 52 = cost of 10x ec_op builtins
     assert_gas!(result, "contract_ec_op_cost", 1101 + 52);
 }
 
