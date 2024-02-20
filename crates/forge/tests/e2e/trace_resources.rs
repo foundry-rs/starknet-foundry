@@ -136,7 +136,7 @@ fn assert_correct_diff_for_builtins_and_easily_unifiable_syscalls(
 // If you changed the corresponding cairo code count the expected occurrences of syscalls manually first, then assert them.
 // TL;DR: DON't mindlessly change numbers to fix the tests if they ever fail.
 fn check_call(test_call_trace: &ProfilerCallTrace) {
-    assert_not_easily_unifiable_syscalls(test_call_trace, 11, 4, 1); // FIXME in #1631 (should be 14, 8, 1)
+    assert_not_easily_unifiable_syscalls(test_call_trace, 14, 8, 1);
 
     let regular_call = &test_call_trace.nested_calls[1];
     assert_not_easily_unifiable_syscalls(regular_call, 2, 1, 0);
@@ -164,7 +164,7 @@ fn check_call(test_call_trace: &ProfilerCallTrace) {
 }
 
 fn check_deploy(test_call_trace: &ProfilerCallTrace) {
-    assert_not_easily_unifiable_syscalls(test_call_trace, 11, 4, 0); // FIXME in #1631 (should be 14, 4, 0)
+    assert_not_easily_unifiable_syscalls(test_call_trace, 14, 4, 0);
 
     for deploy_proxy in &test_call_trace.nested_calls {
         assert_not_easily_unifiable_syscalls(deploy_proxy, 2, 1, 0);
@@ -175,7 +175,7 @@ fn check_deploy(test_call_trace: &ProfilerCallTrace) {
 }
 
 fn check_l1_handler(test_call_trace: &ProfilerCallTrace) {
-    assert_not_easily_unifiable_syscalls(test_call_trace, 6, 3, 0); // FIXME in #1631 (should be 8, 3, 0)
+    assert_not_easily_unifiable_syscalls(test_call_trace, 8, 3, 0);
 
     let handle_l1 = &test_call_trace.nested_calls[1];
     assert_not_easily_unifiable_syscalls(handle_l1, 3, 2, 0);
@@ -188,7 +188,7 @@ fn check_l1_handler(test_call_trace: &ProfilerCallTrace) {
 }
 
 fn check_libcall(test_call_trace: &ProfilerCallTrace) {
-    assert_not_easily_unifiable_syscalls(test_call_trace, 9, 3, 1); // FIXME in #1631 (should be 11, 3, 5)
+    assert_not_easily_unifiable_syscalls(test_call_trace, 11, 3, 5);
 
     let regular_call = &test_call_trace.nested_calls[0];
     assert_not_easily_unifiable_syscalls(regular_call, 2, 1, 0);
