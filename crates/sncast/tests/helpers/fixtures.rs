@@ -273,11 +273,10 @@ pub fn create_test_provider() -> JsonRpcClient<HttpTransport> {
 pub fn copy_file_to(src_path: impl AsRef<std::path::Path>, dest_path: impl AsRef<std::path::Path>) {
     fs_extra::file::copy(
         src_path.as_ref(),
-        dest_path.as_ref(), 
-        &fs_extra::file::CopyOptions::new()
-            .overwrite(true)
+        dest_path.as_ref(),
+        &fs_extra::file::CopyOptions::new().overwrite(true),
     )
-        .expect("Failed to copy the file");
+    .expect("Failed to copy the file");
 }
 
 #[must_use]
