@@ -1,5 +1,5 @@
 use crate::helpers::constants::{DEVNET_OZ_CLASS_HASH, URL};
-use crate::helpers::fixtures::{copy_file_to, default_cli_args};
+use crate::helpers::fixtures::{copy_file, default_cli_args};
 use crate::helpers::runner::runner;
 use indoc::indoc;
 
@@ -132,7 +132,7 @@ pub async fn test_happy_case_accounts_file_already_exists() {
     let accounts_file = "accounts.json";
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
 
-    copy_file_to(
+    copy_file(
         "tests/data/accounts/accounts.json",
         temp_dir.path().join(accounts_file),
     );
@@ -339,7 +339,7 @@ pub async fn test_keystore_file_already_exists() {
     let keystore_file = "my_key.json";
     let account_file = "my_account_new.json";
 
-    copy_file_to(
+    copy_file(
         "tests/data/keystore/my_key.json",
         temp_dir.path().join(keystore_file),
     );
@@ -374,7 +374,7 @@ pub async fn test_account_file_already_exists() {
     let keystore_file = "my_key_new.json";
     let account_file = "my_account.json";
 
-    copy_file_to(
+    copy_file(
         "tests/data/keystore/my_account.json",
         temp_dir.path().join(account_file),
     );

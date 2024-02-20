@@ -1,5 +1,5 @@
 use crate::helpers::constants::{DEVNET_OZ_CLASS_HASH, URL};
-use crate::helpers::fixtures::{convert_to_hex, copy_file_to};
+use crate::helpers::fixtures::{convert_to_hex, copy_file};
 use crate::helpers::fixtures::{
     get_address_from_keystore, get_transaction_hash, get_transaction_receipt, mint_token,
 };
@@ -275,11 +275,11 @@ pub async fn test_happy_case_keystore() {
     let keystore_file = "my_key.json";
     let account_file = "my_account_undeployed_happy_case.json";
 
-    copy_file_to(
+    copy_file(
         "tests/data/keystore/my_key.json",
         tempdir.path().join(keystore_file),
     );
-    copy_file_to(
+    copy_file(
         "tests/data/keystore/my_account_undeployed_happy_case.json",
         tempdir.path().join(account_file),
     );
@@ -336,11 +336,11 @@ pub async fn test_keystore_already_deployed() {
     let keystore_file = "my_key.json";
     let account_file = "account.json";
 
-    copy_file_to(
+    copy_file(
         "tests/data/keystore/my_key.json",
         tempdir.path().join(keystore_file),
     );
-    copy_file_to(
+    copy_file(
         "tests/data/keystore/my_account.json",
         tempdir.path().join(account_file),
     );
@@ -375,11 +375,11 @@ pub async fn test_keystore_key_mismatch() {
     let keystore_file = "my_key_invalid.json";
     let account_file = "my_account_undeployed.json";
 
-    copy_file_to(
+    copy_file(
         "tests/data/keystore/my_key_invalid.json",
         tempdir.path().join(keystore_file),
     );
-    copy_file_to(
+    copy_file(
         "tests/data/keystore/my_account_undeployed.json",
         tempdir.path().join(account_file),
     );
@@ -415,7 +415,7 @@ pub async fn test_deploy_keystore_inexistent_keystore_file() {
     let keystore_file = "my_key_inexistent.json";
     let account_file = "my_account_undeployed.json";
 
-    copy_file_to(
+    copy_file(
         "tests/data/keystore/my_account_undeployed.json",
         tempdir.path().join(account_file),
     );
@@ -450,7 +450,7 @@ pub async fn test_deploy_keystore_inexistent_account_file() {
     let keystore_file = "my_key.json";
     let account_file = "my_account_inexistent.json";
 
-    copy_file_to(
+    copy_file(
         "tests/data/keystore/my_key.json",
         tempdir.path().join(keystore_file),
     );
@@ -485,11 +485,11 @@ pub async fn test_deploy_keystore_no_status() {
     let keystore_file = "my_key.json";
     let account_file = "my_account_invalid.json";
 
-    copy_file_to(
+    copy_file(
         "tests/data/keystore/my_key.json",
         tempdir.path().join(keystore_file),
     );
-    copy_file_to(
+    copy_file(
         "tests/data/keystore/my_account_invalid.json",
         tempdir.path().join(account_file),
     );
@@ -524,11 +524,11 @@ pub async fn test_deploy_keystore_other_args() {
     let keystore_file = "my_key.json";
     let account_file = "my_account_undeployed_happy_case_other_args.json";
 
-    copy_file_to(
+    copy_file(
         "tests/data/keystore/my_key.json",
         tempdir.path().join(keystore_file),
     );
-    copy_file_to(
+    copy_file(
         "tests/data/keystore/my_account_undeployed_happy_case_other_args.json",
         tempdir.path().join(account_file),
     );

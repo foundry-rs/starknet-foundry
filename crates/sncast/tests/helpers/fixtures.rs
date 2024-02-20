@@ -270,7 +270,7 @@ pub fn create_test_provider() -> JsonRpcClient<HttpTransport> {
     JsonRpcClient::new(HttpTransport::new(parsed_url))
 }
 
-pub fn copy_file_to(src_path: impl AsRef<std::path::Path>, dest_path: impl AsRef<std::path::Path>) {
+pub fn copy_file(src_path: impl AsRef<std::path::Path>, dest_path: impl AsRef<std::path::Path>) {
     fs_extra::file::copy(
         src_path.as_ref(),
         dest_path.as_ref(),
@@ -319,7 +319,7 @@ pub fn copy_directory_to_tempdir(src_dir: impl AsRef<Utf8Path>) -> TempDir {
     temp_dir
 }
 
-fn copy_script_directory_to(
+fn copy_script_directory(
     src_dir: impl AsRef<Utf8Path>,
     dest_dir: impl AsRef<Utf8Path>,
     deps: Vec<impl AsRef<std::path::Path>>,
@@ -375,7 +375,7 @@ pub fn copy_script_directory_to_tempdir(
     let dest_dir = Utf8PathBuf::from_path_buf(temp_dir.path().to_path_buf())
         .expect("Failed to create Utf8PathBuf from PathBuf");
 
-    copy_script_directory_to(&src_dir, dest_dir, deps);
+    copy_script_directory(&src_dir, dest_dir, deps);
 
     temp_dir
 }
@@ -397,7 +397,7 @@ pub fn copy_workspace_directory_to_tempdir(
         let src_member_path = src_dir.join(member);
         let dest_member_path = dest_dir.join(member);
         fs::create_dir_all(&dest_member_path).expect("Failed to create directories in temp dir");
-        copy_script_directory_to(&src_member_path, dest_member_path, deps.to_vec());
+        copy_script_directory(&src_member_path, dest_member_path, deps.to_vec());
     }
 
     temp_dir
