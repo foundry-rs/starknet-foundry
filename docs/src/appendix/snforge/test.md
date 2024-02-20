@@ -58,6 +58,10 @@ Display additional info about used resources for passed tests.
 
 ## `--save-trace-data`
 
+Number of maximum steps during single test
+
+## `--max-n-steps` `MAX_N_STEPS`
+
 Saves execution traces of test cases which have passed and are not fuzz tests to files. Traces can be used for profiling purposes.
 
 ## `-h`, `--help`
