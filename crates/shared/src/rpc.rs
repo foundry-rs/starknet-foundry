@@ -22,7 +22,7 @@ pub async fn get_rpc_version(client: &JsonRpcClient<HttpTransport>) -> Result<Ve
     client
         .spec_version()
         .await
-        .context("Error while calling RPC node")?
+        .context("Error while calling RPC method spec_version")?
         .parse::<Version>()
         .context("Failed to parse RPC spec version")
 }
