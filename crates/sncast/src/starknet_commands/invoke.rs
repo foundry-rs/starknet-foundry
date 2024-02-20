@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Result};
 use clap::Args;
 
-use sncast::response::structs::{Hex, InvokeResponse};
+use sncast::response::structs::{Felt, InvokeResponse};
 use sncast::{apply_optional, handle_rpc_error, handle_wait_for_tx, WaitForTx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{Account, Call, ConnectedAccount, Execution, SingleOwnerAccount};
@@ -71,7 +71,7 @@ pub async fn execute_calls(
                 account.provider(),
                 result.transaction_hash,
                 InvokeResponse {
-                    transaction_hash: Hex(result.transaction_hash),
+                    transaction_hash: Felt(result.transaction_hash),
                 },
                 wait_config,
             )
