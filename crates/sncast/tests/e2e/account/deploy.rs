@@ -1,5 +1,5 @@
 use crate::helpers::constants::{DEVNET_OZ_CLASS_HASH, URL};
-use crate::helpers::fixtures::convert_to_hex;
+use crate::helpers::fixtures::{convert_to_hex, copy_file_to};
 use crate::helpers::fixtures::{
     get_address_from_keystore, get_transaction_hash, get_transaction_receipt, mint_token,
 };
@@ -276,19 +276,14 @@ pub async fn test_happy_case_keystore() {
     let keystore_file = "my_key.json";
     let account_file = "my_account_undeployed_happy_case.json";
 
-    fs_extra::file::copy(
+    copy_file_to(
         "tests/data/keystore/my_key.json",
         tempdir.path().join(keystore_file),
-        &fs_extra::file::CopyOptions::new().overwrite(true),
-    )
-    .expect("Unable to copy keystore file");
-    fs_extra::file::copy(
+    );
+    copy_file_to(
         "tests/data/keystore/my_account_undeployed_happy_case.json",
         tempdir.path().join(account_file),
-        &fs_extra::file::CopyOptions::new().overwrite(true),
-    )
-    .expect("Unable to copy account file");
-
+    );
     env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
 
     let address = get_address_from_keystore(
@@ -342,19 +337,14 @@ pub async fn test_keystore_already_deployed() {
     let keystore_file = "my_key.json";
     let account_file = "account.json";
 
-    fs_extra::file::copy(
+    copy_file_to(
         "tests/data/keystore/my_key.json",
         tempdir.path().join(keystore_file),
-        &fs_extra::file::CopyOptions::new().overwrite(true),
-    )
-    .expect("Unable to copy keystore file");
-    fs_extra::file::copy(
+    );
+    copy_file_to(
         "tests/data/keystore/my_account.json",
         tempdir.path().join(account_file),
-        &fs_extra::file::CopyOptions::new().overwrite(true),
-    )
-    .expect("Unable to copy account file");
-
+    );
     env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
 
     let args = vec![
@@ -386,19 +376,15 @@ pub async fn test_keystore_key_mismatch() {
     let keystore_file = "my_key_invalid.json";
     let account_file = "my_account_undeployed.json";
 
-    fs_extra::file::copy(
+    copy_file_to(
         "tests/data/keystore/my_key_invalid.json",
         tempdir.path().join(keystore_file),
-        &fs_extra::file::CopyOptions::new().overwrite(true),
-    )
-    .expect("Unable to copy keystore file");
-    fs_extra::file::copy(
+    );
+    copy_file_to(
         "tests/data/keystore/my_account_undeployed.json",
         tempdir.path().join(account_file),
-        &fs_extra::file::CopyOptions::new().overwrite(true),
-    )
-    .expect("Unable to copy account file");
-
+    );
+    
     env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
 
     let args = vec![
@@ -434,21 +420,17 @@ pub fn test_deploy_keystore_inexistent_file(
 
     let keystore_file = Path::new(keystore_file_str);
     if keystore_file.exists() {
-        fs_extra::file::copy(
+        copy_file_to(
             keystore_file,
             tempdir.path().join(keystore_file.file_name().unwrap()),
-            &fs_extra::file::CopyOptions::new().overwrite(true),
-        )
-        .expect("Unable to copy keystore file");
+        ); 
     }
     let account_file = Path::new(account_file_str);
     if account_file.exists() {
-        fs_extra::file::copy(
+        copy_file_to(
             account_file,
             tempdir.path().join(account_file.file_name().unwrap()),
-            &fs_extra::file::CopyOptions::new().overwrite(true),
-        )
-        .expect("Unable to copy account file");
+        );
     }
 
     env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
@@ -483,19 +465,14 @@ pub async fn test_deploy_keystore_no_status() {
     let keystore_file = "my_key.json";
     let account_file = "my_account_invalid.json";
 
-    fs_extra::file::copy(
+    copy_file_to(
         "tests/data/keystore/my_key.json",
         tempdir.path().join(keystore_file),
-        &fs_extra::file::CopyOptions::new().overwrite(true),
-    )
-    .expect("Unable to copy keystore file");
-    fs_extra::file::copy(
+    );
+    copy_file_to(
         "tests/data/keystore/my_account_invalid.json",
         tempdir.path().join(account_file),
-        &fs_extra::file::CopyOptions::new().overwrite(true),
-    )
-    .expect("Unable to copy account file");
-
+    );
     env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
 
     let args = vec![
@@ -527,19 +504,14 @@ pub async fn test_deploy_keystore_other_args() {
     let keystore_file = "my_key.json";
     let account_file = "my_account_undeployed_happy_case_other_args.json";
 
-    fs_extra::file::copy(
+    copy_file_to(
         "tests/data/keystore/my_key.json",
         tempdir.path().join(keystore_file),
-        &fs_extra::file::CopyOptions::new().overwrite(true),
-    )
-    .expect("Unable to copy keystore file");
-    fs_extra::file::copy(
+    );
+    copy_file_to(
         "tests/data/keystore/my_account_undeployed_happy_case_other_args.json",
         tempdir.path().join(account_file),
-        &fs_extra::file::CopyOptions::new().overwrite(true),
-    )
-    .expect("Unable to copy account file");
-
+    );
     env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
 
     let address = get_address_from_keystore(

@@ -1,5 +1,5 @@
 use crate::helpers::constants::{DEVNET_OZ_CLASS_HASH, URL};
-use crate::helpers::fixtures::default_cli_args;
+use crate::helpers::fixtures::{copy_file_to, default_cli_args};
 use crate::helpers::runner::runner;
 use indoc::indoc;
 
@@ -132,13 +132,10 @@ pub async fn test_happy_case_accounts_file_already_exists() {
     let accounts_file = "accounts.json";
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
 
-    fs_extra::file::copy(
+    copy_file_to(
         "tests/data/accounts/accounts.json",
         temp_dir.path().join(accounts_file),
-        &fs_extra::file::CopyOptions::new().overwrite(true),
-    )
-    .expect("Unable to copy accounts.json");
-
+    );
     let args = vec![
         "--url",
         URL,
@@ -342,13 +339,10 @@ pub async fn test_keystore_file_already_exists() {
     let keystore_file = "my_key.json";
     let account_file = "my_account_new.json";
 
-    fs_extra::file::copy(
+    copy_file_to(
         "tests/data/keystore/my_key.json",
         temp_dir.path().join(keystore_file),
-        &fs_extra::file::CopyOptions::new().overwrite(true),
-    )
-    .expect("Unable to copy keystore file");
-
+    );
     env::set_var(CREATE_KEYSTORE_PASSWORD_ENV_VAR, "123");
 
     let args = vec![
@@ -380,12 +374,10 @@ pub async fn test_account_file_already_exists() {
     let keystore_file = "my_key_new.json";
     let account_file = "my_account.json";
 
-    fs_extra::file::copy(
+    copy_file_to(
         "tests/data/keystore/my_account.json",
         temp_dir.path().join(account_file),
-        &fs_extra::file::CopyOptions::new().overwrite(true),
-    )
-    .expect("Unable to copy account file");
+    );
 
     env::set_var(CREATE_KEYSTORE_PASSWORD_ENV_VAR, "123");
 

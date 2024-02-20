@@ -270,6 +270,16 @@ pub fn create_test_provider() -> JsonRpcClient<HttpTransport> {
     JsonRpcClient::new(HttpTransport::new(parsed_url))
 }
 
+pub fn copy_file_to(src_path: impl AsRef<std::path::Path>, dest_path: impl AsRef<std::path::Path>) {
+    fs_extra::file::copy(
+        src_path.as_ref(),
+        dest_path.as_ref(), 
+        &fs_extra::file::CopyOptions::new()
+            .overwrite(true)
+    )
+        .expect("Failed to copy the file");
+}
+
 #[must_use]
 pub fn duplicate_contract_directory_with_salt(
     src_dir: impl AsRef<Utf8Path>,
