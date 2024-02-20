@@ -138,6 +138,7 @@ fn extract_failed_tests(tests_summaries: Vec<TestCrateSummary>) -> Vec<AnyTestCa
         .collect()
 }
 
+#[allow(clippy::too_many_arguments)]
 fn combine_configs(
     workspace_root: &Utf8Path,
     exit_first: bool,

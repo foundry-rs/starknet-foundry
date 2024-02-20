@@ -1,5 +1,4 @@
 use forge_runner::contracts_data::ContractsData;
-use forge_runner::DEFAULT_MAX_N_STEPS;
 use indoc::formatdoc;
 use std::path::Path;
 use std::path::PathBuf;
@@ -126,7 +125,7 @@ fn fork_aliased_decorator() {
                 12345,
                 false,
                 false,
-                DEFAULT_MAX_N_STEPS,
+                None,
             )),
             Arc::new(RunnerParams::new(
                 ContractsData::try_from(test.contracts().unwrap()).unwrap(),
