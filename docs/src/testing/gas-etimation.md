@@ -47,6 +47,10 @@ Multiplication of those values gives us a gas cost for each component:
 
 We should remember that only the most expensive factor will be taken into account, so our overall gas cost is `10.24`.
 
+> ℹ️ **Info**
+> Using some syscalls (like deploying/calling a contract, getting execution info) adds extra steps and builtins amount to the resources consumed.
+> This is because of the OS-cost of executing those operations.
+
 ### From Used Onchain Data
 
 [Starknet documentation](https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/fee-mechanism/#_on_chain_data)
@@ -60,13 +64,13 @@ Let's calculate gas based on those operations:
 - one storage write
 - one L2 -> L1 message (with `[1, 2, 3]` as a payload)
 
-We assume the cost of a single 32-byte word is 612 gas units. Said that we can estimate the cost of previous operations:
-- contract deployment - 3 * 612 = 1836
-- storage write - 2 * 612 = 1224
-- one L2 -> L1 message - (3 + 3) * 612 = 3672 (read more about L2 -> L1 message cost
+We assume the cost of a single 32-byte word is 551 gas units. Said that we can estimate the cost of previous operations:
+- contract deployment - 3 * 551 = 1653
+- storage write - 2 * 551 = 1102
+- one L2 -> L1 message - (3 + 3) * 551 = 3306 (read more about L2 -> L1 message cost
   [here](https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/fee-mechanism/#l2l1_messages))
 
-This time we sum all calculated values because all of them will be kept onchain. Overall onchain data gas cost is `6732`.
+This time we sum all calculated values because all of them will be kept onchain. Overall onchain data gas cost is `6061`.
 
 ## Estimated Gas vs Starknet Transaction Fee
 
