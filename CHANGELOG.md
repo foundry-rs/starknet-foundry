@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - contract names to call trace
 
+#### Changed
+
+- Bump cairo to 2.5.4
+
 #### Fixed
 
 - Calling Cairo 0 contract no longer cancels cheatcodes in further calls

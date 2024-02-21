@@ -321,7 +321,7 @@ mod tests {
                 sierra = true
 
                 [dependencies]
-                starknet = "2.5.0"
+                starknet = "2.5.4"
                 "#,
             ))
             .unwrap();
