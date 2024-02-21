@@ -19,6 +19,8 @@ pub struct ForgeConfig {
     pub save_trace_data: bool,
     /// Fork configuration profiles
     pub fork: Vec<ForkTarget>,
+    /// Limit of steps
+    pub max_n_steps: Option<u32>,
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -63,6 +65,8 @@ pub(crate) struct RawForgeConfig {
     #[serde(default)]
     /// Fork configuration profiles
     pub fork: Vec<RawForkTarget>,
+    /// Limit of steps
+    pub max_n_steps: Option<u32>,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Default, Clone)]
@@ -130,6 +134,7 @@ impl TryFrom<RawForgeConfig> for ForgeConfig {
             detailed_resources: value.detailed_resources,
             save_trace_data: value.save_trace_data,
             fork: fork_targets,
+            max_n_steps: value.max_n_steps,
         })
     }
 }

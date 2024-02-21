@@ -37,6 +37,7 @@ pub fn run_test_case(test: &TestCase) -> Vec<TestCrateSummary> {
             12345,
             false,
             false,
+            None,
         )),
         Arc::new(RunnerParams::new(
             ContractsData::try_from(test.contracts().unwrap()).unwrap(),

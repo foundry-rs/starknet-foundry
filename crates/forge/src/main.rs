@@ -108,6 +108,10 @@ struct TestArgs {
     /// Save execution traces of all test which have passed and are not fuzz tests
     #[arg(long)]
     save_trace_data: bool,
+
+    /// Number of maximum steps during a single test. For fuzz tests this value is applied to each subtest separately.
+    #[arg(long)]
+    max_n_steps: Option<u32>,
 }
 
 fn validate_fuzzer_runs_value(val: &str) -> Result<u32> {
@@ -134,6 +138,7 @@ fn extract_failed_tests(tests_summaries: Vec<TestCrateSummary>) -> Vec<AnyTestCa
         .collect()
 }
 
+#[allow(clippy::too_many_arguments)]
 fn combine_configs(
     workspace_root: &Utf8Path,
     exit_first: bool,
@@ -141,6 +146,7 @@ fn combine_configs(
     fuzzer_seed: Option<u64>,
     detailed_resources: bool,
     save_trace_data: bool,
+    max_n_steps: Option<u32>,
     forge_config: &ForgeConfig,
 ) -> RunnerConfig {
     RunnerConfig::new(
@@ -154,6 +160,7 @@ fn combine_configs(
             .unwrap_or_else(|| thread_rng().next_u64()),
         detailed_resources || forge_config.detailed_resources,
         save_trace_data || forge_config.save_trace_data,
+        max_n_steps.or(forge_config.max_n_steps),
     )
 }
 
@@ -241,6 +248,7 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                     args.fuzzer_seed,
                     args.detailed_resources,
                     args.save_trace_data,
+                    args.max_n_steps,
                     &forge_config,
                 ));
                 let runner_params =
@@ -326,6 +334,7 @@ mod tests {
             None,
             false,
             false,
+            None,
             &Default::default(),
         );
         let config2 = combine_configs(
@@ -335,6 +344,7 @@ mod tests {
             None,
             false,
             false,
+            None,
             &Default::default(),
         );
 
@@ -353,6 +363,7 @@ mod tests {
             None,
             false,
             false,
+            None,
             &Default::default(),
         );
         assert_eq!(
@@ -364,6 +375,7 @@ mod tests {
                 config.fuzzer_seed,
                 false,
                 false,
+                None
             )
         );
     }
@@ -377,6 +389,7 @@ mod tests {
             fuzzer_seed: Some(500),
             detailed_resources: true,
             save_trace_data: true,
+            max_n_steps: Some(1_000_000),
         };
         let workspace_root: Utf8PathBuf = Default::default();
 
@@ -387,11 +400,12 @@ mod tests {
             None,
             false,
             false,
+            None,
             &config_from_scarb,
         );
         assert_eq!(
             config,
-            RunnerConfig::new(workspace_root, true, 1234, 500, true, true)
+            RunnerConfig::new(workspace_root, true, 1234, 500, true, true, Some(1_000_000))
         );
     }
 
@@ -406,6 +420,7 @@ mod tests {
             fuzzer_seed: Some(1000),
             detailed_resources: false,
             save_trace_data: false,
+            max_n_steps: Some(1234),
         };
         let config = combine_configs(
             &workspace_root,
@@ -414,12 +429,13 @@ mod tests {
             Some(32),
             true,
             true,
+            Some(1_000_000),
             &config_from_scarb,
         );
 
         assert_eq!(
             config,
-            RunnerConfig::new(workspace_root, true, 100, 32, true, true)
+            RunnerConfig::new(workspace_root, true, 100, 32, true, true, Some(1_000_000))
         );
     }
 }
