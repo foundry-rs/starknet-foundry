@@ -5339,8 +5339,13 @@ dependencies = [
 name = "shared"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "cairo-felt 0.9.1",
  "cairo-lang-runner",
+ "console",
+ "semver",
+ "starknet",
+ "url",
 ]
 
 [[package]]

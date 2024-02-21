@@ -1,7 +1,6 @@
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8Path;
 use clap::{Parser, Subcommand, ValueEnum};
-use forge::pretty_printing::print_warning;
 use forge::scarb::config::ForgeConfig;
 use forge::scarb::{
     build_contracts_with_scarb, build_test_artifacts_with_scarb, config_from_scarb_for_package,
@@ -23,6 +22,7 @@ use scarb_ui::args::PackagesFilter;
 
 use forge::block_number_map::BlockNumberMap;
 use semver::{Comparator, Op, Version, VersionReq};
+use shared::print::print_as_warning;
 use std::env;
 use std::sync::Arc;
 use std::thread::available_parallelism;
@@ -185,7 +185,7 @@ fn warn_if_snforge_std_not_compatible(scarb_metadata: &Metadata) -> Result<()> {
         "snforge_std",
         &snforge_std_version_requirement,
     )? {
-        print_warning(&anyhow!("Package snforge_std version does not meet the recommended version requirement {snforge_std_version_requirement}, it might result in unexpected behaviour"));
+        print_as_warning(&anyhow!("Package snforge_std version does not meet the recommended version requirement {snforge_std_version_requirement}, it might result in unexpected behaviour"));
     }
     Ok(())
 }
