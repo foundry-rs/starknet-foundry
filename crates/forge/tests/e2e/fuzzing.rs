@@ -1,6 +1,6 @@
 use crate::e2e::common::runner::{setup_package, test_runner};
 use indoc::indoc;
-use test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
+use shared::output_assert::{assert_stderr_contains, assert_stdout_contains};
 
 #[test]
 fn fuzzing() {

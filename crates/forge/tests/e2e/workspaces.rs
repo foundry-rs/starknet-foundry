@@ -1,7 +1,7 @@
 use crate::e2e::common::runner::{setup_hello_workspace, setup_virtual_workspace, test_runner};
 use indoc::indoc;
+use shared::output_assert::assert_stdout_contains;
 use std::path::PathBuf;
-use test_utils::output_assert::assert_stdout_contains;
 
 #[test]
 fn root_workspace_without_arguments() {

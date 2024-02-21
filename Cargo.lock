@@ -5343,7 +5343,9 @@ dependencies = [
  "cairo-felt 0.9.1",
  "cairo-lang-runner",
  "console",
+ "regex",
  "semver",
+ "snapbox",
  "starknet",
  "url",
 ]

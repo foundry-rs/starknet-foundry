@@ -10,6 +10,8 @@ pub mod print;
 pub mod rpc;
 pub mod utils;
 
+pub mod output_assert;
+
 pub async fn verify_and_warn_if_incompatible_rpc_version(
     client: &JsonRpcClient<HttpTransport>,
     url: &str,
