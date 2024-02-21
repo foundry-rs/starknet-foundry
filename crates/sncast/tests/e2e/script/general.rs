@@ -279,9 +279,7 @@ async fn test_nonexistent_account_address() {
         &script_name,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(SCRIPTS_DIR.to_owned() + "/map_script/scripts")
-        .args(args);
+    let snapbox = runner(&args).current_dir(SCRIPTS_DIR.to_owned() + "/map_script/scripts");
 
     snapbox.assert().success().stderr_matches(indoc! {r"
         command: script run

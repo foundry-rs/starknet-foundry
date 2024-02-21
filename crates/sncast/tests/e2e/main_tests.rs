@@ -130,9 +130,7 @@ async fn test_nonexistent_account_address() {
         "Map",
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(contract_path.path())
-        .args(args);
+    let snapbox = runner(&args).current_dir(contract_path.path());
 
     snapbox.assert().failure().stderr_matches(indoc! {r"
         Error: Invalid account address

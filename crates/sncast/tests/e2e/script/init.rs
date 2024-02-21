@@ -1,6 +1,6 @@
+use crate::helpers::runner::runner;
 use camino::Utf8PathBuf;
 use indoc::{formatdoc, indoc};
-use snapbox::cmd::{cargo_bin, Command};
 use sncast::helpers::constants::INIT_SCRIPTS_DIR;
 use sncast::helpers::scarb_utils::get_cairo_version;
 use tempfile::TempDir;
@@ -10,9 +10,7 @@ fn test_script_init_happy_case() {
     let script_name = "my_script";
     let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(temp_dir.path())
-        .args(["script", "init", script_name]);
+    let snapbox = runner(&["script", "init", script_name]).current_dir(temp_dir.path());
 
     snapbox.assert().stdout_matches(formatdoc! {r"
         [WARNING] [..]
@@ -80,10 +78,8 @@ fn test_init_fails_when_scripts_dir_exists_in_cwd() {
     std::fs::create_dir_all(temp_dir.path().join(INIT_SCRIPTS_DIR))
         .expect("Failed to create scripts directory in the current temp directory");
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(temp_dir.path())
-        .args(["script", "init", script_name]);
-
+    let snapbox = runner(&["script", "init", script_name]).current_dir(temp_dir.path());
+    
     snapbox.assert().stderr_matches(formatdoc! {r"
         command: script init
         error: Scripts directory already exists at [..]
@@ -94,18 +90,16 @@ fn test_init_fails_when_scripts_dir_exists_in_cwd() {
 fn test_init_twice_fails() {
     let script_name = "my_script";
     let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
-
-    Command::new(cargo_bin!("sncast"))
+    
+    let args = vec!["script", "init", script_name];
+    runner(&args)
         .current_dir(temp_dir.path())
-        .args(["script", "init", script_name])
         .assert()
         .success();
 
     assert!(temp_dir.path().join(INIT_SCRIPTS_DIR).exists());
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(temp_dir.path())
-        .args(["script", "init", script_name]);
+    let snapbox = runner(&args).current_dir(temp_dir.path());
 
     snapbox.assert().stderr_matches(formatdoc! {r#"
         command: script init
@@ -119,9 +113,8 @@ fn test_init_twice_fails() {
 //     let script_name = "my_script";
 //     let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
 //
-//     let snapbox = Command::new(cargo_bin!("sncast"))
-//         .current_dir(temp_dir.path())
-//         .args(["script", "init", script_name]);
+//     let snapbox = runner(&["script", "init", script_name])
+//         .current_dir(temp_dir.path());
 //
 //     snapbox.assert().stdout_matches(formatdoc! {r"
 //         [WARNING] [..]
