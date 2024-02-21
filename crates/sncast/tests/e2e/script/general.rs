@@ -249,6 +249,7 @@ async fn test_nonexistent_account_address() {
         "--url",
         URL,
         "script",
+        "run",
         &script_name,
     ];
 
