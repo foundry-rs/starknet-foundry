@@ -43,7 +43,7 @@ fn should_panic() {
 fn should_panic_unknown_entry_point() {
     let test = test_case!(
         indoc!(
-            r#"
+            r"
             use array::ArrayTrait;
             use starknet::{call_contract_syscall, ContractAddress, Felt252TryIntoContractAddress};
             use result::ResultTrait;
@@ -65,7 +65,7 @@ fn should_panic_unknown_entry_point() {
                     Result::Err(err) => panic(err),
                 };
             }
-        "#
+        "
         ),
         Contract::from_code_path(
             "HelloStarknet".to_string(),
