@@ -1,4 +1,3 @@
-use crate::response::print::print_as_warning;
 use anyhow::{anyhow, Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
 use scarb_api::{
@@ -7,6 +6,7 @@ use scarb_api::{
     ScarbCommand, ScarbCommandError, StarknetContractArtifacts,
 };
 use scarb_ui::args::PackagesFilter;
+use shared::print::print_as_warning;
 use std::collections::HashMap;
 use std::env;
 use std::str::FromStr;

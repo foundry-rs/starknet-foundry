@@ -66,7 +66,7 @@ fn should_print_warning() {
             r"
                 [..]Compiling[..]
                 [..]Finished[..]
-                [WARNING] The RPC node with url = http://188.34.188.184:9545/rpc/v0_5 has unsupported version = (0.5.1), use node supporting RPC version ({EXPECTED_RPC_VERSION})
+                [WARNING] RPC node with the url http://188.34.188.184:9545/rpc/v0_5 uses incompatible version 0.5.1. Expected version: {EXPECTED_RPC_VERSION}
 
 
                 Collected 1 test(s) from empty package
@@ -120,7 +120,7 @@ fn should_dedup_urls() {
             r"
                 [..]Compiling[..]
                 [..]Finished[..]
-                [WARNING] The RPC node with url = http://188.34.188.184:9545/rpc/v0_5 has unsupported version = (0.5.1), use node supporting RPC version ({EXPECTED_RPC_VERSION})
+                [WARNING] RPC node with the url http://188.34.188.184:9545/rpc/v0_5 uses incompatible version 0.5.1. Expected version: {EXPECTED_RPC_VERSION}
 
 
                 Collected 2 test(s) from empty package
@@ -180,8 +180,8 @@ fn should_print_foreach() {
             r"
                 [..]Compiling[..]
                 [..]Finished[..]
-                [WARNING] The RPC node with url = http://127.0.0.1:3030?url=http://188.34.188.184:9545/rpc/v0_5 has unsupported version = (0.5.1), use node supporting RPC version ({EXPECTED_RPC_VERSION})
-                [WARNING] The RPC node with url = http://188.34.188.184:9545/rpc/v0_5 has unsupported version = (0.5.1), use node supporting RPC version ({EXPECTED_RPC_VERSION})
+                [WARNING] RPC node with the url http://127.0.0.1:3030?url=http://188.34.188.184:9545/rpc/v0_5 uses incompatible version 0.5.1. Expected version: {EXPECTED_RPC_VERSION}
+                [WARNING] RPC node with the url http://188.34.188.184:9545/rpc/v0_5 uses incompatible version 0.5.1. Expected version: {EXPECTED_RPC_VERSION}
 
 
                 Collected 2 test(s) from empty package

@@ -392,7 +392,7 @@ async fn test_no_scarb_profile() {
         .args(args);
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
-        Warning: Profile profile5 does not exist in scarb, using default 'dev' profile.
+        [WARNING] Profile profile5 does not exist in scarb, using default 'dev' profile.
         command: declare
         class_hash: [..]
         transaction_hash: [..]
