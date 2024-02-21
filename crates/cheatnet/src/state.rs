@@ -214,6 +214,15 @@ impl NotEmptyCallStack {
     }
 }
 
+#[derive(Clone, Default, Debug)]
+pub struct CheatedData {
+    pub block_number: Option<Felt252>,
+    pub block_timestamp: Option<Felt252>,
+    pub caller_address: Option<ContractAddress>,
+    pub sequencer_address: Option<ContractAddress>,
+    pub tx_info: Option<TxInfoMock>,
+}
+
 pub struct TraceData {
     pub current_call_stack: NotEmptyCallStack,
 }
@@ -268,6 +277,30 @@ impl Default for CheatnetState {
 }
 
 impl CheatnetState {
+    #[must_use]
+    pub fn create_cheated_data(&self, contract_address: &ContractAddress) -> CheatedData {
+        CheatedData {
+            block_number: self.get_cheated_block_number(contract_address),
+            block_timestamp: self.get_cheated_block_timestamp(contract_address),
+            caller_address: self.get_cheated_caller_address(contract_address),
+            sequencer_address: self.get_cheated_sequencer_address(contract_address),
+            tx_info: self.get_cheated_tx_info(contract_address),
+        }
+    }
+
+    pub fn get_cheated_data(&mut self, contract_address: &ContractAddress) -> CheatedData {
+        let current_call_stack = &mut self.trace_data.current_call_stack;
+
+        // case of cheating the test address itself
+        if current_call_stack.size() == 1 {
+            let cheated_data = self.create_cheated_data(contract_address);
+            self.update_cheats(contract_address);
+            cheated_data
+        } else {
+            current_call_stack.top_cheated_data()
+        }
+    }
+
     pub fn increment_deploy_salt_base(&mut self) {
         self.deploy_salt_base += 1;
     }
@@ -308,23 +341,9 @@ impl CheatnetState {
         get_cheat_for_contract(&self.global_roll, &self.rolled_contracts, address)
     }
 
-    pub fn get_and_update_cheated_block_number(
-        &mut self,
-        address: &ContractAddress,
-    ) -> Option<Felt252> {
-        get_and_update_cheat_for_contract(&self.global_roll, &mut self.rolled_contracts, address)
-    }
-
     #[must_use]
     pub fn get_cheated_block_timestamp(&self, address: &ContractAddress) -> Option<Felt252> {
         get_cheat_for_contract(&self.global_warp, &self.warped_contracts, address)
-    }
-
-    pub fn get_and_update_cheated_block_timestamp(
-        &mut self,
-        address: &ContractAddress,
-    ) -> Option<Felt252> {
-        get_and_update_cheat_for_contract(&self.global_warp, &mut self.warped_contracts, address)
     }
 
     #[must_use]
@@ -335,23 +354,9 @@ impl CheatnetState {
         get_cheat_for_contract(&self.global_elect, &self.elected_contracts, address)
     }
 
-    pub fn get_and_update_cheated_sequencer_address(
-        &mut self,
-        address: &ContractAddress,
-    ) -> Option<ContractAddress> {
-        get_and_update_cheat_for_contract(&self.global_elect, &mut self.elected_contracts, address)
-    }
-
     #[must_use]
     pub fn get_cheated_tx_info(&self, address: &ContractAddress) -> Option<TxInfoMock> {
         get_cheat_for_contract(&self.global_spoof, &self.spoofed_contracts, address)
-    }
-
-    pub fn get_and_update_cheated_tx_info(
-        &mut self,
-        address: &ContractAddress,
-    ) -> Option<TxInfoMock> {
-        get_and_update_cheat_for_contract(&self.global_spoof, &mut self.spoofed_contracts, address)
     }
 
     #[must_use]
@@ -359,34 +364,12 @@ impl CheatnetState {
         get_cheat_for_contract(&self.global_prank, &self.pranked_contracts, address)
     }
 
-    pub fn get_and_update_cheated_caller_address(
-        &mut self,
-        address: &ContractAddress,
-    ) -> Option<ContractAddress> {
-        get_and_update_cheat_for_contract(&self.global_prank, &mut self.pranked_contracts, address)
-    }
-}
-
-#[derive(Clone, Default, Debug)]
-pub struct CheatedData {
-    pub block_number: Option<Felt252>,
-    pub block_timestamp: Option<Felt252>,
-    pub caller_address: Option<ContractAddress>,
-    pub sequencer_address: Option<ContractAddress>,
-    pub tx_info: Option<TxInfoMock>,
-}
-
-impl CheatedData {
-    pub fn new(cheatnet_state: &mut CheatnetState, contract_address: &ContractAddress) -> Self {
-        Self {
-            block_number: cheatnet_state.get_and_update_cheated_block_number(contract_address),
-            block_timestamp: cheatnet_state
-                .get_and_update_cheated_block_timestamp(contract_address),
-            caller_address: cheatnet_state.get_and_update_cheated_caller_address(contract_address),
-            sequencer_address: cheatnet_state
-                .get_and_update_cheated_sequencer_address(contract_address),
-            tx_info: cheatnet_state.get_and_update_cheated_tx_info(contract_address),
-        }
+    pub fn update_cheats(&mut self, address: &ContractAddress) {
+        update_cheat_for_contract(&self.global_roll, &mut self.rolled_contracts, address);
+        update_cheat_for_contract(&self.global_warp, &mut self.warped_contracts, address);
+        update_cheat_for_contract(&self.global_prank, &mut self.pranked_contracts, address);
+        update_cheat_for_contract(&self.global_elect, &mut self.elected_contracts, address);
+        update_cheat_for_contract(&self.global_spoof, &mut self.spoofed_contracts, address);
     }
 }
 
@@ -423,16 +406,6 @@ impl TraceData {
         last_call.borrow_mut().used_execution_resources =
             subtract_execution_resources(resources_used_after_call, &resources_used_before_call);
     }
-}
-
-fn get_and_update_cheat_for_contract<T: Clone>(
-    global_cheat: &Option<(T, CheatSpan)>,
-    contract_cheats: &mut HashMap<ContractAddress, CheatStatus<T>>,
-    contract: &ContractAddress,
-) -> Option<T> {
-    let cheated_value = get_cheat_for_contract(global_cheat, contract_cheats, contract);
-    update_cheat_for_contract(global_cheat, contract_cheats, contract);
-    cheated_value
 }
 
 fn get_cheat_for_contract<T: Clone>(

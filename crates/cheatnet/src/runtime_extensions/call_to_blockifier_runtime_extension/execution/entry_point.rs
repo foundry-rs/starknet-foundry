@@ -1,7 +1,7 @@
 use super::cairo1_execution::execute_entry_point_call_cairo1;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::deprecated::cairo0_execution::execute_entry_point_call_cairo0;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeState;
-use crate::state::{CheatnetState, CheatedData};
+use crate::state::CheatnetState;
 use blockifier::execution::call_info::{CallExecution, Retdata};
 use blockifier::{
     execution::{
@@ -33,15 +33,20 @@ pub fn execute_call_entry_point(
     resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
 ) -> EntryPointExecutionResult<CallInfo> {
-    let cheated_data = if let Some(contract_address) = &entry_point.code_address {
-        CheatedData::new(runtime_state.cheatnet_state, contract_address)
-    } else {
+    let cheated_data = if let CallType::Delegate = entry_point.call_type {
         runtime_state
             .cheatnet_state
             .trace_data
             .current_call_stack
             .top_cheated_data()
             .clone()
+    } else {
+        let contract_address = &entry_point.storage_address;
+        let cheated_data_ = runtime_state
+            .cheatnet_state
+            .create_cheated_data(contract_address);
+        runtime_state.cheatnet_state.update_cheats(contract_address);
+        cheated_data_
     };
 
     // region: Modified blockifier code
