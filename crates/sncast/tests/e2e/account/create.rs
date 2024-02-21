@@ -3,6 +3,7 @@ use crate::helpers::fixtures::{copy_file, default_cli_args};
 use crate::helpers::runner::runner;
 use indoc::indoc;
 
+use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 use sncast::helpers::configuration::copy_config_to_tempdir;
 use sncast::helpers::constants::CREATE_KEYSTORE_PASSWORD_ENV_VAR;
 use std::{env, fs};
@@ -214,11 +215,15 @@ pub async fn test_account_already_exists() {
     ]);
 
     let snapbox = runner(&args);
+    let output = snapbox.assert().success();
 
-    snapbox.assert().stderr_matches(indoc! {r"
+    assert_stderr_contains(
+        output,
+        indoc! {r"
         command: account create
         error: Account with name = user1 already exists in network with chain_id = SN_GOERLI
-    "});
+        "},
+    );
 }
 
 #[tokio::test]
@@ -242,14 +247,18 @@ pub async fn test_happy_case_keystore() {
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
+    let output = snapbox.assert().success();
 
-    snapbox.assert().stdout_matches(indoc! {r"
+    assert_stdout_contains(
+        output,
+        indoc! {r"
         command: account create
         add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
         address: 0x[..]
         max_fee: [..]
         message: Account successfully created[..]
-    "});
+        "},
+    );
 
     let contents = fs::read_to_string(temp_dir.path().join(account_file))
         .expect("Unable to read created file");
@@ -326,11 +335,15 @@ pub async fn test_keystore_without_account() {
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
+    let output = snapbox.assert().success();
 
-    snapbox.assert().stderr_matches(indoc! {r"
+    assert_stderr_contains(
+        output,
+        indoc! {r"
         command: account create
         error: Argument `--account` must be passed and be a path when using `--keystore`
-    "});
+        "},
+    );
 }
 
 #[tokio::test]
@@ -427,14 +440,18 @@ pub async fn test_happy_case_keystore_int_format() {
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
+    let output = snapbox.assert().success();
 
-    snapbox.assert().stdout_matches(indoc! {r"
+    assert_stdout_contains(
+        output,
+        indoc! {r"
         command: account create
         add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
         address: [..]
         max_fee: [..]
         message: Account successfully created[..]
-    "});
+        "},
+    );
 
     let contents = fs::read_to_string(temp_dir.path().join(account_file))
         .expect("Unable to read created file");
@@ -466,14 +483,18 @@ pub async fn test_happy_case_keystore_hex_format() {
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
+    let output = snapbox.assert().success();
 
-    snapbox.assert().stdout_matches(indoc! {r"
+    assert_stdout_contains(
+        output,
+        indoc! {r"
         command: account create
         add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
         address: 0x[..]
         max_fee: 0x[..]
         message: Account successfully created[..]
-    "});
+        "},
+    );
 
     let contents = fs::read_to_string(temp_dir.path().join(account_file))
         .expect("Unable to read created file");
