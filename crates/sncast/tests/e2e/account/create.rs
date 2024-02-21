@@ -36,7 +36,8 @@ pub async fn test_happy_case() {
         std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
     assert!(stdout_str.contains("command: account create"));
     assert!(stdout_str.contains("max_fee: "));
-    assert!(stdout_str.contains("address: "));
+    assert!(!stdout_str.contains("max_fee: 0x"));
+    assert!(stdout_str.contains("address: 0x"));
     assert!(stdout_str.contains(
         "add_profile: --add-profile flag was not set. No profile added to snfoundry.toml"
     ));

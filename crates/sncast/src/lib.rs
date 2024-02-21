@@ -31,11 +31,12 @@ use starknet::{
 };
 
 use crate::helpers::constants::{WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
+use shared::rpc::create_rpc_client;
+use starknet::accounts::ConnectedAccount;
 use std::collections::HashMap;
 use std::thread::sleep;
 use std::time::Duration;
 use std::{env, fs};
-use url::Url;
 
 pub mod helpers;
 pub mod response;
@@ -129,9 +130,7 @@ impl Default for ValidatedWaitParams {
 
 pub fn get_provider(url: &str) -> Result<JsonRpcClient<HttpTransport>> {
     raise_if_empty(url, "RPC url")?;
-    let parsed_url = Url::parse(url)?;
-    let provider = JsonRpcClient::new(HttpTransport::new(parsed_url));
-    Ok(provider)
+    create_rpc_client(url)
 }
 
 pub async fn get_chain_id(provider: &JsonRpcClient<HttpTransport>) -> Result<FieldElement> {
@@ -222,7 +221,23 @@ pub async fn get_account<'a>(
         get_account_from_accounts_file(account, accounts_file, provider, chain_id)?
     };
 
-    Ok(account.set_block_id(get_block_id("pending")?).clone())
+    account.set_block_id(get_block_id("pending")?);
+    verify_account_address(account.clone()).await?;
+
+    Ok(account)
+}
+
+async fn verify_account_address(account: impl ConnectedAccount + std::marker::Sync) -> Result<()> {
+    match account.get_nonce().await {
+        Ok(_) => Ok(()),
+        Err(error) => {
+            if let StarknetError(ContractNotFound) = error {
+                Err(anyhow!("Invalid account address"))
+            } else {
+                handle_rpc_error::<()>(error)
+            }
+        }
+    }
 }
 
 fn get_account_from_keystore<'a>(

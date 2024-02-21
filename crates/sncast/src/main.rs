@@ -9,6 +9,7 @@ use sncast::response::print::{print_command_result, OutputFormat};
 
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand};
+use shared::verify_and_warn_if_incompatible_rpc_version;
 use sncast::helpers::configuration::{load_config, CastConfig};
 use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
 use sncast::helpers::scarb_utils::{
@@ -144,6 +145,8 @@ async fn run_async_command(
     numbers_format: NumbersFormat,
     output_format: OutputFormat,
 ) -> Result<()> {
+    verify_and_warn_if_incompatible_rpc_version(&provider, &config.rpc_url).await?;
+
     let wait_config = WaitForTx {
         wait: cli.wait,
         wait_params: config.wait_params,
@@ -412,6 +415,10 @@ fn run_script_command(
             let mut config = load_config(&cli.profile, &Some(package_metadata.root.clone()))?;
             update_cast_config(&mut config, cli);
             let provider = get_provider(&config.rpc_url)?;
+            runtime.block_on(verify_and_warn_if_incompatible_rpc_version(
+                &provider,
+                &config.rpc_url,
+            ))?;
 
             let mut artifacts = build_and_load_artifacts(
                 &package_metadata,

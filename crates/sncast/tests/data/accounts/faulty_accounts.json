@@ -11,6 +11,11 @@
             "private_key": "0xe3e70682c2094cac629f6fbed82c07cd",
             "public_key": "0x7e52885445756b313ea16849145363ccb73fb4ab0440dbac333cf9d13de82b9",
             "address": "address"
+        },
+        "with_nonexistent_address": {
+            "private_key": "0xe3e70682c2094cac629f6fbed82c07cd",
+            "public_key": "0x7e52885445756b313ea16849145363ccb73fb4ab0440dbac333cf9d13de82b9",
+            "address": "0x1010101010011aaabbcc"
         }
     }
 }

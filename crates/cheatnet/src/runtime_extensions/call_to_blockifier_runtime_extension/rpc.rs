@@ -1,5 +1,6 @@
 use blockifier::execution::execution_utils::stark_felt_to_felt;
 use cairo_lang_runner::casm_run::format_next_item;
+use conversions::byte_array::ByteArray;
 
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::execute_call_entry_point;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::panic_data::try_extract_panic_data;
@@ -144,7 +145,12 @@ impl CallFailure {
                         "Entry point selector {selector_hash} not found for class hash {class_hash}"
                     ),
                 };
-                CallFailure::Error { msg }
+
+                let panic_data_felts: Vec<Felt252> = ByteArray::from(msg).serialize();
+
+                CallFailure::Panic {
+                    panic_data: panic_data_felts,
+                }
             }
             EntryPointExecutionError::PreExecutionError(
                 PreExecutionError::UninitializedStorageAddress(contract_address),

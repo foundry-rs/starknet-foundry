@@ -1,5 +1,5 @@
 use cairo_lang_sierra::program::Program;
-use forge_runner::compiled_runnable::FuzzerConfig;
+use forge_runner::compiled_runnable::{FuzzerConfig, TestDetails};
 use forge_runner::expected_result::ExpectedTestResult;
 use serde::Deserialize;
 
@@ -18,6 +18,7 @@ pub(crate) struct TestCaseRaw {
     pub expected_result: ExpectedTestResult,
     pub fork_config: Option<RawForkConfig>,
     pub fuzzer_config: Option<FuzzerConfig>,
+    pub test_details: TestDetails,
 }
 
 #[derive(Debug, PartialEq, Clone, Copy, Deserialize)]

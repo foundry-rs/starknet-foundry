@@ -146,7 +146,7 @@ async fn test_incompatible_sncast_std_version() {
 
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
-        Warning: Package sncast_std version does not meet the recommended version requirement =0.17.1, it might result in unexpected behaviour
+        [WARNING] Package sncast_std version does not meet the recommended version requirement =0.18.0, it might result in unexpected behaviour
         ...
     "});
 }
@@ -261,5 +261,30 @@ async fn test_run_script_display_debug_traits() {
         debug call_result: CallResult { data: [2] }
         command: script run
         status: success
+    "});
+}
+
+#[tokio::test]
+async fn test_nonexistent_account_address() {
+    let script_name = "map_script";
+    let args = vec![
+        "--accounts-file",
+        "../../../accounts/faulty_accounts.json",
+        "--account",
+        "with_nonexistent_address",
+        "--url",
+        URL,
+        "script",
+        "run",
+        &script_name,
+    ];
+
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(SCRIPTS_DIR.to_owned() + "/map_script/scripts")
+        .args(args);
+
+    snapbox.assert().success().stderr_matches(indoc! {r"
+        command: script run
+        error: Got an exception while executing a hint: Hint Error: Invalid account address
     "});
 }
