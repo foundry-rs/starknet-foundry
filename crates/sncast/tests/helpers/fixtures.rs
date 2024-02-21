@@ -270,6 +270,15 @@ pub fn create_test_provider() -> JsonRpcClient<HttpTransport> {
     JsonRpcClient::new(HttpTransport::new(parsed_url))
 }
 
+pub fn copy_file(src_path: impl AsRef<std::path::Path>, dest_path: impl AsRef<std::path::Path>) {
+    fs_extra::file::copy(
+        src_path.as_ref(),
+        dest_path.as_ref(),
+        &fs_extra::file::CopyOptions::new().overwrite(true),
+    )
+    .expect("Failed to copy the file");
+}
+
 #[must_use]
 pub fn duplicate_contract_directory_with_salt(
     src_dir: impl AsRef<Utf8Path>,
@@ -310,18 +319,14 @@ pub fn copy_directory_to_tempdir(src_dir: impl AsRef<Utf8Path>) -> TempDir {
     temp_dir
 }
 
-pub fn duplicate_script_directory(
+fn copy_script_directory(
     src_dir: impl AsRef<Utf8Path>,
+    dest_dir: impl AsRef<Utf8Path>,
     deps: Vec<impl AsRef<std::path::Path>>,
-) -> TempDir {
-    let mut deps = get_deps_map_from_paths(deps);
-
+) {
     let src_dir = Utf8PathBuf::from(src_dir.as_ref());
-
-    let temp_dir = copy_directory_to_tempdir(&src_dir);
-
-    let dest_dir = Utf8PathBuf::from_path_buf(temp_dir.path().to_path_buf())
-        .expect("Failed to create Utf8PathBuf from PathBuf");
+    let dest_dir = Utf8PathBuf::from(dest_dir.as_ref());
+    let mut deps = get_deps_map_from_paths(deps);
 
     let manifest_path = dest_dir.join("Scarb.toml");
     let contents = fs::read_to_string(&manifest_path).unwrap();
@@ -359,6 +364,41 @@ pub fn duplicate_script_directory(
     let mut file = File::create(manifest_path).expect("Failed to create file");
     file.write_all(modified_toml.as_bytes())
         .expect("Failed to write to file");
+}
+
+pub fn copy_script_directory_to_tempdir(
+    src_dir: impl AsRef<Utf8Path>,
+    deps: Vec<impl AsRef<std::path::Path>>,
+) -> TempDir {
+    let temp_dir = copy_directory_to_tempdir(&src_dir);
+
+    let dest_dir = Utf8PathBuf::from_path_buf(temp_dir.path().to_path_buf())
+        .expect("Failed to create Utf8PathBuf from PathBuf");
+
+    copy_script_directory(&src_dir, dest_dir, deps);
+
+    temp_dir
+}
+
+pub fn copy_workspace_directory_to_tempdir(
+    src_dir: impl AsRef<Utf8Path>,
+    relative_member_paths: Vec<impl AsRef<std::path::Path>>,
+    deps: &[impl AsRef<std::path::Path> + Clone],
+) -> TempDir {
+    let src_dir = Utf8PathBuf::from(src_dir.as_ref());
+
+    let temp_dir = copy_directory_to_tempdir(&src_dir);
+
+    let dest_dir = Utf8PathBuf::from_path_buf(temp_dir.path().to_path_buf())
+        .expect("Failed to create Utf8PathBuf from PathBuf");
+
+    for member in relative_member_paths {
+        let member = member.as_ref().to_str().unwrap();
+        let src_member_path = src_dir.join(member);
+        let dest_member_path = dest_dir.join(member);
+        fs::create_dir_all(&dest_member_path).expect("Failed to create directories in temp dir");
+        copy_script_directory(&src_member_path, dest_member_path, deps.to_vec());
+    }
 
     temp_dir
 }
@@ -411,8 +451,8 @@ pub fn from_env(name: &str) -> Result<String, String> {
 }
 
 pub fn get_address_from_keystore(
-    keystore_path: &str,
-    account_path: &str,
+    keystore_path: impl AsRef<std::path::Path>,
+    account_path: impl AsRef<std::path::Path>,
     password: &str,
 ) -> FieldElement {
     let contents = std::fs::read_to_string(account_path).unwrap();

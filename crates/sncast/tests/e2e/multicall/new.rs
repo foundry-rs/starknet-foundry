@@ -23,19 +23,22 @@ async fn test_happy_case_stdout() {
 #[tokio::test]
 async fn test_happy_case_file() {
     let mut args = default_cli_args();
-
     let tmp_dir = tempdir().expect("failed to create temporary directory");
-    let tmp_path = tmp_dir.path().join("multicall.toml");
-    let tmp_path = tmp_path.to_str().expect("failed to convert path to string");
+    let multicall_toml_file = "multicall.toml";
 
-    args.append(&mut vec!["multicall", "new", "--output-path", tmp_path]);
+    args.append(&mut vec![
+        "multicall",
+        "new",
+        "--output-path",
+        multicall_toml_file,
+    ]);
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args).current_dir(tmp_dir.path());
     let bdg = snapbox.assert();
     let out = bdg.get_output();
 
-    let contents =
-        std::fs::read_to_string(tmp_path).expect("Should have been able to read the file");
+    let contents = std::fs::read_to_string(tmp_dir.path().join(multicall_toml_file))
+        .expect("Should have been able to read the file");
     assert!(out.stderr.is_empty());
 
     let stdout_str =
@@ -51,15 +54,16 @@ async fn test_directory_non_existent() {
     let mut args = default_cli_args();
 
     let tmp_dir = tempdir().expect("failed to create temporary directory");
-    let tmp_path = tmp_dir
-        .path()
-        .join("non_existent_directory")
-        .join("multicall.toml");
-    let tmp_path = tmp_path.to_str().expect("failed to convert path to string");
+    let multicall_toml_path = "non_existent_directory/multicall.toml";
 
-    args.append(&mut vec!["multicall", "new", "--output-path", tmp_path]);
+    args.append(&mut vec![
+        "multicall",
+        "new",
+        "--output-path",
+        multicall_toml_path,
+    ]);
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args).current_dir(tmp_dir.path());
     let bdg = snapbox.assert();
     let out = bdg.get_output();
 
@@ -83,7 +87,7 @@ async fn test_file_invalid_path() {
 
     args.append(&mut vec!["multicall", "new", "--output-path", tmp_path]);
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args).current_dir(tmp_dir.path());
     let bdg = snapbox.assert();
     let out = bdg.get_output();
 
