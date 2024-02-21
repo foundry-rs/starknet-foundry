@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use clap::Args;
 use sncast::handle_rpc_error;
-use sncast::response::structs::{CallResponse, Hex};
+use sncast::response::structs::{CallResponse, Felt};
 use starknet::core::types::{BlockId, FieldElement, FunctionCall};
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::jsonrpc::HttpTransport;
@@ -46,7 +46,7 @@ pub async fn call(
     let res = provider
         .call(function_call, block_id)
         .await
-        .map(|v| v.into_iter().map(Hex).collect());
+        .map(|v| v.into_iter().map(Felt).collect());
 
     match res {
         Ok(response) => Ok(CallResponse { response }),
