@@ -258,7 +258,7 @@ async fn test_nonexistent_account_address() {
         .args(args);
 
     snapbox.assert().success().stderr_matches(indoc! {r"
-        command: script
+        command: script run
         error: Got an exception while executing a hint: Hint Error: Invalid account address
     "});
 }
