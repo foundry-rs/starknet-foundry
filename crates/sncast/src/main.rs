@@ -405,7 +405,7 @@ fn run_script_command(
             print_command_result("script init", &mut result, numbers_format, output_format)?;
         }
         starknet_commands::script::Commands::Run(run) => {
-            let manifest_path = assert_manifest_path_exists(&cli.path_to_scarb_toml)?;
+            let manifest_path = assert_manifest_path_exists()?;
             let package_metadata = get_package_metadata(&manifest_path, &run.package)?;
 
             let mut config = load_config(&cli.profile, &Some(package_metadata.root.clone()))?;
