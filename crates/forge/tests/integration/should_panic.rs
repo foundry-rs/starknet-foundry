@@ -40,7 +40,7 @@ fn should_panic() {
 }
 
 #[test]
-fn should_panic_uknown_entry_point() {
+fn should_panic_unknown_entry_point() {
     let test = test_case!(
         indoc!(
             r#"
