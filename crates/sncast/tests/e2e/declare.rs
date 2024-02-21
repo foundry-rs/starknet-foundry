@@ -3,8 +3,8 @@ use crate::helpers::fixtures::{
     copy_directory_to_tempdir, duplicate_contract_directory_with_salt, get_accounts_path,
     get_transaction_hash, get_transaction_receipt,
 };
+use crate::helpers::runner::runner;
 use indoc::indoc;
-use snapbox::cmd::{cargo_bin, Command};
 use sncast::helpers::constants::CONFIG_FILENAME;
 use starknet::core::types::TransactionReceipt::Declare;
 use std::fs;
@@ -30,9 +30,7 @@ async fn test_happy_case() {
         "99999999999999999",
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(contract_path.path())
-        .args(args);
+    let snapbox = runner(&args).current_dir(contract_path.path());
     let output = snapbox.assert().success().get_output().stdout.clone();
 
     let hash = get_transaction_hash(&output);
@@ -63,9 +61,8 @@ async fn test_happy_case_specify_package() {
         "99999999999999999",
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(tempdir.path())
-        .args(args);
+    let snapbox = runner(&args).current_dir(tempdir.path());
+
     let output = snapbox.assert().success().get_output().stdout.clone();
 
     let hash = get_transaction_hash(&output);
@@ -76,11 +73,14 @@ async fn test_happy_case_specify_package() {
 
 #[tokio::test]
 async fn contract_already_declared() {
+    let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
+
     let args = vec![
         "--url",
         URL,
         "--accounts-file",
-        "../../accounts/accounts.json",
+        accounts_json_path.as_str(),
         "--account",
         "user1",
         "declare",
@@ -88,9 +88,7 @@ async fn contract_already_declared() {
         "Map",
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(CONTRACTS_DIR.to_string() + "/map")
-        .args(args);
+    let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().success().stderr_matches(indoc! {r"
         command: declare
@@ -100,11 +98,14 @@ async fn contract_already_declared() {
 
 #[tokio::test]
 async fn wrong_contract_name_passed() {
+    let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
+
     let args = vec![
         "--url",
         URL,
         "--accounts-file",
-        "../../accounts/accounts.json",
+        accounts_json_path.as_str(),
         "--account",
         "user1",
         "declare",
@@ -112,9 +113,7 @@ async fn wrong_contract_name_passed() {
         "nonexistent",
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(CONTRACTS_DIR.to_string() + "/map")
-        .args(args);
+    let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().success().stderr_matches(indoc! {r"
         command: declare
@@ -124,11 +123,14 @@ async fn wrong_contract_name_passed() {
 
 #[test]
 fn scarb_build_fails_when_wrong_cairo_path() {
+    let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/build_fails");
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
+
     let args = vec![
         "--url",
         URL,
         "--accounts-file",
-        "../../accounts/accounts.json",
+        accounts_json_path.as_str(),
         "--account",
         "user1",
         "declare",
@@ -136,9 +138,7 @@ fn scarb_build_fails_when_wrong_cairo_path() {
         "BuildFails",
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(CONTRACTS_DIR.to_string() + "/build_fails")
-        .args(args);
+    let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().stderr_matches(indoc! {r"
         ...
@@ -150,11 +150,14 @@ fn scarb_build_fails_when_wrong_cairo_path() {
 #[should_panic(expected = "Path to Scarb.toml manifest does not exist")]
 #[test]
 fn scarb_build_fails_scarb_toml_does_not_exist() {
+    let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR);
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
+
     let args = vec![
         "--url",
         URL,
         "--accounts-file",
-        "../accounts/accounts.json",
+        accounts_json_path.as_str(),
         "--account",
         "user1",
         "declare",
@@ -162,20 +165,19 @@ fn scarb_build_fails_scarb_toml_does_not_exist() {
         "BuildFails",
     ];
 
-    Command::new(cargo_bin!("sncast"))
-        .current_dir(CONTRACTS_DIR.to_string() + "/")
-        .args(args)
-        .assert()
-        .success();
+    runner(&args).current_dir(tempdir.path()).assert().success();
 }
 
 #[test]
 fn scarb_build_fails_manifest_does_not_exist() {
+    let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR);
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
+
     let args = vec![
         "--url",
         URL,
         "--accounts-file",
-        "../accounts/accounts.json",
+        accounts_json_path.as_str(),
         "--account",
         "user1",
         "declare",
@@ -183,10 +185,7 @@ fn scarb_build_fails_manifest_does_not_exist() {
         "BuildFails",
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(CONTRACTS_DIR.to_string() + "/")
-        .args(args);
-
+    let snapbox = runner(&args).current_dir(tempdir.path());
     snapbox.assert().stderr_matches(indoc! {r"
         Error: Path to Scarb.toml manifest does not exist =[..]
     "});
@@ -213,9 +212,7 @@ fn test_too_low_max_fee() {
         "1",
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(contract_path.path())
-        .args(args);
+    let snapbox = runner(&args).current_dir(contract_path.path());
 
     snapbox.assert().success().stderr_matches(indoc! {r"
         command: declare
@@ -226,11 +223,14 @@ fn test_too_low_max_fee() {
 #[should_panic(expected = "Make sure you have enabled sierra code generation in Scarb.toml")]
 #[test]
 fn scarb_no_sierra_artifact() {
+    let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/no_sierra");
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
+
     let args = vec![
         "--url",
         URL,
         "--accounts-file",
-        "../../accounts/accounts.json",
+        accounts_json_path.as_str(),
         "--account",
         "user1",
         "declare",
@@ -238,20 +238,19 @@ fn scarb_no_sierra_artifact() {
         "minimal_contract",
     ];
 
-    Command::new(cargo_bin!("sncast"))
-        .current_dir(CONTRACTS_DIR.to_string() + "/no_sierra")
-        .args(args)
-        .assert()
-        .success();
+    runner(&args).current_dir(tempdir.path()).assert().success();
 }
 
 #[test]
 fn scarb_no_casm_artifact() {
+    let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/no_casm");
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
+
     let args = vec![
         "--url",
         URL,
         "--accounts-file",
-        "../../accounts/accounts.json",
+        accounts_json_path.as_str(),
         "--account",
         "user1",
         "declare",
@@ -259,9 +258,7 @@ fn scarb_no_casm_artifact() {
         "minimal_contract",
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(CONTRACTS_DIR.to_string() + "/no_casm")
-        .args(args);
+    let snapbox = runner(&args).current_dir(tempdir.path());
 
     assert!(
         String::from_utf8(snapbox.assert().success().get_output().stdout.clone())
@@ -290,9 +287,7 @@ async fn test_many_packages_default() {
         "99999999999999999",
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(tempdir.path())
-        .args(args);
+    let snapbox = runner(&args).current_dir(tempdir.path());
     snapbox.assert().failure().stderr_matches(indoc! {r"
         ...
         Error: More than one package found in scarb metadata - specify package using --package flag
@@ -321,9 +316,7 @@ async fn test_worskpaces_package_specified_virtual_fibonacci() {
         "99999999999999999",
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(tempdir.path())
-        .args(args);
+    let snapbox = runner(&args).current_dir(tempdir.path());
 
     let output = snapbox.assert().success().get_output().clone();
     let output = output.stdout.clone();
@@ -353,9 +346,7 @@ async fn test_worskpaces_package_no_contract() {
         "99999999999999999",
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(tempdir.path())
-        .args(args);
+    let snapbox = runner(&args).current_dir(tempdir.path());
     snapbox.assert().success().stderr_matches(indoc! {r"
         ...
         command: declare
@@ -387,9 +378,7 @@ async fn test_no_scarb_profile() {
         "99999999999999999",
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(contract_path.path())
-        .args(args);
+    let snapbox = runner(&args).current_dir(contract_path.path());
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
         [WARNING] Profile profile5 does not exist in scarb, using default 'dev' profile.

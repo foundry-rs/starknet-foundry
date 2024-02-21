@@ -1,16 +1,30 @@
-use crate::helpers::constants::{SCRIPTS_DIR, URL};
+use crate::helpers::constants::{ACCOUNT_FILE_PATH, SCRIPTS_DIR, URL};
 use crate::helpers::fixtures::{
-    duplicate_contract_directory_with_salt, duplicate_script_directory, get_accounts_path,
+    copy_directory_to_tempdir, copy_script_directory_to_tempdir,
+    copy_workspace_directory_to_tempdir, duplicate_contract_directory_with_salt, get_accounts_path,
 };
+use crate::helpers::runner::runner;
 use indoc::indoc;
-use snapbox::cmd::{cargo_bin, Command};
+use tempfile::tempdir;
 
 #[tokio::test]
 async fn test_happy_case() {
+    let contract_dir = duplicate_contract_directory_with_salt(
+        SCRIPTS_DIR.to_owned() + "/map_script/contracts/",
+        "dummy",
+        "21",
+    );
+    let script_dir = copy_script_directory_to_tempdir(
+        SCRIPTS_DIR.to_owned() + "/map_script/scripts/",
+        vec![contract_dir.as_ref()],
+    );
+
+    let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
+
     let script_name = "map_script";
     let args = vec![
         "--accounts-file",
-        "../../../accounts/accounts.json",
+        accounts_json_path.as_str(),
         "--account",
         "user4",
         "--url",
@@ -20,9 +34,7 @@ async fn test_happy_case() {
         &script_name,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(SCRIPTS_DIR.to_owned() + "/map_script/scripts")
-        .args(args);
+    let snapbox = runner(&args).current_dir(script_dir.path());
 
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
@@ -33,25 +45,27 @@ async fn test_happy_case() {
 
 #[tokio::test]
 async fn test_run_script_from_different_directory() {
+    let script_dir =
+        copy_script_directory_to_tempdir(SCRIPTS_DIR.to_owned() + "/misc", Vec::<String>::new());
+    let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
+    let path_to_scarb_toml = script_dir.path().join("Scarb.toml");
+
     let script_name = "call_happy";
-    let path_to_scarb_toml = "misc/Scarb.toml";
     let args = vec![
         "--accounts-file",
-        "../accounts/accounts.json",
+        accounts_json_path.as_str(),
         "--account",
         "user1",
         "--url",
         URL,
         "--path-to-scarb-toml",
-        path_to_scarb_toml,
+        path_to_scarb_toml.to_str().unwrap(),
         "script",
         "run",
         &script_name,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(SCRIPTS_DIR)
-        .args(args);
+    let snapbox = runner(&args);
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
         command: script run
@@ -61,10 +75,13 @@ async fn test_run_script_from_different_directory() {
 
 #[tokio::test]
 async fn test_run_script_from_different_directory_no_path_to_scarb_toml() {
+    let tempdir = tempdir().expect("Unable to create temporary directory");
+    let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
+
     let script_name = "call_happy";
     let args = vec![
         "--accounts-file",
-        "../accounts/accounts.json",
+        accounts_json_path.as_str(),
         "--account",
         "user1",
         "--url",
@@ -74,9 +91,7 @@ async fn test_run_script_from_different_directory_no_path_to_scarb_toml() {
         &script_name,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(SCRIPTS_DIR)
-        .args(args);
+    let snapbox = runner(&args).current_dir(tempdir.path());
     snapbox.assert().failure().stderr_matches(indoc! {r"
         Error: Path to Scarb.toml manifest does not exist =[..]
     "});
@@ -84,10 +99,14 @@ async fn test_run_script_from_different_directory_no_path_to_scarb_toml() {
 
 #[tokio::test]
 async fn test_fail_when_using_starknet_syscall() {
+    let script_dir =
+        copy_script_directory_to_tempdir(SCRIPTS_DIR.to_owned() + "/misc", Vec::<String>::new());
+    let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
+
     let script_name = "using_starknet_syscall";
     let args = vec![
         "--accounts-file",
-        "../../accounts/accounts.json",
+        accounts_json_path.as_str(),
         "--account",
         "user1",
         "--url",
@@ -97,9 +116,7 @@ async fn test_fail_when_using_starknet_syscall() {
         &script_name,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(SCRIPTS_DIR.to_owned() + "/misc")
-        .args(args);
+    let snapbox = runner(&args).current_dir(script_dir.path());
     snapbox.assert().success().stderr_matches(indoc! {r"
         ...
         command: script run
@@ -109,10 +126,13 @@ async fn test_fail_when_using_starknet_syscall() {
 
 #[tokio::test]
 async fn test_incompatible_sncast_std_version() {
+    let script_dir = copy_directory_to_tempdir(SCRIPTS_DIR.to_owned() + "/old_sncast_std/scripts");
+    let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
+
     let script_name = "map_script";
     let args = vec![
         "--accounts-file",
-        "../../../accounts/accounts.json",
+        accounts_json_path.as_str(),
         "--account",
         "user4",
         "--url",
@@ -122,9 +142,7 @@ async fn test_incompatible_sncast_std_version() {
         &script_name,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(SCRIPTS_DIR.to_owned() + "/old_sncast_std/scripts")
-        .args(args);
+    let snapbox = runner(&args).current_dir(script_dir.path());
 
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
@@ -135,10 +153,17 @@ async fn test_incompatible_sncast_std_version() {
 
 #[tokio::test]
 async fn test_multiple_packages_not_picked() {
+    let workspace_dir = copy_workspace_directory_to_tempdir(
+        SCRIPTS_DIR.to_owned() + "/packages",
+        vec!["crates/scripts/script1", "crates/scripts/script2"],
+        Vec::<String>::new().as_ref(),
+    );
+    let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
+
     let script_name = "script1";
     let args = vec![
         "--accounts-file",
-        "../../accounts/accounts.json",
+        accounts_json_path.as_str(),
         "--account",
         "user4",
         "--url",
@@ -148,9 +173,7 @@ async fn test_multiple_packages_not_picked() {
         &script_name,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(SCRIPTS_DIR.to_owned() + "/packages")
-        .args(args);
+    let snapbox = runner(&args).current_dir(workspace_dir.path());
 
     snapbox.assert().failure().stderr_matches(indoc! {r"
         ...
@@ -160,10 +183,17 @@ async fn test_multiple_packages_not_picked() {
 
 #[tokio::test]
 async fn test_multiple_packages_happy_case() {
+    let workspace_dir = copy_workspace_directory_to_tempdir(
+        SCRIPTS_DIR.to_owned() + "/packages",
+        vec!["crates/scripts/script1", "crates/scripts/script2"],
+        Vec::<String>::new().as_ref(),
+    );
+    let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
+
     let script_name = "script1";
     let args = vec![
         "--accounts-file",
-        "../../accounts/accounts.json",
+        accounts_json_path.as_str(),
         "--account",
         "user4",
         "--url",
@@ -175,9 +205,7 @@ async fn test_multiple_packages_happy_case() {
         &script_name,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(SCRIPTS_DIR.to_owned() + "/packages")
-        .args(args);
+    let snapbox = runner(&args).current_dir(workspace_dir.path());
 
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
@@ -193,7 +221,7 @@ async fn test_run_script_display_debug_traits() {
         "dummy",
         "45",
     );
-    let script_dir = duplicate_script_directory(
+    let script_dir = copy_script_directory_to_tempdir(
         SCRIPTS_DIR.to_owned() + "/map_script/scripts/",
         vec![contract_dir.as_ref()],
     );
@@ -213,9 +241,7 @@ async fn test_run_script_display_debug_traits() {
         &script_name,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(script_dir.path())
-        .args(args);
+    let snapbox = runner(&args).current_dir(script_dir.path());
 
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
@@ -253,9 +279,7 @@ async fn test_nonexistent_account_address() {
         &script_name,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(SCRIPTS_DIR.to_owned() + "/map_script/scripts")
-        .args(args);
+    let snapbox = runner(&args).current_dir(SCRIPTS_DIR.to_owned() + "/map_script/scripts");
 
     snapbox.assert().success().stderr_matches(indoc! {r"
         command: script run
