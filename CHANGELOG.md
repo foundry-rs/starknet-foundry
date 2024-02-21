@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - Bump cairo to 2.5.4
+- Unknown entry point error when calling a contract counts as a panic
 
 #### Fixed
 
