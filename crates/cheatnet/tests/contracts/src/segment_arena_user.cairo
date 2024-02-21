@@ -5,6 +5,6 @@ mod SegmentArenaUser {
 
     #[external(v0)]
     fn interface_function(ref self: ContractState) {
-        let felt_dict: Felt252Dict<felt252> = Default::default();
+        let _felt_dict: Felt252Dict<felt252> = Default::default();
     }
 }

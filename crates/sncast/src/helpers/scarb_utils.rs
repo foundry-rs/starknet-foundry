@@ -1,4 +1,3 @@
-use crate::response::print::print_as_warning;
 use anyhow::{anyhow, Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
 use scarb_api::{
@@ -7,6 +6,7 @@ use scarb_api::{
     ScarbCommand, ScarbCommandError, StarknetContractArtifacts,
 };
 use scarb_ui::args::PackagesFilter;
+use shared::print::print_as_warning;
 use std::collections::HashMap;
 use std::env;
 use std::str::FromStr;
@@ -62,6 +62,12 @@ pub fn get_scarb_metadata(manifest_path: &Utf8PathBuf) -> Result<Metadata> {
 pub fn get_scarb_metadata_with_deps(manifest_path: &Utf8PathBuf) -> Result<Metadata> {
     let command = get_scarb_metadata_command(manifest_path)?;
     execute_scarb_metadata_command(&command)
+}
+
+pub fn get_cairo_version(manifest_path: &Utf8PathBuf) -> Result<String> {
+    let scarb_metadata = get_scarb_metadata(manifest_path)?;
+
+    Ok(scarb_metadata.app_version_info.cairo.version.to_string())
 }
 
 pub fn assert_manifest_path_exists() -> Result<Utf8PathBuf> {

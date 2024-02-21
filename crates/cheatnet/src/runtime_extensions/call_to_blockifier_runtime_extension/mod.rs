@@ -62,10 +62,22 @@ impl<'a> ExtensionLogic for CallToBlockifierExtension<'a> {
             // https://docs.starknet.io/documentation/architecture_and_concepts/Smart_Contracts/system-calls-cairo1/#call_contract
             DeprecatedSyscallSelector::CallContract => {
                 execute_syscall::<CallContractRequest>(vm, extended_runtime)?;
+
+                extended_runtime
+                    .extended_runtime
+                    .hint_handler
+                    .increment_syscall_count_by(&selector, 1);
+
                 Ok(SyscallHandlingResult::Handled(()))
             }
             DeprecatedSyscallSelector::LibraryCall => {
                 execute_syscall::<LibraryCallRequest>(vm, extended_runtime)?;
+
+                extended_runtime
+                    .extended_runtime
+                    .hint_handler
+                    .increment_syscall_count_by(&selector, 1);
+
                 Ok(SyscallHandlingResult::Handled(()))
             }
             _ => Ok(SyscallHandlingResult::Forwarded),

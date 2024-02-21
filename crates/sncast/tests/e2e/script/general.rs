@@ -16,6 +16,7 @@ async fn test_happy_case() {
         "--url",
         URL,
         "script",
+        "run",
         &script_name,
     ];
 
@@ -25,7 +26,35 @@ async fn test_happy_case() {
 
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
-        command: script
+        command: script run
+        status: success
+    "});
+}
+
+#[tokio::test]
+async fn test_run_script_from_different_directory() {
+    let script_name = "call_happy";
+    let path_to_scarb_toml = "misc/Scarb.toml";
+    let args = vec![
+        "--accounts-file",
+        "../accounts/accounts.json",
+        "--account",
+        "user1",
+        "--url",
+        URL,
+        "--path-to-scarb-toml",
+        path_to_scarb_toml,
+        "script",
+        "run",
+        &script_name,
+    ];
+
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(SCRIPTS_DIR)
+        .args(args);
+    snapbox.assert().success().stdout_matches(indoc! {r"
+        ...
+        command: script run
         status: success
     "});
 }
@@ -41,6 +70,7 @@ async fn test_run_script_from_different_directory_no_path_to_scarb_toml() {
         "--url",
         URL,
         "script",
+        "run",
         &script_name,
     ];
 
@@ -63,6 +93,7 @@ async fn test_fail_when_using_starknet_syscall() {
         "--url",
         URL,
         "script",
+        "run",
         &script_name,
     ];
 
@@ -71,7 +102,7 @@ async fn test_fail_when_using_starknet_syscall() {
         .args(args);
     snapbox.assert().success().stderr_matches(indoc! {r"
         ...
-        command: script
+        command: script run
         error: Got an exception while executing a hint: Hint Error: Starknet syscalls are not supported
     "});
 }
@@ -87,6 +118,7 @@ async fn test_incompatible_sncast_std_version() {
         "--url",
         URL,
         "script",
+        "run",
         &script_name,
     ];
 
@@ -96,7 +128,7 @@ async fn test_incompatible_sncast_std_version() {
 
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
-        Warning: Package sncast_std version does not meet the recommended version requirement =0.17.0, it might result in unexpected behaviour
+        [WARNING] Package sncast_std version does not meet the recommended version requirement =0.18.0, it might result in unexpected behaviour
         ...
     "});
 }
@@ -112,6 +144,7 @@ async fn test_multiple_packages_not_picked() {
         "--url",
         URL,
         "script",
+        "run",
         &script_name,
     ];
 
@@ -136,6 +169,7 @@ async fn test_multiple_packages_happy_case() {
         "--url",
         URL,
         "script",
+        "run",
         "--package",
         &script_name,
         &script_name,
@@ -147,7 +181,7 @@ async fn test_multiple_packages_happy_case() {
 
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
-        command: script
+        command: script run
         status: success
     "});
 }
@@ -175,6 +209,7 @@ async fn test_run_script_display_debug_traits() {
         "--url",
         URL,
         "script",
+        "run",
         &script_name,
     ];
 
@@ -198,7 +233,32 @@ async fn test_run_script_display_debug_traits() {
         debug invoke_result: InvokeResult { transaction_hash: [..] }
         call_result: [2]
         debug call_result: CallResult { data: [2] }
-        command: script
+        command: script run
         status: success
+    "});
+}
+
+#[tokio::test]
+async fn test_nonexistent_account_address() {
+    let script_name = "map_script";
+    let args = vec![
+        "--accounts-file",
+        "../../../accounts/faulty_accounts.json",
+        "--account",
+        "with_nonexistent_address",
+        "--url",
+        URL,
+        "script",
+        "run",
+        &script_name,
+    ];
+
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(SCRIPTS_DIR.to_owned() + "/map_script/scripts")
+        .args(args);
+
+    snapbox.assert().success().stderr_matches(indoc! {r"
+        command: script run
+        error: Got an exception while executing a hint: Hint Error: Invalid account address
     "});
 }
