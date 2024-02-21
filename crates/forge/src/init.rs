@@ -8,7 +8,7 @@ use std::io::Write;
 use std::path::Path;
 use toml_edit::{value, ArrayOfTables, Document, Item, Table};
 
-const CAIRO_EDITION: &str = "2023_11";
+pub const CAIRO_EDITION: &str = "2023_11";
 
 static TEMPLATE: Dir = include_dir!("starknet_forge_template");
 
