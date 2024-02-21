@@ -2,6 +2,7 @@ use crate::helpers::constants::URL;
 use crate::helpers::fixtures::create_test_provider;
 
 use camino::Utf8PathBuf;
+use shared::rpc::{get_rpc_version, is_expected_version};
 use sncast::{get_account, get_provider};
 use std::fs;
 use url::ParseError;
@@ -135,4 +136,12 @@ async fn test_get_account_failed_to_convert_field_elements() {
     assert!(err2
         .to_string()
         .contains("Failed to convert account address = address to FieldElement"));
+}
+
+// TODO (#1690): Move this test to the shared crate and execute it for a real node
+#[tokio::test]
+async fn test_supported_rpc_version_matches_devnet_version() {
+    let provider = create_test_provider();
+    let devnet_spec_version = get_rpc_version(&provider).await.unwrap();
+    assert!(is_expected_version(&devnet_spec_version));
 }

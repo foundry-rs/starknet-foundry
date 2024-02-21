@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - `script init` command to generate a template file structure for deployment scripts
+- Warning is emitted when executing sncast commands if the node's JSON-RPC version is incompatible
 
 #### Changed
 
