@@ -237,3 +237,28 @@ async fn test_run_script_display_debug_traits() {
         status: success
     "});
 }
+
+#[tokio::test]
+async fn test_nonexistent_account_address() {
+    let script_name = "map_script";
+    let args = vec![
+        "--accounts-file",
+        "../../../accounts/faulty_accounts.json",
+        "--account",
+        "with_nonexistent_address",
+        "--url",
+        URL,
+        "script",
+        "run",
+        &script_name,
+    ];
+
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(SCRIPTS_DIR.to_owned() + "/map_script/scripts")
+        .args(args);
+
+    snapbox.assert().success().stderr_matches(indoc! {r"
+        command: script run
+        error: Got an exception while executing a hint: Hint Error: Invalid account address
+    "});
+}

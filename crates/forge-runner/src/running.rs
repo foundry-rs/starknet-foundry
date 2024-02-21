@@ -48,7 +48,6 @@ use tokio::task::JoinHandle;
 pub fn run_test(
     case: Arc<TestCaseRunnable>,
     casm_program: Arc<CairoProgram>,
-    test_details: Arc<TestDetails>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     send: Sender<()>,
@@ -60,14 +59,8 @@ pub fn run_test(
         if send.is_closed() {
             return Ok(TestCaseSummary::Skipped {});
         }
-        let run_result = run_test_case(
-            vec![],
-            &case,
-            &casm_program,
-            &test_details,
-            &runner_config,
-            &runner_params,
-        );
+        let run_result =
+            run_test_case(vec![], &case, &casm_program, &runner_config, &runner_params);
 
         // TODO: code below is added to fix snforge tests
         // remove it after improve exit-first tests
@@ -85,7 +78,6 @@ pub(crate) fn run_fuzz_test(
     args: Vec<Felt252>,
     case: Arc<TestCaseRunnable>,
     casm_program: Arc<CairoProgram>,
-    test_details: Arc<TestDetails>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     send: Sender<()>,
@@ -103,7 +95,6 @@ pub(crate) fn run_fuzz_test(
             args.clone(),
             &case,
             &casm_program,
-            &test_details,
             &runner_config,
             &runner_params,
         );
@@ -161,19 +152,12 @@ pub struct RunResultWithInfo {
     pub(crate) used_resources: UsedResources,
 }
 
-pub struct TestDetails {
-    pub entry_point_offset: usize,
-    pub parameter_types: Vec<(GenericTypeId, i16)>,
-    pub return_types: Vec<(GenericTypeId, i16)>,
-}
-
 #[allow(clippy::too_many_arguments)]
 #[allow(clippy::too_many_lines)]
 pub fn run_test_case(
     args: Vec<Felt252>,
     case: &TestCaseRunnable,
     casm_program: &CairoProgram,
-    test_details: &TestDetails,
     runner_config: &Arc<RunnerConfig>,
     runner_params: &Arc<RunnerParams>,
 ) -> Result<RunResultWithInfo> {
@@ -185,10 +169,11 @@ pub fn run_test_case(
     let initial_gas = usize::MAX;
     let runner_args: Vec<Arg> = args.into_iter().map(Arg::Value).collect();
     let (entry_code, builtins) = SierraCasmRunner::create_entry_code_from_params(
-        &test_details.parameter_types,
+        &case.test_details.parameter_types,
         &runner_args,
         initial_gas,
-        casm_program.debug_info.sierra_statement_info[test_details.entry_point_offset].code_offset,
+        casm_program.debug_info.sierra_statement_info[case.test_details.entry_point_offset]
+            .code_offset,
     )
     .unwrap();
     let footer = SierraCasmRunner::create_code_footer();
@@ -210,7 +195,7 @@ pub fn run_test_case(
         &string_to_hint,
         &mut execution_resources,
         &mut context,
-        get_syscall_segment_index(&test_details.parameter_types),
+        get_syscall_segment_index(&case.test_details.parameter_types),
     );
 
     let mut cheatnet_state = CheatnetState {
@@ -278,7 +263,7 @@ pub fn run_test_case(
             let ap = vm.get_relocated_trace().unwrap().last().unwrap().ap;
 
             let (results_data, gas_counter) =
-                SierraCasmRunner::get_results_data(&test_details.return_types, &cells, ap);
+                SierraCasmRunner::get_results_data(&case.test_details.return_types, &cells, ap);
             assert_eq!(results_data.len(), 1);
 
             let (_, values) = results_data[0].clone();
