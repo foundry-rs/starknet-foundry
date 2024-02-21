@@ -3,7 +3,7 @@ use crate::e2e::common::runner::{
 };
 use assert_fs::fixture::PathChild;
 use indoc::indoc;
-use shared::output_assert::assert_stdout_contains;
+use shared::test_utils::output_assert::assert_stdout_contains;
 
 #[test]
 #[allow(clippy::too_many_lines)]

@@ -6,7 +6,7 @@ use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
 use camino::Utf8PathBuf;
 use forge::CAIRO_EDITION;
 use indoc::{formatdoc, indoc};
-use shared::output_assert::assert_stdout_contains;
+use shared::test_utils::output_assert::assert_stdout_contains;
 use std::fs;
 use std::{path::Path, str::FromStr};
 use tempfile::TempDir;
