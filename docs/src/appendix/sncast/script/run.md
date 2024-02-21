@@ -1,10 +1,10 @@
-# `script`
+# `run`
 Compile and run a cairo deployment script.
 
 ## `<MODULE_NAME>`
 Required.
 
-Module name that contains the 'main' function that will be executed.
+Script module name that contains the 'main' function that will be executed.
 
 ## `--package <NAME>`
 Optional.

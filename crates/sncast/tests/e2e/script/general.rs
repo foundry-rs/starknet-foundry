@@ -16,6 +16,7 @@ async fn test_happy_case() {
         "--url",
         URL,
         "script",
+        "run",
         &script_name,
     ];
 
@@ -25,7 +26,7 @@ async fn test_happy_case() {
 
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
-        command: script
+        command: script run
         status: success
     "});
 }
@@ -44,6 +45,7 @@ async fn test_run_script_from_different_directory() {
         "--path-to-scarb-toml",
         path_to_scarb_toml,
         "script",
+        "run",
         &script_name,
     ];
 
@@ -52,7 +54,7 @@ async fn test_run_script_from_different_directory() {
         .args(args);
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
-        command: script
+        command: script run
         status: success
     "});
 }
@@ -68,6 +70,7 @@ async fn test_run_script_from_different_directory_no_path_to_scarb_toml() {
         "--url",
         URL,
         "script",
+        "run",
         &script_name,
     ];
 
@@ -90,6 +93,7 @@ async fn test_fail_when_using_starknet_syscall() {
         "--url",
         URL,
         "script",
+        "run",
         &script_name,
     ];
 
@@ -98,7 +102,7 @@ async fn test_fail_when_using_starknet_syscall() {
         .args(args);
     snapbox.assert().success().stderr_matches(indoc! {r"
         ...
-        command: script
+        command: script run
         error: Got an exception while executing a hint: Hint Error: Starknet syscalls are not supported
     "});
 }
@@ -114,6 +118,7 @@ async fn test_incompatible_sncast_std_version() {
         "--url",
         URL,
         "script",
+        "run",
         &script_name,
     ];
 
@@ -139,6 +144,7 @@ async fn test_multiple_packages_not_picked() {
         "--url",
         URL,
         "script",
+        "run",
         &script_name,
     ];
 
@@ -163,6 +169,7 @@ async fn test_multiple_packages_happy_case() {
         "--url",
         URL,
         "script",
+        "run",
         "--package",
         &script_name,
         &script_name,
@@ -174,7 +181,7 @@ async fn test_multiple_packages_happy_case() {
 
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
-        command: script
+        command: script run
         status: success
     "});
 }
@@ -202,6 +209,7 @@ async fn test_run_script_display_debug_traits() {
         "--url",
         URL,
         "script",
+        "run",
         &script_name,
     ];
 
@@ -225,7 +233,7 @@ async fn test_run_script_display_debug_traits() {
         debug invoke_result: InvokeResult { transaction_hash: [..] }
         call_result: [2]
         debug call_result: CallResult { data: [2] }
-        command: script
+        command: script run
         status: success
     "});
 }
