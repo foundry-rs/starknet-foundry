@@ -1,8 +1,10 @@
 use crate::e2e::common::runner::{
     get_current_branch, get_remote_url, runner, setup_package, test_runner,
 };
+
 use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
 use camino::Utf8PathBuf;
+use forge::CAIRO_EDITION;
 use indoc::{formatdoc, indoc};
 use std::fs;
 use std::{path::Path, str::FromStr};
@@ -749,7 +751,7 @@ fn init_new_project_test() {
             [package]
             name = "test_name"
             version = "0.1.0"
-            edition = "2023_10"
+            edition = "{}"
 
             # See more keys and their definitions at https://docs.swmansion.com/scarb/docs/reference/manifest.html
 
@@ -760,7 +762,8 @@ fn init_new_project_test() {
             [[target.starknet-contract]]
             casm = true
         "#,
-        version
+        CAIRO_EDITION,
+        version,
     );
 
     assert_eq!(generated_toml, expected_toml);
