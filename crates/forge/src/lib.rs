@@ -21,14 +21,13 @@ use crate::test_filter::TestsFilter;
 pub mod block_number_map;
 pub mod compiled_raw;
 
-mod init;
-pub use crate::init::CAIRO_EDITION;
-
 pub mod pretty_printing;
 pub mod scarb;
 pub mod shared_cache;
 pub mod test_filter;
 mod warn;
+
+pub const CAIRO_EDITION: &str = "2023_11";
 
 pub(crate) fn replace_id_with_params<'a>(
     raw_fork_config: &'a RawForkConfig,
