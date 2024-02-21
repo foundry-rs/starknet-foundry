@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
     #[test]
-    // require 570031 steps
+    // requires 570031 steps
     fn steps_570031() {
         let mut i = 0;
 
@@ -15,6 +15,7 @@ mod tests {
             assert(1 + 1 == 2, 'who knows?');
         }
     }
+
     #[test]
     fn steps_5700031() {
         let mut i = 0;
@@ -29,6 +30,7 @@ mod tests {
             assert(1 + 1 == 2, 'who knows?');
         }
     }
+
     #[test]
     fn steps_2999998() {
         let mut i = 0;
@@ -43,6 +45,7 @@ mod tests {
             assert(1 + 1 == 2, 'who knows?');
         }
     }
+
     #[test]
     fn steps_3000017() {
         let mut i = 0;

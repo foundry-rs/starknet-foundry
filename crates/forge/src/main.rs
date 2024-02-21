@@ -109,7 +109,7 @@ struct TestArgs {
     #[arg(long)]
     save_trace_data: bool,
 
-    /// Max steps per test
+    /// Number of maximum steps during a single test. For fuzz tests this value is applied to each subtest separately.
     #[arg(long)]
     max_n_steps: Option<u32>,
 }
