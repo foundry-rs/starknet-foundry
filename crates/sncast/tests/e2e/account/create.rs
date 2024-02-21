@@ -369,7 +369,7 @@ pub async fn test_keystore_file_already_exists() {
 }
 
 #[tokio::test]
-pub async fn test_account_file_already_exists() {
+pub async fn test_keystore_account_file_already_exists() {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
 
     let keystore_file = "my_key_new.json";
