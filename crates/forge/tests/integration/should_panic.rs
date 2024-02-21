@@ -51,7 +51,7 @@ fn should_panic_unknown_entry_point() {
             use snforge_std::{declare, ContractClass, ContractClassTrait};
 
             #[test]
-            #[should_panic(expected: "Entry point selector 0x00000000000000000000696e6578697374656e745f656e7472795f706f696e74 not found in contract 0x06288882237f586f11e7a1bcdd1b4841708747bec96952dce019cd76ff3d806f")]
+            #[should_panic]
             fn should_panic_with_no_expected_data() {
                 let contract = declare('HelloStarknet');
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
