@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - contract names to call trace
 - `--max-n-steps` argument that allows setting own steps limit
+- Cairo edition set to `2023_11`
 
 #### Changed
 
