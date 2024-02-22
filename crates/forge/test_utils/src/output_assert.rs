@@ -1,35 +1,34 @@
 use regex::Regex;
 use snapbox::cmd::OutputAssert;
-use std::borrow::Cow;
 
 pub trait AsOutput {
-    fn as_stdout(&self) -> Cow<'_, str>;
-    fn as_stderr(&self) -> Cow<'_, str>;
+    fn as_stdout(&self) -> &str;
+    fn as_stderr(&self) -> &str;
 }
 
 impl AsOutput for OutputAssert {
-    fn as_stdout(&self) -> Cow<'_, str> {
-        String::from_utf8(self.get_output().stdout.clone())
+    fn as_stdout(&self) -> &str {
+        std::str::from_utf8(&self.get_output().stdout)
             .unwrap()
             .into()
     }
-    fn as_stderr(&self) -> Cow<'_, str> {
-        String::from_utf8(self.get_output().stderr.clone())
+    fn as_stderr(&self) -> &str {
+        std::str::from_utf8(&self.get_output().stderr)
             .unwrap()
             .into()
     }
 }
 
 impl AsOutput for String {
-    fn as_stdout(&self) -> Cow<'_, str> {
-        self.into()
+    fn as_stdout(&self) -> &str {
+        self
     }
-    fn as_stderr(&self) -> Cow<'_, str> {
-        self.into()
+    fn as_stderr(&self) -> &str {
+        self
     }
 }
 
-fn find_with_wildcard(line: &str, actual: &[String]) -> Option<usize> {
+fn find_with_wildcard(line: &str, actual: &[&str]) -> Option<usize> {
     let escaped = regex::escape(line);
     let replaced = escaped.replace("\\[\\.\\.\\]", ".*");
     let wrapped = format!("^{replaced}$");
@@ -38,7 +37,7 @@ fn find_with_wildcard(line: &str, actual: &[String]) -> Option<usize> {
     actual.iter().position(|other| re.is_match(other))
 }
 
-fn is_present(line: &str, actual: &mut Vec<String>) -> bool {
+fn is_present(line: &str, actual: &mut Vec<&str>) -> bool {
     let position = find_with_wildcard(line, actual);
     if let Some(position) = position {
         actual.remove(position);
@@ -48,13 +47,13 @@ fn is_present(line: &str, actual: &mut Vec<String>) -> bool {
 }
 
 fn assert_output_contains(output: &str, lines: &str) {
-    let asserted_lines: Vec<String> = lines.lines().map(std::convert::Into::into).collect();
-    let mut actual_lines: Vec<String> = output.lines().map(std::convert::Into::into).collect();
+    let asserted_lines = lines.lines();
+    let mut actual_lines: Vec<&str> = output.lines().collect();
 
     let mut matches = true;
     let mut out = String::new();
 
-    for line in &asserted_lines {
+    for line in asserted_lines {
         if is_present(line, &mut actual_lines) {
             out.push_str("| ");
         } else {

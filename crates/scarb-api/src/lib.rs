@@ -204,15 +204,20 @@ pub fn package_matches_version_requirement(
     name: &str,
     version_req: &VersionReq,
 ) -> Result<bool> {
-    let packages: Vec<&scarb_metadata::PackageMetadata> = metadata
+    let mut packages = metadata
         .packages
         .iter()
-        .filter(|package| package.name == name)
-        .collect();
-    match packages[..] {
-        [] => Ok(true),
-        [package] => Ok(version_req.matches(&package.version)),
-        _ => Err(anyhow!("Package {name} is duplicated in dependencies")),
+        .filter(|package| package.name == name);
+
+    let package = packages.next();
+
+    if packages.next().is_some() {
+        return Err(anyhow!("Package {name} is duplicated in dependencies"));
+    }
+
+    match package {
+        None => Ok(true),
+        Some(package) => Ok(version_req.matches(&package.version)),
     }
 }
 
@@ -538,7 +543,7 @@ mod tests {
         let package_name =
             name_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0]).unwrap();
 
-        assert_eq!(package_name, "basic_package".to_string());
+        assert_eq!(&package_name, "basic_package");
     }
 
     #[test]

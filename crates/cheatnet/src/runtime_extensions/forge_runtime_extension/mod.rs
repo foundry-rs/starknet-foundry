@@ -83,12 +83,10 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
     fn handle_cheatcode(
         &mut self,
         selector: &str,
-        inputs: Vec<Felt252>,
+        mut reader: BufferReader<'_>,
         extended_runtime: &mut Self::Runtime,
     ) -> Result<CheatcodeHandlingResult, EnhancedHintError> {
-        let mut reader = BufferReader::new(&inputs);
-
-        let res = match selector {
+        match selector {
             "start_roll" => {
                 let target = reader.read_cheat_target();
                 let block_number = reader.read_felt();
@@ -607,9 +605,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 Ok(CheatcodeHandlingResult::Handled(vec![map_entry_address]))
             }
             _ => Ok(CheatcodeHandlingResult::Forwarded),
-        }?;
-
-        Ok(res)
+        }
     }
 
     fn override_system_call(
@@ -620,7 +616,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
     ) -> Result<SyscallHandlingResult, HintError> {
         match selector {
             DeprecatedSyscallSelector::ReplaceClass => Err(HintError::CustomHint(Box::from(
-                "Replace class can't be used in tests".to_string(),
+                "Replace class can't be used in tests",
             ))),
             _ => Ok(SyscallHandlingResult::Forwarded),
         }
@@ -645,18 +641,24 @@ fn handle_deploy_result(
 
 fn serialize_call_trace(call_trace: &CallTrace) -> Vec<Felt252> {
     let mut output = vec![];
-    output.append(&mut serialize_call_entry_point(&call_trace.entry_point));
 
-    output.push(Felt252::from(call_trace.nested_calls.len()));
-
-    for call_trace in &call_trace.nested_calls {
-        output.append(&mut serialize_call_trace(&call_trace.borrow()));
-    }
+    serialize_call_trace_inner(call_trace, &mut output);
 
     output
 }
 
-fn serialize_call_entry_point(call_entry_point: &CallEntryPoint) -> Vec<Felt252> {
+// append all to one output Vec instead of allocating new one for each nested call
+fn serialize_call_trace_inner(call_trace: &CallTrace, output: &mut Vec<Felt252>) {
+    serialize_call_entry_point(&call_trace.entry_point, output);
+
+    output.push(Felt252::from(call_trace.nested_calls.len()));
+
+    for call_trace in &call_trace.nested_calls {
+        serialize_call_trace_inner(&call_trace.borrow(), output);
+    }
+}
+
+fn serialize_call_entry_point(call_entry_point: &CallEntryPoint, output: &mut Vec<Felt252>) {
     let entry_point_type = match call_entry_point.entry_point_type {
         EntryPointType::Constructor => 0,
         EntryPointType::External => 1,
@@ -676,7 +678,6 @@ fn serialize_call_entry_point(call_entry_point: &CallEntryPoint) -> Vec<Felt252>
         CallType::Delegate => 1,
     };
 
-    let mut output = vec![];
     output.push(Felt252::from(entry_point_type));
     output.push(call_entry_point.entry_point_selector.0.into_());
     output.push(Felt252::from(calldata.len()));
@@ -684,13 +685,15 @@ fn serialize_call_entry_point(call_entry_point: &CallEntryPoint) -> Vec<Felt252>
     output.push(call_entry_point.storage_address.into_());
     output.push(call_entry_point.caller_address.into_());
     output.push(Felt252::from(call_type));
-
-    output
 }
 
 #[must_use]
 pub fn cheatcode_panic_result(panic_data: Vec<Felt252>) -> Vec<Felt252> {
-    let mut result = vec![Felt252::from(1), Felt252::from(panic_data.len())];
+    let mut result = Vec::with_capacity(panic_data.len() + 2);
+
+    result.push(Felt252::from(1));
+    result.push(Felt252::from(panic_data.len()));
+
     result.extend(panic_data);
     result
 }

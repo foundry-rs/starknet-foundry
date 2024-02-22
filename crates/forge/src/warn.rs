@@ -10,7 +10,7 @@ use shared::verify_and_warn_if_incompatible_rpc_version;
 use std::collections::HashSet;
 
 pub(crate) fn warn_if_available_gas_used_with_incompatible_scarb_version(
-    test_crates: &Vec<CompiledTestCrateRaw>,
+    test_crates: &[CompiledTestCrateRaw],
 ) -> Result<()> {
     for test_crate in test_crates {
         for case in &test_crate.test_cases {
@@ -51,7 +51,7 @@ pub(crate) async fn warn_if_incompatible_rpc_version(
 
     for url in urls {
         handles.push(tokio::spawn(async move {
-            let client = create_rpc_client(&url)?;
+            let client = create_rpc_client(url.as_str())?;
 
             verify_and_warn_if_incompatible_rpc_version(&client, &url).await
         }));

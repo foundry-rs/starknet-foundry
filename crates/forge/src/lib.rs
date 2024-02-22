@@ -136,7 +136,7 @@ pub async fn run(
         let runner_params = runner_params.clone();
 
         let summary = forge_runner::run_tests_from_crate(
-            compiled_test_crate.clone(),
+            compiled_test_crate,
             runner_config,
             runner_params,
             tests_filter,

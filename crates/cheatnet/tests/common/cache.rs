@@ -5,10 +5,14 @@ use std::path::PathBuf;
 use std::str::FromStr;
 
 pub fn read_cache(file_pattern: &str) -> Map<String, Value> {
-    let cache_files: Vec<PathBuf> = glob(file_pattern).unwrap().filter_map(Result::ok).collect();
-    assert!(cache_files.len() < 2, "Multiple matching cache files found");
+    let mut cache_files = glob(file_pattern).unwrap().filter_map(Result::ok);
+    let cache_file = cache_files.next().expect("Cache file not found");
 
-    let cache_file = cache_files.first().expect("Cache file not found");
+    assert!(
+        cache_files.next().is_none(),
+        "Multiple matching cache files found"
+    );
+
     let cache_content = fs::read_to_string(cache_file).expect("Could not read cache");
     let parsed_cache_content: Value =
         serde_json::from_str(&cache_content).expect("Could not parse cache");

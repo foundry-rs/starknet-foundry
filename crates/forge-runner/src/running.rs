@@ -321,7 +321,7 @@ fn extract_test_case_summary(
                     args,
                     result_with_info.gas_used,
                     result_with_info.used_resources,
-                    &result_with_info.call_trace,
+                    result_with_info.call_trace,
                     contracts_data,
                 )),
                 // CairoRunError comes from VirtualMachineError which may come from HintException that originates in TestExecutionSyscallHandler

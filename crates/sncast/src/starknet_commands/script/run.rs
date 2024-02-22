@@ -70,11 +70,9 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
     fn handle_cheatcode(
         &mut self,
         selector: &str,
-        inputs: Vec<Felt252>,
+        mut reader: BufferReader,
         _extended_runtime: &mut Self::Runtime,
     ) -> Result<CheatcodeHandlingResult, EnhancedHintError> {
-        let mut reader = BufferReader::new(&inputs);
-
         let res = match selector {
             "call" => {
                 let contract_address = reader.read_felt().into_();
