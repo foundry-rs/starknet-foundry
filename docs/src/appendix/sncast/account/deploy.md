@@ -1,7 +1,7 @@
 # `deploy`
 Deploy previously created account to Starknet.
 
-## Required Common Arguments — Passed By CLI or Specified in `Scarb.toml`
+## Required Common Arguments — Passed By CLI or Specified in `snfoundry.toml`
 
 * [`url`](../common.md#--url--u-rpc_url)
 

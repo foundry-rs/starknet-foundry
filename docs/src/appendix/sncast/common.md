@@ -18,14 +18,14 @@ Optional.
 
 Starknet RPC node url address.
 
-Overrides url from `Scarb.toml`.
+Overrides url from `snfoundry.toml`.
 
 ## `--account, -a <ACCOUNT_NAME>`
 Optional.
 
 Account name used to interact with the network, aliased in open zeppelin accounts file.
 
-Overrides account from `Scarb.toml`.
+Overrides account from `snfoundry.toml`.
 
 If used with `--keystore`, should be a path to [starkli account JSON file](https://book.starkli.rs/accounts#accounts).
 

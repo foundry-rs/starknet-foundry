@@ -1,7 +1,7 @@
 # `delete`
-Delete an account from `accounts-file` and its associated Scarb profile.
+Delete an account from `accounts-file` and its associated snfoundry profile.
 
-## Required Common Arguments — Passed By CLI or Specified in `Scarb.toml`
+## Required Common Arguments — Passed By CLI or Specified in `snfoundry.toml`
 
 * [`url`](../common.md#--url--u-rpc_url)
 
