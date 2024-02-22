@@ -1,5 +1,5 @@
 use crate::expected_result::ExpectedTestResult;
-use cairo_lang_sierra::program::Program;
+use cairo_lang_sierra::{ids::GenericTypeId, program::Program};
 use serde::Deserialize;
 use starknet_api::block::BlockNumber;
 use url::Url;
@@ -18,6 +18,14 @@ pub struct TestCaseRunnable {
     pub expected_result: ExpectedTestResult,
     pub fork_config: Option<ValidatedForkConfig>,
     pub fuzzer_config: Option<FuzzerConfig>,
+    pub test_details: TestDetails,
+}
+
+#[derive(Debug, PartialEq, Clone, Deserialize, Default)]
+pub struct TestDetails {
+    pub entry_point_offset: usize,
+    pub parameter_types: Vec<(GenericTypeId, i16)>,
+    pub return_types: Vec<(GenericTypeId, i16)>,
 }
 
 #[derive(Debug, Clone)]

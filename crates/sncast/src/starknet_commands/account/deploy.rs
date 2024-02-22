@@ -3,7 +3,7 @@ use camino::Utf8PathBuf;
 use clap::Args;
 use serde_json::Map;
 use sncast::helpers::constants::{KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH};
-use sncast::response::structs::{Hex, InvokeResponse};
+use sncast::response::structs::{Felt, InvokeResponse};
 use starknet::accounts::AccountFactoryError;
 use starknet::accounts::{AccountFactory, OpenZeppelinAccountFactory};
 use starknet::core::types::BlockTag::Pending;
@@ -32,7 +32,7 @@ pub struct Deploy {
 
     /// Custom open zeppelin contract class hash of declared contract
     #[clap(short, long)]
-    pub class_hash: Option<String>,
+    pub class_hash: Option<FieldElement>,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -43,7 +43,7 @@ pub async fn deploy(
     chain_id: FieldElement,
     max_fee: Option<FieldElement>,
     wait_config: WaitForTx,
-    class_hash: Option<String>,
+    class_hash: Option<FieldElement>,
     keystore_path: Option<Utf8PathBuf>,
     account_path: Option<Utf8PathBuf>,
 ) -> Result<InvokeResponse> {
@@ -149,7 +149,7 @@ async fn deploy_from_keystore(
         .is_ok()
     {
         InvokeResponse {
-            transaction_hash: Hex(FieldElement::ZERO),
+            transaction_hash: Felt(FieldElement::ZERO),
         }
     } else {
         deploy_oz_account(
@@ -186,7 +186,7 @@ async fn deploy_from_accounts_file(
     chain_id: FieldElement,
     max_fee: Option<FieldElement>,
     wait_config: WaitForTx,
-    class_hash: Option<String>,
+    class_hash: Option<FieldElement>,
 ) -> Result<InvokeResponse> {
     let network_name = chain_id_to_network_name(chain_id);
 
@@ -214,21 +214,22 @@ async fn deploy_from_accounts_file(
     );
 
     let oz_class_hash = {
-        if let Some(class_hash_) = &class_hash {
-            class_hash_.as_str()
+        if let Some(class_hash_) = class_hash {
+            class_hash_
         } else if let Some(class_hash_) = account
             .get("class_hash")
             .and_then(serde_json::Value::as_str)
         {
-            class_hash_
+            FieldElement::from_hex_be(class_hash_)
+                .expect("Failed to parse account class hash from accounts file")
         } else {
-            OZ_CLASS_HASH
+            FieldElement::from_hex_be(OZ_CLASS_HASH).expect("Failed to parse OZ class hash")
         }
     };
 
     let result = deploy_oz_account(
         provider,
-        parse_number(oz_class_hash).context("Failed to parse account class hash")?,
+        oz_class_hash,
         private_key,
         parse_number(
             account
@@ -273,7 +274,7 @@ async fn deploy_oz_account(
     } else {
         match deployment.estimate_fee().await {
             Ok(max_fee) => max_fee.overall_fee,
-            Err(AccountFactoryError::Provider(error)) => return handle_rpc_error(error),
+            Err(AccountFactoryError::Provider(error)) => return Err(handle_rpc_error(error)),
             Err(error) => bail!(error),
         }
     };
@@ -285,12 +286,12 @@ async fn deploy_oz_account(
                 "Provided class hash {:#x} does not exist",
                 oz_class_hash,
             )),
-            _ => handle_rpc_error(error),
+            _ => Err(handle_rpc_error(error)),
         },
         Err(_) => Err(anyhow!("Unknown RPC error")),
         Ok(result) => {
             let return_value = InvokeResponse {
-                transaction_hash: Hex(result.transaction_hash),
+                transaction_hash: Felt(result.transaction_hash),
             };
             if let Err(message) = handle_wait_for_tx(
                 provider,

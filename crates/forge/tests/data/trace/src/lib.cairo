@@ -30,15 +30,14 @@ mod SimpleContract {
     impl RecursiveCallerImpl of RecursiveCaller<ContractState> {
         fn execute_calls(self: @ContractState, calls: Array<RecursiveCall>) {
             let mut i = 0;
-            while i < calls
-                .len() {
-                    let serviced_call = calls.at(i);
-                    RecursiveCallerDispatcher {
-                        contract_address: serviced_call.contract_address.clone()
-                    }
-                        .execute_calls(serviced_call.payload.clone());
-                    i = i + 1;
+            while i < calls.len() {
+                let serviced_call = calls.at(i);
+                RecursiveCallerDispatcher {
+                    contract_address: serviced_call.contract_address.clone()
                 }
+                    .execute_calls(serviced_call.payload.clone());
+                i = i + 1;
+            }
         }
     }
 }

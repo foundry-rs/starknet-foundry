@@ -11,7 +11,6 @@ use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::state::cached_state::CachedState;
 use cairo_felt::Felt252;
 use cairo_lang_casm::hints::Hint;
-use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{build_hints_dict, RunResultValue, SierraCasmRunner};
 use cairo_lang_sierra::program::VersionedProgram;
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
@@ -19,7 +18,6 @@ use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::vm_core::VirtualMachine;
-use clap::command;
 use clap::Args;
 use conversions::{FromConv, IntoConv};
 use itertools::chain;
@@ -33,28 +31,29 @@ use runtime::{
 use scarb_api::{package_matches_version_requirement, StarknetContractArtifacts};
 use scarb_metadata::{Metadata, PackageMetadata};
 use semver::{Comparator, Op, Version, VersionReq};
+use shared::print::print_as_warning;
+use shared::utils::build_readable_text;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::SCRIPT_LIB_ARTIFACT_NAME;
-use sncast::response::print::print_as_warning;
-use sncast::response::structs::ScriptResponse;
+use sncast::response::errors::handle_starknet_command_error;
+use sncast::response::structs::ScriptRunResponse;
 use starknet::accounts::Account;
 use starknet::core::types::{BlockId, BlockTag::Pending, FieldElement};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use tokio::runtime::Runtime;
 
-type ScriptStarknetContractArtifacts = StarknetContractArtifacts;
-
-#[derive(Args)]
+#[derive(Args, Debug)]
 #[command(about = "Execute a deployment script")]
-pub struct Script {
+pub struct Run {
     /// Module name that contains the `main` function, which will be executed
-    pub script_module_name: String,
+    pub script_name: String,
 
     /// Specifies scarb package to be used
     #[clap(long)]
     pub package: Option<String>,
 }
+type ScriptStarknetContractArtifacts = StarknetContractArtifacts;
 
 pub struct CastScriptExtension<'a> {
     pub hints: &'a HashMap<String, Hint>,
@@ -88,13 +87,16 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     .map(|el| FieldElement::from_(el.clone()))
                     .collect();
 
-                let call_response = self.tokio_runtime.block_on(call::call(
-                    contract_address,
-                    &function_name,
-                    calldata_felts,
-                    self.provider,
-                    &BlockId::Tag(Pending),
-                ))?;
+                let call_response = self
+                    .tokio_runtime
+                    .block_on(call::call(
+                        contract_address,
+                        &function_name,
+                        calldata_felts,
+                        self.provider,
+                        &BlockId::Tag(Pending),
+                    ))
+                    .map_err(handle_starknet_command_error)?;
 
                 let mut res: Vec<Felt252> = vec![Felt252::from(call_response.response.len())];
                 res.extend(call_response.response.iter().map(|el| Felt252::from_(el.0)));
@@ -114,18 +116,20 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     self.config.keystore.clone(),
                 ))?;
 
-                let declare_response = self.tokio_runtime.block_on(declare::declare(
-                    &contract_name,
-                    max_fee,
-                    &account,
-                    nonce,
-                    self.artifacts,
-                    WaitForTx {
-                        wait: true,
-                        timeout: self.config.wait_timeout,
-                        retry_interval: self.config.wait_retry_interval,
-                    },
-                ))?;
+                let declare_response = self
+                    .tokio_runtime
+                    .block_on(declare::declare(
+                        &contract_name,
+                        max_fee,
+                        &account,
+                        nonce,
+                        self.artifacts,
+                        WaitForTx {
+                            wait: true,
+                            wait_params: self.config.wait_params,
+                        },
+                    ))
+                    .map_err(handle_starknet_command_error)?;
 
                 let res: Vec<Felt252> = vec![
                     Felt252::from_(declare_response.class_hash.0),
@@ -153,20 +157,22 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     self.config.keystore.clone(),
                 ))?;
 
-                let deploy_response = self.tokio_runtime.block_on(deploy::deploy(
-                    class_hash,
-                    constructor_calldata,
-                    salt,
-                    unique,
-                    max_fee,
-                    &account,
-                    nonce,
-                    WaitForTx {
-                        wait: true,
-                        timeout: self.config.wait_timeout,
-                        retry_interval: self.config.wait_retry_interval,
-                    },
-                ))?;
+                let deploy_response = self
+                    .tokio_runtime
+                    .block_on(deploy::deploy(
+                        class_hash,
+                        constructor_calldata,
+                        salt,
+                        unique,
+                        max_fee,
+                        &account,
+                        nonce,
+                        WaitForTx {
+                            wait: true,
+                            wait_params: self.config.wait_params,
+                        },
+                    ))
+                    .map_err(handle_starknet_command_error)?;
 
                 let res: Vec<Felt252> = vec![
                     Felt252::from_(deploy_response.contract_address.0),
@@ -194,19 +200,21 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     self.config.keystore.clone(),
                 ))?;
 
-                let invoke_response = self.tokio_runtime.block_on(invoke::invoke(
-                    contract_address,
-                    &entry_point_name,
-                    calldata,
-                    max_fee,
-                    &account,
-                    nonce,
-                    WaitForTx {
-                        wait: true,
-                        timeout: self.config.wait_timeout,
-                        retry_interval: self.config.wait_retry_interval,
-                    },
-                ))?;
+                let invoke_response = self
+                    .tokio_runtime
+                    .block_on(invoke::invoke(
+                        contract_address,
+                        &entry_point_name,
+                        calldata,
+                        max_fee,
+                        &account,
+                        nonce,
+                        WaitForTx {
+                            wait: true,
+                            wait_params: self.config.wait_params,
+                        },
+                    ))
+                    .map_err(handle_starknet_command_error)?;
 
                 let res: Vec<Felt252> = vec![Felt252::from_(invoke_response.transaction_hash.0)];
                 Ok(CheatcodeHandlingResult::Handled(res))
@@ -257,7 +265,7 @@ pub fn run(
     provider: &JsonRpcClient<HttpTransport>,
     tokio_runtime: Runtime,
     config: &CastConfig,
-) -> Result<ScriptResponse> {
+) -> Result<ScriptRunResponse> {
     warn_if_sncast_std_not_compatible(metadata)?;
     let artifacts = inject_lib_artifact(metadata, package_metadata, artifacts)?;
 
@@ -341,13 +349,13 @@ pub fn run(
         builtins,
     ) {
         Ok(result) => match result.value {
-            RunResultValue::Success(data) => Ok(ScriptResponse {
+            RunResultValue::Success(data) => Ok(ScriptRunResponse {
                 status: "success".to_string(),
-                msg: build_readable_text(&data),
+                message: build_readable_text(&data),
             }),
-            RunResultValue::Panic(panic_data) => Ok(ScriptResponse {
+            RunResultValue::Panic(panic_data) => Ok(ScriptRunResponse {
                 status: "script panicked".to_string(),
-                msg: build_readable_text(&panic_data),
+                message: build_readable_text(&panic_data),
             }),
         },
         Err(err) => Err(err.into()),
@@ -402,25 +410,4 @@ fn inject_lib_artifact(
 
     artifacts.insert(SCRIPT_LIB_ARTIFACT_NAME.to_string(), lib_artifacts);
     Ok(artifacts.clone())
-}
-
-// taken from starknet-foundry/crates/forge/src/test_case_summary.rs
-/// Helper function to build `readable_text` from a run data.
-// TODO #1127
-fn build_readable_text(data: &Vec<Felt252>) -> Option<String> {
-    let mut readable_text = String::new();
-
-    for felt in data {
-        readable_text.push_str(&format!("\n    original value: [{felt}]"));
-        if let Some(short_string) = as_cairo_short_string(felt) {
-            readable_text.push_str(&format!(", converted to a string: [{short_string}]"));
-        }
-    }
-
-    if readable_text.is_empty() {
-        None
-    } else {
-        readable_text.push('\n');
-        Some(readable_text)
-    }
 }

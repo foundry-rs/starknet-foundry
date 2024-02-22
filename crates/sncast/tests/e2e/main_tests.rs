@@ -1,14 +1,12 @@
 use crate::helpers::constants::{ACCOUNT, ACCOUNT_FILE_PATH, CONTRACTS_DIR, URL};
 use crate::helpers::fixtures::{
-    duplicate_contract_directory_with_salt, from_env, get_keystores_path,
+    duplicate_contract_directory_with_salt, from_env, get_accounts_path, get_keystores_path,
 };
 use crate::helpers::runner::runner;
 use indoc::indoc;
-use snapbox::cmd::{cargo_bin, Command};
 use sncast::helpers::configuration::copy_config_to_tempdir;
 use sncast::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
 use std::env;
-use std::fs;
 
 #[tokio::test]
 async fn test_happy_case_from_sncast_config() {
@@ -116,7 +114,31 @@ async fn test_happy_case_mixed() {
 }
 
 #[tokio::test]
-async fn test_missing_account() {
+async fn test_nonexistent_account_address() {
+    let contract_path =
+        duplicate_contract_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "dummy", "101");
+    let accounts_json_path = get_accounts_path("tests/data/accounts/faulty_accounts.json");
+    let args = vec![
+        "--accounts-file",
+        accounts_json_path.as_str(),
+        "--account",
+        "with_nonexistent_address",
+        "--url",
+        URL,
+        "declare",
+        "--contract-name",
+        "Map",
+    ];
+
+    let snapbox = runner(&args).current_dir(contract_path.path());
+
+    snapbox.assert().failure().stderr_matches(indoc! {r"
+        Error: Invalid account address
+    "});
+}
+
+#[tokio::test]
+async fn test_missing_account_flag() {
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
@@ -233,15 +255,11 @@ async fn test_keystore_undeployed_account() {
     ];
 
     env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(contract_path.path())
-        .args(args);
+    let snapbox = runner(&args).current_dir(contract_path.path());
 
     snapbox.assert().stderr_matches(indoc! {r"
         Error: [..] make sure the account is deployed
     "});
-
-    fs::remove_dir_all(contract_path).unwrap();
 }
 
 #[tokio::test]
@@ -263,9 +281,7 @@ async fn test_keystore_declare() {
     ];
 
     env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(contract_path.path())
-        .args(args);
+    let snapbox = runner(&args).current_dir(contract_path.path());
 
     assert!(snapbox.assert().success().get_output().stderr.is_empty());
 }

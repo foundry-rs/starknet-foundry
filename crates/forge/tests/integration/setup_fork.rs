@@ -1,3 +1,4 @@
+use forge_runner::contracts_data::ContractsData;
 use indoc::formatdoc;
 use std::path::Path;
 use std::path::PathBuf;
@@ -124,9 +125,10 @@ fn fork_aliased_decorator() {
                 12345,
                 false,
                 false,
+                None,
             )),
             Arc::new(RunnerParams::new(
-                test.contracts().unwrap(),
+                ContractsData::try_from(test.contracts().unwrap()).unwrap(),
                 test.env().clone(),
             )),
             &[ForkTarget::new(

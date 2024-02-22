@@ -121,7 +121,7 @@ fn contract_keccak_cost() {
 
             #[starknet::interface]
             trait IGasChecker<TContractState> {
-                fn keccak(self: @TContractState);
+                fn keccak(self: @TContractState, repetitions: u32);
             }
 
             #[test]
@@ -130,7 +130,7 @@ fn contract_keccak_cost() {
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IGasCheckerDispatcher { contract_address };
 
-                dispatcher.keccak();
+                dispatcher.keccak(5);
             }
         "
         ),
@@ -145,8 +145,8 @@ fn contract_keccak_cost() {
 
     assert_passed!(result);
     // 1101 = cost of deploy (see snforge_std_deploy_cost test)
-    // 11 = cost of single keccak builtin
-    assert_gas!(result, "contract_keccak_cost", 1101 + 11);
+    // 52 = cost of 5x keccak builtin
+    assert_gas!(result, "contract_keccak_cost", 1101 + 52);
 }
 
 #[test]
@@ -169,7 +169,6 @@ fn range_check_cost() {
 /// Declare, deploy and function call consume 13 `range_check_builtin`s
 /// `range_check` function consumes 9, so
 /// overall cost will be 22 * range check builtin cost.
-/// We have to use 9 of them in the `range_check` to exceed steps cost
 #[test]
 fn contract_range_check_cost() {
     let test = test_case!(
@@ -203,8 +202,8 @@ fn contract_range_check_cost() {
 
     assert_passed!(result);
     // 1101 = cost of deploy (see snforge_std_deploy_cost test)
-    // 2 = cost of 22 range check builtins
-    assert_gas!(result, "contract_range_check_cost", 1101 + 2);
+    // 16 = cost of 192 range check builtins
+    assert_gas!(result, "contract_range_check_cost", 1101 + 16);
 }
 
 #[test]
@@ -235,7 +234,7 @@ fn contract_bitwise_cost() {
 
             #[starknet::interface]
             trait IGasChecker<TContractState> {
-                fn bitwise(self: @TContractState);
+                fn bitwise(self: @TContractState, repetitions: u32);
             }
 
             #[test]
@@ -244,7 +243,7 @@ fn contract_bitwise_cost() {
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IGasCheckerDispatcher { contract_address };
 
-                dispatcher.bitwise();
+                dispatcher.bitwise(200);
             }
         "
         ),
@@ -258,9 +257,9 @@ fn contract_bitwise_cost() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
-    // 1101 = cost of deploy (see snforge_std_deploy_cost test)
-    // 2 = cost of 6 bitwise builtins
-    assert_gas!(result, "contract_bitwise_cost", 1101 + 2);
+    // 1101 = cost of deploy l1 cost (see snforge_std_deploy_cost test)
+    // 64 = cost of 200 bitwise builtins
+    assert_gas!(result, "contract_bitwise_cost", 1101 + 64);
 }
 
 #[test]
@@ -315,8 +314,8 @@ fn contract_pedersen_cost() {
 
     assert_passed!(result);
     // 1101 = cost of deploy (see snforge_std_deploy_cost test)
-    // 2 = cost of 12 pedersen builtins
-    assert_gas!(result, "contract_pedersen_cost", 1101 + 2);
+    // 14 = cost of 86 pedersen builtins
+    assert_gas!(result, "contract_pedersen_cost", 1101 + 14);
 }
 
 #[test]
@@ -371,8 +370,8 @@ fn contract_poseidon_cost() {
 
     assert_passed!(result);
     // 1101 = cost of deploy (see snforge_std_deploy_cost test)
-    // 2 = cost of 12 poseidon builtins
-    assert_gas!(result, "contract_poseidon_cost", 1101 + 2);
+    // 13 = cost of 80 poseidon builtins
+    assert_gas!(result, "contract_poseidon_cost", 1101 + 13);
 }
 
 #[test]
@@ -404,7 +403,7 @@ fn contract_ec_op_cost() {
 
             #[starknet::interface]
             trait IGasChecker<TContractState> {
-                fn ec_op(self: @TContractState);
+                fn ec_op(self: @TContractState, repetitions: u32);
             }
 
             #[test]
@@ -413,7 +412,7 @@ fn contract_ec_op_cost() {
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IGasCheckerDispatcher { contract_address };
 
-                dispatcher.ec_op();
+                dispatcher.ec_op(10);
             }
         "
         ),
@@ -428,8 +427,8 @@ fn contract_ec_op_cost() {
 
     assert_passed!(result);
     // 1101 = cost of deploy (see snforge_std_deploy_cost test)
-    // 6 = cost of single ec_op builtin
-    assert_gas!(result, "contract_ec_op_cost", 1101 + 6);
+    // 52 = cost of 10x ec_op builtins
+    assert_gas!(result, "contract_ec_op_cost", 1101 + 52);
 }
 
 #[test]
@@ -464,9 +463,9 @@ fn storage_write_cost() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
-    // 3 = gas cost of steps
+    // 12 = gas cost of steps
     // 2203 = gas cost of onchain data
-    assert_gas!(result, "storage_write_cost", 3 + 2203);
+    assert_gas!(result, "storage_write_cost", 12 + 2203);
 }
 
 #[test]
@@ -532,9 +531,9 @@ fn multiple_storage_writes_cost() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
-    // 4 = gas cost of steps
+    // 16 = gas cost of steps
     // 2203 = gas cost of onchain data
-    assert_gas!(result, "multiple_storage_writes_cost", 4 + 2203);
+    assert_gas!(result, "multiple_storage_writes_cost", 16 + 2203);
 }
 
 #[test]
@@ -569,9 +568,9 @@ fn l1_message_cost() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
-    // 3 = gas cost of steps
+    // 12 = gas cost of steps
     // 27865 = gas cost of onchain data
-    assert_gas!(result, "l1_message_cost", 3 + 27865);
+    assert_gas!(result, "l1_message_cost", 12 + 27865);
 }
 
 #[test]
@@ -637,9 +636,9 @@ fn l1_message_cost_for_proxy() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
-    // 8 = gas cost of steps
+    // 22 = gas cost of steps
     // 29206 = gas cost of onchain data
-    assert_gas!(result, "l1_message_cost_for_proxy", 8 + 29206);
+    assert_gas!(result, "l1_message_cost_for_proxy", 22 + 29206);
 }
 
 #[test]

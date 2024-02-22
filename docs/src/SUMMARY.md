@@ -20,6 +20,7 @@
 * [Fuzz Testing](testing/fuzz-testing.md)
 * [Test Collection](testing/test-collection.md)
 * [Gas Estimation](testing/gas-etimation.md)
+* [Profiling](testing/profiling.md)
 
 # `sncast` Overview
 
@@ -94,7 +95,9 @@
         * [new](appendix/sncast/multicall/new.md)
         * [run](appendix/sncast/multicall/run.md)
     * [show-config](appendix/sncast/show_config.md)
-    * [script](appendix/sncast/script.md)
+    * [script](appendix/sncast/script/script.md)
+        * [init](appendix/sncast/script/init.md)
+        * [run](appendix/sncast/script/run.md)
 * [`sncast` Library Functions References](appendix/sncast-library.md)
     * [declare](appendix/sncast-library/declare.md)
     * [deploy](appendix/sncast-library/deploy.md)
