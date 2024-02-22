@@ -65,10 +65,12 @@ fn assert_output_contains(output: &str, lines: &str) {
         out.push('\n');
     }
 
-    for remaining_line in actual_lines {
-        out.push_str("+ ");
-        out.push_str(&remaining_line);
-        out.push('\n');
+    if !contains {
+        for remaining_line in actual_lines {
+            out.push_str("+ ");
+            out.push_str(&remaining_line);
+            out.push('\n');
+        }
     }
 
     assert!(contains, "Output does not match:\n\n{out}");
