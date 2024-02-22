@@ -49,6 +49,7 @@ fn trace_info_print() {
                                 Caller address: [..]
                                 Call type: Call
                                 Nested Calls: []
+                                Call Result: Success: []
                             ),
                             (
                                 Entry point type: External
@@ -58,8 +59,10 @@ fn trace_info_print() {
                                 Caller address: [..]
                                 Call type: Call
                                 Nested Calls: []
+                                Call Result: Success: []
                             )
                         ]
+                        Call Result: Success: []
                     ),
                     (
                         Entry point type: External
@@ -69,10 +72,13 @@ fn trace_info_print() {
                         Caller address: [..]
                         Call type: Call
                         Nested Calls: []
+                        Call Result: Success: []
                     )
                 ]
+                Call Result: Success: []
             )
         ]
+        Call Result: Success: []
         
         [PASS] tests::test_trace::test_trace_print (gas: [..]
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
