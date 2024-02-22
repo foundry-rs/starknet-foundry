@@ -293,9 +293,8 @@ impl CheatnetState {
 
         // case of cheating the test address itself
         if current_call_stack.size() == 1 {
-            let cheated_data = self.create_cheated_data(contract_address);
-            self.update_cheats(contract_address);
-            cheated_data
+            self.create_cheated_data(contract_address)
+            // do not update the cheats, as the test address cannot be called from the outside
         } else {
             current_call_stack.top_cheated_data()
         }
