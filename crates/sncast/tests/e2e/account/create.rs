@@ -3,6 +3,7 @@ use crate::helpers::fixtures::{copy_file, default_cli_args};
 use crate::helpers::runner::runner;
 use indoc::indoc;
 
+use shared::test_utils::output_assert::assert_stderr_contains;
 use sncast::helpers::configuration::copy_config_to_tempdir;
 use sncast::helpers::constants::CREATE_KEYSTORE_PASSWORD_ENV_VAR;
 use std::{env, fs};
@@ -214,11 +215,15 @@ pub async fn test_account_already_exists() {
     ]);
 
     let snapbox = runner(&args);
+    let output = snapbox.assert().success();
 
-    snapbox.assert().stderr_matches(indoc! {r"
+    assert_stderr_contains(
+        output,
+        indoc! {r"
         command: account create
         error: Account with name = user1 already exists in network with chain_id = SN_GOERLI
-    "});
+        "},
+    );
 }
 
 #[tokio::test]
@@ -326,11 +331,15 @@ pub async fn test_keystore_without_account() {
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
+    let output = snapbox.assert().success();
 
-    snapbox.assert().stderr_matches(indoc! {r"
+    assert_stderr_contains(
+        output,
+        indoc! {r"
         command: account create
         error: Argument `--account` must be passed and be a path when using `--keystore`
-    "});
+        "},
+    );
 }
 
 #[tokio::test]
