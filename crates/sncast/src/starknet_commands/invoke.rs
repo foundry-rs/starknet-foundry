@@ -1,8 +1,9 @@
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
 use clap::Args;
 
+use sncast::response::errors::{RecoverableStarknetCommandError, StarknetCommandError};
 use sncast::response::structs::{Felt, InvokeResponse};
-use sncast::{apply_optional, handle_rpc_error, handle_wait_for_tx, WaitForTx};
+use sncast::{apply_optional, handle_wait_for_tx, WaitForTx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{Account, Call, ConnectedAccount, Execution, SingleOwnerAccount};
 use starknet::core::types::FieldElement;
@@ -43,10 +44,11 @@ pub async fn invoke(
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     nonce: Option<FieldElement>,
     wait_config: WaitForTx,
-) -> Result<InvokeResponse> {
+) -> Result<InvokeResponse, StarknetCommandError> {
     let call = Call {
         to: contract_address,
-        selector: get_selector_from_name(entry_point_name)?,
+        selector: get_selector_from_name(entry_point_name)
+            .context("Failed to convert entry point selector to FieldElement")?,
         calldata,
     };
 
@@ -59,25 +61,26 @@ pub async fn execute_calls(
     max_fee: Option<FieldElement>,
     nonce: Option<FieldElement>,
     wait_config: WaitForTx,
-) -> Result<InvokeResponse> {
+) -> Result<InvokeResponse, StarknetCommandError> {
     let execution_calls = account.execute(calls);
 
     let execution = apply_optional(execution_calls, max_fee, Execution::max_fee);
     let execution = apply_optional(execution, nonce, Execution::nonce);
 
     match execution.send().await {
-        Ok(result) => {
-            handle_wait_for_tx(
-                account.provider(),
-                result.transaction_hash,
-                InvokeResponse {
-                    transaction_hash: Felt(result.transaction_hash),
-                },
-                wait_config,
-            )
-            .await
-        }
-        Err(Provider(error)) => handle_rpc_error(error),
-        _ => Err(anyhow!("Unknown RPC error")),
+        Ok(result) => handle_wait_for_tx(
+            account.provider(),
+            result.transaction_hash,
+            InvokeResponse {
+                transaction_hash: Felt(result.transaction_hash),
+            },
+            wait_config,
+        )
+        .await
+        .map_err(StarknetCommandError::from),
+        Err(Provider(error)) => Err(StarknetCommandError::Recoverable(
+            RecoverableStarknetCommandError::ProviderError(error),
+        )),
+        _ => Err(anyhow!("Unknown RPC error").into()),
     }
 }

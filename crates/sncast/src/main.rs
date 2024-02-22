@@ -16,6 +16,7 @@ use sncast::helpers::scarb_utils::{
     assert_manifest_path_exists, build_and_load_artifacts, get_package_metadata,
     get_scarb_metadata_with_deps, BuildConfig,
 };
+use sncast::response::errors::handle_starknet_command_error;
 use sncast::{
     chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_nonce, get_provider,
     NumbersFormat, ValidatedWaitParams, WaitForTx,
@@ -176,7 +177,8 @@ async fn run_async_command(
                 &artifacts,
                 wait_config,
             )
-            .await;
+            .await
+            .map_err(handle_starknet_command_error);
 
             print_command_result("declare", &mut result, numbers_format, &output_format)?;
             Ok(())
@@ -199,7 +201,8 @@ async fn run_async_command(
                 deploy.nonce,
                 wait_config,
             )
-            .await;
+            .await
+            .map_err(handle_starknet_command_error);
 
             print_command_result("deploy", &mut result, numbers_format, &output_format)?;
             Ok(())
@@ -214,7 +217,8 @@ async fn run_async_command(
                 &provider,
                 block_id.as_ref(),
             )
-            .await;
+            .await
+            .map_err(handle_starknet_command_error);
 
             print_command_result("call", &mut result, numbers_format, &output_format)?;
             Ok(())
@@ -236,7 +240,8 @@ async fn run_async_command(
                 invoke.nonce,
                 wait_config,
             )
-            .await;
+            .await
+            .map_err(handle_starknet_command_error);
 
             print_command_result("invoke", &mut result, numbers_format, &output_format)?;
             Ok(())
