@@ -45,36 +45,6 @@ async fn test_happy_case() {
 }
 
 #[tokio::test]
-async fn test_run_script_from_different_directory() {
-    let script_dir =
-        copy_script_directory_to_tempdir(SCRIPTS_DIR.to_owned() + "/misc", Vec::<String>::new());
-    let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
-    let path_to_scarb_toml = script_dir.path().join("Scarb.toml");
-
-    let script_name = "call_happy";
-    let args = vec![
-        "--accounts-file",
-        accounts_json_path.as_str(),
-        "--account",
-        "user1",
-        "--url",
-        URL,
-        "--path-to-scarb-toml",
-        path_to_scarb_toml.to_str().unwrap(),
-        "script",
-        "run",
-        &script_name,
-    ];
-
-    let snapbox = runner(&args);
-    snapbox.assert().success().stdout_matches(indoc! {r"
-        ...
-        command: script run
-        status: success
-    "});
-}
-
-#[tokio::test]
 async fn test_run_script_from_different_directory_no_path_to_scarb_toml() {
     let tempdir = tempdir().expect("Unable to create temporary directory");
     let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);

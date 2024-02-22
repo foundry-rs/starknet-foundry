@@ -5501,6 +5501,7 @@ dependencies = [
  "starknet",
  "tempfile",
  "test-case",
+ "thiserror",
  "tokio",
  "toml 0.8.9",
  "url",
