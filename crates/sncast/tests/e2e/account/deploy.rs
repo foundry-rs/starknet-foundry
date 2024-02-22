@@ -12,6 +12,7 @@ use starknet::core::types::TransactionReceipt::DeployAccount;
 use std::{env, fs};
 use tempfile::{tempdir, TempDir};
 use test_case::test_case;
+use shared::test_utils::output_assert::assert_stderr_contains;
 
 #[tokio::test]
 pub async fn test_happy_case() {
@@ -144,11 +145,15 @@ async fn test_too_low_max_fee() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-
-    snapbox.assert().success().stderr_matches(indoc! {r"
+    
+    let output = snapbox.assert().success();
+    assert_stderr_contains(
+        output,
+        indoc! {r"
         command: account deploy
         error: Max fee is smaller than the minimal transaction cost
-    "});
+        "},
+    );
 }
 
 #[tokio::test]
@@ -172,11 +177,15 @@ pub async fn test_invalid_class_hash() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-
-    snapbox.assert().success().stderr_matches(indoc! {r"
+    let output = snapbox.assert().success();
+    
+    assert_stderr_contains(
+        output,
+        indoc! {r"
         command: account deploy
         error: Provided class hash 0x123 does not exist
-    "});
+        "},
+    );
 }
 
 #[tokio::test]
@@ -362,10 +371,15 @@ pub async fn test_keystore_already_deployed() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    snapbox.assert().stderr_matches(indoc! {r"
+    let output = snapbox.assert().success();
+    
+    assert_stderr_contains(
+        output,
+        indoc! {r"
         command: account deploy
         error: Account already deployed
-    "});
+        "},
+    );
 }
 
 #[tokio::test]
@@ -402,10 +416,15 @@ pub async fn test_keystore_key_mismatch() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    snapbox.assert().stderr_matches(indoc! {r"
+    let output = snapbox.assert().success();
+    
+    assert_stderr_contains(
+        output,
+        indoc! {r"
         command: account deploy
         error: Public key and private key from keystore do not match
-    "});
+        "},
+    );
 }
 
 #[tokio::test]
@@ -437,10 +456,15 @@ pub async fn test_deploy_keystore_inexistent_keystore_file() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    snapbox.assert().stderr_matches(indoc! {r"
+    let output = snapbox.assert().success();
+    
+    assert_stderr_contains(
+        output,
+        indoc! {r"
         command: account deploy
         error: Failed to read keystore file
-    "});
+        "},
+    );
 }
 
 #[tokio::test]
@@ -472,10 +496,15 @@ pub async fn test_deploy_keystore_inexistent_account_file() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    snapbox.assert().stderr_matches(indoc! {r"
+    let output = snapbox.assert().success();
+    
+    assert_stderr_contains(
+        output,
+        indoc! {r"
         command: account deploy
         error: Failed to read account file: No such file or directory (os error 2)
-    "});
+        "},
+    );
 }
 
 #[tokio::test]
@@ -511,10 +540,15 @@ pub async fn test_deploy_keystore_no_status() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    snapbox.assert().stderr_matches(indoc! {r"
+    let output = snapbox.assert().success();
+    
+    assert_stderr_contains(
+        output,
+        indoc! {r"
         command: account deploy
         error: Failed to get status from account JSON file
-    "});
+        "},
+    );
 }
 
 #[tokio::test]
