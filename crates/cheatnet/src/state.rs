@@ -1,5 +1,7 @@
 use crate::forking::state::ForkStateReader;
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::subtract_execution_resources;
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
+    subtract_execution_resources, CallResult,
+};
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spoof::TxInfoMock;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::{
     Event, SpyTarget,
@@ -133,6 +135,7 @@ pub struct CallTrace {
     // These also include resources used by internal calls
     pub used_execution_resources: ExecutionResources,
     pub nested_calls: Vec<Rc<RefCell<CallTrace>>>,
+    pub result: CallResult,
 }
 
 #[derive(Clone)]
@@ -212,6 +215,7 @@ impl Default for CheatnetState {
             entry_point: test_code_entry_point,
             used_execution_resources: Default::default(),
             nested_calls: vec![],
+            result: CallResult::Success { ret_data: vec![] },
         }));
         Self {
             rolled_contracts: Default::default(),
@@ -311,6 +315,7 @@ impl TraceData {
             entry_point,
             used_execution_resources: Default::default(),
             nested_calls: vec![],
+            result: CallResult::Success { ret_data: vec![] },
         }));
         let current_call = self.current_call_stack.top();
 
@@ -336,6 +341,19 @@ impl TraceData {
 
         last_call.borrow_mut().used_execution_resources =
             subtract_execution_resources(resources_used_after_call, &resources_used_before_call);
+    }
+
+    pub fn add_result_to_last_call(&mut self, call_result: &CallResult) {
+        let binding = self.current_call_stack.top();
+        let mut last_call = binding.borrow_mut();
+        if last_call.nested_calls.is_empty() {
+            last_call.result = call_result.clone();
+            return;
+        }
+
+        last_call.nested_calls[last_call.nested_calls.len() - 1]
+            .borrow_mut()
+            .result = call_result.clone();
     }
 }
 

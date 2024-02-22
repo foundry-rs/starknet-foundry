@@ -9,6 +9,7 @@ use std::path::PathBuf;
 use blockifier::execution::entry_point::{CallEntryPoint, CallType, ExecutionResources};
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources as VmExecutionResources;
 use cheatnet::constants::{TEST_CONTRACT_CLASS_HASH, TEST_ENTRY_POINT_SELECTOR};
+use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallResult;
 use cheatnet::state::CallTrace;
 use conversions::IntoConv;
 use serde::{Deserialize, Serialize};
@@ -33,6 +34,7 @@ pub struct ProfilerCallTrace {
     // These also include resources used by internal calls
     pub used_execution_resources: ProfilerExecutionResources,
     pub nested_calls: Vec<ProfilerCallTrace>,
+    pub result: CallResult,
 }
 
 impl ProfilerCallTrace {
@@ -48,6 +50,7 @@ impl ProfilerCallTrace {
                 .into_iter()
                 .map(|c| ProfilerCallTrace::from_call_trace(c.borrow().clone(), contracts_data))
                 .collect(),
+            result: value.result,
         }
     }
 }

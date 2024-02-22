@@ -1,3 +1,4 @@
+use core::result::ResultTrait;
 use core::starknet::testing::cheatcode;
 use core::starknet::ContractAddress;
 
@@ -5,6 +6,7 @@ use core::starknet::ContractAddress;
 struct CallTrace {
     entry_point: CallEntryPoint,
     nested_calls: Array<CallTrace>,
+    result: CallResult
 }
 
 #[derive(Drop, Serde, PartialEq)]
@@ -30,12 +32,34 @@ enum CallType {
     Delegate,
 }
 
+#[derive(Drop, Serde, PartialEq)]
+enum CallResult {
+    Success: Array<felt252>,
+    Failure: Array<felt252>
+}
+
 fn get_call_trace() -> CallTrace {
     let mut output = cheatcode::<'get_call_trace'>(array![].span());
     Serde::deserialize(ref output).unwrap()
 }
 
 use core::fmt::{Display, Formatter, Error, Debug};
+
+impl DisplayCallResult of Display<CallResult> {
+    fn fmt(self: @CallResult, ref f: Formatter) -> Result<(), Error> {
+        match self {
+            CallResult::Success(val) => {
+                write!(f, "Success: ")?;
+                Debug::fmt(val, ref f)?;
+            },
+            CallResult::Failure(val) => {
+                write!(f, "Failure: ")?;
+                Debug::fmt(val, ref f)?;
+            },
+        };
+        Result::Ok(())
+    }
+}
 
 impl DisplayEntryPointType of Display<EntryPointType> {
     fn fmt(self: @EntryPointType, ref f: Formatter) -> Result<(), Error> {
@@ -76,6 +100,7 @@ struct Indented<T> {
 type IndentedEntryPoint = Indented<CallEntryPoint>;
 type IndentedCallTraceArray = Indented<Array<CallTrace>>;
 type IndentedCallTrace = Indented<CallTrace>;
+type IndentedCallResult = Indented<CallResult>;
 
 
 impl DisplayIndentedCallTrace of Display<Indented<CallTrace>> {
@@ -102,9 +127,18 @@ impl DisplayIndentedCallTrace of Display<Indented<CallTrace>> {
                 .unwrap();
             write!(f, "\n").unwrap();
             write_indents_to_formatter(*self.base_indents, ref f);
-        }
-
+        }        
         write!(f, "]").unwrap();
+
+        write!(f, "\n").unwrap();
+        Display::fmt(
+            @IndentedCallResult {
+                base_indents: *self.base_indents, struct_ref: *self.struct_ref.result
+            },
+            ref f
+        )
+            .unwrap();
+
         Result::Ok(())
     }
 }
@@ -168,6 +202,16 @@ impl DisplayIndentedEntryPoint of Display<Indented<CallEntryPoint>> {
         write_indents_to_formatter(*self.base_indents, ref f);
         write!(f, "Call type: ")?;
         Display::fmt(*self.struct_ref.call_type, ref f)?;
+
+        Result::Ok(())
+    }
+}
+
+impl DisplayIndentedCallResult of Display<Indented<CallResult>> {
+    fn fmt(self: @Indented<CallResult>, ref f: Formatter) -> Result<(), Error> {
+        write_indents_to_formatter(*self.base_indents, ref f);
+        write!(f, "Call Result: ")?;
+        Display::fmt(*self.struct_ref, ref f)?;
 
         Result::Ok(())
     }

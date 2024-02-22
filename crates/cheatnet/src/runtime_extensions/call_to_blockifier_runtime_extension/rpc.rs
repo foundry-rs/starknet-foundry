@@ -14,6 +14,7 @@ use blockifier::execution::{
 };
 use blockifier::state::errors::StateError;
 use cairo_felt::Felt252;
+use serde::{Deserialize, Serialize};
 use starknet_api::core::ClassHash;
 use starknet_api::{core::ContractAddress, deprecated_contract_class::EntryPointType};
 
@@ -64,7 +65,7 @@ fn subtract_syscall_counters(
 }
 
 /// Enum representing possible call execution result, along with the data
-#[derive(Debug)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum CallResult {
     Success { ret_data: Vec<Felt252> },
     Failure(CallFailure),
@@ -73,7 +74,7 @@ pub enum CallResult {
 /// Enum representing possible call failure and its' type.
 /// `Panic` - Recoverable, meant to be caught by the user.
 /// `Error` - Unrecoverable, equivalent of panic! in rust.
-#[derive(Debug)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum CallFailure {
     Panic { panic_data: Vec<Felt252> },
     Error { msg: String },
@@ -239,6 +240,10 @@ pub fn call_entry_point(
     );
 
     let result = CallResult::from_execution_result(&exec_result, starknet_identifier);
+    runtime_state
+        .cheatnet_state
+        .trace_data
+        .add_result_to_last_call(&result);
 
     if let Ok(call_info) = exec_result {
         syscall_handler.inner_calls.push(call_info);

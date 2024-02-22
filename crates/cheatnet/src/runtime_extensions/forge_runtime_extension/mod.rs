@@ -525,31 +525,31 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     match curve.as_deref() {
                         Some("Secp256k1") => {
                             let Ok(signing_key) = k256::ecdsa::SigningKey::from_slice(&secret_key)
-                            else {
-                                return Ok(handle_cheatcode_error("invalid secret_key"));
-                            };
+                                else {
+                                    return Ok(handle_cheatcode_error("invalid secret_key"));
+                                };
 
                             let signature: k256::ecdsa::Signature =
                                 k256::ecdsa::signature::hazmat::PrehashSigner::sign_prehash(
                                     &signing_key,
                                     &msg_hash,
                                 )
-                                .unwrap();
+                                    .unwrap();
 
                             signature.split_bytes()
                         }
                         Some("Secp256r1") => {
                             let Ok(signing_key) = p256::ecdsa::SigningKey::from_slice(&secret_key)
-                            else {
-                                return Ok(handle_cheatcode_error("invalid secret_key"));
-                            };
+                                else {
+                                    return Ok(handle_cheatcode_error("invalid secret_key"));
+                                };
 
                             let signature: p256::ecdsa::Signature =
                                 p256::ecdsa::signature::hazmat::PrehashSigner::sign_prehash(
                                     &signing_key,
                                     &msg_hash,
                                 )
-                                .unwrap();
+                                    .unwrap();
 
                             signature.split_bytes()
                         }
@@ -653,6 +653,8 @@ fn serialize_call_trace(call_trace: &CallTrace) -> Vec<Felt252> {
         output.append(&mut serialize_call_trace(&call_trace.borrow()));
     }
 
+    output.append(&mut serialize_call_result(&call_trace.result));
+
     output
 }
 
@@ -684,6 +686,20 @@ fn serialize_call_entry_point(call_entry_point: &CallEntryPoint) -> Vec<Felt252>
     output.push(call_entry_point.storage_address.into_());
     output.push(call_entry_point.caller_address.into_());
     output.push(Felt252::from(call_type));
+
+    output
+}
+
+fn serialize_call_result(call_result: &CallResult) -> Vec<Felt252> {
+    let (call_result_variant, ret_data) = match call_result {
+        CallResult::Success { ret_data } => (0, ret_data.clone()),
+        CallResult::Failure(_) => (1, vec![]),
+    };
+
+    let mut output = vec![];
+    output.push(Felt252::from(call_result_variant));
+    output.push(Felt252::from(ret_data.len()));
+    output.extend(ret_data);
 
     output
 }
