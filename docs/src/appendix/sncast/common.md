@@ -6,13 +6,6 @@ Optional.
 Used for both `snfoundry.toml` and `Scarb.toml` if specified.
 Defaults to `default` (`snfoundry.toml`) and `dev` (`Scarb.toml`).
 
-## `--path-to-scarb-toml, -s <PATH>`
-Optional.
-
-Path to `Scarb.toml` file.
-
-If supplied, `sncast` will not look for `Scarb.toml` file in current (or parent) directory, but will use this path instead.
-
 ## `--url, -u <RPC_URL>`
 Optional.
 

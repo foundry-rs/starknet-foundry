@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast
+
+#### Removed
+
+- `--path-to-scarb-toml` optional flag that allowed to specify the path to the `Scarb.toml` file
+
 ## [0.18.0] - 2024-02-21
 
 ### Forge
