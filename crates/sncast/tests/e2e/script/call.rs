@@ -2,7 +2,7 @@ use crate::helpers::constants::{SCRIPTS_DIR, URL};
 use crate::helpers::fixtures::copy_script_directory_to_tempdir;
 use crate::helpers::runner::runner;
 use indoc::indoc;
-use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
+use shared::test_utils::output_assert::assert_stderr_contains;
 
 #[tokio::test]
 async fn test_happy_case() {
@@ -13,14 +13,11 @@ async fn test_happy_case() {
     let args = vec!["--url", URL, "script", "run", &script_name];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().success();
-
-    assert_stdout_contains(
-        output,
-        indoc! {r"
+    snapbox.assert().success().stdout_matches(indoc! {r"
+        ...
         command: script run
-        status: success"},
-    );
+        status: success
+    "});
 }
 
 #[tokio::test]
