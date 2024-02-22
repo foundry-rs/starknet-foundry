@@ -37,6 +37,7 @@ use std::collections::HashMap;
 use std::thread::sleep;
 use std::time::Duration;
 use std::{env, fs};
+use thiserror::Error;
 
 pub mod helpers;
 pub mod response;
@@ -350,42 +351,22 @@ impl From<ContractErrorData> for ErrorData {
     }
 }
 
-#[derive(Debug)]
+#[derive(Error, Debug)]
 pub enum TransactionError {
+    #[error("Transaction has been rejected")]
     Rejected,
+    #[error("Transaction has been reverted = {}", .0.data)]
     Reverted(ErrorData),
 }
 
-#[derive(Debug)]
+#[derive(Error, Debug)]
 pub enum WaitForTransactionError {
+    #[error(transparent)]
     TransactionError(TransactionError),
+    #[error("sncast timed out while waiting for transaction to succeed")]
     TimedOut,
-    Other(Error),
-}
-
-impl From<Error> for WaitForTransactionError {
-    fn from(value: Error) -> Self {
-        WaitForTransactionError::Other(value)
-    }
-}
-
-impl From<WaitForTransactionError> for Error {
-    fn from(value: WaitForTransactionError) -> Self {
-        match value {
-            WaitForTransactionError::Other(error) => error,
-            WaitForTransactionError::TimedOut => {
-                anyhow!("sncast timed out while waiting for transaction to succeed")
-            }
-            WaitForTransactionError::TransactionError(error) => match error {
-                TransactionError::Rejected => {
-                    anyhow!("Transaction has been rejected")
-                }
-                TransactionError::Reverted(ErrorData { data: reason }) => {
-                    anyhow!("Transaction has been reverted = {reason}")
-                }
-            },
-        }
-    }
+    #[error(transparent)]
+    ProviderError(#[from] ProviderError),
 }
 
 pub async fn wait_for_tx(
@@ -419,7 +400,11 @@ pub async fn wait_for_tx(
                 let remaining_time = wait_params.remaining_time(i);
                 println!("Waiting for transaction to be accepted ({i} retries / {remaining_time}s left until timeout)");
             }
-            Err(err) => return Err(WaitForTransactionError::Other(err.into())),
+            Err(ProviderError::RateLimited) => {
+                println!("Request rate limited while waiting for transaction to be accepted");
+                sleep(Duration::from_secs(wait_params.get_retry_interval().into()));
+            }
+            Err(err) => return Err(err.into()),
         };
 
         sleep(Duration::from_secs(wait_params.get_retry_interval().into()));
@@ -432,10 +417,7 @@ async fn get_revert_reason(
     provider: &JsonRpcClient<HttpTransport>,
     tx_hash: FieldElement,
 ) -> Result<&str, WaitForTransactionError> {
-    let receipt = provider
-        .get_transaction_receipt(tx_hash)
-        .await
-        .context("Unexpected provider error while fetching transaction receipt")?;
+    let receipt = provider.get_transaction_receipt(tx_hash).await?;
 
     if let starknet::core::types::ExecutionResult::Reverted { reason } = receipt.execution_result()
     {
