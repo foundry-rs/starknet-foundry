@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use crate::helpers::constants::STATE_FILE_VERSION;
 use crate::response::structs::{DeclareResponse, DeployResponse, InvokeResponse};
 use anyhow::{anyhow, Context, Result};
@@ -49,6 +50,7 @@ pub struct ScriptTransactionEntry {
     pub misc: Option<HashMap<String, Value>>,
 }
 
+#[allow(clippy::enum_variant_names)]
 #[derive(Clone, Deserialize, Serialize, Debug, PartialEq)]
 #[serde(tag = "type")]
 pub enum ScriptTransactionOutput {
@@ -138,7 +140,7 @@ fn verify_version(version: u8) -> Result<()> {
 mod tests {
     use super::*;
     use crate::response::structs::Felt;
-    use crate::state::ScriptTransactionOutput::ErrorResponse;
+    use crate::state::state_file::ScriptTransactionOutput::ErrorResponse;
     use camino::Utf8PathBuf;
     use tempfile::TempDir;
 
