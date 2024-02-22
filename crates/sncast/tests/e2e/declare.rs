@@ -5,6 +5,7 @@ use crate::helpers::fixtures::{
 };
 use crate::helpers::runner::runner;
 use indoc::indoc;
+use shared::test_utils::output_assert::assert_stderr_contains;
 use sncast::helpers::constants::CONFIG_FILENAME;
 use starknet::core::types::TransactionReceipt::Declare;
 use std::fs;
@@ -89,11 +90,15 @@ async fn contract_already_declared() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().success();
 
-    snapbox.assert().success().stderr_matches(indoc! {r"
+    assert_stderr_contains(
+        output,
+        indoc! {r"
         command: declare
         error: An error occurred in the called contract [..]
-    "});
+        "},
+    );
 }
 
 #[tokio::test]
@@ -114,11 +119,14 @@ async fn wrong_contract_name_passed() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-
-    snapbox.assert().success().stderr_matches(indoc! {r"
+    let output = snapbox.assert().success();
+    assert_stderr_contains(
+        output,
+        indoc! {r"
         command: declare
         error: Failed to find nonexistent artifact in starknet_artifacts.json file[..]
-    "});
+        "},
+    );
 }
 
 #[test]
@@ -139,12 +147,11 @@ fn scarb_build_fails_when_wrong_cairo_path() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-
-    snapbox.assert().stderr_matches(indoc! {r"
-        ...
-        Failed to build contract: Failed to build using scarb; `scarb` exited with error
-        ...
-    "});
+    let output = snapbox.assert().failure();
+    assert_stderr_contains(
+        output,
+        "Failed to build contract: Failed to build using scarb; `scarb` exited with error",
+    );
 }
 
 #[should_panic(expected = "Path to Scarb.toml manifest does not exist")]
@@ -186,9 +193,14 @@ fn scarb_build_fails_manifest_does_not_exist() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    snapbox.assert().stderr_matches(indoc! {r"
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
         Error: Path to Scarb.toml manifest does not exist =[..]
-    "});
+        "},
+    );
 }
 
 #[test]
@@ -213,11 +225,15 @@ fn test_too_low_max_fee() {
     ];
 
     let snapbox = runner(&args).current_dir(contract_path.path());
+    let output = snapbox.assert().success();
 
-    snapbox.assert().success().stderr_matches(indoc! {r"
+    assert_stderr_contains(
+        output,
+        indoc! {r"
         command: declare
         error: Max fee is smaller than the minimal transaction cost
-    "});
+        "},
+    );
 }
 
 #[should_panic(expected = "Make sure you have enabled sierra code generation in Scarb.toml")]
@@ -288,10 +304,12 @@ async fn test_many_packages_default() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    snapbox.assert().failure().stderr_matches(indoc! {r"
-        ...
-        Error: More than one package found in scarb metadata - specify package using --package flag
-    "});
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(
+        output,
+        "Error: More than one package found in scarb metadata - specify package using --package flag",
+    );
 }
 
 #[tokio::test]
@@ -347,11 +365,15 @@ async fn test_worskpaces_package_no_contract() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    snapbox.assert().success().stderr_matches(indoc! {r"
-        ...
+    let output = snapbox.assert().success();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
         command: declare
         error: Failed to find whatever artifact in starknet_artifacts.json file[..]
-    "});
+        "},
+    );
 }
 
 #[tokio::test]
