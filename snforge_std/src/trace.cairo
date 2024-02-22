@@ -62,12 +62,8 @@ impl DisplayCallResult of Display<CallResult> {
                 write!(f, "Failure: ")?;
 
                 match call_failure {
-                    CallFailure::Panic(val) => {
-                        Debug::fmt(val, ref f)?;
-                    },
-                    CallFailure::Error(msg) => {
-                        Display::fmt(msg, ref f)?;
-                    },
+                    CallFailure::Panic(val) => { Debug::fmt(val, ref f)?; },
+                    CallFailure::Error(msg) => { Display::fmt(msg, ref f)?; },
                 };
             },
         };
@@ -141,7 +137,7 @@ impl DisplayIndentedCallTrace of Display<Indented<CallTrace>> {
                 .unwrap();
             write!(f, "\n").unwrap();
             write_indents_to_formatter(*self.base_indents, ref f);
-        }        
+        }
         write!(f, "]").unwrap();
 
         write!(f, "\n").unwrap();
