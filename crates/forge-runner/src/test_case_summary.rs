@@ -211,7 +211,7 @@ impl TestCaseSummary<Single> {
         arguments: Vec<Felt252>,
         gas: u128,
         used_resources: UsedResources,
-        call_trace: Rc<RefCell<InternalCallTrace>>,
+        call_trace: &Rc<RefCell<InternalCallTrace>>,
         contracts_data: &ContractsData,
     ) -> Self {
         let name = test_case.name.clone();

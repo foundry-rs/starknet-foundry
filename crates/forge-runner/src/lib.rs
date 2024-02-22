@@ -172,7 +172,7 @@ pub async fn run_tests_from_crate(
             .funcs
             .iter()
             .find(|f| f.id.debug_name.as_ref().unwrap().ends_with(&case_name))
-            .ok_or_else(|| RunnerError::MissingFunction { suffix: case_name })?;
+            .ok_or(RunnerError::MissingFunction { suffix: case_name })?;
 
         let args = function_args(function, &BUILTINS);
 

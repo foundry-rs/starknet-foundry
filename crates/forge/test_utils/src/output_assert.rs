@@ -8,14 +8,10 @@ pub trait AsOutput {
 
 impl AsOutput for OutputAssert {
     fn as_stdout(&self) -> &str {
-        std::str::from_utf8(&self.get_output().stdout)
-            .unwrap()
-            .into()
+        std::str::from_utf8(&self.get_output().stdout).unwrap()
     }
     fn as_stderr(&self) -> &str {
-        std::str::from_utf8(&self.get_output().stderr)
-            .unwrap()
-            .into()
+        std::str::from_utf8(&self.get_output().stderr).unwrap()
     }
 }
 
@@ -66,7 +62,7 @@ fn assert_output_contains(output: &str, lines: &str) {
     for remaining_line in actual_lines {
         matches = false;
         out.push_str("+ ");
-        out.push_str(&remaining_line);
+        out.push_str(remaining_line);
         out.push('\n');
     }
 
@@ -77,12 +73,12 @@ fn assert_output_contains(output: &str, lines: &str) {
 pub fn assert_stdout_contains(output: impl AsOutput, lines: impl AsRef<str>) {
     let stdout = output.as_stdout();
 
-    assert_output_contains(&stdout, lines.as_ref());
+    assert_output_contains(stdout, lines.as_ref());
 }
 
 #[allow(clippy::needless_pass_by_value)]
 pub fn assert_stderr_contains(output: impl AsOutput, lines: impl AsRef<str>) {
     let stderr = output.as_stderr();
 
-    assert_output_contains(&stderr, lines.as_ref());
+    assert_output_contains(stderr, lines.as_ref());
 }

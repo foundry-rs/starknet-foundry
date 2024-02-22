@@ -38,7 +38,7 @@ pub struct ProfilerCallTrace {
 }
 
 impl ProfilerCallTrace {
-    pub fn from_call_trace(value: Rc<RefCell<CallTrace>>, contracts_data: &ContractsData) -> Self {
+    pub fn from_call_trace(value: &Rc<RefCell<CallTrace>>, contracts_data: &ContractsData) -> Self {
         let value = value.borrow();
 
         ProfilerCallTrace {
@@ -49,7 +49,7 @@ impl ProfilerCallTrace {
             nested_calls: value
                 .nested_calls
                 .iter()
-                .map(|c| ProfilerCallTrace::from_call_trace(c.clone(), contracts_data))
+                .map(|c| ProfilerCallTrace::from_call_trace(c, contracts_data))
                 .collect(),
         }
     }

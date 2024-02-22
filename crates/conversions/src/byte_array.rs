@@ -32,7 +32,7 @@ impl ByteArray {
 
         result.push(Felt252::from_str_radix(BYTE_ARRAY_MAGIC, 16).unwrap());
         result.push(self.words.len().into());
-        result.extend(self.words.into_iter());
+        result.extend(self.words);
         result.push(self.pending_word);
         result.push(self.pending_word_len.into());
 
