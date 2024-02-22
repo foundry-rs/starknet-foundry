@@ -31,6 +31,7 @@ use crate::runtime_extensions::forge_runtime_extension::cheatcodes::storage::{
 };
 use crate::runtime_extensions::forge_runtime_extension::file_operations::string_into_felt;
 use cairo_lang_starknet::contract::starknet_keccak;
+use conversions::byte_array::ByteArray;
 use runtime::utils::BufferReader;
 use runtime::{
     CheatcodeHandlingResult, EnhancedHintError, ExtendedRuntime, ExtensionLogic,
@@ -525,31 +526,31 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     match curve.as_deref() {
                         Some("Secp256k1") => {
                             let Ok(signing_key) = k256::ecdsa::SigningKey::from_slice(&secret_key)
-                            else {
-                                return Ok(handle_cheatcode_error("invalid secret_key"));
-                            };
+                                else {
+                                    return Ok(handle_cheatcode_error("invalid secret_key"));
+                                };
 
                             let signature: k256::ecdsa::Signature =
                                 k256::ecdsa::signature::hazmat::PrehashSigner::sign_prehash(
                                     &signing_key,
                                     &msg_hash,
                                 )
-                                .unwrap();
+                                    .unwrap();
 
                             signature.split_bytes()
                         }
                         Some("Secp256r1") => {
                             let Ok(signing_key) = p256::ecdsa::SigningKey::from_slice(&secret_key)
-                            else {
-                                return Ok(handle_cheatcode_error("invalid secret_key"));
-                            };
+                                else {
+                                    return Ok(handle_cheatcode_error("invalid secret_key"));
+                                };
 
                             let signature: p256::ecdsa::Signature =
                                 p256::ecdsa::signature::hazmat::PrehashSigner::sign_prehash(
                                     &signing_key,
                                     &msg_hash,
                                 )
-                                .unwrap();
+                                    .unwrap();
 
                             signature.split_bytes()
                         }
@@ -691,15 +692,30 @@ fn serialize_call_entry_point(call_entry_point: &CallEntryPoint) -> Vec<Felt252>
 }
 
 fn serialize_call_result(call_result: &CallResult) -> Vec<Felt252> {
-    let (call_result_variant, ret_data) = match call_result {
-        CallResult::Success { ret_data } => (0, ret_data.clone()),
-        CallResult::Failure(_) => (1, vec![]),
-    };
-
     let mut output = vec![];
-    output.push(Felt252::from(call_result_variant));
-    output.push(Felt252::from(ret_data.len()));
-    output.extend(ret_data);
+
+    match call_result {
+        CallResult::Success { ret_data } => {
+            output.push(Felt252::from(0));
+            output.push(Felt252::from(ret_data.len()));
+            output.extend(ret_data.clone());
+        }
+        CallResult::Failure(call_failure) => {
+            let (call_failure_variant, failure_data) = match call_failure {
+                CallFailure::Panic { panic_data } => (0, panic_data.clone()),
+                CallFailure::Error { msg } => {
+                    let converted_string: ByteArray = ByteArray::from(msg.clone());
+
+                    (1, converted_string.serialize())
+                }
+            };
+
+            output.push(Felt252::from(1));
+            output.push(Felt252::from(call_failure_variant));
+            output.push(Felt252::from(failure_data.len()));
+            output.extend(failure_data);
+        }
+    };
 
     output
 }

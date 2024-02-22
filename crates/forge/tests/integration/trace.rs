@@ -387,7 +387,7 @@ fn trace_failed_call() {
         indoc!(
             r#"
             use snforge_std::{declare, ContractClassTrait, test_address, test_selector};
-            use snforge_std::trace::{CallEntryPoint, CallType, EntryPointType, get_call_trace, CallTrace, CallResult};
+            use snforge_std::trace::{CallEntryPoint, CallType, EntryPointType, get_call_trace, CallTrace, CallResult, CallFailure};
             
             use starknet::{ContractAddress, ClassHash};
             
@@ -492,7 +492,7 @@ fn trace_failed_call() {
                                     result: CallResult::Success(array![])
                                 }
                             ],
-                            result: CallResult::Failure(array![])
+                            result: CallResult::Failure(CallFailure::Panic(array![482670963043]))
                         },
                         CallTrace {
                             entry_point: CallEntryPoint {
@@ -504,7 +504,7 @@ fn trace_failed_call() {
                                 call_type: CallType::Call,
                             },
                             nested_calls: array![],
-                            result: CallResult::Failure(array![])
+                            result: CallResult::Failure(CallFailure::Panic(array![482670963043]))
                         }
                     ],
                     result: CallResult::Success(array![])
@@ -737,7 +737,7 @@ fn trace_failed_library_call_from_test() {
         indoc!(
             r#"
             use snforge_std::{declare, ContractClassTrait, test_address, test_selector};
-            use snforge_std::trace::{CallEntryPoint, CallType, EntryPointType, get_call_trace, CallTrace, CallResult};
+            use snforge_std::trace::{CallEntryPoint, CallType, EntryPointType, get_call_trace, CallTrace, CallResult, CallFailure};
             
             use starknet::{ContractAddress, ClassHash};
             
@@ -777,7 +777,7 @@ fn trace_failed_library_call_from_test() {
                     Result::Ok(_) => panic_with_felt252('shouldve panicked'),
                     Result::Err(panic_data) => { assert(*panic_data.at(0) == 'panic', *panic_data.at(0)); }
                 }
-                            
+                
                 assert_trace(get_call_trace(), proxy_address, checker_address);
             }
             
@@ -842,7 +842,7 @@ fn trace_failed_library_call_from_test() {
                                     result: CallResult::Success(array![])
                                 }
                             ],
-                            result: CallResult::Failure(array![])
+                            result: CallResult::Failure(CallFailure::Panic(array![482670963043]))
                         },
                         CallTrace {
                             entry_point: CallEntryPoint {
@@ -854,7 +854,7 @@ fn trace_failed_library_call_from_test() {
                                 call_type: CallType::Call,
                             },
                             nested_calls: array![],
-                            result: CallResult::Failure(array![])
+                            result: CallResult::Failure(CallFailure::Panic(array![482670963043]))
                         }
                     ],
                     result: CallResult::Success(array![])

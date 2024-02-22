@@ -35,7 +35,13 @@ enum CallType {
 #[derive(Drop, Serde, PartialEq)]
 enum CallResult {
     Success: Array<felt252>,
-    Failure: Array<felt252>
+    Failure: CallFailure
+}
+
+#[derive(Drop, Serde, PartialEq)]
+enum CallFailure {
+    Panic: Array<felt252>,
+    Error: ByteArray
 }
 
 fn get_call_trace() -> CallTrace {
@@ -52,9 +58,17 @@ impl DisplayCallResult of Display<CallResult> {
                 write!(f, "Success: ")?;
                 Debug::fmt(val, ref f)?;
             },
-            CallResult::Failure(val) => {
+            CallResult::Failure(call_failure) => {
                 write!(f, "Failure: ")?;
-                Debug::fmt(val, ref f)?;
+
+                match call_failure {
+                    CallFailure::Panic(val) => {
+                        Debug::fmt(val, ref f)?;
+                    },
+                    CallFailure::Error(msg) => {
+                        Display::fmt(msg, ref f)?;
+                    },
+                };
             },
         };
         Result::Ok(())
