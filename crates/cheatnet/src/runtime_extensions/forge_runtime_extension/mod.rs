@@ -571,7 +571,9 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .trace_data
                     .current_call_stack
                     .borrow_full_trace();
-                let output = serialize_call_trace(call_trace);
+
+                let mut output = vec![];
+                serialize_call_trace(call_trace, &mut output);
 
                 Ok(CheatcodeHandlingResult::Handled(output))
             }
@@ -639,22 +641,14 @@ fn handle_deploy_result(
     }
 }
 
-fn serialize_call_trace(call_trace: &CallTrace) -> Vec<Felt252> {
-    let mut output = vec![];
-
-    serialize_call_trace_inner(call_trace, &mut output);
-
-    output
-}
-
 // append all to one output Vec instead of allocating new one for each nested call
-fn serialize_call_trace_inner(call_trace: &CallTrace, output: &mut Vec<Felt252>) {
+fn serialize_call_trace(call_trace: &CallTrace, output: &mut Vec<Felt252>) {
     serialize_call_entry_point(&call_trace.entry_point, output);
 
     output.push(Felt252::from(call_trace.nested_calls.len()));
 
     for call_trace in &call_trace.nested_calls {
-        serialize_call_trace_inner(&call_trace.borrow(), output);
+        serialize_call_trace(&call_trace.borrow(), output);
     }
 }
 
