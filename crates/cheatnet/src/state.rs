@@ -333,27 +333,20 @@ impl TraceData {
         current_call.borrow_mut().entry_point.class_hash = Some(class_hash);
     }
 
-    pub fn exit_nested_call(&mut self, resources_used_after_call: &ExecutionResources) {
+    pub fn exit_nested_call(
+        &mut self,
+        resources_used_after_call: &ExecutionResources,
+        call_result: CallResult,
+    ) {
         let CallStackElement {
             resources_used_before_call,
             call_trace: last_call,
         } = self.current_call_stack.pop();
 
-        last_call.borrow_mut().used_execution_resources =
+        let mut last_call = last_call.borrow_mut();
+        last_call.used_execution_resources =
             subtract_execution_resources(resources_used_after_call, &resources_used_before_call);
-    }
-
-    pub fn add_result_to_last_call(&mut self, call_result: &CallResult) {
-        let binding = self.current_call_stack.top();
-        let mut last_call = binding.borrow_mut();
-        if last_call.nested_calls.is_empty() {
-            last_call.result = call_result.clone();
-            return;
-        }
-
-        last_call.nested_calls[last_call.nested_calls.len() - 1]
-            .borrow_mut()
-            .result = call_result.clone();
+        last_call.result = call_result;
     }
 }
 

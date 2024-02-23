@@ -703,11 +703,7 @@ fn serialize_call_result(call_result: &CallResult) -> Vec<Felt252> {
         CallResult::Failure(call_failure) => {
             let (call_failure_variant, failure_data) = match call_failure {
                 CallFailure::Panic { panic_data } => (0, panic_data.clone()),
-                CallFailure::Error { msg } => {
-                    let converted_string: ByteArray = ByteArray::from(msg.clone());
-
-                    (1, converted_string.serialize())
-                }
+                CallFailure::Error { msg } => (1, ByteArray::from(msg.clone()).serialize()),
             };
 
             output.push(Felt252::from(1));

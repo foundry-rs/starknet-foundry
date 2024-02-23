@@ -32,7 +32,7 @@ fn trace_deploy() {
                 let proxy_address_3 = proxy
                     .deploy_at(@array![checker_address.into()], 123.try_into().unwrap())
                     .unwrap();
-                                
+                    
                 assert_trace(
                     get_call_trace(), proxy_address1, proxy_address2, proxy_address_3, checker_address
                 );
@@ -75,7 +75,7 @@ fn trace_deploy() {
                                         call_type: CallType::Call,
                                     },
                                     nested_calls: array![],
-                                    result: CallResult::Success(array![])
+                                    result: CallResult::Success(array![101])
                                 }
                             ],
                             result: CallResult::Success(array![])
@@ -100,7 +100,7 @@ fn trace_deploy() {
                                         call_type: CallType::Call,
                                     },
                                     nested_calls: array![],
-                                    result: CallResult::Success(array![])
+                                    result: CallResult::Success(array![101])
                                 }
                             ],
                             result: CallResult::Success(array![])
@@ -125,7 +125,7 @@ fn trace_deploy() {
                                         call_type: CallType::Call,
                                     },
                                     nested_calls: array![],
-                                    result: CallResult::Success(array![])
+                                    result: CallResult::Success(array![101])
                                 }
                             ],
                             result: CallResult::Success(array![])
@@ -203,7 +203,7 @@ fn trace_call() {
             
                 let chcecker_dispatcher = ITraceInfoCheckerDispatcher { contract_address: checker_address };
                 chcecker_dispatcher.from_proxy(4);
-                            
+                
                 assert_trace(
                     get_call_trace(), proxy_address, checker_address, dummy_address, checker.class_hash
                 );
@@ -246,7 +246,7 @@ fn trace_call() {
                                         call_type: CallType::Call,
                                     },
                                     nested_calls: array![],
-                                    result: CallResult::Success(array![])
+                                    result: CallResult::Success(array![101])
                                 },
                             ],
                             result: CallResult::Success(array![])
@@ -271,7 +271,7 @@ fn trace_call() {
                                         call_type: CallType::Call,
                                     },
                                     nested_calls: array![],
-                                    result: CallResult::Success(array![])
+                                    result: CallResult::Success(array![102])
                                 }
                             ],
                             result: CallResult::Success(array![102])
@@ -296,7 +296,7 @@ fn trace_call() {
                                         call_type: CallType::Delegate,
                                     },
                                     nested_calls: array![],
-                                    result: CallResult::Success(array![])
+                                    result: CallResult::Success(array![103])
                                 }
                             ],
                             result: CallResult::Success(array![103])
@@ -321,7 +321,7 @@ fn trace_call() {
                                         call_type: CallType::Call,
                                     },
                                     nested_calls: array![],
-                                    result: CallResult::Success(array![])
+                                    result: CallResult::Success(array![142])
                                 },
                                 CallTrace {
                                     entry_point: CallEntryPoint {
@@ -464,7 +464,7 @@ fn trace_failed_call() {
                                         call_type: CallType::Call,
                                     },
                                     nested_calls: array![],
-                                    result: CallResult::Success(array![])
+                                    result: CallResult::Success(array![101])
                                 },
                             ],
                             result: CallResult::Success(array![])
@@ -489,7 +489,7 @@ fn trace_failed_call() {
                                         call_type: CallType::Call,
                                     },
                                     nested_calls: array![],
-                                    result: CallResult::Success(array![])
+                                    result: CallResult::Failure(CallFailure::Panic(array![482670963043]))
                                 }
                             ],
                             result: CallResult::Failure(CallFailure::Panic(array![482670963043]))
@@ -621,7 +621,7 @@ fn trace_library_call_from_test() {
                                         call_type: CallType::Call,
                                     },
                                     nested_calls: array![],
-                                    result: CallResult::Success(array![])
+                                    result: CallResult::Success(array![102])
                                 }
                             ],
                             result: CallResult::Success(array![102])
@@ -646,7 +646,7 @@ fn trace_library_call_from_test() {
                                         call_type: CallType::Delegate,
                                     },
                                     nested_calls: array![],
-                                    result: CallResult::Success(array![])
+                                    result: CallResult::Success(array![103])
                                 }
                             ],
                             result: CallResult::Success(array![103])
@@ -671,7 +671,7 @@ fn trace_library_call_from_test() {
                                         call_type: CallType::Call,
                                     },
                                     nested_calls: array![],
-                                    result: CallResult::Success(array![])
+                                    result: CallResult::Success(array![142])
                                 },
                                 CallTrace {
                                     entry_point: CallEntryPoint {
@@ -814,7 +814,7 @@ fn trace_failed_library_call_from_test() {
                                         call_type: CallType::Call,
                                     },
                                     nested_calls: array![],
-                                    result: CallResult::Success(array![])
+                                    result: CallResult::Success(array![101])
                                 },
                             ],
                             result: CallResult::Success(array![])
@@ -839,7 +839,7 @@ fn trace_failed_library_call_from_test() {
                                         call_type: CallType::Call,
                                     },
                                     nested_calls: array![],
-                                    result: CallResult::Success(array![])
+                                    result: CallResult::Failure(CallFailure::Panic(array![482670963043]))
                                 }
                             ],
                             result: CallResult::Failure(CallFailure::Panic(array![482670963043]))
@@ -942,7 +942,7 @@ fn trace_l1_handler() {
                                         call_type: CallType::Call,
                                     },
                                     nested_calls: array![],
-                                    result: CallResult::Success(array![])
+                                    result: CallResult::Success(array![101])
                                 }
                             ],
                             result: CallResult::Success(array![])
@@ -977,10 +977,10 @@ fn trace_l1_handler() {
                                                 call_type: CallType::Call,
                                             },
                                             nested_calls: array![],
-                                            result: CallResult::Success(array![])
+                                            result: CallResult::Success(array![102])
                                         }
                                     ],
-                                    result: CallResult::Success(array![])
+                                    result: CallResult::Success(array![102])
                                 }
                             ],
                             result: CallResult::Success(array![102])

@@ -85,6 +85,22 @@ pub enum AddressOrClassHash {
     ClassHash(ClassHash),
 }
 
+impl AddressOrClassHash {
+    #[must_use]
+    pub fn build(
+        maybe_address: Option<ContractAddress>,
+        maybe_class_hash: Option<ClassHash>,
+    ) -> Self {
+        match maybe_address {
+            None => match maybe_class_hash {
+                None => Self::ClassHash(ClassHash::default()),
+                Some(class_hash) => Self::ClassHash(class_hash),
+            },
+            Some(address) => Self::ContractAddress(address),
+        }
+    }
+}
+
 impl CallFailure {
     /// Maps blockifier-type error, to one that can be put into memory as panic-data (or re-raised)
     #[must_use]
@@ -171,7 +187,8 @@ impl CallFailure {
 }
 
 impl CallResult {
-    fn from_execution_result(
+    #[must_use]
+    pub fn from_execution_result(
         result: &EntryPointExecutionResult<CallInfo>,
         starknet_identifier: &AddressOrClassHash,
     ) -> Self {
@@ -240,10 +257,6 @@ pub fn call_entry_point(
     );
 
     let result = CallResult::from_execution_result(&exec_result, starknet_identifier);
-    runtime_state
-        .cheatnet_state
-        .trace_data
-        .add_result_to_last_call(&result);
 
     if let Ok(call_info) = exec_result {
         syscall_handler.inner_calls.push(call_info);
