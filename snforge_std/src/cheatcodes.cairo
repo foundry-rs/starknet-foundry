@@ -75,12 +75,10 @@ fn stop_elect(target: CheatTarget) {
 }
 
 fn start_mock_call<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: Destruct<T>>(
-    contract_address: ContractAddress, function_name: ByteArray, ret_data: T
+    contract_address: ContractAddress, function_name: felt252, ret_data: T
 ) {
     let contract_address_felt: felt252 = contract_address.into();
-    let mut inputs = array![contract_address_felt, core::byte_array::BYTE_ARRAY_MAGIC];
-
-    function_name.serialize(ref inputs);
+    let mut inputs = array![contract_address_felt, function_name];
 
     let mut ret_data_arr = ArrayTrait::new();
     ret_data.serialize(ref ret_data_arr);
@@ -101,11 +99,7 @@ fn start_mock_call<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: Destru
     cheatcode::<'start_mock_call'>(inputs.span());
 }
 
-fn stop_mock_call(contract_address: ContractAddress, function_name: ByteArray) {
+fn stop_mock_call(contract_address: ContractAddress, function_name: felt252) {
     let contract_address_felt: felt252 = contract_address.into();
-    let mut inputs = array![contract_address_felt, core::byte_array::BYTE_ARRAY_MAGIC];
-
-    function_name.serialize(ref inputs);
-
-    cheatcode::<'stop_mock_call'>(inputs.span());
+    cheatcode::<'stop_mock_call'>(array![contract_address_felt, function_name].span());
 }
