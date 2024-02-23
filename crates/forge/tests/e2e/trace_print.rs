@@ -76,6 +76,16 @@ fn trace_info_print() {
                     )
                 ]
                 Call Result: Success: []
+            ),
+            (
+                Entry point type: External
+                Selector: 1423007881864269398513176851135908567621420218646181695002463829511917924133
+                Calldata: [5, 1, 2, 3, 4, 5]
+                Storage address: 3447179351737797591242797233952749538061496839896319750579571119352735823363
+                Caller address: 469394814521890341860918960550914
+                Call type: Call
+                Nested Calls: []
+                Call Result: Failure: [1, 2, 3, 4, 5]
             )
         ]
         Call Result: Success: []
