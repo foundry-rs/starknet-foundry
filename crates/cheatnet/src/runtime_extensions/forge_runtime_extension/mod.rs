@@ -525,31 +525,31 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     match curve.as_deref() {
                         Some("Secp256k1") => {
                             let Ok(signing_key) = k256::ecdsa::SigningKey::from_slice(&secret_key)
-                            else {
-                                return Ok(handle_cheatcode_error("invalid secret_key"));
-                            };
+                                else {
+                                    return Ok(handle_cheatcode_error("invalid secret_key"));
+                                };
 
                             let signature: k256::ecdsa::Signature =
                                 k256::ecdsa::signature::hazmat::PrehashSigner::sign_prehash(
                                     &signing_key,
                                     &msg_hash,
                                 )
-                                .unwrap();
+                                    .unwrap();
 
                             signature.split_bytes()
                         }
                         Some("Secp256r1") => {
                             let Ok(signing_key) = p256::ecdsa::SigningKey::from_slice(&secret_key)
-                            else {
-                                return Ok(handle_cheatcode_error("invalid secret_key"));
-                            };
+                                else {
+                                    return Ok(handle_cheatcode_error("invalid secret_key"));
+                                };
 
                             let signature: p256::ecdsa::Signature =
                                 p256::ecdsa::signature::hazmat::PrehashSigner::sign_prehash(
                                     &signing_key,
                                     &msg_hash,
                                 )
-                                .unwrap();
+                                    .unwrap();
 
                             signature.split_bytes()
                         }
@@ -730,6 +730,29 @@ pub fn update_top_call_execution_resources(runtime: &mut ForgeRuntime) {
         .current_call_stack
         .top();
     top_call.borrow_mut().used_execution_resources = all_execution_resources;
+}
+
+pub fn update_top_call_onchain_data(runtime: &mut ForgeRuntime) {
+    let all_l2_l1_message_sizes = runtime
+        .extended_runtime
+        .extended_runtime
+        .extended_runtime
+        .hint_handler
+        .l2_to_l1_messages
+        .iter()
+        .map(|ordered_message| ordered_message.message.payload.0.len())
+        .collect();
+
+    // call representing the test code
+    let top_call = runtime
+        .extended_runtime
+        .extended_runtime
+        .extension
+        .cheatnet_state
+        .trace_data
+        .current_call_stack
+        .top();
+    top_call.borrow_mut().used_onchain_data.l2_l1_message_sizes = all_l2_l1_message_sizes;
 }
 
 #[must_use]

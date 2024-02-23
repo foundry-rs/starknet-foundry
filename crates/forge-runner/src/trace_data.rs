@@ -9,7 +9,7 @@ use std::path::PathBuf;
 use blockifier::execution::entry_point::{CallEntryPoint, CallType, ExecutionResources};
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources as VmExecutionResources;
 use cheatnet::constants::{TEST_CONTRACT_CLASS_HASH, TEST_ENTRY_POINT_SELECTOR};
-use cheatnet::state::CallTrace;
+use cheatnet::state::{CallTrace, OnchainData};
 use conversions::IntoConv;
 use serde::{Deserialize, Serialize};
 use starknet::core::utils::get_selector_from_name;
@@ -32,6 +32,7 @@ pub struct ProfilerCallTrace {
     pub entry_point: ProfilerCallEntryPoint,
     // These also include resources used by internal calls
     pub used_execution_resources: ProfilerExecutionResources,
+    pub used_onchain_data: OnchainData,
     pub nested_calls: Vec<ProfilerCallTrace>,
 }
 
@@ -43,6 +44,7 @@ impl ProfilerCallTrace {
             used_execution_resources: ProfilerExecutionResources::from(
                 value.used_execution_resources,
             ),
+            used_onchain_data: value.used_onchain_data,
             nested_calls: value
                 .nested_calls
                 .into_iter()

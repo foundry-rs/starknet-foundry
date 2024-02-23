@@ -43,10 +43,10 @@ pub fn execute_call_entry_point(
     if let Some(ret_data) =
         get_ret_data_by_call_entry_point(entry_point, runtime_state.cheatnet_state)
     {
-        runtime_state
-            .cheatnet_state
-            .trace_data
-            .exit_nested_call(resources);
+        runtime_state.cheatnet_state.trace_data.exit_nested_call(
+            resources,
+            &EntryPointExecutionResult::Ok(CallInfo::default()),
+        );
         return Ok(mocked_call_info(entry_point.clone(), ret_data.clone()));
     }
     // endregion
@@ -105,12 +105,7 @@ pub fn execute_call_entry_point(
         ),
     };
 
-    runtime_state
-        .cheatnet_state
-        .trace_data
-        .exit_nested_call(resources);
-
-    result.map_err(|error| {
+    let result = result.map_err(|error| {
         // endregion
         match error {
             // On VM error, pack the stack trace into the propagated error.
@@ -130,7 +125,14 @@ pub fn execute_call_entry_point(
             }
             other_error => other_error,
         }
-    })
+    });
+
+    runtime_state
+        .cheatnet_state
+        .trace_data
+        .exit_nested_call(resources, &result);
+
+    result
     // region: Modified blockifier code
     // We skip recursion depth decrease
     // endregion

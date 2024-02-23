@@ -16,7 +16,10 @@ use runtime::starknet::state::DictStateReader;
 use starknet_api::core::EntryPointSelector;
 
 use crate::constants::{build_test_entry_point, TEST_CONTRACT_CLASS_HASH};
+use blockifier::execution::call_info::CallInfo;
+use blockifier::execution::errors::EntryPointExecutionError;
 use blockifier::state::errors::StateError::UndeclaredClassHash;
+use serde::{Deserialize, Serialize};
 use starknet_api::transaction::ContractAddressSalt;
 use starknet_api::{
     core::{ClassHash, CompiledClassHash, ContractAddress, Nonce},
@@ -126,12 +129,18 @@ pub enum CheatStatus<T> {
     Uncheated,
 }
 
+#[derive(Clone, Default, Debug, Serialize, Deserialize)]
+pub struct OnchainData {
+    pub l2_l1_message_sizes: Vec<usize>,
+}
+
 /// Tree structure representing trace of a call.
 #[derive(Clone)]
 pub struct CallTrace {
     pub entry_point: CallEntryPoint,
     // These also include resources used by internal calls
     pub used_execution_resources: ExecutionResources,
+    pub used_onchain_data: OnchainData,
     pub nested_calls: Vec<Rc<RefCell<CallTrace>>>,
 }
 
@@ -211,6 +220,7 @@ impl Default for CheatnetState {
         let test_call = Rc::new(RefCell::new(CallTrace {
             entry_point: test_code_entry_point,
             used_execution_resources: Default::default(),
+            used_onchain_data: Default::default(),
             nested_calls: vec![],
         }));
         Self {
@@ -310,6 +320,7 @@ impl TraceData {
         let new_call = Rc::new(RefCell::new(CallTrace {
             entry_point,
             used_execution_resources: Default::default(),
+            used_onchain_data: Default::default(),
             nested_calls: vec![],
         }));
         let current_call = self.current_call_stack.top();
@@ -328,14 +339,27 @@ impl TraceData {
         current_call.borrow_mut().entry_point.class_hash = Some(class_hash);
     }
 
-    pub fn exit_nested_call(&mut self, resources_used_after_call: &ExecutionResources) {
+    pub fn exit_nested_call(
+        &mut self,
+        resources_used_after_call: &ExecutionResources,
+        maybe_call_info: &Result<CallInfo, EntryPointExecutionError>,
+    ) {
         let CallStackElement {
             resources_used_before_call,
             call_trace: last_call,
         } = self.current_call_stack.pop();
 
-        last_call.borrow_mut().used_execution_resources =
+        let mut last_call = last_call.borrow_mut();
+        last_call.used_execution_resources =
             subtract_execution_resources(resources_used_after_call, &resources_used_before_call);
+        if let Ok(call_info) = maybe_call_info {
+            last_call.used_onchain_data.l2_l1_message_sizes = call_info
+                .execution
+                .l2_to_l1_messages
+                .iter()
+                .map(|ordered_message| ordered_message.message.payload.0.len())
+                .collect();
+        }
     }
 }
 
