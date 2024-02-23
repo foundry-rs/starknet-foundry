@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Added
+
+- result of the call to the trace
+
 ## [0.18.0] - 2024-02-21
 
 ### Forge
@@ -48,7 +54,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-- `map_string_error` for use with dispatchers, which automatically converts string errors from the syscall result (read more [here](https://foundry-rs.github.io/starknet-foundry/testing/contracts#handling-errors))
+- `map_string_error` for use with dispatchers, which automatically converts string errors from the syscall result (read
+  more [here](https://foundry-rs.github.io/starknet-foundry/testing/contracts#handling-errors))
 
 ## [0.17.0] - 2024-02-07
 
@@ -75,23 +82,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Changed
 
-- sncast tool configuration is now moved away from `Scarb.toml` to `snfoundry.toml` file. This file must be present in current or any parent directories in order to use profiles.
+- sncast tool configuration is now moved away from `Scarb.toml` to `snfoundry.toml` file. This file must be present in
+  current or any parent directories in order to use profiles.
 
 #### Added
 
 - `--package` flag for `declare` and `script` subcommands, that specifies scarb package to work with
-- `Debug` and `Display` impls for script subcommand responses - use `print!`, `println!` macros instead of calling `.print()`
+- `Debug` and `Display` impls for script subcommand responses - use `print!`, `println!` macros instead of
+  calling `.print()`
 
 ## [0.16.0] - 2024-01-26
 
 ### Forge
 
 #### Added
+
 - Bump to cairo 2.5.0
 
 #### Changed
 
-- `SafeDispatcher`s usages need to be tagged with `#[feature("safe_dispatcher)]` (directly before usage), see [the shamans post](https://community.starknet.io/t/cairo-v2-5-0-is-out/112807#safe-dispatchers-15)
+- `SafeDispatcher`s usages need to be tagged with `#[feature("safe_dispatcher)]` (directly before usage),
+  see [the shamans post](https://community.starknet.io/t/cairo-v2-5-0-is-out/112807#safe-dispatchers-15)
 
 ## [0.15.0] - 2024-01-24
 
@@ -128,7 +139,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - maximum number of computational steps per call set to current Starknet limit (3M)
-- `mean` and `std deviation` fields are displayed for gas usage while running fuzzing tests 
+- `mean` and `std deviation` fields are displayed for gas usage while running fuzzing tests
 - Cairo edition in `snforge_std` and `sncast_std` set to `2023_10`
 - `snforge_std::signature` module with `stark_curve`, `secp256k1_curve` and `secp256r1_curve` submodules
 
@@ -144,7 +155,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `assert_not_emitted` assert to check if an event was not emitted
 
-#### Changed 
+#### Changed
 
 - fields from `starknet::info::v2::TxInfo` are now part of `TxInfoMock` from `snforge_std::cheatcodes::tx_info`
 - consistent latest block numbers for each url are now used across the whole run when testing against forks
@@ -155,7 +166,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Cast
 
-#### Added 
+#### Added
 
 - add support for sepolia network
 - `--yes` option to `account delete` command that allows to skip confirmation prompt
@@ -171,7 +182,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - Bump cairo to 2.4.0.
-- Migrated test compilation and collection to Scarb, snforge should now be compatible with every Scarb version >= 2.4.0 unless breaking changes happen
+- Migrated test compilation and collection to Scarb, snforge should now be compatible with every Scarb version >= 2.4.0
+  unless breaking changes happen
 
 ## [0.12.0] - 2023-12-06
 
@@ -180,17 +192,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - print gas usage for each test
-- Support for test collector built-in in Scarb with the `--use-scarb-collector` flag. Requires at least `nightly-2023-12-04` version of Scarb.
+- Support for test collector built-in in Scarb with the `--use-scarb-collector` flag. Requires at
+  least `nightly-2023-12-04` version of Scarb.
 
 ### Cast
 
 #### Added
 
 - `--wait-timeout` to set timeout for waiting for tx on network using `--wait` flag (default 60s)
-- `--wait-retry-interval` to adjust the time between consecutive attempts to fetch tx from network using `--wait` flag (default 5s)
+- `--wait-retry-interval` to adjust the time between consecutive attempts to fetch tx from network using `--wait` flag (
+  default 5s)
 - allow setting nonce in declare, deploy and invoke (using `--nonce` and in deployment scripts)
 - add `get_nonce` function to cast_std
-- `--private-key-file` option to `account add` command that allows to provide a path to the file holding account private key
+- `--private-key-file` option to `account add` command that allows to provide a path to the file holding account private
+  key
 
 ## [0.11.0] - 2023-11-22
 
@@ -202,9 +217,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `--rerun-failed` option to run tests that failed during the last run.
 
 #### Changed
-- `start_warp` and `stop_warp` now take `CheatTarget` as the first argument instead of `ContractAddress`. Read more [here](./docs/src/appendix/cheatcodes/start_warp.md). 
-- `start_prank` and `stop_prank` now take `CheatTarget` as the first argument instead of `ContractAddress`. Read more [here](./docs/src/appendix/cheatcodes/start_prank.md).
-- `start_roll` and `stop_roll` now take `CheatTarget` as the first argument instead of `ContractAddress`. Read more [here](./docs/src/appendix/cheatcodes/start_roll.md).
+
+- `start_warp` and `stop_warp` now take `CheatTarget` as the first argument instead of `ContractAddress`. Read
+  more [here](./docs/src/appendix/cheatcodes/start_warp.md).
+- `start_prank` and `stop_prank` now take `CheatTarget` as the first argument instead of `ContractAddress`. Read
+  more [here](./docs/src/appendix/cheatcodes/start_prank.md).
+- `start_roll` and `stop_roll` now take `CheatTarget` as the first argument instead of `ContractAddress`. Read
+  more [here](./docs/src/appendix/cheatcodes/start_roll.md).
 
 PS: Credits to @bllu404 for the help with the new interfaces for cheats!
 
@@ -228,7 +247,8 @@ PS: Credits to @bllu404 for the help with the new interfaces for cheats!
 
 #### Removed
 
-- `available_gas` attribute, it didn't compute correctly gas usage. Contract functions execution cost would not be included.
+- `available_gas` attribute, it didn't compute correctly gas usage. Contract functions execution cost would not be
+  included.
 
 ## [0.10.1] - 2023-11-09
 
@@ -279,17 +299,18 @@ PS: Credits to @bllu404 for the help with the new interfaces for cheats!
 
 #### Added
 
-- `#[ignore]` attribute together with `--ignored` and `include-ignored` flags - read more [here](https://foundry-rs.github.io/starknet-foundry/testing/testing.html#ignoring-some-tests-unless-specifically-requested)
+- `#[ignore]` attribute together with `--ignored` and `include-ignored` flags - read
+  more [here](https://foundry-rs.github.io/starknet-foundry/testing/testing.html#ignoring-some-tests-unless-specifically-requested)
 - support for `deploy_syscall` directly in the test code (alternative to `deploy`)
 - `snforge_std::signature` module for performing ecdsa signatures
 
 #### Changed
 
 - updated Cairo version to 2.3.0 - compatible Scarb version is 2.3.0:
-  - tests in `src` folder now have to be in a module annotated with `#[cfg(test)]`
+    - tests in `src` folder now have to be in a module annotated with `#[cfg(test)]`
 - `snforge_std::PrintTrait` will not convert values representing ASCII control characters to strings
-- separated `snforge` to subcommands: `snforge test`, `snforge init` and `snforge clean-cache`. 
-Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/snforge.html).
+- separated `snforge` to subcommands: `snforge test`, `snforge init` and `snforge clean-cache`.
+  Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/snforge.html).
 - `starknet::get_block_info` now returns correct block info in a forked block
 
 ### Cast
@@ -301,11 +322,12 @@ Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/snforge.
 - `--hex-format` flag has been added
 
 #### Removed
+
 - `-i` short for `--int-format` is removed, now have to use the full form `--int-format`
 
 ## [0.8.3] - 2023-10-17
 
-### Forge 
+### Forge
 
 #### Changed
 
@@ -322,12 +344,15 @@ Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/snforge.
 ### Forge
 
 #### Fixed
+
 - incorrect caller address bug
 
 ## [0.8.1] - 2023-10-12
+
 ### Forge
 
 #### Fixed
+
 - significantly reduced ram usage
 
 ## [0.8.0] - 2023-10-11
@@ -339,8 +364,10 @@ Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/snforge.
 - `#[fuzzer(...)]` attribute allowing to specify a fuzzer configuration for a single test case
 - Support for `u8`, `u16`, `u32`, `u64`, `u128`, `u256` types to fuzzer
 - `--clean-cache` flag
-- Changed interface of `L1Handler.execute` and `L1Handler` (dropped `fee` parameter, added result handling with `RevertedTransaction`)
-- Contract now has associated state, more about it [here](https://foundry-rs.github.io/starknet-foundry/testing/testing_contract_internals.html)
+- Changed interface of `L1Handler.execute` and `L1Handler` (dropped `fee` parameter, added result handling
+  with `RevertedTransaction`)
+- Contract now has associated state, more about
+  it [here](https://foundry-rs.github.io/starknet-foundry/testing/testing_contract_internals.html)
 - cheatcodes (`prank`, `roll`, `warp`) now work on forked Cairo 0 contracts
 
 #### Changed
@@ -348,14 +375,15 @@ Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/snforge.
 - Spying events interface is updated to enable the use of events defined inside contracts in assertions
 - Test are executed in parallel
 - Fixed inconsistent pointers bug https://github.com/foundry-rs/starknet-foundry/issues/659
-- Fixed an issue where `deploy_at` would not trigger the constructors https://github.com/foundry-rs/starknet-foundry/issues/805
+- Fixed an issue where `deploy_at` would not trigger the
+  constructors https://github.com/foundry-rs/starknet-foundry/issues/805
 
 ### Cast
 
 #### Changed
 
-- dropped official support for cairo 1 compiled contracts. While they still should be working without any problems, 
-from now on the only officially supported cairo compiler version is 2
+- dropped official support for cairo 1 compiled contracts. While they still should be working without any problems,
+  from now on the only officially supported cairo compiler version is 2
 
 ## [0.7.1] - 2023-09-27
 
@@ -366,7 +394,8 @@ from now on the only officially supported cairo compiler version is 2
 - `var` library function for reading environmental variables
 
 #### Fixed
-- Using any concrete `block_id` when using forking mode, would lead to crashes 
+
+- Using any concrete `block_id` when using forking mode, would lead to crashes
 
 ## [0.7.0] - 2023-09-27
 
@@ -381,8 +410,10 @@ from now on the only officially supported cairo compiler version is 2
 #### Changed
 
 - Tests are collected only from a package tree (`src/lib.cairo` as an entrypoint) and `tests` folder:
-  - If there is a `lib.cairo` file in `tests` folder, then it is treated as an entrypoint to the `tests` package from which tests are collected
-  - Otherwise, all test files matching `tests/*.cairo` regex are treated as modules and added to a single virtual `lib.cairo`, which is treated as described above
+    - If there is a `lib.cairo` file in `tests` folder, then it is treated as an entrypoint to the `tests` package from
+      which tests are collected
+    - Otherwise, all test files matching `tests/*.cairo` regex are treated as modules and added to a single
+      virtual `lib.cairo`, which is treated as described above
 
 ### Cast
 
@@ -431,7 +462,8 @@ from now on the only officially supported cairo compiler version is 2
 
 - support for `keccak_syscall` syscall. It can be used directly in cairo tests
 - `l1_handler_execute` cheatcode
-- support for `roll`ing/`warp`ing/`prank`ing the constructor logic (precalculate address, prank, assert pranked state in constructor)
+- support for `roll`ing/`warp`ing/`prank`ing the constructor logic (precalculate address, prank, assert pranked state in
+  constructor)
 - `spy_events` cheatcode
 - Functions `read_json` and `FileParser<T>::parse_json` to load data from json files and deserialize it
 
