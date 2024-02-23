@@ -115,12 +115,9 @@ fn test_account_deploy_error(accounts_content: &str, error: &str) {
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
-    let bdg = snapbox.assert();
-    let out = bdg.get_output();
+    let output = snapbox.assert();
 
-    let stderr_str =
-        std::str::from_utf8(&out.stderr).expect("failed to convert command output to string");
-    assert!(stderr_str.contains(error));
+    assert_stderr_contains(output, error);
 }
 
 #[tokio::test]
@@ -322,13 +319,11 @@ pub async fn test_happy_case_keystore() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    let bdg = snapbox.assert();
-    let out = bdg.get_output();
 
-    let stdout_str =
-        std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
-    assert!(stdout_str.contains("account deploy"));
-    assert!(stdout_str.contains("transaction_hash"));
+    snapbox.assert().stdout_matches(indoc! {r"
+        command: account deploy
+        transaction_hash: 0x[..]
+    "});
 
     let contents = fs::read_to_string(tempdir.path().join(account_file)).unwrap();
     let items: serde_json::Value =
