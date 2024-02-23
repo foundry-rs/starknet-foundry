@@ -13,4 +13,7 @@
 * [multicall](./sncast/multicall/multicall.md)
     * [new](./sncast/multicall/new.md)
     * [run](./sncast/multicall/run.md)
+* [script](./sncast/script/script.md)
+    * [init](./sncast/script/init.md)
+    * [run](./sncast/script/run.md)
 * [show-config](./sncast/show_config.md)
