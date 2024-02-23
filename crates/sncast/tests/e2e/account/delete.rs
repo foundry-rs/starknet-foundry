@@ -161,7 +161,7 @@ pub async fn test_happy_case_with_yes_flag() {
     // Run test with no additional user input
     let snapbox = runner(&args).current_dir(temp_dir.path());
     let output = snapbox.assert().success();
-    
+
     assert!(output.as_stderr().is_empty());
     output.stdout_matches(indoc! {r"
         command: account delete
