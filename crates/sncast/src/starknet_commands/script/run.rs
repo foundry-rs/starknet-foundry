@@ -103,9 +103,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 Ok(CheatcodeHandlingResult::Handled(res))
             }
             "declare" => {
-                let contract_name = reader
-                    .read_short_string()
-                    .expect("Failed to convert contract name to string");
+                let contract_name = reader.read_string();
                 let max_fee = reader.read_option_felt().map(conversions::IntoConv::into_);
                 let nonce = reader.read_option_felt().map(conversions::IntoConv::into_);
 

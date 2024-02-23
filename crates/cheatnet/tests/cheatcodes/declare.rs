@@ -1,12 +1,10 @@
 use std::collections::HashMap;
 
 use crate::common::{get_contracts, state::create_cached_state};
-use cairo_felt::Felt252;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::{
     declare, get_class_hash,
 };
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
-use conversions::felt252::FromShortString;
 use runtime::EnhancedHintError;
 use scarb_api::StarknetContractArtifacts;
 use starknet_api::core::ClassHash;
@@ -26,10 +24,9 @@ fn declare_simple() {
 
     let mut cached_state = create_cached_state();
 
-    let contract = Felt252::from_short_string(contract_name).unwrap();
     let contracts = get_contracts();
 
-    let class_hash = declare(&mut cached_state, &contract, &contracts).unwrap();
+    let class_hash = declare(&mut cached_state, contract_name, &contracts).unwrap();
     let expected_class_hash = get_contract_class_hash(contract_name, &contracts);
 
     assert_eq!(class_hash, expected_class_hash);
@@ -44,8 +41,7 @@ fn declare_multiple() {
     let contracts = get_contracts();
 
     for contract_name in contract_names {
-        let contract = Felt252::from_short_string(contract_name).unwrap();
-        let class_hash = declare(&mut cached_state, &contract, &contracts).unwrap();
+        let class_hash = declare(&mut cached_state, contract_name, &contracts).unwrap();
         let expected_class_hash = get_contract_class_hash(contract_name, &contracts);
         assert_eq!(class_hash, expected_class_hash);
     }
@@ -57,14 +53,13 @@ fn declare_same_contract() {
 
     let mut cached_state = create_cached_state();
 
-    let contract = Felt252::from_short_string(contract_name).unwrap();
     let contracts = get_contracts();
 
-    let class_hash = declare(&mut cached_state, &contract, &contracts).unwrap();
+    let class_hash = declare(&mut cached_state, contract_name, &contracts).unwrap();
     let expected_class_hash = get_contract_class_hash(contract_name, &contracts);
     assert_eq!(class_hash, expected_class_hash);
 
-    let output = declare(&mut cached_state, &contract, &contracts);
+    let output = declare(&mut cached_state, contract_name, &contracts);
 
     assert!(match output {
         Err(CheatcodeError::Unrecoverable(EnhancedHintError::Anyhow(msg))) => {
@@ -80,10 +75,9 @@ fn declare_non_existent() {
 
     let mut cached_state = create_cached_state();
 
-    let contract = Felt252::from_short_string(contract_name).unwrap();
     let contracts = get_contracts();
 
-    let output = declare(&mut cached_state, &contract, &contracts);
+    let output = declare(&mut cached_state, contract_name, &contracts);
 
     assert!(match output {
         Err(CheatcodeError::Unrecoverable(EnhancedHintError::Anyhow(msg))) => {

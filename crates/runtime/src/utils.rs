@@ -48,12 +48,12 @@ impl BufferReader<'_> {
         as_cairo_short_string(&self.read_felt())
     }
 
-    pub fn read_option_string(&mut self) -> Option<String> {
-        let (result, idx_increment) = try_format_string(&self.buffer[self.idx..])?;
+    pub fn read_string(&mut self) -> String {
+        let (result, idx_increment) = try_format_string(&self.buffer[self.idx..]).unwrap();
 
         self.idx += idx_increment;
 
-        Some(result)
+        result
     }
 }
 
