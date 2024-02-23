@@ -2,7 +2,6 @@ use cairo_felt::Felt252;
 use itertools::Itertools;
 
 // if we change API this might have collisions with old API hashes
-#[allow(dead_code)]
 pub fn generate_id(selector: &str, inputs: &[Felt252]) -> String {
     let mut res = selector.as_bytes().to_owned();
     let mut inputs_bytes: Vec<u8> = inputs.iter().flat_map(Felt252::to_bytes_be).collect_vec();
@@ -12,7 +11,7 @@ pub fn generate_id(selector: &str, inputs: &[Felt252]) -> String {
 
 #[cfg(test)]
 mod tests {
-    use crate::state::hashing::hash_script_subcommand_call;
+    use crate::state::hashing::generate_id;
     use cairo_felt::Felt252;
     use num_traits::Num;
 
@@ -22,7 +21,7 @@ mod tests {
 
     #[test]
     fn basic_case() {
-        let hash = hash_script_subcommand_call("aaa", &[Felt252::from(b'a')]);
+        let hash = generate_id("aaa", &[Felt252::from(b'a')]);
         assert_eq!(hash, "61616161");
     }
 
@@ -33,7 +32,7 @@ mod tests {
             Felt252::from(1),
             Felt252::from(1),
         ];
-        let hash = hash_script_subcommand_call("declare", inputs.as_ref());
+        let hash = generate_id("declare", inputs.as_ref());
         assert_eq!(hash, DECLARE_HEX.to_owned() + "4d6170613211");
     }
 
@@ -51,7 +50,7 @@ mod tests {
             Felt252::from(1),
             Felt252::from(1),
         ];
-        let hash = hash_script_subcommand_call("deploy", inputs.as_ref());
+        let hash = generate_id("deploy", inputs.as_ref());
         assert_eq!(
             hash,
             DEPLOY_HEX.to_owned()
@@ -74,7 +73,7 @@ mod tests {
             Felt252::from(1),
             Felt252::from(1),
         ];
-        let hash = hash_script_subcommand_call("invoke", inputs.as_ref());
+        let hash = generate_id("invoke", inputs.as_ref());
         assert_eq!(
             hash,
             INVOKE_HEX.to_owned()
