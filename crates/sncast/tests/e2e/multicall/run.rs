@@ -19,17 +19,15 @@ async fn test_happy_case() {
     args.append(&mut vec!["multicall", "run", "--path", path_str]);
 
     let snapbox = runner(&args);
-    let bdg = snapbox.assert();
-    let out = bdg.get_output();
+    let output = snapbox.assert();
 
-    let stderr_str =
-        std::str::from_utf8(&out.stderr).expect("failed to convert command stderr to string");
+    let stderr_str = output.as_stderr();
     assert!(
         stderr_str.is_empty(),
         "Multicall error, stderr: \n{stderr_str}",
     );
 
-    bdg.stdout_matches(indoc! {r"
+    output.stdout_matches(indoc! {r"
         command: multicall run
         transaction_hash: 0x[..]
     "});
@@ -49,17 +47,15 @@ async fn test_calldata_ids() {
     args.append(&mut vec!["multicall", "run", "--path", path_str]);
 
     let snapbox = runner(&args);
-    let bdg = snapbox.assert();
-    let out = bdg.get_output();
+    let output = snapbox.assert();
 
-    let stderr_str =
-        std::str::from_utf8(&out.stderr).expect("failed to convert command stderr to string");
+    let stderr_str = output.as_stderr();
     assert!(
         stderr_str.is_empty(),
         "Multicall error, stderr: \n{stderr_str}",
     );
 
-    bdg.stdout_matches(indoc! {r"
+    output.stdout_matches(indoc! {r"
         command: multicall run
         transaction_hash: 0x[..]
     "});

@@ -3,7 +3,7 @@ use crate::helpers::fixtures::{copy_file, default_cli_args};
 use crate::helpers::runner::runner;
 use indoc::indoc;
 
-use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
+use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains, AsOutput};
 use sncast::helpers::configuration::copy_config_to_tempdir;
 use sncast::helpers::constants::CREATE_KEYSTORE_PASSWORD_ENV_VAR;
 use std::{env, fs};
@@ -30,11 +30,9 @@ pub async fn test_happy_case() {
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
-    let bdg = snapbox.assert();
-    let out = bdg.get_output();
+    let output = snapbox.assert();
 
-    let stdout_str =
-        std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
+    let stdout_str = output.as_stdout();
     assert!(stdout_str.contains("command: account create"));
     assert!(stdout_str.contains("max_fee: "));
     assert!(!stdout_str.contains("max_fee: 0x"));
