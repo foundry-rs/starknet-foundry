@@ -5,7 +5,7 @@ use crate::helpers::fixtures::{
 };
 use crate::helpers::runner::runner;
 use indoc::indoc;
-use shared::test_utils::output_assert::assert_stderr_contains;
+use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 use sncast::helpers::constants::CONFIG_FILENAME;
 use starknet::core::types::TransactionReceipt::Declare;
 use std::fs;
@@ -275,11 +275,15 @@ fn scarb_no_casm_artifact() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().success();
 
-    assert!(
-        String::from_utf8(snapbox.assert().success().get_output().stdout.clone())
-            .unwrap()
-            .contains("class_hash")
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        command: declare
+        class_hash: [..]
+        transaction_hash: [..]
+        "},
     );
 }
 
