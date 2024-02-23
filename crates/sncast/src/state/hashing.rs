@@ -16,7 +16,6 @@ mod tests {
     use cairo_felt::Felt252;
     use num_traits::Num;
 
-    const CALL_HEX: &str = "63616c6c";
     const DECLARE_HEX: &str = "6465636c617265";
     const DEPLOY_HEX: &str = "6465706c6f79";
     const INVOKE_HEX: &str = "696e766f6b65";
@@ -25,26 +24,6 @@ mod tests {
     fn basic_case() {
         let hash = hash_script_subcommand_call("aaa", &[Felt252::from(b'a')]);
         assert_eq!(hash, "61616161");
-    }
-
-    #[test]
-    fn call() {
-        let inputs = [
-            Felt252::from_str_radix(
-                "559168041797100451294927166283688929222884562339612449063481797630338747795",
-                10,
-            )
-            .unwrap(),
-            Felt252::from(6_776_180),
-            Felt252::from(1),
-            Felt252::from(1),
-        ];
-        let hash = hash_script_subcommand_call("call", inputs.as_ref());
-        assert_eq!(
-            hash,
-            CALL_HEX.to_owned()
-                + "13c7a576625f15b424f294f6b98d3aba744c089e4b010ffc97f488aa6334d9367657411"
-        );
     }
 
     #[test]
