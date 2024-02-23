@@ -42,7 +42,7 @@ async fn test_happy_case_file() {
         path: multicall.toml
         "},
     );
-    
+
     let contents = std::fs::read_to_string(tmp_dir.path().join(multicall_toml_file))
         .expect("Should have been able to read the file");
     assert!(contents.contains(DEFAULT_MULTICALL_CONTENTS));
