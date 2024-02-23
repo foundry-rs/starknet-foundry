@@ -525,31 +525,31 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     match curve.as_deref() {
                         Some("Secp256k1") => {
                             let Ok(signing_key) = k256::ecdsa::SigningKey::from_slice(&secret_key)
-                                else {
-                                    return Ok(handle_cheatcode_error("invalid secret_key"));
-                                };
+                            else {
+                                return Ok(handle_cheatcode_error("invalid secret_key"));
+                            };
 
                             let signature: k256::ecdsa::Signature =
                                 k256::ecdsa::signature::hazmat::PrehashSigner::sign_prehash(
                                     &signing_key,
                                     &msg_hash,
                                 )
-                                    .unwrap();
+                                .unwrap();
 
                             signature.split_bytes()
                         }
                         Some("Secp256r1") => {
                             let Ok(signing_key) = p256::ecdsa::SigningKey::from_slice(&secret_key)
-                                else {
-                                    return Ok(handle_cheatcode_error("invalid secret_key"));
-                                };
+                            else {
+                                return Ok(handle_cheatcode_error("invalid secret_key"));
+                            };
 
                             let signature: p256::ecdsa::Signature =
                                 p256::ecdsa::signature::hazmat::PrehashSigner::sign_prehash(
                                     &signing_key,
                                     &msg_hash,
                                 )
-                                    .unwrap();
+                                .unwrap();
 
                             signature.split_bytes()
                         }

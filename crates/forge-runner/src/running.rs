@@ -176,7 +176,7 @@ pub fn run_test_case(
         casm_program.debug_info.sierra_statement_info[case.test_details.entry_point_offset]
             .code_offset,
     )
-        .unwrap();
+    .unwrap();
     let footer = SierraCasmRunner::create_code_footer();
     let instructions = chain!(entry_code.iter(), casm_program.instructions.iter());
     let (hints_dict, string_to_hint) = build_hints_dict(instructions.clone());
