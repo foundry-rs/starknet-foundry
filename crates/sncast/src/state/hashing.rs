@@ -3,7 +3,7 @@ use itertools::Itertools;
 
 // if we change API this might have collisions with old API hashes
 #[allow(dead_code)]
-pub fn hash_script_subcommand_call(selector: &str, inputs: &[Felt252]) -> String {
+pub fn generate_id(selector: &str, inputs: &[Felt252]) -> String {
     let mut res = selector.as_bytes().to_owned();
     let mut inputs_bytes: Vec<u8> = inputs.iter().flat_map(Felt252::to_bytes_be).collect_vec();
     res.append(&mut inputs_bytes);
