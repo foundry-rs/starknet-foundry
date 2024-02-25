@@ -92,7 +92,7 @@ pub enum RestrictedStarknetError {
     UnsupportedTxVersion,
     #[error("Unsupported contract class version")]
     UnsupportedContractClassVersion,
-    #[error("Unexpected RPC error occured: {0}")]
+    #[error("Unexpected RPC error occurred: {0}")]
     UnexpectedError(anyhow::Error),
 }
 
