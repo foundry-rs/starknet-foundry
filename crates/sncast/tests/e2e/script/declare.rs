@@ -36,9 +36,14 @@ async fn test_missing_field() {
 
 #[tokio::test]
 async fn test_wrong_contract_name() {
+    let contract_dir = duplicate_contract_directory_with_salt(
+        SCRIPTS_DIR.to_owned() + "/map_script/contracts/",
+        "dummy",
+        "609",
+    );
     let tempdir = copy_script_directory_to_tempdir(
         SCRIPTS_DIR.to_owned() + "/declare/test_scripts",
-        Vec::<String>::new(),
+        vec![contract_dir.as_ref()],
     );
     let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
 
