@@ -108,7 +108,6 @@ pub fn generate_transaction_entry_with_id(
     tx_entry: ScriptTransactionEntry,
     inputs: &[Felt252],
 ) -> ScriptTransactionEntries {
-    // todo (1545): Implement hashing function for unique ids
     let id = generate_id(tx_entry.name.as_str(), inputs);
     let transaction = HashMap::from([(id, tx_entry)]);
     ScriptTransactionEntries {
