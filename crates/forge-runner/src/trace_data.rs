@@ -9,11 +9,14 @@ use cheatnet::state::CallTrace;
 use conversions::IntoConv;
 use profiler::trace_data::{
     CallEntryPoint as ProfilerCallEntryPoint, CallTrace as ProfilerCallTrace,
-    CallType as ProfilerCallType, DeprecatedSyscallSelector as ProfilerDeprecatedSyscallSelector,
-    ExecutionResources as ProfilerExecutionResources, VmExecutionResources,
+    CallType as ProfilerCallType, ContractAddress,
+    DeprecatedSyscallSelector as ProfilerDeprecatedSyscallSelector, EntryPointSelector,
+    EntryPointType as ProfilerEntryPointType, ExecutionResources as ProfilerExecutionResources,
+    VmExecutionResources,
 };
 use starknet::core::utils::get_selector_from_name;
 use starknet_api::core::ClassHash;
+use starknet_api::deprecated_contract_class::EntryPointType;
 use starknet_api::hash::StarkFelt;
 use starknet_api::stark_felt;
 
@@ -23,50 +26,6 @@ use crate::test_case_summary::{Single, TestCaseSummary};
 pub const TRACE_DIR: &str = ".snfoundry_trace";
 pub const TEST_CODE_CONTRACT_NAME: &str = "SNFORGE_TEST_CODE";
 pub const TEST_CODE_FUNCTION_NAME: &str = "SNFORGE_TEST_CODE_FUNCTION";
-
-// #[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq, Deserialize, Serialize)]
-// pub enum ProfilerCallType {
-//     #[default]
-//     Call = 0,
-//     Delegate = 1,
-// }
-
-// impl From<CallType> for ProfilerCallType {
-//     fn from(value: CallType) -> Self {
-//         match value {
-//             CallType::Call => ProfilerCallType::Call,
-//             CallType::Delegate => ProfilerCallType::Delegate,
-//         }
-//     }
-// }
-
-// #[derive(Debug, Default, Clone, Deserialize, Serialize)]
-// pub struct ProfilerExecutionResources {
-//     pub vm_resources: VmExecutionResources,
-//     pub syscall_counter: ProfilerSyscallCounter,
-// }
-
-// impl AddAssign<&ProfilerExecutionResources> for ProfilerExecutionResources {
-//     fn add_assign(&mut self, rhs: &ProfilerExecutionResources) {
-//         self.vm_resources += &rhs.vm_resources;
-//         for (syscall, count) in &rhs.syscall_counter {
-//             *self.syscall_counter.entry(*syscall).or_insert(0) += count;
-//         }
-//     }
-// }
-
-// impl Sub<&ProfilerExecutionResources> for &ProfilerExecutionResources {
-//     type Output = ProfilerExecutionResources;
-
-//     fn sub(self, rhs: &ProfilerExecutionResources) -> Self::Output {
-//         let mut result = self.clone();
-//         result.vm_resources -= &rhs.vm_resources;
-//         for (syscall, count) in &rhs.syscall_counter {
-//             *result.syscall_counter.entry(*syscall).or_insert(0) -= count;
-//         }
-//         result
-//     }
-// }
 
 #[must_use]
 pub fn build_profiler_call_trace(
@@ -84,6 +43,7 @@ pub fn build_profiler_call_trace(
     }
 }
 
+#[must_use]
 pub fn build_profiler_execution_resources(value: ExecutionResources) -> ProfilerExecutionResources {
     let mut syscall_counter = HashMap::new();
     for (key, val) in value.syscall_counter {
@@ -100,20 +60,18 @@ pub fn build_profiler_execution_resources(value: ExecutionResources) -> Profiler
 }
 
 #[must_use]
+#[allow(clippy::needless_pass_by_value)]
 pub fn build_profiler_call_entry_point(
     value: CallEntryPoint,
     contracts_data: &ContractsData,
 ) -> ProfilerCallEntryPoint {
     let CallEntryPoint {
         class_hash,
-        code_address,
         entry_point_type,
         entry_point_selector,
-        calldata,
         storage_address,
-        caller_address,
         call_type,
-        initial_gas: _,
+        ..
     } = value;
 
     let mut contract_name = class_hash
@@ -130,18 +88,24 @@ pub fn build_profiler_call_entry_point(
         contract_name = Some(String::from(TEST_CODE_CONTRACT_NAME));
         function_name = Some(String::from(TEST_CODE_FUNCTION_NAME));
     }
-
     ProfilerCallEntryPoint {
-        class_hash,
-        code_address,
-        entry_point_type,
-        entry_point_selector,
-        calldata,
-        storage_address,
-        caller_address,
+        entry_point_type: build_profiler_entry_point_type(entry_point_type),
+        entry_point_selector: EntryPointSelector(format!("{}", entry_point_selector.0)),
+        contract_address: ContractAddress(format!(
+            "0x{}",
+            hex::encode(storage_address.0.key().bytes())
+        )),
         call_type: build_profiler_call_type(call_type),
         contract_name,
         function_name,
+    }
+}
+
+fn build_profiler_entry_point_type(value: EntryPointType) -> ProfilerEntryPointType {
+    match value {
+        EntryPointType::Constructor => ProfilerEntryPointType::Constructor,
+        EntryPointType::External => ProfilerEntryPointType::External,
+        EntryPointType::L1Handler => ProfilerEntryPointType::L1Handler,
     }
 }
 

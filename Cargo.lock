@@ -2857,6 +2857,7 @@ dependencies = [
  "conversions",
  "flatten-serde-json",
  "futures",
+ "hex",
  "itertools 0.11.0",
  "num-bigint",
  "num-integer",
@@ -4573,7 +4574,7 @@ dependencies = [
 [[package]]
 name = "profiler"
 version = "0.1.0"
-source = "git+https://github.com/software-mansion/cairo-profiler/?branch=expose-library#8470be41be9429cbbb00a6bf1a70ae6bcfc45390"
+source = "git+https://github.com/software-mansion/cairo-profiler/?rev=6b76769#6b767694ec991e495259c846a3f3be31f8bfd1c7"
 dependencies = [
  "anyhow",
  "bytes",
@@ -4586,7 +4587,6 @@ dependencies = [
  "prost-types",
  "serde",
  "serde_json",
- "starknet_api",
 ]
 
 [[package]]
