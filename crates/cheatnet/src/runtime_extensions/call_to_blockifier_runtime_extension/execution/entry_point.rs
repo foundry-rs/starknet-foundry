@@ -138,7 +138,12 @@ pub fn execute_call_entry_point(
         resources,
         CallResult::from_execution_result(
             &result,
-            &AddressOrClassHash::build(entry_point.code_address, entry_point.class_hash),
+            &match entry_point.call_type {
+                CallType::Call => AddressOrClassHash::ContractAddress(entry_point.storage_address),
+                CallType::Delegate => {
+                    AddressOrClassHash::ClassHash(entry_point.class_hash.unwrap())
+                }
+            },
         ),
     );
 

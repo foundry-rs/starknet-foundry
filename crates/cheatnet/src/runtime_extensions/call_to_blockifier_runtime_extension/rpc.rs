@@ -85,22 +85,6 @@ pub enum AddressOrClassHash {
     ClassHash(ClassHash),
 }
 
-impl AddressOrClassHash {
-    #[must_use]
-    pub fn build(
-        maybe_address: Option<ContractAddress>,
-        maybe_class_hash: Option<ClassHash>,
-    ) -> Self {
-        match maybe_address {
-            None => match maybe_class_hash {
-                None => Self::ClassHash(ClassHash::default()),
-                Some(class_hash) => Self::ClassHash(class_hash),
-            },
-            Some(address) => Self::ContractAddress(address),
-        }
-    }
-}
-
 impl CallFailure {
     /// Maps blockifier-type error, to one that can be put into memory as panic-data (or re-raised)
     #[must_use]
