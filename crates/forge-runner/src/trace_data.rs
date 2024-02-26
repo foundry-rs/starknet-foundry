@@ -92,8 +92,8 @@ pub fn build_profiler_call_entry_point(
         entry_point_type: build_profiler_entry_point_type(entry_point_type),
         entry_point_selector: EntryPointSelector(format!("{}", entry_point_selector.0)),
         contract_address: ContractAddress(format!(
-            "0x{}",
-            hex::encode(storage_address.0.key().bytes())
+            "{}",
+            storage_address.0.key()
         )),
         call_type: build_profiler_call_type(call_type),
         contract_name,
