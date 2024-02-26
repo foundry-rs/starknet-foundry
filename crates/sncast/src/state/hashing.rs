@@ -1,12 +1,18 @@
+use base64ct::{Base64, Encoding};
 use cairo_felt::Felt252;
 use itertools::Itertools;
+use sha3::Digest;
+use sha3::Sha3_256;
 
 // if we change API this might have collisions with old API hashes
 pub fn generate_id(selector: &str, inputs: &[Felt252]) -> String {
     let mut res = selector.as_bytes().to_owned();
     let mut inputs_bytes: Vec<u8> = inputs.iter().flat_map(Felt252::to_bytes_be).collect_vec();
     res.append(&mut inputs_bytes);
-    res.iter().map(|item| format!("{item:x?}")).join("").clone()
+    let res = res.iter().map(|item| format!("{item:x?}")).join("").clone();
+
+    let hash = Sha3_256::new().chain_update(res).finalize();
+    Base64::encode_string(&hash)
 }
 
 #[cfg(test)]
@@ -15,14 +21,10 @@ mod tests {
     use cairo_felt::Felt252;
     use num_traits::Num;
 
-    const DECLARE_HEX: &str = "6465636c617265";
-    const DEPLOY_HEX: &str = "6465706c6f79";
-    const INVOKE_HEX: &str = "696e766f6b65";
-
     #[test]
     fn basic_case() {
         let hash = generate_id("aaa", &[Felt252::from(b'a')]);
-        assert_eq!(hash, "61616161");
+        assert_eq!(hash, "oiA+mIeajh+kzDjne963zIMgLxyGYR0bZeZDQLjhb1A=");
     }
 
     #[test]
@@ -33,7 +35,7 @@ mod tests {
             Felt252::from(1),
         ];
         let hash = generate_id("declare", inputs.as_ref());
-        assert_eq!(hash, DECLARE_HEX.to_owned() + "4d6170613211");
+        assert_eq!(hash, "WdIwShcOtrdOVwAjg8x3/xhQKhccIGemBmLENbkqfHk=");
     }
 
     #[test]
@@ -51,11 +53,7 @@ mod tests {
             Felt252::from(1),
         ];
         let hash = generate_id("deploy", inputs.as_ref());
-        assert_eq!(
-            hash,
-            DEPLOY_HEX.to_owned()
-                + "774bf6a8340629c8989ddfd523b7c6524886b1aaaf0bd93887cb65eb7a59be601011"
-        );
+        assert_eq!(hash, "aGZ4kfVg3DM9u4MGzyB5m0uHPVcWs992qQPYklLg+Ac=");
     }
 
     #[test]
@@ -74,10 +72,6 @@ mod tests {
             Felt252::from(1),
         ];
         let hash = generate_id("invoke", inputs.as_ref());
-        assert_eq!(
-            hash,
-            INVOKE_HEX.to_owned()
-                + "d6bb24d851d5cb774faa732c58df4420c0f96844b3b63becec202d3aa79c70757421311"
-        );
+        assert_eq!(hash, "AnAKZVPOmmWCLxBEfCY06laZMDaJfkW5pkRLuf4k51w=");
     }
 }

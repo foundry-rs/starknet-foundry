@@ -42,6 +42,8 @@ cairo-vm.workspace = true
 blockifier.workspace = true
 semver.workspace = true
 console.workspace = true
+sha3 = "0.10.8"
+base64ct = { version = "1.6.0", features = ["alloc"] }
 
 [dev-dependencies]
 ctor.workspace = true

@@ -5461,6 +5461,7 @@ name = "sncast"
 version = "0.18.0"
 dependencies = [
  "anyhow",
+ "base64ct",
  "blockifier",
  "cairo-felt 0.9.1",
  "cairo-lang-casm 2.5.4",
@@ -5493,6 +5494,7 @@ dependencies = [
  "semver",
  "serde",
  "serde_json",
+ "sha3",
  "shared",
  "shellexpand",
  "snapbox",

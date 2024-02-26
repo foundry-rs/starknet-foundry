@@ -309,7 +309,7 @@ mod tests {
                 .transactions
                 .clone()
                 .unwrap()
-                .get("6465636c6172657b1c8")
+                .get("sAQDSYirq7MKyoTYu7Erv9lHT/ZxsYLgw2fJyZAHSFQ=")
                 .unwrap(),
             &transaction1
         );
@@ -318,7 +318,7 @@ mod tests {
                 .transactions
                 .clone()
                 .unwrap()
-                .get("696e766f6b6531565")
+                .get("vfAbpX1ynZWKAfgRAMgwvIfPP6npp10JfXLrMsJ9i5k=")
                 .unwrap(),
             &transaction2
         );
@@ -380,7 +380,7 @@ mod tests {
                 .transactions
                 .clone()
                 .unwrap()
-                .get("6465636c6172657b1c8")
+                .get("sAQDSYirq7MKyoTYu7Erv9lHT/ZxsYLgw2fJyZAHSFQ=")
                 .unwrap(),
             &transaction1
         );
@@ -389,7 +389,7 @@ mod tests {
                 .transactions
                 .clone()
                 .unwrap()
-                .get("696e766f6b6531565")
+                .get("vfAbpX1ynZWKAfgRAMgwvIfPP6npp10JfXLrMsJ9i5k=")
                 .unwrap(),
             &transaction2
         );
