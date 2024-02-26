@@ -72,13 +72,13 @@ fn try_format_string(values: &[Felt252]) -> Option<(String, usize)> {
     let full_words_string = values
         .by_ref()
         .take(num_full_words)
-        .map(|word| as_cairo_short_string_ex(&word, BYTES_IN_WORD))
+        .map(|word| as_cairo_short_string_ex(word, BYTES_IN_WORD))
         .collect::<Option<Vec<String>>>()?
         .join("");
     let pending_word = values.next()?;
     let pending_word_len = values.next()?.to_usize()?;
 
-    let pending_word_string = as_cairo_short_string_ex(&pending_word, pending_word_len)?;
+    let pending_word_string = as_cairo_short_string_ex(pending_word, pending_word_len)?;
 
     Some((
         format!("{full_words_string}{pending_word_string}"),
