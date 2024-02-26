@@ -27,7 +27,7 @@ pub(super) fn read_json(file_path: String) -> Result<Vec<Felt252>, EnhancedHintE
 
     let mut result = Vec::with_capacity(split_content.len());
 
-    for felt_str in split_content.iter() {
+    for felt_str in &split_content {
         match string_into_felt(felt_str) {
             Ok(felt) => result.push(felt),
             Err(_) => return Err(EnhancedHintError::FileParsing { path: file_path }),
