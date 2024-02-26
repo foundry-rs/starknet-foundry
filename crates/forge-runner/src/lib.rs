@@ -17,11 +17,12 @@ use contracts_data::ContractsData;
 use futures::stream::FuturesUnordered;
 use futures::StreamExt;
 
+use profiler_api::run_profiler;
 use smol_str::SmolStr;
 use trace_data::save_trace_data;
 
 use std::collections::HashMap;
-use std::default::Default;
+use std::default::{Default};
 use std::sync::Arc;
 use test_case_summary::{AnyTestCaseSummary, Fuzzing};
 use tokio::sync::mpsc::{channel, Sender};
@@ -33,6 +34,7 @@ pub mod expected_result;
 pub mod test_case_summary;
 pub mod test_crate_summary;
 pub mod trace_data;
+pub mod profiler_api;
 
 mod fuzzer;
 mod gas;
@@ -52,6 +54,26 @@ pub const BUILTINS: [&str; 8] = [
     "System",
 ];
 
+#[derive(Debug, PartialEq)]
+enum ExecutionDataToSave {
+    None,
+    Trace,
+    /// Profile data requires saved trace data
+    TraceAndProfile
+}
+
+impl ExecutionDataToSave {
+    fn from_flags(save_trace_data: bool, build_profile: bool) -> Self {
+        if build_profile {
+            return ExecutionDataToSave::TraceAndProfile;
+        } 
+        if save_trace_data {
+            return ExecutionDataToSave::Trace;
+        }
+        ExecutionDataToSave::None
+    }
+}
+
 /// Configuration of the test runner
 #[derive(Debug, PartialEq)]
 #[non_exhaustive]
@@ -61,7 +83,7 @@ pub struct RunnerConfig {
     pub fuzzer_runs: u32,
     pub fuzzer_seed: u64,
     pub detailed_resources: bool,
-    pub save_trace_data: bool,
+    pub execution_data_to_save: ExecutionDataToSave,
     pub max_n_steps: Option<u32>,
 }
 
@@ -75,6 +97,7 @@ impl RunnerConfig {
         fuzzer_seed: u64,
         detailed_resources: bool,
         save_trace_data: bool,
+        build_profile: bool,
         max_n_steps: Option<u32>,
     ) -> Self {
         Self {
@@ -83,7 +106,7 @@ impl RunnerConfig {
             fuzzer_runs,
             fuzzer_seed,
             detailed_resources,
-            save_trace_data,
+            execution_data_to_save: ExecutionDataToSave::from_flags(save_trace_data, build_profile),
             max_n_steps,
         }
     }
@@ -199,9 +222,17 @@ pub async fn run_tests_from_crate(
 
         print_test_result(&result, &runner_config);
 
-        if runner_config.save_trace_data {
-            if let AnyTestCaseSummary::Single(result) = &result {
-                save_trace_data(result);
+        if let AnyTestCaseSummary::Single(result) = &result {
+            match &runner_config.execution_data_to_save {
+                &ExecutionDataToSave::Trace => {
+                    save_trace_data(result);
+                }
+                &ExecutionDataToSave::TraceAndProfile => {
+                    save_trace_data(result);
+                    let profiler = Profiler::try_new()?;
+                    profiler(run)
+                }
+                &ExecutionDataToSave::None => {}
             }
         }
 

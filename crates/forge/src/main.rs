@@ -9,6 +9,7 @@ use forge::shared_cache::{clean_cache, set_cached_failed_tests_names};
 use forge::test_filter::TestsFilter;
 use forge::{pretty_printing, run};
 use forge_runner::contracts_data::ContractsData;
+use forge_runner::profiler_api::Profiler;
 use forge_runner::test_case_summary::{AnyTestCaseSummary, TestCaseSummary};
 use forge_runner::test_crate_summary::TestCrateSummary;
 use forge_runner::{RunnerConfig, RunnerParams, CACHE_DIR};
@@ -109,6 +110,10 @@ struct TestArgs {
     #[arg(long)]
     save_trace_data: bool,
 
+    /// Build profiles of all test which have passed and are not fuzz tests using the cairo-profiler
+    #[arg(long)]
+    build_profile: bool,
+
     /// Number of maximum steps during a single test. For fuzz tests this value is applied to each subtest separately.
     #[arg(long)]
     max_n_steps: Option<u32>,
@@ -146,6 +151,7 @@ fn combine_configs(
     fuzzer_seed: Option<u64>,
     detailed_resources: bool,
     save_trace_data: bool,
+    build_profile: bool,
     max_n_steps: Option<u32>,
     forge_config: &ForgeConfig,
 ) -> RunnerConfig {
@@ -160,6 +166,7 @@ fn combine_configs(
             .unwrap_or_else(|| thread_rng().next_u64()),
         detailed_resources || forge_config.detailed_resources,
         save_trace_data || forge_config.save_trace_data,
+        build_profile || forge_config.build_profile,
         max_n_steps.or(forge_config.max_n_steps),
     )
 }
@@ -248,6 +255,7 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                     args.fuzzer_seed,
                     args.detailed_resources,
                     args.save_trace_data,
+                    args.build_profile,
                     args.max_n_steps,
                     &forge_config,
                 ));
@@ -334,6 +342,7 @@ mod tests {
             None,
             false,
             false,
+            false,
             None,
             &Default::default(),
         );
@@ -342,6 +351,7 @@ mod tests {
             false,
             None,
             None,
+            false,
             false,
             false,
             None,
@@ -363,6 +373,7 @@ mod tests {
             None,
             false,
             false,
+            false,
             None,
             &Default::default(),
         );
@@ -373,6 +384,7 @@ mod tests {
                 false,
                 FUZZER_RUNS_DEFAULT,
                 config.fuzzer_seed,
+                false,
                 false,
                 false,
                 None
@@ -389,6 +401,7 @@ mod tests {
             fuzzer_seed: Some(500),
             detailed_resources: true,
             save_trace_data: true,
+            build_profile: true,
             max_n_steps: Some(1_000_000),
         };
         let workspace_root: Utf8PathBuf = Default::default();
@@ -400,12 +413,13 @@ mod tests {
             None,
             false,
             false,
+            false,
             None,
             &config_from_scarb,
         );
         assert_eq!(
             config,
-            RunnerConfig::new(workspace_root, true, 1234, 500, true, true, Some(1_000_000))
+            RunnerConfig::new(workspace_root, true, 1234, 500, true, true, true, Some(1_000_000))
         );
     }
 
@@ -420,6 +434,7 @@ mod tests {
             fuzzer_seed: Some(1000),
             detailed_resources: false,
             save_trace_data: false,
+            build_profile: false,
             max_n_steps: Some(1234),
         };
         let config = combine_configs(
@@ -429,13 +444,14 @@ mod tests {
             Some(32),
             true,
             true,
+            true,
             Some(1_000_000),
             &config_from_scarb,
         );
 
         assert_eq!(
             config,
-            RunnerConfig::new(workspace_root, true, 100, 32, true, true, Some(1_000_000))
+            RunnerConfig::new(workspace_root, true, 100, 32, true, true, true, Some(1_000_000))
         );
     }
 }
