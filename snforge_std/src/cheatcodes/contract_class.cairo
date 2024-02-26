@@ -1,4 +1,5 @@
 use starknet::{ContractAddress, ClassHash, testing::cheatcode};
+use super::super::byte_array::byte_array_as_felt_array;
 
 #[derive(Drop, Clone)]
 struct RevertedTransaction {
@@ -111,10 +112,7 @@ impl ContractClassImpl of ContractClassTrait {
 }
 
 fn declare(contract: ByteArray) -> ContractClass {
-    let mut inputs = array![core::byte_array::BYTE_ARRAY_MAGIC];
-    contract.serialize(ref inputs);
-
-    let span = cheatcode::<'declare'>(inputs.span());
+    let span = cheatcode::<'declare'>(byte_array_as_felt_array(@contract).span());
 
     let exit_code = *span[0];
     let result = *span[1];
