@@ -43,7 +43,7 @@ blockifier.workspace = true
 semver.workspace = true
 console.workspace = true
 sha3 = "0.10.8"
-base64ct = { version = "1.6.0", features = ["alloc"] }
+base16ct = { version = "0.2.0", features = ["alloc"] }
 
 [dev-dependencies]
 ctor.workspace = true

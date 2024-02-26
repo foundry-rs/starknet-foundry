@@ -1,4 +1,3 @@
-use base64ct::{Base64, Encoding};
 use cairo_felt::Felt252;
 use itertools::Itertools;
 use sha3::Digest;
@@ -6,13 +5,12 @@ use sha3::Sha3_256;
 
 // if we change API this might have collisions with old API hashes
 pub fn generate_id(selector: &str, inputs: &[Felt252]) -> String {
-    let mut res = selector.as_bytes().to_owned();
-    let mut inputs_bytes: Vec<u8> = inputs.iter().flat_map(Felt252::to_bytes_be).collect_vec();
-    res.append(&mut inputs_bytes);
-    let res = res.iter().map(|item| format!("{item:x?}")).join("").clone();
-
-    let hash = Sha3_256::new().chain_update(res).finalize();
-    Base64::encode_string(&hash)
+    let inputs_bytes: Vec<u8> = inputs.iter().flat_map(Felt252::to_bytes_be).collect_vec();
+    let hash = Sha3_256::new()
+        .chain_update(selector)
+        .chain_update(inputs_bytes)
+        .finalize();
+    base16ct::lower::encode_string(&hash)
 }
 
 #[cfg(test)]
@@ -24,7 +22,10 @@ mod tests {
     #[test]
     fn basic_case() {
         let hash = generate_id("aaa", &[Felt252::from(b'a')]);
-        assert_eq!(hash, "oiA+mIeajh+kzDjne963zIMgLxyGYR0bZeZDQLjhb1A=");
+        assert_eq!(
+            hash,
+            "28913c89fa628136fffce7ded99d65a4e3f5c211f82639fed4adca30d53b8dff"
+        );
     }
 
     #[test]
@@ -35,7 +36,10 @@ mod tests {
             Felt252::from(1),
         ];
         let hash = generate_id("declare", inputs.as_ref());
-        assert_eq!(hash, "WdIwShcOtrdOVwAjg8x3/xhQKhccIGemBmLENbkqfHk=");
+        assert_eq!(
+            hash,
+            "e759b4df4e28627248db61c7aaed0104a428b783e15f094ec41abede07e26af5"
+        );
     }
 
     #[test]
@@ -53,7 +57,10 @@ mod tests {
             Felt252::from(1),
         ];
         let hash = generate_id("deploy", inputs.as_ref());
-        assert_eq!(hash, "aGZ4kfVg3DM9u4MGzyB5m0uHPVcWs992qQPYklLg+Ac=");
+        assert_eq!(
+            hash,
+            "baa5f2c5e61ece9fdc7fa54bd287d33a30175a375d18a3243fdd61ca113ad6ae"
+        );
     }
 
     #[test]
@@ -72,6 +79,9 @@ mod tests {
             Felt252::from(1),
         ];
         let hash = generate_id("invoke", inputs.as_ref());
-        assert_eq!(hash, "AnAKZVPOmmWCLxBEfCY06laZMDaJfkW5pkRLuf4k51w=");
+        assert_eq!(
+            hash,
+            "45d549ba1db7bf0a5bfcdfe5dde0fce2c93d44b15f4d7f1c18d5fc2b7dd98fc3"
+        );
     }
 }

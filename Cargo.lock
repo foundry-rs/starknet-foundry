@@ -5461,7 +5461,7 @@ name = "sncast"
 version = "0.18.0"
 dependencies = [
  "anyhow",
- "base64ct",
+ "base16ct",
  "blockifier",
  "cairo-felt 0.9.1",
  "cairo-lang-casm 2.5.4",
