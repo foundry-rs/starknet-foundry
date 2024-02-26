@@ -913,6 +913,7 @@ fn printing_in_contracts() {
 }
 
 #[test]
+#[ignore = "remove this #ignore after release"]
 fn incompatible_snforge_std_version_warning() {
     let temp = setup_package("simple_package");
     let manifest_path = temp.child("Scarb.toml");
