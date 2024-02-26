@@ -209,15 +209,10 @@ pub fn package_matches_version_requirement(
         .iter()
         .filter(|package| package.name == name);
 
-    let package = packages.next();
-
-    if packages.next().is_some() {
-        return Err(anyhow!("Package {name} is duplicated in dependencies"));
-    }
-
-    match package {
-        None => Ok(true),
-        Some(package) => Ok(version_req.matches(&package.version)),
+    match (packages.next(), packages.next()) {
+        (None, None) => Ok(true),
+        (Some(package), None) => Ok(version_req.matches(&package.version)),
+        _ => Err(anyhow!("Package {name} is duplicated in dependencies")),
     }
 }
 

@@ -6,12 +6,12 @@ use std::str::FromStr;
 
 pub fn read_cache(file_pattern: &str) -> Map<String, Value> {
     let mut cache_files = glob(file_pattern).unwrap().filter_map(Result::ok);
-    let cache_file = cache_files.next().expect("Cache file not found");
 
-    assert!(
-        cache_files.next().is_none(),
-        "Multiple matching cache files found"
-    );
+    let cache_file = match (cache_files.next(), cache_files.next()) {
+        (None, None) => panic!("Cache file not found"),
+        (Some(cache_file), None) => cache_file,
+        _ => panic!("Multiple matching cache files found"),
+    };
 
     let cache_content = fs::read_to_string(cache_file).expect("Could not read cache");
     let parsed_cache_content: Value =

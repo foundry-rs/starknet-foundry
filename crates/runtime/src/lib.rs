@@ -378,7 +378,7 @@ pub trait ExtensionLogic {
     fn handle_cheatcode(
         &mut self,
         _selector: &str,
-        _reader: BufferReader,
+        _input_reader: BufferReader,
         _extended_runtime: &mut Self::Runtime,
     ) -> Result<CheatcodeHandlingResult, EnhancedHintError> {
         Ok(CheatcodeHandlingResult::Forwarded)
