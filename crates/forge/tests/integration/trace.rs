@@ -13,7 +13,7 @@ fn trace_deploy() {
             use snforge_std::{declare, ContractClassTrait, test_address, test_selector};
             use snforge_std::trace::{CallEntryPoint, CallType, EntryPointType, get_call_trace, CallTrace};
             
-            use starknet::{SyscallResultTrait, deploy_syscall, ContractAddress, send_message_to_l1_syscall};
+            use starknet::{SyscallResultTrait, deploy_syscall, ContractAddress};
             
             #[test]
             fn test_deploy_trace_info() {
@@ -32,7 +32,7 @@ fn trace_deploy() {
                 let proxy_address_3 = proxy
                     .deploy_at(@array![checker_address.into()], 123.try_into().unwrap())
                     .unwrap();
-                                
+                
                 assert_trace(
                     get_call_trace(), proxy_address1, proxy_address2, proxy_address_3, checker_address
                 );
