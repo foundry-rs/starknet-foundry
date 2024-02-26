@@ -16,7 +16,7 @@ pub struct TransactionExecutionErrorData {
 
 #[derive(Drop, Serde, PartialEq, Debug)]
 pub enum StarknetError {
-    /// Failed to write transaction
+    /// Failed to receive transaction
     FailedToReceiveTransaction,
     /// Contract not found
     ContractNotFound,
