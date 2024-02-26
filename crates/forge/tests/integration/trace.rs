@@ -17,27 +17,25 @@ fn trace_deploy() {
             
             #[test]
             fn test_deploy_trace_info() {
-                // let proxy = declare('TraceInfoProxy');
-                // let checker = declare('TraceInfoChecker');
-                // 
-                // let checker_address = checker.deploy(@array![]).unwrap();
-                // 
-                // let proxy_address1 = proxy.deploy(@array![checker_address.into()]).unwrap();
-                // 
-                // let (proxy_address2, _) = deploy_syscall(
-                //     proxy.class_hash, 0, array![checker_address.into()].span(), false
-                // )
-                //     .unwrap_syscall();
-                // 
-                // let proxy_address_3 = proxy
-                //     .deploy_at(@array![checker_address.into()], 123.try_into().unwrap())
-                //     .unwrap();
-                    
-                send_message_to_l1_syscall(10, array![20].span()).unwrap_syscall();
-            
-                // assert_trace(
-                //     get_call_trace(), proxy_address1, proxy_address2, proxy_address_3, checker_address
-                // );
+                let proxy = declare('TraceInfoProxy');
+                let checker = declare('TraceInfoChecker');
+                
+                let checker_address = checker.deploy(@array![]).unwrap();
+                
+                let proxy_address1 = proxy.deploy(@array![checker_address.into()]).unwrap();
+                
+                let (proxy_address2, _) = deploy_syscall(
+                    proxy.class_hash, 0, array![checker_address.into()].span(), false
+                )
+                    .unwrap_syscall();
+                
+                let proxy_address_3 = proxy
+                    .deploy_at(@array![checker_address.into()], 123.try_into().unwrap())
+                    .unwrap();
+                                
+                assert_trace(
+                    get_call_trace(), proxy_address1, proxy_address2, proxy_address_3, checker_address
+                );
             }
             
             fn assert_trace(
