@@ -108,7 +108,7 @@ fn assert_tx_info(
     expected_tx_info: &TxInfo,
 ) {
     let tx_info = get_tx_info(state, runtime_state, contract_address);
-    assert_eq!(tx_info, expected_tx_info.to_owned());
+    assert_eq!(&tx_info, expected_tx_info);
 }
 
 fn get_tx_info(

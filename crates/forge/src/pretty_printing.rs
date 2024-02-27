@@ -50,10 +50,9 @@ pub fn print_failures(all_failed_tests: &[AnyTestCaseSummary]) {
     if all_failed_tests.is_empty() {
         return;
     }
-    let failed_tests_names: Vec<&String> = all_failed_tests
+    let failed_tests_names = all_failed_tests
         .iter()
-        .map(|any_test_case_summary| any_test_case_summary.name().unwrap())
-        .collect();
+        .map(|any_test_case_summary| any_test_case_summary.name().unwrap());
 
     println!("\nFailures:");
     for name in failed_tests_names {
