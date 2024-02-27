@@ -18,8 +18,6 @@ use runtime::starknet::state::DictStateReader;
 use starknet_api::core::EntryPointSelector;
 
 use crate::constants::{build_test_entry_point, TEST_CONTRACT_CLASS_HASH};
-use blockifier::execution::call_info::CallInfo;
-use blockifier::execution::errors::EntryPointExecutionError;
 use blockifier::state::errors::StateError::UndeclaredClassHash;
 use serde::{Deserialize, Serialize};
 use starknet_api::transaction::ContractAddressSalt;
@@ -345,8 +343,8 @@ impl TraceData {
     pub fn exit_nested_call(
         &mut self,
         resources_used_after_call: &ExecutionResources,
+        l2_l1_message_sizes: Vec<usize>,
         call_result: CallResult,
-        maybe_call_info: &Result<CallInfo, EntryPointExecutionError>,
     ) {
         let CallStackElement {
             resources_used_before_call,
@@ -356,15 +354,8 @@ impl TraceData {
         let mut last_call = last_call.borrow_mut();
         last_call.used_execution_resources =
             subtract_execution_resources(resources_used_after_call, &resources_used_before_call);
+        last_call.used_onchain_data.l2_l1_message_sizes = l2_l1_message_sizes;
         last_call.result = call_result;
-        if let Ok(call_info) = maybe_call_info {
-            last_call.used_onchain_data.l2_l1_message_sizes = call_info
-                .execution
-                .l2_to_l1_messages
-                .iter()
-                .map(|ordered_message| ordered_message.message.payload.0.len())
-                .collect();
-        }
     }
 }
 

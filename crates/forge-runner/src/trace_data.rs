@@ -47,7 +47,7 @@ impl ProfilerCallTrace {
             used_execution_resources: ProfilerExecutionResources::from(
                 value.used_execution_resources.clone(),
             ),
-            used_onchain_data: value.used_onchain_data,
+            used_onchain_data: value.used_onchain_data.clone(),
             nested_calls: value
                 .nested_calls
                 .iter()

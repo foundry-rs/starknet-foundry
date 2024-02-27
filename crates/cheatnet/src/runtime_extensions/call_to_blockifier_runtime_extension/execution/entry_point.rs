@@ -47,13 +47,13 @@ pub fn execute_call_entry_point(
     {
         runtime_state.cheatnet_state.trace_data.exit_nested_call(
             resources,
+            vec![],
             CallResult::Success {
                 ret_data: ret_data
                     .iter()
                     .map(|data| Felt252::from_bytes_be(data.bytes()))
                     .collect(),
             },
-            &EntryPointExecutionResult::Ok(CallInfo::default()),
         );
         return Ok(mocked_call_info(entry_point.clone(), ret_data.clone()));
     }
@@ -141,8 +141,18 @@ pub fn execute_call_entry_point(
     };
     runtime_state.cheatnet_state.trace_data.exit_nested_call(
         resources,
+        result.as_ref().map_or_else(
+            |_| vec![],
+            |call_info| {
+                call_info
+                    .execution
+                    .l2_to_l1_messages
+                    .iter()
+                    .map(|ordered_message| ordered_message.message.payload.0.len())
+                    .collect()
+            },
+        ),
         CallResult::from_execution_result(&result, &identifier),
-        &result
     );
 
     result
