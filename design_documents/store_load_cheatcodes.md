@@ -65,7 +65,7 @@ use pkg::HelloStarknet;
 use pkg::HelloStarknet::{balanceContractMemberStateTrait, CustomStruct};
 
 fn deploy_hello_contract() -> ContractAddress {
-    let contract_class = declare('HelloStarknet');
+    let contract_class = declare("HelloStarknet");
     contract_class.deploy(@array![]).unwrap()
 }
 

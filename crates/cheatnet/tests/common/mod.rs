@@ -21,7 +21,6 @@ use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::{
     deploy, deploy_at,
 };
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
-use conversions::felt252::FromShortString;
 use runtime::starknet::context::build_context;
 use scarb_api::metadata::MetadataCommandExt;
 use scarb_api::{get_contracts_map, ScarbCommand, StarknetContractArtifacts};
@@ -84,10 +83,9 @@ pub fn deploy_contract(
     contract_name: &str,
     calldata: &[Felt252],
 ) -> ContractAddress {
-    let contract = Felt252::from_short_string(contract_name).unwrap();
     let contracts = get_contracts();
 
-    let class_hash = declare(state, &contract, &contracts).unwrap();
+    let class_hash = declare(state, contract_name, &contracts).unwrap();
 
     let mut execution_resources = ExecutionResources::default();
     let mut entry_point_execution_context = build_context(&runtime_state.cheatnet_state.block_info);

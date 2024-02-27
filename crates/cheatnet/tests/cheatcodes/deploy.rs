@@ -23,10 +23,9 @@ fn deploy_at_predefined_address() {
     let mut cheatnet_state = CheatnetState::default();
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
-    let contract = Felt252::from_short_string("HelloStarknet").unwrap();
     let contracts = get_contracts();
 
-    let class_hash = declare(&mut cached_state, &contract, &contracts).unwrap();
+    let class_hash = declare(&mut cached_state, "HelloStarknet", &contracts).unwrap();
     let contract_address = deploy_at_wrapper(
         &mut cached_state,
         &mut runtime_state,
@@ -56,10 +55,9 @@ fn deploy_two_at_the_same_address() {
     let mut cheatnet_state = CheatnetState::default();
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
-    let contract = Felt252::from_short_string("HelloStarknet").unwrap();
     let contracts = get_contracts();
 
-    let class_hash = declare(&mut cached_state, &contract, &contracts).unwrap();
+    let class_hash = declare(&mut cached_state, "HelloStarknet", &contracts).unwrap();
     deploy_at_wrapper(
         &mut cached_state,
         &mut runtime_state,
@@ -90,10 +88,9 @@ fn call_predefined_contract_from_proxy_contract() {
     let mut cheatnet_state = CheatnetState::default();
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
-    let contract = Felt252::from_short_string("PrankChecker").unwrap();
     let contracts = get_contracts();
 
-    let class_hash = declare(&mut cached_state, &contract, &contracts).unwrap();
+    let class_hash = declare(&mut cached_state, "PrankChecker", &contracts).unwrap();
     let prank_checker_address = deploy_at_wrapper(
         &mut cached_state,
         &mut runtime_state,
@@ -154,10 +151,9 @@ fn deploy_contract_on_predefined_address_after_its_usage() {
         "Wrong error message"
     );
 
-    let contract = Felt252::from_short_string("SpyEventsChecker").unwrap();
     let contracts = get_contracts();
 
-    let class_hash = declare(&mut cached_state, &contract, &contracts).unwrap();
+    let class_hash = declare(&mut cached_state, "SpyEventsChecker", &contracts).unwrap();
     deploy_at_wrapper(
         &mut cached_state,
         &mut runtime_state,
@@ -184,10 +180,9 @@ fn try_to_deploy_at_0() {
     let mut cheatnet_state = CheatnetState::default();
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
-    let contract = Felt252::from_short_string("HelloStarknet").unwrap();
     let contracts = get_contracts();
 
-    let class_hash = declare(&mut cached_state, &contract, &contracts).unwrap();
+    let class_hash = declare(&mut cached_state, "HelloStarknet", &contracts).unwrap();
     let output = deploy_at_wrapper(
         &mut cached_state,
         &mut runtime_state,
@@ -209,10 +204,9 @@ fn deploy_calldata_no_constructor() {
     let mut cheatnet_state = CheatnetState::default();
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
-    let contract = Felt252::from_short_string("HelloStarknet").unwrap();
     let contracts = get_contracts();
 
-    let class_hash = declare(&mut cached_state, &contract, &contracts).unwrap();
+    let class_hash = declare(&mut cached_state, "HelloStarknet", &contracts).unwrap();
 
     let output = deploy_wrapper(
         &mut cached_state,
@@ -235,10 +229,9 @@ fn deploy_missing_arguments_in_constructor() {
     let mut cheatnet_state = CheatnetState::default();
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
-    let contract = Felt252::from_short_string("ConstructorSimple2").unwrap();
     let contracts = get_contracts();
 
-    let class_hash = declare(&mut cached_state, &contract, &contracts).unwrap();
+    let class_hash = declare(&mut cached_state, "ConstructorSimple2", &contracts).unwrap();
 
     let output = deploy_wrapper(
         &mut cached_state,
@@ -260,10 +253,9 @@ fn deploy_too_many_arguments_in_constructor() {
     let mut cheatnet_state = CheatnetState::default();
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
-    let contract = Felt252::from_short_string("ConstructorSimple").unwrap();
     let contracts = get_contracts();
 
-    let class_hash = declare(&mut cached_state, &contract, &contracts).unwrap();
+    let class_hash = declare(&mut cached_state, "ConstructorSimple", &contracts).unwrap();
 
     let output = deploy_wrapper(
         &mut cached_state,
@@ -335,10 +327,9 @@ fn deploy_at_invokes_constructor() {
     let mut cheatnet_state = CheatnetState::default();
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
-    let contract = Felt252::from_short_string("ConstructorSimple").unwrap();
     let contracts = get_contracts();
 
-    let class_hash = declare(&mut cached_state, &contract, &contracts).unwrap();
+    let class_hash = declare(&mut cached_state, "ConstructorSimple", &contracts).unwrap();
 
     let contract_address = deploy_at_wrapper(
         &mut cached_state,

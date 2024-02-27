@@ -8,7 +8,7 @@
 Parses json file content and tries to deserialize it to type `T` that implements `Serde` trait.
 
 - `file` - a snapshot of an instance of the struct `File` that consists of the following fields:
-    - `path` - Cairo shortstring representing a path to a file relative to a package root.
+    - `path` - Cairo string representing a path to a file relative to a package root.
 
 > ⚠️ **Warning**
 >
@@ -29,7 +29,7 @@ struct MyStruct {
 
 #[test]
 fn test_parse_json() {
-    let file = FileTrait::new('data/file.json');
+    let file = FileTrait::new("data/file.json");
     let my_struct = FileParser::<MyStruct>::parse_json(@file).unwrap();
     // ...
 }

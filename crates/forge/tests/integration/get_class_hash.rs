@@ -8,18 +8,18 @@ use test_utils::{assert_passed, test_case};
 fn get_class_hash_cheatcode() {
     let test = test_case!(
         indoc!(
-            r"
+            r#"
             use array::ArrayTrait;
             use result::ResultTrait;
             use snforge_std::{ declare, ContractClassTrait, get_class_hash };
 
             #[test]
             fn get_class_hash_cheatcode() {
-                let contract = declare('HelloStarknet');
+                let contract = declare("HelloStarknet");
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 assert(get_class_hash(contract_address) == contract.class_hash, 'Incorrect class hash');
             }
-        "
+        "#
         ),
         Contract::from_code_path(
             "HelloStarknet".to_string(),

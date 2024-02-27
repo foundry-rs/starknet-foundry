@@ -166,10 +166,8 @@ impl NotEmptyCallStack {
     }
 
     pub fn top(&mut self) -> Rc<RefCell<CallTrace>> {
-        let top_val = self.0.pop().unwrap();
-        let borrowed_ref = top_val.call_trace.clone();
-        self.0.push(top_val);
-        borrowed_ref
+        let top_val = self.0.last().unwrap();
+        top_val.call_trace.clone()
     }
 
     fn pop(&mut self) -> CallStackElement {

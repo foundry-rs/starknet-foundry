@@ -1,7 +1,7 @@
-use cairo_felt::Felt252;
-use cairo_lang_runner::short_string::as_cairo_short_string;
-use num_traits::cast::ToPrimitive;
-use num_traits::identities::One;
+use cairo_felt::{felt_str, Felt252};
+use cairo_lang_runner::short_string::{as_cairo_short_string, as_cairo_short_string_ex};
+use cairo_lang_utils::byte_array::{BYTES_IN_WORD, BYTE_ARRAY_MAGIC};
+use num_traits::{cast::ToPrimitive, identities::One};
 
 pub struct BufferReader<'a> {
     pub buffer: &'a [Felt252],
@@ -47,8 +47,41 @@ impl BufferReader<'_> {
     pub fn read_short_string(&mut self) -> Option<String> {
         as_cairo_short_string(&self.read_felt())
     }
+
+    pub fn read_string(&mut self) -> String {
+        let (result, idx_increment) = try_format_string(&self.buffer[self.idx..]).unwrap();
+
+        self.idx += idx_increment;
+
+        result
+    }
 }
 
 fn felt252_to_vec_length(vec_len: &Felt252) -> usize {
     vec_len.to_usize().expect("Invalid Vec length value")
+}
+
+fn try_format_string(values: &[Felt252]) -> Option<(String, usize)> {
+    let mut values = values.iter();
+
+    if values.next()? != &felt_str!(BYTE_ARRAY_MAGIC, 16) {
+        return None;
+    }
+
+    let num_full_words = values.next()?.to_usize()?;
+    let full_words_string = values
+        .by_ref()
+        .take(num_full_words)
+        .map(|word| as_cairo_short_string_ex(word, BYTES_IN_WORD))
+        .collect::<Option<Vec<String>>>()?
+        .join("");
+    let pending_word = values.next()?;
+    let pending_word_len = values.next()?.to_usize()?;
+
+    let pending_word_string = as_cairo_short_string_ex(pending_word, pending_word_len)?;
+
+    Some((
+        format!("{full_words_string}{pending_word_string}"),
+        num_full_words + 4, //4 calls to .next()
+    ))
 }

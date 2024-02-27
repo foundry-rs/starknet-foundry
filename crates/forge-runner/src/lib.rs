@@ -179,10 +179,8 @@ pub async fn run_tests_from_crate(
         let function = sierra_program
             .funcs
             .iter()
-            .find(|f| f.id.debug_name.clone().unwrap().ends_with(&case_name))
-            .ok_or_else(|| RunnerError::MissingFunction {
-                suffix: case_name.clone(),
-            })?;
+            .find(|f| f.id.debug_name.as_ref().unwrap().ends_with(&case_name))
+            .ok_or(RunnerError::MissingFunction { suffix: case_name })?;
 
         let args = function_args(function, &BUILTINS);
 
@@ -191,7 +189,7 @@ pub async fn run_tests_from_crate(
 
         tasks.push(choose_test_strategy_and_run(
             args,
-            case.clone(),
+            case,
             casm_program.clone(),
             runner_config.clone(),
             runner_params.clone(),

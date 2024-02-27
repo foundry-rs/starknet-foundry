@@ -124,12 +124,12 @@ impl ForkCache {
     fn save(&self) {
         let cache_file = self
             .cache_file
-            .clone()
+            .as_ref()
             .unwrap_or_else(|| panic!("No cache_file to save to"));
         let mut file = OpenOptions::new()
             .write(true)
             .create(true)
-            .open(cache_file.clone())
+            .open(cache_file)
             .unwrap();
 
         file.lock_exclusive().expect("Could not lock on cache file");

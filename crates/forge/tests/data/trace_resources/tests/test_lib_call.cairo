@@ -7,10 +7,10 @@ use trace_resources::{
 
 #[test]
 fn test_lib_call() {
-    let empty_hash = declare('Empty').class_hash;
-    let proxy_hash = declare('TraceInfoProxy').class_hash;
-    let checker = declare('TraceInfoChecker');
-    let dummy = declare('TraceDummy');
+    let empty_hash = declare("Empty").class_hash;
+    let proxy_hash = declare("TraceInfoProxy").class_hash;
+    let checker = declare("TraceInfoChecker");
+    let dummy = declare("TraceDummy");
 
     trace_resources::use_builtins_and_syscalls(empty_hash, 7);
 

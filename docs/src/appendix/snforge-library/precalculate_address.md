@@ -24,7 +24,7 @@ use snforge_std::{ declare, ContractClassTrait };
 
 #[test]
 fn test_deploy() {
-    let contract = declare('HelloStarknet');
+    let contract = declare("HelloStarknet");
 
     let mut constructor_calldata = ArrayTrait::new();
     constructor_calldata.append(42_u8.into());

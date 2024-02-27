@@ -27,7 +27,7 @@ pub fn run_test_case(test: &TestCase) -> Vec<TestCrateSummary> {
     let rt = Runtime::new().expect("Could not instantiate Runtime");
 
     rt.block_on(run(
-        &String::from("test_package"),
+        "test_package",
         &test.path().unwrap().join("target/dev/snforge"),
         &TestsFilter::from_flags(None, false, false, false, false, Default::default()),
         Arc::new(RunnerConfig::new(

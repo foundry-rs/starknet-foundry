@@ -1,35 +1,25 @@
-use std::collections::HashMap;
-
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::{
     CheatcodeError, EnhancedHintError,
 };
 use anyhow::{anyhow, Context, Result};
-use blockifier::execution::contract_class::{
-    ContractClass as BlockifierContractClass, ContractClassV1,
+use blockifier::{
+    execution::contract_class::{ContractClass as BlockifierContractClass, ContractClassV1},
+    state::{errors::StateError, state_api::State},
 };
-use blockifier::state::errors::StateError;
-use blockifier::state::state_api::State;
-use cairo_felt::Felt252;
-use serde_json;
-use starknet_api::core::ClassHash;
-use starknet_api::hash::StarkFelt;
-
-use cairo_lang_runner::short_string::as_cairo_short_string;
-use starknet::core::types::contract::SierraClass;
-
 use scarb_api::StarknetContractArtifacts;
+use serde_json;
+use starknet::core::types::contract::SierraClass;
+use starknet_api::{core::ClassHash, hash::StarkFelt};
+use std::collections::HashMap;
 
 #[allow(clippy::implicit_hasher)]
 pub fn declare(
     state: &mut dyn State,
-    contract_name: &Felt252,
+    contract_name: &str,
     contracts: &HashMap<String, StarknetContractArtifacts>,
 ) -> Result<ClassHash, CheatcodeError> {
-    let contract_name_as_short_str = as_cairo_short_string(contract_name)
-        .context("Converting contract name to short string failed")
-        .map_err::<EnhancedHintError, _>(From::from)?;
-    let contract_artifact = contracts.get(&contract_name_as_short_str).with_context(|| {
-            format!("Failed to get contract artifact for name = {contract_name_as_short_str}. Make sure starknet target is correctly defined in Scarb.toml file.")
+    let contract_artifact = contracts.get(contract_name).with_context(|| {
+            format!("Failed to get contract artifact for name = {contract_name}. Make sure starknet target is correctly defined in Scarb.toml file.")
         }).map_err::<EnhancedHintError, _>(From::from)?;
 
     let contract_class = ContractClassV1::try_from_json_string(&contract_artifact.casm)

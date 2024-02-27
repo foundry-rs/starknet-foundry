@@ -110,7 +110,7 @@ impl CallFailure {
                     if let [item] = &items[..] {
                         item.clone()
                     } else {
-                        items.join("\n").to_string()
+                        items.join("\n")
                     }
                 };
 
@@ -148,7 +148,7 @@ impl CallFailure {
                     ),
                 };
 
-                let panic_data_felts: Vec<Felt252> = ByteArray::from(msg).serialize();
+                let panic_data_felts: Vec<Felt252> = ByteArray::from(msg.as_str()).serialize();
 
                 CallFailure::Panic {
                     panic_data: panic_data_felts,
