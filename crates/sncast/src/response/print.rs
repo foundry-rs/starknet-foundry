@@ -1,5 +1,4 @@
-use anyhow::{Error, Result};
-use console::style;
+use anyhow::Result;
 use serde_json::Value;
 use starknet::core::types::FieldElement;
 use std::{collections::HashMap, fmt::Display, str::FromStr};
@@ -162,11 +161,6 @@ fn apply_numbers_formatting(value: OutputValue, formatting: NumbersFormat) -> Ou
             OutputValue::Array(formatted_arr)
         }
     }
-}
-
-pub fn print_as_warning(error: &Error) {
-    let warning_tag = style("Warning:").color256(11);
-    println!("{warning_tag} {error}");
 }
 
 #[cfg(test)]

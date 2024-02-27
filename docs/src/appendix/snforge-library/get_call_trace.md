@@ -4,11 +4,13 @@
 fn get_call_trace() -> CallTrace;
 ```
 
-(For whole structure definition, please refer to [`snforge-std` source](https://github.com/foundry-rs/starknet-foundry/tree/v0.16.0/snforge_std))
+(For whole structure definition, please refer
+to [`snforge-std` source](https://github.com/foundry-rs/starknet-foundry/tree/v0.16.0/snforge_std))
 
 Gets current call trace of the test, up to the last call made to a contract.
 
 ## Example call trace
+
 ```cairo
 use snforge_std::trace::{CallTrace, CallEntryPoint, CallType, EntryPointType, get_call_trace};
 ...
@@ -42,9 +44,11 @@ let ctrace = CallTrace {
                         caller_address: 123.try_into().unwrap(),
                         call_type: CallType::Call,
                     },
-                    nested_calls: array![]
+                    nested_calls: array![],
+                    result: CallResult::Success(array![101])
                 }
             ],
+            result: CallResult::Success(array![])
         },
         CallTrace {
             entry_point: CallEntryPoint {
@@ -55,7 +59,8 @@ let ctrace = CallTrace {
                 caller_address: 0.try_into().unwrap(),
                 call_type: CallType::Call,
             },
-            nested_calls: array![]
+            nested_calls: array![],
+            result: CallResult::Failure(CallFailure::Panic(array![482670963043]))
         }
     ]
 };
@@ -64,7 +69,9 @@ let ctrace = CallTrace {
 The topmost-call is representing the test call, which will always be present if you're running a test.
 It can have nested `CallTrace` - it's an array of subsequent traces made in scope of the call.
 
-The whole structure is represented as a tree of calls, in which each contract interaction (`constructor` call, `l1_handler` call, library or a regular contract `call` via dispatcher) is a new execution scope - thus resulting in a new nested trace.
+The whole structure is represented as a tree of calls, in which each contract interaction (`constructor`
+call, `l1_handler` call, library or a regular contract `call` via dispatcher) is a new execution scope - thus resulting
+in a new nested trace.
 
 ## Displaying the trace
 
@@ -96,8 +103,10 @@ println!("{}", get_call_trace());
 //                   Caller address: [..]
 //                   Call type: Call
 //                   Nested Calls: []
+//                   Call Result: Success: [101]
 //               )
 //           ]
+//           Call Result: Success: []
 //       )
 //   ]
 ```

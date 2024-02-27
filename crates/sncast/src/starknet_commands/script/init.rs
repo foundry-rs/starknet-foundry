@@ -5,9 +5,9 @@ use std::fs;
 use clap::Args;
 use indoc::{formatdoc, indoc};
 use scarb_api::ScarbCommand;
+use shared::print::print_as_warning;
 use sncast::helpers::constants::INIT_SCRIPTS_DIR;
 use sncast::helpers::scarb_utils::get_cairo_version;
-use sncast::response::print::print_as_warning;
 use sncast::response::structs::ScriptInitResponse;
 
 #[derive(Args, Debug)]

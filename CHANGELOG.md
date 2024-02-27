@@ -11,7 +11,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
+- result of the call to the trace
+
+### Cast
+
+#### Removed
+
+- `--path-to-scarb-toml` optional flag that allowed to specify the path to the `Scarb.toml` file
+
+## [0.18.0] - 2024-02-21
+
+### Forge
+
+#### Added
+
 - contract names to call trace
+- `--max-n-steps` argument that allows setting own steps limit
+
+#### Changed
+
+- Unknown entry point error when calling a contract counts as a panic
+- Cairo edition set to `2023_11`
 
 #### Fixed
 
@@ -22,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - `script init` command to generate a template file structure for deployment scripts
+- Warning is emitted when executing sncast commands if the node's JSON-RPC version is incompatible
 
 #### Changed
 

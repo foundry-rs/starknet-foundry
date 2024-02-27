@@ -8,7 +8,7 @@ use serde_json::Value;
 use starknet::core::types::{
     BlockId,
     BlockTag::{Latest, Pending},
-    FieldElement,
+    ContractErrorData, FieldElement,
     StarknetError::{
         BlockNotFound, ClassAlreadyDeclared, ClassHashNotFound, CompilationFailed,
         CompiledClassHashMismatch, ContractClassSizeIsTooLarge, ContractError, ContractNotFound,
@@ -31,11 +31,13 @@ use starknet::{
 };
 
 use crate::helpers::constants::{WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
+use shared::rpc::create_rpc_client;
+use starknet::accounts::ConnectedAccount;
 use std::collections::HashMap;
 use std::thread::sleep;
 use std::time::Duration;
 use std::{env, fs};
-use url::Url;
+use thiserror::Error;
 
 pub mod helpers;
 pub mod response;
@@ -129,9 +131,7 @@ impl Default for ValidatedWaitParams {
 
 pub fn get_provider(url: &str) -> Result<JsonRpcClient<HttpTransport>> {
     raise_if_empty(url, "RPC url")?;
-    let parsed_url = Url::parse(url)?;
-    let provider = JsonRpcClient::new(HttpTransport::new(parsed_url));
-    Ok(provider)
+    create_rpc_client(url)
 }
 
 pub async fn get_chain_id(provider: &JsonRpcClient<HttpTransport>) -> Result<FieldElement> {
@@ -222,7 +222,23 @@ pub async fn get_account<'a>(
         get_account_from_accounts_file(account, accounts_file, provider, chain_id)?
     };
 
-    Ok(account.set_block_id(get_block_id("pending")?).clone())
+    account.set_block_id(get_block_id("pending")?);
+    verify_account_address(account.clone()).await?;
+
+    Ok(account)
+}
+
+async fn verify_account_address(account: impl ConnectedAccount + std::marker::Sync) -> Result<()> {
+    match account.get_nonce().await {
+        Ok(_) => Ok(()),
+        Err(error) => {
+            if let StarknetError(ContractNotFound) = error {
+                Err(anyhow!("Invalid account address"))
+            } else {
+                Err(handle_rpc_error(error))
+            }
+        }
+    }
 }
 
 fn get_account_from_keystore<'a>(
@@ -315,18 +331,58 @@ pub fn get_block_id(value: &str) -> Result<BlockId> {
     }
 }
 
+#[derive(Debug)]
+pub struct ErrorData {
+    pub data: String,
+}
+
+impl ErrorData {
+    #[must_use]
+    pub fn new(data: String) -> Self {
+        ErrorData { data }
+    }
+}
+
+impl From<ContractErrorData> for ErrorData {
+    fn from(value: ContractErrorData) -> Self {
+        ErrorData {
+            data: value.revert_error,
+        }
+    }
+}
+
+#[derive(Error, Debug)]
+pub enum TransactionError {
+    #[error("Transaction has been rejected")]
+    Rejected,
+    #[error("Transaction has been reverted = {}", .0.data)]
+    Reverted(ErrorData),
+}
+
+#[derive(Error, Debug)]
+pub enum WaitForTransactionError {
+    #[error(transparent)]
+    TransactionError(TransactionError),
+    #[error("sncast timed out while waiting for transaction to succeed")]
+    TimedOut,
+    #[error(transparent)]
+    ProviderError(#[from] ProviderError),
+}
+
 pub async fn wait_for_tx(
     provider: &JsonRpcClient<HttpTransport>,
     tx_hash: FieldElement,
     wait_params: ValidatedWaitParams,
-) -> Result<&str> {
+) -> Result<&str, WaitForTransactionError> {
     println!("Transaction hash = {tx_hash:#x}");
 
     let retries = wait_params.get_retries();
     for i in (1..retries).rev() {
         match provider.get_transaction_status(tx_hash).await {
             Ok(starknet::core::types::TransactionStatus::Rejected) => {
-                return Err(anyhow!("Transaction has been rejected"));
+                return Err(WaitForTransactionError::TransactionError(
+                    TransactionError::Rejected,
+                ));
             }
             Ok(
                 starknet::core::types::TransactionStatus::AcceptedOnL2(execution_status)
@@ -344,78 +400,85 @@ pub async fn wait_for_tx(
                 let remaining_time = wait_params.remaining_time(i);
                 println!("Waiting for transaction to be accepted ({i} retries / {remaining_time}s left until timeout)");
             }
+            Err(ProviderError::RateLimited) => {
+                println!("Request rate limited while waiting for transaction to be accepted");
+                sleep(Duration::from_secs(wait_params.get_retry_interval().into()));
+            }
             Err(err) => return Err(err.into()),
         };
 
         sleep(Duration::from_secs(wait_params.get_retry_interval().into()));
     }
 
-    Err(anyhow!(
-        "Failed to get transaction with hash = {tx_hash:#x}; Transaction rejected, not received or sncast timed out"
-    ))
+    Err(WaitForTransactionError::TimedOut)
 }
 
 async fn get_revert_reason(
     provider: &JsonRpcClient<HttpTransport>,
     tx_hash: FieldElement,
-) -> Result<&str> {
+) -> Result<&str, WaitForTransactionError> {
     let receipt = provider.get_transaction_receipt(tx_hash).await?;
 
     if let starknet::core::types::ExecutionResult::Reverted { reason } = receipt.execution_result()
     {
-        Err(anyhow!("Transaction has been reverted = {reason}"))
+        Err(WaitForTransactionError::TransactionError(
+            TransactionError::Reverted(ErrorData {
+                data: reason.clone(),
+            }),
+        ))
     } else {
         unreachable!();
     }
 }
 
-pub fn handle_rpc_error<T>(error: ProviderError) -> std::result::Result<T, Error> {
+#[must_use]
+pub fn handle_rpc_error(error: ProviderError) -> Error {
     match error {
         StarknetError(FailedToReceiveTransaction) => {
-            Err(anyhow!("Node failed to receive transaction"))
+            anyhow!("Node failed to receive transaction")
         }
         StarknetError(ContractNotFound) => {
-            Err(anyhow!("There is no contract at the specified address"))
+            anyhow!("There is no contract at the specified address")
         }
-        StarknetError(BlockNotFound) => Err(anyhow!("Block was not found")),
-        StarknetError(TransactionHashNotFound) => Err(anyhow!(
-            "Transaction with provided hash was not found (does not exist)"
-        )),
+        StarknetError(BlockNotFound) => anyhow!("Block was not found"),
+        StarknetError(TransactionHashNotFound) => {
+            anyhow!("Transaction with provided hash was not found (does not exist)")
+        }
         StarknetError(InvalidTransactionIndex) => {
-            Err(anyhow!("There is no transaction with such an index"))
+            anyhow!("There is no transaction with such an index")
         }
-        StarknetError(ClassHashNotFound) => Err(anyhow!("Provided class hash does not exist")),
-        StarknetError(ContractError(err)) => Err(anyhow!(
-            "An error occurred in the called contract = {err:?}"
-        )),
-        StarknetError(InvalidTransactionNonce) => Err(anyhow!("Invalid transaction nonce")),
-        StarknetError(InsufficientMaxFee) => Err(anyhow!(
-            "Max fee is smaller than the minimal transaction cost"
-        )),
-        StarknetError(InsufficientAccountBalance) => Err(anyhow!(
-            "Account balance is too small to cover transaction fee"
-        )),
-        StarknetError(ClassAlreadyDeclared) => Err(anyhow!(
-            "Contract with the same class hash is already declared"
-        )),
+        StarknetError(ClassHashNotFound) => anyhow!("Provided class hash does not exist"),
+        StarknetError(ContractError(err)) => {
+            anyhow!("An error occurred in the called contract = {err:?}")
+        }
+        StarknetError(InvalidTransactionNonce) => anyhow!("Invalid transaction nonce"),
+        StarknetError(InsufficientMaxFee) => {
+            anyhow!("Max fee is smaller than the minimal transaction cost")
+        }
+        StarknetError(InsufficientAccountBalance) => {
+            anyhow!("Account balance is too small to cover transaction fee")
+        }
+        StarknetError(ClassAlreadyDeclared) => {
+            anyhow!("Contract with the same class hash is already declared")
+        }
         StarknetError(TransactionExecutionError(err)) => {
-            Err(anyhow!("Transaction execution error = {err:?}"))
+            anyhow!("Transaction execution error = {err:?}")
         }
         StarknetError(ValidationFailure(err)) => {
-            Err(anyhow!("Contract failed the validation = {err}"))
+            anyhow!("Contract failed the validation = {err}")
         }
-        StarknetError(CompilationFailed) => Err(anyhow!("Contract failed to compile in starknet")),
+        StarknetError(CompilationFailed) => anyhow!("Contract failed to compile in starknet"),
         StarknetError(ContractClassSizeIsTooLarge) => {
-            Err(anyhow!("Contract class size is too large"))
+            anyhow!("Contract class size is too large")
         }
-        StarknetError(NonAccount) => Err(anyhow!("No account")),
-        StarknetError(DuplicateTx) => Err(anyhow!("Transaction already exists")),
-        StarknetError(CompiledClassHashMismatch) => Err(anyhow!("Compiled class hash mismatch")),
-        StarknetError(UnsupportedTxVersion) => Err(anyhow!("Unsupported transaction version")),
+        StarknetError(NonAccount) => anyhow!("No account"),
+        StarknetError(DuplicateTx) => anyhow!("Transaction already exists"),
+        StarknetError(CompiledClassHashMismatch) => anyhow!("Compiled class hash mismatch"),
+        StarknetError(UnsupportedTxVersion) => anyhow!("Unsupported transaction version"),
         StarknetError(UnsupportedContractClassVersion) => {
-            Err(anyhow!("Unsupported contract class version"))
+            anyhow!("Unsupported contract class version")
         }
-        _ => Err(anyhow!("Unknown RPC error")),
+        _ => anyhow!("Unknown RPC error"),
     }
 }
 
@@ -424,11 +487,11 @@ pub async fn handle_wait_for_tx<T>(
     transaction_hash: FieldElement,
     return_value: T,
     wait_config: WaitForTx,
-) -> Result<T> {
+) -> Result<T, WaitForTransactionError> {
     if wait_config.wait {
         return match wait_for_tx(provider, transaction_hash, wait_config.wait_params).await {
             Ok(_) => Ok(return_value),
-            Err(message) => Err(anyhow!(message)),
+            Err(error) => Err(error),
         };
     }
 

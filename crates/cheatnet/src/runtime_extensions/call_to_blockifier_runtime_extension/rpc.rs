@@ -1,5 +1,6 @@
 use blockifier::execution::execution_utils::stark_felt_to_felt;
 use cairo_lang_runner::casm_run::format_next_item;
+use conversions::byte_array::ByteArray;
 
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::execute_call_entry_point;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::panic_data::try_extract_panic_data;
@@ -14,6 +15,7 @@ use blockifier::execution::{
 use blockifier::state::errors::StateError;
 use cairo_felt::Felt252;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
+use serde::{Deserialize, Serialize};
 use starknet_api::core::ClassHash;
 use starknet_api::{core::ContractAddress, deprecated_contract_class::EntryPointType};
 
@@ -53,7 +55,7 @@ pub fn subtract_syscall_counters(
 }
 
 /// Enum representing possible call execution result, along with the data
-#[derive(Debug)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum CallResult {
     Success { ret_data: Vec<Felt252> },
     Failure(CallFailure),
@@ -62,7 +64,7 @@ pub enum CallResult {
 /// Enum representing possible call failure and its' type.
 /// `Panic` - Recoverable, meant to be caught by the user.
 /// `Error` - Unrecoverable, equivalent of panic! in rust.
-#[derive(Debug)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum CallFailure {
     Panic { panic_data: Vec<Felt252> },
     Error { msg: String },
@@ -134,7 +136,12 @@ impl CallFailure {
                         "Entry point selector {selector_hash} not found for class hash {class_hash}"
                     ),
                 };
-                CallFailure::Error { msg }
+
+                let panic_data_felts: Vec<Felt252> = ByteArray::from(msg).serialize();
+
+                CallFailure::Panic {
+                    panic_data: panic_data_felts,
+                }
             }
             EntryPointExecutionError::PreExecutionError(
                 PreExecutionError::UninitializedStorageAddress(contract_address),
@@ -154,7 +161,8 @@ impl CallFailure {
 }
 
 impl CallResult {
-    fn from_execution_result(
+    #[must_use]
+    pub fn from_execution_result(
         result: &EntryPointExecutionResult<CallInfo>,
         starknet_identifier: &AddressOrClassHash,
     ) -> Self {

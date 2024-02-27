@@ -1,13 +1,18 @@
-use crate::helpers::constants::{SCRIPTS_DIR, URL};
+use crate::helpers::constants::{ACCOUNT_FILE_PATH, SCRIPTS_DIR, URL};
+use crate::helpers::fixtures::{copy_script_directory_to_tempdir, get_accounts_path};
+use crate::helpers::runner::runner;
 use indoc::indoc;
-use snapbox::cmd::{cargo_bin, Command};
 
 #[tokio::test]
 async fn test_max_fee_too_low() {
+    let script_dir =
+        copy_script_directory_to_tempdir(SCRIPTS_DIR.to_owned() + "/invoke", Vec::<String>::new());
+    let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
+
     let script_name = "max_fee_too_low";
     let args = vec![
         "--accounts-file",
-        "../../accounts/accounts.json",
+        accounts_json_path.as_str(),
         "--account",
         "user4",
         "--url",
@@ -17,9 +22,7 @@ async fn test_max_fee_too_low() {
         &script_name,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(SCRIPTS_DIR.to_owned() + "/invoke")
-        .args(args);
+    let snapbox = runner(&args).current_dir(script_dir.path());
     snapbox.assert().success().stderr_matches(indoc! {r"
         ...
         command: script run
@@ -29,10 +32,14 @@ async fn test_max_fee_too_low() {
 
 #[tokio::test]
 async fn test_contract_does_not_exist() {
+    let script_dir =
+        copy_script_directory_to_tempdir(SCRIPTS_DIR.to_owned() + "/invoke", Vec::<String>::new());
+    let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
+
     let script_name = "contract_does_not_exist";
     let args = vec![
         "--accounts-file",
-        "../../accounts/accounts.json",
+        accounts_json_path.as_str(),
         "--account",
         "user4",
         "--url",
@@ -42,9 +49,7 @@ async fn test_contract_does_not_exist() {
         &script_name,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(SCRIPTS_DIR.to_owned() + "/invoke")
-        .args(args);
+    let snapbox = runner(&args).current_dir(script_dir.path());
     snapbox.assert().success().stderr_matches(indoc! {r"
         ...
         command: script run
@@ -54,10 +59,14 @@ async fn test_contract_does_not_exist() {
 
 #[test]
 fn test_wrong_function_name() {
+    let script_dir =
+        copy_script_directory_to_tempdir(SCRIPTS_DIR.to_owned() + "/invoke", Vec::<String>::new());
+    let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
+
     let script_name = "wrong_function_name";
     let args = vec![
         "--accounts-file",
-        "../../accounts/accounts.json",
+        accounts_json_path.as_str(),
         "--account",
         "user4",
         "--url",
@@ -67,9 +76,7 @@ fn test_wrong_function_name() {
         &script_name,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(SCRIPTS_DIR.to_owned() + "/invoke")
-        .args(args);
+    let snapbox = runner(&args).current_dir(script_dir.path());
     snapbox.assert().success().stderr_matches(indoc! {r"
         ...
         command: script run
@@ -79,10 +86,14 @@ fn test_wrong_function_name() {
 
 #[test]
 fn test_wrong_calldata() {
+    let script_dir =
+        copy_script_directory_to_tempdir(SCRIPTS_DIR.to_owned() + "/invoke", Vec::<String>::new());
+    let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
+
     let script_name = "wrong_calldata";
     let args = vec![
         "--accounts-file",
-        "../../accounts/accounts.json",
+        accounts_json_path.as_str(),
         "--account",
         "user4",
         "--url",
@@ -92,9 +103,7 @@ fn test_wrong_calldata() {
         &script_name,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(SCRIPTS_DIR.to_owned() + "/invoke")
-        .args(args);
+    let snapbox = runner(&args).current_dir(script_dir.path());
     snapbox.assert().success().stderr_matches(indoc! {r"
         ...
         command: script run

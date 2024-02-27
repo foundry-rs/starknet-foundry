@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-SCARB_VERSION="2.5.0"
+SCARB_VERSION="2.5.4"
 REPO_ROOT=$(git rev-parse --show-toplevel)
 CONTRACTS_DIRECTORY="${REPO_ROOT}/crates/sncast/tests/data/contracts/"
 

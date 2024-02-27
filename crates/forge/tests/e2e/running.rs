@@ -1,8 +1,10 @@
 use crate::e2e::common::runner::{
     get_current_branch, get_remote_url, runner, setup_package, test_runner,
 };
+
 use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
 use camino::Utf8PathBuf;
+use forge::CAIRO_EDITION;
 use indoc::{formatdoc, indoc};
 use std::fs;
 use std::{path::Path, str::FromStr};
@@ -79,7 +81,7 @@ fn simple_package_with_git_dependency() {
             casm = true
 
             [dependencies]
-            starknet = "2.5.0"
+            starknet = "2.5.4"
             snforge_std = {{ git = "https://github.com/{}", branch = "{}" }}
             "#,
             remote_url,
@@ -749,18 +751,19 @@ fn init_new_project_test() {
             [package]
             name = "test_name"
             version = "0.1.0"
-            edition = "2023_10"
+            edition = "{}"
 
             # See more keys and their definitions at https://docs.swmansion.com/scarb/docs/reference/manifest.html
 
             [dependencies]
             snforge_std = {{ git = "https://github.com/foundry-rs/starknet-foundry", tag = "v{}" }}
-            starknet = "2.5.0"
+            starknet = "2.5.4"
 
             [[target.starknet-contract]]
             casm = true
         "#,
-        version
+        CAIRO_EDITION,
+        version,
     );
 
     assert_eq!(generated_toml, expected_toml);
@@ -778,7 +781,7 @@ fn init_new_project_test() {
         casm = true
 
         [dependencies]
-        starknet = "2.5.0"
+        starknet = "2.5.4"
         snforge_std = {{ git = "https://github.com/{}", branch = "{}" }}
         "#,
             remote_url,
@@ -937,7 +940,7 @@ fn incompatible_snforge_std_version_warning() {
         output,
         indoc! {r"
         [..]Updating git repository https://github.com/foundry-rs/starknet-foundry
-        [WARNING] Package snforge_std version does not meet the recommended version requirement =0.17.1, [..]
+        [WARNING] Package snforge_std version does not meet the recommended version requirement =0.18.0, [..]
         [..]Compiling[..]
         [..]Finished[..]
 

@@ -9,12 +9,14 @@ use sncast::response::print::{print_command_result, OutputFormat};
 
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand};
+use shared::verify_and_warn_if_incompatible_rpc_version;
 use sncast::helpers::configuration::{load_config, CastConfig};
 use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
 use sncast::helpers::scarb_utils::{
     assert_manifest_path_exists, build_and_load_artifacts, get_package_metadata,
     get_scarb_metadata_with_deps, BuildConfig,
 };
+use sncast::response::errors::handle_starknet_command_error;
 use sncast::{
     chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_nonce, get_provider,
     NumbersFormat, ValidatedWaitParams, WaitForTx,
@@ -34,10 +36,6 @@ struct Cli {
     /// Profile name in snfoundry.toml config file
     #[clap(short, long)]
     profile: Option<String>,
-
-    /// Path to Scarb.toml that is to be used; overrides default behaviour of searching for scarb.toml in current or parent directories
-    #[clap(short = 's', long)]
-    path_to_scarb_toml: Option<Utf8PathBuf>,
 
     /// RPC provider url address; overrides url from snfoundry.toml
     #[clap(short = 'u', long = "url")]
@@ -144,6 +142,8 @@ async fn run_async_command(
     numbers_format: NumbersFormat,
     output_format: OutputFormat,
 ) -> Result<()> {
+    verify_and_warn_if_incompatible_rpc_version(&provider, &config.rpc_url).await?;
+
     let wait_config = WaitForTx {
         wait: cli.wait,
         wait_params: config.wait_params,
@@ -158,7 +158,7 @@ async fn run_async_command(
                 config.keystore,
             )
             .await?;
-            let manifest_path = assert_manifest_path_exists(&cli.path_to_scarb_toml)?;
+            let manifest_path = assert_manifest_path_exists()?;
             let package_metadata = get_package_metadata(&manifest_path, &declare.package)?;
             let artifacts = build_and_load_artifacts(
                 &package_metadata,
@@ -177,7 +177,8 @@ async fn run_async_command(
                 &artifacts,
                 wait_config,
             )
-            .await;
+            .await
+            .map_err(handle_starknet_command_error);
 
             print_command_result("declare", &mut result, numbers_format, &output_format)?;
             Ok(())
@@ -200,7 +201,8 @@ async fn run_async_command(
                 deploy.nonce,
                 wait_config,
             )
-            .await;
+            .await
+            .map_err(handle_starknet_command_error);
 
             print_command_result("deploy", &mut result, numbers_format, &output_format)?;
             Ok(())
@@ -215,7 +217,8 @@ async fn run_async_command(
                 &provider,
                 block_id.as_ref(),
             )
-            .await;
+            .await
+            .map_err(handle_starknet_command_error);
 
             print_command_result("call", &mut result, numbers_format, &output_format)?;
             Ok(())
@@ -237,7 +240,8 @@ async fn run_async_command(
                 invoke.nonce,
                 wait_config,
             )
-            .await;
+            .await
+            .map_err(handle_starknet_command_error);
 
             print_command_result("invoke", &mut result, numbers_format, &output_format)?;
             Ok(())
@@ -406,12 +410,16 @@ fn run_script_command(
             print_command_result("script init", &mut result, numbers_format, output_format)?;
         }
         starknet_commands::script::Commands::Run(run) => {
-            let manifest_path = assert_manifest_path_exists(&cli.path_to_scarb_toml)?;
+            let manifest_path = assert_manifest_path_exists()?;
             let package_metadata = get_package_metadata(&manifest_path, &run.package)?;
 
             let mut config = load_config(&cli.profile, &Some(package_metadata.root.clone()))?;
             update_cast_config(&mut config, cli);
             let provider = get_provider(&config.rpc_url)?;
+            runtime.block_on(verify_and_warn_if_incompatible_rpc_version(
+                &provider,
+                &config.rpc_url,
+            ))?;
 
             let mut artifacts = build_and_load_artifacts(
                 &package_metadata,

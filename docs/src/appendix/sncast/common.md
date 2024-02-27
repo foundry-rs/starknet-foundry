@@ -6,26 +6,19 @@ Optional.
 Used for both `snfoundry.toml` and `Scarb.toml` if specified.
 Defaults to `default` (`snfoundry.toml`) and `dev` (`Scarb.toml`).
 
-## `--path-to-scarb-toml, -s <PATH>`
-Optional.
-
-Path to `Scarb.toml` file.
-
-If supplied, `sncast` will not look for `Scarb.toml` file in current (or parent) directory, but will use this path instead.
-
 ## `--url, -u <RPC_URL>`
 Optional.
 
 Starknet RPC node url address.
 
-Overrides url from `Scarb.toml`.
+Overrides url from `snfoundry.toml`.
 
 ## `--account, -a <ACCOUNT_NAME>`
 Optional.
 
 Account name used to interact with the network, aliased in open zeppelin accounts file.
 
-Overrides account from `Scarb.toml`.
+Overrides account from `snfoundry.toml`.
 
 If used with `--keystore`, should be a path to [starkli account JSON file](https://book.starkli.rs/accounts#accounts).
 

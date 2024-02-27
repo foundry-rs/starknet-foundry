@@ -5,7 +5,7 @@ use traits::Into;
 fn main() {
     let max_fee = 99999999999999999;
     let salt = 0x3;
-    let class_hash: ClassHash = 0x6d5e0eea81df9a6b03b9be2319a096d5322bd78ff1d2e6e315a91e9a4ac02ed
+    let class_hash: ClassHash = 0x059426c817fb8103edebdbf1712fa084c6744b2829db9c62d1ea4dce14ee6ded
         .try_into()
         .expect('Invalid class hash value');
 

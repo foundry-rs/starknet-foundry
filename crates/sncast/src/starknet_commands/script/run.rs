@@ -34,10 +34,11 @@ use runtime::{
 use scarb_api::{package_matches_version_requirement, StarknetContractArtifacts};
 use scarb_metadata::{Metadata, PackageMetadata};
 use semver::{Comparator, Op, Version, VersionReq};
+use shared::print::print_as_warning;
 use shared::utils::build_readable_text;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::SCRIPT_LIB_ARTIFACT_NAME;
-use sncast::response::print::print_as_warning;
+use sncast::response::errors::handle_starknet_command_error;
 use sncast::response::structs::ScriptRunResponse;
 use starknet::accounts::Account;
 use starknet::core::types::{BlockId, BlockTag::Pending, FieldElement};
@@ -89,13 +90,16 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     .map(|el| FieldElement::from_(el.clone()))
                     .collect();
 
-                let call_response = self.tokio_runtime.block_on(call::call(
-                    contract_address,
-                    &function_name,
-                    calldata_felts,
-                    self.provider,
-                    &BlockId::Tag(Pending),
-                ))?;
+                let call_response = self
+                    .tokio_runtime
+                    .block_on(call::call(
+                        contract_address,
+                        &function_name,
+                        calldata_felts,
+                        self.provider,
+                        &BlockId::Tag(Pending),
+                    ))
+                    .map_err(handle_starknet_command_error)?;
 
                 let mut res: Vec<Felt252> = vec![Felt252::from(call_response.response.len())];
                 res.extend(call_response.response.iter().map(|el| Felt252::from_(el.0)));
@@ -115,17 +119,20 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     self.config.keystore.clone(),
                 ))?;
 
-                let declare_response = self.tokio_runtime.block_on(declare::declare(
-                    &contract_name,
-                    max_fee,
-                    &account,
-                    nonce,
-                    self.artifacts,
-                    WaitForTx {
-                        wait: true,
-                        wait_params: self.config.wait_params,
-                    },
-                ))?;
+                let declare_response = self
+                    .tokio_runtime
+                    .block_on(declare::declare(
+                        &contract_name,
+                        max_fee,
+                        &account,
+                        nonce,
+                        self.artifacts,
+                        WaitForTx {
+                            wait: true,
+                            wait_params: self.config.wait_params,
+                        },
+                    ))
+                    .map_err(handle_starknet_command_error)?;
 
                 let res: Vec<Felt252> = vec![
                     Felt252::from_(declare_response.class_hash.0),
@@ -153,19 +160,22 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     self.config.keystore.clone(),
                 ))?;
 
-                let deploy_response = self.tokio_runtime.block_on(deploy::deploy(
-                    class_hash,
-                    constructor_calldata,
-                    salt,
-                    unique,
-                    max_fee,
-                    &account,
-                    nonce,
-                    WaitForTx {
-                        wait: true,
-                        wait_params: self.config.wait_params,
-                    },
-                ))?;
+                let deploy_response = self
+                    .tokio_runtime
+                    .block_on(deploy::deploy(
+                        class_hash,
+                        constructor_calldata,
+                        salt,
+                        unique,
+                        max_fee,
+                        &account,
+                        nonce,
+                        WaitForTx {
+                            wait: true,
+                            wait_params: self.config.wait_params,
+                        },
+                    ))
+                    .map_err(handle_starknet_command_error)?;
 
                 let res: Vec<Felt252> = vec![
                     Felt252::from_(deploy_response.contract_address.0),
@@ -193,18 +203,21 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     self.config.keystore.clone(),
                 ))?;
 
-                let invoke_response = self.tokio_runtime.block_on(invoke::invoke(
-                    contract_address,
-                    &entry_point_name,
-                    calldata,
-                    max_fee,
-                    &account,
-                    nonce,
-                    WaitForTx {
-                        wait: true,
-                        wait_params: self.config.wait_params,
-                    },
-                ))?;
+                let invoke_response = self
+                    .tokio_runtime
+                    .block_on(invoke::invoke(
+                        contract_address,
+                        &entry_point_name,
+                        calldata,
+                        max_fee,
+                        &account,
+                        nonce,
+                        WaitForTx {
+                            wait: true,
+                            wait_params: self.config.wait_params,
+                        },
+                    ))
+                    .map_err(handle_starknet_command_error)?;
 
                 let res: Vec<Felt252> = vec![Felt252::from_(invoke_response.transaction_hash.0)];
                 Ok(CheatcodeHandlingResult::Handled(res))

@@ -4,7 +4,7 @@ use anyhow::{anyhow, Result};
 use camino::Utf8PathBuf;
 use serde::{Deserialize, Serialize};
 use std::fs;
-use tempfile::TempDir;
+use tempfile::{tempdir, TempDir};
 use toml::Value;
 
 #[derive(Default, Deserialize, Serialize, Clone, Debug, PartialEq)]
@@ -159,7 +159,7 @@ pub fn find_config_file() -> Result<Utf8PathBuf> {
 
 #[must_use]
 pub fn copy_config_to_tempdir(src_path: &str, additional_path: Option<&str>) -> TempDir {
-    let temp_dir = TempDir::new().expect("Failed to create a temporary directory");
+    let temp_dir = tempdir().expect("Failed to create a temporary directory");
     if let Some(dir) = additional_path {
         let path = temp_dir.path().join(dir);
         fs::create_dir_all(path).expect("Failed to create directories in temp dir");
@@ -172,7 +172,6 @@ pub fn copy_config_to_tempdir(src_path: &str, additional_path: Option<&str>) -> 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::TempDir;
 
     #[test]
     fn find_config_in_current_dir() {
@@ -227,7 +226,7 @@ mod tests {
 
     #[test]
     fn no_config_in_current_nor_parent_dir() {
-        let tempdir = TempDir::new().expect("Failed to create a temporary directory");
+        let tempdir = tempdir().expect("Failed to create a temporary directory");
         assert!(
             search_config_upwards_relative_to(
                 &Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()
@@ -264,7 +263,7 @@ mod tests {
 
     #[test]
     fn load_config_not_found() {
-        let tempdir = TempDir::new().expect("Failed to create a temporary directory");
+        let tempdir = tempdir().expect("Failed to create a temporary directory");
         let config = load_config(
             &None,
             &Some(Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
