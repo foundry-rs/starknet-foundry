@@ -102,8 +102,12 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
             }
             "declare" => {
                 let contract_name = input_reader.read_string();
-                let max_fee = input_reader.read_option_felt().map(conversions::IntoConv::into_);
-                let nonce = input_reader.read_option_felt().map(conversions::IntoConv::into_);
+                let max_fee = input_reader
+                    .read_option_felt()
+                    .map(conversions::IntoConv::into_);
+                let nonce = input_reader
+                    .read_option_felt()
+                    .map(conversions::IntoConv::into_);
 
                 let account = self.tokio_runtime.block_on(get_account(
                     &self.config.account,
