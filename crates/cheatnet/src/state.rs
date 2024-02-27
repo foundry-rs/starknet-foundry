@@ -1,5 +1,7 @@
 use crate::forking::state::ForkStateReader;
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::subtract_execution_resources;
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
+    subtract_execution_resources, CallResult,
+};
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spoof::TxInfoMock;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::{
     Event, SpyTarget,
@@ -133,6 +135,7 @@ pub struct CallTrace {
     // These also include resources used by internal calls
     pub used_execution_resources: ExecutionResources,
     pub nested_calls: Vec<Rc<RefCell<CallTrace>>>,
+    pub result: CallResult,
 }
 
 #[derive(Clone)]
@@ -210,6 +213,7 @@ impl Default for CheatnetState {
             entry_point: test_code_entry_point,
             used_execution_resources: Default::default(),
             nested_calls: vec![],
+            result: CallResult::Success { ret_data: vec![] },
         }));
         Self {
             rolled_contracts: Default::default(),
@@ -309,6 +313,7 @@ impl TraceData {
             entry_point,
             used_execution_resources: Default::default(),
             nested_calls: vec![],
+            result: CallResult::Success { ret_data: vec![] },
         }));
         let current_call = self.current_call_stack.top();
 
@@ -326,14 +331,20 @@ impl TraceData {
         current_call.borrow_mut().entry_point.class_hash = Some(class_hash);
     }
 
-    pub fn exit_nested_call(&mut self, resources_used_after_call: &ExecutionResources) {
+    pub fn exit_nested_call(
+        &mut self,
+        resources_used_after_call: &ExecutionResources,
+        call_result: CallResult,
+    ) {
         let CallStackElement {
             resources_used_before_call,
             call_trace: last_call,
         } = self.current_call_stack.pop();
 
-        last_call.borrow_mut().used_execution_resources =
+        let mut last_call = last_call.borrow_mut();
+        last_call.used_execution_resources =
             subtract_execution_resources(resources_used_after_call, &resources_used_before_call);
+        last_call.result = call_result;
     }
 }
 

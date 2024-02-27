@@ -11,7 +11,7 @@ fn trace_deploy() {
         indoc!(
             r#"
             use snforge_std::{declare, ContractClassTrait, test_address, test_selector};
-            use snforge_std::trace::{CallEntryPoint, CallType, EntryPointType, get_call_trace, CallTrace};
+            use snforge_std::trace::{CallEntryPoint, CallType, EntryPointType, get_call_trace, CallTrace, CallResult};
             
             use starknet::{SyscallResultTrait, deploy_syscall, ContractAddress};
             
@@ -32,7 +32,7 @@ fn trace_deploy() {
                 let proxy_address_3 = proxy
                     .deploy_at(@array![checker_address.into()], 123.try_into().unwrap())
                     .unwrap();
-            
+                    
                 assert_trace(
                     get_call_trace(), proxy_address1, proxy_address2, proxy_address_3, checker_address
                 );
@@ -74,9 +74,11 @@ fn trace_deploy() {
                                         caller_address: proxy_address1,
                                         call_type: CallType::Call,
                                     },
-                                    nested_calls: array![]
+                                    nested_calls: array![],
+                                    result: CallResult::Success(array![101])
                                 }
                             ],
+                            result: CallResult::Success(array![])
                         },
                         CallTrace {
                             entry_point: CallEntryPoint {
@@ -97,9 +99,11 @@ fn trace_deploy() {
                                         caller_address: proxy_address2,
                                         call_type: CallType::Call,
                                     },
-                                    nested_calls: array![]
+                                    nested_calls: array![],
+                                    result: CallResult::Success(array![101])
                                 }
                             ],
+                            result: CallResult::Success(array![])
                         },
                         CallTrace {
                             entry_point: CallEntryPoint {
@@ -120,11 +124,14 @@ fn trace_deploy() {
                                         caller_address: proxy_address3,
                                         call_type: CallType::Call,
                                     },
-                                    nested_calls: array![]
+                                    nested_calls: array![],
+                                    result: CallResult::Success(array![101])
                                 }
                             ],
+                            result: CallResult::Success(array![])
                         }
-                    ]
+                    ],
+                    result: CallResult::Success(array![])
                 };
             
                 assert(trace == expected_trace, '');
@@ -155,7 +162,7 @@ fn trace_call() {
         indoc!(
             r#"
             use snforge_std::{declare, ContractClassTrait, test_address, test_selector, start_prank, CheatTarget};
-            use snforge_std::trace::{CallTrace, CallEntryPoint, CallType, EntryPointType, get_call_trace};
+            use snforge_std::trace::{CallTrace, CallEntryPoint, CallType, EntryPointType, get_call_trace, CallResult};
             
             use starknet::{ContractAddress, ClassHash};
             
@@ -196,7 +203,7 @@ fn trace_call() {
             
                 let chcecker_dispatcher = ITraceInfoCheckerDispatcher { contract_address: checker_address };
                 chcecker_dispatcher.from_proxy(4);
-            
+                
                 assert_trace(
                     get_call_trace(), proxy_address, checker_address, dummy_address, checker.class_hash
                 );
@@ -239,8 +246,10 @@ fn trace_call() {
                                         call_type: CallType::Call,
                                     },
                                     nested_calls: array![],
+                                    result: CallResult::Success(array![101])
                                 },
-                            ]
+                            ],
+                            result: CallResult::Success(array![])
                         },
                         CallTrace {
                             entry_point: CallEntryPoint {
@@ -261,9 +270,11 @@ fn trace_call() {
                                         caller_address: proxy_address,
                                         call_type: CallType::Call,
                                     },
-                                    nested_calls: array![]
+                                    nested_calls: array![],
+                                    result: CallResult::Success(array![102])
                                 }
-                            ]
+                            ],
+                            result: CallResult::Success(array![102])
                         },
                         CallTrace {
                             entry_point: CallEntryPoint {
@@ -284,9 +295,11 @@ fn trace_call() {
                                         caller_address: test_address(),
                                         call_type: CallType::Delegate,
                                     },
-                                    nested_calls: array![]
+                                    nested_calls: array![],
+                                    result: CallResult::Success(array![103])
                                 }
-                            ]
+                            ],
+                            result: CallResult::Success(array![103])
                         },
                         CallTrace {
                             entry_point: CallEntryPoint {
@@ -307,7 +320,8 @@ fn trace_call() {
                                         caller_address: proxy_address,
                                         call_type: CallType::Call,
                                     },
-                                    nested_calls: array![]
+                                    nested_calls: array![],
+                                    result: CallResult::Success(array![142])
                                 },
                                 CallTrace {
                                     entry_point: CallEntryPoint {
@@ -318,9 +332,11 @@ fn trace_call() {
                                         caller_address: proxy_address,
                                         call_type: CallType::Call,
                                     },
-                                    nested_calls: array![]
+                                    nested_calls: array![],
+                                    result: CallResult::Success(array![])
                                 }
-                            ]
+                            ],
+                            result: CallResult::Success(array![])
                         },
                         CallTrace {
                             entry_point: CallEntryPoint {
@@ -331,9 +347,11 @@ fn trace_call() {
                                 caller_address: test_address(),
                                 call_type: CallType::Call,
                             },
-                            nested_calls: array![]
+                            nested_calls: array![],
+                            result: CallResult::Success(array![104])
                         }
-                    ]
+                    ],
+                    result: CallResult::Success(array![])
                 };
             
                 assert(expected == trace, '');
@@ -369,7 +387,7 @@ fn trace_failed_call() {
         indoc!(
             r#"
             use snforge_std::{declare, ContractClassTrait, test_address, test_selector};
-            use snforge_std::trace::{CallEntryPoint, CallType, EntryPointType, get_call_trace, CallTrace};
+            use snforge_std::trace::{CallEntryPoint, CallType, EntryPointType, get_call_trace, CallTrace, CallResult, CallFailure};
             
             use starknet::{ContractAddress, ClassHash};
             
@@ -409,7 +427,7 @@ fn trace_failed_call() {
                     Result::Ok(_) => panic_with_felt252('shouldve panicked'),
                     Result::Err(panic_data) => { assert(*panic_data.at(0) == 'panic', *panic_data.at(0)); }
                 }
-            
+                
                 assert_trace(get_call_trace(), proxy_address, checker_address);
             }
             
@@ -446,8 +464,10 @@ fn trace_failed_call() {
                                         call_type: CallType::Call,
                                     },
                                     nested_calls: array![],
+                                    result: CallResult::Success(array![101])
                                 },
-                            ]
+                            ],
+                            result: CallResult::Success(array![])
                         },
                         CallTrace {
                             entry_point: CallEntryPoint {
@@ -468,9 +488,11 @@ fn trace_failed_call() {
                                         caller_address: proxy_address,
                                         call_type: CallType::Call,
                                     },
-                                    nested_calls: array![]
+                                    nested_calls: array![],
+                                    result: CallResult::Failure(CallFailure::Panic(array![482670963043]))
                                 }
-                            ]
+                            ],
+                            result: CallResult::Failure(CallFailure::Panic(array![482670963043]))
                         },
                         CallTrace {
                             entry_point: CallEntryPoint {
@@ -481,9 +503,11 @@ fn trace_failed_call() {
                                 caller_address: test_address(),
                                 call_type: CallType::Call,
                             },
-                            nested_calls: array![]
+                            nested_calls: array![],
+                            result: CallResult::Failure(CallFailure::Panic(array![482670963043]))
                         }
-                    ]
+                    ],
+                    result: CallResult::Success(array![])
                 };
             
                 assert(expected == trace, '');
@@ -514,7 +538,7 @@ fn trace_library_call_from_test() {
         indoc!(
             r#"
             use snforge_std::{declare, ContractClassTrait, test_address, test_selector};
-            use snforge_std::trace::{CallEntryPoint, CallType, EntryPointType, get_call_trace, CallTrace};
+            use snforge_std::trace::{CallEntryPoint, CallType, EntryPointType, get_call_trace, CallTrace, CallResult};
             
             use starknet::{ContractAddress, ClassHash};
             
@@ -557,7 +581,7 @@ fn trace_library_call_from_test() {
                 };
             
                 chcecker_lib_dispatcher.from_proxy(4);
-            
+                
                 assert_trace(get_call_trace(), checker_address, dummy_address, checker.class_hash);
             }
             
@@ -596,9 +620,11 @@ fn trace_library_call_from_test() {
                                         caller_address: test_address(),
                                         call_type: CallType::Call,
                                     },
-                                    nested_calls: array![]
+                                    nested_calls: array![],
+                                    result: CallResult::Success(array![102])
                                 }
-                            ]
+                            ],
+                            result: CallResult::Success(array![102])
                         },
                         CallTrace {
                             entry_point: CallEntryPoint {
@@ -619,9 +645,11 @@ fn trace_library_call_from_test() {
                                         caller_address: 0.try_into().unwrap(),
                                         call_type: CallType::Delegate,
                                     },
-                                    nested_calls: array![]
+                                    nested_calls: array![],
+                                    result: CallResult::Success(array![103])
                                 }
-                            ]
+                            ],
+                            result: CallResult::Success(array![103])
                         },
                         CallTrace {
                             entry_point: CallEntryPoint {
@@ -642,7 +670,8 @@ fn trace_library_call_from_test() {
                                         caller_address: test_address(),
                                         call_type: CallType::Call,
                                     },
-                                    nested_calls: array![]
+                                    nested_calls: array![],
+                                    result: CallResult::Success(array![142])
                                 },
                                 CallTrace {
                                     entry_point: CallEntryPoint {
@@ -653,9 +682,11 @@ fn trace_library_call_from_test() {
                                         caller_address: test_address(),
                                         call_type: CallType::Call,
                                     },
-                                    nested_calls: array![]
+                                    nested_calls: array![],
+                                    result: CallResult::Success(array![])
                                 }
-                            ]
+                            ],
+                            result: CallResult::Success(array![])
                         },
                         CallTrace {
                             entry_point: CallEntryPoint {
@@ -666,9 +697,11 @@ fn trace_library_call_from_test() {
                                 caller_address: 0.try_into().unwrap(),
                                 call_type: CallType::Delegate,
                             },
-                            nested_calls: array![]
+                            nested_calls: array![],
+                            result: CallResult::Success(array![104])
                         }
-                    ]
+                    ],
+                    result: CallResult::Success(array![])
                 };
             
                 assert(expected == trace, '');
@@ -704,7 +737,7 @@ fn trace_failed_library_call_from_test() {
         indoc!(
             r#"
             use snforge_std::{declare, ContractClassTrait, test_address, test_selector};
-            use snforge_std::trace::{CallEntryPoint, CallType, EntryPointType, get_call_trace, CallTrace};
+            use snforge_std::trace::{CallEntryPoint, CallType, EntryPointType, get_call_trace, CallTrace, CallResult, CallFailure};
             
             use starknet::{ContractAddress, ClassHash};
             
@@ -744,7 +777,7 @@ fn trace_failed_library_call_from_test() {
                     Result::Ok(_) => panic_with_felt252('shouldve panicked'),
                     Result::Err(panic_data) => { assert(*panic_data.at(0) == 'panic', *panic_data.at(0)); }
                 }
-            
+                
                 assert_trace(get_call_trace(), proxy_address, checker_address);
             }
             
@@ -781,8 +814,10 @@ fn trace_failed_library_call_from_test() {
                                         call_type: CallType::Call,
                                     },
                                     nested_calls: array![],
+                                    result: CallResult::Success(array![101])
                                 },
-                            ]
+                            ],
+                            result: CallResult::Success(array![])
                         },
                         CallTrace {
                             entry_point: CallEntryPoint {
@@ -803,9 +838,11 @@ fn trace_failed_library_call_from_test() {
                                         caller_address: proxy_address,
                                         call_type: CallType::Call,
                                     },
-                                    nested_calls: array![]
+                                    nested_calls: array![],
+                                    result: CallResult::Failure(CallFailure::Panic(array![482670963043]))
                                 }
-                            ]
+                            ],
+                            result: CallResult::Failure(CallFailure::Panic(array![482670963043]))
                         },
                         CallTrace {
                             entry_point: CallEntryPoint {
@@ -816,9 +853,11 @@ fn trace_failed_library_call_from_test() {
                                 caller_address: test_address(),
                                 call_type: CallType::Call,
                             },
-                            nested_calls: array![]
+                            nested_calls: array![],
+                            result: CallResult::Failure(CallFailure::Panic(array![482670963043]))
                         }
-                    ]
+                    ],
+                    result: CallResult::Success(array![])
                 };
             
                 assert(expected == trace, '');
@@ -849,7 +888,7 @@ fn trace_l1_handler() {
         indoc!(
             r#"
             use snforge_std::{declare, ContractClassTrait, test_address, test_selector, L1HandlerTrait,};
-            use snforge_std::trace::{CallEntryPoint, CallType, EntryPointType, get_call_trace, CallTrace};
+            use snforge_std::trace::{CallEntryPoint, CallType, EntryPointType, get_call_trace, CallTrace, CallResult};
             
             use starknet::ContractAddress;
             
@@ -902,9 +941,11 @@ fn trace_l1_handler() {
                                         caller_address: proxy_address,
                                         call_type: CallType::Call,
                                     },
-                                    nested_calls: array![]
+                                    nested_calls: array![],
+                                    result: CallResult::Success(array![101])
                                 }
                             ],
+                            result: CallResult::Success(array![])
                         },
                         CallTrace {
                             entry_point: CallEntryPoint {
@@ -935,13 +976,17 @@ fn trace_l1_handler() {
                                                 caller_address: proxy_address,
                                                 call_type: CallType::Call,
                                             },
-                                            nested_calls: array![]
+                                            nested_calls: array![],
+                                            result: CallResult::Success(array![102])
                                         }
-                                    ]
+                                    ],
+                                    result: CallResult::Success(array![102])
                                 }
-                            ]
+                            ],
+                            result: CallResult::Success(array![102])
                         }
-                    ]
+                    ],
+                    result: CallResult::Success(array![])
                 };
             
                 assert(trace == expected_trace, '');
