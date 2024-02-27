@@ -9,7 +9,7 @@ use test_utils::{assert_case_output_contains, assert_failed, assert_passed, test
 fn library_call_syscall_is_usable() {
     let test = test_case!(
         indoc!(
-            r"
+            r#"
         use starknet::ContractAddress;
         use starknet::ClassHash;
         use snforge_std::{ declare, ContractClassTrait };
@@ -27,19 +27,19 @@ fn library_call_syscall_is_usable() {
             fn get_thing(self: @TContractState) -> felt252;
         }
 
-        fn deploy_contract(name: felt252) -> ContractAddress {
+        fn deploy_contract(name: ByteArray) -> ContractAddress {
             let contract = declare(name);
             contract.deploy(@ArrayTrait::new()).unwrap()
         }
 
         #[test]
         fn library_call_syscall_is_usable() {
-            let caller_address = deploy_contract('Caller');
+            let caller_address = deploy_contract("Caller");
             let caller_safe_dispatcher = ICallerDispatcher {
                 contract_address: caller_address
             };
 
-            let executor_contract = declare('Executor');
+            let executor_contract = declare("Executor");
             let executor_class_hash = executor_contract.class_hash;
 
             let executor_address = executor_contract.deploy(@ArrayTrait::new()).unwrap();
@@ -55,7 +55,7 @@ fn library_call_syscall_is_usable() {
             let thing = executor_safe_dispatcher.get_thing();
             assert(thing == 5, 'invalid thing');
         }
-        "
+        "#
         ),
         Contract::new(
             "Caller",
@@ -244,7 +244,7 @@ fn cairo_keccak_is_usable() {
 fn keccak_syscall_in_contract() {
     let test = test_case!(
         indoc!(
-            r"
+            r#"
             use result::ResultTrait;
             use array::ArrayTrait;
             use option::OptionTrait;
@@ -259,7 +259,7 @@ fn keccak_syscall_in_contract() {
 
             #[test]
             fn keccak_syscall_in_contract() {
-                let contract = declare('HelloKeccak');
+                let contract = declare("HelloKeccak");
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IHelloKeccakDispatcher { contract_address };
 
@@ -269,7 +269,7 @@ fn keccak_syscall_in_contract() {
                     'Wrong hash value'
                 );
             }
-        "
+        "#
         ),
         Contract::from_code_path(
             "HelloKeccak".to_string(),
@@ -287,7 +287,7 @@ fn keccak_syscall_in_contract() {
 fn compare_keccak_from_contract_with_plain_keccak() {
     let test = test_case!(
         indoc!(
-            r"
+            r#"
             use result::ResultTrait;
             use array::ArrayTrait;
             use option::OptionTrait;
@@ -304,7 +304,7 @@ fn compare_keccak_from_contract_with_plain_keccak() {
 
             #[test]
             fn compare_keccak_from_contract_with_plain_keccak() {
-                let contract = declare('HelloKeccak');
+                let contract = declare("HelloKeccak");
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IHelloKeccakDispatcher { contract_address };
 
@@ -314,7 +314,7 @@ fn compare_keccak_from_contract_with_plain_keccak() {
 
                 assert(contract_keccak == keccak, 'Keccaks dont match');
             }
-        "
+        "#
         ),
         Contract::from_code_path(
             "HelloKeccak".to_string(),

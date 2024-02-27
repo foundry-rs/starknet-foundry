@@ -1,5 +1,7 @@
 use crate::forking::state::ForkStateReader;
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::subtract_execution_resources;
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
+    subtract_execution_resources, CallResult,
+};
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spoof::TxInfoMock;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::{
     Event, SpyTarget,
@@ -142,6 +144,7 @@ pub struct CallTrace {
     pub used_execution_resources: ExecutionResources,
     pub used_onchain_data: OnchainData,
     pub nested_calls: Vec<Rc<RefCell<CallTrace>>>,
+    pub result: CallResult,
 }
 
 #[derive(Clone)]
@@ -173,10 +176,8 @@ impl NotEmptyCallStack {
     }
 
     pub fn top(&mut self) -> Rc<RefCell<CallTrace>> {
-        let top_val = self.0.pop().unwrap();
-        let borrowed_ref = top_val.call_trace.clone();
-        self.0.push(top_val);
-        borrowed_ref
+        let top_val = self.0.last().unwrap();
+        top_val.call_trace.clone()
     }
 
     fn pop(&mut self) -> CallStackElement {
@@ -222,6 +223,7 @@ impl Default for CheatnetState {
             used_execution_resources: Default::default(),
             used_onchain_data: Default::default(),
             nested_calls: vec![],
+            result: CallResult::Success { ret_data: vec![] },
         }));
         Self {
             rolled_contracts: Default::default(),
@@ -322,6 +324,7 @@ impl TraceData {
             used_execution_resources: Default::default(),
             used_onchain_data: Default::default(),
             nested_calls: vec![],
+            result: CallResult::Success { ret_data: vec![] },
         }));
         let current_call = self.current_call_stack.top();
 
@@ -342,6 +345,7 @@ impl TraceData {
     pub fn exit_nested_call(
         &mut self,
         resources_used_after_call: &ExecutionResources,
+        call_result: CallResult,
         maybe_call_info: &Result<CallInfo, EntryPointExecutionError>,
     ) {
         let CallStackElement {
@@ -352,6 +356,7 @@ impl TraceData {
         let mut last_call = last_call.borrow_mut();
         last_call.used_execution_resources =
             subtract_execution_resources(resources_used_after_call, &resources_used_before_call);
+        last_call.result = call_result;
         if let Ok(call_info) = maybe_call_info {
             last_call.used_onchain_data.l2_l1_message_sizes = call_info
                 .execution

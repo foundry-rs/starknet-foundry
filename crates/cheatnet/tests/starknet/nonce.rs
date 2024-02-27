@@ -12,7 +12,6 @@ use cairo_felt::Felt252;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeState;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
 use cheatnet::state::CheatnetState;
-use conversions::felt252::FromShortString;
 use starknet_api::core::ContractAddress;
 
 // We've decided that the nonce should not change in tests
@@ -59,11 +58,10 @@ fn nonce_declare_deploy() {
     let contract_address = deploy_contract(&mut cached_state, &mut runtime_state, "Noncer", &[]);
 
     let contracts = get_contracts();
-    let contract_name = Felt252::from_short_string("HelloStarknet").unwrap();
 
     let nonce1 = check_nonce(&mut cached_state, &mut runtime_state, &contract_address);
 
-    let class_hash = declare(&mut cached_state, &contract_name, &contracts).unwrap();
+    let class_hash = declare(&mut cached_state, "HelloStarknet", &contracts).unwrap();
 
     let nonce2 = check_nonce(&mut cached_state, &mut runtime_state, &contract_address);
 

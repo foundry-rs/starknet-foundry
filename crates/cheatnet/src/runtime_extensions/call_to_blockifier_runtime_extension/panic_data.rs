@@ -18,7 +18,7 @@ pub fn try_extract_panic_data(err: &str) -> Option<Vec<Felt252>> {
             let panic_data_felts: Vec<Felt252> = panic_data_match
                 .as_str()
                 .split(", ")
-                .map(|s| Felt252::from_bytes_be(s.to_owned().as_bytes()))
+                .map(|s| Felt252::from_bytes_be(s.as_bytes()))
                 .collect();
 
             return Some(panic_data_felts);
@@ -27,8 +27,7 @@ pub fn try_extract_panic_data(err: &str) -> Option<Vec<Felt252>> {
 
     if let Some(captures) = re_string.captures(err) {
         if let Some(string_match) = captures.get(1) {
-            let panic_data_felts: Vec<Felt252> =
-                ByteArray::from(string_match.as_str().to_string()).serialize();
+            let panic_data_felts: Vec<Felt252> = ByteArray::from(string_match.as_str()).serialize();
             return Some(panic_data_felts);
         }
     }

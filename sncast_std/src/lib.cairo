@@ -1,3 +1,4 @@
+use core::serde::Serde;
 use starknet::{testing::cheatcode, ContractAddress, ClassHash};
 use core::fmt::{Debug, Display, Error, Formatter};
 
@@ -57,9 +58,12 @@ impl DisplayDeclareResult of Display<DeclareResult> {
 }
 
 pub fn declare(
-    contract_name: felt252, max_fee: Option<felt252>, nonce: Option<felt252>
+    contract_name: ByteArray, max_fee: Option<felt252>, nonce: Option<felt252>
 ) -> DeclareResult {
-    let mut inputs = array![contract_name];
+    // it's in fact core::byte_array::BYTE_ARRAY_MAGIC but it can't be imported here
+    let mut inputs = array![0x46a6158a16a947e5916b2a2ca68501a45e93d7110e81aa2d6438b1c57c879a3];
+
+    contract_name.serialize(ref inputs);
 
     let mut max_fee_serialized = array![];
     max_fee.serialize(ref max_fee_serialized);

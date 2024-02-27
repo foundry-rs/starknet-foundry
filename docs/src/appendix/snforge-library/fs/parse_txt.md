@@ -9,7 +9,7 @@
 Parses plain text file content and tries to deserialize it to type `T` that implements `Serde` trait.
 
 - `file` - a snapshot of an instance of the struct `File` that consists of the following fields:
-  - `path` - Cairo shortstring representing a path to a file relative to a package root.
+  - `path` - Cairo string representing a path to a file relative to a package root.
 
 ```rust
 use option::OptionTrait;
@@ -24,7 +24,7 @@ struct MyStruct {
 
 #[test]
 fn test_parse_txt() {
-    let file = FileTrait::new('data/file.txt');
+    let file = FileTrait::new("data/file.txt");
     let my_struct = FileParser::<MyStruct>::parse_txt(@file).unwrap();
     // ...
 }

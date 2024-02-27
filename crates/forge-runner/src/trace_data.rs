@@ -1,8 +1,10 @@
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fs;
 use std::ops::{AddAssign, Sub};
 use std::path::PathBuf;
+use std::rc::Rc;
 
 // Will be provided by profiler crate in the future
 // This module will be removed!
@@ -37,18 +39,19 @@ pub struct ProfilerCallTrace {
 }
 
 impl ProfilerCallTrace {
-    #[must_use]
-    pub fn from_call_trace(value: CallTrace, contracts_data: &ContractsData) -> Self {
+    pub fn from_call_trace(value: &Rc<RefCell<CallTrace>>, contracts_data: &ContractsData) -> Self {
+        let value = value.borrow();
+
         ProfilerCallTrace {
-            entry_point: ProfilerCallEntryPoint::from(value.entry_point, contracts_data),
+            entry_point: ProfilerCallEntryPoint::from(value.entry_point.clone(), contracts_data),
             used_execution_resources: ProfilerExecutionResources::from(
-                value.used_execution_resources,
+                value.used_execution_resources.clone(),
             ),
             used_onchain_data: value.used_onchain_data,
             nested_calls: value
                 .nested_calls
-                .into_iter()
-                .map(|c| ProfilerCallTrace::from_call_trace(c.borrow().clone(), contracts_data))
+                .iter()
+                .map(|c| ProfilerCallTrace::from_call_trace(c, contracts_data))
                 .collect(),
         }
     }

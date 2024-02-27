@@ -33,6 +33,7 @@ use blockifier::state::errors::StateError;
 use cairo_vm::vm::errors::memory_errors::MemoryError;
 use starknet_api::StarknetApiError;
 use thiserror::Error;
+use utils::BufferReader;
 
 pub mod starknet;
 pub mod utils;
@@ -83,16 +84,13 @@ impl<'a> SignalPropagator for StarknetRuntime<'a> {
     ) {
     }
 
-    fn propagate_cheatcode_signal(&mut self, _selector: &str, _inputs: Vec<Felt252>) {}
+    fn propagate_cheatcode_signal(&mut self, _selector: &str, _inputs: &[Felt252]) {}
 }
 
 pub fn parse_selector(selector: &BigIntAsHex) -> Result<String, HintError> {
     let selector = &selector.value.to_bytes_be().1;
-    let selector = std::str::from_utf8(selector).map_err(|_| {
-        CustomHint(Box::from(
-            "Failed to parse the cheatcode selector".to_string(),
-        ))
-    })?;
+    let selector = std::str::from_utf8(selector)
+        .map_err(|_| CustomHint(Box::from("Failed to parse the cheatcode selector")))?;
     Ok(String::from(selector))
 }
 
@@ -104,7 +102,7 @@ fn fetch_cheatcode_input(
     let input_start = extract_relocatable(vm, input_start)?;
     let input_end = extract_relocatable(vm, input_end)?;
     let inputs = vm_get_range(vm, input_start, input_end)
-        .map_err(|_| CustomHint(Box::from("Failed to read input data".to_string())))?;
+        .map_err(|_| CustomHint(Box::from("Failed to read input data")))?;
     Ok(inputs)
 }
 
@@ -225,7 +223,7 @@ impl<Extension: ExtensionLogic> ExtendedRuntime<Extension> {
         let inputs = fetch_cheatcode_input(vm, vm_io_ptrs.input_start, vm_io_ptrs.input_end)?;
         if let CheatcodeHandlingResult::Handled(res) = self.extension.handle_cheatcode(
             &selector,
-            inputs.clone(),
+            BufferReader::new(&inputs),
             &mut self.extended_runtime,
         )? {
             let mut buffer = MemBuffer::new_segment(vm);
@@ -238,14 +236,14 @@ impl<Extension: ExtensionLogic> ExtendedRuntime<Extension> {
             let output_end = vm_io_ptrs.output_end;
             insert_value_to_cellref!(vm, output_start, result_start)?;
             insert_value_to_cellref!(vm, output_end, result_end)?;
-            self.propagate_cheatcode_signal(&selector, inputs);
+            self.propagate_cheatcode_signal(&selector, &inputs);
             Ok(())
         } else {
             let res = self
                 .extended_runtime
                 .execute_hint(vm, exec_scopes, hint_data, constants);
             self.extension
-                .handle_cheatcode_signal(&selector, inputs, &mut self.extended_runtime);
+                .handle_cheatcode_signal(&selector, &inputs, &mut self.extended_runtime);
             res
         }
     }
@@ -291,7 +289,7 @@ pub trait SignalPropagator {
         vm: &mut VirtualMachine,
     );
 
-    fn propagate_cheatcode_signal(&mut self, selector: &str, inputs: Vec<Felt252>);
+    fn propagate_cheatcode_signal(&mut self, selector: &str, inputs: &[Felt252]);
 }
 
 impl<Extension: ExtensionLogic> SignalPropagator for ExtendedRuntime<Extension> {
@@ -306,9 +304,9 @@ impl<Extension: ExtensionLogic> SignalPropagator for ExtendedRuntime<Extension> 
             .handle_system_call_signal(selector, vm, &mut self.extended_runtime);
     }
 
-    fn propagate_cheatcode_signal(&mut self, selector: &str, inputs: Vec<Felt252>) {
+    fn propagate_cheatcode_signal(&mut self, selector: &str, inputs: &[Felt252]) {
         self.extended_runtime
-            .propagate_cheatcode_signal(selector, inputs.clone());
+            .propagate_cheatcode_signal(selector, inputs);
         self.extension
             .handle_cheatcode_signal(selector, inputs, &mut self.extended_runtime);
     }
@@ -380,7 +378,7 @@ pub trait ExtensionLogic {
     fn handle_cheatcode(
         &mut self,
         _selector: &str,
-        _inputs: Vec<Felt252>,
+        _input_reader: BufferReader,
         _extended_runtime: &mut Self::Runtime,
     ) -> Result<CheatcodeHandlingResult, EnhancedHintError> {
         Ok(CheatcodeHandlingResult::Forwarded)
@@ -405,7 +403,7 @@ pub trait ExtensionLogic {
     fn handle_cheatcode_signal(
         &mut self,
         _selector: &str,
-        _inputs: Vec<Felt252>,
+        _inputs: &[Felt252],
         _extended_runtime: &mut Self::Runtime,
     ) {
     }

@@ -24,6 +24,8 @@ use starknet_api::{
     transaction::{Calldata, TransactionVersion},
 };
 use std::collections::HashSet;
+use cairo_felt::Felt252;
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{AddressOrClassHash, CallResult};
 
 // blockifier/src/execution/entry_point.rs:180 (CallEntryPoint::execute)
 pub fn execute_call_entry_point(
@@ -45,6 +47,12 @@ pub fn execute_call_entry_point(
     {
         runtime_state.cheatnet_state.trace_data.exit_nested_call(
             resources,
+            CallResult::Success {
+                ret_data: ret_data
+                    .iter()
+                    .map(|data| Felt252::from_bytes_be(data.bytes()))
+                    .collect(),
+            },
             &EntryPointExecutionResult::Ok(CallInfo::default()),
         );
         return Ok(mocked_call_info(entry_point.clone(), ret_data.clone()));
@@ -127,10 +135,15 @@ pub fn execute_call_entry_point(
         }
     });
 
-    runtime_state
-        .cheatnet_state
-        .trace_data
-        .exit_nested_call(resources, &result);
+    let identifier = match entry_point.call_type {
+        CallType::Call => AddressOrClassHash::ContractAddress(entry_point.storage_address),
+        CallType::Delegate => AddressOrClassHash::ClassHash(entry_point.class_hash.unwrap()),
+    };
+    runtime_state.cheatnet_state.trace_data.exit_nested_call(
+        resources,
+        CallResult::from_execution_result(&result, &identifier),
+        &result
+    );
 
     result
     // region: Modified blockifier code

@@ -8,7 +8,7 @@ use test_utils::{assert_passed, test_case};
 fn l1_handler_execute() {
     let test = test_case!(
         indoc!(
-            r"
+            r#"
             #[derive(Copy, Serde, Drop)]
             struct L1Data {
                 balance: felt252,
@@ -30,7 +30,7 @@ fn l1_handler_execute() {
             fn l1_handler_execute() {
                 let calldata = array![0x123];
 
-                let contract = declare('l1_handler_executor');
+                let contract = declare("l1_handler_executor");
                 let contract_address = contract.deploy(@calldata).unwrap();
 
                 let l1_data = L1Data {
@@ -60,7 +60,7 @@ fn l1_handler_execute() {
             fn l1_handler_execute_panicking() {
                 let calldata = array![0x123];
 
-                let contract = declare('l1_handler_executor');
+                let contract = declare("l1_handler_executor");
                 let contract_address = contract.deploy(@calldata).unwrap();
 
 
@@ -79,7 +79,7 @@ fn l1_handler_execute() {
                     },
                 }
             }
-        "
+        "#
         ),
         Contract::from_code_path(
             "l1_handler_executor".to_string(),
