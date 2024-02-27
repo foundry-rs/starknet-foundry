@@ -24,6 +24,27 @@ use starknet_api::block::BlockNumber;
 use starknet_api::core::ContractAddress;
 use tempfile::TempDir;
 
+use super::test_environment::TestEnvironment;
+
+trait PrankTrait {
+    fn start_prank(&mut self, target: CheatTarget, new_address: u128);
+    fn stop_prank(&mut self, contract_address: &ContractAddress);
+}
+
+impl<'a> PrankTrait for TestEnvironment<'a> {
+    fn start_prank(&mut self, target: CheatTarget, new_address: u128) {
+        self.runtime_state
+            .cheatnet_state
+            .start_prank(target, ContractAddress::from(new_address));
+    }
+
+    fn stop_prank(&mut self, contract_address: &ContractAddress) {
+        self.runtime_state
+            .cheatnet_state
+            .stop_prank(CheatTarget::One(*contract_address));
+    }
+}
+
 #[test]
 fn prank_simple() {
     let mut cached_state = create_cached_state();
