@@ -54,7 +54,7 @@ pub async fn test_happy_case() {
 }
 
 #[tokio::test]
-pub async fn test_no_class_hash() {
+pub async fn test_invalid_class_hash() {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
     let accounts_file = "accounts.json";
 
@@ -65,6 +65,8 @@ pub async fn test_no_class_hash() {
         accounts_file,
         "account",
         "create",
+        "--class-hash",
+        "0x10101",
         "--name",
         "my_account_create_happy",
         "--salt",
@@ -75,7 +77,7 @@ pub async fn test_no_class_hash() {
 
     snapbox.assert().stderr_matches(indoc! {r"
         command: account create
-        error: The class 0x58d97f7d76e78f44905cc30cb65b91ea49a4b908a76703c54197bca90f81773 is undeclared, try using --class-hash with a class hash that is already declared
+        error: The class 0x10101 is undeclared, try using --class-hash with a class hash that is already declared
     "});
 }
 
