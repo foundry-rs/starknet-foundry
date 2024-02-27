@@ -2,7 +2,7 @@ use crate::common::state::{build_runtime_state, create_fork_cached_state};
 use crate::common::{call_contract, felt_selector_from_name};
 use cairo_felt::Felt252;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallResult;
-use cheatnet::state::{CheatTarget, CheatnetState};
+use cheatnet::state::{CheatSpan, CheatTarget, CheatnetState};
 use conversions::IntoConv;
 use num_bigint::BigUint;
 use starknet_api::core::ContractAddress;
@@ -96,9 +96,11 @@ fn roll_cairo0_contract(selector: &str) {
     };
     let block_number = &ret_data[0];
 
-    runtime_state
-        .cheatnet_state
-        .start_roll(CheatTarget::One(contract_address), Felt252::from(123));
+    runtime_state.cheatnet_state.start_roll(
+        CheatTarget::One(contract_address),
+        Felt252::from(123),
+        CheatSpan::Indefinite,
+    );
 
     let output = call_contract(
         &mut cached_fork_state,
