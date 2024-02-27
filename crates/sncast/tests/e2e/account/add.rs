@@ -318,7 +318,7 @@ pub async fn test_invalid_private_key_file_path() {
         output,
         indoc! {r"
         command: account add
-        error: Failed to obtain private key from the file [..]
+        error: Failed to obtain private key from the file my_private_key: No such file or directory (os error 2)
         "},
     );
 }

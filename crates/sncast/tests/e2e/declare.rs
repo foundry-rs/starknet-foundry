@@ -96,7 +96,41 @@ async fn contract_already_declared() {
         output,
         indoc! {r"
         command: declare
-        error: An error occurred in the called contract [..]
+        error: An error occurred [..]Class with hash[..]is already declared[..]
+        "},
+    );
+}
+
+#[tokio::test]
+async fn invalid_nonce() {
+    let contract_path =
+        duplicate_contract_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "1123");
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
+    let args = vec![
+        "--url",
+        URL,
+        "--accounts-file",
+        accounts_json_path.as_str(),
+        "--account",
+        "user8",
+        "--int-format",
+        "declare",
+        "--contract-name",
+        "Map",
+        "--max-fee",
+        "99999999999999999",
+        "--nonce",
+        "12345",
+    ];
+
+    let snapbox = runner(&args).current_dir(contract_path.path());
+    let output = snapbox.assert().success();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        command: declare
+        error: Invalid transaction nonce
         "},
     );
 }

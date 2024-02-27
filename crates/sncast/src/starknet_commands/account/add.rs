@@ -4,14 +4,15 @@ use crate::starknet_commands::account::{
 use anyhow::{ensure, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
+use sncast::handle_rpc_error;
 use sncast::helpers::configuration::CastConfig;
 use sncast::response::structs::AccountAddResponse;
 use sncast::{check_class_hash_exists, get_chain_id, parse_number};
 use starknet::core::types::BlockTag::Pending;
-use starknet::core::types::{BlockId, FieldElement};
+use starknet::core::types::{BlockId, FieldElement, StarknetError};
 use starknet::providers::{
     jsonrpc::{HttpTransport, JsonRpcClient},
-    Provider,
+    Provider, ProviderError,
 };
 use starknet::signers::SigningKey;
 
@@ -83,11 +84,7 @@ pub async fn add(
         check_class_hash_exists(provider, class_hash).await?;
     }
 
-    let deployed = add.deployed
-        || provider
-            .get_class_hash_at(BlockId::Tag(Pending), add.address)
-            .await
-            .is_ok();
+    let deployed = add.deployed || is_account_deployed(provider, add.address).await?;
 
     let account_json =
         prepare_account_json(private_key, add.address, deployed, add.class_hash, add.salt);
@@ -120,4 +117,18 @@ pub async fn add(
 fn get_private_key_from_file(file_path: &Utf8PathBuf) -> Result<FieldElement> {
     let private_key_string = std::fs::read_to_string(file_path.clone())?;
     parse_number(&private_key_string)
+}
+
+async fn is_account_deployed(
+    provider: &JsonRpcClient<HttpTransport>,
+    address: FieldElement,
+) -> Result<bool> {
+    match provider
+        .get_class_hash_at(BlockId::Tag(Pending), address)
+        .await
+    {
+        Ok(_) => Ok(true),
+        Err(ProviderError::StarknetError(StarknetError::ContractNotFound)) => Ok(false),
+        Err(err) => Err(handle_rpc_error(err)),
+    }
 }

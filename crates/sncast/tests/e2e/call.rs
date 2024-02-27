@@ -92,7 +92,7 @@ fn test_wrong_function_name() {
         output,
         indoc! {r"
         command: call
-        error: An error occurred in the called contract [..]
+        error: An error occurred [..]Entry point[..]not found in contract[..]
         "},
     );
 }
@@ -119,7 +119,7 @@ fn test_wrong_calldata() {
         output,
         indoc! {r"
         command: call
-        error: An error occurred in the called contract [..]
+        error: An error occurred [..]Execution failed[..]Input too long for arguments[..]
         "},
     );
 }
@@ -146,6 +146,34 @@ async fn test_invalid_selector() {
         indoc! {r"
         command: call
         error: Failed to convert entry point selector to FieldElement: the provided name contains non-ASCII characters
+        "},
+    );
+}
+
+#[test]
+fn test_wrong_block_id() {
+    let contract_address = from_env("CAST_MAP_ADDRESS").unwrap();
+    let mut args = default_cli_args();
+    args.append(&mut vec![
+        "call",
+        "--contract-address",
+        &contract_address,
+        "--function",
+        "get",
+        "--calldata",
+        "0x0",
+        "--block-id",
+        "0x10101",
+    ]);
+
+    let snapbox = runner(&args);
+    let output = snapbox.assert().success();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        command: call
+        error: Block was not found
         "},
     );
 }

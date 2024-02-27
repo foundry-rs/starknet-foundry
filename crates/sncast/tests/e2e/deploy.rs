@@ -83,7 +83,7 @@ fn test_wrong_calldata() {
         output,
         indoc! {r"
         command: deploy
-        error: An error occurred in the called contract [..]
+        error: An error occurred in the called contract[..]Failed to deserialize param #2[..]
         "},
     );
 }
@@ -106,7 +106,7 @@ async fn test_contract_not_declared() {
         output,
         indoc! {r"
         command: deploy
-        error: An error occurred in the called contract [..]
+        error: An error occurred in the called contract[..]Class with hash[..]is not declared[..]
         "},
     );
 }
@@ -133,7 +133,7 @@ fn test_contract_already_deployed() {
         output,
         indoc! {r"
         command: deploy
-        error: An error occurred in the called contract [..]
+        error: An error occurred [..]Requested ContractAddress[..]is unavailable for deployment[..]
         "},
     );
 }
