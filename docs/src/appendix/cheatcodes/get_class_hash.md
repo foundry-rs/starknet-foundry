@@ -26,13 +26,13 @@ use snforge_std::get_class_hash;
 
 #[test]
 fn test_get_class_hash() {
-    let contract = declare('Contract1');
+    let contract = declare("Contract1");
 
     let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
 
     assert(get_class_hash(contract_address) == contract.class_hash, 'Incorrect class hash');
 
-    let other_contract = declare('OtherContract');
+    let other_contract = declare("OtherContract");
 
     IUpgradeableDispatcher { contract_address }.upgrade(other_contract.class_hash);
 
