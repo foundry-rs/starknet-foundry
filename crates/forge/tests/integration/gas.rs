@@ -356,6 +356,7 @@ fn contract_poseidon_cost() {
                 let dispatcher = IGasCheckerDispatcher { contract_address };
 
                 dispatcher.poseidon();
+                dispatcher.poseidon();
             }
         "#
         ),
@@ -369,9 +370,9 @@ fn contract_poseidon_cost() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
-    // 1102 = cost of deploy (see snforge_std_deploy_cost test)
-    // 13 = cost of 80 poseidon builtins
-    assert_gas!(result, "contract_poseidon_cost", 1102 + 13);
+    // 1101 = cost of deploy (see snforge_std_deploy_cost test)
+    // 26 = cost of 160 poseidon builtins
+    assert_gas!(result, "contract_poseidon_cost", 1101 + 26);
 }
 
 #[test]
@@ -531,9 +532,9 @@ fn multiple_storage_writes_cost() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
-    // 16 = gas cost of steps
-    // 2204 = gas cost of onchain data
-    assert_gas!(result, "multiple_storage_writes_cost", 16 + 2204);
+    // 17 = gas cost of steps
+    // 2203 = gas cost of onchain data
+    assert_gas!(result, "multiple_storage_writes_cost", 17 + 2203);
 }
 
 #[test]
@@ -636,9 +637,9 @@ fn l1_message_cost_for_proxy() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
-    // 22 = gas cost of steps
-    // 29207 = gas cost of onchain data
-    assert_gas!(result, "l1_message_cost_for_proxy", 22 + 29207);
+    // 23 = gas cost of steps
+    // 29206 = gas cost of onchain data
+    assert_gas!(result, "l1_message_cost_for_proxy", 23 + 29206);
 }
 
 #[test]
