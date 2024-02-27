@@ -134,17 +134,13 @@ pub fn execute_call_entry_point(
         }
     });
 
+    let identifier = match entry_point.call_type {
+        CallType::Call => AddressOrClassHash::ContractAddress(entry_point.storage_address),
+        CallType::Delegate => AddressOrClassHash::ClassHash(entry_point.class_hash.unwrap()),
+    };
     runtime_state.cheatnet_state.trace_data.exit_nested_call(
         resources,
-        CallResult::from_execution_result(
-            &result,
-            &match entry_point.call_type {
-                CallType::Call => AddressOrClassHash::ContractAddress(entry_point.storage_address),
-                CallType::Delegate => {
-                    AddressOrClassHash::ClassHash(entry_point.class_hash.unwrap())
-                }
-            },
-        ),
+        CallResult::from_execution_result(&result, &identifier),
     );
 
     result
