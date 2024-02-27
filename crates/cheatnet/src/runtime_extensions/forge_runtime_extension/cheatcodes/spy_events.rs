@@ -67,10 +67,10 @@ impl CheatnetState {
         let mut spied_events_len = 0;
         let mut unconsumed_emitted_events: Vec<Event> = vec![];
 
-        let serialized_events: Vec<Vec<Felt252>> = self
+        let serialized_events: Vec<Felt252> = self
             .detected_events
             .iter()
-            .map(|event| {
+            .flat_map(|event| {
                 let mut flattened_event = vec![];
                 if spy_on.does_spy(event.from) {
                     flattened_event.push(Felt252::from_(event.from));
@@ -88,6 +88,6 @@ impl CheatnetState {
             .collect();
 
         self.detected_events = unconsumed_emitted_events;
-        (spied_events_len, serialized_events.concat())
+        (spied_events_len, serialized_events)
     }
 }

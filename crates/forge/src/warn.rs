@@ -10,7 +10,7 @@ use shared::verify_and_warn_if_incompatible_rpc_version;
 use std::collections::HashSet;
 
 pub(crate) fn warn_if_available_gas_used_with_incompatible_scarb_version(
-    test_crates: &Vec<CompiledTestCrateRaw>,
+    test_crates: &[CompiledTestCrateRaw],
 ) -> Result<()> {
     for test_crate in test_crates {
         for case in &test_crate.test_cases {

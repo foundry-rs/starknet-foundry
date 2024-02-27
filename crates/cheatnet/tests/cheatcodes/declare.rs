@@ -87,7 +87,8 @@ fn declare_non_existent() {
 
     assert!(match output {
         Err(CheatcodeError::Unrecoverable(EnhancedHintError::Anyhow(msg))) => {
-            msg.to_string().contains("Failed") && msg.to_string().contains(contract_name)
+            let msg = msg.to_string();
+            msg.contains("Failed") && msg.contains(contract_name)
         }
         _ => false,
     });
