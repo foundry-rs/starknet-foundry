@@ -1,5 +1,6 @@
 use cairo_felt::Felt252;
 use cairo_lang_utils::byte_array::{BYTES_IN_WORD, BYTE_ARRAY_MAGIC};
+use itertools::chain;
 use num_traits::Num;
 
 pub struct ByteArray {

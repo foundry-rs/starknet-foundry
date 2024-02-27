@@ -147,7 +147,8 @@ impl CallFailure {
                     ),
                 };
 
-                let panic_data_felts: Vec<Felt252> = ByteArray::from(msg.as_str()).serialize_with_magic();
+                let panic_data_felts: Vec<Felt252> =
+                    ByteArray::from(msg.as_str()).serialize_with_magic();
 
                 CallFailure::Panic {
                     panic_data: panic_data_felts,
