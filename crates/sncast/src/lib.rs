@@ -32,7 +32,8 @@ use starknet::{
 
 use crate::helpers::constants::{WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
 use shared::rpc::create_rpc_client;
-use starknet::accounts::ConnectedAccount;
+use starknet::accounts::{AccountFactoryError, ConnectedAccount};
+use starknet::signers::local_wallet::SignError;
 use std::collections::HashMap;
 use std::thread::sleep;
 use std::time::Duration;
@@ -479,6 +480,14 @@ pub fn handle_rpc_error(error: ProviderError) -> Error {
             anyhow!("Unsupported contract class version")
         }
         _ => anyhow!("Unknown RPC error"),
+    }
+}
+
+#[must_use]
+pub fn handle_account_factory_error(err: AccountFactoryError<SignError>) -> anyhow::Error {
+    match err {
+        AccountFactoryError::Provider(error) => handle_rpc_error(error),
+        error => anyhow!(error),
     }
 }
 

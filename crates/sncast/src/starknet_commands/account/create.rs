@@ -1,19 +1,22 @@
 use crate::starknet_commands::account::{
     add_created_profile_to_configuration, prepare_account_json, write_account_to_accounts_file,
 };
-use anyhow::{bail, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
 use serde_json::json;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{CREATE_KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH};
 use sncast::response::structs::{AccountCreateResponse, Felt};
-use sncast::{extract_or_generate_salt, get_chain_id, get_keystore_password, parse_number};
+use sncast::{
+    extract_or_generate_salt, get_chain_id, get_keystore_password, handle_account_factory_error,
+    handle_rpc_error, parse_number,
+};
 use starknet::accounts::{AccountFactory, OpenZeppelinAccountFactory};
-use starknet::core::types::{FeeEstimate, FieldElement};
+use starknet::core::types::{BlockId, BlockTag, FeeEstimate, FieldElement, StarknetError};
 use starknet::core::utils::get_contract_address;
 use starknet::providers::jsonrpc::HttpTransport;
-use starknet::providers::JsonRpcClient;
+use starknet::providers::{JsonRpcClient, Provider, ProviderError};
 use starknet::signers::{LocalWallet, SigningKey};
 
 #[derive(Args, Debug)]
@@ -52,6 +55,7 @@ pub async fn create(
     let class_hash = class_hash.unwrap_or_else(|| {
         FieldElement::from_hex_be(OZ_CLASS_HASH).expect("Failed to parse OZ class hash")
     });
+    check_class_hash_exists(provider, class_hash).await?;
     let (account_json, max_fee) = generate_account(provider, salt, class_hash).await?;
 
     let address = parse_number(
@@ -106,6 +110,19 @@ pub async fn create(
     })
 }
 
+async fn check_class_hash_exists(
+    provider: &JsonRpcClient<HttpTransport>,
+    class_hash: FieldElement,
+) -> Result<()> {
+    match provider.get_class(BlockId::Tag(BlockTag::Latest), class_hash).await {
+        Ok(_) => Ok(()),
+        Err(err) => match err {
+            ProviderError::StarknetError(StarknetError::ClassHashNotFound) => Err(anyhow!("The class {class_hash:#x} is undeclared, try using --class-hash with a class hash that is already declared")),
+            _ => Err(handle_rpc_error(err))
+        }
+    }
+}
+
 async fn generate_account(
     provider: &JsonRpcClient<HttpTransport>,
     salt: FieldElement,
@@ -143,16 +160,13 @@ async fn get_account_deployment_fee(
 
     let fee_estimate = deployment.estimate_fee().await;
 
-    if let Err(err) = &fee_estimate {
-        if err
-            .to_string()
-            .contains("StarknetErrorCode.UNDECLARED_CLASS")
-        {
-            bail!("The class {class_hash} is undeclared, try using --class-hash with a class hash that is already declared");
-        }
+    match fee_estimate {
+        Ok(fee_estimate) => Ok(fee_estimate),
+        Err(err) => Err(anyhow!(
+            "Failed to estimate account deployment fee. Reason: {}",
+            handle_account_factory_error(err)
+        )),
     }
-
-    Ok(fee_estimate?)
 }
 
 #[allow(clippy::too_many_arguments)]

@@ -54,6 +54,32 @@ pub async fn test_happy_case() {
 }
 
 #[tokio::test]
+pub async fn test_no_class_hash() {
+    let temp_dir = tempdir().expect("Unable to create a temporary directory");
+    let accounts_file = "accounts.json";
+
+    let args = vec![
+        "--url",
+        URL,
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "create",
+        "--name",
+        "my_account_create_happy",
+        "--salt",
+        "0x1",
+    ];
+
+    let snapbox = runner(&args).current_dir(temp_dir.path());
+
+    snapbox.assert().stderr_matches(indoc! {r"
+        command: account create
+        error: The class 0x58d97f7d76e78f44905cc30cb65b91ea49a4b908a76703c54197bca90f81773 is undeclared, try using --class-hash with a class hash that is already declared
+    "});
+}
+
+#[tokio::test]
 pub async fn test_happy_case_generate_salt() {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
     let accounts_file = "accounts.json";
