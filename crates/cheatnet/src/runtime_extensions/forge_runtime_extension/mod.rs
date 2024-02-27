@@ -31,6 +31,7 @@ use crate::runtime_extensions::forge_runtime_extension::cheatcodes::storage::{
 };
 use crate::runtime_extensions::forge_runtime_extension::file_operations::string_into_felt;
 use cairo_lang_starknet::contract::starknet_keccak;
+use conversions::byte_array::ByteArray;
 use runtime::utils::BufferReader;
 use runtime::{
     CheatcodeHandlingResult, EnhancedHintError, ExtendedRuntime, ExtensionLogic,
@@ -651,6 +652,8 @@ fn serialize_call_trace(call_trace: &CallTrace) -> Vec<Felt252> {
         output.append(&mut serialize_call_trace(&call_trace.borrow()));
     }
 
+    output.append(&mut serialize_call_result(&call_trace.result));
+
     output
 }
 
@@ -682,6 +685,31 @@ fn serialize_call_entry_point(call_entry_point: &CallEntryPoint) -> Vec<Felt252>
     output.push(call_entry_point.storage_address.into_());
     output.push(call_entry_point.caller_address.into_());
     output.push(Felt252::from(call_type));
+
+    output
+}
+
+fn serialize_call_result(call_result: &CallResult) -> Vec<Felt252> {
+    let mut output = vec![];
+
+    match call_result {
+        CallResult::Success { ret_data } => {
+            output.push(Felt252::from(0));
+            output.push(Felt252::from(ret_data.len()));
+            output.extend(ret_data.iter().cloned());
+        }
+        CallResult::Failure(call_failure) => {
+            let (call_failure_variant, failure_data) = match call_failure {
+                CallFailure::Panic { panic_data } => (0, panic_data.clone()),
+                CallFailure::Error { msg } => (1, ByteArray::from(msg.clone()).serialize()),
+            };
+
+            output.push(Felt252::from(1));
+            output.push(Felt252::from(call_failure_variant));
+            output.push(Felt252::from(failure_data.len()));
+            output.extend(failure_data);
+        }
+    };
 
     output
 }

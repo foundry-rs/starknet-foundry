@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
+#### Added
+
+- result of the call to the trace
+
 #### Changed
 
 - `var()`, `read_txt()`, `read_json()`, `FileTrait::new()` now uses regular strings (`ByteArray`) instead of short strings (`felt252`)
