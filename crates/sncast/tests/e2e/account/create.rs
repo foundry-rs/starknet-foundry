@@ -77,7 +77,7 @@ pub async fn test_invalid_class_hash() {
 
     snapbox.assert().stderr_matches(indoc! {r"
         command: account create
-        error: The class 0x10101 is undeclared, try using --class-hash with a class hash that is already declared
+        error: Class with hash 0x10101 is not declared, try using --class-hash with a hash of the declared class
     "});
 }
 

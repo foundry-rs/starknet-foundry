@@ -117,7 +117,7 @@ async fn check_class_hash_exists(
     match provider.get_class(BlockId::Tag(BlockTag::Latest), class_hash).await {
         Ok(_) => Ok(()),
         Err(err) => match err {
-            ProviderError::StarknetError(StarknetError::ClassHashNotFound) => Err(anyhow!("The class {class_hash:#x} is undeclared, try using --class-hash with a class hash that is already declared")),
+            ProviderError::StarknetError(StarknetError::ClassHashNotFound) => Err(anyhow!("Class with hash {class_hash:#x} is not declared, try using --class-hash with a hash of the declared class")),
             _ => Err(handle_rpc_error(err))
         }
     }
