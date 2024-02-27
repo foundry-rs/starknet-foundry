@@ -34,7 +34,6 @@ use crate::runtime_extensions::forge_runtime_extension::cheatcodes::storage::{
     calculate_variable_address, load, store,
 };
 use crate::runtime_extensions::forge_runtime_extension::file_operations::string_into_felt;
-use cairo_lang_starknet::contract::starknet_keccak;
 use conversions::byte_array::ByteArray;
 use runtime::utils::BufferReader;
 use runtime::{
@@ -793,7 +792,7 @@ pub fn update_top_call_execution_resources(runtime: &mut ForgeRuntime) {
 }
 
 // Only top-level is considered relevant since we can't have l1 handlers deeper than 1 level of nesting
-fn get_l1_handlers_payloads_lengths(inner_calls: Vec<CallInfo>) -> Vec<usize> {
+fn get_l1_handlers_payloads_lengths(inner_calls: &[CallInfo]) -> Vec<usize> {
     inner_calls
         .iter()
         .filter_map(|call_info| {
@@ -824,7 +823,7 @@ pub fn get_all_used_resources(runtime: ForgeRuntime) -> UsedResources {
         .unwrap();
 
     let l1_handler_payloads_lengths =
-        get_l1_handlers_payloads_lengths(runtime_call_info.inner_calls);
+        get_l1_handlers_payloads_lengths(&runtime_call_info.inner_calls);
 
     let top_call_syscalls = starknet_runtime.hint_handler.syscall_counter;
 

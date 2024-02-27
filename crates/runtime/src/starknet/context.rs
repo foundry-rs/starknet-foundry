@@ -11,14 +11,8 @@ use blockifier::transaction::objects::{
 };
 use blockifier::versioned_constants::VersionedConstants;
 
-use cairo_vm::vm::runners::builtin_runner::{
-    BITWISE_BUILTIN_NAME, EC_OP_BUILTIN_NAME, HASH_BUILTIN_NAME, KECCAK_BUILTIN_NAME,
-    OUTPUT_BUILTIN_NAME, POSEIDON_BUILTIN_NAME, RANGE_CHECK_BUILTIN_NAME,
-    SEGMENT_ARENA_BUILTIN_NAME, SIGNATURE_BUILTIN_NAME,
-};
 use cairo_vm::vm::runners::cairo_runner::RunResources;
 use serde::{Deserialize, Serialize};
-use starknet_api::contract_address;
 use starknet_api::data_availability::DataAvailabilityMode;
 
 use once_cell::sync::Lazy;
@@ -106,13 +100,11 @@ pub fn build_context(block_info: &BlockInfo) -> EntryPointExecutionContext {
 }
 
 pub fn set_max_steps(entry_point_ctx: &mut EntryPointExecutionContext, max_n_steps: u32) {
-    entry_point_ctx.block_context.invoke_tx_max_n_steps = max_n_steps;
-
     // override it to omit [`EntryPointExecutionContext::max_steps`] restrictions
     entry_point_ctx.vm_run_resources = RunResources::new(max_n_steps as usize);
 }
 
-#[derive(Copy, Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct ForgeBlockInfo {
     pub block_number: BlockNumber,
     pub block_timestamp: BlockTimestamp,

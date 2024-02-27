@@ -29,6 +29,7 @@ pub struct UsedResources {
     pub l1_handler_payloads_lengths: Vec<usize>,
 }
 
+#[must_use]
 pub fn subtract_syscall_counters(
     minuend: &SyscallCounter,
     subtrahend: &SyscallCounter,
@@ -73,6 +74,16 @@ pub enum CallFailure {
 pub enum AddressOrClassHash {
     ContractAddress(ContractAddress),
     ClassHash(ClassHash),
+}
+
+impl AddressOrClassHash {
+    #[must_use]
+    pub fn get_by_entry_point(entry_point: &CallEntryPoint) -> Self {
+        match entry_point.call_type {
+            CallType::Call => Self::ContractAddress(entry_point.storage_address),
+            CallType::Delegate => Self::ClassHash(entry_point.class_hash.unwrap()),
+        }
+    }
 }
 
 impl CallFailure {
@@ -163,26 +174,35 @@ impl CallFailure {
 impl CallResult {
     #[must_use]
     pub fn from_execution_result(
-        result: &EntryPointExecutionResult<(CallInfo, SyscallCounter)>,
+        result: &EntryPointExecutionResult<CallInfo>,
         starknet_identifier: &AddressOrClassHash,
     ) -> Self {
         match result {
-            Ok((call_info, _)) => {
-                let raw_return_data = &call_info.execution.retdata.0;
-
-                let return_data = raw_return_data
-                    .iter()
-                    .map(|data| Felt252::from_bytes_be(data.bytes()))
-                    .collect();
-
-                CallResult::Success {
-                    ret_data: return_data,
-                }
-            }
-            Err(err) => {
-                CallResult::Failure(CallFailure::from_execution_error(err, starknet_identifier))
-            }
+            Ok(call_info) => Self::from_success(call_info),
+            Err(err) => Self::from_err(err, starknet_identifier),
         }
+    }
+
+    #[must_use]
+    pub fn from_success(call_info: &CallInfo) -> Self {
+        let raw_return_data = &call_info.execution.retdata.0;
+
+        let return_data = raw_return_data
+            .iter()
+            .map(|data| Felt252::from_bytes_be(data.bytes()))
+            .collect();
+
+        CallResult::Success {
+            ret_data: return_data,
+        }
+    }
+
+    #[must_use]
+    pub fn from_err(
+        err: &EntryPointExecutionError,
+        starknet_identifier: &AddressOrClassHash,
+    ) -> Self {
+        CallResult::Failure(CallFailure::from_execution_error(err, starknet_identifier))
     }
 }
 

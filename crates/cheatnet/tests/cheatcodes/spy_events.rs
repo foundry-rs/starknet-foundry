@@ -2,7 +2,7 @@ use crate::common::state::{build_runtime_state, create_cached_state};
 use crate::common::{call_contract, deploy_wrapper};
 use crate::common::{deploy_contract, felt_selector_from_name, get_contracts};
 use cairo_felt::Felt252;
-use cairo_lang_starknet::contract::starknet_keccak;
+use cairo_lang_starknet_classes::keccak::starknet_keccak;
 use cairo_vm::hint_processor::hint_processor_utils::felt_to_usize;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::{

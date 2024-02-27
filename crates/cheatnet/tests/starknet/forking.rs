@@ -4,7 +4,9 @@ use crate::common::state::{
 };
 use crate::common::{call_contract, deploy_contract, deploy_wrapper, felt_selector_from_name};
 use crate::{assert_error, assert_success};
-use blockifier::state::cached_state::{CachedState, GlobalContractCache};
+use blockifier::state::cached_state::{
+    CachedState, GlobalContractCache, GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST,
+};
 use cairo_felt::Felt252;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cheatnet::constants::build_testing_state;
@@ -128,7 +130,7 @@ fn test_forking_at_block_number() {
                     cache_dir.path().to_str().unwrap(),
                 )),
             },
-            GlobalContractCache::default(),
+            GlobalContractCache::new(GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST),
         );
 
         let mut cached_state_after_deploy = CachedState::new(
@@ -140,7 +142,7 @@ fn test_forking_at_block_number() {
                     cache_dir.path().to_str().unwrap(),
                 )),
             },
-            GlobalContractCache::default(),
+            GlobalContractCache::new(GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST),
         );
 
         let contract_address = Felt252::from(
@@ -711,7 +713,7 @@ fn test_calling_nonexistent_url() {
                 temp_dir.path().to_str().unwrap(),
             )),
         },
-        GlobalContractCache::default(),
+        GlobalContractCache::new(GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST),
     );
 
     let mut cheatnet_state = CheatnetState::default();

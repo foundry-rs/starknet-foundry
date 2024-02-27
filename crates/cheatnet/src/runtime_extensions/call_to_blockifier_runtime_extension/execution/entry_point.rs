@@ -25,7 +25,6 @@ use starknet_api::{
     transaction::{Calldata, TransactionVersion},
 };
 use std::collections::HashSet;
-use blockifier::execution::syscalls::hint_processor::SyscallCounter;
 use cairo_felt::Felt252;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{AddressOrClassHash, CallResult};
 
@@ -49,7 +48,7 @@ pub fn execute_call_entry_point(
     {
         runtime_state.cheatnet_state.trace_data.exit_nested_call(
             resources,
-            Default::default(),
+            &Default::default(),
             CallResult::Success {
                 ret_data: ret_data
                     .iter()
@@ -115,48 +114,49 @@ pub fn execute_call_entry_point(
         ),
     };
 
-    let result = result.map_err(|error| {
-        // endregion
-        let vm_trace = error.try_to_vm_trace();
-        match error {
-            // On VM error, pack the stack trace into the propagated error.
-            EntryPointExecutionError::CairoRunError(internal_error) => {
-                context.error_stack.push((storage_address, vm_trace));
-                // TODO(Dori, 1/5/2023): Call error_trace only in the top call; as it is
-                //   right now, each intermediate VM error is wrapped in a
-                //   VirtualMachineExecutionErrorWithTrace error with the stringified trace
-                //   of all errors below it.
-                //   When that's done, remove the 10000 character limitation.
-                let error_trace = context.error_trace();
-                EntryPointExecutionError::VirtualMachineExecutionErrorWithTrace {
-                    trace: error_trace[..min(10000, error_trace.len())].to_string(),
-                    source: internal_error,
+    result
+        .map_err(|error| {
+            // endregion
+            let vm_trace = error.try_to_vm_trace();
+            let error = match error {
+                // On VM error, pack the stack trace into the propagated error.
+                EntryPointExecutionError::CairoRunError(internal_error) => {
+                    context.error_stack.push((storage_address, vm_trace));
+                    // TODO(Dori, 1/5/2023): Call error_trace only in the top call; as it is
+                    //   right now, each intermediate VM error is wrapped in a
+                    //   VirtualMachineExecutionErrorWithTrace error with the stringified trace
+                    //   of all errors below it.
+                    //   When that's done, remove the 10000 character limitation.
+                    let error_trace = context.error_trace();
+                    EntryPointExecutionError::VirtualMachineExecutionErrorWithTrace {
+                        trace: error_trace[..min(10000, error_trace.len())].to_string(),
+                        source: internal_error,
+                    }
                 }
-            }
-            other_error => {
-                context
-                    .error_stack
-                    .push((storage_address, format!("{}\n", &other_error)));
-                other_error
-            }
-        }
-    });
+                other_error => {
+                    context
+                        .error_stack
+                        .push((storage_address, format!("{}\n", &other_error)));
+                    other_error
+                }
+            };
 
-    let identifier = match entry_point.call_type {
-        CallType::Call => AddressOrClassHash::ContractAddress(entry_point.storage_address),
-        CallType::Delegate => AddressOrClassHash::ClassHash(entry_point.class_hash.unwrap()),
-    };
+            runtime_state.cheatnet_state.trace_data.exit_nested_call(
+                resources,
+                &Default::default(),
+                CallResult::from_err(&error, &AddressOrClassHash::get_by_entry_point(entry_point)),
+            );
+            error
+        })
+        .map(|(call_info, syscall_counter)| {
+            runtime_state.cheatnet_state.trace_data.exit_nested_call(
+                resources,
+                &syscall_counter,
+                CallResult::from_success(&call_info),
+            );
+            call_info
+        })
 
-    runtime_state.cheatnet_state.trace_data.exit_nested_call(
-        resources,
-        &match &result {
-            Ok((_, counter)) => counter.clone(),
-            Err(_) => Default::default(),
-        },
-        CallResult::from_execution_result(&result, &identifier),
-    );
-
-    result.map(|(call_info, syscall_counter)| call_info)
     // region: Modified blockifier code
     // We skip recursion depth decrease
     // endregion

@@ -9,9 +9,11 @@ use crate::{
         state::create_cached_state,
     },
 };
-use blockifier::state::cached_state::{CachedState, GlobalContractCache};
+use blockifier::state::cached_state::{
+    CachedState, GlobalContractCache, GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST,
+};
 use cairo_felt::{felt_str, Felt252};
-use cairo_lang_starknet::contract::starknet_keccak;
+use cairo_lang_starknet_classes::keccak::starknet_keccak;
 use cheatnet::constants::build_testing_state;
 use cheatnet::forking::state::ForkStateReader;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
@@ -557,7 +559,7 @@ fn prank_cairo0_callback() {
                 temp_dir.path().to_str().unwrap(),
             )),
         },
-        GlobalContractCache::default(),
+        GlobalContractCache::new(GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST),
     );
     let mut cheatnet_state = CheatnetState::default();
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);

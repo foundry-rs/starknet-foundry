@@ -130,7 +130,7 @@ fn build_syscall_handler<'a>(
     string_to_hint: &'a HashMap<String, Hint>,
     execution_resources: &'a mut ExecutionResources,
     context: &'a mut EntryPointExecutionContext,
-    syscall_sxitegment_index: isize,
+    syscall_segment_index: isize,
 ) -> SyscallHintProcessor<'a> {
     let entry_point = build_test_entry_point();
 

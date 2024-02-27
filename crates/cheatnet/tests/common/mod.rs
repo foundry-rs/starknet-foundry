@@ -1,12 +1,11 @@
-use blockifier::execution::entry_point::{
-    CallEntryPoint, CallType, EntryPointExecutionContext, ExecutionResources,
-};
+use blockifier::execution::entry_point::{CallEntryPoint, CallType, EntryPointExecutionContext};
 use blockifier::execution::execution_utils::ReadOnlySegments;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::state::state_api::State;
 use cairo_felt::Felt252;
 use cairo_lang_casm::hints::Hint;
 use cairo_vm::types::relocatable::Relocatable;
+use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use camino::Utf8PathBuf;
 use cheatnet::constants::TEST_ADDRESS;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
