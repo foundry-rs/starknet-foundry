@@ -163,11 +163,11 @@ impl CallFailure {
 impl CallResult {
     #[must_use]
     pub fn from_execution_result(
-        result: &EntryPointExecutionResult<CallInfo>,
+        result: &EntryPointExecutionResult<(CallInfo, SyscallCounter)>,
         starknet_identifier: &AddressOrClassHash,
     ) -> Self {
         match result {
-            Ok(call_info) => {
+            Ok((call_info, _)) => {
                 let raw_return_data = &call_info.execution.retdata.0;
 
                 let return_data = raw_return_data

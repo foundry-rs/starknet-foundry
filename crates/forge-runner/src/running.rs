@@ -43,7 +43,7 @@ use cheatnet::runtime_extensions::forge_runtime_extension::{
 };
 use cheatnet::state::{BlockInfoReader, CallTrace, CheatnetState, ExtendedStateReader};
 use itertools::chain;
-use runtime::starknet::context::{build_context, ForgeBlockInfo, set_max_steps};
+use runtime::starknet::context::{build_context, set_max_steps, ForgeBlockInfo};
 use runtime::{ExtendedRuntime, StarknetRuntime};
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
@@ -130,7 +130,7 @@ fn build_syscall_handler<'a>(
     string_to_hint: &'a HashMap<String, Hint>,
     execution_resources: &'a mut ExecutionResources,
     context: &'a mut EntryPointExecutionContext,
-    syscall_segment_index: isize,
+    syscall_sxitegment_index: isize,
 ) -> SyscallHintProcessor<'a> {
     let entry_point = build_test_entry_point();
 

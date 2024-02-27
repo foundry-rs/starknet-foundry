@@ -2789,7 +2789,7 @@ checksum = "00b0228411908ca8685dba7fc2cdd70ec9990a6e753e89b6ac91a84c40fbaf4b"
 
 [[package]]
 name = "forge"
-version = "0.17.1"
+version = "0.18.0"
 dependencies = [
  "anyhow",
  "ark-ff",
@@ -2854,7 +2854,7 @@ dependencies = [
 
 [[package]]
 name = "forge_runner"
-version = "0.17.1"
+version = "0.18.0"
 dependencies = [
  "anyhow",
  "bimap",
@@ -5340,8 +5340,13 @@ dependencies = [
 name = "shared"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "cairo-felt 0.9.1",
  "cairo-lang-runner",
+ "console",
+ "semver",
+ "starknet",
+ "url",
 ]
 
 [[package]]
@@ -5455,9 +5460,10 @@ dependencies = [
 
 [[package]]
 name = "sncast"
-version = "0.17.1"
+version = "0.18.0"
 dependencies = [
  "anyhow",
+ "base16ct",
  "blockifier",
  "cairo-felt 0.9.1",
  "cairo-lang-casm 2.6.0-rc.1",
@@ -5490,12 +5496,14 @@ dependencies = [
  "semver",
  "serde",
  "serde_json",
+ "sha3",
  "shared",
  "shellexpand",
  "snapbox",
  "starknet",
  "tempfile",
  "test-case",
+ "thiserror",
  "tokio",
  "toml 0.8.9",
  "url",

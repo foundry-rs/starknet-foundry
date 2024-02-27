@@ -672,7 +672,6 @@ fn l1_handler_cost() {
     );
 
     let result = run_test_case(&test);
-
     assert_passed!(result);
     // 1101 = gas cost of onchain data (deploy cost)
     // int(10.24 * 4) = 41 = keccak cost from l1 handler
