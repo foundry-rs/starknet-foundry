@@ -16,7 +16,7 @@ pub enum StarknetCommandError {
     #[error(transparent)]
     WaitForTransactionError(#[from] WaitForTransactionError),
     #[error(transparent)]
-    ProviderError(#[from] RestrictedProviderError),
+    ProviderError(#[from] SNCastProviderError),
 }
 
 #[must_use]
@@ -28,30 +28,30 @@ pub fn handle_starknet_command_error(error: StarknetCommandError) -> anyhow::Err
 }
 
 #[derive(Debug, Error)]
-pub enum RestrictedProviderError {
+pub enum SNCastProviderError {
     #[error(transparent)]
-    StarknetError(RestrictedStarknetError),
+    StarknetError(SNCastStarknetError),
     #[error("Request rate limited")]
     RateLimited,
     #[error("Unknown RPC error: {0}")]
     UnknownError(#[from] anyhow::Error),
 }
 
-impl From<ProviderError> for RestrictedProviderError {
+impl From<ProviderError> for SNCastProviderError {
     fn from(value: ProviderError) -> Self {
         match value {
-            ProviderError::StarknetError(err) => RestrictedProviderError::StarknetError(err.into()),
-            ProviderError::RateLimited => RestrictedProviderError::RateLimited,
+            ProviderError::StarknetError(err) => SNCastProviderError::StarknetError(err.into()),
+            ProviderError::RateLimited => SNCastProviderError::RateLimited,
             ProviderError::ArrayLengthMismatch => {
-                RestrictedProviderError::UnknownError(anyhow!("Array length mismatch"))
+                SNCastProviderError::UnknownError(anyhow!("Array length mismatch"))
             }
-            ProviderError::Other(err) => RestrictedProviderError::UnknownError(anyhow!("{err}")),
+            ProviderError::Other(err) => SNCastProviderError::UnknownError(anyhow!("{err}")),
         }
     }
 }
 
 #[derive(Debug, Error)]
-pub enum RestrictedStarknetError {
+pub enum SNCastStarknetError {
     #[error("Node failed to receive transaction")]
     FailedToReceiveTransaction,
     #[error("There is no contract at the specified address")]
@@ -96,51 +96,43 @@ pub enum RestrictedStarknetError {
     UnexpectedError(anyhow::Error),
 }
 
-impl From<StarknetError> for RestrictedStarknetError {
+impl From<StarknetError> for SNCastStarknetError {
     fn from(value: StarknetError) -> Self {
         match value {
             StarknetError::FailedToReceiveTransaction => {
-                RestrictedStarknetError::FailedToReceiveTransaction
+                SNCastStarknetError::FailedToReceiveTransaction
             }
-            StarknetError::ContractNotFound => RestrictedStarknetError::ContractNotFound,
-            StarknetError::BlockNotFound => RestrictedStarknetError::BlockNotFound,
-            StarknetError::InvalidTransactionIndex => {
-                RestrictedStarknetError::InvalidTransactionIndex
-            }
-            StarknetError::ClassHashNotFound => RestrictedStarknetError::ClassHashNotFound,
-            StarknetError::TransactionHashNotFound => {
-                RestrictedStarknetError::TransactionHashNotFound
-            }
-            ContractError(err) => RestrictedStarknetError::ContractError(err),
-            TransactionExecutionError(err) => {
-                RestrictedStarknetError::TransactionExecutionError(err)
-            }
-            StarknetError::ClassAlreadyDeclared => RestrictedStarknetError::ClassAlreadyDeclared,
-            StarknetError::InvalidTransactionNonce => {
-                RestrictedStarknetError::InvalidTransactionNonce
-            }
-            StarknetError::InsufficientMaxFee => RestrictedStarknetError::InsufficientMaxFee,
+            StarknetError::ContractNotFound => SNCastStarknetError::ContractNotFound,
+            StarknetError::BlockNotFound => SNCastStarknetError::BlockNotFound,
+            StarknetError::InvalidTransactionIndex => SNCastStarknetError::InvalidTransactionIndex,
+            StarknetError::ClassHashNotFound => SNCastStarknetError::ClassHashNotFound,
+            StarknetError::TransactionHashNotFound => SNCastStarknetError::TransactionHashNotFound,
+            ContractError(err) => SNCastStarknetError::ContractError(err),
+            TransactionExecutionError(err) => SNCastStarknetError::TransactionExecutionError(err),
+            StarknetError::ClassAlreadyDeclared => SNCastStarknetError::ClassAlreadyDeclared,
+            StarknetError::InvalidTransactionNonce => SNCastStarknetError::InvalidTransactionNonce,
+            StarknetError::InsufficientMaxFee => SNCastStarknetError::InsufficientMaxFee,
             StarknetError::InsufficientAccountBalance => {
-                RestrictedStarknetError::InsufficientAccountBalance
+                SNCastStarknetError::InsufficientAccountBalance
             }
-            ValidationFailure(err) => RestrictedStarknetError::ValidationFailure(err),
-            StarknetError::CompilationFailed => RestrictedStarknetError::CompilationFailed,
+            ValidationFailure(err) => SNCastStarknetError::ValidationFailure(err),
+            StarknetError::CompilationFailed => SNCastStarknetError::CompilationFailed,
             StarknetError::ContractClassSizeIsTooLarge => {
-                RestrictedStarknetError::ContractClassSizeIsTooLarge
+                SNCastStarknetError::ContractClassSizeIsTooLarge
             }
-            StarknetError::NonAccount => RestrictedStarknetError::NonAccount,
-            StarknetError::DuplicateTx => RestrictedStarknetError::DuplicateTx,
+            StarknetError::NonAccount => SNCastStarknetError::NonAccount,
+            StarknetError::DuplicateTx => SNCastStarknetError::DuplicateTx,
             StarknetError::CompiledClassHashMismatch => {
-                RestrictedStarknetError::CompiledClassHashMismatch
+                SNCastStarknetError::CompiledClassHashMismatch
             }
-            StarknetError::UnsupportedTxVersion => RestrictedStarknetError::UnsupportedTxVersion,
+            StarknetError::UnsupportedTxVersion => SNCastStarknetError::UnsupportedTxVersion,
             StarknetError::UnsupportedContractClassVersion => {
-                RestrictedStarknetError::UnsupportedContractClassVersion
+                SNCastStarknetError::UnsupportedContractClassVersion
             }
             StarknetError::UnexpectedError(err) => {
-                RestrictedStarknetError::UnexpectedError(anyhow!(err))
+                SNCastStarknetError::UnexpectedError(anyhow!(err))
             }
-            other => RestrictedStarknetError::UnexpectedError(anyhow!(other)),
+            other => SNCastStarknetError::UnexpectedError(anyhow!(other)),
         }
     }
 }

@@ -24,7 +24,7 @@ use starknet::{
 };
 
 use crate::helpers::constants::{WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
-use crate::response::errors::RestrictedProviderError;
+use crate::response::errors::SNCastProviderError;
 use shared::rpc::create_rpc_client;
 use starknet::accounts::{AccountFactoryError, ConnectedAccount};
 use starknet::signers::local_wallet::SignError;
@@ -374,7 +374,7 @@ pub enum WaitForTransactionError {
     #[error("sncast timed out while waiting for transaction to succeed")]
     TimedOut,
     #[error(transparent)]
-    ProviderError(#[from] RestrictedProviderError),
+    ProviderError(#[from] SNCastProviderError),
 }
 
 pub async fn wait_for_tx(
@@ -428,7 +428,7 @@ async fn get_revert_reason(
     let receipt = provider
         .get_transaction_receipt(tx_hash)
         .await
-        .map_err(RestrictedProviderError::from)?;
+        .map_err(SNCastProviderError::from)?;
 
     if let starknet::core::types::ExecutionResult::Reverted { reason } = receipt.execution_result()
     {
@@ -443,8 +443,8 @@ async fn get_revert_reason(
 }
 
 #[must_use]
-pub fn handle_rpc_error(error: impl Into<RestrictedProviderError>) -> Error {
-    let err: RestrictedProviderError = error.into();
+pub fn handle_rpc_error(error: impl Into<SNCastProviderError>) -> Error {
+    let err: SNCastProviderError = error.into();
     err.into()
 }
 

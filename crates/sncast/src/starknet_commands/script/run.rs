@@ -37,8 +37,7 @@ use shared::utils::build_readable_text;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::SCRIPT_LIB_ARTIFACT_NAME;
 use sncast::response::errors::{
-    handle_starknet_command_error, RestrictedProviderError, RestrictedStarknetError,
-    StarknetCommandError,
+    handle_starknet_command_error, SNCastProviderError, SNCastStarknetError, StarknetCommandError,
 };
 use sncast::response::structs::ScriptRunResponse;
 use sncast::{TransactionError, WaitForTransactionError};
@@ -81,18 +80,18 @@ impl SerializeAsFelt252 for StarknetCommandError {
     }
 }
 
-impl SerializeAsFelt252 for RestrictedProviderError {
+impl SerializeAsFelt252 for SNCastProviderError {
     fn serialize_as_felt252(&self) -> Vec<Felt252> {
         match self {
-            RestrictedProviderError::StarknetError(err) => {
+            SNCastProviderError::StarknetError(err) => {
                 let mut res = vec![Felt252::from(0)];
                 res.extend(err.serialize_as_felt252());
                 res
             }
-            RestrictedProviderError::RateLimited => {
+            SNCastProviderError::RateLimited => {
                 vec![Felt252::from(1)]
             }
-            RestrictedProviderError::UnknownError(err) => {
+            SNCastProviderError::UnknownError(err) => {
                 let mut res = vec![Felt252::from(2)];
                 res.extend(ByteArray::from(err.to_string()).serialize());
                 res
@@ -101,42 +100,42 @@ impl SerializeAsFelt252 for RestrictedProviderError {
     }
 }
 
-impl SerializeAsFelt252 for RestrictedStarknetError {
+impl SerializeAsFelt252 for SNCastStarknetError {
     fn serialize_as_felt252(&self) -> Vec<Felt252> {
         match self {
-            RestrictedStarknetError::FailedToReceiveTransaction => vec![Felt252::from(0)],
-            RestrictedStarknetError::ContractNotFound => vec![Felt252::from(1)],
-            RestrictedStarknetError::BlockNotFound => vec![Felt252::from(2)],
-            RestrictedStarknetError::InvalidTransactionIndex => vec![Felt252::from(3)],
-            RestrictedStarknetError::ClassHashNotFound => vec![Felt252::from(4)],
-            RestrictedStarknetError::TransactionHashNotFound => vec![Felt252::from(5)],
-            RestrictedStarknetError::ContractError(err) => {
+            SNCastStarknetError::FailedToReceiveTransaction => vec![Felt252::from(0)],
+            SNCastStarknetError::ContractNotFound => vec![Felt252::from(1)],
+            SNCastStarknetError::BlockNotFound => vec![Felt252::from(2)],
+            SNCastStarknetError::InvalidTransactionIndex => vec![Felt252::from(3)],
+            SNCastStarknetError::ClassHashNotFound => vec![Felt252::from(4)],
+            SNCastStarknetError::TransactionHashNotFound => vec![Felt252::from(5)],
+            SNCastStarknetError::ContractError(err) => {
                 let mut res = vec![Felt252::from(6)];
                 res.extend(ByteArray::from(err.revert_error.clone()).serialize());
                 res
             }
-            RestrictedStarknetError::TransactionExecutionError(err) => {
+            SNCastStarknetError::TransactionExecutionError(err) => {
                 let mut res = vec![Felt252::from(7), Felt252::from(err.transaction_index)];
                 res.extend(ByteArray::from(err.execution_error.clone()).serialize());
                 res
             }
-            RestrictedStarknetError::ClassAlreadyDeclared => vec![Felt252::from(8)],
-            RestrictedStarknetError::InvalidTransactionNonce => vec![Felt252::from(9)],
-            RestrictedStarknetError::InsufficientMaxFee => vec![Felt252::from(10)],
-            RestrictedStarknetError::InsufficientAccountBalance => vec![Felt252::from(11)],
-            RestrictedStarknetError::ValidationFailure(err) => {
+            SNCastStarknetError::ClassAlreadyDeclared => vec![Felt252::from(8)],
+            SNCastStarknetError::InvalidTransactionNonce => vec![Felt252::from(9)],
+            SNCastStarknetError::InsufficientMaxFee => vec![Felt252::from(10)],
+            SNCastStarknetError::InsufficientAccountBalance => vec![Felt252::from(11)],
+            SNCastStarknetError::ValidationFailure(err) => {
                 let mut res = vec![Felt252::from(12)];
                 res.extend(ByteArray::from(err.clone()).serialize());
                 res
             }
-            RestrictedStarknetError::CompilationFailed => vec![Felt252::from(13)],
-            RestrictedStarknetError::ContractClassSizeIsTooLarge => vec![Felt252::from(14)],
-            RestrictedStarknetError::NonAccount => vec![Felt252::from(15)],
-            RestrictedStarknetError::DuplicateTx => vec![Felt252::from(16)],
-            RestrictedStarknetError::CompiledClassHashMismatch => vec![Felt252::from(17)],
-            RestrictedStarknetError::UnsupportedTxVersion => vec![Felt252::from(18)],
-            RestrictedStarknetError::UnsupportedContractClassVersion => vec![Felt252::from(19)],
-            RestrictedStarknetError::UnexpectedError(err) => {
+            SNCastStarknetError::CompilationFailed => vec![Felt252::from(13)],
+            SNCastStarknetError::ContractClassSizeIsTooLarge => vec![Felt252::from(14)],
+            SNCastStarknetError::NonAccount => vec![Felt252::from(15)],
+            SNCastStarknetError::DuplicateTx => vec![Felt252::from(16)],
+            SNCastStarknetError::CompiledClassHashMismatch => vec![Felt252::from(17)],
+            SNCastStarknetError::UnsupportedTxVersion => vec![Felt252::from(18)],
+            SNCastStarknetError::UnsupportedContractClassVersion => vec![Felt252::from(19)],
+            SNCastStarknetError::UnexpectedError(err) => {
                 let mut res = vec![Felt252::from(20)];
                 res.extend(ByteArray::from(err.to_string()).serialize());
                 res
