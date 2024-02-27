@@ -6,35 +6,6 @@ use indoc::indoc;
 use shared::test_utils::output_assert::assert_stderr_contains;
 
 #[tokio::test]
-async fn test_missing_field() {
-    let tempdir = copy_script_directory_to_tempdir(
-        SCRIPTS_DIR.to_owned() + "/declare/missing_field",
-        Vec::<String>::new(),
-    );
-    let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
-
-    let script_name = "missing_field";
-    let args = vec![
-        "--accounts-file",
-        accounts_json_path.as_str(),
-        "--account",
-        "user4",
-        "--url",
-        URL,
-        "script",
-        "run",
-        &script_name,
-    ];
-
-    let snapbox = runner(&args).current_dir(tempdir.path());
-    snapbox.assert().failure().stdout_matches(indoc! {r"
-        ...
-        error: Wrong number of arguments. Expected 3, found: 2
-        ...
-    "});
-}
-
-#[tokio::test]
 async fn test_wrong_contract_name() {
     let contract_dir = duplicate_contract_directory_with_salt(
         SCRIPTS_DIR.to_owned() + "/map_script/contracts/",
@@ -42,7 +13,7 @@ async fn test_wrong_contract_name() {
         "609",
     );
     let tempdir = copy_script_directory_to_tempdir(
-        SCRIPTS_DIR.to_owned() + "/declare/test_scripts",
+        SCRIPTS_DIR.to_owned() + "/declare/",
         vec![contract_dir.as_ref()],
     );
     let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
@@ -81,7 +52,7 @@ async fn test_same_contract_twice() {
         "69",
     );
     let script_dir = copy_script_directory_to_tempdir(
-        SCRIPTS_DIR.to_owned() + "/declare/test_scripts",
+        SCRIPTS_DIR.to_owned() + "/declare/",
         vec![contract_dir.as_ref()],
     );
 
@@ -115,7 +86,7 @@ async fn test_with_invalid_max_fee() {
     let script_name = "with_invalid_max_fee";
     let args = vec![
         "--accounts-file",
-        "../../../accounts/accounts.json",
+        "../../accounts/accounts.json",
         "--account",
         "user2",
         "--url",
@@ -125,7 +96,7 @@ async fn test_with_invalid_max_fee() {
         &script_name,
     ];
 
-    let snapbox = runner(&args).current_dir(SCRIPTS_DIR.to_owned() + "/declare/test_scripts");
+    let snapbox = runner(&args).current_dir(SCRIPTS_DIR.to_owned() + "/declare/");
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
         ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::InsufficientMaxFee(())))
@@ -139,7 +110,7 @@ async fn test_with_invalid_nonce() {
     let script_name = "with_invalid_nonce";
     let args = vec![
         "--accounts-file",
-        "../../../accounts/accounts.json",
+        "../../accounts/accounts.json",
         "--account",
         "user4",
         "--url",
@@ -149,7 +120,7 @@ async fn test_with_invalid_nonce() {
         &script_name,
     ];
 
-    let snapbox = runner(&args).current_dir(SCRIPTS_DIR.to_owned() + "/declare/test_scripts");
+    let snapbox = runner(&args).current_dir(SCRIPTS_DIR.to_owned() + "/declare/");
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
         ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::InvalidTransactionNonce(())))
@@ -163,7 +134,7 @@ async fn test_insufficient_account_balance() {
     let script_name = "insufficient_account_balance";
     let args = vec![
         "--accounts-file",
-        "../../../accounts/accounts.json",
+        "../../accounts/accounts.json",
         "--account",
         "user6",
         "--url",
@@ -173,7 +144,7 @@ async fn test_insufficient_account_balance() {
         &script_name,
     ];
 
-    let snapbox = runner(&args).current_dir(SCRIPTS_DIR.to_owned() + "/declare/test_scripts");
+    let snapbox = runner(&args).current_dir(SCRIPTS_DIR.to_owned() + "/declare/");
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
         ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::InsufficientAccountBalance(())))
@@ -190,7 +161,7 @@ async fn test_sncast_timed_out() {
         "78",
     );
     let script_dir = copy_script_directory_to_tempdir(
-        SCRIPTS_DIR.to_owned() + "/declare/test_scripts",
+        SCRIPTS_DIR.to_owned() + "/declare/",
         vec![contract_dir.as_ref()],
     );
 

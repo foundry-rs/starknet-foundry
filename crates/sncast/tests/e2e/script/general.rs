@@ -269,3 +269,32 @@ async fn test_nonexistent_account_address() {
         "},
     );
 }
+
+#[tokio::test]
+async fn test_missing_field() {
+    let tempdir = copy_script_directory_to_tempdir(
+        SCRIPTS_DIR.to_owned() + "/missing_field",
+        Vec::<String>::new(),
+    );
+    let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
+
+    let script_name = "missing_field";
+    let args = vec![
+        "--accounts-file",
+        accounts_json_path.as_str(),
+        "--account",
+        "user4",
+        "--url",
+        URL,
+        "script",
+        "run",
+        &script_name,
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    snapbox.assert().failure().stdout_matches(indoc! {r"
+        ...
+        error: Wrong number of arguments. Expected 3, found: 2
+        ...
+    "});
+}
