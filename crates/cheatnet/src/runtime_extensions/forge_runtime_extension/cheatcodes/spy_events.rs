@@ -47,7 +47,7 @@ pub enum SpyTarget {
 }
 
 impl SpyTarget {
-    pub fn does_spy(&mut self, contract_address: ContractAddress) -> bool {
+    pub fn does_spy(&self, contract_address: ContractAddress) -> bool {
         match self {
             SpyTarget::All => true,
             SpyTarget::One(address) => *address == contract_address,
@@ -63,7 +63,7 @@ impl CheatnetState {
     }
 
     pub fn fetch_events(&mut self, id: &Felt252) -> (usize, Vec<Felt252>) {
-        let spy_on = &mut self.spies[felt_to_usize(id).unwrap()];
+        let spy_on = &self.spies[felt_to_usize(id).unwrap()];
         let mut spied_events_len = 0;
         let mut unconsumed_emitted_events: Vec<Event> = vec![];
 
