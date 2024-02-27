@@ -652,9 +652,7 @@ fn serialize_call_trace(call_trace: &CallTrace, output: &mut Vec<Felt252>) {
         serialize_call_trace(&call_trace.borrow(), output);
     }
 
-    output.append(&mut serialize_call_result(&call_trace.result));
-
-    output
+    serialize_call_result(&call_trace.result, output);
 }
 
 fn serialize_call_entry_point(call_entry_point: &CallEntryPoint, output: &mut Vec<Felt252>) {
@@ -686,9 +684,7 @@ fn serialize_call_entry_point(call_entry_point: &CallEntryPoint, output: &mut Ve
     output.push(Felt252::from(call_type));
 }
 
-fn serialize_call_result(call_result: &CallResult) -> Vec<Felt252> {
-    let mut output = vec![];
-
+fn serialize_call_result(call_result: &CallResult, output: &mut Vec<Felt252>) {
     match call_result {
         CallResult::Success { ret_data } => {
             output.push(Felt252::from(0));
@@ -696,19 +692,31 @@ fn serialize_call_result(call_result: &CallResult) -> Vec<Felt252> {
             output.extend(ret_data.iter().cloned());
         }
         CallResult::Failure(call_failure) => {
-            let (call_failure_variant, failure_data) = match call_failure {
-                CallFailure::Panic { panic_data } => (0, panic_data.clone()),
-                CallFailure::Error { msg } => (1, ByteArray::from(msg.clone()).serialize()),
+            match call_failure {
+                CallFailure::Panic { panic_data } => {
+                    serialize_failure_data(0, panic_data.iter().cloned(), panic_data.len(), output);
+                }
+                CallFailure::Error { msg } => {
+                    let data = ByteArray::from(msg.as_str()).serialize();
+                    let len = data.len();
+                    serialize_failure_data(1, data, len, output);
+                }
             };
-
-            output.push(Felt252::from(1));
-            output.push(Felt252::from(call_failure_variant));
-            output.push(Felt252::from(failure_data.len()));
-            output.extend(failure_data);
         }
     };
+}
 
-    output
+#[inline]
+fn serialize_failure_data(
+    call_failure_variant: u8,
+    failure_data: impl IntoIterator<Item = Felt252>,
+    failure_data_len: usize,
+    output: &mut Vec<Felt252>,
+) {
+    output.push(Felt252::from(1));
+    output.push(Felt252::from(call_failure_variant));
+    output.push(Felt252::from(failure_data_len));
+    output.extend(failure_data);
 }
 
 #[must_use]
