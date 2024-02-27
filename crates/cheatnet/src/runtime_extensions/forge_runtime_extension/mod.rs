@@ -698,7 +698,7 @@ fn serialize_call_result(call_result: &CallResult) -> Vec<Felt252> {
         CallResult::Success { ret_data } => {
             output.push(Felt252::from(0));
             output.push(Felt252::from(ret_data.len()));
-            output.extend(ret_data.clone());
+            output.extend(ret_data.iter().cloned());
         }
         CallResult::Failure(call_failure) => {
             let (call_failure_variant, failure_data) = match call_failure {
