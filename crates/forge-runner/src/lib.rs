@@ -11,7 +11,7 @@ use cairo_lang_sierra::extensions::core::{CoreLibfunc, CoreType};
 use cairo_lang_sierra::ids::ConcreteTypeId;
 use cairo_lang_sierra::program::{Function, Program};
 use cairo_lang_sierra::program_registry::ProgramRegistry;
-use cairo_lang_sierra_to_casm::compiler::CairoProgram;
+use cairo_lang_sierra_to_casm::compiler::{CairoProgram, SierraToCasmConfig};
 use cairo_lang_sierra_to_casm::metadata::{calc_metadata, MetadataComputationConfig};
 use cairo_lang_sierra_type_size::get_type_size_map;
 use camino::Utf8PathBuf;
@@ -187,7 +187,15 @@ fn build_test_details(test_name: &str, sierra_program: &Program) -> TestDetails 
 fn compile_sierra_to_casm(sierra_program: &Program) -> CairoProgram {
     let metadata_config = MetadataComputationConfig::default();
     let metadata = calc_metadata(sierra_program, metadata_config).unwrap();
-    cairo_lang_sierra_to_casm::compiler::compile(sierra_program, &metadata, true).unwrap()
+    cairo_lang_sierra_to_casm::compiler::compile(
+        sierra_program,
+        &metadata,
+        SierraToCasmConfig {
+            gas_usage_check: false,
+            max_bytecode_size: usize::MAX,
+        },
+    )
+    .unwrap()
 }
 
 pub async fn run_tests_from_crate(

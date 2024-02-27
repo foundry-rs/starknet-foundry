@@ -1,22 +1,24 @@
 use crate::forking::state::ForkStateReader;
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::subtract_execution_resources;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spoof::TxInfoMock;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::{
     Event, SpyTarget,
 };
-use blockifier::execution::entry_point::{CallEntryPoint, ExecutionResources};
+use blockifier::execution::entry_point::CallEntryPoint;
 use blockifier::{
     execution::contract_class::ContractClass,
     state::state_api::{StateReader, StateResult},
 };
 use cairo_felt::Felt252;
-use runtime::starknet::context::BlockInfo;
 use runtime::starknet::state::DictStateReader;
 
 use starknet_api::core::EntryPointSelector;
 
 use crate::constants::{build_test_entry_point, TEST_CONTRACT_CLASS_HASH};
+use blockifier::block::BlockInfo;
+use blockifier::execution::syscalls::hint_processor::SyscallCounter;
 use blockifier::state::errors::StateError::UndeclaredClassHash;
+use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
+use runtime::starknet::context::ForgeBlockInfo;
 use starknet_api::transaction::ContractAddressSalt;
 use starknet_api::{
     core::{ClassHash, CompiledClassHash, ContractAddress, Nonce},
@@ -53,7 +55,7 @@ impl BlockInfoReader for ExtendedStateReader {
             return fork_state_reader.get_block_info();
         }
 
-        Ok(BlockInfo::default())
+        Ok(ForgeBlockInfo::default().into())
     }
 }
 
@@ -98,16 +100,13 @@ impl StateReader for ExtendedStateReader {
             })
     }
 
-    fn get_compiled_contract_class(
-        &mut self,
-        class_hash: &ClassHash,
-    ) -> StateResult<ContractClass> {
+    fn get_compiled_contract_class(&mut self, class_hash: ClassHash) -> StateResult<ContractClass> {
         self.dict_state_reader
             .get_compiled_contract_class(class_hash)
             .or_else(|_| {
                 self.fork_state_reader
                     .as_mut()
-                    .map_or(Err(UndeclaredClassHash(*class_hash)), |reader| {
+                    .map_or(Err(UndeclaredClassHash(class_hash)), |reader| {
                         reader.get_compiled_contract_class(class_hash)
                     })
             })
@@ -132,6 +131,7 @@ pub struct CallTrace {
     pub entry_point: CallEntryPoint,
     // These also include resources used by internal calls
     pub used_execution_resources: ExecutionResources,
+    pub used_syscalls: SyscallCounter,
     pub nested_calls: Vec<Rc<RefCell<CallTrace>>>,
 }
 
@@ -211,6 +211,7 @@ impl Default for CheatnetState {
         let test_call = Rc::new(RefCell::new(CallTrace {
             entry_point: test_code_entry_point,
             used_execution_resources: Default::default(),
+            used_syscalls: Default::default(),
             nested_calls: vec![],
         }));
         Self {
@@ -228,7 +229,7 @@ impl Default for CheatnetState {
             spies: vec![],
             detected_events: vec![],
             deploy_salt_base: 0,
-            block_info: Default::default(),
+            block_info: ForgeBlockInfo::default().into(),
             trace_data: TraceData {
                 current_call_stack: NotEmptyCallStack::from(test_call),
             },
@@ -310,6 +311,7 @@ impl TraceData {
         let new_call = Rc::new(RefCell::new(CallTrace {
             entry_point,
             used_execution_resources: Default::default(),
+            used_syscalls: Default::default(),
             nested_calls: vec![],
         }));
         let current_call = self.current_call_stack.top();
@@ -328,14 +330,19 @@ impl TraceData {
         current_call.borrow_mut().entry_point.class_hash = Some(class_hash);
     }
 
-    pub fn exit_nested_call(&mut self, resources_used_after_call: &ExecutionResources) {
+    pub fn exit_nested_call(
+        &mut self,
+        resources_used_after_call: &ExecutionResources,
+        used_syscalls: &SyscallCounter,
+    ) {
         let CallStackElement {
             resources_used_before_call,
             call_trace: last_call,
         } = self.current_call_stack.pop();
 
         last_call.borrow_mut().used_execution_resources =
-            subtract_execution_resources(resources_used_after_call, &resources_used_before_call);
+            resources_used_after_call - &resources_used_before_call;
+        last_call.borrow_mut().used_syscalls = used_syscalls.clone();
     }
 }
 

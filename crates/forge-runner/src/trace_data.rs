@@ -1,3 +1,4 @@
+use blockifier::execution::deprecated_syscalls::hint_processor::SyscallCounter;
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use std::collections::HashMap;
 use std::fs;
@@ -6,8 +7,8 @@ use std::path::PathBuf;
 
 // Will be provided by profiler crate in the future
 // This module will be removed!
-use blockifier::execution::entry_point::{CallEntryPoint, CallType, ExecutionResources};
-use cairo_vm::vm::runners::cairo_runner::ExecutionResources as VmExecutionResources;
+use blockifier::execution::entry_point::{CallEntryPoint, CallType};
+use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cheatnet::constants::{TEST_CONTRACT_CLASS_HASH, TEST_ENTRY_POINT_SELECTOR};
 use cheatnet::state::CallTrace;
 use conversions::IntoConv;
@@ -40,8 +41,9 @@ impl ProfilerCallTrace {
     pub fn from_call_trace(value: CallTrace, contracts_data: &ContractsData) -> Self {
         ProfilerCallTrace {
             entry_point: ProfilerCallEntryPoint::from(value.entry_point, contracts_data),
-            used_execution_resources: ProfilerExecutionResources::from(
+            used_execution_resources: ProfilerExecutionResources::new(
                 value.used_execution_resources,
+                value.used_syscalls,
             ),
             nested_calls: value
                 .nested_calls
@@ -133,8 +135,22 @@ impl From<CallType> for ProfilerCallType {
 
 #[derive(Debug, Default, Clone, Deserialize, Serialize)]
 pub struct ProfilerExecutionResources {
-    pub vm_resources: VmExecutionResources,
+    pub vm_resources: ExecutionResources,
     pub syscall_counter: ProfilerSyscallCounter,
+}
+
+impl ProfilerExecutionResources {
+    fn new(vm_resources: ExecutionResources, syscall_counter: SyscallCounter) -> Self {
+        let mut profiler_syscall_counter = HashMap::new();
+        for (key, val) in syscall_counter {
+            profiler_syscall_counter.insert(key.into(), val);
+        }
+
+        Self {
+            syscall_counter: profiler_syscall_counter,
+            vm_resources,
+        }
+    }
 }
 
 impl AddAssign<&ProfilerExecutionResources> for ProfilerExecutionResources {
@@ -187,19 +203,6 @@ impl ProfilerExecutionResources {
         }
 
         true
-    }
-}
-
-impl From<ExecutionResources> for ProfilerExecutionResources {
-    fn from(value: ExecutionResources) -> Self {
-        let mut syscall_counter = HashMap::new();
-        for (key, val) in value.syscall_counter {
-            syscall_counter.insert(key.into(), val);
-        }
-        ProfilerExecutionResources {
-            vm_resources: value.vm_resources,
-            syscall_counter,
-        }
     }
 }
 

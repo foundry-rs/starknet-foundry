@@ -11,10 +11,12 @@ use crate::gas::calculate_used_gas;
 use crate::test_case_summary::{Single, TestCaseSummary};
 use crate::{RunnerConfig, RunnerParams, TestCaseRunnable, CACHE_DIR};
 use anyhow::{bail, ensure, Result};
-use blockifier::execution::entry_point::{EntryPointExecutionContext, ExecutionResources};
+use blockifier::execution::entry_point::EntryPointExecutionContext;
 use blockifier::execution::execution_utils::ReadOnlySegments;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
-use blockifier::state::cached_state::CachedState;
+use blockifier::state::cached_state::{
+    CachedState, GlobalContractCache, GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST,
+};
 use blockifier::state::state_api::State;
 use cairo_felt::Felt252;
 use cairo_lang_casm::hints::Hint;
@@ -27,6 +29,7 @@ use cairo_lang_sierra::extensions::NoGenericArgsGenericType;
 use cairo_lang_sierra::ids::GenericTypeId;
 use cairo_lang_sierra_to_casm::compiler::CairoProgram;
 use cairo_vm::types::relocatable::{MaybeRelocatable, Relocatable};
+use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use camino::Utf8Path;
 use cheatnet::constants as cheatnet_constants;
@@ -40,7 +43,7 @@ use cheatnet::runtime_extensions::forge_runtime_extension::{
 };
 use cheatnet::state::{BlockInfoReader, CallTrace, CheatnetState, ExtendedStateReader};
 use itertools::chain;
-use runtime::starknet::context::build_context;
+use runtime::starknet::context::{build_context, ForgeBlockInfo};
 use runtime::{ExtendedRuntime, StarknetRuntime};
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
@@ -202,9 +205,12 @@ pub fn run_test_case(
     };
     let block_info = state_reader.get_block_info()?;
 
-    let mut context = build_context(block_info);
+    let mut context = build_context(&ForgeBlockInfo::default().into());
     let mut execution_resources = ExecutionResources::default();
-    let mut cached_state = CachedState::from(state_reader);
+    let mut cached_state = CachedState::new(
+        state_reader,
+        GlobalContractCache::new(GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST),
+    );
     let syscall_handler = build_syscall_handler(
         &mut cached_state,
         &string_to_hint,
@@ -214,7 +220,7 @@ pub fn run_test_case(
     );
 
     let mut cheatnet_state = CheatnetState {
-        block_info,
+        block_info: block_info.clone(),
         ..Default::default()
     };
 
@@ -266,13 +272,12 @@ pub fn run_test_case(
                 .get_execution_resources(&vm)
                 .unwrap()
                 .filter_unused_builtins();
-            forge_runtime
+            *forge_runtime
                 .extended_runtime
                 .extended_runtime
                 .extended_runtime
                 .hint_handler
-                .resources
-                .vm_resources += &vm_resources_without_inner_calls;
+                .resources += &vm_resources_without_inner_calls;
 
             let cells = runner.relocated_memory;
             let ap = vm.get_relocated_trace().unwrap().last().unwrap().ap;
@@ -301,12 +306,12 @@ pub fn run_test_case(
         Err(err) => Err(RunnerError::CairoRunError(err)),
     };
 
-    let block_context = get_context(&forge_runtime).block_context.clone();
     let call_trace_ref = get_call_trace_ref(&mut forge_runtime);
 
     update_top_call_execution_resources(&mut forge_runtime);
+    let transaction_context = get_context(&forge_runtime).tx_context.clone();
     let used_resources = get_all_used_resources(forge_runtime);
-    let gas = calculate_used_gas(&block_context, &mut cached_state, &used_resources)?;
+    let gas = calculate_used_gas(&transaction_context, &mut cached_state, &used_resources)?;
 
     Ok(RunResultWithInfo {
         run_result,

@@ -1,14 +1,14 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use blockifier::execution::contract_class::{ContractClassV1, ContractClassV1Inner};
+use blockifier::execution::contract_class::ContractClassV1;
 
 use blockifier::execution::contract_class::ContractClass;
-use cairo_vm::types::program::Program;
 
 use crate::runtime_extensions::common::create_entry_point_selector;
 use blockifier::execution::entry_point::{CallEntryPoint, CallType};
 use conversions::IntoConv;
+use indoc::indoc;
 use starknet::core::utils::get_selector_from_name;
 use starknet_api::deprecated_contract_class::EntryPointType;
 
@@ -38,17 +38,23 @@ pub const TEST_ENTRY_POINT_SELECTOR: &str = "TEST_CONTRACT_SELECTOR";
 pub const TEST_ADDRESS: &str = "0x01724987234973219347210837402";
 
 fn contract_class_no_entrypoints() -> ContractClass {
-    let inner = ContractClassV1Inner {
-        program: Program::default(),
-        entry_points_by_type: HashMap::from([
-            (EntryPointType::External, vec![]),
-            (EntryPointType::Constructor, vec![]),
-            (EntryPointType::L1Handler, vec![]),
-        ]),
-
-        hints: HashMap::new(),
-    };
-    ContractClass::V1(ContractClassV1(Arc::new(inner)))
+    let raw_contract_class = indoc!(
+        r#"{
+          "prime": "0x800000000000011000000000000000000000000000000000000000000000001",
+          "compiler_version": "2.4.0",
+          "bytecode": [],
+          "hints": [],
+          "entry_points_by_type": {
+            "EXTERNAL": [],
+            "L1_HANDLER": [],
+            "CONSTRUCTOR": []
+          }
+        }"#,
+    );
+    ContractClass::V1(
+        ContractClassV1::try_from_json_string(raw_contract_class)
+            .expect("Could not create dummy contract from raw"),
+    )
 }
 
 // Creates a state with predeployed account and erc20 used to send transactions during tests.

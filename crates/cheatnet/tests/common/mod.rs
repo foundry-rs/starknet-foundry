@@ -91,7 +91,7 @@ pub fn deploy_contract(
     let class_hash = declare(state, &contract, &contracts).unwrap();
 
     let mut execution_resources = ExecutionResources::default();
-    let mut entry_point_execution_context = build_context(runtime_state.cheatnet_state.block_info);
+    let mut entry_point_execution_context = build_context(&runtime_state.cheatnet_state.block_info);
     let hints = HashMap::new();
 
     let mut syscall_hint_processor = build_syscall_hint_processor(
@@ -118,7 +118,7 @@ pub fn deploy_wrapper(
     calldata: &[Felt252],
 ) -> Result<ContractAddress, CheatcodeError> {
     let mut execution_resources = ExecutionResources::default();
-    let mut entry_point_execution_context = build_context(runtime_state.cheatnet_state.block_info);
+    let mut entry_point_execution_context = build_context(&runtime_state.cheatnet_state.block_info);
     let hints = HashMap::new();
 
     let mut syscall_hint_processor = build_syscall_hint_processor(
@@ -145,7 +145,7 @@ pub fn deploy_at_wrapper(
     contract_address: ContractAddress,
 ) -> Result<ContractAddress, CheatcodeError> {
     let mut execution_resources = ExecutionResources::default();
-    let mut entry_point_execution_context = build_context(runtime_state.cheatnet_state.block_info);
+    let mut entry_point_execution_context = build_context(&runtime_state.cheatnet_state.block_info);
     let hints = HashMap::new();
 
     let mut syscall_hint_processor = build_syscall_hint_processor(
@@ -208,7 +208,7 @@ pub fn call_contract(
     };
 
     let mut execution_resources = ExecutionResources::default();
-    let mut entry_point_execution_context = build_context(runtime_state.cheatnet_state.block_info);
+    let mut entry_point_execution_context = build_context(&runtime_state.cheatnet_state.block_info);
     let hints = HashMap::new();
 
     let mut syscall_hint_processor = build_syscall_hint_processor(

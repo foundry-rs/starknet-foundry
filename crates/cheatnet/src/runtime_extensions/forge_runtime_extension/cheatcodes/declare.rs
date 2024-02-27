@@ -40,12 +40,12 @@ pub fn declare(
         .expect("Failed to parse sierra contract code");
     let class_hash = get_class_hash(&sierra_class).expect("Failed to get class hash");
 
-    match state.get_compiled_contract_class(&class_hash) {
+    match state.get_compiled_contract_class(class_hash) {
         Err(StateError::UndeclaredClassHash(_)) => {
             // Class is undeclared; declare it.
 
             state
-                .set_contract_class(&class_hash, contract_class)
+                .set_contract_class(class_hash, contract_class)
                 .map_err(EnhancedHintError::from)?;
 
             // NOTE: Compiled class hash is being set to 0 here

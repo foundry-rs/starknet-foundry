@@ -8,11 +8,12 @@ use blockifier::execution::call_info::CallInfo;
 use blockifier::execution::entry_point::EntryPointExecutionResult;
 use blockifier::execution::syscalls::hint_processor::{SyscallCounter, SyscallHintProcessor};
 use blockifier::execution::{
-    entry_point::{CallEntryPoint, CallType, ExecutionResources},
+    entry_point::{CallEntryPoint, CallType},
     errors::{EntryPointExecutionError, PreExecutionError},
 };
 use blockifier::state::errors::StateError;
 use cairo_felt::Felt252;
+use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use starknet_api::core::ClassHash;
 use starknet_api::{core::ContractAddress, deprecated_contract_class::EntryPointType};
 
@@ -20,24 +21,13 @@ use super::RuntimeState;
 
 #[derive(Clone, Debug, Default)]
 pub struct UsedResources {
+    pub syscall_counter: SyscallCounter,
     pub execution_resources: ExecutionResources,
-    pub l2_to_l1_payloads_length: Vec<usize>,
+    pub l2_to_l1_payloads_lengths: Vec<usize>,
+    pub l1_handler_payloads_lengths: Vec<usize>,
 }
 
-pub(crate) fn subtract_execution_resources(
-    minuend: &ExecutionResources,
-    subtrahend: &ExecutionResources,
-) -> ExecutionResources {
-    ExecutionResources {
-        vm_resources: &minuend.vm_resources - &subtrahend.vm_resources,
-        syscall_counter: subtract_syscall_counters(
-            &minuend.syscall_counter,
-            &subtrahend.syscall_counter,
-        ),
-    }
-}
-
-fn subtract_syscall_counters(
+pub fn subtract_syscall_counters(
     minuend: &SyscallCounter,
     subtrahend: &SyscallCounter,
 ) -> SyscallCounter {

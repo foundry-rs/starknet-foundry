@@ -19,13 +19,13 @@ use blockifier::{
         deprecated_syscalls::DeprecatedSyscallSelector,
         entry_point::{
             CallEntryPoint, CallType, EntryPointExecutionContext, EntryPointExecutionResult,
-            ExecutionResources,
         },
         syscalls::{EmptyRequest, GetExecutionInfoResponse},
     },
     state::state_api::State,
 };
 use cairo_vm::types::relocatable::Relocatable;
+use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use starknet_api::core::calculate_contract_address;
 use starknet_api::{

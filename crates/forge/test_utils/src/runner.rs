@@ -328,11 +328,7 @@ macro_rules! assert_syscall {
                 }
                 AnyTestCaseSummary::Single(case) => match case {
                     TestCaseSummary::Passed { used_resources, .. } => {
-                        used_resources
-                            .execution_resources
-                            .syscall_counter
-                            .get(&$syscall)
-                            .unwrap_or(&0)
+                        used_resources.syscall_counter.get(&$syscall).unwrap_or(&0)
                             == &$expected_count
                             && any_case
                                 .name()
@@ -366,7 +362,6 @@ macro_rules! assert_builtin {
                     TestCaseSummary::Passed { used_resources, .. } => {
                         used_resources
                             .execution_resources
-                            .vm_resources
                             .builtin_instance_counter
                             .get($builtin)
                             .unwrap_or(&0)

@@ -1,5 +1,4 @@
 use crate::state::CheatnetState;
-use blockifier::abi::constants;
 use blockifier::execution::common_hints::HintExecutionResult;
 use blockifier::execution::deprecated_syscalls::hint_processor::{
     DeprecatedSyscallExecutionError, DeprecatedSyscallHintProcessor,
@@ -193,11 +192,7 @@ fn increment_syscall_count(
     syscall_handler: &mut DeprecatedSyscallHintProcessor,
     selector: DeprecatedSyscallSelector,
 ) {
-    let syscall_count = syscall_handler
-        .resources
-        .syscall_counter
-        .entry(selector)
-        .or_default();
+    let syscall_count = syscall_handler.syscall_counter.entry(selector).or_default();
     *syscall_count += 1;
 }
 
@@ -233,7 +228,7 @@ pub fn deploy(
         syscall_handler.context,
         ctor_context,
         request.constructor_calldata,
-        constants::INITIAL_GAS_COST,
+        syscall_handler.context.get_gas_cost("initial_gas_cost"),
     )?;
     syscall_handler.inner_calls.push(call_info);
 
@@ -268,7 +263,7 @@ pub fn call_contract(
         storage_address,
         caller_address: syscall_handler.storage_address,
         call_type: CallType::Call,
-        initial_gas: constants::INITIAL_GAS_COST,
+        initial_gas: syscall_handler.context.get_gas_cost("initial_gas_cost"),
     };
     let retdata_segment =
         execute_inner_call(&mut entry_point, vm, syscall_handler, cheatnet_state)?;
@@ -452,7 +447,7 @@ pub fn execute_library_call(
         storage_address: syscall_handler.storage_address,
         caller_address: syscall_handler.caller_address,
         call_type: CallType::Delegate,
-        initial_gas: constants::INITIAL_GAS_COST,
+        initial_gas: syscall_handler.context.get_gas_cost("initial_gas_cost"),
     };
 
     execute_inner_call(&mut entry_point, vm, syscall_handler, cheatnet_state)

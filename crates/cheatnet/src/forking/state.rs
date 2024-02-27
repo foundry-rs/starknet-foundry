@@ -1,5 +1,6 @@
 use crate::forking::cache::ForkCache;
 use crate::state::BlockInfoReader;
+use blockifier::block::BlockInfo;
 use blockifier::execution::contract_class::{
     ContractClass as ContractClassBlockifier, ContractClassV0, ContractClassV1,
 };
@@ -9,7 +10,7 @@ use cairo_lang_utils::bigint::BigUintAsHex;
 use conversions::{FromConv, IntoConv};
 use flate2::read::GzDecoder;
 use num_bigint::BigUint;
-use runtime::starknet::context::BlockInfo;
+use runtime::starknet::context::ForgeGasPrices;
 use sierra_casm::compile;
 use starknet::core::types::{
     BlockId, ContractClass as ContractClassStarknet, FieldElement, MaybePendingBlockWithTxHashes,
@@ -80,11 +81,13 @@ impl BlockInfoReader for ForkStateReader {
             Ok(MaybePendingBlockWithTxHashes::Block(block)) => {
                 let block_info = BlockInfo {
                     block_number: BlockNumber(block.block_number),
-                    timestamp: BlockTimestamp(block.timestamp),
                     sequencer_address: block.sequencer_address.into_(),
+                    block_timestamp: BlockTimestamp(block.timestamp),
+                    gas_prices: ForgeGasPrices::default().into(),
+                    use_kzg_da: false,
                 };
 
-                self.cache.cache_get_block_info(block_info);
+                self.cache.cache_get_block_info(block_info.clone());
 
                 Ok(block_info)
             }
@@ -179,10 +182,10 @@ impl StateReader for ForkStateReader {
 
     fn get_compiled_contract_class(
         &mut self,
-        class_hash: &ClassHash,
+        class_hash: ClassHash,
     ) -> StateResult<ContractClassBlockifier> {
         let contract_class =
-            if let Some(cache_hit) = self.cache.get_compiled_contract_class(class_hash) {
+            if let Some(cache_hit) = self.cache.get_compiled_contract_class(&class_hash) {
                 Ok(cache_hit)
             } else {
                 match self.runtime.block_on(
@@ -191,12 +194,12 @@ impl StateReader for ForkStateReader {
                 ) {
                     Ok(contract_class) => {
                         self.cache
-                            .cache_get_compiled_contract_class(class_hash, &contract_class);
+                            .cache_get_compiled_contract_class(&class_hash, &contract_class);
 
                         Ok(contract_class)
                     }
                     Err(ProviderError::StarknetError(StarknetError::ClassHashNotFound)) => {
-                        Err(UndeclaredClassHash(*class_hash))
+                        Err(UndeclaredClassHash(class_hash))
                     }
                     Err(ProviderError::Other(boxed)) => other_provider_error!(boxed),
                     Err(x) => Err(StateReadError(format!(

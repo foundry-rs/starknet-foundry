@@ -3,6 +3,8 @@ use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::
 };
 use crate::state::CheatnetState;
 use anyhow::Result;
+use blockifier::execution::entry_point::EntryPointExecutionContext;
+use blockifier::execution::syscalls::hint_processor::OUT_OF_GAS_ERROR;
 use blockifier::execution::syscalls::{
     SyscallRequest, SyscallRequestWrapper, SyscallResponse, SyscallResponseWrapper, SyscallResult,
 };
@@ -12,7 +14,6 @@ use blockifier::execution::{
     execution_utils::felt_to_stark_felt,
     syscalls::hint_processor::{SyscallExecutionError, SyscallHintProcessor},
 };
-use blockifier::{abi::constants, execution::syscalls::hint_processor::OUT_OF_GAS_ERROR};
 use cairo_felt::Felt252;
 use cairo_vm::{
     types::relocatable::Relocatable,
@@ -110,15 +111,18 @@ pub fn felt_from_ptr_immutable(
     Ok(felt)
 }
 
-fn get_syscall_cost(syscall_selector: SyscallSelector) -> u64 {
-    match syscall_selector {
-        SyscallSelector::LibraryCall | SyscallSelector::CallContract => {
-            constants::CALL_CONTRACT_GAS_COST
-        }
-        SyscallSelector::Deploy => constants::DEPLOY_GAS_COST,
-        SyscallSelector::GetExecutionInfo => constants::GET_EXECUTION_INFO_GAS_COST,
+fn get_syscall_cost(
+    syscall_selector: SyscallSelector,
+    context: &EntryPointExecutionContext,
+) -> u64 {
+    let constant_name = match syscall_selector {
+        SyscallSelector::LibraryCall => "library_call_gas_cost",
+        SyscallSelector::CallContract => "call_contract_gas_cost",
+        SyscallSelector::Deploy => "deploy_gas_cost",
+        SyscallSelector::GetExecutionInfo => "get_execution_info_gas_cost",
         _ => unreachable!("Syscall has no associated cost"),
-    }
+    };
+    context.get_gas_cost(constant_name)
 }
 
 impl CheatableStarknetRuntimeExtension<'_> {
@@ -144,14 +148,18 @@ impl CheatableStarknetRuntimeExtension<'_> {
         // Increment, since the selector was peeked into before
         syscall_handler.syscall_ptr += 1;
         syscall_handler.increment_syscall_count_by(&selector, 1);
-        let base_gas_cost = get_syscall_cost(selector);
+        let syscall_gas_cost = get_syscall_cost(selector, syscall_handler.context);
+        let required_gas = syscall_gas_cost
+            - syscall_handler
+                .context
+                .get_gas_cost("syscall_base_gas_cost");
 
         let SyscallRequestWrapper {
             gas_counter,
             request,
         } = SyscallRequestWrapper::<Request>::read(vm, &mut syscall_handler.syscall_ptr)?;
 
-        if gas_counter < base_gas_cost {
+        if gas_counter < required_gas {
             //  Out of gas failure.
             let out_of_gas_error =
                 StarkFelt::try_from(OUT_OF_GAS_ERROR).map_err(SyscallExecutionError::from)?;
@@ -168,7 +176,7 @@ impl CheatableStarknetRuntimeExtension<'_> {
         let mut runtime_state = RuntimeState {
             cheatnet_state: self.cheatnet_state,
         };
-        let mut remaining_gas = gas_counter - base_gas_cost;
+        let mut remaining_gas = gas_counter - required_gas;
         let original_response = execute_callback(
             request,
             vm,
