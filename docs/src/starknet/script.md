@@ -23,7 +23,7 @@ contracts from within Cairo, its interface, internals and feature set can change
 > Example:
 >
 >```cairo
->  let declare_result = declare('Map', Option::Some(max_fee), Option::Some(nonce));
+>  let declare_result = declare("Map", Option::Some(max_fee), Option::Some(nonce));
 >```
 
 Some of the planned features that will be included in future versions are:
@@ -119,7 +119,7 @@ fn main() {
     let max_fee = 99999999999999999;
     let salt = 0x3;
 
-    let declare_result = declare('Map', Option::Some(max_fee), Option::None);
+    let declare_result = declare("Map", Option::Some(max_fee), Option::None);
 
     let nonce = get_nonce('latest');
     let class_hash = declare_result.class_hash;

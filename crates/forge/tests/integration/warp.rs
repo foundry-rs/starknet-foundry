@@ -8,7 +8,7 @@ use test_utils::{assert_passed, test_case};
 fn warp_basic() {
     let test = test_case!(
         indoc!(
-            r"
+            r#"
             use result::ResultTrait;
             use array::ArrayTrait;
             use option::OptionTrait;
@@ -26,7 +26,7 @@ fn warp_basic() {
             }
 
             fn deploy_warp_checker()  -> IWarpCheckerDispatcher {
-                let contract = declare('WarpChecker');
+                let contract = declare("WarpChecker");
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 IWarpCheckerDispatcher { contract_address }
             }
@@ -67,7 +67,7 @@ fn warp_basic() {
 
             #[test]
             fn warp_multiple() {
-                let contract = declare('WarpChecker');
+                let contract = declare("WarpChecker");
 
                 let warp_checker1 = IWarpCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };
                 let warp_checker2 = IWarpCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };
@@ -94,7 +94,7 @@ fn warp_basic() {
 
             #[test]
             fn warp_all() {
-                let contract = declare('WarpChecker');
+                let contract = declare("WarpChecker");
 
                 let warp_checker1 = IWarpCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };
                 let warp_checker2 = IWarpCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };
@@ -118,7 +118,7 @@ fn warp_basic() {
                 assert(new_block_timestamp1 == old_block_timestamp1, 'Warp not stopped #1');
                 assert(new_block_timestamp2 == old_block_timestamp2, 'Warp not stopped #2');
             }
-        "
+        "#
         ),
         Contract::from_code_path(
             "WarpChecker".to_string(),
@@ -136,7 +136,7 @@ fn warp_basic() {
 fn warp_complex() {
     let test = test_case!(
         indoc!(
-            r"
+            r#"
             use result::ResultTrait;
             use array::ArrayTrait;
             use option::OptionTrait;
@@ -154,14 +154,14 @@ fn warp_complex() {
             }
 
             fn deploy_warp_checker()  -> IWarpCheckerDispatcher {
-                let contract = declare('WarpChecker');
+                let contract = declare("WarpChecker");
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 IWarpCheckerDispatcher { contract_address }
             }
 
             #[test]
             fn warp_complex() {
-                let contract = declare('WarpChecker');
+                let contract = declare("WarpChecker");
 
                 let warp_checker1 = IWarpCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };
                 let warp_checker2 = IWarpCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };
@@ -200,7 +200,7 @@ fn warp_complex() {
                 assert(new_block_timestamp1 == 789, 'Wrong block timestamp #7');
                 assert(new_block_timestamp2 == old_block_timestamp2, 'Wrong block timestamp #8');
             }
-        "
+        "#
         ),
         Contract::from_code_path(
             "WarpChecker".to_string(),

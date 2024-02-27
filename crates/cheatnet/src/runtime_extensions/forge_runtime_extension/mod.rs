@@ -257,7 +257,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .hint_handler
                     .state;
 
-                let contract_name = input_reader.read_felt();
+                let contract_name = input_reader.read_string();
                 let contracts = self.contracts;
                 match declare(*state, &contract_name, contracts) {
                     Ok(class_hash) => {
@@ -324,9 +324,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 ]))
             }
             "var" => {
-                let name = input_reader
-                    .read_short_string()
-                    .unwrap_or_else(|| panic!("Failed to parse var argument as short string"));
+                let name = input_reader.read_string();
 
                 let env_var = self
                     .environment_variables
@@ -390,13 +388,13 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 }
             }
             "read_txt" => {
-                let file_path = input_reader.read_felt();
-                let parsed_content = file_operations::read_txt(&file_path)?;
+                let file_path = input_reader.read_string();
+                let parsed_content = file_operations::read_txt(file_path)?;
                 Ok(CheatcodeHandlingResult::Handled(parsed_content))
             }
             "read_json" => {
-                let file_path = input_reader.read_felt();
-                let parsed_content = file_operations::read_json(&file_path)?;
+                let file_path = input_reader.read_string();
+                let parsed_content = file_operations::read_json(file_path)?;
 
                 Ok(CheatcodeHandlingResult::Handled(parsed_content))
             }

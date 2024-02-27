@@ -45,7 +45,7 @@ fn storage_access_from_tests() {
 fn simple_syscalls() {
     let test = test_case!(
         indoc!(
-            r"
+            r#"
         use starknet::info::{get_execution_info, TxInfo};
         use result::ResultTrait;
         use box::BoxTrait;
@@ -89,15 +89,15 @@ fn simple_syscalls() {
 
             let block_info = exec_info.block_info.unbox();
 
-            let contract_roll = declare('RollChecker');
+            let contract_roll = declare("RollChecker");
             let contract_address_roll = contract_roll.deploy(@ArrayTrait::new()).unwrap();
             let dispatcher_roll = IRollCheckerDispatcher { contract_address: contract_address_roll };
 
-            let contract_warp = declare('WarpChecker');
+            let contract_warp = declare("WarpChecker");
             let contract_address_warp = contract_warp.deploy(@ArrayTrait::new()).unwrap();
             let dispatcher_warp = IWarpCheckerDispatcher { contract_address: contract_address_warp };
             
-            let contract_elect = declare('ElectChecker');
+            let contract_elect = declare("ElectChecker");
             let contract_address_elect = contract_elect.deploy(@ArrayTrait::new()).unwrap();
             let dispatcher_elect = IElectCheckerDispatcher { contract_address: contract_address_elect };
 
@@ -105,7 +105,7 @@ fn simple_syscalls() {
             assert(dispatcher_warp.get_block_timestamp() == block_info.block_timestamp, 'Invalid block timestamp');
             assert(dispatcher_elect.get_sequencer_address() == block_info.sequencer_address, 'Invalid sequencer address');
 
-            let contract = declare('SpoofChecker');
+            let contract = declare("SpoofChecker");
             let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
             let dispatcher = ISpoofCheckerDispatcher { contract_address };
 
@@ -118,7 +118,7 @@ fn simple_syscalls() {
             assert(tx_info.chain_id == dispatcher.get_chain_id(), 'Incorrect chain_id');
             assert(tx_info.nonce == dispatcher.get_nonce(), 'Incorrect nonce');
         }
-    "
+    "#
         ),
         Contract::from_code_path(
             "SpoofChecker".to_string(),
@@ -151,7 +151,7 @@ fn simple_syscalls() {
 fn get_block_hash_syscall_in_dispatcher() {
     let test = test_case!(
         indoc!(
-            r"
+            r#"
         use starknet::info::{get_execution_info, TxInfo};
         use result::ResultTrait;
         use box::BoxTrait;
@@ -168,7 +168,7 @@ fn get_block_hash_syscall_in_dispatcher() {
 
         #[test]
         fn get_block_hash_syscall_in_dispatcher() {
-            let block_hash_checker = declare('BlockHashChecker');
+            let block_hash_checker = declare("BlockHashChecker");
             let block_hash_checker_address = block_hash_checker.deploy(@ArrayTrait::new()).unwrap();
             let block_hash_checker_dispatcher = BlockHashCheckerDispatcher { contract_address: block_hash_checker_address };
             
@@ -177,7 +177,7 @@ fn get_block_hash_syscall_in_dispatcher() {
             let stored_blk_hash = block_hash_checker_dispatcher.read_block_hash();
             assert(stored_blk_hash == 0, 'Wrong stored blk hash');
         }
-    "
+    "#
         ),
         Contract::from_code_path(
             "BlockHashChecker".to_string(),
@@ -195,7 +195,7 @@ fn get_block_hash_syscall_in_dispatcher() {
 fn library_calls() {
     let test = test_case!(
         indoc!(
-            r"
+            r#"
         use result::ResultTrait;
         use starknet::{ ClassHash, library_call_syscall, ContractAddress };
         use snforge_std::{ declare };
@@ -214,7 +214,7 @@ fn library_calls() {
 
         #[test]
         fn library_calls() {
-            let class_hash = declare('LibraryContract').class_hash;
+            let class_hash = declare("LibraryContract").class_hash;
             let lib_dispatcher = ILibraryContractLibraryDispatcher { class_hash };
             let value = lib_dispatcher.get_value();
             assert(value == 0, 'Incorrect state');
@@ -222,7 +222,7 @@ fn library_calls() {
             let value = lib_dispatcher.get_value();
             assert(value == 10, 'Incorrect state');
         }
-    "
+    "#
         ),
         Contract::new(
             "LibraryContract",
@@ -335,7 +335,7 @@ fn get_block_hash() {
 fn cant_call_test_contract() {
     let test = test_case!(
         indoc!(
-            r"
+            r#"
         use result::ResultTrait;
         use starknet::{ClassHash, ContractAddress, deploy_syscall, replace_class_syscall, get_block_hash_syscall};
         use snforge_std::{ declare, ContractClassTrait, test_address };
@@ -347,12 +347,12 @@ fn cant_call_test_contract() {
 
         #[test]
         fn cant_call_test_contract() {
-            let contract = declare('CallsBack');
+            let contract = declare("CallsBack");
             let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
             let dispatcher = ICallsBackDispatcher { contract_address: contract_address };
             dispatcher.call_back(test_address());
         }
-    "
+    "#
         ),
         Contract::new(
             "CallsBack",
@@ -711,7 +711,7 @@ fn inconsistent_syscall_pointers() {
 fn caller_address_in_called_contract() {
     let test = test_case!(
         indoc!(
-            r"
+            r#"
         use result::ResultTrait;
         use array::ArrayTrait;
         use option::OptionTrait;
@@ -732,21 +732,21 @@ fn caller_address_in_called_contract() {
 
         #[test]
         fn caller_address_in_called_contract() {
-            let prank_checker = declare('PrankChecker');
+            let prank_checker = declare("PrankChecker");
             let contract_address_prank_checker = prank_checker.deploy(@ArrayTrait::new()).unwrap();
             let dispatcher_prank_checker = IPrankCheckerDispatcher { contract_address: contract_address_prank_checker };
 
             assert(dispatcher_prank_checker.get_caller_address() == test_address().into(), 'Incorrect caller address');
 
 
-            let constructor_prank_checker = declare('ConstructorPrankChecker');
+            let constructor_prank_checker = declare("ConstructorPrankChecker");
             let contract_address_constructor_prank_checker = constructor_prank_checker.deploy(@ArrayTrait::new()).unwrap();
             let dispatcher_constructor_prank_checker = IConstructorPrankCheckerDispatcher { contract_address: contract_address_constructor_prank_checker };
 
             assert(dispatcher_constructor_prank_checker.get_stored_caller_address() == test_address(), 'Incorrect caller address');
 
         }
-    "
+    "#
         ),
         Contract::from_code_path(
             "PrankChecker".to_string(),

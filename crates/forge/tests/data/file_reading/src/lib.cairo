@@ -52,7 +52,7 @@ mod tests {
 
     #[test]
     fn valid_content_and_same_content_no_matter_whitespaces() {
-        let file = FileTrait::new('data/valid.txt');
+        let file = FileTrait::new("data/valid.txt");
         let content = FileParser::<A>::parse_txt(@file).unwrap();
         let expected = A {
             a: 1,
@@ -65,18 +65,18 @@ mod tests {
 
     #[test]
     fn serialization() {
-        let file = FileTrait::new('data/valid.txt');
+        let file = FileTrait::new("data/valid.txt");
         let content = read_txt(@file);
         compare_with_expected_content(content);
 
-        let file = FileTrait::new('data/valid_diff_spaces.txt');
+        let file = FileTrait::new("data/valid_diff_spaces.txt");
         let content = read_txt(@file);
         compare_with_expected_content(content);
     }
 
     #[test]
     fn valid_content_different_folder() {
-        let file = FileTrait::new('valid_file.txt');
+        let file = FileTrait::new("valid_file.txt");
         let content = read_txt(@file);
         let expected = array!['123', '12dsfwe', 124];
 
@@ -95,42 +95,42 @@ mod tests {
 
     #[test]
     fn non_existent() {
-        let file = FileTrait::new('data/non_existent.txt');
+        let file = FileTrait::new("data/non_existent.txt");
         read_txt(@file);
         assert(1 == 1, '');
     }
 
     #[test]
     fn invalid_quotes() {
-        let file = FileTrait::new('data/invalid_quotes.txt');
+        let file = FileTrait::new("data/invalid_quotes.txt");
         read_txt(@file);
         assert(1 == 1, '');
     }
 
     #[test]
     fn negative_number() {
-        let file = FileTrait::new('data/negative_number.txt');
+        let file = FileTrait::new("data/negative_number.txt");
         read_txt(@file);
         assert(1 == 1, '');
     }
 
     #[test]
     fn non_ascii() {
-        let file = FileTrait::new('data/non_ascii.txt');
+        let file = FileTrait::new("data/non_ascii.txt");
         read_txt(@file);
         assert(1 == 1, '');
     }
 
     #[test]
     fn not_number_without_quotes() {
-        let file = FileTrait::new('data/nan_without_quotes.txt');
+        let file = FileTrait::new("data/nan_without_quotes.txt");
         read_txt(@file);
         assert(1 == 1, '');
     }
 
     #[test]
     fn too_large_number() {
-        let file = FileTrait::new('data/too_large_number.txt');
+        let file = FileTrait::new("data/too_large_number.txt");
         read_txt(@file);
         assert(1 == 1, '');
     }
