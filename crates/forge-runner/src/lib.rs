@@ -17,8 +17,8 @@ use contracts_data::ContractsData;
 use futures::stream::FuturesUnordered;
 use futures::StreamExt;
 
+use build_trace_data::save_trace_data;
 use smol_str::SmolStr;
-use trace_data::save_trace_data;
 
 use std::collections::HashMap;
 use std::default::Default;
@@ -27,12 +27,12 @@ use test_case_summary::{AnyTestCaseSummary, Fuzzing};
 use tokio::sync::mpsc::{channel, Sender};
 use tokio::task::JoinHandle;
 
+pub mod build_trace_data;
 pub mod compiled_runnable;
 pub mod contracts_data;
 pub mod expected_result;
 pub mod test_case_summary;
 pub mod test_crate_summary;
-pub mod trace_data;
 
 mod fuzzer;
 mod gas;

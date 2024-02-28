@@ -1,8 +1,8 @@
 use std::fs;
 
-use forge_runner::trace_data::{TEST_CODE_CONTRACT_NAME, TEST_CODE_FUNCTION_NAME, TRACE_DIR};
+use forge_runner::build_trace_data::{TEST_CODE_CONTRACT_NAME, TEST_CODE_FUNCTION_NAME, TRACE_DIR};
 
-use profiler::trace_data::CallTrace as ProfilerCallTrace;
+use trace_data::CallTrace as ProfilerCallTrace;
 
 use crate::e2e::common::runner::{setup_package, test_runner};
 

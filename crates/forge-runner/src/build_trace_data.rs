@@ -7,18 +7,18 @@ use blockifier::execution::entry_point::{CallEntryPoint, CallType, ExecutionReso
 use cheatnet::constants::{TEST_CONTRACT_CLASS_HASH, TEST_ENTRY_POINT_SELECTOR};
 use cheatnet::state::CallTrace;
 use conversions::IntoConv;
-use profiler::trace_data::{
+use starknet::core::utils::get_selector_from_name;
+use starknet_api::core::ClassHash;
+use starknet_api::deprecated_contract_class::EntryPointType;
+use starknet_api::hash::StarkFelt;
+use starknet_api::stark_felt;
+use trace_data::{
     CallEntryPoint as ProfilerCallEntryPoint, CallTrace as ProfilerCallTrace,
     CallType as ProfilerCallType, ContractAddress,
     DeprecatedSyscallSelector as ProfilerDeprecatedSyscallSelector, EntryPointSelector,
     EntryPointType as ProfilerEntryPointType, ExecutionResources as ProfilerExecutionResources,
     VmExecutionResources,
 };
-use starknet::core::utils::get_selector_from_name;
-use starknet_api::core::ClassHash;
-use starknet_api::deprecated_contract_class::EntryPointType;
-use starknet_api::hash::StarkFelt;
-use starknet_api::stark_felt;
 
 use crate::contracts_data::ContractsData;
 use crate::test_case_summary::{Single, TestCaseSummary};
@@ -91,10 +91,7 @@ pub fn build_profiler_call_entry_point(
     ProfilerCallEntryPoint {
         entry_point_type: build_profiler_entry_point_type(entry_point_type),
         entry_point_selector: EntryPointSelector(format!("{}", entry_point_selector.0)),
-        contract_address: ContractAddress(format!(
-            "{}",
-            storage_address.0.key()
-        )),
+        contract_address: ContractAddress(format!("{}", storage_address.0.key())),
         call_type: build_profiler_call_type(call_type),
         contract_name,
         function_name,

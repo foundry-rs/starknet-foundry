@@ -1,13 +1,13 @@
 use assert_fs::TempDir;
-use forge_runner::trace_data::TRACE_DIR;
+use forge_runner::build_trace_data::TRACE_DIR;
 use std::collections::HashMap;
 use std::fs;
 
-use profiler::trace_data::DeprecatedSyscallSelector::{
+use trace_data::DeprecatedSyscallSelector::{
     CallContract, Deploy, EmitEvent, GetBlockHash, GetExecutionInfo, Keccak, LibraryCall,
     SendMessageToL1, StorageRead, StorageWrite,
 };
-use profiler::trace_data::{
+use trace_data::{
     CallTrace as ProfilerCallTrace, ExecutionResources as ProfilerExecutionResources,
 };
 
