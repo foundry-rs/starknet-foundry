@@ -4,7 +4,7 @@ use regex::Regex;
 
 #[must_use]
 pub fn try_extract_panic_data(err: &str) -> Option<Vec<Felt252>> {
-    let re_felt_array = Regex::new(r"Got an exception while executing a hint: Hint Error: Execution failed\. Failure reason: \w+ \('(.*)'\)\.")
+    let re_felt_array = Regex::new(r"Execution failed\. Failure reason: \w+ \('(.*)'\)\.")
         .expect("Could not create felt panic_data matching regex");
 
     let re_string = Regex::new(r#"(?s)Execution failed\. Failure reason: "(.*?)"\."#)

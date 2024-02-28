@@ -43,7 +43,7 @@ use cheatnet::runtime_extensions::forge_runtime_extension::{
 };
 use cheatnet::state::{BlockInfoReader, CallTrace, CheatnetState, ExtendedStateReader};
 use itertools::chain;
-use runtime::starknet::context::{build_context, set_max_steps, ForgeBlockInfo};
+use runtime::starknet::context::{build_context, set_max_steps};
 use runtime::{ExtendedRuntime, StarknetRuntime};
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
@@ -190,7 +190,7 @@ pub fn run_test_case(
     };
     let block_info = state_reader.get_block_info()?;
 
-    let mut context = build_context(&ForgeBlockInfo::default().into());
+    let mut context = build_context(&block_info);
 
     if let Some(max_n_steps) = runner_config.max_n_steps {
         set_max_steps(&mut context, max_n_steps);

@@ -830,8 +830,6 @@ pub fn get_all_used_resources(runtime: ForgeRuntime) -> UsedResources {
     let l1_handler_payloads_lengths =
         get_l1_handlers_payloads_lengths(&runtime_call_info.inner_calls);
 
-    let top_call_syscalls = starknet_runtime.hint_handler.syscall_counter;
-
     // call representing the test code
     let top_call = runtime
         .extended_runtime
@@ -844,7 +842,7 @@ pub fn get_all_used_resources(runtime: ForgeRuntime) -> UsedResources {
 
     let execution_resources = top_call.borrow().used_execution_resources.clone();
 
-    let mut nested_syscalls = sum_syscalls_recursively(
+    let syscalls = sum_syscalls_recursively(
         &runtime
             .extended_runtime
             .extended_runtime
@@ -853,10 +851,9 @@ pub fn get_all_used_resources(runtime: ForgeRuntime) -> UsedResources {
             .trace_data
             .current_call_stack,
     );
-    sum_syscall_counters(&mut nested_syscalls, &top_call_syscalls);
 
     UsedResources {
-        syscall_counter: nested_syscalls,
+        syscall_counter: syscalls,
         execution_resources,
         l1_handler_payloads_lengths,
         l2_to_l1_payloads_lengths,

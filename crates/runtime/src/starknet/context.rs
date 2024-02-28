@@ -112,7 +112,6 @@ pub struct ForgeBlockInfo {
     pub gas_prices: ForgeGasPrices,
     pub use_kzg_da: bool,
 }
-
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ForgeGasPrices {
     eth_l1_gas_price: NonZeroU128,

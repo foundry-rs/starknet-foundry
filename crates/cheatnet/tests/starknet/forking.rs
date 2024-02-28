@@ -469,7 +469,7 @@ fn using_specified_block_nb_is_cached() {
         let cache = read_cache(
             cache_dir
                 .path()
-                .join(PathBuf::from_str("*312646.json").unwrap())
+                .join(PathBuf::from_str("*312646_v2.json").unwrap())
                 .to_str()
                 .unwrap(),
         );
@@ -501,7 +501,7 @@ fn using_specified_block_nb_is_cached() {
             312_646
         );
         assert_eq!(
-            cache["block_info"].as_object().unwrap()["timestamp"]
+            cache["block_info"].as_object().unwrap()["block_timestamp"]
                 .as_u64()
                 .unwrap(),
             1_695_291_683
@@ -604,7 +604,7 @@ fn test_cache_merging() {
             312_767
         );
         assert_eq!(
-            cache["block_info"].as_object().unwrap()["timestamp"]
+            cache["block_info"].as_object().unwrap()["block_timestamp"]
                 .as_u64()
                 .unwrap(),
             1_695_378_726
@@ -677,7 +677,7 @@ fn test_cached_block_info_merging() {
                 312_767
             );
             assert_eq!(
-                cache["block_info"].as_object().unwrap()["timestamp"]
+                cache["block_info"].as_object().unwrap()["block_timestamp"]
                     .as_u64()
                     .unwrap(),
                 1_695_378_726
