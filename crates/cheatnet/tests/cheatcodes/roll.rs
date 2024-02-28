@@ -688,7 +688,7 @@ fn roll_in_constructor_with_span() {
 }
 
 #[test]
-fn roll_no_contructor_with_span() {
+fn roll_no_constructor_with_span() {
     let mut cheatnet_state = CheatnetState::default();
     let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
