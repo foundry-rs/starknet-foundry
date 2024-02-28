@@ -6,7 +6,7 @@ use crate::{
 };
 
 pub fn emit_event_hook(
-    syscall_handler: &mut SyscallHintProcessor<'_>,
+    syscall_handler: &SyscallHintProcessor<'_>,
     cheatnet_state: &mut CheatnetState,
 ) {
     let contract_address = syscall_handler
@@ -14,7 +14,7 @@ pub fn emit_event_hook(
         .code_address
         .unwrap_or(syscall_handler.call.storage_address);
 
-    for spy_on in &mut cheatnet_state.spies {
+    for spy_on in &cheatnet_state.spies {
         if spy_on.does_spy(contract_address) {
             let event =
                 Event::from_ordered_event(syscall_handler.events.last().unwrap(), contract_address);

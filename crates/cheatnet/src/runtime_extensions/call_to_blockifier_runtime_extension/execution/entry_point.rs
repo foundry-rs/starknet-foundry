@@ -54,7 +54,7 @@ pub fn execute_call_entry_point(
                     .collect(),
             },
         );
-        return Ok(mocked_call_info(entry_point.clone(), ret_data.clone()));
+        return Ok(mocked_call_info(entry_point.clone(), ret_data));
     }
     // endregion
 
@@ -198,7 +198,7 @@ fn get_ret_data_by_call_entry_point(
 
             let ret_data = contract_functions
                 .get(&entrypoint_selector)
-                .map(std::clone::Clone::clone);
+                .map(Clone::clone);
             return ret_data;
         }
     }

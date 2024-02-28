@@ -20,7 +20,6 @@ pub struct TxInfoMock {
 }
 
 impl CheatnetState {
-    #[allow(clippy::too_many_arguments)]
     pub fn start_spoof(&mut self, target: CheatTarget, tx_info_mock: TxInfoMock) {
         start_cheat(
             &mut self.global_spoof,
