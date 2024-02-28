@@ -9,7 +9,7 @@ use starknet::core::types::{
     BlockId, BlockTag,
     BlockTag::{Latest, Pending},
     ContractErrorData, FieldElement,
-    StarknetError::{ContractNotFound, TransactionHashNotFound},
+    StarknetError::{ClassHashNotFound, ContractNotFound, TransactionHashNotFound},
 };
 use starknet::core::utils::UdcUniqueness::{NotUnique, Unique};
 use starknet::core::utils::{UdcUniqueSettings, UdcUniqueness};
