@@ -83,10 +83,21 @@ async fn test_same_contract_twice() {
 
 #[tokio::test]
 async fn test_with_invalid_max_fee() {
+    let contract_dir = duplicate_contract_directory_with_salt(
+        SCRIPTS_DIR.to_owned() + "/map_script/contracts/",
+        "dummy",
+        "19",
+    );
+    let script_dir = copy_script_directory_to_tempdir(
+        SCRIPTS_DIR.to_owned() + "/declare/",
+        vec![contract_dir.as_ref()],
+    );
+    let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
+
     let script_name = "with_invalid_max_fee";
     let args = vec![
         "--accounts-file",
-        "../../accounts/accounts.json",
+        accounts_json_path.as_str(),
         "--account",
         "user2",
         "--url",
@@ -96,7 +107,7 @@ async fn test_with_invalid_max_fee() {
         &script_name,
     ];
 
-    let snapbox = runner(&args).current_dir(SCRIPTS_DIR.to_owned() + "/declare/");
+    let snapbox = runner(&args).current_dir(script_dir.path());
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
         ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::InsufficientMaxFee(())))
@@ -107,10 +118,21 @@ async fn test_with_invalid_max_fee() {
 
 #[tokio::test]
 async fn test_with_invalid_nonce() {
+    let contract_dir = duplicate_contract_directory_with_salt(
+        SCRIPTS_DIR.to_owned() + "/map_script/contracts/",
+        "dummy",
+        "21",
+    );
+    let script_dir = copy_script_directory_to_tempdir(
+        SCRIPTS_DIR.to_owned() + "/declare/",
+        vec![contract_dir.as_ref()],
+    );
+    let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
+
     let script_name = "with_invalid_nonce";
     let args = vec![
         "--accounts-file",
-        "../../accounts/accounts.json",
+        accounts_json_path.as_str(),
         "--account",
         "user4",
         "--url",
@@ -120,7 +142,7 @@ async fn test_with_invalid_nonce() {
         &script_name,
     ];
 
-    let snapbox = runner(&args).current_dir(SCRIPTS_DIR.to_owned() + "/declare/");
+    let snapbox = runner(&args).current_dir(script_dir.path());
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
         ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::InvalidTransactionNonce(())))
@@ -131,10 +153,21 @@ async fn test_with_invalid_nonce() {
 
 #[tokio::test]
 async fn test_insufficient_account_balance() {
+    let contract_dir = duplicate_contract_directory_with_salt(
+        SCRIPTS_DIR.to_owned() + "/map_script/contracts/",
+        "dummy",
+        "21",
+    );
+    let script_dir = copy_script_directory_to_tempdir(
+        SCRIPTS_DIR.to_owned() + "/declare/",
+        vec![contract_dir.as_ref()],
+    );
+    let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
+
     let script_name = "insufficient_account_balance";
     let args = vec![
         "--accounts-file",
-        "../../accounts/accounts.json",
+        accounts_json_path.as_str(),
         "--account",
         "user6",
         "--url",
@@ -144,7 +177,7 @@ async fn test_insufficient_account_balance() {
         &script_name,
     ];
 
-    let snapbox = runner(&args).current_dir(SCRIPTS_DIR.to_owned() + "/declare/");
+    let snapbox = runner(&args).current_dir(script_dir.path());
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
         ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::InsufficientAccountBalance(())))
