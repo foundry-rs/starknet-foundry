@@ -9,14 +9,14 @@ use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{CREATE_KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH};
 use sncast::response::structs::{AccountCreateResponse, Felt};
 use sncast::{
-    extract_or_generate_salt, get_chain_id, get_keystore_password, handle_account_factory_error,
-    handle_rpc_error, parse_number,
+    check_class_hash_exists, extract_or_generate_salt, get_chain_id, get_keystore_password,
+    handle_account_factory_error, parse_number,
 };
 use starknet::accounts::{AccountFactory, OpenZeppelinAccountFactory};
-use starknet::core::types::{BlockId, BlockTag, FeeEstimate, FieldElement, StarknetError};
+use starknet::core::types::{FeeEstimate, FieldElement};
 use starknet::core::utils::get_contract_address;
 use starknet::providers::jsonrpc::HttpTransport;
-use starknet::providers::{JsonRpcClient, Provider, ProviderError};
+use starknet::providers::JsonRpcClient;
 use starknet::signers::{LocalWallet, SigningKey};
 
 #[derive(Args, Debug)]
@@ -108,19 +108,6 @@ pub async fn create(
             "Account already deployed".to_string()
         },
     })
-}
-
-async fn check_class_hash_exists(
-    provider: &JsonRpcClient<HttpTransport>,
-    class_hash: FieldElement,
-) -> Result<()> {
-    match provider.get_class(BlockId::Tag(BlockTag::Latest), class_hash).await {
-        Ok(_) => Ok(()),
-        Err(err) => match err {
-            ProviderError::StarknetError(StarknetError::ClassHashNotFound) => Err(anyhow!("Class with hash {class_hash:#x} is not declared, try using --class-hash with a hash of the declared class")),
-            _ => Err(handle_rpc_error(err))
-        }
-    }
 }
 
 async fn generate_account(
