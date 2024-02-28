@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, Result};
 use clap::Args;
 
 use sncast::response::errors::{RecoverableStarknetCommandError, StarknetCommandError};
@@ -7,7 +7,6 @@ use sncast::{apply_optional, handle_wait_for_tx, WaitForTx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{Account, Call, ConnectedAccount, Execution, SingleOwnerAccount};
 use starknet::core::types::FieldElement;
-use starknet::core::utils::get_selector_from_name;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
@@ -38,7 +37,7 @@ pub struct Invoke {
 
 pub async fn invoke(
     contract_address: FieldElement,
-    entry_point_name: &str,
+    entry_point_name: FieldElement,
     calldata: Vec<FieldElement>,
     max_fee: Option<FieldElement>,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
@@ -47,8 +46,7 @@ pub async fn invoke(
 ) -> Result<InvokeResponse, StarknetCommandError> {
     let call = Call {
         to: contract_address,
-        selector: get_selector_from_name(entry_point_name)
-            .context("Failed to convert entry point selector to FieldElement")?,
+        selector: entry_point_name,
         calldata,
     };
 

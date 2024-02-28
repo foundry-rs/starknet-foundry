@@ -43,7 +43,7 @@ fn l1_handler_execute() {
 
                 let mut l1_handler = L1HandlerTrait::new(
                     contract_address,
-                    function_name: 'process_l1_message'
+                    selector!("process_l1_message")
                 );
 
                 l1_handler.from_address = 0x123;
@@ -66,7 +66,7 @@ fn l1_handler_execute() {
 
                 let mut l1_handler = L1HandlerTrait::new(
                     contract_address,
-                    function_name: 'panicking_l1_handler'
+                    selector!("panicking_l1_handler")
                 );
 
                 l1_handler.from_address = 0x123;

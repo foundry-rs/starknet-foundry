@@ -900,7 +900,7 @@ fn trace_l1_handler() {
                 let checker_address = checker.deploy(@array![]).unwrap();
                 let proxy_address = proxy.deploy(@array![checker_address.into()]).unwrap();
             
-                let mut l1_handler = L1HandlerTrait::new(checker_address, function_name: 'handle_l1_message');
+                let mut l1_handler = L1HandlerTrait::new(checker_address, selector!("handle_l1_message"));
             
                 l1_handler.from_address = 123;
                 l1_handler.payload = array![proxy_address.into()].span();

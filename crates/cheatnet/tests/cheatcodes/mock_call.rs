@@ -30,7 +30,7 @@ fn mock_call_simple() {
 
     runtime_state.cheatnet_state.start_mock_call(
         contract_address,
-        &Felt252::from_short_string("get_thing").unwrap(),
+        Felt252::from_short_string("get_thing").unwrap(),
         &ret_data,
     );
 
@@ -63,7 +63,7 @@ fn mock_call_stop() {
 
     runtime_state.cheatnet_state.start_mock_call(
         contract_address,
-        &Felt252::from_short_string("get_thing").unwrap(),
+        Felt252::from_short_string("get_thing").unwrap(),
         &ret_data,
     );
 
@@ -79,7 +79,7 @@ fn mock_call_stop() {
 
     runtime_state.cheatnet_state.stop_mock_call(
         contract_address,
-        &Felt252::from_short_string("get_thing").unwrap(),
+        Felt252::from_short_string("get_thing").unwrap(),
     );
 
     let output = call_contract(
@@ -110,7 +110,7 @@ fn mock_call_stop_no_start() {
 
     runtime_state.cheatnet_state.stop_mock_call(
         contract_address,
-        &Felt252::from_short_string("get_thing").unwrap(),
+        Felt252::from_short_string("get_thing").unwrap(),
     );
 
     let output = call_contract(
@@ -142,14 +142,14 @@ fn mock_call_double() {
     let ret_data = vec![Felt252::from(123)];
     runtime_state.cheatnet_state.start_mock_call(
         contract_address,
-        &Felt252::from_short_string("get_thing").unwrap(),
+        Felt252::from_short_string("get_thing").unwrap(),
         &ret_data,
     );
 
     let ret_data = vec![Felt252::from(999)];
     runtime_state.cheatnet_state.start_mock_call(
         contract_address,
-        &Felt252::from_short_string("get_thing").unwrap(),
+        Felt252::from_short_string("get_thing").unwrap(),
         &ret_data,
     );
 
@@ -165,7 +165,7 @@ fn mock_call_double() {
 
     runtime_state.cheatnet_state.stop_mock_call(
         contract_address,
-        &Felt252::from_short_string("get_thing").unwrap(),
+        Felt252::from_short_string("get_thing").unwrap(),
     );
 
     let output = call_contract(
@@ -197,7 +197,7 @@ fn mock_call_double_call() {
     let ret_data = vec![Felt252::from(123)];
     runtime_state.cheatnet_state.start_mock_call(
         contract_address,
-        &Felt252::from_short_string("get_thing").unwrap(),
+        Felt252::from_short_string("get_thing").unwrap(),
         &ret_data,
     );
 
@@ -239,7 +239,7 @@ fn mock_call_proxy() {
     let ret_data = vec![Felt252::from(123)];
     runtime_state.cheatnet_state.start_mock_call(
         contract_address,
-        &Felt252::from_short_string("get_thing").unwrap(),
+        Felt252::from_short_string("get_thing").unwrap(),
         &ret_data,
     );
 
@@ -288,7 +288,7 @@ fn mock_call_proxy_with_other_syscall() {
     let ret_data = vec![Felt252::from(123)];
     runtime_state.cheatnet_state.start_mock_call(
         contract_address,
-        &Felt252::from_short_string("get_thing").unwrap(),
+        Felt252::from_short_string("get_thing").unwrap(),
         &ret_data,
     );
 
@@ -338,7 +338,7 @@ fn mock_call_inner_call_no_effect() {
 
     runtime_state.cheatnet_state.start_mock_call(
         contract_address,
-        &Felt252::from_short_string("get_thing").unwrap(),
+        Felt252::from_short_string("get_thing").unwrap(),
         &ret_data,
     );
 
@@ -392,7 +392,7 @@ fn mock_call_library_call_no_effect() {
     let ret_data = vec![Felt252::from(123)];
     runtime_state.cheatnet_state.start_mock_call(
         contract_address,
-        &Felt252::from_short_string("get_constant_thing").unwrap(),
+        Felt252::from_short_string("get_constant_thing").unwrap(),
         &ret_data,
     );
 
@@ -425,7 +425,7 @@ fn mock_call_before_deployment() {
     let ret_data = vec![Felt252::from(123)];
     runtime_state.cheatnet_state.start_mock_call(
         precalculated_address,
-        &Felt252::from_short_string("get_thing").unwrap(),
+        Felt252::from_short_string("get_thing").unwrap(),
         &ret_data,
     );
 
@@ -468,7 +468,7 @@ fn mock_call_not_implemented() {
 
     runtime_state.cheatnet_state.start_mock_call(
         contract_address,
-        &Felt252::from_short_string("get_thing_not_implemented").unwrap(),
+        Felt252::from_short_string("get_thing_not_implemented").unwrap(),
         &ret_data,
     );
 
@@ -497,7 +497,7 @@ fn mock_call_in_constructor() {
     let ret_data = vec![Felt252::from(223)];
     runtime_state.cheatnet_state.start_mock_call(
         balance_contract_address,
-        &Felt252::from_short_string("get_balance").unwrap(),
+        Felt252::from_short_string("get_balance").unwrap(),
         &ret_data,
     );
 
@@ -543,13 +543,13 @@ fn mock_call_two_methods() {
     let ret_data = vec![Felt252::from(123)];
     runtime_state.cheatnet_state.start_mock_call(
         contract_address,
-        &Felt252::from_short_string("get_thing").unwrap(),
+        Felt252::from_short_string("get_thing").unwrap(),
         &ret_data,
     );
 
     runtime_state.cheatnet_state.start_mock_call(
         contract_address,
-        &Felt252::from_short_string("get_constant_thing").unwrap(),
+        Felt252::from_short_string("get_constant_thing").unwrap(),
         &ret_data,
     );
 
@@ -587,7 +587,7 @@ fn mock_call_nonexisting_contract() {
 
     runtime_state.cheatnet_state.start_mock_call(
         contract_address,
-        &Felt252::from_short_string("get_thing").unwrap(),
+        Felt252::from_short_string("get_thing").unwrap(),
         &ret_data,
     );
 

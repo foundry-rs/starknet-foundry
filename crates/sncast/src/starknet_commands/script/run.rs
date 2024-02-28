@@ -76,9 +76,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
         let res = match selector {
             "call" => {
                 let contract_address = input_reader.read_felt().into_();
-                let function_name = input_reader
-                    .read_short_string()
-                    .expect("Failed to convert function name to short string");
+                let function_selector = input_reader.read_felt().into_();
                 let calldata = input_reader.read_vec();
                 let calldata_felts: Vec<FieldElement> = calldata
                     .iter()
@@ -89,7 +87,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     .tokio_runtime
                     .block_on(call::call(
                         contract_address,
-                        &function_name,
+                        function_selector,
                         calldata_felts,
                         self.provider,
                         &BlockId::Tag(Pending),
@@ -188,9 +186,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
             }
             "invoke" => {
                 let contract_address = input_reader.read_felt().into_();
-                let entry_point_name = input_reader
-                    .read_short_string()
-                    .expect("Failed to convert entry point name to short string");
+                let entry_point_name = input_reader.read_felt().into_();
                 let calldata: Vec<FieldElement> = input_reader
                     .read_vec()
                     .iter()
@@ -214,7 +210,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     .tokio_runtime
                     .block_on(invoke::invoke(
                         contract_address,
-                        &entry_point_name,
+                        entry_point_name,
                         calldata,
                         max_fee,
                         &account,

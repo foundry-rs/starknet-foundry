@@ -21,6 +21,7 @@ use sncast::{
     chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_nonce, get_provider,
     NumbersFormat, ValidatedWaitParams, WaitForTx,
 };
+use starknet::core::utils::get_selector_from_name;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use tokio::runtime::Runtime;
@@ -212,7 +213,8 @@ async fn run_async_command(
 
             let mut result = starknet_commands::call::call(
                 call.contract_address,
-                call.function.as_ref(),
+                get_selector_from_name(&call.function)
+                    .context("Failed to convert entry point selector to FieldElement")?,
                 call.calldata,
                 &provider,
                 block_id.as_ref(),
@@ -233,7 +235,8 @@ async fn run_async_command(
             .await?;
             let mut result = starknet_commands::invoke::invoke(
                 invoke.contract_address,
-                &invoke.function,
+                get_selector_from_name(&invoke.function)
+                    .context("Failed to convert entry point selector to FieldElement")?,
                 invoke.calldata,
                 invoke.max_fee,
                 &account,

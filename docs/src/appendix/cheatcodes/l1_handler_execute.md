@@ -17,7 +17,7 @@ arriving from Ethereum.
 ```rust
 struct L1Handler {
     contract_address: ContractAddress,
-    function_name: felt252,
+    function_selector: felt252,
     from_address: felt252,
     payload: Span::<felt252>,
 }
@@ -26,7 +26,7 @@ struct L1Handler {
 where:
 
 - `contract_address` - The target contract address
-- `function_name` - Name of the `#[l1_handler]` function
+- `function_selector` - Name of the `#[l1_handler]` function
 - `from_address` - Ethereum address of the contract that sends the message
 - `payload` - The message payload that may contain any Cairo data structure that can be serialized with
 [Serde](https://book.cairo-lang.org/appendix-03-derivable-traits.html?highlight=serde#serializing-with-serde)
@@ -70,7 +70,7 @@ fn test_l1_handler_execute() {
 
     let mut l1_handler = L1HandlerTrait::new(
         contract_address,
-        function_name: 'process_l1_message'
+        selector!("process_l1_message")
     );
 
     l1_handler.from_address = 0x123;

@@ -12,8 +12,8 @@
 - [`start_spoof`](cheatcodes/start_spoof.md) - changes the transaction context for contracts
 - [`stop_spoof`](cheatcodes/stop_spoof.md) - cancels the `start_spoof` for contracts
 - [`get_class_hash`](cheatcodes/get_class_hash.md) - retrieves a class hash of a contract
-- [`start_mock_call`](cheatcodes/start_mock_call.md) - mocks contract call to a `function_name` of a contract
-- [`stop_mock_call`](cheatcodes/stop_mock_call.md) - cancels the `start_mock_call` for the function `function_name` of a contract
+- [`start_mock_call`](cheatcodes/start_mock_call.md) - mocks contract call to a `function_selector` of a contract
+- [`stop_mock_call`](cheatcodes/stop_mock_call.md) - cancels the `start_mock_call` for the function `function_selector` of a contract
 - [`l1_handler_execute`](cheatcodes/l1_handler_execute.md) - executes a `#[l1_handler]` function to mock a message arriving from Ethereum
 - [`spy_events`](cheatcodes/spy_events.md) - creates `EventSpy` instance which spies on events emitted by contracts
 - [`store`](cheatcodes/store.md) - stores values in targeted contact's storage

@@ -4,25 +4,25 @@ use snforge_std::cheatcodes::contract_class::RevertedTransaction;
 #[derive(Drop, Clone)]
 struct L1Handler {
     contract_address: ContractAddress,
-    function_name: felt252,
+    function_selector: felt252,
     from_address: felt252,
     payload: Span::<felt252>,
 }
 
 trait L1HandlerTrait {
-    fn new(contract_address: ContractAddress, function_name: felt252) -> L1Handler;
+    fn new(contract_address: ContractAddress, function_selector: felt252) -> L1Handler;
     fn execute(self: L1Handler) -> Result::<(), RevertedTransaction>;
 }
 
 impl L1HandlerImpl of L1HandlerTrait {
-    fn new(contract_address: ContractAddress, function_name: felt252) -> L1Handler {
-        L1Handler { contract_address, function_name, from_address: 0, payload: array![].span(), }
+    fn new(contract_address: ContractAddress, function_selector: felt252) -> L1Handler {
+        L1Handler { contract_address, function_selector, from_address: 0, payload: array![].span(), }
     }
 
     fn execute(self: L1Handler) -> Result::<(), RevertedTransaction> {
         let mut inputs: Array::<felt252> = array![
             self.contract_address.into(),
-            self.function_name,
+            self.function_selector,
             self.from_address,
             self.payload.len().into(),
         ];

@@ -28,11 +28,11 @@ fn mock_call_simple() {
 
             let mock_ret_data = 421;
 
-            start_mock_call(contract_address, 'get_thing', mock_ret_data);
+            start_mock_call(contract_address, selector!("get_thing"), mock_ret_data);
             let thing = dispatcher.get_thing();
             assert(thing == 421, 'Incorrect thing');
 
-            stop_mock_call(contract_address, 'get_thing');
+            stop_mock_call(contract_address, selector!("get_thing"));
             let thing = dispatcher.get_thing();
             assert(thing == 420, 'Incorrect thing');
         }
@@ -45,7 +45,7 @@ fn mock_call_simple() {
             let contract_address = contract.deploy(@calldata).unwrap();
 
             let mock_ret_data = 421;
-            start_mock_call(contract_address, 'get_thing', mock_ret_data);
+            start_mock_call(contract_address, selector!("get_thing"), mock_ret_data);
 
             let dispatcher = IMockCheckerDispatcher { contract_address };
             let thing = dispatcher.get_thing();
@@ -97,7 +97,7 @@ fn mock_call_complex_types() {
             let dispatcher = IMockCheckerDispatcher { contract_address };
 
             let mock_ret_data = StructThing {item_one: 412, item_two: 421};
-            start_mock_call(contract_address, 'get_struct_thing', mock_ret_data);
+            start_mock_call(contract_address, selector!("get_struct_thing"), mock_ret_data);
 
             let thing: StructThing = dispatcher.get_struct_thing();
 
@@ -115,7 +115,7 @@ fn mock_call_complex_types() {
             let dispatcher = IMockCheckerDispatcher { contract_address };
 
             let mock_ret_data =  array![ StructThing {item_one: 112, item_two: 121}, StructThing {item_one: 412, item_two: 421} ];
-            start_mock_call(contract_address, 'get_arr_thing', mock_ret_data);
+            start_mock_call(contract_address, selector!("get_arr_thing"), mock_ret_data);
 
             let things: Array<StructThing> = dispatcher.get_arr_thing();
 
