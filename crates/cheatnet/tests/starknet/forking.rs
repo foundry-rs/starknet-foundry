@@ -554,7 +554,7 @@ fn test_cache_merging() {
         let cache = read_cache(
             cache_dir
                 .path()
-                .join(PathBuf::from_str("*312767.json").unwrap())
+                .join(PathBuf::from_str("*312767_v2.json").unwrap())
                 .to_str()
                 .unwrap(),
         );
@@ -665,7 +665,7 @@ fn test_cached_block_info_merging() {
         let cache = read_cache(
             cache_dir
                 .path()
-                .join(PathBuf::from_str("*312767.json").unwrap())
+                .join(PathBuf::from_str("*312767_v2.json").unwrap())
                 .to_str()
                 .unwrap(),
         );
