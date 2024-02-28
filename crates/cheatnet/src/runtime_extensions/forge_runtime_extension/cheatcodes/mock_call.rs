@@ -4,6 +4,7 @@ use cairo_felt::Felt252;
 use conversions::IntoConv;
 use starknet_api::core::{ContractAddress, EntryPointSelector};
 use starknet_api::hash::StarkFelt;
+use std::collections::hash_map::Entry;
 
 impl CheatnetState {
     pub fn start_mock_call(
@@ -24,9 +25,7 @@ impl CheatnetState {
         contract_address: ContractAddress,
         function_selector: Felt252,
     ) {
-        if let std::collections::hash_map::Entry::Occupied(mut e) =
-            self.mocked_functions.entry(contract_address)
-        {
+        if let Entry::Occupied(mut e) = self.mocked_functions.entry(contract_address) {
             let contract_mocked_functions = e.get_mut();
             contract_mocked_functions.remove(&EntryPointSelector(function_selector.into_()));
         }
