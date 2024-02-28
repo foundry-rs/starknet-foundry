@@ -1,8 +1,8 @@
+use crate::build_trace_data::build_profiler_call_trace;
 use crate::compiled_runnable::TestCaseRunnable;
 use crate::contracts_data::ContractsData;
 use crate::expected_result::{ExpectedPanicValue, ExpectedTestResult};
 use crate::gas::check_available_gas;
-use crate::trace_data::ProfilerCallTrace;
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{RunResult, RunResultValue};
@@ -13,6 +13,7 @@ use shared::utils::build_readable_text;
 use std::cell::RefCell;
 use std::option::Option;
 use std::rc::Rc;
+use trace_data::CallTrace;
 
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct GasStatistics {
@@ -75,7 +76,7 @@ pub struct Single;
 impl TestType for Single {
     type GasInfo = u128;
     type TestStatistics = ();
-    type TraceData = ProfilerCallTrace;
+    type TraceData = CallTrace;
 }
 
 /// Summary of running a single test case
@@ -226,7 +227,7 @@ impl TestCaseSummary<Single> {
                         test_statistics: (),
                         gas_info: gas,
                         used_resources,
-                        trace_data: ProfilerCallTrace::from_call_trace(call_trace, contracts_data),
+                        trace_data: build_profiler_call_trace(call_trace, contracts_data),
                     };
                     check_available_gas(&test_case.available_gas, summary)
                 }
@@ -260,7 +261,7 @@ impl TestCaseSummary<Single> {
                         test_statistics: (),
                         gas_info: gas,
                         used_resources,
-                        trace_data: ProfilerCallTrace::from_call_trace(call_trace, contracts_data),
+                        trace_data: build_profiler_call_trace(call_trace, contracts_data),
                     },
                 },
             },

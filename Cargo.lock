@@ -2826,6 +2826,7 @@ dependencies = [
  "tokio",
  "tokio-util",
  "toml_edit 0.21.1",
+ "trace-data",
  "url",
 ]
 
@@ -2856,6 +2857,7 @@ dependencies = [
  "conversions",
  "flatten-serde-json",
  "futures",
+ "hex",
  "itertools 0.11.0",
  "num-bigint",
  "num-integer",
@@ -2874,6 +2876,7 @@ dependencies = [
  "thiserror",
  "tokio",
  "tokio-util",
+ "trace-data",
  "url",
 ]
 
@@ -6257,6 +6260,14 @@ name = "tower-service"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b6bc1c9ce2b5135ac7f93c72918fc37feb872bdc6a5533a8b85eb4b86bfdae52"
+
+[[package]]
+name = "trace-data"
+version = "0.1.0"
+source = "git+https://github.com/software-mansion/cairo-profiler/?rev=6fa3f15#6fa3f15a3df4fd078e2164d007a0565054f0df55"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "tracing"

@@ -59,6 +59,7 @@ tokio-util.workspace = true
 futures.workspace = true
 num-integer.workspace = true
 url.workspace = true
+trace-data.workspace = true
 
 [[bin]]
 name = "snforge"
