@@ -227,10 +227,7 @@ impl TestCaseSummary<Single> {
                         test_statistics: (),
                         gas_info: gas,
                         used_resources,
-                        trace_data: build_profiler_call_trace(
-                            call_trace,
-                            contracts_data,
-                        ),
+                        trace_data: build_profiler_call_trace(call_trace, contracts_data),
                     };
                     check_available_gas(&test_case.available_gas, summary)
                 }
@@ -264,10 +261,7 @@ impl TestCaseSummary<Single> {
                         test_statistics: (),
                         gas_info: gas,
                         used_resources,
-                        trace_data: build_profiler_call_trace(
-                            call_trace,
-                            contracts_data,
-                        ),
+                        trace_data: build_profiler_call_trace(call_trace, contracts_data),
                     },
                 },
             },

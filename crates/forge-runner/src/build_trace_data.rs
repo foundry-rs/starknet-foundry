@@ -30,7 +30,10 @@ pub const TEST_CODE_CONTRACT_NAME: &str = "SNFORGE_TEST_CODE";
 pub const TEST_CODE_FUNCTION_NAME: &str = "SNFORGE_TEST_CODE_FUNCTION";
 
 #[must_use]
-pub fn build_profiler_call_trace(value: &Rc<RefCell<CallTrace>>, contracts_data: &ContractsData) -> ProfilerCallTrace {
+pub fn build_profiler_call_trace(
+    value: &Rc<RefCell<CallTrace>>,
+    contracts_data: &ContractsData,
+) -> ProfilerCallTrace {
     let value = value.borrow();
 
     ProfilerCallTrace {
