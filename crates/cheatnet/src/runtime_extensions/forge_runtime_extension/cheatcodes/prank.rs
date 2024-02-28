@@ -1,4 +1,4 @@
-use crate::state::{start_cheat, stop_cheat, CheatTarget};
+use crate::state::{start_cheat, stop_cheat, CheatSpan, CheatTarget};
 use crate::CheatnetState;
 use starknet_api::core::ContractAddress;
 
@@ -9,6 +9,7 @@ impl CheatnetState {
             &mut self.pranked_contracts,
             target,
             caller_address,
+            CheatSpan::Indefinite,
         );
     }
 

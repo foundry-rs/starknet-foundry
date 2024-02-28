@@ -5,7 +5,7 @@
 Read and parse json file content to an array of felts.
 
 - `file` - a snapshot of an instance of the struct `File` that consists of the following fields:
-  - `path` - Cairo shortstring representing a path to a file relative to a package root.
+  - `path` - Cairo string representing a path to a file relative to a package root.
 
 > ⚠️ **Warning**
 >
@@ -17,7 +17,7 @@ use snforge_std::fs::{ FileTrait, read_json };
 
 #[test]
 fn test_read_json() {
-    let file = FileTrait::new('data/file.json');
+    let file = FileTrait::new("data/file.json");
     let content = read_json(@file);
     // ...
 }

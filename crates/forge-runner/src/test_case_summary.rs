@@ -128,7 +128,7 @@ pub enum AnyTestCaseSummary {
 
 impl<T: TestType> TestCaseSummary<T> {
     #[must_use]
-    pub fn name(&self) -> Option<&String> {
+    pub fn name(&self) -> Option<&str> {
         match self {
             TestCaseSummary::Failed { name, .. }
             | TestCaseSummary::Passed { name, .. }
@@ -138,7 +138,7 @@ impl<T: TestType> TestCaseSummary<T> {
     }
 
     #[must_use]
-    pub fn msg(&self) -> Option<&String> {
+    pub fn msg(&self) -> Option<&str> {
         match self {
             TestCaseSummary::Failed { msg: Some(msg), .. }
             | TestCaseSummary::Passed { msg: Some(msg), .. } => Some(msg),
@@ -215,7 +215,7 @@ impl TestCaseSummary<Single> {
         call_trace: &Rc<RefCell<InternalCallTrace>>,
         contracts_data: &ContractsData,
     ) -> Self {
-        let name = test_case.name.to_string();
+        let name = test_case.name.clone();
         let msg = extract_result_data(&run_result, &test_case.expected_result);
         match run_result.value {
             RunResultValue::Success(_) => match &test_case.expected_result {
@@ -228,7 +228,7 @@ impl TestCaseSummary<Single> {
                         gas_info: gas,
                         used_resources,
                         trace_data: build_profiler_call_trace(
-                            call_trace.borrow().clone(),
+                            call_trace,
                             contracts_data,
                         ),
                     };
@@ -265,7 +265,7 @@ impl TestCaseSummary<Single> {
                         gas_info: gas,
                         used_resources,
                         trace_data: build_profiler_call_trace(
-                            call_trace.borrow().clone(),
+                            call_trace,
                             contracts_data,
                         ),
                     },
@@ -330,7 +330,7 @@ fn extract_result_data(run_result: &RunResult, expectation: &ExpectedTestResult)
 
 impl AnyTestCaseSummary {
     #[must_use]
-    pub fn name(&self) -> Option<&String> {
+    pub fn name(&self) -> Option<&str> {
         match self {
             AnyTestCaseSummary::Fuzzing(case) => case.name(),
             AnyTestCaseSummary::Single(case) => case.name(),
@@ -338,7 +338,7 @@ impl AnyTestCaseSummary {
     }
 
     #[must_use]
-    pub fn msg(&self) -> Option<&String> {
+    pub fn msg(&self) -> Option<&str> {
         match self {
             AnyTestCaseSummary::Fuzzing(case) => case.msg(),
             AnyTestCaseSummary::Single(case) => case.msg(),

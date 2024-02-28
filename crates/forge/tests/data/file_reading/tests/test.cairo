@@ -74,7 +74,7 @@ struct Test {
 
 #[test]
 fn valid_content_and_same_content_no_matter_whitespaces() {
-    let file = FileTrait::new('data/valid.txt');
+    let file = FileTrait::new("data/valid.txt");
     let content = FileParser::<A>::parse_txt(@file).unwrap();
     let expected = A {
         a: 1,
@@ -88,18 +88,18 @@ fn valid_content_and_same_content_no_matter_whitespaces() {
 
 #[test]
 fn serialization() {
-    let file = FileTrait::new('data/valid.txt');
+    let file = FileTrait::new("data/valid.txt");
     let content = read_txt(@file);
     compare_with_expected_content(content);
 
-    let file = FileTrait::new('data/valid_diff_spaces.txt');
+    let file = FileTrait::new("data/valid_diff_spaces.txt");
     let content = read_txt(@file);
     compare_with_expected_content(content);
 }
 
 #[test]
 fn json_serialization() {
-    let file = FileTrait::new('data/json/valid.json');
+    let file = FileTrait::new("data/json/valid.json");
     let content = read_json(@file);
     compare_with_expected_content(content);
 }
@@ -107,14 +107,14 @@ fn json_serialization() {
 #[test]
 #[should_panic]
 fn invalid_json() {
-    let file = FileTrait::new('data/json/invalid.json');
+    let file = FileTrait::new("data/json/invalid.json");
     read_json(@file);
     assert(1 == 1, '');
 }
 
 #[test]
 fn json_with_array() {
-    let file = FileTrait::new('data/json/with_array.json');
+    let file = FileTrait::new("data/json/with_array.json");
     let content = FileParser::<Test>::parse_json(@file).unwrap();
     assert(*content.array[0] == 1, '');
     assert(*content.array[1] == 23, '');
@@ -126,7 +126,7 @@ fn json_with_array() {
 
 #[test]
 fn json_deserialization() {
-    let file = FileTrait::new('data/json/nested_valid.json');
+    let file = FileTrait::new("data/json/nested_valid.json");
     let content = FileParser::<E>::parse_json(@file).unwrap();
 
     let mut output_array = ArrayTrait::new();
@@ -138,7 +138,7 @@ fn json_deserialization() {
 
 #[test]
 fn valid_content_different_folder() {
-    let file = FileTrait::new('valid_file.txt');
+    let file = FileTrait::new("valid_file.txt");
     let content = read_txt(@file);
     let expected = array!['123', '12dsfwe', 124];
 
@@ -157,7 +157,7 @@ fn valid_content_different_folder() {
 
 #[test]
 fn non_existent() {
-    let file = FileTrait::new('data/non_existent.txt');
+    let file = FileTrait::new("data/non_existent.txt");
     read_txt(@file);
     assert(1 == 1, '');
 }
@@ -165,42 +165,42 @@ fn non_existent() {
 #[test]
 #[should_panic]
 fn json_non_existent() {
-    let file = FileTrait::new('data/non_existent.json');
+    let file = FileTrait::new("data/non_existent.json");
     read_json(@file);
     assert(1 == 1, '');
 }
 
 #[test]
 fn invalid_quotes() {
-    let file = FileTrait::new('data/invalid_quotes.txt');
+    let file = FileTrait::new("data/invalid_quotes.txt");
     read_txt(@file);
     assert(1 == 1, '');
 }
 
 #[test]
 fn negative_number() {
-    let file = FileTrait::new('data/negative_number.txt');
+    let file = FileTrait::new("data/negative_number.txt");
     read_txt(@file);
     assert(1 == 1, '');
 }
 
 #[test]
 fn non_ascii() {
-    let file = FileTrait::new('data/non_ascii.txt');
+    let file = FileTrait::new("data/non_ascii.txt");
     read_txt(@file);
     assert(1 == 1, '');
 }
 
 #[test]
 fn not_number_without_quotes() {
-    let file = FileTrait::new('data/nan_without_quotes.txt');
+    let file = FileTrait::new("data/nan_without_quotes.txt");
     read_txt(@file);
     assert(1 == 1, '');
 }
 
 #[test]
 fn too_large_number() {
-    let file = FileTrait::new('data/too_large_number.txt');
+    let file = FileTrait::new("data/too_large_number.txt");
     read_txt(@file);
     assert(1 == 1, '');
 }

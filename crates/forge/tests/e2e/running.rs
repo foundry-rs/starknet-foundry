@@ -914,7 +914,7 @@ fn printing_in_contracts() {
 
 #[test]
 fn incompatible_snforge_std_version_warning() {
-    let temp = setup_package("simple_package");
+    let temp = setup_package("steps");
     let manifest_path = temp.child("Scarb.toml");
     let tempdir = TempDir::new().expect("Failed to create a temporary directory");
 
@@ -945,35 +945,25 @@ fn incompatible_snforge_std_version_warning() {
         [..]Finished[..]
 
 
-        Collected 13 test(s) from simple_package package
-        Running 2 test(s) from src/
-        [PASS] simple_package::tests::test_fib [..]
-        [IGNORE] simple_package::tests::ignored_test
-        Running 11 test(s) from tests/
-        [PASS] tests::contract::call_and_invoke [..]
-        [PASS] tests::ext_function_test::test_my_test [..]
-        [IGNORE] tests::ext_function_test::ignored_test
-        [PASS] tests::ext_function_test::test_simple [..]
-        [PASS] tests::test_simple::test_simple [..]
-        [PASS] tests::test_simple::test_simple2 [..]
-        [PASS] tests::test_simple::test_two [..]
-        [PASS] tests::test_simple::test_two_and_two [..]
-        [FAIL] tests::test_simple::test_failing
+        Collected 4 test(s) from steps package
+        Running 4 test(s) from src/
+        [PASS] steps::tests::steps_570031 [..]
+        [FAIL] steps::tests::steps_3000017
         
         Failure data:
-            0x6661696c696e6720636865636b ('failing check')
+            Could not reach the end of the program. RunResources has no remaining steps.
         
-        [FAIL] tests::test_simple::test_another_failing
+        [FAIL] steps::tests::steps_5700031
         
         Failure data:
-            0x6661696c696e6720636865636b ('failing check')
+            Could not reach the end of the program. RunResources has no remaining steps.
         
-        [PASS] tests::without_prefix::five [..]
-        Tests: 9 passed, 2 failed, 0 skipped, 2 ignored, 0 filtered out
+        [PASS] steps::tests::steps_2999998 [..]
+        Tests: 2 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:
-            tests::test_simple::test_failing
-            tests::test_simple::test_another_failing
+            steps::tests::steps_3000017
+            steps::tests::steps_5700031
         "},
     );
 }

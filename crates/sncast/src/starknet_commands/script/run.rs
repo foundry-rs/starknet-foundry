@@ -70,18 +70,16 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
     fn handle_cheatcode(
         &mut self,
         selector: &str,
-        inputs: Vec<Felt252>,
+        mut input_reader: BufferReader,
         _extended_runtime: &mut Self::Runtime,
     ) -> Result<CheatcodeHandlingResult, EnhancedHintError> {
-        let mut reader = BufferReader::new(&inputs);
-
         let res = match selector {
             "call" => {
-                let contract_address = reader.read_felt().into_();
-                let function_name = reader
+                let contract_address = input_reader.read_felt().into_();
+                let function_name = input_reader
                     .read_short_string()
                     .expect("Failed to convert function name to short string");
-                let calldata = reader.read_vec();
+                let calldata = input_reader.read_vec();
                 let calldata_felts: Vec<FieldElement> = calldata
                     .iter()
                     .map(|el| FieldElement::from_(el.clone()))
@@ -103,11 +101,13 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 Ok(CheatcodeHandlingResult::Handled(res))
             }
             "declare" => {
-                let contract_name = reader
-                    .read_short_string()
-                    .expect("Failed to convert contract name to string");
-                let max_fee = reader.read_option_felt().map(conversions::IntoConv::into_);
-                let nonce = reader.read_option_felt().map(conversions::IntoConv::into_);
+                let contract_name = input_reader.read_string();
+                let max_fee = input_reader
+                    .read_option_felt()
+                    .map(conversions::IntoConv::into_);
+                let nonce = input_reader
+                    .read_option_felt()
+                    .map(conversions::IntoConv::into_);
 
                 let account = self.tokio_runtime.block_on(get_account(
                     &self.config.account,
@@ -138,17 +138,23 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 Ok(CheatcodeHandlingResult::Handled(res))
             }
             "deploy" => {
-                let class_hash = reader.read_felt().into_();
-                let constructor_calldata: Vec<FieldElement> = reader
+                let class_hash = input_reader.read_felt().into_();
+                let constructor_calldata: Vec<FieldElement> = input_reader
                     .read_vec()
                     .iter()
                     .map(|el| FieldElement::from_(el.clone()))
                     .collect();
 
-                let salt = reader.read_option_felt().map(conversions::IntoConv::into_);
-                let unique = reader.read_bool();
-                let max_fee = reader.read_option_felt().map(conversions::IntoConv::into_);
-                let nonce = reader.read_option_felt().map(conversions::IntoConv::into_);
+                let salt = input_reader
+                    .read_option_felt()
+                    .map(conversions::IntoConv::into_);
+                let unique = input_reader.read_bool();
+                let max_fee = input_reader
+                    .read_option_felt()
+                    .map(conversions::IntoConv::into_);
+                let nonce = input_reader
+                    .read_option_felt()
+                    .map(conversions::IntoConv::into_);
 
                 let account = self.tokio_runtime.block_on(get_account(
                     &self.config.account,
@@ -181,17 +187,21 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 Ok(CheatcodeHandlingResult::Handled(res))
             }
             "invoke" => {
-                let contract_address = reader.read_felt().into_();
-                let entry_point_name = reader
+                let contract_address = input_reader.read_felt().into_();
+                let entry_point_name = input_reader
                     .read_short_string()
                     .expect("Failed to convert entry point name to short string");
-                let calldata: Vec<FieldElement> = reader
+                let calldata: Vec<FieldElement> = input_reader
                     .read_vec()
                     .iter()
                     .map(|el| FieldElement::from_(el.clone()))
                     .collect();
-                let max_fee = reader.read_option_felt().map(conversions::IntoConv::into_);
-                let nonce = reader.read_option_felt().map(conversions::IntoConv::into_);
+                let max_fee = input_reader
+                    .read_option_felt()
+                    .map(conversions::IntoConv::into_);
+                let nonce = input_reader
+                    .read_option_felt()
+                    .map(conversions::IntoConv::into_);
 
                 let account = self.tokio_runtime.block_on(get_account(
                     &self.config.account,
@@ -220,7 +230,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 Ok(CheatcodeHandlingResult::Handled(res))
             }
             "get_nonce" => {
-                let block_id = reader
+                let block_id = input_reader
                     .read_short_string()
                     .expect("Failed to convert entry point name to short string");
                 let account = self.tokio_runtime.block_on(get_account(

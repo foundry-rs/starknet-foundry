@@ -372,8 +372,7 @@ fn mock_call_library_call_no_effect() {
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
     let contracts = get_contracts();
-    let contract_name = Felt252::from_short_string("MockChecker").unwrap();
-    let class_hash = declare(&mut cached_state, &contract_name, &contracts).unwrap();
+    let class_hash = declare(&mut cached_state, "MockChecker", &contracts).unwrap();
 
     let contract_address = deploy_wrapper(
         &mut cached_state,
@@ -416,8 +415,7 @@ fn mock_call_before_deployment() {
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
     let contracts = get_contracts();
-    let contract_name = Felt252::from_short_string("MockChecker").unwrap();
-    let class_hash = declare(&mut cached_state, &contract_name, &contracts).unwrap();
+    let class_hash = declare(&mut cached_state, "MockChecker", &contracts).unwrap();
 
     let precalculated_address = runtime_state
         .cheatnet_state
@@ -493,8 +491,7 @@ fn mock_call_in_constructor() {
 
     let contracts = get_contracts();
 
-    let contract_name = Felt252::from_short_string("HelloStarknet").unwrap();
-    let class_hash = declare(&mut cached_state, &contract_name, &contracts).unwrap();
+    let class_hash = declare(&mut cached_state, "HelloStarknet", &contracts).unwrap();
     let balance_contract_address =
         deploy_wrapper(&mut cached_state, &mut runtime_state, &class_hash, &[]).unwrap();
     let ret_data = vec![Felt252::from(223)];
@@ -504,8 +501,7 @@ fn mock_call_in_constructor() {
         &ret_data,
     );
 
-    let contract_name = Felt252::from_short_string("ConstructorMockChecker").unwrap();
-    let class_hash = declare(&mut cached_state, &contract_name, &contracts).unwrap();
+    let class_hash = declare(&mut cached_state, "ConstructorMockChecker", &contracts).unwrap();
     let contract_address = deploy_wrapper(
         &mut cached_state,
         &mut runtime_state,

@@ -237,7 +237,7 @@ trait ILibraryContract<TContractState> {
 
 #[test]
 fn test_library_calls() {
-    let class_hash = declare('LibraryContract').class_hash;
+    let class_hash = declare("LibraryContract").class_hash;
     let lib_dispatcher = ILibraryContractSafeLibraryDispatcher { class_hash };
     let value = lib_dispatcher.get_value().unwrap();
     assert(value == 0, 'Incorrect state');

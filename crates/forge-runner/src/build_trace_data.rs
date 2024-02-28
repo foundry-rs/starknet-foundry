@@ -1,6 +1,8 @@
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
+use std::rc::Rc;
 
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::entry_point::{CallEntryPoint, CallType, ExecutionResources};
@@ -28,17 +30,18 @@ pub const TEST_CODE_CONTRACT_NAME: &str = "SNFORGE_TEST_CODE";
 pub const TEST_CODE_FUNCTION_NAME: &str = "SNFORGE_TEST_CODE_FUNCTION";
 
 #[must_use]
-pub fn build_profiler_call_trace(
-    value: CallTrace,
-    contracts_data: &ContractsData,
-) -> ProfilerCallTrace {
+pub fn build_profiler_call_trace(value: &Rc<RefCell<CallTrace>>, contracts_data: &ContractsData) -> ProfilerCallTrace {
+    let value = value.borrow();
+
     ProfilerCallTrace {
-        entry_point: build_profiler_call_entry_point(value.entry_point, contracts_data),
-        cumulative_resources: build_profiler_execution_resources(value.used_execution_resources),
+        entry_point: build_profiler_call_entry_point(value.entry_point.clone(), contracts_data),
+        cumulative_resources: build_profiler_execution_resources(
+            value.used_execution_resources.clone(),
+        ),
         nested_calls: value
             .nested_calls
-            .into_iter()
-            .map(|c| build_profiler_call_trace(c.borrow().clone(), contracts_data))
+            .iter()
+            .map(|c| build_profiler_call_trace(c, contracts_data))
             .collect(),
     }
 }

@@ -8,7 +8,7 @@ use test_utils::{assert_passed, test_case};
 fn start_and_stop_spoof_single_attribute() {
     let test = test_case!(
         indoc!(
-            r"
+            r#"
             use result::ResultTrait;
             use box::BoxTrait;
             use starknet::info::TxInfo;
@@ -25,7 +25,7 @@ fn start_and_stop_spoof_single_attribute() {
 
             #[test]
             fn start_spoof_single_attribute() {
-                let contract = declare('SpoofChecker');
+                let contract = declare("SpoofChecker");
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ISpoofCheckerDispatcher { contract_address };
 
@@ -48,7 +48,7 @@ fn start_and_stop_spoof_single_attribute() {
 
             #[test]
             fn test_spoof_all_stop_one() {
-                let contract = declare('SpoofChecker');
+                let contract = declare("SpoofChecker");
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ISpoofCheckerDispatcher { contract_address };
 
@@ -92,7 +92,7 @@ fn start_and_stop_spoof_single_attribute() {
                 assert(tx_info.fee_data_availability_mode == expected_tx_info.fee_data_availability_mode, 'Invalid fee_data_av_mode');
                 assert(tx_info.account_deployment_data == expected_tx_info.account_deployment_data, 'Invalid account_deployment_data');
             }
-        "
+        "#
         ),
         Contract::from_code_path(
             "SpoofChecker".to_string(),
@@ -110,7 +110,7 @@ fn start_and_stop_spoof_single_attribute() {
 fn start_spoof_all_attributes_mocked() {
     let test = test_case!(
         indoc!(
-            r"
+            r#"
             use result::ResultTrait;
             use option::OptionTrait;
             use starknet::info::TxInfo;
@@ -142,7 +142,7 @@ fn start_spoof_all_attributes_mocked() {
 
             #[test]
             fn start_spoof_all_attributes_mocked() {
-                let contract = declare('SpoofChecker');
+                let contract = declare("SpoofChecker");
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ISpoofCheckerDispatcher { contract_address };
 
@@ -210,7 +210,7 @@ fn start_spoof_all_attributes_mocked() {
                 let account_deployment_data = dispatcher.get_account_deployment_data();
                 assert(account_deployment_data == array![111, 222].span(), 'Invalid account deployment');
             }
-        "
+        "#
         ),
         Contract::from_code_path(
             "SpoofChecker".to_string(),
@@ -228,7 +228,7 @@ fn start_spoof_all_attributes_mocked() {
 fn start_spoof_cancel_mock_by_setting_attribute_to_none() {
     let test = test_case!(
         indoc!(
-            r"
+            r#"
             use result::ResultTrait;
             use box::BoxTrait;
             use starknet::info::TxInfo;
@@ -245,7 +245,7 @@ fn start_spoof_cancel_mock_by_setting_attribute_to_none() {
 
             #[test]
             fn start_spoof_cancel_mock_by_setting_attribute_to_none() {
-                let contract = declare('SpoofChecker');
+                let contract = declare("SpoofChecker");
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ISpoofCheckerDispatcher { contract_address };
 
@@ -289,7 +289,7 @@ fn start_spoof_cancel_mock_by_setting_attribute_to_none() {
                 assert(tx_info.fee_data_availability_mode == expected_tx_info.fee_data_availability_mode, 'Invalid fee_data_av_mode');
                 assert(tx_info.account_deployment_data == expected_tx_info.account_deployment_data, 'Invalid account_deployment_data');
             }
-        "
+        "#
         ),
         Contract::from_code_path(
             "SpoofChecker".to_string(),
@@ -307,7 +307,7 @@ fn start_spoof_cancel_mock_by_setting_attribute_to_none() {
 fn start_spoof_no_attributes_mocked() {
     let test = test_case!(
         indoc!(
-            r"
+            r#"
             use result::ResultTrait;
             use option::OptionTrait;
             use starknet::info::TxInfo;
@@ -326,7 +326,7 @@ fn start_spoof_no_attributes_mocked() {
 
             #[test]
             fn start_spoof_no_attributes_mocked() {
-                let contract = declare('SpoofChecker');
+                let contract = declare("SpoofChecker");
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ISpoofCheckerDispatcher { contract_address };
 
@@ -361,7 +361,7 @@ fn start_spoof_no_attributes_mocked() {
                 assert(tx_info.fee_data_availability_mode == expected_tx_info.fee_data_availability_mode, 'Invalid fee_data_av_mode');
                 assert(tx_info.account_deployment_data == expected_tx_info.account_deployment_data, 'Invalid account_deployment_data');
             }
-        "
+        "#
         ),
         Contract::from_code_path(
             "SpoofChecker".to_string(),
@@ -379,7 +379,7 @@ fn start_spoof_no_attributes_mocked() {
 fn start_spoof_multiple() {
     let test = test_case!(
         indoc!(
-            r"
+            r#"
             use result::ResultTrait;
             use option::OptionTrait;
             use starknet::info::TxInfo;
@@ -397,7 +397,7 @@ fn start_spoof_multiple() {
 
             #[test]
             fn start_spoof_multiple() {
-                let contract = declare('SpoofChecker');
+                let contract = declare("SpoofChecker");
                 
                 let contract_address_1 = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher_1 = ISpoofCheckerDispatcher { contract_address: contract_address_1 };
@@ -419,7 +419,7 @@ fn start_spoof_multiple() {
                 let transaction_hash = dispatcher_2.get_tx_hash();
                 assert(transaction_hash == 421, 'Invalid tx hash');
             }
-        "
+        "#
         ),
         Contract::from_code_path(
             "SpoofChecker".to_string(),
@@ -438,7 +438,7 @@ fn start_spoof_multiple() {
 fn start_spoof_all() {
     let test = test_case!(
         indoc!(
-            r"
+            r#"
             use result::ResultTrait;
             use option::OptionTrait;
             use starknet::info::TxInfo;
@@ -469,7 +469,7 @@ fn start_spoof_all() {
 
             #[test]
             fn start_spoof_all_one_param() {
-                let contract = declare('SpoofChecker');
+                let contract = declare("SpoofChecker");
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ISpoofCheckerDispatcher { contract_address };
 
@@ -483,7 +483,7 @@ fn start_spoof_all() {
             
             #[test]
             fn start_spoof_all_multiple_params() {
-                let contract = declare('SpoofChecker');
+                let contract = declare("SpoofChecker");
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ISpoofCheckerDispatcher { contract_address };
 
@@ -551,7 +551,7 @@ fn start_spoof_all() {
                 let account_deployment_data = dispatcher.get_account_deployment_data();
                 assert(account_deployment_data == array![111, 222].span(), 'Invalid account deployment');
             }
-        "
+        "#
         ),
         Contract::from_code_path(
             "SpoofChecker".to_string(),
@@ -569,7 +569,7 @@ fn start_spoof_all() {
 fn start_spoof_complex() {
     let test = test_case!(
         indoc!(
-            r"
+            r#"
             use result::ResultTrait;
             use option::OptionTrait;
             use starknet::info::TxInfo;
@@ -587,7 +587,7 @@ fn start_spoof_complex() {
 
             #[test]
             fn start_spoof_complex() {
-                let contract = declare('SpoofChecker');
+                let contract = declare("SpoofChecker");
                 let contract_address_1 = contract.deploy(@array![]).unwrap();
                 let contract_address_2 = contract.deploy(@array![]).unwrap();
                 
@@ -619,7 +619,7 @@ fn start_spoof_complex() {
                 assert(transaction_hash_1 == 821, 'Invalid tx hash');
                 assert(transaction_hash_2 == 821, 'Invalid tx hash');
             }
-        "
+        "#
         ),
         Contract::from_code_path(
             "SpoofChecker".to_string(),
