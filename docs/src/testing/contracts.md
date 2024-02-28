@@ -94,13 +94,6 @@ Sometimes we want to test contracts functions that can panic, like testing that 
 panics on invalid address. For that purpose Starknet also provides a `SafeDispatcher`, that returns a `Result` instead of
 panicking.
 
-> ⚠️ **Warning**
->
-> As of Cairo 2.5.0, the `SafeDispatcher` need special marking with `#[feature("safe_dispatcher")]` before **each** call made with it.
-> For the detailed explanation of this behavior, refer to [the shamans post](https://community.starknet.io/t/cairo-v2-5-0-is-out/112807#safe-dispatchers-15).
-> For the implementation, check the example below.
-
-
 First, let's add a new, panicking function to our contract.
 
 ```rust
@@ -140,6 +133,7 @@ If we called this function in a test, it would result in a failure.
 
 ```rust
 #[test]
+#[feature("safe_dispatcher")]
 fn failing() {
     // ...
 
@@ -173,13 +167,14 @@ Using `SafeDispatcher` we can test that the function in fact panics with an expe
 
 ```rust
 #[test]
+#[feature("safe_dispatcher")]
 fn handling_errors() {
     // ...
 
     let contract_address = contract.deploy(@calldata).unwrap();
     let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
-    
-    #[feature("safe_dispatcher")] // Mandatory tag since cairo 2.5.0
+
+
     match safe_dispatcher.do_a_panic() {
         Result::Ok(_) => panic_with_felt252('shouldve panicked'),
         Result::Err(panic_data) => {
@@ -208,13 +203,13 @@ Similarly, you can handle the panics which use string as an argument (like an `a
 use snforge_std::errors::{ SyscallResultStringErrorTrait, PanicDataOrString };
 // ...
 #[test]
+#[feature("safe_dispatcher")]
 fn handling_string_errors() {
     // ...
     let contract_address = contract.deploy(@calldata).unwrap();
     let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
     
     // Notice the `map_string_error` helper usage here, and different error type
-    #[feature("safe_dispatcher")]
     match safe_dispatcher.do_a_string_panic().map_string_error() { 
         Result::Ok(_) => panic_with_felt252('shouldve panicked'),
         Result::Err(panic_data) => {
@@ -232,6 +227,27 @@ fn handling_string_errors() {
 }
 ```
 You also could skip the de-serialization of the `panic_data`, and not use `map_string_error`, but this way you can actually use assertions on the `ByteArray` that was used to panic. 
+
+> 📝 **Note**
+> 
+> To operate with `SafeDispatcher` it's required to annotage its usage with `#[feature("safe_dispatcher")]`.
+> 
+> There are 3 options:
+> - above the module declaration
+>   ```rust
+>   #[feature("safe_dispatcher")]
+>   mod my_module;    
+>   ```
+> - above the function declaration
+>   ```rust
+>   #[feature("safe_dispatcher")]
+>   fn my_function() { ... }    
+>   ```
+> - directly before the usage
+>   ```rust
+>   #[feature("safe_dispatcher")]
+>   let result = safe_dispatcher.some_function();
+>   ```
 
 ### Expecting Test Failure
 
