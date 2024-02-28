@@ -19,8 +19,8 @@ use cheatnet::state::ExtendedStateReader;
 
 // Put together from a few blockifier functions
 fn calculate_messages_costs(
-    l2_to_l1_payloads_lengths: &Vec<usize>,
-    l1_handler_payloads_lengths: &Vec<usize>,
+    l2_to_l1_payloads_lengths: &[usize],
+    l1_handler_payloads_lengths: &[usize],
 ) -> GasVector {
     let l2_to_l1_segment_length = l2_to_l1_payloads_lengths
         .iter()
