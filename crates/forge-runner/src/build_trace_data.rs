@@ -185,6 +185,7 @@ fn build_profiler_call_type(value: CallType) -> ProfilerCallType {
     }
 }
 
+#[must_use]
 pub fn save_trace_data(test_name: &String, trace_data: &ProfilerCallTrace) -> PathBuf {
     let serialized_trace =
         serde_json::to_string(trace_data).expect("Failed to serialize call trace");

@@ -144,6 +144,7 @@ fn extract_failed_tests(
 }
 
 #[allow(clippy::too_many_arguments)]
+#[allow(clippy::fn_params_excessive_bools)]
 fn combine_configs(
     workspace_root: &Utf8Path,
     exit_first: bool,

@@ -5,6 +5,7 @@ use serde::Deserialize;
 use std::collections::{HashMap, HashSet};
 
 #[allow(clippy::module_name_repetitions)]
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Debug, PartialEq, Default)]
 pub struct ForgeConfig {
     /// Should runner exit after first failed test
@@ -49,6 +50,7 @@ impl ForkTarget {
 }
 
 /// Represents forge config deserialized from Scarb.toml using basic types like String etc.
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Deserialize, Debug, PartialEq, Default)]
 pub(crate) struct RawForgeConfig {
     #[serde(default)]
@@ -64,6 +66,7 @@ pub(crate) struct RawForgeConfig {
     #[serde(default)]
     /// Save execution traces of all test which have passed and are not fuzz tests
     pub save_trace_data: bool,
+    #[serde(default)]
     /// Builds profiles of all test which have passed and are not fuzz tests
     pub build_profile: bool,
     #[serde(default)]

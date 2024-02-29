@@ -243,18 +243,16 @@ pub async fn run_tests_from_crate(
 }
 
 fn maybe_save_execution_data(result: &AnyTestCaseSummary, execution_data_to_save: &ExecutionDataToSave) {
-    if let AnyTestCaseSummary::Single(result) = result {
-        if let TestCaseSummary::Passed { name, trace_data, ..} = result {
-            match execution_data_to_save {
-                &ExecutionDataToSave::Trace => {
-                    let _ = save_trace_data(name, trace_data);
-                }
-                &ExecutionDataToSave::TraceAndProfile => {
-                    let trace_path = save_trace_data(name, trace_data);
-                    run_profiler(name, trace_path);
-                }
-                &ExecutionDataToSave::None => {}
+    if let AnyTestCaseSummary::Single( TestCaseSummary::Passed { name, trace_data, ..} ) = result {
+        match execution_data_to_save {
+            ExecutionDataToSave::Trace => {
+                let _ = save_trace_data(name, trace_data);
             }
+            ExecutionDataToSave::TraceAndProfile => {
+                let trace_path = save_trace_data(name, trace_data);
+                run_profiler(name, trace_path);
+            }
+            ExecutionDataToSave::None => {}
         }
     }
 }
