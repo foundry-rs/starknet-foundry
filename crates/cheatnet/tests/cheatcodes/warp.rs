@@ -10,7 +10,7 @@ use crate::{
 };
 use cairo_felt::Felt252;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
-use cheatnet::state::{CheatTarget, CheatnetState};
+use cheatnet::state::{CheatSpan, CheatTarget, CheatnetState};
 use conversions::IntoConv;
 use starknet_api::core::ContractAddress;
 
@@ -19,11 +19,18 @@ use super::test_environment::TestEnvironment;
 const DEFAULT_BLOCK_TIMESTAMP: u64 = 0;
 
 trait WarpTrait {
+    fn warp(&mut self, target: CheatTarget, timestamp: u128, span: CheatSpan);
     fn start_warp(&mut self, target: CheatTarget, timestamp: u128);
     fn stop_warp(&mut self, contract_address: &ContractAddress);
 }
 
 impl<'a> WarpTrait for TestEnvironment<'a> {
+    fn warp(&mut self, target: CheatTarget, timestamp: u128, span: CheatSpan) {
+        self.runtime_state
+            .cheatnet_state
+            .warp(target, Felt252::from(timestamp), span);
+    }
+
     fn start_warp(&mut self, target: CheatTarget, timestamp: u128) {
         self.runtime_state
             .cheatnet_state
@@ -590,7 +597,7 @@ fn warp_simple_with_span() {
 
     let contract_address = test_env.deploy("WarpChecker", &[]);
 
-    test_env.start_warp(
+    test_env.warp(
         CheatTarget::One(contract_address),
         123,
         CheatSpan::Number(2),
@@ -620,7 +627,7 @@ fn warp_proxy_with_span() {
     let contract_address_1 = test_env.deploy_wrapper(&class_hash, &[]);
     let contract_address_2 = test_env.deploy_wrapper(&class_hash, &[]);
 
-    test_env.start_warp(
+    test_env.warp(
         CheatTarget::One(contract_address_1),
         123,
         CheatSpan::Number(1),
@@ -647,7 +654,7 @@ fn warp_in_constructor_with_span() {
         .cheatnet_state
         .precalculate_address(&class_hash, &[]);
 
-    test_env.start_warp(
+    test_env.warp(
         CheatTarget::One(precalculated_address),
         123,
         CheatSpan::Number(2),
@@ -683,7 +690,7 @@ fn warp_no_contructor_with_span() {
         .cheatnet_state
         .precalculate_address(&class_hash, &[]);
 
-    test_env.start_warp(
+    test_env.warp(
         CheatTarget::One(precalculated_address),
         123,
         CheatSpan::Number(1),
@@ -709,7 +716,7 @@ fn warp_override_span() {
 
     let contract_address = test_env.deploy("WarpChecker", &[]);
 
-    test_env.start_warp(
+    test_env.warp(
         CheatTarget::One(contract_address),
         123,
         CheatSpan::Number(2),
@@ -720,7 +727,7 @@ fn warp_override_span() {
         vec![Felt252::from(123)]
     );
 
-    test_env.start_warp(
+    test_env.warp(
         CheatTarget::One(contract_address),
         321,
         CheatSpan::Indefinite,
@@ -752,7 +759,7 @@ fn warp_library_call_with_span() {
     let class_hash = test_env.declare("WarpChecker", &contracts);
     let contract_address = test_env.deploy("WarpCheckerLibCall", &[]);
 
-    test_env.start_warp(
+    test_env.warp(
         CheatTarget::One(contract_address),
         123,
         CheatSpan::Number(1),
@@ -778,7 +785,7 @@ fn warp_all_span() {
     let contract_address_1 = test_env.deploy("WarpChecker", &[]);
     let contract_address_2 = test_env.deploy("WarpCheckerLibCall", &[]);
 
-    test_env.start_warp(CheatTarget::All, 123, CheatSpan::Number(1));
+    test_env.warp(CheatTarget::All, 123, CheatSpan::Number(1));
 
     assert_success!(
         test_env.call_contract(&contract_address_1, "get_block_timestamp", &[]),
