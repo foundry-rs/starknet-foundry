@@ -9,14 +9,7 @@ use starknet::core::types::{
     BlockId, BlockTag,
     BlockTag::{Latest, Pending},
     ContractErrorData, FieldElement,
-    StarknetError::{
-        BlockNotFound, ClassAlreadyDeclared, ClassHashNotFound, CompilationFailed,
-        CompiledClassHashMismatch, ContractClassSizeIsTooLarge, ContractError, ContractNotFound,
-        DuplicateTx, FailedToReceiveTransaction, InsufficientAccountBalance, InsufficientMaxFee,
-        InvalidTransactionIndex, InvalidTransactionNonce, NonAccount, TransactionExecutionError,
-        TransactionHashNotFound, UnsupportedContractClassVersion, UnsupportedTxVersion,
-        ValidationFailure,
-    },
+    StarknetError::{ClassHashNotFound, ContractNotFound, TransactionHashNotFound},
 };
 use starknet::core::utils::UdcUniqueness::{NotUnique, Unique};
 use starknet::core::utils::{UdcUniqueSettings, UdcUniqueness};
@@ -31,6 +24,7 @@ use starknet::{
 };
 
 use crate::helpers::constants::{WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
+use crate::response::errors::SNCastProviderError;
 use shared::rpc::create_rpc_client;
 use starknet::accounts::{AccountFactoryError, ConnectedAccount};
 use starknet::signers::local_wallet::SignError;
@@ -380,7 +374,7 @@ pub enum WaitForTransactionError {
     #[error("sncast timed out while waiting for transaction to succeed")]
     TimedOut,
     #[error(transparent)]
-    ProviderError(#[from] ProviderError),
+    ProviderError(#[from] SNCastProviderError),
 }
 
 pub async fn wait_for_tx(
@@ -418,7 +412,7 @@ pub async fn wait_for_tx(
                 println!("Request rate limited while waiting for transaction to be accepted");
                 sleep(Duration::from_secs(wait_params.get_retry_interval().into()));
             }
-            Err(err) => return Err(err.into()),
+            Err(err) => return Err(WaitForTransactionError::ProviderError(err.into())),
         };
 
         sleep(Duration::from_secs(wait_params.get_retry_interval().into()));
@@ -431,7 +425,10 @@ async fn get_revert_reason(
     provider: &JsonRpcClient<HttpTransport>,
     tx_hash: FieldElement,
 ) -> Result<&str, WaitForTransactionError> {
-    let receipt = provider.get_transaction_receipt(tx_hash).await?;
+    let receipt = provider
+        .get_transaction_receipt(tx_hash)
+        .await
+        .map_err(SNCastProviderError::from)?;
 
     if let starknet::core::types::ExecutionResult::Reverted { reason } = receipt.execution_result()
     {
@@ -446,54 +443,9 @@ async fn get_revert_reason(
 }
 
 #[must_use]
-pub fn handle_rpc_error(error: ProviderError) -> Error {
-    match error {
-        StarknetError(FailedToReceiveTransaction) => {
-            anyhow!("Node failed to receive transaction")
-        }
-        StarknetError(ContractNotFound) => {
-            anyhow!("There is no contract at the specified address")
-        }
-        StarknetError(BlockNotFound) => anyhow!("Block was not found"),
-        StarknetError(TransactionHashNotFound) => {
-            anyhow!("Transaction with provided hash was not found (does not exist)")
-        }
-        StarknetError(InvalidTransactionIndex) => {
-            anyhow!("There is no transaction with such an index")
-        }
-        StarknetError(ClassHashNotFound) => anyhow!("Provided class hash does not exist"),
-        StarknetError(ContractError(err)) => {
-            anyhow!("An error occurred in the called contract = {err:?}")
-        }
-        StarknetError(InvalidTransactionNonce) => anyhow!("Invalid transaction nonce"),
-        StarknetError(InsufficientMaxFee) => {
-            anyhow!("Max fee is smaller than the minimal transaction cost")
-        }
-        StarknetError(InsufficientAccountBalance) => {
-            anyhow!("Account balance is too small to cover transaction fee")
-        }
-        StarknetError(ClassAlreadyDeclared) => {
-            anyhow!("Contract with the same class hash is already declared")
-        }
-        StarknetError(TransactionExecutionError(err)) => {
-            anyhow!("Transaction execution error = {err:?}")
-        }
-        StarknetError(ValidationFailure(err)) => {
-            anyhow!("Contract failed the validation = {err}")
-        }
-        StarknetError(CompilationFailed) => anyhow!("Contract failed to compile in starknet"),
-        StarknetError(ContractClassSizeIsTooLarge) => {
-            anyhow!("Contract class size is too large")
-        }
-        StarknetError(NonAccount) => anyhow!("No account"),
-        StarknetError(DuplicateTx) => anyhow!("Transaction already exists"),
-        StarknetError(CompiledClassHashMismatch) => anyhow!("Compiled class hash mismatch"),
-        StarknetError(UnsupportedTxVersion) => anyhow!("Unsupported transaction version"),
-        StarknetError(UnsupportedContractClassVersion) => {
-            anyhow!("Unsupported contract class version")
-        }
-        _ => anyhow!("Unknown RPC error"),
-    }
+pub fn handle_rpc_error(error: impl Into<SNCastProviderError>) -> Error {
+    let err: SNCastProviderError = error.into();
+    err.into()
 }
 
 #[must_use]

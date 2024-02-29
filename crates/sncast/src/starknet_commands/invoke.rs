@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Context, Result};
 use clap::Args;
 
-use sncast::response::errors::{RecoverableStarknetCommandError, StarknetCommandError};
+use sncast::response::errors::StarknetCommandError;
 use sncast::response::structs::{Felt, InvokeResponse};
 use sncast::{apply_optional, handle_wait_for_tx, WaitForTx};
 use starknet::accounts::AccountError::Provider;
@@ -78,9 +78,7 @@ pub async fn execute_calls(
         )
         .await
         .map_err(StarknetCommandError::from),
-        Err(Provider(error)) => Err(StarknetCommandError::Recoverable(
-            RecoverableStarknetCommandError::ProviderError(error),
-        )),
+        Err(Provider(error)) => Err(StarknetCommandError::ProviderError(error.into())),
         _ => Err(anyhow!("Unknown RPC error").into()),
     }
 }

@@ -3,7 +3,9 @@ use sncast_std::{
 };
 
 fn second_contract() {
-    let declare_result = declare("Mapa2", Option::None, Option::None);
+    let declare_result = declare("Mapa2", Option::None, Option::None)
+        .expect('mapa2 declare failed');
+
     let deploy_result = deploy(
         declare_result.class_hash,
         ArrayTrait::new(),
@@ -28,7 +30,8 @@ fn main() {
     let salt = 0x3;
 
     let declare_nonce = get_nonce('latest');
-    let declare_result = declare("Mapa", Option::Some(max_fee), Option::Some(declare_nonce));
+    let declare_result = declare("Mapa", Option::Some(max_fee), Option::Some(declare_nonce))
+        .expect('mapa declare failed');
 
     let class_hash = declare_result.class_hash;
     let deploy_nonce = get_nonce('pending');
