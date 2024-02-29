@@ -2,7 +2,7 @@ use crate::common::call_contract;
 use crate::common::state::build_runtime_state;
 use crate::{
     assert_success,
-    common::{deploy_contract, felt_selector_from_name, state::create_cached_state},
+    common::{deploy_contract, felt_selector_from_name, recover_data, state::create_cached_state},
 };
 use blockifier::state::state_api::State;
 use cairo_felt::Felt252;
@@ -29,7 +29,7 @@ fn check_timestamp(
     assert_success!(output, vec![]);
 
     let output = call_contract(state, runtime_state, contract_address, &read_timestamp, &[]);
-    output.recover_data()[0].clone()
+    recover_data(output)[0].clone()
 }
 
 #[test]

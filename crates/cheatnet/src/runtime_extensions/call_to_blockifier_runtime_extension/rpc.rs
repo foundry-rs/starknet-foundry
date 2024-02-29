@@ -194,17 +194,6 @@ impl CallResult {
             }
         }
     }
-
-    #[must_use]
-    pub fn recover_data(self) -> Vec<Felt252> {
-        match self {
-            CallResult::Success { ret_data, .. } => ret_data,
-            CallResult::Failure(failure_type) => match failure_type {
-                CallFailure::Panic { panic_data, .. } => panic_data,
-                CallFailure::Error { msg, .. } => panic!("Call failed with message: {msg}"),
-            },
-        }
-    }
 }
 
 pub fn call_l1_handler(

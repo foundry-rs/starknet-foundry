@@ -4,7 +4,10 @@ use crate::common::state::build_runtime_state;
 use crate::common::{call_contract, deploy_wrapper};
 use crate::{
     assert_success,
-    common::{deploy_contract, felt_selector_from_name, get_contracts, state::create_cached_state},
+    common::{
+        deploy_contract, felt_selector_from_name, get_contracts, recover_data,
+        state::create_cached_state,
+    },
 };
 use blockifier::state::cached_state::{CachedState, GlobalContractCache};
 use cairo_felt::{felt_str, Felt252};
@@ -151,7 +154,7 @@ fn prank_stop() {
         &[],
     );
 
-    let old_address = output.recover_data();
+    let old_address = recover_data(output);
 
     runtime_state.cheatnet_state.start_prank(
         CheatTarget::One(contract_address),
@@ -166,7 +169,7 @@ fn prank_stop() {
         &[],
     );
 
-    let new_address = output.recover_data();
+    let new_address = recover_data(output);
     assert_eq!(new_address, vec![Felt252::from(123)]);
     assert_ne!(old_address, new_address);
 
@@ -181,7 +184,7 @@ fn prank_stop() {
         &selector,
         &[],
     );
-    let changed_back_address = output.recover_data();
+    let changed_back_address = recover_data(output);
 
     assert_eq!(old_address, changed_back_address);
 }
@@ -205,7 +208,7 @@ fn prank_double() {
         &[],
     );
 
-    let old_address = output.recover_data();
+    let old_address = recover_data(output);
 
     runtime_state.cheatnet_state.start_prank(
         CheatTarget::One(contract_address),
@@ -224,7 +227,7 @@ fn prank_double() {
         &[],
     );
 
-    let new_address = output.recover_data();
+    let new_address = recover_data(output);
     assert_eq!(new_address, vec![Felt252::from(123)]);
     assert_ne!(old_address, new_address);
 
@@ -239,7 +242,7 @@ fn prank_double() {
         &selector,
         &[],
     );
-    let changed_back_address = output.recover_data();
+    let changed_back_address = recover_data(output);
 
     assert_eq!(old_address, changed_back_address);
 }
@@ -373,7 +376,7 @@ fn prank_all() {
         &[],
     );
 
-    let old_address = output.recover_data();
+    let old_address = recover_data(output);
 
     runtime_state
         .cheatnet_state
@@ -387,7 +390,7 @@ fn prank_all() {
         &[],
     );
 
-    let new_address = output.recover_data();
+    let new_address = recover_data(output);
     assert_eq!(new_address, vec![Felt252::from(123)]);
     assert_ne!(old_address, new_address);
 
@@ -400,7 +403,7 @@ fn prank_all() {
         &selector,
         &[],
     );
-    let changed_back_address = output.recover_data();
+    let changed_back_address = recover_data(output);
 
     assert_eq!(old_address, changed_back_address);
 }
@@ -428,7 +431,7 @@ fn prank_multiple() {
         &[],
     );
 
-    let old_address1 = output.recover_data();
+    let old_address1 = recover_data(output);
 
     let output = call_contract(
         &mut cached_state,
@@ -438,7 +441,7 @@ fn prank_multiple() {
         &[],
     );
 
-    let old_address2 = output.recover_data();
+    let old_address2 = recover_data(output);
 
     runtime_state.cheatnet_state.start_prank(
         CheatTarget::Multiple(vec![contract_address1, contract_address2]),
@@ -453,7 +456,7 @@ fn prank_multiple() {
         &[],
     );
 
-    let new_address1 = output.recover_data();
+    let new_address1 = recover_data(output);
 
     let output = call_contract(
         &mut cached_state,
@@ -463,7 +466,7 @@ fn prank_multiple() {
         &[],
     );
 
-    let new_address2 = output.recover_data();
+    let new_address2 = recover_data(output);
 
     assert_eq!(new_address1, vec![Felt252::from(123)]);
     assert_eq!(new_address2, vec![Felt252::from(123)]);
@@ -483,7 +486,7 @@ fn prank_multiple() {
         &[],
     );
 
-    let changed_back_address1 = output.recover_data();
+    let changed_back_address1 = recover_data(output);
 
     let output = call_contract(
         &mut cached_state,
@@ -493,7 +496,7 @@ fn prank_multiple() {
         &[],
     );
 
-    let changed_back_address2 = output.recover_data();
+    let changed_back_address2 = recover_data(output);
 
     assert_eq!(old_address1, changed_back_address1);
     assert_eq!(old_address2, changed_back_address2);
@@ -526,7 +529,7 @@ fn prank_all_then_one() {
         &[],
     );
 
-    assert_eq!(output.recover_data(), vec![Felt252::from(123)]);
+    assert_eq!(recover_data(output), vec![Felt252::from(123)]);
 }
 
 #[test]
@@ -556,7 +559,7 @@ fn prank_one_then_all() {
         &[],
     );
 
-    assert_eq!(output.recover_data(), vec![Felt252::from(321)]);
+    assert_eq!(recover_data(output), vec![Felt252::from(321)]);
 }
 
 #[test]

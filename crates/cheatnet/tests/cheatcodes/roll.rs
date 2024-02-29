@@ -3,7 +3,10 @@ use crate::common::state::build_runtime_state;
 use crate::common::{call_contract, deploy_wrapper};
 use crate::{
     assert_success,
-    common::{deploy_contract, felt_selector_from_name, get_contracts, state::create_cached_state},
+    common::{
+        deploy_contract, felt_selector_from_name, get_contracts, recover_data,
+        state::create_cached_state,
+    },
 };
 use cairo_felt::Felt252;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
@@ -139,7 +142,7 @@ fn roll_stop() {
         &[],
     );
 
-    let old_block_number = output.recover_data();
+    let old_block_number = recover_data(output);
 
     runtime_state
         .cheatnet_state
@@ -153,7 +156,7 @@ fn roll_stop() {
         &[],
     );
 
-    let new_block_number = output.recover_data();
+    let new_block_number = recover_data(output);
     assert_eq!(new_block_number, vec![Felt252::from(123)]);
     assert_ne!(old_block_number, new_block_number);
 
@@ -168,7 +171,7 @@ fn roll_stop() {
         &selector,
         &[],
     );
-    let changed_back_block_number = output.recover_data();
+    let changed_back_block_number = recover_data(output);
 
     assert_eq!(old_block_number, changed_back_block_number);
 }
@@ -192,7 +195,7 @@ fn roll_double() {
         &[],
     );
 
-    let old_block_number = output.recover_data();
+    let old_block_number = recover_data(output);
 
     runtime_state
         .cheatnet_state
@@ -209,7 +212,7 @@ fn roll_double() {
         &[],
     );
 
-    let new_block_number = output.recover_data();
+    let new_block_number = recover_data(output);
     assert_eq!(new_block_number, vec![Felt252::from(123)]);
     assert_ne!(old_block_number, new_block_number);
 
@@ -224,7 +227,7 @@ fn roll_double() {
         &selector,
         &[],
     );
-    let changed_back_block_number = output.recover_data();
+    let changed_back_block_number = recover_data(output);
 
     assert_eq!(old_block_number, changed_back_block_number);
 }
@@ -440,7 +443,7 @@ fn roll_all_stop() {
         &[],
     );
 
-    let old_block_number = output.recover_data();
+    let old_block_number = recover_data(output);
 
     runtime_state
         .cheatnet_state
@@ -454,7 +457,7 @@ fn roll_all_stop() {
         &[],
     );
 
-    let new_block_number = output.recover_data();
+    let new_block_number = recover_data(output);
     assert_eq!(new_block_number, vec![Felt252::from(123)]);
     assert_ne!(old_block_number, new_block_number);
 
@@ -467,7 +470,7 @@ fn roll_all_stop() {
         &selector,
         &[],
     );
-    let changed_back_block_number = output.recover_data();
+    let changed_back_block_number = recover_data(output);
 
     assert_eq!(old_block_number, changed_back_block_number);
 }
@@ -497,7 +500,7 @@ fn roll_multiple() {
         &[],
     );
 
-    let old_block_number1 = output.recover_data();
+    let old_block_number1 = recover_data(output);
 
     let output = call_contract(
         &mut cached_state,
@@ -507,7 +510,7 @@ fn roll_multiple() {
         &[],
     );
 
-    let old_block_number2 = output.recover_data();
+    let old_block_number2 = recover_data(output);
 
     runtime_state.cheatnet_state.start_roll(
         CheatTarget::Multiple(vec![contract_address1, contract_address2]),
@@ -522,7 +525,7 @@ fn roll_multiple() {
         &[],
     );
 
-    let new_block_number1 = output.recover_data();
+    let new_block_number1 = recover_data(output);
 
     let output = call_contract(
         &mut cached_state,
@@ -532,7 +535,7 @@ fn roll_multiple() {
         &[],
     );
 
-    let new_block_number2 = output.recover_data();
+    let new_block_number2 = recover_data(output);
 
     assert_eq!(new_block_number1, vec![Felt252::from(123)]);
     assert_eq!(new_block_number2, vec![Felt252::from(123)]);
@@ -552,7 +555,7 @@ fn roll_multiple() {
         &[],
     );
 
-    let changed_back_block_number1 = output.recover_data();
+    let changed_back_block_number1 = recover_data(output);
 
     let output = call_contract(
         &mut cached_state,
@@ -562,7 +565,7 @@ fn roll_multiple() {
         &[],
     );
 
-    let changed_back_block_number2 = output.recover_data();
+    let changed_back_block_number2 = recover_data(output);
 
     assert_eq!(old_block_number1, changed_back_block_number1);
     assert_eq!(old_block_number2, changed_back_block_number2);

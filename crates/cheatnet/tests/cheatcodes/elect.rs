@@ -3,7 +3,10 @@ use crate::common::state::build_runtime_state;
 use crate::common::{call_contract, deploy_wrapper};
 use crate::{
     assert_success,
-    common::{deploy_contract, felt_selector_from_name, get_contracts, state::create_cached_state},
+    common::{
+        deploy_contract, felt_selector_from_name, get_contracts, recover_data,
+        state::create_cached_state,
+    },
 };
 use cairo_felt::Felt252;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
@@ -140,7 +143,7 @@ fn elect_stop() {
         &[],
     );
 
-    let old_sequencer_address = output.recover_data();
+    let old_sequencer_address = recover_data(output);
 
     runtime_state.cheatnet_state.start_elect(
         CheatTarget::One(contract_address),
@@ -155,7 +158,7 @@ fn elect_stop() {
         &[],
     );
 
-    let new_sequencer_address = output.recover_data();
+    let new_sequencer_address = recover_data(output);
     assert_eq!(new_sequencer_address, vec![Felt252::from(123)]);
     assert_ne!(old_sequencer_address, new_sequencer_address);
 
@@ -170,7 +173,7 @@ fn elect_stop() {
         &selector,
         &[],
     );
-    let changed_back_sequencer_address = output.recover_data();
+    let changed_back_sequencer_address = recover_data(output);
 
     assert_eq!(old_sequencer_address, changed_back_sequencer_address);
 }
@@ -194,7 +197,7 @@ fn elect_double() {
         &[],
     );
 
-    let old_sequencer_address = output.recover_data();
+    let old_sequencer_address = recover_data(output);
 
     runtime_state.cheatnet_state.start_elect(
         CheatTarget::One(contract_address),
@@ -213,7 +216,7 @@ fn elect_double() {
         &[],
     );
 
-    let new_sequencer_address = output.recover_data();
+    let new_sequencer_address = recover_data(output);
     assert_eq!(new_sequencer_address, vec![Felt252::from(123)]);
     assert_ne!(old_sequencer_address, new_sequencer_address);
 
@@ -228,7 +231,7 @@ fn elect_double() {
         &selector,
         &[],
     );
-    let changed_back_sequencer_address = output.recover_data();
+    let changed_back_sequencer_address = recover_data(output);
 
     assert_eq!(old_sequencer_address, changed_back_sequencer_address);
 }
@@ -448,7 +451,7 @@ fn elect_all_stop() {
         &[],
     );
 
-    let old_sequencer_address = output.recover_data();
+    let old_sequencer_address = recover_data(output);
 
     runtime_state
         .cheatnet_state
@@ -462,7 +465,7 @@ fn elect_all_stop() {
         &[],
     );
 
-    let new_sequencer_address = output.recover_data();
+    let new_sequencer_address = recover_data(output);
     assert_eq!(new_sequencer_address, vec![Felt252::from(123)]);
     assert_ne!(old_sequencer_address, new_sequencer_address);
 
@@ -475,7 +478,7 @@ fn elect_all_stop() {
         &selector,
         &[],
     );
-    let changed_back_sequencer_address = output.recover_data();
+    let changed_back_sequencer_address = recover_data(output);
 
     assert_eq!(old_sequencer_address, changed_back_sequencer_address);
 }
@@ -505,7 +508,7 @@ fn elect_multiple() {
         &[],
     );
 
-    let old_sequencer_address1 = output.recover_data();
+    let old_sequencer_address1 = recover_data(output);
 
     let output = call_contract(
         &mut cached_state,
@@ -515,7 +518,7 @@ fn elect_multiple() {
         &[],
     );
 
-    let old_sequencer_address2 = output.recover_data();
+    let old_sequencer_address2 = recover_data(output);
 
     runtime_state.cheatnet_state.start_elect(
         CheatTarget::Multiple(vec![contract_address1, contract_address2]),
@@ -530,7 +533,7 @@ fn elect_multiple() {
         &[],
     );
 
-    let new_sequencer_address1 = output.recover_data();
+    let new_sequencer_address1 = recover_data(output);
 
     let output = call_contract(
         &mut cached_state,
@@ -540,7 +543,7 @@ fn elect_multiple() {
         &[],
     );
 
-    let new_sequencer_address2 = output.recover_data();
+    let new_sequencer_address2 = recover_data(output);
 
     assert_eq!(new_sequencer_address1, vec![Felt252::from(123)]);
     assert_eq!(new_sequencer_address2, vec![Felt252::from(123)]);
@@ -560,7 +563,7 @@ fn elect_multiple() {
         &[],
     );
 
-    let changed_back_sequencer_address1 = output.recover_data();
+    let changed_back_sequencer_address1 = recover_data(output);
 
     let output = call_contract(
         &mut cached_state,
@@ -570,7 +573,7 @@ fn elect_multiple() {
         &[],
     );
 
-    let changed_back_sequencer_address2 = output.recover_data();
+    let changed_back_sequencer_address2 = recover_data(output);
 
     assert_eq!(old_sequencer_address1, changed_back_sequencer_address1);
     assert_eq!(old_sequencer_address2, changed_back_sequencer_address2);

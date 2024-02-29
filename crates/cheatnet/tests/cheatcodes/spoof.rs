@@ -4,7 +4,7 @@ use crate::{
     assert_success,
     common::{
         call_contract_getter_by_name, deploy_contract, felt_selector_from_name, get_contracts,
-        state::create_cached_state,
+        recover_data, state::create_cached_state,
     },
 };
 use blockifier::state::state_api::State;
@@ -139,7 +139,7 @@ fn get_tx_info(
 ) -> TxInfo {
     let get_tx_info_output =
         call_contract_getter_by_name(state, runtime_state, contract_address, "get_tx_info");
-    let tx_info_data = get_tx_info_output.recover_data();
+    let tx_info_data = recover_data(get_tx_info_output);
     TxInfo::deserialize(&tx_info_data)
 }
 
