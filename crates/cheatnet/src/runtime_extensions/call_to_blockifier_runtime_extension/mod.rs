@@ -18,10 +18,10 @@ use crate::constants::TEST_ADDRESS;
 use cairo_vm::vm::{errors::hint_errors::HintError, vm_core::VirtualMachine};
 use conversions::FromConv;
 use runtime::{ExtendedRuntime, ExtensionLogic, SyscallHandlingResult, SyscallPtrAccess};
-use starknet_api::core::PatriciaKey;
+use starknet_api::core::{ContractAddress, PatriciaKey};
 use starknet_api::deprecated_contract_class::EntryPointType;
-use starknet_api::hash::StarkHash;
-use starknet_api::{core::ContractAddress, hash::StarkFelt, patricia_key};
+use starknet_api::hash::{StarkFelt, StarkHash};
+use starknet_api::{contract_address, patricia_key};
 
 use crate::state::CheatnetState;
 
@@ -111,7 +111,7 @@ impl ExecuteCall for CallContractRequest {
             entry_point_selector: self.function_selector,
             calldata: self.calldata,
             storage_address: contract_address,
-            caller_address: ContractAddress(patricia_key!(TEST_ADDRESS)),
+            caller_address: contract_address!(TEST_ADDRESS),
             call_type: CallType::Call,
             initial_gas: u64::MAX,
         };
@@ -139,7 +139,7 @@ impl ExecuteCall for LibraryCallRequest {
             entry_point_type: EntryPointType::External,
             entry_point_selector: self.function_selector,
             calldata: self.calldata,
-            storage_address: ContractAddress(patricia_key!(TEST_ADDRESS)),
+            storage_address: contract_address!(TEST_ADDRESS),
             caller_address: ContractAddress::default(),
             call_type: CallType::Delegate,
             initial_gas: u64::MAX,
