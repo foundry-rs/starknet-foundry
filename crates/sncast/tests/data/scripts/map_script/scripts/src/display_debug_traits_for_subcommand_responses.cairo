@@ -25,7 +25,8 @@ fn main() {
         true,
         Option::Some(max_fee),
         Option::Some(deploy_nonce)
-    );
+    )
+        .expect('deploy failed');
     println!("deploy_result: {}", deploy_result);
     println!("debug deploy_result: {:?}", deploy_result);
 

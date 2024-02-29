@@ -305,28 +305,32 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     self.config.keystore.clone(),
                 ))?;
 
-                let deploy_response = self
-                    .tokio_runtime
-                    .block_on(deploy::deploy(
-                        class_hash,
-                        constructor_calldata,
-                        salt,
-                        unique,
-                        max_fee,
-                        &account,
-                        nonce,
-                        WaitForTx {
-                            wait: true,
-                            wait_params: self.config.wait_params,
-                        },
-                    ))
-                    .map_err(handle_starknet_command_error)?;
-
-                let res: Vec<Felt252> = vec![
-                    Felt252::from_(deploy_response.contract_address.0),
-                    Felt252::from_(deploy_response.transaction_hash.0),
-                ];
-                Ok(CheatcodeHandlingResult::Handled(res))
+                match self.tokio_runtime.block_on(deploy::deploy(
+                    class_hash,
+                    constructor_calldata,
+                    salt,
+                    unique,
+                    max_fee,
+                    &account,
+                    nonce,
+                    WaitForTx {
+                        wait: true,
+                        wait_params: self.config.wait_params,
+                    },
+                )) {
+                    Ok(deploy_response) => {
+                        let res: Vec<Felt252> = vec![
+                            Felt252::from(0),
+                            Felt252::from_(deploy_response.contract_address.0),
+                            Felt252::from_(deploy_response.transaction_hash.0),
+                        ];
+                        Ok(CheatcodeHandlingResult::Handled(res))
+                    }
+                    Err(err) => {
+                        let res = handle_starknet_command_error_in_script(&err);
+                        Ok(CheatcodeHandlingResult::Handled(res))
+                    }
+                }
             }
             "invoke" => {
                 let contract_address = input_reader.read_felt().into_();

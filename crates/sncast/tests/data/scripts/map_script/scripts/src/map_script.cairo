@@ -13,7 +13,8 @@ fn second_contract() {
         false,
         Option::None,
         Option::None
-    );
+    )
+        .expect('mapa deploy failed');
     assert(deploy_result.transaction_hash != 0, deploy_result.transaction_hash);
 
     let invoke_result = invoke(
@@ -42,7 +43,8 @@ fn main() {
         true,
         Option::Some(max_fee),
         Option::Some(deploy_nonce)
-    );
+    )
+        .expect('mapa deploy failed');
     assert(deploy_result.transaction_hash != 0, deploy_result.transaction_hash);
 
     let invoke_nonce = get_nonce('pending');

@@ -170,7 +170,7 @@ pub fn declare(
     result_data
 }
 
-#[derive(Drop, Clone, Debug)]
+#[derive(Drop, Clone, Debug, Serde)]
 pub struct DeployResult {
     pub contract_address: ContractAddress,
     pub transaction_hash: felt252,
@@ -194,7 +194,7 @@ pub fn deploy(
     unique: bool,
     max_fee: Option<felt252>,
     nonce: Option<felt252>
-) -> DeployResult {
+) -> Result<DeployResult, ScriptCommandError> {
     let class_hash_felt: felt252 = class_hash.into();
     let mut inputs = array![class_hash_felt];
 
@@ -216,14 +216,14 @@ pub fn deploy(
     inputs.append_span(max_fee_serialized.span());
     inputs.append_span(nonce_serialized.span());
 
-    let buf = cheatcode::<'deploy'>(inputs.span());
+    let mut buf = cheatcode::<'deploy'>(inputs.span());
 
-    let contract_address: ContractAddress = (*buf[0])
-        .try_into()
-        .expect('Invalid contract address value');
-    let transaction_hash = *buf[1];
+    let mut result_data: Result<DeployResult, ScriptCommandError> = Serde::<
+        Result<DeployResult>
+    >::deserialize(ref buf)
+        .expect('deploy deserialize failed');
 
-    DeployResult { contract_address, transaction_hash }
+    result_data
 }
 
 #[derive(Drop, Clone, Debug)]
