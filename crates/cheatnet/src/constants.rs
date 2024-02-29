@@ -17,7 +17,7 @@ use runtime::starknet::state::DictStateReader;
 use starknet_api::core::{ClassHash, ContractAddress, PatriciaKey};
 use starknet_api::hash::StarkHash;
 use starknet_api::transaction::Calldata;
-use starknet_api::{class_hash, patricia_key};
+use starknet_api::{class_hash, contract_address, patricia_key};
 
 pub const MAX_FEE: u128 = 1_000_000 * 100_000_000_000; // 1000000 * min_gas_price.
 pub const INITIAL_BALANCE: u128 = 10 * MAX_FEE;
@@ -63,8 +63,8 @@ pub fn build_testing_state() -> DictStateReader {
         (test_contract_class_hash, contract_class_no_entrypoints()),
     ]);
 
-    let test_erc20_address = ContractAddress(patricia_key!(ERC20_CONTRACT_ADDRESS));
-    let test_address = ContractAddress(patricia_key!(TEST_ADDRESS));
+    let test_erc20_address = contract_address!(ERC20_CONTRACT_ADDRESS);
+    let test_address = contract_address!(TEST_ADDRESS);
     let address_to_class_hash = HashMap::from([
         (test_erc20_address, test_erc20_class_hash),
         (test_address, test_contract_class_hash),
@@ -85,11 +85,11 @@ pub fn build_test_entry_point() -> CallEntryPoint {
     let entry_point_selector = create_entry_point_selector(&test_selector);
     CallEntryPoint {
         class_hash: None,
-        code_address: Some(ContractAddress(patricia_key!(TEST_ADDRESS))),
+        code_address: Some(contract_address!(TEST_ADDRESS)),
         entry_point_type: EntryPointType::External,
         entry_point_selector,
         calldata: Calldata(Arc::new(vec![])),
-        storage_address: ContractAddress(patricia_key!(TEST_ADDRESS)),
+        storage_address: contract_address!(TEST_ADDRESS),
         caller_address: ContractAddress::default(),
         call_type: CallType::Call,
         initial_gas: u64::MAX,
