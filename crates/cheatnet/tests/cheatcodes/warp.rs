@@ -678,7 +678,7 @@ fn warp_in_constructor_with_span() {
 }
 
 #[test]
-fn warp_no_contructor_with_span() {
+fn warp_no_constructor_with_span() {
     let mut cheatnet_state = CheatnetState::default();
     let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
