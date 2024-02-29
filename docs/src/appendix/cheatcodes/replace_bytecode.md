@@ -55,7 +55,7 @@ We can use `replace_bytecode` in a test to change the class hash for contracts:
 use snforge_std::{replace_bytecode, CheatTarget};
 
 #[test]
-fn test_warp() {
+fn test_replace_bytecode() {
     // ...
 
     dispatcher.set(50);
