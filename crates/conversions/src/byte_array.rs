@@ -31,13 +31,13 @@ impl ByteArray {
     pub fn serialize_with_magic(self) -> Vec<Felt252> {
         chain!(
             [Felt252::from_str_radix(BYTE_ARRAY_MAGIC, 16).unwrap(),],
-            self.serialize().into_iter()
+            self.serialize_no_magic().into_iter()
         )
         .collect()
     }
 
     #[must_use]
-    pub fn serialize(self) -> Vec<Felt252> {
+    pub fn serialize_no_magic(self) -> Vec<Felt252> {
         let mut result = Vec::with_capacity(self.words.len() + 3);
 
         result.push(self.words.len().into());

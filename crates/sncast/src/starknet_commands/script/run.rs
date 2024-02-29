@@ -58,12 +58,12 @@ impl SerializeAsFelt252 for StarknetCommandError {
         match self {
             StarknetCommandError::UnknownError(err) => {
                 let mut res = vec![Felt252::from(0)];
-                res.extend(ByteArray::from(err.to_string().as_str()).serialize());
+                res.extend(ByteArray::from(err.to_string().as_str()).serialize_no_magic());
                 res
             }
             StarknetCommandError::ContractArtifactsNotFound(err) => {
                 let mut res = vec![Felt252::from(1)];
-                res.extend(ByteArray::from(err.data.as_str()).serialize());
+                res.extend(ByteArray::from(err.data.as_str()).serialize_no_magic());
                 res
             }
             StarknetCommandError::WaitForTransactionError(err) => {
@@ -93,7 +93,7 @@ impl SerializeAsFelt252 for SNCastProviderError {
             }
             SNCastProviderError::UnknownError(err) => {
                 let mut res = vec![Felt252::from(2)];
-                res.extend(ByteArray::from(err.to_string().as_str()).serialize());
+                res.extend(ByteArray::from(err.to_string().as_str()).serialize_no_magic());
                 res
             }
         }
@@ -111,12 +111,12 @@ impl SerializeAsFelt252 for SNCastStarknetError {
             SNCastStarknetError::TransactionHashNotFound => vec![Felt252::from(5)],
             SNCastStarknetError::ContractError(err) => {
                 let mut res = vec![Felt252::from(6)];
-                res.extend(ByteArray::from(err.revert_error.as_str()).serialize());
+                res.extend(ByteArray::from(err.revert_error.as_str()).serialize_no_magic());
                 res
             }
             SNCastStarknetError::TransactionExecutionError(err) => {
                 let mut res = vec![Felt252::from(7), Felt252::from(err.transaction_index)];
-                res.extend(ByteArray::from(err.execution_error.as_str()).serialize());
+                res.extend(ByteArray::from(err.execution_error.as_str()).serialize_no_magic());
                 res
             }
             SNCastStarknetError::ClassAlreadyDeclared => vec![Felt252::from(8)],
@@ -125,7 +125,7 @@ impl SerializeAsFelt252 for SNCastStarknetError {
             SNCastStarknetError::InsufficientAccountBalance => vec![Felt252::from(11)],
             SNCastStarknetError::ValidationFailure(err) => {
                 let mut res = vec![Felt252::from(12)];
-                res.extend(ByteArray::from(err.as_str()).serialize());
+                res.extend(ByteArray::from(err.as_str()).serialize_no_magic());
                 res
             }
             SNCastStarknetError::CompilationFailed => vec![Felt252::from(13)],
@@ -137,7 +137,7 @@ impl SerializeAsFelt252 for SNCastStarknetError {
             SNCastStarknetError::UnsupportedContractClassVersion => vec![Felt252::from(19)],
             SNCastStarknetError::UnexpectedError(err) => {
                 let mut res = vec![Felt252::from(20)];
-                res.extend(ByteArray::from(err.to_string().as_str()).serialize());
+                res.extend(ByteArray::from(err.to_string().as_str()).serialize_no_magic());
                 res
             }
         }
@@ -168,7 +168,7 @@ impl SerializeAsFelt252 for TransactionError {
             TransactionError::Rejected => vec![Felt252::from(0)],
             TransactionError::Reverted(err) => {
                 let mut res = vec![Felt252::from(1)];
-                res.extend(ByteArray::from(err.data.as_str()).serialize());
+                res.extend(ByteArray::from(err.data.as_str()).serialize_no_magic());
                 res
             }
         }
