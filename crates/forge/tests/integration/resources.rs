@@ -77,13 +77,13 @@ fn syscalls_count() {
             
             #[test]
             fn deploy() {
-                let contract = declare('HelloStarknet');
+                let contract = declare("HelloStarknet");
                 deploy_syscall(contract.class_hash, 0, array![].span(), false).unwrap_syscall();
             }
             
             #[test]
             fn storage_read() {
-                let contract = declare('HelloStarknet');
+                let contract = declare("HelloStarknet");
                 let (address, _) = deploy_syscall(contract.class_hash, 0, array![].span(), false)
                     .unwrap_syscall();
             
@@ -92,7 +92,7 @@ fn syscalls_count() {
             
             #[test]
             fn storage_write() {
-                let contract = declare('HelloStarknet');
+                let contract = declare("HelloStarknet");
                 let (address, _) = deploy_syscall(contract.class_hash, 0, array![].span(), false)
                     .unwrap_syscall();
             
@@ -152,7 +152,7 @@ fn syscalls_count() {
 fn accumulate_syscalls() {
     let test = test_case!(
         indoc!(
-            r"
+            r#"
             use snforge_std::{ declare, ContractClassTrait };
 
             #[starknet::interface]
@@ -162,7 +162,7 @@ fn accumulate_syscalls() {
 
             #[test]
             fn single_write() {
-                let contract = declare('GasChecker');
+                let contract = declare("GasChecker");
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IGasCheckerDispatcher { contract_address };
 
@@ -171,14 +171,14 @@ fn accumulate_syscalls() {
 
             #[test]
             fn double_write() {
-                let contract = declare('GasChecker');
+                let contract = declare("GasChecker");
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IGasCheckerDispatcher { contract_address };
 
                 dispatcher.change_balance(1);
                 dispatcher.change_balance(2);
             }
-        "
+        "#
         ),
         Contract::from_code_path(
             "GasChecker".to_string(),

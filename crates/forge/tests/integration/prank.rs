@@ -8,7 +8,7 @@ use test_utils::{assert_passed, test_case};
 fn prank() {
     let test = test_case!(
         indoc!(
-            r"
+            r#"
             use result::ResultTrait;
             use array::ArrayTrait;
             use option::OptionTrait;
@@ -24,7 +24,7 @@ fn prank() {
 
             #[test]
             fn test_stop_prank() {
-                let contract = declare('PrankChecker');
+                let contract = declare("PrankChecker");
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IPrankCheckerDispatcher { contract_address };
 
@@ -46,7 +46,7 @@ fn prank() {
 
             #[test]
             fn test_prank_all() {
-                let contract = declare('PrankChecker');
+                let contract = declare("PrankChecker");
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IPrankCheckerDispatcher { contract_address };
 
@@ -68,7 +68,7 @@ fn prank() {
 
             #[test]
             fn test_prank_all_stop_one() {
-                let contract = declare('PrankChecker');
+                let contract = declare("PrankChecker");
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IPrankCheckerDispatcher { contract_address };
 
@@ -90,7 +90,7 @@ fn prank() {
 
             #[test]
             fn test_prank_multiple() {
-                let contract = declare('PrankChecker');
+                let contract = declare("PrankChecker");
 
                 let contract_address1 = contract.deploy(@ArrayTrait::new()).unwrap();
                 let contract_address2 = contract.deploy(@ArrayTrait::new()).unwrap();
@@ -120,7 +120,7 @@ fn prank() {
                 assert(old_caller_address1 == new_caller_address1, 'Address did not change back #1');
                 assert(old_caller_address2 == new_caller_address2, 'Address did not change back #2');
             }
-        "
+        "#
         ),
         Contract::from_code_path(
             "PrankChecker".to_string(),

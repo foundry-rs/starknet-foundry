@@ -6,7 +6,7 @@ use rand::RngCore;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use starknet::core::types::{
-    BlockId,
+    BlockId, BlockTag,
     BlockTag::{Latest, Pending},
     ContractErrorData, FieldElement,
     StarknetError::{
@@ -32,7 +32,8 @@ use starknet::{
 
 use crate::helpers::constants::{WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
 use shared::rpc::create_rpc_client;
-use starknet::accounts::ConnectedAccount;
+use starknet::accounts::{AccountFactoryError, ConnectedAccount};
+use starknet::signers::local_wallet::SignError;
 use std::collections::HashMap;
 use std::thread::sleep;
 use std::time::Duration;
@@ -237,6 +238,19 @@ async fn verify_account_address(account: impl ConnectedAccount + std::marker::Sy
             } else {
                 Err(handle_rpc_error(error))
             }
+        }
+    }
+}
+
+pub async fn check_class_hash_exists(
+    provider: &JsonRpcClient<HttpTransport>,
+    class_hash: FieldElement,
+) -> Result<()> {
+    match provider.get_class(BlockId::Tag(BlockTag::Latest), class_hash).await {
+        Ok(_) => Ok(()),
+        Err(err) => match err {
+            StarknetError(ClassHashNotFound) => Err(anyhow!("Class with hash {class_hash:#x} is not declared, try using --class-hash with a hash of the declared class")),
+            _ => Err(handle_rpc_error(err))
         }
     }
 }
@@ -479,6 +493,14 @@ pub fn handle_rpc_error(error: ProviderError) -> Error {
             anyhow!("Unsupported contract class version")
         }
         _ => anyhow!("Unknown RPC error"),
+    }
+}
+
+#[must_use]
+pub fn handle_account_factory_error(err: AccountFactoryError<SignError>) -> anyhow::Error {
+    match err {
+        AccountFactoryError::Provider(error) => handle_rpc_error(error),
+        error => anyhow!(error),
     }
 }
 

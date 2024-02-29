@@ -11,8 +11,29 @@ use crate::{
 use cairo_felt::Felt252;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
 use cheatnet::state::{CheatTarget, CheatnetState};
-use conversions::felt252::FromShortString;
 use conversions::IntoConv;
+use starknet_api::core::ContractAddress;
+
+use super::test_environment::TestEnvironment;
+
+trait RollTrait {
+    fn start_roll(&mut self, target: CheatTarget, block_number: u128);
+    fn stop_roll(&mut self, contract_address: &ContractAddress);
+}
+
+impl<'a> RollTrait for TestEnvironment<'a> {
+    fn start_roll(&mut self, target: CheatTarget, block_number: u128) {
+        self.runtime_state
+            .cheatnet_state
+            .start_roll(target, Felt252::from(block_number));
+    }
+
+    fn stop_roll(&mut self, contract_address: &ContractAddress) {
+        self.runtime_state
+            .cheatnet_state
+            .stop_roll(CheatTarget::One(*contract_address));
+    }
+}
 
 #[test]
 fn roll_simple() {
@@ -74,8 +95,7 @@ fn roll_in_constructor() {
 
     let contracts = get_contracts();
 
-    let contract_name = Felt252::from_short_string("ConstructorRollChecker").unwrap();
-    let class_hash = declare(&mut cached_state, &contract_name, &contracts).unwrap();
+    let class_hash = declare(&mut cached_state, "ConstructorRollChecker", &contracts).unwrap();
     let precalculated_address = runtime_state
         .cheatnet_state
         .precalculate_address(&class_hash, &[]);
@@ -273,8 +293,7 @@ fn roll_library_call() {
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
     let contracts = get_contracts();
-    let contract_name = Felt252::from_short_string("RollChecker").unwrap();
-    let class_hash = declare(&mut cached_state, &contract_name, &contracts).unwrap();
+    let class_hash = declare(&mut cached_state, "RollChecker", &contracts).unwrap();
 
     let lib_call_address = deploy_contract(
         &mut cached_state,
@@ -462,9 +481,8 @@ fn roll_multiple() {
     let mut cheatnet_state = CheatnetState::default();
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
-    let contract = Felt252::from_short_string("RollChecker").unwrap();
     let contracts = get_contracts();
-    let class_hash = declare(&mut cached_state, &contract, &contracts).unwrap();
+    let class_hash = declare(&mut cached_state, "RollChecker", &contracts).unwrap();
 
     let contract_address1 =
         deploy_wrapper(&mut cached_state, &mut runtime_state, &class_hash, &[]).unwrap();

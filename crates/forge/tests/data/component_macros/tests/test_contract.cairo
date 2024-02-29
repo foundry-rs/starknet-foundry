@@ -12,7 +12,7 @@ use component_macros::example::{IMyContractDispatcherTrait, IMyContractDispatche
 
 #[test]
 fn test_mint() {
-    let contract = declare('MyContract');
+    let contract = declare("MyContract");
     let address = contract.deploy(@array!['minter']).unwrap();
     let minter: ContractAddress = 'minter'.try_into().unwrap();
 

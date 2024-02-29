@@ -8,7 +8,7 @@ use test_utils::running_tests::run_test_case;
 fn using_dict() {
     let test = test_utils::test_case!(
         indoc!(
-            r"
+            r#"
         use result::ResultTrait;
         use snforge_std::{ declare, ContractClass, ContractClassTrait };
         use array::ArrayTrait;
@@ -21,7 +21,7 @@ fn using_dict() {
         
         #[test]
         fn using_dict() {
-            let contract = declare('DictUsingContract');
+            let contract = declare("DictUsingContract");
             let numbers = array![1, 2, 3, 3, 3, 3 ,3, 4, 4, 4, 4, 4, 5, 5, 5, 5];
             let mut inputs: Array<felt252> = array![];
             numbers.serialize(ref inputs);
@@ -38,7 +38,7 @@ fn using_dict() {
             let unq = dispatcher.get_unique();
             assert(unq == 4, 'wrong unique count');
         }
-        "
+        "#
         ),
         Contract::from_code_path(
             "DictUsingContract".to_string(),

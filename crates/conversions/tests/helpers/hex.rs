@@ -21,7 +21,7 @@ pub fn str_hex_to_field_element(hex_string: &str) -> FieldElement {
 }
 
 fn hex_string_to_bytes(hex_string: &str) -> [u8; 32] {
-    let hex_string = hex_string.strip_prefix("0x").unwrap().to_string();
+    let hex_string = hex_string.strip_prefix("0x").unwrap();
     let mut bytes = [0u8; 32];
     for i in 0..32 {
         let byte_str = &hex_string[i * 2..i * 2 + 2];
