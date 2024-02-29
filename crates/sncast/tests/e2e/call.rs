@@ -139,7 +139,7 @@ async fn test_invalid_selector() {
     ]);
 
     let snapbox = runner(&args);
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
