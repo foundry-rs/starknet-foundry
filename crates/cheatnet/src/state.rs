@@ -194,10 +194,8 @@ impl NotEmptyCallStack {
     }
 
     pub fn top_cheated_data(&mut self) -> CheatedData {
-        let top_val = self.0.pop().unwrap();
-        let borrowed_ref = top_val.cheated_data.clone();
-        self.0.push(top_val);
-        borrowed_ref
+        let top_val = self.0.last().unwrap();
+        top_val.cheated_data.clone()
     }
 
     fn pop(&mut self) -> CallStackElement {
