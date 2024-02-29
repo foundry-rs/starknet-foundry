@@ -7,6 +7,7 @@ use trace_info::{
 };
 
 #[test]
+#[feature("safe_dispatcher")]
 fn test_trace_print() {
     let sc = declare("SimpleContract");
 
@@ -28,7 +29,6 @@ fn test_trace_print() {
     RecursiveCallerDispatcher { contract_address: contract_address_A }.execute_calls(calls);
 
     let failing_dispatcher = FailingSafeDispatcher { contract_address: contract_address_A };
-    #[feature("safe_dispatcher")]
     match failing_dispatcher.fail(array![1, 2, 3, 4, 5]) {
         Result::Ok(_) => panic_with_felt252('shouldve panicked'),
         Result::Err(panic_data) => { assert(panic_data == array![1, 2, 3, 4, 5], ''); }
