@@ -14,12 +14,10 @@ use starknet_api::deprecated_contract_class::EntryPointType;
 
 use runtime::starknet::context::ERC20_CONTRACT_ADDRESS;
 use runtime::starknet::state::DictStateReader;
-use starknet_api::{
-    core::{ClassHash, ContractAddress, PatriciaKey},
-    hash::{StarkFelt, StarkHash},
-    patricia_key, stark_felt,
-    transaction::Calldata,
-};
+use starknet_api::core::{ClassHash, ContractAddress, PatriciaKey};
+use starknet_api::hash::StarkHash;
+use starknet_api::transaction::Calldata;
+use starknet_api::{class_hash, patricia_key};
 
 pub const MAX_FEE: u128 = 1_000_000 * 100_000_000_000; // 1000000 * min_gas_price.
 pub const INITIAL_BALANCE: u128 = 10 * MAX_FEE;
@@ -56,8 +54,8 @@ fn contract_class_no_entrypoints() -> ContractClass {
 // Account does not include validations
 #[must_use]
 pub fn build_testing_state() -> DictStateReader {
-    let test_erc20_class_hash = ClassHash(stark_felt!(TEST_ERC20_CONTRACT_CLASS_HASH));
-    let test_contract_class_hash = ClassHash(stark_felt!(TEST_CONTRACT_CLASS_HASH));
+    let test_erc20_class_hash = class_hash!(TEST_ERC20_CONTRACT_CLASS_HASH);
+    let test_contract_class_hash = class_hash!(TEST_CONTRACT_CLASS_HASH);
 
     let class_hash_to_class = HashMap::from([
         // This is dummy put here only to satisfy blockifier
