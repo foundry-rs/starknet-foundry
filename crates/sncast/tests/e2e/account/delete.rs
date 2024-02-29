@@ -2,7 +2,7 @@ use crate::helpers::constants::URL;
 use crate::helpers::fixtures::default_cli_args;
 use crate::helpers::runner::runner;
 use indoc::indoc;
-use shared::test_utils::output_assert::assert_stderr_contains;
+use shared::test_utils::output_assert::{assert_stderr_contains, AsOutput};
 use tempfile::{tempdir, TempDir};
 use tokio::fs::File;
 use tokio::io::AsyncWriteExt;
@@ -103,12 +103,11 @@ pub async fn test_happy_case() {
 
     // Run test with an affirmative user input
     let snapbox = runner(&args).current_dir(temp_dir.path()).stdin("Y");
-    let bdg = snapbox.assert();
-    let out = bdg.get_output();
-    let stdout_str =
-        std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
 
-    assert!(stdout_str.contains("Account successfully removed"));
+    snapbox.assert().success().stdout_matches(indoc! {r"
+        command: account delete
+        result: Account successfully removed
+    "});
 }
 
 #[tokio::test]
@@ -131,12 +130,11 @@ pub async fn test_happy_case_without_network_args() {
 
     // Run test with an affirmative user input
     let snapbox = runner(&args).current_dir(temp_dir.path()).stdin("Y");
-    let bdg = snapbox.assert();
-    let out = bdg.get_output();
-    let stdout_str =
-        std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
 
-    assert!(stdout_str.contains("Account successfully removed"));
+    snapbox.assert().success().stdout_matches(indoc! {r"
+        command: account delete
+        result: Account successfully removed
+    "});
 }
 
 #[tokio::test]
@@ -162,13 +160,13 @@ pub async fn test_happy_case_with_yes_flag() {
 
     // Run test with no additional user input
     let snapbox = runner(&args).current_dir(temp_dir.path());
-    let bdg = snapbox.assert();
-    let out = bdg.get_output();
-    let stdout_str =
-        std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
+    let output = snapbox.assert().success();
 
-    assert!(out.stderr.is_empty());
-    assert!(stdout_str.contains("Account successfully removed"));
+    assert!(output.as_stderr().is_empty());
+    output.stdout_matches(indoc! {r"
+        command: account delete
+        result: Account successfully removed
+    "});
 }
 
 #[must_use]

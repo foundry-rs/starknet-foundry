@@ -3,7 +3,7 @@ use crate::helpers::fixtures::{copy_file, default_cli_args};
 use crate::helpers::runner::runner;
 use indoc::indoc;
 
-use shared::test_utils::output_assert::assert_stderr_contains;
+use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains, AsOutput};
 use sncast::helpers::configuration::copy_config_to_tempdir;
 use sncast::helpers::constants::CREATE_KEYSTORE_PASSWORD_ENV_VAR;
 use std::{env, fs};
@@ -30,11 +30,9 @@ pub async fn test_happy_case() {
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
-    let bdg = snapbox.assert();
-    let out = bdg.get_output();
+    let output = snapbox.assert();
 
-    let stdout_str =
-        std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
+    let stdout_str = output.as_stdout();
     assert!(stdout_str.contains("command: account create"));
     assert!(stdout_str.contains("max_fee: "));
     assert!(!stdout_str.contains("max_fee: 0x"));
@@ -105,14 +103,14 @@ pub async fn test_happy_case_generate_salt() {
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
-    let bdg = snapbox.assert();
-    let out = bdg.get_output();
 
-    let stdout_str =
-        std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
-    assert!(stdout_str.contains("command: account create"));
-    assert!(stdout_str.contains("max_fee: "));
-    assert!(stdout_str.contains("address: "));
+    snapbox.assert().success().stdout_matches(indoc! {r"
+        command: account create
+        add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
+        address: 0x[..]
+        max_fee: [..]
+        message: Account successfully created[..]
+        "});
 
     let contents = fs::read_to_string(temp_dir.path().join(accounts_file))
         .expect("Unable to read created file");
@@ -146,13 +144,11 @@ pub async fn test_happy_case_add_profile() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    let bdg = snapbox.assert();
-    let out = bdg.get_output();
+    let output = snapbox.assert().success();
 
-    let stdout_str =
-        std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
-    assert!(
-        stdout_str.contains("add_profile: Profile my_account successfully added to snfoundry.toml")
+    assert_stdout_contains(
+        output,
+        "add_profile: Profile my_account successfully added to snfoundry.toml",
     );
 
     let contents = fs::read_to_string(tempdir.path().join("snfoundry.toml"))
@@ -186,14 +182,14 @@ pub async fn test_happy_case_accounts_file_already_exists() {
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
-    let bdg = snapbox.assert();
-    let out = bdg.get_output();
 
-    let stdout_str =
-        std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
-    assert!(stdout_str.contains("command: account create"));
-    assert!(stdout_str.contains("max_fee: "));
-    assert!(stdout_str.contains("address: "));
+    snapbox.assert().success().stdout_matches(indoc! {r"
+        command: account create
+        add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
+        address: 0x[..]
+        max_fee: [..]
+        message: Account successfully created[..]
+        "});
 
     let contents = fs::read_to_string(temp_dir.path().join(accounts_file))
         .expect("Unable to read created file");
@@ -222,14 +218,15 @@ pub async fn test_profile_already_exists() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    let bdg = snapbox.assert();
-    let out = bdg.get_output();
+    let output = snapbox.assert();
 
-    let std_err =
-        std::str::from_utf8(&out.stderr).expect("failed to convert command stderr to string");
-    assert!(std_err.contains(
-        "error: Failed to add profile = default to the snfoundry.toml. Profile already exists"
-    ));
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        command: account create
+        error: Failed to add profile = default to the snfoundry.toml. Profile already exists
+        "},
+    );
 }
 
 #[tokio::test]
@@ -321,13 +318,11 @@ pub async fn test_happy_case_keystore_add_profile() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    let bdg = snapbox.assert().success();
-    let out = bdg.get_output();
-
-    let stdout_str =
-        std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
-    assert!(stdout_str
-        .contains("add_profile: Profile with_keystore successfully added to snfoundry.toml"));
+    let output = snapbox.assert().success();
+    assert_stdout_contains(
+        output,
+        "add_profile: Profile with_keystore successfully added to snfoundry.toml",
+    );
 
     let contents =
         fs::read_to_string(tempdir.path().join(account_file)).expect("Unable to read created file");
@@ -401,12 +396,15 @@ pub async fn test_keystore_file_already_exists() {
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
-    let bdg = snapbox.assert();
-    let out = bdg.get_output();
-    let stderr_str =
-        std::str::from_utf8(&out.stderr).expect("failed to convert command output to string");
+    let output = snapbox.assert().success();
 
-    assert!(stderr_str.contains("error: Keystore file my_key.json already exists"));
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        command: account create
+        error: Keystore file my_key.json already exists
+        "},
+    );
 }
 
 #[tokio::test]
@@ -437,12 +435,15 @@ pub async fn test_keystore_account_file_already_exists() {
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
-    let bdg = snapbox.assert();
-    let out = bdg.get_output();
-    let stderr_str =
-        std::str::from_utf8(&out.stderr).expect("failed to convert command output to string");
+    let output = snapbox.assert().success();
 
-    assert!(stderr_str.contains("error: Account file my_account.json already exists"));
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        command: account create
+        error: Account file my_account.json already exists
+        "},
+    );
 }
 
 #[tokio::test]
