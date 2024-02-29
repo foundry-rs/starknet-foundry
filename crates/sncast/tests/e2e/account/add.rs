@@ -56,6 +56,82 @@ pub async fn test_happy_case() {
 }
 
 #[tokio::test]
+pub async fn test_no_deployed_flag_and_existent_account_address() {
+    let tempdir = tempdir().expect("Unable to create a temporary directory");
+    let accounts_file = "accounts.json";
+
+    let args = vec![
+        "--url",
+        URL,
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "add",
+        "--name",
+        "my_account_add",
+        "--address",
+        "0xf6ecd22832b7c3713cfa7826ee309ce96a2769833f093795fafa1b8f20c48b",
+        "--private-key",
+        "0x456",
+    ];
+
+    runner(&args).current_dir(tempdir.path()).assert();
+
+    let contents = fs::read_to_string(tempdir.path().join(accounts_file))
+        .expect("Unable to read created file");
+    let contents_json: serde_json::Value = serde_json::from_str(&contents).unwrap();
+    assert_eq!(
+        contents_json,
+        json!(
+            {
+                "alpha-goerli": {
+                  "my_account_add": {
+                    "address": "0xf6ecd22832b7c3713cfa7826ee309ce96a2769833f093795fafa1b8f20c48b",
+                    "class_hash": "0x4d07e40e93398ed3c76981e72dd1fd22557a78ce36c0515f679e27f0bb5bc5f",
+                    "deployed": true,
+                    "private_key": "0x456",
+                    "public_key": "0x5f679dacd8278105bd3b84a15548fe84079068276b0e84d6cc093eb5430f063"
+                  }
+                }
+            }
+        )
+    );
+}
+
+#[tokio::test]
+pub async fn test_no_deployed_flag_with_existent_account_address_and_incorrect_class_hash() {
+    let tempdir = tempdir().expect("Unable to create a temporary directory");
+    let accounts_file = "accounts.json";
+
+    // https://testnet.starkscan.co/contract/0x041a78e741e5af2fec34b695679bc6891742439f7afb8484ecd7766661ad02bf
+    let oz_universal_deployer_class_hash =
+        "0x07b3e05f48f0c69e4a65ce5e076a66271a527aff2c34ce1083ec6e1526997a69";
+    let args = vec![
+        "--url",
+        URL,
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "add",
+        "--name",
+        "my_account_add",
+        "--address",
+        "0xf6ecd22832b7c3713cfa7826ee309ce96a2769833f093795fafa1b8f20c48b",
+        "--private-key",
+        "0x456",
+        "--class-hash",
+        oz_universal_deployer_class_hash,
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+
+    snapbox.assert().stderr_matches(indoc! {r"
+        command: account add
+        error: Incorrect class hash 0x7b3e05f48f0c69e4a65ce5e076a66271a527aff2c34ce1083ec6e1526997a69 for account address 0xf6ecd22832b7c3713cfa7826ee309ce96a2769833f093795fafa1b8f20c48b
+    "});
+}
+
+#[tokio::test]
 pub async fn test_happy_case_add_profile() {
     let tempdir = tempdir().expect("Failed to create a temporary directory");
     let accounts_file = "accounts.json";
@@ -155,6 +231,7 @@ pub async fn test_detect_deployed() {
                 "alpha-goerli": {
                   "my_account_add": {
                     "address": DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS,
+                    "class_hash": "0x4d07e40e93398ed3c76981e72dd1fd22557a78ce36c0515f679e27f0bb5bc5f",
                     "deployed": true,
                     "private_key": "0x5",
                     "public_key": "0x788435d61046d3eec54d77d25bd194525f4fa26ebe6575536bc6f656656b74c"
