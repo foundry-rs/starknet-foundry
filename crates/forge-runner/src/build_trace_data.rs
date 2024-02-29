@@ -10,10 +10,10 @@ use cheatnet::constants::{TEST_CONTRACT_CLASS_HASH, TEST_ENTRY_POINT_SELECTOR};
 use cheatnet::state::CallTrace;
 use conversions::IntoConv;
 use starknet::core::utils::get_selector_from_name;
+use starknet_api::class_hash;
 use starknet_api::core::ClassHash;
 use starknet_api::deprecated_contract_class::EntryPointType;
-use starknet_api::hash::StarkFelt;
-use starknet_api::stark_felt;
+use starknet_api::hash::StarkHash;
 use trace_data::{
     CallEntryPoint as ProfilerCallEntryPoint, CallTrace as ProfilerCallTrace,
     CallType as ProfilerCallType, ContractAddress,
@@ -89,7 +89,7 @@ pub fn build_profiler_call_entry_point(
         == get_selector_from_name(TEST_ENTRY_POINT_SELECTOR)
             .unwrap()
             .into_()
-        && class_hash == Some(ClassHash(stark_felt!(TEST_CONTRACT_CLASS_HASH)))
+        && class_hash == Some(class_hash!(TEST_CONTRACT_CLASS_HASH))
     {
         contract_name = Some(String::from(TEST_CODE_CONTRACT_NAME));
         function_name = Some(String::from(TEST_CODE_FUNCTION_NAME));
