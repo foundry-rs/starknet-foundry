@@ -3,6 +3,7 @@ use starknet::ContractAddress;
 #[starknet::interface]
 trait IConstructorPrankChecker<TContractState> {
     fn get_stored_caller_address(ref self: TContractState) -> ContractAddress;
+    fn get_caller_address(ref self: TContractState) -> felt252;
 }
 
 #[starknet::contract]
@@ -24,6 +25,10 @@ mod ConstructorPrankChecker {
     impl IConstructorPrankChecker of super::IConstructorPrankChecker<ContractState> {
         fn get_stored_caller_address(ref self: ContractState) -> ContractAddress {
             self.caller_address.read()
+        }
+
+        fn get_caller_address(ref self: ContractState) -> felt252 {
+            starknet::get_caller_address().into()
         }
     }
 }
