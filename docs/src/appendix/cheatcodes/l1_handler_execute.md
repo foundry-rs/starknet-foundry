@@ -26,7 +26,7 @@ struct L1Handler {
 where:
 
 - `contract_address` - The target contract address
-- `function_selector` - Name of the `#[l1_handler]` function
+- `function_selector` - Selector of the `#[l1_handler]` function
 - `from_address` - Ethereum address of the contract that sends the message
 - `payload` - The message payload that may contain any Cairo data structure that can be serialized with
 [Serde](https://book.cairo-lang.org/appendix-03-derivable-traits.html?highlight=serde#serializing-with-serde)

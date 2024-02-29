@@ -14,7 +14,7 @@ pub struct CallResult {
 ```
 
 - `contract_address` - address of the contract to call.
-- `function_selector` - the selector of the function to call, as Cairo shortstring.
+- `function_selector` - the selector of the function to call.
 - `calldata` - inputs to the function to be called.
 
 ```rust

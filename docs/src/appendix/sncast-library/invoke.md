@@ -18,7 +18,7 @@ pub struct InvokeResult {
 ```
 
 - `contract_address` - address of the contract to invoke.
-- `entry_point_selector` - the selector of the function to invoke, as Cairo shortstring.
+- `entry_point_selector` - the selector of the function to invoke.
 - `calldata` - inputs to the function to be invoked.
 - `max_fee` - max fee for declare transaction. If not provided, max fee will be automatically estimated.
 - `nonce` - nonce for declare transaction. If not provided, nonce will be set automatically.
