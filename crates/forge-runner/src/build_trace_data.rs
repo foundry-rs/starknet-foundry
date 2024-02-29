@@ -23,7 +23,6 @@ use trace_data::{
 };
 
 use crate::contracts_data::ContractsData;
-use crate::test_case_summary::{Single, TestCaseSummary};
 
 pub const TRACE_DIR: &str = ".snfoundry_trace";
 pub const TEST_CODE_CONTRACT_NAME: &str = "SNFORGE_TEST_CODE";
@@ -186,19 +185,15 @@ fn build_profiler_call_type(value: CallType) -> ProfilerCallType {
     }
 }
 
-pub fn save_trace_data(summary: &TestCaseSummary<Single>) {
-    if let TestCaseSummary::Passed {
-        name, trace_data, ..
-    } = summary
-    {
-        let serialized_trace =
-            serde_json::to_string(trace_data).expect("Failed to serialize call trace");
-        let dir_to_save_trace = PathBuf::from(TRACE_DIR);
-        fs::create_dir_all(&dir_to_save_trace)
-            .expect("Failed to create a file to save call trace to");
+pub fn save_trace_data(test_name: &String, trace_data: &ProfilerCallTrace) -> PathBuf {
+    let serialized_trace =
+        serde_json::to_string(trace_data).expect("Failed to serialize call trace");
+    let dir_to_save_trace = PathBuf::from(TRACE_DIR);
+    fs::create_dir_all(&dir_to_save_trace)
+        .expect("Failed to create a file to save call trace to");
 
-        let filename = format!("{name}.json");
-        fs::write(dir_to_save_trace.join(filename), serialized_trace)
-            .expect("Failed to write call trace to a file");
-    }
+    let filename = format!("{test_name}.json");
+    fs::write(dir_to_save_trace.join(&filename), serialized_trace)
+        .expect("Failed to write call trace to a file");
+    dir_to_save_trace.join(&filename)
 }
