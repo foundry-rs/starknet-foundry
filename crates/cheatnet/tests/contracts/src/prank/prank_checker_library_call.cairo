@@ -8,6 +8,7 @@ trait IPrankChecker<TContractState> {
 #[starknet::interface]
 trait IPrankCheckerLibCall<TContractState> {
     fn get_caller_address_with_lib_call(ref self: TContractState, class_hash: ClassHash) -> felt252;
+    fn get_caller_address(ref self: TContractState) -> felt252;
 }
 
 #[starknet::contract]
@@ -25,6 +26,10 @@ mod PrankCheckerLibCall {
         ) -> felt252 {
             let prank_checker = IPrankCheckerLibraryDispatcher { class_hash };
             prank_checker.get_caller_address()
+        }
+
+        fn get_caller_address(ref self: ContractState) -> felt252 {
+            starknet::get_caller_address().into()
         }
     }
 }

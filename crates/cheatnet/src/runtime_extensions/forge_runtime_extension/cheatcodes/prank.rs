@@ -3,14 +3,18 @@ use crate::CheatnetState;
 use starknet_api::core::ContractAddress;
 
 impl CheatnetState {
-    pub fn start_prank(&mut self, target: CheatTarget, caller_address: ContractAddress) {
+    pub fn prank(&mut self, target: CheatTarget, caller_address: ContractAddress, span: CheatSpan) {
         start_cheat(
             &mut self.global_prank,
             &mut self.pranked_contracts,
             target,
             caller_address,
-            CheatSpan::Indefinite,
+            span,
         );
+    }
+
+    pub fn start_prank(&mut self, target: CheatTarget, caller_address: ContractAddress) {
+        self.prank(target, caller_address, CheatSpan::Indefinite);
     }
 
     pub fn stop_prank(&mut self, target: CheatTarget) {
