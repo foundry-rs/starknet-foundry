@@ -1,6 +1,6 @@
+use crate::common::felt_selector_from_name;
 use crate::common::state::{build_runtime_state, create_cached_state};
 use crate::common::{call_contract, deploy_wrapper};
-use crate::common::{felt_selector_from_name, recover_data};
 use crate::{
     assert_success,
     common::{deploy_contract, get_contracts},
@@ -555,7 +555,7 @@ fn mock_call_in_constructor() {
         &selector,
         &[],
     );
-    let output_data = recover_data(output);
+    let output_data = output.recover_data();
     assert_eq!(output_data.len(), 1);
     assert_eq!(output_data.first().unwrap().clone(), Felt252::from(223));
 }

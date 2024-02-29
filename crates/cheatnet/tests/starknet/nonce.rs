@@ -2,10 +2,7 @@ use crate::common::state::build_runtime_state;
 use crate::common::{call_contract, deploy_wrapper};
 use crate::{
     assert_success,
-    common::{
-        deploy_contract, felt_selector_from_name, get_contracts, recover_data,
-        state::create_cached_state,
-    },
+    common::{deploy_contract, felt_selector_from_name, get_contracts, state::create_cached_state},
 };
 use blockifier::state::state_api::State;
 use cairo_felt::Felt252;
@@ -32,7 +29,7 @@ fn check_nonce(
 
     let output = call_contract(state, runtime_state, contract_address, &read_nonce, &[]);
 
-    recover_data(output)[0].clone()
+    output.recover_data()[0].clone()
 }
 
 #[test]

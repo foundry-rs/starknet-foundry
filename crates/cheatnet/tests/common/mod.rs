@@ -9,11 +9,9 @@ use cairo_lang_casm::hints::Hint;
 use cairo_vm::types::relocatable::Relocatable;
 use camino::Utf8PathBuf;
 use cheatnet::constants::TEST_ADDRESS;
+use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallResult;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     call_entry_point, AddressOrClassHash,
-};
-use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
-    CallFailure, CallResult,
 };
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeState;
 use cheatnet::runtime_extensions::common::{create_entry_point_selector, create_execute_calldata};
@@ -56,15 +54,6 @@ fn build_syscall_hint_processor<'a>(
         hints,
         ReadOnlySegments::default(),
     )
-}
-pub fn recover_data(output: CallResult) -> Vec<Felt252> {
-    match output {
-        CallResult::Success { ret_data, .. } => ret_data,
-        CallResult::Failure(failure_type) => match failure_type {
-            CallFailure::Panic { panic_data, .. } => panic_data,
-            CallFailure::Error { msg, .. } => panic!("Call failed with message: {msg}"),
-        },
-    }
 }
 
 pub fn get_contracts() -> HashMap<String, StarknetContractArtifacts> {

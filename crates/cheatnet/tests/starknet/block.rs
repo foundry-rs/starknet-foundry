@@ -2,7 +2,7 @@ use crate::common::call_contract;
 use crate::common::state::build_runtime_state;
 use crate::{
     assert_success,
-    common::{deploy_contract, felt_selector_from_name, recover_data, state::create_cached_state},
+    common::{deploy_contract, felt_selector_from_name, state::create_cached_state},
 };
 use blockifier::state::state_api::State;
 use cairo_felt::Felt252;
@@ -33,7 +33,7 @@ fn check_block(
         &[],
     );
 
-    let block_number = &recover_data(output)[0];
+    let block_number = &output.recover_data()[0];
 
     let output = call_contract(
         state,
@@ -43,7 +43,7 @@ fn check_block(
         &[],
     );
 
-    let block_timestamp = &recover_data(output)[0];
+    let block_timestamp = &output.recover_data()[0];
 
     let output = call_contract(
         state,
@@ -53,7 +53,7 @@ fn check_block(
         &[],
     );
 
-    let sequencer_address = &recover_data(output)[0];
+    let sequencer_address = &output.recover_data()[0];
 
     let output = call_contract(
         state,
@@ -63,7 +63,7 @@ fn check_block(
         &[],
     );
 
-    let block_hash = &recover_data(output)[0];
+    let block_hash = &output.recover_data()[0];
 
     (
         block_number.clone(),

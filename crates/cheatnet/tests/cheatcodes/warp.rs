@@ -3,10 +3,7 @@ use crate::common::state::build_runtime_state;
 use crate::common::{call_contract, deploy_wrapper};
 use crate::{
     assert_success,
-    common::{
-        deploy_contract, felt_selector_from_name, get_contracts, recover_data,
-        state::create_cached_state,
-    },
+    common::{deploy_contract, felt_selector_from_name, get_contracts, state::create_cached_state},
 };
 use cairo_felt::Felt252;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
@@ -140,7 +137,7 @@ fn warp_stop() {
         &[],
     );
 
-    let old_block_timestamp = recover_data(output);
+    let old_block_timestamp = output.recover_data();
 
     runtime_state
         .cheatnet_state
@@ -154,7 +151,7 @@ fn warp_stop() {
         &[],
     );
 
-    let new_block_timestamp = recover_data(output);
+    let new_block_timestamp = output.recover_data();
     assert_eq!(new_block_timestamp, vec![Felt252::from(123)]);
     assert_ne!(old_block_timestamp, new_block_timestamp);
 
@@ -169,7 +166,7 @@ fn warp_stop() {
         &selector,
         &[],
     );
-    let changed_back_block_timestamp = recover_data(output);
+    let changed_back_block_timestamp = output.recover_data();
 
     assert_eq!(old_block_timestamp, changed_back_block_timestamp);
 }
@@ -193,7 +190,7 @@ fn warp_double() {
         &[],
     );
 
-    let old_block_timestamp = recover_data(output);
+    let old_block_timestamp = output.recover_data();
 
     runtime_state
         .cheatnet_state
@@ -210,7 +207,7 @@ fn warp_double() {
         &[],
     );
 
-    let new_block_timestamp = recover_data(output);
+    let new_block_timestamp = output.recover_data();
     assert_eq!(new_block_timestamp, vec![Felt252::from(123)]);
     assert_ne!(old_block_timestamp, new_block_timestamp);
 
@@ -225,7 +222,7 @@ fn warp_double() {
         &selector,
         &[],
     );
-    let changed_back_block_timestamp = recover_data(output);
+    let changed_back_block_timestamp = output.recover_data();
 
     assert_eq!(old_block_timestamp, changed_back_block_timestamp);
 }
@@ -453,7 +450,7 @@ fn warp_all_stop() {
         &[],
     );
 
-    let old_block_timestamp = recover_data(output);
+    let old_block_timestamp = output.recover_data();
 
     runtime_state
         .cheatnet_state
@@ -467,7 +464,7 @@ fn warp_all_stop() {
         &[],
     );
 
-    let new_block_timestamp = recover_data(output);
+    let new_block_timestamp = output.recover_data();
     assert_eq!(new_block_timestamp, vec![Felt252::from(123)]);
     assert_ne!(old_block_timestamp, new_block_timestamp);
 
@@ -480,7 +477,7 @@ fn warp_all_stop() {
         &selector,
         &[],
     );
-    let changed_back_block_timestamp = recover_data(output);
+    let changed_back_block_timestamp = output.recover_data();
 
     assert_eq!(old_block_timestamp, changed_back_block_timestamp);
 }
@@ -510,7 +507,7 @@ fn warp_multiple() {
         &[],
     );
 
-    let old_block_timestamp1 = recover_data(output);
+    let old_block_timestamp1 = output.recover_data();
 
     let output = call_contract(
         &mut cached_state,
@@ -520,7 +517,7 @@ fn warp_multiple() {
         &[],
     );
 
-    let old_block_timestamp2 = recover_data(output);
+    let old_block_timestamp2 = output.recover_data();
 
     runtime_state.cheatnet_state.start_warp(
         CheatTarget::Multiple(vec![contract_address1, contract_address2]),
@@ -535,7 +532,7 @@ fn warp_multiple() {
         &[],
     );
 
-    let new_block_timestamp1 = recover_data(output);
+    let new_block_timestamp1 = output.recover_data();
 
     let output = call_contract(
         &mut cached_state,
@@ -545,7 +542,7 @@ fn warp_multiple() {
         &[],
     );
 
-    let new_block_timestamp2 = recover_data(output);
+    let new_block_timestamp2 = output.recover_data();
 
     assert_eq!(new_block_timestamp1, vec![Felt252::from(123)]);
     assert_eq!(new_block_timestamp2, vec![Felt252::from(123)]);
@@ -565,7 +562,7 @@ fn warp_multiple() {
         &[],
     );
 
-    let changed_back_block_timestamp1 = recover_data(output);
+    let changed_back_block_timestamp1 = output.recover_data();
 
     let output = call_contract(
         &mut cached_state,
@@ -575,7 +572,7 @@ fn warp_multiple() {
         &[],
     );
 
-    let changed_back_block_timestamp2 = recover_data(output);
+    let changed_back_block_timestamp2 = output.recover_data();
 
     assert_eq!(old_block_timestamp1, changed_back_block_timestamp1);
     assert_eq!(old_block_timestamp2, changed_back_block_timestamp2);
