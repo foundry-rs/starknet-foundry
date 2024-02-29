@@ -28,7 +28,7 @@ fn fuzzing() {
 
         [PASS] fuzzing::tests::custom_fuzzer_config (runs: 10, [..]
         [PASS] fuzzing::tests::uint8_arg (runs: 256, [..]
-        [PASS] fuzzing::tests::fuzzed_loop (runs: 256, gas: {max: ~54, min: ~1, mean: ~28.00, std deviation: ~15.99})
+        [PASS] fuzzing::tests::fuzzed_loop (runs: 256, gas: {max: ~56, min: ~1, mean: ~29.00, std deviation: ~16.37})
         [PASS] fuzzing::tests::uint16_arg (runs: 256, [..]
         [PASS] fuzzing::tests::uint32_arg (runs: 256, [..]
         [PASS] fuzzing::tests::uint64_arg (runs: 256, [..]
