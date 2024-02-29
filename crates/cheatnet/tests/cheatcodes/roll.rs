@@ -18,15 +18,22 @@ use starknet_api::core::ContractAddress;
 use super::test_environment::TestEnvironment;
 
 trait RollTrait {
-    fn start_roll(&mut self, target: CheatTarget, block_number: u128, span: CheatSpan);
+    fn roll(&mut self, target: CheatTarget, block_number: u128, span: CheatSpan);
+    fn start_roll(&mut self, target: CheatTarget, block_number: u128);
     fn stop_roll(&mut self, contract_address: &ContractAddress);
 }
 
 impl<'a> RollTrait for TestEnvironment<'a> {
-    fn start_roll(&mut self, target: CheatTarget, block_number: u128, span: CheatSpan) {
+    fn roll(&mut self, target: CheatTarget, block_number: u128, span: CheatSpan) {
         self.runtime_state
             .cheatnet_state
-            .start_roll(target, Felt252::from(block_number), span);
+            .roll(target, Felt252::from(block_number), span);
+    }
+
+    fn start_roll(&mut self, target: CheatTarget, block_number: u128) {
+        self.runtime_state
+            .cheatnet_state
+            .start_roll(target, Felt252::from(block_number));
     }
 
     fn stop_roll(&mut self, contract_address: &ContractAddress) {
@@ -45,11 +52,9 @@ fn roll_simple() {
     let contract_address =
         deploy_contract(&mut cached_state, &mut runtime_state, "RollChecker", &[]);
 
-    runtime_state.cheatnet_state.start_roll(
-        CheatTarget::One(contract_address),
-        Felt252::from(123_u128),
-        CheatSpan::Indefinite,
-    );
+    runtime_state
+        .cheatnet_state
+        .start_roll(CheatTarget::One(contract_address), Felt252::from(123_u128));
 
     let selector = felt_selector_from_name("get_block_number");
 
@@ -73,11 +78,9 @@ fn roll_with_other_syscall() {
     let contract_address =
         deploy_contract(&mut cached_state, &mut runtime_state, "RollChecker", &[]);
 
-    runtime_state.cheatnet_state.start_roll(
-        CheatTarget::One(contract_address),
-        Felt252::from(123_u128),
-        CheatSpan::Indefinite,
-    );
+    runtime_state
+        .cheatnet_state
+        .start_roll(CheatTarget::One(contract_address), Felt252::from(123_u128));
 
     let selector = felt_selector_from_name("get_block_number_and_emit_event");
 
@@ -108,7 +111,6 @@ fn roll_in_constructor() {
     runtime_state.cheatnet_state.start_roll(
         CheatTarget::One(precalculated_address),
         Felt252::from(123_u128),
-        CheatSpan::Indefinite,
     );
 
     let contract_address =
@@ -150,11 +152,9 @@ fn roll_stop() {
 
     let old_block_number = recover_data(output);
 
-    runtime_state.cheatnet_state.start_roll(
-        CheatTarget::One(contract_address),
-        Felt252::from(123_u128),
-        CheatSpan::Indefinite,
-    );
+    runtime_state
+        .cheatnet_state
+        .start_roll(CheatTarget::One(contract_address), Felt252::from(123_u128));
 
     let output = call_contract(
         &mut cached_state,
@@ -205,16 +205,12 @@ fn roll_double() {
 
     let old_block_number = recover_data(output);
 
-    runtime_state.cheatnet_state.start_roll(
-        CheatTarget::One(contract_address),
-        Felt252::from(123_u128),
-        CheatSpan::Indefinite,
-    );
-    runtime_state.cheatnet_state.start_roll(
-        CheatTarget::One(contract_address),
-        Felt252::from(123_u128),
-        CheatSpan::Indefinite,
-    );
+    runtime_state
+        .cheatnet_state
+        .start_roll(CheatTarget::One(contract_address), Felt252::from(123_u128));
+    runtime_state
+        .cheatnet_state
+        .start_roll(CheatTarget::One(contract_address), Felt252::from(123_u128));
 
     let output = call_contract(
         &mut cached_state,
@@ -269,11 +265,9 @@ fn roll_proxy() {
         &[contract_address.into_()],
     );
 
-    runtime_state.cheatnet_state.start_roll(
-        CheatTarget::One(contract_address),
-        Felt252::from(123_u128),
-        CheatSpan::Indefinite,
-    );
+    runtime_state
+        .cheatnet_state
+        .start_roll(CheatTarget::One(contract_address), Felt252::from(123_u128));
 
     let after_roll_output = call_contract(
         &mut cached_state,
@@ -325,11 +319,9 @@ fn roll_library_call() {
         &[class_hash.into_()],
     );
 
-    runtime_state.cheatnet_state.start_roll(
-        CheatTarget::One(lib_call_address),
-        Felt252::from(123_u128),
-        CheatSpan::Indefinite,
-    );
+    runtime_state
+        .cheatnet_state
+        .start_roll(CheatTarget::One(lib_call_address), Felt252::from(123_u128));
 
     let after_roll_output = call_contract(
         &mut cached_state,
@@ -365,11 +357,9 @@ fn roll_all_simple() {
     let contract_address =
         deploy_contract(&mut cached_state, &mut runtime_state, "RollChecker", &[]);
 
-    runtime_state.cheatnet_state.start_roll(
-        CheatTarget::All,
-        Felt252::from(123),
-        CheatSpan::Indefinite,
-    );
+    runtime_state
+        .cheatnet_state
+        .start_roll(CheatTarget::All, Felt252::from(123));
 
     let selector = felt_selector_from_name("get_block_number");
 
@@ -393,16 +383,12 @@ fn roll_all_then_one() {
     let contract_address =
         deploy_contract(&mut cached_state, &mut runtime_state, "RollChecker", &[]);
 
-    runtime_state.cheatnet_state.start_roll(
-        CheatTarget::All,
-        Felt252::from(321_u128),
-        CheatSpan::Indefinite,
-    );
-    runtime_state.cheatnet_state.start_roll(
-        CheatTarget::One(contract_address),
-        Felt252::from(123_u128),
-        CheatSpan::Indefinite,
-    );
+    runtime_state
+        .cheatnet_state
+        .start_roll(CheatTarget::All, Felt252::from(321_u128));
+    runtime_state
+        .cheatnet_state
+        .start_roll(CheatTarget::One(contract_address), Felt252::from(123_u128));
 
     let selector = felt_selector_from_name("get_block_number");
 
@@ -426,16 +412,12 @@ fn roll_one_then_all() {
     let contract_address =
         deploy_contract(&mut cached_state, &mut runtime_state, "RollChecker", &[]);
 
-    runtime_state.cheatnet_state.start_roll(
-        CheatTarget::One(contract_address),
-        Felt252::from(123_u128),
-        CheatSpan::Indefinite,
-    );
-    runtime_state.cheatnet_state.start_roll(
-        CheatTarget::All,
-        Felt252::from(321_u128),
-        CheatSpan::Indefinite,
-    );
+    runtime_state
+        .cheatnet_state
+        .start_roll(CheatTarget::One(contract_address), Felt252::from(123_u128));
+    runtime_state
+        .cheatnet_state
+        .start_roll(CheatTarget::All, Felt252::from(321_u128));
 
     let selector = felt_selector_from_name("get_block_number");
 
@@ -471,11 +453,9 @@ fn roll_all_stop() {
 
     let old_block_number = recover_data(output);
 
-    runtime_state.cheatnet_state.start_roll(
-        CheatTarget::All,
-        Felt252::from(123_u128),
-        CheatSpan::Indefinite,
-    );
+    runtime_state
+        .cheatnet_state
+        .start_roll(CheatTarget::All, Felt252::from(123_u128));
 
     let output = call_contract(
         &mut cached_state,
@@ -543,7 +523,6 @@ fn roll_multiple() {
     runtime_state.cheatnet_state.start_roll(
         CheatTarget::Multiple(vec![contract_address1, contract_address2]),
         Felt252::from(123_u128),
-        CheatSpan::Indefinite,
     );
 
     let output = call_contract(
@@ -607,7 +586,7 @@ fn roll_simple_with_span() {
 
     let contract_address = test_env.deploy("RollChecker", &[]);
 
-    test_env.start_roll(
+    test_env.roll(
         CheatTarget::One(contract_address),
         123,
         CheatSpan::Number(2),
@@ -637,7 +616,7 @@ fn roll_proxy_with_span() {
     let contract_address_1 = test_env.deploy_wrapper(&class_hash, &[]);
     let contract_address_2 = test_env.deploy_wrapper(&class_hash, &[]);
 
-    test_env.start_roll(
+    test_env.roll(
         CheatTarget::One(contract_address_1),
         123,
         CheatSpan::Number(1),
@@ -664,7 +643,7 @@ fn roll_in_constructor_with_span() {
         .cheatnet_state
         .precalculate_address(&class_hash, &[]);
 
-    test_env.start_roll(
+    test_env.roll(
         CheatTarget::One(precalculated_address),
         123,
         CheatSpan::Number(2),
@@ -700,7 +679,7 @@ fn roll_no_constructor_with_span() {
         .cheatnet_state
         .precalculate_address(&class_hash, &[]);
 
-    test_env.start_roll(
+    test_env.roll(
         CheatTarget::One(precalculated_address),
         123,
         CheatSpan::Number(1),
@@ -726,7 +705,7 @@ fn roll_override_span() {
 
     let contract_address = test_env.deploy("RollChecker", &[]);
 
-    test_env.start_roll(
+    test_env.roll(
         CheatTarget::One(contract_address),
         123,
         CheatSpan::Number(2),
@@ -737,7 +716,7 @@ fn roll_override_span() {
         vec![Felt252::from(123)]
     );
 
-    test_env.start_roll(
+    test_env.roll(
         CheatTarget::One(contract_address),
         321,
         CheatSpan::Indefinite,
@@ -769,7 +748,7 @@ fn roll_library_call_with_span() {
     let class_hash = test_env.declare("RollChecker", &contracts);
     let contract_address = test_env.deploy("RollCheckerLibCall", &[]);
 
-    test_env.start_roll(
+    test_env.roll(
         CheatTarget::One(contract_address),
         123,
         CheatSpan::Number(1),
@@ -795,7 +774,7 @@ fn roll_all_span() {
     let contract_address_1 = test_env.deploy("RollChecker", &[]);
     let contract_address_2 = test_env.deploy("RollCheckerLibCall", &[]);
 
-    test_env.start_roll(CheatTarget::All, 123, CheatSpan::Number(1));
+    test_env.roll(CheatTarget::All, 123, CheatSpan::Number(1));
 
     assert_success!(
         test_env.call_contract(&contract_address_1, "get_block_number", &[]),

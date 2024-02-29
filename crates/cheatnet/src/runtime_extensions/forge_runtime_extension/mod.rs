@@ -5,7 +5,7 @@ use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
 };
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::{deploy, deploy_at};
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
-use crate::state::{CallTrace, CheatSpan, CheatTarget};
+use crate::state::{CallTrace, CheatTarget};
 use anyhow::{Context, Result};
 use blockifier::execution::call_info::{CallExecution, CallInfo};
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
@@ -95,7 +95,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .extended_runtime
                     .extension
                     .cheatnet_state
-                    .start_roll(target, block_number, CheatSpan::Indefinite);
+                    .start_roll(target, block_number);
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
             "stop_roll" => {
