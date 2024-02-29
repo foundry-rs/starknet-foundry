@@ -10,6 +10,7 @@ mod load;
 mod mock_call;
 mod prank;
 mod precalculate_address;
+mod replace_bytecode;
 mod roll;
 mod spoof;
 mod spy_events;

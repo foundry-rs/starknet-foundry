@@ -250,6 +250,17 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .stop_spoof(target);
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
+            "replace_bytecode" => {
+                let contract = input_reader.read_felt().into_();
+                let class = input_reader.read_felt().into_();
+
+                extended_runtime
+                    .extended_runtime
+                    .extension
+                    .cheatnet_state
+                    .replace_class_for_contract(contract, class);
+                Ok(CheatcodeHandlingResult::Handled(vec![]))
+            }
             "declare" => {
                 let state = &mut extended_runtime
                     .extended_runtime

@@ -47,6 +47,7 @@ pub enum SpyTarget {
 }
 
 impl SpyTarget {
+    #[must_use]
     pub fn does_spy(&self, contract_address: ContractAddress) -> bool {
         match self {
             SpyTarget::All => true,

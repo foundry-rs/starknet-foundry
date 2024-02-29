@@ -66,11 +66,17 @@ pub fn execute_call_entry_point(
             PreExecutionError::UninitializedStorageAddress(entry_point.storage_address).into(),
         );
     }
-
-    let class_hash = match entry_point.class_hash {
-        Some(class_hash) => class_hash,
-        None => storage_class_hash, // If not given, take the storage contract class hash.
-    };
+    let class_hash = runtime_state
+        .cheatnet_state
+        .replaced_bytecode_contracts
+        .get(&storage_address)
+        .copied()
+        .or(entry_point.class_hash)
+        .unwrap_or(storage_class_hash);
+    // let class_hash = match entry_point.class_hash {
+    //     Some(class_hash) => class_hash,
+    //     None => storage_class_hash, // If not given, take the storage contract class hash.
+    // };
 
     // region: Modified blockifier code
     runtime_state
