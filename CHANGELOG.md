@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
+- `replace_bytecode` cheatcode
 - result of the call to the trace
 
 #### Changed
