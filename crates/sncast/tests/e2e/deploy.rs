@@ -4,6 +4,7 @@ use crate::helpers::fixtures::{
 };
 use crate::helpers::runner::runner;
 use indoc::indoc;
+use shared::test_utils::output_assert::assert_stderr_contains;
 use starknet::core::types::TransactionReceipt::Deploy;
 
 #[tokio::test]
@@ -76,11 +77,15 @@ fn test_wrong_calldata() {
     ]);
 
     let snapbox = runner(&args);
+    let output = snapbox.assert().success();
 
-    snapbox.assert().stderr_matches(indoc! {r"
+    assert_stderr_contains(
+        output,
+        indoc! {r"
         command: deploy
         error: An error occurred in the called contract [..]
-    "});
+        "},
+    );
 }
 
 #[tokio::test]
@@ -95,11 +100,15 @@ async fn test_contract_not_declared() {
     ]);
 
     let snapbox = runner(&args);
+    let output = snapbox.assert().success();
 
-    snapbox.assert().stderr_matches(indoc! {r"
+    assert_stderr_contains(
+        output,
+        indoc! {r"
         command: deploy
         error: An error occurred in the called contract [..]
-    "});
+        "},
+    );
 }
 
 #[test]
@@ -118,11 +127,15 @@ fn test_contract_already_deployed() {
     ]);
 
     let snapbox = runner(&args);
+    let output = snapbox.assert().success();
 
-    snapbox.assert().stderr_matches(indoc! {r"
+    assert_stderr_contains(
+        output,
+        indoc! {r"
         command: deploy
         error: An error occurred in the called contract [..]
-    "});
+        "},
+    );
 }
 
 #[test]
@@ -144,9 +157,13 @@ fn test_too_low_max_fee() {
     ]);
 
     let snapbox = runner(&args);
+    let output = snapbox.assert().success();
 
-    snapbox.assert().stderr_matches(indoc! {r"
+    assert_stderr_contains(
+        output,
+        indoc! {r"
         command: deploy
         error: Max fee is smaller than the minimal transaction cost
-    "});
+        "},
+    );
 }

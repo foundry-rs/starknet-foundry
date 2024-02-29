@@ -1,5 +1,7 @@
 use crate::helpers::fixtures::default_cli_args;
 use crate::helpers::runner::runner;
+use indoc::indoc;
+use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains, AsOutput};
 use sncast::helpers::constants::DEFAULT_MULTICALL_CONTENTS;
 use tempfile::tempdir;
 
@@ -10,14 +12,10 @@ async fn test_happy_case_stdout() {
     args.append(&mut vec!["multicall", "new"]);
 
     let snapbox = runner(&args);
-    let bdg = snapbox.assert();
-    let out = bdg.get_output();
+    let output = snapbox.assert().success();
 
-    let stdout_str =
-        std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
-
-    assert!(out.stderr.is_empty());
-    assert!(stdout_str.contains(DEFAULT_MULTICALL_CONTENTS));
+    assert!(output.as_stderr().is_empty());
+    assert_stdout_contains(output, DEFAULT_MULTICALL_CONTENTS);
 }
 
 #[tokio::test]
@@ -34,18 +32,19 @@ async fn test_happy_case_file() {
     ]);
 
     let snapbox = runner(&args).current_dir(tmp_dir.path());
-    let bdg = snapbox.assert();
-    let out = bdg.get_output();
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        command: multicall new
+        content:[..]
+        path: multicall.toml
+        "},
+    );
 
     let contents = std::fs::read_to_string(tmp_dir.path().join(multicall_toml_file))
         .expect("Should have been able to read the file");
-    assert!(out.stderr.is_empty());
-
-    let stdout_str =
-        std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
-
-    assert!(stdout_str.contains("path: "));
-    assert!(stdout_str.contains("content: "));
     assert!(contents.contains(DEFAULT_MULTICALL_CONTENTS));
 }
 
@@ -64,15 +63,16 @@ async fn test_directory_non_existent() {
     ]);
 
     let snapbox = runner(&args).current_dir(tmp_dir.path());
-    let bdg = snapbox.assert();
-    let out = bdg.get_output();
+    let output = snapbox.assert().success();
 
-    let stdout_str =
-        std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
-    let stderr_str =
-        std::str::from_utf8(&out.stderr).expect("failed to convert command output to string");
-    assert!(stdout_str.is_empty());
-    assert!(stderr_str.contains("No such file or directory"));
+    assert!(output.as_stdout().is_empty());
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        command: multicall new
+        error: No such file or directory[..]
+        "},
+    );
 }
 
 #[tokio::test]
@@ -88,13 +88,14 @@ async fn test_file_invalid_path() {
     args.append(&mut vec!["multicall", "new", "--output-path", tmp_path]);
 
     let snapbox = runner(&args).current_dir(tmp_dir.path());
-    let bdg = snapbox.assert();
-    let out = bdg.get_output();
+    let output = snapbox.assert().success();
 
-    let stdout_str =
-        std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
-    let stderr_str =
-        std::str::from_utf8(&out.stderr).expect("failed to convert command output to string");
-    assert!(stdout_str.is_empty());
-    assert!(stderr_str.contains("Output file cannot be a directory"));
+    assert!(output.as_stdout().is_empty());
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        command: multicall new
+        error: Output file cannot be a directory[..]
+        "},
+    );
 }

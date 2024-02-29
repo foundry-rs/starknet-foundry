@@ -1,6 +1,6 @@
 use crate::e2e::common::runner::{setup_package, test_runner};
 use indoc::formatdoc;
-use test_utils::output_assert::assert_stderr_contains;
+use shared::test_utils::output_assert::assert_stderr_contains;
 
 #[test]
 fn print_error_if_attributes_incorrect() {

@@ -1,6 +1,7 @@
 use crate::helpers::runner::runner;
 use camino::Utf8PathBuf;
 use indoc::{formatdoc, indoc};
+use shared::test_utils::output_assert::assert_stderr_contains;
 use sncast::helpers::constants::INIT_SCRIPTS_DIR;
 use sncast::helpers::scarb_utils::get_cairo_version;
 use tempfile::TempDir;
@@ -79,11 +80,15 @@ fn test_init_fails_when_scripts_dir_exists_in_cwd() {
         .expect("Failed to create scripts directory in the current temp directory");
 
     let snapbox = runner(&["script", "init", script_name]).current_dir(temp_dir.path());
+    let output = snapbox.assert().success();
 
-    snapbox.assert().stderr_matches(formatdoc! {r"
+    assert_stderr_contains(
+        output,
+        indoc! {r"
         command: script init
         error: Scripts directory already exists at [..]
-    "});
+        "},
+    );
 }
 
 #[test]
@@ -100,11 +105,15 @@ fn test_init_twice_fails() {
     assert!(temp_dir.path().join(INIT_SCRIPTS_DIR).exists());
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
+    let output = snapbox.assert().success();
 
-    snapbox.assert().stderr_matches(formatdoc! {r#"
+    assert_stderr_contains(
+        output,
+        indoc! {r"
         command: script init
         error: Scripts directory already exists at [..]
-    "#});
+        "},
+    );
 }
 
 // todo: When releasing a new version this fails, because a new tag do not exist yet
