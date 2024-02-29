@@ -17,11 +17,20 @@ use starknet_api::core::ContractAddress;
 use super::test_environment::TestEnvironment;
 
 trait ElectTrait {
+    fn elect(&mut self, target: CheatTarget, sequencer_address: u128, span: CheatSpan);
     fn start_elect(&mut self, target: CheatTarget, sequencer_address: u128);
     fn stop_elect(&mut self, contract_address: &ContractAddress);
 }
 
 impl<'a> ElectTrait for TestEnvironment<'a> {
+    fn elect(&mut self, target: CheatTarget, sequencer_address: u128, span: CheatSpan) {
+        self.runtime_state.cheatnet_state.elect(
+            target,
+            ContractAddress::from(sequencer_address),
+            span,
+        );
+    }
+
     fn start_elect(&mut self, target: CheatTarget, sequencer_address: u128) {
         self.runtime_state
             .cheatnet_state
