@@ -1,4 +1,4 @@
-use starknet::{testing::cheatcode, ContractAddress, contract_address_const};
+use starknet::{testing::cheatcode, ContractAddress, ClassHash, contract_address_const};
 
 mod events;
 mod l1_handler;
@@ -46,6 +46,10 @@ fn stop_prank(target: CheatTarget) {
     let mut inputs = array![];
     target.serialize(ref inputs);
     cheatcode::<'stop_prank'>(inputs.span());
+}
+
+fn replace_bytecode(contract: ContractAddress, new_class: ClassHash) {
+    cheatcode::<'replace_bytecode'>(array![contract.into(), new_class.into()].span());
 }
 
 fn start_warp(target: CheatTarget, block_number: u64) {
