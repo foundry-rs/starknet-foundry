@@ -14,7 +14,7 @@ use snforge_std::stop_mock_call;
 fn test_mock_call() {
     // ...
     
-    stop_mock_call(contract_address, function_selector);
+    stop_mock_call(contract_address, selector!("my_function"));
     
     // ...
 }

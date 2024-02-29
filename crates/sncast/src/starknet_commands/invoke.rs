@@ -37,7 +37,7 @@ pub struct Invoke {
 
 pub async fn invoke(
     contract_address: FieldElement,
-    entry_point_name: FieldElement,
+    function_selector: FieldElement,
     calldata: Vec<FieldElement>,
     max_fee: Option<FieldElement>,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
@@ -46,7 +46,7 @@ pub async fn invoke(
 ) -> Result<InvokeResponse, StarknetCommandError> {
     let call = Call {
         to: contract_address,
-        selector: entry_point_name,
+        selector: function_selector,
         calldata,
     };
 
