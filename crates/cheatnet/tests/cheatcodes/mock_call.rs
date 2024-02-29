@@ -17,33 +17,31 @@ trait MockCallTrait {
     fn start_mock_call(
         &mut self,
         contract_address: &ContractAddress,
-        function_name: &str,
+        function_selector: Felt252,
         ret_data: &[u128],
     );
-    fn stop_mock_call(&mut self, contract_address: &ContractAddress, function_name: &str);
+    fn stop_mock_call(&mut self, contract_address: &ContractAddress, function_selector: Felt252);
 }
 
 impl<'a> MockCallTrait for TestEnvironment<'a> {
     fn start_mock_call(
         &mut self,
         contract_address: &ContractAddress,
-        function_name: &str,
+        function_selector: Felt252,
         ret_data: &[u128],
     ) {
-        let function_name = Felt252::from_short_string(function_name).unwrap();
         let ret_data: Vec<Felt252> = ret_data.iter().map(|x| Felt252::from(*x)).collect();
         self.runtime_state.cheatnet_state.start_mock_call(
             *contract_address,
-            &function_name,
+            function_selector,
             &ret_data,
         );
     }
 
-    fn stop_mock_call(&mut self, contract_address: &ContractAddress, function_name: &str) {
-        let function_name = Felt252::from_short_string(function_name).unwrap();
+    fn stop_mock_call(&mut self, contract_address: &ContractAddress, function_selector: Felt252) {
         self.runtime_state
             .cheatnet_state
-            .stop_mock_call(*contract_address, &function_name);
+            .stop_mock_call(*contract_address, function_selector);
     }
 }
 
