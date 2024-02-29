@@ -3,6 +3,7 @@ use starknet::ContractAddress;
 #[starknet::interface]
 trait IConstructorElectChecker<TContractState> {
     fn get_stored_sequencer_address(ref self: TContractState) -> ContractAddress;
+    fn get_sequencer_address(self: @TContractState) -> ContractAddress;
 }
 
 #[starknet::contract]
@@ -25,6 +26,10 @@ mod ConstructorElectChecker {
     impl IConstructorElectChecker of super::IConstructorElectChecker<ContractState> {
         fn get_stored_sequencer_address(ref self: ContractState) -> ContractAddress {
             self.seq_addr.read()
+        }
+
+        fn get_sequencer_address(self: @ContractState) -> ContractAddress {
+            starknet::get_block_info().unbox().sequencer_address
         }
     }
 }
