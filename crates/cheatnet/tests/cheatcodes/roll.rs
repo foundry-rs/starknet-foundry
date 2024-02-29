@@ -12,6 +12,28 @@ use cairo_felt::Felt252;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
 use cheatnet::state::{CheatTarget, CheatnetState};
 use conversions::IntoConv;
+use starknet_api::core::ContractAddress;
+
+use super::test_environment::TestEnvironment;
+
+trait RollTrait {
+    fn start_roll(&mut self, target: CheatTarget, block_number: u128);
+    fn stop_roll(&mut self, contract_address: &ContractAddress);
+}
+
+impl<'a> RollTrait for TestEnvironment<'a> {
+    fn start_roll(&mut self, target: CheatTarget, block_number: u128) {
+        self.runtime_state
+            .cheatnet_state
+            .start_roll(target, Felt252::from(block_number));
+    }
+
+    fn stop_roll(&mut self, contract_address: &ContractAddress) {
+        self.runtime_state
+            .cheatnet_state
+            .stop_roll(CheatTarget::One(*contract_address));
+    }
+}
 
 #[test]
 fn roll_simple() {

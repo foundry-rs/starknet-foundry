@@ -12,6 +12,28 @@ use cairo_felt::Felt252;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
 use cheatnet::state::{CheatTarget, CheatnetState};
 use conversions::IntoConv;
+use starknet_api::core::ContractAddress;
+
+use super::test_environment::TestEnvironment;
+
+trait WarpTrait {
+    fn start_warp(&mut self, target: CheatTarget, timestamp: u128);
+    fn stop_warp(&mut self, contract_address: &ContractAddress);
+}
+
+impl<'a> WarpTrait for TestEnvironment<'a> {
+    fn start_warp(&mut self, target: CheatTarget, timestamp: u128) {
+        self.runtime_state
+            .cheatnet_state
+            .start_warp(target, Felt252::from(timestamp));
+    }
+
+    fn stop_warp(&mut self, contract_address: &ContractAddress) {
+        self.runtime_state
+            .cheatnet_state
+            .stop_warp(CheatTarget::One(*contract_address));
+    }
+}
 
 #[test]
 fn warp_simple() {
