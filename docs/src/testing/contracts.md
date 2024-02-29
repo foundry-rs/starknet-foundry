@@ -233,12 +233,12 @@ You also could skip the de-serialization of the `panic_data`, and not use `map_s
 > To operate with `SafeDispatcher` it's required to annotage its usage with `#[feature("safe_dispatcher")]`.
 > 
 > There are 3 options:
-> - above the module declaration
+> - module-level declaration
 >   ```rust
 >   #[feature("safe_dispatcher")]
 >   mod my_module;    
 >   ```
-> - above the function declaration
+> - function-level declaration
 >   ```rust
 >   #[feature("safe_dispatcher")]
 >   fn my_function() { ... }    
