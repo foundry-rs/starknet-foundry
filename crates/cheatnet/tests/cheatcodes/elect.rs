@@ -14,6 +14,27 @@ use cheatnet::state::{CheatTarget, CheatnetState};
 use conversions::IntoConv;
 use starknet_api::core::ContractAddress;
 
+use super::test_environment::TestEnvironment;
+
+trait ElectTrait {
+    fn start_elect(&mut self, target: CheatTarget, sequencer_address: u128);
+    fn stop_elect(&mut self, contract_address: &ContractAddress);
+}
+
+impl<'a> ElectTrait for TestEnvironment<'a> {
+    fn start_elect(&mut self, target: CheatTarget, sequencer_address: u128) {
+        self.runtime_state
+            .cheatnet_state
+            .start_elect(target, ContractAddress::from(sequencer_address));
+    }
+
+    fn stop_elect(&mut self, contract_address: &ContractAddress) {
+        self.runtime_state
+            .cheatnet_state
+            .stop_elect(CheatTarget::One(*contract_address));
+    }
+}
+
 #[test]
 fn elect_simple() {
     let mut cached_state = create_cached_state();

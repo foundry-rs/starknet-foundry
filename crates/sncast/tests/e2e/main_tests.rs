@@ -4,6 +4,7 @@ use crate::helpers::fixtures::{
 };
 use crate::helpers::runner::runner;
 use indoc::indoc;
+use shared::test_utils::output_assert::assert_stderr_contains;
 use sncast::helpers::configuration::copy_config_to_tempdir;
 use sncast::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
 use std::env;
@@ -22,11 +23,15 @@ async fn test_happy_case_from_sncast_config() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().success();
 
-    snapbox.assert().success().stderr_matches(indoc! {r"
+    assert_stderr_contains(
+        output,
+        indoc! {r"
         command: call
         error: There is no contract at the specified address
-    "});
+        "},
+    );
 }
 
 #[tokio::test]
@@ -46,11 +51,15 @@ async fn test_happy_case_from_cli_no_scarb() {
     ];
 
     let snapbox = runner(&args);
+    let output = snapbox.assert().success();
 
-    snapbox.assert().success().stderr_matches(indoc! {r"
+    assert_stderr_contains(
+        output,
+        indoc! {r"
         command: call
         error: There is no contract at the specified address
-    "});
+        "},
+    );
 }
 
 #[tokio::test]
@@ -131,10 +140,9 @@ async fn test_nonexistent_account_address() {
     ];
 
     let snapbox = runner(&args).current_dir(contract_path.path());
+    let output = snapbox.assert().failure();
 
-    snapbox.assert().failure().stderr_matches(indoc! {r"
-        Error: Invalid account address
-    "});
+    assert_stderr_contains(output, "Error: Invalid account address");
 }
 
 #[tokio::test]
@@ -150,10 +158,12 @@ async fn test_missing_account_flag() {
     ];
 
     let snapbox = runner(&args);
+    let output = snapbox.assert().failure();
 
-    snapbox.assert().stderr_matches(indoc! {r"
-        Error: Account name not passed nor found in snfoundry.toml
-    "});
+    assert_stderr_contains(
+        output,
+        "Error: Account name not passed nor found in snfoundry.toml",
+    );
 }
 
 #[tokio::test]
@@ -169,10 +179,12 @@ async fn test_missing_url() {
     ];
 
     let snapbox = runner(&args);
+    let output = snapbox.assert().failure();
 
-    snapbox.assert().stderr_matches(indoc! {r"
-        Error: RPC url not passed nor found in snfoundry.toml
-    "});
+    assert_stderr_contains(
+        output,
+        "Error: RPC url not passed nor found in snfoundry.toml",
+    );
 }
 
 #[tokio::test]
@@ -189,9 +201,8 @@ async fn test_inexistent_keystore() {
 
     let snapbox = runner(&args);
 
-    snapbox.assert().stderr_matches(indoc! {r"
-        Error: Failed to find keystore file
-    "});
+    let output = snapbox.assert().failure();
+    assert_stderr_contains(output, "Error: Failed to find keystore file");
 }
 
 #[tokio::test]
@@ -207,10 +218,9 @@ async fn test_keystore_account_required() {
     ];
 
     let snapbox = runner(&args);
+    let output = snapbox.assert().failure();
 
-    snapbox.assert().stderr_matches(indoc! {r"
-        Error: Passed empty path for `--account`
-    "});
+    assert_stderr_contains(output, "Error: Passed empty path for `--account`");
 }
 
 #[tokio::test]
@@ -228,10 +238,12 @@ async fn test_keystore_inexistent_account() {
     ];
 
     let snapbox = runner(&args);
+    let output = snapbox.assert().failure();
 
-    snapbox.assert().stderr_matches(indoc! {r"
-        Error: File containing the account does not exist[..]
-    "});
+    assert_stderr_contains(
+        output,
+        "Error: File containing the account does not exist[..]",
+    );
 }
 
 #[tokio::test]
@@ -256,10 +268,9 @@ async fn test_keystore_undeployed_account() {
 
     env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
     let snapbox = runner(&args).current_dir(contract_path.path());
+    let output = snapbox.assert().failure();
 
-    snapbox.assert().stderr_matches(indoc! {r"
-        Error: [..] make sure the account is deployed
-    "});
+    assert_stderr_contains(output, "Error: [..] make sure the account is deployed");
 }
 
 #[tokio::test]

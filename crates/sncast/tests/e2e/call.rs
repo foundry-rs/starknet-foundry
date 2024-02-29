@@ -1,6 +1,7 @@
 use crate::helpers::fixtures::{default_cli_args, from_env, invoke_contract};
 use crate::helpers::runner::runner;
 use indoc::indoc;
+use shared::test_utils::output_assert::assert_stderr_contains;
 
 #[test]
 fn test_happy_case() {
@@ -61,11 +62,15 @@ async fn test_contract_does_not_exist() {
     ]);
 
     let snapbox = runner(&args);
+    let output = snapbox.assert().success();
 
-    snapbox.assert().stderr_matches(indoc! {r"
+    assert_stderr_contains(
+        output,
+        indoc! {r"
         command: call
         error: There is no contract at the specified address
-    "});
+        "},
+    );
 }
 
 #[test]
@@ -81,11 +86,15 @@ fn test_wrong_function_name() {
     ]);
 
     let snapbox = runner(&args);
+    let output = snapbox.assert().success();
 
-    snapbox.assert().stderr_matches(indoc! {r"
+    assert_stderr_contains(
+        output,
+        indoc! {r"
         command: call
         error: An error occurred in the called contract [..]
-    "});
+        "},
+    );
 }
 
 #[test]
@@ -104,11 +113,15 @@ fn test_wrong_calldata() {
     ]);
 
     let snapbox = runner(&args);
+    let output = snapbox.assert().success();
 
-    snapbox.assert().stderr_matches(indoc! {r"
+    assert_stderr_contains(
+        output,
+        indoc! {r"
         command: call
         error: An error occurred in the called contract [..]
-    "});
+        "},
+    );
 }
 
 #[tokio::test]
@@ -126,10 +139,15 @@ async fn test_invalid_selector() {
     ]);
 
     let snapbox = runner(&args);
-    snapbox.assert().stderr_matches(indoc! {r"
+    let output = snapbox.assert().success();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
         Error: Failed to convert entry point selector to FieldElement
     
         Caused by:
             the provided name contains non-ASCII characters
-  "});
+  "},
+    );
 }
