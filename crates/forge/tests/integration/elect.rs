@@ -8,7 +8,7 @@ use test_utils::{assert_passed, test_case};
 fn elect_basic() {
     let test = test_case!(
         indoc!(
-            r"
+            r#"
             use result::ResultTrait;
             use array::ArrayTrait;
             use option::OptionTrait;
@@ -24,7 +24,7 @@ fn elect_basic() {
 
             #[test]
             fn test_stop_elect() {
-                let contract = declare('ElectChecker');
+                let contract = declare("ElectChecker");
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IElectCheckerDispatcher { contract_address };
 
@@ -43,7 +43,7 @@ fn elect_basic() {
 
             #[test]
             fn test_elect_multiple() {
-                let contract = declare('ElectChecker');
+                let contract = declare("ElectChecker");
 
                 let elect_checker1 = IElectCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };
                 let elect_checker2 = IElectCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };
@@ -69,7 +69,7 @@ fn elect_basic() {
             }
             #[test]
             fn test_elect_all() {
-                let contract = declare('ElectChecker');
+                let contract = declare("ElectChecker");
 
                 let elect_checker1 = IElectCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };
                 let elect_checker2 = IElectCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };
@@ -96,7 +96,7 @@ fn elect_basic() {
 
             #[test]
             fn test_elect_all_stop_one() {
-                let contract = declare('ElectChecker');
+                let contract = declare("ElectChecker");
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IElectCheckerDispatcher { contract_address };
 
@@ -115,7 +115,7 @@ fn elect_basic() {
                 let new_seq_addr = dispatcher.get_sequencer_address();
                 assert(old_seq_addr == new_seq_addr, 'Address did not change back');
             }
-        "
+        "#
         ),
         Contract::from_code_path(
             "ElectChecker".to_string(),
@@ -133,7 +133,7 @@ fn elect_basic() {
 fn elect_complex() {
     let test = test_case!(
         indoc!(
-            r"
+            r#"
             use result::ResultTrait;
             use array::ArrayTrait;
             use option::OptionTrait;
@@ -149,7 +149,7 @@ fn elect_complex() {
 
             #[test]
             fn test_elect_complex() {
-                let contract = declare('ElectChecker');
+                let contract = declare("ElectChecker");
 
                 let elect_checker1 = IElectCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };
                 let elect_checker2 = IElectCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };
@@ -188,7 +188,7 @@ fn elect_complex() {
                 assert(new_seq_addr1 == 789.try_into().unwrap(), 'Wrong seq addr #7');
                 assert(new_seq_addr2 == old_seq_addr2, 'Wrong seq addr #8');
             }
-        "
+        "#
         ),
         Contract::from_code_path(
             "ElectChecker".to_string(),

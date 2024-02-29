@@ -1,4 +1,4 @@
-use crate::helpers::constants::{DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS, URL};
+use crate::helpers::constants::{DEVNET_OZ_CLASS_HASH, DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS, URL};
 use crate::helpers::runner::runner;
 use camino::Utf8PathBuf;
 use indoc::indoc;
@@ -78,7 +78,7 @@ pub async fn test_happy_case_add_profile() {
         "--salt",
         "0x3",
         "--class-hash",
-        "0x4",
+        DEVNET_OZ_CLASS_HASH,
         "--add-profile",
         "my_account_add",
     ];
@@ -101,7 +101,7 @@ pub async fn test_happy_case_add_profile() {
                 "alpha-goerli": {
                   "my_account_add": {
                     "address": "0x1",
-                    "class_hash": "0x4",
+                    "class_hash": DEVNET_OZ_CLASS_HASH,
                     "deployed": false,
                     "private_key": "0x2",
                     "public_key": "0x759ca09377679ecd535a81e83039658bf40959283187c654c5416f439403cf5",

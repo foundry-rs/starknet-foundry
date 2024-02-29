@@ -11,6 +11,11 @@ trait RecursiveCaller<T> {
     fn execute_calls(self: @T, calls: Array<RecursiveCall>);
 }
 
+#[starknet::interface]
+trait Failing<TContractState> {
+    fn fail(self: @TContractState, data: Array<felt252>);
+}
+
 #[starknet::contract]
 mod SimpleContract {
     use core::array::ArrayTrait;
@@ -18,7 +23,8 @@ mod SimpleContract {
     use starknet::ContractAddress;
     use starknet::get_contract_address;
     use super::{
-        RecursiveCaller, RecursiveCallerDispatcher, RecursiveCallerDispatcherTrait, RecursiveCall
+        RecursiveCaller, RecursiveCallerDispatcher, RecursiveCallerDispatcherTrait, RecursiveCall,
+        Failing
     };
 
 
@@ -38,6 +44,13 @@ mod SimpleContract {
                     .execute_calls(serviced_call.payload.clone());
                 i = i + 1;
             }
+        }
+    }
+
+    #[abi(embed_v0)]
+    impl FailingImpl of Failing<ContractState> {
+        fn fail(self: @ContractState, data: Array<felt252>) {
+            panic(data);
         }
     }
 }

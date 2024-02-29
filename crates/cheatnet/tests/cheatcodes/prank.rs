@@ -19,11 +19,31 @@ use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::spy_event
     Event, SpyTarget,
 };
 use cheatnet::state::{CheatTarget, CheatnetState, ExtendedStateReader};
-use conversions::felt252::FromShortString;
 use conversions::IntoConv;
 use starknet_api::block::BlockNumber;
 use starknet_api::core::ContractAddress;
 use tempfile::TempDir;
+
+use super::test_environment::TestEnvironment;
+
+trait PrankTrait {
+    fn start_prank(&mut self, target: CheatTarget, new_address: u128);
+    fn stop_prank(&mut self, contract_address: &ContractAddress);
+}
+
+impl<'a> PrankTrait for TestEnvironment<'a> {
+    fn start_prank(&mut self, target: CheatTarget, new_address: u128) {
+        self.runtime_state
+            .cheatnet_state
+            .start_prank(target, ContractAddress::from(new_address));
+    }
+
+    fn stop_prank(&mut self, contract_address: &ContractAddress) {
+        self.runtime_state
+            .cheatnet_state
+            .stop_prank(CheatTarget::One(*contract_address));
+    }
+}
 
 #[test]
 fn prank_simple() {
@@ -87,8 +107,7 @@ fn prank_in_constructor() {
 
     let contracts = get_contracts();
 
-    let contract_name = Felt252::from_short_string("ConstructorPrankChecker").unwrap();
-    let class_hash = declare(&mut cached_state, &contract_name, &contracts).unwrap();
+    let class_hash = declare(&mut cached_state, "ConstructorPrankChecker", &contracts).unwrap();
     let precalculated_address = runtime_state
         .cheatnet_state
         .precalculate_address(&class_hash, &[]);
@@ -290,8 +309,7 @@ fn prank_library_call() {
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
     let contracts = get_contracts();
-    let contract_name = Felt252::from_short_string("PrankChecker").unwrap();
-    let class_hash = declare(&mut cached_state, &contract_name, &contracts).unwrap();
+    let class_hash = declare(&mut cached_state, "PrankChecker", &contracts).unwrap();
 
     let lib_call_address = deploy_contract(
         &mut cached_state,
@@ -396,9 +414,8 @@ fn prank_multiple() {
     let mut cheatnet_state = CheatnetState::default();
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
-    let contract = Felt252::from_short_string("PrankChecker").unwrap();
     let contracts = get_contracts();
-    let class_hash = declare(&mut cached_state, &contract, &contracts).unwrap();
+    let class_hash = declare(&mut cached_state, "PrankChecker", &contracts).unwrap();
 
     let contract_address1 =
         deploy_wrapper(&mut cached_state, &mut runtime_state, &class_hash, &[]).unwrap();

@@ -29,7 +29,7 @@ impl BlockNumberMap {
             .insert((url, hash), block_number);
     }
 
-    fn get_latest_block_number(&mut self, url: &String) -> Option<&BlockNumber> {
+    fn get_latest_block_number(&mut self, url: &str) -> Option<&BlockNumber> {
         self.url_to_latest_block_number.get(url)
     }
 

@@ -8,17 +8,16 @@ use trace_resources::{
 };
 
 #[test]
+#[feature("safe_dispatcher")]
 fn test_failed_lib_call() {
-    let empty_hash = declare('Empty').class_hash;
-    let proxy_hash = declare('TraceInfoProxy').class_hash;
-    let checker = declare('TraceInfoChecker');
+    let empty_hash = declare("Empty").class_hash;
+    let proxy_hash = declare("TraceInfoProxy").class_hash;
+    let checker = declare("TraceInfoChecker");
     let checker_address = checker.deploy(@array![]).unwrap();
 
     trace_resources::use_builtins_and_syscalls(empty_hash, 7);
 
     let proxy_lib_dispatcher = ITraceInfoProxySafeLibraryDispatcher { class_hash: proxy_hash };
-
-    #[feature("safe_dispatcher")]
     match proxy_lib_dispatcher.with_panic(checker_address, empty_hash, 1) {
         Result::Ok(_) => panic_with_felt252('shouldve panicked'),
         Result::Err(panic_data) => { assert(*panic_data.at(0) == 'panic', *panic_data.at(0)); }
@@ -27,8 +26,6 @@ fn test_failed_lib_call() {
     let chcecker_lib_dispatcher = ITraceInfoCheckerSafeLibraryDispatcher {
         class_hash: checker.class_hash
     };
-
-    #[feature("safe_dispatcher")]
     match chcecker_lib_dispatcher.panic(empty_hash, 2) {
         Result::Ok(_) => panic_with_felt252('shouldve panicked'),
         Result::Err(panic_data) => { assert(*panic_data.at(0) == 'panic', *panic_data.at(0)); }

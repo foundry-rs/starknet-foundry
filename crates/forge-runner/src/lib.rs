@@ -17,8 +17,8 @@ use contracts_data::ContractsData;
 use futures::stream::FuturesUnordered;
 use futures::StreamExt;
 
+use build_trace_data::save_trace_data;
 use smol_str::SmolStr;
-use trace_data::save_trace_data;
 
 use std::collections::HashMap;
 use std::default::Default;
@@ -27,12 +27,12 @@ use test_case_summary::{AnyTestCaseSummary, Fuzzing};
 use tokio::sync::mpsc::{channel, Sender};
 use tokio::task::JoinHandle;
 
+pub mod build_trace_data;
 pub mod compiled_runnable;
 pub mod contracts_data;
 pub mod expected_result;
 pub mod test_case_summary;
 pub mod test_crate_summary;
-pub mod trace_data;
 
 mod fuzzer;
 mod gas;
@@ -171,10 +171,8 @@ pub async fn run_tests_from_crate(
         let function = sierra_program
             .funcs
             .iter()
-            .find(|f| f.id.debug_name.clone().unwrap().ends_with(&case_name))
-            .ok_or_else(|| RunnerError::MissingFunction {
-                suffix: case_name.clone(),
-            })?;
+            .find(|f| f.id.debug_name.as_ref().unwrap().ends_with(&case_name))
+            .ok_or(RunnerError::MissingFunction { suffix: case_name })?;
 
         let args = function_args(function, &BUILTINS);
 
@@ -183,7 +181,7 @@ pub async fn run_tests_from_crate(
 
         tasks.push(choose_test_strategy_and_run(
             args,
-            case.clone(),
+            case,
             casm_program.clone(),
             runner_config.clone(),
             runner_params.clone(),

@@ -12,5 +12,5 @@ pub fn create_execute_calldata(calldata: &[Felt252]) -> Calldata {
 
 #[must_use]
 pub fn create_entry_point_selector(entry_point_selector: &Felt252) -> EntryPointSelector {
-    EntryPointSelector((*entry_point_selector).clone().into_())
+    EntryPointSelector(entry_point_selector.clone().into_())
 }
