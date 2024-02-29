@@ -12,7 +12,7 @@ use cairo_felt::Felt252;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeState;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::spoof::TxInfoMock;
-use cheatnet::state::{CheatTarget, CheatnetState};
+use cheatnet::state::{CheatSpan, CheatTarget, CheatnetState};
 use conversions::IntoConv;
 use num_traits::ToPrimitive;
 use runtime::utils::BufferReader;
@@ -21,11 +21,18 @@ use starknet_api::core::ContractAddress;
 use super::test_environment::TestEnvironment;
 
 trait SpoofTrait {
+    fn spoof(&mut self, target: CheatTarget, tx_info_mock: TxInfoMock, span: CheatSpan);
     fn start_spoof(&mut self, target: CheatTarget, tx_info_mock: TxInfoMock);
     fn stop_spoof(&mut self, contract_address: &ContractAddress);
 }
 
 impl<'a> SpoofTrait for TestEnvironment<'a> {
+    fn spoof(&mut self, target: CheatTarget, tx_info_mock: TxInfoMock, span: CheatSpan) {
+        self.runtime_state
+            .cheatnet_state
+            .spoof(target, tx_info_mock, span);
+    }
+
     fn start_spoof(&mut self, target: CheatTarget, tx_info_mock: TxInfoMock) {
         self.runtime_state
             .cheatnet_state
