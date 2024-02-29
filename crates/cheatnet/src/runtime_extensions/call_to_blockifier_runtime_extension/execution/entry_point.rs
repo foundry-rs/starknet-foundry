@@ -28,6 +28,7 @@ use cairo_felt::Felt252;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{AddressOrClassHash, CallResult};
 
 // blockifier/src/execution/entry_point.rs:180 (CallEntryPoint::execute)
+#[allow(clippy::too_many_lines)]
 pub fn execute_call_entry_point(
     entry_point: &mut CallEntryPoint, // Instead of 'self'
     state: &mut dyn State,
@@ -89,11 +90,7 @@ pub fn execute_call_entry_point(
         .get(&storage_address)
         .copied()
         .or(entry_point.class_hash)
-        .unwrap_or(storage_class_hash);
-    // let class_hash = match entry_point.class_hash {
-    //     Some(class_hash) => class_hash,
-    //     None => storage_class_hash, // If not given, take the storage contract class hash.
-    // };
+        .unwrap_or(storage_class_hash); // If not given, take the storage contract class hash.
 
     // region: Modified blockifier code
     runtime_state
