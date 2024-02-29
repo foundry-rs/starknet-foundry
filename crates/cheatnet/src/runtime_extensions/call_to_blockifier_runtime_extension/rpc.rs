@@ -1,25 +1,26 @@
-use blockifier::execution::execution_utils::stark_felt_to_felt;
-use cairo_lang_runner::casm_run::format_next_item;
-use conversions::byte_array::ByteArray;
-use conversions::IntoConv;
-
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::execute_call_entry_point;
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::panic_data::try_extract_panic_data;
-use crate::runtime_extensions::common::create_execute_calldata;
-use blockifier::execution::call_info::CallInfo;
-use blockifier::execution::entry_point::EntryPointExecutionResult;
-use blockifier::execution::syscalls::hint_processor::{SyscallCounter, SyscallHintProcessor};
+use super::RuntimeState;
+use crate::runtime_extensions::{
+    call_to_blockifier_runtime_extension::{
+        execution::entry_point::execute_call_entry_point, panic_data::try_extract_panic_data,
+    },
+    common::{create_entry_point_selector, create_execute_calldata},
+};
 use blockifier::execution::{
-    entry_point::{CallEntryPoint, CallType, ExecutionResources},
+    call_info::CallInfo,
+    entry_point::{CallEntryPoint, CallType, EntryPointExecutionResult, ExecutionResources},
     errors::{EntryPointExecutionError, PreExecutionError},
+    execution_utils::stark_felt_to_felt,
+    syscalls::hint_processor::{SyscallCounter, SyscallHintProcessor},
 };
 use blockifier::state::errors::StateError;
 use cairo_felt::Felt252;
+use cairo_lang_runner::casm_run::format_next_item;
+use conversions::byte_array::ByteArray;
 use serde::{Deserialize, Serialize};
-use starknet_api::core::{ClassHash, EntryPointSelector};
-use starknet_api::{core::ContractAddress, deprecated_contract_class::EntryPointType};
-
-use super::RuntimeState;
+use starknet_api::{
+    core::{ClassHash, ContractAddress},
+    deprecated_contract_class::EntryPointType,
+};
 
 #[derive(Clone, Debug, Default)]
 pub struct UsedResources {
@@ -201,10 +202,10 @@ pub fn call_l1_handler(
     syscall_handler: &mut SyscallHintProcessor,
     runtime_state: &mut RuntimeState,
     contract_address: &ContractAddress,
-    entry_point_selector: Felt252,
+    entry_point_selector: &Felt252,
     calldata: &[Felt252],
 ) -> CallResult {
-    let entry_point_selector = EntryPointSelector(entry_point_selector.into_());
+    let entry_point_selector = create_entry_point_selector(entry_point_selector);
     let calldata = create_execute_calldata(calldata);
 
     let entry_point = CallEntryPoint {

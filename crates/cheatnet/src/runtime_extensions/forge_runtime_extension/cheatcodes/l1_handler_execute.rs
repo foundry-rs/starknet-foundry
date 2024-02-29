@@ -10,7 +10,7 @@ pub fn l1_handler_execute(
     syscall_handler: &mut SyscallHintProcessor,
     runtime_state: &mut RuntimeState,
     contract_address: ContractAddress,
-    function_selector: Felt252,
+    function_selector: &Felt252,
     from_address: &Felt252,
     payload: &[Felt252],
 ) -> CallResult {

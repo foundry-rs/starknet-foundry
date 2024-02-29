@@ -372,7 +372,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     syscall_handler,
                     &mut runtime_state,
                     contract_address,
-                    function_selector,
+                    &function_selector,
                     &from_address,
                     &payload,
                 ) {
