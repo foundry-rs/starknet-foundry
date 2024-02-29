@@ -133,3 +133,92 @@ fn prank() {
 
     assert_passed(&result);
 }
+
+#[test]
+fn prank_with_span() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use result::ResultTrait;
+            use array::ArrayTrait;
+            use option::OptionTrait;
+            use traits::TryInto;
+            use starknet::ContractAddress;
+            use starknet::Felt252TryIntoContractAddress;
+            use snforge_std::{ test_address, declare, ContractClassTrait, prank, start_prank, stop_prank, CheatTarget, CheatSpan };
+
+            #[starknet::interface]
+            trait IPrankChecker<TContractState> {
+                fn get_caller_address(ref self: TContractState) -> felt252;
+            }
+
+            fn deploy_prank_checker() -> IPrankCheckerDispatcher {
+                let contract_address = declare("PrankChecker").deploy(@ArrayTrait::new()).unwrap();
+                IPrankCheckerDispatcher { contract_address }
+            }
+
+            #[test]
+            fn test_prank_once() {
+                let dispatcher = deploy_prank_checker();
+
+                let target_caller_address: ContractAddress = 123.try_into().unwrap();
+
+                prank(CheatTarget::One(dispatcher.contract_address), target_caller_address, CheatSpan::Calls(1));
+
+                let caller_address = dispatcher.get_caller_address();
+                assert(caller_address == target_caller_address.into(), 'Wrong caller address');
+
+                let caller_address = dispatcher.get_caller_address();
+                assert(caller_address == test_address().into(), 'Address did not change back');
+            }
+
+            #[test]
+            fn test_prank_twice() {
+                let dispatcher = deploy_prank_checker();
+
+                let target_caller_address: ContractAddress = 123.try_into().unwrap();
+
+                prank(CheatTarget::One(dispatcher.contract_address), target_caller_address, CheatSpan::Calls(2));
+
+                let caller_address = dispatcher.get_caller_address();
+                assert(caller_address == target_caller_address.into(), 'Wrong caller address');
+                
+                let caller_address = dispatcher.get_caller_address();
+                assert(caller_address == target_caller_address.into(), 'Wrong caller address');
+
+                let caller_address = dispatcher.get_caller_address();
+                assert(caller_address == test_address().into(), 'Address did not change back');
+            }
+
+            #[test]
+            fn test_prank_test_address() {
+                let old_caller_address = starknet::get_caller_address();
+                
+                let target_caller_address: ContractAddress = 123.try_into().unwrap();
+                
+                prank(CheatTarget::One(test_address()), target_caller_address, CheatSpan::Calls(1));
+                
+                let caller_address = starknet::get_caller_address();
+                assert(caller_address == target_caller_address, 'Wrong caller address');
+
+                let caller_address = starknet::get_caller_address();
+                assert(caller_address == target_caller_address, 'Wrong caller address');
+                
+                stop_prank(CheatTarget::One(test_address()));
+
+                let caller_address = starknet::get_caller_address();
+                assert(caller_address == old_caller_address, 'Wrong caller address');
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "PrankChecker".to_string(),
+            Path::new("tests/data/contracts/prank_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test);
+
+    assert_passed!(result);
+}

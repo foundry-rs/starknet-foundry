@@ -14,6 +14,12 @@ enum CheatTarget {
     Multiple: Array<ContractAddress>
 }
 
+#[derive(Drop, Serde, PartialEq)]
+enum CheatSpan {
+    Indefinite: (),
+    Calls: usize,
+}
+
 fn test_selector() -> felt252 {
     selector!("TEST_CONTRACT_SELECTOR")
 }
@@ -35,11 +41,18 @@ fn stop_roll(target: CheatTarget) {
     cheatcode::<'stop_roll'>(inputs.span());
 }
 
-fn start_prank(target: CheatTarget, caller_address: ContractAddress) {
+fn prank(target: CheatTarget, caller_address: ContractAddress, span: CheatSpan) {
+    assert!(span != CheatSpan::Calls(0), "CheatSpan must be greater than 0");
+
     let mut inputs = array![];
     target.serialize(ref inputs);
+    span.serialize(ref inputs);
     inputs.append(caller_address.into());
     cheatcode::<'start_prank'>(inputs.span());
+}
+
+fn start_prank(target: CheatTarget, caller_address: ContractAddress) {
+    prank(target, caller_address, CheatSpan::Indefinite)
 }
 
 fn stop_prank(target: CheatTarget) {
