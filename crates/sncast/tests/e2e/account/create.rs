@@ -75,11 +75,15 @@ pub async fn test_invalid_class_hash() {
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
+    let output = snapbox.assert().success();
 
-    snapbox.assert().stderr_matches(indoc! {r"
+    assert_stderr_contains(
+        output,
+        indoc! {r"
         command: account create
         error: Class with hash 0x10101 is not declared, try using --class-hash with a hash of the declared class
-    "});
+        "},
+    );
 }
 
 #[tokio::test]
