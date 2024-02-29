@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
 use camino::Utf8Path;
 use warn::{
     warn_if_available_gas_used_with_incompatible_scarb_version, warn_if_incompatible_rpc_version,
@@ -103,7 +103,8 @@ pub async fn run(
     fork_targets: &[ForkTarget],
     block_number_map: &mut BlockNumberMap,
 ) -> Result<Vec<TestCrateSummary>> {
-    let test_crates = load_test_artifacts(snforge_target_dir_path, package_name)?;
+    let test_crates = load_test_artifacts(snforge_target_dir_path, package_name)
+        .context("Failed to load test artifacts, make sure to use scarb >=2.5.4")?;
     let all_tests: usize = test_crates.iter().map(|tc| tc.test_cases.len()).sum();
 
     let test_crates = test_crates
@@ -136,7 +137,7 @@ pub async fn run(
         let runner_params = runner_params.clone();
 
         let summary = forge_runner::run_tests_from_crate(
-            compiled_test_crate.clone(),
+            compiled_test_crate,
             runner_config,
             runner_params,
             tests_filter,

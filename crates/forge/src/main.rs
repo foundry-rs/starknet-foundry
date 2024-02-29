@@ -129,7 +129,9 @@ fn validate_fuzzer_runs_value(val: &str) -> Result<u32> {
     Ok(parsed_val)
 }
 
-fn extract_failed_tests(tests_summaries: Vec<TestCrateSummary>) -> Vec<AnyTestCaseSummary> {
+fn extract_failed_tests(
+    tests_summaries: Vec<TestCrateSummary>,
+) -> impl Iterator<Item = AnyTestCaseSummary> {
     tests_summaries
         .into_iter()
         .flat_map(|test_file_summary| test_file_summary.test_case_summaries)
@@ -140,7 +142,6 @@ fn extract_failed_tests(tests_summaries: Vec<TestCrateSummary>) -> Vec<AnyTestCa
                     | AnyTestCaseSummary::Single(TestCaseSummary::Failed { .. })
             )
         })
-        .collect()
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -280,8 +281,7 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                 )
                 .await?;
 
-                let mut failed_tests = extract_failed_tests(tests_file_summaries);
-                all_failed_tests.append(&mut failed_tests);
+                all_failed_tests.extend(extract_failed_tests(tests_file_summaries));
             }
             set_cached_failed_tests_names(&all_failed_tests, &workspace_root.join(CACHE_DIR))?;
             pretty_printing::print_latest_blocks_numbers(

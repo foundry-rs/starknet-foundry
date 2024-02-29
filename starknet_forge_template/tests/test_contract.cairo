@@ -7,14 +7,14 @@ use {{ PROJECT_NAME }}::IHelloStarknetSafeDispatcherTrait;
 use {{ PROJECT_NAME }}::IHelloStarknetDispatcher;
 use {{ PROJECT_NAME }}::IHelloStarknetDispatcherTrait;
 
-fn deploy_contract(name: felt252) -> ContractAddress {
+fn deploy_contract(name: ByteArray) -> ContractAddress {
     let contract = declare(name);
     contract.deploy(@ArrayTrait::new()).unwrap()
 }
 
 #[test]
 fn test_increase_balance() {
-    let contract_address = deploy_contract('HelloStarknet');
+    let contract_address = deploy_contract("HelloStarknet");
 
     let dispatcher = IHelloStarknetDispatcher { contract_address };
 
@@ -29,7 +29,7 @@ fn test_increase_balance() {
 
 #[test]
 fn test_cannot_increase_balance_with_zero_value() {
-    let contract_address = deploy_contract('HelloStarknet');
+    let contract_address = deploy_contract("HelloStarknet");
 
     let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
 

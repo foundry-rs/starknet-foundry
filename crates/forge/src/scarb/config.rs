@@ -2,7 +2,7 @@ use crate::compiled_raw::RawForkParams;
 use anyhow::{bail, Result};
 use itertools::Itertools;
 use serde::Deserialize;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(Debug, PartialEq, Default)]
@@ -82,16 +82,18 @@ pub(crate) struct RawForkTarget {
 
 fn validate_raw_fork_config(raw_config: RawForgeConfig) -> Result<RawForgeConfig> {
     let forks = &raw_config.fork;
-    let names: Vec<String> = forks.iter().map(|fork| fork.name.clone()).collect();
-    let removed_duplicated_names: Vec<String> = names.clone().into_iter().unique().collect();
+
+    let names: Vec<_> = forks.iter().map(|fork| &fork.name).collect();
+    let removed_duplicated_names: HashSet<_> = names.iter().collect();
 
     if names.len() != removed_duplicated_names.len() {
         bail!("Some fork names are duplicated");
     }
 
     for fork in forks {
-        let block_id_items: Vec<(&String, &String)> = fork.block_id.iter().collect();
-        let [(block_id_key, block_id_value)] = block_id_items[..] else {
+        let block_id_item = fork.block_id.iter().exactly_one();
+
+        let Ok((block_id_key, block_id_value)) = block_id_item else {
             bail!("block_id should be set once per fork");
         };
 
@@ -115,11 +117,8 @@ impl TryFrom<RawForgeConfig> for ForgeConfig {
         let mut fork_targets = vec![];
 
         for raw_fork_target in value.fork {
-            let [(block_id_type, block_id_value)] =
-                raw_fork_target.block_id.iter().collect_vec()[..]
-            else {
-                unreachable!()
-            };
+            let (block_id_type, block_id_value) =
+                raw_fork_target.block_id.iter().exactly_one().unwrap();
 
             fork_targets.push(ForkTarget::new(
                 raw_fork_target.name,

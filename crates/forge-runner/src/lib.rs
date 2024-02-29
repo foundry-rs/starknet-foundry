@@ -18,23 +18,23 @@ use futures::stream::FuturesUnordered;
 use futures::StreamExt;
 
 use profiler_api::run_profiler;
+use build_trace_data::save_trace_data;
 use smol_str::SmolStr;
-use trace_data::save_trace_data;
 
 use std::collections::HashMap;
-use std::default::{Default};
 use std::sync::Arc;
 use test_case_summary::{AnyTestCaseSummary, Fuzzing};
 use tokio::sync::mpsc::{channel, Sender};
 use tokio::task::JoinHandle;
 
+pub mod build_trace_data;
 pub mod compiled_runnable;
 pub mod contracts_data;
 pub mod expected_result;
 pub mod test_case_summary;
 pub mod test_crate_summary;
-pub mod trace_data;
 pub mod profiler_api;
+
 
 mod fuzzer;
 mod gas;
@@ -55,7 +55,7 @@ pub const BUILTINS: [&str; 8] = [
 ];
 
 #[derive(Debug, PartialEq)]
-enum ExecutionDataToSave {
+pub enum ExecutionDataToSave {
     None,
     Trace,
     /// Profile data requires saved trace data
@@ -194,10 +194,8 @@ pub async fn run_tests_from_crate(
         let function = sierra_program
             .funcs
             .iter()
-            .find(|f| f.id.debug_name.clone().unwrap().ends_with(&case_name))
-            .ok_or_else(|| RunnerError::MissingFunction {
-                suffix: case_name.clone(),
-            })?;
+            .find(|f| f.id.debug_name.as_ref().unwrap().ends_with(&case_name))
+            .ok_or(RunnerError::MissingFunction { suffix: case_name })?;
 
         let args = function_args(function, &BUILTINS);
 
@@ -206,7 +204,7 @@ pub async fn run_tests_from_crate(
 
         tasks.push(choose_test_strategy_and_run(
             args,
-            case.clone(),
+            case,
             casm_program.clone(),
             runner_config.clone(),
             runner_params.clone(),
@@ -222,19 +220,7 @@ pub async fn run_tests_from_crate(
 
         print_test_result(&result, &runner_config);
 
-        if let AnyTestCaseSummary::Single(result) = &result {
-            match &runner_config.execution_data_to_save {
-                &ExecutionDataToSave::Trace => {
-                    save_trace_data(result);
-                }
-                &ExecutionDataToSave::TraceAndProfile => {
-                    save_trace_data(result);
-                    let profiler = Profiler::try_new()?;
-                    profiler(run)
-                }
-                &ExecutionDataToSave::None => {}
-            }
-        }
+        maybe_save_execution_data(&result, &runner_config.execution_data_to_save);
 
         if result.is_failed() && runner_config.exit_first {
             interrupted = true;
@@ -253,6 +239,23 @@ pub async fn run_tests_from_crate(
         Ok(TestCrateRunResult::Interrupted(summary))
     } else {
         Ok(TestCrateRunResult::Ok(summary))
+    }
+}
+
+fn maybe_save_execution_data(result: &AnyTestCaseSummary, execution_data_to_save: &ExecutionDataToSave) {
+    if let AnyTestCaseSummary::Single(result) = result {
+        if let TestCaseSummary::Passed { name, trace_data, ..} = result {
+            match execution_data_to_save {
+                &ExecutionDataToSave::Trace => {
+                    let _ = save_trace_data(name, trace_data);
+                }
+                &ExecutionDataToSave::TraceAndProfile => {
+                    let trace_path = save_trace_data(name, trace_data);
+                    run_profiler(name, trace_path);
+                }
+                &ExecutionDataToSave::None => {}
+            }
+        }
     }
 }
 

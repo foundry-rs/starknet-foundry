@@ -54,6 +54,34 @@ pub async fn test_happy_case() {
 }
 
 #[tokio::test]
+pub async fn test_invalid_class_hash() {
+    let temp_dir = tempdir().expect("Unable to create a temporary directory");
+    let accounts_file = "accounts.json";
+
+    let args = vec![
+        "--url",
+        URL,
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "create",
+        "--class-hash",
+        "0x10101",
+        "--name",
+        "my_account_create_happy",
+        "--salt",
+        "0x1",
+    ];
+
+    let snapbox = runner(&args).current_dir(temp_dir.path());
+
+    snapbox.assert().stderr_matches(indoc! {r"
+        command: account create
+        error: Class with hash 0x10101 is not declared, try using --class-hash with a hash of the declared class
+    "});
+}
+
+#[tokio::test]
 pub async fn test_happy_case_generate_salt() {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
     let accounts_file = "accounts.json";

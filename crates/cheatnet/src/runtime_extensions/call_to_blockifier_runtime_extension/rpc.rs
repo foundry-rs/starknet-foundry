@@ -14,6 +14,7 @@ use blockifier::execution::{
 };
 use blockifier::state::errors::StateError;
 use cairo_felt::Felt252;
+use serde::{Deserialize, Serialize};
 use starknet_api::core::ClassHash;
 use starknet_api::{core::ContractAddress, deprecated_contract_class::EntryPointType};
 
@@ -64,7 +65,7 @@ fn subtract_syscall_counters(
 }
 
 /// Enum representing possible call execution result, along with the data
-#[derive(Debug)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum CallResult {
     Success { ret_data: Vec<Felt252> },
     Failure(CallFailure),
@@ -73,7 +74,7 @@ pub enum CallResult {
 /// Enum representing possible call failure and its' type.
 /// `Panic` - Recoverable, meant to be caught by the user.
 /// `Error` - Unrecoverable, equivalent of panic! in rust.
-#[derive(Debug)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum CallFailure {
     Panic { panic_data: Vec<Felt252> },
     Error { msg: String },
@@ -108,7 +109,7 @@ impl CallFailure {
                     if let [item] = &items[..] {
                         item.clone()
                     } else {
-                        items.join("\n").to_string()
+                        items.join("\n")
                     }
                 };
 
@@ -146,7 +147,7 @@ impl CallFailure {
                     ),
                 };
 
-                let panic_data_felts: Vec<Felt252> = ByteArray::from(msg).serialize();
+                let panic_data_felts: Vec<Felt252> = ByteArray::from(msg.as_str()).serialize();
 
                 CallFailure::Panic {
                     panic_data: panic_data_felts,
@@ -170,7 +171,8 @@ impl CallFailure {
 }
 
 impl CallResult {
-    fn from_execution_result(
+    #[must_use]
+    pub fn from_execution_result(
         result: &EntryPointExecutionResult<CallInfo>,
         starknet_identifier: &AddressOrClassHash,
     ) -> Self {
