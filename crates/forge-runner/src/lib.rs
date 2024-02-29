@@ -17,8 +17,8 @@ use contracts_data::ContractsData;
 use futures::stream::FuturesUnordered;
 use futures::StreamExt;
 
-use profiler_api::run_profiler;
 use build_trace_data::save_trace_data;
+use profiler_api::run_profiler;
 use smol_str::SmolStr;
 
 use std::collections::HashMap;
@@ -31,10 +31,9 @@ pub mod build_trace_data;
 pub mod compiled_runnable;
 pub mod contracts_data;
 pub mod expected_result;
+pub mod profiler_api;
 pub mod test_case_summary;
 pub mod test_crate_summary;
-pub mod profiler_api;
-
 
 mod fuzzer;
 mod gas;
@@ -59,14 +58,14 @@ pub enum ExecutionDataToSave {
     None,
     Trace,
     /// Profile data requires saved trace data
-    TraceAndProfile
+    TraceAndProfile,
 }
 
 impl ExecutionDataToSave {
     fn from_flags(save_trace_data: bool, build_profile: bool) -> Self {
         if build_profile {
             return ExecutionDataToSave::TraceAndProfile;
-        } 
+        }
         if save_trace_data {
             return ExecutionDataToSave::Trace;
         }
@@ -220,7 +219,7 @@ pub async fn run_tests_from_crate(
 
         print_test_result(&result, &runner_config);
 
-        maybe_save_execution_data(&result, &runner_config.execution_data_to_save);
+        maybe_save_execution_data(&result, &runner_config.execution_data_to_save)?;
 
         if result.is_failed() && runner_config.exit_first {
             interrupted = true;
@@ -242,19 +241,26 @@ pub async fn run_tests_from_crate(
     }
 }
 
-fn maybe_save_execution_data(result: &AnyTestCaseSummary, execution_data_to_save: &ExecutionDataToSave) {
-    if let AnyTestCaseSummary::Single( TestCaseSummary::Passed { name, trace_data, ..} ) = result {
+fn maybe_save_execution_data(
+    result: &AnyTestCaseSummary,
+    execution_data_to_save: &ExecutionDataToSave,
+) -> Result<()> {
+    if let AnyTestCaseSummary::Single(TestCaseSummary::Passed {
+        name, trace_data, ..
+    }) = result
+    {
         match execution_data_to_save {
             ExecutionDataToSave::Trace => {
                 let _ = save_trace_data(name, trace_data);
             }
             ExecutionDataToSave::TraceAndProfile => {
                 let trace_path = save_trace_data(name, trace_data);
-                run_profiler(name, trace_path);
+                run_profiler(name, trace_path)?;
             }
             ExecutionDataToSave::None => {}
         }
     }
+    Ok(())
 }
 
 #[allow(clippy::too_many_arguments)]

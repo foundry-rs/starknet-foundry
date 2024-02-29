@@ -1,7 +1,7 @@
 pub(crate) mod common;
 
-mod build_trace_data;
 mod build_profile;
+mod build_trace_data;
 mod collection;
 mod color;
 mod components;
