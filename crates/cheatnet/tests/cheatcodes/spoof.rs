@@ -18,6 +18,27 @@ use num_traits::ToPrimitive;
 use runtime::utils::BufferReader;
 use starknet_api::core::ContractAddress;
 
+use super::test_environment::TestEnvironment;
+
+trait SpoofTrait {
+    fn start_spoof(&mut self, target: CheatTarget, tx_info_mock: TxInfoMock);
+    fn stop_spoof(&mut self, contract_address: &ContractAddress);
+}
+
+impl<'a> SpoofTrait for TestEnvironment<'a> {
+    fn start_spoof(&mut self, target: CheatTarget, tx_info_mock: TxInfoMock) {
+        self.runtime_state
+            .cheatnet_state
+            .start_spoof(target, tx_info_mock);
+    }
+
+    fn stop_spoof(&mut self, contract_address: &ContractAddress) {
+        self.runtime_state
+            .cheatnet_state
+            .stop_spoof(CheatTarget::One(*contract_address));
+    }
+}
+
 #[derive(Clone, Default, Debug, PartialEq)]
 pub struct TxInfo {
     pub version: Felt252,

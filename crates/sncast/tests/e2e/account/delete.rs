@@ -2,6 +2,7 @@ use crate::helpers::constants::URL;
 use crate::helpers::fixtures::default_cli_args;
 use crate::helpers::runner::runner;
 use indoc::indoc;
+use shared::test_utils::output_assert::{assert_stderr_contains, AsOutput};
 use tempfile::{tempdir, TempDir};
 use tokio::fs::File;
 use tokio::io::AsyncWriteExt;
@@ -19,11 +20,15 @@ pub async fn test_no_accounts_in_network() {
     ]);
 
     let snapbox = runner(&args);
+    let output = snapbox.assert().success();
 
-    snapbox.assert().stderr_matches(indoc! {r"
-    command: account delete
-    error: No accounts defined for network = goerli0-network
-    "});
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        command: account delete
+        error: No accounts defined for network = goerli0-network
+        "},
+    );
 }
 
 #[tokio::test]
@@ -32,11 +37,15 @@ pub async fn test_account_does_not_exist() {
     args.append(&mut vec!["account", "delete", "--name", "user99"]);
 
     let snapbox = runner(&args);
+    let output = snapbox.assert().success();
 
-    snapbox.assert().stderr_matches(indoc! {r"
-    command: account delete
-    error: Account with name user99 does not exist
-    "});
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        command: account delete
+        error: Account with name user99 does not exist
+        "},
+    );
 }
 
 #[tokio::test]
@@ -62,10 +71,14 @@ pub async fn test_delete_abort() {
     // Run test with a negative user input
     let snapbox = runner(&args).current_dir(temp_dir.path()).stdin("n");
 
-    snapbox.assert().stderr_matches(indoc! {r"
-    command: account delete
-    error: Delete aborted
-    "});
+    let output = snapbox.assert().success();
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        command: account delete
+        error: Delete aborted
+        "},
+    );
 }
 
 #[tokio::test]
@@ -90,12 +103,11 @@ pub async fn test_happy_case() {
 
     // Run test with an affirmative user input
     let snapbox = runner(&args).current_dir(temp_dir.path()).stdin("Y");
-    let bdg = snapbox.assert();
-    let out = bdg.get_output();
-    let stdout_str =
-        std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
 
-    assert!(stdout_str.contains("Account successfully removed"));
+    snapbox.assert().success().stdout_matches(indoc! {r"
+        command: account delete
+        result: Account successfully removed
+    "});
 }
 
 #[tokio::test]
@@ -118,12 +130,11 @@ pub async fn test_happy_case_without_network_args() {
 
     // Run test with an affirmative user input
     let snapbox = runner(&args).current_dir(temp_dir.path()).stdin("Y");
-    let bdg = snapbox.assert();
-    let out = bdg.get_output();
-    let stdout_str =
-        std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
 
-    assert!(stdout_str.contains("Account successfully removed"));
+    snapbox.assert().success().stdout_matches(indoc! {r"
+        command: account delete
+        result: Account successfully removed
+    "});
 }
 
 #[tokio::test]
@@ -149,13 +160,13 @@ pub async fn test_happy_case_with_yes_flag() {
 
     // Run test with no additional user input
     let snapbox = runner(&args).current_dir(temp_dir.path());
-    let bdg = snapbox.assert();
-    let out = bdg.get_output();
-    let stdout_str =
-        std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
+    let output = snapbox.assert().success();
 
-    assert!(out.stderr.is_empty());
-    assert!(stdout_str.contains("Account successfully removed"));
+    assert!(output.as_stderr().is_empty());
+    output.stdout_matches(indoc! {r"
+        command: account delete
+        result: Account successfully removed
+    "});
 }
 
 #[must_use]

@@ -15,8 +15,8 @@ use starknet::providers::{JsonRpcClient, Provider};
 use starknet::signers::{LocalWallet, SigningKey};
 
 use sncast::{
-    account_file_exists, chain_id_to_network_name, get_keystore_password, handle_rpc_error,
-    handle_wait_for_tx, parse_number, WaitForTx,
+    account_file_exists, chain_id_to_network_name, get_keystore_password,
+    handle_account_factory_error, handle_rpc_error, handle_wait_for_tx, parse_number, WaitForTx,
 };
 
 #[derive(Args, Debug)]
@@ -274,8 +274,7 @@ async fn deploy_oz_account(
     } else {
         match deployment.estimate_fee().await {
             Ok(max_fee) => max_fee.overall_fee,
-            Err(AccountFactoryError::Provider(error)) => return Err(handle_rpc_error(error)),
-            Err(error) => bail!(error),
+            Err(error) => return Err(handle_account_factory_error(error)),
         }
     };
     let result = deployment.max_fee(deploy_max_fee).send().await;

@@ -6,6 +6,7 @@ use crate::helpers::fixtures::{
 use crate::helpers::runner::runner;
 use indoc::indoc;
 use serde_json::Value;
+use shared::test_utils::output_assert::{assert_stderr_contains, AsOutput};
 use sncast::helpers::configuration::copy_config_to_tempdir;
 use sncast::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
 use starknet::core::types::TransactionReceipt::DeployAccount;
@@ -36,15 +37,13 @@ pub async fn test_happy_case() {
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let bdg = snapbox.assert();
-    let out = bdg.get_output();
 
-    let hash = get_transaction_hash(&out.stdout);
+    let hash = get_transaction_hash(&bdg.get_output().stdout);
     let receipt = get_transaction_receipt(hash).await;
 
     assert!(matches!(receipt, DeployAccount(_)));
 
-    let stdout_str =
-        std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
+    let stdout_str = bdg.as_stdout();
     assert!(stdout_str.contains("account deploy"));
     assert!(stdout_str.contains("transaction_hash"));
 
@@ -76,16 +75,14 @@ pub async fn test_happy_case_add_profile() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    let bdg = snapbox.assert();
-    let out = bdg.get_output();
+    let output = snapbox.assert();
 
-    let hash = get_transaction_hash(&out.stdout);
+    let hash = get_transaction_hash(&output.get_output().stdout);
     let receipt = get_transaction_receipt(hash).await;
 
     assert!(matches!(receipt, DeployAccount(_)));
 
-    let stdout_str =
-        std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
+    let stdout_str = output.as_stdout();
     assert!(stdout_str.contains("account deploy"));
     assert!(stdout_str.contains("transaction_hash"));
 }
@@ -114,12 +111,9 @@ fn test_account_deploy_error(accounts_content: &str, error: &str) {
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
-    let bdg = snapbox.assert();
-    let out = bdg.get_output();
+    let output = snapbox.assert();
 
-    let stderr_str =
-        std::str::from_utf8(&out.stderr).expect("failed to convert command output to string");
-    assert!(stderr_str.contains(error));
+    assert_stderr_contains(output, error);
 }
 
 #[tokio::test]
@@ -145,10 +139,14 @@ async fn test_too_low_max_fee() {
 
     let snapbox = runner(&args).current_dir(tempdir.path());
 
-    snapbox.assert().success().stderr_matches(indoc! {r"
+    let output = snapbox.assert().success();
+    assert_stderr_contains(
+        output,
+        indoc! {r"
         command: account deploy
         error: Max fee is smaller than the minimal transaction cost
-    "});
+        "},
+    );
 }
 
 #[tokio::test]
@@ -172,11 +170,15 @@ pub async fn test_invalid_class_hash() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().success();
 
-    snapbox.assert().success().stderr_matches(indoc! {r"
+    assert_stderr_contains(
+        output,
+        indoc! {r"
         command: account deploy
         error: Provided class hash 0x123 does not exist
-    "});
+        "},
+    );
 }
 
 #[tokio::test]
@@ -313,13 +315,11 @@ pub async fn test_happy_case_keystore() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    let bdg = snapbox.assert();
-    let out = bdg.get_output();
 
-    let stdout_str =
-        std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
-    assert!(stdout_str.contains("account deploy"));
-    assert!(stdout_str.contains("transaction_hash"));
+    snapbox.assert().stdout_matches(indoc! {r"
+        command: account deploy
+        transaction_hash: 0x[..]
+    "});
 
     let contents = fs::read_to_string(tempdir.path().join(account_file)).unwrap();
     let items: serde_json::Value =
@@ -362,10 +362,15 @@ pub async fn test_keystore_already_deployed() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    snapbox.assert().stderr_matches(indoc! {r"
+    let output = snapbox.assert().success();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
         command: account deploy
         error: Account already deployed
-    "});
+        "},
+    );
 }
 
 #[tokio::test]
@@ -402,10 +407,15 @@ pub async fn test_keystore_key_mismatch() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    snapbox.assert().stderr_matches(indoc! {r"
+    let output = snapbox.assert().success();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
         command: account deploy
         error: Public key and private key from keystore do not match
-    "});
+        "},
+    );
 }
 
 #[tokio::test]
@@ -437,10 +447,15 @@ pub async fn test_deploy_keystore_inexistent_keystore_file() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    snapbox.assert().stderr_matches(indoc! {r"
+    let output = snapbox.assert().success();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
         command: account deploy
         error: Failed to read keystore file
-    "});
+        "},
+    );
 }
 
 #[tokio::test]
@@ -472,10 +487,15 @@ pub async fn test_deploy_keystore_inexistent_account_file() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    snapbox.assert().stderr_matches(indoc! {r"
+    let output = snapbox.assert().success();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
         command: account deploy
-        error: Failed to read account file: No such file or directory (os error 2)
-    "});
+        error: Failed to read account file[..]
+        "},
+    );
 }
 
 #[tokio::test]
@@ -511,10 +531,15 @@ pub async fn test_deploy_keystore_no_status() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    snapbox.assert().stderr_matches(indoc! {r"
+    let output = snapbox.assert().success();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
         command: account deploy
         error: Failed to get status from account JSON file
-    "});
+        "},
+    );
 }
 
 #[tokio::test]

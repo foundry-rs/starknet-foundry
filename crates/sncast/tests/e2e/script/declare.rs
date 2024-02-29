@@ -2,6 +2,7 @@ use crate::helpers::constants::{ACCOUNT_FILE_PATH, SCRIPTS_DIR, URL};
 use crate::helpers::fixtures::{copy_script_directory_to_tempdir, get_accounts_path};
 use crate::helpers::runner::runner;
 use indoc::indoc;
+use shared::test_utils::output_assert::assert_stderr_contains;
 
 #[tokio::test]
 async fn test_missing_field() {
@@ -54,8 +55,13 @@ async fn test_wrong_contract_name() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    snapbox.assert().success().stderr_matches(indoc! {r"
+    let output = snapbox.assert().success();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
         command: script run
         error: Got an exception [..] Failed to find Mapaaaa artifact in starknet_artifacts.json file. Please make sure you have specified correct package using `--package` flag and that you have enabled sierra and casm code generation in Scarb.toml.
-    "});
+        "},
+    );
 }

@@ -5,6 +5,7 @@ use crate::helpers::fixtures::{
 };
 use crate::helpers::runner::runner;
 use indoc::indoc;
+use shared::test_utils::output_assert::assert_stderr_contains;
 use tempfile::tempdir;
 
 #[tokio::test]
@@ -62,9 +63,12 @@ async fn test_run_script_from_different_directory_no_path_to_scarb_toml() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    snapbox.assert().failure().stderr_matches(indoc! {r"
-        Error: Path to Scarb.toml manifest does not exist =[..]
-    "});
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(
+        output,
+        "Error: Path to Scarb.toml manifest does not exist =[..]",
+    );
 }
 
 #[tokio::test]
@@ -87,11 +91,15 @@ async fn test_fail_when_using_starknet_syscall() {
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
-    snapbox.assert().success().stderr_matches(indoc! {r"
-        ...
+    let output = snapbox.assert().success();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
         command: script run
         error: Got an exception while executing a hint: Hint Error: Starknet syscalls are not supported
-    "});
+        "},
+    );
 }
 
 #[tokio::test]
@@ -144,11 +152,12 @@ async fn test_multiple_packages_not_picked() {
     ];
 
     let snapbox = runner(&args).current_dir(workspace_dir.path());
+    let output = snapbox.assert().failure();
 
-    snapbox.assert().failure().stderr_matches(indoc! {r"
-        ...
-        Error: More than one package found in scarb metadata - specify package using --package flag
-    "});
+    assert_stderr_contains(
+        output,
+        "Error: More than one package found in scarb metadata - specify package using --package flag",
+    );
 }
 
 #[tokio::test]
@@ -250,9 +259,13 @@ async fn test_nonexistent_account_address() {
     ];
 
     let snapbox = runner(&args).current_dir(SCRIPTS_DIR.to_owned() + "/map_script/scripts");
+    let output = snapbox.assert().success();
 
-    snapbox.assert().success().stderr_matches(indoc! {r"
+    assert_stderr_contains(
+        output,
+        indoc! {r"
         command: script run
         error: Got an exception while executing a hint: Hint Error: Invalid account address
-    "});
+        "},
+    );
 }
