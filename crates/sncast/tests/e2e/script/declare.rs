@@ -3,7 +3,7 @@ use crate::helpers::fixtures::duplicate_contract_directory_with_salt;
 use crate::helpers::fixtures::{copy_script_directory_to_tempdir, get_accounts_path};
 use crate::helpers::runner::runner;
 use indoc::indoc;
-use shared::test_utils::output_assert::assert_stderr_contains;
+use shared::test_utils::output_assert::assert_stdout_contains;
 
 #[tokio::test]
 async fn test_wrong_contract_name() {
@@ -34,7 +34,7 @@ async fn test_wrong_contract_name() {
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
 
-    assert_stderr_contains(
+    assert_stdout_contains(
         output,
         indoc! {r#"
         ScriptCommandError::ContractArtifactsNotFound(ErrorData { msg: "Mapaaaa" })
