@@ -173,11 +173,11 @@ fn mock_call_cairo0_contract() {
 
                 assert(eth_dispatcher.name() == 'ETH', 'invalid name');
 
-                start_mock_call(eth_dispatcher.contract_address, 'name', 'NotETH');
+                start_mock_call(eth_dispatcher.contract_address, selector!("name"), 'NotETH');
 
                 assert(eth_dispatcher.name() == 'NotETH', 'invalid mocked name');
 
-                stop_mock_call(eth_dispatcher.contract_address, 'name');
+                stop_mock_call(eth_dispatcher.contract_address, selector!("name"));
 
                 assert(eth_dispatcher.name() == 'ETH', 'invalid name after mock');
             }}

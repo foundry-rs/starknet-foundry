@@ -18,11 +18,15 @@ fn second_contract() {
     assert(deploy_result.transaction_hash != 0, deploy_result.transaction_hash);
 
     let invoke_result = invoke(
-        deploy_result.contract_address, 'put', array![0x1, 0x3], Option::None, Option::None
+        deploy_result.contract_address,
+        selector!("put"),
+        array![0x1, 0x3],
+        Option::None,
+        Option::None
     );
     assert(invoke_result.transaction_hash != 0, invoke_result.transaction_hash);
 
-    let call_result = call(deploy_result.contract_address, 'get', array![0x1]);
+    let call_result = call(deploy_result.contract_address, selector!("get"), array![0x1]);
     assert(call_result.data == array![0x3], *call_result.data.at(0));
 }
 
@@ -50,14 +54,14 @@ fn main() {
     let invoke_nonce = get_nonce('pending');
     let invoke_result = invoke(
         deploy_result.contract_address,
-        'put',
+        selector!("put"),
         array![0x1, 0x2],
         Option::Some(max_fee),
         Option::Some(invoke_nonce)
     );
     assert(invoke_result.transaction_hash != 0, invoke_result.transaction_hash);
 
-    let call_result = call(deploy_result.contract_address, 'get', array![0x1]);
+    let call_result = call(deploy_result.contract_address, selector!("get"), array![0x1]);
     assert(call_result.data == array![0x2], *call_result.data.at(0));
 
     second_contract();
