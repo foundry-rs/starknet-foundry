@@ -139,13 +139,15 @@ async fn test_invalid_selector() {
     ]);
 
     let snapbox = runner(&args);
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: call
-        error: Failed to convert entry point selector to FieldElement: the provided name contains non-ASCII characters
-        "},
+        Error: Failed to convert entry point selector to FieldElement
+    
+        Caused by:
+            the provided name contains non-ASCII characters
+  "},
     );
 }

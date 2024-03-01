@@ -1,9 +1,8 @@
-use anyhow::{Context, Result};
+use anyhow::Result;
 use clap::Args;
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::structs::{CallResponse, Felt};
 use starknet::core::types::{BlockId, FieldElement, FunctionCall};
-use starknet::core::utils::get_selector_from_name;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::{JsonRpcClient, Provider};
 
@@ -32,15 +31,14 @@ pub struct Call {
 #[allow(clippy::ptr_arg)]
 pub async fn call(
     contract_address: FieldElement,
-    func_name: &str,
+    entry_point_selector: FieldElement,
     calldata: Vec<FieldElement>,
     provider: &JsonRpcClient<HttpTransport>,
     block_id: &BlockId,
 ) -> Result<CallResponse, StarknetCommandError> {
     let function_call = FunctionCall {
         contract_address,
-        entry_point_selector: get_selector_from_name(func_name)
-            .context("Failed to convert entry point selector to FieldElement")?,
+        entry_point_selector,
         calldata,
     };
     let res = provider
