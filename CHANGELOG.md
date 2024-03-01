@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - result of the call to the trace
+- added `--build-profile` flag to the `--test` command. Saves trace data and then builds profiles of test cases which pass and are not fuzz tests. You need [cairo-profiler](https://github.com/software-mansion/cairo-profiler) installed on your system.
 
 #### Changed
 
