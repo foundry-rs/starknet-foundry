@@ -177,7 +177,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
             }
             "start_mock_call" => {
                 let contract_address = input_reader.read_felt().into_();
-                let function_name = input_reader.read_felt();
+                let function_selector = input_reader.read_felt();
 
                 let ret_data = input_reader.read_vec();
 
@@ -185,18 +185,18 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .extended_runtime
                     .extension
                     .cheatnet_state
-                    .start_mock_call(contract_address, &function_name, &ret_data);
+                    .start_mock_call(contract_address, function_selector, &ret_data);
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
             "stop_mock_call" => {
                 let contract_address = input_reader.read_felt().into_();
-                let function_name = input_reader.read_felt();
+                let function_selector = input_reader.read_felt();
 
                 extended_runtime
                     .extended_runtime
                     .extension
                     .cheatnet_state
-                    .stop_mock_call(contract_address, &function_name);
+                    .stop_mock_call(contract_address, function_selector);
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
             "start_spoof" => {
@@ -360,7 +360,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
             }
             "l1_handler_execute" => {
                 let contract_address = input_reader.read_felt().into_();
-                let function_name = input_reader.read_felt();
+                let function_selector = input_reader.read_felt();
                 let from_address = input_reader.read_felt();
 
                 let payload = input_reader.read_vec();
@@ -375,7 +375,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     syscall_handler,
                     &mut runtime_state,
                     contract_address,
-                    &function_name,
+                    &function_selector,
                     &from_address,
                     &payload,
                 ) {

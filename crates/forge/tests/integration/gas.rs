@@ -656,7 +656,7 @@ fn l1_handler_cost() {
                 let contract = declare("GasChecker");
                 let contract_address = contract.deploy(@array![]).unwrap();
                 
-                let mut l1_handler = L1HandlerTrait::new(contract_address, function_name: 'handle_l1_message');
+                let mut l1_handler = L1HandlerTrait::new(contract_address, selector!("handle_l1_message"));
 
                 l1_handler.from_address = 123;
                 l1_handler.payload = array![].span();
