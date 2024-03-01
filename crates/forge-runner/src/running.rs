@@ -209,7 +209,7 @@ pub fn run_test_case(
     );
 
     let mut cheatnet_state = CheatnetState {
-        block_info: block_info.clone(),
+        block_info,
         ..Default::default()
     };
 
