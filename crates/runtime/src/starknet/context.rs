@@ -105,6 +105,7 @@ pub fn set_max_steps(entry_point_ctx: &mut EntryPointExecutionContext, max_n_ste
     entry_point_ctx.vm_run_resources = RunResources::new(max_n_steps as usize);
 }
 
+// We need to be copying those 1:1 for serialization (caching purposes)
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct ForgeBlockInfo {
     pub block_number: BlockNumber,

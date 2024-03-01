@@ -679,5 +679,3 @@ fn l1_handler_cost() {
     // 14643 - l1 cost of payload + emit message handle event
     assert_gas!(result, "l1_handler_cost", 1101 + 41 + 14643);
 }
-
-// TODO: Events test

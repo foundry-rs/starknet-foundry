@@ -83,7 +83,8 @@ pub fn calculate_used_gas(
     );
 
     let tx_gas_cost = get_da_gas_cost(state_changes_count, false);
-    // + get_tx_events_gas_cost(call_infos, versioned_constants); TODO;
+    // TODO (1796): This should probably be added to the total cost estimate
+    // + get_tx_events_gas_cost(call_infos, versioned_constants);
 
     let l1_gas_usage = usize_from_u128(tx_gas_cost.l1_gas)
         .expect("This conversion should not fail as the value is a converted usize.");
