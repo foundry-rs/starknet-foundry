@@ -90,8 +90,11 @@ pub fn calculate_used_gas(
     let l1_blob_gas_usage = usize_from_u128(tx_gas_cost.l1_data_gas)
         .expect("This conversion should not fail as the value is a converted usize.");
 
-    let mut total_vm_usage = resources.execution_resources.filter_unused_builtins();
     let versioned_constants = transaction_context.block_context.versioned_constants();
+    let mut total_vm_usage = resources.execution_resources.filter_unused_builtins();
+    total_vm_usage += &versioned_constants
+        .get_additional_os_syscall_resources(&resources.syscall_counter)
+        .expect("Could not get additional costs");
 
     // An estimation of what segment arena consumes
     let n_steps = total_vm_usage.n_steps
