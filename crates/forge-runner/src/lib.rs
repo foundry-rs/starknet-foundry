@@ -254,7 +254,7 @@ fn maybe_save_execution_data(
             }
             ExecutionDataToSave::TraceAndProfile => {
                 let trace_path = save_trace_data(name, trace_data);
-                run_profiler(name, trace_path)?;
+                run_profiler(name, &trace_path)?;
             }
             ExecutionDataToSave::None => {}
         }
