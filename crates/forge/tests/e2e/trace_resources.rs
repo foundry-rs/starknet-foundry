@@ -96,21 +96,21 @@ fn check_vm_resources_and_easily_unifiable_syscalls(
 fn assert_correct_diff_for_builtins_and_easily_unifiable_syscalls(
     resource_diff: &ProfilerExecutionResources,
 ) {
-    for (syscall, count) in [
-        (EmitEvent, 1),
-        (GetBlockHash, 1),
-        (GetExecutionInfo, 1),
-        (StorageWrite, 1),
-        (StorageRead, 1),
-        (SendMessageToL1, 2),
-        (Keccak, 1),
+    for syscall in [
+        EmitEvent,
+        GetBlockHash,
+        GetExecutionInfo,
+        StorageWrite,
+        StorageRead,
+        SendMessageToL1,
+        Keccak,
     ] {
         assert_eq!(
             *resource_diff
                 .syscall_counter
                 .get(&syscall)
                 .unwrap_or_else(|| panic!("Expected resource diff to contain {syscall:?}")),
-            count,
+            1,
             "Incorrect diff for {syscall:?}"
         );
     }
@@ -136,18 +136,13 @@ fn assert_correct_diff_for_builtins_and_easily_unifiable_syscalls(
 fn assert_l2_l1_messages(call_trace: &ProfilerCallTrace) {
     assert_eq!(
         call_trace.used_onchain_data.l2_l1_message_sizes.len(),
-        2,
-        "Every call should have two messages"
-    );
-    assert_eq!(
-        call_trace.used_onchain_data.l2_l1_message_sizes[0],
-        call_trace.used_onchain_data.l2_l1_message_sizes[1],
-        "Both messages should be identical"
+        1,
+        "Every call should have one message"
     );
     assert_eq!(
         call_trace.used_onchain_data.l2_l1_message_sizes,
-        vec![2, 2],
-        "Both messages should have payload of length 2"
+        vec![2],
+        "Message should have payload of length 2"
     );
 }
 

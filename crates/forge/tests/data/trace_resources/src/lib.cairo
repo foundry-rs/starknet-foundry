@@ -22,7 +22,6 @@ fn use_builtins_and_syscalls(empty_hash: ClassHash, salt: felt252) -> ContractAd
     starknet::deploy_syscall(empty_hash, salt, array![].span(), false).unwrap_syscall();
     emit_event_syscall(array![1].span(), array![2].span()).unwrap_syscall();
     send_message_to_l1_syscall(10, array![20, 30].span()).unwrap_syscall();
-    send_message_to_l1_syscall(10, array![20, 30].span()).unwrap_syscall();
     let x = starknet::storage_read_syscall(0, 10.try_into().unwrap()).unwrap_syscall();
     starknet::storage_write_syscall(0, 10.try_into().unwrap(), x).unwrap_syscall();
 
