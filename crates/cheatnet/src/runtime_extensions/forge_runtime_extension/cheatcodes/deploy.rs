@@ -14,7 +14,7 @@ use cairo_felt::Felt252;
 use cairo_vm::vm::errors::hint_errors::HintError::CustomHint;
 use starknet_api::core::PatriciaKey;
 use starknet_api::hash::StarkHash;
-use starknet_api::patricia_key;
+use starknet_api::{contract_address, patricia_key};
 
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::cheated_syscalls;
 use starknet_api::core::{ClassHash, ContractAddress};
@@ -41,7 +41,7 @@ pub fn deploy_at(
         class_hash: *class_hash,
         code_address: Some(contract_address),
         storage_address: contract_address,
-        caller_address: ContractAddress(patricia_key!(TEST_ADDRESS)),
+        caller_address: contract_address!(TEST_ADDRESS),
     };
 
     let calldata = Calldata(Arc::new(

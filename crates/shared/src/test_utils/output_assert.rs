@@ -46,27 +46,25 @@ fn assert_output_contains(output: &str, lines: &str) {
     let asserted_lines = lines.lines();
     let mut actual_lines: Vec<&str> = output.lines().collect();
 
-    let mut matches = true;
+    let mut contains = true;
     let mut out = String::new();
 
     for line in asserted_lines {
         if is_present(line, &mut actual_lines) {
-            out.push_str("| ");
+            out.push_str(&format!("| {line}\n"));
         } else {
-            matches = false;
-            out.push_str("- ");
+            contains = false;
+            out.push_str(&format!("- {line}\n"));
         }
-        out.push_str(line);
-        out.push('\n');
-    }
-    for remaining_line in actual_lines {
-        matches = false;
-        out.push_str("+ ");
-        out.push_str(remaining_line);
-        out.push('\n');
     }
 
-    assert!(matches, "Stdout does not match:\n\n{out}");
+    if !contains {
+        actual_lines
+            .iter()
+            .for_each(|line| out.push_str(&format!("+ {line}\n")));
+    }
+
+    assert!(contains, "Output does not match:\n\n{out}");
 }
 
 #[allow(clippy::needless_pass_by_value)]

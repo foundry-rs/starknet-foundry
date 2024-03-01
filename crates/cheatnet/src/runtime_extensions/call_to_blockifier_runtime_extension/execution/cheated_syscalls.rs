@@ -48,14 +48,11 @@ pub fn get_execution_info_syscall(
 ) -> SyscallResult<GetExecutionInfoResponse> {
     let execution_info_ptr = syscall_handler.get_or_allocate_execution_info_segment(vm)?;
 
-    let contract_address = syscall_handler.storage_address();
+    let cheated_data = runtime_state
+        .cheatnet_state
+        .get_cheated_data(&syscall_handler.storage_address());
 
-    let ptr_cheated_exec_info = get_cheated_exec_info_ptr(
-        runtime_state.cheatnet_state,
-        vm,
-        execution_info_ptr,
-        &contract_address,
-    );
+    let ptr_cheated_exec_info = get_cheated_exec_info_ptr(vm, execution_info_ptr, &cheated_data);
 
     Ok(GetExecutionInfoResponse {
         execution_info_ptr: ptr_cheated_exec_info,

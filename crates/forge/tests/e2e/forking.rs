@@ -3,7 +3,7 @@ use crate::e2e::common::runner::{
 };
 use forge::shared_cache::CACHE_DIR;
 use indoc::indoc;
-use test_utils::output_assert::assert_stdout_contains;
+use shared::test_utils::output_assert::assert_stdout_contains;
 
 #[test]
 fn without_cache() {

@@ -25,6 +25,7 @@ use starknet_api::{
     transaction::{TransactionHash, TransactionSignature, TransactionVersion},
 };
 
+pub const DEFAULT_BLOCK_NUMBER: u64 = 2000;
 pub const SEQUENCER_ADDRESS: &str = "0x1000";
 pub const ERC20_CONTRACT_ADDRESS: &str = "0x1001";
 pub const STEP_RESOURCE_COST: f64 = 0.005_f64;
@@ -133,7 +134,7 @@ impl Default for ForgeGasPrices {
 impl Default for ForgeBlockInfo {
     fn default() -> Self {
         Self {
-            block_number: BlockNumber(2000),
+            block_number: BlockNumber(DEFAULT_BLOCK_NUMBER),
             block_timestamp: BlockTimestamp::default(),
             sequencer_address: ContractAddress(patricia_key!(SEQUENCER_ADDRESS)),
             gas_prices: ForgeGasPrices {

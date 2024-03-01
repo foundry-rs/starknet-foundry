@@ -8,6 +8,7 @@ trait IWarpChecker<TContractState> {
 #[starknet::interface]
 trait IWarpCheckerLibCall<TContractState> {
     fn get_block_timestamp_with_lib_call(ref self: TContractState, class_hash: ClassHash) -> u64;
+    fn get_block_timestamp(ref self: TContractState) -> u64;
 }
 
 #[starknet::contract]
@@ -25,6 +26,10 @@ mod WarpCheckerLibCall {
         ) -> u64 {
             let warp_checker = IWarpCheckerLibraryDispatcher { class_hash };
             warp_checker.get_block_timestamp()
+        }
+
+        fn get_block_timestamp(ref self: ContractState) -> u64 {
+            starknet::get_block_info().unbox().block_timestamp
         }
     }
 }
