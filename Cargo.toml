@@ -20,8 +20,8 @@ license = "MIT"
 license-file = "LICENSE"
 
 [workspace.dependencies]
-blockifier = "0.5.0-rc.3"
-starknet_api = "0.8.0"
+blockifier = "0.5.0-rc.4"
+starknet_api = "0.10.0-dev.3"
 cairo-lang-casm = "2.6.0-rc.1"
 cairo-lang-runner = "2.6.0-rc.1"
 cairo-lang-sierra-to-casm = "2.6.0-rc.1"
