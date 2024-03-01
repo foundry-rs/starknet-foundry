@@ -1,8 +1,9 @@
+use std::cell::RefCell;
 use std::cmp::min;
 use super::cairo1_execution::execute_entry_point_call_cairo1;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::deprecated::cairo0_execution::execute_entry_point_call_cairo0;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeState;
-use crate::state::CheatnetState;
+use crate::state::{CallTrace, CheatnetState};
 use blockifier::execution::call_info::{CallExecution, Retdata};
 use blockifier::{
     execution::{
@@ -25,6 +26,7 @@ use starknet_api::{
     transaction::{Calldata, TransactionVersion},
 };
 use std::collections::HashSet;
+use std::rc::Rc;
 use blockifier::execution::deprecated_syscalls::hint_processor::SyscallCounter;
 use cairo_felt::Felt252;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{AddressOrClassHash, CallResult};
@@ -146,6 +148,7 @@ pub fn execute_call_entry_point(
         runtime_state,
         resources,
         entry_point,
+        context,
     )
     // endregion
 }
@@ -155,6 +158,7 @@ fn map_and_process_entry_point_call_result(
     runtime_state: &mut RuntimeState,
     resources: &mut ExecutionResources,
     entry_point: &mut CallEntryPoint,
+    context: &mut EntryPointExecutionContext,
 ) -> EntryPointExecutionResult<CallInfo> {
     result
         .map_err({
@@ -170,7 +174,21 @@ fn map_and_process_entry_point_call_result(
                 error
             }
         })
-        .map(|(call_info, syscall_counter)| {
+        .map(|(call_info, this_call_syscall_counter)| {
+            let versioned_constants = context.tx_context.block_context.versioned_constants();
+            // We don't want the syscall resources to pollute the results
+            *resources -= &versioned_constants
+                .get_additional_os_syscall_resources(&this_call_syscall_counter)
+                .expect("Could not get additional resources");
+            let nested_syscall_counter_sum = aggregate_nested_syscall_counters(
+                &runtime_state
+                    .cheatnet_state
+                    .trace_data
+                    .current_call_stack
+                    .top(),
+            );
+            let syscall_counter =
+                sum_syscall_counters(&nested_syscall_counter_sum, &this_call_syscall_counter);
             runtime_state.cheatnet_state.trace_data.exit_nested_call(
                 resources,
                 &syscall_counter,
@@ -251,4 +269,29 @@ fn mocked_call_info(call: CallEntryPoint, ret_data: Vec<StarkFelt>) -> CallInfo 
         storage_read_values: vec![],
         accessed_storage_keys: HashSet::new(),
     }
+}
+
+#[must_use]
+fn sum_syscall_counters(a: &SyscallCounter, b: &SyscallCounter) -> SyscallCounter {
+    let mut result = a.clone();
+    for (key, value) in b {
+        match result.get(key) {
+            None => result.insert(*key, *value),
+            Some(x) => result.insert(*key, value + x),
+        };
+    }
+    result
+}
+
+fn aggregate_nested_syscall_counters(trace: &Rc<RefCell<CallTrace>>) -> SyscallCounter {
+    let mut result = SyscallCounter::new();
+    for nested_call in &trace.borrow().nested_calls {
+        let nested_call = nested_call.borrow();
+        result = sum_syscall_counters(&result, &nested_call.used_syscalls);
+        for sub_trace in &nested_call.nested_calls {
+            let sub_trace_counter = aggregate_nested_syscall_counters(sub_trace);
+            result = sum_syscall_counters(&result, &sub_trace_counter);
+        }
+    }
+    result
 }

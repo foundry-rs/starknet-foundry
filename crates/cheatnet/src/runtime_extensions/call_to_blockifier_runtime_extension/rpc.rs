@@ -29,32 +29,6 @@ pub struct UsedResources {
     pub l1_handler_payloads_lengths: Vec<usize>,
 }
 
-#[must_use]
-pub fn subtract_syscall_counters(
-    minuend: &SyscallCounter,
-    subtrahend: &SyscallCounter,
-) -> SyscallCounter {
-    let mut result = minuend.clone();
-
-    for (syscall, count) in subtrahend {
-        let old_syscall_count = minuend
-            .get(syscall)
-            .unwrap_or_else(|| panic!("Missing SyscallCounter entry {syscall:?}"));
-
-        let new_count = old_syscall_count
-            .checked_sub(*count)
-            .unwrap_or_else(|| panic!("Underflow when subtracting syscall counts for {syscall:?}"));
-
-        if new_count != 0 {
-            result.insert(*syscall, new_count);
-        } else {
-            result.remove(syscall);
-        }
-    }
-
-    result
-}
-
 /// Enum representing possible call execution result, along with the data
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum CallResult {

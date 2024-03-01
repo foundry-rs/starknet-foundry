@@ -1,13 +1,11 @@
-use std::cell::RefCell;
 use std::collections::HashMap;
-use std::rc::Rc;
 
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     CallFailure, CallResult, UsedResources,
 };
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::{deploy, deploy_at};
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
-use crate::state::{CallTrace, CheatTarget, NotEmptyCallStack};
+use crate::state::{CallTrace, CheatTarget};
 use anyhow::{Context, Result};
 use blockifier::execution::call_info::{CallExecution, CallInfo};
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
@@ -26,6 +24,7 @@ use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_starknet_classes::keccak::starknet_keccak;
 use starknet_api::core::ContractAddress;
 
+use crate::runtime_extensions::common::sum_syscall_counters;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::get_class_hash::get_class_hash;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::l1_handler_execute::l1_handler_execute;
@@ -778,22 +777,15 @@ pub fn update_top_call_execution_resources(runtime: &mut ForgeRuntime) {
         .syscall_counter
         .clone();
 
-    top_call_mut.used_syscalls = top_call_syscalls;
-    let top_call_used_syscalls = top_call_mut.used_syscalls.clone();
+    // Only sum 1-level, rest should be summed up in entry point execution stage
+    let nested_calls_syscalls = top_call_mut
+        .nested_calls
+        .iter()
+        .fold(SyscallCounter::new(), |syscalls, trace| {
+            sum_syscall_counters(&syscalls, &trace.borrow().used_syscalls)
+        });
 
-    let versioned_constants = runtime
-        .extended_runtime
-        .extended_runtime
-        .extended_runtime
-        .hint_handler
-        .context
-        .tx_context
-        .block_context
-        .versioned_constants();
-    // Those need to be processed in order to be included in resources
-    top_call_mut.used_execution_resources += &versioned_constants
-        .get_additional_os_syscall_resources(&top_call_used_syscalls)
-        .expect("Could not get additional resources");
+    top_call_mut.used_syscalls = sum_syscall_counters(&top_call_syscalls, &nested_calls_syscalls);
 }
 
 // Only top-level is considered relevant since we can't have l1 handlers deeper than 1 level of nesting
@@ -841,47 +833,12 @@ pub fn get_all_used_resources(runtime: ForgeRuntime) -> UsedResources {
         .top();
 
     let execution_resources = top_call.borrow().used_execution_resources.clone();
-
-    let syscalls = sum_syscalls_recursively(
-        &runtime
-            .extended_runtime
-            .extended_runtime
-            .extension
-            .cheatnet_state
-            .trace_data
-            .current_call_stack,
-    );
+    let top_call_syscalls = top_call.borrow().used_syscalls.clone();
 
     UsedResources {
-        syscall_counter: syscalls,
+        syscall_counter: top_call_syscalls,
         execution_resources,
         l1_handler_payloads_lengths,
         l2_to_l1_payloads_lengths,
     }
-}
-
-fn sum_nested_syscalls(calls: &Vec<Rc<RefCell<CallTrace>>>) -> SyscallCounter {
-    let mut syscalls = Default::default();
-    for call in calls {
-        let nested_syscalls_sum = sum_nested_syscalls(&call.borrow().nested_calls);
-        sum_syscall_counters(&mut syscalls, &call.borrow().used_syscalls);
-        sum_syscall_counters(&mut syscalls, &nested_syscalls_sum);
-    }
-    syscalls
-}
-
-fn sum_syscall_counters(res: &mut SyscallCounter, summand: &SyscallCounter) {
-    for (key, value) in summand {
-        match res.get(key) {
-            None => res.insert(*key, *value),
-            Some(x) => res.insert(*key, value + x),
-        };
-    }
-}
-
-fn sum_syscalls_recursively(call_stack: &NotEmptyCallStack) -> SyscallCounter {
-    let full_trace = call_stack.borrow_full_trace();
-    let mut syscalls_sum = sum_nested_syscalls(&full_trace.nested_calls);
-    sum_syscall_counters(&mut syscalls_sum, &full_trace.used_syscalls);
-    syscalls_sum
 }
