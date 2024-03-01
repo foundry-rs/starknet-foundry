@@ -218,7 +218,6 @@ pub async fn run_tests_from_crate(
         let result = task??;
 
         print_test_result(&result, &runner_config);
-
         maybe_save_execution_data(&result, &runner_config.execution_data_to_save)?;
 
         if result.is_failed() && runner_config.exit_first {

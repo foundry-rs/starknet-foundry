@@ -11,7 +11,6 @@ fn simple_package_build_profile() {
         .arg("--build-profile")
         .assert()
         .code(1);
-
     assert!(temp
         .join(PROFILE_DIR)
         .join("simple_package::tests::test_fib.pb.gz")

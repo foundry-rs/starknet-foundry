@@ -5,7 +5,7 @@ use serde::Deserialize;
 use std::collections::{HashMap, HashSet};
 
 #[allow(clippy::module_name_repetitions)]
-#[allow(clippy::struct_excuessive_bools)]
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Debug, PartialEq, Default)]
 pub struct ForgeConfig {
     /// Should runner exit after first failed test
