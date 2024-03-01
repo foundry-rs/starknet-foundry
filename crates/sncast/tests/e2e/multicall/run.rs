@@ -1,6 +1,8 @@
 use crate::helpers::constants::MULTICALL_CONFIGS_DIR;
 use crate::helpers::fixtures::default_cli_args;
 use crate::helpers::runner::runner;
+use indoc::indoc;
+use shared::test_utils::output_assert::{assert_stderr_contains, AsOutput};
 use std::path::Path;
 
 #[tokio::test]
@@ -17,20 +19,18 @@ async fn test_happy_case() {
     args.append(&mut vec!["multicall", "run", "--path", path_str]);
 
     let snapbox = runner(&args);
-    let bdg = snapbox.assert();
-    let out = bdg.get_output();
+    let output = snapbox.assert();
 
-    let stdout_str =
-        std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
-
-    let stderr_str =
-        std::str::from_utf8(&out.stderr).expect("failed to convert command stderr to string");
+    let stderr_str = output.as_stderr();
     assert!(
         stderr_str.is_empty(),
         "Multicall error, stderr: \n{stderr_str}",
     );
 
-    assert!(stdout_str.contains("command: multicall"));
+    output.stdout_matches(indoc! {r"
+        command: multicall run
+        transaction_hash: 0x[..]
+    "});
 }
 
 #[tokio::test]
@@ -47,19 +47,18 @@ async fn test_calldata_ids() {
     args.append(&mut vec!["multicall", "run", "--path", path_str]);
 
     let snapbox = runner(&args);
-    let bdg = snapbox.assert();
-    let out = bdg.get_output();
+    let output = snapbox.assert();
 
-    let stdout_str =
-        std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
-
-    let stderr_str =
-        std::str::from_utf8(&out.stderr).expect("failed to convert command stderr to string");
+    let stderr_str = output.as_stderr();
     assert!(
         stderr_str.is_empty(),
         "Multicall error, stderr: \n{stderr_str}",
     );
-    assert!(stdout_str.contains("command: multicall"));
+
+    output.stdout_matches(indoc! {r"
+        command: multicall run
+        transaction_hash: 0x[..]
+    "});
 }
 
 #[tokio::test]
@@ -70,13 +69,16 @@ async fn test_invalid_path() {
     args.append(&mut vec!["multicall", "run", "--path", "non-existent"]);
 
     let snapbox = runner(&args);
-    let bdg = snapbox.assert();
-    let out = bdg.get_output();
+    let output = snapbox.assert().success();
 
-    assert!(out.stdout.is_empty());
-    let stderr_str =
-        std::str::from_utf8(&out.stderr[..]).expect("failed to convert stderr to string");
-    assert!(stderr_str.contains("No such file or directory"));
+    assert!(output.as_stdout().is_empty());
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        command: multicall run
+        error: No such file or directory [..]
+        "},
+    );
 }
 
 #[tokio::test]
@@ -93,13 +95,15 @@ async fn test_deploy_fail() {
     args.append(&mut vec!["multicall", "run", "--path", path_str]);
 
     let snapbox = runner(&args);
-    let bdg = snapbox.assert();
-    let out = bdg.get_output();
+    let output = snapbox.assert().success();
 
-    let stderr_str =
-        std::str::from_utf8(&out.stderr).expect("failed to convert command output to string");
-
-    assert!(stderr_str.contains("An error occurred in the called contract"));
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        command: multicall run
+        error: An error occurred in the called contract [..]
+        "},
+    );
 }
 
 #[tokio::test]
@@ -116,14 +120,15 @@ async fn test_invoke_fail() {
     args.append(&mut vec!["multicall", "run", "--path", path_str]);
 
     let snapbox = runner(&args);
-    let bdg = snapbox.assert();
-    let out = bdg.get_output();
+    let output = snapbox.assert().success();
 
-    let stderr_str =
-        std::str::from_utf8(&out.stderr).expect("failed to convert command output to string");
-
-    assert!(out.stdout.is_empty());
-    assert!(stderr_str.contains("An error occurred in the called contract"));
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        command: multicall run
+        error: An error occurred in the called contract [..]
+        "},
+    );
 }
 
 #[tokio::test]
@@ -140,7 +145,13 @@ async fn test_deploy_success_invoke_fails() {
     args.append(&mut vec!["multicall", "run", "--path", path_str]);
 
     let snapbox = runner(&args);
-    let output = String::from_utf8(snapbox.assert().success().get_output().stderr.clone()).unwrap();
 
-    assert!(output.contains("An error occurred in the called contract"));
+    let output = snapbox.assert().success();
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        command: multicall run
+        error: An error occurred in the called contract [..]
+        "},
+    );
 }

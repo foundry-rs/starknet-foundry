@@ -41,6 +41,7 @@ serde_json.workspace = true
 console.workspace = true
 serde.workspace = true
 bimap.workspace = true
+trace-data.workspace = true
 flatten-serde-json.workspace = true
 rayon.workspace = true
 cheatnet = { path = "../cheatnet" }

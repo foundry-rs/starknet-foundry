@@ -1,12 +1,15 @@
 use assert_fs::TempDir;
+use forge_runner::build_trace_data::TRACE_DIR;
 use std::collections::HashMap;
 use std::fs;
 
-use forge_runner::trace_data::ProfilerDeprecatedSyscallSelector::{
+use trace_data::DeprecatedSyscallSelector::{
     CallContract, Deploy, EmitEvent, GetBlockHash, GetExecutionInfo, Keccak, LibraryCall,
     SendMessageToL1, StorageRead, StorageWrite,
 };
-use forge_runner::trace_data::{ProfilerCallTrace, ProfilerExecutionResources, TRACE_DIR};
+use trace_data::{
+    CallTrace as ProfilerCallTrace, ExecutionResources as ProfilerExecutionResources,
+};
 
 use crate::e2e::common::runner::{setup_package, test_runner};
 
@@ -84,7 +87,7 @@ fn check_vm_resources_and_easily_unifiable_syscalls(
         sum_child_resources += resource;
     }
 
-    let current_resources = &call_trace.used_execution_resources;
+    let current_resources = &call_trace.cumulative_resources;
     assert!(current_resources.gt_eq_than(&sum_child_resources));
     let resource_diff = current_resources - &sum_child_resources;
     assert_correct_diff_for_builtins_and_easily_unifiable_syscalls(&resource_diff);
@@ -232,7 +235,7 @@ fn assert_not_easily_unifiable_syscalls(
     call_contract_count: usize,
     library_call_count: usize,
 ) {
-    let syscall_counter = &call.used_execution_resources.syscall_counter;
+    let syscall_counter = &call.cumulative_resources.syscall_counter;
 
     let expected_counts: HashMap<_, _> = [
         (Deploy, deploy_count),

@@ -5,33 +5,30 @@ use cairo_vm::{
     vm::vm_core::VirtualMachine,
 };
 use conversions::FromConv;
-use starknet_api::core::ContractAddress;
 
 use crate::{
-    runtime_extensions::forge_runtime_extension::cheatcodes::spoof::TxInfoMock,
-    state::CheatnetState,
+    runtime_extensions::forge_runtime_extension::cheatcodes::spoof::TxInfoMock, state::CheatedData,
 };
 
 fn get_cheated_block_info_ptr(
-    cheatnet_state: &CheatnetState,
     vm: &mut VirtualMachine,
     original_block_info: &[MaybeRelocatable],
-    contract_address: &ContractAddress,
+    cheated_data: &CheatedData,
 ) -> Relocatable {
     // create a new segment with replaced block info
     let ptr_cheated_block_info = vm.add_memory_segment();
 
     let mut new_block_info = original_block_info.to_owned();
 
-    if let Some(rolled_number) = cheatnet_state.get_cheated_block_number(contract_address) {
+    if let Some(rolled_number) = cheated_data.block_number.clone() {
         new_block_info[0] = MaybeRelocatable::Int(rolled_number);
     };
 
-    if let Some(warped_timestamp) = cheatnet_state.get_cheated_block_timestamp(contract_address) {
+    if let Some(warped_timestamp) = cheated_data.block_timestamp.clone() {
         new_block_info[1] = MaybeRelocatable::Int(warped_timestamp);
     }
 
-    if let Some(elected_address) = cheatnet_state.get_cheated_sequencer_address(contract_address) {
+    if let Some(elected_address) = cheated_data.sequencer_address {
         new_block_info[2] = MaybeRelocatable::Int(Felt252::from_(elected_address));
     };
 
@@ -41,19 +38,16 @@ fn get_cheated_block_info_ptr(
 }
 
 fn get_cheated_tx_info_ptr(
-    cheatnet_state: &CheatnetState,
     vm: &mut VirtualMachine,
     original_tx_info: &[MaybeRelocatable],
-    contract_address: &ContractAddress,
+    cheated_data: &CheatedData,
 ) -> Relocatable {
     // create a new segment with replaced tx info
     let ptr_cheated_tx_info = vm.add_memory_segment();
 
     let mut new_tx_info = original_tx_info.to_owned();
 
-    let tx_info_mock = cheatnet_state
-        .get_cheated_tx_info(contract_address)
-        .unwrap();
+    let tx_info_mock = cheated_data.tx_info.clone().unwrap();
 
     let TxInfoMock {
         version,
@@ -129,50 +123,43 @@ fn get_cheated_tx_info_ptr(
 }
 
 pub fn get_cheated_exec_info_ptr(
-    cheatnet_state: &CheatnetState,
     vm: &mut VirtualMachine,
     execution_info_ptr: Relocatable,
-    contract_address: &ContractAddress,
+    cheated_data: &CheatedData,
 ) -> Relocatable {
     let ptr_cheated_exec_info = vm.add_memory_segment();
 
     // Initialize as old exec_info
     let mut new_exec_info = vm.get_continuous_range(execution_info_ptr, 5).unwrap();
-    if cheatnet_state.address_is_rolled(contract_address)
-        || cheatnet_state.address_is_warped(contract_address)
-        || cheatnet_state.address_is_elected(contract_address)
+    if cheated_data.block_number.is_some()
+        || cheated_data.block_timestamp.is_some()
+        || cheated_data.sequencer_address.is_some()
     {
         let data = vm.get_range(execution_info_ptr, 1)[0].clone();
         if let MaybeRelocatable::RelocatableValue(block_info_ptr) = data.unwrap().into_owned() {
             let original_block_info = vm.get_continuous_range(block_info_ptr, 3).unwrap();
 
-            let ptr_cheated_block_info = get_cheated_block_info_ptr(
-                cheatnet_state,
-                vm,
-                &original_block_info,
-                contract_address,
-            );
-
+            let ptr_cheated_block_info =
+                get_cheated_block_info_ptr(vm, &original_block_info, cheated_data);
             new_exec_info[0] = MaybeRelocatable::RelocatableValue(ptr_cheated_block_info);
         }
     }
 
-    if cheatnet_state.address_is_spoofed(contract_address) {
+    if cheated_data.tx_info.is_some() {
         let data = vm.get_range(execution_info_ptr, 2)[1].clone();
         if let MaybeRelocatable::RelocatableValue(tx_info_ptr) = data.unwrap().into_owned() {
             let original_tx_info = vm.get_continuous_range(tx_info_ptr, 17).unwrap();
 
-            let ptr_cheated_tx_info =
-                get_cheated_tx_info_ptr(cheatnet_state, vm, &original_tx_info, contract_address);
+            let ptr_cheated_tx_info = get_cheated_tx_info_ptr(vm, &original_tx_info, cheated_data);
 
             new_exec_info[1] = MaybeRelocatable::RelocatableValue(ptr_cheated_tx_info);
         }
     }
 
-    if cheatnet_state.address_is_pranked(contract_address) {
+    if cheated_data.caller_address.is_some() {
         new_exec_info[2] = MaybeRelocatable::Int(stark_felt_to_felt(
-            *cheatnet_state
-                .get_cheated_caller_address(contract_address)
+            *cheated_data
+                .caller_address
                 .expect("No caller address value found for the pranked contract address")
                 .0
                 .key(),

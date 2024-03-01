@@ -34,12 +34,29 @@ pub fn execute_call_entry_point(
     resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
 ) -> EntryPointExecutionResult<CallInfo> {
+    let cheated_data = if let CallType::Delegate = entry_point.call_type {
+        runtime_state
+            .cheatnet_state
+            .trace_data
+            .current_call_stack
+            .top_cheated_data()
+            .clone()
+    } else {
+        let contract_address = &entry_point.storage_address;
+        let cheated_data_ = runtime_state
+            .cheatnet_state
+            .create_cheated_data(contract_address);
+        runtime_state.cheatnet_state.update_cheats(contract_address);
+        cheated_data_
+    };
+
     // region: Modified blockifier code
     // We skip recursion depth validation here.
-    runtime_state
-        .cheatnet_state
-        .trace_data
-        .enter_nested_call(entry_point.clone(), resources.clone());
+    runtime_state.cheatnet_state.trace_data.enter_nested_call(
+        entry_point.clone(),
+        resources.clone(),
+        cheated_data,
+    );
 
     let identifier = match entry_point.call_type {
         CallType::Call => AddressOrClassHash::ContractAddress(entry_point.storage_address),
