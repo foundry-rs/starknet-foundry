@@ -1,6 +1,6 @@
 use anyhow::Result;
 use clap::Args;
-use sncast::response::errors::{RecoverableStarknetCommandError, StarknetCommandError};
+use sncast::response::errors::StarknetCommandError;
 use sncast::response::structs::{CallResponse, Felt};
 use starknet::core::types::{BlockId, FieldElement, FunctionCall};
 use starknet::providers::jsonrpc::HttpTransport;
@@ -48,8 +48,6 @@ pub async fn call(
 
     match res {
         Ok(response) => Ok(CallResponse { response }),
-        Err(error) => Err(StarknetCommandError::Recoverable(
-            RecoverableStarknetCommandError::ProviderError(error),
-        )),
+        Err(error) => Err(StarknetCommandError::ProviderError(error.into())),
     }
 }
