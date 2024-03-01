@@ -14,11 +14,6 @@ mod ReplaceBytecodeB {
         value: felt252
     }
 
-    #[event]
-    #[derive(Drop, starknet::Event)]
-    enum Event {}
-
-
     #[abi(embed_v0)]
     impl IReplaceBytecodeB of super::IReplaceBytecodeB<ContractState> {
         fn get(self: @ContractState) -> felt252 {

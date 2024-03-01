@@ -20,6 +20,16 @@ fn override_entrypoint() {
 
     let selector = felt_selector_from_name("get_const");
 
+    let output = call_contract(
+        &mut cached_state,
+        &mut runtime_state,
+        &contract_address,
+        &selector,
+        &[],
+    );
+
+    assert_success!(output, vec![Felt252::from(2137)]);
+
     runtime_state
         .cheatnet_state
         .replace_class_for_contract(contract_address, class_hash_b);
@@ -59,6 +69,16 @@ fn keep_storage() {
     );
 
     assert_success!(output, vec![]);
+
+    let output = call_contract(
+        &mut cached_state,
+        &mut runtime_state,
+        &contract_address,
+        &selector,
+        &[],
+    );
+
+    assert_success!(output, vec![Felt252::from(456)]);
 
     runtime_state
         .cheatnet_state

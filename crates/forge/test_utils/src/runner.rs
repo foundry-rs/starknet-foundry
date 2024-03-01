@@ -86,13 +86,12 @@ impl Contract {
             .iter()
             .find(|package| package.name == "contract")
             .unwrap();
-
-        Ok(get_contracts_map(&scarb_metadata, &package.id, None)
+        let contract = get_contracts_map(&scarb_metadata, &package.id, None)
             .unwrap()
-            .into_values()
-            .map(|x| (x.sierra, x.casm))
-            .next()
-            .unwrap())
+            .remove(&self.name)
+            .ok_or(anyhow!("there is no contract with name {}", self.name))?;
+
+        Ok((contract.sierra, contract.casm))
     }
 }
 
