@@ -148,13 +148,12 @@ fn handling_errors() {
         }
 
         #[test]
+        #[feature("safe_dispatcher")]
         fn handling_errors() {
             let contract = declare("HelloStarknet");
             let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
             let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
         
-        
-            #[feature("safe_dispatcher")]
             match safe_dispatcher.do_a_panic() {
                 Result::Ok(_) => panic_with_felt252('shouldve panicked'),
                 Result::Err(panic_data) => {
@@ -166,7 +165,6 @@ fn handling_errors() {
             let mut panic_data = ArrayTrait::new();
             panic_data.append('capybara');
 
-            #[feature("safe_dispatcher")]
             match safe_dispatcher.do_a_panic_with(panic_data) {
                 Result::Ok(_) => panic_with_felt252('shouldve panicked'),
                 Result::Err(panic_data) => {
@@ -175,7 +173,6 @@ fn handling_errors() {
                 }
             };
             
-            #[feature("safe_dispatcher")]
             match safe_dispatcher.do_a_panic_with(ArrayTrait::new()) {
                 Result::Ok(_) => panic_with_felt252('shouldve panicked'),
                 Result::Err(panic_data) => {
@@ -212,12 +209,12 @@ fn handling_bytearray_based_errors() {
         }
 
         #[test]
+        #[feature("safe_dispatcher")]
         fn handling_errors() {
             let contract = declare("HelloStarknet");
             let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
             let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
         
-            #[feature("safe_dispatcher")]
             match safe_dispatcher.do_a_panic_with_bytearray().map_string_error() {
                 Result::Ok(_) => panic_with_felt252('shouldve panicked'),
                 Result::Err(x) => {

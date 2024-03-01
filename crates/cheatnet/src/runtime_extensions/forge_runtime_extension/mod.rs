@@ -695,7 +695,7 @@ fn serialize_call_result(call_result: &CallResult, output: &mut Vec<Felt252>) {
                     serialize_failure_data(0, panic_data.iter().cloned(), panic_data.len(), output);
                 }
                 CallFailure::Error { msg } => {
-                    let data = ByteArray::from(msg.as_str()).serialize();
+                    let data = ByteArray::from(msg.as_str()).serialize_with_magic();
                     let len = data.len();
                     serialize_failure_data(1, data, len, output);
                 }

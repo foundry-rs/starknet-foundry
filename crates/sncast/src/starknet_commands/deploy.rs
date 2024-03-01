@@ -10,7 +10,7 @@ use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
 
-use sncast::response::errors::{RecoverableStarknetCommandError, StarknetCommandError};
+use sncast::response::errors::StarknetCommandError;
 use sncast::{extract_or_generate_salt, udc_uniqueness};
 use sncast::{handle_wait_for_tx, WaitForTx};
 
@@ -89,9 +89,7 @@ pub async fn deploy(
         )
         .await
         .map_err(StarknetCommandError::from),
-        Err(Provider(error)) => Err(StarknetCommandError::Recoverable(
-            RecoverableStarknetCommandError::ProviderError(error),
-        )),
+        Err(Provider(error)) => Err(StarknetCommandError::ProviderError(error.into())),
         _ => Err(anyhow!("Unknown RPC error").into()),
     }
 }
