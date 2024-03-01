@@ -8,4 +8,4 @@ It is inspired by Foundry.
 
 Watch video tutorial to learn the basics 🎥
 
-{{#embed https://www.youtube.com/watch?v=6vqPHBHdNDM }}
+<iframe width="560" height="315" src="https://www.youtube.com/embed/6vqPHBHdNDM"></iframe>

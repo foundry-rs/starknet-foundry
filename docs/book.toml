@@ -12,5 +12,3 @@ edit-url-template = "https://github.com/foundry-rs/starknet-foundry/edit/master/
 
 [output.html.playground]
 runnable = false
-
-[preprocessor.embed]
