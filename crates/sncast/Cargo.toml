@@ -18,7 +18,7 @@ scarb-metadata.workspace = true
 thiserror.workspace = true
 primitive-types = "0.12.1"
 shellexpand = "3.1.0"
-toml = "0.8.9"
+toml = "0.8.10"
 rpassword = "7.3.1"
 promptly = "0.3.1"
 scarb-api = { path = "../scarb-api" }
@@ -51,7 +51,7 @@ snapbox.workspace = true
 indoc.workspace = true
 project-root.workspace = true
 reqwest = "0.11.18"
-tempfile = "3.9.0"
+tempfile = "3.10.1"
 test-case.workspace = true
 fs_extra = "1.3.0"
 dotenv = "0.15.0"
