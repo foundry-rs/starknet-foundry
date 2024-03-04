@@ -112,6 +112,8 @@ pub struct SerializableBlockInfo {
     pub block_timestamp: BlockTimestamp,
     pub sequencer_address: ContractAddress,
     pub gas_prices: SerializableGasPrices,
+    // A field which indicates if EIP-4844 blobs are used for publishing state diffs to l1
+    // This has influence on the cost of publishing the data on l1
     pub use_kzg_da: bool,
 }
 #[derive(Clone, Debug, Serialize, Deserialize)]
