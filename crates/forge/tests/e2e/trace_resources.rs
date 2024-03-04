@@ -138,12 +138,12 @@ fn assert_correct_diff_for_builtins_and_easily_unifiable_syscalls(
 
 fn assert_l2_l1_messages(call_trace: &ProfilerCallTrace) {
     assert_eq!(
-        call_trace.used_onchain_data.l2_l1_message_sizes.len(),
+        call_trace.used_l1_resources.l2_l1_message_sizes.len(),
         1,
         "Every call should have one message"
     );
     assert_eq!(
-        call_trace.used_onchain_data.l2_l1_message_sizes,
+        call_trace.used_l1_resources.l2_l1_message_sizes,
         vec![2],
         "Message should have payload of length 2"
     );

@@ -785,7 +785,7 @@ pub fn update_top_call_onchain_data(runtime: &mut ForgeRuntime) {
         .trace_data
         .current_call_stack
         .top();
-    top_call.borrow_mut().used_onchain_data.l2_l1_message_sizes = all_l2_l1_message_sizes;
+    top_call.borrow_mut().used_l1_resources.l2_l1_message_sizes = all_l2_l1_message_sizes;
 }
 
 #[must_use]
