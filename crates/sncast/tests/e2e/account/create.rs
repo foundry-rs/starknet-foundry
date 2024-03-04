@@ -1,4 +1,4 @@
-use crate::helpers::constants::{DEVNET_OZ_CLASS_HASH, URL};
+use crate::helpers::constants::{DEVNET_OZ_CLASS_HASH_CAIRO_0, URL};
 use crate::helpers::fixtures::{copy_file, default_cli_args};
 use crate::helpers::runner::runner;
 use configuration::copy_config_to_tempdir;
@@ -26,7 +26,7 @@ pub async fn test_happy_case() {
         "--salt",
         "0x1",
         "--class-hash",
-        DEVNET_OZ_CLASS_HASH,
+        DEVNET_OZ_CLASS_HASH_CAIRO_0,
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
@@ -100,7 +100,7 @@ pub async fn test_happy_case_generate_salt() {
         "--name",
         "my_account",
         "--class-hash",
-        DEVNET_OZ_CLASS_HASH,
+        DEVNET_OZ_CLASS_HASH_CAIRO_0,
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
@@ -142,7 +142,7 @@ pub async fn test_happy_case_add_profile() {
         "--add-profile",
         "my_account",
         "--class-hash",
-        DEVNET_OZ_CLASS_HASH,
+        DEVNET_OZ_CLASS_HASH_CAIRO_0,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -180,7 +180,7 @@ pub async fn test_happy_case_accounts_file_already_exists() {
         "--salt",
         "0x1",
         "--class-hash",
-        DEVNET_OZ_CLASS_HASH,
+        DEVNET_OZ_CLASS_HASH_CAIRO_0,
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
@@ -217,7 +217,7 @@ pub async fn test_profile_already_exists() {
         "--add-profile",
         "default",
         "--class-hash",
-        DEVNET_OZ_CLASS_HASH,
+        DEVNET_OZ_CLASS_HASH_CAIRO_0,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -243,7 +243,7 @@ pub async fn test_account_already_exists() {
         "--salt",
         "0x1",
         "--class-hash",
-        DEVNET_OZ_CLASS_HASH,
+        DEVNET_OZ_CLASS_HASH_CAIRO_0,
     ]);
 
     let snapbox = runner(&args);
@@ -275,7 +275,7 @@ pub async fn test_happy_case_keystore() {
         "account",
         "create",
         "--class-hash",
-        DEVNET_OZ_CLASS_HASH,
+        DEVNET_OZ_CLASS_HASH_CAIRO_0,
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
@@ -316,7 +316,7 @@ pub async fn test_happy_case_keystore_add_profile() {
         "account",
         "create",
         "--class-hash",
-        DEVNET_OZ_CLASS_HASH,
+        DEVNET_OZ_CLASS_HASH_CAIRO_0,
         "--add-profile",
         "with_keystore",
     ];
@@ -359,7 +359,7 @@ pub async fn test_keystore_without_account() {
         "account",
         "create",
         "--class-hash",
-        DEVNET_OZ_CLASS_HASH,
+        DEVNET_OZ_CLASS_HASH_CAIRO_0,
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
@@ -397,7 +397,7 @@ pub async fn test_keystore_file_already_exists() {
         "account",
         "create",
         "--class-hash",
-        DEVNET_OZ_CLASS_HASH,
+        DEVNET_OZ_CLASS_HASH_CAIRO_0,
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
@@ -436,7 +436,7 @@ pub async fn test_keystore_account_file_already_exists() {
         "account",
         "create",
         "--class-hash",
-        DEVNET_OZ_CLASS_HASH,
+        DEVNET_OZ_CLASS_HASH_CAIRO_0,
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
@@ -470,7 +470,7 @@ pub async fn test_happy_case_keystore_int_format() {
         "account",
         "create",
         "--class-hash",
-        DEVNET_OZ_CLASS_HASH,
+        DEVNET_OZ_CLASS_HASH_CAIRO_0,
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
@@ -510,7 +510,7 @@ pub async fn test_happy_case_keystore_hex_format() {
         "account",
         "create",
         "--class-hash",
-        DEVNET_OZ_CLASS_HASH,
+        DEVNET_OZ_CLASS_HASH_CAIRO_0,
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
