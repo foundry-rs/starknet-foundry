@@ -65,18 +65,18 @@ pub fn execute_call_entry_point(
         cheated_data,
     );
 
+    let identifier = match entry_point.call_type {
+        CallType::Call => AddressOrClassHash::ContractAddress(entry_point.storage_address),
+        CallType::Delegate => AddressOrClassHash::ClassHash(entry_point.class_hash.unwrap()),
+    };
+
     if let Some(ret_data) =
         get_ret_data_by_call_entry_point(entry_point, runtime_state.cheatnet_state)
     {
         runtime_state.cheatnet_state.trace_data.exit_nested_call(
             resources,
-            &Default::default(),
-            CallResult::Success {
-                ret_data: ret_data
-                    .iter()
-                    .map(|data| Felt252::from_bytes_be(data.bytes()))
-                    .collect(),
-            },
+            &Ok(CallInfo::default()),
+            &identifier,
         );
         return Ok(mocked_call_info(entry_point.clone(), ret_data.clone()));
     }

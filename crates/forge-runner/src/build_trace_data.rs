@@ -44,6 +44,7 @@ pub fn build_profiler_call_trace(
             value.used_execution_resources.clone(),
             value.used_syscalls.clone(),
         ),
+        used_l1_resources: value.used_l1_resources.clone(),
         nested_calls: value
             .nested_calls
             .iter()

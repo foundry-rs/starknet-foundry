@@ -2,7 +2,7 @@ use crate::helpers::constants::{ACCOUNT_FILE_PATH, SCRIPTS_DIR, URL};
 use crate::helpers::fixtures::{copy_script_directory_to_tempdir, get_accounts_path};
 use crate::helpers::runner::runner;
 use indoc::indoc;
-use shared::test_utils::output_assert::assert_stderr_contains;
+use shared::test_utils::output_assert::assert_stdout_contains;
 
 #[tokio::test]
 async fn test_max_fee_too_low() {
@@ -26,11 +26,12 @@ async fn test_max_fee_too_low() {
     let snapbox = runner(&args).current_dir(script_dir.path());
     let output = snapbox.assert().success();
 
-    assert_stderr_contains(
+    assert_stdout_contains(
         output,
         indoc! {r"
+        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::InsufficientMaxFee(())))
         command: script run
-        error: Got an exception while executing a hint: Hint Error: Max fee is smaller than the minimal transaction cost
+        status: success
         "},
     );
 }
@@ -57,12 +58,21 @@ async fn test_contract_does_not_exist() {
     let snapbox = runner(&args).current_dir(script_dir.path());
     let output = snapbox.assert().success();
 
-    assert_stderr_contains(
+    assert_stdout_contains(
         output,
-        indoc! {r"
+        indoc! {r#"
+        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::ContractError(ErrorData { msg: "Error in the called contract ([..]):
+        Error at pc=0:81:
+        Got an exception while executing a hint: Custom Hint Error: Requested contract address ContractAddress(PatriciaKey(StarkFelt("[..]"))) is not deployed.
+        Cairo traceback (most recent call last):
+        Unknown location (pc=0:731)
+        Unknown location (pc=0:677)
+        Unknown location (pc=0:291)
+        Unknown location (pc=0:314)
+        " })))
         command: script run
-        error: Got an exception while executing a hint: Hint Error: An error [..]Requested contract address[..]is not deployed[..]
-        "},
+        status: success
+        "#},
     );
 }
 
@@ -88,12 +98,21 @@ fn test_wrong_function_name() {
     let snapbox = runner(&args).current_dir(script_dir.path());
     let output = snapbox.assert().success();
 
-    assert_stderr_contains(
+    assert_stdout_contains(
         output,
-        indoc! {r"
+        indoc! {r#"
+        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::ContractError(ErrorData { msg: "Error in the called contract ([..]):
+        Error at pc=0:81:
+        Got an exception while executing a hint: Custom Hint Error: Entry point EntryPointSelector(StarkFelt("[..]")) not found in contract.
+        Cairo traceback (most recent call last):
+        Unknown location (pc=0:731)
+        Unknown location (pc=0:677)
+        Unknown location (pc=0:291)
+        Unknown location (pc=0:314)
+        " })))
         command: script run
-        error: Got an exception while executing a hint: Hint Error: An error [..] Entry point EntryPointSelector(StarkFelt[..]not found in contract[..]
-        "},
+        status: success
+        "#},
     );
 }
 
@@ -119,11 +138,20 @@ fn test_wrong_calldata() {
     let snapbox = runner(&args).current_dir(script_dir.path());
     let output = snapbox.assert().success();
 
-    assert_stderr_contains(
+    assert_stdout_contains(
         output,
-        indoc! {r"
+        indoc! {r#"
+        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::ContractError(ErrorData { msg: "Error in the called contract ([..]):
+        Error at pc=0:81:
+        Got an exception while executing a hint: Custom Hint Error: Execution failed. Failure reason: [..] ('Failed to deserialize param #2').
+        Cairo traceback (most recent call last):
+        Unknown location (pc=0:731)
+        Unknown location (pc=0:677)
+        Unknown location (pc=0:291)
+        Unknown location (pc=0:314)
+        " })))
         command: script run
-        error: Got an exception while executing a hint: Hint Error: An error [..]Failed to deserialize param #2[..]
-        "},
+        status: success
+        "#},
     );
 }

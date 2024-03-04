@@ -102,7 +102,7 @@ pub impl DisplayContractAddress of Display<ContractAddress> {
     }
 }
 
-#[derive(Drop, Clone, Debug)]
+#[derive(Drop, Clone, Debug, Serde)]
 pub struct CallResult {
     pub data: Array::<felt252>,
 }
@@ -115,7 +115,7 @@ impl DisplayCallResult of Display<CallResult> {
 
 pub fn call(
     contract_address: ContractAddress, function_selector: felt252, calldata: Array::<felt252>
-) -> CallResult {
+) -> Result<CallResult, ScriptCommandError> {
     let contract_address_felt: felt252 = contract_address.into();
     let mut inputs = array![contract_address_felt, function_selector];
 
@@ -126,9 +126,12 @@ pub fn call(
 
     let mut buf = cheatcode::<'call'>(inputs.span());
 
-    let result_data: Array::<felt252> = Serde::<Array<felt252>>::deserialize(ref buf).unwrap();
+    let mut result_data: Result<CallResult, ScriptCommandError> = Serde::<
+        Result<CallResult>
+    >::deserialize(ref buf)
+        .expect('call deserialize failed');
 
-    CallResult { data: result_data }
+    result_data
 }
 
 #[derive(Drop, Clone, Debug, Serde)]
@@ -226,7 +229,7 @@ pub fn deploy(
     result_data
 }
 
-#[derive(Drop, Clone, Debug)]
+#[derive(Drop, Clone, Debug, Serde)]
 pub struct InvokeResult {
     pub transaction_hash: felt252,
 }
@@ -243,7 +246,7 @@ pub fn invoke(
     calldata: Array::<felt252>,
     max_fee: Option<felt252>,
     nonce: Option<felt252>
-) -> InvokeResult {
+) -> Result<InvokeResult, ScriptCommandError> {
     let contract_address_felt: felt252 = contract_address.into();
     let mut inputs = array![contract_address_felt, entry_point_selector];
 
@@ -260,11 +263,14 @@ pub fn invoke(
     inputs.append_span(max_fee_serialized.span());
     inputs.append_span(nonce_serialized.span());
 
-    let buf = cheatcode::<'invoke'>(inputs.span());
+    let mut buf = cheatcode::<'invoke'>(inputs.span());
 
-    let transaction_hash = *buf[0];
+    let mut result_data: Result<InvokeResult, ScriptCommandError> = Serde::<
+        Result<InvokeResult>
+    >::deserialize(ref buf)
+        .expect('invoke deserialize failed');
 
-    InvokeResult { transaction_hash }
+    result_data
 }
 
 pub fn get_nonce(block_tag: felt252) -> felt252 {
