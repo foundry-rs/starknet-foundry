@@ -1,7 +1,8 @@
+use crate::build_trace_data::build_profiler_call_trace;
 use crate::compiled_runnable::TestCaseRunnable;
+use crate::contracts_data::ContractsData;
 use crate::expected_result::{ExpectedPanicValue, ExpectedTestResult};
 use crate::gas::check_available_gas;
-use crate::trace_data::ProfilerCallTrace;
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{RunResult, RunResultValue};
@@ -12,6 +13,7 @@ use shared::utils::build_readable_text;
 use std::cell::RefCell;
 use std::option::Option;
 use std::rc::Rc;
+use trace_data::CallTrace;
 
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct GasStatistics {
@@ -74,7 +76,7 @@ pub struct Single;
 impl TestType for Single {
     type GasInfo = u128;
     type TestStatistics = ();
-    type TraceData = ProfilerCallTrace;
+    type TraceData = CallTrace;
 }
 
 /// Summary of running a single test case
@@ -126,7 +128,7 @@ pub enum AnyTestCaseSummary {
 
 impl<T: TestType> TestCaseSummary<T> {
     #[must_use]
-    pub fn name(&self) -> Option<&String> {
+    pub fn name(&self) -> Option<&str> {
         match self {
             TestCaseSummary::Failed { name, .. }
             | TestCaseSummary::Passed { name, .. }
@@ -136,7 +138,7 @@ impl<T: TestType> TestCaseSummary<T> {
     }
 
     #[must_use]
-    pub fn msg(&self) -> Option<&String> {
+    pub fn msg(&self) -> Option<&str> {
         match self {
             TestCaseSummary::Failed { msg: Some(msg), .. }
             | TestCaseSummary::Passed { msg: Some(msg), .. } => Some(msg),
@@ -211,8 +213,9 @@ impl TestCaseSummary<Single> {
         gas: u128,
         used_resources: UsedResources,
         call_trace: &Rc<RefCell<InternalCallTrace>>,
+        contracts_data: &ContractsData,
     ) -> Self {
-        let name = test_case.name.to_string();
+        let name = test_case.name.clone();
         let msg = extract_result_data(&run_result, &test_case.expected_result);
         match run_result.value {
             RunResultValue::Success(_) => match &test_case.expected_result {
@@ -224,7 +227,7 @@ impl TestCaseSummary<Single> {
                         test_statistics: (),
                         gas_info: gas,
                         used_resources,
-                        trace_data: ProfilerCallTrace::from(call_trace.borrow().clone()),
+                        trace_data: build_profiler_call_trace(call_trace, contracts_data),
                     };
                     check_available_gas(&test_case.available_gas, summary)
                 }
@@ -258,7 +261,7 @@ impl TestCaseSummary<Single> {
                         test_statistics: (),
                         gas_info: gas,
                         used_resources,
-                        trace_data: ProfilerCallTrace::from(call_trace.borrow().clone()),
+                        trace_data: build_profiler_call_trace(call_trace, contracts_data),
                     },
                 },
             },
@@ -321,7 +324,7 @@ fn extract_result_data(run_result: &RunResult, expectation: &ExpectedTestResult)
 
 impl AnyTestCaseSummary {
     #[must_use]
-    pub fn name(&self) -> Option<&String> {
+    pub fn name(&self) -> Option<&str> {
         match self {
             AnyTestCaseSummary::Fuzzing(case) => case.name(),
             AnyTestCaseSummary::Single(case) => case.name(),
@@ -329,7 +332,7 @@ impl AnyTestCaseSummary {
     }
 
     #[must_use]
-    pub fn msg(&self) -> Option<&String> {
+    pub fn msg(&self) -> Option<&str> {
         match self {
             AnyTestCaseSummary::Fuzzing(case) => case.msg(),
             AnyTestCaseSummary::Single(case) => case.msg(),

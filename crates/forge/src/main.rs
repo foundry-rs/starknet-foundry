@@ -1,7 +1,6 @@
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8Path;
 use clap::{Parser, Subcommand, ValueEnum};
-use forge::pretty_printing::print_warning;
 use forge::scarb::config::ForgeConfig;
 use forge::scarb::{
     build_contracts_with_scarb, build_test_artifacts_with_scarb, config_from_scarb_for_package,
@@ -9,6 +8,7 @@ use forge::scarb::{
 use forge::shared_cache::{clean_cache, set_cached_failed_tests_names};
 use forge::test_filter::TestsFilter;
 use forge::{pretty_printing, run};
+use forge_runner::contracts_data::ContractsData;
 use forge_runner::test_case_summary::{AnyTestCaseSummary, TestCaseSummary};
 use forge_runner::test_crate_summary::TestCrateSummary;
 use forge_runner::{RunnerConfig, RunnerParams, CACHE_DIR};
@@ -22,6 +22,7 @@ use scarb_ui::args::PackagesFilter;
 
 use forge::block_number_map::BlockNumberMap;
 use semver::{Comparator, Op, Version, VersionReq};
+use shared::print::print_as_warning;
 use std::env;
 use std::sync::Arc;
 use std::thread::available_parallelism;
@@ -108,6 +109,10 @@ struct TestArgs {
     /// Save execution traces of all test which have passed and are not fuzz tests
     #[arg(long)]
     save_trace_data: bool,
+
+    /// Number of maximum steps during a single test. For fuzz tests this value is applied to each subtest separately.
+    #[arg(long)]
+    max_n_steps: Option<u32>,
 }
 
 fn validate_fuzzer_runs_value(val: &str) -> Result<u32> {
@@ -120,7 +125,9 @@ fn validate_fuzzer_runs_value(val: &str) -> Result<u32> {
     Ok(parsed_val)
 }
 
-fn extract_failed_tests(tests_summaries: Vec<TestCrateSummary>) -> Vec<AnyTestCaseSummary> {
+fn extract_failed_tests(
+    tests_summaries: Vec<TestCrateSummary>,
+) -> impl Iterator<Item = AnyTestCaseSummary> {
     tests_summaries
         .into_iter()
         .flat_map(|test_file_summary| test_file_summary.test_case_summaries)
@@ -131,9 +138,9 @@ fn extract_failed_tests(tests_summaries: Vec<TestCrateSummary>) -> Vec<AnyTestCa
                     | AnyTestCaseSummary::Single(TestCaseSummary::Failed { .. })
             )
         })
-        .collect()
 }
 
+#[allow(clippy::too_many_arguments)]
 fn combine_configs(
     workspace_root: &Utf8Path,
     exit_first: bool,
@@ -141,6 +148,7 @@ fn combine_configs(
     fuzzer_seed: Option<u64>,
     detailed_resources: bool,
     save_trace_data: bool,
+    max_n_steps: Option<u32>,
     forge_config: &ForgeConfig,
 ) -> RunnerConfig {
     RunnerConfig::new(
@@ -154,6 +162,7 @@ fn combine_configs(
             .unwrap_or_else(|| thread_rng().next_u64()),
         detailed_resources || forge_config.detailed_resources,
         save_trace_data || forge_config.save_trace_data,
+        max_n_steps.or(forge_config.max_n_steps),
     )
 }
 
@@ -178,7 +187,7 @@ fn warn_if_snforge_std_not_compatible(scarb_metadata: &Metadata) -> Result<()> {
         "snforge_std",
         &snforge_std_version_requirement,
     )? {
-        print_warning(&anyhow!("Package snforge_std version does not meet the recommended version requirement {snforge_std_version_requirement}, it might result in unexpected behaviour"));
+        print_as_warning(&anyhow!("Package snforge_std version does not meet the recommended version requirement {snforge_std_version_requirement}, it might result in unexpected behaviour"));
     }
     Ok(())
 }
@@ -232,6 +241,8 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                 let contracts =
                     get_contracts_map(&scarb_metadata, &package.id, None).unwrap_or_default();
 
+                let contracts_data = ContractsData::try_from(contracts)?;
+
                 let runner_config = Arc::new(combine_configs(
                     &workspace_root,
                     args.exit_first,
@@ -239,9 +250,11 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                     args.fuzzer_seed,
                     args.detailed_resources,
                     args.save_trace_data,
+                    args.max_n_steps,
                     &forge_config,
                 ));
-                let runner_params = Arc::new(RunnerParams::new(contracts, env::vars().collect()));
+                let runner_params =
+                    Arc::new(RunnerParams::new(contracts_data, env::vars().collect()));
 
                 let tests_file_summaries = run(
                     &package.name,
@@ -261,8 +274,7 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                 )
                 .await?;
 
-                let mut failed_tests = extract_failed_tests(tests_file_summaries);
-                all_failed_tests.append(&mut failed_tests);
+                all_failed_tests.extend(extract_failed_tests(tests_file_summaries));
             }
             set_cached_failed_tests_names(&all_failed_tests, &workspace_root.join(CACHE_DIR))?;
             pretty_printing::print_latest_blocks_numbers(
@@ -324,6 +336,7 @@ mod tests {
             None,
             false,
             false,
+            None,
             &Default::default(),
         );
         let config2 = combine_configs(
@@ -333,6 +346,7 @@ mod tests {
             None,
             false,
             false,
+            None,
             &Default::default(),
         );
 
@@ -351,6 +365,7 @@ mod tests {
             None,
             false,
             false,
+            None,
             &Default::default(),
         );
         assert_eq!(
@@ -362,6 +377,7 @@ mod tests {
                 config.fuzzer_seed,
                 false,
                 false,
+                None
             )
         );
     }
@@ -375,6 +391,7 @@ mod tests {
             fuzzer_seed: Some(500),
             detailed_resources: true,
             save_trace_data: true,
+            max_n_steps: Some(1_000_000),
         };
         let workspace_root: Utf8PathBuf = Default::default();
 
@@ -385,11 +402,12 @@ mod tests {
             None,
             false,
             false,
+            None,
             &config_from_scarb,
         );
         assert_eq!(
             config,
-            RunnerConfig::new(workspace_root, true, 1234, 500, true, true)
+            RunnerConfig::new(workspace_root, true, 1234, 500, true, true, Some(1_000_000))
         );
     }
 
@@ -404,6 +422,7 @@ mod tests {
             fuzzer_seed: Some(1000),
             detailed_resources: false,
             save_trace_data: false,
+            max_n_steps: Some(1234),
         };
         let config = combine_configs(
             &workspace_root,
@@ -412,12 +431,13 @@ mod tests {
             Some(32),
             true,
             true,
+            Some(1_000_000),
             &config_from_scarb,
         );
 
         assert_eq!(
             config,
-            RunnerConfig::new(workspace_root, true, 100, 32, true, true)
+            RunnerConfig::new(workspace_root, true, 100, 32, true, true, Some(1_000_000))
         );
     }
 }

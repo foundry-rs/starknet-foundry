@@ -24,6 +24,7 @@ use starknet_api::{
     transaction::{Calldata, TransactionVersion},
 };
 use std::collections::HashSet;
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::AddressOrClassHash;
 
 // blockifier/src/execution/entry_point.rs:180 (CallEntryPoint::execute)
 pub fn execute_call_entry_point(
@@ -33,22 +34,46 @@ pub fn execute_call_entry_point(
     resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
 ) -> EntryPointExecutionResult<CallInfo> {
+    let cheated_data = if let CallType::Delegate = entry_point.call_type {
+        runtime_state
+            .cheatnet_state
+            .trace_data
+            .current_call_stack
+            .top_cheated_data()
+            .clone()
+    } else {
+        let contract_address = &entry_point.storage_address;
+        let cheated_data_ = runtime_state
+            .cheatnet_state
+            .create_cheated_data(contract_address);
+        runtime_state.cheatnet_state.update_cheats(contract_address);
+        cheated_data_
+    };
+
     // region: Modified blockifier code
     // We skip recursion depth validation here.
-    runtime_state
-        .cheatnet_state
-        .trace_data
-        .enter_nested_call(entry_point.clone(), resources.clone());
+    runtime_state.cheatnet_state.trace_data.enter_nested_call(
+        entry_point.clone(),
+        resources.clone(),
+        cheated_data,
+    );
+
+    let identifier = match entry_point.call_type {
+        CallType::Call => AddressOrClassHash::ContractAddress(entry_point.storage_address),
+        CallType::Delegate => AddressOrClassHash::ClassHash(entry_point.class_hash.unwrap()),
+    };
 
     if let Some(ret_data) =
         get_ret_data_by_call_entry_point(entry_point, runtime_state.cheatnet_state)
     {
-        runtime_state
-            .cheatnet_state
-            .trace_data
-            .exit_nested_call(resources);
+        runtime_state.cheatnet_state.trace_data.exit_nested_call(
+            resources,
+            &Ok(CallInfo::default()),
+            &identifier,
+        );
         return Ok(mocked_call_info(entry_point.clone(), ret_data.clone()));
     }
+    // endregion
 
     // Validate contract is deployed.
     let storage_address = entry_point.storage_address;
@@ -63,6 +88,14 @@ pub fn execute_call_entry_point(
         Some(class_hash) => class_hash,
         None => storage_class_hash, // If not given, take the storage contract class hash.
     };
+
+    // region: Modified blockifier code
+    runtime_state
+        .cheatnet_state
+        .trace_data
+        .set_class_hash_for_current_call(class_hash);
+    // endregion
+
     // Hack to prevent version 0 attack on argent accounts.
     if context.account_tx_context.version() == TransactionVersion(StarkFelt::from(0_u8))
         && class_hash
@@ -96,12 +129,7 @@ pub fn execute_call_entry_point(
         ),
     };
 
-    runtime_state
-        .cheatnet_state
-        .trace_data
-        .exit_nested_call(resources);
-
-    result.map_err(|error| {
+    let result = result.map_err(|error| {
         // endregion
         match error {
             // On VM error, pack the stack trace into the propagated error.
@@ -121,7 +149,14 @@ pub fn execute_call_entry_point(
             }
             other_error => other_error,
         }
-    })
+    });
+
+    runtime_state
+        .cheatnet_state
+        .trace_data
+        .exit_nested_call(resources, &result, &identifier);
+
+    result
     // region: Modified blockifier code
     // We skip recursion depth decrease
     // endregion

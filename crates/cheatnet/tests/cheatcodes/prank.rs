@@ -1,3 +1,5 @@
+use crate::cheatcodes::spy_events::felt_vec_to_event_vec;
+
 use crate::common::assertions::assert_outputs;
 use crate::common::state::build_runtime_state;
 use crate::common::{call_contract, deploy_wrapper};
@@ -8,12 +10,54 @@ use crate::{
         state::create_cached_state,
     },
 };
+use blockifier::state::cached_state::CachedState;
+use blockifier::state::cached_state::GlobalContractCache;
+use cairo_felt::felt_str;
 use cairo_felt::Felt252;
+use cairo_lang_starknet::contract::starknet_keccak;
+use cheatnet::constants::build_testing_state;
+use cheatnet::constants::TEST_ADDRESS;
+use cheatnet::forking::state::ForkStateReader;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
-use cheatnet::state::{CheatTarget, CheatnetState};
-use conversions::felt252::FromShortString;
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::{
+    Event, SpyTarget,
+};
+use cheatnet::state::{CheatSpan, CheatTarget, CheatnetState, ExtendedStateReader};
 use conversions::IntoConv;
+use starknet_api::block::BlockNumber;
 use starknet_api::core::ContractAddress;
+use starknet_api::core::PatriciaKey;
+use starknet_api::hash::StarkHash;
+use starknet_api::patricia_key;
+use tempfile::TempDir;
+
+use super::test_environment::TestEnvironment;
+
+trait PrankTrait {
+    fn prank(&mut self, target: CheatTarget, new_address: u128, span: CheatSpan);
+    fn start_prank(&mut self, target: CheatTarget, new_address: u128);
+    fn stop_prank(&mut self, contract_address: &ContractAddress);
+}
+
+impl<'a> PrankTrait for TestEnvironment<'a> {
+    fn prank(&mut self, target: CheatTarget, new_address: u128, span: CheatSpan) {
+        self.runtime_state
+            .cheatnet_state
+            .prank(target, ContractAddress::from(new_address), span);
+    }
+
+    fn start_prank(&mut self, target: CheatTarget, new_address: u128) {
+        self.runtime_state
+            .cheatnet_state
+            .start_prank(target, ContractAddress::from(new_address));
+    }
+
+    fn stop_prank(&mut self, contract_address: &ContractAddress) {
+        self.runtime_state
+            .cheatnet_state
+            .stop_prank(CheatTarget::One(*contract_address));
+    }
+}
 
 #[test]
 fn prank_simple() {
@@ -77,8 +121,7 @@ fn prank_in_constructor() {
 
     let contracts = get_contracts();
 
-    let contract_name = Felt252::from_short_string("ConstructorPrankChecker").unwrap();
-    let class_hash = declare(&mut cached_state, &contract_name, &contracts).unwrap();
+    let class_hash = declare(&mut cached_state, "ConstructorPrankChecker", &contracts).unwrap();
     let precalculated_address = runtime_state
         .cheatnet_state
         .precalculate_address(&class_hash, &[]);
@@ -183,7 +226,7 @@ fn prank_double() {
 
     runtime_state.cheatnet_state.start_prank(
         CheatTarget::One(contract_address),
-        ContractAddress::from(123_u128),
+        ContractAddress::from(124_u128),
     );
     runtime_state.cheatnet_state.start_prank(
         CheatTarget::One(contract_address),
@@ -280,8 +323,7 @@ fn prank_library_call() {
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
     let contracts = get_contracts();
-    let contract_name = Felt252::from_short_string("PrankChecker").unwrap();
-    let class_hash = declare(&mut cached_state, &contract_name, &contracts).unwrap();
+    let class_hash = declare(&mut cached_state, "PrankChecker", &contracts).unwrap();
 
     let lib_call_address = deploy_contract(
         &mut cached_state,
@@ -386,9 +428,8 @@ fn prank_multiple() {
     let mut cheatnet_state = CheatnetState::default();
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
-    let contract = Felt252::from_short_string("PrankChecker").unwrap();
     let contracts = get_contracts();
-    let class_hash = declare(&mut cached_state, &contract, &contracts).unwrap();
+    let class_hash = declare(&mut cached_state, "PrankChecker", &contracts).unwrap();
 
     let contract_address1 =
         deploy_wrapper(&mut cached_state, &mut runtime_state, &class_hash, &[]).unwrap();
@@ -533,4 +574,257 @@ fn prank_one_then_all() {
     );
 
     assert_eq!(recover_data(output), vec![Felt252::from(321)]);
+}
+
+#[test]
+fn prank_cairo0_callback() {
+    let temp_dir = TempDir::new().unwrap();
+    let mut cached_state = CachedState::new(
+        ExtendedStateReader {
+            dict_state_reader: build_testing_state(),
+            fork_state_reader: Some(ForkStateReader::new(
+                "http://188.34.188.184:6060/rpc/v0_6".parse().unwrap(),
+                BlockNumber(950_486),
+                temp_dir.path().to_str().unwrap(),
+            )),
+        },
+        GlobalContractCache::default(),
+    );
+    let mut cheatnet_state = CheatnetState::default();
+    let mut runtime_state = build_runtime_state(&mut cheatnet_state);
+
+    let contract_address = deploy_contract(
+        &mut cached_state,
+        &mut runtime_state,
+        "Cairo1Contract_v1",
+        &[],
+    );
+
+    runtime_state.cheatnet_state.start_prank(
+        CheatTarget::One(contract_address),
+        ContractAddress::from(123_u128),
+    );
+    let id = runtime_state.cheatnet_state.spy_events(SpyTarget::All);
+
+    let expected_caller_address = Felt252::from(123_u128);
+
+    let output = call_contract(
+        &mut cached_state,
+        &mut runtime_state,
+        &contract_address,
+        &felt_selector_from_name("start"),
+        &[
+            felt_str!(
+                // cairo 0 callback contract address
+                "034dad9a1512fcb0d33032c65f4605a073bdc42f70e61524510e5760c2b4f544",
+                16
+            ),
+            expected_caller_address.clone(),
+        ],
+    );
+
+    let (_, events) = runtime_state
+        .cheatnet_state
+        .fetch_events(&Felt252::from(id));
+
+    let events = felt_vec_to_event_vec(&events);
+
+    // make sure end() was called by cairo0 contract
+    assert_eq!(
+        events[0],
+        Event {
+            from: contract_address,
+            keys: vec![starknet_keccak("End".as_ref()).into()],
+            data: vec![expected_caller_address]
+        },
+        "Wrong event"
+    );
+
+    assert_success!(output, vec![]);
+}
+
+#[test]
+fn prank_simple_with_span() {
+    let mut cheatnet_state = CheatnetState::default();
+    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+
+    let contract_address = test_env.deploy("PrankChecker", &[]);
+    let selector = "get_caller_address";
+
+    test_env.prank(
+        CheatTarget::One(contract_address),
+        123,
+        CheatSpan::Number(2),
+    );
+
+    assert_success!(
+        test_env.call_contract(&contract_address, selector, &[]),
+        vec![Felt252::from(123)]
+    );
+    assert_success!(
+        test_env.call_contract(&contract_address, selector, &[]),
+        vec![Felt252::from(123)]
+    );
+    assert_success!(
+        test_env.call_contract(&contract_address, "get_caller_address", &[]),
+        vec![ContractAddress(patricia_key!(TEST_ADDRESS)).into_()]
+    );
+}
+
+#[test]
+fn prank_proxy_with_span() {
+    let mut cheatnet_state = CheatnetState::default();
+    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+
+    let contracts = get_contracts();
+    let class_hash = test_env.declare("PrankCheckerProxy", &contracts);
+    let contract_address_1 = test_env.deploy_wrapper(&class_hash, &[]);
+    let contract_address_2 = test_env.deploy_wrapper(&class_hash, &[]);
+
+    test_env.prank(
+        CheatTarget::One(contract_address_1),
+        123,
+        CheatSpan::Number(1),
+    );
+
+    let output = test_env.call_contract(
+        &contract_address_1,
+        "call_proxy",
+        &[contract_address_2.into_()],
+    );
+    assert_success!(output, vec![123.into(), contract_address_2.into_()]);
+}
+
+#[test]
+fn prank_override_span() {
+    let mut cheatnet_state = CheatnetState::default();
+    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+
+    let contract_address = test_env.deploy("PrankChecker", &[]);
+    let selector = "get_caller_address";
+
+    test_env.prank(
+        CheatTarget::One(contract_address),
+        123,
+        CheatSpan::Number(2),
+    );
+
+    assert_success!(
+        test_env.call_contract(&contract_address, selector, &[]),
+        vec![Felt252::from(123)]
+    );
+
+    test_env.prank(
+        CheatTarget::One(contract_address),
+        321,
+        CheatSpan::Indefinite,
+    );
+
+    assert_success!(
+        test_env.call_contract(&contract_address, selector, &[]),
+        vec![Felt252::from(321)]
+    );
+    assert_success!(
+        test_env.call_contract(&contract_address, selector, &[]),
+        vec![Felt252::from(321)]
+    );
+
+    test_env.stop_prank(&contract_address);
+
+    assert_success!(
+        test_env.call_contract(&contract_address, "get_caller_address", &[]),
+        vec![ContractAddress(patricia_key!(TEST_ADDRESS)).into_()]
+    );
+}
+
+#[test]
+fn prank_constructor_with_span() {
+    let mut cheatnet_state = CheatnetState::default();
+    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+
+    let contracts = get_contracts();
+    let class_hash = test_env.declare("ConstructorPrankChecker", &contracts);
+    let precalculated_address = test_env
+        .runtime_state
+        .cheatnet_state
+        .precalculate_address(&class_hash, &[]);
+
+    test_env.prank(
+        CheatTarget::One(precalculated_address),
+        123,
+        CheatSpan::Number(3),
+    );
+
+    let contract_address = test_env.deploy_wrapper(&class_hash, &[]);
+    assert_eq!(precalculated_address, contract_address);
+
+    assert_success!(
+        test_env.call_contract(&contract_address, "get_stored_caller_address", &[]),
+        vec![Felt252::from(123)]
+    );
+    assert_success!(
+        test_env.call_contract(&contract_address, "get_caller_address", &[]),
+        vec![Felt252::from(123)]
+    );
+    assert_success!(
+        test_env.call_contract(&contract_address, "get_caller_address", &[]),
+        vec![ContractAddress(patricia_key!(TEST_ADDRESS)).into_()]
+    );
+}
+
+#[test]
+fn prank_library_call_with_span() {
+    let mut cheatnet_state = CheatnetState::default();
+    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+
+    let contracts = get_contracts();
+    let class_hash = test_env.declare("PrankChecker", &contracts);
+    let contract_address = test_env.deploy("PrankCheckerLibCall", &[]);
+
+    test_env.prank(
+        CheatTarget::One(contract_address),
+        123,
+        CheatSpan::Number(1),
+    );
+
+    let lib_call_selector = "get_caller_address_with_lib_call";
+
+    assert_success!(
+        test_env.call_contract(&contract_address, lib_call_selector, &[class_hash.into_()]),
+        vec![Felt252::from(123)]
+    );
+    assert_success!(
+        test_env.call_contract(&contract_address, lib_call_selector, &[class_hash.into_()]),
+        vec![ContractAddress(patricia_key!(TEST_ADDRESS)).into_()]
+    );
+}
+
+#[test]
+fn prank_all_span() {
+    let mut cheatnet_state = CheatnetState::default();
+    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+
+    let contract_address_1 = test_env.deploy("PrankChecker", &[]);
+    let contract_address_2 = test_env.deploy("PrankCheckerLibCall", &[]);
+    let selector = "get_caller_address";
+
+    test_env.prank(CheatTarget::All, 123, CheatSpan::Number(1));
+
+    assert_success!(
+        test_env.call_contract(&contract_address_1, selector, &[]),
+        vec![Felt252::from(123)]
+    );
+    assert_success!(
+        test_env.call_contract(&contract_address_1, selector, &[]),
+        vec![ContractAddress(patricia_key!(TEST_ADDRESS)).into_()]
+    );
+
+    assert_success!(
+        test_env.call_contract(&contract_address_2, selector, &[]),
+        vec![Felt252::from(123)]
+    );
+    assert_success!(
+        test_env.call_contract(&contract_address_2, selector, &[]),
+        vec![ContractAddress(patricia_key!(TEST_ADDRESS)).into_()]
+    );
 }

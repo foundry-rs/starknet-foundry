@@ -9,16 +9,19 @@ use sncast::response::print::{print_command_result, OutputFormat};
 
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand};
+use shared::verify_and_warn_if_incompatible_rpc_version;
 use sncast::helpers::configuration::{load_config, CastConfig};
 use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
 use sncast::helpers::scarb_utils::{
     assert_manifest_path_exists, build_and_load_artifacts, get_package_metadata,
     get_scarb_metadata_with_deps, BuildConfig,
 };
+use sncast::response::errors::handle_starknet_command_error;
 use sncast::{
     chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_nonce, get_provider,
     NumbersFormat, ValidatedWaitParams, WaitForTx,
 };
+use starknet::core::utils::get_selector_from_name;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use tokio::runtime::Runtime;
@@ -34,10 +37,6 @@ struct Cli {
     /// Profile name in snfoundry.toml config file
     #[clap(short, long)]
     profile: Option<String>,
-
-    /// Path to Scarb.toml that is to be used; overrides default behaviour of searching for scarb.toml in current or parent directories
-    #[clap(short = 's', long)]
-    path_to_scarb_toml: Option<Utf8PathBuf>,
 
     /// RPC provider url address; overrides url from snfoundry.toml
     #[clap(short = 'u', long = "url")]
@@ -108,7 +107,7 @@ enum Commands {
     /// Show current configuration being used
     ShowConfig(ShowConfig),
 
-    /// Run a deployment script
+    /// Run or initialize a deployment script
     Script(Script),
 }
 
@@ -121,35 +120,7 @@ fn main() -> Result<()> {
     let runtime = Runtime::new().expect("Failed to instantiate Runtime");
 
     if let Commands::Script(script) = &cli.command {
-        let manifest_path = assert_manifest_path_exists(&cli.path_to_scarb_toml)?;
-        let package_metadata = get_package_metadata(&manifest_path, &script.package)?;
-
-        let mut config = load_config(&cli.profile, &Some(package_metadata.root.clone()))?;
-        update_cast_config(&mut config, &cli);
-        let provider = get_provider(&config.rpc_url)?;
-
-        let mut artifacts = build_and_load_artifacts(
-            &package_metadata,
-            &BuildConfig {
-                scarb_toml_path: manifest_path.clone(),
-                json: cli.json,
-                profile: cli.profile.unwrap_or("dev".to_string()),
-            },
-        )
-        .expect("Failed to build script");
-        let metadata_with_deps = get_scarb_metadata_with_deps(&manifest_path)?;
-        let mut result = starknet_commands::script::run(
-            &script.script_module_name,
-            &metadata_with_deps,
-            &package_metadata,
-            &mut artifacts,
-            &provider,
-            runtime,
-            &config,
-        );
-
-        print_command_result("script", &mut result, numbers_format, &output_format)?;
-        Ok(())
+        run_script_command(&cli, runtime, script, numbers_format, &output_format)
     } else {
         let mut config = load_config(&cli.profile, &None)?;
         update_cast_config(&mut config, &cli);
@@ -172,6 +143,8 @@ async fn run_async_command(
     numbers_format: NumbersFormat,
     output_format: OutputFormat,
 ) -> Result<()> {
+    verify_and_warn_if_incompatible_rpc_version(&provider, &config.rpc_url).await?;
+
     let wait_config = WaitForTx {
         wait: cli.wait,
         wait_params: config.wait_params,
@@ -186,7 +159,7 @@ async fn run_async_command(
                 config.keystore,
             )
             .await?;
-            let manifest_path = assert_manifest_path_exists(&cli.path_to_scarb_toml)?;
+            let manifest_path = assert_manifest_path_exists()?;
             let package_metadata = get_package_metadata(&manifest_path, &declare.package)?;
             let artifacts = build_and_load_artifacts(
                 &package_metadata,
@@ -205,7 +178,8 @@ async fn run_async_command(
                 &artifacts,
                 wait_config,
             )
-            .await;
+            .await
+            .map_err(handle_starknet_command_error);
 
             print_command_result("declare", &mut result, numbers_format, &output_format)?;
             Ok(())
@@ -228,7 +202,8 @@ async fn run_async_command(
                 deploy.nonce,
                 wait_config,
             )
-            .await;
+            .await
+            .map_err(handle_starknet_command_error);
 
             print_command_result("deploy", &mut result, numbers_format, &output_format)?;
             Ok(())
@@ -238,12 +213,14 @@ async fn run_async_command(
 
             let mut result = starknet_commands::call::call(
                 call.contract_address,
-                call.function.as_ref(),
+                get_selector_from_name(&call.function)
+                    .context("Failed to convert entry point selector to FieldElement")?,
                 call.calldata,
                 &provider,
                 block_id.as_ref(),
             )
-            .await;
+            .await
+            .map_err(handle_starknet_command_error);
 
             print_command_result("call", &mut result, numbers_format, &output_format)?;
             Ok(())
@@ -258,14 +235,16 @@ async fn run_async_command(
             .await?;
             let mut result = starknet_commands::invoke::invoke(
                 invoke.contract_address,
-                &invoke.function,
+                get_selector_from_name(&invoke.function)
+                    .context("Failed to convert entry point selector to FieldElement")?,
                 invoke.calldata,
                 invoke.max_fee,
                 &account,
                 invoke.nonce,
                 wait_config,
             )
-            .await;
+            .await
+            .map_err(handle_starknet_command_error);
 
             print_command_result("invoke", &mut result, numbers_format, &output_format)?;
             Ok(())
@@ -419,6 +398,58 @@ async fn run_async_command(
         }
         Commands::Script(_) => unreachable!(),
     }
+}
+
+fn run_script_command(
+    cli: &Cli,
+    runtime: Runtime,
+    script: &Script,
+    numbers_format: NumbersFormat,
+    output_format: &OutputFormat,
+) -> Result<()> {
+    match &script.command {
+        starknet_commands::script::Commands::Init(init) => {
+            let mut result = starknet_commands::script::init::init(init);
+            print_command_result("script init", &mut result, numbers_format, output_format)?;
+        }
+        starknet_commands::script::Commands::Run(run) => {
+            let manifest_path = assert_manifest_path_exists()?;
+            let package_metadata = get_package_metadata(&manifest_path, &run.package)?;
+
+            let mut config = load_config(&cli.profile, &Some(package_metadata.root.clone()))?;
+            update_cast_config(&mut config, cli);
+            let provider = get_provider(&config.rpc_url)?;
+            runtime.block_on(verify_and_warn_if_incompatible_rpc_version(
+                &provider,
+                &config.rpc_url,
+            ))?;
+
+            let mut artifacts = build_and_load_artifacts(
+                &package_metadata,
+                &BuildConfig {
+                    scarb_toml_path: manifest_path.clone(),
+                    json: cli.json,
+                    profile: cli.profile.clone().unwrap_or("dev".to_string()),
+                },
+            )
+            .expect("Failed to build script");
+            let metadata_with_deps = get_scarb_metadata_with_deps(&manifest_path)?;
+
+            let mut result = starknet_commands::script::run::run(
+                &run.script_name,
+                &metadata_with_deps,
+                &package_metadata,
+                &mut artifacts,
+                &provider,
+                runtime,
+                &config,
+            );
+
+            print_command_result("script run", &mut result, numbers_format, output_format)?;
+        }
+    }
+
+    Ok(())
 }
 
 fn update_cast_config(config: &mut CastConfig, cli: &Cli) {

@@ -11,7 +11,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-- dependency on the [universal-sierra-compiler](https://github.com/software-mansion/universal-sierra-compiler) binary, which will allow forge to be independent of sierra version
+- result of the call to the trace
+- dependency on the [universal-sierra-compiler](https://github.com/software-mansion/universal-sierra-compiler)
+binary, which will allow forge to be independent of sierra version
+
+
+#### Changed
+
+- `var()`, `read_txt()`, `read_json()`, `FileTrait::new()`, `declare()` now use regular strings (`ByteArray`) instead of short strings (`felt252`)
+- `start_mock_call()`, `stop_mock_call()`, `L1Handler` now use selector (`selector!()`) instead of names
+
+### Cast
+
+#### Changed
+
+- `declare()` now uses regular strings (`ByteArray`) instead of short strings (`felt252`)
+- `call()` and `invoke()` now require function selector (`selector!()`) instead of function name in scripts (sncast_std)
+
+#### Removed
+
+- `--path-to-scarb-toml` optional flag that allowed to specify the path to the `Scarb.toml` file
+
+## [0.18.0] - 2024-02-21
+
+### Forge
+
+#### Added
+
+- contract names to call trace
+- `--max-n-steps` argument that allows setting own steps limit
+
+#### Changed
+
+- Unknown entry point error when calling a contract counts as a panic
+- Cairo edition set to `2023_11`
+
+#### Fixed
+
+- Calling Cairo 0 contract no longer cancels cheatcodes in further calls
+
+### Cast
+
+#### Added
+
+- `script init` command to generate a template file structure for deployment scripts
+- Warning is emitted when executing sncast commands if the node's JSON-RPC version is incompatible
+
+#### Changed
+
+- to run a deployment script it is required to use `script run` subcommand
 
 ## [0.17.1] - 2024-02-12
 

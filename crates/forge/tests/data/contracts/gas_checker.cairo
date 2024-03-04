@@ -1,11 +1,11 @@
 #[starknet::interface]
 trait IGasChecker<TContractState> {
-    fn keccak(self: @TContractState);
+    fn keccak(self: @TContractState, repetitions: u32);
     fn range_check(self: @TContractState);
-    fn bitwise(self: @TContractState);
+    fn bitwise(self: @TContractState, repetitions: u32);
     fn pedersen(self: @TContractState);
     fn poseidon(self: @TContractState);
-    fn ec_op(self: @TContractState);
+    fn ec_op(self: @TContractState, repetitions: u32);
 
     fn change_balance(ref self: TContractState, new_balance: u64);
     fn send_l1_message(self: @TContractState);
@@ -22,8 +22,12 @@ mod GasChecker {
 
     #[abi(embed_v0)]
     impl IGasCheckerImpl of super::IGasChecker<ContractState> {
-        fn keccak(self: @ContractState) {
-            keccak::keccak_u256s_le_inputs(array![1].span());
+        fn keccak(self: @ContractState, repetitions: u32) {
+            let mut i: u32 = 0;
+            while i < repetitions {
+                keccak::keccak_u256s_le_inputs(array![1].span());
+                i += 1;
+            }
         }
 
         fn range_check(self: @ContractState) {
@@ -36,18 +40,215 @@ mod GasChecker {
             assert(1_u8 >= 1_u8, 'error message');
             assert(1_u8 >= 1_u8, 'error message');
             assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
+            assert(1_u8 >= 1_u8, 'error message');
         }
 
-        fn bitwise(self: @ContractState) {
-            1_u8 & 1_u8;
-            1_u8 & 1_u8;
-            1_u8 & 1_u8;
-            1_u8 & 1_u8;
-            1_u8 & 1_u8;
-            1_u8 & 1_u8;
+        fn bitwise(self: @ContractState, repetitions: u32) {
+            let mut i: u32 = 0;
+            while i < repetitions {
+                1_u8 & 1_u8;
+                i += 1;
+            }
         }
 
         fn pedersen(self: @ContractState) {
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
+            core::pedersen::pedersen(1, 2);
             core::pedersen::pedersen(1, 2);
             core::pedersen::pedersen(1, 2);
             core::pedersen::pedersen(1, 2);
@@ -75,10 +276,82 @@ mod GasChecker {
             core::poseidon::hades_permutation(0, 0, 0);
             core::poseidon::hades_permutation(0, 0, 0);
             core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
+            core::poseidon::hades_permutation(0, 0, 0);
         }
 
-        fn ec_op(self: @ContractState) {
-            EcPointTrait::new_from_x(1).unwrap().mul(2);
+        fn ec_op(self: @ContractState, repetitions: u32) {
+            let mut i: u32 = 0;
+            while i < repetitions {
+                EcPointTrait::new_from_x(1).unwrap().mul(2);
+                i += 1;
+            }
         }
 
         fn change_balance(ref self: ContractState, new_balance: u64) {

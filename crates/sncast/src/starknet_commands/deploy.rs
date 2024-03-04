@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Result};
 use clap::Args;
-use sncast::response::structs::{DeployResponse, Hex};
+use sncast::response::structs::{DeployResponse, Felt};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{Account, ConnectedAccount, SingleOwnerAccount};
 use starknet::contract::ContractFactory;
@@ -10,8 +10,9 @@ use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
 
+use sncast::response::errors::StarknetCommandError;
 use sncast::{extract_or_generate_salt, udc_uniqueness};
-use sncast::{handle_rpc_error, handle_wait_for_tx, WaitForTx};
+use sncast::{handle_wait_for_tx, WaitForTx};
 
 #[derive(Args)]
 #[command(about = "Deploy a contract on Starknet")]
@@ -51,7 +52,7 @@ pub async fn deploy(
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     nonce: Option<FieldElement>,
     wait_config: WaitForTx,
-) -> Result<DeployResponse> {
+) -> Result<DeployResponse, StarknetCommandError> {
     let salt = extract_or_generate_salt(salt);
     let factory = ContractFactory::new(class_hash, account);
     let execution = factory.deploy(constructor_calldata.clone(), salt, unique);
@@ -71,26 +72,24 @@ pub async fn deploy(
     };
 
     let result = execution.send().await;
-
     match result {
-        Ok(result) => {
-            handle_wait_for_tx(
-                account.provider(),
-                result.transaction_hash,
-                DeployResponse {
-                    contract_address: Hex(get_udc_deployed_address(
-                        salt,
-                        class_hash,
-                        &udc_uniqueness(unique, account.address()),
-                        &constructor_calldata,
-                    )),
-                    transaction_hash: Hex(result.transaction_hash),
-                },
-                wait_config,
-            )
-            .await
-        }
-        Err(Provider(error)) => handle_rpc_error(error),
-        _ => Err(anyhow!("Unknown RPC error")),
+        Ok(result) => handle_wait_for_tx(
+            account.provider(),
+            result.transaction_hash,
+            DeployResponse {
+                contract_address: Felt(get_udc_deployed_address(
+                    salt,
+                    class_hash,
+                    &udc_uniqueness(unique, account.address()),
+                    &constructor_calldata,
+                )),
+                transaction_hash: Felt(result.transaction_hash),
+            },
+            wait_config,
+        )
+        .await
+        .map_err(StarknetCommandError::from),
+        Err(Provider(error)) => Err(StarknetCommandError::ProviderError(error.into())),
+        _ => Err(anyhow!("Unknown RPC error").into()),
     }
 }

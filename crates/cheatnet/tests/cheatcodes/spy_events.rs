@@ -9,11 +9,10 @@ use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::spy_event
     Event, SpyTarget,
 };
 use cheatnet::state::CheatnetState;
-use conversions::felt252::FromShortString;
 use conversions::IntoConv;
 use std::vec;
 
-fn felt_vec_to_event_vec(felts: &[Felt252]) -> Vec<Event> {
+pub fn felt_vec_to_event_vec(felts: &[Felt252]) -> Vec<Event> {
     let mut events = vec![];
     let mut i = 0;
     while i < felts.len() {
@@ -286,8 +285,7 @@ fn library_call_emits_event() {
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
     let contracts = get_contracts();
-    let contract_name = Felt252::from_short_string("SpyEventsChecker").unwrap();
-    let class_hash = declare(&mut cached_state, &contract_name, &contracts).unwrap();
+    let class_hash = declare(&mut cached_state, "SpyEventsChecker", &contracts).unwrap();
     let contract_address = deploy_contract(
         &mut cached_state,
         &mut runtime_state,
@@ -368,8 +366,7 @@ fn check_if_there_is_no_interference() {
 
     let contracts = get_contracts();
 
-    let contract_name = Felt252::from_short_string("SpyEventsChecker").unwrap();
-    let class_hash = declare(&mut cached_state, &contract_name, &contracts).unwrap();
+    let class_hash = declare(&mut cached_state, "SpyEventsChecker", &contracts).unwrap();
 
     let spy_events_checker_address =
         deploy_wrapper(&mut cached_state, &mut runtime_state, &class_hash, &[]).unwrap();
@@ -428,8 +425,7 @@ fn test_nested_calls() {
 
     let contracts = get_contracts();
 
-    let contract_name = Felt252::from_short_string("SpyEventsCheckerProxy").unwrap();
-    let class_hash = declare(&mut cached_state, &contract_name, &contracts).unwrap();
+    let class_hash = declare(&mut cached_state, "SpyEventsCheckerProxy", &contracts).unwrap();
 
     let spy_events_checker_proxy_address = deploy_wrapper(
         &mut cached_state,
@@ -507,8 +503,7 @@ fn use_multiple_spies() {
 
     let contracts = get_contracts();
 
-    let contract_name = Felt252::from_short_string("SpyEventsCheckerProxy").unwrap();
-    let class_hash = declare(&mut cached_state, &contract_name, &contracts).unwrap();
+    let class_hash = declare(&mut cached_state, "SpyEventsCheckerProxy", &contracts).unwrap();
 
     let spy_events_checker_proxy_address = deploy_wrapper(
         &mut cached_state,

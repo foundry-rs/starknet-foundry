@@ -6,6 +6,7 @@ use std::rc::Rc;
 use std::sync::Arc;
 
 use crate::compiled_runnable::ValidatedForkConfig;
+use crate::contracts_data::ContractsData;
 use crate::gas::calculate_used_gas;
 use crate::test_case_summary::{Single, TestCaseSummary};
 use crate::{
@@ -39,10 +40,12 @@ use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::Use
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::CallToBlockifierExtension;
 use cheatnet::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
 use cheatnet::runtime_extensions::forge_runtime_extension::{
-    get_all_used_resources, update_top_call_execution_resources, ForgeExtension, ForgeRuntime,
+    get_all_used_resources, update_top_call_execution_resources, update_top_call_l1_resources,
+    ForgeExtension, ForgeRuntime,
 };
 use cheatnet::state::{BlockInfoReader, CallTrace, CheatnetState, ExtendedStateReader};
-use runtime::starknet::context::build_context;
+use itertools::chain;
+use runtime::starknet::context::{build_context, set_max_steps};
 use runtime::{ExtendedRuntime, StarknetRuntime};
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
@@ -50,7 +53,6 @@ use tokio::task::JoinHandle;
 pub fn run_test(
     case: Arc<TestCaseRunnable>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
-    test_details: Arc<TestDetails>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     send: Sender<()>,
@@ -62,14 +64,8 @@ pub fn run_test(
         if send.is_closed() {
             return Ok(TestCaseSummary::Skipped {});
         }
-        let run_result = run_test_case(
-            vec![],
-            &case,
-            &casm_program,
-            &test_details,
-            &runner_config,
-            &runner_params,
-        );
+        let run_result =
+            run_test_case(vec![], &case, &casm_program, &runner_config, &runner_params);
 
         // TODO: code below is added to fix snforge tests
         // remove it after improve exit-first tests
@@ -78,7 +74,7 @@ pub fn run_test(
             return Ok(TestCaseSummary::Skipped {});
         }
 
-        extract_test_case_summary(run_result, &case, vec![])
+        extract_test_case_summary(run_result, &case, vec![], &runner_params.contracts_data)
     })
 }
 
@@ -87,7 +83,6 @@ pub(crate) fn run_fuzz_test(
     args: Vec<Felt252>,
     case: Arc<TestCaseRunnable>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
-    test_details: Arc<TestDetails>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     send: Sender<()>,
@@ -105,7 +100,6 @@ pub(crate) fn run_fuzz_test(
             args.clone(),
             &case,
             &casm_program,
-            &test_details,
             &runner_config,
             &runner_params,
         );
@@ -117,7 +111,7 @@ pub(crate) fn run_fuzz_test(
             return Ok(TestCaseSummary::Skipped {});
         }
 
-        extract_test_case_summary(run_result, &case, args)
+        extract_test_case_summary(run_result, &case, args, &runner_params.contracts_data)
     })
 }
 
@@ -163,19 +157,12 @@ pub struct RunResultWithInfo {
     pub(crate) used_resources: UsedResources,
 }
 
-pub struct TestDetails {
-    pub entry_point_offset: usize,
-    pub parameter_types: Vec<(GenericTypeId, i16)>,
-    pub return_types: Vec<(GenericTypeId, i16)>,
-}
-
 #[allow(clippy::too_many_arguments)]
 #[allow(clippy::too_many_lines)]
 pub fn run_test_case(
     args: Vec<Felt252>,
     case: &TestCaseRunnable,
     casm_program: &AssembledProgramWithDebugInfo,
-    test_details: &TestDetails,
     runner_config: &Arc<RunnerConfig>,
     runner_params: &Arc<RunnerParams>,
 ) -> Result<RunResultWithInfo> {
@@ -187,10 +174,10 @@ pub fn run_test_case(
     let initial_gas = usize::MAX;
     let runner_args: Vec<Arg> = args.into_iter().map(Arg::Value).collect();
     let (entry_code, builtins) = SierraCasmRunner::create_entry_code_from_params(
-        &test_details.parameter_types,
+        &case.test_details.parameter_types,
         &runner_args,
         initial_gas,
-        casm_program.debug_info[test_details.entry_point_offset].0,
+        casm_program.debug_info[case.test_details.entry_point_offset].0,
     )
     .unwrap();
     let footer = SierraCasmRunner::create_code_footer();
@@ -209,6 +196,11 @@ pub fn run_test_case(
     let block_info = state_reader.get_block_info()?;
 
     let mut context = build_context(block_info);
+
+    if let Some(max_n_steps) = runner_config.max_n_steps {
+        set_max_steps(&mut context, max_n_steps);
+    }
+
     let mut execution_resources = ExecutionResources::default();
     let mut cached_state = CachedState::from(state_reader);
     let syscall_handler = build_syscall_handler(
@@ -216,7 +208,7 @@ pub fn run_test_case(
         &string_to_hint,
         &mut execution_resources,
         &mut context,
-        get_syscall_segment_index(&test_details.parameter_types),
+        get_syscall_segment_index(&case.test_details.parameter_types),
     );
 
     let mut cheatnet_state = CheatnetState {
@@ -241,7 +233,7 @@ pub fn run_test_case(
     };
     let forge_extension = ForgeExtension {
         environment_variables: &runner_params.environment_variables,
-        contracts: &runner_params.contracts,
+        contracts: &runner_params.contracts_data.contracts,
     };
 
     let mut forge_runtime = ExtendedRuntime {
@@ -284,7 +276,7 @@ pub fn run_test_case(
             let ap = vm.get_relocated_trace().unwrap().last().unwrap().ap;
 
             let (results_data, gas_counter) =
-                SierraCasmRunner::get_results_data(&test_details.return_types, &cells, ap);
+                SierraCasmRunner::get_results_data(&case.test_details.return_types, &cells, ap);
             assert_eq!(results_data.len(), 1);
 
             let (_, values) = results_data[0].clone();
@@ -311,6 +303,7 @@ pub fn run_test_case(
     let call_trace_ref = get_call_trace_ref(&mut forge_runtime);
 
     update_top_call_execution_resources(&mut forge_runtime);
+    update_top_call_l1_resources(&mut forge_runtime);
     let used_resources = get_all_used_resources(forge_runtime);
     let gas = calculate_used_gas(&block_context, &mut cached_state, &used_resources)?;
 
@@ -326,6 +319,7 @@ fn extract_test_case_summary(
     run_result: Result<RunResultWithInfo>,
     case: &TestCaseRunnable,
     args: Vec<Felt252>,
+    contracts_data: &ContractsData,
 ) -> Result<TestCaseSummary<Single>> {
     match run_result {
         Ok(result_with_info) => {
@@ -337,6 +331,7 @@ fn extract_test_case_summary(
                     result_with_info.gas_used,
                     result_with_info.used_resources,
                     &result_with_info.call_trace,
+                    contracts_data,
                 )),
                 // CairoRunError comes from VirtualMachineError which may come from HintException that originates in TestExecutionSyscallHandler
                 Err(RunnerError::CairoRunError(error)) => Ok(TestCaseSummary::Failed {

@@ -1,22 +1,26 @@
-use blockifier::execution::execution_utils::stark_felt_to_felt;
-use cairo_lang_runner::casm_run::format_next_item;
-
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::execute_call_entry_point;
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::panic_data::try_extract_panic_data;
-use crate::runtime_extensions::common::{create_entry_point_selector, create_execute_calldata};
-use blockifier::execution::call_info::CallInfo;
-use blockifier::execution::entry_point::EntryPointExecutionResult;
-use blockifier::execution::syscalls::hint_processor::{SyscallCounter, SyscallHintProcessor};
+use super::RuntimeState;
+use crate::runtime_extensions::{
+    call_to_blockifier_runtime_extension::{
+        execution::entry_point::execute_call_entry_point, panic_data::try_extract_panic_data,
+    },
+    common::{create_entry_point_selector, create_execute_calldata},
+};
 use blockifier::execution::{
-    entry_point::{CallEntryPoint, CallType, ExecutionResources},
+    call_info::CallInfo,
+    entry_point::{CallEntryPoint, CallType, EntryPointExecutionResult, ExecutionResources},
     errors::{EntryPointExecutionError, PreExecutionError},
+    execution_utils::stark_felt_to_felt,
+    syscalls::hint_processor::{SyscallCounter, SyscallHintProcessor},
 };
 use blockifier::state::errors::StateError;
 use cairo_felt::Felt252;
-use starknet_api::core::ClassHash;
-use starknet_api::{core::ContractAddress, deprecated_contract_class::EntryPointType};
-
-use super::RuntimeState;
+use cairo_lang_runner::casm_run::format_next_item;
+use conversions::byte_array::ByteArray;
+use serde::{Deserialize, Serialize};
+use starknet_api::{
+    core::{ClassHash, ContractAddress},
+    deprecated_contract_class::EntryPointType,
+};
 
 #[derive(Clone, Debug, Default)]
 pub struct UsedResources {
@@ -63,7 +67,7 @@ fn subtract_syscall_counters(
 }
 
 /// Enum representing possible call execution result, along with the data
-#[derive(Debug)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum CallResult {
     Success { ret_data: Vec<Felt252> },
     Failure(CallFailure),
@@ -72,7 +76,7 @@ pub enum CallResult {
 /// Enum representing possible call failure and its' type.
 /// `Panic` - Recoverable, meant to be caught by the user.
 /// `Error` - Unrecoverable, equivalent of panic! in rust.
-#[derive(Debug)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum CallFailure {
     Panic { panic_data: Vec<Felt252> },
     Error { msg: String },
@@ -107,7 +111,7 @@ impl CallFailure {
                     if let [item] = &items[..] {
                         item.clone()
                     } else {
-                        items.join("\n").to_string()
+                        items.join("\n")
                     }
                 };
 
@@ -144,7 +148,13 @@ impl CallFailure {
                         "Entry point selector {selector_hash} not found for class hash {class_hash}"
                     ),
                 };
-                CallFailure::Error { msg }
+
+                let panic_data_felts: Vec<Felt252> =
+                    ByteArray::from(msg.as_str()).serialize_with_magic();
+
+                CallFailure::Panic {
+                    panic_data: panic_data_felts,
+                }
             }
             EntryPointExecutionError::PreExecutionError(
                 PreExecutionError::UninitializedStorageAddress(contract_address),
@@ -164,7 +174,8 @@ impl CallFailure {
 }
 
 impl CallResult {
-    fn from_execution_result(
+    #[must_use]
+    pub fn from_execution_result(
         result: &EntryPointExecutionResult<CallInfo>,
         starknet_identifier: &AddressOrClassHash,
     ) -> Self {

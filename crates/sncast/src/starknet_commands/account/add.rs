@@ -6,7 +6,7 @@ use camino::Utf8PathBuf;
 use clap::Args;
 use sncast::helpers::configuration::CastConfig;
 use sncast::response::structs::AccountAddResponse;
-use sncast::{get_chain_id, parse_number};
+use sncast::{check_class_hash_exists, get_chain_id, parse_number};
 use starknet::core::types::BlockTag::Pending;
 use starknet::core::types::{BlockId, FieldElement};
 use starknet::providers::{
@@ -77,6 +77,10 @@ pub async fn add(
             public_key == &private_key.verifying_key().scalar(),
             "The private key does not match the public key"
         );
+    }
+
+    if let Some(class_hash) = add.class_hash {
+        check_class_hash_exists(provider, class_hash).await?;
     }
 
     let deployed = add.deployed

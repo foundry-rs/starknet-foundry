@@ -1,4 +1,7 @@
+use std::path::Path;
+
 use indoc::indoc;
+use test_utils::runner::Contract;
 use test_utils::running_tests::run_test_case;
 use test_utils::{assert_passed, test_case};
 
@@ -30,6 +33,46 @@ fn should_panic() {
             }
         "
     ));
+
+    let result = run_test_case(&test);
+
+    assert_passed!(result);
+}
+
+#[test]
+fn should_panic_unknown_entry_point() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use array::ArrayTrait;
+            use starknet::{call_contract_syscall, ContractAddress, Felt252TryIntoContractAddress};
+            use result::ResultTrait;
+
+            use snforge_std::{declare, ContractClass, ContractClassTrait};
+
+            #[test]
+            #[should_panic]
+            fn should_panic_with_no_expected_data() {
+                let contract = declare("HelloStarknet");
+                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+            
+                match call_contract_syscall(
+                    contract_address,
+                    'inexistent_entry_point',
+                    ArrayTrait::<felt252>::new().span()
+                ) {
+                    Result::Ok(_) => panic_with_felt252('Expected an error'),
+                    Result::Err(err) => panic(err),
+                };
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "HelloStarknet".to_string(),
+            Path::new("tests/data/contracts/hello_starknet.cairo"),
+        )
+        .unwrap()
+    );
 
     let result = run_test_case(&test);
 

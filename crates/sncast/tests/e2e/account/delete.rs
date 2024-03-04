@@ -2,7 +2,8 @@ use crate::helpers::constants::URL;
 use crate::helpers::fixtures::default_cli_args;
 use crate::helpers::runner::runner;
 use indoc::indoc;
-use snapbox::cmd::{cargo_bin, Command};
+use shared::test_utils::output_assert::{assert_stderr_contains, AsOutput};
+use tempfile::{tempdir, TempDir};
 use tokio::fs::File;
 use tokio::io::AsyncWriteExt;
 
@@ -19,11 +20,15 @@ pub async fn test_no_accounts_in_network() {
     ]);
 
     let snapbox = runner(&args);
+    let output = snapbox.assert().success();
 
-    snapbox.assert().stderr_matches(indoc! {r"
-    command: account delete
-    error: No accounts defined for network = goerli0-network
-    "});
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        command: account delete
+        error: No accounts defined for network = goerli0-network
+        "},
+    );
 }
 
 #[tokio::test]
@@ -32,24 +37,29 @@ pub async fn test_account_does_not_exist() {
     args.append(&mut vec!["account", "delete", "--name", "user99"]);
 
     let snapbox = runner(&args);
+    let output = snapbox.assert().success();
 
-    snapbox.assert().stderr_matches(indoc! {r"
-    command: account delete
-    error: Account with name user99 does not exist
-    "});
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        command: account delete
+        error: Account with name user99 does not exist
+        "},
+    );
 }
 
 #[tokio::test]
 pub async fn test_delete_abort() {
     // Creating dummy accounts test file
-    create_dummy_accounts_file("temp_accounts1.json").await;
+    let accounts_file_name = "temp_accounts.json";
+    let temp_dir = create_tempdir_with_accounts_file(accounts_file_name).await;
 
     // Now delete dummy account
     let args = vec![
         "--url",
         URL,
         "--accounts-file",
-        "temp_accounts1.json",
+        &accounts_file_name,
         "account",
         "delete",
         "--name",
@@ -59,27 +69,30 @@ pub async fn test_delete_abort() {
     ];
 
     // Run test with a negative user input
-    let snapbox = Command::new(cargo_bin!("sncast")).args(args).stdin("n");
+    let snapbox = runner(&args).current_dir(temp_dir.path()).stdin("n");
 
-    snapbox.assert().stderr_matches(indoc! {r"
-    command: account delete
-    error: Delete aborted
-    "});
-
-    let _ = tokio::fs::remove_file("temp_accounts1.json").await;
+    let output = snapbox.assert().success();
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        command: account delete
+        error: Delete aborted
+        "},
+    );
 }
 
 #[tokio::test]
 pub async fn test_happy_case() {
     // Creating dummy accounts test file
-    create_dummy_accounts_file("temp_accounts2.json").await;
+    let accounts_file_name = "temp_accounts.json";
+    let temp_dir = create_tempdir_with_accounts_file(accounts_file_name).await;
 
     // Now delete dummy account
     let args = vec![
         "--url",
         URL,
         "--accounts-file",
-        "temp_accounts2.json",
+        &accounts_file_name,
         "account",
         "delete",
         "--name",
@@ -89,28 +102,26 @@ pub async fn test_happy_case() {
     ];
 
     // Run test with an affirmative user input
-    let snapbox = Command::new(cargo_bin!("sncast")).args(args).stdin("Y");
-    let bdg = snapbox.assert();
-    let out = bdg.get_output();
-    let stdout_str =
-        std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
+    let snapbox = runner(&args).current_dir(temp_dir.path()).stdin("Y");
 
-    assert!(stdout_str.contains("Account successfully removed"));
-
-    let _ = tokio::fs::remove_file("temp_accounts2.json").await;
+    snapbox.assert().success().stdout_matches(indoc! {r"
+        command: account delete
+        result: Account successfully removed
+    "});
 }
 
 #[tokio::test]
 pub async fn test_happy_case_without_network_args() {
     // Creating dummy accounts test file
-    create_dummy_accounts_file("temp_accounts6.json").await;
+    let accounts_file_name = "temp_accounts.json";
+    let temp_dir = create_tempdir_with_accounts_file(accounts_file_name).await;
 
     // Now delete dummy account
     let args = vec![
         "--url",
         URL,
         "--accounts-file",
-        "temp_accounts6.json",
+        &accounts_file_name,
         "account",
         "delete",
         "--name",
@@ -118,28 +129,26 @@ pub async fn test_happy_case_without_network_args() {
     ];
 
     // Run test with an affirmative user input
-    let snapbox = Command::new(cargo_bin!("sncast")).args(args).stdin("Y");
-    let bdg = snapbox.assert();
-    let out = bdg.get_output();
-    let stdout_str =
-        std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
+    let snapbox = runner(&args).current_dir(temp_dir.path()).stdin("Y");
 
-    assert!(stdout_str.contains("Account successfully removed"));
-
-    let _ = tokio::fs::remove_file("temp_accounts6.json").await;
+    snapbox.assert().success().stdout_matches(indoc! {r"
+        command: account delete
+        result: Account successfully removed
+    "});
 }
 
 #[tokio::test]
 pub async fn test_happy_case_with_yes_flag() {
     // Creating dummy accounts test file
-    create_dummy_accounts_file("temp_accounts7.json").await;
+    let accounts_file_name = "temp_accounts.json";
+    let temp_dir = create_tempdir_with_accounts_file(accounts_file_name).await;
 
     // Now delete dummy account
     let args = vec![
         "--url",
         URL,
         "--accounts-file",
-        "temp_accounts7.json",
+        &accounts_file_name,
         "account",
         "delete",
         "--name",
@@ -150,19 +159,20 @@ pub async fn test_happy_case_with_yes_flag() {
     ];
 
     // Run test with no additional user input
-    let snapbox = Command::new(cargo_bin!("sncast")).args(args);
-    let bdg = snapbox.assert();
-    let out = bdg.get_output();
-    let stdout_str =
-        std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
+    let snapbox = runner(&args).current_dir(temp_dir.path());
+    let output = snapbox.assert().success();
 
-    assert!(out.stderr.is_empty());
-    assert!(stdout_str.contains("Account successfully removed"));
-
-    let _ = tokio::fs::remove_file("temp_accounts7.json").await;
+    assert!(output.as_stderr().is_empty());
+    output.stdout_matches(indoc! {r"
+        command: account delete
+        result: Account successfully removed
+    "});
 }
 
-async fn create_dummy_accounts_file(file_name: &str) {
+#[must_use]
+async fn create_tempdir_with_accounts_file(file_name: &str) -> TempDir {
+    let tempdir = tempdir().expect("Unable to create temporary directory");
+
     let json_data = indoc! {r#"
     {
         "alpha-goerli": {
@@ -189,11 +199,13 @@ async fn create_dummy_accounts_file(file_name: &str) {
     }
     "#};
 
-    let mut file = File::create(file_name)
+    let mut file = File::create(tempdir.path().join(file_name))
         .await
         .expect("Could not create temporary accounts file!");
     file.write_all(json_data.as_bytes())
         .await
         .expect("Could not write temporary testing accounts");
     let _ = file.flush().await;
+
+    tempdir
 }

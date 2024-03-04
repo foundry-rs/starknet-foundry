@@ -1,12 +1,15 @@
 use assert_fs::TempDir;
+use forge_runner::build_trace_data::TRACE_DIR;
 use std::collections::HashMap;
 use std::fs;
 
-use forge_runner::trace_data::ProfilerDeprecatedSyscallSelector::{
+use trace_data::DeprecatedSyscallSelector::{
     CallContract, Deploy, EmitEvent, GetBlockHash, GetExecutionInfo, Keccak, LibraryCall,
     SendMessageToL1, StorageRead, StorageWrite,
 };
-use forge_runner::trace_data::{ProfilerCallTrace, ProfilerExecutionResources, TRACE_DIR};
+use trace_data::{
+    CallTrace as ProfilerCallTrace, ExecutionResources as ProfilerExecutionResources,
+};
 
 use crate::e2e::common::runner::{setup_package, test_runner};
 
@@ -84,10 +87,11 @@ fn check_vm_resources_and_easily_unifiable_syscalls(
         sum_child_resources += resource;
     }
 
-    let current_resources = &call_trace.used_execution_resources;
+    let current_resources = &call_trace.cumulative_resources;
     assert!(current_resources.gt_eq_than(&sum_child_resources));
     let resource_diff = current_resources - &sum_child_resources;
     assert_correct_diff_for_builtins_and_easily_unifiable_syscalls(&resource_diff);
+    assert_l2_l1_messages(call_trace);
 
     current_resources
 }
@@ -132,11 +136,24 @@ fn assert_correct_diff_for_builtins_and_easily_unifiable_syscalls(
     }
 }
 
+fn assert_l2_l1_messages(call_trace: &ProfilerCallTrace) {
+    assert_eq!(
+        call_trace.used_l1_resources.l2_l1_message_sizes.len(),
+        1,
+        "Every call should have one message"
+    );
+    assert_eq!(
+        call_trace.used_l1_resources.l2_l1_message_sizes,
+        vec![2],
+        "Message should have payload of length 2"
+    );
+}
+
 // When sth fails in the functions below and you didn't change anything in the cairo code it is a BUG.
 // If you changed the corresponding cairo code count the expected occurrences of syscalls manually first, then assert them.
 // TL;DR: DON't mindlessly change numbers to fix the tests if they ever fail.
 fn check_call(test_call_trace: &ProfilerCallTrace) {
-    assert_not_easily_unifiable_syscalls(test_call_trace, 11, 4, 1); // FIXME in #1631 (should be 14, 8, 1)
+    assert_not_easily_unifiable_syscalls(test_call_trace, 14, 8, 1);
 
     let regular_call = &test_call_trace.nested_calls[1];
     assert_not_easily_unifiable_syscalls(regular_call, 2, 1, 0);
@@ -164,7 +181,7 @@ fn check_call(test_call_trace: &ProfilerCallTrace) {
 }
 
 fn check_deploy(test_call_trace: &ProfilerCallTrace) {
-    assert_not_easily_unifiable_syscalls(test_call_trace, 11, 4, 0); // FIXME in #1631 (should be 14, 4, 0)
+    assert_not_easily_unifiable_syscalls(test_call_trace, 14, 4, 0);
 
     for deploy_proxy in &test_call_trace.nested_calls {
         assert_not_easily_unifiable_syscalls(deploy_proxy, 2, 1, 0);
@@ -175,7 +192,7 @@ fn check_deploy(test_call_trace: &ProfilerCallTrace) {
 }
 
 fn check_l1_handler(test_call_trace: &ProfilerCallTrace) {
-    assert_not_easily_unifiable_syscalls(test_call_trace, 6, 3, 0); // FIXME in #1631 (should be 8, 3, 0)
+    assert_not_easily_unifiable_syscalls(test_call_trace, 8, 3, 0);
 
     let handle_l1 = &test_call_trace.nested_calls[1];
     assert_not_easily_unifiable_syscalls(handle_l1, 3, 2, 0);
@@ -188,7 +205,7 @@ fn check_l1_handler(test_call_trace: &ProfilerCallTrace) {
 }
 
 fn check_libcall(test_call_trace: &ProfilerCallTrace) {
-    assert_not_easily_unifiable_syscalls(test_call_trace, 9, 3, 1); // FIXME in #1631 (should be 11, 3, 5)
+    assert_not_easily_unifiable_syscalls(test_call_trace, 11, 3, 5);
 
     let regular_call = &test_call_trace.nested_calls[0];
     assert_not_easily_unifiable_syscalls(regular_call, 2, 1, 0);
@@ -218,7 +235,7 @@ fn assert_not_easily_unifiable_syscalls(
     call_contract_count: usize,
     library_call_count: usize,
 ) {
-    let syscall_counter = &call.used_execution_resources.syscall_counter;
+    let syscall_counter = &call.cumulative_resources.syscall_counter;
 
     let expected_counts: HashMap<_, _> = [
         (Deploy, deploy_count),

@@ -1,10 +1,14 @@
 use crate::forking::state::ForkStateReader;
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::subtract_execution_resources;
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
+    subtract_execution_resources, AddressOrClassHash, CallResult,
+};
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spoof::TxInfoMock;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::{
     Event, SpyTarget,
 };
-use blockifier::execution::entry_point::{CallEntryPoint, ExecutionResources};
+use blockifier::execution::entry_point::{
+    CallEntryPoint, EntryPointExecutionResult, ExecutionResources,
+};
 use blockifier::{
     execution::contract_class::ContractClass,
     state::state_api::{StateReader, StateResult},
@@ -15,18 +19,21 @@ use runtime::starknet::state::DictStateReader;
 
 use starknet_api::core::EntryPointSelector;
 
-use crate::constants::build_test_entry_point;
+use crate::constants::{build_test_entry_point, TEST_CONTRACT_CLASS_HASH};
+use blockifier::execution::call_info::CallInfo;
 use blockifier::state::errors::StateError::UndeclaredClassHash;
 use starknet_api::transaction::ContractAddressSalt;
 use starknet_api::{
+    class_hash,
     core::{ClassHash, CompiledClassHash, ContractAddress, Nonce},
-    hash::StarkFelt,
+    hash::{StarkFelt, StarkHash},
     state::StorageKey,
 };
 use std::cell::{Ref, RefCell};
 use std::collections::HashMap;
 use std::hash::BuildHasher;
 use std::rc::Rc;
+use trace_data::L1Resources;
 
 // Specifies which contracts to target
 // with a cheatcode function
@@ -34,6 +41,13 @@ pub enum CheatTarget {
     All,
     One(ContractAddress),
     Multiple(Vec<ContractAddress>),
+}
+
+// Specifies the duration of the cheat
+#[derive(Clone, Debug)]
+pub enum CheatSpan {
+    Indefinite,
+    Number(usize),
 }
 
 #[derive(Debug)]
@@ -120,27 +134,43 @@ impl StateReader for ExtendedStateReader {
     }
 }
 
+#[derive(Debug)]
 pub enum CheatStatus<T> {
-    Cheated(T),
+    Cheated(T, CheatSpan),
     Uncheated,
 }
 
+impl<T> CheatStatus<T> {
+    pub fn decrement_cheat_span(&mut self) {
+        if let CheatStatus::Cheated(_, CheatSpan::Number(n)) = self {
+            *n -= 1;
+            if *n == 0 {
+                *self = CheatStatus::Uncheated;
+            }
+        }
+    }
+}
+
 /// Tree structure representing trace of a call.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct CallTrace {
     pub entry_point: CallEntryPoint,
     // These also include resources used by internal calls
     pub used_execution_resources: ExecutionResources,
+    pub used_l1_resources: L1Resources,
     pub nested_calls: Vec<Rc<RefCell<CallTrace>>>,
+    pub result: CallResult,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 struct CallStackElement {
     // when we exit the call we use it to calculate resources used by the call
     resources_used_before_call: ExecutionResources,
     call_trace: Rc<RefCell<CallTrace>>,
+    cheated_data: CheatedData,
 }
 
+#[derive(Debug)]
 pub struct NotEmptyCallStack(Vec<CallStackElement>);
 
 impl NotEmptyCallStack {
@@ -148,6 +178,7 @@ impl NotEmptyCallStack {
         NotEmptyCallStack(vec![CallStackElement {
             resources_used_before_call: ExecutionResources::default(),
             call_trace: elem,
+            cheated_data: Default::default(),
         }])
     }
 
@@ -155,18 +186,23 @@ impl NotEmptyCallStack {
         &mut self,
         elem: Rc<RefCell<CallTrace>>,
         resources_used_before_call: ExecutionResources,
+        cheated_data: CheatedData,
     ) {
         self.0.push(CallStackElement {
             resources_used_before_call,
             call_trace: elem,
+            cheated_data,
         });
     }
 
     pub fn top(&mut self) -> Rc<RefCell<CallTrace>> {
-        let top_val = self.0.pop().unwrap();
-        let borrowed_ref = top_val.call_trace.clone();
-        self.0.push(top_val);
-        borrowed_ref
+        let top_val = self.0.last().unwrap();
+        top_val.call_trace.clone()
+    }
+
+    pub fn top_cheated_data(&mut self) -> CheatedData {
+        let top_val = self.0.last().unwrap();
+        top_val.cheated_data.clone()
     }
 
     fn pop(&mut self) -> CallStackElement {
@@ -175,27 +211,43 @@ impl NotEmptyCallStack {
     }
 
     #[must_use]
+    pub fn size(&self) -> usize {
+        self.0.len()
+    }
+
+    #[must_use]
     pub fn borrow_full_trace(&self) -> Ref<'_, CallTrace> {
         self.0.first().unwrap().call_trace.borrow()
     }
 }
 
+#[derive(Clone, Default, Debug)]
+pub struct CheatedData {
+    pub block_number: Option<Felt252>,
+    pub block_timestamp: Option<Felt252>,
+    pub caller_address: Option<ContractAddress>,
+    pub sequencer_address: Option<ContractAddress>,
+    pub tx_info: Option<TxInfoMock>,
+}
+
+#[derive(Debug)]
 pub struct TraceData {
     pub current_call_stack: NotEmptyCallStack,
 }
 
+#[derive(Debug)]
 pub struct CheatnetState {
     pub rolled_contracts: HashMap<ContractAddress, CheatStatus<Felt252>>,
-    pub global_roll: Option<Felt252>,
+    pub global_roll: Option<(Felt252, CheatSpan)>,
     pub pranked_contracts: HashMap<ContractAddress, CheatStatus<ContractAddress>>,
-    pub global_prank: Option<ContractAddress>,
+    pub global_prank: Option<(ContractAddress, CheatSpan)>,
     pub warped_contracts: HashMap<ContractAddress, CheatStatus<Felt252>>,
-    pub global_warp: Option<Felt252>,
+    pub global_warp: Option<(Felt252, CheatSpan)>,
     pub elected_contracts: HashMap<ContractAddress, CheatStatus<ContractAddress>>,
-    pub global_elect: Option<ContractAddress>,
+    pub global_elect: Option<(ContractAddress, CheatSpan)>,
     pub mocked_functions: HashMap<ContractAddress, HashMap<EntryPointSelector, Vec<StarkFelt>>>,
     pub spoofed_contracts: HashMap<ContractAddress, CheatStatus<TxInfoMock>>,
-    pub global_spoof: Option<TxInfoMock>,
+    pub global_spoof: Option<(TxInfoMock, CheatSpan)>,
     pub spies: Vec<SpyTarget>,
     pub detected_events: Vec<Event>,
     pub deploy_salt_base: u32,
@@ -205,10 +257,14 @@ pub struct CheatnetState {
 
 impl Default for CheatnetState {
     fn default() -> Self {
+        let mut test_code_entry_point = build_test_entry_point();
+        test_code_entry_point.class_hash = Some(class_hash!(TEST_CONTRACT_CLASS_HASH));
         let test_call = Rc::new(RefCell::new(CallTrace {
-            entry_point: build_test_entry_point(),
+            entry_point: test_code_entry_point,
             used_execution_resources: Default::default(),
+            used_l1_resources: Default::default(),
             nested_calls: vec![],
+            result: CallResult::Success { ret_data: vec![] },
         }));
         Self {
             rolled_contracts: Default::default(),
@@ -234,6 +290,29 @@ impl Default for CheatnetState {
 }
 
 impl CheatnetState {
+    #[must_use]
+    pub fn create_cheated_data(&self, contract_address: &ContractAddress) -> CheatedData {
+        CheatedData {
+            block_number: self.get_cheated_block_number(contract_address),
+            block_timestamp: self.get_cheated_block_timestamp(contract_address),
+            caller_address: self.get_cheated_caller_address(contract_address),
+            sequencer_address: self.get_cheated_sequencer_address(contract_address),
+            tx_info: self.get_cheated_tx_info(contract_address),
+        }
+    }
+
+    pub fn get_cheated_data(&mut self, contract_address: &ContractAddress) -> CheatedData {
+        let current_call_stack = &mut self.trace_data.current_call_stack;
+
+        // case of cheating the test address itself
+        if current_call_stack.size() == 1 {
+            self.create_cheated_data(contract_address)
+            // do not update the cheats, as the test address cannot be called from the outside
+        } else {
+            current_call_stack.top_cheated_data()
+        }
+    }
+
     pub fn increment_deploy_salt_base(&mut self) {
         self.deploy_salt_base += 1;
     }
@@ -296,6 +375,14 @@ impl CheatnetState {
     pub fn get_cheated_caller_address(&self, address: &ContractAddress) -> Option<ContractAddress> {
         get_cheat_for_contract(&self.global_prank, &self.pranked_contracts, address)
     }
+
+    pub fn update_cheats(&mut self, address: &ContractAddress) {
+        update_cheat_for_contract(&self.global_roll, &mut self.rolled_contracts, address);
+        update_cheat_for_contract(&self.global_warp, &mut self.warped_contracts, address);
+        update_cheat_for_contract(&self.global_prank, &mut self.pranked_contracts, address);
+        update_cheat_for_contract(&self.global_elect, &mut self.elected_contracts, address);
+        update_cheat_for_contract(&self.global_spoof, &mut self.spoofed_contracts, address);
+    }
 }
 
 impl TraceData {
@@ -303,11 +390,14 @@ impl TraceData {
         &mut self,
         entry_point: CallEntryPoint,
         resources_used_before_call: ExecutionResources,
+        cheated_data: CheatedData,
     ) {
         let new_call = Rc::new(RefCell::new(CallTrace {
             entry_point,
             used_execution_resources: Default::default(),
+            used_l1_resources: Default::default(),
             nested_calls: vec![],
+            result: CallResult::Success { ret_data: vec![] },
         }));
         let current_call = self.current_call_stack.top();
 
@@ -317,62 +407,104 @@ impl TraceData {
             .push(new_call.clone());
 
         self.current_call_stack
-            .push(new_call, resources_used_before_call);
+            .push(new_call, resources_used_before_call, cheated_data);
     }
 
-    pub fn exit_nested_call(&mut self, resources_used_after_call: &ExecutionResources) {
+    pub fn set_class_hash_for_current_call(&mut self, class_hash: ClassHash) {
+        let current_call = self.current_call_stack.top();
+        current_call.borrow_mut().entry_point.class_hash = Some(class_hash);
+    }
+
+    pub fn exit_nested_call(
+        &mut self,
+        resources_used_after_call: &ExecutionResources,
+        execution_result: &EntryPointExecutionResult<CallInfo>,
+        identifier: &AddressOrClassHash,
+    ) {
         let CallStackElement {
             resources_used_before_call,
             call_trace: last_call,
+            ..
         } = self.current_call_stack.pop();
 
-        last_call.borrow_mut().used_execution_resources =
+        let mut last_call = last_call.borrow_mut();
+        last_call.used_execution_resources =
             subtract_execution_resources(resources_used_after_call, &resources_used_before_call);
+
+        last_call.used_l1_resources.l2_l1_message_sizes = execution_result.as_ref().map_or_else(
+            |_| vec![],
+            |call_info| {
+                let messages = &call_info.execution.l2_to_l1_messages;
+                messages
+                    .iter()
+                    .map(|ordered_message| ordered_message.message.payload.0.len())
+                    .collect()
+            },
+        );
+
+        last_call.result = CallResult::from_execution_result(execution_result, identifier);
     }
 }
 
 fn get_cheat_for_contract<T: Clone>(
-    global_cheat: &Option<T>,
+    global_cheat: &Option<(T, CheatSpan)>,
     contract_cheats: &HashMap<ContractAddress, CheatStatus<T>>,
     contract: &ContractAddress,
 ) -> Option<T> {
-    if let Some(cheated_contract) = contract_cheats.get(contract) {
-        match cheated_contract {
-            CheatStatus::Cheated(contract_cheat) => Some(contract_cheat.clone()),
+    if let Some(cheat_status) = contract_cheats.get(contract) {
+        match cheat_status {
+            CheatStatus::Cheated(contract_cheat, _) => Some(contract_cheat.clone()),
             CheatStatus::Uncheated => None,
         }
     } else {
-        global_cheat.clone()
+        global_cheat.as_ref().map(|(cheat, _)| cheat.clone())
+    }
+}
+
+fn update_cheat_for_contract<T: Clone>(
+    global_cheat: &Option<(T, CheatSpan)>,
+    contract_cheats: &mut HashMap<ContractAddress, CheatStatus<T>>,
+    contract: &ContractAddress,
+) {
+    if let Some(cheat_status) = contract_cheats.get_mut(contract) {
+        cheat_status.decrement_cheat_span();
+    } else if let Some((cheat, span)) = global_cheat {
+        let mut cheat_status = CheatStatus::Cheated(cheat.clone(), span.clone());
+        cheat_status.decrement_cheat_span();
+        contract_cheats.insert(*contract, cheat_status);
     }
 }
 
 pub fn start_cheat<T: Clone, S: BuildHasher>(
-    global_cheat: &mut Option<T>,
+    global_cheat: &mut Option<(T, CheatSpan)>,
     contract_cheats: &mut HashMap<ContractAddress, CheatStatus<T>, S>,
     target: CheatTarget,
     cheat_value: T,
+    span: CheatSpan,
 ) {
     match target {
         CheatTarget::All => {
-            *global_cheat = Some(cheat_value);
+            *global_cheat = Some((cheat_value, span));
             // Clear individual cheats so that `All`
             // contracts are affected by this cheat
             contract_cheats.clear();
         }
         CheatTarget::One(contract_address) => {
-            (*contract_cheats).insert(contract_address, CheatStatus::Cheated(cheat_value));
+            (*contract_cheats).insert(contract_address, CheatStatus::Cheated(cheat_value, span));
         }
         CheatTarget::Multiple(contract_addresses) => {
             for contract_address in contract_addresses {
-                (*contract_cheats)
-                    .insert(contract_address, CheatStatus::Cheated(cheat_value.clone()));
+                (*contract_cheats).insert(
+                    contract_address,
+                    CheatStatus::Cheated(cheat_value.clone(), span.clone()),
+                );
             }
         }
-    }
+    };
 }
 
 pub fn stop_cheat<T, S: BuildHasher>(
-    global_cheat: &mut Option<T>,
+    global_cheat: &mut Option<(T, CheatSpan)>,
     contract_cheats: &mut HashMap<ContractAddress, CheatStatus<T>, S>,
     target: CheatTarget,
 ) {

@@ -1,24 +1,23 @@
 use crate::{
-    compiled_raw::CompiledTestCrateRaw, pretty_printing::print_warning, replace_id_with_params,
-    scarb::config::ForkTarget,
+    compiled_raw::CompiledTestCrateRaw, replace_id_with_params, scarb::config::ForkTarget,
 };
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, Result};
 use scarb_api::ScarbCommand;
-use semver::{Version, VersionReq};
-use shared::consts::EXPECTED_RPC_VERSION;
-use starknet::providers::{jsonrpc::HttpTransport, JsonRpcClient, Provider};
+use semver::Version;
+use shared::print::print_as_warning;
+use shared::rpc::create_rpc_client;
+use shared::verify_and_warn_if_incompatible_rpc_version;
 use std::collections::HashSet;
-use url::Url;
 
 pub(crate) fn warn_if_available_gas_used_with_incompatible_scarb_version(
-    test_crates: &Vec<CompiledTestCrateRaw>,
+    test_crates: &[CompiledTestCrateRaw],
 ) -> Result<()> {
     for test_crate in test_crates {
         for case in &test_crate.test_cases {
             if case.available_gas == Some(0)
                 && ScarbCommand::version().run()?.scarb <= Version::new(2, 4, 3)
             {
-                print_warning(&anyhow!(
+                print_as_warning(&anyhow!(
                     "`available_gas` attribute was probably specified when using Scarb ~2.4.3 \
                     Make sure to use Scarb >=2.4.4"
                 ));
@@ -33,8 +32,7 @@ pub(crate) async fn warn_if_incompatible_rpc_version(
     test_crates: &[CompiledTestCrateRaw],
     fork_targets: &[ForkTarget],
 ) -> Result<()> {
-    let mut urls = HashSet::<&str>::new();
-    let expected_version = VersionReq::parse(EXPECTED_RPC_VERSION)?;
+    let mut urls = HashSet::<String>::new();
 
     // collect urls
     for test_crate in test_crates {
@@ -45,44 +43,22 @@ pub(crate) async fn warn_if_incompatible_rpc_version(
         {
             let params = replace_id_with_params(raw_fork_config, fork_targets)?;
 
-            urls.insert(&params.url);
+            urls.insert(params.url.clone());
         }
     }
 
     let mut handles = Vec::with_capacity(urls.len());
 
-    // call rpc's
     for url in urls {
-        let client = JsonRpcClient::new(HttpTransport::new(
-            Url::parse(url).with_context(|| format!("could not parse url: {url}"))?,
-        ));
+        handles.push(tokio::spawn(async move {
+            let client = create_rpc_client(&url)?;
 
-        handles.push(async move {
-            (
-                client
-                    .spec_version()
-                    .await
-                    .map(|version| {
-                        version
-                            .parse::<Version>()
-                            .with_context(|| format!("could not parse version: {version}"))
-                    })
-                    .context("error while calling rpc node"),
-                url,
-            )
-        });
+            verify_and_warn_if_incompatible_rpc_version(&client, &url).await
+        }));
     }
 
-    // assert version
     for handle in handles {
-        let (version, url) = handle.await;
-        let version = version??;
-
-        if !expected_version.matches(&version) {
-            print_warning(&anyhow!(
-                "The RPC node with url = {url} has unsupported version = ({version}), use node supporting RPC version ({EXPECTED_RPC_VERSION})"
-            ));
-        }
+        handle.await??;
     }
 
     Ok(())

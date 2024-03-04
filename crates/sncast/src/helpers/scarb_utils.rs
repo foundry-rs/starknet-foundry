@@ -1,4 +1,3 @@
-use crate::response::print::print_as_warning;
 use anyhow::{anyhow, Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
 use scarb_api::{
@@ -7,6 +6,7 @@ use scarb_api::{
     ScarbCommand, ScarbCommandError, StarknetContractArtifacts,
 };
 use scarb_ui::args::PackagesFilter;
+use shared::print::print_as_warning;
 use std::collections::HashMap;
 use std::env;
 use std::str::FromStr;
@@ -64,16 +64,14 @@ pub fn get_scarb_metadata_with_deps(manifest_path: &Utf8PathBuf) -> Result<Metad
     execute_scarb_metadata_command(&command)
 }
 
-pub fn assert_manifest_path_exists(
-    path_to_scarb_toml: &Option<Utf8PathBuf>,
-) -> Result<Utf8PathBuf> {
-    if let Some(path) = path_to_scarb_toml {
-        assert!(path.exists(), "Failed to locate file at path = {path}");
-    }
+pub fn get_cairo_version(manifest_path: &Utf8PathBuf) -> Result<String> {
+    let scarb_metadata = get_scarb_metadata(manifest_path)?;
 
-    let manifest_path = path_to_scarb_toml.clone().unwrap_or_else(|| {
-        get_scarb_manifest().expect("Failed to obtain manifest path from scarb")
-    });
+    Ok(scarb_metadata.app_version_info.cairo.version.to_string())
+}
+
+pub fn assert_manifest_path_exists() -> Result<Utf8PathBuf> {
+    let manifest_path = get_scarb_manifest().expect("Failed to obtain manifest path from scarb");
 
     if !manifest_path.exists() {
         return Err(anyhow!(

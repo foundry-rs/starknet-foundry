@@ -10,9 +10,39 @@ use crate::{
 };
 use cairo_felt::Felt252;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
-use cheatnet::state::{CheatTarget, CheatnetState};
-use conversions::felt252::FromShortString;
+use cheatnet::state::{CheatSpan, CheatTarget, CheatnetState};
 use conversions::IntoConv;
+use starknet_api::core::ContractAddress;
+
+use super::test_environment::TestEnvironment;
+
+const DEFAULT_BLOCK_TIMESTAMP: u64 = 0;
+
+trait WarpTrait {
+    fn warp(&mut self, target: CheatTarget, timestamp: u128, span: CheatSpan);
+    fn start_warp(&mut self, target: CheatTarget, timestamp: u128);
+    fn stop_warp(&mut self, contract_address: &ContractAddress);
+}
+
+impl<'a> WarpTrait for TestEnvironment<'a> {
+    fn warp(&mut self, target: CheatTarget, timestamp: u128, span: CheatSpan) {
+        self.runtime_state
+            .cheatnet_state
+            .warp(target, Felt252::from(timestamp), span);
+    }
+
+    fn start_warp(&mut self, target: CheatTarget, timestamp: u128) {
+        self.runtime_state
+            .cheatnet_state
+            .start_warp(target, Felt252::from(timestamp));
+    }
+
+    fn stop_warp(&mut self, contract_address: &ContractAddress) {
+        self.runtime_state
+            .cheatnet_state
+            .stop_warp(CheatTarget::One(*contract_address));
+    }
+}
 
 #[test]
 fn warp_simple() {
@@ -73,8 +103,7 @@ fn warp_in_constructor() {
 
     let contracts = get_contracts();
 
-    let contract_name = Felt252::from_short_string("ConstructorWarpChecker").unwrap();
-    let class_hash = declare(&mut cached_state, &contract_name, &contracts).unwrap();
+    let class_hash = declare(&mut cached_state, "ConstructorWarpChecker", &contracts).unwrap();
     let precalculated_address = runtime_state
         .cheatnet_state
         .precalculate_address(&class_hash, &[]);
@@ -269,8 +298,7 @@ fn warp_library_call() {
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
     let contracts = get_contracts();
-    let contract_name = Felt252::from_short_string("WarpChecker").unwrap();
-    let class_hash = declare(&mut cached_state, &contract_name, &contracts).unwrap();
+    let class_hash = declare(&mut cached_state, "WarpChecker", &contracts).unwrap();
 
     let lib_call_address = deploy_contract(
         &mut cached_state,
@@ -321,9 +349,8 @@ fn warp_all_simple() {
     let mut cheatnet_state = CheatnetState::default();
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
-    let contract = Felt252::from_short_string("WarpChecker").unwrap();
     let contracts = get_contracts();
-    let class_hash = declare(&mut cached_state, &contract, &contracts).unwrap();
+    let class_hash = declare(&mut cached_state, "WarpChecker", &contracts).unwrap();
 
     let contract_address1 =
         deploy_wrapper(&mut cached_state, &mut runtime_state, &class_hash, &[]).unwrap();
@@ -473,9 +500,8 @@ fn warp_multiple() {
     let mut cheatnet_state = CheatnetState::default();
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
-    let contract = Felt252::from_short_string("WarpChecker").unwrap();
     let contracts = get_contracts();
-    let class_hash = declare(&mut cached_state, &contract, &contracts).unwrap();
+    let class_hash = declare(&mut cached_state, "WarpChecker", &contracts).unwrap();
 
     let contract_address1 =
         deploy_wrapper(&mut cached_state, &mut runtime_state, &class_hash, &[]).unwrap();
@@ -562,4 +588,220 @@ fn warp_multiple() {
 
     assert_eq!(old_block_timestamp1, changed_back_block_timestamp1);
     assert_eq!(old_block_timestamp2, changed_back_block_timestamp2);
+}
+
+#[test]
+fn warp_simple_with_span() {
+    let mut cheatnet_state = CheatnetState::default();
+    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+
+    let contract_address = test_env.deploy("WarpChecker", &[]);
+
+    test_env.warp(
+        CheatTarget::One(contract_address),
+        123,
+        CheatSpan::Number(2),
+    );
+
+    assert_success!(
+        test_env.call_contract(&contract_address, "get_block_timestamp", &[]),
+        vec![Felt252::from(123)]
+    );
+    assert_success!(
+        test_env.call_contract(&contract_address, "get_block_timestamp", &[]),
+        vec![Felt252::from(123)]
+    );
+    assert_success!(
+        test_env.call_contract(&contract_address, "get_block_timestamp", &[]),
+        vec![Felt252::from(DEFAULT_BLOCK_TIMESTAMP)]
+    );
+}
+
+#[test]
+fn warp_proxy_with_span() {
+    let mut cheatnet_state = CheatnetState::default();
+    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+
+    let contracts = get_contracts();
+    let class_hash = test_env.declare("WarpCheckerProxy", &contracts);
+    let contract_address_1 = test_env.deploy_wrapper(&class_hash, &[]);
+    let contract_address_2 = test_env.deploy_wrapper(&class_hash, &[]);
+
+    test_env.warp(
+        CheatTarget::One(contract_address_1),
+        123,
+        CheatSpan::Number(1),
+    );
+
+    let output = test_env.call_contract(
+        &contract_address_1,
+        "call_proxy",
+        &[contract_address_2.into_()],
+    );
+    assert_success!(output, vec![123.into(), DEFAULT_BLOCK_TIMESTAMP.into()]);
+}
+
+#[test]
+fn warp_in_constructor_with_span() {
+    let mut cheatnet_state = CheatnetState::default();
+    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+
+    let contracts = get_contracts();
+
+    let class_hash = test_env.declare("ConstructorWarpChecker", &contracts);
+    let precalculated_address = test_env
+        .runtime_state
+        .cheatnet_state
+        .precalculate_address(&class_hash, &[]);
+
+    test_env.warp(
+        CheatTarget::One(precalculated_address),
+        123,
+        CheatSpan::Number(2),
+    );
+
+    let contract_address = test_env.deploy_wrapper(&class_hash, &[]);
+    assert_eq!(precalculated_address, contract_address);
+
+    assert_success!(
+        test_env.call_contract(&contract_address, "get_block_timestamp", &[]),
+        vec![Felt252::from(123)]
+    );
+    assert_success!(
+        test_env.call_contract(&contract_address, "get_block_timestamp", &[]),
+        vec![Felt252::from(DEFAULT_BLOCK_TIMESTAMP)]
+    );
+    assert_success!(
+        test_env.call_contract(&contract_address, "get_stored_block_timestamp", &[]),
+        vec![Felt252::from(123)]
+    );
+}
+
+#[test]
+fn warp_no_constructor_with_span() {
+    let mut cheatnet_state = CheatnetState::default();
+    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+
+    let contracts = get_contracts();
+
+    let class_hash = test_env.declare("WarpChecker", &contracts);
+    let precalculated_address = test_env
+        .runtime_state
+        .cheatnet_state
+        .precalculate_address(&class_hash, &[]);
+
+    test_env.warp(
+        CheatTarget::One(precalculated_address),
+        123,
+        CheatSpan::Number(1),
+    );
+
+    let contract_address = test_env.deploy_wrapper(&class_hash, &[]);
+    assert_eq!(precalculated_address, contract_address);
+
+    assert_success!(
+        test_env.call_contract(&contract_address, "get_block_timestamp", &[]),
+        vec![Felt252::from(123)]
+    );
+    assert_success!(
+        test_env.call_contract(&contract_address, "get_block_timestamp", &[]),
+        vec![Felt252::from(DEFAULT_BLOCK_TIMESTAMP)]
+    );
+}
+
+#[test]
+fn warp_override_span() {
+    let mut cheatnet_state = CheatnetState::default();
+    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+
+    let contract_address = test_env.deploy("WarpChecker", &[]);
+
+    test_env.warp(
+        CheatTarget::One(contract_address),
+        123,
+        CheatSpan::Number(2),
+    );
+
+    assert_success!(
+        test_env.call_contract(&contract_address, "get_block_timestamp", &[]),
+        vec![Felt252::from(123)]
+    );
+
+    test_env.warp(
+        CheatTarget::One(contract_address),
+        321,
+        CheatSpan::Indefinite,
+    );
+
+    assert_success!(
+        test_env.call_contract(&contract_address, "get_block_timestamp", &[]),
+        vec![Felt252::from(321)]
+    );
+    assert_success!(
+        test_env.call_contract(&contract_address, "get_block_timestamp", &[]),
+        vec![Felt252::from(321)]
+    );
+
+    test_env.stop_warp(&contract_address);
+
+    assert_success!(
+        test_env.call_contract(&contract_address, "get_block_timestamp", &[]),
+        vec![Felt252::from(DEFAULT_BLOCK_TIMESTAMP)]
+    );
+}
+
+#[test]
+fn warp_library_call_with_span() {
+    let mut cheatnet_state = CheatnetState::default();
+    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+
+    let contracts = get_contracts();
+    let class_hash = test_env.declare("WarpChecker", &contracts);
+    let contract_address = test_env.deploy("WarpCheckerLibCall", &[]);
+
+    test_env.warp(
+        CheatTarget::One(contract_address),
+        123,
+        CheatSpan::Number(1),
+    );
+
+    let lib_call_selector = "get_block_timestamp_with_lib_call";
+
+    assert_success!(
+        test_env.call_contract(&contract_address, lib_call_selector, &[class_hash.into_()]),
+        vec![Felt252::from(123)]
+    );
+    assert_success!(
+        test_env.call_contract(&contract_address, lib_call_selector, &[class_hash.into_()]),
+        vec![Felt252::from(DEFAULT_BLOCK_TIMESTAMP)]
+    );
+}
+
+#[test]
+fn warp_all_span() {
+    let mut cheatnet_state = CheatnetState::default();
+    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+
+    let contract_address_1 = test_env.deploy("WarpChecker", &[]);
+    let contract_address_2 = test_env.deploy("WarpCheckerLibCall", &[]);
+
+    test_env.warp(CheatTarget::All, 123, CheatSpan::Number(1));
+
+    assert_success!(
+        test_env.call_contract(&contract_address_1, "get_block_timestamp", &[]),
+        vec![Felt252::from(123)]
+    );
+    assert_success!(
+        test_env.call_contract(&contract_address_1, "get_block_timestamp", &[]),
+        vec![Felt252::from(DEFAULT_BLOCK_TIMESTAMP)]
+    );
+
+    assert_success!(
+        test_env.call_contract(&contract_address_2, "get_block_timestamp", &[]),
+        vec![Felt252::from(123)]
+    );
+    assert_success!(
+        test_env.call_contract(&contract_address_2, "get_block_timestamp", &[]),
+        vec![Felt252::from(DEFAULT_BLOCK_TIMESTAMP)]
+    );
 }

@@ -8,9 +8,42 @@ use crate::{
 use cairo_felt::Felt252;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
 use cheatnet::state::CheatnetState;
-use conversions::felt252::FromShortString;
 use conversions::IntoConv;
 use starknet_api::core::ContractAddress;
+
+use super::test_environment::TestEnvironment;
+
+trait MockCallTrait {
+    fn start_mock_call(
+        &mut self,
+        contract_address: &ContractAddress,
+        function_selector: Felt252,
+        ret_data: &[u128],
+    );
+    fn stop_mock_call(&mut self, contract_address: &ContractAddress, function_selector: Felt252);
+}
+
+impl<'a> MockCallTrait for TestEnvironment<'a> {
+    fn start_mock_call(
+        &mut self,
+        contract_address: &ContractAddress,
+        function_selector: Felt252,
+        ret_data: &[u128],
+    ) {
+        let ret_data: Vec<Felt252> = ret_data.iter().map(|x| Felt252::from(*x)).collect();
+        self.runtime_state.cheatnet_state.start_mock_call(
+            *contract_address,
+            function_selector,
+            &ret_data,
+        );
+    }
+
+    fn stop_mock_call(&mut self, contract_address: &ContractAddress, function_selector: Felt252) {
+        self.runtime_state
+            .cheatnet_state
+            .stop_mock_call(*contract_address, function_selector);
+    }
+}
 
 #[test]
 fn mock_call_simple() {
@@ -30,7 +63,7 @@ fn mock_call_simple() {
 
     runtime_state.cheatnet_state.start_mock_call(
         contract_address,
-        &Felt252::from_short_string("get_thing").unwrap(),
+        felt_selector_from_name("get_thing"),
         &ret_data,
     );
 
@@ -63,7 +96,7 @@ fn mock_call_stop() {
 
     runtime_state.cheatnet_state.start_mock_call(
         contract_address,
-        &Felt252::from_short_string("get_thing").unwrap(),
+        felt_selector_from_name("get_thing"),
         &ret_data,
     );
 
@@ -77,10 +110,9 @@ fn mock_call_stop() {
 
     assert_success!(output, ret_data);
 
-    runtime_state.cheatnet_state.stop_mock_call(
-        contract_address,
-        &Felt252::from_short_string("get_thing").unwrap(),
-    );
+    runtime_state
+        .cheatnet_state
+        .stop_mock_call(contract_address, felt_selector_from_name("get_thing"));
 
     let output = call_contract(
         &mut cached_state,
@@ -108,10 +140,9 @@ fn mock_call_stop_no_start() {
 
     let selector = felt_selector_from_name("get_thing");
 
-    runtime_state.cheatnet_state.stop_mock_call(
-        contract_address,
-        &Felt252::from_short_string("get_thing").unwrap(),
-    );
+    runtime_state
+        .cheatnet_state
+        .stop_mock_call(contract_address, felt_selector_from_name("get_thing"));
 
     let output = call_contract(
         &mut cached_state,
@@ -140,18 +171,14 @@ fn mock_call_double() {
     let selector = felt_selector_from_name("get_thing");
 
     let ret_data = vec![Felt252::from(123)];
-    runtime_state.cheatnet_state.start_mock_call(
-        contract_address,
-        &Felt252::from_short_string("get_thing").unwrap(),
-        &ret_data,
-    );
+    runtime_state
+        .cheatnet_state
+        .start_mock_call(contract_address, selector.clone(), &ret_data);
 
     let ret_data = vec![Felt252::from(999)];
-    runtime_state.cheatnet_state.start_mock_call(
-        contract_address,
-        &Felt252::from_short_string("get_thing").unwrap(),
-        &ret_data,
-    );
+    runtime_state
+        .cheatnet_state
+        .start_mock_call(contract_address, selector.clone(), &ret_data);
 
     let output = call_contract(
         &mut cached_state,
@@ -163,10 +190,9 @@ fn mock_call_double() {
 
     assert_success!(output, ret_data);
 
-    runtime_state.cheatnet_state.stop_mock_call(
-        contract_address,
-        &Felt252::from_short_string("get_thing").unwrap(),
-    );
+    runtime_state
+        .cheatnet_state
+        .stop_mock_call(contract_address, selector.clone());
 
     let output = call_contract(
         &mut cached_state,
@@ -197,7 +223,7 @@ fn mock_call_double_call() {
     let ret_data = vec![Felt252::from(123)];
     runtime_state.cheatnet_state.start_mock_call(
         contract_address,
-        &Felt252::from_short_string("get_thing").unwrap(),
+        felt_selector_from_name("get_thing"),
         &ret_data,
     );
 
@@ -239,7 +265,7 @@ fn mock_call_proxy() {
     let ret_data = vec![Felt252::from(123)];
     runtime_state.cheatnet_state.start_mock_call(
         contract_address,
-        &Felt252::from_short_string("get_thing").unwrap(),
+        felt_selector_from_name("get_thing"),
         &ret_data,
     );
 
@@ -288,7 +314,7 @@ fn mock_call_proxy_with_other_syscall() {
     let ret_data = vec![Felt252::from(123)];
     runtime_state.cheatnet_state.start_mock_call(
         contract_address,
-        &Felt252::from_short_string("get_thing").unwrap(),
+        felt_selector_from_name("get_thing"),
         &ret_data,
     );
 
@@ -338,7 +364,7 @@ fn mock_call_inner_call_no_effect() {
 
     runtime_state.cheatnet_state.start_mock_call(
         contract_address,
-        &Felt252::from_short_string("get_thing").unwrap(),
+        felt_selector_from_name("get_thing"),
         &ret_data,
     );
 
@@ -372,8 +398,7 @@ fn mock_call_library_call_no_effect() {
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
     let contracts = get_contracts();
-    let contract_name = Felt252::from_short_string("MockChecker").unwrap();
-    let class_hash = declare(&mut cached_state, &contract_name, &contracts).unwrap();
+    let class_hash = declare(&mut cached_state, "MockChecker", &contracts).unwrap();
 
     let contract_address = deploy_wrapper(
         &mut cached_state,
@@ -393,7 +418,7 @@ fn mock_call_library_call_no_effect() {
     let ret_data = vec![Felt252::from(123)];
     runtime_state.cheatnet_state.start_mock_call(
         contract_address,
-        &Felt252::from_short_string("get_constant_thing").unwrap(),
+        felt_selector_from_name("get_constant_thing"),
         &ret_data,
     );
 
@@ -416,8 +441,7 @@ fn mock_call_before_deployment() {
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
     let contracts = get_contracts();
-    let contract_name = Felt252::from_short_string("MockChecker").unwrap();
-    let class_hash = declare(&mut cached_state, &contract_name, &contracts).unwrap();
+    let class_hash = declare(&mut cached_state, "MockChecker", &contracts).unwrap();
 
     let precalculated_address = runtime_state
         .cheatnet_state
@@ -427,7 +451,7 @@ fn mock_call_before_deployment() {
     let ret_data = vec![Felt252::from(123)];
     runtime_state.cheatnet_state.start_mock_call(
         precalculated_address,
-        &Felt252::from_short_string("get_thing").unwrap(),
+        felt_selector_from_name("get_thing"),
         &ret_data,
     );
 
@@ -470,7 +494,7 @@ fn mock_call_not_implemented() {
 
     runtime_state.cheatnet_state.start_mock_call(
         contract_address,
-        &Felt252::from_short_string("get_thing_not_implemented").unwrap(),
+        felt_selector_from_name("get_thing_not_implemented"),
         &ret_data,
     );
 
@@ -493,19 +517,17 @@ fn mock_call_in_constructor() {
 
     let contracts = get_contracts();
 
-    let contract_name = Felt252::from_short_string("HelloStarknet").unwrap();
-    let class_hash = declare(&mut cached_state, &contract_name, &contracts).unwrap();
+    let class_hash = declare(&mut cached_state, "HelloStarknet", &contracts).unwrap();
     let balance_contract_address =
         deploy_wrapper(&mut cached_state, &mut runtime_state, &class_hash, &[]).unwrap();
     let ret_data = vec![Felt252::from(223)];
     runtime_state.cheatnet_state.start_mock_call(
         balance_contract_address,
-        &Felt252::from_short_string("get_balance").unwrap(),
+        felt_selector_from_name("get_balance"),
         &ret_data,
     );
 
-    let contract_name = Felt252::from_short_string("ConstructorMockChecker").unwrap();
-    let class_hash = declare(&mut cached_state, &contract_name, &contracts).unwrap();
+    let class_hash = declare(&mut cached_state, "ConstructorMockChecker", &contracts).unwrap();
     let contract_address = deploy_wrapper(
         &mut cached_state,
         &mut runtime_state,
@@ -547,13 +569,13 @@ fn mock_call_two_methods() {
     let ret_data = vec![Felt252::from(123)];
     runtime_state.cheatnet_state.start_mock_call(
         contract_address,
-        &Felt252::from_short_string("get_thing").unwrap(),
+        felt_selector_from_name("get_thing"),
         &ret_data,
     );
 
     runtime_state.cheatnet_state.start_mock_call(
         contract_address,
-        &Felt252::from_short_string("get_constant_thing").unwrap(),
+        felt_selector_from_name("get_constant_thing"),
         &ret_data,
     );
 
@@ -591,7 +613,7 @@ fn mock_call_nonexisting_contract() {
 
     runtime_state.cheatnet_state.start_mock_call(
         contract_address,
-        &Felt252::from_short_string("get_thing").unwrap(),
+        felt_selector_from_name("get_thing"),
         &ret_data,
     );
 

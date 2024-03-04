@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
 use camino::Utf8Path;
 use warn::{
     warn_if_available_gas_used_with_incompatible_scarb_version, warn_if_incompatible_rpc_version,
@@ -20,11 +20,14 @@ use crate::test_filter::TestsFilter;
 
 pub mod block_number_map;
 pub mod compiled_raw;
+
 pub mod pretty_printing;
 pub mod scarb;
 pub mod shared_cache;
 pub mod test_filter;
 mod warn;
+
+pub const CAIRO_EDITION: &str = "2023_11";
 
 pub(crate) fn replace_id_with_params<'a>(
     raw_fork_config: &'a RawForkConfig,
@@ -70,6 +73,7 @@ async fn to_runnable(
             expected_result: case.expected_result,
             fork_config,
             fuzzer_config: case.fuzzer_config,
+            test_details: case.test_details,
         });
     }
 
@@ -99,7 +103,8 @@ pub async fn run(
     fork_targets: &[ForkTarget],
     block_number_map: &mut BlockNumberMap,
 ) -> Result<Vec<TestCrateSummary>> {
-    let test_crates = load_test_artifacts(snforge_target_dir_path, package_name)?;
+    let test_crates = load_test_artifacts(snforge_target_dir_path, package_name)
+        .context("Failed to load test artifacts, make sure to use scarb >=2.5.4")?;
     let all_tests: usize = test_crates.iter().map(|tc| tc.test_cases.len()).sum();
 
     let test_crates = test_crates
@@ -132,7 +137,7 @@ pub async fn run(
         let runner_params = runner_params.clone();
 
         let summary = forge_runner::run_tests_from_crate(
-            compiled_test_crate.clone(),
+            compiled_test_crate,
             runner_config,
             runner_params,
             tests_filter,
@@ -175,8 +180,8 @@ pub async fn run(
 mod tests {
     use super::*;
     use crate::compiled_raw::{CompiledTestCrateRaw, CrateLocation, TestCaseRaw};
-    use cairo_lang_sierra::program::Program;
-    use forge_runner::expected_result::ExpectedTestResult;
+    use cairo_lang_sierra::{ids::GenericTypeId, program::Program};
+    use forge_runner::{compiled_runnable::TestDetails, expected_result::ExpectedTestResult};
 
     #[tokio::test]
     async fn to_runnable_unparsable_url() {
@@ -198,6 +203,18 @@ mod tests {
                     block_id_value: "Latest".to_string(),
                 })),
                 fuzzer_config: None,
+                test_details: TestDetails {
+                    entry_point_offset: 100,
+                    parameter_types: vec![
+                        (GenericTypeId("RangeCheck".into()), 1),
+                        (GenericTypeId("GasBuiltin".into()), 1),
+                    ],
+                    return_types: vec![
+                        (GenericTypeId("RangeCheck".into()), 1),
+                        (GenericTypeId("GasBuiltin".into()), 1),
+                        (GenericTypeId("Enum".into()), 3),
+                    ],
+                },
             }],
             tests_location: CrateLocation::Lib,
         };
@@ -225,6 +242,18 @@ mod tests {
                 expected_result: ExpectedTestResult::Success,
                 fork_config: Some(RawForkConfig::Id("non_existent".to_string())),
                 fuzzer_config: None,
+                test_details: TestDetails {
+                    entry_point_offset: 100,
+                    parameter_types: vec![
+                        (GenericTypeId("RangeCheck".into()), 1),
+                        (GenericTypeId("GasBuiltin".into()), 1),
+                    ],
+                    return_types: vec![
+                        (GenericTypeId("RangeCheck".into()), 1),
+                        (GenericTypeId("GasBuiltin".into()), 1),
+                        (GenericTypeId("Enum".into()), 3),
+                    ],
+                },
             }],
             tests_location: CrateLocation::Lib,
         };

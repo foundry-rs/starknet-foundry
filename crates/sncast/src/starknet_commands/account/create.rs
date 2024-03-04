@@ -1,14 +1,17 @@
 use crate::starknet_commands::account::{
     add_created_profile_to_configuration, prepare_account_json, write_account_to_accounts_file,
 };
-use anyhow::{bail, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
 use serde_json::json;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{CREATE_KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH};
-use sncast::response::structs::{AccountCreateResponse, Decimal, Hex};
-use sncast::{extract_or_generate_salt, get_chain_id, get_keystore_password, parse_number};
+use sncast::response::structs::{AccountCreateResponse, Felt};
+use sncast::{
+    check_class_hash_exists, extract_or_generate_salt, get_chain_id, get_keystore_password,
+    handle_account_factory_error, parse_number,
+};
 use starknet::accounts::{AccountFactory, OpenZeppelinAccountFactory};
 use starknet::core::types::{FeeEstimate, FieldElement};
 use starknet::core::utils::get_contract_address;
@@ -33,7 +36,7 @@ pub struct Create {
     // TODO (#253): think about supporting different account providers
     /// Custom open zeppelin contract class hash of declared contract
     #[clap(short, long)]
-    pub class_hash: Option<String>,
+    pub class_hash: Option<FieldElement>,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -46,16 +49,13 @@ pub async fn create(
     chain_id: FieldElement,
     salt: Option<FieldElement>,
     add_profile: Option<String>,
-    class_hash: Option<String>,
+    class_hash: Option<FieldElement>,
 ) -> Result<AccountCreateResponse> {
     let salt = extract_or_generate_salt(salt);
-    let class_hash = {
-        let ch = match &class_hash {
-            Some(class_hash) => class_hash,
-            None => OZ_CLASS_HASH,
-        };
-        parse_number(ch)?
-    };
+    let class_hash = class_hash.unwrap_or_else(|| {
+        FieldElement::from_hex_be(OZ_CLASS_HASH).expect("Failed to parse OZ class hash")
+    });
+    check_class_hash_exists(provider, class_hash).await?;
     let (account_json, max_fee) = generate_account(provider, salt, class_hash).await?;
 
     let address = parse_number(
@@ -92,8 +92,8 @@ pub async fn create(
     }
 
     Ok(AccountCreateResponse {
-        address: Hex(address),
-        max_fee: Decimal(max_fee),
+        address: Felt(address),
+        max_fee: Felt(max_fee),
         add_profile: if add_profile.is_some() {
             format!(
                 "Profile {} successfully added to snfoundry.toml",
@@ -114,7 +114,7 @@ async fn generate_account(
     provider: &JsonRpcClient<HttpTransport>,
     salt: FieldElement,
     class_hash: FieldElement,
-) -> Result<(serde_json::Value, u64)> {
+) -> Result<(serde_json::Value, FieldElement)> {
     let private_key = SigningKey::from_random();
 
     let address: FieldElement = get_contract_address(
@@ -131,7 +131,7 @@ async fn generate_account(
         .await?
         .overall_fee;
 
-    Ok((account_json, max_fee.try_into()?))
+    Ok((account_json, max_fee))
 }
 
 async fn get_account_deployment_fee(
@@ -147,16 +147,13 @@ async fn get_account_deployment_fee(
 
     let fee_estimate = deployment.estimate_fee().await;
 
-    if let Err(err) = &fee_estimate {
-        if err
-            .to_string()
-            .contains("StarknetErrorCode.UNDECLARED_CLASS")
-        {
-            bail!("The class {class_hash} is undeclared, try using --class-hash with a class hash that is already declared");
-        }
+    match fee_estimate {
+        Ok(fee_estimate) => Ok(fee_estimate),
+        Err(err) => Err(anyhow!(
+            "Failed to estimate account deployment fee. Reason: {}",
+            handle_account_factory_error(err)
+        )),
     }
-
-    Ok(fee_estimate?)
 }
 
 #[allow(clippy::too_many_arguments)]

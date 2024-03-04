@@ -1,4 +1,3 @@
-pub mod output_assert;
 pub mod runner;
 pub mod running_tests;
 

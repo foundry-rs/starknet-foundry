@@ -8,7 +8,7 @@ use test_utils::{assert_case_output_contains, assert_failed, assert_passed, test
 fn simple_call_and_invoke() {
     let test = test_case!(
         indoc!(
-            r"
+            r#"
         use array::ArrayTrait;
         use result::ResultTrait;
         use option::OptionTrait;
@@ -27,7 +27,7 @@ fn simple_call_and_invoke() {
 
         #[test]
         fn simple_call_and_invoke() {
-            let contract = declare('HelloStarknet');
+            let contract = declare("HelloStarknet");
             let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
             let dispatcher = IHelloStarknetDispatcher { contract_address };
 
@@ -39,7 +39,7 @@ fn simple_call_and_invoke() {
             let balance = dispatcher.get_balance();
             assert(balance == 100, 'balance == 100');
         }
-    "
+    "#
         ),
         Contract::from_code_path(
             "HelloStarknet".to_string(),
@@ -57,7 +57,7 @@ fn simple_call_and_invoke() {
 fn advanced_types() {
     let test = test_case!(
         indoc!(
-            r"
+            r#"
         use array::ArrayTrait;
         use result::ResultTrait;
         use option::OptionTrait;
@@ -95,7 +95,7 @@ fn advanced_types() {
             calldata.append(0);         // initial supply high
             calldata.append(1234);      // recipient
         
-            let contract = declare('ERC20');
+            let contract = declare("ERC20");
             let contract_address = contract.deploy(@calldata).unwrap();
             let dispatcher = IERC20Dispatcher { contract_address };
             let user_address: ContractAddress = 1234.try_into().unwrap();
@@ -112,7 +112,7 @@ fn advanced_types() {
             let balance = dispatcher.balance_of(other_user_address);
             assert(balance == 1000_u256, 'balance == 1000');
         }
-    "
+    "#
         ),
         Contract::from_code_path(
             "ERC20".to_string(),
@@ -148,13 +148,12 @@ fn handling_errors() {
         }
 
         #[test]
+        #[feature("safe_dispatcher")]
         fn handling_errors() {
-            let contract = declare('HelloStarknet');
+            let contract = declare("HelloStarknet");
             let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
             let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
         
-        
-            #[feature("safe_dispatcher")]
             match safe_dispatcher.do_a_panic() {
                 Result::Ok(_) => panic_with_felt252('shouldve panicked'),
                 Result::Err(panic_data) => {
@@ -166,7 +165,6 @@ fn handling_errors() {
             let mut panic_data = ArrayTrait::new();
             panic_data.append('capybara');
 
-            #[feature("safe_dispatcher")]
             match safe_dispatcher.do_a_panic_with(panic_data) {
                 Result::Ok(_) => panic_with_felt252('shouldve panicked'),
                 Result::Err(panic_data) => {
@@ -175,7 +173,6 @@ fn handling_errors() {
                 }
             };
             
-            #[feature("safe_dispatcher")]
             match safe_dispatcher.do_a_panic_with(ArrayTrait::new()) {
                 Result::Ok(_) => panic_with_felt252('shouldve panicked'),
                 Result::Err(panic_data) => {
@@ -212,12 +209,12 @@ fn handling_bytearray_based_errors() {
         }
 
         #[test]
+        #[feature("safe_dispatcher")]
         fn handling_errors() {
-            let contract = declare('HelloStarknet');
+            let contract = declare("HelloStarknet");
             let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
             let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
         
-            #[feature("safe_dispatcher")]
             match safe_dispatcher.do_a_panic_with_bytearray().map_string_error() {
                 Result::Ok(_) => panic_with_felt252('shouldve panicked'),
                 Result::Err(x) => {
@@ -251,7 +248,7 @@ fn handling_bytearray_based_errors() {
 fn serding() {
     let test = test_case!(
         indoc!(
-            r"
+            r#"
         use array::ArrayTrait;
         use result::ResultTrait;
         use option::OptionTrait;
@@ -289,7 +286,7 @@ fn serding() {
         
         #[test]
         fn serding() {
-            let contract = declare('Serding');
+            let contract = declare("Serding");
             let contract_address = contract.deploy( @ArrayTrait::new()).unwrap();
         
             let dispatcher = ISerdingDispatcher {
@@ -305,7 +302,7 @@ fn serding() {
         
             assert(result == 1 + 2 + 3 + 4 + 5, 'Invalid sum');
         }
-    "
+    "#
         ),
         Contract::from_code_path(
             "Serding".to_string(),
@@ -324,7 +321,7 @@ fn serding() {
 fn proxy_storage() {
     let test = test_case!(
         indoc!(
-            r"
+            r#"
         use array::ArrayTrait;
         use result::ResultTrait;
         use option::OptionTrait;
@@ -346,7 +343,7 @@ fn proxy_storage() {
             c: NestedStruct,
         }
         
-        fn deploy_contract(name: felt252) -> ContractAddress {
+        fn deploy_contract(name: ByteArray) -> ContractAddress {
             let contract = declare(name);
             contract.deploy(@ArrayTrait::new()).unwrap()
         }
@@ -366,8 +363,8 @@ fn proxy_storage() {
         
         #[test]
         fn proxy_storage() {
-            let caller_address = deploy_contract('Caller');
-            let executor_address = deploy_contract('Executor');
+            let caller_address = deploy_contract("Caller");
+            let executor_address = deploy_contract("Executor");
         
             let caller_dispatcher = ICallerDispatcher { contract_address: caller_address };
             let executor_dispatcher = IExecutorDispatcher { contract_address: executor_address };
@@ -383,7 +380,7 @@ fn proxy_storage() {
         
             assert(storage_after == cs, 'Invalid storage');
         }
-    "
+    "#
         ),
         Contract::new(
             "Caller",
@@ -499,7 +496,7 @@ fn proxy_storage() {
 fn proxy_dispatcher_panic() {
     let test = test_case!(
         indoc!(
-            r"
+            r#"
         use array::ArrayTrait;
         use result::ResultTrait;
         use option::OptionTrait;
@@ -509,7 +506,7 @@ fn proxy_dispatcher_panic() {
         use starknet::Felt252TryIntoContractAddress;
         use snforge_std::{ declare, ContractClassTrait };
 
-        fn deploy_contract(name: felt252, constructor_calldata: @Array<felt252>) -> ContractAddress {
+        fn deploy_contract(name: ByteArray, constructor_calldata: @Array<felt252>) -> ContractAddress {
             let contract = declare(name);
             contract.deploy(constructor_calldata).unwrap()
         }
@@ -521,9 +518,9 @@ fn proxy_dispatcher_panic() {
         
         #[test]
         fn proxy_dispatcher_panic() {
-            let executor_address = deploy_contract('Executor', @ArrayTrait::new());
+            let executor_address = deploy_contract("Executor", @ArrayTrait::new());
             let caller_constructor_calldata: Array<felt252> = array![executor_address.into()]; 
-            let caller_address = deploy_contract('Caller', @caller_constructor_calldata);
+            let caller_address = deploy_contract("Caller", @caller_constructor_calldata);
         
             let caller_dispatcher = ICallerSafeDispatcher { contract_address: caller_address };
         
@@ -532,7 +529,7 @@ fn proxy_dispatcher_panic() {
                 Result::Err(x) => assert(*x.at(0) == 'panic_msg', 'wrong panic msg')
             }
         }
-    "
+    "#
         ),
         Contract::new(
             "Caller",
@@ -613,7 +610,7 @@ fn proxy_dispatcher_panic() {
 fn nonexistent_method_call() {
     let test = test_case!(
         indoc!(
-            r"
+            r#"
         use array::ArrayTrait;
         use result::ResultTrait;
         use option::OptionTrait;
@@ -624,7 +621,7 @@ fn nonexistent_method_call() {
         use snforge_std::{ declare, ContractClassTrait };
         
 
-        fn deploy_contract(name: felt252, constructor_calldata: @Array<felt252>) -> ContractAddress {
+        fn deploy_contract(name: ByteArray, constructor_calldata: @Array<felt252>) -> ContractAddress {
             let contract = declare(name);
             contract.deploy(constructor_calldata).unwrap()
         }
@@ -636,12 +633,12 @@ fn nonexistent_method_call() {
         
         #[test]
         fn nonexistent_method_call() {
-            let contract_address = deploy_contract('Contract', @ArrayTrait::new());
+            let contract_address = deploy_contract("Contract", @ArrayTrait::new());
         
             let caller_dispatcher = ICallerDispatcher { contract_address };
             caller_dispatcher.invoke_nonexistent();
         }
-    "
+    "#
         ),
         Contract::new(
             "Contract",
@@ -672,7 +669,7 @@ fn nonexistent_method_call() {
 fn nonexistent_libcall_function() {
     let test = test_case!(
         indoc!(
-            r"
+            r#"
         use array::ArrayTrait;
         use result::ResultTrait;
         use option::OptionTrait;
@@ -683,7 +680,7 @@ fn nonexistent_libcall_function() {
         use starknet::ClassHash;
         use snforge_std::{ declare, ContractClassTrait };
         
-        fn deploy_contract(name: felt252) -> ContractAddress {
+        fn deploy_contract(name: ByteArray) -> ContractAddress {
             let contract = declare(name);
             contract.deploy(@ArrayTrait::new()).unwrap()
         }
@@ -695,13 +692,13 @@ fn nonexistent_libcall_function() {
 
         #[test]
         fn nonexistent_libcall_function() {
-            let class = declare('Contract');
-            let contract_address = deploy_contract('LibCaller');
+            let class = declare("Contract");
+            let contract_address = deploy_contract("LibCaller");
             
             let dispatcher = IContractDispatcher { contract_address };
             dispatcher.invoke_nonexistent_libcall_from_contract(class.class_hash);
         }
-        "
+        "#
         ),
         Contract::new(
             "LibCaller",
@@ -800,7 +797,7 @@ fn undeclared_class_call() {
 fn nonexistent_class_libcall() {
     let test = test_case!(
         indoc!(
-            r"
+            r#"
         use array::ArrayTrait;
         use result::ResultTrait;
         use option::OptionTrait;
@@ -808,7 +805,7 @@ fn nonexistent_class_libcall() {
         use starknet::ClassHash;
         use snforge_std::{ declare, ContractClassTrait };
         
-        fn deploy_contract(name: felt252) -> ContractAddress {
+        fn deploy_contract(name: ByteArray) -> ContractAddress {
             let contract = declare(name);
             contract.deploy(@ArrayTrait::new()).unwrap()
         }
@@ -820,11 +817,11 @@ fn nonexistent_class_libcall() {
 
         #[test]
         fn test_nonexistent_libcall() {
-            let contract_address = deploy_contract('LibCaller');
+            let contract_address = deploy_contract("LibCaller");
             let dispatcher = IContractDispatcher { contract_address };
             dispatcher.invoke_nonexistent_libcall_from_contract();
         }
-        "
+        "#
         ),
         Contract::new(
             "LibCaller",

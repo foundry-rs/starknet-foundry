@@ -13,10 +13,31 @@ use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeS
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::spoof::TxInfoMock;
 use cheatnet::state::{CheatTarget, CheatnetState};
-use conversions::{felt252::FromShortString, IntoConv};
+use conversions::IntoConv;
 use num_traits::ToPrimitive;
 use runtime::utils::BufferReader;
 use starknet_api::core::ContractAddress;
+
+use super::test_environment::TestEnvironment;
+
+trait SpoofTrait {
+    fn start_spoof(&mut self, target: CheatTarget, tx_info_mock: TxInfoMock);
+    fn stop_spoof(&mut self, contract_address: &ContractAddress);
+}
+
+impl<'a> SpoofTrait for TestEnvironment<'a> {
+    fn start_spoof(&mut self, target: CheatTarget, tx_info_mock: TxInfoMock) {
+        self.runtime_state
+            .cheatnet_state
+            .start_spoof(target, tx_info_mock);
+    }
+
+    fn stop_spoof(&mut self, contract_address: &ContractAddress) {
+        self.runtime_state
+            .cheatnet_state
+            .stop_spoof(CheatTarget::One(*contract_address));
+    }
+}
 
 #[derive(Clone, Default, Debug, PartialEq)]
 pub struct TxInfo {
@@ -108,7 +129,7 @@ fn assert_tx_info(
     expected_tx_info: &TxInfo,
 ) {
     let tx_info = get_tx_info(state, runtime_state, contract_address);
-    assert_eq!(tx_info, expected_tx_info.to_owned());
+    assert_eq!(&tx_info, expected_tx_info);
 }
 
 fn get_tx_info(
@@ -377,8 +398,7 @@ fn spoof_in_constructor() {
 
     let contracts = get_contracts();
 
-    let contract_name = Felt252::from_short_string("ConstructorSpoofChecker").unwrap();
-    let class_hash = declare(&mut cached_state, &contract_name, &contracts).unwrap();
+    let class_hash = declare(&mut cached_state, "ConstructorSpoofChecker", &contracts).unwrap();
     let precalculated_address = runtime_state
         .cheatnet_state
         .precalculate_address(&class_hash, vec![].as_slice());
@@ -469,8 +489,7 @@ fn spoof_library_call() {
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
     let contracts = get_contracts();
-    let contract_name = Felt252::from_short_string("SpoofChecker").unwrap();
-    let class_hash = declare(&mut cached_state, &contract_name, &contracts).unwrap();
+    let class_hash = declare(&mut cached_state, "SpoofChecker", &contracts).unwrap();
 
     let lib_call_address = deploy_contract(
         &mut cached_state,
@@ -636,9 +655,8 @@ fn spoof_multiple() {
     let mut cheatnet_state = CheatnetState::default();
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
-    let contract = Felt252::from_short_string("SpoofChecker").unwrap();
     let contracts = get_contracts();
-    let class_hash = declare(&mut cached_state, &contract, &contracts).unwrap();
+    let class_hash = declare(&mut cached_state, "SpoofChecker", &contracts).unwrap();
 
     let contract_address_1 =
         deploy_wrapper(&mut cached_state, &mut runtime_state, &class_hash, &[]).unwrap();

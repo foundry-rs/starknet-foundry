@@ -15,9 +15,10 @@ use starknet_api::deprecated_contract_class::EntryPointType;
 use runtime::starknet::context::ERC20_CONTRACT_ADDRESS;
 use runtime::starknet::state::DictStateReader;
 use starknet_api::{
+    class_hash, contract_address,
     core::{ClassHash, ContractAddress, PatriciaKey},
-    hash::{StarkFelt, StarkHash},
-    patricia_key, stark_felt,
+    hash::StarkHash,
+    patricia_key,
     transaction::Calldata,
 };
 
@@ -33,6 +34,7 @@ pub const SECURITY_TEST_CLASS_HASH: &str = "0x114";
 pub const TEST_ERC20_CONTRACT_CLASS_HASH: &str = "0x1010";
 
 pub const TEST_CONTRACT_CLASS_HASH: &str = "0x117";
+pub const TEST_ENTRY_POINT_SELECTOR: &str = "TEST_CONTRACT_SELECTOR";
 // snforge_std/src/cheatcodes.cairo::test_address
 pub const TEST_ADDRESS: &str = "0x01724987234973219347210837402";
 
@@ -55,8 +57,8 @@ fn contract_class_no_entrypoints() -> ContractClass {
 // Account does not include validations
 #[must_use]
 pub fn build_testing_state() -> DictStateReader {
-    let test_erc20_class_hash = ClassHash(stark_felt!(TEST_ERC20_CONTRACT_CLASS_HASH));
-    let test_contract_class_hash = ClassHash(stark_felt!(TEST_CONTRACT_CLASS_HASH));
+    let test_erc20_class_hash = class_hash!(TEST_ERC20_CONTRACT_CLASS_HASH);
+    let test_contract_class_hash = class_hash!(TEST_CONTRACT_CLASS_HASH);
 
     let class_hash_to_class = HashMap::from([
         // This is dummy put here only to satisfy blockifier
@@ -64,8 +66,8 @@ pub fn build_testing_state() -> DictStateReader {
         (test_contract_class_hash, contract_class_no_entrypoints()),
     ]);
 
-    let test_erc20_address = ContractAddress(patricia_key!(ERC20_CONTRACT_ADDRESS));
-    let test_address = ContractAddress(patricia_key!(TEST_ADDRESS));
+    let test_erc20_address = contract_address!(ERC20_CONTRACT_ADDRESS);
+    let test_address = contract_address!(TEST_ADDRESS);
     let address_to_class_hash = HashMap::from([
         (test_erc20_address, test_erc20_class_hash),
         (test_address, test_contract_class_hash),
@@ -80,17 +82,17 @@ pub fn build_testing_state() -> DictStateReader {
 
 #[must_use]
 pub fn build_test_entry_point() -> CallEntryPoint {
-    let test_selector = get_selector_from_name("TEST_CONTRACT_SELECTOR")
+    let test_selector = get_selector_from_name(TEST_ENTRY_POINT_SELECTOR)
         .unwrap()
         .into_();
     let entry_point_selector = create_entry_point_selector(&test_selector);
     CallEntryPoint {
         class_hash: None,
-        code_address: Some(ContractAddress(patricia_key!(TEST_ADDRESS))),
+        code_address: Some(contract_address!(TEST_ADDRESS)),
         entry_point_type: EntryPointType::External,
         entry_point_selector,
         calldata: Calldata(Arc::new(vec![])),
-        storage_address: ContractAddress(patricia_key!(TEST_ADDRESS)),
+        storage_address: contract_address!(TEST_ADDRESS),
         caller_address: ContractAddress::default(),
         call_type: CallType::Call,
         initial_gas: u64::MAX,

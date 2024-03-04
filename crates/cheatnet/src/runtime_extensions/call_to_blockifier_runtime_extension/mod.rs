@@ -18,10 +18,10 @@ use crate::constants::TEST_ADDRESS;
 use cairo_vm::vm::{errors::hint_errors::HintError, vm_core::VirtualMachine};
 use conversions::FromConv;
 use runtime::{ExtendedRuntime, ExtensionLogic, SyscallHandlingResult, SyscallPtrAccess};
-use starknet_api::core::PatriciaKey;
+use starknet_api::core::{ContractAddress, PatriciaKey};
 use starknet_api::deprecated_contract_class::EntryPointType;
-use starknet_api::hash::StarkHash;
-use starknet_api::{core::ContractAddress, hash::StarkFelt, patricia_key};
+use starknet_api::hash::{StarkFelt, StarkHash};
+use starknet_api::{contract_address, patricia_key};
 
 use crate::state::CheatnetState;
 
@@ -62,10 +62,22 @@ impl<'a> ExtensionLogic for CallToBlockifierExtension<'a> {
             // https://docs.starknet.io/documentation/architecture_and_concepts/Smart_Contracts/system-calls-cairo1/#call_contract
             DeprecatedSyscallSelector::CallContract => {
                 execute_syscall::<CallContractRequest>(vm, extended_runtime)?;
+
+                extended_runtime
+                    .extended_runtime
+                    .hint_handler
+                    .increment_syscall_count_by(&selector, 1);
+
                 Ok(SyscallHandlingResult::Handled(()))
             }
             DeprecatedSyscallSelector::LibraryCall => {
                 execute_syscall::<LibraryCallRequest>(vm, extended_runtime)?;
+
+                extended_runtime
+                    .extended_runtime
+                    .hint_handler
+                    .increment_syscall_count_by(&selector, 1);
+
                 Ok(SyscallHandlingResult::Handled(()))
             }
             _ => Ok(SyscallHandlingResult::Forwarded),
@@ -99,7 +111,7 @@ impl ExecuteCall for CallContractRequest {
             entry_point_selector: self.function_selector,
             calldata: self.calldata,
             storage_address: contract_address,
-            caller_address: ContractAddress(patricia_key!(TEST_ADDRESS)),
+            caller_address: contract_address!(TEST_ADDRESS),
             call_type: CallType::Call,
             initial_gas: u64::MAX,
         };
@@ -127,7 +139,7 @@ impl ExecuteCall for LibraryCallRequest {
             entry_point_type: EntryPointType::External,
             entry_point_selector: self.function_selector,
             calldata: self.calldata,
-            storage_address: ContractAddress(patricia_key!(TEST_ADDRESS)),
+            storage_address: contract_address!(TEST_ADDRESS),
             caller_address: ContractAddress::default(),
             call_type: CallType::Delegate,
             initial_gas: u64::MAX,
@@ -165,6 +177,7 @@ fn execute_syscall<Request: ExecuteCall + SyscallRequest>(
     Ok(())
 }
 
+#[derive(Debug)]
 pub struct RuntimeState<'a> {
     pub cheatnet_state: &'a mut CheatnetState,
 }

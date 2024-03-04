@@ -97,7 +97,7 @@ mod HelloStarknet {
 #[test]
 fn call_and_invoke() {
     // Declare the contract
-    let class_hash = declare('HelloStarknet');
+    let class_hash = declare("HelloStarknet");
     
     // Prepare contract for deployment
     let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
@@ -121,7 +121,7 @@ any steps introduced.
 #[test]
 fn call_and_invoke() {
     // Declare the contract
-    let class_hash = declare('HelloStarknet');
+    let class_hash = declare("HelloStarknet");
     
     // Prepare contract for deployment
     let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
@@ -187,7 +187,7 @@ mod HelloStarknet {
 #[test]
 fn call_and_invoke() {
     // Declare the contract
-    let contract = declare('HelloStarknet');
+    let contract = declare("HelloStarknet");
         
     // Precalculate the address
     let contract_address = contract.precalulucate_address(@ArrayTrait::new());

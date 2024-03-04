@@ -1,7 +1,7 @@
 {
   "version": 1,
   "transactions": [{
-    "123-abc-456": {
+    "123abc456": {
       "name": "declare",
       "output": {
         "type": "DeclareResponse",
@@ -12,7 +12,7 @@
       "timestamp": 1706093159,
       "misc": null
     },
-    "789-def-420": {
+    "789def420": {
       "name": "deploy",
       "output": {
         "type": "ErrorResponse",

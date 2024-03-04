@@ -7,21 +7,20 @@ use crate::test_crate_summary::TestCrateSummary;
 use anyhow::{anyhow, Result};
 
 use cairo_lang_runner::RunnerError;
-use cairo_lang_sierra::extensions::core::{CoreLibfunc, CoreType};
 use cairo_lang_sierra::ids::ConcreteTypeId;
 use cairo_lang_sierra::program::{Function, Program};
 use cairo_lang_sierra::program_registry::ProgramRegistry;
 use cairo_lang_sierra_type_size::get_type_size_map;
+use cairo_lang_sierra_to_casm::compiler::CairoProgram;
+use cairo_lang_sierra_to_casm::metadata::{calc_metadata, MetadataComputationConfig};
 use camino::Utf8PathBuf;
 
+use contracts_data::ContractsData;
 use futures::stream::FuturesUnordered;
 use futures::StreamExt;
 
-use once_cell::sync::Lazy;
-use running::TestDetails;
-use scarb_api::StarknetContractArtifacts;
+use build_trace_data::save_trace_data;
 use smol_str::SmolStr;
-use trace_data::save_trace_data;
 
 use cairo_lang_casm::hints::Hint;
 use num_bigint::BigInt;
@@ -33,11 +32,12 @@ use tokio::sync::mpsc::{channel, Sender};
 use tokio::task::JoinHandle;
 use universal_sierra_compiler_api::{compile_sierra, SierraType};
 
+pub mod build_trace_data;
 pub mod compiled_runnable;
+pub mod contracts_data;
 pub mod expected_result;
 pub mod test_case_summary;
 pub mod test_crate_summary;
-pub mod trace_data;
 
 mod fuzzer;
 mod gas;
@@ -46,18 +46,16 @@ mod running;
 
 pub const CACHE_DIR: &str = ".snfoundry_cache";
 
-pub static BUILTINS: Lazy<Vec<&str>> = Lazy::new(|| {
-    vec![
-        "Pedersen",
-        "RangeCheck",
-        "Bitwise",
-        "EcOp",
-        "Poseidon",
-        "SegmentArena",
-        "GasBuiltin",
-        "System",
-    ]
-});
+pub const BUILTINS: [&str; 8] = [
+    "Pedersen",
+    "RangeCheck",
+    "Bitwise",
+    "EcOp",
+    "Poseidon",
+    "SegmentArena",
+    "GasBuiltin",
+    "System",
+];
 
 /// Configuration of the test runner
 #[derive(Debug, PartialEq)]
@@ -69,6 +67,7 @@ pub struct RunnerConfig {
     pub fuzzer_seed: u64,
     pub detailed_resources: bool,
     pub save_trace_data: bool,
+    pub max_n_steps: Option<u32>,
 }
 
 impl RunnerConfig {
@@ -81,6 +80,7 @@ impl RunnerConfig {
         fuzzer_seed: u64,
         detailed_resources: bool,
         save_trace_data: bool,
+        max_n_steps: Option<u32>,
     ) -> Self {
         Self {
             workspace_root,
@@ -89,6 +89,7 @@ impl RunnerConfig {
             fuzzer_seed,
             detailed_resources,
             save_trace_data,
+            max_n_steps,
         }
     }
 }
@@ -96,18 +97,18 @@ impl RunnerConfig {
 #[non_exhaustive]
 #[derive(Debug, Clone)]
 pub struct RunnerParams {
-    contracts: HashMap<String, StarknetContractArtifacts>,
+    contracts_data: ContractsData,
     environment_variables: HashMap<String, String>,
 }
 
 impl RunnerParams {
     #[must_use]
     pub fn new(
-        contracts: HashMap<String, StarknetContractArtifacts>,
+        contracts_data: ContractsData,
         environment_variables: HashMap<String, String>,
     ) -> Self {
         Self {
-            contracts,
+            contracts_data,
             environment_variables,
         }
     }
@@ -133,55 +134,6 @@ pub trait TestCaseFilter {
 pub enum TestCrateRunResult {
     Ok(TestCrateSummary),
     Interrupted(TestCrateSummary),
-}
-
-fn build_test_details(test_name: &str, sierra_program: &Program) -> TestDetails {
-    let sierra_program_registry =
-        ProgramRegistry::<CoreType, CoreLibfunc>::new(sierra_program).unwrap();
-    let type_sizes = get_type_size_map(sierra_program, &sierra_program_registry).unwrap();
-    let func = sierra_program
-        .funcs
-        .iter()
-        .find(|f| f.id.debug_name.clone().unwrap().ends_with(test_name))
-        .unwrap();
-
-    let parameter_types = func
-        .signature
-        .param_types
-        .iter()
-        .map(|pt| {
-            let td = sierra_program
-                .type_declarations
-                .iter()
-                .find(|td| &td.id == pt)
-                .unwrap();
-            let generic_id = &td.long_id.generic_id;
-            let size = type_sizes[&td.id];
-            (generic_id.clone(), size)
-        })
-        .collect::<Vec<_>>();
-
-    let return_types = func
-        .signature
-        .ret_types
-        .iter()
-        .map(|pt| {
-            let td = sierra_program
-                .type_declarations
-                .iter()
-                .find(|td| &td.id == pt)
-                .unwrap();
-            let generic_id = &td.long_id.generic_id;
-            let size = type_sizes[&td.id];
-            (generic_id.clone(), size)
-        })
-        .collect::<Vec<_>>();
-
-    TestDetails {
-        entry_point_offset: func.entry_point.0,
-        parameter_types,
-        return_types,
-    }
 }
 
 #[derive(Serialize, Deserialize)]
@@ -242,22 +194,18 @@ pub async fn run_tests_from_crate(
         let function = sierra_program
             .funcs
             .iter()
-            .find(|f| f.id.debug_name.clone().unwrap().ends_with(&case_name))
-            .ok_or_else(|| RunnerError::MissingFunction {
-                suffix: case_name.clone(),
-            })?;
+            .find(|f| f.id.debug_name.as_ref().unwrap().ends_with(&case_name))
+            .ok_or(RunnerError::MissingFunction { suffix: case_name })?;
 
         let args = function_args(function, &BUILTINS);
 
         let case = Arc::new(case.clone());
         let args: Vec<ConcreteTypeId> = args.into_iter().cloned().collect();
-        let test_details = Arc::new(build_test_details(&case.name, sierra_program));
 
         tasks.push(choose_test_strategy_and_run(
             args,
-            case.clone(),
+            case,
             casm_program.clone(),
-            test_details.clone(),
             runner_config.clone(),
             runner_params.clone(),
             send.clone(),
@@ -303,36 +251,20 @@ fn choose_test_strategy_and_run(
     args: Vec<ConcreteTypeId>,
     case: Arc<TestCaseRunnable>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
-    test_details: Arc<TestDetails>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     send: Sender<()>,
 ) -> JoinHandle<Result<AnyTestCaseSummary>> {
     if args.is_empty() {
         tokio::task::spawn(async move {
-            let res = run_test(
-                case,
-                casm_program,
-                test_details,
-                runner_config,
-                runner_params,
-                send,
-            )
-            .await??;
+            let res = run_test(case, casm_program, runner_config, runner_params, send).await??;
             Ok(AnyTestCaseSummary::Single(res))
         })
     } else {
         tokio::task::spawn(async move {
-            let res = run_with_fuzzing(
-                args,
-                case,
-                casm_program,
-                test_details,
-                runner_config,
-                runner_params,
-                send,
-            )
-            .await??;
+            let res =
+                run_with_fuzzing(args, case, casm_program, runner_config, runner_params, send)
+                    .await??;
             Ok(AnyTestCaseSummary::Fuzzing(res))
         })
     }
@@ -342,7 +274,6 @@ fn run_with_fuzzing(
     args: Vec<ConcreteTypeId>,
     case: Arc<TestCaseRunnable>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
-    test_details: Arc<TestDetails>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     send: Sender<()>,
@@ -381,7 +312,6 @@ fn run_with_fuzzing(
                 args,
                 case.clone(),
                 casm_program.clone(),
-                test_details.clone(),
                 runner_config.clone(),
                 runner_params.clone(),
                 send.clone(),

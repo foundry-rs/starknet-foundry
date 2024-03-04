@@ -1,13 +1,15 @@
 use crate::e2e::common::runner::{
     get_current_branch, get_remote_url, runner, setup_package, test_runner,
 };
+
 use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
 use camino::Utf8PathBuf;
+use forge::CAIRO_EDITION;
 use indoc::{formatdoc, indoc};
+use shared::test_utils::output_assert::assert_stdout_contains;
 use std::fs;
 use std::{path::Path, str::FromStr};
 use tempfile::TempDir;
-use test_utils::output_assert::assert_stdout_contains;
 use test_utils::tempdir_with_tool_versions;
 use toml_edit::{value, Document, Item};
 
@@ -79,7 +81,7 @@ fn simple_package_with_git_dependency() {
             casm = true
 
             [dependencies]
-            starknet = "2.5.0"
+            starknet = "2.5.4"
             snforge_std = {{ git = "https://github.com/{}", branch = "{}" }}
             "#,
             remote_url,
@@ -749,18 +751,19 @@ fn init_new_project_test() {
             [package]
             name = "test_name"
             version = "0.1.0"
-            edition = "2023_10"
+            edition = "{}"
 
             # See more keys and their definitions at https://docs.swmansion.com/scarb/docs/reference/manifest.html
 
             [dependencies]
             snforge_std = {{ git = "https://github.com/foundry-rs/starknet-foundry", tag = "v{}" }}
-            starknet = "2.5.0"
+            starknet = "2.5.4"
 
             [[target.starknet-contract]]
             casm = true
         "#,
-        version
+        CAIRO_EDITION,
+        version,
     );
 
     assert_eq!(generated_toml, expected_toml);
@@ -778,7 +781,7 @@ fn init_new_project_test() {
         casm = true
 
         [dependencies]
-        starknet = "2.5.0"
+        starknet = "2.5.4"
         snforge_std = {{ git = "https://github.com/{}", branch = "{}" }}
         "#,
             remote_url,
@@ -911,7 +914,7 @@ fn printing_in_contracts() {
 
 #[test]
 fn incompatible_snforge_std_version_warning() {
-    let temp = setup_package("simple_package");
+    let temp = setup_package("steps");
     let manifest_path = temp.child("Scarb.toml");
     let tempdir = TempDir::new().expect("Failed to create a temporary directory");
 
@@ -937,40 +940,30 @@ fn incompatible_snforge_std_version_warning() {
         output,
         indoc! {r"
         [..]Updating git repository https://github.com/foundry-rs/starknet-foundry
-        [WARNING] Package snforge_std version does not meet the recommended version requirement =0.17.1, [..]
+        [WARNING] Package snforge_std version does not meet the recommended version requirement =0.18.0, [..]
         [..]Compiling[..]
         [..]Finished[..]
 
 
-        Collected 13 test(s) from simple_package package
-        Running 2 test(s) from src/
-        [PASS] simple_package::tests::test_fib [..]
-        [IGNORE] simple_package::tests::ignored_test
-        Running 11 test(s) from tests/
-        [PASS] tests::contract::call_and_invoke [..]
-        [PASS] tests::ext_function_test::test_my_test [..]
-        [IGNORE] tests::ext_function_test::ignored_test
-        [PASS] tests::ext_function_test::test_simple [..]
-        [PASS] tests::test_simple::test_simple [..]
-        [PASS] tests::test_simple::test_simple2 [..]
-        [PASS] tests::test_simple::test_two [..]
-        [PASS] tests::test_simple::test_two_and_two [..]
-        [FAIL] tests::test_simple::test_failing
+        Collected 4 test(s) from steps package
+        Running 4 test(s) from src/
+        [PASS] steps::tests::steps_570031 [..]
+        [FAIL] steps::tests::steps_3000017
         
         Failure data:
-            0x6661696c696e6720636865636b ('failing check')
+            Could not reach the end of the program. RunResources has no remaining steps.
         
-        [FAIL] tests::test_simple::test_another_failing
+        [FAIL] steps::tests::steps_5700031
         
         Failure data:
-            0x6661696c696e6720636865636b ('failing check')
+            Could not reach the end of the program. RunResources has no remaining steps.
         
-        [PASS] tests::without_prefix::five [..]
-        Tests: 9 passed, 2 failed, 0 skipped, 2 ignored, 0 filtered out
+        [PASS] steps::tests::steps_2999998 [..]
+        Tests: 2 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:
-            tests::test_simple::test_failing
-            tests::test_simple::test_another_failing
+            steps::tests::steps_3000017
+            steps::tests::steps_5700031
         "},
     );
 }

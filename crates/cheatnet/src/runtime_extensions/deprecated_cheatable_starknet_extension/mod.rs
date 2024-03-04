@@ -1,14 +1,19 @@
 use crate::state::CheatnetState;
 use blockifier::abi::constants;
 use blockifier::execution::common_hints::HintExecutionResult;
-use blockifier::execution::deprecated_syscalls::hint_processor::DeprecatedSyscallHintProcessor;
-use blockifier::execution::deprecated_syscalls::{
-    CallContractRequest, DeprecatedSyscallResult, DeprecatedSyscallSelector,
-    GetBlockNumberResponse, GetBlockTimestampResponse, GetContractAddressResponse,
-    LibraryCallRequest, SyscallRequest, SyscallResponse, WriteResponseResult,
+use blockifier::execution::deprecated_syscalls::hint_processor::{
+    DeprecatedSyscallExecutionError, DeprecatedSyscallHintProcessor,
 };
-use blockifier::execution::entry_point::{CallEntryPoint, CallType};
-use blockifier::execution::execution_utils::{write_maybe_relocatable, ReadOnlySegment};
+use blockifier::execution::deprecated_syscalls::{
+    CallContractRequest, DeployRequest, DeployResponse, DeprecatedSyscallResult,
+    DeprecatedSyscallSelector, GetBlockNumberResponse, GetBlockTimestampResponse,
+    GetContractAddressResponse, LibraryCallRequest, SyscallRequest, SyscallResponse,
+    WriteResponseResult,
+};
+use blockifier::execution::entry_point::{CallEntryPoint, CallType, ConstructorContext};
+use blockifier::execution::execution_utils::{
+    execute_deployment, write_maybe_relocatable, ReadOnlySegment,
+};
 use conversions::FromConv;
 
 use ::runtime::SyscallHandlingResult;
@@ -18,7 +23,9 @@ use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use num_traits::ToPrimitive;
 use starknet_api::block::{BlockNumber, BlockTimestamp};
-use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector};
+use starknet_api::core::{
+    calculate_contract_address, ClassHash, ContractAddress, EntryPointSelector,
+};
 use starknet_api::deprecated_contract_class::EntryPointType;
 use starknet_api::transaction::Calldata;
 
@@ -135,6 +142,20 @@ impl<'a> DeprecatedExtensionLogic for DeprecatedCheatableStarknetRuntimeExtensio
                 self.execute_syscall(vm, library_call, syscall_handler)?;
                 Ok(SyscallHandlingResult::Handled(()))
             }
+            DeprecatedSyscallSelector::CallContract => {
+                syscall_handler.syscall_ptr += 1;
+                increment_syscall_count(syscall_handler, selector);
+
+                self.execute_syscall(vm, call_contract, syscall_handler)?;
+                Ok(SyscallHandlingResult::Handled(()))
+            }
+            DeprecatedSyscallSelector::Deploy => {
+                syscall_handler.syscall_ptr += 1;
+                increment_syscall_count(syscall_handler, selector);
+
+                self.execute_syscall(vm, deploy, syscall_handler)?;
+                Ok(SyscallHandlingResult::Handled(()))
+            }
             _ => Ok(SyscallHandlingResult::Forwarded),
         }
     }
@@ -178,6 +199,83 @@ fn increment_syscall_count(
         .entry(selector)
         .or_default();
     *syscall_count += 1;
+}
+
+//blockifier/src/execution/deprecated_syscalls/mod.rs:303 (deploy)
+pub fn deploy(
+    request: DeployRequest,
+    _vm: &mut VirtualMachine,
+    syscall_handler: &mut DeprecatedSyscallHintProcessor<'_>,
+    _cheatnet_state: &mut CheatnetState,
+) -> DeprecatedSyscallResult<DeployResponse> {
+    let deployer_address = syscall_handler.storage_address;
+    let deployer_address_for_calculation = if request.deploy_from_zero {
+        ContractAddress::default()
+    } else {
+        deployer_address
+    };
+    let deployed_contract_address = calculate_contract_address(
+        request.contract_address_salt,
+        request.class_hash,
+        &request.constructor_calldata,
+        deployer_address_for_calculation,
+    )?;
+
+    let ctor_context = ConstructorContext {
+        class_hash: request.class_hash,
+        code_address: Some(deployed_contract_address),
+        storage_address: deployed_contract_address,
+        caller_address: deployer_address,
+    };
+    let call_info = execute_deployment(
+        syscall_handler.state,
+        syscall_handler.resources,
+        syscall_handler.context,
+        ctor_context,
+        request.constructor_calldata,
+        constants::INITIAL_GAS_COST,
+    )?;
+    syscall_handler.inner_calls.push(call_info);
+
+    Ok(DeployResponse {
+        contract_address: deployed_contract_address,
+    })
+}
+
+//blockifier/src/execution/deprecated_syscalls/mod.rs:182 (call_contract)
+pub fn call_contract(
+    request: CallContractRequest,
+    vm: &mut VirtualMachine,
+    syscall_handler: &mut DeprecatedSyscallHintProcessor<'_>,
+    cheatnet_state: &mut CheatnetState,
+) -> DeprecatedSyscallResult<SingleSegmentResponse> {
+    let storage_address = request.contract_address;
+    // Check that the call is legal if in Validate execution mode.
+    if syscall_handler.is_validate_mode() && syscall_handler.storage_address != storage_address {
+        return Err(
+            DeprecatedSyscallExecutionError::InvalidSyscallInExecutionMode {
+                syscall_name: "call_contract".to_string(),
+                execution_mode: syscall_handler.execution_mode(),
+            },
+        );
+    }
+    let mut entry_point = CallEntryPoint {
+        class_hash: None,
+        code_address: Some(storage_address),
+        entry_point_type: EntryPointType::External,
+        entry_point_selector: request.function_selector,
+        calldata: request.calldata,
+        storage_address,
+        caller_address: syscall_handler.storage_address,
+        call_type: CallType::Call,
+        initial_gas: constants::INITIAL_GAS_COST,
+    };
+    let retdata_segment =
+        execute_inner_call(&mut entry_point, vm, syscall_handler, cheatnet_state)?;
+
+    Ok(SingleSegmentResponse {
+        segment: retdata_segment,
+    })
 }
 
 // blockifier/src/execution/deprecated_syscalls/mod.rs:209 (delegate_call)
