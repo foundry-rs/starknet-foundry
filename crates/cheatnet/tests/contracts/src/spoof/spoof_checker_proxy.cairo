@@ -36,9 +36,7 @@ mod SpoofCheckerProxy {
             starknet::get_tx_info().unbox().transaction_hash
         }
 
-        fn call_proxy(
-            self: @ContractState, address: ContractAddress
-        ) -> (felt252, felt252) {
+        fn call_proxy(self: @ContractState, address: ContractAddress) -> (felt252, felt252) {
             let dispatcher = ISpoofCheckerProxyDispatcher { contract_address: address };
             let tx_hash = self.get_transaction_hash();
             let res = dispatcher.get_spoof_checkers_tx_hash(get_contract_address());
