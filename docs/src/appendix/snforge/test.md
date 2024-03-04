@@ -58,7 +58,7 @@ Display additional info about used resources for passed tests.
 
 ## `--save-trace-data`
 
-Saves execution traces of test cases which pass and are not fuzz tests . You can use traces for profiling purposes.
+Saves execution traces of test cases which pass and are not fuzz tests. You can use traces for profiling purposes.
 
 ## `--build-profile`
 

@@ -190,7 +190,7 @@ pub fn save_trace_data(test_name: &String, trace_data: &ProfilerCallTrace) -> Pa
     let serialized_trace =
         serde_json::to_string(trace_data).expect("Failed to serialize call trace");
     let dir_to_save_trace = PathBuf::from(TRACE_DIR);
-    fs::create_dir_all(&dir_to_save_trace).expect("Failed to create a file to save call trace to");
+    fs::create_dir_all(&dir_to_save_trace).expect("Failed to create a .trace_data directory");
 
     let filename = format!("{test_name}.json");
     fs::write(dir_to_save_trace.join(&filename), serialized_trace)
