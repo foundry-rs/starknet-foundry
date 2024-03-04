@@ -765,7 +765,7 @@ pub fn update_top_call_execution_resources(runtime: &mut ForgeRuntime) {
     top_call.borrow_mut().used_execution_resources = all_execution_resources;
 }
 
-pub fn update_top_call_onchain_data(runtime: &mut ForgeRuntime) {
+pub fn update_top_call_l1_resources(runtime: &mut ForgeRuntime) {
     let all_l2_l1_message_sizes = runtime
         .extended_runtime
         .extended_runtime
