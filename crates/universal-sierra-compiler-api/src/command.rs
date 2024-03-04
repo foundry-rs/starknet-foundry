@@ -1,4 +1,5 @@
 use anyhow::Context;
+use std::env;
 use std::ffi::{OsStr, OsString};
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
@@ -79,6 +80,9 @@ impl UniversalSierraCompilerCommand {
     }
 
     fn binary_path() -> PathBuf {
-        PathBuf::from("universal-sierra-compiler")
+        env::var("UNIVERSAL_SIERRA_COMPILER")
+            .map(PathBuf::from)
+            .ok()
+            .unwrap_or_else(|| PathBuf::from("universal-sierra-compiler"))
     }
 }
