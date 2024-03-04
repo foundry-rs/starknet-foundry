@@ -45,7 +45,8 @@ fn main() {
 
     assert(invoke_result.transaction_hash != 0, invoke_result.transaction_hash);
 
-    let call_result = call(deploy_result.contract_address, selector!("get"), array![0x1]);
+    let call_result = call(deploy_result.contract_address, selector!("get"), array![0x1])
+        .expect('call failed');
     println!("call_result: {}", call_result);
     println!("debug call_result: {:?}", call_result);
 

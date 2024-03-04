@@ -221,20 +221,26 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     .map(|el| FieldElement::from_(el.clone()))
                     .collect();
 
-                let call_response = self
-                    .tokio_runtime
-                    .block_on(call::call(
-                        contract_address,
-                        function_selector,
-                        calldata_felts,
-                        self.provider,
-                        &BlockId::Tag(Pending),
-                    ))
-                    .map_err(handle_starknet_command_error)?;
-
-                let mut res: Vec<Felt252> = vec![Felt252::from(call_response.response.len())];
-                res.extend(call_response.response.iter().map(|el| Felt252::from_(el.0)));
-                Ok(CheatcodeHandlingResult::Handled(res))
+                match self.tokio_runtime.block_on(call::call(
+                    contract_address,
+                    function_selector,
+                    calldata_felts,
+                    self.provider,
+                    &BlockId::Tag(Pending),
+                )) {
+                    Ok(call_response) => {
+                        let mut res: Vec<Felt252> = vec![
+                            Felt252::from(0),
+                            Felt252::from(call_response.response.len()),
+                        ];
+                        res.extend(call_response.response.iter().map(|el| Felt252::from_(el.0)));
+                        Ok(CheatcodeHandlingResult::Handled(res))
+                    }
+                    Err(err) => {
+                        let res = handle_starknet_command_error_in_script(&err);
+                        Ok(CheatcodeHandlingResult::Handled(res))
+                    }
+                }
             }
             "declare" => {
                 let contract_name = input_reader.read_string();

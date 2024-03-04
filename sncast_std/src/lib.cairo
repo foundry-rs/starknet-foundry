@@ -102,7 +102,7 @@ pub impl DisplayContractAddress of Display<ContractAddress> {
     }
 }
 
-#[derive(Drop, Clone, Debug)]
+#[derive(Drop, Clone, Debug, Serde)]
 pub struct CallResult {
     pub data: Array::<felt252>,
 }
@@ -115,7 +115,7 @@ impl DisplayCallResult of Display<CallResult> {
 
 pub fn call(
     contract_address: ContractAddress, function_selector: felt252, calldata: Array::<felt252>
-) -> CallResult {
+) -> Result<CallResult, ScriptCommandError> {
     let contract_address_felt: felt252 = contract_address.into();
     let mut inputs = array![contract_address_felt, function_selector];
 
@@ -126,9 +126,12 @@ pub fn call(
 
     let mut buf = cheatcode::<'call'>(inputs.span());
 
-    let result_data: Array::<felt252> = Serde::<Array<felt252>>::deserialize(ref buf).unwrap();
+    let mut result_data: Result<CallResult, ScriptCommandError> = Serde::<
+        Result<CallResult>
+    >::deserialize(ref buf)
+        .expect('call deserialize failed');
 
-    CallResult { data: result_data }
+    result_data
 }
 
 #[derive(Drop, Clone, Debug, Serde)]
