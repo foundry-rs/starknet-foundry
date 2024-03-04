@@ -777,7 +777,7 @@ pub fn update_top_call_execution_resources(runtime: &mut ForgeRuntime) {
         .syscall_counter
         .clone();
 
-    // Only sum 1-level, rest should be summed up in entry point execution stage
+    // Only sum 1-level since these include syscalls from inner calls
     let nested_calls_syscalls = top_call_mut
         .nested_calls
         .iter()
