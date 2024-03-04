@@ -39,7 +39,8 @@ fn main() {
         array![0x1, 0x2],
         Option::Some(max_fee),
         Option::Some(invoke_nonce)
-    );
+    )
+        .expect('invoke failed');
     println!("invoke_result: {}", invoke_result);
     println!("debug invoke_result: {:?}", invoke_result);
 

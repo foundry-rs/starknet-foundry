@@ -36,9 +36,7 @@ use shared::print::print_as_warning;
 use shared::utils::build_readable_text;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::SCRIPT_LIB_ARTIFACT_NAME;
-use sncast::response::errors::{
-    handle_starknet_command_error, SNCastProviderError, SNCastStarknetError, StarknetCommandError,
-};
+use sncast::response::errors::{SNCastProviderError, SNCastStarknetError, StarknetCommandError};
 use sncast::response::structs::ScriptRunResponse;
 use sncast::{TransactionError, WaitForTransactionError};
 use starknet::accounts::Account;
@@ -358,24 +356,30 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     self.config.keystore.clone(),
                 ))?;
 
-                let invoke_response = self
-                    .tokio_runtime
-                    .block_on(invoke::invoke(
-                        contract_address,
-                        function_selector,
-                        calldata,
-                        max_fee,
-                        &account,
-                        nonce,
-                        WaitForTx {
-                            wait: true,
-                            wait_params: self.config.wait_params,
-                        },
-                    ))
-                    .map_err(handle_starknet_command_error)?;
-
-                let res: Vec<Felt252> = vec![Felt252::from_(invoke_response.transaction_hash.0)];
-                Ok(CheatcodeHandlingResult::Handled(res))
+                match self.tokio_runtime.block_on(invoke::invoke(
+                    contract_address,
+                    function_selector,
+                    calldata,
+                    max_fee,
+                    &account,
+                    nonce,
+                    WaitForTx {
+                        wait: true,
+                        wait_params: self.config.wait_params,
+                    },
+                )) {
+                    Ok(invoke_response) => {
+                        let res: Vec<Felt252> = vec![
+                            Felt252::from(0),
+                            Felt252::from_(invoke_response.transaction_hash.0),
+                        ];
+                        Ok(CheatcodeHandlingResult::Handled(res))
+                    }
+                    Err(err) => {
+                        let res = handle_starknet_command_error_in_script(&err);
+                        Ok(CheatcodeHandlingResult::Handled(res))
+                    }
+                }
             }
             "get_nonce" => {
                 let block_id = input_reader
