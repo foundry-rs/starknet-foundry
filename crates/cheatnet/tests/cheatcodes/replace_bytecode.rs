@@ -4,17 +4,38 @@ use cairo_felt::Felt252;
 use cheatnet::{
     constants::build_testing_state,
     forking::state::ForkStateReader,
+    runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallResult,
     state::{CheatnetState, ExtendedStateReader},
 };
 use num_traits::Zero;
 use starknet_api::{
     block::BlockNumber,
     contract_address,
-    core::{ContractAddress, PatriciaKey},
+    core::{ClassHash, ContractAddress, PatriciaKey},
     hash::StarkHash,
     patricia_key,
 };
 use tempfile::TempDir;
+
+trait ReplaceBytecodeTrait {
+    fn replace_class_for_contract(
+        &mut self,
+        contract_address: ContractAddress,
+        class_hash: ClassHash,
+    );
+}
+
+impl ReplaceBytecodeTrait for TestEnvironment<'_> {
+    fn replace_class_for_contract(
+        &mut self,
+        contract_address: ContractAddress,
+        class_hash: ClassHash,
+    ) {
+        self.runtime_state
+            .cheatnet_state
+            .replace_class_for_contract(contract_address, class_hash);
+    }
+}
 
 #[test]
 fn fork() {
@@ -42,13 +63,10 @@ fn fork() {
 
     assert!(matches!(
         output,
-        cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallResult::Success { ret_data, .. }
-        if ret_data != vec![Felt252::zero()],
+        CallResult::Success { ret_data, .. } if ret_data != vec![Felt252::zero()],
     ));
 
-    test_env
-        .cheatnet_state()
-        .replace_class_for_contract(contract, class_hash);
+    test_env.replace_class_for_contract(contract, class_hash);
 
     let output = test_env.call_contract(&contract, "get_admin", &[]);
 
@@ -69,9 +87,7 @@ fn override_entrypoint() {
 
     assert_success!(output, vec![Felt252::from(2137)]);
 
-    test_env
-        .cheatnet_state()
-        .replace_class_for_contract(contract_address, class_hash_b);
+    test_env.replace_class_for_contract(contract_address, class_hash_b);
 
     let output = test_env.call_contract(&contract_address, "get_const", &[]);
 
@@ -96,9 +112,7 @@ fn keep_storage() {
 
     assert_success!(output, vec![Felt252::from(456)]);
 
-    test_env
-        .cheatnet_state()
-        .replace_class_for_contract(contract_address, class_hash_b);
+    test_env.replace_class_for_contract(contract_address, class_hash_b);
 
     let output = test_env.call_contract(&contract_address, "get", &[]);
 
@@ -115,13 +129,9 @@ fn allow_setting_original_class() {
     let class_hash_b = test_env.declare("ReplaceBytecodeB", &contracts);
     let contract_address = test_env.deploy_wrapper(&class_hash_a, &[]);
 
-    test_env
-        .cheatnet_state()
-        .replace_class_for_contract(contract_address, class_hash_b);
+    test_env.replace_class_for_contract(contract_address, class_hash_b);
 
-    test_env
-        .cheatnet_state()
-        .replace_class_for_contract(contract_address, class_hash_a);
+    test_env.replace_class_for_contract(contract_address, class_hash_a);
 
     let output = test_env.call_contract(&contract_address, "get_const", &[]);
 
