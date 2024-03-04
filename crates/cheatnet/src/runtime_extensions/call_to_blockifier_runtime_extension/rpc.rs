@@ -7,7 +7,7 @@ use crate::runtime_extensions::{
 };
 use blockifier::execution::{
     call_info::CallInfo,
-    entry_point::{CallEntryPoint, CallType, EntryPointExecutionResult, ExecutionResources},
+    entry_point::{CallEntryPoint, CallType, EntryPointExecutionResult},
     errors::{EntryPointExecutionError, PreExecutionError},
     execution_utils::stark_felt_to_felt,
     syscalls::hint_processor::{SyscallCounter, SyscallHintProcessor},
