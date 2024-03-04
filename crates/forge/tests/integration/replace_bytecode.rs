@@ -32,12 +32,67 @@ fn override_entrypoint() {
         "#
         ),
         Contract::from_code_path(
-            "ReplaceBytecodeA".to_string(),
+            "ReplaceBytecodeA",
             Path::new("tests/data/contracts/two_implementations.cairo"),
         )
         .unwrap(),
         Contract::from_code_path(
-            "ReplaceBytecodeB".to_string(),
+            "ReplaceBytecodeB",
+            Path::new("tests/data/contracts/two_implementations.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test);
+
+    assert_passed!(result);
+}
+
+#[test]
+fn libcall_in_cheated() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use snforge_std::{declare, replace_bytecode, ContractClassTrait};
+
+            #[starknet::interface]
+            trait IReplaceBytecode<TContractState> {
+                fn libcall(self: @TContractState, class_hash: starknet::ClassHash) -> felt252;
+            }
+            
+            #[starknet::interface]
+            trait ILib<TContractState> {
+                fn get(self: @TContractState) -> felt252;
+            }
+
+            #[test]
+            fn override_entrypoint() {
+                let contract = declare("ReplaceBytecodeA");
+                let contract_b_class = declare("ReplaceBytecodeB").class_hash;
+                let lib = declare("Lib").class_hash;
+                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+                let dispatcher = IReplaceBytecodeDispatcher { contract_address };
+
+                assert(dispatcher.libcall(lib) == 123456789, '');
+
+                replace_bytecode(contract_address, contract_b_class);
+
+                assert(dispatcher.libcall(lib) == 123456789, '');
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "Lib",
+            Path::new("tests/data/contracts/two_implementations.cairo"),
+        )
+        .unwrap(),
+        Contract::from_code_path(
+            "ReplaceBytecodeA",
+            Path::new("tests/data/contracts/two_implementations.cairo"),
+        )
+        .unwrap(),
+        Contract::from_code_path(
+            "ReplaceBytecodeB",
             Path::new("tests/data/contracts/two_implementations.cairo"),
         )
         .unwrap()

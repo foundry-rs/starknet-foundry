@@ -30,16 +30,19 @@ pub struct Contract {
 
 impl Contract {
     #[must_use]
-    pub fn new(name: &str, code: &str) -> Self {
+    pub fn new(name: impl Into<String>, code: impl Into<String>) -> Self {
         Self {
-            name: name.to_string(),
-            code: code.to_string(),
+            name: name.into(),
+            code: code.into(),
         }
     }
 
-    pub fn from_code_path(name: String, path: &Path) -> Result<Self> {
+    pub fn from_code_path(name: impl Into<String>, path: &Path) -> Result<Self> {
         let code = fs::read_to_string(path)?;
-        Ok(Self { name, code })
+        Ok(Self {
+            name: name.into(),
+            code,
+        })
     }
 
     fn generate_sierra_and_casm(self) -> Result<(String, String)> {

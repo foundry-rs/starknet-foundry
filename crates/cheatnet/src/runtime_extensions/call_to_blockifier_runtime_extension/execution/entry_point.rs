@@ -84,12 +84,15 @@ pub fn execute_call_entry_point(
             PreExecutionError::UninitializedStorageAddress(entry_point.storage_address).into(),
         );
     }
-    let class_hash = runtime_state
+    let maybe_replacement_class = runtime_state
         .cheatnet_state
         .replaced_bytecode_contracts
         .get(&storage_address)
-        .copied()
-        .or(entry_point.class_hash)
+        .copied();
+
+    let class_hash = entry_point
+        .class_hash
+        .or(maybe_replacement_class)
         .unwrap_or(storage_class_hash); // If not given, take the storage contract class hash.
 
     // region: Modified blockifier code

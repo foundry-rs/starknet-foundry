@@ -74,4 +74,8 @@ impl<'a> TestEnvironment<'a> {
             calldata,
         )
     }
+
+    pub fn cheatnet_state(&mut self) -> &mut CheatnetState {
+        self.runtime_state.cheatnet_state
+    }
 }
