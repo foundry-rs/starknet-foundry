@@ -87,9 +87,10 @@ pub fn calculate_used_gas(
     // + get_tx_events_gas_cost(call_infos, versioned_constants);
 
     let l1_gas_usage = usize_from_u128(tx_gas_cost.l1_gas)
-        .expect("This conversion should not fail as the value is a converted usize.");
-    let l1_blob_gas_usage = usize_from_u128(tx_gas_cost.l1_data_gas)
-        .expect("This conversion should not fail as the value is a converted usize.");
+        .expect("tx_gas_cost.l1_gas conversion should not fail as the value is a converted usize.");
+    let l1_blob_gas_usage = usize_from_u128(tx_gas_cost.l1_data_gas).expect(
+        "tx_gas_cost.l1_data_gas conversion should not fail as the value is a converted usize.",
+    );
 
     let versioned_constants = transaction_context.block_context.versioned_constants();
     let mut total_vm_usage = resources.execution_resources.filter_unused_builtins();
