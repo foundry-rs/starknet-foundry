@@ -44,7 +44,6 @@ use cheatnet::runtime_extensions::forge_runtime_extension::{
     ForgeExtension, ForgeRuntime,
 };
 use cheatnet::state::{BlockInfoReader, CallTrace, CheatnetState, ExtendedStateReader};
-use itertools::chain;
 use runtime::starknet::context::{build_context, set_max_steps};
 use runtime::{ExtendedRuntime, StarknetRuntime};
 use tokio::sync::mpsc::Sender;

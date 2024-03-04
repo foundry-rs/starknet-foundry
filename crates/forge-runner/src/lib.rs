@@ -9,10 +9,6 @@ use anyhow::{anyhow, Result};
 use cairo_lang_runner::RunnerError;
 use cairo_lang_sierra::ids::ConcreteTypeId;
 use cairo_lang_sierra::program::{Function, Program};
-use cairo_lang_sierra::program_registry::ProgramRegistry;
-use cairo_lang_sierra_type_size::get_type_size_map;
-use cairo_lang_sierra_to_casm::compiler::CairoProgram;
-use cairo_lang_sierra_to_casm::metadata::{calc_metadata, MetadataComputationConfig};
 use camino::Utf8PathBuf;
 
 use contracts_data::ContractsData;
