@@ -1,7 +1,7 @@
 use crate::starknet_commands::account::{
     add_created_profile_to_configuration, prepare_account_json, write_account_to_accounts_file,
 };
-use anyhow::{bail, ensure, Context, Result};
+use anyhow::{ensure, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
 use sncast::handle_rpc_error;
@@ -30,11 +30,6 @@ pub struct Add {
     /// Class hash of the account
     #[clap(short, long)]
     pub class_hash: Option<FieldElement>,
-
-    /// Account deployment status
-    /// If not passed, sncast will check whether the account is deployed or not
-    #[clap(short, long)]
-    pub deployed: bool,
 
     /// Account private key
     #[clap(long, group = "private_key_input")]
@@ -80,30 +75,24 @@ pub async fn add(
         );
     }
 
-    if let Some(class_hash) = add.class_hash {
-        check_class_hash_exists(provider, class_hash).await?;
-    }
-
-    let mut is_deployed = add.deployed;
-    let mut class_hash = add.class_hash;
-
-    if !is_deployed {
-        let received_class_hash = get_class_hash_by_address(provider, add.address).await?;
-        if let Some(received_class_hash) = received_class_hash {
-            is_deployed = true;
-            if let Some(class_hash_arg) = add.class_hash {
-                if class_hash_arg != received_class_hash {
-                    bail!(
-                        "Incorrect class hash {:#x} for account address {:#x}",
-                        class_hash_arg,
-                        add.address
-                    );
-                }
-            } else {
-                class_hash = Some(received_class_hash);
-            }
+    let fetched_class_hash = get_class_hash_by_address(provider, add.address).await?;
+    let is_deployed = fetched_class_hash.is_some();
+    let class_hash = match (fetched_class_hash, add.class_hash) {
+        (Some(from_provider), Some(from_user)) => {
+            ensure!(
+                from_provider == from_user,
+                "Incorrect class hash {:#x} for account address {:#x}",
+                from_user,
+                add.address
+            );
+            fetched_class_hash
         }
-    }
+        (None, Some(from_user)) => {
+            check_class_hash_exists(provider, from_user).await?;
+            Some(from_user)
+        }
+        _ => fetched_class_hash,
+    };
 
     let account_json =
         prepare_account_json(private_key, add.address, is_deployed, class_hash, add.salt);

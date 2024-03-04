@@ -25,7 +25,6 @@ pub async fn test_happy_case() {
         "0x123",
         "--private-key",
         "0x456",
-        "--deployed",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -45,7 +44,7 @@ pub async fn test_happy_case() {
                 "alpha-goerli": {
                   "my_account_add": {
                     "address": "0x123",
-                    "deployed": true,
+                    "deployed": false,
                     "private_key": "0x456",
                     "public_key": "0x5f679dacd8278105bd3b84a15548fe84079068276b0e84d6cc093eb5430f063"
                   }
@@ -56,7 +55,7 @@ pub async fn test_happy_case() {
 }
 
 #[tokio::test]
-pub async fn test_no_deployed_flag_and_existent_account_address() {
+pub async fn test_existent_account_address() {
     let tempdir = tempdir().expect("Unable to create a temporary directory");
     let accounts_file = "accounts.json";
 
@@ -99,7 +98,7 @@ pub async fn test_no_deployed_flag_and_existent_account_address() {
 }
 
 #[tokio::test]
-pub async fn test_no_deployed_flag_with_existent_account_address_and_incorrect_class_hash() {
+pub async fn test_existent_account_address_and_incorrect_class_hash() {
     let tempdir = tempdir().expect("Unable to create a temporary directory");
     let accounts_file = "accounts.json";
 
@@ -257,7 +256,6 @@ pub async fn test_invalid_public_key() {
         "0x456",
         "--public-key",
         "0x457",
-        "--deployed",
     ];
 
     let snapbox = runner(&args);
@@ -274,15 +272,7 @@ pub async fn test_invalid_public_key() {
 
 #[tokio::test]
 pub async fn test_missing_arguments() {
-    let args = vec![
-        "--url",
-        URL,
-        "account",
-        "add",
-        "--name",
-        "my_account_add",
-        "--deployed",
-    ];
+    let args = vec!["--url", URL, "account", "add", "--name", "my_account_add"];
 
     let snapbox = runner(&args);
     let output = snapbox.assert().failure();
@@ -318,7 +308,6 @@ pub async fn test_private_key_from_file() {
         "0x123",
         "--private-key-file",
         private_key_file,
-        "--deployed",
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
@@ -338,7 +327,7 @@ pub async fn test_private_key_from_file() {
                 "alpha-goerli": {
                   "my_account_add": {
                     "address": "0x123",
-                    "deployed": true,
+                    "deployed": false,
                     "private_key": "0x456",
                     "public_key": "0x5f679dacd8278105bd3b84a15548fe84079068276b0e84d6cc093eb5430f063"
                   }
@@ -385,7 +374,6 @@ pub async fn test_invalid_private_key_file_path() {
         "0x123",
         "--private-key-file",
         "my_private_key",
-        "--deployed",
     ];
 
     let snapbox = runner(&args);
