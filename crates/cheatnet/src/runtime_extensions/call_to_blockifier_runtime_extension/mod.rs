@@ -177,6 +177,7 @@ fn execute_syscall<Request: ExecuteCall + SyscallRequest>(
     Ok(())
 }
 
+#[derive(Debug)]
 pub struct RuntimeState<'a> {
     pub cheatnet_state: &'a mut CheatnetState,
 }

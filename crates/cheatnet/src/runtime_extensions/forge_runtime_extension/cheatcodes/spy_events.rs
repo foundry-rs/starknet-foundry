@@ -40,6 +40,7 @@ impl Event {
 }
 
 /// Specifies which contract are spied on.
+#[derive(Debug)]
 pub enum SpyTarget {
     All,
     One(ContractAddress),

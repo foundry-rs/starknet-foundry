@@ -2,7 +2,7 @@
 
 ## Installation
 
-Install mdBook 
+Install mdBook
 
 ```shell
 cargo install mdbook

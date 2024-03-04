@@ -1,11 +1,11 @@
 # `stop_mock_call`
 
-> `fn stop_mock_call(contract_address: ContractAddress, function_name: felt252)`
+> `fn stop_mock_call(contract_address: ContractAddress, function_selector: felt252)`
 
-Cancels the [`start_mock_call`](./start_mock_call.md) for the function `function_name` of a contract at the given address.
+Cancels the [`start_mock_call`](./start_mock_call.md) for the function `function_selector` of a contract at the given address.
 
 - `contract_address` - target contract address
-- `function_name` - name of the function
+- `function_selector` - selector of the function
 
 ```rust
 use snforge_std::stop_mock_call;
@@ -14,7 +14,7 @@ use snforge_std::stop_mock_call;
 fn test_mock_call() {
     // ...
     
-    stop_mock_call(contract_address, function_name);
+    stop_mock_call(contract_address, selector!("my_function"));
     
     // ...
 }
