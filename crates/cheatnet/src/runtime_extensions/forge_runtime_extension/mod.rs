@@ -776,6 +776,29 @@ pub fn update_top_call_execution_resources(runtime: &mut ForgeRuntime) {
     top_call.borrow_mut().used_execution_resources = all_execution_resources;
 }
 
+pub fn update_top_call_l1_resources(runtime: &mut ForgeRuntime) {
+    let all_l2_l1_message_sizes = runtime
+        .extended_runtime
+        .extended_runtime
+        .extended_runtime
+        .hint_handler
+        .l2_to_l1_messages
+        .iter()
+        .map(|ordered_message| ordered_message.message.payload.0.len())
+        .collect();
+
+    // call representing the test code
+    let top_call = runtime
+        .extended_runtime
+        .extended_runtime
+        .extension
+        .cheatnet_state
+        .trace_data
+        .current_call_stack
+        .top();
+    top_call.borrow_mut().used_l1_resources.l2_l1_message_sizes = all_l2_l1_message_sizes;
+}
+
 #[must_use]
 pub fn get_all_used_resources(runtime: ForgeRuntime) -> UsedResources {
     let starknet_runtime = runtime.extended_runtime.extended_runtime.extended_runtime;

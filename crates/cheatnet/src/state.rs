@@ -1,12 +1,14 @@
 use crate::forking::state::ForkStateReader;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
-    subtract_execution_resources, CallResult,
+    subtract_execution_resources, AddressOrClassHash, CallResult,
 };
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spoof::TxInfoMock;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::{
     Event, SpyTarget,
 };
-use blockifier::execution::entry_point::{CallEntryPoint, ExecutionResources};
+use blockifier::execution::entry_point::{
+    CallEntryPoint, EntryPointExecutionResult, ExecutionResources,
+};
 use blockifier::{
     execution::contract_class::ContractClass,
     state::state_api::{StateReader, StateResult},
@@ -18,6 +20,7 @@ use runtime::starknet::state::DictStateReader;
 use starknet_api::core::EntryPointSelector;
 
 use crate::constants::{build_test_entry_point, TEST_CONTRACT_CLASS_HASH};
+use blockifier::execution::call_info::CallInfo;
 use blockifier::state::errors::StateError::UndeclaredClassHash;
 use starknet_api::transaction::ContractAddressSalt;
 use starknet_api::{
@@ -30,6 +33,7 @@ use std::cell::{Ref, RefCell};
 use std::collections::HashMap;
 use std::hash::BuildHasher;
 use std::rc::Rc;
+use trace_data::L1Resources;
 
 // Specifies which contracts to target
 // with a cheatcode function
@@ -153,6 +157,7 @@ pub struct CallTrace {
     pub entry_point: CallEntryPoint,
     // These also include resources used by internal calls
     pub used_execution_resources: ExecutionResources,
+    pub used_l1_resources: L1Resources,
     pub nested_calls: Vec<Rc<RefCell<CallTrace>>>,
     pub result: CallResult,
 }
@@ -258,6 +263,7 @@ impl Default for CheatnetState {
         let test_call = Rc::new(RefCell::new(CallTrace {
             entry_point: test_code_entry_point,
             used_execution_resources: Default::default(),
+            used_l1_resources: Default::default(),
             nested_calls: vec![],
             result: CallResult::Success { ret_data: vec![] },
         }));
@@ -391,6 +397,7 @@ impl TraceData {
         let new_call = Rc::new(RefCell::new(CallTrace {
             entry_point,
             used_execution_resources: Default::default(),
+            used_l1_resources: Default::default(),
             nested_calls: vec![],
             result: CallResult::Success { ret_data: vec![] },
         }));
@@ -413,7 +420,8 @@ impl TraceData {
     pub fn exit_nested_call(
         &mut self,
         resources_used_after_call: &ExecutionResources,
-        call_result: CallResult,
+        execution_result: &EntryPointExecutionResult<CallInfo>,
+        identifier: &AddressOrClassHash,
     ) {
         let CallStackElement {
             resources_used_before_call,
@@ -424,7 +432,19 @@ impl TraceData {
         let mut last_call = last_call.borrow_mut();
         last_call.used_execution_resources =
             subtract_execution_resources(resources_used_after_call, &resources_used_before_call);
-        last_call.result = call_result;
+
+        last_call.used_l1_resources.l2_l1_message_sizes = execution_result.as_ref().map_or_else(
+            |_| vec![],
+            |call_info| {
+                let messages = &call_info.execution.l2_to_l1_messages;
+                messages
+                    .iter()
+                    .map(|ordered_message| ordered_message.message.payload.0.len())
+                    .collect()
+            },
+        );
+
+        last_call.result = CallResult::from_execution_result(execution_result, identifier);
     }
 }
 
