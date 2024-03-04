@@ -1,11 +1,13 @@
 #[starknet::interface]
 trait IConstructorSpoofChecker<TContractState> {
     fn get_stored_tx_hash(self: @TContractState) -> felt252;
+    fn get_transaction_hash(self: @TContractState) -> felt252;
 }
 
 #[starknet::contract]
 mod ConstructorSpoofChecker {
     use box::BoxTrait;
+
     #[storage]
     struct Storage {
         stored_tx_hash: felt252,
@@ -21,6 +23,10 @@ mod ConstructorSpoofChecker {
     impl IConstructorSpoofChecker of super::IConstructorSpoofChecker<ContractState> {
         fn get_stored_tx_hash(self: @ContractState) -> felt252 {
             self.stored_tx_hash.read()
+        }
+
+        fn get_transaction_hash(self: @ContractState) -> felt252 {
+            starknet::get_tx_info().unbox().transaction_hash
         }
     }
 }
