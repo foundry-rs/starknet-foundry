@@ -1965,6 +1965,7 @@ dependencies = [
  "test-case",
  "thiserror",
  "tokio",
+ "trace-data",
  "url",
 ]
 
@@ -6217,7 +6218,7 @@ checksum = "b6bc1c9ce2b5135ac7f93c72918fc37feb872bdc6a5533a8b85eb4b86bfdae52"
 [[package]]
 name = "trace-data"
 version = "0.1.0"
-source = "git+https://github.com/software-mansion/cairo-profiler/?rev=6fa3f15#6fa3f15a3df4fd078e2164d007a0565054f0df55"
+source = "git+https://github.com/software-mansion/cairo-profiler/?rev=d014aad#d014aadb02742afe4adc0adb85a5c129ff657b77"
 dependencies = [
  "serde",
 ]

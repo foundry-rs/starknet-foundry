@@ -36,7 +36,8 @@ use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::Use
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::CallToBlockifierExtension;
 use cheatnet::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
 use cheatnet::runtime_extensions::forge_runtime_extension::{
-    get_all_used_resources, update_top_call_execution_resources, ForgeExtension, ForgeRuntime,
+    get_all_used_resources, update_top_call_execution_resources, update_top_call_l1_resources,
+    ForgeExtension, ForgeRuntime,
 };
 use cheatnet::state::{BlockInfoReader, CallTrace, CheatnetState, ExtendedStateReader};
 use itertools::chain;
@@ -295,6 +296,7 @@ pub fn run_test_case(
     let call_trace_ref = get_call_trace_ref(&mut forge_runtime);
 
     update_top_call_execution_resources(&mut forge_runtime);
+    update_top_call_l1_resources(&mut forge_runtime);
     let used_resources = get_all_used_resources(forge_runtime);
     let gas = calculate_used_gas(&block_context, &mut cached_state, &used_resources)?;
 
