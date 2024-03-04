@@ -2,7 +2,7 @@
 
 > `fn stop_prank(target: CheatTarget)`
 
-Cancels the [`start_prank`](./start_prank.md) for the given target.
+Cancels the [`prank`](./prank.md) / [`start_prank`](./start_prank.md) for the given target.
 
 - `contract_address` - target contract address
 
