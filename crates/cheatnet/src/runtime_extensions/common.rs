@@ -20,10 +20,7 @@ pub fn create_entry_point_selector(entry_point_selector: &Felt252) -> EntryPoint
 pub fn sum_syscall_counters(a: &SyscallCounter, b: &SyscallCounter) -> SyscallCounter {
     let mut result = a.clone();
     for (key, value) in b {
-        match result.get(key) {
-            None => result.insert(*key, *value),
-            Some(x) => result.insert(*key, value + x),
-        };
+        *result.entry(key).or_default() += *value;
     }
     result
 }
