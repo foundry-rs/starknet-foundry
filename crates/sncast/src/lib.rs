@@ -8,7 +8,7 @@ use serde_json::Value;
 use starknet::core::types::{
     BlockId, BlockTag,
     BlockTag::{Latest, Pending},
-    ContractErrorData, FieldElement,
+    ContractClass, ContractErrorData, FieldElement,
     StarknetError::{ClassHashNotFound, ContractNotFound, TransactionHashNotFound},
 };
 use starknet::core::utils::UdcUniqueness::{NotUnique, Unique};
@@ -48,6 +48,7 @@ struct Account {
     salt: Option<String>,
     deployed: Option<bool>,
     class_hash: Option<String>,
+    legacy: Option<bool>,
 }
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
@@ -331,6 +332,54 @@ fn get_account_from_accounts_file<'a>(
     );
 
     Ok(account)
+}
+
+pub async fn check_if_legacy_contract(
+    class_hash: Option<FieldElement>,
+    address: FieldElement,
+    provider: &JsonRpcClient<HttpTransport>,
+) -> Result<bool> {
+    let class_hash = extract_class_hash_or_fetch(class_hash, address, provider).await?;
+    let contract_class = provider
+        .get_class(BlockId::Tag(Pending), class_hash)
+        .await?;
+
+    Ok(is_legacy_contract(&contract_class))
+}
+
+async fn extract_class_hash_or_fetch(
+    class_hash: Option<FieldElement>,
+    address: FieldElement,
+    provider: &JsonRpcClient<HttpTransport>,
+) -> Result<FieldElement> {
+    match class_hash {
+        Some(class_hash) => Ok(class_hash),
+        None => get_class_hash_by_address(provider, address)
+            .await?
+            .ok_or_else(|| anyhow!("No class hash exists for the provided address {address:#x}")),
+    }
+}
+
+pub async fn get_class_hash_by_address(
+    provider: &JsonRpcClient<HttpTransport>,
+    address: FieldElement,
+) -> Result<Option<FieldElement>> {
+    match provider
+        .get_class_hash_at(BlockId::Tag(Pending), address)
+        .await
+    {
+        Ok(class_hash) => Ok(Some(class_hash)),
+        Err(StarknetError(ContractNotFound)) => Ok(None),
+        Err(err) => Err(handle_rpc_error(err)),
+    }
+}
+
+#[must_use]
+pub fn is_legacy_contract(contract_class: &ContractClass) -> bool {
+    match contract_class {
+        ContractClass::Legacy(_) => true,
+        ContractClass::Sierra(_) => false,
+    }
 }
 
 pub fn get_block_id(value: &str) -> Result<BlockId> {

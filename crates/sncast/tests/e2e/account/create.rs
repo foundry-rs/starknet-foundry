@@ -50,6 +50,7 @@ pub async fn test_happy_case() {
     assert!(contents.contains("address"));
     assert!(contents.contains("salt"));
     assert!(contents.contains("class_hash"));
+    assert!(contents.contains("legacy"));
 }
 
 #[tokio::test]
@@ -121,6 +122,7 @@ pub async fn test_happy_case_generate_salt() {
     assert!(contents.contains("address"));
     assert!(contents.contains("salt"));
     assert!(contents.contains("class_hash"));
+    assert!(contents.contains("legacy"));
 }
 
 #[tokio::test]
@@ -195,6 +197,7 @@ pub async fn test_happy_case_accounts_file_already_exists() {
         .expect("Unable to read created file");
     assert!(contents.contains("my_account"));
     assert!(contents.contains("deployed"));
+    assert!(contents.contains("legacy"));
 }
 
 #[tokio::test]
@@ -290,6 +293,7 @@ pub async fn test_happy_case_keystore() {
     assert!(contents.contains("\"deployment\": {"));
     assert!(contents.contains("\"variant\": {"));
     assert!(contents.contains("\"version\": 1"));
+    assert!(contents.contains("\"legacy\": true"));
 }
 
 #[tokio::test]
@@ -329,6 +333,7 @@ pub async fn test_happy_case_keystore_add_profile() {
     assert!(contents.contains("\"deployment\": {"));
     assert!(contents.contains("\"variant\": {"));
     assert!(contents.contains("\"version\": 1"));
+    assert!(contents.contains("\"legacy\": true"));
 
     let contents = fs::read_to_string(tempdir.path().join("snfoundry.toml"))
         .expect("Unable to read snfoundry.toml");
@@ -483,6 +488,7 @@ pub async fn test_happy_case_keystore_int_format() {
     assert!(contents.contains("\"deployment\": {"));
     assert!(contents.contains("\"variant\": {"));
     assert!(contents.contains("\"version\": 1"));
+    assert!(contents.contains("\"legacy\": true"));
 }
 
 #[tokio::test]
@@ -522,4 +528,5 @@ pub async fn test_happy_case_keystore_hex_format() {
     assert!(contents.contains("\"deployment\": {"));
     assert!(contents.contains("\"variant\": {"));
     assert!(contents.contains("\"version\": 1"));
+    assert!(contents.contains("\"legacy\": true"));
 }
