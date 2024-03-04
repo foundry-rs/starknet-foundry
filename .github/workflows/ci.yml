@@ -19,7 +19,7 @@ jobs:
       - uses: software-mansion/setup-scarb@v1.3.2
       - name: Install universal-sierra-compiler
         run: |
-          curl -L https://raw.githubusercontent.com/software-mansion/universal-sierra-compiler/master/scripts/install.sh | sh -s v2.0.0-rc.0
+          curl -L https://raw.githubusercontent.com/software-mansion/universal-sierra-compiler/master/scripts/install.sh | sh
       - run: cargo test --release --lib -p forge
       - run: cargo test --release --bin snforge
       - run: cargo test --release integration -p forge
@@ -56,7 +56,7 @@ jobs:
       - uses: software-mansion/setup-scarb@v1.3.2
       - name: Install universal-sierra-compiler
         run: |
-          curl -L https://raw.githubusercontent.com/software-mansion/universal-sierra-compiler/master/scripts/install.sh | sh -s v2.0.0-rc.0
+          curl -L https://raw.githubusercontent.com/software-mansion/universal-sierra-compiler/master/scripts/install.sh | sh
       - run: cargo test --release e2e -p forge
 
   test-forge-runner:
@@ -78,7 +78,7 @@ jobs:
       - uses: software-mansion/setup-scarb@v1.3.2
       - name: Install universal-sierra-compiler
         run: |
-          curl -L https://raw.githubusercontent.com/software-mansion/universal-sierra-compiler/master/scripts/install.sh | sh -s v2.0.0-rc.0
+          curl -L https://raw.githubusercontent.com/software-mansion/universal-sierra-compiler/master/scripts/install.sh | sh
       - name: Run Cheatnet tests
         run: cargo test --release -p cheatnet
 
@@ -98,7 +98,7 @@ jobs:
       - uses: software-mansion/setup-scarb@v1.3.2
       - name: Install universal-sierra-compiler
         run: |
-          curl -L https://raw.githubusercontent.com/software-mansion/universal-sierra-compiler/master/scripts/install.sh | sh -s v2.0.0-rc.0
+          curl -L https://raw.githubusercontent.com/software-mansion/universal-sierra-compiler/master/scripts/install.sh | sh
       - name: Run tests
         run: cargo test --release -p sncast
 
