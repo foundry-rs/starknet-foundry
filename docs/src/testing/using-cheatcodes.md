@@ -226,3 +226,70 @@ fn mock_constructor_with_prank() {
     contract.deploy(constructor_arguments).unwrap();
 }
 ```
+
+### Setting Cheatcode Span
+
+Sometimes it's useful to have a cheatcode work only for a certain number of calls. 
+
+That's where `CheatSpan` comes in handy.
+
+```rust
+#[derive(Drop, Serde, PartialEq)]
+enum CheatSpan {
+    Indefinite: (),
+    Calls: usize,
+}
+```
+
+To set span for a cheatcode, use `prank` / `warp` / `roll` / etc.
+
+```rust
+prank(CheatTarget::One(contract_address), new_caller_address, CheatSpan::Calls(1))
+```
+
+Calling a cheatcode with `CheatSpan::Calls(N)` is going to activate the cheatcode for `N` calls to a contract, after which `stop_prank` will be automatically called.
+
+Of course the cheatcode can still be stopped before its `CheatSpan` goes down to 0 - simply call `stop_prank` manually.
+
+> ℹ️ **Info**
+>
+> Using `start_prank` is **equivalent** to using `prank` with `CheatSpan::Indefinite`.
+
+
+To better understand the functionality of `CheatSpan`, here's a full example:
+
+```rust
+use snforge_std::{
+    declare, ContractClass, ContractClassTrait, prank, CheatSpan, CheatTarget
+};
+
+#[test]
+#[feature("safe_dispatcher")]
+fn call_and_invoke() {
+    let contract = declare("HelloStarknet");
+    let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+    let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
+
+    let balance = safe_dispatcher.get_balance().unwrap();
+    assert_eq!(balance, 0);
+
+    let pranked_address: ContractAddress = 123.try_into().unwrap();
+    // Prank the contract_address for a span of 2 calls
+    prank(CheatTarget::One(contract_address), pranked_address, CheatSpan::Calls(2));
+
+    // Call #1 should succeed
+    let call_1_result = safe_dispatcher.increase_balance(100);
+    assert!(call_1_result.is_ok());
+
+    // Call #2 should succeed
+    let call_2_result = safe_dispatcher.increase_balance(100);
+    assert!(call_2_result.is_ok());
+
+    // Call #3 should fail, as the prank cheatcode has been stopped
+    let call_3_result = safe_dispatcher.increase_balance(100);
+    assert!(call_3_result.is_err());
+
+    let balance = safe_dispatcher.get_balance().unwrap();
+    assert_eq!(balance, 200);
+}
+```
