@@ -86,6 +86,7 @@ impl Contract {
             .iter()
             .find(|package| package.name == "contract")
             .unwrap();
+
         let contract = get_contracts_map(&scarb_metadata, &package.id, None)
             .unwrap()
             .remove(&self.name)

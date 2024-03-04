@@ -58,13 +58,14 @@ fn keep_storage() {
     let contract_address =
         deploy_wrapper(&mut cached_state, &mut runtime_state, &class_hash_a, &[]).unwrap();
 
-    let selector = felt_selector_from_name("set");
+    let set_selector = felt_selector_from_name("set");
+    let get_selector = felt_selector_from_name("get");
 
     let output = call_contract(
         &mut cached_state,
         &mut runtime_state,
         &contract_address,
-        &selector,
+        &set_selector,
         &[456.into()],
     );
 
@@ -74,7 +75,7 @@ fn keep_storage() {
         &mut cached_state,
         &mut runtime_state,
         &contract_address,
-        &selector,
+        &get_selector,
         &[],
     );
 
@@ -84,13 +85,11 @@ fn keep_storage() {
         .cheatnet_state
         .replace_class_for_contract(contract_address, class_hash_b);
 
-    let selector = felt_selector_from_name("get");
-
     let output = call_contract(
         &mut cached_state,
         &mut runtime_state,
         &contract_address,
-        &selector,
+        &get_selector,
         &[],
     );
 
