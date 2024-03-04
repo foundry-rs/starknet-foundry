@@ -16,12 +16,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - `var()`, `read_txt()`, `read_json()`, `FileTrait::new()`, `declare()` now use regular strings (`ByteArray`) instead of short strings (`felt252`)
+- `start_mock_call()`, `stop_mock_call()`, `L1Handler` now use selector (`selector!()`) instead of names
 
 ### Cast
 
 #### Changed
 
-- `declare()` now use regular strings (`ByteArray`) instead of short strings (`felt252`)
+- `declare()` now uses regular strings (`ByteArray`) instead of short strings (`felt252`)
+- `call()` and `invoke()` now require function selector (`selector!()`) instead of function name in scripts (sncast_std)
 
 #### Removed
 

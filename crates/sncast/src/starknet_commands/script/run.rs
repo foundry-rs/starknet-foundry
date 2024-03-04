@@ -19,6 +19,7 @@ use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use clap::Args;
+use conversions::byte_array::ByteArray;
 use conversions::{FromConv, IntoConv};
 use itertools::chain;
 use runtime::starknet::context::{build_context, BlockInfo};
@@ -35,13 +36,151 @@ use shared::print::print_as_warning;
 use shared::utils::build_readable_text;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::SCRIPT_LIB_ARTIFACT_NAME;
-use sncast::response::errors::handle_starknet_command_error;
+use sncast::response::errors::{
+    handle_starknet_command_error, SNCastProviderError, SNCastStarknetError, StarknetCommandError,
+};
 use sncast::response::structs::ScriptRunResponse;
+use sncast::{TransactionError, WaitForTransactionError};
 use starknet::accounts::Account;
 use starknet::core::types::{BlockId, BlockTag::Pending, FieldElement};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use tokio::runtime::Runtime;
+
+type ScriptStarknetContractArtifacts = StarknetContractArtifacts;
+
+pub trait SerializeAsFelt252 {
+    fn serialize_as_felt252(&self) -> Vec<Felt252>;
+}
+
+impl SerializeAsFelt252 for StarknetCommandError {
+    fn serialize_as_felt252(&self) -> Vec<Felt252> {
+        match self {
+            StarknetCommandError::UnknownError(err) => {
+                let mut res = vec![Felt252::from(0)];
+                res.extend(ByteArray::from(err.to_string().as_str()).serialize_no_magic());
+                res
+            }
+            StarknetCommandError::ContractArtifactsNotFound(err) => {
+                let mut res = vec![Felt252::from(1)];
+                res.extend(ByteArray::from(err.data.as_str()).serialize_no_magic());
+                res
+            }
+            StarknetCommandError::WaitForTransactionError(err) => {
+                let mut res = vec![Felt252::from(2)];
+                res.extend(err.serialize_as_felt252());
+                res
+            }
+            StarknetCommandError::ProviderError(err) => {
+                let mut res = vec![Felt252::from(3)];
+                res.extend(err.serialize_as_felt252());
+                res
+            }
+        }
+    }
+}
+
+impl SerializeAsFelt252 for SNCastProviderError {
+    fn serialize_as_felt252(&self) -> Vec<Felt252> {
+        match self {
+            SNCastProviderError::StarknetError(err) => {
+                let mut res = vec![Felt252::from(0)];
+                res.extend(err.serialize_as_felt252());
+                res
+            }
+            SNCastProviderError::RateLimited => {
+                vec![Felt252::from(1)]
+            }
+            SNCastProviderError::UnknownError(err) => {
+                let mut res = vec![Felt252::from(2)];
+                res.extend(ByteArray::from(err.to_string().as_str()).serialize_no_magic());
+                res
+            }
+        }
+    }
+}
+
+impl SerializeAsFelt252 for SNCastStarknetError {
+    fn serialize_as_felt252(&self) -> Vec<Felt252> {
+        match self {
+            SNCastStarknetError::FailedToReceiveTransaction => vec![Felt252::from(0)],
+            SNCastStarknetError::ContractNotFound => vec![Felt252::from(1)],
+            SNCastStarknetError::BlockNotFound => vec![Felt252::from(2)],
+            SNCastStarknetError::InvalidTransactionIndex => vec![Felt252::from(3)],
+            SNCastStarknetError::ClassHashNotFound => vec![Felt252::from(4)],
+            SNCastStarknetError::TransactionHashNotFound => vec![Felt252::from(5)],
+            SNCastStarknetError::ContractError(err) => {
+                let mut res = vec![Felt252::from(6)];
+                res.extend(ByteArray::from(err.revert_error.as_str()).serialize_no_magic());
+                res
+            }
+            SNCastStarknetError::TransactionExecutionError(err) => {
+                let mut res = vec![Felt252::from(7), Felt252::from(err.transaction_index)];
+                res.extend(ByteArray::from(err.execution_error.as_str()).serialize_no_magic());
+                res
+            }
+            SNCastStarknetError::ClassAlreadyDeclared => vec![Felt252::from(8)],
+            SNCastStarknetError::InvalidTransactionNonce => vec![Felt252::from(9)],
+            SNCastStarknetError::InsufficientMaxFee => vec![Felt252::from(10)],
+            SNCastStarknetError::InsufficientAccountBalance => vec![Felt252::from(11)],
+            SNCastStarknetError::ValidationFailure(err) => {
+                let mut res = vec![Felt252::from(12)];
+                res.extend(ByteArray::from(err.as_str()).serialize_no_magic());
+                res
+            }
+            SNCastStarknetError::CompilationFailed => vec![Felt252::from(13)],
+            SNCastStarknetError::ContractClassSizeIsTooLarge => vec![Felt252::from(14)],
+            SNCastStarknetError::NonAccount => vec![Felt252::from(15)],
+            SNCastStarknetError::DuplicateTx => vec![Felt252::from(16)],
+            SNCastStarknetError::CompiledClassHashMismatch => vec![Felt252::from(17)],
+            SNCastStarknetError::UnsupportedTxVersion => vec![Felt252::from(18)],
+            SNCastStarknetError::UnsupportedContractClassVersion => vec![Felt252::from(19)],
+            SNCastStarknetError::UnexpectedError(err) => {
+                let mut res = vec![Felt252::from(20)];
+                res.extend(ByteArray::from(err.to_string().as_str()).serialize_no_magic());
+                res
+            }
+        }
+    }
+}
+
+impl SerializeAsFelt252 for WaitForTransactionError {
+    fn serialize_as_felt252(&self) -> Vec<Felt252> {
+        match self {
+            WaitForTransactionError::TransactionError(err) => {
+                let mut res = vec![Felt252::from(0)];
+                res.extend(err.serialize_as_felt252());
+                res
+            }
+            WaitForTransactionError::TimedOut => vec![Felt252::from(1)],
+            WaitForTransactionError::ProviderError(err) => {
+                let mut res = vec![Felt252::from(2)];
+                res.extend(err.serialize_as_felt252());
+                res
+            }
+        }
+    }
+}
+
+impl SerializeAsFelt252 for TransactionError {
+    fn serialize_as_felt252(&self) -> Vec<Felt252> {
+        match self {
+            TransactionError::Rejected => vec![Felt252::from(0)],
+            TransactionError::Reverted(err) => {
+                let mut res = vec![Felt252::from(1)];
+                res.extend(ByteArray::from(err.data.as_str()).serialize_no_magic());
+                res
+            }
+        }
+    }
+}
+
+fn handle_starknet_command_error_in_script(err: &StarknetCommandError) -> Vec<Felt252> {
+    let error_msg_serialized = err.serialize_as_felt252();
+    let mut res: Vec<Felt252> = vec![Felt252::from(1)];
+    res.extend(error_msg_serialized);
+    res
+}
 
 #[derive(Args, Debug)]
 #[command(about = "Execute a deployment script")]
@@ -53,7 +192,6 @@ pub struct Run {
     #[clap(long)]
     pub package: Option<String>,
 }
-type ScriptStarknetContractArtifacts = StarknetContractArtifacts;
 
 pub struct CastScriptExtension<'a> {
     pub hints: &'a HashMap<String, Hint>,
@@ -76,9 +214,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
         let res = match selector {
             "call" => {
                 let contract_address = input_reader.read_felt().into_();
-                let function_name = input_reader
-                    .read_short_string()
-                    .expect("Failed to convert function name to short string");
+                let function_selector = input_reader.read_felt().into_();
                 let calldata = input_reader.read_vec();
                 let calldata_felts: Vec<FieldElement> = calldata
                     .iter()
@@ -89,7 +225,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     .tokio_runtime
                     .block_on(call::call(
                         contract_address,
-                        &function_name,
+                        function_selector,
                         calldata_felts,
                         self.provider,
                         &BlockId::Tag(Pending),
@@ -116,26 +252,30 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     self.config.keystore.clone(),
                 ))?;
 
-                let declare_response = self
-                    .tokio_runtime
-                    .block_on(declare::declare(
-                        &contract_name,
-                        max_fee,
-                        &account,
-                        nonce,
-                        self.artifacts,
-                        WaitForTx {
-                            wait: true,
-                            wait_params: self.config.wait_params,
-                        },
-                    ))
-                    .map_err(handle_starknet_command_error)?;
-
-                let res: Vec<Felt252> = vec![
-                    Felt252::from_(declare_response.class_hash.0),
-                    Felt252::from_(declare_response.transaction_hash.0),
-                ];
-                Ok(CheatcodeHandlingResult::Handled(res))
+                match self.tokio_runtime.block_on(declare::declare(
+                    &contract_name,
+                    max_fee,
+                    &account,
+                    nonce,
+                    self.artifacts,
+                    WaitForTx {
+                        wait: true,
+                        wait_params: self.config.wait_params,
+                    },
+                )) {
+                    Ok(declare_response) => {
+                        let res: Vec<Felt252> = vec![
+                            Felt252::from(0),
+                            Felt252::from_(declare_response.class_hash.0),
+                            Felt252::from_(declare_response.transaction_hash.0),
+                        ];
+                        Ok(CheatcodeHandlingResult::Handled(res))
+                    }
+                    Err(err) => {
+                        let res = handle_starknet_command_error_in_script(&err);
+                        Ok(CheatcodeHandlingResult::Handled(res))
+                    }
+                }
             }
             "deploy" => {
                 let class_hash = input_reader.read_felt().into_();
@@ -163,34 +303,36 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     self.config.keystore.clone(),
                 ))?;
 
-                let deploy_response = self
-                    .tokio_runtime
-                    .block_on(deploy::deploy(
-                        class_hash,
-                        constructor_calldata,
-                        salt,
-                        unique,
-                        max_fee,
-                        &account,
-                        nonce,
-                        WaitForTx {
-                            wait: true,
-                            wait_params: self.config.wait_params,
-                        },
-                    ))
-                    .map_err(handle_starknet_command_error)?;
-
-                let res: Vec<Felt252> = vec![
-                    Felt252::from_(deploy_response.contract_address.0),
-                    Felt252::from_(deploy_response.transaction_hash.0),
-                ];
-                Ok(CheatcodeHandlingResult::Handled(res))
+                match self.tokio_runtime.block_on(deploy::deploy(
+                    class_hash,
+                    constructor_calldata,
+                    salt,
+                    unique,
+                    max_fee,
+                    &account,
+                    nonce,
+                    WaitForTx {
+                        wait: true,
+                        wait_params: self.config.wait_params,
+                    },
+                )) {
+                    Ok(deploy_response) => {
+                        let res: Vec<Felt252> = vec![
+                            Felt252::from(0),
+                            Felt252::from_(deploy_response.contract_address.0),
+                            Felt252::from_(deploy_response.transaction_hash.0),
+                        ];
+                        Ok(CheatcodeHandlingResult::Handled(res))
+                    }
+                    Err(err) => {
+                        let res = handle_starknet_command_error_in_script(&err);
+                        Ok(CheatcodeHandlingResult::Handled(res))
+                    }
+                }
             }
             "invoke" => {
                 let contract_address = input_reader.read_felt().into_();
-                let entry_point_name = input_reader
-                    .read_short_string()
-                    .expect("Failed to convert entry point name to short string");
+                let function_selector = input_reader.read_felt().into_();
                 let calldata: Vec<FieldElement> = input_reader
                     .read_vec()
                     .iter()
@@ -214,7 +356,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     .tokio_runtime
                     .block_on(invoke::invoke(
                         contract_address,
-                        &entry_point_name,
+                        function_selector,
                         calldata,
                         max_fee,
                         &account,

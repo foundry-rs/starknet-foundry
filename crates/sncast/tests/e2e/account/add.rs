@@ -3,6 +3,7 @@ use crate::helpers::runner::runner;
 use camino::Utf8PathBuf;
 use indoc::indoc;
 use serde_json::json;
+use shared::test_utils::output_assert::assert_stderr_contains;
 use std::fs;
 use tempfile::tempdir;
 
@@ -183,11 +184,15 @@ pub async fn test_invalid_public_key() {
     ];
 
     let snapbox = runner(&args);
+    let output = snapbox.assert().success();
 
-    snapbox.assert().stderr_matches(indoc! {r"
+    assert_stderr_contains(
+        output,
+        indoc! {r"
         command: account add
         error: The private key does not match the public key
-    "});
+        "},
+    );
 }
 
 #[tokio::test]
@@ -203,12 +208,16 @@ pub async fn test_missing_arguments() {
     ];
 
     let snapbox = runner(&args);
-    snapbox.assert().stderr_matches(indoc! {r"
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
         error: the following required arguments were not provided:
           --address <ADDRESS>
           <--private-key <PRIVATE_KEY>|--private-key-file <PRIVATE_KEY_FILE_PATH>>
-        ...
-    "});
+        "},
+    );
 }
 
 #[tokio::test]
@@ -278,10 +287,12 @@ pub async fn test_accept_only_one_private_key() {
     ];
 
     let snapbox = runner(&args);
-    snapbox.assert().stderr_matches(indoc! {r"
-        error: the argument '--private-key <PRIVATE_KEY>' cannot be used with '--private-key-file <PRIVATE_KEY_FILE_PATH>'
-        ...
-    "});
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(
+        output,
+        "error: the argument '--private-key <PRIVATE_KEY>' cannot be used with '--private-key-file <PRIVATE_KEY_FILE_PATH>'"
+    );
 }
 
 #[tokio::test]
@@ -301,11 +312,15 @@ pub async fn test_invalid_private_key_file_path() {
     ];
 
     let snapbox = runner(&args);
+    let output = snapbox.assert().success();
 
-    snapbox.assert().stderr_matches(indoc! {r"
+    assert_stderr_contains(
+        output,
+        indoc! {r"
         command: account add
         error: Failed to obtain private key from the file [..]
-    "});
+        "},
+    );
 }
 
 #[tokio::test]
@@ -335,11 +350,15 @@ pub async fn test_invalid_private_key_in_file() {
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
+    let output = snapbox.assert().success();
 
-    snapbox.assert().stderr_matches(indoc! {r"
+    assert_stderr_contains(
+        output,
+        indoc! {r"
         command: account add
         error: Failed to obtain private key from the file my_private_key: invalid character
-    "});
+        "},
+    );
 }
 
 #[tokio::test]

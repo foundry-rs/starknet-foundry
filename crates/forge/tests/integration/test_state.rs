@@ -681,7 +681,7 @@ fn spy_struct_events() {
 #[test]
 fn inconsistent_syscall_pointers() {
     let test = test_case!(indoc!(
-        r"
+        r#"
         use starknet::ContractAddress;
         use starknet::info::get_block_number;
         use snforge_std::start_mock_call;
@@ -695,12 +695,12 @@ fn inconsistent_syscall_pointers() {
         fn inconsistent_syscall_pointers() {
             // verifies if SyscallHandler.syscal_ptr is incremented correctly when calling a contract
             let address = 'address'.try_into().unwrap();
-            start_mock_call(address, 'get_value', 55);
+            start_mock_call(address, selector!("get_value"), 55);
             let contract = IContractDispatcher { contract_address: address };
             contract.get_value(address);
             get_block_number();
         }
-    "
+    "#
     ),);
     let result = run_test_case(&test);
 

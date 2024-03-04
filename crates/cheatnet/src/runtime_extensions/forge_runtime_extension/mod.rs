@@ -174,7 +174,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
             }
             "start_mock_call" => {
                 let contract_address = input_reader.read_felt().into_();
-                let function_name = input_reader.read_felt();
+                let function_selector = input_reader.read_felt();
 
                 let ret_data = input_reader.read_vec();
 
@@ -182,18 +182,18 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .extended_runtime
                     .extension
                     .cheatnet_state
-                    .start_mock_call(contract_address, &function_name, &ret_data);
+                    .start_mock_call(contract_address, function_selector, &ret_data);
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
             "stop_mock_call" => {
                 let contract_address = input_reader.read_felt().into_();
-                let function_name = input_reader.read_felt();
+                let function_selector = input_reader.read_felt();
 
                 extended_runtime
                     .extended_runtime
                     .extension
                     .cheatnet_state
-                    .stop_mock_call(contract_address, &function_name);
+                    .stop_mock_call(contract_address, function_selector);
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
             "start_spoof" => {
@@ -357,7 +357,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
             }
             "l1_handler_execute" => {
                 let contract_address = input_reader.read_felt().into_();
-                let function_name = input_reader.read_felt();
+                let function_selector = input_reader.read_felt();
                 let from_address = input_reader.read_felt();
 
                 let payload = input_reader.read_vec();
@@ -372,7 +372,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     syscall_handler,
                     &mut runtime_state,
                     contract_address,
-                    &function_name,
+                    &function_selector,
                     &from_address,
                     &payload,
                 ) {
@@ -695,7 +695,7 @@ fn serialize_call_result(call_result: &CallResult, output: &mut Vec<Felt252>) {
                     serialize_failure_data(0, panic_data.iter().cloned(), panic_data.len(), output);
                 }
                 CallFailure::Error { msg } => {
-                    let data = ByteArray::from(msg.as_str()).serialize();
+                    let data = ByteArray::from(msg.as_str()).serialize_with_magic();
                     let len = data.len();
                     serialize_failure_data(1, data, len, output);
                 }
@@ -763,6 +763,29 @@ pub fn update_top_call_execution_resources(runtime: &mut ForgeRuntime) {
         .current_call_stack
         .top();
     top_call.borrow_mut().used_execution_resources = all_execution_resources;
+}
+
+pub fn update_top_call_l1_resources(runtime: &mut ForgeRuntime) {
+    let all_l2_l1_message_sizes = runtime
+        .extended_runtime
+        .extended_runtime
+        .extended_runtime
+        .hint_handler
+        .l2_to_l1_messages
+        .iter()
+        .map(|ordered_message| ordered_message.message.payload.0.len())
+        .collect();
+
+    // call representing the test code
+    let top_call = runtime
+        .extended_runtime
+        .extended_runtime
+        .extension
+        .cheatnet_state
+        .trace_data
+        .current_call_stack
+        .top();
+    top_call.borrow_mut().used_l1_resources.l2_l1_message_sizes = all_l2_l1_message_sizes;
 }
 
 #[must_use]

@@ -91,6 +91,7 @@ fn check_vm_resources_and_easily_unifiable_syscalls(
     assert!(current_resources.gt_eq_than(&sum_child_resources));
     let resource_diff = current_resources - &sum_child_resources;
     assert_correct_diff_for_builtins_and_easily_unifiable_syscalls(&resource_diff);
+    assert_l2_l1_messages(call_trace);
 
     current_resources
 }
@@ -133,6 +134,19 @@ fn assert_correct_diff_for_builtins_and_easily_unifiable_syscalls(
             "Incorrect diff for {builtin:?}"
         );
     }
+}
+
+fn assert_l2_l1_messages(call_trace: &ProfilerCallTrace) {
+    assert_eq!(
+        call_trace.used_l1_resources.l2_l1_message_sizes.len(),
+        1,
+        "Every call should have one message"
+    );
+    assert_eq!(
+        call_trace.used_l1_resources.l2_l1_message_sizes,
+        vec![2],
+        "Message should have payload of length 2"
+    );
 }
 
 // When sth fails in the functions below and you didn't change anything in the cairo code it is a BUG.

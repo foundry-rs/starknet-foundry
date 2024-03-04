@@ -134,7 +134,7 @@ fn main() {
 
     let invoke_nonce = get_nonce('pending');
     let invoke_result = invoke(
-        deploy_result.contract_address, 'put', array![0x1, 0x2], Option::Some(max_fee), Option::Some(invoke_nonce)
+        deploy_result.contract_address, selector!("put"), array![0x1, 0x2], Option::Some(max_fee), Option::Some(invoke_nonce)
     );
 
     println!("Invoke tx hash is: {}", invoke_result.transaction_hash);

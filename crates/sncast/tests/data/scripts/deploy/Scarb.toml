@@ -1,5 +1,5 @@
 [package]
-name = "deploy_script"
+name = "deploy_test_scripts"
 version = "0.1.0"
 
 [dependencies]

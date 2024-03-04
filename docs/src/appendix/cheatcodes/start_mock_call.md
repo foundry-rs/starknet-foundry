@@ -1,15 +1,15 @@
 # `start_mock_call`
 
-> `fn start_mock_call<T, impl TSerde: serde::Serde<T>, impl TDestruct: Destruct<T>>(contract_address: ContractAddress, function_name: felt252, ret_data: T)`
+> `fn start_mock_call<T, impl TSerde: serde::Serde<T>, impl TDestruct: Destruct<T>>(contract_address: ContractAddress, function_selector: felt252, ret_data: T)`
 
-Mocks contract call to a `function_name` of a contract at the given address. A call to function `function_name` will
+Mocks contract call to a `function_selector` of a contract at the given address. A call to function `function_selector` will
 return data provided in `ret_data` argument.
 
 An address with no contract can be mocked as well. Mock can be canceled with [`stop_mock_call`](./stop_mock_call.md).
 
 - `contract_address` - target contract address
-- `function_name` - name of the function in a contract at the `contract_address` that will be mocked
-- `ret_data` - data to return by the function `function_name`
+- `function_selector` - selector of the function in a contract at the `contract_address` that will be mocked
+- `ret_data` - data to return by the function `function_selector`
 
 > 📝 **Note**
 > Mocks do not have any effect on function calls within the contract itself.
@@ -57,7 +57,7 @@ fn test_mock_call() {
     // ...
 
     let mock_ret_data = 421;
-    start_mock_call(contract_address, 'get_balance', mock_ret_data);
+    start_mock_call(contract_address, selector!("get_balance"), mock_ret_data);
 
     dispatcher.set_balance(13);
     let balance = dispatcher.get_balance();
@@ -117,7 +117,7 @@ fn test_mock_not_implemented() {
     // ...
 
     let mock_ret_data = 42;
-    start_mock_call(contract_address, 'function_not_actually_implemented', mock_ret_data);
+    start_mock_call(contract_address, selector!("function_not_actually_implemented"), mock_ret_data);
 
     let result = dispatcher.call_not_actually_implemented();
     assert(result == 42, 'result != 42');
