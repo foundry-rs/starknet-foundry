@@ -23,10 +23,12 @@ fn second_contract() {
         array![0x1, 0x3],
         Option::None,
         Option::None
-    );
+    )
+        .expect('mapa2 invoke failed');
     assert(invoke_result.transaction_hash != 0, invoke_result.transaction_hash);
 
-    let call_result = call(deploy_result.contract_address, selector!("get"), array![0x1]);
+    let call_result = call(deploy_result.contract_address, selector!("get"), array![0x1])
+        .expect('mapa2 call failed');
     assert(call_result.data == array![0x3], *call_result.data.at(0));
 }
 
@@ -58,10 +60,12 @@ fn main() {
         array![0x1, 0x2],
         Option::Some(max_fee),
         Option::Some(invoke_nonce)
-    );
+    )
+        .expect('mapa invoke failed');
     assert(invoke_result.transaction_hash != 0, invoke_result.transaction_hash);
 
-    let call_result = call(deploy_result.contract_address, selector!("get"), array![0x1]);
+    let call_result = call(deploy_result.contract_address, selector!("get"), array![0x1])
+        .expect('mapa call failed');
     assert(call_result.data == array![0x2], *call_result.data.at(0));
 
     second_contract();
