@@ -7,7 +7,7 @@ use std::collections::HashMap;
 
 pub fn print_error_message(error: &Error) {
     let error_tag = style("ERROR").red();
-    println!("[{error_tag}] {error}");
+    println!("[{error_tag}] {error:#}");
 }
 
 pub(crate) fn print_collected_tests_count(tests_num: usize, package_name: &str) {

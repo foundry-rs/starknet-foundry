@@ -5,6 +5,7 @@ use serde::Deserialize;
 use std::collections::{HashMap, HashSet};
 
 #[allow(clippy::module_name_repetitions)]
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Debug, PartialEq, Default)]
 pub struct ForgeConfig {
     /// Should runner exit after first failed test
@@ -17,6 +18,8 @@ pub struct ForgeConfig {
     pub detailed_resources: bool,
     /// Save execution traces of all test which have passed and are not fuzz tests
     pub save_trace_data: bool,
+    /// Builds profile of all test which have passed and are not fuzz tests
+    pub build_profile: bool,
     /// Fork configuration profiles
     pub fork: Vec<ForkTarget>,
     /// Limit of steps
@@ -47,6 +50,7 @@ impl ForkTarget {
 }
 
 /// Represents forge config deserialized from Scarb.toml using basic types like String etc.
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Deserialize, Debug, PartialEq, Default)]
 pub(crate) struct RawForgeConfig {
     #[serde(default)]
@@ -62,6 +66,9 @@ pub(crate) struct RawForgeConfig {
     #[serde(default)]
     /// Save execution traces of all test which have passed and are not fuzz tests
     pub save_trace_data: bool,
+    #[serde(default)]
+    /// Builds profiles of all test which have passed and are not fuzz tests
+    pub build_profile: bool,
     #[serde(default)]
     /// Fork configuration profiles
     pub fork: Vec<RawForkTarget>,
@@ -132,6 +139,7 @@ impl TryFrom<RawForgeConfig> for ForgeConfig {
             fuzzer_seed: value.fuzzer_seed,
             detailed_resources: value.detailed_resources,
             save_trace_data: value.save_trace_data,
+            build_profile: value.build_profile,
             fork: fork_targets,
             max_n_steps: value.max_n_steps,
         })
