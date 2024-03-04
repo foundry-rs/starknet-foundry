@@ -20,15 +20,18 @@ pub struct TxInfoMock {
 }
 
 impl CheatnetState {
-    #[allow(clippy::too_many_arguments)]
-    pub fn start_spoof(&mut self, target: CheatTarget, tx_info_mock: TxInfoMock) {
+    pub fn spoof(&mut self, target: CheatTarget, tx_info_mock: TxInfoMock, span: CheatSpan) {
         start_cheat(
             &mut self.global_spoof,
             &mut self.spoofed_contracts,
             target,
             tx_info_mock,
-            CheatSpan::Indefinite,
+            span,
         );
+    }
+
+    pub fn start_spoof(&mut self, target: CheatTarget, tx_info_mock: TxInfoMock) {
+        self.spoof(target, tx_info_mock, CheatSpan::Indefinite);
     }
 
     pub fn stop_spoof(&mut self, target: CheatTarget) {
