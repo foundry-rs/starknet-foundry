@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-- [`replace_bytecode` cheatcode](https://github.com/foundry-rs/starknet-foundry/blob/master/docs/src/appendix/cheatcodes/replace_bytecode.md)
+- [`replace_bytecode`](https://foundry-rs.github.io/starknet-foundry/appendix/cheatcodes/replace_bytecode.html)  cheatcode
 - result of the call to the trace
 
 #### Changed
