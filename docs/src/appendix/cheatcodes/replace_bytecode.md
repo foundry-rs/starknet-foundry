@@ -17,7 +17,7 @@ struct Storage {
 }
 
 #[abi(embed_v0)]
-impl IReplaceBytecodeA of super::IReplaceBytecodeA<ContractState> {
+impl IContractA of super::IContract<ContractState> {
     fn get(self: @ContractState) -> felt252 {
         self.value.read()
     }
@@ -37,7 +37,7 @@ struct Storage {
 }
 
 #[abi(embed_v0)]
-impl IReplaceBytecodeB of super::IReplaceBytecodeB<ContractState> {
+impl IContractB of super::IContract<ContractState> {
     fn get(self: @ContractState) -> felt252 {
         self.value.read() + 100
     }
