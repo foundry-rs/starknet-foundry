@@ -65,7 +65,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - fixed a bug where a profile was passed to scarb even when it did not exist
-- added error handling in deployment scripts (`declare`, `deploy`, `call`, `invoke` now return `Result<T, ScriptCommandError>`)
+- error handling from inside deployment scripts is now possible (`declare`, `deploy`, `call`, `invoke` now return `Result<T, ScriptCommandError>`)
 
 ### Forge
 
