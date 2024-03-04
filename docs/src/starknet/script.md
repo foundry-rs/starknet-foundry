@@ -206,7 +206,7 @@ status: success
 
 ## Error handling
 
-Each of `declare`, `deploy`, `invoke`, `call` subcommands return `Result<T, ScriptCommandError>`, where `T` is a corresponding response struct. 
+Each of `declare`, `deploy`, `invoke`, `call` functions return `Result<T, ScriptCommandError>`, where `T` is a corresponding response struct. 
 This allows for various script errors to be handled programmatically. 
 Script errors implement `Debug` trait, allowing the error to be printed to stdout.
 
