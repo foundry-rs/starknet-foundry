@@ -131,6 +131,36 @@ pub async fn test_existent_account_address_and_incorrect_class_hash() {
 }
 
 #[tokio::test]
+pub async fn test_nonexistent_account_address_and_nonexistent_class_hash() {
+    let tempdir = tempdir().expect("Unable to create a temporary directory");
+    let accounts_file = "accounts.json";
+
+    let args = vec![
+        "--url",
+        URL,
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "add",
+        "--name",
+        "my_account_add",
+        "--address",
+        "0x202",
+        "--private-key",
+        "0x456",
+        "--class-hash",
+        "0x101",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+
+    snapbox.assert().stderr_matches(indoc! {r"
+        command: account add
+        error: Class with hash 0x101 is not declared, try using --class-hash with a hash of the declared class
+    "});
+}
+
+#[tokio::test]
 pub async fn test_happy_case_add_profile() {
     let tempdir = tempdir().expect("Failed to create a temporary directory");
     let accounts_file = "accounts.json";
