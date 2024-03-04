@@ -764,10 +764,10 @@ pub fn update_top_call_execution_resources(runtime: &mut ForgeRuntime) {
         .cheatnet_state
         .trace_data
         .current_call_stack
-        .top();
+        .top()
+        .borrow_mut();
 
-    let mut top_call_mut = top_call.borrow_mut();
-    top_call_mut.used_execution_resources = all_execution_resources;
+    top_call.used_execution_resources = all_execution_resources;
 
     let top_call_syscalls = runtime
         .extended_runtime
@@ -778,14 +778,14 @@ pub fn update_top_call_execution_resources(runtime: &mut ForgeRuntime) {
         .clone();
 
     // Only sum 1-level since these include syscalls from inner calls
-    let nested_calls_syscalls = top_call_mut
+    let nested_calls_syscalls = top_call
         .nested_calls
         .iter()
         .fold(SyscallCounter::new(), |syscalls, trace| {
-            sum_syscall_counters(&syscalls, &trace.borrow().used_syscalls)
+            sum_syscall_counters(syscalls, &trace.borrow().used_syscalls)
         });
 
-    top_call_mut.used_syscalls = sum_syscall_counters(&top_call_syscalls, &nested_calls_syscalls);
+    top_call.used_syscalls = sum_syscall_counters(top_call_syscalls, &nested_calls_syscalls);
 }
 
 // Only top-level is considered relevant since we can't have l1 handlers deeper than 1 level of nesting

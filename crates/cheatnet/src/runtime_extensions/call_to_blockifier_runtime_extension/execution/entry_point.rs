@@ -206,7 +206,7 @@ fn map_and_process_entry_point_call_result(
                     .top(),
             );
             let syscall_counter =
-                sum_syscall_counters(&nested_syscall_counter_sum, &this_call_syscall_counter);
+                sum_syscall_counters(nested_syscall_counter_sum, &this_call_syscall_counter);
             runtime_state.cheatnet_state.trace_data.exit_nested_call(
                 resources,
                 &syscall_counter,
@@ -294,10 +294,10 @@ fn aggregate_nested_syscall_counters(trace: &Rc<RefCell<CallTrace>>) -> SyscallC
     let mut result = SyscallCounter::new();
     for nested_call in &trace.borrow().nested_calls {
         let nested_call = nested_call.borrow();
-        result = sum_syscall_counters(&result, &nested_call.used_syscalls);
+        result = sum_syscall_counters(result, &nested_call.used_syscalls);
         for sub_trace in &nested_call.nested_calls {
             let sub_trace_counter = aggregate_nested_syscall_counters(sub_trace);
-            result = sum_syscall_counters(&result, &sub_trace_counter);
+            result = sum_syscall_counters(result, &sub_trace_counter);
         }
     }
     result
