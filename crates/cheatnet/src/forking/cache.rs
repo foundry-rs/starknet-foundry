@@ -5,7 +5,7 @@ use conversions::{FromConv, IntoConv, TryIntoConv};
 use fs2::FileExt;
 use num_bigint::BigUint;
 use regex::Regex;
-use runtime::starknet::context::ForgeBlockInfo;
+use runtime::starknet::context::SerializableBlockInfo;
 use serde::{Deserialize, Serialize};
 use starknet::core::types::ContractClass;
 use starknet_api::block::BlockNumber;
@@ -26,7 +26,7 @@ struct ForkCacheContent {
     class_hash_at: HashMap<String, String>,
     compiled_contract_class: HashMap<String, String>,
     compiled_class_hash: HashMap<String, String>,
-    block_info: Option<ForgeBlockInfo>,
+    block_info: Option<SerializableBlockInfo>,
 }
 
 impl ForkCacheContent {

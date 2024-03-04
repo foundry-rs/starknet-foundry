@@ -10,7 +10,7 @@ use cairo_lang_utils::bigint::BigUintAsHex;
 use conversions::{FromConv, IntoConv};
 use flate2::read::GzDecoder;
 use num_bigint::BigUint;
-use runtime::starknet::context::ForgeGasPrices;
+use runtime::starknet::context::SerializableGasPrices;
 use sierra_casm::compile;
 use starknet::core::types::{
     BlockId, ContractClass as ContractClassStarknet, FieldElement, MaybePendingBlockWithTxHashes,
@@ -83,7 +83,7 @@ impl BlockInfoReader for ForkStateReader {
                     block_number: BlockNumber(block.block_number),
                     sequencer_address: block.sequencer_address.into_(),
                     block_timestamp: BlockTimestamp(block.timestamp),
-                    gas_prices: ForgeGasPrices::default().into(),
+                    gas_prices: SerializableGasPrices::default().into(),
                     use_kzg_da: false,
                 };
 

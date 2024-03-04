@@ -107,21 +107,21 @@ pub fn set_max_steps(entry_point_ctx: &mut EntryPointExecutionContext, max_n_ste
 
 // We need to be copying those 1:1 for serialization (caching purposes)
 #[derive(Clone, Serialize, Deserialize, Debug)]
-pub struct ForgeBlockInfo {
+pub struct SerializableBlockInfo {
     pub block_number: BlockNumber,
     pub block_timestamp: BlockTimestamp,
     pub sequencer_address: ContractAddress,
-    pub gas_prices: ForgeGasPrices,
+    pub gas_prices: SerializableGasPrices,
     pub use_kzg_da: bool,
 }
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct ForgeGasPrices {
+pub struct SerializableGasPrices {
     eth_l1_gas_price: NonZeroU128,
     strk_l1_gas_price: NonZeroU128,
     eth_l1_data_gas_price: NonZeroU128,
     strk_l1_data_gas_price: NonZeroU128,
 }
-impl Default for ForgeGasPrices {
+impl Default for SerializableGasPrices {
     fn default() -> Self {
         Self {
             eth_l1_gas_price: NonZeroU128::try_from(100 * u128::pow(10, 9)).unwrap(),
@@ -132,13 +132,13 @@ impl Default for ForgeGasPrices {
     }
 }
 
-impl Default for ForgeBlockInfo {
+impl Default for SerializableBlockInfo {
     fn default() -> Self {
         Self {
             block_number: BlockNumber(DEFAULT_BLOCK_NUMBER),
             block_timestamp: BlockTimestamp::default(),
             sequencer_address: ContractAddress(patricia_key!(SEQUENCER_ADDRESS)),
-            gas_prices: ForgeGasPrices {
+            gas_prices: SerializableGasPrices {
                 eth_l1_gas_price: NonZeroU128::try_from(100 * u128::pow(10, 9)).unwrap(),
                 strk_l1_gas_price: NonZeroU128::try_from(100 * u128::pow(10, 9)).unwrap(),
                 eth_l1_data_gas_price: NonZeroU128::try_from(u128::pow(10, 6)).unwrap(),
@@ -149,8 +149,8 @@ impl Default for ForgeBlockInfo {
     }
 }
 
-impl From<ForgeBlockInfo> for BlockInfo {
-    fn from(forge_block_info: ForgeBlockInfo) -> Self {
+impl From<SerializableBlockInfo> for BlockInfo {
+    fn from(forge_block_info: SerializableBlockInfo) -> Self {
         Self {
             block_number: forge_block_info.block_number,
             block_timestamp: forge_block_info.block_timestamp,
@@ -161,7 +161,7 @@ impl From<ForgeBlockInfo> for BlockInfo {
     }
 }
 
-impl From<BlockInfo> for ForgeBlockInfo {
+impl From<BlockInfo> for SerializableBlockInfo {
     fn from(block_info: BlockInfo) -> Self {
         Self {
             block_number: block_info.block_number,
@@ -172,8 +172,8 @@ impl From<BlockInfo> for ForgeBlockInfo {
         }
     }
 }
-impl From<ForgeGasPrices> for GasPrices {
-    fn from(forge_gas_prices: ForgeGasPrices) -> Self {
+impl From<SerializableGasPrices> for GasPrices {
+    fn from(forge_gas_prices: SerializableGasPrices) -> Self {
         Self {
             eth_l1_gas_price: forge_gas_prices.eth_l1_gas_price,
             strk_l1_gas_price: forge_gas_prices.strk_l1_gas_price,
@@ -183,7 +183,7 @@ impl From<ForgeGasPrices> for GasPrices {
     }
 }
 
-impl From<GasPrices> for ForgeGasPrices {
+impl From<GasPrices> for SerializableGasPrices {
     fn from(gas_prices: GasPrices) -> Self {
         Self {
             eth_l1_gas_price: gas_prices.eth_l1_gas_price,

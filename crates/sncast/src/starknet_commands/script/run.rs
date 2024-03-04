@@ -25,7 +25,7 @@ use clap::Args;
 use conversions::byte_array::ByteArray;
 use conversions::{FromConv, IntoConv};
 use itertools::chain;
-use runtime::starknet::context::{build_context, ForgeBlockInfo};
+use runtime::starknet::context::{build_context, SerializableBlockInfo};
 use runtime::starknet::state::DictStateReader;
 use runtime::utils::BufferReader;
 use runtime::{
@@ -460,7 +460,7 @@ pub fn run(
         .assemble_ex(&entry_code, &footer);
 
     // hint processor
-    let mut context = build_context(&ForgeBlockInfo::default().into());
+    let mut context = build_context(&SerializableBlockInfo::default().into());
 
     let mut blockifier_state = CachedState::new(
         DictStateReader::default(),

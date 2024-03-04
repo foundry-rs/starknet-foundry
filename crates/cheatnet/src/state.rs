@@ -19,7 +19,7 @@ use blockifier::block::BlockInfo;
 use blockifier::execution::syscalls::hint_processor::SyscallCounter;
 use blockifier::state::errors::StateError::UndeclaredClassHash;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
-use runtime::starknet::context::ForgeBlockInfo;
+use runtime::starknet::context::SerializableBlockInfo;
 use starknet_api::transaction::ContractAddressSalt;
 use starknet_api::{
     class_hash,
@@ -63,7 +63,7 @@ impl BlockInfoReader for ExtendedStateReader {
             return fork_state_reader.get_block_info();
         }
 
-        Ok(ForgeBlockInfo::default().into())
+        Ok(SerializableBlockInfo::default().into())
     }
 }
 
@@ -275,7 +275,7 @@ impl Default for CheatnetState {
             spies: vec![],
             detected_events: vec![],
             deploy_salt_base: 0,
-            block_info: ForgeBlockInfo::default().into(),
+            block_info: SerializableBlockInfo::default().into(),
             trace_data: TraceData {
                 current_call_stack: NotEmptyCallStack::from(test_call),
             },
