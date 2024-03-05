@@ -8,8 +8,8 @@ members = [
     "crates/cheatnet",
     "crates/conversions",
     "crates/runtime",
-    "crates/sierra-casm",
     "crates/scarb-api",
+    "crates/universal-sierra-compiler-api"
 ]
 
 [workspace.package]
@@ -22,7 +22,7 @@ license-file = "LICENSE"
 [workspace.dependencies]
 blockifier = "0.5.0-dev.0"
 starknet_api = "0.7.0-dev.0"
-cairo-lang-casm = "2.5.4"
+cairo-lang-casm = { version = "2.5.4", features = ["serde"] }
 cairo-lang-runner = "2.5.4"
 cairo-lang-sierra-to-casm = "2.5.4"
 cairo-lang-sierra = "2.5.4"
@@ -45,27 +45,27 @@ cairo-lang-syntax = "2.5.4"
 cairo-lang-test-plugin = "2.5.4"
 cairo-vm = "0.9.1"
 cairo-felt = "0.9.1"
-anyhow = "1.0.79"
+anyhow = "1.0.80"
 assert_fs = "1.1.1"
 camino = { version = "1.1.4", features = ["serde1"] }
-clap = { version = "4.4.18", features = ["derive"] }
+clap = { version = "4.5.1", features = ["derive"] }
 console = "0.15.8"
 include_dir = "0.7.3"
 indoc = "2"
 itertools = "0.11.0"
-num-traits = "0.2.17"
+num-traits = "0.2.18"
 once_cell = "1.18.0"
-rayon = "1.8"
+rayon = "1.9"
 regex = "1.10.3"
-serde = { version = "1.0.196", features = ["derive"] }
-serde_json = "1.0.113"
+serde = { version = "1.0.197", features = ["derive"] }
+serde_json = "1.0.114"
 starknet = { git = "https://github.com/xJonathanLEI/starknet-rs", rev = "082f556" }
 trace-data = { git = "https://github.com/software-mansion/cairo-profiler/", rev = "129ffac" }
-tempfile = "3.9.0"
-thiserror = "1.0.56"
-ctor = "0.2.4"
+tempfile = "3.10.1"
+thiserror = "1.0.57"
+ctor = "0.2.7"
 url = "2.5.0"
-tokio = { version = "1.35.1", features = ["full"] }
+tokio = { version = "1.36.0", features = ["full"] }
 tokio-util = "0.7.9"
 futures = "0.3.30"
 num-bigint = { version = "0.4.4", features = ["rand"] }
@@ -79,9 +79,9 @@ shared = { path = "./crates/shared" }
 test-case = "3.1.0"
 scarb-metadata = "1.11.1"
 flatten-serde-json = "0.1.0"
-snapbox = "0.4.16"
+snapbox = "0.4.17"
 smol_str = "0.2.1"
-num-integer = "0.1.45"
+num-integer = "0.1.46"
 scarb-ui = "0.1.3"
-semver = "1.0.21"
+semver = "1.0.22"
 bimap = "0.6.3"

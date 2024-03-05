@@ -98,6 +98,7 @@ fn check_vm_resources_and_easily_unifiable_syscalls(
 
     let resource_diff = current_resources - &sum_child_resources;
     assert_correct_diff_for_builtins_and_easily_unifiable_syscalls(&resource_diff);
+    assert_l2_l1_messages(call_trace);
 
     let storage_writes_diff = current_storage_writes - sum_child_storage_writes;
     assert_l1_resources(call_trace, storage_writes_diff);

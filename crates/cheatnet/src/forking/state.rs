@@ -5,12 +5,12 @@ use blockifier::execution::contract_class::{
 };
 use blockifier::state::errors::StateError::{StateReadError, UndeclaredClassHash};
 use blockifier::state::state_api::{StateReader, StateResult};
+use cairo_lang_starknet::casm_contract_class::CasmContractClass;
 use cairo_lang_utils::bigint::BigUintAsHex;
 use conversions::{FromConv, IntoConv};
 use flate2::read::GzDecoder;
 use num_bigint::BigUint;
 use runtime::starknet::context::BlockInfo;
-use sierra_casm::compile;
 use starknet::core::types::{
     BlockId, ContractClass as ContractClassStarknet, FieldElement, MaybePendingBlockWithTxHashes,
     StarknetError,
@@ -28,6 +28,7 @@ use std::collections::HashMap;
 use std::io::Read;
 use std::ops::Deref;
 use tokio::runtime::Runtime;
+use universal_sierra_compiler_api::{compile_sierra, SierraType};
 use url::Url;
 
 #[derive(Debug)]
@@ -221,11 +222,19 @@ impl StateReader for ForkStateReader {
                     "entry_points_by_type": flattened_class.entry_points_by_type
                 });
 
-                let casm_contract_class = compile(sierra_contract_class).unwrap();
+                match compile_sierra(&sierra_contract_class, None, &SierraType::Contract) {
+                    Ok(casm_contract_class_raw) => {
+                        let casm_contract_class: CasmContractClass =
+                            serde_json::from_str(&casm_contract_class_raw)
+                                .expect("Unable to deserialize CasmContractClass");
 
-                Ok(ContractClassBlockifier::V1(
-                    ContractClassV1::try_from(casm_contract_class).unwrap(),
-                ))
+                        Ok(ContractClassBlockifier::V1(
+                            ContractClassV1::try_from(casm_contract_class)
+                                .expect("Unable to create ContractClassV1 from CasmContractClass"),
+                        ))
+                    }
+                    Err(err) => Err(StateReadError(err.to_string())),
+                }
             }
             ContractClassStarknet::Legacy(legacy_class) => {
                 let converted_entry_points: HashMap<EntryPointType, Vec<EntryPoint>> =
