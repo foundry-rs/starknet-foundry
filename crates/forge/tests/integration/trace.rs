@@ -1,8 +1,8 @@
 use indoc::indoc;
 use std::path::Path;
-use test_utils::runner::Contract;
+use test_utils::runner::{assert_passed, Contract};
 use test_utils::running_tests::run_test_case;
-use test_utils::{assert_passed, test_case};
+use test_utils::test_case;
 
 #[test]
 #[allow(clippy::too_many_lines)]
@@ -152,7 +152,7 @@ fn trace_deploy() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -377,7 +377,7 @@ fn trace_call() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -525,7 +525,7 @@ fn trace_failed_call() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -724,7 +724,7 @@ fn trace_library_call_from_test() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -872,7 +872,7 @@ fn trace_failed_library_call_from_test() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -1001,5 +1001,5 @@ fn trace_l1_handler() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }

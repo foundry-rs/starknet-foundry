@@ -5030,6 +5030,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "assert_fs",
+ "blockifier",
  "cairo-lang-casm",
  "cairo-lang-compiler",
  "cairo-lang-filesystem",

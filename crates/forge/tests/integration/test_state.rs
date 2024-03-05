@@ -1,8 +1,8 @@
 use indoc::indoc;
 use std::path::Path;
-use test_utils::runner::Contract;
+use test_utils::runner::{assert_case_output_contains, assert_failed, assert_passed, Contract};
 use test_utils::running_tests::run_test_case;
-use test_utils::{assert_case_output_contains, assert_failed, assert_passed, test_case};
+use test_utils::test_case;
 
 #[test]
 fn storage_access_from_tests() {
@@ -38,7 +38,7 @@ fn storage_access_from_tests() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -144,7 +144,7 @@ fn simple_syscalls() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -188,7 +188,7 @@ fn get_block_hash_syscall_in_dispatcher() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -273,7 +273,7 @@ fn library_calls() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -301,11 +301,11 @@ fn disabled_syscalls() {
 
     let result = run_test_case(&test);
 
-    assert_failed!(result);
-    assert_case_output_contains!(
-        result,
+    assert_failed(&result);
+    assert_case_output_contains(
+        &result,
         "disabled_syscalls",
-        "Replace class can't be used in tests"
+        "Replace class can't be used in tests",
     );
 }
 
@@ -328,7 +328,7 @@ fn get_block_hash() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -396,9 +396,9 @@ fn cant_call_test_contract() {
 
     let result = run_test_case(&test);
 
-    assert_failed!(result);
-    assert_case_output_contains!(result, "cant_call_test_contract", "Entry point");
-    assert_case_output_contains!(result, "cant_call_test_contract", "not found in contract");
+    assert_failed(&result);
+    assert_case_output_contains(&result, "cant_call_test_contract", "Entry point");
+    assert_case_output_contains(&result, "cant_call_test_contract", "not found in contract");
 }
 
 #[test]
@@ -442,7 +442,7 @@ fn storage_access_default_values() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -569,7 +569,7 @@ fn simple_cheatcodes() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -605,7 +605,7 @@ fn spy_events_simple() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -675,7 +675,7 @@ fn spy_struct_events() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -704,7 +704,7 @@ fn inconsistent_syscall_pointers() {
     ),);
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -792,7 +792,7 @@ fn caller_address_in_called_contract() {
     );
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -863,5 +863,5 @@ fn felt252_dict_usage() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }

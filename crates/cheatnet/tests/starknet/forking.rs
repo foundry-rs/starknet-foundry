@@ -1,9 +1,9 @@
+use crate::common::assertions::{assert_error, assert_success};
 use crate::common::cache::{purge_cache, read_cache};
 use crate::common::state::{
     build_runtime_state, create_fork_cached_state, create_fork_cached_state_at,
 };
 use crate::common::{call_contract, deploy_contract, deploy_wrapper, felt_selector_from_name};
-use crate::{assert_error, assert_success};
 use blockifier::state::cached_state::{CachedState, GlobalContractCache};
 use cairo_felt::Felt252;
 use cairo_vm::vm::errors::hint_errors::HintError;
@@ -48,7 +48,7 @@ fn fork_simple() {
         &selector,
         &[],
     );
-    assert_success!(output, vec![Felt252::from(2)]);
+    assert_success(output, &[Felt252::from(2)]);
 
     let selector = felt_selector_from_name("increase_balance");
     call_contract(
@@ -67,7 +67,7 @@ fn fork_simple() {
         &selector,
         &[],
     );
-    assert_success!(output, vec![Felt252::from(102)]);
+    assert_success(output, &[Felt252::from(102)]);
 }
 
 #[test]
@@ -87,7 +87,7 @@ fn try_calling_nonexistent_contract() {
         &selector,
         &[],
     );
-    assert_error!(
+    assert_error(
         output,
         "Contract not deployed at address: 0x0000000000000000000000000000000000000000000000000000000000000001"
     );
@@ -162,7 +162,7 @@ fn test_forking_at_block_number() {
             &[],
         );
 
-        assert_error!(
+        assert_error(
             output,
             "Contract not deployed at address: 0x071c8d74edc89330f314f3b1109059d68ebfa68874aa91e9c425a6378ffde00e"
         );
@@ -178,7 +178,7 @@ fn test_forking_at_block_number() {
             &[],
         );
 
-        assert_success!(output, vec![Felt252::from(0)]);
+        assert_success(output, &[Felt252::from(0)]);
     }
     purge_cache(cache_dir.path().to_str().unwrap());
 }
@@ -212,7 +212,7 @@ fn call_forked_contract_from_other_contract() {
         &selector,
         &[forked_contract_address],
     );
-    assert_success!(output, vec![Felt252::from(2)]);
+    assert_success(output, &[Felt252::from(2)]);
 }
 
 #[test]
@@ -244,7 +244,7 @@ fn library_call_on_forked_class_hash() {
         &selector,
         &[forked_class_hash.clone()],
     );
-    assert_success!(output, vec![Felt252::from(0)]);
+    assert_success(output, &[Felt252::from(0)]);
 
     call_contract(
         &mut cached_fork_state,
@@ -261,7 +261,7 @@ fn library_call_on_forked_class_hash() {
         &selector,
         &[forked_class_hash],
     );
-    assert_success!(output, vec![Felt252::from(100)]);
+    assert_success(output, &[Felt252::from(100)]);
 }
 
 #[test]
@@ -300,7 +300,7 @@ fn call_forked_contract_from_constructor() {
         &selector,
         &[forked_class_hash],
     );
-    assert_success!(output, vec![Felt252::from(2)]);
+    assert_success(output, &[Felt252::from(2)]);
 }
 
 #[test]
@@ -335,7 +335,7 @@ fn call_forked_contract_get_block_info_via_proxy() {
         &selector,
         &[forked_contract_address.clone()],
     );
-    assert_success!(output, vec![Felt252::from(315_887)]);
+    assert_success(output, &[Felt252::from(315_887)]);
 
     let selector = felt_selector_from_name("read_block_timestamp");
     let output = call_contract(
@@ -345,7 +345,7 @@ fn call_forked_contract_get_block_info_via_proxy() {
         &selector,
         &[forked_contract_address.clone()],
     );
-    assert_success!(output, vec![Felt252::from(1_697_630_072)]);
+    assert_success(output, &[Felt252::from(1_697_630_072)]);
 
     let selector = felt_selector_from_name("read_sequencer_address");
     let output = call_contract(
@@ -355,15 +355,15 @@ fn call_forked_contract_get_block_info_via_proxy() {
         &selector,
         &[forked_contract_address],
     );
-    assert_success!(
+    assert_success(
         output,
-        vec![Felt252::from(
+        &[Felt252::from(
             BigUint::from_str_radix(
                 &"0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8"[2..],
-                16
+                16,
             )
-            .unwrap()
-        )]
+            .unwrap(),
+        )],
     );
 }
 
@@ -400,7 +400,7 @@ fn call_forked_contract_get_block_info_via_libcall() {
         &selector,
         &[forked_class_hash.clone()],
     );
-    assert_success!(output, vec![Felt252::from(315_887)]);
+    assert_success(output, &[Felt252::from(315_887)]);
 
     let selector = felt_selector_from_name("read_block_timestamp_with_lib_call");
     let output = call_contract(
@@ -410,7 +410,7 @@ fn call_forked_contract_get_block_info_via_libcall() {
         &selector,
         &[forked_class_hash.clone()],
     );
-    assert_success!(output, vec![Felt252::from(1_697_630_072)]);
+    assert_success(output, &[Felt252::from(1_697_630_072)]);
 
     let selector = felt_selector_from_name("read_sequencer_address_with_lib_call");
     let output = call_contract(
@@ -420,15 +420,15 @@ fn call_forked_contract_get_block_info_via_libcall() {
         &selector,
         &[forked_class_hash],
     );
-    assert_success!(
+    assert_success(
         output,
-        vec![Felt252::from(
+        &[Felt252::from(
             BigUint::from_str_radix(
                 &"0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8"[2..],
-                16
+                16,
             )
-            .unwrap()
-        )]
+            .unwrap(),
+        )],
     );
 }
 
@@ -459,7 +459,7 @@ fn using_specified_block_nb_is_cached() {
             &[],
         );
 
-        assert_success!(output, vec![Felt252::from(2)]);
+        assert_success(output, &[Felt252::from(2)]);
     };
 
     let assert_cache = || {
@@ -538,7 +538,7 @@ fn test_cache_merging() {
             &[],
         );
 
-        assert_success!(output, vec![Felt252::from(balance)]);
+        assert_success(output, &[Felt252::from(balance)]);
     }
 
     let cache_dir = TempDir::new().unwrap();
@@ -621,7 +621,7 @@ fn test_cache_merging() {
     purge_cache(cache_dir.path().to_str().unwrap());
 
     // Parallel execution
-    vec![
+    [
         (cache_dir_str, contract_1_address, 2),
         (cache_dir_str, contract_2_address, 0),
     ]
@@ -651,7 +651,7 @@ fn test_cached_block_info_merging() {
             &[],
         );
 
-        assert_success!(output, vec![Felt252::from(balance)]);
+        assert_success(output, &[Felt252::from(balance)]);
     }
 
     let cache_dir = TempDir::new().unwrap();
@@ -734,8 +734,8 @@ fn test_calling_nonexistent_url() {
         &[],
     );
 
-    assert_error!(
+    assert_error(
         output,
-        "Unable to reach the node. Check your internet connection and node url"
+        "Unable to reach the node. Check your internet connection and node url",
     );
 }
