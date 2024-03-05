@@ -23,12 +23,6 @@ Optional.
 
 Class hash of the account.
 
-## `--deployed, -d`
-Optional.
-
-Specify account deployment status as deployed.
-If not passed, sncast will check whether the account is deployed or not.
-
 ## `--private-key <PRIVATE_KEY>`
 Optional. Required if `--private-key-file` is not passed.
 
