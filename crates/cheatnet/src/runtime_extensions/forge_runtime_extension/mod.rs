@@ -766,7 +766,7 @@ pub fn update_top_call_execution_resources(runtime: &mut ForgeRuntime) {
 }
 
 pub fn update_top_call_l1_resources(runtime: &mut ForgeRuntime) {
-    let all_l2_l1_message_sizes = runtime
+    let l2_l1_message_sizes = runtime
         .extended_runtime
         .extended_runtime
         .extended_runtime
@@ -775,6 +775,18 @@ pub fn update_top_call_l1_resources(runtime: &mut ForgeRuntime) {
         .iter()
         .map(|ordered_message| ordered_message.message.payload.0.len())
         .collect();
+
+    let all_storage_writes = runtime
+        .extended_runtime
+        .extended_runtime
+        .extended_runtime
+        .hint_handler
+        .state
+        .to_state_diff()
+        .storage_updates
+        .iter()
+        .map(|(_, entry)| entry.len())
+        .sum();
 
     // call representing the test code
     let top_call = runtime
@@ -785,7 +797,10 @@ pub fn update_top_call_l1_resources(runtime: &mut ForgeRuntime) {
         .trace_data
         .current_call_stack
         .top();
-    top_call.borrow_mut().used_l1_resources.l2_l1_message_sizes = all_l2_l1_message_sizes;
+    let mut top_call = top_call.borrow_mut();
+
+    top_call.used_l1_resources.l2_l1_message_sizes = l2_l1_message_sizes;
+    top_call.used_l1_resources.storage_writes = all_storage_writes;
 }
 
 #[must_use]

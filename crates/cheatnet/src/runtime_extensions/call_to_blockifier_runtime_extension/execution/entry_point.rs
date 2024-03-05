@@ -1,7 +1,7 @@
 use super::cairo1_execution::execute_entry_point_call_cairo1;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::deprecated::cairo0_execution::execute_entry_point_call_cairo0;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeState;
-use crate::state::CheatnetState;
+use crate::state::{CheatnetState};
 use blockifier::execution::call_info::{CallExecution, Retdata};
 use blockifier::{
     execution::{
@@ -52,9 +52,13 @@ pub fn execute_call_entry_point(
 
     // region: Modified blockifier code
     // We skip recursion depth validation here.
+
+    let state_diff_before = state.to_state_diff();
+
     runtime_state.cheatnet_state.trace_data.enter_nested_call(
         entry_point.clone(),
         resources.clone(),
+        &state_diff_before,
         cheated_data,
     );
 
@@ -68,6 +72,7 @@ pub fn execute_call_entry_point(
     {
         runtime_state.cheatnet_state.trace_data.exit_nested_call(
             resources,
+            &state_diff_before,
             &Ok(CallInfo::default()),
             &identifier,
         );
@@ -151,10 +156,12 @@ pub fn execute_call_entry_point(
         }
     });
 
-    runtime_state
-        .cheatnet_state
-        .trace_data
-        .exit_nested_call(resources, &result, &identifier);
+    runtime_state.cheatnet_state.trace_data.exit_nested_call(
+        resources,
+        &state.to_state_diff(),
+        &result,
+        &identifier,
+    );
 
     result
     // region: Modified blockifier code

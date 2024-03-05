@@ -21,6 +21,7 @@ use starknet_api::core::EntryPointSelector;
 
 use crate::constants::{build_test_entry_point, TEST_CONTRACT_CLASS_HASH};
 use blockifier::execution::call_info::CallInfo;
+use blockifier::state::cached_state::CommitmentStateDiff;
 use blockifier::state::errors::StateError::UndeclaredClassHash;
 use starknet_api::transaction::ContractAddressSalt;
 use starknet_api::{
@@ -166,6 +167,7 @@ pub struct CallTrace {
 struct CallStackElement {
     // when we exit the call we use it to calculate resources used by the call
     resources_used_before_call: ExecutionResources,
+    state_diff_before_call: CommitmentStateDiff,
     call_trace: Rc<RefCell<CallTrace>>,
     cheated_data: CheatedData,
 }
@@ -177,6 +179,12 @@ impl NotEmptyCallStack {
     pub fn from(elem: Rc<RefCell<CallTrace>>) -> Self {
         NotEmptyCallStack(vec![CallStackElement {
             resources_used_before_call: ExecutionResources::default(),
+            state_diff_before_call: CommitmentStateDiff {
+                address_to_class_hash: Default::default(),
+                address_to_nonce: Default::default(),
+                storage_updates: Default::default(),
+                class_hash_to_compiled_class_hash: Default::default(),
+            },
             call_trace: elem,
             cheated_data: Default::default(),
         }])
@@ -186,10 +194,12 @@ impl NotEmptyCallStack {
         &mut self,
         elem: Rc<RefCell<CallTrace>>,
         resources_used_before_call: ExecutionResources,
+        state_diff_before_call: CommitmentStateDiff,
         cheated_data: CheatedData,
     ) {
         self.0.push(CallStackElement {
             resources_used_before_call,
+            state_diff_before_call,
             call_trace: elem,
             cheated_data,
         });
@@ -390,6 +400,7 @@ impl TraceData {
         &mut self,
         entry_point: CallEntryPoint,
         resources_used_before_call: ExecutionResources,
+        state_diff_before_call: &CommitmentStateDiff,
         cheated_data: CheatedData,
     ) {
         let new_call = Rc::new(RefCell::new(CallTrace {
@@ -406,8 +417,12 @@ impl TraceData {
             .nested_calls
             .push(new_call.clone());
 
-        self.current_call_stack
-            .push(new_call, resources_used_before_call, cheated_data);
+        self.current_call_stack.push(
+            new_call,
+            resources_used_before_call,
+            state_diff_before_call.clone(),
+            cheated_data,
+        );
     }
 
     pub fn set_class_hash_for_current_call(&mut self, class_hash: ClassHash) {
@@ -418,11 +433,13 @@ impl TraceData {
     pub fn exit_nested_call(
         &mut self,
         resources_used_after_call: &ExecutionResources,
+        state_diff_after_call: &CommitmentStateDiff,
         execution_result: &EntryPointExecutionResult<CallInfo>,
         identifier: &AddressOrClassHash,
     ) {
         let CallStackElement {
             resources_used_before_call,
+            state_diff_before_call,
             call_trace: last_call,
             ..
         } = self.current_call_stack.pop();
@@ -430,6 +447,8 @@ impl TraceData {
         let mut last_call = last_call.borrow_mut();
         last_call.used_execution_resources =
             subtract_execution_resources(resources_used_after_call, &resources_used_before_call);
+        last_call.used_l1_resources.storage_writes =
+            get_storage_writes(state_diff_after_call, &state_diff_before_call);
 
         last_call.used_l1_resources.l2_l1_message_sizes = execution_result.as_ref().map_or_else(
             |_| vec![],
@@ -444,6 +463,21 @@ impl TraceData {
 
         last_call.result = CallResult::from_execution_result(execution_result, identifier);
     }
+}
+
+fn get_storage_writes(after: &CommitmentStateDiff, before: &CommitmentStateDiff) -> usize {
+    let storage_writes_before: usize = before
+        .storage_updates
+        .iter()
+        .map(|(_, entry)| entry.len())
+        .sum();
+    let storage_writes_after: usize = after
+        .storage_updates
+        .iter()
+        .map(|(_, entry)| entry.len())
+        .sum();
+
+    storage_writes_after - storage_writes_before
 }
 
 fn get_cheat_for_contract<T: Clone>(
