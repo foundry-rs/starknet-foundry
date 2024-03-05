@@ -26,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Removed
 
 - `--path-to-scarb-toml` optional flag that allowed to specify the path to the `Scarb.toml` file
-- `--deployed` flag in `account add` subcommand
+- `--deployed` flag from `account add` subcommand
 
 ## [0.18.0] - 2024-02-21
 
