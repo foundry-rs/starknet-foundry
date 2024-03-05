@@ -712,7 +712,7 @@ fn nonexistent_libcall_function() {
                 }
 
                 #[starknet::contract]
-                mod Contract {
+                mod LibCaller {
                     use starknet::ClassHash;
                     use result::ResultTrait;
                     use array::ArrayTrait;
@@ -833,7 +833,7 @@ fn nonexistent_class_libcall() {
                 }
 
                 #[starknet::contract]
-                mod Contract {
+                mod LibCaller {
                     use starknet::class_hash::class_hash_try_from_felt252;
                     use starknet::ClassHash;
                     use result::ResultTrait;

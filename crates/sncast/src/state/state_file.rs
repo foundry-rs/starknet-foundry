@@ -77,16 +77,20 @@ pub enum ScriptTransactionStatus {
     Error,
 }
 
+pub fn load_state_file(path: &Utf8PathBuf) -> Result<ScriptTransactionsSchema> {
+    let content = fs::read_to_string(path).context("Failed to load state file")?;
+    match serde_json::from_str::<ScriptTransactionsSchema>(&content) {
+        Ok(state_file) => {
+            verify_version(state_file.version)?;
+            Ok(state_file)
+        }
+        Err(_) => Err(anyhow!("Failed to parse state file - it may be corrupt")),
+    }
+}
+
 pub fn load_or_create_state_file(path: &Utf8PathBuf) -> Result<ScriptTransactionsSchema> {
     if path.exists() {
-        let content = fs::read_to_string(path).expect("Failed to read state file");
-        match serde_json::from_str::<ScriptTransactionsSchema>(&content) {
-            Ok(state_file) => {
-                verify_version(state_file.version)?;
-                Ok(state_file)
-            }
-            Err(_) => Err(anyhow!("Failed to parse state file - it may be corrupt")),
-        }
+        load_state_file(path)
     } else {
         let default_state = ScriptTransactionsSchema {
             version: STATE_FILE_VERSION,
@@ -113,6 +117,13 @@ pub fn generate_transaction_entry_with_id(
     ScriptTransactionEntries {
         transactions: transaction,
     }
+}
+
+pub fn read_txs_from_state_file(
+    state_file_path: &Utf8PathBuf,
+) -> Result<Option<ScriptTransactionEntries>> {
+    let state_file = load_state_file(state_file_path)?;
+    Ok(state_file.transactions)
 }
 
 pub fn write_txs_to_state_file(
@@ -210,6 +221,13 @@ mod tests {
             result.to_string(),
             "Failed to parse state file - it may be corrupt"
         );
+    }
+
+    #[test]
+    #[should_panic(expected = "No such file or directory (os error 2)")]
+    fn test_load_state_file_invalid_path() {
+        let state_file = Utf8PathBuf::from("bla/bla/crypto.json");
+        load_state_file(&state_file).unwrap();
     }
 
     #[test]
@@ -392,5 +410,44 @@ mod tests {
                 .unwrap(),
             &transaction2
         );
+    }
+
+    #[test]
+    fn test_read_and_write_state_file_exists_with_txs() {
+        let from_state_file = Utf8PathBuf::from("tests/data/files/state_with_txs.json");
+        let tempdir = TempDir::new().unwrap();
+        let temp_state_file =
+            Utf8PathBuf::from_path_buf(tempdir.path().join("state_with_txs.json")).unwrap();
+        fs::copy(from_state_file, &temp_state_file).unwrap();
+
+        let tx_id = "789def420".to_string();
+
+        let result = read_txs_from_state_file(&temp_state_file).expect("Failed to read state file");
+        let mut entries = result.unwrap();
+        let transaction_entry = entries.transactions.get(&tx_id).unwrap();
+        assert_eq!(entries.transactions.len(), 2);
+        assert_eq!(transaction_entry.status, ScriptTransactionStatus::Fail);
+
+        let new_transaction = ScriptTransactionEntry {
+            name: "deploy".to_string(),
+            output: ScriptTransactionOutput::DeployResponse(DeployResponse {
+                transaction_hash: Felt("0x3".parse().unwrap()),
+                contract_address: Felt("0x333".parse().unwrap()),
+            }),
+            status: ScriptTransactionStatus::Success,
+            timestamp: 1,
+            misc: None,
+        };
+        entries
+            .transactions
+            .insert(tx_id.clone(), new_transaction)
+            .unwrap();
+        write_txs_to_state_file(&temp_state_file, entries).unwrap();
+
+        let result = read_txs_from_state_file(&temp_state_file).expect("Failed to read state file");
+        let entries = result.unwrap();
+        let transaction_entry = entries.transactions.get(&tx_id).unwrap();
+        assert_eq!(entries.transactions.len(), 2);
+        assert_eq!(transaction_entry.status, ScriptTransactionStatus::Success);
     }
 }
