@@ -785,7 +785,7 @@ pub fn update_top_call_l1_resources(runtime: &mut ForgeRuntime) {
         .to_state_diff()
         .storage_updates
         .iter()
-        .map(|(_, entry)| entry.len())
+        .map(|(_, entry)| entry.len() as isize)
         .sum();
 
     // call representing the test code

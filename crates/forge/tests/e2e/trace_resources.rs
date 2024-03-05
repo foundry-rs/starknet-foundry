@@ -76,24 +76,33 @@ fn deserialize_call_trace(test_name: &str, temp_dir: &TempDir) -> ProfilerCallTr
 
 fn check_vm_resources_and_easily_unifiable_syscalls(
     call_trace: &ProfilerCallTrace,
-) -> &ProfilerExecutionResources {
+) -> (&ProfilerExecutionResources, isize) {
     let mut child_resources = vec![];
     for call in &call_trace.nested_calls {
         child_resources.push(check_vm_resources_and_easily_unifiable_syscalls(call));
     }
 
     let mut sum_child_resources = ProfilerExecutionResources::default();
-    for resource in child_resources {
+    let mut sum_child_storage_writes = 0;
+    for (resource, storage_writes) in child_resources {
         sum_child_resources += resource;
+
+        sum_child_storage_writes += storage_writes;
     }
 
     let current_resources = &call_trace.cumulative_resources;
     assert!(current_resources.gt_eq_than(&sum_child_resources));
+
+    let current_storage_writes = call_trace.used_l1_resources.storage_writes;
+    assert!(current_storage_writes >= sum_child_storage_writes);
+
     let resource_diff = current_resources - &sum_child_resources;
     assert_correct_diff_for_builtins_and_easily_unifiable_syscalls(&resource_diff);
-    assert_l2_l1_messages(call_trace);
 
-    current_resources
+    let storage_writes_diff = current_storage_writes - sum_child_storage_writes;
+    assert_l1_resources(call_trace, storage_writes_diff);
+
+    (current_resources, current_storage_writes)
 }
 
 fn assert_correct_diff_for_builtins_and_easily_unifiable_syscalls(
@@ -136,7 +145,7 @@ fn assert_correct_diff_for_builtins_and_easily_unifiable_syscalls(
     }
 }
 
-fn assert_l2_l1_messages(call_trace: &ProfilerCallTrace) {
+fn assert_l1_resources(call_trace: &ProfilerCallTrace, storage_writes_diff: isize) {
     assert_eq!(
         call_trace.used_l1_resources.l2_l1_message_sizes.len(),
         1,
@@ -146,6 +155,10 @@ fn assert_l2_l1_messages(call_trace: &ProfilerCallTrace) {
         call_trace.used_l1_resources.l2_l1_message_sizes,
         vec![2],
         "Message should have payload of length 2"
+    );
+    assert!(
+        storage_writes_diff <= 1,
+        "Every call should have at most one storage write"
     );
 }
 

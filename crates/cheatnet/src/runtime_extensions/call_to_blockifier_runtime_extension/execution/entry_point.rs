@@ -27,6 +27,7 @@ use std::collections::HashSet;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::AddressOrClassHash;
 
 // blockifier/src/execution/entry_point.rs:180 (CallEntryPoint::execute)
+#[allow(clippy::too_many_lines)]
 pub fn execute_call_entry_point(
     entry_point: &mut CallEntryPoint, // Instead of 'self'
     state: &mut dyn State,
@@ -52,9 +53,7 @@ pub fn execute_call_entry_point(
 
     // region: Modified blockifier code
     // We skip recursion depth validation here.
-
     let state_diff_before = state.to_state_diff();
-
     runtime_state.cheatnet_state.trace_data.enter_nested_call(
         entry_point.clone(),
         resources.clone(),

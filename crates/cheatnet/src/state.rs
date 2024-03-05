@@ -465,7 +465,7 @@ impl TraceData {
     }
 }
 
-fn get_storage_writes(after: &CommitmentStateDiff, before: &CommitmentStateDiff) -> usize {
+fn get_storage_writes(after: &CommitmentStateDiff, before: &CommitmentStateDiff) -> isize {
     let storage_writes_before: usize = before
         .storage_updates
         .iter()
@@ -477,7 +477,7 @@ fn get_storage_writes(after: &CommitmentStateDiff, before: &CommitmentStateDiff)
         .map(|(_, entry)| entry.len())
         .sum();
 
-    storage_writes_after - storage_writes_before
+    storage_writes_after as isize - storage_writes_before as isize
 }
 
 fn get_cheat_for_contract<T: Clone>(
