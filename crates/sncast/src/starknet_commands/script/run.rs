@@ -448,7 +448,7 @@ pub fn run(
         sierra_program,
         Some(MetadataComputationConfig::default()),
         OrderedHashMap::default(),
-        false,
+        None,
     )
     .with_context(|| "Failed to set up runner")?;
 
