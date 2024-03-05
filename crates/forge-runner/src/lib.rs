@@ -8,9 +8,7 @@ use anyhow::{anyhow, Result};
 
 use cairo_lang_runner::RunnerError;
 use cairo_lang_sierra::ids::ConcreteTypeId;
-use cairo_lang_sierra::program::{Function, Program};
-use cairo_lang_sierra_to_casm::compiler::CairoProgram;
-use cairo_lang_sierra_to_casm::metadata::{calc_metadata, MetadataComputationConfig};
+use cairo_lang_sierra::program::Function;
 use camino::Utf8PathBuf;
 
 use contracts_data::ContractsData;
@@ -26,6 +24,7 @@ use std::sync::Arc;
 use test_case_summary::{AnyTestCaseSummary, Fuzzing};
 use tokio::sync::mpsc::{channel, Sender};
 use tokio::task::JoinHandle;
+use universal_sierra_compiler_api::{compile_sierra_to_casm, AssembledProgramWithDebugInfo};
 
 pub mod build_trace_data;
 pub mod compiled_runnable;
@@ -153,12 +152,6 @@ pub enum TestCrateRunResult {
     Interrupted(TestCrateSummary),
 }
 
-fn compile_sierra_to_casm(sierra_program: &Program) -> CairoProgram {
-    let metadata_config = MetadataComputationConfig::default();
-    let metadata = calc_metadata(sierra_program, metadata_config).unwrap();
-    cairo_lang_sierra_to_casm::compiler::compile(sierra_program, &metadata, true).unwrap()
-}
-
 pub async fn run_tests_from_crate(
     tests: Arc<CompiledTestCrateRunnable>,
     runner_config: Arc<RunnerConfig>,
@@ -166,7 +159,7 @@ pub async fn run_tests_from_crate(
     tests_filter: &impl TestCaseFilter,
 ) -> Result<TestCrateRunResult> {
     let sierra_program = &tests.sierra_program;
-    let casm_program = Arc::new(compile_sierra_to_casm(sierra_program));
+    let casm_program = Arc::new(compile_sierra_to_casm(sierra_program)?);
 
     let mut tasks = FuturesUnordered::new();
     let test_cases = &tests.test_cases;
@@ -266,7 +259,7 @@ fn maybe_save_execution_data(
 fn choose_test_strategy_and_run(
     args: Vec<ConcreteTypeId>,
     case: Arc<TestCaseRunnable>,
-    casm_program: Arc<CairoProgram>,
+    casm_program: Arc<AssembledProgramWithDebugInfo>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     send: Sender<()>,
@@ -289,7 +282,7 @@ fn choose_test_strategy_and_run(
 fn run_with_fuzzing(
     args: Vec<ConcreteTypeId>,
     case: Arc<TestCaseRunnable>,
-    casm_program: Arc<CairoProgram>,
+    casm_program: Arc<AssembledProgramWithDebugInfo>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     send: Sender<()>,
