@@ -5,12 +5,9 @@ use crate::e2e::common::runner::{setup_package, test_runner};
 #[test]
 fn simple_package_build_profile() {
     let temp = setup_package("simple_package");
-    let snapbox = test_runner();
-    snapbox
-        .current_dir(&temp)
-        .arg("--build-profile")
-        .assert()
-        .code(1);
+
+    test_runner(&temp).arg("--build-profile").assert().code(1);
+
     assert!(temp
         .join(PROFILE_DIR)
         .join("simple_package::tests::test_fib.pb.gz")
@@ -29,10 +26,5 @@ fn simple_package_build_profile() {
         .exists());
 
     // Check if it doesn't crash in case some data already exists
-    let snapbox = test_runner();
-    snapbox
-        .current_dir(&temp)
-        .arg("--build-profile")
-        .assert()
-        .code(1);
+    test_runner(&temp).arg("--build-profile").assert().code(1);
 }

@@ -10,9 +10,10 @@ fn without_cache() {
     let temp = setup_package("forking");
 
     let output = test_runner(&temp)
-        .args(["forking::tests::test_fork_simple"])
+        .arg("forking::tests::test_fork_simple")
         .assert()
         .code(0);
+
     assert_stdout_contains(
         output,
         indoc! {r"
