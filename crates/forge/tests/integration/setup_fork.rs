@@ -125,6 +125,7 @@ fn fork_aliased_decorator() {
                 12345,
                 false,
                 false,
+                false,
                 None,
             )),
             Arc::new(RunnerParams::new(

@@ -142,7 +142,7 @@ fn with_failing_scarb_build() {
         .unwrap();
 
     test_runner(&temp).assert().code(2).stdout_eq(indoc! {r"
-            [ERROR] Failed to build test artifacts with Scarb
+            [ERROR] Failed to build test artifacts with Scarb: `scarb` exited with error
         "});
 }
 

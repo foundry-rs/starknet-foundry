@@ -1,8 +1,8 @@
 # `call`
 
-> `fn call(
+> `pub fn call(
     contract_address: ContractAddress, function_selector: felt252, calldata: Array::<felt252>
-) -> CallResult`
+) -> Result<CallResult, ScriptCommandError>`
 
 Calls a contract and returns `CallResult`.
 
@@ -26,7 +26,7 @@ fn main() {
         .try_into()
         .expect('Invalid contract address value');
 
-    let call_result = call(contract_address, selector!("get"), array![0x1]);
+    let call_result = call(contract_address, selector!("get"), array![0x1]).expect('call failed');
     println!("call_result: {}", call_result);
     println!("debug call_result: {:?}", call_result);
 }

@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - result of the call to the trace
+- added `--build-profile` flag to the `--test` command. Saves trace data and then builds profiles of test cases which pass and are not fuzz tests. You need [cairo-profiler](https://github.com/software-mansion/cairo-profiler) installed on your system.
+- dependency on the [universal-sierra-compiler](https://github.com/software-mansion/universal-sierra-compiler)
+binary, which will allow forge to be independent of sierra version
+
 
 #### Changed
 
@@ -65,6 +69,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - fixed a bug where a profile was passed to scarb even when it did not exist
+- error handling from inside deployment scripts is now possible (`declare`, `deploy`, `call`, `invoke` now return `Result<T, ScriptCommandError>`)
 
 ### Forge
 
