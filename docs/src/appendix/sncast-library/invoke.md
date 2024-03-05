@@ -1,12 +1,12 @@
 # `invoke`
 
-> `fn invoke(
+> `pub fn invoke(
     contract_address: ContractAddress,
     entry_point_selector: felt252,
     calldata: Array::<felt252>,
     max_fee: Option<felt252>,
     nonce: Option<felt252>
-) -> InvokeResult`
+) -> Result<InvokeResult, ScriptCommandError>`
 
 Invokes a contract and returns `InvokeResult`.
 
@@ -34,8 +34,8 @@ fn main() {
 
     let invoke_result = invoke(
         contract_address, selector!("put"), array![0x1, 0x2], Option::None, Option::None
-    );
-    
+    ).expect('invoke failed');
+
     println!("invoke_result: {}", invoke_result);
     println!("debug invoke_result: {:?}", invoke_result);
 }
