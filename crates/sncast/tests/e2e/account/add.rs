@@ -1,7 +1,9 @@
-use crate::helpers::constants::{DEVNET_OZ_CLASS_HASH, DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS, URL};
+use crate::helpers::constants::{
+    DEVNET_OZ_CLASS_HASH, DEVNET_OZ_CLASS_HASH_CAIRO_1, DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS, URL,
+};
 use crate::helpers::runner::runner;
 use camino::Utf8PathBuf;
-use indoc::indoc;
+use indoc::{formatdoc, indoc};
 use serde_json::json;
 use shared::test_utils::output_assert::assert_stderr_contains;
 use std::fs;
@@ -69,7 +71,7 @@ pub async fn test_existent_account_address() {
         "--name",
         "my_account_add",
         "--address",
-        "0xf6ecd22832b7c3713cfa7826ee309ce96a2769833f093795fafa1b8f20c48b",
+        DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS,
         "--private-key",
         "0x456",
     ];
@@ -85,8 +87,8 @@ pub async fn test_existent_account_address() {
             {
                 "alpha-goerli": {
                   "my_account_add": {
-                    "address": "0xf6ecd22832b7c3713cfa7826ee309ce96a2769833f093795fafa1b8f20c48b",
-                    "class_hash": "0x4d07e40e93398ed3c76981e72dd1fd22557a78ce36c0515f679e27f0bb5bc5f",
+                    "address": DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS,
+                    "class_hash": DEVNET_OZ_CLASS_HASH,
                     "deployed": true,
                     "private_key": "0x456",
                     "public_key": "0x5f679dacd8278105bd3b84a15548fe84079068276b0e84d6cc093eb5430f063"
@@ -102,9 +104,6 @@ pub async fn test_existent_account_address_and_incorrect_class_hash() {
     let tempdir = tempdir().expect("Unable to create a temporary directory");
     let accounts_file = "accounts.json";
 
-    // https://testnet.starkscan.co/contract/0x041a78e741e5af2fec34b695679bc6891742439f7afb8484ecd7766661ad02bf
-    let oz_universal_deployer_class_hash =
-        "0x07b3e05f48f0c69e4a65ce5e076a66271a527aff2c34ce1083ec6e1526997a69";
     let args = vec![
         "--url",
         URL,
@@ -115,19 +114,19 @@ pub async fn test_existent_account_address_and_incorrect_class_hash() {
         "--name",
         "my_account_add",
         "--address",
-        "0xf6ecd22832b7c3713cfa7826ee309ce96a2769833f093795fafa1b8f20c48b",
+        DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS,
         "--private-key",
         "0x456",
         "--class-hash",
-        oz_universal_deployer_class_hash,
+        DEVNET_OZ_CLASS_HASH_CAIRO_1,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
 
-    snapbox.assert().stderr_matches(indoc! {r"
+    snapbox.assert().stderr_matches(formatdoc! {r"
         command: account add
-        error: Incorrect class hash 0x7b3e05f48f0c69e4a65ce5e076a66271a527aff2c34ce1083ec6e1526997a69 for account address 0xf6ecd22832b7c3713cfa7826ee309ce96a2769833f093795fafa1b8f20c48b
-    "});
+        error: Incorrect class hash {} for account address {}
+    ", DEVNET_OZ_CLASS_HASH_CAIRO_1, DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS});
 }
 
 #[tokio::test]
@@ -260,7 +259,7 @@ pub async fn test_detect_deployed() {
                 "alpha-goerli": {
                   "my_account_add": {
                     "address": DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS,
-                    "class_hash": "0x4d07e40e93398ed3c76981e72dd1fd22557a78ce36c0515f679e27f0bb5bc5f",
+                    "class_hash": DEVNET_OZ_CLASS_HASH,
                     "deployed": true,
                     "private_key": "0x5",
                     "public_key": "0x788435d61046d3eec54d77d25bd194525f4fa26ebe6575536bc6f656656b74c"
