@@ -52,16 +52,6 @@ pub enum AddressOrClassHash {
     ClassHash(ClassHash),
 }
 
-impl AddressOrClassHash {
-    #[must_use]
-    pub fn get_by_entry_point(entry_point: &CallEntryPoint) -> Self {
-        match entry_point.call_type {
-            CallType::Call => Self::ContractAddress(entry_point.storage_address),
-            CallType::Delegate => Self::ClassHash(entry_point.class_hash.unwrap()),
-        }
-    }
-}
-
 impl CallFailure {
     /// Maps blockifier-type error, to one that can be put into memory as panic-data (or re-raised)
     #[must_use]

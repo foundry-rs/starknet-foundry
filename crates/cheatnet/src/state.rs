@@ -1,14 +1,10 @@
 use crate::forking::state::ForkStateReader;
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
-    subtract_execution_resources, AddressOrClassHash, CallResult,
-};
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallResult;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spoof::TxInfoMock;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::{
     Event, SpyTarget,
 };
-use blockifier::execution::entry_point::{
-    CallEntryPoint, EntryPointExecutionResult, ExecutionResources,
-};
+use blockifier::execution::entry_point::CallEntryPoint;
 use blockifier::{
     execution::contract_class::ContractClass,
     state::state_api::{StateReader, StateResult},
@@ -421,10 +417,9 @@ impl TraceData {
     pub fn exit_nested_call(
         &mut self,
         resources_used_after_call: &ExecutionResources,
-        execution_result: &EntryPointExecutionResult<CallInfo>,
-        identifier: &AddressOrClassHash,
         used_syscalls: &SyscallCounter,
-        call_result: CallResult,
+        result: CallResult,
+        call_info: Option<&CallInfo>,
     ) {
         let CallStackElement {
             resources_used_before_call,
@@ -437,18 +432,15 @@ impl TraceData {
             resources_used_after_call - &resources_used_before_call;
         last_call.used_syscalls = used_syscalls.clone();
 
-        last_call.used_l1_resources.l2_l1_message_sizes = execution_result.as_ref().map_or_else(
-            |_| vec![],
-            |call_info| {
-                let messages = &call_info.execution.l2_to_l1_messages;
-                messages
-                    .iter()
-                    .map(|ordered_message| ordered_message.message.payload.0.len())
-                    .collect()
-            },
-        );
+        last_call.used_l1_resources.l2_l1_message_sizes = call_info.map_or(vec![], |info| {
+            info.execution
+                .l2_to_l1_messages
+                .iter()
+                .map(|ordered_message| ordered_message.message.payload.0.len())
+                .collect()
+        });
 
-        last_call.result = CallResult::from_execution_result(execution_result, identifier);
+        last_call.result = result;
     }
 }
 

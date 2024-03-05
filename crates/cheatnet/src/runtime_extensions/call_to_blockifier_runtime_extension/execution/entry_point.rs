@@ -29,6 +29,7 @@ use std::collections::HashSet;
 use std::rc::Rc;
 use blockifier::execution::deprecated_syscalls::hint_processor::SyscallCounter;
 use cairo_felt::Felt252;
+use conversions::{FromConv};
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{AddressOrClassHash, CallResult};
 use crate::runtime_extensions::common::sum_syscall_counters;
 
@@ -65,18 +66,20 @@ pub fn execute_call_entry_point(
         cheated_data,
     );
 
-    let identifier = match entry_point.call_type {
-        CallType::Call => AddressOrClassHash::ContractAddress(entry_point.storage_address),
-        CallType::Delegate => AddressOrClassHash::ClassHash(entry_point.class_hash.unwrap()),
-    };
-
     if let Some(ret_data) =
         get_ret_data_by_call_entry_point(entry_point, runtime_state.cheatnet_state)
     {
+        let ret_data_f252: Vec<Felt252> = ret_data
+            .iter()
+            .map(|datum| Felt252::from_(*datum))
+            .collect();
         runtime_state.cheatnet_state.trace_data.exit_nested_call(
             resources,
-            &Ok(CallInfo::default()),
-            &identifier,
+            &Default::default(),
+            CallResult::Success {
+                ret_data: ret_data_f252,
+            },
+            Some(&CallInfo::default()),
         );
         return Ok(mocked_call_info(entry_point.clone(), ret_data.clone()));
     }
@@ -178,16 +181,19 @@ fn map_and_process_entry_point_call_result(
     entry_point: &mut CallEntryPoint,
     context: &mut EntryPointExecutionContext,
 ) -> EntryPointExecutionResult<CallInfo> {
+    let identifier = match entry_point.call_type {
+        CallType::Call => AddressOrClassHash::ContractAddress(entry_point.storage_address),
+        CallType::Delegate => AddressOrClassHash::ClassHash(entry_point.class_hash.unwrap()),
+    };
+
     result
         .map_err({
             |error| {
                 runtime_state.cheatnet_state.trace_data.exit_nested_call(
                     resources,
                     &Default::default(),
-                    CallResult::from_err(
-                        &error,
-                        &AddressOrClassHash::get_by_entry_point(entry_point),
-                    ),
+                    CallResult::from_err(&error, &identifier),
+                    None,
                 );
                 error
             }
@@ -211,6 +217,7 @@ fn map_and_process_entry_point_call_result(
                 resources,
                 &syscall_counter,
                 CallResult::from_success(&call_info),
+                Some(&call_info),
             );
             call_info
         })
