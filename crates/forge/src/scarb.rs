@@ -178,7 +178,8 @@ mod tests {
                 fuzzer_seed: None,
                 max_n_steps: None,
                 detailed_resources: false,
-                save_trace_data: false
+                save_trace_data: false,
+                build_profile: false
             }
         );
     }

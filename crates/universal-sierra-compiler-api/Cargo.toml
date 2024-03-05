@@ -1,0 +1,14 @@
+[package]
+name = "universal-sierra-compiler-api"
+version = "1.0.0"
+edition.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+which.workspace = true
+tempfile.workspace = true
+num-bigint.workspace = true
+cairo-lang-casm.workspace = true
+cairo-lang-sierra.workspace = true

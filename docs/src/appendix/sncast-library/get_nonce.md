@@ -1,6 +1,6 @@
 # `get_nonce`
 
-> `fn get_nonce(block_tag: felt252) -> felt252`
+> `pub fn get_nonce(block_tag: felt252) -> felt252`
 
 Gets nonce of an account for a given block tag (`pending` or `latest`) and returns nonce as `felt252`.
 

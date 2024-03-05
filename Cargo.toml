@@ -8,8 +8,8 @@ members = [
     "crates/cheatnet",
     "crates/conversions",
     "crates/runtime",
-    "crates/sierra-casm",
     "crates/scarb-api",
+    "crates/universal-sierra-compiler-api"
 ]
 
 [workspace.package]
@@ -22,7 +22,7 @@ license-file = "LICENSE"
 [workspace.dependencies]
 blockifier = "0.5.0-rc.4"
 starknet_api = "0.10.0-dev.3"
-cairo-lang-casm = "2.6.0-rc.1"
+cairo-lang-casm = { version = "2.6.0-rc.1", features = ["serde"] }
 cairo-lang-runner = "2.6.0-rc.1"
 cairo-lang-sierra-to-casm = "2.6.0-rc.1"
 cairo-lang-sierra = "2.6.0-rc.1"

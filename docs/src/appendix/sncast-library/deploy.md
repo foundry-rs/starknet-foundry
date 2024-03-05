@@ -1,13 +1,13 @@
 # `deploy`
 
-> `fn deploy(
+> `pub fn deploy(
     class_hash: ClassHash,
     constructor_calldata: Array::<felt252>,
     salt: Option<felt252>,
     unique: bool,
     max_fee: Option<felt252>,
     nonce: Option<felt252>
-) -> DeployResult`
+) -> Result<DeployResult, ScriptCommandError>`
 
 Deploys a contract and returns `DeployResult`.
 
@@ -44,7 +44,7 @@ fn main() {
         true,
         Option::Some(max_fee),
         Option::Some(nonce)
-    );
+    ).expect('deploy failed');
 
     println!("deploy_result: {}", deploy_result);
     println!("debug deploy_result: {:?}", deploy_result);

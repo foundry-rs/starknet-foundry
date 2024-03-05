@@ -58,7 +58,12 @@ Display additional info about used resources for passed tests.
 
 ## `--save-trace-data`
 
-Saves execution traces of test cases which have passed and are not fuzz tests to files. Traces can be used for profiling purposes.
+Saves execution traces of test cases which pass and are not fuzz tests. You can use traces for profiling purposes.
+
+## `--build-profile`
+
+Saves trace data and then builds profiles of test cases which pass and are not fuzz tests. 
+You need [cairo-profiler](https://github.com/software-mansion/cairo-profiler) installed on your system. You can set a custom path to cairo-profiler with `CAIRO_PROFILER` env variable. Profile can be read with pprof, more information: [cairo-profiler](https://github.com/software-mansion/cairo-profiler), [pprof](https://github.com/google/pprof?tab=readme-ov-file#building-pprof)
 
 ## `--max-n-steps` `<MAX_N_STEPS>`
 

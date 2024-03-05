@@ -1,6 +1,6 @@
 # `declare`
 
-> `fn declare(contract_name: ByteArray, max_fee: Option<felt252>, nonce: Option<felt252>) -> DeclareResult`
+> `pub fn declare(contract_name: ByteArray, max_fee: Option<felt252>, nonce: Option<felt252>) -> Result<DeclareResult, ScriptCommandError>`
 
 Declares a contract and returns `DeclareResult`.
 
@@ -21,11 +21,8 @@ use sncast_std::{declare, DeclareResult};
 
 fn main() {
     let max_fee = 9999999;
-    let declare_result = declare("HelloStarknet", Option::Some(max_fee), Option::None);
+    let declare_result = declare("HelloStarknet", Option::Some(max_fee), Option::None).expect('declare failed');
 
-    let class_hash = declare_result.class_hash;
-    class_hash_to_felt252(class_hash).print();
-    
     println!("declare_result: {}", declare_result);
     println!("debug declare_result: {:?}", declare_result);
 }
