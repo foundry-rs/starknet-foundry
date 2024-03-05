@@ -8,7 +8,7 @@ use anyhow::{anyhow, Result};
 
 use cairo_lang_runner::RunnerError;
 use cairo_lang_sierra::ids::ConcreteTypeId;
-use cairo_lang_sierra::program::{Function, Program};
+use cairo_lang_sierra::program::Function;
 use camino::Utf8PathBuf;
 
 use contracts_data::ContractsData;
@@ -18,15 +18,12 @@ use futures::StreamExt;
 use build_trace_data::save_trace_data;
 use smol_str::SmolStr;
 
-use cairo_lang_casm::hints::Hint;
-use num_bigint::BigInt;
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 use test_case_summary::{AnyTestCaseSummary, Fuzzing};
 use tokio::sync::mpsc::{channel, Sender};
 use tokio::task::JoinHandle;
-use universal_sierra_compiler_api::{compile_sierra, SierraType};
+use universal_sierra_compiler_api::{compile_sierra_to_casm, AssembledProgramWithDebugInfo};
 
 pub mod build_trace_data;
 pub mod compiled_runnable;
@@ -130,30 +127,6 @@ pub trait TestCaseFilter {
 pub enum TestCrateRunResult {
     Ok(TestCrateSummary),
     Interrupted(TestCrateSummary),
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct AssembledProgramWithDebugInfo {
-    pub assembled_cairo_program: AssembledCairoProgramWithSerde,
-    pub debug_info: Vec<(usize, usize)>,
-}
-
-#[derive(Serialize, Deserialize, Clone)]
-pub struct AssembledCairoProgramWithSerde {
-    pub bytecode: Vec<BigInt>,
-    pub hints: Vec<(usize, Vec<Hint>)>,
-}
-
-fn compile_sierra_to_casm(sierra_program: &Program) -> Result<AssembledProgramWithDebugInfo> {
-    let assembled_with_info_raw = compile_sierra(
-        &serde_json::to_value(sierra_program).unwrap(),
-        None,
-        &SierraType::Raw,
-    )?;
-    let assembled_with_info: AssembledProgramWithDebugInfo =
-        serde_json::from_str(&assembled_with_info_raw)?;
-
-    Ok(assembled_with_info)
 }
 
 pub async fn run_tests_from_crate(

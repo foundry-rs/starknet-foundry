@@ -25,7 +25,8 @@ impl UniversalSierraCompilerCommand {
     pub fn ensure_available() -> anyhow::Result<()> {
         which::which(UniversalSierraCompilerCommand::binary_path())
             .context("Cannot find `universal-sierra-compiler` binary. \
-                      Make sure you have USC installed https://github.com/software-mansion/universal-sierra-compiler"
+                      Make sure you have USC installed https://github.com/software-mansion/universal-sierra-compiler \
+                      and added to PATH (or set at UNIVERSAL_SIERRA_COMPILER env var)"
             )?;
         Ok(())
     }

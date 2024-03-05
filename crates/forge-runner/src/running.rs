@@ -9,10 +9,7 @@ use crate::compiled_runnable::ValidatedForkConfig;
 use crate::contracts_data::ContractsData;
 use crate::gas::calculate_used_gas;
 use crate::test_case_summary::{Single, TestCaseSummary};
-use crate::{
-    AssembledCairoProgramWithSerde, AssembledProgramWithDebugInfo, RunnerConfig, RunnerParams,
-    TestCaseRunnable, CACHE_DIR,
-};
+use crate::{RunnerConfig, RunnerParams, TestCaseRunnable, CACHE_DIR};
 use anyhow::{bail, ensure, Result};
 use blockifier::execution::entry_point::{EntryPointExecutionContext, ExecutionResources};
 use blockifier::execution::execution_utils::ReadOnlySegments;
@@ -48,6 +45,9 @@ use runtime::starknet::context::{build_context, set_max_steps};
 use runtime::{ExtendedRuntime, StarknetRuntime};
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
+use universal_sierra_compiler_api::{
+    AssembledCairoProgramWithSerde, AssembledProgramWithDebugInfo,
+};
 
 pub fn run_test(
     case: Arc<TestCaseRunnable>,

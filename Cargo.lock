@@ -5398,6 +5398,9 @@ name = "universal-sierra-compiler-api"
 version = "1.0.0"
 dependencies = [
  "anyhow",
+ "cairo-lang-casm",
+ "cairo-lang-sierra",
+ "num-bigint",
  "serde",
  "serde_json",
  "tempfile",
