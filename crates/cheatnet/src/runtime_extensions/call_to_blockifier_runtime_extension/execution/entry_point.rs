@@ -144,7 +144,7 @@ pub fn execute_call_entry_point(
         ),
     };
 
-    let entry_point_call_result = result.map_err(|error| {
+    let result = result.map_err(|error| {
         // endregion
         let vm_trace = error.try_to_vm_trace();
         match error {
@@ -172,63 +172,65 @@ pub fn execute_call_entry_point(
     });
 
     // region: Modified blockifier code
-    map_and_process_entry_point_call_result(
-        entry_point_call_result,
-        runtime_state,
-        resources,
-        entry_point,
-        context,
-    )
+    match &result {
+        Ok((call_info, syscall_counter)) => remove_syscall_resources_and_exit_success_call(
+            call_info,
+            syscall_counter,
+            context,
+            resources,
+            runtime_state,
+        ),
+        Err(err) => exit_error_call(err, runtime_state, resources, entry_point),
+    }
+
+    result.map(|(call_info, _)| call_info)
     // endregion
 }
 
-fn map_and_process_entry_point_call_result(
-    result: EntryPointExecutionResult<(CallInfo, SyscallCounter)>,
+fn remove_syscall_resources_and_exit_success_call(
+    call_info: &CallInfo,
+    syscall_counter: &SyscallCounter,
+    context: &mut EntryPointExecutionContext,
+    resources: &mut ExecutionResources,
+    runtime_state: &mut RuntimeState,
+) {
+    let versioned_constants = context.tx_context.block_context.versioned_constants();
+    // We don't want the syscall resources to pollute the results
+    *resources -= &versioned_constants
+        .get_additional_os_syscall_resources(syscall_counter)
+        .expect("Could not get additional resources");
+    let nested_syscall_counter_sum = aggregate_nested_syscall_counters(
+        &runtime_state
+            .cheatnet_state
+            .trace_data
+            .current_call_stack
+            .top(),
+    );
+    let syscall_counter = sum_syscall_counters(nested_syscall_counter_sum, syscall_counter);
+    runtime_state.cheatnet_state.trace_data.exit_nested_call(
+        resources,
+        &syscall_counter,
+        CallResult::from_success(call_info),
+        Some(call_info),
+    );
+}
+
+fn exit_error_call(
+    error: &EntryPointExecutionError,
     runtime_state: &mut RuntimeState,
     resources: &mut ExecutionResources,
-    entry_point: &mut CallEntryPoint,
-    context: &mut EntryPointExecutionContext,
-) -> EntryPointExecutionResult<CallInfo> {
+    entry_point: &CallEntryPoint,
+) {
     let identifier = match entry_point.call_type {
         CallType::Call => AddressOrClassHash::ContractAddress(entry_point.storage_address),
         CallType::Delegate => AddressOrClassHash::ClassHash(entry_point.class_hash.unwrap()),
     };
-
-    result
-        .map_err({
-            |error| {
-                runtime_state.cheatnet_state.trace_data.exit_nested_call(
-                    resources,
-                    &Default::default(),
-                    CallResult::from_err(&error, &identifier),
-                    None,
-                );
-                error
-            }
-        })
-        .map(|(call_info, this_call_syscall_counter)| {
-            let versioned_constants = context.tx_context.block_context.versioned_constants();
-            // We don't want the syscall resources to pollute the results
-            *resources -= &versioned_constants
-                .get_additional_os_syscall_resources(&this_call_syscall_counter)
-                .expect("Could not get additional resources");
-            let nested_syscall_counter_sum = aggregate_nested_syscall_counters(
-                &runtime_state
-                    .cheatnet_state
-                    .trace_data
-                    .current_call_stack
-                    .top(),
-            );
-            let syscall_counter =
-                sum_syscall_counters(nested_syscall_counter_sum, &this_call_syscall_counter);
-            runtime_state.cheatnet_state.trace_data.exit_nested_call(
-                resources,
-                &syscall_counter,
-                CallResult::from_success(&call_info),
-                Some(&call_info),
-            );
-            call_info
-        })
+    runtime_state.cheatnet_state.trace_data.exit_nested_call(
+        resources,
+        &Default::default(),
+        CallResult::from_err(error, &identifier),
+        None,
+    );
 }
 
 // blockifier/src/execution/entry_point.rs:366 (execute_constructor_entry_point)
