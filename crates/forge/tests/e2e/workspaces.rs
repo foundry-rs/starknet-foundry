@@ -176,7 +176,7 @@ fn root_workspace_inside_nested_package() {
     let temp = setup_hello_workspace();
 
     let output = test_runner(&temp)
-        .current_dir(&temp.join("crates/addition"))
+        .current_dir(temp.join("crates/addition"))
         .assert()
         .success();
 
@@ -274,7 +274,7 @@ fn root_workspace_for_entire_workspace_inside_package() {
     let temp = setup_hello_workspace();
 
     let output = test_runner(&temp)
-        .current_dir(&temp.join("crates/fibonacci"))
+        .current_dir(temp.join("crates/fibonacci"))
         .arg("--workspace")
         .assert()
         .code(1);

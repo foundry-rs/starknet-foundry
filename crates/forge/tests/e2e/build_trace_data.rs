@@ -40,10 +40,7 @@ fn simple_package_save_trace() {
     assert!(call_trace.nested_calls.is_empty());
 
     // Check if it doesn't crash in case some data already exists
-    test_runner(&temp)
-        .arg("--save-trace-data")
-        .assert()
-        .code(1);
+    test_runner(&temp).arg("--save-trace-data").assert().code(1);
 }
 
 #[test]
