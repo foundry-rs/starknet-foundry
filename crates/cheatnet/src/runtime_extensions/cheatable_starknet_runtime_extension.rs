@@ -89,7 +89,7 @@ impl<'a> ExtensionLogic for CheatableStarknetRuntimeExtension<'a> {
         selector: &DeprecatedSyscallSelector,
         extended_runtime: &mut Self::Runtime,
     ) {
-        let syscall_handler = &mut extended_runtime.hint_handler;
+        let syscall_handler = &extended_runtime.hint_handler;
         if let SyscallSelector::EmitEvent = selector {
             syscall_hooks::emit_event_hook(syscall_handler, self.cheatnet_state);
         }

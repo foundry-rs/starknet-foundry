@@ -81,7 +81,7 @@ pub fn execute_call_entry_point(
             },
             Some(&CallInfo::default()),
         );
-        return Ok(mocked_call_info(entry_point.clone(), ret_data.clone()));
+        return Ok(mocked_call_info(entry_point.clone(), ret_data));
     }
     // endregion
 
@@ -93,8 +93,16 @@ pub fn execute_call_entry_point(
             PreExecutionError::UninitializedStorageAddress(entry_point.storage_address).into(),
         );
     }
+    let maybe_replacement_class = runtime_state
+        .cheatnet_state
+        .replaced_bytecode_contracts
+        .get(&storage_address)
+        .copied();
 
-    let class_hash = entry_point.class_hash.unwrap_or(storage_class_hash);
+    let class_hash = entry_point
+        .class_hash
+        .or(maybe_replacement_class)
+        .unwrap_or(storage_class_hash); // If not given, take the storage contract class hash.
 
     // region: Modified blockifier code
     runtime_state
@@ -272,7 +280,7 @@ fn get_ret_data_by_call_entry_point(
 
             let ret_data = contract_functions
                 .get(&entrypoint_selector)
-                .map(std::clone::Clone::clone);
+                .map(Clone::clone);
             return ret_data;
         }
     }

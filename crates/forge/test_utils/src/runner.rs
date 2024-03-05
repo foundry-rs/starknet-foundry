@@ -30,16 +30,19 @@ pub struct Contract {
 
 impl Contract {
     #[must_use]
-    pub fn new(name: &str, code: &str) -> Self {
+    pub fn new(name: impl Into<String>, code: impl Into<String>) -> Self {
         Self {
-            name: name.to_string(),
-            code: code.to_string(),
+            name: name.into(),
+            code: code.into(),
         }
     }
 
-    pub fn from_code_path(name: String, path: &Path) -> Result<Self> {
+    pub fn from_code_path(name: impl Into<String>, path: &Path) -> Result<Self> {
         let code = fs::read_to_string(path)?;
-        Ok(Self { name, code })
+        Ok(Self {
+            name: name.into(),
+            code,
+        })
     }
 
     fn generate_sierra_and_casm(self) -> Result<(String, String)> {
@@ -87,12 +90,12 @@ impl Contract {
             .find(|package| package.name == "contract")
             .unwrap();
 
-        Ok(get_contracts_map(&scarb_metadata, &package.id, None)
+        let contract = get_contracts_map(&scarb_metadata, &package.id, None)
             .unwrap()
-            .into_values()
-            .map(|x| (x.sierra, x.casm))
-            .next()
-            .unwrap())
+            .remove(&self.name)
+            .ok_or(anyhow!("there is no contract with name {}", self.name))?;
+
+        Ok((contract.sierra, contract.casm))
     }
 }
 

@@ -3,6 +3,7 @@ mod events;
 mod get_class_hash;
 mod mock;
 mod prank;
+mod replace_bytecode;
 mod roll;
 mod spoof;
 mod elect;

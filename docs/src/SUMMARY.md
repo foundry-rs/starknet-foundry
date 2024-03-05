@@ -61,6 +61,7 @@
     * [spy_events](appendix/cheatcodes/spy_events.md)
     * [start_spoof](appendix/cheatcodes/start_spoof.md)
     * [stop_spoof](appendix/cheatcodes/stop_spoof.md)
+    * [replace_bytecode](appendix/cheatcodes/replace_bytecode.md)
     * [store](appendix/cheatcodes/store.md)
     * [load](appendix/cheatcodes/load.md)
 * [`snforge` Library Functions References](appendix/snforge-library.md)
