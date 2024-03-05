@@ -54,11 +54,11 @@ fn json_values_sorted_by_keys(content: &str) -> Result<Vec<String>, EnhancedHint
 fn value_into_vec(value: &Value) -> Vec<String> {
     match value {
         Value::Array(vec) => {
-            let vec_len = vec.len().to_string();
+            let vec_len = vec.len();
 
-            let mut str_vec = vec![];
+            let mut str_vec = Vec::with_capacity(vec_len + 1);
 
-            str_vec.push(vec_len);
+            str_vec.push(vec_len.to_string());
             str_vec.extend(vec.iter().map(ToString::to_string));
 
             str_vec

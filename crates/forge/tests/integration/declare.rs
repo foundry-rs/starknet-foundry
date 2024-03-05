@@ -65,7 +65,7 @@ fn simple_declare() {
 #[test]
 fn declare_simple() {
     let contract = Contract::from_code_path(
-        "Contract1".to_string(),
+        "HelloStarknet".to_string(),
         Path::new("tests/data/contracts/hello_starknet.cairo"),
     )
     .unwrap();
@@ -81,7 +81,7 @@ fn declare_simple() {
         #[test]
         fn declare_simple() {
             assert(1 == 1, 'simple check');
-            let contract = declare("Contract1");
+            let contract = declare("HelloStarknet");
             let class_hash = contract.class_hash.into();
             assert(class_hash != 0, 'proper class hash');
         }
