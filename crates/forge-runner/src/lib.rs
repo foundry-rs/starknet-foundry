@@ -16,6 +16,7 @@ use futures::stream::FuturesUnordered;
 use futures::StreamExt;
 
 use build_trace_data::save_trace_data;
+use profiler_api::run_profiler;
 use smol_str::SmolStr;
 
 use std::collections::HashMap;
@@ -29,6 +30,7 @@ pub mod build_trace_data;
 pub mod compiled_runnable;
 pub mod contracts_data;
 pub mod expected_result;
+pub mod profiler_api;
 pub mod test_case_summary;
 pub mod test_crate_summary;
 
@@ -50,6 +52,26 @@ pub const BUILTINS: [&str; 8] = [
     "System",
 ];
 
+#[derive(Debug, PartialEq)]
+pub enum ExecutionDataToSave {
+    None,
+    Trace,
+    /// Profile data requires saved trace data
+    TraceAndProfile,
+}
+
+impl ExecutionDataToSave {
+    fn from_flags(save_trace_data: bool, build_profile: bool) -> Self {
+        if build_profile {
+            return ExecutionDataToSave::TraceAndProfile;
+        }
+        if save_trace_data {
+            return ExecutionDataToSave::Trace;
+        }
+        ExecutionDataToSave::None
+    }
+}
+
 /// Configuration of the test runner
 #[derive(Debug, PartialEq)]
 #[non_exhaustive]
@@ -59,7 +81,7 @@ pub struct RunnerConfig {
     pub fuzzer_runs: u32,
     pub fuzzer_seed: u64,
     pub detailed_resources: bool,
-    pub save_trace_data: bool,
+    pub execution_data_to_save: ExecutionDataToSave,
     pub max_n_steps: Option<u32>,
 }
 
@@ -73,6 +95,7 @@ impl RunnerConfig {
         fuzzer_seed: u64,
         detailed_resources: bool,
         save_trace_data: bool,
+        build_profile: bool,
         max_n_steps: Option<u32>,
     ) -> Self {
         Self {
@@ -81,7 +104,7 @@ impl RunnerConfig {
             fuzzer_runs,
             fuzzer_seed,
             detailed_resources,
-            save_trace_data,
+            execution_data_to_save: ExecutionDataToSave::from_flags(save_trace_data, build_profile),
             max_n_steps,
         }
     }
@@ -188,12 +211,7 @@ pub async fn run_tests_from_crate(
         let result = task??;
 
         print_test_result(&result, &runner_config);
-
-        if runner_config.save_trace_data {
-            if let AnyTestCaseSummary::Single(result) = &result {
-                save_trace_data(result);
-            }
-        }
+        maybe_save_execution_data(&result, &runner_config.execution_data_to_save)?;
 
         if result.is_failed() && runner_config.exit_first {
             interrupted = true;
@@ -213,6 +231,28 @@ pub async fn run_tests_from_crate(
     } else {
         Ok(TestCrateRunResult::Ok(summary))
     }
+}
+
+fn maybe_save_execution_data(
+    result: &AnyTestCaseSummary,
+    execution_data_to_save: &ExecutionDataToSave,
+) -> Result<()> {
+    if let AnyTestCaseSummary::Single(TestCaseSummary::Passed {
+        name, trace_data, ..
+    }) = result
+    {
+        match execution_data_to_save {
+            ExecutionDataToSave::Trace => {
+                let _ = save_trace_data(name, trace_data);
+            }
+            ExecutionDataToSave::TraceAndProfile => {
+                let trace_path = save_trace_data(name, trace_data);
+                run_profiler(name, &trace_path)?;
+            }
+            ExecutionDataToSave::None => {}
+        }
+    }
+    Ok(())
 }
 
 #[allow(clippy::too_many_arguments)]
