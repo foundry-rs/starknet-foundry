@@ -73,7 +73,7 @@ async fn test_happy_case_specify_package() {
 }
 
 #[tokio::test]
-async fn contract_already_declared() {
+async fn test_contract_already_declared() {
     let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
@@ -102,7 +102,7 @@ async fn contract_already_declared() {
 }
 
 #[tokio::test]
-async fn invalid_nonce() {
+async fn test_invalid_nonce() {
     let contract_path =
         duplicate_contract_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "1123");
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
@@ -136,7 +136,7 @@ async fn invalid_nonce() {
 }
 
 #[tokio::test]
-async fn wrong_contract_name_passed() {
+async fn test_wrong_contract_name_passed() {
     let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
@@ -164,7 +164,7 @@ async fn wrong_contract_name_passed() {
 }
 
 #[test]
-fn scarb_build_fails_when_wrong_cairo_path() {
+fn test_scarb_build_fails_when_wrong_cairo_path() {
     let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/build_fails");
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
@@ -190,7 +190,7 @@ fn scarb_build_fails_when_wrong_cairo_path() {
 
 #[should_panic(expected = "Path to Scarb.toml manifest does not exist")]
 #[test]
-fn scarb_build_fails_scarb_toml_does_not_exist() {
+fn test_scarb_build_fails_scarb_toml_does_not_exist() {
     let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR);
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
@@ -210,7 +210,7 @@ fn scarb_build_fails_scarb_toml_does_not_exist() {
 }
 
 #[test]
-fn scarb_build_fails_manifest_does_not_exist() {
+fn test_scarb_build_fails_manifest_does_not_exist() {
     let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR);
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
@@ -272,7 +272,7 @@ fn test_too_low_max_fee() {
 
 #[should_panic(expected = "Make sure you have enabled sierra code generation in Scarb.toml")]
 #[test]
-fn scarb_no_sierra_artifact() {
+fn test_scarb_no_sierra_artifact() {
     let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/no_sierra");
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
@@ -292,7 +292,7 @@ fn scarb_no_sierra_artifact() {
 }
 
 #[test]
-fn scarb_no_casm_artifact() {
+fn test_scarb_no_casm_artifact() {
     let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/no_casm");
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
