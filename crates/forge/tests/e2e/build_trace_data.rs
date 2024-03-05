@@ -9,12 +9,7 @@ use crate::e2e::common::runner::{setup_package, test_runner};
 #[test]
 fn simple_package_save_trace() {
     let temp = setup_package("simple_package");
-    let snapbox = test_runner();
-    snapbox
-        .current_dir(&temp)
-        .arg("--save-trace-data")
-        .assert()
-        .code(1);
+    test_runner(&temp).arg("--save-trace-data").assert().code(1);
 
     assert!(temp
         .join(TRACE_DIR)
@@ -45,9 +40,7 @@ fn simple_package_save_trace() {
     assert!(call_trace.nested_calls.is_empty());
 
     // Check if it doesn't crash in case some data already exists
-    let snapbox = test_runner();
-    snapbox
-        .current_dir(&temp)
+    test_runner(&temp)
         .arg("--save-trace-data")
         .assert()
         .code(1);
@@ -56,11 +49,8 @@ fn simple_package_save_trace() {
 #[test]
 fn trace_has_contract_and_function_names() {
     let temp = setup_package("trace");
-    let snapbox = test_runner();
-
-    snapbox
+    test_runner(&temp)
         .arg("--save-trace-data")
-        .current_dir(&temp)
         .assert()
         .success();
 

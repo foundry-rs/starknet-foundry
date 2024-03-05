@@ -1,4 +1,4 @@
-use crate::e2e::common::runner::{setup_package, test_runner};
+use crate::e2e::common::runner::setup_package;
 use assert_fs::fixture::{FileWriteStr, PathChild};
 use axum::{extract::Query, response::Redirect, routing::any, Router};
 use indoc::{formatdoc, indoc};
@@ -10,6 +10,8 @@ use tokio::{
     net::TcpListener,
     runtime::{Builder, Runtime},
 };
+
+use super::common::runner::test_runner;
 
 #[derive(serde::Deserialize)]
 struct Params {
@@ -53,12 +55,7 @@ fn should_print_warning() {
         ))
         .unwrap();
 
-    let snapbox = test_runner();
-
-    let output = snapbox
-        .env("SCARB_CACHE", temp.path())
-        .current_dir(&temp)
-        .assert();
+    let output = test_runner(&temp).assert();
 
     assert_stdout_contains(
         output,
@@ -107,12 +104,7 @@ fn should_dedup_urls() {
         ))
         .unwrap();
 
-    let snapbox = test_runner();
-
-    let output = snapbox
-        .env("SCARB_CACHE", temp.path())
-        .current_dir(&temp)
-        .assert();
+    let output = test_runner(&temp).assert();
 
     assert_stdout_contains(
         output,
@@ -167,12 +159,7 @@ fn should_print_foreach() {
         ))
         .unwrap();
 
-    let snapbox = test_runner();
-
-    let output = snapbox
-        .env("SCARB_CACHE", temp.path())
-        .current_dir(&temp)
-        .assert();
+    let output = test_runner(&temp).assert();
 
     assert_stdout_contains(
         output,

@@ -1,14 +1,14 @@
-use crate::e2e::common::runner::{setup_package, test_runner};
+use crate::e2e::common::runner::setup_package;
 use indoc::indoc;
 use shared::test_utils::output_assert::assert_stdout_contains;
+
+use super::common::runner::test_runner;
 
 #[test]
 fn should_allow_less_than_default() {
     let temp = setup_package("steps");
-    let snapbox = test_runner();
 
-    let output = snapbox
-        .current_dir(&temp)
+    let output = test_runner(&temp)
         .args(["--max-n-steps", "100000"])
         .assert()
         .code(1);
@@ -58,10 +58,8 @@ fn should_allow_less_than_default() {
 // 4_000_000 is blockifier limit we want to omit
 fn should_allow_more_than_4kk() {
     let temp = setup_package("steps");
-    let snapbox = test_runner();
 
-    let output = snapbox
-        .current_dir(&temp)
+    let output = test_runner(&temp)
         .args(["--max-n-steps", "5700031"])
         .assert()
         .code(0);
@@ -88,9 +86,8 @@ fn should_allow_more_than_4kk() {
 #[test]
 fn should_default_to_3kk() {
     let temp = setup_package("steps");
-    let snapbox = test_runner();
 
-    let output = snapbox.current_dir(&temp).assert().code(1);
+    let output = test_runner(&temp).assert().code(1);
 
     assert_stdout_contains(
         output,

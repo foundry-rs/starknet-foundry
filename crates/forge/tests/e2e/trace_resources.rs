@@ -11,7 +11,9 @@ use trace_data::{
     CallTrace as ProfilerCallTrace, ExecutionResources as ProfilerExecutionResources,
 };
 
-use crate::e2e::common::runner::{setup_package, test_runner};
+use crate::e2e::common::runner::setup_package;
+
+use super::common::runner::test_runner;
 
 #[test]
 fn trace_resources_call() {
@@ -50,9 +52,8 @@ fn assert_resources_for_test(
     check_not_easily_unifiable_syscalls: fn(&ProfilerCallTrace),
 ) {
     let temp = setup_package("trace_resources");
-    let snapbox = test_runner();
-    snapbox
-        .current_dir(&temp)
+
+    test_runner(&temp)
         .arg(test_name)
         .arg("--save-trace-data")
         .assert()
