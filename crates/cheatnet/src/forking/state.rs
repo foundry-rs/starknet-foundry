@@ -225,10 +225,12 @@ impl StateReader for ForkStateReader {
                 match compile_sierra(&sierra_contract_class, None, &SierraType::Contract) {
                     Ok(casm_contract_class_raw) => {
                         let casm_contract_class: CasmContractClass =
-                            serde_json::from_str(&casm_contract_class_raw).unwrap();
+                            serde_json::from_str(&casm_contract_class_raw)
+                                .expect("Unable to deserialize CasmContractClass");
 
                         Ok(ContractClassBlockifier::V1(
-                            ContractClassV1::try_from(casm_contract_class).unwrap(),
+                            ContractClassV1::try_from(casm_contract_class)
+                                .expect("Unable to create ContractClassV1 from CasmContractClass"),
                         ))
                     }
                     Err(err) => Err(StateReadError(err.to_string())),
