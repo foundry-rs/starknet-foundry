@@ -33,6 +33,7 @@ binary, which will allow forge to be independent of sierra version
 #### Removed
 
 - `--path-to-scarb-toml` optional flag that allowed to specify the path to the `Scarb.toml` file
+- `--deployed` flag from `account add` subcommand
 
 ## [0.18.0] - 2024-02-21
 
