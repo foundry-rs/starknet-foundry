@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
+⚠️ This version requires installing external [universal-sierra-compiler (v2.0.0)](https://github.com/software-mansion/universal-sierra-compiler) ⚠️
+
 #### Added
 
 - [`replace_bytecode`](https://foundry-rs.github.io/starknet-foundry/appendix/cheatcodes/replace_bytecode.html)  cheatcode
