@@ -1,3 +1,4 @@
+use crate::byte_array::ByteArray;
 use crate::{FromConv, IntoConv, TryFromConv};
 use blockifier::execution::execution_utils::stark_felt_to_felt;
 use cairo_felt::{Felt252, ParseFeltError};
@@ -65,5 +66,32 @@ impl FromShortString<Felt252> for Felt252 {
         } else {
             Err(ParseFeltError)
         }
+    }
+}
+
+pub trait SerializeAsFelt252Vec {
+    fn serialize_as_felt252_vec(&self) -> Vec<Felt252>;
+}
+
+impl<T: SerializeAsFelt252Vec, E: SerializeAsFelt252Vec> SerializeAsFelt252Vec for Result<T, E> {
+    fn serialize_as_felt252_vec(&self) -> Vec<Felt252> {
+        match self {
+            Ok(val) => {
+                let mut res = vec![Felt252::from(0)];
+                res.extend(val.serialize_as_felt252_vec());
+                res
+            }
+            Err(err) => {
+                let mut res = vec![Felt252::from(1)];
+                res.extend(err.serialize_as_felt252_vec());
+                res
+            }
+        }
+    }
+}
+
+impl SerializeAsFelt252Vec for &str {
+    fn serialize_as_felt252_vec(&self) -> Vec<Felt252> {
+        ByteArray::from(*self).serialize_no_magic()
     }
 }
