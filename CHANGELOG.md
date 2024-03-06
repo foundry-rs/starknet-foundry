@@ -7,7 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.0] - 2024-03-06
+
 ### Forge
+
+⚠️ This version requires installing external [universal-sierra-compiler (v2.0.0)](https://github.com/software-mansion/universal-sierra-compiler) ⚠️
 
 #### Added
 
@@ -33,6 +37,7 @@ binary, which will allow forge to be independent of sierra version
 #### Removed
 
 - `--path-to-scarb-toml` optional flag that allowed to specify the path to the `Scarb.toml` file
+- `--deployed` flag from `account add` subcommand
 
 ## [0.18.0] - 2024-02-21
 

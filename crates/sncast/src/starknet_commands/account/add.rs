@@ -4,14 +4,15 @@ use crate::starknet_commands::account::{
 use anyhow::{ensure, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
+use sncast::handle_rpc_error;
 use sncast::helpers::configuration::CastConfig;
 use sncast::response::structs::AccountAddResponse;
 use sncast::{check_class_hash_exists, get_chain_id, parse_number};
 use starknet::core::types::BlockTag::Pending;
-use starknet::core::types::{BlockId, FieldElement};
+use starknet::core::types::{BlockId, FieldElement, StarknetError};
 use starknet::providers::{
     jsonrpc::{HttpTransport, JsonRpcClient},
-    Provider,
+    Provider, ProviderError,
 };
 use starknet::signers::SigningKey;
 
@@ -29,11 +30,6 @@ pub struct Add {
     /// Class hash of the account
     #[clap(short, long)]
     pub class_hash: Option<FieldElement>,
-
-    /// Account deployment status
-    /// If not passed, sncast will check whether the account is deployed or not
-    #[clap(short, long)]
-    pub deployed: bool,
 
     /// Account private key
     #[clap(long, group = "private_key_input")]
@@ -79,18 +75,27 @@ pub async fn add(
         );
     }
 
-    if let Some(class_hash) = add.class_hash {
-        check_class_hash_exists(provider, class_hash).await?;
-    }
-
-    let deployed = add.deployed
-        || provider
-            .get_class_hash_at(BlockId::Tag(Pending), add.address)
-            .await
-            .is_ok();
+    let fetched_class_hash = get_class_hash_by_address(provider, add.address).await?;
+    let is_deployed = fetched_class_hash.is_some();
+    let class_hash = match (fetched_class_hash, add.class_hash) {
+        (Some(from_provider), Some(from_user)) => {
+            ensure!(
+                from_provider == from_user,
+                "Incorrect class hash {:#x} for account address {:#x}",
+                from_user,
+                add.address
+            );
+            fetched_class_hash
+        }
+        (None, Some(from_user)) => {
+            check_class_hash_exists(provider, from_user).await?;
+            Some(from_user)
+        }
+        _ => fetched_class_hash,
+    };
 
     let account_json =
-        prepare_account_json(private_key, add.address, deployed, add.class_hash, add.salt);
+        prepare_account_json(private_key, add.address, is_deployed, class_hash, add.salt);
 
     let chain_id = get_chain_id(provider).await?;
     write_account_to_accounts_file(account, accounts_file, chain_id, account_json.clone())?;
@@ -120,4 +125,18 @@ pub async fn add(
 fn get_private_key_from_file(file_path: &Utf8PathBuf) -> Result<FieldElement> {
     let private_key_string = std::fs::read_to_string(file_path.clone())?;
     parse_number(&private_key_string)
+}
+
+async fn get_class_hash_by_address(
+    provider: &JsonRpcClient<HttpTransport>,
+    address: FieldElement,
+) -> Result<Option<FieldElement>> {
+    match provider
+        .get_class_hash_at(BlockId::Tag(Pending), address)
+        .await
+    {
+        Ok(class_hash) => Ok(Some(class_hash)),
+        Err(ProviderError::StarknetError(StarknetError::ContractNotFound)) => Ok(None),
+        Err(err) => Err(handle_rpc_error(err)),
+    }
 }

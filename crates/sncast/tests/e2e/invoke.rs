@@ -56,7 +56,7 @@ async fn test_contract_does_not_exist() {
         output,
         indoc! {r"
         command: invoke
-        error: An error occurred in the called contract [..]
+        error: An error occurred in the called contract[..]Requested contract address[..]is not deployed[..]
         "},
     );
 }
@@ -82,7 +82,7 @@ fn test_wrong_function_name() {
         output,
         indoc! {r"
         command: invoke
-        error: An error occurred in the called contract [..]
+        error: An error occurred in the called contract[..]Entry point[..]not found in contract[..]
         "},
     );
 }
@@ -110,7 +110,7 @@ fn test_wrong_calldata() {
         output,
         indoc! {r"
         command: invoke
-        error: An error occurred in the called contract [..]
+        error: An error occurred in the called contract[..]Failed to deserialize param #2[..]
         "},
     );
 }
