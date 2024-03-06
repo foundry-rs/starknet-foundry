@@ -9,6 +9,7 @@ use cheatcodes::contract_class::ContractClassTrait;
 
 use cheatcodes::tx_info::TxInfoMock;
 use cheatcodes::tx_info::TxInfoMockTrait;
+use cheatcodes::tx_info::spoof;
 use cheatcodes::tx_info::start_spoof;
 use cheatcodes::tx_info::stop_spoof;
 
@@ -37,10 +38,13 @@ use cheatcodes::test_selector;
 use cheatcodes::prank;
 use cheatcodes::start_prank;
 use cheatcodes::stop_prank;
+use cheatcodes::roll;
 use cheatcodes::start_roll;
 use cheatcodes::stop_roll;
+use cheatcodes::warp;
 use cheatcodes::start_warp;
 use cheatcodes::stop_warp;
+use cheatcodes::elect;
 use cheatcodes::start_elect;
 use cheatcodes::stop_elect;
 use cheatcodes::start_mock_call;

@@ -213,3 +213,100 @@ fn warp_complex() {
 
     assert_passed(&result);
 }
+
+#[test]
+fn warp_with_span() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use result::ResultTrait;
+            use array::ArrayTrait;
+            use option::OptionTrait;
+            use traits::TryInto;
+            use starknet::ContractAddress;
+            use starknet::Felt252TryIntoContractAddress;
+            use snforge_std::{ test_address, declare, ContractClassTrait, warp, start_warp, stop_warp, CheatTarget, CheatSpan };
+
+            #[starknet::interface]
+            trait IWarpChecker<TContractState> {
+                fn get_block_timestamp(ref self: TContractState) -> felt252;
+            }
+
+            fn deploy_warp_checker() -> IWarpCheckerDispatcher {
+                let contract_address = declare("WarpChecker").deploy(@ArrayTrait::new()).unwrap();
+                IWarpCheckerDispatcher { contract_address }
+            }
+
+            #[test]
+            fn test_warp_once() {
+                let old_block_timestamp = get_block_timestamp();
+                
+                let dispatcher = deploy_warp_checker();
+
+                let target_block_timestamp = 123;
+
+                warp(CheatTarget::One(dispatcher.contract_address), target_block_timestamp, CheatSpan::Calls(1));
+
+                let block_timestamp = dispatcher.get_block_timestamp();
+                assert_eq!(block_timestamp, target_block_timestamp.into());
+
+                let block_timestamp = dispatcher.get_block_timestamp();
+                assert_eq!(block_timestamp, old_block_timestamp.into());
+            }
+
+            #[test]
+            fn test_warp_twice() {
+                let old_block_timestamp = get_block_timestamp();
+
+                let dispatcher = deploy_warp_checker();
+
+                let target_block_timestamp = 123;
+
+                warp(CheatTarget::One(dispatcher.contract_address), target_block_timestamp, CheatSpan::Calls(2));
+
+                let block_timestamp = dispatcher.get_block_timestamp();
+                assert_eq!(block_timestamp, target_block_timestamp.into());
+                
+                let block_timestamp = dispatcher.get_block_timestamp();
+                assert_eq!(block_timestamp, target_block_timestamp.into());
+
+                let block_timestamp = dispatcher.get_block_timestamp();
+                assert_eq!(block_timestamp, old_block_timestamp.into());
+            }
+
+            #[test]
+            fn test_warp_test_address() {
+                let old_block_timestamp = get_block_timestamp();
+                
+                let target_block_timestamp = 123;
+                
+                warp(CheatTarget::One(test_address()), target_block_timestamp, CheatSpan::Calls(1));
+                
+                let block_timestamp = get_block_timestamp();
+                assert_eq!(block_timestamp, target_block_timestamp.into());
+
+                let block_timestamp = get_block_timestamp();
+                assert_eq!(block_timestamp, target_block_timestamp.into());
+                
+                stop_warp(CheatTarget::One(test_address()));
+
+                let block_timestamp = get_block_timestamp();
+                assert_eq!(block_timestamp, old_block_timestamp.into());
+            }
+
+            fn get_block_timestamp() -> u64 {
+                starknet::get_block_info().unbox().block_timestamp
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "WarpChecker".to_string(),
+            Path::new("tests/data/contracts/warp_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test);
+
+    assert_passed!(result);
+}

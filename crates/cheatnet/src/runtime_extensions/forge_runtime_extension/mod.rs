@@ -101,12 +101,14 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
         match selector {
             "start_roll" => {
                 let target = input_reader.read_cheat_target()?;
+                let span = input_reader.read_cheat_span()?;
                 let block_number = input_reader.read_felt()?;
+
                 extended_runtime
                     .extended_runtime
                     .extension
                     .cheatnet_state
-                    .start_roll(target, block_number);
+                    .roll(target, block_number, span);
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
             "stop_roll" => {
@@ -121,13 +123,14 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
             }
             "start_warp" => {
                 let target = input_reader.read_cheat_target()?;
+                let span = input_reader.read_cheat_span()?;
                 let warp_timestamp = input_reader.read_felt()?;
 
                 extended_runtime
                     .extended_runtime
                     .extension
                     .cheatnet_state
-                    .start_warp(target, warp_timestamp);
+                    .warp(target, warp_timestamp, span);
 
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
@@ -143,13 +146,14 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
             }
             "start_elect" => {
                 let target = input_reader.read_cheat_target()?;
+                let span = input_reader.read_cheat_span()?;
                 let sequencer_address = input_reader.read_felt()?.into_();
 
                 extended_runtime
                     .extended_runtime
                     .extension
                     .cheatnet_state
-                    .start_elect(target, sequencer_address);
+                    .elect(target, sequencer_address, span);
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
             "stop_elect" => {
@@ -210,6 +214,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
             }
             "start_spoof" => {
                 let target = input_reader.read_cheat_target()?;
+                let span = input_reader.read_cheat_span()?;
 
                 let version = input_reader.read_option_felt()?;
                 let account_contract_address = input_reader.read_option_felt()?;
@@ -250,7 +255,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .extended_runtime
                     .extension
                     .cheatnet_state
-                    .start_spoof(target, tx_info_mock);
+                    .spoof(target, tx_info_mock, span);
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
             "stop_spoof" => {
