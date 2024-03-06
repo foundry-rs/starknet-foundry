@@ -687,7 +687,7 @@ fn capture_cairo0_event() {
                 "1e84b5cfc819964b8acb004914a08b19977f41ff43207b25de889ec35ed4483",
                 16
             )],
-            data: vec![Felt252::from(123456789)]
+            data: vec![Felt252::from(123_456_789)]
         },
         "Wrong spy_events_checker event"
     );
