@@ -3,7 +3,7 @@ use crate::runtime_extensions::{
     call_to_blockifier_runtime_extension::{
         execution::entry_point::execute_call_entry_point, panic_data::try_extract_panic_data,
     },
-    common::{create_entry_point_selector, create_execute_calldata},
+    common::create_execute_calldata,
 };
 use blockifier::execution::{
     call_info::CallInfo,
@@ -15,7 +15,7 @@ use blockifier::execution::{
 use blockifier::state::errors::StateError;
 use cairo_felt::Felt252;
 use cairo_lang_runner::casm_run::format_next_item;
-use conversions::byte_array::ByteArray;
+use conversions::{byte_array::ByteArray, IntoConv};
 use serde::{Deserialize, Serialize};
 use starknet_api::{
     core::{ClassHash, ContractAddress},
@@ -206,14 +206,13 @@ pub fn call_l1_handler(
     entry_point_selector: &Felt252,
     calldata: &[Felt252],
 ) -> CallResult {
-    let entry_point_selector = create_entry_point_selector(entry_point_selector);
     let calldata = create_execute_calldata(calldata);
 
     let entry_point = CallEntryPoint {
         class_hash: None,
         code_address: Some(*contract_address),
         entry_point_type: EntryPointType::L1Handler,
-        entry_point_selector,
+        entry_point_selector: entry_point_selector.clone().into_(),
         calldata,
         storage_address: *contract_address,
         caller_address: ContractAddress::default(),

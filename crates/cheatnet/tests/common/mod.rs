@@ -16,12 +16,13 @@ use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     CallFailure, CallResult,
 };
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeState;
-use cheatnet::runtime_extensions::common::{create_entry_point_selector, create_execute_calldata};
+use cheatnet::runtime_extensions::common::create_execute_calldata;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::{
     deploy, deploy_at,
 };
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
+use conversions::IntoConv;
 use runtime::starknet::context::build_context;
 use scarb_api::metadata::MetadataCommandExt;
 use scarb_api::{get_contracts_map, ScarbCommand, StarknetContractArtifacts};
@@ -190,14 +191,13 @@ pub fn call_contract(
     entry_point_selector: &Felt252,
     calldata: &[Felt252],
 ) -> CallResult {
-    let entry_point_selector = create_entry_point_selector(entry_point_selector);
     let calldata = create_execute_calldata(calldata);
 
     let entry_point = CallEntryPoint {
         class_hash: None,
         code_address: Some(*contract_address),
         entry_point_type: EntryPointType::External,
-        entry_point_selector,
+        entry_point_selector: entry_point_selector.clone().into_(),
         calldata,
         storage_address: *contract_address,
         caller_address: ContractAddress(patricia_key!(TEST_ADDRESS)),
