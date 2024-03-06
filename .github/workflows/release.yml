@@ -189,6 +189,18 @@ jobs:
             tar xzvf ${{ env.BINARY_PATH }}
           fi
 
+      - name: Install universal-sierra-compiler
+        shell: bash
+        run: |
+          if [[ ${{ matrix.target }} == *windows* ]]; then
+            curl -L -o udc.zip https://github.com/software-mansion/universal-sierra-compiler/releases/download/v2.0.0/universal-sierra-compiler-v2.0.0-x86_64-pc-windows-msvc.zip
+            unzip udc.zip
+            echo "UDC_PATH=$(pwd)/universal-sierra-compiler-v2.0.0-x86_64-pc-windows-msvc/bin/universal-sierra-compiler.exe" >> $GITHUB_ENV
+          else
+            curl -L https://raw.githubusercontent.com/software-mansion/universal-sierra-compiler/master/scripts/install.sh | sh
+            echo "UDC_PATH=${HOME}/.local/bin/universal-sierra-compiler" >> $GITHUB_ENV
+          fi
+
       - name: Smoke test
         shell: bash
         env:
@@ -198,6 +210,7 @@ jobs:
           BINARY_PATH="${BINARY_PATH%.tar.gz}"
           BINARY_PATH="${BINARY_PATH%.zip}"
           BINARY_PATH="${BINARY_PATH#artifacts/}"
+          export UNIVERSAL_SIERRA_COMPILER="${{ env.UDC_PATH }}"
           
           if [[ ${{ matrix.target }} == *windows* ]]; then
             SNFORGE_PATH=$(readlink -f $BINARY_PATH/bin/snforge.exe)

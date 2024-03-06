@@ -25,6 +25,8 @@ use starknet::{
 
 use crate::helpers::constants::{WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
 use crate::response::errors::SNCastProviderError;
+use cairo_felt::Felt252;
+use conversions::felt252::SerializeAsFelt252Vec;
 use shared::rpc::create_rpc_client;
 use starknet::accounts::{AccountFactoryError, ConnectedAccount};
 use starknet::signers::local_wallet::SignError;
@@ -375,6 +377,37 @@ pub enum WaitForTransactionError {
     TimedOut,
     #[error(transparent)]
     ProviderError(#[from] SNCastProviderError),
+}
+
+impl SerializeAsFelt252Vec for WaitForTransactionError {
+    fn serialize_as_felt252_vec(&self) -> Vec<Felt252> {
+        match self {
+            WaitForTransactionError::TransactionError(err) => {
+                let mut res = vec![Felt252::from(0)];
+                res.extend(err.serialize_as_felt252_vec());
+                res
+            }
+            WaitForTransactionError::TimedOut => vec![Felt252::from(1)],
+            WaitForTransactionError::ProviderError(err) => {
+                let mut res = vec![Felt252::from(2)];
+                res.extend(err.serialize_as_felt252_vec());
+                res
+            }
+        }
+    }
+}
+
+impl SerializeAsFelt252Vec for TransactionError {
+    fn serialize_as_felt252_vec(&self) -> Vec<Felt252> {
+        match self {
+            TransactionError::Rejected => vec![Felt252::from(0)],
+            TransactionError::Reverted(err) => {
+                let mut res = vec![Felt252::from(1)];
+                res.extend(err.data.as_str().serialize_as_felt252_vec());
+                res
+            }
+        }
+    }
 }
 
 pub async fn wait_for_tx(
