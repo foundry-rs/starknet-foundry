@@ -49,6 +49,6 @@ fn emit_event(
     if is_spied_on {
         cheatnet_state
             .detected_events
-            .push(Event::from_ordered_event(ordered_event, contract_address))
+            .push(Event::from_ordered_event(ordered_event, contract_address));
     }
 }
