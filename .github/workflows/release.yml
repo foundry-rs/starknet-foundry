@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     branches:
-      - 'master'
+      - 'szymczyk/what-is-happening'
     tags:
       - v[0-9]+.*
 
@@ -75,26 +75,26 @@ jobs:
             # Use cross to link oldest GLIBC possible.
             cross: true
 
-          - target: x86_64-unknown-linux-musl
-            os: ubuntu-latest
-            cross: true
-
-          - target: aarch64-unknown-linux-gnu
-            os: ubuntu-latest
-            cross: true
-
-          - target: aarch64-unknown-linux-musl
-            os: ubuntu-latest
-            cross: true
-
+#          - target: x86_64-unknown-linux-musl
+#            os: ubuntu-latest
+#            cross: true
+#
+#          - target: aarch64-unknown-linux-gnu
+#            os: ubuntu-latest
+#            cross: true
+#
+#          - target: aarch64-unknown-linux-musl
+#            os: ubuntu-latest
+#            cross: true
+#
           - target: x86_64-apple-darwin
             os: macos-latest
-
-          - target: aarch64-apple-darwin
-            os: macos-latest
-
-          - target: x86_64-pc-windows-msvc
-            os: windows-latest
+#
+#          - target: aarch64-apple-darwin
+#            os: macos-latest
+#
+#          - target: x86_64-pc-windows-msvc
+#            os: windows-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -152,8 +152,8 @@ jobs:
           - target: x86_64-apple-darwin
             os: macos-latest
 
-          - target: x86_64-pc-windows-msvc
-            os: windows-latest
+#          - target: x86_64-pc-windows-msvc
+#            os: windows-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -197,7 +197,7 @@ jobs:
             unzip udc.zip
             echo "UDC_PATH=$(pwd)/universal-sierra-compiler-v2.0.0-x86_64-pc-windows-msvc/bin/universal-sierra-compiler.exe" >> $GITHUB_ENV
           else
-            curl -L https://raw.githubusercontent.com/software-mansion/universal-sierra-compiler/master/scripts/install.sh | bash
+            curl -L https://raw.githubusercontent.com/software-mansion/universal-sierra-compiler/master/scripts/install.sh | sh
           fi
 
       - name: Smoke test
@@ -224,46 +224,46 @@ jobs:
           
           ./scripts/smoke_test.sh "$RPC_URL" "$SNFORGE_PATH" "$SNCAST_PATH" "$REPO_URL" "$REVISION"
 
-  create-release:
-    name: Create release
-    runs-on: ubuntu-latest
-    needs: [ test-binary, verify-version ]
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts-dl
-
-      - name: Unpack artifacts to staging directory
-        run: |
-          mkdir -p artifacts
-          mv artifacts-dl/build-*/starknet-foundry-* artifacts/
-
-      - name: Create GitHub release
-        id: create-release
-        uses: taiki-e/create-gh-release-action@8df4de6534ceacdaed10a08f73418ca751f31793
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          changelog: CHANGELOG.md
-          allow-missing-changelog: false
-          title: $version
-          ref: refs/tags/${{ needs.verify-version.outputs.version }}
-
-      - name: Upload artifacts to the release
-        working-directory: artifacts
-        run: gh release upload "$TAG" *
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ steps.create-release.outputs.computed-prefix }}${{ steps.create-release.outputs.version }}
-
-  deploy-docs:
-    name: Deploy documentation
-    needs: [ create-release, verify-version ]
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-    if: ${{ !contains(needs.verify-version.outputs.version, '-')  }}
-    uses: ./.github/workflows/docs.yml
+#  create-release:
+#    name: Create release
+#    runs-on: ubuntu-latest
+#    needs: [ test-binary, verify-version ]
+#    steps:
+#      - uses: actions/checkout@v4
+#
+#      - name: Download artifacts
+#        uses: actions/download-artifact@v4
+#        with:
+#          path: artifacts-dl
+#
+#      - name: Unpack artifacts to staging directory
+#        run: |
+#          mkdir -p artifacts
+#          mv artifacts-dl/build-*/starknet-foundry-* artifacts/
+#
+#      - name: Create GitHub release
+#        id: create-release
+#        uses: taiki-e/create-gh-release-action@8df4de6534ceacdaed10a08f73418ca751f31793
+#        with:
+#          token: ${{ secrets.GITHUB_TOKEN }}
+#          changelog: CHANGELOG.md
+#          allow-missing-changelog: false
+#          title: $version
+#          ref: refs/tags/${{ needs.verify-version.outputs.version }}
+#
+#      - name: Upload artifacts to the release
+#        working-directory: artifacts
+#        run: gh release upload "$TAG" *
+#        env:
+#          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#          TAG: ${{ steps.create-release.outputs.computed-prefix }}${{ steps.create-release.outputs.version }}
+#
+#  deploy-docs:
+#    name: Deploy documentation
+#    needs: [ create-release, verify-version ]
+#    permissions:
+#      contents: read
+#      pages: write
+#      id-token: write
+#    if: ${{ !contains(needs.verify-version.outputs.version, '-')  }}
+#    uses: ./.github/workflows/docs.yml
