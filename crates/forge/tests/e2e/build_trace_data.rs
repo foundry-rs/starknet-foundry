@@ -83,3 +83,34 @@ fn assert_contract_and_function_names(trace: &ProfilerCallTrace) {
         assert_contract_and_function_names(sub_trace);
     }
 }
+
+#[test]
+fn trace_has_vm_trace() {
+    let temp = setup_package("trace");
+    let snapbox = test_runner();
+
+    snapbox
+        .arg("--save-trace-data")
+        .current_dir(&temp)
+        .assert()
+        .success();
+
+    let trace_data = fs::read_to_string(
+        temp.join(TRACE_DIR)
+            .join("tests::test_trace::test_trace_print.json"),
+    )
+    .unwrap();
+
+    let call_trace: ProfilerCallTrace =
+        serde_json::from_str(&trace_data).expect("Failed to parse call_trace");
+
+    assert_vm_trace_exists(&call_trace);
+}
+
+fn assert_vm_trace_exists(trace: &ProfilerCallTrace) {
+    assert!(!trace.vm_trace.is_empty());
+
+    for sub_trace in &trace.nested_calls {
+        assert_vm_trace_exists(sub_trace);
+    }
+}
