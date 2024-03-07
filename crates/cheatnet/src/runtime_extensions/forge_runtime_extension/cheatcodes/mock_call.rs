@@ -2,7 +2,7 @@ use crate::CheatnetState;
 use blockifier::execution::execution_utils::felt_to_stark_felt;
 use cairo_felt::Felt252;
 use conversions::IntoConv;
-use starknet_api::core::{ContractAddress, EntryPointSelector};
+use starknet_api::core::ContractAddress;
 use starknet_api::hash::StarkFelt;
 use std::collections::hash_map::Entry;
 
@@ -17,7 +17,7 @@ impl CheatnetState {
 
         let contract_mocked_functions = self.mocked_functions.entry(contract_address).or_default();
 
-        contract_mocked_functions.insert(EntryPointSelector(function_selector.into_()), ret_data);
+        contract_mocked_functions.insert(function_selector.into_(), ret_data);
     }
 
     pub fn stop_mock_call(
@@ -27,7 +27,7 @@ impl CheatnetState {
     ) {
         if let Entry::Occupied(mut e) = self.mocked_functions.entry(contract_address) {
             let contract_mocked_functions = e.get_mut();
-            contract_mocked_functions.remove(&EntryPointSelector(function_selector.into_()));
+            contract_mocked_functions.remove(&function_selector.into_());
         }
     }
 }

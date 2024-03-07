@@ -4,7 +4,7 @@ mod tests_stark_felt {
     use cairo_felt::{Felt252, PRIME_STR};
     use conversions::{FromConv, IntoConv, TryFromConv, TryIntoConv};
     use starknet::core::types::FieldElement;
-    use starknet_api::core::{ClassHash, ContractAddress, Nonce};
+    use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, Nonce};
     use starknet_api::hash::StarkFelt;
 
     #[test]
@@ -16,6 +16,7 @@ mod tests_stark_felt {
         assert_eq!(stark_felt, Felt252::from_(stark_felt).into_());
         assert_eq!(stark_felt, FieldElement::from_(stark_felt).into_());
         assert_eq!(stark_felt, Nonce::from_(stark_felt).into_());
+        assert_eq!(stark_felt, EntryPointSelector::from_(stark_felt).into_());
 
         assert_eq!(stark_felt, String::from_(stark_felt).try_into_().unwrap());
     }
@@ -29,6 +30,7 @@ mod tests_stark_felt {
         assert_eq!(stark_felt, Felt252::from_(stark_felt).into_());
         assert_eq!(stark_felt, FieldElement::from_(stark_felt).into_());
         assert_eq!(stark_felt, Nonce::from_(stark_felt).into_());
+        assert_eq!(stark_felt, EntryPointSelector::from_(stark_felt).into_());
 
         assert_eq!(stark_felt, String::from_(stark_felt).try_into_().unwrap());
     }
@@ -43,6 +45,7 @@ mod tests_stark_felt {
         assert_eq!(stark_felt, Felt252::from_(stark_felt).into_());
         assert_eq!(stark_felt, FieldElement::from_(stark_felt).into_());
         assert_eq!(stark_felt, Nonce::from_(stark_felt).into_());
+        assert_eq!(stark_felt, EntryPointSelector::from_(stark_felt).into_());
 
         // PATRICIA_KEY_UPPER_BOUND for contract_address from starknet_api-0.4.1/src/core.rs:156
         max_value = "0x07ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";

@@ -1,8 +1,8 @@
 use forge_runner::test_case_summary::{AnyTestCaseSummary, TestCaseSummary};
 use indoc::indoc;
-use test_utils::runner::TestCase;
+use test_utils::runner::{assert_passed, TestCase};
 use test_utils::running_tests::run_test_case;
-use test_utils::{assert_passed, test_case};
+use test_utils::test_case;
 
 #[test]
 fn fuzzed_argument() {
@@ -22,7 +22,7 @@ fn fuzzed_argument() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -43,7 +43,7 @@ fn fuzzer_different_types() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]

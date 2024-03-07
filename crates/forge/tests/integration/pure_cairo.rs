@@ -1,6 +1,9 @@
 use indoc::indoc;
 use test_utils::running_tests::run_test_case;
-use test_utils::{assert_failed, assert_passed, test_case};
+use test_utils::{
+    runner::{assert_failed, assert_passed},
+    test_case,
+};
 
 #[test]
 fn simple() {
@@ -14,7 +17,7 @@ fn simple() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -29,5 +32,5 @@ fn failing() {
 
     let result = run_test_case(&test);
 
-    assert_failed!(result);
+    assert_failed(&result);
 }

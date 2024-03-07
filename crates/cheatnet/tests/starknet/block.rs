@@ -1,8 +1,8 @@
 use crate::common::call_contract;
 use crate::common::state::build_runtime_state;
-use crate::{
-    assert_success,
-    common::{deploy_contract, felt_selector_from_name, recover_data, state::create_cached_state},
+use crate::common::{
+    assertions::assert_success, deploy_contract, felt_selector_from_name, recover_data,
+    state::create_cached_state,
 };
 use blockifier::state::state_api::State;
 use cairo_felt::Felt252;
@@ -23,7 +23,7 @@ fn check_block(
 
     let output = call_contract(state, runtime_state, contract_address, &write_block, &[]);
 
-    assert_success!(output, vec![]);
+    assert_success(output, &[]);
 
     let output = call_contract(
         state,

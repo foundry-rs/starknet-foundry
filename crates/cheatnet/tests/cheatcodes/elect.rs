@@ -3,7 +3,7 @@ use crate::common::assertions::assert_outputs;
 use crate::common::state::build_runtime_state;
 use crate::common::{call_contract, deploy_wrapper};
 use crate::{
-    assert_success,
+    common::assertions::assert_success,
     common::{
         deploy_contract, felt_selector_from_name, get_contracts, recover_data,
         state::create_cached_state,
@@ -70,7 +70,7 @@ fn elect_simple() {
         &[],
     );
 
-    assert_success!(output, vec![Felt252::from(123)]);
+    assert_success(output, &[Felt252::from(123)]);
 }
 
 #[test]
@@ -96,7 +96,7 @@ fn elect_with_other_syscall() {
         &selector,
         &[],
     );
-    assert_success!(output, vec![Felt252::from(123)]);
+    assert_success(output, &[Felt252::from(123)]);
 }
 
 #[test]
@@ -132,7 +132,7 @@ fn elect_in_constructor() {
         &[],
     );
 
-    assert_success!(output, vec![Felt252::from(123)]);
+    assert_success(output, &[Felt252::from(123)]);
 }
 
 #[test]
@@ -170,7 +170,7 @@ fn elect_stop() {
     );
 
     let new_sequencer_address = recover_data(output);
-    assert_eq!(new_sequencer_address, vec![Felt252::from(123)]);
+    assert_eq!(new_sequencer_address, &[Felt252::from(123)]);
     assert_ne!(old_sequencer_address, new_sequencer_address);
 
     runtime_state
@@ -228,7 +228,7 @@ fn elect_double() {
     );
 
     let new_sequencer_address = recover_data(output);
-    assert_eq!(new_sequencer_address, vec![Felt252::from(123)]);
+    assert_eq!(new_sequencer_address, &[Felt252::from(123)]);
     assert_ne!(old_sequencer_address, new_sequencer_address);
 
     runtime_state
@@ -285,7 +285,7 @@ fn elect_proxy() {
         &[contract_address.into_()],
     );
 
-    assert_success!(after_elect_output, vec![Felt252::from(123)]);
+    assert_success(after_elect_output, &[Felt252::from(123)]);
 
     runtime_state
         .cheatnet_state
@@ -340,7 +340,7 @@ fn elect_library_call() {
         &[class_hash.into_()],
     );
 
-    assert_success!(after_elect_output, vec![Felt252::from(123)]);
+    assert_success(after_elect_output, &[Felt252::from(123)]);
 
     runtime_state
         .cheatnet_state
@@ -380,7 +380,7 @@ fn elect_all_simple() {
         &[],
     );
 
-    assert_success!(output, vec![Felt252::from(123)]);
+    assert_success(output, &[Felt252::from(123)]);
 }
 
 #[test]
@@ -410,7 +410,7 @@ fn elect_all_then_one() {
         &[],
     );
 
-    assert_success!(output, vec![Felt252::from(123)]);
+    assert_success(output, &[Felt252::from(123)]);
 }
 
 #[test]
@@ -440,7 +440,7 @@ fn elect_one_then_all() {
         &[],
     );
 
-    assert_success!(output, vec![Felt252::from(321)]);
+    assert_success(output, &[Felt252::from(321)]);
 }
 
 #[test]
@@ -477,7 +477,7 @@ fn elect_all_stop() {
     );
 
     let new_sequencer_address = recover_data(output);
-    assert_eq!(new_sequencer_address, vec![Felt252::from(123)]);
+    assert_eq!(new_sequencer_address, &[Felt252::from(123)]);
     assert_ne!(old_sequencer_address, new_sequencer_address);
 
     runtime_state.cheatnet_state.stop_elect(CheatTarget::All);
@@ -556,8 +556,8 @@ fn elect_multiple() {
 
     let new_sequencer_address2 = recover_data(output);
 
-    assert_eq!(new_sequencer_address1, vec![Felt252::from(123)]);
-    assert_eq!(new_sequencer_address2, vec![Felt252::from(123)]);
+    assert_eq!(new_sequencer_address1, &[Felt252::from(123)]);
+    assert_eq!(new_sequencer_address2, &[Felt252::from(123)]);
 
     runtime_state
         .cheatnet_state
@@ -603,17 +603,17 @@ fn elect_simple_with_span() {
         CheatSpan::Number(2),
     );
 
-    assert_success!(
+    assert_success(
         test_env.call_contract(&contract_address, "get_sequencer_address", &[]),
-        vec![Felt252::from(123)]
+        &[Felt252::from(123)],
     );
-    assert_success!(
+    assert_success(
         test_env.call_contract(&contract_address, "get_sequencer_address", &[]),
-        vec![Felt252::from(123)]
+        &[Felt252::from(123)],
     );
-    assert_success!(
+    assert_success(
         test_env.call_contract(&contract_address, "get_sequencer_address", &[]),
-        vec![contract_address!(SEQUENCER_ADDRESS).into_()]
+        &[contract_address!(SEQUENCER_ADDRESS).into_()],
     );
 }
 
@@ -638,9 +638,9 @@ fn elect_proxy_with_span() {
         "call_proxy",
         &[contract_address_2.into_()],
     );
-    assert_success!(
+    assert_success(
         output,
-        vec![123.into(), contract_address!(SEQUENCER_ADDRESS).into_()]
+        &[123.into(), contract_address!(SEQUENCER_ADDRESS).into_()],
     );
 }
 
@@ -666,17 +666,17 @@ fn elect_in_constructor_with_span() {
     let contract_address = test_env.deploy_wrapper(&class_hash, &[]);
     assert_eq!(precalculated_address, contract_address);
 
-    assert_success!(
+    assert_success(
         test_env.call_contract(&contract_address, "get_sequencer_address", &[]),
-        vec![Felt252::from(123)]
+        &[Felt252::from(123)],
     );
-    assert_success!(
+    assert_success(
         test_env.call_contract(&contract_address, "get_sequencer_address", &[]),
-        vec![contract_address!(SEQUENCER_ADDRESS).into_()]
+        &[contract_address!(SEQUENCER_ADDRESS).into_()],
     );
-    assert_success!(
+    assert_success(
         test_env.call_contract(&contract_address, "get_stored_sequencer_address", &[]),
-        vec![Felt252::from(123)]
+        &[Felt252::from(123)],
     );
 }
 
@@ -702,13 +702,13 @@ fn elect_no_constructor_with_span() {
     let contract_address = test_env.deploy_wrapper(&class_hash, &[]);
     assert_eq!(precalculated_address, contract_address);
 
-    assert_success!(
+    assert_success(
         test_env.call_contract(&contract_address, "get_sequencer_address", &[]),
-        vec![Felt252::from(123)]
+        &[Felt252::from(123)],
     );
-    assert_success!(
+    assert_success(
         test_env.call_contract(&contract_address, "get_sequencer_address", &[]),
-        vec![contract_address!(SEQUENCER_ADDRESS).into_()]
+        &[contract_address!(SEQUENCER_ADDRESS).into_()],
     );
 }
 
@@ -725,9 +725,9 @@ fn elect_override_span() {
         CheatSpan::Number(2),
     );
 
-    assert_success!(
+    assert_success(
         test_env.call_contract(&contract_address, "get_sequencer_address", &[]),
-        vec![Felt252::from(123)]
+        &[Felt252::from(123)],
     );
 
     test_env.elect(
@@ -736,20 +736,20 @@ fn elect_override_span() {
         CheatSpan::Indefinite,
     );
 
-    assert_success!(
+    assert_success(
         test_env.call_contract(&contract_address, "get_sequencer_address", &[]),
-        vec![Felt252::from(321)]
+        &[Felt252::from(321)],
     );
-    assert_success!(
+    assert_success(
         test_env.call_contract(&contract_address, "get_sequencer_address", &[]),
-        vec![Felt252::from(321)]
+        &[Felt252::from(321)],
     );
 
     test_env.stop_elect(&contract_address);
 
-    assert_success!(
+    assert_success(
         test_env.call_contract(&contract_address, "get_sequencer_address", &[]),
-        vec![contract_address!(SEQUENCER_ADDRESS).into_()]
+        &[contract_address!(SEQUENCER_ADDRESS).into_()],
     );
 }
 
@@ -770,13 +770,13 @@ fn elect_library_call_with_span() {
 
     let lib_call_selector = "get_sequencer_address_with_lib_call";
 
-    assert_success!(
+    assert_success(
         test_env.call_contract(&contract_address, lib_call_selector, &[class_hash.into_()]),
-        vec![Felt252::from(123)]
+        &[Felt252::from(123)],
     );
-    assert_success!(
+    assert_success(
         test_env.call_contract(&contract_address, lib_call_selector, &[class_hash.into_()]),
-        vec![contract_address!(SEQUENCER_ADDRESS).into_()]
+        &[contract_address!(SEQUENCER_ADDRESS).into_()],
     );
 }
 
@@ -790,21 +790,21 @@ fn elect_all_span() {
 
     test_env.elect(CheatTarget::All, 123, CheatSpan::Number(1));
 
-    assert_success!(
+    assert_success(
         test_env.call_contract(&contract_address_1, "get_sequencer_address", &[]),
-        vec![Felt252::from(123)]
+        &[Felt252::from(123)],
     );
-    assert_success!(
+    assert_success(
         test_env.call_contract(&contract_address_1, "get_sequencer_address", &[]),
-        vec![contract_address!(SEQUENCER_ADDRESS).into_()]
+        &[contract_address!(SEQUENCER_ADDRESS).into_()],
     );
 
-    assert_success!(
+    assert_success(
         test_env.call_contract(&contract_address_2, "get_sequencer_address", &[]),
-        vec![Felt252::from(123)]
+        &[Felt252::from(123)],
     );
-    assert_success!(
+    assert_success(
         test_env.call_contract(&contract_address_2, "get_sequencer_address", &[]),
-        vec![contract_address!(SEQUENCER_ADDRESS).into_()]
+        &[contract_address!(SEQUENCER_ADDRESS).into_()],
     );
 }
