@@ -74,4 +74,18 @@ impl<'a> TestEnvironment<'a> {
             calldata,
         )
     }
+
+    pub fn precalculate_address(
+        &mut self,
+        class_hash: &ClassHash,
+        calldata: &[u128],
+    ) -> ContractAddress {
+        let calldata = calldata
+            .iter()
+            .map(|x| Felt252::from(*x))
+            .collect::<Vec<_>>();
+        self.runtime_state
+            .cheatnet_state
+            .precalculate_address(class_hash, &calldata)
+    }
 }
