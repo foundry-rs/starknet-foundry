@@ -6,11 +6,6 @@ use indoc::indoc;
 use num_traits::{cast::ToPrimitive, identities::One};
 use thiserror::Error;
 
-pub struct BufferReader<'a> {
-    pub buffer: &'a [Felt252],
-    pub idx: usize,
-}
-
 #[derive(Error, Debug)]
 pub enum BufferReadError {
     #[error("Read out of bounds")]
@@ -31,6 +26,11 @@ impl From<BufferReadError> for EnhancedHintError {
                 )
         )
     }
+}
+
+pub struct BufferReader<'a> {
+    pub buffer: &'a [Felt252],
+    pub idx: usize,
 }
 
 pub type BufferReadResult<T> = core::result::Result<T, BufferReadError>;
@@ -62,7 +62,8 @@ impl BufferReader<'_> {
     }
 
     pub fn read_vec(&mut self) -> BufferReadResult<Vec<Felt252>> {
-        let count = felt252_to_vec_length(&self.read_felt()?);
+        let count = self.read_felt()?;
+        let count = felt252_to_vec_length(&count)?;
         self.read_vec_body(count)
     }
 
@@ -75,7 +76,12 @@ impl BufferReader<'_> {
 
     pub fn read_option_vec(&mut self) -> BufferReadResult<Option<Vec<Felt252>>> {
         Ok(match self.read_option_felt()? {
-            Some(count) => Some(self.read_vec_body(felt252_to_vec_length(&count))?),
+            Some(count) => {
+                let count = felt252_to_vec_length(&count)?;
+                let result = self.read_vec_body(count)?;
+
+                Some(result)
+            }
             None => None,
         })
     }
@@ -102,8 +108,8 @@ impl BufferReader<'_> {
     }
 }
 
-fn felt252_to_vec_length(vec_len: &Felt252) -> usize {
-    vec_len.to_usize().expect("Invalid Vec length value")
+fn felt252_to_vec_length(vec_len: &Felt252) -> BufferReadResult<usize> {
+    vec_len.to_usize().ok_or(BufferReadError::ParseFailed)
 }
 
 fn try_format_string(values: &[Felt252]) -> Option<(String, usize)> {
