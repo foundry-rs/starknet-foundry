@@ -41,7 +41,7 @@ use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::CallToBl
 use cheatnet::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
 use cheatnet::runtime_extensions::forge_runtime_extension::{
     get_all_used_resources, update_top_call_execution_resources, update_top_call_l1_resources,
-    ForgeExtension, ForgeRuntime,
+    update_top_call_vm_trace, ForgeExtension, ForgeRuntime,
 };
 use cheatnet::state::{BlockInfoReader, CallTrace, CheatnetState, ExtendedStateReader};
 use runtime::starknet::context::{build_context, set_max_steps};
@@ -291,6 +291,8 @@ pub fn run_test_case(
                 values,
                 &cells,
             );
+
+            update_top_call_vm_trace(&mut forge_runtime, &vm);
 
             Ok(RunResult {
                 gas_counter,

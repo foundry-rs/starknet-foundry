@@ -1,4 +1,5 @@
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeState;
+use crate::runtime_extensions::common::get_relocated_vm_trace;
 use crate::runtime_extensions::deprecated_cheatable_starknet_extension::runtime::{
     DeprecatedExtendedRuntime, DeprecatedStarknetRuntime,
 };
@@ -16,6 +17,7 @@ use blockifier::execution::execution_utils::Args;
 use blockifier::execution::syscalls::hint_processor::SyscallCounter;
 use blockifier::state::state_api::State;
 use cairo_vm::hint_processor::hint_processor_definition::HintProcessor;
+use cairo_vm::vm::errors::cairo_run_errors::CairoRunError;
 use cairo_vm::vm::runners::cairo_runner::{CairoArg, CairoRunner, ExecutionResources};
 use cairo_vm::vm::trace::trace_entry::TraceEntry;
 use cairo_vm::vm::vm_core::VirtualMachine;
@@ -68,17 +70,7 @@ pub fn execute_entry_point_call_cairo0(
         &args,
     )?;
 
-    let vm_trace = vm
-        .get_relocated_trace()
-        .unwrap()
-        .iter()
-        .map(|x| TraceEntry {
-            pc: x.pc,
-            ap: x.ap,
-            fp: x.fp,
-        })
-        .collect();
-
+    let vm_trace = get_relocated_vm_trace(&vm);
     let syscall_counter = cheatable_syscall_handler
         .extended_runtime
         .hint_handler
@@ -122,6 +114,11 @@ pub fn cheatable_run_entry_point(
         vm,
         hint_processor,
     )?;
+
+    // region: Modified blockifier code
+    // Relocate trace to then collect it
+    runner.relocate(vm, true).map_err(CairoRunError::from)?;
+    // endregion
 
     Ok(())
 }
