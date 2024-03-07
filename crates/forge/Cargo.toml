@@ -10,9 +10,7 @@ anyhow.workspace = true
 blockifier.workspace = true
 camino.workspace = true
 include_dir.workspace = true
-indoc.workspace = true
 starknet_api.workspace = true
-tempfile.workspace = true
 rayon.workspace = true
 shared.workspace = true
 cheatnet = { path = "../cheatnet" }
@@ -74,6 +72,8 @@ criterion.workspace = true
 test_utils = { path = "test_utils" }
 axum.workspace = true
 lazy_static.workspace = true
+indoc.workspace = true
+tempfile.workspace = true
 
 [[bench]]
 name = "forge_bench"
