@@ -4,7 +4,7 @@
 
 Cancels the [`spoof`](./spoof.md) / [`start_spoof`](./start_spoof.md) for the given target.
 
-- `target` - instance of [`CheatTarget`](./cheat_target.md) specifying which contracts to stop spoofing
+- `target` - instance of [`CheatTarget`](../cheat_target.md) specifying which contracts to stop spoofing
 
 ```rust
 use snforge_std::{ stop_spoof, CheatTarget };

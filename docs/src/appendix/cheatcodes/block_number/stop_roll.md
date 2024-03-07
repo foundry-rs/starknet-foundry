@@ -4,7 +4,7 @@
 
 Cancels the [`roll`](./roll.md) / [`start_roll`](./start_roll.md) for the given target.
 
-- `target` - instance of [`CheatTarget`](./cheat_target.md) specifying which contracts to stop rolling
+- `target` - instance of [`CheatTarget`](../cheat_target.md) specifying which contracts to stop rolling
 
 ```rust
 use snforge_std::{stop_roll, CheatTarget};

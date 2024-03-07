@@ -121,7 +121,7 @@ Our user validation is not letting us call the contract, because the default cal
 ## Using Cheatcodes in Tests
 
 By using cheatcodes, we can change various properties of transaction info, block info, etc.
-For example, we can use the [`start_prank`](../appendix/cheatcodes/start_prank.md) cheatcode to change the caller
+For example, we can use the [`start_prank`](../appendix/cheatcodes/caller_address/start_prank.md) cheatcode to change the caller
 address, so it passes our validation.
 
 ### Pranking the Address
@@ -164,7 +164,7 @@ Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 Most cheatcodes come with corresponding `start_` and `stop_` functions that can be used to start and stop the state
 change.
 In case of the `start_prank`, we can cancel the address change
-using [`stop_prank`](../appendix/cheatcodes/stop_prank.md)
+using [`stop_prank`](../appendix/cheatcodes/caller_address/stop_prank.md)
 
 ```rust
 use snforge_std::{stop_prank, CheatTarget};

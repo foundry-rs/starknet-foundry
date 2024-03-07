@@ -5,6 +5,6 @@
 Changes the block number for the given target, for a given duration.
 This change can be canceled with [`stop_roll`](./stop_roll.md).
 
-- `target` - instance of [`CheatTarget`](./cheat_target.md) specifying which contracts to roll
+- `target` - instance of [`CheatTarget`](../cheat_target.md) specifying which contracts to roll
 - `block_number` - block number to be set
-- `span` - instance of [`CheatSpan`](./cheat_span.md) specifying the duration of roll
+- `span` - instance of [`CheatSpan`](../cheat_span.md) specifying the duration of roll
