@@ -679,3 +679,34 @@ fn l1_handler_cost() {
     // 14643 - l1 cost of payload + emit message handle event
     assert_gas!(result, "l1_handler_cost", 1101 + 41 + 14643);
 }
+
+#[test]
+fn events_cost() {
+    let test = test_case!(indoc!(
+        r"
+            use starknet::syscalls::emit_event_syscall;
+            #[test]
+            fn events_cost() {
+                let mut keys = array![];
+                let mut values =  array![];
+                
+                let mut i: u32 = 0;
+                while i < 50 {
+                    keys.append('key');
+                    values.append(1);
+                    i += 1;
+                };
+                
+                emit_event_syscall(keys.span(), values.span()).unwrap();
+            }
+        "
+    ));
+
+    let result = run_test_case(&test);
+
+    assert_passed!(result);
+    // 2991 steps and memholes * 0.0025 ~= 8
+    // 6 gas for 50 event values
+    // ~13 gas for 50 event keys
+    assert_gas!(result, "events_cost", 8 + 6 + 13);
+}

@@ -18,6 +18,7 @@ use cairo_lang_runner::casm_run::format_next_item;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use conversions::byte_array::ByteArray;
 use serde::{Deserialize, Serialize};
+use starknet_api::transaction::EventContent;
 use starknet_api::{
     core::{ClassHash, ContractAddress},
     deprecated_contract_class::EntryPointType,
@@ -27,6 +28,7 @@ use starknet_api::{
 pub struct UsedResources {
     pub syscall_counter: SyscallCounter,
     pub execution_resources: ExecutionResources,
+    pub events: Vec<EventContent>,
     pub l2_to_l1_payloads_lengths: Vec<usize>,
     pub l1_handler_payloads_lengths: Vec<usize>,
 }

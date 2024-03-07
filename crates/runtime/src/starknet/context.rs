@@ -31,11 +31,6 @@ pub const ERC20_CONTRACT_ADDRESS: &str = "0x1001";
 pub const STEP_RESOURCE_COST: f64 = 0.005_f64;
 pub const DEFAULT_MAX_N_STEPS: u32 = 3_000_000;
 
-const CONSTANTS_13_0_JSON: &str = include_str!("./resources/versioned_constants_13_0.json");
-static DEFAULT_CONSTANTS: Lazy<VersionedConstants> = Lazy::new(|| {
-    serde_json::from_str(CONSTANTS_13_0_JSON).expect("Versioned constants JSON file is malformed")
-});
-
 #[must_use]
 pub fn build_block_context(block_info: &BlockInfo) -> BlockContext {
     BlockContext::new_unchecked(
@@ -47,7 +42,7 @@ pub fn build_block_context(block_info: &BlockInfo) -> BlockContext {
                 eth_fee_token_address: ContractAddress(patricia_key!(ERC20_CONTRACT_ADDRESS)),
             },
         },
-        &DEFAULT_CONSTANTS.clone(),
+        VersionedConstants::latest_constants(), // 0.13.1
     )
 }
 
