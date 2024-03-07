@@ -49,7 +49,6 @@ ctor.workspace = true
 snapbox.workspace = true
 indoc.workspace = true
 project-root.workspace = true
-reqwest.workspace = true
 tempfile.workspace = true
 test-case.workspace = true
 fs_extra.workspace = true
