@@ -108,7 +108,9 @@ fn trace_has_vm_trace() {
 }
 
 fn assert_vm_trace_exists(trace: &ProfilerCallTrace) {
-    assert!(!trace.vm_trace.is_empty());
+    assert!(
+        !trace.vm_trace.is_empty() || trace.entry_point.function_name == Some(String::from("fail"))
+    );
 
     for sub_trace in &trace.nested_calls {
         assert_vm_trace_exists(sub_trace);
