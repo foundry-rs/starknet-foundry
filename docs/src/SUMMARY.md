@@ -48,6 +48,7 @@
     * [`CheatTarget`](appendix/cheatcodes/cheat_target.md)
     * [`CheatSpan`](appendix/cheatcodes/cheat_span.md)
     * [caller_address](appendix/cheatcodes/caller_address/README.md)
+        * [prank](appendix/cheatcodes/caller_address/prank.md)
         * [start_prank](appendix/cheatcodes/caller_address/start_prank.md)
         * [stop_prank](appendix/cheatcodes/caller_address/stop_prank.md)
     * [start_roll](appendix/cheatcodes/start_roll.md)

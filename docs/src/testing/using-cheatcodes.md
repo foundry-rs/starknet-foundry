@@ -231,10 +231,9 @@ fn mock_constructor_with_prank() {
 
 Sometimes it's useful to have a cheatcode work only for a certain number of calls. 
 
-That's where `CheatSpan` comes in handy.
+That's where [`CheatSpan`](../appendix/cheatcodes/cheat_span.md) comes in handy.
 
 ```rust
-#[derive(Drop, Serde, PartialEq)]
 enum CheatSpan {
     Indefinite: (),
     Calls: usize,
@@ -247,7 +246,7 @@ To set span for a cheatcode, use `prank` / `warp` / `roll` / etc.
 prank(CheatTarget::One(contract_address), new_caller_address, CheatSpan::Calls(1))
 ```
 
-Calling a cheatcode with `CheatSpan::Calls(N)` is going to activate the cheatcode for `N` calls to a contract, after which `stop_prank` will be automatically called.
+Calling a cheatcode with `CheatSpan::Calls(N)` is going to activate the cheatcode for `N` calls to a contract, after which it's going to be automatically cancelled.
 
 Of course the cheatcode can still be stopped before its `CheatSpan` goes down to 0 - simply call `stop_prank` manually.
 
@@ -273,7 +272,10 @@ fn call_and_invoke() {
     let balance = safe_dispatcher.get_balance().unwrap();
     assert_eq!(balance, 0);
 
+    // Function `increase_balance` from HelloStarknet contract
+    // requires the caller_address to be 123
     let pranked_address: ContractAddress = 123.try_into().unwrap();
+
     // Prank the contract_address for a span of 2 calls
     prank(CheatTarget::One(contract_address), pranked_address, CheatSpan::Calls(2));
 

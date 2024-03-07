@@ -12,7 +12,7 @@ enum CheatSpan {
 - `Calls` applies the cheatcode for specified number of calls, after which the cheat is stopped. 
 
 
-An example with the [`start_warp`](./start_warp.md) cheatcode:
+An example with the [`warp`](./warp.md) cheatcode:
 ```rust 
 #[test]
 fn some_test() {
