@@ -1,10 +1,7 @@
-use std::fs;
-
+use super::common::runner::{setup_package, test_runner};
 use forge_runner::build_trace_data::{TEST_CODE_CONTRACT_NAME, TEST_CODE_FUNCTION_NAME, TRACE_DIR};
-
+use std::fs;
 use trace_data::CallTrace as ProfilerCallTrace;
-
-use crate::e2e::common::runner::{setup_package, test_runner};
 
 #[test]
 fn simple_package_save_trace() {

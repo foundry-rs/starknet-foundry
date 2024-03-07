@@ -1,17 +1,14 @@
-use crate::e2e::common::runner::setup_package;
+use super::common::runner::{setup_package, test_runner};
 use assert_fs::fixture::{FileWriteStr, PathChild};
 use axum::{extract::Query, response::Redirect, routing::any, Router};
 use indoc::{formatdoc, indoc};
 use lazy_static::lazy_static;
-use shared::consts::EXPECTED_RPC_VERSION;
-use shared::test_utils::output_assert::assert_stdout_contains;
+use shared::{consts::EXPECTED_RPC_VERSION, test_utils::output_assert::assert_stdout_contains};
 use std::{thread::sleep, time::Duration};
 use tokio::{
     net::TcpListener,
     runtime::{Builder, Runtime},
 };
-
-use super::common::runner::test_runner;
 
 #[derive(serde::Deserialize)]
 struct Params {

@@ -1,8 +1,6 @@
-use crate::e2e::common::runner::setup_package;
+use super::common::runner::{setup_package, test_runner};
 use indoc::indoc;
 use shared::test_utils::output_assert::assert_stdout_contains;
-
-use super::common::runner::test_runner;
 
 #[test]
 fn env_var_reading() {

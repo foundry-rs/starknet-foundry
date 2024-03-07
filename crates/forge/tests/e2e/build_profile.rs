@@ -1,6 +1,5 @@
+use super::common::runner::{setup_package, test_runner};
 use forge_runner::profiler_api::PROFILE_DIR;
-
-use crate::e2e::common::runner::{setup_package, test_runner};
 
 #[test]
 fn simple_package_build_profile() {

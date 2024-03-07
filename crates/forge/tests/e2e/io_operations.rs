@@ -1,9 +1,7 @@
-use crate::e2e::common::runner::{setup_package_with_file_patterns, BASE_FILE_PATTERNS};
+use super::common::runner::{setup_package_with_file_patterns, test_runner, BASE_FILE_PATTERNS};
 use assert_fs::fixture::PathChild;
 use indoc::indoc;
 use shared::test_utils::output_assert::assert_stdout_contains;
-
-use super::common::runner::test_runner;
 
 #[test]
 #[allow(clippy::too_many_lines)]
