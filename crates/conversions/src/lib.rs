@@ -4,6 +4,7 @@ pub mod byte_array;
 pub mod class_hash;
 pub mod contract_address;
 pub mod dec_string;
+pub mod entrypoint_selector;
 pub mod felt252;
 pub mod field_element;
 pub mod nonce;

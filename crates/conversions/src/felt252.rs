@@ -1,10 +1,10 @@
 use crate::byte_array::ByteArray;
-use crate::{FromConv, TryFromConv};
+use crate::{FromConv, IntoConv, TryFromConv};
 use blockifier::execution::execution_utils::stark_felt_to_felt;
 use cairo_felt::{Felt252, ParseFeltError};
 use num_traits::Num;
 use starknet::core::types::FieldElement;
-use starknet_api::core::Nonce;
+use starknet_api::core::{EntryPointSelector, Nonce};
 use starknet_api::{
     core::{ClassHash, ContractAddress},
     hash::StarkFelt,
@@ -37,6 +37,12 @@ impl FromConv<ContractAddress> for Felt252 {
 impl FromConv<Nonce> for Felt252 {
     fn from_(value: Nonce) -> Felt252 {
         stark_felt_to_felt(value.0)
+    }
+}
+
+impl FromConv<EntryPointSelector> for Felt252 {
+    fn from_(value: EntryPointSelector) -> Felt252 {
+        value.0.into_()
     }
 }
 

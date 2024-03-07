@@ -3,7 +3,7 @@ mod tests_field_elements {
     use cairo_felt::{Felt252, PRIME_STR};
     use conversions::{FromConv, IntoConv, TryFromConv, TryIntoConv};
     use starknet::core::types::FieldElement;
-    use starknet_api::core::{ClassHash, ContractAddress, Nonce};
+    use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, Nonce};
     use starknet_api::hash::{StarkFelt, StarkHash};
 
     #[test]
@@ -14,6 +14,10 @@ mod tests_field_elements {
         assert_eq!(field_element, ContractAddress::from_(field_element).into_());
         assert_eq!(field_element, Felt252::from_(field_element).into_());
         assert_eq!(field_element, Nonce::from_(field_element).into_());
+        assert_eq!(
+            field_element,
+            EntryPointSelector::from_(field_element).into_()
+        );
         assert_eq!(field_element, StarkFelt::from_(field_element).into_());
         assert_eq!(field_element, StarkHash::from_(field_element).into_());
 
@@ -31,6 +35,10 @@ mod tests_field_elements {
         assert_eq!(field_element, ContractAddress::from_(field_element).into_());
         assert_eq!(field_element, Felt252::from_(field_element).into_());
         assert_eq!(field_element, Nonce::from_(field_element).into_());
+        assert_eq!(
+            field_element,
+            EntryPointSelector::from_(field_element).into_()
+        );
         assert_eq!(field_element, StarkFelt::from_(field_element).into_());
         assert_eq!(field_element, StarkHash::from_(field_element).into_());
 

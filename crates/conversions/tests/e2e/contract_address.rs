@@ -4,7 +4,7 @@ mod tests_contract_address {
     use cairo_felt::{Felt252, PRIME_STR};
     use conversions::{FromConv, IntoConv, TryFromConv, TryIntoConv};
     use starknet::core::types::FieldElement;
-    use starknet_api::core::{ClassHash, Nonce};
+    use starknet_api::core::{ClassHash, EntryPointSelector, Nonce};
     use starknet_api::hash::StarkHash;
     use starknet_api::{
         core::{ContractAddress, PatriciaKey},
@@ -23,6 +23,10 @@ mod tests_contract_address {
             FieldElement::from_(contract_address).into_()
         );
         assert_eq!(contract_address, Nonce::from_(contract_address).into_());
+        assert_eq!(
+            contract_address,
+            EntryPointSelector::from_(contract_address).into_()
+        );
         assert_eq!(contract_address, StarkFelt::from_(contract_address).into_());
         assert_eq!(contract_address, StarkHash::from_(contract_address).into_());
 
@@ -44,6 +48,10 @@ mod tests_contract_address {
             FieldElement::from_(contract_address).into_()
         );
         assert_eq!(contract_address, Nonce::from_(contract_address).into_());
+        assert_eq!(
+            contract_address,
+            EntryPointSelector::from_(contract_address).into_()
+        );
         assert_eq!(contract_address, StarkFelt::from_(contract_address).into_());
         assert_eq!(contract_address, StarkHash::from_(contract_address).into_());
 
@@ -67,6 +75,10 @@ mod tests_contract_address {
             FieldElement::from_(contract_address).into_()
         );
         assert_eq!(contract_address, Nonce::from_(contract_address).into_());
+        assert_eq!(
+            contract_address,
+            EntryPointSelector::from_(contract_address).into_()
+        );
         assert_eq!(contract_address, StarkFelt::from_(contract_address).into_());
         assert_eq!(contract_address, StarkHash::from_(contract_address).into_());
 

@@ -65,17 +65,15 @@ fn add_simple_abi_entry_to_mapping(
     match abi_entry {
         AbiEntry::Function(abi_function) | AbiEntry::L1Handler(abi_function) => {
             selector_map.insert(
-                EntryPointSelector(get_selector_from_name(&abi_function.name).unwrap().into_()),
+                get_selector_from_name(&abi_function.name).unwrap().into_(),
                 abi_function.name,
             );
         }
         AbiEntry::Constructor(abi_constructor) => {
             selector_map.insert(
-                EntryPointSelector(
-                    get_selector_from_name(&abi_constructor.name)
-                        .unwrap()
-                        .into_(),
-                ),
+                get_selector_from_name(&abi_constructor.name)
+                    .unwrap()
+                    .into_(),
                 abi_constructor.name,
             );
         }
