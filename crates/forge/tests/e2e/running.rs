@@ -88,8 +88,9 @@ fn simple_package_with_git_dependency() {
 
     assert_stdout_contains(
         output,
-        indoc! {r"
-        [..]Updating git repository https://github.com/foundry-rs/starknet-foundry
+        formatdoc!(
+            r"
+        [..]Updating git repository https://github.com/{}
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -123,7 +124,9 @@ fn simple_package_with_git_dependency() {
         Failures:
             tests::test_simple::test_failing
             tests::test_simple::test_another_failing
-        "},
+        ",
+            remote_url.trim_end_matches(".git")
+        ),
     );
 }
 
@@ -742,8 +745,9 @@ fn init_new_project_test() {
         .success();
     assert_stdout_contains(
         output,
-        indoc! {r"
-        [..]Updating git repository https://github.com/foundry-rs/starknet-foundry
+        formatdoc!(
+            r"
+        [..]Updating git repository https://github.com/{}
         [..]Compiling test_name v0.1.0[..]
         [..]Finished[..]
 
@@ -754,7 +758,9 @@ fn init_new_project_test() {
         [PASS] tests::test_contract::test_increase_balance [..]
         [PASS] tests::test_contract::test_cannot_increase_balance_with_zero_value [..]
         Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
-    "},
+    ",
+            remote_url.trim_end_matches(".git")
+        ),
     );
 }
 
