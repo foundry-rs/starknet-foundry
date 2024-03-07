@@ -9,7 +9,7 @@ trait ICairo0Contract<TContractState> {
 
 #[starknet::interface]
 trait ISpyEventsCairo0<TContractState> {
-    fn test(ref self: TContractState, cairo0_address: ContractAddress);
+    fn test_cairo0_event_collection(ref self: TContractState, cairo0_address: ContractAddress);
 }
 
 #[starknet::contract]
@@ -23,7 +23,7 @@ mod SpyEventsCairo0 {
 
     #[abi(embed_v0)]
     impl ISpyEventsCairo0 of super::ISpyEventsCairo0<ContractState> {
-        fn test(ref self: ContractState, cairo0_address: ContractAddress) {
+        fn test_cairo0_event_collection(ref self: ContractState, cairo0_address: ContractAddress) {
             let cairo0_contract = super::ICairo0ContractDispatcher {
                 contract_address: cairo0_address
             };

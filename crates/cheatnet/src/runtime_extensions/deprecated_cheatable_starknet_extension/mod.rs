@@ -168,7 +168,7 @@ impl<'a> DeprecatedExtensionLogic for DeprecatedCheatableStarknetRuntimeExtensio
     ) {
         let syscall_handler = &extended_runtime.hint_handler;
         if let DeprecatedSyscallSelector::EmitEvent = selector {
-            syscall_hooks::emit_event_hook_deprecated(syscall_handler, self.cheatnet_state);
+            syscall_hooks::emit_event_hook(syscall_handler, self.cheatnet_state);
         }
     }
 }

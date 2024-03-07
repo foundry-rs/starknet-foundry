@@ -8,39 +8,35 @@ use blockifier::execution::{
 };
 use starknet_api::core::ContractAddress;
 
+pub trait SyscallHintProcessorExt {
+    fn contract_address(&self) -> ContractAddress;
+    fn ordered_event(&self) -> &OrderedEvent;
+}
+
+impl SyscallHintProcessorExt for SyscallHintProcessor<'_> {
+    fn contract_address(&self) -> ContractAddress {
+        self.call.code_address.unwrap_or(self.call.storage_address)
+    }
+    fn ordered_event(&self) -> &OrderedEvent {
+        self.events.last().unwrap()
+    }
+}
+
+impl SyscallHintProcessorExt for DeprecatedSyscallHintProcessor<'_> {
+    fn contract_address(&self) -> ContractAddress {
+        self.storage_address
+    }
+    fn ordered_event(&self) -> &OrderedEvent {
+        self.events.last().unwrap()
+    }
+}
+
 pub fn emit_event_hook(
-    syscall_handler: &SyscallHintProcessor<'_>,
+    syscall_handler: &impl SyscallHintProcessorExt,
     cheatnet_state: &mut CheatnetState,
 ) {
-    let contract_address = syscall_handler
-        .call
-        .code_address
-        .unwrap_or(syscall_handler.call.storage_address);
-
-    emit_event(
-        contract_address,
-        syscall_handler.events.last().unwrap(),
-        cheatnet_state,
-    );
-}
-pub fn emit_event_hook_deprecated(
-    syscall_handler: &DeprecatedSyscallHintProcessor<'_>,
-    cheatnet_state: &mut CheatnetState,
-) {
-    let contract_address = syscall_handler.storage_address;
-
-    emit_event(
-        contract_address,
-        syscall_handler.events.last().unwrap(),
-        cheatnet_state,
-    );
-}
-
-fn emit_event(
-    contract_address: ContractAddress,
-    ordered_event: &OrderedEvent,
-    cheatnet_state: &mut CheatnetState,
-) {
+    let contract_address = syscall_handler.contract_address();
+    let ordered_event = syscall_handler.ordered_event();
     let is_spied_on = cheatnet_state
         .spies
         .iter()

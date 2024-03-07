@@ -1,17 +1,20 @@
-use crate::common::state::{build_runtime_state, create_cached_state};
-use crate::common::{call_contract, deploy_wrapper};
-use crate::common::{deploy_contract, felt_selector_from_name, get_contracts};
+use crate::common::{
+    call_contract, deploy_contract, deploy_wrapper, felt_selector_from_name, get_contracts,
+    state::{build_runtime_state, create_cached_state},
+};
 use blockifier::state::cached_state::{CachedState, GlobalContractCache};
 use cairo_felt::{felt_str, Felt252};
 use cairo_lang_starknet::contract::starknet_keccak;
 use cairo_vm::hint_processor::hint_processor_utils::felt_to_usize;
-use cheatnet::constants::build_testing_state;
-use cheatnet::forking::state::ForkStateReader;
-use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
-use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::{
-    Event, SpyTarget,
+use cheatnet::{
+    constants::build_testing_state,
+    forking::state::ForkStateReader,
+    runtime_extensions::forge_runtime_extension::cheatcodes::{
+        declare::declare,
+        spy_events::{Event, SpyTarget},
+    },
+    state::{CheatnetState, ExtendedStateReader},
 };
-use cheatnet::state::{CheatnetState, ExtendedStateReader};
 use conversions::IntoConv;
 use starknet_api::block::BlockNumber;
 use std::vec;
@@ -656,7 +659,7 @@ fn capture_cairo0_event() {
 
     let id = runtime_state.cheatnet_state.spy_events(SpyTarget::All);
 
-    let selector = felt_selector_from_name("test");
+    let selector = felt_selector_from_name("test_cairo0_event_collection");
 
     let cairo0_contract_address = felt_str!(
         "1960625ba5c435bac113ecd15af3c60e327d550fc5dbb43f07cd0875ad2f54c",
@@ -683,10 +686,7 @@ fn capture_cairo0_event() {
         events[0],
         Event {
             from: cairo0_contract_address.into_(),
-            keys: vec![felt_str!(
-                "1e84b5cfc819964b8acb004914a08b19977f41ff43207b25de889ec35ed4483",
-                16
-            )],
+            keys: vec![starknet_keccak("my_event".as_ref()).into()],
             data: vec![Felt252::from(123_456_789)]
         },
         "Wrong spy_events_checker event"
