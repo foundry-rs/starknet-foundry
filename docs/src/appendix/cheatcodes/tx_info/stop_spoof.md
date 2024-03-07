@@ -2,7 +2,7 @@
 
 > `fn stop_spoof(target: CheatTarget)`
 
-Cancels the [`start_spoof`](./start_spoof.md) for the given target.
+Cancels the [`spoof`](./spoof.md) / [`start_spoof`](./start_spoof.md) for the given target.
 
 - `target` - instance of [`CheatTarget`](./cheat_target.md) specifying which contracts to stop spoofing
 

@@ -2,7 +2,7 @@
 
 > `fn stop_roll(target: CheatTarget)`
 
-Cancels the [`start_roll`](./start_roll.md) for the given target.
+Cancels the [`roll`](./roll.md) / [`start_roll`](./start_roll.md) for the given target.
 
 - `target` - instance of [`CheatTarget`](./cheat_target.md) specifying which contracts to stop rolling
 

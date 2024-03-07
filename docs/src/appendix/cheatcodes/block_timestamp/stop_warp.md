@@ -2,7 +2,7 @@
 
 > `fn stop_warp(target: CheatTarget)`
 
-Cancels the [`start_warp`](./start_warp.md) for the given target.
+Cancels the [`warp`](./warp.md) / [`start_warp`](./start_warp.md) for the given target.
 
 - `target` - instance of [`CheatTarget`](./cheat_target.md) specifying which contracts to stop warping.
 
