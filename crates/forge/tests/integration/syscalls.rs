@@ -1,8 +1,8 @@
 use indoc::indoc;
 use std::path::Path;
-use test_utils::runner::Contract;
+use test_utils::runner::{assert_case_output_contains, assert_failed, assert_passed, Contract};
 use test_utils::running_tests::run_test_case;
-use test_utils::{assert_case_output_contains, assert_failed, assert_passed, test_case};
+use test_utils::test_case;
 
 #[test]
 #[allow(clippy::too_many_lines)]
@@ -139,7 +139,7 @@ fn library_call_syscall_is_usable() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -164,7 +164,7 @@ fn keccak_syscall_is_usable() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -189,13 +189,13 @@ fn keccak_syscall_too_small_input() {
 
     let result = run_test_case(&test);
 
-    assert_case_output_contains!(
-        result,
+    assert_case_output_contains(
+        &result,
         "keccak_syscall_too_small_input",
-        "Invalid input length"
+        "Invalid input length",
     );
 
-    assert_failed!(result);
+    assert_failed(&result);
 }
 
 #[test]
@@ -237,7 +237,7 @@ fn cairo_keccak_is_usable() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -280,7 +280,7 @@ fn keccak_syscall_in_contract() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -325,5 +325,5 @@ fn compare_keccak_from_contract_with_plain_keccak() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }

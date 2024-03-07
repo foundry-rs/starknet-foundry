@@ -1,8 +1,8 @@
 use indoc::indoc;
 use std::path::Path;
-use test_utils::runner::Contract;
+use test_utils::runner::{assert_case_output_contains, assert_failed, assert_passed, Contract};
 use test_utils::running_tests::run_test_case;
-use test_utils::{assert_case_output_contains, assert_failed, assert_passed, test_case};
+use test_utils::test_case;
 
 #[test]
 fn simple_call_and_invoke() {
@@ -50,7 +50,7 @@ fn simple_call_and_invoke() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -123,7 +123,7 @@ fn advanced_types() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -191,7 +191,7 @@ fn handling_errors() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -241,7 +241,7 @@ fn handling_bytearray_based_errors() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -313,7 +313,7 @@ fn serding() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -487,7 +487,7 @@ fn proxy_storage() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -603,7 +603,7 @@ fn proxy_dispatcher_panic() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -657,9 +657,9 @@ fn nonexistent_method_call() {
 
     let result = run_test_case(&test);
 
-    assert_failed!(result);
-    assert_case_output_contains!(
-        result,
+    assert_failed(&result);
+    assert_case_output_contains(
+       & result,
         "nonexistent_method_call",
         "Entry point selector 0x01fdb214e1495025fa4baf660d34f03c0d8b5037cf10311d2a3202a806aa9485 not found in contract"
     );
@@ -754,9 +754,9 @@ fn nonexistent_libcall_function() {
 
     let result = run_test_case(&test);
 
-    assert_failed!(result);
-    assert_case_output_contains!(
-        result,
+    assert_failed(&result);
+    assert_case_output_contains(
+       & result,
         "nonexistent_libcall_function",
         "Entry point EntryPointSelector(StarkFelt(\"0x01fdb214e1495025fa4baf660d34f03c0d8b5037cf10311d2a3202a806aa9485\")) not found in contract"
     );
@@ -785,9 +785,9 @@ fn undeclared_class_call() {
 
     let result = run_test_case(&test);
 
-    assert_failed!(result);
-    assert_case_output_contains!(
-        result,
+    assert_failed(&result);
+    assert_case_output_contains(
+       & result,
         "undeclared_class_call",
         "Contract not deployed at address: 0x0000000000000000000000000000000000000000000000000000000000000005"
     );
@@ -878,7 +878,7 @@ fn nonexistent_class_libcall() {
 
     let result = run_test_case(&test);
 
-    assert_failed!(result);
-    assert_case_output_contains!(result, "test_nonexistent_libcall", "Class with hash");
-    assert_case_output_contains!(result, "test_nonexistent_libcall", "is not declared.");
+    assert_failed(&result);
+    assert_case_output_contains(&result, "test_nonexistent_libcall", "Class with hash");
+    assert_case_output_contains(&result, "test_nonexistent_libcall", "is not declared.");
 }

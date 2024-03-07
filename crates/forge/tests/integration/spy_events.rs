@@ -1,8 +1,8 @@
 use indoc::indoc;
 use std::path::Path;
-use test_utils::runner::Contract;
+use test_utils::runner::{assert_case_output_contains, assert_failed, assert_passed, Contract};
 use test_utils::running_tests::run_test_case;
-use test_utils::{assert_case_output_contains, assert_failed, assert_passed, test_case};
+use test_utils::test_case;
 
 #[test]
 fn spy_events_simple() {
@@ -71,7 +71,7 @@ fn spy_events_simple() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -138,13 +138,13 @@ fn assert_emitted_fails() {
 
     let result = run_test_case(&test);
 
-    assert_failed!(result);
-    assert_case_output_contains!(
-        result,
+    assert_failed(&result);
+    assert_case_output_contains(
+        &result,
         "assert_emitted_fails",
-        "Event with matching data and"
+        "Event with matching data and",
     );
-    assert_case_output_contains!(result, "assert_emitted_fails", "keys was not emitted");
+    assert_case_output_contains(&result, "assert_emitted_fails", "keys was not emitted");
 }
 
 #[test]
@@ -245,16 +245,16 @@ fn expect_three_events_while_two_emitted() {
 
     let result = run_test_case(&test);
 
-    assert_failed!(result);
-    assert_case_output_contains!(
-        result,
+    assert_failed(&result);
+    assert_case_output_contains(
+        &result,
         "expect_three_events_while_two_emitted",
-        "Event with matching data and"
+        "Event with matching data and",
     );
-    assert_case_output_contains!(
-        result,
+    assert_case_output_contains(
+        &result,
         "expect_three_events_while_two_emitted",
-        "keys was not emitted"
+        "keys was not emitted",
     );
 }
 
@@ -347,7 +347,7 @@ fn expect_two_events_while_three_emitted() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -414,16 +414,16 @@ fn event_emitted_wrong_data_asserted() {
 
     let result = run_test_case(&test);
 
-    assert_failed!(result);
-    assert_case_output_contains!(
-        result,
+    assert_failed(&result);
+    assert_case_output_contains(
+        &result,
         "event_emitted_wrong_data_asserted",
-        "Event with matching data and"
+        "Event with matching data and",
     );
-    assert_case_output_contains!(
-        result,
+    assert_case_output_contains(
+        &result,
         "event_emitted_wrong_data_asserted",
-        "keys was not emitted from"
+        "keys was not emitted from",
     );
 }
 
@@ -473,7 +473,7 @@ fn emit_unnamed_event() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -540,7 +540,7 @@ fn assert_not_emitted_pass() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -609,11 +609,11 @@ fn assert_not_emitted_fails() {
 
     let result = run_test_case(&test);
 
-    assert_failed!(result);
-    assert_case_output_contains!(
-        result,
+    assert_failed(&result);
+    assert_case_output_contains(
+        &result,
         "assert_not_emitted_fails",
-        "Event with matching data and"
+        "Event with matching data and",
     );
-    assert_case_output_contains!(result, "assert_not_emitted_fails", "keys was emitted");
+    assert_case_output_contains(&result, "assert_not_emitted_fails", "keys was emitted");
 }

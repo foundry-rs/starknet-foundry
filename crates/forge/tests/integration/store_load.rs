@@ -1,8 +1,7 @@
 use indoc::{formatdoc, indoc};
 use std::path::Path;
-use test_utils::runner::Contract;
+use test_utils::runner::{assert_case_output_contains, assert_failed, assert_passed, Contract};
 use test_utils::running_tests::run_test_case;
-use test_utils::{assert_case_output_contains, assert_failed, assert_passed};
 
 #[test]
 fn store_load_simple() {
@@ -52,7 +51,7 @@ fn store_load_simple() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -102,7 +101,7 @@ fn store_load_wrong_selector() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -149,7 +148,7 @@ fn store_load_wrong_data_length() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -224,26 +223,26 @@ fn store_load_max_boundaries_input() {
 
     let result = run_test_case(&test);
 
-    assert_failed!(result);
-    assert_case_output_contains!(
-        result,
+    assert_failed(&result);
+    assert_case_output_contains(
+        &result,
         "load_boundaries_max",
-        "storage_address out of range"
+        "storage_address out of range",
     );
-    assert_case_output_contains!(
-        result,
+    assert_case_output_contains(
+        &result,
         "store_boundaries_max",
-        "storage_address out of range"
+        "storage_address out of range",
     );
-    assert_case_output_contains!(
-        result,
+    assert_case_output_contains(
+        &result,
         "load_boundaries_max_overflow",
-        "storage_address out of range"
+        "storage_address out of range",
     );
-    assert_case_output_contains!(
-        result,
+    assert_case_output_contains(
+        &result,
         "store_boundaries_max_overflow",
-        "storage_address out of range"
+        "storage_address out of range",
     );
 }
 
@@ -325,7 +324,7 @@ fn store_load_structure() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -414,7 +413,7 @@ fn store_load_felt_to_structure() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -494,7 +493,7 @@ fn store_load_structure_to_felt() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -553,7 +552,7 @@ fn store_load_felt_to_felt() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 static INTEGRATION_RPC_URL: &str = "http://188.34.188.184:9545/rpc/v0_6";
 #[test]
@@ -592,5 +591,5 @@ fn fork_store_load() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }

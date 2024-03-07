@@ -78,7 +78,7 @@ fn load_elaborate_struct() {
 
 > ⚠️ **Warning**
 > 
-> Complex data can often times be packed in a custom manner (see [this pattern](https://book.cairo-lang.org/ch99-01-03-05-optimizing-storage.html#storage-optimization-with-storepacking)) to optimize costs.
+> Complex data can often times be packed in a custom manner (see [this pattern](https://book.cairo-lang.org/ch15-01-optimizing-storage-costs.html#the-storepacking-trait)) to optimize costs.
 > If that's the case for your contract, make sure to handle deserialization properly - standard methods might not work.
 > **Use this cheatcode as a last-resort, for cases that cannot be handled via contract's API!**
 
