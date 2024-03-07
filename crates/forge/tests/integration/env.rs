@@ -2,7 +2,10 @@ use cairo_felt::Felt252;
 use indoc::indoc;
 use num_bigint::BigUint;
 use test_utils::running_tests::run_test_case;
-use test_utils::{assert_case_output_contains, assert_failed, assert_passed, test_case};
+use test_utils::{
+    runner::{assert_case_output_contains, assert_failed, assert_passed},
+    test_case,
+};
 
 #[test]
 fn read_short_string() {
@@ -21,7 +24,7 @@ fn read_short_string() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -41,7 +44,7 @@ fn read_felt252() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -62,11 +65,11 @@ fn read_invalid_felt252() {
 
     let result = run_test_case(&test);
 
-    assert_failed!(result);
-    assert_case_output_contains!(
-        result,
+    assert_failed(&result);
+    assert_case_output_contains(
+        &result,
         "read_invalid_felt252",
-        &format!("Failed to parse value = {value} to felt")
+        &format!("Failed to parse value = {value} to felt"),
     );
 }
 
@@ -89,11 +92,11 @@ fn read_invalid_short_string() {
 
     let result = run_test_case(&test);
 
-    assert_failed!(result);
-    assert_case_output_contains!(
-        result,
+    assert_failed(&result);
+    assert_case_output_contains(
+        &result,
         "read_invalid_short_string",
-        &format!("Failed to parse value = {value} to felt")
+        &format!("Failed to parse value = {value} to felt"),
     );
 }
 
@@ -111,10 +114,10 @@ fn read_non_existent() {
     ));
     let result = run_test_case(&test);
 
-    assert_failed!(result);
-    assert_case_output_contains!(
-        result,
+    assert_failed(&result);
+    assert_case_output_contains(
+        &result,
         "read_invalid_short_string",
-        "Failed to read from env var = MY_ENV_VAR"
+        "Failed to read from env var = MY_ENV_VAR",
     );
 }

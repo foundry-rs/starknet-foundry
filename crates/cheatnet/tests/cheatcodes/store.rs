@@ -1,5 +1,5 @@
-use crate::assert_success;
 use crate::cheatcodes::{map_entry_address, variable_address};
+use crate::common::assertions::assert_success;
 use crate::common::state::{build_runtime_state, create_cached_state};
 use crate::common::{call_contract, deploy_wrapper};
 use crate::common::{felt_selector_from_name, get_contracts};
@@ -39,7 +39,7 @@ fn store_simple_state() {
         &[],
     );
 
-    assert_success!(output, vec![Felt252::from(666)]);
+    assert_success(output, &[Felt252::from(666)]);
 }
 
 #[test]
@@ -76,5 +76,5 @@ fn store_state_map_simple_value() {
         &[map_key],
     );
 
-    assert_success!(call_output, vec![inserted_value]);
+    assert_success(call_output, &[inserted_value]);
 }

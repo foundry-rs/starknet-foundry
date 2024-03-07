@@ -4,9 +4,9 @@ use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector::{
 };
 use indoc::indoc;
 use std::path::Path;
-use test_utils::runner::Contract;
+use test_utils::runner::{assert_builtin, assert_passed, assert_syscall, Contract};
 use test_utils::running_tests::run_test_case;
-use test_utils::{assert_builtin, assert_passed, assert_syscall, test_case};
+use test_utils::test_case;
 
 #[test]
 fn builtins_count() {
@@ -46,14 +46,14 @@ fn builtins_count() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 
     // No ECDSA and Keccak builtins
-    assert_builtin!(result, "range_check", "range_check_builtin", 1);
-    assert_builtin!(result, "bitwise", "bitwise_builtin", 1);
-    assert_builtin!(result, "pedersen", "pedersen_builtin", 1);
-    assert_builtin!(result, "poseidon", "poseidon_builtin", 1);
-    assert_builtin!(result, "ec_op", "ec_op_builtin", 1);
+    assert_builtin(&result, "range_check", "range_check_builtin", 1);
+    assert_builtin(&result, "bitwise", "bitwise_builtin", 1);
+    assert_builtin(&result, "pedersen", "pedersen_builtin", 1);
+    assert_builtin(&result, "poseidon", "poseidon_builtin", 1);
+    assert_builtin(&result, "ec_op", "ec_op_builtin", 1);
 }
 
 #[test]
@@ -135,17 +135,17 @@ fn syscalls_count() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 
-    assert_syscall!(result, "keccak", Keccak, 1);
-    assert_syscall!(result, "deploy", Deploy, 1);
-    assert_syscall!(result, "storage_read", StorageRead, 1);
-    assert_syscall!(result, "storage_write", StorageWrite, 1);
-    assert_syscall!(result, "get_block_hash", GetBlockHash, 1);
-    assert_syscall!(result, "get_execution_info", GetExecutionInfo, 1);
-    assert_syscall!(result, "get_execution_info_v2", GetExecutionInfo, 1);
-    assert_syscall!(result, "send_message_to_l1", SendMessageToL1, 1);
-    assert_syscall!(result, "emit_event", EmitEvent, 1);
+    assert_syscall(&result, "keccak", Keccak, 1);
+    assert_syscall(&result, "deploy", Deploy, 1);
+    assert_syscall(&result, "storage_read", StorageRead, 1);
+    assert_syscall(&result, "storage_write", StorageWrite, 1);
+    assert_syscall(&result, "get_block_hash", GetBlockHash, 1);
+    assert_syscall(&result, "get_execution_info", GetExecutionInfo, 1);
+    assert_syscall(&result, "get_execution_info_v2", GetExecutionInfo, 1);
+    assert_syscall(&result, "send_message_to_l1", SendMessageToL1, 1);
+    assert_syscall(&result, "emit_event", EmitEvent, 1);
 }
 
 #[test]
@@ -189,7 +189,7 @@ fn accumulate_syscalls() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
-    assert_syscall!(result, "single_write", StorageWrite, 1);
-    assert_syscall!(result, "double_write", StorageWrite, 2);
+    assert_passed(&result);
+    assert_syscall(&result, "single_write", StorageWrite, 1);
+    assert_syscall(&result, "double_write", StorageWrite, 2);
 }

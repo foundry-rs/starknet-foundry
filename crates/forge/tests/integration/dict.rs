@@ -1,7 +1,6 @@
 use indoc::indoc;
 use std::path::Path;
-use test_utils::assert_passed;
-use test_utils::runner::Contract;
+use test_utils::runner::{assert_passed, Contract};
 use test_utils::running_tests::run_test_case;
 
 #[test]
@@ -49,5 +48,5 @@ fn using_dict() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }

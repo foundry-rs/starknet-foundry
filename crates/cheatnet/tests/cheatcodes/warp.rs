@@ -2,7 +2,7 @@ use crate::common::assertions::assert_outputs;
 use crate::common::state::build_runtime_state;
 use crate::common::{call_contract, deploy_wrapper};
 use crate::{
-    assert_success,
+    common::assertions::assert_success,
     common::{
         deploy_contract, felt_selector_from_name, get_contracts, recover_data,
         state::create_cached_state,
@@ -67,7 +67,7 @@ fn warp_simple() {
         &[],
     );
 
-    assert_success!(output, vec![Felt252::from(123)]);
+    assert_success(output, &[Felt252::from(123)]);
 }
 
 #[test]
@@ -92,7 +92,7 @@ fn warp_with_other_syscall() {
         &[],
     );
 
-    assert_success!(output, vec![Felt252::from(123)]);
+    assert_success(output, &[Felt252::from(123)]);
 }
 
 #[test]
@@ -127,7 +127,7 @@ fn warp_in_constructor() {
         &[],
     );
 
-    assert_success!(output, vec![Felt252::from(123)]);
+    assert_success(output, &[Felt252::from(123)]);
 }
 
 #[test]
@@ -164,7 +164,7 @@ fn warp_stop() {
     );
 
     let new_block_timestamp = recover_data(output);
-    assert_eq!(new_block_timestamp, vec![Felt252::from(123)]);
+    assert_eq!(new_block_timestamp, &[Felt252::from(123)]);
     assert_ne!(old_block_timestamp, new_block_timestamp);
 
     runtime_state
@@ -220,7 +220,7 @@ fn warp_double() {
     );
 
     let new_block_timestamp = recover_data(output);
-    assert_eq!(new_block_timestamp, vec![Felt252::from(123)]);
+    assert_eq!(new_block_timestamp, &[Felt252::from(123)]);
     assert_ne!(old_block_timestamp, new_block_timestamp);
 
     runtime_state
@@ -275,7 +275,7 @@ fn warp_proxy() {
         &[contract_address.into_()],
     );
 
-    assert_success!(output, vec![Felt252::from(123)]);
+    assert_success(output, &[Felt252::from(123)]);
 
     runtime_state
         .cheatnet_state
@@ -328,7 +328,7 @@ fn warp_library_call() {
         &[class_hash.into_()],
     );
 
-    assert_success!(output, vec![Felt252::from(123)]);
+    assert_success(output, &[Felt252::from(123)]);
 
     runtime_state
         .cheatnet_state
@@ -372,7 +372,7 @@ fn warp_all_simple() {
         &[],
     );
 
-    assert_success!(output, vec![Felt252::from(123)]);
+    assert_success(output, &[Felt252::from(123)]);
 
     let output = call_contract(
         &mut cached_state,
@@ -382,7 +382,7 @@ fn warp_all_simple() {
         &[],
     );
 
-    assert_success!(output, vec![Felt252::from(123)]);
+    assert_success(output, &[Felt252::from(123)]);
 }
 
 #[test]
@@ -411,7 +411,7 @@ fn warp_all_then_one() {
         &[],
     );
 
-    assert_success!(output, vec![Felt252::from(123)]);
+    assert_success(output, &[Felt252::from(123)]);
 }
 
 #[test]
@@ -440,7 +440,7 @@ fn warp_one_then_all() {
         &[],
     );
 
-    assert_success!(output, vec![Felt252::from(321)]);
+    assert_success(output, &[Felt252::from(321)]);
 }
 
 #[test]
@@ -477,7 +477,7 @@ fn warp_all_stop() {
     );
 
     let new_block_timestamp = recover_data(output);
-    assert_eq!(new_block_timestamp, vec![Felt252::from(123)]);
+    assert_eq!(new_block_timestamp, &[Felt252::from(123)]);
     assert_ne!(old_block_timestamp, new_block_timestamp);
 
     runtime_state.cheatnet_state.stop_warp(CheatTarget::All);
@@ -556,8 +556,8 @@ fn warp_multiple() {
 
     let new_block_timestamp2 = recover_data(output);
 
-    assert_eq!(new_block_timestamp1, vec![Felt252::from(123)]);
-    assert_eq!(new_block_timestamp2, vec![Felt252::from(123)]);
+    assert_eq!(new_block_timestamp1, &[Felt252::from(123)]);
+    assert_eq!(new_block_timestamp2, &[Felt252::from(123)]);
 
     runtime_state
         .cheatnet_state
@@ -603,17 +603,17 @@ fn warp_simple_with_span() {
         CheatSpan::Number(2),
     );
 
-    assert_success!(
+    assert_success(
         test_env.call_contract(&contract_address, "get_block_timestamp", &[]),
-        vec![Felt252::from(123)]
+        &[Felt252::from(123)],
     );
-    assert_success!(
+    assert_success(
         test_env.call_contract(&contract_address, "get_block_timestamp", &[]),
-        vec![Felt252::from(123)]
+        &[Felt252::from(123)],
     );
-    assert_success!(
+    assert_success(
         test_env.call_contract(&contract_address, "get_block_timestamp", &[]),
-        vec![Felt252::from(DEFAULT_BLOCK_TIMESTAMP)]
+        &[Felt252::from(DEFAULT_BLOCK_TIMESTAMP)],
     );
 }
 
@@ -638,7 +638,7 @@ fn warp_proxy_with_span() {
         "call_proxy",
         &[contract_address_2.into_()],
     );
-    assert_success!(output, vec![123.into(), DEFAULT_BLOCK_TIMESTAMP.into()]);
+    assert_success(output, &[123.into(), DEFAULT_BLOCK_TIMESTAMP.into()]);
 }
 
 #[test]
@@ -663,17 +663,17 @@ fn warp_in_constructor_with_span() {
     let contract_address = test_env.deploy_wrapper(&class_hash, &[]);
     assert_eq!(precalculated_address, contract_address);
 
-    assert_success!(
+    assert_success(
         test_env.call_contract(&contract_address, "get_block_timestamp", &[]),
-        vec![Felt252::from(123)]
+        &[Felt252::from(123)],
     );
-    assert_success!(
+    assert_success(
         test_env.call_contract(&contract_address, "get_block_timestamp", &[]),
-        vec![Felt252::from(DEFAULT_BLOCK_TIMESTAMP)]
+        &[Felt252::from(DEFAULT_BLOCK_TIMESTAMP)],
     );
-    assert_success!(
+    assert_success(
         test_env.call_contract(&contract_address, "get_stored_block_timestamp", &[]),
-        vec![Felt252::from(123)]
+        &[Felt252::from(123)],
     );
 }
 
@@ -699,13 +699,13 @@ fn warp_no_constructor_with_span() {
     let contract_address = test_env.deploy_wrapper(&class_hash, &[]);
     assert_eq!(precalculated_address, contract_address);
 
-    assert_success!(
+    assert_success(
         test_env.call_contract(&contract_address, "get_block_timestamp", &[]),
-        vec![Felt252::from(123)]
+        &[Felt252::from(123)],
     );
-    assert_success!(
+    assert_success(
         test_env.call_contract(&contract_address, "get_block_timestamp", &[]),
-        vec![Felt252::from(DEFAULT_BLOCK_TIMESTAMP)]
+        &[Felt252::from(DEFAULT_BLOCK_TIMESTAMP)],
     );
 }
 
@@ -722,9 +722,9 @@ fn warp_override_span() {
         CheatSpan::Number(2),
     );
 
-    assert_success!(
+    assert_success(
         test_env.call_contract(&contract_address, "get_block_timestamp", &[]),
-        vec![Felt252::from(123)]
+        &[Felt252::from(123)],
     );
 
     test_env.warp(
@@ -733,20 +733,20 @@ fn warp_override_span() {
         CheatSpan::Indefinite,
     );
 
-    assert_success!(
+    assert_success(
         test_env.call_contract(&contract_address, "get_block_timestamp", &[]),
-        vec![Felt252::from(321)]
+        &[Felt252::from(321)],
     );
-    assert_success!(
+    assert_success(
         test_env.call_contract(&contract_address, "get_block_timestamp", &[]),
-        vec![Felt252::from(321)]
+        &[Felt252::from(321)],
     );
 
     test_env.stop_warp(&contract_address);
 
-    assert_success!(
+    assert_success(
         test_env.call_contract(&contract_address, "get_block_timestamp", &[]),
-        vec![Felt252::from(DEFAULT_BLOCK_TIMESTAMP)]
+        &[Felt252::from(DEFAULT_BLOCK_TIMESTAMP)],
     );
 }
 
@@ -767,13 +767,13 @@ fn warp_library_call_with_span() {
 
     let lib_call_selector = "get_block_timestamp_with_lib_call";
 
-    assert_success!(
+    assert_success(
         test_env.call_contract(&contract_address, lib_call_selector, &[class_hash.into_()]),
-        vec![Felt252::from(123)]
+        &[Felt252::from(123)],
     );
-    assert_success!(
+    assert_success(
         test_env.call_contract(&contract_address, lib_call_selector, &[class_hash.into_()]),
-        vec![Felt252::from(DEFAULT_BLOCK_TIMESTAMP)]
+        &[Felt252::from(DEFAULT_BLOCK_TIMESTAMP)],
     );
 }
 
@@ -787,21 +787,21 @@ fn warp_all_span() {
 
     test_env.warp(CheatTarget::All, 123, CheatSpan::Number(1));
 
-    assert_success!(
+    assert_success(
         test_env.call_contract(&contract_address_1, "get_block_timestamp", &[]),
-        vec![Felt252::from(123)]
+        &[Felt252::from(123)],
     );
-    assert_success!(
+    assert_success(
         test_env.call_contract(&contract_address_1, "get_block_timestamp", &[]),
-        vec![Felt252::from(DEFAULT_BLOCK_TIMESTAMP)]
+        &[Felt252::from(DEFAULT_BLOCK_TIMESTAMP)],
     );
 
-    assert_success!(
+    assert_success(
         test_env.call_contract(&contract_address_2, "get_block_timestamp", &[]),
-        vec![Felt252::from(123)]
+        &[Felt252::from(123)],
     );
-    assert_success!(
+    assert_success(
         test_env.call_contract(&contract_address_2, "get_block_timestamp", &[]),
-        vec![Felt252::from(DEFAULT_BLOCK_TIMESTAMP)]
+        &[Felt252::from(DEFAULT_BLOCK_TIMESTAMP)],
     );
 }

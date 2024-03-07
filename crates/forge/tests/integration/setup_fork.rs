@@ -16,9 +16,9 @@ use tokio::runtime::Runtime;
 
 use forge::compiled_raw::RawForkParams;
 use forge_runner::{RunnerConfig, RunnerParams};
-use test_utils::runner::Contract;
+use test_utils::runner::{assert_case_output_contains, assert_failed, assert_passed, Contract};
 use test_utils::running_tests::run_test_case;
-use test_utils::{assert_case_output_contains, assert_failed, assert_passed, test_case};
+use test_utils::test_case;
 
 static INTEGRATION_RPC_URL: &str = "http://188.34.188.184:9545/rpc/v0_6";
 static TESTNET_RPC_URL: &str = "http://188.34.188.184:6060/rpc";
@@ -63,7 +63,7 @@ fn fork_simple_decorator() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -144,7 +144,7 @@ fn fork_aliased_decorator() {
         ))
         .expect("Runner fail");
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -174,7 +174,7 @@ fn fork_cairo0_contract() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -253,7 +253,7 @@ fn get_block_info_in_forked_block() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -271,11 +271,11 @@ fn fork_get_block_info_fails() {
 
     let result = run_test_case(&test);
 
-    assert_failed!(result);
-    assert_case_output_contains!(
-        result,
+    assert_failed(&result);
+    assert_case_output_contains(
+        &result,
         "fork_get_block_info_fails",
-        "Unable to get block with tx hashes from fork"
+        "Unable to get block with tx hashes from fork",
     );
 }
 
@@ -308,5 +308,5 @@ fn incompatible_abi() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
