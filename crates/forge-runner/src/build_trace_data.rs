@@ -9,6 +9,7 @@ use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::entry_point::{CallEntryPoint, CallType};
 use blockifier::execution::syscalls::hint_processor::SyscallCounter;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
+use cairo_vm::vm::trace::trace_entry::TraceEntry;
 use cheatnet::constants::{TEST_CONTRACT_CLASS_HASH, TEST_ENTRY_POINT_SELECTOR};
 use cheatnet::state::CallTrace;
 use conversions::IntoConv;
@@ -22,7 +23,7 @@ use trace_data::{
     CallType as ProfilerCallType, ContractAddress,
     DeprecatedSyscallSelector as ProfilerDeprecatedSyscallSelector, EntryPointSelector,
     EntryPointType as ProfilerEntryPointType, ExecutionResources as ProfilerExecutionResources,
-    VmExecutionResources,
+    TraceEntry as ProfilerTraceEntry, VmExecutionResources,
 };
 
 use crate::contracts_data::ContractsData;
@@ -49,6 +50,11 @@ pub fn build_profiler_call_trace(
             .nested_calls
             .iter()
             .map(|c| build_profiler_call_trace(c, contracts_data))
+            .collect(),
+        vm_trace: value
+            .vm_trace
+            .iter()
+            .map(build_profiler_trace_entry)
             .collect(),
     }
 }
@@ -190,6 +196,14 @@ fn build_profiler_call_type(value: CallType) -> ProfilerCallType {
     match value {
         CallType::Call => ProfilerCallType::Call,
         CallType::Delegate => ProfilerCallType::Delegate,
+    }
+}
+
+fn build_profiler_trace_entry(value: &TraceEntry) -> ProfilerTraceEntry {
+    ProfilerTraceEntry {
+        pc: value.pc,
+        ap: value.ap,
+        fp: value.fp,
     }
 }
 

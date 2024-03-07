@@ -61,7 +61,7 @@ regex = "1.10.3"
 serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.114"
 starknet = { git = "https://github.com/xJonathanLEI/starknet-rs", rev = "082f556" }
-trace-data = { git = "https://github.com/software-mansion/cairo-profiler/", rev = "d014aad" }
+trace-data = { git = "https://github.com/software-mansion/cairo-profiler/", rev = "e01fc91" }
 tempfile = "3.10.1"
 thiserror = "1.0.57"
 ctor = "0.2.7"

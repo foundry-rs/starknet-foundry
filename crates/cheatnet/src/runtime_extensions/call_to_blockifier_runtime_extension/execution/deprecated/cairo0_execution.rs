@@ -17,6 +17,7 @@ use blockifier::execution::syscalls::hint_processor::SyscallCounter;
 use blockifier::state::state_api::State;
 use cairo_vm::hint_processor::hint_processor_definition::HintProcessor;
 use cairo_vm::vm::runners::cairo_runner::{CairoArg, CairoRunner, ExecutionResources};
+use cairo_vm::vm::trace::trace_entry::TraceEntry;
 use cairo_vm::vm::vm_core::VirtualMachine;
 
 // blockifier/src/execution/deprecated_execution.rs:36 (execute_entry_point_call)
@@ -27,7 +28,7 @@ pub fn execute_entry_point_call_cairo0(
     runtime_state: &mut RuntimeState,
     resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
-) -> EntryPointExecutionResult<(CallInfo, SyscallCounter)> {
+) -> EntryPointExecutionResult<(CallInfo, SyscallCounter, Vec<TraceEntry>)> {
     let VmExecutionContext {
         mut runner,
         mut vm,
@@ -66,24 +67,36 @@ pub fn execute_entry_point_call_cairo0(
         entry_point_pc,
         &args,
     )?;
-    // endregion
+
+    let vm_trace = vm
+        .get_relocated_trace()
+        .unwrap()
+        .iter()
+        .map(|x| TraceEntry {
+            pc: x.pc,
+            ap: x.ap,
+            fp: x.fp,
+        })
+        .collect();
+
     let syscall_counter = cheatable_syscall_handler
         .extended_runtime
         .hint_handler
         .syscall_counter
         .clone();
-    Ok((
-        finalize_execution(
-            vm,
-            runner,
-            cheatable_syscall_handler.extended_runtime.hint_handler,
-            call,
-            previous_vm_resources,
-            implicit_args,
-            n_total_args,
-        )?,
-        syscall_counter,
-    ))
+
+    let execution_result = finalize_execution(
+        vm,
+        runner,
+        cheatable_syscall_handler.extended_runtime.hint_handler,
+        call,
+        previous_vm_resources,
+        implicit_args,
+        n_total_args,
+    )?;
+
+    Ok((execution_result, syscall_counter, vm_trace))
+    // endregion
 }
 
 // blockifier/src/execution/deprecated_execution.rs:192 (run_entry_point)

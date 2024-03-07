@@ -14,6 +14,7 @@ use blockifier::{
     },
     state::state_api::State,
 };
+use cairo_vm::vm::trace::trace_entry::TraceEntry;
 use cairo_vm::{
     hint_processor::hint_processor_definition::HintProcessor,
     vm::{
@@ -31,7 +32,7 @@ pub fn execute_entry_point_call_cairo1(
     runtime_state: &mut RuntimeState, // Added parameter
     resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
-) -> EntryPointExecutionResult<(CallInfo, SyscallCounter)> {
+) -> EntryPointExecutionResult<(CallInfo, SyscallCounter, Vec<TraceEntry>)> {
     let RuntimeState { cheatnet_state } = runtime_state;
 
     let VmExecutionContext {
@@ -73,7 +74,17 @@ pub fn execute_entry_point_call_cairo1(
         &args,
         program_extra_data_length,
     )?;
-    // endregion
+
+    let vm_trace = vm
+        .get_relocated_trace()
+        .unwrap()
+        .iter()
+        .map(|x| TraceEntry {
+            pc: x.pc,
+            ap: x.ap,
+            fp: x.fp,
+        })
+        .collect();
 
     let syscall_counter = cheatable_runtime
         .extended_runtime
@@ -95,7 +106,8 @@ pub fn execute_entry_point_call_cairo1(
         });
     }
 
-    Ok((call_info, syscall_counter))
+    Ok((call_info, syscall_counter, vm_trace))
+    // endregion
 }
 
 // crates/blockifier/src/execution/cairo1_execution.rs:236 (run_entry_point)
