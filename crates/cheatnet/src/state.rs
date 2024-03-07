@@ -134,7 +134,7 @@ impl StateReader for ExtendedStateReader {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum CheatStatus<T> {
     Cheated(T, CheatSpan),
     Uncheated,
@@ -245,7 +245,8 @@ pub struct CheatnetState {
     pub global_warp: Option<(Felt252, CheatSpan)>,
     pub elected_contracts: HashMap<ContractAddress, CheatStatus<ContractAddress>>,
     pub global_elect: Option<(ContractAddress, CheatSpan)>,
-    pub mocked_functions: HashMap<ContractAddress, HashMap<EntryPointSelector, Vec<StarkFelt>>>,
+    pub mocked_functions:
+        HashMap<ContractAddress, HashMap<EntryPointSelector, CheatStatus<Vec<StarkFelt>>>>,
     pub spoofed_contracts: HashMap<ContractAddress, CheatStatus<TxInfoMock>>,
     pub global_spoof: Option<(TxInfoMock, CheatSpan)>,
     pub replaced_bytecode_contracts: HashMap<ContractAddress, ClassHash>,
