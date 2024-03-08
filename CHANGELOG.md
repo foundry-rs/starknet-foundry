@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Fixed
+
+- Events emitted in cairo 0 contracts are now properly collected
+
 ## [0.19.0] - 2024-03-06
 
 ### Forge

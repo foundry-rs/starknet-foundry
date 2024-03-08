@@ -1,5 +1,12 @@
 use starknet::ContractAddress;
 
+// https://testnet.starkscan.co/contract/0x1960625ba5c435bac113ecd15af3c60e327d550fc5dbb43f07cd0875ad2f54c
+#[starknet::interface]
+trait ICairo0Contract<TContractState> {
+    // this function only job is to emit `my_event` with single felt252 value
+    fn emit_one_cairo0_event(ref self: TContractState, contract_address: felt252);
+}
+
 #[starknet::interface]
 trait ISpyEventsChecker<TContractState> {
     fn do_not_emit(ref self: TContractState);
@@ -14,12 +21,14 @@ trait ISpyEventsChecker<TContractState> {
         even_more_data: u256
     );
     fn emit_event_syscall(ref self: TContractState, some_key: felt252, some_data: felt252);
+    fn test_cairo0_event_collection(ref self: TContractState, cairo0_address: ContractAddress);
 }
 
 #[starknet::contract]
 mod SpyEventsChecker {
     use starknet::ContractAddress;
     use starknet::SyscallResultTrait;
+    use super::ICairo0ContractDispatcherTrait;
 
     #[storage]
     struct Storage {}
@@ -78,7 +87,16 @@ mod SpyEventsChecker {
         }
 
         fn emit_event_syscall(ref self: ContractState, some_key: felt252, some_data: felt252) {
-            starknet::emit_event_syscall(array![some_key].span(), array![some_data].span()).unwrap_syscall();
+            starknet::emit_event_syscall(array![some_key].span(), array![some_data].span())
+                .unwrap_syscall();
+        }
+
+        fn test_cairo0_event_collection(ref self: ContractState, cairo0_address: ContractAddress) {
+            let cairo0_contract = super::ICairo0ContractDispatcher {
+                contract_address: cairo0_address
+            };
+
+            cairo0_contract.emit_one_cairo0_event(123456789);
         }
     }
 }
