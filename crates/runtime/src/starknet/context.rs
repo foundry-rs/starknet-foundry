@@ -27,8 +27,6 @@ use starknet_api::{
 pub const DEFAULT_BLOCK_NUMBER: u64 = 2000;
 pub const SEQUENCER_ADDRESS: &str = "0x1000";
 pub const ERC20_CONTRACT_ADDRESS: &str = "0x1001";
-pub const STEP_RESOURCE_COST: f64 = 0.005_f64;
-pub const DEFAULT_MAX_N_STEPS: u32 = 3_000_000;
 
 #[must_use]
 pub fn build_block_context(block_info: &BlockInfo) -> BlockContext {
