@@ -617,3 +617,75 @@ fn assert_not_emitted_fails() {
     );
     assert_case_output_contains(&result, "assert_not_emitted_fails", "keys was emitted");
 }
+
+#[test]
+fn capture_cairo0_event() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use array::ArrayTrait;
+            use result::ResultTrait;
+            use starknet::{ContractAddress, contract_address_const};
+            use snforge_std::{ declare, ContractClassTrait, spy_events, EventSpy, EventFetcher,
+                event_name_hash, EventAssertions, SpyOn };
+
+            #[starknet::interface]
+            trait ISpyEventsChecker<TContractState> {
+                fn test_cairo0_event_collection(ref self: TContractState, cairo0_address: felt252);
+            }
+
+            #[starknet::contract]
+            mod SpyEventsChecker {
+                use starknet::ContractAddress;
+
+                #[storage]
+                struct Storage {}
+
+                #[event]
+                #[derive(Drop, starknet::Event)]
+                enum Event {
+                    my_event: Cairo0Event,
+                }
+
+                #[derive(Drop, starknet::Event)]
+                struct Cairo0Event {
+                    some_data: felt252
+                }
+            }
+
+            #[test]
+            #[fork(url: "http://188.34.188.184:6060/rpc/v0_6", block_id: BlockId::Tag(BlockTag::Latest))]
+            fn assert_not_emitted_fails() {
+                let cairo0_contract_address = contract_address_const::<0x1960625ba5c435bac113ecd15af3c60e327d550fc5dbb43f07cd0875ad2f54c>();
+                let contract = declare("SpyEventsChecker");
+                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+                let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
+
+                let mut spy = spy_events(SpyOn::One(cairo0_contract_address));
+
+                dispatcher.test_cairo0_event_collection(cairo0_contract_address.into());
+
+                spy.assert_emitted(@array![
+                    (
+                        cairo0_contract_address,
+                        SpyEventsChecker::Event::my_event(
+                            SpyEventsChecker::Cairo0Event {
+                                some_data: 123456789
+                            }
+                        )
+                    )
+                ]);
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "SpyEventsChecker".to_string(),
+            Path::new("tests/data/contracts/spy_events_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test);
+
+    assert_passed(&result);
+}
