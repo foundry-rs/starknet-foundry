@@ -142,7 +142,10 @@ async fn test_nonexistent_account_address() {
     let snapbox = runner(&args).current_dir(contract_path.path());
     let output = snapbox.assert().failure();
 
-    assert_stderr_contains(output, "Error: Invalid account address");
+    assert_stderr_contains(
+        output,
+        "Error: No account exists with the provided address 0x1010101010011aaabbcc",
+    );
 }
 
 #[tokio::test]

@@ -125,7 +125,7 @@ async fn test_get_account_failed_to_convert_field_elements() {
     let err1 = account1.unwrap_err();
     assert!(err1
         .to_string()
-        .contains("Failed to convert private key = privatekey to FieldElement"));
+        .contains("Failed to convert private key to FieldElement"));
 
     let account2 = get_account(
         "with_wrong_address",
@@ -138,6 +138,18 @@ async fn test_get_account_failed_to_convert_field_elements() {
     assert!(err2
         .to_string()
         .contains("Failed to convert account address = address to FieldElement"));
+
+    let account3 = get_account(
+        "with_wrong_class_hash",
+        &Utf8PathBuf::from("tests/data/accounts/faulty_accounts.json"),
+        &provider,
+        None,
+    )
+    .await;
+    let err3 = account3.unwrap_err();
+    assert!(err3
+        .to_string()
+        .contains("Failed to convert class hash = class_hash to FieldElement"));
 }
 
 // TODO (#1690): Move this test to the shared crate and execute it for a real node
