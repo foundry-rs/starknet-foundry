@@ -64,7 +64,7 @@ impl<'a> TxInfoTrait for TestEnvironment<'a> {
 }
 
 #[derive(Clone, Default, Debug, PartialEq)]
-pub struct TxInfo {
+struct TxInfo {
     pub version: Felt252,
     pub account_contract_address: Felt252,
     pub max_fee: Felt252,
