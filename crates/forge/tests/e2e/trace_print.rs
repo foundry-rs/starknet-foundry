@@ -1,13 +1,12 @@
-use crate::e2e::common::runner::{setup_package, test_runner};
+use super::common::runner::{setup_package, test_runner};
 use indoc::indoc;
 use shared::test_utils::output_assert::assert_stdout_contains;
 
 #[test]
 fn trace_info_print() {
     let temp = setup_package("trace");
-    let snapbox = test_runner();
 
-    let output = snapbox.current_dir(&temp).assert().success();
+    let output = test_runner(&temp).assert().success();
 
     assert_stdout_contains(
         output,

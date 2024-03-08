@@ -1,4 +1,4 @@
-use crate::e2e::common::runner::{
+use super::common::runner::{
     runner, setup_package, setup_package_with_file_patterns, test_runner, BASE_FILE_PATTERNS,
 };
 use forge::shared_cache::CACHE_DIR;
@@ -8,13 +8,12 @@ use shared::test_utils::output_assert::assert_stdout_contains;
 #[test]
 fn without_cache() {
     let temp = setup_package("forking");
-    let snapbox = test_runner();
 
-    let output = snapbox
-        .current_dir(&temp)
-        .args(["forking::tests::test_fork_simple"])
+    let output = test_runner(&temp)
+        .arg("forking::tests::test_fork_simple")
         .assert()
         .code(0);
+
     assert_stdout_contains(
         output,
         indoc! {r"
@@ -43,10 +42,8 @@ fn with_cache() {
         "forking",
         &[BASE_FILE_PATTERNS, &[&format!("{CACHE_DIR}/*.json")]].concat(),
     );
-    let snapbox = test_runner();
 
-    let output = snapbox
-        .current_dir(&temp)
+    let output = test_runner(&temp)
         .args(["--exact", "forking::tests::test_fork_simple"])
         .assert()
         .code(1);
@@ -80,14 +77,9 @@ fn with_clean_cache() {
         &[BASE_FILE_PATTERNS, &[&format!("{CACHE_DIR}/*.json")]].concat(),
     );
 
-    runner()
-        .arg("clean-cache")
-        .current_dir(&temp)
-        .assert()
-        .code(0);
+    runner(&temp).arg("clean-cache").assert().code(0);
 
-    let output = test_runner()
-        .current_dir(&temp)
+    let output = test_runner(&temp)
         .args(["--exact", "forking::tests::test_fork_simple"])
         .assert()
         .code(0);
@@ -113,10 +105,8 @@ fn printing_latest_block_number() {
         "forking",
         &[BASE_FILE_PATTERNS, &[&format!("{CACHE_DIR}/*.json")]].concat(),
     );
-    let snapbox = test_runner();
 
-    let output = snapbox
-        .current_dir(&temp)
+    let output = test_runner(&temp)
         .args(["--exact", "forking::tests::print_block_number_when_latest"])
         .assert()
         .code(0);

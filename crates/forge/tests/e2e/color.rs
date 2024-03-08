@@ -1,6 +1,5 @@
+use super::common::runner::setup_package;
 use snapbox::cmd::{cargo_bin, Command as SnapboxCommand, OutputAssert};
-
-use crate::e2e::common::runner::setup_package;
 
 fn runner_color(value: &str) -> SnapboxCommand {
     SnapboxCommand::new(cargo_bin!("snforge"))
