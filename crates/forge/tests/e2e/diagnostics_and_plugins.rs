@@ -1,4 +1,4 @@
-use crate::e2e::common::runner::{setup_package, test_runner};
+use super::common::runner::{setup_package, test_runner};
 use indoc::formatdoc;
 use shared::test_utils::output_assert::assert_stderr_contains;
 
@@ -8,9 +8,7 @@ fn print_error_if_attributes_incorrect() {
     let mock_tests_dir_path = mock_tests_dir.path().canonicalize().unwrap();
     let mock_tests_dir_path_str = mock_tests_dir_path.to_str().unwrap();
 
-    let snapbox = test_runner();
-
-    let output = snapbox.current_dir(&mock_tests_dir).assert().code(2);
+    let output = test_runner(&mock_tests_dir).assert().code(2);
     assert_stderr_contains(
         output,
         formatdoc! {r#"

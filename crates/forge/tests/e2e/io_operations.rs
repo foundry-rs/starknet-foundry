@@ -1,6 +1,4 @@
-use crate::e2e::common::runner::{
-    setup_package_with_file_patterns, test_runner, BASE_FILE_PATTERNS,
-};
+use super::common::runner::{setup_package_with_file_patterns, test_runner, BASE_FILE_PATTERNS};
 use assert_fs::fixture::PathChild;
 use indoc::indoc;
 use shared::test_utils::output_assert::assert_stdout_contains;
@@ -120,15 +118,21 @@ fn file_reading() {
     "};
 
     // run from different directories to make sure cwd is always set to package directory
-    let snapbox = test_runner();
-    let output = snapbox.current_dir(&temp).assert().code(1);
+    let output = test_runner(&temp).assert().code(1);
+
     assert_stdout_contains(output, expected);
 
-    let snapbox = test_runner();
-    let output = snapbox.current_dir(temp.child("src")).assert().code(1);
+    let output = test_runner(&temp)
+        .current_dir(temp.child("src"))
+        .assert()
+        .code(1);
+
     assert_stdout_contains(output, expected);
 
-    let snapbox = test_runner();
-    let output = snapbox.current_dir(temp.child("data")).assert().code(1);
+    let output = test_runner(&temp)
+        .current_dir(temp.child("data"))
+        .assert()
+        .code(1);
+
     assert_stdout_contains(output, expected);
 }

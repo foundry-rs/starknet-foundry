@@ -1,23 +1,19 @@
-use crate::e2e::common::runner::{
+use super::common::runner::{
     get_current_branch, get_remote_url, runner, setup_package, test_runner,
 };
-
 use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
 use camino::Utf8PathBuf;
 use forge::CAIRO_EDITION;
 use indoc::{formatdoc, indoc};
 use shared::test_utils::output_assert::assert_stdout_contains;
-use std::fs;
-use std::{path::Path, str::FromStr};
-use tempfile::TempDir;
+use std::{fs, path::Path, str::FromStr};
 use test_utils::tempdir_with_tool_versions;
 use toml_edit::{value, Document, Item};
 
 #[test]
 fn simple_package() {
     let temp = setup_package("simple_package");
-    let snapbox = test_runner();
-    let output = snapbox.current_dir(&temp).assert().code(1);
+    let output = test_runner(&temp).assert().code(1);
 
     assert_stdout_contains(
         output,
@@ -62,7 +58,6 @@ fn simple_package() {
 #[test]
 fn simple_package_with_git_dependency() {
     let temp = tempdir_with_tool_versions().unwrap();
-    let temp_scarb = tempdir_with_tool_versions().unwrap();
 
     temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
         .unwrap();
@@ -89,12 +84,7 @@ fn simple_package_with_git_dependency() {
         ))
         .unwrap();
 
-    let snapbox = test_runner();
-    let output = snapbox
-        .env("SCARB_CACHE", temp_scarb.path())
-        .current_dir(&temp)
-        .assert()
-        .code(1);
+    let output = test_runner(&temp).assert().code(1);
 
     assert_stdout_contains(
         output,
@@ -153,11 +143,7 @@ fn with_failing_scarb_build() {
         ))
         .unwrap();
 
-    test_runner()
-        .current_dir(&temp)
-        .assert()
-        .code(2)
-        .stdout_eq(indoc! {r"
+    test_runner(&temp).assert().code(2).stdout_eq(indoc! {r"
             [ERROR] Failed to build test artifacts with Scarb: `scarb` exited with error
         "});
 }
@@ -165,9 +151,8 @@ fn with_failing_scarb_build() {
 #[test]
 fn with_filter() {
     let temp = setup_package("simple_package");
-    let snapbox = test_runner();
 
-    let output = snapbox.current_dir(&temp).arg("two").assert().success();
+    let output = test_runner(&temp).arg("two").assert().success();
 
     assert_stdout_contains(
         output,
@@ -189,10 +174,8 @@ fn with_filter() {
 #[test]
 fn with_filter_matching_module() {
     let temp = setup_package("simple_package");
-    let snapbox = test_runner();
 
-    let output = snapbox
-        .current_dir(&temp)
+    let output = test_runner(&temp)
         .arg("ext_function_test::")
         .assert()
         .success();
@@ -218,10 +201,8 @@ fn with_filter_matching_module() {
 #[test]
 fn with_exact_filter() {
     let temp = setup_package("simple_package");
-    let snapbox = test_runner();
 
-    let output = snapbox
-        .current_dir(&temp)
+    let output = test_runner(&temp)
         .arg("tests::test_simple::test_two")
         .arg("--exact")
         .assert()
@@ -245,10 +226,8 @@ fn with_exact_filter() {
 #[test]
 fn with_gas_usage() {
     let temp = setup_package("simple_package");
-    let snapbox = test_runner();
 
-    let output = snapbox
-        .current_dir(&temp)
+    let output = test_runner(&temp)
         .arg("tests::test_simple::test_two")
         .arg("--exact")
         .assert()
@@ -273,9 +252,8 @@ fn with_gas_usage() {
 #[test]
 fn with_non_matching_filter() {
     let temp = setup_package("simple_package");
-    let snapbox = test_runner();
 
-    let output = snapbox.current_dir(&temp).arg("qwerty").assert().success();
+    let output = test_runner(&temp).arg("qwerty").assert().success();
 
     assert_stdout_contains(
         output,
@@ -295,9 +273,8 @@ fn with_non_matching_filter() {
 #[test]
 fn with_ignored_flag() {
     let temp = setup_package("simple_package");
-    let snapbox = test_runner();
 
-    let output = snapbox.current_dir(&temp).arg("--ignored").assert().code(1);
+    let output = test_runner(&temp).arg("--ignored").assert().code(1);
 
     assert_stdout_contains(
         output,
@@ -326,13 +303,8 @@ fn with_ignored_flag() {
 #[test]
 fn with_include_ignored_flag() {
     let temp = setup_package("simple_package");
-    let snapbox = test_runner();
 
-    let output = snapbox
-        .current_dir(&temp)
-        .arg("--include-ignored")
-        .assert()
-        .code(1);
+    let output = test_runner(&temp).arg("--include-ignored").assert().code(1);
 
     assert_stdout_contains(
         output,
@@ -382,10 +354,8 @@ fn with_include_ignored_flag() {
 #[test]
 fn with_ignored_flag_and_filter() {
     let temp = setup_package("simple_package");
-    let snapbox = test_runner();
 
-    let output = snapbox
-        .current_dir(&temp)
+    let output = test_runner(&temp)
         .arg("--ignored")
         .arg("ext_function_test::ignored_test")
         .assert()
@@ -417,10 +387,8 @@ fn with_ignored_flag_and_filter() {
 #[test]
 fn with_include_ignored_flag_and_filter() {
     let temp = setup_package("simple_package");
-    let snapbox = test_runner();
 
-    let output = snapbox
-        .current_dir(&temp)
+    let output = test_runner(&temp)
         .arg("--include-ignored")
         .arg("ignored_test")
         .assert()
@@ -454,12 +422,7 @@ fn with_include_ignored_flag_and_filter() {
 fn with_rerun_failed_flag_without_cache() {
     let temp = setup_package("simple_package");
 
-    let snapbox = test_runner();
-    let output = snapbox
-        .current_dir(&temp)
-        .arg("--rerun-failed")
-        .assert()
-        .code(1);
+    let output = test_runner(&temp).arg("--rerun-failed").assert().code(1);
 
     assert_stdout_contains(
         output,
@@ -504,12 +467,10 @@ fn with_rerun_failed_flag_without_cache() {
 #[test]
 fn with_rerun_failed_flag_and_name_filter() {
     let temp = setup_package("simple_package");
-    let snapbox = test_runner();
 
-    snapbox.current_dir(&temp).assert().code(1);
-    let snapbox = test_runner();
-    let output = snapbox
-        .current_dir(&temp)
+    test_runner(&temp).assert().code(1);
+
+    let output = test_runner(&temp)
         .arg("--rerun-failed")
         .arg("test_another_failing")
         .assert()
@@ -541,15 +502,10 @@ fn with_rerun_failed_flag_and_name_filter() {
 #[test]
 fn with_rerun_failed_flag() {
     let temp = setup_package("simple_package");
-    let snapbox = test_runner();
 
-    snapbox.current_dir(&temp).assert().code(1);
-    let snapbox = test_runner();
-    let output = snapbox
-        .current_dir(&temp)
-        .arg("--rerun-failed")
-        .assert()
-        .code(1);
+    test_runner(&temp).assert().code(1);
+
+    let output = test_runner(&temp).arg("--rerun-failed").assert().code(1);
 
     assert_stdout_contains(
         output,
@@ -583,9 +539,8 @@ fn with_rerun_failed_flag() {
 #[test]
 fn with_panic_data_decoding() {
     let temp = setup_package("panic_decoding");
-    let snapbox = test_runner();
 
-    let output = snapbox.current_dir(&temp).assert().code(1);
+    let output = test_runner(&temp).assert().code(1);
 
     assert_stdout_contains(
         output,
@@ -678,9 +633,7 @@ fn with_exit_first() {
         ))
         .unwrap();
 
-    let snapbox = test_runner();
-
-    let output = snapbox.current_dir(&temp).assert().code(1);
+    let output = test_runner(&temp).assert().code(1);
     assert_stdout_contains(
         output,
         indoc! {r"
@@ -707,9 +660,9 @@ fn with_exit_first() {
 #[test]
 fn with_exit_first_flag() {
     let temp = setup_package("exit_first");
-    let snapbox = test_runner().arg("--exit-first");
 
-    let output = snapbox.current_dir(&temp).assert().code(1);
+    let output = test_runner(&temp).arg("--exit-first").assert().code(1);
+
     assert_stdout_contains(
         output,
         indoc! {r"
@@ -736,15 +689,8 @@ fn with_exit_first_flag() {
 #[test]
 fn init_new_project_test() {
     let temp = tempdir_with_tool_versions().unwrap();
-    let temp_scarb = tempdir_with_tool_versions().unwrap();
 
-    let snapbox = runner();
-    snapbox
-        .env("SCARB_CACHE", temp_scarb.path())
-        .current_dir(&temp)
-        .args(["init", "test_name"])
-        .assert()
-        .success();
+    runner(&temp).args(["init", "test_name"]).assert().success();
     let manifest_path = temp.child("test_name/Scarb.toml");
 
     let generated_toml = std::fs::read_to_string(manifest_path.path()).unwrap();
@@ -792,9 +738,8 @@ fn init_new_project_test() {
         ))
         .unwrap();
 
-    let snapbox = test_runner();
     // Check if template works with current version of snforge_std
-    let output = snapbox
+    let output = test_runner(&temp)
         .current_dir(temp.child(Path::new("test_name")))
         .assert()
         .success();
@@ -825,9 +770,7 @@ fn should_panic() {
     temp.copy_from("tests/data/should_panic_test", &["**/*.cairo", "**/*.toml"])
         .unwrap();
 
-    let snapbox = test_runner();
-
-    let output = snapbox.current_dir(&temp).assert().code(1);
+    let output = test_runner(&temp).assert().code(1);
 
     assert_stdout_contains(
         output,
@@ -890,9 +833,9 @@ fn should_panic() {
 #[test]
 fn printing_in_contracts() {
     let temp = setup_package("contract_printing");
-    let snapbox = test_runner();
 
-    let output = snapbox.current_dir(&temp).assert().success();
+    let output = test_runner(&temp).assert().success();
+
     assert_stdout_contains(
         output,
         indoc! {r#"
@@ -922,7 +865,6 @@ fn printing_in_contracts() {
 fn incompatible_snforge_std_version_warning() {
     let temp = setup_package("steps");
     let manifest_path = temp.child("Scarb.toml");
-    let tempdir = TempDir::new().expect("Failed to create a temporary directory");
 
     let mut scarb_toml = fs::read_to_string(&manifest_path)
         .unwrap()
@@ -934,13 +876,7 @@ fn incompatible_snforge_std_version_warning() {
     scarb_toml["dependencies"]["snforge_std"]["tag"] = value("v0.10.1");
     manifest_path.write_str(&scarb_toml.to_string()).unwrap();
 
-    let snapbox = test_runner();
-
-    let output = snapbox
-        .current_dir(&temp)
-        .env("SCARB_CACHE", tempdir.path())
-        .assert()
-        .failure();
+    let output = test_runner(&temp).assert().failure();
 
     assert_stdout_contains(
         output,
@@ -977,8 +913,10 @@ fn incompatible_snforge_std_version_warning() {
 #[test]
 fn detailed_resources_flag() {
     let temp = setup_package("erc20_package");
-    let snapbox = test_runner().arg("--detailed-resources");
-    let output = snapbox.current_dir(&temp).assert().success();
+    let output = test_runner(&temp)
+        .arg("--detailed-resources")
+        .assert()
+        .success();
 
     assert_stdout_contains(
         output,

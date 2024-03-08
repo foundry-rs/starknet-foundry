@@ -1,17 +1,15 @@
+use super::common::runner::{setup_package, test_runner};
 use assert_fs::TempDir;
 use forge_runner::build_trace_data::TRACE_DIR;
-use std::collections::HashMap;
-use std::fs;
-
-use trace_data::DeprecatedSyscallSelector::{
-    CallContract, Deploy, EmitEvent, GetBlockHash, GetExecutionInfo, Keccak, LibraryCall,
-    SendMessageToL1, StorageRead, StorageWrite,
-};
+use std::{collections::HashMap, fs};
 use trace_data::{
-    CallTrace as ProfilerCallTrace, ExecutionResources as ProfilerExecutionResources,
+    CallTrace as ProfilerCallTrace,
+    DeprecatedSyscallSelector::{
+        CallContract, Deploy, EmitEvent, GetBlockHash, GetExecutionInfo, Keccak, LibraryCall,
+        SendMessageToL1, StorageRead, StorageWrite,
+    },
+    ExecutionResources as ProfilerExecutionResources,
 };
-
-use crate::e2e::common::runner::{setup_package, test_runner};
 
 #[test]
 fn trace_resources_call() {
@@ -50,9 +48,8 @@ fn assert_resources_for_test(
     check_not_easily_unifiable_syscalls: fn(&ProfilerCallTrace),
 ) {
     let temp = setup_package("trace_resources");
-    let snapbox = test_runner();
-    snapbox
-        .current_dir(&temp)
+
+    test_runner(&temp)
         .arg(test_name)
         .arg("--save-trace-data")
         .assert()
