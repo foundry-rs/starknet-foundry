@@ -1,11 +1,56 @@
-use cairo_felt::Felt252;
-use itertools::Itertools;
+#![allow(dead_code)]
 use sha3::Digest;
 use sha3::Sha3_256;
+use starknet::core::types::FieldElement;
+use std::vec;
+
+trait SerialiseAsBytes {
+    fn serialise_as_bytes(&self) -> Vec<u8>;
+}
+
+impl<T: SerialiseAsBytes> SerialiseAsBytes for Option<T> {
+    fn serialise_as_bytes(&self) -> Vec<u8> {
+        match self {
+            None => {
+                vec![0]
+            }
+            Some(val) => {
+                let mut res = vec![1u8];
+                res.extend(val.serialise_as_bytes());
+                res
+            }
+        }
+    }
+}
+
+impl<T: SerialiseAsBytes> SerialiseAsBytes for &[T] {
+    fn serialise_as_bytes(&self) -> Vec<u8> {
+        self.iter()
+            .flat_map(SerialiseAsBytes::serialise_as_bytes)
+            .collect()
+    }
+}
+
+impl SerialiseAsBytes for str {
+    fn serialise_as_bytes(&self) -> Vec<u8> {
+        self.as_bytes().to_vec()
+    }
+}
+
+impl SerialiseAsBytes for FieldElement {
+    fn serialise_as_bytes(&self) -> Vec<u8> {
+        self.to_bytes_be().to_vec()
+    }
+}
+
+impl SerialiseAsBytes for bool {
+    fn serialise_as_bytes(&self) -> Vec<u8> {
+        vec![u8::from(*self)]
+    }
+}
 
 // if we change API this might have collisions with old API hashes
-pub fn generate_id(selector: &str, inputs: &[Felt252]) -> String {
-    let inputs_bytes: Vec<u8> = inputs.iter().flat_map(Felt252::to_bytes_be).collect_vec();
+pub(super) fn generate_id(selector: &str, inputs_bytes: Vec<u8>) -> String {
     let hash = Sha3_256::new()
         .chain_update(selector)
         .chain_update(inputs_bytes)
@@ -13,15 +58,56 @@ pub fn generate_id(selector: &str, inputs: &[Felt252]) -> String {
     base16ct::lower::encode_string(&hash)
 }
 
+#[must_use]
+pub fn generate_declare_tx_id(contract_name: &str) -> String {
+    generate_id("declare", contract_name.serialise_as_bytes())
+}
+
+#[must_use]
+pub fn generate_deploy_tx_id(
+    class_hash: FieldElement,
+    constructor_calldata: &[FieldElement],
+    salt: Option<FieldElement>,
+    unique: bool,
+) -> String {
+    let bytes = [
+        class_hash.serialise_as_bytes(),
+        constructor_calldata.serialise_as_bytes(),
+        salt.serialise_as_bytes(),
+        unique.serialise_as_bytes(),
+    ]
+    .concat();
+    generate_id("deploy", bytes)
+}
+
+#[must_use]
+pub fn generate_invoke_tx_id(
+    contract_address: FieldElement,
+    function_selector: FieldElement,
+    calldata: &[FieldElement],
+) -> String {
+    let bytes = [
+        contract_address.serialise_as_bytes(),
+        function_selector.serialise_as_bytes(),
+        calldata.serialise_as_bytes(),
+    ]
+    .concat();
+    generate_id("invoke", bytes)
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::state::hashing::generate_id;
+    use crate::state::hashing::{
+        generate_declare_tx_id, generate_deploy_tx_id, generate_id, generate_invoke_tx_id,
+    };
     use cairo_felt::Felt252;
+    use conversions::IntoConv;
     use num_traits::Num;
+    use starknet::core::types::FieldElement;
 
     #[test]
     fn basic_case() {
-        let hash = generate_id("aaa", &[Felt252::from(b'a')]);
+        let hash = generate_id("aaa", vec![b'a']);
         assert_eq!(
             hash,
             "28913c89fa628136fffce7ded99d65a4e3f5c211f82639fed4adca30d53b8dff"
@@ -30,58 +116,47 @@ mod tests {
 
     #[test]
     fn declare() {
-        let inputs = [
-            Felt252::from_str_radix("332347236658", 10).unwrap(),
-            Felt252::from(1),
-            Felt252::from(1),
-        ];
-        let hash = generate_id("declare", inputs.as_ref());
+        let contract_name = "testcontract";
+        let hash = generate_declare_tx_id(contract_name);
         assert_eq!(
             hash,
-            "e759b4df4e28627248db61c7aaed0104a428b783e15f094ec41abede07e26af5"
+            "058d80fb318b7a9aefce7c3725d062f1e449197909a654920b773d3f2c8bb7ce"
         );
     }
 
     #[test]
     fn deploy() {
-        let inputs = [
-            Felt252::from_str_radix(
-                "3372465304726137760522924034754430320558984443503992760655017624209518336998",
-                10,
-            )
-            .unwrap(),
-            Felt252::from(0),
-            Felt252::from(1),
-            Felt252::from(0),
-            Felt252::from(1),
-            Felt252::from(1),
-        ];
-        let hash = generate_id("deploy", inputs.as_ref());
+        let class_hash: FieldElement = Felt252::from_str_radix(
+            "3372465304726137760522924034754430320558984443503992760655017624209518336998",
+            10,
+        )
+        .unwrap()
+        .into_();
+        let constructor_calldata = vec![FieldElement::from(12u32), FieldElement::from(4u32)];
+        let salt = Some(FieldElement::from(89u32));
+        let unique = true;
+
+        let hash = generate_deploy_tx_id(class_hash, &constructor_calldata, salt, unique);
         assert_eq!(
             hash,
-            "baa5f2c5e61ece9fdc7fa54bd287d33a30175a375d18a3243fdd61ca113ad6ae"
+            "c4146aa83f3d3c4e700db0bb8a2781d5b33914d899559d98918d73eb97985480"
         );
     }
 
     #[test]
     fn invoke() {
-        let inputs = [
-            Felt252::from_str_radix(
-                "379396891768624119314138643760266110764950106055405813326441497989022918556",
-                10,
-            )
-            .unwrap(),
-            Felt252::from(7_370_100),
-            Felt252::from(2),
-            Felt252::from(1),
-            Felt252::from(3),
-            Felt252::from(1),
-            Felt252::from(1),
-        ];
-        let hash = generate_id("invoke", inputs.as_ref());
+        let contract_address = Felt252::from_str_radix(
+            "379396891768624119314138643760266110764950106055405813326441497989022918556",
+            10,
+        )
+        .unwrap()
+        .into_();
+        let function_selector = FieldElement::from(890u32);
+        let calldata = vec![FieldElement::from(1809u32), FieldElement::from(14u32)];
+        let hash = generate_invoke_tx_id(contract_address, function_selector, &calldata);
         assert_eq!(
             hash,
-            "45d549ba1db7bf0a5bfcdfe5dde0fce2c93d44b15f4d7f1c18d5fc2b7dd98fc3"
+            "9b7d3fa2d93d1360a343bfd1d3d76aedef74aace5a5ad47ddbda136d9ce9b244"
         );
     }
 }
