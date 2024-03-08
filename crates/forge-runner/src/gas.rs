@@ -88,6 +88,8 @@ fn get_messages_costs(
             get_consumed_message_to_l2_emissions_cost(Some(*l1_handler_payload_length))
         })
         .sum();
+    let log_msg_to_l1_event_emission_cost =
+        get_log_message_to_l1_emissions_cost(l2_to_l1_payloads_lengths);
     let starknet_gas_usage = GasVector {
         l1_gas: u128_from_usize(
             message_segment_length * eth_gas_constants::GAS_PER_MEMORY_WORD
@@ -96,7 +98,7 @@ fn get_messages_costs(
         )
         .expect("Could not convert starknet gas usage from usize to u128."),
         l1_data_gas: 0,
-    } + get_log_message_to_l1_emissions_cost(l2_to_l1_payloads_lengths)
+    } + log_msg_to_l1_event_emission_cost
         + l1_handlers_emission_costs;
 
     let sharp_gas_usage = GasVector {

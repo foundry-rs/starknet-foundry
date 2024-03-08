@@ -15,7 +15,6 @@ use cairo_vm::vm::runners::cairo_runner::RunResources;
 use serde::{Deserialize, Serialize};
 use starknet_api::data_availability::DataAvailabilityMode;
 
-use once_cell::sync::Lazy;
 use starknet_api::block::{BlockNumber, BlockTimestamp};
 use starknet_api::transaction::{Resource, ResourceBounds, ResourceBoundsMapping};
 use starknet_api::{
