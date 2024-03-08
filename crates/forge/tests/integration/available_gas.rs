@@ -24,7 +24,7 @@ fn available_gas_exceeded() {
     let test = test_utils::test_case!(indoc!(
         r"
             #[test]
-            #[available_gas(10)]
+            #[available_gas(5)]
             fn keccak_cost() {
                 keccak::keccak_u256s_le_inputs(array![1].span());
             }
@@ -37,7 +37,7 @@ fn available_gas_exceeded() {
     assert_case_output_contains!(
         result,
         "keccak_cost",
-        "Test cost exceeded the available gas. Consumed gas: ~11"
+        "Test cost exceeded the available gas. Consumed gas: ~6"
     );
 }
 
