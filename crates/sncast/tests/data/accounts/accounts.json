@@ -51,6 +51,12 @@
             "private_key": "0x88ecc06581d81c76cef06d6f4f0c1b28",
             "public_key": "0x8cdbe26bc82084b04eccb3c6f8a76f12ad6c4015b3dc8ab90dc840d42cac29",
             "address": "0x691a61b12a7105b1372cc377f135213c11e8400a546f6b0e7ea0296046690ce"
+        },
+        "cairo0": {
+            "private_key": "0x2fdd8a6b63491829ce385c872dad8b65eee5fc3e65c72e94f76725b10a6056f",
+            "public_key": "0xd39cc3278f855cb025b28409d16137792175638a8acec3b5b3d2487d2472a6",
+            "address": "0x4ee94bdf625820bc562c49c4d1ca4b2ef82bcfc5ed0cf67464770bea333b19a",
+            "legacy": true
         }
     },
     "alpha-goerli2": {

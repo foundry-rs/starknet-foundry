@@ -40,7 +40,7 @@ fn start_devnet() {
             "--seed",
             &SEED.to_string(),
             "--account-class",
-            "cairo0",
+            "cairo1",
             "--state-archive-capacity",
             "full",
         ])
