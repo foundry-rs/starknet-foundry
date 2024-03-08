@@ -466,18 +466,22 @@ impl TraceData {
 }
 
 fn get_storage_values_updated(after: &CommitmentStateDiff, before: &CommitmentStateDiff) -> isize {
-    let storage_values_updated_after: usize = after
+    let storage_values_updated_after: isize = after
         .storage_updates
         .iter()
         .map(|(_, entry)| entry.len())
-        .sum();
-    let storage_values_updated_before: usize = before
+        .sum::<usize>()
+        .try_into()
+        .unwrap();
+    let storage_values_updated_before: isize = before
         .storage_updates
         .iter()
         .map(|(_, entry)| entry.len())
-        .sum();
+        .sum::<usize>()
+        .try_into()
+        .unwrap();
 
-    storage_values_updated_after as isize - storage_values_updated_before as isize
+    storage_values_updated_after - storage_values_updated_before
 }
 
 fn get_cheat_for_contract<T: Clone>(
