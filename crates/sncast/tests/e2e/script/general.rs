@@ -1,11 +1,15 @@
 use crate::helpers::constants::{ACCOUNT_FILE_PATH, SCRIPTS_DIR, URL};
 use crate::helpers::fixtures::{
-    copy_directory_to_tempdir, copy_script_directory_to_tempdir,
-    copy_workspace_directory_to_tempdir, duplicate_contract_directory_with_salt, get_accounts_path,
+    assert_tx_entry_failed, assert_tx_entry_success, copy_directory_to_tempdir,
+    copy_script_directory_to_tempdir, copy_workspace_directory_to_tempdir,
+    duplicate_contract_directory_with_salt, get_accounts_path,
 };
 use crate::helpers::runner::runner;
+use camino::Utf8PathBuf;
 use indoc::indoc;
 use shared::test_utils::output_assert::assert_stderr_contains;
+use sncast::get_default_state_file_name;
+use sncast::state::state_file::{read_txs_from_state_file, ScriptTransactionStatus};
 use tempfile::tempdir;
 use test_case::test_case;
 
@@ -317,4 +321,178 @@ async fn test_missing_field() {
         error: Wrong number of arguments. Expected 3, found: 2
         ...
     "});
+}
+
+#[tokio::test]
+async fn test_same_script_twice_with_state_file_enabled() {
+    let contract_dir = duplicate_contract_directory_with_salt(
+        SCRIPTS_DIR.to_owned() + "/map_script/contracts/",
+        "dummy",
+        "34547",
+    );
+    let script_dir = copy_script_directory_to_tempdir(
+        SCRIPTS_DIR.to_owned() + "/map_script/scripts/",
+        vec![contract_dir.as_ref()],
+    );
+
+    let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
+
+    let script_name = "map_script";
+    let args = vec![
+        "--accounts-file",
+        accounts_json_path.as_str(),
+        "--account",
+        "user6",
+        "--url",
+        URL,
+        "script",
+        "run",
+        &script_name,
+    ];
+
+    let snapbox = runner(&args).current_dir(script_dir.path());
+
+    snapbox.assert().success().stdout_matches(indoc! {r"
+        ...
+        command: script run
+        status: success
+    "});
+
+    let state_file_path = Utf8PathBuf::from_path_buf(
+        script_dir
+            .path()
+            .join(get_default_state_file_name(script_name)),
+    )
+    .unwrap();
+    let tx_entries_after_first_run = read_txs_from_state_file(&state_file_path).unwrap().unwrap();
+
+    assert!(tx_entries_after_first_run
+        .transactions
+        .iter()
+        .all(|(_, value)| value.status == ScriptTransactionStatus::Success));
+
+    assert_eq!(tx_entries_after_first_run.transactions.len(), 6);
+
+    let snapbox = runner(&args).current_dir(script_dir.path());
+
+    snapbox.assert().success().stdout_matches(indoc! {r"
+        ...
+        command: script run
+        status: success
+    "});
+
+    let tx_entries_after_second_run = read_txs_from_state_file(&state_file_path).unwrap().unwrap();
+
+    assert_eq!(tx_entries_after_first_run, tx_entries_after_second_run);
+}
+
+#[tokio::test]
+async fn test_state_file_contains_all_failed_txs() {
+    let script_dir = copy_script_directory_to_tempdir(
+        SCRIPTS_DIR.to_owned() + "/state_file/",
+        Vec::<String>::new(),
+    );
+
+    let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
+
+    let script_name = "all_tx_fail";
+    let args = vec![
+        "--accounts-file",
+        accounts_json_path.as_str(),
+        "--account",
+        "user4",
+        "--url",
+        URL,
+        "script",
+        "run",
+        &script_name,
+    ];
+
+    let snapbox = runner(&args).current_dir(script_dir.path());
+
+    snapbox.assert().success().stdout_matches(indoc! {r"
+        ...
+        command: script run
+        status: success
+    "});
+
+    let state_file_path = Utf8PathBuf::from_path_buf(
+        script_dir
+            .path()
+            .join(get_default_state_file_name(script_name)),
+    )
+    .unwrap();
+    let tx_entries_after_first_run = read_txs_from_state_file(&state_file_path).unwrap().unwrap();
+
+    assert_eq!(tx_entries_after_first_run.transactions.len(), 3);
+
+    let declare_tx_entry = tx_entries_after_first_run
+        .get("2341f038132e07bd9fa3cabf5fa0c3fde26b0fc03e7b09198dbd230e1b1e071c")
+        .unwrap();
+    assert_tx_entry_failed(declare_tx_entry, "declare", ScriptTransactionStatus::Error, vec!["Failed to find Not_this_time artifact in starknet_artifacts.json file. Please make sure you have specified correct package using `--package` flag and that you have enabled sierra and casm code generation in Scarb.toml."]);
+
+    let deploy_tx_entry = tx_entries_after_first_run
+        .get("2402e1bcaf641961a4e97b76cad1e91f9522e4a34e57b5f740f3ea529b853c8f")
+        .unwrap();
+    assert_tx_entry_failed(
+        deploy_tx_entry,
+        "deploy",
+        ScriptTransactionStatus::Fail,
+        vec!["Class with hash ClassHash", "is not declared"],
+    );
+
+    let invoke_tx_entry = tx_entries_after_first_run
+        .get("9e0f8008202594e57674569610b5cd22079802b0929f570dfe118b107cb24221")
+        .unwrap();
+    assert_tx_entry_failed(
+        invoke_tx_entry,
+        "invoke",
+        ScriptTransactionStatus::Fail,
+        vec!["Requested contract address", "is not deployed"],
+    );
+}
+
+#[tokio::test]
+async fn test_state_file_rerun_failed_tx() {
+    let script_dir = copy_script_directory_to_tempdir(
+        SCRIPTS_DIR.to_owned() + "/state_file/",
+        Vec::<String>::new(),
+    );
+
+    let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
+
+    let script_name = "rerun_failed_tx";
+    let args = vec![
+        "--accounts-file",
+        accounts_json_path.as_str(),
+        "--account",
+        "user4",
+        "--url",
+        URL,
+        "script",
+        "run",
+        &script_name,
+    ];
+
+    let snapbox = runner(&args).current_dir(script_dir.path());
+
+    snapbox.assert().success().stdout_matches(indoc! {r"
+        ...
+        command: script run
+        status: success
+    "});
+
+    let state_file_path = Utf8PathBuf::from_path_buf(
+        script_dir
+            .path()
+            .join(get_default_state_file_name(script_name)),
+    )
+    .unwrap();
+    let tx_entries_after_first_run = read_txs_from_state_file(&state_file_path).unwrap().unwrap();
+    assert_eq!(tx_entries_after_first_run.transactions.len(), 1);
+
+    let invoke_tx_entry = tx_entries_after_first_run
+        .get("1863066e9093b13eea3a3844f28674dc8d9b7e2e49a525504133169c1d382718")
+        .unwrap();
+    assert_tx_entry_success(invoke_tx_entry, "invoke");
 }

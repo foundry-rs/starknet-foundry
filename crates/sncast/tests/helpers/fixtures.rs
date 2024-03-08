@@ -7,6 +7,9 @@ use serde::de::DeserializeOwned;
 use serde::Deserialize;
 use serde_json::{json, Map, Value};
 use sncast::helpers::scarb_utils::get_package_metadata;
+use sncast::state::state_file::{
+    ScriptTransactionEntry, ScriptTransactionOutput, ScriptTransactionStatus,
+};
 use sncast::{apply_optional, get_chain_id, get_keystore_password};
 use sncast::{get_account, get_provider, parse_number};
 use starknet::accounts::{Account, AccountFactory, Call, Execution, OpenZeppelinAccountFactory};
@@ -536,4 +539,38 @@ pub fn get_keystores_path(relative_path_from_cargo_toml: &str) -> String {
         .to_str()
         .expect("Failed to convert path to string")
         .to_string()
+}
+
+pub fn assert_tx_entry_failed(
+    tx_entry: &ScriptTransactionEntry,
+    name: &str,
+    status: ScriptTransactionStatus,
+    msg_contains: Vec<&str>,
+) {
+    assert_eq!(tx_entry.name, name);
+    assert_eq!(tx_entry.status, status);
+
+    let ScriptTransactionOutput::ErrorResponse(response) = tx_entry.output.clone() else {
+        panic!("Wrong response")
+    };
+    for msg in msg_contains {
+        assert!(response.message.contains(msg));
+    }
+
+    assert!(tx_entry.timestamp > 1_709_853_748);
+}
+
+pub fn assert_tx_entry_success(tx_entry: &ScriptTransactionEntry, name: &str) {
+    assert_eq!(tx_entry.name, name);
+    assert_eq!(tx_entry.status, ScriptTransactionStatus::Success);
+
+    let expected_selector = match tx_entry.output {
+        ScriptTransactionOutput::DeployResponse(_) => "deploy",
+        ScriptTransactionOutput::DeclareResponse(_) => "declare",
+        ScriptTransactionOutput::InvokeResponse(_) => "invoke",
+        ScriptTransactionOutput::ErrorResponse(_) => panic!("Error response received"),
+    };
+    assert_eq!(expected_selector, name);
+
+    assert!(tx_entry.timestamp > 1_709_853_748);
 }

@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "transactions": [{
+    "1863066e9093b13eea3a3844f28674dc8d9b7e2e49a525504133169c1d382718": {
+      "name": "invoke",
+      "output": {
+          "type": "ErrorResponse",
+          "message": "Max fee is smaller than the minimal transaction cost"
+        },
+        "status": "Error",
+        "timestamp": 1709853492,
+        "misc": null
+    }
+  }]
+}
