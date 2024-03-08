@@ -17,4 +17,4 @@ pub const DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS: &str =
 
 // https://github.com/0xSpaceShard/starknet-devnet-rs/blob/1a76e9d29541af2667ca815c47bb332cead27c55/crates/starknet/src/constants.rs#L17
 pub const DEVNET_OZ_CLASS_HASH_CAIRO_1: &str =
-    "0x61dac032f228abef9c6626f995015233097ae253a7f72d68552db02f2971b8f";
+    "0x4c6d6cf894f8bc96bb9c525e6853e5483177841f7388f74a46cfda6f028c755";
