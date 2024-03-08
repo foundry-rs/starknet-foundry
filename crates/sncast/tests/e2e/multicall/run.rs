@@ -4,11 +4,14 @@ use crate::helpers::runner::runner;
 use indoc::indoc;
 use shared::test_utils::output_assert::{assert_stderr_contains, AsOutput};
 use std::path::Path;
+use test_case::test_case;
 
+#[test_case("cairo0"; "cairo_0_account")]
+#[test_case("cairo1"; "cairo_1_account")]
 #[tokio::test]
-async fn test_happy_case() {
+async fn test_happy_case(account: &str) {
     let mut args = default_cli_args();
-    args.append(&mut vec!["--account", "user2"]);
+    args.append(&mut vec!["--account", account]);
 
     let path = project_root::get_project_root().expect("failed to get project root path");
     let path = Path::new(&path)
