@@ -447,8 +447,8 @@ impl TraceData {
         let mut last_call = last_call.borrow_mut();
         last_call.used_execution_resources =
             subtract_execution_resources(resources_used_after_call, &resources_used_before_call);
-        last_call.used_l1_resources.storage_writes =
-            get_storage_writes(state_diff_after_call, &state_diff_before_call);
+        last_call.used_l1_resources.storage_values_updated =
+            get_storage_values_updated(state_diff_after_call, &state_diff_before_call);
 
         last_call.used_l1_resources.l2_l1_message_sizes = execution_result.as_ref().map_or_else(
             |_| vec![],
@@ -465,19 +465,19 @@ impl TraceData {
     }
 }
 
-fn get_storage_writes(after: &CommitmentStateDiff, before: &CommitmentStateDiff) -> isize {
-    let storage_writes_before: usize = before
+fn get_storage_values_updated(after: &CommitmentStateDiff, before: &CommitmentStateDiff) -> isize {
+    let storage_values_updated_after: usize = after
         .storage_updates
         .iter()
         .map(|(_, entry)| entry.len())
         .sum();
-    let storage_writes_after: usize = after
+    let storage_values_updated_before: usize = before
         .storage_updates
         .iter()
         .map(|(_, entry)| entry.len())
         .sum();
 
-    storage_writes_after as isize - storage_writes_before as isize
+    storage_values_updated_after as isize - storage_values_updated_before as isize
 }
 
 fn get_cheat_for_contract<T: Clone>(

@@ -776,7 +776,7 @@ pub fn update_top_call_l1_resources(runtime: &mut ForgeRuntime) {
         .map(|ordered_message| ordered_message.message.payload.0.len())
         .collect();
 
-    let all_storage_writes = runtime
+    let all_storage_values_updated = runtime
         .extended_runtime
         .extended_runtime
         .extended_runtime
@@ -800,7 +800,7 @@ pub fn update_top_call_l1_resources(runtime: &mut ForgeRuntime) {
     let mut top_call = top_call.borrow_mut();
 
     top_call.used_l1_resources.l2_l1_message_sizes = l2_l1_message_sizes;
-    top_call.used_l1_resources.storage_writes = all_storage_writes;
+    top_call.used_l1_resources.storage_values_updated = all_storage_values_updated;
 }
 
 #[must_use]
