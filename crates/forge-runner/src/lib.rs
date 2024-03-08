@@ -19,6 +19,7 @@ use build_trace_data::save_trace_data;
 use profiler_api::run_profiler;
 use smol_str::SmolStr;
 
+use shared::print::print_as_warning;
 use std::collections::HashMap;
 use std::sync::Arc;
 use test_case_summary::{AnyTestCaseSummary, Fuzzing};
@@ -243,11 +244,13 @@ fn maybe_save_execution_data(
     {
         match execution_data_to_save {
             ExecutionDataToSave::Trace => {
-                let _ = save_trace_data(name, trace_data);
+                save_trace_data(name, trace_data)?;
             }
             ExecutionDataToSave::TraceAndProfile => {
-                let trace_path = save_trace_data(name, trace_data);
-                run_profiler(name, &trace_path)?;
+                let trace_path = save_trace_data(name, trace_data)?;
+                if let Err(err) = run_profiler(name, &trace_path) {
+                    print_as_warning(&err);
+                }
             }
             ExecutionDataToSave::None => {}
         }
