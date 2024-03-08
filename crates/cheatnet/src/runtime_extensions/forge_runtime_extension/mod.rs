@@ -29,7 +29,6 @@ use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::storage::{
     calculate_variable_address, load, store,
 };
-use crate::runtime_extensions::forge_runtime_extension::file_operations::string_into_felt;
 use cairo_lang_starknet::contract::starknet_keccak;
 use conversions::byte_array::ByteArray;
 use runtime::utils::BufferReader;
@@ -42,6 +41,7 @@ use starknet_api::deprecated_contract_class::EntryPointType;
 
 use super::call_to_blockifier_runtime_extension::{CallToBlockifierRuntime, RuntimeState};
 use super::cheatable_starknet_runtime_extension::SyscallSelector;
+use conversions::string::TryFromDecStr;
 
 pub mod cheatcodes;
 mod file_operations;
@@ -342,7 +342,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .get(&name)
                     .with_context(|| format!("Failed to read from env var = {name}"))?;
 
-                let parsed_env_var = string_into_felt(env_var)
+                let parsed_env_var = Felt252::try_from_dec_str(env_var)
                     .with_context(|| format!("Failed to parse value = {env_var} to felt"))?;
 
                 Ok(CheatcodeHandlingResult::Handled(vec![parsed_env_var]))

@@ -1,7 +1,8 @@
 #[cfg(test)]
 mod tests_field_elements {
     use cairo_felt::{Felt252, PRIME_STR};
-    use conversions::{FromConv, IntoConv, TryFromConv, TryIntoConv};
+    use conversions::string::{IntoDecStr, TryFromDecStr, TryFromHexStr};
+    use conversions::{FromConv, IntoConv};
     use starknet::core::types::FieldElement;
     use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, Nonce};
     use starknet_api::hash::{StarkFelt, StarkHash};
@@ -23,7 +24,7 @@ mod tests_field_elements {
 
         assert_eq!(
             field_element,
-            String::from_(field_element).try_into_().unwrap()
+            FieldElement::try_from_dec_str(&field_element.into_dec_string()).unwrap()
         );
     }
 
@@ -44,13 +45,12 @@ mod tests_field_elements {
 
         assert_eq!(
             field_element,
-            String::from_(field_element).try_into_().unwrap()
+            FieldElement::try_from_dec_str(&field_element.into_dec_string()).unwrap()
         );
     }
 
     #[test]
     fn test_field_element_conversions_out_of_range() {
-        let prime = String::from(PRIME_STR);
-        assert!(FieldElement::try_from_(prime).is_err());
+        assert!(FieldElement::try_from_hex_str(PRIME_STR).is_err());
     }
 }

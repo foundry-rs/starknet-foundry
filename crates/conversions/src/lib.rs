@@ -3,12 +3,12 @@ use std::convert::Infallible;
 pub mod byte_array;
 pub mod class_hash;
 pub mod contract_address;
-pub mod dec_string;
 pub mod entrypoint_selector;
 pub mod felt252;
 pub mod field_element;
 pub mod nonce;
 pub mod stark_felt;
+pub mod string;
 
 pub trait FromConv<T>: Sized {
     fn from_(value: T) -> Self;
@@ -80,16 +80,17 @@ macro_rules! from_thru_felt252 {
 }
 
 #[macro_export]
-macro_rules! try_from_thru_felt252 {
-    ($from:ty, $to:ty) => {
-        impl TryFromConv<$from> for $to {
-            type Error = ParseFeltError;
-
-            fn try_from_(value: $from) -> Result<Self, Self::Error> {
-                match Felt252::try_from_(value) {
-                    Ok(felt) => Ok(Self::from_(felt)),
-                    Err(err) => Err(err),
-                }
+macro_rules! try_from_str_thru_felt252 {
+    ($to:ty) => {
+        impl $crate::string::TryFromDecStr for $to {
+            fn try_from_dec_str(value: &str) -> Result<Self, $crate::string::ParseFeltError> {
+                Felt252::try_from_dec_str(value).map(Self::from_)
+            }
+        }
+        impl $crate::string::TryFromHexStr for $to {
+            fn try_from_hex_str(value: &str) -> Result<Self, $crate::string::ParseFeltError> {
+                Felt252::try_from_hex_str(value.strip_prefix("0x").unwrap_or(value))
+                    .map(Self::from_)
             }
         }
     };

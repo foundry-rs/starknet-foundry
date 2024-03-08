@@ -1,6 +1,6 @@
-use crate::{from_thru_felt252, try_from_thru_felt252, FromConv, TryFromConv};
+use crate::{from_thru_felt252, try_from_str_thru_felt252, FromConv};
 use blockifier::execution::execution_utils::felt_to_stark_felt;
-use cairo_felt::{Felt252, ParseFeltError};
+use cairo_felt::Felt252;
 use starknet::core::types::FieldElement;
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, Nonce};
 use starknet_api::hash::StarkFelt;
@@ -17,4 +17,4 @@ from_thru_felt252!(ContractAddress, StarkFelt);
 from_thru_felt252!(Nonce, StarkFelt);
 from_thru_felt252!(EntryPointSelector, StarkFelt);
 
-try_from_thru_felt252!(String, StarkFelt);
+try_from_str_thru_felt252!(StarkFelt);

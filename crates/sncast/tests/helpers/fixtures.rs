@@ -437,12 +437,6 @@ fn write_devnet_env(key: &str, value: &FieldElement) {
     writeln!(file, "{key}={value}").unwrap();
 }
 
-#[must_use]
-pub fn convert_to_hex(value: &str) -> String {
-    let dec = U256::from_dec_str(value).expect("Invalid decimal string");
-    format!("{dec:#x}")
-}
-
 pub fn from_env(name: &str) -> Result<String, String> {
     match env::var(name) {
         Ok(value) => Ok(value),

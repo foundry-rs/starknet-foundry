@@ -12,14 +12,15 @@ use cheatnet::forking::state::ForkStateReader;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeState;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
 use cheatnet::state::{BlockInfoReader, CheatnetState, ExtendedStateReader};
-use conversions::{IntoConv, TryIntoConv};
+use conversions::string::TryFromDecStr;
+use conversions::IntoConv;
 use num_bigint::BigUint;
 use num_traits::Num;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use runtime::EnhancedHintError;
 use serde_json::Value;
 use starknet_api::block::BlockNumber;
-use starknet_api::core::ContractAddress;
+use starknet_api::core::{ClassHash, ContractAddress};
 use std::path::PathBuf;
 use std::str::FromStr;
 use tempfile::TempDir;
@@ -100,7 +101,7 @@ fn try_deploying_undeclared_class() {
     let mut cheatnet_state = CheatnetState::default();
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
-    let class_hash = "1".to_owned().try_into_().unwrap();
+    let class_hash = ClassHash::try_from_dec_str("1").unwrap();
 
     assert!(
         match deploy_wrapper(&mut cached_fork_state, &mut runtime_state, &class_hash, &[]) {

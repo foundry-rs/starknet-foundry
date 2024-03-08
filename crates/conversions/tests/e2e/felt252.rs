@@ -1,11 +1,11 @@
 #[cfg(test)]
 mod tests_felt252 {
-    use crate::helpers::hex::str_hex_to_felt252;
     use cairo_felt::{Felt252, PRIME_STR};
     use cairo_lang_runner::short_string::as_cairo_short_string;
     use conversions::byte_array::ByteArray;
     use conversions::felt252::{FromShortString, SerializeAsFelt252Vec};
-    use conversions::{FromConv, IntoConv, TryFromConv, TryIntoConv};
+    use conversions::string::{IntoDecStr, TryFromDecStr, TryFromHexStr};
+    use conversions::{FromConv, IntoConv};
     use itertools::chain;
     use starknet::core::types::FieldElement;
     use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, Nonce};
@@ -23,7 +23,10 @@ mod tests_felt252 {
         assert_eq!(felt, StarkFelt::from_(felt.clone()).into_());
         assert_eq!(felt, StarkHash::from_(felt.clone()).into_());
 
-        assert_eq!(felt, String::from_(felt.clone()).try_into_().unwrap());
+        assert_eq!(
+            felt,
+            Felt252::try_from_dec_str(&felt.clone().into_dec_string()).unwrap()
+        );
     }
 
     #[test]
@@ -38,54 +41,57 @@ mod tests_felt252 {
         assert_eq!(felt, StarkFelt::from_(felt.clone()).into_());
         assert_eq!(felt, StarkHash::from_(felt.clone()).into_());
 
-        assert_eq!(felt, String::from_(felt.clone()).try_into_().unwrap());
+        assert_eq!(
+            felt,
+            Felt252::try_from_dec_str(&felt.clone().into_dec_string()).unwrap()
+        );
     }
 
     #[test]
     fn test_felt252_conversions_limit() {
         // max_value from cairo_felt::PRIME_STR
         let mut max_value = "0x0800000000000011000000000000000000000000000000000000000000000000";
-        let mut felt252 = str_hex_to_felt252(max_value);
+        let mut felt = Felt252::try_from_hex_str(max_value).unwrap();
 
-        assert_eq!(felt252, Nonce::from_(felt252.clone()).into_());
-        assert_eq!(felt252, EntryPointSelector::from_(felt252.clone()).into_());
-        assert_eq!(felt252, FieldElement::from_(felt252.clone()).into_());
-        assert_eq!(felt252, ClassHash::from_(felt252.clone()).into_());
-        assert_eq!(felt252, StarkFelt::from_(felt252.clone()).into_());
-        assert_eq!(felt252, StarkHash::from_(felt252.clone()).into_());
+        assert_eq!(felt, Nonce::from_(felt.clone()).into_());
+        assert_eq!(felt, EntryPointSelector::from_(felt.clone()).into_());
+        assert_eq!(felt, FieldElement::from_(felt.clone()).into_());
+        assert_eq!(felt, ClassHash::from_(felt.clone()).into_());
+        assert_eq!(felt, StarkFelt::from_(felt.clone()).into_());
+        assert_eq!(felt, StarkHash::from_(felt.clone()).into_());
 
         // PATRICIA_KEY_UPPER_BOUND for contract_address from starknet_api-0.4.1/src/core.rs:156
         max_value = "0x07ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
-        felt252 = str_hex_to_felt252(max_value);
-        assert_eq!(felt252, ContractAddress::from_(felt252.clone()).into_());
+        felt = Felt252::try_from_hex_str(max_value).unwrap();
+        assert_eq!(felt, ContractAddress::from_(felt.clone()).into_());
 
         // Unknown source for this value, founded by try and error(cairo-lang-runner-2.2.0/src/short_string.rs).
         max_value = "0x0777777777777777777777777777777777777f7f7f7f7f7f7f7f7f7f7f7f7f7f";
-        felt252 = str_hex_to_felt252(max_value);
+        felt = Felt252::try_from_hex_str(max_value).unwrap();
 
-        assert_eq!(felt252, String::from_(felt252.clone()).try_into_().unwrap());
+        assert_eq!(
+            felt,
+            Felt252::try_from_dec_str(&felt.clone().into_dec_string()).unwrap()
+        );
     }
 
     #[test]
     fn test_felt252_try_from_string_out_of_range() {
-        let prime = String::from(PRIME_STR);
-        assert!(Felt252::try_from_(prime).is_err());
+        assert!(Felt252::try_from_hex_str(PRIME_STR).is_err());
     }
 
     #[test]
     fn test_decimal_string() {
-        let decimal_string = String::from("123456");
-        let felt = Felt252::try_from_(decimal_string).unwrap();
+        let felt = Felt252::try_from_dec_str("123456").unwrap();
 
         assert_eq!(felt, Felt252::from(123_456));
     }
 
     #[test]
     fn test_from_short_string() {
-        let shortstring = String::from("abc");
-        let felt = Felt252::from_short_string(&shortstring).unwrap();
+        let felt = Felt252::from_short_string("abc").unwrap();
 
-        assert_eq!(shortstring, as_cairo_short_string(&felt).unwrap());
+        assert_eq!("abc", &as_cairo_short_string(&felt).unwrap());
     }
 
     #[test]

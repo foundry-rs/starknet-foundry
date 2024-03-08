@@ -1,6 +1,6 @@
 mod class_hash;
 mod contract_address;
-mod dec_string;
+mod string;
 mod entrypoint_selector;
 mod felt252;
 mod field_elements;

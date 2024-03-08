@@ -1,7 +1,8 @@
 use crate::byte_array::ByteArray;
-use crate::{FromConv, IntoConv, TryFromConv};
+use crate::string::{ParseFeltError, TryFromDecStr, TryFromHexStr};
+use crate::{FromConv, IntoConv};
 use blockifier::execution::execution_utils::stark_felt_to_felt;
-use cairo_felt::{Felt252, ParseFeltError};
+use cairo_felt::Felt252;
 use num_traits::Num;
 use starknet::core::types::FieldElement;
 use starknet_api::core::{EntryPointSelector, Nonce};
@@ -46,12 +47,22 @@ impl FromConv<EntryPointSelector> for Felt252 {
     }
 }
 
-impl TryFromConv<String> for Felt252 {
-    type Error = ParseFeltError;
-
+impl TryFromDecStr for Felt252 {
     /// Parse decimal felt
-    fn try_from_(value: String) -> Result<Felt252, Self::Error> {
-        Felt252::from_str_radix(&value, 10)
+    fn try_from_dec_str(value: &str) -> Result<Felt252, ParseFeltError> {
+        match Felt252::from_str_radix(value, 10) {
+            Ok(ok) => Ok(ok),
+            Err(_) => Err(ParseFeltError),
+        }
+    }
+}
+impl TryFromHexStr for Felt252 {
+    /// Parse decimal felt
+    fn try_from_hex_str(value: &str) -> Result<Felt252, ParseFeltError> {
+        match Felt252::from_str_radix(value, 16) {
+            Ok(ok) => Ok(ok),
+            Err(_) => Err(ParseFeltError),
+        }
     }
 }
 
