@@ -3,7 +3,7 @@ use std::cmp::min;
 use super::cairo1_execution::execute_entry_point_call_cairo1;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::deprecated::cairo0_execution::execute_entry_point_call_cairo0;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeState;
-use crate::state::{CallTrace, CheatnetState};
+use crate::state::{CallTrace, CheatnetState, CheatStatus};
 use blockifier::execution::call_info::{CallExecution, Retdata};
 use blockifier::{
     execution::{
@@ -66,22 +66,25 @@ pub fn execute_call_entry_point(
         cheated_data,
     );
 
-    if let Some(ret_data) =
-        get_ret_data_by_call_entry_point(entry_point, runtime_state.cheatnet_state)
+    if let Some(cheat_status) =
+        get_mocked_function_cheat_status(entry_point, runtime_state.cheatnet_state)
     {
-        let ret_data_f252: Vec<Felt252> = ret_data
-            .iter()
-            .map(|datum| Felt252::from_(*datum))
-            .collect();
-        runtime_state.cheatnet_state.trace_data.exit_nested_call(
-            resources,
-            &Default::default(),
-            CallResult::Success {
-                ret_data: ret_data_f252,
-            },
-            Some(&CallInfo::default()),
-        );
-        return Ok(mocked_call_info(entry_point.clone(), ret_data));
+        if let CheatStatus::Cheated(ret_data, _) = (*cheat_status).clone() {
+            cheat_status.decrement_cheat_span();
+            let ret_data_f252: Vec<Felt252> = ret_data
+                .iter()
+                .map(|datum| Felt252::from_(*datum))
+                .collect();
+            runtime_state.cheatnet_state.trace_data.exit_nested_call(
+                resources,
+                &Default::default(),
+                CallResult::Success {
+                    ret_data: ret_data_f252,
+                },
+                Some(&CallInfo::default()),
+            );
+            return Ok(mocked_call_info(entry_point.clone(), ret_data.clone()));
+        }
     }
     // endregion
 
@@ -272,21 +275,18 @@ pub fn execute_constructor_entry_point(
     // endregion
 }
 
-fn get_ret_data_by_call_entry_point(
+fn get_mocked_function_cheat_status<'a>(
     call: &CallEntryPoint,
-    cheatnet_state: &CheatnetState,
-) -> Option<Vec<StarkFelt>> {
-    if let Some(contract_address) = call.code_address {
-        if let Some(contract_functions) = cheatnet_state.mocked_functions.get(&contract_address) {
-            let entrypoint_selector = call.entry_point_selector;
-
-            let ret_data = contract_functions
-                .get(&entrypoint_selector)
-                .map(Clone::clone);
-            return ret_data;
-        }
+    cheatnet_state: &'a mut CheatnetState,
+) -> Option<&'a mut CheatStatus<Vec<StarkFelt>>> {
+    if call.call_type == CallType::Delegate {
+        return None;
     }
-    None
+
+    cheatnet_state
+        .mocked_functions
+        .get_mut(&call.storage_address)
+        .and_then(|contract_functions| contract_functions.get_mut(&call.entry_point_selector))
 }
 
 fn mocked_call_info(call: CallEntryPoint, ret_data: Vec<StarkFelt>) -> CallInfo {

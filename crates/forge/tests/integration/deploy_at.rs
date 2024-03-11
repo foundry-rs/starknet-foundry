@@ -1,8 +1,8 @@
 use indoc::indoc;
 use std::path::Path;
-use test_utils::runner::Contract;
+use test_utils::runner::{assert_case_output_contains, assert_failed, assert_passed, Contract};
 use test_utils::running_tests::run_test_case;
-use test_utils::{assert_case_output_contains, assert_failed, assert_passed, test_case};
+use test_utils::test_case;
 
 #[test]
 fn deploy_at_correct_address() {
@@ -75,7 +75,7 @@ fn deploy_at_correct_address() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -106,11 +106,11 @@ fn deploy_two_at_the_same_address() {
 
     let result = run_test_case(&test);
 
-    assert_failed!(result);
-    assert_case_output_contains!(
-        result,
+    assert_failed(&result);
+    assert_case_output_contains(
+        &result,
         "deploy_two_at_the_same_address",
-        "Address is already taken"
+        "Address is already taken",
     );
 }
 
@@ -147,5 +147,5 @@ fn deploy_at_error_handling() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }

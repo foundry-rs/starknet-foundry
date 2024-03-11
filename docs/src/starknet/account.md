@@ -153,7 +153,6 @@ $ sncast \
     --address 0x1 \
     --private-key 0x2 \
     --class-hash 0x3 \
-    --deployed
 ```
 
 For a detailed CLI description, see [account add command reference](../appendix/sncast/account/add.md).

@@ -1,8 +1,8 @@
 use indoc::indoc;
 use std::path::Path;
-use test_utils::runner::Contract;
+use test_utils::runner::{assert_passed, Contract};
 use test_utils::running_tests::run_test_case;
-use test_utils::{assert_passed, test_case};
+use test_utils::test_case;
 
 #[test]
 fn prank() {
@@ -131,5 +131,5 @@ fn prank() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }

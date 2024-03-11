@@ -1,9 +1,9 @@
 use std::path::Path;
 
 use indoc::indoc;
-use test_utils::runner::Contract;
+use test_utils::runner::{assert_passed, Contract};
 use test_utils::running_tests::run_test_case;
-use test_utils::{assert_passed, test_case};
+use test_utils::test_case;
 
 #[test]
 fn should_panic() {
@@ -36,7 +36,7 @@ fn should_panic() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -76,5 +76,5 @@ fn should_panic_unknown_entry_point() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }

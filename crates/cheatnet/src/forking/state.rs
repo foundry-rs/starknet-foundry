@@ -4,7 +4,7 @@ use blockifier::block::BlockInfo;
 use blockifier::execution::contract_class::{
     ContractClass as ContractClassBlockifier, ContractClassV0, ContractClassV1,
 };
-use blockifier::state::errors::StateError::{StateReadError, UndeclaredClassHash};
+use blockifier::state::errors::StateError::{self, StateReadError, UndeclaredClassHash};
 use blockifier::state::state_api::{StateReader, StateResult};
 use cairo_lang_starknet_classes::casm_contract_class::CasmContractClass;
 use cairo_lang_utils::bigint::BigUintAsHex;
@@ -27,7 +27,6 @@ use starknet_api::hash::StarkFelt;
 use starknet_api::state::StorageKey;
 use std::collections::HashMap;
 use std::io::Read;
-use std::ops::Deref;
 use tokio::runtime::Runtime;
 use universal_sierra_compiler_api::{compile_sierra, SierraType};
 use url::Url;
@@ -56,17 +55,17 @@ impl ForkStateReader {
     }
 }
 
-#[macro_export]
-macro_rules! other_provider_error {
-    ( $boxed:expr ) => {{
-        let err_str = $boxed.deref().to_string();
+#[allow(clippy::needless_pass_by_value)]
+fn other_provider_error<T>(boxed: impl ToString) -> Result<T, StateError> {
+    let err_str = boxed.to_string();
+
+    Err(StateReadError(
         if err_str.contains("error sending request for url") {
-            return Err(StateReadError(
-                "Unable to reach the node. Check your internet connection and node url".to_string(),
-            ));
-        }
-        Err(StateReadError(format!("JsonRpc provider error: {err_str}")))
-    }};
+            "Unable to reach the node. Check your internet connection and node url".to_string()
+        } else {
+            format!("JsonRpc provider error: {err_str}")
+        },
+    ))
 }
 
 impl BlockInfoReader for ForkStateReader {
@@ -95,7 +94,7 @@ impl BlockInfoReader for ForkStateReader {
             Ok(MaybePendingBlockWithTxHashes::PendingBlock(_)) => {
                 unreachable!("Pending block is not be allowed at the configuration level")
             }
-            Err(ProviderError::Other(boxed)) => other_provider_error!(boxed),
+            Err(ProviderError::Other(boxed)) => other_provider_error(boxed),
             Err(err) => Err(StateReadError(format!(
                 "Unable to get block with tx hashes from fork ({err})"
             ))),
@@ -124,7 +123,7 @@ impl StateReader for ForkStateReader {
                     .cache_get_storage_at(contract_address, key, value_sf);
                 Ok(value_sf)
             }
-            Err(ProviderError::Other(boxed)) => other_provider_error!(boxed),
+            Err(ProviderError::Other(boxed)) => other_provider_error(boxed),
             Err(ProviderError::StarknetError(StarknetError::ContractNotFound)) => Ok(Default::default()),
             Err(x) => Err(StateReadError(format!(
                 "Unable to get storage at address: {contract_address:?} and key: {key:?} from fork ({x})"
@@ -146,7 +145,7 @@ impl StateReader for ForkStateReader {
                 self.cache.cache_get_nonce_at(contract_address, nonce);
                 Ok(nonce)
             }
-            Err(ProviderError::Other(boxed)) => other_provider_error!(boxed),
+            Err(ProviderError::Other(boxed)) => other_provider_error(boxed),
             Err(ProviderError::StarknetError(StarknetError::ContractNotFound)) => {
                 Ok(Default::default())
             }
@@ -174,7 +173,7 @@ impl StateReader for ForkStateReader {
             Err(ProviderError::StarknetError(StarknetError::ContractNotFound)) => {
                 Ok(Default::default())
             }
-            Err(ProviderError::Other(boxed)) => other_provider_error!(boxed),
+            Err(ProviderError::Other(boxed)) => other_provider_error(boxed),
             Err(x) => Err(StateReadError(format!(
                 "Unable to get class hash at {contract_address:?} from fork ({x})"
             ))),
@@ -202,7 +201,7 @@ impl StateReader for ForkStateReader {
                     Err(ProviderError::StarknetError(StarknetError::ClassHashNotFound)) => {
                         Err(UndeclaredClassHash(class_hash))
                     }
-                    Err(ProviderError::Other(boxed)) => other_provider_error!(boxed),
+                    Err(ProviderError::Other(boxed)) => other_provider_error(boxed),
                     Err(x) => Err(StateReadError(format!(
                         "Unable to get compiled class at {class_hash} from fork ({x})"
                     ))),

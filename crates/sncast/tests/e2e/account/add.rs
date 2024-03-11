@@ -1,7 +1,9 @@
-use crate::helpers::constants::{DEVNET_OZ_CLASS_HASH, DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS, URL};
+use crate::helpers::constants::{
+    DEVNET_OZ_CLASS_HASH, DEVNET_OZ_CLASS_HASH_CAIRO_1, DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS, URL,
+};
 use crate::helpers::runner::runner;
 use camino::Utf8PathBuf;
-use indoc::indoc;
+use indoc::{formatdoc, indoc};
 use serde_json::json;
 use shared::test_utils::output_assert::assert_stderr_contains;
 use std::fs;
@@ -25,7 +27,6 @@ pub async fn test_happy_case() {
         "0x123",
         "--private-key",
         "0x456",
-        "--deployed",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -45,6 +46,49 @@ pub async fn test_happy_case() {
                 "alpha-goerli": {
                   "my_account_add": {
                     "address": "0x123",
+                    "deployed": false,
+                    "private_key": "0x456",
+                    "public_key": "0x5f679dacd8278105bd3b84a15548fe84079068276b0e84d6cc093eb5430f063"
+                  }
+                }
+            }
+        )
+    );
+}
+
+#[tokio::test]
+pub async fn test_existent_account_address() {
+    let tempdir = tempdir().expect("Unable to create a temporary directory");
+    let accounts_file = "accounts.json";
+
+    let args = vec![
+        "--url",
+        URL,
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "add",
+        "--name",
+        "my_account_add",
+        "--address",
+        DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS,
+        "--private-key",
+        "0x456",
+    ];
+
+    runner(&args).current_dir(tempdir.path()).assert();
+
+    let contents = fs::read_to_string(tempdir.path().join(accounts_file))
+        .expect("Unable to read created file");
+    let contents_json: serde_json::Value = serde_json::from_str(&contents).unwrap();
+    assert_eq!(
+        contents_json,
+        json!(
+            {
+                "alpha-goerli": {
+                  "my_account_add": {
+                    "address": DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS,
+                    "class_hash": DEVNET_OZ_CLASS_HASH,
                     "deployed": true,
                     "private_key": "0x456",
                     "public_key": "0x5f679dacd8278105bd3b84a15548fe84079068276b0e84d6cc093eb5430f063"
@@ -53,6 +97,66 @@ pub async fn test_happy_case() {
             }
         )
     );
+}
+
+#[tokio::test]
+pub async fn test_existent_account_address_and_incorrect_class_hash() {
+    let tempdir = tempdir().expect("Unable to create a temporary directory");
+    let accounts_file = "accounts.json";
+
+    let args = vec![
+        "--url",
+        URL,
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "add",
+        "--name",
+        "my_account_add",
+        "--address",
+        DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS,
+        "--private-key",
+        "0x456",
+        "--class-hash",
+        DEVNET_OZ_CLASS_HASH_CAIRO_1,
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+
+    snapbox.assert().stderr_matches(formatdoc! {r"
+        command: account add
+        error: Incorrect class hash {} for account address {}
+    ", DEVNET_OZ_CLASS_HASH_CAIRO_1, DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS});
+}
+
+#[tokio::test]
+pub async fn test_nonexistent_account_address_and_nonexistent_class_hash() {
+    let tempdir = tempdir().expect("Unable to create a temporary directory");
+    let accounts_file = "accounts.json";
+
+    let args = vec![
+        "--url",
+        URL,
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "add",
+        "--name",
+        "my_account_add",
+        "--address",
+        "0x202",
+        "--private-key",
+        "0x456",
+        "--class-hash",
+        "0x101",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+
+    snapbox.assert().stderr_matches(indoc! {r"
+        command: account add
+        error: Class with hash 0x101 is not declared, try using --class-hash with a hash of the declared class
+    "});
 }
 
 #[tokio::test]
@@ -155,6 +259,7 @@ pub async fn test_detect_deployed() {
                 "alpha-goerli": {
                   "my_account_add": {
                     "address": DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS,
+                    "class_hash": DEVNET_OZ_CLASS_HASH,
                     "deployed": true,
                     "private_key": "0x5",
                     "public_key": "0x788435d61046d3eec54d77d25bd194525f4fa26ebe6575536bc6f656656b74c"
@@ -180,7 +285,6 @@ pub async fn test_invalid_public_key() {
         "0x456",
         "--public-key",
         "0x457",
-        "--deployed",
     ];
 
     let snapbox = runner(&args);
@@ -197,15 +301,7 @@ pub async fn test_invalid_public_key() {
 
 #[tokio::test]
 pub async fn test_missing_arguments() {
-    let args = vec![
-        "--url",
-        URL,
-        "account",
-        "add",
-        "--name",
-        "my_account_add",
-        "--deployed",
-    ];
+    let args = vec!["--url", URL, "account", "add", "--name", "my_account_add"];
 
     let snapbox = runner(&args);
     let output = snapbox.assert().failure();
@@ -241,7 +337,6 @@ pub async fn test_private_key_from_file() {
         "0x123",
         "--private-key-file",
         private_key_file,
-        "--deployed",
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
@@ -261,7 +356,7 @@ pub async fn test_private_key_from_file() {
                 "alpha-goerli": {
                   "my_account_add": {
                     "address": "0x123",
-                    "deployed": true,
+                    "deployed": false,
                     "private_key": "0x456",
                     "public_key": "0x5f679dacd8278105bd3b84a15548fe84079068276b0e84d6cc093eb5430f063"
                   }
@@ -308,7 +403,6 @@ pub async fn test_invalid_private_key_file_path() {
         "0x123",
         "--private-key-file",
         "my_private_key",
-        "--deployed",
     ];
 
     let snapbox = runner(&args);
@@ -318,7 +412,7 @@ pub async fn test_invalid_private_key_file_path() {
         output,
         indoc! {r"
         command: account add
-        error: Failed to obtain private key from the file [..]
+        error: Failed to obtain private key from the file my_private_key: No such file or directory (os error 2)
         "},
     );
 }

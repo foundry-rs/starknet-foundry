@@ -33,6 +33,7 @@ use self::runtime::{
 };
 
 use super::call_to_blockifier_runtime_extension::execution::entry_point::execute_call_entry_point;
+use super::call_to_blockifier_runtime_extension::execution::syscall_hooks;
 use super::call_to_blockifier_runtime_extension::RuntimeState;
 
 pub mod runtime;
@@ -156,6 +157,17 @@ impl<'a> DeprecatedExtensionLogic for DeprecatedCheatableStarknetRuntimeExtensio
                 Ok(SyscallHandlingResult::Handled(()))
             }
             _ => Ok(SyscallHandlingResult::Forwarded),
+        }
+    }
+
+    fn post_syscall_hook(
+        &mut self,
+        selector: &DeprecatedSyscallSelector,
+        extended_runtime: &mut Self::Runtime,
+    ) {
+        let syscall_handler = &extended_runtime.hint_handler;
+        if let DeprecatedSyscallSelector::EmitEvent = selector {
+            syscall_hooks::emit_event_hook(syscall_handler, self.cheatnet_state);
         }
     }
 }

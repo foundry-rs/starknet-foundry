@@ -243,10 +243,10 @@ fn maybe_save_execution_data(
     {
         match execution_data_to_save {
             ExecutionDataToSave::Trace => {
-                let _ = save_trace_data(name, trace_data);
+                save_trace_data(name, trace_data)?;
             }
             ExecutionDataToSave::TraceAndProfile => {
-                let trace_path = save_trace_data(name, trace_data);
+                let trace_path = save_trace_data(name, trace_data)?;
                 run_profiler(name, &trace_path)?;
             }
             ExecutionDataToSave::None => {}

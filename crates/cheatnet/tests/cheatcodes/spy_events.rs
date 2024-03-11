@@ -1,16 +1,24 @@
-use crate::common::state::{build_runtime_state, create_cached_state};
-use crate::common::{call_contract, deploy_wrapper};
-use crate::common::{deploy_contract, felt_selector_from_name, get_contracts};
-use cairo_felt::Felt252;
+use crate::common::{
+    call_contract, deploy_contract, deploy_wrapper, felt_selector_from_name, get_contracts,
+    state::{build_runtime_state, create_cached_state},
+};
+use blockifier::state::cached_state::{CachedState, GlobalContractCache};
+use cairo_felt::{felt_str, Felt252};
 use cairo_lang_starknet_classes::keccak::starknet_keccak;
 use cairo_vm::hint_processor::hint_processor_utils::felt_to_usize;
-use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
-use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::{
-    Event, SpyTarget,
+use cheatnet::{
+    constants::build_testing_state,
+    forking::state::ForkStateReader,
+    runtime_extensions::forge_runtime_extension::cheatcodes::{
+        declare::declare,
+        spy_events::{Event, SpyTarget},
+    },
+    state::{CheatnetState, ExtendedStateReader},
 };
-use cheatnet::state::CheatnetState;
 use conversions::IntoConv;
+use starknet_api::block::BlockNumber;
 use std::vec;
+use tempfile::TempDir;
 
 pub fn felt_vec_to_event_vec(felts: &[Felt252]) -> Vec<Event> {
     let mut events = vec![];
@@ -621,6 +629,65 @@ fn test_emitted_by_emit_events_syscall() {
             from: contract_address,
             keys: vec![Felt252::from(123)],
             data: vec![Felt252::from(456)]
+        },
+        "Wrong spy_events_checker event"
+    );
+}
+#[test]
+fn capture_cairo0_event() {
+    let temp_dir = TempDir::new().unwrap();
+    let mut cached_state = CachedState::new(
+        ExtendedStateReader {
+            dict_state_reader: build_testing_state(),
+            fork_state_reader: Some(ForkStateReader::new(
+                "http://188.34.188.184:6060/rpc/v0_6".parse().unwrap(),
+                BlockNumber(960_107),
+                temp_dir.path().to_str().unwrap(),
+            )),
+        },
+        GlobalContractCache::default(),
+    );
+    let mut cheatnet_state = CheatnetState::default();
+    let mut runtime_state = build_runtime_state(&mut cheatnet_state);
+
+    let contract_address = deploy_contract(
+        &mut cached_state,
+        &mut runtime_state,
+        "SpyEventsCairo0",
+        &[],
+    );
+
+    let id = runtime_state.cheatnet_state.spy_events(SpyTarget::All);
+
+    let selector = felt_selector_from_name("test_cairo0_event_collection");
+
+    let cairo0_contract_address = felt_str!(
+        "1960625ba5c435bac113ecd15af3c60e327d550fc5dbb43f07cd0875ad2f54c",
+        16
+    );
+
+    call_contract(
+        &mut cached_state,
+        &mut runtime_state,
+        &contract_address,
+        &selector,
+        &[cairo0_contract_address.clone()],
+    );
+
+    let (length, serialized_events) = runtime_state
+        .cheatnet_state
+        .fetch_events(&Felt252::from(id));
+
+    let events = felt_vec_to_event_vec(&serialized_events);
+
+    assert_eq!(length, 1, "There should be one event");
+
+    assert_eq!(
+        events[0],
+        Event {
+            from: cairo0_contract_address.into_(),
+            keys: vec![starknet_keccak("my_event".as_ref()).into()],
+            data: vec![Felt252::from(123_456_789)]
         },
         "Wrong spy_events_checker event"
     );

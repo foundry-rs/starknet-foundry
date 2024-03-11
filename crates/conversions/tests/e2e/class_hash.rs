@@ -4,7 +4,7 @@ mod tests_class_hash {
     use cairo_felt::{Felt252, PRIME_STR};
     use conversions::{FromConv, IntoConv, TryFromConv, TryIntoConv};
     use starknet::core::types::FieldElement;
-    use starknet_api::core::{ContractAddress, Nonce};
+    use starknet_api::core::{ContractAddress, EntryPointSelector, Nonce};
     use starknet_api::hash::StarkHash;
     use starknet_api::{core::ClassHash, hash::StarkFelt};
 
@@ -17,6 +17,7 @@ mod tests_class_hash {
         assert_eq!(class_hash, Felt252::from_(class_hash).into_());
         assert_eq!(class_hash, FieldElement::from_(class_hash).into_());
         assert_eq!(class_hash, Nonce::from_(class_hash).into_());
+        assert_eq!(class_hash, EntryPointSelector::from_(class_hash).into_());
         assert_eq!(class_hash, StarkFelt::from_(class_hash).into_());
         assert_eq!(class_hash, StarkHash::from_(class_hash).into_());
 
@@ -32,6 +33,7 @@ mod tests_class_hash {
         assert_eq!(class_hash, Felt252::from_(class_hash).into_());
         assert_eq!(class_hash, FieldElement::from_(class_hash).into_());
         assert_eq!(class_hash, Nonce::from_(class_hash).into_());
+        assert_eq!(class_hash, EntryPointSelector::from_(class_hash).into_());
         assert_eq!(class_hash, StarkFelt::from_(class_hash).into_());
         assert_eq!(class_hash, StarkHash::from_(class_hash).into_());
 
@@ -47,6 +49,7 @@ mod tests_class_hash {
         assert_eq!(class_hash, Felt252::from_(class_hash).into_());
         assert_eq!(class_hash, FieldElement::from_(class_hash).into_());
         assert_eq!(class_hash, Nonce::from_(class_hash).into_());
+        assert_eq!(class_hash, EntryPointSelector::from_(class_hash).into_());
         assert_eq!(class_hash, StarkFelt::from_(class_hash).into_());
         assert_eq!(class_hash, StarkHash::from_(class_hash).into_());
 
