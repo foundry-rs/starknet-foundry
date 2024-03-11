@@ -81,7 +81,7 @@ pub fn execute_call_entry_point(
                 CallResult::Success {
                     ret_data: ret_data_f252,
                 },
-                Some(&CallInfo::default()),
+                &[],
             );
             return Ok(mocked_call_info(entry_point.clone(), ret_data.clone()));
         }
@@ -214,7 +214,7 @@ fn remove_syscall_resources_and_exit_success_call(
         resources,
         syscall_counter,
         CallResult::from_success(call_info),
-        Some(call_info),
+        &call_info.execution.l2_to_l1_messages,
     );
 }
 
@@ -232,7 +232,7 @@ fn exit_error_call(
         resources,
         Default::default(),
         CallResult::from_err(error, &identifier),
-        None,
+        &[],
     );
 }
 
