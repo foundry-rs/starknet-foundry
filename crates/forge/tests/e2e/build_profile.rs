@@ -10,19 +10,19 @@ fn simple_package_build_profile() {
     assert!(temp
         .join(PROFILE_DIR)
         .join("simple_package::tests::test_fib.pb.gz")
-        .exists());
+        .is_file());
     assert!(!temp
         .join(PROFILE_DIR)
         .join("tests::test_simple::test_failing.pb.gz")
-        .exists());
+        .is_file());
     assert!(!temp
         .join(PROFILE_DIR)
         .join("simple_package::tests::ignored_test.pb.gz")
-        .exists());
+        .is_file());
     assert!(temp
         .join(PROFILE_DIR)
         .join("tests::ext_function_test::test_simple.pb.gz")
-        .exists());
+        .is_file());
 
     // Check if it doesn't crash in case some data already exists
     test_runner(&temp).arg("--build-profile").assert().code(1);

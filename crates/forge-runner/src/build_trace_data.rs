@@ -1,3 +1,4 @@
+use anyhow::{Context, Result};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fs;
@@ -186,15 +187,14 @@ fn build_profiler_call_type(value: CallType) -> ProfilerCallType {
     }
 }
 
-#[must_use]
-pub fn save_trace_data(test_name: &String, trace_data: &ProfilerCallTrace) -> PathBuf {
+pub fn save_trace_data(test_name: &String, trace_data: &ProfilerCallTrace) -> Result<PathBuf> {
     let serialized_trace =
         serde_json::to_string(trace_data).expect("Failed to serialize call trace");
     let dir_to_save_trace = PathBuf::from(TRACE_DIR);
-    fs::create_dir_all(&dir_to_save_trace).expect("Failed to create a .trace_data directory");
+    fs::create_dir_all(&dir_to_save_trace).context("Failed to create a .trace_data directory")?;
 
     let filename = format!("{test_name}.json");
     fs::write(dir_to_save_trace.join(&filename), serialized_trace)
-        .expect("Failed to write call trace to a file");
-    dir_to_save_trace.join(&filename)
+        .context("Failed to write call trace to a file")?;
+    Ok(dir_to_save_trace.join(&filename))
 }
