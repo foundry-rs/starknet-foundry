@@ -15,6 +15,7 @@ rayon.workspace = true
 shared.workspace = true
 cheatnet = { path = "../cheatnet" }
 conversions = { path = "../conversions" }
+configuration = { path = "../configuration" }
 scarb-api = { path = "../scarb-api" }
 forge_runner = { path = "../forge-runner" }
 universal-sierra-compiler-api = { path = "../universal-sierra-compiler-api" }
