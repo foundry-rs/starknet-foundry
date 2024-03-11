@@ -53,6 +53,8 @@ pub fn build_profiler_call_trace(
             .collect(),
         vm_trace: value
             .vm_trace
+            .as_ref()
+            .expect("vm trace in trace is missing")
             .iter()
             .map(build_profiler_trace_entry)
             .collect(),

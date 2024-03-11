@@ -87,7 +87,7 @@ fn assert_contract_and_function_names(trace: &ProfilerCallTrace) {
 #[test]
 fn trace_has_vm_trace() {
     let temp = setup_package("trace");
-    let snapbox = test_runner();
+    let snapbox = test_runner(&temp);
 
     snapbox
         .arg("--save-trace-data")

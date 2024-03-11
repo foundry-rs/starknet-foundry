@@ -34,7 +34,7 @@ pub fn execute_entry_point_call_cairo1(
     runtime_state: &mut RuntimeState, // Added parameter
     resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
-) -> EntryPointExecutionResult<(CallInfo, SyscallCounter, Vec<TraceEntry>)> {
+) -> EntryPointExecutionResult<(CallInfo, SyscallCounter, Option<Vec<TraceEntry>>)> {
     let RuntimeState { cheatnet_state } = runtime_state;
 
     let VmExecutionContext {
@@ -77,7 +77,16 @@ pub fn execute_entry_point_call_cairo1(
         program_extra_data_length,
     )?;
 
-    let vm_trace = get_relocated_vm_trace(&vm);
+    let vm_trace = if cheatable_runtime
+        .extension
+        .cheatnet_state
+        .trace_data
+        .collect_vm_trace
+    {
+        Some(get_relocated_vm_trace(&vm))
+    } else {
+        None
+    };
     let syscall_counter = cheatable_runtime
         .extended_runtime
         .hint_handler

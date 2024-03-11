@@ -28,7 +28,7 @@ pub fn execute_entry_point_call_cairo0(
     runtime_state: &mut RuntimeState,
     resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
-) -> EntryPointExecutionResult<(CallInfo, SyscallCounter, Vec<TraceEntry>)> {
+) -> EntryPointExecutionResult<(CallInfo, SyscallCounter, Option<Vec<TraceEntry>>)> {
     let VmExecutionContext {
         mut runner,
         mut vm,
@@ -68,6 +68,11 @@ pub fn execute_entry_point_call_cairo0(
         &args,
     )?;
 
+    let vm_trace = cheatable_syscall_handler
+        .extension
+        .cheatnet_state
+        .trace_data
+        .default_vm_trace();
     let syscall_counter = cheatable_syscall_handler
         .extended_runtime
         .hint_handler
@@ -84,7 +89,7 @@ pub fn execute_entry_point_call_cairo0(
         n_total_args,
     )?;
 
-    Ok((execution_result, syscall_counter, vec![]))
+    Ok((execution_result, syscall_counter, vm_trace))
     // endregion
 }
 

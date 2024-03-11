@@ -157,7 +157,7 @@ pub struct CallTrace {
     pub used_syscalls: SyscallCounter,
     pub nested_calls: Vec<Rc<RefCell<CallTrace>>>,
     pub result: CallResult,
-    pub vm_trace: Vec<TraceEntry>,
+    pub vm_trace: Option<Vec<TraceEntry>>,
 }
 
 #[derive(Clone)]
@@ -229,6 +229,7 @@ pub struct CheatedData {
 
 pub struct TraceData {
     pub current_call_stack: NotEmptyCallStack,
+    pub collect_vm_trace: bool,
 }
 
 pub struct CheatnetState {
@@ -263,7 +264,7 @@ impl Default for CheatnetState {
             used_syscalls: Default::default(),
             nested_calls: vec![],
             result: CallResult::Success { ret_data: vec![] },
-            vm_trace: vec![],
+            vm_trace: None,
         }));
         Self {
             rolled_contracts: Default::default(),
@@ -284,6 +285,7 @@ impl Default for CheatnetState {
             block_info: SerializableBlockInfo::default().into(),
             trace_data: TraceData {
                 current_call_stack: NotEmptyCallStack::from(test_call),
+                collect_vm_trace: false,
             },
         }
     }
@@ -386,6 +388,14 @@ impl CheatnetState {
 }
 
 impl TraceData {
+    #[must_use]
+    pub fn default_vm_trace(&self) -> Option<Vec<TraceEntry>> {
+        if self.collect_vm_trace {
+            Some(vec![])
+        } else {
+            None
+        }
+    }
     pub fn enter_nested_call(
         &mut self,
         entry_point: CallEntryPoint,
@@ -399,7 +409,7 @@ impl TraceData {
             used_syscalls: Default::default(),
             nested_calls: vec![],
             result: CallResult::Success { ret_data: vec![] },
-            vm_trace: vec![],
+            vm_trace: None,
         }));
         let current_call = self.current_call_stack.top();
 
@@ -423,8 +433,12 @@ impl TraceData {
         used_syscalls: SyscallCounter,
         result: CallResult,
         l2_to_l1_messages: &[OrderedL2ToL1Message],
-        vm_trace: Vec<TraceEntry>,
+        vm_trace: Option<Vec<TraceEntry>>,
     ) {
+        assert!(
+            (vm_trace.is_some() && self.collect_vm_trace)
+                || (vm_trace.is_none() && !self.collect_vm_trace)
+        );
         let CallStackElement {
             resources_used_before_call,
             call_trace: last_call,

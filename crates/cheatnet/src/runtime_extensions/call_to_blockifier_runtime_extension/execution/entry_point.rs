@@ -83,7 +83,7 @@ pub fn execute_call_entry_point(
                     ret_data: ret_data_f252,
                 },
                 &[],
-                vec![],
+                runtime_state.cheatnet_state.trace_data.default_vm_trace(),
             );
             return Ok(mocked_call_info(entry_point.clone(), ret_data.clone()));
         }
@@ -203,7 +203,7 @@ fn remove_syscall_resources_and_exit_success_call(
     context: &mut EntryPointExecutionContext,
     resources: &mut ExecutionResources,
     runtime_state: &mut RuntimeState,
-    vm_trace: Vec<TraceEntry>,
+    vm_trace: Option<Vec<TraceEntry>>,
 ) {
     let versioned_constants = context.tx_context.block_context.versioned_constants();
     // We don't want the syscall resources to pollute the results
@@ -242,7 +242,7 @@ fn exit_error_call(
         Default::default(),
         CallResult::from_err(error, &identifier),
         &[],
-        vec![],
+        runtime_state.cheatnet_state.trace_data.default_vm_trace(),
     );
 }
 

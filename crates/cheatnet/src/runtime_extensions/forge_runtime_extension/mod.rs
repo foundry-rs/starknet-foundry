@@ -847,7 +847,7 @@ pub fn update_top_call_vm_trace(runtime: &mut ForgeRuntime, vm: &VirtualMachine)
         .current_call_stack
         .top()
         .borrow_mut()
-        .vm_trace = get_relocated_vm_trace(vm);
+        .vm_trace = Some(get_relocated_vm_trace(vm));
 }
 
 #[must_use]
