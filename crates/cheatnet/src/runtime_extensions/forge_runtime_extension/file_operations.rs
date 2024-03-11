@@ -1,9 +1,10 @@
 use anyhow::{anyhow, Result};
 use cairo_felt::Felt252;
-use conversions::string::TryFromDecStr;
+use conversions::{string::TryFromDecStr, IntoConv};
 use flatten_serde_json::flatten;
 use runtime::EnhancedHintError;
 use serde_json::{Map, Value};
+use starknet::core::utils::cairo_short_string_to_felt;
 
 pub(super) fn read_txt(file_path: String) -> Result<Vec<Felt252>, EnhancedHintError> {
     let content = std::fs::read_to_string(&file_path)?;
@@ -11,9 +12,10 @@ pub(super) fn read_txt(file_path: String) -> Result<Vec<Felt252>, EnhancedHintEr
     let mut result = vec![];
 
     for felt_str in content.trim().split_ascii_whitespace() {
-        match Felt252::try_from_dec_str(felt_str) {
-            Ok(felt) => result.push(felt),
-            Err(_) => return Err(EnhancedHintError::FileParsing { path: file_path }),
+        if let Some(felt) = parse_num_or_short_string(felt_str) {
+            result.push(felt)
+        } else {
+            return Err(EnhancedHintError::FileParsing { path: file_path });
         }
     }
 
@@ -67,13 +69,31 @@ fn value_into_vec(value: &Value) -> Vec<String> {
     }
 }
 
+fn parse_num_or_short_string(felt_str: &str) -> Option<Felt252> {
+    match Felt252::try_from_dec_str(felt_str) {
+        Ok(felt) => Some(felt),
+        Err(_) => {
+            let mut chars = felt_str.chars();
+            let first = chars.next();
+
+            if first != chars.last() || (first != Some('"') && first != Some('\'')) {
+                return None;
+            }
+
+            cairo_short_string_to_felt(&felt_str[1..felt_str.len() - 1])
+                .ok()
+                .map(IntoConv::into_)
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use cairo_felt::Felt252;
     use num_bigint::BigUint;
     use num_traits::One;
 
-    use super::json_values_sorted_by_keys;
+    use super::{json_values_sorted_by_keys, parse_num_or_short_string};
     use conversions::string::TryFromDecStr;
 
     #[test]
@@ -152,8 +172,8 @@ mod tests {
     fn test_string_into_felt_shortstring() {
         let string = "\'1he5llo9\'";
         let string2 = "\"1he5llo9\"";
-        let felt = Felt252::try_from_dec_str(string).unwrap();
-        let felt2 = Felt252::try_from_dec_str(string2).unwrap();
+        let felt = parse_num_or_short_string(string).unwrap();
+        let felt2 = parse_num_or_short_string(string2).unwrap();
         assert_eq!(felt, felt2);
         assert_eq!(
             felt,
@@ -164,32 +184,32 @@ mod tests {
     #[test]
     fn test_string_into_felt_shortstring_mismatched_quotes() {
         let string = "\'1he5llo9\"";
-        assert!(Felt252::try_from_dec_str(string).is_err());
+        assert!(parse_num_or_short_string(string).is_none());
         let string = "\"1he5llo9\'";
-        assert!(Felt252::try_from_dec_str(string).is_err());
+        assert!(parse_num_or_short_string(string).is_none());
     }
 
     #[test]
     fn test_string_into_felt_shortstring_missing_quote() {
         let string = "\'1he5llo9";
-        assert!(Felt252::try_from_dec_str(string).is_err());
+        assert!(parse_num_or_short_string(string).is_none());
     }
 
     #[test]
     fn test_string_into_felt_shortstring_empty() {
         let string = "\'\'";
-        assert_eq!(Felt252::try_from_dec_str(string).unwrap(), 0.into());
+        assert_eq!(parse_num_or_short_string(string).unwrap(), 0.into());
     }
 
     #[test]
     fn test_string_into_felt_shortstring_too_long() {
         let string = "\'abcdefghjiklmnoprstqwyzabcdefghi\'";
-        assert!(Felt252::try_from_dec_str(string).is_err());
+        assert!(parse_num_or_short_string(string).is_none());
     }
 
     #[test]
     fn test_string_into_felt_shortstring_non_ascii() {
         let string = "\'abcd§g\'";
-        assert!(Felt252::try_from_dec_str(string).is_err());
+        assert!(parse_num_or_short_string(string).is_none());
     }
 }
