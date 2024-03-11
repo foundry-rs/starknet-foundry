@@ -108,13 +108,15 @@ fn stop_elect(target: CheatTarget) {
     cheatcode::<'stop_elect'>(inputs.span());
 }
 
-fn mock_call<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: Destruct<T>>(
-    contract_address: ContractAddress, function_selector: felt252, ret_data: T, span: CheatSpan
+fn mock_calls<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: Destruct<T>>(
+    contract_address: ContractAddress, function_selector: felt252, ret_data: T, amount: u32
 ) {
+    assert!(amount > 0, "amount must be greater than 0");
+
     let contract_address_felt: felt252 = contract_address.into();
     let mut inputs = array![contract_address_felt, function_selector];
 
-    span.serialize(ref inputs);
+    CheatSpan::Calls(amount).serialize(ref inputs);
 
     let mut ret_data_arr = ArrayTrait::new();
     ret_data.serialize(ref ret_data_arr);
@@ -127,7 +129,17 @@ fn mock_call<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: Destruct<T>>
 fn start_mock_call<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: Destruct<T>>(
     contract_address: ContractAddress, function_selector: felt252, ret_data: T
 ) {
-    mock_call(contract_address, function_selector, ret_data, CheatSpan::Indefinite);
+    let contract_address_felt: felt252 = contract_address.into();
+    let mut inputs = array![contract_address_felt, function_selector];
+
+    CheatSpan::Indefinite.serialize(ref inputs);
+
+    let mut ret_data_arr = ArrayTrait::new();
+    ret_data.serialize(ref ret_data_arr);
+
+    ret_data_arr.serialize(ref inputs);
+
+    cheatcode::<'start_mock_call'>(inputs.span());
 }
 
 fn stop_mock_call(contract_address: ContractAddress, function_selector: felt252) {
