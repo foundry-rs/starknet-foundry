@@ -246,9 +246,9 @@ To set span for a cheatcode, use `prank` / `warp` / `roll` / etc.
 prank(CheatTarget::One(contract_address), new_caller_address, CheatSpan::Calls(1))
 ```
 
-Calling a cheatcode with `CheatSpan::Calls(N)` is going to activate the cheatcode for `N` calls to a contract, after which it's going to be automatically cancelled.
+Calling a cheatcode with `CheatSpan::Calls(N)` is going to activate the cheatcode for `N` calls to a contract, after which it's going to be automatically canceled.
 
-Of course the cheatcode can still be stopped before its `CheatSpan` goes down to 0 - simply call `stop_prank` manually.
+Of course the cheatcode can still be canceled before its `CheatSpan` goes down to 0 - simply call `stop_prank` manually.
 
 > ℹ️ **Info**
 >
@@ -287,7 +287,7 @@ fn call_and_invoke() {
     let call_2_result = safe_dispatcher.increase_balance(100);
     assert!(call_2_result.is_ok());
 
-    // Call #3 should fail, as the prank cheatcode has been stopped
+    // Call #3 should fail, as the prank cheatcode has been canceled
     let call_3_result = safe_dispatcher.increase_balance(100);
     assert!(call_3_result.is_err());
 

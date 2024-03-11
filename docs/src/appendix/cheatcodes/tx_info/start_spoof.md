@@ -2,7 +2,7 @@
 
 > `fn start_spoof(target: CheatTarget, tx_info_mock: TxInfoMock)`
 
-Changes `TxInfo` returned by `get_tx_info()` for the targeted contract until the spoof is stopped
+Changes `TxInfo` returned by `get_tx_info()` for the targeted contract until the spoof is canceled
 with [stop_spoof](./stop_spoof.md).
 
 - `target` - instance of [`CheatTarget`](../cheat_target.md) specifying which contracts to spoof
