@@ -18,7 +18,6 @@ pub struct TestEnvironment<'a> {
     pub runtime_state: RuntimeState<'a>,
 }
 
-#[allow(dead_code)]
 impl<'a> TestEnvironment<'a> {
     pub fn new(cheatnet_state: &'a mut CheatnetState) -> Self {
         let cached_state = create_cached_state();
