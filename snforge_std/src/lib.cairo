@@ -47,6 +47,7 @@ use cheatcodes::stop_warp;
 use cheatcodes::elect;
 use cheatcodes::start_elect;
 use cheatcodes::stop_elect;
+use cheatcodes::mock_call;
 use cheatcodes::start_mock_call;
 use cheatcodes::stop_mock_call;
 use cheatcodes::replace_bytecode;

@@ -49,7 +49,7 @@ fn stop_roll(target: CheatTarget) {
 }
 
 fn prank(target: CheatTarget, caller_address: ContractAddress, span: CheatSpan) {
-    assert!(span != CheatSpan::Calls(0), "CheatSpan must be greater than 0");
+    validate_cheat_span(@span);
 
     let mut inputs = array![];
     target.serialize(ref inputs);
@@ -108,29 +108,26 @@ fn stop_elect(target: CheatTarget) {
     cheatcode::<'stop_elect'>(inputs.span());
 }
 
-fn start_mock_call<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: Destruct<T>>(
-    contract_address: ContractAddress, function_selector: felt252, ret_data: T
+fn mock_call<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: Destruct<T>>(
+    contract_address: ContractAddress, function_selector: felt252, ret_data: T, span: CheatSpan
 ) {
     let contract_address_felt: felt252 = contract_address.into();
     let mut inputs = array![contract_address_felt, function_selector];
 
+    span.serialize(ref inputs);
+
     let mut ret_data_arr = ArrayTrait::new();
     ret_data.serialize(ref ret_data_arr);
 
-    let ret_data_len = ret_data_arr.len();
-
-    inputs.append(ret_data_len.into());
-
-    let mut i = 0;
-    loop {
-        if ret_data_len == i {
-            break ();
-        }
-        inputs.append(*ret_data_arr[i]);
-        i += 1;
-    };
+    ret_data_arr.serialize(ref inputs);
 
     cheatcode::<'start_mock_call'>(inputs.span());
+}
+
+fn start_mock_call<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: Destruct<T>>(
+    contract_address: ContractAddress, function_selector: felt252, ret_data: T
+) {
+    mock_call(contract_address, function_selector, ret_data, CheatSpan::Indefinite);
 }
 
 fn stop_mock_call(contract_address: ContractAddress, function_selector: felt252) {
@@ -143,5 +140,5 @@ fn replace_bytecode(contract: ContractAddress, new_class: ClassHash) {
 }
 
 fn validate_cheat_span(span: @CheatSpan) {
-    assert!(span != @CheatSpan::Calls(0), "CheatSpan must be greater than 0");
+    assert!(span != @CheatSpan::Calls(0), "CheatSpan::Calls must be greater than 0");
 }

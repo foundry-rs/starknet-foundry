@@ -749,5 +749,5 @@ fn spoof_with_span() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
