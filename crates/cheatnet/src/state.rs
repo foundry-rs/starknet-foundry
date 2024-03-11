@@ -420,7 +420,7 @@ impl TraceData {
     pub fn exit_nested_call(
         &mut self,
         resources_used_after_call: &ExecutionResources,
-        used_syscalls: &SyscallCounter,
+        used_syscalls: SyscallCounter,
         result: CallResult,
         call_info: Option<&CallInfo>,
     ) {
@@ -433,7 +433,7 @@ impl TraceData {
         let mut last_call = last_call.borrow_mut();
         last_call.used_execution_resources =
             resources_used_after_call - &resources_used_before_call;
-        last_call.used_syscalls = used_syscalls.clone();
+        last_call.used_syscalls = used_syscalls;
 
         last_call.used_l1_resources.l2_l1_message_sizes = call_info.map_or(vec![], |info| {
             info.execution

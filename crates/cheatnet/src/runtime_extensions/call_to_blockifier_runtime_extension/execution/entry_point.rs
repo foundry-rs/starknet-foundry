@@ -77,7 +77,7 @@ pub fn execute_call_entry_point(
                 .collect();
             runtime_state.cheatnet_state.trace_data.exit_nested_call(
                 resources,
-                &Default::default(),
+                Default::default(),
                 CallResult::Success {
                     ret_data: ret_data_f252,
                 },
@@ -212,7 +212,7 @@ fn remove_syscall_resources_and_exit_success_call(
     let syscall_counter = sum_syscall_counters(nested_syscall_counter_sum, syscall_counter);
     runtime_state.cheatnet_state.trace_data.exit_nested_call(
         resources,
-        &syscall_counter,
+        syscall_counter,
         CallResult::from_success(call_info),
         Some(call_info),
     );
@@ -230,7 +230,7 @@ fn exit_error_call(
     };
     runtime_state.cheatnet_state.trace_data.exit_nested_call(
         resources,
-        &Default::default(),
+        Default::default(),
         CallResult::from_err(error, &identifier),
         None,
     );
