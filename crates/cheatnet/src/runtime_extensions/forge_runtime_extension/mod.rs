@@ -838,16 +838,17 @@ pub fn update_top_call_l1_resources(runtime: &mut ForgeRuntime) {
 }
 
 pub fn update_top_call_vm_trace(runtime: &mut ForgeRuntime, vm: &VirtualMachine) {
-    runtime
+    let trace_data = &mut runtime
         .extended_runtime
         .extended_runtime
         .extension
         .cheatnet_state
-        .trace_data
-        .current_call_stack
-        .top()
-        .borrow_mut()
-        .vm_trace = Some(get_relocated_vm_trace(vm));
+        .trace_data;
+
+    if trace_data.collect_vm_trace {
+        trace_data.current_call_stack.top().borrow_mut().vm_trace =
+            Some(get_relocated_vm_trace(vm));
+    }
 }
 
 #[must_use]
