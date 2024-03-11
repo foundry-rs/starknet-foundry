@@ -34,7 +34,7 @@ use crate::runtime_extensions::forge_runtime_extension::cheatcodes::storage::{
 };
 use crate::runtime_extensions::forge_runtime_extension::file_operations::string_into_felt;
 use conversions::byte_array::ByteArray;
-use runtime::utils::BufferReader;
+use runtime::utils::{BufferReadResult, BufferReader};
 use runtime::{
     CheatcodeHandlingResult, EnhancedHintError, ExtendedRuntime, ExtensionLogic,
     SyscallHandlingResult,
@@ -57,25 +57,26 @@ pub struct ForgeExtension<'a> {
 }
 
 trait BufferReaderExt {
-    fn read_cheat_target(&mut self) -> CheatTarget;
+    fn read_cheat_target(&mut self) -> BufferReadResult<CheatTarget>;
 }
 
 impl BufferReaderExt for BufferReader<'_> {
-    fn read_cheat_target(&mut self) -> CheatTarget {
-        let cheat_target_variant = self.read_felt().to_u8();
-        match cheat_target_variant {
+    fn read_cheat_target(&mut self) -> BufferReadResult<CheatTarget> {
+        let cheat_target_variant = self.read_felt()?.to_u8();
+
+        Ok(match cheat_target_variant {
             Some(0) => CheatTarget::All,
-            Some(1) => CheatTarget::One(self.read_felt().into_()),
+            Some(1) => CheatTarget::One(self.read_felt()?.into_()),
             Some(2) => {
                 let contract_addresses: Vec<_> = self
-                    .read_vec()
+                    .read_vec()?
                     .iter()
                     .map(|el| ContractAddress::from_(el.clone()))
                     .collect();
                 CheatTarget::Multiple(contract_addresses)
             }
             _ => unreachable!("Invalid CheatTarget variant"),
-        }
+        })
     }
 }
 
@@ -92,8 +93,8 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
     ) -> Result<CheatcodeHandlingResult, EnhancedHintError> {
         match selector {
             "start_roll" => {
-                let target = input_reader.read_cheat_target();
-                let block_number = input_reader.read_felt();
+                let target = input_reader.read_cheat_target()?;
+                let block_number = input_reader.read_felt()?;
                 extended_runtime
                     .extended_runtime
                     .extension
@@ -102,7 +103,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
             "stop_roll" => {
-                let target = input_reader.read_cheat_target();
+                let target = input_reader.read_cheat_target()?;
 
                 extended_runtime
                     .extended_runtime
@@ -112,8 +113,8 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
             "start_warp" => {
-                let target = input_reader.read_cheat_target();
-                let warp_timestamp = input_reader.read_felt();
+                let target = input_reader.read_cheat_target()?;
+                let warp_timestamp = input_reader.read_felt()?;
 
                 extended_runtime
                     .extended_runtime
@@ -124,7 +125,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
             "stop_warp" => {
-                let target = input_reader.read_cheat_target();
+                let target = input_reader.read_cheat_target()?;
 
                 extended_runtime
                     .extended_runtime
@@ -134,8 +135,8 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
             "start_elect" => {
-                let target = input_reader.read_cheat_target();
-                let sequencer_address = input_reader.read_felt().into_();
+                let target = input_reader.read_cheat_target()?;
+                let sequencer_address = input_reader.read_felt()?.into_();
 
                 extended_runtime
                     .extended_runtime
@@ -145,7 +146,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
             "stop_elect" => {
-                let target = input_reader.read_cheat_target();
+                let target = input_reader.read_cheat_target()?;
                 extended_runtime
                     .extended_runtime
                     .extension
@@ -154,9 +155,9 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
             "start_prank" => {
-                let target = input_reader.read_cheat_target();
+                let target = input_reader.read_cheat_target()?;
 
-                let caller_address = input_reader.read_felt().into_();
+                let caller_address = input_reader.read_felt()?.into_();
 
                 extended_runtime
                     .extended_runtime
@@ -166,7 +167,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
             "stop_prank" => {
-                let target = input_reader.read_cheat_target();
+                let target = input_reader.read_cheat_target()?;
 
                 extended_runtime
                     .extended_runtime
@@ -176,10 +177,10 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
             "start_mock_call" => {
-                let contract_address = input_reader.read_felt().into_();
-                let function_selector = input_reader.read_felt();
+                let contract_address = input_reader.read_felt()?.into_();
+                let function_selector = input_reader.read_felt()?;
 
-                let ret_data = input_reader.read_vec();
+                let ret_data = input_reader.read_vec()?;
 
                 extended_runtime
                     .extended_runtime
@@ -189,8 +190,8 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
             "stop_mock_call" => {
-                let contract_address = input_reader.read_felt().into_();
-                let function_selector = input_reader.read_felt();
+                let contract_address = input_reader.read_felt()?.into_();
+                let function_selector = input_reader.read_felt()?;
 
                 extended_runtime
                     .extended_runtime
@@ -200,25 +201,26 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
             "start_spoof" => {
-                let target = input_reader.read_cheat_target();
+                let target = input_reader.read_cheat_target()?;
 
-                let version = input_reader.read_option_felt();
-                let account_contract_address = input_reader.read_option_felt();
-                let max_fee = input_reader.read_option_felt();
-                let signature = input_reader.read_option_vec();
-                let transaction_hash = input_reader.read_option_felt();
-                let chain_id = input_reader.read_option_felt();
-                let nonce = input_reader.read_option_felt();
-                let resource_bounds = input_reader.read_option_felt().map(|resource_bounds_len| {
-                    input_reader.read_vec_body(
+                let version = input_reader.read_option_felt()?;
+                let account_contract_address = input_reader.read_option_felt()?;
+                let max_fee = input_reader.read_option_felt()?;
+                let signature = input_reader.read_option_vec()?;
+                let transaction_hash = input_reader.read_option_felt()?;
+                let chain_id = input_reader.read_option_felt()?;
+                let nonce = input_reader.read_option_felt()?;
+                let resource_bounds = match input_reader.read_option_felt()? {
+                    Some(resource_bounds_len) => Some(input_reader.read_vec_body(
                         3 * resource_bounds_len.to_usize().unwrap(), // ResourceBounds struct has 3 fields
-                    )
-                });
-                let tip = input_reader.read_option_felt();
-                let paymaster_data = input_reader.read_option_vec();
-                let nonce_data_availability_mode = input_reader.read_option_felt();
-                let fee_data_availability_mode = input_reader.read_option_felt();
-                let account_deployment_data = input_reader.read_option_vec();
+                    )?),
+                    None => None,
+                };
+                let tip = input_reader.read_option_felt()?;
+                let paymaster_data = input_reader.read_option_vec()?;
+                let nonce_data_availability_mode = input_reader.read_option_felt()?;
+                let fee_data_availability_mode = input_reader.read_option_felt()?;
+                let account_deployment_data = input_reader.read_option_vec()?;
 
                 let tx_info_mock = cheatcodes::spoof::TxInfoMock {
                     version,
@@ -244,7 +246,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
             "stop_spoof" => {
-                let target = input_reader.read_cheat_target();
+                let target = input_reader.read_cheat_target()?;
 
                 extended_runtime
                     .extended_runtime
@@ -254,8 +256,8 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
             "replace_bytecode" => {
-                let contract = input_reader.read_felt().into_();
-                let class = input_reader.read_felt().into_();
+                let contract = input_reader.read_felt()?.into_();
+                let class = input_reader.read_felt()?.into_();
 
                 extended_runtime
                     .extended_runtime
@@ -271,7 +273,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .hint_handler
                     .state;
 
-                let contract_name = input_reader.read_string();
+                let contract_name = input_reader.read_string()?;
                 let contracts = self.contracts;
                 match declare(*state, &contract_name, contracts) {
                     Ok(class_hash) => {
@@ -286,8 +288,8 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 }
             }
             "deploy" => {
-                let class_hash = input_reader.read_felt().into_();
-                let calldata = input_reader.read_vec();
+                let class_hash = input_reader.read_felt()?.into_();
+                let calldata = input_reader.read_vec()?;
                 let cheatnet_runtime = &mut extended_runtime.extended_runtime;
                 let syscall_handler = &mut cheatnet_runtime.extended_runtime.hint_handler;
 
@@ -303,9 +305,9 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 ))
             }
             "deploy_at" => {
-                let class_hash = input_reader.read_felt().into_();
-                let calldata = input_reader.read_vec();
-                let contract_address = input_reader.read_felt().into_();
+                let class_hash = input_reader.read_felt()?.into_();
+                let calldata = input_reader.read_vec()?;
+                let contract_address = input_reader.read_felt()?.into_();
                 let cheatnet_runtime = &mut extended_runtime.extended_runtime;
                 let syscall_handler = &mut cheatnet_runtime.extended_runtime.hint_handler;
 
@@ -322,8 +324,8 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 ))
             }
             "precalculate_address" => {
-                let class_hash = input_reader.read_felt().into_();
-                let calldata = input_reader.read_vec();
+                let class_hash = input_reader.read_felt()?.into_();
+                let calldata = input_reader.read_vec()?;
 
                 let contract_address = extended_runtime
                     .extended_runtime
@@ -338,7 +340,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 ]))
             }
             "var" => {
-                let name = input_reader.read_string();
+                let name = input_reader.read_string()?;
 
                 let env_var = self
                     .environment_variables
@@ -351,7 +353,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 Ok(CheatcodeHandlingResult::Handled(vec![parsed_env_var]))
             }
             "get_class_hash" => {
-                let contract_address = input_reader.read_felt().into_();
+                let contract_address = input_reader.read_felt()?.into_();
 
                 let state = &mut extended_runtime
                     .extended_runtime
@@ -370,11 +372,11 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 }
             }
             "l1_handler_execute" => {
-                let contract_address = input_reader.read_felt().into_();
-                let function_selector = input_reader.read_felt();
-                let from_address = input_reader.read_felt();
+                let contract_address = input_reader.read_felt()?.into_();
+                let function_selector = input_reader.read_felt()?;
+                let from_address = input_reader.read_felt()?;
 
-                let payload = input_reader.read_vec();
+                let payload = input_reader.read_vec()?;
 
                 let cheatnet_runtime = &mut extended_runtime.extended_runtime;
 
@@ -402,27 +404,27 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 }
             }
             "read_txt" => {
-                let file_path = input_reader.read_string();
+                let file_path = input_reader.read_string()?;
                 let parsed_content = file_operations::read_txt(file_path)?;
                 Ok(CheatcodeHandlingResult::Handled(parsed_content))
             }
             "read_json" => {
-                let file_path = input_reader.read_string();
+                let file_path = input_reader.read_string()?;
                 let parsed_content = file_operations::read_json(file_path)?;
 
                 Ok(CheatcodeHandlingResult::Handled(parsed_content))
             }
             "spy_events" => {
                 let spy_target_variant = input_reader
-                    .read_felt()
+                    .read_felt()?
                     .to_u8()
                     .expect("Invalid spy_target length");
                 let spy_on = match spy_target_variant {
                     0 => SpyTarget::All,
-                    1 => SpyTarget::One(input_reader.read_felt().into_()),
+                    1 => SpyTarget::One(input_reader.read_felt()?.into_()),
                     _ => {
                         let addresses = input_reader
-                            .read_vec()
+                            .read_vec()?
                             .iter()
                             .map(|el| ContractAddress::from_(el.clone()))
                             .collect();
@@ -439,7 +441,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 Ok(CheatcodeHandlingResult::Handled(vec![Felt252::from(id)]))
             }
             "fetch_events" => {
-                let id = &input_reader.read_felt();
+                let id = &input_reader.read_felt()?;
                 let (emitted_events_len, serialized_events) = extended_runtime
                     .extended_runtime
                     .extension
@@ -450,7 +452,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 Ok(CheatcodeHandlingResult::Handled(result))
             }
             "event_name_hash" => {
-                let name = input_reader.read_felt();
+                let name = input_reader.read_felt()?;
                 let hash = starknet_keccak(as_cairo_short_string(&name).unwrap().as_bytes());
 
                 Ok(CheatcodeHandlingResult::Handled(vec![Felt252::from(hash)]))
@@ -464,8 +466,8 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 ]))
             }
             "stark_sign_message" => {
-                let private_key = input_reader.read_felt();
-                let message_hash = input_reader.read_felt();
+                let private_key = input_reader.read_felt()?;
+                let message_hash = input_reader.read_felt()?;
 
                 if private_key == Felt252::from(0) {
                     return Ok(handle_cheatcode_error("invalid secret_key"));
@@ -484,7 +486,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 }
             }
             "generate_ecdsa_keys" => {
-                let curve = as_cairo_short_string(&input_reader.read_felt());
+                let curve = as_cairo_short_string(&input_reader.read_felt()?);
 
                 let (signing_key_bytes, verifying_key_bytes) = {
                     match curve.as_deref() {
@@ -522,11 +524,11 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 ]))
             }
             "ecdsa_sign_message" => {
-                let curve = as_cairo_short_string(&input_reader.read_felt());
-                let sk_low = input_reader.read_felt();
-                let sk_high = input_reader.read_felt();
-                let msg_hash_low = input_reader.read_felt();
-                let msg_hash_high = input_reader.read_felt();
+                let curve = as_cairo_short_string(&input_reader.read_felt()?);
+                let sk_low = input_reader.read_felt()?;
+                let sk_high = input_reader.read_felt()?;
+                let msg_hash_low = input_reader.read_felt()?;
+                let msg_hash_high = input_reader.read_felt()?;
 
                 let secret_key = concat_u128_bytes(&sk_low.to_be_bytes(), &sk_high.to_be_bytes());
                 let msg_hash =
@@ -596,9 +598,9 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .extended_runtime
                     .hint_handler
                     .state;
-                let target = ContractAddress::from_(input_reader.read_felt());
-                let storage_address = input_reader.read_felt();
-                store(*state, target, &storage_address, input_reader.read_felt())
+                let target = ContractAddress::from_(input_reader.read_felt()?);
+                let storage_address = input_reader.read_felt()?;
+                store(*state, target, &storage_address, input_reader.read_felt()?)
                     .expect("Failed to store");
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
@@ -608,14 +610,14 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .extended_runtime
                     .hint_handler
                     .state;
-                let target = ContractAddress::from_(input_reader.read_felt());
-                let storage_address = &input_reader.read_felt();
+                let target = ContractAddress::from_(input_reader.read_felt()?);
+                let storage_address = &input_reader.read_felt()?;
                 let loaded = load(*state, target, storage_address).expect("Failed to load");
                 Ok(CheatcodeHandlingResult::Handled(vec![loaded]))
             }
             "map_entry_address" => {
-                let map_selector = &input_reader.read_felt();
-                let keys = &input_reader.read_vec();
+                let map_selector = &input_reader.read_felt()?;
+                let keys = &input_reader.read_vec()?;
                 let map_entry_address = calculate_variable_address(map_selector, Some(keys));
                 Ok(CheatcodeHandlingResult::Handled(vec![map_entry_address]))
             }

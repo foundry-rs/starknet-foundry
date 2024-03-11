@@ -3955,6 +3955,7 @@ dependencies = [
  "cairo-lang-starknet",
  "cairo-lang-utils",
  "cairo-vm",
+ "indoc",
  "num-bigint",
  "num-traits 0.2.18",
  "once_cell",
