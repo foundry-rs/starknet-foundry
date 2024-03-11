@@ -46,6 +46,7 @@ pub fn build_profiler_call_trace(
             .iter()
             .map(|c| build_profiler_call_trace(c, contracts_data))
             .collect(),
+        vm_trace: vec![],
     }
 }
 
