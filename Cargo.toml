@@ -9,6 +9,7 @@ members = [
     "crates/conversions",
     "crates/runtime",
     "crates/scarb-api",
+    "crates/configuration",
     "crates/universal-sierra-compiler-api"
 ]
 

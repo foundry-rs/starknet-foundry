@@ -1,6 +1,6 @@
 use crate::helpers::runner::runner;
+use configuration::copy_config_to_tempdir;
 use indoc::indoc;
-use sncast::helpers::configuration::copy_config_to_tempdir;
 
 #[tokio::test]
 async fn test_show_config_from_snfoundry_toml() {

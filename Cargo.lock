@@ -1326,6 +1326,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "configuration"
+version = "1.0.0"
+dependencies = [
+ "anyhow",
+ "camino",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "toml",
+]
+
+[[package]]
 name = "console"
 version = "0.15.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4536,6 +4548,7 @@ dependencies = [
  "cairo-vm",
  "camino",
  "clap",
+ "configuration",
  "console",
  "conversions",
  "ctor",

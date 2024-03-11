@@ -3,9 +3,9 @@ use crate::helpers::fixtures::{
     duplicate_contract_directory_with_salt, from_env, get_accounts_path, get_keystores_path,
 };
 use crate::helpers::runner::runner;
+use configuration::copy_config_to_tempdir;
 use indoc::indoc;
 use shared::test_utils::output_assert::assert_stderr_contains;
-use sncast::helpers::configuration::copy_config_to_tempdir;
 use sncast::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
 use std::env;
 
