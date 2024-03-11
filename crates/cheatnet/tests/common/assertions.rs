@@ -33,22 +33,3 @@ pub fn assert_error(call_contract_output: CallResult, expected_data: impl Into<S
         if msg == expected_data.into(),
     ));
 }
-
-#[inline]
-pub fn assert_outputs(output1: CallResult, output2: CallResult) {
-    let CallResult::Success {
-        ret_data: before_ret_data,
-    } = output1
-    else {
-        panic!("Unexpected failure")
-    };
-
-    let CallResult::Success {
-        ret_data: after_ret_data,
-    } = output2
-    else {
-        panic!("Unexpected failure")
-    };
-
-    assert_eq!(before_ret_data, after_ret_data);
-}

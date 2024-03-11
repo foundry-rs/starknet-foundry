@@ -163,24 +163,6 @@ pub fn deploy_at_wrapper(
     )
 }
 
-pub fn call_contract_getter_by_name(
-    state: &mut dyn State,
-    runtime_state: &mut RuntimeState,
-    contract_address: &ContractAddress,
-    fn_name: &str,
-) -> CallResult {
-    let selector = felt_selector_from_name(fn_name);
-    let result = call_contract(
-        state,
-        runtime_state,
-        contract_address,
-        &selector,
-        vec![].as_slice(),
-    );
-
-    result
-}
-
 // This does contract call without the transaction layer. This way `call_contract` can return data and modify state.
 // `call` and `invoke` on the transactional layer use such method under the hood.
 pub fn call_contract(
