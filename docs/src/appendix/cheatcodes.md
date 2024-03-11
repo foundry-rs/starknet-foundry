@@ -4,22 +4,22 @@
 - [`CheatSpan`](cheatcodes/cheat_span.md) - enum for specifying the number of calls for a cheat
 - [`prank`](cheatcodes/caller_address/prank.md) - changes the caller address for contracts, for a number of calls
 - [`start_prank`](cheatcodes/caller_address/start_prank.md) - changes the caller address for contracts
-- [`stop_prank`](cheatcodes/caller_address/stop_prank.md) - cancels the `start_prank` for contracts
+- [`stop_prank`](cheatcodes/caller_address/stop_prank.md) - cancels the `prank` / `start_prank` for contracts
 - [`roll`](cheatcodes/block_number/roll.md) - changes the block number for contracts, for a number of calls
 - [`start_roll`](cheatcodes/block_number/start_roll.md) - changes the block number for contracts
-- [`stop_roll`](cheatcodes/block_number/stop_roll.md) - cancels the `start_roll` for contracts
+- [`stop_roll`](cheatcodes/block_number/stop_roll.md) - cancels the `roll` / `start_roll` for contracts
 - [`warp`](cheatcodes/block_timestamp/warp.md) - changes the block timestamp for contracts, for a number of calls
 - [`start_warp`](cheatcodes/block_timestamp/start_warp.md) - changes the block timestamp for contracts
-- [`stop_warp`](cheatcodes/block_timestamp/stop_warp.md) - cancels the `start_warp` for contracts
+- [`stop_warp`](cheatcodes/block_timestamp/stop_warp.md) - cancels the `warp` / `start_warp` for contracts
 - [`elect`](cheatcodes/sequencer_address/elect.md) - changes the sequencer address for contracts, for a number of calls
 - [`start_elect`](cheatcodes/sequencer_address/start_elect.md) - changes the sequencer address for contracts
-- [`stop_elect`](cheatcodes/sequencer_address/stop_elect.md) - cancels the `start_elect` for contracts
+- [`stop_elect`](cheatcodes/sequencer_address/stop_elect.md) - cancels the `elect` / `start_elect` for contracts
 - [`spoof`](cheatcodes/tx_info/spoof.md) - changes the transaction context for contracts, for a number of calls
 - [`start_spoof`](cheatcodes/tx_info/start_spoof.md) - changes the transaction context for contracts
-- [`stop_spoof`](cheatcodes/tx_info/stop_spoof.md) - cancels the `start_spoof` for contracts
+- [`stop_spoof`](cheatcodes/tx_info/stop_spoof.md) - cancels the `spoof` / `start_spoof` for contracts
 - [`mock_call`](cheatcodes/mock/mock_call.md) - mocks contract call to an entry point, for a number of calls
 - [`start_mock_call`](cheatcodes/mock/start_mock_call.md) - mocks contract call to an entry point
-- [`stop_mock_call`](cheatcodes/mock/stop_mock_call.md) - cancels the `start_mock_call` for an entry point
+- [`stop_mock_call`](cheatcodes/mock/stop_mock_call.md) - cancels the `mock_call` / `start_mock_call` for an entry point
 - [`get_class_hash`](cheatcodes/get_class_hash.md) - retrieves a class hash of a contract
 - [`replace_bytecode`](cheatcodes/replace_bytecode.md) - replace the class hash of a contract
 - [`l1_handler_execute`](cheatcodes/l1_handler_execute.md) - executes a `#[l1_handler]` function to mock a message arriving from Ethereum
