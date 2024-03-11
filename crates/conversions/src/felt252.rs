@@ -51,8 +51,8 @@ impl TryFromDecStr for Felt252 {
     /// Parse decimal felt
     fn try_from_dec_str(value: &str) -> Result<Felt252, ParseFeltError> {
         match Felt252::from_str_radix(value, 10) {
-            Ok(ok) => Ok(ok),
-            Err(_) => Err(ParseFeltError),
+            Ok(ok) if ok < Felt252::prime().into() => Ok(ok),
+            _ => Err(ParseFeltError),
         }
     }
 }
@@ -60,8 +60,8 @@ impl TryFromHexStr for Felt252 {
     /// Parse decimal felt
     fn try_from_hex_str(value: &str) -> Result<Felt252, ParseFeltError> {
         match Felt252::from_str_radix(value, 16) {
-            Ok(ok) => Ok(ok),
-            Err(_) => Err(ParseFeltError),
+            Ok(ok) if ok < Felt252::prime().into() => Ok(ok),
+            _ => Err(ParseFeltError),
         }
     }
 }
