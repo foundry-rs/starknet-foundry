@@ -733,7 +733,7 @@ fn events_contract_cost() {
         "#
         ),
         Contract::from_code_path(
-            "GasChecker".to_string(),
+            "GasChecker",
             Path::new("tests/data/contracts/gas_checker.cairo"),
         )
         .unwrap()
