@@ -75,7 +75,7 @@ fn build_block_context(block_info: BlockInfo) -> BlockContext {
     ]));
 
     BlockContext {
-        chain_id: ChainId("SN_GOERLI".to_string()),
+        chain_id: ChainId("SN_SEPOLIA".to_string()),
         block_number: block_info.block_number,
         block_timestamp: block_info.timestamp,
         sequencer_address: block_info.sequencer_address,
