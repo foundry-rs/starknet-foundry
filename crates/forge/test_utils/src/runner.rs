@@ -1,19 +1,26 @@
+use crate::tempdir_with_tool_versions;
 use anyhow::{anyhow, bail, Context, Result};
-use assert_fs::fixture::{FileTouch, FileWriteStr, PathChild};
-use assert_fs::TempDir;
+use assert_fs::{
+    fixture::{FileTouch, FileWriteStr, PathChild},
+    TempDir,
+};
+use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use camino::Utf8PathBuf;
-use forge_runner::test_crate_summary::TestCrateSummary;
+use forge_runner::{
+    test_case_summary::{AnyTestCaseSummary, TestCaseSummary},
+    test_crate_summary::TestCrateSummary,
+};
 use indoc::formatdoc;
 use scarb_api::{
     get_contracts_map, metadata::MetadataCommandExt, ScarbCommand, StarknetContractArtifacts,
 };
-use std::collections::HashMap;
-use std::fs;
-use std::path::{Path, PathBuf};
-use std::process::{Command, Stdio};
-use std::str::FromStr;
-
-use crate::tempdir_with_tool_versions;
+use std::{
+    collections::HashMap,
+    fs,
+    path::{Path, PathBuf},
+    process::{Command, Stdio},
+    str::FromStr,
+};
 
 /// Represents a dependency of a Cairo project
 #[derive(Debug, Clone)]
@@ -220,163 +227,131 @@ macro_rules! test_case {
     });
 }
 
-#[macro_export]
-macro_rules! assert_passed {
-    ($result:expr) => {{
-        use forge_runner::test_case_summary::{AnyTestCaseSummary, TestCaseSummary};
-        use $crate::runner::TestCase;
+pub fn assert_passed(result: &[TestCrateSummary]) {
+    let result = &TestCase::find_test_result(result).test_case_summaries;
 
-        let result = TestCase::find_test_result(&$result);
-        assert!(
-            !result.test_case_summaries.is_empty(),
-            "No test results found"
-        );
-        assert!(
-            result.test_case_summaries.iter().all(|t| t.is_passed()),
-            "Some tests didn't pass"
-        );
-    }};
+    assert!(!result.is_empty(), "No test results found");
+    assert!(
+        result.iter().all(AnyTestCaseSummary::is_passed),
+        "Some tests didn't pass"
+    );
 }
 
-#[macro_export]
-macro_rules! assert_failed {
-    ($result:expr) => {{
-        use forge_runner::test_case_summary::{AnyTestCaseSummary, TestCaseSummary};
+pub fn assert_failed(result: &[TestCrateSummary]) {
+    let result = &TestCase::find_test_result(result).test_case_summaries;
 
-        use $crate::runner::TestCase;
-
-        let result = TestCase::find_test_result(&$result);
-        assert!(
-            !result.test_case_summaries.is_empty(),
-            "No test results found"
-        );
-        assert!(
-            result.test_case_summaries.iter().all(|t| t.is_failed()),
-            "Some tests didn't fail"
-        );
-    }};
+    assert!(!result.is_empty(), "No test results found");
+    assert!(
+        result.iter().all(AnyTestCaseSummary::is_failed),
+        "Some tests didn't fail"
+    );
 }
 
-#[macro_export]
-macro_rules! assert_case_output_contains {
-    ($result:expr, $test_case_name:expr, $asserted_msg:expr) => {{
-        use forge_runner::test_case_summary::{AnyTestCaseSummary, TestCaseSummary};
+pub fn assert_case_output_contains(
+    result: &[TestCrateSummary],
+    test_case_name: &str,
+    asserted_msg: &str,
+) {
+    let test_name_suffix = format!("::{test_case_name}");
 
-        use $crate::runner::TestCase;
+    let result = TestCase::find_test_result(result);
 
-        let test_case_name = $test_case_name;
-        let test_name_suffix = format!("::{test_case_name}");
+    assert!(result.test_case_summaries.iter().any(|any_case| {
+        if any_case.is_passed() || any_case.is_failed() {
+            return any_case.msg().unwrap().contains(asserted_msg)
+                && any_case
+                    .name()
+                    .unwrap()
+                    .ends_with(test_name_suffix.as_str());
+        }
+        false
+    }));
+}
 
-        let result = TestCase::find_test_result(&$result);
+pub fn assert_gas(result: &[TestCrateSummary], test_case_name: &str, asserted_gas: u128) {
+    let test_name_suffix = format!("::{test_case_name}");
 
-        assert!(result.test_case_summaries.iter().any(|any_case| {
-            if any_case.is_passed() || any_case.is_failed() {
-                return any_case.msg().unwrap().contains($asserted_msg)
-                    && any_case
-                        .name()
-                        .unwrap()
-                        .ends_with(test_name_suffix.as_str());
+    let result = TestCase::find_test_result(result);
+
+    assert!(result.test_case_summaries.iter().any(|any_case| {
+        match any_case {
+            AnyTestCaseSummary::Fuzzing(_) => {
+                panic!("Cannot use assert_gas! for fuzzing tests")
             }
-            false
-        }));
-    }};
-}
-
-#[macro_export]
-macro_rules! assert_gas {
-    ($result:expr, $test_case_name:expr, $asserted_gas:expr) => {{
-        use forge_runner::test_case_summary::{AnyTestCaseSummary, TestCaseSummary};
-        use $crate::runner::TestCase;
-
-        let test_case_name = $test_case_name;
-        let test_name_suffix = format!("::{test_case_name}");
-
-        let result = TestCase::find_test_result(&$result);
-
-        assert!(result.test_case_summaries.iter().any(|any_case| {
-            match any_case {
-                AnyTestCaseSummary::Fuzzing(case) => {
-                    panic!("Cannot use assert_gas! for fuzzing tests")
+            AnyTestCaseSummary::Single(case) => match case {
+                TestCaseSummary::Passed { gas_info: gas, .. } => {
+                    *gas == asserted_gas
+                        && any_case
+                            .name()
+                            .unwrap()
+                            .ends_with(test_name_suffix.as_str())
                 }
-                AnyTestCaseSummary::Single(case) => match case {
-                    TestCaseSummary::Passed { gas_info: gas, .. } => {
-                        *gas == $asserted_gas
-                            && any_case
-                                .name()
-                                .unwrap()
-                                .ends_with(test_name_suffix.as_str())
-                    }
-                    _ => false,
-                },
-            }
-        }));
-    }};
+                _ => false,
+            },
+        }
+    }));
 }
 
-#[macro_export]
-macro_rules! assert_syscall {
-    ($result:expr, $test_case_name:expr, $syscall:expr, $expected_count:expr) => {{
-        use forge_runner::test_case_summary::{AnyTestCaseSummary, TestCaseSummary};
-        use $crate::runner::TestCase;
+pub fn assert_syscall(
+    result: &[TestCrateSummary],
+    test_case_name: &str,
+    syscall: DeprecatedSyscallSelector,
+    expected_count: usize,
+) {
+    let test_name_suffix = format!("::{test_case_name}");
 
-        let test_case_name = $test_case_name;
-        let test_name_suffix = format!("::{test_case_name}");
+    let result = TestCase::find_test_result(result);
 
-        let result = TestCase::find_test_result(&$result);
-
-        assert!(result.test_case_summaries.iter().any(|any_case| {
-            match any_case {
-                AnyTestCaseSummary::Fuzzing(_) => {
-                    panic!("Cannot use assert_syscall! for fuzzing tests")
-                }
-                AnyTestCaseSummary::Single(case) => match case {
-                    TestCaseSummary::Passed { used_resources, .. } => {
-                        used_resources.syscall_counter.get(&$syscall).unwrap_or(&0)
-                            == &$expected_count
-                            && any_case
-                                .name()
-                                .unwrap()
-                                .ends_with(test_name_suffix.as_str())
-                    }
-                    _ => false,
-                },
+    assert!(result.test_case_summaries.iter().any(|any_case| {
+        match any_case {
+            AnyTestCaseSummary::Fuzzing(_) => {
+                panic!("Cannot use assert_syscall! for fuzzing tests")
             }
-        }));
-    }};
+            AnyTestCaseSummary::Single(case) => match case {
+                TestCaseSummary::Passed { used_resources, .. } => {
+                    used_resources.syscall_counter.get(&syscall).unwrap_or(&0) == &expected_count
+                        && any_case
+                            .name()
+                            .unwrap()
+                            .ends_with(test_name_suffix.as_str())
+                }
+                _ => false,
+            },
+        }
+    }));
 }
 
-#[macro_export]
-macro_rules! assert_builtin {
-    ($result:expr, $test_case_name:expr, $builtin:expr, $expected_count:expr) => {{
-        use forge_runner::test_case_summary::{AnyTestCaseSummary, TestCaseSummary};
-        use $crate::runner::TestCase;
+pub fn assert_builtin(
+    result: &[TestCrateSummary],
+    test_case_name: &str,
+    builtin: &str,
+    expected_count: usize,
+) {
+    let test_name_suffix = format!("::{test_case_name}");
+    let builtin = builtin.to_string();
 
-        let test_case_name = $test_case_name;
-        let test_name_suffix = format!("::{test_case_name}");
+    let result = TestCase::find_test_result(result);
 
-        let result = TestCase::find_test_result(&$result);
-
-        assert!(result.test_case_summaries.iter().any(|any_case| {
-            match any_case {
-                AnyTestCaseSummary::Fuzzing(_) => {
-                    panic!("Cannot use assert_builtin! for fuzzing tests")
-                }
-                AnyTestCaseSummary::Single(case) => match case {
-                    TestCaseSummary::Passed { used_resources, .. } => {
-                        used_resources
-                            .execution_resources
-                            .builtin_instance_counter
-                            .get($builtin)
-                            .unwrap_or(&0)
-                            == &$expected_count
-                            && any_case
-                                .name()
-                                .unwrap()
-                                .ends_with(test_name_suffix.as_str())
-                    }
-                    _ => false,
-                },
+    assert!(result.test_case_summaries.iter().any(|any_case| {
+        match any_case {
+            AnyTestCaseSummary::Fuzzing(_) => {
+                panic!("Cannot use assert_builtin! for fuzzing tests")
             }
-        }));
-    }};
+            AnyTestCaseSummary::Single(case) => match case {
+                TestCaseSummary::Passed { used_resources, .. } => {
+                    used_resources
+                        .execution_resources
+                        .builtin_instance_counter
+                        .get(&builtin)
+                        .unwrap_or(&0)
+                        == &expected_count
+                        && any_case
+                            .name()
+                            .unwrap()
+                            .ends_with(test_name_suffix.as_str())
+                }
+                _ => false,
+            },
+        }
+    }));
 }

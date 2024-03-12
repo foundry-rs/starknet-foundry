@@ -4,7 +4,7 @@ mod tests_nonce {
     use cairo_felt::{Felt252, PRIME_STR};
     use conversions::{FromConv, IntoConv, TryFromConv, TryIntoConv};
     use starknet::core::types::FieldElement;
-    use starknet_api::core::{ClassHash, ContractAddress, Nonce};
+    use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, Nonce};
     use starknet_api::hash::{StarkFelt, StarkHash};
 
     #[test]
@@ -18,6 +18,7 @@ mod tests_nonce {
         assert_eq!(nonce, FieldElement::from_(nonce).into_());
         assert_eq!(nonce, StarkFelt::from_(nonce).into_());
         assert_eq!(nonce, StarkHash::from_(nonce).into_());
+        assert_eq!(nonce, EntryPointSelector::from_(nonce).into_());
 
         assert_eq!(nonce, String::from_(nonce).try_into_().unwrap());
     }
@@ -33,6 +34,7 @@ mod tests_nonce {
         assert_eq!(nonce, FieldElement::from_(nonce).into_());
         assert_eq!(nonce, StarkFelt::from_(nonce).into_());
         assert_eq!(nonce, StarkHash::from_(nonce).into_());
+        assert_eq!(nonce, EntryPointSelector::from_(nonce).into_());
 
         assert_eq!(nonce, String::from_(nonce).try_into_().unwrap());
     }
@@ -48,6 +50,7 @@ mod tests_nonce {
         assert_eq!(nonce, ClassHash::from_(nonce).into_());
         assert_eq!(nonce, StarkFelt::from_(nonce).into_());
         assert_eq!(nonce, StarkHash::from_(nonce).into_());
+        assert_eq!(nonce, EntryPointSelector::from_(nonce).into_());
 
         // PATRICIA_KEY_UPPER_BOUND for contract_address from starknet_api-0.4.1/src/core.rs:156
         max_value = "0x07ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";

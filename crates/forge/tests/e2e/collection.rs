@@ -1,4 +1,4 @@
-use crate::e2e::common::runner::{setup_package, test_runner};
+use super::common::runner::{setup_package, test_runner};
 use indoc::indoc;
 use shared::test_utils::output_assert::assert_stdout_contains;
 
@@ -6,13 +6,7 @@ use shared::test_utils::output_assert::assert_stdout_contains;
 fn collection_with_lib() {
     let temp = setup_package("collection_with_lib");
 
-    let snapbox = test_runner();
-
-    let output = snapbox
-        .env("SCARB_CACHE", temp.path())
-        .current_dir(&temp)
-        .assert()
-        .success();
+    let output = test_runner(&temp).assert().success();
 
     assert_stdout_contains(
         output,
@@ -50,13 +44,7 @@ fn collection_with_lib() {
 fn collection_without_lib() {
     let temp = setup_package("collection_without_lib");
 
-    let snapbox = test_runner();
-
-    let output = snapbox
-        .env("SCARB_CACHE", temp.path())
-        .current_dir(&temp)
-        .assert()
-        .success();
+    let output = test_runner(&temp).assert().success();
 
     assert_stdout_contains(
         output,

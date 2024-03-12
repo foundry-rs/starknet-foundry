@@ -16,7 +16,7 @@ use starknet_api::core::EntryPointSelector;
 
 use crate::constants::{build_test_entry_point, TEST_CONTRACT_CLASS_HASH};
 use blockifier::block::BlockInfo;
-use blockifier::execution::call_info::CallInfo;
+use blockifier::execution::call_info::OrderedL2ToL1Message;
 use blockifier::execution::syscalls::hint_processor::SyscallCounter;
 use blockifier::state::errors::StateError::UndeclaredClassHash;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
@@ -130,7 +130,7 @@ impl StateReader for ExtendedStateReader {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum CheatStatus<T> {
     Cheated(T, CheatSpan),
     Uncheated,
@@ -242,7 +242,8 @@ pub struct CheatnetState {
     pub global_warp: Option<(Felt252, CheatSpan)>,
     pub elected_contracts: HashMap<ContractAddress, CheatStatus<ContractAddress>>,
     pub global_elect: Option<(ContractAddress, CheatSpan)>,
-    pub mocked_functions: HashMap<ContractAddress, HashMap<EntryPointSelector, Vec<StarkFelt>>>,
+    pub mocked_functions:
+        HashMap<ContractAddress, HashMap<EntryPointSelector, CheatStatus<Vec<StarkFelt>>>>,
     pub spoofed_contracts: HashMap<ContractAddress, CheatStatus<TxInfoMock>>,
     pub global_spoof: Option<(TxInfoMock, CheatSpan)>,
     pub replaced_bytecode_contracts: HashMap<ContractAddress, ClassHash>,
@@ -419,9 +420,9 @@ impl TraceData {
     pub fn exit_nested_call(
         &mut self,
         resources_used_after_call: &ExecutionResources,
-        used_syscalls: &SyscallCounter,
+        used_syscalls: SyscallCounter,
         result: CallResult,
-        call_info: Option<&CallInfo>,
+        l2_to_l1_messages: &[OrderedL2ToL1Message],
     ) {
         let CallStackElement {
             resources_used_before_call,
@@ -432,15 +433,12 @@ impl TraceData {
         let mut last_call = last_call.borrow_mut();
         last_call.used_execution_resources =
             resources_used_after_call - &resources_used_before_call;
-        last_call.used_syscalls = used_syscalls.clone();
+        last_call.used_syscalls = used_syscalls;
 
-        last_call.used_l1_resources.l2_l1_message_sizes = call_info.map_or(vec![], |info| {
-            info.execution
-                .l2_to_l1_messages
-                .iter()
-                .map(|ordered_message| ordered_message.message.payload.0.len())
-                .collect()
-        });
+        last_call.used_l1_resources.l2_l1_message_sizes = l2_to_l1_messages
+            .iter()
+            .map(|ordered_message| ordered_message.message.payload.0.len())
+            .collect();
 
         last_call.result = result;
     }

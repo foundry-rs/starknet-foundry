@@ -1,4 +1,4 @@
-use crate::assert_success;
+use crate::common::assertions::assert_success;
 use crate::common::state::{build_runtime_state, create_cached_state};
 use crate::common::{
     call_contract, deploy_at_wrapper, deploy_contract, deploy_wrapper, felt_selector_from_name,
@@ -46,7 +46,7 @@ fn deploy_at_predefined_address() {
         &[],
     );
 
-    assert_success!(output, vec![Felt252::from(0)]);
+    assert_success(output, &[Felt252::from(0)]);
 }
 
 #[test]
@@ -117,7 +117,7 @@ fn call_predefined_contract_from_proxy_contract() {
         &[prank_checker_address.into_()],
     );
 
-    assert_success!(output, vec![proxy_address.into_()]);
+    assert_success(output, &[proxy_address.into_()]);
 }
 
 #[test]
@@ -171,7 +171,7 @@ fn deploy_contract_on_predefined_address_after_its_usage() {
         &[Felt252::from(323)],
     );
 
-    assert_success!(output, vec![]);
+    assert_success(output, &[]);
 }
 
 #[test]
@@ -318,7 +318,7 @@ fn deploy_invokes_constructor() {
         &[],
     );
 
-    assert_success!(output, vec![Felt252::from(123)]);
+    assert_success(output, &[Felt252::from(123)]);
 }
 
 #[test]
@@ -350,5 +350,5 @@ fn deploy_at_invokes_constructor() {
         &[],
     );
 
-    assert_success!(output, vec![Felt252::from(123)]);
+    assert_success(output, &[Felt252::from(123)]);
 }

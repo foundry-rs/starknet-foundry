@@ -1991,7 +1991,7 @@ checksum = "00b0228411908ca8685dba7fc2cdd70ec9990a6e753e89b6ac91a84c40fbaf4b"
 
 [[package]]
 name = "forge"
-version = "0.18.0"
+version = "0.19.0"
 dependencies = [
  "anyhow",
  "ark-ff",
@@ -2029,6 +2029,7 @@ dependencies = [
  "num-integer",
  "num-traits 0.2.18",
  "once_cell",
+ "openssl",
  "rand",
  "rayon",
  "regex",
@@ -2057,7 +2058,7 @@ dependencies = [
 
 [[package]]
 name = "forge_runner"
-version = "0.18.0"
+version = "0.19.0"
 dependencies = [
  "anyhow",
  "bimap",
@@ -3268,6 +3269,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ff011a302c396a5197692431fc1948019154afc178baf7d8e37367442a4601cf"
 
 [[package]]
+name = "openssl-src"
+version = "300.2.3+3.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5cff92b6f71555b61bb9315f7c64da3ca43d87531622120fea0195fc761b4843"
+dependencies = [
+ "cc",
+]
+
+[[package]]
 name = "openssl-sys"
 version = "0.9.99"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3275,6 +3285,7 @@ checksum = "22e1bf214306098e4832460f797824c05d25aacdf896f64a985fb0fd992454ae"
 dependencies = [
  "cc",
  "libc",
+ "openssl-src",
  "pkg-config",
  "vcpkg",
 ]
@@ -3944,6 +3955,7 @@ dependencies = [
  "cairo-lang-starknet",
  "cairo-lang-utils",
  "cairo-vm",
+ "indoc",
  "num-bigint",
  "num-traits 0.2.18",
  "once_cell",
@@ -4510,7 +4522,7 @@ dependencies = [
 
 [[package]]
 name = "sncast"
-version = "0.18.0"
+version = "0.19.0"
 dependencies = [
  "anyhow",
  "base16ct",
@@ -5029,6 +5041,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "assert_fs",
+ "blockifier",
  "cairo-lang-casm",
  "cairo-lang-compiler",
  "cairo-lang-filesystem",

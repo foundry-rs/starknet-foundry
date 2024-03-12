@@ -5,7 +5,6 @@ use blockifier::execution::contract_class::ContractClassV1;
 
 use blockifier::execution::contract_class::ContractClass;
 
-use crate::runtime_extensions::common::create_entry_point_selector;
 use blockifier::execution::entry_point::{CallEntryPoint, CallType};
 use conversions::IntoConv;
 use indoc::indoc;
@@ -88,10 +87,8 @@ pub fn build_testing_state() -> DictStateReader {
 
 #[must_use]
 pub fn build_test_entry_point() -> CallEntryPoint {
-    let test_selector = get_selector_from_name(TEST_ENTRY_POINT_SELECTOR)
-        .unwrap()
-        .into_();
-    let entry_point_selector = create_entry_point_selector(&test_selector);
+    let test_selector = get_selector_from_name(TEST_ENTRY_POINT_SELECTOR).unwrap();
+    let entry_point_selector = test_selector.into_();
     CallEntryPoint {
         class_hash: None,
         code_address: Some(contract_address!(TEST_ADDRESS)),

@@ -1,25 +1,23 @@
-use crate::common::state::build_runtime_state;
-use crate::common::{call_contract, deploy_wrapper};
-use crate::{
-    assert_success,
-    common::{
-        call_contract_getter_by_name, deploy_contract, felt_selector_from_name, get_contracts,
-        recover_data, state::create_cached_state,
-    },
+use super::test_environment::TestEnvironment;
+use crate::common::{
+    assertions::assert_success,
+    call_contract, call_contract_getter_by_name, deploy_contract, deploy_wrapper,
+    felt_selector_from_name, get_contracts, recover_data,
+    state::{build_runtime_state, create_cached_state},
 };
 use blockifier::state::state_api::State;
 use cairo_felt::Felt252;
-use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeState;
-use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
-use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::spoof::TxInfoMock;
-use cheatnet::state::{CheatSpan, CheatTarget, CheatnetState};
+use cheatnet::{
+    runtime_extensions::{
+        call_to_blockifier_runtime_extension::RuntimeState,
+        forge_runtime_extension::cheatcodes::{declare::declare, spoof::TxInfoMock},
+    },
+    state::{CheatSpan, CheatTarget, CheatnetState},
+};
 use conversions::IntoConv;
 use num_traits::ToPrimitive;
 use runtime::utils::BufferReader;
-use starknet_api::core::ContractAddress;
-use starknet_api::transaction::TransactionHash;
-
-use super::test_environment::TestEnvironment;
+use starknet_api::{core::ContractAddress, transaction::TransactionHash};
 
 trait SpoofTrait {
     fn spoof(&mut self, target: CheatTarget, tx_info_mock: TxInfoMock, span: CheatSpan);
@@ -66,7 +64,7 @@ impl<'a> TxInfoTrait for TestEnvironment<'a> {
 }
 
 #[derive(Clone, Default, Debug, PartialEq)]
-pub struct TxInfo {
+struct TxInfo {
     pub version: Felt252,
     pub account_contract_address: Felt252,
     pub max_fee: Felt252,
@@ -113,22 +111,24 @@ impl TxInfo {
     fn deserialize(data: &[Felt252]) -> Self {
         let mut reader = BufferReader::new(data);
 
-        let version = reader.read_felt();
-        let account_contract_address = reader.read_felt();
-        let max_fee = reader.read_felt();
-        let signature = reader.read_vec();
-        let transaction_hash = reader.read_felt();
-        let chain_id = reader.read_felt();
-        let nonce = reader.read_felt();
-        let resource_bounds_len = reader.read_felt();
-        let resource_bounds = reader.read_vec_body(
-            3 * resource_bounds_len.to_usize().unwrap(), // ResourceBounds struct has 3 fields
-        );
-        let tip = reader.read_felt();
-        let paymaster_data = reader.read_vec();
-        let nonce_data_availability_mode = reader.read_felt();
-        let fee_data_availability_mode = reader.read_felt();
-        let account_deployment_data = reader.read_vec();
+        let version = reader.read_felt().unwrap();
+        let account_contract_address = reader.read_felt().unwrap();
+        let max_fee = reader.read_felt().unwrap();
+        let signature = reader.read_vec().unwrap();
+        let transaction_hash = reader.read_felt().unwrap();
+        let chain_id = reader.read_felt().unwrap();
+        let nonce = reader.read_felt().unwrap();
+        let resource_bounds_len = reader.read_felt().unwrap();
+        let resource_bounds = reader
+            .read_vec_body(
+                3 * resource_bounds_len.to_usize().unwrap(), // ResourceBounds struct has 3 fields
+            )
+            .unwrap();
+        let tip = reader.read_felt().unwrap();
+        let paymaster_data = reader.read_vec().unwrap();
+        let nonce_data_availability_mode = reader.read_felt().unwrap();
+        let fee_data_availability_mode = reader.read_felt().unwrap();
+        let account_deployment_data = reader.read_vec().unwrap();
 
         Self {
             version,
@@ -175,12 +175,8 @@ fn spoof_simple() {
     let mut cheatnet_state = CheatnetState::default();
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
-    let contract_address = deploy_contract(
-        &mut cached_state,
-        &mut runtime_state,
-        "SpoofChecker",
-        vec![].as_slice(),
-    );
+    let contract_address =
+        deploy_contract(&mut cached_state, &mut runtime_state, "SpoofChecker", &[]);
 
     let tx_info_before = get_tx_info(&mut cached_state, &mut runtime_state, &contract_address);
 
@@ -209,12 +205,8 @@ fn start_spoof_multiple_times() {
     let mut cheatnet_state = CheatnetState::default();
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
-    let contract_address = deploy_contract(
-        &mut cached_state,
-        &mut runtime_state,
-        "SpoofChecker",
-        vec![].as_slice(),
-    );
+    let contract_address =
+        deploy_contract(&mut cached_state, &mut runtime_state, "SpoofChecker", &[]);
 
     let tx_info_before = get_tx_info(&mut cached_state, &mut runtime_state, &contract_address);
 
@@ -315,12 +307,8 @@ fn spoof_start_stop() {
     let mut cheatnet_state = CheatnetState::default();
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
-    let contract_address = deploy_contract(
-        &mut cached_state,
-        &mut runtime_state,
-        "SpoofChecker",
-        vec![].as_slice(),
-    );
+    let contract_address =
+        deploy_contract(&mut cached_state, &mut runtime_state, "SpoofChecker", &[]);
 
     let tx_info_before = get_tx_info(&mut cached_state, &mut runtime_state, &contract_address);
 
@@ -360,12 +348,8 @@ fn spoof_stop_no_effect() {
     let mut cheatnet_state = CheatnetState::default();
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
-    let contract_address = deploy_contract(
-        &mut cached_state,
-        &mut runtime_state,
-        "SpoofChecker",
-        vec![].as_slice(),
-    );
+    let contract_address =
+        deploy_contract(&mut cached_state, &mut runtime_state, "SpoofChecker", &[]);
 
     let tx_info_before = get_tx_info(&mut cached_state, &mut runtime_state, &contract_address);
 
@@ -387,12 +371,8 @@ fn spoof_with_other_syscall() {
     let mut cheatnet_state = CheatnetState::default();
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
-    let contract_address = deploy_contract(
-        &mut cached_state,
-        &mut runtime_state,
-        "SpoofChecker",
-        vec![].as_slice(),
-    );
+    let contract_address =
+        deploy_contract(&mut cached_state, &mut runtime_state, "SpoofChecker", &[]);
 
     let tx_info_mock = TxInfoMock {
         transaction_hash: Some(Felt252::from(123)),
@@ -410,10 +390,10 @@ fn spoof_with_other_syscall() {
         &mut runtime_state,
         &contract_address,
         &selector,
-        vec![].as_slice(),
+        &[],
     );
 
-    assert_success!(output, vec![Felt252::from(123)]);
+    assert_success(output, &[Felt252::from(123)]);
 }
 
 #[test]
@@ -427,7 +407,7 @@ fn spoof_in_constructor() {
     let class_hash = declare(&mut cached_state, "ConstructorSpoofChecker", &contracts).unwrap();
     let precalculated_address = runtime_state
         .cheatnet_state
-        .precalculate_address(&class_hash, vec![].as_slice());
+        .precalculate_address(&class_hash, &[]);
 
     let tx_info_mock = TxInfoMock {
         transaction_hash: Some(Felt252::from(123)),
@@ -450,10 +430,10 @@ fn spoof_in_constructor() {
         &mut runtime_state,
         &contract_address,
         &selector,
-        vec![].as_slice(),
+        &[],
     );
 
-    assert_success!(output, vec![Felt252::from(123)]);
+    assert_success(output, &[Felt252::from(123)]);
 }
 
 #[test]
@@ -462,12 +442,8 @@ fn spoof_proxy() {
     let mut cheatnet_state = CheatnetState::default();
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
-    let contract_address = deploy_contract(
-        &mut cached_state,
-        &mut runtime_state,
-        "SpoofChecker",
-        vec![].as_slice(),
-    );
+    let contract_address =
+        deploy_contract(&mut cached_state, &mut runtime_state, "SpoofChecker", &[]);
 
     let tx_info_mock = TxInfoMock {
         transaction_hash: Some(Felt252::from(123)),
@@ -485,16 +461,16 @@ fn spoof_proxy() {
         &mut runtime_state,
         &contract_address,
         &selector,
-        vec![].as_slice(),
+        &[],
     );
 
-    assert_success!(output, vec![Felt252::from(123)]);
+    assert_success(output, &[Felt252::from(123)]);
 
     let proxy_address = deploy_contract(
         &mut cached_state,
         &mut runtime_state,
         "SpoofCheckerProxy",
-        vec![].as_slice(),
+        &[],
     );
     let proxy_selector = felt_selector_from_name("get_spoof_checkers_tx_hash");
     let output = call_contract(
@@ -505,7 +481,7 @@ fn spoof_proxy() {
         &[contract_address.into_()],
     );
 
-    assert_success!(output, vec![Felt252::from(123)]);
+    assert_success(output, &[Felt252::from(123)]);
 }
 
 #[test]
@@ -521,7 +497,7 @@ fn spoof_library_call() {
         &mut cached_state,
         &mut runtime_state,
         "SpoofCheckerLibCall",
-        vec![].as_slice(),
+        &[],
     );
 
     let tx_info_mock = TxInfoMock {
@@ -542,7 +518,7 @@ fn spoof_library_call() {
         &[class_hash.into_()],
     );
 
-    assert_success!(output, vec![Felt252::from(123)]);
+    assert_success(output, &[Felt252::from(123)]);
 }
 
 #[test]
@@ -785,10 +761,7 @@ fn spoof_proxy_with_span() {
         "call_proxy",
         &[contract_address_2.into_()],
     );
-    assert_success!(
-        output,
-        vec![123.into(), TransactionHash::default().0.into_()]
-    );
+    assert_success(output, &[123.into(), TransactionHash::default().0.into_()]);
 }
 
 #[test]
@@ -818,17 +791,17 @@ fn spoof_in_constructor_with_span() {
     let contract_address = test_env.deploy_wrapper(&class_hash, &[]);
     assert_eq!(precalculated_address, contract_address);
 
-    assert_success!(
+    assert_success(
         test_env.call_contract(&contract_address, "get_transaction_hash", &[]),
-        vec![Felt252::from(123)]
+        &[Felt252::from(123)],
     );
-    assert_success!(
+    assert_success(
         test_env.call_contract(&contract_address, "get_transaction_hash", &[]),
-        vec![TransactionHash::default().0.into_()]
+        &[TransactionHash::default().0.into_()],
     );
-    assert_success!(
+    assert_success(
         test_env.call_contract(&contract_address, "get_stored_tx_hash", &[]),
-        vec![Felt252::from(123)]
+        &[Felt252::from(123)],
     );
 }
 
@@ -859,13 +832,13 @@ fn spoof_no_constructor_with_span() {
     let contract_address = test_env.deploy_wrapper(&class_hash, &[]);
     assert_eq!(precalculated_address, contract_address);
 
-    assert_success!(
+    assert_success(
         test_env.call_contract(&contract_address, "get_transaction_hash", &[]),
-        vec![Felt252::from(123)]
+        &[Felt252::from(123)],
     );
-    assert_success!(
+    assert_success(
         test_env.call_contract(&contract_address, "get_transaction_hash", &[]),
-        vec![TransactionHash::default().0.into_()]
+        &[TransactionHash::default().0.into_()],
     );
 }
 
@@ -928,13 +901,13 @@ fn spoof_library_call_with_span() {
 
     let lib_call_selector = "get_tx_hash_with_lib_call";
 
-    assert_success!(
+    assert_success(
         test_env.call_contract(&contract_address, lib_call_selector, &[class_hash.into_()]),
-        vec![Felt252::from(123)]
+        &[Felt252::from(123)],
     );
-    assert_success!(
+    assert_success(
         test_env.call_contract(&contract_address, lib_call_selector, &[class_hash.into_()]),
-        vec![tx_info_before.transaction_hash]
+        &[tx_info_before.transaction_hash],
     );
 }
 

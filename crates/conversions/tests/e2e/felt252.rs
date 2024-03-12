@@ -3,10 +3,12 @@ mod tests_felt252 {
     use crate::helpers::hex::str_hex_to_felt252;
     use cairo_felt::{Felt252, PRIME_STR};
     use cairo_lang_runner::short_string::as_cairo_short_string;
-    use conversions::felt252::FromShortString;
+    use conversions::byte_array::ByteArray;
+    use conversions::felt252::{FromShortString, SerializeAsFelt252Vec};
     use conversions::{FromConv, IntoConv, TryFromConv, TryIntoConv};
+    use itertools::chain;
     use starknet::core::types::FieldElement;
-    use starknet_api::core::{ClassHash, ContractAddress, Nonce};
+    use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, Nonce};
     use starknet_api::hash::{StarkFelt, StarkHash};
 
     #[test]
@@ -17,6 +19,7 @@ mod tests_felt252 {
         assert_eq!(felt, ContractAddress::from_(felt.clone()).into_());
         assert_eq!(felt, FieldElement::from_(felt.clone()).into_());
         assert_eq!(felt, Nonce::from_(felt.clone()).into_());
+        assert_eq!(felt, EntryPointSelector::from_(felt.clone()).into_());
         assert_eq!(felt, StarkFelt::from_(felt.clone()).into_());
         assert_eq!(felt, StarkHash::from_(felt.clone()).into_());
 
@@ -31,6 +34,7 @@ mod tests_felt252 {
         assert_eq!(felt, ContractAddress::from_(felt.clone()).into_());
         assert_eq!(felt, FieldElement::from_(felt.clone()).into_());
         assert_eq!(felt, Nonce::from_(felt.clone()).into_());
+        assert_eq!(felt, EntryPointSelector::from_(felt.clone()).into_());
         assert_eq!(felt, StarkFelt::from_(felt.clone()).into_());
         assert_eq!(felt, StarkHash::from_(felt.clone()).into_());
 
@@ -44,6 +48,7 @@ mod tests_felt252 {
         let mut felt252 = str_hex_to_felt252(max_value);
 
         assert_eq!(felt252, Nonce::from_(felt252.clone()).into_());
+        assert_eq!(felt252, EntryPointSelector::from_(felt252.clone()).into_());
         assert_eq!(felt252, FieldElement::from_(felt252.clone()).into_());
         assert_eq!(felt252, ClassHash::from_(felt252.clone()).into_());
         assert_eq!(felt252, StarkFelt::from_(felt252.clone()).into_());
@@ -89,5 +94,29 @@ mod tests_felt252 {
         let shortstring = String::from("1234567890123456789012345678901a");
 
         assert!(Felt252::from_short_string(&shortstring).is_err());
+    }
+
+    #[test]
+    fn test_result_to_felt252_vec() {
+        let val = "a";
+        let serialised_val = vec![Felt252::from(0), Felt252::from(97), Felt252::from(1)];
+
+        let res: Result<&str, &str> = Ok(val);
+        let expected: Vec<Felt252> =
+            chain!(vec![Felt252::from(0)], serialised_val.clone()).collect();
+        assert_eq!(res.serialize_as_felt252_vec(), expected);
+
+        let res: Result<&str, &str> = Err(val);
+        let expected: Vec<Felt252> = chain!(vec![Felt252::from(1)], serialised_val).collect();
+        assert_eq!(res.serialize_as_felt252_vec(), expected);
+    }
+
+    #[test]
+    fn test_str_to_felt252_vec() {
+        let val = "abc";
+        assert_eq!(
+            val.serialize_as_felt252_vec(),
+            ByteArray::from(val).serialize_no_magic()
+        );
     }
 }

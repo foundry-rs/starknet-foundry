@@ -1,8 +1,8 @@
 use indoc::indoc;
 use std::path::Path;
-use test_utils::runner::Contract;
+use test_utils::runner::{assert_passed, Contract};
 use test_utils::running_tests::run_test_case;
-use test_utils::{assert_passed, test_case};
+use test_utils::test_case;
 
 #[test]
 fn error_handling() {
@@ -36,7 +36,7 @@ fn error_handling() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -80,5 +80,5 @@ fn deploy_syscall_check() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }

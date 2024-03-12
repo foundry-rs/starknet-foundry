@@ -1,18 +1,21 @@
 use std::{any::Any, collections::HashMap};
 
-use blockifier::execution::hint_code;
+use crate::runtime_extensions::cheatable_starknet_runtime_extension::stark_felt_from_ptr_immutable;
+use anyhow::Result;
 use blockifier::execution::{
     deprecated_syscalls::{
         hint_processor::DeprecatedSyscallHintProcessor, DeprecatedSyscallSelector,
     },
+    hint_code,
     syscalls::{hint_processor::SyscallExecutionError, SyscallResult},
 };
 use cairo_felt::Felt252;
-use cairo_vm::hint_processor::builtin_hint_processor::hint_utils::get_ptr_from_var_name;
 use cairo_vm::{
     hint_processor::{
-        builtin_hint_processor::builtin_hint_processor_definition::HintProcessorData,
-        hint_processor_definition::{HintProcessorLogic, HintReference},
+        builtin_hint_processor::{
+            builtin_hint_processor_definition::HintProcessorData, hint_utils::get_ptr_from_var_name,
+        },
+        hint_processor_definition::{HintProcessor, HintProcessorLogic, HintReference},
     },
     serde::deserialize_program::ApTracking,
     types::{exec_scope::ExecutionScopes, relocatable::Relocatable},
@@ -23,12 +26,6 @@ use cairo_vm::{
     },
 };
 use runtime::{SyscallHandlingResult, SyscallPtrAccess};
-
-use anyhow::Result;
-
-use cairo_vm::hint_processor::hint_processor_definition::HintProcessor;
-
-use crate::runtime_extensions::cheatable_starknet_runtime_extension::stark_felt_from_ptr_immutable;
 
 pub struct DeprecatedStarknetRuntime<'a> {
     pub hint_handler: DeprecatedSyscallHintProcessor<'a>,
@@ -161,8 +158,14 @@ impl<Extension: DeprecatedExtensionLogic> DeprecatedExtendedRuntime<Extension> {
         {
             Ok(())
         } else {
-            self.extended_runtime
-                .execute_hint(vm, exec_scopes, hint_data, constants)
+            let res = self
+                .extended_runtime
+                .execute_hint(vm, exec_scopes, hint_data, constants);
+
+            self.extension
+                .post_syscall_hook(&selector, &mut self.extended_runtime);
+
+            res
         }
     }
 }
@@ -208,4 +211,10 @@ pub trait DeprecatedExtensionLogic {
     ) -> Result<SyscallHandlingResult, HintError> {
         Ok(SyscallHandlingResult::Forwarded)
     }
+
+    fn post_syscall_hook(
+        &mut self,
+        _selector: &DeprecatedSyscallSelector,
+        _extended_runtime: &mut Self::Runtime,
+    );
 }

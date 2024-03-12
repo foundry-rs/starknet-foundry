@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
+#### Fixed
+
+- Events emitted in cairo 0 contracts are now properly collected
+- `--build-profile` no longer fails silently (compatible with [`cairo-profiler`](https://github.com/software-mansion/cairo-profiler) 0.2.0)
+
+## [0.19.0] - 2024-03-06
+
+### Forge
+
+⚠️ This version requires installing external [universal-sierra-compiler (v2.0.0)](https://github.com/software-mansion/universal-sierra-compiler) ⚠️
+
 #### Added
 
 - [`replace_bytecode`](https://foundry-rs.github.io/starknet-foundry/appendix/cheatcodes/replace_bytecode.html)  cheatcode
@@ -33,6 +44,7 @@ binary, which will allow forge to be independent of sierra version
 #### Removed
 
 - `--path-to-scarb-toml` optional flag that allowed to specify the path to the `Scarb.toml` file
+- `--deployed` flag from `account add` subcommand
 
 ## [0.18.0] - 2024-02-21
 

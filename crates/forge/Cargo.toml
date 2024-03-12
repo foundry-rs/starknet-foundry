@@ -10,9 +10,7 @@ anyhow.workspace = true
 blockifier.workspace = true
 camino.workspace = true
 include_dir.workspace = true
-indoc.workspace = true
 starknet_api.workspace = true
-tempfile.workspace = true
 rayon.workspace = true
 shared.workspace = true
 cheatnet = { path = "../cheatnet" }
@@ -45,13 +43,15 @@ rand.workspace = true
 scarb-metadata.workspace = true
 scarb-ui.workspace = true
 semver.workspace = true
-schemars = { version = "0.8.12", features = ["preserve_order"] }
+schemars.workspace = true
 cairo-vm.workspace = true
-ark-ff = "0.4.0-alpha.7"
-ark-std = "0.4.0"
-ark-secp256k1 = "0.4.0"
-ark-secp256r1 = "0.4.0"
-toml_edit = "0.22.6"
+ark-ff.workspace = true
+ark-std.workspace = true
+ark-secp256k1.workspace = true
+ark-secp256r1.workspace = true
+# openssl is being used, please do not remove it!
+openssl.workspace = true
+toml_edit.workspace = true
 flatten-serde-json.workspace = true
 smol_str.workspace = true
 tokio.workspace = true
@@ -68,10 +68,12 @@ path = "src/main.rs"
 [dev-dependencies]
 assert_fs.workspace = true
 snapbox.workspace = true
-criterion = { version = "0.5.1", features = ["html_reports"] }
+criterion.workspace = true
 test_utils = { path = "test_utils" }
-axum = "0.7.4"
-lazy_static = "1.4.0"
+axum.workspace = true
+lazy_static.workspace = true
+indoc.workspace = true
+tempfile.workspace = true
 
 [[bench]]
 name = "forge_bench"

@@ -1,7 +1,7 @@
 use crate::common::state::build_runtime_state;
 use crate::common::{call_contract, deploy_wrapper};
 use crate::{
-    assert_success,
+    common::assertions::assert_success,
     common::{
         deploy_contract, felt_selector_from_name, get_contracts, recover_data,
         state::create_cached_state,
@@ -28,7 +28,7 @@ fn check_nonce(
 
     let output = call_contract(state, runtime_state, contract_address, &write_nonce, &[]);
 
-    assert_success!(output, vec![]);
+    assert_success(output, &[]);
 
     let output = call_contract(state, runtime_state, contract_address, &read_nonce, &[]);
 

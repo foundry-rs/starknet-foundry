@@ -3,7 +3,6 @@ use crate::helpers::constants::STATE_FILE_VERSION;
 use crate::response::structs::{DeclareResponse, DeployResponse, InvokeResponse};
 use crate::state::hashing::generate_id;
 use anyhow::{anyhow, Context, Result};
-use cairo_felt::Felt252;
 use camino::Utf8PathBuf;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -110,9 +109,9 @@ pub fn load_or_create_state_file(path: &Utf8PathBuf) -> Result<ScriptTransaction
 #[must_use]
 pub fn generate_transaction_entry_with_id(
     tx_entry: ScriptTransactionEntry,
-    inputs: &[Felt252],
+    input_bytes: Vec<u8>,
 ) -> ScriptTransactionEntries {
-    let id = generate_id(tx_entry.name.as_str(), inputs);
+    let id = generate_id(tx_entry.name.as_str(), input_bytes);
     let transaction = HashMap::from([(id, tx_entry)]);
     ScriptTransactionEntries {
         transactions: transaction,
@@ -243,7 +242,7 @@ mod tests {
         let state_file_path =
             Utf8PathBuf::from_path_buf(tempdir.path().join("write_state_nofile.json")).unwrap();
 
-        let inputs = vec![Felt252::from(123), Felt252::from(456)];
+        let inputs = vec![123u8, 46u8];
         let transaction = ScriptTransactionEntry {
             name: "declare".to_string(),
             output: ScriptTransactionOutput::DeclareResponse(DeclareResponse {
@@ -255,7 +254,7 @@ mod tests {
             misc: None,
         };
 
-        let tx_entry = generate_transaction_entry_with_id(transaction.clone(), &inputs);
+        let tx_entry = generate_transaction_entry_with_id(transaction.clone(), inputs);
         write_txs_to_state_file(&state_file_path, tx_entry).unwrap();
         let content = fs::read_to_string(state_file_path).unwrap();
         let parsed_content = serde_json::from_str::<ScriptTransactionsSchema>(&content).unwrap();
@@ -280,7 +279,7 @@ mod tests {
         let state_file_path =
             Utf8PathBuf::from_path_buf(tempdir.path().join("write_state_append.json")).unwrap();
 
-        let inputs = vec![Felt252::from(123), Felt252::from(456)];
+        let inputs = vec![123u8, 45u8];
         let transaction1 = ScriptTransactionEntry {
             name: "declare".to_string(),
             output: ScriptTransactionOutput::DeclareResponse(DeclareResponse {
@@ -292,10 +291,10 @@ mod tests {
             misc: None,
         };
 
-        let tx1_entry = generate_transaction_entry_with_id(transaction1.clone(), &inputs);
+        let tx1_entry = generate_transaction_entry_with_id(transaction1.clone(), inputs);
         write_txs_to_state_file(&state_file_path, tx1_entry).unwrap();
 
-        let inputs = vec![Felt252::from(789), Felt252::from(101)];
+        let inputs = vec![101u8, 22u8];
         let transaction2 = ScriptTransactionEntry {
             name: "invoke".to_string(),
             output: ScriptTransactionOutput::InvokeResponse(InvokeResponse {
@@ -306,7 +305,7 @@ mod tests {
             misc: None,
         };
 
-        let tx2_entry = generate_transaction_entry_with_id(transaction2.clone(), &inputs);
+        let tx2_entry = generate_transaction_entry_with_id(transaction2.clone(), inputs);
         write_txs_to_state_file(&state_file_path, tx2_entry).unwrap();
 
         let content = fs::read_to_string(state_file_path).unwrap();
@@ -326,7 +325,7 @@ mod tests {
                 .transactions
                 .clone()
                 .unwrap()
-                .get("53c070523bceb0daaa922824b4e369b666dab9d73e49a0713bff184ac3c840a6")
+                .get("73a528dc325194630de256f187a49c8c3984cdeda6eacc0bad31053cb23715e2")
                 .unwrap(),
             &transaction1
         );
@@ -335,7 +334,7 @@ mod tests {
                 .transactions
                 .clone()
                 .unwrap()
-                .get("139211b98a0378e6e49f0d4fbcdfd2e4d7db8e20b3c387cb31589377e787a2cb")
+                .get("d9b7c5fd12456cbad0a707f3a7800b17f0ad329c9795b4d392a053ef29caa947")
                 .unwrap(),
             &transaction2
         );
@@ -351,7 +350,7 @@ mod tests {
             transactions: None,
         };
 
-        let inputs = vec![Felt252::from(123), Felt252::from(456)];
+        let inputs = vec![123u8, 45u8];
         let transaction1 = ScriptTransactionEntry {
             name: "declare".to_string(),
             output: ScriptTransactionOutput::DeclareResponse(DeclareResponse {
@@ -362,10 +361,10 @@ mod tests {
             timestamp: 2,
             misc: None,
         };
-        let tx1_entry = generate_transaction_entry_with_id(transaction1.clone(), &inputs);
+        let tx1_entry = generate_transaction_entry_with_id(transaction1.clone(), inputs);
         state.append_transaction_entries(tx1_entry);
 
-        let inputs = vec![Felt252::from(789), Felt252::from(101)];
+        let inputs = vec![13u8, 15u8];
         let transaction2 = ScriptTransactionEntry {
             name: "invoke".to_string(),
             output: ScriptTransactionOutput::InvokeResponse(InvokeResponse {
@@ -375,7 +374,7 @@ mod tests {
             timestamp: 3,
             misc: None,
         };
-        let tx2_entry = generate_transaction_entry_with_id(transaction2.clone(), &inputs);
+        let tx2_entry = generate_transaction_entry_with_id(transaction2.clone(), inputs);
         state.append_transaction_entries(tx2_entry);
 
         write_txs_to_state_file(&state_file_path, state.transactions.unwrap()).unwrap();
@@ -397,7 +396,7 @@ mod tests {
                 .transactions
                 .clone()
                 .unwrap()
-                .get("53c070523bceb0daaa922824b4e369b666dab9d73e49a0713bff184ac3c840a6")
+                .get("73a528dc325194630de256f187a49c8c3984cdeda6eacc0bad31053cb23715e2")
                 .unwrap(),
             &transaction1
         );
@@ -406,7 +405,7 @@ mod tests {
                 .transactions
                 .clone()
                 .unwrap()
-                .get("139211b98a0378e6e49f0d4fbcdfd2e4d7db8e20b3c387cb31589377e787a2cb")
+                .get("7b99f490728861b6701d95268e612dd4d0b5bb1f3a9e2dbbe9cc27f3eccda234")
                 .unwrap(),
             &transaction2
         );

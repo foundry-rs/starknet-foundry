@@ -1,6 +1,6 @@
 use indoc::indoc;
 use test_utils::running_tests::run_test_case;
-use test_utils::{assert_passed, test_case};
+use test_utils::{runner::assert_passed, test_case};
 
 #[test]
 fn test_stark_sign_msg_hash_range() {
@@ -37,7 +37,7 @@ fn test_stark_sign_msg_hash_range() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -66,7 +66,7 @@ fn test_stark_curve() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -97,7 +97,7 @@ fn test_secp256k1_curve() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -128,7 +128,7 @@ fn test_secp256r1_curve() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -170,7 +170,7 @@ fn test_secp256_curves() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -214,7 +214,7 @@ fn test_stark_secp256k1_curves() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -273,5 +273,5 @@ fn test_invalid_secret_key() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }

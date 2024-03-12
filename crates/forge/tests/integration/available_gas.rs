@@ -1,6 +1,6 @@
 use indoc::indoc;
+use test_utils::runner::{assert_case_output_contains, assert_failed, assert_passed};
 use test_utils::running_tests::run_test_case;
-use test_utils::{assert_case_output_contains, assert_failed, assert_passed};
 
 #[test]
 fn correct_available_gas() {
@@ -16,7 +16,7 @@ fn correct_available_gas() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -33,11 +33,11 @@ fn available_gas_exceeded() {
 
     let result = run_test_case(&test);
 
-    assert_failed!(result);
-    assert_case_output_contains!(
-        result,
+    assert_failed(&result);
+    assert_case_output_contains(
+        &result,
         "keccak_cost",
-        "Test cost exceeded the available gas. Consumed gas: ~6"
+        "Test cost exceeded the available gas. Consumed gas: ~6",
     );
 }
 
@@ -55,5 +55,5 @@ fn available_gas_fuzzing() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }

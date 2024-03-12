@@ -3,7 +3,7 @@ mod tests_short_string {
     use cairo_felt::Felt252;
     use conversions::{FromConv, TryFromConv};
     use starknet::core::types::FieldElement;
-    use starknet_api::core::{ClassHash, ContractAddress, Nonce};
+    use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, Nonce};
     use starknet_api::hash::{StarkFelt, StarkHash};
 
     #[test]
@@ -29,6 +29,10 @@ mod tests_short_string {
         assert_eq!(
             short_string,
             String::from_(Nonce::try_from_(short_string.clone()).unwrap())
+        );
+        assert_eq!(
+            short_string,
+            String::from_(EntryPointSelector::try_from_(short_string.clone()).unwrap())
         );
         assert_eq!(
             short_string,
@@ -66,6 +70,10 @@ mod tests_short_string {
         );
         assert_eq!(
             short_string,
+            String::from_(EntryPointSelector::try_from_(short_string.clone()).unwrap())
+        );
+        assert_eq!(
+            short_string,
             String::from_(StarkFelt::try_from_(short_string.clone()).unwrap())
         );
         assert_eq!(
@@ -94,6 +102,10 @@ mod tests_short_string {
         assert_eq!(
             short_string,
             String::from_(Nonce::try_from_(short_string.clone()).unwrap())
+        );
+        assert_eq!(
+            short_string,
+            String::from_(EntryPointSelector::try_from_(short_string.clone()).unwrap())
         );
         assert_eq!(
             short_string,

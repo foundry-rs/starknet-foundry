@@ -14,6 +14,7 @@ use blockifier::state::cached_state::CachedState;
 use blockifier::state::errors::StateError;
 use blockifier::transaction::objects::{GasVector, HasRelatedFeeType, ResourcesMapping};
 use blockifier::utils::{u128_from_usize, usize_from_u128};
+use blockifier::versioned_constants::VersionedConstants;
 use cairo_vm::vm::runners::builtin_runner::SEGMENT_ARENA_BUILTIN_NAME;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
@@ -25,17 +26,18 @@ pub fn calculate_used_gas(
     state: &mut CachedState<ExtendedStateReader>,
     mut resources: UsedResources,
 ) -> Result<u128, StateError> {
-    add_syscall_resources(transaction_context, &mut resources);
+    let versioned_constants = transaction_context.block_context.versioned_constants();
+    add_syscall_resources(versioned_constants, &mut resources);
 
-    let l1_data_cost = get_l1_data_cost(transaction_context, state)?;
     let messaging_gas_vector = get_messages_costs(
         &resources.l2_to_l1_payloads_lengths,
         &resources.l1_handler_payloads_lengths,
     );
 
+    let l1_data_cost = get_l1_data_cost(transaction_context, state)?;
     let l1_and_vm_costs = get_l1_and_vm_costs(
         l1_data_cost,
-        transaction_context,
+        versioned_constants,
         resources.execution_resources,
     );
 
@@ -64,6 +66,8 @@ fn get_events_cost(events: &[EventContent], transaction_context: &TransactionCon
 }
 
 // Put together from a few blockifier functions
+// In a transaction (blockifier), there's only one l1_handler possible so we have to calculate those costs manually
+// (it's not the case in a scope of the test)
 fn get_messages_costs(
     l2_to_l1_payloads_lengths: &[usize],
     l1_handler_payloads_lengths: &[usize],
@@ -114,18 +118,16 @@ fn get_messages_costs(
 
 fn get_l1_and_vm_costs(
     l1_data_costs: GasVector,
-    transaction_context: &TransactionContext,
+    versioned_constants: &VersionedConstants,
     execution_resources: ExecutionResources,
 ) -> GasVector {
-    let versioned_constants = transaction_context.block_context.versioned_constants();
     let resources_mapping = get_resources_mapping(l1_data_costs, execution_resources);
 
     calculate_tx_gas_vector(&resources_mapping, versioned_constants)
         .expect("Could not calculate gas")
 }
 
-fn add_syscall_resources(transaction_context: &TransactionContext, resources: &mut UsedResources) {
-    let versioned_constants = transaction_context.block_context.versioned_constants();
+fn add_syscall_resources(versioned_constants: &VersionedConstants, resources: &mut UsedResources) {
     let mut total_vm_usage = resources.execution_resources.filter_unused_builtins();
     total_vm_usage += &versioned_constants
         .get_additional_os_syscall_resources(&resources.syscall_counter)

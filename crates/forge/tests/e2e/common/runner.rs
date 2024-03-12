@@ -9,12 +9,14 @@ use std::{env, fs};
 use test_utils::tempdir_with_tool_versions;
 use toml_edit::{value, Document};
 
-pub(crate) fn runner() -> SnapboxCommand {
+pub(crate) fn runner(temp_dir: &TempDir) -> SnapboxCommand {
     SnapboxCommand::new(cargo_bin!("snforge"))
+        .env("SCARB_CACHE", temp_dir.path())
+        .current_dir(temp_dir)
 }
 
-pub(crate) fn test_runner() -> SnapboxCommand {
-    runner().arg("test")
+pub(crate) fn test_runner(temp_dir: &TempDir) -> SnapboxCommand {
+    runner(temp_dir).arg("test")
 }
 
 pub(crate) static BASE_FILE_PATTERNS: &[&str] = &["**/*.cairo", "**/*.toml"];
