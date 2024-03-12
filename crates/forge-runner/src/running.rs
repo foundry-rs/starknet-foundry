@@ -9,7 +9,7 @@ use crate::compiled_runnable::ValidatedForkConfig;
 use crate::contracts_data::ContractsData;
 use crate::gas::calculate_used_gas;
 use crate::test_case_summary::{Single, TestCaseSummary};
-use crate::{ExecutionDataToSave, RunnerConfig, RunnerParams, TestCaseRunnable, CACHE_DIR};
+use crate::{RunnerConfig, RunnerParams, TestCaseRunnable, CACHE_DIR};
 use anyhow::{bail, ensure, Result};
 use blockifier::execution::entry_point::EntryPointExecutionContext;
 use blockifier::execution::execution_utils::ReadOnlySegments;
@@ -218,10 +218,8 @@ pub fn run_test_case(
         block_info,
         ..Default::default()
     };
-    cheatnet_state.trace_data.collect_vm_trace = match runner_config.execution_data_to_save {
-        ExecutionDataToSave::Trace | ExecutionDataToSave::TraceAndProfile => true,
-        ExecutionDataToSave::None => false,
-    };
+    cheatnet_state.trace_data.collect_vm_trace =
+        runner_config.execution_data_to_save.is_vm_trace_needed();
 
     let cheatable_runtime = ExtendedRuntime {
         extension: CheatableStarknetRuntimeExtension {

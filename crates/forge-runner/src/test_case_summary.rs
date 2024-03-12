@@ -13,7 +13,7 @@ use shared::utils::build_readable_text;
 use std::cell::RefCell;
 use std::option::Option;
 use std::rc::Rc;
-use trace_data::CallTrace;
+use trace_data::CallTrace as ProfilerCallTrace;
 
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct GasStatistics {
@@ -76,7 +76,7 @@ pub struct Single;
 impl TestType for Single {
     type GasInfo = u128;
     type TestStatistics = ();
-    type TraceData = CallTrace;
+    type TraceData = Option<ProfilerCallTrace>;
 }
 
 /// Summary of running a single test case

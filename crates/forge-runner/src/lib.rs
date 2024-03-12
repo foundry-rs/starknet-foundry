@@ -52,12 +52,22 @@ pub const BUILTINS: [&str; 8] = [
     "System",
 ];
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub enum ExecutionDataToSave {
     None,
     Trace,
     /// Profile data requires saved trace data
     TraceAndProfile,
+}
+
+impl ExecutionDataToSave {
+    #[must_use]
+    pub fn is_vm_trace_needed(self) -> bool {
+        match self {
+            ExecutionDataToSave::Trace | ExecutionDataToSave::TraceAndProfile => true,
+            ExecutionDataToSave::None => false,
+        }
+    }
 }
 
 impl ExecutionDataToSave {
@@ -211,7 +221,7 @@ pub async fn run_tests_from_crate(
         let result = task??;
 
         print_test_result(&result, &runner_config);
-        maybe_save_execution_data(&result, &runner_config.execution_data_to_save)?;
+        maybe_save_execution_data(&result, runner_config.execution_data_to_save)?;
 
         if result.is_failed() && runner_config.exit_first {
             interrupted = true;
@@ -235,7 +245,7 @@ pub async fn run_tests_from_crate(
 
 fn maybe_save_execution_data(
     result: &AnyTestCaseSummary,
-    execution_data_to_save: &ExecutionDataToSave,
+    execution_data_to_save: ExecutionDataToSave,
 ) -> Result<()> {
     if let AnyTestCaseSummary::Single(TestCaseSummary::Passed {
         name, trace_data, ..
@@ -243,10 +253,20 @@ fn maybe_save_execution_data(
     {
         match execution_data_to_save {
             ExecutionDataToSave::Trace => {
-                save_trace_data(name, trace_data)?;
+                save_trace_data(
+                    name,
+                    trace_data
+                        .as_ref()
+                        .expect("missing trace data - probably vm trace was not collected before"),
+                )?;
             }
             ExecutionDataToSave::TraceAndProfile => {
-                let trace_path = save_trace_data(name, trace_data)?;
+                let trace_path = save_trace_data(
+                    name,
+                    trace_data
+                        .as_ref()
+                        .expect("missing trace data - probably vm trace was not collected before"),
+                )?;
                 run_profiler(name, &trace_path)?;
             }
             ExecutionDataToSave::None => {}

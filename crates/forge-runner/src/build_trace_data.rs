@@ -32,14 +32,20 @@ pub const TRACE_DIR: &str = ".snfoundry_trace";
 pub const TEST_CODE_CONTRACT_NAME: &str = "SNFORGE_TEST_CODE";
 pub const TEST_CODE_FUNCTION_NAME: &str = "SNFORGE_TEST_CODE_FUNCTION";
 
-#[must_use]
 pub fn build_profiler_call_trace(
     value: &Rc<RefCell<CallTrace>>,
     contracts_data: &ContractsData,
-) -> ProfilerCallTrace {
+) -> Option<ProfilerCallTrace> {
     let value = value.borrow();
 
-    ProfilerCallTrace {
+    let vm_trace = value
+        .vm_trace
+        .as_ref()?
+        .iter()
+        .map(build_profiler_trace_entry)
+        .collect();
+
+    Some(ProfilerCallTrace {
         entry_point: build_profiler_call_entry_point(value.entry_point.clone(), contracts_data),
         cumulative_resources: build_profiler_execution_resources(
             value.used_execution_resources.clone(),
@@ -49,16 +55,13 @@ pub fn build_profiler_call_trace(
         nested_calls: value
             .nested_calls
             .iter()
-            .map(|c| build_profiler_call_trace(c, contracts_data))
+            .map(|c| {
+                build_profiler_call_trace(c, contracts_data)
+                    .expect("some call traces had vm trace while others didn't")
+            })
             .collect(),
-        vm_trace: value
-            .vm_trace
-            .as_ref()
-            .expect("vm trace in trace is missing")
-            .iter()
-            .map(build_profiler_trace_entry)
-            .collect(),
-    }
+        vm_trace,
+    })
 }
 
 #[must_use]
