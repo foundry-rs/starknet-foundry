@@ -1186,7 +1186,6 @@ dependencies = [
  "fs2",
  "glob",
  "indoc",
- "itertools 0.11.0",
  "k256",
  "num-bigint",
  "num-traits 0.2.18",

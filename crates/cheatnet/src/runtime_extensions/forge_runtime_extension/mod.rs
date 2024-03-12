@@ -59,8 +59,6 @@ pub struct ForgeExtension<'a> {
 trait BufferReaderExt {
     fn read_cheat_target(&mut self) -> BufferReadResult<CheatTarget>;
 }
-use itertools::chain;
-use starknet_api::transaction::EventContent;
 
 impl BufferReaderExt for BufferReader<'_> {
     fn read_cheat_target(&mut self) -> BufferReadResult<CheatTarget> {
@@ -876,15 +874,14 @@ pub fn get_all_used_resources(runtime: ForgeRuntime) -> UsedResources {
     let top_call_syscalls = top_call.borrow().used_syscalls.clone();
     let events = runtime_call_info
         .into_iter() // This method iterates over inner calls as well
-        .map(|call_info| {
+        .flat_map(|call_info| {
             call_info
                 .execution
                 .events
                 .iter()
                 .map(|evt| evt.event.clone())
-                .collect::<Vec<EventContent>>()
         })
-        .fold(vec![], |a, b| chain!(a, b).collect());
+        .collect();
 
     UsedResources {
         events,
