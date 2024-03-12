@@ -10,4 +10,4 @@ An address with no contract can be mocked as well. Mock can be canceled with [`s
 - `contract_address` - target contract address
 - `function_selector` - selector of the function in a contract at the `contract_address` that will be mocked
 - `ret_data` - data to return by the function `function_selector`
-- `span` - instance of [`CheatSpan`](../cheat_span.md) specifying the duration of mock
+- `span` - instance of [`CheatSpan`](../cheat_span.md) specifying the span of mock
