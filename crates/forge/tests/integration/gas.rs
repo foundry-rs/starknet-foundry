@@ -704,9 +704,9 @@ fn events_cost() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
     // 2991 steps and memholes * 0.0025 ~= 8
     // 6 gas for 50 event values
     // ~13 gas for 50 event keys
-    assert_gas!(result, "events_cost", 8 + 6 + 13);
+    assert_gas(&result, "events_cost", 8 + 6 + 13);
 }
