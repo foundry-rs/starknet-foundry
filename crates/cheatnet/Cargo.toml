@@ -39,6 +39,7 @@ runtime = { path = "../runtime" }
 universal-sierra-compiler-api = { path = "../universal-sierra-compiler-api" }
 k256.workspace = true
 p256.workspace = true
+itertools.workspace = true
 
 [dev-dependencies]
 ctor.workspace = true

@@ -710,3 +710,41 @@ fn events_cost() {
     // ~13 gas for 50 event keys
     assert_gas(&result, "events_cost", 8 + 6 + 13);
 }
+
+#[test]
+fn events_contract_cost() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use snforge_std::{ declare, ContractClassTrait };
+
+            #[starknet::interface]
+            trait IGasChecker<TContractState> {
+                fn emit_event(ref self: TContractState, n_keys_and_vals: u32);
+            }
+
+            #[test]
+            fn event_emission_cost() {
+                let contract_address = declare("GasChecker").deploy(@array![]).unwrap();
+                let dispatcher = IGasCheckerDispatcher { contract_address };
+
+                dispatcher.emit_event(50);
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "GasChecker".to_string(),
+            Path::new("tests/data/contracts/gas_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test);
+
+    assert_passed(&result);
+    // 13 = gas cost of steps
+    // 1101 = gas cost of onchain data (deploy cost)
+    // 6 gas for 50 event values
+    // ~13 gas for 50 event keys
+    assert_gas(&result, "event_emission_cost", 13 + 1101 + 6 + 13);
+}

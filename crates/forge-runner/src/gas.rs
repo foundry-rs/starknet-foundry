@@ -41,21 +41,24 @@ pub fn calculate_used_gas(
         resources.execution_resources,
     );
 
-    let events_costs = get_events_cost(&resources.events, transaction_context);
+    let events_costs = get_events_cost(resources.events, transaction_context);
 
     let gas = l1_and_vm_costs + messaging_gas_vector + events_costs;
 
     Ok(gas.l1_gas)
 }
 
-fn get_events_cost(events: &[EventContent], transaction_context: &TransactionContext) -> GasVector {
+fn get_events_cost(
+    events: Vec<EventContent>,
+    transaction_context: &TransactionContext,
+) -> GasVector {
     let versioned_constants = transaction_context.block_context.versioned_constants();
 
     let ordered_events: Vec<OrderedEvent> = events
-        .iter()
+        .into_iter()
         .map(|content| OrderedEvent {
             order: 0, // Order does not matter here
-            event: content.clone(),
+            event: content,
         })
         .collect();
     let miligas = get_events_milligas_cost(&ordered_events, versioned_constants);
