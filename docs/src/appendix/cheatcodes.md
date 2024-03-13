@@ -20,11 +20,11 @@
 - [`load`](cheatcodes/load.md) - loads values directly from targeted contact's storage
 
 > ℹ️ **Info**
-> To use cheatcodes you need to add `snforge_std` package as a dependency in
-> your [`Scarb.toml`](https://docs.swmansion.com/scarb/docs/guides/dependencies.html#adding-a-dependency)
+> To use cheatcodes you need to add `snforge_std` package as a development dependency in
+> your [`Scarb.toml`](https://docs.swmansion.com/scarb/docs/guides/dependencies.html#development-dependencies)
 > using appropriate release tag.
 >
 > ```toml
-> [dependencies]
+> [dev-dependencies]
 > snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.12.0" }
 > ```
