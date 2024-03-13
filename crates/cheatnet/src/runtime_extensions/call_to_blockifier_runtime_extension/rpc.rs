@@ -18,6 +18,7 @@ use cairo_lang_runner::casm_run::format_next_item;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use conversions::{byte_array::ByteArray, IntoConv};
 use serde::{Deserialize, Serialize};
+use starknet_api::transaction::EventContent;
 use starknet_api::{
     core::{ClassHash, ContractAddress},
     deprecated_contract_class::EntryPointType,
@@ -29,6 +30,7 @@ pub struct UsedResources {
     pub execution_resources: ExecutionResources,
     pub l2_to_l1_payload_lengths: Vec<usize>,
     pub l1_handler_payload_lengths: Vec<usize>,
+    pub events: Vec<EventContent>,
 }
 
 /// Enum representing possible call execution result, along with the data

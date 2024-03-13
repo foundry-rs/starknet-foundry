@@ -21,7 +21,7 @@ fn should_allow_less_than_default() {
 
                 Collected 4 test(s) from steps package
                 Running 4 test(s) from src/
-                [FAIL] steps::tests::steps_3000017
+                [FAIL] steps::tests::steps_4000006
                 
                 Failure data:
                     Could not reach the end of the program. RunResources has no remaining steps.
@@ -31,7 +31,7 @@ fn should_allow_less_than_default() {
                 Failure data:
                     Could not reach the end of the program. RunResources has no remaining steps.
                 
-                [FAIL] steps::tests::steps_2999998
+                [FAIL] steps::tests::steps_3999987
                 
                 Failure data:
                     Could not reach the end of the program. RunResources has no remaining steps.
@@ -44,9 +44,9 @@ fn should_allow_less_than_default() {
                 Tests: 0 passed, 4 failed, 0 skipped, 0 ignored, 0 filtered out
                 
                 Failures:
-                    steps::tests::steps_3000017
+                    steps::tests::steps_4000006
                     steps::tests::steps_5700031
-                    steps::tests::steps_2999998
+                    steps::tests::steps_3999987
                     steps::tests::steps_570031
             "
         ),
@@ -54,7 +54,7 @@ fn should_allow_less_than_default() {
 }
 #[test]
 // 4_000_000 is blockifier limit we want to omit
-fn should_allow_more_than_4kk() {
+fn should_allow_more_than_4m() {
     let temp = setup_package("steps");
 
     let output = test_runner(&temp)
@@ -73,8 +73,8 @@ fn should_allow_more_than_4kk() {
                 Collected 4 test(s) from steps package
                 Running 4 test(s) from src/
                 [PASS] steps::tests::steps_570031 [..]
-                [PASS] steps::tests::steps_3000017 [..]
-                [PASS] steps::tests::steps_2999998 [..]
+                [PASS] steps::tests::steps_4000006 [..]
+                [PASS] steps::tests::steps_3999987 [..]
                 [PASS] steps::tests::steps_5700031 [..]
                 Tests: 4 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
             "
@@ -82,7 +82,7 @@ fn should_allow_more_than_4kk() {
     );
 }
 #[test]
-fn should_default_to_3kk() {
+fn should_default_to_4m() {
     let temp = setup_package("steps");
 
     let output = test_runner(&temp).assert().code(1);
@@ -98,7 +98,7 @@ fn should_default_to_3kk() {
                 Collected 4 test(s) from steps package
                 Running 4 test(s) from src/
                 [PASS] steps::tests::steps_570031 [..]
-                [FAIL] steps::tests::steps_3000017
+                [FAIL] steps::tests::steps_4000006
                 
                 Failure data:
                     Could not reach the end of the program. RunResources has no remaining steps.
@@ -108,11 +108,11 @@ fn should_default_to_3kk() {
                 Failure data:
                     Could not reach the end of the program. RunResources has no remaining steps.
                 
-                [PASS] steps::tests::steps_2999998 [..]
+                [PASS] steps::tests::steps_3999987 [..]
                 Tests: 2 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
                 
                 Failures:
-                    steps::tests::steps_3000017
+                    steps::tests::steps_4000006
                     steps::tests::steps_5700031
             "
         ),

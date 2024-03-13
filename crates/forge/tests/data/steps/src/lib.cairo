@@ -1,3 +1,4 @@
+// 19 steps per iteration
 #[cfg(test)]
 mod tests {
     #[test]
@@ -32,11 +33,11 @@ mod tests {
     }
 
     #[test]
-    fn steps_2999998() {
+    fn steps_3999987() {
         let mut i = 0;
 
         loop {
-            if i == 157_893 {
+            if i == 210_524 {
                 break;
             }
 
@@ -47,11 +48,11 @@ mod tests {
     }
 
     #[test]
-    fn steps_3000017() {
+    fn steps_4000006() {
         let mut i = 0;
 
         loop {
-            if i == 157_894 {
+            if i == 210_525 {
                 break;
             }
 

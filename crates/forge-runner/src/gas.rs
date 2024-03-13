@@ -3,10 +3,11 @@ use std::collections::HashMap;
 
 use crate::test_case_summary::{Single, TestCaseSummary};
 use blockifier::context::TransactionContext;
+use blockifier::execution::call_info::OrderedEvent;
 use blockifier::fee::eth_gas_constants;
 use blockifier::fee::fee_utils::calculate_tx_gas_vector;
 use blockifier::fee::gas_usage::{
-    get_consumed_message_to_l2_emissions_cost, get_da_gas_cost,
+    get_consumed_message_to_l2_emissions_cost, get_da_gas_cost, get_events_milligas_cost,
     get_log_message_to_l1_emissions_cost,
 };
 use blockifier::state::cached_state::CachedState;
@@ -18,6 +19,7 @@ use cairo_vm::vm::runners::builtin_runner::SEGMENT_ARENA_BUILTIN_NAME;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::state::ExtendedStateReader;
+use starknet_api::transaction::EventContent;
 
 pub fn calculate_used_gas(
     transaction_context: &TransactionContext,
@@ -39,9 +41,31 @@ pub fn calculate_used_gas(
         resources.execution_resources,
     );
 
-    let gas = l1_and_vm_costs + messaging_gas_vector;
+    let events_costs = get_events_cost(resources.events, transaction_context);
+
+    let gas = l1_and_vm_costs + messaging_gas_vector + events_costs;
 
     Ok(gas.l1_gas)
+}
+
+fn get_events_cost(
+    events: Vec<EventContent>,
+    transaction_context: &TransactionContext,
+) -> GasVector {
+    let versioned_constants = transaction_context.block_context.versioned_constants();
+
+    let ordered_events: Vec<OrderedEvent> = events
+        .into_iter()
+        .map(|content| OrderedEvent {
+            order: 0, // Order does not matter here
+            event: content,
+        })
+        .collect();
+    let milligas = get_events_milligas_cost(&ordered_events, versioned_constants);
+    GasVector {
+        l1_gas: milligas / 1000_u128,
+        l1_data_gas: 0_u128,
+    }
 }
 
 // Put together from a few blockifier functions
@@ -71,6 +95,9 @@ fn get_messages_costs(
             get_consumed_message_to_l2_emissions_cost(Some(*l1_handler_payload_length))
         })
         .sum();
+
+    let log_msg_to_l1_event_emission_cost =
+        get_log_message_to_l1_emissions_cost(l2_to_l1_payloads_lengths);
     let starknet_gas_usage = GasVector {
         l1_gas: u128_from_usize(
             message_segment_length * eth_gas_constants::GAS_PER_MEMORY_WORD
@@ -79,7 +106,7 @@ fn get_messages_costs(
         )
         .expect("Could not convert starknet gas usage from usize to u128."),
         l1_data_gas: 0,
-    } + get_log_message_to_l1_emissions_cost(l2_to_l1_payloads_lengths)
+    } + log_msg_to_l1_event_emission_cost
         + l1_handlers_emission_costs;
 
     let sharp_gas_usage = GasVector {
@@ -130,8 +157,6 @@ fn get_l1_data_cost(
     );
 
     let l1_data_gas_cost = get_da_gas_cost(state_changes_count, false);
-    // TODO (1796): This should probably be added to the total cost estimate
-    // + get_tx_events_gas_cost(call_infos, versioned_constants);
     Ok(l1_data_gas_cost)
 }
 
