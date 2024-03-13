@@ -31,7 +31,7 @@ use blockifier::execution::deprecated_syscalls::hint_processor::SyscallCounter;
 use cairo_felt::Felt252;
 use conversions::{FromConv};
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{AddressOrClassHash, CallResult};
-use crate::runtime_extensions::common::{sub_syscall_counters, sum_syscall_counters};
+use crate::runtime_extensions::common::sum_syscall_counters;
 
 // blockifier/src/execution/entry_point.rs:180 (CallEntryPoint::execute)
 #[allow(clippy::too_many_lines)]
@@ -306,6 +306,15 @@ fn mocked_call_info(call: CallEntryPoint, ret_data: Vec<StarkFelt>) -> CallInfo 
     }
 }
 
+fn aggregate_nested_syscall_counters(trace: &Rc<RefCell<CallTrace>>) -> SyscallCounter {
+    let mut result = SyscallCounter::new();
+    for nested_call in &trace.borrow().nested_calls {
+        let sub_trace_counter = aggregate_syscall_counters(nested_call);
+        result = sum_syscall_counters(result, &sub_trace_counter);
+    }
+    result
+}
+
 fn aggregate_syscall_counters(trace: &Rc<RefCell<CallTrace>>) -> SyscallCounter {
     let mut result = trace.borrow().used_syscalls.clone();
     for nested_call in &trace.borrow().nested_calls {
@@ -313,10 +322,4 @@ fn aggregate_syscall_counters(trace: &Rc<RefCell<CallTrace>>) -> SyscallCounter 
         result = sum_syscall_counters(result, &sub_trace_counter);
     }
     result
-}
-
-fn aggregate_nested_syscall_counters(trace: &Rc<RefCell<CallTrace>>) -> SyscallCounter {
-    let whole_trace_syscall_counter = aggregate_syscall_counters(trace);
-
-    sub_syscall_counters(whole_trace_syscall_counter, &trace.borrow().used_syscalls)
 }
