@@ -10,6 +10,8 @@ test = "snforge"
 
 [workspace.dependencies]
 starknet = "2.4.0"
+
+[workspace.dev-dependencies]
 snforge_std = { path = "../../../../../snforge_std" }
 
 [workspace.package]
@@ -26,9 +28,11 @@ test.workspace = true
 snforge.workspace = true
 
 [dependencies]
-starknet.workspace = true
 fibonacci = { path = "crates/fibonacci" }
 addition = { path = "crates/addition" }
+
+[dev-dependencies]
+starknet.workspace = true
 
 [[target.starknet-contract]]
 sierra = true

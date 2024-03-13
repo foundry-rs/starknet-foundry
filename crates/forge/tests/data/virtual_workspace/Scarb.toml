@@ -11,6 +11,8 @@ exit_first = true
 
 [workspace.dependencies]
 starknet = "2.4.0"
+
+[workspace.dev-dependencies]
 snforge_std = { path = "../../../../../snforge_std" }
 
 [workspace.package]
