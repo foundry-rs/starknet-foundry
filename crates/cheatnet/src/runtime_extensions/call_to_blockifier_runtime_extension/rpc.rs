@@ -154,10 +154,7 @@ impl CallResult {
     pub fn from_success(call_info: &CallInfo) -> Self {
         let raw_return_data = &call_info.execution.retdata.0;
 
-        let return_data = raw_return_data
-            .iter()
-            .map(|data| Felt252::from_bytes_be(data.bytes()))
-            .collect();
+        let return_data = raw_return_data.iter().map(|data| (*data).into_()).collect();
 
         CallResult::Success {
             ret_data: return_data,
