@@ -54,7 +54,7 @@ fn should_allow_less_than_default() {
 }
 #[test]
 // 4_000_000 is blockifier limit we want to omit
-fn should_allow_more_than_4kk() {
+fn should_allow_more_than_4m() {
     let temp = setup_package("steps");
 
     let output = test_runner(&temp)
@@ -82,7 +82,7 @@ fn should_allow_more_than_4kk() {
     );
 }
 #[test]
-fn should_default_to_4kk() {
+fn should_default_to_4m() {
     let temp = setup_package("steps");
 
     let output = test_runner(&temp).assert().code(1);
