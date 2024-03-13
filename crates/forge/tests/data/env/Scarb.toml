@@ -3,4 +3,6 @@ name = "env"
 version = "0.1.0"
 
 [dependencies]
+
+[dev-dependencies]
 snforge_std = { path = "../../../../../snforge_std" }
