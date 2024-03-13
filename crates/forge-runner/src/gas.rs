@@ -30,8 +30,8 @@ pub fn calculate_used_gas(
     add_syscall_resources(versioned_constants, &mut resources);
 
     let messaging_gas_vector = get_messages_costs(
-        &resources.l2_to_l1_payloads_lengths,
-        &resources.l1_handler_payloads_lengths,
+        &resources.l2_to_l1_payload_lengths,
+        &resources.l1_handler_payload_lengths,
     );
 
     let l1_data_cost = get_l1_data_cost(transaction_context, state)?;

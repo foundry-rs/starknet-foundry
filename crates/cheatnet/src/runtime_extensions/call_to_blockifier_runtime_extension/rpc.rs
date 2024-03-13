@@ -29,8 +29,8 @@ pub struct UsedResources {
     pub syscall_counter: SyscallCounter,
     pub execution_resources: ExecutionResources,
     pub events: Vec<EventContent>,
-    pub l2_to_l1_payloads_lengths: Vec<usize>,
-    pub l1_handler_payloads_lengths: Vec<usize>,
+    pub l2_to_l1_payload_lengths: Vec<usize>,
+    pub l1_handler_payload_lengths: Vec<usize>,
 }
 
 /// Enum representing possible call execution result, along with the data
@@ -156,10 +156,7 @@ impl CallResult {
     pub fn from_success(call_info: &CallInfo) -> Self {
         let raw_return_data = &call_info.execution.retdata.0;
 
-        let return_data = raw_return_data
-            .iter()
-            .map(|data| Felt252::from_bytes_be(data.bytes()))
-            .collect();
+        let return_data = raw_return_data.iter().map(|data| (*data).into_()).collect();
 
         CallResult::Success {
             ret_data: return_data,
