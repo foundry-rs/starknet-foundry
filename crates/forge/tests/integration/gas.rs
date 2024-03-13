@@ -569,7 +569,7 @@ fn l1_message_cost() {
     let result = run_test_case(&test);
 
     assert_passed(&result);
-    // 12 = gas cost of steps
+    // 11 = gas cost of steps
     // 1101 = gas cost of deployment
     // 29524 = gas cost of onchain data
     assert_gas(&result, "l1_message_cost", 11 + 1101 + 29524);
@@ -638,7 +638,7 @@ fn l1_message_cost_for_proxy() {
     let result = run_test_case(&test);
 
     assert_passed(&result);
-    // 22 = gas cost of steps
+    // 21 = gas cost of steps
     // 2442 = gas cost of l1 data (deployments - discounts)
     // 29524 = gas cost of message
     assert_gas(&result, "l1_message_cost_for_proxy", 21 + 2442 + 29524);

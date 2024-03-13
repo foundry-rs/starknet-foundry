@@ -19,6 +19,7 @@ use once_cell::sync::Lazy;
 use starknet_api::block::{BlockNumber, BlockTimestamp};
 use starknet_api::transaction::{Resource, ResourceBounds, ResourceBoundsMapping};
 use starknet_api::{
+    contract_address,
     core::{ChainId, ContractAddress, Nonce, PatriciaKey},
     hash::{StarkFelt, StarkHash},
     patricia_key,
@@ -43,8 +44,8 @@ pub fn build_block_context(block_info: &BlockInfo) -> BlockContext {
         &ChainInfo {
             chain_id: ChainId("SN_GOERLI".to_string()),
             fee_token_addresses: FeeTokenAddresses {
-                strk_fee_token_address: ContractAddress(patricia_key!(ERC20_CONTRACT_ADDRESS)),
-                eth_fee_token_address: ContractAddress(patricia_key!(ERC20_CONTRACT_ADDRESS)),
+                strk_fee_token_address: contract_address!(ERC20_CONTRACT_ADDRESS),
+                eth_fee_token_address: contract_address!(ERC20_CONTRACT_ADDRESS),
             },
         },
         &DEFAULT_CONSTANTS.clone(),
@@ -139,13 +140,8 @@ impl Default for SerializableBlockInfo {
         Self {
             block_number: BlockNumber(DEFAULT_BLOCK_NUMBER),
             block_timestamp: BlockTimestamp::default(),
-            sequencer_address: ContractAddress(patricia_key!(SEQUENCER_ADDRESS)),
-            gas_prices: SerializableGasPrices {
-                eth_l1_gas_price: NonZeroU128::try_from(100 * u128::pow(10, 9)).unwrap(),
-                strk_l1_gas_price: NonZeroU128::try_from(100 * u128::pow(10, 9)).unwrap(),
-                eth_l1_data_gas_price: NonZeroU128::try_from(u128::pow(10, 6)).unwrap(),
-                strk_l1_data_gas_price: NonZeroU128::try_from(u128::pow(10, 9)).unwrap(),
-            },
+            sequencer_address: contract_address!(SEQUENCER_ADDRESS),
+            gas_prices: SerializableGasPrices::default(),
             use_kzg_da: false,
         }
     }

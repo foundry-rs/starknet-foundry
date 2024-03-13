@@ -851,11 +851,11 @@ pub fn get_all_used_resources(runtime: ForgeRuntime) -> UsedResources {
         inner_calls: starknet_runtime.hint_handler.inner_calls,
         ..Default::default()
     };
-    let l2_to_l1_payloads_lengths = runtime_call_info
+    let l2_to_l1_payload_lengths = runtime_call_info
         .get_sorted_l2_to_l1_payload_lengths()
         .unwrap();
 
-    let l1_handler_payloads_lengths =
+    let l1_handler_payload_lengths =
         get_l1_handlers_payloads_lengths(&runtime_call_info.inner_calls);
 
     // call representing the test code
@@ -874,7 +874,7 @@ pub fn get_all_used_resources(runtime: ForgeRuntime) -> UsedResources {
     UsedResources {
         syscall_counter: top_call_syscalls,
         execution_resources,
-        l1_handler_payloads_lengths,
-        l2_to_l1_payloads_lengths,
+        l1_handler_payload_lengths,
+        l2_to_l1_payload_lengths,
     }
 }

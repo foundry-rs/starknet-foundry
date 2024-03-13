@@ -16,3 +16,13 @@ pub fn sum_syscall_counters(mut a: SyscallCounter, b: &SyscallCounter) -> Syscal
     }
     a
 }
+#[must_use]
+/// set-difference based subtraction
+pub fn sub_syscall_counters(mut a: SyscallCounter, b: &SyscallCounter) -> SyscallCounter {
+    for (key, b_value) in b {
+        if let Some(a_value) = a.get_mut(key) {
+            *a_value -= *b_value;
+        }
+    }
+    a
+}

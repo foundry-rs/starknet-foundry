@@ -27,8 +27,8 @@ use starknet_api::{
 pub struct UsedResources {
     pub syscall_counter: SyscallCounter,
     pub execution_resources: ExecutionResources,
-    pub l2_to_l1_payloads_lengths: Vec<usize>,
-    pub l1_handler_payloads_lengths: Vec<usize>,
+    pub l2_to_l1_payload_lengths: Vec<usize>,
+    pub l1_handler_payload_lengths: Vec<usize>,
 }
 
 /// Enum representing possible call execution result, along with the data
