@@ -464,9 +464,9 @@ fn storage_write_cost() {
     let result = run_test_case(&test);
 
     assert_passed(&result);
-    // 12 = gas cost of steps
+    // 11 = gas cost of steps
     // 2203 = gas cost of onchain data
-    assert_gas(&result, "storage_write_cost", 12 + 2203);
+    assert_gas(&result, "storage_write_cost", 11 + 2203);
 }
 
 #[test]
@@ -532,9 +532,9 @@ fn multiple_storage_writes_cost() {
     let result = run_test_case(&test);
 
     assert_passed(&result);
-    // 17 = gas cost of steps
+    // 16 = gas cost of steps
     // 2203 = gas cost of onchain data
-    assert_gas(&result, "multiple_storage_writes_cost", 17 + 2203);
+    assert_gas(&result, "multiple_storage_writes_cost", 16 + 2203);
 }
 
 #[test]
@@ -569,9 +569,10 @@ fn l1_message_cost() {
     let result = run_test_case(&test);
 
     assert_passed(&result);
-    // 12 = gas cost of steps
-    // 27865 = gas cost of onchain data
-    assert_gas(&result, "l1_message_cost", 12 + 27865);
+    // 11 = gas cost of steps
+    // 1101 = gas cost of deployment
+    // 29524 = gas cost of onchain data
+    assert_gas(&result, "l1_message_cost", 11 + 1101 + 29524);
 }
 
 #[test]
@@ -637,9 +638,10 @@ fn l1_message_cost_for_proxy() {
     let result = run_test_case(&test);
 
     assert_passed(&result);
-    // 23 = gas cost of steps
-    // 29206 = gas cost of onchain data
-    assert_gas(&result, "l1_message_cost_for_proxy", 23 + 29206);
+    // 21 = gas cost of steps
+    // 2442 = gas cost of l1 data (deployments - discounts)
+    // 29524 = gas cost of message
+    assert_gas(&result, "l1_message_cost_for_proxy", 21 + 2442 + 29524);
 }
 
 #[test]
@@ -650,7 +652,7 @@ fn l1_handler_cost() {
             use snforge_std::{ declare, ContractClassTrait, L1HandlerTrait };
 
             #[test]
-            fn l1_message_cost() {
+            fn l1_handler_cost() {
                 let contract = declare("GasChecker");
                 let contract_address = contract.deploy(@array![]).unwrap();
                 
@@ -671,9 +673,9 @@ fn l1_handler_cost() {
     );
 
     let result = run_test_case(&test);
-
     assert_passed(&result);
     // 1101 = gas cost of onchain data (deploy cost)
     // int(10.24 * 4) = 41 = keccak cost from l1 handler
-    assert_gas(&result, "l1_message_cost", 1101 + 41);
+    // 14643 - l1 cost of payload + emit message handle event
+    assert_gas(&result, "l1_handler_cost", 1101 + 41 + 14643);
 }

@@ -5,10 +5,12 @@ use crate::starknet_commands::{call, declare, deploy, invoke};
 use crate::{get_account, get_nonce, WaitForTx};
 use anyhow::{anyhow, Context, Result};
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
-use blockifier::execution::entry_point::{CallEntryPoint, ExecutionResources};
+use blockifier::execution::entry_point::CallEntryPoint;
 use blockifier::execution::execution_utils::ReadOnlySegments;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
-use blockifier::state::cached_state::CachedState;
+use blockifier::state::cached_state::{
+    CachedState, GlobalContractCache, GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST,
+};
 use cairo_felt::Felt252;
 use cairo_lang_casm::hints::Hint;
 use cairo_lang_runner::{build_hints_dict, RunResultValue, SierraCasmRunner};
@@ -17,12 +19,13 @@ use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::errors::hint_errors::HintError;
+use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use clap::Args;
 use conversions::felt252::SerializeAsFelt252Vec;
 use conversions::{FromConv, IntoConv};
 use itertools::chain;
-use runtime::starknet::context::{build_context, BlockInfo};
+use runtime::starknet::context::{build_context, SerializableBlockInfo};
 use runtime::starknet::state::DictStateReader;
 use runtime::utils::BufferReader;
 use runtime::{
@@ -271,7 +274,7 @@ pub fn run(
         sierra_program,
         Some(MetadataComputationConfig::default()),
         OrderedHashMap::default(),
-        false,
+        None,
     )
     .with_context(|| "Failed to set up runner")?;
 
@@ -293,9 +296,12 @@ pub fn run(
         .assemble_ex(&entry_code, &footer);
 
     // hint processor
-    let mut context = build_context(BlockInfo::default());
+    let mut context = build_context(&SerializableBlockInfo::default().into());
 
-    let mut blockifier_state = CachedState::from(DictStateReader::default());
+    let mut blockifier_state = CachedState::new(
+        DictStateReader::default(),
+        GlobalContractCache::new(GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST),
+    );
     let mut execution_resources = ExecutionResources::default();
 
     let syscall_handler = SyscallHintProcessor::new(

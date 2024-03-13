@@ -24,7 +24,7 @@ pub fn store(
     storage_address: &Felt252,
     value: Felt252,
 ) -> Result<(), anyhow::Error> {
-    state.set_storage_at(target, storage_key(storage_address)?, value.into_());
+    state.set_storage_at(target, storage_key(storage_address)?, value.into_())?;
     Ok(())
 }
 

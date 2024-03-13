@@ -1,17 +1,15 @@
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeState;
 use crate::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
 use blockifier::execution::call_info::CallInfo;
+use blockifier::execution::deprecated_syscalls::hint_processor::SyscallCounter;
 use blockifier::execution::entry_point_execution::{
     finalize_execution, initialize_execution_context, prepare_call_arguments, VmExecutionContext,
 };
 use blockifier::{
     execution::{
         contract_class::{ContractClassV1, EntryPointV1},
-        entry_point::{
-            CallEntryPoint, EntryPointExecutionContext, EntryPointExecutionResult,
-            ExecutionResources,
-        },
-        errors::{EntryPointExecutionError, VirtualMachineExecutionError},
+        entry_point::{CallEntryPoint, EntryPointExecutionContext, EntryPointExecutionResult},
+        errors::EntryPointExecutionError,
         execution_utils::Args,
     },
     state::state_api::State,
@@ -19,7 +17,7 @@ use blockifier::{
 use cairo_vm::{
     hint_processor::hint_processor_definition::HintProcessor,
     vm::{
-        runners::cairo_runner::{CairoArg, CairoRunner},
+        runners::cairo_runner::{CairoArg, CairoRunner, ExecutionResources},
         vm_core::VirtualMachine,
     },
 };
@@ -33,7 +31,7 @@ pub fn execute_entry_point_call_cairo1(
     runtime_state: &mut RuntimeState, // Added parameter
     resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
-) -> EntryPointExecutionResult<CallInfo> {
+) -> EntryPointExecutionResult<(CallInfo, SyscallCounter)> {
     let RuntimeState { cheatnet_state } = runtime_state;
 
     let VmExecutionContext {
@@ -55,7 +53,7 @@ pub fn execute_entry_point_call_cairo1(
     let n_total_args = args.len();
 
     // Snapshot the VM resources, in order to calculate the usage of this run at the end.
-    let previous_vm_resources = syscall_handler.resources.vm_resources.clone();
+    let previous_vm_resources = syscall_handler.resources.clone();
 
     // region: Modified blockifier code
 
@@ -77,6 +75,12 @@ pub fn execute_entry_point_call_cairo1(
     )?;
     // endregion
 
+    let syscall_counter = cheatable_runtime
+        .extended_runtime
+        .hint_handler
+        .syscall_counter
+        .clone();
+
     let call_info = finalize_execution(
         vm,
         runner,
@@ -91,7 +95,7 @@ pub fn execute_entry_point_call_cairo1(
         });
     }
 
-    Ok(call_info)
+    Ok((call_info, syscall_counter))
 }
 
 // crates/blockifier/src/execution/cairo1_execution.rs:236 (run_entry_point)
@@ -102,7 +106,7 @@ pub fn cheatable_run_entry_point(
     entry_point: &EntryPointV1,
     args: &Args,
     program_segment_size: usize,
-) -> Result<(), VirtualMachineExecutionError> {
+) -> Result<(), EntryPointExecutionError> {
     // region: Modified blockifier code
     // Opposite to blockifier
     let verify_secure = false;

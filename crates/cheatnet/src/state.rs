@@ -1,27 +1,26 @@
 use crate::forking::state::ForkStateReader;
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
-    subtract_execution_resources, AddressOrClassHash, CallResult,
-};
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallResult;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spoof::TxInfoMock;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::{
     Event, SpyTarget,
 };
-use blockifier::execution::entry_point::{
-    CallEntryPoint, EntryPointExecutionResult, ExecutionResources,
-};
+use blockifier::execution::entry_point::CallEntryPoint;
 use blockifier::{
     execution::contract_class::ContractClass,
     state::state_api::{StateReader, StateResult},
 };
 use cairo_felt::Felt252;
-use runtime::starknet::context::BlockInfo;
 use runtime::starknet::state::DictStateReader;
 
 use starknet_api::core::EntryPointSelector;
 
 use crate::constants::{build_test_entry_point, TEST_CONTRACT_CLASS_HASH};
-use blockifier::execution::call_info::CallInfo;
+use blockifier::block::BlockInfo;
+use blockifier::execution::call_info::OrderedL2ToL1Message;
+use blockifier::execution::syscalls::hint_processor::SyscallCounter;
 use blockifier::state::errors::StateError::UndeclaredClassHash;
+use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
+use runtime::starknet::context::SerializableBlockInfo;
 use starknet_api::transaction::ContractAddressSalt;
 use starknet_api::{
     class_hash,
@@ -66,7 +65,7 @@ impl BlockInfoReader for ExtendedStateReader {
             return fork_state_reader.get_block_info();
         }
 
-        Ok(BlockInfo::default())
+        Ok(SerializableBlockInfo::default().into())
     }
 }
 
@@ -111,16 +110,13 @@ impl StateReader for ExtendedStateReader {
             })
     }
 
-    fn get_compiled_contract_class(
-        &mut self,
-        class_hash: &ClassHash,
-    ) -> StateResult<ContractClass> {
+    fn get_compiled_contract_class(&mut self, class_hash: ClassHash) -> StateResult<ContractClass> {
         self.dict_state_reader
             .get_compiled_contract_class(class_hash)
             .or_else(|_| {
                 self.fork_state_reader
                     .as_mut()
-                    .map_or(Err(UndeclaredClassHash(*class_hash)), |reader| {
+                    .map_or(Err(UndeclaredClassHash(class_hash)), |reader| {
                         reader.get_compiled_contract_class(class_hash)
                     })
             })
@@ -158,6 +154,7 @@ pub struct CallTrace {
     // These also include resources used by internal calls
     pub used_execution_resources: ExecutionResources,
     pub used_l1_resources: L1Resources,
+    pub used_syscalls: SyscallCounter,
     pub nested_calls: Vec<Rc<RefCell<CallTrace>>>,
     pub result: CallResult,
 }
@@ -265,6 +262,7 @@ impl Default for CheatnetState {
             entry_point: test_code_entry_point,
             used_execution_resources: Default::default(),
             used_l1_resources: Default::default(),
+            used_syscalls: Default::default(),
             nested_calls: vec![],
             result: CallResult::Success { ret_data: vec![] },
         }));
@@ -284,7 +282,7 @@ impl Default for CheatnetState {
             spies: vec![],
             detected_events: vec![],
             deploy_salt_base: 0,
-            block_info: Default::default(),
+            block_info: SerializableBlockInfo::default().into(),
             trace_data: TraceData {
                 current_call_stack: NotEmptyCallStack::from(test_call),
             },
@@ -399,6 +397,7 @@ impl TraceData {
             entry_point,
             used_execution_resources: Default::default(),
             used_l1_resources: Default::default(),
+            used_syscalls: Default::default(),
             nested_calls: vec![],
             result: CallResult::Success { ret_data: vec![] },
         }));
@@ -421,8 +420,9 @@ impl TraceData {
     pub fn exit_nested_call(
         &mut self,
         resources_used_after_call: &ExecutionResources,
-        execution_result: &EntryPointExecutionResult<CallInfo>,
-        identifier: &AddressOrClassHash,
+        used_syscalls: SyscallCounter,
+        result: CallResult,
+        l2_to_l1_messages: &[OrderedL2ToL1Message],
     ) {
         let CallStackElement {
             resources_used_before_call,
@@ -432,20 +432,15 @@ impl TraceData {
 
         let mut last_call = last_call.borrow_mut();
         last_call.used_execution_resources =
-            subtract_execution_resources(resources_used_after_call, &resources_used_before_call);
+            resources_used_after_call - &resources_used_before_call;
+        last_call.used_syscalls = used_syscalls;
 
-        last_call.used_l1_resources.l2_l1_message_sizes = execution_result.as_ref().map_or_else(
-            |_| vec![],
-            |call_info| {
-                let messages = &call_info.execution.l2_to_l1_messages;
-                messages
-                    .iter()
-                    .map(|ordered_message| ordered_message.message.payload.0.len())
-                    .collect()
-            },
-        );
+        last_call.used_l1_resources.l2_l1_message_sizes = l2_to_l1_messages
+            .iter()
+            .map(|ordered_message| ordered_message.message.payload.0.len())
+            .collect();
 
-        last_call.result = CallResult::from_execution_result(execution_result, identifier);
+        last_call.result = result;
     }
 }
 

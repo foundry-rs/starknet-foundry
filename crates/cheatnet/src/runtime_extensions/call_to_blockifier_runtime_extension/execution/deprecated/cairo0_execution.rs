@@ -9,13 +9,14 @@ use blockifier::execution::deprecated_entry_point_execution::{
     finalize_execution, initialize_execution_context, prepare_call_arguments, VmExecutionContext,
 };
 use blockifier::execution::entry_point::{
-    CallEntryPoint, EntryPointExecutionContext, EntryPointExecutionResult, ExecutionResources,
+    CallEntryPoint, EntryPointExecutionContext, EntryPointExecutionResult,
 };
-use blockifier::execution::errors::VirtualMachineExecutionError;
+use blockifier::execution::errors::EntryPointExecutionError;
 use blockifier::execution::execution_utils::Args;
+use blockifier::execution::syscalls::hint_processor::SyscallCounter;
 use blockifier::state::state_api::State;
 use cairo_vm::hint_processor::hint_processor_definition::HintProcessor;
-use cairo_vm::vm::runners::cairo_runner::{CairoArg, CairoRunner};
+use cairo_vm::vm::runners::cairo_runner::{CairoArg, CairoRunner, ExecutionResources};
 use cairo_vm::vm::vm_core::VirtualMachine;
 
 // blockifier/src/execution/deprecated_execution.rs:36 (execute_entry_point_call)
@@ -26,7 +27,7 @@ pub fn execute_entry_point_call_cairo0(
     runtime_state: &mut RuntimeState,
     resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
-) -> EntryPointExecutionResult<CallInfo> {
+) -> EntryPointExecutionResult<(CallInfo, SyscallCounter)> {
     let VmExecutionContext {
         mut runner,
         mut vm,
@@ -44,7 +45,7 @@ pub fn execute_entry_point_call_cairo0(
     let n_total_args = args.len();
 
     // Fix the VM resources, in order to calculate the usage of this run at the end.
-    let previous_vm_resources = syscall_handler.resources.vm_resources.clone();
+    let previous_vm_resources = syscall_handler.resources.clone();
 
     // region: Modified blockifier code
     let cheatable_extension = DeprecatedCheatableStarknetRuntimeExtension {
@@ -66,16 +67,23 @@ pub fn execute_entry_point_call_cairo0(
         &args,
     )?;
     // endregion
-
-    Ok(finalize_execution(
-        vm,
-        runner,
-        cheatable_syscall_handler.extended_runtime.hint_handler,
-        call,
-        previous_vm_resources,
-        implicit_args,
-        n_total_args,
-    )?)
+    let syscall_counter = cheatable_syscall_handler
+        .extended_runtime
+        .hint_handler
+        .syscall_counter
+        .clone();
+    Ok((
+        finalize_execution(
+            vm,
+            runner,
+            cheatable_syscall_handler.extended_runtime.hint_handler,
+            call,
+            previous_vm_resources,
+            implicit_args,
+            n_total_args,
+        )?,
+        syscall_counter,
+    ))
 }
 
 // blockifier/src/execution/deprecated_execution.rs:192 (run_entry_point)
@@ -85,7 +93,7 @@ pub fn cheatable_run_entry_point(
     hint_processor: &mut dyn HintProcessor,
     entry_point_pc: usize,
     args: &Args,
-) -> Result<(), VirtualMachineExecutionError> {
+) -> Result<(), EntryPointExecutionError> {
     // region: Modified blockifier code
     // Opposite to blockifier
     let verify_secure = false;

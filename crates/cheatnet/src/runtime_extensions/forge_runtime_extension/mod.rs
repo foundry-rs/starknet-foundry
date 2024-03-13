@@ -11,6 +11,7 @@ use blockifier::execution::call_info::{CallExecution, CallInfo};
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::entry_point::{CallEntryPoint, CallType};
 use blockifier::execution::execution_utils::stark_felt_to_felt;
+use blockifier::execution::syscalls::hint_processor::SyscallCounter;
 use cairo_felt::Felt252;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::vm_core::VirtualMachine;
@@ -20,8 +21,10 @@ use num_traits::ToPrimitive;
 use scarb_api::StarknetContractArtifacts;
 
 use cairo_lang_runner::short_string::as_cairo_short_string;
+use cairo_lang_starknet_classes::keccak::starknet_keccak;
 use starknet_api::core::ContractAddress;
 
+use crate::runtime_extensions::common::sum_syscall_counters;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::get_class_hash::get_class_hash;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::l1_handler_execute::l1_handler_execute;
@@ -30,7 +33,6 @@ use crate::runtime_extensions::forge_runtime_extension::cheatcodes::storage::{
     calculate_variable_address, load, store,
 };
 use crate::runtime_extensions::forge_runtime_extension::file_operations::string_into_felt;
-use cairo_lang_starknet::contract::starknet_keccak;
 use conversions::byte_array::ByteArray;
 use runtime::utils::{BufferReadResult, BufferReader};
 use runtime::{
@@ -39,6 +41,7 @@ use runtime::{
 };
 use starknet::signers::SigningKey;
 use starknet_api::deprecated_contract_class::EntryPointType;
+use starknet_api::deprecated_contract_class::EntryPointType::L1Handler;
 
 use super::call_to_blockifier_runtime_extension::{CallToBlockifierRuntime, RuntimeState};
 use super::cheatable_starknet_runtime_extension::SyscallSelector;
@@ -792,7 +795,40 @@ pub fn update_top_call_execution_resources(runtime: &mut ForgeRuntime) {
         .trace_data
         .current_call_stack
         .top();
-    top_call.borrow_mut().used_execution_resources = all_execution_resources;
+    let mut top_call = top_call.borrow_mut();
+
+    top_call.used_execution_resources = all_execution_resources;
+
+    let top_call_syscalls = runtime
+        .extended_runtime
+        .extended_runtime
+        .extended_runtime
+        .hint_handler
+        .syscall_counter
+        .clone();
+
+    // Only sum 1-level since these include syscalls from inner calls
+    let nested_calls_syscalls = top_call
+        .nested_calls
+        .iter()
+        .fold(SyscallCounter::new(), |syscalls, trace| {
+            sum_syscall_counters(syscalls, &trace.borrow().used_syscalls)
+        });
+
+    top_call.used_syscalls = sum_syscall_counters(top_call_syscalls, &nested_calls_syscalls);
+}
+
+// Only top-level is considered relevant sincecrates/cheatnet/src/state.rs we can't have l1 handlers deeper than 1 level of nesting
+fn get_l1_handlers_payloads_lengths(inner_calls: &[CallInfo]) -> Vec<usize> {
+    inner_calls
+        .iter()
+        .filter_map(|call_info| {
+            if call_info.call.entry_point_type == L1Handler {
+                return Some(call_info.call.calldata.0.len());
+            }
+            None
+        })
+        .collect()
 }
 
 pub fn update_top_call_l1_resources(runtime: &mut ForgeRuntime) {
@@ -832,9 +868,12 @@ pub fn get_all_used_resources(runtime: ForgeRuntime) -> UsedResources {
         inner_calls: starknet_runtime.hint_handler.inner_calls,
         ..Default::default()
     };
-    let l2_to_l1_payloads_length = runtime_call_info
-        .get_sorted_l2_to_l1_payloads_length()
+    let l2_to_l1_payload_lengths = runtime_call_info
+        .get_sorted_l2_to_l1_payload_lengths()
         .unwrap();
+
+    let l1_handler_payload_lengths =
+        get_l1_handlers_payloads_lengths(&runtime_call_info.inner_calls);
 
     // call representing the test code
     let top_call = runtime
@@ -845,10 +884,14 @@ pub fn get_all_used_resources(runtime: ForgeRuntime) -> UsedResources {
         .trace_data
         .current_call_stack
         .top();
+
     let execution_resources = top_call.borrow().used_execution_resources.clone();
+    let top_call_syscalls = top_call.borrow().used_syscalls.clone();
 
     UsedResources {
+        syscall_counter: top_call_syscalls,
         execution_resources,
-        l2_to_l1_payloads_length,
+        l1_handler_payload_lengths,
+        l2_to_l1_payload_lengths,
     }
 }
