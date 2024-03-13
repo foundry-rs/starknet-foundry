@@ -1,25 +1,23 @@
-use crate::common::state::build_runtime_state;
-use crate::common::{call_contract, deploy_wrapper};
-use crate::{
-    common::assertions::assert_success,
-    common::{
-        call_contract_getter_by_name, deploy_contract, felt_selector_from_name, get_contracts,
-        recover_data, state::create_cached_state,
-    },
+use super::test_environment::TestEnvironment;
+use crate::common::{
+    assertions::assert_success,
+    call_contract, call_contract_getter_by_name, deploy_contract, deploy_wrapper,
+    felt_selector_from_name, get_contracts, recover_data,
+    state::{build_runtime_state, create_cached_state},
 };
 use blockifier::state::state_api::State;
 use cairo_felt::Felt252;
-use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeState;
-use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
-use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::spoof::TxInfoMock;
-use cheatnet::state::{CheatSpan, CheatTarget, CheatnetState};
+use cheatnet::{
+    runtime_extensions::{
+        call_to_blockifier_runtime_extension::RuntimeState,
+        forge_runtime_extension::cheatcodes::{declare::declare, spoof::TxInfoMock},
+    },
+    state::{CheatSpan, CheatTarget, CheatnetState},
+};
 use conversions::IntoConv;
 use num_traits::ToPrimitive;
 use runtime::utils::BufferReader;
-use starknet_api::core::ContractAddress;
-use starknet_api::transaction::TransactionHash;
-
-use super::test_environment::TestEnvironment;
+use starknet_api::{core::ContractAddress, transaction::TransactionHash};
 
 trait SpoofTrait {
     fn spoof(&mut self, target: CheatTarget, tx_info_mock: TxInfoMock, span: CheatSpan);
@@ -66,7 +64,7 @@ impl<'a> TxInfoTrait for TestEnvironment<'a> {
 }
 
 #[derive(Clone, Default, Debug, PartialEq)]
-pub struct TxInfo {
+struct TxInfo {
     pub version: Felt252,
     pub account_contract_address: Felt252,
     pub max_fee: Felt252,
@@ -113,22 +111,24 @@ impl TxInfo {
     fn deserialize(data: &[Felt252]) -> Self {
         let mut reader = BufferReader::new(data);
 
-        let version = reader.read_felt();
-        let account_contract_address = reader.read_felt();
-        let max_fee = reader.read_felt();
-        let signature = reader.read_vec();
-        let transaction_hash = reader.read_felt();
-        let chain_id = reader.read_felt();
-        let nonce = reader.read_felt();
-        let resource_bounds_len = reader.read_felt();
-        let resource_bounds = reader.read_vec_body(
-            3 * resource_bounds_len.to_usize().unwrap(), // ResourceBounds struct has 3 fields
-        );
-        let tip = reader.read_felt();
-        let paymaster_data = reader.read_vec();
-        let nonce_data_availability_mode = reader.read_felt();
-        let fee_data_availability_mode = reader.read_felt();
-        let account_deployment_data = reader.read_vec();
+        let version = reader.read_felt().unwrap();
+        let account_contract_address = reader.read_felt().unwrap();
+        let max_fee = reader.read_felt().unwrap();
+        let signature = reader.read_vec().unwrap();
+        let transaction_hash = reader.read_felt().unwrap();
+        let chain_id = reader.read_felt().unwrap();
+        let nonce = reader.read_felt().unwrap();
+        let resource_bounds_len = reader.read_felt().unwrap();
+        let resource_bounds = reader
+            .read_vec_body(
+                3 * resource_bounds_len.to_usize().unwrap(), // ResourceBounds struct has 3 fields
+            )
+            .unwrap();
+        let tip = reader.read_felt().unwrap();
+        let paymaster_data = reader.read_vec().unwrap();
+        let nonce_data_availability_mode = reader.read_felt().unwrap();
+        let fee_data_availability_mode = reader.read_felt().unwrap();
+        let account_deployment_data = reader.read_vec().unwrap();
 
         Self {
             version,

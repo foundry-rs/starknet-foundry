@@ -1,3 +1,4 @@
+use anyhow::{Context, Result};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fs;
@@ -5,7 +6,9 @@ use std::path::PathBuf;
 use std::rc::Rc;
 
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
-use blockifier::execution::entry_point::{CallEntryPoint, CallType, ExecutionResources};
+use blockifier::execution::entry_point::{CallEntryPoint, CallType};
+use blockifier::execution::syscalls::hint_processor::SyscallCounter;
+use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cheatnet::constants::{TEST_CONTRACT_CLASS_HASH, TEST_ENTRY_POINT_SELECTOR};
 use cheatnet::state::CallTrace;
 use conversions::IntoConv;
@@ -39,6 +42,7 @@ pub fn build_profiler_call_trace(
         entry_point: build_profiler_call_entry_point(value.entry_point.clone(), contracts_data),
         cumulative_resources: build_profiler_execution_resources(
             value.used_execution_resources.clone(),
+            value.used_syscalls.clone(),
         ),
         used_l1_resources: value.used_l1_resources.clone(),
         nested_calls: value
@@ -50,18 +54,21 @@ pub fn build_profiler_call_trace(
 }
 
 #[must_use]
-pub fn build_profiler_execution_resources(value: ExecutionResources) -> ProfilerExecutionResources {
-    let mut syscall_counter = HashMap::new();
-    for (key, val) in value.syscall_counter {
-        syscall_counter.insert(build_profiler_deprecated_syscall_selector(key), val);
+pub fn build_profiler_execution_resources(
+    execution_resources: ExecutionResources,
+    syscall_counter: SyscallCounter,
+) -> ProfilerExecutionResources {
+    let mut profiler_syscall_counter = HashMap::new();
+    for (key, val) in syscall_counter {
+        profiler_syscall_counter.insert(build_profiler_deprecated_syscall_selector(key), val);
     }
     ProfilerExecutionResources {
         vm_resources: VmExecutionResources {
-            n_steps: value.vm_resources.n_steps,
-            n_memory_holes: value.vm_resources.n_memory_holes,
-            builtin_instance_counter: value.vm_resources.builtin_instance_counter,
+            n_steps: execution_resources.n_steps,
+            n_memory_holes: execution_resources.n_memory_holes,
+            builtin_instance_counter: execution_resources.builtin_instance_counter,
         },
-        syscall_counter,
+        syscall_counter: profiler_syscall_counter,
     }
 }
 
@@ -186,15 +193,14 @@ fn build_profiler_call_type(value: CallType) -> ProfilerCallType {
     }
 }
 
-#[must_use]
-pub fn save_trace_data(test_name: &String, trace_data: &ProfilerCallTrace) -> PathBuf {
+pub fn save_trace_data(test_name: &String, trace_data: &ProfilerCallTrace) -> Result<PathBuf> {
     let serialized_trace =
         serde_json::to_string(trace_data).expect("Failed to serialize call trace");
     let dir_to_save_trace = PathBuf::from(TRACE_DIR);
-    fs::create_dir_all(&dir_to_save_trace).expect("Failed to create a .trace_data directory");
+    fs::create_dir_all(&dir_to_save_trace).context("Failed to create a .trace_data directory")?;
 
     let filename = format!("{test_name}.json");
     fs::write(dir_to_save_trace.join(&filename), serialized_trace)
-        .expect("Failed to write call trace to a file");
-    dir_to_save_trace.join(&filename)
+        .context("Failed to write call trace to a file")?;
+    Ok(dir_to_save_trace.join(&filename))
 }

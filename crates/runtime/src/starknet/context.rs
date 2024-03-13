@@ -1,33 +1,30 @@
 use std::collections::BTreeMap;
-use std::collections::HashMap;
+use std::num::NonZeroU128;
 use std::sync::Arc;
 
-use blockifier::block_context::{FeeTokenAddresses, GasPrices};
-
+use blockifier::block::{BlockInfo, GasPrices};
+use blockifier::context::{BlockContext, ChainInfo, FeeTokenAddresses, TransactionContext};
 use blockifier::execution::common_hints::ExecutionMode;
 use blockifier::execution::entry_point::EntryPointExecutionContext;
-use blockifier::transaction::objects::{CommonAccountFields, CurrentAccountTransactionContext};
-use blockifier::{
-    abi::constants, block_context::BlockContext, transaction::objects::AccountTransactionContext,
+use blockifier::transaction::objects::{
+    CommonAccountFields, CurrentTransactionInfo, TransactionInfo,
 };
+use blockifier::versioned_constants::VersionedConstants;
 
-use cairo_vm::vm::runners::builtin_runner::{
-    BITWISE_BUILTIN_NAME, EC_OP_BUILTIN_NAME, HASH_BUILTIN_NAME, KECCAK_BUILTIN_NAME,
-    OUTPUT_BUILTIN_NAME, POSEIDON_BUILTIN_NAME, RANGE_CHECK_BUILTIN_NAME,
-    SEGMENT_ARENA_BUILTIN_NAME, SIGNATURE_BUILTIN_NAME,
-};
 use cairo_vm::vm::runners::cairo_runner::RunResources;
 use serde::{Deserialize, Serialize};
-
-use starknet_api::block::{BlockNumber, BlockTimestamp};
-use starknet_api::core::{ChainId, ContractAddress, Nonce, PatriciaKey};
 use starknet_api::data_availability::DataAvailabilityMode;
-use starknet_api::hash::{StarkFelt, StarkHash};
-use starknet_api::transaction::{
-    Resource, ResourceBounds, ResourceBoundsMapping, TransactionHash, TransactionSignature,
-    TransactionVersion,
+
+use once_cell::sync::Lazy;
+use starknet_api::block::{BlockNumber, BlockTimestamp};
+use starknet_api::transaction::{Resource, ResourceBounds, ResourceBoundsMapping};
+use starknet_api::{
+    contract_address,
+    core::{ChainId, ContractAddress, Nonce, PatriciaKey},
+    hash::{StarkFelt, StarkHash},
+    patricia_key,
+    transaction::{TransactionHash, TransactionSignature, TransactionVersion},
 };
-use starknet_api::{contract_address, patricia_key};
 
 pub const DEFAULT_BLOCK_NUMBER: u64 = 2000;
 pub const SEQUENCER_ADDRESS: &str = "0x1000";
@@ -35,68 +32,28 @@ pub const ERC20_CONTRACT_ADDRESS: &str = "0x1001";
 pub const STEP_RESOURCE_COST: f64 = 0.005_f64;
 pub const DEFAULT_MAX_N_STEPS: u32 = 3_000_000;
 
-// HOW TO FIND:
-// 1. https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/fee-mechanism/#calculation_of_computation_costs
-#[must_use]
-fn build_block_context(block_info: BlockInfo) -> BlockContext {
-    // blockifier::test_utils::create_for_account_testing
-    let vm_resource_fee_cost = Arc::new(HashMap::from([
-        (constants::N_STEPS_RESOURCE.to_string(), STEP_RESOURCE_COST),
-        (HASH_BUILTIN_NAME.to_string(), 32_f64 * STEP_RESOURCE_COST),
-        (
-            RANGE_CHECK_BUILTIN_NAME.to_string(),
-            16_f64 * STEP_RESOURCE_COST,
-        ),
-        (
-            SIGNATURE_BUILTIN_NAME.to_string(),
-            2048_f64 * STEP_RESOURCE_COST,
-        ), // ECDSA
-        (
-            BITWISE_BUILTIN_NAME.to_string(),
-            64_f64 * STEP_RESOURCE_COST,
-        ),
-        (
-            POSEIDON_BUILTIN_NAME.to_string(),
-            32_f64 * STEP_RESOURCE_COST,
-        ),
-        (OUTPUT_BUILTIN_NAME.to_string(), 0_f64 * STEP_RESOURCE_COST),
-        (
-            EC_OP_BUILTIN_NAME.to_string(),
-            1024_f64 * STEP_RESOURCE_COST,
-        ),
-        (
-            KECCAK_BUILTIN_NAME.to_string(),
-            2048_f64 * STEP_RESOURCE_COST, // 2**11
-        ),
-        (
-            SEGMENT_ARENA_BUILTIN_NAME.to_string(),
-            0_f64 * STEP_RESOURCE_COST,
-        ),
-    ]));
+const CONSTANTS_13_0_JSON: &str = include_str!("./resources/versioned_constants_13_0.json");
+static DEFAULT_CONSTANTS: Lazy<VersionedConstants> = Lazy::new(|| {
+    serde_json::from_str(CONSTANTS_13_0_JSON).expect("Versioned constants JSON file is malformed")
+});
 
-    BlockContext {
-        chain_id: ChainId("SN_GOERLI".to_string()),
-        block_number: block_info.block_number,
-        block_timestamp: block_info.timestamp,
-        sequencer_address: block_info.sequencer_address,
-        vm_resource_fee_cost,
-        invoke_tx_max_n_steps: DEFAULT_MAX_N_STEPS,
-        validate_max_n_steps: 1_000_000,
-        max_recursion_depth: 50,
-        fee_token_addresses: FeeTokenAddresses {
-            strk_fee_token_address: contract_address!(ERC20_CONTRACT_ADDRESS),
-            eth_fee_token_address: contract_address!(ERC20_CONTRACT_ADDRESS),
+#[must_use]
+pub fn build_block_context(block_info: &BlockInfo) -> BlockContext {
+    BlockContext::new_unchecked(
+        block_info,
+        &ChainInfo {
+            chain_id: ChainId("SN_SEPOLIA".to_string()),
+            fee_token_addresses: FeeTokenAddresses {
+                strk_fee_token_address: contract_address!(ERC20_CONTRACT_ADDRESS),
+                eth_fee_token_address: contract_address!(ERC20_CONTRACT_ADDRESS),
+            },
         },
-        gas_prices: GasPrices {
-            eth_l1_gas_price: 100 * u128::pow(10, 9),
-            strk_l1_gas_price: 100 * u128::pow(10, 9),
-        },
-    }
+        &DEFAULT_CONSTANTS.clone(),
+    )
 }
 
-#[must_use]
-pub fn build_transaction_context() -> AccountTransactionContext {
-    AccountTransactionContext::Current(CurrentAccountTransactionContext {
+fn build_tx_info() -> TransactionInfo {
+    TransactionInfo::Current(CurrentTransactionInfo {
         common_fields: CommonAccountFields {
             transaction_hash: TransactionHash::default(),
             version: TransactionVersion::THREE,
@@ -130,39 +87,107 @@ pub fn build_transaction_context() -> AccountTransactionContext {
 }
 
 #[must_use]
-pub fn build_context(block_info: BlockInfo) -> EntryPointExecutionContext {
-    let block_context = build_block_context(block_info);
-    let account_context = build_transaction_context();
+pub fn build_transaction_context(block_info: &BlockInfo) -> TransactionContext {
+    TransactionContext {
+        block_context: build_block_context(block_info),
+        tx_info: build_tx_info(),
+    }
+}
 
-    EntryPointExecutionContext::new(
-        &block_context,
-        &account_context,
-        ExecutionMode::Execute,
-        false,
-    )
-    .unwrap()
+#[must_use]
+pub fn build_context(block_info: &BlockInfo) -> EntryPointExecutionContext {
+    let transaction_context = Arc::new(build_transaction_context(block_info));
+
+    EntryPointExecutionContext::new(transaction_context, ExecutionMode::Execute, false).unwrap()
 }
 
 pub fn set_max_steps(entry_point_ctx: &mut EntryPointExecutionContext, max_n_steps: u32) {
-    entry_point_ctx.block_context.invoke_tx_max_n_steps = max_n_steps;
-
     // override it to omit [`EntryPointExecutionContext::max_steps`] restrictions
     entry_point_ctx.vm_run_resources = RunResources::new(max_n_steps as usize);
 }
 
-#[derive(Copy, Clone, Serialize, Deserialize, Debug)]
-pub struct BlockInfo {
+// We need to be copying those 1:1 for serialization (caching purposes)
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub struct SerializableBlockInfo {
     pub block_number: BlockNumber,
-    pub timestamp: BlockTimestamp,
+    pub block_timestamp: BlockTimestamp,
     pub sequencer_address: ContractAddress,
+    pub gas_prices: SerializableGasPrices,
+    // A field which indicates if EIP-4844 blobs are used for publishing state diffs to l1
+    // This has influence on the cost of publishing the data on l1
+    pub use_kzg_da: bool,
+}
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct SerializableGasPrices {
+    eth_l1_gas_price: NonZeroU128,
+    strk_l1_gas_price: NonZeroU128,
+    eth_l1_data_gas_price: NonZeroU128,
+    strk_l1_data_gas_price: NonZeroU128,
+}
+impl Default for SerializableGasPrices {
+    fn default() -> Self {
+        Self {
+            eth_l1_gas_price: NonZeroU128::try_from(100 * u128::pow(10, 9)).unwrap(),
+            strk_l1_gas_price: NonZeroU128::try_from(100 * u128::pow(10, 9)).unwrap(),
+            eth_l1_data_gas_price: NonZeroU128::try_from(u128::pow(10, 6)).unwrap(),
+            strk_l1_data_gas_price: NonZeroU128::try_from(u128::pow(10, 9)).unwrap(),
+        }
+    }
 }
 
-impl Default for BlockInfo {
+impl Default for SerializableBlockInfo {
     fn default() -> Self {
         Self {
             block_number: BlockNumber(DEFAULT_BLOCK_NUMBER),
-            timestamp: BlockTimestamp::default(),
+            block_timestamp: BlockTimestamp::default(),
             sequencer_address: contract_address!(SEQUENCER_ADDRESS),
+            gas_prices: SerializableGasPrices::default(),
+            use_kzg_da: false,
+        }
+    }
+}
+
+impl From<SerializableBlockInfo> for BlockInfo {
+    fn from(forge_block_info: SerializableBlockInfo) -> Self {
+        Self {
+            block_number: forge_block_info.block_number,
+            block_timestamp: forge_block_info.block_timestamp,
+            sequencer_address: forge_block_info.sequencer_address,
+            gas_prices: forge_block_info.gas_prices.into(),
+            use_kzg_da: forge_block_info.use_kzg_da,
+        }
+    }
+}
+
+impl From<BlockInfo> for SerializableBlockInfo {
+    fn from(block_info: BlockInfo) -> Self {
+        Self {
+            block_number: block_info.block_number,
+            block_timestamp: block_info.block_timestamp,
+            sequencer_address: block_info.sequencer_address,
+            gas_prices: block_info.gas_prices.into(),
+            use_kzg_da: block_info.use_kzg_da,
+        }
+    }
+}
+impl From<SerializableGasPrices> for GasPrices {
+    fn from(forge_gas_prices: SerializableGasPrices) -> Self {
+        Self {
+            eth_l1_gas_price: forge_gas_prices.eth_l1_gas_price,
+            strk_l1_gas_price: forge_gas_prices.strk_l1_gas_price,
+            eth_l1_data_gas_price: forge_gas_prices.eth_l1_data_gas_price,
+            strk_l1_data_gas_price: forge_gas_prices.strk_l1_data_gas_price,
+        }
+    }
+}
+
+impl From<GasPrices> for SerializableGasPrices {
+    fn from(gas_prices: GasPrices) -> Self {
+        Self {
+            eth_l1_gas_price: gas_prices.eth_l1_gas_price,
+            strk_l1_gas_price: gas_prices.strk_l1_gas_price,
+            eth_l1_data_gas_price: gas_prices.eth_l1_data_gas_price,
+            strk_l1_data_gas_price: gas_prices.strk_l1_data_gas_price,
         }
     }
 }

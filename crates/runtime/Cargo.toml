@@ -7,6 +7,7 @@ edition.workspace = true
 testing = []
 
 [dependencies]
+indoc.workspace = true
 anyhow.workspace = true
 cairo-lang-runner.workspace = true
 cairo-lang-casm.workspace = true
@@ -21,3 +22,4 @@ cairo-vm.workspace = true
 serde_json.workspace = true
 serde.workspace = true
 thiserror.workspace = true
+once_cell.workspace = true

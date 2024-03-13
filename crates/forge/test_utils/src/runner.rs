@@ -309,12 +309,7 @@ pub fn assert_syscall(
             }
             AnyTestCaseSummary::Single(case) => match case {
                 TestCaseSummary::Passed { used_resources, .. } => {
-                    used_resources
-                        .execution_resources
-                        .syscall_counter
-                        .get(&syscall)
-                        .unwrap_or(&0)
-                        == &expected_count
+                    used_resources.syscall_counter.get(&syscall).unwrap_or(&0) == &expected_count
                         && any_case
                             .name()
                             .unwrap()
@@ -346,7 +341,6 @@ pub fn assert_builtin(
                 TestCaseSummary::Passed { used_resources, .. } => {
                     used_resources
                         .execution_resources
-                        .vm_resources
                         .builtin_instance_counter
                         .get(&builtin)
                         .unwrap_or(&0)

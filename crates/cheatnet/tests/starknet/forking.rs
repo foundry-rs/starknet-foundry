@@ -4,7 +4,9 @@ use crate::common::state::{
     build_runtime_state, create_fork_cached_state, create_fork_cached_state_at,
 };
 use crate::common::{call_contract, deploy_contract, deploy_wrapper, felt_selector_from_name};
-use blockifier::state::cached_state::{CachedState, GlobalContractCache};
+use blockifier::state::cached_state::{
+    CachedState, GlobalContractCache, GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST,
+};
 use cairo_felt::Felt252;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cheatnet::constants::build_testing_state;
@@ -129,7 +131,7 @@ fn test_forking_at_block_number() {
                     cache_dir.path().to_str().unwrap(),
                 )),
             },
-            GlobalContractCache::default(),
+            GlobalContractCache::new(GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST),
         );
 
         let mut cached_state_after_deploy = CachedState::new(
@@ -141,7 +143,7 @@ fn test_forking_at_block_number() {
                     cache_dir.path().to_str().unwrap(),
                 )),
             },
-            GlobalContractCache::default(),
+            GlobalContractCache::new(GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST),
         );
 
         let contract_address = Felt252::from(
@@ -468,7 +470,7 @@ fn using_specified_block_nb_is_cached() {
         let cache = read_cache(
             cache_dir
                 .path()
-                .join(PathBuf::from_str("*312646.json").unwrap())
+                .join(PathBuf::from_str("*312646_v2.json").unwrap())
                 .to_str()
                 .unwrap(),
         );
@@ -500,7 +502,7 @@ fn using_specified_block_nb_is_cached() {
             312_646
         );
         assert_eq!(
-            cache["block_info"].as_object().unwrap()["timestamp"]
+            cache["block_info"].as_object().unwrap()["block_timestamp"]
                 .as_u64()
                 .unwrap(),
             1_695_291_683
@@ -553,7 +555,7 @@ fn test_cache_merging() {
         let cache = read_cache(
             cache_dir
                 .path()
-                .join(PathBuf::from_str("*312767.json").unwrap())
+                .join(PathBuf::from_str("*312767_v2.json").unwrap())
                 .to_str()
                 .unwrap(),
         );
@@ -603,7 +605,7 @@ fn test_cache_merging() {
             312_767
         );
         assert_eq!(
-            cache["block_info"].as_object().unwrap()["timestamp"]
+            cache["block_info"].as_object().unwrap()["block_timestamp"]
                 .as_u64()
                 .unwrap(),
             1_695_378_726
@@ -664,7 +666,7 @@ fn test_cached_block_info_merging() {
         let cache = read_cache(
             cache_dir
                 .path()
-                .join(PathBuf::from_str("*312767.json").unwrap())
+                .join(PathBuf::from_str("*312767_v2.json").unwrap())
                 .to_str()
                 .unwrap(),
         );
@@ -676,7 +678,7 @@ fn test_cached_block_info_merging() {
                 312_767
             );
             assert_eq!(
-                cache["block_info"].as_object().unwrap()["timestamp"]
+                cache["block_info"].as_object().unwrap()["block_timestamp"]
                     .as_u64()
                     .unwrap(),
                 1_695_378_726
@@ -712,7 +714,7 @@ fn test_calling_nonexistent_url() {
                 temp_dir.path().to_str().unwrap(),
             )),
         },
-        GlobalContractCache::default(),
+        GlobalContractCache::new(GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST),
     );
 
     let mut cheatnet_state = CheatnetState::default();

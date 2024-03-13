@@ -359,7 +359,7 @@ mod GasChecker {
         }
 
         fn send_l1_message(self: @ContractState) {
-            starknet::send_message_to_l1_syscall(1, array![1].span()).unwrap();
+            starknet::send_message_to_l1_syscall(1, array![1, 2 ,3].span()).unwrap();
         }
     }
 
