@@ -12,6 +12,7 @@
 > your [`Scarb.toml`](https://docs.swmansion.com/scarb/docs/guides/dependencies.html#adding-a-dependency)
 > using appropriate release tag.
 >```toml
+> # TODO cast?
 > [dependencies]
 > sncast_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.12.0" }
 > ```

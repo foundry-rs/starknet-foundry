@@ -89,6 +89,7 @@ $ tree
 name = "my_script"
 version = "0.1.0"
 
+# TODO cast?
 [dependencies]
 starknet = ">=2.3.0"
 sncast_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.12.0" }
@@ -166,6 +167,7 @@ $ tree
 name = "map_script"
 version = "0.1.0"
 
+# TODO cast?
 [dependencies]
 starknet = ">=2.3.0"
 sncast_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.12.0" }
