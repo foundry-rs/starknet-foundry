@@ -339,25 +339,13 @@ pub async fn check_if_legacy_contract(
     address: FieldElement,
     provider: &JsonRpcClient<HttpTransport>,
 ) -> Result<bool> {
-    let class_hash = extract_class_hash_or_fetch(class_hash, address, provider).await?;
-    let contract_class = provider
-        .get_class(BlockId::Tag(Pending), class_hash)
-        .await?;
+    let contract_class = match class_hash {
+        Some(class_hash) => provider.get_class(BlockId::Tag(Pending), class_hash).await,
+        None => provider.get_class_at(BlockId::Tag(Pending), address).await,
+    }
+    .map_err(handle_rpc_error)?;
 
     Ok(is_legacy_contract(&contract_class))
-}
-
-async fn extract_class_hash_or_fetch(
-    class_hash: Option<FieldElement>,
-    address: FieldElement,
-    provider: &JsonRpcClient<HttpTransport>,
-) -> Result<FieldElement> {
-    match class_hash {
-        Some(class_hash) => Ok(class_hash),
-        None => get_class_hash_by_address(provider, address)
-            .await?
-            .ok_or_else(|| anyhow!("No class hash exists for the provided address {address:#x}")),
-    }
 }
 
 pub async fn get_class_hash_by_address(

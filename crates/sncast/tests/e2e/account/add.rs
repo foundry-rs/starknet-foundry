@@ -189,7 +189,7 @@ pub async fn test_nonexistent_account_address() {
 
     snapbox.assert().stderr_matches(indoc! {r"
         command: account add
-        error: No class hash exists for the provided address 0x123
+        error: There is no contract at the specified address
     "});
 }
 
