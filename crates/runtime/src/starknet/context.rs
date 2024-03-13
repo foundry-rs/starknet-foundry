@@ -42,7 +42,7 @@ pub fn build_block_context(block_info: &BlockInfo) -> BlockContext {
     BlockContext::new_unchecked(
         block_info,
         &ChainInfo {
-            chain_id: ChainId("SN_GOERLI".to_string()),
+            chain_id: ChainId("SN_SEPOLIA".to_string()),
             fee_token_addresses: FeeTokenAddresses {
                 strk_fee_token_address: contract_address!(ERC20_CONTRACT_ADDRESS),
                 eth_fee_token_address: contract_address!(ERC20_CONTRACT_ADDRESS),
