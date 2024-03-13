@@ -267,4 +267,4 @@ command: script
 status: success
 ```
 
-More on deployment scripts errors [here](#../appendix/sncast-library/errors.md).
+More on deployment scripts errors [here](../appendix/sncast-library/errors.md).
