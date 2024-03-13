@@ -41,7 +41,7 @@ pub mod response;
 pub mod state;
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
-struct Account {
+struct AccountData {
     private_key: String,
     public_key: String,
     address: String,
@@ -199,9 +199,9 @@ pub async fn get_account<'a>(
 ) -> Result<SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, LocalWallet>> {
     let chain_id = get_chain_id(provider).await?;
     let account_info = if let Some(keystore) = keystore {
-        get_account_info_from_keystore(account, &keystore)?
+        get_account_data_from_keystore(account, &keystore)?
     } else {
-        get_account_info_from_accounts_file(account, chain_id, accounts_file)?
+        get_account_data_from_accounts_file(account, chain_id, accounts_file)?
     };
 
     let account = build_account(account_info, chain_id, provider).await?;
@@ -210,23 +210,23 @@ pub async fn get_account<'a>(
 }
 
 async fn build_account(
-    account_info: Account,
+    account_data: AccountData,
     chain_id: FieldElement,
     provider: &JsonRpcClient<HttpTransport>,
 ) -> Result<SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>> {
     let signer = LocalWallet::from(SigningKey::from_secret_scalar(
-        parse_number(&account_info.private_key)
+        parse_number(&account_data.private_key)
             .context("Failed to convert private key to FieldElement")?,
     ));
-    let address = parse_number(&account_info.address).with_context(|| {
+    let address = parse_number(&account_data.address).with_context(|| {
         format!(
             "Failed to convert account address = {} to FieldElement",
-            &account_info.address
+            &account_data.address
         )
     })?;
     verify_account_address(address, provider).await?;
 
-    let class_hash = account_info
+    let class_hash = account_data
         .class_hash
         .map(|class_hash| {
             parse_number(&class_hash).with_context(|| {
@@ -239,7 +239,7 @@ async fn build_account(
         .transpose()?;
 
     let account_encoding =
-        get_account_encoding(account_info.legacy, class_hash, address, provider).await?;
+        get_account_encoding(account_data.legacy, class_hash, address, provider).await?;
 
     let mut account =
         SingleOwnerAccount::new(provider, signer, address, chain_id, account_encoding);
@@ -280,7 +280,10 @@ pub async fn check_class_hash_exists(
     }
 }
 
-fn get_account_info_from_keystore(account: &str, keystore_path: &Utf8PathBuf) -> Result<Account> {
+fn get_account_data_from_keystore(
+    account: &str,
+    keystore_path: &Utf8PathBuf,
+) -> Result<AccountData> {
     if !keystore_path.exists() {
         bail!("Failed to find keystore file");
     }
@@ -327,7 +330,7 @@ fn get_account_info_from_keystore(account: &str, keystore_path: &Utf8PathBuf) ->
         .ok_or_else(|| anyhow::anyhow!("Failed to get public key from account JSON file"))?;
     let legacy = variant_info.get("legacy").and_then(Value::as_bool);
 
-    Ok(Account {
+    Ok(AccountData {
         private_key,
         public_key,
         address,
@@ -338,17 +341,17 @@ fn get_account_info_from_keystore(account: &str, keystore_path: &Utf8PathBuf) ->
     })
 }
 
-fn get_account_info_from_accounts_file(
+fn get_account_data_from_accounts_file(
     name: &str,
     chain_id: FieldElement,
     path: &Utf8PathBuf,
-) -> Result<Account> {
+) -> Result<AccountData> {
     raise_if_empty(name, "Account name")?;
     account_file_exists(path)?;
 
     let file_content =
         fs::read_to_string(path).with_context(|| format!("Failed to read a file = {path}"))?;
-    let accounts: HashMap<String, HashMap<String, Account>> =
+    let accounts: HashMap<String, HashMap<String, AccountData>> =
         serde_json::from_str(&file_content)
             .with_context(|| format!("Failed to parse file = {path} to JSON"))?;
     let network_name = chain_id_to_network_name(chain_id);
@@ -653,8 +656,8 @@ pub fn apply_optional<T, R, F: FnOnce(T, R) -> T>(initial: T, option: Option<R>,
 mod tests {
     use crate::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
     use crate::{
-        chain_id_to_network_name, extract_or_generate_salt, get_account_info_from_accounts_file,
-        get_account_info_from_keystore, get_block_id, udc_uniqueness,
+        chain_id_to_network_name, extract_or_generate_salt, get_account_data_from_accounts_file,
+        get_account_data_from_keystore, get_block_id, udc_uniqueness,
     };
     use camino::Utf8PathBuf;
     use starknet::core::types::{
@@ -751,7 +754,7 @@ mod tests {
 
     #[test]
     fn test_get_account_info_from_accounts_file() {
-        let account = get_account_info_from_accounts_file(
+        let account = get_account_data_from_accounts_file(
             "user1",
             FieldElement::from_byte_slice_be("SN_GOERLI".as_bytes()).unwrap(),
             &Utf8PathBuf::from("tests/data/accounts/accounts.json"),
@@ -776,9 +779,9 @@ mod tests {
     }
 
     #[test]
-    fn test_get_account_info_from_keystore() {
+    fn test_get_account_data_from_keystore() {
         env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
-        let account = get_account_info_from_keystore(
+        let account = get_account_data_from_keystore(
             "tests/data/keystore/my_account.json",
             &Utf8PathBuf::from("tests/data/keystore/my_key.json"),
         )
@@ -798,8 +801,8 @@ mod tests {
     }
 
     #[test]
-    fn test_get_account_info_wrong_chain_id() {
-        let account = get_account_info_from_accounts_file(
+    fn test_get_account_data_wrong_chain_id() {
+        let account = get_account_data_from_accounts_file(
             "user1",
             FieldElement::from_hex_be("0x435553544f4d5f434841494e5f4944")
                 .expect("Failed to convert chain id from hex"),
