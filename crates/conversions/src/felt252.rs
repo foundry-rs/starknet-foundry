@@ -3,7 +3,7 @@ use crate::string::{ParseFeltError, TryFromDecStr, TryFromHexStr};
 use crate::{FromConv, IntoConv};
 use blockifier::execution::execution_utils::stark_felt_to_felt;
 use cairo_felt::Felt252;
-use num_traits::Num;
+use num_traits::{Bounded, Num};
 use starknet::core::types::FieldElement;
 use starknet_api::core::{EntryPointSelector, Nonce};
 use starknet_api::{
@@ -48,21 +48,21 @@ impl FromConv<EntryPointSelector> for Felt252 {
 }
 
 impl TryFromDecStr for Felt252 {
-    /// Parse decimal felt
     fn try_from_dec_str(value: &str) -> Result<Felt252, ParseFeltError> {
-        match Felt252::from_str_radix(value, 10) {
-            Ok(ok) if ok < Felt252::prime().into() => Ok(ok),
-            _ => Err(ParseFeltError),
-        }
+        from_string(value, 10)
     }
 }
+
 impl TryFromHexStr for Felt252 {
-    /// Parse decimal felt
     fn try_from_hex_str(value: &str) -> Result<Felt252, ParseFeltError> {
-        match Felt252::from_str_radix(value, 16) {
-            Ok(ok) if ok < Felt252::prime().into() => Ok(ok),
-            _ => Err(ParseFeltError),
-        }
+        from_string(value.strip_prefix("0x").unwrap_or(value), 16)
+    }
+}
+
+fn from_string(value: &str, radix: u32) -> Result<Felt252, ParseFeltError> {
+    match Felt252::from_str_radix(value, radix) {
+        Ok(felt) if felt <= Felt252::max_value() => Ok(felt),
+        _ => Err(ParseFeltError),
     }
 }
 

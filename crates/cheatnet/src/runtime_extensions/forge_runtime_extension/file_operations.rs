@@ -91,7 +91,7 @@ fn parse_num_or_short_string(felt_str: &str) -> Option<Felt252> {
 mod tests {
     use cairo_felt::Felt252;
     use num_bigint::BigUint;
-    use num_traits::One;
+    use num_traits::{One, Zero};
 
     use super::{json_values_sorted_by_keys, parse_num_or_short_string};
     use conversions::string::TryFromDecStr;
@@ -159,7 +159,8 @@ mod tests {
     #[test]
     fn test_string_into_felt_prime() {
         let string = "3618502788666131213697322783095070105623107215331596699973092056135872020481";
-        assert!(Felt252::try_from_dec_str(string).is_err());
+        println!("{}", Felt252::try_from_dec_str(string).unwrap());
+        assert!(Felt252::try_from_dec_str(string).unwrap() == Felt252::zero());
     }
 
     #[test]

@@ -3,7 +3,6 @@ use crate::helpers::constants::{
 };
 use anyhow::Context;
 use camino::{Utf8Path, Utf8PathBuf};
-use primitive_types::U256;
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
 use serde_json::{json, Map, Value};
