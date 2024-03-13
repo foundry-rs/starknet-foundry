@@ -13,7 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Events emitted in cairo 0 contracts are now properly collected
 - `--build-profile` no longer fails silently (compatible with [`cairo-profiler`](https://github.com/software-mansion/cairo-profiler) 0.2.0)
-- Default block info has been changed from `SN_GOERLI` to `SN_SEPOLIA`
+
+#### Changed
+
+- Default `chain_id` has been changed from `SN_GOERLI` to `SN_SEPOLIA`
+
 
 ## [0.19.0] - 2024-03-06
 
