@@ -61,9 +61,9 @@ fn get_events_cost(
             event: content,
         })
         .collect();
-    let miligas = get_events_milligas_cost(&ordered_events, versioned_constants);
+    let milligas = get_events_milligas_cost(&ordered_events, versioned_constants);
     GasVector {
-        l1_gas: miligas / 1000_u128,
+        l1_gas: milligas / 1000_u128,
         l1_data_gas: 0_u128,
     }
 }
