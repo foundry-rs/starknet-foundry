@@ -160,8 +160,8 @@ fn test_wrong_calldata() {
         Unknown location (pc=0:314)
         " })))
 
-        Error in the called contract (0x07537a17e169c96cf2b0392508b3a66cbc50c9a811a8a7896529004c5e93fdf6):
-        Execution failed. Failure reason: 0x4661696c656420746f20646573657269616c697a6520706172616d202332 ('Failed to deserialize param #2').
+        Error in the called contract ([..]):
+        Execution failed. Failure reason: [..] ('Failed to deserialize param #2').
         command: script run
         status: success
         "#},

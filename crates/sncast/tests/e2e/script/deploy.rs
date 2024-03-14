@@ -181,8 +181,8 @@ async fn test_invalid_call_data() {
         Got an exception while executing a hint: Execution failed. Failure reason: [..] ('Failed to deserialize param #2').
 
         Transaction hash = [..]
-        Error in the called contract (0x05c9abf31cb1f5c53d30b4e86d81844066b9f96a1c52b45be9d0e295735f02e6):
-        Execution failed. Failure reason: 0x4661696c656420746f20646573657269616c697a6520706172616d202332 ('Failed to deserialize param #2').
+        Error in the called contract ([..]):
+        Execution failed. Failure reason: [..] ('Failed to deserialize param #2').
         Cairo traceback (most recent call last):
         Unknown location (pc=0:174)
         Unknown location (pc=0:127)
