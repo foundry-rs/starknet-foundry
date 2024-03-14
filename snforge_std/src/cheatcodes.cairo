@@ -8,14 +8,14 @@ mod tx_info;
 mod fork;
 mod storage;
 
-#[derive(Drop, Serde, PartialEq, Clone)]
+#[derive(Drop, Serde, PartialEq, Clone, Debug, Display)]
 enum CheatTarget {
     All: (),
     One: ContractAddress,
     Multiple: Array<ContractAddress>
 }
 
-#[derive(Drop, Serde, PartialEq, Clone)]
+#[derive(Drop, Serde, PartialEq, Clone, Debug, Display)]
 enum CheatSpan {
     Indefinite: (),
     TargetCalls: usize,
