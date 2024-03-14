@@ -60,8 +60,6 @@ async fn test_same_salt_and_class_hash_deployed_twice() {
     assert_stdout_contains(
         output,
         indoc! {r#"
-        [..]Compiling[..]
-        [..]Finished[..]
         ScriptCommandError::WaitForTransactionError(WaitForTransactionError::TransactionError(TransactionError::Reverted(ErrorData { msg: "Error in the called contract ([..]):
         Error at pc=0:81:
         Got an exception while executing a hint.
@@ -70,7 +68,6 @@ async fn test_same_salt_and_class_hash_deployed_twice() {
         Unknown location (pc=0:677)
         Unknown location (pc=0:291)
         Unknown location (pc=0:314)
-
         Error in the called contract ([..]):
         Error at pc=0:32:
         Transaction hash = [..]
@@ -111,8 +108,6 @@ async fn test_invalid_class_hash() {
     assert_stdout_contains(
         output,
         indoc! {r#"
-        [..]Compiling[..]
-        [..]Finished[..]
         ScriptCommandError::WaitForTransactionError(WaitForTransactionError::TransactionError(TransactionError::Reverted(ErrorData { msg: "Error in the called contract ([..]):
         Error at pc=0:81:
         Got an exception while executing a hint.
@@ -121,7 +116,6 @@ async fn test_invalid_class_hash() {
         Unknown location (pc=0:677)
         Unknown location (pc=0:291)
         Unknown location (pc=0:314)
-
         Error in the called contract ([..]):
         Error at pc=0:32:
         Transaction hash = [..]
@@ -165,8 +159,6 @@ async fn test_invalid_call_data() {
     assert_stdout_contains(
         output,
         indoc! {r#"
-        [..]Compiling[..]
-        [..]Finished[..]
         ScriptCommandError::WaitForTransactionError(WaitForTransactionError::TransactionError(TransactionError::Reverted(ErrorData { msg: "Error in the called contract ([..]):
         Error at pc=0:81:
         Got an exception while executing a hint.
@@ -175,11 +167,9 @@ async fn test_invalid_call_data() {
         Unknown location (pc=0:677)
         Unknown location (pc=0:291)
         Unknown location (pc=0:314)
-
         Error in the called contract ([..]):
         Error at pc=0:32:
         Got an exception while executing a hint: Execution failed. Failure reason: [..] ('Failed to deserialize param #2').
-
         Transaction hash = [..]
         Error in the called contract ([..]):
         Execution failed. Failure reason: [..] ('Failed to deserialize param #2').

@@ -61,8 +61,6 @@ async fn test_contract_does_not_exist() {
     assert_stdout_contains(
         output,
         indoc! {r#"
-        [..]Compiling[..]
-        [..]Finished[..]
         ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::ContractError(ErrorData { msg: "Error in the called contract ([..]):
         Error at pc=0:81:
         Got an exception while executing a hint: Requested contract address ContractAddress(PatriciaKey(StarkFelt("[..]"))) is not deployed.
@@ -103,8 +101,6 @@ fn test_wrong_function_name() {
     assert_stdout_contains(
         output,
         indoc! {r#"
-        [..]Compiling[..]
-        [..]Finished[..]
         ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::ContractError(ErrorData { msg: "Error in the called contract ([..]):
         Error at pc=0:81:
         Got an exception while executing a hint: Entry point EntryPointSelector(StarkFelt("[..]")) not found in contract.
@@ -114,7 +110,6 @@ fn test_wrong_function_name() {
         Unknown location (pc=0:291)
         Unknown location (pc=0:314)
         " })))
-
         Error in the called contract ([..]):
         Entry point EntryPointSelector(StarkFelt([..])) not found in contract.
         command: script run
@@ -148,8 +143,6 @@ fn test_wrong_calldata() {
     assert_stdout_contains(
         output,
         indoc! {r#"
-        [..]Compiling[..]
-        [..]Finished[..]
         ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::ContractError(ErrorData { msg: "Error in the called contract ([..]):
         Error at pc=0:81:
         Got an exception while executing a hint: Execution failed. Failure reason: [..] ('Failed to deserialize param #2').
@@ -159,7 +152,6 @@ fn test_wrong_calldata() {
         Unknown location (pc=0:291)
         Unknown location (pc=0:314)
         " })))
-
         Error in the called contract ([..]):
         Execution failed. Failure reason: [..] ('Failed to deserialize param #2').
         command: script run
