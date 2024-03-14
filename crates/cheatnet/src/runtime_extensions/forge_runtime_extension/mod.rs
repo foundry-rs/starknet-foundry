@@ -885,7 +885,6 @@ pub fn get_all_used_resources(runtime: ForgeRuntime) -> UsedResources {
 
     let execution_resources = top_call.borrow().used_execution_resources.clone();
     let top_call_syscalls = top_call.borrow().used_syscalls.clone();
-
     let events = runtime_call_info
         .into_iter() // This method iterates over inner calls as well
         .flat_map(|call_info| {
