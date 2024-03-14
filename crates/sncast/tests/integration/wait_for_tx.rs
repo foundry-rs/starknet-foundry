@@ -53,7 +53,7 @@ async fn test_wait_for_reverted_transaction() {
     let provider = create_test_provider();
     let class_hash = from_env("CAST_WITH_CONSTRUCTOR_CLASS_HASH").unwrap();
     let salt = "0x029c81e6487b5f9278faa6f454cda3c8eca259f99877faab823b3704327cd695";
-    let max_fee: u64 = 332_323_232_324_342;
+    let max_fee: u64 = 43_400_000_000_000 - 1;
 
     let transaction_hash = invoke_contract(
         ACCOUNT,

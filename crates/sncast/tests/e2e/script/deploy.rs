@@ -60,6 +60,8 @@ async fn test_same_salt_and_class_hash_deployed_twice() {
     assert_stdout_contains(
         output,
         indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
         ScriptCommandError::WaitForTransactionError(WaitForTransactionError::TransactionError(TransactionError::Reverted(ErrorData { msg: "Error in the called contract ([..]):
         Error at pc=0:81:
         Got an exception while executing a hint.
@@ -71,7 +73,9 @@ async fn test_same_salt_and_class_hash_deployed_twice() {
 
         Error in the called contract ([..]):
         Error at pc=0:32:
-        Got an exception while executing a hint: Custom Hint Error: Requested ContractAddress(PatriciaKey(StarkFelt("[..]"))) is unavailable for deployment.
+        Transaction hash = [..]
+        Transaction hash = [..]
+        Got an exception while executing a hint: Requested ContractAddress(PatriciaKey(StarkFelt("[..]"))) is unavailable for deployment.
         Cairo traceback (most recent call last):
         Unknown location (pc=0:174)
         Unknown location (pc=0:127)
@@ -107,6 +111,8 @@ async fn test_invalid_class_hash() {
     assert_stdout_contains(
         output,
         indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
         ScriptCommandError::WaitForTransactionError(WaitForTransactionError::TransactionError(TransactionError::Reverted(ErrorData { msg: "Error in the called contract ([..]):
         Error at pc=0:81:
         Got an exception while executing a hint.
@@ -118,7 +124,8 @@ async fn test_invalid_class_hash() {
 
         Error in the called contract ([..]):
         Error at pc=0:32:
-        Got an exception while executing a hint: Custom Hint Error: Class with hash ClassHash(
+        Transaction hash = [..]
+        Got an exception while executing a hint: Class with hash ClassHash(
             StarkFelt(
                 "[..]",
             ),
@@ -158,6 +165,8 @@ async fn test_invalid_call_data() {
     assert_stdout_contains(
         output,
         indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
         ScriptCommandError::WaitForTransactionError(WaitForTransactionError::TransactionError(TransactionError::Reverted(ErrorData { msg: "Error in the called contract ([..]):
         Error at pc=0:81:
         Got an exception while executing a hint.
@@ -169,7 +178,11 @@ async fn test_invalid_call_data() {
 
         Error in the called contract ([..]):
         Error at pc=0:32:
-        Got an exception while executing a hint: Custom Hint Error: Execution failed. Failure reason: [..] ('Failed to deserialize param #2').
+        Got an exception while executing a hint: Execution failed. Failure reason: [..] ('Failed to deserialize param #2').
+
+        Transaction hash = [..]
+        Error in the called contract (0x05c9abf31cb1f5c53d30b4e86d81844066b9f96a1c52b45be9d0e295735f02e6):
+        Execution failed. Failure reason: 0x4661696c656420746f20646573657269616c697a6520706172616d202332 ('Failed to deserialize param #2').
         Cairo traceback (most recent call last):
         Unknown location (pc=0:174)
         Unknown location (pc=0:127)

@@ -11,7 +11,7 @@ fn main() {
         .expect('Invalid class hash value');
 
     let deploy_nonce = get_nonce('pending');
-    let deploy_result = deploy(
+    deploy(
         class_hash,
         array![0x2, 0x2, 0x0],
         Option::Some(salt),

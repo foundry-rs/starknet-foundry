@@ -41,6 +41,8 @@ fn start_devnet() {
             &SEED.to_string(),
             "--account-class",
             "cairo0",
+            "--state-archive-capacity",
+            "full",
         ])
         .stdout(Stdio::null())
         .spawn()
