@@ -1,10 +1,11 @@
+use blockifier::block::BlockInfo;
 use cairo_felt::Felt252;
 use camino::Utf8PathBuf;
 use conversions::{FromConv, IntoConv, TryIntoConv};
 use fs2::FileExt;
 use num_bigint::BigUint;
 use regex::Regex;
-use runtime::starknet::context::BlockInfo;
+use runtime::starknet::context::SerializableBlockInfo;
 use serde::{Deserialize, Serialize};
 use starknet::core::types::ContractClass;
 use starknet_api::block::BlockNumber;
@@ -25,13 +26,13 @@ struct ForkCacheContent {
     class_hash_at: HashMap<String, String>,
     compiled_contract_class: HashMap<String, String>,
     compiled_class_hash: HashMap<String, String>,
-    block_info: Option<BlockInfo>,
+    block_info: Option<SerializableBlockInfo>,
 }
 
 impl ForkCacheContent {
     fn new() -> Self {
         Self {
-            cache_version: "1.0".to_string(),
+            cache_version: "2.0".to_string(),
             storage_at: HashMap::new(),
             nonce_at: HashMap::new(),
             class_hash_at: HashMap::new(),
@@ -65,7 +66,7 @@ impl ForkCacheContent {
         self.compiled_class_hash
             .extend(other.compiled_class_hash.clone());
         if other.block_info.is_some() {
-            self.block_info = other.block_info;
+            self.block_info = other.block_info.clone();
         }
     }
 }
@@ -264,11 +265,11 @@ impl ForkCache {
     }
 
     pub(crate) fn get_block_info(&self) -> Option<BlockInfo> {
-        self.fork_cache_content.block_info
+        Some(self.fork_cache_content.block_info.clone()?.into())
     }
 
     pub(crate) fn cache_get_block_info(&mut self, block_info: BlockInfo) {
-        self.fork_cache_content.block_info = Some(block_info);
+        self.fork_cache_content.block_info = Some(block_info.into());
     }
 }
 
@@ -283,7 +284,7 @@ fn cache_file_path_from_fork_config(
     let sanitized_path = re.replace_all(url.as_str(), "_").to_string();
 
     let cache_file_path = Utf8PathBuf::from(cache_dir)
-        .join(sanitized_path + "_" + block_number.0.to_string().as_str() + ".json");
+        .join(sanitized_path + "_" + block_number.0.to_string().as_str() + "_v2.json");
 
     fs::create_dir_all(cache_file_path.parent().unwrap())
         .expect("Fork cache directory could not be created");

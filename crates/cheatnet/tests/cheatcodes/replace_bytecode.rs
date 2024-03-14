@@ -2,7 +2,9 @@ use crate::{
     cheatcodes::test_environment::TestEnvironment, common::assertions::assert_success,
     common::get_contracts,
 };
-use blockifier::state::cached_state::{CachedState, GlobalContractCache};
+use blockifier::state::cached_state::{
+    CachedState, GlobalContractCache, GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST,
+};
 use cairo_felt::Felt252;
 use cheatnet::{
     constants::build_testing_state,
@@ -54,7 +56,7 @@ fn fork() {
                 cache_dir.path().to_str().unwrap(),
             )),
         },
-        GlobalContractCache::default(),
+        GlobalContractCache::new(GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST),
     );
     let contracts = get_contracts();
 

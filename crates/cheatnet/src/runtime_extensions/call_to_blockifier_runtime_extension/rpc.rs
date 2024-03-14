@@ -7,7 +7,7 @@ use crate::runtime_extensions::{
 };
 use blockifier::execution::{
     call_info::CallInfo,
-    entry_point::{CallEntryPoint, CallType, EntryPointExecutionResult, ExecutionResources},
+    entry_point::{CallEntryPoint, CallType, EntryPointExecutionResult},
     errors::{EntryPointExecutionError, PreExecutionError},
     execution_utils::stark_felt_to_felt,
     syscalls::hint_processor::{SyscallCounter, SyscallHintProcessor},
@@ -15,8 +15,10 @@ use blockifier::execution::{
 use blockifier::state::errors::StateError;
 use cairo_felt::Felt252;
 use cairo_lang_runner::casm_run::format_next_item;
+use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use conversions::{byte_array::ByteArray, IntoConv};
 use serde::{Deserialize, Serialize};
+use starknet_api::transaction::EventContent;
 use starknet_api::{
     core::{ClassHash, ContractAddress},
     deprecated_contract_class::EntryPointType,
@@ -24,46 +26,11 @@ use starknet_api::{
 
 #[derive(Clone, Debug, Default)]
 pub struct UsedResources {
+    pub syscall_counter: SyscallCounter,
     pub execution_resources: ExecutionResources,
-    pub l2_to_l1_payloads_length: Vec<usize>,
-}
-
-pub(crate) fn subtract_execution_resources(
-    minuend: &ExecutionResources,
-    subtrahend: &ExecutionResources,
-) -> ExecutionResources {
-    ExecutionResources {
-        vm_resources: &minuend.vm_resources - &subtrahend.vm_resources,
-        syscall_counter: subtract_syscall_counters(
-            &minuend.syscall_counter,
-            &subtrahend.syscall_counter,
-        ),
-    }
-}
-
-fn subtract_syscall_counters(
-    minuend: &SyscallCounter,
-    subtrahend: &SyscallCounter,
-) -> SyscallCounter {
-    let mut result = minuend.clone();
-
-    for (syscall, count) in subtrahend {
-        let old_syscall_count = minuend
-            .get(syscall)
-            .unwrap_or_else(|| panic!("Missing SyscallCounter entry {syscall:?}"));
-
-        let new_count = old_syscall_count
-            .checked_sub(*count)
-            .unwrap_or_else(|| panic!("Underflow when subtracting syscall counts for {syscall:?}"));
-
-        if new_count != 0 {
-            result.insert(*syscall, new_count);
-        } else {
-            result.remove(syscall);
-        }
-    }
-
-    result
+    pub l2_to_l1_payload_lengths: Vec<usize>,
+    pub l1_handler_payload_lengths: Vec<usize>,
+    pub events: Vec<EventContent>,
 }
 
 /// Enum representing possible call execution result, along with the data
@@ -180,22 +147,28 @@ impl CallResult {
         starknet_identifier: &AddressOrClassHash,
     ) -> Self {
         match result {
-            Ok(call_info) => {
-                let raw_return_data = &call_info.execution.retdata.0;
-
-                let return_data = raw_return_data
-                    .iter()
-                    .map(|data| Felt252::from_bytes_be(data.bytes()))
-                    .collect();
-
-                CallResult::Success {
-                    ret_data: return_data,
-                }
-            }
-            Err(err) => {
-                CallResult::Failure(CallFailure::from_execution_error(err, starknet_identifier))
-            }
+            Ok(call_info) => Self::from_success(call_info),
+            Err(err) => Self::from_err(err, starknet_identifier),
         }
+    }
+
+    #[must_use]
+    pub fn from_success(call_info: &CallInfo) -> Self {
+        let raw_return_data = &call_info.execution.retdata.0;
+
+        let return_data = raw_return_data.iter().map(|data| (*data).into_()).collect();
+
+        CallResult::Success {
+            ret_data: return_data,
+        }
+    }
+
+    #[must_use]
+    pub fn from_err(
+        err: &EntryPointExecutionError,
+        starknet_identifier: &AddressOrClassHash,
+    ) -> Self {
+        CallResult::Failure(CallFailure::from_execution_error(err, starknet_identifier))
     }
 }
 

@@ -1,24 +1,43 @@
+use crate::cheatcodes::test_environment::TestEnvironment;
+use crate::common::get_contracts;
 use crate::common::{
-    call_contract, deploy_contract, deploy_wrapper, felt_selector_from_name, get_contracts,
-    state::{build_runtime_state, create_cached_state},
+    call_contract, deploy_contract, felt_selector_from_name, state::build_runtime_state,
 };
-use blockifier::state::cached_state::{CachedState, GlobalContractCache};
+use blockifier::state::cached_state::{
+    CachedState, GlobalContractCache, GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST,
+};
 use cairo_felt::{felt_str, Felt252};
-use cairo_lang_starknet::contract::starknet_keccak;
+use cairo_lang_starknet_classes::keccak::starknet_keccak;
 use cairo_vm::hint_processor::hint_processor_utils::felt_to_usize;
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::{
+    Event, SpyTarget,
+};
 use cheatnet::{
     constants::build_testing_state,
     forking::state::ForkStateReader,
-    runtime_extensions::forge_runtime_extension::cheatcodes::{
-        declare::declare,
-        spy_events::{Event, SpyTarget},
-    },
     state::{CheatnetState, ExtendedStateReader},
 };
 use conversions::IntoConv;
 use starknet_api::block::BlockNumber;
 use std::vec;
 use tempfile::TempDir;
+
+trait SpyTrait {
+    fn spy_events(&mut self, spy_on: SpyTarget) -> usize;
+    fn fetch_events(&mut self, id: usize) -> (usize, Vec<Felt252>);
+}
+
+impl<'a> SpyTrait for TestEnvironment<'a> {
+    fn spy_events(&mut self, spy_on: SpyTarget) -> usize {
+        self.runtime_state.cheatnet_state.spy_events(spy_on)
+    }
+
+    fn fetch_events(&mut self, id: usize) -> (usize, Vec<Felt252>) {
+        self.runtime_state
+            .cheatnet_state
+            .fetch_events(&Felt252::from(id))
+    }
+}
 
 pub fn felt_vec_to_event_vec(felts: &[Felt252]) -> Vec<Event> {
     let mut events = vec![];
@@ -48,31 +67,16 @@ pub fn felt_vec_to_event_vec(felts: &[Felt252]) -> Vec<Event> {
 
 #[test]
 fn spy_events_complex() {
-    let mut cached_state = create_cached_state();
     let mut cheatnet_state = CheatnetState::default();
-    let mut runtime_state = build_runtime_state(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
-    let contract_address = deploy_contract(
-        &mut cached_state,
-        &mut runtime_state,
-        "SpyEventsChecker",
-        &[],
-    );
+    let contract_address = test_env.deploy("SpyEventsChecker", &[]);
 
-    let id = runtime_state.cheatnet_state.spy_events(SpyTarget::All);
+    let id = test_env.spy_events(SpyTarget::All);
 
-    let selector = felt_selector_from_name("emit_one_event");
-    call_contract(
-        &mut cached_state,
-        &mut runtime_state,
-        &contract_address,
-        &selector,
-        &[Felt252::from(123)],
-    );
+    test_env.call_contract(&contract_address, "emit_one_event", &[Felt252::from(123)]);
 
-    let (length, serialized_events) = runtime_state
-        .cheatnet_state
-        .fetch_events(&Felt252::from(id));
+    let (length, serialized_events) = test_env.fetch_events(id);
     let events = felt_vec_to_event_vec(&serialized_events);
 
     assert_eq!(length, 1, "There should be one event");
@@ -91,53 +95,28 @@ fn spy_events_complex() {
         "Wrong event"
     );
 
-    let selector = felt_selector_from_name("emit_one_event");
-    call_contract(
-        &mut cached_state,
-        &mut runtime_state,
-        &contract_address,
-        &selector,
-        &[Felt252::from(123)],
-    );
+    test_env.call_contract(&contract_address, "emit_one_event", &[Felt252::from(123)]);
 
-    let (length, _) = runtime_state
-        .cheatnet_state
-        .fetch_events(&Felt252::from(id));
+    let (length, _) = test_env.fetch_events(id);
     assert_eq!(length, 1, "There should be one new event");
 
-    let (length, _) = runtime_state
-        .cheatnet_state
-        .fetch_events(&Felt252::from(id));
+    let (length, _) = test_env.fetch_events(id);
     assert_eq!(length, 0, "There should be no new events");
 }
 
 #[test]
 fn check_events_order() {
-    let mut cached_state = create_cached_state();
     let mut cheatnet_state = CheatnetState::default();
-    let mut runtime_state = build_runtime_state(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
-    let spy_events_checker_address = deploy_contract(
-        &mut cached_state,
-        &mut runtime_state,
-        "SpyEventsChecker",
-        &[],
-    );
-    let spy_events_order_checker_address = deploy_contract(
-        &mut cached_state,
-        &mut runtime_state,
-        "SpyEventsOrderChecker",
-        &[],
-    );
+    let spy_events_checker_address = test_env.deploy("SpyEventsChecker", &[]);
+    let spy_events_order_checker_address = test_env.deploy("SpyEventsOrderChecker", &[]);
 
-    let id = runtime_state.cheatnet_state.spy_events(SpyTarget::All);
+    let id = test_env.spy_events(SpyTarget::All);
 
-    let selector = felt_selector_from_name("emit_and_call_another");
-    call_contract(
-        &mut cached_state,
-        &mut runtime_state,
+    test_env.call_contract(
         &spy_events_order_checker_address,
-        &selector,
+        "emit_and_call_another",
         &[
             Felt252::from(123),
             Felt252::from(234),
@@ -146,9 +125,7 @@ fn check_events_order() {
         ],
     );
 
-    let (length, serialized_events) = runtime_state
-        .cheatnet_state
-        .fetch_events(&Felt252::from(id));
+    let (length, serialized_events) = test_env.fetch_events(id);
     let events = felt_vec_to_event_vec(&serialized_events);
 
     assert_eq!(length, 3, "There should be three events");
@@ -183,40 +160,25 @@ fn check_events_order() {
 
 #[test]
 fn check_events_captured_only_for_spied_contracts() {
-    let mut cached_state = create_cached_state();
     let mut cheatnet_state = CheatnetState::default();
-    let mut runtime_state = build_runtime_state(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
-    let spy_events_checker_address = deploy_contract(
-        &mut cached_state,
-        &mut runtime_state,
-        "SpyEventsChecker",
-        &[],
-    );
-    let selector = felt_selector_from_name("emit_one_event");
+    let spy_events_checker_address = test_env.deploy("SpyEventsChecker", &[]);
 
-    call_contract(
-        &mut cached_state,
-        &mut runtime_state,
+    test_env.call_contract(
         &spy_events_checker_address,
-        &selector,
+        "emit_one_event",
         &[Felt252::from(123)],
     );
 
-    let id = runtime_state
-        .cheatnet_state
-        .spy_events(SpyTarget::One(spy_events_checker_address));
-    call_contract(
-        &mut cached_state,
-        &mut runtime_state,
+    let id = test_env.spy_events(SpyTarget::One(spy_events_checker_address));
+    test_env.call_contract(
         &spy_events_checker_address,
-        &selector,
+        "emit_one_event",
         &[Felt252::from(123)],
     );
 
-    let (length, serialized_events) = runtime_state
-        .cheatnet_state
-        .fetch_events(&Felt252::from(id));
+    let (length, serialized_events) = test_env.fetch_events(id);
     let events = felt_vec_to_event_vec(&serialized_events);
 
     assert_eq!(length, 1, "There should be one event");
@@ -238,39 +200,18 @@ fn check_events_captured_only_for_spied_contracts() {
 
 #[test]
 fn duplicate_spies_on_one_address() {
-    let mut cached_state = create_cached_state();
     let mut cheatnet_state = CheatnetState::default();
-    let mut runtime_state = build_runtime_state(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
-    let contract_address = deploy_contract(
-        &mut cached_state,
-        &mut runtime_state,
-        "SpyEventsChecker",
-        &[],
-    );
+    let contract_address = test_env.deploy("SpyEventsChecker", &[]);
 
-    let id1 = runtime_state
-        .cheatnet_state
-        .spy_events(SpyTarget::One(contract_address));
-    let id2 = runtime_state
-        .cheatnet_state
-        .spy_events(SpyTarget::One(contract_address));
+    let id1 = test_env.spy_events(SpyTarget::One(contract_address));
+    let id2 = test_env.spy_events(SpyTarget::One(contract_address));
 
-    let selector = felt_selector_from_name("emit_one_event");
-    call_contract(
-        &mut cached_state,
-        &mut runtime_state,
-        &contract_address,
-        &selector,
-        &[Felt252::from(123)],
-    );
+    test_env.call_contract(&contract_address, "emit_one_event", &[Felt252::from(123)]);
 
-    let (length1, serialized_events1) = runtime_state
-        .cheatnet_state
-        .fetch_events(&Felt252::from(id1));
-    let (length2, _) = runtime_state
-        .cheatnet_state
-        .fetch_events(&Felt252::from(id2));
+    let (length1, serialized_events1) = test_env.fetch_events(id1);
+    let (length2, _) = test_env.fetch_events(id2);
     let events1 = felt_vec_to_event_vec(&serialized_events1);
 
     assert_eq!(length1, 1, "There should be one event");
@@ -288,33 +229,22 @@ fn duplicate_spies_on_one_address() {
 
 #[test]
 fn library_call_emits_event() {
-    let mut cached_state = create_cached_state();
     let mut cheatnet_state = CheatnetState::default();
-    let mut runtime_state = build_runtime_state(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
     let contracts = get_contracts();
-    let class_hash = declare(&mut cached_state, "SpyEventsChecker", &contracts).unwrap();
-    let contract_address = deploy_contract(
-        &mut cached_state,
-        &mut runtime_state,
-        "SpyEventsLibCall",
-        &[],
-    );
+    let class_hash = test_env.declare("SpyEventsChecker", &contracts);
+    let contract_address = test_env.deploy("SpyEventsLibCall", &[]);
 
-    let id = runtime_state.cheatnet_state.spy_events(SpyTarget::All);
+    let id = test_env.spy_events(SpyTarget::All);
 
-    let selector = felt_selector_from_name("call_lib_call");
-    call_contract(
-        &mut cached_state,
-        &mut runtime_state,
+    test_env.call_contract(
         &contract_address,
-        &selector,
+        "call_lib_call",
         &[Felt252::from(123), class_hash.into_()],
     );
 
-    let (length, serialized_events) = runtime_state
-        .cheatnet_state
-        .fetch_events(&Felt252::from(id));
+    let (length, serialized_events) = test_env.fetch_events(id);
     let events = felt_vec_to_event_vec(&serialized_events);
 
     assert_eq!(length, 1, "There should be one event");
@@ -331,22 +261,14 @@ fn library_call_emits_event() {
 
 #[test]
 fn event_emitted_in_constructor() {
-    let mut cached_state = create_cached_state();
     let mut cheatnet_state = CheatnetState::default();
-    let mut runtime_state = build_runtime_state(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
-    let id = runtime_state.cheatnet_state.spy_events(SpyTarget::All);
+    let id = test_env.spy_events(SpyTarget::All);
 
-    let contract_address = deploy_contract(
-        &mut cached_state,
-        &mut runtime_state,
-        "ConstructorSpyEventsChecker",
-        &[Felt252::from(123)],
-    );
+    let contract_address = test_env.deploy("ConstructorSpyEventsChecker", &[Felt252::from(123)]);
 
-    let (length, serialized_events) = runtime_state
-        .cheatnet_state
-        .fetch_events(&Felt252::from(id));
+    let (length, serialized_events) = test_env.fetch_events(id);
     let events = felt_vec_to_event_vec(&serialized_events);
 
     assert_eq!(length, 1, "There should be one event");
@@ -368,41 +290,27 @@ fn event_emitted_in_constructor() {
 
 #[test]
 fn check_if_there_is_no_interference() {
-    let mut cached_state = create_cached_state();
     let mut cheatnet_state = CheatnetState::default();
-    let mut runtime_state = build_runtime_state(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
-    let contracts = get_contracts();
+    let contracts: std::collections::HashMap<String, scarb_api::StarknetContractArtifacts> =
+        get_contracts();
+    let class_hash = test_env.declare("SpyEventsChecker", &contracts);
 
-    let class_hash = declare(&mut cached_state, "SpyEventsChecker", &contracts).unwrap();
+    let spy_events_checker_address = test_env.deploy_wrapper(&class_hash, &[]);
+    let other_spy_events_checker_address = test_env.deploy_wrapper(&class_hash, &[]);
 
-    let spy_events_checker_address =
-        deploy_wrapper(&mut cached_state, &mut runtime_state, &class_hash, &[]).unwrap();
-    let other_spy_events_checker_address =
-        deploy_wrapper(&mut cached_state, &mut runtime_state, &class_hash, &[]).unwrap();
+    let id1 = test_env.spy_events(SpyTarget::One(spy_events_checker_address));
+    let id2 = test_env.spy_events(SpyTarget::One(other_spy_events_checker_address));
 
-    let id1 = runtime_state
-        .cheatnet_state
-        .spy_events(SpyTarget::One(spy_events_checker_address));
-    let id2 = runtime_state
-        .cheatnet_state
-        .spy_events(SpyTarget::One(other_spy_events_checker_address));
-
-    let selector = felt_selector_from_name("emit_one_event");
-    call_contract(
-        &mut cached_state,
-        &mut runtime_state,
+    test_env.call_contract(
         &spy_events_checker_address,
-        &selector,
+        "emit_one_event",
         &[Felt252::from(123)],
     );
 
-    let (length1, serialized_events1) = runtime_state
-        .cheatnet_state
-        .fetch_events(&Felt252::from(id1));
-    let (length2, _) = runtime_state
-        .cheatnet_state
-        .fetch_events(&Felt252::from(id2));
+    let (length1, serialized_events1) = test_env.fetch_events(id1);
+    let (length2, _) = test_env.fetch_events(id2);
     let events1 = felt_vec_to_event_vec(&serialized_events1);
 
     assert_eq!(length1, 1, "There should be one event");
@@ -420,50 +328,28 @@ fn check_if_there_is_no_interference() {
 
 #[test]
 fn test_nested_calls() {
-    let mut cached_state = create_cached_state();
     let mut cheatnet_state = CheatnetState::default();
-    let mut runtime_state = build_runtime_state(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
-    let spy_events_checker_address = deploy_contract(
-        &mut cached_state,
-        &mut runtime_state,
-        "SpyEventsChecker",
-        &[],
-    );
+    let spy_events_checker_address = test_env.deploy("SpyEventsChecker", &[]);
 
     let contracts = get_contracts();
+    let class_hash = test_env.declare("SpyEventsCheckerProxy", &contracts);
 
-    let class_hash = declare(&mut cached_state, "SpyEventsCheckerProxy", &contracts).unwrap();
+    let spy_events_checker_proxy_address =
+        test_env.deploy_wrapper(&class_hash, &[spy_events_checker_address.into_()]);
+    let spy_events_checker_top_proxy_address =
+        test_env.deploy_wrapper(&class_hash, &[spy_events_checker_proxy_address.into_()]);
 
-    let spy_events_checker_proxy_address = deploy_wrapper(
-        &mut cached_state,
-        &mut runtime_state,
-        &class_hash,
-        &[spy_events_checker_address.into_()],
-    )
-    .unwrap();
-    let spy_events_checker_top_proxy_address = deploy_wrapper(
-        &mut cached_state,
-        &mut runtime_state,
-        &class_hash,
-        &[spy_events_checker_proxy_address.into_()],
-    )
-    .unwrap();
+    let id = test_env.spy_events(SpyTarget::All);
 
-    let id = runtime_state.cheatnet_state.spy_events(SpyTarget::All);
-
-    let selector = felt_selector_from_name("emit_one_event");
-    call_contract(
-        &mut cached_state,
-        &mut runtime_state,
+    test_env.call_contract(
         &spy_events_checker_top_proxy_address,
-        &selector,
+        "emit_one_event",
         &[Felt252::from(123)],
     );
 
-    let (length, serialized_events) = runtime_state
-        .cheatnet_state
-        .fetch_events(&Felt252::from(id));
+    let (length, serialized_events) = test_env.fetch_events(id);
     let events = felt_vec_to_event_vec(&serialized_events);
 
     assert_eq!(length, 3, "There should be three events");
@@ -498,64 +384,32 @@ fn test_nested_calls() {
 
 #[test]
 fn use_multiple_spies() {
-    let mut cached_state = create_cached_state();
     let mut cheatnet_state = CheatnetState::default();
-    let mut runtime_state = build_runtime_state(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
-    let spy_events_checker_address = deploy_contract(
-        &mut cached_state,
-        &mut runtime_state,
-        "SpyEventsChecker",
-        &[],
-    );
+    let spy_events_checker_address = test_env.deploy("SpyEventsChecker", &[]);
 
     let contracts = get_contracts();
+    let class_hash = test_env.declare("SpyEventsCheckerProxy", &contracts);
 
-    let class_hash = declare(&mut cached_state, "SpyEventsCheckerProxy", &contracts).unwrap();
+    let spy_events_checker_proxy_address =
+        test_env.deploy_wrapper(&class_hash, &[spy_events_checker_address.into_()]);
+    let spy_events_checker_top_proxy_address =
+        test_env.deploy_wrapper(&class_hash, &[spy_events_checker_proxy_address.into_()]);
 
-    let spy_events_checker_proxy_address = deploy_wrapper(
-        &mut cached_state,
-        &mut runtime_state,
-        &class_hash,
-        &[spy_events_checker_address.into_()],
-    )
-    .unwrap();
-    let spy_events_checker_top_proxy_address = deploy_wrapper(
-        &mut cached_state,
-        &mut runtime_state,
-        &class_hash,
-        &[spy_events_checker_proxy_address.into_()],
-    )
-    .unwrap();
+    let id1 = test_env.spy_events(SpyTarget::One(spy_events_checker_address));
+    let id2 = test_env.spy_events(SpyTarget::One(spy_events_checker_proxy_address));
+    let id3 = test_env.spy_events(SpyTarget::One(spy_events_checker_top_proxy_address));
 
-    let id1 = runtime_state
-        .cheatnet_state
-        .spy_events(SpyTarget::One(spy_events_checker_address));
-    let id2 = runtime_state
-        .cheatnet_state
-        .spy_events(SpyTarget::One(spy_events_checker_proxy_address));
-    let id3 = runtime_state
-        .cheatnet_state
-        .spy_events(SpyTarget::One(spy_events_checker_top_proxy_address));
-
-    let selector = felt_selector_from_name("emit_one_event");
-    call_contract(
-        &mut cached_state,
-        &mut runtime_state,
+    test_env.call_contract(
         &spy_events_checker_top_proxy_address,
-        &selector,
+        "emit_one_event",
         &[Felt252::from(123)],
     );
 
-    let (length1, serialized_events1) = runtime_state
-        .cheatnet_state
-        .fetch_events(&Felt252::from(id1));
-    let (length2, serialized_events2) = runtime_state
-        .cheatnet_state
-        .fetch_events(&Felt252::from(id2));
-    let (length3, serialized_events3) = runtime_state
-        .cheatnet_state
-        .fetch_events(&Felt252::from(id3));
+    let (length1, serialized_events1) = test_env.fetch_events(id1);
+    let (length2, serialized_events2) = test_env.fetch_events(id2);
+    let (length3, serialized_events3) = test_env.fetch_events(id3);
     let events1 = felt_vec_to_event_vec(&serialized_events1);
     let events2 = felt_vec_to_event_vec(&serialized_events2);
     let events3 = felt_vec_to_event_vec(&serialized_events3);
@@ -595,31 +449,20 @@ fn use_multiple_spies() {
 
 #[test]
 fn test_emitted_by_emit_events_syscall() {
-    let mut cached_state = create_cached_state();
     let mut cheatnet_state = CheatnetState::default();
-    let mut runtime_state = build_runtime_state(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
-    let contract_address = deploy_contract(
-        &mut cached_state,
-        &mut runtime_state,
-        "SpyEventsChecker",
-        &[],
-    );
+    let contract_address = test_env.deploy("SpyEventsChecker", &[]);
 
-    let id = runtime_state.cheatnet_state.spy_events(SpyTarget::All);
+    let id = test_env.spy_events(SpyTarget::All);
 
-    let selector = felt_selector_from_name("emit_event_syscall");
-    call_contract(
-        &mut cached_state,
-        &mut runtime_state,
+    test_env.call_contract(
         &contract_address,
-        &selector,
+        "emit_event_syscall",
         &[Felt252::from(123), Felt252::from(456)],
     );
 
-    let (length, serialized_events) = runtime_state
-        .cheatnet_state
-        .fetch_events(&Felt252::from(id));
+    let (length, serialized_events) = test_env.fetch_events(id);
     let events = felt_vec_to_event_vec(&serialized_events);
 
     assert_eq!(length, 1, "There should be one event");
@@ -645,7 +488,7 @@ fn capture_cairo0_event() {
                 temp_dir.path().to_str().unwrap(),
             )),
         },
-        GlobalContractCache::default(),
+        GlobalContractCache::new(GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST),
     );
     let mut cheatnet_state = CheatnetState::default();
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);

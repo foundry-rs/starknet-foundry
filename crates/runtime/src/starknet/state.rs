@@ -53,14 +53,11 @@ impl StateReader for DictStateReader {
             .ok_or(StateError::UnavailableContractAddress(contract_address))
     }
 
-    fn get_compiled_contract_class(
-        &mut self,
-        class_hash: &ClassHash,
-    ) -> StateResult<ContractClass> {
-        let contract_class = self.class_hash_to_class.get(class_hash).cloned();
+    fn get_compiled_contract_class(&mut self, class_hash: ClassHash) -> StateResult<ContractClass> {
+        let contract_class = self.class_hash_to_class.get(&class_hash).cloned();
         match contract_class {
             Some(contract_class) => Ok(contract_class),
-            _ => Err(StateError::UndeclaredClassHash(*class_hash)),
+            _ => Err(StateError::UndeclaredClassHash(class_hash)),
         }
     }
 

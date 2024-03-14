@@ -1,4 +1,6 @@
-use blockifier::state::cached_state::{CachedState, GlobalContractCache};
+use blockifier::state::cached_state::{
+    CachedState, GlobalContractCache, GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST,
+};
 use cheatnet::constants::build_testing_state;
 use cheatnet::forking::state::ForkStateReader;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeState;
@@ -11,7 +13,7 @@ pub fn create_cached_state() -> CachedState<ExtendedStateReader> {
             dict_state_reader: build_testing_state(),
             fork_state_reader: None,
         },
-        GlobalContractCache::default(),
+        GlobalContractCache::new(GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST),
     )
 }
 
@@ -26,7 +28,7 @@ pub fn create_fork_cached_state(cache_dir: &str) -> CachedState<ExtendedStateRea
                 cache_dir,
             )),
         },
-        GlobalContractCache::default(),
+        GlobalContractCache::new(GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST),
     )
 }
 
@@ -40,7 +42,7 @@ pub fn create_fork_cached_state_at(
             dict_state_reader: build_testing_state(),
             fork_state_reader: Some(ForkStateReader::new(node_url, block_number, cache_dir)),
         },
-        GlobalContractCache::default(),
+        GlobalContractCache::new(GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST),
     )
 }
 

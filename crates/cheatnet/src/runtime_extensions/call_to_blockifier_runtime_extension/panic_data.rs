@@ -4,10 +4,10 @@ use regex::Regex;
 
 #[must_use]
 pub fn try_extract_panic_data(err: &str) -> Option<Vec<Felt252>> {
-    let re_felt_array = Regex::new(r"Got an exception while executing a hint: Hint Error: Execution failed\. Failure reason: \w+ \('(.*)'\)\.")
+    let re_felt_array = Regex::new(r"Execution failed\. Failure reason: \w+ \('(.*)'\)\.")
         .expect("Could not create felt panic_data matching regex");
 
-    let re_string = Regex::new(r#"(?s)Got an exception while executing a hint: Hint Error: Execution failed\. Failure reason: "(.*)"\."#)
+    let re_string = Regex::new(r#"(?s)Execution failed\. Failure reason: "(.*?)"\."#)
         .expect("Could not create string panic_data matching regex");
 
     if let Some(captures) = re_felt_array.captures(err) {
@@ -27,8 +27,9 @@ pub fn try_extract_panic_data(err: &str) -> Option<Vec<Felt252>> {
 
     if let Some(captures) = re_string.captures(err) {
         if let Some(string_match) = captures.get(1) {
+            let string_match_str = string_match.as_str();
             let panic_data_felts: Vec<Felt252> =
-                ByteArray::from(string_match.as_str()).serialize_with_magic();
+                ByteArray::from(string_match_str).serialize_with_magic();
             return Some(panic_data_felts);
         }
     }

@@ -1,12 +1,11 @@
-use blockifier::execution::entry_point::{
-    CallEntryPoint, CallType, EntryPointExecutionContext, ExecutionResources,
-};
+use blockifier::execution::entry_point::{CallEntryPoint, CallType, EntryPointExecutionContext};
 use blockifier::execution::execution_utils::ReadOnlySegments;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::state::state_api::State;
 use cairo_felt::Felt252;
 use cairo_lang_casm::hints::Hint;
 use cairo_vm::types::relocatable::Relocatable;
+use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use camino::Utf8PathBuf;
 use cheatnet::constants::TEST_ADDRESS;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
@@ -90,7 +89,7 @@ pub fn deploy_contract(
     let class_hash = declare(state, contract_name, &contracts).unwrap();
 
     let mut execution_resources = ExecutionResources::default();
-    let mut entry_point_execution_context = build_context(runtime_state.cheatnet_state.block_info);
+    let mut entry_point_execution_context = build_context(&runtime_state.cheatnet_state.block_info);
     let hints = HashMap::new();
 
     let mut syscall_hint_processor = build_syscall_hint_processor(
@@ -117,7 +116,7 @@ pub fn deploy_wrapper(
     calldata: &[Felt252],
 ) -> Result<ContractAddress, CheatcodeError> {
     let mut execution_resources = ExecutionResources::default();
-    let mut entry_point_execution_context = build_context(runtime_state.cheatnet_state.block_info);
+    let mut entry_point_execution_context = build_context(&runtime_state.cheatnet_state.block_info);
     let hints = HashMap::new();
 
     let mut syscall_hint_processor = build_syscall_hint_processor(
@@ -144,7 +143,7 @@ pub fn deploy_at_wrapper(
     contract_address: ContractAddress,
 ) -> Result<ContractAddress, CheatcodeError> {
     let mut execution_resources = ExecutionResources::default();
-    let mut entry_point_execution_context = build_context(runtime_state.cheatnet_state.block_info);
+    let mut entry_point_execution_context = build_context(&runtime_state.cheatnet_state.block_info);
     let hints = HashMap::new();
 
     let mut syscall_hint_processor = build_syscall_hint_processor(
@@ -162,24 +161,6 @@ pub fn deploy_at_wrapper(
         calldata,
         contract_address,
     )
-}
-
-pub fn call_contract_getter_by_name(
-    state: &mut dyn State,
-    runtime_state: &mut RuntimeState,
-    contract_address: &ContractAddress,
-    fn_name: &str,
-) -> CallResult {
-    let selector = felt_selector_from_name(fn_name);
-    let result = call_contract(
-        state,
-        runtime_state,
-        contract_address,
-        &selector,
-        vec![].as_slice(),
-    );
-
-    result
 }
 
 // This does contract call without the transaction layer. This way `call_contract` can return data and modify state.
@@ -206,7 +187,7 @@ pub fn call_contract(
     };
 
     let mut execution_resources = ExecutionResources::default();
-    let mut entry_point_execution_context = build_context(runtime_state.cheatnet_state.block_info);
+    let mut entry_point_execution_context = build_context(&runtime_state.cheatnet_state.block_info);
     let hints = HashMap::new();
 
     let mut syscall_hint_processor = build_syscall_hint_processor(

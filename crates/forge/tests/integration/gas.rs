@@ -61,8 +61,8 @@ fn deploy_syscall_cost() {
 
     assert_passed(&result);
     // 1101 = gas cost of onchain data (deploy cost)
-    // int(10.24 * 2) = 21 = keccak cost from constructor
-    assert_gas(&result, "deploy_syscall_cost", 1101 + 21);
+    // int(5.12 * 2) = 11 = keccak cost from constructor
+    assert_gas(&result, "deploy_syscall_cost", 1101 + 11);
 }
 
 #[test]
@@ -91,8 +91,8 @@ fn snforge_std_deploy_cost() {
 
     assert_passed(&result);
     // 1101 = gas cost of onchain data (deploy cost)
-    // int(10.24 * 2) = 21 = keccak cost from constructor
-    assert_gas(&result, "deploy_cost", 1101 + 21);
+    // int(5.12 * 2) = 11 = keccak cost from constructor
+    assert_gas(&result, "deploy_cost", 1101 + 11);
 }
 
 #[test]
@@ -109,7 +109,7 @@ fn keccak_cost() {
     let result = run_test_case(&test);
 
     assert_passed(&result);
-    assert_gas(&result, "keccak_cost", 11);
+    assert_gas(&result, "keccak_cost", 6);
 }
 
 #[test]
@@ -145,8 +145,8 @@ fn contract_keccak_cost() {
 
     assert_passed(&result);
     // 1101 = cost of deploy (see snforge_std_deploy_cost test)
-    // 52 = cost of 5x keccak builtin
-    assert_gas(&result, "contract_keccak_cost", 1101 + 52);
+    // 26 = cost of 5x keccak builtin
+    assert_gas(&result, "contract_keccak_cost", 1101 + 26);
 }
 
 #[test]
@@ -202,8 +202,8 @@ fn contract_range_check_cost() {
 
     assert_passed(&result);
     // 1101 = cost of deploy (see snforge_std_deploy_cost test)
-    // 16 = cost of 192 range check builtins
-    assert_gas(&result, "contract_range_check_cost", 1101 + 16);
+    // 8 = cost of 192 range check builtins
+    assert_gas(&result, "contract_range_check_cost", 1101 + 8);
 }
 
 #[test]
@@ -243,7 +243,7 @@ fn contract_bitwise_cost() {
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IGasCheckerDispatcher { contract_address };
 
-                dispatcher.bitwise(200);
+                dispatcher.bitwise(300);
             }
         "#
         ),
@@ -258,8 +258,8 @@ fn contract_bitwise_cost() {
 
     assert_passed(&result);
     // 1101 = cost of deploy l1 cost (see snforge_std_deploy_cost test)
-    // 64 = cost of 200 bitwise builtins
-    assert_gas(&result, "contract_bitwise_cost", 1101 + 64);
+    // 48 = cost of 300 bitwise builtins
+    assert_gas(&result, "contract_bitwise_cost", 1101 + 48);
 }
 
 #[test]
@@ -314,8 +314,8 @@ fn contract_pedersen_cost() {
 
     assert_passed(&result);
     // 1101 = cost of deploy (see snforge_std_deploy_cost test)
-    // 14 = cost of 86 pedersen builtins
-    assert_gas(&result, "contract_pedersen_cost", 1101 + 14);
+    // 7 = cost of 86 pedersen builtins
+    assert_gas(&result, "contract_pedersen_cost", 1101 + 7);
 }
 
 #[test]
@@ -371,8 +371,8 @@ fn contract_poseidon_cost() {
 
     assert_passed(&result);
     // 1101 = cost of deploy (see snforge_std_deploy_cost test)
-    // 26 = cost of 160 poseidon builtins
-    assert_gas(&result, "contract_poseidon_cost", 1101 + 26);
+    // 13 = cost of 160 poseidon builtins
+    assert_gas(&result, "contract_poseidon_cost", 1101 + 13);
 }
 
 #[test]
@@ -392,7 +392,7 @@ fn ec_op_cost() {
     let result = run_test_case(&test);
 
     assert_passed(&result);
-    assert_gas(&result, "ec_op_cost", 6);
+    assert_gas(&result, "ec_op_cost", 3);
 }
 
 #[test]
@@ -428,8 +428,8 @@ fn contract_ec_op_cost() {
 
     assert_passed(&result);
     // 1101 = cost of deploy (see snforge_std_deploy_cost test)
-    // 52 = cost of 10x ec_op builtins
-    assert_gas(&result, "contract_ec_op_cost", 1101 + 52);
+    // 26 = cost of 10x ec_op builtins
+    assert_gas(&result, "contract_ec_op_cost", 1101 + 26);
 }
 
 #[test]
@@ -464,9 +464,9 @@ fn storage_write_cost() {
     let result = run_test_case(&test);
 
     assert_passed(&result);
-    // 12 = gas cost of steps
+    // 6 = gas cost of steps
     // 2203 = gas cost of onchain data
-    assert_gas(&result, "storage_write_cost", 12 + 2203);
+    assert_gas(&result, "storage_write_cost", 6 + 2203);
 }
 
 #[test]
@@ -532,9 +532,9 @@ fn multiple_storage_writes_cost() {
     let result = run_test_case(&test);
 
     assert_passed(&result);
-    // 17 = gas cost of steps
+    // 9 = gas cost of steps
     // 2203 = gas cost of onchain data
-    assert_gas(&result, "multiple_storage_writes_cost", 17 + 2203);
+    assert_gas(&result, "multiple_storage_writes_cost", 9 + 2203);
 }
 
 #[test]
@@ -569,9 +569,10 @@ fn l1_message_cost() {
     let result = run_test_case(&test);
 
     assert_passed(&result);
-    // 12 = gas cost of steps
-    // 27865 = gas cost of onchain data
-    assert_gas(&result, "l1_message_cost", 12 + 27865);
+    // 6 = gas cost of steps
+    // 1101 = gas cost of deployment
+    // 29524 = gas cost of onchain data
+    assert_gas(&result, "l1_message_cost", 6 + 1101 + 29524);
 }
 
 #[test]
@@ -637,9 +638,10 @@ fn l1_message_cost_for_proxy() {
     let result = run_test_case(&test);
 
     assert_passed(&result);
-    // 23 = gas cost of steps
-    // 29206 = gas cost of onchain data
-    assert_gas(&result, "l1_message_cost_for_proxy", 23 + 29206);
+    // 12 = gas cost of steps
+    // 2442 = gas cost of l1 data (deployments - discounts)
+    // 29524 = gas cost of message
+    assert_gas(&result, "l1_message_cost_for_proxy", 12 + 2442 + 29524);
 }
 
 #[test]
@@ -650,7 +652,7 @@ fn l1_handler_cost() {
             use snforge_std::{ declare, ContractClassTrait, L1HandlerTrait };
 
             #[test]
-            fn l1_message_cost() {
+            fn l1_handler_cost() {
                 let contract = declare("GasChecker");
                 let contract_address = contract.deploy(@array![]).unwrap();
                 
@@ -671,9 +673,77 @@ fn l1_handler_cost() {
     );
 
     let result = run_test_case(&test);
-
     assert_passed(&result);
     // 1101 = gas cost of onchain data (deploy cost)
-    // int(10.24 * 4) = 41 = keccak cost from l1 handler
-    assert_gas(&result, "l1_message_cost", 1101 + 41);
+    // int(5.12 * 4) = 21 = keccak cost from l1 handler
+    // 14643 - l1 cost of payload + emit message handle event
+    assert_gas(&result, "l1_handler_cost", 1101 + 21 + 14643);
+}
+
+#[test]
+fn events_cost() {
+    let test = test_case!(indoc!(
+        r"
+            use starknet::syscalls::emit_event_syscall;
+            #[test]
+            fn events_cost() {
+                let mut keys = array![];
+                let mut values =  array![];
+                
+                let mut i: u32 = 0;
+                while i < 50 {
+                    keys.append('key');
+                    values.append(1);
+                    i += 1;
+                };
+                
+                emit_event_syscall(keys.span(), values.span()).unwrap();
+            }
+        "
+    ));
+
+    let result = run_test_case(&test);
+
+    assert_passed(&result);
+    // 2991 steps and memholes * 0.0025 ~= 8
+    // 6 gas for 50 event values
+    // ~13 gas for 50 event keys
+    assert_gas(&result, "events_cost", 8 + 6 + 13);
+}
+
+#[test]
+fn events_contract_cost() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use snforge_std::{ declare, ContractClassTrait };
+
+            #[starknet::interface]
+            trait IGasChecker<TContractState> {
+                fn emit_event(ref self: TContractState, n_keys_and_vals: u32);
+            }
+
+            #[test]
+            fn event_emission_cost() {
+                let contract_address = declare("GasChecker").deploy(@array![]).unwrap();
+                let dispatcher = IGasCheckerDispatcher { contract_address };
+
+                dispatcher.emit_event(50);
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "GasChecker",
+            Path::new("tests/data/contracts/gas_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test);
+    assert_passed(&result);
+    // 13 = gas cost of steps
+    // 1101 = gas cost of onchain data (deploy cost)
+    // 6 gas for 50 event values
+    // ~13 gas for 50 event keys
+    assert_gas(&result, "event_emission_cost", 13 + 1101 + 6 + 13);
 }
