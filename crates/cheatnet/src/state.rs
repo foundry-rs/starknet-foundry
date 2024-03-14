@@ -229,7 +229,7 @@ pub struct CheatedData {
 
 pub struct TraceData {
     pub current_call_stack: NotEmptyCallStack,
-    pub collect_vm_trace: bool,
+    pub is_vm_trace_needed: bool,
 }
 
 pub struct CheatnetState {
@@ -285,7 +285,7 @@ impl Default for CheatnetState {
             block_info: SerializableBlockInfo::default().into(),
             trace_data: TraceData {
                 current_call_stack: NotEmptyCallStack::from(test_call),
-                collect_vm_trace: false,
+                is_vm_trace_needed: false,
             },
         }
     }
@@ -390,7 +390,7 @@ impl CheatnetState {
 impl TraceData {
     #[must_use]
     pub fn default_vm_trace(&self) -> Option<Vec<TraceEntry>> {
-        if self.collect_vm_trace {
+        if self.is_vm_trace_needed {
             Some(vec![])
         } else {
             None
@@ -436,8 +436,8 @@ impl TraceData {
         vm_trace: Option<Vec<TraceEntry>>,
     ) {
         assert!(
-            (vm_trace.is_some() && self.collect_vm_trace)
-                || (vm_trace.is_none() && !self.collect_vm_trace)
+            (vm_trace.is_some() && self.is_vm_trace_needed)
+                || (vm_trace.is_none() && !self.is_vm_trace_needed)
         );
         let CallStackElement {
             resources_used_before_call,

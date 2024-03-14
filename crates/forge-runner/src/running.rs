@@ -218,7 +218,7 @@ pub fn run_test_case(
         block_info,
         ..Default::default()
     };
-    cheatnet_state.trace_data.collect_vm_trace =
+    cheatnet_state.trace_data.is_vm_trace_needed =
         runner_config.execution_data_to_save.is_vm_trace_needed();
 
     let cheatable_runtime = ExtendedRuntime {

@@ -81,7 +81,7 @@ pub fn execute_entry_point_call_cairo1(
         .extension
         .cheatnet_state
         .trace_data
-        .collect_vm_trace
+        .is_vm_trace_needed
     {
         Some(get_relocated_vm_trace(&vm))
     } else {

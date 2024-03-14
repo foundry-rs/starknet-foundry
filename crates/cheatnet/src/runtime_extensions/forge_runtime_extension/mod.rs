@@ -845,7 +845,7 @@ pub fn update_top_call_vm_trace(runtime: &mut ForgeRuntime, vm: &VirtualMachine)
         .cheatnet_state
         .trace_data;
 
-    if trace_data.collect_vm_trace {
+    if trace_data.is_vm_trace_needed {
         trace_data.current_call_stack.top().borrow_mut().vm_trace =
             Some(get_relocated_vm_trace(vm));
     }
