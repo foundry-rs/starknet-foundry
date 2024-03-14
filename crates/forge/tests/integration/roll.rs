@@ -237,7 +237,7 @@ fn roll_with_span() {
 
                 let target_block_number = 123;
 
-                roll(CheatTarget::One(dispatcher.contract_address), target_block_number, CheatSpan::Calls(1));
+                roll(CheatTarget::One(dispatcher.contract_address), target_block_number, CheatSpan::TargetCalls(1));
 
                 let block_number = dispatcher.get_block_number();
                 assert_eq!(block_number, target_block_number.into());
@@ -254,7 +254,7 @@ fn roll_with_span() {
 
                 let target_block_number = 123;
 
-                roll(CheatTarget::One(dispatcher.contract_address), target_block_number, CheatSpan::Calls(2));
+                roll(CheatTarget::One(dispatcher.contract_address), target_block_number, CheatSpan::TargetCalls(2));
 
                 let block_number = dispatcher.get_block_number();
                 assert_eq!(block_number, target_block_number.into());
@@ -272,7 +272,7 @@ fn roll_with_span() {
                 
                 let target_block_number = 123;
                 
-                roll(CheatTarget::One(test_address()), target_block_number, CheatSpan::Calls(1));
+                roll(CheatTarget::One(test_address()), target_block_number, CheatSpan::TargetCalls(1));
                 
                 let block_number = get_block_number();
                 assert_eq!(block_number, target_block_number.into());

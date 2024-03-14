@@ -245,7 +245,7 @@ fn warp_with_span() {
 
                 let target_block_timestamp = 123;
 
-                warp(CheatTarget::One(dispatcher.contract_address), target_block_timestamp, CheatSpan::Calls(1));
+                warp(CheatTarget::One(dispatcher.contract_address), target_block_timestamp, CheatSpan::TargetCalls(1));
 
                 let block_timestamp = dispatcher.get_block_timestamp();
                 assert_eq!(block_timestamp, target_block_timestamp.into());
@@ -262,7 +262,7 @@ fn warp_with_span() {
 
                 let target_block_timestamp = 123;
 
-                warp(CheatTarget::One(dispatcher.contract_address), target_block_timestamp, CheatSpan::Calls(2));
+                warp(CheatTarget::One(dispatcher.contract_address), target_block_timestamp, CheatSpan::TargetCalls(2));
 
                 let block_timestamp = dispatcher.get_block_timestamp();
                 assert_eq!(block_timestamp, target_block_timestamp.into());
@@ -280,7 +280,7 @@ fn warp_with_span() {
                 
                 let target_block_timestamp = 123;
                 
-                warp(CheatTarget::One(test_address()), target_block_timestamp, CheatSpan::Calls(1));
+                warp(CheatTarget::One(test_address()), target_block_timestamp, CheatSpan::TargetCalls(1));
                 
                 let block_timestamp = get_block_timestamp();
                 assert_eq!(block_timestamp, target_block_timestamp.into());

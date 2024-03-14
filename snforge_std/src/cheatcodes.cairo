@@ -17,7 +17,7 @@ enum CheatTarget {
 #[derive(Drop, Serde, PartialEq, Clone)]
 enum CheatSpan {
     Indefinite: (),
-    Calls: usize,
+    TargetCalls: usize,
 }
 
 fn test_selector() -> felt252 {
@@ -116,7 +116,7 @@ fn mock_calls<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: Destruct<T>
     let contract_address_felt: felt252 = contract_address.into();
     let mut inputs = array![contract_address_felt, function_selector];
 
-    CheatSpan::Calls(amount).serialize(ref inputs);
+    CheatSpan::TargetCalls(amount).serialize(ref inputs);
 
     let mut ret_data_arr = ArrayTrait::new();
     ret_data.serialize(ref ret_data_arr);
@@ -152,5 +152,5 @@ fn replace_bytecode(contract: ContractAddress, new_class: ClassHash) {
 }
 
 fn validate_cheat_span(span: @CheatSpan) {
-    assert!(span != @CheatSpan::Calls(0), "CheatSpan::Calls must be greater than 0");
+    assert!(span != @CheatSpan::TargetCalls(0), "CheatSpan::TargetCalls must be greater than 0");
 }

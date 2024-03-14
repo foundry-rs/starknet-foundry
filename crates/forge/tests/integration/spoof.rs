@@ -690,7 +690,7 @@ fn spoof_with_span() {
                 let mut tx_info_mock = TxInfoMockTrait::default();
                 tx_info_mock.transaction_hash = Option::Some(421);
 
-                spoof(CheatTarget::One(dispatcher.contract_address), tx_info_mock, CheatSpan::Calls(1));
+                spoof(CheatTarget::One(dispatcher.contract_address), tx_info_mock, CheatSpan::TargetCalls(1));
 
                 let mut expected_tx_info = tx_info_before;
                 expected_tx_info.transaction_hash = 421;
@@ -708,7 +708,7 @@ fn spoof_with_span() {
                 let mut tx_info_mock = TxInfoMockTrait::default();
                 tx_info_mock.transaction_hash = Option::Some(421);
 
-                spoof(CheatTarget::One(dispatcher.contract_address), tx_info_mock, CheatSpan::Calls(2));
+                spoof(CheatTarget::One(dispatcher.contract_address), tx_info_mock, CheatSpan::TargetCalls(2));
 
                 let mut expected_tx_info = tx_info_before;
                 expected_tx_info.transaction_hash = 421;
@@ -725,7 +725,7 @@ fn spoof_with_span() {
                 let mut tx_info_mock = TxInfoMockTrait::default();
                 tx_info_mock.transaction_hash = Option::Some(421);
 
-                spoof(CheatTarget::One(test_address()), tx_info_mock, CheatSpan::Calls(1));
+                spoof(CheatTarget::One(test_address()), tx_info_mock, CheatSpan::TargetCalls(1));
                 
                 let mut expected_tx_info = tx_info_before;
                 expected_tx_info.transaction_hash = 421;
