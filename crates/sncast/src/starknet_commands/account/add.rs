@@ -93,7 +93,6 @@ pub async fn add(
         }
         _ => fetched_class_hash,
     };
-
     let account_json =
         prepare_account_json(private_key, add.address, is_deployed, class_hash, add.salt);
 

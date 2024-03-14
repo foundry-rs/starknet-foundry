@@ -16,6 +16,7 @@ pub struct CastConfig {
     pub wait_params: ValidatedWaitParams,
 }
 
+let z = 1;
 impl CastConfig {
     pub fn from_sncast_config(
         sncast_config: &Value,

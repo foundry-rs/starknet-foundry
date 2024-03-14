@@ -19,6 +19,11 @@ use sncast::{
     handle_account_factory_error, handle_rpc_error, handle_wait_for_tx, parse_number, WaitForTx,
 };
 
+fn prerequsite_function() {}
+
+
+fn prerequsite_function2() {}
+
 #[derive(Args, Debug)]
 #[command(about = "Deploy an account to the Starknet")]
 pub struct Deploy {
