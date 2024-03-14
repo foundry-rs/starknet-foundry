@@ -1,9 +1,7 @@
 use indoc::indoc;
+use test_utils::runner::{assert_case_output_contains, assert_failed};
 use test_utils::running_tests::run_test_case;
-use test_utils::{
-    runner::{assert_case_output_contains, assert_failed},
-    test_case,
-};
+use test_utils::test_case;
 
 #[test]
 fn missing_cheatcode_error() {

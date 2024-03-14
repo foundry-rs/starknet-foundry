@@ -4,12 +4,8 @@ mod tests_contract_address {
     use cairo_felt::{Felt252, PRIME_STR};
     use conversions::{FromConv, IntoConv, TryFromConv, TryIntoConv};
     use starknet::core::types::FieldElement;
-    use starknet_api::core::{ClassHash, EntryPointSelector, Nonce};
-    use starknet_api::hash::StarkHash;
-    use starknet_api::{
-        core::{ContractAddress, PatriciaKey},
-        hash::StarkFelt,
-    };
+    use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, Nonce, PatriciaKey};
+    use starknet_api::hash::{StarkFelt, StarkHash};
 
     #[test]
     fn test_contract_address_conversions_happy_case() {

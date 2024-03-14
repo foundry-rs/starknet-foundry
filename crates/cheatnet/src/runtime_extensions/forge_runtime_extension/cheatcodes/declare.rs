@@ -2,14 +2,16 @@ use crate::runtime_extensions::forge_runtime_extension::cheatcodes::{
     CheatcodeError, EnhancedHintError,
 };
 use anyhow::{anyhow, Context, Result};
-use blockifier::{
-    execution::contract_class::{ContractClass as BlockifierContractClass, ContractClassV1},
-    state::{errors::StateError, state_api::State},
+use blockifier::execution::contract_class::{
+    ContractClass as BlockifierContractClass, ContractClassV1,
 };
+use blockifier::state::errors::StateError;
+use blockifier::state::state_api::State;
 use scarb_api::StarknetContractArtifacts;
 use serde_json;
 use starknet::core::types::contract::SierraClass;
-use starknet_api::{core::ClassHash, hash::StarkFelt};
+use starknet_api::core::ClassHash;
+use starknet_api::hash::StarkFelt;
 use std::collections::HashMap;
 
 #[allow(clippy::implicit_hasher)]

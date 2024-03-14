@@ -1,14 +1,14 @@
 use super::common::runner::{setup_package, test_runner};
 use assert_fs::TempDir;
 use forge_runner::build_trace_data::TRACE_DIR;
-use std::{collections::HashMap, fs};
+use std::collections::HashMap;
+use std::fs;
+use trace_data::DeprecatedSyscallSelector::{
+    CallContract, Deploy, EmitEvent, GetBlockHash, GetExecutionInfo, Keccak, LibraryCall,
+    SendMessageToL1, StorageRead, StorageWrite,
+};
 use trace_data::{
-    CallTrace as ProfilerCallTrace,
-    DeprecatedSyscallSelector::{
-        CallContract, Deploy, EmitEvent, GetBlockHash, GetExecutionInfo, Keccak, LibraryCall,
-        SendMessageToL1, StorageRead, StorageWrite,
-    },
-    ExecutionResources as ProfilerExecutionResources,
+    CallTrace as ProfilerCallTrace, ExecutionResources as ProfilerExecutionResources,
 };
 
 #[test]

@@ -1,6 +1,7 @@
 use indoc::indoc;
+use test_utils::runner::assert_passed;
 use test_utils::running_tests::run_test_case;
-use test_utils::{runner::assert_passed, test_case};
+use test_utils::test_case;
 
 #[test]
 fn test_stark_sign_msg_hash_range() {

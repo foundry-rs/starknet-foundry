@@ -1,38 +1,28 @@
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::execute_constructor_entry_point;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeState;
-use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
-use blockifier::execution::syscalls::{
-    DeployRequest, DeployResponse, LibraryCallRequest, SyscallResponse, SyscallResult,
+use blockifier::execution::call_info::CallInfo;
+use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
+use blockifier::execution::entry_point::{
+    CallEntryPoint, CallType, ConstructorContext, EntryPointExecutionContext,
+    EntryPointExecutionResult,
 };
-use blockifier::execution::{call_info::CallInfo, entry_point::ConstructorContext};
-use blockifier::execution::{
-    execution_utils::ReadOnlySegment,
-    syscalls::{hint_processor::write_segment, WriteResponseResult},
+use blockifier::execution::execution_utils::ReadOnlySegment;
+use blockifier::execution::syscalls::hint_processor::{
+    create_retdata_segment, write_segment, SyscallHintProcessor,
+};
+use blockifier::execution::syscalls::{
+    CallContractRequest, DeployRequest, DeployResponse, EmptyRequest, GetExecutionInfoResponse,
+    LibraryCallRequest, SyscallResponse, SyscallResult, WriteResponseResult,
 };
 use blockifier::state::errors::StateError;
-use blockifier::{
-    execution::syscalls::{hint_processor::create_retdata_segment, CallContractRequest},
-    transaction::transaction_utils::update_remaining_gas,
-};
-use blockifier::{
-    execution::{
-        deprecated_syscalls::DeprecatedSyscallSelector,
-        entry_point::{
-            CallEntryPoint, CallType, EntryPointExecutionContext, EntryPointExecutionResult,
-        },
-        syscalls::{EmptyRequest, GetExecutionInfoResponse},
-    },
-    state::state_api::State,
-};
+use blockifier::state::state_api::State;
+use blockifier::transaction::transaction_utils::update_remaining_gas;
 use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cairo_vm::vm::vm_core::VirtualMachine;
-use starknet_api::core::calculate_contract_address;
-use starknet_api::{
-    core::{ClassHash, ContractAddress},
-    deprecated_contract_class::EntryPointType,
-    transaction::Calldata,
-};
+use starknet_api::core::{calculate_contract_address, ClassHash, ContractAddress};
+use starknet_api::deprecated_contract_class::EntryPointType;
+use starknet_api::transaction::Calldata;
 
 use super::calls::{execute_inner_call, execute_library_call};
 use super::execution_info::get_cheated_exec_info_ptr;

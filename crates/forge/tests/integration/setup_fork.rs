@@ -1,9 +1,7 @@
 use forge_runner::contracts_data::ContractsData;
 use indoc::formatdoc;
-use std::path::Path;
-use std::path::PathBuf;
-use std::process::Command;
-use std::process::Stdio;
+use std::path::{Path, PathBuf};
+use std::process::{Command, Stdio};
 use std::sync::Arc;
 
 use camino::Utf8PathBuf;

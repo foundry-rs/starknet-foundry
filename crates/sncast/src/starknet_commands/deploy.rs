@@ -11,8 +11,7 @@ use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
 
 use sncast::response::errors::StarknetCommandError;
-use sncast::{extract_or_generate_salt, udc_uniqueness};
-use sncast::{handle_wait_for_tx, WaitForTx};
+use sncast::{extract_or_generate_salt, handle_wait_for_tx, udc_uniqueness, WaitForTx};
 
 #[derive(Args)]
 #[command(about = "Deploy a contract on Starknet")]

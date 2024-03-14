@@ -1,7 +1,6 @@
 use crate::common::assertions::{assert_error, assert_panic};
-use crate::common::call_contract;
-use crate::common::state::build_runtime_state;
-use crate::common::{deploy_contract, felt_selector_from_name, state::create_cached_state};
+use crate::common::state::{build_runtime_state, create_cached_state};
+use crate::common::{call_contract, deploy_contract, felt_selector_from_name};
 use cairo_felt::Felt252;
 use cairo_lang_utils::byte_array::BYTE_ARRAY_MAGIC;
 use cheatnet::state::CheatnetState;

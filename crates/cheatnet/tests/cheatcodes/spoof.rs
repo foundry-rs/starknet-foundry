@@ -1,12 +1,14 @@
 use super::test_environment::TestEnvironment;
-use crate::common::{assertions::assert_success, get_contracts, recover_data};
+use crate::common::assertions::assert_success;
+use crate::common::{get_contracts, recover_data};
 use cairo_felt::Felt252;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::spoof::TxInfoMock;
 use cheatnet::state::{CheatSpan, CheatTarget, CheatnetState};
 use conversions::IntoConv;
 use num_traits::ToPrimitive;
 use runtime::utils::BufferReader;
-use starknet_api::{core::ContractAddress, transaction::TransactionHash};
+use starknet_api::core::ContractAddress;
+use starknet_api::transaction::TransactionHash;
 
 trait SpoofTrait {
     fn spoof(&mut self, target: CheatTarget, tx_info_mock: TxInfoMock, span: CheatSpan);

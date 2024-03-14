@@ -1,9 +1,12 @@
+use crate::starknet_commands::account;
 use crate::starknet_commands::account::Account;
+use crate::starknet_commands::call::Call;
+use crate::starknet_commands::declare::Declare;
+use crate::starknet_commands::deploy::Deploy;
+use crate::starknet_commands::invoke::Invoke;
+use crate::starknet_commands::multicall::Multicall;
+use crate::starknet_commands::script::Script;
 use crate::starknet_commands::show_config::ShowConfig;
-use crate::starknet_commands::{
-    account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,
-    script::Script,
-};
 use anyhow::{Context, Result};
 use sncast::response::print::{print_command_result, OutputFormat};
 

@@ -1,4 +1,5 @@
-use crate::{common::assertions::assert_success, common::get_contracts};
+use crate::common::assertions::assert_success;
+use crate::common::get_contracts;
 use cairo_felt::Felt252;
 use cheatnet::state::{CheatSpan, CheatTarget, CheatnetState};
 use conversions::IntoConv;

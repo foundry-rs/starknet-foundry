@@ -4,7 +4,8 @@ pub const PREV_TESTS_FAILED: &str = ".prev_tests_failed";
 use anyhow::{Ok, Result};
 use camino::Utf8PathBuf;
 use forge_runner::test_case_summary::AnyTestCaseSummary;
-use scarb_api::{metadata::MetadataCommandExt, ScarbCommand};
+use scarb_api::metadata::MetadataCommandExt;
+use scarb_api::ScarbCommand;
 use std::fs::{self, File};
 use std::io::{BufRead, BufReader, BufWriter, Write};
 

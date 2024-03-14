@@ -3,7 +3,8 @@ use cairo_felt::{felt_str, Felt252};
 use cairo_lang_runner::short_string::{as_cairo_short_string, as_cairo_short_string_ex};
 use cairo_lang_utils::byte_array::{BYTES_IN_WORD, BYTE_ARRAY_MAGIC};
 use indoc::indoc;
-use num_traits::{cast::ToPrimitive, identities::One};
+use num_traits::cast::ToPrimitive;
+use num_traits::identities::One;
 use thiserror::Error;
 
 #[derive(Error, Debug)]

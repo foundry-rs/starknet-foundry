@@ -5,23 +5,18 @@ use rand::rngs::OsRng;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use starknet::core::types::{
-    BlockId, BlockTag,
-    BlockTag::{Latest, Pending},
-    ContractErrorData, FieldElement,
-    StarknetError::{ClassHashNotFound, ContractNotFound, TransactionHashNotFound},
+use starknet::accounts::{ExecutionEncoding, SingleOwnerAccount};
+use starknet::core::types::BlockTag::{Latest, Pending};
+use starknet::core::types::StarknetError::{
+    ClassHashNotFound, ContractNotFound, TransactionHashNotFound,
 };
+use starknet::core::types::{BlockId, BlockTag, ContractErrorData, FieldElement};
 use starknet::core::utils::UdcUniqueness::{NotUnique, Unique};
 use starknet::core::utils::{UdcUniqueSettings, UdcUniqueness};
-use starknet::{
-    accounts::{ExecutionEncoding, SingleOwnerAccount},
-    providers::{
-        jsonrpc::{HttpTransport, JsonRpcClient},
-        Provider, ProviderError,
-        ProviderError::StarknetError,
-    },
-    signers::{LocalWallet, SigningKey},
-};
+use starknet::providers::jsonrpc::{HttpTransport, JsonRpcClient};
+use starknet::providers::ProviderError::StarknetError;
+use starknet::providers::{Provider, ProviderError};
+use starknet::signers::{LocalWallet, SigningKey};
 
 use crate::helpers::constants::{WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
 use crate::response::errors::SNCastProviderError;
@@ -559,16 +554,12 @@ mod tests {
         get_block_id, udc_uniqueness,
     };
     use camino::Utf8PathBuf;
+    use starknet::core::types::BlockTag::{Latest, Pending};
+    use starknet::core::types::{BlockId, FieldElement};
     use starknet::core::utils::UdcUniqueSettings;
     use starknet::core::utils::UdcUniqueness::{NotUnique, Unique};
-    use starknet::{
-        core::types::{
-            BlockId,
-            BlockTag::{Latest, Pending},
-            FieldElement,
-        },
-        providers::{jsonrpc::HttpTransport, JsonRpcClient},
-    };
+    use starknet::providers::jsonrpc::HttpTransport;
+    use starknet::providers::JsonRpcClient;
     use url::Url;
 
     #[test]

@@ -1,21 +1,17 @@
 use std::marker::PhantomData;
 
+use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::entry_point::{CallEntryPoint, CallType};
-use blockifier::execution::execution_utils::felt_from_ptr;
+use blockifier::execution::execution_utils::{felt_from_ptr, ReadOnlySegment};
+use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::execution::syscalls::{
-    CallContractRequest, LibraryCallRequest, SyscallRequestWrapper,
-};
-use blockifier::execution::{
-    deprecated_syscalls::DeprecatedSyscallSelector,
-    execution_utils::ReadOnlySegment,
-    syscalls::{
-        hint_processor::SyscallHintProcessor, SyscallRequest, SyscallResponse,
-        SyscallResponseWrapper,
-    },
+    CallContractRequest, LibraryCallRequest, SyscallRequest, SyscallRequestWrapper,
+    SyscallResponse, SyscallResponseWrapper,
 };
 
 use crate::constants::TEST_ADDRESS;
-use cairo_vm::vm::{errors::hint_errors::HintError, vm_core::VirtualMachine};
+use cairo_vm::vm::errors::hint_errors::HintError;
+use cairo_vm::vm::vm_core::VirtualMachine;
 use conversions::FromConv;
 use runtime::{ExtendedRuntime, ExtensionLogic, SyscallHandlingResult, SyscallPtrAccess};
 use starknet_api::core::{ContractAddress, PatriciaKey};
@@ -25,12 +21,9 @@ use starknet_api::{contract_address, patricia_key};
 
 use crate::state::CheatnetState;
 
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::cheated_syscalls::SingleSegmentResponse;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
-    call_entry_point, AddressOrClassHash,
-};
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::{
-    execution::cheated_syscalls::SingleSegmentResponse,
-    rpc::{CallFailure, CallResult},
+    call_entry_point, AddressOrClassHash, CallFailure, CallResult,
 };
 
 use super::cheatable_starknet_runtime_extension::CheatableStarknetRuntime;

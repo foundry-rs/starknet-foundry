@@ -4,11 +4,9 @@ use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spoof::TxInf
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::{
     Event, SpyTarget,
 };
+use blockifier::execution::contract_class::ContractClass;
 use blockifier::execution::entry_point::CallEntryPoint;
-use blockifier::{
-    execution::contract_class::ContractClass,
-    state::state_api::{StateReader, StateResult},
-};
+use blockifier::state::state_api::{StateReader, StateResult};
 use cairo_felt::Felt252;
 use runtime::starknet::state::DictStateReader;
 
@@ -21,13 +19,11 @@ use blockifier::execution::syscalls::hint_processor::SyscallCounter;
 use blockifier::state::errors::StateError::UndeclaredClassHash;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use runtime::starknet::context::SerializableBlockInfo;
+use starknet_api::class_hash;
+use starknet_api::core::{ClassHash, CompiledClassHash, ContractAddress, Nonce};
+use starknet_api::hash::{StarkFelt, StarkHash};
+use starknet_api::state::StorageKey;
 use starknet_api::transaction::ContractAddressSalt;
-use starknet_api::{
-    class_hash,
-    core::{ClassHash, CompiledClassHash, ContractAddress, Nonce},
-    hash::{StarkFelt, StarkHash},
-    state::StorageKey,
-};
 use std::cell::{Ref, RefCell};
 use std::collections::HashMap;
 use std::hash::BuildHasher;

@@ -1,9 +1,8 @@
+use crate::common::assertions::assert_success;
 use crate::common::state::{build_runtime_state, create_cached_state};
-use crate::common::{call_contract, deploy_wrapper};
-use crate::common::{felt_selector_from_name, recover_data};
-use crate::{
-    common::assertions::assert_success,
-    common::{deploy_contract, get_contracts},
+use crate::common::{
+    call_contract, deploy_contract, deploy_wrapper, felt_selector_from_name, get_contracts,
+    recover_data,
 };
 use cairo_felt::Felt252;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;

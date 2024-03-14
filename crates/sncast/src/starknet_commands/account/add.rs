@@ -4,16 +4,13 @@ use crate::starknet_commands::account::{
 use anyhow::{ensure, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
-use sncast::handle_rpc_error;
 use sncast::helpers::configuration::CastConfig;
 use sncast::response::structs::AccountAddResponse;
-use sncast::{check_class_hash_exists, get_chain_id, parse_number};
+use sncast::{check_class_hash_exists, get_chain_id, handle_rpc_error, parse_number};
 use starknet::core::types::BlockTag::Pending;
 use starknet::core::types::{BlockId, FieldElement, StarknetError};
-use starknet::providers::{
-    jsonrpc::{HttpTransport, JsonRpcClient},
-    Provider, ProviderError,
-};
+use starknet::providers::jsonrpc::{HttpTransport, JsonRpcClient};
+use starknet::providers::{Provider, ProviderError};
 use starknet::signers::SigningKey;
 
 #[derive(Args, Debug)]

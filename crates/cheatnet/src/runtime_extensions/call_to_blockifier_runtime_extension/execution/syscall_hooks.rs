@@ -1,11 +1,8 @@
-use crate::{
-    runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::Event,
-    state::CheatnetState,
-};
-use blockifier::execution::{
-    call_info::OrderedEvent, deprecated_syscalls::hint_processor::DeprecatedSyscallHintProcessor,
-    syscalls::hint_processor::SyscallHintProcessor,
-};
+use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::Event;
+use crate::state::CheatnetState;
+use blockifier::execution::call_info::OrderedEvent;
+use blockifier::execution::deprecated_syscalls::hint_processor::DeprecatedSyscallHintProcessor;
+use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use starknet_api::core::ContractAddress;
 
 pub trait SyscallHintProcessorExt {

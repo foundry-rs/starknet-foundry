@@ -16,14 +16,13 @@ use serde::{Deserialize, Serialize};
 use starknet_api::data_availability::DataAvailabilityMode;
 
 use starknet_api::block::{BlockNumber, BlockTimestamp};
-use starknet_api::transaction::{Resource, ResourceBounds, ResourceBoundsMapping};
-use starknet_api::{
-    contract_address,
-    core::{ChainId, ContractAddress, Nonce, PatriciaKey},
-    hash::{StarkFelt, StarkHash},
-    patricia_key,
-    transaction::{TransactionHash, TransactionSignature, TransactionVersion},
+use starknet_api::core::{ChainId, ContractAddress, Nonce, PatriciaKey};
+use starknet_api::hash::{StarkFelt, StarkHash};
+use starknet_api::transaction::{
+    Resource, ResourceBounds, ResourceBoundsMapping, TransactionHash, TransactionSignature,
+    TransactionVersion,
 };
+use starknet_api::{contract_address, patricia_key};
 
 pub const DEFAULT_BLOCK_NUMBER: u64 = 2000;
 pub const SEQUENCER_ADDRESS: &str = "0x1000";

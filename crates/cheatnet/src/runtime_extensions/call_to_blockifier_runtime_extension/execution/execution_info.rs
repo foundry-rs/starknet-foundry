@@ -1,14 +1,11 @@
 use blockifier::execution::execution_utils::stark_felt_to_felt;
 use cairo_felt::Felt252;
-use cairo_vm::{
-    types::relocatable::{MaybeRelocatable, Relocatable},
-    vm::vm_core::VirtualMachine,
-};
+use cairo_vm::types::relocatable::{MaybeRelocatable, Relocatable};
+use cairo_vm::vm::vm_core::VirtualMachine;
 use conversions::FromConv;
 
-use crate::{
-    runtime_extensions::forge_runtime_extension::cheatcodes::spoof::TxInfoMock, state::CheatedData,
-};
+use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spoof::TxInfoMock;
+use crate::state::CheatedData;
 
 fn get_cheated_block_info_ptr(
     vm: &mut VirtualMachine,

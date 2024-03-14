@@ -4,11 +4,8 @@ use blockifier::execution::execution_utils::stark_felt_to_felt;
 use cairo_felt::{Felt252, ParseFeltError};
 use num_traits::Num;
 use starknet::core::types::FieldElement;
-use starknet_api::core::{EntryPointSelector, Nonce};
-use starknet_api::{
-    core::{ClassHash, ContractAddress},
-    hash::StarkFelt,
-};
+use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, Nonce};
+use starknet_api::hash::StarkFelt;
 
 impl FromConv<FieldElement> for Felt252 {
     fn from_(value: FieldElement) -> Felt252 {

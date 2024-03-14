@@ -1,12 +1,11 @@
-use crate::helpers::{
-    constants::{ACCOUNT, ACCOUNT_FILE_PATH},
-    fixtures::{create_test_provider, from_env, invoke_contract},
-};
+use crate::helpers::constants::{ACCOUNT, ACCOUNT_FILE_PATH};
+use crate::helpers::fixtures::{create_test_provider, from_env, invoke_contract};
 use sncast::helpers::constants::UDC_ADDRESS;
 
 use camino::Utf8PathBuf;
-use sncast::{get_account, ValidatedWaitParams};
-use sncast::{handle_wait_for_tx, parse_number, wait_for_tx, WaitForTx};
+use sncast::{
+    get_account, handle_wait_for_tx, parse_number, wait_for_tx, ValidatedWaitParams, WaitForTx,
+};
 use starknet::contract::ContractFactory;
 use starknet::core::types::FieldElement;
 

@@ -13,13 +13,10 @@ use starknet_api::deprecated_contract_class::EntryPointType;
 
 use runtime::starknet::context::ERC20_CONTRACT_ADDRESS;
 use runtime::starknet::state::DictStateReader;
-use starknet_api::{
-    class_hash, contract_address,
-    core::{ClassHash, ContractAddress, PatriciaKey},
-    hash::StarkHash,
-    patricia_key,
-    transaction::Calldata,
-};
+use starknet_api::core::{ClassHash, ContractAddress, PatriciaKey};
+use starknet_api::hash::StarkHash;
+use starknet_api::transaction::Calldata;
+use starknet_api::{class_hash, contract_address, patricia_key};
 
 pub const MAX_FEE: u128 = 1_000_000 * 100_000_000_000; // 1000000 * min_gas_price.
 pub const INITIAL_BALANCE: u128 = 10 * MAX_FEE;

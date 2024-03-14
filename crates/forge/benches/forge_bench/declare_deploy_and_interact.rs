@@ -1,10 +1,8 @@
 use std::fs;
 use std::path::Path;
-use test_utils::{
-    runner::{assert_passed, Contract, TestCase},
-    running_tests::run_test_case,
-    test_case,
-};
+use test_utils::runner::{assert_passed, Contract, TestCase};
+use test_utils::running_tests::run_test_case;
+use test_utils::test_case;
 
 pub fn setup() -> TestCase {
     test_case!(

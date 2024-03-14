@@ -3,25 +3,21 @@ use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::
 };
 use crate::state::CheatnetState;
 use anyhow::Result;
+use blockifier::execution::common_hints::HintExecutionResult;
+use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::entry_point::EntryPointExecutionContext;
-use blockifier::execution::syscalls::hint_processor::OUT_OF_GAS_ERROR;
+use blockifier::execution::execution_utils::felt_to_stark_felt;
+use blockifier::execution::syscalls::hint_processor::{
+    SyscallExecutionError, SyscallHintProcessor, OUT_OF_GAS_ERROR,
+};
 use blockifier::execution::syscalls::{
     SyscallRequest, SyscallRequestWrapper, SyscallResponse, SyscallResponseWrapper, SyscallResult,
 };
-use blockifier::execution::{
-    common_hints::HintExecutionResult,
-    deprecated_syscalls::DeprecatedSyscallSelector,
-    execution_utils::felt_to_stark_felt,
-    syscalls::hint_processor::{SyscallExecutionError, SyscallHintProcessor},
-};
 use cairo_felt::Felt252;
-use cairo_vm::{
-    types::relocatable::Relocatable,
-    vm::{
-        errors::{hint_errors::HintError, vm_errors::VirtualMachineError},
-        vm_core::VirtualMachine,
-    },
-};
+use cairo_vm::types::relocatable::Relocatable;
+use cairo_vm::vm::errors::hint_errors::HintError;
+use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
+use cairo_vm::vm::vm_core::VirtualMachine;
 use runtime::{ExtendedRuntime, ExtensionLogic, StarknetRuntime, SyscallHandlingResult};
 use starknet_api::hash::StarkFelt;
 

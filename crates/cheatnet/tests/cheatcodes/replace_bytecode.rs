@@ -1,25 +1,19 @@
-use crate::{
-    cheatcodes::test_environment::TestEnvironment, common::assertions::assert_success,
-    common::get_contracts,
-};
+use crate::cheatcodes::test_environment::TestEnvironment;
+use crate::common::assertions::assert_success;
+use crate::common::get_contracts;
 use blockifier::state::cached_state::{
     CachedState, GlobalContractCache, GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST,
 };
 use cairo_felt::Felt252;
-use cheatnet::{
-    constants::build_testing_state,
-    forking::state::ForkStateReader,
-    runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallResult,
-    state::{CheatnetState, ExtendedStateReader},
-};
+use cheatnet::constants::build_testing_state;
+use cheatnet::forking::state::ForkStateReader;
+use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallResult;
+use cheatnet::state::{CheatnetState, ExtendedStateReader};
 use num_traits::Zero;
-use starknet_api::{
-    block::BlockNumber,
-    contract_address,
-    core::{ClassHash, ContractAddress, PatriciaKey},
-    hash::StarkHash,
-    patricia_key,
-};
+use starknet_api::block::BlockNumber;
+use starknet_api::core::{ClassHash, ContractAddress, PatriciaKey};
+use starknet_api::hash::StarkHash;
+use starknet_api::{contract_address, patricia_key};
 use tempfile::TempDir;
 
 trait ReplaceBytecodeTrait {

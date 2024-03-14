@@ -7,12 +7,14 @@ use camino::Utf8PathBuf;
 use clap::{Args, Subcommand};
 use serde_json::json;
 use sncast::helpers::configuration::{
-    find_config_file, load_config, search_config_upwards_relative_to,
+    find_config_file, load_config, search_config_upwards_relative_to, CastConfig,
 };
 use sncast::helpers::constants::CONFIG_FILENAME;
-use sncast::{chain_id_to_network_name, decode_chain_id, helpers::configuration::CastConfig};
-use starknet::{core::types::FieldElement, signers::SigningKey};
-use std::{fs::OpenOptions, io::Write};
+use sncast::{chain_id_to_network_name, decode_chain_id};
+use starknet::core::types::FieldElement;
+use starknet::signers::SigningKey;
+use std::fs::OpenOptions;
+use std::io::Write;
 use toml::Value;
 
 pub mod add;

@@ -1,20 +1,14 @@
-use blockifier::{
-    execution::{
-        entry_point::{CallEntryPoint, CallType},
-        execution_utils::ReadOnlySegment,
-        syscalls::{
-            hint_processor::{create_retdata_segment, SyscallExecutionError, SyscallHintProcessor},
-            SyscallResult,
-        },
-    },
-    transaction::transaction_utils::update_remaining_gas,
+use blockifier::execution::entry_point::{CallEntryPoint, CallType};
+use blockifier::execution::execution_utils::ReadOnlySegment;
+use blockifier::execution::syscalls::hint_processor::{
+    create_retdata_segment, SyscallExecutionError, SyscallHintProcessor,
 };
+use blockifier::execution::syscalls::SyscallResult;
+use blockifier::transaction::transaction_utils::update_remaining_gas;
 use cairo_vm::vm::vm_core::VirtualMachine;
-use starknet_api::{
-    core::{ClassHash, EntryPointSelector},
-    deprecated_contract_class::EntryPointType,
-    transaction::Calldata,
-};
+use starknet_api::core::{ClassHash, EntryPointSelector};
+use starknet_api::deprecated_contract_class::EntryPointType;
+use starknet_api::transaction::Calldata;
 
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeState;
 

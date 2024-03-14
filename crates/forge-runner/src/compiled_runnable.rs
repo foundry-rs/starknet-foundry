@@ -1,5 +1,6 @@
 use crate::expected_result::ExpectedTestResult;
-use cairo_lang_sierra::{ids::GenericTypeId, program::Program};
+use cairo_lang_sierra::ids::GenericTypeId;
+use cairo_lang_sierra::program::Program;
 use serde::Deserialize;
 use starknet_api::block::BlockNumber;
 use url::Url;

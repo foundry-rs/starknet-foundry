@@ -1,20 +1,17 @@
 use anyhow::{anyhow, Context, Result};
 use clap::Args;
 use scarb_api::StarknetContractArtifacts;
-use sncast::response::structs::DeclareResponse;
-use sncast::response::structs::Felt;
+use sncast::response::structs::{DeclareResponse, Felt};
 use sncast::{apply_optional, handle_wait_for_tx, ErrorData, WaitForTx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{ConnectedAccount, Declaration};
 
 use sncast::response::errors::StarknetCommandError;
+use starknet::accounts::{Account, SingleOwnerAccount};
+use starknet::core::types::contract::{CompiledClass, SierraClass};
 use starknet::core::types::FieldElement;
-use starknet::{
-    accounts::{Account, SingleOwnerAccount},
-    core::types::contract::{CompiledClass, SierraClass},
-    providers::jsonrpc::{HttpTransport, JsonRpcClient},
-    signers::LocalWallet,
-};
+use starknet::providers::jsonrpc::{HttpTransport, JsonRpcClient};
+use starknet::signers::LocalWallet;
 use std::collections::HashMap;
 use std::sync::Arc;
 

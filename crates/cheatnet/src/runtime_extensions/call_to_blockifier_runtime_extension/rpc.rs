@@ -1,28 +1,22 @@
 use super::RuntimeState;
-use crate::runtime_extensions::{
-    call_to_blockifier_runtime_extension::{
-        execution::entry_point::execute_call_entry_point, panic_data::try_extract_panic_data,
-    },
-    common::create_execute_calldata,
-};
-use blockifier::execution::{
-    call_info::CallInfo,
-    entry_point::{CallEntryPoint, CallType, EntryPointExecutionResult},
-    errors::{EntryPointExecutionError, PreExecutionError},
-    execution_utils::stark_felt_to_felt,
-    syscalls::hint_processor::{SyscallCounter, SyscallHintProcessor},
-};
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::execute_call_entry_point;
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::panic_data::try_extract_panic_data;
+use crate::runtime_extensions::common::create_execute_calldata;
+use blockifier::execution::call_info::CallInfo;
+use blockifier::execution::entry_point::{CallEntryPoint, CallType, EntryPointExecutionResult};
+use blockifier::execution::errors::{EntryPointExecutionError, PreExecutionError};
+use blockifier::execution::execution_utils::stark_felt_to_felt;
+use blockifier::execution::syscalls::hint_processor::{SyscallCounter, SyscallHintProcessor};
 use blockifier::state::errors::StateError;
 use cairo_felt::Felt252;
 use cairo_lang_runner::casm_run::format_next_item;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
-use conversions::{byte_array::ByteArray, IntoConv};
+use conversions::byte_array::ByteArray;
+use conversions::IntoConv;
 use serde::{Deserialize, Serialize};
+use starknet_api::core::{ClassHash, ContractAddress};
+use starknet_api::deprecated_contract_class::EntryPointType;
 use starknet_api::transaction::EventContent;
-use starknet_api::{
-    core::{ClassHash, ContractAddress},
-    deprecated_contract_class::EntryPointType,
-};
 
 #[derive(Clone, Debug, Default)]
 pub struct UsedResources {

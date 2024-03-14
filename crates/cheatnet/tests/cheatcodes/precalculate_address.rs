@@ -1,4 +1,5 @@
-use crate::{cheatcodes::test_environment::TestEnvironment, common::get_contracts};
+use crate::cheatcodes::test_environment::TestEnvironment;
+use crate::common::get_contracts;
 use cheatnet::state::CheatnetState;
 
 #[test]

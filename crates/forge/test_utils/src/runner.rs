@@ -1,26 +1,19 @@
 use crate::tempdir_with_tool_versions;
 use anyhow::{anyhow, bail, Context, Result};
-use assert_fs::{
-    fixture::{FileTouch, FileWriteStr, PathChild},
-    TempDir,
-};
+use assert_fs::fixture::{FileTouch, FileWriteStr, PathChild};
+use assert_fs::TempDir;
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use camino::Utf8PathBuf;
-use forge_runner::{
-    test_case_summary::{AnyTestCaseSummary, TestCaseSummary},
-    test_crate_summary::TestCrateSummary,
-};
+use forge_runner::test_case_summary::{AnyTestCaseSummary, TestCaseSummary};
+use forge_runner::test_crate_summary::TestCrateSummary;
 use indoc::formatdoc;
-use scarb_api::{
-    get_contracts_map, metadata::MetadataCommandExt, ScarbCommand, StarknetContractArtifacts,
-};
-use std::{
-    collections::HashMap,
-    fs,
-    path::{Path, PathBuf},
-    process::{Command, Stdio},
-    str::FromStr,
-};
+use scarb_api::metadata::MetadataCommandExt;
+use scarb_api::{get_contracts_map, ScarbCommand, StarknetContractArtifacts};
+use std::collections::HashMap;
+use std::fs;
+use std::path::{Path, PathBuf};
+use std::process::{Command, Stdio};
+use std::str::FromStr;
 
 /// Represents a dependency of a Cairo project
 #[derive(Debug, Clone)]

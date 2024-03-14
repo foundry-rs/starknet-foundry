@@ -13,9 +13,9 @@ use cairo_felt::Felt252;
 use cairo_lang_casm::hints::{Hint, StarknetHint};
 use cairo_lang_casm::operand::{CellRef, ResOperand};
 use cairo_lang_runner::casm_run::{
-    extract_buffer, extract_relocatable, get_ptr, vm_get_range, MemBuffer,
+    cell_ref_to_relocatable, extract_buffer, extract_relocatable, get_ptr, vm_get_range, MemBuffer,
 };
-use cairo_lang_runner::{casm_run::cell_ref_to_relocatable, insert_value_to_cellref};
+use cairo_lang_runner::insert_value_to_cellref;
 use cairo_lang_utils::bigint::BigIntAsHex;
 use cairo_vm::hint_processor::hint_processor_definition::{
     HintProcessor, HintProcessorLogic, HintReference,

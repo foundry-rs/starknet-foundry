@@ -1,22 +1,18 @@
 use crate::cheatcodes::test_environment::TestEnvironment;
-use crate::common::get_contracts;
-use crate::common::{
-    call_contract, deploy_contract, felt_selector_from_name, state::build_runtime_state,
-};
+use crate::common::state::build_runtime_state;
+use crate::common::{call_contract, deploy_contract, felt_selector_from_name, get_contracts};
 use blockifier::state::cached_state::{
     CachedState, GlobalContractCache, GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST,
 };
 use cairo_felt::{felt_str, Felt252};
 use cairo_lang_starknet_classes::keccak::starknet_keccak;
 use cairo_vm::hint_processor::hint_processor_utils::felt_to_usize;
+use cheatnet::constants::build_testing_state;
+use cheatnet::forking::state::ForkStateReader;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::{
     Event, SpyTarget,
 };
-use cheatnet::{
-    constants::build_testing_state,
-    forking::state::ForkStateReader,
-    state::{CheatnetState, ExtendedStateReader},
-};
+use cheatnet::state::{CheatnetState, ExtendedStateReader};
 use conversions::IntoConv;
 use starknet_api::block::BlockNumber;
 use std::vec;

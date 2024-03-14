@@ -1,6 +1,7 @@
 use crate::helpers::constants::{ACCOUNT_FILE_PATH, SCRIPTS_DIR, URL};
-use crate::helpers::fixtures::duplicate_contract_directory_with_salt;
-use crate::helpers::fixtures::{copy_script_directory_to_tempdir, get_accounts_path};
+use crate::helpers::fixtures::{
+    copy_script_directory_to_tempdir, duplicate_contract_directory_with_salt, get_accounts_path,
+};
 use crate::helpers::runner::runner;
 use indoc::indoc;
 use shared::test_utils::output_assert::assert_stdout_contains;

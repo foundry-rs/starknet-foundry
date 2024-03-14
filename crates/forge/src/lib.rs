@@ -180,8 +180,10 @@ pub async fn run(
 mod tests {
     use super::*;
     use crate::compiled_raw::{CompiledTestCrateRaw, CrateLocation, TestCaseRaw};
-    use cairo_lang_sierra::{ids::GenericTypeId, program::Program};
-    use forge_runner::{compiled_runnable::TestDetails, expected_result::ExpectedTestResult};
+    use cairo_lang_sierra::ids::GenericTypeId;
+    use cairo_lang_sierra::program::Program;
+    use forge_runner::compiled_runnable::TestDetails;
+    use forge_runner::expected_result::ExpectedTestResult;
 
     #[tokio::test]
     async fn to_runnable_unparsable_url() {

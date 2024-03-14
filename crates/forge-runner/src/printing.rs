@@ -1,7 +1,5 @@
-use crate::{
-    test_case_summary::{AnyTestCaseSummary, FuzzingStatistics, TestCaseSummary},
-    RunnerConfig,
-};
+use crate::test_case_summary::{AnyTestCaseSummary, FuzzingStatistics, TestCaseSummary};
+use crate::RunnerConfig;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use console::style;
 

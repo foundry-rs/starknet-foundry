@@ -7,8 +7,7 @@ use blockifier::state::cached_state::{
 };
 use cairo_felt::{felt_str, Felt252};
 use cairo_lang_starknet_classes::keccak::starknet_keccak;
-use cheatnet::constants::build_testing_state;
-use cheatnet::constants::TEST_ADDRESS;
+use cheatnet::constants::{build_testing_state, TEST_ADDRESS};
 use cheatnet::forking::state::ForkStateReader;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::{
     Event, SpyTarget,

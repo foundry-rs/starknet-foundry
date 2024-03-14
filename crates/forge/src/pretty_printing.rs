@@ -1,7 +1,8 @@
 use crate::compiled_raw::CrateLocation;
 use anyhow::Error;
 use console::style;
-use forge_runner::{test_case_summary::AnyTestCaseSummary, test_crate_summary::TestCrateSummary};
+use forge_runner::test_case_summary::AnyTestCaseSummary;
+use forge_runner::test_crate_summary::TestCrateSummary;
 use starknet_api::block::BlockNumber;
 use std::collections::HashMap;
 

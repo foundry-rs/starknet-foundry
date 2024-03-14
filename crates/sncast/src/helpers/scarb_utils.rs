@@ -1,10 +1,7 @@
 use anyhow::{anyhow, Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
-use scarb_api::{
-    get_contracts_map,
-    metadata::{Metadata, MetadataCommand, PackageMetadata},
-    ScarbCommand, ScarbCommandError, StarknetContractArtifacts,
-};
+use scarb_api::metadata::{Metadata, MetadataCommand, PackageMetadata};
+use scarb_api::{get_contracts_map, ScarbCommand, ScarbCommandError, StarknetContractArtifacts};
 use scarb_ui::args::PackagesFilter;
 use shared::print::print_as_warning;
 use std::collections::HashMap;

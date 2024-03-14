@@ -13,10 +13,9 @@ use forge_runner::test_case_summary::{AnyTestCaseSummary, TestCaseSummary};
 use forge_runner::test_crate_summary::TestCrateSummary;
 use forge_runner::{RunnerConfig, RunnerParams, CACHE_DIR};
 use rand::{thread_rng, RngCore};
+use scarb_api::metadata::{Metadata, MetadataCommandExt, PackageMetadata};
 use scarb_api::{
-    get_contracts_map,
-    metadata::{Metadata, MetadataCommandExt, PackageMetadata},
-    package_matches_version_requirement, target_dir_for_workspace, ScarbCommand,
+    get_contracts_map, package_matches_version_requirement, target_dir_for_workspace, ScarbCommand,
 };
 use scarb_ui::args::PackagesFilter;
 

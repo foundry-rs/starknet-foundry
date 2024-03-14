@@ -9,10 +9,7 @@ use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use camino::Utf8PathBuf;
 use cheatnet::constants::TEST_ADDRESS;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
-    call_entry_point, AddressOrClassHash,
-};
-use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
-    CallFailure, CallResult,
+    call_entry_point, AddressOrClassHash, CallFailure, CallResult,
 };
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeState;
 use cheatnet::runtime_extensions::common::create_execute_calldata;
@@ -26,8 +23,7 @@ use runtime::starknet::context::build_context;
 use scarb_api::metadata::MetadataCommandExt;
 use scarb_api::{get_contracts_map, ScarbCommand, StarknetContractArtifacts};
 use starknet::core::utils::get_selector_from_name;
-use starknet_api::core::PatriciaKey;
-use starknet_api::core::{ClassHash, ContractAddress};
+use starknet_api::core::{ClassHash, ContractAddress, PatriciaKey};
 use starknet_api::deprecated_contract_class::EntryPointType;
 use starknet_api::hash::StarkHash;
 use starknet_api::patricia_key;

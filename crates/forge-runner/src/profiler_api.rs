@@ -1,6 +1,7 @@
 use anyhow::{anyhow, Context, Result};
-use std::process::Stdio;
-use std::{env, fs, path::PathBuf, process::Command};
+use std::path::PathBuf;
+use std::process::{Command, Stdio};
+use std::{env, fs};
 
 pub const PROFILE_DIR: &str = "profile";
 

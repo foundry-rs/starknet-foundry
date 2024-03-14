@@ -1,26 +1,20 @@
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeState;
 use crate::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
 use blockifier::execution::call_info::CallInfo;
+use blockifier::execution::contract_class::{ContractClassV1, EntryPointV1};
 use blockifier::execution::deprecated_syscalls::hint_processor::SyscallCounter;
+use blockifier::execution::entry_point::{
+    CallEntryPoint, EntryPointExecutionContext, EntryPointExecutionResult,
+};
 use blockifier::execution::entry_point_execution::{
     finalize_execution, initialize_execution_context, prepare_call_arguments, VmExecutionContext,
 };
-use blockifier::{
-    execution::{
-        contract_class::{ContractClassV1, EntryPointV1},
-        entry_point::{CallEntryPoint, EntryPointExecutionContext, EntryPointExecutionResult},
-        errors::EntryPointExecutionError,
-        execution_utils::Args,
-    },
-    state::state_api::State,
-};
-use cairo_vm::{
-    hint_processor::hint_processor_definition::HintProcessor,
-    vm::{
-        runners::cairo_runner::{CairoArg, CairoRunner, ExecutionResources},
-        vm_core::VirtualMachine,
-    },
-};
+use blockifier::execution::errors::EntryPointExecutionError;
+use blockifier::execution::execution_utils::Args;
+use blockifier::state::state_api::State;
+use cairo_vm::hint_processor::hint_processor_definition::HintProcessor;
+use cairo_vm::vm::runners::cairo_runner::{CairoArg, CairoRunner, ExecutionResources};
+use cairo_vm::vm::vm_core::VirtualMachine;
 use runtime::{ExtendedRuntime, StarknetRuntime};
 
 // blockifier/src/execution/cairo1_execution.rs:48 (execute_entry_point_call)

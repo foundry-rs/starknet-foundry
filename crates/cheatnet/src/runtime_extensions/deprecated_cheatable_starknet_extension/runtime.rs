@@ -1,30 +1,26 @@
-use std::{any::Any, collections::HashMap};
+use std::any::Any;
+use std::collections::HashMap;
 
 use crate::runtime_extensions::cheatable_starknet_runtime_extension::stark_felt_from_ptr_immutable;
 use anyhow::Result;
-use blockifier::execution::{
-    deprecated_syscalls::{
-        hint_processor::DeprecatedSyscallHintProcessor, DeprecatedSyscallSelector,
-    },
-    hint_code,
-    syscalls::{hint_processor::SyscallExecutionError, SyscallResult},
-};
+use blockifier::execution::deprecated_syscalls::hint_processor::DeprecatedSyscallHintProcessor;
+use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
+use blockifier::execution::hint_code;
+use blockifier::execution::syscalls::hint_processor::SyscallExecutionError;
+use blockifier::execution::syscalls::SyscallResult;
 use cairo_felt::Felt252;
-use cairo_vm::{
-    hint_processor::{
-        builtin_hint_processor::{
-            builtin_hint_processor_definition::HintProcessorData, hint_utils::get_ptr_from_var_name,
-        },
-        hint_processor_definition::{HintProcessor, HintProcessorLogic, HintReference},
-    },
-    serde::deserialize_program::ApTracking,
-    types::{exec_scope::ExecutionScopes, relocatable::Relocatable},
-    vm::{
-        errors::{hint_errors::HintError, vm_errors::VirtualMachineError},
-        runners::cairo_runner::{ResourceTracker, RunResources},
-        vm_core::VirtualMachine,
-    },
+use cairo_vm::hint_processor::builtin_hint_processor::builtin_hint_processor_definition::HintProcessorData;
+use cairo_vm::hint_processor::builtin_hint_processor::hint_utils::get_ptr_from_var_name;
+use cairo_vm::hint_processor::hint_processor_definition::{
+    HintProcessor, HintProcessorLogic, HintReference,
 };
+use cairo_vm::serde::deserialize_program::ApTracking;
+use cairo_vm::types::exec_scope::ExecutionScopes;
+use cairo_vm::types::relocatable::Relocatable;
+use cairo_vm::vm::errors::hint_errors::HintError;
+use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
+use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
+use cairo_vm::vm::vm_core::VirtualMachine;
 use runtime::{SyscallHandlingResult, SyscallPtrAccess};
 
 pub struct DeprecatedStarknetRuntime<'a> {

@@ -1,11 +1,9 @@
 use cairo_felt::Felt252;
 use indoc::indoc;
 use num_bigint::BigUint;
+use test_utils::runner::{assert_case_output_contains, assert_failed, assert_passed};
 use test_utils::running_tests::run_test_case;
-use test_utils::{
-    runner::{assert_case_output_contains, assert_failed, assert_passed},
-    test_case,
-};
+use test_utils::test_case;
 
 #[test]
 fn read_short_string() {

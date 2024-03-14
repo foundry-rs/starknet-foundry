@@ -6,12 +6,9 @@ use blockifier::state::cached_state::StorageEntry;
 use blockifier::state::errors::StateError;
 use blockifier::state::state_api::{StateReader, StateResult};
 
-use starknet_api::core::CompiledClassHash;
+use starknet_api::core::{ClassHash, CompiledClassHash, ContractAddress, Nonce};
+use starknet_api::hash::StarkFelt;
 use starknet_api::state::StorageKey;
-use starknet_api::{
-    core::{ClassHash, ContractAddress, Nonce},
-    hash::StarkFelt,
-};
 
 /// A simple implementation of `StateReader` using `HashMap`s as storage.
 #[derive(Debug, Default)]

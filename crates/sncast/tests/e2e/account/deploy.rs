@@ -1,7 +1,7 @@
 use crate::helpers::constants::{DEVNET_OZ_CLASS_HASH, URL};
-use crate::helpers::fixtures::{convert_to_hex, copy_file};
 use crate::helpers::fixtures::{
-    get_address_from_keystore, get_transaction_hash, get_transaction_receipt, mint_token,
+    convert_to_hex, copy_file, get_address_from_keystore, get_transaction_hash,
+    get_transaction_receipt, mint_token,
 };
 use crate::helpers::runner::runner;
 use indoc::indoc;

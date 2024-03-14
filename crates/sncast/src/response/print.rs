@@ -1,7 +1,9 @@
 use anyhow::Result;
 use serde_json::Value;
 use starknet::core::types::FieldElement;
-use std::{collections::HashMap, fmt::Display, str::FromStr};
+use std::collections::HashMap;
+use std::fmt::Display;
+use std::str::FromStr;
 
 use serde::{Serialize, Serializer};
 

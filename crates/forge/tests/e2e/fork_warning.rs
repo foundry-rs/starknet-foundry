@@ -1,14 +1,17 @@
 use super::common::runner::{setup_package, test_runner};
 use assert_fs::fixture::{FileWriteStr, PathChild};
-use axum::{extract::Query, response::Redirect, routing::any, Router};
+use axum::extract::Query;
+use axum::response::Redirect;
+use axum::routing::any;
+use axum::Router;
 use indoc::{formatdoc, indoc};
 use lazy_static::lazy_static;
-use shared::{consts::EXPECTED_RPC_VERSION, test_utils::output_assert::assert_stdout_contains};
-use std::{thread::sleep, time::Duration};
-use tokio::{
-    net::TcpListener,
-    runtime::{Builder, Runtime},
-};
+use shared::consts::EXPECTED_RPC_VERSION;
+use shared::test_utils::output_assert::assert_stdout_contains;
+use std::thread::sleep;
+use std::time::Duration;
+use tokio::net::TcpListener;
+use tokio::runtime::{Builder, Runtime};
 
 #[derive(serde::Deserialize)]
 struct Params {

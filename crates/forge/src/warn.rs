@@ -1,6 +1,6 @@
-use crate::{
-    compiled_raw::CompiledTestCrateRaw, replace_id_with_params, scarb::config::ForkTarget,
-};
+use crate::compiled_raw::CompiledTestCrateRaw;
+use crate::replace_id_with_params;
+use crate::scarb::config::ForkTarget;
 use anyhow::{anyhow, Result};
 use scarb_api::ScarbCommand;
 use semver::Version;

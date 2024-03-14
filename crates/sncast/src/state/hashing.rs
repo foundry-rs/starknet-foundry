@@ -1,6 +1,5 @@
 #![allow(dead_code)]
-use sha3::Digest;
-use sha3::Sha3_256;
+use sha3::{Digest, Sha3_256};
 use starknet::core::types::FieldElement;
 use std::vec;
 

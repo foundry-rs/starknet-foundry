@@ -4,9 +4,8 @@ mod tests_class_hash {
     use cairo_felt::{Felt252, PRIME_STR};
     use conversions::{FromConv, IntoConv, TryFromConv, TryIntoConv};
     use starknet::core::types::FieldElement;
-    use starknet_api::core::{ContractAddress, EntryPointSelector, Nonce};
-    use starknet_api::hash::StarkHash;
-    use starknet_api::{core::ClassHash, hash::StarkFelt};
+    use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, Nonce};
+    use starknet_api::hash::{StarkFelt, StarkHash};
 
     #[test]
     fn test_class_hash_conversions_happy_case() {
