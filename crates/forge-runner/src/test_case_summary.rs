@@ -76,7 +76,7 @@ pub struct Single;
 impl TestType for Single {
     type GasInfo = u128;
     type TestStatistics = ();
-    type TraceData = Option<ProfilerCallTrace>;
+    type TraceData = ProfilerCallTrace;
 }
 
 /// Summary of running a single test case
