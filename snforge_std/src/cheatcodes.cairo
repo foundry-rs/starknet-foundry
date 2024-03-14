@@ -156,9 +156,8 @@ fn validate_cheat_target_and_span(target: @CheatTarget, span: @CheatSpan) {
     validate_cheat_span(span);
 
     if target == @CheatTarget::All {
-        assert_eq!(
-            span,
-            @CheatSpan::Indefinite,
+        assert!(
+            span == @CheatSpan::Indefinite,
             "CheatTarget::All can only be used with CheatSpan::Indefinite"
         );
     }
