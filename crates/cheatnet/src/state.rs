@@ -388,14 +388,6 @@ impl CheatnetState {
 }
 
 impl TraceData {
-    #[must_use]
-    pub fn default_vm_trace(&self) -> Option<Vec<TraceEntry>> {
-        if self.is_vm_trace_needed {
-            Some(vec![])
-        } else {
-            None
-        }
-    }
     pub fn enter_nested_call(
         &mut self,
         entry_point: CallEntryPoint,

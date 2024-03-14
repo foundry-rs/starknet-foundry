@@ -83,7 +83,7 @@ pub fn execute_call_entry_point(
                     ret_data: ret_data_f252,
                 },
                 &[],
-                runtime_state.cheatnet_state.trace_data.default_vm_trace(),
+                None,
             );
             return Ok(mocked_call_info(entry_point.clone(), ret_data.clone()));
         }
@@ -242,7 +242,7 @@ fn exit_error_call(
         Default::default(),
         CallResult::from_err(error, &identifier),
         &[],
-        runtime_state.cheatnet_state.trace_data.default_vm_trace(),
+        None,
     );
 }
 
