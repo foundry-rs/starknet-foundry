@@ -873,7 +873,6 @@ pub fn get_all_used_resources(runtime: ForgeRuntime) -> UsedResources {
 
     let l1_handler_payload_lengths =
         get_l1_handlers_payloads_lengths(&runtime_call_info.inner_calls);
-
     // call representing the test code
     let top_call = runtime
         .extended_runtime
