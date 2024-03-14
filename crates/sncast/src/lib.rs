@@ -27,6 +27,7 @@ use crate::helpers::constants::{WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
 use crate::response::errors::SNCastProviderError;
 use cairo_felt::Felt252;
 use conversions::felt252::SerializeAsFelt252Vec;
+use serde::de::DeserializeOwned;
 use shared::rpc::create_rpc_client;
 use starknet::accounts::AccountFactoryError;
 use starknet::signers::local_wallet::SignError;
@@ -284,16 +285,8 @@ fn get_account_data_from_keystore(
     account: &str,
     keystore_path: &Utf8PathBuf,
 ) -> Result<AccountData> {
-    if !keystore_path.exists() {
-        bail!("Failed to find keystore file");
-    }
-    if account.is_empty() {
-        bail!("Passed empty path for `--account`");
-    }
+    check_keystore_and_account_files_exist(keystore_path, account)?;
     let path_to_account = Utf8PathBuf::from(account);
-    if !path_to_account.exists() {
-        bail!("File containing the account does not exist: When using `--keystore` argument, the `--account` argument should be a path to the starkli JSON account file");
-    }
 
     let private_key = SigningKey::from_keystore(
         keystore_path,
@@ -302,33 +295,27 @@ fn get_account_data_from_keystore(
     .secret_scalar();
     let private_key = format!("{private_key:#x}");
 
-    let file_content = fs::read_to_string(path_to_account.clone())
-        .with_context(|| format!("Failed to read a file = {}", &path_to_account))?;
-    let account_info: Value = serde_json::from_str(&file_content)
-        .with_context(|| format!("Failed to parse file = {} to JSON", &path_to_account))?;
-    let deployment_info = account_info
-        .get("deployment")
-        .expect("Failed to find deployment key in the account JSON file");
+    let account_info: Value = read_and_parse_json_file(&path_to_account)?;
 
-    let parse_to_string = |entry: &Value, key: &str| -> Option<String> {
-        entry.get(key).and_then(Value::as_str).map(str::to_string)
+    let parse_to_string = |entry: &Value, parent_key: &str, child_key: &str| -> Option<String> {
+        get_from_json(entry, parent_key, child_key)
+            .and_then(Value::as_str)
+            .map(str::to_string)
     };
 
-    let address = parse_to_string(deployment_info, "address").ok_or_else(|| {
+    let address = parse_to_string(&account_info, "deployment", "address").ok_or_else(|| {
         anyhow::anyhow!(
             "Failed to get address from account JSON file - make sure the account is deployed"
         )
     })?;
-    let class_hash = parse_to_string(deployment_info, "class_hash");
-    let salt = parse_to_string(deployment_info, "salt");
-    let deployed = parse_to_string(deployment_info, "status").map(|status| &status == "deployed");
-
-    let variant_info = account_info
-        .get("variant")
-        .expect("Failed to find variant key in the account JSON file");
-    let public_key = parse_to_string(variant_info, "public_key")
+    let public_key = parse_to_string(&account_info, "variant", "public_key")
         .ok_or_else(|| anyhow::anyhow!("Failed to get public key from account JSON file"))?;
-    let legacy = variant_info.get("legacy").and_then(Value::as_bool);
+
+    let class_hash = parse_to_string(&account_info, "deployment", "class_hash");
+    let salt = parse_to_string(&account_info, "deployment", "salt");
+    let deployed =
+        parse_to_string(&account_info, "deployment", "status").map(|status| &status == "deployed");
+    let legacy = get_from_json(&account_info, "variant", "legacy").and_then(Value::as_bool);
 
     Ok(AccountData {
         private_key,
@@ -341,20 +328,24 @@ fn get_account_data_from_keystore(
     })
 }
 
+fn get_from_json<'a>(entry: &'a Value, parent_key: &str, child_key: &str) -> Option<&'a Value> {
+    entry
+        .get(parent_key)
+        .expect("Failed to get key from the account JSON file")
+        .get(child_key)
+}
+
 fn get_account_data_from_accounts_file(
     name: &str,
     chain_id: FieldElement,
     path: &Utf8PathBuf,
 ) -> Result<AccountData> {
     raise_if_empty(name, "Account name")?;
-    account_file_exists(path)?;
+    check_account_file_exists(path)?;
 
-    let file_content =
-        fs::read_to_string(path).with_context(|| format!("Failed to read a file = {path}"))?;
-    let accounts: HashMap<String, HashMap<String, AccountData>> =
-        serde_json::from_str(&file_content)
-            .with_context(|| format!("Failed to parse file = {path} to JSON"))?;
+    let accounts: HashMap<String, HashMap<String, AccountData>> = read_and_parse_json_file(path)?;
     let network_name = chain_id_to_network_name(chain_id);
+
     let account = accounts
         .get(&network_name)
         .and_then(|accounts_map| accounts_map.get(name))
@@ -367,6 +358,13 @@ fn get_account_data_from_accounts_file(
             network_name
         )
     })
+}
+
+fn read_and_parse_json_file<T: DeserializeOwned>(path: &Utf8PathBuf) -> Result<T> {
+    let file_content =
+        fs::read_to_string(path).with_context(|| format!("Failed to read a file = {path}"))?;
+    serde_json::from_str(&file_content)
+        .with_context(|| format!("Failed to parse file = {path} to JSON"))
 }
 
 async fn get_account_encoding(
@@ -620,10 +618,27 @@ pub fn raise_if_empty(value: &str, value_name: &str) -> Result<()> {
     Ok(())
 }
 
-pub fn account_file_exists(accounts_file_path: &Utf8PathBuf) -> Result<()> {
+pub fn check_account_file_exists(accounts_file_path: &Utf8PathBuf) -> Result<()> {
     if !accounts_file_path.exists() {
         bail! {"Accounts file = {} does not exist! If you do not have an account create one with `account create` command \
         or if you're using a custom accounts file, make sure to supply correct path to it with `--accounts-file` argument.", accounts_file_path}
+    }
+    Ok(())
+}
+
+pub fn check_keystore_and_account_files_exist(
+    keystore_path: &Utf8PathBuf,
+    account: &str,
+) -> Result<()> {
+    if !keystore_path.exists() {
+        bail!("Failed to find keystore file");
+    }
+    if account.is_empty() {
+        bail!("Passed empty path for `--account`");
+    }
+    let path_to_account = Utf8PathBuf::from(account);
+    if !path_to_account.exists() {
+        bail!("File containing the account does not exist: When using `--keystore` argument, the `--account` argument should be a path to the starkli JSON account file");
     }
     Ok(())
 }
