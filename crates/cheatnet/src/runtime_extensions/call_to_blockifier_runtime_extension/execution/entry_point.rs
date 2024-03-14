@@ -316,16 +316,20 @@ fn mocked_call_info(call: CallEntryPoint, ret_data: Vec<StarkFelt>) -> CallInfo 
     }
 }
 
-#[must_use]
 fn aggregate_nested_syscall_counters(trace: &Rc<RefCell<CallTrace>>) -> SyscallCounter {
     let mut result = SyscallCounter::new();
     for nested_call in &trace.borrow().nested_calls {
-        let nested_call = nested_call.borrow();
-        result = sum_syscall_counters(result, &nested_call.used_syscalls);
-        for sub_trace in &nested_call.nested_calls {
-            let sub_trace_counter = aggregate_nested_syscall_counters(sub_trace);
-            result = sum_syscall_counters(result, &sub_trace_counter);
-        }
+        let sub_trace_counter = aggregate_syscall_counters(nested_call);
+        result = sum_syscall_counters(result, &sub_trace_counter);
+    }
+    result
+}
+
+fn aggregate_syscall_counters(trace: &Rc<RefCell<CallTrace>>) -> SyscallCounter {
+    let mut result = trace.borrow().used_syscalls.clone();
+    for nested_call in &trace.borrow().nested_calls {
+        let sub_trace_counter = aggregate_nested_syscall_counters(nested_call);
+        result = sum_syscall_counters(result, &sub_trace_counter);
     }
     result
 }

@@ -1,29 +1,19 @@
-use crate::common::{
-    deploy_wrapper, get_contracts,
-    state::{build_runtime_state, create_cached_state},
-};
-use cairo_felt::Felt252;
-use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
+use crate::{cheatcodes::test_environment::TestEnvironment, common::get_contracts};
 use cheatnet::state::CheatnetState;
 
 #[test]
 fn precalculate_address_simple() {
-    let mut cached_state = create_cached_state();
     let mut cheatnet_state = CheatnetState::default();
-    let mut runtime_state = build_runtime_state(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
     let contracts = get_contracts();
-    let class_hash = declare(&mut cached_state, "HelloStarknet", &contracts).unwrap();
+    let class_hash = test_env.declare("HelloStarknet", &contracts);
 
-    let precalculated1 = runtime_state
-        .cheatnet_state
-        .precalculate_address(&class_hash, &[]);
-    let actual1 = deploy_wrapper(&mut cached_state, &mut runtime_state, &class_hash, &[]).unwrap();
+    let precalculated1 = test_env.precalculate_address(&class_hash, &[]);
+    let actual1 = test_env.deploy_wrapper(&class_hash, &[]);
 
-    let precalculated2 = runtime_state
-        .cheatnet_state
-        .precalculate_address(&class_hash, &[]);
-    let actual2 = deploy_wrapper(&mut cached_state, &mut runtime_state, &class_hash, &[]).unwrap();
+    let precalculated2 = test_env.precalculate_address(&class_hash, &[]);
+    let actual2 = test_env.deploy_wrapper(&class_hash, &[]);
 
     assert_eq!(precalculated1, actual1);
     assert_eq!(precalculated2, actual2);
@@ -32,42 +22,20 @@ fn precalculate_address_simple() {
 
 #[test]
 fn precalculate_address_calldata() {
-    let mut cached_state = create_cached_state();
     let mut cheatnet_state = CheatnetState::default();
-    let mut runtime_state = build_runtime_state(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
     let contracts = get_contracts();
-    let class_hash = declare(&mut cached_state, "ConstructorSimple", &contracts).unwrap();
+    let class_hash = test_env.declare("ConstructorSimple", &contracts);
 
-    let calldata1 = vec![Felt252::from(123)];
-    let calldata2 = vec![Felt252::from(420)];
+    let precalculated1 = test_env.precalculate_address(&class_hash, &[111]);
+    let precalculated2 = test_env.precalculate_address(&class_hash, &[222]);
 
-    let precalculated1 = runtime_state
-        .cheatnet_state
-        .precalculate_address(&class_hash, &calldata1);
-    let precalculated2 = runtime_state
-        .cheatnet_state
-        .precalculate_address(&class_hash, &calldata2);
+    let actual1 = test_env.deploy_wrapper(&class_hash, &[111.into()]);
 
-    let actual1 = deploy_wrapper(
-        &mut cached_state,
-        &mut runtime_state,
-        &class_hash,
-        &calldata1,
-    )
-    .unwrap();
+    let precalculated2_post_deploy = test_env.precalculate_address(&class_hash, &[222]);
 
-    let precalculated2_post_deploy = runtime_state
-        .cheatnet_state
-        .precalculate_address(&class_hash, &calldata2);
-
-    let actual2 = deploy_wrapper(
-        &mut cached_state,
-        &mut runtime_state,
-        &class_hash,
-        &calldata2,
-    )
-    .unwrap();
+    let actual2 = test_env.deploy_wrapper(&class_hash, &[222.into()]);
 
     assert_eq!(precalculated1, actual1);
     assert_ne!(precalculated1, precalculated2);

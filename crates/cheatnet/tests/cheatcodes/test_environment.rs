@@ -18,7 +18,6 @@ pub struct TestEnvironment<'a> {
     pub runtime_state: RuntimeState<'a>,
 }
 
-#[allow(dead_code)]
 impl<'a> TestEnvironment<'a> {
     pub fn new(cheatnet_state: &'a mut CheatnetState) -> Self {
         let cached_state = create_cached_state();
@@ -73,5 +72,19 @@ impl<'a> TestEnvironment<'a> {
             &felt_selector_from_name(selector),
             calldata,
         )
+    }
+
+    pub fn precalculate_address(
+        &mut self,
+        class_hash: &ClassHash,
+        calldata: &[u128],
+    ) -> ContractAddress {
+        let calldata = calldata
+            .iter()
+            .map(|x| Felt252::from(*x))
+            .collect::<Vec<_>>();
+        self.runtime_state
+            .cheatnet_state
+            .precalculate_address(class_hash, &calldata)
     }
 }

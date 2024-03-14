@@ -15,10 +15,10 @@ use cairo_vm::vm::runners::cairo_runner::RunResources;
 use serde::{Deserialize, Serialize};
 use starknet_api::data_availability::DataAvailabilityMode;
 
-use once_cell::sync::Lazy;
 use starknet_api::block::{BlockNumber, BlockTimestamp};
 use starknet_api::transaction::{Resource, ResourceBounds, ResourceBoundsMapping};
 use starknet_api::{
+    contract_address,
     core::{ChainId, ContractAddress, Nonce, PatriciaKey},
     hash::{StarkFelt, StarkHash},
     patricia_key,
@@ -28,26 +28,19 @@ use starknet_api::{
 pub const DEFAULT_BLOCK_NUMBER: u64 = 2000;
 pub const SEQUENCER_ADDRESS: &str = "0x1000";
 pub const ERC20_CONTRACT_ADDRESS: &str = "0x1001";
-pub const STEP_RESOURCE_COST: f64 = 0.005_f64;
-pub const DEFAULT_MAX_N_STEPS: u32 = 3_000_000;
-
-const CONSTANTS_13_0_JSON: &str = include_str!("./resources/versioned_constants_13_0.json");
-static DEFAULT_CONSTANTS: Lazy<VersionedConstants> = Lazy::new(|| {
-    serde_json::from_str(CONSTANTS_13_0_JSON).expect("Versioned constants JSON file is malformed")
-});
 
 #[must_use]
 pub fn build_block_context(block_info: &BlockInfo) -> BlockContext {
     BlockContext::new_unchecked(
         block_info,
         &ChainInfo {
-            chain_id: ChainId("SN_GOERLI".to_string()),
+            chain_id: ChainId("SN_SEPOLIA".to_string()),
             fee_token_addresses: FeeTokenAddresses {
-                strk_fee_token_address: ContractAddress(patricia_key!(ERC20_CONTRACT_ADDRESS)),
-                eth_fee_token_address: ContractAddress(patricia_key!(ERC20_CONTRACT_ADDRESS)),
+                strk_fee_token_address: contract_address!(ERC20_CONTRACT_ADDRESS),
+                eth_fee_token_address: contract_address!(ERC20_CONTRACT_ADDRESS),
             },
         },
-        &DEFAULT_CONSTANTS.clone(),
+        VersionedConstants::latest_constants(), // 0.13.1
     )
 }
 
@@ -139,13 +132,8 @@ impl Default for SerializableBlockInfo {
         Self {
             block_number: BlockNumber(DEFAULT_BLOCK_NUMBER),
             block_timestamp: BlockTimestamp::default(),
-            sequencer_address: ContractAddress(patricia_key!(SEQUENCER_ADDRESS)),
-            gas_prices: SerializableGasPrices {
-                eth_l1_gas_price: NonZeroU128::try_from(100 * u128::pow(10, 9)).unwrap(),
-                strk_l1_gas_price: NonZeroU128::try_from(100 * u128::pow(10, 9)).unwrap(),
-                eth_l1_data_gas_price: NonZeroU128::try_from(u128::pow(10, 6)).unwrap(),
-                strk_l1_data_gas_price: NonZeroU128::try_from(u128::pow(10, 9)).unwrap(),
-            },
+            sequencer_address: contract_address!(SEQUENCER_ADDRESS),
+            gas_prices: SerializableGasPrices::default(),
             use_kzg_da: false,
         }
     }

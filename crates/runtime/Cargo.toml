@@ -22,4 +22,4 @@ cairo-vm.workspace = true
 serde_json.workspace = true
 serde.workspace = true
 thiserror.workspace = true
-once_cell = "1.19.0"
+once_cell.workspace = true

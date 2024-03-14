@@ -855,21 +855,23 @@ pub fn update_top_call_vm_trace(runtime: &mut ForgeRuntime, vm: &VirtualMachine)
 pub fn get_all_used_resources(runtime: ForgeRuntime) -> UsedResources {
     let starknet_runtime = runtime.extended_runtime.extended_runtime.extended_runtime;
     let top_call_l2_to_l1_messages = starknet_runtime.hint_handler.l2_to_l1_messages;
+    let top_call_events = starknet_runtime.hint_handler.events;
 
     // used just to obtain payloads of L2 -> L1 messages
     let runtime_call_info = CallInfo {
         execution: CallExecution {
             l2_to_l1_messages: top_call_l2_to_l1_messages,
+            events: top_call_events,
             ..Default::default()
         },
         inner_calls: starknet_runtime.hint_handler.inner_calls,
         ..Default::default()
     };
-    let l2_to_l1_payloads_lengths = runtime_call_info
+    let l2_to_l1_payload_lengths = runtime_call_info
         .get_sorted_l2_to_l1_payload_lengths()
         .unwrap();
 
-    let l1_handler_payloads_lengths =
+    let l1_handler_payload_lengths =
         get_l1_handlers_payloads_lengths(&runtime_call_info.inner_calls);
 
     // call representing the test code
@@ -885,10 +887,22 @@ pub fn get_all_used_resources(runtime: ForgeRuntime) -> UsedResources {
     let execution_resources = top_call.borrow().used_execution_resources.clone();
     let top_call_syscalls = top_call.borrow().used_syscalls.clone();
 
+    let events = runtime_call_info
+        .into_iter() // This method iterates over inner calls as well
+        .flat_map(|call_info| {
+            call_info
+                .execution
+                .events
+                .iter()
+                .map(|evt| evt.event.clone())
+        })
+        .collect();
+
     UsedResources {
+        events,
         syscall_counter: top_call_syscalls,
         execution_resources,
-        l1_handler_payloads_lengths,
-        l2_to_l1_payloads_lengths,
+        l1_handler_payload_lengths,
+        l2_to_l1_payload_lengths,
     }
 }

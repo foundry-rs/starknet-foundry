@@ -9,6 +9,7 @@ trait IGasChecker<TContractState> {
 
     fn change_balance(ref self: TContractState, new_balance: u64);
     fn send_l1_message(self: @TContractState);
+    fn emit_event(self: @TContractState, n_keys_and_vals: u32);
 }
 
 #[starknet::contract]
@@ -360,6 +361,20 @@ mod GasChecker {
 
         fn send_l1_message(self: @ContractState) {
             starknet::send_message_to_l1_syscall(1, array![1, 2 ,3].span()).unwrap();
+        }
+
+        fn emit_event(self: @ContractState, n_keys_and_vals: u32) {
+             let mut keys = array![];
+             let mut values =  array![];
+
+             let mut i: u32 = 0;
+             while i < n_keys_and_vals {
+                keys.append('key');
+                values.append(1);
+                    i += 1;
+             };
+
+             starknet::emit_event_syscall(keys.span(), values.span()).unwrap();
         }
     }
 
