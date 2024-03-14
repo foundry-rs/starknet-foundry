@@ -727,7 +727,7 @@ fn spoof_simple_with_span() {
     test_env.spoof(
         CheatTarget::One(contract_address),
         tx_info_mock,
-        CheatSpan::Number(2),
+        CheatSpan::TargetCalls(2),
     );
 
     test_env.assert_tx_info(&contract_address, &expected_tx_info);
@@ -753,7 +753,7 @@ fn spoof_proxy_with_span() {
     test_env.spoof(
         CheatTarget::One(contract_address_1),
         tx_info_mock,
-        CheatSpan::Number(1),
+        CheatSpan::TargetCalls(1),
     );
 
     let output = test_env.call_contract(
@@ -785,7 +785,7 @@ fn spoof_in_constructor_with_span() {
     test_env.spoof(
         CheatTarget::One(precalculated_address),
         tx_info_mock,
-        CheatSpan::Number(2),
+        CheatSpan::TargetCalls(2),
     );
 
     let contract_address = test_env.deploy_wrapper(&class_hash, &[]);
@@ -826,7 +826,7 @@ fn spoof_no_constructor_with_span() {
     test_env.spoof(
         CheatTarget::One(precalculated_address),
         tx_info_mock,
-        CheatSpan::Number(1),
+        CheatSpan::TargetCalls(1),
     );
 
     let contract_address = test_env.deploy_wrapper(&class_hash, &[]);
@@ -871,7 +871,7 @@ fn spoof_override_span() {
     test_env.spoof(
         CheatTarget::One(contract_address),
         tx_info_mock,
-        CheatSpan::Number(1),
+        CheatSpan::TargetCalls(1),
     );
 
     test_env.assert_tx_info(&contract_address, &expected_tx_info);
@@ -896,7 +896,7 @@ fn spoof_library_call_with_span() {
     test_env.spoof(
         CheatTarget::One(contract_address),
         tx_info_mock,
-        CheatSpan::Number(1),
+        CheatSpan::TargetCalls(1),
     );
 
     let lib_call_selector = "get_tx_hash_with_lib_call";
@@ -928,7 +928,7 @@ fn spoof_all_span() {
     let expected_tx_info_1 = TxInfo::apply_mock_fields(&tx_info_mock, &tx_info_before_1);
     let expected_tx_info_2 = TxInfo::apply_mock_fields(&tx_info_mock, &tx_info_before_2);
 
-    test_env.spoof(CheatTarget::All, tx_info_mock, CheatSpan::Number(1));
+    test_env.spoof(CheatTarget::All, tx_info_mock, CheatSpan::TargetCalls(1));
 
     test_env.assert_tx_info(&contract_address_1, &expected_tx_info_1);
     test_env.assert_tx_info(&contract_address_1, &tx_info_before_1);

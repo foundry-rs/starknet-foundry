@@ -600,7 +600,7 @@ fn elect_simple_with_span() {
     test_env.elect(
         CheatTarget::One(contract_address),
         123,
-        CheatSpan::Number(2),
+        CheatSpan::TargetCalls(2),
     );
 
     assert_success(
@@ -630,7 +630,7 @@ fn elect_proxy_with_span() {
     test_env.elect(
         CheatTarget::One(contract_address_1),
         123,
-        CheatSpan::Number(1),
+        CheatSpan::TargetCalls(1),
     );
 
     let output = test_env.call_contract(
@@ -660,7 +660,7 @@ fn elect_in_constructor_with_span() {
     test_env.elect(
         CheatTarget::One(precalculated_address),
         123,
-        CheatSpan::Number(2),
+        CheatSpan::TargetCalls(2),
     );
 
     let contract_address = test_env.deploy_wrapper(&class_hash, &[]);
@@ -696,7 +696,7 @@ fn elect_no_constructor_with_span() {
     test_env.elect(
         CheatTarget::One(precalculated_address),
         123,
-        CheatSpan::Number(1),
+        CheatSpan::TargetCalls(1),
     );
 
     let contract_address = test_env.deploy_wrapper(&class_hash, &[]);
@@ -722,7 +722,7 @@ fn elect_override_span() {
     test_env.elect(
         CheatTarget::One(contract_address),
         123,
-        CheatSpan::Number(2),
+        CheatSpan::TargetCalls(2),
     );
 
     assert_success(
@@ -765,7 +765,7 @@ fn elect_library_call_with_span() {
     test_env.elect(
         CheatTarget::One(contract_address),
         123,
-        CheatSpan::Number(1),
+        CheatSpan::TargetCalls(1),
     );
 
     let lib_call_selector = "get_sequencer_address_with_lib_call";
@@ -788,7 +788,7 @@ fn elect_all_span() {
     let contract_address_1 = test_env.deploy("ElectChecker", &[]);
     let contract_address_2 = test_env.deploy("ElectCheckerLibCall", &[]);
 
-    test_env.elect(CheatTarget::All, 123, CheatSpan::Number(1));
+    test_env.elect(CheatTarget::All, 123, CheatSpan::TargetCalls(1));
 
     assert_success(
         test_env.call_contract(&contract_address_1, "get_sequencer_address", &[]),

@@ -46,7 +46,7 @@ pub enum CheatTarget {
 #[derive(Clone, Debug)]
 pub enum CheatSpan {
     Indefinite,
-    Number(usize),
+    TargetCalls(usize),
 }
 
 #[derive(Debug)]
@@ -138,7 +138,7 @@ pub enum CheatStatus<T> {
 
 impl<T> CheatStatus<T> {
     pub fn decrement_cheat_span(&mut self) {
-        if let CheatStatus::Cheated(_, CheatSpan::Number(n)) = self {
+        if let CheatStatus::Cheated(_, CheatSpan::TargetCalls(n)) = self {
             *n -= 1;
             if *n == 0 {
                 *self = CheatStatus::Uncheated;
