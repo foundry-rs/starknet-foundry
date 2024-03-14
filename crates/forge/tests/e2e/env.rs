@@ -8,7 +8,7 @@ fn env_var_reading() {
 
     let output = test_runner(&temp)
         .env("FELT_ENV_VAR", "987654321")
-        .env("STRING_ENV_VAR", "'abcde'")
+        .env("STRING_ENV_VAR", "abcde")
         .assert()
         .code(0);
 

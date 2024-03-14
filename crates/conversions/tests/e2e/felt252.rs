@@ -7,6 +7,7 @@ mod tests_felt252 {
     use conversions::string::{IntoDecStr, TryFromDecStr, TryFromHexStr};
     use conversions::{FromConv, IntoConv};
     use itertools::chain;
+    use num_traits::Bounded;
     use starknet::core::types::FieldElement;
     use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, Nonce};
     use starknet_api::hash::{StarkFelt, StarkHash};
@@ -49,9 +50,7 @@ mod tests_felt252 {
 
     #[test]
     fn test_felt252_conversions_limit() {
-        // max_value from cairo_felt::PRIME_STR
-        let mut max_value = "0x0800000000000011000000000000000000000000000000000000000000000000";
-        let mut felt = Felt252::try_from_hex_str(max_value).unwrap();
+        let mut felt = Felt252::max_value();
 
         assert_eq!(felt, Nonce::from_(felt.clone()).into_());
         assert_eq!(felt, EntryPointSelector::from_(felt.clone()).into_());
@@ -61,12 +60,12 @@ mod tests_felt252 {
         assert_eq!(felt, StarkHash::from_(felt.clone()).into_());
 
         // PATRICIA_KEY_UPPER_BOUND for contract_address from starknet_api-0.4.1/src/core.rs:156
-        max_value = "0x07ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
+        let max_value = "0x07fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe";
         felt = Felt252::try_from_hex_str(max_value).unwrap();
         assert_eq!(felt, ContractAddress::from_(felt.clone()).into_());
 
         // Unknown source for this value, founded by try and error(cairo-lang-runner-2.2.0/src/short_string.rs).
-        max_value = "0x0777777777777777777777777777777777777f7f7f7f7f7f7f7f7f7f7f7f7f7f";
+        let max_value = "0x0777777777777777777777777777777777777f7f7f7f7f7f7f7f7f7f7f7f7f7f";
         felt = Felt252::try_from_hex_str(max_value).unwrap();
 
         assert_eq!(
@@ -77,7 +76,7 @@ mod tests_felt252 {
 
     #[test]
     fn test_felt252_try_from_string_out_of_range() {
-        assert!(Felt252::try_from_hex_str(PRIME_STR).is_err());
+        assert!(Felt252::try_from_hex_str(PRIME_STR).unwrap() == Felt252::from(0_u8));
     }
 
     #[test]

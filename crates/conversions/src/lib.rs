@@ -89,8 +89,7 @@ macro_rules! try_from_str_thru_felt252 {
         }
         impl $crate::string::TryFromHexStr for $to {
             fn try_from_hex_str(value: &str) -> Result<Self, $crate::string::ParseFeltError> {
-                Felt252::try_from_hex_str(value.strip_prefix("0x").unwrap_or(value))
-                    .map(Self::from_)
+                Felt252::try_from_hex_str(value).map(Self::from_)
             }
         }
     };

@@ -2,7 +2,7 @@ use crate::IntoConv;
 use cairo_felt::Felt252;
 use thiserror::Error;
 
-#[derive(Clone, Debug, PartialEq, Eq, Error)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Error)]
 pub struct ParseFeltError;
 
 impl std::fmt::Display for ParseFeltError {

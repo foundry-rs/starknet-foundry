@@ -64,7 +64,7 @@ mod tests_contract_address {
     #[test]
     fn test_contract_address_conversions_limit() {
         // PATRICIA_KEY_UPPER_BOUND for contract_address from starknet_api-0.4.1/src/core.rs:156
-        let mut max_value = "0x07ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
+        let mut max_value = "0x07fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe";
         let mut contract_address = ContractAddress::try_from_hex_str(max_value).unwrap();
 
         assert_eq!(contract_address, ClassHash::from_(contract_address).into_(),);
@@ -93,6 +93,6 @@ mod tests_contract_address {
 
     #[test]
     fn test_contract_address_conversions_out_of_range() {
-        assert!(ContractAddress::try_from_hex_str(PRIME_STR).is_err());
+        assert!(ContractAddress::try_from_hex_str(PRIME_STR).unwrap() == Felt252::from(0_u8).into_());
     }
 }

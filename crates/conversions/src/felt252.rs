@@ -3,7 +3,7 @@ use crate::string::{ParseFeltError, TryFromDecStr, TryFromHexStr};
 use crate::{FromConv, IntoConv};
 use blockifier::execution::execution_utils::stark_felt_to_felt;
 use cairo_felt::Felt252;
-use num_traits::{Bounded, Num};
+use num_traits::Num;
 use starknet::core::types::FieldElement;
 use starknet_api::core::{EntryPointSelector, Nonce};
 use starknet_api::{
@@ -55,13 +55,15 @@ impl TryFromDecStr for Felt252 {
 
 impl TryFromHexStr for Felt252 {
     fn try_from_hex_str(value: &str) -> Result<Felt252, ParseFeltError> {
-        from_string(value.strip_prefix("0x").unwrap_or(value), 16)
+        let value = value.strip_prefix("0x").ok_or(ParseFeltError)?;
+
+        from_string(value, 16)
     }
 }
 
 fn from_string(value: &str, radix: u32) -> Result<Felt252, ParseFeltError> {
     match Felt252::from_str_radix(value, radix) {
-        Ok(felt) if felt <= Felt252::max_value() => Ok(felt),
+        Ok(felt) => Ok(felt),
         _ => Err(ParseFeltError),
     }
 }
@@ -77,6 +79,19 @@ impl FromShortString<Felt252> for Felt252 {
         } else {
             Err(ParseFeltError)
         }
+    }
+}
+
+pub trait TryInferFormat: Sized {
+    /// Parses value from `hex string` -> `dec string` -> `cairo shortstring`
+    fn infer_format_and_parse(value: &str) -> Result<Self, ParseFeltError>;
+}
+
+impl TryInferFormat for Felt252 {
+    fn infer_format_and_parse(value: &str) -> Result<Self, ParseFeltError> {
+        Felt252::try_from_hex_str(value)
+            .or_else(|_| Felt252::try_from_dec_str(value))
+            .or_else(|_| Felt252::from_short_string(value))
     }
 }
 

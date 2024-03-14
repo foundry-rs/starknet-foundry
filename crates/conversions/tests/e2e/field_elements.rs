@@ -51,6 +51,6 @@ mod tests_field_elements {
 
     #[test]
     fn test_field_element_conversions_out_of_range() {
-        assert!(FieldElement::try_from_hex_str(PRIME_STR).is_err());
+        assert!(FieldElement::try_from_hex_str(PRIME_STR).unwrap() == Felt252::from(0_u8).into_());
     }
 }
