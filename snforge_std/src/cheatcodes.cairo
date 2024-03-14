@@ -1,4 +1,5 @@
-use starknet::{testing::cheatcode, ContractAddress, ClassHash, contract_address_const};
+use starknet::{ContractAddress, ClassHash, contract_address_const};
+use starknet::testing::cheatcode;
 
 mod events;
 mod l1_handler;
@@ -7,7 +8,7 @@ mod tx_info;
 mod fork;
 mod storage;
 
-#[derive(Drop, Serde)]
+#[derive(Drop, Serde, PartialEq, Clone)]
 enum CheatTarget {
     All: (),
     One: ContractAddress,
@@ -29,7 +30,7 @@ fn test_address() -> ContractAddress {
 }
 
 fn roll(target: CheatTarget, block_number: u64, span: CheatSpan) {
-    validate_cheat_span(@span);
+    validate_cheat_target_and_span(@target, @span);
 
     let mut inputs = array![];
     target.serialize(ref inputs);
@@ -49,7 +50,7 @@ fn stop_roll(target: CheatTarget) {
 }
 
 fn prank(target: CheatTarget, caller_address: ContractAddress, span: CheatSpan) {
-    validate_cheat_span(@span);
+    validate_cheat_target_and_span(@target, @span);
 
     let mut inputs = array![];
     target.serialize(ref inputs);
@@ -69,7 +70,7 @@ fn stop_prank(target: CheatTarget) {
 }
 
 fn warp(target: CheatTarget, block_timestamp: u64, span: CheatSpan) {
-    validate_cheat_span(@span);
+    validate_cheat_target_and_span(@target, @span);
 
     let mut inputs = array![];
     target.serialize(ref inputs);
@@ -89,7 +90,7 @@ fn stop_warp(target: CheatTarget) {
 }
 
 fn elect(target: CheatTarget, sequencer_address: ContractAddress, span: CheatSpan) {
-    validate_cheat_span(@span);
+    validate_cheat_target_and_span(@target, @span);
 
     let mut inputs = array![];
     target.serialize(ref inputs);
@@ -149,6 +150,18 @@ fn stop_mock_call(contract_address: ContractAddress, function_selector: felt252)
 
 fn replace_bytecode(contract: ContractAddress, new_class: ClassHash) {
     cheatcode::<'replace_bytecode'>(array![contract.into(), new_class.into()].span());
+}
+
+fn validate_cheat_target_and_span(target: @CheatTarget, span: @CheatSpan) {
+    validate_cheat_span(span);
+
+    if target == @CheatTarget::All {
+        assert_eq!(
+            span,
+            @CheatSpan::Indefinite,
+            "CheatTarget::All can only be used with CheatSpan::Indefinite"
+        );
+    }
 }
 
 fn validate_cheat_span(span: @CheatSpan) {
