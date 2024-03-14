@@ -2,14 +2,6 @@ use crate::cheatcodes::spy_events::felt_vec_to_event_vec;
 use crate::common::assertions::assert_success;
 use crate::common::get_contracts;
 use crate::common::state::build_runtime_state;
-use crate::common::{call_contract, deploy_wrapper};
-use crate::{
-    common::assertions::assert_success,
-    common::{
-        deploy_contract, felt_selector_from_name, get_contracts, recover_data,
-        state::create_cached_state,
-    },
-};
 use blockifier::state::cached_state::{
     CachedState, GlobalContractCache, GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST,
 };
