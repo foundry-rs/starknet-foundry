@@ -24,6 +24,8 @@ fn prerequsite_function() {}
 
 fn prerequsite_function2() {}
 
+fn prerequsite_function3() {}
+
 #[derive(Args, Debug)]
 #[command(about = "Deploy an account to the Starknet")]
 pub struct Deploy {
