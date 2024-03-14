@@ -427,10 +427,6 @@ impl TraceData {
         l2_to_l1_messages: &[OrderedL2ToL1Message],
         vm_trace: Option<Vec<TraceEntry>>,
     ) {
-        assert!(
-            (vm_trace.is_some() && self.is_vm_trace_needed)
-                || (vm_trace.is_none() && !self.is_vm_trace_needed)
-        );
         let CallStackElement {
             resources_used_before_call,
             call_trace: last_call,
