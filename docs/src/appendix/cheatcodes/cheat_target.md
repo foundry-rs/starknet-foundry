@@ -11,7 +11,13 @@ enum CheatTarget {
 `CheatTarget` is an enum used to designate the contracts to which a cheat should be applied. 
 - `All` applies the cheatcode to all contract addresses. 
 - `One` applies the cheatcode to the given contract address. 
-- `Multiple` applies the cheatcode to the given contract addresses. 
+- `Multiple` applies the cheatcode to each given address. 
+
+> 📝 **Note**
+> 
+> `CheatTarget::Multiple` acts as a helper for targeting every specified address separately with `CheatTarget::One`.
+> It does not treat the list of specified addresses as a group unit.
+
 
 
 An example with the [`start_warp`](./start_warp.md) cheatcode:
