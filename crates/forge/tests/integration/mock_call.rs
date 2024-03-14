@@ -146,7 +146,7 @@ fn mock_calls() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use snforge_std::{ declare, ContractClassTrait, mock_calls, start_mock_call, stop_mock_call };
+        use snforge_std::{ declare, ContractClassTrait, mock_call, start_mock_call, stop_mock_call };
 
         #[starknet::interface]
         trait IMockChecker<TContractState> {
@@ -154,7 +154,7 @@ fn mock_calls() {
         }
 
         #[test]
-        fn mock_calls_one() {
+        fn mock_call_one() {
             let calldata = array![420];
 
             let contract = declare("MockChecker");
@@ -164,7 +164,7 @@ fn mock_calls() {
 
             let mock_ret_data = 421;
 
-            mock_calls(contract_address, selector!("get_thing"), mock_ret_data, 1);
+            mock_call(contract_address, selector!("get_thing"), mock_ret_data, 1);
 
             let thing = dispatcher.get_thing();
             assert_eq!(thing, 421);
@@ -174,7 +174,7 @@ fn mock_calls() {
         }
 
         #[test]
-        fn mock_calls_twice() {
+        fn mock_call_twice() {
             let calldata = array![420];
 
             let contract = declare("MockChecker");
@@ -184,7 +184,7 @@ fn mock_calls() {
 
             let mock_ret_data = 421;
 
-            mock_calls(contract_address, selector!("get_thing"), mock_ret_data, 2);
+            mock_call(contract_address, selector!("get_thing"), mock_ret_data, 2);
 
             let thing = dispatcher.get_thing();
             assert_eq!(thing, 421);
