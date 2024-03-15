@@ -93,6 +93,8 @@ mod tests_contract_address {
 
     #[test]
     fn test_contract_address_conversions_out_of_range() {
-        assert!(ContractAddress::try_from_hex_str(PRIME_STR).unwrap() == Felt252::from(0_u8).into_());
+        assert!(
+            ContractAddress::try_from_hex_str(PRIME_STR).unwrap() == Felt252::from(0_u8).into_()
+        );
     }
 }

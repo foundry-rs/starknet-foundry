@@ -177,7 +177,7 @@ fn non_existent() {
 }
 
 #[test]
-// it's readed as shortstring now
+// it's read as shortstring now
 fn negative_number() {
     let file = FileTrait::new("data/negative_number.txt");
     read_txt(@file);
