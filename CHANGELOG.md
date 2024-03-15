@@ -30,6 +30,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Supported RPC version is now 0.7.0
 
+### Cast
+
+#### Added
+
+- Support OpenZeppelin Cairo 1 (or higher) accounts
+
+#### Changed
+
+- Default class hash in `account create` and `account deploy` has been changed to [this class](https://starkscan.co/class/0x04c6d6cf894f8bc96bb9c525e6853e5483177841f7388f74a46cfda6f028c755)
 
 ## [0.19.0] - 2024-03-06
 
