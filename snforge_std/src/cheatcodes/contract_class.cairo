@@ -60,7 +60,7 @@ impl ContractClassImpl of ContractClassTrait {
 
         if exit_code == 0 {
             let result = *outputs[1];
-            Result::<ContractAddress, RevertedTransaction>::Ok(result.try_into().unwrap())
+            Result::Ok(result.try_into().unwrap())
         } else {
             let panic_data_len_felt = *outputs[1];
             let panic_data_len = panic_data_len_felt.try_into().unwrap();
@@ -76,7 +76,7 @@ impl ContractClassImpl of ContractClassTrait {
                 i += 1;
             };
 
-            Result::<ContractAddress, RevertedTransaction>::Err(RevertedTransaction { panic_data })
+            Result::Err(RevertedTransaction { panic_data })
         }
     }
 
@@ -93,7 +93,7 @@ impl ContractClassImpl of ContractClassTrait {
 
         if exit_code == 0 {
             let result = *outputs[1];
-            Result::<ContractAddress, RevertedTransaction>::Ok(result.try_into().unwrap())
+            Result::Ok(result.try_into().unwrap())
         } else {
             let panic_data_len_felt = *outputs[1];
             let panic_data_len = panic_data_len_felt.try_into().unwrap();
@@ -109,7 +109,7 @@ impl ContractClassImpl of ContractClassTrait {
                 i += 1;
             };
 
-            Result::<ContractAddress, RevertedTransaction>::Err(RevertedTransaction { panic_data })
+            Result::Err(RevertedTransaction { panic_data })
         }
     }
 
