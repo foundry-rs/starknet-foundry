@@ -94,6 +94,7 @@ pub fn run(project_name: &str) -> Result<()> {
         .current_dir(&project_path)
         .offline()
         .arg("add")
+        .arg("--dev")
         .arg("snforge_std")
         .arg("--git")
         .arg("https://github.com/foundry-rs/starknet-foundry.git")

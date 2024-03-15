@@ -705,8 +705,10 @@ fn init_new_project_test() {
             # See more keys and their definitions at https://docs.swmansion.com/scarb/docs/reference/manifest.html
 
             [dependencies]
-            snforge_std = {{ git = "https://github.com/foundry-rs/starknet-foundry", tag = "v{}" }}
             starknet = "2.5.4"
+
+            [dev-dependencies]
+            snforge_std = {{ git = "https://github.com/foundry-rs/starknet-foundry", tag = "v{}" }}
 
             [[target.starknet-contract]]
             casm = true
@@ -731,6 +733,8 @@ fn init_new_project_test() {
 
         [dependencies]
         starknet = "2.5.4"
+
+        [dev-dependencies]
         snforge_std = {{ git = "https://github.com/{}", branch = "{}" }}
         "#,
             remote_url,
@@ -870,10 +874,10 @@ fn incompatible_snforge_std_version_warning() {
         .unwrap()
         .parse::<Document>()
         .unwrap();
-    scarb_toml["dependencies"]["snforge_std"]["path"] = Item::None;
-    scarb_toml["dependencies"]["snforge_std"]["git"] =
+    scarb_toml["dev-dependencies"]["snforge_std"]["path"] = Item::None;
+    scarb_toml["dev-dependencies"]["snforge_std"]["git"] =
         value("https://github.com/foundry-rs/starknet-foundry.git");
-    scarb_toml["dependencies"]["snforge_std"]["tag"] = value("v0.10.1");
+    scarb_toml["dev-dependencies"]["snforge_std"]["tag"] = value("v0.10.1");
     manifest_path.write_str(&scarb_toml.to_string()).unwrap();
 
     let output = test_runner(&temp).assert().failure();
@@ -890,7 +894,7 @@ fn incompatible_snforge_std_version_warning() {
         Collected 4 test(s) from steps package
         Running 4 test(s) from src/
         [PASS] steps::tests::steps_570031 [..]
-        [FAIL] steps::tests::steps_3000017
+        [FAIL] steps::tests::steps_4000006
         
         Failure data:
             Could not reach the end of the program. RunResources has no remaining steps.
@@ -900,11 +904,11 @@ fn incompatible_snforge_std_version_warning() {
         Failure data:
             Could not reach the end of the program. RunResources has no remaining steps.
         
-        [PASS] steps::tests::steps_2999998 [..]
+        [PASS] steps::tests::steps_3999987 [..]
         Tests: 2 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:
-            steps::tests::steps_3000017
+            steps::tests::steps_4000006
             steps::tests::steps_5700031
         "},
     );
