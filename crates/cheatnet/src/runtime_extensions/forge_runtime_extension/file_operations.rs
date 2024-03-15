@@ -1,42 +1,33 @@
 use anyhow::{anyhow, Result};
 use cairo_felt::Felt252;
-use conversions::felt252::TryInferFormat;
+use conversions::{felt252::TryInferFormat, string::ParseFeltError};
 use flatten_serde_json::flatten;
 use runtime::EnhancedHintError;
 use serde_json::{Map, Value};
 use std::fs::read_to_string;
 
-pub(super) fn read_txt(file_path: String) -> Result<Vec<Felt252>, EnhancedHintError> {
-    let content = read_to_string(&file_path)?;
+pub(super) fn read_txt(path: String) -> Result<Vec<Felt252>, EnhancedHintError> {
+    let content = read_to_string(&path)?;
 
-    let mut result = vec![];
-
-    for felt_str in content.trim().lines().filter(|line| !line.is_empty()) {
-        if let Ok(felt) = Felt252::infer_format_and_parse(&felt_str.replace("\\n", "\n")) {
-            result.push(felt)
-        } else {
-            return Err(EnhancedHintError::FileParsing { path: file_path });
-        }
-    }
-
-    Ok(result)
+    content
+        .trim()
+        .lines()
+        .filter(|line| !line.is_empty())
+        .map(parse)
+        .collect::<Result<_, _>>()
+        .map_err(|_| EnhancedHintError::FileParsing { path })
 }
 
-pub(super) fn read_json(file_path: String) -> Result<Vec<Felt252>, EnhancedHintError> {
-    let content = read_to_string(&file_path)?;
+pub(super) fn read_json(path: String) -> Result<Vec<Felt252>, EnhancedHintError> {
+    let content = read_to_string(&path)?;
     let split_content = json_values_sorted_by_keys(&content)
-        .map_err(|e| anyhow!("{}, in file {}", e.to_string(), file_path))?;
+        .map_err(|e| anyhow!("{}, in file {}", e.to_string(), path))?;
 
-    let mut result = Vec::with_capacity(split_content.len());
-
-    for felt_str in &split_content {
-        match Felt252::infer_format_and_parse(felt_str) {
-            Ok(felt) => result.push(felt),
-            Err(_) => return Err(EnhancedHintError::FileParsing { path: file_path }),
-        }
-    }
-
-    Ok(result)
+    split_content
+        .into_iter()
+        .map(|str| parse(&str))
+        .collect::<Result<_, _>>()
+        .map_err(|_| EnhancedHintError::FileParsing { path })
 }
 
 fn json_values_sorted_by_keys(content: &str) -> Result<Vec<String>, EnhancedHintError> {
@@ -61,12 +52,31 @@ fn value_into_vec(value: &Value) -> Vec<String> {
             let mut str_vec = Vec::with_capacity(vec_len + 1);
 
             str_vec.push(vec_len.to_string());
-            str_vec.extend(vec.iter().map(ToString::to_string));
+            str_vec.extend(vec.iter().map(to_string_unqoted));
 
             str_vec
         }
-        value => vec![value.to_string()],
+        value => vec![to_string_unqoted(value)],
     }
+}
+
+fn to_string_unqoted(value: &impl ToString) -> String {
+    let value = value.to_string();
+    let mut string = value.as_str();
+
+    if string.starts_with('"') {
+        string = &string[1..];
+    }
+
+    if string.ends_with('"') {
+        string = &string[..string.len() - 1];
+    }
+
+    string.to_owned()
+}
+
+fn parse(felt_str: &str) -> Result<Felt252, ParseFeltError> {
+    Felt252::infer_format_and_parse(&felt_str.replace("\\n", "\n"))
 }
 
 #[cfg(test)]
@@ -86,7 +96,7 @@ mod tests {
             "ab": 12
         }"#;
         let result = json_values_sorted_by_keys(string).unwrap();
-        let expected_result = ["1", "2", "12", "43", "\"Joh\""].to_vec();
+        let expected_result = ["1", "2", "12", "43", "Joh"].to_vec();
 
         assert_eq!(result, expected_result);
 
@@ -96,7 +106,7 @@ mod tests {
             "test": ["1",2,"3",4]
         }"#;
         let result = json_values_sorted_by_keys(string).unwrap();
-        let expected_result = ["\"string\"", "4", "\"1\"", "2", "\"3\"", "4"];
+        let expected_result = ["string", "4", "1", "2", "3", "4"];
         assert_eq!(result, expected_result);
     }
 
