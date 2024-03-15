@@ -35,11 +35,9 @@ use conversions::{
     felt252::{FromShortString, TryInferFormat},
     FromConv, IntoConv,
 };
-use crate::runtime_extensions::forge_runtime_extension::file_operations::string_into_felt;
-use conversions::byte_array::ByteArray;
-use runtime::utils::{BufferReadResult, BufferReader};
+use num_traits::ToPrimitive;
 use runtime::{
-    utils::{BufferReadResult, BufferReader},
+    utils::{BufferReadError, BufferReadResult, BufferReader},
     CheatcodeHandlingResult, EnhancedHintError, ExtendedRuntime, ExtensionLogic,
     SyscallHandlingResult,
 };
