@@ -3,10 +3,10 @@
 > ℹ️ **Info**
 > To use the library functions designed for testing smart contracts,
 > you need to add `snforge_std` package as a dependency in
-> your [`Scarb.toml`](https://docs.swmansion.com/scarb/docs/guides/dependencies.html#adding-a-dependency)
+> your [`Scarb.toml`](https://docs.swmansion.com/scarb/docs/guides/dependencies.html#development-dependencies)
 > using appropriate release tag.
 >```toml
-> [dependencies]
+> [dev-dependencies]
 > snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.12.0" }
 > ```
 

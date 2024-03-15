@@ -34,7 +34,7 @@ use crate::runtime_extensions::forge_runtime_extension::cheatcodes::storage::{
 };
 use crate::runtime_extensions::forge_runtime_extension::file_operations::string_into_felt;
 use conversions::byte_array::ByteArray;
-use runtime::utils::{BufferReadResult, BufferReader};
+use runtime::utils::{BufferReadError, BufferReadResult, BufferReader};
 use runtime::{
     CheatcodeHandlingResult, EnhancedHintError, ExtendedRuntime, ExtensionLogic,
     SyscallHandlingResult,
@@ -75,7 +75,7 @@ impl BufferReaderExt for BufferReader<'_> {
                     .collect();
                 CheatTarget::Multiple(contract_addresses)
             }
-            _ => unreachable!("Invalid CheatTarget variant"),
+            _ => Err(BufferReadError::ParseFailed)?,
         })
     }
 }

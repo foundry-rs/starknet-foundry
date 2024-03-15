@@ -42,14 +42,14 @@ Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ## Using `snforge` With Existing Scarb Projects
 
 To use `snforge` with existing Scarb projects, make sure you have declared the `snforge_std` package as your project
-dependency.
+development dependency.
 
-Add the following line under `[dependencies]` section in the `Scarb.toml` file.
+Add the following line under `[dev-dependencies]` section in the `Scarb.toml` file.
 
 ```toml
 # ...
 
-[dependencies]
+[dev-dependencies]
 snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.12.0" }
 ```
 
@@ -65,7 +65,8 @@ using [`scarb add`](https://docs.swmansion.com/scarb/docs/guides/dependencies.ht
 command.
 
 ```shell
-$ scarb add snforge_std \
+$ scarb add snforge_std \ 
+ --dev \
  --git https://github.com/foundry-rs/starknet-foundry.git \
  --tag v0.12.0
 ```

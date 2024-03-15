@@ -705,8 +705,10 @@ fn init_new_project_test() {
             # See more keys and their definitions at https://docs.swmansion.com/scarb/docs/reference/manifest.html
 
             [dependencies]
-            snforge_std = {{ git = "https://github.com/foundry-rs/starknet-foundry", tag = "v{}" }}
             starknet = "2.5.4"
+
+            [dev-dependencies]
+            snforge_std = {{ git = "https://github.com/foundry-rs/starknet-foundry", tag = "v{}" }}
 
             [[target.starknet-contract]]
             casm = true
@@ -731,6 +733,8 @@ fn init_new_project_test() {
 
         [dependencies]
         starknet = "2.5.4"
+
+        [dev-dependencies]
         snforge_std = {{ git = "https://github.com/{}", branch = "{}" }}
         "#,
             remote_url,
@@ -870,10 +874,10 @@ fn incompatible_snforge_std_version_warning() {
         .unwrap()
         .parse::<Document>()
         .unwrap();
-    scarb_toml["dependencies"]["snforge_std"]["path"] = Item::None;
-    scarb_toml["dependencies"]["snforge_std"]["git"] =
+    scarb_toml["dev-dependencies"]["snforge_std"]["path"] = Item::None;
+    scarb_toml["dev-dependencies"]["snforge_std"]["git"] =
         value("https://github.com/foundry-rs/starknet-foundry.git");
-    scarb_toml["dependencies"]["snforge_std"]["tag"] = value("v0.10.1");
+    scarb_toml["dev-dependencies"]["snforge_std"]["tag"] = value("v0.10.1");
     manifest_path.write_str(&scarb_toml.to_string()).unwrap();
 
     let output = test_runner(&temp).assert().failure();
