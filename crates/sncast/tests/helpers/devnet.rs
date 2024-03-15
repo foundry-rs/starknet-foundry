@@ -1,6 +1,7 @@
 use crate::helpers::constants::{DEVNET_ENV_FILE, SEED, URL};
 use crate::helpers::fixtures::{
-    declare_contract, declare_deploy_contract, deploy_keystore_account, remove_devnet_env,
+    declare_contract, declare_deploy_contract, deploy_cairo_0_account, deploy_keystore_account,
+    remove_devnet_env,
 };
 use ctor::{ctor, dtor};
 use std::net::TcpStream;
@@ -79,6 +80,7 @@ fn start_devnet() {
     ));
 
     rt.block_on(deploy_keystore_account());
+    rt.block_on(deploy_cairo_0_account());
 
     dotenv::from_filename(DEVNET_ENV_FILE).unwrap();
 }
