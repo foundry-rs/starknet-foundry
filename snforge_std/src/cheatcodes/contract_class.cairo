@@ -1,5 +1,6 @@
 use starknet::{ContractAddress, ClassHash, testing::cheatcode};
 use super::super::byte_array::byte_array_as_felt_array;
+use core::traits::Into;
 
 #[derive(Drop, Clone)]
 struct RevertedTransaction {
@@ -35,6 +36,8 @@ trait ContractClassTrait {
         constructor_calldata: @Array::<felt252>,
         contract_address: ContractAddress
     ) -> Result<ContractAddress, RevertedTransaction>;
+
+    fn new<T, +Into<T, ClassHash>>(class_hash: T) -> ContractClass;
 }
 
 impl ContractClassImpl of ContractClassTrait {
@@ -108,6 +111,10 @@ impl ContractClassImpl of ContractClassTrait {
 
             Result::<ContractAddress, RevertedTransaction>::Err(RevertedTransaction { panic_data })
         }
+    }
+
+    fn new<T, +Into<T, ClassHash>>(class_hash: T) -> ContractClass {
+        ContractClass { class_hash: class_hash.into() }
     }
 }
 
