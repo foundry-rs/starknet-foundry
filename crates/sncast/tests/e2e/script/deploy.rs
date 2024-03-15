@@ -49,7 +49,7 @@ async fn test_same_salt_and_class_hash_deployed_twice() {
         "--accounts-file",
         accounts_json_path.as_str(),
         "--account",
-        "cairo0",
+        "user3",
         "--url",
         URL,
         "script",
@@ -64,22 +64,9 @@ async fn test_same_salt_and_class_hash_deployed_twice() {
         output,
         indoc! {r#"
         ScriptCommandError::WaitForTransactionError(WaitForTransactionError::TransactionError(TransactionError::Reverted(ErrorData { msg: "Error in the called contract ([..]):
-        Error at pc=0:81:
         Got an exception while executing a hint.
-        Cairo traceback (most recent call last):
-        Unknown location (pc=0:731)
-        Unknown location (pc=0:677)
-        Unknown location (pc=0:291)
-        Unknown location (pc=0:314)
         Error in the called contract ([..]):
-        Error at pc=0:32:
-        Transaction hash = [..]
-        Transaction hash = [..]
         Got an exception while executing a hint: Requested ContractAddress(PatriciaKey(StarkFelt("[..]"))) is unavailable for deployment.
-        Cairo traceback (most recent call last):
-        Unknown location (pc=0:174)
-        Unknown location (pc=0:127)
-        " })))
         command: script run
         status: success
         "#},
@@ -97,7 +84,7 @@ async fn test_invalid_class_hash() {
         "--accounts-file",
         accounts_json_path.as_str(),
         "--account",
-        "cairo0",
+        "user2",
         "--url",
         URL,
         "script",
@@ -112,25 +99,13 @@ async fn test_invalid_class_hash() {
         output,
         indoc! {r#"
         ScriptCommandError::WaitForTransactionError(WaitForTransactionError::TransactionError(TransactionError::Reverted(ErrorData { msg: "Error in the called contract ([..]):
-        Error at pc=0:81:
         Got an exception while executing a hint.
-        Cairo traceback (most recent call last):
-        Unknown location (pc=0:731)
-        Unknown location (pc=0:677)
-        Unknown location (pc=0:291)
-        Unknown location (pc=0:314)
         Error in the called contract ([..]):
-        Error at pc=0:32:
-        Transaction hash = [..]
         Got an exception while executing a hint: Class with hash ClassHash(
             StarkFelt(
                 "[..]",
             ),
         ) is not declared.
-        Cairo traceback (most recent call last):
-        Unknown location (pc=0:174)
-        Unknown location (pc=0:127)
-        " })))
         command: script run
         status: success
         "#},
@@ -148,7 +123,7 @@ async fn test_invalid_call_data() {
         "--accounts-file",
         accounts_json_path.as_str(),
         "--account",
-        "cairo0",
+        "user5",
         "--url",
         URL,
         "script",
@@ -163,23 +138,9 @@ async fn test_invalid_call_data() {
         output,
         indoc! {r#"
         ScriptCommandError::WaitForTransactionError(WaitForTransactionError::TransactionError(TransactionError::Reverted(ErrorData { msg: "Error in the called contract ([..]):
-        Error at pc=0:81:
         Got an exception while executing a hint.
-        Cairo traceback (most recent call last):
-        Unknown location (pc=0:731)
-        Unknown location (pc=0:677)
-        Unknown location (pc=0:291)
-        Unknown location (pc=0:314)
         Error in the called contract ([..]):
-        Error at pc=0:32:
         Got an exception while executing a hint: Execution failed. Failure reason: [..] ('Failed to deserialize param #2').
-        Transaction hash = [..]
-        Error in the called contract ([..]):
-        Execution failed. Failure reason: [..] ('Failed to deserialize param #2').
-        Cairo traceback (most recent call last):
-        Unknown location (pc=0:174)
-        Unknown location (pc=0:127)
-        " })))
         command: script run
         status: success
         "#},
