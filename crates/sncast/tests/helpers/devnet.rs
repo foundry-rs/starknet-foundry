@@ -34,7 +34,16 @@ fn start_devnet() {
     }
 
     Command::new("tests/utils/devnet/bin/starknet-devnet")
-        .args(["--port", &port, "--seed", &SEED.to_string()])
+        .args([
+            "--port",
+            &port,
+            "--seed",
+            &SEED.to_string(),
+            "--account-class",
+            "cairo0",
+            "--state-archive-capacity",
+            "full",
+        ])
         .stdout(Stdio::null())
         .spawn()
         .expect("Failed to start devnet!");

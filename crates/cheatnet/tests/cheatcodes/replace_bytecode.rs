@@ -51,7 +51,7 @@ fn fork() {
         ExtendedStateReader {
             dict_state_reader: build_testing_state(),
             fork_state_reader: Some(ForkStateReader::new(
-                "http://188.34.188.184:6060/rpc/v0_6".parse().unwrap(),
+                "http://188.34.188.184:6060/rpc/v0_7".parse().unwrap(),
                 BlockNumber(957_613),
                 cache_dir.path().to_str().unwrap(),
             )),

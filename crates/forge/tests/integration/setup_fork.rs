@@ -20,7 +20,7 @@ use test_utils::runner::{assert_case_output_contains, assert_failed, assert_pass
 use test_utils::running_tests::run_test_case;
 use test_utils::test_case;
 
-static INTEGRATION_RPC_URL: &str = "http://188.34.188.184:9545/rpc/v0_6";
+static INTEGRATION_RPC_URL: &str = "http://188.34.188.184:9545/rpc/v0_7";
 static TESTNET_RPC_URL: &str = "http://188.34.188.184:6060/rpc";
 
 #[test]
