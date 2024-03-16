@@ -1,8 +1,9 @@
 use crate::consts::EXPECTED_RPC_VERSION;
 use anyhow::{Context, Result};
-use semver::Version;
+use semver::{Version, VersionReq};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::{JsonRpcClient, Provider};
+use std::str::FromStr;
 use url::Url;
 
 pub fn create_rpc_client(url: &str) -> Result<JsonRpcClient<HttpTransport>> {
@@ -13,9 +14,9 @@ pub fn create_rpc_client(url: &str) -> Result<JsonRpcClient<HttpTransport>> {
 
 #[must_use]
 pub fn is_expected_version(version: &Version) -> bool {
-    let expected_version =
-        Version::parse(EXPECTED_RPC_VERSION).expect("Failed to parse the expected RPC version");
-    *version == expected_version
+    VersionReq::from_str(EXPECTED_RPC_VERSION)
+        .expect("Failed to parse the expected RPC version")
+        .matches(version)
 }
 
 pub async fn get_rpc_version(client: &JsonRpcClient<HttpTransport>) -> Result<Version> {
