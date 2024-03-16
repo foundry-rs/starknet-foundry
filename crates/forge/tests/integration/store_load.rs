@@ -554,7 +554,7 @@ fn store_load_felt_to_felt() {
 
     assert_passed(&result);
 }
-static INTEGRATION_RPC_URL: &str = "http://188.34.188.184:9545/rpc/v0_6";
+static INTEGRATION_RPC_URL: &str = "http://188.34.188.184:9545/rpc/v0_7";
 #[test]
 fn fork_store_load() {
     let test = test_utils::test_case!(formatdoc!(

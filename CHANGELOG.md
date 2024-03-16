@@ -17,6 +17,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - Default `chain_id` has been changed from `SN_GOERLI` to `SN_SEPOLIA`
+- Supported RPC version is now 0.7.0-rc2
+
+### Cast
+
+#### Changed
+
+- Supported RPC version is now 0.7.0-rc2
 
 
 ## [0.19.0] - 2024-03-06
