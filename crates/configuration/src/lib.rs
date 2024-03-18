@@ -44,7 +44,7 @@ pub fn get_profile(
 ) -> Result<serde_json::Value> {
     let profile_name = profile.as_deref().unwrap_or("default");
     let tool_config = get_with_ownership(raw_config, tool)
-        .context("Failed to find {tool} config in snfoundry.toml file")?;
+        .unwrap_or(serde_json::Value::Object(serde_json::Map::new()));
 
     match get_with_ownership(tool_config, profile_name) {
         Some(profile_value) => Ok(profile_value),
@@ -164,7 +164,7 @@ pub fn copy_config_to_tempdir(src_path: &str, additional_path: Option<&str>) -> 
 
 #[cfg(test)]
 mod tests {
-    use std::fs;
+    use std::fs::{self, File};
 
     use serde::{Deserialize, Serialize};
     use tempfile::tempdir;
@@ -316,6 +316,18 @@ mod tests {
         fn from_raw(config: serde_json::Value) -> Result<Self> {
             Ok(serde_json::from_value::<StubComplexConfig>(config)?)
         }
+    }
+
+    #[test]
+    fn empty_config_works() {
+        let temp_dir = tempdir().expect("Failed to create a temporary directory");
+        File::create(temp_dir.path().join(CONFIG_FILENAME)).unwrap();
+
+        load_global_config::<StubConfig>(
+            &Some(Utf8PathBuf::try_from(temp_dir.path().to_path_buf()).unwrap()),
+            &None,
+        )
+        .unwrap();
     }
 
     #[test]
