@@ -346,18 +346,11 @@ fn get_account_data_from_accounts_file(
     let accounts: HashMap<String, HashMap<String, AccountData>> = read_and_parse_json_file(path)?;
     let network_name = chain_id_to_network_name(chain_id);
 
-    let account = accounts
+    accounts
         .get(&network_name)
         .and_then(|accounts_map| accounts_map.get(name))
-        .cloned();
-
-    account.ok_or_else(|| {
-        anyhow!(
-            "Account = {} not found under network = {}",
-            name,
-            network_name
-        )
-    })
+        .cloned()
+        .ok_or_else(|| anyhow!("Account = {name} not found under network = {network_name}"))
 }
 
 fn read_and_parse_json_file<T: DeserializeOwned>(path: &Utf8PathBuf) -> Result<T> {
