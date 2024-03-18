@@ -1331,6 +1331,7 @@ version = "1.0.0"
 dependencies = [
  "anyhow",
  "camino",
+ "scarb-metadata",
  "serde",
  "serde_json",
  "tempfile",
@@ -2027,6 +2028,7 @@ dependencies = [
  "camino",
  "cheatnet",
  "clap",
+ "configuration",
  "console",
  "conversions",
  "criterion",
