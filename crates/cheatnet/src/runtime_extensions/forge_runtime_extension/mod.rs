@@ -85,7 +85,7 @@ impl BufferReaderExt for BufferReader<'_> {
         Ok(match cheat_span_variant {
             Some(0) => CheatSpan::Indefinite,
             Some(1) => CheatSpan::Number(self.read_felt()?.to_usize().unwrap()),
-            _ => unreachable!("Invalid CheatSpan variant"),
+            _ => Err(BufferReadError::ParseFailed)?,
         })
     }
 }
