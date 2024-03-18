@@ -112,7 +112,7 @@ fn stop_elect(target: CheatTarget) {
 fn mock_call<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: Destruct<T>>(
     contract_address: ContractAddress, function_selector: felt252, ret_data: T, n_times: u32
 ) {
-    assert!(n_times > 0, "n_times must be greater than 0");
+    assert!(n_times > 0, "cannot mock_call 0 times, n_times argument must be greater than 0");
 
     let contract_address_felt: felt252 = contract_address.into();
     let mut inputs = array![contract_address_felt, function_selector];
