@@ -632,3 +632,122 @@ fn start_spoof_complex() {
 
     assert_passed(&result);
 }
+
+#[test]
+fn spoof_with_span() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use result::ResultTrait;
+            use box::BoxTrait;
+            use starknet::info::TxInfo;
+            use serde::Serde;
+            use starknet::ContractAddress;
+            use array::SpanTrait;
+            use snforge_std::{ test_address, declare, ContractClassTrait, spoof, start_spoof, stop_spoof, TxInfoMock, TxInfoMockTrait, CheatTarget, CheatSpan };
+            use starknet::info::v2::ResourceBounds;
+
+            #[starknet::interface]
+            trait ISpoofChecker<TContractState> {
+                fn get_tx_info(ref self: TContractState) -> starknet::info::v2::TxInfo;
+            }
+            
+            fn deploy_spoof_checker() -> ISpoofCheckerDispatcher {
+                let contract_address = declare("SpoofChecker").deploy(@ArrayTrait::new()).unwrap();
+                ISpoofCheckerDispatcher { contract_address }
+            }
+
+            fn assert_tx_info(tx_info: starknet::info::v2::TxInfo, expected_tx_info: starknet::info::v2::TxInfo) {
+                assert(tx_info.version == expected_tx_info.version, 'Invalid version');
+                assert(tx_info.account_contract_address == expected_tx_info.account_contract_address, 'Invalid account_contract_addr');
+                assert(tx_info.max_fee == expected_tx_info.max_fee, 'Invalid max_fee');
+                assert(tx_info.signature == expected_tx_info.signature, 'Invalid signature');
+                assert(tx_info.transaction_hash == expected_tx_info.transaction_hash, 'Invalid transaction_hash');
+                assert(tx_info.chain_id == expected_tx_info.chain_id, 'Invalid chain_id');
+                assert(tx_info.nonce == expected_tx_info.nonce, 'Invalid nonce');
+
+                let mut resource_bounds = array![];
+                tx_info.resource_bounds.serialize(ref resource_bounds);
+
+                let mut expected_resource_bounds = array![];
+                expected_tx_info.resource_bounds.serialize(ref expected_resource_bounds);
+
+                assert(resource_bounds == expected_resource_bounds, 'Invalid resource bounds');
+                
+                assert(tx_info.tip == expected_tx_info.tip, 'Invalid tip');
+                assert(tx_info.paymaster_data == expected_tx_info.paymaster_data, 'Invalid paymaster_data');
+                assert(tx_info.nonce_data_availability_mode == expected_tx_info.nonce_data_availability_mode, 'Invalid nonce_data_av_mode');
+                assert(tx_info.fee_data_availability_mode == expected_tx_info.fee_data_availability_mode, 'Invalid fee_data_av_mode');
+                assert(tx_info.account_deployment_data == expected_tx_info.account_deployment_data, 'Invalid account_deployment_data');
+            }
+
+            #[test]
+            fn test_spoof_once() {
+                let dispatcher = deploy_spoof_checker();
+
+                let tx_info_before = dispatcher.get_tx_info();
+
+                let mut tx_info_mock = TxInfoMockTrait::default();
+                tx_info_mock.transaction_hash = Option::Some(421);
+
+                spoof(CheatTarget::One(dispatcher.contract_address), tx_info_mock, CheatSpan::TargetCalls(1));
+
+                let mut expected_tx_info = tx_info_before;
+                expected_tx_info.transaction_hash = 421;
+
+                assert_tx_info(dispatcher.get_tx_info(), expected_tx_info);
+                assert_tx_info(dispatcher.get_tx_info(), tx_info_before);
+            }
+
+            #[test]
+            fn test_spoof_twice() {
+                let dispatcher = deploy_spoof_checker();
+
+                let tx_info_before = dispatcher.get_tx_info();
+
+                let mut tx_info_mock = TxInfoMockTrait::default();
+                tx_info_mock.transaction_hash = Option::Some(421);
+
+                spoof(CheatTarget::One(dispatcher.contract_address), tx_info_mock, CheatSpan::TargetCalls(2));
+
+                let mut expected_tx_info = tx_info_before;
+                expected_tx_info.transaction_hash = 421;
+
+                assert_tx_info(dispatcher.get_tx_info(), expected_tx_info);
+                assert_tx_info(dispatcher.get_tx_info(), expected_tx_info);
+                assert_tx_info(dispatcher.get_tx_info(), tx_info_before);
+            }
+
+            #[test]
+            fn test_spoof_test_address() {
+                let tx_info_before = starknet::get_tx_info().unbox();
+
+                let mut tx_info_mock = TxInfoMockTrait::default();
+                tx_info_mock.transaction_hash = Option::Some(421);
+
+                spoof(CheatTarget::One(test_address()), tx_info_mock, CheatSpan::TargetCalls(1));
+                
+                let mut expected_tx_info = tx_info_before;
+                expected_tx_info.transaction_hash = 421;
+
+                let tx_info = starknet::get_tx_info().unbox();
+                assert_tx_info(tx_info, expected_tx_info);
+
+                stop_spoof(CheatTarget::One(test_address()));
+
+                let tx_info = starknet::get_tx_info().unbox();
+                assert_tx_info(tx_info, tx_info_before);
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "SpoofChecker".to_string(),
+            Path::new("tests/data/contracts/spoof_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test);
+
+    assert_passed(&result);
+}

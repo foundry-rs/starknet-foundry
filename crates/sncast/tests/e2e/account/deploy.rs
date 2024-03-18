@@ -5,10 +5,10 @@ use crate::helpers::fixtures::{
 };
 use crate::helpers::runner::runner;
 use conversions::string::IntoHexStr;
+use configuration::copy_config_to_tempdir;
 use indoc::indoc;
 use serde_json::Value;
 use shared::test_utils::output_assert::{assert_stderr_contains, AsOutput};
-use sncast::helpers::configuration::copy_config_to_tempdir;
 use sncast::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
 use starknet::core::types::TransactionReceipt::DeployAccount;
 use std::{env, fs};
