@@ -4,6 +4,11 @@ Transaction gas cost is always important for the users. Developers need to know 
 and gas-efficient.
 `snforge` supports gas estimation for each test case. 
 
+> 📝 **Note**
+> 
+> [declare](../appendix/snforge-library/declare.md) is omitted while calculating gas.
+> This is because [declare](../appendix/snforge-library/declare.md) need to be called in separate transaction.
+
 ## Displaying Estimated Gas
 
 ### Single Test
