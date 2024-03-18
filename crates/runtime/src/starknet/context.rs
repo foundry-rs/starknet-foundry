@@ -134,7 +134,7 @@ impl Default for SerializableBlockInfo {
             block_timestamp: BlockTimestamp::default(),
             sequencer_address: contract_address!(SEQUENCER_ADDRESS),
             gas_prices: SerializableGasPrices::default(),
-            use_kzg_da: false,
+            use_kzg_da: true,
         }
     }
 }

@@ -84,7 +84,7 @@ impl BlockInfoReader for ForkStateReader {
                     sequencer_address: block.sequencer_address.into_(),
                     block_timestamp: BlockTimestamp(block.timestamp),
                     gas_prices: SerializableGasPrices::default().into(),
-                    use_kzg_da: false,
+                    use_kzg_da: true,
                 };
 
                 self.cache.cache_get_block_info(block_info.clone());
