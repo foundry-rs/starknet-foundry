@@ -51,7 +51,7 @@ fn spoof(target: CheatTarget, tx_info_mock: TxInfoMock, span: CheatSpan) {
     target.serialize(ref inputs);
     span.serialize(ref inputs);
     tx_info_mock.serialize(ref inputs);
-    cheatcode::<'start_spoof'>(inputs.span());
+    cheatcode::<'spoof'>(inputs.span());
 }
 
 fn start_spoof(target: CheatTarget, tx_info_mock: TxInfoMock) {

@@ -102,7 +102,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
         extended_runtime: &mut Self::Runtime,
     ) -> Result<CheatcodeHandlingResult, EnhancedHintError> {
         match selector {
-            "start_roll" => {
+            "roll" => {
                 let target = input_reader.read_cheat_target()?;
                 let span = input_reader.read_cheat_span()?;
                 let block_number = input_reader.read_felt()?;
@@ -124,7 +124,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .stop_roll(target);
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
-            "start_warp" => {
+            "warp" => {
                 let target = input_reader.read_cheat_target()?;
                 let span = input_reader.read_cheat_span()?;
                 let warp_timestamp = input_reader.read_felt()?;
@@ -147,7 +147,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .stop_warp(target);
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
-            "start_elect" => {
+            "elect" => {
                 let target = input_reader.read_cheat_target()?;
                 let span = input_reader.read_cheat_span()?;
                 let sequencer_address = input_reader.read_felt()?.into_();
@@ -168,7 +168,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .stop_elect(target);
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
-            "start_prank" => {
+            "prank" => {
                 let target = input_reader.read_cheat_target()?;
                 let span = input_reader.read_cheat_span()?;
 
@@ -191,7 +191,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .stop_prank(target);
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
-            "start_mock_call" => {
+            "mock_call" => {
                 let contract_address = input_reader.read_felt()?.into_();
                 let function_selector = input_reader.read_felt()?;
                 let span = input_reader.read_cheat_span()?;
@@ -216,7 +216,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .stop_mock_call(contract_address, function_selector);
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
-            "start_spoof" => {
+            "spoof" => {
                 let target = input_reader.read_cheat_target()?;
                 let span = input_reader.read_cheat_span()?;
 
