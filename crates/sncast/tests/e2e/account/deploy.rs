@@ -4,8 +4,8 @@ use crate::helpers::fixtures::{
     get_address_from_keystore, get_transaction_hash, get_transaction_receipt, mint_token,
 };
 use crate::helpers::runner::runner;
-use conversions::string::IntoHexStr;
 use configuration::copy_config_to_tempdir;
+use conversions::string::IntoHexStr;
 use indoc::indoc;
 use serde_json::Value;
 use shared::test_utils::output_assert::{assert_stderr_contains, AsOutput};
