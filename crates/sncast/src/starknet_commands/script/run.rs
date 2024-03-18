@@ -21,6 +21,7 @@ use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cairo_vm::vm::vm_core::VirtualMachine;
+use camino::Utf8PathBuf;
 use clap::Args;
 use conversions::felt252::SerializeAsFelt252Vec;
 use conversions::{FromConv, IntoConv};
@@ -40,6 +41,10 @@ use shared::utils::build_readable_text;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::SCRIPT_LIB_ARTIFACT_NAME;
 use sncast::response::structs::ScriptRunResponse;
+use sncast::state::hashing::{
+    generate_declare_tx_id, generate_deploy_tx_id, generate_invoke_tx_id,
+};
+use sncast::state::state_file::{serialize_as_script_function_result, StateManager};
 use starknet::accounts::Account;
 use starknet::core::types::{BlockId, BlockTag::Pending, FieldElement};
 use starknet::providers::jsonrpc::HttpTransport;
@@ -57,6 +62,10 @@ pub struct Run {
     /// Specifies scarb package to be used
     #[clap(long)]
     pub package: Option<String>,
+
+    /// Path to state file
+    #[clap(long)]
+    pub no_state_file: bool,
 }
 
 pub struct CastScriptExtension<'a> {
@@ -65,6 +74,7 @@ pub struct CastScriptExtension<'a> {
     pub tokio_runtime: Runtime,
     pub config: &'a CastConfig,
     pub artifacts: &'a HashMap<String, StarknetContractArtifacts>,
+    pub state: StateManager,
 }
 
 impl<'a> ExtensionLogic for CastScriptExtension<'a> {
@@ -107,6 +117,16 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     .read_option_felt()?
                     .map(conversions::IntoConv::into_);
 
+                let declare_tx_id = generate_declare_tx_id(contract_name.as_str());
+
+                if let Some(success_output) =
+                    self.state.maybe_get_success_output(declare_tx_id.as_str())
+                {
+                    return Ok(CheatcodeHandlingResult::Handled(
+                        serialize_as_script_function_result(success_output),
+                    ));
+                }
+
                 let account = self.tokio_runtime.block_on(get_account(
                     &self.config.account,
                     &self.config.accounts_file,
@@ -125,6 +145,12 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                         wait_params: self.config.wait_params,
                     },
                 ));
+
+                self.state.maybe_insert_tx_entry(
+                    declare_tx_id.as_str(),
+                    selector,
+                    &declare_result,
+                )?;
                 Ok(CheatcodeHandlingResult::Handled(
                     declare_result.serialize_as_felt252_vec(),
                 ))
@@ -148,6 +174,17 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     .read_option_felt()?
                     .map(conversions::IntoConv::into_);
 
+                let deploy_tx_id =
+                    generate_deploy_tx_id(class_hash, &constructor_calldata, salt, unique);
+
+                if let Some(success_output) =
+                    self.state.maybe_get_success_output(deploy_tx_id.as_str())
+                {
+                    return Ok(CheatcodeHandlingResult::Handled(
+                        serialize_as_script_function_result(success_output),
+                    ));
+                }
+
                 let account = self.tokio_runtime.block_on(get_account(
                     &self.config.account,
                     &self.config.accounts_file,
@@ -168,6 +205,13 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                         wait_params: self.config.wait_params,
                     },
                 ));
+
+                self.state.maybe_insert_tx_entry(
+                    deploy_tx_id.as_str(),
+                    selector,
+                    &deploy_result,
+                )?;
+
                 Ok(CheatcodeHandlingResult::Handled(
                     deploy_result.serialize_as_felt252_vec(),
                 ))
@@ -186,6 +230,17 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 let nonce = input_reader
                     .read_option_felt()?
                     .map(conversions::IntoConv::into_);
+
+                let invoke_tx_id =
+                    generate_invoke_tx_id(contract_address, function_selector, &calldata);
+
+                if let Some(success_output) =
+                    self.state.maybe_get_success_output(invoke_tx_id.as_str())
+                {
+                    return Ok(CheatcodeHandlingResult::Handled(
+                        serialize_as_script_function_result(success_output),
+                    ));
+                }
 
                 let account = self.tokio_runtime.block_on(get_account(
                     &self.config.account,
@@ -206,6 +261,13 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                         wait_params: self.config.wait_params,
                     },
                 ));
+
+                self.state.maybe_insert_tx_entry(
+                    invoke_tx_id.as_str(),
+                    selector,
+                    &invoke_result,
+                )?;
+
                 Ok(CheatcodeHandlingResult::Handled(
                     invoke_result.serialize_as_felt252_vec(),
                 ))
@@ -248,6 +310,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn run(
     module_name: &str,
     metadata: &Metadata,
@@ -256,6 +319,7 @@ pub fn run(
     provider: &JsonRpcClient<HttpTransport>,
     tokio_runtime: Runtime,
     config: &CastConfig,
+    state_file_path: Option<Utf8PathBuf>,
 ) -> Result<ScriptRunResponse> {
     warn_if_sncast_std_not_compatible(metadata)?;
     let artifacts = inject_lib_artifact(metadata, package_metadata, artifacts)?;
@@ -318,12 +382,15 @@ pub fn run(
         ReadOnlySegments::default(),
     );
 
+    let state = StateManager::from(state_file_path)?;
+
     let cast_extension = CastScriptExtension {
         hints: &string_to_hint,
         provider,
         tokio_runtime,
         config,
         artifacts: &artifacts,
+        state,
     };
 
     let mut cast_runtime = ExtendedRuntime {
