@@ -3,10 +3,11 @@ use crate::helpers::constants::{
 };
 use crate::helpers::runner::runner;
 use camino::Utf8PathBuf;
+use configuration::CONFIG_FILENAME;
 use indoc::{formatdoc, indoc};
 use serde_json::json;
 use shared::test_utils::output_assert::assert_stderr_contains;
-use std::fs;
+use std::fs::{self, File};
 use tempfile::tempdir;
 
 #[tokio::test]
@@ -501,4 +502,30 @@ pub async fn test_private_key_as_int_in_file() {
             }
         )
     );
+}
+
+#[tokio::test]
+pub async fn test_empty_config_add_profile() {
+    let tempdir = tempdir().expect("Unable to create a temporary directory");
+    File::create(tempdir.path().join(CONFIG_FILENAME)).unwrap();
+    let accounts_file = "accounts.json";
+
+    let args = vec![
+        "--url",
+        URL,
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "add",
+        "--name",
+        "my_account_add",
+        "--address",
+        DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS,
+        "--private-key",
+        "0x456",
+        "--add-profile",
+        "random",
+    ];
+
+    runner(&args).current_dir(tempdir.path()).assert().success();
 }
