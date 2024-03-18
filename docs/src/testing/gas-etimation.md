@@ -6,8 +6,8 @@ and gas-efficient.
 
 > 📝 **Note**
 > 
-> [declare](../appendix/snforge-library/declare.md) is omitted while calculating gas.
-> This is because [declare](../appendix/snforge-library/declare.md) need to be called in separate transaction.
+> [declare](../appendix/snforge-library/declare.md) cost is omitted while calculating gas.
+> This is because declare is a separate [transaction](https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/transactions/#declare-transaction) on Starknet.
 
 ## Displaying Estimated Gas
 
