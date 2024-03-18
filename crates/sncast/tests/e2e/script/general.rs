@@ -265,7 +265,24 @@ async fn test_nonexistent_account_address() {
         output,
         indoc! {r"
         command: script run
-        error: Got an exception while executing a hint: Hint Error: Invalid account address
+        error: Invalid account address
+        "},
+    );
+}
+
+#[tokio::test]
+async fn test_no_account_passed() {
+    let script_name = "map_script";
+    let args = vec!["--url", URL, "script", "run", &script_name];
+
+    let snapbox = runner(&args).current_dir(SCRIPTS_DIR.to_owned() + "/map_script/scripts");
+    let output = snapbox.assert().success();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        command: script run
+        error: [..] Account not defined. Please ensure the correct account is passed to `script run` command
         "},
     );
 }
