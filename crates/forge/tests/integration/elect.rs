@@ -201,3 +201,100 @@ fn elect_complex() {
 
     assert_passed(&result);
 }
+
+#[test]
+fn elect_with_span() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use result::ResultTrait;
+            use array::ArrayTrait;
+            use option::OptionTrait;
+            use traits::TryInto;
+            use starknet::ContractAddress;
+            use starknet::Felt252TryIntoContractAddress;
+            use snforge_std::{ test_address, declare, ContractClassTrait, elect, start_elect, stop_elect, CheatTarget, CheatSpan };
+
+            #[starknet::interface]
+            trait IElectChecker<TContractState> {
+                fn get_sequencer_address(ref self: TContractState) -> felt252;
+            }
+
+            fn deploy_elect_checker() -> IElectCheckerDispatcher {
+                let contract_address = declare("ElectChecker").deploy(@ArrayTrait::new()).unwrap();
+                IElectCheckerDispatcher { contract_address }
+            }
+
+            #[test]
+            fn test_elect_once() {
+                let old_sequencer_address = get_sequencer_address();
+                
+                let dispatcher = deploy_elect_checker();
+
+                let target_sequencer_address: ContractAddress = 123.try_into().unwrap();
+
+                elect(CheatTarget::One(dispatcher.contract_address), target_sequencer_address, CheatSpan::TargetCalls(1));
+
+                let sequencer_address = dispatcher.get_sequencer_address();
+                assert(sequencer_address == target_sequencer_address.into(), 'Wrong sequencer address');
+
+                let sequencer_address = dispatcher.get_sequencer_address();
+                assert(sequencer_address == old_sequencer_address.into(), 'Address did not change back');
+            }
+
+            #[test]
+            fn test_elect_twice() {
+                let old_sequencer_address = get_sequencer_address();
+
+                let dispatcher = deploy_elect_checker();
+
+                let target_sequencer_address: ContractAddress = 123.try_into().unwrap();
+
+                elect(CheatTarget::One(dispatcher.contract_address), target_sequencer_address, CheatSpan::TargetCalls(2));
+
+                let sequencer_address = dispatcher.get_sequencer_address();
+                assert(sequencer_address == target_sequencer_address.into(), 'Wrong sequencer address');
+                
+                let sequencer_address = dispatcher.get_sequencer_address();
+                assert(sequencer_address == target_sequencer_address.into(), 'Wrong sequencer address');
+
+                let sequencer_address = dispatcher.get_sequencer_address();
+                assert(sequencer_address == old_sequencer_address.into(), 'Address did not change back');
+            }
+
+            #[test]
+            fn test_elect_test_address() {
+                let old_sequencer_address = get_sequencer_address();
+                
+                let target_sequencer_address: ContractAddress = 123.try_into().unwrap();
+                
+                elect(CheatTarget::One(test_address()), target_sequencer_address, CheatSpan::TargetCalls(1));
+                
+                let sequencer_address = get_sequencer_address();
+                assert(sequencer_address == target_sequencer_address, 'Wrong sequencer address');
+
+                let sequencer_address = get_sequencer_address();
+                assert(sequencer_address == target_sequencer_address, 'Wrong sequencer address');
+                
+                stop_elect(CheatTarget::One(test_address()));
+
+                let sequencer_address = get_sequencer_address();
+                assert(sequencer_address == old_sequencer_address, 'Wrong sequencer address');
+            }
+
+            fn get_sequencer_address() -> ContractAddress {
+                starknet::get_block_info().unbox().sequencer_address
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "ElectChecker".to_string(),
+            Path::new("tests/data/contracts/elect_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test);
+
+    assert_passed(&result);
+}
