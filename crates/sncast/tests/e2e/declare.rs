@@ -4,9 +4,9 @@ use crate::helpers::fixtures::{
     get_transaction_hash, get_transaction_receipt,
 };
 use crate::helpers::runner::runner;
+use configuration::CONFIG_FILENAME;
 use indoc::indoc;
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
-use sncast::helpers::constants::CONFIG_FILENAME;
 use starknet::core::types::TransactionReceipt::Declare;
 use std::fs;
 

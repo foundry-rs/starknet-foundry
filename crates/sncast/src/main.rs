@@ -5,12 +5,13 @@ use crate::starknet_commands::{
     script::Script,
 };
 use anyhow::{Context, Result};
+use configuration::load_global_config;
 use sncast::response::print::{print_command_result, OutputFormat};
 
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand};
 use shared::verify_and_warn_if_incompatible_rpc_version;
-use sncast::helpers::configuration::{load_config, CastConfig};
+use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
 use sncast::helpers::scarb_utils::{
     assert_manifest_path_exists, build_and_load_artifacts, get_package_metadata,
@@ -122,9 +123,9 @@ fn main() -> Result<()> {
     if let Commands::Script(script) = &cli.command {
         run_script_command(&cli, runtime, script, numbers_format, &output_format)
     } else {
-        let mut config = load_config(&cli.profile, &None)?;
+        let mut config = load_global_config::<CastConfig>(&None, &cli.profile)?;
         update_cast_config(&mut config, &cli);
-        let provider = get_provider(&config.rpc_url)?;
+        let provider = get_provider(&config.url)?;
         runtime.block_on(run_async_command(
             cli,
             config,
@@ -143,7 +144,7 @@ async fn run_async_command(
     numbers_format: NumbersFormat,
     output_format: OutputFormat,
 ) -> Result<()> {
-    verify_and_warn_if_incompatible_rpc_version(&provider, &config.rpc_url).await?;
+    verify_and_warn_if_incompatible_rpc_version(&provider, &config.url).await?;
 
     let wait_config = WaitForTx {
         wait: cli.wait,
@@ -294,7 +295,7 @@ async fn run_async_command(
         Commands::Account(account) => match account.command {
             account::Commands::Add(add) => {
                 let mut result = starknet_commands::account::add::add(
-                    &config.rpc_url,
+                    &config.url,
                     &add.name.clone(),
                     &config.accounts_file,
                     &provider,
@@ -315,7 +316,7 @@ async fn run_async_command(
                     config.account
                 };
                 let mut result = starknet_commands::account::create::create(
-                    &config.rpc_url,
+                    &config.url,
                     &account,
                     &config.accounts_file,
                     config.keystore,
@@ -416,12 +417,15 @@ fn run_script_command(
             let manifest_path = assert_manifest_path_exists()?;
             let package_metadata = get_package_metadata(&manifest_path, &run.package)?;
 
-            let mut config = load_config(&cli.profile, &Some(package_metadata.root.clone()))?;
+            let mut config = load_global_config::<CastConfig>(
+                &Some(package_metadata.root.clone()),
+                &cli.profile,
+            )?;
             update_cast_config(&mut config, cli);
-            let provider = get_provider(&config.rpc_url)?;
+            let provider = get_provider(&config.url)?;
             runtime.block_on(verify_and_warn_if_incompatible_rpc_version(
                 &provider,
-                &config.rpc_url,
+                &config.url,
             ))?;
 
             let mut artifacts = build_and_load_artifacts(
@@ -459,7 +463,7 @@ fn update_cast_config(config: &mut CastConfig, cli: &Cli) {
         };
     }
 
-    config.rpc_url = clone_or_else!(cli.rpc_url, config.rpc_url);
+    config.url = clone_or_else!(cli.rpc_url, config.url);
     config.account = clone_or_else!(cli.account, config.account);
     config.keystore = cli.keystore.clone().or(config.keystore.clone());
 

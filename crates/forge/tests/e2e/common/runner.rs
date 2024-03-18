@@ -42,7 +42,7 @@ pub(crate) fn setup_package_with_file_patterns(
         .unwrap()
         .parse::<Document>()
         .unwrap();
-    scarb_toml["dependencies"]["snforge_std"]["path"] = value(snforge_std_path);
+    scarb_toml["dev-dependencies"]["snforge_std"]["path"] = value(snforge_std_path);
     scarb_toml["dependencies"]["starknet"] = value("2.4.0");
     scarb_toml["target.starknet-contract"]["sierra"] = value(true);
 

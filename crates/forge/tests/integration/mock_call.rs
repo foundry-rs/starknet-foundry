@@ -139,3 +139,71 @@ fn mock_call_complex_types() {
     let result = run_test_case(&test);
     assert_passed(&result);
 }
+
+#[test]
+fn mock_calls() {
+    let test = test_case!(
+        indoc!(
+            r#"
+        use result::ResultTrait;
+        use snforge_std::{ declare, ContractClassTrait, mock_call, start_mock_call, stop_mock_call };
+
+        #[starknet::interface]
+        trait IMockChecker<TContractState> {
+            fn get_thing(ref self: TContractState) -> felt252;
+        }
+
+        #[test]
+        fn mock_call_one() {
+            let calldata = array![420];
+
+            let contract = declare("MockChecker");
+            let contract_address = contract.deploy(@calldata).unwrap();
+
+            let dispatcher = IMockCheckerDispatcher { contract_address };
+
+            let mock_ret_data = 421;
+
+            mock_call(contract_address, selector!("get_thing"), mock_ret_data, 1);
+
+            let thing = dispatcher.get_thing();
+            assert_eq!(thing, 421);
+
+            let thing = dispatcher.get_thing();
+            assert_eq!(thing, 420);
+        }
+
+        #[test]
+        fn mock_call_twice() {
+            let calldata = array![420];
+
+            let contract = declare("MockChecker");
+            let contract_address = contract.deploy(@calldata).unwrap();
+
+            let dispatcher = IMockCheckerDispatcher { contract_address };
+
+            let mock_ret_data = 421;
+
+            mock_call(contract_address, selector!("get_thing"), mock_ret_data, 2);
+
+            let thing = dispatcher.get_thing();
+            assert_eq!(thing, 421);
+
+            let thing = dispatcher.get_thing();
+            assert_eq!(thing, 421);
+
+            let thing = dispatcher.get_thing();
+            assert_eq!(thing, 420);
+        }
+    "#
+        ),
+        Contract::from_code_path(
+            "MockChecker".to_string(),
+            Path::new("tests/data/contracts/mock_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test);
+    assert_passed(&result);
+}
