@@ -67,6 +67,7 @@ mod tests {
     use indoc::{formatdoc, indoc};
     use scarb_api::metadata::MetadataCommandExt;
     use scarb_metadata::PackageId;
+    use std::env;
     use std::str::FromStr;
     use test_utils::tempdir_with_tool_versions;
 
@@ -355,5 +356,57 @@ mod tests {
         )
         .unwrap_err();
         assert!(format!("{err:?}").contains("block_id.tag can only be equal to Latest"));
+    }
+
+    #[test]
+    fn get_forge_config_resolves_env_variables() {
+        let temp = setup_package("simple_package");
+        let content = indoc!(
+            r#"
+            [package]
+            name = "simple_package"
+            version = "0.1.0"
+
+            [[tool.snforge.fork]]
+            name = "ENV_URL_FORK"
+            url = "$ENV_URL_FORK234980670176"
+            block_id.number = "1"
+            "#
+        );
+        temp.child("Scarb.toml").write_str(content).unwrap();
+
+        let scarb_metadata = ScarbCommand::metadata()
+            .inherit_stderr()
+            .current_dir(temp.path())
+            .run()
+            .unwrap();
+
+        env::set_var("ENV_URL_FORK234980670176", "http://some.rpc.url_from_env");
+        let config = load_package_config::<ForgeConfig>(
+            &scarb_metadata,
+            &scarb_metadata.workspace.members[0],
+        )
+        .unwrap();
+
+        assert_eq!(
+            config,
+            ForgeConfig {
+                exit_first: false,
+                fork: vec![ForkTarget::new(
+                    "ENV_URL_FORK".to_string(),
+                    RawForkParams {
+                        url: "http://some.rpc.url_from_env".to_string(),
+                        block_id_type: "number".to_string(),
+                        block_id_value: "1".to_string(),
+                    },
+                )],
+                fuzzer_runs: None,
+                fuzzer_seed: None,
+                max_n_steps: None,
+                detailed_resources: false,
+                save_trace_data: false,
+                build_profile: false
+            }
+        );
     }
 }

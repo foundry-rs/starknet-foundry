@@ -1,6 +1,7 @@
 use anyhow::{anyhow, Context, Result};
 use scarb_metadata::{Metadata, PackageId};
-use std::fs;
+use serde_json::Number;
+use std::{env, fs};
 
 use camino::Utf8PathBuf;
 use tempfile::{tempdir, TempDir};
@@ -72,7 +73,7 @@ pub fn load_global_config<T: GlobalConfig + Default>(
                 .expect("Conversion from TOML value to JSON value should not fail.");
 
             let profile = get_profile(raw_config_json, T::tool_name(), profile)?;
-            T::from_raw(profile)
+            T::from_raw(resolve_env_variables(profile)?)
         }
         None => Ok(T::default()),
     }
@@ -88,11 +89,47 @@ pub fn load_package_config<T: PackageConfig + Default>(
     let maybe_raw_metadata = metadata
         .get_package(package)
         .ok_or_else(|| anyhow!("Failed to find metadata for package = {package}"))?
-        .tool_metadata("snforge");
+        .tool_metadata("snforge")
+        .cloned();
     match maybe_raw_metadata {
-        Some(raw_metadata) => T::from_raw(raw_metadata),
+        Some(raw_metadata) => T::from_raw(&resolve_env_variables(raw_metadata)?),
         None => Ok(T::default()),
     }
+}
+
+fn resolve_env_variables(config: serde_json::Value) -> Result<serde_json::Value> {
+    match config {
+        serde_json::Value::Object(map) => {
+            let val = map
+                .into_iter()
+                .map(|(k, v)| -> Result<(String, serde_json::Value)> {
+                    Ok((k, resolve_env_variables(v)?))
+                })
+                .collect::<Result<serde_json::Map<String, serde_json::Value>>>()?;
+            Ok(serde_json::Value::Object(val))
+        }
+        serde_json::Value::Array(val) => {
+            let val = val
+                .into_iter()
+                .map(resolve_env_variables)
+                .collect::<Result<Vec<serde_json::Value>>>()?;
+            Ok(serde_json::Value::Array(val))
+        }
+        serde_json::Value::String(val) if val.starts_with('$') => resolve_env_variable(&val),
+        val => Ok(val),
+    }
+}
+
+fn resolve_env_variable(var: &str) -> Result<serde_json::Value> {
+    assert!(var.starts_with('$'));
+    let value = env::var(&var[1..])?;
+    if let Ok(value) = value.parse::<Number>() {
+        return Ok(serde_json::Value::Number(value));
+    }
+    if let Ok(value) = value.parse::<bool>() {
+        return Ok(serde_json::Value::Bool(value));
+    }
+    Ok(serde_json::Value::String(value))
 }
 
 pub fn search_config_upwards_relative_to(current_dir: &Utf8PathBuf) -> Result<Utf8PathBuf> {
@@ -248,5 +285,73 @@ mod tests {
 
         assert_eq!(config.account, String::new());
         assert_eq!(config.url, String::new());
+    }
+
+    #[derive(Debug, Default, Serialize, Deserialize)]
+    pub struct StubComplexConfig {
+        #[serde(default)]
+        pub url: String,
+        #[serde(default)]
+        pub account: i32,
+        #[serde(default)]
+        pub nested: StubComplexConfigNested,
+    }
+
+    #[derive(Debug, Default, Serialize, Deserialize)]
+    pub struct StubComplexConfigNested {
+        #[serde(
+            default,
+            rename(serialize = "list-example", deserialize = "list-example")
+        )]
+        list_example: Vec<bool>,
+        #[serde(default, rename(serialize = "url-nested", deserialize = "url-nested"))]
+        url_nested: f32,
+    }
+
+    impl GlobalConfig for StubComplexConfig {
+        fn tool_name() -> &'static str {
+            "stubtool"
+        }
+
+        fn from_raw(config: serde_json::Value) -> Result<Self> {
+            Ok(serde_json::from_value::<StubComplexConfig>(config)?)
+        }
+    }
+
+    #[test]
+    #[allow(clippy::float_cmp)]
+    fn resolve_env_vars() {
+        let tempdir =
+            copy_config_to_tempdir("tests/data/stubtool_snfoundry.toml", Some("childdir1"));
+        fs::copy(
+            "tests/data/stubtool_snfoundry.toml",
+            tempdir.path().join("childdir1").join(CONFIG_FILENAME),
+        )
+        .expect("Failed to copy config file to temp dir");
+        // missing env variables
+        if load_global_config::<StubConfig>(
+            &Some(Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
+            &Some(String::from("with-envs")),
+        )
+        .is_ok()
+        {
+            panic!("Expected failure");
+        }
+
+        // present env variables
+        env::set_var("VALUE_STRING123132", "nfsaufbnsailfbsbksdabfnkl");
+        env::set_var("VALUE_INT123132", "321312");
+        env::set_var("VALUE_FLOAT123132", "321.312");
+        env::set_var("VALUE_BOOL1231321", "true");
+        env::set_var("VALUE_BOOL1231322", "false");
+        let config = load_global_config::<StubComplexConfig>(
+            &Some(Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
+            &Some(String::from("with-envs")),
+        )
+        .unwrap();
+        assert_eq!(config.url, String::from("nfsaufbnsailfbsbksdabfnkl"));
+        assert_eq!(config.account, 321_312);
+        assert_eq!(config.nested.list_example, vec![true, false]);
+        assert_eq!(config.nested.url_nested, 321.312);
     }
 }
