@@ -10,7 +10,7 @@ use cairo_felt::{felt_str, Felt252};
 use cairo_lang_starknet_classes::keccak::starknet_keccak;
 use cairo_vm::hint_processor::hint_processor_utils::felt_to_usize;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::{
-    Event, SpyTarget,
+    Event, Events, SpyTarget,
 };
 use cheatnet::{
     constants::build_testing_state,
@@ -24,7 +24,7 @@ use tempfile::TempDir;
 
 trait SpyTrait {
     fn spy_events(&mut self, spy_on: SpyTarget) -> usize;
-    fn fetch_events(&mut self, id: usize) -> (usize, Vec<Felt252>);
+    fn fetch_events(&mut self, id: usize) -> Events;
 }
 
 impl<'a> SpyTrait for TestEnvironment<'a> {
@@ -32,7 +32,7 @@ impl<'a> SpyTrait for TestEnvironment<'a> {
         self.runtime_state.cheatnet_state.spy_events(spy_on)
     }
 
-    fn fetch_events(&mut self, id: usize) -> (usize, Vec<Felt252>) {
+    fn fetch_events(&mut self, id: usize) -> Events {
         self.runtime_state
             .cheatnet_state
             .fetch_events(&Felt252::from(id))
@@ -76,8 +76,9 @@ fn spy_events_complex() {
 
     test_env.call_contract(&contract_address, "emit_one_event", &[Felt252::from(123)]);
 
-    let (length, serialized_events) = test_env.fetch_events(id);
-    let events = felt_vec_to_event_vec(&serialized_events);
+    let serialized_events = test_env.fetch_events(id);
+    let length = serialized_events.len();
+    let events = felt_vec_to_event_vec(serialized_events.events());
 
     assert_eq!(length, 1, "There should be one event");
     assert_eq!(
@@ -97,10 +98,10 @@ fn spy_events_complex() {
 
     test_env.call_contract(&contract_address, "emit_one_event", &[Felt252::from(123)]);
 
-    let (length, _) = test_env.fetch_events(id);
+    let length = test_env.fetch_events(id).len();
     assert_eq!(length, 1, "There should be one new event");
 
-    let (length, _) = test_env.fetch_events(id);
+    let length = test_env.fetch_events(id).len();
     assert_eq!(length, 0, "There should be no new events");
 }
 
@@ -125,8 +126,9 @@ fn check_events_order() {
         ],
     );
 
-    let (length, serialized_events) = test_env.fetch_events(id);
-    let events = felt_vec_to_event_vec(&serialized_events);
+    let serialized_events = test_env.fetch_events(id);
+    let length = serialized_events.len();
+    let events = felt_vec_to_event_vec(serialized_events.events());
 
     assert_eq!(length, 3, "There should be three events");
     assert_eq!(
@@ -178,8 +180,9 @@ fn check_events_captured_only_for_spied_contracts() {
         &[Felt252::from(123)],
     );
 
-    let (length, serialized_events) = test_env.fetch_events(id);
-    let events = felt_vec_to_event_vec(&serialized_events);
+    let serialized_events = test_env.fetch_events(id);
+    let length = serialized_events.len();
+    let events = felt_vec_to_event_vec(serialized_events.events());
 
     assert_eq!(length, 1, "There should be one event");
     assert_eq!(
@@ -210,12 +213,13 @@ fn duplicate_spies_on_one_address() {
 
     test_env.call_contract(&contract_address, "emit_one_event", &[Felt252::from(123)]);
 
-    let (length1, serialized_events1) = test_env.fetch_events(id1);
-    let (length2, _) = test_env.fetch_events(id2);
-    let events1 = felt_vec_to_event_vec(&serialized_events1);
+    let serialized_events1 = test_env.fetch_events(id1);
+    let length1 = serialized_events1.len();
+    let length2 = test_env.fetch_events(id2).len();
+    let events1 = felt_vec_to_event_vec(serialized_events1.events());
 
     assert_eq!(length1, 1, "There should be one event");
-    assert_eq!(length2, 0, "There should be no events");
+    assert_eq!(length2, 1, "There should be one event");
     assert_eq!(
         events1[0],
         Event {
@@ -244,8 +248,9 @@ fn library_call_emits_event() {
         &[Felt252::from(123), class_hash.into_()],
     );
 
-    let (length, serialized_events) = test_env.fetch_events(id);
-    let events = felt_vec_to_event_vec(&serialized_events);
+    let serialized_events = test_env.fetch_events(id);
+    let length = serialized_events.len();
+    let events = felt_vec_to_event_vec(serialized_events.events());
 
     assert_eq!(length, 1, "There should be one event");
     assert_eq!(
@@ -268,8 +273,9 @@ fn event_emitted_in_constructor() {
 
     let contract_address = test_env.deploy("ConstructorSpyEventsChecker", &[Felt252::from(123)]);
 
-    let (length, serialized_events) = test_env.fetch_events(id);
-    let events = felt_vec_to_event_vec(&serialized_events);
+    let serialized_events = test_env.fetch_events(id);
+    let length = serialized_events.len();
+    let events = felt_vec_to_event_vec(serialized_events.events());
 
     assert_eq!(length, 1, "There should be one event");
     assert_eq!(
@@ -309,9 +315,10 @@ fn check_if_there_is_no_interference() {
         &[Felt252::from(123)],
     );
 
-    let (length1, serialized_events1) = test_env.fetch_events(id1);
-    let (length2, _) = test_env.fetch_events(id2);
-    let events1 = felt_vec_to_event_vec(&serialized_events1);
+    let serialized_events1 = test_env.fetch_events(id1);
+    let length1 = serialized_events1.len();
+    let length2 = test_env.fetch_events(id2).len();
+    let events1 = felt_vec_to_event_vec(serialized_events1.events());
 
     assert_eq!(length1, 1, "There should be one event");
     assert_eq!(length2, 0, "There should be no events");
@@ -349,8 +356,9 @@ fn test_nested_calls() {
         &[Felt252::from(123)],
     );
 
-    let (length, serialized_events) = test_env.fetch_events(id);
-    let events = felt_vec_to_event_vec(&serialized_events);
+    let serialized_events = test_env.fetch_events(id);
+    let length = serialized_events.len();
+    let events = felt_vec_to_event_vec(serialized_events.events());
 
     assert_eq!(length, 3, "There should be three events");
     assert_eq!(
@@ -407,12 +415,15 @@ fn use_multiple_spies() {
         &[Felt252::from(123)],
     );
 
-    let (length1, serialized_events1) = test_env.fetch_events(id1);
-    let (length2, serialized_events2) = test_env.fetch_events(id2);
-    let (length3, serialized_events3) = test_env.fetch_events(id3);
-    let events1 = felt_vec_to_event_vec(&serialized_events1);
-    let events2 = felt_vec_to_event_vec(&serialized_events2);
-    let events3 = felt_vec_to_event_vec(&serialized_events3);
+    let serialized_events1 = test_env.fetch_events(id1);
+    let serialized_events2 = test_env.fetch_events(id2);
+    let serialized_events3 = test_env.fetch_events(id3);
+    let length1 = serialized_events1.len();
+    let length2 = serialized_events2.len();
+    let length3 = serialized_events3.len();
+    let events1 = felt_vec_to_event_vec(serialized_events1.events());
+    let events2 = felt_vec_to_event_vec(serialized_events2.events());
+    let events3 = felt_vec_to_event_vec(serialized_events3.events());
 
     assert_eq!(length1, 1, "There should be one event");
     assert_eq!(length2, 1, "There should be one event");
@@ -462,8 +473,9 @@ fn test_emitted_by_emit_events_syscall() {
         &[Felt252::from(123), Felt252::from(456)],
     );
 
-    let (length, serialized_events) = test_env.fetch_events(id);
-    let events = felt_vec_to_event_vec(&serialized_events);
+    let serialized_events = test_env.fetch_events(id);
+    let length = serialized_events.len();
+    let events = felt_vec_to_event_vec(serialized_events.events());
 
     assert_eq!(length, 1, "There should be one event");
     assert_eq!(
@@ -517,11 +529,13 @@ fn capture_cairo0_event() {
         &[cairo0_contract_address.clone()],
     );
 
-    let (length, serialized_events) = runtime_state
+    let serialized_events = runtime_state
         .cheatnet_state
         .fetch_events(&Felt252::from(id));
 
-    let events = felt_vec_to_event_vec(&serialized_events);
+    let length = serialized_events.len();
+
+    let events = felt_vec_to_event_vec(serialized_events.events());
 
     assert_eq!(length, 1, "There should be one event");
 

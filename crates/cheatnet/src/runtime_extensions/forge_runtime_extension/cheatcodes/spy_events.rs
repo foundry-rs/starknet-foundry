@@ -39,6 +39,22 @@ impl Event {
     }
 }
 
+#[derive(Debug)]
+pub struct Spy {
+    pub(crate) target: SpyTarget,
+    pub(crate) events: Vec<Event>,
+}
+
+impl Spy {
+    #[must_use]
+    pub fn new(target: SpyTarget) -> Self {
+        Self {
+            target,
+            events: Vec::new(),
+        }
+    }
+}
+
 /// Specifies which contract are spied on.
 #[derive(Debug)]
 pub enum SpyTarget {
@@ -58,38 +74,50 @@ impl SpyTarget {
     }
 }
 
+pub struct Events {
+    events: Vec<Felt252>,
+}
+
+#[allow(clippy::len_without_is_empty)]
+impl Events {
+    #[must_use]
+    pub fn events(&self) -> &[Felt252] {
+        &self.events[1..]
+    }
+
+    #[must_use]
+    pub fn len(&self) -> usize {
+        felt_to_usize(&self.events[0]).unwrap()
+    }
+}
+
+impl From<Events> for Vec<Felt252> {
+    fn from(value: Events) -> Self {
+        value.events
+    }
+}
+
 impl CheatnetState {
     pub fn spy_events(&mut self, spy_on: SpyTarget) -> usize {
-        self.spies.push(spy_on);
+        self.spies.push(Spy::new(spy_on));
         self.spies.len() - 1
     }
 
-    pub fn fetch_events(&mut self, id: &Felt252) -> (usize, Vec<Felt252>) {
-        let spy_on = &self.spies[felt_to_usize(id).unwrap()];
-        let mut spied_events_len = 0;
-        let mut unconsumed_emitted_events: Vec<Event> = vec![];
+    pub fn fetch_events(&mut self, id: &Felt252) -> Events {
+        let spy = &mut self.spies[felt_to_usize(id).unwrap()];
 
-        let serialized_events: Vec<Felt252> = self
-            .detected_events
-            .iter()
-            .flat_map(|event| {
-                let mut flattened_event = vec![];
-                if spy_on.does_spy(event.from) {
-                    flattened_event.push(Felt252::from_(event.from));
-                    flattened_event.push(Felt252::from(event.keys.len()));
-                    flattened_event.append(&mut event.keys.clone());
-                    flattened_event.push(Felt252::from(event.data.len()));
-                    flattened_event.append(&mut event.data.clone());
+        let mut serialized_events = vec![Felt252::from(spy.events.len())];
 
-                    spied_events_len += 1;
-                } else {
-                    unconsumed_emitted_events.push(event.clone());
-                }
-                flattened_event
-            })
-            .collect();
+        for event in spy.events.drain(..) {
+            serialized_events.push(Felt252::from_(event.from));
+            serialized_events.push(Felt252::from(event.keys.len()));
+            serialized_events.extend(event.keys);
+            serialized_events.push(Felt252::from(event.data.len()));
+            serialized_events.extend(event.data);
+        }
 
-        self.detected_events = unconsumed_emitted_events;
-        (spied_events_len, serialized_events)
+        Events {
+            events: serialized_events,
+        }
     }
 }

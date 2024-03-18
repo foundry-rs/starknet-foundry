@@ -6,10 +6,6 @@ Creates `EventSpy` instance which spies on events emitted by contracts defined
 under the `spy_on` argument.
 
 ```rust
-struct EventSpy {
-    events: Array<(ContractAddress, Event)>,
-}
-
 struct Event {
     keys: Array<felt252>,
     data: Array<felt252>
@@ -22,15 +18,11 @@ enum SpyOn {
 }
 ```
 
-> ⚠️ **Warning**
->
-> Spying on the same contract with multiple spies can result in unexpected behavior — avoid it if possible.
-
-`EventSpy` implements `EventFetcher` and `EventAssertions` traits.
+`EventSpy` implements `Events` and `EventAssertions` traits.
 
 ```rust
-trait EventFetcher {
-    fn fetch_events(ref self: EventSpy);
+trait Events {
+    fn events(ref self: EventSpy) -> @Array<(ContractAddress, Event)>;
 }
 
 trait EventAssertions<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>> {
@@ -84,21 +76,18 @@ fn test_complex_assertions() {
 
     dispatcher.emit_one_event(123);
 
-    spy.fetch_events();
+    assert(spy.events().len() == 1, 'There should be one event');
 
-    assert(spy.events.len() == 1, 'There should be one event');
-
-    let (from, event) = spy.events.at(0);
+    let (from, event) = spy.events().at(0);
     assert(from == @contract_address, 'Emitted from wrong address');
     assert(event.keys.len() == 1, 'There should be one key');
     assert(event.keys.at(0) == @event_name_hash('FirstEvent'), 'Wrong event name');
     assert(event.data.len() == 1, 'There should be one data');
 
     dispatcher.emit_one_event(123);
-    assert(spy.events.len() == 1, 'There should be one event');
+    assert(spy.events().len() == 1, 'There should be one event');
 
-    spy.fetch_events();
-    assert(spy.events.len() == 2, 'There should be two events');
+    assert(spy.events().len() == 2, 'There should be two events');
 }
 ```
 
@@ -106,8 +95,7 @@ Let's go through important parts of the provided code:
 
 - After contract deployment we created the spy with `spy_events` cheatcode.
   From this moment all events emitted by the `SpyEventsChecker` contract will be spied.
-- We have to call `fetch_events` method on the created spy to load emitted events into it.
-- When events are fetched they are loaded into the `events` property of our spy and we can assert them.
+- To get events we call the `events` method of our spy and we can assert them.
 - If the event is emitted by calling `self.emit` method, its hashed name is saved under the `keys.at(0)`
 (this way Starknet handles events)
 
@@ -156,8 +144,6 @@ fn test_simple_assertions() {
 
 The flow is much simpler (thanks to `EventAssertions` trait). Let's go through it as previously:
 
-- When contract is called we don't have to call `fetch_events` on the spy (it is done inside
-  the `assert_emitted` method).
 - `assert_emitted` takes the array snapshot of tuples `(ContractAddress, event)` we expect were emitted.
 
 > 📝 **Note**

@@ -442,14 +442,13 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
             }
             "fetch_events" => {
                 let id = &input_reader.read_felt()?;
-                let (emitted_events_len, serialized_events) = extended_runtime
+                let events = extended_runtime
                     .extended_runtime
                     .extension
                     .cheatnet_state
                     .fetch_events(id);
-                let mut result = vec![Felt252::from(emitted_events_len)];
-                result.extend(serialized_events);
-                Ok(CheatcodeHandlingResult::Handled(result))
+
+                Ok(CheatcodeHandlingResult::Handled(events.into()))
             }
             "event_name_hash" => {
                 let name = input_reader.read_felt()?;

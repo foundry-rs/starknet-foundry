@@ -12,7 +12,7 @@ fn spy_events_simple() {
             use array::ArrayTrait;
             use result::ResultTrait;
             use starknet::ContractAddress;
-            use snforge_std::{ declare, ContractClassTrait, spy_events, EventSpy, EventFetcher,
+            use snforge_std::{ declare, ContractClassTrait, spy_events, EventSpy, EventFetcher, Events,
                 event_name_hash, EventAssertions, SpyOn };
 
             #[starknet::interface]
@@ -58,7 +58,7 @@ fn spy_events_simple() {
                         )
                     )
                 ]);
-                assert(spy.events.len() == 0, 'There should be no events');
+                assert(spy.events().len() == 0, 'There should be no event');
             }
         "#
         ),

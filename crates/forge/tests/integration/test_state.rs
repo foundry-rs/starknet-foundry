@@ -580,7 +580,7 @@ fn spy_events_simple() {
             use result::ResultTrait;
             use starknet::SyscallResultTrait;
             use starknet::ContractAddress;
-            use snforge_std::{ declare, ContractClassTrait, spy_events, EventSpy, EventFetcher,
+            use snforge_std::{ declare, ContractClassTrait, spy_events, EventSpy, EventFetcher, Events,
                 event_name_hash, EventAssertions, Event, SpyOn, test_address };
 
             #[test]
@@ -598,7 +598,7 @@ fn spy_events_simple() {
                     )
                 ]);
 
-                assert(spy.events.len() == 0, 'There should be no events left');
+                assert(spy.events().len() == 0, 'There should be no events left');
             }
         "
     ),);

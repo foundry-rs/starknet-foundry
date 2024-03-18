@@ -22,6 +22,7 @@ use cheatcodes::events::SpyOn;
 use cheatcodes::events::Event;
 use cheatcodes::events::EventSpy;
 use cheatcodes::events::EventFetcher;
+use cheatcodes::events::Events;
 use cheatcodes::events::EventAssertions;
 use cheatcodes::events::spy_events;
 use cheatcodes::events::event_name_hash;

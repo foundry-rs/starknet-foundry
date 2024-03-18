@@ -340,12 +340,12 @@ fn prank_cairo0_callback() {
         &[],
     );
 
-    let (_, events) = test_env
+    let events = test_env
         .runtime_state
         .cheatnet_state
         .fetch_events(&Felt252::from(id));
 
-    let events = felt_vec_to_event_vec(&events);
+    let events = felt_vec_to_event_vec(events.events());
 
     // make sure end() was called by cairo0 contract
     assert_eq!(

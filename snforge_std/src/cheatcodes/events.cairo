@@ -13,7 +13,7 @@ fn spy_events(spy_on: SpyOn) -> EventSpy {
     spy_on.serialize(ref inputs);
     let output = cheatcode::<'spy_events'>(inputs.span());
 
-    EventSpy { _id: *output[0], events: array![] }
+    EventSpy { _id: *output[0], _events: array![] }
 }
 
 fn event_name_hash(name: felt252) -> felt252 {
@@ -30,7 +30,19 @@ struct Event {
 #[derive(Drop, Serde)]
 struct EventSpy {
     _id: felt252,
-    events: Array<(ContractAddress, Event)>,
+    _events: Array<(ContractAddress, Event)>,
+}
+
+trait Events {
+    fn events(ref self: EventSpy) -> @Array<(ContractAddress, Event)>;
+}
+
+impl EventsImpl of Events {
+    fn events(ref self: EventSpy) -> @Array<(ContractAddress, Event)> {
+        self.fetch_events();
+
+        @self._events
+    }
 }
 
 trait EventFetcher {
@@ -48,7 +60,7 @@ impl EventFetcherImpl of EventFetcher {
                 break;
             }
             let (from, event) = events.at(i);
-            self.events.append((*from, event.clone()));
+            self._events.append((*from, event.clone()));
             i += 1;
         }
     }
@@ -112,7 +124,7 @@ impl EventAssertionsImpl<
 fn is_emitted<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>>(
     ref self: EventSpy, expected_from: @ContractAddress, expected_event: @T
 ) -> bool {
-    let emitted_events = @self.events;
+    let emitted_events = @self._events;
 
     let mut expected_keys = array![];
     let mut expected_data = array![];
@@ -135,7 +147,7 @@ fn is_emitted<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>>(
 }
 
 fn remove_event(ref self: EventSpy, index: usize) {
-    let emitted_events = @self.events;
+    let emitted_events = @self._events;
     let mut emitted_events_deleted_event = array![];
     let mut k = 0;
     loop {
@@ -149,7 +161,7 @@ fn remove_event(ref self: EventSpy, index: usize) {
         }
         k += 1;
     };
-    self.events = emitted_events_deleted_event;
+    self._events = emitted_events_deleted_event;
 }
 
 impl EventTraitImpl of starknet::Event<Event> {

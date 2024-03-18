@@ -1,9 +1,7 @@
 use crate::forking::state::ForkStateReader;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallResult;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spoof::TxInfoMock;
-use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::{
-    Event, SpyTarget,
-};
+use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::Spy;
 use blockifier::execution::entry_point::CallEntryPoint;
 use blockifier::{
     execution::contract_class::ContractClass,
@@ -247,8 +245,7 @@ pub struct CheatnetState {
     pub spoofed_contracts: HashMap<ContractAddress, CheatStatus<TxInfoMock>>,
     pub global_spoof: Option<(TxInfoMock, CheatSpan)>,
     pub replaced_bytecode_contracts: HashMap<ContractAddress, ClassHash>,
-    pub spies: Vec<SpyTarget>,
-    pub detected_events: Vec<Event>,
+    pub spies: Vec<Spy>,
     pub deploy_salt_base: u32,
     pub block_info: BlockInfo,
     pub trace_data: TraceData,
@@ -280,7 +277,6 @@ impl Default for CheatnetState {
             replaced_bytecode_contracts: Default::default(),
             global_spoof: None,
             spies: vec![],
-            detected_events: vec![],
             deploy_salt_base: 0,
             block_info: SerializableBlockInfo::default().into(),
             trace_data: TraceData {
