@@ -229,7 +229,7 @@ fn mock_constructor_with_prank() {
 
 ### Setting Cheatcode Span
 
-Sometimes it's useful to have a cheatcode work only for a certain number of calls. 
+Sometimes it's useful to have a cheatcode work only for a certain number of target calls. 
 
 That's where [`CheatSpan`](../appendix/cheatcodes/cheat_span.md) comes in handy.
 

@@ -7,4 +7,4 @@ This change can be canceled with [`stop_warp`](./stop_warp.md).
 
 - `target` - instance of [`CheatTarget`](../cheat_target.md) specifying which contracts to warp
 - `block_timestamp` - block timestamp to be set
-- `span` - instance of [`CheatSpan`](../cheat_span.md) specifying the span of warp
+- `span` - instance of [`CheatSpan`](../cheat_span.md) specifying the number of target calls with the cheat applied

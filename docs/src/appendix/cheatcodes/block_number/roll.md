@@ -7,4 +7,4 @@ This change can be canceled with [`stop_roll`](./stop_roll.md).
 
 - `target` - instance of [`CheatTarget`](../cheat_target.md) specifying which contracts to roll
 - `block_number` - block number to be set
-- `span` - instance of [`CheatSpan`](../cheat_span.md) specifying the span of roll
+- `span` - instance of [`CheatSpan`](../cheat_span.md) specifying the number of target calls with the cheat applied

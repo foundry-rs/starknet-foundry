@@ -7,4 +7,4 @@ This change can be canceled with [`stop_prank`](./stop_prank.md).
 
 - `target` - instance of [`CheatTarget`](../cheat_target.md) specifying which contracts to prank
 - `caller_address` - caller address to be set
-- `span` - instance of [`CheatSpan`](../cheat_span.md) specifying the span of prank
+- `span` - instance of [`CheatSpan`](../cheat_span.md) specifying the number of target calls with the cheat applied
