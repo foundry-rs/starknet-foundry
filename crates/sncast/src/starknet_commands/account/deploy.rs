@@ -15,7 +15,7 @@ use starknet::providers::{JsonRpcClient, Provider};
 use starknet::signers::{LocalWallet, SigningKey};
 
 use sncast::{
-    account_file_exists, chain_id_to_network_name, get_keystore_password,
+    chain_id_to_network_name, check_account_file_exists, get_keystore_password,
     handle_account_factory_error, handle_rpc_error, handle_wait_for_tx, parse_number, WaitForTx,
 };
 
@@ -64,7 +64,7 @@ pub async fn deploy(
         if name == String::default() {
             bail!("No --name value passed")
         }
-        account_file_exists(&accounts_file)?;
+        check_account_file_exists(&accounts_file)?;
         deploy_from_accounts_file(
             provider,
             accounts_file,

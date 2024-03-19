@@ -265,7 +265,7 @@ async fn test_nonexistent_account_address() {
         output,
         indoc! {r"
         command: script run
-        error: Invalid account address
+        error: Account with address 0x1010101010011aaabbcc not found on network SN_GOERLI
         "},
     );
 }

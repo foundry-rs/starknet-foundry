@@ -3,7 +3,8 @@
     "variant": {
         "type": "open_zeppelin",
         "version": 1,
-        "public_key": "0xe2d3d7080bfc665e0060a06e8e95c3db3ff78a1fec4cc81ddc87e49a12e0a"
+        "public_key": "0xe2d3d7080bfc665e0060a06e8e95c3db3ff78a1fec4cc81ddc87e49a12e0a",
+        "legacy": true
     },
     "deployment": {
         "status": "deployed",
