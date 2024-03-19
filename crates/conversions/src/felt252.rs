@@ -83,15 +83,31 @@ impl FromShortString<Felt252> for Felt252 {
 }
 
 pub trait TryInferFormat: Sized {
-    /// Parses value from `hex string` -> `dec string` -> `cairo shortstring`
+    /// Parses value from `hex string` -> `dec string` -> `quotted cairo shortstring`
     fn infer_format_and_parse(value: &str) -> Result<Self, ParseFeltError>;
 }
 
-impl TryInferFormat for Felt252 {
+fn infer_format_and_parse_felt(value: &str) -> Result<Felt252, ParseFeltError> {
+    let mut result = Err(ParseFeltError);
+
+    if value.starts_with('"') && value.ends_with('"') {
+        let value_unquotted = &value[1..value.len() - 1];
+        let value_escaped = value_unquotted.replace("\\n", "\n").replace("\\\"", "\"");
+
+        result = result.or_else(|_| Felt252::from_short_string(&value_escaped));
+    }
+
+    result
+        .or_else(|_| Felt252::try_from_hex_str(value))
+        .or_else(|_| Felt252::try_from_dec_str(value))
+}
+
+impl<T> TryInferFormat for T
+where
+    T: From<Felt252>,
+{
     fn infer_format_and_parse(value: &str) -> Result<Self, ParseFeltError> {
-        Felt252::try_from_hex_str(value)
-            .or_else(|_| Felt252::try_from_dec_str(value))
-            .or_else(|_| Felt252::from_short_string(value))
+        infer_format_and_parse_felt(value).map(Into::into)
     }
 }
 

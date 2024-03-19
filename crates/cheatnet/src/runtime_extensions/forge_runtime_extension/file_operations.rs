@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Result};
 use cairo_felt::Felt252;
-use conversions::{felt252::TryInferFormat, string::ParseFeltError};
+use conversions::felt252::TryInferFormat;
 use flatten_serde_json::flatten;
 use runtime::EnhancedHintError;
 use serde_json::{Map, Value};
@@ -13,7 +13,7 @@ pub(super) fn read_txt(path: String) -> Result<Vec<Felt252>, EnhancedHintError> 
         .trim()
         .lines()
         .filter(|line| !line.is_empty())
-        .map(parse)
+        .map(Felt252::infer_format_and_parse)
         .collect::<Result<_, _>>()
         .map_err(|_| EnhancedHintError::FileParsing { path })
 }
@@ -25,7 +25,7 @@ pub(super) fn read_json(path: String) -> Result<Vec<Felt252>, EnhancedHintError>
 
     split_content
         .into_iter()
-        .map(|str| parse(&str))
+        .map(|str| Felt252::infer_format_and_parse(&str))
         .collect::<Result<_, _>>()
         .map_err(|_| EnhancedHintError::FileParsing { path })
 }
@@ -52,31 +52,12 @@ fn value_into_vec(value: &Value) -> Vec<String> {
             let mut str_vec = Vec::with_capacity(vec_len + 1);
 
             str_vec.push(vec_len.to_string());
-            str_vec.extend(vec.iter().map(to_string_unqoted));
+            str_vec.extend(vec.iter().map(ToString::to_string));
 
             str_vec
         }
-        value => vec![to_string_unqoted(value)],
+        value => vec![value.to_string()],
     }
-}
-
-fn to_string_unqoted(value: &impl ToString) -> String {
-    let value = value.to_string();
-    let mut string = value.as_str();
-
-    if string.starts_with('"') {
-        string = &string[1..];
-    }
-
-    if string.ends_with('"') {
-        string = &string[..string.len() - 1];
-    }
-
-    string.to_owned()
-}
-
-fn parse(felt_str: &str) -> Result<Felt252, ParseFeltError> {
-    Felt252::infer_format_and_parse(&felt_str.replace("\\n", "\n"))
 }
 
 #[cfg(test)]
