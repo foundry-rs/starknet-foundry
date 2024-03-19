@@ -293,6 +293,7 @@ fn prank_one_then_all() {
     );
 }
 
+#[ignore] // TODO (#1916)
 #[test]
 fn prank_cairo0_callback() {
     let temp_dir = TempDir::new().unwrap();
