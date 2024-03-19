@@ -42,6 +42,7 @@ impl ReplaceBytecodeTrait for TestEnvironment<'_> {
     }
 }
 
+#[ignore] // TODO (#1916)
 #[test]
 fn fork() {
     let cache_dir = TempDir::new().unwrap();

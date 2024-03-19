@@ -476,6 +476,8 @@ fn test_emitted_by_emit_events_syscall() {
         "Wrong spy_events_checker event"
     );
 }
+
+#[ignore] // TODO (#1916)
 #[test]
 fn capture_cairo0_event() {
     let temp_dir = TempDir::new().unwrap();

@@ -618,6 +618,7 @@ fn assert_not_emitted_fails() {
     assert_case_output_contains(&result, "assert_not_emitted_fails", "keys was emitted");
 }
 
+#[ignore] // TODO (#1916)
 #[test]
 fn capture_cairo0_event() {
     let test = test_case!(

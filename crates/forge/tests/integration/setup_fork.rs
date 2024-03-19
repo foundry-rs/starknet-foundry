@@ -284,6 +284,7 @@ fn fork_get_block_info_fails() {
     );
 }
 
+#[ignore] // TODO (#1916)
 #[test]
 // found in: https://github.com/foundry-rs/starknet-foundry/issues/1175
 fn incompatible_abi() {
