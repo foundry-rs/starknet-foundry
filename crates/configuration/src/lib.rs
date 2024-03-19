@@ -1,4 +1,5 @@
 use anyhow::{anyhow, Context, Result};
+use scarb_metadata::{Metadata, PackageId};
 use std::fs;
 
 use camino::Utf8PathBuf;
@@ -19,7 +20,14 @@ pub trait GlobalConfig {
 
 /// Defined in scarb manifest
 /// Configuration associated with a specific package
-pub trait PackageConfig {}
+pub trait PackageConfig {
+    #[must_use]
+    fn tool_name() -> &'static str;
+
+    fn from_raw(config: &serde_json::Value) -> Result<Self>
+    where
+        Self: Sized;
+}
 
 fn get_with_ownership(config: serde_json::Value, key: &str) -> Option<serde_json::Value> {
     match config {
@@ -66,6 +74,23 @@ pub fn load_global_config<T: GlobalConfig + Default>(
             let profile = get_profile(raw_config_json, T::tool_name(), profile)?;
             T::from_raw(profile)
         }
+        None => Ok(T::default()),
+    }
+}
+/// Loads config for a specific package from the `Scarb.toml` file
+/// # Arguments
+/// * `metadata` - Scarb metadata object
+/// * `package` - Id of the Scarb package
+pub fn load_package_config<T: PackageConfig + Default>(
+    metadata: &Metadata,
+    package: &PackageId,
+) -> Result<T> {
+    let maybe_raw_metadata = metadata
+        .get_package(package)
+        .ok_or_else(|| anyhow!("Failed to find metadata for package = {package}"))?
+        .tool_metadata("snforge");
+    match maybe_raw_metadata {
+        Some(raw_metadata) => T::from_raw(raw_metadata),
         None => Ok(T::default()),
     }
 }

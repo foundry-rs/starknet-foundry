@@ -5,7 +5,7 @@ use crate::{
             CallToBlockifierRuntime, RuntimeState,
         },
         cheatable_starknet_runtime_extension::SyscallSelector,
-        common::sum_syscall_counters,
+        common::{get_relocated_vm_trace, sum_syscall_counters},
         forge_runtime_extension::cheatcodes::{
             declare::declare,
             deploy::{deploy, deploy_at},
@@ -855,6 +855,20 @@ pub fn update_top_call_l1_resources(runtime: &mut ForgeRuntime) {
         .current_call_stack
         .top();
     top_call.borrow_mut().used_l1_resources.l2_l1_message_sizes = all_l2_l1_message_sizes;
+}
+
+pub fn update_top_call_vm_trace(runtime: &mut ForgeRuntime, vm: &VirtualMachine) {
+    let trace_data = &mut runtime
+        .extended_runtime
+        .extended_runtime
+        .extension
+        .cheatnet_state
+        .trace_data;
+
+    if trace_data.is_vm_trace_needed {
+        trace_data.current_call_stack.top().borrow_mut().vm_trace =
+            Some(get_relocated_vm_trace(vm));
+    }
 }
 
 #[must_use]

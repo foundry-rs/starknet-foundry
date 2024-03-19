@@ -41,7 +41,7 @@ use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::CallToBl
 use cheatnet::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
 use cheatnet::runtime_extensions::forge_runtime_extension::{
     get_all_used_resources, update_top_call_execution_resources, update_top_call_l1_resources,
-    ForgeExtension, ForgeRuntime,
+    update_top_call_vm_trace, ForgeExtension, ForgeRuntime,
 };
 use cheatnet::state::{BlockInfoReader, CallTrace, CheatnetState, ExtendedStateReader};
 use runtime::starknet::context::{build_context, set_max_steps};
@@ -159,7 +159,6 @@ pub struct RunResultWithInfo {
     pub(crate) used_resources: UsedResources,
 }
 
-#[allow(clippy::too_many_arguments)]
 #[allow(clippy::too_many_lines)]
 pub fn run_test_case(
     args: Vec<Felt252>,
@@ -219,6 +218,8 @@ pub fn run_test_case(
         block_info,
         ..Default::default()
     };
+    cheatnet_state.trace_data.is_vm_trace_needed =
+        runner_config.execution_data_to_save.is_vm_trace_needed();
 
     let cheatable_runtime = ExtendedRuntime {
         extension: CheatableStarknetRuntimeExtension {
@@ -291,6 +292,8 @@ pub fn run_test_case(
                 values,
                 &cells,
             );
+
+            update_top_call_vm_trace(&mut forge_runtime, &vm);
 
             Ok(RunResult {
                 gas_counter,

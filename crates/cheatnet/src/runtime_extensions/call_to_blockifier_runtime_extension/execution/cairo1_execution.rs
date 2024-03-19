@@ -1,5 +1,6 @@
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeState;
 use crate::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
+use crate::runtime_extensions::common::get_relocated_vm_trace;
 use blockifier::execution::call_info::CallInfo;
 use blockifier::execution::deprecated_syscalls::hint_processor::SyscallCounter;
 use blockifier::execution::entry_point_execution::{
@@ -14,6 +15,8 @@ use blockifier::{
     },
     state::state_api::State,
 };
+use cairo_vm::vm::errors::cairo_run_errors::CairoRunError;
+use cairo_vm::vm::trace::trace_entry::TraceEntry;
 use cairo_vm::{
     hint_processor::hint_processor_definition::HintProcessor,
     vm::{
@@ -31,7 +34,7 @@ pub fn execute_entry_point_call_cairo1(
     runtime_state: &mut RuntimeState, // Added parameter
     resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
-) -> EntryPointExecutionResult<(CallInfo, SyscallCounter)> {
+) -> EntryPointExecutionResult<(CallInfo, SyscallCounter, Option<Vec<TraceEntry>>)> {
     let RuntimeState { cheatnet_state } = runtime_state;
 
     let VmExecutionContext {
@@ -73,8 +76,17 @@ pub fn execute_entry_point_call_cairo1(
         &args,
         program_extra_data_length,
     )?;
-    // endregion
 
+    let vm_trace = if cheatable_runtime
+        .extension
+        .cheatnet_state
+        .trace_data
+        .is_vm_trace_needed
+    {
+        Some(get_relocated_vm_trace(&vm))
+    } else {
+        None
+    };
     let syscall_counter = cheatable_runtime
         .extended_runtime
         .hint_handler
@@ -95,7 +107,8 @@ pub fn execute_entry_point_call_cairo1(
         });
     }
 
-    Ok((call_info, syscall_counter))
+    Ok((call_info, syscall_counter, vm_trace))
+    // endregion
 }
 
 // crates/blockifier/src/execution/cairo1_execution.rs:236 (run_entry_point)
@@ -121,6 +134,11 @@ pub fn cheatable_run_entry_point(
         vm,
         hint_processor,
     )?;
+
+    // region: Modified blockifier code
+    // Relocate trace to then collect it
+    runner.relocate(vm, true).map_err(CairoRunError::from)?;
+    // endregion
 
     Ok(())
 }

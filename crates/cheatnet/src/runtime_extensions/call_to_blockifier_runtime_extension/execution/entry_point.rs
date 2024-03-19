@@ -29,6 +29,7 @@ use std::collections::HashSet;
 use std::rc::Rc;
 use blockifier::execution::deprecated_syscalls::hint_processor::SyscallCounter;
 use cairo_felt::Felt252;
+use cairo_vm::vm::trace::trace_entry::TraceEntry;
 use conversions::{FromConv};
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{AddressOrClassHash, CallResult};
 use crate::runtime_extensions::common::sum_syscall_counters;
@@ -82,6 +83,7 @@ pub fn execute_call_entry_point(
                     ret_data: ret_data_f252,
                 },
                 &[],
+                None,
             );
             return Ok(mocked_call_info(entry_point.clone(), ret_data.clone()));
         }
@@ -175,18 +177,23 @@ pub fn execute_call_entry_point(
     });
 
     // region: Modified blockifier code
-    match &result {
-        Ok((call_info, syscall_counter)) => remove_syscall_resources_and_exit_success_call(
-            call_info,
-            syscall_counter,
-            context,
-            resources,
-            runtime_state,
-        ),
-        Err(err) => exit_error_call(err, runtime_state, resources, entry_point),
+    match result {
+        Ok((call_info, syscall_counter, vm_trace)) => {
+            remove_syscall_resources_and_exit_success_call(
+                &call_info,
+                &syscall_counter,
+                context,
+                resources,
+                runtime_state,
+                vm_trace,
+            );
+            Ok(call_info)
+        }
+        Err(err) => {
+            exit_error_call(&err, runtime_state, resources, entry_point);
+            Err(err)
+        }
     }
-
-    result.map(|(call_info, _)| call_info)
     // endregion
 }
 
@@ -196,6 +203,7 @@ fn remove_syscall_resources_and_exit_success_call(
     context: &mut EntryPointExecutionContext,
     resources: &mut ExecutionResources,
     runtime_state: &mut RuntimeState,
+    vm_trace: Option<Vec<TraceEntry>>,
 ) {
     let versioned_constants = context.tx_context.block_context.versioned_constants();
     // We don't want the syscall resources to pollute the results
@@ -215,6 +223,7 @@ fn remove_syscall_resources_and_exit_success_call(
         syscall_counter,
         CallResult::from_success(call_info),
         &call_info.execution.l2_to_l1_messages,
+        vm_trace,
     );
 }
 
@@ -233,6 +242,7 @@ fn exit_error_call(
         Default::default(),
         CallResult::from_err(error, &identifier),
         &[],
+        None,
     );
 }
 

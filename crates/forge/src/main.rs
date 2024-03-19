@@ -1,10 +1,9 @@
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8Path;
 use clap::{Parser, Subcommand, ValueEnum};
+use configuration::load_package_config;
 use forge::scarb::config::ForgeConfig;
-use forge::scarb::{
-    build_contracts_with_scarb, build_test_artifacts_with_scarb, config_from_scarb_for_package,
-};
+use forge::scarb::{build_contracts_with_scarb, build_test_artifacts_with_scarb};
 use forge::shared_cache::{clean_cache, set_cached_failed_tests_names};
 use forge::test_filter::TestsFilter;
 use forge::{pretty_printing, run};
@@ -244,7 +243,8 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
             for package in &packages {
                 env::set_current_dir(&package.root)?;
 
-                let forge_config = config_from_scarb_for_package(&scarb_metadata, &package.id)?;
+                let forge_config =
+                    load_package_config::<ForgeConfig>(&scarb_metadata, &package.id)?;
                 let contracts =
                     get_contracts_map(&scarb_metadata, &package.id, None).unwrap_or_default();
 
