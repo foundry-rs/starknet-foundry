@@ -40,10 +40,11 @@ use shared::utils::build_readable_text;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::SCRIPT_LIB_ARTIFACT_NAME;
 use sncast::response::structs::ScriptRunResponse;
-use starknet::accounts::Account;
+use starknet::accounts::{Account, SingleOwnerAccount};
 use starknet::core::types::{BlockId, BlockTag::Pending, FieldElement};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
+use starknet::signers::LocalWallet;
 use tokio::runtime::Runtime;
 
 type ScriptStarknetContractArtifacts = StarknetContractArtifacts;
@@ -62,9 +63,18 @@ pub struct Run {
 pub struct CastScriptExtension<'a> {
     pub hints: &'a HashMap<String, Hint>,
     pub provider: &'a JsonRpcClient<HttpTransport>,
+    pub account: Option<&'a SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, LocalWallet>>,
     pub tokio_runtime: Runtime,
     pub config: &'a CastConfig,
     pub artifacts: &'a HashMap<String, StarknetContractArtifacts>,
+}
+
+impl<'a> CastScriptExtension<'a> {
+    pub fn account(
+        &self,
+    ) -> Result<&SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>> {
+        self.account.ok_or_else(|| anyhow!("Account not defined. Please ensure the correct account is passed to `script run` command"))
+    }
 }
 
 impl<'a> ExtensionLogic for CastScriptExtension<'a> {
@@ -107,17 +117,10 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     .read_option_felt()?
                     .map(conversions::IntoConv::into_);
 
-                let account = self.tokio_runtime.block_on(get_account(
-                    &self.config.account,
-                    &self.config.accounts_file,
-                    self.provider,
-                    self.config.keystore.clone(),
-                ))?;
-
                 let declare_result = self.tokio_runtime.block_on(declare::declare(
                     &contract_name,
                     max_fee,
-                    &account,
+                    self.account()?,
                     nonce,
                     self.artifacts,
                     WaitForTx {
@@ -148,20 +151,13 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     .read_option_felt()?
                     .map(conversions::IntoConv::into_);
 
-                let account = self.tokio_runtime.block_on(get_account(
-                    &self.config.account,
-                    &self.config.accounts_file,
-                    self.provider,
-                    self.config.keystore.clone(),
-                ))?;
-
                 let deploy_result = self.tokio_runtime.block_on(deploy::deploy(
                     class_hash,
                     constructor_calldata,
                     salt,
                     unique,
                     max_fee,
-                    &account,
+                    self.account()?,
                     nonce,
                     WaitForTx {
                         wait: true,
@@ -187,19 +183,12 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     .read_option_felt()?
                     .map(conversions::IntoConv::into_);
 
-                let account = self.tokio_runtime.block_on(get_account(
-                    &self.config.account,
-                    &self.config.accounts_file,
-                    self.provider,
-                    self.config.keystore.clone(),
-                ))?;
-
                 let invoke_result = self.tokio_runtime.block_on(invoke::invoke(
                     contract_address,
                     function_selector,
                     calldata,
                     max_fee,
-                    &account,
+                    self.account()?,
                     nonce,
                     WaitForTx {
                         wait: true,
@@ -214,17 +203,11 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 let block_id = input_reader
                     .read_short_string()?
                     .expect("Failed to convert entry point name to short string");
-                let account = self.tokio_runtime.block_on(get_account(
-                    &self.config.account,
-                    &self.config.accounts_file,
-                    self.provider,
-                    self.config.keystore.clone(),
-                ))?;
 
                 let nonce = self.tokio_runtime.block_on(get_nonce(
                     self.provider,
                     &block_id,
-                    account.address(),
+                    self.account()?.address(),
                 ))?;
 
                 let res: Vec<Felt252> = vec![Felt252::from_(nonce)];
@@ -318,12 +301,24 @@ pub fn run(
         ReadOnlySegments::default(),
     );
 
+    let account = if config.account.is_empty() {
+        None
+    } else {
+        Some(tokio_runtime.block_on(get_account(
+            &config.account,
+            &config.accounts_file,
+            provider,
+            config.keystore.clone(),
+        ))?)
+    };
+
     let cast_extension = CastScriptExtension {
         hints: &string_to_hint,
         provider,
         tokio_runtime,
         config,
         artifacts: &artifacts,
+        account: account.as_ref(),
     };
 
     let mut cast_runtime = ExtendedRuntime {

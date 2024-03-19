@@ -36,7 +36,7 @@ fn roll(target: CheatTarget, block_number: u64, span: CheatSpan) {
     target.serialize(ref inputs);
     span.serialize(ref inputs);
     inputs.append(block_number.into());
-    cheatcode::<'start_roll'>(inputs.span());
+    cheatcode::<'roll'>(inputs.span());
 }
 
 fn start_roll(target: CheatTarget, block_number: u64) {
@@ -56,7 +56,7 @@ fn prank(target: CheatTarget, caller_address: ContractAddress, span: CheatSpan) 
     target.serialize(ref inputs);
     span.serialize(ref inputs);
     inputs.append(caller_address.into());
-    cheatcode::<'start_prank'>(inputs.span());
+    cheatcode::<'prank'>(inputs.span());
 }
 
 fn start_prank(target: CheatTarget, caller_address: ContractAddress) {
@@ -76,7 +76,7 @@ fn warp(target: CheatTarget, block_timestamp: u64, span: CheatSpan) {
     target.serialize(ref inputs);
     span.serialize(ref inputs);
     inputs.append(block_timestamp.into());
-    cheatcode::<'start_warp'>(inputs.span());
+    cheatcode::<'warp'>(inputs.span());
 }
 
 fn start_warp(target: CheatTarget, block_timestamp: u64) {
@@ -96,7 +96,7 @@ fn elect(target: CheatTarget, sequencer_address: ContractAddress, span: CheatSpa
     target.serialize(ref inputs);
     span.serialize(ref inputs);
     inputs.append(sequencer_address.into());
-    cheatcode::<'start_elect'>(inputs.span());
+    cheatcode::<'elect'>(inputs.span());
 }
 
 fn start_elect(target: CheatTarget, sequencer_address: ContractAddress) {
@@ -112,7 +112,7 @@ fn stop_elect(target: CheatTarget) {
 fn mock_call<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: Destruct<T>>(
     contract_address: ContractAddress, function_selector: felt252, ret_data: T, n_times: u32
 ) {
-    assert!(n_times > 0, "n_times must be greater than 0");
+    assert!(n_times > 0, "cannot mock_call 0 times, n_times argument must be greater than 0");
 
     let contract_address_felt: felt252 = contract_address.into();
     let mut inputs = array![contract_address_felt, function_selector];
@@ -124,7 +124,7 @@ fn mock_call<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: Destruct<T>>
 
     ret_data_arr.serialize(ref inputs);
 
-    cheatcode::<'start_mock_call'>(inputs.span());
+    cheatcode::<'mock_call'>(inputs.span());
 }
 
 fn start_mock_call<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: Destruct<T>>(
@@ -140,7 +140,7 @@ fn start_mock_call<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: Destru
 
     ret_data_arr.serialize(ref inputs);
 
-    cheatcode::<'start_mock_call'>(inputs.span());
+    cheatcode::<'mock_call'>(inputs.span());
 }
 
 fn stop_mock_call(contract_address: ContractAddress, function_selector: felt252) {

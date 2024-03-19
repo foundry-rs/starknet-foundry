@@ -1,10 +1,10 @@
-use crate::helpers::constants::{DEVNET_OZ_CLASS_HASH, URL};
+use crate::helpers::constants::{DEVNET_OZ_CLASS_HASH_CAIRO_0, URL};
 use crate::helpers::fixtures::{copy_file, default_cli_args};
 use crate::helpers::runner::runner;
+use configuration::copy_config_to_tempdir;
 use indoc::indoc;
 
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains, AsOutput};
-use sncast::helpers::configuration::copy_config_to_tempdir;
 use sncast::helpers::constants::CREATE_KEYSTORE_PASSWORD_ENV_VAR;
 use std::{env, fs};
 use tempfile::tempdir;
@@ -26,7 +26,7 @@ pub async fn test_happy_case() {
         "--salt",
         "0x1",
         "--class-hash",
-        DEVNET_OZ_CLASS_HASH,
+        DEVNET_OZ_CLASS_HASH_CAIRO_0,
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
@@ -50,6 +50,7 @@ pub async fn test_happy_case() {
     assert!(contents.contains("address"));
     assert!(contents.contains("salt"));
     assert!(contents.contains("class_hash"));
+    assert!(contents.contains("legacy"));
 }
 
 #[tokio::test]
@@ -99,7 +100,7 @@ pub async fn test_happy_case_generate_salt() {
         "--name",
         "my_account",
         "--class-hash",
-        DEVNET_OZ_CLASS_HASH,
+        DEVNET_OZ_CLASS_HASH_CAIRO_0,
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
@@ -121,6 +122,7 @@ pub async fn test_happy_case_generate_salt() {
     assert!(contents.contains("address"));
     assert!(contents.contains("salt"));
     assert!(contents.contains("class_hash"));
+    assert!(contents.contains("legacy"));
 }
 
 #[tokio::test]
@@ -140,7 +142,7 @@ pub async fn test_happy_case_add_profile() {
         "--add-profile",
         "my_account",
         "--class-hash",
-        DEVNET_OZ_CLASS_HASH,
+        DEVNET_OZ_CLASS_HASH_CAIRO_0,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -178,7 +180,7 @@ pub async fn test_happy_case_accounts_file_already_exists() {
         "--salt",
         "0x1",
         "--class-hash",
-        DEVNET_OZ_CLASS_HASH,
+        DEVNET_OZ_CLASS_HASH_CAIRO_0,
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
@@ -195,6 +197,7 @@ pub async fn test_happy_case_accounts_file_already_exists() {
         .expect("Unable to read created file");
     assert!(contents.contains("my_account"));
     assert!(contents.contains("deployed"));
+    assert!(contents.contains("legacy"));
 }
 
 #[tokio::test]
@@ -214,7 +217,7 @@ pub async fn test_profile_already_exists() {
         "--add-profile",
         "default",
         "--class-hash",
-        DEVNET_OZ_CLASS_HASH,
+        DEVNET_OZ_CLASS_HASH_CAIRO_0,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -240,7 +243,7 @@ pub async fn test_account_already_exists() {
         "--salt",
         "0x1",
         "--class-hash",
-        DEVNET_OZ_CLASS_HASH,
+        DEVNET_OZ_CLASS_HASH_CAIRO_0,
     ]);
 
     let snapbox = runner(&args);
@@ -272,7 +275,7 @@ pub async fn test_happy_case_keystore() {
         "account",
         "create",
         "--class-hash",
-        DEVNET_OZ_CLASS_HASH,
+        DEVNET_OZ_CLASS_HASH_CAIRO_0,
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
@@ -290,6 +293,7 @@ pub async fn test_happy_case_keystore() {
     assert!(contents.contains("\"deployment\": {"));
     assert!(contents.contains("\"variant\": {"));
     assert!(contents.contains("\"version\": 1"));
+    assert!(contents.contains("\"legacy\": true"));
 }
 
 #[tokio::test]
@@ -312,7 +316,7 @@ pub async fn test_happy_case_keystore_add_profile() {
         "account",
         "create",
         "--class-hash",
-        DEVNET_OZ_CLASS_HASH,
+        DEVNET_OZ_CLASS_HASH_CAIRO_0,
         "--add-profile",
         "with_keystore",
     ];
@@ -329,6 +333,7 @@ pub async fn test_happy_case_keystore_add_profile() {
     assert!(contents.contains("\"deployment\": {"));
     assert!(contents.contains("\"variant\": {"));
     assert!(contents.contains("\"version\": 1"));
+    assert!(contents.contains("\"legacy\": true"));
 
     let contents = fs::read_to_string(tempdir.path().join("snfoundry.toml"))
         .expect("Unable to read snfoundry.toml");
@@ -354,7 +359,7 @@ pub async fn test_keystore_without_account() {
         "account",
         "create",
         "--class-hash",
-        DEVNET_OZ_CLASS_HASH,
+        DEVNET_OZ_CLASS_HASH_CAIRO_0,
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
@@ -392,7 +397,7 @@ pub async fn test_keystore_file_already_exists() {
         "account",
         "create",
         "--class-hash",
-        DEVNET_OZ_CLASS_HASH,
+        DEVNET_OZ_CLASS_HASH_CAIRO_0,
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
@@ -431,7 +436,7 @@ pub async fn test_keystore_account_file_already_exists() {
         "account",
         "create",
         "--class-hash",
-        DEVNET_OZ_CLASS_HASH,
+        DEVNET_OZ_CLASS_HASH_CAIRO_0,
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
@@ -465,7 +470,7 @@ pub async fn test_happy_case_keystore_int_format() {
         "account",
         "create",
         "--class-hash",
-        DEVNET_OZ_CLASS_HASH,
+        DEVNET_OZ_CLASS_HASH_CAIRO_0,
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
@@ -483,6 +488,7 @@ pub async fn test_happy_case_keystore_int_format() {
     assert!(contents.contains("\"deployment\": {"));
     assert!(contents.contains("\"variant\": {"));
     assert!(contents.contains("\"version\": 1"));
+    assert!(contents.contains("\"legacy\": true"));
 }
 
 #[tokio::test]
@@ -504,7 +510,7 @@ pub async fn test_happy_case_keystore_hex_format() {
         "account",
         "create",
         "--class-hash",
-        DEVNET_OZ_CLASS_HASH,
+        DEVNET_OZ_CLASS_HASH_CAIRO_0,
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
@@ -522,4 +528,5 @@ pub async fn test_happy_case_keystore_hex_format() {
     assert!(contents.contains("\"deployment\": {"));
     assert!(contents.contains("\"variant\": {"));
     assert!(contents.contains("\"version\": 1"));
+    assert!(contents.contains("\"legacy\": true"));
 }

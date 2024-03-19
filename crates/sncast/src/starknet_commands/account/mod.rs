@@ -5,11 +5,10 @@ use crate::starknet_commands::account::deploy::Deploy;
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use clap::{Args, Subcommand};
-use serde_json::json;
-use sncast::helpers::configuration::{
-    find_config_file, load_config, search_config_upwards_relative_to,
+use configuration::{
+    find_config_file, load_global_config, search_config_upwards_relative_to, CONFIG_FILENAME,
 };
-use sncast::helpers::constants::CONFIG_FILENAME;
+use serde_json::json;
 use sncast::{chain_id_to_network_name, decode_chain_id, helpers::configuration::CastConfig};
 use starknet::{core::types::FieldElement, signers::SigningKey};
 use std::{fs::OpenOptions, io::Write};
@@ -39,6 +38,7 @@ pub fn prepare_account_json(
     private_key: &SigningKey,
     address: FieldElement,
     deployed: bool,
+    legacy: bool,
     class_hash: Option<FieldElement>,
     salt: Option<FieldElement>,
 ) -> serde_json::Value {
@@ -47,6 +47,7 @@ pub fn prepare_account_json(
         "public_key": format!("{:#x}", private_key.verifying_key().scalar()),
         "address": format!("{address:#x}"),
         "deployed": deployed,
+        "legacy": legacy,
     });
 
     if let Some(salt) = salt {
@@ -98,7 +99,7 @@ pub fn add_created_profile_to_configuration(
     cast_config: &CastConfig,
     path: &Option<Utf8PathBuf>,
 ) -> Result<()> {
-    if !load_config(profile, path)
+    if !load_global_config::<CastConfig>(path, profile)
         .unwrap_or_default()
         .account
         .is_empty()
@@ -112,10 +113,7 @@ pub fn add_created_profile_to_configuration(
     let toml_string = {
         let mut new_profile = toml::value::Table::new();
 
-        new_profile.insert(
-            "url".to_string(),
-            Value::String(cast_config.rpc_url.clone()),
-        );
+        new_profile.insert("url".to_string(), Value::String(cast_config.url.clone()));
         new_profile.insert(
             "account".to_string(),
             Value::String(cast_config.account.clone()),
@@ -162,7 +160,8 @@ pub fn add_created_profile_to_configuration(
 #[cfg(test)]
 mod tests {
     use camino::Utf8PathBuf;
-    use sncast::helpers::configuration::{copy_config_to_tempdir, CastConfig};
+    use configuration::copy_config_to_tempdir;
+    use sncast::helpers::configuration::CastConfig;
     use sncast::helpers::constants::DEFAULT_ACCOUNTS_FILE;
     use std::fs;
 
@@ -173,7 +172,7 @@ mod tests {
         let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
         let path = Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap();
         let config = CastConfig {
-            rpc_url: String::from("http://some-url"),
+            url: String::from("http://some-url"),
             account: String::from("some-name"),
             accounts_file: "accounts".into(),
             ..Default::default()
@@ -197,7 +196,7 @@ mod tests {
     fn test_add_created_profile_to_configuration_profile_already_exists() {
         let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
         let config = CastConfig {
-            rpc_url: String::from("http://127.0.0.1:5055/rpc"),
+            url: String::from("http://127.0.0.1:5055/rpc"),
             account: String::from("user1"),
             accounts_file: DEFAULT_ACCOUNTS_FILE.into(),
             ..Default::default()

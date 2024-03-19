@@ -1,37 +1,28 @@
-use scarb_metadata::{Metadata, PackageId};
-
 use crate::compiled_raw::CompiledTestCrateRaw;
 use crate::scarb::config::{ForgeConfig, RawForgeConfig};
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result};
 use camino::Utf8Path;
+use configuration::PackageConfig;
 use scarb_api::ScarbCommand;
 use scarb_ui::args::PackagesFilter;
 
 pub mod config;
 
-/// Get Forge config from the `Scarb.toml` file
-///
-/// # Arguments
-///
-/// * `metadata` - Scarb metadata object
-/// * `package` - Id of the Scarb package
-pub fn config_from_scarb_for_package(
-    metadata: &Metadata,
-    package: &PackageId,
-) -> Result<ForgeConfig> {
-    let maybe_raw_metadata = metadata
-        .get_package(package)
-        .ok_or_else(|| anyhow!("Failed to find metadata for package = {package}"))?
-        .tool_metadata("snforge");
-    let raw_config = if let Some(raw_metadata) = maybe_raw_metadata {
-        serde_json::from_value::<RawForgeConfig>(raw_metadata.clone())?
-    } else {
-        Default::default()
-    };
+impl PackageConfig for ForgeConfig {
+    fn tool_name() -> &'static str {
+        "snforge"
+    }
 
-    raw_config
-        .try_into()
-        .context("Invalid config in Scarb.toml: ")
+    fn from_raw(config: &serde_json::Value) -> Result<Self>
+    where
+        Self: Sized,
+    {
+        let raw_config = serde_json::from_value::<RawForgeConfig>(config.clone())?;
+
+        raw_config
+            .try_into()
+            .context("Invalid config in Scarb.toml: ")
+    }
 }
 
 pub fn build_contracts_with_scarb(filter: PackagesFilter) -> Result<()> {
@@ -72,8 +63,10 @@ mod tests {
     use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
     use assert_fs::TempDir;
     use camino::Utf8PathBuf;
+    use configuration::load_package_config;
     use indoc::{formatdoc, indoc};
     use scarb_api::metadata::MetadataCommandExt;
+    use scarb_metadata::PackageId;
     use std::str::FromStr;
     use test_utils::tempdir_with_tool_versions;
 
@@ -140,9 +133,11 @@ mod tests {
             .run()
             .unwrap();
 
-        let config =
-            config_from_scarb_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
-                .unwrap();
+        let config = load_package_config::<ForgeConfig>(
+            &scarb_metadata,
+            &scarb_metadata.workspace.members[0],
+        )
+        .unwrap();
 
         assert_eq!(
             config,
@@ -193,7 +188,7 @@ mod tests {
             .run()
             .unwrap();
 
-        let result = config_from_scarb_for_package(
+        let result = load_package_config::<ForgeConfig>(
             &scarb_metadata,
             &PackageId::from(String::from("12345679")),
         );
@@ -222,9 +217,11 @@ mod tests {
             .run()
             .unwrap();
 
-        let config =
-            config_from_scarb_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
-                .unwrap();
+        let config = load_package_config::<ForgeConfig>(
+            &scarb_metadata,
+            &scarb_metadata.workspace.members[0],
+        )
+        .unwrap();
 
         assert_eq!(config, Default::default());
     }
@@ -256,9 +253,11 @@ mod tests {
             .current_dir(temp.path())
             .run()
             .unwrap();
-        let err =
-            config_from_scarb_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
-                .unwrap_err();
+        let err = load_package_config::<ForgeConfig>(
+            &scarb_metadata,
+            &scarb_metadata.workspace.members[0],
+        )
+        .unwrap_err();
 
         assert!(format!("{err:?}").contains("Some fork names are duplicated"));
     }
@@ -286,9 +285,11 @@ mod tests {
             .current_dir(temp.path())
             .run()
             .unwrap();
-        let err =
-            config_from_scarb_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
-                .unwrap_err();
+        let err = load_package_config::<ForgeConfig>(
+            &scarb_metadata,
+            &scarb_metadata.workspace.members[0],
+        )
+        .unwrap_err();
         assert!(format!("{err:?}").contains("block_id should be set once per fork"));
     }
 
@@ -315,9 +316,11 @@ mod tests {
             .run()
             .unwrap();
 
-        let err =
-            config_from_scarb_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
-                .unwrap_err();
+        let err = load_package_config::<ForgeConfig>(
+            &scarb_metadata,
+            &scarb_metadata.workspace.members[0],
+        )
+        .unwrap_err();
         assert!(
             format!("{err:?}").contains("block_id = wrong_variant is not valid. Possible values are = \"number\", \"hash\" and \"tag\"")
         );
@@ -346,9 +349,11 @@ mod tests {
             .run()
             .unwrap();
 
-        let err =
-            config_from_scarb_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
-                .unwrap_err();
+        let err = load_package_config::<ForgeConfig>(
+            &scarb_metadata,
+            &scarb_metadata.workspace.members[0],
+        )
+        .unwrap_err();
         assert!(format!("{err:?}").contains("block_id.tag can only be equal to Latest"));
     }
 }

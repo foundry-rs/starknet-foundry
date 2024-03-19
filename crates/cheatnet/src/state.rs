@@ -20,6 +20,7 @@ use blockifier::execution::call_info::OrderedL2ToL1Message;
 use blockifier::execution::syscalls::hint_processor::SyscallCounter;
 use blockifier::state::errors::StateError::UndeclaredClassHash;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
+use cairo_vm::vm::trace::trace_entry::TraceEntry;
 use runtime::starknet::context::SerializableBlockInfo;
 use starknet_api::transaction::ContractAddressSalt;
 use starknet_api::{
@@ -148,7 +149,6 @@ impl<T> CheatStatus<T> {
 }
 
 /// Tree structure representing trace of a call.
-#[derive(Clone, Debug)]
 pub struct CallTrace {
     pub entry_point: CallEntryPoint,
     // These also include resources used by internal calls
@@ -157,9 +157,10 @@ pub struct CallTrace {
     pub used_syscalls: SyscallCounter,
     pub nested_calls: Vec<Rc<RefCell<CallTrace>>>,
     pub result: CallResult,
+    pub vm_trace: Option<Vec<TraceEntry>>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 struct CallStackElement {
     // when we exit the call we use it to calculate resources used by the call
     resources_used_before_call: ExecutionResources,
@@ -167,7 +168,6 @@ struct CallStackElement {
     cheated_data: CheatedData,
 }
 
-#[derive(Debug)]
 pub struct NotEmptyCallStack(Vec<CallStackElement>);
 
 impl NotEmptyCallStack {
@@ -227,12 +227,11 @@ pub struct CheatedData {
     pub tx_info: Option<TxInfoMock>,
 }
 
-#[derive(Debug)]
 pub struct TraceData {
     pub current_call_stack: NotEmptyCallStack,
+    pub is_vm_trace_needed: bool,
 }
 
-#[derive(Debug)]
 pub struct CheatnetState {
     pub rolled_contracts: HashMap<ContractAddress, CheatStatus<Felt252>>,
     pub global_roll: Option<(Felt252, CheatSpan)>,
@@ -265,6 +264,7 @@ impl Default for CheatnetState {
             used_syscalls: Default::default(),
             nested_calls: vec![],
             result: CallResult::Success { ret_data: vec![] },
+            vm_trace: None,
         }));
         Self {
             rolled_contracts: Default::default(),
@@ -285,6 +285,7 @@ impl Default for CheatnetState {
             block_info: SerializableBlockInfo::default().into(),
             trace_data: TraceData {
                 current_call_stack: NotEmptyCallStack::from(test_call),
+                is_vm_trace_needed: false,
             },
         }
     }
@@ -400,6 +401,7 @@ impl TraceData {
             used_syscalls: Default::default(),
             nested_calls: vec![],
             result: CallResult::Success { ret_data: vec![] },
+            vm_trace: None,
         }));
         let current_call = self.current_call_stack.top();
 
@@ -423,6 +425,7 @@ impl TraceData {
         used_syscalls: SyscallCounter,
         result: CallResult,
         l2_to_l1_messages: &[OrderedL2ToL1Message],
+        vm_trace: Option<Vec<TraceEntry>>,
     ) {
         let CallStackElement {
             resources_used_before_call,
@@ -441,6 +444,7 @@ impl TraceData {
             .collect();
 
         last_call.result = result;
+        last_call.vm_trace = vm_trace;
     }
 }
 

@@ -1,6 +1,6 @@
 use starknet::{ContractAddress, testing::cheatcode, contract_address_const};
 use starknet::info::v2::ResourceBounds;
-use snforge_std::{CheatSpan, CheatTarget};
+use snforge_std::cheatcodes::{CheatSpan, CheatTarget, validate_cheat_target_and_span};
 
 #[derive(Copy, Drop, Serde)]
 struct TxInfoMock {
@@ -45,11 +45,13 @@ impl TxInfoMockImpl of TxInfoMockTrait {
 }
 
 fn spoof(target: CheatTarget, tx_info_mock: TxInfoMock, span: CheatSpan) {
+    validate_cheat_target_and_span(@target, @span);
+
     let mut inputs = array![];
     target.serialize(ref inputs);
     span.serialize(ref inputs);
     tx_info_mock.serialize(ref inputs);
-    cheatcode::<'start_spoof'>(inputs.span());
+    cheatcode::<'spoof'>(inputs.span());
 }
 
 fn start_spoof(target: CheatTarget, tx_info_mock: TxInfoMock) {

@@ -4,16 +4,12 @@ use crate::starknet_commands::account::{
 use anyhow::{ensure, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
-use sncast::handle_rpc_error;
 use sncast::helpers::configuration::CastConfig;
 use sncast::response::structs::AccountAddResponse;
 use sncast::{check_class_hash_exists, get_chain_id, parse_number};
-use starknet::core::types::BlockTag::Pending;
-use starknet::core::types::{BlockId, FieldElement, StarknetError};
-use starknet::providers::{
-    jsonrpc::{HttpTransport, JsonRpcClient},
-    Provider, ProviderError,
-};
+use sncast::{check_if_legacy_contract, get_class_hash_by_address};
+use starknet::core::types::FieldElement;
+use starknet::providers::jsonrpc::{HttpTransport, JsonRpcClient};
 use starknet::signers::SigningKey;
 
 #[derive(Args, Debug)]
@@ -76,7 +72,7 @@ pub async fn add(
     }
 
     let fetched_class_hash = get_class_hash_by_address(provider, add.address).await?;
-    let is_deployed = fetched_class_hash.is_some();
+    let deployed = fetched_class_hash.is_some();
     let class_hash = match (fetched_class_hash, add.class_hash) {
         (Some(from_provider), Some(from_user)) => {
             ensure!(
@@ -94,15 +90,23 @@ pub async fn add(
         _ => fetched_class_hash,
     };
 
-    let account_json =
-        prepare_account_json(private_key, add.address, is_deployed, class_hash, add.salt);
+    let legacy = check_if_legacy_contract(class_hash, add.address, provider).await?;
+
+    let account_json = prepare_account_json(
+        private_key,
+        add.address,
+        deployed,
+        legacy,
+        class_hash,
+        add.salt,
+    );
 
     let chain_id = get_chain_id(provider).await?;
     write_account_to_accounts_file(account, accounts_file, chain_id, account_json.clone())?;
 
     if add.add_profile.is_some() {
         let config = CastConfig {
-            rpc_url: rpc_url.into(),
+            url: rpc_url.into(),
             account: account.into(),
             accounts_file: accounts_file.into(),
             ..Default::default()
@@ -125,18 +129,4 @@ pub async fn add(
 fn get_private_key_from_file(file_path: &Utf8PathBuf) -> Result<FieldElement> {
     let private_key_string = std::fs::read_to_string(file_path.clone())?;
     parse_number(&private_key_string)
-}
-
-async fn get_class_hash_by_address(
-    provider: &JsonRpcClient<HttpTransport>,
-    address: FieldElement,
-) -> Result<Option<FieldElement>> {
-    match provider
-        .get_class_hash_at(BlockId::Tag(Pending), address)
-        .await
-    {
-        Ok(class_hash) => Ok(Some(class_hash)),
-        Err(ProviderError::StarknetError(StarknetError::ContractNotFound)) => Ok(None),
-        Err(err) => Err(handle_rpc_error(err)),
-    }
 }

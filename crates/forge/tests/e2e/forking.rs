@@ -46,6 +46,7 @@ fn with_cache() {
     let output = test_runner(&temp)
         .args(["--exact", "forking::tests::test_fork_simple"])
         .assert()
+        // if this fails after bumping rpc version change cache file name (name contains url) in tests/data/forking/.snfoundry_cache/
         .code(1);
 
     assert_stdout_contains(
@@ -123,7 +124,7 @@ fn printing_latest_block_number() {
         [PASS] forking::tests::print_block_number_when_latest [..]
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 4 filtered out
 
-        Latest block number = [..] for url = http://188.34.188.184:9545/rpc/v0_6
+        Latest block number = [..] for url = http://188.34.188.184:9545/rpc/v0_7
         "},
     );
 }

@@ -19,7 +19,7 @@ pub async fn show_config(
 ) -> Result<ShowConfigResponse> {
     let chain_id_field = get_chain_id(provider).await?;
     let chain_id = chain_id_to_network_name(chain_id_field);
-    let rpc_url = Some(cast_config.rpc_url).filter(|p| !p.is_empty());
+    let rpc_url = Some(cast_config.url).filter(|p| !p.is_empty());
     let account = Some(cast_config.account).filter(|p| !p.is_empty());
     let mut accounts_file_path =
         Some(cast_config.accounts_file).filter(|p| p != &Utf8PathBuf::default());

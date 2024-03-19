@@ -24,7 +24,7 @@ use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_starknet_classes::keccak::starknet_keccak;
 use starknet_api::core::ContractAddress;
 
-use crate::runtime_extensions::common::sum_syscall_counters;
+use crate::runtime_extensions::common::{get_relocated_vm_trace, sum_syscall_counters};
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::get_class_hash::get_class_hash;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::l1_handler_execute::l1_handler_execute;
@@ -34,7 +34,7 @@ use crate::runtime_extensions::forge_runtime_extension::cheatcodes::storage::{
 };
 use crate::runtime_extensions::forge_runtime_extension::file_operations::string_into_felt;
 use conversions::byte_array::ByteArray;
-use runtime::utils::{BufferReadResult, BufferReader};
+use runtime::utils::{BufferReadError, BufferReadResult, BufferReader};
 use runtime::{
     CheatcodeHandlingResult, EnhancedHintError, ExtendedRuntime, ExtensionLogic,
     SyscallHandlingResult,
@@ -76,7 +76,7 @@ impl BufferReaderExt for BufferReader<'_> {
                     .collect();
                 CheatTarget::Multiple(contract_addresses)
             }
-            _ => unreachable!("Invalid CheatTarget variant"),
+            _ => Err(BufferReadError::ParseFailed)?,
         })
     }
 
@@ -85,7 +85,7 @@ impl BufferReaderExt for BufferReader<'_> {
         Ok(match cheat_span_variant {
             Some(0) => CheatSpan::Indefinite,
             Some(1) => CheatSpan::TargetCalls(self.read_felt()?.to_usize().unwrap()),
-            _ => unreachable!("Invalid CheatSpan variant"),
+            _ => Err(BufferReadError::ParseFailed)?,
         })
     }
 }
@@ -102,7 +102,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
         extended_runtime: &mut Self::Runtime,
     ) -> Result<CheatcodeHandlingResult, EnhancedHintError> {
         match selector {
-            "start_roll" => {
+            "roll" => {
                 let target = input_reader.read_cheat_target()?;
                 let span = input_reader.read_cheat_span()?;
                 let block_number = input_reader.read_felt()?;
@@ -124,7 +124,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .stop_roll(target);
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
-            "start_warp" => {
+            "warp" => {
                 let target = input_reader.read_cheat_target()?;
                 let span = input_reader.read_cheat_span()?;
                 let warp_timestamp = input_reader.read_felt()?;
@@ -147,7 +147,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .stop_warp(target);
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
-            "start_elect" => {
+            "elect" => {
                 let target = input_reader.read_cheat_target()?;
                 let span = input_reader.read_cheat_span()?;
                 let sequencer_address = input_reader.read_felt()?.into_();
@@ -168,7 +168,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .stop_elect(target);
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
-            "start_prank" => {
+            "prank" => {
                 let target = input_reader.read_cheat_target()?;
                 let span = input_reader.read_cheat_span()?;
 
@@ -191,7 +191,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .stop_prank(target);
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
-            "start_mock_call" => {
+            "mock_call" => {
                 let contract_address = input_reader.read_felt()?.into_();
                 let function_selector = input_reader.read_felt()?;
                 let span = input_reader.read_cheat_span()?;
@@ -216,7 +216,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .stop_mock_call(contract_address, function_selector);
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
-            "start_spoof" => {
+            "spoof" => {
                 let target = input_reader.read_cheat_target()?;
                 let span = input_reader.read_cheat_span()?;
 
@@ -852,6 +852,20 @@ pub fn update_top_call_l1_resources(runtime: &mut ForgeRuntime) {
         .current_call_stack
         .top();
     top_call.borrow_mut().used_l1_resources.l2_l1_message_sizes = all_l2_l1_message_sizes;
+}
+
+pub fn update_top_call_vm_trace(runtime: &mut ForgeRuntime, vm: &VirtualMachine) {
+    let trace_data = &mut runtime
+        .extended_runtime
+        .extended_runtime
+        .extension
+        .cheatnet_state
+        .trace_data;
+
+    if trace_data.is_vm_trace_needed {
+        trace_data.current_call_stack.top().borrow_mut().vm_trace =
+            Some(get_relocated_vm_trace(vm));
+    }
 }
 
 #[must_use]
