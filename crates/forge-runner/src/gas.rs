@@ -45,7 +45,7 @@ pub fn calculate_used_gas(
 
     let gas = l1_and_vm_costs + messaging_gas_vector + events_costs;
 
-    Ok(gas.l1_gas)
+    Ok(gas.l1_gas + gas.l1_data_gas)
 }
 
 fn get_events_cost(
@@ -156,7 +156,8 @@ fn get_l1_data_cost(
             .fee_token_address(&transaction_context.tx_info.fee_type()),
     );
 
-    let l1_data_gas_cost = get_da_gas_cost(state_changes_count, false);
+    let use_kzg_da = transaction_context.block_context.block_info().use_kzg_da;
+    let l1_data_gas_cost = get_da_gas_cost(state_changes_count, use_kzg_da);
     Ok(l1_data_gas_cost)
 }
 
