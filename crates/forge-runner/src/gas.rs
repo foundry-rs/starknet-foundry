@@ -24,10 +24,9 @@ use starknet_api::transaction::EventContent;
 pub fn calculate_used_gas(
     transaction_context: &TransactionContext,
     state: &mut CachedState<ExtendedStateReader>,
-    mut resources: UsedResources,
+    resources: UsedResources,
 ) -> Result<u128, StateError> {
     let versioned_constants = transaction_context.block_context.versioned_constants();
-    add_syscall_resources(versioned_constants, &mut resources);
 
     let messaging_gas_vector = get_messages_costs(
         &resources.l2_to_l1_payload_lengths,
@@ -129,14 +128,6 @@ fn get_l1_and_vm_costs(
 
     calculate_tx_gas_vector(&resources_mapping, versioned_constants)
         .expect("Could not calculate gas")
-}
-
-fn add_syscall_resources(versioned_constants: &VersionedConstants, resources: &mut UsedResources) {
-    let mut total_vm_usage = resources.execution_resources.filter_unused_builtins();
-    total_vm_usage += &versioned_constants
-        .get_additional_os_syscall_resources(&resources.syscall_counter)
-        .expect("Could not get additional costs");
-    resources.execution_resources = total_vm_usage;
 }
 
 fn get_l1_data_cost(
