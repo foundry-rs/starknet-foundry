@@ -1,5 +1,5 @@
 use crate::helpers::constants::{
-    ACCOUNT_FILE_PATH, CONTRACTS_DIR, DEVNET_ENV_FILE, DEVNET_OZ_CLASS_HASH, URL,
+    ACCOUNT_FILE_PATH, CONTRACTS_DIR, DEVNET_ENV_FILE, DEVNET_OZ_CLASS_HASH_CAIRO_0, URL,
 };
 use anyhow::Context;
 use camino::{Utf8Path, Utf8PathBuf};
@@ -92,7 +92,8 @@ pub async fn deploy_keystore_account() {
         .unwrap_or_else(|_| panic!("Failed to parse keystore account file at = {account_path}"));
 
     let factory = OpenZeppelinAccountFactory::new(
-        parse_number(DEVNET_OZ_CLASS_HASH).expect("Could not parse DEVNET_OZ_CLASS_HASH"),
+        parse_number(DEVNET_OZ_CLASS_HASH_CAIRO_0)
+            .expect("Could not parse DEVNET_OZ_CLASS_HASH_CAIRO_0"),
         chain_id,
         LocalWallet::from_signing_key(private_key),
         provider,

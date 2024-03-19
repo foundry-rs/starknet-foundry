@@ -9,8 +9,8 @@ use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{CREATE_KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH};
 use sncast::response::structs::{AccountCreateResponse, Felt};
 use sncast::{
-    check_class_hash_exists, extract_or_generate_salt, get_chain_id, get_keystore_password,
-    handle_account_factory_error, parse_number,
+    check_class_hash_exists, check_if_legacy_contract, extract_or_generate_salt, get_chain_id,
+    get_keystore_password, handle_account_factory_error, parse_number,
 };
 use starknet::accounts::{AccountFactory, OpenZeppelinAccountFactory};
 use starknet::core::types::{FeeEstimate, FieldElement};
@@ -56,6 +56,7 @@ pub async fn create(
         FieldElement::from_hex_be(OZ_CLASS_HASH).expect("Failed to parse OZ class hash")
     });
     check_class_hash_exists(provider, class_hash).await?;
+
     let (account_json, max_fee) = generate_account(provider, salt, class_hash).await?;
 
     let address = parse_number(
@@ -75,7 +76,18 @@ pub async fn create(
                 .as_str()
                 .context("Invalid private_key")?,
         )?;
-        create_to_keystore(private_key, salt, class_hash, &keystore, &account_path)?;
+        let legacy = account_json["legacy"]
+            .as_bool()
+            .expect("Invalid legacy entry");
+
+        create_to_keystore(
+            private_key,
+            salt,
+            class_hash,
+            &keystore,
+            &account_path,
+            legacy,
+        )?;
     } else {
         write_account_to_accounts_file(account, accounts_file, chain_id, account_json.clone())?;
     }
@@ -124,8 +136,16 @@ async fn generate_account(
         FieldElement::ZERO,
     );
 
-    let account_json =
-        prepare_account_json(&private_key, address, false, Some(class_hash), Some(salt));
+    let legacy = check_if_legacy_contract(Some(class_hash), address, provider).await?;
+
+    let account_json = prepare_account_json(
+        &private_key,
+        address,
+        false,
+        legacy,
+        Some(class_hash),
+        Some(salt),
+    );
 
     let max_fee = get_account_deployment_fee(&private_key, class_hash, salt, provider)
         .await?
@@ -163,6 +183,7 @@ fn create_to_keystore(
     class_hash: FieldElement,
     keystore_path: &Utf8PathBuf,
     account_path: &Utf8PathBuf,
+    legacy: bool,
 ) -> Result<()> {
     if keystore_path.exists() {
         bail!("Keystore file {keystore_path} already exists");
@@ -180,6 +201,7 @@ fn create_to_keystore(
             "type": "open_zeppelin",
             "version": 1,
             "public_key": format!("{:#x}", private_key.verifying_key().scalar()),
+            "legacy": legacy,
         },
         "deployment": {
             "status": "undeployed",
