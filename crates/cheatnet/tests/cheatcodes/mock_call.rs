@@ -662,7 +662,12 @@ fn mock_call_simple_with_span() {
 
     let contract_address = test_env.deploy("MockChecker", &[Felt252::from(420)]);
 
-    test_env.mock_call(&contract_address, "get_thing", &[123], CheatSpan::Number(2));
+    test_env.mock_call(
+        &contract_address,
+        "get_thing",
+        &[123],
+        CheatSpan::TargetCalls(2),
+    );
 
     assert_success(
         test_env.call_contract(&contract_address, "get_thing", &[]),
@@ -686,7 +691,12 @@ fn mock_call_proxy_with_span() {
     let contract_address = test_env.deploy("MockChecker", &[Felt252::from(420)]);
     let proxy_address = test_env.deploy("MockCheckerProxy", &[]);
 
-    test_env.mock_call(&contract_address, "get_thing", &[123], CheatSpan::Number(2));
+    test_env.mock_call(
+        &contract_address,
+        "get_thing",
+        &[123],
+        CheatSpan::TargetCalls(2),
+    );
 
     assert_success(
         test_env.call_contract(&contract_address, "get_thing", &[]),
@@ -729,7 +739,7 @@ fn mock_call_in_constructor_with_span() {
         &balance_address,
         "get_balance",
         &[111],
-        CheatSpan::Number(2),
+        CheatSpan::TargetCalls(2),
     );
 
     let contract_address = test_env.deploy_wrapper(&class_hash, &[balance_address.into_()]);
@@ -766,7 +776,7 @@ fn mock_call_twice_in_function() {
         &precalculated_address,
         "get_thing",
         &[222],
-        CheatSpan::Number(2),
+        CheatSpan::TargetCalls(2),
     );
 
     let contract_address = test_env.deploy_wrapper(&class_hash, &[111.into()]);
@@ -793,7 +803,12 @@ fn mock_call_override_span() {
 
     let contract_address = test_env.deploy("MockChecker", &[111.into()]);
 
-    test_env.mock_call(&contract_address, "get_thing", &[222], CheatSpan::Number(2));
+    test_env.mock_call(
+        &contract_address,
+        "get_thing",
+        &[222],
+        CheatSpan::TargetCalls(2),
+    );
 
     assert_success(
         test_env.call_contract(&contract_address, "get_thing", &[]),

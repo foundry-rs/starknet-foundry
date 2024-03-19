@@ -84,7 +84,7 @@ impl BufferReaderExt for BufferReader<'_> {
         let cheat_span_variant = self.read_felt()?.to_u8();
         Ok(match cheat_span_variant {
             Some(0) => CheatSpan::Indefinite,
-            Some(1) => CheatSpan::Number(self.read_felt()?.to_usize().unwrap()),
+            Some(1) => CheatSpan::TargetCalls(self.read_felt()?.to_usize().unwrap()),
             _ => Err(BufferReadError::ParseFailed)?,
         })
     }
