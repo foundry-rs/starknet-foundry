@@ -7,13 +7,16 @@ use crate::helpers::runner::runner;
 use indoc::indoc;
 use shared::test_utils::output_assert::assert_stderr_contains;
 use tempfile::tempdir;
+use test_case::test_case;
 
+#[test_case("cairo0"; "cairo_0_account")]
+#[test_case("cairo1"; "cairo_1_account")]
 #[tokio::test]
-async fn test_happy_case() {
+async fn test_happy_case(account: &str) {
     let contract_dir = duplicate_contract_directory_with_salt(
         SCRIPTS_DIR.to_owned() + "/map_script/contracts/",
         "dummy",
-        "21",
+        account,
     );
     let script_dir = copy_script_directory_to_tempdir(
         SCRIPTS_DIR.to_owned() + "/map_script/scripts/",
@@ -27,7 +30,7 @@ async fn test_happy_case() {
         "--accounts-file",
         accounts_json_path.as_str(),
         "--account",
-        "user4",
+        account,
         "--url",
         URL,
         "script",

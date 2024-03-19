@@ -4,9 +4,12 @@ use crate::helpers::fixtures::{copy_script_directory_to_tempdir, get_accounts_pa
 use crate::helpers::runner::runner;
 use indoc::indoc;
 use shared::test_utils::output_assert::assert_stdout_contains;
+use test_case::test_case;
 
+#[test_case("cairo0"; "cairo_0_account")]
+#[test_case("cairo1"; "cairo_1_account")]
 #[tokio::test]
-async fn test_wrong_contract_name() {
+async fn test_wrong_contract_name(account: &str) {
     let contract_dir = duplicate_contract_directory_with_salt(
         SCRIPTS_DIR.to_owned() + "/map_script/contracts/",
         "dummy",
@@ -23,7 +26,7 @@ async fn test_wrong_contract_name() {
         "--accounts-file",
         accounts_json_path.as_str(),
         "--account",
-        "user4",
+        account,
         "--url",
         URL,
         "script",

@@ -180,5 +180,5 @@ async fn test_check_if_legacy_contract_by_address() {
     let is_legacy = check_if_legacy_contract(None, address, &provider)
         .await
         .unwrap();
-    assert!(is_legacy);
+    assert!(!is_legacy);
 }
