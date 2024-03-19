@@ -121,7 +121,7 @@ Our user validation is not letting us call the contract, because the default cal
 ## Using Cheatcodes in Tests
 
 By using cheatcodes, we can change various properties of transaction info, block info, etc.
-For example, we can use the [`start_prank`](../appendix/cheatcodes/start_prank.md) cheatcode to change the caller
+For example, we can use the [`start_prank`](../appendix/cheatcodes/caller_address/start_prank.md) cheatcode to change the caller
 address, so it passes our validation.
 
 ### Pranking the Address
@@ -164,7 +164,7 @@ Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 Most cheatcodes come with corresponding `start_` and `stop_` functions that can be used to start and stop the state
 change.
 In case of the `start_prank`, we can cancel the address change
-using [`stop_prank`](../appendix/cheatcodes/stop_prank.md)
+using [`stop_prank`](../appendix/cheatcodes/caller_address/stop_prank.md)
 
 ```rust
 use snforge_std::{stop_prank, CheatTarget};
@@ -224,5 +224,74 @@ fn mock_constructor_with_prank() {
 
     // The constructor will have 123 set as the caller address
     contract.deploy(constructor_arguments).unwrap();
+}
+```
+
+### Setting Cheatcode Span
+
+Sometimes it's useful to have a cheatcode work only for a certain number of target calls. 
+
+That's where [`CheatSpan`](../appendix/cheatcodes/cheat_span.md) comes in handy.
+
+```rust
+enum CheatSpan {
+    Indefinite: (),
+    TargetCalls: usize,
+}
+```
+
+To set span for a cheatcode, use `prank` / `warp` / `roll` / etc.
+
+```rust
+prank(CheatTarget::One(contract_address), new_caller_address, CheatSpan::TargetCalls(1))
+```
+
+Calling a cheatcode with `CheatSpan::TargetCalls(N)` is going to activate the cheatcode for `N` calls to a specified `CheatTarget`, after which it's going to be automatically canceled.
+
+Of course the cheatcode can still be canceled before its `CheatSpan` goes down to 0 - simply call `stop_prank` on the target manually.
+
+> ℹ️ **Info**
+>
+> Using `start_prank` is **equivalent** to using `prank` with `CheatSpan::Indefinite`.
+
+
+To better understand the functionality of `CheatSpan`, here's a full example:
+
+```rust
+use snforge_std::{
+    declare, ContractClass, ContractClassTrait, prank, CheatSpan, CheatTarget
+};
+
+#[test]
+#[feature("safe_dispatcher")]
+fn call_and_invoke() {
+    let contract = declare("HelloStarknet");
+    let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+    let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
+
+    let balance = safe_dispatcher.get_balance().unwrap();
+    assert_eq!(balance, 0);
+
+    // Function `increase_balance` from HelloStarknet contract
+    // requires the caller_address to be 123
+    let pranked_address: ContractAddress = 123.try_into().unwrap();
+
+    // Prank the contract_address for a span of 2 target calls (here, calls to contract_address)
+    prank(CheatTarget::One(contract_address), pranked_address, CheatSpan::TargetCalls(2));
+
+    // Call #1 should succeed
+    let call_1_result = safe_dispatcher.increase_balance(100);
+    assert!(call_1_result.is_ok());
+
+    // Call #2 should succeed
+    let call_2_result = safe_dispatcher.increase_balance(100);
+    assert!(call_2_result.is_ok());
+
+    // Call #3 should fail, as the prank cheatcode has been canceled
+    let call_3_result = safe_dispatcher.increase_balance(100);
+    assert!(call_3_result.is_err());
+
+    let balance = safe_dispatcher.get_balance().unwrap();
+    assert_eq!(balance, 200);
 }
 ```

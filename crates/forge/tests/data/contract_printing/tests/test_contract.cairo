@@ -21,14 +21,14 @@ fn deploy_contract(name: ByteArray) -> ContractAddress {
 fn test_increase_balance() {
     let contract_address = deploy_contract("HelloStarknet");
 
-    let safe_dispatcher = IHelloStarknetDispatcher { contract_address };
+    let dispatcher = IHelloStarknetDispatcher { contract_address };
 
-    let balance_before = safe_dispatcher.get_balance();
+    let balance_before = dispatcher.get_balance();
     assert(balance_before == 0, 'Invalid balance');
 
-    safe_dispatcher.increase_balance(42);
+    dispatcher.increase_balance(42);
 
-    let balance_after = safe_dispatcher.get_balance();
+    let balance_after = dispatcher.get_balance();
     assert(balance_after == 42, 'Invalid balance');
 }
 

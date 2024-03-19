@@ -5,7 +5,7 @@
 Changes the sequencer address for a given target.
 The change can be canceled with [`stop_elect`](./stop_elect.md).
 
-- `target` - instance of [`CheatTarget`](./cheat_target.md) specifying which contracts to elect
+- `target` - instance of [`CheatTarget`](../cheat_target.md) specifying which contracts to elect
 - `sequencer_address` - sequencer address to be set
 
 For contract implementation:

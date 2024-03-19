@@ -5,7 +5,7 @@
 Changes the caller address for the given target.
 This change can be canceled with [`stop_prank`](./stop_prank.md).
 
-- `target` - instance of [`CheatTarget`](./cheat_target.md) specifying which contracts to prank.
+- `target` - instance of [`CheatTarget`](../cheat_target.md) specifying which contracts to prank.
 - `caller_address` - caller address to be set
 
 For contract implementation:
