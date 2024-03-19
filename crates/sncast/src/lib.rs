@@ -225,7 +225,7 @@ async fn build_account(
             &account_data.address
         )
     })?;
-    verify_account_address(address, provider).await?;
+    verify_account_address(address, chain_id, provider).await?;
 
     let class_hash = account_data
         .class_hash
@@ -252,14 +252,16 @@ async fn build_account(
 
 async fn verify_account_address(
     address: FieldElement,
+    chain_id: FieldElement,
     provider: &JsonRpcClient<HttpTransport>,
 ) -> Result<()> {
     match provider.get_nonce(BlockId::Tag(Pending), address).await {
         Ok(_) => Ok(()),
         Err(error) => {
             if let StarknetError(ContractNotFound) = error {
+                let decoded_chain_id = decode_chain_id(chain_id);
                 Err(anyhow!(
-                    "No account exists with the provided address {address:#x}"
+                    "Account with address {address:#x} not found on network {decoded_chain_id}"
                 ))
             } else {
                 Err(handle_rpc_error(error))
