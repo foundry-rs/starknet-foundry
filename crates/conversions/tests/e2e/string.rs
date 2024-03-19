@@ -1,4 +1,3 @@
-
 use cairo_felt::Felt252;
 use conversions::string::{IntoDecStr, TryFromDecStr};
 use starknet::core::types::FieldElement;
