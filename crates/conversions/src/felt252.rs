@@ -90,9 +90,9 @@ pub trait TryInferFormat: Sized {
 fn infer_format_and_parse_felt(value: &str) -> Result<Felt252, ParseFeltError> {
     let mut result = Err(ParseFeltError);
 
-    if value.starts_with('"') && value.ends_with('"') {
+    if value.starts_with('\'') && value.ends_with('\'') {
         let value_unquotted = &value[1..value.len() - 1];
-        let value_escaped = value_unquotted.replace("\\n", "\n").replace("\\\"", "\"");
+        let value_escaped = value_unquotted.replace("\\n", "\n").replace("\\'", "'");
 
         result = result.or_else(|_| Felt252::from_short_string(&value_escaped));
     }

@@ -41,7 +41,11 @@ fn file_reading() {
         [PASS] tests::test::valid_content_and_same_content_no_matter_newlines [..]
         [PASS] tests::test::serialization [..]
         [PASS] tests::test::json_with_array [..]
-        [PASS] tests::test::negative_number [..]
+        [FAIL] tests::test::negative_number
+            Got an exception while executing a hint: Hint Error: Failed to parse data/negative_number.txt file
+        
+        Failure data:
+        
         [FAIL] tests::test::valid_content_different_folder
         
         Failure data:
@@ -49,7 +53,7 @@ fn file_reading() {
         
         [PASS] tests::test::json_serialization [..]
         [PASS] tests::test::json_deserialization [..]
-        Tests: 6 passed, 5 failed, 0 skipped, 0 ignored, 0 filtered out
+        Tests: 5 passed, 6 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:
             tests::test::json_non_existent
@@ -57,6 +61,7 @@ fn file_reading() {
             tests::test::non_existent
             tests::test::non_ascii
             tests::test::valid_content_different_folder
+            tests::test::negative_number
     "};
 
     // run from different directories to make sure cwd is always set to package directory

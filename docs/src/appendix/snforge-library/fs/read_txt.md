@@ -22,15 +22,16 @@ File content must consists of elements that:
 - have to be separated with newlines
 - have to be either:
   - integers in range of `[0, P)` where P is [`Cairo Prime`](https://book.cairo-lang.org/ch02-02-data-types.html?highlight=prime#felt-type) either in decimal or `0x` prefixed hex format
-  - single line strings of length `<=31` (new lines can be used with \n)
+  - single line short strings (`felt252`) of length `<=31` surrounded by `''` ie. `'short string'`, new lines can be used with `\n` and `'` with `\'`
+  - single line strings (`ByteArray`) surrounded by `""` ie. `"very very very very loooooong string"`, new lines can be used with `\n` and `"` with `\"`
 
 For example, this file content:
 ```txt
 1
 2
-hello
+'hello'
 10
-world
+'world'
 ```
 will be parsed to the following array:
 ```rust

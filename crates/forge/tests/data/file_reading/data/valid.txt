@@ -1,14 +1,14 @@
 1
-hello
+'hello'
 3
 
 0x678
 
-      
+'      '
 
 
-hello\nworld
-world
+'hello\nworld'
+'world'
 
 
 0

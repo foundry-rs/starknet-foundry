@@ -177,11 +177,10 @@ fn non_existent() {
 }
 
 #[test]
-// it's read as shortstring now
 fn negative_number() {
     let file = FileTrait::new("data/negative_number.txt");
     read_txt(@file);
-    assert(1 == 1, '');
+    assert(1 == 1, 'negative numbers not allowed');
 }
 
 #[test]

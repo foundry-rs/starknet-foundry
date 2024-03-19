@@ -20,7 +20,7 @@ fn read_short_string() {
         }
     "#
     ));
-    test.set_env("MY_ENV_VAR", "env_var_value");
+    test.set_env("MY_ENV_VAR", "'env_var_value'");
 
     let result = run_test_case(&test);
 
