@@ -68,7 +68,7 @@
         * [start_spoof](appendix/cheatcodes/tx_info/start_spoof.md)
         * [stop_spoof](appendix/cheatcodes/tx_info/stop_spoof.md)
     * [mock](appendix/cheatcodes/mock/README.md)
-        * [mock_calls](appendix/cheatcodes/mock/mock_calls.md)
+        * [mock_call](appendix/cheatcodes/mock/mock_call.md)
         * [start_mock_call](appendix/cheatcodes/mock/start_mock_call.md)
         * [stop_mock_call](appendix/cheatcodes/mock/stop_mock_call.md)
     * [get_class_hash](appendix/cheatcodes/get_class_hash.md)

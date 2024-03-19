@@ -2,7 +2,7 @@
 
 > `fn stop_mock_call(contract_address: ContractAddress, function_selector: felt252)`
 
-Cancels the [`mock_calls`](./mock_calls.md) / [`start_mock_call`](./start_mock_call.md) for the function `function_selector` of a contract at the given address.
+Cancels the [`mock_call`](./mock_call.md) / [`start_mock_call`](./start_mock_call.md) for the function `function_selector` of a contract at the given address.
 
 - `contract_address` - target contract address
 - `function_selector` - selector of the function
