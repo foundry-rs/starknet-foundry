@@ -1,7 +1,7 @@
 # Cheatcodes Reference
 
 - [`CheatTarget`](cheatcodes/cheat_target.md) - enum for selecting contracts to target with cheatcodes
-- [`CheatSpan`](cheatcodes/cheat_span.md) - enum for specifying the number of calls for a cheat
+- [`CheatSpan`](cheatcodes/cheat_span.md) - enum for specifying the number of target calls for a cheat
 - [`prank`](cheatcodes/caller_address/prank.md) - changes the caller address for contracts, for a number of calls
 - [`start_prank`](cheatcodes/caller_address/start_prank.md) - changes the caller address for contracts
 - [`stop_prank`](cheatcodes/caller_address/stop_prank.md) - cancels the `prank` / `start_prank` for contracts

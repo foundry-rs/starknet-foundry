@@ -236,19 +236,19 @@ That's where [`CheatSpan`](../appendix/cheatcodes/cheat_span.md) comes in handy.
 ```rust
 enum CheatSpan {
     Indefinite: (),
-    Calls: usize,
+    TargetCalls: usize,
 }
 ```
 
 To set span for a cheatcode, use `prank` / `warp` / `roll` / etc.
 
 ```rust
-prank(CheatTarget::One(contract_address), new_caller_address, CheatSpan::Calls(1))
+prank(CheatTarget::One(contract_address), new_caller_address, CheatSpan::TargetCalls(1))
 ```
 
-Calling a cheatcode with `CheatSpan::Calls(N)` is going to activate the cheatcode for `N` calls to a contract, after which it's going to be automatically canceled.
+Calling a cheatcode with `CheatSpan::TargetCalls(N)` is going to activate the cheatcode for `N` calls to a specified `CheatTarget`, after which it's going to be automatically canceled.
 
-Of course the cheatcode can still be canceled before its `CheatSpan` goes down to 0 - simply call `stop_prank` manually.
+Of course the cheatcode can still be canceled before its `CheatSpan` goes down to 0 - simply call `stop_prank` on the target manually.
 
 > ℹ️ **Info**
 >
@@ -276,8 +276,8 @@ fn call_and_invoke() {
     // requires the caller_address to be 123
     let pranked_address: ContractAddress = 123.try_into().unwrap();
 
-    // Prank the contract_address for a span of 2 calls
-    prank(CheatTarget::One(contract_address), pranked_address, CheatSpan::Calls(2));
+    // Prank the contract_address for a span of 2 target calls (here, calls to contract_address)
+    prank(CheatTarget::One(contract_address), pranked_address, CheatSpan::TargetCalls(2));
 
     // Call #1 should succeed
     let call_1_result = safe_dispatcher.increase_balance(100);
