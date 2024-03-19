@@ -6,7 +6,7 @@ use scarb_api::{
     ScarbCommand, ScarbCommandError, StarknetContractArtifacts,
 };
 use scarb_ui::args::PackagesFilter;
-use shared::print::print_as_warning;
+use shared::{command::CommandExt, print::print_as_warning};
 use std::collections::HashMap;
 use std::env;
 use std::str::FromStr;
@@ -22,7 +22,7 @@ pub fn get_scarb_manifest_for(dir: &Utf8Path) -> Result<Utf8PathBuf> {
         .current_dir(dir)
         .arg("manifest-path")
         .command()
-        .output()
+        .output_checked()
         .context("Failed to execute the `scarb manifest-path` command")?;
 
     let output_str = String::from_utf8(output.stdout)
