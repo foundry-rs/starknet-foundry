@@ -33,15 +33,14 @@ use blockifier::{
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_starknet_classes::keccak::starknet_keccak;
-use starknet_api::core::ContractAddress;
-
-use crate::runtime_extensions::common::{get_relocated_vm_trace, sum_syscall_counters};
-use crate::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
-use crate::runtime_extensions::forge_runtime_extension::cheatcodes::get_class_hash::get_class_hash;
-use crate::runtime_extensions::forge_runtime_extension::cheatcodes::l1_handler_execute::l1_handler_execute;
-use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::SpyTarget;
-use crate::runtime_extensions::forge_runtime_extension::cheatcodes::storage::{
-    calculate_variable_address, load, store,
+use cairo_vm::vm::{
+    errors::hint_errors::HintError, runners::cairo_runner::ExecutionResources,
+    vm_core::VirtualMachine,
+};
+use conversions::{
+    byte_array::ByteArray,
+    felt252::{FromShortString, TryInferFormat},
+    FromConv, IntoConv,
 };
 use num_traits::ToPrimitive;
 use runtime::{
@@ -51,10 +50,8 @@ use runtime::{
 };
 use scarb_api::StarknetContractArtifacts;
 use starknet::signers::SigningKey;
-use starknet_api::{
-    core::ContractAddress,
-    deprecated_contract_class::EntryPointType::{self, L1Handler},
-};
+use starknet_api::core::ContractAddress;
+use starknet_api::deprecated_contract_class::EntryPointType::{self, L1Handler};
 use std::collections::HashMap;
 
 pub mod cheatcodes;

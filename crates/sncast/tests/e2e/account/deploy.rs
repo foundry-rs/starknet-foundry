@@ -1,5 +1,5 @@
 use crate::helpers::constants::{DEVNET_OZ_CLASS_HASH_CAIRO_0, DEVNET_OZ_CLASS_HASH_CAIRO_1, URL};
-use crate::helpers::fixtures::{convert_to_hex, copy_file};
+use crate::helpers::fixtures::copy_file;
 use crate::helpers::fixtures::{
     get_address_from_keystore, get_transaction_hash, get_transaction_receipt, mint_token,
 };
