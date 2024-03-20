@@ -193,3 +193,42 @@ fn accumulate_syscalls() {
     assert_syscall(&result, "single_write", StorageWrite, 1);
     assert_syscall(&result, "double_write", StorageWrite, 2);
 }
+
+#[test]
+fn steps_count_includes_os_resources() {
+    let test = test_case!(indoc!(
+        "
+            use starknet::{SyscallResultTrait, StorageAddress};
+
+            #[test]
+            fn syscall_storage_write() {
+                let storage_address: StorageAddress = 10.try_into().unwrap();
+                starknet::storage_write_syscall(0, storage_address, 10).unwrap_syscall();
+                starknet::storage_write_syscall(0, storage_address, 10).unwrap_syscall();
+                starknet::storage_write_syscall(0, storage_address, 10).unwrap_syscall();
+                assert(1 == 1, 'haha');
+            }
+
+            #[test]
+            fn syscall_storage_write_baseline() {
+                let _storage_address: StorageAddress = 10.try_into().unwrap();
+                // starknet::storage_write_syscall(0, storage_address, 10).unwrap_syscall();
+                // starknet::storage_write_syscall(0, storage_address, 10).unwrap_syscall();
+                // starknet::storage_write_syscall(0, storage_address, 10).unwrap_syscall();
+                assert(1 == 1, 'haha');
+            }
+        "
+    ));
+
+    let result = run_test_case(&test);
+    assert_passed(&result);
+    // Cost of storage write in builtins is 1 range check and 89 steps
+    // Steps are pretty hard to verify so this test is based on range check diff
+    assert_builtin(&result, "syscall_storage_write", "range_check_builtin", 6);
+    assert_builtin(
+        &result,
+        "syscall_storage_write_baseline",
+        "range_check_builtin",
+        3,
+    );
+}
