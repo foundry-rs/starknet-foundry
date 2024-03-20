@@ -7,11 +7,13 @@ use crate::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::{dep
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
 use crate::state::{CallTrace, CheatSpan, CheatTarget};
 use anyhow::{Context, Result};
+use blockifier::context::TransactionContext;
 use blockifier::execution::call_info::{CallExecution, CallInfo};
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::entry_point::{CallEntryPoint, CallType};
 use blockifier::execution::execution_utils::stark_felt_to_felt;
 use blockifier::execution::syscalls::hint_processor::SyscallCounter;
+use blockifier::versioned_constants::VersionedConstants;
 use cairo_felt::Felt252;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::vm_core::VirtualMachine;
@@ -22,6 +24,7 @@ use scarb_api::StarknetContractArtifacts;
 
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_starknet_classes::keccak::starknet_keccak;
+use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use starknet_api::core::ContractAddress;
 
 use crate::runtime_extensions::common::{get_relocated_vm_trace, sum_syscall_counters};
@@ -867,9 +870,23 @@ pub fn update_top_call_vm_trace(runtime: &mut ForgeRuntime, vm: &VirtualMachine)
             Some(get_relocated_vm_trace(vm));
     }
 }
+fn add_syscall_resources(
+    versioned_constants: &VersionedConstants,
+    execution_resources: &ExecutionResources,
+    syscall_counter: &SyscallCounter,
+) -> ExecutionResources {
+    let mut total_vm_usage = execution_resources.filter_unused_builtins();
+    total_vm_usage += &versioned_constants
+        .get_additional_os_syscall_resources(syscall_counter)
+        .expect("Could not get additional costs");
+    total_vm_usage
+}
 
 #[must_use]
-pub fn get_all_used_resources(runtime: ForgeRuntime) -> UsedResources {
+pub fn get_all_used_resources(
+    runtime: ForgeRuntime,
+    transaction_context: &TransactionContext,
+) -> UsedResources {
     let starknet_runtime = runtime.extended_runtime.extended_runtime.extended_runtime;
     let top_call_l2_to_l1_messages = starknet_runtime.hint_handler.l2_to_l1_messages;
     let top_call_events = starknet_runtime.hint_handler.events;
@@ -913,6 +930,13 @@ pub fn get_all_used_resources(runtime: ForgeRuntime) -> UsedResources {
                 .map(|evt| evt.event.clone())
         })
         .collect();
+
+    let versioned_constants = transaction_context.block_context.versioned_constants();
+    let execution_resources = add_syscall_resources(
+        versioned_constants,
+        &execution_resources,
+        &top_call_syscalls,
+    );
 
     UsedResources {
         events,

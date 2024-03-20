@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Default `chain_id` has been changed from `SN_GOERLI` to `SN_SEPOLIA`
 - Supported RPC version is now 0.7.0
 - Gas calculation is in sync with starknet 0.13.1 (with EIP 4844 blob usage enabled)
+- Resources displayed (steps, builtins) now include OS costs of syscalls 
 
 ### Cast
 
