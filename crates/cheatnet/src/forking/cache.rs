@@ -1,10 +1,7 @@
 use blockifier::block::BlockInfo;
-use cairo_felt::Felt252;
 use camino::Utf8PathBuf;
 use conversions::string::{IntoDecStr, TryFromDecStr};
-use conversions::IntoConv;
 use fs2::FileExt;
-use num_bigint::BigUint;
 use regex::Regex;
 use runtime::starknet::context::SerializableBlockInfo;
 use serde::{Deserialize, Serialize};
@@ -167,11 +164,8 @@ impl ForkCache {
             .get(&storage_key_str)?;
 
         Some(
-            Felt252::from(
-                BigUint::parse_bytes(cache_hit.as_bytes(), 10)
-                    .expect("Parsing class_hash_at entry failed"),
-            )
-            .into_(),
+            StarkFelt::try_from_dec_str(cache_hit.as_str())
+                .expect("Parsing class_hash_at entry failed"),
         )
     }
 
@@ -218,11 +212,8 @@ impl ForkCache {
             .class_hash_at
             .get(&contract_address.into_dec_string())
             .map(|dec_string| {
-                Felt252::from(
-                    BigUint::parse_bytes(dec_string.as_bytes(), 10)
-                        .expect("Parsing class_hash_at entry failed"),
-                )
-                .into_()
+                ClassHash::try_from_dec_str(dec_string.as_str())
+                    .expect("Parsing class_hash_at entry failed")
             }) // Entry encoded as a decimal string
     }
 

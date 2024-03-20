@@ -370,7 +370,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let parsed_env_var = Felt252::infer_format_and_parse(env_var)
                     .with_context(|| format!("Failed to parse value = {env_var} to felt"))?;
 
-                Ok(CheatcodeHandlingResult::Handled(vec![parsed_env_var]))
+                Ok(CheatcodeHandlingResult::Handled(parsed_env_var))
             }
             "get_class_hash" => {
                 let contract_address = input_reader.read_felt()?.into_();

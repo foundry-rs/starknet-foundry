@@ -27,6 +27,39 @@ world',
         i += 1;
     };
 }
+fn compare_with_expected_content_json(content: Array<felt252>) {
+    let hello: ByteArray = "hello";
+    let hello_world: ByteArray = "hello
+world";
+    let world: ByteArray = "world";
+    let spaces: ByteArray = "      ";
+
+    let mut expected = array![1];
+
+    hello.serialize(ref expected);
+
+    expected.append(3);
+    expected.append(0x678);
+
+    spaces.serialize(ref expected);
+
+    hello_world.serialize(ref expected);
+    world.serialize(ref expected);
+
+    expected.append(0);
+    expected.append(3618502788666131213697322783095070105623107215331596699973092056135872020480);
+
+    assert(content.len() == expected.len(), 'lengths not equal');
+
+    let mut i = 0;
+    loop {
+        if i == content.len() {
+            break;
+        }
+        assert(*content[i] == *expected[i], 'unexpected content');
+        i += 1;
+    };
+}
 
 #[derive(Serde, Drop, PartialEq)]
 struct A {
@@ -61,7 +94,7 @@ struct E {
 }
 #[derive(Serde, Drop, PartialEq)]
 struct F {
-    c: felt252,
+    c: ByteArray,
     d: u8,
     e: G
 }
@@ -74,15 +107,14 @@ struct G {
 struct Test {
     a: u8,
     array: Array<u32>,
-    mixed_array: Array<felt252>,
-    short_string_array: Array<felt252>,
+    string_array: Array<ByteArray>,
 }
 
 #[test]
 fn json_serialization() {
     let file = FileTrait::new("data/json/valid.json");
     let content = read_json(@file);
-    compare_with_expected_content(content);
+    compare_with_expected_content_json(content);
 }
 
 #[test]
@@ -97,12 +129,11 @@ fn json_with_array() {
     let file = FileTrait::new("data/json/with_array.json");
     let content = FileParser::<Test>::parse_json(@file).unwrap();
 
-    assert(*content.array[0] == 1, '');
-    assert(*content.array[1] == 23, '');
-    assert(*content.mixed_array[0] == 1, '');
-    assert(*content.mixed_array[1] == 'test', '');
-    assert(*content.short_string_array[0] == 'test', '');
-    assert(*content.short_string_array[1] == 'test2', '');
+    let string_array = array!["test", "test2"];
+
+    assert(*content.array[0] == 1, '1');
+    assert(*content.array[1] == 23, '23');
+    assert(content.string_array == string_array, 'string_array');
 }
 
 #[test]
@@ -113,7 +144,7 @@ fn json_deserialization() {
     let mut output_array = ArrayTrait::new();
     content.serialize(ref output_array);
     assert(content.a == 23, '');
-    assert(content.b.c == 'test', '');
+    assert(content.b.c == "test", '');
     assert(content.b.e.c == 2, '');
 }
 

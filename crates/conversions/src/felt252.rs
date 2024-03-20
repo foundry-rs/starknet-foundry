@@ -1,13 +1,14 @@
-use crate::byte_array::ByteArray;
-use crate::string::{ParseFeltError, TryFromDecStr, TryFromHexStr};
-use crate::{FromConv, IntoConv};
+use crate::{
+    byte_array::ByteArray,
+    string::{ParseFeltError, TryFromDecStr, TryFromHexStr},
+    FromConv, IntoConv,
+};
 use blockifier::execution::execution_utils::stark_felt_to_felt;
 use cairo_felt::Felt252;
 use num_traits::Num;
 use starknet::core::types::FieldElement;
-use starknet_api::core::{EntryPointSelector, Nonce};
 use starknet_api::{
-    core::{ClassHash, ContractAddress},
+    core::{ClassHash, ContractAddress, EntryPointSelector, Nonce},
     hash::StarkFelt,
 };
 
@@ -83,31 +84,43 @@ impl FromShortString<Felt252> for Felt252 {
 }
 
 pub trait TryInferFormat: Sized {
-    /// Parses value from `hex string` -> `dec string` -> `quotted cairo shortstring`
-    fn infer_format_and_parse(value: &str) -> Result<Self, ParseFeltError>;
-}
-
-fn infer_format_and_parse_felt(value: &str) -> Result<Felt252, ParseFeltError> {
-    let mut result = Err(ParseFeltError);
-
-    if value.starts_with('\'') && value.ends_with('\'') {
-        let value_unquotted = &value[1..value.len() - 1];
-        let value_escaped = value_unquotted.replace("\\n", "\n").replace("\\'", "'");
-
-        result = result.or_else(|_| Felt252::from_short_string(&value_escaped));
-    }
-
-    result
-        .or_else(|_| Felt252::try_from_hex_str(value))
-        .or_else(|_| Felt252::try_from_dec_str(value))
+    /// Parses value from `hex string`, `dec string` and `quotted cairo shortstring`
+    fn infer_format_and_parse(value: &str) -> Result<Vec<Self>, ParseFeltError>;
 }
 
 impl<T> TryInferFormat for T
 where
     T: From<Felt252>,
 {
-    fn infer_format_and_parse(value: &str) -> Result<Self, ParseFeltError> {
-        infer_format_and_parse_felt(value).map(Into::into)
+    fn infer_format_and_parse(mut value: &str) -> Result<Vec<Self>, ParseFeltError> {
+        let mut result = Err(ParseFeltError);
+
+        let is_short_string = value.starts_with('\'') && value.ends_with('\'');
+        let is_string = value.starts_with('"') && value.ends_with('"');
+
+        if is_short_string || is_string {
+            value = &value[1..value.len() - 1];
+        }
+
+        if is_short_string {
+            let value_escaped = value.replace("\\n", "\n").replace("\\'", "'");
+
+            result =
+                result.or_else(|_| Felt252::from_short_string(&value_escaped).map(|f| vec![f]));
+        }
+
+        if is_string {
+            //TODO
+            let value_escaped = value.replace("\\n", "\n").replace("\\\"", "\"");
+
+            result = result
+                .or_else(|_| Ok(ByteArray::from(value_escaped.as_str()).serialize_no_magic()));
+        }
+
+        result
+            .or_else(|_| Felt252::try_from_hex_str(value).map(|f| vec![f]))
+            .or_else(|_| Felt252::try_from_dec_str(value).map(|f| vec![f]))
+            .map(|felts| felts.into_iter().map(Into::into).collect())
     }
 }
 
@@ -135,5 +148,12 @@ impl<T: SerializeAsFelt252Vec, E: SerializeAsFelt252Vec> SerializeAsFelt252Vec f
 impl SerializeAsFelt252Vec for &str {
     fn serialize_as_felt252_vec(&self) -> Vec<Felt252> {
         ByteArray::from(*self).serialize_no_magic()
+    }
+}
+impl SerializeAsFelt252Vec for [&str] {
+    fn serialize_as_felt252_vec(&self) -> Vec<Felt252> {
+        self.iter()
+            .flat_map(|s| ByteArray::from(*s).serialize_no_magic())
+            .collect()
     }
 }
