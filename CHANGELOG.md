@@ -9,11 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.20.0] - 2024-03-20
 
-### Cast
-
-#### Added
-- Providing configuration data with env variables [DOCS](https://foundry-rs.github.io/starknet-foundry/projects/configuration.html#environmental-variables)
-
 ### Forge
 
 #### Added
@@ -38,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - Support for OpenZeppelin Cairo 1 (or higher) accounts creation, deployment and usage
+- Providing configuration data with env variables [DOCS](https://foundry-rs.github.io/starknet-foundry/projects/configuration.html#environmental-variables)
 
 #### Changed
 
