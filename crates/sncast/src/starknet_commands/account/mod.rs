@@ -38,6 +38,7 @@ pub fn prepare_account_json(
     private_key: &SigningKey,
     address: FieldElement,
     deployed: bool,
+    legacy: bool,
     class_hash: Option<FieldElement>,
     salt: Option<FieldElement>,
 ) -> serde_json::Value {
@@ -46,6 +47,7 @@ pub fn prepare_account_json(
         "public_key": format!("{:#x}", private_key.verifying_key().scalar()),
         "address": format!("{address:#x}"),
         "deployed": deployed,
+        "legacy": legacy,
     });
 
     if let Some(salt) = salt {

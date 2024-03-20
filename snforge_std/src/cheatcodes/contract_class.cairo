@@ -1,5 +1,6 @@
 use starknet::{ContractAddress, ClassHash, testing::cheatcode};
 use super::super::byte_array::byte_array_as_felt_array;
+use core::traits::Into;
 
 #[derive(Drop, Clone)]
 struct RevertedTransaction {
@@ -35,6 +36,8 @@ trait ContractClassTrait {
         constructor_calldata: @Array::<felt252>,
         contract_address: ContractAddress
     ) -> Result<ContractAddress, RevertedTransaction>;
+
+    fn new<T, +Into<T, ClassHash>>(class_hash: T) -> ContractClass;
 }
 
 impl ContractClassImpl of ContractClassTrait {
@@ -57,7 +60,7 @@ impl ContractClassImpl of ContractClassTrait {
 
         if exit_code == 0 {
             let result = *outputs[1];
-            Result::<ContractAddress, RevertedTransaction>::Ok(result.try_into().unwrap())
+            Result::Ok(result.try_into().unwrap())
         } else {
             let panic_data_len_felt = *outputs[1];
             let panic_data_len = panic_data_len_felt.try_into().unwrap();
@@ -73,7 +76,7 @@ impl ContractClassImpl of ContractClassTrait {
                 i += 1;
             };
 
-            Result::<ContractAddress, RevertedTransaction>::Err(RevertedTransaction { panic_data })
+            Result::Err(RevertedTransaction { panic_data })
         }
     }
 
@@ -90,7 +93,7 @@ impl ContractClassImpl of ContractClassTrait {
 
         if exit_code == 0 {
             let result = *outputs[1];
-            Result::<ContractAddress, RevertedTransaction>::Ok(result.try_into().unwrap())
+            Result::Ok(result.try_into().unwrap())
         } else {
             let panic_data_len_felt = *outputs[1];
             let panic_data_len = panic_data_len_felt.try_into().unwrap();
@@ -106,8 +109,12 @@ impl ContractClassImpl of ContractClassTrait {
                 i += 1;
             };
 
-            Result::<ContractAddress, RevertedTransaction>::Err(RevertedTransaction { panic_data })
+            Result::Err(RevertedTransaction { panic_data })
         }
+    }
+
+    fn new<T, +Into<T, ClassHash>>(class_hash: T) -> ContractClass {
+        ContractClass { class_hash: class_hash.into() }
     }
 }
 

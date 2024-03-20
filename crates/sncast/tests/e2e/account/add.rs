@@ -1,5 +1,6 @@
 use crate::helpers::constants::{
-    DEVNET_OZ_CLASS_HASH, DEVNET_OZ_CLASS_HASH_CAIRO_1, DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS, URL,
+    DEVNET_OZ_CLASS_HASH_CAIRO_0, DEVNET_OZ_CLASS_HASH_CAIRO_1, DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS,
+    URL,
 };
 use crate::helpers::runner::runner;
 use camino::Utf8PathBuf;
@@ -27,6 +28,8 @@ pub async fn test_happy_case() {
         "0x123",
         "--private-key",
         "0x456",
+        "--class-hash",
+        DEVNET_OZ_CLASS_HASH_CAIRO_0,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -46,9 +49,11 @@ pub async fn test_happy_case() {
                 "alpha-goerli": {
                   "my_account_add": {
                     "address": "0x123",
+                    "class_hash": DEVNET_OZ_CLASS_HASH_CAIRO_0,
                     "deployed": false,
+                    "legacy": true,
                     "private_key": "0x456",
-                    "public_key": "0x5f679dacd8278105bd3b84a15548fe84079068276b0e84d6cc093eb5430f063"
+                    "public_key": "0x5f679dacd8278105bd3b84a15548fe84079068276b0e84d6cc093eb5430f063",
                   }
                 }
             }
@@ -88,8 +93,9 @@ pub async fn test_existent_account_address() {
                 "alpha-goerli": {
                   "my_account_add": {
                     "address": DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS,
-                    "class_hash": DEVNET_OZ_CLASS_HASH,
+                    "class_hash": DEVNET_OZ_CLASS_HASH_CAIRO_1,
                     "deployed": true,
+                    "legacy": false,
                     "private_key": "0x456",
                     "public_key": "0x5f679dacd8278105bd3b84a15548fe84079068276b0e84d6cc093eb5430f063"
                   }
@@ -118,7 +124,7 @@ pub async fn test_existent_account_address_and_incorrect_class_hash() {
         "--private-key",
         "0x456",
         "--class-hash",
-        DEVNET_OZ_CLASS_HASH_CAIRO_1,
+        DEVNET_OZ_CLASS_HASH_CAIRO_0,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -126,7 +132,7 @@ pub async fn test_existent_account_address_and_incorrect_class_hash() {
     snapbox.assert().stderr_matches(formatdoc! {r"
         command: account add
         error: Incorrect class hash {} for account address {}
-    ", DEVNET_OZ_CLASS_HASH_CAIRO_1, DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS});
+    ", DEVNET_OZ_CLASS_HASH_CAIRO_0, DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS});
 }
 
 #[tokio::test]
@@ -160,6 +166,34 @@ pub async fn test_nonexistent_account_address_and_nonexistent_class_hash() {
 }
 
 #[tokio::test]
+pub async fn test_nonexistent_account_address() {
+    let tempdir = tempdir().expect("Unable to create a temporary directory");
+    let accounts_file = "accounts.json";
+
+    let args = vec![
+        "--url",
+        URL,
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "add",
+        "--name",
+        "my_account_add",
+        "--address",
+        "0x123",
+        "--private-key",
+        "0x456",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+
+    snapbox.assert().stderr_matches(indoc! {r"
+        command: account add
+        error: There is no contract at the specified address
+    "});
+}
+
+#[tokio::test]
 pub async fn test_happy_case_add_profile() {
     let tempdir = tempdir().expect("Failed to create a temporary directory");
     let accounts_file = "accounts.json";
@@ -182,7 +216,7 @@ pub async fn test_happy_case_add_profile() {
         "--salt",
         "0x3",
         "--class-hash",
-        DEVNET_OZ_CLASS_HASH,
+        DEVNET_OZ_CLASS_HASH_CAIRO_0,
         "--add-profile",
         "my_account_add",
     ];
@@ -205,11 +239,12 @@ pub async fn test_happy_case_add_profile() {
                 "alpha-goerli": {
                   "my_account_add": {
                     "address": "0x1",
-                    "class_hash": DEVNET_OZ_CLASS_HASH,
+                    "class_hash": DEVNET_OZ_CLASS_HASH_CAIRO_0,
                     "deployed": false,
                     "private_key": "0x2",
                     "public_key": "0x759ca09377679ecd535a81e83039658bf40959283187c654c5416f439403cf5",
                     "salt": "0x3",
+                    "legacy": true
                   }
                 }
             }
@@ -259,10 +294,11 @@ pub async fn test_detect_deployed() {
                 "alpha-goerli": {
                   "my_account_add": {
                     "address": DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS,
-                    "class_hash": DEVNET_OZ_CLASS_HASH,
+                    "class_hash": DEVNET_OZ_CLASS_HASH_CAIRO_1,
                     "deployed": true,
                     "private_key": "0x5",
-                    "public_key": "0x788435d61046d3eec54d77d25bd194525f4fa26ebe6575536bc6f656656b74c"
+                    "public_key": "0x788435d61046d3eec54d77d25bd194525f4fa26ebe6575536bc6f656656b74c",
+                    "legacy": false
                   }
                 }
             }
@@ -337,6 +373,8 @@ pub async fn test_private_key_from_file() {
         "0x123",
         "--private-key-file",
         private_key_file,
+        "--class-hash",
+        DEVNET_OZ_CLASS_HASH_CAIRO_0,
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
@@ -357,8 +395,10 @@ pub async fn test_private_key_from_file() {
                   "my_account_add": {
                     "address": "0x123",
                     "deployed": false,
+                    "legacy": true,
                     "private_key": "0x456",
-                    "public_key": "0x5f679dacd8278105bd3b84a15548fe84079068276b0e84d6cc093eb5430f063"
+                    "public_key": "0x5f679dacd8278105bd3b84a15548fe84079068276b0e84d6cc093eb5430f063",
+                    "class_hash": DEVNET_OZ_CLASS_HASH_CAIRO_0,
                   }
                 }
             }
@@ -473,7 +513,7 @@ pub async fn test_private_key_as_int_in_file() {
         "--name",
         "my_account_add",
         "--address",
-        "0x123",
+        DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS,
         "--private-key-file",
         private_key_file,
     ];
@@ -492,10 +532,12 @@ pub async fn test_private_key_as_int_in_file() {
             {
                 "alpha-goerli": {
                   "my_account_add": {
-                    "address": "0x123",
-                    "deployed": false,
+                    "address": DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS,
+                    "deployed": true,
+                    "legacy": false,
                     "private_key": "0x456",
-                    "public_key": "0x5f679dacd8278105bd3b84a15548fe84079068276b0e84d6cc093eb5430f063"
+                    "public_key": "0x5f679dacd8278105bd3b84a15548fe84079068276b0e84d6cc093eb5430f063",
+                    "class_hash": DEVNET_OZ_CLASS_HASH_CAIRO_1
                   }
                 }
             }

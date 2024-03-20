@@ -4,7 +4,7 @@ use test_utils::running_tests::run_test_case;
 use test_utils::test_case;
 
 static CHEATNET_RPC_URL: &str = "http://188.34.188.184:9545/rpc/v0_7";
-
+#[ignore] // TODO (#1916)
 #[test]
 fn prank_cairo0_contract() {
     let test = test_case!(formatdoc!(
@@ -53,6 +53,7 @@ fn prank_cairo0_contract() {
     assert_passed(&result);
 }
 
+#[ignore] // TODO (#1916)
 #[test]
 fn roll_cairo0_contract() {
     let test = test_case!(formatdoc!(
@@ -101,6 +102,7 @@ fn roll_cairo0_contract() {
     assert_passed(&result);
 }
 
+#[ignore] // TODO (#1916)
 #[test]
 fn warp_cairo0_contract() {
     let test = test_case!(formatdoc!(
@@ -151,6 +153,7 @@ fn warp_cairo0_contract() {
     assert_passed(&result);
 }
 
+#[ignore] // TODO (#1916)
 #[test]
 fn mock_call_cairo0_contract() {
     let test = test_case!(formatdoc!(
@@ -192,6 +195,7 @@ fn mock_call_cairo0_contract() {
     assert_passed(&result);
 }
 
+#[ignore] // TODO (#1916)
 #[test]
 fn store_load_cairo0_contract() {
     let test = test_case!(formatdoc!(

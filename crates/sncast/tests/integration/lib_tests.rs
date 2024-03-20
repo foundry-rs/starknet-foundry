@@ -1,9 +1,11 @@
-use crate::helpers::constants::URL;
+use crate::helpers::constants::{
+    DEVNET_OZ_CLASS_HASH_CAIRO_0, DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS, URL,
+};
 use crate::helpers::fixtures::create_test_provider;
 
 use camino::Utf8PathBuf;
 use shared::rpc::{get_rpc_version, is_expected_version};
-use sncast::{get_account, get_provider};
+use sncast::{check_if_legacy_contract, get_account, get_provider, parse_number};
 use std::fs;
 use url::ParseError;
 
@@ -123,7 +125,7 @@ async fn test_get_account_failed_to_convert_field_elements() {
     let err1 = account1.unwrap_err();
     assert!(err1
         .to_string()
-        .contains("Failed to convert private key = privatekey to FieldElement"));
+        .contains("Failed to convert private key to FieldElement"));
 
     let account2 = get_account(
         "with_wrong_address",
@@ -136,6 +138,18 @@ async fn test_get_account_failed_to_convert_field_elements() {
     assert!(err2
         .to_string()
         .contains("Failed to convert account address = address to FieldElement"));
+
+    let account3 = get_account(
+        "with_wrong_class_hash",
+        &Utf8PathBuf::from("tests/data/accounts/faulty_accounts.json"),
+        &provider,
+        None,
+    )
+    .await;
+    let err3 = account3.unwrap_err();
+    assert!(err3
+        .to_string()
+        .contains("Failed to convert class hash = class_hash to FieldElement"));
 }
 
 // TODO (#1690): Move this test to the shared crate and execute it for a real node
@@ -144,4 +158,27 @@ async fn test_supported_rpc_version_matches_devnet_version() {
     let provider = create_test_provider();
     let devnet_spec_version = get_rpc_version(&provider).await.unwrap();
     assert!(is_expected_version(&devnet_spec_version));
+}
+
+#[tokio::test]
+async fn test_check_if_legacy_contract_by_class_hash() {
+    let provider = create_test_provider();
+    let class_hash = parse_number(DEVNET_OZ_CLASS_HASH_CAIRO_0)
+        .expect("Failed to parse DEVNET_OZ_CLASS_HASH_CAIRO_0");
+    let mock_address = parse_number("0x1").unwrap();
+    let is_legacy = check_if_legacy_contract(Some(class_hash), mock_address, &provider)
+        .await
+        .unwrap();
+    assert!(is_legacy);
+}
+
+#[tokio::test]
+async fn test_check_if_legacy_contract_by_address() {
+    let provider = create_test_provider();
+    let address = parse_number(DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS)
+        .expect("Failed to parse DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS");
+    let is_legacy = check_if_legacy_contract(None, address, &provider)
+        .await
+        .unwrap();
+    assert!(!is_legacy);
 }

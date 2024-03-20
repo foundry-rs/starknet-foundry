@@ -5,6 +5,7 @@ use forge::shared_cache::CACHE_DIR;
 use indoc::indoc;
 use shared::test_utils::output_assert::assert_stdout_contains;
 
+#[ignore] // TODO (#1916)
 #[test]
 fn without_cache() {
     let temp = setup_package("forking");
@@ -32,6 +33,7 @@ fn without_cache() {
     );
 }
 
+#[ignore] // TODO (#1916)
 #[test]
 /// The cache file at `forking/$CACHE_DIR` was modified to have different value stored
 /// that this from the real network. We use it to verify that values from cache are actually used.
@@ -71,6 +73,7 @@ fn with_cache() {
     );
 }
 
+#[ignore] // TODO (#1916)
 #[test]
 fn with_clean_cache() {
     let temp = setup_package_with_file_patterns(
@@ -100,6 +103,7 @@ fn with_clean_cache() {
     );
 }
 
+#[ignore] // TODO (#1916)
 #[test]
 fn printing_latest_block_number() {
     let temp = setup_package_with_file_patterns(

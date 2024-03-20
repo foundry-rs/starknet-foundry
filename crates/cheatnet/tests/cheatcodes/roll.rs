@@ -291,7 +291,7 @@ fn roll_simple_with_span() {
     test_env.roll(
         CheatTarget::One(contract_address),
         123,
-        CheatSpan::Number(2),
+        CheatSpan::TargetCalls(2),
     );
 
     assert_success(
@@ -321,7 +321,7 @@ fn roll_proxy_with_span() {
     test_env.roll(
         CheatTarget::One(contract_address_1),
         123,
-        CheatSpan::Number(1),
+        CheatSpan::TargetCalls(1),
     );
 
     let output = test_env.call_contract(
@@ -345,7 +345,7 @@ fn roll_in_constructor_with_span() {
     test_env.roll(
         CheatTarget::One(precalculated_address),
         123,
-        CheatSpan::Number(2),
+        CheatSpan::TargetCalls(2),
     );
 
     let contract_address = test_env.deploy_wrapper(&class_hash, &[]);
@@ -378,7 +378,7 @@ fn roll_no_constructor_with_span() {
     test_env.roll(
         CheatTarget::One(precalculated_address),
         123,
-        CheatSpan::Number(1),
+        CheatSpan::TargetCalls(1),
     );
 
     let contract_address = test_env.deploy_wrapper(&class_hash, &[]);
@@ -404,7 +404,7 @@ fn roll_override_span() {
     test_env.roll(
         CheatTarget::One(contract_address),
         123,
-        CheatSpan::Number(2),
+        CheatSpan::TargetCalls(2),
     );
 
     assert_success(
@@ -447,7 +447,7 @@ fn roll_library_call_with_span() {
     test_env.roll(
         CheatTarget::One(contract_address),
         123,
-        CheatSpan::Number(1),
+        CheatSpan::TargetCalls(1),
     );
 
     let lib_call_selector = "get_block_number_with_lib_call";
@@ -470,7 +470,7 @@ fn roll_all_span() {
     let contract_address_1 = test_env.deploy("RollChecker", &[]);
     let contract_address_2 = test_env.deploy("RollCheckerLibCall", &[]);
 
-    test_env.roll(CheatTarget::All, 123, CheatSpan::Number(1));
+    test_env.roll(CheatTarget::All, 123, CheatSpan::TargetCalls(1));
 
     assert_success(
         test_env.call_contract(&contract_address_1, "get_block_number", &[]),

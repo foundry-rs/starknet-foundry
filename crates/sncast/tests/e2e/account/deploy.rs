@@ -1,5 +1,5 @@
-use crate::helpers::constants::{DEVNET_OZ_CLASS_HASH, URL};
-use crate::helpers::fixtures::copy_file;
+use crate::helpers::constants::{DEVNET_OZ_CLASS_HASH_CAIRO_0, DEVNET_OZ_CLASS_HASH_CAIRO_1, URL};
+use crate::helpers::fixtures::{convert_to_hex, copy_file};
 use crate::helpers::fixtures::{
     get_address_from_keystore, get_transaction_hash, get_transaction_receipt, mint_token,
 };
@@ -15,9 +15,11 @@ use std::{env, fs};
 use tempfile::{tempdir, TempDir};
 use test_case::test_case;
 
+#[test_case(DEVNET_OZ_CLASS_HASH_CAIRO_0; "cairo_0_class_hash")]
+#[test_case(DEVNET_OZ_CLASS_HASH_CAIRO_1; "cairo_1_class_hash")]
 #[tokio::test]
-pub async fn test_happy_case() {
-    let tempdir = create_account(false).await;
+pub async fn test_happy_case(class_hash: &str) {
+    let tempdir = create_account(false, class_hash).await;
     let accounts_file = "accounts.json";
 
     let args = vec![
@@ -32,8 +34,6 @@ pub async fn test_happy_case() {
         "my_account",
         "--max-fee",
         "99999999999999999",
-        "--class-hash",
-        DEVNET_OZ_CLASS_HASH,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -56,7 +56,7 @@ pub async fn test_happy_case() {
 
 #[tokio::test]
 pub async fn test_happy_case_add_profile() {
-    let tempdir = create_account(true).await;
+    let tempdir = create_account(true, DEVNET_OZ_CLASS_HASH_CAIRO_1).await;
     let accounts_file = "accounts.json";
 
     let args = vec![
@@ -71,8 +71,6 @@ pub async fn test_happy_case_add_profile() {
         "my_account",
         "--max-fee",
         "99999999999999999",
-        "--class-hash",
-        DEVNET_OZ_CLASS_HASH,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -119,7 +117,7 @@ fn test_account_deploy_error(accounts_content: &str, error: &str) {
 
 #[tokio::test]
 async fn test_too_low_max_fee() {
-    let tempdir = create_account(false).await;
+    let tempdir = create_account(false, DEVNET_OZ_CLASS_HASH_CAIRO_1).await;
     let accounts_file = "accounts.json";
 
     let args = vec![
@@ -134,8 +132,6 @@ async fn test_too_low_max_fee() {
         "my_account",
         "--max-fee",
         "1",
-        "--class-hash",
-        DEVNET_OZ_CLASS_HASH,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -152,7 +148,7 @@ async fn test_too_low_max_fee() {
 
 #[tokio::test]
 pub async fn test_invalid_class_hash() {
-    let tempdir = create_account(true).await;
+    let tempdir = create_account(true, DEVNET_OZ_CLASS_HASH_CAIRO_1).await;
     let accounts_file = "accounts.json";
 
     let args = vec![
@@ -184,7 +180,7 @@ pub async fn test_invalid_class_hash() {
 
 #[tokio::test]
 pub async fn test_valid_class_hash() {
-    let tempdir = create_account(true).await;
+    let tempdir = create_account(true, DEVNET_OZ_CLASS_HASH_CAIRO_1).await;
     let accounts_file = "accounts.json";
 
     let args = vec![
@@ -210,7 +206,7 @@ pub async fn test_valid_class_hash() {
 
 #[tokio::test]
 pub async fn test_valid_no_max_fee() {
-    let tempdir = create_account(true).await;
+    let tempdir = create_account(true, DEVNET_OZ_CLASS_HASH_CAIRO_1).await;
     let accounts_file = "accounts.json";
 
     let args = vec![
@@ -234,7 +230,7 @@ pub async fn test_valid_no_max_fee() {
     "});
 }
 
-pub async fn create_account(add_profile: bool) -> TempDir {
+pub async fn create_account(add_profile: bool, class_hash: &str) -> TempDir {
     let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
     let accounts_file = "accounts.json";
 
@@ -248,7 +244,7 @@ pub async fn create_account(add_profile: bool) -> TempDir {
         "--name",
         "my_account",
         "--class-hash",
-        DEVNET_OZ_CLASS_HASH,
+        class_hash,
     ];
     if add_profile {
         args.push("--add-profile");
@@ -308,7 +304,7 @@ pub async fn test_happy_case_keystore() {
         "--max-fee",
         "99999999999999999",
         "--class-hash",
-        DEVNET_OZ_CLASS_HASH,
+        DEVNET_OZ_CLASS_HASH_CAIRO_1,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -355,7 +351,7 @@ pub async fn test_keystore_already_deployed() {
         "--max-fee",
         "10000000000000000",
         "--class-hash",
-        DEVNET_OZ_CLASS_HASH,
+        DEVNET_OZ_CLASS_HASH_CAIRO_1,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -400,7 +396,7 @@ pub async fn test_keystore_key_mismatch() {
         "--max-fee",
         "10000000000000000",
         "--class-hash",
-        DEVNET_OZ_CLASS_HASH,
+        DEVNET_OZ_CLASS_HASH_CAIRO_1,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -440,7 +436,7 @@ pub async fn test_deploy_keystore_inexistent_keystore_file() {
         "--max-fee",
         "10000000000000000",
         "--class-hash",
-        DEVNET_OZ_CLASS_HASH,
+        DEVNET_OZ_CLASS_HASH_CAIRO_1,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -480,7 +476,7 @@ pub async fn test_deploy_keystore_inexistent_account_file() {
         "--max-fee",
         "10000000000000000",
         "--class-hash",
-        DEVNET_OZ_CLASS_HASH,
+        DEVNET_OZ_CLASS_HASH_CAIRO_1,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -524,7 +520,7 @@ pub async fn test_deploy_keystore_no_status() {
         "--max-fee",
         "10000000000000000",
         "--class-hash",
-        DEVNET_OZ_CLASS_HASH,
+        DEVNET_OZ_CLASS_HASH_CAIRO_1,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -580,7 +576,7 @@ pub async fn test_deploy_keystore_other_args() {
         "--max-fee",
         "99999999999999999",
         "--class-hash",
-        DEVNET_OZ_CLASS_HASH,
+        DEVNET_OZ_CLASS_HASH_CAIRO_1,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());

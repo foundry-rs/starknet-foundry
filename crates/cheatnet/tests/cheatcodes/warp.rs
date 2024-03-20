@@ -293,7 +293,7 @@ fn warp_simple_with_span() {
     test_env.warp(
         CheatTarget::One(contract_address),
         123,
-        CheatSpan::Number(2),
+        CheatSpan::TargetCalls(2),
     );
 
     assert_success(
@@ -323,7 +323,7 @@ fn warp_proxy_with_span() {
     test_env.warp(
         CheatTarget::One(contract_address_1),
         123,
-        CheatSpan::Number(1),
+        CheatSpan::TargetCalls(1),
     );
 
     let output = test_env.call_contract(
@@ -347,7 +347,7 @@ fn warp_in_constructor_with_span() {
     test_env.warp(
         CheatTarget::One(precalculated_address),
         123,
-        CheatSpan::Number(2),
+        CheatSpan::TargetCalls(2),
     );
 
     let contract_address = test_env.deploy_wrapper(&class_hash, &[]);
@@ -380,7 +380,7 @@ fn warp_no_constructor_with_span() {
     test_env.warp(
         CheatTarget::One(precalculated_address),
         123,
-        CheatSpan::Number(1),
+        CheatSpan::TargetCalls(1),
     );
 
     let contract_address = test_env.deploy_wrapper(&class_hash, &[]);
@@ -406,7 +406,7 @@ fn warp_override_span() {
     test_env.warp(
         CheatTarget::One(contract_address),
         123,
-        CheatSpan::Number(2),
+        CheatSpan::TargetCalls(2),
     );
 
     assert_success(
@@ -449,7 +449,7 @@ fn warp_library_call_with_span() {
     test_env.warp(
         CheatTarget::One(contract_address),
         123,
-        CheatSpan::Number(1),
+        CheatSpan::TargetCalls(1),
     );
 
     let lib_call_selector = "get_block_timestamp_with_lib_call";
@@ -472,7 +472,7 @@ fn warp_all_span() {
     let contract_address_1 = test_env.deploy("WarpChecker", &[]);
     let contract_address_2 = test_env.deploy("WarpCheckerLibCall", &[]);
 
-    test_env.warp(CheatTarget::All, 123, CheatSpan::Number(1));
+    test_env.warp(CheatTarget::All, 123, CheatSpan::TargetCalls(1));
 
     assert_success(
         test_env.call_contract(&contract_address_1, "get_block_timestamp", &[]),

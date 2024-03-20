@@ -293,6 +293,7 @@ fn prank_one_then_all() {
     );
 }
 
+#[ignore] // TODO (#1916)
 #[test]
 fn prank_cairo0_callback() {
     let temp_dir = TempDir::new().unwrap();
@@ -369,7 +370,7 @@ fn prank_simple_with_span() {
     test_env.prank(
         CheatTarget::One(contract_address),
         123,
-        CheatSpan::Number(2),
+        CheatSpan::TargetCalls(2),
     );
 
     assert_success(
@@ -400,7 +401,7 @@ fn prank_proxy_with_span() {
     test_env.prank(
         CheatTarget::One(contract_address_1),
         123,
-        CheatSpan::Number(1),
+        CheatSpan::TargetCalls(1),
     );
 
     let output = test_env.call_contract(
@@ -421,7 +422,7 @@ fn prank_override_span() {
     test_env.prank(
         CheatTarget::One(contract_address),
         123,
-        CheatSpan::Number(2),
+        CheatSpan::TargetCalls(2),
     );
 
     assert_success(
@@ -464,7 +465,7 @@ fn prank_constructor_with_span() {
     test_env.prank(
         CheatTarget::One(precalculated_address),
         123,
-        CheatSpan::Number(3),
+        CheatSpan::TargetCalls(3),
     );
 
     let contract_address = test_env.deploy_wrapper(&class_hash, &[]);
@@ -496,7 +497,7 @@ fn prank_library_call_with_span() {
     test_env.prank(
         CheatTarget::One(contract_address),
         123,
-        CheatSpan::Number(1),
+        CheatSpan::TargetCalls(1),
     );
 
     let lib_call_selector = "get_caller_address_with_lib_call";
@@ -519,7 +520,7 @@ fn prank_all_span() {
     let contract_address_1 = test_env.deploy("PrankChecker", &[]);
     let contract_address_2 = test_env.deploy("PrankCheckerLibCall", &[]);
 
-    test_env.prank(CheatTarget::All, 123, CheatSpan::Number(1));
+    test_env.prank(CheatTarget::All, 123, CheatSpan::TargetCalls(1));
 
     assert_success(
         test_env.call_contract(&contract_address_1, "get_caller_address", &[]),

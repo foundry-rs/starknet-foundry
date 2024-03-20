@@ -9,11 +9,14 @@ use indoc::indoc;
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 use starknet::core::types::TransactionReceipt::Declare;
 use std::fs;
+use test_case::test_case;
 
+#[test_case("cairo0"; "cairo_0_account")]
+#[test_case("cairo1"; "cairo_1_account")]
 #[tokio::test]
-async fn test_happy_case() {
+async fn test_happy_case(account: &str) {
     let contract_path =
-        duplicate_contract_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "1");
+        duplicate_contract_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", account);
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
     let args = vec![
         "--url",
@@ -21,7 +24,7 @@ async fn test_happy_case() {
         "--accounts-file",
         accounts_json_path.as_str(),
         "--account",
-        "user8",
+        account,
         "--int-format",
         "--json",
         "declare",

@@ -19,21 +19,29 @@ use crate::{
     state::{CallTrace, CheatSpan, CheatTarget},
 };
 use anyhow::{Context, Result};
-use blockifier::execution::{
-    call_info::{CallExecution, CallInfo},
-    deprecated_syscalls::DeprecatedSyscallSelector,
-    entry_point::{CallEntryPoint, CallType},
-    execution_utils::stark_felt_to_felt,
-    syscalls::hint_processor::SyscallCounter,
+use blockifier::context::TransactionContext;
+use blockifier::{
+    execution::{
+        call_info::{CallExecution, CallInfo},
+        deprecated_syscalls::DeprecatedSyscallSelector,
+        entry_point::{CallEntryPoint, CallType},
+        execution_utils::stark_felt_to_felt,
+        syscalls::hint_processor::SyscallCounter,
+    },
+    versioned_constants::VersionedConstants,
 };
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_starknet_classes::keccak::starknet_keccak;
-use cairo_vm::vm::{errors::hint_errors::HintError, vm_core::VirtualMachine};
-use conversions::{
-    byte_array::ByteArray,
-    felt252::{FromShortString, TryInferFormat},
-    FromConv, IntoConv,
+use starknet_api::core::ContractAddress;
+
+use crate::runtime_extensions::common::{get_relocated_vm_trace, sum_syscall_counters};
+use crate::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
+use crate::runtime_extensions::forge_runtime_extension::cheatcodes::get_class_hash::get_class_hash;
+use crate::runtime_extensions::forge_runtime_extension::cheatcodes::l1_handler_execute::l1_handler_execute;
+use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::SpyTarget;
+use crate::runtime_extensions::forge_runtime_extension::cheatcodes::storage::{
+    calculate_variable_address, load, store,
 };
 use num_traits::ToPrimitive;
 use runtime::{
@@ -87,7 +95,7 @@ impl BufferReaderExt for BufferReader<'_> {
         let cheat_span_variant = self.read_felt()?.to_u8();
         Ok(match cheat_span_variant {
             Some(0) => CheatSpan::Indefinite,
-            Some(1) => CheatSpan::Number(self.read_felt()?.to_usize().unwrap()),
+            Some(1) => CheatSpan::TargetCalls(self.read_felt()?.to_usize().unwrap()),
             _ => Err(BufferReadError::ParseFailed)?,
         })
     }
@@ -870,9 +878,23 @@ pub fn update_top_call_vm_trace(runtime: &mut ForgeRuntime, vm: &VirtualMachine)
             Some(get_relocated_vm_trace(vm));
     }
 }
+fn add_syscall_resources(
+    versioned_constants: &VersionedConstants,
+    execution_resources: &ExecutionResources,
+    syscall_counter: &SyscallCounter,
+) -> ExecutionResources {
+    let mut total_vm_usage = execution_resources.filter_unused_builtins();
+    total_vm_usage += &versioned_constants
+        .get_additional_os_syscall_resources(syscall_counter)
+        .expect("Could not get additional costs");
+    total_vm_usage
+}
 
 #[must_use]
-pub fn get_all_used_resources(runtime: ForgeRuntime) -> UsedResources {
+pub fn get_all_used_resources(
+    runtime: ForgeRuntime,
+    transaction_context: &TransactionContext,
+) -> UsedResources {
     let starknet_runtime = runtime.extended_runtime.extended_runtime.extended_runtime;
     let top_call_l2_to_l1_messages = starknet_runtime.hint_handler.l2_to_l1_messages;
     let top_call_events = starknet_runtime.hint_handler.events;
@@ -916,6 +938,13 @@ pub fn get_all_used_resources(runtime: ForgeRuntime) -> UsedResources {
                 .map(|evt| evt.event.clone())
         })
         .collect();
+
+    let versioned_constants = transaction_context.block_context.versioned_constants();
+    let execution_resources = add_syscall_resources(
+        versioned_constants,
+        &execution_resources,
+        &top_call_syscalls,
+    );
 
     UsedResources {
         events,

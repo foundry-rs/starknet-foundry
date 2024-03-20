@@ -310,7 +310,7 @@ pub fn run_test_case(
     update_top_call_execution_resources(&mut forge_runtime);
     update_top_call_l1_resources(&mut forge_runtime);
     let transaction_context = get_context(&forge_runtime).tx_context.clone();
-    let used_resources = get_all_used_resources(forge_runtime);
+    let used_resources = get_all_used_resources(forge_runtime, &transaction_context);
     let gas = calculate_used_gas(
         &transaction_context,
         &mut cached_state,

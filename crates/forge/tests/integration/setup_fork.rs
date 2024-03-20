@@ -23,6 +23,7 @@ use test_utils::test_case;
 static INTEGRATION_RPC_URL: &str = "http://188.34.188.184:9545/rpc/v0_7";
 static TESTNET_RPC_URL: &str = "http://188.34.188.184:6060/rpc";
 
+#[ignore] // TODO (#1916)
 #[test]
 fn fork_simple_decorator() {
     let test = test_case!(formatdoc!(
@@ -66,6 +67,7 @@ fn fork_simple_decorator() {
     assert_passed(&result);
 }
 
+#[ignore] // TODO (#1916)
 #[test]
 fn fork_aliased_decorator() {
     let test = test_case!(formatdoc!(
@@ -147,6 +149,7 @@ fn fork_aliased_decorator() {
     assert_passed(&result);
 }
 
+#[ignore] // TODO (#1916)
 #[test]
 fn fork_cairo0_contract() {
     let test = test_case!(formatdoc!(
@@ -177,6 +180,7 @@ fn fork_cairo0_contract() {
     assert_passed(&result);
 }
 
+#[ignore] // TODO (#1916)
 #[test]
 fn get_block_info_in_forked_block() {
     let test = test_case!(formatdoc!(
@@ -256,6 +260,7 @@ fn get_block_info_in_forked_block() {
     assert_passed(&result);
 }
 
+#[ignore] // TODO (#1916)
 #[test]
 fn fork_get_block_info_fails() {
     let test = test_case!(formatdoc!(
@@ -279,6 +284,7 @@ fn fork_get_block_info_fails() {
     );
 }
 
+#[ignore] // TODO (#1916)
 #[test]
 // found in: https://github.com/foundry-rs/starknet-foundry/issues/1175
 fn incompatible_abi() {

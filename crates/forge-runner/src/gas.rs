@@ -24,10 +24,9 @@ use starknet_api::transaction::EventContent;
 pub fn calculate_used_gas(
     transaction_context: &TransactionContext,
     state: &mut CachedState<ExtendedStateReader>,
-    mut resources: UsedResources,
+    resources: UsedResources,
 ) -> Result<u128, StateError> {
     let versioned_constants = transaction_context.block_context.versioned_constants();
-    add_syscall_resources(versioned_constants, &mut resources);
 
     let messaging_gas_vector = get_messages_costs(
         &resources.l2_to_l1_payload_lengths,
@@ -45,7 +44,7 @@ pub fn calculate_used_gas(
 
     let gas = l1_and_vm_costs + messaging_gas_vector + events_costs;
 
-    Ok(gas.l1_gas)
+    Ok(gas.l1_gas + gas.l1_data_gas)
 }
 
 fn get_events_cost(
@@ -131,14 +130,6 @@ fn get_l1_and_vm_costs(
         .expect("Could not calculate gas")
 }
 
-fn add_syscall_resources(versioned_constants: &VersionedConstants, resources: &mut UsedResources) {
-    let mut total_vm_usage = resources.execution_resources.filter_unused_builtins();
-    total_vm_usage += &versioned_constants
-        .get_additional_os_syscall_resources(&resources.syscall_counter)
-        .expect("Could not get additional costs");
-    resources.execution_resources = total_vm_usage;
-}
-
 fn get_l1_data_cost(
     transaction_context: &TransactionContext,
     state: &mut CachedState<ExtendedStateReader>,
@@ -156,7 +147,8 @@ fn get_l1_data_cost(
             .fee_token_address(&transaction_context.tx_info.fee_type()),
     );
 
-    let l1_data_gas_cost = get_da_gas_cost(state_changes_count, false);
+    let use_kzg_da = transaction_context.block_context.block_info().use_kzg_da;
+    let l1_data_gas_cost = get_da_gas_cost(state_changes_count, use_kzg_da);
     Ok(l1_data_gas_cost)
 }
 
