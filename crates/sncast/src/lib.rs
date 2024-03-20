@@ -199,13 +199,13 @@ pub async fn get_account<'a>(
     keystore: Option<Utf8PathBuf>,
 ) -> Result<SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, LocalWallet>> {
     let chain_id = get_chain_id(provider).await?;
-    let account_info = if let Some(keystore) = keystore {
+    let account_data = if let Some(keystore) = keystore {
         get_account_data_from_keystore(account, &keystore)?
     } else {
         get_account_data_from_accounts_file(account, chain_id, accounts_file)?
     };
 
-    let account = build_account(account_info, chain_id, provider).await?;
+    let account = build_account(account_data, chain_id, provider).await?;
 
     Ok(account)
 }
@@ -763,7 +763,7 @@ mod tests {
     }
 
     #[test]
-    fn test_get_account_info_from_accounts_file() {
+    fn test_get_account_data_from_accounts_file() {
         let account = get_account_data_from_accounts_file(
             "user1",
             FieldElement::from_byte_slice_be("SN_GOERLI".as_bytes()).unwrap(),

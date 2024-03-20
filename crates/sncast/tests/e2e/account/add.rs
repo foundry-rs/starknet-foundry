@@ -93,9 +93,9 @@ pub async fn test_existent_account_address() {
                 "alpha-goerli": {
                   "my_account_add": {
                     "address": DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS,
-                    "class_hash": DEVNET_OZ_CLASS_HASH_CAIRO_0,
+                    "class_hash": DEVNET_OZ_CLASS_HASH_CAIRO_1,
                     "deployed": true,
-                    "legacy": true,
+                    "legacy": false,
                     "private_key": "0x456",
                     "public_key": "0x5f679dacd8278105bd3b84a15548fe84079068276b0e84d6cc093eb5430f063"
                   }
@@ -124,7 +124,7 @@ pub async fn test_existent_account_address_and_incorrect_class_hash() {
         "--private-key",
         "0x456",
         "--class-hash",
-        DEVNET_OZ_CLASS_HASH_CAIRO_1,
+        DEVNET_OZ_CLASS_HASH_CAIRO_0,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -132,7 +132,7 @@ pub async fn test_existent_account_address_and_incorrect_class_hash() {
     snapbox.assert().stderr_matches(formatdoc! {r"
         command: account add
         error: Incorrect class hash {} for account address {}
-    ", DEVNET_OZ_CLASS_HASH_CAIRO_1, DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS});
+    ", DEVNET_OZ_CLASS_HASH_CAIRO_0, DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS});
 }
 
 #[tokio::test]
@@ -294,11 +294,11 @@ pub async fn test_detect_deployed() {
                 "alpha-goerli": {
                   "my_account_add": {
                     "address": DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS,
-                    "class_hash": DEVNET_OZ_CLASS_HASH_CAIRO_0,
+                    "class_hash": DEVNET_OZ_CLASS_HASH_CAIRO_1,
                     "deployed": true,
                     "private_key": "0x5",
                     "public_key": "0x788435d61046d3eec54d77d25bd194525f4fa26ebe6575536bc6f656656b74c",
-                    "legacy": true
+                    "legacy": false
                   }
                 }
             }
@@ -534,10 +534,10 @@ pub async fn test_private_key_as_int_in_file() {
                   "my_account_add": {
                     "address": DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS,
                     "deployed": true,
-                    "legacy": true,
+                    "legacy": false,
                     "private_key": "0x456",
                     "public_key": "0x5f679dacd8278105bd3b84a15548fe84079068276b0e84d6cc093eb5430f063",
-                    "class_hash": DEVNET_OZ_CLASS_HASH_CAIRO_0
+                    "class_hash": DEVNET_OZ_CLASS_HASH_CAIRO_1
                   }
                 }
             }

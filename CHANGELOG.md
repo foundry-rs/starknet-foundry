@@ -27,10 +27,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Cast
 
+#### Added
+
+- Support for OpenZeppelin Cairo 1 (or higher) accounts creation, deployment and usage
+
 #### Changed
 
 - Supported RPC version is now 0.7.0
-
+- Default class hash in `account create` and `account deploy` has been changed to [cairo2 class hash](https://starkscan.co/class/0x04c6d6cf894f8bc96bb9c525e6853e5483177841f7388f74a46cfda6f028c755)
 
 ## [0.19.0] - 2024-03-06
 
@@ -256,13 +260,13 @@ binary, which will allow forge to be independent of sierra version
 
 #### Added
 
-- `elect` cheatcode for mocking the sequencer address. Read more [here](./docs/src/appendix/cheatcodes/start_elect.md).
+- `elect` cheatcode for mocking the sequencer address. Read more [here](./docs/src/appendix/cheatcodes/sequencer_address/start_elect.md).
 - `--rerun-failed` option to run tests that failed during the last run.
 
 #### Changed
-- `start_warp` and `stop_warp` now take `CheatTarget` as the first argument instead of `ContractAddress`. Read more [here](./docs/src/appendix/cheatcodes/start_warp.md). 
-- `start_prank` and `stop_prank` now take `CheatTarget` as the first argument instead of `ContractAddress`. Read more [here](./docs/src/appendix/cheatcodes/start_prank.md).
-- `start_roll` and `stop_roll` now take `CheatTarget` as the first argument instead of `ContractAddress`. Read more [here](./docs/src/appendix/cheatcodes/start_roll.md).
+- `start_warp` and `stop_warp` now take `CheatTarget` as the first argument instead of `ContractAddress`. Read more [here](./docs/src/appendix/cheatcodes/block_timestamp/start_warp.md). 
+- `start_prank` and `stop_prank` now take `CheatTarget` as the first argument instead of `ContractAddress`. Read more [here](./docs/src/appendix/cheatcodes/caller_address/start_prank.md).
+- `start_roll` and `stop_roll` now take `CheatTarget` as the first argument instead of `ContractAddress`. Read more [here](./docs/src/appendix/cheatcodes/block_number/start_roll.md).
 
 PS: Credits to @bllu404 for the help with the new interfaces for cheats!
 

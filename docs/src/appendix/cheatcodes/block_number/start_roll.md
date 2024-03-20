@@ -5,7 +5,7 @@
 Changes the block number for the given target.
 The change can be canceled with [`stop_roll`](./stop_roll.md).
 
-- `target` - instance of [`CheatTarget`](./cheat_target.md) specifying which contracts to roll
+- `target` - instance of [`CheatTarget`](../cheat_target.md) specifying which contracts to roll
 - `block_number` - block number to be set
 
 For contract implementation:

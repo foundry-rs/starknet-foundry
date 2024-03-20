@@ -6,14 +6,17 @@ use crate::helpers::runner::runner;
 use indoc::indoc;
 use shared::test_utils::output_assert::assert_stderr_contains;
 use starknet::core::types::TransactionReceipt::Deploy;
+use test_case::test_case;
 
+#[test_case("cairo0"; "cairo_0_account")]
+#[test_case("cairo1"; "cairo_1_account")]
 #[tokio::test]
-async fn test_happy_case() {
+async fn test_happy_case(account: &str) {
     let class_hash = from_env("CAST_MAP_CLASS_HASH").unwrap();
     let mut args = default_cli_args();
     args.append(&mut vec![
         "--account",
-        "user2",
+        account,
         "--int-format",
         "--json",
         "deploy",

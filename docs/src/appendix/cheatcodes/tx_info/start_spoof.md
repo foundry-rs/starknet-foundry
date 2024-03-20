@@ -2,11 +2,11 @@
 
 > `fn start_spoof(target: CheatTarget, tx_info_mock: TxInfoMock)`
 
-Changes `TxInfo` returned by `get_tx_info()` for the targeted contract until the spoof is stopped
+Changes `TxInfo` returned by `get_tx_info()` for the targeted contract until the spoof is canceled
 with [stop_spoof](./stop_spoof.md).
 
-- `target` - instance of [`CheatTarget`](./cheat_target.md) specifying which contracts to spoof
-- `TxInfoMock` - a struct with same structure as `TxInfo` (returned by `get_tx_info()`), 
+- `target` - instance of [`CheatTarget`](../cheat_target.md) specifying which contracts to spoof
+- `tx_info_mock` - a struct with same structure as `TxInfo` (returned by `get_tx_info()`)
 
 To mock the field of `TxInfo`, set the corresponding field of `TxInfoMock` to `Some(mocked_value)`. Setting the field to `None` will use a default value - the field will not be mocked. Using `None` will also cancel current mock for that field. See below for practical example.
 

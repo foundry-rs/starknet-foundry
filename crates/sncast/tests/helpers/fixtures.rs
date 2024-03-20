@@ -79,41 +79,78 @@ pub async fn deploy_keystore_account() {
     let keystore_path = "tests/data/keystore/predeployed_key.json";
     let account_path = "tests/data/keystore/predeployed_account.json";
     let private_key =
-        SigningKey::from_keystore(keystore_path, "123").expect("Could not get the private_key");
+        SigningKey::from_keystore(keystore_path, "123").expect("Failed to get private_key");
 
-    let provider = get_provider(URL).expect("Could not get the provider");
-    let chain_id = get_chain_id(&provider)
-        .await
-        .expect("Could not get chain_id from provider");
-
-    let contents =
-        std::fs::read_to_string(account_path).expect("Failed to read keystore account file");
-    let items: serde_json::Value = serde_json::from_str(&contents)
+    let contents = fs::read_to_string(account_path).expect("Failed to read keystore account file");
+    let items: Value = serde_json::from_str(&contents)
         .unwrap_or_else(|_| panic!("Failed to parse keystore account file at = {account_path}"));
 
+    let deployment_info = items
+        .get("deployment")
+        .expect("Failed to get deployment key");
+    let address = get_from_json_as_str(deployment_info, "address");
+
+    deploy_test_account(
+        address,
+        DEVNET_OZ_CLASS_HASH_CAIRO_0,
+        "0xa5d90c65b1b1339",
+        private_key,
+    )
+    .await;
+}
+
+pub async fn deploy_cairo_0_account() {
+    let accounts_file = "tests/data/accounts/accounts.json";
+
+    let contents = fs::read_to_string(accounts_file).expect("Failed to read accounts file");
+    let items: Value = serde_json::from_str(&contents)
+        .unwrap_or_else(|_| panic!("Failed to parse accounts file at = {accounts_file}"));
+
+    let account_data = items
+        .get("alpha-goerli")
+        .and_then(|accounts| accounts.get("cairo0"))
+        .unwrap_or_else(|| panic!("Failed to get cairo0 account"));
+
+    let address = get_from_json_as_str(account_data, "address");
+    let salt = get_from_json_as_str(account_data, "salt");
+    let private_key = get_from_json_as_str(account_data, "private_key");
+
+    let private_key = SigningKey::from_secret_scalar(
+        parse_number(private_key).expect("Failed to convert private key to FieldElement"),
+    );
+
+    deploy_test_account(address, DEVNET_OZ_CLASS_HASH_CAIRO_0, salt, private_key).await;
+}
+
+async fn deploy_test_account(address: &str, class_hash: &str, salt: &str, private_key: SigningKey) {
+    let provider = get_provider(URL).expect("Failed to get the provider");
+    let chain_id = get_chain_id(&provider)
+        .await
+        .expect("Failed to get chain id");
+
     let factory = OpenZeppelinAccountFactory::new(
-        parse_number(DEVNET_OZ_CLASS_HASH_CAIRO_0)
-            .expect("Could not parse DEVNET_OZ_CLASS_HASH_CAIRO_0"),
+        parse_number(class_hash).expect("Failed to parse class hash"),
         chain_id,
         LocalWallet::from_signing_key(private_key),
         provider,
     )
     .await
-    .expect("Could not create Account Factory");
+    .expect("Failed to create Account Factory");
 
-    mint_token(
-        items["deployment"]["address"]
-            .as_str()
-            .expect("Could not get address"),
-        9_999_999_999_999_999_999,
-    )
-    .await;
+    mint_token(address, u64::MAX).await;
 
     factory
-        .deploy(parse_number("0xa5d90c65b1b1339").expect("Could not parse salt"))
+        .deploy(parse_number(salt).expect("Failed to parse salt"))
         .send()
         .await
-        .expect("Could not deploy keystore account");
+        .expect("Failed to deploy account");
+}
+
+fn get_from_json_as_str<'a>(entry: &'a Value, key: &str) -> &'a str {
+    entry
+        .get(key)
+        .and_then(Value::as_str)
+        .unwrap_or_else(|| panic!("Failed to get {key} key"))
 }
 
 pub async fn declare_deploy_contract(account: &str, path: &str, shortname: &str) {
