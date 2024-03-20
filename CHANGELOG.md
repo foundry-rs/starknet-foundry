@@ -7,11 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast
+
+#### Added
+- Providing configuration data with env variables [DOCS](https://foundry-rs.github.io/starknet-foundry/projects/configuration.html#environmental-variables)
+
 ### Forge
 
 #### Added
 
 - variants of cheatcodes with `CheatSpan` (read more [here](https://foundry-rs.github.io/starknet-foundry/testing/using-cheatcodes#setting-cheatcode-span))
+- Providing configuration data with env variables [DOCS](https://foundry-rs.github.io/starknet-foundry/projects/configuration.html#environmental-variables)
 
 #### Fixed
 

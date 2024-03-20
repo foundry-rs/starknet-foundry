@@ -90,3 +90,18 @@ $ sncast call \
 command: call
 response: [0x1, 0x23, 0x4]
 ```
+
+## Environmental variables
+
+Programmers can use environmental variables in both `Scarb.toml::tool::snforge` and in `snfoundry.toml`. To use an environmental variable as a value, use its name prefixed with `$`. 
+This might be useful, for example, to hide node urls in the public repositories. 
+As an example:
+
+# ...
+[sncast.default]
+account = "my_account"
+accounts-file = "~/my_accounts.json"
+url = "$NODE_URL"
+# ...
+
+Variable value are automatically resolved to numbers and booleans (strings `true`, `false`) if it is possible.
