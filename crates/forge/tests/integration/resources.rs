@@ -195,7 +195,7 @@ fn accumulate_syscalls() {
 }
 
 #[test]
-fn steps_count_includes_os_resources() {
+fn estimation_includes_os_resources() {
     let test = test_case!(indoc!(
         "
             use starknet::{SyscallResultTrait, StorageAddress};
