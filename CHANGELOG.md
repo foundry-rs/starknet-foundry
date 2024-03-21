@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Changed
+
+- `read_txt` and `read_json` now supports `ByteArray`
+
 ## [0.20.0] - 2024-03-20
 
 ### Forge
