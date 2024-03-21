@@ -69,14 +69,8 @@ path = "src/main.rs"
 [dev-dependencies]
 assert_fs.workspace = true
 snapbox.workspace = true
-criterion.workspace = true
 test_utils = { path = "test_utils" }
 axum.workspace = true
 lazy_static.workspace = true
 indoc.workspace = true
 tempfile.workspace = true
-
-[[bench]]
-name = "forge_bench"
-path = "benches/main.rs"
-harness = false
