@@ -89,30 +89,25 @@ pub trait TryInferFormat: Sized {
     fn infer_format_and_parse(value: &str) -> Result<Vec<Self>, ParseFeltError>;
 }
 
+fn resolve(value: &str) -> String {
+    value[1..value.len() - 1].replace("\\n", "\n")
+}
+
 impl TryInferFormat for Felt252 {
-    fn infer_format_and_parse(mut value: &str) -> Result<Vec<Self>, ParseFeltError> {
-        let expect_short_string = value.starts_with('\'') && value.ends_with('\'');
-        let expect_string = value.starts_with('"') && value.ends_with('"');
+    fn infer_format_and_parse(value: &str) -> Result<Vec<Self>, ParseFeltError> {
+        if value.starts_with('\'') && value.ends_with('\'') {
+            let value = resolve(value).replace("\\'", "'");
 
-        if expect_short_string || expect_string {
-            value = &value[1..value.len() - 1];
+            Felt252::from_short_string(&value).map(|felt| vec![felt])
+        } else if value.starts_with('"') && value.ends_with('"') {
+            let value = resolve(value).replace("\\\"", "\"");
+
+            Ok(ByteArray::from(value.as_str()).serialize_no_magic())
+        } else {
+            Felt252::try_from_hex_str(value)
+                .or_else(|_| Felt252::try_from_dec_str(value))
+                .map(|felt| vec![felt])
         }
-
-        if expect_short_string {
-            let value_escaped = value.replace("\\n", "\n").replace("\\'", "'");
-
-            return Felt252::from_short_string(&value_escaped).map(|felt| vec![felt]);
-        }
-
-        if expect_string {
-            let value_escaped = value.replace("\\n", "\n").replace("\\\"", "\"");
-
-            return Ok(ByteArray::from(value_escaped.as_str()).serialize_no_magic());
-        }
-
-        Felt252::try_from_hex_str(value)
-            .or_else(|_| Felt252::try_from_dec_str(value))
-            .map(|felt| vec![felt])
     }
 }
 
