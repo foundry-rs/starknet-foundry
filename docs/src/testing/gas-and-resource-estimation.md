@@ -57,7 +57,7 @@ that starknet-foundry does not include for a test (since it's not a normal trans
 
 #### Not included in the gas/resource estimations
 - Fee transfer costs
-- Resources needed for using `Invoke`/`Declare`/`DeployAccount` transaction
+- Transaction type related resources - in real Starknet additional cost depending on the transaction type (e.g., `Invoke`/`Declare`/`DeployAccount`) is added
 - Declaration gas costs (CASM/Sierra bytecode or ABIs)
 - Call validation gas costs (if you did not call `__validate__` endpoint explicitly)
 
