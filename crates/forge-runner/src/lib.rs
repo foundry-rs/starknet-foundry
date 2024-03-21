@@ -163,7 +163,7 @@ pub enum TestCrateRunResult {
 }
 
 pub async fn run_tests_from_crate(
-    tests: Arc<CompiledTestCrateRunnable>,
+    tests: CompiledTestCrateRunnable,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     tests_filter: &impl TestCaseFilter,
@@ -172,7 +172,7 @@ pub async fn run_tests_from_crate(
     let casm_program = Arc::new(compile_sierra_to_casm(sierra_program)?);
 
     let mut tasks = FuturesUnordered::new();
-    let test_cases = &tests.test_cases;
+    let test_cases = tests.test_cases;
     // Initiate two channels to manage the `--exit-first` flag.
     // Owing to `cheatnet` fork's utilization of its own Tokio runtime for RPC requests,
     // test execution must occur within a `tokio::spawn_blocking`.
@@ -183,7 +183,7 @@ pub async fn run_tests_from_crate(
     for case in test_cases {
         let case_name = case.name.clone();
 
-        if !tests_filter.should_be_run(case) {
+        if !tests_filter.should_be_run(&case) {
             tasks.push(tokio::task::spawn(async {
                 // TODO TestCaseType should also be encoded in the test case definition
                 Ok(AnyTestCaseSummary::Single(TestCaseSummary::Ignored {
@@ -201,7 +201,7 @@ pub async fn run_tests_from_crate(
 
         let args = function_args(function, &BUILTINS);
 
-        let case = Arc::new(case.clone());
+        let case = Arc::new(case);
         let args: Vec<ConcreteTypeId> = args.into_iter().cloned().collect();
 
         tasks.push(choose_test_strategy_and_run(
