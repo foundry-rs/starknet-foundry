@@ -38,6 +38,23 @@ use utils::BufferReader;
 pub mod starknet;
 pub mod utils;
 
+// from core/src/starknet/testing.cairo
+const CAIRO_TEST_CHEATCODES: [&str; 14] = [
+    "set_block_number",
+    "set_caller_address",
+    "set_contract_address",
+    "set_sequencer_address",
+    "set_block_timestamp",
+    "set_version",
+    "set_account_contract_address",
+    "set_max_fee",
+    "set_transaction_hash",
+    "set_chain_id",
+    "set_nonce",
+    "set_signature",
+    "pop_log",
+    "pop_l2_to_l1_message",
+];
 pub trait SyscallPtrAccess {
     fn get_mut_syscall_ptr(&mut self) -> &mut Relocatable;
 
@@ -124,9 +141,18 @@ impl<'a> HintProcessorLogic for StarknetRuntime<'a> {
         })) = maybe_extended_hint
         {
             let selector = parse_selector(selector)?;
-            return Err(HintError::CustomHint(
-                format!("Cheatcode `{selector}` is not supported in this runtime").into(),
-            ));
+
+            let mut base_error =
+                format!("Cheatcode `{selector}` is not supported in this runtime\n").to_string();
+
+            if CAIRO_TEST_CHEATCODES.contains(&selector.as_str()) {
+                base_error.push_str("Check if cheatcodes are imported from snforge_std");
+            } else {
+                base_error
+                    .push_str("Check if used snforge_std is compatible with used snforge binary");
+            }
+
+            return Err(HintError::CustomHint(base_error.into()));
         }
 
         self.hint_handler

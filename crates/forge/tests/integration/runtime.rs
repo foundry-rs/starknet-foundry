@@ -24,7 +24,39 @@ fn missing_cheatcode_error() {
     assert_case_output_contains(
         &result,
         "missing_cheatcode_error",
-        "Cheatcode `not_existing123` is not supported in this runtime",
+        indoc!(
+            r"
+            Cheatcode `not_existing123` is not supported in this runtime
+            Check if used snforge_std is compatible with used snforge binary
+        "
+        ),
+    );
+}
+#[test]
+fn cairo_test_cheatcode_error() {
+    let test = test_case!(indoc!(
+        r"
+            use starknet::testing::cheatcode;
+            use array::ArrayTrait;
+
+            #[test]
+            fn missing_cheatcode_error() {
+                cheatcode::<'set_version'>(array![1, 2].span());
+                assert(1==1, 'nothing')
+            }
+        "
+    ));
+    let result = run_test_case(&test);
+    assert_failed(&result);
+    assert_case_output_contains(
+        &result,
+        "missing_cheatcode_error",
+        indoc!(
+            r"
+            Cheatcode `set_version` is not supported in this runtime
+            Check if cheatcodes are imported from snforge_std
+        "
+        ),
     );
 }
 
