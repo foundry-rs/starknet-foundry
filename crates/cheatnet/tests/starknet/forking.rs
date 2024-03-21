@@ -34,11 +34,10 @@ fn fork_simple() {
     let mut cheatnet_state = CheatnetState::default();
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
-    let contract_address = Felt252::try_from_dec_str(
+    let contract_address = ContractAddress::try_from_dec_str(
         "3216637956526895219277698311134811322769343974163380838558193911733621219342",
     )
-    .unwrap()
-    .into_();
+    .unwrap();
 
     let selector = felt_selector_from_name("get_balance");
     let output = call_contract(
@@ -704,11 +703,10 @@ fn test_calling_nonexistent_url() {
     let mut cheatnet_state = CheatnetState::default();
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
-    let contract_address = Felt252::try_from_dec_str(
+    let contract_address = ContractAddress::try_from_dec_str(
         "3216637956526895219277698311134811322769343974163380838558193911733621219342",
     )
-    .unwrap()
-    .into_();
+    .unwrap();
 
     let selector = felt_selector_from_name("get_balance");
     let output = call_contract(

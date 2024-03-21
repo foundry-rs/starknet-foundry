@@ -110,7 +110,6 @@ where
         }
 
         if is_string {
-            //TODO
             let value_escaped = value.replace("\\n", "\n").replace("\\\"", "\"");
 
             result = result
