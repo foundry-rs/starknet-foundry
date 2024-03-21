@@ -4,10 +4,11 @@ use crate::helpers::constants::{
 };
 use crate::helpers::runner::runner;
 use camino::Utf8PathBuf;
+use configuration::CONFIG_FILENAME;
 use indoc::{formatdoc, indoc};
 use serde_json::json;
 use shared::test_utils::output_assert::assert_stderr_contains;
-use std::fs;
+use std::fs::{self, File};
 use tempfile::tempdir;
 
 #[tokio::test]
@@ -543,4 +544,41 @@ pub async fn test_private_key_as_int_in_file() {
             }
         )
     );
+}
+
+#[tokio::test]
+pub async fn test_empty_config_add_profile() {
+    let tempdir = tempdir().expect("Unable to create a temporary directory");
+    File::create(tempdir.path().join(CONFIG_FILENAME)).unwrap();
+    let accounts_file = "accounts.json";
+
+    let args = vec![
+        "--url",
+        URL,
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "add",
+        "--name",
+        "my_account_add",
+        "--address",
+        DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS,
+        "--private-key",
+        "0x456",
+        "--add-profile",
+        "random",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+
+    snapbox.assert().stdout_matches(indoc! {r"
+        command: account add
+        add_profile: Profile random successfully added to snfoundry.toml
+    "});
+    let current_dir_utf8 = Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap();
+
+    let contents = fs::read_to_string(current_dir_utf8.join("snfoundry.toml"))
+        .expect("Unable to read snfoundry.toml");
+    assert!(contents.contains("[sncast.random]"));
+    assert!(contents.contains("account = \"my_account_add\""));
 }
