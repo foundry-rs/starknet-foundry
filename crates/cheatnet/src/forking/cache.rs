@@ -98,6 +98,7 @@ impl ForkCache {
                 .write(true)
                 .read(true)
                 .create(true)
+                .truncate(false)
                 .open(&cache_file_path)
                 .unwrap();
 
@@ -129,6 +130,7 @@ impl ForkCache {
         let mut file = OpenOptions::new()
             .write(true)
             .create(true)
+            .truncate(false)
             .open(cache_file)
             .unwrap();
 
