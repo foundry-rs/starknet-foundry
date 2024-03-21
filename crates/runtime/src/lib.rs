@@ -142,17 +142,16 @@ impl<'a> HintProcessorLogic for StarknetRuntime<'a> {
         {
             let selector = parse_selector(selector)?;
 
-            let mut base_error =
-                format!("Cheatcode `{selector}` is not supported in this runtime\n").to_string();
+            let error = format!(
+                "Cheatcode `{selector}` is not supported in this runtime\n{}",
+                if CAIRO_TEST_CHEATCODES.contains(&selector.as_str()) {
+                    "Check if cheatcodes are imported from snforge_std"
+                } else {
+                    "Check if used snforge_std is compatible with used snforge binary"
+                }
+            );
 
-            if CAIRO_TEST_CHEATCODES.contains(&selector.as_str()) {
-                base_error.push_str("Check if cheatcodes are imported from snforge_std");
-            } else {
-                base_error
-                    .push_str("Check if used snforge_std is compatible with used snforge binary");
-            }
-
-            return Err(HintError::CustomHint(base_error.into()));
+            return Err(HintError::CustomHint(error.into()));
         }
 
         self.hint_handler
