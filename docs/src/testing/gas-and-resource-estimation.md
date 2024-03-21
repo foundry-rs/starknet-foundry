@@ -29,11 +29,6 @@ While using the fuzzing feature additional gas statistics will be displayed:
 > Starknet-Foundry uses blob-based gas calculation formula in order to calculate gas usage. 
 > For details on the exact formula, [see the docs](https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/fee-mechanism/#overall_fee_blob). 
 
-> 📝 **Note**
->  
-> For now, blob gas is added up together with regular gas. 
-> This behavior might change in the future.
-
 ## VM Resources estimation 
 
 It is possible to enable more detailed breakdown of resources, on which the gas calculations are based on.
