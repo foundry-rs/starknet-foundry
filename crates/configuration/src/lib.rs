@@ -89,7 +89,7 @@ pub fn load_package_config<T: PackageConfig + Default>(
     let maybe_raw_metadata = metadata
         .get_package(package)
         .ok_or_else(|| anyhow!("Failed to find metadata for package = {package}"))?
-        .tool_metadata("snforge")
+        .tool_metadata(T::tool_name())
         .cloned();
     match maybe_raw_metadata {
         Some(raw_metadata) => T::from_raw(&resolve_env_variables(raw_metadata)?),
