@@ -11,6 +11,7 @@ use std::str::from_utf8;
 use tempfile::Builder;
 
 pub use command::*;
+use shared::command::CommandExt;
 
 mod command;
 
@@ -77,7 +78,7 @@ pub fn compile_sierra_at_path(
             sierra_file_path,
         ])
         .command()
-        .output()
+        .output_checked()
         .context(
             "Error while compiling Sierra. \
             Make sure you have the latest universal-sierra-compiler binary installed. \

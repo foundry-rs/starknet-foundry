@@ -2,6 +2,7 @@ use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
 use assert_fs::TempDir;
 use camino::Utf8PathBuf;
 use indoc::formatdoc;
+use shared::command::CommandExt;
 use snapbox::cmd::{cargo_bin, Command as SnapboxCommand};
 use std::process::Command;
 use std::str::FromStr;
@@ -176,7 +177,7 @@ pub(crate) fn get_remote_url() -> String {
     } else {
         let output = Command::new("git")
             .args(["remote", "get-url", "origin"])
-            .output()
+            .output_checked()
             .unwrap();
 
         String::from_utf8(output.stdout)
@@ -197,7 +198,7 @@ pub(crate) fn get_current_branch() -> String {
     } else {
         let output = Command::new("git")
             .args(["rev-parse", "--abbrev-ref", "HEAD"])
-            .output()
+            .output_checked()
             .unwrap();
 
         String::from_utf8(output.stdout).unwrap().trim().to_string()

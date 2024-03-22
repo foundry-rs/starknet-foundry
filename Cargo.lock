@@ -4037,6 +4037,7 @@ dependencies = [
  "semver",
  "serde",
  "serde_json",
+ "shared",
  "thiserror",
  "universal-sierra-compiler-api",
  "which",
@@ -4965,6 +4966,7 @@ dependencies = [
  "scarb-metadata",
  "serde",
  "serde_json",
+ "shared",
  "snapbox",
  "tempfile",
  "tokio",
@@ -5310,6 +5312,7 @@ dependencies = [
  "num-bigint",
  "serde",
  "serde_json",
+ "shared",
  "tempfile",
  "which",
 ]
