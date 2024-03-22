@@ -1,10 +1,10 @@
 use crate::{
     byte_array::ByteArray,
-    string::{ParseFeltError, TryFromDecStr, TryFromHexStr},
+    string::{TryFromDecStr, TryFromHexStr},
     FromConv, IntoConv,
 };
 use blockifier::execution::execution_utils::stark_felt_to_felt;
-use cairo_felt::Felt252;
+use cairo_felt::{Felt252, ParseFeltError};
 use num_traits::Num;
 use starknet::core::types::FieldElement;
 use starknet_api::{
@@ -27,19 +27,19 @@ impl FromConv<StarkFelt> for Felt252 {
 
 impl FromConv<ClassHash> for Felt252 {
     fn from_(value: ClassHash) -> Felt252 {
-        Felt252::from_bytes_be(value.0.bytes())
+        value.0.into_()
     }
 }
 
 impl FromConv<ContractAddress> for Felt252 {
     fn from_(value: ContractAddress) -> Felt252 {
-        stark_felt_to_felt(*value.0.key())
+        (*value.0.key()).into_()
     }
 }
 
 impl FromConv<Nonce> for Felt252 {
     fn from_(value: Nonce) -> Felt252 {
-        stark_felt_to_felt(value.0)
+        value.0.into_()
     }
 }
 
@@ -144,13 +144,5 @@ impl<T: SerializeAsFelt252Vec, E: SerializeAsFelt252Vec> SerializeAsFelt252Vec f
 impl SerializeAsFelt252Vec for &str {
     fn serialize_as_felt252_vec(&self) -> Vec<Felt252> {
         ByteArray::from(*self).serialize_no_magic()
-    }
-}
-
-impl SerializeAsFelt252Vec for [&str] {
-    fn serialize_as_felt252_vec(&self) -> Vec<Felt252> {
-        self.iter()
-            .flat_map(|s| ByteArray::from(*s).serialize_no_magic())
-            .collect()
     }
 }

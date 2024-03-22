@@ -1,8 +1,8 @@
 use anyhow::{anyhow, Result};
-use cairo_felt::Felt252;
+use cairo_felt::{Felt252, ParseFeltError};
 use conversions::{
     felt252::{SerializeAsFelt252Vec, TryInferFormat},
-    string::{ParseFeltError, TryFromDecStr},
+    string::TryFromDecStr,
 };
 use flatten_serde_json::flatten;
 use runtime::EnhancedHintError;

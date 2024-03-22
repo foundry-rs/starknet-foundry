@@ -1,15 +1,5 @@
 use crate::IntoConv;
-use cairo_felt::Felt252;
-use thiserror::Error;
-
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Error)]
-pub struct ParseFeltError;
-
-impl std::fmt::Display for ParseFeltError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{self:?}")
-    }
-}
+use cairo_felt::{Felt252, ParseFeltError};
 
 pub trait TryFromDecStr {
     fn try_from_dec_str(str: &str) -> Result<Self, ParseFeltError>

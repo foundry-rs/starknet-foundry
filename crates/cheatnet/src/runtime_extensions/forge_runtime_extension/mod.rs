@@ -18,9 +18,9 @@ use crate::{
     },
     state::{CallTrace, CheatSpan, CheatTarget},
 };
-use anyhow::{Context, Result};
-use blockifier::context::TransactionContext;
+use anyhow::{anyhow, Context, Result};
 use blockifier::{
+    context::TransactionContext,
     execution::{
         call_info::{CallExecution, CallInfo},
         deprecated_syscalls::DeprecatedSyscallSelector,
@@ -50,8 +50,10 @@ use runtime::{
 };
 use scarb_api::StarknetContractArtifacts;
 use starknet::signers::SigningKey;
-use starknet_api::core::ContractAddress;
-use starknet_api::deprecated_contract_class::EntryPointType::{self, L1Handler};
+use starknet_api::{
+    core::ContractAddress,
+    deprecated_contract_class::EntryPointType::{self, L1Handler},
+};
 use std::collections::HashMap;
 
 pub mod cheatcodes;
@@ -373,7 +375,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .with_context(|| format!("Failed to read from env var = {name}"))?;
 
                 let parsed_env_var = Felt252::infer_format_and_parse(env_var)
-                    .with_context(|| format!("Failed to parse value = {env_var} to felt"))?;
+                    .map_err(|_| anyhow!("Failed to parse value = {env_var} to felt"))?;
 
                 Ok(CheatcodeHandlingResult::Handled(parsed_env_var))
             }
