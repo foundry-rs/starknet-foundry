@@ -5,6 +5,7 @@ edition.workspace = true
 
 [dependencies]
 anyhow.workspace = true
+shared.workspace = true
 camino.workspace = true
 scarb-metadata.workspace = true
 scarb-ui.workspace = true
