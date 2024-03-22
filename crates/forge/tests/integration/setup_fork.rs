@@ -16,6 +16,7 @@ use tokio::runtime::Runtime;
 
 use forge::compiled_raw::RawForkParams;
 use forge_runner::{RunnerConfig, RunnerParams};
+use shared::command::CommandExt;
 use test_utils::runner::{assert_case_output_contains, assert_failed, assert_passed, Contract};
 use test_utils::running_tests::run_test_case;
 use test_utils::test_case;
@@ -106,14 +107,13 @@ fn fork_aliased_decorator() {
 
     let rt = Runtime::new().expect("Could not instantiate Runtime");
 
-    let test_build_output = Command::new("scarb")
+    Command::new("scarb")
         .current_dir(test.path().unwrap())
         .arg("snforge-test-collector")
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit())
-        .output()
+        .output_checked()
         .unwrap();
-    assert!(test_build_output.status.success());
 
     let result = rt
         .block_on(run(

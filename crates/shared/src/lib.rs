@@ -5,6 +5,7 @@ use anyhow::{anyhow, Result};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 
+pub mod command;
 pub mod consts;
 pub mod print;
 pub mod rpc;
