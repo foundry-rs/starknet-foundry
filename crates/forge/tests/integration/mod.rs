@@ -1,5 +1,4 @@
 mod available_gas;
-mod benchmarks;
 mod cheat_fork;
 mod declare;
 mod deploy;
@@ -28,5 +27,6 @@ mod spy_events;
 mod store_load;
 mod syscalls;
 mod test_state;
+mod too_many_events;
 mod trace;
 mod warp;

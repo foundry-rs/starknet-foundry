@@ -272,12 +272,13 @@ impl<Extension: ExtensionLogic> ExtendedRuntime<Extension> {
             self.propagate_system_call_signal(selector, vm);
             Ok(())
         } else {
-            let res = self
-                .extended_runtime
-                .execute_hint(vm, exec_scopes, hint_data, constants);
+            self.extended_runtime
+                .execute_hint(vm, exec_scopes, hint_data, constants)?;
+
             self.extension
                 .post_syscall_hook(&selector, &mut self.extended_runtime);
-            res
+
+            Ok(())
         }
     }
 }

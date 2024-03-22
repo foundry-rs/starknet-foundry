@@ -97,11 +97,13 @@ Programmers can use environmental variables in both `Scarb.toml::tool::snforge` 
 This might be useful, for example, to hide node urls in the public repositories. 
 As an example:
 
+```toml
 # ...
 [sncast.default]
 account = "my_account"
 accounts-file = "~/my_accounts.json"
 url = "$NODE_URL"
 # ...
+```
 
 Variable value are automatically resolved to numbers and booleans (strings `true`, `false`) if it is possible.

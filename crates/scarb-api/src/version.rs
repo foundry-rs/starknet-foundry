@@ -2,6 +2,7 @@ use crate::ScarbCommand;
 use anyhow::{Context, Result};
 use regex::Regex;
 use semver::Version;
+use shared::command::CommandExt;
 use std::str::from_utf8;
 
 pub struct ScarbVersionOutput {
@@ -17,7 +18,7 @@ impl VersionCommand {
         let scarb_version = ScarbCommand::new()
             .arg("--version")
             .command()
-            .output()
+            .output_checked()
             .context("Failed to execute `scarb --version`")?;
 
         let version_output = from_utf8(&scarb_version.stdout)
