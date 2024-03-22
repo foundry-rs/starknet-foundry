@@ -132,6 +132,7 @@ impl<'a> HintProcessorLogic for StarknetRuntime<'a> {
         constants: &HashMap<String, Felt252>,
     ) -> Result<(), HintError> {
         let maybe_extended_hint = hint_data.downcast_ref::<Hint>();
+
         if let Some(Hint::Starknet(StarknetHint::Cheatcode {
             selector,
             input_start: _,
@@ -142,12 +143,14 @@ impl<'a> HintProcessorLogic for StarknetRuntime<'a> {
         {
             let selector = parse_selector(selector)?;
 
+            let is_cairo_test_fn = CAIRO_TEST_CHEATCODES.contains(&selector.as_str());
+
             let error = format!(
-                "Cheatcode `{selector}` is not supported in this runtime\n{}",
-                if CAIRO_TEST_CHEATCODES.contains(&selector.as_str()) {
-                    "Check if cheatcodes are imported from snforge_std"
+                "Function `{selector}` is not supported in this runtime\n{}",
+                if is_cairo_test_fn {
+                    "Check if functions are imported from `snforge_std`/`sncast_std` NOT from `starknet::testing`"
                 } else {
-                    "Check if used snforge_std is compatible with used snforge binary"
+                    "Check if used library is compatible with used binary, probably one of them is not updated"
                 }
             );
 

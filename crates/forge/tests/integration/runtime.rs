@@ -26,8 +26,8 @@ fn missing_cheatcode_error() {
         "missing_cheatcode_error",
         indoc!(
             r"
-            Cheatcode `not_existing123` is not supported in this runtime
-            Check if used snforge_std is compatible with used snforge binary
+            Function `not_existing123` is not supported in this runtime
+            Check if used library is compatible with used binary, probably one of them is not updated
         "
         ),
     );
@@ -53,8 +53,8 @@ fn cairo_test_cheatcode_error() {
         "missing_cheatcode_error",
         indoc!(
             r"
-            Cheatcode `set_version` is not supported in this runtime
-            Check if cheatcodes are imported from snforge_std
+            Function `set_version` is not supported in this runtime
+            Check if functions are imported from `snforge_std`/`sncast_std` NOT from `starknet::testing`
         "
         ),
     );
