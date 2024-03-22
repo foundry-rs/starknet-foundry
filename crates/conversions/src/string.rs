@@ -30,22 +30,6 @@ pub trait IntoHexStr {
     fn into_hex_string(self) -> String;
 }
 
-impl IntoDecStr for Felt252 {
-    fn into_dec_string(self) -> String {
-        self.to_str_radix(10)
-    }
-}
-
-impl IntoHexStr for Felt252 {
-    fn into_hex_string(self) -> String {
-        let mut result = self.to_str_radix(16);
-
-        result.insert_str(0, "0x");
-
-        result
-    }
-}
-
 impl<T> IntoDecStr for T
 where
     T: IntoConv<Felt252>,
@@ -53,7 +37,7 @@ where
     fn into_dec_string(self) -> String {
         let felt: Felt252 = self.into_();
 
-        felt.into_dec_string()
+        felt.to_str_radix(10)
     }
 }
 impl<T> IntoHexStr for T
@@ -63,6 +47,10 @@ where
     fn into_hex_string(self) -> String {
         let felt: Felt252 = self.into_();
 
-        felt.into_hex_string()
+        let mut result = felt.to_str_radix(16);
+
+        result.insert_str(0, "0x");
+
+        result
     }
 }

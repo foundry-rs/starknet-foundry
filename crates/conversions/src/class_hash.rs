@@ -1,4 +1,4 @@
-use crate::{from_thru_felt252, try_from_str_thru_felt252, FromConv, IntoConv};
+use crate::{from_thru_felt252, FromConv, IntoConv};
 use cairo_felt::Felt252;
 use starknet::core::types::FieldElement;
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, Nonce};
@@ -15,5 +15,3 @@ from_thru_felt252!(StarkFelt, ClassHash);
 from_thru_felt252!(ContractAddress, ClassHash);
 from_thru_felt252!(Nonce, ClassHash);
 from_thru_felt252!(EntryPointSelector, ClassHash);
-
-try_from_str_thru_felt252!(ClassHash);

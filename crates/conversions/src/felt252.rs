@@ -49,23 +49,32 @@ impl FromConv<EntryPointSelector> for Felt252 {
     }
 }
 
-impl TryFromDecStr for Felt252 {
-    fn try_from_dec_str(value: &str) -> Result<Felt252, ParseFeltError> {
+impl<T> TryFromDecStr for T
+where
+    T: FromConv<Felt252>,
+{
+    fn try_from_dec_str(value: &str) -> Result<T, ParseFeltError> {
         from_string(value, 10)
     }
 }
 
-impl TryFromHexStr for Felt252 {
-    fn try_from_hex_str(value: &str) -> Result<Felt252, ParseFeltError> {
+impl<T> TryFromHexStr for T
+where
+    T: FromConv<Felt252>,
+{
+    fn try_from_hex_str(value: &str) -> Result<T, ParseFeltError> {
         let value = value.strip_prefix("0x").ok_or(ParseFeltError)?;
 
         from_string(value, 16)
     }
 }
 
-fn from_string(value: &str, radix: u32) -> Result<Felt252, ParseFeltError> {
+fn from_string<T>(value: &str, radix: u32) -> Result<T, ParseFeltError>
+where
+    T: FromConv<Felt252>,
+{
     match Felt252::from_str_radix(value, radix) {
-        Ok(felt) => Ok(felt),
+        Ok(felt) => Ok(T::from_(felt)),
         _ => Err(ParseFeltError),
     }
 }

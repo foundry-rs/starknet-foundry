@@ -14,6 +14,12 @@ pub trait FromConv<T>: Sized {
     fn from_(value: T) -> Self;
 }
 
+impl<T> FromConv<T> for T {
+    fn from_(value: T) -> Self {
+        value
+    }
+}
+
 pub trait IntoConv<T>: Sized {
     fn into_(self) -> T;
 }
@@ -74,22 +80,6 @@ macro_rules! from_thru_felt252 {
         impl FromConv<$from> for $to {
             fn from_(value: $from) -> Self {
                 Self::from_(Felt252::from_(value))
-            }
-        }
-    };
-}
-
-#[macro_export]
-macro_rules! try_from_str_thru_felt252 {
-    ($to:ty) => {
-        impl $crate::string::TryFromDecStr for $to {
-            fn try_from_dec_str(value: &str) -> Result<Self, $crate::string::ParseFeltError> {
-                Felt252::try_from_dec_str(value).map(Self::from_)
-            }
-        }
-        impl $crate::string::TryFromHexStr for $to {
-            fn try_from_hex_str(value: &str) -> Result<Self, $crate::string::ParseFeltError> {
-                Felt252::try_from_hex_str(value).map(Self::from_)
             }
         }
     };
