@@ -246,7 +246,7 @@ pub async fn create_account(add_profile: bool, class_hash: &str) -> TempDir {
         class_hash,
     ];
     if add_profile {
-        args.push("--add-profile");
+        args.push("--update-profile");
         args.push("deploy_profile");
     }
 

@@ -37,7 +37,7 @@ pub async fn test_happy_case() {
 
     snapbox.assert().stdout_matches(indoc! {r"
         command: account add
-        add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
+        add_profile: --update-profile flag was not set. No profile added to snfoundry.toml
     "});
 
     let contents = fs::read_to_string(tempdir.path().join(accounts_file))
@@ -218,7 +218,7 @@ pub async fn test_happy_case_add_profile() {
         "0x3",
         "--class-hash",
         DEVNET_OZ_CLASS_HASH_CAIRO_0,
-        "--add-profile",
+        "--update-profile",
         "my_account_add",
     ];
 
@@ -282,7 +282,7 @@ pub async fn test_detect_deployed() {
 
     snapbox.assert().stdout_matches(indoc! {r"
         command: account add
-        add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
+        add_profile: --update-profile flag was not set. No profile added to snfoundry.toml
     "});
 
     let contents = fs::read_to_string(tempdir.path().join(accounts_file))
@@ -382,7 +382,7 @@ pub async fn test_private_key_from_file() {
 
     snapbox.assert().stdout_matches(indoc! {r"
         command: account add
-        add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
+        add_profile: --update-profile flag was not set. No profile added to snfoundry.toml
     "});
 
     let contents = fs::read_to_string(temp_dir.path().join(accounts_file))
@@ -565,7 +565,7 @@ pub async fn test_empty_config_add_profile() {
         DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS,
         "--private-key",
         "0x456",
-        "--add-profile",
+        "--update-profile",
         "random",
     ];
 

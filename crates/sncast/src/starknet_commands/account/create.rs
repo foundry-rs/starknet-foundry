@@ -103,19 +103,21 @@ pub async fn create(
         add_created_profile_to_configuration(&add_profile, &config, &None)?;
     }
 
+    let profile_message = if add_profile.is_some() {
+        format!(
+            "Profile {} successfully added or updated in snfoundry.toml",
+            add_profile.clone().expect("Failed to get profile name")
+        )
+    } else {
+        "No profile added or updated in snfoundry.toml".to_string()
+    };
+
     Ok(AccountCreateResponse {
         address: Felt(address),
         max_fee: Felt(max_fee),
-        add_profile: if add_profile.is_some() {
-            format!(
-                "Profile {} successfully added to snfoundry.toml",
-                add_profile.clone().expect("Failed to get profile name")
-            )
-        } else {
-            "--add-profile flag was not set. No profile added to snfoundry.toml".to_string()
-        },
+        add_profile: profile_message,
         message: if account_json["deployed"] == json!(false) {
-            "Account successfully created. Prefund generated address with at least <max_fee> tokens. It is good to send more in the case of higher demand.".to_string()
+            "Account successfully created. Prefund the generated address with at least <max_fee> tokens. Consider sending more for higher demand.".to_string()
         } else {
             "Account already deployed".to_string()
         },
@@ -217,10 +219,13 @@ fn write_account_to_file(
     account_json: &serde_json::Value,
     account_file: &Utf8PathBuf,
 ) -> Result<()> {
-    std::fs::create_dir_all(account_file.clone().parent().unwrap())?;
-    std::fs::write(
-        account_file.clone(),
-        serde_json::to_string_pretty(&account_json).unwrap(),
-    )?;
+    let parent_dir = account_file
+        .parent()
+        .ok_or(anyhow!("Invalid parent directory"))?;
+    std::fs::create_dir_all(parent_dir)?;
+
+    let json_str = serde_json::to_string_pretty(account_json)?;
+    std::fs::write(account_file, json_str)?;
+
     Ok(())
 }

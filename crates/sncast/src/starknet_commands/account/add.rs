@@ -121,7 +121,7 @@ pub async fn add(
                 add.add_profile.clone().expect("Failed to get profile name")
             )
         } else {
-            "--add-profile flag was not set. No profile added to snfoundry.toml".to_string()
+            "--update-profile flag was not set. No profile added to snfoundry.toml".to_string()
         },
     })
 }
