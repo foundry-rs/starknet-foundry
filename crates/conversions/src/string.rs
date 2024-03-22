@@ -35,19 +35,16 @@ where
     T: IntoConv<Felt252>,
 {
     fn into_dec_string(self) -> String {
-        let felt: Felt252 = self.into_();
-
-        felt.to_str_radix(10)
+        self.into_().to_str_radix(10)
     }
 }
+
 impl<T> IntoHexStr for T
 where
     T: IntoConv<Felt252>,
 {
     fn into_hex_string(self) -> String {
-        let felt: Felt252 = self.into_();
-
-        let mut result = felt.to_str_radix(16);
+        let mut result = self.into_().to_str_radix(16);
 
         result.insert_str(0, "0x");
 
