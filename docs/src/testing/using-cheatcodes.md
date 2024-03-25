@@ -108,7 +108,7 @@ Running 1 test(s) from tests/
 [FAIL] tests::call_and_invoke
 
 Failure data:
-    original value: [2619239621329578143946475627394146418642347364], converted to a string: [user is not allowed]
+    0x75736572206973206e6f7420616c6c6f776564 ('user is not allowed')
 
 Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
 
@@ -192,7 +192,7 @@ Running 1 test(s) from tests/
 [FAIL] tests::call_and_invoke, 0 ignored, 0 filtered out
 
 Failure data:
-    original value: [2619239621329578143946475627394146418642347364], converted to a string: [user is not allowed]
+    0x75736572206973206e6f7420616c6c6f776564 ('user is not allowed')
 
 Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
 

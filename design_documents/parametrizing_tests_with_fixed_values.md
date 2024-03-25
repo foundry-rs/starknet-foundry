@@ -125,7 +125,7 @@ $ snforge test
 [FAIL] tests::parametrized[my_case](a = 4, b = 5)     # named test case
 
 Failure data:
-    original value: [344693033283], converted to a string: [PANIC]
+    0x50414e4943 ('PANIC')
     
 [PASS] tests::parametrized(a = 5, b = 7)
 # ...
