@@ -460,7 +460,7 @@ from now on the only officially supported cairo compiler version is 2
 
 ### Changed
 
-- `--update-profile` no longer accepts `-a` for short
+- `--add-profile` no longer accepts `-a` for short
 - allow the `id` property in multicalls to be referenced in the inputs of `deploy` and `invoke` calls
 
 ## [0.6.0] - 2023-09-13

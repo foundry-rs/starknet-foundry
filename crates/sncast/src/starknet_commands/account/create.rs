@@ -103,21 +103,19 @@ pub async fn create(
         add_created_profile_to_configuration(&add_profile, &config, &None)?;
     }
 
-    let profile_message = if add_profile.is_some() {
+    Ok(AccountCreateResponse {
+        address: Felt(address),
+        max_fee: Felt(max_fee),
+        add_profile: if add_profile.is_some() {
         format!(
             "Profile {} successfully added or updated in snfoundry.toml",
             add_profile.clone().expect("Failed to get profile name")
         )
     } else {
         "No profile added or updated in snfoundry.toml".to_string()
-    };
-
-    Ok(AccountCreateResponse {
-        address: Felt(address),
-        max_fee: Felt(max_fee),
-        add_profile: profile_message,
+    },
         message: if account_json["deployed"] == json!(false) {
-            "Account successfully created. Prefund the generated address with at least <max_fee> tokens. Consider sending more for higher demand.".to_string()
+            "Account successfully created. Prefund the generated address with at least <max_fee> tokens. Consider sending more in case of a higher demand.".to_string()
         } else {
             "Account already deployed".to_string()
         },
