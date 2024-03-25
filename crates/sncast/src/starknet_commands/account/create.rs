@@ -107,13 +107,13 @@ pub async fn create(
         address: Felt(address),
         max_fee: Felt(max_fee),
         add_profile: if add_profile.is_some() {
-        format!(
-            "Profile {} successfully added or updated in snfoundry.toml",
-            add_profile.clone().expect("Failed to get profile name")
-        )
-    } else {
-        "No profile added or updated in snfoundry.toml".to_string()
-    },
+            format!(
+                "Profile {} successfully added or updated in snfoundry.toml",
+                add_profile.clone().expect("Failed to get profile name")
+            )
+        } else {
+            "No profile added or updated in snfoundry.toml".to_string()
+        },
         message: if account_json["deployed"] == json!(false) {
             "Account successfully created. Prefund the generated address with at least <max_fee> tokens. Consider sending more in case of a higher demand.".to_string()
         } else {
