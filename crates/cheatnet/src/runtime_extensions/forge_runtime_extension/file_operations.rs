@@ -117,7 +117,7 @@ mod tests {
         let (_temp, file_path) = create_file(string);
         let result = read_json(file_path).unwrap();
         let mut expected_result = "string".serialize_as_felt252_vec();
-        expected_result.push(Felt252::from(4)); // .test.len()
+        expected_result.push(Felt252::from(4));
         expected_result.extend("1".serialize_as_felt252_vec());
         expected_result.push(Felt252::from(2));
         expected_result.extend("3".serialize_as_felt252_vec());
