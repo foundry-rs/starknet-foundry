@@ -1,11 +1,11 @@
-use cairo_lang_sierra::program::Program;
+use cairo_lang_sierra::program::VersionedProgram;
 use forge_runner::compiled_runnable::{FuzzerConfig, TestDetails};
 use forge_runner::expected_result::ExpectedTestResult;
 use serde::Deserialize;
 
 #[derive(Debug, Clone, Deserialize)]
 pub(crate) struct CompiledTestCrateRaw {
-    pub sierra_program: Program,
+    pub sierra_program: VersionedProgram,
     pub test_cases: Vec<TestCaseRaw>,
     pub tests_location: CrateLocation,
 }
