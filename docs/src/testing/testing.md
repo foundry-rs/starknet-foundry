@@ -141,3 +141,5 @@ Running 1 test(s) from src/
 
 Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ```
+
+For more information about how starknet-foundry calculates those, see [gas and resource estimation](gas-and-resource-estimation.md) section.
