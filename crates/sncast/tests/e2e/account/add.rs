@@ -37,7 +37,7 @@ pub async fn test_happy_case() {
 
     snapbox.assert().stdout_matches(indoc! {r"
         command: account add
-        add_profile: --update-profile flag was not set. No profile added to snfoundry.toml
+        add_profile: No profile added or updated in snfoundry.toml
     "});
 
     let contents = fs::read_to_string(tempdir.path().join(accounts_file))
@@ -282,7 +282,7 @@ pub async fn test_detect_deployed() {
 
     snapbox.assert().stdout_matches(indoc! {r"
         command: account add
-        add_profile: --update-profile flag was not set. No profile added to snfoundry.toml
+        add_profile: No profile added or updated in snfoundry.toml
     "});
 
     let contents = fs::read_to_string(tempdir.path().join(accounts_file))
@@ -382,7 +382,7 @@ pub async fn test_private_key_from_file() {
 
     snapbox.assert().stdout_matches(indoc! {r"
         command: account add
-        add_profile: --update-profile flag was not set. No profile added to snfoundry.toml
+        add_profile: No profile added or updated in snfoundry.toml
     "});
 
     let contents = fs::read_to_string(temp_dir.path().join(accounts_file))

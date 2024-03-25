@@ -38,7 +38,7 @@ pub async fn test_happy_case() {
     assert!(!stdout_str.contains("max_fee: 0x"));
     assert!(stdout_str.contains("address: 0x"));
     assert!(stdout_str.contains(
-        "add_profile: --update-profile flag was not set. No profile added to snfoundry.toml"
+        "add_profile: No profile added or updated in snfoundry.toml"
     ));
 
     let contents = fs::read_to_string(temp_dir.path().join(accounts_file))
@@ -107,7 +107,7 @@ pub async fn test_happy_case_generate_salt() {
 
     snapbox.assert().success().stdout_matches(indoc! {r"
         command: account create
-        add_profile: --update-profile flag was not set. No profile added to snfoundry.toml
+        add_profile: No profile added or updated in snfoundry.toml
         address: 0x[..]
         max_fee: [..]
         message: Account successfully created[..]
@@ -187,7 +187,7 @@ pub async fn test_happy_case_accounts_file_already_exists() {
 
     snapbox.assert().success().stdout_matches(indoc! {r"
         command: account create
-        add_profile: --update-profile flag was not set. No profile added to snfoundry.toml
+        add_profile: No profile added or updated in snfoundry.toml
         address: 0x[..]
         max_fee: [..]
         message: Account successfully created[..]
@@ -282,7 +282,7 @@ pub async fn test_happy_case_keystore() {
 
     snapbox.assert().stdout_matches(indoc! {r"
         command: account create
-        add_profile: --update-profile flag was not set. No profile added to snfoundry.toml
+        add_profile: No profile added or updated in snfoundry.toml
         address: 0x[..]
         max_fee: [..]
         message: Account successfully created[..]
@@ -477,7 +477,7 @@ pub async fn test_happy_case_keystore_int_format() {
 
     snapbox.assert().stdout_matches(indoc! {r"
         command: account create
-        add_profile: --update-profile flag was not set. No profile added to snfoundry.toml
+        add_profile: No profile added or updated in snfoundry.toml
         address: [..]
         max_fee: [..]
         message: Account successfully created[..]
@@ -517,7 +517,7 @@ pub async fn test_happy_case_keystore_hex_format() {
 
     snapbox.assert().stdout_matches(indoc! {r"
         command: account create
-        add_profile: --update-profile flag was not set. No profile added to snfoundry.toml
+        add_profile: No profile added or updated in snfoundry.toml
         address: 0x[..]
         max_fee: 0x[..]
         message: Account successfully created[..]
