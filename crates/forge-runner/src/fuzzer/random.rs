@@ -4,15 +4,16 @@ use anyhow::Result;
 use cairo_felt::Felt252;
 use rand::prelude::StdRng;
 use rand::SeedableRng;
+use std::num::NonZeroU32;
 
 #[derive(Debug, Clone)]
 pub struct RandomFuzzer {
     rng: StdRng,
-    run_params: RunParams,
+    pub(crate) run_params: RunParams,
 }
 
 impl RandomFuzzer {
-    pub fn create(seed: u64, total_runs: u32, arguments: &[&str]) -> Result<Self> {
+    pub fn create(seed: u64, total_runs: NonZeroU32, arguments: &[&str]) -> Result<Self> {
         let mut rng = StdRng::seed_from_u64(seed);
         let run_params = RunParams::from(&mut rng, total_runs, arguments)?;
 
@@ -20,44 +21,36 @@ impl RandomFuzzer {
     }
 
     pub fn next_args(&mut self) -> Vec<Felt252> {
-        assert!(self.run_params.executed_runs < self.run_params.total_runs);
+        assert!(self.run_params.executed_runs < self.run_params.total_runs.get());
 
         self.next_run();
 
-        let mut args = vec![];
+        self.run_params
+            .arguments
+            .iter()
+            .flat_map(|argument| {
+                let current_run = self.run_params.executed_runs;
 
-        for (index, argument) in self.run_params.arguments.iter().enumerate() {
-            if self.is_run_with_min_value_for_arg(index) {
-                args.extend(argument.min());
-            } else if self.is_run_with_max_value_for_arg(index) {
-                args.extend(argument.max());
-            } else {
-                args.extend(argument.gen(&mut self.rng));
-            }
-        }
-
-        args
+                if argument.run_with_min_value == current_run {
+                    argument.cairo_type.min()
+                } else if argument.run_with_max_value == current_run {
+                    argument.cairo_type.max()
+                } else {
+                    argument.cairo_type.gen(&mut self.rng)
+                }
+            })
+            .collect()
     }
 
     fn next_run(&mut self) {
         self.run_params.executed_runs += 1;
-    }
-
-    fn is_run_with_min_value_for_arg(&self, arg_number: usize) -> bool {
-        let current_run = self.run_params.executed_runs;
-        self.run_params.run_with_min_value_for_argument[arg_number] == current_run
-    }
-
-    fn is_run_with_max_value_for_arg(&self, arg_number: usize) -> bool {
-        let current_run = self.run_params.executed_runs;
-        self.run_params.run_with_max_value_for_argument[arg_number] == current_run
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::fuzzer::arguments::CairoType;
+    use crate::fuzzer::{arguments::CairoType, FuzzerRun};
     use num_bigint::BigUint;
     use num_traits::Zero;
     use rand::{thread_rng, RngCore};
@@ -66,10 +59,8 @@ mod tests {
         fn default() -> Self {
             Self {
                 arguments: vec![],
-                total_runs: 256,
+                total_runs: NonZeroU32::new(256).unwrap(),
                 executed_runs: 0,
-                run_with_min_value_for_argument: vec![],
-                run_with_max_value_for_argument: vec![],
             }
         }
     }
@@ -90,10 +81,12 @@ mod tests {
     #[test]
     fn fuzzer_generates_different_values() {
         let run_params = RunParams {
-            run_with_max_value_for_argument: vec![3, 3, 3],
-            run_with_min_value_for_argument: vec![4, 4, 4],
-            arguments: vec![CairoType::Felt252, CairoType::U256, CairoType::U32],
-            total_runs: 10,
+            arguments: vec![
+                FuzzerRun::new(CairoType::Felt252, 4, 3),
+                FuzzerRun::new(CairoType::U256, 4, 3),
+                FuzzerRun::new(CairoType::U32, 4, 3),
+            ],
+            total_runs: NonZeroU32::new(10).unwrap(),
             ..Default::default()
         };
         let mut fuzzer = RandomFuzzer {
@@ -113,27 +106,28 @@ mod tests {
     #[test]
     fn run_with_max_value() {
         let run_params = RunParams {
-            run_with_max_value_for_argument: vec![1],
-            run_with_min_value_for_argument: vec![2],
-            total_runs: 10,
+            arguments: vec![FuzzerRun::new(CairoType::Felt252, 2, 1)],
+            total_runs: NonZeroU32::new(10).unwrap(),
             ..Default::default()
         };
         let mut fuzzer = RandomFuzzer {
             rng: StdRng::seed_from_u64(1234),
             run_params,
         };
+        let current_run = fuzzer.run_params.executed_runs;
+        assert!(fuzzer.run_params.arguments[0].run_with_max_value != current_run);
 
-        assert!(!fuzzer.is_run_with_max_value_for_arg(0));
         fuzzer.next_args();
-        assert!(fuzzer.is_run_with_max_value_for_arg(0));
+
+        let current_run = fuzzer.run_params.executed_runs;
+        assert!(fuzzer.run_params.arguments[0].run_with_max_value == current_run);
     }
 
     #[test]
     fn run_with_min_value() {
         let run_params = RunParams {
-            run_with_max_value_for_argument: vec![2],
-            run_with_min_value_for_argument: vec![1],
-            total_runs: 10,
+            total_runs: NonZeroU32::new(10).unwrap(),
+            arguments: vec![FuzzerRun::new(CairoType::Felt252, 1, 2)],
             ..Default::default()
         };
         let mut fuzzer = RandomFuzzer {
@@ -141,18 +135,32 @@ mod tests {
             run_params,
         };
 
-        assert!(!fuzzer.is_run_with_min_value_for_arg(0));
+        let current_run = fuzzer.run_params.executed_runs;
+        assert!(fuzzer.run_params.arguments[0].run_with_min_value != current_run);
+
         fuzzer.next_args();
-        assert!(fuzzer.is_run_with_min_value_for_arg(0));
+
+        let current_run = fuzzer.run_params.executed_runs;
+        assert!(fuzzer.run_params.arguments[0].run_with_min_value == current_run);
     }
 
     #[test]
     fn using_seed_consistent_result() {
         let seed = thread_rng().next_u64();
-        let mut fuzzer = RandomFuzzer::create(seed, 3, &["felt252", "felt252", "felt252"]).unwrap();
+        let mut fuzzer = RandomFuzzer::create(
+            seed,
+            NonZeroU32::new(3).unwrap(),
+            &["felt252", "felt252", "felt252"],
+        )
+        .unwrap();
         let values = fuzzer.next_args();
 
-        let mut fuzzer = RandomFuzzer::create(seed, 3, &["felt252", "felt252", "felt252"]).unwrap();
+        let mut fuzzer = RandomFuzzer::create(
+            seed,
+            NonZeroU32::new(3).unwrap(),
+            &["felt252", "felt252", "felt252"],
+        )
+        .unwrap();
         let values_from_seed = fuzzer.next_args();
 
         assert_eq!(values, values_from_seed);
@@ -161,7 +169,7 @@ mod tests {
     #[test]
     fn min_and_max_used_at_least_once_for_each_arg() {
         let seed = thread_rng().next_u64();
-        let runs_number = 10;
+        let runs_number = NonZeroU32::new(10).unwrap();
         let arguments = vec!["felt252", "felt252", "felt252"];
         let args_number = arguments.len();
 
@@ -170,7 +178,7 @@ mod tests {
         let mut min_used = vec![false; args_number];
         let mut max_used = vec![false; args_number];
 
-        for _ in 1..=runs_number {
+        for _ in 1..=runs_number.get() {
             let values = fuzzer.next_args();
             for (i, value) in values.iter().enumerate() {
                 assert!(
@@ -190,7 +198,11 @@ mod tests {
 
     #[test]
     fn create_fuzzer_from_invalid_arguments() {
-        let result = RandomFuzzer::create(1234, 512, &["felt252", "invalid", "args"]);
+        let result = RandomFuzzer::create(
+            1234,
+            NonZeroU32::new(512).unwrap(),
+            &["felt252", "invalid", "args"],
+        );
         let err = result.unwrap_err();
 
         assert_eq!(
