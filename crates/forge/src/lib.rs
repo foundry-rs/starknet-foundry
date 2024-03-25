@@ -78,7 +78,11 @@ async fn to_runnable(
     }
 
     Ok(CompiledTestCrateRunnable {
-        sierra_program: compiled_test_crate.sierra_program,
+        sierra_program: compiled_test_crate
+            .sierra_program
+            .into_v1()
+            .unwrap()
+            .program,
         test_cases,
     })
 }
@@ -180,18 +184,29 @@ pub async fn run(
 mod tests {
     use super::*;
     use crate::compiled_raw::{CompiledTestCrateRaw, CrateLocation, TestCaseRaw};
+    use cairo_lang_sierra::program::{ProgramArtifact, Version, VersionedProgram};
     use cairo_lang_sierra::{ids::GenericTypeId, program::Program};
     use forge_runner::{compiled_runnable::TestDetails, expected_result::ExpectedTestResult};
+
+    fn program_for_testing() -> VersionedProgram {
+        VersionedProgram::V1 {
+            version: Version::<1>,
+            program: ProgramArtifact {
+                program: Program {
+                    type_declarations: vec![],
+                    libfunc_declarations: vec![],
+                    statements: vec![],
+                    funcs: vec![],
+                },
+                debug_info: None,
+            },
+        }
+    }
 
     #[tokio::test]
     async fn to_runnable_unparsable_url() {
         let mocked_tests = CompiledTestCrateRaw {
-            sierra_program: Program {
-                type_declarations: vec![],
-                libfunc_declarations: vec![],
-                statements: vec![],
-                funcs: vec![],
-            },
+            sierra_program: program_for_testing(),
             test_cases: vec![TestCaseRaw {
                 name: "crate1::do_thing".to_string(),
                 available_gas: None,
@@ -229,12 +244,7 @@ mod tests {
     #[tokio::test]
     async fn to_runnable_non_existent_id() {
         let mocked_tests = CompiledTestCrateRaw {
-            sierra_program: Program {
-                type_declarations: vec![],
-                libfunc_declarations: vec![],
-                statements: vec![],
-                funcs: vec![],
-            },
+            sierra_program: program_for_testing(),
             test_cases: vec![TestCaseRaw {
                 name: "crate1::do_thing".to_string(),
                 available_gas: None,
