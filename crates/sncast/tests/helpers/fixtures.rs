@@ -3,7 +3,6 @@ use crate::helpers::constants::{
 };
 use anyhow::Context;
 use camino::{Utf8Path, Utf8PathBuf};
-use primitive_types::U256;
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
 use serde_json::{json, Map, Value};
@@ -473,12 +472,6 @@ fn write_devnet_env(key: &str, value: &FieldElement) {
         .unwrap();
 
     writeln!(file, "{key}={value}").unwrap();
-}
-
-#[must_use]
-pub fn convert_to_hex(value: &str) -> String {
-    let dec = U256::from_dec_str(value).expect("Invalid decimal string");
-    format!("{dec:#x}")
 }
 
 pub fn from_env(name: &str) -> Result<String, String> {

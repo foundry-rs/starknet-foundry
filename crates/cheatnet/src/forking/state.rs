@@ -118,7 +118,7 @@ impl StateReader for ForkStateReader {
             self.block_id(),
         )) {
             Ok(value) => {
-                let value_sf: StarkFelt = value.into_();
+                let value_sf = value.into_();
                 self.cache
                     .cache_get_storage_at(contract_address, key, value_sf);
                 Ok(value_sf)
@@ -165,7 +165,7 @@ impl StateReader for ForkStateReader {
                 .get_class_hash_at(self.block_id(), FieldElement::from_(contract_address)),
         ) {
             Ok(class_hash) => {
-                let class_hash: ClassHash = class_hash.into_();
+                let class_hash = class_hash.into_();
                 self.cache
                     .cache_get_class_hash_at(contract_address, class_hash);
                 Ok(class_hash)
