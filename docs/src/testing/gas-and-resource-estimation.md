@@ -14,7 +14,7 @@ When the test passes with no errors, estimated gas is displayed this way:
 [PASS] tests::simple_test (gas: ~1)
 ```
 
-This gas calculation is based on the estimated VM resources (that you can display additionally on demand), 
+This gas calculation is based on the estimated VM resources (that you can [display additionally on demand](#usage)), 
 deployed contracts, storage updates, events and l1 <> l2 messages. 
 
 ### Fuzzed Tests
