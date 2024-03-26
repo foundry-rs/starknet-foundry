@@ -1,4 +1,3 @@
-use crate::fuzzer::arguments::Argument;
 use crate::fuzzer::RunParams;
 use anyhow::Result;
 use cairo_felt::Felt252;

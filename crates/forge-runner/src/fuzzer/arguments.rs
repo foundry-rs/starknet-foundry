@@ -6,7 +6,7 @@ use num_traits::{One, Zero};
 use rand::prelude::StdRng;
 use std::ops::{Add, Shl, Shr, Sub};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub enum CairoType {
     U8,
     U16,
@@ -17,35 +17,24 @@ pub enum CairoType {
     Felt252,
 }
 
-pub trait Argument {
-    fn low(&self) -> BigUint;
-    fn high(&self) -> BigUint;
-    fn gen(&self, rng: &mut StdRng) -> Vec<Felt252>;
-    fn min(&self) -> Vec<Felt252>;
-    fn max(&self) -> Vec<Felt252>;
-}
-
-impl Argument for CairoType {
-    fn low(&self) -> BigUint {
+impl CairoType {
+    pub fn low(self) -> BigUint {
         BigUint::zero()
     }
 
-    fn high(&self) -> BigUint {
+    pub fn high(self) -> BigUint {
         match self {
             CairoType::U8 => BigUint::from(u8::MAX).add(BigUint::one()),
             CairoType::U16 => BigUint::from(u16::MAX).add(BigUint::one()),
             CairoType::U32 => BigUint::from(u32::MAX).add(BigUint::one()),
             CairoType::U64 => BigUint::from(u64::MAX).add(BigUint::one()),
             CairoType::U128 => BigUint::from(u128::MAX).add(BigUint::one()),
-            CairoType::U256 => {
-                let max = BigUint::from(1_u32);
-                max.shl(256)
-            }
+            CairoType::U256 => BigUint::from(1_u32).shl(256),
             CairoType::Felt252 => Felt252::prime(),
         }
     }
 
-    fn gen(&self, rng: &mut StdRng) -> Vec<Felt252> {
+    pub fn gen(self, rng: &mut StdRng) -> Vec<Felt252> {
         match self {
             CairoType::U8
             | CairoType::U16
@@ -64,7 +53,7 @@ impl Argument for CairoType {
         }
     }
 
-    fn min(&self) -> Vec<Felt252> {
+    pub fn min(self) -> Vec<Felt252> {
         match self {
             CairoType::U8
             | CairoType::U16
@@ -76,7 +65,7 @@ impl Argument for CairoType {
         }
     }
 
-    fn max(&self) -> Vec<Felt252> {
+    pub fn max(self) -> Vec<Felt252> {
         match self {
             CairoType::U8
             | CairoType::U16
