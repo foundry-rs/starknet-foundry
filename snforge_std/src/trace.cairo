@@ -2,48 +2,55 @@ use core::result::ResultTrait;
 use core::starknet::testing::cheatcode;
 use core::starknet::ContractAddress;
 
+/// Tree-like structure which contains all of the calls and sub-calls along with the results
 #[derive(Drop, Serde, PartialEq)]
 struct CallTrace {
-    entry_point: CallEntryPoint,
-    nested_calls: Array<CallTrace>,
+    entry_point: CallEntryPoint,     /// The topmost entry point of this trace
+    nested_calls: Array<CallTrace>,  /// All the calls that happened in the context of `entry_point`
     result: CallResult
 }
 
+/// A single function entry point summary
 #[derive(Drop, Serde, PartialEq)]
 struct CallEntryPoint {
     entry_point_type: EntryPointType,
-    entry_point_selector: felt252,
-    calldata: Array<felt252>,
-    contract_address: ContractAddress,
-    caller_address: ContractAddress,
+    entry_point_selector: felt252,      /// Hashed selector of the invoked function
+    calldata: Array<felt252>,           /// Serialized arguments calldata
+    contract_address: ContractAddress,  /// Contract address targeted by the call
+    caller_address: ContractAddress,    /// Address that the call originates from
     call_type: CallType,
 }
 
+/// Type of the function being invoked
 #[derive(Drop, Serde, PartialEq)]
 enum EntryPointType {
-    Constructor,
-    External,
-    L1Handler,
+    Constructor,  /// Constructor of a contract
+    External,     /// Contract interface entry point
+    L1Handler,    /// An entrypoint for handling messages from L1
 }
 
+/// Denotes type of the call
 #[derive(Drop, Serde, PartialEq)]
 enum CallType {
-    Call,
-    Delegate,
+    Call,     /// Regular call
+    Delegate, /// Library call
 }
 
+/// Result of a contract or a library call
 #[derive(Drop, Serde, PartialEq)]
 enum CallResult {
-    Success: Array<felt252>,
-    Failure: CallFailure
+    Success: Array<felt252>, /// A successful call with it's result
+    Failure: CallFailure     /// A failed call along with it's panic data
 }
 
+/// Represents a pre-processed failure of a call
 #[derive(Drop, Serde, PartialEq)]
 enum CallFailure {
-    Panic: Array<felt252>,
-    Error: ByteArray
+    Panic: Array<felt252>, /// Contains raw panic data
+    Error: ByteArray       /// Contains panic data in parsed form, if parsing is applicable
 }
 
+/// Returns current call trace of the test, up to the last call made to a contract
 fn get_call_trace() -> CallTrace {
     let mut output = cheatcode::<'get_call_trace'>(array![].span());
     Serde::deserialize(ref output).unwrap()
