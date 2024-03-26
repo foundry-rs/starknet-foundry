@@ -18,7 +18,7 @@ pub enum CairoType {
 }
 
 impl CairoType {
-    pub fn low(self) -> BigUint {
+    pub fn low() -> BigUint {
         BigUint::zero()
     }
 
@@ -43,11 +43,11 @@ impl CairoType {
             | CairoType::U128
             | CairoType::Felt252 => {
                 vec![Felt252::from(
-                    rng.gen_biguint_range(&self.low(), &self.high()),
+                    rng.gen_biguint_range(&Self::low(), &self.high()),
                 )]
             }
             CairoType::U256 => {
-                let val = rng.gen_biguint_range(&self.low(), &self.high());
+                let val = rng.gen_biguint_range(&Self::low(), &self.high());
                 u256_to_felt252(val)
             }
         }
@@ -60,8 +60,8 @@ impl CairoType {
             | CairoType::U32
             | CairoType::U64
             | CairoType::U128
-            | CairoType::Felt252 => vec![Felt252::from(self.low())],
-            CairoType::U256 => vec![Felt252::from(self.low()), Felt252::from(self.low())],
+            | CairoType::Felt252 => vec![Felt252::from(Self::low())],
+            CairoType::U256 => vec![Felt252::from(Self::low()), Felt252::from(Self::low())],
         }
     }
 
