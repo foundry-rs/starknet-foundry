@@ -32,7 +32,9 @@ use universal_sierra_compiler_api::UniversalSierraCompilerCommand;
 mod init;
 
 // unchecked because .unwrap() is not const in stable
-const FUZZER_RUNS_DEFAULT: NonZeroU32 = unsafe { NonZeroU32::new_unchecked(256) };
+fn default_fuzzer_runs() -> NonZeroU32 {
+    NonZeroU32::new(256).unwrap()
+}
 
 #[derive(Parser, Debug)]
 #[command(version)]
@@ -153,7 +155,7 @@ fn combine_configs(
         exit_first || forge_config.exit_first,
         fuzzer_runs
             .or(forge_config.fuzzer_runs)
-            .unwrap_or(FUZZER_RUNS_DEFAULT),
+            .unwrap_or(default_fuzzer_runs()),
         fuzzer_seed
             .or(forge_config.fuzzer_seed)
             .unwrap_or_else(|| thread_rng().next_u64()),
@@ -376,7 +378,7 @@ mod tests {
             RunnerConfig::new(
                 workspace_root,
                 false,
-                FUZZER_RUNS_DEFAULT,
+                default_fuzzer_runs(),
                 config.fuzzer_seed,
                 false,
                 false,

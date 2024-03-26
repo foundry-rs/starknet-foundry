@@ -54,6 +54,20 @@ mod tests {
     use num_traits::Zero;
     use rand::{thread_rng, RngCore};
 
+    impl FuzzerRun {
+        pub fn new(
+            cairo_type: CairoType,
+            run_with_min_value: u32,
+            run_with_max_value: u32,
+        ) -> Self {
+            Self {
+                cairo_type,
+                run_with_min_value,
+                run_with_max_value,
+            }
+        }
+    }
+
     impl Default for RunParams {
         fn default() -> Self {
             Self {

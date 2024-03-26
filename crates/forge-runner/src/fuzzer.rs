@@ -11,30 +11,19 @@ use std::num::NonZeroU32;
 
 #[derive(Debug, Clone)]
 pub struct FuzzerRun {
-    cairo_type: CairoType,
-    run_with_min_value: u32,
-    run_with_max_value: u32,
-}
-
-impl FuzzerRun {
-    #[allow(dead_code)] // used in tests
-    pub fn new(cairo_type: CairoType, run_with_min_value: u32, run_with_max_value: u32) -> Self {
-        Self {
-            cairo_type,
-            run_with_min_value,
-            run_with_max_value,
-        }
-    }
+    pub(super) cairo_type: CairoType,
+    pub(super) run_with_min_value: u32,
+    pub(super) run_with_max_value: u32,
 }
 
 #[derive(Debug, Clone)]
 pub struct RunParams {
     /// Arguments
-    pub(crate) arguments: Vec<FuzzerRun>,
+    pub(super) arguments: Vec<FuzzerRun>,
     /// Total number of runs
     total_runs: NonZeroU32,
     /// Number of already executed runs
-    pub(crate) executed_runs: u32,
+    pub(super) executed_runs: u32,
 }
 
 impl RunParams {
