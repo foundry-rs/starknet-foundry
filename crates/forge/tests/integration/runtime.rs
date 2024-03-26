@@ -27,7 +27,7 @@ fn missing_cheatcode_error() {
         indoc!(
             r"
             Function `not_existing123` is not supported in this runtime
-            Check if used library is compatible with used binary, probably one of them is not updated
+            Check if used library (`snforge_std` or `sncast_std`) is compatible with used binary, probably one of them is not updated
         "
         ),
     );

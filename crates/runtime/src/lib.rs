@@ -150,7 +150,7 @@ impl<'a> HintProcessorLogic for StarknetRuntime<'a> {
                 if is_cairo_test_fn {
                     "Check if functions are imported from `snforge_std`/`sncast_std` NOT from `starknet::testing`"
                 } else {
-                    "Check if used library is compatible with used binary, probably one of them is not updated"
+                    "Check if used library (`snforge_std` or `sncast_std`) is compatible with used binary, probably one of them is not updated"
                 }
             );
 
