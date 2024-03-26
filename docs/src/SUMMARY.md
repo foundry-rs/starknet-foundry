@@ -19,7 +19,7 @@
 * [Using Cheatcodes](testing/using-cheatcodes.md)
 * [Fuzz Testing](testing/fuzz-testing.md)
 * [Test Collection](testing/test-collection.md)
-* [Gas Estimation](testing/gas-etimation.md)
+* [Gas and VM Resources Estimation](testing/gas-and-resource-estimation.md)
 * [Profiling](testing/profiling.md)
 
 # `sncast` Overview

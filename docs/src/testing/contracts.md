@@ -152,8 +152,7 @@ Running 1 test(s) from tests/
 [FAIL] tests::failing
 
 Failure data:
-    original value: [344693033283], converted to a string: [PANIC]
-    original value: [75047462256968], converted to a string: [DAYTAH]
+    (0x50414e4943 ('PANIC'), 0x444159544148 ('DAYTAH'))
 
 Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
 

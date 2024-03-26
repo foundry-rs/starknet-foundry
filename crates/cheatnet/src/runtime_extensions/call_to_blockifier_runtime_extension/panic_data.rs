@@ -42,9 +42,8 @@ mod test {
     use super::*;
     use cairo_felt::Felt252;
     use cairo_lang_utils::byte_array::BYTE_ARRAY_MAGIC;
-    use conversions::felt252::FromShortString;
+    use conversions::{felt252::FromShortString, string::TryFromHexStr};
     use indoc::indoc;
-    use num_traits::Num;
 
     #[test]
     fn extracting_plain_panic_data() {
@@ -82,7 +81,7 @@ mod test {
                     "#
                 ),
                 Some(vec![
-                    Felt252::from_str_radix(BYTE_ARRAY_MAGIC, 16).unwrap(),
+                    Felt252::try_from_hex_str(&format!("0x{BYTE_ARRAY_MAGIC}")).unwrap(),
                     Felt252::from(1),
                     Felt252::from_short_string("wow message is exactly 31 chars").unwrap(),
                     Felt252::from(0),
@@ -98,7 +97,7 @@ mod test {
                     "#
                 ),
                 Some(vec![
-                    Felt252::from_str_radix(BYTE_ARRAY_MAGIC, 16).unwrap(),
+                    Felt252::try_from_hex_str(&format!("0x{BYTE_ARRAY_MAGIC}")).unwrap(),
                     Felt252::from(0),
                     Felt252::from(0),
                     Felt252::from(0),
@@ -115,7 +114,7 @@ mod test {
                     "#
                 ),
                 Some(vec![
-                    Felt252::from_str_radix(BYTE_ARRAY_MAGIC, 16).unwrap(),
+                    Felt252::try_from_hex_str(&format!("0x{BYTE_ARRAY_MAGIC}")).unwrap(),
                     Felt252::from(3),
                     Felt252::from_short_string("A very long and multiline\nthing").unwrap(),
                     Felt252::from_short_string(" is also being parsed, and can\n").unwrap(),

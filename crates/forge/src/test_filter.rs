@@ -129,16 +129,22 @@ impl TestCaseFilter for TestsFilter {
 mod tests {
     use crate::compiled_raw::{CompiledTestCrateRaw, CrateLocation, TestCaseRaw};
     use crate::test_filter::TestsFilter;
-    use cairo_lang_sierra::program::Program;
+    use cairo_lang_sierra::program::{Program, ProgramArtifact, Version, VersionedProgram};
     use forge_runner::compiled_runnable::TestDetails;
     use forge_runner::expected_result::ExpectedTestResult;
 
-    fn program_for_testing() -> Program {
-        Program {
-            type_declarations: vec![],
-            libfunc_declarations: vec![],
-            statements: vec![],
-            funcs: vec![],
+    fn program_for_testing() -> VersionedProgram {
+        VersionedProgram::V1 {
+            version: Version::<1>,
+            program: ProgramArtifact {
+                program: Program {
+                    type_declarations: vec![],
+                    libfunc_declarations: vec![],
+                    statements: vec![],
+                    funcs: vec![],
+                },
+                debug_info: None,
+            },
         }
     }
 

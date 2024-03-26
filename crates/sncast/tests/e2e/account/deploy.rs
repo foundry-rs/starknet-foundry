@@ -1,10 +1,11 @@
 use crate::helpers::constants::{DEVNET_OZ_CLASS_HASH_CAIRO_0, DEVNET_OZ_CLASS_HASH_CAIRO_1, URL};
-use crate::helpers::fixtures::{convert_to_hex, copy_file};
+use crate::helpers::fixtures::copy_file;
 use crate::helpers::fixtures::{
     get_address_from_keystore, get_transaction_hash, get_transaction_receipt, mint_token,
 };
 use crate::helpers::runner::runner;
 use configuration::copy_config_to_tempdir;
+use conversions::string::IntoHexStr;
 use indoc::indoc;
 use serde_json::Value;
 use shared::test_utils::output_assert::{assert_stderr_contains, AsOutput};
@@ -289,11 +290,7 @@ pub async fn test_happy_case_keystore() {
         KEYSTORE_PASSWORD_ENV_VAR,
     );
 
-    mint_token(
-        &convert_to_hex(&address.to_string()),
-        9_999_999_999_999_999_999,
-    )
-    .await;
+    mint_token(&address.into_hex_string(), 9_999_999_999_999_999_999).await;
 
     let args = vec![
         "--url",
@@ -561,11 +558,7 @@ pub async fn test_deploy_keystore_other_args() {
         KEYSTORE_PASSWORD_ENV_VAR,
     );
 
-    mint_token(
-        &convert_to_hex(&address.to_string()),
-        9_999_999_999_999_999_999,
-    )
-    .await;
+    mint_token(&address.into_hex_string(), 9_999_999_999_999_999_999).await;
 
     let args = vec![
         "--url",

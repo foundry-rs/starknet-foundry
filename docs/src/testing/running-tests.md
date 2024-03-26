@@ -54,7 +54,7 @@ Running 6 test(s) from src/
 [FAIL] package_name::tests::failing
 
 Failure data:
-    original value: [8111420071579136082810415440747], converted to a string: [failing check]
+    0x6661696c696e6720636865636b ('failing check')
 
 Tests: 3 passed, 1 failed, 2 skipped, 0 ignored, 0 filtered out
 

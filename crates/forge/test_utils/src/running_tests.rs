@@ -6,6 +6,7 @@ use forge::test_filter::TestsFilter;
 use forge_runner::contracts_data::ContractsData;
 use forge_runner::test_crate_summary::TestCrateSummary;
 use forge_runner::{RunnerConfig, RunnerParams};
+use shared::command::CommandExt;
 use std::path::PathBuf;
 use std::process::Command;
 use std::process::Stdio;
@@ -15,14 +16,13 @@ use tokio::runtime::Runtime;
 
 #[must_use]
 pub fn run_test_case(test: &TestCase) -> Vec<TestCrateSummary> {
-    let test_build_output = Command::new("scarb")
+    Command::new("scarb")
         .current_dir(test.path().unwrap())
         .arg("snforge-test-collector")
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit())
-        .output()
+        .output_checked()
         .unwrap();
-    assert!(test_build_output.status.success());
 
     let rt = Runtime::new().expect("Could not instantiate Runtime");
 

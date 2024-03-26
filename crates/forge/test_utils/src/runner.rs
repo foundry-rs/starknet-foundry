@@ -1,5 +1,5 @@
 use crate::tempdir_with_tool_versions;
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{anyhow, Context, Result};
 use assert_fs::{
     fixture::{FileTouch, FileWriteStr, PathChild},
     TempDir,
@@ -14,6 +14,7 @@ use indoc::formatdoc;
 use scarb_api::{
     get_contracts_map, metadata::MetadataCommandExt, ScarbCommand, StarknetContractArtifacts,
 };
+use shared::command::CommandExt;
 use std::{
     collections::HashMap,
     fs,
@@ -76,16 +77,13 @@ impl Contract {
             ))
             .unwrap();
 
-        let build_output = Command::new("scarb")
+        Command::new("scarb")
             .current_dir(&dir)
             .arg("build")
             .stdout(Stdio::inherit())
             .stderr(Stdio::inherit())
-            .output()
+            .output_checked()
             .context("Failed to build contracts with Scarb")?;
-        if !build_output.status.success() {
-            bail!("scarb build did not succeed")
-        }
 
         let scarb_metadata = ScarbCommand::metadata()
             .current_dir(dir.path())
