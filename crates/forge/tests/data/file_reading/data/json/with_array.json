@@ -1,6 +1,5 @@
 {
     "aa": 2,
     "array": [1, 23, 4, 5],
-    "mixed_array": [1, "test"],
-    "short_strong_array": ["test", "test2"]
+    "string_array": ["test", "test2"]
 }

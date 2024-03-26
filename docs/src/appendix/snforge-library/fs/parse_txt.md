@@ -31,14 +31,18 @@ fn test_parse_txt() {
 ```
 
 File content must consists of elements that:
-- have to be separated with whitespaces
+- have to be separated with newlines
 - have to be either:
-  - integers in range of `[0, P)` where P is [`Cairo Prime`](https://book.cairo-lang.org/ch02-02-data-types.html?highlight=prime#felt-type)
-  - strings of length `<=31` enclosed in single quotation marks
+  - integers in range of `[0, P)` where P is [`Cairo Prime`](https://book.cairo-lang.org/ch02-02-data-types.html?highlight=prime#felt-type) either in decimal or `0x` prefixed hex format
+  - single line strings of length `<=31` (new lines can be used with \n)
 
 For example, this file content:
 ```txt
-1  2   'hello' 10     'world'
+1
+2
+hello
+10
+world
 ```
 could be parsed to the following struct:
 ```rust

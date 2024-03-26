@@ -1,9 +1,7 @@
 use blockifier::block::BlockInfo;
-use cairo_felt::Felt252;
 use camino::Utf8PathBuf;
-use conversions::{FromConv, IntoConv, TryIntoConv};
+use conversions::string::{IntoDecStr, TryFromDecStr};
 use fs2::FileExt;
-use num_bigint::BigUint;
 use regex::Regex;
 use runtime::starknet::context::SerializableBlockInfo;
 use serde::{Deserialize, Serialize};
@@ -102,7 +100,7 @@ impl ForkCache {
                 .open(&cache_file_path)
                 .unwrap();
 
-            let mut cache_file_content: String = String::new();
+            let mut cache_file_content = String::new();
             file.read_to_string(&mut cache_file_content)
                 .expect("Could not read cache file: {path}");
 
@@ -158,8 +156,8 @@ impl ForkCache {
         contract_address: ContractAddress,
         key: StorageKey,
     ) -> Option<StarkFelt> {
-        let contract_address_str: String = contract_address.into_();
-        let storage_key_str: String = (*key.0.key()).into_();
+        let contract_address_str = contract_address.into_dec_string();
+        let storage_key_str = (*key.0.key()).into_dec_string();
 
         let cache_hit = self
             .fork_cache_content
@@ -168,11 +166,8 @@ impl ForkCache {
             .get(&storage_key_str)?;
 
         Some(
-            Felt252::from(
-                BigUint::parse_bytes(cache_hit.as_bytes(), 10)
-                    .expect("Parsing class_hash_at entry failed"),
-            )
-            .into_(),
+            StarkFelt::try_from_dec_str(cache_hit.as_str())
+                .expect("Parsing class_hash_at entry failed"),
         )
     }
 
@@ -182,9 +177,9 @@ impl ForkCache {
         key: StorageKey,
         value: StarkFelt,
     ) {
-        let contract_address_str: String = contract_address.into_();
-        let storage_key_str: String = (*key.0.key()).into_();
-        let value_str = value.into_();
+        let contract_address_str = contract_address.into_dec_string();
+        let storage_key_str = (*key.0.key()).into_dec_string();
+        let value_str = value.into_dec_string();
 
         self.fork_cache_content
             .storage_at
@@ -201,13 +196,13 @@ impl ForkCache {
     pub(crate) fn get_nonce_at(&self, address: ContractAddress) -> Option<Nonce> {
         self.fork_cache_content
             .nonce_at
-            .get(&String::from_(address))
-            .map(|el| el.clone().try_into_().unwrap())
+            .get(&address.into_dec_string())
+            .map(|el| Nonce::try_from_dec_str(el.as_str()).unwrap())
     }
 
     pub(crate) fn cache_get_nonce_at(&mut self, contract_address: ContractAddress, nonce: Nonce) {
-        let contract_address_str = contract_address.into_();
-        let nonce_str = nonce.into_();
+        let contract_address_str = contract_address.into_dec_string();
+        let nonce_str = nonce.into_dec_string();
 
         self.fork_cache_content
             .nonce_at
@@ -217,13 +212,10 @@ impl ForkCache {
     pub(crate) fn get_class_hash_at(&self, contract_address: ContractAddress) -> Option<ClassHash> {
         self.fork_cache_content
             .class_hash_at
-            .get(&String::from_(contract_address))
+            .get(&contract_address.into_dec_string())
             .map(|dec_string| {
-                Felt252::from(
-                    BigUint::parse_bytes(dec_string.as_bytes(), 10)
-                        .expect("Parsing class_hash_at entry failed"),
-                )
-                .into_()
+                ClassHash::try_from_dec_str(dec_string.as_str())
+                    .expect("Parsing class_hash_at entry failed")
             }) // Entry encoded as a decimal string
     }
 
@@ -232,8 +224,8 @@ impl ForkCache {
         contract_address: ContractAddress,
         class_hash: ClassHash,
     ) {
-        let contract_address_str = contract_address.into_();
-        let class_hash_str = class_hash.into_();
+        let contract_address_str = contract_address.into_dec_string();
+        let class_hash_str = class_hash.into_dec_string();
 
         self.fork_cache_content
             .class_hash_at
@@ -244,7 +236,7 @@ impl ForkCache {
         &self,
         class_hash: &ClassHash,
     ) -> Option<ContractClass> {
-        let class_hash_str: String = (*class_hash).into_();
+        let class_hash_str = (*class_hash).into_dec_string();
         self.fork_cache_content
             .compiled_contract_class
             .get(&class_hash_str)
@@ -258,7 +250,7 @@ impl ForkCache {
         class_hash: &ClassHash,
         contract_class: &ContractClass,
     ) {
-        let class_hash_str = (*class_hash).into_();
+        let class_hash_str = (*class_hash).into_dec_string();
         let contract_class_str = serde_json::to_string(&contract_class)
             .expect("Could not serialize ContractClassV1 into string");
         self.fork_cache_content

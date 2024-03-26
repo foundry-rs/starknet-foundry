@@ -14,14 +14,13 @@ use cheatnet::forking::state::ForkStateReader;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeState;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
 use cheatnet::state::{BlockInfoReader, CheatnetState, ExtendedStateReader};
-use conversions::{IntoConv, TryIntoConv};
-use num_bigint::BigUint;
-use num_traits::Num;
+use conversions::string::{TryFromDecStr, TryFromHexStr};
+use conversions::IntoConv;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use runtime::EnhancedHintError;
 use serde_json::Value;
 use starknet_api::block::BlockNumber;
-use starknet_api::core::ContractAddress;
+use starknet_api::core::{ClassHash, ContractAddress};
 use std::path::PathBuf;
 use std::str::FromStr;
 use tempfile::TempDir;
@@ -35,13 +34,10 @@ fn fork_simple() {
     let mut cheatnet_state = CheatnetState::default();
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
-    let contract_address = Felt252::from(
-        BigUint::from_str(
-            "3216637956526895219277698311134811322769343974163380838558193911733621219342",
-        )
-        .unwrap(),
+    let contract_address = ContractAddress::try_from_dec_str(
+        "3216637956526895219277698311134811322769343974163380838558193911733621219342",
     )
-    .into_();
+    .unwrap();
 
     let selector = felt_selector_from_name("get_balance");
     let output = call_contract(
@@ -104,7 +100,7 @@ fn try_deploying_undeclared_class() {
     let mut cheatnet_state = CheatnetState::default();
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
-    let class_hash = "1".to_owned().try_into_().unwrap();
+    let class_hash = ClassHash::try_from_dec_str("1").unwrap();
 
     assert!(
         match deploy_wrapper(&mut cached_fork_state, &mut runtime_state, &class_hash, &[]) {
@@ -148,12 +144,10 @@ fn test_forking_at_block_number() {
             GlobalContractCache::new(GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST),
         );
 
-        let contract_address = Felt252::from(
-            BigUint::from_str(
-                "3216637956526895219277698311134811322769343974163380838558193911733621219342",
-            )
-            .unwrap(),
+        let contract_address = Felt252::try_from_dec_str(
+            "3216637956526895219277698311134811322769343974163380838558193911733621219342",
         )
+        .unwrap()
         .into_();
 
         let selector = felt_selector_from_name("get_balance");
@@ -196,12 +190,10 @@ fn call_forked_contract_from_other_contract() {
     let mut cheatnet_state = CheatnetState::default();
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
-    let forked_contract_address = Felt252::from(
-        BigUint::from_str(
-            "3216637956526895219277698311134811322769343974163380838558193911733621219342",
-        )
-        .unwrap(),
-    );
+    let forked_contract_address = Felt252::try_from_dec_str(
+        "3216637956526895219277698311134811322769343974163380838558193911733621219342",
+    )
+    .unwrap();
 
     let contract_address = deploy_contract(
         &mut cached_fork_state,
@@ -229,12 +221,10 @@ fn library_call_on_forked_class_hash() {
     let mut cheatnet_state = CheatnetState::default();
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
-    let forked_class_hash = Felt252::from(
-        BigUint::from_str(
-            "2721209982346623666255046859539202086457905975723689966720503254490557413774",
-        )
-        .unwrap(),
-    );
+    let forked_class_hash = Felt252::try_from_dec_str(
+        "2721209982346623666255046859539202086457905975723689966720503254490557413774",
+    )
+    .unwrap();
 
     let contract_address = deploy_contract(
         &mut cached_fork_state,
@@ -279,19 +269,15 @@ fn call_forked_contract_from_constructor() {
     let mut cheatnet_state = CheatnetState::default();
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
-    let forked_class_hash = Felt252::from(
-        BigUint::from_str(
-            "2721209982346623666255046859539202086457905975723689966720503254490557413774",
-        )
-        .unwrap(),
-    );
+    let forked_class_hash = Felt252::try_from_dec_str(
+        "2721209982346623666255046859539202086457905975723689966720503254490557413774",
+    )
+    .unwrap();
 
-    let forked_contract_address = Felt252::from(
-        BigUint::from_str(
-            "3216637956526895219277698311134811322769343974163380838558193911733621219342",
-        )
-        .unwrap(),
-    );
+    let forked_contract_address = Felt252::try_from_dec_str(
+        "3216637956526895219277698311134811322769343974163380838558193911733621219342",
+    )
+    .unwrap();
 
     let contract_address = deploy_contract(
         &mut cached_fork_state,
@@ -322,12 +308,10 @@ fn call_forked_contract_get_block_info_via_proxy() {
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
     runtime_state.cheatnet_state.block_info = block_info;
 
-    let forked_contract_address = Felt252::from(
-        BigUint::from_str(
-            "2142482702760034245482243841749569811658592971915399561448302710970247869206",
-        )
-        .unwrap(),
-    );
+    let forked_contract_address = Felt252::try_from_dec_str(
+        "2142482702760034245482243841749569811658592971915399561448302710970247869206",
+    )
+    .unwrap();
 
     let contract_address = deploy_contract(
         &mut cached_fork_state,
@@ -366,13 +350,10 @@ fn call_forked_contract_get_block_info_via_proxy() {
     );
     assert_success(
         output,
-        &[Felt252::from(
-            BigUint::from_str_radix(
-                &"0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8"[2..],
-                16,
-            )
-            .unwrap(),
-        )],
+        &[Felt252::try_from_hex_str(
+            "0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8",
+        )
+        .unwrap()],
     );
 }
 
@@ -387,13 +368,10 @@ fn call_forked_contract_get_block_info_via_libcall() {
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
     runtime_state.cheatnet_state.block_info = block_info;
 
-    let forked_class_hash = Felt252::from(
-        BigUint::from_str_radix(
-            &"0x00623d04363a9502cd0706dfc717574dd3c596f162c3867456002f25c706cd14"[2..],
-            16,
-        )
-        .unwrap(),
-    );
+    let forked_class_hash = Felt252::try_from_hex_str(
+        "0x00623d04363a9502cd0706dfc717574dd3c596f162c3867456002f25c706cd14",
+    )
+    .unwrap();
 
     let contract_address = deploy_contract(
         &mut cached_fork_state,
@@ -432,13 +410,10 @@ fn call_forked_contract_get_block_info_via_libcall() {
     );
     assert_success(
         output,
-        &[Felt252::from(
-            BigUint::from_str_radix(
-                &"0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8"[2..],
-                16,
-            )
-            .unwrap(),
-        )],
+        &[Felt252::try_from_hex_str(
+            "0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8",
+        )
+        .unwrap()],
     );
 }
 
@@ -453,13 +428,10 @@ fn using_specified_block_nb_is_cached() {
 
         let mut cheatnet_state = CheatnetState::default();
         let mut runtime_state = build_runtime_state(&mut cheatnet_state);
-        let contract_address = Felt252::from(
-            BigUint::from_str(
-                "3216637956526895219277698311134811322769343974163380838558193911733621219342",
-            )
-            .unwrap(),
+        let contract_address = ContractAddress::try_from_dec_str(
+            "3216637956526895219277698311134811322769343974163380838558193911733621219342",
         )
-        .into_();
+        .unwrap();
 
         let selector = felt_selector_from_name("get_balance");
         let output = call_contract(
@@ -539,7 +511,7 @@ fn test_cache_merging() {
 
         let mut cheatnet_state = CheatnetState::default();
         let mut runtime_state = build_runtime_state(&mut cheatnet_state);
-        let contract_address = Felt252::from(BigUint::from_str(contract_address).unwrap()).into_();
+        let contract_address = ContractAddress::try_from_dec_str(contract_address).unwrap();
 
         let selector = felt_selector_from_name("get_balance");
         let output = call_contract(
@@ -653,7 +625,7 @@ fn test_cached_block_info_merging() {
         }
         let mut cheatnet_state = CheatnetState::default();
         let mut runtime_state = build_runtime_state(&mut cheatnet_state);
-        let contract_address = Felt252::from(BigUint::from_str(contract_address).unwrap()).into_();
+        let contract_address = ContractAddress::try_from_dec_str(contract_address).unwrap();
 
         let selector = felt_selector_from_name("get_balance");
         let output = call_contract(
@@ -731,13 +703,10 @@ fn test_calling_nonexistent_url() {
     let mut cheatnet_state = CheatnetState::default();
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
-    let contract_address = Felt252::from(
-        BigUint::from_str(
-            "3216637956526895219277698311134811322769343974163380838558193911733621219342",
-        )
-        .unwrap(),
+    let contract_address = ContractAddress::try_from_dec_str(
+        "3216637956526895219277698311134811322769343974163380838558193911733621219342",
     )
-    .into_();
+    .unwrap();
 
     let selector = felt_selector_from_name("get_balance");
     let output = call_contract(

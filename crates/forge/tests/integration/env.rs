@@ -48,14 +48,15 @@ fn read_felt252() {
 }
 
 #[test]
-fn read_invalid_felt252() {
+fn read_overflow_felt252() {
     let mut test = test_case!(indoc!(
         r#"
         use snforge_std::env::var;
 
         #[test]
-        fn read_invalid_felt252() {
-            var("MY_ENV_VAR");
+        fn read_overflow_felt252() {
+            let result = var("MY_ENV_VAR");
+            assert(result == 1, '');
         }
     "#
     ));
@@ -65,12 +66,7 @@ fn read_invalid_felt252() {
 
     let result = run_test_case(&test);
 
-    assert_failed(&result);
-    assert_case_output_contains(
-        &result,
-        "read_invalid_felt252",
-        &format!("Failed to parse value = {value} to felt"),
-    );
+    assert_passed(&result);
 }
 
 #[test]

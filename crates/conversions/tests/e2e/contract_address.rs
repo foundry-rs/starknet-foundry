@@ -1,8 +1,8 @@
 #[cfg(test)]
 mod tests_contract_address {
-    use crate::helpers::hex::str_hex_to_stark_felt;
     use cairo_felt::{Felt252, PRIME_STR};
-    use conversions::{FromConv, IntoConv, TryFromConv, TryIntoConv};
+    use conversions::string::{IntoDecStr, TryFromDecStr, TryFromHexStr};
+    use conversions::{FromConv, IntoConv};
     use starknet::core::types::FieldElement;
     use starknet_api::core::{ClassHash, EntryPointSelector, Nonce};
     use starknet_api::hash::StarkHash;
@@ -32,7 +32,7 @@ mod tests_contract_address {
 
         assert_eq!(
             contract_address,
-            String::from_(contract_address).try_into_().unwrap()
+            ContractAddress::try_from_dec_str(&contract_address.into_dec_string()).unwrap()
         );
     }
 
@@ -57,16 +57,15 @@ mod tests_contract_address {
 
         assert_eq!(
             contract_address,
-            String::from_(contract_address).try_into_().unwrap()
+            ContractAddress::try_from_dec_str(&contract_address.into_dec_string()).unwrap()
         );
     }
 
     #[test]
     fn test_contract_address_conversions_limit() {
         // PATRICIA_KEY_UPPER_BOUND for contract_address from starknet_api-0.4.1/src/core.rs:156
-        let mut max_value = "0x07ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
-        let mut contract_address =
-            ContractAddress(PatriciaKey::try_from(str_hex_to_stark_felt(max_value)).unwrap());
+        let mut max_value = "0x07fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe";
+        let mut contract_address = ContractAddress::try_from_hex_str(max_value).unwrap();
 
         assert_eq!(contract_address, ClassHash::from_(contract_address).into_(),);
         assert_eq!(contract_address, Felt252::from_(contract_address).into_());
@@ -84,18 +83,18 @@ mod tests_contract_address {
 
         // Unknown source for this value, founded by try and error(cairo-lang-runner-2.2.0/src/short_string.rs).
         max_value = "0x0777777777777777777777777777777777777f7f7f7f7f7f7f7f7f7f7f7f7f7f";
-        contract_address =
-            ContractAddress(PatriciaKey::try_from(str_hex_to_stark_felt(max_value)).unwrap());
+        contract_address = ContractAddress::try_from_hex_str(max_value).unwrap();
 
         assert_eq!(
             contract_address,
-            String::from_(contract_address).try_into_().unwrap()
+            ContractAddress::try_from_dec_str(&contract_address.into_dec_string()).unwrap()
         );
     }
 
     #[test]
     fn test_contract_address_conversions_out_of_range() {
-        let prime = String::from(PRIME_STR);
-        assert!(ContractAddress::try_from_(prime).is_err());
+        assert!(
+            ContractAddress::try_from_hex_str(PRIME_STR).unwrap() == Felt252::from(0_u8).into_()
+        );
     }
 }

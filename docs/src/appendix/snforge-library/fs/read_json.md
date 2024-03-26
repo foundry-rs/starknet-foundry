@@ -25,7 +25,7 @@ fn test_read_json() {
 
 File content must have proper JSON Format with values satisfying the conditions:
   - integers in range of `[0, P)` where P is [`Cairo Prime`](https://book.cairo-lang.org/ch02-02-data-types.html?highlight=prime#felt-type)
-  - strings of length `<=31`
+  - single line strings (`ByteArray`) ie. `"very very very very loooooong string"`, new lines can be used with `\n` and `"` with `\"`
   - array of integers or strings fulfilling the above conditions
 
 For example, this file content:
@@ -36,11 +36,11 @@ For example, this file content:
     "d": {
         "e": 1234
     },
-    "c": "123"
+    "c": 123
 }
 ```
 will be read to the following array:
 
 ```rust
-array![12, 1, '123', 1234]
+array![12, 1, 123, 1234]
 ```

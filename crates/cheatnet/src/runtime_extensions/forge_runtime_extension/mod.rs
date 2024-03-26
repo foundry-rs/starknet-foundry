@@ -1,53 +1,60 @@
-use std::collections::HashMap;
-
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
-    CallFailure, CallResult, UsedResources,
+use crate::{
+    runtime_extensions::{
+        call_to_blockifier_runtime_extension::{
+            rpc::{CallFailure, CallResult, UsedResources},
+            CallToBlockifierRuntime, RuntimeState,
+        },
+        cheatable_starknet_runtime_extension::SyscallSelector,
+        common::{get_relocated_vm_trace, sum_syscall_counters},
+        forge_runtime_extension::cheatcodes::{
+            declare::declare,
+            deploy::{deploy, deploy_at},
+            get_class_hash::get_class_hash,
+            l1_handler_execute::l1_handler_execute,
+            spy_events::SpyTarget,
+            storage::{calculate_variable_address, load, store},
+            CheatcodeError,
+        },
+    },
+    state::{CallTrace, CheatSpan, CheatTarget},
 };
-use crate::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::{deploy, deploy_at};
-use crate::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
-use crate::state::{CallTrace, CheatSpan, CheatTarget};
-use anyhow::{Context, Result};
-use blockifier::context::TransactionContext;
-use blockifier::execution::call_info::{CallExecution, CallInfo};
-use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
-use blockifier::execution::entry_point::{CallEntryPoint, CallType};
-use blockifier::execution::execution_utils::stark_felt_to_felt;
-use blockifier::execution::syscalls::hint_processor::SyscallCounter;
-use blockifier::versioned_constants::VersionedConstants;
+use anyhow::{anyhow, Context, Result};
+use blockifier::{
+    context::TransactionContext,
+    execution::{
+        call_info::{CallExecution, CallInfo},
+        deprecated_syscalls::DeprecatedSyscallSelector,
+        entry_point::{CallEntryPoint, CallType},
+        execution_utils::stark_felt_to_felt,
+        syscalls::hint_processor::SyscallCounter,
+    },
+    versioned_constants::VersionedConstants,
+};
 use cairo_felt::Felt252;
-use cairo_vm::vm::errors::hint_errors::HintError;
-use cairo_vm::vm::vm_core::VirtualMachine;
-use conversions::felt252::FromShortString;
-use conversions::{FromConv, IntoConv};
-use num_traits::ToPrimitive;
-use scarb_api::StarknetContractArtifacts;
-
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_starknet_classes::keccak::starknet_keccak;
-use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
-use starknet_api::core::ContractAddress;
-
-use crate::runtime_extensions::common::{get_relocated_vm_trace, sum_syscall_counters};
-use crate::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
-use crate::runtime_extensions::forge_runtime_extension::cheatcodes::get_class_hash::get_class_hash;
-use crate::runtime_extensions::forge_runtime_extension::cheatcodes::l1_handler_execute::l1_handler_execute;
-use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::SpyTarget;
-use crate::runtime_extensions::forge_runtime_extension::cheatcodes::storage::{
-    calculate_variable_address, load, store,
+use cairo_vm::vm::{
+    errors::hint_errors::HintError, runners::cairo_runner::ExecutionResources,
+    vm_core::VirtualMachine,
 };
-use crate::runtime_extensions::forge_runtime_extension::file_operations::string_into_felt;
-use conversions::byte_array::ByteArray;
-use runtime::utils::{BufferReadError, BufferReadResult, BufferReader};
+use conversions::{
+    byte_array::ByteArray,
+    felt252::{FromShortString, TryInferFormat},
+    FromConv, IntoConv,
+};
+use num_traits::ToPrimitive;
 use runtime::{
+    utils::{BufferReadError, BufferReadResult, BufferReader},
     CheatcodeHandlingResult, EnhancedHintError, ExtendedRuntime, ExtensionLogic,
     SyscallHandlingResult,
 };
+use scarb_api::StarknetContractArtifacts;
 use starknet::signers::SigningKey;
-use starknet_api::deprecated_contract_class::EntryPointType;
-use starknet_api::deprecated_contract_class::EntryPointType::L1Handler;
-
-use super::call_to_blockifier_runtime_extension::{CallToBlockifierRuntime, RuntimeState};
-use super::cheatable_starknet_runtime_extension::SyscallSelector;
+use starknet_api::{
+    core::ContractAddress,
+    deprecated_contract_class::EntryPointType::{self, L1Handler},
+};
+use std::collections::HashMap;
 
 pub mod cheatcodes;
 mod file_operations;
@@ -367,10 +374,10 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .get(&name)
                     .with_context(|| format!("Failed to read from env var = {name}"))?;
 
-                let parsed_env_var = string_into_felt(env_var)
-                    .with_context(|| format!("Failed to parse value = {env_var} to felt"))?;
+                let parsed_env_var = Felt252::infer_format_and_parse(env_var)
+                    .map_err(|_| anyhow!("Failed to parse value = {env_var} to felt"))?;
 
-                Ok(CheatcodeHandlingResult::Handled(vec![parsed_env_var]))
+                Ok(CheatcodeHandlingResult::Handled(parsed_env_var))
             }
             "get_class_hash" => {
                 let contract_address = input_reader.read_felt()?.into_();

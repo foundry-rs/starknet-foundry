@@ -66,7 +66,7 @@ Running 1 test(s) from src/
 [FAIL] package_name::tests::failing
 
 Failure data:
-    [6381921], converted to a string: [aaa]
+    0x616161 ('aaa')
 
 Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
 
@@ -141,3 +141,5 @@ Running 1 test(s) from src/
 
 Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ```
+
+For more information about how starknet-foundry calculates those, see [gas and resource estimation](gas-and-resource-estimation.md) section.
