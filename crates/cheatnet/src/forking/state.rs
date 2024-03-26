@@ -1,5 +1,6 @@
 use crate::forking::cache::ForkCache;
 use crate::state::BlockInfoReader;
+use anyhow::Result;
 use blockifier::block::BlockInfo;
 use blockifier::execution::contract_class::{
     ContractClass as ContractClassBlockifier, ContractClassV0, ContractClassV1,
@@ -40,14 +41,13 @@ pub struct ForkStateReader {
 }
 
 impl ForkStateReader {
-    #[must_use]
-    pub fn new(url: Url, block_number: BlockNumber, cache_dir: &str) -> Self {
-        ForkStateReader {
-            cache: ForkCache::load_or_new(&url, block_number, cache_dir),
+    pub fn new(url: Url, block_number: BlockNumber, cache_dir: &str) -> Result<Self> {
+        Ok(ForkStateReader {
+            cache: ForkCache::load_or_new(&url, block_number, cache_dir)?,
             client: JsonRpcClient::new(HttpTransport::new(url)),
             block_number,
             runtime: Runtime::new().expect("Could not instantiate Runtime"),
-        }
+        })
     }
 
     fn block_id(&self) -> BlockId {

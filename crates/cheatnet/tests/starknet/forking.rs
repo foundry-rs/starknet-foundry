@@ -123,11 +123,14 @@ fn test_forking_at_block_number() {
         let mut cached_state_before_delopy = CachedState::new(
             ExtendedStateReader {
                 dict_state_reader: build_testing_state(),
-                fork_state_reader: Some(ForkStateReader::new(
-                    node_url.clone(),
-                    BlockNumber(309_780),
-                    cache_dir.path().to_str().unwrap(),
-                )),
+                fork_state_reader: Some(
+                    ForkStateReader::new(
+                        node_url.clone(),
+                        BlockNumber(309_780),
+                        cache_dir.path().to_str().unwrap(),
+                    )
+                    .unwrap(),
+                ),
             },
             GlobalContractCache::new(GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST),
         );
@@ -135,11 +138,14 @@ fn test_forking_at_block_number() {
         let mut cached_state_after_deploy = CachedState::new(
             ExtendedStateReader {
                 dict_state_reader: build_testing_state(),
-                fork_state_reader: Some(ForkStateReader::new(
-                    node_url,
-                    BlockNumber(309_781),
-                    cache_dir.path().to_str().unwrap(),
-                )),
+                fork_state_reader: Some(
+                    ForkStateReader::new(
+                        node_url,
+                        BlockNumber(309_781),
+                        cache_dir.path().to_str().unwrap(),
+                    )
+                    .unwrap(),
+                ),
             },
             GlobalContractCache::new(GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST),
         );
@@ -691,11 +697,14 @@ fn test_calling_nonexistent_url() {
     let mut cached_fork_state = CachedState::new(
         ExtendedStateReader {
             dict_state_reader: build_testing_state(),
-            fork_state_reader: Some(ForkStateReader::new(
-                nonexistent_url,
-                BlockNumber(1),
-                temp_dir.path().to_str().unwrap(),
-            )),
+            fork_state_reader: Some(
+                ForkStateReader::new(
+                    nonexistent_url,
+                    BlockNumber(1),
+                    temp_dir.path().to_str().unwrap(),
+                )
+                .unwrap(),
+            ),
         },
         GlobalContractCache::new(GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST),
     );

@@ -379,6 +379,7 @@ fn get_fork_state_reader(
                 *block_number,
                 workspace_root.join(CACHE_DIR).as_ref(),
             )
+            .unwrap()
         })
 }
 
