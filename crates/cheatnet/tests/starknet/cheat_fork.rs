@@ -11,7 +11,7 @@ use test_case::test_case;
 const CAIRO0_TESTER_ADDRESS: &str =
     "1825832089891106126806210124294467331434544162488231781791271899226056323189";
 
-#[ignore] // TODO (#1916)
+
 #[test_case("return_caller_address"; "when common call")]
 #[test_case("return_proxied_caller_address"; "when library call")]
 fn prank_cairo0_contract(selector: &str) {
@@ -72,7 +72,7 @@ fn prank_cairo0_contract(selector: &str) {
     assert_eq!(unpranked_caller, caller);
 }
 
-#[ignore] // TODO (#1916)
+
 #[test_case("return_block_number"; "when common call")]
 #[test_case("return_proxied_block_number"; "when library call")]
 fn roll_cairo0_contract(selector: &str) {
@@ -132,7 +132,7 @@ fn roll_cairo0_contract(selector: &str) {
     assert_eq!(unrolled_block_number, block_number);
 }
 
-#[ignore] // TODO (#1916)
+
 #[test_case("return_block_timestamp"; "when common call")]
 #[test_case("return_proxied_block_timestamp"; "when library call")]
 fn warp_cairo0_contract(selector: &str) {

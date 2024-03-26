@@ -477,7 +477,7 @@ fn test_emitted_by_emit_events_syscall() {
     );
 }
 
-#[ignore] // TODO (#1916)
+
 #[test]
 fn capture_cairo0_event() {
     let temp_dir = TempDir::new().unwrap();
@@ -485,7 +485,7 @@ fn capture_cairo0_event() {
         ExtendedStateReader {
             dict_state_reader: build_testing_state(),
             fork_state_reader: Some(ForkStateReader::new(
-                "http://188.34.188.184:6060/rpc/v0_7".parse().unwrap(),
+                "http://188.34.188.184:7070/rpc/v0_7".parse().unwrap(),
                 BlockNumber(960_107),
                 temp_dir.path().to_str().unwrap(),
             )),

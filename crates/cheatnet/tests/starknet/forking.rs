@@ -26,7 +26,7 @@ use std::str::FromStr;
 use tempfile::TempDir;
 use url::Url;
 
-#[ignore] // TODO (#1916)
+
 #[test]
 fn fork_simple() {
     let cache_dir = TempDir::new().unwrap();
@@ -69,7 +69,7 @@ fn fork_simple() {
     assert_success(output, &[Felt252::from(102)]);
 }
 
-#[ignore] // TODO (#1916)
+
 #[test]
 fn try_calling_nonexistent_contract() {
     let cache_dir = TempDir::new().unwrap();
@@ -112,10 +112,10 @@ fn try_deploying_undeclared_class() {
     );
 }
 
-#[ignore] // TODO (#1916)
+
 #[test]
 fn test_forking_at_block_number() {
-    let node_url: Url = "http://188.34.188.184:9545/rpc/v0_7".parse().unwrap();
+    let node_url: Url = "http://188.34.188.184:7070/rpc/v0_7".parse().unwrap();
     let cache_dir = TempDir::new().unwrap();
 
     {
@@ -182,7 +182,7 @@ fn test_forking_at_block_number() {
     purge_cache(cache_dir.path().to_str().unwrap());
 }
 
-#[ignore] // TODO (#1916)
+
 #[test]
 fn call_forked_contract_from_other_contract() {
     let cache_dir = TempDir::new().unwrap();
@@ -213,7 +213,7 @@ fn call_forked_contract_from_other_contract() {
     assert_success(output, &[Felt252::from(2)]);
 }
 
-#[ignore] // TODO (#1916)
+
 #[test]
 fn library_call_on_forked_class_hash() {
     let cache_dir = TempDir::new().unwrap();
@@ -261,7 +261,7 @@ fn library_call_on_forked_class_hash() {
     assert_success(output, &[Felt252::from(100)]);
 }
 
-#[ignore] // TODO (#1916)
+
 #[test]
 fn call_forked_contract_from_constructor() {
     let cache_dir = TempDir::new().unwrap();
@@ -297,7 +297,7 @@ fn call_forked_contract_from_constructor() {
     assert_success(output, &[Felt252::from(2)]);
 }
 
-#[ignore] // TODO (#1916)
+
 #[test]
 fn call_forked_contract_get_block_info_via_proxy() {
     let cache_dir = TempDir::new().unwrap();
@@ -357,7 +357,7 @@ fn call_forked_contract_get_block_info_via_proxy() {
     );
 }
 
-#[ignore] // TODO (#1916)
+
 #[test]
 fn call_forked_contract_get_block_info_via_libcall() {
     let cache_dir = TempDir::new().unwrap();
@@ -417,7 +417,7 @@ fn call_forked_contract_get_block_info_via_libcall() {
     );
 }
 
-#[ignore] // TODO (#1916)
+
 #[test]
 fn using_specified_block_nb_is_cached() {
     let cache_dir = TempDir::new().unwrap();
@@ -502,7 +502,7 @@ fn using_specified_block_nb_is_cached() {
     purge_cache(cache_dir.path().to_str().unwrap());
 }
 
-#[ignore] // TODO (#1916)
+
 #[test]
 fn test_cache_merging() {
     fn run_test(cache_dir: &str, contract_address: &str, balance: u64) {
@@ -615,7 +615,7 @@ fn test_cache_merging() {
     assert_cache();
 }
 
-#[ignore] // TODO (#1916)
+
 #[test]
 fn test_cached_block_info_merging() {
     fn run_test(cache_dir: &str, contract_address: &str, balance: u64, call_get_block_info: bool) {
@@ -683,7 +683,7 @@ fn test_cached_block_info_merging() {
     assert_cached_block_info(true);
 }
 
-#[ignore] // TODO (#1916)
+
 #[test]
 fn test_calling_nonexistent_url() {
     let temp_dir = TempDir::new().unwrap();

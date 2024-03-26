@@ -293,7 +293,6 @@ fn prank_one_then_all() {
     );
 }
 
-#[ignore] // TODO (#1916)
 #[test]
 fn prank_cairo0_callback() {
     let temp_dir = TempDir::new().unwrap();
@@ -301,7 +300,7 @@ fn prank_cairo0_callback() {
         ExtendedStateReader {
             dict_state_reader: build_testing_state(),
             fork_state_reader: Some(ForkStateReader::new(
-                "http://188.34.188.184:6060/rpc/v0_7".parse().unwrap(),
+                "http://188.34.188.184:7070/rpc/v0_7".parse().unwrap(),
                 BlockNumber(950_486),
                 temp_dir.path().to_str().unwrap(),
             )),
