@@ -61,7 +61,7 @@ enum CallFailure {
     /// Contains raw panic data
     Panic: Array<felt252>,
     /// Contains panic data in parsed form, if parsing is applicable
-    Error: ByteArray
+    Error: ByteArray,
 }
 
 /// Returns current call trace of the test, up to the last call made to a contract
