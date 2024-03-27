@@ -5,49 +5,64 @@ use core::starknet::ContractAddress;
 /// Tree-like structure which contains all of the calls and sub-calls along with the results
 #[derive(Drop, Serde, PartialEq)]
 struct CallTrace {
-    entry_point: CallEntryPoint, /// The topmost entry point of this trace
-    nested_calls: Array<CallTrace>, /// All the calls that happened in the context of `entry_point`
-    result: CallResult
+    /// The topmost entry point of this trace
+    entry_point: CallEntryPoint,
+    /// All the calls that happened in the context of `entry_point`
+    nested_calls: Array<CallTrace>,
+    result: CallResult,
 }
 
 /// A single function entry point summary
 #[derive(Drop, Serde, PartialEq)]
 struct CallEntryPoint {
     entry_point_type: EntryPointType,
-    entry_point_selector: felt252, /// Hashed selector of the invoked function
-    calldata: Array<felt252>, /// Serialized arguments calldata
-    contract_address: ContractAddress, /// Contract address targeted by the call
-    caller_address: ContractAddress, /// Address that the call originates from
+    /// Hashed selector of the invoked function
+    entry_point_selector: felt252,
+    /// Serialized arguments calldata
+    calldata: Array<felt252>,
+    /// Contract address targeted by the call
+    contract_address: ContractAddress,
+    /// Address that the call originates from
+    caller_address: ContractAddress,
     call_type: CallType,
 }
 
 /// Type of the function being invoked
 #[derive(Drop, Serde, PartialEq)]
 enum EntryPointType {
-    Constructor, /// Constructor of a contract
-    External, /// Contract interface entry point
-    L1Handler, /// An entrypoint for handling messages from L1
+    /// Constructor of a contract
+    Constructor,
+    /// Contract interface entry point
+    External,
+    /// An entrypoint for handling messages from L1
+    L1Handler,
 }
 
 /// Denotes type of the call
 #[derive(Drop, Serde, PartialEq)]
 enum CallType {
-    Call, /// Regular call
-    Delegate, /// Library call
+    /// Regular call
+    Call,
+    /// Library call
+    Delegate,
 }
 
 /// Result of a contract or a library call
 #[derive(Drop, Serde, PartialEq)]
 enum CallResult {
-    Success: Array<felt252>, /// A successful call with it's result
-    Failure: CallFailure /// A failed call along with it's panic data
+    /// A successful call with it's result
+    Success: Array<felt252>,
+    /// A failed call along with it's panic data
+    Failure: CallFailure,
 }
 
 /// Represents a pre-processed failure of a call
 #[derive(Drop, Serde, PartialEq)]
 enum CallFailure {
-    Panic: Array<felt252>, /// Contains raw panic data
-    Error: ByteArray /// Contains panic data in parsed form, if parsing is applicable
+    /// Contains raw panic data
+    Panic: Array<felt252>,
+    /// Contains panic data in parsed form, if parsing is applicable
+    Error: ByteArray
 }
 
 /// Returns current call trace of the test, up to the last call made to a contract
