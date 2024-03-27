@@ -223,4 +223,14 @@ mod tests {
             "Tried to use incorrect type for fuzzing. Type = invalid is not supported"
         );
     }
+    #[test]
+    fn fuzzer_less_than_3_runs() {
+        for runs in 1..2 {
+            let result = RandomFuzzer::create(1234, NonZeroU32::new(runs).unwrap(), &["felt252"]);
+            let mut fuzzer = result.unwrap();
+
+            // just check if it panics
+            fuzzer.next_args();
+        }
+    }
 }
