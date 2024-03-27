@@ -26,7 +26,7 @@ fn warp_basic() {
             }
 
             fn deploy_warp_checker()  -> IWarpCheckerDispatcher {
-                let contract = declare("WarpChecker");
+                let contract = declare("WarpChecker").unwrap();
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 IWarpCheckerDispatcher { contract_address }
             }
@@ -67,7 +67,7 @@ fn warp_basic() {
 
             #[test]
             fn warp_multiple() {
-                let contract = declare("WarpChecker");
+                let contract = declare("WarpChecker").unwrap();
 
                 let warp_checker1 = IWarpCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };
                 let warp_checker2 = IWarpCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };
@@ -94,7 +94,7 @@ fn warp_basic() {
 
             #[test]
             fn warp_all() {
-                let contract = declare("WarpChecker");
+                let contract = declare("WarpChecker").unwrap();
 
                 let warp_checker1 = IWarpCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };
                 let warp_checker2 = IWarpCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };
@@ -154,14 +154,14 @@ fn warp_complex() {
             }
 
             fn deploy_warp_checker()  -> IWarpCheckerDispatcher {
-                let contract = declare("WarpChecker");
+                let contract = declare("WarpChecker").unwrap();
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 IWarpCheckerDispatcher { contract_address }
             }
 
             #[test]
             fn warp_complex() {
-                let contract = declare("WarpChecker");
+                let contract = declare("WarpChecker").unwrap();
 
                 let warp_checker1 = IWarpCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };
                 let warp_checker2 = IWarpCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };
@@ -233,7 +233,7 @@ fn warp_with_span() {
             }
 
             fn deploy_warp_checker() -> IWarpCheckerDispatcher {
-                let contract_address = declare("WarpChecker").deploy(@ArrayTrait::new()).unwrap();
+                let contract_address = declare("WarpChecker").unwrap().deploy(@ArrayTrait::new()).unwrap();
                 IWarpCheckerDispatcher { contract_address }
             }
 

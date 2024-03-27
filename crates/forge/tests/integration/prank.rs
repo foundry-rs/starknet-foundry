@@ -24,7 +24,7 @@ fn prank() {
 
             #[test]
             fn test_stop_prank() {
-                let contract = declare("PrankChecker");
+                let contract = declare("PrankChecker").unwrap();
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IPrankCheckerDispatcher { contract_address };
 
@@ -46,7 +46,7 @@ fn prank() {
 
             #[test]
             fn test_prank_all() {
-                let contract = declare("PrankChecker");
+                let contract = declare("PrankChecker").unwrap();
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IPrankCheckerDispatcher { contract_address };
 
@@ -68,7 +68,7 @@ fn prank() {
 
             #[test]
             fn test_prank_all_stop_one() {
-                let contract = declare("PrankChecker");
+                let contract = declare("PrankChecker").unwrap();
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IPrankCheckerDispatcher { contract_address };
 
@@ -90,7 +90,7 @@ fn prank() {
 
             #[test]
             fn test_prank_multiple() {
-                let contract = declare("PrankChecker");
+                let contract = declare("PrankChecker").unwrap();
 
                 let contract_address1 = contract.deploy(@ArrayTrait::new()).unwrap();
                 let contract_address2 = contract.deploy(@ArrayTrait::new()).unwrap();
@@ -153,7 +153,7 @@ fn prank_with_span() {
             }
 
             fn deploy_prank_checker() -> IPrankCheckerDispatcher {
-                let contract_address = declare("PrankChecker").deploy(@ArrayTrait::new()).unwrap();
+                let contract_address = declare("PrankChecker").unwrap().deploy(@ArrayTrait::new()).unwrap();
                 IPrankCheckerDispatcher { contract_address }
             }
 

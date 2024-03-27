@@ -20,7 +20,7 @@ fn using_dict() {
         
         #[test]
         fn using_dict() {
-            let contract = declare("DictUsingContract");
+            let contract = declare("DictUsingContract").unwrap();
             let numbers = array![1, 2, 3, 3, 3, 3 ,3, 4, 4, 4, 4, 4, 5, 5, 5, 5];
             let mut inputs: Array<felt252> = array![];
             numbers.serialize(ref inputs);

@@ -16,7 +16,7 @@ trait IHelloStarknet<TContractState> {
 #[test]
 fn declare_and_interact() {
     assert(1 == 1, 'simple check');
-    let contract = declare("HelloStarknet");
+    let contract = declare("HelloStarknet").unwrap();
     let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
     let dispatcher = IHelloStarknetDispatcher { contract_address };
 

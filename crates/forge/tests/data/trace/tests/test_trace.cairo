@@ -9,7 +9,7 @@ use trace_info::{
 #[test]
 #[feature("safe_dispatcher")]
 fn test_trace_print() {
-    let sc = declare("SimpleContract");
+    let sc = declare("SimpleContract").unwrap();
 
     let contract_address_A = sc.deploy(@array![]).unwrap();
     let contract_address_B = sc.deploy(@array![]).unwrap();

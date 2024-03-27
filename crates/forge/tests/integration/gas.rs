@@ -16,7 +16,7 @@ fn declare_cost_is_omitted() {
 
             #[test]
             fn declare_cost_is_omitted() {
-                declare("GasChecker");
+                declare("GasChecker").unwrap();
             }
         "#
         ),
@@ -44,7 +44,7 @@ fn deploy_syscall_cost() {
 
             #[test]
             fn deploy_syscall_cost() {
-                let contract = declare("GasConstructorChecker");
+                let contract = declare("GasConstructorChecker").unwrap();
                 let (address, _) = deploy_syscall(contract.class_hash, 0, array![].span(), false).unwrap();
                 assert(address != 0.try_into().unwrap(), 'wrong deployed addr');
             }
@@ -76,7 +76,7 @@ fn snforge_std_deploy_cost() {
             
             #[test]
             fn deploy_cost() {
-                let contract = declare("GasConstructorChecker");
+                let contract = declare("GasConstructorChecker").unwrap();
                 let address = contract.deploy(@array![]).unwrap();
                 assert(address != 0.try_into().unwrap(), 'wrong deployed addr');
             }
@@ -128,7 +128,7 @@ fn contract_keccak_cost() {
 
             #[test]
             fn contract_keccak_cost() {
-                let contract = declare("GasChecker");
+                let contract = declare("GasChecker").unwrap();
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IGasCheckerDispatcher { contract_address };
 
@@ -185,7 +185,7 @@ fn contract_range_check_cost() {
 
             #[test]
             fn contract_range_check_cost() {
-                let contract = declare("GasChecker");
+                let contract = declare("GasChecker").unwrap();
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IGasCheckerDispatcher { contract_address };
 
@@ -241,7 +241,7 @@ fn contract_bitwise_cost() {
 
             #[test]
             fn contract_bitwise_cost() {
-                let contract = declare("GasChecker");
+                let contract = declare("GasChecker").unwrap();
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IGasCheckerDispatcher { contract_address };
 
@@ -297,7 +297,7 @@ fn contract_pedersen_cost() {
 
             #[test]
             fn contract_pedersen_cost() {
-                let contract = declare("GasChecker");
+                let contract = declare("GasChecker").unwrap();
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IGasCheckerDispatcher { contract_address };
 
@@ -353,7 +353,7 @@ fn contract_poseidon_cost() {
 
             #[test]
             fn contract_poseidon_cost() {
-                let contract = declare("GasChecker");
+                let contract = declare("GasChecker").unwrap();
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IGasCheckerDispatcher { contract_address };
 
@@ -411,7 +411,7 @@ fn contract_ec_op_cost() {
 
             #[test]
             fn contract_ec_op_cost() {
-                let contract = declare("GasChecker");
+                let contract = declare("GasChecker").unwrap();
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IGasCheckerDispatcher { contract_address };
 
@@ -448,7 +448,7 @@ fn storage_write_cost() {
 
             #[test]
             fn storage_write_cost() {
-                let contract = declare("GasChecker");
+                let contract = declare("GasChecker").unwrap();
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IGasCheckerDispatcher { contract_address };
 
@@ -520,7 +520,7 @@ fn multiple_storage_writes_cost() {
 
             #[test]
             fn multiple_storage_writes_cost() {
-                let contract = declare("GasChecker");
+                let contract = declare("GasChecker").unwrap();
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IGasCheckerDispatcher { contract_address };
 
@@ -564,7 +564,7 @@ fn l1_message_cost() {
 
             #[test]
             fn l1_message_cost() {
-                let contract = declare("GasChecker");
+                let contract = declare("GasChecker").unwrap();
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IGasCheckerDispatcher { contract_address };
 
@@ -625,10 +625,10 @@ fn l1_message_cost_for_proxy() {
 
             #[test]
             fn l1_message_cost_for_proxy() {
-                let contract = declare("GasChecker");
+                let contract = declare("GasChecker").unwrap();
                 let gas_checker_address = contract.deploy(@ArrayTrait::new()).unwrap();
 
-                let contract = declare("GasCheckerProxy");
+                let contract = declare("GasCheckerProxy").unwrap();
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IGasCheckerProxyDispatcher { contract_address };
 
@@ -670,7 +670,7 @@ fn l1_handler_cost() {
 
             #[test]
             fn l1_handler_cost() {
-                let contract = declare("GasChecker");
+                let contract = declare("GasChecker").unwrap();
                 let contract_address = contract.deploy(@array![]).unwrap();
                 
                 let mut l1_handler = L1HandlerTrait::new(contract_address, selector!("handle_l1_message"));
@@ -742,7 +742,7 @@ fn events_contract_cost() {
 
             #[test]
             fn event_emission_cost() {
-                let contract_address = declare("GasChecker").deploy(@array![]).unwrap();
+                let contract_address = declare("GasChecker").unwrap().deploy(@array![]).unwrap();
                 let dispatcher = IGasCheckerDispatcher { contract_address };
 
                 dispatcher.emit_event(50);

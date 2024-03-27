@@ -76,7 +76,7 @@ trait ISpyEventsChecker<TContractState> {
 
 #[test]
 fn test_complex_assertions() {
-    let contract = declare("SpyEventsChecker");
+    let contract = declare("SpyEventsChecker").unwrap();
     let contract_address = contract.deploy(array![]).unwrap();
     let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
 
@@ -134,7 +134,7 @@ trait ISpyEventsChecker<TContractState> {
 
 #[test]
 fn test_simple_assertions() {
-    let contract = declare("SpyEventsChecker");
+    let contract = declare("SpyEventsChecker").unwrap();
     let contract_address = contract.deploy(array![]).unwrap();
     let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
 
@@ -201,7 +201,7 @@ trait ISpyEventsChecker<TContractState> {
 
 #[test]
 fn test_simple_assertions() {
-    let contract = declare("SpyEventsChecker");
+    let contract = declare("SpyEventsChecker").unwrap();
     let first_address = contract.deploy(array![]).unwrap();
     let second_address = contract.deploy(array![]).unwrap();
     let third_address = contract.deploy(array![]).unwrap();
@@ -270,7 +270,7 @@ trait ISpyEventsChecker<TContractState> {
 
 #[test]
 fn test_simple_assertions() {
-    let contract = declare("SpyEventsChecker");
+    let contract = declare("SpyEventsChecker").unwrap();
     let contract_address = contract.deploy(array![]).unwrap();
     let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
 

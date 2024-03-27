@@ -15,7 +15,7 @@ fn error_handling() {
 
         #[test]
         fn error_handling() {
-            let contract = declare("PanickingConstructor");
+            let contract = declare("PanickingConstructor").unwrap();
 
             match contract.deploy(@ArrayTrait::new()) {
                 Result::Ok(_) => panic_with_felt252('Should have panicked'),
@@ -55,7 +55,7 @@ fn deploy_syscall_check() {
 
         #[test]
         fn deploy_syscall_check() {
-            let contract = declare("DeployChecker");
+            let contract = declare("DeployChecker").unwrap();
             let salt = 1;
             let calldata = array![10];
         

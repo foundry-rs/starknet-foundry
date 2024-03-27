@@ -30,7 +30,7 @@ fn l1_handler_execute() {
             fn l1_handler_execute() {
                 let calldata = array![0x123];
 
-                let contract = declare("l1_handler_executor");
+                let contract = declare("l1_handler_executor").unwrap();
                 let contract_address = contract.deploy(@calldata).unwrap();
 
                 let l1_data = L1Data {
@@ -60,7 +60,7 @@ fn l1_handler_execute() {
             fn l1_handler_execute_panicking() {
                 let calldata = array![0x123];
 
-                let contract = declare("l1_handler_executor");
+                let contract = declare("l1_handler_executor").unwrap();
                 let contract_address = contract.deploy(@calldata).unwrap();
 
 

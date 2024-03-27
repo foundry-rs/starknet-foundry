@@ -40,7 +40,7 @@ mod tests {
 
     #[test]
     fn contract_test() {
-        declare("FibonacciContract");
-        declare("SubtractionContract");
+        declare("FibonacciContract").unwrap();
+        declare("SubtractionContract").unwrap();
     }
 }

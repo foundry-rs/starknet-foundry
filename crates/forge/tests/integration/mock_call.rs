@@ -21,7 +21,7 @@ fn mock_call_simple() {
         fn mock_call_simple() {
             let calldata = array![420];
 
-            let contract = declare("MockChecker");
+            let contract = declare("MockChecker").unwrap();
             let contract_address = contract.deploy(@calldata).unwrap();
 
             let dispatcher = IMockCheckerDispatcher { contract_address };
@@ -41,7 +41,7 @@ fn mock_call_simple() {
         fn mock_call_simple_before_dispatcher_created() {
             let calldata = array![420];
 
-            let contract = declare("MockChecker");
+            let contract = declare("MockChecker").unwrap();
             let contract_address = contract.deploy(@calldata).unwrap();
 
             let mock_ret_data = 421;
@@ -91,7 +91,7 @@ fn mock_call_complex_types() {
         fn start_mock_call_return_struct() {
             let calldata = array![420];
 
-            let contract = declare("MockChecker");
+            let contract = declare("MockChecker").unwrap();
             let contract_address = contract.deploy(@calldata).unwrap();
 
             let dispatcher = IMockCheckerDispatcher { contract_address };
@@ -109,7 +109,7 @@ fn mock_call_complex_types() {
         fn start_mock_call_return_arr() {
             let calldata = array![420];
 
-            let contract = declare("MockChecker");
+            let contract = declare("MockChecker").unwrap();
             let contract_address = contract.deploy(@calldata).unwrap();
 
             let dispatcher = IMockCheckerDispatcher { contract_address };
@@ -157,7 +157,7 @@ fn mock_calls() {
         fn mock_call_one() {
             let calldata = array![420];
 
-            let contract = declare("MockChecker");
+            let contract = declare("MockChecker").unwrap();
             let contract_address = contract.deploy(@calldata).unwrap();
 
             let dispatcher = IMockCheckerDispatcher { contract_address };
@@ -177,7 +177,7 @@ fn mock_calls() {
         fn mock_call_twice() {
             let calldata = array![420];
 
-            let contract = declare("MockChecker");
+            let contract = declare("MockChecker").unwrap();
             let contract_address = contract.deploy(@calldata).unwrap();
 
             let dispatcher = IMockCheckerDispatcher { contract_address };

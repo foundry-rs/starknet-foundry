@@ -17,8 +17,8 @@ fn trace_deploy() {
             
             #[test]
             fn test_deploy_trace_info() {
-                let proxy = declare("TraceInfoProxy");
-                let checker = declare("TraceInfoChecker");
+                let proxy = declare("TraceInfoProxy").unwrap();
+                let checker = declare("TraceInfoChecker").unwrap();
             
                 let checker_address = checker.deploy(@array![]).unwrap();
             
@@ -187,9 +187,9 @@ fn trace_call() {
             
             #[test]
             fn test_call_trace_info() {
-                let proxy = declare("TraceInfoProxy");
-                let checker = declare("TraceInfoChecker");
-                let dummy = declare("TraceDummy");
+                let proxy = declare("TraceInfoProxy").unwrap();
+                let checker = declare("TraceInfoChecker").unwrap();
+                let dummy = declare("TraceDummy").unwrap();
             
                 let checker_address = checker.deploy(@array![]).unwrap();
                 let proxy_address = proxy.deploy(@array![checker_address.into()]).unwrap();
@@ -407,8 +407,8 @@ fn trace_failed_call() {
             #[test]
             #[feature("safe_dispatcher")]
             fn test_failed_call_trace_info() {
-                let proxy = declare("TraceInfoProxy");
-                let checker = declare("TraceInfoChecker");
+                let proxy = declare("TraceInfoProxy").unwrap();
+                let checker = declare("TraceInfoChecker").unwrap();
             
                 let checker_address = checker.deploy(@array![]).unwrap();
                 let proxy_address = proxy.deploy(@array![checker_address.into()]).unwrap();
@@ -560,9 +560,9 @@ fn trace_library_call_from_test() {
             
             #[test]
             fn test_library_call_trace_info() {
-                let proxy_hash = declare("TraceInfoProxy").class_hash;
-                let checker = declare("TraceInfoChecker");
-                let dummy = declare("TraceDummy");
+                let proxy_hash = declare("TraceInfoProxy").unwrap().class_hash;
+                let checker = declare("TraceInfoChecker").unwrap();
+                let dummy = declare("TraceDummy").unwrap();
             
                 let checker_address = checker.deploy(@array![]).unwrap();
                 let dummy_address = dummy.deploy(@array![]).unwrap();
@@ -754,8 +754,8 @@ fn trace_failed_library_call_from_test() {
             #[test]
             #[feature("safe_dispatcher")]
             fn test_failed_call_trace_info() {
-                let proxy = declare("TraceInfoProxy");
-                let checker = declare("TraceInfoChecker");
+                let proxy = declare("TraceInfoProxy").unwrap();
+                let checker = declare("TraceInfoChecker").unwrap();
             
                 let checker_address = checker.deploy(@array![]).unwrap();
                 let proxy_address = proxy.deploy(@array![checker_address.into()]).unwrap();
@@ -888,8 +888,8 @@ fn trace_l1_handler() {
             
             #[test]
             fn test_l1_handler_call_trace_info() {
-                let proxy = declare("TraceInfoProxy");
-                let checker = declare("TraceInfoChecker");
+                let proxy = declare("TraceInfoProxy").unwrap();
+                let checker = declare("TraceInfoChecker").unwrap();
             
                 let checker_address = checker.deploy(@array![]).unwrap();
                 let proxy_address = proxy.deploy(@array![checker_address.into()]).unwrap();

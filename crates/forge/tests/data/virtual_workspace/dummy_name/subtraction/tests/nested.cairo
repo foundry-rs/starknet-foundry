@@ -13,5 +13,5 @@ fn simple_case() {
 
 #[test]
 fn contract_test() {
-    declare("SubtractionContract");
+    declare("SubtractionContract").unwrap();
 }
