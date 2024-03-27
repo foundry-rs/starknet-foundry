@@ -302,17 +302,8 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 let contract_name = input_reader.read_string()?;
                 let contracts = self.contracts;
-                match declare(*state, &contract_name, contracts) {
-                    Ok(class_hash) => {
-                        let felt_class_hash = stark_felt_to_felt(class_hash.0);
-                        let result = vec![Felt252::from(0), felt_class_hash];
-                        Ok(CheatcodeHandlingResult::Handled(result))
-                    }
-                    Err(CheatcodeError::Recoverable(_)) => {
-                        panic!("Declare should not fail recoverably!")
-                    }
-                    Err(CheatcodeError::Unrecoverable(err)) => Err(err),
-                }
+
+                handle_deploy_declare_result(declare(*state, &contract_name, contracts))
             }
             "deploy" => {
                 let class_hash = input_reader.read_felt()?.into_();
@@ -322,7 +313,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 syscall_handler.increment_syscall_count_by(&DeprecatedSyscallSelector::Deploy, 1);
 
-                handle_deploy_result(deploy(
+                handle_deploy_declare_result(deploy(
                     syscall_handler,
                     &mut RuntimeState {
                         cheatnet_state: cheatnet_runtime.extension.cheatnet_state,
@@ -340,7 +331,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 syscall_handler.increment_syscall_count_by(&DeprecatedSyscallSelector::Deploy, 1);
 
-                handle_deploy_result(deploy_at(
+                handle_deploy_declare_result(deploy_at(
                     syscall_handler,
                     &mut RuntimeState {
                         cheatnet_state: cheatnet_runtime.extension.cheatnet_state,
@@ -667,14 +658,16 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
     }
 }
 
-fn handle_deploy_result(
-    deploy_result: Result<ContractAddress, CheatcodeError>,
-) -> Result<CheatcodeHandlingResult, EnhancedHintError> {
-    match deploy_result {
-        Ok(contract_address) => {
-            let felt_contract_address = contract_address.into_();
-            let result = vec![Felt252::from(0), felt_contract_address];
-            Ok(CheatcodeHandlingResult::Handled(result))
+fn handle_deploy_declare_result<T>(
+    result: Result<T, CheatcodeError>,
+) -> Result<CheatcodeHandlingResult, EnhancedHintError>
+where
+    T: IntoConv<Felt252>,
+{
+    match result {
+        Ok(value) => {
+            let result_arr = vec![Felt252::from(0), value.into_()];
+            Ok(CheatcodeHandlingResult::Handled(result_arr))
         }
         Err(CheatcodeError::Recoverable(panic_data)) => Ok(CheatcodeHandlingResult::Handled(
             cheatcode_panic_result(panic_data),
