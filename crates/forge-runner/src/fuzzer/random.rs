@@ -8,7 +8,7 @@ use std::num::NonZeroU32;
 #[derive(Debug, Clone)]
 pub struct RandomFuzzer {
     rng: StdRng,
-    pub(crate) run_params: RunParams,
+    run_params: RunParams,
 }
 
 impl RandomFuzzer {
@@ -49,12 +49,12 @@ impl RandomFuzzer {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::fuzzer::{arguments::CairoType, FuzzerRun};
+    use crate::fuzzer::{arguments::CairoType, FuzzerArg};
     use num_bigint::BigUint;
     use num_traits::Zero;
     use rand::{thread_rng, RngCore};
 
-    impl FuzzerRun {
+    impl FuzzerArg {
         pub fn new(
             cairo_type: CairoType,
             run_with_min_value: u32,
@@ -95,9 +95,9 @@ mod tests {
     fn fuzzer_generates_different_values() {
         let run_params = RunParams {
             arguments: vec![
-                FuzzerRun::new(CairoType::Felt252, 4, 3),
-                FuzzerRun::new(CairoType::U256, 4, 3),
-                FuzzerRun::new(CairoType::U32, 4, 3),
+                FuzzerArg::new(CairoType::Felt252, 4, 3),
+                FuzzerArg::new(CairoType::U256, 4, 3),
+                FuzzerArg::new(CairoType::U32, 4, 3),
             ],
             total_runs: NonZeroU32::new(10).unwrap(),
             ..Default::default()
@@ -119,7 +119,7 @@ mod tests {
     #[test]
     fn run_with_max_value() {
         let run_params = RunParams {
-            arguments: vec![FuzzerRun::new(CairoType::Felt252, 2, 1)],
+            arguments: vec![FuzzerArg::new(CairoType::Felt252, 2, 1)],
             total_runs: NonZeroU32::new(10).unwrap(),
             ..Default::default()
         };
@@ -140,7 +140,7 @@ mod tests {
     fn run_with_min_value() {
         let run_params = RunParams {
             total_runs: NonZeroU32::new(10).unwrap(),
-            arguments: vec![FuzzerRun::new(CairoType::Felt252, 1, 2)],
+            arguments: vec![FuzzerArg::new(CairoType::Felt252, 1, 2)],
             ..Default::default()
         };
         let mut fuzzer = RandomFuzzer {

@@ -31,7 +31,6 @@ use universal_sierra_compiler_api::UniversalSierraCompilerCommand;
 
 mod init;
 
-// unchecked because .unwrap() is not const in stable
 fn default_fuzzer_runs() -> NonZeroU32 {
     NonZeroU32::new(256).unwrap()
 }

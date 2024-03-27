@@ -10,27 +10,27 @@ pub use random::RandomFuzzer;
 use std::num::NonZeroU32;
 
 #[derive(Debug, Clone)]
-pub struct FuzzerRun {
-    pub(super) cairo_type: CairoType,
-    pub(super) run_with_min_value: u32,
-    pub(super) run_with_max_value: u32,
+pub struct FuzzerArg {
+    cairo_type: CairoType,
+    run_with_min_value: u32,
+    run_with_max_value: u32,
 }
 
 #[derive(Debug, Clone)]
 pub struct RunParams {
     /// Arguments
-    pub(super) arguments: Vec<FuzzerRun>,
+    arguments: Vec<FuzzerArg>,
     /// Total number of runs
     total_runs: NonZeroU32,
     /// Number of already executed runs
-    pub(super) executed_runs: u32,
+    executed_runs: u32,
 }
 
 impl RunParams {
     pub fn from(rng: &mut StdRng, total_runs: NonZeroU32, arguments: &[&str]) -> Result<Self> {
         let arguments = arguments
             .iter()
-            .map(|arg| -> Result<FuzzerRun> {
+            .map(|arg| -> Result<FuzzerArg> {
                 let argument = CairoType::from_name(arg)?;
                 if total_runs.get() >= 3 {
                     let run_with_min_value = rng.gen_range(1..=total_runs.get());
@@ -42,13 +42,13 @@ impl RunParams {
                         run_with_max_value
                     };
 
-                    Ok(FuzzerRun {
+                    Ok(FuzzerArg {
                         cairo_type: argument,
                         run_with_max_value,
                         run_with_min_value,
                     })
                 } else {
-                    Ok(FuzzerRun {
+                    Ok(FuzzerArg {
                         cairo_type: argument,
                         run_with_max_value: u32::MAX,
                         run_with_min_value: u32::MAX,
