@@ -2,12 +2,11 @@ use core::result::ResultTrait;
 use core::starknet::testing::cheatcode;
 use core::starknet::ContractAddress;
 
-/// Tree-like structure which contains all of the calls and sub-calls along with the results
+/// Tree-like structure which contains all of the starknet calls and sub-calls along with the results
 #[derive(Drop, Serde, PartialEq)]
 struct CallTrace {
-    /// The topmost entry point of this trace
     entry_point: CallEntryPoint,
-    /// All the calls that happened in the context of `entry_point`
+    /// All the calls that happened in the scope of `entry_point`
     nested_calls: Array<CallTrace>,
     result: CallResult,
 }
