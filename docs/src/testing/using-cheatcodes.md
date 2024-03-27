@@ -131,7 +131,7 @@ use snforge_std::{ declare, ContractClassTrait, start_prank, CheatTarget };
 
 #[test]
 fn call_and_invoke() {
-    let contract = declare("HelloStarknet");
+    let contract = declare("HelloStarknet").unwrap();
     let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
     let dispatcher = IHelloStarknetDispatcher { contract_address };
 
@@ -213,7 +213,7 @@ use snforge_std::{ declare, ContractClassTrait, start_prank, CheatTarget };
 
 #[test]
 fn mock_constructor_with_prank() {
-    let contract = declare("HelloStarknet");
+    let contract = declare("HelloStarknet").unwrap();
     let constructor_arguments = @ArrayTrait::new();
 
     // Precalculate the address to obtain the contract address before the constructor call (deploy) itself
@@ -265,7 +265,7 @@ use snforge_std::{
 #[test]
 #[feature("safe_dispatcher")]
 fn call_and_invoke() {
-    let contract = declare("HelloStarknet");
+    let contract = declare("HelloStarknet").unwrap();
     let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
     let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
 

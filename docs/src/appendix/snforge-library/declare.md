@@ -1,6 +1,6 @@
 # `declare`
 
-> `fn declare(contract: ByteArray) -> ContractClass`
+> `fn declare(contract: ByteArray) -> Result<ContractClass, RevertedTransaction>`
 
 Declares a contract and returns `ContractClass`.
 Functions [deploy](./deploy.md) and [precalculate_address](./precalculate_address.md) can be called on this struct.
@@ -20,7 +20,7 @@ use snforge_std::declare;
 
 #[test]
 fn test_declare() {
-    let contract = declare("HelloStarknet");
+    let contract = declare("HelloStarknet").unwrap();
     // ...
 }
 ```
