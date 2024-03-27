@@ -94,3 +94,40 @@ fn declare_simple() {
 
     assert_passed(&result);
 }
+
+#[test]
+fn redeclare() {
+    let contract = Contract::from_code_path(
+        "HelloStarknet".to_string(),
+        Path::new("tests/data/contracts/hello_starknet.cairo"),
+    )
+    .unwrap();
+
+    let test = test_case!(
+        indoc!(
+            r#"
+        use result::ResultTrait;
+        use traits::Into;
+        use starknet::ClassHashIntoFelt252;
+        use snforge_std::declare;
+
+        #[test]
+        fn redeclare() {
+            assert(1 == 1, 'simple check');
+            let contract = match declare("HelloStarknet") {
+                Result::Ok(contract) => contract,
+                Result::Err(_) => panic!("Failed to declare contract"),
+            };
+            let class_hash = contract.class_hash.into();
+            assert(class_hash != 0, 'proper class hash');
+            assert!(declare("HelloStarknet").is_err(), "Contract redeclared");
+        }
+        "#
+        ),
+        contract
+    );
+
+    let result = run_test_case(&test);
+
+    assert_passed(&result);
+}
