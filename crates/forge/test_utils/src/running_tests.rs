@@ -7,6 +7,7 @@ use forge_runner::contracts_data::ContractsData;
 use forge_runner::test_crate_summary::TestCrateSummary;
 use forge_runner::{RunnerConfig, RunnerParams};
 use shared::command::CommandExt;
+use std::num::NonZeroU32;
 use std::path::PathBuf;
 use std::process::Command;
 use std::process::Stdio;
@@ -33,7 +34,7 @@ pub fn run_test_case(test: &TestCase) -> Vec<TestCrateSummary> {
         Arc::new(RunnerConfig::new(
             Utf8PathBuf::from_path_buf(PathBuf::from(tempdir().unwrap().path())).unwrap(),
             false,
-            256,
+            NonZeroU32::new(256).unwrap(),
             12345,
             false,
             false,

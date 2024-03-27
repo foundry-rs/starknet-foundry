@@ -2,7 +2,10 @@ use crate::compiled_raw::RawForkParams;
 use anyhow::{bail, Result};
 use itertools::Itertools;
 use serde::Deserialize;
-use std::collections::{HashMap, HashSet};
+use std::{
+    collections::{HashMap, HashSet},
+    num::NonZeroU32,
+};
 
 #[allow(clippy::module_name_repetitions)]
 #[allow(clippy::struct_excessive_bools)]
@@ -11,7 +14,7 @@ pub struct ForgeConfig {
     /// Should runner exit after first failed test
     pub exit_first: bool,
     /// How many runs should fuzzer execute
-    pub fuzzer_runs: Option<u32>,
+    pub fuzzer_runs: Option<NonZeroU32>,
     /// Seed to be used by fuzzer
     pub fuzzer_seed: Option<u64>,
     /// Display more detailed info about used resources
@@ -57,7 +60,7 @@ pub(crate) struct RawForgeConfig {
     /// Should runner exit after first failed test
     pub exit_first: bool,
     /// How many runs should fuzzer execute
-    pub fuzzer_runs: Option<u32>,
+    pub fuzzer_runs: Option<NonZeroU32>,
     /// Seed to be used by fuzzer
     pub fuzzer_seed: Option<u64>,
     #[serde(default)]
