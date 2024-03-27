@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - `read_txt` and `read_json` now supports `ByteArray`
+- `snforge_std::declare` returns `Result<ContractClass, RevertedTransaction>` instead of `ContractClass`
 
 ## [0.20.1] - 2024-03-22
 
