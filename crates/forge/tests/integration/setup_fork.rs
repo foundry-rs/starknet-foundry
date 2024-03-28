@@ -123,7 +123,7 @@ fn fork_aliased_decorator() {
             Arc::new(RunnerConfig::new(
                 Utf8PathBuf::from_path_buf(PathBuf::from(tempdir().unwrap().path())).unwrap(),
                 false,
-                256,
+                256.try_into().unwrap(),
                 12345,
                 false,
                 false,
