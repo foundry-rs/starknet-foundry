@@ -43,7 +43,7 @@ pub async fn declare_contract(account: &str, path: &str, shortname: &str) -> Fie
 
     let mut cmd = ScarbCommand::new_with_stdio();
     let contract_name = path.split('/').find(|&x| !x.is_empty()).unwrap_or("");
-    let contract_dir = format!("{}/{}", CONTRACTS_DIR, contract_name);
+    let contract_dir = format!("{CONTRACTS_DIR}/{contract_name}");
     cmd.arg("build")
         .current_dir(&contract_dir)
         .run()
