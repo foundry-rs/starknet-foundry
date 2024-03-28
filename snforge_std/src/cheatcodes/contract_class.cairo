@@ -33,7 +33,7 @@ trait ContractClassTrait {
         self: @ContractClass, constructor_calldata: @Array::<felt252>
     ) -> ContractAddress;
 
-    /// Deploys a contract and returns its address
+    /// Deploys a contract
     /// `self` - an instance of `ContractClass` struct
     /// `constructor_calldata` - snapshot of calldata for the constructor
     /// Returns the address the contract was deployed at, or a `RevertedTransaction` if it failed
@@ -150,7 +150,7 @@ fn declare(contract: ByteArray) -> ContractClass {
     ContractClass { class_hash }
 }
 
-/// Retrieves a class hash of a contract deployed under the given address.
+/// Retrieves a class hash of a contract deployed under the given address
 /// `contract_address` - target contract address
 /// Returns the `ClassHash` under given address
 fn get_class_hash(contract_address: ContractAddress) -> ClassHash {
