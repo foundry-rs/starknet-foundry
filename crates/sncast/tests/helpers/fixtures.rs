@@ -3,6 +3,7 @@ use crate::helpers::constants::{
 };
 use anyhow::Context;
 use camino::{Utf8Path, Utf8PathBuf};
+use scarb_api::ScarbCommand;
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
 use serde_json::{json, Map, Value};
@@ -40,6 +41,14 @@ pub async fn declare_contract(account: &str, path: &str, shortname: &str) -> Fie
     .await
     .expect("Could not get the account");
 
+    let mut cmd = ScarbCommand::new_with_stdio();
+    let contract_name = path.split('/').find(|&x| !x.is_empty()).unwrap_or("");
+    let contract_dir = format!("{}/{}", CONTRACTS_DIR, contract_name);
+    cmd.arg("build")
+        .current_dir(&contract_dir)
+        .run()
+        .expect("Failed to build test contract");
+
     let contract_definition: SierraClass = {
         let file_contents =
             std::fs::read(CONTRACTS_DIR.to_string() + path + ".contract_class.json")
@@ -67,6 +76,13 @@ pub async fn declare_contract(account: &str, path: &str, shortname: &str) -> Fie
     );
 
     let tx = declaration.send().await.unwrap();
+
+    // scarb clean does not remove lockfile, and we want to do that
+    fs::remove_file(format!("{}/{}", contract_dir, "Scarb.lock"))
+        .expect("Failed to remove test contract's lockfile");
+    fs::remove_dir_all(format!("{}/{}", contract_dir, "target"))
+        .expect("Failed to remove test contract's target dir");
+
     let class_hash = tx.class_hash;
     let tx_hash = tx.transaction_hash;
     write_devnet_env(format!("{shortname}_CLASS_HASH").as_str(), &class_hash);
