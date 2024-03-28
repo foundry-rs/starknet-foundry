@@ -1,21 +1,7 @@
 use starknet::{ContractAddress, ClassHash, testing::cheatcode, SyscallResult};
 use super::super::byte_array::byte_array_as_felt_array;
+use super::super::errors::TransactionError;
 use core::traits::Into;
-
-#[derive(Drop, Clone)]
-struct RevertedTransaction {
-    panic_data: Array::<felt252>,
-}
-
-trait RevertedTransactionTrait {
-    fn first(self: @RevertedTransaction) -> felt252;
-}
-
-impl RevertedTransactionImpl of RevertedTransactionTrait {
-    fn first(self: @RevertedTransaction) -> felt252 {
-        *self.panic_data.at(0)
-    }
-}
 
 #[derive(Drop, Clone, Copy)]
 struct ContractClass {
