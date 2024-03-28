@@ -23,20 +23,38 @@ struct ContractClass {
 }
 
 trait ContractClassTrait {
+    /// Calculates an address of a contract in advance that would be returned when calling `deploy`
+    /// The precalculated address is only correct for the very next deployment
+    /// The `constructor_calldata` has a direct impact on the resulting contract address
+    /// `self` - an instance of the struct `ContractClass` which is obtained by calling `declare`
+    /// `constructor_calldata` - snapshot of calldata for the deploy constructor
+    /// Returns the precalculated `ContractAddress`
     fn precalculate_address(
         self: @ContractClass, constructor_calldata: @Array::<felt252>
     ) -> ContractAddress;
 
+    /// Deploys a contract and returns its address
+    /// `self` - an instance of `ContractClass` struct
+    /// `constructor_calldata` - snapshot of calldata for the constructor
+    /// Returns the address the contract was deployed at, or a `RevertedTransaction` if it failed
     fn deploy(
         self: @ContractClass, constructor_calldata: @Array::<felt252>
     ) -> Result<ContractAddress, RevertedTransaction>;
 
+    /// Deploys a contract at a given address
+    /// `self` - an instance of `ContractClass` struct
+    /// `constructor_calldata` - snapshot of calldata for the constructor
+    /// `contract_address` - address the contract should be deployed at
+    /// Returns the address the contract was deployed at, or a `RevertedTransaction` if it failed
     fn deploy_at(
         self: @ContractClass,
         constructor_calldata: @Array::<felt252>,
         contract_address: ContractAddress
     ) -> Result<ContractAddress, RevertedTransaction>;
 
+    /// Utility method for creating a new `ContractClass` instance
+    /// `class_hash` - a numeric value that can be converted into the class hash of `ContractClass`
+    /// Returns the created `ContractClass`
     fn new<T, +Into<T, ClassHash>>(class_hash: T) -> ContractClass;
 }
 
@@ -118,6 +136,9 @@ impl ContractClassImpl of ContractClassTrait {
     }
 }
 
+/// Declares a contract
+/// `contract` - name of a contract as Cairo string. It is a name of the contract (part after mod keyword) e.g. "HelloStarknet"
+/// Returns the `ContractClass` which was declared
 fn declare(contract: ByteArray) -> ContractClass {
     let span = cheatcode::<'declare'>(byte_array_as_felt_array(@contract).span());
 
@@ -129,6 +150,9 @@ fn declare(contract: ByteArray) -> ContractClass {
     ContractClass { class_hash }
 }
 
+/// Retrieves a class hash of a contract deployed under the given address.
+/// `contract_address` - target contract address
+/// Returns the `ClassHash` under given address
 fn get_class_hash(contract_address: ContractAddress) -> ClassHash {
     let contract_address_felt: felt252 = contract_address.into();
 
