@@ -44,7 +44,7 @@ Optional.
 
 Salt for the account address.
 
-## `--add-profile <NAME>`
+## `--update-profile <NAME>`
 Optional.
 
 If passed, a profile with corresponding name will be added to snfoundry.toml.
