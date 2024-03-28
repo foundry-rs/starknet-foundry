@@ -1,21 +1,7 @@
 use starknet::{ContractAddress, ClassHash, testing::cheatcode};
 use super::super::byte_array::byte_array_as_felt_array;
+use super::super::errors::TransactionError;
 use core::traits::Into;
-
-#[derive(Drop, Clone)]
-struct RevertedTransaction {
-    panic_data: Array::<felt252>,
-}
-
-trait RevertedTransactionTrait {
-    fn first(self: @RevertedTransaction) -> felt252;
-}
-
-impl RevertedTransactionImpl of RevertedTransactionTrait {
-    fn first(self: @RevertedTransaction) -> felt252 {
-        *self.panic_data.at(0)
-    }
-}
 
 #[derive(Drop, Clone, Copy)]
 struct ContractClass {
@@ -29,13 +15,13 @@ trait ContractClassTrait {
 
     fn deploy(
         self: @ContractClass, constructor_calldata: @Array::<felt252>
-    ) -> Result<ContractAddress, RevertedTransaction>;
+    ) -> Result<ContractAddress, TransactionError>;
 
     fn deploy_at(
         self: @ContractClass,
         constructor_calldata: @Array::<felt252>,
         contract_address: ContractAddress
-    ) -> Result<ContractAddress, RevertedTransaction>;
+    ) -> Result<ContractAddress, TransactionError>;
 
     fn new<T, +Into<T, ClassHash>>(class_hash: T) -> ContractClass;
 }
@@ -52,7 +38,7 @@ impl ContractClassImpl of ContractClassTrait {
 
     fn deploy(
         self: @ContractClass, constructor_calldata: @Array::<felt252>
-    ) -> Result<ContractAddress, RevertedTransaction> {
+    ) -> Result<ContractAddress, TransactionError> {
         let mut inputs = _prepare_calldata(self.class_hash, constructor_calldata);
 
         let outputs = cheatcode::<'deploy'>(inputs.span());
@@ -76,7 +62,7 @@ impl ContractClassImpl of ContractClassTrait {
                 i += 1;
             };
 
-            Result::Err(RevertedTransaction { panic_data })
+            Result::Err(TransactionError { panic_data })
         }
     }
 
@@ -84,7 +70,7 @@ impl ContractClassImpl of ContractClassTrait {
         self: @ContractClass,
         constructor_calldata: @Array::<felt252>,
         contract_address: ContractAddress
-    ) -> Result<ContractAddress, RevertedTransaction> {
+    ) -> Result<ContractAddress, TransactionError> {
         let mut inputs = _prepare_calldata(self.class_hash, constructor_calldata);
         inputs.append(contract_address.into());
 
@@ -109,7 +95,7 @@ impl ContractClassImpl of ContractClassTrait {
                 i += 1;
             };
 
-            Result::Err(RevertedTransaction { panic_data })
+            Result::Err(TransactionError { panic_data })
         }
     }
 
