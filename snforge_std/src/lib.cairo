@@ -2,8 +2,6 @@ mod cheatcodes;
 
 use cheatcodes::contract_class::declare;
 use cheatcodes::contract_class::get_class_hash;
-use cheatcodes::contract_class::RevertedTransaction;
-use cheatcodes::contract_class::RevertedTransactionTrait;
 use cheatcodes::contract_class::ContractClass;
 use cheatcodes::contract_class::ContractClassTrait;
 
