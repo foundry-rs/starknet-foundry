@@ -22,11 +22,9 @@ pub fn create_fork_cached_state(cache_dir: &str) -> CachedState<ExtendedStateRea
     CachedState::new(
         ExtendedStateReader {
             dict_state_reader: build_testing_state(),
-            fork_state_reader: Some(ForkStateReader::new(
-                node_url,
-                BlockNumber(320_000),
-                cache_dir,
-            )),
+            fork_state_reader: Some(
+                ForkStateReader::new(node_url, BlockNumber(320_000), cache_dir).unwrap(),
+            ),
         },
         GlobalContractCache::new(GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST),
     )
@@ -40,7 +38,9 @@ pub fn create_fork_cached_state_at(
     CachedState::new(
         ExtendedStateReader {
             dict_state_reader: build_testing_state(),
-            fork_state_reader: Some(ForkStateReader::new(node_url, block_number, cache_dir)),
+            fork_state_reader: Some(
+                ForkStateReader::new(node_url, block_number, cache_dir).unwrap(),
+            ),
         },
         GlobalContractCache::new(GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST),
     )

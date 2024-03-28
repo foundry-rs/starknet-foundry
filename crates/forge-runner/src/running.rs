@@ -192,7 +192,7 @@ pub fn run_test_case(
 
     let mut state_reader = ExtendedStateReader {
         dict_state_reader: cheatnet_constants::build_testing_state(),
-        fork_state_reader: get_fork_state_reader(&runner_config.workspace_root, &case.fork_config),
+        fork_state_reader: get_fork_state_reader(&runner_config.workspace_root, &case.fork_config)?,
     };
     let block_info = state_reader.get_block_info()?;
 
@@ -370,7 +370,7 @@ fn extract_test_case_summary(
 fn get_fork_state_reader(
     workspace_root: &Utf8Path,
     fork_config: &Option<ValidatedForkConfig>,
-) -> Option<ForkStateReader> {
+) -> Result<Option<ForkStateReader>> {
     fork_config
         .as_ref()
         .map(|ValidatedForkConfig { url, block_number }| {
@@ -380,6 +380,7 @@ fn get_fork_state_reader(
                 workspace_root.join(CACHE_DIR).as_ref(),
             )
         })
+        .transpose()
 }
 
 fn get_context<'a>(runtime: &'a ForgeRuntime) -> &'a EntryPointExecutionContext {

@@ -11,7 +11,7 @@ use std::env;
 
 #[tokio::test]
 async fn test_happy_case_from_sncast_config() {
-    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
+    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None).unwrap();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
@@ -64,7 +64,7 @@ async fn test_happy_case_from_cli_no_scarb() {
 
 #[tokio::test]
 async fn test_happy_case_from_cli_with_sncast_config() {
-    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
+    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None).unwrap();
     let address = from_env("CAST_MAP_ADDRESS").unwrap();
     let args = vec![
         "--accounts-file",
@@ -96,7 +96,7 @@ async fn test_happy_case_from_cli_with_sncast_config() {
 
 #[tokio::test]
 async fn test_happy_case_mixed() {
-    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
+    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None).unwrap();
     let address = from_env("CAST_MAP_ADDRESS").unwrap();
     let args = vec![
         "--accounts-file",

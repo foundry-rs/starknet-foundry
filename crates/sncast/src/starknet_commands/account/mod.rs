@@ -169,7 +169,8 @@ mod tests {
 
     #[test]
     fn test_add_created_profile_to_configuration_happy_case() {
-        let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
+        let tempdir =
+            copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None).unwrap();
         let path = Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap();
         let config = CastConfig {
             url: String::from("http://some-url"),
@@ -194,7 +195,8 @@ mod tests {
 
     #[test]
     fn test_add_created_profile_to_configuration_profile_already_exists() {
-        let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
+        let tempdir =
+            copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None).unwrap();
         let config = CastConfig {
             url: String::from("http://127.0.0.1:5055/rpc"),
             account: String::from("user1"),

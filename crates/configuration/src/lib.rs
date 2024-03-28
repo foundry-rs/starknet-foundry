@@ -65,12 +65,12 @@ pub fn load_global_config<T: GlobalConfig + Default>(
     match config_path {
         Some(path) => {
             let raw_config_toml = fs::read_to_string(path)
-                .expect("Failed to read snfoundry.toml config file")
+                .context("Failed to read snfoundry.toml config file")?
                 .parse::<Value>()
                 .context("Failed to parse snfoundry.toml config file")?;
 
             let raw_config_json = serde_json::to_value(raw_config_toml)
-                .expect("Conversion from TOML value to JSON value should not fail.");
+                .context("Conversion from TOML value to JSON value should not fail.")?;
 
             let profile = get_profile(raw_config_json, T::tool_name(), profile)?;
             T::from_raw(resolve_env_variables(profile)?)
@@ -150,16 +150,16 @@ pub fn find_config_file() -> Result<Utf8PathBuf> {
     )?)
 }
 
-#[must_use]
-pub fn copy_config_to_tempdir(src_path: &str, additional_path: Option<&str>) -> TempDir {
-    let temp_dir = tempdir().expect("Failed to create a temporary directory");
+pub fn copy_config_to_tempdir(src_path: &str, additional_path: Option<&str>) -> Result<TempDir> {
+    let temp_dir = tempdir().context("Failed to create a temporary directory")?;
     if let Some(dir) = additional_path {
         let path = temp_dir.path().join(dir);
-        fs::create_dir_all(path).expect("Failed to create directories in temp dir");
+        fs::create_dir_all(path).context("Failed to create directories in temp dir")?;
     };
     let temp_dir_file_path = temp_dir.path().join(CONFIG_FILENAME);
-    fs::copy(src_path, temp_dir_file_path).expect("Failed to copy config file to temp dir");
-    temp_dir
+    fs::copy(src_path, temp_dir_file_path).context("Failed to copy config file to temp dir")?;
+
+    Ok(temp_dir)
 }
 
 #[cfg(test)]
@@ -173,7 +173,7 @@ mod tests {
 
     #[test]
     fn find_config_in_current_dir() {
-        let tempdir = copy_config_to_tempdir("tests/data/stubtool_snfoundry.toml", None);
+        let tempdir = copy_config_to_tempdir("tests/data/stubtool_snfoundry.toml", None).unwrap();
         let path = search_config_upwards_relative_to(
             &Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap(),
         )
@@ -184,7 +184,7 @@ mod tests {
     #[test]
     fn find_config_in_parent_dir() {
         let tempdir =
-            copy_config_to_tempdir("tests/data/stubtool_snfoundry.toml", Some("childdir"));
+            copy_config_to_tempdir("tests/data/stubtool_snfoundry.toml", Some("childdir")).unwrap();
         let path = search_config_upwards_relative_to(
             &Utf8PathBuf::try_from(tempdir.path().to_path_buf().join("childdir")).unwrap(),
         )
@@ -197,7 +197,8 @@ mod tests {
         let tempdir = copy_config_to_tempdir(
             "tests/data/stubtool_snfoundry.toml",
             Some("childdir1/childdir2"),
-        );
+        )
+        .unwrap();
         let path = search_config_upwards_relative_to(
             &Utf8PathBuf::try_from(tempdir.path().to_path_buf().join("childdir1/childdir2"))
                 .unwrap(),
@@ -209,7 +210,8 @@ mod tests {
     #[test]
     fn find_config_in_parent_dir_available_in_multiple_parents() {
         let tempdir =
-            copy_config_to_tempdir("tests/data/stubtool_snfoundry.toml", Some("childdir1"));
+            copy_config_to_tempdir("tests/data/stubtool_snfoundry.toml", Some("childdir1"))
+                .unwrap();
         fs::copy(
             "tests/data/stubtool_snfoundry.toml",
             tempdir.path().join("childdir1").join(CONFIG_FILENAME),
@@ -252,7 +254,7 @@ mod tests {
     }
     #[test]
     fn load_config_happy_case_with_profile() {
-        let tempdir = copy_config_to_tempdir("tests/data/stubtool_snfoundry.toml", None);
+        let tempdir = copy_config_to_tempdir("tests/data/stubtool_snfoundry.toml", None).unwrap();
         let config = load_global_config::<StubConfig>(
             &Some(Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
             &Some(String::from("profile1")),
@@ -264,7 +266,7 @@ mod tests {
 
     #[test]
     fn load_config_happy_case_default_profile() {
-        let tempdir = copy_config_to_tempdir("tests/data/stubtool_snfoundry.toml", None);
+        let tempdir = copy_config_to_tempdir("tests/data/stubtool_snfoundry.toml", None).unwrap();
         let config = load_global_config::<StubConfig>(
             &Some(Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap()),
             &None,
@@ -334,7 +336,8 @@ mod tests {
     #[allow(clippy::float_cmp)]
     fn resolve_env_vars() {
         let tempdir =
-            copy_config_to_tempdir("tests/data/stubtool_snfoundry.toml", Some("childdir1"));
+            copy_config_to_tempdir("tests/data/stubtool_snfoundry.toml", Some("childdir1"))
+                .unwrap();
         fs::copy(
             "tests/data/stubtool_snfoundry.toml",
             tempdir.path().join("childdir1").join(CONFIG_FILENAME),

@@ -29,7 +29,7 @@ pub struct AssembledCairoProgramWithSerde {
 
 pub fn compile_sierra_to_casm(sierra_program: &Program) -> Result<AssembledProgramWithDebugInfo> {
     let assembled_with_info_raw = compile_sierra(
-        &serde_json::to_value(sierra_program).unwrap(),
+        &serde_json::to_value(sierra_program)?,
         None,
         &SierraType::Raw,
     )?;
@@ -44,14 +44,8 @@ pub fn compile_sierra(
     current_dir: Option<&Path>,
     sierra_type: &SierraType,
 ) -> Result<String> {
-    let mut temp_sierra_file = Builder::new().tempfile().unwrap();
-    let _ = temp_sierra_file
-        .write(
-            serde_json::to_vec(sierra_contract_class)
-                .unwrap()
-                .as_slice(),
-        )
-        .unwrap();
+    let mut temp_sierra_file = Builder::new().tempfile()?;
+    let _ = temp_sierra_file.write(serde_json::to_vec(sierra_contract_class)?.as_slice())?;
 
     compile_sierra_at_path(
         temp_sierra_file.path().to_str().unwrap(),
@@ -85,7 +79,7 @@ pub fn compile_sierra_at_path(
             Contact us if it doesn't help",
         )?;
 
-    Ok(from_utf8(&usc_output.stdout).unwrap().to_string())
+    Ok(from_utf8(&usc_output.stdout)?.to_string())
 }
 
 pub enum SierraType {

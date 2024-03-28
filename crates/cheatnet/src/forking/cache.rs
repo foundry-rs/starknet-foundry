@@ -1,3 +1,4 @@
+use anyhow::{Context, Result};
 use blockifier::block::BlockInfo;
 use camino::Utf8PathBuf;
 use conversions::string::{IntoDecStr, TryFromDecStr};
@@ -88,10 +89,13 @@ impl Drop for ForkCache {
 }
 
 impl ForkCache {
-    #[must_use]
-    pub(crate) fn load_or_new(url: &Url, block_number: BlockNumber, cache_dir: &str) -> Self {
+    pub(crate) fn load_or_new(
+        url: &Url,
+        block_number: BlockNumber,
+        cache_dir: &str,
+    ) -> Result<Self> {
         let (fork_cache_content, cache_file) = {
-            let cache_file_path = cache_file_path_from_fork_config(url, block_number, cache_dir);
+            let cache_file_path = cache_file_path_from_fork_config(url, block_number, cache_dir)?;
             let mut file = OpenOptions::new()
                 .write(true)
                 .read(true)
@@ -114,10 +118,10 @@ impl ForkCache {
             (fork_cache_content, Some(cache_file_path.to_string()))
         };
 
-        ForkCache {
+        Ok(ForkCache {
             fork_cache_content,
             cache_file,
-        }
+        })
     }
 
     fn save(&self) {
@@ -271,7 +275,7 @@ fn cache_file_path_from_fork_config(
     url: &Url,
     block_number: BlockNumber,
     cache_dir: &str,
-) -> Utf8PathBuf {
+) -> Result<Utf8PathBuf> {
     let re = Regex::new(r"[^a-zA-Z0-9]").unwrap();
 
     // Use the replace_all method to replace non-alphanumeric characters with underscores
@@ -281,7 +285,7 @@ fn cache_file_path_from_fork_config(
         .join(sanitized_path + "_" + block_number.0.to_string().as_str() + "_v2.json");
 
     fs::create_dir_all(cache_file_path.parent().unwrap())
-        .expect("Fork cache directory could not be created");
+        .context("Fork cache directory could not be created")?;
 
-    cache_file_path
+    Ok(cache_file_path)
 }
