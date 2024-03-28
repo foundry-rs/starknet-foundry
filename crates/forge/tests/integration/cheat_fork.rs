@@ -12,11 +12,11 @@ fn prank_cairo0_contract() {
             use starknet::{{class_hash::Felt252TryIntoClassHash, SyscallResultTrait}};
             use snforge_std::{{start_prank, stop_prank, test_address, CheatTarget}};
 
-            const CAIRO0_CLASS_HASH: felt252 = 3390338629460413397996224645413818793848470654644268493965292562067946505747;
+            const CAIRO0_CLASS_HASH: felt252 = 0x029c0caff0aef71bd089d58b25bcc5c23458d080b2d1b75e423de86f95176818;
             const LIB_CALL_SELECTOR: felt252 = 219972792400094465318120350250971259539342451068659710037080072200128459645;
 
             #[test]
-            #[fork(url: "{}", block_id: BlockId::Number(314821))]
+            #[fork(url: "{}", block_id: BlockId::Number(54060))]
             fn prank_cairo0_contract() {{
                 let caller = starknet::library_call_syscall(
                     CAIRO0_CLASS_HASH.try_into().unwrap(),
@@ -53,7 +53,6 @@ fn prank_cairo0_contract() {
     assert_passed(&result);
 }
 
-
 #[test]
 fn roll_cairo0_contract() {
     let test = test_case!(formatdoc!(
@@ -61,11 +60,11 @@ fn roll_cairo0_contract() {
             use starknet::{{class_hash::Felt252TryIntoClassHash, SyscallResultTrait}};
             use snforge_std::{{start_roll, stop_roll, test_address, CheatTarget}};
 
-            const CAIRO0_CLASS_HASH: felt252 = 3390338629460413397996224645413818793848470654644268493965292562067946505747;
+            const CAIRO0_CLASS_HASH: felt252 = 0x029c0caff0aef71bd089d58b25bcc5c23458d080b2d1b75e423de86f95176818;
             const LIB_CALL_SELECTOR: felt252 = 1043360521069001059812816533306435120284814797591254795559962622467917544215;
 
             #[test]
-            #[fork(url: "{}", block_id: BlockId::Number(314821))]
+            #[fork(url: "{}", block_id: BlockId::Number(54060))]
             fn roll_cairo0_contract() {{
                 let block_number = starknet::library_call_syscall(
                     CAIRO0_CLASS_HASH.try_into().unwrap(),
@@ -102,7 +101,6 @@ fn roll_cairo0_contract() {
     assert_passed(&result);
 }
 
-
 #[test]
 fn warp_cairo0_contract() {
     let test = test_case!(formatdoc!(
@@ -110,11 +108,11 @@ fn warp_cairo0_contract() {
             use starknet::{{class_hash::Felt252TryIntoClassHash, SyscallResultTrait}};
             use snforge_std::{{start_warp, stop_warp, test_address, CheatTarget}};
 
-            const CAIRO0_CLASS_HASH: felt252 = 3390338629460413397996224645413818793848470654644268493965292562067946505747;
+            const CAIRO0_CLASS_HASH: felt252 = 0x029c0caff0aef71bd089d58b25bcc5c23458d080b2d1b75e423de86f95176818;
             const LIB_CALL_SELECTOR: felt252 = 1104673410415683966349700971986586038248888383055081852378797598061780438342;
 
             #[test]
-            #[fork(url: "{}", block_id: BlockId::Number(314821))]
+            #[fork(url: "{}", block_id: BlockId::Number(54060))]
             fn warp_cairo0_contract() {{
                 let block_timestamp = starknet::library_call_syscall(
                     CAIRO0_CLASS_HASH.try_into().unwrap(),
@@ -153,7 +151,6 @@ fn warp_cairo0_contract() {
     assert_passed(&result);
 }
 
-
 #[test]
 fn mock_call_cairo0_contract() {
     let test = test_case!(formatdoc!(
@@ -167,7 +164,7 @@ fn mock_call_cairo0_contract() {
             }}
 
             #[test]
-            #[fork(url: "{}", block_id: BlockId::Number(314821))]
+            #[fork(url: "{}", block_id: BlockId::Number(54060))]
             fn mock_call_cairo0_contract() {{
                 let eth_dispatcher = IERC20Dispatcher {{
                     contract_address: contract_address_const::<
@@ -175,15 +172,15 @@ fn mock_call_cairo0_contract() {
                     >()
                 }};
 
-                assert(eth_dispatcher.name() == 'ETH', 'invalid name');
+                assert(eth_dispatcher.name() == 'Ether', 'invalid name');
 
-                start_mock_call(eth_dispatcher.contract_address, selector!("name"), 'NotETH');
+                start_mock_call(eth_dispatcher.contract_address, selector!("name"), 'NotEther');
 
-                assert(eth_dispatcher.name() == 'NotETH', 'invalid mocked name');
+                assert(eth_dispatcher.name() == 'NotEther', 'invalid mocked name');
 
                 stop_mock_call(eth_dispatcher.contract_address, selector!("name"));
 
-                assert(eth_dispatcher.name() == 'ETH', 'invalid name after mock');
+                assert(eth_dispatcher.name() == 'Ether', 'invalid name after mock');
             }}
         "#,
         CHEATNET_RPC_URL,
@@ -194,7 +191,6 @@ fn mock_call_cairo0_contract() {
 
     assert_passed(&result);
 }
-
 
 #[test]
 fn store_load_cairo0_contract() {
@@ -209,7 +205,7 @@ fn store_load_cairo0_contract() {
             }}
 
             #[test]
-            #[fork(url: "{}", block_id: BlockId::Number(314821))]
+            #[fork(url: "{}", block_id: BlockId::Number(54060))]
             fn mock_call_cairo0_contract() {{
                 let eth_dispatcher = IERC20Dispatcher {{
                     contract_address: contract_address_const::<
@@ -217,19 +213,19 @@ fn store_load_cairo0_contract() {
                     >()
                 }};
 
-                assert(eth_dispatcher.name() == 'ETH', 'invalid name');
+                assert(eth_dispatcher.name() == 'Ether', 'invalid name');
 
                 let name = load(eth_dispatcher.contract_address, selector!("ERC20_name"), 1);
 
-                assert(name == array!['ETH'], 'invalid load value');
+                assert(name == array!['Ether'], 'invalid load value');
 
-                store(eth_dispatcher.contract_address, selector!("ERC20_name"), array!['NotETH'].span());
+                store(eth_dispatcher.contract_address, selector!("ERC20_name"), array!['NotEther'].span());
 
-                assert(eth_dispatcher.name() == 'NotETH', 'invalid store name');
+                assert(eth_dispatcher.name() == 'NotEther', 'invalid store name');
                 
                 let name = load(eth_dispatcher.contract_address, selector!("ERC20_name"), 1);
                 
-                assert(name == array!['NotETH'], 'invalid load2 name');
+                assert(name == array!['NotEther'], 'invalid load2 name');
             }}
         "#,
         CHEATNET_RPC_URL,

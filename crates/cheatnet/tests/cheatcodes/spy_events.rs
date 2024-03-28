@@ -6,7 +6,7 @@ use crate::common::{
 use blockifier::state::cached_state::{
     CachedState, GlobalContractCache, GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST,
 };
-use cairo_felt::{felt_str, Felt252};
+use cairo_felt::Felt252;
 use cairo_lang_starknet_classes::keccak::starknet_keccak;
 use cairo_vm::hint_processor::hint_processor_utils::felt_to_usize;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::{
@@ -17,6 +17,7 @@ use cheatnet::{
     forking::state::ForkStateReader,
     state::{CheatnetState, ExtendedStateReader},
 };
+use conversions::string::TryFromHexStr;
 use conversions::IntoConv;
 use starknet_api::block::BlockNumber;
 use std::vec;
@@ -477,7 +478,6 @@ fn test_emitted_by_emit_events_syscall() {
     );
 }
 
-
 #[test]
 fn capture_cairo0_event() {
     let temp_dir = TempDir::new().unwrap();
@@ -486,7 +486,7 @@ fn capture_cairo0_event() {
             dict_state_reader: build_testing_state(),
             fork_state_reader: Some(ForkStateReader::new(
                 "http://188.34.188.184:7070/rpc/v0_7".parse().unwrap(),
-                BlockNumber(960_107),
+                BlockNumber(53_626),
                 temp_dir.path().to_str().unwrap(),
             )),
         },
@@ -506,10 +506,10 @@ fn capture_cairo0_event() {
 
     let selector = felt_selector_from_name("test_cairo0_event_collection");
 
-    let cairo0_contract_address = felt_str!(
-        "1960625ba5c435bac113ecd15af3c60e327d550fc5dbb43f07cd0875ad2f54c",
-        16
-    );
+    let cairo0_contract_address = Felt252::try_from_hex_str(
+        "0x2c77ca97586968c6651a533bd5f58042c368b14cf5f526d2f42f670012e10ac",
+    )
+    .unwrap();
 
     call_contract(
         &mut cached_state,

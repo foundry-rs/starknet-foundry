@@ -664,7 +664,7 @@ fn capture_cairo0_event() {
             #[test]
             #[fork(url: "http://188.34.188.184:7070/rpc/v0_7", block_id: BlockId::Tag(BlockTag::Latest))]
             fn capture_cairo0_event() {
-                let cairo0_contract_address = contract_address_const::<0x1960625ba5c435bac113ecd15af3c60e327d550fc5dbb43f07cd0875ad2f54c>();
+                let cairo0_contract_address = contract_address_const::<0x2c77ca97586968c6651a533bd5f58042c368b14cf5f526d2f42f670012e10ac>();
                 let contract = declare("SpyEventsChecker");
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ISpyEventsCheckerDispatcher { contract_address };

@@ -5,7 +5,6 @@ use forge::shared_cache::CACHE_DIR;
 use indoc::indoc;
 use shared::test_utils::output_assert::assert_stdout_contains;
 
-
 #[test]
 fn without_cache() {
     let temp = setup_package("forking");
@@ -32,7 +31,6 @@ fn without_cache() {
         "},
     );
 }
-
 
 #[test]
 /// The cache file at `forking/$CACHE_DIR` was modified to have different value stored
@@ -63,7 +61,7 @@ fn with_cache() {
         [FAIL] forking::tests::test_fork_simple
 
         Failure data:
-            0x42616c616e63652073686f756c642062652032 ('Balance should be 2')
+            0x42616c616e63652073686f756c642062652030 ('Balance should be 0')
 
         Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 4 filtered out
 
@@ -72,7 +70,6 @@ fn with_cache() {
         "},
     );
 }
-
 
 #[test]
 fn with_clean_cache() {
@@ -102,7 +99,6 @@ fn with_clean_cache() {
         "},
     );
 }
-
 
 #[test]
 fn printing_latest_block_number() {

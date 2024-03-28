@@ -3,14 +3,13 @@ use crate::common::{call_contract, felt_selector_from_name};
 use cairo_felt::Felt252;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallResult;
 use cheatnet::state::{CheatTarget, CheatnetState};
-use conversions::string::TryFromDecStr;
+use conversions::string::TryFromHexStr;
 use starknet_api::core::ContractAddress;
 use tempfile::TempDir;
 use test_case::test_case;
 
 const CAIRO0_TESTER_ADDRESS: &str =
-    "1825832089891106126806210124294467331434544162488231781791271899226056323189";
-
+    "0x7fec0c04dde6b1cfa7994359313f8b67edd0d8e40e28424437702d3ee48c2a4";
 
 #[test_case("return_caller_address"; "when common call")]
 #[test_case("return_proxied_caller_address"; "when library call")]
@@ -20,7 +19,7 @@ fn prank_cairo0_contract(selector: &str) {
     let mut cheatnet_state = CheatnetState::default();
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
-    let contract_address = ContractAddress::try_from_dec_str(CAIRO0_TESTER_ADDRESS).unwrap();
+    let contract_address = ContractAddress::try_from_hex_str(CAIRO0_TESTER_ADDRESS).unwrap();
 
     let selector = felt_selector_from_name(selector);
     let output = call_contract(
@@ -30,6 +29,7 @@ fn prank_cairo0_contract(selector: &str) {
         &selector,
         &[],
     );
+    println!("{output:?}");
     let CallResult::Success { ret_data } = output else {
         panic!("Wrong call output")
     };
@@ -72,7 +72,6 @@ fn prank_cairo0_contract(selector: &str) {
     assert_eq!(unpranked_caller, caller);
 }
 
-
 #[test_case("return_block_number"; "when common call")]
 #[test_case("return_proxied_block_number"; "when library call")]
 fn roll_cairo0_contract(selector: &str) {
@@ -81,7 +80,7 @@ fn roll_cairo0_contract(selector: &str) {
     let mut cheatnet_state = CheatnetState::default();
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
-    let contract_address = ContractAddress::try_from_dec_str(CAIRO0_TESTER_ADDRESS).unwrap();
+    let contract_address = ContractAddress::try_from_hex_str(CAIRO0_TESTER_ADDRESS).unwrap();
 
     let selector = felt_selector_from_name(selector);
     let output = call_contract(
@@ -132,7 +131,6 @@ fn roll_cairo0_contract(selector: &str) {
     assert_eq!(unrolled_block_number, block_number);
 }
 
-
 #[test_case("return_block_timestamp"; "when common call")]
 #[test_case("return_proxied_block_timestamp"; "when library call")]
 fn warp_cairo0_contract(selector: &str) {
@@ -141,7 +139,7 @@ fn warp_cairo0_contract(selector: &str) {
     let mut cheatnet_state = CheatnetState::default();
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
-    let contract_address = ContractAddress::try_from_dec_str(CAIRO0_TESTER_ADDRESS).unwrap();
+    let contract_address = ContractAddress::try_from_hex_str(CAIRO0_TESTER_ADDRESS).unwrap();
 
     let selector = felt_selector_from_name(selector);
     let output = call_contract(

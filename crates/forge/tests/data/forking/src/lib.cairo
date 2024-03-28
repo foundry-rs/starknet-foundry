@@ -11,83 +11,83 @@ mod tests {
     }
 
     #[test]
-    #[fork(url: "http://188.34.188.184:7070/rpc/v0_7", block_id: BlockId::Number(313388))]
+    #[fork(url: "http://188.34.188.184:7070/rpc/v0_7", block_id: BlockId::Number(54060))]
     fn test_fork_simple() {
         let dispatcher = IHelloStarknetDispatcher {
             contract_address: contract_address_const::<
-                3216637956526895219277698311134811322769343974163380838558193911733621219342
+                0x202de98471a4fae6bcbabb96cab00437d381abc58b02509043778074d6781e9
             >()
         };
 
         let balance = dispatcher.get_balance();
-        assert(balance == 2, 'Balance should be 2');
+        assert(balance == 0, 'Balance should be 0');
 
         dispatcher.increase_balance(100);
 
         let balance = dispatcher.get_balance();
-        assert(balance == 102, 'Balance should be 102');
+        assert(balance == 100, 'Balance should be 100');
     }
 
     #[test]
-    #[fork(url: "http://188.34.188.184:7070/rpc/v0_7", block_id: BlockId::Number(0x4c82c))]
+    #[fork(url: "http://188.34.188.184:7070/rpc/v0_7", block_id: BlockId::Number(0xd32c))]
     fn test_fork_simple_number_hex() {
         let dispatcher = IHelloStarknetDispatcher {
             contract_address: contract_address_const::<
-                3216637956526895219277698311134811322769343974163380838558193911733621219342
+                0x202de98471a4fae6bcbabb96cab00437d381abc58b02509043778074d6781e9
             >()
         };
 
         let balance = dispatcher.get_balance();
-        assert(balance == 2, 'Balance should be 2');
+        assert(balance == 0, 'Balance should be 0');
 
         dispatcher.increase_balance(100);
 
         let balance = dispatcher.get_balance();
-        assert(balance == 102, 'Balance should be 102');
+        assert(balance == 100, 'Balance should be 100');
     }
 
     #[test]
     #[fork(
         url: "http://188.34.188.184:7070/rpc/v0_7",
-        block_id: BlockId::Hash(0x05a49d0e9704b2d5df7aed50551d96d138ad2a3525c9e3d3511fb42bf54f6b84)
+        block_id: BlockId::Hash(0x06ae121e46f5375f93b00475fb130348ae38148e121f84b0865e17542e9485de)
     )]
     fn test_fork_simple_hash_hex() {
         let dispatcher = IHelloStarknetDispatcher {
             contract_address: contract_address_const::<
-                3216637956526895219277698311134811322769343974163380838558193911733621219342
+                0x202de98471a4fae6bcbabb96cab00437d381abc58b02509043778074d6781e9
             >()
         };
 
         let balance = dispatcher.get_balance();
-        assert(balance == 2, 'Balance should be 2');
+        assert(balance == 0, 'Balance should be 0');
 
         dispatcher.increase_balance(100);
 
         let balance = dispatcher.get_balance();
-        assert(balance == 102, 'Balance should be 102');
+        assert(balance == 100, 'Balance should be 100');
     }
 
     #[test]
     #[fork(
         url: "http://188.34.188.184:7070/rpc/v0_7",
         block_id: BlockId::Hash(
-            2552411129059775354525588266083178415167802891503196038260593864007232744324
+            3021433528476416000728121069095289682281028310523383289416465162415092565470
         )
     )]
     fn test_fork_simple_hash_number() {
         let dispatcher = IHelloStarknetDispatcher {
             contract_address: contract_address_const::<
-                3216637956526895219277698311134811322769343974163380838558193911733621219342
+                0x202de98471a4fae6bcbabb96cab00437d381abc58b02509043778074d6781e9
             >()
         };
 
         let balance = dispatcher.get_balance();
-        assert(balance == 2, 'Balance should be 2');
+        assert(balance == 0, 'Balance should be 0');
 
         dispatcher.increase_balance(100);
 
         let balance = dispatcher.get_balance();
-        assert(balance == 102, 'Balance should be 102');
+        assert(balance == 100, 'Balance should be 100');
     }
 
     #[test]
