@@ -24,7 +24,6 @@ use test_utils::test_case;
 static INTEGRATION_RPC_URL: &str = "http://188.34.188.184:7070/rpc/v0_7";
 static TESTNET_RPC_URL: &str = "http://188.34.188.184:6060/rpc";
 
-
 #[test]
 fn fork_simple_decorator() {
     let test = test_case!(formatdoc!(
@@ -67,7 +66,6 @@ fn fork_simple_decorator() {
 
     assert_passed(&result);
 }
-
 
 #[test]
 fn fork_aliased_decorator() {
@@ -149,7 +147,6 @@ fn fork_aliased_decorator() {
     assert_passed(&result);
 }
 
-
 #[test]
 fn fork_cairo0_contract() {
     let test = test_case!(formatdoc!(
@@ -179,7 +176,6 @@ fn fork_cairo0_contract() {
 
     assert_passed(&result);
 }
-
 
 #[test]
 fn get_block_info_in_forked_block() {
@@ -260,7 +256,6 @@ fn get_block_info_in_forked_block() {
     assert_passed(&result);
 }
 
-
 #[test]
 fn fork_get_block_info_fails() {
     let test = test_case!(formatdoc!(
@@ -283,7 +278,6 @@ fn fork_get_block_info_fails() {
         "Unable to get block with tx hashes from fork",
     );
 }
-
 
 #[test]
 // found in: https://github.com/foundry-rs/starknet-foundry/issues/1175
