@@ -48,7 +48,7 @@ Do the following to start interacting with the Starknet:
       --url http://127.0.0.1:5050 \
       account deploy
       --name some-name \
-      --max-fee 864600000000
+      --max-fee 9999999999999
     
     command: account deploy
     transaction_hash: 0x20b20896ce63371ef015d66b4dd89bf18c5510a840b4a85a43a983caa6e2579
