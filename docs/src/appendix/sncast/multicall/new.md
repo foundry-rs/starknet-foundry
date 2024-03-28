@@ -2,6 +2,10 @@
 
 Generates an empty template for the multicall `.toml` file that may be later used with the `run` subcommand. It either outputs it to a new file or to the standard output.
 
+## Required Common Arguments — Passed By CLI or Specified in `snfoundry.toml`
+
+* [`url`](../common.md#--url--u-rpc_url)
+
 ## `--output-path, -p <PATH>`
 Optional.
 

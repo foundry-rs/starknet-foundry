@@ -1,6 +1,11 @@
 # `declare`
 Send a declare transaction of Cairo contract to Starknet.
 
+## Required Common Arguments — Passed By CLI or Specified in `snfoundry.toml`
+
+* [`url`](./common.md#--url--u-rpc_url)
+* [`account`](./common.md#--account--a-account_name)
+
 ## `--contract-name, -c <CONTRACT_NAME>`
 Required.
 
