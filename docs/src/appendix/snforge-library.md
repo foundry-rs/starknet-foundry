@@ -1,12 +1,9 @@
 # Library Functions References
 
-* [`declare`](snforge-library/declare.md) - declares a contract and returns a struct on
-  which [`precalculate_address`](snforge-library/precalculate_address.md) and [`deploy`](snforge-library/deploy.md) can be
-  called
-* [`precalculate_address`](snforge-library/precalculate_address.md) - calculates a contract address that would be returned
-  when calling [`deploy`](snforge-library/deploy.md)
-* [`deploy`](snforge-library/deploy.md) - deploys a contract and returns its address
-* [`get_call_trace`](snforge-library/get_call_trace.md) - gets current test call trace (with contracts interactions included)
+* [`declare`](snforge-library/declare.md) - declares a contract and returns
+  a [`ContractClass`](snforge-library/contract_class.md) which can be interacted with later
+* [`get_call_trace`](snforge-library/get_call_trace.md) - gets current test call trace (with contracts interactions
+  included)
 * [`fs`](snforge-library/fs.md) - module containing functions for interacting with the filesystem
 * [`env`](snforge-library/env.md) - module containing functions for interacting with the system environment
 * [`signature`](snforge-library/signature.md) - module containing struct and trait for creating `ecdsa` signatures
