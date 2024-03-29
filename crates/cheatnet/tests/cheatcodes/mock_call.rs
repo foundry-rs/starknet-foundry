@@ -1,5 +1,5 @@
 use crate::common::state::{build_runtime_state, create_cached_state};
-use crate::common::{call_contract, class_hashes, deploy_wrapper};
+use crate::common::{call_contract, deploy_wrapper};
 use crate::common::{felt_selector_from_name, recover_data};
 use crate::{
     common::assertions::assert_success,
@@ -424,14 +424,8 @@ fn mock_call_library_call_no_effect() {
     let mut cheatnet_state = CheatnetState::default();
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
-    let contracts = get_contracts();
-    let class_hash = declare(
-        &mut cached_state,
-        "MockChecker",
-        &contracts,
-        &class_hashes(&contracts),
-    )
-    .unwrap();
+    let contracts_data = get_contracts();
+    let class_hash = declare(&mut cached_state, "MockChecker", &contracts_data).unwrap();
 
     let contract_address = deploy_wrapper(
         &mut cached_state,
@@ -473,14 +467,8 @@ fn mock_call_before_deployment() {
     let mut cheatnet_state = CheatnetState::default();
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
-    let contracts = get_contracts();
-    let class_hash = declare(
-        &mut cached_state,
-        "MockChecker",
-        &contracts,
-        &class_hashes(&contracts),
-    )
-    .unwrap();
+    let contracts_data = get_contracts();
+    let class_hash = declare(&mut cached_state, "MockChecker", &contracts_data).unwrap();
 
     let precalculated_address = runtime_state
         .cheatnet_state
@@ -554,15 +542,9 @@ fn mock_call_in_constructor() {
     let mut cheatnet_state = CheatnetState::default();
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
-    let contracts = get_contracts();
+    let contracts_data = get_contracts();
 
-    let class_hash = declare(
-        &mut cached_state,
-        "HelloStarknet",
-        &contracts,
-        &class_hashes(&contracts),
-    )
-    .unwrap();
+    let class_hash = declare(&mut cached_state, "HelloStarknet", &contracts_data).unwrap();
     let balance_contract_address =
         deploy_wrapper(&mut cached_state, &mut runtime_state, &class_hash, &[]).unwrap();
     let ret_data = [Felt252::from(223)];
@@ -572,13 +554,7 @@ fn mock_call_in_constructor() {
         &ret_data,
     );
 
-    let class_hash = declare(
-        &mut cached_state,
-        "ConstructorMockChecker",
-        &contracts,
-        &class_hashes(&contracts),
-    )
-    .unwrap();
+    let class_hash = declare(&mut cached_state, "ConstructorMockChecker", &contracts_data).unwrap();
     let contract_address = deploy_wrapper(
         &mut cached_state,
         &mut runtime_state,
@@ -749,11 +725,11 @@ fn mock_call_in_constructor_with_span() {
     let mut cheatnet_state = CheatnetState::default();
     let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
-    let contracts = get_contracts();
+    let contracts_data = get_contracts();
 
     let balance_address = test_env.deploy("HelloStarknet", &[]);
 
-    let class_hash = test_env.declare("ConstructorMockChecker", &contracts);
+    let class_hash = test_env.declare("ConstructorMockChecker", &contracts_data);
     let precalculated_address = test_env
         .runtime_state
         .cheatnet_state
@@ -788,9 +764,9 @@ fn mock_call_twice_in_function() {
     let mut cheatnet_state = CheatnetState::default();
     let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
-    let contracts = get_contracts();
+    let contracts_data = get_contracts();
 
-    let class_hash = test_env.declare("MockChecker", &contracts);
+    let class_hash = test_env.declare("MockChecker", &contracts_data);
     let precalculated_address = test_env
         .runtime_state
         .cheatnet_state

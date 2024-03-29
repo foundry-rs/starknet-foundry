@@ -1,26 +1,23 @@
-use crate::runtime_extensions::forge_runtime_extension::cheatcodes::{
-    CheatcodeError, EnhancedHintError,
+use crate::runtime_extensions::forge_runtime_extension::{
+    cheatcodes::{CheatcodeError, EnhancedHintError},
+    contracts_data::ContractsData,
 };
 use anyhow::{anyhow, Context, Result};
-use bimap::BiMap;
 use blockifier::{
     execution::contract_class::{ContractClass as BlockifierContractClass, ContractClassV1},
     state::{errors::StateError, state_api::State},
 };
 use conversions::IntoConv;
-use scarb_api::StarknetContractArtifacts;
 use starknet::core::types::contract::SierraClass;
 use starknet_api::core::ClassHash;
-use std::collections::HashMap;
 
 #[allow(clippy::implicit_hasher)]
 pub fn declare(
     state: &mut dyn State,
     contract_name: &str,
-    contracts: &HashMap<String, StarknetContractArtifacts>,
-    class_hashes: &BiMap<String, ClassHash>,
+    contracts_data: &ContractsData,
 ) -> Result<ClassHash, CheatcodeError> {
-    let contract_artifact = contracts.get(contract_name).with_context(|| {
+    let contract_artifact = contracts_data.contracts.get(contract_name).with_context(|| {
             format!("Failed to get contract artifact for name = {contract_name}. Make sure starknet target is correctly defined in Scarb.toml file.")
         }).map_err::<EnhancedHintError, _>(From::from)?;
 
@@ -28,7 +25,8 @@ pub fn declare(
         .expect("Failed to read contract class from json");
     let contract_class = BlockifierContractClass::V1(contract_class);
 
-    let class_hash = *class_hashes
+    let class_hash = *contracts_data
+        .class_hashes
         .get_by_left(contract_name)
         .expect("Failed to get class hash");
 

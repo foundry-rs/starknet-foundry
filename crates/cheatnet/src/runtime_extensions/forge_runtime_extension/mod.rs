@@ -1,3 +1,4 @@
+use self::contracts_data::ContractsData;
 use crate::{
     runtime_extensions::{
         call_to_blockifier_runtime_extension::{
@@ -19,7 +20,6 @@ use crate::{
     state::{CallTrace, CheatSpan, CheatTarget},
 };
 use anyhow::{anyhow, Context, Result};
-use bimap::BiMap;
 use blockifier::{
     context::TransactionContext,
     execution::{
@@ -48,10 +48,9 @@ use runtime::{
     CheatcodeHandlingResult, EnhancedHintError, ExtendedRuntime, ExtensionLogic,
     SyscallHandlingResult,
 };
-use scarb_api::StarknetContractArtifacts;
 use starknet::signers::SigningKey;
 use starknet_api::{
-    core::{ClassHash, ContractAddress},
+    core::ContractAddress,
     deprecated_contract_class::EntryPointType::{self, L1Handler},
 };
 use std::collections::HashMap;
@@ -64,8 +63,7 @@ pub type ForgeRuntime<'a> = ExtendedRuntime<ForgeExtension<'a>>;
 
 pub struct ForgeExtension<'a> {
     pub environment_variables: &'a HashMap<String, String>,
-    pub contracts: &'a HashMap<String, StarknetContractArtifacts>,
-    pub class_hashes: &'a BiMap<String, ClassHash>,
+    pub contracts_data: &'a ContractsData,
 }
 
 trait BufferReaderExt {
@@ -304,7 +302,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 let contract_name = input_reader.read_string()?;
 
-                match declare(*state, &contract_name, self.contracts, self.class_hashes) {
+                match declare(*state, &contract_name, self.contracts_data) {
                     Ok(class_hash) => {
                         let result = vec![Felt252::from(0), class_hash.into_()];
                         Ok(CheatcodeHandlingResult::Handled(result))

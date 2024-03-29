@@ -63,9 +63,9 @@ fn roll_with_other_syscall() {
 fn roll_in_constructor() {
     let mut cheatnet_state = CheatnetState::default();
     let mut test_env = TestEnvironment::new(&mut cheatnet_state);
-    let contracts = get_contracts();
+    let contracts_data = get_contracts();
 
-    let class_hash = test_env.declare("ConstructorRollChecker", &contracts);
+    let class_hash = test_env.declare("ConstructorRollChecker", &contracts_data);
     let precalculated_address = test_env.precalculate_address(&class_hash, &[]);
 
     test_env.start_roll(CheatTarget::One(precalculated_address), 123);
@@ -152,8 +152,8 @@ fn roll_library_call() {
     let mut cheatnet_state = CheatnetState::default();
     let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
-    let contracts = get_contracts();
-    let class_hash = test_env.declare("RollChecker", &contracts);
+    let contracts_data = get_contracts();
+    let class_hash = test_env.declare("RollChecker", &contracts_data);
 
     let lib_call_address = test_env.deploy("RollCheckerLibCall", &[]);
     let lib_call_selector = "get_block_number_with_lib_call";
@@ -243,8 +243,8 @@ fn roll_multiple() {
     let mut cheatnet_state = CheatnetState::default();
     let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
-    let contracts = get_contracts();
-    let class_hash = test_env.declare("RollChecker", &contracts);
+    let contracts_data = get_contracts();
+    let class_hash = test_env.declare("RollChecker", &contracts_data);
 
     let contract_address1 = test_env.deploy_wrapper(&class_hash, &[]);
     let contract_address2 = test_env.deploy_wrapper(&class_hash, &[]);
@@ -313,8 +313,8 @@ fn roll_proxy_with_span() {
     let mut cheatnet_state = CheatnetState::default();
     let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
-    let contracts = get_contracts();
-    let class_hash = test_env.declare("RollCheckerProxy", &contracts);
+    let contracts_data = get_contracts();
+    let class_hash = test_env.declare("RollCheckerProxy", &contracts_data);
     let contract_address_1 = test_env.deploy_wrapper(&class_hash, &[]);
     let contract_address_2 = test_env.deploy_wrapper(&class_hash, &[]);
 
@@ -337,9 +337,9 @@ fn roll_in_constructor_with_span() {
     let mut cheatnet_state = CheatnetState::default();
     let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
-    let contracts = get_contracts();
+    let contracts_data = get_contracts();
 
-    let class_hash = test_env.declare("ConstructorRollChecker", &contracts);
+    let class_hash = test_env.declare("ConstructorRollChecker", &contracts_data);
     let precalculated_address = test_env.precalculate_address(&class_hash, &[]);
 
     test_env.roll(
@@ -370,9 +370,9 @@ fn roll_no_constructor_with_span() {
     let mut cheatnet_state = CheatnetState::default();
     let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
-    let contracts = get_contracts();
+    let contracts_data = get_contracts();
 
-    let class_hash = test_env.declare("RollChecker", &contracts);
+    let class_hash = test_env.declare("RollChecker", &contracts_data);
     let precalculated_address = test_env.precalculate_address(&class_hash, &[]);
 
     test_env.roll(
@@ -440,8 +440,8 @@ fn roll_library_call_with_span() {
     let mut cheatnet_state = CheatnetState::default();
     let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
-    let contracts = get_contracts();
-    let class_hash = test_env.declare("RollChecker", &contracts);
+    let contracts_data = get_contracts();
+    let class_hash = test_env.declare("RollChecker", &contracts_data);
     let contract_address = test_env.deploy("RollCheckerLibCall", &[]);
 
     test_env.roll(

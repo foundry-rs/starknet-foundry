@@ -232,8 +232,8 @@ fn library_call_emits_event() {
     let mut cheatnet_state = CheatnetState::default();
     let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
-    let contracts = get_contracts();
-    let class_hash = test_env.declare("SpyEventsChecker", &contracts);
+    let contracts_data = get_contracts();
+    let class_hash = test_env.declare("SpyEventsChecker", &contracts_data);
     let contract_address = test_env.deploy("SpyEventsLibCall", &[]);
 
     let id = test_env.spy_events(SpyTarget::All);
@@ -293,9 +293,8 @@ fn check_if_there_is_no_interference() {
     let mut cheatnet_state = CheatnetState::default();
     let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
-    let contracts: std::collections::HashMap<String, scarb_api::StarknetContractArtifacts> =
-        get_contracts();
-    let class_hash = test_env.declare("SpyEventsChecker", &contracts);
+    let contracts_data = get_contracts();
+    let class_hash = test_env.declare("SpyEventsChecker", &contracts_data);
 
     let spy_events_checker_address = test_env.deploy_wrapper(&class_hash, &[]);
     let other_spy_events_checker_address = test_env.deploy_wrapper(&class_hash, &[]);
@@ -333,8 +332,8 @@ fn test_nested_calls() {
 
     let spy_events_checker_address = test_env.deploy("SpyEventsChecker", &[]);
 
-    let contracts = get_contracts();
-    let class_hash = test_env.declare("SpyEventsCheckerProxy", &contracts);
+    let contracts_data = get_contracts();
+    let class_hash = test_env.declare("SpyEventsCheckerProxy", &contracts_data);
 
     let spy_events_checker_proxy_address =
         test_env.deploy_wrapper(&class_hash, &[spy_events_checker_address.into_()]);
@@ -389,8 +388,8 @@ fn use_multiple_spies() {
 
     let spy_events_checker_address = test_env.deploy("SpyEventsChecker", &[]);
 
-    let contracts = get_contracts();
-    let class_hash = test_env.declare("SpyEventsCheckerProxy", &contracts);
+    let contracts_data = get_contracts();
+    let class_hash = test_env.declare("SpyEventsCheckerProxy", &contracts_data);
 
     let spy_events_checker_proxy_address =
         test_env.deploy_wrapper(&class_hash, &[spy_events_checker_address.into_()]);
