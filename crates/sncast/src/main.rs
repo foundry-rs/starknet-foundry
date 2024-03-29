@@ -439,14 +439,16 @@ fn run_script_command(
             .expect("Failed to build script");
             let metadata_with_deps = get_scarb_metadata_with_deps(&manifest_path)?;
 
+            let chain_id = runtime
+                .block_on(get_chain_id(&provider))
+                .expect("Failed to fetch chain id");
             let state_file_path = if run.no_state_file {
                 None
             } else {
-                Some(
-                    package_metadata
-                        .root
-                        .join(get_default_state_file_name(&run.script_name)),
-                )
+                Some(package_metadata.root.join(get_default_state_file_name(
+                    &run.script_name,
+                    &chain_id_to_network_name(chain_id),
+                )))
             };
 
             let mut result = starknet_commands::script::run::run(

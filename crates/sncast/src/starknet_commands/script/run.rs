@@ -41,11 +41,11 @@ use shared::utils::build_readable_text;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::SCRIPT_LIB_ARTIFACT_NAME;
 use sncast::response::structs::ScriptRunResponse;
-use starknet::accounts::{Account, SingleOwnerAccount};
 use sncast::state::hashing::{
     generate_declare_tx_id, generate_deploy_tx_id, generate_invoke_tx_id,
 };
 use sncast::state::state_file::{serialize_as_script_function_result, StateManager};
+use starknet::accounts::{Account, SingleOwnerAccount};
 use starknet::core::types::{BlockId, BlockTag::Pending, FieldElement};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
@@ -64,7 +64,7 @@ pub struct Run {
     #[clap(long)]
     pub package: Option<String>,
 
-    /// Path to state file
+    /// Do not write to state file
     #[clap(long)]
     pub no_state_file: bool,
 }

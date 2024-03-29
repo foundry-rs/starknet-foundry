@@ -33,4 +33,4 @@ pub const STATE_FILE_VERSION: u8 = 1;
 
 pub const INIT_SCRIPTS_DIR: &str = "scripts";
 
-pub const DEFAULT_STATE_FILE_NAME: &str = "state.json";
+pub const DEFAULT_STATE_FILE_SUFFIX: &str = "state.json";
