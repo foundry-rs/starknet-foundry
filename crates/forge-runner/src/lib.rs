@@ -20,6 +20,7 @@ use profiler_api::run_profiler;
 use smol_str::SmolStr;
 
 use std::collections::HashMap;
+use std::num::NonZeroU32;
 use std::sync::Arc;
 use test_case_summary::{AnyTestCaseSummary, Fuzzing};
 use tokio::sync::mpsc::{channel, Sender};
@@ -88,7 +89,7 @@ impl ExecutionDataToSave {
 pub struct RunnerConfig {
     pub workspace_root: Utf8PathBuf,
     pub exit_first: bool,
-    pub fuzzer_runs: u32,
+    pub fuzzer_runs: NonZeroU32,
     pub fuzzer_seed: u64,
     pub detailed_resources: bool,
     pub execution_data_to_save: ExecutionDataToSave,
@@ -101,7 +102,7 @@ impl RunnerConfig {
     pub fn new(
         workspace_root: Utf8PathBuf,
         exit_first: bool,
-        fuzzer_runs: u32,
+        fuzzer_runs: NonZeroU32,
         fuzzer_seed: u64,
         detailed_resources: bool,
         save_trace_data: bool,
@@ -324,7 +325,7 @@ fn run_with_fuzzing(
 
         let mut tasks = FuturesUnordered::new();
 
-        for _ in 1..=fuzzer_runs {
+        for _ in 1..=fuzzer_runs.get() {
             let args = fuzzer.next_args();
 
             tasks.push(run_fuzz_test(
@@ -368,7 +369,7 @@ fn run_with_fuzzing(
             // Because we execute tests parallel, it's possible to
             // get Passed after Skipped. To treat fuzzing a test as Passed
             // we have to ensure that all fuzzing subtests Passed
-            if runs != fuzzer_runs {
+            if runs != fuzzer_runs.get() {
                 return Ok(TestCaseSummary::Skipped {});
             };
         };
