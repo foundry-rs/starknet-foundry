@@ -137,13 +137,6 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     ));
                 }
 
-                let account = self.tokio_runtime.block_on(get_account(
-                    &self.config.account,
-                    &self.config.accounts_file,
-                    self.provider,
-                    self.config.keystore.clone(),
-                ))?;
-
                 let declare_result = self.tokio_runtime.block_on(declare::declare(
                     &contract_name,
                     max_fee,
@@ -195,13 +188,6 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     ));
                 }
 
-                let account = self.tokio_runtime.block_on(get_account(
-                    &self.config.account,
-                    &self.config.accounts_file,
-                    self.provider,
-                    self.config.keystore.clone(),
-                ))?;
-
                 let deploy_result = self.tokio_runtime.block_on(deploy::deploy(
                     class_hash,
                     constructor_calldata,
@@ -251,13 +237,6 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                         serialize_as_script_function_result(success_output),
                     ));
                 }
-
-                let account = self.tokio_runtime.block_on(get_account(
-                    &self.config.account,
-                    &self.config.accounts_file,
-                    self.provider,
-                    self.config.keystore.clone(),
-                ))?;
 
                 let invoke_result = self.tokio_runtime.block_on(invoke::invoke(
                     contract_address,
