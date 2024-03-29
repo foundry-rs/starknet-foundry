@@ -29,7 +29,7 @@ fn prank_cairo0_contract(selector: &str) {
         &selector,
         &[],
     );
-    println!("{output:?}");
+
     let CallResult::Success { ret_data } = output else {
         panic!("Wrong call output")
     };
