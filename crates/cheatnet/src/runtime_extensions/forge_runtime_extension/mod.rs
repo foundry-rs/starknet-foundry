@@ -25,7 +25,6 @@ use blockifier::{
         call_info::{CallExecution, CallInfo},
         deprecated_syscalls::DeprecatedSyscallSelector,
         entry_point::{CallEntryPoint, CallType},
-        execution_utils::stark_felt_to_felt,
         syscalls::hint_processor::SyscallCounter,
     },
     versioned_constants::VersionedConstants,
@@ -304,8 +303,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let contracts = self.contracts;
                 match declare(*state, &contract_name, contracts) {
                     Ok(class_hash) => {
-                        let felt_class_hash = stark_felt_to_felt(class_hash.0);
-                        let result = vec![Felt252::from(0), felt_class_hash];
+                        let result = vec![Felt252::from(0), class_hash.into_()];
                         Ok(CheatcodeHandlingResult::Handled(result))
                     }
                     Err(CheatcodeError::Recoverable(_)) => {
@@ -390,9 +388,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 match get_class_hash(*state, contract_address) {
                     Ok(class_hash) => {
-                        let felt_class_hash = stark_felt_to_felt(class_hash.0);
-
-                        Ok(CheatcodeHandlingResult::Handled(vec![felt_class_hash]))
+                        Ok(CheatcodeHandlingResult::Handled(vec![class_hash.into_()]))
                     }
                     Err(CheatcodeError::Recoverable(_)) => unreachable!(),
                     Err(CheatcodeError::Unrecoverable(err)) => Err(err),

@@ -6,10 +6,11 @@ use blockifier::{
     execution::contract_class::{ContractClass as BlockifierContractClass, ContractClassV1},
     state::{errors::StateError, state_api::State},
 };
+use conversions::IntoConv;
 use scarb_api::StarknetContractArtifacts;
 use serde_json;
 use starknet::core::types::contract::SierraClass;
-use starknet_api::{core::ClassHash, hash::StarkFelt};
+use starknet_api::core::ClassHash;
 use std::collections::HashMap;
 
 #[allow(clippy::implicit_hasher)]
@@ -60,7 +61,5 @@ pub fn declare(
 }
 
 pub fn get_class_hash(sierra_class: &SierraClass) -> Result<ClassHash> {
-    let class_hash = sierra_class.class_hash()?;
-    let class_hash = StarkFelt::new(class_hash.to_bytes_be())?;
-    Ok(ClassHash(class_hash))
+    Ok(sierra_class.class_hash()?.into_())
 }
