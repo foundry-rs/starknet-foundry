@@ -4958,6 +4958,7 @@ dependencies = [
  "cairo-lang-starknet",
  "cairo-lang-utils",
  "camino",
+ "cheatnet",
  "forge",
  "forge_runner",
  "indoc",

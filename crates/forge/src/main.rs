@@ -7,7 +7,6 @@ use forge::scarb::{build_contracts_with_scarb, build_test_artifacts_with_scarb};
 use forge::shared_cache::{clean_cache, set_cached_failed_tests_names};
 use forge::test_filter::TestsFilter;
 use forge::{pretty_printing, run};
-use forge_runner::contracts_data::ContractsData;
 use forge_runner::test_case_summary::{AnyTestCaseSummary, TestCaseSummary};
 use forge_runner::test_crate_summary::TestCrateSummary;
 use forge_runner::{RunnerConfig, RunnerParams, CACHE_DIR};
@@ -19,6 +18,7 @@ use scarb_api::{
 };
 use scarb_ui::args::PackagesFilter;
 
+use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use forge::block_number_map::BlockNumberMap;
 use semver::{Comparator, Op, Version, VersionReq};
 use shared::print::print_as_warning;

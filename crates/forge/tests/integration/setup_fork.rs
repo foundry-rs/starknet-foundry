@@ -1,4 +1,3 @@
-use forge_runner::contracts_data::ContractsData;
 use indoc::formatdoc;
 use std::path::Path;
 use std::path::PathBuf;
@@ -14,6 +13,7 @@ use forge::test_filter::TestsFilter;
 use tempfile::tempdir;
 use tokio::runtime::Runtime;
 
+use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use forge::compiled_raw::RawForkParams;
 use forge_runner::{RunnerConfig, RunnerParams};
 use shared::command::CommandExt;

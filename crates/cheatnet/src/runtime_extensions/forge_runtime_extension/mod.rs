@@ -57,6 +57,7 @@ use starknet_api::{
 use std::collections::HashMap;
 
 pub mod cheatcodes;
+pub mod contracts_data;
 mod file_operations;
 
 pub type ForgeRuntime<'a> = ExtendedRuntime<ForgeExtension<'a>>;

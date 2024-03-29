@@ -28,6 +28,7 @@ serde.workspace = true
 flatten-serde-json.workspace = true
 num-traits.workspace = true
 url.workspace = true
+rayon.workspace = true
 tokio.workspace = true
 num-bigint.workspace = true
 conversions.workspace = true
