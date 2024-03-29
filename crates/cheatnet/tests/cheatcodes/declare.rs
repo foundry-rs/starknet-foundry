@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use crate::common::class_hashes;
 use crate::common::{get_contracts, state::create_cached_state};
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::{
     declare, get_class_hash,
@@ -26,7 +27,13 @@ fn declare_simple() {
 
     let contracts = get_contracts();
 
-    let class_hash = declare(&mut cached_state, contract_name, &contracts).unwrap();
+    let class_hash = declare(
+        &mut cached_state,
+        contract_name,
+        &contracts,
+        &class_hashes(&contracts),
+    )
+    .unwrap();
     let expected_class_hash = get_contract_class_hash(contract_name, &contracts);
 
     assert_eq!(class_hash, expected_class_hash);
@@ -41,7 +48,13 @@ fn declare_multiple() {
     let contracts = get_contracts();
 
     for contract_name in contract_names {
-        let class_hash = declare(&mut cached_state, contract_name, &contracts).unwrap();
+        let class_hash = declare(
+            &mut cached_state,
+            contract_name,
+            &contracts,
+            &class_hashes(&contracts),
+        )
+        .unwrap();
         let expected_class_hash = get_contract_class_hash(contract_name, &contracts);
         assert_eq!(class_hash, expected_class_hash);
     }
@@ -55,11 +68,22 @@ fn declare_same_contract() {
 
     let contracts = get_contracts();
 
-    let class_hash = declare(&mut cached_state, contract_name, &contracts).unwrap();
+    let class_hash = declare(
+        &mut cached_state,
+        contract_name,
+        &contracts,
+        &class_hashes(&contracts),
+    )
+    .unwrap();
     let expected_class_hash = get_contract_class_hash(contract_name, &contracts);
     assert_eq!(class_hash, expected_class_hash);
 
-    let output = declare(&mut cached_state, contract_name, &contracts);
+    let output = declare(
+        &mut cached_state,
+        contract_name,
+        &contracts,
+        &class_hashes(&contracts),
+    );
 
     assert!(match output {
         Err(CheatcodeError::Unrecoverable(EnhancedHintError::Anyhow(msg))) => {
@@ -77,7 +101,12 @@ fn declare_non_existent() {
 
     let contracts = get_contracts();
 
-    let output = declare(&mut cached_state, contract_name, &contracts);
+    let output = declare(
+        &mut cached_state,
+        contract_name,
+        &contracts,
+        &class_hashes(&contracts),
+    );
 
     assert!(match output {
         Err(CheatcodeError::Unrecoverable(EnhancedHintError::Anyhow(msg))) => {

@@ -1158,6 +1158,7 @@ name = "cheatnet"
 version = "1.0.0"
 dependencies = [
  "anyhow",
+ "bimap",
  "blockifier",
  "cairo-felt",
  "cairo-lang-casm",

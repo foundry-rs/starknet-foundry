@@ -239,6 +239,7 @@ pub fn run_test_case(
     let forge_extension = ForgeExtension {
         environment_variables: &runner_params.environment_variables,
         contracts: &runner_params.contracts_data.contracts,
+        class_hashes: &runner_params.contracts_data.class_hashes,
     };
 
     let mut forge_runtime = ExtendedRuntime {

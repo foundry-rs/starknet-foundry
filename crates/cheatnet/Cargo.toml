@@ -9,6 +9,7 @@ testing = []
 [dependencies]
 anyhow.workspace = true
 blockifier.workspace = true
+bimap.workspace = true
 camino.workspace = true
 starknet_api.workspace = true
 cairo-felt.workspace = true

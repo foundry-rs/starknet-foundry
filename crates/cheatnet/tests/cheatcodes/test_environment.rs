@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::common::state::build_runtime_state;
-use crate::common::{call_contract, deploy_wrapper};
+use crate::common::{call_contract, class_hashes, deploy_wrapper};
 use crate::common::{deploy_contract, felt_selector_from_name, state::create_cached_state};
 use blockifier::state::cached_state::CachedState;
 use cairo_felt::Felt252;
@@ -33,7 +33,13 @@ impl<'a> TestEnvironment<'a> {
         contract_name: &str,
         contracts: &HashMap<String, StarknetContractArtifacts>,
     ) -> ClassHash {
-        declare(&mut self.cached_state, contract_name, contracts).unwrap()
+        declare(
+            &mut self.cached_state,
+            contract_name,
+            contracts,
+            &class_hashes(contracts),
+        )
+        .unwrap()
     }
 
     pub fn deploy(&mut self, contract_name: &str, calldata: &[Felt252]) -> ContractAddress {

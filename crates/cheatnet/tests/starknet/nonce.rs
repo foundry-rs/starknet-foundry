@@ -1,5 +1,5 @@
 use crate::common::state::build_runtime_state;
-use crate::common::{call_contract, deploy_wrapper};
+use crate::common::{call_contract, class_hashes, deploy_wrapper};
 use crate::{
     common::assertions::assert_success,
     common::{
@@ -61,7 +61,13 @@ fn nonce_declare_deploy() {
 
     let nonce1 = check_nonce(&mut cached_state, &mut runtime_state, &contract_address);
 
-    let class_hash = declare(&mut cached_state, "HelloStarknet", &contracts).unwrap();
+    let class_hash = declare(
+        &mut cached_state,
+        "HelloStarknet",
+        &contracts,
+        &class_hashes(&contracts),
+    )
+    .unwrap();
 
     let nonce2 = check_nonce(&mut cached_state, &mut runtime_state, &contract_address);
 

@@ -1,3 +1,4 @@
+use bimap::BiMap;
 use blockifier::execution::entry_point::{CallEntryPoint, CallType, EntryPointExecutionContext};
 use blockifier::execution::execution_utils::ReadOnlySegments;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
@@ -6,7 +7,6 @@ use cairo_felt::Felt252;
 use cairo_lang_casm::hints::Hint;
 use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
-use camino::Utf8PathBuf;
 use cheatnet::constants::TEST_ADDRESS;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     call_entry_point, AddressOrClassHash,
@@ -16,12 +16,15 @@ use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
 };
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeState;
 use cheatnet::runtime_extensions::common::create_execute_calldata;
-use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::{
+    declare, get_class_hash,
+};
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::{
     deploy, deploy_at,
 };
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
 use conversions::IntoConv;
+use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use runtime::starknet::context::build_context;
 use scarb_api::metadata::MetadataCommandExt;
 use scarb_api::{get_contracts_map, ScarbCommand, StarknetContractArtifacts};
@@ -70,12 +73,28 @@ pub fn recover_data(output: CallResult) -> Vec<Felt252> {
 pub fn get_contracts() -> HashMap<String, StarknetContractArtifacts> {
     let scarb_metadata = ScarbCommand::metadata()
         .inherit_stderr()
-        .manifest_path(Utf8PathBuf::from("tests/contracts/Scarb.toml"))
+        .manifest_path("tests/contracts/Scarb.toml")
         .run()
         .unwrap();
 
     let package = scarb_metadata.packages.first().unwrap();
     get_contracts_map(&scarb_metadata, &package.id, None).unwrap()
+}
+
+pub fn class_hashes(
+    contracts: &HashMap<String, StarknetContractArtifacts>,
+) -> BiMap<String, ClassHash> {
+    let class_hashes: Vec<(String, ClassHash)> = contracts
+        .par_iter()
+        .map(|(name, artifact)| {
+            (
+                name.clone(),
+                get_class_hash(&serde_json::from_str(&artifact.sierra).unwrap()).unwrap(),
+            )
+        })
+        .collect();
+
+    BiMap::from_iter(class_hashes)
 }
 
 pub fn deploy_contract(
@@ -86,7 +105,7 @@ pub fn deploy_contract(
 ) -> ContractAddress {
     let contracts = get_contracts();
 
-    let class_hash = declare(state, contract_name, &contracts).unwrap();
+    let class_hash = declare(state, contract_name, &contracts, &class_hashes(&contracts)).unwrap();
 
     let mut execution_resources = ExecutionResources::default();
     let mut entry_point_execution_context = build_context(&runtime_state.cheatnet_state.block_info);

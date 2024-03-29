@@ -1,5 +1,5 @@
 use crate::common::state::{build_runtime_state, create_cached_state};
-use crate::common::{call_contract, deploy_wrapper};
+use crate::common::{call_contract, class_hashes, deploy_wrapper};
 use crate::common::{felt_selector_from_name, recover_data};
 use crate::{
     common::assertions::assert_success,
@@ -425,7 +425,13 @@ fn mock_call_library_call_no_effect() {
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
     let contracts = get_contracts();
-    let class_hash = declare(&mut cached_state, "MockChecker", &contracts).unwrap();
+    let class_hash = declare(
+        &mut cached_state,
+        "MockChecker",
+        &contracts,
+        &class_hashes(&contracts),
+    )
+    .unwrap();
 
     let contract_address = deploy_wrapper(
         &mut cached_state,
@@ -468,7 +474,13 @@ fn mock_call_before_deployment() {
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
     let contracts = get_contracts();
-    let class_hash = declare(&mut cached_state, "MockChecker", &contracts).unwrap();
+    let class_hash = declare(
+        &mut cached_state,
+        "MockChecker",
+        &contracts,
+        &class_hashes(&contracts),
+    )
+    .unwrap();
 
     let precalculated_address = runtime_state
         .cheatnet_state
@@ -544,7 +556,13 @@ fn mock_call_in_constructor() {
 
     let contracts = get_contracts();
 
-    let class_hash = declare(&mut cached_state, "HelloStarknet", &contracts).unwrap();
+    let class_hash = declare(
+        &mut cached_state,
+        "HelloStarknet",
+        &contracts,
+        &class_hashes(&contracts),
+    )
+    .unwrap();
     let balance_contract_address =
         deploy_wrapper(&mut cached_state, &mut runtime_state, &class_hash, &[]).unwrap();
     let ret_data = [Felt252::from(223)];
@@ -554,7 +572,13 @@ fn mock_call_in_constructor() {
         &ret_data,
     );
 
-    let class_hash = declare(&mut cached_state, "ConstructorMockChecker", &contracts).unwrap();
+    let class_hash = declare(
+        &mut cached_state,
+        "ConstructorMockChecker",
+        &contracts,
+        &class_hashes(&contracts),
+    )
+    .unwrap();
     let contract_address = deploy_wrapper(
         &mut cached_state,
         &mut runtime_state,
