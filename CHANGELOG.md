@@ -13,6 +13,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `read_txt` and `read_json` now supports `ByteArray`
 
+### Cast
+
+#### Added
+
+- sncast script idempotency feature - every action done by the script that alters the network state will be tracked in state file, 
+and won't be replayed if previously suceeded 
+
 ## [0.20.1] - 2024-03-22
 
 ## [0.20.0] - 2024-03-20
