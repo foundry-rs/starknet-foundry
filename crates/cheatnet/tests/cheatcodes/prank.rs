@@ -300,11 +300,14 @@ fn prank_cairo0_callback() {
     let cached_state = CachedState::new(
         ExtendedStateReader {
             dict_state_reader: build_testing_state(),
-            fork_state_reader: Some(ForkStateReader::new(
-                "http://188.34.188.184:7070/rpc/v0_7".parse().unwrap(),
-                BlockNumber(53_631),
-                temp_dir.path().to_str().unwrap(),
-            )),
+            fork_state_reader: Some(
+                ForkStateReader::new(
+                    "http://188.34.188.184:7070/rpc/v0_7".parse().unwrap(),
+                    BlockNumber(53_631),
+                    temp_dir.path().to_str().unwrap(),
+                )
+                .unwrap(),
+            ),
         },
         GlobalContractCache::new(GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST),
     );

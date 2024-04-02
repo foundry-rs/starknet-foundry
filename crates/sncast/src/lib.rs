@@ -183,13 +183,13 @@ pub async fn get_nonce(
     block_id: &str,
     address: FieldElement,
 ) -> Result<FieldElement> {
-    Ok(provider
+    provider
         .get_nonce(
-            get_block_id(block_id).expect("Failed to obtain block id"),
+            get_block_id(block_id).context("Failed to obtain block id")?,
             address,
         )
         .await
-        .expect("Failed to get a nonce"))
+        .context("Failed to get a nonce")
 }
 
 pub async fn get_account<'a>(

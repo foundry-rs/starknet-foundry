@@ -231,7 +231,7 @@ pub async fn test_valid_no_max_fee() {
 }
 
 pub async fn create_account(add_profile: bool, class_hash: &str) -> TempDir {
-    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
+    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None).unwrap();
     let accounts_file = "accounts.json";
 
     let mut args = vec![
