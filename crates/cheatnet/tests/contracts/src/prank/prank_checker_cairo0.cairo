@@ -10,7 +10,7 @@ trait ICairo1Contract<TContractState> {
     fn end(ref self: TContractState);
 }
 
-//https://testnet.starkscan.co/contract/0x034dad9a1512fcb0d33032c65f4605a073bdc42f70e61524510e5760c2b4f544
+// 0x18783f6c124c3acc504f300cb6b3a33def439681744d027be8d7fd5d3551565
 #[starknet::interface]
 trait ICairo0Contract<TContractState> {
     // this function only job is to call `ICairo1Contract::end()`

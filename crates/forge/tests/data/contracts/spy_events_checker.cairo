@@ -1,6 +1,6 @@
 use starknet::ContractAddress;
 
-// https://testnet.starkscan.co/contract/0x1960625ba5c435bac113ecd15af3c60e327d550fc5dbb43f07cd0875ad2f54c
+// 0x2c77ca97586968c6651a533bd5f58042c368b14cf5f526d2f42f670012e10ac
 #[starknet::interface]
 trait ICairo0Contract<TContractState> {
     // this function only job is to emit `my_event` with single felt252 value
