@@ -42,7 +42,6 @@ impl ReplaceBytecodeTrait for TestEnvironment<'_> {
     }
 }
 
-#[ignore] // TODO (#1916)
 #[test]
 fn fork() {
     let cache_dir = TempDir::new().unwrap();
@@ -52,8 +51,8 @@ fn fork() {
         ExtendedStateReader {
             dict_state_reader: build_testing_state(),
             fork_state_reader: Some(ForkStateReader::new(
-                "http://188.34.188.184:6060/rpc/v0_7".parse().unwrap(),
-                BlockNumber(957_613),
+                "http://188.34.188.184:7070/rpc/v0_7".parse().unwrap(),
+                BlockNumber(53300),
                 cache_dir.path().to_str().unwrap(),
             )),
         },
@@ -63,9 +62,9 @@ fn fork() {
 
     let class_hash = test_env.declare("ReplaceInFork", &contracts);
     let contract =
-        contract_address!("0x066ecea8cc2444d33214b9e379be1acef84aa340469b8cd285201e0517c5cb14");
+        contract_address!("0x06fdb5ef99e9def44484a3f8540bc42333e321e9b24a397d6bc0c8860bb7da8f");
 
-    let output = test_env.call_contract(&contract, "get_admin", &[]);
+    let output = test_env.call_contract(&contract, "get_owner", &[]);
 
     assert!(matches!(
         output,
@@ -74,7 +73,7 @@ fn fork() {
 
     test_env.replace_class_for_contract(contract, class_hash);
 
-    let output = test_env.call_contract(&contract, "get_admin", &[]);
+    let output = test_env.call_contract(&contract, "get_owner", &[]);
 
     assert_success(output, &[Felt252::zero()]);
 }

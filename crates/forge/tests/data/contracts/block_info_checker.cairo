@@ -10,9 +10,9 @@ trait IBlockInfoChecker<TContractState> {
 #[starknet::contract]
 mod BlockInfoChecker {
     use core::starknet::SyscallResultTrait;
-    use array::ArrayTrait;
+    use core::array::ArrayTrait;
     use starknet::get_block_info;
-    use box::BoxTrait;
+    use core::box::BoxTrait;
     use starknet::ContractAddress;
 
     #[storage]
