@@ -22,9 +22,9 @@ fn precalculate_address() {
 
             let contract = declare("HelloStarknet").unwrap();
             let contract_address_pre = contract.precalculate_address(@calldata);
-            let contract_address = contract.deploy(@calldata).unwrap();
+            let (contract_address, _) = contract.deploy(@calldata).unwrap();
             let contract_address_pre2 = contract.precalculate_address(@calldata);
-            let contract_address2 = contract.deploy(@calldata).unwrap();
+            let (contract_address2, _) = contract.deploy(@calldata).unwrap();
 
             assert(contract_address_pre == contract_address, 'must be eq');
             assert(contract_address_pre2 == contract_address2, 'must be eq');
