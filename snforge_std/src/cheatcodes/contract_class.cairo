@@ -1,6 +1,5 @@
 use starknet::{ContractAddress, ClassHash, testing::cheatcode, SyscallResult};
 use super::super::byte_array::byte_array_as_felt_array;
-use super::super::errors::TransactionError;
 use core::traits::Into;
 
 #[derive(Drop, Clone, Copy)]

@@ -24,7 +24,7 @@ fn l1_handler_execute() {
             use serde::Serde;
             use array::{ArrayTrait, SpanTrait};
             use core::result::ResultTrait;
-            use snforge_std::{declare, ContractClassTrait, L1Handler, L1HandlerTrait, RevertedTransaction};
+            use snforge_std::{declare, ContractClassTrait, L1Handler, L1HandlerTrait};
 
             #[test]
             fn l1_handler_execute() {
@@ -73,7 +73,7 @@ fn l1_handler_execute() {
                 l1_handler.payload = array![].span();
                 match l1_handler.execute() {
                     Result::Ok(_) => panic_with_felt252('should have panicked'),
-                    Result::Err(RevertedTransaction { panic_data }) => {
+                    Result::Err(panic_data) => {
                         assert(*panic_data.at(0) == 'custom', 'Wrong 1st panic datum');
                         assert(*panic_data.at(1) == 'panic', 'Wrong 2nd panic datum');
                     },

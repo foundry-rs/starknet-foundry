@@ -1,5 +1,4 @@
-use starknet::{ContractAddress, testing::cheatcode};
-use snforge_std::cheatcodes::contract_class::RevertedTransaction;
+use starknet::{ContractAddress, testing::cheatcode, SyscallResult};
 
 #[derive(Drop, Clone)]
 struct L1Handler {
@@ -11,7 +10,7 @@ struct L1Handler {
 
 trait L1HandlerTrait {
     fn new(contract_address: ContractAddress, function_selector: felt252) -> L1Handler;
-    fn execute(self: L1Handler) -> Result::<(), RevertedTransaction>;
+    fn execute(self: L1Handler) -> SyscallResult::<()>;
 }
 
 impl L1HandlerImpl of L1HandlerTrait {
@@ -21,7 +20,7 @@ impl L1HandlerImpl of L1HandlerTrait {
         }
     }
 
-    fn execute(self: L1Handler) -> Result::<(), RevertedTransaction> {
+    fn execute(self: L1Handler) -> SyscallResult::<()> {
         let mut inputs: Array::<felt252> = array![
             self.contract_address.into(),
             self.function_selector,
@@ -43,7 +42,7 @@ impl L1HandlerImpl of L1HandlerTrait {
         let exit_code = *outputs[0];
 
         if exit_code == 0 {
-            Result::<(), RevertedTransaction>::Ok(())
+            SyscallResult::Ok(())
         } else {
             let panic_data_len_felt = *outputs[1];
             let panic_data_len = panic_data_len_felt.try_into().unwrap();
@@ -59,7 +58,7 @@ impl L1HandlerImpl of L1HandlerTrait {
                 i += 1;
             };
 
-            Result::<(), RevertedTransaction>::Err(RevertedTransaction { panic_data })
+            SyscallResult::Err(panic_data)
         }
     }
 }
