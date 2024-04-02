@@ -36,7 +36,7 @@ trait ContractClassTrait {
     /// Deploys a contract
     /// `self` - an instance of the struct `ContractClass` which is obtained by calling `declare`
     /// `constructor_calldata` - serialized calldata for the constructor
-    /// Returns the address the contract was deployed at, or a `RevertedTransaction` if it failed
+    /// Returns the address the contract was deployed at and serialized constructor return data, or panic data if it failed
     fn deploy(
         self: @ContractClass, constructor_calldata: @Array::<felt252>
     ) -> SyscallResult<(ContractAddress, Span<felt252>)>;
@@ -45,7 +45,7 @@ trait ContractClassTrait {
     /// `self` - an instance of the struct `ContractClass` which is obtained by calling `declare`
     /// `constructor_calldata` - serialized calldata for the constructor
     /// `contract_address` - address the contract should be deployed at
-    /// Returns the address the contract was deployed at, or a `RevertedTransaction` if it failed
+    /// Returns the address the contract was deployed at and serialized constructor return data, or panic data if it failed
     fn deploy_at(
         self: @ContractClass,
         constructor_calldata: @Array::<felt252>,
