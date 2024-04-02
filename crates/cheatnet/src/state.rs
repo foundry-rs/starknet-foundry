@@ -149,6 +149,7 @@ impl<T> CheatStatus<T> {
 }
 
 /// Tree structure representing trace of a call.
+#[derive(Default)]
 pub struct CallTrace {
     pub entry_point: CallEntryPoint,
     // These also include resources used by internal calls
@@ -158,6 +159,24 @@ pub struct CallTrace {
     pub nested_calls: Vec<Rc<RefCell<CallTrace>>>,
     pub result: CallResult,
     pub vm_trace: Option<Vec<TraceEntry>>,
+    pub node_type: NodeType,
+}
+
+#[derive(Default)]
+pub enum NodeType {
+    #[default]
+    Regular,
+    Phantom,
+}
+
+impl NodeType {
+    #[must_use]
+    pub fn is_visible_to_user(&self) -> bool {
+        match *self {
+            NodeType::Regular => true,
+            NodeType::Phantom => false,
+        }
+    }
 }
 
 #[derive(Clone)]
@@ -259,12 +278,7 @@ impl Default for CheatnetState {
         test_code_entry_point.class_hash = Some(class_hash!(TEST_CONTRACT_CLASS_HASH));
         let test_call = Rc::new(RefCell::new(CallTrace {
             entry_point: test_code_entry_point,
-            used_execution_resources: Default::default(),
-            used_l1_resources: Default::default(),
-            used_syscalls: Default::default(),
-            nested_calls: vec![],
-            result: CallResult::Success { ret_data: vec![] },
-            vm_trace: None,
+            ..Default::default()
         }));
         Self {
             rolled_contracts: Default::default(),
@@ -396,12 +410,7 @@ impl TraceData {
     ) {
         let new_call = Rc::new(RefCell::new(CallTrace {
             entry_point,
-            used_execution_resources: Default::default(),
-            used_l1_resources: Default::default(),
-            used_syscalls: Default::default(),
-            nested_calls: vec![],
-            result: CallResult::Success { ret_data: vec![] },
-            vm_trace: None,
+            ..Default::default()
         }));
         let current_call = self.current_call_stack.top();
 
@@ -445,6 +454,16 @@ impl TraceData {
 
         last_call.result = result;
         last_call.vm_trace = vm_trace;
+    }
+
+    pub fn add_phantom_call(&mut self) {
+        let new_call = Rc::new(RefCell::new(CallTrace {
+            node_type: NodeType::Phantom,
+            ..Default::default()
+        }));
+        let current_call = self.current_call_stack.top();
+
+        current_call.borrow_mut().nested_calls.push(new_call);
     }
 }
 

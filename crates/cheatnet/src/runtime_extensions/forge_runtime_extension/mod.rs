@@ -684,6 +684,10 @@ fn handle_deploy_result(
 
 // append all to one output Vec instead of allocating new one for each nested call
 fn serialize_call_trace(call_trace: &CallTrace, output: &mut Vec<Felt252>) {
+    if !call_trace.node_type.is_visible_to_user() {
+        return;
+    }
+
     serialize_call_entry_point(&call_trace.entry_point, output);
 
     output.push(Felt252::from(call_trace.nested_calls.len()));
