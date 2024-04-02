@@ -1184,6 +1184,7 @@ dependencies = [
  "runtime",
  "scarb-api",
  "scarb-metadata",
+ "semver",
  "serde",
  "serde_json",
  "starknet",

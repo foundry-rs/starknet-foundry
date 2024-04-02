@@ -109,7 +109,7 @@ impl StateReader for ForkStateReader {
         contract_address: ContractAddress,
         key: StorageKey,
     ) -> StateResult<StarkFelt> {
-        if let Some(cache_hit) = self.cache.get_storage_at(contract_address, key) {
+        if let Some(cache_hit) = self.cache.get_storage_at(&contract_address, &key) {
             return Ok(cache_hit);
         }
 
@@ -133,7 +133,7 @@ impl StateReader for ForkStateReader {
     }
 
     fn get_nonce_at(&mut self, contract_address: ContractAddress) -> StateResult<Nonce> {
-        if let Some(cache_hit) = self.cache.get_nonce_at(contract_address) {
+        if let Some(cache_hit) = self.cache.get_nonce_at(&contract_address) {
             return Ok(cache_hit);
         }
 
@@ -157,7 +157,7 @@ impl StateReader for ForkStateReader {
     }
 
     fn get_class_hash_at(&mut self, contract_address: ContractAddress) -> StateResult<ClassHash> {
-        if let Some(cache_hit) = self.cache.get_class_hash_at(contract_address) {
+        if let Some(cache_hit) = self.cache.get_class_hash_at(&contract_address) {
             return Ok(cache_hit);
         }
 
@@ -191,14 +191,11 @@ impl StateReader for ForkStateReader {
             } else {
                 match self.runtime.block_on(
                     self.client
-                        .get_class(self.block_id(), FieldElement::from_(*class_hash)),
+                        .get_class(self.block_id(), FieldElement::from_(class_hash)),
                 ) {
-                    Ok(contract_class) => {
-                        self.cache
-                            .cache_get_compiled_contract_class(&class_hash, &contract_class);
-
-                        Ok(contract_class)
-                    }
+                    Ok(contract_class) => Ok(self
+                        .cache
+                        .insert_compiled_contract_class(class_hash, contract_class)),
                     Err(ProviderError::StarknetError(StarknetError::ClassHashNotFound)) => {
                         Err(UndeclaredClassHash(class_hash))
                     }
