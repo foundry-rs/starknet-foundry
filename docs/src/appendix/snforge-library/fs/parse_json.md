@@ -35,6 +35,7 @@ fn test_parse_json() {
 }
 ```
 
+## Accepted format
 File content must have proper JSON Format with values satisfying the conditions:
   - integers in range of `[0, P)` where P is [`Cairo Prime`](https://book.cairo-lang.org/ch02-02-data-types.html?highlight=prime#felt-type)
   - strings of length `<=31`

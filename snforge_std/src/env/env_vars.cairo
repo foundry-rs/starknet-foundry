@@ -1,7 +1,9 @@
 use starknet::testing::cheatcode;
 use super::super::byte_array::byte_array_as_felt_array;
 
-fn var(name: ByteArray) -> felt252 {
-    let outputs = cheatcode::<'var'>(byte_array_as_felt_array(@name).span());
-    *outputs[0]
+/// Reads an environment variable, without parsing it
+/// `name` - name of an environment variable
+/// Returns the read array of felts
+fn var(name: ByteArray) -> Array<felt252> {
+    cheatcode::<'var'>(byte_array_as_felt_array(@name).span())
 }
