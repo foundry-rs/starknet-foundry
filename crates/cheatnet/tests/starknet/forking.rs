@@ -15,7 +15,6 @@ use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeS
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
 use cheatnet::state::{BlockInfoReader, CheatnetState, ExtendedStateReader};
 use conversions::string::{TryFromDecStr, TryFromHexStr};
-use conversions::IntoConv;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use runtime::EnhancedHintError;
 use serde_json::Value;
@@ -26,7 +25,6 @@ use std::str::FromStr;
 use tempfile::TempDir;
 use url::Url;
 
-#[ignore] // TODO (#1916)
 #[test]
 fn fork_simple() {
     let cache_dir = TempDir::new().unwrap();
@@ -34,8 +32,8 @@ fn fork_simple() {
     let mut cheatnet_state = CheatnetState::default();
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
-    let contract_address = ContractAddress::try_from_dec_str(
-        "3216637956526895219277698311134811322769343974163380838558193911733621219342",
+    let contract_address = ContractAddress::try_from_hex_str(
+        "0x202de98471a4fae6bcbabb96cab00437d381abc58b02509043778074d6781e9",
     )
     .unwrap();
 
@@ -47,7 +45,7 @@ fn fork_simple() {
         &selector,
         &[],
     );
-    assert_success(output, &[Felt252::from(2)]);
+    assert_success(output, &[Felt252::from(0)]);
 
     let selector = felt_selector_from_name("increase_balance");
     call_contract(
@@ -66,10 +64,9 @@ fn fork_simple() {
         &selector,
         &[],
     );
-    assert_success(output, &[Felt252::from(102)]);
+    assert_success(output, &[Felt252::from(100)]);
 }
 
-#[ignore] // TODO (#1916)
 #[test]
 fn try_calling_nonexistent_contract() {
     let cache_dir = TempDir::new().unwrap();
@@ -112,10 +109,9 @@ fn try_deploying_undeclared_class() {
     );
 }
 
-#[ignore] // TODO (#1916)
 #[test]
 fn test_forking_at_block_number() {
-    let node_url: Url = "http://188.34.188.184:9545/rpc/v0_7".parse().unwrap();
+    let node_url: Url = "http://188.34.188.184:7070/rpc/v0_7".parse().unwrap();
     let cache_dir = TempDir::new().unwrap();
 
     {
@@ -125,7 +121,7 @@ fn test_forking_at_block_number() {
                 dict_state_reader: build_testing_state(),
                 fork_state_reader: Some(ForkStateReader::new(
                     node_url.clone(),
-                    BlockNumber(309_780),
+                    BlockNumber(50_000),
                     cache_dir.path().to_str().unwrap(),
                 )),
             },
@@ -137,18 +133,17 @@ fn test_forking_at_block_number() {
                 dict_state_reader: build_testing_state(),
                 fork_state_reader: Some(ForkStateReader::new(
                     node_url,
-                    BlockNumber(309_781),
+                    BlockNumber(53_681),
                     cache_dir.path().to_str().unwrap(),
                 )),
             },
             GlobalContractCache::new(GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST),
         );
 
-        let contract_address = Felt252::try_from_dec_str(
-            "3216637956526895219277698311134811322769343974163380838558193911733621219342",
+        let contract_address = ContractAddress::try_from_hex_str(
+            "0x202de98471a4fae6bcbabb96cab00437d381abc58b02509043778074d6781e9",
         )
-        .unwrap()
-        .into_();
+        .unwrap();
 
         let selector = felt_selector_from_name("get_balance");
         let output = call_contract(
@@ -163,7 +158,7 @@ fn test_forking_at_block_number() {
 
         assert_error(
             output,
-            "Contract not deployed at address: 0x071c8d74edc89330f314f3b1109059d68ebfa68874aa91e9c425a6378ffde00e"
+            "Contract not deployed at address: 0x0202de98471a4fae6bcbabb96cab00437d381abc58b02509043778074d6781e9"
         );
 
         let selector = felt_selector_from_name("get_balance");
@@ -182,7 +177,6 @@ fn test_forking_at_block_number() {
     purge_cache(cache_dir.path().to_str().unwrap());
 }
 
-#[ignore] // TODO (#1916)
 #[test]
 fn call_forked_contract_from_other_contract() {
     let cache_dir = TempDir::new().unwrap();
@@ -190,8 +184,8 @@ fn call_forked_contract_from_other_contract() {
     let mut cheatnet_state = CheatnetState::default();
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
-    let forked_contract_address = Felt252::try_from_dec_str(
-        "3216637956526895219277698311134811322769343974163380838558193911733621219342",
+    let forked_contract_address = Felt252::try_from_hex_str(
+        "0x202de98471a4fae6bcbabb96cab00437d381abc58b02509043778074d6781e9",
     )
     .unwrap();
 
@@ -210,10 +204,9 @@ fn call_forked_contract_from_other_contract() {
         &selector,
         &[forked_contract_address],
     );
-    assert_success(output, &[Felt252::from(2)]);
+    assert_success(output, &[Felt252::from(0)]);
 }
 
-#[ignore] // TODO (#1916)
 #[test]
 fn library_call_on_forked_class_hash() {
     let cache_dir = TempDir::new().unwrap();
@@ -221,8 +214,8 @@ fn library_call_on_forked_class_hash() {
     let mut cheatnet_state = CheatnetState::default();
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
-    let forked_class_hash = Felt252::try_from_dec_str(
-        "2721209982346623666255046859539202086457905975723689966720503254490557413774",
+    let forked_class_hash = Felt252::try_from_hex_str(
+        "0x06a7eb29ee38b0a0b198e39ed6ad458d2e460264b463351a0acfc05822d61550",
     )
     .unwrap();
 
@@ -261,7 +254,6 @@ fn library_call_on_forked_class_hash() {
     assert_success(output, &[Felt252::from(100)]);
 }
 
-#[ignore] // TODO (#1916)
 #[test]
 fn call_forked_contract_from_constructor() {
     let cache_dir = TempDir::new().unwrap();
@@ -269,13 +261,13 @@ fn call_forked_contract_from_constructor() {
     let mut cheatnet_state = CheatnetState::default();
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
-    let forked_class_hash = Felt252::try_from_dec_str(
-        "2721209982346623666255046859539202086457905975723689966720503254490557413774",
+    let forked_class_hash = Felt252::try_from_hex_str(
+        "0x06a7eb29ee38b0a0b198e39ed6ad458d2e460264b463351a0acfc05822d61550",
     )
     .unwrap();
 
-    let forked_contract_address = Felt252::try_from_dec_str(
-        "3216637956526895219277698311134811322769343974163380838558193911733621219342",
+    let forked_contract_address = Felt252::try_from_hex_str(
+        "0x202de98471a4fae6bcbabb96cab00437d381abc58b02509043778074d6781e9",
     )
     .unwrap();
 
@@ -294,22 +286,21 @@ fn call_forked_contract_from_constructor() {
         &selector,
         &[forked_class_hash],
     );
-    assert_success(output, &[Felt252::from(2)]);
+    assert_success(output, &[Felt252::from(0)]);
 }
 
-#[ignore] // TODO (#1916)
 #[test]
 fn call_forked_contract_get_block_info_via_proxy() {
     let cache_dir = TempDir::new().unwrap();
     let mut cached_fork_state =
-        create_fork_cached_state_at(BlockNumber(315_887), cache_dir.path().to_str().unwrap());
+        create_fork_cached_state_at(53_655, cache_dir.path().to_str().unwrap());
     let block_info = cached_fork_state.state.get_block_info().unwrap();
     let mut cheatnet_state = CheatnetState::default();
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
     runtime_state.cheatnet_state.block_info = block_info;
 
-    let forked_contract_address = Felt252::try_from_dec_str(
-        "2142482702760034245482243841749569811658592971915399561448302710970247869206",
+    let forked_contract_address = Felt252::try_from_hex_str(
+        "0x3d80c579ad7d83ff46634abe8f91f9d2080c5c076d4f0f59dd810f9b3f01164",
     )
     .unwrap();
 
@@ -328,7 +319,7 @@ fn call_forked_contract_get_block_info_via_proxy() {
         &selector,
         &[forked_contract_address.clone()],
     );
-    assert_success(output, &[Felt252::from(315_887)]);
+    assert_success(output, &[Felt252::from(53_655)]);
 
     let selector = felt_selector_from_name("read_block_timestamp");
     let output = call_contract(
@@ -338,7 +329,7 @@ fn call_forked_contract_get_block_info_via_proxy() {
         &selector,
         &[forked_contract_address.clone()],
     );
-    assert_success(output, &[Felt252::from(1_697_630_072)]);
+    assert_success(output, &[Felt252::from(1_711_548_115)]);
 
     let selector = felt_selector_from_name("read_sequencer_address");
     let output = call_contract(
@@ -357,19 +348,18 @@ fn call_forked_contract_get_block_info_via_proxy() {
     );
 }
 
-#[ignore] // TODO (#1916)
 #[test]
 fn call_forked_contract_get_block_info_via_libcall() {
     let cache_dir = TempDir::new().unwrap();
     let mut cached_fork_state =
-        create_fork_cached_state_at(BlockNumber(315_887), cache_dir.path().to_str().unwrap());
+        create_fork_cached_state_at(53_669, cache_dir.path().to_str().unwrap());
     let block_info = cached_fork_state.state.get_block_info().unwrap();
     let mut cheatnet_state = CheatnetState::default();
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
     runtime_state.cheatnet_state.block_info = block_info;
 
     let forked_class_hash = Felt252::try_from_hex_str(
-        "0x00623d04363a9502cd0706dfc717574dd3c596f162c3867456002f25c706cd14",
+        "0x04947e141416a51b57a59bc8786b5c0e02751d33e46383fa9cebbf9cf6f30844",
     )
     .unwrap();
 
@@ -388,7 +378,7 @@ fn call_forked_contract_get_block_info_via_libcall() {
         &selector,
         &[forked_class_hash.clone()],
     );
-    assert_success(output, &[Felt252::from(315_887)]);
+    assert_success(output, &[Felt252::from(53_669)]);
 
     let selector = felt_selector_from_name("read_block_timestamp_with_lib_call");
     let output = call_contract(
@@ -398,7 +388,7 @@ fn call_forked_contract_get_block_info_via_libcall() {
         &selector,
         &[forked_class_hash.clone()],
     );
-    assert_success(output, &[Felt252::from(1_697_630_072)]);
+    assert_success(output, &[Felt252::from(1_711_551_518)]);
 
     let selector = felt_selector_from_name("read_sequencer_address_with_lib_call");
     let output = call_contract(
@@ -417,19 +407,18 @@ fn call_forked_contract_get_block_info_via_libcall() {
     );
 }
 
-#[ignore] // TODO (#1916)
 #[test]
 fn using_specified_block_nb_is_cached() {
     let cache_dir = TempDir::new().unwrap();
     let run_test = || {
         let mut cached_state =
-            create_fork_cached_state_at(BlockNumber(312_646), cache_dir.path().to_str().unwrap());
+            create_fork_cached_state_at(53_669, cache_dir.path().to_str().unwrap());
         let _ = cached_state.state.get_block_info().unwrap();
 
         let mut cheatnet_state = CheatnetState::default();
         let mut runtime_state = build_runtime_state(&mut cheatnet_state);
-        let contract_address = ContractAddress::try_from_dec_str(
-            "3216637956526895219277698311134811322769343974163380838558193911733621219342",
+        let contract_address = ContractAddress::try_from_hex_str(
+            "0x202de98471a4fae6bcbabb96cab00437d381abc58b02509043778074d6781e9",
         )
         .unwrap();
 
@@ -442,7 +431,7 @@ fn using_specified_block_nb_is_cached() {
             &[],
         );
 
-        assert_success(output, &[Felt252::from(2)]);
+        assert_success(output, &[Felt252::from(0)]);
     };
 
     let assert_cache = || {
@@ -450,26 +439,26 @@ fn using_specified_block_nb_is_cached() {
         let cache = read_cache(
             cache_dir
                 .path()
-                .join(PathBuf::from_str("*312646_v2.json").unwrap())
+                .join(PathBuf::from_str("*v2.json").unwrap())
                 .to_str()
                 .unwrap(),
         );
         assert_eq!(
             cache["storage_at"].as_object().unwrap()
-                ["3216637956526895219277698311134811322769343974163380838558193911733621219342"]
+                ["909695684384966988518360885740987679295896914752010826969619859679272731113"]
                 .as_object()
                 .unwrap()
                 ["916907772491729262376534102982219947830828984996257231353398618781993312401"],
-            "2"
+            "0"
         );
         assert_eq!(
             cache["class_hash_at"].as_object().unwrap()
-                ["3216637956526895219277698311134811322769343974163380838558193911733621219342"],
-            "2721209982346623666255046859539202086457905975723689966720503254490557413774"
+                ["909695684384966988518360885740987679295896914752010826969619859679272731113"],
+            "3010563592154543959652480197888940232967299549713214562804538472607100835152"
         );
 
         match cache["compiled_contract_class"].as_object().unwrap()
-            ["2721209982346623666255046859539202086457905975723689966720503254490557413774"]
+            ["3010563592154543959652480197888940232967299549713214562804538472607100835152"]
         {
             Value::String(_) => {}
             _ => panic!("The compiled_contract_class entry is not as string"),
@@ -479,13 +468,13 @@ fn using_specified_block_nb_is_cached() {
             cache["block_info"].as_object().unwrap()["block_number"]
                 .as_u64()
                 .unwrap(),
-            312_646
+            53_669
         );
         assert_eq!(
             cache["block_info"].as_object().unwrap()["block_timestamp"]
                 .as_u64()
                 .unwrap(),
-            1_695_291_683
+            1_711_551_518
         );
         assert_eq!(
             cache["block_info"].as_object().unwrap()["sequencer_address"],
@@ -502,11 +491,10 @@ fn using_specified_block_nb_is_cached() {
     purge_cache(cache_dir.path().to_str().unwrap());
 }
 
-#[ignore] // TODO (#1916)
 #[test]
 fn test_cache_merging() {
     fn run_test(cache_dir: &str, contract_address: &str, balance: u64) {
-        let mut cached_state = create_fork_cached_state_at(BlockNumber(312_767), cache_dir);
+        let mut cached_state = create_fork_cached_state_at(53_680, cache_dir);
         let _ = cached_state.state.get_block_info().unwrap();
 
         let mut cheatnet_state = CheatnetState::default();
@@ -527,24 +515,24 @@ fn test_cache_merging() {
 
     let cache_dir = TempDir::new().unwrap();
     let contract_1_address =
-        "3216637956526895219277698311134811322769343974163380838558193911733621219342";
+        "909695684384966988518360885740987679295896914752010826969619859679272731113";
     let contract_2_address =
-        "3221247681918684045050855759557788124640099286968827281606334752803016107426";
+        "2217203761804284794966758647769644801828837216064483209093377886716094955025";
 
     let assert_cache = || {
         // Assertions
         let cache = read_cache(
             cache_dir
                 .path()
-                .join(PathBuf::from_str("*312767_v2.json").unwrap())
+                .join(PathBuf::from_str("*v2.json").unwrap())
                 .to_str()
                 .unwrap(),
         );
 
         let contract_1_class_hash =
-            "2721209982346623666255046859539202086457905975723689966720503254490557413774";
+            "3010563592154543959652480197888940232967299549713214562804538472607100835152";
         let contract_2_class_hash =
-            "1174898468974458236078282214054469608534299071801223106624371487328427954435";
+            "76036093035636804407129547095773871757195382428447731413907511841964835171";
 
         let balance_storage_address =
             "916907772491729262376534102982219947830828984996257231353398618781993312401";
@@ -552,7 +540,7 @@ fn test_cache_merging() {
             cache["storage_at"].as_object().unwrap()[contract_1_address]
                 .as_object()
                 .unwrap()[balance_storage_address],
-            "2"
+            "0"
         );
         assert_eq!(
             cache["storage_at"].as_object().unwrap()[contract_2_address]
@@ -583,13 +571,13 @@ fn test_cache_merging() {
             cache["block_info"].as_object().unwrap()["block_number"]
                 .as_u64()
                 .unwrap(),
-            312_767
+            53_680
         );
         assert_eq!(
             cache["block_info"].as_object().unwrap()["block_timestamp"]
                 .as_u64()
                 .unwrap(),
-            1_695_378_726
+            1_711_554_206
         );
         assert_eq!(
             cache["block_info"].as_object().unwrap()["sequencer_address"],
@@ -598,7 +586,7 @@ fn test_cache_merging() {
     };
     let cache_dir_str = cache_dir.path().to_str().unwrap();
 
-    run_test(cache_dir_str, contract_1_address, 2);
+    run_test(cache_dir_str, contract_1_address, 0);
     run_test(cache_dir_str, contract_2_address, 0);
     assert_cache();
 
@@ -606,7 +594,7 @@ fn test_cache_merging() {
 
     // Parallel execution
     [
-        (cache_dir_str, contract_1_address, 2),
+        (cache_dir_str, contract_1_address, 0),
         (cache_dir_str, contract_2_address, 0),
     ]
     .par_iter()
@@ -615,11 +603,10 @@ fn test_cache_merging() {
     assert_cache();
 }
 
-#[ignore] // TODO (#1916)
 #[test]
 fn test_cached_block_info_merging() {
     fn run_test(cache_dir: &str, contract_address: &str, balance: u64, call_get_block_info: bool) {
-        let mut cached_state = create_fork_cached_state_at(BlockNumber(312_767), cache_dir);
+        let mut cached_state = create_fork_cached_state_at(53_680, cache_dir);
         if call_get_block_info {
             let _ = cached_state.state.get_block_info().unwrap();
         }
@@ -641,14 +628,14 @@ fn test_cached_block_info_merging() {
 
     let cache_dir = TempDir::new().unwrap();
     let contract_1_address =
-        "3216637956526895219277698311134811322769343974163380838558193911733621219342";
+        "909695684384966988518360885740987679295896914752010826969619859679272731113";
 
     let assert_cached_block_info = |is_block_info_cached: bool| {
         // Assertions
         let cache = read_cache(
             cache_dir
                 .path()
-                .join(PathBuf::from_str("*312767_v2.json").unwrap())
+                .join(PathBuf::from_str("*v2.json").unwrap())
                 .to_str()
                 .unwrap(),
         );
@@ -657,13 +644,13 @@ fn test_cached_block_info_merging() {
                 cache["block_info"].as_object().unwrap()["block_number"]
                     .as_u64()
                     .unwrap(),
-                312_767
+                53_680
             );
             assert_eq!(
                 cache["block_info"].as_object().unwrap()["block_timestamp"]
                     .as_u64()
                     .unwrap(),
-                1_695_378_726
+                1_711_554_206
             );
             assert_eq!(
                 cache["block_info"].as_object().unwrap()["sequencer_address"],
@@ -675,15 +662,14 @@ fn test_cached_block_info_merging() {
     };
     let cache_dir_str = cache_dir.path().to_str().unwrap();
 
-    run_test(cache_dir_str, contract_1_address, 2, false);
+    run_test(cache_dir_str, contract_1_address, 0, false);
     assert_cached_block_info(false);
-    run_test(cache_dir_str, contract_1_address, 2, true);
+    run_test(cache_dir_str, contract_1_address, 0, true);
     assert_cached_block_info(true);
-    run_test(cache_dir_str, contract_1_address, 2, false);
+    run_test(cache_dir_str, contract_1_address, 0, false);
     assert_cached_block_info(true);
 }
 
-#[ignore] // TODO (#1916)
 #[test]
 fn test_calling_nonexistent_url() {
     let temp_dir = TempDir::new().unwrap();
@@ -703,8 +689,8 @@ fn test_calling_nonexistent_url() {
     let mut cheatnet_state = CheatnetState::default();
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
-    let contract_address = ContractAddress::try_from_dec_str(
-        "3216637956526895219277698311134811322769343974163380838558193911733621219342",
+    let contract_address = ContractAddress::try_from_hex_str(
+        "0x202de98471a4fae6bcbabb96cab00437d381abc58b02509043778074d6781e9",
     )
     .unwrap();
 
