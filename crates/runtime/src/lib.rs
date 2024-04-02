@@ -38,6 +38,23 @@ use utils::BufferReader;
 pub mod starknet;
 pub mod utils;
 
+// from core/src/starknet/testing.cairo
+const CAIRO_TEST_CHEATCODES: [&str; 14] = [
+    "set_block_number",
+    "set_caller_address",
+    "set_contract_address",
+    "set_sequencer_address",
+    "set_block_timestamp",
+    "set_version",
+    "set_account_contract_address",
+    "set_max_fee",
+    "set_transaction_hash",
+    "set_chain_id",
+    "set_nonce",
+    "set_signature",
+    "pop_log",
+    "pop_l2_to_l1_message",
+];
 pub trait SyscallPtrAccess {
     fn get_mut_syscall_ptr(&mut self) -> &mut Relocatable;
 
@@ -115,6 +132,7 @@ impl<'a> HintProcessorLogic for StarknetRuntime<'a> {
         constants: &HashMap<String, Felt252>,
     ) -> Result<(), HintError> {
         let maybe_extended_hint = hint_data.downcast_ref::<Hint>();
+
         if let Some(Hint::Starknet(StarknetHint::Cheatcode {
             selector,
             input_start: _,
@@ -124,9 +142,19 @@ impl<'a> HintProcessorLogic for StarknetRuntime<'a> {
         })) = maybe_extended_hint
         {
             let selector = parse_selector(selector)?;
-            return Err(HintError::CustomHint(
-                format!("Cheatcode `{selector}` is not supported in this runtime").into(),
-            ));
+
+            let is_cairo_test_fn = CAIRO_TEST_CHEATCODES.contains(&selector.as_str());
+
+            let error = format!(
+                "Function `{selector}` is not supported in this runtime\n{}",
+                if is_cairo_test_fn {
+                    "Check if functions are imported from `snforge_std`/`sncast_std` NOT from `starknet::testing`"
+                } else {
+                    "Check if used library (`snforge_std` or `sncast_std`) is compatible with used binary, probably one of them is not updated"
+                }
+            );
+
+            return Err(HintError::CustomHint(error.into()));
         }
 
         self.hint_handler

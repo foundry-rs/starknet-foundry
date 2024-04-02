@@ -6,8 +6,8 @@ fn precalculate_address_simple() {
     let mut cheatnet_state = CheatnetState::default();
     let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
-    let contracts = get_contracts();
-    let class_hash = test_env.declare("HelloStarknet", &contracts);
+    let contracts_data = get_contracts();
+    let class_hash = test_env.declare("HelloStarknet", &contracts_data);
 
     let precalculated1 = test_env.precalculate_address(&class_hash, &[]);
     let actual1 = test_env.deploy_wrapper(&class_hash, &[]);
@@ -25,8 +25,8 @@ fn precalculate_address_calldata() {
     let mut cheatnet_state = CheatnetState::default();
     let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
-    let contracts = get_contracts();
-    let class_hash = test_env.declare("ConstructorSimple", &contracts);
+    let contracts_data = get_contracts();
+    let class_hash = test_env.declare("ConstructorSimple", &contracts_data);
 
     let precalculated1 = test_env.precalculate_address(&class_hash, &[111]);
     let precalculated2 = test_env.precalculate_address(&class_hash, &[222]);

@@ -6,7 +6,6 @@ use std::rc::Rc;
 use std::sync::Arc;
 
 use crate::compiled_runnable::ValidatedForkConfig;
-use crate::contracts_data::ContractsData;
 use crate::gas::calculate_used_gas;
 use crate::test_case_summary::{Single, TestCaseSummary};
 use crate::{RunnerConfig, RunnerParams, TestCaseRunnable, CACHE_DIR};
@@ -39,6 +38,7 @@ use cheatnet::forking::state::ForkStateReader;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::CallToBlockifierExtension;
 use cheatnet::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
+use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::runtime_extensions::forge_runtime_extension::{
     get_all_used_resources, update_top_call_execution_resources, update_top_call_l1_resources,
     update_top_call_vm_trace, ForgeExtension, ForgeRuntime,
@@ -238,7 +238,7 @@ pub fn run_test_case(
     };
     let forge_extension = ForgeExtension {
         environment_variables: &runner_params.environment_variables,
-        contracts: &runner_params.contracts_data.contracts,
+        contracts_data: &runner_params.contracts_data,
     };
 
     let mut forge_runtime = ExtendedRuntime {
