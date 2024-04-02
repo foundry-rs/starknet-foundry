@@ -402,7 +402,7 @@ fn start_spoof_multiple() {
                 let (contract_address_1, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher_1 = ISpoofCheckerDispatcher { contract_address: contract_address_1 };
                 
-                let (contract_address_2, ) = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address_2, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher_2 = ISpoofCheckerDispatcher { contract_address: contract_address_2 };
 
                 let mut tx_info_mock = TxInfoMockTrait::default();

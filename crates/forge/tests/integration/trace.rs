@@ -29,7 +29,7 @@ fn trace_deploy() {
                 )
                     .unwrap_syscall();
             
-                let proxy_address_3 = proxy
+                let (proxy_address_3, _) = proxy
                     .deploy_at(@array![checker_address.into()], 123.try_into().unwrap())
                     .unwrap();
                     

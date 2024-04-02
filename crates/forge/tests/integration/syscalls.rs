@@ -29,7 +29,8 @@ fn library_call_syscall_is_usable() {
 
         fn deploy_contract(name: ByteArray) -> ContractAddress {
             let contract = declare(name).unwrap();
-            contract.deploy(@ArrayTrait::new()).unwrap()
+            let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+            contract_address
         }
 
         #[test]

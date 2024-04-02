@@ -758,9 +758,9 @@ fn events_contract_cost() {
 
     let result = run_test_case(&test);
     assert_passed(&result);
-    // 13 = gas cost of steps
+    // 14 = gas cost of steps
     // 96 = gas cost of onchain data (deploy cost)
     // 6 gas for 50 event values
     // ~13 gas for 50 event keys
-    assert_gas(&result, "event_emission_cost", 13 + 96 + 6 + 13);
+    assert_gas(&result, "event_emission_cost", 14 + 96 + 6 + 13);
 }
