@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - sncast script idempotency feature - every action done by the script that alters the network state will be tracked in state file, 
-and won't be replayed if previously suceeded 
+and won't be replayed if previously succeeded 
 
 ## [0.20.1] - 2024-03-22
 
