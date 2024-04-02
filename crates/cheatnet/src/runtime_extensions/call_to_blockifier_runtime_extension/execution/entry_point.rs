@@ -30,7 +30,7 @@ use std::rc::Rc;
 use blockifier::execution::deprecated_syscalls::hint_processor::SyscallCounter;
 use cairo_felt::Felt252;
 use cairo_vm::vm::trace::trace_entry::TraceEntry;
-use conversions::{FromConv};
+use conversions::FromConv;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{AddressOrClassHash, CallResult};
 use crate::runtime_extensions::common::sum_syscall_counters;
 

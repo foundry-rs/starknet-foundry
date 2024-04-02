@@ -7,6 +7,7 @@ use anyhow::Result;
 use blockifier::execution::entry_point::ConstructorContext;
 use blockifier::execution::execution_utils::felt_to_stark_felt;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
+use conversions::FromConv;
 use runtime::EnhancedHintError;
 use std::sync::Arc;
 
@@ -28,7 +29,7 @@ pub fn deploy_at(
     class_hash: &ClassHash,
     calldata: &[Felt252],
     contract_address: ContractAddress,
-) -> Result<ContractAddress, CheatcodeError> {
+) -> Result<(ContractAddress, Vec<Felt252>), CheatcodeError> {
     if let Ok(class_hash) = syscall_handler.state.get_class_hash_at(contract_address) {
         if class_hash != ClassHash::default() {
             return Err(CheatcodeError::Unrecoverable(EnhancedHintError::from(
@@ -59,18 +60,21 @@ pub fn deploy_at(
     );
     runtime_state.cheatnet_state.increment_deploy_salt_base();
 
-    exec_result.as_ref().map_err(|err| {
-        let call_contract_failure = CallFailure::from_execution_error(
-            err,
-            &AddressOrClassHash::ContractAddress(contract_address),
-        );
-        CheatcodeError::from(call_contract_failure)
-    })?;
-
-    if let Ok(call_info) = exec_result {
-        syscall_handler.inner_calls.push(call_info);
+    match exec_result {
+        Ok(call_info) => {
+            let retdata = call_info.execution.retdata.0.clone();
+            let retdata: Vec<Felt252> = retdata.into_iter().map(Felt252::from_).collect();
+            syscall_handler.inner_calls.push(call_info);
+            Ok((contract_address, retdata))
+        }
+        Err(err) => {
+            let call_contract_failure = CallFailure::from_execution_error(
+                &err,
+                &AddressOrClassHash::ContractAddress(contract_address),
+            );
+            Err(CheatcodeError::from(call_contract_failure))
+        }
     }
-    Ok(contract_address)
 }
 
 pub fn deploy(
@@ -78,7 +82,7 @@ pub fn deploy(
     runtime_state: &mut RuntimeState,
     class_hash: &ClassHash,
     calldata: &[Felt252],
-) -> Result<ContractAddress, CheatcodeError> {
+) -> Result<(ContractAddress, Vec<Felt252>), CheatcodeError> {
     let contract_address = runtime_state
         .cheatnet_state
         .precalculate_address(class_hash, calldata);
