@@ -29,9 +29,9 @@ fn store_simple_state() {
     let mut cheatnet_state = CheatnetState::default();
     let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
-    let contracts = get_contracts();
+    let contracts_data = get_contracts();
 
-    let class_hash = test_env.declare("HelloStarknet", &contracts);
+    let class_hash = test_env.declare("HelloStarknet", &contracts_data);
     let contract_address = test_env.deploy_wrapper(&class_hash, &[]);
 
     test_env.store(contract_address, &variable_address("balance"), 666);
@@ -47,9 +47,9 @@ fn store_state_map_simple_value() {
     let mut cheatnet_state = CheatnetState::default();
     let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
-    let contracts = get_contracts();
+    let contracts_data = get_contracts();
 
-    let class_hash = test_env.declare("MapSimpleValueSimpleKey", &contracts);
+    let class_hash = test_env.declare("MapSimpleValueSimpleKey", &contracts_data);
 
     let contract_address = test_env.deploy_wrapper(&class_hash, &[]);
 

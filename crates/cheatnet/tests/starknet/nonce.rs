@@ -57,11 +57,11 @@ fn nonce_declare_deploy() {
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
     let contract_address = deploy_contract(&mut cached_state, &mut runtime_state, "Noncer", &[]);
 
-    let contracts = get_contracts();
+    let contracts_data = get_contracts();
 
     let nonce1 = check_nonce(&mut cached_state, &mut runtime_state, &contract_address);
 
-    let class_hash = declare(&mut cached_state, "HelloStarknet", &contracts).unwrap();
+    let class_hash = declare(&mut cached_state, "HelloStarknet", &contracts_data).unwrap();
 
     let nonce2 = check_nonce(&mut cached_state, &mut runtime_state, &contract_address);
 

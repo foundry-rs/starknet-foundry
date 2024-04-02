@@ -1,10 +1,9 @@
-use blockifier::execution::execution_utils::stark_felt_to_felt;
 use cairo_felt::Felt252;
 use cairo_vm::{
     types::relocatable::{MaybeRelocatable, Relocatable},
     vm::vm_core::VirtualMachine,
 };
-use conversions::FromConv;
+use conversions::{FromConv, IntoConv};
 
 use crate::{
     runtime_extensions::forge_runtime_extension::cheatcodes::spoof::TxInfoMock, state::CheatedData,
@@ -157,13 +156,14 @@ pub fn get_cheated_exec_info_ptr(
     }
 
     if cheated_data.caller_address.is_some() {
-        new_exec_info[2] = MaybeRelocatable::Int(stark_felt_to_felt(
-            *cheated_data
+        new_exec_info[2] = MaybeRelocatable::Int(
+            (*cheated_data
                 .caller_address
                 .expect("No caller address value found for the pranked contract address")
                 .0
-                .key(),
-        ));
+                .key())
+            .into_(),
+        );
     }
 
     vm.load_data(ptr_cheated_exec_info, &new_exec_info).unwrap();

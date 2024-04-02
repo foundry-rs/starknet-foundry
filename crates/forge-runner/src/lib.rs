@@ -11,7 +11,6 @@ use cairo_lang_sierra::ids::ConcreteTypeId;
 use cairo_lang_sierra::program::Function;
 use camino::Utf8PathBuf;
 
-use contracts_data::ContractsData;
 use futures::stream::FuturesUnordered;
 use futures::StreamExt;
 
@@ -19,6 +18,7 @@ use build_trace_data::save_trace_data;
 use profiler_api::run_profiler;
 use smol_str::SmolStr;
 
+use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use std::collections::HashMap;
 use std::num::NonZeroU32;
 use std::sync::Arc;
@@ -29,7 +29,6 @@ use universal_sierra_compiler_api::{compile_sierra_to_casm, AssembledProgramWith
 
 pub mod build_trace_data;
 pub mod compiled_runnable;
-pub mod contracts_data;
 pub mod expected_result;
 pub mod profiler_api;
 pub mod test_case_summary;

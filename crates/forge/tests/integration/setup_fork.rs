@@ -1,4 +1,3 @@
-use forge_runner::contracts_data::ContractsData;
 use indoc::formatdoc;
 use std::path::Path;
 use std::path::PathBuf;
@@ -14,6 +13,7 @@ use forge::test_filter::TestsFilter;
 use tempfile::tempdir;
 use tokio::runtime::Runtime;
 
+use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use forge::compiled_raw::RawForkParams;
 use forge_runner::{RunnerConfig, RunnerParams};
 use shared::command::CommandExt;
@@ -21,10 +21,8 @@ use test_utils::runner::{assert_case_output_contains, assert_failed, assert_pass
 use test_utils::running_tests::run_test_case;
 use test_utils::test_case;
 
-static INTEGRATION_RPC_URL: &str = "http://188.34.188.184:9545/rpc/v0_7";
-static TESTNET_RPC_URL: &str = "http://188.34.188.184:6060/rpc";
+const TESTNET_RPC_URL: &str = "http://188.34.188.184:7070/rpc/v0_7";
 
-#[ignore] // TODO (#1916)
 #[test]
 fn fork_simple_decorator() {
     let test = test_case!(formatdoc!(
@@ -45,22 +43,22 @@ fn fork_simple_decorator() {
             }}
 
             #[test]
-            #[fork(url: "{}", block_id: BlockId::Number(313388))]
+            #[fork(url: "{}", block_id: BlockId::Number(54060))]
             fn fork_simple_decorator() {{
                 let dispatcher = IHelloStarknetDispatcher {{
-                    contract_address: contract_address_const::<3216637956526895219277698311134811322769343974163380838558193911733621219342>()
+                    contract_address: contract_address_const::<0x202de98471a4fae6bcbabb96cab00437d381abc58b02509043778074d6781e9>()
                 }};
 
                 let balance = dispatcher.get_balance();
-                assert(balance == 2, 'Balance should be 2');
+                assert(balance == 0, 'Balance should be 0');
 
                 dispatcher.increase_balance(100);
 
                 let balance = dispatcher.get_balance();
-                assert(balance == 102, 'Balance should be 102');
+                assert(balance == 100, 'Balance should be 100');
             }}
         "#,
-        INTEGRATION_RPC_URL
+        TESTNET_RPC_URL
     ).as_str());
 
     let result = run_test_case(&test);
@@ -68,7 +66,6 @@ fn fork_simple_decorator() {
     assert_passed(&result);
 }
 
-#[ignore] // TODO (#1916)
 #[test]
 fn fork_aliased_decorator() {
     let test = test_case!(formatdoc!(
@@ -91,16 +88,16 @@ fn fork_aliased_decorator() {
             #[fork("FORK_NAME_FROM_SCARB_TOML")]
             fn fork_aliased_decorator() {{
                 let dispatcher = IHelloStarknetDispatcher {{
-                    contract_address: contract_address_const::<3216637956526895219277698311134811322769343974163380838558193911733621219342>()
+                    contract_address: contract_address_const::<0x202de98471a4fae6bcbabb96cab00437d381abc58b02509043778074d6781e9>()
                 }};
 
                 let balance = dispatcher.get_balance();
-                assert(balance == 2, 'Balance should be 2');
+                assert(balance == 0, 'Balance should be 0');
 
                 dispatcher.increase_balance(100);
 
                 let balance = dispatcher.get_balance();
-                assert(balance == 102, 'Balance should be 102');
+                assert(balance == 100, 'Balance should be 100');
             }}
         "#
     ).as_str());
@@ -137,7 +134,7 @@ fn fork_aliased_decorator() {
             &[ForkTarget::new(
                 "FORK_NAME_FROM_SCARB_TOML".to_string(),
                 RawForkParams {
-                    url: INTEGRATION_RPC_URL.to_string(),
+                    url: TESTNET_RPC_URL.to_string(),
                     block_id_type: "Tag".to_string(),
                     block_id_value: "Latest".to_string(),
                 },
@@ -149,7 +146,6 @@ fn fork_aliased_decorator() {
     assert_passed(&result);
 }
 
-#[ignore] // TODO (#1916)
 #[test]
 fn fork_cairo0_contract() {
     let test = test_case!(formatdoc!(
@@ -162,17 +158,17 @@ fn fork_cairo0_contract() {
             }}
 
             #[test]
-            #[fork(url: "{}", block_id: BlockId::Number(313494))]
+            #[fork(url: "{}", block_id: BlockId::Number(54060))]
             fn fork_cairo0_contract() {{
                 let contract_address = contract_address_const::<0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7>();
 
                 let dispatcher = IERC20CamelDispatcher {{ contract_address }};
 
                 let total_supply = dispatcher.totalSupply();
-                assert(total_supply == 1368798332311330795498, 'Wrong total supply');
+                assert(total_supply == 88730316280408105750094, 'Wrong total supply');
             }}
         "#,
-        INTEGRATION_RPC_URL
+        TESTNET_RPC_URL
     ).as_str());
 
     let result = run_test_case(&test);
@@ -180,7 +176,6 @@ fn fork_cairo0_contract() {
     assert_passed(&result);
 }
 
-#[ignore] // TODO (#1916)
 #[test]
 fn get_block_info_in_forked_block() {
     let test = test_case!(formatdoc!(
@@ -198,16 +193,16 @@ fn get_block_info_in_forked_block() {
             }}
 
             #[test]
-            #[fork(url: "{INTEGRATION_RPC_URL}", block_id: BlockId::Number(315887))]
+            #[fork(url: "{TESTNET_RPC_URL}", block_id: BlockId::Number(54060))]
             fn test_fork_get_block_info_contract_on_testnet() {{
                 let dispatcher = IBlockInfoCheckerDispatcher {{
-                    contract_address: contract_address_const::<0x4bc9a2c302d2c704dbabe8fe396d9fe7b9ca65a46a3cf5d2edc6c57bddcf316>()
+                    contract_address: contract_address_const::<0x3d80c579ad7d83ff46634abe8f91f9d2080c5c076d4f0f59dd810f9b3f01164>()
                 }};
 
                 let timestamp = dispatcher.read_block_timestamp();
-                assert(timestamp == 1697630072, timestamp.into());
+                assert(timestamp == 1711645884, timestamp.into());
                 let block_number = dispatcher.read_block_number();
-                assert(block_number == 315887, block_number.into());
+                assert(block_number == 54060, block_number.into());
 
                 let expected_sequencer_addr = contract_address_const::<0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8>();
                 let sequencer_addr = dispatcher.read_sequencer_address();
@@ -215,26 +210,26 @@ fn get_block_info_in_forked_block() {
             }}
 
             #[test]
-            #[fork(url: "{INTEGRATION_RPC_URL}", block_id: BlockId::Number(315887))]
+            #[fork(url: "{TESTNET_RPC_URL}", block_id: BlockId::Number(54060))]
             fn test_fork_get_block_info_test_state() {{
                 let block_info = starknet::get_block_info().unbox();
-                assert(block_info.block_timestamp == 1697630072, block_info.block_timestamp.into());
-                assert(block_info.block_number == 315887, block_info.block_number.into());
+                assert(block_info.block_timestamp == 1711645884, block_info.block_timestamp.into());
+                assert(block_info.block_number == 54060, block_info.block_number.into());
                 let expected_sequencer_addr = contract_address_const::<0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8>();
                 assert(block_info.sequencer_address == expected_sequencer_addr, block_info.sequencer_address.into());
             }}
 
             #[test]
-            #[fork(url: "{INTEGRATION_RPC_URL}", block_id: BlockId::Number(315887))]
+            #[fork(url: "{TESTNET_RPC_URL}", block_id: BlockId::Number(54060))]
             fn test_fork_get_block_info_contract_deployed() {{
                 let contract = declare("BlockInfoChecker");
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IBlockInfoCheckerDispatcher {{ contract_address }};
 
                 let timestamp = dispatcher.read_block_timestamp();
-                assert(timestamp == 1697630072, timestamp.into());
+                assert(timestamp == 1711645884, timestamp.into());
                 let block_number = dispatcher.read_block_number();
-                assert(block_number == 315887, block_number.into());
+                assert(block_number == 54060, block_number.into());
 
                 let expected_sequencer_addr = contract_address_const::<0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8>();
                 let sequencer_addr = dispatcher.read_sequencer_address();
@@ -242,11 +237,11 @@ fn get_block_info_in_forked_block() {
             }}
 
             #[test]
-            #[fork(url: "{INTEGRATION_RPC_URL}", block_id: BlockId::Tag(BlockTag::Latest))]
+            #[fork(url: "{TESTNET_RPC_URL}", block_id: BlockId::Tag(BlockTag::Latest))]
             fn test_fork_get_block_info_latest_block() {{
                 let block_info = starknet::get_block_info().unbox();
-                assert(block_info.block_timestamp > 1697630072, block_info.block_timestamp.into());
-                assert(block_info.block_number > 315887, block_info.block_number.into());
+                assert(block_info.block_timestamp > 1711645884, block_info.block_timestamp.into());
+                assert(block_info.block_number > 54060, block_info.block_number.into());
             }}
         "#
     ).as_str(),
@@ -260,13 +255,12 @@ fn get_block_info_in_forked_block() {
     assert_passed(&result);
 }
 
-#[ignore] // TODO (#1916)
 #[test]
 fn fork_get_block_info_fails() {
     let test = test_case!(formatdoc!(
         r#"
             #[test]
-            #[fork(url: "{INTEGRATION_RPC_URL}", block_id: BlockId::Number(999999999999))]
+            #[fork(url: "{TESTNET_RPC_URL}", block_id: BlockId::Number(999999999999))]
             fn fork_get_block_info_fails() {{
                 starknet::get_block_info();
             }}
@@ -284,35 +278,34 @@ fn fork_get_block_info_fails() {
     );
 }
 
-#[ignore] // TODO (#1916)
-#[test]
-// found in: https://github.com/foundry-rs/starknet-foundry/issues/1175
-fn incompatible_abi() {
-    let test = test_case!(formatdoc!(
-        r#"
-            #[derive(Serde)]
-            struct Propdetails {{
-                payload: felt252,
-            }}
+// #[test]
+// // found in: https://github.com/foundry-rs/starknet-foundry/issues/1175
+// fn incompatible_abi() {
+//     let test = test_case!(formatdoc!(
+//         r#"
+//             #[derive(Serde)]
+//             struct Propdetails {{
+//                 payload: felt252,
+//             }}
 
-            #[starknet::interface]
-            trait IGovernance<State> {{
-                fn get_proposal_details(self: @State, param: felt252) -> Propdetails;
-            }}
+//             #[starknet::interface]
+//             trait IGovernance<State> {{
+//                 fn get_proposal_details(self: @State, param: felt252) -> Propdetails;
+//             }}
 
-            #[test]
-            #[fork(url: "{TESTNET_RPC_URL}", block_id: BlockId::Number(904597))]
-            fn test_forking_functionality() {{
-                let gov_contract_addr: starknet::ContractAddress = 0x7ba1d4836a1142c09dde23cb39b2885fe350912591461b5764454a255bdbac6.try_into().unwrap();
-                let dispatcher = IGovernanceDispatcher {{ contract_address: gov_contract_addr }};
-                let propdetails = dispatcher.get_proposal_details(1);
-                assert(propdetails.payload==0x78b4ccacdc1c902281f6f13d94b6d17b1f4c44ff811c01dea504d43a264f611, 'payload not match');
-            }}
-        "#,
-    )
-    .as_str());
+//             #[test]
+//             #[fork(url: "{TESTNET_RPC_URL}", block_id: BlockId::Number(54_060))]
+//             fn test_forking_functionality() {{
+//                 let gov_contract_addr: starknet::ContractAddress = 0x7ba1d4836a1142c09dde23cb39b2885fe350912591461b5764454a255bdbac6.try_into().unwrap();
+//                 let dispatcher = IGovernanceDispatcher {{ contract_address: gov_contract_addr }};
+//                 let propdetails = dispatcher.get_proposal_details(1);
+//                 assert(propdetails.payload==0x78b4ccacdc1c902281f6f13d94b6d17b1f4c44ff811c01dea504d43a264f611, 'payload not match');
+//             }}
+//         "#,
+//     )
+//     .as_str());
 
-    let result = run_test_case(&test);
+//     let result = run_test_case(&test);
 
-    assert_passed(&result);
-}
+//     assert_passed(&result);
+// }

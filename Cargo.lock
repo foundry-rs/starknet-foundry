@@ -1158,6 +1158,7 @@ name = "cheatnet"
 version = "1.0.0"
 dependencies = [
  "anyhow",
+ "bimap",
  "blockifier",
  "cairo-felt",
  "cairo-lang-casm",
@@ -4949,6 +4950,7 @@ dependencies = [
  "cairo-lang-starknet",
  "cairo-lang-utils",
  "camino",
+ "cheatnet",
  "forge",
  "forge_runner",
  "indoc",
