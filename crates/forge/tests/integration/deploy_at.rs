@@ -20,7 +20,7 @@ fn deploy_at_correct_address() {
         #[test]
         fn deploy_at_correct_address() {
             let contract = declare("PrankChecker").unwrap();
-            let prank_checker = contract.deploy(@array![]).unwrap();
+            let (prank_checker, _) = contract.deploy(@array![]).unwrap();
         
             let contract = declare("Proxy").unwrap();
             let deploy_at_address = 123;

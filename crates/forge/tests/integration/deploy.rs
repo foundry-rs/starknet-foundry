@@ -19,9 +19,9 @@ fn error_handling() {
 
             match contract.deploy(@ArrayTrait::new()) {
                 Result::Ok(_) => panic_with_felt252('Should have panicked'),
-                Result::Err(x) => {
-                    assert(*x.panic_data.at(0_usize) == 'PANIK', *x.panic_data.at(0_usize));
-                    assert(*x.panic_data.at(1_usize) == 'DEJTA', *x.panic_data.at(1_usize));
+                Result::Err(panic_data) => {
+                    assert(*panic_data.at(0_usize) == 'PANIK', *panic_data.at(0_usize));
+                    assert(*panic_data.at(1_usize) == 'DEJTA', *panic_data.at(1_usize));
                 }
             }
         }
@@ -74,6 +74,36 @@ fn deploy_syscall_check() {
         Contract::from_code_path(
             "DeployChecker".to_string(),
             Path::new("tests/data/contracts/deploy_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test);
+
+    assert_passed(&result);
+}
+
+#[test]
+fn constructor_retdata() {
+    let test = test_case!(
+        indoc!(
+            r#"
+        use result::ResultTrait;
+        use snforge_std::{ declare, ContractClass, ContractClassTrait };
+        use array::ArrayTrait;
+
+        #[test]
+        fn constructor_retdata() {
+            let contract = declare("ConstructorRetdata");
+
+            let (_contract_address, retdata) = contract.deploy(@ArrayTrait::new()).unwrap();
+            assert_eq!(retdata, array![3, 2, 3, 4].span());
+        }
+    "#
+        ),
+        Contract::from_code_path(
+            "ConstructorRetdata".to_string(),
+            Path::new("tests/data/contracts/constructor_retdata.cairo"),
         )
         .unwrap()
     );

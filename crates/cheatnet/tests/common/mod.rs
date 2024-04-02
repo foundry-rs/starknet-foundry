@@ -166,7 +166,6 @@ pub fn deploy_at_wrapper(
         calldata,
         contract_address,
     )?;
-
     Ok(contract_address)
 }
 
