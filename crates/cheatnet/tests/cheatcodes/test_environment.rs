@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use crate::common::state::build_runtime_state;
 use crate::common::{call_contract, deploy_wrapper};
 use crate::common::{deploy_contract, felt_selector_from_name, state::create_cached_state};
@@ -8,8 +6,8 @@ use cairo_felt::Felt252;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallResult;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeState;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
+use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::state::{CheatnetState, ExtendedStateReader};
-use scarb_api::StarknetContractArtifacts;
 use starknet_api::core::ClassHash;
 use starknet_api::core::ContractAddress;
 
@@ -28,12 +26,8 @@ impl<'a> TestEnvironment<'a> {
         }
     }
 
-    pub fn declare(
-        &mut self,
-        contract_name: &str,
-        contracts: &HashMap<String, StarknetContractArtifacts>,
-    ) -> ClassHash {
-        declare(&mut self.cached_state, contract_name, contracts).unwrap()
+    pub fn declare(&mut self, contract_name: &str, contracts_data: &ContractsData) -> ClassHash {
+        declare(&mut self.cached_state, contract_name, contracts_data).unwrap()
     }
 
     pub fn deploy(&mut self, contract_name: &str, calldata: &[Felt252]) -> ContractAddress {

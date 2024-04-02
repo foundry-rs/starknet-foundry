@@ -11,6 +11,7 @@ use blockifier::execution::syscalls::hint_processor::SyscallCounter;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cairo_vm::vm::trace::trace_entry::TraceEntry;
 use cheatnet::constants::{TEST_CONTRACT_CLASS_HASH, TEST_ENTRY_POINT_SELECTOR};
+use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::state::CallTrace;
 use conversions::IntoConv;
 use itertools::Itertools;
@@ -26,8 +27,6 @@ use trace_data::{
     EntryPointType as ProfilerEntryPointType, ExecutionResources as ProfilerExecutionResources,
     TraceEntry as ProfilerTraceEntry, VmExecutionResources,
 };
-
-use crate::contracts_data::ContractsData;
 
 pub const TRACE_DIR: &str = ".snfoundry_trace";
 pub const TEST_CODE_CONTRACT_NAME: &str = "SNFORGE_TEST_CODE";
