@@ -554,8 +554,8 @@ fn store_load_felt_to_felt() {
 
     assert_passed(&result);
 }
-static INTEGRATION_RPC_URL: &str = "http://188.34.188.184:9545/rpc/v0_7";
-#[ignore] // TODO (#1916)
+static INTEGRATION_RPC_URL: &str = "http://188.34.188.184:7070/rpc/v0_7";
+
 #[test]
 fn fork_store_load() {
     let test = test_utils::test_case!(formatdoc!(
@@ -570,16 +570,16 @@ fn fork_store_load() {
             }}
 
             #[test]
-            #[fork(url: "{}", block_id: BlockId::Number(313388))]
+            #[fork(url: "{}", block_id: BlockId::Number(54060))]
             fn fork_simple_decorator() {{
                 let dispatcher = IHelloStarknetDispatcher {{
-                    contract_address: contract_address_const::<3216637956526895219277698311134811322769343974163380838558193911733621219342>()
+                    contract_address: contract_address_const::<0x202de98471a4fae6bcbabb96cab00437d381abc58b02509043778074d6781e9>()
                 }};
 
                 let balance = dispatcher.get_balance();
-                assert(balance == 2, 'Balance should be 2');
+                assert(balance == 0, 'Balance should be 0');
                 let result = load(dispatcher.contract_address, selector!("balance"), 1);
-                assert(*result.at(0) == 2, 'Wrong balance loaded');
+                assert(*result.at(0) == 0, 'Wrong balance loaded');
                 
                 store(dispatcher.contract_address, selector!("balance"), array![100].span());
 
