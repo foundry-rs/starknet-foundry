@@ -27,23 +27,23 @@ trait ContractClassTrait {
     /// The precalculated address is only correct for the very next deployment
     /// The `constructor_calldata` has a direct impact on the resulting contract address
     /// `self` - an instance of the struct `ContractClass` which is obtained by calling `declare`
-    /// `constructor_calldata` - snapshot of calldata for the deploy constructor
+    /// `constructor_calldata` - serialized calldata for the deploy constructor
     /// Returns the precalculated `ContractAddress`
     fn precalculate_address(
         self: @ContractClass, constructor_calldata: @Array::<felt252>
     ) -> ContractAddress;
 
     /// Deploys a contract
-    /// `self` - an instance of `ContractClass` struct
-    /// `constructor_calldata` - snapshot of calldata for the constructor
+    /// `self` - an instance of the struct `ContractClass` which is obtained by calling `declare`
+    /// `constructor_calldata` - serialized calldata for the constructor
     /// Returns the address the contract was deployed at, or a `RevertedTransaction` if it failed
     fn deploy(
         self: @ContractClass, constructor_calldata: @Array::<felt252>
     ) -> Result<ContractAddress, RevertedTransaction>;
 
     /// Deploys a contract at a given address
-    /// `self` - an instance of `ContractClass` struct
-    /// `constructor_calldata` - snapshot of calldata for the constructor
+    /// `self` - an instance of the struct `ContractClass` which is obtained by calling `declare`
+    /// `constructor_calldata` - serialized calldata for the constructor
     /// `contract_address` - address the contract should be deployed at
     /// Returns the address the contract was deployed at, or a `RevertedTransaction` if it failed
     fn deploy_at(
