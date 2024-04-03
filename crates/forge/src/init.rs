@@ -45,7 +45,7 @@ fn update_config(config_path: &Path) -> Result<()> {
     let config_file = fs::read_to_string(config_path)?;
     let mut document = config_file
         .parse::<DocumentMut>()
-        .expect("invalid document")?;
+        .context("invalid document")?;
 
     add_target_to_toml(&mut document);
     set_cairo_edition(&mut document, CAIRO_EDITION);
