@@ -17,8 +17,8 @@ popd || exit
 
 # Check cast
 
-if ! $SNCAST_PATH --url "$RPC_URL":9545/rpc/v0_6 call \
-    --contract-address 0x071c8d74edc89330f314f3b1109059d68ebfa68874aa91e9c425a6378ffde00e \
-    --function "get_balance" | grep -q $'command: call\nresponse: [0x2]'; then
+if ! $SNCAST_PATH --url "$RPC_URL":7070/rpc/v0_7 call \
+    --contract-address 0x06b248bde9ce00d69099304a527640bc9515a08f0b49e5168e2096656f207e1d \
+    --function "get" --calldata 0x1 | grep -q $'command: call\nresponse: [0x0]'; then
   exit 1
 fi
