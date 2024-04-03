@@ -7,7 +7,7 @@ use scarb_api::ScarbCommand;
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::Path;
-use toml_edit::{value, ArrayOfTables, Document, Item, Table};
+use toml_edit::{value, ArrayOfTables, DocumentMut, Item, Table};
 
 static TEMPLATE: Dir = include_dir!("starknet_forge_template");
 
@@ -44,7 +44,7 @@ fn replace_project_name(contents: &[u8], project_name: &str) -> Result<Vec<u8>> 
 fn update_config(config_path: &Path) -> Result<()> {
     let config_file = fs::read_to_string(config_path)?;
     let mut document = config_file
-        .parse::<Document>()
+        .parse::<DocumentMut>()
         .context("invalid document")?;
 
     add_target_to_toml(&mut document);
@@ -55,7 +55,7 @@ fn update_config(config_path: &Path) -> Result<()> {
     Ok(())
 }
 
-fn add_target_to_toml(document: &mut Document) {
+fn add_target_to_toml(document: &mut DocumentMut) {
     let mut array_of_tables = ArrayOfTables::new();
     let mut casm = Table::new();
     let mut contract = Table::new();
@@ -67,7 +67,7 @@ fn add_target_to_toml(document: &mut Document) {
     document.insert("target", Item::Table(contract));
 }
 
-fn set_cairo_edition(document: &mut Document, cairo_edition: &str) {
+fn set_cairo_edition(document: &mut DocumentMut, cairo_edition: &str) {
     document["package"]["edition"] = value(cairo_edition);
 }
 
