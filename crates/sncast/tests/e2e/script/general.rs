@@ -458,10 +458,27 @@ async fn test_state_file_rerun_failed_tx() {
         SCRIPTS_DIR.to_owned() + "/state_file/",
         Vec::<String>::new(),
     );
-
-    let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
-
     let script_name = "rerun_failed_tx";
+    let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
+    let state_file_path = Utf8PathBuf::from_path_buf(
+        script_dir
+            .path()
+            .join(get_default_state_file_name(script_name, "alpha-goerli")),
+    )
+    .unwrap();
+
+    let tx_entries_before = read_txs_from_state_file(&state_file_path).unwrap().unwrap();
+    assert_eq!(tx_entries_before.transactions.len(), 1);
+    let invoke_tx_entry_before = tx_entries_before
+        .get("1863066e9093b13eea3a3844f28674dc8d9b7e2e49a525504133169c1d382718")
+        .unwrap();
+    assert_tx_entry_failed(
+        invoke_tx_entry_before,
+        "invoke",
+        ScriptTransactionStatus::Error,
+        vec!["Requested contract address", "is not deployed"],
+    );
+
     let args = vec![
         "--accounts-file",
         accounts_json_path.as_str(),
@@ -482,12 +499,6 @@ async fn test_state_file_rerun_failed_tx() {
         status: success
     "});
 
-    let state_file_path = Utf8PathBuf::from_path_buf(
-        script_dir
-            .path()
-            .join(get_default_state_file_name(script_name, "alpha-goerli")),
-    )
-    .unwrap();
     let tx_entries_after_first_run = read_txs_from_state_file(&state_file_path).unwrap().unwrap();
     assert_eq!(tx_entries_after_first_run.transactions.len(), 1);
 

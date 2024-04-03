@@ -14,13 +14,13 @@ fn main() {
         .expect('Invalid contract address value');
 
     let declare_nonce = get_nonce('latest');
-    let declare_result = declare(
+    declare(
         "Not_this_time", Option::Some(max_fee), Option::Some(declare_nonce)
     )
         .expect_err('error expected declare');
 
     let deploy_nonce = get_nonce('pending');
-    let deploy_result = deploy(
+    deploy(
         nonexistent_class_hash,
         ArrayTrait::new(),
         Option::Some(salt),
@@ -31,7 +31,7 @@ fn main() {
         .expect_err('error expected deploy');
 
     let invoke_nonce = get_nonce('pending');
-    let invoke_result = invoke(
+    invoke(
         map_contract_address,
         selector!("put"),
         array![0x1, 0x2],
