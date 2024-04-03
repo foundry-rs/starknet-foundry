@@ -202,7 +202,7 @@ pub async fn test_happy_case_accounts_file_already_exists() {
 
 #[tokio::test]
 pub async fn test_profile_already_exists() {
-    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
+    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None).unwrap();
     let accounts_file = "accounts.json";
 
     let args = vec![
@@ -298,7 +298,7 @@ pub async fn test_happy_case_keystore() {
 
 #[tokio::test]
 pub async fn test_happy_case_keystore_add_profile() {
-    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None);
+    let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None).unwrap();
     let keystore_file = "my_key.json";
     let account_file = "my_account.json";
     let accounts_json_file = "accounts.json";
