@@ -98,9 +98,9 @@ pub fn load_or_create_state_file(path: &Utf8PathBuf) -> Result<ScriptTransaction
         fs::write(
             path,
             serde_json::to_string_pretty(&default_state)
-                .expect("Failed to convert ScriptTransactionsSchema to json"),
+                .context("Failed to convert ScriptTransactionsSchema to json")?,
         )
-        .expect("Failed to write initial state to state file");
+        .context("Failed to write initial state to state file")?;
         Ok(default_state)
     }
 }
@@ -137,7 +137,7 @@ pub fn write_txs_to_state_file(
         serde_json::to_string_pretty(&state_file)
             .expect("Failed to convert ScriptTransactionsSchema to json"),
     )
-    .unwrap_or_else(|_| panic!("Failed to write new transactions to state file {state_file_path}"));
+    .with_context(|| anyhow!("Failed to write new transactions to state file {state_file_path}"))?;
     Ok(())
 }
 

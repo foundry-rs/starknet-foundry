@@ -28,7 +28,7 @@ jobs:
     env:
       MDBOOK_VERSION: 0.4.31
     steps:
-      - uses: dtolnay/rust-toolchain@be73d7920c329f220ce78e0234b8f96b7ae60248
+      - uses: dtolnay/rust-toolchain@dc6353516c68da0f06325f42ad880f76a5e77ec9
         with:
           toolchain: stable
       - uses: actions/checkout@v4
@@ -37,7 +37,7 @@ jobs:
           cargo install --version ${MDBOOK_VERSION} mdbook
       - name: Setup Pages
         id: pages
-        uses: actions/configure-pages@v4
+        uses: actions/configure-pages@v5
       - name: Build with mdBook
         run: mdbook build
         working-directory: ./docs
