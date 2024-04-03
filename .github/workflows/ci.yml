@@ -77,7 +77,6 @@ jobs:
       - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
       - uses: software-mansion/setup-scarb@v1.3.2
       - uses: software-mansion/setup-universal-sierra-compiler@v1
-      - run: echo $UNIVERSAL_SIERRA_COMPILER
       - name: Run Cheatnet tests
         run: cargo test --release -p cheatnet
 
