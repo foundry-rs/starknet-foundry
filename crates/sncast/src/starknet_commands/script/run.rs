@@ -64,7 +64,7 @@ pub struct Run {
     #[clap(long)]
     pub package: Option<String>,
 
-    /// Do not write to state file
+    /// Do not use the state file
     #[clap(long)]
     pub no_state_file: bool,
 }
@@ -130,7 +130,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 let declare_tx_id = generate_declare_tx_id(contract_name.as_str());
 
                 if let Some(success_output) =
-                    self.state.maybe_get_success_output(declare_tx_id.as_str())
+                    self.state.get_output_if_success(declare_tx_id.as_str())
                 {
                     return Ok(CheatcodeHandlingResult::Handled(
                         serialize_as_script_function_result(success_output),
@@ -181,7 +181,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     generate_deploy_tx_id(class_hash, &constructor_calldata, salt, unique);
 
                 if let Some(success_output) =
-                    self.state.maybe_get_success_output(deploy_tx_id.as_str())
+                    self.state.get_output_if_success(deploy_tx_id.as_str())
                 {
                     return Ok(CheatcodeHandlingResult::Handled(
                         serialize_as_script_function_result(success_output),
@@ -231,7 +231,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     generate_invoke_tx_id(contract_address, function_selector, &calldata);
 
                 if let Some(success_output) =
-                    self.state.maybe_get_success_output(invoke_tx_id.as_str())
+                    self.state.get_output_if_success(invoke_tx_id.as_str())
                 {
                     return Ok(CheatcodeHandlingResult::Handled(
                         serialize_as_script_function_result(success_output),

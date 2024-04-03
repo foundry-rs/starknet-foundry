@@ -439,9 +439,7 @@ fn run_script_command(
             .expect("Failed to build script");
             let metadata_with_deps = get_scarb_metadata_with_deps(&manifest_path)?;
 
-            let chain_id = runtime
-                .block_on(get_chain_id(&provider))
-                .expect("Failed to fetch chain id");
+            let chain_id = runtime.block_on(get_chain_id(&provider))?;
             let state_file_path = if run.no_state_file {
                 None
             } else {

@@ -47,7 +47,7 @@ impl StateManager {
     }
 
     #[must_use]
-    pub fn maybe_get_success_output(&self, tx_id: &str) -> Option<ScriptTransactionOutput> {
+    pub fn get_output_if_success(&self, tx_id: &str) -> Option<ScriptTransactionOutput> {
         if let Some(state) = &self.inner {
             return state
                 .executed_transactions_prev_run
@@ -106,12 +106,12 @@ pub struct ScriptTransactionEntries {
 
 impl ScriptTransactionEntries {
     #[must_use]
-    pub fn get(&self, key: &str) -> Option<&ScriptTransactionEntry> {
-        self.transactions.get(key)
+    pub fn get(&self, tx_id: &str) -> Option<&ScriptTransactionEntry> {
+        self.transactions.get(tx_id)
     }
 
-    pub fn insert(&mut self, key: &str, entry: ScriptTransactionEntry) {
-        self.transactions.insert(key.to_string(), entry);
+    pub fn insert(&mut self, tx_id: &str, entry: ScriptTransactionEntry) {
+        self.transactions.insert(tx_id.to_string(), entry);
     }
 
     #[must_use]

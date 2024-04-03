@@ -32,6 +32,8 @@ use tempfile::TempDir;
 use toml::Table;
 use url::Url;
 
+const SCRIPT_ORIGIN_TIMESTAMP: u64 = 1_709_853_748;
+
 pub async fn declare_contract(account: &str, path: &str, shortname: &str) -> FieldElement {
     let provider = get_provider(URL).expect("Could not get the provider");
     let account = get_account(
@@ -557,7 +559,7 @@ pub fn assert_tx_entry_failed(
         assert!(response.message.contains(msg));
     }
 
-    assert!(tx_entry.timestamp > 1_709_853_748);
+    assert!(tx_entry.timestamp > SCRIPT_ORIGIN_TIMESTAMP);
 }
 
 pub fn assert_tx_entry_success(tx_entry: &ScriptTransactionEntry, name: &str) {
@@ -572,5 +574,5 @@ pub fn assert_tx_entry_success(tx_entry: &ScriptTransactionEntry, name: &str) {
     };
     assert_eq!(expected_selector, name);
 
-    assert!(tx_entry.timestamp > 1_709_853_748);
+    assert!(tx_entry.timestamp > SCRIPT_ORIGIN_TIMESTAMP);
 }

@@ -324,7 +324,7 @@ async fn test_missing_field() {
 }
 
 #[tokio::test]
-async fn test_same_script_twice_with_state_file_enabled() {
+async fn test_run_script_twice_with_state_file_enabled() {
     let contract_dir = duplicate_contract_directory_with_salt(
         SCRIPTS_DIR.to_owned() + "/map_script/contracts/",
         "dummy",
