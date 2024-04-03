@@ -1,8 +1,9 @@
+use crate::felt252::SerializeAsFelt252Vec;
 use cairo_felt::Felt252;
 use cairo_lang_utils::byte_array::{BYTES_IN_WORD, BYTE_ARRAY_MAGIC};
-use itertools::chain;
 use num_traits::Num;
 
+#[derive(Clone)]
 pub struct ByteArray {
     words: Vec<Felt252>,
     pending_word_len: usize,
@@ -26,19 +27,30 @@ impl From<&str> for ByteArray {
     }
 }
 
+impl SerializeAsFelt252Vec for ByteArray {
+    fn serialize_as_felt252(self, output: &mut Vec<Felt252>) {
+        output.extend(self.serialize_no_magic());
+    }
+}
+
 impl ByteArray {
     #[must_use]
     pub fn serialize_with_magic(self) -> Vec<Felt252> {
-        chain!(
-            [Felt252::from_str_radix(BYTE_ARRAY_MAGIC, 16).unwrap(),],
-            self.serialize_no_magic().into_iter()
-        )
-        .collect()
+        self.serialize(true)
     }
 
     #[must_use]
     pub fn serialize_no_magic(self) -> Vec<Felt252> {
-        let mut result = Vec::with_capacity(self.words.len() + 3);
+        self.serialize(false)
+    }
+
+    #[must_use]
+    fn serialize(self, magic: bool) -> Vec<Felt252> {
+        let mut result = Vec::with_capacity(self.words.len() + 3 + usize::from(magic));
+
+        if magic {
+            result.push(Felt252::from_str_radix(BYTE_ARRAY_MAGIC, 16).unwrap());
+        }
 
         result.push(self.words.len().into());
         result.extend(self.words);
