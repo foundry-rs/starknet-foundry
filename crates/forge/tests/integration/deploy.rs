@@ -84,7 +84,7 @@ fn deploy_syscall_check() {
 }
 
 #[test]
-fn constructor_retdata() {
+fn constructor_retdata_span() {
     let test = test_case!(
         indoc!(
             r#"
@@ -93,19 +93,134 @@ fn constructor_retdata() {
         use array::ArrayTrait;
 
         #[test]
-        fn constructor_retdata() {
-            let contract = declare("ConstructorRetdata");
+        fn constructor_retdata_span() {
+            let contract = declare("ConstructorRetdata").unwrap();
 
             let (_contract_address, retdata) = contract.deploy(@ArrayTrait::new()).unwrap();
             assert_eq!(retdata, array![3, 2, 3, 4].span());
         }
     "#
         ),
-        Contract::from_code_path(
-            "ConstructorRetdata".to_string(),
-            Path::new("tests/data/contracts/constructor_retdata.cairo"),
+        Contract::new(
+            "ConstructorRetdata",
+            indoc!(
+                r"
+                #[starknet::contract]
+                mod ConstructorRetdata {
+                    use array::ArrayTrait;
+                
+                    #[storage]
+                    struct Storage {}
+                
+                    #[constructor]
+                    fn constructor(ref self: ContractState) -> Span<felt252> {
+                        array![2, 3, 4].span()
+                    }
+                }
+                "
+            )
         )
-        .unwrap()
+    );
+
+    let result = run_test_case(&test);
+
+    assert_passed(&result);
+}
+
+#[test]
+fn constructor_retdata_felt() {
+    let test = test_case!(
+        indoc!(
+            r#"
+        use result::ResultTrait;
+        use snforge_std::{ declare, ContractClass, ContractClassTrait };
+        use array::ArrayTrait;
+
+        #[test]
+        fn constructor_retdata_felt() {
+            let contract = declare("ConstructorRetdata").unwrap();
+
+            let (_contract_address, retdata) = contract.deploy(@ArrayTrait::new()).unwrap();
+            assert_eq!(retdata, array![5].span());
+        }
+    "#
+        ),
+        Contract::new(
+            "ConstructorRetdata",
+            indoc!(
+                r"
+                #[starknet::contract]
+                mod ConstructorRetdata {
+                    use array::ArrayTrait;
+                
+                    #[storage]
+                    struct Storage {}
+                
+                    #[constructor]
+                    fn constructor(ref self: ContractState) -> felt252 {
+                        5
+                    }
+                }
+                "
+            )
+        )
+    );
+
+    let result = run_test_case(&test);
+
+    assert_passed(&result);
+}
+
+#[test]
+fn constructor_retdata_struct() {
+    let test = test_case!(
+        indoc!(
+            r#"
+        use result::ResultTrait;
+        use snforge_std::{ declare, ContractClass, ContractClassTrait };
+        use array::ArrayTrait;
+
+        #[test]
+        fn constructor_retdata_struct() {
+            let contract = declare("ConstructorRetdata").unwrap();
+
+            let (_contract_address, retdata) = contract.deploy(@ArrayTrait::new()).unwrap();
+            assert_eq!(retdata, array![0, 6, 2, 7, 8, 9].span());
+        }
+    "#
+        ),
+        Contract::new(
+            "ConstructorRetdata",
+            indoc!(
+                r"
+                #[starknet::contract]
+                mod ConstructorRetdata {
+                    use array::ArrayTrait;
+                
+                    #[storage]
+                    struct Storage {}
+                
+                    #[derive(Serde, Drop)]
+                    struct Retdata {
+                        a: felt252,
+                        b: Span<felt252>,
+                        c: felt252,
+                    }
+
+                    #[constructor]
+                    fn constructor(ref self: ContractState) -> Option<Retdata> {
+                        Option::Some(
+                            Retdata {
+                                a: 6,
+                                b: array![7, 8].span(),
+                                c: 9
+                            }
+                        )
+                    }
+                }
+                "
+            )
+        )
     );
 
     let result = run_test_case(&test);
