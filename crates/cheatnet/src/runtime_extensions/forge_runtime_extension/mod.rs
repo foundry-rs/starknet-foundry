@@ -302,7 +302,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 let contract_name = input_reader.read_string()?;
 
-                handle_deploy_declare_result(declare(*state, &contract_name, self.contracts_data))
+                handle_cheatcode_result(declare(*state, &contract_name, self.contracts_data))
             }
             "deploy" => {
                 let class_hash = input_reader.read_felt()?.into_();
@@ -312,7 +312,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 syscall_handler.increment_syscall_count_by(&DeprecatedSyscallSelector::Deploy, 1);
 
-                handle_deploy_declare_result(deploy(
+                handle_cheatcode_result(deploy(
                     syscall_handler,
                     &mut RuntimeState {
                         cheatnet_state: cheatnet_runtime.extension.cheatnet_state,
@@ -330,7 +330,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 syscall_handler.increment_syscall_count_by(&DeprecatedSyscallSelector::Deploy, 1);
 
-                handle_deploy_declare_result(deploy_at(
+                handle_cheatcode_result(deploy_at(
                     syscall_handler,
                     &mut RuntimeState {
                         cheatnet_state: cheatnet_runtime.extension.cheatnet_state,
@@ -655,7 +655,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
     }
 }
 
-fn handle_deploy_declare_result<T>(
+fn handle_cheatcode_result<T>(
     result: Result<T, CheatcodeError>,
 ) -> Result<CheatcodeHandlingResult, EnhancedHintError>
 where
