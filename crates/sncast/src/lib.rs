@@ -473,28 +473,28 @@ pub enum WaitForTransactionError {
 }
 
 impl SerializeAsFelt252Vec for WaitForTransactionError {
-    fn serialize_as_felt252(self, output: &mut Vec<Felt252>) {
+    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
         match self {
             WaitForTransactionError::TransactionError(err) => {
                 output.push(Felt252::from(0));
-                err.serialize_as_felt252(output);
+                err.serialize_into_felt252_vec(output);
             }
             WaitForTransactionError::TimedOut => output.push(Felt252::from(1)),
             WaitForTransactionError::ProviderError(err) => {
                 output.push(Felt252::from(2));
-                err.serialize_as_felt252(output);
+                err.serialize_into_felt252_vec(output);
             }
         }
     }
 }
 
 impl SerializeAsFelt252Vec for TransactionError {
-    fn serialize_as_felt252(self, output: &mut Vec<Felt252>) {
+    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
         match self {
             TransactionError::Rejected => output.push(Felt252::from(0)),
             TransactionError::Reverted(err) => {
                 output.push(Felt252::from(1));
-                err.data.as_str().serialize_as_felt252(output);
+                err.data.as_str().serialize_into_felt252_vec(output);
             }
         }
     }

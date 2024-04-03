@@ -121,16 +121,16 @@ impl TryInferFormat for Felt252 {
 }
 
 pub trait SerializeAsFelt252Vec: Sized {
-    fn serialize_as_felt252(self, output: &mut Vec<Felt252>);
+    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>);
     fn serialize_as_felt252_vec(self) -> Vec<Felt252> {
         let mut result = vec![];
-        self.serialize_as_felt252(&mut result);
+        self.serialize_into_felt252_vec(&mut result);
         result
     }
 }
 
 impl SerializeAsFelt252Vec for Vec<Felt252> {
-    fn serialize_as_felt252(self, output: &mut Vec<Felt252>) {
+    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
         output.extend(self);
     }
 
@@ -140,22 +140,22 @@ impl SerializeAsFelt252Vec for Vec<Felt252> {
 }
 
 impl<T: SerializeAsFelt252Vec, E: SerializeAsFelt252Vec> SerializeAsFelt252Vec for Result<T, E> {
-    fn serialize_as_felt252(self, output: &mut Vec<Felt252>) {
+    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
         match self {
             Ok(val) => {
                 output.push(Felt252::from(0));
-                val.serialize_as_felt252(output);
+                val.serialize_into_felt252_vec(output);
             }
             Err(err) => {
                 output.push(Felt252::from(1));
-                err.serialize_as_felt252(output);
+                err.serialize_into_felt252_vec(output);
             }
         }
     }
 }
 
 impl SerializeAsFelt252Vec for &str {
-    fn serialize_as_felt252(self, output: &mut Vec<Felt252>) {
+    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
         output.extend(self.serialize_as_felt252_vec());
     }
 
