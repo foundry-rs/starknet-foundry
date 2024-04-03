@@ -24,7 +24,7 @@ fn elect_basic() {
 
             #[test]
             fn test_stop_elect() {
-                let contract = declare("ElectChecker");
+                let contract = declare("ElectChecker").unwrap();
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IElectCheckerDispatcher { contract_address };
 
@@ -43,7 +43,7 @@ fn elect_basic() {
 
             #[test]
             fn test_elect_multiple() {
-                let contract = declare("ElectChecker");
+                let contract = declare("ElectChecker").unwrap();
 
                 let elect_checker1 = IElectCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };
                 let elect_checker2 = IElectCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };
@@ -69,7 +69,7 @@ fn elect_basic() {
             }
             #[test]
             fn test_elect_all() {
-                let contract = declare("ElectChecker");
+                let contract = declare("ElectChecker").unwrap();
 
                 let elect_checker1 = IElectCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };
                 let elect_checker2 = IElectCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };
@@ -96,7 +96,7 @@ fn elect_basic() {
 
             #[test]
             fn test_elect_all_stop_one() {
-                let contract = declare("ElectChecker");
+                let contract = declare("ElectChecker").unwrap();
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IElectCheckerDispatcher { contract_address };
 
@@ -149,7 +149,7 @@ fn elect_complex() {
 
             #[test]
             fn test_elect_complex() {
-                let contract = declare("ElectChecker");
+                let contract = declare("ElectChecker").unwrap();
 
                 let elect_checker1 = IElectCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };
                 let elect_checker2 = IElectCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };
@@ -221,7 +221,7 @@ fn elect_with_span() {
             }
 
             fn deploy_elect_checker() -> IElectCheckerDispatcher {
-                let contract_address = declare("ElectChecker").deploy(@ArrayTrait::new()).unwrap();
+                let contract_address = declare("ElectChecker").unwrap().deploy(@ArrayTrait::new()).unwrap();
                 IElectCheckerDispatcher { contract_address }
             }
 

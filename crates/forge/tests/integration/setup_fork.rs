@@ -222,7 +222,7 @@ fn get_block_info_in_forked_block() {
             #[test]
             #[fork(url: "{TESTNET_RPC_URL}", block_id: BlockId::Number(54060))]
             fn test_fork_get_block_info_contract_deployed() {{
-                let contract = declare("BlockInfoChecker");
+                let contract = declare("BlockInfoChecker").unwrap();
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IBlockInfoCheckerDispatcher {{ contract_address }};
 

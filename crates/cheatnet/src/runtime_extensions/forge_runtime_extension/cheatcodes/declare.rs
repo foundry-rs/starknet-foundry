@@ -2,11 +2,12 @@ use crate::runtime_extensions::forge_runtime_extension::{
     cheatcodes::{CheatcodeError, EnhancedHintError},
     contracts_data::ContractsData,
 };
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result};
 use blockifier::{
     execution::contract_class::{ContractClass as BlockifierContractClass, ContractClassV1},
     state::{errors::StateError, state_api::State},
 };
+use conversions::byte_array::ByteArray;
 use conversions::IntoConv;
 use starknet::core::types::contract::SierraClass;
 use starknet_api::core::ClassHash;
@@ -52,9 +53,11 @@ pub fn declare(
         Ok(_) => {
             // Class is already declared, cannot redeclare
             // (i.e., make sure the leaf is uninitialized).
-            Err(CheatcodeError::Unrecoverable(EnhancedHintError::Anyhow(
-                anyhow!("Class hash {} is already declared", class_hash),
-            )))
+            let error = format!("Class hash {class_hash} is already declared");
+            let byte_array = ByteArray::from(error.as_str());
+            Err(CheatcodeError::Recoverable(
+                byte_array.serialize_with_magic(),
+            ))
         }
     }
 }
