@@ -106,11 +106,11 @@ impl ForkCache {
             .create(true)
             .truncate(false)
             .open(&cache_file)
-            .unwrap();
+            .context("Could not open cache file")?;
 
         let mut cache_file_content = String::new();
         file.read_to_string(&mut cache_file_content)
-            .expect("Could not read cache file: {path}");
+            .context("Could not read cache file")?;
 
         // File was just created
         let fork_cache_content = if cache_file_content.is_empty() {
