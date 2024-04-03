@@ -8,7 +8,7 @@ use std::process::Command;
 use std::str::FromStr;
 use std::{env, fs};
 use test_utils::tempdir_with_tool_versions;
-use toml_edit::{value, Document};
+use toml_edit::{value, DocumentMut};
 
 pub(crate) fn runner(temp_dir: &TempDir) -> SnapboxCommand {
     SnapboxCommand::new(cargo_bin!("snforge"))
@@ -41,7 +41,7 @@ pub(crate) fn setup_package_with_file_patterns(
 
     let mut scarb_toml = fs::read_to_string(&manifest_path)
         .unwrap()
-        .parse::<Document>()
+        .parse::<DocumentMut>()
         .unwrap();
     scarb_toml["dev-dependencies"]["snforge_std"]["path"] = value(snforge_std_path);
     scarb_toml["dependencies"]["starknet"] = value("2.4.0");
