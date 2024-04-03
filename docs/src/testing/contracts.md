@@ -60,7 +60,7 @@ fn call_and_invoke() {
     // First declare and deploy a contract
     let contract = declare("HelloStarknet").unwrap();
     // Alternatively we could use `deploy_syscall` here
-    let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+    let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
 
     // Create a Dispatcher object that will allow interacting with the deployed contract
     let dispatcher = IHelloStarknetDispatcher { contract_address };
@@ -137,7 +137,7 @@ If we called this function in a test, it would result in a failure.
 fn failing() {
     // ...
 
-    let contract_address = contract.deploy(@calldata).unwrap();
+    let (contract_address, _) = contract.deploy(@calldata).unwrap();
     let dispatcher = IHelloStarknetDispatcher { contract_address };
 
     dispatcher.do_a_panic();
@@ -170,7 +170,7 @@ Using `SafeDispatcher` we can test that the function in fact panics with an expe
 fn handling_errors() {
     // ...
 
-    let contract_address = contract.deploy(@calldata).unwrap();
+    let (contract_address, _) = contract.deploy(@calldata).unwrap();
     let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
 
 
@@ -205,7 +205,7 @@ use snforge_std::errors::{ SyscallResultStringErrorTrait, PanicDataOrString };
 #[feature("safe_dispatcher")]
 fn handling_string_errors() {
     // ...
-    let contract_address = contract.deploy(@calldata).unwrap();
+    let (contract_address, _) = contract.deploy(@calldata).unwrap();
     let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
     
     // Notice the `map_string_error` helper usage here, and different error type
