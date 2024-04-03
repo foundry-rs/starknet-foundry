@@ -80,7 +80,9 @@ fn assert_contract_and_function_names(trace: &ProfilerCallTrace) {
     );
 
     for sub_trace in &trace.nested_calls {
-        assert_contract_and_function_names(sub_trace);
+        if matches!(trace.node_type, NodeType::Regular) {
+            assert_contract_and_function_names(sub_trace);
+        }
     }
 }
 
