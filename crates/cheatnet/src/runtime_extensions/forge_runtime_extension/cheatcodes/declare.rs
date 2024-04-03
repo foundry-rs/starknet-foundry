@@ -8,7 +8,6 @@ use blockifier::{
     state::{errors::StateError, state_api::State},
 };
 use conversions::byte_array::ByteArray;
-use scarb_api::StarknetContractArtifacts;
 use conversions::IntoConv;
 use starknet::core::types::contract::SierraClass;
 use starknet_api::core::ClassHash;

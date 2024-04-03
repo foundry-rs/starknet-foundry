@@ -301,7 +301,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .state;
 
                 let contract_name = input_reader.read_string()?;
-                
+
                 handle_deploy_declare_result(declare(*state, &contract_name, self.contracts_data))
             }
             "deploy" => {
