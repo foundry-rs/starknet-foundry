@@ -1,4 +1,3 @@
-use forge_runner::contracts_data::ContractsData;
 use indoc::formatdoc;
 use std::path::Path;
 use std::path::PathBuf;
@@ -14,6 +13,7 @@ use forge::test_filter::TestsFilter;
 use tempfile::tempdir;
 use tokio::runtime::Runtime;
 
+use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use forge::compiled_raw::RawForkParams;
 use forge_runner::{RunnerConfig, RunnerParams};
 use shared::command::CommandExt;
@@ -278,34 +278,35 @@ fn fork_get_block_info_fails() {
     );
 }
 
-// #[test]
-// // found in: https://github.com/foundry-rs/starknet-foundry/issues/1175
-// fn incompatible_abi() {
-//     let test = test_case!(formatdoc!(
-//         r#"
-//             #[derive(Serde)]
-//             struct Propdetails {{
-//                 payload: felt252,
-//             }}
+#[test]
+// found in: https://github.com/foundry-rs/starknet-foundry/issues/1175
+fn incompatible_abi() {
+    let test = test_case!(formatdoc!(
+        r#"
+            #[derive(Serde)]
+            struct Response {{
+                payload: felt252,
+                // there is second field on chain
+            }}
 
-//             #[starknet::interface]
-//             trait IGovernance<State> {{
-//                 fn get_proposal_details(self: @State, param: felt252) -> Propdetails;
-//             }}
+            #[starknet::interface]
+            trait IResponseWith2Felts<State> {{
+                fn get(self: @State) -> Response;
+            }}
 
-//             #[test]
-//             #[fork(url: "{TESTNET_RPC_URL}", block_id: BlockId::Number(54_060))]
-//             fn test_forking_functionality() {{
-//                 let gov_contract_addr: starknet::ContractAddress = 0x7ba1d4836a1142c09dde23cb39b2885fe350912591461b5764454a255bdbac6.try_into().unwrap();
-//                 let dispatcher = IGovernanceDispatcher {{ contract_address: gov_contract_addr }};
-//                 let propdetails = dispatcher.get_proposal_details(1);
-//                 assert(propdetails.payload==0x78b4ccacdc1c902281f6f13d94b6d17b1f4c44ff811c01dea504d43a264f611, 'payload not match');
-//             }}
-//         "#,
-//     )
-//     .as_str());
+            #[test]
+            #[fork(url: "{TESTNET_RPC_URL}", block_id: BlockId::Tag(BlockTag::Latest))]
+            fn test_forking_functionality() {{
+                let gov_contract_addr: starknet::ContractAddress = 0x66e4b798c66160bd5fd04056938e5c9f65d67f183dfab9d7d0d2ed9413276fe.try_into().unwrap();
+                let dispatcher = IResponseWith2FeltsDispatcher {{ contract_address: gov_contract_addr }};
+                let propdetails = dispatcher.get();
+                assert(propdetails.payload == 8, 'payload not match');
+            }}
+        "#,
+    )
+    .as_str());
 
-//     let result = run_test_case(&test);
+    let result = run_test_case(&test);
 
-//     assert_passed(&result);
-// }
+    assert_passed(&result);
+}

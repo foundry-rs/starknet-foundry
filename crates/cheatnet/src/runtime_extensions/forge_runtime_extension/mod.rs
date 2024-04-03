@@ -1,3 +1,4 @@
+use self::contracts_data::ContractsData;
 use crate::{
     runtime_extensions::{
         call_to_blockifier_runtime_extension::{
@@ -25,7 +26,6 @@ use blockifier::{
         call_info::{CallExecution, CallInfo},
         deprecated_syscalls::DeprecatedSyscallSelector,
         entry_point::{CallEntryPoint, CallType},
-        execution_utils::stark_felt_to_felt,
         syscalls::hint_processor::SyscallCounter,
     },
     versioned_constants::VersionedConstants,
@@ -48,7 +48,6 @@ use runtime::{
     CheatcodeHandlingResult, EnhancedHintError, ExtendedRuntime, ExtensionLogic,
     SyscallHandlingResult,
 };
-use scarb_api::StarknetContractArtifacts;
 use starknet::signers::SigningKey;
 use starknet_api::{
     core::ContractAddress,
@@ -57,13 +56,14 @@ use starknet_api::{
 use std::collections::HashMap;
 
 pub mod cheatcodes;
+pub mod contracts_data;
 mod file_operations;
 
 pub type ForgeRuntime<'a> = ExtendedRuntime<ForgeExtension<'a>>;
 
 pub struct ForgeExtension<'a> {
     pub environment_variables: &'a HashMap<String, String>,
-    pub contracts: &'a HashMap<String, StarknetContractArtifacts>,
+    pub contracts_data: &'a ContractsData,
 }
 
 trait BufferReaderExt {
@@ -301,9 +301,8 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .state;
 
                 let contract_name = input_reader.read_string()?;
-                let contracts = self.contracts;
-
-                handle_deploy_declare_result(declare(*state, &contract_name, contracts))
+                
+                handle_deploy_declare_result(declare(*state, &contract_name, self.contracts_data))
             }
             "deploy" => {
                 let class_hash = input_reader.read_felt()?.into_();
@@ -381,9 +380,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 match get_class_hash(*state, contract_address) {
                     Ok(class_hash) => {
-                        let felt_class_hash = stark_felt_to_felt(class_hash.0);
-
-                        Ok(CheatcodeHandlingResult::Handled(vec![felt_class_hash]))
+                        Ok(CheatcodeHandlingResult::Handled(vec![class_hash.into_()]))
                     }
                     Err(CheatcodeError::Recoverable(_)) => unreachable!(),
                     Err(CheatcodeError::Unrecoverable(err)) => Err(err),

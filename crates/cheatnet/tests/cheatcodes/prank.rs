@@ -85,8 +85,8 @@ fn prank_in_constructor() {
     let mut cheatnet_state = CheatnetState::default();
     let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
-    let contracts = get_contracts();
-    let class_hash = test_env.declare("ConstructorPrankChecker", &contracts);
+    let contracts_data = get_contracts();
+    let class_hash = test_env.declare("ConstructorPrankChecker", &contracts_data);
     let precalculated_address = test_env.precalculate_address(&class_hash, &[]);
 
     test_env.start_prank(CheatTarget::One(precalculated_address), 123);
@@ -174,8 +174,8 @@ fn prank_library_call() {
     let mut cheatnet_state = CheatnetState::default();
     let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
-    let contracts = get_contracts();
-    let class_hash = test_env.declare("PrankChecker", &contracts);
+    let contracts_data = get_contracts();
+    let class_hash = test_env.declare("PrankChecker", &contracts_data);
     let lib_call_address = test_env.deploy("PrankCheckerLibCall", &[]);
 
     test_env.start_prank(CheatTarget::One(lib_call_address), 123);
@@ -224,8 +224,8 @@ fn prank_multiple() {
     let mut cheatnet_state = CheatnetState::default();
     let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
-    let contracts = get_contracts();
-    let class_hash = test_env.declare("PrankChecker", &contracts);
+    let contracts_data = get_contracts();
+    let class_hash = test_env.declare("PrankChecker", &contracts_data);
 
     let contract_address1 = test_env.deploy_wrapper(&class_hash, &[]);
     let contract_address2 = test_env.deploy_wrapper(&class_hash, &[]);
@@ -300,11 +300,14 @@ fn prank_cairo0_callback() {
     let cached_state = CachedState::new(
         ExtendedStateReader {
             dict_state_reader: build_testing_state(),
-            fork_state_reader: Some(ForkStateReader::new(
-                "http://188.34.188.184:7070/rpc/v0_7".parse().unwrap(),
-                BlockNumber(53_631),
-                temp_dir.path().to_str().unwrap(),
-            )),
+            fork_state_reader: Some(
+                ForkStateReader::new(
+                    "http://188.34.188.184:7070/rpc/v0_7".parse().unwrap(),
+                    BlockNumber(53_631),
+                    temp_dir.path().to_str().unwrap(),
+                )
+                .unwrap(),
+            ),
         },
         GlobalContractCache::new(GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST),
     );
@@ -392,8 +395,8 @@ fn prank_proxy_with_span() {
     let mut cheatnet_state = CheatnetState::default();
     let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
-    let contracts = get_contracts();
-    let class_hash = test_env.declare("PrankCheckerProxy", &contracts);
+    let contracts_data = get_contracts();
+    let class_hash = test_env.declare("PrankCheckerProxy", &contracts_data);
 
     let contract_address_1 = test_env.deploy_wrapper(&class_hash, &[]);
     let contract_address_2 = test_env.deploy_wrapper(&class_hash, &[]);
@@ -458,8 +461,8 @@ fn prank_constructor_with_span() {
     let mut cheatnet_state = CheatnetState::default();
     let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
-    let contracts = get_contracts();
-    let class_hash = test_env.declare("ConstructorPrankChecker", &contracts);
+    let contracts_data = get_contracts();
+    let class_hash = test_env.declare("ConstructorPrankChecker", &contracts_data);
     let precalculated_address = test_env.precalculate_address(&class_hash, &[]);
 
     test_env.prank(
@@ -490,8 +493,8 @@ fn prank_library_call_with_span() {
     let mut cheatnet_state = CheatnetState::default();
     let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
-    let contracts = get_contracts();
-    let class_hash = test_env.declare("PrankChecker", &contracts);
+    let contracts_data = get_contracts();
+    let class_hash = test_env.declare("PrankChecker", &contracts_data);
     let contract_address = test_env.deploy("PrankCheckerLibCall", &[]);
 
     test_env.prank(

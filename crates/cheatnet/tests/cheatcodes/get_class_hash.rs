@@ -12,8 +12,8 @@ fn get_class_hash_simple() {
     let mut cheatnet_state = CheatnetState::default();
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
-    let contracts = get_contracts();
-    let class_hash = declare(&mut cached_state, "HelloStarknet", &contracts).unwrap();
+    let contracts_data = get_contracts();
+    let class_hash = declare(&mut cached_state, "HelloStarknet", &contracts_data).unwrap();
     let contract_address =
         deploy_wrapper(&mut cached_state, &mut runtime_state, &class_hash, &[]).unwrap();
 
@@ -29,8 +29,8 @@ fn get_class_hash_upgrade() {
     let mut cheatnet_state = CheatnetState::default();
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
-    let contracts = get_contracts();
-    let class_hash = declare(&mut cached_state, "GetClassHashCheckerUpg", &contracts).unwrap();
+    let contracts_data = get_contracts();
+    let class_hash = declare(&mut cached_state, "GetClassHashCheckerUpg", &contracts_data).unwrap();
     let contract_address =
         deploy_wrapper(&mut cached_state, &mut runtime_state, &class_hash, &[]).unwrap();
 
@@ -40,7 +40,7 @@ fn get_class_hash_upgrade() {
     );
 
     let hello_starknet_class_hash =
-        declare(&mut cached_state, "HelloStarknet", &contracts).unwrap();
+        declare(&mut cached_state, "HelloStarknet", &contracts_data).unwrap();
 
     let selector = felt_selector_from_name("upgrade");
     call_contract(

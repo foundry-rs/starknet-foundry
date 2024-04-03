@@ -50,17 +50,20 @@ fn fork() {
     test_env.cached_state = CachedState::new(
         ExtendedStateReader {
             dict_state_reader: build_testing_state(),
-            fork_state_reader: Some(ForkStateReader::new(
-                "http://188.34.188.184:7070/rpc/v0_7".parse().unwrap(),
-                BlockNumber(53300),
-                cache_dir.path().to_str().unwrap(),
-            )),
+            fork_state_reader: Some(
+                ForkStateReader::new(
+                    "http://188.34.188.184:7070/rpc/v0_7".parse().unwrap(),
+                    BlockNumber(53300),
+                    cache_dir.path().to_str().unwrap(),
+                )
+                .unwrap(),
+            ),
         },
         GlobalContractCache::new(GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST),
     );
-    let contracts = get_contracts();
+    let contracts_data = get_contracts();
 
-    let class_hash = test_env.declare("ReplaceInFork", &contracts);
+    let class_hash = test_env.declare("ReplaceInFork", &contracts_data);
     let contract =
         contract_address!("0x06fdb5ef99e9def44484a3f8540bc42333e321e9b24a397d6bc0c8860bb7da8f");
 
@@ -82,10 +85,10 @@ fn fork() {
 fn override_entrypoint() {
     let mut cheatnet_state = CheatnetState::default();
     let mut test_env = TestEnvironment::new(&mut cheatnet_state);
-    let contracts = get_contracts();
+    let contracts_data = get_contracts();
 
-    let class_hash_a = test_env.declare("ReplaceBytecodeA", &contracts);
-    let class_hash_b = test_env.declare("ReplaceBytecodeB", &contracts);
+    let class_hash_a = test_env.declare("ReplaceBytecodeA", &contracts_data);
+    let class_hash_b = test_env.declare("ReplaceBytecodeB", &contracts_data);
     let contract_address = test_env.deploy_wrapper(&class_hash_a, &[]);
 
     let output = test_env.call_contract(&contract_address, "get_const", &[]);
@@ -103,10 +106,10 @@ fn override_entrypoint() {
 fn keep_storage() {
     let mut cheatnet_state = CheatnetState::default();
     let mut test_env = TestEnvironment::new(&mut cheatnet_state);
-    let contracts = get_contracts();
+    let contracts_data = get_contracts();
 
-    let class_hash_a = test_env.declare("ReplaceBytecodeA", &contracts);
-    let class_hash_b = test_env.declare("ReplaceBytecodeB", &contracts);
+    let class_hash_a = test_env.declare("ReplaceBytecodeA", &contracts_data);
+    let class_hash_b = test_env.declare("ReplaceBytecodeB", &contracts_data);
     let contract_address = test_env.deploy_wrapper(&class_hash_a, &[]);
 
     let output = test_env.call_contract(&contract_address, "set", &[456.into()]);
@@ -128,10 +131,10 @@ fn keep_storage() {
 fn allow_setting_original_class() {
     let mut cheatnet_state = CheatnetState::default();
     let mut test_env = TestEnvironment::new(&mut cheatnet_state);
-    let contracts = get_contracts();
+    let contracts_data = get_contracts();
 
-    let class_hash_a = test_env.declare("ReplaceBytecodeA", &contracts);
-    let class_hash_b = test_env.declare("ReplaceBytecodeB", &contracts);
+    let class_hash_a = test_env.declare("ReplaceBytecodeA", &contracts_data);
+    let class_hash_b = test_env.declare("ReplaceBytecodeB", &contracts_data);
     let contract_address = test_env.deploy_wrapper(&class_hash_a, &[]);
 
     test_env.replace_class_for_contract(contract_address, class_hash_b);
