@@ -48,7 +48,9 @@ jobs:
       - name: Get branch name
         run: echo 'The branch name is' $BRANCH_NAME
 
-      - uses: software-mansion/setup-universal-sierra-compiler@v1
+      - name: Install cairo-profiler
+        run: |
+          curl -L https://raw.githubusercontent.com/software-mansion/cairo-profiler/main/scripts/install.sh | sh
 
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
