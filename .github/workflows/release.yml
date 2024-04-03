@@ -201,7 +201,6 @@ jobs:
           BINARY_PATH="${BINARY_PATH%.tar.gz}"
           BINARY_PATH="${BINARY_PATH%.zip}"
           BINARY_PATH="${BINARY_PATH#artifacts/}"
-          echo $UNIVERSAL_SIERRA_COMPILER
           
           if [[ ${{ matrix.target }} == *windows* ]]; then
             SNFORGE_PATH=$(readlink -f $BINARY_PATH/bin/snforge.exe)
