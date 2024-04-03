@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - `read_txt` and `read_json` now supports `ByteArray`
+- `var` now supports `ByteArray` with double quoting, and returns `Span<felt252>` instead of a single `felt252`
 
 ## [0.20.1] - 2024-03-22
 
