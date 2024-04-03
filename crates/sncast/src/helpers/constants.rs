@@ -32,3 +32,5 @@ pub const SCRIPT_LIB_ARTIFACT_NAME: &str = "__sncast_script_lib";
 pub const STATE_FILE_VERSION: u8 = 1;
 
 pub const INIT_SCRIPTS_DIR: &str = "scripts";
+
+pub const DEFAULT_STATE_FILE_SUFFIX: &str = "state.json";

@@ -129,6 +129,12 @@ pub trait SerializeAsFelt252Vec: Sized {
     }
 }
 
+impl SerializeAsFelt252Vec for Vec<Felt252> {
+    fn serialize_as_felt252_vec(&self) -> Vec<Felt252> {
+        self.to_owned()
+    }
+}
+
 impl<T: SerializeAsFelt252Vec, E: SerializeAsFelt252Vec> SerializeAsFelt252Vec for Result<T, E> {
     fn serialize_as_felt252(self, output: &mut Vec<Felt252>) {
         match self {
