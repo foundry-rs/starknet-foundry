@@ -582,10 +582,10 @@ fn l1_message_cost() {
     let result = run_test_case(&test);
 
     assert_passed(&result);
-    // 6 = gas cost of steps
+    // 7 = gas cost of steps
     // 96 = gas cost of deployment
     // 29524 = gas cost of onchain data
-    assert_gas(&result, "l1_message_cost", 6 + 96 + 29524);
+    assert_gas(&result, "l1_message_cost", 7 + 96 + 29524);
 }
 
 #[test]
