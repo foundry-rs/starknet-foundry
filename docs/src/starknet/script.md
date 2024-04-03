@@ -220,7 +220,7 @@ command: script run
 status: success
 ```
 
-As [an idempotency](#state-file) feature is turned on by default, executing the same script one again ends with a success
+As [an idempotency](#state-file) feature is turned on by default, executing the same script once again ends with a success
 and only `call` functions are being executed (as they do not change the network state):
 
 ```shell
