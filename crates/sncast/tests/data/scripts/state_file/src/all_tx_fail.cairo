@@ -14,9 +14,7 @@ fn main() {
         .expect('Invalid contract address value');
 
     let declare_nonce = get_nonce('latest');
-    declare(
-        "Not_this_time", Option::Some(max_fee), Option::Some(declare_nonce)
-    )
+    declare("Not_this_time", Option::Some(max_fee), Option::Some(declare_nonce))
         .expect_err('error expected declare');
 
     let deploy_nonce = get_nonce('pending');
