@@ -1,13 +1,82 @@
 #![allow(dead_code)]
 use crate::helpers::constants::STATE_FILE_VERSION;
+use crate::response::errors::StarknetCommandError;
 use crate::response::structs::{DeclareResponse, DeployResponse, InvokeResponse};
 use crate::state::hashing::generate_id;
+use crate::WaitForTransactionError;
 use anyhow::{anyhow, Context, Result};
+use cairo_felt::Felt252;
 use camino::Utf8PathBuf;
+use conversions::felt252::SerializeAsFelt252Vec;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::fs;
+use std::time::{SystemTime, UNIX_EPOCH};
+
+struct InnerStateManager {
+    state_file: Utf8PathBuf,
+    executed_transactions_prev_run: ScriptTransactionEntries,
+    executed_transactions_current_run: ScriptTransactionEntries,
+}
+
+#[derive(Default)]
+pub struct StateManager {
+    inner: Option<InnerStateManager>,
+}
+
+impl StateManager {
+    pub fn from(state_file_path: Option<Utf8PathBuf>) -> Result<Self> {
+        let res = if let Some(state_file_path) = state_file_path {
+            let executed_transactions = load_or_create_state_file(&state_file_path)?
+                .transactions
+                .unwrap_or_default();
+
+            Self {
+                inner: Some(InnerStateManager {
+                    state_file: state_file_path,
+                    executed_transactions_prev_run: executed_transactions,
+                    executed_transactions_current_run: ScriptTransactionEntries::default(),
+                }),
+            }
+        } else {
+            Self::default()
+        };
+
+        Ok(res)
+    }
+
+    #[must_use]
+    pub fn get_output_if_success(&self, tx_id: &str) -> Option<ScriptTransactionOutput> {
+        if let Some(state) = &self.inner {
+            return state
+                .executed_transactions_prev_run
+                .get_success_output(tx_id);
+        }
+        None
+    }
+
+    pub fn maybe_insert_tx_entry(
+        &mut self,
+        tx_id: &str,
+        selector: &str,
+        result: &Result<impl Into<ScriptTransactionOutput> + Clone, StarknetCommandError>,
+    ) -> Result<()> {
+        if let Some(state) = &mut self.inner {
+            state.executed_transactions_current_run.insert(
+                tx_id,
+                ScriptTransactionEntry::from(selector.to_string(), result),
+            );
+
+            write_txs_to_state_file(
+                &state.state_file,
+                state.executed_transactions_current_run.clone(),
+            )?;
+        }
+
+        Ok(())
+    }
+}
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct ScriptTransactionsSchema {
@@ -30,15 +99,29 @@ impl ScriptTransactionsSchema {
     }
 }
 
-#[derive(Clone, Deserialize, Serialize, Debug, PartialEq)]
+#[derive(Clone, Deserialize, Serialize, Debug, PartialEq, Default)]
 pub struct ScriptTransactionEntries {
     pub transactions: HashMap<String, ScriptTransactionEntry>,
 }
 
 impl ScriptTransactionEntries {
     #[must_use]
-    pub fn get(&self, key: &str) -> Option<&ScriptTransactionEntry> {
-        self.transactions.get(key)
+    pub fn get(&self, tx_id: &str) -> Option<&ScriptTransactionEntry> {
+        self.transactions.get(tx_id)
+    }
+
+    pub fn insert(&mut self, tx_id: &str, entry: ScriptTransactionEntry) {
+        self.transactions.insert(tx_id.to_string(), entry);
+    }
+
+    #[must_use]
+    pub fn get_success_output(&self, tx_id: &str) -> Option<ScriptTransactionOutput> {
+        if let Some(entry) = self.get(tx_id) {
+            if entry.status == ScriptTransactionStatus::Success {
+                return Some(entry.output.clone());
+            }
+        }
+        None
     }
 }
 
@@ -47,8 +130,48 @@ pub struct ScriptTransactionEntry {
     pub name: String,
     pub output: ScriptTransactionOutput,
     pub status: ScriptTransactionStatus,
-    pub timestamp: u32,
+    pub timestamp: u64,
     pub misc: Option<HashMap<String, Value>>,
+}
+
+impl ScriptTransactionEntry {
+    pub fn from(
+        name: String,
+        result: &Result<impl Into<ScriptTransactionOutput> + Clone, StarknetCommandError>,
+    ) -> ScriptTransactionEntry {
+        let (response, status) = match result {
+            Ok(response) => {
+                let response: ScriptTransactionOutput = (*response).clone().into();
+                (response, ScriptTransactionStatus::Success)
+            }
+            Err(error) => {
+                let transaction_status = match error {
+                    StarknetCommandError::WaitForTransactionError(
+                        WaitForTransactionError::TransactionError(_),
+                    ) => ScriptTransactionStatus::Fail,
+                    _ => ScriptTransactionStatus::Error,
+                };
+                let response = ErrorResponse {
+                    message: error.to_string(),
+                };
+                let response = ScriptTransactionOutput::ErrorResponse(response);
+                (response, transaction_status)
+            }
+        };
+
+        let timestamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("System time is smaller than Unix epoch")
+            .as_secs();
+
+        Self {
+            name,
+            output: response,
+            status,
+            timestamp,
+            misc: None,
+        }
+    }
 }
 
 #[allow(clippy::enum_variant_names)]
@@ -61,12 +184,43 @@ pub enum ScriptTransactionOutput {
     ErrorResponse(ErrorResponse),
 }
 
+impl From<InvokeResponse> for ScriptTransactionOutput {
+    fn from(value: InvokeResponse) -> Self {
+        Self::InvokeResponse(value)
+    }
+}
+
+impl From<DeclareResponse> for ScriptTransactionOutput {
+    fn from(value: DeclareResponse) -> Self {
+        Self::DeclareResponse(value)
+    }
+}
+
+impl From<DeployResponse> for ScriptTransactionOutput {
+    fn from(value: DeployResponse) -> Self {
+        Self::DeployResponse(value)
+    }
+}
+
+#[must_use]
+pub fn serialize_as_script_function_result(output: ScriptTransactionOutput) -> Vec<Felt252> {
+    let res = match output {
+        ScriptTransactionOutput::InvokeResponse(val) => val.serialize_as_felt252_vec(),
+        ScriptTransactionOutput::DeclareResponse(val) => val.serialize_as_felt252_vec(),
+        ScriptTransactionOutput::DeployResponse(val) => val.serialize_as_felt252_vec(),
+        ScriptTransactionOutput::ErrorResponse(_) => {
+            panic!("Cannot return ErrorResponse as script function response")
+        }
+    };
+    Ok::<Vec<Felt252>, StarknetCommandError>(res).serialize_as_felt252_vec()
+}
+
 #[derive(Clone, Deserialize, Serialize, Debug, PartialEq)]
 pub struct ErrorResponse {
     pub message: String,
 }
 
-#[derive(Clone, Deserialize, Serialize, Debug, PartialEq)]
+#[derive(Clone, Copy, Deserialize, Serialize, Debug, PartialEq)]
 pub enum ScriptTransactionStatus {
     // script executed successfully, transaction accepted/succeeded
     Success,
