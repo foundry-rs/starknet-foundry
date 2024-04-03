@@ -12,6 +12,9 @@ mod tests {
         assert(short_string_value == array!['abcde'].span(), 'invalid short string value');
 
         let byte_array = Serde::<ByteArray>::deserialize(ref byte_array_value).unwrap();
-        assert(byte_array == "that is a very long environment variable that would normally not fit", 'Invalid ByteArray value')
+        assert(
+            byte_array == "that is a very long environment variable that would normally not fit",
+            'Invalid ByteArray value'
+        )
     }
 }
