@@ -36,7 +36,6 @@
 # Foundry Development
 
 * [Environment Setup](development/environment-setup.md)
-* [RPC Version](development/rpc-version.md)
 
 # Appendix
 
@@ -77,11 +76,9 @@
     * [spy_events](appendix/cheatcodes/spy_events.md)
     * [store](appendix/cheatcodes/store.md)
     * [load](appendix/cheatcodes/load.md)
-* [`snforge` Library Functions References](appendix/snforge-library.md)
+* [`snforge` Library Reference](appendix/snforge-library.md)
     * [declare](appendix/snforge-library/declare.md)
-    * [precalculate_address](appendix/snforge-library/precalculate_address.md)
-    * [deploy](appendix/snforge-library/deploy.md)
-    * [deploy_at](appendix/snforge-library/deploy_at.md)
+    * [contract_class](appendix/snforge-library/contract_class.md)
     * [get_call_trace](appendix/snforge-library/get_call_trace.md)
     * [fs](appendix/snforge-library/fs.md)
         * [read_txt](appendix/snforge-library/fs/read_txt.md)

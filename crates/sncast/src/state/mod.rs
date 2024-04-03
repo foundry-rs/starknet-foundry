@@ -1,2 +1,2 @@
-mod hashing;
-mod state_file;
+pub mod hashing;
+pub mod state_file;

@@ -5,7 +5,6 @@ use forge::shared_cache::CACHE_DIR;
 use indoc::indoc;
 use shared::test_utils::output_assert::assert_stdout_contains;
 
-#[ignore] // TODO (#1916)
 #[test]
 fn without_cache() {
     let temp = setup_package("forking");
@@ -33,7 +32,6 @@ fn without_cache() {
     );
 }
 
-#[ignore] // TODO (#1916)
 #[test]
 /// The cache file at `forking/$CACHE_DIR` was modified to have different value stored
 /// that this from the real network. We use it to verify that values from cache are actually used.
@@ -63,7 +61,7 @@ fn with_cache() {
         [FAIL] forking::tests::test_fork_simple
 
         Failure data:
-            0x42616c616e63652073686f756c642062652032 ('Balance should be 2')
+            0x42616c616e63652073686f756c642062652030 ('Balance should be 0')
 
         Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 4 filtered out
 
@@ -73,7 +71,6 @@ fn with_cache() {
     );
 }
 
-#[ignore] // TODO (#1916)
 #[test]
 fn with_clean_cache() {
     let temp = setup_package_with_file_patterns(
@@ -103,7 +100,6 @@ fn with_clean_cache() {
     );
 }
 
-#[ignore] // TODO (#1916)
 #[test]
 fn printing_latest_block_number() {
     let temp = setup_package_with_file_patterns(
@@ -128,7 +124,7 @@ fn printing_latest_block_number() {
         [PASS] forking::tests::print_block_number_when_latest [..]
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 4 filtered out
 
-        Latest block number = [..] for url = http://188.34.188.184:9545/rpc/v0_7
+        Latest block number = [..] for url = http://188.34.188.184:7070/rpc/v0_7
         "},
     );
 }

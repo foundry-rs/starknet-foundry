@@ -5,7 +5,7 @@ use crate::common::state::build_runtime_state;
 use blockifier::state::cached_state::{
     CachedState, GlobalContractCache, GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST,
 };
-use cairo_felt::{felt_str, Felt252};
+use cairo_felt::Felt252;
 use cairo_lang_starknet_classes::keccak::starknet_keccak;
 use cheatnet::constants::build_testing_state;
 use cheatnet::constants::TEST_ADDRESS;
@@ -22,6 +22,7 @@ use starknet_api::{contract_address, patricia_key};
 use tempfile::TempDir;
 
 use super::test_environment::TestEnvironment;
+use conversions::string::TryFromHexStr;
 
 trait PrankTrait {
     fn prank(&mut self, target: CheatTarget, new_address: u128, span: CheatSpan);
@@ -84,8 +85,8 @@ fn prank_in_constructor() {
     let mut cheatnet_state = CheatnetState::default();
     let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
-    let contracts = get_contracts();
-    let class_hash = test_env.declare("ConstructorPrankChecker", &contracts);
+    let contracts_data = get_contracts();
+    let class_hash = test_env.declare("ConstructorPrankChecker", &contracts_data);
     let precalculated_address = test_env.precalculate_address(&class_hash, &[]);
 
     test_env.start_prank(CheatTarget::One(precalculated_address), 123);
@@ -173,8 +174,8 @@ fn prank_library_call() {
     let mut cheatnet_state = CheatnetState::default();
     let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
-    let contracts = get_contracts();
-    let class_hash = test_env.declare("PrankChecker", &contracts);
+    let contracts_data = get_contracts();
+    let class_hash = test_env.declare("PrankChecker", &contracts_data);
     let lib_call_address = test_env.deploy("PrankCheckerLibCall", &[]);
 
     test_env.start_prank(CheatTarget::One(lib_call_address), 123);
@@ -223,8 +224,8 @@ fn prank_multiple() {
     let mut cheatnet_state = CheatnetState::default();
     let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
-    let contracts = get_contracts();
-    let class_hash = test_env.declare("PrankChecker", &contracts);
+    let contracts_data = get_contracts();
+    let class_hash = test_env.declare("PrankChecker", &contracts_data);
 
     let contract_address1 = test_env.deploy_wrapper(&class_hash, &[]);
     let contract_address2 = test_env.deploy_wrapper(&class_hash, &[]);
@@ -293,18 +294,20 @@ fn prank_one_then_all() {
     );
 }
 
-#[ignore] // TODO (#1916)
 #[test]
 fn prank_cairo0_callback() {
     let temp_dir = TempDir::new().unwrap();
     let cached_state = CachedState::new(
         ExtendedStateReader {
             dict_state_reader: build_testing_state(),
-            fork_state_reader: Some(ForkStateReader::new(
-                "http://188.34.188.184:6060/rpc/v0_7".parse().unwrap(),
-                BlockNumber(950_486),
-                temp_dir.path().to_str().unwrap(),
-            )),
+            fork_state_reader: Some(
+                ForkStateReader::new(
+                    "http://188.34.188.184:7070/rpc/v0_7".parse().unwrap(),
+                    BlockNumber(53_631),
+                    temp_dir.path().to_str().unwrap(),
+                )
+                .unwrap(),
+            ),
         },
         GlobalContractCache::new(GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST),
     );
@@ -330,11 +333,11 @@ fn prank_cairo0_callback() {
             &contract_address,
             "start",
             &[
-                felt_str!(
-                    // cairo 0 callback contract address
-                    "034dad9a1512fcb0d33032c65f4605a073bdc42f70e61524510e5760c2b4f544",
-                    16
-                ),
+                // cairo 0 callback contract address
+                Felt252::try_from_hex_str(
+                    "0x18783f6c124c3acc504f300cb6b3a33def439681744d027be8d7fd5d3551565",
+                )
+                .unwrap(),
                 expected_caller_address.clone(),
             ],
         ),
@@ -392,8 +395,8 @@ fn prank_proxy_with_span() {
     let mut cheatnet_state = CheatnetState::default();
     let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
-    let contracts = get_contracts();
-    let class_hash = test_env.declare("PrankCheckerProxy", &contracts);
+    let contracts_data = get_contracts();
+    let class_hash = test_env.declare("PrankCheckerProxy", &contracts_data);
 
     let contract_address_1 = test_env.deploy_wrapper(&class_hash, &[]);
     let contract_address_2 = test_env.deploy_wrapper(&class_hash, &[]);
@@ -458,8 +461,8 @@ fn prank_constructor_with_span() {
     let mut cheatnet_state = CheatnetState::default();
     let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
-    let contracts = get_contracts();
-    let class_hash = test_env.declare("ConstructorPrankChecker", &contracts);
+    let contracts_data = get_contracts();
+    let class_hash = test_env.declare("ConstructorPrankChecker", &contracts_data);
     let precalculated_address = test_env.precalculate_address(&class_hash, &[]);
 
     test_env.prank(
@@ -490,8 +493,8 @@ fn prank_library_call_with_span() {
     let mut cheatnet_state = CheatnetState::default();
     let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
-    let contracts = get_contracts();
-    let class_hash = test_env.declare("PrankChecker", &contracts);
+    let contracts_data = get_contracts();
+    let class_hash = test_env.declare("PrankChecker", &contracts_data);
     let contract_address = test_env.deploy("PrankCheckerLibCall", &[]);
 
     test_env.prank(

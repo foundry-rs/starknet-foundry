@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use crate::common::{get_contracts, state::create_cached_state};
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::{
     declare, get_class_hash,
@@ -8,6 +6,7 @@ use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::Cheatcode
 use runtime::EnhancedHintError;
 use scarb_api::StarknetContractArtifacts;
 use starknet_api::core::ClassHash;
+use std::collections::HashMap;
 
 fn get_contract_class_hash(
     contract_name: &str,
@@ -24,10 +23,10 @@ fn declare_simple() {
 
     let mut cached_state = create_cached_state();
 
-    let contracts = get_contracts();
+    let contracts_data = get_contracts();
 
-    let class_hash = declare(&mut cached_state, contract_name, &contracts).unwrap();
-    let expected_class_hash = get_contract_class_hash(contract_name, &contracts);
+    let class_hash = declare(&mut cached_state, contract_name, &contracts_data).unwrap();
+    let expected_class_hash = get_contract_class_hash(contract_name, &contracts_data.contracts);
 
     assert_eq!(class_hash, expected_class_hash);
 }
@@ -38,11 +37,11 @@ fn declare_multiple() {
 
     let mut cached_state = create_cached_state();
 
-    let contracts = get_contracts();
+    let contracts_data = get_contracts();
 
     for contract_name in contract_names {
-        let class_hash = declare(&mut cached_state, contract_name, &contracts).unwrap();
-        let expected_class_hash = get_contract_class_hash(contract_name, &contracts);
+        let class_hash = declare(&mut cached_state, contract_name, &contracts_data).unwrap();
+        let expected_class_hash = get_contract_class_hash(contract_name, &contracts_data.contracts);
         assert_eq!(class_hash, expected_class_hash);
     }
 }
@@ -53,13 +52,13 @@ fn declare_same_contract() {
 
     let mut cached_state = create_cached_state();
 
-    let contracts = get_contracts();
+    let contracts_data = get_contracts();
 
-    let class_hash = declare(&mut cached_state, contract_name, &contracts).unwrap();
-    let expected_class_hash = get_contract_class_hash(contract_name, &contracts);
+    let class_hash = declare(&mut cached_state, contract_name, &contracts_data).unwrap();
+    let expected_class_hash = get_contract_class_hash(contract_name, &contracts_data.contracts);
     assert_eq!(class_hash, expected_class_hash);
 
-    let output = declare(&mut cached_state, contract_name, &contracts);
+    let output = declare(&mut cached_state, contract_name, &contracts_data);
 
     assert!(match output {
         Err(CheatcodeError::Unrecoverable(EnhancedHintError::Anyhow(msg))) => {
@@ -75,9 +74,9 @@ fn declare_non_existent() {
 
     let mut cached_state = create_cached_state();
 
-    let contracts = get_contracts();
+    let contracts_data = get_contracts();
 
-    let output = declare(&mut cached_state, contract_name, &contracts);
+    let output = declare(&mut cached_state, contract_name, &contracts_data);
 
     assert!(match output {
         Err(CheatcodeError::Unrecoverable(EnhancedHintError::Anyhow(msg))) => {

@@ -18,29 +18,20 @@ pub fn create_cached_state() -> CachedState<ExtendedStateReader> {
 }
 
 pub fn create_fork_cached_state(cache_dir: &str) -> CachedState<ExtendedStateReader> {
-    let node_url = "http://188.34.188.184:9545/rpc/v0_7".parse().unwrap();
-    CachedState::new(
-        ExtendedStateReader {
-            dict_state_reader: build_testing_state(),
-            fork_state_reader: Some(ForkStateReader::new(
-                node_url,
-                BlockNumber(320_000),
-                cache_dir,
-            )),
-        },
-        GlobalContractCache::new(GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST),
-    )
+    create_fork_cached_state_at(54_060, cache_dir)
 }
 
 pub fn create_fork_cached_state_at(
-    block_number: BlockNumber,
+    block_number: u64,
     cache_dir: &str,
 ) -> CachedState<ExtendedStateReader> {
-    let node_url = "http://188.34.188.184:9545/rpc/v0_7".parse().unwrap();
+    let node_url = "http://188.34.188.184:7070/rpc/v0_7".parse().unwrap();
     CachedState::new(
         ExtendedStateReader {
             dict_state_reader: build_testing_state(),
-            fork_state_reader: Some(ForkStateReader::new(node_url, block_number, cache_dir)),
+            fork_state_reader: Some(
+                ForkStateReader::new(node_url, BlockNumber(block_number), cache_dir).unwrap(),
+            ),
         },
         GlobalContractCache::new(GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST),
     )

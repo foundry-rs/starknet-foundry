@@ -7,7 +7,7 @@ use scarb_api::ScarbCommand;
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::Path;
-use toml_edit::{value, ArrayOfTables, Document, Item, Table};
+use toml_edit::{value, ArrayOfTables, DocumentMut, Item, Table};
 
 static TEMPLATE: Dir = include_dir!("starknet_forge_template");
 
@@ -27,7 +27,7 @@ fn overwrite_files_from_scarb_template(
         fs::create_dir_all(base_path.join(Path::new(dir_to_overwrite)))?;
         let path = base_path.join(file.path());
         let contents = file.contents();
-        let contents = replace_project_name(contents, project_name);
+        let contents = replace_project_name(contents, project_name)?;
 
         fs::write(path, contents)?;
     }
@@ -35,15 +35,17 @@ fn overwrite_files_from_scarb_template(
     Ok(())
 }
 
-fn replace_project_name(contents: &[u8], project_name: &str) -> Vec<u8> {
-    let contents = std::str::from_utf8(contents).expect("UTF-8 error");
+fn replace_project_name(contents: &[u8], project_name: &str) -> Result<Vec<u8>> {
+    let contents = std::str::from_utf8(contents).context("UTF-8 error")?;
     let contents = contents.replace("{{ PROJECT_NAME }}", project_name);
-    contents.into_bytes()
+    Ok(contents.into_bytes())
 }
 
 fn update_config(config_path: &Path) -> Result<()> {
     let config_file = fs::read_to_string(config_path)?;
-    let mut document = config_file.parse::<Document>().expect("invalid document");
+    let mut document = config_file
+        .parse::<DocumentMut>()
+        .context("invalid document")?;
 
     add_target_to_toml(&mut document);
     set_cairo_edition(&mut document, CAIRO_EDITION);
@@ -53,7 +55,7 @@ fn update_config(config_path: &Path) -> Result<()> {
     Ok(())
 }
 
-fn add_target_to_toml(document: &mut Document) {
+fn add_target_to_toml(document: &mut DocumentMut) {
     let mut array_of_tables = ArrayOfTables::new();
     let mut casm = Table::new();
     let mut contract = Table::new();
@@ -65,7 +67,7 @@ fn add_target_to_toml(document: &mut Document) {
     document.insert("target", Item::Table(contract));
 }
 
-fn set_cairo_edition(document: &mut Document, cairo_edition: &str) {
+fn set_cairo_edition(document: &mut DocumentMut, cairo_edition: &str) {
     document["package"]["edition"] = value(cairo_edition);
 }
 
