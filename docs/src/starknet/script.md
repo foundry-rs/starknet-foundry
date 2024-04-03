@@ -15,10 +15,10 @@ contracts from within Cairo, its interface, internals and feature set can change
 
 > ⚠️⚠️ By default, the nonce for each transaction is being taken from the pending block ⚠️⚠️
 >
-> Some RPC nodes can be configured with higher poll itervals, which means they may return "older" nonces
-> in pending blocks, or even not be able to obtain pending blocks at all. When running a script you get an error like
-> "Invalid transaction nonce", this might be the case and you may need to manually set both nonce and max_fee for
-> transactions.
+> Some RPC nodes can be configured with higher poll intervals, which means they may return "older" nonces
+> in pending blocks, or even not be able to obtain pending blocks at all. This might be the case if you get
+> an error like "Invalid transaction nonce" when running a script, and you may need to manually set both nonce
+> and max_fee for transactions.
 >
 > Example:
 >
