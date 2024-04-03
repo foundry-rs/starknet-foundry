@@ -12,7 +12,7 @@ use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cairo_vm::vm::trace::trace_entry::TraceEntry;
 use cheatnet::constants::{TEST_CONTRACT_CLASS_HASH, TEST_ENTRY_POINT_SELECTOR};
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
-use cheatnet::state::CallTrace;
+use cheatnet::state::{CallTrace, NodeType};
 use conversions::IntoConv;
 use itertools::Itertools;
 use starknet::core::utils::get_selector_from_name;
@@ -25,7 +25,7 @@ use trace_data::{
     CallType as ProfilerCallType, ContractAddress,
     DeprecatedSyscallSelector as ProfilerDeprecatedSyscallSelector, EntryPointSelector,
     EntryPointType as ProfilerEntryPointType, ExecutionResources as ProfilerExecutionResources,
-    TraceEntry as ProfilerTraceEntry, VmExecutionResources,
+    NodeType as ProfilerNodeType, TraceEntry as ProfilerTraceEntry, VmExecutionResources,
 };
 
 pub const TRACE_DIR: &str = ".snfoundry_trace";
@@ -58,6 +58,7 @@ pub fn build_profiler_call_trace(
             .map(|c| build_profiler_call_trace(c, contracts_data))
             .collect(),
         vm_trace,
+        node_type: build_profiler_node_type(value.node_type),
     }
 }
 
@@ -208,6 +209,13 @@ fn build_profiler_trace_entry(value: &TraceEntry) -> ProfilerTraceEntry {
         pc: value.pc,
         ap: value.ap,
         fp: value.fp,
+    }
+}
+
+fn build_profiler_node_type(value: NodeType) -> ProfilerNodeType {
+    match value {
+        NodeType::Regular => ProfilerNodeType::Regular,
+        NodeType::Phantom => ProfilerNodeType::Phantom,
     }
 }
 

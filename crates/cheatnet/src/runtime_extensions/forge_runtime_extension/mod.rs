@@ -1,4 +1,5 @@
 use self::contracts_data::ContractsData;
+use crate::state::NodeType;
 use crate::{
     runtime_extensions::{
         call_to_blockifier_runtime_extension::{
@@ -690,7 +691,12 @@ fn serialize_call_trace(call_trace: &CallTrace, output: &mut Vec<Felt252>) {
 
     serialize_call_entry_point(&call_trace.entry_point, output);
 
-    output.push(Felt252::from(call_trace.nested_calls.len()));
+    let visible_calls_count = call_trace
+        .nested_calls
+        .iter()
+        .filter(|call| call.borrow().node_type == NodeType::Regular)
+        .count();
+    output.push(Felt252::from(visible_calls_count));
 
     for call_trace in &call_trace.nested_calls {
         serialize_call_trace(&call_trace.borrow(), output);
