@@ -77,7 +77,7 @@ fn test_using_curves() {
     let is_valid = key_pair.verify(msg_hash, (r, s));
     
     // StarkCurve
-    let key_pair2 = KeyPairTrait::<felt252, felt252>::generate();
+    let key_pair = KeyPairTrait::<felt252, felt252>::generate();
     let (r, s): (felt252, felt252) = key_pair.sign(msg_hash);
     let is_valid = key_pair.verify(msg_hash, (r, s));
 }
