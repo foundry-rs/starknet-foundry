@@ -10,7 +10,7 @@ struct L1Handler {
 
 trait L1HandlerTrait {
     fn new(contract_address: ContractAddress, function_selector: felt252) -> L1Handler;
-    fn execute(self: L1Handler) -> SyscallResult::<()>;
+    fn execute(self: L1Handler) -> SyscallResult<()>;
 }
 
 impl L1HandlerImpl of L1HandlerTrait {
@@ -20,7 +20,7 @@ impl L1HandlerImpl of L1HandlerTrait {
         }
     }
 
-    fn execute(self: L1Handler) -> SyscallResult::<()> {
+    fn execute(self: L1Handler) -> SyscallResult<()> {
         let mut inputs: Array::<felt252> = array![
             self.contract_address.into(),
             self.function_selector,
