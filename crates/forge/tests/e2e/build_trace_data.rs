@@ -65,7 +65,7 @@ fn trace_has_contract_and_function_names() {
         call_trace.entry_point.function_name,
         Some(String::from(TEST_CODE_FUNCTION_NAME))
     );
-    assert_contract_and_function_names(&call_trace.nested_calls[0]);
+    assert_contract_and_function_names(&call_trace.nested_calls[3]);
 }
 
 fn assert_contract_and_function_names(trace: &ProfilerCallTrace) {
@@ -80,9 +80,7 @@ fn assert_contract_and_function_names(trace: &ProfilerCallTrace) {
     );
 
     for sub_trace in &trace.nested_calls {
-        if matches!(trace.node_type, NodeType::Regular) {
-            assert_contract_and_function_names(sub_trace);
-        }
+        assert_contract_and_function_names(sub_trace);
     }
 }
 
@@ -111,7 +109,9 @@ fn trace_has_vm_trace() {
 
 fn assert_vm_trace_exists(trace: &ProfilerCallTrace) {
     assert!(
-        trace.vm_trace.is_some() || trace.entry_point.function_name == Some(String::from("fail"))
+        trace.vm_trace.is_some()
+            || trace.entry_point.function_name == Some(String::from("fail"))
+            || matches!(trace.node_type, NodeType::Phantom)
     );
 
     for sub_trace in &trace.nested_calls {

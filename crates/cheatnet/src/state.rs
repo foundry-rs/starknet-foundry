@@ -162,7 +162,7 @@ pub struct CallTrace {
     pub node_type: NodeType,
 }
 
-#[derive(Default, Copy, Clone, PartialEq)]
+#[derive(Default, Copy, Clone)]
 pub enum NodeType {
     #[default]
     Regular,

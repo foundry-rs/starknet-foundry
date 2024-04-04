@@ -694,7 +694,7 @@ fn serialize_call_trace(call_trace: &CallTrace, output: &mut Vec<Felt252>) {
     let visible_calls_count = call_trace
         .nested_calls
         .iter()
-        .filter(|call| call.borrow().node_type == NodeType::Regular)
+        .filter(|call| matches!(call.borrow().node_type, NodeType::Regular))
         .count();
     output.push(Felt252::from(visible_calls_count));
 
