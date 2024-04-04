@@ -274,6 +274,8 @@ impl<Extension: ExtensionLogic> ExtendedRuntime<Extension> {
         } else {
             self.extended_runtime
                 .execute_hint(vm, exec_scopes, hint_data, constants)?;
+            self.extension
+                .handle_system_call_signal(selector, vm, &mut self.extended_runtime);
             Ok(())
         }
     }
