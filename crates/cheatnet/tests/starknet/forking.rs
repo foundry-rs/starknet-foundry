@@ -10,18 +10,18 @@ use blockifier::state::cached_state::{
 use cairo_felt::Felt252;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cheatnet::constants::build_testing_state;
-use cheatnet::forking::state::ForkStateReader;
+use cheatnet::forking::{cache::CACHE_VERSION, state::ForkStateReader};
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeState;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
 use cheatnet::state::{BlockInfoReader, CheatnetState, ExtendedStateReader};
-use conversions::string::{TryFromDecStr, TryFromHexStr};
+use conversions::string::TryFromHexStr;
+use conversions::IntoConv;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use runtime::EnhancedHintError;
 use serde_json::Value;
 use starknet_api::block::BlockNumber;
-use starknet_api::core::{ClassHash, ContractAddress};
-use std::path::PathBuf;
-use std::str::FromStr;
+use starknet_api::core::ContractAddress;
+use starknet_api::hash::StarkFelt;
 use tempfile::TempDir;
 use url::Url;
 
@@ -97,7 +97,7 @@ fn try_deploying_undeclared_class() {
     let mut cheatnet_state = CheatnetState::default();
     let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
-    let class_hash = ClassHash::try_from_dec_str("1").unwrap();
+    let class_hash = StarkFelt::ONE.into_();
 
     assert!(
         match deploy_wrapper(&mut cached_fork_state, &mut runtime_state, &class_hash, &[]) {
@@ -445,29 +445,28 @@ fn using_specified_block_nb_is_cached() {
         let cache = read_cache(
             cache_dir
                 .path()
-                .join(PathBuf::from_str("*v2.json").unwrap())
+                .join(format!("*v{CACHE_VERSION}.json"))
                 .to_str()
                 .unwrap(),
         );
         assert_eq!(
             cache["storage_at"].as_object().unwrap()
-                ["909695684384966988518360885740987679295896914752010826969619859679272731113"]
+                ["0x202de98471a4fae6bcbabb96cab00437d381abc58b02509043778074d6781e9"]
                 .as_object()
-                .unwrap()
-                ["916907772491729262376534102982219947830828984996257231353398618781993312401"],
-            "0"
+                .unwrap()["0x206f38f7e4f15e87567361213c28f235cccdaa1d7fd34c9db1dfe9489c6a091"],
+            "0x0"
         );
         assert_eq!(
             cache["class_hash_at"].as_object().unwrap()
-                ["909695684384966988518360885740987679295896914752010826969619859679272731113"],
-            "3010563592154543959652480197888940232967299549713214562804538472607100835152"
+                ["0x202de98471a4fae6bcbabb96cab00437d381abc58b02509043778074d6781e9"],
+            "0x6a7eb29ee38b0a0b198e39ed6ad458d2e460264b463351a0acfc05822d61550"
         );
 
         match cache["compiled_contract_class"].as_object().unwrap()
-            ["3010563592154543959652480197888940232967299549713214562804538472607100835152"]
+            ["0x6a7eb29ee38b0a0b198e39ed6ad458d2e460264b463351a0acfc05822d61550"]
         {
-            Value::String(_) => {}
-            _ => panic!("The compiled_contract_class entry is not as string"),
+            Value::Object(_) => {}
+            _ => panic!("The compiled_contract_class entry is not an object"),
         };
 
         assert_eq!(
@@ -505,7 +504,7 @@ fn test_cache_merging() {
 
         let mut cheatnet_state = CheatnetState::default();
         let mut runtime_state = build_runtime_state(&mut cheatnet_state);
-        let contract_address = ContractAddress::try_from_dec_str(contract_address).unwrap();
+        let contract_address = ContractAddress::try_from_hex_str(contract_address).unwrap();
 
         let selector = felt_selector_from_name("get_balance");
         let output = call_contract(
@@ -520,57 +519,56 @@ fn test_cache_merging() {
     }
 
     let cache_dir = TempDir::new().unwrap();
-    let contract_1_address =
-        "909695684384966988518360885740987679295896914752010826969619859679272731113";
-    let contract_2_address =
-        "2217203761804284794966758647769644801828837216064483209093377886716094955025";
+    let contract_1_address = "0x202de98471a4fae6bcbabb96cab00437d381abc58b02509043778074d6781e9";
+    let contract_2_address = "0x4e6e4924e5db5ffe394484860a8f60e5c292d1937fd80040b312aeea921be11";
 
     let assert_cache = || {
         // Assertions
         let cache = read_cache(
             cache_dir
                 .path()
-                .join(PathBuf::from_str("*v2.json").unwrap())
+                .join(format!("*v{CACHE_VERSION}.json"))
                 .to_str()
                 .unwrap(),
         );
 
         let contract_1_class_hash =
-            "3010563592154543959652480197888940232967299549713214562804538472607100835152";
+            "0x6a7eb29ee38b0a0b198e39ed6ad458d2e460264b463351a0acfc05822d61550";
         let contract_2_class_hash =
-            "76036093035636804407129547095773871757195382428447731413907511841964835171";
+            "0x2b08ef708af3e6263e02ce541a0099e7c30bac5a8d3d13e42c25c787fa4163";
 
         let balance_storage_address =
-            "916907772491729262376534102982219947830828984996257231353398618781993312401";
+            "0x206f38f7e4f15e87567361213c28f235cccdaa1d7fd34c9db1dfe9489c6a091";
         assert_eq!(
             cache["storage_at"].as_object().unwrap()[contract_1_address]
                 .as_object()
                 .unwrap()[balance_storage_address],
-            "0"
+            "0x0"
         );
         assert_eq!(
             cache["storage_at"].as_object().unwrap()[contract_2_address]
                 .as_object()
                 .unwrap()[balance_storage_address],
-            "0"
+            "0x0"
         );
 
         assert_eq!(
             cache["class_hash_at"].as_object().unwrap()[contract_1_address],
             contract_1_class_hash
         );
+
         assert_eq!(
             cache["class_hash_at"].as_object().unwrap()[contract_2_address],
             contract_2_class_hash
         );
 
         match cache["compiled_contract_class"].as_object().unwrap()[contract_1_class_hash] {
-            Value::String(_) => {}
-            _ => panic!("The compiled_contract_class entry is not as string"),
+            Value::Object(_) => {}
+            _ => panic!("The compiled_contract_class entry is not an object"),
         }
         match cache["compiled_contract_class"].as_object().unwrap()[contract_2_class_hash] {
-            Value::String(_) => {}
-            _ => panic!("The compiled_contract_class entry is not as string"),
+            Value::Object(_) => {}
+            _ => panic!("The compiled_contract_class entry is not an object"),
         }
 
         assert_eq!(
@@ -611,14 +609,17 @@ fn test_cache_merging() {
 
 #[test]
 fn test_cached_block_info_merging() {
-    fn run_test(cache_dir: &str, contract_address: &str, balance: u64, call_get_block_info: bool) {
+    fn run_test(cache_dir: &str, balance: u64, call_get_block_info: bool) {
         let mut cached_state = create_fork_cached_state_at(53_680, cache_dir);
         if call_get_block_info {
             let _ = cached_state.state.get_block_info().unwrap();
         }
         let mut cheatnet_state = CheatnetState::default();
         let mut runtime_state = build_runtime_state(&mut cheatnet_state);
-        let contract_address = ContractAddress::try_from_dec_str(contract_address).unwrap();
+        let contract_address = ContractAddress::try_from_hex_str(
+            "0x202de98471a4fae6bcbabb96cab00437d381abc58b02509043778074d6781e9",
+        )
+        .unwrap();
 
         let selector = felt_selector_from_name("get_balance");
         let output = call_contract(
@@ -633,15 +634,13 @@ fn test_cached_block_info_merging() {
     }
 
     let cache_dir = TempDir::new().unwrap();
-    let contract_1_address =
-        "909695684384966988518360885740987679295896914752010826969619859679272731113";
 
     let assert_cached_block_info = |is_block_info_cached: bool| {
         // Assertions
         let cache = read_cache(
             cache_dir
                 .path()
-                .join(PathBuf::from_str("*v2.json").unwrap())
+                .join(format!("*v{CACHE_VERSION}.json"))
                 .to_str()
                 .unwrap(),
         );
@@ -668,11 +667,11 @@ fn test_cached_block_info_merging() {
     };
     let cache_dir_str = cache_dir.path().to_str().unwrap();
 
-    run_test(cache_dir_str, contract_1_address, 0, false);
+    run_test(cache_dir_str, 0, false);
     assert_cached_block_info(false);
-    run_test(cache_dir_str, contract_1_address, 0, true);
+    run_test(cache_dir_str, 0, true);
     assert_cached_block_info(true);
-    run_test(cache_dir_str, contract_1_address, 0, false);
+    run_test(cache_dir_str, 0, false);
     assert_cached_block_info(true);
 }
 

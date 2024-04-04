@@ -27,7 +27,7 @@ fn simple_call_and_invoke() {
 
         #[test]
         fn simple_call_and_invoke() {
-            let contract = declare("HelloStarknet");
+            let contract = declare("HelloStarknet").unwrap();
             let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
             let dispatcher = IHelloStarknetDispatcher { contract_address };
 
@@ -95,7 +95,7 @@ fn advanced_types() {
             calldata.append(0);         // initial supply high
             calldata.append(1234);      // recipient
         
-            let contract = declare("ERC20");
+            let contract = declare("ERC20").unwrap();
             let contract_address = contract.deploy(@calldata).unwrap();
             let dispatcher = IERC20Dispatcher { contract_address };
             let user_address: ContractAddress = 1234.try_into().unwrap();
@@ -150,7 +150,7 @@ fn handling_errors() {
         #[test]
         #[feature("safe_dispatcher")]
         fn handling_errors() {
-            let contract = declare("HelloStarknet");
+            let contract = declare("HelloStarknet").unwrap();
             let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
             let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
         
@@ -211,7 +211,7 @@ fn handling_bytearray_based_errors() {
         #[test]
         #[feature("safe_dispatcher")]
         fn handling_errors() {
-            let contract = declare("HelloStarknet");
+            let contract = declare("HelloStarknet").unwrap();
             let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
             let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
         
@@ -286,7 +286,7 @@ fn serding() {
         
         #[test]
         fn serding() {
-            let contract = declare("Serding");
+            let contract = declare("Serding").unwrap();
             let contract_address = contract.deploy( @ArrayTrait::new()).unwrap();
         
             let dispatcher = ISerdingDispatcher {
@@ -344,7 +344,7 @@ fn proxy_storage() {
         }
         
         fn deploy_contract(name: ByteArray) -> ContractAddress {
-            let contract = declare(name);
+            let contract = declare(name).unwrap();
             contract.deploy(@ArrayTrait::new()).unwrap()
         }
         
@@ -507,7 +507,7 @@ fn proxy_dispatcher_panic() {
         use snforge_std::{ declare, ContractClassTrait };
 
         fn deploy_contract(name: ByteArray, constructor_calldata: @Array<felt252>) -> ContractAddress {
-            let contract = declare(name);
+            let contract = declare(name).unwrap();
             contract.deploy(constructor_calldata).unwrap()
         }
         
@@ -622,7 +622,7 @@ fn nonexistent_method_call() {
         
 
         fn deploy_contract(name: ByteArray, constructor_calldata: @Array<felt252>) -> ContractAddress {
-            let contract = declare(name);
+            let contract = declare(name).unwrap();
             contract.deploy(constructor_calldata).unwrap()
         }
         
@@ -681,7 +681,7 @@ fn nonexistent_libcall_function() {
         use snforge_std::{ declare, ContractClassTrait };
         
         fn deploy_contract(name: ByteArray) -> ContractAddress {
-            let contract = declare(name);
+            let contract = declare(name).unwrap();
             contract.deploy(@ArrayTrait::new()).unwrap()
         }
         
@@ -692,7 +692,7 @@ fn nonexistent_libcall_function() {
 
         #[test]
         fn nonexistent_libcall_function() {
-            let class = declare("Contract");
+            let class = declare("Contract").unwrap();
             let contract_address = deploy_contract("LibCaller");
             
             let dispatcher = IContractDispatcher { contract_address };
@@ -806,7 +806,7 @@ fn nonexistent_class_libcall() {
         use snforge_std::{ declare, ContractClassTrait };
         
         fn deploy_contract(name: ByteArray) -> ContractAddress {
-            let contract = declare(name);
+            let contract = declare(name).unwrap();
             contract.deploy(@ArrayTrait::new()).unwrap()
         }
         

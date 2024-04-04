@@ -5,4 +5,3 @@
 > 💡 **Tip**
 >
 > This cheatcode can be used to test if your contract upgrade procedure is correct
-

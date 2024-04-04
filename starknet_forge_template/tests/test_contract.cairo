@@ -8,7 +8,7 @@ use {{ PROJECT_NAME }}::IHelloStarknetDispatcher;
 use {{ PROJECT_NAME }}::IHelloStarknetDispatcherTrait;
 
 fn deploy_contract(name: ByteArray) -> ContractAddress {
-    let contract = declare(name);
+    let contract = declare(name).unwrap();
     contract.deploy(@ArrayTrait::new()).unwrap()
 }
 
