@@ -23,7 +23,7 @@ use starknet::{
     signers::{LocalWallet, SigningKey},
 };
 
-use crate::helpers::constants::{WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
+use crate::helpers::constants::{DEFAULT_STATE_FILE_SUFFIX, WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
 use crate::response::errors::SNCastProviderError;
 use cairo_felt::Felt252;
 use conversions::felt252::SerializeAsFelt252Vec;
@@ -183,13 +183,13 @@ pub async fn get_nonce(
     block_id: &str,
     address: FieldElement,
 ) -> Result<FieldElement> {
-    Ok(provider
+    provider
         .get_nonce(
-            get_block_id(block_id).expect("Failed to obtain block id"),
+            get_block_id(block_id).context("Failed to obtain block id")?,
             address,
         )
         .await
-        .expect("Failed to get a nonce"))
+        .context("Failed to get a nonce")
 }
 
 pub async fn get_account<'a>(
@@ -660,6 +660,11 @@ pub fn apply_optional<T, R, F: FnOnce(T, R) -> T>(initial: T, option: Option<R>,
         Some(value) => function(initial, value),
         None => initial,
     }
+}
+
+#[must_use]
+pub fn get_default_state_file_name(script_name: &str, chain_id: &str) -> String {
+    format!("{script_name}_{chain_id}_{DEFAULT_STATE_FILE_SUFFIX}")
 }
 
 #[cfg(test)]

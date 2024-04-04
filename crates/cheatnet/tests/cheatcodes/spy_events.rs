@@ -6,7 +6,7 @@ use crate::common::{
 use blockifier::state::cached_state::{
     CachedState, GlobalContractCache, GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST,
 };
-use cairo_felt::{felt_str, Felt252};
+use cairo_felt::Felt252;
 use cairo_lang_starknet_classes::keccak::starknet_keccak;
 use cairo_vm::hint_processor::hint_processor_utils::felt_to_usize;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::{
@@ -17,6 +17,7 @@ use cheatnet::{
     forking::state::ForkStateReader,
     state::{CheatnetState, ExtendedStateReader},
 };
+use conversions::string::TryFromHexStr;
 use conversions::IntoConv;
 use starknet_api::block::BlockNumber;
 use std::vec;
@@ -232,8 +233,8 @@ fn library_call_emits_event() {
     let mut cheatnet_state = CheatnetState::default();
     let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
-    let contracts = get_contracts();
-    let class_hash = test_env.declare("SpyEventsChecker", &contracts);
+    let contracts_data = get_contracts();
+    let class_hash = test_env.declare("SpyEventsChecker", &contracts_data);
     let contract_address = test_env.deploy("SpyEventsLibCall", &[]);
 
     let id = test_env.spy_events(SpyTarget::All);
@@ -293,9 +294,8 @@ fn check_if_there_is_no_interference() {
     let mut cheatnet_state = CheatnetState::default();
     let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
-    let contracts: std::collections::HashMap<String, scarb_api::StarknetContractArtifacts> =
-        get_contracts();
-    let class_hash = test_env.declare("SpyEventsChecker", &contracts);
+    let contracts_data = get_contracts();
+    let class_hash = test_env.declare("SpyEventsChecker", &contracts_data);
 
     let spy_events_checker_address = test_env.deploy_wrapper(&class_hash, &[]);
     let other_spy_events_checker_address = test_env.deploy_wrapper(&class_hash, &[]);
@@ -333,8 +333,8 @@ fn test_nested_calls() {
 
     let spy_events_checker_address = test_env.deploy("SpyEventsChecker", &[]);
 
-    let contracts = get_contracts();
-    let class_hash = test_env.declare("SpyEventsCheckerProxy", &contracts);
+    let contracts_data = get_contracts();
+    let class_hash = test_env.declare("SpyEventsCheckerProxy", &contracts_data);
 
     let spy_events_checker_proxy_address =
         test_env.deploy_wrapper(&class_hash, &[spy_events_checker_address.into_()]);
@@ -389,8 +389,8 @@ fn use_multiple_spies() {
 
     let spy_events_checker_address = test_env.deploy("SpyEventsChecker", &[]);
 
-    let contracts = get_contracts();
-    let class_hash = test_env.declare("SpyEventsCheckerProxy", &contracts);
+    let contracts_data = get_contracts();
+    let class_hash = test_env.declare("SpyEventsCheckerProxy", &contracts_data);
 
     let spy_events_checker_proxy_address =
         test_env.deploy_wrapper(&class_hash, &[spy_events_checker_address.into_()]);
@@ -477,18 +477,20 @@ fn test_emitted_by_emit_events_syscall() {
     );
 }
 
-#[ignore] // TODO (#1916)
 #[test]
 fn capture_cairo0_event() {
     let temp_dir = TempDir::new().unwrap();
     let mut cached_state = CachedState::new(
         ExtendedStateReader {
             dict_state_reader: build_testing_state(),
-            fork_state_reader: Some(ForkStateReader::new(
-                "http://188.34.188.184:6060/rpc/v0_7".parse().unwrap(),
-                BlockNumber(960_107),
-                temp_dir.path().to_str().unwrap(),
-            )),
+            fork_state_reader: Some(
+                ForkStateReader::new(
+                    "http://188.34.188.184:7070/rpc/v0_7".parse().unwrap(),
+                    BlockNumber(53_626),
+                    temp_dir.path().to_str().unwrap(),
+                )
+                .unwrap(),
+            ),
         },
         GlobalContractCache::new(GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST),
     );
@@ -506,10 +508,10 @@ fn capture_cairo0_event() {
 
     let selector = felt_selector_from_name("test_cairo0_event_collection");
 
-    let cairo0_contract_address = felt_str!(
-        "1960625ba5c435bac113ecd15af3c60e327d550fc5dbb43f07cd0875ad2f54c",
-        16
-    );
+    let cairo0_contract_address = Felt252::try_from_hex_str(
+        "0x2c77ca97586968c6651a533bd5f58042c368b14cf5f526d2f42f670012e10ac",
+    )
+    .unwrap();
 
     call_contract(
         &mut cached_state,

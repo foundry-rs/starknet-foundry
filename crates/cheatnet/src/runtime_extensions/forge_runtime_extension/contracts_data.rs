@@ -1,14 +1,13 @@
+use super::cheatcodes::declare::get_class_hash;
 use anyhow::Result;
 use bimap::BiMap;
-use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::get_class_hash;
-use std::collections::HashMap;
-
 use conversions::IntoConv;
 use rayon::iter::{IntoParallelIterator, IntoParallelRefIterator, ParallelIterator};
 use scarb_api::StarknetContractArtifacts;
 use starknet::core::types::contract::{AbiEntry, SierraClass};
 use starknet::core::utils::get_selector_from_name;
 use starknet_api::core::{ClassHash, EntryPointSelector};
+use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
 pub struct ContractsData {

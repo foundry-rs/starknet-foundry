@@ -1,5 +1,5 @@
 use crate::fuzzer::arguments::CairoType;
-use anyhow::Result;
+use anyhow::{Ok, Result};
 use rand::rngs::StdRng;
 use rand::Rng;
 
@@ -7,55 +7,60 @@ mod arguments;
 mod random;
 
 pub use random::RandomFuzzer;
+use std::num::NonZeroU32;
+
+#[derive(Debug, Clone)]
+pub struct FuzzerArg {
+    cairo_type: CairoType,
+    run_with_min_value: u32,
+    run_with_max_value: u32,
+}
 
 #[derive(Debug, Clone)]
 pub struct RunParams {
     /// Arguments
-    arguments: Vec<CairoType>,
+    arguments: Vec<FuzzerArg>,
     /// Total number of runs
-    total_runs: u32,
+    total_runs: NonZeroU32,
     /// Number of already executed runs
     executed_runs: u32,
-    /// Run in which an argument has a min value
-    /// e.g. `run_with_min_value_argument[0] = 5`
-    /// means that the first argument will have the lowest possible value in 5th run
-    run_with_min_value_for_argument: Vec<u32>,
-    /// Run in which argument has a max value
-    /// e.g. `run_with_max_value_for_argument[0] = 5`
-    /// means that the first argument will have the highest possible value in 5th run
-    run_with_max_value_for_argument: Vec<u32>,
 }
 
 impl RunParams {
-    pub fn from(rng: &mut StdRng, total_runs: u32, arguments: &[&str]) -> Result<Self> {
-        assert!(total_runs >= 3);
-
+    pub fn from(rng: &mut StdRng, total_runs: NonZeroU32, arguments: &[&str]) -> Result<Self> {
         let arguments = arguments
             .iter()
-            .map(|arg| CairoType::from_name(arg))
-            .collect::<Result<Vec<_>>>()?;
+            .map(|arg| -> Result<FuzzerArg> {
+                let argument = CairoType::from_name(arg)?;
+                if total_runs.get() >= 3 {
+                    let run_with_min_value = rng.gen_range(1..=total_runs.get());
+                    let run_with_max_value = rng.gen_range(1..=total_runs.get());
 
-        let run_with_min_value_for_argument: Vec<u32> = (0..arguments.len())
-            .map(|_| rng.gen_range(1..=total_runs))
-            .collect();
-        let run_with_max_value_for_argument: Vec<u32> = run_with_min_value_for_argument
-            .iter()
-            .map(|&run_with_min| {
-                let run_with_max = rng.gen_range(1..=total_runs);
-                if run_with_max == run_with_min {
-                    run_with_min % total_runs + 1
+                    let run_with_max_value = if run_with_max_value == run_with_min_value {
+                        run_with_min_value % total_runs.get() + 1
+                    } else {
+                        run_with_max_value
+                    };
+
+                    Ok(FuzzerArg {
+                        cairo_type: argument,
+                        run_with_max_value,
+                        run_with_min_value,
+                    })
                 } else {
-                    run_with_max
+                    Ok(FuzzerArg {
+                        cairo_type: argument,
+                        run_with_max_value: u32::MAX,
+                        run_with_min_value: u32::MAX,
+                    })
                 }
             })
-            .collect();
+            .collect::<Result<Vec<_>>>()?;
 
         Ok(Self {
             arguments,
             total_runs,
             executed_runs: 0,
-            run_with_min_value_for_argument,
-            run_with_max_value_for_argument,
         })
     }
 }

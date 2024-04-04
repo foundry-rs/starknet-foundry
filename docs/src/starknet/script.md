@@ -15,10 +15,10 @@ contracts from within Cairo, its interface, internals and feature set can change
 
 > ⚠️⚠️ By default, the nonce for each transaction is being taken from the pending block ⚠️⚠️
 >
-> Some RPC nodes can be configured with higher poll itervals, which means they may return "older" nonces
-> in pending blocks, or even not be able to obtain pending blocks at all. When running a script you get an error like
-> "Invalid transaction nonce", this might be the case and you may need to manually set both nonce and max_fee for
-> transactions.
+> Some RPC nodes can be configured with higher poll intervals, which means they may return "older" nonces
+> in pending blocks, or even not be able to obtain pending blocks at all. This might be the case if you get
+> an error like "Invalid transaction nonce" when running a script, and you may need to manually set both nonce
+> and max_fee for transactions.
 >
 > Example:
 >
@@ -28,7 +28,6 @@ contracts from within Cairo, its interface, internals and feature set can change
 
 Some of the planned features that will be included in future versions are:
 
-- scripts idempotency
 - dispatchers support
 - logging
 - account creation/deployment
@@ -36,6 +35,23 @@ Some of the planned features that will be included in future versions are:
 - dry running the scripts
 
 and more!
+
+## State file
+
+By default, when you run a script a state file containing information about previous runs will be created. This file
+can later be used to skip making changes to the network if they were done previously. 
+
+To determine if an operation (a function like declare, deploy or invoke) has to be sent to the network, the script will
+first check if such operation with given arguments already exists in state file. If it does, and previously ended with 
+a success, its execution will be skipped. Otherwise sncast will attempt to execute this function, and will write its status
+to the state file afterwards.
+
+To prevent sncast from using the state file, you can set [the --no-state-file flag](../appendix/sncast/script/run.md#--no-state-file).
+
+A state file is typically named in a following manner:
+```
+{script name}_{network name}_state.json
+```
 
 ## Examples
 
@@ -118,7 +134,7 @@ fn main() {
     let max_fee = 99999999999999999;
     let salt = 0x3;
 
-    let declare_result = declare("Map", Option::Some(max_fee), Option::None).expect('declare failed');
+    let declare_result = declare("Map", Option::Some(max_fee), Option::None).expect('contract already declared');
 
     let nonce = get_nonce('latest');
     let class_hash = declare_result.class_hash;
@@ -202,6 +218,38 @@ Call result: [2]
 
 command: script run
 status: success
+```
+
+As [an idempotency](#state-file) feature is turned on by default, executing the same script once again ends with a success
+and only `call` functions are being executed (as they do not change the network state):
+
+```shell
+$ sncast \
+  --url http://127.0.0.1:5050 \
+  --account example_user \
+  script run map_script
+
+Class hash of the declared contract: 1922774777685257258886771026518018305931014651657879651971507142160195873652
+Deployed the contract to address: 3478557462226312644848472512920965457566154264259286784215363579593349825684
+Invoke tx hash is: 1373185562410761200747829131886166680837022579434823960660735040169785115611
+Call result: [2]
+command: script run
+status: success
+```
+
+whereas, when we run the same script once again with `--no-state-file` flag set, it fails (as the `Map` contract is already declared):
+
+```shell
+$ sncast \
+  --url http://127.0.0.1:5050 \
+  --account example_user \
+  script run map_script --no-state-file
+
+command: script run
+message:
+    0x636f6e747261637420616c7265616479206465636c61726564 ('contract already declared')
+
+status: script panicked
 ```
 
 ## Error handling

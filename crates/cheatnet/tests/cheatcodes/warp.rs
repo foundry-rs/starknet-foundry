@@ -65,9 +65,9 @@ fn warp_with_other_syscall() {
 fn warp_in_constructor() {
     let mut cheatnet_state = CheatnetState::default();
     let mut test_env = TestEnvironment::new(&mut cheatnet_state);
-    let contracts = get_contracts();
+    let contracts_data = get_contracts();
 
-    let class_hash = test_env.declare("ConstructorWarpChecker", &contracts);
+    let class_hash = test_env.declare("ConstructorWarpChecker", &contracts_data);
     let precalculated_address = test_env.precalculate_address(&class_hash, &[]);
 
     test_env.start_warp(CheatTarget::One(precalculated_address), 123);
@@ -154,8 +154,8 @@ fn warp_library_call() {
     let mut cheatnet_state = CheatnetState::default();
     let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
-    let contracts = get_contracts();
-    let class_hash = test_env.declare("WarpChecker", &contracts);
+    let contracts_data = get_contracts();
+    let class_hash = test_env.declare("WarpChecker", &contracts_data);
 
     let lib_call_address = test_env.deploy("WarpCheckerLibCall", &[]);
     let lib_call_selector = "get_block_timestamp_with_lib_call";
@@ -245,8 +245,8 @@ fn warp_multiple() {
     let mut cheatnet_state = CheatnetState::default();
     let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
-    let contracts = get_contracts();
-    let class_hash = test_env.declare("WarpChecker", &contracts);
+    let contracts_data = get_contracts();
+    let class_hash = test_env.declare("WarpChecker", &contracts_data);
 
     let contract_address1 = test_env.deploy_wrapper(&class_hash, &[]);
     let contract_address2 = test_env.deploy_wrapper(&class_hash, &[]);
@@ -315,8 +315,8 @@ fn warp_proxy_with_span() {
     let mut cheatnet_state = CheatnetState::default();
     let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
-    let contracts = get_contracts();
-    let class_hash = test_env.declare("WarpCheckerProxy", &contracts);
+    let contracts_data = get_contracts();
+    let class_hash = test_env.declare("WarpCheckerProxy", &contracts_data);
     let contract_address_1 = test_env.deploy_wrapper(&class_hash, &[]);
     let contract_address_2 = test_env.deploy_wrapper(&class_hash, &[]);
 
@@ -339,9 +339,9 @@ fn warp_in_constructor_with_span() {
     let mut cheatnet_state = CheatnetState::default();
     let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
-    let contracts = get_contracts();
+    let contracts_data = get_contracts();
 
-    let class_hash = test_env.declare("ConstructorWarpChecker", &contracts);
+    let class_hash = test_env.declare("ConstructorWarpChecker", &contracts_data);
     let precalculated_address = test_env.precalculate_address(&class_hash, &[]);
 
     test_env.warp(
@@ -372,9 +372,9 @@ fn warp_no_constructor_with_span() {
     let mut cheatnet_state = CheatnetState::default();
     let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
-    let contracts = get_contracts();
+    let contracts_data = get_contracts();
 
-    let class_hash = test_env.declare("WarpChecker", &contracts);
+    let class_hash = test_env.declare("WarpChecker", &contracts_data);
     let precalculated_address = test_env.precalculate_address(&class_hash, &[]);
 
     test_env.warp(
@@ -442,8 +442,8 @@ fn warp_library_call_with_span() {
     let mut cheatnet_state = CheatnetState::default();
     let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
-    let contracts = get_contracts();
-    let class_hash = test_env.declare("WarpChecker", &contracts);
+    let contracts_data = get_contracts();
+    let class_hash = test_env.declare("WarpChecker", &contracts_data);
     let contract_address = test_env.deploy("WarpCheckerLibCall", &[]);
 
     test_env.warp(

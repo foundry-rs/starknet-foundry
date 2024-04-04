@@ -8,7 +8,7 @@ use indoc::{formatdoc, indoc};
 use shared::test_utils::output_assert::assert_stdout_contains;
 use std::{fs, path::Path, str::FromStr};
 use test_utils::tempdir_with_tool_versions;
-use toml_edit::{value, Document, Item};
+use toml_edit::{value, DocumentMut, Item};
 
 #[test]
 fn simple_package() {
@@ -872,7 +872,7 @@ fn incompatible_snforge_std_version_warning() {
 
     let mut scarb_toml = fs::read_to_string(&manifest_path)
         .unwrap()
-        .parse::<Document>()
+        .parse::<DocumentMut>()
         .unwrap();
     scarb_toml["dev-dependencies"]["snforge_std"]["path"] = Item::None;
     scarb_toml["dev-dependencies"]["snforge_std"]["git"] =
@@ -886,7 +886,7 @@ fn incompatible_snforge_std_version_warning() {
         output,
         indoc! {r"
         [..]Updating git repository https://github.com/foundry-rs/starknet-foundry
-        [WARNING] Package snforge_std version does not meet the recommended version requirement =0.20.1, [..]
+        [WARNING] Package snforge_std version does not meet the recommended version requirement =0.21.0, [..]
         [..]Compiling[..]
         [..]Finished[..]
 

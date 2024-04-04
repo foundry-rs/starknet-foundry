@@ -146,7 +146,7 @@ fn fuzzing_incorrect_runs() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        error: invalid value '0' for '--fuzzer-runs <FUZZER_RUNS>': Number of fuzzer runs must be greater than or equal to 3
+        error: invalid value '0' for '--fuzzer-runs <FUZZER_RUNS>': number would be zero for non-zero type
 
         For more information, try '--help'.
         "},

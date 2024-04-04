@@ -71,9 +71,9 @@ fn elect_in_constructor() {
     let mut cheatnet_state = CheatnetState::default();
     let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
-    let contracts = get_contracts();
+    let contracts_data = get_contracts();
 
-    let class_hash = test_env.declare("ConstructorElectChecker", &contracts);
+    let class_hash = test_env.declare("ConstructorElectChecker", &contracts_data);
     let precalculated_address = test_env.precalculate_address(&class_hash, &[]);
 
     test_env.start_elect(CheatTarget::One(precalculated_address), 123);
@@ -164,8 +164,8 @@ fn elect_library_call() {
     let mut cheatnet_state = CheatnetState::default();
     let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
-    let contracts = get_contracts();
-    let class_hash = test_env.declare("ElectChecker", &contracts);
+    let contracts_data = get_contracts();
+    let class_hash = test_env.declare("ElectChecker", &contracts_data);
 
     let lib_call_address = test_env.deploy("ElectCheckerLibCall", &[]);
     let lib_call_selector = "get_sequencer_address_with_lib_call";
@@ -262,8 +262,8 @@ fn elect_multiple() {
     let mut cheatnet_state = CheatnetState::default();
     let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
-    let contracts = get_contracts();
-    let class_hash = test_env.declare("ElectChecker", &contracts);
+    let contracts_data = get_contracts();
+    let class_hash = test_env.declare("ElectChecker", &contracts_data);
 
     let contract_address1 = test_env.deploy_wrapper(&class_hash, &[]);
     let contract_address2 = test_env.deploy_wrapper(&class_hash, &[]);
@@ -332,8 +332,8 @@ fn elect_proxy_with_span() {
     let mut cheatnet_state = CheatnetState::default();
     let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
-    let contracts = get_contracts();
-    let class_hash = test_env.declare("ElectCheckerProxy", &contracts);
+    let contracts_data = get_contracts();
+    let class_hash = test_env.declare("ElectCheckerProxy", &contracts_data);
     let contract_address_1 = test_env.deploy_wrapper(&class_hash, &[]);
     let contract_address_2 = test_env.deploy_wrapper(&class_hash, &[]);
 
@@ -359,9 +359,9 @@ fn elect_in_constructor_with_span() {
     let mut cheatnet_state = CheatnetState::default();
     let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
-    let contracts = get_contracts();
+    let contracts_data = get_contracts();
 
-    let class_hash = test_env.declare("ConstructorElectChecker", &contracts);
+    let class_hash = test_env.declare("ConstructorElectChecker", &contracts_data);
     let precalculated_address = test_env
         .runtime_state
         .cheatnet_state
@@ -395,9 +395,9 @@ fn elect_no_constructor_with_span() {
     let mut cheatnet_state = CheatnetState::default();
     let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
-    let contracts = get_contracts();
+    let contracts_data = get_contracts();
 
-    let class_hash = test_env.declare("ElectChecker", &contracts);
+    let class_hash = test_env.declare("ElectChecker", &contracts_data);
     let precalculated_address = test_env
         .runtime_state
         .cheatnet_state
@@ -468,8 +468,8 @@ fn elect_library_call_with_span() {
     let mut cheatnet_state = CheatnetState::default();
     let mut test_env = TestEnvironment::new(&mut cheatnet_state);
 
-    let contracts = get_contracts();
-    let class_hash = test_env.declare("ElectChecker", &contracts);
+    let contracts_data = get_contracts();
+    let class_hash = test_env.declare("ElectChecker", &contracts_data);
     let contract_address = test_env.deploy("ElectCheckerLibCall", &[]);
 
     test_env.elect(

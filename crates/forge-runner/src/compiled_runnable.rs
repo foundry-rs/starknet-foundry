@@ -2,6 +2,7 @@ use crate::expected_result::ExpectedTestResult;
 use cairo_lang_sierra::{ids::GenericTypeId, program::Program};
 use serde::Deserialize;
 use starknet_api::block::BlockNumber;
+use std::num::NonZeroU32;
 use url::Url;
 
 #[derive(Debug, Clone)]
@@ -36,6 +37,6 @@ pub struct ValidatedForkConfig {
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct FuzzerConfig {
-    pub fuzzer_runs: u32,
+    pub fuzzer_runs: NonZeroU32,
     pub fuzzer_seed: u64,
 }

@@ -1,4 +1,4 @@
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{anyhow, Context, Result};
 use camino::Utf8Path;
 use clap::{Parser, Subcommand, ValueEnum};
 use configuration::load_package_config;
@@ -7,7 +7,6 @@ use forge::scarb::{build_contracts_with_scarb, build_test_artifacts_with_scarb};
 use forge::shared_cache::{clean_cache, set_cached_failed_tests_names};
 use forge::test_filter::TestsFilter;
 use forge::{pretty_printing, run};
-use forge_runner::contracts_data::ContractsData;
 use forge_runner::test_case_summary::{AnyTestCaseSummary, TestCaseSummary};
 use forge_runner::test_crate_summary::TestCrateSummary;
 use forge_runner::{RunnerConfig, RunnerParams, CACHE_DIR};
@@ -19,10 +18,12 @@ use scarb_api::{
 };
 use scarb_ui::args::PackagesFilter;
 
+use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use forge::block_number_map::BlockNumberMap;
 use semver::{Comparator, Op, Version, VersionReq};
 use shared::print::print_as_warning;
 use std::env;
+use std::num::NonZeroU32;
 use std::sync::Arc;
 use std::thread::available_parallelism;
 use tokio::runtime::Builder;
@@ -30,7 +31,9 @@ use universal_sierra_compiler_api::UniversalSierraCompilerCommand;
 
 mod init;
 
-const FUZZER_RUNS_DEFAULT: u32 = 256;
+fn default_fuzzer_runs() -> NonZeroU32 {
+    NonZeroU32::new(256).unwrap()
+}
 
 #[derive(Parser, Debug)]
 #[command(version)]
@@ -80,8 +83,8 @@ struct TestArgs {
     packages_filter: PackagesFilter,
 
     /// Number of fuzzer runs
-    #[arg(short = 'r', long, value_parser = validate_fuzzer_runs_value)]
-    fuzzer_runs: Option<u32>,
+    #[arg(short = 'r', long)]
+    fuzzer_runs: Option<NonZeroU32>,
     /// Seed for the fuzzer
     #[arg(short = 's', long)]
     fuzzer_seed: Option<u64>,
@@ -118,16 +121,6 @@ struct TestArgs {
     max_n_steps: Option<u32>,
 }
 
-fn validate_fuzzer_runs_value(val: &str) -> Result<u32> {
-    let parsed_val: u32 = val
-        .parse()
-        .map_err(|_| anyhow!("Failed to parse {val} as u32"))?;
-    if parsed_val < 3 {
-        bail!("Number of fuzzer runs must be greater than or equal to 3")
-    }
-    Ok(parsed_val)
-}
-
 fn extract_failed_tests(
     tests_summaries: Vec<TestCrateSummary>,
 ) -> impl Iterator<Item = AnyTestCaseSummary> {
@@ -148,7 +141,7 @@ fn extract_failed_tests(
 fn combine_configs(
     workspace_root: &Utf8Path,
     exit_first: bool,
-    fuzzer_runs: Option<u32>,
+    fuzzer_runs: Option<NonZeroU32>,
     fuzzer_seed: Option<u64>,
     detailed_resources: bool,
     save_trace_data: bool,
@@ -161,7 +154,7 @@ fn combine_configs(
         exit_first || forge_config.exit_first,
         fuzzer_runs
             .or(forge_config.fuzzer_runs)
-            .unwrap_or(FUZZER_RUNS_DEFAULT),
+            .unwrap_or(default_fuzzer_runs()),
         fuzzer_seed
             .or(forge_config.fuzzer_seed)
             .unwrap_or_else(|| thread_rng().next_u64()),
@@ -384,7 +377,7 @@ mod tests {
             RunnerConfig::new(
                 workspace_root,
                 false,
-                FUZZER_RUNS_DEFAULT,
+                default_fuzzer_runs(),
                 config.fuzzer_seed,
                 false,
                 false,
@@ -399,7 +392,7 @@ mod tests {
         let config_from_scarb = ForgeConfig {
             exit_first: true,
             fork: vec![],
-            fuzzer_runs: Some(1234),
+            fuzzer_runs: Some(NonZeroU32::new(1234).unwrap()),
             fuzzer_seed: Some(500),
             detailed_resources: true,
             save_trace_data: true,
@@ -424,7 +417,7 @@ mod tests {
             RunnerConfig::new(
                 workspace_root,
                 true,
-                1234,
+                NonZeroU32::new(1234).unwrap(),
                 500,
                 true,
                 true,
@@ -441,7 +434,7 @@ mod tests {
         let config_from_scarb = ForgeConfig {
             exit_first: false,
             fork: vec![],
-            fuzzer_runs: Some(1234),
+            fuzzer_runs: Some(NonZeroU32::new(1234).unwrap()),
             fuzzer_seed: Some(1000),
             detailed_resources: false,
             save_trace_data: false,
@@ -451,7 +444,7 @@ mod tests {
         let config = combine_configs(
             &workspace_root,
             true,
-            Some(100),
+            Some(NonZeroU32::new(100).unwrap()),
             Some(32),
             true,
             true,
@@ -465,7 +458,7 @@ mod tests {
             RunnerConfig::new(
                 workspace_root,
                 true,
-                100,
+                NonZeroU32::new(100).unwrap(),
                 32,
                 true,
                 true,

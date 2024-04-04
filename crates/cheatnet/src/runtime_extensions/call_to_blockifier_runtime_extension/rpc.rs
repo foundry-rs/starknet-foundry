@@ -9,7 +9,6 @@ use blockifier::execution::{
     call_info::CallInfo,
     entry_point::{CallEntryPoint, CallType, EntryPointExecutionResult},
     errors::{EntryPointExecutionError, PreExecutionError},
-    execution_utils::stark_felt_to_felt,
     syscalls::hint_processor::{SyscallCounter, SyscallHintProcessor},
 };
 use blockifier::state::errors::StateError;
@@ -70,7 +69,7 @@ impl CallFailure {
 
                 // blockifier/src/execution_utils:274 (format_panic_data) (modified)
                 let err_data_str = {
-                    let mut felts = error_data.iter().map(|felt| stark_felt_to_felt(*felt));
+                    let mut felts = error_data.iter().map(|felt| (*felt).into_());
                     let mut items = Vec::new();
                     while let Some(item) = format_next_item(&mut felts) {
                         items.push(item.quote_if_string());
