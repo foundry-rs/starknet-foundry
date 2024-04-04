@@ -1,3 +1,5 @@
+use core::option::OptionTrait;
+use core::traits::TryInto;
 use starknet::{ContractAddress, ClassHash, testing::cheatcode};
 use super::super::byte_array::byte_array_as_felt_array;
 use core::traits::Into;
@@ -138,16 +140,35 @@ impl ContractClassImpl of ContractClassTrait {
 
 /// Declares a contract
 /// `contract` - name of a contract as Cairo string. It is a name of the contract (part after mod keyword) e.g. "HelloStarknet"
-/// Returns the `ContractClass` which was declared
-fn declare(contract: ByteArray) -> ContractClass {
+/// Returns the `ContractClass` which was declared or RevertedTransaction if declaration failed
+fn declare(contract: ByteArray) -> Result<ContractClass, RevertedTransaction> {
     let span = cheatcode::<'declare'>(byte_array_as_felt_array(@contract).span());
 
     let exit_code = *span[0];
-    let result = *span[1];
-    assert(exit_code == 0, 'declare should never fail');
-    let class_hash = result.try_into().unwrap();
 
-    ContractClass { class_hash }
+    if exit_code == 0 {
+        let result = *span[1];
+        let class_hash = result.try_into().unwrap();
+        let contract_class = ContractClass { class_hash };
+        Result::Ok(contract_class)
+    } else {
+        // TODO: Extract to a helper function.
+        let panic_data_len_felt = *span[1];
+        let panic_data_len = panic_data_len_felt.try_into().unwrap();
+        let mut panic_data = array![];
+
+        let offset = 2;
+        let mut i = offset;
+        loop {
+            if panic_data_len + offset == i {
+                break ();
+            }
+            panic_data.append(*span[i]);
+            i += 1;
+        };
+
+        Result::Err(RevertedTransaction { panic_data })
+    }
 }
 
 /// Retrieves a class hash of a contract deployed under the given address

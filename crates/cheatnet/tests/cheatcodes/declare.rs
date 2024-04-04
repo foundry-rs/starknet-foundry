@@ -60,12 +60,7 @@ fn declare_same_contract() {
 
     let output = declare(&mut cached_state, contract_name, &contracts_data);
 
-    assert!(match output {
-        Err(CheatcodeError::Unrecoverable(EnhancedHintError::Anyhow(msg))) => {
-            msg.to_string().contains("is already declared")
-        }
-        _ => false,
-    });
+    assert!(matches!(output, Err(CheatcodeError::Recoverable(_))));
 }
 
 #[test]

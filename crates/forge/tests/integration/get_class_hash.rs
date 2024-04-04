@@ -15,7 +15,7 @@ fn get_class_hash_cheatcode() {
 
             #[test]
             fn get_class_hash_cheatcode() {
-                let contract = declare("HelloStarknet");
+                let contract = declare("HelloStarknet").unwrap();
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 assert(get_class_hash(contract_address) == contract.class_hash, 'Incorrect class hash');
             }
