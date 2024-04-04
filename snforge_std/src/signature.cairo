@@ -4,7 +4,7 @@ mod stark_curve;
 
 #[derive(Copy, Drop)]
 struct KeyPair<SK, PK> {
-    /// A key that is used for signing the messages, it's 2 times shorter than the signature itself
+    /// A key that is used for signing the messages
     secret_key: SK,
     /// A (x, y) point on the elliptic curve used for verification of the signature
     public_key: PK,
