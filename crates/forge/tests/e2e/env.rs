@@ -9,6 +9,10 @@ fn env_var_reading() {
     let output = test_runner(&temp)
         .env("FELT_ENV_VAR", "987654321")
         .env("STRING_ENV_VAR", "'abcde'")
+        .env(
+            "BYTE_ARRAY_ENV_VAR",
+            r#""that is a very long environment variable that would normally not fit""#,
+        )
         .assert()
         .code(0);
 

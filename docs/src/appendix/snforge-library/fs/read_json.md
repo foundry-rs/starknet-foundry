@@ -23,6 +23,7 @@ fn test_read_json() {
 }
 ```
 
+## Accepted format
 File content must have proper JSON Format with values satisfying the conditions:
   - integers in range of `[0, P)` where P is [`Cairo Prime`](https://book.cairo-lang.org/ch02-02-data-types.html?highlight=prime#felt-type)
   - single line strings (`ByteArray`) ie. `"very very very very loooooong string"`, new lines can be used with `\n` and `"` with `\"`
