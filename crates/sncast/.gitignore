@@ -7,3 +7,5 @@ tests/utils/scarb*
 tests/data/contracts/constructor_with_params[0-9]/
 tests/data/contracts/map[0-9]/
 tests/utils/devnet
+tests/**/*state.json
+

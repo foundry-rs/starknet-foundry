@@ -20,7 +20,7 @@ fn precalculate_address() {
         fn precalculate_address() {
             let mut calldata = ArrayTrait::new();
 
-            let contract = declare("HelloStarknet");
+            let contract = declare("HelloStarknet").unwrap();
             let contract_address_pre = contract.precalculate_address(@calldata);
             let contract_address = contract.deploy(@calldata).unwrap();
             let contract_address_pre2 = contract.precalculate_address(@calldata);

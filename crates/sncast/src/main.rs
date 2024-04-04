@@ -19,8 +19,8 @@ use sncast::helpers::scarb_utils::{
 };
 use sncast::response::errors::handle_starknet_command_error;
 use sncast::{
-    chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_nonce, get_provider,
-    NumbersFormat, ValidatedWaitParams, WaitForTx,
+    chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_default_state_file_name,
+    get_nonce, get_provider, NumbersFormat, ValidatedWaitParams, WaitForTx,
 };
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::jsonrpc::HttpTransport;
@@ -439,6 +439,16 @@ fn run_script_command(
             .expect("Failed to build script");
             let metadata_with_deps = get_scarb_metadata_with_deps(&manifest_path)?;
 
+            let chain_id = runtime.block_on(get_chain_id(&provider))?;
+            let state_file_path = if run.no_state_file {
+                None
+            } else {
+                Some(package_metadata.root.join(get_default_state_file_name(
+                    &run.script_name,
+                    &chain_id_to_network_name(chain_id),
+                )))
+            };
+
             let mut result = starknet_commands::script::run::run(
                 &run.script_name,
                 &metadata_with_deps,
@@ -447,6 +457,7 @@ fn run_script_command(
                 &provider,
                 runtime,
                 &config,
+                state_file_path,
             );
 
             print_command_result("script run", &mut result, numbers_format, output_format)?;

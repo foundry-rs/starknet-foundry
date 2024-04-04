@@ -11,8 +11,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Changed
 
-- `read_txt` and `read_json` now supports `ByteArray`
 - `var` now supports `ByteArray` with double quoting, and returns `Span<felt252>` instead of a single `felt252`
+
+
+## [0.21.0] - 2024-04-03
+
+### Forge
+
+#### Changed
+
+- `read_txt` and `read_json` now supports `ByteArray`
+- `snforge_std::declare` returns `Result<ContractClass, RevertedTransaction>` instead of `ContractClass`
+
+### Cast
+
+#### Added
+
+- sncast script idempotency feature - every action done by the script that alters the network state will be tracked in state file, 
+and won't be replayed if previously succeeded 
 
 ## [0.20.1] - 2024-03-22
 

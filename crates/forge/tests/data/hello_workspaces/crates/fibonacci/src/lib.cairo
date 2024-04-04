@@ -33,7 +33,7 @@ mod tests {
 
     #[test]
     fn contract_test() {
-        declare("FibonacciContract");
-        declare("AdditionContract");
+        declare("FibonacciContract").unwrap();
+        declare("AdditionContract").unwrap();
     }
 }
