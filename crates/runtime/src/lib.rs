@@ -31,6 +31,7 @@ use cairo_vm::vm::vm_core::VirtualMachine;
 
 use blockifier::state::errors::StateError;
 use cairo_vm::vm::errors::memory_errors::MemoryError;
+use conversions::felt252::SerializeAsFelt252Vec;
 use starknet_api::StarknetApiError;
 use thiserror::Error;
 use utils::BufferReader;
@@ -379,6 +380,12 @@ pub enum SyscallHandlingResult {
 pub enum CheatcodeHandlingResult {
     Forwarded,
     Handled(Vec<Felt252>),
+}
+
+impl CheatcodeHandlingResult {
+    pub fn from_serializable(serializable: impl SerializeAsFelt252Vec) -> Self {
+        Self::Handled(serializable.serialize_as_felt252_vec())
+    }
 }
 
 pub trait ExtensionLogic {

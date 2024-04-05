@@ -8,6 +8,7 @@ testing = []
 
 [dependencies]
 indoc.workspace = true
+conversions.workspace = true
 anyhow.workspace = true
 cairo-lang-runner.workspace = true
 cairo-lang-casm.workspace = true
