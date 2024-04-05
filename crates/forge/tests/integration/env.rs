@@ -16,7 +16,7 @@ fn read_short_string() {
         #[test]
         fn read_short_string() {
             let result = var("MY_ENV_VAR");
-            assert(result == 'env_var_value', 'failed reading env var');
+            assert(result == array!['env_var_value'], 'failed reading env var');
         }
     "#
     ));
@@ -36,11 +36,35 @@ fn read_felt252() {
         #[test]
         fn read_felt252() {
             let result = var("MY_ENV_VAR");
-            assert(result == 1234567, 'failed reading env var');
+            assert(result == array![1234567], 'failed reading env var');
         }
     "#
     ));
     test.set_env("MY_ENV_VAR", "1234567");
+
+    let result = run_test_case(&test);
+
+    assert_passed(&result);
+}
+
+#[test]
+fn read_bytearray() {
+    let mut test = test_case!(indoc!(
+        r#"
+        use snforge_std::env::var;
+
+        #[test]
+        fn read_bytearray() {
+            let mut result = var("MY_ENV_VAR").span();
+            let result_bytearray = Serde::<ByteArray>::deserialize(ref result).unwrap();
+            assert(result_bytearray == "very long string literal very very long very very long", 'failed reading env var');
+        }
+    "#
+    ));
+    test.set_env(
+        "MY_ENV_VAR",
+        r#""very long string literal very very long very very long""#,
+    );
 
     let result = run_test_case(&test);
 
@@ -56,7 +80,7 @@ fn read_overflow_felt252() {
         #[test]
         fn read_overflow_felt252() {
             let result = var("MY_ENV_VAR");
-            assert(result == 1, '');
+            assert(result == array![1], '');
         }
     "#
     ));
