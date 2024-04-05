@@ -84,9 +84,10 @@ impl<'a> ExtensionLogic for CheatableStarknetRuntimeExtension<'a> {
         }
     }
 
-    fn post_syscall_hook(
+    fn handle_system_call_signal(
         &mut self,
-        selector: &DeprecatedSyscallSelector,
+        selector: DeprecatedSyscallSelector,
+        _vm: &mut VirtualMachine,
         extended_runtime: &mut Self::Runtime,
     ) {
         let syscall_handler = &extended_runtime.hint_handler;

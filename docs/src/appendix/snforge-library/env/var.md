@@ -1,21 +1,15 @@
 # `var`
 
-> `fn var(name: ByteArray) -> felt252`
+> `fn var(name: ByteArray) -> Array<felt252>`
 
-Read and parse felt252 or cairo short string (encoded as felt) value from an environment variable.
+Reads an environment variable, without parsing it.
 
-- `name` - name of an environment variable
+The serialized output is correlated with the inferred input type, same as during [reading from a file](../fs/read_txt.md#accepted-format).
 
-```rust
-use snforge_std::env::var;
+> 📝 **Note**
+> 
+> If you want snfoundry to treat your variable like a short string, surround it with 'single quotes'.
+>  
+> If you would like it to be serialized as a ByteArray, use "double quoting". It will be then de-serializable with `Serde`.
 
-#[test]
-fn reading_env_vars() {
-    // ...
-    let felt252_value = var("FELT_ENV_VAR");
-    let short_string_value = var("STRING_ENV_VAR");
 
-    assert(felt252_value == 987654321, 'invalid felt value');
-    assert(short_string_value == 'abcde', 'invalid short string value');
-}
-```

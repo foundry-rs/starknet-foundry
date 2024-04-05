@@ -5,7 +5,7 @@
 Read and parses plain text file content to an array of felts.
 
 - `file` - a snapshot of an instance of the struct `File` that consists of the following fields:
-  - `path` - Cairo string representing a path to a file relative to a package root.
+- `path` - Cairo string representing a path to a file relative to a package root.
 
 ```rust
 use snforge_std::fs::{ FileTrait, read_txt };
@@ -18,6 +18,7 @@ fn test_read_txt() {
 }
 ```
 
+## Accepted format
 File content must consists of elements that:
 - have to be separated with newlines
 - have to be either:

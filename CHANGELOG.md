@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Changed
+
+- `var` now supports `ByteArray` with double quoting, and returns `Array<felt252>` instead of a single `felt252`
+
+
 ## [0.21.0] - 2024-04-03
 
 ### Forge
@@ -14,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - `read_txt` and `read_json` now supports `ByteArray`
+- `snforge_std::declare` returns `Result<ContractClass, RevertedTransaction>` instead of `ContractClass`
 
 ### Cast
 

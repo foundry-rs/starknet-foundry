@@ -302,10 +302,8 @@ impl<Extension: ExtensionLogic> ExtendedRuntime<Extension> {
         } else {
             self.extended_runtime
                 .execute_hint(vm, exec_scopes, hint_data, constants)?;
-
             self.extension
-                .post_syscall_hook(&selector, &mut self.extended_runtime);
-
+                .handle_system_call_signal(selector, vm, &mut self.extended_runtime);
             Ok(())
         }
     }
@@ -393,14 +391,6 @@ pub trait ExtensionLogic {
         _extended_runtime: &mut Self::Runtime,
     ) -> Result<SyscallHandlingResult, HintError> {
         Ok(SyscallHandlingResult::Forwarded)
-    }
-
-    #[allow(clippy::trivially_copy_pass_by_ref)]
-    fn post_syscall_hook(
-        &mut self,
-        _selector: &DeprecatedSyscallSelector,
-        _extended_runtime: &mut Self::Runtime,
-    ) {
     }
 
     #[allow(clippy::trivially_copy_pass_by_ref)]
