@@ -154,6 +154,19 @@ impl<T: SerializeAsFelt252Vec, E: SerializeAsFelt252Vec> SerializeAsFelt252Vec f
     }
 }
 
+impl<T> SerializeAsFelt252Vec for T
+where
+    T: IntoConv<Felt252>,
+{
+    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
+        output.push(self.into_());
+    }
+
+    fn serialize_as_felt252_vec(self) -> Vec<Felt252> {
+        vec![self.into_()]
+    }
+}
+
 impl SerializeAsFelt252Vec for &str {
     fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
         output.extend(self.serialize_as_felt252_vec());

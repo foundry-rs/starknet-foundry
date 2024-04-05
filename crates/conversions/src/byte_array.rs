@@ -30,12 +30,25 @@ impl SerializeAsFelt252Vec for ByteArray {
     fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
         output.extend(self.serialize_no_magic());
     }
+
+    fn serialize_as_felt252_vec(self) -> Vec<Felt252> {
+        let len = self.words.len().into();
+
+        let mut result = self.words;
+
+        result.insert(0, len);
+
+        result.push(self.pending_word);
+        result.push(self.pending_word_len.into());
+
+        result
+    }
 }
 
 impl ByteArray {
     #[must_use]
     pub fn serialize_with_magic(self) -> Vec<Felt252> {
-        let mut result = self.serialize_no_magic();
+        let mut result = self.serialize_as_felt252_vec();
 
         result.insert(
             0,
@@ -47,13 +60,6 @@ impl ByteArray {
 
     #[must_use]
     pub fn serialize_no_magic(self) -> Vec<Felt252> {
-        let mut result = Vec::with_capacity(self.words.len() + 3);
-
-        result.push(self.words.len().into());
-        result.extend(self.words);
-        result.push(self.pending_word);
-        result.push(self.pending_word_len.into());
-
-        result
+        self.serialize_as_felt252_vec()
     }
 }
