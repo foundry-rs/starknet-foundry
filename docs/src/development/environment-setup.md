@@ -1,10 +1,11 @@
 # Environment Setup
-
 > 💡 **Info**
-> 
-> This setup is for development of Starknet Foundry.
->
-> If you don't wish to contribute, you can omit these instructions.
+> This tutorial is only relevant if you wish to contribute to Starknet Foundry. 
+> If you plan to only use it as a tool for your project, you can skip this part.
+
+## Prerequisites
+
+### Rust
 
 Install the latest stable [Rust](https://www.rust-lang.org/tools/install) version.
 If you already have Rust installed make sure to upgrade it by running
@@ -13,31 +14,10 @@ If you already have Rust installed make sure to upgrade it by running
 $ rustup update
 ```
 
-To verify that project was cloned and set up correctly, you can run
+### Scarb
+You can read more about installing scarb [here](https://docs.swmansion.com/scarb/download.html)
 
-```shell
-$ cargo check
-```
-
-## Running Tests
-
-> 📝 **Note**
-> 
-> Make sure you run `./scripts/install_devnet.sh`
-> and then set [Scarb](https://docs.swmansion.com/scarb/) version 
-> [compatible](https://github.com/foundry-rs/starknet-foundry/releases) with both `snforge` and `sncast`
-> and use the newest [universal-sierra-compiler](https://github.com/software-mansion/universal-sierra-compiler)
-> after setting up the development environment, otherwise the tests will fail.
-
-Tests can be run with:
-
-```shell
-$ cargo test
-```
-
-> 💡 **Info**
->
-> Please make sure you're using scarb installed via asdf - otherwise some tests may fail.
+Please make sure you're using scarb installed via asdf - otherwise some tests may fail.
 > To verify, run:
 > 
 > ```shell
@@ -45,7 +25,24 @@ $ cargo test
 > $HOME/.asdf/shims/scarb
 > ```
 > 
-> If you previously installed scarb using official installer, you may need to remove this installation or modify your PATH to make sure asdf installed one > is always used.
+> If you previously installed scarb using official installer, you may need to remove this installation or modify your PATH to make sure asdf installed one is always used.
+
+### Starknet Devnet
+To install it run `./scripts/install_devnet.sh`
+
+### Universal sierra compiler
+Install the latest [universal-sierra-compiler](https://github.com/software-mansion/universal-sierra-compiler) version.
+
+
+
+## Running Tests
+Make sure to install are prerequisites beforehand!
+Tests can be run with:
+
+```shell
+$ cargo test
+```
+
 
 ## Formatting and Lints
 
