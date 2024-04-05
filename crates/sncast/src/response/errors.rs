@@ -26,11 +26,11 @@ impl SerializeAsFelt252Vec for StarknetCommandError {
         match self {
             StarknetCommandError::UnknownError(err) => {
                 output.push(Felt252::from(0));
-                err.to_string().as_str().serialize_into_felt252_vec(output);
+                err.to_string().serialize_into_felt252_vec(output);
             }
             StarknetCommandError::ContractArtifactsNotFound(err) => {
                 output.push(Felt252::from(1));
-                err.data.as_str().serialize_into_felt252_vec(output);
+                err.data.serialize_into_felt252_vec(output);
             }
             StarknetCommandError::WaitForTransactionError(err) => {
                 output.push(Felt252::from(2));
@@ -72,7 +72,7 @@ impl SerializeAsFelt252Vec for SNCastProviderError {
             SNCastProviderError::RateLimited => output.push(Felt252::from(1)),
             SNCastProviderError::UnknownError(err) => {
                 output.push(Felt252::from(2));
-                err.to_string().as_str().serialize_into_felt252_vec(output);
+                err.to_string().serialize_into_felt252_vec(output);
             }
         }
     }
@@ -189,14 +189,11 @@ impl SerializeAsFelt252Vec for SNCastStarknetError {
             SNCastStarknetError::TransactionHashNotFound => output.push(Felt252::from(5)),
             SNCastStarknetError::ContractError(err) => {
                 output.push(Felt252::from(6));
-                err.revert_error.as_str().serialize_into_felt252_vec(output);
+                err.revert_error.serialize_into_felt252_vec(output);
             }
             SNCastStarknetError::TransactionExecutionError(err) => {
-                output.push(Felt252::from(7));
-                output.push(Felt252::from(err.transaction_index));
-                err.execution_error
-                    .as_str()
-                    .serialize_into_felt252_vec(output);
+                output.extend([Felt252::from(7), Felt252::from(err.transaction_index)]);
+                err.execution_error.serialize_into_felt252_vec(output);
             }
             SNCastStarknetError::ClassAlreadyDeclared => output.push(Felt252::from(8)),
             SNCastStarknetError::InvalidTransactionNonce => output.push(Felt252::from(9)),
@@ -204,7 +201,7 @@ impl SerializeAsFelt252Vec for SNCastStarknetError {
             SNCastStarknetError::InsufficientAccountBalance => output.push(Felt252::from(11)),
             SNCastStarknetError::ValidationFailure(err) => {
                 output.push(Felt252::from(12));
-                err.as_str().serialize_into_felt252_vec(output);
+                err.serialize_into_felt252_vec(output);
             }
             SNCastStarknetError::CompilationFailed => output.push(Felt252::from(13)),
             SNCastStarknetError::ContractClassSizeIsTooLarge => output.push(Felt252::from(14)),
@@ -215,7 +212,7 @@ impl SerializeAsFelt252Vec for SNCastStarknetError {
             SNCastStarknetError::UnsupportedContractClassVersion => output.push(Felt252::from(19)),
             SNCastStarknetError::UnexpectedError(err) => {
                 output.push(Felt252::from(20));
-                err.to_string().as_str().serialize_into_felt252_vec(output);
+                err.to_string().serialize_into_felt252_vec(output);
             }
         }
     }

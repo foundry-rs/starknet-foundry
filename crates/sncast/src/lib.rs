@@ -494,7 +494,7 @@ impl SerializeAsFelt252Vec for TransactionError {
             TransactionError::Rejected => output.push(Felt252::from(0)),
             TransactionError::Reverted(err) => {
                 output.push(Felt252::from(1));
-                err.data.as_str().serialize_into_felt252_vec(output);
+                err.data.serialize_into_felt252_vec(output);
             }
         }
     }

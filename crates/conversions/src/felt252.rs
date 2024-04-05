@@ -163,3 +163,13 @@ impl SerializeAsFelt252Vec for &str {
         ByteArray::from(self).serialize_no_magic()
     }
 }
+
+impl SerializeAsFelt252Vec for String {
+    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
+        self.as_str().serialize_into_felt252_vec(output);
+    }
+
+    fn serialize_as_felt252_vec(self) -> Vec<Felt252> {
+        self.as_str().serialize_as_felt252_vec()
+    }
+}
