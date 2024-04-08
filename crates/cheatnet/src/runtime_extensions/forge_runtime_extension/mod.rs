@@ -687,17 +687,22 @@ fn handle_deploy_result(
 fn serialize_call_trace(call_trace: &CallTrace, output: &mut Vec<Felt252>) {
     serialize_call_entry_point(&call_trace.entry_point, output);
 
-    let visible_calls_count = call_trace
+    let visible_calls: Vec<_> = call_trace
         .nested_calls
         .iter()
-        .filter(|call| matches!(call, CallTraceNode::EntryPointCall(_)))
-        .count();
-    output.push(Felt252::from(visible_calls_count));
+        .filter_map(|call_node| {
+            if let CallTraceNode::EntryPointCall(call) = call_node {
+                Some(call)
+            } else {
+                None
+            }
+        })
+        .collect();
 
-    for call_trace_node in &call_trace.nested_calls {
-        if let CallTraceNode::EntryPointCall(call_trace) = call_trace_node {
-            serialize_call_trace(&call_trace.borrow(), output);
-        }
+    output.push(Felt252::from(visible_calls.len()));
+
+    for call_trace_node in visible_calls {
+        serialize_call_trace(&call_trace_node.borrow(), output);
     }
 
     serialize_call_result(&call_trace.result, output);
