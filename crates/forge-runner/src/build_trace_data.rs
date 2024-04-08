@@ -12,7 +12,7 @@ use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cairo_vm::vm::trace::trace_entry::TraceEntry;
 use cheatnet::constants::{TEST_CONTRACT_CLASS_HASH, TEST_ENTRY_POINT_SELECTOR};
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
-use cheatnet::state::{CallTrace, NodeType};
+use cheatnet::state::{CallTrace, CallTraceNode};
 use conversions::IntoConv;
 use itertools::Itertools;
 use starknet::core::utils::get_selector_from_name;
@@ -22,10 +22,10 @@ use starknet_api::deprecated_contract_class::EntryPointType;
 use starknet_api::hash::StarkHash;
 use trace_data::{
     CallEntryPoint as ProfilerCallEntryPoint, CallTrace as ProfilerCallTrace,
-    CallType as ProfilerCallType, ContractAddress,
+    CallTraceNode as ProfilerCallTraceNode, CallType as ProfilerCallType, ContractAddress,
     DeprecatedSyscallSelector as ProfilerDeprecatedSyscallSelector, EntryPointSelector,
     EntryPointType as ProfilerEntryPointType, ExecutionResources as ProfilerExecutionResources,
-    NodeType as ProfilerNodeType, TraceEntry as ProfilerTraceEntry, VmExecutionResources,
+    TraceEntry as ProfilerTraceEntry, VmExecutionResources,
 };
 
 pub const TRACE_DIR: &str = ".snfoundry_trace";
@@ -55,10 +55,21 @@ pub fn build_profiler_call_trace(
         nested_calls: value
             .nested_calls
             .iter()
-            .map(|c| build_profiler_call_trace(c, contracts_data))
+            .map(|c| build_profiler_call_trace_node(c, contracts_data))
             .collect(),
         vm_trace,
-        node_type: build_profiler_node_type(value.node_type),
+    }
+}
+
+fn build_profiler_call_trace_node(
+    value: &CallTraceNode,
+    contracts_data: &ContractsData,
+) -> ProfilerCallTraceNode {
+    match value {
+        CallTraceNode::EntryPointCall(trace) => {
+            ProfilerCallTraceNode::EntryPointCall(build_profiler_call_trace(trace, contracts_data))
+        }
+        CallTraceNode::DeployWithoutConstructor => ProfilerCallTraceNode::DeployWithoutConstructor,
     }
 }
 
@@ -209,13 +220,6 @@ fn build_profiler_trace_entry(value: &TraceEntry) -> ProfilerTraceEntry {
         pc: value.pc,
         ap: value.ap,
         fp: value.fp,
-    }
-}
-
-fn build_profiler_node_type(value: NodeType) -> ProfilerNodeType {
-    match value {
-        NodeType::Regular => ProfilerNodeType::Regular,
-        NodeType::Phantom => ProfilerNodeType::Phantom,
     }
 }
 

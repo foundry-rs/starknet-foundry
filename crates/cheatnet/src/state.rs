@@ -156,27 +156,16 @@ pub struct CallTrace {
     pub used_execution_resources: ExecutionResources,
     pub used_l1_resources: L1Resources,
     pub used_syscalls: SyscallCounter,
-    pub nested_calls: Vec<Rc<RefCell<CallTrace>>>,
+    pub nested_calls: Vec<CallTraceNode>,
     pub result: CallResult,
     pub vm_trace: Option<Vec<TraceEntry>>,
-    pub node_type: NodeType,
 }
 
-#[derive(Default, Copy, Clone)]
-pub enum NodeType {
-    #[default]
-    Regular,
-    Phantom,
-}
-
-impl NodeType {
-    #[must_use]
-    pub fn is_visible_to_user(&self) -> bool {
-        match *self {
-            NodeType::Regular => true,
-            NodeType::Phantom => false,
-        }
-    }
+/// Enum representing node of a trace of a call.
+#[derive(Clone)]
+pub enum CallTraceNode {
+    EntryPointCall(Rc<RefCell<CallTrace>>),
+    DeployWithoutConstructor,
 }
 
 #[derive(Clone)]
@@ -417,7 +406,7 @@ impl TraceData {
         current_call
             .borrow_mut()
             .nested_calls
-            .push(new_call.clone());
+            .push(CallTraceNode::EntryPointCall(new_call.clone()));
 
         self.current_call_stack
             .push(new_call, resources_used_before_call, cheated_data);
@@ -456,14 +445,13 @@ impl TraceData {
         last_call.vm_trace = vm_trace;
     }
 
-    pub fn add_phantom_call(&mut self) {
-        let new_call = Rc::new(RefCell::new(CallTrace {
-            node_type: NodeType::Phantom,
-            ..Default::default()
-        }));
+    pub fn add_deploy_without_constructor_node(&mut self) {
         let current_call = self.current_call_stack.top();
 
-        current_call.borrow_mut().nested_calls.push(new_call);
+        current_call
+            .borrow_mut()
+            .nested_calls
+            .push(CallTraceNode::DeployWithoutConstructor);
     }
 }
 

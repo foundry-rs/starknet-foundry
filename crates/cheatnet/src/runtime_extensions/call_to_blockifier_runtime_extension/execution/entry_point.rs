@@ -2,7 +2,7 @@ use std::cell::RefCell;
 use super::cairo1_execution::execute_entry_point_call_cairo1;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::deprecated::cairo0_execution::execute_entry_point_call_cairo0;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
-use crate::state::{CallTrace, CheatStatus};
+use crate::state::{CallTrace, CallTraceNode, CheatStatus};
 use blockifier::execution::call_info::{CallExecution, Retdata};
 use blockifier::{
     execution::{
@@ -220,7 +220,9 @@ pub fn execute_constructor_entry_point(
     let contract_class = state.get_compiled_contract_class(ctor_context.class_hash)?;
     let Some(constructor_selector) = contract_class.constructor_selector() else {
         // Contract has no constructor.
-        runtime_state.cheatnet_state.trace_data.add_phantom_call();
+        cheatnet_state
+            .trace_data
+            .add_deploy_without_constructor_node();
         return handle_empty_constructor(ctor_context, calldata, remaining_gas);
     };
 
@@ -279,18 +281,22 @@ fn mocked_call_info(call: CallEntryPoint, ret_data: Vec<StarkFelt>) -> CallInfo 
 
 fn aggregate_nested_syscall_counters(trace: &Rc<RefCell<CallTrace>>) -> SyscallCounter {
     let mut result = SyscallCounter::new();
-    for nested_call in &trace.borrow().nested_calls {
-        let sub_trace_counter = aggregate_syscall_counters(nested_call);
-        result = sum_syscall_counters(result, &sub_trace_counter);
+    for nested_call_node in &trace.borrow().nested_calls {
+        if let CallTraceNode::EntryPointCall(nested_call) = nested_call_node {
+            let sub_trace_counter = aggregate_syscall_counters(nested_call);
+            result = sum_syscall_counters(result, &sub_trace_counter);
+        }
     }
     result
 }
 
 fn aggregate_syscall_counters(trace: &Rc<RefCell<CallTrace>>) -> SyscallCounter {
     let mut result = trace.borrow().used_syscalls.clone();
-    for nested_call in &trace.borrow().nested_calls {
-        let sub_trace_counter = aggregate_nested_syscall_counters(nested_call);
-        result = sum_syscall_counters(result, &sub_trace_counter);
+    for nested_call_node in &trace.borrow().nested_calls {
+        if let CallTraceNode::EntryPointCall(nested_call) = nested_call_node {
+            let sub_trace_counter = aggregate_nested_syscall_counters(nested_call);
+            result = sum_syscall_counters(result, &sub_trace_counter);
+        }
     }
     result
 }

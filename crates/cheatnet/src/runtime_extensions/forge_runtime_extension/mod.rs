@@ -1,5 +1,5 @@
 use self::contracts_data::ContractsData;
-use crate::state::NodeType;
+use crate::state::CallTraceNode;
 use crate::{
     runtime_extensions::{
         call_to_blockifier_runtime_extension::{
@@ -685,21 +685,19 @@ fn handle_deploy_result(
 
 // append all to one output Vec instead of allocating new one for each nested call
 fn serialize_call_trace(call_trace: &CallTrace, output: &mut Vec<Felt252>) {
-    if !call_trace.node_type.is_visible_to_user() {
-        return;
-    }
-
     serialize_call_entry_point(&call_trace.entry_point, output);
 
     let visible_calls_count = call_trace
         .nested_calls
         .iter()
-        .filter(|call| matches!(call.borrow().node_type, NodeType::Regular))
+        .filter(|call| matches!(call, CallTraceNode::EntryPointCall(_)))
         .count();
     output.push(Felt252::from(visible_calls_count));
 
-    for call_trace in &call_trace.nested_calls {
-        serialize_call_trace(&call_trace.borrow(), output);
+    for call_trace_node in &call_trace.nested_calls {
+        if let CallTraceNode::EntryPointCall(call_trace) = call_trace_node {
+            serialize_call_trace(&call_trace.borrow(), output);
+        }
     }
 
     serialize_call_result(&call_trace.result, output);
@@ -830,6 +828,13 @@ pub fn update_top_call_execution_resources(runtime: &mut ForgeRuntime) {
     let nested_calls_syscalls = top_call
         .nested_calls
         .iter()
+        .filter_map(|trace_node| {
+            if let CallTraceNode::EntryPointCall(trace) = trace_node {
+                Some(trace)
+            } else {
+                None
+            }
+        })
         .fold(SyscallCounter::new(), |syscalls, trace| {
             sum_syscall_counters(syscalls, &trace.borrow().used_syscalls)
         });
