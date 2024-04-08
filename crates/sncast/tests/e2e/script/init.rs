@@ -1,7 +1,8 @@
 use crate::helpers::runner::runner;
 use camino::Utf8PathBuf;
 use indoc::{formatdoc, indoc};
-use shared::test_utils::output_assert::assert_stderr_contains;
+use scarb_api::ScarbCommand;
+use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 use sncast::helpers::constants::INIT_SCRIPTS_DIR;
 use sncast::helpers::scarb_utils::get_cairo_version;
 use tempfile::TempDir;
@@ -116,26 +117,44 @@ fn test_init_twice_fails() {
     );
 }
 
-// todo: When releasing a new version this fails, because a new tag do not exist yet
-// #[test]
-// fn test_initialized_script_compiles() {
-//     let script_name = "my_script";
-//     let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
-//
-//     let snapbox = runner(&["script", "init", script_name])
-//         .current_dir(temp_dir.path());
-//
-//     snapbox.assert().stdout_matches(formatdoc! {r"
-//         [WARNING] [..]
-//         command: script init
-//         message: Successfully initialized `{script_name}` at [..]/scripts/{script_name}
-//     "});
-//
-//     let script_dir_path = temp_dir.path().join(INIT_SCRIPTS_DIR).join(script_name);
-//
-//     ScarbCommand::new_with_stdio()
-//         .current_dir(script_dir_path)
-//         .arg("build")
-//         .run()
-//         .expect("Failed to compile the initialized script");
-// }
+#[test]
+fn test_initialized_script_compiles() {
+    let script_name = "my_script";
+    let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
+
+    let snapbox = runner(&["script", "init", script_name]).current_dir(temp_dir.path());
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        formatdoc! {r"
+        [WARNING] The newly created script isn't auto-added to the workspace. [..]
+        command: script init
+        message: Successfully initialized `{script_name}` at [..]/scripts/{script_name}
+    "},
+    );
+
+    let script_dir_path = temp_dir.path().join(INIT_SCRIPTS_DIR).join(script_name);
+    let scarb_toml_path = script_dir_path.join("Scarb.toml");
+
+    let config = std::fs::read_to_string(&scarb_toml_path).expect("Failed to read Scarb.toml");
+    let mut doc = config
+        .parse::<toml_edit::DocumentMut>()
+        .expect("Failed to parse Scarb.toml");
+
+    let tab = doc["dependencies"]["sncast_std"]
+        .as_inline_table_mut()
+        .unwrap();
+    // Using a tag during the release process will cause the test to fail
+    // as the new tag won't exists in the repository yet
+    tab.remove("tag").expect("Failed to remove the tag");
+    tab.insert("branch", "master".into());
+
+    std::fs::write(&scarb_toml_path, doc.to_string()).expect("Failed to overwrite Scarb.toml");
+
+    ScarbCommand::new_with_stdio()
+        .current_dir(script_dir_path)
+        .arg("build")
+        .run()
+        .expect("Failed to compile the initialized script");
+}

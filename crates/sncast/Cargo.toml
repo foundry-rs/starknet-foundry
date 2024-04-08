@@ -54,6 +54,7 @@ tempfile.workspace = true
 test-case.workspace = true
 fs_extra.workspace = true
 dotenv.workspace = true
+toml_edit.workspace = true
 
 [[bin]]
 name = "sncast"
