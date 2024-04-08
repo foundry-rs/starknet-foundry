@@ -41,7 +41,7 @@ pub enum CallResult {
 
 impl Default for CallResult {
     fn default() -> Self {
-        Self::Success { ret_data: vec![] }
+        Self::Failure(CallFailure::Error { msg: String::new() })
     }
 }
 
