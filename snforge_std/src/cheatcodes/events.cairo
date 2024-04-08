@@ -1,5 +1,6 @@
 use starknet::testing::cheatcode;
 use starknet::ContractAddress;
+use super::super::_cheatcode::handle_cheatcode;
 
 #[derive(Drop, Serde)]
 enum SpyOn {
@@ -11,13 +12,13 @@ enum SpyOn {
 fn spy_events(spy_on: SpyOn) -> EventSpy {
     let mut inputs = array![];
     spy_on.serialize(ref inputs);
-    let output = cheatcode::<'spy_events'>(inputs.span());
+    let output = handle_cheatcode(cheatcode::<'spy_events'>(inputs.span()));
 
     EventSpy { _id: *output[0], events: array![] }
 }
 
 fn event_name_hash(name: felt252) -> felt252 {
-    let mut output = cheatcode::<'event_name_hash'>(array![name].span());
+    let mut output = handle_cheatcode(cheatcode::<'event_name_hash'>(array![name].span()));
     *output[0]
 }
 
@@ -39,7 +40,7 @@ trait EventFetcher {
 
 impl EventFetcherImpl of EventFetcher {
     fn fetch_events(ref self: EventSpy) {
-        let mut output = cheatcode::<'fetch_events'>(array![self._id].span());
+        let mut output = handle_cheatcode(cheatcode::<'fetch_events'>(array![self._id].span()));
         let events = Serde::<Array<(ContractAddress, Event)>>::deserialize(ref output).unwrap();
 
         let mut i = 0;

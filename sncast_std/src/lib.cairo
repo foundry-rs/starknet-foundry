@@ -124,7 +124,7 @@ pub fn call(
 
     inputs.append_span(calldata_serialized.span());
 
-    let mut buf = cheatcode::<'call'>(inputs.span());
+    let mut buf = handle_cheatcode(cheatcode::<'call'>(inputs.span()));
 
     let mut result_data: Result<CallResult, ScriptCommandError> = Serde::<
         Result<CallResult>
@@ -163,7 +163,7 @@ pub fn declare(
     inputs.append_span(max_fee_serialized.span());
     inputs.append_span(nonce_serialized.span());
 
-    let mut buf = cheatcode::<'declare'>(inputs.span());
+    let mut buf = handle_cheatcode(cheatcode::<'declare'>(inputs.span()));
 
     let mut result_data: Result<DeclareResult, ScriptCommandError> = Serde::<
         Result<DeclareResult>
@@ -219,7 +219,7 @@ pub fn deploy(
     inputs.append_span(max_fee_serialized.span());
     inputs.append_span(nonce_serialized.span());
 
-    let mut buf = cheatcode::<'deploy'>(inputs.span());
+    let mut buf = handle_cheatcode(cheatcode::<'deploy'>(inputs.span()));
 
     let mut result_data: Result<DeployResult, ScriptCommandError> = Serde::<
         Result<DeployResult>
@@ -263,7 +263,7 @@ pub fn invoke(
     inputs.append_span(max_fee_serialized.span());
     inputs.append_span(nonce_serialized.span());
 
-    let mut buf = cheatcode::<'invoke'>(inputs.span());
+    let mut buf = handle_cheatcode(cheatcode::<'invoke'>(inputs.span()));
 
     let mut result_data: Result<InvokeResult, ScriptCommandError> = Serde::<
         Result<InvokeResult>
@@ -275,6 +275,22 @@ pub fn invoke(
 
 pub fn get_nonce(block_tag: felt252) -> felt252 {
     let inputs = array![block_tag];
-    let buf = cheatcode::<'get_nonce'>(inputs.span());
+    let buf = handle_cheatcode(cheatcode::<'get_nonce'>(inputs.span()));
     *buf[0]
+}
+
+fn handle_cheatcode(input: Span<felt252>) -> Span<felt252> {
+    let first = *input.at(0);
+    let input = input.slice(1, input.len() - 1);
+
+    if first == 1 {
+        // it's in fact core::byte_array::BYTE_ARRAY_MAGIC but it can't be imported here
+        let mut arr = array![0x46a6158a16a947e5916b2a2ca68501a45e93d7110e81aa2d6438b1c57c879a3];
+
+        arr.append_span(input);
+
+        panic(arr)
+    } else {
+        input
+    }
 }

@@ -61,3 +61,5 @@ mod trace;
 mod errors;
 
 mod byte_array;
+
+mod _cheatcode;
