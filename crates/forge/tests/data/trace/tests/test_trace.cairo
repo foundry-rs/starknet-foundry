@@ -11,9 +11,9 @@ use trace_info::{
 fn test_trace_print() {
     let sc = declare("SimpleContract").unwrap();
 
-    let contract_address_A = sc.deploy(@array![]).unwrap();
-    let contract_address_B = sc.deploy(@array![]).unwrap();
-    let contract_address_C = sc.deploy(@array![]).unwrap();
+    let (contract_address_A, _) = sc.deploy(@array![]).unwrap();
+    let (contract_address_B, _) = sc.deploy(@array![]).unwrap();
+    let (contract_address_C, _) = sc.deploy(@array![]).unwrap();
 
     let calls = array![
         RecursiveCall {

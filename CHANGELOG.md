@@ -11,8 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Changed
 
+- `deploy` / `deploy_at` now additionally return the constructor return data via `SyscallResult<(ContractAddress, Span<felt252>)>`
 - `var` now supports `ByteArray` with double quoting, and returns `Array<felt252>` instead of a single `felt252`
-
 
 ## [0.21.0] - 2024-04-03
 

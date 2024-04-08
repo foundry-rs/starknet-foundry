@@ -31,7 +31,7 @@ fn l1_handler_execute() {
                 let calldata = array![0x123];
 
                 let contract = declare("l1_handler_executor").unwrap();
-                let contract_address = contract.deploy(@calldata).unwrap();
+                let (contract_address, _) = contract.deploy(@calldata).unwrap();
 
                 let l1_data = L1Data {
                     balance: 42,
@@ -61,7 +61,7 @@ fn l1_handler_execute() {
                 let calldata = array![0x123];
 
                 let contract = declare("l1_handler_executor").unwrap();
-                let contract_address = contract.deploy(@calldata).unwrap();
+                let (contract_address, _) = contract.deploy(@calldata).unwrap();
 
 
                 let mut l1_handler = L1HandlerTrait::new(

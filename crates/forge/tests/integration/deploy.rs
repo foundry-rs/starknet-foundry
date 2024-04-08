@@ -19,9 +19,9 @@ fn error_handling() {
 
             match contract.deploy(@ArrayTrait::new()) {
                 Result::Ok(_) => panic_with_felt252('Should have panicked'),
-                Result::Err(x) => {
-                    assert(*x.panic_data.at(0_usize) == 'PANIK', *x.panic_data.at(0_usize));
-                    assert(*x.panic_data.at(1_usize) == 'DEJTA', *x.panic_data.at(1_usize));
+                Result::Err(panic_data) => {
+                    assert(*panic_data.at(0_usize) == 'PANIK', *panic_data.at(0_usize));
+                    assert(*panic_data.at(1_usize) == 'DEJTA', *panic_data.at(1_usize));
                 }
             }
         }
@@ -76,6 +76,151 @@ fn deploy_syscall_check() {
             Path::new("tests/data/contracts/deploy_checker.cairo"),
         )
         .unwrap()
+    );
+
+    let result = run_test_case(&test);
+
+    assert_passed(&result);
+}
+
+#[test]
+fn constructor_retdata_span() {
+    let test = test_case!(
+        indoc!(
+            r#"
+        use result::ResultTrait;
+        use snforge_std::{ declare, ContractClass, ContractClassTrait };
+        use array::ArrayTrait;
+
+        #[test]
+        fn constructor_retdata_span() {
+            let contract = declare("ConstructorRetdata").unwrap();
+
+            let (_contract_address, retdata) = contract.deploy(@ArrayTrait::new()).unwrap();
+            assert_eq!(retdata, array![3, 2, 3, 4].span());
+        }
+    "#
+        ),
+        Contract::new(
+            "ConstructorRetdata",
+            indoc!(
+                r"
+                #[starknet::contract]
+                mod ConstructorRetdata {
+                    use array::ArrayTrait;
+                
+                    #[storage]
+                    struct Storage {}
+                
+                    #[constructor]
+                    fn constructor(ref self: ContractState) -> Span<felt252> {
+                        array![2, 3, 4].span()
+                    }
+                }
+                "
+            )
+        )
+    );
+
+    let result = run_test_case(&test);
+
+    assert_passed(&result);
+}
+
+#[test]
+fn constructor_retdata_felt() {
+    let test = test_case!(
+        indoc!(
+            r#"
+        use result::ResultTrait;
+        use snforge_std::{ declare, ContractClass, ContractClassTrait };
+        use array::ArrayTrait;
+
+        #[test]
+        fn constructor_retdata_felt() {
+            let contract = declare("ConstructorRetdata").unwrap();
+
+            let (_contract_address, retdata) = contract.deploy(@ArrayTrait::new()).unwrap();
+            assert_eq!(retdata, array![5].span());
+        }
+    "#
+        ),
+        Contract::new(
+            "ConstructorRetdata",
+            indoc!(
+                r"
+                #[starknet::contract]
+                mod ConstructorRetdata {
+                    use array::ArrayTrait;
+                
+                    #[storage]
+                    struct Storage {}
+                
+                    #[constructor]
+                    fn constructor(ref self: ContractState) -> felt252 {
+                        5
+                    }
+                }
+                "
+            )
+        )
+    );
+
+    let result = run_test_case(&test);
+
+    assert_passed(&result);
+}
+
+#[test]
+fn constructor_retdata_struct() {
+    let test = test_case!(
+        indoc!(
+            r#"
+        use result::ResultTrait;
+        use snforge_std::{ declare, ContractClass, ContractClassTrait };
+        use array::ArrayTrait;
+
+        #[test]
+        fn constructor_retdata_struct() {
+            let contract = declare("ConstructorRetdata").unwrap();
+
+            let (_contract_address, retdata) = contract.deploy(@ArrayTrait::new()).unwrap();
+            assert_eq!(retdata, array![0, 6, 2, 7, 8, 9].span());
+        }
+    "#
+        ),
+        Contract::new(
+            "ConstructorRetdata",
+            indoc!(
+                r"
+                #[starknet::contract]
+                mod ConstructorRetdata {
+                    use array::ArrayTrait;
+                
+                    #[storage]
+                    struct Storage {}
+                
+                    #[derive(Serde, Drop)]
+                    struct Retdata {
+                        a: felt252,
+                        b: Span<felt252>,
+                        c: felt252,
+                    }
+
+                    #[constructor]
+                    fn constructor(ref self: ContractState) -> Option<Retdata> {
+                        Option::Some(
+                            Retdata {
+                                a: 6,
+                                b: array![7, 8].span(),
+                                c: 9
+                            }
+                        )
+                    }
+                }
+                "
+            )
+        )
     );
 
     let result = run_test_case(&test);

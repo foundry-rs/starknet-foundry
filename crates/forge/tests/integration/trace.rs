@@ -20,16 +20,16 @@ fn trace_deploy() {
                 let proxy = declare("TraceInfoProxy").unwrap();
                 let checker = declare("TraceInfoChecker").unwrap();
             
-                let checker_address = checker.deploy(@array![]).unwrap();
+                let (checker_address, _) = checker.deploy(@array![]).unwrap();
             
-                let proxy_address1 = proxy.deploy(@array![checker_address.into()]).unwrap();
+                let (proxy_address1, _) = proxy.deploy(@array![checker_address.into()]).unwrap();
             
                 let (proxy_address2, _) = deploy_syscall(
                     proxy.class_hash, 0, array![checker_address.into()].span(), false
                 )
                     .unwrap_syscall();
             
-                let proxy_address_3 = proxy
+                let (proxy_address_3, _) = proxy
                     .deploy_at(@array![checker_address.into()], 123.try_into().unwrap())
                     .unwrap();
                     
@@ -191,9 +191,9 @@ fn trace_call() {
                 let checker = declare("TraceInfoChecker").unwrap();
                 let dummy = declare("TraceDummy").unwrap();
             
-                let checker_address = checker.deploy(@array![]).unwrap();
-                let proxy_address = proxy.deploy(@array![checker_address.into()]).unwrap();
-                let dummy_address = dummy.deploy(@array![]).unwrap();
+                let (checker_address, _) = checker.deploy(@array![]).unwrap();
+                let (proxy_address, _) = proxy.deploy(@array![checker_address.into()]).unwrap();
+                let (dummy_address, _) = dummy.deploy(@array![]).unwrap();
             
                 let proxy_dispatcher = ITraceInfoProxyDispatcher { contract_address: proxy_address };
             
@@ -410,8 +410,8 @@ fn trace_failed_call() {
                 let proxy = declare("TraceInfoProxy").unwrap();
                 let checker = declare("TraceInfoChecker").unwrap();
             
-                let checker_address = checker.deploy(@array![]).unwrap();
-                let proxy_address = proxy.deploy(@array![checker_address.into()]).unwrap();
+                let (checker_address, _) = checker.deploy(@array![]).unwrap();
+                let (proxy_address, _) = proxy.deploy(@array![checker_address.into()]).unwrap();
             
                 let proxy_dispatcher = ITraceInfoProxySafeDispatcher { contract_address: proxy_address };
                 match proxy_dispatcher.with_panic(checker_address) {
@@ -564,8 +564,8 @@ fn trace_library_call_from_test() {
                 let checker = declare("TraceInfoChecker").unwrap();
                 let dummy = declare("TraceDummy").unwrap();
             
-                let checker_address = checker.deploy(@array![]).unwrap();
-                let dummy_address = dummy.deploy(@array![]).unwrap();
+                let (checker_address, _) = checker.deploy(@array![]).unwrap();
+                let (dummy_address, _) = dummy.deploy(@array![]).unwrap();
             
                 let proxy_lib_dispatcher = ITraceInfoProxyLibraryDispatcher { class_hash: proxy_hash };
             
@@ -757,8 +757,8 @@ fn trace_failed_library_call_from_test() {
                 let proxy = declare("TraceInfoProxy").unwrap();
                 let checker = declare("TraceInfoChecker").unwrap();
             
-                let checker_address = checker.deploy(@array![]).unwrap();
-                let proxy_address = proxy.deploy(@array![checker_address.into()]).unwrap();
+                let (checker_address, _) = checker.deploy(@array![]).unwrap();
+                let (proxy_address, _) = proxy.deploy(@array![checker_address.into()]).unwrap();
             
                 let proxy_dispatcher = ITraceInfoProxySafeDispatcher { contract_address: proxy_address };
                 match proxy_dispatcher.with_panic(checker_address) {
@@ -891,8 +891,8 @@ fn trace_l1_handler() {
                 let proxy = declare("TraceInfoProxy").unwrap();
                 let checker = declare("TraceInfoChecker").unwrap();
             
-                let checker_address = checker.deploy(@array![]).unwrap();
-                let proxy_address = proxy.deploy(@array![checker_address.into()]).unwrap();
+                let (checker_address, _) = checker.deploy(@array![]).unwrap();
+                let (proxy_address, _) = proxy.deploy(@array![checker_address.into()]).unwrap();
             
                 let mut l1_handler = L1HandlerTrait::new(checker_address, selector!("handle_l1_message"));
             

@@ -101,13 +101,15 @@ pub fn deploy_contract(
         &hints,
     );
 
-    deploy(
+    let (contract_address, _retdata) = deploy(
         &mut syscall_hint_processor,
         runtime_state,
         &class_hash,
         calldata,
     )
-    .unwrap()
+    .unwrap();
+
+    contract_address
 }
 
 pub fn deploy_wrapper(
@@ -128,12 +130,14 @@ pub fn deploy_wrapper(
         &hints,
     );
 
-    deploy(
+    let (contract_address, _retdata) = deploy(
         &mut syscall_hint_processor,
         runtime_state,
         class_hash,
         calldata,
-    )
+    )?;
+
+    Ok(contract_address)
 }
 
 pub fn deploy_at_wrapper(
@@ -155,13 +159,15 @@ pub fn deploy_at_wrapper(
         &hints,
     );
 
-    deploy_at(
+    let (contract_address, _retdata) = deploy_at(
         &mut syscall_hint_processor,
         runtime_state,
         class_hash,
         calldata,
         contract_address,
-    )
+    )?;
+
+    Ok(contract_address)
 }
 
 // This does contract call without the transaction layer. This way `call_contract` can return data and modify state.

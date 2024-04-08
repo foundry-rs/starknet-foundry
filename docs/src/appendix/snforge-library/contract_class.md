@@ -21,13 +21,13 @@ trait ContractClassTrait {
 
     fn deploy(
         self: @ContractClass, constructor_calldata: @Array::<felt252>
-    ) -> Result<ContractAddress, RevertedTransaction>;
+    ) -> SyscallResult<(ContractAddress, Span<felt252>)>;
 
     fn deploy_at(
         self: @ContractClass,
         constructor_calldata: @Array::<felt252>,
         contract_address: ContractAddress
-    ) -> Result<ContractAddress, RevertedTransaction>;
+    ) -> SyscallResult<(ContractAddress, Span<felt252>)>;
 
     fn new<T, +Into<T, ClassHash>>(class_hash: T) -> ContractClass;
 }

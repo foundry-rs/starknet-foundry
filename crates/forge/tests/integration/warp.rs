@@ -27,7 +27,7 @@ fn warp_basic() {
 
             fn deploy_warp_checker()  -> IWarpCheckerDispatcher {
                 let contract = declare("WarpChecker").unwrap();
-                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 IWarpCheckerDispatcher { contract_address }
             }
 
@@ -69,8 +69,11 @@ fn warp_basic() {
             fn warp_multiple() {
                 let contract = declare("WarpChecker").unwrap();
 
-                let warp_checker1 = IWarpCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };
-                let warp_checker2 = IWarpCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };
+                let (contract_address1, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address2, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+
+                let warp_checker1 = IWarpCheckerDispatcher { contract_address: contract_address1 };
+                let warp_checker2 = IWarpCheckerDispatcher { contract_address: contract_address2 };
 
                 let old_block_timestamp1 = warp_checker1.get_block_timestamp();
                 let old_block_timestamp2 = warp_checker2.get_block_timestamp();
@@ -96,8 +99,11 @@ fn warp_basic() {
             fn warp_all() {
                 let contract = declare("WarpChecker").unwrap();
 
-                let warp_checker1 = IWarpCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };
-                let warp_checker2 = IWarpCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };
+                let (contract_address1, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address2, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+
+                let warp_checker1 = IWarpCheckerDispatcher { contract_address: contract_address1 };
+                let warp_checker2 = IWarpCheckerDispatcher { contract_address: contract_address2 };
 
                 let old_block_timestamp1 = warp_checker1.get_block_timestamp();
                 let old_block_timestamp2 = warp_checker2.get_block_timestamp();
@@ -155,7 +161,7 @@ fn warp_complex() {
 
             fn deploy_warp_checker()  -> IWarpCheckerDispatcher {
                 let contract = declare("WarpChecker").unwrap();
-                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 IWarpCheckerDispatcher { contract_address }
             }
 
@@ -163,8 +169,11 @@ fn warp_complex() {
             fn warp_complex() {
                 let contract = declare("WarpChecker").unwrap();
 
-                let warp_checker1 = IWarpCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };
-                let warp_checker2 = IWarpCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };
+                let (contract_address1, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address2, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+
+                let warp_checker1 = IWarpCheckerDispatcher { contract_address: contract_address1 };
+                let warp_checker2 = IWarpCheckerDispatcher { contract_address: contract_address2 };
 
                 let old_block_timestamp2 = warp_checker2.get_block_timestamp();
 
@@ -233,7 +242,7 @@ fn warp_with_span() {
             }
 
             fn deploy_warp_checker() -> IWarpCheckerDispatcher {
-                let contract_address = declare("WarpChecker").unwrap().deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = declare("WarpChecker").unwrap().deploy(@ArrayTrait::new()).unwrap();
                 IWarpCheckerDispatcher { contract_address }
             }
 
