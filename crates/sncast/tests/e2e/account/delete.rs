@@ -65,7 +65,7 @@ pub async fn test_delete_abort() {
         "--name",
         "user3",
         "--network",
-        "alpha-goerli2",
+        "alpha-goerli",
     ];
 
     // Run test with a negative user input
@@ -98,7 +98,7 @@ pub async fn test_happy_case() {
         "--name",
         "user3",
         "--network",
-        "alpha-goerli2",
+        "alpha-goerli",
     ];
 
     // Run test with an affirmative user input
@@ -154,7 +154,7 @@ pub async fn test_happy_case_with_yes_flag() {
         "--name",
         "user3",
         "--network",
-        "alpha-goerli2",
+        "alpha-goerli",
         "--yes",
     ];
 
@@ -175,14 +175,14 @@ async fn create_tempdir_with_accounts_file(file_name: &str) -> TempDir {
 
     let json_data = indoc! {r#"
     {
-        "alpha-goerli": {
+        "alpha-sepolia": {
             "user0": {
                 "private_key": "0x1e9038bdc68ce1d27d54205256988e85",
                 "public_key": "0x2f91ed13f8f0f7d39b942c80bfcd3d0967809d99e0cc083606cbe59033d2b39",
                 "address": "0x4f5f24ceaae64434fa2bc2befd08976b51cf8f6a5d8257f7ec3616f61de263a"
             }
         },
-        "alpha-goerli2": {
+        "alpha-goerli": {
             "user3": {
                 "private_key": "0xe3e70682c2094cac629f6fbed82c07cd",
                 "public_key": "0x7e52885445756b313ea16849145363ccb73fb4ab0440dbac333cf9d13de82b9",

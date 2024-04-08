@@ -272,7 +272,7 @@ async fn test_nonexistent_account_address() {
         output,
         indoc! {r"
         command: script run
-        error: Account with address 0x1010101010011aaabbcc not found on network SN_GOERLI
+        error: Account with address 0x1010101010011aaabbcc not found on network SN_SEPOLIA
         "},
     );
 }
@@ -361,7 +361,7 @@ async fn test_run_script_twice_with_state_file_enabled() {
     let state_file_path = Utf8PathBuf::from_path_buf(
         script_dir
             .path()
-            .join(get_default_state_file_name(script_name, "alpha-goerli")),
+            .join(get_default_state_file_name(script_name, "alpha-sepolia")),
     )
     .unwrap();
     let tx_entries_after_first_run = read_txs_from_state_file(&state_file_path).unwrap().unwrap();
@@ -419,7 +419,7 @@ async fn test_state_file_contains_all_failed_txs() {
     let state_file_path = Utf8PathBuf::from_path_buf(
         script_dir
             .path()
-            .join(get_default_state_file_name(script_name, "alpha-goerli")),
+            .join(get_default_state_file_name(script_name, "alpha-sepolia")),
     )
     .unwrap();
     let tx_entries_after_first_run = read_txs_from_state_file(&state_file_path).unwrap().unwrap();
@@ -463,7 +463,7 @@ async fn test_state_file_rerun_failed_tx() {
     let state_file_path = Utf8PathBuf::from_path_buf(
         script_dir
             .path()
-            .join(get_default_state_file_name(script_name, "alpha-goerli")),
+            .join(get_default_state_file_name(script_name, "alpha-sepolia")),
     )
     .unwrap();
 

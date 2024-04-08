@@ -47,7 +47,7 @@ pub async fn test_happy_case() {
         contents_json,
         json!(
             {
-                "alpha-goerli": {
+                "alpha-sepolia": {
                   "my_account_add": {
                     "address": "0x123",
                     "class_hash": DEVNET_OZ_CLASS_HASH_CAIRO_0,
@@ -91,7 +91,7 @@ pub async fn test_existent_account_address() {
         contents_json,
         json!(
             {
-                "alpha-goerli": {
+                "alpha-sepolia": {
                   "my_account_add": {
                     "address": DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS,
                     "class_hash": DEVNET_OZ_CLASS_HASH_CAIRO_1,
@@ -237,7 +237,7 @@ pub async fn test_happy_case_add_profile() {
         contents_json,
         json!(
             {
-                "alpha-goerli": {
+                "alpha-sepolia": {
                   "my_account_add": {
                     "address": "0x1",
                     "class_hash": DEVNET_OZ_CLASS_HASH_CAIRO_0,
@@ -292,7 +292,7 @@ pub async fn test_detect_deployed() {
         contents_json,
         json!(
             {
-                "alpha-goerli": {
+                "alpha-sepolia": {
                   "my_account_add": {
                     "address": DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS,
                     "class_hash": DEVNET_OZ_CLASS_HASH_CAIRO_1,
@@ -392,7 +392,7 @@ pub async fn test_private_key_from_file() {
         contents_json,
         json!(
             {
-                "alpha-goerli": {
+                "alpha-sepolia": {
                   "my_account_add": {
                     "address": "0x123",
                     "deployed": false,
@@ -531,7 +531,7 @@ pub async fn test_private_key_as_int_in_file() {
         contents_json,
         json!(
             {
-                "alpha-goerli": {
+                "alpha-sepolia": {
                   "my_account_add": {
                     "address": DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS,
                     "deployed": true,
