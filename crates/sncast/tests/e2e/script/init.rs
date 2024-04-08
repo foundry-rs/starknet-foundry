@@ -60,9 +60,9 @@ fn test_script_init_happy_case() {
         indoc! {r#"
             use sncast_std::{call, CallResult};
 
-            // The example below uses a contract deployed to the Goerli testnet
+            // The example below uses a contract deployed to the Sepolia testnet
             fn main() {
-                let contract_address = 0x7ad10abd2cc24c2e066a2fee1e435cd5fa60a37f9268bfbaf2e98ce5ca3c436;
+                let contract_address = 0x07e867f1fa6da2108dd2b3d534f1fbec411c5ec9504eb3baa1e49c7a0bef5ab5;
                 let call_result = call(contract_address.try_into().unwrap(), 'get_greeting', array![]);
                 assert(*call_result.data[0]=='Hello, Starknet!', *call_result.data[0]);
                 println!("{:?}", call_result);
