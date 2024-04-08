@@ -267,6 +267,7 @@ impl Default for CheatnetState {
         test_code_entry_point.class_hash = Some(class_hash!(TEST_CONTRACT_CLASS_HASH));
         let test_call = Rc::new(RefCell::new(CallTrace {
             entry_point: test_code_entry_point,
+            result: CallResult::Success { ret_data: vec![] },
             ..Default::default()
         }));
         Self {
