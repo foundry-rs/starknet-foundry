@@ -30,7 +30,6 @@ use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cairo_vm::vm::vm_core::VirtualMachine;
 
 use blockifier::state::errors::StateError;
-use cairo_vm::vm::errors::memory_errors::MemoryError;
 use conversions::byte_array::ByteArray;
 use conversions::felt252::SerializeAsFelt252Vec;
 use starknet_api::StarknetApiError;
@@ -271,7 +270,6 @@ impl<Extension: ExtensionLogic> ExtendedRuntime<Extension> {
                 return res;
             }
             Ok(CheatcodeHandlingResult::Handled(res)) => Ok(res),
-            Err(EnhancedHintError::Hint(hint)) => return Err(hint),
             Err(err) => Err(ByteArray::from(err.to_string().as_str()).serialize_no_magic()),
         }
         .serialize_as_felt252_vec();
@@ -456,10 +454,6 @@ pub enum EnhancedHintError {
     #[error(transparent)]
     Anyhow(#[from] anyhow::Error),
     #[error(transparent)]
-    VirtualMachine(#[from] VirtualMachineError),
-    #[error(transparent)]
-    Memory(#[from] MemoryError),
-    #[error(transparent)]
     State(#[from] StateError),
     #[error(transparent)]
     SerdeJson(#[from] serde_json::Error),
@@ -467,13 +461,4 @@ pub enum EnhancedHintError {
     StarknetApi(#[from] StarknetApiError),
     #[error("Failed to parse {path} file")]
     FileParsing { path: String },
-}
-
-impl From<EnhancedHintError> for HintError {
-    fn from(error: EnhancedHintError) -> Self {
-        match error {
-            EnhancedHintError::Hint(error) => error,
-            error => HintError::CustomHint(error.to_string().into_boxed_str()),
-        }
-    }
 }
