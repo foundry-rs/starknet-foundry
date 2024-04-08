@@ -208,8 +208,8 @@ fn handling_string_errors() {
     let (contract_address, _) = contract.deploy(@calldata).unwrap();
     let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
     
-    // Notice the `map_string_error` helper usage here, and different error type
-    match safe_dispatcher.do_a_string_panic().map_string_error() { 
+    // Notice the `map_error_to_string` helper usage here, and different error type
+    match safe_dispatcher.do_a_string_panic().map_error_to_string() { 
         Result::Ok(_) => panic_with_felt252('shouldve panicked'),
         Result::Err(panic_data) => {
             match x { 
@@ -225,7 +225,7 @@ fn handling_string_errors() {
     };
 }
 ```
-You also could skip the de-serialization of the `panic_data`, and not use `map_string_error`, but this way you can actually use assertions on the `ByteArray` that was used to panic. 
+You also could skip the de-serialization of the `panic_data`, and not use `map_error_to_string`, but this way you can actually use assertions on the `ByteArray` that was used to panic. 
 
 > 📝 **Note**
 > 

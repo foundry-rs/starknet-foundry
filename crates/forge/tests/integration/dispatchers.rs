@@ -215,7 +215,7 @@ fn handling_bytearray_based_errors() {
             let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
             let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
         
-            match safe_dispatcher.do_a_panic_with_bytearray().map_string_error() {
+            match safe_dispatcher.do_a_panic_with_bytearray().map_error_to_string() {
                 Result::Ok(_) => panic_with_felt252('shouldve panicked'),
                 Result::Err(x) => {
                         match x {

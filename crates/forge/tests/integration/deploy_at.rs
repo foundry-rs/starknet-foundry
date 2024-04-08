@@ -120,7 +120,7 @@ fn deploy_at_error_handling() {
         indoc!(
             r#"
         use array::ArrayTrait;
-        use snforge_std::{ declare, ContractClassTrait, RevertedTransaction };
+        use snforge_std::{ declare, ContractClassTrait };
         use starknet::ContractAddress;
 
         #[test]

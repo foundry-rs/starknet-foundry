@@ -2,21 +2,6 @@ use starknet::{ContractAddress, ClassHash, testing::cheatcode, SyscallResult};
 use super::super::byte_array::byte_array_as_felt_array;
 use core::traits::Into;
 
-#[derive(Drop, Clone)]
-struct RevertedTransaction {
-    panic_data: Array::<felt252>,
-}
-
-trait RevertedTransactionTrait {
-    fn first(self: @RevertedTransaction) -> felt252;
-}
-
-impl RevertedTransactionImpl of RevertedTransactionTrait {
-    fn first(self: @RevertedTransaction) -> felt252 {
-        *self.panic_data.at(0)
-    }
-}
-
 #[derive(Drop, Clone, Copy)]
 struct ContractClass {
     class_hash: ClassHash,
@@ -148,8 +133,8 @@ impl ContractClassImpl of ContractClassTrait {
 
 /// Declares a contract
 /// `contract` - name of a contract as Cairo string. It is a name of the contract (part after mod keyword) e.g. "HelloStarknet"
-/// Returns the `ContractClass` which was declared or RevertedTransaction if declaration failed
-fn declare(contract: ByteArray) -> Result<ContractClass, RevertedTransaction> {
+/// Returns the `ContractClass` which was declared or panic data if declaration failed
+fn declare(contract: ByteArray) -> Result<ContractClass, Array<felt252>> {
     let span = cheatcode::<'declare'>(byte_array_as_felt_array(@contract).span());
 
     let exit_code = *span[0];
@@ -175,7 +160,7 @@ fn declare(contract: ByteArray) -> Result<ContractClass, RevertedTransaction> {
             i += 1;
         };
 
-        Result::Err(RevertedTransaction { panic_data })
+        Result::Err(panic_data)
     }
 }
 
