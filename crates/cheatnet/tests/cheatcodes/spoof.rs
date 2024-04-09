@@ -16,20 +16,15 @@ trait SpoofTrait {
 
 impl<'a> SpoofTrait for TestEnvironment<'a> {
     fn spoof(&mut self, target: CheatTarget, tx_info_mock: TxInfoMock, span: CheatSpan) {
-        self.runtime_state
-            .cheatnet_state
-            .spoof(target, tx_info_mock, span);
+        self.cheatnet_state.spoof(target, tx_info_mock, span);
     }
 
     fn start_spoof(&mut self, target: CheatTarget, tx_info_mock: TxInfoMock) {
-        self.runtime_state
-            .cheatnet_state
-            .start_spoof(target, tx_info_mock);
+        self.cheatnet_state.start_spoof(target, tx_info_mock);
     }
 
     fn stop_spoof(&mut self, contract_address: &ContractAddress) {
-        self.runtime_state
-            .cheatnet_state
+        self.cheatnet_state
             .stop_spoof(CheatTarget::One(*contract_address));
     }
 }
@@ -461,10 +456,7 @@ fn spoof_all_stop() {
 
     test_env.start_spoof(CheatTarget::All, tx_info_mock);
 
-    test_env
-        .runtime_state
-        .cheatnet_state
-        .stop_spoof(CheatTarget::All);
+    test_env.cheatnet_state.stop_spoof(CheatTarget::All);
 
     test_env.assert_tx_info(&contract_address, &tx_info_before);
 }
@@ -499,10 +491,7 @@ fn spoof_multiple() {
     test_env.assert_tx_info(&contract_address_1, &expected_tx_info_1);
     test_env.assert_tx_info(&contract_address_2, &expected_tx_info_2);
 
-    test_env
-        .runtime_state
-        .cheatnet_state
-        .stop_spoof(CheatTarget::All);
+    test_env.cheatnet_state.stop_spoof(CheatTarget::All);
 
     test_env.assert_tx_info(&contract_address_1, &tx_info_before_1);
     test_env.assert_tx_info(&contract_address_2, &tx_info_before_2);

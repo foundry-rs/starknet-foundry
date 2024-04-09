@@ -15,20 +15,17 @@ trait RollTrait {
 
 impl<'a> RollTrait for TestEnvironment<'a> {
     fn roll(&mut self, target: CheatTarget, block_number: u128, span: CheatSpan) {
-        self.runtime_state
-            .cheatnet_state
+        self.cheatnet_state
             .roll(target, Felt252::from(block_number), span);
     }
 
     fn start_roll(&mut self, target: CheatTarget, block_number: u128) {
-        self.runtime_state
-            .cheatnet_state
+        self.cheatnet_state
             .start_roll(target, Felt252::from(block_number));
     }
 
     fn stop_roll(&mut self, contract_address: &ContractAddress) {
-        self.runtime_state
-            .cheatnet_state
+        self.cheatnet_state
             .stop_roll(CheatTarget::One(*contract_address));
     }
 }
@@ -227,10 +224,7 @@ fn roll_all_stop() {
         &[Felt252::from(123)],
     );
 
-    test_env
-        .runtime_state
-        .cheatnet_state
-        .stop_roll(CheatTarget::All);
+    test_env.cheatnet_state.stop_roll(CheatTarget::All);
 
     assert_success(
         test_env.call_contract(&contract_address, "get_block_number", &[]),
@@ -249,7 +243,7 @@ fn roll_multiple() {
     let contract_address1 = test_env.deploy_wrapper(&class_hash, &[]);
     let contract_address2 = test_env.deploy_wrapper(&class_hash, &[]);
 
-    test_env.runtime_state.cheatnet_state.start_roll(
+    test_env.cheatnet_state.start_roll(
         CheatTarget::Multiple(vec![contract_address1, contract_address2]),
         Felt252::from(123),
     );
@@ -264,7 +258,6 @@ fn roll_multiple() {
     );
 
     test_env
-        .runtime_state
         .cheatnet_state
         .stop_roll(CheatTarget::Multiple(vec![
             contract_address1,

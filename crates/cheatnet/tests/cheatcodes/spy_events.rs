@@ -1,8 +1,6 @@
 use crate::cheatcodes::test_environment::TestEnvironment;
 use crate::common::get_contracts;
-use crate::common::{
-    call_contract, deploy_contract, felt_selector_from_name, state::build_runtime_state,
-};
+use crate::common::{call_contract, deploy_contract, felt_selector_from_name};
 use blockifier::state::cached_state::{
     CachedState, GlobalContractCache, GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST,
 };
@@ -30,13 +28,11 @@ trait SpyTrait {
 
 impl<'a> SpyTrait for TestEnvironment<'a> {
     fn spy_events(&mut self, spy_on: SpyTarget) -> usize {
-        self.runtime_state.cheatnet_state.spy_events(spy_on)
+        self.cheatnet_state.spy_events(spy_on)
     }
 
     fn fetch_events(&mut self, id: usize) -> (usize, Vec<Felt252>) {
-        self.runtime_state
-            .cheatnet_state
-            .fetch_events(&Felt252::from(id))
+        self.cheatnet_state.fetch_events(&Felt252::from(id))
     }
 }
 
@@ -495,16 +491,15 @@ fn capture_cairo0_event() {
         GlobalContractCache::new(GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST),
     );
     let mut cheatnet_state = CheatnetState::default();
-    let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
     let contract_address = deploy_contract(
         &mut cached_state,
-        &mut runtime_state,
+        &mut cheatnet_state,
         "SpyEventsCairo0",
         &[],
     );
 
-    let id = runtime_state.cheatnet_state.spy_events(SpyTarget::All);
+    let id = cheatnet_state.spy_events(SpyTarget::All);
 
     let selector = felt_selector_from_name("test_cairo0_event_collection");
 
@@ -515,15 +510,13 @@ fn capture_cairo0_event() {
 
     call_contract(
         &mut cached_state,
-        &mut runtime_state,
+        &mut cheatnet_state,
         &contract_address,
         &selector,
         &[cairo0_contract_address.clone()],
     );
 
-    let (length, serialized_events) = runtime_state
-        .cheatnet_state
-        .fetch_events(&Felt252::from(id));
+    let (length, serialized_events) = cheatnet_state.fetch_events(&Felt252::from(id));
 
     let events = felt_vec_to_event_vec(&serialized_events);
 

@@ -1,7 +1,6 @@
 use crate::cheatcodes::spy_events::felt_vec_to_event_vec;
 use crate::common::assertions::assert_success;
 use crate::common::get_contracts;
-use crate::common::state::build_runtime_state;
 use blockifier::state::cached_state::{
     CachedState, GlobalContractCache, GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST,
 };
@@ -32,20 +31,17 @@ trait PrankTrait {
 
 impl<'a> PrankTrait for TestEnvironment<'a> {
     fn prank(&mut self, target: CheatTarget, new_address: u128, span: CheatSpan) {
-        self.runtime_state
-            .cheatnet_state
+        self.cheatnet_state
             .prank(target, ContractAddress::from(new_address), span);
     }
 
     fn start_prank(&mut self, target: CheatTarget, new_address: u128) {
-        self.runtime_state
-            .cheatnet_state
+        self.cheatnet_state
             .start_prank(target, ContractAddress::from(new_address));
     }
 
     fn stop_prank(&mut self, contract_address: &ContractAddress) {
-        self.runtime_state
-            .cheatnet_state
+        self.cheatnet_state
             .stop_prank(CheatTarget::One(*contract_address));
     }
 }
@@ -208,10 +204,7 @@ fn prank_all() {
         &[Felt252::from(123)],
     );
 
-    test_env
-        .runtime_state
-        .cheatnet_state
-        .stop_prank(CheatTarget::All);
+    test_env.cheatnet_state.stop_prank(CheatTarget::All);
 
     assert_success(
         test_env.call_contract(&contract_address, "get_caller_address", &[]),
@@ -245,7 +238,6 @@ fn prank_multiple() {
     );
 
     test_env
-        .runtime_state
         .cheatnet_state
         .stop_prank(CheatTarget::Multiple(vec![
             contract_address1,
@@ -312,19 +304,15 @@ fn prank_cairo0_callback() {
         GlobalContractCache::new(GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST),
     );
     let mut cheatnet_state = CheatnetState::default();
-    let runtime_state = build_runtime_state(&mut cheatnet_state);
     let mut test_env = TestEnvironment {
         cached_state,
-        runtime_state,
+        cheatnet_state: &mut cheatnet_state,
     };
 
     let contract_address = test_env.deploy("Cairo1Contract_v1", &[]);
 
     test_env.start_prank(CheatTarget::One(contract_address), 123);
-    let id = test_env
-        .runtime_state
-        .cheatnet_state
-        .spy_events(SpyTarget::All);
+    let id = test_env.cheatnet_state.spy_events(SpyTarget::All);
 
     let expected_caller_address = Felt252::from(123);
 
@@ -344,10 +332,7 @@ fn prank_cairo0_callback() {
         &[],
     );
 
-    let (_, events) = test_env
-        .runtime_state
-        .cheatnet_state
-        .fetch_events(&Felt252::from(id));
+    let (_, events) = test_env.cheatnet_state.fetch_events(&Felt252::from(id));
 
     let events = felt_vec_to_event_vec(&events);
 

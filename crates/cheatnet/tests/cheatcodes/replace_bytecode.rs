@@ -36,8 +36,7 @@ impl ReplaceBytecodeTrait for TestEnvironment<'_> {
         contract_address: ContractAddress,
         class_hash: ClassHash,
     ) {
-        self.runtime_state
-            .cheatnet_state
+        self.cheatnet_state
             .replace_class_for_contract(contract_address, class_hash);
     }
 }

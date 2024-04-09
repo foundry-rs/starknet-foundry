@@ -16,20 +16,17 @@ trait WarpTrait {
 
 impl<'a> WarpTrait for TestEnvironment<'a> {
     fn warp(&mut self, target: CheatTarget, timestamp: u128, span: CheatSpan) {
-        self.runtime_state
-            .cheatnet_state
+        self.cheatnet_state
             .warp(target, Felt252::from(timestamp), span);
     }
 
     fn start_warp(&mut self, target: CheatTarget, timestamp: u128) {
-        self.runtime_state
-            .cheatnet_state
+        self.cheatnet_state
             .start_warp(target, Felt252::from(timestamp));
     }
 
     fn stop_warp(&mut self, contract_address: &ContractAddress) {
-        self.runtime_state
-            .cheatnet_state
+        self.cheatnet_state
             .stop_warp(CheatTarget::One(*contract_address));
     }
 }
@@ -229,10 +226,7 @@ fn warp_all_stop() {
         &[Felt252::from(123)],
     );
 
-    test_env
-        .runtime_state
-        .cheatnet_state
-        .stop_warp(CheatTarget::All);
+    test_env.cheatnet_state.stop_warp(CheatTarget::All);
 
     assert_success(
         test_env.call_contract(&contract_address, "get_block_timestamp", &[]),
@@ -251,7 +245,7 @@ fn warp_multiple() {
     let contract_address1 = test_env.deploy_wrapper(&class_hash, &[]);
     let contract_address2 = test_env.deploy_wrapper(&class_hash, &[]);
 
-    test_env.runtime_state.cheatnet_state.start_warp(
+    test_env.cheatnet_state.start_warp(
         CheatTarget::Multiple(vec![contract_address1, contract_address2]),
         Felt252::from(123),
     );
@@ -266,7 +260,6 @@ fn warp_multiple() {
     );
 
     test_env
-        .runtime_state
         .cheatnet_state
         .stop_warp(CheatTarget::Multiple(vec![
             contract_address1,

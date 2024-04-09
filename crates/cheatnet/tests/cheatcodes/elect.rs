@@ -16,22 +16,17 @@ trait ElectTrait {
 
 impl<'a> ElectTrait for TestEnvironment<'a> {
     fn elect(&mut self, target: CheatTarget, sequencer_address: u128, span: CheatSpan) {
-        self.runtime_state.cheatnet_state.elect(
-            target,
-            ContractAddress::from(sequencer_address),
-            span,
-        );
+        self.cheatnet_state
+            .elect(target, ContractAddress::from(sequencer_address), span);
     }
 
     fn start_elect(&mut self, target: CheatTarget, sequencer_address: u128) {
-        self.runtime_state
-            .cheatnet_state
+        self.cheatnet_state
             .start_elect(target, ContractAddress::from(sequencer_address));
     }
 
     fn stop_elect(&mut self, contract_address: &ContractAddress) {
-        self.runtime_state
-            .cheatnet_state
+        self.cheatnet_state
             .stop_elect(CheatTarget::One(*contract_address));
     }
 }
@@ -102,7 +97,6 @@ fn elect_stop() {
     );
 
     test_env
-        .runtime_state
         .cheatnet_state
         .stop_elect(CheatTarget::One(contract_address));
 
@@ -246,10 +240,7 @@ fn elect_all_stop() {
         &[Felt252::from(123)],
     );
 
-    test_env
-        .runtime_state
-        .cheatnet_state
-        .stop_elect(CheatTarget::All);
+    test_env.cheatnet_state.stop_elect(CheatTarget::All);
 
     assert_success(
         test_env.call_contract(&contract_address, "get_sequencer_address", &[]),
@@ -283,7 +274,6 @@ fn elect_multiple() {
     );
 
     test_env
-        .runtime_state
         .cheatnet_state
         .stop_elect(CheatTarget::Multiple(vec![
             contract_address1,
@@ -363,7 +353,6 @@ fn elect_in_constructor_with_span() {
 
     let class_hash = test_env.declare("ConstructorElectChecker", &contracts_data);
     let precalculated_address = test_env
-        .runtime_state
         .cheatnet_state
         .precalculate_address(&class_hash, &[]);
 
@@ -399,7 +388,6 @@ fn elect_no_constructor_with_span() {
 
     let class_hash = test_env.declare("ElectChecker", &contracts_data);
     let precalculated_address = test_env
-        .runtime_state
         .cheatnet_state
         .precalculate_address(&class_hash, &[]);
 
