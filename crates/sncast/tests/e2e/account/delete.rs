@@ -16,7 +16,7 @@ pub async fn test_no_accounts_in_network() {
         "--name",
         "user99",
         "--network",
-        "goerli0-network",
+        "my-custom-network",
     ]);
 
     let snapbox = runner(&args);
@@ -26,7 +26,7 @@ pub async fn test_no_accounts_in_network() {
         output,
         indoc! {r"
         command: account delete
-        error: No accounts defined for network = goerli0-network
+        error: No accounts defined for network = my-custom-network
         "},
     );
 }
@@ -65,7 +65,7 @@ pub async fn test_delete_abort() {
         "--name",
         "user3",
         "--network",
-        "alpha-goerli",
+        "custom-network",
     ];
 
     // Run test with a negative user input
@@ -98,7 +98,7 @@ pub async fn test_happy_case() {
         "--name",
         "user3",
         "--network",
-        "alpha-goerli",
+        "custom-network",
     ];
 
     // Run test with an affirmative user input
@@ -154,7 +154,7 @@ pub async fn test_happy_case_with_yes_flag() {
         "--name",
         "user3",
         "--network",
-        "alpha-goerli",
+        "custom-network",
         "--yes",
     ];
 
@@ -182,7 +182,7 @@ async fn create_tempdir_with_accounts_file(file_name: &str) -> TempDir {
                 "address": "0x4f5f24ceaae64434fa2bc2befd08976b51cf8f6a5d8257f7ec3616f61de263a"
             }
         },
-        "alpha-goerli": {
+        "custom-network": {
             "user3": {
                 "private_key": "0xe3e70682c2094cac629f6fbed82c07cd",
                 "public_key": "0x7e52885445756b313ea16849145363ccb73fb4ab0440dbac333cf9d13de82b9",
