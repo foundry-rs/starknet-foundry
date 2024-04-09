@@ -2,7 +2,6 @@ use crate::cheatcodes::{map_entry_address, variable_address};
 use crate::common::get_contracts;
 use cairo_felt::Felt252;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::storage::load;
-use cheatnet::state::CheatnetState;
 use starknet_api::core::ContractAddress;
 
 use super::test_environment::TestEnvironment;
@@ -11,7 +10,7 @@ trait LoadTrait {
     fn load(&mut self, target: ContractAddress, storage_address: &Felt252) -> Felt252;
 }
 
-impl<'a> LoadTrait for TestEnvironment<'a> {
+impl LoadTrait for TestEnvironment {
     fn load(&mut self, target: ContractAddress, storage_address: &Felt252) -> Felt252 {
         load(&mut self.cached_state, target, storage_address).unwrap()
     }
@@ -19,8 +18,7 @@ impl<'a> LoadTrait for TestEnvironment<'a> {
 
 #[test]
 fn load_simple_state() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
     let contracts_data = get_contracts();
 
     let class_hash = test_env.declare("HelloStarknet", &contracts_data);
@@ -39,8 +37,7 @@ fn load_simple_state() {
 
 #[test]
 fn load_state_map_simple_value() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
     let contracts_data = get_contracts();
 
     let class_hash = test_env.declare("MapSimpleValueSimpleKey", &contracts_data);

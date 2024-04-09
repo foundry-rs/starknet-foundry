@@ -1,6 +1,6 @@
 use crate::{common::assertions::assert_success, common::get_contracts};
 use cairo_felt::Felt252;
-use cheatnet::state::{CheatSpan, CheatTarget, CheatnetState};
+use cheatnet::state::{CheatSpan, CheatTarget};
 use conversions::IntoConv;
 use starknet_api::core::ContractAddress;
 
@@ -14,7 +14,7 @@ trait WarpTrait {
     fn stop_warp(&mut self, contract_address: &ContractAddress);
 }
 
-impl<'a> WarpTrait for TestEnvironment<'a> {
+impl WarpTrait for TestEnvironment {
     fn warp(&mut self, target: CheatTarget, timestamp: u128, span: CheatSpan) {
         self.cheatnet_state
             .warp(target, Felt252::from(timestamp), span);
@@ -33,8 +33,7 @@ impl<'a> WarpTrait for TestEnvironment<'a> {
 
 #[test]
 fn warp_simple() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("WarpChecker", &[]);
 
@@ -46,8 +45,7 @@ fn warp_simple() {
 
 #[test]
 fn warp_with_other_syscall() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("WarpChecker", &[]);
 
@@ -60,8 +58,7 @@ fn warp_with_other_syscall() {
 
 #[test]
 fn warp_in_constructor() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
     let contracts_data = get_contracts();
 
     let class_hash = test_env.declare("ConstructorWarpChecker", &contracts_data);
@@ -79,8 +76,7 @@ fn warp_in_constructor() {
 
 #[test]
 fn warp_stop() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("WarpChecker", &[]);
 
@@ -101,8 +97,7 @@ fn warp_stop() {
 
 #[test]
 fn warp_double() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("WarpChecker", &[]);
 
@@ -124,8 +119,7 @@ fn warp_double() {
 
 #[test]
 fn warp_proxy() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("WarpChecker", &[]);
     let proxy_address = test_env.deploy("WarpCheckerProxy", &[]);
@@ -148,8 +142,7 @@ fn warp_proxy() {
 
 #[test]
 fn warp_library_call() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
     let class_hash = test_env.declare("WarpChecker", &contracts_data);
@@ -173,8 +166,7 @@ fn warp_library_call() {
 
 #[test]
 fn warp_all_simple() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("WarpChecker", &[]);
 
@@ -186,8 +178,7 @@ fn warp_all_simple() {
 
 #[test]
 fn warp_all_then_one() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("WarpChecker", &[]);
 
@@ -200,8 +191,7 @@ fn warp_all_then_one() {
 
 #[test]
 fn warp_one_then_all() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("WarpChecker", &[]);
 
@@ -214,8 +204,7 @@ fn warp_one_then_all() {
 
 #[test]
 fn warp_all_stop() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("WarpChecker", &[]);
 
@@ -236,8 +225,7 @@ fn warp_all_stop() {
 
 #[test]
 fn warp_multiple() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
     let class_hash = test_env.declare("WarpChecker", &contracts_data);
@@ -278,8 +266,7 @@ fn warp_multiple() {
 
 #[test]
 fn warp_simple_with_span() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("WarpChecker", &[]);
 
@@ -305,8 +292,7 @@ fn warp_simple_with_span() {
 
 #[test]
 fn warp_proxy_with_span() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
     let class_hash = test_env.declare("WarpCheckerProxy", &contracts_data);
@@ -329,8 +315,7 @@ fn warp_proxy_with_span() {
 
 #[test]
 fn warp_in_constructor_with_span() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
 
@@ -362,8 +347,7 @@ fn warp_in_constructor_with_span() {
 
 #[test]
 fn warp_no_constructor_with_span() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
 
@@ -391,8 +375,7 @@ fn warp_no_constructor_with_span() {
 
 #[test]
 fn warp_override_span() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("WarpChecker", &[]);
 
@@ -432,8 +415,7 @@ fn warp_override_span() {
 
 #[test]
 fn warp_library_call_with_span() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
     let class_hash = test_env.declare("WarpChecker", &contracts_data);
@@ -459,8 +441,7 @@ fn warp_library_call_with_span() {
 
 #[test]
 fn warp_all_span() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address_1 = test_env.deploy("WarpChecker", &[]);
     let contract_address_2 = test_env.deploy("WarpCheckerLibCall", &[]);

@@ -9,18 +9,18 @@ use cheatnet::state::{CheatnetState, ExtendedStateReader};
 use starknet_api::core::ClassHash;
 use starknet_api::core::ContractAddress;
 
-pub struct TestEnvironment<'a> {
+pub struct TestEnvironment {
     pub cached_state: CachedState<ExtendedStateReader>,
-    pub cheatnet_state: &'a mut CheatnetState,
+    pub cheatnet_state: CheatnetState,
 }
 
-impl<'a> TestEnvironment<'a> {
-    pub fn new(cheatnet_state: &'a mut CheatnetState) -> Self {
+impl TestEnvironment {
+    pub fn new() -> Self {
         let cached_state = create_cached_state();
 
         Self {
             cached_state,
-            cheatnet_state,
+            cheatnet_state: CheatnetState::default(),
         }
     }
 
@@ -31,7 +31,7 @@ impl<'a> TestEnvironment<'a> {
     pub fn deploy(&mut self, contract_name: &str, calldata: &[Felt252]) -> ContractAddress {
         deploy_contract(
             &mut self.cached_state,
-            self.cheatnet_state,
+            &mut self.cheatnet_state,
             contract_name,
             calldata,
         )
@@ -44,7 +44,7 @@ impl<'a> TestEnvironment<'a> {
     ) -> ContractAddress {
         deploy_wrapper(
             &mut self.cached_state,
-            self.cheatnet_state,
+            &mut self.cheatnet_state,
             class_hash,
             calldata,
         )
@@ -59,7 +59,7 @@ impl<'a> TestEnvironment<'a> {
     ) -> CallResult {
         call_contract(
             &mut self.cached_state,
-            self.cheatnet_state,
+            &mut self.cheatnet_state,
             contract_address,
             &felt_selector_from_name(selector),
             calldata,

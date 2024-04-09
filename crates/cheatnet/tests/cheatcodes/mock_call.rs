@@ -31,7 +31,7 @@ trait MockCallTrait {
     fn stop_mock_call(&mut self, contract_address: &ContractAddress, function_name: &str);
 }
 
-impl<'a> MockCallTrait for TestEnvironment<'a> {
+impl MockCallTrait for TestEnvironment {
     fn mock_call(
         &mut self,
         contract_address: &ContractAddress,
@@ -631,8 +631,7 @@ fn mock_call_nonexisting_contract() {
 
 #[test]
 fn mock_call_simple_with_span() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("MockChecker", &[Felt252::from(420)]);
 
@@ -659,8 +658,7 @@ fn mock_call_simple_with_span() {
 
 #[test]
 fn mock_call_proxy_with_span() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("MockChecker", &[Felt252::from(420)]);
     let proxy_address = test_env.deploy("MockCheckerProxy", &[]);
@@ -696,8 +694,7 @@ fn mock_call_proxy_with_span() {
 
 #[test]
 fn mock_call_in_constructor_with_span() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
 
@@ -734,8 +731,7 @@ fn mock_call_in_constructor_with_span() {
 
 #[test]
 fn mock_call_twice_in_function() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
 
@@ -770,8 +766,7 @@ fn mock_call_twice_in_function() {
 
 #[test]
 fn mock_call_override_span() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("MockChecker", &[111.into()]);
 

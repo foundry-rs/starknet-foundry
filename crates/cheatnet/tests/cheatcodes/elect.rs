@@ -1,7 +1,7 @@
 use super::test_environment::TestEnvironment;
 use crate::{common::assertions::assert_success, common::get_contracts};
 use cairo_felt::Felt252;
-use cheatnet::state::{CheatSpan, CheatTarget, CheatnetState};
+use cheatnet::state::{CheatSpan, CheatTarget};
 use conversions::IntoConv;
 use runtime::starknet::context::SEQUENCER_ADDRESS;
 use starknet_api::core::{ContractAddress, PatriciaKey};
@@ -14,7 +14,7 @@ trait ElectTrait {
     fn stop_elect(&mut self, contract_address: &ContractAddress);
 }
 
-impl<'a> ElectTrait for TestEnvironment<'a> {
+impl ElectTrait for TestEnvironment {
     fn elect(&mut self, target: CheatTarget, sequencer_address: u128, span: CheatSpan) {
         self.cheatnet_state
             .elect(target, ContractAddress::from(sequencer_address), span);
@@ -33,8 +33,7 @@ impl<'a> ElectTrait for TestEnvironment<'a> {
 
 #[test]
 fn elect_simple() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("ElectChecker", &[]);
 
@@ -48,8 +47,7 @@ fn elect_simple() {
 
 #[test]
 fn elect_with_other_syscall() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("ElectChecker", &[]);
 
@@ -63,8 +61,7 @@ fn elect_with_other_syscall() {
 
 #[test]
 fn elect_in_constructor() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
 
@@ -84,8 +81,7 @@ fn elect_in_constructor() {
 
 #[test]
 fn elect_stop() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("ElectChecker", &[]);
 
@@ -108,8 +104,7 @@ fn elect_stop() {
 
 #[test]
 fn elect_double() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("ElectChecker", &[]);
 
@@ -131,8 +126,7 @@ fn elect_double() {
 
 #[test]
 fn elect_proxy() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("ElectChecker", &[]);
     let proxy_address = test_env.deploy("ElectCheckerProxy", &[]);
@@ -155,8 +149,7 @@ fn elect_proxy() {
 
 #[test]
 fn elect_library_call() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
     let class_hash = test_env.declare("ElectChecker", &contracts_data);
@@ -181,8 +174,7 @@ fn elect_library_call() {
 
 #[test]
 fn elect_all_simple() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("ElectChecker", &[]);
 
@@ -196,8 +188,7 @@ fn elect_all_simple() {
 
 #[test]
 fn elect_all_then_one() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("ElectChecker", &[]);
 
@@ -212,8 +203,7 @@ fn elect_all_then_one() {
 
 #[test]
 fn elect_one_then_all() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("ElectChecker", &[]);
 
@@ -228,8 +218,7 @@ fn elect_one_then_all() {
 
 #[test]
 fn elect_all_stop() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("ElectChecker", &[]);
 
@@ -250,8 +239,7 @@ fn elect_all_stop() {
 
 #[test]
 fn elect_multiple() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
     let class_hash = test_env.declare("ElectChecker", &contracts_data);
@@ -292,8 +280,7 @@ fn elect_multiple() {
 
 #[test]
 fn elect_simple_with_span() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("ElectChecker", &[]);
 
@@ -319,8 +306,7 @@ fn elect_simple_with_span() {
 
 #[test]
 fn elect_proxy_with_span() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
     let class_hash = test_env.declare("ElectCheckerProxy", &contracts_data);
@@ -346,8 +332,7 @@ fn elect_proxy_with_span() {
 
 #[test]
 fn elect_in_constructor_with_span() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
 
@@ -381,8 +366,7 @@ fn elect_in_constructor_with_span() {
 
 #[test]
 fn elect_no_constructor_with_span() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
 
@@ -412,8 +396,7 @@ fn elect_no_constructor_with_span() {
 
 #[test]
 fn elect_override_span() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("ElectChecker", &[]);
 
@@ -453,8 +436,7 @@ fn elect_override_span() {
 
 #[test]
 fn elect_library_call_with_span() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
     let class_hash = test_env.declare("ElectChecker", &contracts_data);
@@ -480,8 +462,7 @@ fn elect_library_call_with_span() {
 
 #[test]
 fn elect_all_span() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address_1 = test_env.deploy("ElectChecker", &[]);
     let contract_address_2 = test_env.deploy("ElectCheckerLibCall", &[]);

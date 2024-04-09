@@ -2,7 +2,7 @@ use super::test_environment::TestEnvironment;
 use crate::common::{assertions::assert_success, get_contracts, recover_data};
 use cairo_felt::Felt252;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::spoof::TxInfoMock;
-use cheatnet::state::{CheatSpan, CheatTarget, CheatnetState};
+use cheatnet::state::{CheatSpan, CheatTarget};
 use conversions::IntoConv;
 use num_traits::ToPrimitive;
 use runtime::utils::BufferReader;
@@ -14,7 +14,7 @@ trait SpoofTrait {
     fn stop_spoof(&mut self, contract_address: &ContractAddress);
 }
 
-impl<'a> SpoofTrait for TestEnvironment<'a> {
+impl SpoofTrait for TestEnvironment {
     fn spoof(&mut self, target: CheatTarget, tx_info_mock: TxInfoMock, span: CheatSpan) {
         self.cheatnet_state.spoof(target, tx_info_mock, span);
     }
@@ -34,7 +34,7 @@ trait TxInfoTrait {
     fn get_tx_info(&mut self, contract_address: &ContractAddress) -> TxInfo;
 }
 
-impl<'a> TxInfoTrait for TestEnvironment<'a> {
+impl TxInfoTrait for TestEnvironment {
     fn assert_tx_info(&mut self, contract_address: &ContractAddress, expected_tx_info: &TxInfo) {
         let tx_info = self.get_tx_info(contract_address);
         assert_eq!(tx_info, *expected_tx_info);
@@ -134,8 +134,7 @@ impl TxInfo {
 
 #[test]
 fn spoof_simple() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("SpoofChecker", &[]);
 
@@ -155,8 +154,7 @@ fn spoof_simple() {
 
 #[test]
 fn start_spoof_multiple_times() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("SpoofChecker", &[]);
 
@@ -236,8 +234,7 @@ fn start_spoof_multiple_times() {
 
 #[test]
 fn spoof_start_stop() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("SpoofChecker", &[]);
 
@@ -261,8 +258,7 @@ fn spoof_start_stop() {
 
 #[test]
 fn spoof_stop_no_effect() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("SpoofChecker", &[]);
 
@@ -275,8 +271,7 @@ fn spoof_stop_no_effect() {
 
 #[test]
 fn spoof_with_other_syscall() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("SpoofChecker", &[]);
 
@@ -294,8 +289,7 @@ fn spoof_with_other_syscall() {
 
 #[test]
 fn spoof_in_constructor() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
 
@@ -319,8 +313,7 @@ fn spoof_in_constructor() {
 
 #[test]
 fn spoof_proxy() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("SpoofChecker", &[]);
 
@@ -347,8 +340,7 @@ fn spoof_proxy() {
 
 #[test]
 fn spoof_library_call() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
     let class_hash = test_env.declare("SpoofChecker", &contracts_data);
@@ -373,8 +365,7 @@ fn spoof_library_call() {
 
 #[test]
 fn spoof_all_simple() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("SpoofChecker", &[]);
 
@@ -394,8 +385,7 @@ fn spoof_all_simple() {
 
 #[test]
 fn spoof_all_then_one() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("SpoofChecker", &[]);
 
@@ -418,8 +408,7 @@ fn spoof_all_then_one() {
 
 #[test]
 fn spoof_one_then_all() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("SpoofChecker", &[]);
 
@@ -442,8 +431,7 @@ fn spoof_one_then_all() {
 
 #[test]
 fn spoof_all_stop() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("SpoofChecker", &[]);
 
@@ -463,8 +451,7 @@ fn spoof_all_stop() {
 
 #[test]
 fn spoof_multiple() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
     let class_hash = test_env.declare("SpoofChecker", &contracts_data);
@@ -499,8 +486,7 @@ fn spoof_multiple() {
 
 #[test]
 fn spoof_simple_with_span() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("SpoofChecker", &[]);
 
@@ -524,8 +510,7 @@ fn spoof_simple_with_span() {
 
 #[test]
 fn spoof_proxy_with_span() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
     let class_hash = test_env.declare("SpoofCheckerProxy", &contracts_data);
@@ -553,8 +538,7 @@ fn spoof_proxy_with_span() {
 
 #[test]
 fn spoof_in_constructor_with_span() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
 
@@ -591,8 +575,7 @@ fn spoof_in_constructor_with_span() {
 
 #[test]
 fn spoof_no_constructor_with_span() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
 
@@ -625,8 +608,7 @@ fn spoof_no_constructor_with_span() {
 
 #[test]
 fn spoof_override_span() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("SpoofChecker", &[]);
 
@@ -661,8 +643,7 @@ fn spoof_override_span() {
 
 #[test]
 fn spoof_library_call_with_span() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
     let class_hash = test_env.declare("SpoofChecker", &contracts_data);
@@ -694,8 +675,7 @@ fn spoof_library_call_with_span() {
 
 #[test]
 fn spoof_all_span() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address_1 = test_env.deploy("SpoofChecker", &[]);
     let contract_address_2 = test_env.deploy("SpoofCheckerLibCall", &[]);

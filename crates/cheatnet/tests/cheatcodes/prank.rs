@@ -1,26 +1,21 @@
 use crate::cheatcodes::spy_events::felt_vec_to_event_vec;
 use crate::common::assertions::assert_success;
 use crate::common::get_contracts;
-use blockifier::state::cached_state::{
-    CachedState, GlobalContractCache, GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST,
-};
 use cairo_felt::Felt252;
 use cairo_lang_starknet_classes::keccak::starknet_keccak;
-use cheatnet::constants::build_testing_state;
 use cheatnet::constants::TEST_ADDRESS;
-use cheatnet::forking::state::ForkStateReader;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::{
     Event, SpyTarget,
 };
-use cheatnet::state::{CheatSpan, CheatTarget, CheatnetState, ExtendedStateReader};
+use cheatnet::state::{CheatSpan, CheatTarget};
 use conversions::IntoConv;
-use starknet_api::block::BlockNumber;
 use starknet_api::core::{ContractAddress, PatriciaKey};
 use starknet_api::hash::StarkHash;
 use starknet_api::{contract_address, patricia_key};
 use tempfile::TempDir;
 
 use super::test_environment::TestEnvironment;
+use crate::common::state::create_fork_cached_state_at;
 use conversions::string::TryFromHexStr;
 
 trait PrankTrait {
@@ -29,7 +24,7 @@ trait PrankTrait {
     fn stop_prank(&mut self, contract_address: &ContractAddress);
 }
 
-impl<'a> PrankTrait for TestEnvironment<'a> {
+impl PrankTrait for TestEnvironment {
     fn prank(&mut self, target: CheatTarget, new_address: u128, span: CheatSpan) {
         self.cheatnet_state
             .prank(target, ContractAddress::from(new_address), span);
@@ -48,8 +43,7 @@ impl<'a> PrankTrait for TestEnvironment<'a> {
 
 #[test]
 fn prank_simple() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("PrankChecker", &[]);
 
@@ -63,8 +57,7 @@ fn prank_simple() {
 
 #[test]
 fn prank_with_other_syscall() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("PrankChecker", &[]);
 
@@ -78,8 +71,7 @@ fn prank_with_other_syscall() {
 
 #[test]
 fn prank_in_constructor() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
     let class_hash = test_env.declare("ConstructorPrankChecker", &contracts_data);
@@ -98,8 +90,7 @@ fn prank_in_constructor() {
 
 #[test]
 fn prank_stop() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("PrankChecker", &[]);
 
@@ -120,8 +111,7 @@ fn prank_stop() {
 
 #[test]
 fn prank_double() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("PrankChecker", &[]);
 
@@ -143,8 +133,7 @@ fn prank_double() {
 
 #[test]
 fn prank_proxy() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("PrankChecker", &[]);
     let proxy_address = test_env.deploy("PrankCheckerProxy", &[]);
@@ -167,8 +156,7 @@ fn prank_proxy() {
 
 #[test]
 fn prank_library_call() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
     let class_hash = test_env.declare("PrankChecker", &contracts_data);
@@ -192,8 +180,7 @@ fn prank_library_call() {
 
 #[test]
 fn prank_all() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("PrankChecker", &[]);
 
@@ -214,8 +201,7 @@ fn prank_all() {
 
 #[test]
 fn prank_multiple() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
     let class_hash = test_env.declare("PrankChecker", &contracts_data);
@@ -256,8 +242,7 @@ fn prank_multiple() {
 
 #[test]
 fn prank_all_then_one() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("PrankChecker", &[]);
 
@@ -272,8 +257,7 @@ fn prank_all_then_one() {
 
 #[test]
 fn prank_one_then_all() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("PrankChecker", &[]);
 
@@ -289,25 +273,10 @@ fn prank_one_then_all() {
 #[test]
 fn prank_cairo0_callback() {
     let temp_dir = TempDir::new().unwrap();
-    let cached_state = CachedState::new(
-        ExtendedStateReader {
-            dict_state_reader: build_testing_state(),
-            fork_state_reader: Some(
-                ForkStateReader::new(
-                    "http://188.34.188.184:7070/rpc/v0_7".parse().unwrap(),
-                    BlockNumber(53_631),
-                    temp_dir.path().to_str().unwrap(),
-                )
-                .unwrap(),
-            ),
-        },
-        GlobalContractCache::new(GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST),
-    );
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment {
-        cached_state,
-        cheatnet_state: &mut cheatnet_state,
-    };
+    let cached_state = create_fork_cached_state_at(53_631, temp_dir.path().to_str().unwrap());
+    let mut test_env = TestEnvironment::new();
+
+    test_env.cached_state = cached_state;
 
     let contract_address = test_env.deploy("Cairo1Contract_v1", &[]);
 
@@ -350,8 +319,7 @@ fn prank_cairo0_callback() {
 
 #[test]
 fn prank_simple_with_span() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("PrankChecker", &[]);
 
@@ -377,8 +345,7 @@ fn prank_simple_with_span() {
 
 #[test]
 fn prank_proxy_with_span() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
     let class_hash = test_env.declare("PrankCheckerProxy", &contracts_data);
@@ -402,8 +369,7 @@ fn prank_proxy_with_span() {
 
 #[test]
 fn prank_override_span() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("PrankChecker", &[]);
 
@@ -443,8 +409,7 @@ fn prank_override_span() {
 
 #[test]
 fn prank_constructor_with_span() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
     let class_hash = test_env.declare("ConstructorPrankChecker", &contracts_data);
@@ -475,8 +440,7 @@ fn prank_constructor_with_span() {
 
 #[test]
 fn prank_library_call_with_span() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
     let class_hash = test_env.declare("PrankChecker", &contracts_data);
@@ -502,8 +466,7 @@ fn prank_library_call_with_span() {
 
 #[test]
 fn prank_all_span() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address_1 = test_env.deploy("PrankChecker", &[]);
     let contract_address_2 = test_env.deploy("PrankCheckerLibCall", &[]);
