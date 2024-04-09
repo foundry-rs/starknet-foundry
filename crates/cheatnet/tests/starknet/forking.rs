@@ -108,42 +108,44 @@ fn try_deploying_undeclared_class() {
 fn test_forking_at_block_number() {
     let cache_dir = TempDir::new().unwrap();
 
-    let mut cheatnet_state = CheatnetState::default();
-    let mut cached_state_before_delopy =
-        create_fork_cached_state_at(50_000, cache_dir.path().to_str().unwrap());
+    {
+        let mut cheatnet_state = CheatnetState::default();
+        let mut cached_state_before_delopy =
+            create_fork_cached_state_at(50_000, cache_dir.path().to_str().unwrap());
 
-    let mut cached_state_after_deploy =
-        create_fork_cached_state_at(53_681, cache_dir.path().to_str().unwrap());
+        let mut cached_state_after_deploy =
+            create_fork_cached_state_at(53_681, cache_dir.path().to_str().unwrap());
 
-    let contract_address = ContractAddress::try_from_hex_str(
-        "0x202de98471a4fae6bcbabb96cab00437d381abc58b02509043778074d6781e9",
-    )
-    .unwrap();
+        let contract_address = ContractAddress::try_from_hex_str(
+            "0x202de98471a4fae6bcbabb96cab00437d381abc58b02509043778074d6781e9",
+        )
+        .unwrap();
 
-    let selector = felt_selector_from_name("get_balance");
-    let output = call_contract(
-        &mut cached_state_before_delopy,
-        &mut cheatnet_state,
-        &contract_address,
-        &selector,
-        &[],
-    );
+        let selector = felt_selector_from_name("get_balance");
+        let output = call_contract(
+            &mut cached_state_before_delopy,
+            &mut cheatnet_state,
+            &contract_address,
+            &selector,
+            &[],
+        );
 
-    assert_error(
+        assert_error(
             output,
             "Contract not deployed at address: 0x0202de98471a4fae6bcbabb96cab00437d381abc58b02509043778074d6781e9"
         );
 
-    let selector = felt_selector_from_name("get_balance");
-    let output = call_contract(
-        &mut cached_state_after_deploy,
-        &mut cheatnet_state,
-        &contract_address,
-        &selector,
-        &[],
-    );
+        let selector = felt_selector_from_name("get_balance");
+        let output = call_contract(
+            &mut cached_state_after_deploy,
+            &mut cheatnet_state,
+            &contract_address,
+            &selector,
+            &[],
+        );
 
-    assert_success(output, &[Felt252::from(0)]);
+        assert_success(output, &[Felt252::from(0)]);
+    }
 
     purge_cache(cache_dir.path().to_str().unwrap());
 }
