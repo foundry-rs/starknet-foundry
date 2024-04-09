@@ -1,5 +1,5 @@
 {
-    "alpha-goerli": {
+    "alpha-sepolia": {
         "with_wrong_private_key": {
             "private_key": "privatekey",
             "public_key": "0x14b491156e96ecf11dace8999b1e5e30888548a581c067b1956b7468bb279b9",
