@@ -4460,7 +4460,6 @@ dependencies = [
  "thiserror",
  "tokio",
  "toml",
- "toml_edit 0.22.9",
  "url",
 ]
 

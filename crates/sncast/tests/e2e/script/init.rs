@@ -135,25 +135,25 @@ fn test_initialized_script_compiles() {
     );
 
     let script_dir_path = temp_dir.path().join(INIT_SCRIPTS_DIR).join(script_name);
-    let scarb_toml_path = script_dir_path.join("Scarb.toml");
 
-    let config = std::fs::read_to_string(&scarb_toml_path).expect("Failed to read Scarb.toml");
-    let mut doc = config
-        .parse::<toml_edit::DocumentMut>()
-        .expect("Failed to parse Scarb.toml");
-
-    let tab = doc["dependencies"]["sncast_std"]
-        .as_inline_table_mut()
-        .unwrap();
-    // Using a tag during the release process will cause the test to fail
-    // as the new tag won't exists in the repository yet
-    tab.remove("tag").expect("Failed to remove the tag");
-    tab.insert("branch", "master".into());
-
-    std::fs::write(&scarb_toml_path, doc.to_string()).expect("Failed to overwrite Scarb.toml");
+    // Using a tag during the release process will cause the test to fail as the new tag won't exist in the repository yet
+    // This command will overwrite sncast_std dependency to use the master branch instead of a tag
+    ScarbCommand::new_with_stdio()
+        .current_dir(&script_dir_path)
+        .args([
+            "--offline",
+            "add",
+            "sncast_std",
+            "--git",
+            "https://github.com/foundry-rs/starknet-foundry.git",
+            "--branch",
+            "master",
+        ])
+        .run()
+        .expect("Failed to overwrite sncast_std dependency in Scarb.toml");
 
     ScarbCommand::new_with_stdio()
-        .current_dir(script_dir_path)
+        .current_dir(&script_dir_path)
         .arg("build")
         .run()
         .expect("Failed to compile the initialized script");
