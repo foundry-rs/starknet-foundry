@@ -1,5 +1,6 @@
 use starknet::{ContractAddress, ClassHash, contract_address_const};
 use starknet::testing::cheatcode;
+use super::_cheatcode::handle_cheatcode;
 
 mod events;
 mod l1_handler;
@@ -36,7 +37,7 @@ fn roll(target: CheatTarget, block_number: u64, span: CheatSpan) {
     target.serialize(ref inputs);
     span.serialize(ref inputs);
     inputs.append(block_number.into());
-    cheatcode::<'roll'>(inputs.span());
+    handle_cheatcode(cheatcode::<'roll'>(inputs.span()));
 }
 
 fn start_roll(target: CheatTarget, block_number: u64) {
@@ -46,7 +47,7 @@ fn start_roll(target: CheatTarget, block_number: u64) {
 fn stop_roll(target: CheatTarget) {
     let mut inputs = array![];
     target.serialize(ref inputs);
-    cheatcode::<'stop_roll'>(inputs.span());
+    handle_cheatcode(cheatcode::<'stop_roll'>(inputs.span()));
 }
 
 fn prank(target: CheatTarget, caller_address: ContractAddress, span: CheatSpan) {
@@ -56,7 +57,7 @@ fn prank(target: CheatTarget, caller_address: ContractAddress, span: CheatSpan) 
     target.serialize(ref inputs);
     span.serialize(ref inputs);
     inputs.append(caller_address.into());
-    cheatcode::<'prank'>(inputs.span());
+    handle_cheatcode(cheatcode::<'prank'>(inputs.span()));
 }
 
 fn start_prank(target: CheatTarget, caller_address: ContractAddress) {
@@ -66,7 +67,7 @@ fn start_prank(target: CheatTarget, caller_address: ContractAddress) {
 fn stop_prank(target: CheatTarget) {
     let mut inputs = array![];
     target.serialize(ref inputs);
-    cheatcode::<'stop_prank'>(inputs.span());
+    handle_cheatcode(cheatcode::<'stop_prank'>(inputs.span()));
 }
 
 fn warp(target: CheatTarget, block_timestamp: u64, span: CheatSpan) {
@@ -76,7 +77,7 @@ fn warp(target: CheatTarget, block_timestamp: u64, span: CheatSpan) {
     target.serialize(ref inputs);
     span.serialize(ref inputs);
     inputs.append(block_timestamp.into());
-    cheatcode::<'warp'>(inputs.span());
+    handle_cheatcode(cheatcode::<'warp'>(inputs.span()));
 }
 
 fn start_warp(target: CheatTarget, block_timestamp: u64) {
@@ -86,7 +87,7 @@ fn start_warp(target: CheatTarget, block_timestamp: u64) {
 fn stop_warp(target: CheatTarget) {
     let mut inputs = array![];
     target.serialize(ref inputs);
-    cheatcode::<'stop_warp'>(inputs.span());
+    handle_cheatcode(cheatcode::<'stop_warp'>(inputs.span()));
 }
 
 fn elect(target: CheatTarget, sequencer_address: ContractAddress, span: CheatSpan) {
@@ -96,7 +97,7 @@ fn elect(target: CheatTarget, sequencer_address: ContractAddress, span: CheatSpa
     target.serialize(ref inputs);
     span.serialize(ref inputs);
     inputs.append(sequencer_address.into());
-    cheatcode::<'elect'>(inputs.span());
+    handle_cheatcode(cheatcode::<'elect'>(inputs.span()));
 }
 
 fn start_elect(target: CheatTarget, sequencer_address: ContractAddress) {
@@ -106,7 +107,7 @@ fn start_elect(target: CheatTarget, sequencer_address: ContractAddress) {
 fn stop_elect(target: CheatTarget) {
     let mut inputs = array![];
     target.serialize(ref inputs);
-    cheatcode::<'stop_elect'>(inputs.span());
+    handle_cheatcode(cheatcode::<'stop_elect'>(inputs.span()));
 }
 
 fn mock_call<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: Destruct<T>>(
@@ -124,7 +125,7 @@ fn mock_call<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: Destruct<T>>
 
     ret_data_arr.serialize(ref inputs);
 
-    cheatcode::<'mock_call'>(inputs.span());
+    handle_cheatcode(cheatcode::<'mock_call'>(inputs.span()));
 }
 
 fn start_mock_call<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: Destruct<T>>(
@@ -140,16 +141,20 @@ fn start_mock_call<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: Destru
 
     ret_data_arr.serialize(ref inputs);
 
-    cheatcode::<'mock_call'>(inputs.span());
+    handle_cheatcode(cheatcode::<'mock_call'>(inputs.span()));
 }
 
 fn stop_mock_call(contract_address: ContractAddress, function_selector: felt252) {
     let contract_address_felt: felt252 = contract_address.into();
-    cheatcode::<'stop_mock_call'>(array![contract_address_felt, function_selector].span());
+    handle_cheatcode(
+        cheatcode::<'stop_mock_call'>(array![contract_address_felt, function_selector].span())
+    );
 }
 
 fn replace_bytecode(contract: ContractAddress, new_class: ClassHash) {
-    cheatcode::<'replace_bytecode'>(array![contract.into(), new_class.into()].span());
+    handle_cheatcode(
+        cheatcode::<'replace_bytecode'>(array![contract.into(), new_class.into()].span())
+    );
 }
 
 fn validate_cheat_target_and_span(target: @CheatTarget, span: @CheatSpan) {

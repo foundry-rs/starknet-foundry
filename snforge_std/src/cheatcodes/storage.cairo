@@ -4,6 +4,7 @@ use core::option::OptionTrait;
 use core::traits::TryInto;
 use starknet::{testing::cheatcode, ContractAddress, storage_address_try_from_felt252};
 use core::panic_with_felt252;
+use super::super::_cheatcode::handle_cheatcode;
 
 fn validate_storage_address_felt(storage_address_felt: felt252) {
     match storage_address_try_from_felt252(storage_address_felt) {
@@ -16,13 +17,13 @@ fn validate_storage_address_felt(storage_address_felt: felt252) {
 fn store_felt252(target: ContractAddress, storage_address: felt252, value: felt252) {
     validate_storage_address_felt(storage_address);
     let inputs = array![target.into(), storage_address.into(), value];
-    cheatcode::<'store'>(inputs.span());
+    handle_cheatcode(cheatcode::<'store'>(inputs.span()));
 }
 
 fn load_felt252(target: ContractAddress, storage_address: felt252) -> felt252 {
     validate_storage_address_felt(storage_address);
     let inputs = array![target.into(), storage_address];
-    *cheatcode::<'load'>(inputs.span()).at(0)
+    *handle_cheatcode(cheatcode::<'load'>(inputs.span())).at(0)
 }
 
 fn store(target: ContractAddress, storage_address: felt252, serialized_value: Span<felt252>) {
@@ -55,5 +56,5 @@ fn load(target: ContractAddress, storage_address: felt252, size: felt252) -> Arr
 fn map_entry_address(map_selector: felt252, keys: Span<felt252>) -> felt252 {
     let mut inputs = array![map_selector];
     keys.serialize(ref inputs);
-    *cheatcode::<'map_entry_address'>(inputs.span()).at(0)
+    *handle_cheatcode(cheatcode::<'map_entry_address'>(inputs.span())).at(0)
 }

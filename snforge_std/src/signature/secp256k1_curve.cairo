@@ -2,12 +2,15 @@ use starknet::secp256_trait::{is_valid_signature};
 use starknet::secp256k1::{Secp256k1Point, Secp256k1Impl, Secp256k1PointImpl};
 use starknet::{SyscallResultTrait};
 use starknet::testing::cheatcode;
+use super::super::_cheatcode::handle_cheatcode;
 
 use snforge_std::signature::{KeyPair, KeyPairTrait, SignerTrait, VerifierTrait, to_u256, from_u256};
 
 impl Secp256k1CurveKeyPairImpl of KeyPairTrait<u256, Secp256k1Point> {
     fn generate() -> KeyPair<u256, Secp256k1Point> {
-        let output = cheatcode::<'generate_ecdsa_keys'>(array!['Secp256k1'].span());
+        let output = handle_cheatcode(
+            cheatcode::<'generate_ecdsa_keys'>(array!['Secp256k1'].span())
+        );
 
         let secret_key = to_u256(*output[0], *output[1]);
         let pk_x = to_u256(*output[2], *output[3]);
@@ -38,9 +41,11 @@ impl Secp256k1CurveSignerImpl of SignerTrait<KeyPair<u256, Secp256k1Point>, u256
         let (sk_low, sk_high) = from_u256(self.secret_key);
         let (msg_hash_low, msg_hash_high) = from_u256(message_hash);
 
-        let output = cheatcode::<
-            'ecdsa_sign_message'
-        >(array!['Secp256k1', sk_low, sk_high, msg_hash_low, msg_hash_high].span());
+        let output = handle_cheatcode(
+            cheatcode::<
+                'ecdsa_sign_message'
+            >(array!['Secp256k1', sk_low, sk_high, msg_hash_low, msg_hash_high].span())
+        );
 
         if *output[0] == 1 {
             core::panic_with_felt252(*output[1]);
