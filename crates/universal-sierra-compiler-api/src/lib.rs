@@ -15,10 +15,16 @@ use shared::command::CommandExt;
 
 mod command;
 
+/// The offset of the sierra statement within the bytecode.
+type CodeOffset = usize;
+
+/// The index of the sierra statement in the instructions vector.
+type InstructionIdx = usize;
+
 #[derive(Serialize, Deserialize)]
 pub struct AssembledProgramWithDebugInfo {
     pub assembled_cairo_program: AssembledCairoProgramWithSerde,
-    pub debug_info: Vec<(usize, usize)>,
+    pub debug_info: Vec<(CodeOffset, InstructionIdx)>,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
