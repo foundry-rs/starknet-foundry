@@ -1,3 +1,4 @@
+use core::option::OptionTrait;
 use starknet::testing::cheatcode;
 use starknet::ContractAddress;
 
@@ -75,11 +76,8 @@ impl EventAssertionsImpl<
             let emitted = is_emitted(ref self, from, event);
 
             if !emitted {
-                panic(
-                    array![
-                        'Event with matching data and', 'keys was not emitted from', (*from).into()
-                    ]
-                );
+                let from: felt252 = (*from).into();
+                panic!("Event with matching data and keys was not emitted from {}", from);
             }
 
             i += 1;
@@ -99,9 +97,8 @@ impl EventAssertionsImpl<
             let emitted = is_emitted(ref self, from, event);
 
             if emitted {
-                panic(
-                    array!['Event with matching data and', 'keys was emitted from', (*from).into()]
-                );
+                let from: felt252 = (*from).into();
+                panic!("Event with matching data and keys was emitted from {}", from);
             }
 
             i += 1;
