@@ -1,6 +1,5 @@
 use crate::common::assertions::{assert_error, assert_panic};
 use crate::common::call_contract;
-use crate::common::state::build_runtime_state;
 use crate::common::{deploy_contract, felt_selector_from_name, state::create_cached_state};
 use cairo_felt::Felt252;
 use cairo_lang_utils::byte_array::BYTE_ARRAY_MAGIC;
@@ -13,15 +12,15 @@ use num_traits::{Bounded, Num};
 fn call_contract_error() {
     let mut cached_state = create_cached_state();
     let mut cheatnet_state = CheatnetState::default();
-    let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
-    let contract_address = deploy_contract(&mut cached_state, &mut runtime_state, "PanicCall", &[]);
+    let contract_address =
+        deploy_contract(&mut cached_state, &mut cheatnet_state, "PanicCall", &[]);
 
     let selector = felt_selector_from_name("panic_call");
 
     let output = call_contract(
         &mut cached_state,
-        &mut runtime_state,
+        &mut cheatnet_state,
         &contract_address,
         &selector,
         &[Felt252::from(420)],
@@ -34,15 +33,15 @@ fn call_contract_error() {
 fn call_contract_panic() {
     let mut cached_state = create_cached_state();
     let mut cheatnet_state = CheatnetState::default();
-    let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
-    let contract_address = deploy_contract(&mut cached_state, &mut runtime_state, "PanicCall", &[]);
+    let contract_address =
+        deploy_contract(&mut cached_state, &mut cheatnet_state, "PanicCall", &[]);
 
     let selector = felt_selector_from_name("panic_call");
 
     let output = call_contract(
         &mut cached_state,
-        &mut runtime_state,
+        &mut cheatnet_state,
         &contract_address,
         &selector,
         &[],
@@ -63,17 +62,16 @@ fn call_contract_panic() {
 fn call_proxied_contract_bytearray_panic() {
     let mut cached_state = create_cached_state();
     let mut cheatnet_state = CheatnetState::default();
-    let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
     let proxy = deploy_contract(
         &mut cached_state,
-        &mut runtime_state,
+        &mut cheatnet_state,
         "ByteArrayPanickingContractProxy",
         &[],
     );
     let bytearray_panicking_contract = deploy_contract(
         &mut cached_state,
-        &mut runtime_state,
+        &mut cheatnet_state,
         "ByteArrayPanickingContract",
         &[],
     );
@@ -82,7 +80,7 @@ fn call_proxied_contract_bytearray_panic() {
 
     let output = call_contract(
         &mut cached_state,
-        &mut runtime_state,
+        &mut cheatnet_state,
         &proxy,
         &selector,
         &[bytearray_panicking_contract.into_()],

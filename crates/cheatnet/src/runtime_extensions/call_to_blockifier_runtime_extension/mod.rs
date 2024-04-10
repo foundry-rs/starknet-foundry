@@ -92,7 +92,7 @@ where
     fn execute_call(
         self,
         syscall_handler: &mut SyscallHintProcessor,
-        runtime_state: &mut RuntimeState,
+        cheatnet_state: &mut CheatnetState,
     ) -> CallResult;
 }
 
@@ -100,7 +100,7 @@ impl ExecuteCall for CallContractRequest {
     fn execute_call(
         self: CallContractRequest,
         syscall_handler: &mut SyscallHintProcessor,
-        runtime_state: &mut RuntimeState,
+        cheatnet_state: &mut CheatnetState,
     ) -> CallResult {
         let contract_address = self.contract_address;
 
@@ -118,7 +118,7 @@ impl ExecuteCall for CallContractRequest {
 
         call_entry_point(
             syscall_handler,
-            runtime_state,
+            cheatnet_state,
             entry_point,
             &AddressOrClassHash::ContractAddress(contract_address),
         )
@@ -129,7 +129,7 @@ impl ExecuteCall for LibraryCallRequest {
     fn execute_call(
         self: LibraryCallRequest,
         syscall_handler: &mut SyscallHintProcessor,
-        runtime_state: &mut RuntimeState,
+        cheatnet_state: &mut CheatnetState,
     ) -> CallResult {
         let class_hash = self.class_hash;
 
@@ -147,7 +147,7 @@ impl ExecuteCall for LibraryCallRequest {
 
         call_entry_point(
             syscall_handler,
-            runtime_state,
+            cheatnet_state,
             entry_point,
             &AddressOrClassHash::ClassHash(class_hash),
         )
@@ -168,17 +168,12 @@ fn execute_syscall<Request: ExecuteCall + SyscallRequest>(
         cheatable_starknet_runtime.get_mut_syscall_ptr(),
     )?;
 
-    let cheatnet_state: &mut _ = cheatable_starknet_runtime.extension.cheatnet_state;
+    let cheatnet_state = &mut *cheatable_starknet_runtime.extension.cheatnet_state;
     let syscall_handler = &mut cheatable_starknet_runtime.extended_runtime.hint_handler;
-    let mut runtime_state = RuntimeState { cheatnet_state };
 
-    let call_result = request.execute_call(syscall_handler, &mut runtime_state);
+    let call_result = request.execute_call(syscall_handler, cheatnet_state);
     write_call_response(syscall_handler, vm, gas_counter, call_result)?;
     Ok(())
-}
-
-pub struct RuntimeState<'a> {
-    pub cheatnet_state: &'a mut CheatnetState,
 }
 
 fn write_call_response(
