@@ -12,9 +12,9 @@ Parses json file content and tries to deserialize it to type `T` that implements
 
 > ⚠️ **Warning**
 >
-> A JSON object is an unordered data structure.
-> To properly decode a JSON object, make sure the order of the struct attributes aligns with the alphabetical order of the JSON keys.
-> Nested JSON values are sorted by the flattened format keys `(a.b.c)`.
+>  A JSON object is an unordered data structure. To give it an order, the values in the array are sorted alphabetically by JSON keys.
+To properly decode a JSON object, make sure the order of struct attributes aligns with the alphabetical order of the JSON keys.
+>Nested JSON values are sorted by the flattened format keys `(a.b.c)`.
 
 ```rust
 use option::OptionTrait;
@@ -37,8 +37,8 @@ fn test_parse_json() {
 
 ## Accepted format
 File content must have proper JSON Format with values satisfying the conditions:
-  - integers, in decimal format, in range of `[0, P)` where P is [`Cairo Prime`](https://book.cairo-lang.org/ch02-02-data-types.html?highlight=prime#felt-type)
-  - single line strings (`ByteArray`) i.e., `"very very very very loooooong string"`, new lines can be used with `\n` and `"` with `\"`
+  - integers in range of `[0, P)` where P is [`Cairo Prime`](https://book.cairo-lang.org/ch02-02-data-types.html?highlight=prime#felt-type)
+  - strings of length `<=31`
   - array of integers or strings fulfilling the above conditions
 
 For example, this file content:
