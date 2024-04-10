@@ -3,7 +3,7 @@
 A struct which enables interaction with given class hash.
 It can be obtained by using [declare](./declare.md), or created with an arbitrary `ClassHash`.
 
-```
+```rust
 struct ContractClass {
     class_hash: ClassHash,
 }
@@ -13,7 +13,7 @@ struct ContractClass {
 
 ### `ContractClassTrait`
 
-```
+```rust
 trait ContractClassTrait {
     fn precalculate_address(
         self: @ContractClass, constructor_calldata: @Array::<felt252>
