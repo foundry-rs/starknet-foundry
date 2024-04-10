@@ -953,7 +953,7 @@ fn catch_runtime_errors() {
                 use snforge_std::fs::{FileTrait, read_txt};
 
                 #[test]
-                #[should_panic]
+                #[should_panic(expected: "No such file or directory (os error 2)")]
                 fn catch_no_such_file() {
                     let file = FileTrait::new("no_way_this_file_exists");
                     let content = read_txt(@file);
@@ -973,9 +973,6 @@ fn catch_runtime_errors() {
                 [..]Compiling[..]
                 [..]Finished[..]
                 [PASS] tests::test::catch_no_such_file [..]
-
-                Success data:
-                    "No such file or directory (os error 2)"
             "#
         ),
     );
