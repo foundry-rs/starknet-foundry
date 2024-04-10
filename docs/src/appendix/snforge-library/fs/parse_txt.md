@@ -2,33 +2,10 @@
 
 
 > `trait FileParser<T, impl TSerde: Serde<T>> {
->fn parse_txt(file: @File) -> Option<T>;
+>   fn parse_txt(file: @File) -> Option<T>;
 > }`
 
 
-Parses plain text file content and tries to deserialize it to type `T` that implements `Serde` trait.
-
-- `file` - a snapshot of an instance of the struct `File` that consists of the following fields:
-  - `path` - Cairo string representing a path to a file relative to a package root.
-
-```rust
-use option::OptionTrait;
-use serde::Serde;
-use snforge_std::fs::{ FileTrait, FileParser };
-
-#[derive(Serde, Drop)]
-struct MyStruct {
-    a: u32,
-    b: felt252
-}
-
-#[test]
-fn test_parse_txt() {
-    let file = FileTrait::new("data/file.txt");
-    let my_struct = FileParser::<MyStruct>::parse_txt(@file).unwrap();
-    // ...
-}
-```
 ## Accepted format
 File content must consists of elements that:
 - have to be separated with newlines
