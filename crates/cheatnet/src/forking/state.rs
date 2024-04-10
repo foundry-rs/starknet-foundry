@@ -1,7 +1,7 @@
 use crate::forking::cache::ForkCache;
 use crate::state::BlockInfoReader;
 use anyhow::{Context, Result};
-use blockifier::block::BlockInfo;
+use blockifier::blockifier::block::BlockInfo;
 use blockifier::execution::contract_class::{
     ContractClass as ContractClassBlockifier, ContractClassV0, ContractClassV1,
 };
@@ -105,7 +105,7 @@ impl BlockInfoReader for ForkStateReader {
 
 impl StateReader for ForkStateReader {
     fn get_storage_at(
-        &mut self,
+        &self,
         contract_address: ContractAddress,
         key: StorageKey,
     ) -> StateResult<StarkFelt> {
@@ -120,8 +120,8 @@ impl StateReader for ForkStateReader {
         )) {
             Ok(value) => {
                 let value_sf = value.into_();
-                self.cache
-                    .cache_get_storage_at(contract_address, key, value_sf);
+                // self.cache
+                //     .cache_get_storage_at(contract_address, key, value_sf);
                 Ok(value_sf)
             }
             Err(ProviderError::Other(boxed)) => other_provider_error(boxed),
@@ -132,7 +132,7 @@ impl StateReader for ForkStateReader {
         }
     }
 
-    fn get_nonce_at(&mut self, contract_address: ContractAddress) -> StateResult<Nonce> {
+    fn get_nonce_at(&self, contract_address: ContractAddress) -> StateResult<Nonce> {
         if let Some(cache_hit) = self.cache.get_nonce_at(&contract_address) {
             return Ok(cache_hit);
         }
@@ -143,7 +143,7 @@ impl StateReader for ForkStateReader {
         ) {
             Ok(nonce) => {
                 let nonce = nonce.into_();
-                self.cache.cache_get_nonce_at(contract_address, nonce);
+                // self.cache.cache_get_nonce_at(contract_address, nonce);
                 Ok(nonce)
             }
             Err(ProviderError::Other(boxed)) => other_provider_error(boxed),
@@ -156,7 +156,7 @@ impl StateReader for ForkStateReader {
         }
     }
 
-    fn get_class_hash_at(&mut self, contract_address: ContractAddress) -> StateResult<ClassHash> {
+    fn get_class_hash_at(&self, contract_address: ContractAddress) -> StateResult<ClassHash> {
         if let Some(cache_hit) = self.cache.get_class_hash_at(&contract_address) {
             return Ok(cache_hit);
         }
@@ -167,8 +167,8 @@ impl StateReader for ForkStateReader {
         ) {
             Ok(class_hash) => {
                 let class_hash = class_hash.into_();
-                self.cache
-                    .cache_get_class_hash_at(contract_address, class_hash);
+                // self.cache
+                //     .cache_get_class_hash_at(contract_address, class_hash);
                 Ok(class_hash)
             }
             Err(ProviderError::StarknetError(StarknetError::ContractNotFound)) => {
@@ -182,20 +182,21 @@ impl StateReader for ForkStateReader {
     }
 
     fn get_compiled_contract_class(
-        &mut self,
+        &self,
         class_hash: ClassHash,
     ) -> StateResult<ContractClassBlockifier> {
         let contract_class =
-            if let Some(cache_hit) = self.cache.get_compiled_contract_class(&class_hash) {
-                Ok(cache_hit)
-            } else {
+            // if let Some(cache_hit) = self.cache.get_compiled_contract_class(&class_hash) {
+            //     Ok(cache_hit)
+            // } else {
                 match self.runtime.block_on(
                     self.client
                         .get_class(self.block_id(), FieldElement::from_(class_hash)),
                 ) {
-                    Ok(contract_class) => Ok(self
-                        .cache
-                        .insert_compiled_contract_class(class_hash, contract_class)),
+                    // Ok(contract_class) => Ok(self
+                    //     .cache
+                    //     .insert_compiled_contract_class(class_hash, contract_class)),
+                    Ok(contract_class) => Ok(contract_class),
                     Err(ProviderError::StarknetError(StarknetError::ClassHashNotFound)) => {
                         Err(UndeclaredClassHash(class_hash))
                     }
@@ -203,8 +204,8 @@ impl StateReader for ForkStateReader {
                     Err(x) => Err(StateReadError(format!(
                         "Unable to get compiled class at {class_hash} from fork ({x})"
                     ))),
-                }
-            };
+                };
+        // };
 
         match contract_class? {
             ContractClassStarknet::Sierra(flattened_class) => {
@@ -259,10 +260,7 @@ impl StateReader for ForkStateReader {
         }
     }
 
-    fn get_compiled_class_hash(
-        &mut self,
-        _class_hash: ClassHash,
-    ) -> StateResult<CompiledClassHash> {
+    fn get_compiled_class_hash(&self, _class_hash: ClassHash) -> StateResult<CompiledClassHash> {
         Err(StateReadError(
             "Unable to get compiled class hash from the fork".to_string(),
         ))
