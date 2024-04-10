@@ -9,7 +9,7 @@ Read and parse json file content to an array of felts.
 
 > ⚠️ **Warning**
 >
-> A JSON object is an unordered data structure. To give it an order, the values in the array are sorted alphabetically by JSON keys. Therefore, the values in the array are sorted alphabetically by JSON key.
+> A JSON object is an unordered data structure. To give it an order, the values in the resulting array are sorted alphabetically by JSON keys.
 > Nested JSON values are sorted by the flattened format keys `(a.b.c)`.
 
 ```rust
@@ -25,8 +25,8 @@ fn test_read_json() {
 
 ## Accepted format
 File content must have proper JSON Format with values satisfying the conditions:
-  - integers in range of `[0, P)` where P is [`Cairo Prime`](https://book.cairo-lang.org/ch02-02-data-types.html?highlight=prime#felt-type)
-  - single line strings (`ByteArray`) ie. `"very very very very loooooong string"`, new lines can be used with `\n` and `"` with `\"`
+  - integers, in decimal format, in range of `[0, P)` where P is [`Cairo Prime`](https://book.cairo-lang.org/ch02-02-data-types.html?highlight=prime#felt-type) 
+  - single line strings (`ByteArray`) i.e., `"very very very very loooooong string"`, new lines can be used with `\n` and `"` with `\"`
   - array of integers or strings fulfilling the above conditions
 
 For example, this file content:
