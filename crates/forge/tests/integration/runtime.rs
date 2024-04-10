@@ -65,24 +65,27 @@ fn cheatcode_invalid_args() {
     let test = test_utils::test_case!(indoc!(
         r"
             use starknet::testing::cheatcode;
+            use snforge_std::_cheatcode::handle_cheatcode;
 
             #[test]
             fn cheatcode_invalid_args() {
-                cheatcode::<'replace_bytecode'>(array![].span());
+                handle_cheatcode(cheatcode::<'replace_bytecode'>(array![].span()));
                 assert(true,'');
             }
         "
     ));
 
     let result = run_test_case(&test);
+
     assert_case_output_contains(
         &result,
         "cheatcode_invalid_args",
         indoc!(
-            r"
-                Got an exception while executing a hint: Hint Error: Reading from buffer failed, this can be caused by calling starknet::testing::cheatcode with invalid arguments.
-                Probably snforge_std version is incompatible, check above for incompatibility warning.
-            "
+            r#"
+                "Reading from buffer failed, this can be caused by calling starknet::testing::cheatcode with invalid arguments.
+                    Probably snforge_std version is incompatible, check above for incompatibility warning.
+                    "
+            "#
         ),
     );
     assert_failed(&result);

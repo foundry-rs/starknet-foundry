@@ -30,7 +30,8 @@ use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cairo_vm::vm::vm_core::VirtualMachine;
 
 use blockifier::state::errors::StateError;
-use cairo_vm::vm::errors::memory_errors::MemoryError;
+use conversions::byte_array::ByteArray;
+use conversions::felt252::SerializeAsFelt252Vec;
 use starknet_api::StarknetApiError;
 use thiserror::Error;
 use utils::BufferReader;
@@ -249,31 +250,45 @@ impl<Extension: ExtensionLogic> ExtendedRuntime<Extension> {
     ) -> Result<(), HintError> {
         let selector = parse_selector(selector)?;
         let inputs = fetch_cheatcode_input(vm, vm_io_ptrs.input_start, vm_io_ptrs.input_end)?;
-        if let CheatcodeHandlingResult::Handled(res) = self.extension.handle_cheatcode(
+
+        let result = self.extension.handle_cheatcode(
             &selector,
             BufferReader::new(&inputs),
             &mut self.extended_runtime,
-        )? {
-            let mut buffer = MemBuffer::new_segment(vm);
-            let result_start = buffer.ptr;
-            buffer
-                .write_data(res.iter())
-                .expect("Failed to insert cheatcode result to memory");
-            let result_end = buffer.ptr;
-            let output_start = vm_io_ptrs.output_start;
-            let output_end = vm_io_ptrs.output_end;
-            insert_value_to_cellref!(vm, output_start, result_start)?;
-            insert_value_to_cellref!(vm, output_end, result_end)?;
-            self.propagate_cheatcode_signal(&selector, &inputs);
-            Ok(())
-        } else {
-            let res = self
-                .extended_runtime
-                .execute_hint(vm, exec_scopes, hint_data, constants);
-            self.extension
-                .handle_cheatcode_signal(&selector, &inputs, &mut self.extended_runtime);
-            res
+        );
+
+        let res = match result {
+            Ok(CheatcodeHandlingResult::Forwarded) => {
+                let res = self
+                    .extended_runtime
+                    .execute_hint(vm, exec_scopes, hint_data, constants);
+                self.extension.handle_cheatcode_signal(
+                    &selector,
+                    &inputs,
+                    &mut self.extended_runtime,
+                );
+                return res;
+            }
+            Ok(CheatcodeHandlingResult::Handled(res)) => Ok(res),
+            Err(err) => Err(ByteArray::from(err.to_string().as_str()).serialize_no_magic()),
         }
+        .serialize_as_felt252_vec();
+
+        let mut buffer = MemBuffer::new_segment(vm);
+        let result_start = buffer.ptr;
+        buffer
+            .write_data(res.iter())
+            .expect("Failed to insert cheatcode result to memory");
+        let result_end = buffer.ptr;
+        let output_start = vm_io_ptrs.output_start;
+        let output_end = vm_io_ptrs.output_end;
+
+        insert_value_to_cellref!(vm, output_start, result_start)?;
+        insert_value_to_cellref!(vm, output_end, result_end)?;
+
+        self.propagate_cheatcode_signal(&selector, &inputs);
+
+        Ok(())
     }
     fn execute_syscall_hint(
         &mut self,
@@ -439,10 +454,6 @@ pub enum EnhancedHintError {
     #[error(transparent)]
     Anyhow(#[from] anyhow::Error),
     #[error(transparent)]
-    VirtualMachine(#[from] VirtualMachineError),
-    #[error(transparent)]
-    Memory(#[from] MemoryError),
-    #[error(transparent)]
     State(#[from] StateError),
     #[error(transparent)]
     SerdeJson(#[from] serde_json::Error),
@@ -450,13 +461,4 @@ pub enum EnhancedHintError {
     StarknetApi(#[from] StarknetApiError),
     #[error("Failed to parse {path} file")]
     FileParsing { path: String },
-}
-
-impl From<EnhancedHintError> for HintError {
-    fn from(error: EnhancedHintError) -> Self {
-        match error {
-            EnhancedHintError::Hint(error) => error,
-            error => HintError::CustomHint(error.to_string().into_boxed_str()),
-        }
-    }
 }

@@ -204,8 +204,8 @@ fn contract_range_check_cost() {
 
     assert_passed(&result);
     // 96 = cost of deploy (see snforge_std_deploy_cost test)
-    // 8 = cost of 192 range check builtins
-    assert_gas(&result, "contract_range_check_cost", 96 + 8);
+    // 9 = cost of 203 range check builtins
+    assert_gas(&result, "contract_range_check_cost", 96 + 9);
 }
 
 #[test]
@@ -466,10 +466,10 @@ fn storage_write_cost() {
     let result = run_test_case(&test);
 
     assert_passed(&result);
-    // 6 = gas cost of steps
+    // 7 = gas cost of steps
     // 96 = gas cost of deployment
     // storage_updates(1) * 2 * 32 = 64
-    assert_gas(&result, "storage_write_cost", 6 + 96 + 64);
+    assert_gas(&result, "storage_write_cost", 7 + 96 + 64);
 }
 
 #[test]
@@ -651,14 +651,14 @@ fn l1_message_cost_for_proxy() {
     let result = run_test_case(&test);
 
     assert_passed(&result);
-    // 12 = gas cost of steps
+    // 13 = gas cost of steps
     // l = number of class hash updates
     // n = unique contracts updated
     // So, as per formula:
     // n(2) * 2 * 32 = 128
     // l(2) * 32 = 64
     // 29524 = gas cost of message
-    assert_gas(&result, "l1_message_cost_for_proxy", 12 + 128 + 64 + 29524);
+    assert_gas(&result, "l1_message_cost_for_proxy", 13 + 128 + 64 + 29524);
 }
 
 #[test]

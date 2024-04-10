@@ -1,5 +1,6 @@
 use starknet::{ContractAddress, ClassHash, testing::cheatcode, SyscallResult};
 use super::super::byte_array::byte_array_as_felt_array;
+use super::super::_cheatcode::handle_cheatcode;
 use core::traits::Into;
 
 #[derive(Drop, Clone, Copy)]
@@ -49,7 +50,7 @@ impl ContractClassImpl of ContractClassTrait {
     ) -> ContractAddress {
         let mut inputs: Array::<felt252> = _prepare_calldata(self.class_hash, constructor_calldata);
 
-        let outputs = cheatcode::<'precalculate_address'>(inputs.span());
+        let outputs = handle_cheatcode(cheatcode::<'precalculate_address'>(inputs.span()));
         (*outputs[0]).try_into().unwrap()
     }
 
@@ -58,7 +59,7 @@ impl ContractClassImpl of ContractClassTrait {
     ) -> SyscallResult<(ContractAddress, Span<felt252>)> {
         let mut inputs = _prepare_calldata(self.class_hash, constructor_calldata);
 
-        let outputs = cheatcode::<'deploy'>(inputs.span());
+        let outputs = handle_cheatcode(cheatcode::<'deploy'>(inputs.span()));
         let exit_code = *outputs[0];
 
         if exit_code == 0 {
@@ -96,7 +97,7 @@ impl ContractClassImpl of ContractClassTrait {
         let mut inputs = _prepare_calldata(self.class_hash, constructor_calldata);
         inputs.append(contract_address.into());
 
-        let outputs = cheatcode::<'deploy_at'>(inputs.span());
+        let outputs = handle_cheatcode(cheatcode::<'deploy_at'>(inputs.span()));
         let exit_code = *outputs[0];
 
         if exit_code == 0 {
@@ -135,7 +136,7 @@ impl ContractClassImpl of ContractClassTrait {
 /// `contract` - name of a contract as Cairo string. It is a name of the contract (part after mod keyword) e.g. "HelloStarknet"
 /// Returns the `ContractClass` which was declared or panic data if declaration failed
 fn declare(contract: ByteArray) -> Result<ContractClass, Array<felt252>> {
-    let span = cheatcode::<'declare'>(byte_array_as_felt_array(@contract).span());
+    let span = handle_cheatcode(cheatcode::<'declare'>(byte_array_as_felt_array(@contract).span()));
 
     let exit_code = *span[0];
 
@@ -171,7 +172,7 @@ fn get_class_hash(contract_address: ContractAddress) -> ClassHash {
     let contract_address_felt: felt252 = contract_address.into();
 
     // Expecting a buffer with one felt252, being the class hash.
-    let buf = cheatcode::<'get_class_hash'>(array![contract_address_felt].span());
+    let buf = handle_cheatcode(cheatcode::<'get_class_hash'>(array![contract_address_felt].span()));
     (*buf[0]).try_into().expect('Invalid class hash value')
 }
 
