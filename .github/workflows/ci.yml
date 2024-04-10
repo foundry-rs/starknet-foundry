@@ -25,6 +25,8 @@ jobs:
   test-forge-e2e:
     name: Test Forge / E2E Tests
     runs-on: ubuntu-latest
+    env:
+      RPC_URL: ${{ secrets.RPC_URL }}
     steps:
       - name: Extract branch name
         if: github.event_name != 'pull_request'
@@ -41,6 +43,14 @@ jobs:
       - name: Extract repo name and owner on pull request
         if: github.event_name == 'pull_request'
         run: echo "REPO_NAME=$(echo ${{ github.event.pull_request.head.repo.full_name }}.git)" >> $GITHUB_ENV
+
+      - name: Set RPC_URL for foundry-rs/stakrnet-foundry
+        if: ${{ github.event.pull_request.head.repo.full_name == 'foundry-rs/starknet-foundry' }}
+        run: echo "RPC_URL=$(echo ${{ secrets.RPC_URL }}:7070)" >> $GITHUB_ENV
+
+      - name: Set RPC_URL for forks
+        if: ${{ github.event.pull_request.head.repo.full_name != 'foundry-rs/starknet-foundry' }}
+        run: echo "RPC_URL=$(echo ${{ secrets.RPC_URL }})" >> $GITHUB_ENV
 
       - name: Print repo name
         run: echo 'The repo name is' $REPO_NAME
@@ -72,6 +82,14 @@ jobs:
     name: Test Cheatnet
     runs-on: ubuntu-latest
     steps:
+      - name: Set RPC_URL for foundry-rs/stakrnet-foundry
+        if: ${{ github.event.pull_request.head.repo.full_name == 'foundry-rs/starknet-foundry' }}
+        run: echo "RPC_URL=$(echo ${{ secrets.RPC_URL }}:7070)" >> $GITHUB_ENV
+
+      - name: Set RPC_URL for forks
+        if: ${{ github.event.pull_request.head.repo.full_name != 'foundry-rs/starknet-foundry' }}
+        run: echo "RPC_URL=$(echo ${{ secrets.RPC_URL }})" >> $GITHUB_ENV
+
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
