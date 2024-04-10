@@ -1,4 +1,5 @@
 use starknet::{ContractAddress, testing::cheatcode, SyscallResult};
+use super::super::_cheatcode::handle_cheatcode;
 
 #[derive(Drop, Clone)]
 struct L1Handler {
@@ -38,7 +39,7 @@ impl L1HandlerImpl of L1HandlerTrait {
             i += 1;
         };
 
-        let outputs = cheatcode::<'l1_handler_execute'>(inputs.span());
+        let outputs = handle_cheatcode(cheatcode::<'l1_handler_execute'>(inputs.span()));
         let exit_code = *outputs[0];
 
         if exit_code == 0 {
