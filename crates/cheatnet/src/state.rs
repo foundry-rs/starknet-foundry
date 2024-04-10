@@ -168,6 +168,17 @@ pub enum CallTraceNode {
     DeployWithoutConstructor,
 }
 
+impl CallTraceNode {
+    #[must_use]
+    pub fn extract_entry_point_call(&self) -> Option<&Rc<RefCell<CallTrace>>> {
+        if let CallTraceNode::EntryPointCall(trace) = self {
+            Some(trace)
+        } else {
+            None
+        }
+    }
+}
+
 #[derive(Clone)]
 struct CallStackElement {
     // when we exit the call we use it to calculate resources used by the call

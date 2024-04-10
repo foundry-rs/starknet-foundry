@@ -690,13 +690,7 @@ fn serialize_call_trace(call_trace: &CallTrace, output: &mut Vec<Felt252>) {
     let visible_calls: Vec<_> = call_trace
         .nested_calls
         .iter()
-        .filter_map(|call_node| {
-            if let CallTraceNode::EntryPointCall(call) = call_node {
-                Some(call)
-            } else {
-                None
-            }
-        })
+        .filter_map(CallTraceNode::extract_entry_point_call)
         .collect();
 
     output.push(Felt252::from(visible_calls.len()));
@@ -833,13 +827,7 @@ pub fn update_top_call_execution_resources(runtime: &mut ForgeRuntime) {
     let nested_calls_syscalls = top_call
         .nested_calls
         .iter()
-        .filter_map(|trace_node| {
-            if let CallTraceNode::EntryPointCall(trace) = trace_node {
-                Some(trace)
-            } else {
-                None
-            }
-        })
+        .filter_map(CallTraceNode::extract_entry_point_call)
         .fold(SyscallCounter::new(), |syscalls, trace| {
             sum_syscall_counters(syscalls, &trace.borrow().used_syscalls)
         });
