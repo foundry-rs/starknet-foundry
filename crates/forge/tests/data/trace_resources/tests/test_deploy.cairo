@@ -9,7 +9,7 @@ fn test_deploy() {
 
     trace_resources::use_builtins_and_syscalls(empty_hash, 7);
 
-    let checker_address = checker.deploy(@array![]).unwrap();
+    let (checker_address, _) = checker.deploy(@array![]).unwrap();
 
     proxy.deploy(@array![checker_address.into(), empty_hash.into(), 1]).unwrap();
 

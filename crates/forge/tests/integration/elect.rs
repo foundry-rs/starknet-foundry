@@ -25,7 +25,7 @@ fn elect_basic() {
             #[test]
             fn test_stop_elect() {
                 let contract = declare("ElectChecker").unwrap();
-                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IElectCheckerDispatcher { contract_address };
 
                 let old_sequencer_address = dispatcher.get_sequencer_address();
@@ -45,8 +45,11 @@ fn elect_basic() {
             fn test_elect_multiple() {
                 let contract = declare("ElectChecker").unwrap();
 
-                let elect_checker1 = IElectCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };
-                let elect_checker2 = IElectCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };
+                let (contract_address1, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address2, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+
+                let elect_checker1 = IElectCheckerDispatcher { contract_address: contract_address1 };
+                let elect_checker2 = IElectCheckerDispatcher { contract_address: contract_address2 };
 
                 let old_seq_addr1 = elect_checker1.get_sequencer_address();
                 let old_seq_addr2 = elect_checker2.get_sequencer_address();
@@ -71,8 +74,11 @@ fn elect_basic() {
             fn test_elect_all() {
                 let contract = declare("ElectChecker").unwrap();
 
-                let elect_checker1 = IElectCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };
-                let elect_checker2 = IElectCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };
+                let (contract_address1, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address2, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+
+                let elect_checker1 = IElectCheckerDispatcher { contract_address: contract_address1 };
+                let elect_checker2 = IElectCheckerDispatcher { contract_address: contract_address2 };
 
                 let old_seq_addr1 = elect_checker1.get_sequencer_address();
                 let old_seq_addr2 = elect_checker2.get_sequencer_address();
@@ -97,7 +103,7 @@ fn elect_basic() {
             #[test]
             fn test_elect_all_stop_one() {
                 let contract = declare("ElectChecker").unwrap();
-                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IElectCheckerDispatcher { contract_address };
 
                 let target_seq_addr: felt252 = 123;
@@ -151,8 +157,11 @@ fn elect_complex() {
             fn test_elect_complex() {
                 let contract = declare("ElectChecker").unwrap();
 
-                let elect_checker1 = IElectCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };
-                let elect_checker2 = IElectCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };
+                let (contract_address1, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address2, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+
+                let elect_checker1 = IElectCheckerDispatcher { contract_address: contract_address1 };
+                let elect_checker2 = IElectCheckerDispatcher { contract_address: contract_address2 };
 
                 let old_seq_addr2 = elect_checker2.get_sequencer_address();
 
@@ -221,7 +230,7 @@ fn elect_with_span() {
             }
 
             fn deploy_elect_checker() -> IElectCheckerDispatcher {
-                let contract_address = declare("ElectChecker").unwrap().deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = declare("ElectChecker").unwrap().deploy(@ArrayTrait::new()).unwrap();
                 IElectCheckerDispatcher { contract_address }
             }
 

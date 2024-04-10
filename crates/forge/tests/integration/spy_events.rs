@@ -42,7 +42,7 @@ fn spy_events_simple() {
             #[test]
             fn spy_events_simple() {
                 let contract = declare("SpyEventsChecker").unwrap();
-                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
 
                 let mut spy = spy_events(SpyOn::One(contract_address));
@@ -112,7 +112,7 @@ fn assert_emitted_fails() {
             #[test]
             fn assert_emitted_fails() {
                 let contract = declare("SpyEventsChecker").unwrap();
-                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
 
                 let mut spy = spy_events(SpyOn::One(contract_address));
@@ -203,7 +203,7 @@ fn expect_three_events_while_two_emitted() {
             #[test]
             fn expect_three_events_while_two_emitted() {
                 let contract = declare("SpyEventsChecker").unwrap();
-                let contract_address = contract.deploy(@array![]).unwrap();
+                let (contract_address, _) = contract.deploy(@array![]).unwrap();
                 let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
 
                 let some_data = 456;
@@ -311,7 +311,7 @@ fn expect_two_events_while_three_emitted() {
             #[test]
             fn expect_two_events_while_three_emitted() {
                 let contract = declare("SpyEventsChecker").unwrap();
-                let contract_address = contract.deploy(@array![]).unwrap();
+                let (contract_address, _) = contract.deploy(@array![]).unwrap();
                 let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
 
                 let some_data = 456;
@@ -388,7 +388,7 @@ fn event_emitted_wrong_data_asserted() {
             #[test]
             fn event_emitted_wrong_data_asserted() {
                 let contract = declare("SpyEventsChecker").unwrap();
-                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
 
                 let mut spy = spy_events(SpyOn::One(contract_address));
@@ -449,7 +449,7 @@ fn emit_unnamed_event() {
             #[test]
             fn emit_unnamed_event() {
                 let contract = declare("SpyEventsChecker").unwrap();
-                let contract_address = contract.deploy(@array![]).unwrap();
+                let (contract_address, _) = contract.deploy(@array![]).unwrap();
                 let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
 
                 let mut spy = spy_events(SpyOn::One(contract_address));
@@ -514,7 +514,7 @@ fn assert_not_emitted_pass() {
             #[test]
             fn assert_not_emitted_pass() {
                 let contract = declare("SpyEventsChecker").unwrap();
-                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
 
                 let mut spy = spy_events(SpyOn::One(contract_address));
@@ -581,7 +581,7 @@ fn assert_not_emitted_fails() {
             #[test]
             fn assert_not_emitted_fails() {
                 let contract = declare("SpyEventsChecker").unwrap();
-                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
 
                 let mut spy = spy_events(SpyOn::One(contract_address));
@@ -665,7 +665,7 @@ fn capture_cairo0_event() {
             fn capture_cairo0_event() {
                 let cairo0_contract_address = contract_address_const::<0x2c77ca97586968c6651a533bd5f58042c368b14cf5f526d2f42f670012e10ac>();
                 let contract = declare("SpyEventsChecker").unwrap();
-                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
 
                 let mut spy = spy_events(SpyOn::All);

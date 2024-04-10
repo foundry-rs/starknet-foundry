@@ -85,11 +85,10 @@ $ sncast \
     --accounts-file my-account-file.json \
     account delete \
     --name some-name \
-    --network alpha-goerli
+    --network alpha-sepolia
   
-Do you want to remove account a4 from network alpha-goerli? (Y/n)
+Do you want to remove account some-name from network alpha-sepolia? (Y/n)
 Y
-Account removed from Scarb
 command: account delete
 result: Account successfully removed
 ```

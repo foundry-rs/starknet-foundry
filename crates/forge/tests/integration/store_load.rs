@@ -19,7 +19,7 @@ fn store_load_simple() {
             
             fn deploy_contract() -> IHelloStarknetDispatcher {
                 let contract = declare("HelloStarknet").unwrap();
-                let contract_address = contract.deploy(@array![]).unwrap();
+                let (contract_address, _) = contract.deploy(@array![]).unwrap();
                 IHelloStarknetDispatcher { contract_address }
             }
 
@@ -70,7 +70,7 @@ fn store_load_wrong_selector() {
             
             fn deploy_contract() -> IHelloStarknetDispatcher {
                 let contract = declare("HelloStarknet").unwrap();
-                let contract_address = contract.deploy(@array![]).unwrap();
+                let (contract_address, _) = contract.deploy(@array![]).unwrap();
                 IHelloStarknetDispatcher { contract_address }
             }
 
@@ -120,7 +120,7 @@ fn store_load_wrong_data_length() {
             
             fn deploy_contract() -> IHelloStarknetDispatcher {
                 let contract = declare("HelloStarknet").unwrap();
-                let contract_address = contract.deploy(@array![]).unwrap();
+                let (contract_address, _) = contract.deploy(@array![]).unwrap();
                 IHelloStarknetDispatcher { contract_address }
             }
 
@@ -167,7 +167,7 @@ fn store_load_max_boundaries_input() {
             
             fn deploy_contract() -> IHelloStarknetDispatcher {
                 let contract = declare("HelloStarknet").unwrap();
-                let contract_address = contract.deploy(@array![]).unwrap();
+                let (contract_address, _) = contract.deploy(@array![]).unwrap();
                 IHelloStarknetDispatcher { contract_address }
             }
             
@@ -287,7 +287,7 @@ fn store_load_structure() {
             
             fn deploy_contract() -> IStorageTesterDispatcher {
                 let contract = declare("StorageTester").unwrap();
-                let contract_address = contract.deploy(@array![]).unwrap();
+                let (contract_address, _) = contract.deploy(@array![]).unwrap();
                 IStorageTesterDispatcher { contract_address }
             }
 
@@ -368,7 +368,7 @@ fn store_load_felt_to_structure() {
             
             fn deploy_contract() -> IStorageTesterDispatcher {
                 let contract = declare("StorageTester").unwrap();
-                let contract_address = contract.deploy(@array![]).unwrap();
+                let (contract_address, _) = contract.deploy(@array![]).unwrap();
                 IStorageTesterDispatcher { contract_address }
             }
 
@@ -450,7 +450,7 @@ fn store_load_structure_to_felt() {
             
             fn deploy_contract() -> IStorageTesterDispatcher {
                 let contract = declare("StorageTester").unwrap();
-                let contract_address = contract.deploy(@array![]).unwrap();
+                let (contract_address, _) = contract.deploy(@array![]).unwrap();
                 IStorageTesterDispatcher { contract_address }
             }
 
@@ -512,7 +512,7 @@ fn store_load_felt_to_felt() {
             
             fn deploy_contract() -> IStorageTesterDispatcher {
                 let contract = declare("StorageTester").unwrap();
-                let contract_address = contract.deploy(@array![]).unwrap();
+                let (contract_address, _) = contract.deploy(@array![]).unwrap();
                 IStorageTesterDispatcher { contract_address }
             }
 

@@ -13,7 +13,7 @@ async fn test_show_config_from_snfoundry_toml() {
         command: show-config
         account: user1
         accounts_file_path: ../account-file
-        chain_id: alpha-goerli
+        chain_id: alpha-sepolia
         rpc_url: http://127.0.0.1:5055/rpc
         wait_retry_interval: 5
         wait_timeout: 300
@@ -41,7 +41,7 @@ async fn test_show_config_from_cli() {
     snapbox.assert().success().stdout_eq(indoc! {r"
         command: show-config
         account: /path/to/account.json
-        chain_id: alpha-goerli
+        chain_id: alpha-sepolia
         keystore: ../keystore
         rpc_url: http://127.0.0.1:5055/rpc
         wait_retry_interval: 1
@@ -60,7 +60,7 @@ async fn test_show_config_from_cli_and_snfoundry_toml() {
         command: show-config
         account: user2
         accounts_file_path: ../account-file
-        chain_id: alpha-goerli
+        chain_id: alpha-sepolia
         profile: profile2
         rpc_url: http://127.0.0.1:5055/rpc
         wait_retry_interval: 5
@@ -79,7 +79,7 @@ async fn test_show_config_when_no_keystore() {
         command: show-config
         account: user3
         accounts_file_path: ../account-file
-        chain_id: alpha-goerli
+        chain_id: alpha-sepolia
         profile: profile4
         rpc_url: http://127.0.0.1:5055/rpc
         wait_retry_interval: 5
@@ -97,7 +97,7 @@ async fn test_show_config_when_keystore() {
     snapbox.assert().success().stdout_eq(indoc! {r"
         command: show-config
         account: /path/to/account.json
-        chain_id: alpha-goerli
+        chain_id: alpha-sepolia
         keystore: ../keystore
         profile: profile3
         rpc_url: http://127.0.0.1:5055/rpc

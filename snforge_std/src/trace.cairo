@@ -1,6 +1,7 @@
 use core::result::ResultTrait;
 use core::starknet::testing::cheatcode;
 use core::starknet::ContractAddress;
+use super::_cheatcode::handle_cheatcode;
 
 /// Tree-like structure which contains all of the starknet calls and sub-calls along with the results
 #[derive(Drop, Serde, PartialEq)]
@@ -66,7 +67,7 @@ enum CallFailure {
 
 /// Returns current call trace of the test, up to the last call made to a contract
 fn get_call_trace() -> CallTrace {
-    let mut output = cheatcode::<'get_call_trace'>(array![].span());
+    let mut output = handle_cheatcode(cheatcode::<'get_call_trace'>(array![].span()));
     Serde::deserialize(ref output).unwrap()
 }
 

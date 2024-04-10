@@ -11,7 +11,7 @@ fn file_reading() {
         &[BASE_FILE_PATTERNS, &["**/*.txt", "**/*.json"]].concat(),
     );
 
-    let expected = indoc! {r"
+    let expected = indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
         
@@ -21,28 +21,28 @@ fn file_reading() {
         [FAIL] tests::test::json_non_existent
         
         Failure data:
-            Got an exception while executing a hint: Hint Error: No such file or directory [..]
+            "No such file or directory [..]"
         
         [FAIL] tests::test::invalid_json
         
         Failure data:
-            Got an exception while executing a hint: Hint Error: Parse JSON error: invalid type: integer `231232`, expected a map at line 1 column 6 , in file data/json/invalid.json
+            "Parse JSON error: invalid type: integer `231232`, expected a map at line 1 column 6 , in file data/json/invalid.json"
         
         [FAIL] tests::test::non_existent
         
         Failure data:
-            Got an exception while executing a hint: Hint Error: No such file or directory [..]
+            "No such file or directory [..]"
         
         [FAIL] tests::test::non_ascii
         
         Failure data:
-            Got an exception while executing a hint: Hint Error: Failed to parse data/non_ascii.txt file
+            "Failed to parse data/non_ascii.txt file"
         
         [PASS] tests::test::valid_content_and_same_content_no_matter_newlines [..]
         [PASS] tests::test::serialization [..]
         [PASS] tests::test::json_with_array [..]
         [FAIL] tests::test::negative_number
-            Got an exception while executing a hint: Hint Error: Failed to parse data/negative_number.txt file
+            "Failed to parse data/negative_number.txt file"
         
         Failure data:
         
@@ -62,7 +62,7 @@ fn file_reading() {
             tests::test::non_ascii
             tests::test::valid_content_different_folder
             tests::test::negative_number
-    "};
+    "#};
 
     // run from different directories to make sure cwd is always set to package directory
     let output = test_runner(&temp).assert().code(1);

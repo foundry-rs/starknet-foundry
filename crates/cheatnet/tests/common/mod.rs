@@ -13,7 +13,6 @@ use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     CallFailure, CallResult,
 };
-use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeState;
 use cheatnet::runtime_extensions::common::create_execute_calldata;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::{
@@ -21,6 +20,7 @@ use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::{
 };
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
+use cheatnet::state::CheatnetState;
 use conversions::IntoConv;
 use runtime::starknet::context::build_context;
 use scarb_api::metadata::MetadataCommandExt;
@@ -81,7 +81,7 @@ pub fn get_contracts() -> ContractsData {
 
 pub fn deploy_contract(
     state: &mut dyn State,
-    runtime_state: &mut RuntimeState,
+    cheatnet_state: &mut CheatnetState,
     contract_name: &str,
     calldata: &[Felt252],
 ) -> ContractAddress {
@@ -90,7 +90,7 @@ pub fn deploy_contract(
     let class_hash = declare(state, contract_name, &contracts_data).unwrap();
 
     let mut execution_resources = ExecutionResources::default();
-    let mut entry_point_execution_context = build_context(&runtime_state.cheatnet_state.block_info);
+    let mut entry_point_execution_context = build_context(&cheatnet_state.block_info);
     let hints = HashMap::new();
 
     let mut syscall_hint_processor = build_syscall_hint_processor(
@@ -101,23 +101,25 @@ pub fn deploy_contract(
         &hints,
     );
 
-    deploy(
+    let (contract_address, _retdata) = deploy(
         &mut syscall_hint_processor,
-        runtime_state,
+        cheatnet_state,
         &class_hash,
         calldata,
     )
-    .unwrap()
+    .unwrap();
+
+    contract_address
 }
 
 pub fn deploy_wrapper(
     state: &mut dyn State,
-    runtime_state: &mut RuntimeState,
+    cheatnet_state: &mut CheatnetState,
     class_hash: &ClassHash,
     calldata: &[Felt252],
 ) -> Result<ContractAddress, CheatcodeError> {
     let mut execution_resources = ExecutionResources::default();
-    let mut entry_point_execution_context = build_context(&runtime_state.cheatnet_state.block_info);
+    let mut entry_point_execution_context = build_context(&cheatnet_state.block_info);
     let hints = HashMap::new();
 
     let mut syscall_hint_processor = build_syscall_hint_processor(
@@ -128,23 +130,25 @@ pub fn deploy_wrapper(
         &hints,
     );
 
-    deploy(
+    let (contract_address, _retdata) = deploy(
         &mut syscall_hint_processor,
-        runtime_state,
+        cheatnet_state,
         class_hash,
         calldata,
-    )
+    )?;
+
+    Ok(contract_address)
 }
 
 pub fn deploy_at_wrapper(
     state: &mut dyn State,
-    runtime_state: &mut RuntimeState,
+    cheatnet_state: &mut CheatnetState,
     class_hash: &ClassHash,
     calldata: &[Felt252],
     contract_address: ContractAddress,
 ) -> Result<ContractAddress, CheatcodeError> {
     let mut execution_resources = ExecutionResources::default();
-    let mut entry_point_execution_context = build_context(&runtime_state.cheatnet_state.block_info);
+    let mut entry_point_execution_context = build_context(&cheatnet_state.block_info);
     let hints = HashMap::new();
 
     let mut syscall_hint_processor = build_syscall_hint_processor(
@@ -155,20 +159,22 @@ pub fn deploy_at_wrapper(
         &hints,
     );
 
-    deploy_at(
+    let (contract_address, _retdata) = deploy_at(
         &mut syscall_hint_processor,
-        runtime_state,
+        cheatnet_state,
         class_hash,
         calldata,
         contract_address,
-    )
+    )?;
+
+    Ok(contract_address)
 }
 
 // This does contract call without the transaction layer. This way `call_contract` can return data and modify state.
 // `call` and `invoke` on the transactional layer use such method under the hood.
 pub fn call_contract(
     state: &mut dyn State,
-    runtime_state: &mut RuntimeState,
+    cheatnet_state: &mut CheatnetState,
     contract_address: &ContractAddress,
     entry_point_selector: &Felt252,
     calldata: &[Felt252],
@@ -188,7 +194,7 @@ pub fn call_contract(
     };
 
     let mut execution_resources = ExecutionResources::default();
-    let mut entry_point_execution_context = build_context(&runtime_state.cheatnet_state.block_info);
+    let mut entry_point_execution_context = build_context(&cheatnet_state.block_info);
     let hints = HashMap::new();
 
     let mut syscall_hint_processor = build_syscall_hint_processor(
@@ -201,7 +207,7 @@ pub fn call_contract(
 
     call_entry_point(
         &mut syscall_hint_processor,
-        runtime_state,
+        cheatnet_state,
         entry_point,
         &AddressOrClassHash::ContractAddress(*contract_address),
     )

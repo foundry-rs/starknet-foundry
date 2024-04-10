@@ -1,4 +1,4 @@
-use super::RuntimeState;
+use super::CheatnetState;
 use crate::runtime_extensions::{
     call_to_blockifier_runtime_extension::{
         execution::entry_point::execute_call_entry_point, panic_data::try_extract_panic_data,
@@ -173,7 +173,7 @@ impl CallResult {
 
 pub fn call_l1_handler(
     syscall_handler: &mut SyscallHintProcessor,
-    runtime_state: &mut RuntimeState,
+    cheatnet_state: &mut CheatnetState,
     contract_address: &ContractAddress,
     entry_point_selector: &Felt252,
     calldata: &[Felt252],
@@ -194,7 +194,7 @@ pub fn call_l1_handler(
 
     call_entry_point(
         syscall_handler,
-        runtime_state,
+        cheatnet_state,
         entry_point,
         &AddressOrClassHash::ContractAddress(*contract_address),
     )
@@ -202,14 +202,14 @@ pub fn call_l1_handler(
 
 pub fn call_entry_point(
     syscall_handler: &mut SyscallHintProcessor,
-    runtime_state: &mut RuntimeState,
+    cheatnet_state: &mut CheatnetState,
     mut entry_point: CallEntryPoint,
     starknet_identifier: &AddressOrClassHash,
 ) -> CallResult {
     let exec_result = execute_call_entry_point(
         &mut entry_point,
         syscall_handler.state,
-        runtime_state,
+        cheatnet_state,
         syscall_handler.resources,
         syscall_handler.context,
     );

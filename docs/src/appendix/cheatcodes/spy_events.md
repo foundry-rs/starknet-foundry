@@ -77,7 +77,7 @@ trait ISpyEventsChecker<TContractState> {
 #[test]
 fn test_complex_assertions() {
     let contract = declare("SpyEventsChecker").unwrap();
-    let contract_address = contract.deploy(array![]).unwrap();
+    let (contract_address, _) = contract.deploy(array![]).unwrap();
     let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
 
     let mut spy = spy_events(SpyOn::One(contract_address));
@@ -135,7 +135,7 @@ trait ISpyEventsChecker<TContractState> {
 #[test]
 fn test_simple_assertions() {
     let contract = declare("SpyEventsChecker").unwrap();
-    let contract_address = contract.deploy(array![]).unwrap();
+    let (contract_address, _) = contract.deploy(array![]).unwrap();
     let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
 
     let mut spy = spy_events(SpyOn::One(contract_address));
@@ -202,9 +202,9 @@ trait ISpyEventsChecker<TContractState> {
 #[test]
 fn test_simple_assertions() {
     let contract = declare("SpyEventsChecker").unwrap();
-    let first_address = contract.deploy(array![]).unwrap();
-    let second_address = contract.deploy(array![]).unwrap();
-    let third_address = contract.deploy(array![]).unwrap();
+    let (first_address, _) = contract.deploy(array![]).unwrap();
+    let (second_address, _) = contract.deploy(array![]).unwrap();
+    let (third_address, _) = contract.deploy(array![]).unwrap();
 
     let first_dispatcher = ISpyEventsCheckerDispatcher { first_address };
     let second_dispatcher = ISpyEventsCheckerDispatcher { second_address };
@@ -271,7 +271,7 @@ trait ISpyEventsChecker<TContractState> {
 #[test]
 fn test_simple_assertions() {
     let contract = declare("SpyEventsChecker").unwrap();
-    let contract_address = contract.deploy(array![]).unwrap();
+    let (contract_address, _) = contract.deploy(array![]).unwrap();
     let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
 
     let mut spy = spy_events(SpyOn::One(contract_address));

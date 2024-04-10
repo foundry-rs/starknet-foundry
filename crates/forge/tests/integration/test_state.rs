@@ -90,15 +90,15 @@ fn simple_syscalls() {
             let block_info = exec_info.block_info.unbox();
 
             let contract_roll = declare("RollChecker").unwrap();
-            let contract_address_roll = contract_roll.deploy(@ArrayTrait::new()).unwrap();
+            let (contract_address_roll, _) = contract_roll.deploy(@ArrayTrait::new()).unwrap();
             let dispatcher_roll = IRollCheckerDispatcher { contract_address: contract_address_roll };
 
             let contract_warp = declare("WarpChecker").unwrap();
-            let contract_address_warp = contract_warp.deploy(@ArrayTrait::new()).unwrap();
+            let (contract_address_warp, _) = contract_warp.deploy(@ArrayTrait::new()).unwrap();
             let dispatcher_warp = IWarpCheckerDispatcher { contract_address: contract_address_warp };
             
             let contract_elect = declare("ElectChecker").unwrap();
-            let contract_address_elect = contract_elect.deploy(@ArrayTrait::new()).unwrap();
+            let (contract_address_elect, _) = contract_elect.deploy(@ArrayTrait::new()).unwrap();
             let dispatcher_elect = IElectCheckerDispatcher { contract_address: contract_address_elect };
 
             assert(dispatcher_roll.get_block_number() == block_info.block_number, 'Invalid block number');
@@ -106,7 +106,7 @@ fn simple_syscalls() {
             assert(dispatcher_elect.get_sequencer_address() == block_info.sequencer_address, 'Invalid sequencer address');
 
             let contract = declare("SpoofChecker").unwrap();
-            let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+            let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
             let dispatcher = ISpoofCheckerDispatcher { contract_address };
 
             let tx_info = exec_info.tx_info.unbox();
@@ -169,7 +169,7 @@ fn get_block_hash_syscall_in_dispatcher() {
         #[test]
         fn get_block_hash_syscall_in_dispatcher() {
             let block_hash_checker = declare("BlockHashChecker").unwrap();
-            let block_hash_checker_address = block_hash_checker.deploy(@ArrayTrait::new()).unwrap();
+            let (block_hash_checker_address, _) = block_hash_checker.deploy(@ArrayTrait::new()).unwrap();
             let block_hash_checker_dispatcher = BlockHashCheckerDispatcher { contract_address: block_hash_checker_address };
             
             block_hash_checker_dispatcher.write_block();
@@ -348,7 +348,7 @@ fn cant_call_test_contract() {
         #[test]
         fn cant_call_test_contract() {
             let contract = declare("CallsBack").unwrap();
-            let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+            let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
             let dispatcher = ICallsBackDispatcher { contract_address: contract_address };
             dispatcher.call_back(test_address());
         }
@@ -733,14 +733,14 @@ fn caller_address_in_called_contract() {
         #[test]
         fn caller_address_in_called_contract() {
             let prank_checker = declare("PrankChecker").unwrap();
-            let contract_address_prank_checker = prank_checker.deploy(@ArrayTrait::new()).unwrap();
+            let (contract_address_prank_checker, _) = prank_checker.deploy(@ArrayTrait::new()).unwrap();
             let dispatcher_prank_checker = IPrankCheckerDispatcher { contract_address: contract_address_prank_checker };
 
             assert(dispatcher_prank_checker.get_caller_address() == test_address().into(), 'Incorrect caller address');
 
 
             let constructor_prank_checker = declare("ConstructorPrankChecker").unwrap();
-            let contract_address_constructor_prank_checker = constructor_prank_checker.deploy(@ArrayTrait::new()).unwrap();
+            let (contract_address_constructor_prank_checker, _) = constructor_prank_checker.deploy(@ArrayTrait::new()).unwrap();
             let dispatcher_constructor_prank_checker = IConstructorPrankCheckerDispatcher { contract_address: contract_address_constructor_prank_checker };
 
             assert(dispatcher_constructor_prank_checker.get_stored_caller_address() == test_address(), 'Incorrect caller address');

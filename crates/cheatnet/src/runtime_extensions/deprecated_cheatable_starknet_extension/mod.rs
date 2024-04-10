@@ -34,7 +34,6 @@ use self::runtime::{
 
 use super::call_to_blockifier_runtime_extension::execution::entry_point::execute_call_entry_point;
 use super::call_to_blockifier_runtime_extension::execution::syscall_hooks;
-use super::call_to_blockifier_runtime_extension::RuntimeState;
 
 pub mod runtime;
 
@@ -407,12 +406,11 @@ pub fn execute_inner_call(
     syscall_handler: &mut DeprecatedSyscallHintProcessor<'_>,
     cheatnet_state: &mut CheatnetState,
 ) -> DeprecatedSyscallResult<ReadOnlySegment> {
-    let mut runtime_state = RuntimeState { cheatnet_state };
     // region: Modified blockifier code
     let call_info = execute_call_entry_point(
         call,
         syscall_handler.state,
-        &mut runtime_state,
+        cheatnet_state,
         syscall_handler.resources,
         syscall_handler.context,
     )?;
