@@ -3,7 +3,7 @@ use crate::{
     runtime_extensions::{
         call_to_blockifier_runtime_extension::{
             rpc::{CallFailure, CallResult, UsedResources},
-            CallToBlockifierRuntime, RuntimeState,
+            CallToBlockifierRuntime,
         },
         cheatable_starknet_runtime_extension::SyscallSelector,
         common::{get_relocated_vm_trace, sum_syscall_counters},
@@ -314,9 +314,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 handle_deploy_result(deploy(
                     syscall_handler,
-                    &mut RuntimeState {
-                        cheatnet_state: cheatnet_runtime.extension.cheatnet_state,
-                    },
+                    cheatnet_runtime.extension.cheatnet_state,
                     &class_hash,
                     &calldata,
                 ))
@@ -332,9 +330,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 handle_deploy_result(deploy_at(
                     syscall_handler,
-                    &mut RuntimeState {
-                        cheatnet_state: cheatnet_runtime.extension.cheatnet_state,
-                    },
+                    cheatnet_runtime.extension.cheatnet_state,
                     &class_hash,
                     &calldata,
                     contract_address,
@@ -395,13 +391,10 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 let cheatnet_runtime = &mut extended_runtime.extended_runtime;
 
-                let mut runtime_state = RuntimeState {
-                    cheatnet_state: cheatnet_runtime.extension.cheatnet_state,
-                };
                 let syscall_handler = &mut cheatnet_runtime.extended_runtime.hint_handler;
                 match l1_handler_execute(
                     syscall_handler,
-                    &mut runtime_state,
+                    cheatnet_runtime.extension.cheatnet_state,
                     contract_address,
                     &function_selector,
                     &from_address,
