@@ -472,31 +472,28 @@ pub enum WaitForTransactionError {
 }
 
 impl SerializeAsFelt252Vec for WaitForTransactionError {
-    fn serialize_as_felt252_vec(&self) -> Vec<Felt252> {
+    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
         match self {
             WaitForTransactionError::TransactionError(err) => {
-                let mut res = vec![Felt252::from(0)];
-                res.extend(err.serialize_as_felt252_vec());
-                res
+                output.push(Felt252::from(0));
+                err.serialize_into_felt252_vec(output);
             }
-            WaitForTransactionError::TimedOut => vec![Felt252::from(1)],
+            WaitForTransactionError::TimedOut => output.push(Felt252::from(1)),
             WaitForTransactionError::ProviderError(err) => {
-                let mut res = vec![Felt252::from(2)];
-                res.extend(err.serialize_as_felt252_vec());
-                res
+                output.push(Felt252::from(2));
+                err.serialize_into_felt252_vec(output);
             }
         }
     }
 }
 
 impl SerializeAsFelt252Vec for TransactionError {
-    fn serialize_as_felt252_vec(&self) -> Vec<Felt252> {
+    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
         match self {
-            TransactionError::Rejected => vec![Felt252::from(0)],
+            TransactionError::Rejected => output.push(Felt252::from(0)),
             TransactionError::Reverted(err) => {
-                let mut res = vec![Felt252::from(1)];
-                res.extend(err.data.as_str().serialize_as_felt252_vec());
-                res
+                output.push(Felt252::from(1));
+                err.data.serialize_into_felt252_vec(output);
             }
         }
     }

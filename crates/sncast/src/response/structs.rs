@@ -46,10 +46,9 @@ pub struct CallResponse {
 impl CommandResponse for CallResponse {}
 
 impl SerializeAsFelt252Vec for CallResponse {
-    fn serialize_as_felt252_vec(&self) -> Vec<Felt252> {
-        let mut res = vec![Felt252::from(self.response.len())];
-        res.extend(self.response.iter().map(|el| Felt252::from_(el.0)));
-        res
+    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
+        output.push(Felt252::from(self.response.len()));
+        output.extend(self.response.iter().map(|el| Felt252::from_(el.0)));
     }
 }
 
@@ -60,8 +59,8 @@ pub struct InvokeResponse {
 impl CommandResponse for InvokeResponse {}
 
 impl SerializeAsFelt252Vec for InvokeResponse {
-    fn serialize_as_felt252_vec(&self) -> Vec<Felt252> {
-        vec![Felt252::from_(self.transaction_hash.0)]
+    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
+        output.push(Felt252::from_(self.transaction_hash.0));
     }
 }
 
@@ -73,11 +72,11 @@ pub struct DeployResponse {
 impl CommandResponse for DeployResponse {}
 
 impl SerializeAsFelt252Vec for DeployResponse {
-    fn serialize_as_felt252_vec(&self) -> Vec<Felt252> {
-        vec![
+    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
+        output.extend([
             Felt252::from_(self.contract_address.0),
             Felt252::from_(self.transaction_hash.0),
-        ]
+        ]);
     }
 }
 
@@ -89,11 +88,11 @@ pub struct DeclareResponse {
 impl CommandResponse for DeclareResponse {}
 
 impl SerializeAsFelt252Vec for DeclareResponse {
-    fn serialize_as_felt252_vec(&self) -> Vec<Felt252> {
-        vec![
+    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
+        output.extend([
             Felt252::from_(self.class_hash.0),
             Felt252::from_(self.transaction_hash.0),
-        ]
+        ]);
     }
 }
 

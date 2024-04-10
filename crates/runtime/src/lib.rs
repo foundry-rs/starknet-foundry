@@ -1,14 +1,9 @@
-use std::any::Any;
-use std::collections::HashMap;
-use std::io;
-
 use anyhow::Result;
-
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::execution_utils::felt_to_stark_felt;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::execution::syscalls::SyscallResult;
-
+use blockifier::state::errors::StateError;
 use cairo_felt::Felt252;
 use cairo_lang_casm::hints::{Hint, StarknetHint};
 use cairo_lang_casm::operand::{CellRef, ResOperand};
@@ -28,11 +23,12 @@ use cairo_vm::vm::errors::hint_errors::HintError::CustomHint;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cairo_vm::vm::vm_core::VirtualMachine;
-
-use blockifier::state::errors::StateError;
 use conversions::byte_array::ByteArray;
 use conversions::felt252::SerializeAsFelt252Vec;
 use starknet_api::StarknetApiError;
+use std::any::Any;
+use std::collections::HashMap;
+use std::io;
 use thiserror::Error;
 use utils::BufferReader;
 
@@ -394,6 +390,12 @@ pub enum SyscallHandlingResult {
 pub enum CheatcodeHandlingResult {
     Forwarded,
     Handled(Vec<Felt252>),
+}
+
+impl CheatcodeHandlingResult {
+    pub fn from_serializable(serializable: impl SerializeAsFelt252Vec) -> Self {
+        Self::Handled(serializable.serialize_as_felt252_vec())
+    }
 }
 
 pub trait ExtensionLogic {
