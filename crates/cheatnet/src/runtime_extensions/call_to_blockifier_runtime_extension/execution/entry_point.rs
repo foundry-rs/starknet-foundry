@@ -142,33 +142,6 @@ pub fn execute_call_entry_point(
         ),
     };
 
-    let result = result.map_err(|error| {
-        // endregion
-        let vm_trace = error.try_to_vm_trace();
-        match error {
-            // On VM error, pack the stack trace into the propagated error.
-            EntryPointExecutionError::CairoRunError(internal_error) => {
-                context.error_stack.push((storage_address, vm_trace));
-                // TODO(Dori, 1/5/2023): Call error_trace only in the top call; as it is
-                //   right now, each intermediate VM error is wrapped in a
-                //   VirtualMachineExecutionErrorWithTrace error with the stringified trace
-                //   of all errors below it.
-                //   When that's done, remove the 10000 character limitation.
-                let error_trace = context.error_trace();
-                EntryPointExecutionError::VirtualMachineExecutionErrorWithTrace {
-                    trace: error_trace[..min(10000, error_trace.len())].to_string(),
-                    source: internal_error,
-                }
-            }
-            other_error => {
-                context
-                    .error_stack
-                    .push((storage_address, format!("{}\n", &other_error)));
-                other_error
-            }
-        }
-    });
-
     // region: Modified blockifier code
     match result {
         Ok((call_info, syscall_counter, vm_trace)) => {
