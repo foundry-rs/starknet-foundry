@@ -942,3 +942,52 @@ fn detailed_resources_flag() {
         "},
     );
 }
+
+#[test]
+fn catch_runtime_errors() {
+    let temp = setup_package("simple_package");
+
+    temp.child("tests/test.cairo")
+        .write_str(indoc!(
+            r#"
+                use snforge_std::fs::{FileTrait, read_txt};
+
+                #[test]
+                #[should_panic]
+                fn catch_no_such_file() {
+                    let file = FileTrait::new("no_way_this_file_exists");
+                    let content = read_txt(@file);
+
+                    assert!(false);
+                }
+
+                #[test]
+                #[should_panic(expected: 'u8_add Overflow')]
+                fn overflow() {
+                    let a: u8 = 255;
+                    let b: u8 = a + 20;
+
+                    assert!(false);
+                }
+            "#
+        ))
+        .unwrap();
+
+    let output = test_runner(&temp).assert();
+
+    assert_stdout_contains(
+        output,
+        formatdoc!(
+            r#"
+                [..]Compiling[..]
+                [..]Finished[..]
+                [PASS] tests::test::catch_no_such_file [..]
+
+                Success data:
+                    "No such file or directory (os error 2)"
+
+                [PASS] tests::test::overflow [..]
+            "#
+        ),
+    );
+}
