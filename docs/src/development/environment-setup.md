@@ -79,3 +79,7 @@ Some typos can be automatically fixed by running
 ```shell
 $ typos -w
 ```
+
+## Contributing
+
+Read the general contribution guideline [here](https://github.com/foundry-rs/starknet-foundry/blob/master/CONTRIBUTING.md)
