@@ -29,6 +29,6 @@ trait ContractClassTrait {
         contract_address: ContractAddress
     ) -> SyscallResult<(ContractAddress, Span<felt252>)>;
 
-    fn new <T, +Into<T, ClassHash>> (class_hash: T) -> ContractClass;
+    fn new<T, +Into<T, ClassHash>> (class_hash: T) -> ContractClass;
 }
 ```
