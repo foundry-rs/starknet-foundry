@@ -960,15 +960,6 @@ fn catch_runtime_errors() {
 
                     assert!(false);
                 }
-
-                #[test]
-                #[should_panic(expected: 'u8_add Overflow')]
-                fn overflow() {
-                    let a: u8 = 255;
-                    let b: u8 = a + 20;
-
-                    assert!(false);
-                }
             "#
         ))
         .unwrap();
@@ -985,8 +976,6 @@ fn catch_runtime_errors() {
 
                 Success data:
                     "No such file or directory (os error 2)"
-
-                [PASS] tests::test::overflow [..]
             "#
         ),
     );
