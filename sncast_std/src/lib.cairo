@@ -126,10 +126,11 @@ pub fn call(
 
     let mut buf = handle_cheatcode(cheatcode::<'call'>(inputs.span()));
 
-    let mut result_data: Result<CallResult, ScriptCommandError> = Serde::<
-        Result<CallResult>
-    >::deserialize(ref buf)
-        .expect('call deserialize failed');
+    let mut result_data: Result<CallResult, ScriptCommandError> =
+        match Serde::<Result<CallResult>>::deserialize(ref buf) {
+        Option::Some(result_data) => result_data,
+        Option::None => panic!("call deserialize failed")
+    };
 
     result_data
 }
@@ -165,10 +166,11 @@ pub fn declare(
 
     let mut buf = handle_cheatcode(cheatcode::<'declare'>(inputs.span()));
 
-    let mut result_data: Result<DeclareResult, ScriptCommandError> = Serde::<
-        Result<DeclareResult>
-    >::deserialize(ref buf)
-        .expect('declare deserialize failed');
+    let mut result_data: Result<DeclareResult, ScriptCommandError> =
+        match Serde::<Result<DeclareResult>>::deserialize(ref buf) {
+        Option::Some(result_data) => result_data,
+        Option::None => panic!("declare deserialize failed"),
+    };
 
     result_data
 }
@@ -221,10 +223,11 @@ pub fn deploy(
 
     let mut buf = handle_cheatcode(cheatcode::<'deploy'>(inputs.span()));
 
-    let mut result_data: Result<DeployResult, ScriptCommandError> = Serde::<
-        Result<DeployResult>
-    >::deserialize(ref buf)
-        .expect('deploy deserialize failed');
+    let mut result_data: Result<DeployResult, ScriptCommandError> =
+        match Serde::<Result<DeployResult>>::deserialize(ref buf) {
+        Option::Some(result_data) => result_data,
+        Option::None => panic!("deploy deserialize failed")
+    };
 
     result_data
 }
@@ -265,10 +268,11 @@ pub fn invoke(
 
     let mut buf = handle_cheatcode(cheatcode::<'invoke'>(inputs.span()));
 
-    let mut result_data: Result<InvokeResult, ScriptCommandError> = Serde::<
-        Result<InvokeResult>
-    >::deserialize(ref buf)
-        .expect('invoke deserialize failed');
+    let mut result_data: Result<InvokeResult, ScriptCommandError> =
+        match Serde::<Result<InvokeResult>>::deserialize(ref buf) {
+        Option::Some(result_data) => result_data,
+        Option::None => panic!("invoke deserialize failed")
+    };
 
     result_data
 }
