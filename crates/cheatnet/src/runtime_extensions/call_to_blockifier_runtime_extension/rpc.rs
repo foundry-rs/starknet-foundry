@@ -39,12 +39,6 @@ pub enum CallResult {
     Failure(CallFailure),
 }
 
-impl Default for CallResult {
-    fn default() -> Self {
-        Self::Failure(CallFailure::Error { msg: String::new() })
-    }
-}
-
 /// Enum representing possible call failure and its type.
 /// `Panic` - Recoverable, meant to be caught by the user.
 /// `Error` - Unrecoverable, equivalent of panic! in rust.

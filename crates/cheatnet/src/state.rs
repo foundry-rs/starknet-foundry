@@ -149,7 +149,6 @@ impl<T> CheatStatus<T> {
 }
 
 /// Tree structure representing trace of a call.
-#[derive(Default)]
 pub struct CallTrace {
     pub entry_point: CallEntryPoint,
     // These also include resources used by internal calls
@@ -159,6 +158,20 @@ pub struct CallTrace {
     pub nested_calls: Vec<CallTraceNode>,
     pub result: CallResult,
     pub vm_trace: Option<Vec<TraceEntry>>,
+}
+
+impl CallTrace {
+    fn default_successful_call() -> Self {
+        Self {
+            entry_point: Default::default(),
+            used_execution_resources: Default::default(),
+            used_l1_resources: Default::default(),
+            used_syscalls: Default::default(),
+            nested_calls: vec![],
+            result: CallResult::Success { ret_data: vec![] },
+            vm_trace: None,
+        }
+    }
 }
 
 /// Enum representing node of a trace of a call.
@@ -278,8 +291,7 @@ impl Default for CheatnetState {
         test_code_entry_point.class_hash = Some(class_hash!(TEST_CONTRACT_CLASS_HASH));
         let test_call = Rc::new(RefCell::new(CallTrace {
             entry_point: test_code_entry_point,
-            result: CallResult::Success { ret_data: vec![] },
-            ..Default::default()
+            ..CallTrace::default_successful_call()
         }));
         Self {
             rolled_contracts: Default::default(),
@@ -411,7 +423,7 @@ impl TraceData {
     ) {
         let new_call = Rc::new(RefCell::new(CallTrace {
             entry_point,
-            ..Default::default()
+            ..CallTrace::default_successful_call()
         }));
         let current_call = self.current_call_stack.top();
 
