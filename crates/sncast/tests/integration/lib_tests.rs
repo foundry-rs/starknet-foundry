@@ -109,7 +109,7 @@ async fn test_get_account_no_user_for_network() {
     let err = account.unwrap_err();
     assert!(err
         .to_string()
-        .contains("Account = user10 not found under network = alpha-goerli"));
+        .contains("Account = user10 not found under network = alpha-sepolia"));
 }
 
 #[tokio::test]

@@ -1,28 +1,26 @@
-use crate::common::state::build_runtime_state;
 use crate::common::{call_contract, deploy_wrapper};
 use crate::common::{deploy_contract, felt_selector_from_name, state::create_cached_state};
 use blockifier::state::cached_state::CachedState;
 use cairo_felt::Felt252;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallResult;
-use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeState;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::state::{CheatnetState, ExtendedStateReader};
 use starknet_api::core::ClassHash;
 use starknet_api::core::ContractAddress;
 
-pub struct TestEnvironment<'a> {
+pub struct TestEnvironment {
     pub cached_state: CachedState<ExtendedStateReader>,
-    pub runtime_state: RuntimeState<'a>,
+    pub cheatnet_state: CheatnetState,
 }
 
-impl<'a> TestEnvironment<'a> {
-    pub fn new(cheatnet_state: &'a mut CheatnetState) -> Self {
+impl TestEnvironment {
+    pub fn new() -> Self {
         let cached_state = create_cached_state();
-        let runtime_state = build_runtime_state(cheatnet_state);
+
         Self {
             cached_state,
-            runtime_state,
+            cheatnet_state: CheatnetState::default(),
         }
     }
 
@@ -33,7 +31,7 @@ impl<'a> TestEnvironment<'a> {
     pub fn deploy(&mut self, contract_name: &str, calldata: &[Felt252]) -> ContractAddress {
         deploy_contract(
             &mut self.cached_state,
-            &mut self.runtime_state,
+            &mut self.cheatnet_state,
             contract_name,
             calldata,
         )
@@ -46,7 +44,7 @@ impl<'a> TestEnvironment<'a> {
     ) -> ContractAddress {
         deploy_wrapper(
             &mut self.cached_state,
-            &mut self.runtime_state,
+            &mut self.cheatnet_state,
             class_hash,
             calldata,
         )
@@ -61,7 +59,7 @@ impl<'a> TestEnvironment<'a> {
     ) -> CallResult {
         call_contract(
             &mut self.cached_state,
-            &mut self.runtime_state,
+            &mut self.cheatnet_state,
             contract_address,
             &felt_selector_from_name(selector),
             calldata,
@@ -77,8 +75,7 @@ impl<'a> TestEnvironment<'a> {
             .iter()
             .map(|x| Felt252::from(*x))
             .collect::<Vec<_>>();
-        self.runtime_state
-            .cheatnet_state
+        self.cheatnet_state
             .precalculate_address(class_hash, &calldata)
     }
 }

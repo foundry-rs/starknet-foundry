@@ -14,7 +14,7 @@ use simple_package::hello_starknet::IHelloStarknetDispatcherTrait;
 fn call_and_invoke() {
     let contract = declare("HelloStarknet").unwrap();
     let constructor_calldata = @ArrayTrait::new();
-    let contract_address = contract.deploy(constructor_calldata).unwrap();
+    let (contract_address, _) = contract.deploy(constructor_calldata).unwrap();
     let dispatcher = IHelloStarknetDispatcher { contract_address };
 
     let balance = dispatcher.get_balance();

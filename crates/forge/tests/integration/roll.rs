@@ -25,7 +25,7 @@ fn roll_basic() {
             #[test]
             fn test_stop_roll() {
                 let contract = declare("RollChecker").unwrap();
-                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IRollCheckerDispatcher { contract_address };
 
                 let old_block_number = dispatcher.get_block_number();
@@ -45,8 +45,11 @@ fn roll_basic() {
             fn test_roll_multiple() {
                 let contract = declare("RollChecker").unwrap();
 
-                let roll_checker1 = IRollCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };
-                let roll_checker2 = IRollCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };
+                let (contract_address1, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address2, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+
+                let roll_checker1 = IRollCheckerDispatcher { contract_address: contract_address1 };
+                let roll_checker2 = IRollCheckerDispatcher { contract_address: contract_address2 };
 
                 let old_block_number1 = roll_checker1.get_block_number();
                 let old_block_number2 = roll_checker2.get_block_number();
@@ -72,8 +75,11 @@ fn roll_basic() {
             fn test_roll_all() {
                 let contract = declare("RollChecker").unwrap();
 
-                let roll_checker1 = IRollCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };
-                let roll_checker2 = IRollCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };
+                let (contract_address1, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address2, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+
+                let roll_checker1 = IRollCheckerDispatcher { contract_address: contract_address1 };
+                let roll_checker2 = IRollCheckerDispatcher { contract_address: contract_address2 };
 
                 let old_block_number1 = roll_checker1.get_block_number();
                 let old_block_number2 = roll_checker2.get_block_number();
@@ -98,7 +104,7 @@ fn roll_basic() {
             #[test]
             fn test_roll_all_stop_one() {
                 let contract = declare("RollChecker").unwrap();
-                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IRollCheckerDispatcher { contract_address };
 
                 let old_block_number = dispatcher.get_block_number();
@@ -147,7 +153,7 @@ fn roll_complex() {
 
             fn deploy_roll_checker()  -> IRollCheckerDispatcher {
                 let contract = declare("RollChecker").unwrap();
-                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 IRollCheckerDispatcher { contract_address }
             }
 
@@ -155,8 +161,11 @@ fn roll_complex() {
             fn roll_complex() {
                 let contract = declare("RollChecker").unwrap();
 
-                let roll_checker1 = IRollCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };
-                let roll_checker2 = IRollCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };
+                let (contract_address1, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address2, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+
+                let roll_checker1 = IRollCheckerDispatcher { contract_address: contract_address1 };
+                let roll_checker2 = IRollCheckerDispatcher { contract_address: contract_address2 };
 
                 let old_block_number2 = roll_checker2.get_block_number();
 
@@ -225,7 +234,7 @@ fn roll_with_span() {
             }
 
             fn deploy_roll_checker() -> IRollCheckerDispatcher {
-                let contract_address = declare("RollChecker").unwrap().deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = declare("RollChecker").unwrap().deploy(@ArrayTrait::new()).unwrap();
                 IRollCheckerDispatcher { contract_address }
             }
 

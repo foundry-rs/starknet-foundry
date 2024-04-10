@@ -158,10 +158,9 @@ pub fn chain_id_to_network_name(chain_id: FieldElement) -> String {
     let decoded = decode_chain_id(chain_id);
 
     match &decoded[..] {
-        "SN_GOERLI" => "alpha-goerli".into(),
-        "SN_GOERLI2" => "alpha-goerli2".into(),
         "SN_MAIN" => "alpha-mainnet".into(),
         "SN_SEPOLIA" => "alpha-sepolia".into(),
+        "SN_INTEGRATION_SEPOLIA" => "alpha-integration-sepolia".into(),
         _ => decoded,
     }
 }
@@ -750,16 +749,12 @@ mod tests {
 
     #[test]
     fn test_chain_id_to_network_name() {
-        let network_name_goerli = chain_id_to_network_name(
-            FieldElement::from_byte_slice_be("SN_GOERLI".as_bytes()).unwrap(),
-        );
         let network_name_katana = chain_id_to_network_name(
             FieldElement::from_byte_slice_be("KATANA".as_bytes()).unwrap(),
         );
         let network_name_sepolia = chain_id_to_network_name(
             FieldElement::from_byte_slice_be("SN_SEPOLIA".as_bytes()).unwrap(),
         );
-        assert_eq!(network_name_goerli, "alpha-goerli");
         assert_eq!(network_name_katana, "KATANA");
         assert_eq!(network_name_sepolia, "alpha-sepolia");
     }
@@ -768,7 +763,7 @@ mod tests {
     fn test_get_account_data_from_accounts_file() {
         let account = get_account_data_from_accounts_file(
             "user1",
-            FieldElement::from_byte_slice_be("SN_GOERLI".as_bytes()).unwrap(),
+            FieldElement::from_byte_slice_be("SN_SEPOLIA".as_bytes()).unwrap(),
             &Utf8PathBuf::from("tests/data/accounts/accounts.json"),
         )
         .unwrap();

@@ -1,20 +1,11 @@
 use crate::{
-    cheatcodes::test_environment::TestEnvironment, common::assertions::assert_success,
-    common::get_contracts,
-};
-use blockifier::state::cached_state::{
-    CachedState, GlobalContractCache, GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST,
+    cheatcodes::test_environment::TestEnvironment,
+    common::{assertions::assert_success, get_contracts, state::create_fork_cached_state_at},
 };
 use cairo_felt::Felt252;
-use cheatnet::{
-    constants::build_testing_state,
-    forking::state::ForkStateReader,
-    runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallResult,
-    state::{CheatnetState, ExtendedStateReader},
-};
+use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallResult;
 use num_traits::Zero;
 use starknet_api::{
-    block::BlockNumber,
     contract_address,
     core::{ClassHash, ContractAddress, PatriciaKey},
     hash::StarkHash,
@@ -30,14 +21,13 @@ trait ReplaceBytecodeTrait {
     );
 }
 
-impl ReplaceBytecodeTrait for TestEnvironment<'_> {
+impl ReplaceBytecodeTrait for TestEnvironment {
     fn replace_class_for_contract(
         &mut self,
         contract_address: ContractAddress,
         class_hash: ClassHash,
     ) {
-        self.runtime_state
-            .cheatnet_state
+        self.cheatnet_state
             .replace_class_for_contract(contract_address, class_hash);
     }
 }
@@ -45,22 +35,8 @@ impl ReplaceBytecodeTrait for TestEnvironment<'_> {
 #[test]
 fn fork() {
     let cache_dir = TempDir::new().unwrap();
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
-    test_env.cached_state = CachedState::new(
-        ExtendedStateReader {
-            dict_state_reader: build_testing_state(),
-            fork_state_reader: Some(
-                ForkStateReader::new(
-                    "http://188.34.188.184:7070/rpc/v0_7".parse().unwrap(),
-                    BlockNumber(53300),
-                    cache_dir.path().to_str().unwrap(),
-                )
-                .unwrap(),
-            ),
-        },
-        GlobalContractCache::new(GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST),
-    );
+    let mut test_env = TestEnvironment::new();
+    test_env.cached_state = create_fork_cached_state_at(53_300, cache_dir.path().to_str().unwrap());
     let contracts_data = get_contracts();
 
     let class_hash = test_env.declare("ReplaceInFork", &contracts_data);
@@ -83,8 +59,7 @@ fn fork() {
 
 #[test]
 fn override_entrypoint() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
     let contracts_data = get_contracts();
 
     let class_hash_a = test_env.declare("ReplaceBytecodeA", &contracts_data);
@@ -104,8 +79,7 @@ fn override_entrypoint() {
 
 #[test]
 fn keep_storage() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
     let contracts_data = get_contracts();
 
     let class_hash_a = test_env.declare("ReplaceBytecodeA", &contracts_data);
@@ -129,8 +103,7 @@ fn keep_storage() {
 
 #[test]
 fn allow_setting_original_class() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
     let contracts_data = get_contracts();
 
     let class_hash_a = test_env.declare("ReplaceBytecodeA", &contracts_data);

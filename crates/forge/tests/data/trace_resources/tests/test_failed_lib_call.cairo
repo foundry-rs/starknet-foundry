@@ -13,7 +13,7 @@ fn test_failed_lib_call() {
     let empty_hash = declare("Empty").unwrap().class_hash;
     let proxy_hash = declare("TraceInfoProxy").unwrap().class_hash;
     let checker = declare("TraceInfoChecker").unwrap();
-    let checker_address = checker.deploy(@array![]).unwrap();
+    let (checker_address, _) = checker.deploy(@array![]).unwrap();
 
     trace_resources::use_builtins_and_syscalls(empty_hash, 7);
 

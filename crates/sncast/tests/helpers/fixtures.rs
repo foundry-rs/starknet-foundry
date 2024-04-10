@@ -111,7 +111,7 @@ pub async fn deploy_cairo_0_account() {
         .unwrap_or_else(|_| panic!("Failed to parse accounts file at = {accounts_file}"));
 
     let account_data = items
-        .get("alpha-goerli")
+        .get("alpha-sepolia")
         .and_then(|accounts| accounts.get("cairo0"))
         .unwrap_or_else(|| panic!("Failed to get cairo0 account"));
 

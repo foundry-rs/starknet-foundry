@@ -1,6 +1,6 @@
 # `l1_handler_execute`
 
-> `fn execute(self: L1Handler) -> Result<(), RevertedTransaction>`
+> `fn execute(self: L1Handler) -> SyscallResult<()>`
 
 Executes a `#[l1_handler]` function to mock a
 [message](https://docs.starknet.io/documentation/architecture_and_concepts/L1-L2_Communication/messaging-mechanism/)
@@ -9,9 +9,8 @@ arriving from Ethereum.
 > 📝 **Note**
 > 
 > Execution of the `#[l1_handler]` function may panic like any other function.
-> If you'd like to assert the panic data, use `RevertedTransaction` returned by the function.
 > It works like a regular `SafeDispatcher` would with a function call.
-> For more info check out [handling panic errors](../../testing/contracts.md#handling-errors)
+> For more info about asserting panic data check out [handling panic errors](../../testing/contracts.md#handling-errors)
 
 
 ```rust

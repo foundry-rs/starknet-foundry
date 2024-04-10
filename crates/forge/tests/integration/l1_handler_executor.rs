@@ -24,14 +24,14 @@ fn l1_handler_execute() {
             use serde::Serde;
             use array::{ArrayTrait, SpanTrait};
             use core::result::ResultTrait;
-            use snforge_std::{declare, ContractClassTrait, L1Handler, L1HandlerTrait, RevertedTransaction};
+            use snforge_std::{declare, ContractClassTrait, L1Handler, L1HandlerTrait};
 
             #[test]
             fn l1_handler_execute() {
                 let calldata = array![0x123];
 
                 let contract = declare("l1_handler_executor").unwrap();
-                let contract_address = contract.deploy(@calldata).unwrap();
+                let (contract_address, _) = contract.deploy(@calldata).unwrap();
 
                 let l1_data = L1Data {
                     balance: 42,
@@ -61,7 +61,7 @@ fn l1_handler_execute() {
                 let calldata = array![0x123];
 
                 let contract = declare("l1_handler_executor").unwrap();
-                let contract_address = contract.deploy(@calldata).unwrap();
+                let (contract_address, _) = contract.deploy(@calldata).unwrap();
 
 
                 let mut l1_handler = L1HandlerTrait::new(
@@ -73,7 +73,7 @@ fn l1_handler_execute() {
                 l1_handler.payload = array![].span();
                 match l1_handler.execute() {
                     Result::Ok(_) => panic_with_felt252('should have panicked'),
-                    Result::Err(RevertedTransaction { panic_data }) => {
+                    Result::Err(panic_data) => {
                         assert(*panic_data.at(0) == 'custom', 'Wrong 1st panic datum');
                         assert(*panic_data.at(1) == 'panic', 'Wrong 2nd panic datum');
                     },

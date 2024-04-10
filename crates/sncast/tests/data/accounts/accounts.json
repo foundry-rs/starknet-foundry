@@ -1,5 +1,5 @@
 {
-    "alpha-goerli": {
+    "alpha-sepolia": {
         "user0": {
             "private_key": "0x56c12e097e49ea382ca8eadec0839401",
             "public_key": "0x48234b9bc6c1e749f4b908d310d8c53dae6564110b05ccf79016dca8ce7dfac",
@@ -60,20 +60,6 @@
             "class_hah": "0x4d07e40e93398ed3c76981e72dd1fd22557a78ce36c0515f679e27f0bb5bc5f",
             "salt": "0xe35eea9d1b0fa729",
             "legacy": true
-        }
-    },
-    "alpha-goerli2": {
-        "user3": {
-            "private_key": "0xe3e70682c2094cac629f6fbed82c07cd",
-            "public_key": "0x7e52885445756b313ea16849145363ccb73fb4ab0440dbac333cf9d13de82b9",
-            "address": "0x7e00d496e324876bbc8531f2d9a82bf154d1a04a50218ee74cdd372f75a551a"
-        },
-        "user4": {
-            "private_key": "0x73fbb3c1eff11167598455d0408f3932e42c678bd8f7fbc6028c716867cc01f",
-            "public_key": "0x43a74f86b7e204f1ba081636c9d4015e1f54f5bb03a4ae8741602a15ffbb182",
-            "salt": "0x54aa715a5cff30ccf7845ad4659eb1dac5b730c2541263c358c7e3a4c4a8064",
-            "address": "0x7ccdf182d27c7aaa2e733b94db4a3f7b28ff56336b34abf43c15e3a9edfbe91",
-            "deployed": true
         }
     }
 }

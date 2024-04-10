@@ -1,7 +1,8 @@
 use crate::helpers::runner::runner;
 use camino::Utf8PathBuf;
 use indoc::{formatdoc, indoc};
-use shared::test_utils::output_assert::assert_stderr_contains;
+use scarb_api::ScarbCommand;
+use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 use sncast::helpers::constants::INIT_SCRIPTS_DIR;
 use sncast::helpers::scarb_utils::get_cairo_version;
 use tempfile::TempDir;
@@ -60,11 +61,11 @@ fn test_script_init_happy_case() {
         indoc! {r#"
             use sncast_std::{call, CallResult};
 
-            // The example below uses a contract deployed to the Goerli testnet
+            // The example below uses a contract deployed to the Sepolia testnet
             fn main() {
-                let contract_address = 0x7ad10abd2cc24c2e066a2fee1e435cd5fa60a37f9268bfbaf2e98ce5ca3c436;
-                let call_result = call(contract_address.try_into().unwrap(), 'get_greeting', array![]);
-                assert(*call_result.data[0]=='Hello, Starknet!', *call_result.data[0]);
+                let contract_address = 0x07e867f1fa6da2108dd2b3d534f1fbec411c5ec9504eb3baa1e49c7a0bef5ab5;
+                let call_result = call(contract_address.try_into().unwrap(), selector!("get_greeting"), array![]).expect('call failed');
+                assert(*call_result.data[1]=='Hello, Starknet!', *call_result.data[1]);
                 println!("{:?}", call_result);
             }
         "#}
@@ -116,26 +117,44 @@ fn test_init_twice_fails() {
     );
 }
 
-// todo: When releasing a new version this fails, because a new tag do not exist yet
-// #[test]
-// fn test_initialized_script_compiles() {
-//     let script_name = "my_script";
-//     let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
-//
-//     let snapbox = runner(&["script", "init", script_name])
-//         .current_dir(temp_dir.path());
-//
-//     snapbox.assert().stdout_matches(formatdoc! {r"
-//         [WARNING] [..]
-//         command: script init
-//         message: Successfully initialized `{script_name}` at [..]/scripts/{script_name}
-//     "});
-//
-//     let script_dir_path = temp_dir.path().join(INIT_SCRIPTS_DIR).join(script_name);
-//
-//     ScarbCommand::new_with_stdio()
-//         .current_dir(script_dir_path)
-//         .arg("build")
-//         .run()
-//         .expect("Failed to compile the initialized script");
-// }
+#[test]
+fn test_initialized_script_compiles() {
+    let script_name = "my_script";
+    let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
+
+    let snapbox = runner(&["script", "init", script_name]).current_dir(temp_dir.path());
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        formatdoc! {r"
+        [WARNING] The newly created script isn't auto-added to the workspace. [..]
+        command: script init
+        message: Successfully initialized `{script_name}` at [..]/scripts/{script_name}
+    "},
+    );
+
+    let script_dir_path = temp_dir.path().join(INIT_SCRIPTS_DIR).join(script_name);
+
+    // Using a tag during the release process will cause the test to fail as the new tag won't exist in the repository yet
+    // This command will overwrite sncast_std dependency to use the master branch instead of a tag
+    ScarbCommand::new_with_stdio()
+        .current_dir(&script_dir_path)
+        .args([
+            "--offline",
+            "add",
+            "sncast_std",
+            "--git",
+            "https://github.com/foundry-rs/starknet-foundry.git",
+            "--branch",
+            "master",
+        ])
+        .run()
+        .expect("Failed to overwrite sncast_std dependency in Scarb.toml");
+
+    ScarbCommand::new_with_stdio()
+        .current_dir(&script_dir_path)
+        .arg("build")
+        .run()
+        .expect("Failed to compile the initialized script");
+}

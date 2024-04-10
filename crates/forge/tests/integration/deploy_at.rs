@@ -20,12 +20,12 @@ fn deploy_at_correct_address() {
         #[test]
         fn deploy_at_correct_address() {
             let contract = declare("PrankChecker").unwrap();
-            let prank_checker = contract.deploy(@array![]).unwrap();
+            let (prank_checker, _) = contract.deploy(@array![]).unwrap();
         
             let contract = declare("Proxy").unwrap();
             let deploy_at_address = 123;
 
-            let contract_address = contract.deploy_at(@array![], deploy_at_address.try_into().unwrap()).unwrap();
+            let (contract_address, _) = contract.deploy_at(@array![], deploy_at_address.try_into().unwrap()).unwrap();
             assert(deploy_at_address == contract_address.into(), 'addresses should be the same');
             
             let real_address = IProxyDispatcher{ contract_address }.get_caller_address(prank_checker);
@@ -91,7 +91,7 @@ fn deploy_two_at_the_same_address() {
             let contract_address = 123;
         
             let contract = declare("HelloStarknet").unwrap();
-            let real_address = contract.deploy_at(@array![], contract_address.try_into().unwrap()).unwrap();
+            let (real_address, _) = contract.deploy_at(@array![], contract_address.try_into().unwrap()).unwrap();
             assert(real_address.into() == contract_address, 'addresses should be the same');
             contract.deploy_at(@array![], contract_address.try_into().unwrap()).unwrap();
         }
@@ -120,7 +120,7 @@ fn deploy_at_error_handling() {
         indoc!(
             r#"
         use array::ArrayTrait;
-        use snforge_std::{ declare, ContractClassTrait, RevertedTransaction };
+        use snforge_std::{ declare, ContractClassTrait };
         use starknet::ContractAddress;
 
         #[test]
@@ -130,7 +130,7 @@ fn deploy_at_error_handling() {
             let contract = declare("PanickingConstructor").unwrap();
             match contract.deploy_at(@array![], contract_address.try_into().unwrap()) {
                 Result::Ok(_) => panic_with_felt252('shouldve panicked'),
-                Result::Err(RevertedTransaction { panic_data }) => {
+                Result::Err(panic_data) => {
                     assert(*panic_data.at(0) == 'PANIK', 'wrong 1st panic datum');
                     assert(*panic_data.at(1) == 'DEJTA', 'wrong 2nd panic datum');
                 },

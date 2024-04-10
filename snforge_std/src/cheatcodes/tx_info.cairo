@@ -1,6 +1,7 @@
 use starknet::{ContractAddress, testing::cheatcode, contract_address_const};
 use starknet::info::v2::ResourceBounds;
 use snforge_std::cheatcodes::{CheatSpan, CheatTarget, validate_cheat_target_and_span};
+use super::super::_cheatcode::handle_cheatcode;
 
 #[derive(Copy, Drop, Serde)]
 struct TxInfoMock {
@@ -51,7 +52,7 @@ fn spoof(target: CheatTarget, tx_info_mock: TxInfoMock, span: CheatSpan) {
     target.serialize(ref inputs);
     span.serialize(ref inputs);
     tx_info_mock.serialize(ref inputs);
-    cheatcode::<'spoof'>(inputs.span());
+    handle_cheatcode(cheatcode::<'spoof'>(inputs.span()));
 }
 
 fn start_spoof(target: CheatTarget, tx_info_mock: TxInfoMock) {
@@ -61,6 +62,6 @@ fn start_spoof(target: CheatTarget, tx_info_mock: TxInfoMock) {
 fn stop_spoof(target: CheatTarget) {
     let mut inputs = array![];
     target.serialize(ref inputs);
-    cheatcode::<'stop_spoof'>(inputs.span());
+    handle_cheatcode(cheatcode::<'stop_spoof'>(inputs.span()));
 }
 

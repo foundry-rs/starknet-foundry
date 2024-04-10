@@ -51,7 +51,7 @@ pub async fn test_happy_case(class_hash: &str) {
     let contents = fs::read_to_string(tempdir.path().join(accounts_file)).unwrap();
     let items: serde_json::Value =
         serde_json::from_str(&contents).expect("Failed to parse accounts file at ");
-    assert_eq!(items["alpha-goerli"]["my_account"]["deployed"], true);
+    assert_eq!(items["alpha-sepolia"]["my_account"]["deployed"], true);
 }
 
 #[tokio::test]
@@ -86,10 +86,10 @@ pub async fn test_happy_case_add_profile() {
     assert!(stdout_str.contains("transaction_hash"));
 }
 
-#[test_case("{}", "error: No accounts defined for network alpha-goerli" ; "when empty file")]
-#[test_case("{\"alpha-goerli\": {}}", "error: Account with name my_account does not exist" ; "when account name not present")]
-#[test_case("{\"alpha-goerli\": {\"my_account\" : {}}}", "error: Failed to get private key from accounts file" ; "when private key not present")]
-#[test_case("{\"alpha-goerli\": {\"my_account\" : {\"private_key\": \"0x1\"}}}", "error: Failed to get salt from accounts file" ; "when salt not present")]
+#[test_case("{}", "error: No accounts defined for network alpha-sepolia" ; "when empty file")]
+#[test_case("{\"alpha-sepolia\": {}}", "error: Account with name my_account does not exist" ; "when account name not present")]
+#[test_case("{\"alpha-sepolia\": {\"my_account\" : {}}}", "error: Failed to get private key from accounts file" ; "when private key not present")]
+#[test_case("{\"alpha-sepolia\": {\"my_account\" : {\"private_key\": \"0x1\"}}}", "error: Failed to get salt from accounts file" ; "when salt not present")]
 fn test_account_deploy_error(accounts_content: &str, error: &str) {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
 
@@ -258,7 +258,7 @@ pub async fn create_account(add_profile: bool, class_hash: &str) -> TempDir {
         serde_json::from_str(&contents).expect("Failed to parse accounts file at {path}");
 
     mint_token(
-        items["alpha-goerli"]["my_account"]["address"]
+        items["alpha-sepolia"]["my_account"]["address"]
             .as_str()
             .unwrap(),
         9_999_999_999_999_999_999,
