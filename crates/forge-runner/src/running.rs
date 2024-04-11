@@ -174,13 +174,18 @@ pub fn run_test_case(
 
     let initial_gas = usize::MAX;
     let runner_args: Vec<Arg> = args.into_iter().map(Arg::Value).collect();
-    let sierra_offset = case.test_details.entry_point_offset;
-    let entry_point_casm_offset = casm_program.debug_info[sierra_offset].0;
+    let sierra_instruction_idx = case.test_details.sierra_entry_point_instruction_idx;
+    let (casm_entry_point_offset, actual_instruction_idx) =
+        casm_program.debug_info[sierra_instruction_idx];
+    assert_eq!(
+        actual_instruction_idx, sierra_instruction_idx,
+        "sierra_instruction_idx != actual_instruction_idx"
+    );
     let (entry_code, builtins) = SierraCasmRunner::create_entry_code_from_params(
         &case.test_details.parameter_types,
         &runner_args,
         initial_gas,
-        entry_point_casm_offset,
+        casm_entry_point_offset,
     )
     .unwrap();
     let footer = SierraCasmRunner::create_code_footer();

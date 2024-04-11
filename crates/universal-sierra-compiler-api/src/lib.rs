@@ -15,8 +15,8 @@ use shared::command::CommandExt;
 
 mod command;
 
-/// The offset of the sierra statement within the bytecode.
-type CodeOffset = usize;
+/// The offset of the sierra statement within the CASM bytecode
+type CasmCodeOffset = usize;
 
 /// The index of the sierra statement in the instructions vector.
 type InstructionIdx = usize;
@@ -24,7 +24,7 @@ type InstructionIdx = usize;
 #[derive(Serialize, Deserialize)]
 pub struct AssembledProgramWithDebugInfo {
     pub assembled_cairo_program: AssembledCairoProgramWithSerde,
-    pub debug_info: Vec<(CodeOffset, InstructionIdx)>,
+    pub debug_info: Vec<(CasmCodeOffset, InstructionIdx)>,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
