@@ -827,7 +827,7 @@ pub fn update_top_call_execution_resources(runtime: &mut ForgeRuntime) {
     top_call.used_syscalls = sum_syscall_counters(top_call_syscalls, &nested_calls_syscalls);
 }
 
-// Only top-level is considered relevant sincecrates/cheatnet/src/state.rs we can't have l1 handlers deeper than 1 level of nesting
+// Only top-level is considered relevant since we can't have l1 handlers deeper than 1 level of nesting
 fn get_l1_handlers_payloads_lengths(inner_calls: &[CallInfo]) -> Vec<usize> {
     inner_calls
         .iter()
