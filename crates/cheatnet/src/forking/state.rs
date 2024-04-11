@@ -26,6 +26,7 @@ use starknet_api::deprecated_contract_class::{
 };
 use starknet_api::hash::StarkFelt;
 use starknet_api::state::StorageKey;
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::io::Read;
 use tokio::runtime::Runtime;
@@ -37,14 +38,16 @@ pub struct ForkStateReader {
     client: JsonRpcClient<HttpTransport>,
     block_number: BlockNumber,
     runtime: Runtime,
-    cache: ForkCache,
+    cache: RefCell<ForkCache>,
 }
 
 impl ForkStateReader {
     pub fn new(url: Url, block_number: BlockNumber, cache_dir: &str) -> Result<Self> {
         Ok(ForkStateReader {
-            cache: ForkCache::load_or_new(&url, block_number, cache_dir)
-                .context("Could not create fork cache")?,
+            cache: RefCell::new(
+                ForkCache::load_or_new(&url, block_number, cache_dir)
+                    .context("Could not create fork cache")?,
+            ),
             client: JsonRpcClient::new(HttpTransport::new(url)),
             block_number,
             runtime: Runtime::new().expect("Could not instantiate Runtime"),
@@ -71,7 +74,7 @@ fn other_provider_error<T>(boxed: impl ToString) -> Result<T, StateError> {
 
 impl BlockInfoReader for ForkStateReader {
     fn get_block_info(&mut self) -> StateResult<BlockInfo> {
-        if let Some(cache_hit) = self.cache.get_block_info() {
+        if let Some(cache_hit) = self.cache.borrow().get_block_info() {
             return Ok(cache_hit);
         }
 
@@ -88,7 +91,9 @@ impl BlockInfoReader for ForkStateReader {
                     use_kzg_da: true,
                 };
 
-                self.cache.cache_get_block_info(block_info.clone());
+                self.cache
+                    .borrow_mut()
+                    .cache_get_block_info(block_info.clone());
 
                 Ok(block_info)
             }
@@ -109,7 +114,7 @@ impl StateReader for ForkStateReader {
         contract_address: ContractAddress,
         key: StorageKey,
     ) -> StateResult<StarkFelt> {
-        if let Some(cache_hit) = self.cache.get_storage_at(&contract_address, &key) {
+        if let Some(cache_hit) = self.cache.borrow().get_storage_at(&contract_address, &key) {
             return Ok(cache_hit);
         }
 
@@ -120,8 +125,8 @@ impl StateReader for ForkStateReader {
         )) {
             Ok(value) => {
                 let value_sf = value.into_();
-                // self.cache
-                //     .cache_get_storage_at(contract_address, key, value_sf);
+                self.cache.borrow_mut()
+                    .cache_get_storage_at(contract_address, key, value_sf);
                 Ok(value_sf)
             }
             Err(ProviderError::Other(boxed)) => other_provider_error(boxed),
@@ -133,7 +138,7 @@ impl StateReader for ForkStateReader {
     }
 
     fn get_nonce_at(&self, contract_address: ContractAddress) -> StateResult<Nonce> {
-        if let Some(cache_hit) = self.cache.get_nonce_at(&contract_address) {
+        if let Some(cache_hit) = self.cache.borrow().get_nonce_at(&contract_address) {
             return Ok(cache_hit);
         }
 
@@ -143,7 +148,9 @@ impl StateReader for ForkStateReader {
         ) {
             Ok(nonce) => {
                 let nonce = nonce.into_();
-                // self.cache.cache_get_nonce_at(contract_address, nonce);
+                self.cache
+                    .borrow_mut()
+                    .cache_get_nonce_at(contract_address, nonce);
                 Ok(nonce)
             }
             Err(ProviderError::Other(boxed)) => other_provider_error(boxed),
@@ -157,7 +164,7 @@ impl StateReader for ForkStateReader {
     }
 
     fn get_class_hash_at(&self, contract_address: ContractAddress) -> StateResult<ClassHash> {
-        if let Some(cache_hit) = self.cache.get_class_hash_at(&contract_address) {
+        if let Some(cache_hit) = self.cache.borrow().get_class_hash_at(&contract_address) {
             return Ok(cache_hit);
         }
 
@@ -167,8 +174,9 @@ impl StateReader for ForkStateReader {
         ) {
             Ok(class_hash) => {
                 let class_hash = class_hash.into_();
-                // self.cache
-                //     .cache_get_class_hash_at(contract_address, class_hash);
+                self.cache
+                    .borrow_mut()
+                    .cache_get_class_hash_at(contract_address, class_hash);
                 Ok(class_hash)
             }
             Err(ProviderError::StarknetError(StarknetError::ContractNotFound)) => {
@@ -185,18 +193,19 @@ impl StateReader for ForkStateReader {
         &self,
         class_hash: ClassHash,
     ) -> StateResult<ContractClassBlockifier> {
-        let contract_class =
-            // if let Some(cache_hit) = self.cache.get_compiled_contract_class(&class_hash) {
-            //     Ok(cache_hit)
-            // } else {
+        let mut cache = self.cache.borrow_mut();
+
+        let contract_class = {
+            if let Some(cache_hit) = cache.get_compiled_contract_class(&class_hash) {
+                Ok(cache_hit)
+            } else {
                 match self.runtime.block_on(
                     self.client
                         .get_class(self.block_id(), FieldElement::from_(class_hash)),
                 ) {
-                    // Ok(contract_class) => Ok(self
-                    //     .cache
-                    //     .insert_compiled_contract_class(class_hash, contract_class)),
-                    Ok(contract_class) => Ok(contract_class),
+                    Ok(contract_class) => {
+                        Ok(cache.insert_compiled_contract_class(class_hash, contract_class))
+                    }
                     Err(ProviderError::StarknetError(StarknetError::ClassHashNotFound)) => {
                         Err(UndeclaredClassHash(class_hash))
                     }
@@ -204,8 +213,9 @@ impl StateReader for ForkStateReader {
                     Err(x) => Err(StateReadError(format!(
                         "Unable to get compiled class at {class_hash} from fork ({x})"
                     ))),
-                };
-        // };
+                }
+            }
+        };
 
         match contract_class? {
             ContractClassStarknet::Sierra(flattened_class) => {
