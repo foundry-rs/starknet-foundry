@@ -15,7 +15,7 @@ use shared::command::CommandExt;
 
 mod command;
 
-/// The offset of the sierra statement within the CASM bytecode
+/// The offset of the source sierra statement within the CASM bytecode
 type CasmCodeOffset = usize;
 
 /// The index of the sierra statement in the instructions vector.
