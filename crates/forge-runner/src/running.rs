@@ -49,7 +49,7 @@ use runtime::{ExtendedRuntime, StarknetRuntime};
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
 use universal_sierra_compiler_api::{
-    AssembledCairoProgramWithSerde, AssembledProgramWithDebugInfo,
+    AssembledCairoProgramWithSerde, AssembledProgramWithDebugInfo, CasmCodeOffset, InstructionIdx,
 };
 
 pub fn run_test(
@@ -175,12 +175,9 @@ pub fn run_test_case(
     let initial_gas = usize::MAX;
     let runner_args: Vec<Arg> = args.into_iter().map(Arg::Value).collect();
     let sierra_instruction_idx = case.test_details.sierra_entry_point_instruction_idx;
-    let (casm_entry_point_offset, actual_instruction_idx) =
-        casm_program.debug_info[sierra_instruction_idx];
-    assert_eq!(
-        actual_instruction_idx, sierra_instruction_idx,
-        "sierra_instruction_idx != actual_instruction_idx"
-    );
+    let casm_entry_point_offset =
+        find_casm_instruction_offset(&casm_program.debug_info, sierra_instruction_idx);
+
     let (entry_code, builtins) = SierraCasmRunner::create_entry_code_from_params(
         &case.test_details.parameter_types,
         &runner_args,
@@ -330,6 +327,17 @@ pub fn run_test_case(
         used_resources,
         call_trace: call_trace_ref,
     })
+}
+
+fn find_casm_instruction_offset(
+    debug_info: &[(CasmCodeOffset, InstructionIdx)],
+    sierra_statement_idx: InstructionIdx,
+) -> CasmCodeOffset {
+    debug_info
+        .iter()
+        .find(|(_, statement_idx)| *statement_idx == sierra_statement_idx)
+        .expect("No matching CASM statement found for sierra statement")
+        .0
 }
 
 fn extract_test_case_summary(
