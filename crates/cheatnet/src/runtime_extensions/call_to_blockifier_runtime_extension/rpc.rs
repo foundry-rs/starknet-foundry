@@ -5,18 +5,13 @@ use crate::runtime_extensions::{
     },
     common::create_execute_calldata,
 };
-use blockifier::state::errors::StateError;
-use blockifier::{
-    execution::{
-        call_info::CallInfo,
-        entry_point::{CallEntryPoint, CallType, EntryPointExecutionResult},
-        errors::{
-            gen_transaction_execution_error_trace, EntryPointExecutionError, PreExecutionError,
-        },
-        syscalls::hint_processor::{SyscallCounter, SyscallHintProcessor},
-    },
-    transaction::errors::TransactionExecutionError,
+use blockifier::execution::{
+    call_info::CallInfo,
+    entry_point::{CallEntryPoint, CallType, EntryPointExecutionResult},
+    errors::{EntryPointExecutionError, PreExecutionError},
+    syscalls::hint_processor::{SyscallCounter, SyscallHintProcessor},
 };
+use blockifier::state::errors::StateError;
 use cairo_felt::Felt252;
 use cairo_lang_runner::casm_run::format_next_item;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;

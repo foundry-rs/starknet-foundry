@@ -12,9 +12,7 @@ use blockifier::fee::gas_usage::{
 };
 use blockifier::state::cached_state::CachedState;
 use blockifier::state::errors::StateError;
-use blockifier::transaction::objects::{
-    GasVector, HasRelatedFeeType, ResourcesMapping, TransactionResources,
-};
+use blockifier::transaction::objects::{GasVector, HasRelatedFeeType, ResourcesMapping};
 use blockifier::utils::{u128_from_usize, usize_from_u128};
 use blockifier::versioned_constants::VersionedConstants;
 use cairo_vm::vm::runners::builtin_runner::SEGMENT_ARENA_BUILTIN_NAME;
@@ -39,7 +37,7 @@ pub fn calculate_used_gas(
     let l1_and_vm_costs = get_l1_and_vm_costs(
         l1_data_cost,
         versioned_constants,
-        resources.execution_resources,
+        &resources.execution_resources,
     );
 
     let events_costs = get_events_cost(resources.events, transaction_context);
@@ -59,7 +57,7 @@ fn get_events_cost(
     let mut total_event_keys = 0;
     let mut total_event_data_size = 0;
 
-    for event_content in events.iter() {
+    for event_content in events {
         // TODO(barak: 18/03/2024): Once we start charging per byte
         // change to num_bytes_keys
         // and num_bytes_data.
@@ -134,9 +132,9 @@ fn get_messages_costs(
 fn get_l1_and_vm_costs(
     l1_data_costs: GasVector,
     versioned_constants: &VersionedConstants,
-    execution_resources: ExecutionResources,
+    execution_resources: &ExecutionResources,
 ) -> GasVector {
-    calculate_l1_gas_by_vm_usage(versioned_constants, &execution_resources, 0)
+    calculate_l1_gas_by_vm_usage(versioned_constants, execution_resources, 0)
         .expect("Could not calculate gas")
 }
 
