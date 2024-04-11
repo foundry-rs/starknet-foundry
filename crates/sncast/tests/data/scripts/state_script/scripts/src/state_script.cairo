@@ -37,5 +37,4 @@ fn main() {
     let call_result = call(deploy_result.contract_address, selector!("get"), array![0x1])
         .expect('state call failed');
     assert(call_result.data == array![0x2], *call_result.data.at(0));
-
 }
