@@ -2,14 +2,14 @@
   "version": 1,
   "transactions": {
     "transactions": {
-      "1863066e9093b13eea3a3844f28674dc8d9b7e2e49a525504133169c1d382718": {
+      "31829eae07da513c7e6f457b9ac48af0004512db23efeae38734af97834bb273": {
         "name": "invoke",
         "output": {
           "type": "ErrorResponse",
-          "message": "An error occurred in the called contract = ContractErrorData { revert_error: \"Error in the called contract (0x00f6ecd22832b7c3713cfa7826ee309ce96a2769833f093795fafa1b8f20c48b):\\nError at pc=0:4835:\\nGot an exception while executing a hint: Requested contract address ContractAddress(PatriciaKey(StarkFelt(\\\"0x07537a17e169c96cf2b0392508b3a66cbc50c9a811a8a7896529004c5e93fdf6\\\"))) is not deployed.\\nCairo traceback (most recent call last):\\nUnknown location (pc=0:67)\\nUnknown location (pc=0:1835)\\nUnknown location (pc=0:2554)\\nUnknown location (pc=0:3436)\\nUnknown location (pc=0:4040)\\n\" }"
+          "message": "An error occurred in the called contract = ContractErrorData { revert_error: \"Error in the called contract (0x00f6ecd22832b7c3713cfa7826ee309ce96a2769833f093795fafa1b8f20c48b):\\nError at pc=0:4835:\\nGot an exception while executing a hint: Requested contract address ContractAddress(PatriciaKey(StarkFelt(\\\"0x00cd8f9ab31324bb93251837e4efb4223ee195454f6304fcfcb277e277653008\\\"))) is not deployed.\\nCairo traceback (most recent call last):\\nUnknown location (pc=0:67)\\nUnknown location (pc=0:1835)\\nUnknown location (pc=0:2554)\\nUnknown location (pc=0:3436)\\nUnknown location (pc=0:4040)\\n\" }"
         },
         "status": "Error",
-        "timestamp": 1712136454,
+        "timestamp": 1712758668,
         "misc": null
       }
     }

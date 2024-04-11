@@ -1,7 +1,6 @@
-use crate::helpers::constants::{DEVNET_ENV_FILE, SEED, URL};
+use crate::helpers::constants::{SEED, URL};
 use crate::helpers::fixtures::{
-    declare_contract, declare_deploy_contract, deploy_cairo_0_account, deploy_keystore_account,
-    remove_devnet_env,
+    deploy_cairo_0_account, deploy_keystore_account, from_env, remove_devnet_env,
 };
 use ctor::{ctor, dtor};
 use std::net::TcpStream;
@@ -18,7 +17,6 @@ fn start_devnet() {
         TcpStream::connect(address).is_ok()
     }
 
-    remove_devnet_env();
     let port = Url::parse(URL).unwrap().port().unwrap_or(80).to_string();
     let host = Url::parse(URL)
         .unwrap()
@@ -34,6 +32,9 @@ fn start_devnet() {
         }
     }
 
+    let fork_network_url =
+        from_env("FORK_NETWORK_URL").expect("Failed to get FORK_NETWORK_URL environment variable");
+
     Command::new("tests/utils/devnet/bin/starknet-devnet")
         .args([
             "--port",
@@ -42,6 +43,8 @@ fn start_devnet() {
             &SEED.to_string(),
             "--state-archive-capacity",
             "full",
+            "--fork-network",
+            &fork_network_url,
         ])
         .stdout(Stdio::null())
         .spawn()
@@ -59,28 +62,10 @@ fn start_devnet() {
         }
     }
 
-    Command::new("tests/utils/build_contracts.sh")
-        .spawn()
-        .expect("Failed to compile contracts")
-        .wait()
-        .expect("Timed out compiling contracts");
-
     let rt = Runtime::new().expect("Could not instantiate Runtime");
-    rt.block_on(declare_deploy_contract(
-        "user1",
-        "/map/target/dev/map_Map",
-        "CAST_MAP",
-    ));
-    rt.block_on(declare_contract(
-        "user4",
-        "/constructor_with_params/target/dev/constructor_with_params_ConstructorWithParams",
-        "CAST_WITH_CONSTRUCTOR",
-    ));
 
     rt.block_on(deploy_keystore_account());
     rt.block_on(deploy_cairo_0_account());
-
-    dotenv::from_filename(DEVNET_ENV_FILE).unwrap();
 }
 
 #[cfg(test)]

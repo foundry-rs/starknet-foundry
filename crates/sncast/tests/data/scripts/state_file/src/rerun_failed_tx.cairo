@@ -3,7 +3,7 @@ use sncast_std::{
 };
 
 fn main() {
-    let map_contract_address = 0x07537a17e169c96cf2b0392508b3a66cbc50c9a811a8a7896529004c5e93fdf6
+    let map_contract_address = 0xcd8f9ab31324bb93251837e4efb4223ee195454f6304fcfcb277e277653008
         .try_into()
         .expect('Invalid contract address value');
 

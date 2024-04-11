@@ -1,7 +1,5 @@
-use crate::helpers::constants::ACCOUNT;
-use crate::helpers::fixtures::{
-    default_cli_args, from_env, get_transaction_hash, get_transaction_receipt,
-};
+use crate::helpers::constants::{ACCOUNT, MAP_CONTRACT_ADDRESS_SEPOLIA};
+use crate::helpers::fixtures::{default_cli_args, get_transaction_hash, get_transaction_receipt};
 use crate::helpers::runner::runner;
 use indoc::indoc;
 use shared::test_utils::output_assert::assert_stderr_contains;
@@ -12,7 +10,6 @@ use test_case::test_case;
 #[test_case("cairo1"; "cairo_1_account")]
 #[tokio::test]
 async fn test_happy_case(account: &str) {
-    let contract_address = from_env("CAST_MAP_ADDRESS").unwrap();
     let mut args = default_cli_args();
     args.append(&mut vec![
         "--account",
@@ -21,7 +18,7 @@ async fn test_happy_case(account: &str) {
         "--json",
         "invoke",
         "--contract-address",
-        &contract_address,
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
         "put",
         "--calldata",
@@ -66,14 +63,13 @@ async fn test_contract_does_not_exist() {
 
 #[test]
 fn test_wrong_function_name() {
-    let contract_address = from_env("CAST_MAP_ADDRESS").unwrap();
     let mut args = default_cli_args();
     args.append(&mut vec![
         "--account",
         "user2",
         "invoke",
         "--contract-address",
-        &contract_address,
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
         "nonexistent_put",
     ]);
@@ -92,14 +88,13 @@ fn test_wrong_function_name() {
 
 #[test]
 fn test_wrong_calldata() {
-    let contract_address = from_env("CAST_MAP_ADDRESS").unwrap();
     let mut args = default_cli_args();
     args.append(&mut vec![
         "--account",
         "user5",
         "invoke",
         "--contract-address",
-        &contract_address,
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
         "put",
         "--calldata",
@@ -120,7 +115,6 @@ fn test_wrong_calldata() {
 
 #[test]
 fn test_too_low_max_fee() {
-    let contract_address = from_env("CAST_MAP_ADDRESS").unwrap();
     let mut args = default_cli_args();
     args.append(&mut vec![
         "--account",
@@ -128,7 +122,7 @@ fn test_too_low_max_fee() {
         "--wait",
         "invoke",
         "--contract-address",
-        &contract_address,
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
         "put",
         "--calldata",

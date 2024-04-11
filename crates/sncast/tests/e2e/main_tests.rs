@@ -1,6 +1,8 @@
-use crate::helpers::constants::{ACCOUNT, ACCOUNT_FILE_PATH, CONTRACTS_DIR, URL};
+use crate::helpers::constants::{
+    ACCOUNT, ACCOUNT_FILE_PATH, CONTRACTS_DIR, MAP_CONTRACT_ADDRESS_SEPOLIA, URL,
+};
 use crate::helpers::fixtures::{
-    duplicate_contract_directory_with_salt, from_env, get_accounts_path, get_keystores_path,
+    duplicate_contract_directory_with_salt, get_accounts_path, get_keystores_path,
 };
 use crate::helpers::runner::runner;
 use configuration::copy_config_to_tempdir;
@@ -65,7 +67,6 @@ async fn test_happy_case_from_cli_no_scarb() {
 #[tokio::test]
 async fn test_happy_case_from_cli_with_sncast_config() {
     let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None).unwrap();
-    let address = from_env("CAST_MAP_ADDRESS").unwrap();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
@@ -77,7 +78,7 @@ async fn test_happy_case_from_cli_with_sncast_config() {
         ACCOUNT,
         "call",
         "--contract-address",
-        &address,
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
         "get",
         "--calldata",
@@ -97,7 +98,6 @@ async fn test_happy_case_from_cli_with_sncast_config() {
 #[tokio::test]
 async fn test_happy_case_mixed() {
     let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None).unwrap();
-    let address = from_env("CAST_MAP_ADDRESS").unwrap();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
@@ -105,7 +105,7 @@ async fn test_happy_case_mixed() {
         ACCOUNT,
         "call",
         "--contract-address",
-        &address,
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
         "get",
         "--calldata",
