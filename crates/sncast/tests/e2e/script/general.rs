@@ -342,7 +342,7 @@ async fn test_run_script_twice_with_state_file_enabled() {
         "--accounts-file",
         accounts_json_path.as_str(),
         "--account",
-        "user6",
+        "user7",
         "--url",
         URL,
         "script",
