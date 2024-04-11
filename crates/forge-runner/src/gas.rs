@@ -4,7 +4,6 @@ use blockifier::fee::fee_utils::calculate_l1_gas_by_vm_usage;
 use crate::test_case_summary::{Single, TestCaseSummary};
 use blockifier::context::TransactionContext;
 use blockifier::fee::eth_gas_constants;
-// use blockifier::fee::fee_utils::calculate_tx_gas_vector;
 use blockifier::fee::gas_usage::{
     get_consumed_message_to_l2_emissions_cost, get_da_gas_cost,
     get_log_message_to_l1_emissions_cost,
