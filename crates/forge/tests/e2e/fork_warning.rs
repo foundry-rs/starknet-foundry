@@ -39,7 +39,7 @@ fn setup_redirect_server() {
 #[test]
 fn should_print_warning() {
     let temp = setup_package("empty");
-
+    // TODO here all the tests
     temp.child("tests/test.cairo")
         .write_str(indoc!(
             r#"

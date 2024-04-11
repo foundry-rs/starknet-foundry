@@ -1,4 +1,4 @@
-use indoc::formatdoc;
+use indoc::{formatdoc, indoc};
 use std::path::Path;
 use std::path::PathBuf;
 use std::process::Command;
@@ -17,11 +17,10 @@ use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::Contr
 use forge::compiled_raw::RawForkParams;
 use forge_runner::{RunnerConfig, RunnerParams};
 use shared::command::CommandExt;
+use shared::test_utils::rpc_url;
 use test_utils::runner::{assert_case_output_contains, assert_failed, assert_passed, Contract};
 use test_utils::running_tests::run_test_case;
 use test_utils::test_case;
-
-const TESTNET_RPC_URL: &str = "http://188.34.188.184:7070/rpc/v0_7";
 
 #[test]
 fn fork_simple_decorator() {
@@ -58,7 +57,7 @@ fn fork_simple_decorator() {
                 assert(balance == 100, 'Balance should be 100');
             }}
         "#,
-        TESTNET_RPC_URL
+        rpc_url().unwrap()
     ).as_str());
 
     let result = run_test_case(&test);
@@ -68,7 +67,7 @@ fn fork_simple_decorator() {
 
 #[test]
 fn fork_aliased_decorator() {
-    let test = test_case!(formatdoc!(
+    let test = test_case!(indoc!(
         r#"
             use result::ResultTrait;
             use array::ArrayTrait;
@@ -79,17 +78,17 @@ fn fork_aliased_decorator() {
             use starknet::contract_address_const;
 
             #[starknet::interface]
-            trait IHelloStarknet<TContractState> {{
+            trait IHelloStarknet<TContractState> {
                 fn increase_balance(ref self: TContractState, amount: felt252);
                 fn get_balance(self: @TContractState) -> felt252;
-            }}
+            }
 
             #[test]
             #[fork("FORK_NAME_FROM_SCARB_TOML")]
-            fn fork_aliased_decorator() {{
-                let dispatcher = IHelloStarknetDispatcher {{
+            fn fork_aliased_decorator() {
+                let dispatcher = IHelloStarknetDispatcher {
                     contract_address: contract_address_const::<0x202de98471a4fae6bcbabb96cab00437d381abc58b02509043778074d6781e9>()
-                }};
+                };
 
                 let balance = dispatcher.get_balance();
                 assert(balance == 0, 'Balance should be 0');
@@ -98,9 +97,9 @@ fn fork_aliased_decorator() {
 
                 let balance = dispatcher.get_balance();
                 assert(balance == 100, 'Balance should be 100');
-            }}
+            }
         "#
-    ).as_str());
+    ));
 
     let rt = Runtime::new().expect("Could not instantiate Runtime");
 
@@ -134,7 +133,7 @@ fn fork_aliased_decorator() {
             &[ForkTarget::new(
                 "FORK_NAME_FROM_SCARB_TOML".to_string(),
                 RawForkParams {
-                    url: TESTNET_RPC_URL.to_string(),
+                    url: rpc_url().unwrap().to_string(),
                     block_id_type: "Tag".to_string(),
                     block_id_value: "Latest".to_string(),
                 },
@@ -168,7 +167,7 @@ fn fork_cairo0_contract() {
                 assert(total_supply == 88730316280408105750094, 'Wrong total supply');
             }}
         "#,
-        TESTNET_RPC_URL
+        rpc_url().unwrap()
     ).as_str());
 
     let result = run_test_case(&test);
@@ -193,7 +192,7 @@ fn get_block_info_in_forked_block() {
             }}
 
             #[test]
-            #[fork(url: "{TESTNET_RPC_URL}", block_id: BlockId::Number(54060))]
+            #[fork(url: "{rpc_url}", block_id: BlockId::Number(54060))]
             fn test_fork_get_block_info_contract_on_testnet() {{
                 let dispatcher = IBlockInfoCheckerDispatcher {{
                     contract_address: contract_address_const::<0x3d80c579ad7d83ff46634abe8f91f9d2080c5c076d4f0f59dd810f9b3f01164>()
@@ -210,7 +209,7 @@ fn get_block_info_in_forked_block() {
             }}
 
             #[test]
-            #[fork(url: "{TESTNET_RPC_URL}", block_id: BlockId::Number(54060))]
+            #[fork(url: "{rpc_url}", block_id: BlockId::Number(54060))]
             fn test_fork_get_block_info_test_state() {{
                 let block_info = starknet::get_block_info().unbox();
                 assert(block_info.block_timestamp == 1711645884, block_info.block_timestamp.into());
@@ -220,7 +219,7 @@ fn get_block_info_in_forked_block() {
             }}
 
             #[test]
-            #[fork(url: "{TESTNET_RPC_URL}", block_id: BlockId::Number(54060))]
+            #[fork(url: "{rpc_url}", block_id: BlockId::Number(54060))]
             fn test_fork_get_block_info_contract_deployed() {{
                 let contract = declare("BlockInfoChecker").unwrap();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
@@ -237,13 +236,14 @@ fn get_block_info_in_forked_block() {
             }}
 
             #[test]
-            #[fork(url: "{TESTNET_RPC_URL}", block_id: BlockId::Tag(BlockTag::Latest))]
+            #[fork(url: "{rpc_url}", block_id: BlockId::Tag(BlockTag::Latest))]
             fn test_fork_get_block_info_latest_block() {{
                 let block_info = starknet::get_block_info().unbox();
                 assert(block_info.block_timestamp > 1711645884, block_info.block_timestamp.into());
                 assert(block_info.block_number > 54060, block_info.block_number.into());
             }}
-        "#
+        "#,
+        rpc_url = rpc_url().unwrap()
     ).as_str(),
     Contract::from_code_path(
         "BlockInfoChecker".to_string(),
@@ -260,11 +260,12 @@ fn fork_get_block_info_fails() {
     let test = test_case!(formatdoc!(
         r#"
             #[test]
-            #[fork(url: "{TESTNET_RPC_URL}", block_id: BlockId::Number(999999999999))]
+            #[fork(url: "{}", block_id: BlockId::Number(999999999999))]
             fn fork_get_block_info_fails() {{
                 starknet::get_block_info();
             }}
-        "#
+        "#,
+        rpc_url().unwrap()
     )
     .as_str());
 
@@ -295,7 +296,7 @@ fn incompatible_abi() {
             }}
 
             #[test]
-            #[fork(url: "{TESTNET_RPC_URL}", block_id: BlockId::Tag(BlockTag::Latest))]
+            #[fork(url: "{}", block_id: BlockId::Tag(BlockTag::Latest))]
             fn test_forking_functionality() {{
                 let gov_contract_addr: starknet::ContractAddress = 0x66e4b798c66160bd5fd04056938e5c9f65d67f183dfab9d7d0d2ed9413276fe.try_into().unwrap();
                 let dispatcher = IResponseWith2FeltsDispatcher {{ contract_address: gov_contract_addr }};
@@ -303,6 +304,7 @@ fn incompatible_abi() {
                 assert(propdetails.payload == 8, 'payload not match');
             }}
         "#,
+        rpc_url().unwrap()
     )
     .as_str());
 

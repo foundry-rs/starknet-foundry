@@ -3,6 +3,7 @@ use test_utils::runner::assert_passed;
 use test_utils::running_tests::run_test_case;
 use test_utils::test_case;
 
+// TODO rename this and remove from tests
 static CHEATNET_RPC_URL: &str = "http://188.34.188.184:7070/rpc/v0_7";
 
 #[test]
