@@ -7,7 +7,7 @@ use crate::helpers::fixtures::{
 use crate::helpers::runner::runner;
 use camino::Utf8PathBuf;
 use indoc::indoc;
-use shared::test_utils::output_assert::assert_stderr_contains;
+use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 use sncast::get_default_state_file_name;
 use sncast::state::state_file::{read_txs_from_state_file, ScriptTransactionStatus};
 use tempfile::tempdir;
@@ -285,12 +285,13 @@ async fn test_no_account_passed() {
     let snapbox = runner(&args).current_dir(SCRIPTS_DIR.to_owned() + "/map_script/scripts");
     let output = snapbox.assert().success();
 
-    assert_stderr_contains(
+    assert_stdout_contains(
         output,
-        indoc! {r"
+        indoc! {r#"
         command: script run
-        error: [..] Account not defined. Please ensure the correct account is passed to `script run` command
-        "},
+        message: 
+            "Account not defined. Please ensure the correct account is passed to `script run` command"
+        "#},
     );
 }
 

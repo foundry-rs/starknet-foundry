@@ -20,6 +20,6 @@ is a new execution scope - thus resulting in a new nested trace.
 
 The `CallTrace` structure implements a `Display` trait, for a pretty-print with indentations
 
-```cairo
+```rust
 println!("{}", get_call_trace());
 ```

@@ -2,8 +2,8 @@ use std::cell::RefCell;
 use std::cmp::min;
 use super::cairo1_execution::execute_entry_point_call_cairo1;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::deprecated::cairo0_execution::execute_entry_point_call_cairo0;
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeState;
-use crate::state::{CallTrace, CheatnetState, CheatStatus};
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
+use crate::state::{CallTrace, CheatStatus};
 use blockifier::execution::call_info::{CallExecution, Retdata};
 use blockifier::{
     execution::{
@@ -39,44 +39,39 @@ use crate::runtime_extensions::common::sum_syscall_counters;
 pub fn execute_call_entry_point(
     entry_point: &mut CallEntryPoint, // Instead of 'self'
     state: &mut dyn State,
-    runtime_state: &mut RuntimeState,
+    cheatnet_state: &mut CheatnetState,
     resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
 ) -> EntryPointExecutionResult<CallInfo> {
     let cheated_data = if let CallType::Delegate = entry_point.call_type {
-        runtime_state
-            .cheatnet_state
+        cheatnet_state
             .trace_data
             .current_call_stack
             .top_cheated_data()
             .clone()
     } else {
         let contract_address = &entry_point.storage_address;
-        let cheated_data_ = runtime_state
-            .cheatnet_state
-            .create_cheated_data(contract_address);
-        runtime_state.cheatnet_state.update_cheats(contract_address);
+        let cheated_data_ = cheatnet_state.create_cheated_data(contract_address);
+        cheatnet_state.update_cheats(contract_address);
         cheated_data_
     };
 
     // region: Modified blockifier code
     // We skip recursion depth validation here.
-    runtime_state.cheatnet_state.trace_data.enter_nested_call(
+    cheatnet_state.trace_data.enter_nested_call(
         entry_point.clone(),
         resources.clone(),
         cheated_data,
     );
 
-    if let Some(cheat_status) =
-        get_mocked_function_cheat_status(entry_point, runtime_state.cheatnet_state)
-    {
+    if let Some(cheat_status) = get_mocked_function_cheat_status(entry_point, cheatnet_state) {
         if let CheatStatus::Cheated(ret_data, _) = (*cheat_status).clone() {
             cheat_status.decrement_cheat_span();
             let ret_data_f252: Vec<Felt252> = ret_data
                 .iter()
                 .map(|datum| Felt252::from_(*datum))
                 .collect();
-            runtime_state.cheatnet_state.trace_data.exit_nested_call(
+            cheatnet_state.trace_data.exit_nested_call(
                 resources,
                 Default::default(),
                 CallResult::Success {
@@ -98,8 +93,7 @@ pub fn execute_call_entry_point(
             PreExecutionError::UninitializedStorageAddress(entry_point.storage_address).into(),
         );
     }
-    let maybe_replacement_class = runtime_state
-        .cheatnet_state
+    let maybe_replacement_class = cheatnet_state
         .replaced_bytecode_contracts
         .get(&storage_address)
         .copied();
@@ -110,8 +104,7 @@ pub fn execute_call_entry_point(
         .unwrap_or(storage_class_hash); // If not given, take the storage contract class hash.
 
     // region: Modified blockifier code
-    runtime_state
-        .cheatnet_state
+    cheatnet_state
         .trace_data
         .set_class_hash_for_current_call(class_hash);
     // endregion
@@ -135,7 +128,7 @@ pub fn execute_call_entry_point(
             entry_point.clone(),
             deprecated_class,
             state,
-            runtime_state,
+            cheatnet_state,
             resources,
             context,
         ),
@@ -143,7 +136,7 @@ pub fn execute_call_entry_point(
             entry_point.clone(),
             &contract_class,
             state,
-            runtime_state,
+            cheatnet_state,
             resources,
             context,
         ),
@@ -184,13 +177,13 @@ pub fn execute_call_entry_point(
                 &syscall_counter,
                 context,
                 resources,
-                runtime_state,
+                cheatnet_state,
                 vm_trace,
             );
             Ok(call_info)
         }
         Err(err) => {
-            exit_error_call(&err, runtime_state, resources, entry_point);
+            exit_error_call(&err, cheatnet_state, resources, entry_point);
             Err(err)
         }
     }
@@ -202,7 +195,7 @@ fn remove_syscall_resources_and_exit_success_call(
     syscall_counter: &SyscallCounter,
     context: &mut EntryPointExecutionContext,
     resources: &mut ExecutionResources,
-    runtime_state: &mut RuntimeState,
+    cheatnet_state: &mut CheatnetState,
     vm_trace: Option<Vec<TraceEntry>>,
 ) {
     let versioned_constants = context.tx_context.block_context.versioned_constants();
@@ -210,15 +203,10 @@ fn remove_syscall_resources_and_exit_success_call(
     *resources -= &versioned_constants
         .get_additional_os_syscall_resources(syscall_counter)
         .expect("Could not get additional resources");
-    let nested_syscall_counter_sum = aggregate_nested_syscall_counters(
-        &runtime_state
-            .cheatnet_state
-            .trace_data
-            .current_call_stack
-            .top(),
-    );
+    let nested_syscall_counter_sum =
+        aggregate_nested_syscall_counters(&cheatnet_state.trace_data.current_call_stack.top());
     let syscall_counter = sum_syscall_counters(nested_syscall_counter_sum, syscall_counter);
-    runtime_state.cheatnet_state.trace_data.exit_nested_call(
+    cheatnet_state.trace_data.exit_nested_call(
         resources,
         syscall_counter,
         CallResult::from_success(call_info),
@@ -229,7 +217,7 @@ fn remove_syscall_resources_and_exit_success_call(
 
 fn exit_error_call(
     error: &EntryPointExecutionError,
-    runtime_state: &mut RuntimeState,
+    cheatnet_state: &mut CheatnetState,
     resources: &mut ExecutionResources,
     entry_point: &CallEntryPoint,
 ) {
@@ -237,7 +225,7 @@ fn exit_error_call(
         CallType::Call => AddressOrClassHash::ContractAddress(entry_point.storage_address),
         CallType::Delegate => AddressOrClassHash::ClassHash(entry_point.class_hash.unwrap()),
     };
-    runtime_state.cheatnet_state.trace_data.exit_nested_call(
+    cheatnet_state.trace_data.exit_nested_call(
         resources,
         Default::default(),
         CallResult::from_err(error, &identifier),
@@ -249,7 +237,7 @@ fn exit_error_call(
 // blockifier/src/execution/entry_point.rs:366 (execute_constructor_entry_point)
 pub fn execute_constructor_entry_point(
     state: &mut dyn State,
-    runtime_state: &mut RuntimeState,
+    cheatnet_state: &mut CheatnetState,
     resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
     ctor_context: ConstructorContext,
@@ -278,7 +266,7 @@ pub fn execute_constructor_entry_point(
     execute_call_entry_point(
         &mut constructor_call,
         state,
-        runtime_state,
+        cheatnet_state,
         resources,
         context,
     )

@@ -2,7 +2,6 @@ use crate::constants::TEST_ADDRESS;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     AddressOrClassHash, CallFailure,
 };
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeState;
 use anyhow::Result;
 use blockifier::execution::entry_point::ConstructorContext;
 use blockifier::execution::execution_utils::felt_to_stark_felt;
@@ -22,10 +21,11 @@ use starknet_api::core::{ClassHash, ContractAddress};
 use starknet_api::transaction::Calldata;
 
 use super::CheatcodeError;
+use crate::state::CheatnetState;
 
 pub fn deploy_at(
     syscall_handler: &mut SyscallHintProcessor,
-    runtime_state: &mut RuntimeState,
+    cheatnet_state: &mut CheatnetState,
     class_hash: &ClassHash,
     calldata: &[Felt252],
     contract_address: ContractAddress,
@@ -51,14 +51,14 @@ pub fn deploy_at(
 
     let exec_result = cheated_syscalls::execute_deployment(
         syscall_handler.state,
-        runtime_state,
+        cheatnet_state,
         syscall_handler.resources,
         syscall_handler.context,
         ctor_context,
         calldata,
         u64::MAX,
     );
-    runtime_state.cheatnet_state.increment_deploy_salt_base();
+    cheatnet_state.increment_deploy_salt_base();
 
     match exec_result {
         Ok(call_info) => {
@@ -79,17 +79,15 @@ pub fn deploy_at(
 
 pub fn deploy(
     syscall_handler: &mut SyscallHintProcessor,
-    runtime_state: &mut RuntimeState,
+    cheatnet_state: &mut CheatnetState,
     class_hash: &ClassHash,
     calldata: &[Felt252],
 ) -> Result<(ContractAddress, Vec<Felt252>), CheatcodeError> {
-    let contract_address = runtime_state
-        .cheatnet_state
-        .precalculate_address(class_hash, calldata);
+    let contract_address = cheatnet_state.precalculate_address(class_hash, calldata);
 
     deploy_at(
         syscall_handler,
-        runtime_state,
+        cheatnet_state,
         class_hash,
         calldata,
         contract_address,

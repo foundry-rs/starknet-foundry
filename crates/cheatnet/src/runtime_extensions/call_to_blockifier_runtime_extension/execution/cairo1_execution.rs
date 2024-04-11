@@ -1,4 +1,4 @@
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeState;
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
 use crate::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
 use crate::runtime_extensions::common::get_relocated_vm_trace;
 use blockifier::execution::call_info::CallInfo;
@@ -31,12 +31,10 @@ pub fn execute_entry_point_call_cairo1(
     call: CallEntryPoint,
     contract_class: &ContractClassV1,
     state: &mut dyn State,
-    runtime_state: &mut RuntimeState, // Added parameter
+    cheatnet_state: &mut CheatnetState, // Added parameter
     resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
 ) -> EntryPointExecutionResult<(CallInfo, SyscallCounter, Option<Vec<TraceEntry>>)> {
-    let RuntimeState { cheatnet_state } = runtime_state;
-
     let VmExecutionContext {
         mut runner,
         mut vm,

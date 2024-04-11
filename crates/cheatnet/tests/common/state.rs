@@ -3,8 +3,7 @@ use blockifier::state::cached_state::{
 };
 use cheatnet::constants::build_testing_state;
 use cheatnet::forking::state::ForkStateReader;
-use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeState;
-use cheatnet::state::{CheatnetState, ExtendedStateReader};
+use cheatnet::state::ExtendedStateReader;
 use starknet_api::block::BlockNumber;
 
 pub fn create_cached_state() -> CachedState<ExtendedStateReader> {
@@ -35,8 +34,4 @@ pub fn create_fork_cached_state_at(
         },
         GlobalContractCache::new(GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST),
     )
-}
-
-pub fn build_runtime_state(cheatnet_state: &mut CheatnetState) -> RuntimeState {
-    RuntimeState { cheatnet_state }
 }

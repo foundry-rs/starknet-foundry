@@ -1,5 +1,6 @@
 use core::ecdsa::check_ecdsa_signature;
 use core::ec::{EcPointImpl, EcPoint, stark_curve};
+use super::super::_cheatcode::handle_cheatcode;
 
 use starknet::testing::cheatcode;
 
@@ -7,7 +8,7 @@ use snforge_std::signature::{KeyPair, KeyPairTrait, SignerTrait, VerifierTrait};
 
 impl StarkCurveKeyPairImpl of KeyPairTrait<felt252, felt252> {
     fn generate() -> KeyPair<felt252, felt252> {
-        let output = cheatcode::<'generate_stark_keys'>(array![].span());
+        let output = handle_cheatcode(cheatcode::<'generate_stark_keys'>(array![].span()));
 
         let secret_key = *output[0];
         let public_key = *output[1];
@@ -32,9 +33,9 @@ impl StarkCurveKeyPairImpl of KeyPairTrait<felt252, felt252> {
 
 impl StarkCurveSignerImpl of SignerTrait<KeyPair<felt252, felt252>, felt252, (felt252, felt252)> {
     fn sign(self: KeyPair<felt252, felt252>, message_hash: felt252) -> (felt252, felt252) {
-        let output = cheatcode::<
-            'stark_sign_message'
-        >(array![self.secret_key, message_hash].span());
+        let output = handle_cheatcode(
+            cheatcode::<'stark_sign_message'>(array![self.secret_key, message_hash].span())
+        );
         if *output[0] == 1 {
             core::panic_with_felt252(*output[1]);
         }
