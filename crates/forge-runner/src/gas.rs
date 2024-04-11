@@ -1,6 +1,5 @@
 use blockifier::abi::constants;
 use blockifier::fee::fee_utils::calculate_l1_gas_by_vm_usage;
-use std::collections::HashMap;
 
 use crate::test_case_summary::{Single, TestCaseSummary};
 use blockifier::context::TransactionContext;
@@ -12,11 +11,8 @@ use blockifier::fee::gas_usage::{
 };
 use blockifier::state::cached_state::CachedState;
 use blockifier::state::errors::StateError;
-use blockifier::transaction::objects::{GasVector, HasRelatedFeeType, ResourcesMapping};
-use blockifier::utils::{u128_from_usize, usize_from_u128};
-use blockifier::versioned_constants::VersionedConstants;
-use cairo_vm::vm::runners::builtin_runner::SEGMENT_ARENA_BUILTIN_NAME;
-use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
+use blockifier::transaction::objects::{GasVector, HasRelatedFeeType};
+use blockifier::utils::u128_from_usize;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::state::ExtendedStateReader;
 use starknet_api::transaction::EventContent;
@@ -34,15 +30,14 @@ pub fn calculate_used_gas(
     );
 
     let l1_data_cost = get_l1_data_cost(transaction_context, state)?;
-    let l1_and_vm_costs = get_l1_and_vm_costs(
-        l1_data_cost,
-        versioned_constants,
-        &resources.execution_resources,
-    );
+
+    let l1_gas_by_vm_costs =
+        calculate_l1_gas_by_vm_usage(versioned_constants, &resources.execution_resources, 0)
+            .expect("Could not calculate gas");
 
     let events_costs = get_events_cost(resources.events, transaction_context);
 
-    let gas = l1_and_vm_costs + messaging_gas_vector + events_costs;
+    let gas = l1_data_cost + l1_gas_by_vm_costs + messaging_gas_vector + events_costs;
 
     Ok(gas.l1_gas + gas.l1_data_gas)
 }
@@ -129,16 +124,6 @@ fn get_messages_costs(
     starknet_gas_usage + sharp_gas_usage
 }
 
-fn get_l1_and_vm_costs(
-    l1_data_costs: GasVector,
-    versioned_constants: &VersionedConstants,
-    execution_resources: &ExecutionResources,
-) -> GasVector {
-    l1_data_costs
-        + calculate_l1_gas_by_vm_usage(versioned_constants, execution_resources, 0)
-            .expect("Could not calculate gas")
-}
-
 fn get_l1_data_cost(
     transaction_context: &TransactionContext,
     state: &mut CachedState<ExtendedStateReader>,
@@ -159,34 +144,6 @@ fn get_l1_data_cost(
     let use_kzg_da = transaction_context.block_context.block_info().use_kzg_da;
     let l1_data_gas_cost = get_da_gas_cost(&state_changes_count, use_kzg_da);
     Ok(l1_data_gas_cost)
-}
-
-fn get_resources_mapping(
-    data_availability_gas_cost: GasVector,
-    mut vm_usage: ExecutionResources,
-) -> ResourcesMapping {
-    let l1_gas_usage = usize_from_u128(data_availability_gas_cost.l1_gas)
-        .expect("tx_gas_cost.l1_gas conversion should not fail as the value is a converted usize.");
-    let l1_blob_gas_usage = usize_from_u128(data_availability_gas_cost.l1_data_gas).expect(
-        "tx_gas_cost.l1_data_gas conversion should not fail as the value is a converted usize.",
-    );
-    // An estimation of what segment arena consumes
-    let n_steps = vm_usage.n_steps
-        + 10 * vm_usage
-            .builtin_instance_counter
-            .remove(SEGMENT_ARENA_BUILTIN_NAME)
-            .unwrap_or_default();
-
-    let mut tx_resources = HashMap::from([
-        (constants::L1_GAS_USAGE.to_string(), l1_gas_usage),
-        (constants::BLOB_GAS_USAGE.to_string(), l1_blob_gas_usage),
-        (
-            constants::N_STEPS_RESOURCE.to_string(),
-            n_steps + vm_usage.n_memory_holes,
-        ),
-    ]);
-    tx_resources.extend(vm_usage.builtin_instance_counter);
-    ResourcesMapping(tx_resources)
 }
 
 pub fn check_available_gas(
