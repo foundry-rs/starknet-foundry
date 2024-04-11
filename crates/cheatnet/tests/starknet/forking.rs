@@ -645,7 +645,7 @@ fn test_cached_block_info_merging() {
 #[test]
 fn test_calling_nonexistent_url() {
     let temp_dir = TempDir::new().unwrap();
-    let nonexistent_url = "http://188.34.188.184:9546".parse().unwrap();
+    let nonexistent_url = "http://nonexistent-node-address.com".parse().unwrap();
     let mut cached_fork_state = CachedState::new(
         ExtendedStateReader {
             dict_state_reader: build_testing_state(),
