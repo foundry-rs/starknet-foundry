@@ -204,8 +204,8 @@ fn contract_range_check_cost() {
 
     assert_passed(&result);
     // 96 = cost of deploy (see snforge_std_deploy_cost test)
-    // 9 = cost of 203 range check builtins
-    assert_gas(&result, "contract_range_check_cost", 96 + 9);
+    // 8 = cost of 200 range check builtins
+    assert_gas(&result, "contract_range_check_cost", 96 + 8);
 }
 
 #[test]
