@@ -49,7 +49,8 @@ use runtime::{ExtendedRuntime, StarknetRuntime};
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
 use universal_sierra_compiler_api::{
-    AssembledCairoProgramWithSerde, AssembledProgramWithDebugInfo, CasmCodeOffset, InstructionIdx,
+    AssembledCairoProgramWithSerde, AssembledProgramWithDebugInfo, CasmCodeOffset,
+    CasmInstructionIdx, InstructionIdx,
 };
 
 pub fn run_test(
@@ -330,14 +331,10 @@ pub fn run_test_case(
 }
 
 fn find_casm_instruction_offset(
-    debug_info: &[(CasmCodeOffset, InstructionIdx)],
-    sierra_statement_idx: InstructionIdx,
+    debug_info: &[(CasmCodeOffset, CasmInstructionIdx)],
+    sierra_statement_idx: usize,
 ) -> CasmCodeOffset {
-    debug_info
-        .iter()
-        .find(|(_, statement_idx)| *statement_idx == sierra_statement_idx)
-        .expect("No matching CASM statement found for sierra statement")
-        .0
+    debug_info[sierra_statement_idx].0
 }
 
 fn extract_test_case_summary(

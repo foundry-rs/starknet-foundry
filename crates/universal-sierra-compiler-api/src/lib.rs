@@ -15,17 +15,17 @@ use shared::command::CommandExt;
 
 mod command;
 
-/// The offset of the source sierra statement within the CASM bytecode
 pub type CasmCodeOffset = usize;
-
-/// The index of the sierra statement in the instructions vector.
-pub type InstructionIdx = usize;
+pub type CasmInstructionIdx = usize;
 
 #[derive(Serialize, Deserialize)]
 pub struct AssembledProgramWithDebugInfo {
     pub assembled_cairo_program: AssembledCairoProgramWithSerde,
-    /// Contains mapping of sierra instruction idx to first generated CASM instruction offset
-    pub debug_info: Vec<(CasmCodeOffset, InstructionIdx)>,
+    /// Contains mapping of one sierra statement idx, to the corresponding:
+    /// - CASM code offset
+    /// - CASM instruction index
+    /// Those 2 values are not equal since the instruction sizes may vary
+    pub debug_info: Vec<(CasmCodeOffset, CasmInstructionIdx)>,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
