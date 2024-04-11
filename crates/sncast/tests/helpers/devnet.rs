@@ -1,7 +1,5 @@
 use crate::helpers::constants::{SEED, URL};
-use crate::helpers::fixtures::{
-    deploy_cairo_0_account, deploy_keystore_account, from_env, remove_devnet_env,
-};
+use crate::helpers::fixtures::{deploy_cairo_0_account, deploy_keystore_account, from_env};
 use ctor::{ctor, dtor};
 use std::net::TcpStream;
 use std::process::{Command, Stdio};
@@ -32,6 +30,7 @@ fn start_devnet() {
         }
     }
 
+    dotenv::dotenv().ok();
     let fork_network_url =
         from_env("FORK_NETWORK_URL").expect("Failed to get FORK_NETWORK_URL environment variable");
 
@@ -79,5 +78,4 @@ fn stop_devnet() {
         ])
         .spawn()
         .expect("Failed to kill devnet processes");
-    remove_devnet_env();
 }

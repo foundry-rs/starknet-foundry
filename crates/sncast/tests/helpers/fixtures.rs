@@ -1,5 +1,5 @@
 use crate::helpers::constants::{
-    ACCOUNT_FILE_PATH, CONTRACTS_DIR, DEVNET_ENV_FILE, DEVNET_OZ_CLASS_HASH_CAIRO_0, URL,
+    ACCOUNT_FILE_PATH, CONTRACTS_DIR, DEVNET_OZ_CLASS_HASH_CAIRO_0, URL,
 };
 use anyhow::Context;
 use camino::{Utf8Path, Utf8PathBuf};
@@ -25,7 +25,7 @@ use starknet::signers::{LocalWallet, SigningKey};
 use std::collections::HashMap;
 use std::env;
 use std::fs;
-use std::fs::{File, OpenOptions};
+use std::fs::File;
 use std::io::{BufRead, Write};
 use std::sync::Arc;
 use tempfile::TempDir;
@@ -74,8 +74,6 @@ pub async fn declare_contract(account: &str, path: &str, shortname: &str) -> Fie
     let tx = declaration.send().await.unwrap();
     let class_hash = tx.class_hash;
     let tx_hash = tx.transaction_hash;
-    write_devnet_env(format!("{shortname}_CLASS_HASH").as_str(), &class_hash);
-    write_devnet_env(format!("{shortname}_DECLARE_HASH").as_str(), &tx_hash);
     class_hash
 }
 
@@ -178,7 +176,6 @@ pub async fn declare_deploy_contract(account: &str, path: &str, shortname: &str)
     match receipt {
         TransactionReceipt::Deploy(deploy_receipt) => {
             let address = deploy_receipt.contract_address;
-            write_devnet_env(format!("{shortname}_ADDRESS").as_str(), &address);
         }
         _ => {
             panic!("Unexpected TransactionReceipt variant");
@@ -461,22 +458,6 @@ pub fn get_deps_map_from_paths(
     }
 
     deps
-}
-
-pub fn remove_devnet_env() {
-    if Utf8PathBuf::from(DEVNET_ENV_FILE).is_file() {
-        fs::remove_file(DEVNET_ENV_FILE).unwrap();
-    }
-}
-
-fn write_devnet_env(key: &str, value: &FieldElement) {
-    let mut file = OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(DEVNET_ENV_FILE)
-        .unwrap();
-
-    writeln!(file, "{key}={value}").unwrap();
 }
 
 pub fn from_env(name: &str) -> Result<String, String> {
