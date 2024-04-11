@@ -50,7 +50,7 @@ use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
 use universal_sierra_compiler_api::{
     AssembledCairoProgramWithSerde, AssembledProgramWithDebugInfo, CasmCodeOffset,
-    CasmInstructionIdx, InstructionIdx,
+    CasmInstructionIdx,
 };
 
 pub fn run_test(
