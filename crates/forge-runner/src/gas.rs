@@ -134,8 +134,9 @@ fn get_l1_and_vm_costs(
     versioned_constants: &VersionedConstants,
     execution_resources: &ExecutionResources,
 ) -> GasVector {
-    calculate_l1_gas_by_vm_usage(versioned_constants, execution_resources, 0)
-        .expect("Could not calculate gas")
+    l1_data_costs
+        + calculate_l1_gas_by_vm_usage(versioned_constants, execution_resources, 0)
+            .expect("Could not calculate gas")
 }
 
 fn get_l1_data_cost(

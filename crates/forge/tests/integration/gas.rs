@@ -539,7 +539,7 @@ fn multiple_storage_writes_cost() {
     let result = run_test_case(&test);
 
     assert_passed(&result);
-    // 9 = gas cost of steps
+    // 8 = gas cost of steps
     // l = number of class hash updates
     // n = unique contracts updated
     // m = unique(!) values updated
@@ -547,7 +547,7 @@ fn multiple_storage_writes_cost() {
     // n(1) * 2 * 32 = 64
     // m(1) * 2 * 32 = 64
     // l(1) * 32 = 32
-    assert_gas(&result, "multiple_storage_writes_cost", 9 + 64 + 64 + 32);
+    assert_gas(&result, "multiple_storage_writes_cost", 8 + 64 + 64 + 32);
 }
 
 #[test]
@@ -582,10 +582,10 @@ fn l1_message_cost() {
     let result = run_test_case(&test);
 
     assert_passed(&result);
-    // 7 = gas cost of steps
+    // 6 = gas cost of steps
     // 96 = gas cost of deployment
     // 29524 = gas cost of onchain data
-    assert_gas(&result, "l1_message_cost", 7 + 96 + 29524);
+    assert_gas(&result, "l1_message_cost", 6 + 96 + 29524);
 }
 
 #[test]
@@ -758,9 +758,9 @@ fn events_contract_cost() {
 
     let result = run_test_case(&test);
     assert_passed(&result);
-    // 14 = gas cost of steps
+    // 13 = gas cost of steps
     // 96 = gas cost of onchain data (deploy cost)
     // 6 gas for 50 event values
     // ~13 gas for 50 event keys
-    assert_gas(&result, "event_emission_cost", 14 + 96 + 6 + 13);
+    assert_gas(&result, "event_emission_cost", 13 + 96 + 6 + 13);
 }
