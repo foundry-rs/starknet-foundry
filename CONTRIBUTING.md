@@ -10,7 +10,7 @@ Before opening an issue it is always a good idea to search existing
 [issues](https://github.com/foundry-rs/starknet-foundry/issues) and verify if similar one doesn't already exist. 
 
 
-## Opening a pull request
+## Contributing
 
 ### Environment setup
 

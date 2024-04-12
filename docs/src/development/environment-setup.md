@@ -22,6 +22,9 @@ Please make sure you're using scarb installed via asdf - otherwise some tests ma
 > 
 > ```shell
 > $ which scarb
+> ```
+> the result of which should be:
+> ```shell
 > $HOME/.asdf/shims/scarb
 > ```
 > 
@@ -36,7 +39,6 @@ Install the latest [universal-sierra-compiler](https://github.com/software-mansi
 
 
 ## Running Tests
-Make sure to install are prerequisites beforehand!
 Tests can be run with:
 
 ```shell
