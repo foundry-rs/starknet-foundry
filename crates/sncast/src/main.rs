@@ -57,7 +57,7 @@ Join the community:
 - Socialize on Starknet's Discord: https://discord.gg/KZWaFtPZJf
 
 Report bugs: https://github.com/foundry-rs/starknet-foundry/issues/new/choose\
-",
+"
 )]
 #[command(about = "sncast - All-in-one tool for interacting with Starknet smart contracts", long_about = None)]
 #[clap(name = "sncast")]
