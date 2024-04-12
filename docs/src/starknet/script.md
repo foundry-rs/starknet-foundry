@@ -43,7 +43,7 @@ can later be used to skip making changes to the network if they were done previo
 
 To determine if an operation (a function like declare, deploy or invoke) has to be sent to the network, the script will
 first check if such operation with given arguments already exists in state file. If it does, and previously ended with 
-a success, its execution will be skipped. Otherwise sncast will attempt to execute this function, and will write its status
+a success, its execution will be skipped. Otherwise, sncast will attempt to execute this function, and will write its status
 to the state file afterwards.
 
 To prevent sncast from using the state file, you can set [the --no-state-file flag](../appendix/sncast/script/run.md#--no-state-file).
@@ -52,6 +52,104 @@ A state file is typically named in a following manner:
 ```
 {script name}_{network name}_state.json
 ```
+
+## Suggested directory structures
+
+As sncast scripts are just regular scarb packages, there are multiple ways to incorporate scripts into your existing scarb workspace.
+Most common directory structures include:
+
+### 1. having a `scripts` directory with all the scripts in the same workspace with cairo contracts (default for `sncast script init`)
+```shell
+$ tree
+.
+├── scripts
+│   └── my_script
+│       ├── Scarb.toml
+│       └── src
+│           ├── my_script.cairo
+│           └── lib.cairo
+├── src
+│   ├── my_contract.cairo
+│   └── lib.cairo
+└── Scarb.toml
+```
+
+> 📝 **Note**
+> You should add `scripts` to `members` field in your top-level Scarb.toml to be able to run the script from 
+anywhere in the workspace - otherwise you will have to run the script from within its directory. To learn more consult
+[Scarb documentation](https://docs.swmansion.com/scarb/docs/reference/workspaces.html#members).
+
+You can also have multiple scripts as separate packages, or multiple modules inside one package, like so:
+
+#### 1a. multiple scripts in one package
+```shell
+$ tree
+.
+├── scripts
+│   └── my_script
+│       ├── Scarb.toml
+│       └── src
+│           ├── my_script1.cairo
+│           ├── my_script2.cairo
+│           └── lib.cairo
+├── src
+│   ├── my_contract.cairo
+│   └── lib.cairo
+└── Scarb.toml
+```
+
+#### 1b. multiple scripts as separate packages
+
+```shell
+$ tree
+.
+├── scripts
+│   ├── Scarb.toml
+│   ├── first_script
+│   │   ├── Scarb.toml
+│   │   └── src
+│   │       ├── first_script.cairo
+│   │       └── lib.cairo
+│   └── second_script
+│       ├── Scarb.toml
+│       └── src
+│           ├── second_script.cairo
+│           └── lib.cairo
+├── src
+│   ├── my_contract.cairo
+│   └── lib.cairo
+└── Scarb.toml
+```
+
+#### 1c. single script with flat directory structure
+
+```shell
+$ tree
+.
+├── Scarb.toml
+├── scripts
+│   ├── Scarb.toml
+│   └── src
+│       ├── my_script.cairo
+│       └── lib.cairo
+└── src
+    └── lib.cairo
+```
+
+### 2. having scripts disjointed from the workspace with cairo contracts
+```shell
+$ tree
+.
+├── Scarb.toml
+└── src
+    ├── lib.cairo
+    └── my_script.cairo
+```
+
+In order to use this directory structure you must set any contracts you're using as dependencies in script's Scarb.toml,
+and override `build-external-contracts` property to build those contracts. To learn more consult [Scarb documentation](https://docs.swmansion.com/scarb/docs/extensions/starknet/contract-target.html#compiling-external-contracts).
+
+This setup can be seen in action in [Full Example below](#full-example-with-contract-deployment).
 
 ## Examples
 
@@ -107,7 +205,7 @@ version = "0.1.0"
 
 [dependencies]
 starknet = ">=2.3.0"
-sncast_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.12.0" }
+sncast_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.21.0" }
 ```
 
 To run the script, do:
@@ -184,7 +282,7 @@ version = "0.1.0"
 
 [dependencies]
 starknet = ">=2.3.0"
-sncast_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.12.0" }
+sncast_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.21.0" }
 map = { path = "../contracts" }
 
 [lib]
