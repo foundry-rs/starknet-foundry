@@ -30,8 +30,36 @@ use tokio::runtime::Runtime;
 mod starknet_commands;
 
 #[derive(Parser)]
-#[command(version)]
-#[command(about = "sncast - a Starknet Foundry CLI", long_about = None)]
+#[command(
+    version,
+    help_template = "\
+{name} {version}
+{author-with-newline}{about-with-newline}
+Use -h for short descriptions and --help for more details.
+
+{before-help}{usage-heading} {usage}
+
+{all-args}{after-help}
+",
+    after_help = "Read the docs: https://foundry-rs.github.io/starknet-foundry/",
+    after_long_help = "\
+Read the docs:
+- Foundry Book: https://foundry-rs.github.io/starknet-foundry/
+- Cairo Book: https://book.cairo-lang.org/
+- Starknet Book: https://book.starknet.io/
+- Starknet Documentation: https://docs.starknet.io/
+- Scarb Documentation: https://docs.swmansion.com/scarb/docs.html
+
+Join the community:
+- Follow core developers on X: https://twitter.com/swmansionxyz
+- Chat on Telegram: https://t.me/starknet_foundry
+- Get support on Telegram: https://t.me/starknet_foundry_support
+- Socialize on Starknet's Discord: https://discord.gg/KZWaFtPZJf
+
+Report bugs: https://github.com/foundry-rs/starknet-foundry/issues/new/choose\
+",
+)]
+#[command(about = "sncast - All-in-one tool for interacting with Starknet smart contracts", long_about = None)]
 #[clap(name = "sncast")]
 #[allow(clippy::struct_excessive_bools)]
 struct Cli {

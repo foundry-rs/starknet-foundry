@@ -36,7 +36,36 @@ fn default_fuzzer_runs() -> NonZeroU32 {
 }
 
 #[derive(Parser, Debug)]
-#[command(version)]
+#[command(
+    version,
+    help_template = "\
+{name} {version}
+{author-with-newline}{about-with-newline}
+Use -h for short descriptions and --help for more details.
+
+{before-help}{usage-heading} {usage}
+
+{all-args}{after-help}
+",
+    after_help = "Read the docs: https://foundry-rs.github.io/starknet-foundry/",
+    after_long_help = "\
+Read the docs:
+- Foundry Book: https://foundry-rs.github.io/starknet-foundry/
+- Cairo Book: https://book.cairo-lang.org/
+- Starknet Book: https://book.starknet.io/
+- Starknet Documentation: https://docs.starknet.io/
+- Scarb Documentation: https://docs.swmansion.com/scarb/docs.html
+
+Join the community:
+- Follow core developers on X: https://twitter.com/swmansionxyz
+- Chat on Telegram: https://t.me/starknet_foundry
+- Get support on Telegram: https://t.me/starknet_foundry_support
+- Socialize on Starknet's Discord: https://discord.gg/KZWaFtPZJf
+
+Report bugs: https://github.com/foundry-rs/starknet-foundry/issues/new/choose\
+",
+)]
+#[command(about = "snforge - a testing tool for Starknet contracts", long_about = None)]
 #[clap(name = "snforge")]
 struct Cli {
     #[command(subcommand)]
