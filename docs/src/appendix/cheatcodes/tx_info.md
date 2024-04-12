@@ -1,6 +1,6 @@
-# `snforge_std::cheatcodes::tx_info`
+# `tx_info`
 
-Module containing cheatcodes modifying `tx_info`:
+Cheatcodes modifying `tx_info`:
 
 ## `spoof`
 
