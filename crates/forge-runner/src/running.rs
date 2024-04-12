@@ -175,7 +175,7 @@ pub fn run_test_case(
 
     let initial_gas = usize::MAX;
     let runner_args: Vec<Arg> = args.into_iter().map(Arg::Value).collect();
-    let sierra_instruction_idx = case.test_details.sierra_entry_point_instruction_idx;
+    let sierra_instruction_idx = case.test_details.sierra_entry_point_statement_idx;
     let casm_entry_point_offset =
         get_casm_instruction_offset(&casm_program.debug_info, sierra_instruction_idx);
 
