@@ -49,7 +49,8 @@ use runtime::{ExtendedRuntime, StarknetRuntime};
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
 use universal_sierra_compiler_api::{
-    AssembledCairoProgramWithSerde, AssembledProgramWithDebugInfo,
+    AssembledCairoProgramWithSerde, AssembledProgramWithDebugInfo, CasmCodeOffset,
+    CasmInstructionIdx,
 };
 
 pub fn run_test(
@@ -174,11 +175,15 @@ pub fn run_test_case(
 
     let initial_gas = usize::MAX;
     let runner_args: Vec<Arg> = args.into_iter().map(Arg::Value).collect();
+    let sierra_instruction_idx = case.test_details.sierra_entry_point_statement_idx;
+    let casm_entry_point_offset =
+        get_casm_instruction_offset(&casm_program.debug_info, sierra_instruction_idx);
+
     let (entry_code, builtins) = SierraCasmRunner::create_entry_code_from_params(
         &case.test_details.parameter_types,
         &runner_args,
         initial_gas,
-        casm_program.debug_info[case.test_details.entry_point_offset].0,
+        casm_entry_point_offset,
     )
     .unwrap();
     let footer = SierraCasmRunner::create_code_footer();
@@ -323,6 +328,13 @@ pub fn run_test_case(
         used_resources,
         call_trace: call_trace_ref,
     })
+}
+
+fn get_casm_instruction_offset(
+    debug_info: &[(CasmCodeOffset, CasmInstructionIdx)],
+    sierra_statement_idx: usize,
+) -> CasmCodeOffset {
+    debug_info[sierra_statement_idx].0
 }
 
 fn extract_test_case_summary(
