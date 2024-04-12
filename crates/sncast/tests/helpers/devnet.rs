@@ -1,4 +1,4 @@
-use crate::helpers::constants::{SEED, URL};
+use crate::helpers::constants::{FORK_BLOCK_NUMBER, SEED, URL};
 use crate::helpers::fixtures::{deploy_cairo_0_account, deploy_keystore_account, from_env};
 use ctor::{ctor, dtor};
 use std::net::TcpStream;
@@ -44,6 +44,8 @@ fn start_devnet() {
             "full",
             "--fork-network",
             &sepolia_rpc_url,
+            "--fork-block",
+            &FORK_BLOCK_NUMBER.to_string(),
         ])
         .stdout(Stdio::null())
         .spawn()
