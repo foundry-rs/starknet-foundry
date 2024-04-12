@@ -6,7 +6,7 @@ Starknet Foundry is under active development and is open for contributions!
 
 If you think something doesn't work or something is missing please open an issue! This way we can address this problem
 and make Starknet Foundry better!
-Before opening an issue it is always a good idea to search existing 
+Before opening an issue, it is always a good idea to search existing 
 [issues](https://github.com/foundry-rs/starknet-foundry/issues) and verify if a similar one doesn't already exist. 
 
 
