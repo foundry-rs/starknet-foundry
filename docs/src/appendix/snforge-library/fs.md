@@ -11,7 +11,7 @@ trait FileTrait {
 
 ## `FileParser<T>`
 ```rust
-trait FileParser<T, impl TSerde: Serde<T>> {
+trait FileParser<T, +Serde<T>> {
     fn parse_txt(file: @File) -> Option<T>;
     fn parse_json(file: @File) -> Option<T>;
 }
