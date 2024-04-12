@@ -35,7 +35,7 @@ Try to make your pull request self-contained, only introducing the necessary cha
 If your feature is complicated,
 consider splitting the changes into meaningful parts and introducing them as separate pull requests.
 
-Creating very large pull requests may significantly increase review time or event prevent them from being merged.
+Creating very large pull requests may significantly increase review time or even prevent them from being merged.
 
 ### Contributions Related to Spelling and Grammar
 
