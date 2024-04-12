@@ -10,7 +10,7 @@ fn validate_storage_address_felt(storage_address_felt: felt252) {
     match storage_address_try_from_felt252(storage_address_felt) {
         Option::Some(_) => {},
         // Panics in order not to leave inconsistencies in the state
-        Option::None(()) => panic(array!['storage_address out of range', storage_address_felt]),
+        Option::None(()) => panic!("storage_address out of range {}", storage_address_felt),
     }
 }
 

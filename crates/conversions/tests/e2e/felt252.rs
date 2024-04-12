@@ -103,15 +103,15 @@ mod tests_felt252 {
 
     #[test]
     fn test_result_to_felt252_vec() {
-        let val = "a";
+        let val: ByteArray = "a".into();
         let serialised_val = vec![Felt252::from(0), Felt252::from(97), Felt252::from(1)];
 
-        let res: Result<&str, &str> = Ok(val);
+        let res: Result<ByteArray, ByteArray> = Ok(val.clone());
         let expected: Vec<Felt252> =
             chain!(vec![Felt252::from(0)], serialised_val.clone()).collect();
         assert_eq!(res.serialize_as_felt252_vec(), expected);
 
-        let res: Result<&str, &str> = Err(val);
+        let res: Result<ByteArray, ByteArray> = Err(val);
         let expected: Vec<Felt252> = chain!(vec![Felt252::from(1)], serialised_val).collect();
         assert_eq!(res.serialize_as_felt252_vec(), expected);
     }
