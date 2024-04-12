@@ -30,6 +30,16 @@ Please make sure you're using scarb installed via asdf - otherwise some tests ma
 > 
 > If you previously installed scarb using official installer, you may need to remove this installation or modify your PATH to make sure asdf installed one is always used.
 
+
+> ❗️ **Warning**
+> 
+> If you haven't pushed your branch to the remote yet (you've been working only locally), two tests will fail:
+> 
+> - `e2e::running::init_new_project_test`
+> - `e2e::running::simple_package_with_git_dependency`
+> 
+> After pushing the branch to the remote, those tests should pass.
+
 ### Starknet Devnet
 To install it run `./scripts/install_devnet.sh`
 
