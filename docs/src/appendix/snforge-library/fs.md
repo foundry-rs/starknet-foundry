@@ -44,7 +44,7 @@ Different ones apply for JSON and plain text files.
 
 > ⚠️ **Warning**
 >
-> A JSON object is an unordered data structure. To give it an order, the values in the array are sorted alphabetically by JSON keys. Therefore, the values in the array are sorted alphabetically by JSON key.
+> A JSON object is an unordered data structure. To make reading JSONs deterministic, the values are read from the JSON in an order that is alphabetical in respect to JSON keys.
 > Nested JSON values are sorted by the flattened format keys `(a.b.c)`.
 
 
