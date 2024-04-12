@@ -163,7 +163,7 @@ fn accumulate_syscalls() {
             #[test]
             fn single_write() {
                 let contract = declare("GasChecker").unwrap();
-                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IGasCheckerDispatcher { contract_address };
 
                 dispatcher.change_balance(1);
@@ -172,7 +172,7 @@ fn accumulate_syscalls() {
             #[test]
             fn double_write() {
                 let contract = declare("GasChecker").unwrap();
-                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IGasCheckerDispatcher { contract_address };
 
                 dispatcher.change_balance(1);

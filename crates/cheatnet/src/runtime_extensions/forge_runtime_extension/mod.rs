@@ -3,7 +3,7 @@ use crate::{
     runtime_extensions::{
         call_to_blockifier_runtime_extension::{
             rpc::{CallFailure, CallResult, UsedResources},
-            CallToBlockifierRuntime, RuntimeState,
+            CallToBlockifierRuntime,
         },
         cheatable_starknet_runtime_extension::SyscallSelector,
         common::{get_relocated_vm_trace, sum_syscall_counters},
@@ -50,7 +50,7 @@ use runtime::{
 };
 use starknet::signers::SigningKey;
 use starknet_api::{
-    core::ContractAddress,
+    core::{ClassHash, ContractAddress},
     deprecated_contract_class::EntryPointType::{self, L1Handler},
 };
 use std::collections::HashMap;
@@ -302,7 +302,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 let contract_name = input_reader.read_string()?;
 
-                handle_cheatcode_result(declare(*state, &contract_name, self.contracts_data))
+                handle_declare_result(declare(*state, &contract_name, self.contracts_data))
             }
             "deploy" => {
                 let class_hash = input_reader.read_felt()?.into_();
@@ -312,11 +312,9 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 syscall_handler.increment_syscall_count_by(&DeprecatedSyscallSelector::Deploy, 1);
 
-                handle_cheatcode_result(deploy(
+                handle_deploy_result(deploy(
                     syscall_handler,
-                    &mut RuntimeState {
-                        cheatnet_state: cheatnet_runtime.extension.cheatnet_state,
-                    },
+                    cheatnet_runtime.extension.cheatnet_state,
                     &class_hash,
                     &calldata,
                 ))
@@ -330,11 +328,9 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 syscall_handler.increment_syscall_count_by(&DeprecatedSyscallSelector::Deploy, 1);
 
-                handle_cheatcode_result(deploy_at(
+                handle_deploy_result(deploy_at(
                     syscall_handler,
-                    &mut RuntimeState {
-                        cheatnet_state: cheatnet_runtime.extension.cheatnet_state,
-                    },
+                    cheatnet_runtime.extension.cheatnet_state,
                     &class_hash,
                     &calldata,
                     contract_address,
@@ -395,13 +391,10 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 let cheatnet_runtime = &mut extended_runtime.extended_runtime;
 
-                let mut runtime_state = RuntimeState {
-                    cheatnet_state: cheatnet_runtime.extension.cheatnet_state,
-                };
                 let syscall_handler = &mut cheatnet_runtime.extended_runtime.hint_handler;
                 match l1_handler_execute(
                     syscall_handler,
-                    &mut runtime_state,
+                    cheatnet_runtime.extension.cheatnet_state,
                     contract_address,
                     &function_selector,
                     &from_address,
@@ -655,16 +648,32 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
     }
 }
 
-fn handle_cheatcode_result<T>(
-    result: Result<T, CheatcodeError>,
-) -> Result<CheatcodeHandlingResult, EnhancedHintError>
-where
-    T: IntoConv<Felt252>,
-{
-    match result {
-        Ok(value) => {
-            let result_arr = vec![Felt252::from(0), value.into_()];
+fn handle_declare_result(
+    declare_result: Result<ClassHash, CheatcodeError>,
+) -> Result<CheatcodeHandlingResult, EnhancedHintError> {
+    match declare_result {
+        Ok(class_hash) => {
+            let result_arr = vec![Felt252::from(0), class_hash.into_()];
             Ok(CheatcodeHandlingResult::Handled(result_arr))
+        }
+        Err(CheatcodeError::Recoverable(panic_data)) => Ok(CheatcodeHandlingResult::Handled(
+            cheatcode_panic_result(panic_data),
+        )),
+        Err(CheatcodeError::Unrecoverable(err)) => Err(err),
+    }
+}
+
+fn handle_deploy_result(
+    deploy_result: Result<(ContractAddress, Vec<Felt252>), CheatcodeError>,
+) -> Result<CheatcodeHandlingResult, EnhancedHintError> {
+    match deploy_result {
+        Ok((contract_address, retdata)) => {
+            let mut result = Vec::new();
+            result.push(Felt252::from(0));
+            result.push(contract_address.into_());
+            result.push(retdata.len().into());
+            result.extend(retdata);
+            Ok(CheatcodeHandlingResult::Handled(result))
         }
         Err(CheatcodeError::Recoverable(panic_data)) => Ok(CheatcodeHandlingResult::Handled(
             cheatcode_panic_result(panic_data),

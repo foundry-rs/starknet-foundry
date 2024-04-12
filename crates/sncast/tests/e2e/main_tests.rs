@@ -144,7 +144,7 @@ async fn test_nonexistent_account_address() {
 
     assert_stderr_contains(
         output,
-        "Error: Account with address 0x1010101010011aaabbcc not found on network SN_GOERLI",
+        "Error: Account with address 0x1010101010011aaabbcc not found on network SN_SEPOLIA",
     );
 }
 

@@ -44,7 +44,7 @@ pub async fn test_happy_case() {
     let contents = fs::read_to_string(temp_dir.path().join(accounts_file))
         .expect("Unable to read created file");
     assert!(contents.contains("my_account"));
-    assert!(contents.contains("alpha-goerli"));
+    assert!(contents.contains("alpha-sepolia"));
     assert!(contents.contains("private_key"));
     assert!(contents.contains("public_key"));
     assert!(contents.contains("address"));
@@ -116,7 +116,7 @@ pub async fn test_happy_case_generate_salt() {
     let contents = fs::read_to_string(temp_dir.path().join(accounts_file))
         .expect("Unable to read created file");
     assert!(contents.contains("my_account"));
-    assert!(contents.contains("alpha-goerli"));
+    assert!(contents.contains("alpha-sepolia"));
     assert!(contents.contains("private_key"));
     assert!(contents.contains("public_key"));
     assert!(contents.contains("address"));
@@ -253,7 +253,7 @@ pub async fn test_account_already_exists() {
         output,
         indoc! {r"
         command: account create
-        error: Account with name = user1 already exists in network with chain_id = SN_GOERLI
+        error: Account with name = user1 already exists in network with chain_id = SN_SEPOLIA
         "},
     );
 }

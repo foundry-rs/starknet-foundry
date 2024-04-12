@@ -1,14 +1,14 @@
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
-    call_l1_handler, CallResult,
+use crate::{
+    runtime_extensions::call_to_blockifier_runtime_extension::rpc::{call_l1_handler, CallResult},
+    state::CheatnetState,
 };
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeState;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use cairo_felt::Felt252;
 use starknet_api::core::ContractAddress;
 
 pub fn l1_handler_execute(
     syscall_handler: &mut SyscallHintProcessor,
-    runtime_state: &mut RuntimeState,
+    cheatnet_state: &mut CheatnetState,
     contract_address: ContractAddress,
     function_selector: &Felt252,
     from_address: &Felt252,
@@ -19,7 +19,7 @@ pub fn l1_handler_execute(
 
     call_l1_handler(
         syscall_handler,
-        runtime_state,
+        cheatnet_state,
         &contract_address,
         function_selector,
         calldata.as_slice(),

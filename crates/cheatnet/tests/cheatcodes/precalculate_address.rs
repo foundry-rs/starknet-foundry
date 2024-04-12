@@ -1,10 +1,8 @@
 use crate::{cheatcodes::test_environment::TestEnvironment, common::get_contracts};
-use cheatnet::state::CheatnetState;
 
 #[test]
 fn precalculate_address_simple() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
     let class_hash = test_env.declare("HelloStarknet", &contracts_data);
@@ -22,8 +20,7 @@ fn precalculate_address_simple() {
 
 #[test]
 fn precalculate_address_calldata() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
     let class_hash = test_env.declare("ConstructorSimple", &contracts_data);

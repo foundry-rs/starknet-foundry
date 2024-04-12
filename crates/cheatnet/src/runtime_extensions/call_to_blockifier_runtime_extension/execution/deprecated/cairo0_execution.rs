@@ -1,4 +1,4 @@
-use crate::runtime_extensions::call_to_blockifier_runtime_extension::RuntimeState;
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
 use crate::runtime_extensions::deprecated_cheatable_starknet_extension::runtime::{
     DeprecatedExtendedRuntime, DeprecatedStarknetRuntime,
 };
@@ -25,7 +25,7 @@ pub fn execute_entry_point_call_cairo0(
     call: CallEntryPoint,
     contract_class: ContractClassV0,
     state: &mut dyn State,
-    runtime_state: &mut RuntimeState,
+    cheatnet_state: &mut CheatnetState,
     resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
 ) -> EntryPointExecutionResult<(CallInfo, SyscallCounter, Option<Vec<TraceEntry>>)> {
@@ -49,9 +49,7 @@ pub fn execute_entry_point_call_cairo0(
     let previous_vm_resources = syscall_handler.resources.clone();
 
     // region: Modified blockifier code
-    let cheatable_extension = DeprecatedCheatableStarknetRuntimeExtension {
-        cheatnet_state: runtime_state.cheatnet_state,
-    };
+    let cheatable_extension = DeprecatedCheatableStarknetRuntimeExtension { cheatnet_state };
     let mut cheatable_syscall_handler = DeprecatedExtendedRuntime {
         extension: cheatable_extension,
         extended_runtime: DeprecatedStarknetRuntime {

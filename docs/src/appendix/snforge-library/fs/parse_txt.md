@@ -29,7 +29,7 @@ fn test_parse_txt() {
     // ...
 }
 ```
-
+## Accepted format
 File content must consists of elements that:
 - have to be separated with newlines
 - have to be either:

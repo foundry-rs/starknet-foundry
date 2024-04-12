@@ -1,25 +1,16 @@
 use crate::cheatcodes::test_environment::TestEnvironment;
 use crate::common::get_contracts;
-use crate::common::{
-    call_contract, deploy_contract, felt_selector_from_name, state::build_runtime_state,
-};
-use blockifier::state::cached_state::{
-    CachedState, GlobalContractCache, GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST,
-};
+use crate::common::state::create_fork_cached_state_at;
+use crate::common::{call_contract, deploy_contract, felt_selector_from_name};
 use cairo_felt::Felt252;
 use cairo_lang_starknet_classes::keccak::starknet_keccak;
 use cairo_vm::hint_processor::hint_processor_utils::felt_to_usize;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::{
     Event, SpyTarget,
 };
-use cheatnet::{
-    constants::build_testing_state,
-    forking::state::ForkStateReader,
-    state::{CheatnetState, ExtendedStateReader},
-};
+use cheatnet::state::CheatnetState;
 use conversions::string::TryFromHexStr;
 use conversions::IntoConv;
-use starknet_api::block::BlockNumber;
 use std::vec;
 use tempfile::TempDir;
 
@@ -28,15 +19,13 @@ trait SpyTrait {
     fn fetch_events(&mut self, id: usize) -> (usize, Vec<Felt252>);
 }
 
-impl<'a> SpyTrait for TestEnvironment<'a> {
+impl SpyTrait for TestEnvironment {
     fn spy_events(&mut self, spy_on: SpyTarget) -> usize {
-        self.runtime_state.cheatnet_state.spy_events(spy_on)
+        self.cheatnet_state.spy_events(spy_on)
     }
 
     fn fetch_events(&mut self, id: usize) -> (usize, Vec<Felt252>) {
-        self.runtime_state
-            .cheatnet_state
-            .fetch_events(&Felt252::from(id))
+        self.cheatnet_state.fetch_events(&Felt252::from(id))
     }
 }
 
@@ -68,8 +57,7 @@ pub fn felt_vec_to_event_vec(felts: &[Felt252]) -> Vec<Event> {
 
 #[test]
 fn spy_events_complex() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("SpyEventsChecker", &[]);
 
@@ -107,8 +95,7 @@ fn spy_events_complex() {
 
 #[test]
 fn check_events_order() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let spy_events_checker_address = test_env.deploy("SpyEventsChecker", &[]);
     let spy_events_order_checker_address = test_env.deploy("SpyEventsOrderChecker", &[]);
@@ -161,8 +148,7 @@ fn check_events_order() {
 
 #[test]
 fn check_events_captured_only_for_spied_contracts() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let spy_events_checker_address = test_env.deploy("SpyEventsChecker", &[]);
 
@@ -201,8 +187,7 @@ fn check_events_captured_only_for_spied_contracts() {
 
 #[test]
 fn duplicate_spies_on_one_address() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("SpyEventsChecker", &[]);
 
@@ -230,8 +215,7 @@ fn duplicate_spies_on_one_address() {
 
 #[test]
 fn library_call_emits_event() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
     let class_hash = test_env.declare("SpyEventsChecker", &contracts_data);
@@ -262,8 +246,7 @@ fn library_call_emits_event() {
 
 #[test]
 fn event_emitted_in_constructor() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let id = test_env.spy_events(SpyTarget::All);
 
@@ -291,8 +274,7 @@ fn event_emitted_in_constructor() {
 
 #[test]
 fn check_if_there_is_no_interference() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
     let class_hash = test_env.declare("SpyEventsChecker", &contracts_data);
@@ -328,8 +310,7 @@ fn check_if_there_is_no_interference() {
 
 #[test]
 fn test_nested_calls() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let spy_events_checker_address = test_env.deploy("SpyEventsChecker", &[]);
 
@@ -384,8 +365,7 @@ fn test_nested_calls() {
 
 #[test]
 fn use_multiple_spies() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let spy_events_checker_address = test_env.deploy("SpyEventsChecker", &[]);
 
@@ -449,8 +429,7 @@ fn use_multiple_spies() {
 
 #[test]
 fn test_emitted_by_emit_events_syscall() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("SpyEventsChecker", &[]);
 
@@ -480,31 +459,17 @@ fn test_emitted_by_emit_events_syscall() {
 #[test]
 fn capture_cairo0_event() {
     let temp_dir = TempDir::new().unwrap();
-    let mut cached_state = CachedState::new(
-        ExtendedStateReader {
-            dict_state_reader: build_testing_state(),
-            fork_state_reader: Some(
-                ForkStateReader::new(
-                    "http://188.34.188.184:7070/rpc/v0_7".parse().unwrap(),
-                    BlockNumber(53_626),
-                    temp_dir.path().to_str().unwrap(),
-                )
-                .unwrap(),
-            ),
-        },
-        GlobalContractCache::new(GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST),
-    );
+    let mut cached_state = create_fork_cached_state_at(53_626, temp_dir.path().to_str().unwrap());
     let mut cheatnet_state = CheatnetState::default();
-    let mut runtime_state = build_runtime_state(&mut cheatnet_state);
 
     let contract_address = deploy_contract(
         &mut cached_state,
-        &mut runtime_state,
+        &mut cheatnet_state,
         "SpyEventsCairo0",
         &[],
     );
 
-    let id = runtime_state.cheatnet_state.spy_events(SpyTarget::All);
+    let id = cheatnet_state.spy_events(SpyTarget::All);
 
     let selector = felt_selector_from_name("test_cairo0_event_collection");
 
@@ -515,15 +480,13 @@ fn capture_cairo0_event() {
 
     call_contract(
         &mut cached_state,
-        &mut runtime_state,
+        &mut cheatnet_state,
         &contract_address,
         &selector,
         &[cairo0_contract_address.clone()],
     );
 
-    let (length, serialized_events) = runtime_state
-        .cheatnet_state
-        .fetch_events(&Felt252::from(id));
+    let (length, serialized_events) = cheatnet_state.fetch_events(&Felt252::from(id));
 
     let events = felt_vec_to_event_vec(&serialized_events);
 

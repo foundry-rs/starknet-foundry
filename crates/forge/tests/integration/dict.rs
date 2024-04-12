@@ -25,7 +25,7 @@ fn using_dict() {
             let mut inputs: Array<felt252> = array![];
             numbers.serialize(ref inputs);
             
-            let contract_address = contract.deploy(@inputs).unwrap();
+            let (contract_address, _) = contract.deploy(@inputs).unwrap();
             let dispatcher = IDictUsingContractDispatcher { contract_address };
             
             let unq = dispatcher.get_unique();

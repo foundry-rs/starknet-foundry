@@ -136,7 +136,6 @@ pub async fn run(
 
         let compiled_test_crate =
             to_runnable(compiled_test_crate, fork_targets, block_number_map).await?;
-        let compiled_test_crate = compiled_test_crate;
         let runner_config = runner_config.clone();
         let runner_params = runner_params.clone();
 

@@ -26,7 +26,7 @@ fn start_and_stop_spoof_single_attribute() {
             #[test]
             fn start_spoof_single_attribute() {
                 let contract = declare("SpoofChecker").unwrap();
-                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ISpoofCheckerDispatcher { contract_address };
 
                 let tx_info_before = dispatcher.get_tx_info();
@@ -49,7 +49,7 @@ fn start_and_stop_spoof_single_attribute() {
             #[test]
             fn test_spoof_all_stop_one() {
                 let contract = declare("SpoofChecker").unwrap();
-                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ISpoofCheckerDispatcher { contract_address };
 
                 let tx_info_before = dispatcher.get_tx_info();
@@ -143,7 +143,7 @@ fn start_spoof_all_attributes_mocked() {
             #[test]
             fn start_spoof_all_attributes_mocked() {
                 let contract = declare("SpoofChecker").unwrap();
-                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ISpoofCheckerDispatcher { contract_address };
 
                 let mut tx_info_mock = TxInfoMockTrait::default();
@@ -246,7 +246,7 @@ fn start_spoof_cancel_mock_by_setting_attribute_to_none() {
             #[test]
             fn start_spoof_cancel_mock_by_setting_attribute_to_none() {
                 let contract = declare("SpoofChecker").unwrap();
-                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ISpoofCheckerDispatcher { contract_address };
 
                 let tx_info_before_mock = dispatcher.get_tx_info();
@@ -327,7 +327,7 @@ fn start_spoof_no_attributes_mocked() {
             #[test]
             fn start_spoof_no_attributes_mocked() {
                 let contract = declare("SpoofChecker").unwrap();
-                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ISpoofCheckerDispatcher { contract_address };
 
                 let tx_info_before_mock = dispatcher.get_tx_info();
@@ -399,10 +399,10 @@ fn start_spoof_multiple() {
             fn start_spoof_multiple() {
                 let contract = declare("SpoofChecker").unwrap();
                 
-                let contract_address_1 = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address_1, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher_1 = ISpoofCheckerDispatcher { contract_address: contract_address_1 };
                 
-                let contract_address_2 = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address_2, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher_2 = ISpoofCheckerDispatcher { contract_address: contract_address_2 };
 
                 let mut tx_info_mock = TxInfoMockTrait::default();
@@ -470,7 +470,7 @@ fn start_spoof_all() {
             #[test]
             fn start_spoof_all_one_param() {
                 let contract = declare("SpoofChecker").unwrap();
-                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ISpoofCheckerDispatcher { contract_address };
 
                 let mut tx_info_mock = TxInfoMockTrait::default();
@@ -484,7 +484,7 @@ fn start_spoof_all() {
             #[test]
             fn start_spoof_all_multiple_params() {
                 let contract = declare("SpoofChecker").unwrap();
-                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ISpoofCheckerDispatcher { contract_address };
 
                 let mut tx_info_mock = TxInfoMockTrait::default();
@@ -588,8 +588,8 @@ fn start_spoof_complex() {
             #[test]
             fn start_spoof_complex() {
                 let contract = declare("SpoofChecker").unwrap();
-                let contract_address_1 = contract.deploy(@array![]).unwrap();
-                let contract_address_2 = contract.deploy(@array![]).unwrap();
+                let (contract_address_1, _) = contract.deploy(@array![]).unwrap();
+                let (contract_address_2, _) = contract.deploy(@array![]).unwrap();
                 
                 let dispatcher_1 = ISpoofCheckerDispatcher { contract_address: contract_address_1 };
                 let dispatcher_2 = ISpoofCheckerDispatcher { contract_address: contract_address_2 };
@@ -653,7 +653,7 @@ fn spoof_with_span() {
             }
             
             fn deploy_spoof_checker() -> ISpoofCheckerDispatcher {
-                let contract_address = declare("SpoofChecker").unwrap().deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = declare("SpoofChecker").unwrap().deploy(@ArrayTrait::new()).unwrap();
                 ISpoofCheckerDispatcher { contract_address }
             }
 

@@ -20,7 +20,7 @@ fn override_entrypoint() {
             fn override_entrypoint() {
                 let contract = declare("ReplaceBytecodeA").unwrap();
                 let contract_b_class = declare("ReplaceBytecodeB").unwrap().class_hash;
-                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IReplaceBytecodeDispatcher { contract_address };
 
                 assert(dispatcher.get() == 2137, '');
@@ -70,7 +70,7 @@ fn libcall_in_cheated() {
                 let contract = declare("ReplaceBytecodeA").unwrap();
                 let contract_b_class = declare("ReplaceBytecodeB").unwrap().class_hash;
                 let lib = declare("Lib").unwrap().class_hash;
-                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IReplaceBytecodeDispatcher { contract_address };
 
                 assert(dispatcher.libcall(lib) == 123456789, '');

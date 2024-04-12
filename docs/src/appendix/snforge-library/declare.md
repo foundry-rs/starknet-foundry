@@ -1,6 +1,6 @@
 # `declare`
 
-> `fn declare(contract: ByteArray) -> Result<ContractClass, RevertedTransaction>`
+> `fn declare(contract: ByteArray) -> Result<ContractClass, Array<felt252>>`
 
 Declares a contract for later deployment.
 

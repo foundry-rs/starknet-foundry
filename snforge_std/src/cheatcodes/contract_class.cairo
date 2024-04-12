@@ -1,23 +1,7 @@
-use core::option::OptionTrait;
-use core::traits::TryInto;
-use starknet::{ContractAddress, ClassHash, testing::cheatcode};
+use starknet::{ContractAddress, ClassHash, testing::cheatcode, SyscallResult};
 use super::super::byte_array::byte_array_as_felt_array;
+use super::super::_cheatcode::handle_cheatcode;
 use core::traits::Into;
-
-#[derive(Drop, Clone)]
-struct RevertedTransaction {
-    panic_data: Array::<felt252>,
-}
-
-trait RevertedTransactionTrait {
-    fn first(self: @RevertedTransaction) -> felt252;
-}
-
-impl RevertedTransactionImpl of RevertedTransactionTrait {
-    fn first(self: @RevertedTransaction) -> felt252 {
-        *self.panic_data.at(0)
-    }
-}
 
 #[derive(Drop, Clone, Copy)]
 struct ContractClass {
@@ -38,21 +22,21 @@ trait ContractClassTrait {
     /// Deploys a contract
     /// `self` - an instance of the struct `ContractClass` which is obtained by calling `declare`
     /// `constructor_calldata` - serialized calldata for the constructor
-    /// Returns the address the contract was deployed at, or a `RevertedTransaction` if it failed
+    /// Returns the address the contract was deployed at and serialized constructor return data, or panic data if it failed
     fn deploy(
         self: @ContractClass, constructor_calldata: @Array::<felt252>
-    ) -> Result<ContractAddress, RevertedTransaction>;
+    ) -> SyscallResult<(ContractAddress, Span<felt252>)>;
 
     /// Deploys a contract at a given address
     /// `self` - an instance of the struct `ContractClass` which is obtained by calling `declare`
     /// `constructor_calldata` - serialized calldata for the constructor
     /// `contract_address` - address the contract should be deployed at
-    /// Returns the address the contract was deployed at, or a `RevertedTransaction` if it failed
+    /// Returns the address the contract was deployed at and serialized constructor return data, or panic data if it failed
     fn deploy_at(
         self: @ContractClass,
         constructor_calldata: @Array::<felt252>,
         contract_address: ContractAddress
-    ) -> Result<ContractAddress, RevertedTransaction>;
+    ) -> SyscallResult<(ContractAddress, Span<felt252>)>;
 
     /// Utility method for creating a new `ContractClass` instance
     /// `class_hash` - a numeric value that can be converted into the class hash of `ContractClass`
@@ -66,21 +50,26 @@ impl ContractClassImpl of ContractClassTrait {
     ) -> ContractAddress {
         let mut inputs: Array::<felt252> = _prepare_calldata(self.class_hash, constructor_calldata);
 
-        let outputs = cheatcode::<'precalculate_address'>(inputs.span());
+        let outputs = handle_cheatcode(cheatcode::<'precalculate_address'>(inputs.span()));
         (*outputs[0]).try_into().unwrap()
     }
 
     fn deploy(
         self: @ContractClass, constructor_calldata: @Array::<felt252>
-    ) -> Result<ContractAddress, RevertedTransaction> {
+    ) -> SyscallResult<(ContractAddress, Span<felt252>)> {
         let mut inputs = _prepare_calldata(self.class_hash, constructor_calldata);
 
-        let outputs = cheatcode::<'deploy'>(inputs.span());
+        let outputs = handle_cheatcode(cheatcode::<'deploy'>(inputs.span()));
         let exit_code = *outputs[0];
 
         if exit_code == 0 {
-            let result = *outputs[1];
-            Result::Ok(result.try_into().unwrap())
+            let contract_address_felt = *outputs[1];
+            let contract_address = contract_address_felt.try_into().unwrap();
+            let retdata_len_felt = *outputs[2];
+            let retdata_len = retdata_len_felt.try_into().unwrap();
+            let mut retdata = outputs.slice(3, retdata_len);
+
+            SyscallResult::Ok((contract_address, retdata))
         } else {
             let panic_data_len_felt = *outputs[1];
             let panic_data_len = panic_data_len_felt.try_into().unwrap();
@@ -96,7 +85,7 @@ impl ContractClassImpl of ContractClassTrait {
                 i += 1;
             };
 
-            Result::Err(RevertedTransaction { panic_data })
+            SyscallResult::Err(panic_data)
         }
     }
 
@@ -104,16 +93,21 @@ impl ContractClassImpl of ContractClassTrait {
         self: @ContractClass,
         constructor_calldata: @Array::<felt252>,
         contract_address: ContractAddress
-    ) -> Result<ContractAddress, RevertedTransaction> {
+    ) -> SyscallResult<(ContractAddress, Span<felt252>)> {
         let mut inputs = _prepare_calldata(self.class_hash, constructor_calldata);
         inputs.append(contract_address.into());
 
-        let outputs = cheatcode::<'deploy_at'>(inputs.span());
+        let outputs = handle_cheatcode(cheatcode::<'deploy_at'>(inputs.span()));
         let exit_code = *outputs[0];
 
         if exit_code == 0 {
-            let result = *outputs[1];
-            Result::Ok(result.try_into().unwrap())
+            let contract_address_felt = *outputs[1];
+            let contract_address = contract_address_felt.try_into().unwrap();
+            let retdata_len_felt = *outputs[2];
+            let retdata_len = retdata_len_felt.try_into().unwrap();
+            let mut retdata = outputs.slice(3, retdata_len);
+
+            SyscallResult::Ok((contract_address, retdata))
         } else {
             let panic_data_len_felt = *outputs[1];
             let panic_data_len = panic_data_len_felt.try_into().unwrap();
@@ -129,7 +123,7 @@ impl ContractClassImpl of ContractClassTrait {
                 i += 1;
             };
 
-            Result::Err(RevertedTransaction { panic_data })
+            SyscallResult::Err(panic_data)
         }
     }
 
@@ -140,9 +134,9 @@ impl ContractClassImpl of ContractClassTrait {
 
 /// Declares a contract
 /// `contract` - name of a contract as Cairo string. It is a name of the contract (part after mod keyword) e.g. "HelloStarknet"
-/// Returns the `ContractClass` which was declared or RevertedTransaction if declaration failed
-fn declare(contract: ByteArray) -> Result<ContractClass, RevertedTransaction> {
-    let span = cheatcode::<'declare'>(byte_array_as_felt_array(@contract).span());
+/// Returns the `ContractClass` which was declared or panic data if declaration failed
+fn declare(contract: ByteArray) -> Result<ContractClass, Array<felt252>> {
+    let span = handle_cheatcode(cheatcode::<'declare'>(byte_array_as_felt_array(@contract).span()));
 
     let exit_code = *span[0];
 
@@ -167,7 +161,7 @@ fn declare(contract: ByteArray) -> Result<ContractClass, RevertedTransaction> {
             i += 1;
         };
 
-        Result::Err(RevertedTransaction { panic_data })
+        Result::Err(panic_data)
     }
 }
 
@@ -178,8 +172,11 @@ fn get_class_hash(contract_address: ContractAddress) -> ClassHash {
     let contract_address_felt: felt252 = contract_address.into();
 
     // Expecting a buffer with one felt252, being the class hash.
-    let buf = cheatcode::<'get_class_hash'>(array![contract_address_felt].span());
-    (*buf[0]).try_into().expect('Invalid class hash value')
+    let buf = handle_cheatcode(cheatcode::<'get_class_hash'>(array![contract_address_felt].span()));
+    match (*buf[0]).try_into() {
+        Option::Some(hash) => hash,
+        Option::None => panic!("Invalid class hash value")
+    }
 }
 
 fn _prepare_calldata(

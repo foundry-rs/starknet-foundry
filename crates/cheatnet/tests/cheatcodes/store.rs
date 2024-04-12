@@ -3,7 +3,6 @@ use crate::common::assertions::assert_success;
 use crate::common::get_contracts;
 use cairo_felt::Felt252;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::storage::store;
-use cheatnet::state::CheatnetState;
 use starknet_api::core::ContractAddress;
 
 use super::test_environment::TestEnvironment;
@@ -12,7 +11,7 @@ trait StoreTrait {
     fn store(&mut self, target: ContractAddress, storage_address: &Felt252, value: u128);
 }
 
-impl<'a> StoreTrait for TestEnvironment<'a> {
+impl StoreTrait for TestEnvironment {
     fn store(&mut self, target: ContractAddress, storage_address: &Felt252, value: u128) {
         store(
             &mut self.cached_state,
@@ -26,8 +25,7 @@ impl<'a> StoreTrait for TestEnvironment<'a> {
 
 #[test]
 fn store_simple_state() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
 
@@ -44,8 +42,7 @@ fn store_simple_state() {
 
 #[test]
 fn store_state_map_simple_value() {
-    let mut cheatnet_state = CheatnetState::default();
-    let mut test_env = TestEnvironment::new(&mut cheatnet_state);
+    let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
 
