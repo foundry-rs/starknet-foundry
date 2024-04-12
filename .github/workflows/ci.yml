@@ -99,7 +99,7 @@ jobs:
         env:
           NODE_URL: ${{ secrets.NODE_URL }}
         run: |
-          FORK_NETWORK_URL="${NODE_URL}:7070/rpc/v0_7" cargo test --release -p sncast
+          SEPOLIA_RPC_URL="${NODE_URL}:7070/rpc/v0_7" cargo test --release -p sncast
 
   test-conversions:
     name: Test Conversions

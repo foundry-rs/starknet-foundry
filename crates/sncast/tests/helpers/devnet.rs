@@ -31,8 +31,8 @@ fn start_devnet() {
     }
 
     dotenv::dotenv().ok();
-    let fork_network_url =
-        from_env("FORK_NETWORK_URL").expect("Failed to get FORK_NETWORK_URL environment variable");
+    let sepolia_rpc_url =
+        from_env("SEPOLIA_RPC_URL").expect("Failed to get SEPOLIA_RPC_URL environment variable");
 
     Command::new("tests/utils/devnet/bin/starknet-devnet")
         .args([
@@ -43,7 +43,7 @@ fn start_devnet() {
             "--state-archive-capacity",
             "full",
             "--fork-network",
-            &fork_network_url,
+            &sepolia_rpc_url,
         ])
         .stdout(Stdio::null())
         .spawn()
