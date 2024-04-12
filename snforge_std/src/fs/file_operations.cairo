@@ -4,10 +4,12 @@ use super::super::_cheatcode::handle_cheatcode;
 
 #[derive(Drop, Clone)]
 struct File {
-    path: ByteArray // relative path
+    path: ByteArray
 }
 
 trait FileTrait {
+    /// Creates a file struct used for reading json / text
+    /// `path` - a path to file in ByteArray form, relative to the package root
     fn new(path: ByteArray) -> File;
 }
 
@@ -17,6 +19,8 @@ impl FileTraitImpl of FileTrait {
     }
 }
 
+/// `file` - a `File` struct to read text data from
+/// Returns an array of felts read from the file, panics if read was not possible
 fn read_txt(file: @File) -> Array<felt252> {
     let content = handle_cheatcode(
         cheatcode::<'read_txt'>(byte_array_as_felt_array(file.path).span())
@@ -35,6 +39,8 @@ fn read_txt(file: @File) -> Array<felt252> {
     result
 }
 
+/// `file` - a `File` struct to read json data from
+/// Returns an array of felts read from the file, panics if read was not possible, or json was incorrect
 fn read_json(file: @File) -> Array<felt252> {
     let content = handle_cheatcode(
         cheatcode::<'read_json'>(byte_array_as_felt_array(file.path).span())
@@ -54,7 +60,13 @@ fn read_json(file: @File) -> Array<felt252> {
 }
 
 trait FileParser<T, impl TSerde: Serde<T>> {
+    /// Reads from the text file and tries to deserialize the result into given type with `Serde`
+    /// `file` - File instance
+    /// Returns an instance of `T` if deserialization was possible
     fn parse_txt(file: @File) -> Option<T>;
+    /// Reads from the json file and tries to deserialize the result into given type with `Serde`
+    /// `file` - File instance
+    /// Returns an instance of `T` if deserialization was possible
     fn parse_json(file: @File) -> Option<T>;
 }
 
