@@ -22,7 +22,7 @@ If you are a first time contributor pick up any issue labeled as `good-first-iss
 work on it and we will assign it to you. Need some guidance? Reach out to other developers on [Telegram](https://t.me/+d8ULaPxeRqlhMDNk) or open
 a [GitHub discussion](https://github.com/foundry-rs/starknet-foundry/discussions)!
 
-If you are more experienced Starknet Foundry contributor you can pick any issue labeled as `help-wanted`. Make sure to discuss the details with the core team beforehand.
+If you are a more experienced Starknet Foundry contributor you can pick any issue labeled as `help-wanted`. Make sure to discuss the details with the core team beforehand.
 
 ### Writing Tests
 
