@@ -460,7 +460,7 @@ async fn test_state_file_rerun_failed_tx() {
         Vec::<String>::new(),
     );
     let script_name = "rerun_failed_tx";
-    let tx_id = "31829eae07da513c7e6f457b9ac48af0004512db23efeae38734af97834bb273";
+    let map_invoke_tx_id = "31829eae07da513c7e6f457b9ac48af0004512db23efeae38734af97834bb273";
     let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
     let state_file_path = Utf8PathBuf::from_path_buf(
         script_dir
@@ -471,7 +471,7 @@ async fn test_state_file_rerun_failed_tx() {
 
     let tx_entries_before = read_txs_from_state_file(&state_file_path).unwrap().unwrap();
     assert_eq!(tx_entries_before.transactions.len(), 1);
-    let invoke_tx_entry_before = tx_entries_before.get(tx_id).unwrap();
+    let invoke_tx_entry_before = tx_entries_before.get(map_invoke_tx_id).unwrap();
     assert_tx_entry_failed(
         invoke_tx_entry_before,
         "invoke",
@@ -502,6 +502,6 @@ async fn test_state_file_rerun_failed_tx() {
     let tx_entries_after_first_run = read_txs_from_state_file(&state_file_path).unwrap().unwrap();
     assert_eq!(tx_entries_after_first_run.transactions.len(), 1);
 
-    let invoke_tx_entry = tx_entries_after_first_run.get(tx_id).unwrap();
+    let invoke_tx_entry = tx_entries_after_first_run.get(map_invoke_tx_id).unwrap();
     assert_tx_entry_success(invoke_tx_entry, "invoke");
 }
