@@ -17,7 +17,7 @@ $ rustup update
 ### Scarb
 You can read more about installing scarb [here](https://docs.swmansion.com/scarb/download.html)
 
-Please make sure you're using scarb installed via asdf - otherwise some tests may fail.
+Please make sure you're using Scarb installed via [asdf](https://asdf-vm.com/) - otherwise some tests may fail.
 > To verify, run:
 > 
 > ```shell
