@@ -177,7 +177,7 @@ pub fn run_test_case(
     let runner_args: Vec<Arg> = args.into_iter().map(Arg::Value).collect();
     let sierra_instruction_idx = case.test_details.sierra_entry_point_instruction_idx;
     let casm_entry_point_offset =
-        find_casm_instruction_offset(&casm_program.debug_info, sierra_instruction_idx);
+        get_casm_instruction_offset(&casm_program.debug_info, sierra_instruction_idx);
 
     let (entry_code, builtins) = SierraCasmRunner::create_entry_code_from_params(
         &case.test_details.parameter_types,
@@ -330,7 +330,7 @@ pub fn run_test_case(
     })
 }
 
-fn find_casm_instruction_offset(
+fn get_casm_instruction_offset(
     debug_info: &[(CasmCodeOffset, CasmInstructionIdx)],
     sierra_statement_idx: usize,
 ) -> CasmCodeOffset {
