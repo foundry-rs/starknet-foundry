@@ -29,10 +29,8 @@ $ cargo check
 > and use the newest [universal-sierra-compiler](https://github.com/software-mansion/universal-sierra-compiler)
 > after setting up the development environment, otherwise the tests will fail.
 
-> 📝 **Note**
->
-> To run `sncast` tests, it is required to set `SEPOLIA_RPC_URL` environment variable, which is
-> used to fork the Sepolia testnet network in the devnet tests. This variable can be set in the `.env` file.
+To run `sncast` tests, it is required to set `SEPOLIA_RPC_URL` environment variable, which is
+used to fork the Sepolia testnet network in the devnet tests. This variable can be set in the `.env` file.
 
 Tests can be run with:
 
