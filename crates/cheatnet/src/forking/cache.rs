@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use blockifier::block::BlockInfo;
+use blockifier::blockifier::block::BlockInfo;
 use camino::Utf8PathBuf;
 use fs2::FileExt;
 use regex::Regex;
