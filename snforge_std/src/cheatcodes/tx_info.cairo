@@ -7,7 +7,7 @@ use super::super::_cheatcode::handle_cheatcode;
 /// A structure used for setting individual fields in `TxInfo`
 /// All fields are optional, with optional value meaning as defined:
 /// - `None` means that the field is going to be reset to the initial value
-/// - `Some(n)` means that the value will be set to the `n` value
+/// - `Some(value)` means that the field will be set to `value`
 #[derive(Copy, Drop, Serde)]
 struct TxInfoMock {
     version: Option<felt252>,
