@@ -25,7 +25,7 @@ Cancels the `spoof` / `start_spoof` for the given target.
 
 A structure used for setting individual fields in `TxInfo`
 All fields are optional, with optional value meaning as defined:
-- `None` means that the field is going to be reset to default value
+- `None` means that the field is going to be reset to the initial value
 - `Some(n)` means that the value will be set to the `n` value
 ```
 struct TxInfoMock {
