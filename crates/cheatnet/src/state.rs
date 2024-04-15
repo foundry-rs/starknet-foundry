@@ -15,7 +15,7 @@ use runtime::starknet::state::DictStateReader;
 use starknet_api::core::EntryPointSelector;
 
 use crate::constants::{build_test_entry_point, TEST_CONTRACT_CLASS_HASH};
-use blockifier::block::BlockInfo;
+use blockifier::blockifier::block::BlockInfo;
 use blockifier::execution::call_info::OrderedL2ToL1Message;
 use blockifier::execution::syscalls::hint_processor::SyscallCounter;
 use blockifier::state::errors::StateError::UndeclaredClassHash;
@@ -72,7 +72,7 @@ impl BlockInfoReader for ExtendedStateReader {
 
 impl StateReader for ExtendedStateReader {
     fn get_storage_at(
-        &mut self,
+        &self,
         contract_address: ContractAddress,
         key: StorageKey,
     ) -> StateResult<StarkFelt> {
@@ -80,50 +80,50 @@ impl StateReader for ExtendedStateReader {
             .get_storage_at(contract_address, key)
             .or_else(|_| {
                 self.fork_state_reader
-                    .as_mut()
+                    .as_ref()
                     .map_or(Ok(Default::default()), {
                         |reader| reader.get_storage_at(contract_address, key)
                     })
             })
     }
 
-    fn get_nonce_at(&mut self, contract_address: ContractAddress) -> StateResult<Nonce> {
+    fn get_nonce_at(&self, contract_address: ContractAddress) -> StateResult<Nonce> {
         self.dict_state_reader
             .get_nonce_at(contract_address)
             .or_else(|_| {
                 self.fork_state_reader
-                    .as_mut()
+                    .as_ref()
                     .map_or(Ok(Default::default()), {
                         |reader| reader.get_nonce_at(contract_address)
                     })
             })
     }
 
-    fn get_class_hash_at(&mut self, contract_address: ContractAddress) -> StateResult<ClassHash> {
+    fn get_class_hash_at(&self, contract_address: ContractAddress) -> StateResult<ClassHash> {
         self.dict_state_reader
             .get_class_hash_at(contract_address)
             .or_else(|_| {
                 self.fork_state_reader
-                    .as_mut()
+                    .as_ref()
                     .map_or(Ok(Default::default()), {
                         |reader| reader.get_class_hash_at(contract_address)
                     })
             })
     }
 
-    fn get_compiled_contract_class(&mut self, class_hash: ClassHash) -> StateResult<ContractClass> {
+    fn get_compiled_contract_class(&self, class_hash: ClassHash) -> StateResult<ContractClass> {
         self.dict_state_reader
             .get_compiled_contract_class(class_hash)
             .or_else(|_| {
                 self.fork_state_reader
-                    .as_mut()
+                    .as_ref()
                     .map_or(Err(UndeclaredClassHash(class_hash)), |reader| {
                         reader.get_compiled_contract_class(class_hash)
                     })
             })
     }
 
-    fn get_compiled_class_hash(&mut self, class_hash: ClassHash) -> StateResult<CompiledClassHash> {
+    fn get_compiled_class_hash(&self, class_hash: ClassHash) -> StateResult<CompiledClassHash> {
         Ok(self
             .dict_state_reader
             .get_compiled_class_hash(class_hash)
