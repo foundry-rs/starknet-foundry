@@ -1,3 +1,4 @@
+use core::array::ArrayTrait;
 use starknet::testing::cheatcode;
 use super::super::byte_array::byte_array_as_felt_array;
 use super::super::_cheatcode::handle_cheatcode;
@@ -27,15 +28,7 @@ fn read_txt(file: @File) -> Array<felt252> {
     );
 
     let mut result = array![];
-
-    let mut i = 0;
-    loop {
-        if content.len() == i {
-            break ();
-        }
-        result.append(*content[i]);
-        i += 1;
-    };
+    result.append_span(content);
     result
 }
 
@@ -47,15 +40,7 @@ fn read_json(file: @File) -> Array<felt252> {
     );
 
     let mut result = array![];
-
-    let mut i = 0;
-    loop {
-        if content.len() == i {
-            break ();
-        }
-        result.append(*content[i]);
-        i += 1;
-    };
+    result.append_span(content);
     result
 }
 
