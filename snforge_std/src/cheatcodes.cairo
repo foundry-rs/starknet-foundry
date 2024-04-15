@@ -71,9 +71,9 @@ fn stop_prank(target: CheatTarget) {
 }
 
 /// Changes the block timestamp for the given target and span.
-/// - `target` - instance of [`CheatTarget`](../cheat_target.md) specifying which contracts to warp
+/// - `target` - instance of `CheatTarget` specifying which contracts to warp
 /// - `block_timestamp` - block timestamp to be set
-/// - `span` - instance of [`CheatSpan`](../cheat_span.md) specifying the number of target calls with the cheat applied
+/// - `span` - instance of `CheatSpan` specifying the number of target calls with the cheat applied
 fn warp(target: CheatTarget, block_timestamp: u64, span: CheatSpan) {
     validate_cheat_target_and_span(@target, @span);
 
@@ -92,7 +92,7 @@ fn start_warp(target: CheatTarget, block_timestamp: u64) {
 }
 
 /// Cancels the `warp` / `start_warp` for the given target.
-/// - `target` - instance of `CheatTarget` specifying which contracts to stop warping.
+/// - `target` - instance of `CheatTarget` specifying which contracts to stop warping
 fn stop_warp(target: CheatTarget) {
     let mut inputs = array![];
     target.serialize(ref inputs);
