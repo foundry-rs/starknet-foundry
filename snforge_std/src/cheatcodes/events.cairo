@@ -1,3 +1,4 @@
+use core::array::ArrayTrait;
 use core::option::OptionTrait;
 use starknet::testing::cheatcode;
 use starknet::ContractAddress;
@@ -152,25 +153,11 @@ fn remove_event(ref self: EventSpy, index: usize) {
 
 impl EventTraitImpl of starknet::Event<Event> {
     fn append_keys_and_data(self: @Event, ref keys: Array<felt252>, ref data: Array<felt252>) {
-        array_extend(ref keys, self.keys);
-        array_extend(ref data, self.data);
+        keys.append_span(self.keys.span());
+        data.append_span(self.data.span());
     }
 
     fn deserialize(ref keys: Span<felt252>, ref data: Span<felt252>) -> Option<Event> {
         Option::None
     }
-}
-
-fn array_extend<T, impl TCopy: Copy<T>, impl TDrop: Drop<T>>(
-    ref array: Array<T>, other: @Array<T>
-) {
-    let mut i = 0;
-    loop {
-        if i == other.len() {
-            break;
-        }
-        array.append(*other.at(i));
-
-        i += 1;
-    };
 }

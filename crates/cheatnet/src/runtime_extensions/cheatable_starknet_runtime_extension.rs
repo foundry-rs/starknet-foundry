@@ -114,14 +114,14 @@ fn get_syscall_cost(
     syscall_selector: SyscallSelector,
     context: &EntryPointExecutionContext,
 ) -> u64 {
-    let constant_name = match syscall_selector {
-        SyscallSelector::LibraryCall => "library_call_gas_cost",
-        SyscallSelector::CallContract => "call_contract_gas_cost",
-        SyscallSelector::Deploy => "deploy_gas_cost",
-        SyscallSelector::GetExecutionInfo => "get_execution_info_gas_cost",
+    let gas_costs = context.gas_costs();
+    match syscall_selector {
+        SyscallSelector::LibraryCall => gas_costs.library_call_gas_cost,
+        SyscallSelector::CallContract => gas_costs.call_contract_gas_cost,
+        SyscallSelector::Deploy => gas_costs.deploy_gas_cost,
+        SyscallSelector::GetExecutionInfo => gas_costs.get_execution_info_gas_cost,
         _ => unreachable!("Syscall has no associated cost"),
-    };
-    context.get_gas_cost(constant_name)
+    }
 }
 
 impl CheatableStarknetRuntimeExtension<'_> {
@@ -148,10 +148,8 @@ impl CheatableStarknetRuntimeExtension<'_> {
         syscall_handler.syscall_ptr += 1;
         syscall_handler.increment_syscall_count_by(&selector, 1);
         let syscall_gas_cost = get_syscall_cost(selector, syscall_handler.context);
-        let required_gas = syscall_gas_cost
-            - syscall_handler
-                .context
-                .get_gas_cost("syscall_base_gas_cost");
+        let required_gas =
+            syscall_gas_cost - syscall_handler.context.gas_costs().syscall_base_gas_cost;
 
         let SyscallRequestWrapper {
             gas_counter,
