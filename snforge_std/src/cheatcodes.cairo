@@ -45,7 +45,7 @@ fn roll(target: CheatTarget, block_number: u64, span: CheatSpan) {
 }
 
 /// Changes the block number for the given target.
-/// - `target` - instance of [`CheatTarget`](../cheat_target.md) specifying which contracts to roll
+/// - `target` - instance of `CheatTarget` specifying which contracts to roll
 /// - `block_number` - block number to be set
 fn start_roll(target: CheatTarget, block_number: u64) {
     roll(target, block_number, CheatSpan::Indefinite);
