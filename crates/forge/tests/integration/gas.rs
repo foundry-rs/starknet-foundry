@@ -466,10 +466,10 @@ fn storage_write_cost() {
     let result = run_test_case(&test);
 
     assert_passed(&result);
-    // 6 = gas cost of steps
+    // 7 = gas cost of steps
     // 96 = gas cost of deployment
     // storage_updates(1) * 2 * 32 = 64
-    assert_gas(&result, "storage_write_cost", 6 + 96 + 64);
+    assert_gas(&result, "storage_write_cost", 7 + 96 + 64);
 }
 
 #[test]
