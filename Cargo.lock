@@ -499,9 +499,9 @@ dependencies = [
 
 [[package]]
 name = "blockifier"
-version = "0.5.0"
+version = "0.7.0-dev.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "93a41962da92cb8daab297c29fb54289a0291d84cd87d82ad8b616948b0f64b1"
+checksum = "279ea24b641c6efbeff9b93b4b97f4c6a75399b39580b6cf882a0c92850336df"
 dependencies = [
  "anyhow",
  "ark-ec",
@@ -522,6 +522,7 @@ dependencies = [
  "log",
  "num-bigint",
  "num-integer",
+ "num-rational",
  "num-traits 0.2.18",
  "once_cell",
  "phf",
@@ -2739,6 +2740,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "itertools"
+version = "0.12.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ba291022dbbd398a455acf126c1e341954079855bc60dfdda641363bd6922569"
+dependencies = [
+ "either",
+]
+
+[[package]]
 name = "itoa"
 version = "1.0.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2807,6 +2817,28 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3f35c735096c0293d313e8f2a641627472b83d01b937177fe76e5e2708d31e0d"
 dependencies = [
  "regex",
+]
+
+[[package]]
+name = "lambdaworks-crypto"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "458fee521f12d0aa97a2e06eaf134398a5d2ae7b2074af77eb402b0d93138c47"
+dependencies = [
+ "lambdaworks-math",
+ "serde",
+ "sha2",
+ "sha3",
+]
+
+[[package]]
+name = "lambdaworks-math"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6c74ce6f0d9cb672330b6ca59e85a6c3607a3329e0372ab0d3fe38c2d38e50f9"
+dependencies = [
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -3098,6 +3130,19 @@ dependencies = [
  "num-modular",
  "num-traits 0.2.18",
  "rand",
+]
+
+[[package]]
+name = "num-rational"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0638a1c9d0a3c0914158145bc76cff373a75a627e6ecbfb71cbe6f453a5a19b0"
+dependencies = [
+ "autocfg",
+ "num-bigint",
+ "num-integer",
+ "num-traits 0.2.18",
+ "serde",
 ]
 
 [[package]]
@@ -4752,20 +4797,38 @@ dependencies = [
 ]
 
 [[package]]
-name = "starknet_api"
-version = "0.10.0"
+name = "starknet-types-core"
+version = "0.0.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9e6aeb260177f5ca6dde788e844825d8d83782905dbac1b24c0c620743284475"
+checksum = "e1e16522c1c9aa7fc149a46816cd18aa12a5fc2b2b75a018089022db473a9237"
+dependencies = [
+ "bitvec",
+ "lambdaworks-crypto",
+ "lambdaworks-math",
+ "lazy_static",
+ "num-bigint",
+ "num-integer",
+ "num-traits 0.2.18",
+ "serde",
+]
+
+[[package]]
+name = "starknet_api"
+version = "0.12.0-dev.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4333a5d836f1018c87a0db36ffe673e8f79db4c40718dca65ad82430d9204b16"
 dependencies = [
  "cairo-lang-starknet-classes",
  "derive_more",
  "hex",
  "indexmap 2.1.0",
+ "itertools 0.12.1",
  "once_cell",
  "primitive-types",
  "serde",
  "serde_json",
  "starknet-crypto 0.5.2",
+ "starknet-types-core",
  "strum",
  "strum_macros",
  "thiserror",
