@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 use std::num::NonZeroU128;
 use std::sync::Arc;
 
-use blockifier::block::{BlockInfo, GasPrices};
+use blockifier::blockifier::block::{BlockInfo, GasPrices};
 use blockifier::context::{BlockContext, ChainInfo, FeeTokenAddresses, TransactionContext};
 use blockifier::execution::common_hints::ExecutionMode;
 use blockifier::execution::entry_point::EntryPointExecutionContext;

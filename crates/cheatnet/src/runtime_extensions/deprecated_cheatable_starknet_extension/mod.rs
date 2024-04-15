@@ -239,7 +239,7 @@ pub fn deploy(
         syscall_handler.context,
         ctor_context,
         request.constructor_calldata,
-        syscall_handler.context.get_gas_cost("initial_gas_cost"),
+        syscall_handler.context.gas_costs().initial_gas_cost,
     )?;
     syscall_handler.inner_calls.push(call_info);
 
@@ -274,7 +274,7 @@ pub fn call_contract(
         storage_address,
         caller_address: syscall_handler.storage_address,
         call_type: CallType::Call,
-        initial_gas: syscall_handler.context.get_gas_cost("initial_gas_cost"),
+        initial_gas: syscall_handler.context.gas_costs().initial_gas_cost,
     };
     let retdata_segment =
         execute_inner_call(&mut entry_point, vm, syscall_handler, cheatnet_state)?;
@@ -457,7 +457,7 @@ pub fn execute_library_call(
         storage_address: syscall_handler.storage_address,
         caller_address: syscall_handler.caller_address,
         call_type: CallType::Delegate,
-        initial_gas: syscall_handler.context.get_gas_cost("initial_gas_cost"),
+        initial_gas: syscall_handler.context.gas_costs().initial_gas_cost,
     };
 
     execute_inner_call(&mut entry_point, vm, syscall_handler, cheatnet_state)
