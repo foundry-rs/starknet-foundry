@@ -66,14 +66,14 @@ fn prank(target: CheatTarget, caller_address: ContractAddress, span: CheatSpan) 
 
 /// Changes the caller address for the given target.
 /// This change can be canceled with `stop_prank`.
-/// - `target` - instance of `CheatTarget` specifying which contracts to prank.
+/// - `target` - instance of `CheatTarget` specifying which contracts to prank
 /// - `caller_address` - caller address to be set
 fn start_prank(target: CheatTarget, caller_address: ContractAddress) {
     prank(target, caller_address, CheatSpan::Indefinite);
 }
 
 /// Cancels the `prank` / `start_prank` for the given target.
-/// - `contract_address` - target contract address
+/// - `target` - instance of `CheatTarget` specifying which contracts to stop prank on
 fn stop_prank(target: CheatTarget) {
     let mut inputs = array![];
     target.serialize(ref inputs);
