@@ -46,7 +46,7 @@
 * [Cheatcodes Reference](appendix/cheatcodes.md)
     * [CheatTarget](appendix/cheatcodes/cheat_target.md)
     * [CheatSpan](appendix/cheatcodes/cheat_span.md)
-    * [mock](appendix/cheatcodes/mock_call.md)
+    * [mock_call](appendix/cheatcodes/mock_call.md)
     * [caller_address](appendix/cheatcodes/caller_address/README.md)
         * [prank](appendix/cheatcodes/caller_address/prank.md)
         * [start_prank](appendix/cheatcodes/caller_address/start_prank.md)
