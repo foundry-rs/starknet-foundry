@@ -12,3 +12,7 @@ edit-url-template = "https://github.com/foundry-rs/starknet-foundry/edit/master/
 
 [output.html.playground]
 runnable = false
+
+[output.html.fold]
+enable = true
+level = 0
