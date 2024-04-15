@@ -140,7 +140,6 @@ fn mock_call<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: Destruct<T>>
 }
 
 
-
 /// Mocks contract call to a function of a contract at the given address, indefinitely.
 /// See `mock_call` for comprehensive definition of how it can be used.
 /// - `contract_address` - targeted contracts' address
