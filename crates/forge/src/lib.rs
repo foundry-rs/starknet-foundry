@@ -8,10 +8,12 @@ use std::sync::Arc;
 
 use compiled_raw::{CompiledTestCrateRaw, RawForkConfig, RawForkParams};
 use forge_runner::test_crate_summary::TestCrateSummary;
-use forge_runner::{RunnerConfig, RunnerParams, TestCrateRunResult};
+use forge_runner::TestCrateRunResult;
 
 use crate::block_number_map::BlockNumberMap;
 use forge_runner::compiled_runnable::{CompiledTestCrateRunnable, TestCaseRunnable};
+use forge_runner::context_data::ContextData;
+use forge_runner::forge_config::ForgeConfig;
 
 use crate::scarb::config::ForkTarget;
 use crate::test_filter::TestsFilter;
@@ -100,8 +102,8 @@ pub async fn run(
     compiled_test_crates: Vec<CompiledTestCrateRaw>,
     package_name: &str,
     tests_filter: &TestsFilter,
-    runner_config: Arc<RunnerConfig>,
-    runner_params: Arc<RunnerParams>,
+    forge_config: Arc<ForgeConfig>,
+    context_data: Arc<ContextData>,
     fork_targets: &[ForkTarget],
     block_number_map: &mut BlockNumberMap,
 ) -> Result<Vec<TestCrateSummary>> {
@@ -135,13 +137,13 @@ pub async fn run(
 
         let compiled_test_crate =
             to_runnable(compiled_test_crate, fork_targets, block_number_map).await?;
-        let runner_config = runner_config.clone();
-        let runner_params = runner_params.clone();
+        let forge_config = forge_config.clone();
+        let context_data = context_data.clone();
 
         let summary = forge_runner::run_tests_from_crate(
             compiled_test_crate,
-            runner_config,
-            runner_params,
+            forge_config,
+            context_data,
             tests_filter,
         )
         .await?;
@@ -172,7 +174,7 @@ pub async fn run(
     });
 
     if any_fuzz_test_was_run {
-        pretty_printing::print_test_seed(runner_config.fuzzer_seed);
+        pretty_printing::print_test_seed(forge_config.runner_config.fuzzer_seed);
     }
 
     Ok(summaries)
