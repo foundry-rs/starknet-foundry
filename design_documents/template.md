@@ -14,5 +14,5 @@ Try to include motivation behind non-obvious technical decisions. This is import
 
 
 ## Implementation plan
-Optional - provide only if relevant
+Optional - provide only if feature is not implemented and you have some steps in mind which you will take. Keep it high level!
 
