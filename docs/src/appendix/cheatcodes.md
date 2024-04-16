@@ -5,9 +5,9 @@
 - [`prank`](cheatcodes/caller_address#prank) - changes the caller address for contracts, for a number of calls
 - [`start_prank`](cheatcodes/caller_address#start_prank) - changes the caller address for contracts
 - [`stop_prank`](cheatcodes/caller_address#stop_prank) - cancels the `prank` / `start_prank` for contracts
-- [`roll`](cheatcodes/block_number/roll.md) - changes the block number for contracts, for a number of calls
-- [`start_roll`](cheatcodes/block_number/start_roll.md) - changes the block number for contracts
-- [`stop_roll`](cheatcodes/block_number/stop_roll.md) - cancels the `roll` / `start_roll` for contracts
+- [`roll`](cheatcodes/block_number#roll) - changes the block number for contracts, for a number of calls
+- [`start_roll`](cheatcodes/block_number#start_roll) - changes the block number for contracts
+- [`stop_roll`](cheatcodes/block_number#stop_roll) - cancels the `roll` / `start_roll` for contracts
 - [`warp`](cheatcodes/block_timestamp#warp) - changes the block timestamp for contracts, for a number of calls
 - [`start_warp`](cheatcodes/block_timestamp#start_warp) - changes the block timestamp for contracts
 - [`stop_warp`](cheatcodes/block_timestamp#stop_warp) - cancels the `warp` / `start_warp` for contracts

@@ -39,7 +39,7 @@ pub enum CallResult {
     Failure(CallFailure),
 }
 
-/// Enum representing possible call failure and its' type.
+/// Enum representing possible call failure and its type.
 /// `Panic` - Recoverable, meant to be caught by the user.
 /// `Error` - Unrecoverable, equivalent of panic! in rust.
 #[derive(Debug, Clone, Serialize, Deserialize)]
