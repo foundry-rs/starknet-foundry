@@ -24,7 +24,8 @@ pub struct TestCaseRunnable {
 
 #[derive(Debug, PartialEq, Clone, Deserialize, Default)]
 pub struct TestDetails {
-    pub entry_point_offset: usize,
+    #[serde(rename = "entry_point_offset")]
+    pub sierra_entry_point_statement_idx: usize,
     pub parameter_types: Vec<(GenericTypeId, i16)>,
     pub return_types: Vec<(GenericTypeId, i16)>,
 }
