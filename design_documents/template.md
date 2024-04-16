@@ -11,6 +11,7 @@ Provide an overview of the feature API from the user perspective. Consider it a 
 ## Technical overview of the solution
 Provide a rough description of the feature implementation. Keep it high level. Try to include your mental model if possible.
 Try to include motivation behind non-obvious technical decisions. This is important so we don't have to rethink details and motivations it every time.
+If something is an open question include it as well.
 
 
 ## Implementation plan
