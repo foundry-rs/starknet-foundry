@@ -14,9 +14,9 @@
 - [`elect`](cheatcodes/sequencer_address/elect.md) - changes the sequencer address for contracts, for a number of calls
 - [`start_elect`](cheatcodes/sequencer_address/start_elect.md) - changes the sequencer address for contracts
 - [`stop_elect`](cheatcodes/sequencer_address/stop_elect.md) - cancels the `elect` / `start_elect` for contracts
-- [`spoof`](cheatcodes/tx_info/spoof.md) - changes the transaction context for contracts, for a number of calls
-- [`start_spoof`](cheatcodes/tx_info/start_spoof.md) - changes the transaction context for contracts
-- [`stop_spoof`](cheatcodes/tx_info/stop_spoof.md) - cancels the `spoof` / `start_spoof` for contracts
+- [`spoof`](cheatcodes/tx_info#spoof) - changes the transaction context for contracts, for a number of calls
+- [`start_spoof`](cheatcodes/tx_info#start_spoof) - changes the transaction context for contracts
+- [`stop_spoof`](cheatcodes/tx_info#stop_spoof) - cancels the `spoof` / `start_spoof` for contracts
 - [`mock_call`](cheatcodes/mock/mock_call.md) - mocks a number of contract calls to an entry point
 - [`start_mock_call`](cheatcodes/mock/start_mock_call.md) - mocks contract call to an entry point
 - [`stop_mock_call`](cheatcodes/mock/stop_mock_call.md) - cancels the `mock_call` / `start_mock_call` for an entry point
