@@ -113,11 +113,14 @@ fn try_get_starknet_artifacts_path(
 }
 
 /// Get the map with `StarknetContractArtifacts` for the given package
-pub fn get_contracts_map(
+pub fn get_contracts_artifacts_and_sierra_paths(
     metadata: &Metadata,
     package: &PackageId,
     profile: Option<&str>,
-) -> Result<HashMap<String, StarknetContractArtifacts>> {
+) -> Result<(
+    HashMap<String, StarknetContractArtifacts>,
+    HashMap<String, Utf8PathBuf>,
+)> {
     let target_name = target_name_for_package(metadata, package)?;
     let target_dir = target_dir_for_workspace(metadata);
     let maybe_contracts_path = try_get_starknet_artifacts_path(
@@ -126,29 +129,37 @@ pub fn get_contracts_map(
         profile.unwrap_or(metadata.current_profile.as_str()),
     )?;
 
-    let map = match maybe_contracts_path {
-        Some(contracts_path) => load_contract_artifacts(&contracts_path)?,
-        None => HashMap::default(),
+    let maps = match maybe_contracts_path {
+        Some(contracts_path) => load_contracts_artifacts_and_sierra_paths(&contracts_path)?,
+        None => (HashMap::default(), HashMap::default()),
     };
-    Ok(map)
+
+    Ok(maps)
 }
 
-fn load_contract_artifacts(
+fn load_contracts_artifacts_and_sierra_paths(
     contracts_path: &Utf8PathBuf,
-) -> Result<HashMap<String, StarknetContractArtifacts>> {
+) -> Result<(
+    HashMap<String, StarknetContractArtifacts>,
+    HashMap<String, Utf8PathBuf>,
+)> {
     let base_path = contracts_path
         .parent()
         .ok_or_else(|| anyhow!("Failed to get parent for path = {}", &contracts_path))?;
     let artifacts = artifacts_for_package(contracts_path)?;
-    let mut map = HashMap::new();
+    let mut artifacts_map = HashMap::new();
+    let mut sierra_paths_map = HashMap::new();
 
     for ref contract in artifacts.contracts {
         let name = contract.contract_name.clone();
         let contract_artifacts =
             StarknetContractArtifacts::from_scarb_contract_artifact(contract, base_path)?;
-        map.insert(name, contract_artifacts);
+        artifacts_map.insert(name.clone(), contract_artifacts);
+
+        let sierra_path = base_path.join(contract.artifacts.sierra.clone());
+        sierra_paths_map.insert(name, sierra_path);
     }
-    Ok(map)
+    Ok((artifacts_map, sierra_paths_map))
 }
 
 fn compilation_unit_for_package<'a>(
@@ -489,7 +500,9 @@ mod tests {
             .unwrap();
 
         let package = metadata.packages.first().unwrap();
-        let contracts = get_contracts_map(&metadata, &package.id, None).unwrap();
+        let contracts = get_contracts_artifacts_and_sierra_paths(&metadata, &package.id, None)
+            .unwrap()
+            .0;
 
         assert!(contracts.contains_key("ERC20"));
         assert!(contracts.contains_key("HelloStarknet"));

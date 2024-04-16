@@ -1,6 +1,7 @@
 use super::cheatcodes::declare::get_class_hash;
 use anyhow::Result;
 use bimap::BiMap;
+use camino::Utf8PathBuf;
 use conversions::IntoConv;
 use rayon::iter::{IntoParallelIterator, IntoParallelRefIterator, ParallelIterator};
 use scarb_api::StarknetContractArtifacts;
@@ -12,13 +13,17 @@ use std::collections::HashMap;
 #[derive(Debug, Clone)]
 pub struct ContractsData {
     pub contracts: HashMap<String, StarknetContractArtifacts>,
+    pub sierra_paths: HashMap<String, Utf8PathBuf>,
     pub class_hashes: BiMap<String, ClassHash>,
     pub selectors: HashMap<EntryPointSelector, String>,
 }
 
 impl ContractsData {
-    pub fn try_from(contracts: HashMap<String, StarknetContractArtifacts>) -> Result<Self> {
-        let parsed_contracts: HashMap<String, SierraClass> = contracts
+    pub fn try_from(
+        contracts_artifacts: HashMap<String, StarknetContractArtifacts>,
+        contracts_sierra_paths: HashMap<String, Utf8PathBuf>,
+    ) -> Result<Self> {
+        let parsed_contracts: HashMap<String, SierraClass> = contracts_artifacts
             .par_iter()
             .map(|(name, artifact)| Ok((name.clone(), serde_json::from_str(&artifact.sierra)?)))
             .collect::<Result<_>>()?;
@@ -35,7 +40,8 @@ impl ContractsData {
             .collect();
 
         Ok(ContractsData {
-            contracts,
+            contracts: contracts_artifacts,
+            sierra_paths: contracts_sierra_paths,
             class_hashes: BiMap::from_iter(class_hashes),
             selectors,
         })

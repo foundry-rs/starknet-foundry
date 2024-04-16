@@ -3,10 +3,12 @@ use camino::Utf8PathBuf;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use forge::block_number_map::BlockNumberMap;
 use forge::run;
+use forge::scarb::{load_test_artifacts, test_artifacts_path};
 use forge::test_filter::TestsFilter;
 use forge_runner::test_crate_summary::TestCrateSummary;
 use forge_runner::{RunnerConfig, RunnerParams};
 use shared::command::CommandExt;
+use std::collections::HashMap;
 use std::num::NonZeroU32;
 use std::path::PathBuf;
 use std::process::Command;
@@ -26,10 +28,15 @@ pub fn run_test_case(test: &TestCase) -> Vec<TestCrateSummary> {
         .unwrap();
 
     let rt = Runtime::new().expect("Could not instantiate Runtime");
+    let test_artifacts_path = test_artifacts_path(
+        &test.path().unwrap().join("target/dev/snforge"),
+        "test_package",
+    );
+    let compiled_test_crates = load_test_artifacts(&test_artifacts_path).unwrap();
 
     rt.block_on(run(
+        compiled_test_crates,
         "test_package",
-        &test.path().unwrap().join("target/dev/snforge"),
         &TestsFilter::from_flags(None, false, false, false, false, Default::default()),
         Arc::new(RunnerConfig::new(
             Utf8PathBuf::from_path_buf(PathBuf::from(tempdir().unwrap().path())).unwrap(),
@@ -42,7 +49,7 @@ pub fn run_test_case(test: &TestCase) -> Vec<TestCrateSummary> {
             None,
         )),
         Arc::new(RunnerParams::new(
-            ContractsData::try_from(test.contracts().unwrap()).unwrap(),
+            ContractsData::try_from(test.contracts().unwrap(), HashMap::new()).unwrap(),
             test.env().clone(),
         )),
         &[],

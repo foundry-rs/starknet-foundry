@@ -12,7 +12,8 @@ use forge_runner::{
 };
 use indoc::formatdoc;
 use scarb_api::{
-    get_contracts_map, metadata::MetadataCommandExt, ScarbCommand, StarknetContractArtifacts,
+    get_contracts_artifacts_and_sierra_paths, metadata::MetadataCommandExt, ScarbCommand,
+    StarknetContractArtifacts,
 };
 use shared::command::CommandExt;
 use std::{
@@ -95,8 +96,9 @@ impl Contract {
             .find(|package| package.name == "contract")
             .unwrap();
 
-        let contract = get_contracts_map(&scarb_metadata, &package.id, None)
+        let contract = get_contracts_artifacts_and_sierra_paths(&scarb_metadata, &package.id, None)
             .unwrap()
+            .0
             .remove(&self.name)
             .ok_or(anyhow!("there is no contract with name {}", self.name))?;
 

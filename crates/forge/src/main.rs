@@ -3,7 +3,10 @@ use camino::Utf8Path;
 use clap::{Parser, Subcommand, ValueEnum};
 use configuration::load_package_config;
 use forge::scarb::config::ForgeConfig;
-use forge::scarb::{build_contracts_with_scarb, build_test_artifacts_with_scarb};
+use forge::scarb::{
+    build_contracts_with_scarb, build_test_artifacts_with_scarb, load_test_artifacts,
+    test_artifacts_path,
+};
 use forge::shared_cache::{clean_cache, set_cached_failed_tests_names};
 use forge::test_filter::TestsFilter;
 use forge::{pretty_printing, run};
@@ -12,7 +15,7 @@ use forge_runner::test_crate_summary::TestCrateSummary;
 use forge_runner::{RunnerConfig, RunnerParams, CACHE_DIR};
 use rand::{thread_rng, RngCore};
 use scarb_api::{
-    get_contracts_map,
+    get_contracts_artifacts_and_sierra_paths,
     metadata::{Metadata, MetadataCommandExt, PackageMetadata},
     package_matches_version_requirement, target_dir_for_workspace, ScarbCommand,
 };
@@ -265,13 +268,17 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
             for package in &packages {
                 env::set_current_dir(&package.root)?;
 
+                let test_artifacts_path =
+                    test_artifacts_path(&snforge_target_dir_path, &package.name);
+                let compiled_test_crates = load_test_artifacts(&test_artifacts_path)?;
+
+                let (contracts_artifacts, contracts_sierra_paths) =
+                    get_contracts_artifacts_and_sierra_paths(&scarb_metadata, &package.id, None)?;
+                let contracts_data =
+                    ContractsData::try_from(contracts_artifacts, contracts_sierra_paths)?;
+
                 let forge_config =
                     load_package_config::<ForgeConfig>(&scarb_metadata, &package.id)?;
-                let contracts =
-                    get_contracts_map(&scarb_metadata, &package.id, None).unwrap_or_default();
-
-                let contracts_data = ContractsData::try_from(contracts)?;
-
                 let runner_config = Arc::new(combine_configs(
                     &workspace_root,
                     args.exit_first,
@@ -287,8 +294,8 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                     Arc::new(RunnerParams::new(contracts_data, env::vars().collect()));
 
                 let tests_file_summaries = run(
+                    compiled_test_crates,
                     &package.name,
-                    &snforge_target_dir_path,
                     &TestsFilter::from_flags(
                         args.test_filter.clone(),
                         args.exact,

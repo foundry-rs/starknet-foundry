@@ -1,10 +1,8 @@
-use anyhow::{anyhow, Context, Result};
-use camino::Utf8Path;
+use anyhow::{anyhow, Result};
 use warn::{
     warn_if_available_gas_used_with_incompatible_scarb_version, warn_if_incompatible_rpc_version,
 };
 
-use crate::scarb::load_test_artifacts;
 use forge_runner::test_case_summary::AnyTestCaseSummary;
 use std::sync::Arc;
 
@@ -99,19 +97,20 @@ async fn to_runnable(
 /// * `fork_target` - A configuration of forks used in tests
 #[allow(clippy::implicit_hasher)]
 pub async fn run(
+    compiled_test_crates: Vec<CompiledTestCrateRaw>,
     package_name: &str,
-    snforge_target_dir_path: &Utf8Path,
     tests_filter: &TestsFilter,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     fork_targets: &[ForkTarget],
     block_number_map: &mut BlockNumberMap,
 ) -> Result<Vec<TestCrateSummary>> {
-    let test_crates = load_test_artifacts(snforge_target_dir_path, package_name)
-        .context("Failed to load test artifacts, make sure to use scarb >=2.5.4")?;
-    let all_tests: usize = test_crates.iter().map(|tc| tc.test_cases.len()).sum();
+    let all_tests: usize = compiled_test_crates
+        .iter()
+        .map(|tc| tc.test_cases.len())
+        .sum();
 
-    let test_crates = test_crates
+    let test_crates = compiled_test_crates
         .into_iter()
         .map(|tc| tests_filter.filter_tests(tc))
         .collect::<Result<Vec<CompiledTestCrateRaw>>>()?;
