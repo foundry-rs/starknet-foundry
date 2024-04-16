@@ -218,7 +218,7 @@ mod tests {
                 })),
                 fuzzer_config: None,
                 test_details: TestDetails {
-                    entry_point_offset: 100,
+                    sierra_entry_point_statement_idx: 100,
                     parameter_types: vec![
                         (GenericTypeId("RangeCheck".into()), 1),
                         (GenericTypeId("GasBuiltin".into()), 1),
@@ -252,7 +252,7 @@ mod tests {
                 fork_config: Some(RawForkConfig::Id("non_existent".to_string())),
                 fuzzer_config: None,
                 test_details: TestDetails {
-                    entry_point_offset: 100,
+                    sierra_entry_point_statement_idx: 100,
                     parameter_types: vec![
                         (GenericTypeId("RangeCheck".into()), 1),
                         (GenericTypeId("GasBuiltin".into()), 1),

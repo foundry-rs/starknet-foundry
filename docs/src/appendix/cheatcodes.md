@@ -8,9 +8,9 @@
 - [`roll`](cheatcodes/block_number/roll.md) - changes the block number for contracts, for a number of calls
 - [`start_roll`](cheatcodes/block_number/start_roll.md) - changes the block number for contracts
 - [`stop_roll`](cheatcodes/block_number/stop_roll.md) - cancels the `roll` / `start_roll` for contracts
-- [`warp`](cheatcodes/block_timestamp/warp.md) - changes the block timestamp for contracts, for a number of calls
-- [`start_warp`](cheatcodes/block_timestamp/start_warp.md) - changes the block timestamp for contracts
-- [`stop_warp`](cheatcodes/block_timestamp/stop_warp.md) - cancels the `warp` / `start_warp` for contracts
+- [`warp`](cheatcodes/block_timestamp#warp) - changes the block timestamp for contracts, for a number of calls
+- [`start_warp`](cheatcodes/block_timestamp#start_warp) - changes the block timestamp for contracts
+- [`stop_warp`](cheatcodes/block_timestamp#stop_warp) - cancels the `warp` / `start_warp` for contracts
 - [`elect`](cheatcodes/sequencer_address/elect.md) - changes the sequencer address for contracts, for a number of calls
 - [`start_elect`](cheatcodes/sequencer_address/start_elect.md) - changes the sequencer address for contracts
 - [`stop_elect`](cheatcodes/sequencer_address/stop_elect.md) - cancels the `elect` / `start_elect` for contracts

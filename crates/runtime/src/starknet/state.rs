@@ -25,7 +25,7 @@ pub struct DictStateReader {
 
 impl StateReader for DictStateReader {
     fn get_storage_at(
-        &mut self,
+        &self,
         contract_address: ContractAddress,
         key: StorageKey,
     ) -> StateResult<StarkFelt> {
@@ -37,7 +37,7 @@ impl StateReader for DictStateReader {
             )))
     }
 
-    fn get_nonce_at(&mut self, contract_address: ContractAddress) -> StateResult<Nonce> {
+    fn get_nonce_at(&self, contract_address: ContractAddress) -> StateResult<Nonce> {
         self.address_to_nonce
             .get(&contract_address)
             .copied()
@@ -46,14 +46,14 @@ impl StateReader for DictStateReader {
             )))
     }
 
-    fn get_class_hash_at(&mut self, contract_address: ContractAddress) -> StateResult<ClassHash> {
+    fn get_class_hash_at(&self, contract_address: ContractAddress) -> StateResult<ClassHash> {
         self.address_to_class_hash
             .get(&contract_address)
             .copied()
             .ok_or(StateError::UnavailableContractAddress(contract_address))
     }
 
-    fn get_compiled_contract_class(&mut self, class_hash: ClassHash) -> StateResult<ContractClass> {
+    fn get_compiled_contract_class(&self, class_hash: ClassHash) -> StateResult<ContractClass> {
         let contract_class = self.class_hash_to_class.get(&class_hash).cloned();
         match contract_class {
             Some(contract_class) => Ok(contract_class),
@@ -61,7 +61,7 @@ impl StateReader for DictStateReader {
         }
     }
 
-    fn get_compiled_class_hash(&mut self, class_hash: ClassHash) -> StateResult<CompiledClassHash> {
+    fn get_compiled_class_hash(&self, class_hash: ClassHash) -> StateResult<CompiledClassHash> {
         let compiled_class_hash = self
             .class_hash_to_compiled_class_hash
             .get(&class_hash)

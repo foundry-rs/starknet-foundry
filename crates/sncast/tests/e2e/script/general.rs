@@ -327,23 +327,23 @@ async fn test_missing_field() {
 #[tokio::test]
 async fn test_run_script_twice_with_state_file_enabled() {
     let contract_dir = duplicate_contract_directory_with_salt(
-        SCRIPTS_DIR.to_owned() + "/map_script/contracts/",
+        SCRIPTS_DIR.to_owned() + "/state_script/contracts/",
         "dummy",
         "34547",
     );
     let script_dir = copy_script_directory_to_tempdir(
-        SCRIPTS_DIR.to_owned() + "/map_script/scripts/",
+        SCRIPTS_DIR.to_owned() + "/state_script/scripts/",
         vec![contract_dir.as_ref()],
     );
 
     let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
 
-    let script_name = "map_script";
+    let script_name = "state_script";
     let args = vec![
         "--accounts-file",
         accounts_json_path.as_str(),
         "--account",
-        "user6",
+        "user7",
         "--url",
         URL,
         "script",
@@ -372,7 +372,7 @@ async fn test_run_script_twice_with_state_file_enabled() {
         .iter()
         .all(|(_, value)| value.status == ScriptTransactionStatus::Success));
 
-    assert_eq!(tx_entries_after_first_run.transactions.len(), 6);
+    assert_eq!(tx_entries_after_first_run.transactions.len(), 3);
 
     let snapbox = runner(&args).current_dir(script_dir.path());
 
