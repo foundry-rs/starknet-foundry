@@ -89,7 +89,7 @@ fn trace_info_print() {
         ]
         Call Result: Success: []
         
-        [PASS] tests::test_trace::test_trace_print (gas: [..]
+        [PASS] tests::test_trace::test_trace (gas: [..]
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         "},
     );
