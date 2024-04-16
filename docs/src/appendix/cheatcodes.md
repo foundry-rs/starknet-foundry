@@ -2,9 +2,9 @@
 
 - [`CheatTarget`](cheatcodes/cheat_target.md) - enum for selecting contracts to target with cheatcodes
 - [`CheatSpan`](cheatcodes/cheat_span.md) - enum for specifying the number of target calls for a cheat
-- [`prank`](cheatcodes/caller_address/prank.md) - changes the caller address for contracts, for a number of calls
-- [`start_prank`](cheatcodes/caller_address/start_prank.md) - changes the caller address for contracts
-- [`stop_prank`](cheatcodes/caller_address/stop_prank.md) - cancels the `prank` / `start_prank` for contracts
+- [`prank`](cheatcodes/caller_address#prank) - changes the caller address for contracts, for a number of calls
+- [`start_prank`](cheatcodes/caller_address#start_prank) - changes the caller address for contracts
+- [`stop_prank`](cheatcodes/caller_address#stop_prank) - cancels the `prank` / `start_prank` for contracts
 - [`roll`](cheatcodes/block_number/roll.md) - changes the block number for contracts, for a number of calls
 - [`start_roll`](cheatcodes/block_number/start_roll.md) - changes the block number for contracts
 - [`stop_roll`](cheatcodes/block_number/stop_roll.md) - cancels the `roll` / `start_roll` for contracts
