@@ -13,7 +13,7 @@ use std::collections::HashMap;
 #[derive(Debug, Clone)]
 pub struct ContractsData {
     pub contracts: HashMap<String, StarknetContractArtifacts>,
-    pub sierra_paths: HashMap<String, Utf8PathBuf>,
+    pub source_sierra_paths: HashMap<String, Utf8PathBuf>,
     pub class_hashes: BiMap<String, ClassHash>,
     pub selectors: HashMap<EntryPointSelector, String>,
 }
@@ -41,7 +41,7 @@ impl ContractsData {
 
         Ok(ContractsData {
             contracts: contracts_artifacts,
-            sierra_paths: contracts_sierra_paths,
+            source_sierra_paths: contracts_sierra_paths,
             class_hashes: BiMap::from_iter(class_hashes),
             selectors,
         })
