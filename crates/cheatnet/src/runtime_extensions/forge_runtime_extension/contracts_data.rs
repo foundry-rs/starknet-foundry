@@ -12,13 +12,13 @@ use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
 pub struct ContractsData {
-    contracts: HashMap<String, Contract>,
+    contracts: HashMap<String, ContractData>,
     class_hash_index: BiMap<String, ClassHash>,
     selectors: HashMap<EntryPointSelector, String>,
 }
 
 #[derive(Debug, Clone)]
-struct Contract {
+struct ContractData {
     artifacts: StarknetContractArtifacts,
     class_hash: ClassHash,
     _sierra_source_path: Utf8PathBuf,
@@ -47,7 +47,7 @@ impl ContractsData {
                 let class_hash = *class_hash_index.get_by_left(&name).unwrap();
                 (
                     name,
-                    Contract {
+                    ContractData {
                         artifacts,
                         class_hash,
                         _sierra_source_path: sierra_source_path,
