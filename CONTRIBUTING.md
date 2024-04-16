@@ -18,9 +18,8 @@ See [development guide](https://foundry-rs.github.io/starknet-foundry/developmen
 Foundry book for environment setup.
 
 ### Selecting an issue
-If you are a first time contributor pick up any issue labeled as `good-first-issue`! Write a comment that you would like to 
-work on it and we will assign it to you. Need some guidance? Reach out to other developers on [Telegram](https://t.me/+d8ULaPxeRqlhMDNk) or open
-a [GitHub discussion](https://github.com/foundry-rs/starknet-foundry/discussions)!
+If you are a first time contributor pick up any issue labeled as `good-first-issue`. Write a comment that you would like to 
+work on it and we will assign it to you. Need some guidance? Reach out to other developers on [Telegram](https://t.me/+d8ULaPxeRqlhMDNk).
 
 If you are a more experienced Starknet Foundry contributor you can pick any issue labeled as `help-wanted`. Make sure to discuss the details with the core team beforehand.
 
