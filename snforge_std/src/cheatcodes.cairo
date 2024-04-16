@@ -73,7 +73,7 @@ fn start_prank(target: CheatTarget, caller_address: ContractAddress) {
 }
 
 /// Cancels the `prank` / `start_prank` for the given target.
-/// - `target` - instance of `CheatTarget` specifying which contracts to stop prank on
+/// - `target` - instance of `CheatTarget` specifying which contracts to stop pranking
 fn stop_prank(target: CheatTarget) {
     let mut inputs = array![];
     target.serialize(ref inputs);
