@@ -1,6 +1,6 @@
 # <TITLE>
 
-## Rationale for the solution 
+## Rationale of the solution 
 Provide use cases of the feature and general motivation why it is worth implementing/was implemented. You can also include some 
 existing solutions.
 
