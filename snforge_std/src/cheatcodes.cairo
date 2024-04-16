@@ -60,6 +60,10 @@ fn stop_roll(target: CheatTarget) {
     handle_cheatcode(cheatcode::<'stop_roll'>(inputs.span()));
 }
 
+/// Changes the caller address for the given target and span.
+/// - `target` - instance of `CheatTarget` specifying which contracts to prank
+/// - `caller_address` - caller address to be set
+/// - `span` - instance of `CheatSpan` specifying the number of target calls with the cheat applied
 fn prank(target: CheatTarget, caller_address: ContractAddress, span: CheatSpan) {
     validate_cheat_target_and_span(@target, @span);
 
@@ -70,16 +74,26 @@ fn prank(target: CheatTarget, caller_address: ContractAddress, span: CheatSpan) 
     handle_cheatcode(cheatcode::<'prank'>(inputs.span()));
 }
 
+/// Changes the caller address for the given target.
+/// This change can be canceled with `stop_prank`.
+/// - `target` - instance of `CheatTarget` specifying which contracts to prank
+/// - `caller_address` - caller address to be set
 fn start_prank(target: CheatTarget, caller_address: ContractAddress) {
     prank(target, caller_address, CheatSpan::Indefinite);
 }
 
+/// Cancels the `prank` / `start_prank` for the given target.
+/// - `target` - instance of `CheatTarget` specifying which contracts to stop pranking
 fn stop_prank(target: CheatTarget) {
     let mut inputs = array![];
     target.serialize(ref inputs);
     handle_cheatcode(cheatcode::<'stop_prank'>(inputs.span()));
 }
 
+/// Changes the block timestamp for the given target and span.
+/// - `target` - instance of `CheatTarget` specifying which contracts to warp
+/// - `block_timestamp` - block timestamp to be set
+/// - `span` - instance of `CheatSpan` specifying the number of target calls with the cheat applied
 fn warp(target: CheatTarget, block_timestamp: u64, span: CheatSpan) {
     validate_cheat_target_and_span(@target, @span);
 
@@ -90,10 +104,15 @@ fn warp(target: CheatTarget, block_timestamp: u64, span: CheatSpan) {
     handle_cheatcode(cheatcode::<'warp'>(inputs.span()));
 }
 
+/// Changes the block timestamp for the given target.
+/// - `target` - instance of `CheatTarget` specifying which contracts to warp
+/// - `block_timestamp` - block timestamp to be set
 fn start_warp(target: CheatTarget, block_timestamp: u64) {
     warp(target, block_timestamp, CheatSpan::Indefinite);
 }
 
+/// Cancels the `warp` / `start_warp` for the given target.
+/// - `target` - instance of `CheatTarget` specifying which contracts to stop warping
 fn stop_warp(target: CheatTarget) {
     let mut inputs = array![];
     target.serialize(ref inputs);
