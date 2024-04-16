@@ -1,3 +1,5 @@
+use core::array::SpanTrait;
+use core::serde::Serde;
 use starknet::{ContractAddress, testing::cheatcode, SyscallResult};
 use super::super::_cheatcode::handle_cheatcode;
 
@@ -23,42 +25,17 @@ impl L1HandlerImpl of L1HandlerTrait {
 
     fn execute(self: L1Handler) -> SyscallResult<()> {
         let mut inputs: Array::<felt252> = array![
-            self.contract_address.into(),
-            self.function_selector,
-            self.from_address,
-            self.payload.len().into(),
+            self.contract_address.into(), self.function_selector, self.from_address,
         ];
+        self.payload.serialize(ref inputs);
 
-        let payload_len = self.payload.len();
-        let mut i = 0;
-        loop {
-            if payload_len == i {
-                break ();
-            }
-            inputs.append(*self.payload[i]);
-            i += 1;
-        };
-
-        let outputs = handle_cheatcode(cheatcode::<'l1_handler_execute'>(inputs.span()));
-        let exit_code = *outputs[0];
+        let mut outputs = handle_cheatcode(cheatcode::<'l1_handler_execute'>(inputs.span()));
+        let exit_code = *outputs.pop_front().unwrap();
 
         if exit_code == 0 {
             SyscallResult::Ok(())
         } else {
-            let panic_data_len_felt = *outputs[1];
-            let panic_data_len = panic_data_len_felt.try_into().unwrap();
-            let mut panic_data = array![];
-
-            let offset = 2;
-            let mut i = offset;
-            loop {
-                if panic_data_len + offset == i {
-                    break ();
-                }
-                panic_data.append(*outputs[i]);
-                i += 1;
-            };
-
+            let panic_data = Serde::<Array<felt252>>::deserialize(ref outputs).unwrap();
             SyscallResult::Err(panic_data)
         }
     }

@@ -827,7 +827,7 @@ pub fn update_top_call_execution_resources(runtime: &mut ForgeRuntime) {
     top_call.used_syscalls = sum_syscall_counters(top_call_syscalls, &nested_calls_syscalls);
 }
 
-// Only top-level is considered relevant sincecrates/cheatnet/src/state.rs we can't have l1 handlers deeper than 1 level of nesting
+// Only top-level is considered relevant since we can't have l1 handlers deeper than 1 level of nesting
 fn get_l1_handlers_payloads_lengths(inner_calls: &[CallInfo]) -> Vec<usize> {
     inner_calls
         .iter()
@@ -907,9 +907,7 @@ pub fn get_all_used_resources(
         inner_calls: starknet_runtime.hint_handler.inner_calls,
         ..Default::default()
     };
-    let l2_to_l1_payload_lengths = runtime_call_info
-        .get_sorted_l2_to_l1_payload_lengths()
-        .unwrap();
+    let l2_to_l1_payload_lengths = runtime_call_info.get_l2_to_l1_payload_lengths();
 
     let l1_handler_payload_lengths =
         get_l1_handlers_payloads_lengths(&runtime_call_info.inner_calls);
@@ -927,7 +925,7 @@ pub fn get_all_used_resources(
     let execution_resources = top_call.borrow().used_execution_resources.clone();
     let top_call_syscalls = top_call.borrow().used_syscalls.clone();
     let events = runtime_call_info
-        .into_iter() // This method iterates over inner calls as well
+        .iter() // This method iterates over inner calls as well
         .flat_map(|call_info| {
             call_info
                 .execution
