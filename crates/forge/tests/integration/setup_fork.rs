@@ -1,4 +1,6 @@
 use indoc::formatdoc;
+
+use std::num::NonZeroU32;
 use std::path::Path;
 use std::path::PathBuf;
 use std::process::Command;
@@ -16,7 +18,10 @@ use tokio::runtime::Runtime;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use forge::compiled_raw::RawForkParams;
 use forge::scarb::{get_test_artifacts_path, load_test_artifacts};
-use forge_runner::{RunnerConfig, RunnerParams};
+use forge_runner::context_data::{ContextData, RuntimeData};
+use forge_runner::forge_config::{
+    ExecutionDataToSave, ForgeConfig, OutputConfig, RunnerConfig, RuntimeConfig,
+};
 use shared::command::CommandExt;
 use test_utils::runner::{assert_case_output_contains, assert_failed, assert_passed, Contract};
 use test_utils::running_tests::run_test_case;
@@ -124,20 +129,29 @@ fn fork_aliased_decorator() {
             compiled_test_crates,
             "test_package",
             &TestsFilter::from_flags(None, false, false, false, false, Default::default()),
-            Arc::new(RunnerConfig::new(
-                Utf8PathBuf::from_path_buf(PathBuf::from(tempdir().unwrap().path())).unwrap(),
-                false,
-                256.try_into().unwrap(),
-                12345,
-                false,
-                false,
-                false,
-                None,
-            )),
-            Arc::new(RunnerParams::new(
-                ContractsData::try_from(test.contracts().unwrap()).unwrap(),
-                test.env().clone(),
-            )),
+            Arc::new(ForgeConfig {
+                runner_config: Arc::new(RunnerConfig {
+                    exit_first: false,
+                    fuzzer_runs: NonZeroU32::new(256).unwrap(),
+                    fuzzer_seed: 12345,
+                }),
+                runtime_config: Arc::new(RuntimeConfig { max_n_steps: None }),
+                output_config: OutputConfig {
+                    detailed_resources: false,
+                    execution_data_to_save: ExecutionDataToSave::None,
+                },
+            }),
+            Arc::new(ContextData {
+                runtime_data: RuntimeData {
+                    contracts_data: ContractsData::try_from(test.contracts().unwrap()).unwrap(),
+                    environment_variables: test.env().clone(),
+                },
+                workspace_root: Utf8PathBuf::from_path_buf(PathBuf::from(
+                    tempdir().unwrap().path(),
+                ))
+                .unwrap(),
+                test_artifacts_path,
+            }),
             &[ForkTarget::new(
                 "FORK_NAME_FROM_SCARB_TOML".to_string(),
                 RawForkParams {

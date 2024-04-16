@@ -9,7 +9,6 @@ use anyhow::{anyhow, Result};
 use cairo_lang_runner::RunnerError;
 use cairo_lang_sierra::ids::ConcreteTypeId;
 use cairo_lang_sierra::program::Function;
-use camino::Utf8PathBuf;
 
 use futures::stream::FuturesUnordered;
 use futures::StreamExt;
@@ -18,9 +17,8 @@ use build_trace_data::save_trace_data;
 use profiler_api::run_profiler;
 use smol_str::SmolStr;
 
-use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
-use std::collections::HashMap;
-use std::num::NonZeroU32;
+use crate::context_data::ContextData;
+use crate::forge_config::{ExecutionDataToSave, ForgeConfig, RunnerConfig, RuntimeConfig};
 use std::sync::Arc;
 use test_case_summary::{AnyTestCaseSummary, Fuzzing};
 use tokio::sync::mpsc::{channel, Sender};
@@ -30,10 +28,12 @@ use universal_sierra_compiler_api::{compile_sierra_to_casm, AssembledProgramWith
 pub mod build_trace_data;
 pub mod compiled_runnable;
 pub mod expected_result;
+pub mod forge_config;
 pub mod profiler_api;
 pub mod test_case_summary;
 pub mod test_crate_summary;
 
+pub mod context_data;
 mod fuzzer;
 mod gas;
 mod printing;
@@ -52,97 +52,8 @@ pub const BUILTINS: [&str; 8] = [
     "System",
 ];
 
-#[derive(Debug, PartialEq, Clone, Copy)]
-pub enum ExecutionDataToSave {
-    None,
-    Trace,
-    /// Profile data requires saved trace data
-    TraceAndProfile,
-}
-
-impl ExecutionDataToSave {
-    #[must_use]
-    pub fn is_vm_trace_needed(self) -> bool {
-        match self {
-            ExecutionDataToSave::Trace | ExecutionDataToSave::TraceAndProfile => true,
-            ExecutionDataToSave::None => false,
-        }
-    }
-}
-
-impl ExecutionDataToSave {
-    fn from_flags(save_trace_data: bool, build_profile: bool) -> Self {
-        if build_profile {
-            return ExecutionDataToSave::TraceAndProfile;
-        }
-        if save_trace_data {
-            return ExecutionDataToSave::Trace;
-        }
-        ExecutionDataToSave::None
-    }
-}
-
-/// Configuration of the test runner
-#[derive(Debug, PartialEq)]
-#[non_exhaustive]
-pub struct RunnerConfig {
-    pub workspace_root: Utf8PathBuf,
-    pub exit_first: bool,
-    pub fuzzer_runs: NonZeroU32,
-    pub fuzzer_seed: u64,
-    pub detailed_resources: bool,
-    pub execution_data_to_save: ExecutionDataToSave,
-    pub max_n_steps: Option<u32>,
-}
-
-impl RunnerConfig {
-    #[must_use]
-    #[allow(clippy::too_many_arguments, clippy::fn_params_excessive_bools)]
-    pub fn new(
-        workspace_root: Utf8PathBuf,
-        exit_first: bool,
-        fuzzer_runs: NonZeroU32,
-        fuzzer_seed: u64,
-        detailed_resources: bool,
-        save_trace_data: bool,
-        build_profile: bool,
-        max_n_steps: Option<u32>,
-    ) -> Self {
-        Self {
-            workspace_root,
-            exit_first,
-            fuzzer_runs,
-            fuzzer_seed,
-            detailed_resources,
-            execution_data_to_save: ExecutionDataToSave::from_flags(save_trace_data, build_profile),
-            max_n_steps,
-        }
-    }
-}
-
-#[non_exhaustive]
-#[derive(Debug, Clone)]
-pub struct RunnerParams {
-    contracts_data: ContractsData,
-    environment_variables: HashMap<String, String>,
-}
-
-impl RunnerParams {
-    #[must_use]
-    pub fn new(
-        contracts_data: ContractsData,
-        environment_variables: HashMap<String, String>,
-    ) -> Self {
-        Self {
-            contracts_data,
-            environment_variables,
-        }
-    }
-}
-
 /// Exit status of the runner
-#[derive(Debug, PartialEq, Clone)]
-#[non_exhaustive]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub enum RunnerStatus {
     /// Runner exited without problems
     Default,
@@ -164,8 +75,8 @@ pub enum TestCrateRunResult {
 
 pub async fn run_tests_from_crate(
     tests: CompiledTestCrateRunnable,
-    runner_config: Arc<RunnerConfig>,
-    runner_params: Arc<RunnerParams>,
+    forge_config: Arc<ForgeConfig>,
+    context_data: Arc<ContextData>,
     tests_filter: &impl TestCaseFilter,
 ) -> Result<TestCrateRunResult> {
     let sierra_program = &tests.sierra_program;
@@ -208,8 +119,8 @@ pub async fn run_tests_from_crate(
             args,
             case,
             casm_program.clone(),
-            runner_config.clone(),
-            runner_params.clone(),
+            forge_config.clone(),
+            context_data.clone(),
             send.clone(),
         ));
     }
@@ -220,10 +131,10 @@ pub async fn run_tests_from_crate(
     while let Some(task) = tasks.next().await {
         let result = task??;
 
-        print_test_result(&result, &runner_config);
-        maybe_save_execution_data(&result, runner_config.execution_data_to_save)?;
+        print_test_result(&result, forge_config.output_config.detailed_resources);
+        maybe_save_execution_data(&result, forge_config.output_config.execution_data_to_save)?;
 
-        if result.is_failed() && runner_config.exit_first {
+        if result.is_failed() && forge_config.runner_config.exit_first {
             interrupted = true;
             rec.close();
         }
@@ -270,31 +181,55 @@ fn choose_test_strategy_and_run(
     args: Vec<ConcreteTypeId>,
     case: Arc<TestCaseRunnable>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
-    runner_config: Arc<RunnerConfig>,
-    runner_params: Arc<RunnerParams>,
+    forge_config: Arc<ForgeConfig>,
+    context_data: Arc<ContextData>,
     send: Sender<()>,
 ) -> JoinHandle<Result<AnyTestCaseSummary>> {
+    let is_vm_trace_needed = forge_config
+        .output_config
+        .execution_data_to_save
+        .is_vm_trace_needed();
+
     if args.is_empty() {
         tokio::task::spawn(async move {
-            let res = run_test(case, casm_program, runner_config, runner_params, send).await??;
+            let res = run_test(
+                case,
+                casm_program,
+                forge_config.runtime_config.clone(),
+                context_data,
+                is_vm_trace_needed,
+                send,
+            )
+            .await??;
             Ok(AnyTestCaseSummary::Single(res))
         })
     } else {
         tokio::task::spawn(async move {
-            let res =
-                run_with_fuzzing(args, case, casm_program, runner_config, runner_params, send)
-                    .await??;
+            let res = run_with_fuzzing(
+                args,
+                case,
+                casm_program,
+                forge_config.runner_config.clone(),
+                forge_config.runtime_config.clone(),
+                context_data,
+                is_vm_trace_needed,
+                send,
+            )
+            .await??;
             Ok(AnyTestCaseSummary::Fuzzing(res))
         })
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn run_with_fuzzing(
     args: Vec<ConcreteTypeId>,
     case: Arc<TestCaseRunnable>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
     runner_config: Arc<RunnerConfig>,
-    runner_params: Arc<RunnerParams>,
+    runtime_config: Arc<RuntimeConfig>,
+    context_data: Arc<ContextData>,
+    is_vm_trace_needed: bool,
     send: Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary<Fuzzing>>> {
     tokio::task::spawn(async move {
@@ -331,8 +266,9 @@ fn run_with_fuzzing(
                 args,
                 case.clone(),
                 casm_program.clone(),
-                runner_config.clone(),
-                runner_params.clone(),
+                runtime_config.clone(),
+                context_data.clone(),
+                is_vm_trace_needed,
                 send.clone(),
                 fuzzing_send.clone(),
             ));
