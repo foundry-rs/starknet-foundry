@@ -70,3 +70,9 @@ $ scarb add snforge_std \
  --git https://github.com/foundry-rs/starknet-foundry.git \
  --tag v0.12.0
 ```
+
+Additionally, ensure that starknet-contract target is enabled in the `Scarb.toml` file.
+
+```toml
+# ...
+[[target.starknet-contract]]
