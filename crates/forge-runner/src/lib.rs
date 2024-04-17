@@ -176,7 +176,6 @@ fn maybe_save_execution_data(
     Ok(())
 }
 
-#[allow(clippy::too_many_arguments)]
 fn choose_test_strategy_and_run(
     args: Vec<ConcreteTypeId>,
     case: Arc<TestCaseRunnable>,
