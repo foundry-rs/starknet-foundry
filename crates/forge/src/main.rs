@@ -183,6 +183,11 @@ fn combine_configs(
     max_n_steps: Option<u32>,
     forge_config_from_scarb: &ForgeConfigFromScarb,
 ) -> ForgeConfig {
+    let execution_data_to_save = ExecutionDataToSave::from_flags(
+        save_trace_data || forge_config_from_scarb.save_trace_data,
+        build_profile || forge_config_from_scarb.build_profile,
+    );
+
     ForgeConfig {
         runner_config: Arc::new(RunnerConfig {
             exit_first: exit_first || forge_config_from_scarb.exit_first,
@@ -193,15 +198,13 @@ fn combine_configs(
                 .or(forge_config_from_scarb.fuzzer_seed)
                 .unwrap_or_else(|| thread_rng().next_u64()),
         }),
-        runtime_config: Arc::new(RuntimeConfig {
-            max_n_steps: max_n_steps.or(forge_config_from_scarb.max_n_steps),
-        }),
+        runtime_config: Arc::new(RuntimeConfig::new(
+            max_n_steps.or(forge_config_from_scarb.max_n_steps),
+            execution_data_to_save,
+        )),
         output_config: OutputConfig {
             detailed_resources: detailed_resources || forge_config_from_scarb.detailed_resources,
-            execution_data_to_save: ExecutionDataToSave::from_flags(
-                save_trace_data || forge_config_from_scarb.save_trace_data,
-                build_profile || forge_config_from_scarb.build_profile,
-            ),
+            execution_data_to_save,
         },
     }
 }
@@ -433,7 +436,10 @@ mod tests {
                     fuzzer_runs: default_fuzzer_runs(),
                     fuzzer_seed: config.runner_config.fuzzer_seed,
                 }),
-                runtime_config: Arc::new(RuntimeConfig { max_n_steps: None }),
+                runtime_config: Arc::new(RuntimeConfig {
+                    max_n_steps: None,
+                    is_vm_trace_needed: false
+                }),
                 output_config: OutputConfig {
                     detailed_resources: false,
                     execution_data_to_save: ExecutionDataToSave::None
@@ -474,7 +480,8 @@ mod tests {
                     fuzzer_seed: 500,
                 }),
                 runtime_config: Arc::new(RuntimeConfig {
-                    max_n_steps: Some(1_000_000)
+                    max_n_steps: Some(1_000_000),
+                    is_vm_trace_needed: true,
                 }),
                 output_config: OutputConfig {
                     detailed_resources: true,
@@ -516,7 +523,8 @@ mod tests {
                     fuzzer_seed: 32,
                 }),
                 runtime_config: Arc::new(RuntimeConfig {
-                    max_n_steps: Some(1_000_000)
+                    max_n_steps: Some(1_000_000),
+                    is_vm_trace_needed: true,
                 }),
                 output_config: OutputConfig {
                     detailed_resources: true,

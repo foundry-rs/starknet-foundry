@@ -185,11 +185,6 @@ fn choose_test_strategy_and_run(
     context_data: Arc<ContextData>,
     send: Sender<()>,
 ) -> JoinHandle<Result<AnyTestCaseSummary>> {
-    let is_vm_trace_needed = forge_config
-        .output_config
-        .execution_data_to_save
-        .is_vm_trace_needed();
-
     if args.is_empty() {
         tokio::task::spawn(async move {
             let res = run_test(
@@ -197,7 +192,6 @@ fn choose_test_strategy_and_run(
                 casm_program,
                 forge_config.runtime_config.clone(),
                 context_data,
-                is_vm_trace_needed,
                 send,
             )
             .await??;
@@ -212,7 +206,6 @@ fn choose_test_strategy_and_run(
                 forge_config.runner_config.clone(),
                 forge_config.runtime_config.clone(),
                 context_data,
-                is_vm_trace_needed,
                 send,
             )
             .await??;
@@ -221,7 +214,6 @@ fn choose_test_strategy_and_run(
     }
 }
 
-#[allow(clippy::too_many_arguments)]
 fn run_with_fuzzing(
     args: Vec<ConcreteTypeId>,
     case: Arc<TestCaseRunnable>,
@@ -229,7 +221,6 @@ fn run_with_fuzzing(
     runner_config: Arc<RunnerConfig>,
     runtime_config: Arc<RuntimeConfig>,
     context_data: Arc<ContextData>,
-    is_vm_trace_needed: bool,
     send: Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary<Fuzzing>>> {
     tokio::task::spawn(async move {
@@ -268,7 +259,6 @@ fn run_with_fuzzing(
                 casm_program.clone(),
                 runtime_config.clone(),
                 context_data.clone(),
-                is_vm_trace_needed,
                 send.clone(),
                 fuzzing_send.clone(),
             ));
