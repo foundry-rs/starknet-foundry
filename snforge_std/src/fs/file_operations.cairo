@@ -5,18 +5,6 @@ use super::super::_cheatcode::handle_cheatcode;
 
 type File = ByteArray;
 
-trait FileTrait {
-    /// Creates a file struct used for reading json / text
-    /// `path` - a path to file in ByteArray form, relative to the package root
-    fn new(path: ByteArray) -> File;
-}
-
-impl FileTraitImpl of FileTrait {
-    fn new(path: ByteArray) -> File {
-        path
-    }
-}
-
 /// `file` - a `File` struct to read text data from
 /// Returns an array of felts read from the file, panics if read was not possible
 fn read_txt(file: @File) -> Array<felt252> {
