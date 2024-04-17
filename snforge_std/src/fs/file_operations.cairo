@@ -3,10 +3,7 @@ use starknet::testing::cheatcode;
 use super::super::byte_array::byte_array_as_felt_array;
 use super::super::_cheatcode::handle_cheatcode;
 
-#[derive(Drop, Clone)]
-struct File {
-    path: ByteArray
-}
+type File = ByteArray;
 
 trait FileTrait {
     /// Creates a file struct used for reading json / text
@@ -16,7 +13,7 @@ trait FileTrait {
 
 impl FileTraitImpl of FileTrait {
     fn new(path: ByteArray) -> File {
-        File { path }
+        path
     }
 }
 
@@ -24,7 +21,7 @@ impl FileTraitImpl of FileTrait {
 /// Returns an array of felts read from the file, panics if read was not possible
 fn read_txt(file: @File) -> Array<felt252> {
     let content = handle_cheatcode(
-        cheatcode::<'read_txt'>(byte_array_as_felt_array(file.path).span())
+        cheatcode::<'read_txt'>(byte_array_as_felt_array(file).span())
     );
 
     let mut result = array![];
@@ -36,7 +33,7 @@ fn read_txt(file: @File) -> Array<felt252> {
 /// Returns an array of felts read from the file, panics if read was not possible, or json was incorrect
 fn read_json(file: @File) -> Array<felt252> {
     let content = handle_cheatcode(
-        cheatcode::<'read_json'>(byte_array_as_felt_array(file.path).span())
+        cheatcode::<'read_json'>(byte_array_as_felt_array(file).span())
     );
 
     let mut result = array![];
@@ -58,13 +55,13 @@ trait FileParser<T, impl TSerde: Serde<T>> {
 impl FileParserImpl<T, impl TSerde: Serde<T>> of FileParser<T> {
     fn parse_txt(file: @File) -> Option<T> {
         let mut content = handle_cheatcode(
-            cheatcode::<'read_txt'>(byte_array_as_felt_array(file.path).span())
+            cheatcode::<'read_txt'>(byte_array_as_felt_array(file).span())
         );
         Serde::<T>::deserialize(ref content)
     }
     fn parse_json(file: @File) -> Option<T> {
         let mut content = handle_cheatcode(
-            cheatcode::<'read_json'>(byte_array_as_felt_array(file.path).span())
+            cheatcode::<'read_json'>(byte_array_as_felt_array(file).span())
         );
         Serde::<T>::deserialize(ref content)
     }
