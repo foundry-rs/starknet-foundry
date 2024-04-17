@@ -34,7 +34,7 @@ Options:
 For more information, check out https://foundry-rs.github.io/starknet-foundry/getting-started/installation.html
 EOF
 }
-finished_installation() {
+print_docs_and_community_info() {
   cat <<EOF
 
 Read the docs:
@@ -139,7 +139,7 @@ main() {
   local _retval=$?
 
   echo
-  finished_installation
+  print_docs_and_community_info
   if echo ":$PATH:" | grep -q ":${LOCAL_BIN}:"; then
     echo "Starknet Foundry has been successfully installed and should be already available in your PATH."
     echo "Run 'snforge --version' and 'sncast --version' to verify your installation. Happy coding!"
