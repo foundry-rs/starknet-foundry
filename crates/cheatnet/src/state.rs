@@ -15,7 +15,7 @@ use runtime::starknet::state::DictStateReader;
 use starknet_api::core::EntryPointSelector;
 
 use crate::constants::{build_test_entry_point, TEST_CONTRACT_CLASS_HASH};
-use blockifier::block::BlockInfo;
+use blockifier::blockifier::block::BlockInfo;
 use blockifier::execution::call_info::OrderedL2ToL1Message;
 use blockifier::execution::syscalls::hint_processor::SyscallCounter;
 use blockifier::state::errors::StateError::UndeclaredClassHash;
@@ -72,7 +72,7 @@ impl BlockInfoReader for ExtendedStateReader {
 
 impl StateReader for ExtendedStateReader {
     fn get_storage_at(
-        &mut self,
+        &self,
         contract_address: ContractAddress,
         key: StorageKey,
     ) -> StateResult<StarkFelt> {
@@ -80,50 +80,50 @@ impl StateReader for ExtendedStateReader {
             .get_storage_at(contract_address, key)
             .or_else(|_| {
                 self.fork_state_reader
-                    .as_mut()
+                    .as_ref()
                     .map_or(Ok(Default::default()), {
                         |reader| reader.get_storage_at(contract_address, key)
                     })
             })
     }
 
-    fn get_nonce_at(&mut self, contract_address: ContractAddress) -> StateResult<Nonce> {
+    fn get_nonce_at(&self, contract_address: ContractAddress) -> StateResult<Nonce> {
         self.dict_state_reader
             .get_nonce_at(contract_address)
             .or_else(|_| {
                 self.fork_state_reader
-                    .as_mut()
+                    .as_ref()
                     .map_or(Ok(Default::default()), {
                         |reader| reader.get_nonce_at(contract_address)
                     })
             })
     }
 
-    fn get_class_hash_at(&mut self, contract_address: ContractAddress) -> StateResult<ClassHash> {
+    fn get_class_hash_at(&self, contract_address: ContractAddress) -> StateResult<ClassHash> {
         self.dict_state_reader
             .get_class_hash_at(contract_address)
             .or_else(|_| {
                 self.fork_state_reader
-                    .as_mut()
+                    .as_ref()
                     .map_or(Ok(Default::default()), {
                         |reader| reader.get_class_hash_at(contract_address)
                     })
             })
     }
 
-    fn get_compiled_contract_class(&mut self, class_hash: ClassHash) -> StateResult<ContractClass> {
+    fn get_compiled_contract_class(&self, class_hash: ClassHash) -> StateResult<ContractClass> {
         self.dict_state_reader
             .get_compiled_contract_class(class_hash)
             .or_else(|_| {
                 self.fork_state_reader
-                    .as_mut()
+                    .as_ref()
                     .map_or(Err(UndeclaredClassHash(class_hash)), |reader| {
                         reader.get_compiled_contract_class(class_hash)
                     })
             })
     }
 
-    fn get_compiled_class_hash(&mut self, class_hash: ClassHash) -> StateResult<CompiledClassHash> {
+    fn get_compiled_class_hash(&self, class_hash: ClassHash) -> StateResult<CompiledClassHash> {
         Ok(self
             .dict_state_reader
             .get_compiled_class_hash(class_hash)
@@ -155,9 +155,41 @@ pub struct CallTrace {
     pub used_execution_resources: ExecutionResources,
     pub used_l1_resources: L1Resources,
     pub used_syscalls: SyscallCounter,
-    pub nested_calls: Vec<Rc<RefCell<CallTrace>>>,
+    pub nested_calls: Vec<CallTraceNode>,
     pub result: CallResult,
     pub vm_trace: Option<Vec<TraceEntry>>,
+}
+
+impl CallTrace {
+    fn default_successful_call() -> Self {
+        Self {
+            entry_point: Default::default(),
+            used_execution_resources: Default::default(),
+            used_l1_resources: Default::default(),
+            used_syscalls: Default::default(),
+            nested_calls: vec![],
+            result: CallResult::Success { ret_data: vec![] },
+            vm_trace: None,
+        }
+    }
+}
+
+/// Enum representing node of a trace of a call.
+#[derive(Clone)]
+pub enum CallTraceNode {
+    EntryPointCall(Rc<RefCell<CallTrace>>),
+    DeployWithoutConstructor,
+}
+
+impl CallTraceNode {
+    #[must_use]
+    pub fn extract_entry_point_call(&self) -> Option<&Rc<RefCell<CallTrace>>> {
+        if let CallTraceNode::EntryPointCall(trace) = self {
+            Some(trace)
+        } else {
+            None
+        }
+    }
 }
 
 #[derive(Clone)]
@@ -259,12 +291,7 @@ impl Default for CheatnetState {
         test_code_entry_point.class_hash = Some(class_hash!(TEST_CONTRACT_CLASS_HASH));
         let test_call = Rc::new(RefCell::new(CallTrace {
             entry_point: test_code_entry_point,
-            used_execution_resources: Default::default(),
-            used_l1_resources: Default::default(),
-            used_syscalls: Default::default(),
-            nested_calls: vec![],
-            result: CallResult::Success { ret_data: vec![] },
-            vm_trace: None,
+            ..CallTrace::default_successful_call()
         }));
         Self {
             rolled_contracts: Default::default(),
@@ -396,19 +423,14 @@ impl TraceData {
     ) {
         let new_call = Rc::new(RefCell::new(CallTrace {
             entry_point,
-            used_execution_resources: Default::default(),
-            used_l1_resources: Default::default(),
-            used_syscalls: Default::default(),
-            nested_calls: vec![],
-            result: CallResult::Success { ret_data: vec![] },
-            vm_trace: None,
+            ..CallTrace::default_successful_call()
         }));
         let current_call = self.current_call_stack.top();
 
         current_call
             .borrow_mut()
             .nested_calls
-            .push(new_call.clone());
+            .push(CallTraceNode::EntryPointCall(new_call.clone()));
 
         self.current_call_stack
             .push(new_call, resources_used_before_call, cheated_data);
@@ -445,6 +467,15 @@ impl TraceData {
 
         last_call.result = result;
         last_call.vm_trace = vm_trace;
+    }
+
+    pub fn add_deploy_without_constructor_node(&mut self) {
+        let current_call = self.current_call_stack.top();
+
+        current_call
+            .borrow_mut()
+            .nested_calls
+            .push(CallTraceNode::DeployWithoutConstructor);
     }
 }
 

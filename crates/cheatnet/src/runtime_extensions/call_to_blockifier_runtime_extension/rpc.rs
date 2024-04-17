@@ -39,7 +39,7 @@ pub enum CallResult {
     Failure(CallFailure),
 }
 
-/// Enum representing possible call failure and its' type.
+/// Enum representing possible call failure and its type.
 /// `Panic` - Recoverable, meant to be caught by the user.
 /// `Error` - Unrecoverable, equivalent of panic! in rust.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -94,13 +94,6 @@ impl CallFailure {
                     panic_data: err_data,
                 }
             }
-            EntryPointExecutionError::VirtualMachineExecutionErrorWithTrace { trace, .. } => {
-                if let Some(panic_data) = try_extract_panic_data(trace) {
-                    CallFailure::Panic { panic_data }
-                } else {
-                    CallFailure::Error { msg: trace.clone() }
-                }
-            }
             EntryPointExecutionError::PreExecutionError(PreExecutionError::EntryPointNotFound(
                 selector,
             )) => {
@@ -132,9 +125,14 @@ impl CallFailure {
             EntryPointExecutionError::StateError(StateError::StateReadError(msg)) => {
                 CallFailure::Error { msg: msg.clone() }
             }
-            result => CallFailure::Error {
-                msg: result.to_string(),
-            },
+            error => {
+                let error_string = error.to_string();
+                if let Some(panic_data) = try_extract_panic_data(&error_string) {
+                    CallFailure::Panic { panic_data }
+                } else {
+                    CallFailure::Error { msg: error_string }
+                }
+            }
         }
     }
 }

@@ -10,7 +10,7 @@ members = [
     "crates/runtime",
     "crates/scarb-api",
     "crates/configuration",
-    "crates/universal-sierra-compiler-api"
+    "crates/universal-sierra-compiler-api",
 ]
 
 [workspace.package]
@@ -21,8 +21,8 @@ license = "MIT"
 license-file = "LICENSE"
 
 [workspace.dependencies]
-blockifier = "0.5.0"
-starknet_api = "0.10.0-dev.3"
+blockifier = "0.7.0-dev.1"
+starknet_api = "0.12.0-dev.1"
 cairo-lang-casm = { version = "2.6.0", features = ["serde"] }
 cairo-lang-runner = "2.6.0"
 cairo-lang-sierra-to-casm = "2.6.0"
@@ -44,7 +44,7 @@ cairo-lang-sierra-type-size = "2.6.0"
 cairo-lang-sierra-generator = "2.6.0"
 cairo-lang-syntax = "2.6.0"
 cairo-lang-test-plugin = "2.6.0"
-cairo-lang-starknet-classes="2.6.0"
+cairo-lang-starknet-classes = "2.6.0"
 cairo-vm = "0.9.1"
 cairo-felt = "0.9.1"
 anyhow = "1.0.81"
@@ -62,7 +62,7 @@ regex = "1.10.4"
 serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.115"
 starknet = { git = "https://github.com/xJonathanLEI/starknet-rs", rev = "d980869" }
-trace-data = { git = "https://github.com/software-mansion/cairo-profiler/", rev = "3af0782" }
+trace-data = { git = "https://github.com/software-mansion/cairo-profiler/", rev = "0b9dafb" }
 tempfile = "3.10.1"
 thiserror = "1.0.58"
 ctor = "0.2.7"

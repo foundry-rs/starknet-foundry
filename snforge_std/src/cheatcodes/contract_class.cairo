@@ -1,3 +1,5 @@
+use core::serde::Serde;
+use core::traits::TryInto;
 use starknet::{ContractAddress, ClassHash, testing::cheatcode, SyscallResult};
 use super::super::byte_array::byte_array_as_felt_array;
 use super::super::_cheatcode::handle_cheatcode;
@@ -59,32 +61,16 @@ impl ContractClassImpl of ContractClassTrait {
     ) -> SyscallResult<(ContractAddress, Span<felt252>)> {
         let mut inputs = _prepare_calldata(self.class_hash, constructor_calldata);
 
-        let outputs = handle_cheatcode(cheatcode::<'deploy'>(inputs.span()));
-        let exit_code = *outputs[0];
+        let mut outputs = handle_cheatcode(cheatcode::<'deploy'>(inputs.span()));
+        let exit_code = *outputs.pop_front().unwrap();
 
         if exit_code == 0 {
-            let contract_address_felt = *outputs[1];
+            let contract_address_felt = *outputs.pop_front().unwrap();
             let contract_address = contract_address_felt.try_into().unwrap();
-            let retdata_len_felt = *outputs[2];
-            let retdata_len = retdata_len_felt.try_into().unwrap();
-            let mut retdata = outputs.slice(3, retdata_len);
-
+            let retdata = Serde::<Span<felt252>>::deserialize(ref outputs).unwrap();
             SyscallResult::Ok((contract_address, retdata))
         } else {
-            let panic_data_len_felt = *outputs[1];
-            let panic_data_len = panic_data_len_felt.try_into().unwrap();
-            let mut panic_data = array![];
-
-            let offset = 2;
-            let mut i = offset;
-            loop {
-                if panic_data_len + offset == i {
-                    break ();
-                }
-                panic_data.append(*outputs[i]);
-                i += 1;
-            };
-
+            let panic_data = Serde::<Array<felt252>>::deserialize(ref outputs).unwrap();
             SyscallResult::Err(panic_data)
         }
     }
@@ -97,32 +83,16 @@ impl ContractClassImpl of ContractClassTrait {
         let mut inputs = _prepare_calldata(self.class_hash, constructor_calldata);
         inputs.append(contract_address.into());
 
-        let outputs = handle_cheatcode(cheatcode::<'deploy_at'>(inputs.span()));
-        let exit_code = *outputs[0];
+        let mut outputs = handle_cheatcode(cheatcode::<'deploy_at'>(inputs.span()));
+        let exit_code = *outputs.pop_front().unwrap();
 
         if exit_code == 0 {
-            let contract_address_felt = *outputs[1];
+            let contract_address_felt = *outputs.pop_front().unwrap();
             let contract_address = contract_address_felt.try_into().unwrap();
-            let retdata_len_felt = *outputs[2];
-            let retdata_len = retdata_len_felt.try_into().unwrap();
-            let mut retdata = outputs.slice(3, retdata_len);
-
+            let retdata = Serde::<Span<felt252>>::deserialize(ref outputs).unwrap();
             SyscallResult::Ok((contract_address, retdata))
         } else {
-            let panic_data_len_felt = *outputs[1];
-            let panic_data_len = panic_data_len_felt.try_into().unwrap();
-            let mut panic_data = array![];
-
-            let offset = 2;
-            let mut i = offset;
-            loop {
-                if panic_data_len + offset == i {
-                    break ();
-                }
-                panic_data.append(*outputs[i]);
-                i += 1;
-            };
-
+            let panic_data = Serde::<Array<felt252>>::deserialize(ref outputs).unwrap();
             SyscallResult::Err(panic_data)
         }
     }
@@ -136,31 +106,19 @@ impl ContractClassImpl of ContractClassTrait {
 /// `contract` - name of a contract as Cairo string. It is a name of the contract (part after mod keyword) e.g. "HelloStarknet"
 /// Returns the `ContractClass` which was declared or panic data if declaration failed
 fn declare(contract: ByteArray) -> Result<ContractClass, Array<felt252>> {
-    let span = handle_cheatcode(cheatcode::<'declare'>(byte_array_as_felt_array(@contract).span()));
+    let mut span = handle_cheatcode(
+        cheatcode::<'declare'>(byte_array_as_felt_array(@contract).span())
+    );
 
-    let exit_code = *span[0];
+    let exit_code = *span.pop_front().unwrap();
 
     if exit_code == 0 {
-        let result = *span[1];
+        let result = *span.pop_front().unwrap();
         let class_hash = result.try_into().unwrap();
         let contract_class = ContractClass { class_hash };
         Result::Ok(contract_class)
     } else {
-        // TODO: Extract to a helper function.
-        let panic_data_len_felt = *span[1];
-        let panic_data_len = panic_data_len_felt.try_into().unwrap();
-        let mut panic_data = array![];
-
-        let offset = 2;
-        let mut i = offset;
-        loop {
-            if panic_data_len + offset == i {
-                break ();
-            }
-            panic_data.append(*span[i]);
-            i += 1;
-        };
-
+        let panic_data = Serde::<Array<felt252>>::deserialize(ref span).unwrap();
         Result::Err(panic_data)
     }
 }
@@ -184,19 +142,6 @@ fn _prepare_calldata(
 ) -> Array::<felt252> {
     let class_hash: felt252 = class_hash.clone().into();
     let mut inputs: Array::<felt252> = array![class_hash];
-    let calldata_len_felt = constructor_calldata.len().into();
-    inputs.append(calldata_len_felt);
-
-    let calldata_len = constructor_calldata.len();
-    let mut i = 0;
-
-    loop {
-        if i == calldata_len {
-            break ();
-        }
-        inputs.append(*constructor_calldata[i]);
-        i += 1;
-    };
-
+    constructor_calldata.serialize(ref inputs);
     inputs
 }

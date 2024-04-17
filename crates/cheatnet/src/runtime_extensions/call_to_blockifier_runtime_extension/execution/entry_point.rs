@@ -1,9 +1,8 @@
 use std::cell::RefCell;
-use std::cmp::min;
 use super::cairo1_execution::execute_entry_point_call_cairo1;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::deprecated::cairo0_execution::execute_entry_point_call_cairo0;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::CheatnetState;
-use crate::state::{CallTrace, CheatStatus};
+use crate::state::{CallTrace, CallTraceNode, CheatStatus};
 use blockifier::execution::call_info::{CallExecution, Retdata};
 use blockifier::{
     execution::{
@@ -142,33 +141,6 @@ pub fn execute_call_entry_point(
         ),
     };
 
-    let result = result.map_err(|error| {
-        // endregion
-        let vm_trace = error.try_to_vm_trace();
-        match error {
-            // On VM error, pack the stack trace into the propagated error.
-            EntryPointExecutionError::CairoRunError(internal_error) => {
-                context.error_stack.push((storage_address, vm_trace));
-                // TODO(Dori, 1/5/2023): Call error_trace only in the top call; as it is
-                //   right now, each intermediate VM error is wrapped in a
-                //   VirtualMachineExecutionErrorWithTrace error with the stringified trace
-                //   of all errors below it.
-                //   When that's done, remove the 10000 character limitation.
-                let error_trace = context.error_trace();
-                EntryPointExecutionError::VirtualMachineExecutionErrorWithTrace {
-                    trace: error_trace[..min(10000, error_trace.len())].to_string(),
-                    source: internal_error,
-                }
-            }
-            other_error => {
-                context
-                    .error_stack
-                    .push((storage_address, format!("{}\n", &other_error)));
-                other_error
-            }
-        }
-    });
-
     // region: Modified blockifier code
     match result {
         Ok((call_info, syscall_counter, vm_trace)) => {
@@ -248,6 +220,9 @@ pub fn execute_constructor_entry_point(
     let contract_class = state.get_compiled_contract_class(ctor_context.class_hash)?;
     let Some(constructor_selector) = contract_class.constructor_selector() else {
         // Contract has no constructor.
+        cheatnet_state
+            .trace_data
+            .add_deploy_without_constructor_node();
         return handle_empty_constructor(ctor_context, calldata, remaining_gas);
     };
 
@@ -306,18 +281,22 @@ fn mocked_call_info(call: CallEntryPoint, ret_data: Vec<StarkFelt>) -> CallInfo 
 
 fn aggregate_nested_syscall_counters(trace: &Rc<RefCell<CallTrace>>) -> SyscallCounter {
     let mut result = SyscallCounter::new();
-    for nested_call in &trace.borrow().nested_calls {
-        let sub_trace_counter = aggregate_syscall_counters(nested_call);
-        result = sum_syscall_counters(result, &sub_trace_counter);
+    for nested_call_node in &trace.borrow().nested_calls {
+        if let CallTraceNode::EntryPointCall(nested_call) = nested_call_node {
+            let sub_trace_counter = aggregate_syscall_counters(nested_call);
+            result = sum_syscall_counters(result, &sub_trace_counter);
+        }
     }
     result
 }
 
 fn aggregate_syscall_counters(trace: &Rc<RefCell<CallTrace>>) -> SyscallCounter {
     let mut result = trace.borrow().used_syscalls.clone();
-    for nested_call in &trace.borrow().nested_calls {
-        let sub_trace_counter = aggregate_nested_syscall_counters(nested_call);
-        result = sum_syscall_counters(result, &sub_trace_counter);
+    for nested_call_node in &trace.borrow().nested_calls {
+        if let CallTraceNode::EntryPointCall(nested_call) = nested_call_node {
+            let sub_trace_counter = aggregate_nested_syscall_counters(nested_call);
+            result = sum_syscall_counters(result, &sub_trace_counter);
+        }
     }
     result
 }
