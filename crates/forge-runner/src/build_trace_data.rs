@@ -108,10 +108,10 @@ pub fn build_profiler_call_entry_point(
     } = value;
 
     let mut contract_name = class_hash
-        .and_then(|c| contracts_data.get_contract_name_from_class_hash(&c))
+        .and_then(|c| contracts_data.get_contract_name(&c))
         .cloned();
     let mut function_name = contracts_data
-        .get_function_name_from_entry_point_selector(&entry_point_selector)
+        .get_function_name(&entry_point_selector)
         .cloned();
 
     if entry_point_selector.0
