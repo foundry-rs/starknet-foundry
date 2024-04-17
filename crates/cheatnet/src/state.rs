@@ -155,9 +155,41 @@ pub struct CallTrace {
     pub used_execution_resources: ExecutionResources,
     pub used_l1_resources: L1Resources,
     pub used_syscalls: SyscallCounter,
-    pub nested_calls: Vec<Rc<RefCell<CallTrace>>>,
+    pub nested_calls: Vec<CallTraceNode>,
     pub result: CallResult,
     pub vm_trace: Option<Vec<TraceEntry>>,
+}
+
+impl CallTrace {
+    fn default_successful_call() -> Self {
+        Self {
+            entry_point: Default::default(),
+            used_execution_resources: Default::default(),
+            used_l1_resources: Default::default(),
+            used_syscalls: Default::default(),
+            nested_calls: vec![],
+            result: CallResult::Success { ret_data: vec![] },
+            vm_trace: None,
+        }
+    }
+}
+
+/// Enum representing node of a trace of a call.
+#[derive(Clone)]
+pub enum CallTraceNode {
+    EntryPointCall(Rc<RefCell<CallTrace>>),
+    DeployWithoutConstructor,
+}
+
+impl CallTraceNode {
+    #[must_use]
+    pub fn extract_entry_point_call(&self) -> Option<&Rc<RefCell<CallTrace>>> {
+        if let CallTraceNode::EntryPointCall(trace) = self {
+            Some(trace)
+        } else {
+            None
+        }
+    }
 }
 
 #[derive(Clone)]
@@ -259,12 +291,7 @@ impl Default for CheatnetState {
         test_code_entry_point.class_hash = Some(class_hash!(TEST_CONTRACT_CLASS_HASH));
         let test_call = Rc::new(RefCell::new(CallTrace {
             entry_point: test_code_entry_point,
-            used_execution_resources: Default::default(),
-            used_l1_resources: Default::default(),
-            used_syscalls: Default::default(),
-            nested_calls: vec![],
-            result: CallResult::Success { ret_data: vec![] },
-            vm_trace: None,
+            ..CallTrace::default_successful_call()
         }));
         Self {
             rolled_contracts: Default::default(),
@@ -396,19 +423,14 @@ impl TraceData {
     ) {
         let new_call = Rc::new(RefCell::new(CallTrace {
             entry_point,
-            used_execution_resources: Default::default(),
-            used_l1_resources: Default::default(),
-            used_syscalls: Default::default(),
-            nested_calls: vec![],
-            result: CallResult::Success { ret_data: vec![] },
-            vm_trace: None,
+            ..CallTrace::default_successful_call()
         }));
         let current_call = self.current_call_stack.top();
 
         current_call
             .borrow_mut()
             .nested_calls
-            .push(new_call.clone());
+            .push(CallTraceNode::EntryPointCall(new_call.clone()));
 
         self.current_call_stack
             .push(new_call, resources_used_before_call, cheated_data);
@@ -445,6 +467,15 @@ impl TraceData {
 
         last_call.result = result;
         last_call.vm_trace = vm_trace;
+    }
+
+    pub fn add_deploy_without_constructor_node(&mut self) {
+        let current_call = self.current_call_stack.top();
+
+        current_call
+            .borrow_mut()
+            .nested_calls
+            .push(CallTraceNode::DeployWithoutConstructor);
     }
 }
 

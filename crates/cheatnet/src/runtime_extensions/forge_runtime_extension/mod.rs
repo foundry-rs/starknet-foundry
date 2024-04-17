@@ -1,4 +1,5 @@
 use self::contracts_data::ContractsData;
+use crate::state::CallTraceNode;
 use crate::{
     runtime_extensions::{
         call_to_blockifier_runtime_extension::{
@@ -686,10 +687,16 @@ fn handle_deploy_result(
 fn serialize_call_trace(call_trace: &CallTrace, output: &mut Vec<Felt252>) {
     serialize_call_entry_point(&call_trace.entry_point, output);
 
-    output.push(Felt252::from(call_trace.nested_calls.len()));
+    let visible_calls: Vec<_> = call_trace
+        .nested_calls
+        .iter()
+        .filter_map(CallTraceNode::extract_entry_point_call)
+        .collect();
 
-    for call_trace in &call_trace.nested_calls {
-        serialize_call_trace(&call_trace.borrow(), output);
+    output.push(Felt252::from(visible_calls.len()));
+
+    for call_trace_node in visible_calls {
+        serialize_call_trace(&call_trace_node.borrow(), output);
     }
 
     serialize_call_result(&call_trace.result, output);
@@ -737,7 +744,7 @@ fn serialize_call_result(call_result: &CallResult, output: &mut Vec<Felt252>) {
                     serialize_failure_data(0, panic_data.iter().cloned(), panic_data.len(), output);
                 }
                 CallFailure::Error { msg } => {
-                    let data = ByteArray::from(msg.as_str()).serialize_with_magic();
+                    let data = ByteArray::from(msg.as_str()).serialize_no_magic();
                     let len = data.len();
                     serialize_failure_data(1, data, len, output);
                 }
@@ -820,6 +827,7 @@ pub fn update_top_call_execution_resources(runtime: &mut ForgeRuntime) {
     let nested_calls_syscalls = top_call
         .nested_calls
         .iter()
+        .filter_map(CallTraceNode::extract_entry_point_call)
         .fold(SyscallCounter::new(), |syscalls, trace| {
             sum_syscall_counters(syscalls, &trace.borrow().used_syscalls)
         });
