@@ -135,7 +135,10 @@ fn fork_aliased_decorator() {
                     fuzzer_runs: NonZeroU32::new(256).unwrap(),
                     fuzzer_seed: 12345,
                 }),
-                runtime_config: Arc::new(RuntimeConfig { max_n_steps: None }),
+                runtime_config: Arc::new(RuntimeConfig {
+                    max_n_steps: None,
+                    is_vm_trace_needed: false,
+                }),
                 output_config: OutputConfig {
                     detailed_resources: false,
                     execution_data_to_save: ExecutionDataToSave::None,

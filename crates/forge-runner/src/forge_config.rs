@@ -18,6 +18,17 @@ pub struct RunnerConfig {
 #[derive(Debug, PartialEq)]
 pub struct RuntimeConfig {
     pub max_n_steps: Option<u32>,
+    pub is_vm_trace_needed: bool,
+}
+
+impl RuntimeConfig {
+    #[must_use]
+    pub fn new(max_n_steps: Option<u32>, execution_data_to_save: ExecutionDataToSave) -> Self {
+        Self {
+            max_n_steps,
+            is_vm_trace_needed: is_vm_trace_needed(execution_data_to_save),
+        }
+    }
 }
 
 #[derive(Debug, PartialEq)]
@@ -57,12 +68,9 @@ impl ExecutionDataToSave {
     }
 }
 
-impl ExecutionDataToSave {
-    #[must_use]
-    pub fn is_vm_trace_needed(self) -> bool {
-        match self {
-            ExecutionDataToSave::Trace | ExecutionDataToSave::TraceAndProfile => true,
-            ExecutionDataToSave::None => false,
-        }
+fn is_vm_trace_needed(execution_data_to_save: ExecutionDataToSave) -> bool {
+    match execution_data_to_save {
+        ExecutionDataToSave::Trace | ExecutionDataToSave::TraceAndProfile => true,
+        ExecutionDataToSave::None => false,
     }
 }

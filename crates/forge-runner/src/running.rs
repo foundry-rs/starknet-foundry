@@ -60,7 +60,6 @@ pub fn run_test(
     casm_program: Arc<AssembledProgramWithDebugInfo>,
     runtime_config: Arc<RuntimeConfig>,
     context_data: Arc<ContextData>,
-    is_vm_trace_needed: bool,
     send: Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary<Single>>> {
     tokio::task::spawn_blocking(move || {
@@ -70,14 +69,8 @@ pub fn run_test(
         if send.is_closed() {
             return Ok(TestCaseSummary::Skipped {});
         }
-        let run_result = run_test_case(
-            vec![],
-            &case,
-            &casm_program,
-            &runtime_config,
-            &context_data,
-            is_vm_trace_needed,
-        );
+        let run_result =
+            run_test_case(vec![], &case, &casm_program, &runtime_config, &context_data);
 
         // TODO: code below is added to fix snforge tests
         // remove it after improve exit-first tests
@@ -95,14 +88,12 @@ pub fn run_test(
     })
 }
 
-#[allow(clippy::too_many_arguments)]
 pub(crate) fn run_fuzz_test(
     args: Vec<Felt252>,
     case: Arc<TestCaseRunnable>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
     runtime_config: Arc<RuntimeConfig>,
     context_data: Arc<ContextData>,
-    is_vm_trace_needed: bool,
     send: Sender<()>,
     fuzzing_send: Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary<Single>>> {
@@ -120,7 +111,6 @@ pub(crate) fn run_fuzz_test(
             &casm_program,
             &runtime_config,
             &context_data,
-            is_vm_trace_needed,
         );
 
         // TODO: code below is added to fix snforge tests
@@ -188,7 +178,6 @@ pub fn run_test_case(
     casm_program: &AssembledProgramWithDebugInfo,
     runtime_config: &RuntimeConfig,
     context_data: &ContextData,
-    is_vm_trace_needed: bool,
 ) -> Result<RunResultWithInfo> {
     ensure!(
         case.available_gas != Some(0),
@@ -245,7 +234,7 @@ pub fn run_test_case(
         block_info,
         ..Default::default()
     };
-    cheatnet_state.trace_data.is_vm_trace_needed = is_vm_trace_needed;
+    cheatnet_state.trace_data.is_vm_trace_needed = runtime_config.is_vm_trace_needed;
 
     let cheatable_runtime = ExtendedRuntime {
         extension: CheatableStarknetRuntimeExtension {
