@@ -110,7 +110,8 @@ fn trace_has_vm_trace() {
 
 fn assert_vm_trace_exists(trace: &ProfilerCallTrace) {
     assert!(
-        trace.vm_trace.is_some() || trace.entry_point.function_name == Some(String::from("fail"))
+        trace.cairo_execution_info.is_some()
+            || trace.entry_point.function_name == Some(String::from("fail"))
     );
 
     for sub_trace_node in &trace.nested_calls {

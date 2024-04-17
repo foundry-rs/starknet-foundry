@@ -10,6 +10,7 @@ use blockifier::execution::entry_point::{CallEntryPoint, CallType};
 use blockifier::execution::syscalls::hint_processor::SyscallCounter;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cairo_vm::vm::trace::trace_entry::TraceEntry;
+use camino::Utf8PathBuf;
 use cheatnet::constants::{TEST_CONTRACT_CLASS_HASH, TEST_ENTRY_POINT_SELECTOR};
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::state::{CallTrace, CallTraceNode};
@@ -21,7 +22,7 @@ use starknet_api::core::ClassHash;
 use starknet_api::deprecated_contract_class::EntryPointType;
 use starknet_api::hash::StarkHash;
 use trace_data::{
-    CallEntryPoint as ProfilerCallEntryPoint, CallTrace as ProfilerCallTrace,
+    CairoExecutionInfo, CallEntryPoint as ProfilerCallEntryPoint, CallTrace as ProfilerCallTrace,
     CallTraceNode as ProfilerCallTraceNode, CallType as ProfilerCallType, ContractAddress,
     DeprecatedSyscallSelector as ProfilerDeprecatedSyscallSelector, EntryPointSelector,
     EntryPointType as ProfilerEntryPointType, ExecutionResources as ProfilerExecutionResources,
@@ -35,9 +36,11 @@ pub const TEST_CODE_FUNCTION_NAME: &str = "SNFORGE_TEST_CODE_FUNCTION";
 pub fn build_profiler_call_trace(
     value: &Rc<RefCell<CallTrace>>,
     contracts_data: &ContractsData,
+    test_artifacts_path: &Utf8PathBuf,
 ) -> ProfilerCallTrace {
     let value = value.borrow();
 
+    let entry_point = build_profiler_call_entry_point(value.entry_point.clone(), contracts_data);
     let vm_trace = value.vm_trace.as_ref().map(|trace_data| {
         trace_data
             .iter()
@@ -45,8 +48,27 @@ pub fn build_profiler_call_trace(
             .collect_vec()
     });
 
+    let cairo_execution_info = if vm_trace.is_some() && entry_point.contract_name.is_some() {
+        let contract_name = entry_point.contract_name.as_ref().unwrap();
+        let source_sierra_path = if contract_name == TEST_CODE_CONTRACT_NAME {
+            test_artifacts_path
+        } else {
+            contracts_data
+                .get_source_sierra_path(contract_name)
+                .unwrap()
+        }
+        .clone();
+
+        Some(CairoExecutionInfo {
+            vm_trace: vm_trace.unwrap(),
+            source_sierra_path,
+        })
+    } else {
+        None
+    };
+
     ProfilerCallTrace {
-        entry_point: build_profiler_call_entry_point(value.entry_point.clone(), contracts_data),
+        entry_point,
         cumulative_resources: build_profiler_execution_resources(
             value.used_execution_resources.clone(),
             value.used_syscalls.clone(),
@@ -55,20 +77,21 @@ pub fn build_profiler_call_trace(
         nested_calls: value
             .nested_calls
             .iter()
-            .map(|c| build_profiler_call_trace_node(c, contracts_data))
+            .map(|c| build_profiler_call_trace_node(c, contracts_data, test_artifacts_path))
             .collect(),
-        vm_trace,
+        cairo_execution_info,
     }
 }
 
 fn build_profiler_call_trace_node(
     value: &CallTraceNode,
     contracts_data: &ContractsData,
+    test_artifacts_path: &Utf8PathBuf,
 ) -> ProfilerCallTraceNode {
     match value {
-        CallTraceNode::EntryPointCall(trace) => {
-            ProfilerCallTraceNode::EntryPointCall(build_profiler_call_trace(trace, contracts_data))
-        }
+        CallTraceNode::EntryPointCall(trace) => ProfilerCallTraceNode::EntryPointCall(
+            build_profiler_call_trace(trace, contracts_data, test_artifacts_path),
+        ),
         CallTraceNode::DeployWithoutConstructor => ProfilerCallTraceNode::DeployWithoutConstructor,
     }
 }
