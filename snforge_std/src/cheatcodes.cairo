@@ -119,6 +119,10 @@ fn stop_warp(target: CheatTarget) {
     handle_cheatcode(cheatcode::<'stop_warp'>(inputs.span()));
 }
 
+/// Changes the sequencer address for the given target and span.
+/// `target` - instance of `CheatTarget` specifying which contracts to elect
+/// `sequencer_address` - sequencer address to be set
+/// `span` - instance of `CheatSpan` specifying the number of target calls with the cheat applied
 fn elect(target: CheatTarget, sequencer_address: ContractAddress, span: CheatSpan) {
     validate_cheat_target_and_span(@target, @span);
 
@@ -129,10 +133,16 @@ fn elect(target: CheatTarget, sequencer_address: ContractAddress, span: CheatSpa
     handle_cheatcode(cheatcode::<'elect'>(inputs.span()));
 }
 
+/// Changes the sequencer address for a given target.
+/// - `target` - instance of `CheatTarget` specifying which contracts to elect
+/// - `sequencer_address` - sequencer address to be set
 fn start_elect(target: CheatTarget, sequencer_address: ContractAddress) {
     elect(target, sequencer_address, CheatSpan::Indefinite);
 }
 
+
+/// Cancels the `elect` / `start_elect` for the given target.
+/// - `target` - instance of `CheatTarget` specifying which contracts to stop electing
 fn stop_elect(target: CheatTarget) {
     let mut inputs = array![];
     target.serialize(ref inputs);
