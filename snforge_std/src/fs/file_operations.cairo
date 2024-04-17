@@ -5,28 +5,36 @@ use super::super::_cheatcode::handle_cheatcode;
 
 type File = ByteArray;
 
-/// `file` - a `File` struct to read text data from
-/// Returns an array of felts read from the file, panics if read was not possible
-fn read_txt(file: @File) -> Array<felt252> {
-    let content = handle_cheatcode(
-        cheatcode::<'read_txt'>(byte_array_as_felt_array(file).span())
-    );
+trait FileReader {
+    /// `file` - a `File` type to read text data from
+    /// Returns an array of felts read from the file, panics if read was not possible
+    fn read_txt(file: @File) -> Array<felt252>;
 
-    let mut result = array![];
-    result.append_span(content);
-    result
+    /// `file` - a `File` type to read json data from
+    /// Returns an array of felts read from the file, panics if read was not possible, or json was incorrect
+    fn read_json(file: @File) -> Array<felt252>;
 }
 
-/// `file` - a `File` struct to read json data from
-/// Returns an array of felts read from the file, panics if read was not possible, or json was incorrect
-fn read_json(file: @File) -> Array<felt252> {
-    let content = handle_cheatcode(
-        cheatcode::<'read_json'>(byte_array_as_felt_array(file).span())
-    );
+impl FileReaderImpl of FileReader {
+    fn read_txt(file: @File) -> Array<felt252> {
+        let content = handle_cheatcode(
+            cheatcode::<'read_txt'>(byte_array_as_felt_array(file).span())
+        );
 
-    let mut result = array![];
-    result.append_span(content);
-    result
+        let mut result = array![];
+        result.append_span(content);
+        result
+    }
+
+    fn read_json(file: @File) -> Array<felt252> {
+        let content = handle_cheatcode(
+            cheatcode::<'read_json'>(byte_array_as_felt_array(file).span())
+        );
+
+        let mut result = array![];
+        result.append_span(content);
+        result
+    }
 }
 
 trait FileParser<T, impl TSerde: Serde<T>> {
