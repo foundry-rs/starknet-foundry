@@ -44,7 +44,10 @@ pub fn build_test_artifacts_with_scarb(filter: PackagesFilter) -> Result<()> {
 }
 
 #[must_use]
-pub fn test_artifacts_path(snforge_target_dir_path: &Utf8Path, package_name: &str) -> Utf8PathBuf {
+pub fn get_test_artifacts_path(
+    snforge_target_dir_path: &Utf8Path,
+    package_name: &str,
+) -> Utf8PathBuf {
     snforge_target_dir_path.join(format!("{package_name}.snforge_sierra.json"))
 }
 

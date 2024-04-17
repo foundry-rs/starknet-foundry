@@ -24,7 +24,7 @@ use cheatnet::state::CheatnetState;
 use conversions::IntoConv;
 use runtime::starknet::context::build_context;
 use scarb_api::metadata::MetadataCommandExt;
-use scarb_api::{get_contracts_artifacts_and_sierra_paths, ScarbCommand};
+use scarb_api::{get_contracts_artifacts_and_source_sierra_paths, ScarbCommand};
 use starknet::core::utils::get_selector_from_name;
 use starknet_api::core::PatriciaKey;
 use starknet_api::core::{ClassHash, ContractAddress};
@@ -76,9 +76,10 @@ pub fn get_contracts() -> ContractsData {
 
     let package = scarb_metadata.packages.first().unwrap();
 
-    let (contracts_artifacts, contracts_sierra_paths) =
-        get_contracts_artifacts_and_sierra_paths(&scarb_metadata, &package.id, None).unwrap();
-    ContractsData::try_from(contracts_artifacts, contracts_sierra_paths).unwrap()
+    let contracts =
+        get_contracts_artifacts_and_source_sierra_paths(&scarb_metadata, &package.id, None)
+            .unwrap();
+    ContractsData::try_from(contracts).unwrap()
 }
 
 pub fn deploy_contract(

@@ -4,8 +4,8 @@ use clap::{Parser, Subcommand, ValueEnum};
 use configuration::load_package_config;
 use forge::scarb::config::ForgeConfig;
 use forge::scarb::{
-    build_contracts_with_scarb, build_test_artifacts_with_scarb, load_test_artifacts,
-    test_artifacts_path,
+    build_contracts_with_scarb, build_test_artifacts_with_scarb, get_test_artifacts_path,
+    load_test_artifacts,
 };
 use forge::shared_cache::{clean_cache, set_cached_failed_tests_names};
 use forge::test_filter::TestsFilter;
@@ -15,7 +15,7 @@ use forge_runner::test_crate_summary::TestCrateSummary;
 use forge_runner::{RunnerConfig, RunnerParams, CACHE_DIR};
 use rand::{thread_rng, RngCore};
 use scarb_api::{
-    get_contracts_artifacts_and_sierra_paths,
+    get_contracts_artifacts_and_source_sierra_paths,
     metadata::{Metadata, MetadataCommandExt, PackageMetadata},
     package_matches_version_requirement, target_dir_for_workspace, ScarbCommand,
 };
@@ -269,13 +269,15 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                 env::set_current_dir(&package.root)?;
 
                 let test_artifacts_path =
-                    test_artifacts_path(&snforge_target_dir_path, &package.name);
+                    get_test_artifacts_path(&snforge_target_dir_path, &package.name);
                 let compiled_test_crates = load_test_artifacts(&test_artifacts_path)?;
 
-                let (contracts_artifacts, contracts_sierra_paths) =
-                    get_contracts_artifacts_and_sierra_paths(&scarb_metadata, &package.id, None)?;
-                let contracts_data =
-                    ContractsData::try_from(contracts_artifacts, contracts_sierra_paths)?;
+                let contracts = get_contracts_artifacts_and_source_sierra_paths(
+                    &scarb_metadata,
+                    &package.id,
+                    None,
+                )?;
+                let contracts_data = ContractsData::try_from(contracts)?;
 
                 let forge_config =
                     load_package_config::<ForgeConfig>(&scarb_metadata, &package.id)?;
