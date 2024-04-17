@@ -44,7 +44,7 @@ Use -h for short descriptions and --help for more details.
     after_help = "Read the docs: https://foundry-rs.github.io/starknet-foundry/",
     after_long_help = "\
 Read the docs:
-- Foundry Book: https://foundry-rs.github.io/starknet-foundry/
+- Starknet Foundry Book: https://foundry-rs.github.io/starknet-foundry/
 - Cairo Book: https://book.cairo-lang.org/
 - Starknet Book: https://book.starknet.io/
 - Starknet Documentation: https://docs.starknet.io/
@@ -52,9 +52,9 @@ Read the docs:
 
 Join the community:
 - Follow core developers on X: https://twitter.com/swmansionxyz
-- Chat on Telegram: https://t.me/starknet_foundry
-- Get support on Telegram: https://t.me/starknet_foundry_support
-- Socialize on Starknet's Discord: https://discord.gg/KZWaFtPZJf
+- Get support via Telegram: https://t.me/starknet_foundry_support
+- Or discord: https://discord.gg/KZWaFtPZJf
+- Or join our general chat (Telegram): https://t.me/starknet_foundry
 
 Report bugs: https://github.com/foundry-rs/starknet-foundry/issues/new/choose\
 "
