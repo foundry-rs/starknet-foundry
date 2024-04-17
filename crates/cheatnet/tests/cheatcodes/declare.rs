@@ -12,9 +12,7 @@ fn declare_simple() {
     let contracts_data = get_contracts();
 
     let class_hash = declare(&mut cached_state, contract_name, &contracts_data).unwrap();
-    let expected_class_hash = contracts_data
-        .get_class_hash_for_contract(contract_name)
-        .unwrap();
+    let expected_class_hash = contracts_data.get_class_hash(contract_name).unwrap();
 
     assert_eq!(class_hash, *expected_class_hash);
 }
@@ -29,9 +27,7 @@ fn declare_multiple() {
 
     for contract_name in contract_names {
         let class_hash = declare(&mut cached_state, contract_name, &contracts_data).unwrap();
-        let expected_class_hash = contracts_data
-            .get_class_hash_for_contract(contract_name)
-            .unwrap();
+        let expected_class_hash = contracts_data.get_class_hash(contract_name).unwrap();
         assert_eq!(class_hash, *expected_class_hash);
     }
 }
@@ -45,9 +41,7 @@ fn declare_same_contract() {
     let contracts_data = get_contracts();
 
     let class_hash = declare(&mut cached_state, contract_name, &contracts_data).unwrap();
-    let expected_class_hash = contracts_data
-        .get_class_hash_for_contract(contract_name)
-        .unwrap();
+    let expected_class_hash = contracts_data.get_class_hash(contract_name).unwrap();
     assert_eq!(class_hash, *expected_class_hash);
 
     let output = declare(&mut cached_state, contract_name, &contracts_data);
