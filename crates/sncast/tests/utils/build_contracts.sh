@@ -15,10 +15,22 @@ if [ ! -d "${REPO_ROOT}/crates/sncast/tests/utils/devnet/bin" ]; then
   exit 1
 fi
 
+function run_usc_inside() {
+  target_dir=$1
+
+  for contract_filename in `ls  $target_dir/*.contract_class.json`; do
+    contract_name=`basename $contract_filename .contract_class.json`
+    universal-sierra-compiler compile-contract --sierra-path "$contract_filename" --output-path "$target_dir/$contract_name.compiled_contract_class.json"
+  done
+}
+
 for contract_dir in "$CONTRACTS_DIRECTORY"/*; do
   if ! test -d "$contract_dir"/target && [[ "$contract_dir" != *"fails"* ]]; then
     pushd "$contract_dir"
     scarb build
+
+    run_usc_inside "$contract_dir/target/dev"
+
     popd
   fi
 done
