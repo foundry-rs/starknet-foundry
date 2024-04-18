@@ -63,3 +63,5 @@ mod errors;
 mod byte_array;
 
 mod _cheatcode;
+
+mod _config_types;

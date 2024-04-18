@@ -1,0 +1,7 @@
+[package]
+name = "tests2"
+version = "0.1.0"
+
+[dependencies]
+snforge_scarb_plugin = { path = "../" }
+snforge_std = { path = "../../../snforge_Std" }

@@ -1,0 +1,25 @@
+[package]
+name = "snforge-scarb-plugin"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+crate-type = ["rlib", "cdylib"]
+
+[dependencies]
+cairo-lang-macro = { git = "https://github.com/software-mansion/scarb" }
+cairo-lang-macro-stable = { git = "https://github.com/software-mansion/scarb" }
+
+cairo-lang-parser = { git = "https://github.com/starkware-libs/cairo" }
+cairo-lang-utils = { git = "https://github.com/starkware-libs/cairo" }
+cairo-lang-syntax = { git = "https://github.com/starkware-libs/cairo" }
+cairo-lang-diagnostics = { git = "https://github.com/starkware-libs/cairo" }
+cairo-lang-filesystem = { git = "https://github.com/starkware-libs/cairo" }
+cairo-lang-sierra = { git = "https://github.com/starkware-libs/cairo" }
+
+url.workspace = true
+indoc.workspace = true
+serde_json.workspace = true
+scarb-api = { path = "../scarb-api" }
+smol_str = "0.2.1"
