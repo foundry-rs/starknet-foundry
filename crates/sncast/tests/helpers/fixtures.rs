@@ -1,6 +1,4 @@
-use crate::helpers::constants::{
-    ACCOUNT_FILE_PATH, CONTRACTS_DIR, DEVNET_ENV_FILE, DEVNET_OZ_CLASS_HASH_CAIRO_0, URL,
-};
+use crate::helpers::constants::{ACCOUNT_FILE_PATH, DEVNET_OZ_CLASS_HASH_CAIRO_0, URL};
 use anyhow::Context;
 use camino::{Utf8Path, Utf8PathBuf};
 use serde::de::DeserializeOwned;
@@ -13,8 +11,6 @@ use sncast::state::state_file::{
 use sncast::{apply_optional, get_chain_id, get_keystore_password};
 use sncast::{get_account, get_provider, parse_number};
 use starknet::accounts::{Account, AccountFactory, Call, Execution, OpenZeppelinAccountFactory};
-use starknet::contract::ContractFactory;
-use starknet::core::types::contract::{CompiledClass, SierraClass};
 use starknet::core::types::TransactionReceipt;
 use starknet::core::types::{FieldElement, InvokeTransactionResult};
 use starknet::core::utils::get_contract_address;
@@ -25,59 +21,13 @@ use starknet::signers::{LocalWallet, SigningKey};
 use std::collections::HashMap;
 use std::env;
 use std::fs;
-use std::fs::{File, OpenOptions};
+use std::fs::File;
 use std::io::{BufRead, Write};
-use std::sync::Arc;
 use tempfile::TempDir;
 use toml::Table;
 use url::Url;
 
 const SCRIPT_ORIGIN_TIMESTAMP: u64 = 1_709_853_748;
-
-pub async fn declare_contract(account: &str, path: &str, shortname: &str) -> FieldElement {
-    let provider = get_provider(URL).expect("Could not get the provider");
-    let account = get_account(
-        account,
-        &Utf8PathBuf::from(ACCOUNT_FILE_PATH),
-        &provider,
-        None,
-    )
-    .await
-    .expect("Could not get the account");
-
-    let contract_definition: SierraClass = {
-        let file_contents =
-            std::fs::read(CONTRACTS_DIR.to_string() + path + ".contract_class.json")
-                .expect("Could not read contract's sierra file");
-        serde_json::from_slice(&file_contents).expect("Could not cast sierra file to SierraClass")
-    };
-    let casm_contract_definition: CompiledClass = {
-        let file_contents =
-            std::fs::read(CONTRACTS_DIR.to_string() + path + ".compiled_contract_class.json")
-                .expect("Could not read contract's casm file");
-        serde_json::from_slice(&file_contents).expect("Could not cast casm file to CompiledClass")
-    };
-
-    let casm_class_hash = casm_contract_definition
-        .class_hash()
-        .expect("Could not compute class_hash");
-
-    let declaration = account.declare(
-        Arc::new(
-            contract_definition
-                .flatten()
-                .expect("Could not flatten SierraClass"),
-        ),
-        casm_class_hash,
-    );
-
-    let tx = declaration.send().await.unwrap();
-    let class_hash = tx.class_hash;
-    let tx_hash = tx.transaction_hash;
-    write_devnet_env(format!("{shortname}_CLASS_HASH").as_str(), &class_hash);
-    write_devnet_env(format!("{shortname}_DECLARE_HASH").as_str(), &tx_hash);
-    class_hash
-}
 
 pub async fn deploy_keystore_account() {
     let keystore_path = "tests/data/keystore/predeployed_key.json";
@@ -155,35 +105,6 @@ fn get_from_json_as_str<'a>(entry: &'a Value, key: &str) -> &'a str {
         .get(key)
         .and_then(Value::as_str)
         .unwrap_or_else(|| panic!("Failed to get {key} key"))
-}
-
-pub async fn declare_deploy_contract(account: &str, path: &str, shortname: &str) {
-    let class_hash = declare_contract(account, path, shortname).await;
-
-    let provider = get_provider(URL).expect("Could not get the provider");
-    let account = get_account(
-        account,
-        &Utf8PathBuf::from(ACCOUNT_FILE_PATH),
-        &provider,
-        None,
-    )
-    .await
-    .expect("Could not get the account");
-
-    let factory = ContractFactory::new(class_hash, &account);
-    let deployment = factory.deploy(Vec::new(), FieldElement::ONE, true);
-
-    let transaction_hash = deployment.send().await.unwrap().transaction_hash;
-    let receipt = get_transaction_receipt(transaction_hash).await;
-    match receipt {
-        TransactionReceipt::Deploy(deploy_receipt) => {
-            let address = deploy_receipt.contract_address;
-            write_devnet_env(format!("{shortname}_ADDRESS").as_str(), &address);
-        }
-        _ => {
-            panic!("Unexpected TransactionReceipt variant");
-        }
-    };
 }
 
 pub async fn invoke_contract(
@@ -461,22 +382,6 @@ pub fn get_deps_map_from_paths(
     }
 
     deps
-}
-
-pub fn remove_devnet_env() {
-    if Utf8PathBuf::from(DEVNET_ENV_FILE).is_file() {
-        fs::remove_file(DEVNET_ENV_FILE).unwrap();
-    }
-}
-
-fn write_devnet_env(key: &str, value: &FieldElement) {
-    let mut file = OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(DEVNET_ENV_FILE)
-        .unwrap();
-
-    writeln!(file, "{key}={value}").unwrap();
 }
 
 pub fn from_env(name: &str) -> Result<String, String> {
