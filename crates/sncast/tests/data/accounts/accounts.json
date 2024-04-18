@@ -47,13 +47,13 @@
             "public_key": "0x4fdaeb60e75399877bd5d14d3dac2e805f3c2a6732851a19db63fee0cfae00d",
             "address": "0x68d6e92b8e2310c550178b2fe484d5cb89dd6aa93ae804afd4d124e9d6c3cd3"
         },
-        "cairo1": {
+        "oz_cairo_1": {
             "private_key": "0x88ecc06581d81c76cef06d6f4f0c1b28",
             "public_key": "0x8cdbe26bc82084b04eccb3c6f8a76f12ad6c4015b3dc8ab90dc840d42cac29",
             "address": "0x691a61b12a7105b1372cc377f135213c11e8400a546f6b0e7ea0296046690ce",
             "legacy": false
         },
-        "cairo0": {
+        "oz_cairo_0": {
             "private_key": "0x45136b667118bab7f2a9d656d08981ecd7065feb420c3f81c3ed8f461072b0a",
             "public_key": "0x6b35e242f65996a44b6cf808b954785926eb89e8f4b6441b65780c4eacb9668",
             "address": "0x5c8fb90cc7249383cbc83c682565720a6d3df92840c02424a6c230e26464c4c",

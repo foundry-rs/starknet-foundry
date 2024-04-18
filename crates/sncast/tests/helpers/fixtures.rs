@@ -58,7 +58,7 @@ pub async fn deploy_keystore_account() {
 }
 
 pub async fn deploy_cairo_0_account() {
-    let (address, salt, private_key) = get_account_deployment_data("cairo0");
+    let (address, salt, private_key) = get_account_deployment_data("oz_cairo_0");
     deploy_oz_account(
         address.as_str(),
         DEVNET_OZ_CLASS_HASH_CAIRO_0,
