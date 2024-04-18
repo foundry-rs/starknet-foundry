@@ -465,7 +465,7 @@ fn run_script_command(
                 },
             )
             .expect("Failed to build artifacts");
-            // todo #2042: remove duplicated compilation
+            // TODO(#2042): remove duplicated compilation
             build(
                 &package_metadata,
                 &BuildConfig {

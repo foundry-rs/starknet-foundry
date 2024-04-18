@@ -454,6 +454,7 @@ fn inject_lib_artifact(
         .target_dir
         .clone()
         .unwrap_or_else(|| metadata.workspace.root.join("target"));
+    // TODO(#2042)
     let sierra_path = &target_dir.join("dev").join(sierra_filename);
 
     let lib_artifacts = ScriptStarknetContractArtifacts {
