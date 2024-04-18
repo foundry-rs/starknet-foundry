@@ -60,6 +60,14 @@
             "class_hah": "0x4d07e40e93398ed3c76981e72dd1fd22557a78ce36c0515f679e27f0bb5bc5f",
             "salt": "0xe35eea9d1b0fa729",
             "legacy": true
+        },
+        "argent": {
+            "address": "0x243054cc47be5adab0c3463c6fdc3c4a4009e31ecfb0d629bda00a9fe7e6a5d",
+            "class_hash": "0x29927c8af6bccf3f6fda035981e765a7bdbf18a2dc0d630494f8758aa908e2b",
+            "legacy": false,
+            "private_key": "0x48c8aa111cc645462239d7117d3f2dd3c7c4fb498bda63df9cccf60f829e30",
+            "public_key": "0x6d3a3cb3dee41f7240e0d63e23e8828191090ec50e49b65ddb81bd78fa83979",
+            "salt": "0x1"
         }
     }
 }
