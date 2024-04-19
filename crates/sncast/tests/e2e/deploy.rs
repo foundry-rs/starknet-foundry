@@ -1,18 +1,18 @@
-use crate::helpers::constants::ACCOUNT;
-use crate::helpers::fixtures::{
-    default_cli_args, from_env, get_transaction_hash, get_transaction_receipt,
+use crate::helpers::constants::{
+    ACCOUNT, CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA, MAP_CONTRACT_CLASS_HASH_SEPOLIA,
 };
+use crate::helpers::fixtures::{default_cli_args, get_transaction_hash, get_transaction_receipt};
 use crate::helpers::runner::runner;
 use indoc::indoc;
 use shared::test_utils::output_assert::assert_stderr_contains;
 use starknet::core::types::TransactionReceipt::Deploy;
 use test_case::test_case;
 
-#[test_case("cairo0"; "cairo_0_account")]
-#[test_case("cairo1"; "cairo_1_account")]
+#[test_case("oz_cairo_0"; "cairo_0_account")]
+#[test_case("oz_cairo_1"; "cairo_1_account")]
+#[test_case("argent"; "argent_account")]
 #[tokio::test]
 async fn test_happy_case(account: &str) {
-    let class_hash = from_env("CAST_MAP_CLASS_HASH").unwrap();
     let mut args = default_cli_args();
     args.append(&mut vec![
         "--account",
@@ -21,7 +21,7 @@ async fn test_happy_case(account: &str) {
         "--json",
         "deploy",
         "--class-hash",
-        &class_hash,
+        MAP_CONTRACT_CLASS_HASH_SEPOLIA,
         "--salt",
         "0x2",
         "--unique",
@@ -40,7 +40,6 @@ async fn test_happy_case(account: &str) {
 
 #[tokio::test]
 async fn test_happy_case_with_constructor() {
-    let class_hash = from_env("CAST_WITH_CONSTRUCTOR_CLASS_HASH").unwrap();
     let mut args = default_cli_args();
     args.append(&mut vec![
         "--account",
@@ -53,7 +52,7 @@ async fn test_happy_case_with_constructor() {
         "0x1",
         "0x0",
         "--class-hash",
-        &class_hash,
+        CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA,
     ]);
 
     let snapbox = runner(&args);
@@ -67,14 +66,13 @@ async fn test_happy_case_with_constructor() {
 
 #[test]
 fn test_wrong_calldata() {
-    let class_hash = from_env("CAST_WITH_CONSTRUCTOR_CLASS_HASH").unwrap();
     let mut args = default_cli_args();
     args.append(&mut vec![
         "--account",
         "user4",
         "deploy",
         "--class-hash",
-        &class_hash,
+        CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA,
         "--constructor-calldata",
         "0x1 0x1",
     ]);
@@ -116,17 +114,15 @@ async fn test_contract_not_declared() {
 
 #[test]
 fn test_contract_already_deployed() {
-    let class_hash = from_env("CAST_MAP_CLASS_HASH").unwrap();
     let mut args = default_cli_args();
     args.append(&mut vec![
         "--account",
         "user1",
         "deploy",
         "--class-hash",
-        &class_hash,
+        MAP_CONTRACT_CLASS_HASH_SEPOLIA,
         "--salt",
         "0x1",
-        "--unique",
     ]);
 
     let snapbox = runner(&args);
@@ -143,7 +139,6 @@ fn test_contract_already_deployed() {
 
 #[test]
 fn test_too_low_max_fee() {
-    let class_hash = from_env("CAST_MAP_CLASS_HASH").unwrap();
     let mut args = default_cli_args();
     args.append(&mut vec![
         "--account",
@@ -151,7 +146,7 @@ fn test_too_low_max_fee() {
         "--wait",
         "deploy",
         "--class-hash",
-        &class_hash,
+        MAP_CONTRACT_CLASS_HASH_SEPOLIA,
         "--salt",
         "0x2",
         "--unique",

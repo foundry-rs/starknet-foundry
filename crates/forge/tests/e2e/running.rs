@@ -879,7 +879,7 @@ fn incompatible_snforge_std_version_warning() {
         output,
         indoc! {r"
         [..]Updating git repository https://github.com/foundry-rs/starknet-foundry
-        [WARNING] Package snforge_std version does not meet the recommended version requirement =0.21.0, [..]
+        [WARNING] Package snforge_std version does not meet the recommended version requirement =0.22.0, [..]
         [..]Compiling[..]
         [..]Finished[..]
 
