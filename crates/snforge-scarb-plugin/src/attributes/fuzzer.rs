@@ -12,6 +12,7 @@ impl AttributeInfo for FuzzerCollector {
 
 impl AttributeReturnType for FuzzerCollector {
     const RETURN_TYPE: &'static str = "FuzzerConfig";
+    const EXECUTABLE_NAME: &'static str = "__snforge_fuzzer__";
 }
 
 impl AttributeCollector for FuzzerCollector {
@@ -45,7 +46,7 @@ pub mod validate {
         let arg = named_args.as_once_optional(arg_name)?;
 
         arg.map_or(Ok("Option::None".to_string()), |arg| {
-            number::<T>(db, arg, arg_name)
+            number::<T>(db, arg, arg_name).map(|num| format!("Option::Some({num})"))
         })
     }
 

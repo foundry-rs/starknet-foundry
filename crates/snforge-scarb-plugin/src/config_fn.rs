@@ -1,7 +1,7 @@
 use crate::{
     args::Arguments,
-    asserts::{assert_is_used_on_test, assert_is_used_once},
-    attributes::{AttributeCollector, AttributeInfo},
+    asserts::assert_is_used_once,
+    attributes::AttributeCollector,
     parse::{parse, parse_args},
     MacroResult,
 };
@@ -18,19 +18,27 @@ pub trait ConfigFn {
 
 impl<T> ConfigFn for T
 where
-    T: AttributeCollector + AttributeInfo,
+    T: AttributeCollector,
 {
     fn get_config_fn_name(origin_fn_name: &str) -> String {
         let attr_name = Self::ATTR_NAME;
 
-        format!("snforge_internal_prefix_{origin_fn_name}_{attr_name}")
+        format!("{origin_fn_name}__snforge__{attr_name}")
     }
 
     fn create_config_fn(origin_fn_name: &str, body: &str) -> String {
         let fn_name = Self::get_config_fn_name(origin_fn_name);
         let return_type = Self::RETURN_TYPE;
+        let exec_name = Self::EXECUTABLE_NAME;
 
-        format!("fn {fn_name}()->Option<snforge_std::_config_types::{return_type}>{{{body}}}")
+        formatdoc!(
+            r#"
+                #[executable("{exec_name}")]
+                fn {fn_name}() -> Option<snforge_std::_config_types::{return_type}> {{
+                    {body}
+                }}
+            "#
+        )
     }
 
     fn extend_with_config_fn(args: TokenStream, item: TokenStream) -> MacroResult {
@@ -40,7 +48,6 @@ where
         let db = db.upcast();
 
         assert_is_used_once::<Self>(db, &func)?;
-        assert_is_used_on_test::<Self>(db, &func)?;
 
         let (args_db, args) = parse_args::<Self>(&args.to_string())?;
 

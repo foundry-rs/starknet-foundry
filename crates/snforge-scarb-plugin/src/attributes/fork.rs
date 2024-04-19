@@ -12,6 +12,7 @@ impl AttributeInfo for ForkCollector {
 
 impl AttributeReturnType for ForkCollector {
     const RETURN_TYPE: &'static str = "ForkConfig";
+    const EXECUTABLE_NAME: &'static str = "__snforge_fork__";
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -69,10 +70,7 @@ mod validate {
     use cairo_lang_syntax::node::{ast::Expr, db::SyntaxGroup, helpers::GetIdentifier};
     use url::Url;
 
-    pub fn url<T: AttributeInfo>(
-        db: &dyn SyntaxGroup,
-        url: &Expr,
-    ) -> Result<String, Diagnostic> {
+    pub fn url<T: AttributeInfo>(db: &dyn SyntaxGroup, url: &Expr) -> Result<String, Diagnostic> {
         match url {
             Expr::String(string) => match string.string_value(db) {
                 None => Err(T::error("<url> is not a valid string")),

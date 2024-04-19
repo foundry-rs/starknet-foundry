@@ -15,6 +15,7 @@ impl AttributeInfo for IgnoreCollector {
 
 impl AttributeReturnType for IgnoreCollector {
     const RETURN_TYPE: &'static str = "IgnoreConfig";
+    const EXECUTABLE_NAME: &'static str = "__snforge_ignore__";
 }
 
 impl AttributeCollector for IgnoreCollector {

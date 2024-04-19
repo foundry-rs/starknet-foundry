@@ -9,13 +9,14 @@ pub mod ignore;
 pub mod should_panic;
 pub mod test;
 
-pub trait AttributeInfo: Sized {
+pub trait AttributeInfo {
     const ATTR_NAME: &'static str;
     const ARGS_FORM: &'static str;
 }
 
-pub trait AttributeReturnType: Sized {
+pub trait AttributeReturnType {
     const RETURN_TYPE: &'static str;
+    const EXECUTABLE_NAME: &'static str;
 }
 
 pub trait AttributeCollector: AttributeInfo + AttributeReturnType {
@@ -32,7 +33,8 @@ where
 {
     fn error(message: impl ToString) -> Diagnostic {
         let message = message.to_string();
+        let attr_name = Self::ATTR_NAME;
 
-        Diagnostic::error(format!("#[{}] {message}", Self::ATTR_NAME))
+        Diagnostic::error(format!("#[{attr_name}] {message}"))
     }
 }

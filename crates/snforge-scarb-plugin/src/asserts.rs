@@ -1,6 +1,6 @@
 use crate::{
     args::Arguments,
-    attributes::{test::TestCollector, AttributeInfo, ErrorExt},
+    attributes::{AttributeInfo, ErrorExt},
     parse::parse_args,
 };
 use cairo_lang_macro::{Diagnostic, Diagnostics};
@@ -15,20 +15,6 @@ pub fn assert_is_used_once<T: AttributeInfo>(
         Err(T::error("can only be used once per item"))
     } else {
         Ok(())
-    }
-}
-
-pub fn assert_is_used_on_test<T: AttributeInfo>(
-    db: &dyn SyntaxGroup,
-    func: &FunctionWithBody,
-) -> Result<(), Diagnostic> {
-    if func.attributes(db).has_attr(db, TestCollector::ATTR_NAME) {
-        Ok(())
-    } else {
-        Err(T::error(format!(
-            "can only be used on functions marked with #[{}]",
-            TestCollector::ATTR_NAME
-        )))
     }
 }
 

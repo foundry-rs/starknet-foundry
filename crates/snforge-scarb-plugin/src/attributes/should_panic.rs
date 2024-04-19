@@ -14,6 +14,7 @@ impl AttributeInfo for ShouldPanicCollector {
 
 impl AttributeReturnType for ShouldPanicCollector {
     const RETURN_TYPE: &'static str = "ShouldPanicConfig";
+    const EXECUTABLE_NAME: &'static str = "__snforge_should_panic__";
 }
 
 #[derive(Debug, Clone)]

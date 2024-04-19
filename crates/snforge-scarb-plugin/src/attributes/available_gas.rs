@@ -17,6 +17,7 @@ impl AttributeInfo for AvailableGasCollector {
 
 impl AttributeReturnType for AvailableGasCollector {
     const RETURN_TYPE: &'static str = "AvailableGasConfig";
+    const EXECUTABLE_NAME: &'static str = "__snforge_available_gas__";
 }
 
 impl AttributeCollector for AvailableGasCollector {
