@@ -4,14 +4,14 @@ use crate::starknet_commands::account::delete::Delete;
 use crate::starknet_commands::account::deploy::Deploy;
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
-use clap::{Args, Subcommand};
+use clap::{Args, Subcommand, ValueEnum};
 use configuration::{
     find_config_file, load_global_config, search_config_upwards_relative_to, CONFIG_FILENAME,
 };
 use serde_json::json;
 use sncast::{chain_id_to_network_name, decode_chain_id, helpers::configuration::CastConfig};
 use starknet::{core::types::FieldElement, signers::SigningKey};
-use std::{fs::OpenOptions, io::Write};
+use std::{fmt, fs::OpenOptions, io::Write};
 use toml::Value;
 
 pub mod add;
@@ -34,11 +34,27 @@ pub enum Commands {
     Delete(Delete),
 }
 
+#[derive(ValueEnum, Clone, Debug)]
+pub enum AccountType {
+    Oz,
+    Argent,
+}
+
+impl fmt::Display for AccountType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            AccountType::Oz => write!(f, "open_zeppelin"),
+            AccountType::Argent => write!(f, "argent"),
+        }
+    }
+}
+
 pub fn prepare_account_json(
     private_key: &SigningKey,
     address: FieldElement,
     deployed: bool,
     legacy: bool,
+    account_type: &AccountType,
     class_hash: Option<FieldElement>,
     salt: Option<FieldElement>,
 ) -> serde_json::Value {
@@ -46,6 +62,7 @@ pub fn prepare_account_json(
         "private_key": format!("{:#x}", private_key.secret_scalar()),
         "public_key": format!("{:#x}", private_key.verifying_key().scalar()),
         "address": format!("{address:#x}"),
+        "type": format!("{account_type}"),
         "deployed": deployed,
         "legacy": legacy,
     });
