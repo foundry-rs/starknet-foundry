@@ -23,7 +23,6 @@ use cheatcodes::events::EventSpy;
 use cheatcodes::events::EventFetcher;
 use cheatcodes::events::EventAssertions;
 use cheatcodes::events::spy_events;
-use cheatcodes::events::event_name_hash;
 
 use cheatcodes::storage::store;
 use cheatcodes::storage::load;

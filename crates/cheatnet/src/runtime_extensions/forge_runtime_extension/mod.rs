@@ -460,12 +460,6 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 result.extend(serialized_events);
                 Ok(CheatcodeHandlingResult::Handled(result))
             }
-            "event_name_hash" => {
-                let name = input_reader.read_felt()?;
-                let hash = starknet_keccak(as_cairo_short_string(&name).unwrap().as_bytes());
-
-                Ok(CheatcodeHandlingResult::Handled(vec![Felt252::from(hash)]))
-            }
             "generate_stark_keys" => {
                 let key_pair = SigningKey::from_random();
 
