@@ -47,19 +47,27 @@
             "public_key": "0x4fdaeb60e75399877bd5d14d3dac2e805f3c2a6732851a19db63fee0cfae00d",
             "address": "0x68d6e92b8e2310c550178b2fe484d5cb89dd6aa93ae804afd4d124e9d6c3cd3"
         },
-        "cairo1": {
+        "oz_cairo_1": {
             "private_key": "0x88ecc06581d81c76cef06d6f4f0c1b28",
             "public_key": "0x8cdbe26bc82084b04eccb3c6f8a76f12ad6c4015b3dc8ab90dc840d42cac29",
             "address": "0x691a61b12a7105b1372cc377f135213c11e8400a546f6b0e7ea0296046690ce",
             "legacy": false
         },
-        "cairo0": {
+        "oz_cairo_0": {
             "private_key": "0x45136b667118bab7f2a9d656d08981ecd7065feb420c3f81c3ed8f461072b0a",
             "public_key": "0x6b35e242f65996a44b6cf808b954785926eb89e8f4b6441b65780c4eacb9668",
             "address": "0x5c8fb90cc7249383cbc83c682565720a6d3df92840c02424a6c230e26464c4c",
             "class_hah": "0x4d07e40e93398ed3c76981e72dd1fd22557a78ce36c0515f679e27f0bb5bc5f",
             "salt": "0xe35eea9d1b0fa729",
             "legacy": true
+        },
+        "argent": {
+            "address": "0x243054cc47be5adab0c3463c6fdc3c4a4009e31ecfb0d629bda00a9fe7e6a5d",
+            "class_hash": "0x29927c8af6bccf3f6fda035981e765a7bdbf18a2dc0d630494f8758aa908e2b",
+            "legacy": false,
+            "private_key": "0x48c8aa111cc645462239d7117d3f2dd3c7c4fb498bda63df9cccf60f829e30",
+            "public_key": "0x6d3a3cb3dee41f7240e0d63e23e8828191090ec50e49b65ddb81bd78fa83979",
+            "salt": "0x1"
         }
     }
 }
