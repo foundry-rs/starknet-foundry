@@ -20,11 +20,11 @@ use scarb_api::{
 };
 use scarb_ui::args::PackagesFilter;
 
+use camino::Utf8PathBuf;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use forge::block_number_map::BlockNumberMap;
-use forge_runner::context_data::{ContextData, RuntimeData};
 use forge_runner::forge_config::{
-    ExecutionDataToSave, ForgeConfig, OutputConfig, RunnerConfig, RuntimeConfig,
+    is_vm_trace_needed, ExecutionDataToSave, ForgeConfig, OutputConfig, TestRunnerConfig,
 };
 use semver::{Comparator, Op, Version, VersionReq};
 use shared::print::print_as_warning;
@@ -181,6 +181,9 @@ fn combine_configs(
     save_trace_data: bool,
     build_profile: bool,
     max_n_steps: Option<u32>,
+    contracts_data: ContractsData,
+    cache_dir: Utf8PathBuf,
+    test_artifacts_path: Utf8PathBuf,
     forge_config_from_scarb: &ForgeConfigFromScarb,
 ) -> ForgeConfig {
     let execution_data_to_save = ExecutionDataToSave::from_flags(
@@ -189,7 +192,7 @@ fn combine_configs(
     );
 
     ForgeConfig {
-        runner_config: Arc::new(RunnerConfig {
+        test_runner_config: Arc::new(TestRunnerConfig {
             exit_first: exit_first || forge_config_from_scarb.exit_first,
             fuzzer_runs: fuzzer_runs
                 .or(forge_config_from_scarb.fuzzer_runs)
@@ -197,15 +200,17 @@ fn combine_configs(
             fuzzer_seed: fuzzer_seed
                 .or(forge_config_from_scarb.fuzzer_seed)
                 .unwrap_or_else(|| thread_rng().next_u64()),
+            max_n_steps: max_n_steps.or(forge_config_from_scarb.max_n_steps),
+            is_vm_trace_needed: is_vm_trace_needed(execution_data_to_save),
+            cache_dir,
+            contracts_data,
+            environment_variables: env::vars().collect(),
+            test_artifacts_path,
         }),
-        runtime_config: Arc::new(RuntimeConfig::new(
-            max_n_steps.or(forge_config_from_scarb.max_n_steps),
-            execution_data_to_save,
-        )),
-        output_config: OutputConfig {
+        output_config: Arc::new(OutputConfig {
             detailed_resources: detailed_resources || forge_config_from_scarb.detailed_resources,
             execution_data_to_save,
-        },
+        }),
     }
 }
 
@@ -277,6 +282,8 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
         rt.spawn(async move {
             let mut block_number_map = BlockNumberMap::default();
             let mut all_failed_tests = vec![];
+
+            let cache_dir = workspace_root.join(CACHE_DIR);
             for package in &packages {
                 env::set_current_dir(&package.root)?;
 
@@ -291,18 +298,9 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                 )?;
                 let contracts_data = ContractsData::try_from(contracts)?;
 
-                let context_data = Arc::new(ContextData {
-                    workspace_root: workspace_root.clone(),
-                    test_artifacts_path,
-                    runtime_data: RuntimeData {
-                        contracts_data,
-                        environment_variables: env::vars().collect(),
-                    },
-                });
-
                 let forge_config_from_scarb =
                     load_package_config::<ForgeConfigFromScarb>(&scarb_metadata, &package.id)?;
-                let runner_config = Arc::new(combine_configs(
+                let forge_config = Arc::new(combine_configs(
                     args.exit_first,
                     args.fuzzer_runs,
                     args.fuzzer_seed,
@@ -310,6 +308,9 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                     args.save_trace_data,
                     args.build_profile,
                     args.max_n_steps,
+                    contracts_data,
+                    cache_dir.clone(),
+                    test_artifacts_path,
                     &forge_config_from_scarb,
                 ));
 
@@ -326,8 +327,7 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                     compiled_test_crates,
                     &package.name,
                     &test_filter,
-                    runner_config,
-                    context_data,
+                    forge_config,
                     &forge_config_from_scarb.fork,
                     &mut block_number_map,
                 )
@@ -336,7 +336,7 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                 all_failed_tests.extend(extract_failed_tests(tests_file_summaries));
             }
 
-            set_cached_failed_tests_names(&all_failed_tests, &workspace_root.join(CACHE_DIR))?;
+            set_cached_failed_tests_names(&all_failed_tests, &cache_dir)?;
             pretty_printing::print_latest_blocks_numbers(
                 block_number_map.get_url_to_latest_block_number(),
             );
@@ -395,6 +395,9 @@ mod tests {
             false,
             false,
             None,
+            Default::default(),
+            Default::default(),
+            Default::default(),
             &Default::default(),
         );
         let config2 = combine_configs(
@@ -405,14 +408,17 @@ mod tests {
             false,
             false,
             None,
+            Default::default(),
+            Default::default(),
+            Default::default(),
             &Default::default(),
         );
 
-        assert_ne!(config.runner_config.fuzzer_seed, 0);
-        assert_ne!(config2.runner_config.fuzzer_seed, 0);
+        assert_ne!(config.test_runner_config.fuzzer_seed, 0);
+        assert_ne!(config2.test_runner_config.fuzzer_seed, 0);
         assert_ne!(
-            config.runner_config.fuzzer_seed,
-            config2.runner_config.fuzzer_seed
+            config.test_runner_config.fuzzer_seed,
+            config2.test_runner_config.fuzzer_seed
         );
     }
 
@@ -426,24 +432,29 @@ mod tests {
             false,
             false,
             None,
+            Default::default(),
+            Default::default(),
+            Default::default(),
             &Default::default(),
         );
         assert_eq!(
             config,
             ForgeConfig {
-                runner_config: Arc::new(RunnerConfig {
+                test_runner_config: Arc::new(TestRunnerConfig {
                     exit_first: false,
                     fuzzer_runs: default_fuzzer_runs(),
-                    fuzzer_seed: config.runner_config.fuzzer_seed,
-                }),
-                runtime_config: Arc::new(RuntimeConfig {
+                    fuzzer_seed: config.test_runner_config.fuzzer_seed,
                     max_n_steps: None,
-                    is_vm_trace_needed: false
+                    is_vm_trace_needed: false,
+                    cache_dir: Default::default(),
+                    contracts_data: Default::default(),
+                    environment_variables: config.test_runner_config.environment_variables.clone(),
+                    test_artifacts_path: Default::default(),
                 }),
-                output_config: OutputConfig {
+                output_config: Arc::new(OutputConfig {
                     detailed_resources: false,
                     execution_data_to_save: ExecutionDataToSave::None
-                },
+                }),
             }
         );
     }
@@ -469,24 +480,29 @@ mod tests {
             false,
             false,
             None,
+            Default::default(),
+            Default::default(),
+            Default::default(),
             &config_from_scarb,
         );
         assert_eq!(
             config,
             ForgeConfig {
-                runner_config: Arc::new(RunnerConfig {
+                test_runner_config: Arc::new(TestRunnerConfig {
                     exit_first: true,
                     fuzzer_runs: NonZeroU32::new(1234).unwrap(),
                     fuzzer_seed: 500,
-                }),
-                runtime_config: Arc::new(RuntimeConfig {
                     max_n_steps: Some(1_000_000),
                     is_vm_trace_needed: true,
+                    cache_dir: Default::default(),
+                    contracts_data: Default::default(),
+                    environment_variables: config.test_runner_config.environment_variables.clone(),
+                    test_artifacts_path: Default::default(),
                 }),
-                output_config: OutputConfig {
+                output_config: Arc::new(OutputConfig {
                     detailed_resources: true,
                     execution_data_to_save: ExecutionDataToSave::TraceAndProfile
-                },
+                }),
             }
         );
     }
@@ -511,25 +527,30 @@ mod tests {
             true,
             true,
             Some(1_000_000),
+            Default::default(),
+            Default::default(),
+            Default::default(),
             &config_from_scarb,
         );
 
         assert_eq!(
             config,
             ForgeConfig {
-                runner_config: Arc::new(RunnerConfig {
+                test_runner_config: Arc::new(TestRunnerConfig {
                     exit_first: true,
                     fuzzer_runs: NonZeroU32::new(100).unwrap(),
                     fuzzer_seed: 32,
-                }),
-                runtime_config: Arc::new(RuntimeConfig {
                     max_n_steps: Some(1_000_000),
                     is_vm_trace_needed: true,
+                    cache_dir: Default::default(),
+                    contracts_data: Default::default(),
+                    environment_variables: config.test_runner_config.environment_variables.clone(),
+                    test_artifacts_path: Default::default(),
                 }),
-                output_config: OutputConfig {
+                output_config: Arc::new(OutputConfig {
                     detailed_resources: true,
                     execution_data_to_save: ExecutionDataToSave::TraceAndProfile
-                },
+                }),
             }
         );
     }

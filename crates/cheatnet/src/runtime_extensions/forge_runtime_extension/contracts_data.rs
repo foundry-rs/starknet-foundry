@@ -13,14 +13,14 @@ use std::collections::HashMap;
 type ContractName = String;
 type FunctionName = String;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct ContractsData {
     contracts: HashMap<ContractName, ContractData>,
     class_hashes: BiMap<ContractName, ClassHash>,
     selectors: HashMap<EntryPointSelector, FunctionName>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 struct ContractData {
     artifacts: StarknetContractArtifacts,
     class_hash: ClassHash,

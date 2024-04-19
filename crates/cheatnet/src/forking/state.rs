@@ -9,6 +9,7 @@ use blockifier::state::errors::StateError::{self, StateReadError, UndeclaredClas
 use blockifier::state::state_api::{StateReader, StateResult};
 use cairo_lang_starknet_classes::casm_contract_class::CasmContractClass;
 use cairo_lang_utils::bigint::BigUintAsHex;
+use camino::Utf8Path;
 use conversions::{FromConv, IntoConv};
 use flate2::read::GzDecoder;
 use num_bigint::BigUint;
@@ -42,7 +43,7 @@ pub struct ForkStateReader {
 }
 
 impl ForkStateReader {
-    pub fn new(url: Url, block_number: BlockNumber, cache_dir: &str) -> Result<Self> {
+    pub fn new(url: Url, block_number: BlockNumber, cache_dir: &Utf8Path) -> Result<Self> {
         Ok(ForkStateReader {
             cache: RefCell::new(
                 ForkCache::load_or_new(&url, block_number, cache_dir)

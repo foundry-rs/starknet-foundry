@@ -17,8 +17,7 @@ use build_trace_data::save_trace_data;
 use profiler_api::run_profiler;
 use smol_str::SmolStr;
 
-use crate::context_data::ContextData;
-use crate::forge_config::{ExecutionDataToSave, ForgeConfig, RunnerConfig, RuntimeConfig};
+use crate::forge_config::{ExecutionDataToSave, ForgeConfig, TestRunnerConfig};
 use std::sync::Arc;
 use test_case_summary::{AnyTestCaseSummary, Fuzzing};
 use tokio::sync::mpsc::{channel, Sender};
@@ -33,7 +32,6 @@ pub mod profiler_api;
 pub mod test_case_summary;
 pub mod test_crate_summary;
 
-pub mod context_data;
 mod fuzzer;
 mod gas;
 mod printing;
@@ -76,7 +74,6 @@ pub enum TestCrateRunResult {
 pub async fn run_tests_from_crate(
     tests: CompiledTestCrateRunnable,
     forge_config: Arc<ForgeConfig>,
-    context_data: Arc<ContextData>,
     tests_filter: &impl TestCaseFilter,
 ) -> Result<TestCrateRunResult> {
     let sierra_program = &tests.sierra_program;
@@ -120,7 +117,6 @@ pub async fn run_tests_from_crate(
             case,
             casm_program.clone(),
             forge_config.clone(),
-            context_data.clone(),
             send.clone(),
         ));
     }
@@ -134,7 +130,7 @@ pub async fn run_tests_from_crate(
         print_test_result(&result, forge_config.output_config.detailed_resources);
         maybe_save_execution_data(&result, forge_config.output_config.execution_data_to_save)?;
 
-        if result.is_failed() && forge_config.runner_config.exit_first {
+        if result.is_failed() && forge_config.test_runner_config.exit_first {
             interrupted = true;
             rec.close();
         }
@@ -181,7 +177,6 @@ fn choose_test_strategy_and_run(
     case: Arc<TestCaseRunnable>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
     forge_config: Arc<ForgeConfig>,
-    context_data: Arc<ContextData>,
     send: Sender<()>,
 ) -> JoinHandle<Result<AnyTestCaseSummary>> {
     if args.is_empty() {
@@ -189,8 +184,7 @@ fn choose_test_strategy_and_run(
             let res = run_test(
                 case,
                 casm_program,
-                forge_config.runtime_config.clone(),
-                context_data,
+                forge_config.test_runner_config.clone(),
                 send,
             )
             .await??;
@@ -202,9 +196,7 @@ fn choose_test_strategy_and_run(
                 args,
                 case,
                 casm_program,
-                forge_config.runner_config.clone(),
-                forge_config.runtime_config.clone(),
-                context_data,
+                forge_config.test_runner_config.clone(),
                 send,
             )
             .await??;
@@ -217,9 +209,7 @@ fn run_with_fuzzing(
     args: Vec<ConcreteTypeId>,
     case: Arc<TestCaseRunnable>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
-    runner_config: Arc<RunnerConfig>,
-    runtime_config: Arc<RuntimeConfig>,
-    context_data: Arc<ContextData>,
+    test_runner_config: Arc<TestRunnerConfig>,
     send: Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary<Fuzzing>>> {
     tokio::task::spawn(async move {
@@ -243,7 +233,10 @@ fn run_with_fuzzing(
                 fuzzer_runs,
                 fuzzer_seed,
             }) => (fuzzer_runs, fuzzer_seed),
-            _ => (runner_config.fuzzer_runs, runner_config.fuzzer_seed),
+            _ => (
+                test_runner_config.fuzzer_runs,
+                test_runner_config.fuzzer_seed,
+            ),
         };
         let mut fuzzer = RandomFuzzer::create(fuzzer_seed, fuzzer_runs, &args)?;
 
@@ -256,8 +249,7 @@ fn run_with_fuzzing(
                 args,
                 case.clone(),
                 casm_program.clone(),
-                runtime_config.clone(),
-                context_data.clone(),
+                test_runner_config.clone(),
                 send.clone(),
                 fuzzing_send.clone(),
             ));
