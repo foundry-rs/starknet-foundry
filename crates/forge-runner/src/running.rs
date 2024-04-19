@@ -6,11 +6,10 @@ use std::rc::Rc;
 use std::sync::Arc;
 
 use crate::compiled_runnable::ValidatedForkConfig;
-use crate::context_data::ContextData;
-use crate::forge_config::RuntimeConfig;
+use crate::forge_config::{RuntimeConfig, TestRunnerConfig};
 use crate::gas::calculate_used_gas;
 use crate::test_case_summary::{Single, TestCaseSummary};
-use crate::{TestCaseRunnable, CACHE_DIR};
+use crate::TestCaseRunnable;
 use anyhow::{bail, ensure, Result};
 use blockifier::execution::entry_point::EntryPointExecutionContext;
 use blockifier::execution::execution_utils::ReadOnlySegments;
@@ -58,8 +57,7 @@ use universal_sierra_compiler_api::{
 pub fn run_test(
     case: Arc<TestCaseRunnable>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
-    runtime_config: Arc<RuntimeConfig>,
-    context_data: Arc<ContextData>,
+    test_runner_config: Arc<TestRunnerConfig>,
     send: Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary<Single>>> {
     tokio::task::spawn_blocking(move || {
@@ -69,8 +67,12 @@ pub fn run_test(
         if send.is_closed() {
             return Ok(TestCaseSummary::Skipped {});
         }
-        let run_result =
-            run_test_case(vec![], &case, &casm_program, &runtime_config, &context_data);
+        let run_result = run_test_case(
+            vec![],
+            &case,
+            &casm_program,
+            &RuntimeConfig::from(&test_runner_config),
+        );
 
         // TODO: code below is added to fix snforge tests
         // remove it after improve exit-first tests
@@ -83,7 +85,7 @@ pub fn run_test(
             run_result,
             &case,
             vec![],
-            &context_data.runtime_data.contracts_data,
+            &test_runner_config.contracts_data,
         )
     })
 }
@@ -92,8 +94,7 @@ pub(crate) fn run_fuzz_test(
     args: Vec<Felt252>,
     case: Arc<TestCaseRunnable>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
-    runtime_config: Arc<RuntimeConfig>,
-    context_data: Arc<ContextData>,
+    test_runner_config: Arc<TestRunnerConfig>,
     send: Sender<()>,
     fuzzing_send: Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary<Single>>> {
@@ -109,8 +110,7 @@ pub(crate) fn run_fuzz_test(
             args.clone(),
             &case,
             &casm_program,
-            &runtime_config,
-            &context_data,
+            &Arc::new(RuntimeConfig::from(&test_runner_config)),
         );
 
         // TODO: code below is added to fix snforge tests
@@ -120,12 +120,7 @@ pub(crate) fn run_fuzz_test(
             return Ok(TestCaseSummary::Skipped {});
         }
 
-        extract_test_case_summary(
-            run_result,
-            &case,
-            args,
-            &context_data.runtime_data.contracts_data,
-        )
+        extract_test_case_summary(run_result, &case, args, &test_runner_config.contracts_data)
     })
 }
 
@@ -177,7 +172,6 @@ pub fn run_test_case(
     case: &TestCaseRunnable,
     casm_program: &AssembledProgramWithDebugInfo,
     runtime_config: &RuntimeConfig,
-    context_data: &ContextData,
 ) -> Result<RunResultWithInfo> {
     ensure!(
         case.available_gas != Some(0),
@@ -208,7 +202,7 @@ pub fn run_test_case(
 
     let mut state_reader = ExtendedStateReader {
         dict_state_reader: cheatnet_constants::build_testing_state(),
-        fork_state_reader: get_fork_state_reader(&context_data.workspace_root, &case.fork_config)?,
+        fork_state_reader: get_fork_state_reader(runtime_config.cache_dir, &case.fork_config)?,
     };
     let block_info = state_reader.get_block_info()?;
 
@@ -252,8 +246,8 @@ pub fn run_test_case(
         extended_runtime: cheatable_runtime,
     };
     let forge_extension = ForgeExtension {
-        environment_variables: &context_data.runtime_data.environment_variables,
-        contracts_data: &context_data.runtime_data.contracts_data,
+        environment_variables: runtime_config.environment_variables,
+        contracts_data: runtime_config.contracts_data,
     };
 
     let mut forge_runtime = ExtendedRuntime {
@@ -390,17 +384,13 @@ fn extract_test_case_summary(
 }
 
 fn get_fork_state_reader(
-    workspace_root: &Utf8Path,
+    cache_dir: &Utf8Path,
     fork_config: &Option<ValidatedForkConfig>,
 ) -> Result<Option<ForkStateReader>> {
     fork_config
         .as_ref()
         .map(|ValidatedForkConfig { url, block_number }| {
-            ForkStateReader::new(
-                url.clone(),
-                *block_number,
-                workspace_root.join(CACHE_DIR).as_ref(),
-            )
+            ForkStateReader::new(url.clone(), *block_number, cache_dir)
         })
         .transpose()
 }
