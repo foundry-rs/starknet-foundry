@@ -402,7 +402,7 @@ async fn test_state_file_contains_all_failed_txs() {
         "--accounts-file",
         accounts_json_path.as_str(),
         "--account",
-        "user4",
+        "user10",
         "--url",
         URL,
         "script",
