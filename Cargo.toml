@@ -79,12 +79,12 @@ which = "5.0.0"
 conversions = { path = "./crates/conversions" }
 shared = { path = "./crates/shared" }
 test-case = "3.1.0"
-scarb-metadata = "1.11.1"
+scarb-metadata = { git = "https://github.com/software-mansion/scarb.git", rev = "193d0ed" }
 flatten-serde-json = "0.1.0"
 snapbox = "0.4.17"
 smol_str = "0.2.1"
 num-integer = "0.1.46"
-scarb-ui = "0.1.3"
+scarb-ui = { git = "https://github.com/software-mansion/scarb.git", rev = "193d0ed" }
 semver = "1.0.22"
 bimap = "0.6.3"
 primitive-types = "0.12.1"

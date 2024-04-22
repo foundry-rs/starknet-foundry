@@ -4,7 +4,7 @@ use anyhow::{Context, Result};
 use camino::Utf8Path;
 use configuration::PackageConfig;
 use scarb_api::ScarbCommand;
-use scarb_ui::args::PackagesFilter;
+use scarb_ui::args::{FeaturesSpec, PackagesFilter};
 
 pub mod config;
 
@@ -25,19 +25,27 @@ impl PackageConfig for ForgeConfig {
     }
 }
 
-pub fn build_contracts_with_scarb(filter: PackagesFilter) -> Result<()> {
+pub fn build_contracts_with_scarb(
+    filter: PackagesFilter,
+    features_spec: FeaturesSpec,
+) -> Result<()> {
     ScarbCommand::new_with_stdio()
         .arg("build")
         .packages_filter(filter)
+        .features_spec(features_spec)
         .run()
         .context("Failed to build contracts with Scarb")?;
     Ok(())
 }
 
-pub fn build_test_artifacts_with_scarb(filter: PackagesFilter) -> Result<()> {
+pub fn build_test_artifacts_with_scarb(
+    filter: PackagesFilter,
+    features_spec: FeaturesSpec,
+) -> Result<()> {
     ScarbCommand::new_with_stdio()
         .arg("snforge-test-collector")
         .packages_filter(filter)
+        .features_spec(features_spec)
         .run()
         .context("Failed to build test artifacts with Scarb")?;
     Ok(())

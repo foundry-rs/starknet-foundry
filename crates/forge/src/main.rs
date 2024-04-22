@@ -16,7 +16,7 @@ use scarb_api::{
     metadata::{Metadata, MetadataCommandExt, PackageMetadata},
     package_matches_version_requirement, target_dir_for_workspace, ScarbCommand,
 };
-use scarb_ui::args::PackagesFilter;
+use scarb_ui::args::{FeaturesSpec, PackagesFilter};
 
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use forge::block_number_map::BlockNumberMap;
@@ -148,6 +148,10 @@ struct TestArgs {
     /// Number of maximum steps during a single test. For fuzz tests this value is applied to each subtest separately.
     #[arg(long)]
     max_n_steps: Option<u32>,
+
+    /// Specify Scarb features to enable.
+    #[command(flatten)]
+    pub features: FeaturesSpec,
 }
 
 fn extract_failed_tests(
@@ -243,8 +247,8 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
 
     let filter = PackagesFilter::generate_for::<Metadata>(packages.iter());
 
-    build_test_artifacts_with_scarb(filter.clone())?;
-    build_contracts_with_scarb(filter.clone())?;
+    build_test_artifacts_with_scarb(filter.clone(), args.features.clone())?;
+    build_contracts_with_scarb(filter, args.features)?;
 
     let cores = if let Ok(available_cores) = available_parallelism() {
         available_cores.get()
