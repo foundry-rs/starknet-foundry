@@ -326,7 +326,8 @@ pub fn run(
     .with_context(|| "Failed to set up runner")?;
 
     let name_suffix = module_name.to_string() + "::main";
-    let func = runner.find_function(name_suffix.as_str())?;
+    let func = runner.find_function(name_suffix.as_str())
+        .context("Failed to find main function in script - please make sure `sierra-replace-ids` is not set to `false` for `dev` profile in script's Scarb.toml")?;
 
     let (entry_code, builtins) = runner.create_entry_code(func, &Vec::new(), usize::MAX)?;
     let footer = SierraCasmRunner::create_code_footer();
