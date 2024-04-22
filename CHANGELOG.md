@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast
+
+#### Fixed
+- scripts built with release profile are now properly recognized and ran 
+
 ## [0.22.0] - 2024-04-17
 
 ### Forge
