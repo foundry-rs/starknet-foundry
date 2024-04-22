@@ -69,7 +69,7 @@ fn test_wrong_calldata() {
     let mut args = default_cli_args();
     args.append(&mut vec![
         "--account",
-        "user4",
+        "user9",
         "deploy",
         "--class-hash",
         CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA,

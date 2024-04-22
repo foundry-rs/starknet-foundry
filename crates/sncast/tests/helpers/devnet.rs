@@ -48,6 +48,10 @@ fn start_devnet() {
             &sepolia_rpc_url,
             "--fork-block",
             &FORK_BLOCK_NUMBER.to_string(),
+            "--initial-balance",
+            "9999999999999999999",
+            "--accounts",
+            "20",
         ])
         .stdout(Stdio::null())
         .spawn()
