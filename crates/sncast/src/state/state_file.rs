@@ -259,7 +259,7 @@ pub fn load_or_create_state_file(path: &Utf8PathBuf) -> Result<ScriptTransaction
     }
 }
 
-// todo (1233): remove must_use attribute when it's no longer needed
+// TODO(#1233): remove must_use attribute when it's no longer needed
 #[must_use]
 pub fn generate_transaction_entry_with_id(
     tx_entry: ScriptTransactionEntry,

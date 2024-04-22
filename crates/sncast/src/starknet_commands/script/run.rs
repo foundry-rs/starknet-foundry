@@ -326,7 +326,8 @@ pub fn run(
     .with_context(|| "Failed to set up runner")?;
 
     let name_suffix = module_name.to_string() + "::main";
-    let func = runner.find_function(name_suffix.as_str())?;
+    let func = runner.find_function(name_suffix.as_str())
+        .context("Failed to find main function in script - please make sure `sierra-replace-ids` is not set to `false` for `dev` profile in script's Scarb.toml")?;
 
     let (entry_code, builtins) = runner.create_entry_code(func, &Vec::new(), usize::MAX)?;
     let footer = SierraCasmRunner::create_code_footer();
@@ -454,9 +455,8 @@ fn inject_lib_artifact(
         .target_dir
         .clone()
         .unwrap_or_else(|| metadata.workspace.root.join("target"));
-    let sierra_path = &target_dir
-        .join(&metadata.current_profile)
-        .join(sierra_filename);
+    // TODO(#2042)
+    let sierra_path = &target_dir.join("dev").join(sierra_filename);
 
     let lib_artifacts = ScriptStarknetContractArtifacts {
         sierra: fs::read_to_string(sierra_path)?,
