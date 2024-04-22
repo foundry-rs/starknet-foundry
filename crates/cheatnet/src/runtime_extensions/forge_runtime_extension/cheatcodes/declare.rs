@@ -18,7 +18,7 @@ pub fn declare(
     contract_name: &str,
     contracts_data: &ContractsData,
 ) -> Result<ClassHash, CheatcodeError> {
-    let contract_artifact = contracts_data.contracts.get(contract_name).with_context(|| {
+    let contract_artifact = contracts_data.get_artifacts_for_contract(contract_name).with_context(|| {
             format!("Failed to get contract artifact for name = {contract_name}. Make sure starknet target is correctly defined in Scarb.toml file.")
         }).map_err::<EnhancedHintError, _>(From::from)?;
 
@@ -27,8 +27,7 @@ pub fn declare(
     let contract_class = BlockifierContractClass::V1(contract_class);
 
     let class_hash = *contracts_data
-        .class_hashes
-        .get_by_left(contract_name)
+        .get_class_hash_for_contract(contract_name)
         .expect("Failed to get class hash");
 
     match state.get_compiled_contract_class(class_hash) {

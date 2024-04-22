@@ -15,6 +15,7 @@ use tokio::runtime::Runtime;
 
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use forge::compiled_raw::RawForkParams;
+use forge::scarb::{get_test_artifacts_path, load_test_artifacts};
 use forge_runner::{RunnerConfig, RunnerParams};
 use shared::command::CommandExt;
 use test_utils::runner::{assert_case_output_contains, assert_failed, assert_passed, Contract};
@@ -112,10 +113,16 @@ fn fork_aliased_decorator() {
         .output_checked()
         .unwrap();
 
+    let test_artifacts_path = get_test_artifacts_path(
+        &test.path().unwrap().join("target/dev/snforge"),
+        "test_package",
+    );
+    let compiled_test_crates = load_test_artifacts(&test_artifacts_path).unwrap();
+
     let result = rt
         .block_on(run(
-            &String::from("test_package"),
-            &test.path().unwrap().join("target/dev/snforge"),
+            compiled_test_crates,
+            "test_package",
             &TestsFilter::from_flags(None, false, false, false, false, Default::default()),
             Arc::new(RunnerConfig::new(
                 Utf8PathBuf::from_path_buf(PathBuf::from(tempdir().unwrap().path())).unwrap(),

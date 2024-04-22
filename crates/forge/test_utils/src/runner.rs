@@ -12,7 +12,8 @@ use forge_runner::{
 };
 use indoc::formatdoc;
 use scarb_api::{
-    get_contracts_map, metadata::MetadataCommandExt, ScarbCommand, StarknetContractArtifacts,
+    get_contracts_artifacts_and_source_sierra_paths, metadata::MetadataCommandExt, ScarbCommand,
+    StarknetContractArtifacts,
 };
 use shared::command::CommandExt;
 use std::{
@@ -95,10 +96,12 @@ impl Contract {
             .find(|package| package.name == "contract")
             .unwrap();
 
-        let contract = get_contracts_map(&scarb_metadata, &package.id, None)
-            .unwrap()
-            .remove(&self.name)
-            .ok_or(anyhow!("there is no contract with name {}", self.name))?;
+        let contract =
+            get_contracts_artifacts_and_source_sierra_paths(&scarb_metadata, &package.id, None)
+                .unwrap()
+                .remove(&self.name)
+                .ok_or(anyhow!("there is no contract with name {}", self.name))?
+                .0;
 
         Ok((contract.sierra, contract.casm))
     }
@@ -189,7 +192,7 @@ impl<'a> TestCase {
         ]
     }
 
-    pub fn contracts(&self) -> Result<HashMap<String, StarknetContractArtifacts>> {
+    pub fn contracts(&self) -> Result<HashMap<String, (StarknetContractArtifacts, Utf8PathBuf)>> {
         self.contracts
             .clone()
             .into_iter()
@@ -197,7 +200,13 @@ impl<'a> TestCase {
                 let name = contract.name.clone();
                 let (sierra, casm) = contract.generate_sierra_and_casm()?;
 
-                Ok((name, StarknetContractArtifacts { sierra, casm }))
+                Ok((
+                    name,
+                    (
+                        StarknetContractArtifacts { sierra, casm },
+                        Default::default(),
+                    ),
+                ))
             })
             .collect()
     }
