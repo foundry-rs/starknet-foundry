@@ -5,11 +5,13 @@ use forge::block_number_map::BlockNumberMap;
 use forge::run;
 use forge::scarb::{get_test_artifacts_path, load_test_artifacts};
 use forge::test_filter::TestsFilter;
+use forge_runner::forge_config::{
+    ExecutionDataToSave, ForgeConfig, OutputConfig, TestRunnerConfig,
+};
 use forge_runner::test_crate_summary::TestCrateSummary;
-use forge_runner::{RunnerConfig, RunnerParams};
+use forge_runner::CACHE_DIR;
 use shared::command::CommandExt;
 use std::num::NonZeroU32;
-use std::path::PathBuf;
 use std::process::Command;
 use std::process::Stdio;
 use std::sync::Arc;
@@ -37,20 +39,25 @@ pub fn run_test_case(test: &TestCase) -> Vec<TestCrateSummary> {
         compiled_test_crates,
         "test_package",
         &TestsFilter::from_flags(None, false, false, false, false, Default::default()),
-        Arc::new(RunnerConfig::new(
-            Utf8PathBuf::from_path_buf(PathBuf::from(tempdir().unwrap().path())).unwrap(),
-            false,
-            NonZeroU32::new(256).unwrap(),
-            12345,
-            false,
-            false,
-            false,
-            None,
-        )),
-        Arc::new(RunnerParams::new(
-            ContractsData::try_from(test.contracts().unwrap()).unwrap(),
-            test.env().clone(),
-        )),
+        Arc::new(ForgeConfig {
+            test_runner_config: Arc::new(TestRunnerConfig {
+                exit_first: false,
+                fuzzer_runs: NonZeroU32::new(256).unwrap(),
+                fuzzer_seed: 12345,
+                max_n_steps: None,
+                is_vm_trace_needed: false,
+                cache_dir: Utf8PathBuf::from_path_buf(tempdir().unwrap().into_path())
+                    .unwrap()
+                    .join(CACHE_DIR),
+                contracts_data: ContractsData::try_from(test.contracts().unwrap()).unwrap(),
+                environment_variables: test.env().clone(),
+                test_artifacts_path,
+            }),
+            output_config: Arc::new(OutputConfig {
+                detailed_resources: false,
+                execution_data_to_save: ExecutionDataToSave::None,
+            }),
+        }),
         &[],
         &mut BlockNumberMap::default(),
     ))
