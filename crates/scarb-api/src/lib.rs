@@ -32,7 +32,6 @@ struct StarknetContract {
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 struct StarknetContractArtifactPaths {
     sierra: Utf8PathBuf,
-    casm: Option<Utf8PathBuf>,
 }
 
 /// Contains compiled Starknet artifacts
@@ -52,14 +51,11 @@ impl StarknetContractArtifacts {
         let sierra_path = base_path.join(starknet_contract.artifacts.sierra.clone());
         let sierra = fs::read_to_string(sierra_path)?;
 
-        let casm = match &starknet_contract.artifacts.casm {
-            None => compile_sierra_at_path(
-                starknet_contract.artifacts.sierra.as_str(),
-                Some(base_path.as_std_path()),
-                &SierraType::Contract,
-            )?,
-            Some(casm_path) => fs::read_to_string(base_path.join(casm_path))?,
-        };
+        let casm = compile_sierra_at_path(
+            starknet_contract.artifacts.sierra.as_str(),
+            Some(base_path.as_std_path()),
+            &SierraType::Contract,
+        )?;
 
         Ok(Self { sierra, casm })
     }
