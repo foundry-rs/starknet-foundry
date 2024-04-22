@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
+#### Added
+
+- support for Scarb features in `snforge test` - flags the same as in Scarb. Read more [here](TODO).
+
 #### Changed
 
 - the tool now always compiles Sierra contract artifacts to CASM using
