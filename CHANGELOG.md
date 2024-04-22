@@ -7,7 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Changed
+
+- the tool now always compiles Sierra contract artifacts to CASM using
+[`USC`](https://github.com/software-mansion/universal-sierra-compiler) - before it used to consume CASM artifacts
+produced by Scarb if they were present. Setting up `casm = true` in `Scarb.toml` is no longer recommended - it may slow
+down the compilation.
+
 ### Cast
+
+#### Changed
+
+- the tool now always compiles Sierra contract artifacts to CASM using
+[`USC`](https://github.com/software-mansion/universal-sierra-compiler) - before it used to consume CASM artifacts
+produced by Scarb if they were present. Setting up `casm = true` in `Scarb.toml` is no longer recommended - it may slow
+down the compilation.
 
 #### Fixed
 - scripts built with release profile are now properly recognized and ran 
