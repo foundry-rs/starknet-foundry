@@ -100,7 +100,7 @@ async fn test_get_account_no_account() {
 async fn test_get_account_no_user_for_network() {
     let provider = create_test_provider();
     let account = get_account(
-        "user10",
+        "user100",
         &Utf8PathBuf::from("tests/data/accounts/accounts.json"),
         &provider,
         None,
@@ -109,7 +109,7 @@ async fn test_get_account_no_user_for_network() {
     let err = account.unwrap_err();
     assert!(err
         .to_string()
-        .contains("Account = user10 not found under network = alpha-sepolia"));
+        .contains("Account = user100 not found under network = alpha-sepolia"));
 }
 
 #[tokio::test]

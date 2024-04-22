@@ -87,9 +87,9 @@ impl ContractsData {
     }
 
     #[must_use]
-    pub fn get_source_sierra_path(&self, name: &str) -> Option<&Utf8PathBuf> {
+    pub fn get_source_sierra_path(&self, contract_name: &str) -> Option<&Utf8PathBuf> {
         self.contracts
-            .get(name)
+            .get(contract_name)
             .map(|contract| &contract.source_sierra_path)
     }
 

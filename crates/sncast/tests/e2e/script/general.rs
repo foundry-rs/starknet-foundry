@@ -13,8 +13,9 @@ use sncast::state::state_file::{read_txs_from_state_file, ScriptTransactionStatu
 use tempfile::tempdir;
 use test_case::test_case;
 
-#[test_case("cairo0"; "cairo_0_account")]
-#[test_case("cairo1"; "cairo_1_account")]
+#[test_case("oz_cairo_0"; "cairo_0_account")]
+#[test_case("oz_cairo_1"; "cairo_1_account")]
+#[test_case("argent"; "argent_account")]
 #[tokio::test]
 async fn test_happy_case(account: &str) {
     let contract_dir = duplicate_contract_directory_with_salt(
@@ -401,7 +402,7 @@ async fn test_state_file_contains_all_failed_txs() {
         "--accounts-file",
         accounts_json_path.as_str(),
         "--account",
-        "user4",
+        "user10",
         "--url",
         URL,
         "script",
@@ -460,6 +461,7 @@ async fn test_state_file_rerun_failed_tx() {
         Vec::<String>::new(),
     );
     let script_name = "rerun_failed_tx";
+    let map_invoke_tx_id = "31829eae07da513c7e6f457b9ac48af0004512db23efeae38734af97834bb273";
     let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
     let state_file_path = Utf8PathBuf::from_path_buf(
         script_dir
@@ -470,9 +472,7 @@ async fn test_state_file_rerun_failed_tx() {
 
     let tx_entries_before = read_txs_from_state_file(&state_file_path).unwrap().unwrap();
     assert_eq!(tx_entries_before.transactions.len(), 1);
-    let invoke_tx_entry_before = tx_entries_before
-        .get("1863066e9093b13eea3a3844f28674dc8d9b7e2e49a525504133169c1d382718")
-        .unwrap();
+    let invoke_tx_entry_before = tx_entries_before.get(map_invoke_tx_id).unwrap();
     assert_tx_entry_failed(
         invoke_tx_entry_before,
         "invoke",
@@ -503,8 +503,44 @@ async fn test_state_file_rerun_failed_tx() {
     let tx_entries_after_first_run = read_txs_from_state_file(&state_file_path).unwrap().unwrap();
     assert_eq!(tx_entries_after_first_run.transactions.len(), 1);
 
-    let invoke_tx_entry = tx_entries_after_first_run
-        .get("1863066e9093b13eea3a3844f28674dc8d9b7e2e49a525504133169c1d382718")
-        .unwrap();
+    let invoke_tx_entry = tx_entries_after_first_run.get(map_invoke_tx_id).unwrap();
     assert_tx_entry_success(invoke_tx_entry, "invoke");
+}
+
+#[tokio::test]
+async fn test_using_release_profile() {
+    let contract_dir = duplicate_contract_directory_with_salt(
+        SCRIPTS_DIR.to_owned() + "/map_script/contracts/",
+        "dummy",
+        "69420",
+    );
+    let script_dir = copy_script_directory_to_tempdir(
+        SCRIPTS_DIR.to_owned() + "/map_script/scripts/",
+        vec![contract_dir.as_ref()],
+    );
+
+    let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
+
+    let script_name = "map_script";
+    let args = vec![
+        "--accounts-file",
+        accounts_json_path.as_str(),
+        "--account",
+        "user5",
+        "--url",
+        URL,
+        "--profile",
+        "release",
+        "script",
+        "run",
+        &script_name,
+    ];
+
+    let snapbox = runner(&args).current_dir(script_dir.path());
+
+    snapbox.assert().success().stdout_matches(indoc! {r"
+        ...
+        command: script run
+        status: success
+    "});
 }

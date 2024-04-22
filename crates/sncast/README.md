@@ -145,3 +145,6 @@ $HOME/.asdf/shims/scarb
 ```
 
 If you previously installed scarb using official installer, you may need to remove this installation or modify your PATH to make sure asdf installed one is always used.
+
+To run `sncast` tests, it is required to set `SEPOLIA_RPC_URL` environment variable, which is
+used to fork the Sepolia testnet network in the devnet tests. This variable can be set in the `.env` file.
