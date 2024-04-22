@@ -25,6 +25,9 @@ down the compilation.
 produced by Scarb if they were present. Setting up `casm = true` in `Scarb.toml` is no longer recommended - it may slow
 down the compilation.
 
+#### Fixed
+- scripts built with release profile are now properly recognized and ran 
+
 ## [0.22.0] - 2024-04-17
 
 ### Forge
