@@ -58,7 +58,7 @@ A state file is typically named in a following manner:
 As sncast scripts are just regular scarb packages, there are multiple ways to incorporate scripts into your existing scarb workspace.
 Most common directory structures include:
 
-### 1. having a `scripts` directory with all the scripts in the same workspace with cairo contracts (default for `sncast script init`)
+### 1. `scripts` directory with all the scripts in the same workspace with cairo contracts (default for `sncast script init`)
 ```shell
 $ tree
 .
@@ -136,7 +136,7 @@ $ tree
     └── lib.cairo
 ```
 
-### 2. having scripts disjointed from the workspace with cairo contracts
+### 2. scripts disjointed from the workspace with cairo contracts
 ```shell
 $ tree
 .
