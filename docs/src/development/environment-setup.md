@@ -43,6 +43,9 @@ Please make sure you're using Scarb installed via [asdf](https://asdf-vm.com/) -
 ### Starknet Devnet
 To install it run `./scripts/install_devnet.sh`
 
+To run `sncast` tests, it is required to set `SEPOLIA_RPC_URL` environment variable, which is
+used to fork the Sepolia testnet network in the devnet tests. This variable can be set in the `.env` file.
+
 ### Universal sierra compiler
 Install the latest [universal-sierra-compiler](https://github.com/software-mansion/universal-sierra-compiler) version.
 

@@ -96,7 +96,10 @@ jobs:
       - uses: software-mansion/setup-scarb@v1.3.2
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - name: Run tests
-        run: cargo test --release -p sncast
+        env:
+          NODE_URL: ${{ secrets.NODE_URL }}
+        run: |
+          SEPOLIA_RPC_URL="${NODE_URL}:7070/rpc/v0_7" cargo test --release -p sncast
 
   test-conversions:
     name: Test Conversions
@@ -127,6 +130,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
       - uses: software-mansion/setup-scarb@v1.3.2
+      - uses: software-mansion/setup-universal-sierra-compiler@v1
       - run: cargo test --release -p scarb-api
 
   scarbfmt:
