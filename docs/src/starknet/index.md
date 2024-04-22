@@ -7,7 +7,6 @@ Starknet Foundry `sncast` is a command line tool for performing Starknet RPC cal
 
 > ⚠️ **Warning**
 > Currently, support is only provided for accounts that use the default signature based on the [Stark curve](https://docs.starknet.io/documentation/architecture_and_concepts/Cryptography/stark-curve).
-> It is recommended to use OpenZeppelin accounts.
 
 ## How to Use `sncast`
 
