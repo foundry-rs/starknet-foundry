@@ -10,7 +10,7 @@ use blockifier::execution::entry_point::{CallEntryPoint, CallType};
 use blockifier::execution::syscalls::hint_processor::SyscallCounter;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cairo_vm::vm::trace::trace_entry::TraceEntry;
-use camino::Utf8PathBuf;
+use camino::{Utf8Path, Utf8PathBuf};
 use cheatnet::constants::{TEST_CONTRACT_CLASS_HASH, TEST_ENTRY_POINT_SELECTOR};
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::state::{CallTrace, CallTraceNode};
@@ -47,25 +47,8 @@ pub fn build_profiler_call_trace(
             .map(build_profiler_trace_entry)
             .collect_vec()
     });
-
-    let cairo_execution_info = if vm_trace.is_some() && entry_point.contract_name.is_some() {
-        let contract_name = entry_point.contract_name.as_ref().unwrap();
-        let source_sierra_path = if contract_name == TEST_CODE_CONTRACT_NAME {
-            test_artifacts_path
-        } else {
-            contracts_data
-                .get_source_sierra_path(contract_name)
-                .unwrap()
-        }
-        .clone();
-
-        Some(CairoExecutionInfo {
-            vm_trace: vm_trace.unwrap(),
-            source_sierra_path,
-        })
-    } else {
-        None
-    };
+    let cairo_execution_info =
+        build_cairo_execution_info(&entry_point, vm_trace, contracts_data, test_artifacts_path);
 
     ProfilerCallTrace {
         entry_point,
@@ -80,6 +63,42 @@ pub fn build_profiler_call_trace(
             .map(|c| build_profiler_call_trace_node(c, contracts_data, test_artifacts_path))
             .collect(),
         cairo_execution_info,
+    }
+}
+
+fn build_cairo_execution_info(
+    entry_point: &ProfilerCallEntryPoint,
+    vm_trace: Option<Vec<ProfilerTraceEntry>>,
+    contracts_data: &ContractsData,
+    test_artifacts_path: &Utf8Path,
+) -> Option<CairoExecutionInfo> {
+    let cairo_execution_info_available = vm_trace.is_some() && entry_point.contract_name.is_some();
+
+    if cairo_execution_info_available {
+        let contract_name = entry_point.contract_name.as_ref().unwrap();
+        let source_sierra_path =
+            get_source_sierra_path(contract_name, contracts_data, test_artifacts_path).into();
+
+        Some(CairoExecutionInfo {
+            vm_trace: vm_trace.unwrap(),
+            source_sierra_path,
+        })
+    } else {
+        None
+    }
+}
+
+fn get_source_sierra_path<'a>(
+    contract_name: &str,
+    contracts_data: &'a ContractsData,
+    test_artifacts_path: &'a Utf8Path,
+) -> &'a Utf8Path {
+    if contract_name == TEST_CODE_CONTRACT_NAME {
+        test_artifacts_path
+    } else {
+        contracts_data
+            .get_source_sierra_path(contract_name)
+            .unwrap()
     }
 }
 
