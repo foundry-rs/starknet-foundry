@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use blockifier::blockifier::block::BlockInfo;
-use camino::Utf8PathBuf;
+use camino::{Utf8Path, Utf8PathBuf};
 use fs2::FileExt;
 use regex::Regex;
 use runtime::starknet::context::SerializableBlockInfo;
@@ -97,7 +97,7 @@ impl ForkCache {
     pub(crate) fn load_or_new(
         url: &Url,
         block_number: BlockNumber,
-        cache_dir: &str,
+        cache_dir: &Utf8Path,
     ) -> Result<Self> {
         let cache_file = cache_file_path_from_fork_config(url, block_number, cache_dir)?;
         let mut file = OpenOptions::new()
@@ -239,14 +239,14 @@ impl ForkCache {
 fn cache_file_path_from_fork_config(
     url: &Url,
     BlockNumber(block_number): BlockNumber,
-    cache_dir: &str,
+    cache_dir: &Utf8Path,
 ) -> Result<Utf8PathBuf> {
     let re = Regex::new(r"[^a-zA-Z0-9]").unwrap();
 
     // replace non-alphanumeric characters with underscores
     let sanitized_path = re.replace_all(url.as_str(), "_");
 
-    let cache_file_path = Utf8PathBuf::from(cache_dir).join(format!(
+    let cache_file_path = cache_dir.join(format!(
         "{sanitized_path}_{block_number}_v{CACHE_VERSION}.json"
     ));
 

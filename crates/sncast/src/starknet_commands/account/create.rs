@@ -34,7 +34,7 @@ pub struct Create {
     /// If passed, a profile with provided name and corresponding data will be created in snfoundry.toml
     #[clap(long)]
     pub add_profile: Option<String>,
-    // TODO (#253): think about supporting different account providers
+    // TODO(#1855, #1854): think about supporting different account providers
     /// Custom open zeppelin contract class hash of declared contract
     #[clap(short, long)]
     pub class_hash: Option<FieldElement>,

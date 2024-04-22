@@ -14,7 +14,7 @@ use shared::verify_and_warn_if_incompatible_rpc_version;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
 use sncast::helpers::scarb_utils::{
-    assert_manifest_path_exists, build_and_load_artifacts, get_package_metadata,
+    assert_manifest_path_exists, build, build_and_load_artifacts, get_package_metadata,
     get_scarb_metadata_with_deps, BuildConfig,
 };
 use sncast::response::errors::handle_starknet_command_error;
@@ -462,6 +462,16 @@ fn run_script_command(
                     scarb_toml_path: manifest_path.clone(),
                     json: cli.json,
                     profile: cli.profile.clone().unwrap_or("dev".to_string()),
+                },
+            )
+            .expect("Failed to build artifacts");
+            // TODO(#2042): remove duplicated compilation
+            build(
+                &package_metadata,
+                &BuildConfig {
+                    scarb_toml_path: manifest_path.clone(),
+                    json: cli.json,
+                    profile: "dev".to_string(),
                 },
             )
             .expect("Failed to build script");

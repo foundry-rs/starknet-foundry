@@ -32,7 +32,6 @@ struct StarknetContract {
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 struct StarknetContractArtifactPaths {
     sierra: Utf8PathBuf,
-    casm: Option<Utf8PathBuf>,
 }
 
 /// Contains compiled Starknet artifacts
@@ -52,14 +51,11 @@ impl StarknetContractArtifacts {
         let sierra_path = base_path.join(starknet_contract.artifacts.sierra.clone());
         let sierra = fs::read_to_string(sierra_path)?;
 
-        let casm = match &starknet_contract.artifacts.casm {
-            None => compile_sierra_at_path(
-                starknet_contract.artifacts.sierra.as_str(),
-                Some(base_path.as_std_path()),
-                &SierraType::Contract,
-            )?,
-            Some(casm_path) => fs::read_to_string(base_path.join(casm_path))?,
-        };
+        let casm = compile_sierra_at_path(
+            starknet_contract.artifacts.sierra.as_str(),
+            Some(base_path.as_std_path()),
+            &SierraType::Contract,
+        )?;
 
         Ok(Self { sierra, casm })
     }
@@ -113,11 +109,11 @@ fn try_get_starknet_artifacts_path(
 }
 
 /// Get the map with `StarknetContractArtifacts` for the given package
-pub fn get_contracts_map(
+pub fn get_contracts_artifacts_and_source_sierra_paths(
     metadata: &Metadata,
     package: &PackageId,
     profile: Option<&str>,
-) -> Result<HashMap<String, StarknetContractArtifacts>> {
+) -> Result<HashMap<String, (StarknetContractArtifacts, Utf8PathBuf)>> {
     let target_name = target_name_for_package(metadata, package)?;
     let target_dir = target_dir_for_workspace(metadata);
     let maybe_contracts_path = try_get_starknet_artifacts_path(
@@ -127,15 +123,16 @@ pub fn get_contracts_map(
     )?;
 
     let map = match maybe_contracts_path {
-        Some(contracts_path) => load_contract_artifacts(&contracts_path)?,
+        Some(contracts_path) => load_contracts_artifacts_and_source_sierra_paths(&contracts_path)?,
         None => HashMap::default(),
     };
+
     Ok(map)
 }
 
-fn load_contract_artifacts(
+fn load_contracts_artifacts_and_source_sierra_paths(
     contracts_path: &Utf8PathBuf,
-) -> Result<HashMap<String, StarknetContractArtifacts>> {
+) -> Result<HashMap<String, (StarknetContractArtifacts, Utf8PathBuf)>> {
     let base_path = contracts_path
         .parent()
         .ok_or_else(|| anyhow!("Failed to get parent for path = {}", &contracts_path))?;
@@ -146,7 +143,10 @@ fn load_contract_artifacts(
         let name = contract.contract_name.clone();
         let contract_artifacts =
             StarknetContractArtifacts::from_scarb_contract_artifact(contract, base_path)?;
-        map.insert(name, contract_artifacts);
+
+        let sierra_path = base_path.join(contract.artifacts.sierra.clone());
+
+        map.insert(name.clone(), (contract_artifacts, sierra_path));
     }
     Ok(map)
 }
@@ -489,7 +489,8 @@ mod tests {
             .unwrap();
 
         let package = metadata.packages.first().unwrap();
-        let contracts = get_contracts_map(&metadata, &package.id, None).unwrap();
+        let contracts =
+            get_contracts_artifacts_and_source_sierra_paths(&metadata, &package.id, None).unwrap();
 
         assert!(contracts.contains_key("ERC20"));
         assert!(contracts.contains_key("HelloStarknet"));
@@ -497,25 +498,17 @@ mod tests {
         let sierra_contents_erc20 =
             fs::read_to_string(temp.join("target/dev/basic_package_ERC20.contract_class.json"))
                 .unwrap();
-        let casm_contents_erc20 = fs::read_to_string(
-            temp.join("target/dev/basic_package_ERC20.compiled_contract_class.json"),
-        )
-        .unwrap();
         let contract = contracts.get("ERC20").unwrap();
-        assert_eq!(&sierra_contents_erc20, &contract.sierra);
-        assert_eq!(&casm_contents_erc20, &contract.casm);
+        assert_eq!(&sierra_contents_erc20, &contract.0.sierra);
+        assert!(!contract.0.casm.is_empty());
 
         let sierra_contents_erc20 = fs::read_to_string(
             temp.join("target/dev/basic_package_HelloStarknet.contract_class.json"),
         )
         .unwrap();
-        let casm_contents_erc20 = fs::read_to_string(
-            temp.join("target/dev/basic_package_HelloStarknet.compiled_contract_class.json"),
-        )
-        .unwrap();
         let contract = contracts.get("HelloStarknet").unwrap();
-        assert_eq!(&sierra_contents_erc20, &contract.sierra);
-        assert_eq!(&casm_contents_erc20, &contract.casm);
+        assert_eq!(&sierra_contents_erc20, &contract.0.sierra);
+        assert!(!contract.0.casm.is_empty());
     }
 
     #[test]

@@ -13,5 +13,5 @@
 > using appropriate release tag.
 >```toml
 > [dependencies]
-> sncast_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.12.0" }
+> sncast_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.22.0" }
 > ```
