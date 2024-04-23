@@ -57,13 +57,14 @@ fn update_config(config_path: &Path) -> Result<()> {
 
 fn add_target_to_toml(document: &mut DocumentMut) {
     let mut array_of_tables = ArrayOfTables::new();
-    let mut casm = Table::new();
+    let mut sierra = Table::new();
     let mut contract = Table::new();
     contract.set_implicit(true);
 
-    casm.insert("casm", Item::Value(true.into()));
-    array_of_tables.push(casm);
+    sierra.insert("sierra", Item::Value(true.into()));
+    array_of_tables.push(sierra);
     contract.insert("starknet-contract", Item::ArrayOfTables(array_of_tables));
+
     document.insert("target", Item::Table(contract));
 }
 

@@ -243,13 +243,11 @@ mod tests {
                 name = "{}"
                 version = "0.1.0"
 
-                [[target.starknet-contract]]
-                sierra = true
-                casm = true
-
                 [dependencies]
                 starknet = "2.4.0"
                 snforge_std = {{ path = "{}" }}
+                
+                [[target.starknet-contract]]
 
                 [[tool.snforge.fork]]
                 name = "FIRST_FORK_NAME"
@@ -370,7 +368,6 @@ mod tests {
                 [[target.starknet-contract]]
                 name = "essa"
                 sierra = true
-                casm = true
                 "#,
                 snforge_std_path
             ))
@@ -498,6 +495,7 @@ mod tests {
         let sierra_contents_erc20 =
             fs::read_to_string(temp.join("target/dev/basic_package_ERC20.contract_class.json"))
                 .unwrap();
+
         let contract = contracts.get("ERC20").unwrap();
         assert_eq!(&sierra_contents_erc20, &contract.0.sierra);
         assert!(!contract.0.casm.is_empty());
