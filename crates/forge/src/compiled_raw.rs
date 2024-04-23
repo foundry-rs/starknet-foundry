@@ -4,14 +4,14 @@ use forge_runner::expected_result::ExpectedTestResult;
 use serde::Deserialize;
 
 #[derive(Debug, Clone, Deserialize)]
-pub(crate) struct CompiledTestCrateRaw {
+pub struct CompiledTestCrateRaw {
     pub sierra_program: VersionedProgram,
     pub test_cases: Vec<TestCaseRaw>,
     pub tests_location: CrateLocation,
 }
 
 #[derive(Debug, PartialEq, Clone, Deserialize)]
-pub(crate) struct TestCaseRaw {
+pub struct TestCaseRaw {
     pub name: String,
     pub available_gas: Option<usize>,
     pub ignored: bool,
@@ -22,7 +22,7 @@ pub(crate) struct TestCaseRaw {
 }
 
 #[derive(Debug, PartialEq, Clone, Copy, Deserialize)]
-pub(crate) enum CrateLocation {
+pub enum CrateLocation {
     /// Main crate in a package
     Lib,
     /// Crate in the `tests/` directory
@@ -30,7 +30,7 @@ pub(crate) enum CrateLocation {
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
-pub(crate) enum RawForkConfig {
+pub enum RawForkConfig {
     Id(String),
     Params(RawForkParams),
 }
