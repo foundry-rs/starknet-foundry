@@ -119,7 +119,7 @@ fn test_too_low_max_fee() {
     let mut args = default_cli_args();
     args.append(&mut vec![
         "--account",
-        "user8",
+        "user11",
         "--wait",
         "invoke",
         "--contract-address",

@@ -1,6 +1,7 @@
 use super::cheatcodes::declare::get_class_hash;
 use anyhow::Result;
 use bimap::BiMap;
+use camino::Utf8PathBuf;
 use conversions::IntoConv;
 use rayon::iter::{IntoParallelIterator, IntoParallelRefIterator, ParallelIterator};
 use scarb_api::StarknetContractArtifacts;
@@ -9,24 +10,54 @@ use starknet::core::utils::get_selector_from_name;
 use starknet_api::core::{ClassHash, EntryPointSelector};
 use std::collections::HashMap;
 
-#[derive(Debug, Clone)]
+type ContractName = String;
+type FunctionName = String;
+
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct ContractsData {
-    pub contracts: HashMap<String, StarknetContractArtifacts>,
-    pub class_hashes: BiMap<String, ClassHash>,
-    pub selectors: HashMap<EntryPointSelector, String>,
+    contracts: HashMap<ContractName, ContractData>,
+    class_hashes: BiMap<ContractName, ClassHash>,
+    selectors: HashMap<EntryPointSelector, FunctionName>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+struct ContractData {
+    artifacts: StarknetContractArtifacts,
+    class_hash: ClassHash,
+    source_sierra_path: Utf8PathBuf,
 }
 
 impl ContractsData {
-    pub fn try_from(contracts: HashMap<String, StarknetContractArtifacts>) -> Result<Self> {
-        let parsed_contracts: HashMap<String, SierraClass> = contracts
+    pub fn try_from(
+        contracts: HashMap<ContractName, (StarknetContractArtifacts, Utf8PathBuf)>,
+    ) -> Result<Self> {
+        let parsed_contracts: HashMap<ContractName, SierraClass> = contracts
             .par_iter()
-            .map(|(name, artifact)| Ok((name.clone(), serde_json::from_str(&artifact.sierra)?)))
+            .map(|(name, (artifact, _))| {
+                Ok((name.clone(), serde_json::from_str(&artifact.sierra)?))
+            })
             .collect::<Result<_>>()?;
 
-        let class_hashes: Vec<(String, ClassHash)> = parsed_contracts
+        let class_hashes: Vec<(ContractName, ClassHash)> = parsed_contracts
             .par_iter()
             .map(|(name, sierra_class)| Ok((name.clone(), get_class_hash(sierra_class)?)))
             .collect::<Result<_>>()?;
+        let class_hashes = BiMap::from_iter(class_hashes);
+
+        let contracts = contracts
+            .into_iter()
+            .map(|(name, (artifacts, source_sierra_path))| {
+                let class_hash = *class_hashes.get_by_left(&name).unwrap();
+                (
+                    name,
+                    ContractData {
+                        artifacts,
+                        class_hash,
+                        source_sierra_path,
+                    },
+                )
+            })
+            .collect();
 
         let selectors = parsed_contracts
             .into_par_iter()
@@ -36,13 +67,47 @@ impl ContractsData {
 
         Ok(ContractsData {
             contracts,
-            class_hashes: BiMap::from_iter(class_hashes),
+            class_hashes,
             selectors,
         })
     }
+
+    #[must_use]
+    pub fn get_artifacts(&self, contract_name: &str) -> Option<&StarknetContractArtifacts> {
+        self.contracts
+            .get(contract_name)
+            .map(|contract| &contract.artifacts)
+    }
+
+    #[must_use]
+    pub fn get_class_hash(&self, contract_name: &str) -> Option<&ClassHash> {
+        self.contracts
+            .get(contract_name)
+            .map(|contract| &contract.class_hash)
+    }
+
+    #[must_use]
+    pub fn get_source_sierra_path(&self, contract_name: &str) -> Option<&Utf8PathBuf> {
+        self.contracts
+            .get(contract_name)
+            .map(|contract| &contract.source_sierra_path)
+    }
+
+    #[must_use]
+    pub fn get_contract_name(&self, class_hash: &ClassHash) -> Option<&ContractName> {
+        self.class_hashes.get_by_right(class_hash)
+    }
+
+    #[must_use]
+    pub fn get_function_name(
+        &self,
+        entry_point_selector: &EntryPointSelector,
+    ) -> Option<&FunctionName> {
+        self.selectors.get(entry_point_selector)
+    }
 }
 
-fn build_name_selector_map(abi: Vec<AbiEntry>) -> HashMap<EntryPointSelector, String> {
+fn build_name_selector_map(abi: Vec<AbiEntry>) -> HashMap<EntryPointSelector, FunctionName> {
     let mut selector_map = HashMap::new();
     for abi_entry in abi {
         match abi_entry {
@@ -59,7 +124,7 @@ fn build_name_selector_map(abi: Vec<AbiEntry>) -> HashMap<EntryPointSelector, St
 
 fn add_simple_abi_entry_to_mapping(
     abi_entry: AbiEntry,
-    selector_map: &mut HashMap<EntryPointSelector, String>,
+    selector_map: &mut HashMap<EntryPointSelector, FunctionName>,
 ) {
     match abi_entry {
         AbiEntry::Function(abi_function) | AbiEntry::L1Handler(abi_function) => {
