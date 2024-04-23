@@ -86,7 +86,7 @@ fn assert_contract_and_function_names(trace: &ProfilerCallTrace) {
 }
 
 #[test]
-fn trace_has_vm_trace() {
+fn trace_has_cairo_execution_info() {
     let temp = setup_package("trace");
     let snapbox = test_runner(&temp);
 
@@ -105,10 +105,10 @@ fn trace_has_vm_trace() {
     let call_trace: ProfilerCallTrace =
         serde_json::from_str(&trace_data).expect("Failed to parse call_trace");
 
-    assert_vm_trace_exists(&call_trace);
+    assert_cairo_execution_info_exists(&call_trace);
 }
 
-fn assert_vm_trace_exists(trace: &ProfilerCallTrace) {
+fn assert_cairo_execution_info_exists(trace: &ProfilerCallTrace) {
     assert!(
         trace.cairo_execution_info.is_some()
             || trace.entry_point.function_name == Some(String::from("fail"))
@@ -116,7 +116,7 @@ fn assert_vm_trace_exists(trace: &ProfilerCallTrace) {
 
     for sub_trace_node in &trace.nested_calls {
         if let ProfilerCallTraceNode::EntryPointCall(sub_trace) = sub_trace_node {
-            assert_vm_trace_exists(sub_trace);
+            assert_cairo_execution_info_exists(sub_trace);
         }
     }
 }

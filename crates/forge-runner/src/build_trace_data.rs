@@ -172,7 +172,7 @@ fn get_contract_name(
     contracts_data: &ContractsData,
 ) -> Option<String> {
     if class_hash == Some(class_hash!(TEST_CONTRACT_CLASS_HASH)) {
-        Some(String::from(TEST_CODE_FUNCTION_NAME))
+        Some(String::from(TEST_CODE_CONTRACT_NAME))
     } else {
         class_hash
             .and_then(|c| contracts_data.get_contract_name(&c))
