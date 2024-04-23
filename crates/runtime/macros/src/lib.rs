@@ -1,4 +1,4 @@
-use proc_macro2::{Span, TokenStream};
+use proc_macro2::TokenStream;
 use quote::{quote, quote_spanned};
 use syn::spanned::Spanned;
 use syn::{parse_macro_input, parse_quote, Data, DeriveInput, Fields, GenericParam, Generics};
@@ -12,11 +12,6 @@ pub fn derive_from_reader(item: proc_macro::TokenStream) -> proc_macro::TokenStr
     let generics = &mut input.generics;
     let data = &input.data;
 
-    let mod_name = syn::Ident::new(
-        &format!("{name}__internal__from_reader_impl___"),
-        Span::call_site(),
-    );
-
     add_trait_bounds(generics);
 
     let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
@@ -24,14 +19,10 @@ pub fn derive_from_reader(item: proc_macro::TokenStream) -> proc_macro::TokenStr
     let body = create_func_body(data, &span);
 
     quote! {
-        mod #mod_name {
-            use runtime::utils::from_reader::{FromReader, BufferReader, BufferReadResult};
-            use super::*;
-
-            impl #impl_generics FromReader for #name #ty_generics #where_clause {
-                fn from_reader(reader: &mut BufferReader<'_>) -> BufferReadResult<Self> {
-                    #body
-                }
+        #[allow(clippy::all)]
+        impl #impl_generics runtime::utils::from_reader::FromReader for #name #ty_generics #where_clause {
+            fn from_reader(reader: &mut runtime::utils::buffer_reader::BufferReader<'_>) -> runtime::utils::buffer_reader::BufferReadResult<Self> {
+                #body
             }
         }
     }
@@ -41,7 +32,9 @@ pub fn derive_from_reader(item: proc_macro::TokenStream) -> proc_macro::TokenStr
 fn add_trait_bounds(generics: &mut Generics) {
     for param in &mut generics.params {
         if let GenericParam::Type(type_param) = param {
-            type_param.bounds.push(parse_quote!(FromReader));
+            type_param
+                .bounds
+                .push(parse_quote!(runtime::utils::from_reader::FromReader));
         }
     }
 }
@@ -53,7 +46,7 @@ fn from_field(fields: &Fields) -> TokenStream {
                 let name = &f.ident;
 
                 quote_spanned! {f.span() =>
-                    #name: FromReader::from_reader(reader)?,
+                    #name: runtime::utils::from_reader::FromReader::from_reader(reader)?,
                 }
             });
 
@@ -64,7 +57,7 @@ fn from_field(fields: &Fields) -> TokenStream {
         Fields::Unnamed(fields) => {
             let recurse = fields.unnamed.iter().map(|f| {
                 quote_spanned! {f.span()=>
-                    FromReader::from_reader(reader)?
+                    runtime::utils::from_reader::FromReader::from_reader(reader)?
                 }
             });
 
@@ -109,15 +102,16 @@ fn create_func_body(data: &Data, span: &TokenStream) -> TokenStream {
 
                 let this = match variant {
                     #(#arms,)*
-                    _ => Result::Err(BufferReadError::ParseFailed)?,
+                    _ => Result::Err(runtime::utils::buffer_reader::BufferReadError::ParseFailed)?,
                 };
 
                 Result::Ok(this)
             }
         }
-        Data::Union(_) => {
-            syn::Error::new_spanned(span, "FromReader can be derived only on structs and enums")
-                .into_compile_error()
-        }
+        Data::Union(_) => syn::Error::new_spanned(
+            span,
+            "runtime::utils::from_reader::FromReader can be derived only on structs and enums",
+        )
+        .into_compile_error(),
     }
 }
