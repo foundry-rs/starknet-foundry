@@ -36,7 +36,7 @@ fn start_devnet() {
     let sepolia_rpc_url =
         from_env("SEPOLIA_RPC_URL").expect("Failed to get SEPOLIA_RPC_URL environment variable");
 
-    Command::new("tests/utils/devnet/bin/starknet-devnet")
+    Command::new("tests/utils/devnet/starknet-devnet")
         .args([
             "--port",
             &port,
@@ -48,6 +48,10 @@ fn start_devnet() {
             &sepolia_rpc_url,
             "--fork-block",
             &FORK_BLOCK_NUMBER.to_string(),
+            "--initial-balance",
+            "9999999999999999999",
+            "--accounts",
+            "20",
         ])
         .stdout(Stdio::null())
         .spawn()

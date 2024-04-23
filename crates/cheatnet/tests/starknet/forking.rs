@@ -7,6 +7,7 @@ use blockifier::state::cached_state::{
 };
 use cairo_felt::Felt252;
 use cairo_vm::vm::errors::hint_errors::HintError;
+use camino::Utf8Path;
 use cheatnet::constants::build_testing_state;
 use cheatnet::forking::{cache::CACHE_VERSION, state::ForkStateReader};
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
@@ -652,7 +653,7 @@ fn test_calling_nonexistent_url() {
                 ForkStateReader::new(
                     nonexistent_url,
                     BlockNumber(1),
-                    temp_dir.path().to_str().unwrap(),
+                    Utf8Path::from_path(temp_dir.path()).unwrap(),
                 )
                 .unwrap(),
             ),
