@@ -79,7 +79,7 @@ fn build_cairo_execution_info(
 ) -> Option<CairoExecutionInfo> {
     let contract_name = get_contract_name(entry_point.class_hash, contracts_data);
     let source_sierra_path = contract_name
-        .map(|name| get_source_sierra_path(&name, contracts_data, test_artifacts_path).into());
+        .and_then(|name| get_source_sierra_path(&name, contracts_data, test_artifacts_path));
 
     #[allow(clippy::unnecessary_unwrap)]
     if source_sierra_path.is_some() && vm_trace.is_some() {
@@ -92,17 +92,17 @@ fn build_cairo_execution_info(
     }
 }
 
-fn get_source_sierra_path<'a>(
+fn get_source_sierra_path(
     contract_name: &str,
-    contracts_data: &'a ContractsData,
-    test_artifacts_path: &'a Utf8Path,
-) -> &'a Utf8Path {
+    contracts_data: &ContractsData,
+    test_artifacts_path: &Utf8Path,
+) -> Option<Utf8PathBuf> {
     if contract_name == TEST_CODE_CONTRACT_NAME {
-        test_artifacts_path
+        Some(Utf8PathBuf::from(test_artifacts_path))
     } else {
         contracts_data
             .get_source_sierra_path(contract_name)
-            .unwrap()
+            .cloned()
     }
 }
 
