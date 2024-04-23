@@ -46,10 +46,7 @@ fn l1_handler_execute() {
                     selector!("process_l1_message")
                 );
 
-                l1_handler.from_address = 0x123;
-                l1_handler.payload = payload.span();
-
-                l1_handler.execute().unwrap();
+                l1_handler.execute(0x123, payload.span()).unwrap();
                     
                 let dispatcher = IBalanceTokenDispatcher { contract_address };
                 assert(dispatcher.get_balance() == 42, dispatcher.get_balance());
@@ -69,9 +66,7 @@ fn l1_handler_execute() {
                     selector!("panicking_l1_handler")
                 );
 
-                l1_handler.from_address = 0x123;
-                l1_handler.payload = array![].span();
-                match l1_handler.execute() {
+                match l1_handler.execute(0x123, array![].span()) {
                     Result::Ok(_) => panic_with_felt252('should have panicked'),
                     Result::Err(panic_data) => {
                         assert(*panic_data.at(0) == 'custom', 'Wrong 1st panic datum');

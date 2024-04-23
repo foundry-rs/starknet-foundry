@@ -5,29 +5,27 @@ use super::super::_cheatcode::handle_cheatcode;
 
 #[derive(Drop, Clone)]
 struct L1Handler {
-    contract_address: ContractAddress,
-    function_selector: felt252,
-    from_address: felt252,
-    payload: Span::<felt252>,
+    target: ContractAddress,
+    selector: felt252,
 }
 
 trait L1HandlerTrait {
-    fn new(contract_address: ContractAddress, function_selector: felt252) -> L1Handler;
-    fn execute(self: L1Handler) -> SyscallResult<()>;
+    fn new(target: ContractAddress, selector: felt252) -> L1Handler;
+    fn execute(self: L1Handler, from_address: felt252, payload: Span::<felt252>) -> SyscallResult<()>;
 }
 
 impl L1HandlerImpl of L1HandlerTrait {
-    fn new(contract_address: ContractAddress, function_selector: felt252) -> L1Handler {
+    fn new(target: ContractAddress, selector: felt252) -> L1Handler {
         L1Handler {
-            contract_address, function_selector, from_address: 0, payload: array![].span(),
+            target, selector,
         }
     }
 
-    fn execute(self: L1Handler) -> SyscallResult<()> {
+    fn execute(self: L1Handler, from_address: felt252, payload: Span::<felt252>) -> SyscallResult<()> {
         let mut inputs: Array::<felt252> = array![
-            self.contract_address.into(), self.function_selector, self.from_address,
+            self.target.into(), self.selector, from_address.into(),
         ];
-        self.payload.serialize(ref inputs);
+        payload.serialize(ref inputs);
 
         let mut outputs = handle_cheatcode(cheatcode::<'l1_handler_execute'>(inputs.span()));
         let exit_code = *outputs.pop_front().unwrap();
