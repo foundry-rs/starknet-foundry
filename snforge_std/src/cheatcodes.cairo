@@ -211,7 +211,8 @@ fn stop_mock_call(contract_address: ContractAddress, function_selector: felt252)
 }
 
 /// Replaces class for given contract address.
-/// The `new_class` hash has to be declared (in order for the replacement to execute the code).
+/// The `new_class` hash has to be declared in order for the replacement class to execute the code,
+/// when interacting with the contract.
 /// - `contract` - address specifying which address will be replaced
 /// - `new_class` - class hash, that will be used now for given address
 fn replace_bytecode(contract: ContractAddress, new_class: ClassHash) {
