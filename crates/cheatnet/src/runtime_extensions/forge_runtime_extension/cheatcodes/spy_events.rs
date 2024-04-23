@@ -3,6 +3,7 @@ use blockifier::execution::call_info::OrderedEvent;
 use cairo_felt::Felt252;
 use cairo_vm::hint_processor::hint_processor_utils::felt_to_usize;
 use conversions::FromConv;
+use runtime::FromReader;
 use starknet_api::core::ContractAddress;
 
 /// Represents an emitted event. It is used in the `CheatnetState` to keep track of events
@@ -40,7 +41,7 @@ impl Event {
 }
 
 /// Specifies which contract are spied on.
-#[derive(Debug)]
+#[derive(FromReader, Debug)]
 pub enum SpyTarget {
     All,
     One(ContractAddress),

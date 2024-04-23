@@ -24,7 +24,7 @@ use cairo_vm::vm::vm_core::VirtualMachine;
 use camino::Utf8PathBuf;
 use clap::Args;
 use conversions::felt252::SerializeAsFelt252Vec;
-use conversions::{FromConv, IntoConv};
+use conversions::FromConv;
 use itertools::chain;
 use runtime::starknet::context::{build_context, SerializableBlockInfo};
 use runtime::starknet::state::DictStateReader;
@@ -46,7 +46,7 @@ use sncast::state::hashing::{
 };
 use sncast::state::state_file::{serialize_as_script_function_result, StateManager};
 use starknet::accounts::{Account, SingleOwnerAccount};
-use starknet::core::types::{BlockId, BlockTag::Pending, FieldElement};
+use starknet::core::types::{BlockId, BlockTag::Pending};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
@@ -99,13 +99,9 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
     ) -> Result<CheatcodeHandlingResult, EnhancedHintError> {
         let res = match selector {
             "call" => {
-                let contract_address = input_reader.read_felt()?.into_();
-                let function_selector = input_reader.read_felt()?.into_();
-                let calldata = input_reader.read_vec()?;
-                let calldata_felts: Vec<FieldElement> = calldata
-                    .iter()
-                    .map(|el| FieldElement::from_(el.clone()))
-                    .collect();
+                let contract_address = input_reader.read()?;
+                let function_selector = input_reader.read()?;
+                let calldata_felts = input_reader.read()?;
 
                 let call_result = self.tokio_runtime.block_on(call::call(
                     contract_address,
@@ -120,12 +116,8 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
             }
             "declare" => {
                 let contract_name = input_reader.read_string()?;
-                let max_fee = input_reader
-                    .read_option_felt()?
-                    .map(conversions::IntoConv::into_);
-                let nonce = input_reader
-                    .read_option_felt()?
-                    .map(conversions::IntoConv::into_);
+                let max_fee = input_reader.read()?;
+                let nonce = input_reader.read()?;
 
                 let declare_tx_id = generate_declare_tx_id(contract_name.as_str());
 
@@ -159,23 +151,13 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 ))
             }
             "deploy" => {
-                let class_hash = input_reader.read_felt()?.into_();
-                let constructor_calldata: Vec<FieldElement> = input_reader
-                    .read_vec()?
-                    .iter()
-                    .map(|el| FieldElement::from_(el.clone()))
-                    .collect();
+                let class_hash = input_reader.read()?;
+                let constructor_calldata = input_reader.read_vec()?;
 
-                let salt = input_reader
-                    .read_option_felt()?
-                    .map(conversions::IntoConv::into_);
-                let unique = input_reader.read_bool()?;
-                let max_fee = input_reader
-                    .read_option_felt()?
-                    .map(conversions::IntoConv::into_);
-                let nonce = input_reader
-                    .read_option_felt()?
-                    .map(conversions::IntoConv::into_);
+                let salt = input_reader.read()?;
+                let unique = input_reader.read()?;
+                let max_fee = input_reader.read()?;
+                let nonce = input_reader.read()?;
 
                 let deploy_tx_id =
                     generate_deploy_tx_id(class_hash, &constructor_calldata, salt, unique);
@@ -213,19 +195,11 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 ))
             }
             "invoke" => {
-                let contract_address = input_reader.read_felt()?.into_();
-                let function_selector = input_reader.read_felt()?.into_();
-                let calldata: Vec<FieldElement> = input_reader
-                    .read_vec()?
-                    .iter()
-                    .map(|el| FieldElement::from_(el.clone()))
-                    .collect();
-                let max_fee = input_reader
-                    .read_option_felt()?
-                    .map(conversions::IntoConv::into_);
-                let nonce = input_reader
-                    .read_option_felt()?
-                    .map(conversions::IntoConv::into_);
+                let contract_address = input_reader.read()?;
+                let function_selector = input_reader.read()?;
+                let calldata = input_reader.read_vec()?;
+                let max_fee = input_reader.read()?;
+                let nonce = input_reader.read()?;
 
                 let invoke_tx_id =
                     generate_invoke_tx_id(contract_address, function_selector, &calldata);
