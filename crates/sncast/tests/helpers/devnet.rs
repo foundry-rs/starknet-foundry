@@ -36,7 +36,7 @@ fn start_devnet() {
     let sepolia_rpc_url =
         from_env("SEPOLIA_RPC_URL").expect("Failed to get SEPOLIA_RPC_URL environment variable");
 
-    Command::new("tests/utils/devnet/bin/starknet-devnet")
+    Command::new("tests/utils/devnet/starknet-devnet")
         .args([
             "--port",
             &port,

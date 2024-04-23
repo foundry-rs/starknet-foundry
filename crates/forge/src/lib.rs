@@ -1,19 +1,18 @@
-use anyhow::{anyhow, Context, Result};
-use camino::Utf8Path;
+use anyhow::{anyhow, Result};
 use warn::{
     warn_if_available_gas_used_with_incompatible_scarb_version, warn_if_incompatible_rpc_version,
 };
 
-use crate::scarb::load_test_artifacts;
 use forge_runner::test_case_summary::AnyTestCaseSummary;
 use std::sync::Arc;
 
 use compiled_raw::{CompiledTestCrateRaw, RawForkConfig, RawForkParams};
 use forge_runner::test_crate_summary::TestCrateSummary;
-use forge_runner::{RunnerConfig, RunnerParams, TestCrateRunResult};
+use forge_runner::TestCrateRunResult;
 
 use crate::block_number_map::BlockNumberMap;
 use forge_runner::compiled_runnable::{CompiledTestCrateRunnable, TestCaseRunnable};
+use forge_runner::forge_config::ForgeConfig;
 
 use crate::scarb::config::ForkTarget;
 use crate::test_filter::TestsFilter;
@@ -99,19 +98,19 @@ async fn to_runnable(
 /// * `fork_target` - A configuration of forks used in tests
 #[allow(clippy::implicit_hasher)]
 pub async fn run(
+    compiled_test_crates: Vec<CompiledTestCrateRaw>,
     package_name: &str,
-    snforge_target_dir_path: &Utf8Path,
     tests_filter: &TestsFilter,
-    runner_config: Arc<RunnerConfig>,
-    runner_params: Arc<RunnerParams>,
+    forge_config: Arc<ForgeConfig>,
     fork_targets: &[ForkTarget],
     block_number_map: &mut BlockNumberMap,
 ) -> Result<Vec<TestCrateSummary>> {
-    let test_crates = load_test_artifacts(snforge_target_dir_path, package_name)
-        .context("Failed to load test artifacts, make sure to use scarb >=2.5.4")?;
-    let all_tests: usize = test_crates.iter().map(|tc| tc.test_cases.len()).sum();
+    let all_tests: usize = compiled_test_crates
+        .iter()
+        .map(|tc| tc.test_cases.len())
+        .sum();
 
-    let test_crates = test_crates
+    let test_crates = compiled_test_crates
         .into_iter()
         .map(|tc| tests_filter.filter_tests(tc))
         .collect::<Result<Vec<CompiledTestCrateRaw>>>()?;
@@ -136,16 +135,11 @@ pub async fn run(
 
         let compiled_test_crate =
             to_runnable(compiled_test_crate, fork_targets, block_number_map).await?;
-        let runner_config = runner_config.clone();
-        let runner_params = runner_params.clone();
+        let forge_config = forge_config.clone();
 
-        let summary = forge_runner::run_tests_from_crate(
-            compiled_test_crate,
-            runner_config,
-            runner_params,
-            tests_filter,
-        )
-        .await?;
+        let summary =
+            forge_runner::run_tests_from_crate(compiled_test_crate, forge_config, tests_filter)
+                .await?;
 
         match summary {
             TestCrateRunResult::Ok(summary) => {
@@ -173,7 +167,7 @@ pub async fn run(
     });
 
     if any_fuzz_test_was_run {
-        pretty_printing::print_test_seed(runner_config.fuzzer_seed);
+        pretty_printing::print_test_seed(forge_config.test_runner_config.fuzzer_seed);
     }
 
     Ok(summaries)

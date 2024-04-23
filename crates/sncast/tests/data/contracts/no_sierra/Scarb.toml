@@ -7,7 +7,6 @@ starknet = ">=2.0.2"
 
 [[target.starknet-contract]]
 sierra = false
-casm = true
 
 [lib]
 sierra = false

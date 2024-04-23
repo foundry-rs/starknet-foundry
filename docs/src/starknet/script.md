@@ -290,8 +290,6 @@ sierra = true
 casm = true
 
 [[target.starknet-contract]]
-sierra = true
-casm = true
 build-external-contracts = [
     "map::Map"
 ]

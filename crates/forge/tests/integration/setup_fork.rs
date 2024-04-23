@@ -1,6 +1,7 @@
 use indoc::formatdoc;
+
+use std::num::NonZeroU32;
 use std::path::Path;
-use std::path::PathBuf;
 use std::process::Command;
 use std::process::Stdio;
 use std::sync::Arc;
@@ -15,7 +16,11 @@ use tokio::runtime::Runtime;
 
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use forge::compiled_raw::RawForkParams;
-use forge_runner::{RunnerConfig, RunnerParams};
+use forge::scarb::{get_test_artifacts_path, load_test_artifacts};
+use forge_runner::forge_config::{
+    ExecutionDataToSave, ForgeConfig, OutputConfig, TestRunnerConfig,
+};
+use forge_runner::CACHE_DIR;
 use shared::command::CommandExt;
 use test_utils::runner::{assert_case_output_contains, assert_failed, assert_passed, Contract};
 use test_utils::running_tests::run_test_case;
@@ -112,25 +117,36 @@ fn fork_aliased_decorator() {
         .output_checked()
         .unwrap();
 
+    let test_artifacts_path = get_test_artifacts_path(
+        &test.path().unwrap().join("target/dev/snforge"),
+        "test_package",
+    );
+    let compiled_test_crates = load_test_artifacts(&test_artifacts_path).unwrap();
+
     let result = rt
         .block_on(run(
-            &String::from("test_package"),
-            &test.path().unwrap().join("target/dev/snforge"),
+            compiled_test_crates,
+            "test_package",
             &TestsFilter::from_flags(None, false, false, false, false, Default::default()),
-            Arc::new(RunnerConfig::new(
-                Utf8PathBuf::from_path_buf(PathBuf::from(tempdir().unwrap().path())).unwrap(),
-                false,
-                256.try_into().unwrap(),
-                12345,
-                false,
-                false,
-                false,
-                None,
-            )),
-            Arc::new(RunnerParams::new(
-                ContractsData::try_from(test.contracts().unwrap()).unwrap(),
-                test.env().clone(),
-            )),
+            Arc::new(ForgeConfig {
+                test_runner_config: Arc::new(TestRunnerConfig {
+                    exit_first: false,
+                    fuzzer_runs: NonZeroU32::new(256).unwrap(),
+                    fuzzer_seed: 12345,
+                    max_n_steps: None,
+                    is_vm_trace_needed: false,
+                    cache_dir: Utf8PathBuf::from_path_buf(tempdir().unwrap().into_path())
+                        .unwrap()
+                        .join(CACHE_DIR),
+                    contracts_data: ContractsData::try_from(test.contracts().unwrap()).unwrap(),
+                    environment_variables: test.env().clone(),
+                    test_artifacts_path,
+                }),
+                output_config: Arc::new(OutputConfig {
+                    detailed_resources: false,
+                    execution_data_to_save: ExecutionDataToSave::None,
+                }),
+            }),
             &[ForkTarget::new(
                 "FORK_NAME_FROM_SCARB_TOML".to_string(),
                 RawForkParams {
