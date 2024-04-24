@@ -129,13 +129,13 @@ macro_rules! for_all_fields {
 }
 
 impl CheatnetState {
-    fn get_cheated_execution_info_for_target(
+    fn get_cheated_execution_info_for_contract(
         &mut self,
-        target: &ContractAddress,
+        target: ContractAddress,
     ) -> &mut ExecutionInfoMock {
         self.cheated_execution_info_contracts
-            .get_mut(target)
-            .unwrap()
+            .entry(target)
+            .or_insert_with(|| self.global_cheated_execution_info.clone())
     }
 
     pub fn cheat_execution_info(&mut self, execution_info_mock: ExecutionInfoDto) {
@@ -148,12 +148,12 @@ impl CheatnetState {
                         span,
                         target,
                     }) => {
-                        let cheated_info = self.get_cheated_execution_info_for_target(&target);
+                        let cheated_info = self.get_cheated_execution_info_for_contract(target);
 
                         cheated_info.$($path).+ = CheatStatus::Cheated(value, span);
                     }
                     Operation::Stop(target) => {
-                        let cheated_info = self.get_cheated_execution_info_for_target(&target);
+                        let cheated_info = self.get_cheated_execution_info_for_contract(target);
 
                         cheated_info.$($path).+ = CheatStatus::Uncheated;
                     }
@@ -175,11 +175,8 @@ impl CheatnetState {
         for_all_fields!(cheat!);
     }
 
-    pub fn progress_cheated_execution_info(&mut self, address: &ContractAddress) {
-        let mocks = self
-            .cheated_execution_info_contracts
-            .get_mut(address)
-            .unwrap();
+    pub fn progress_cheated_execution_info(&mut self, address: ContractAddress) {
+        let mocks = self.get_cheated_execution_info_for_contract(address);
 
         macro_rules! decrement {
             ($($path:ident).+) => {
@@ -188,10 +185,5 @@ impl CheatnetState {
         }
 
         for_all_fields!(decrement!);
-    }
-
-    pub fn on_deploy_cheated_execution_info(&mut self, address: ContractAddress) {
-        self.cheated_execution_info_contracts
-            .insert(address, self.global_cheated_execution_info.clone());
     }
 }
