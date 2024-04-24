@@ -4,6 +4,7 @@ use starknet::testing::cheatcode;
 use starknet::ContractAddress;
 use super::super::_cheatcode::handle_cheatcode;
 
+/// Allows specifying which contracts you want to capture events from.
 #[derive(Drop, Serde)]
 enum SpyOn {
     All: (),
@@ -11,6 +12,7 @@ enum SpyOn {
     Multiple: Array<ContractAddress>
 }
 
+/// Creates `EventSpy` instance which spies on events emitted by contracts defined under the `spy_on` argument.
 fn spy_events(spy_on: SpyOn) -> EventSpy {
     let mut inputs = array![];
     spy_on.serialize(ref inputs);
@@ -19,17 +21,16 @@ fn spy_events(spy_on: SpyOn) -> EventSpy {
     EventSpy { _id: *output[0], events: array![] }
 }
 
-fn event_name_hash(name: felt252) -> felt252 {
-    let mut output = handle_cheatcode(cheatcode::<'event_name_hash'>(array![name].span()));
-    *output[0]
-}
-
+/// Raw event format (as seen via the RPC-API), can be used for asserting the emitted events.
 #[derive(Drop, Clone, Serde)]
 struct Event {
     keys: Array<felt252>,
     data: Array<felt252>
 }
 
+
+/// An event spy structure, along with the events collected so far in the test.
+/// `events` are mutable and can be updated with `fetch_events`.
 #[derive(Drop, Serde)]
 struct EventSpy {
     _id: felt252,
@@ -37,6 +38,7 @@ struct EventSpy {
 }
 
 trait EventFetcher {
+    /// Allows to update the structs' events field, from the spied contracts
     fn fetch_events(ref self: EventSpy);
 }
 
@@ -57,6 +59,7 @@ impl EventFetcherImpl of EventFetcher {
     }
 }
 
+/// Allows to assert the expected events emission (or lack thereof), in the scope of the spy
 trait EventAssertions<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>> {
     fn assert_emitted(ref self: EventSpy, events: @Array<(ContractAddress, T)>);
     fn assert_not_emitted(ref self: EventSpy, events: @Array<(ContractAddress, T)>);
