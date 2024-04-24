@@ -10,9 +10,7 @@ use std::io::BufWriter;
 pub const TESTS_PROGRAMS_DIR: &str = ".snfoundry_test_code";
 
 #[derive(Clone)]
-pub struct TestProgramPath {
-    path: Utf8PathBuf,
-}
+pub struct TestProgramPath(Utf8PathBuf);
 
 impl TestProgramPath {
     pub fn save_test_program(
@@ -37,14 +35,12 @@ impl TestProgramPath {
             .unlock()
             .with_context(|| format!("Couldn't lock the output file = {test_program_path}"))?;
 
-        Ok(Self {
-            path: test_program_path,
-        })
+        Ok(Self(test_program_path))
     }
 }
 
 impl From<TestProgramPath> for Utf8PathBuf {
     fn from(value: TestProgramPath) -> Self {
-        value.path
+        value.0
     }
 }
