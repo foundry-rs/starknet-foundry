@@ -18,6 +18,7 @@
 * [Testing Smart Contracts](testing/contracts.md)
 * [Testing Contracts' Internals](testing/testing_contract_internals.md)
 * [Using Cheatcodes](testing/using-cheatcodes.md)
+* [Testing Events](testing/testing-events.md)
 * [Test Collection](testing/test-collection.md)
 * [Gas and VM Resources Estimation](testing/gas-and-resource-estimation.md)
 
