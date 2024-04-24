@@ -13,6 +13,7 @@ use forge_runner::TestCrateRunResult;
 use crate::block_number_map::BlockNumberMap;
 use forge_runner::compiled_runnable::{CompiledTestCrateRunnable, TestCaseRunnable};
 use forge_runner::forge_config::ForgeConfig;
+use forge_runner::sierra_test_code_path::SierraTestCodePath;
 
 use crate::scarb::config::ForkTarget;
 use crate::test_filter::TestsFilter;
@@ -77,11 +78,7 @@ async fn to_runnable(
     }
 
     Ok(CompiledTestCrateRunnable {
-        sierra_program: compiled_test_crate
-            .sierra_program
-            .into_v1()
-            .unwrap()
-            .program,
+        sierra_program: compiled_test_crate.sierra_program.into_v1().unwrap(),
         test_cases,
     })
 }
@@ -127,19 +124,31 @@ pub async fn run(
 
     let mut summaries = vec![];
 
-    for compiled_test_crate in test_crates {
+    for compiled_test_crate_raw in test_crates {
         pretty_printing::print_running_tests(
-            compiled_test_crate.tests_location,
-            compiled_test_crate.test_cases.len(),
+            compiled_test_crate_raw.tests_location,
+            compiled_test_crate_raw.test_cases.len(),
         );
 
+        let tests_location = &format!("{:?}", compiled_test_crate_raw.tests_location);
         let compiled_test_crate =
-            to_runnable(compiled_test_crate, fork_targets, block_number_map).await?;
+            to_runnable(compiled_test_crate_raw, fork_targets, block_number_map).await?;
         let forge_config = forge_config.clone();
 
-        let summary =
-            forge_runner::run_tests_from_crate(compiled_test_crate, forge_config, tests_filter)
-                .await?;
+        let sierra_test_code_path = Arc::new(SierraTestCodePath::new(
+            &compiled_test_crate,
+            forge_config
+                .sierra_test_code_path_config
+                .path_for_sierra(tests_location),
+        )?);
+
+        let summary = forge_runner::run_tests_from_crate(
+            compiled_test_crate,
+            forge_config,
+            tests_filter,
+            sierra_test_code_path,
+        )
+        .await?;
 
         match summary {
             TestCrateRunResult::Ok(summary) => {

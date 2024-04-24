@@ -8,6 +8,7 @@ use std::sync::Arc;
 use crate::compiled_runnable::ValidatedForkConfig;
 use crate::forge_config::{RuntimeConfig, TestRunnerConfig};
 use crate::gas::calculate_used_gas;
+use crate::sierra_test_code_path::SierraTestCodePath;
 use crate::test_case_summary::{Single, TestCaseSummary};
 use crate::TestCaseRunnable;
 use anyhow::{bail, ensure, Result};
@@ -32,7 +33,7 @@ use cairo_vm::serde::deserialize_program::HintParams;
 use cairo_vm::types::relocatable::{MaybeRelocatable, Relocatable};
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cairo_vm::vm::vm_core::VirtualMachine;
-use camino::{Utf8Path, Utf8PathBuf};
+use camino::Utf8Path;
 use cheatnet::constants as cheatnet_constants;
 use cheatnet::constants::build_test_entry_point;
 use cheatnet::forking::state::ForkStateReader;
@@ -58,6 +59,7 @@ pub fn run_test(
     case: Arc<TestCaseRunnable>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
     test_runner_config: Arc<TestRunnerConfig>,
+    sierra_test_code_path: Arc<SierraTestCodePath>,
     send: Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary<Single>>> {
     tokio::task::spawn_blocking(move || {
@@ -86,7 +88,7 @@ pub fn run_test(
             &case,
             vec![],
             &test_runner_config.contracts_data,
-            &test_runner_config.test_artifacts_path,
+            &sierra_test_code_path,
         )
     })
 }
@@ -96,6 +98,7 @@ pub(crate) fn run_fuzz_test(
     case: Arc<TestCaseRunnable>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
     test_runner_config: Arc<TestRunnerConfig>,
+    sierra_test_code_path: Arc<SierraTestCodePath>,
     send: Sender<()>,
     fuzzing_send: Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary<Single>>> {
@@ -126,7 +129,7 @@ pub(crate) fn run_fuzz_test(
             &case,
             args,
             &test_runner_config.contracts_data,
-            &test_runner_config.test_artifacts_path,
+            &sierra_test_code_path,
         )
     })
 }
@@ -353,7 +356,7 @@ fn extract_test_case_summary(
     case: &TestCaseRunnable,
     args: Vec<Felt252>,
     contracts_data: &ContractsData,
-    test_artifacts_path: &Utf8PathBuf,
+    sierra_test_code_path: &SierraTestCodePath,
 ) -> Result<TestCaseSummary<Single>> {
     match run_result {
         Ok(result_with_info) => {
@@ -366,7 +369,7 @@ fn extract_test_case_summary(
                     result_with_info.used_resources,
                     &result_with_info.call_trace,
                     contracts_data,
-                    test_artifacts_path,
+                    sierra_test_code_path,
                 )),
                 // CairoRunError comes from VirtualMachineError which may come from HintException that originates in TestExecutionSyscallHandler
                 Err(RunnerError::CairoRunError(error)) => Ok(TestCaseSummary::Failed {

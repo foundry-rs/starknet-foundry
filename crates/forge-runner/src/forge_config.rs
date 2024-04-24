@@ -8,6 +8,7 @@ use std::sync::Arc;
 pub struct ForgeConfig {
     pub test_runner_config: Arc<TestRunnerConfig>,
     pub output_config: Arc<OutputConfig>,
+    pub sierra_test_code_path_config: SierraTestCodePathConfig,
 }
 
 #[derive(Debug, PartialEq)]
@@ -20,7 +21,6 @@ pub struct TestRunnerConfig {
     pub cache_dir: Utf8PathBuf,
     pub contracts_data: ContractsData,
     pub environment_variables: HashMap<String, String>,
-    pub test_artifacts_path: Utf8PathBuf,
 }
 
 #[derive(Debug, PartialEq)]
@@ -88,5 +88,21 @@ impl<'a> RuntimeConfig<'a> {
             contracts_data: &value.contracts_data,
             environment_variables: &value.environment_variables,
         }
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub struct SierraTestCodePathConfig {
+    pub package_name: String,
+    pub sierra_test_code_dir: Utf8PathBuf,
+}
+
+impl SierraTestCodePathConfig {
+    #[must_use]
+    pub fn path_for_sierra(&self, tests_location: &str) -> Utf8PathBuf {
+        self.sierra_test_code_dir.join(format!(
+            "{}_{tests_location}.sierra.json",
+            self.package_name
+        ))
     }
 }

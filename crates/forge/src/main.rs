@@ -11,7 +11,7 @@ use forge::test_filter::TestsFilter;
 use forge::{pretty_printing, run};
 use forge_runner::test_case_summary::{AnyTestCaseSummary, TestCaseSummary};
 use forge_runner::test_crate_summary::TestCrateSummary;
-use forge_runner::CACHE_DIR;
+use forge_runner::{CACHE_DIR, SIERRA_TEST_CODE_DIR};
 use rand::{thread_rng, RngCore};
 use scarb_api::{
     get_contracts_artifacts_and_source_sierra_paths,
@@ -24,7 +24,8 @@ use camino::Utf8PathBuf;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use forge::block_number_map::BlockNumberMap;
 use forge_runner::forge_config::{
-    is_vm_trace_needed, ExecutionDataToSave, ForgeConfig, OutputConfig, TestRunnerConfig,
+    is_vm_trace_needed, ExecutionDataToSave, ForgeConfig, OutputConfig, SierraTestCodePathConfig,
+    TestRunnerConfig,
 };
 use semver::{Comparator, Op, Version, VersionReq};
 use shared::print::print_as_warning;
@@ -183,7 +184,8 @@ fn combine_configs(
     max_n_steps: Option<u32>,
     contracts_data: ContractsData,
     cache_dir: Utf8PathBuf,
-    test_artifacts_path: Utf8PathBuf,
+    sierra_test_code_dir: Utf8PathBuf,
+    package_name: String,
     forge_config_from_scarb: &ForgeConfigFromScarb,
 ) -> ForgeConfig {
     let execution_data_to_save = ExecutionDataToSave::from_flags(
@@ -205,12 +207,15 @@ fn combine_configs(
             cache_dir,
             contracts_data,
             environment_variables: env::vars().collect(),
-            test_artifacts_path,
         }),
         output_config: Arc::new(OutputConfig {
             detailed_resources: detailed_resources || forge_config_from_scarb.detailed_resources,
             execution_data_to_save,
         }),
+        sierra_test_code_path_config: SierraTestCodePathConfig {
+            package_name,
+            sierra_test_code_dir,
+        },
     }
 }
 
@@ -284,6 +289,7 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
             let mut all_failed_tests = vec![];
 
             let cache_dir = workspace_root.join(CACHE_DIR);
+            let sierra_test_code_dir = workspace_root.join(SIERRA_TEST_CODE_DIR);
             for package in &packages {
                 env::set_current_dir(&package.root)?;
 
@@ -310,7 +316,8 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                     args.max_n_steps,
                     contracts_data,
                     cache_dir.clone(),
-                    test_artifacts_path,
+                    sierra_test_code_dir.clone(),
+                    package.name.clone(),
                     &forge_config_from_scarb,
                 ));
 
@@ -398,6 +405,7 @@ mod tests {
             Default::default(),
             Default::default(),
             Default::default(),
+            Default::default(),
             &Default::default(),
         );
         let config2 = combine_configs(
@@ -408,6 +416,7 @@ mod tests {
             false,
             false,
             None,
+            Default::default(),
             Default::default(),
             Default::default(),
             Default::default(),
@@ -435,6 +444,7 @@ mod tests {
             Default::default(),
             Default::default(),
             Default::default(),
+            Default::default(),
             &Default::default(),
         );
         assert_eq!(
@@ -449,12 +459,15 @@ mod tests {
                     cache_dir: Default::default(),
                     contracts_data: Default::default(),
                     environment_variables: config.test_runner_config.environment_variables.clone(),
-                    test_artifacts_path: Default::default(),
                 }),
                 output_config: Arc::new(OutputConfig {
                     detailed_resources: false,
                     execution_data_to_save: ExecutionDataToSave::None
                 }),
+                sierra_test_code_path_config: SierraTestCodePathConfig {
+                    package_name: Default::default(),
+                    sierra_test_code_dir: Default::default()
+                },
             }
         );
     }
@@ -483,6 +496,7 @@ mod tests {
             Default::default(),
             Default::default(),
             Default::default(),
+            Default::default(),
             &config_from_scarb,
         );
         assert_eq!(
@@ -497,12 +511,15 @@ mod tests {
                     cache_dir: Default::default(),
                     contracts_data: Default::default(),
                     environment_variables: config.test_runner_config.environment_variables.clone(),
-                    test_artifacts_path: Default::default(),
                 }),
                 output_config: Arc::new(OutputConfig {
                     detailed_resources: true,
                     execution_data_to_save: ExecutionDataToSave::TraceAndProfile
                 }),
+                sierra_test_code_path_config: SierraTestCodePathConfig {
+                    package_name: Default::default(),
+                    sierra_test_code_dir: Default::default()
+                },
             }
         );
     }
@@ -530,6 +547,7 @@ mod tests {
             Default::default(),
             Default::default(),
             Default::default(),
+            Default::default(),
             &config_from_scarb,
         );
 
@@ -545,12 +563,15 @@ mod tests {
                     cache_dir: Default::default(),
                     contracts_data: Default::default(),
                     environment_variables: config.test_runner_config.environment_variables.clone(),
-                    test_artifacts_path: Default::default(),
                 }),
                 output_config: Arc::new(OutputConfig {
                     detailed_resources: true,
                     execution_data_to_save: ExecutionDataToSave::TraceAndProfile
                 }),
+                sierra_test_code_path_config: SierraTestCodePathConfig {
+                    package_name: Default::default(),
+                    sierra_test_code_dir: Default::default()
+                },
             }
         );
     }
