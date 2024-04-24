@@ -5,7 +5,7 @@ use std::fs;
 use std::path::PathBuf;
 use std::rc::Rc;
 
-use crate::sierra_test_code_path::SierraTestCodePath;
+use crate::build_trace_data::test_program_path::TestProgramPath;
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::entry_point::{CallEntryPoint, CallType};
 use blockifier::execution::syscalls::hint_processor::SyscallCounter;
@@ -31,14 +31,17 @@ use trace_data::{
     VmExecutionResources,
 };
 
+pub mod test_program_path;
+
 pub const TRACE_DIR: &str = ".snfoundry_trace";
+
 pub const TEST_CODE_CONTRACT_NAME: &str = "SNFORGE_TEST_CODE";
 pub const TEST_CODE_FUNCTION_NAME: &str = "SNFORGE_TEST_CODE_FUNCTION";
 
 pub fn build_profiler_call_trace(
     value: &Rc<RefCell<CallTrace>>,
     contracts_data: &ContractsData,
-    sierra_test_code_path: &SierraTestCodePath,
+    maybe_test_program_path: &Option<TestProgramPath>,
 ) -> ProfilerCallTrace {
     let value = value.borrow();
 
@@ -53,7 +56,7 @@ pub fn build_profiler_call_trace(
         &value.entry_point,
         vm_trace,
         contracts_data,
-        sierra_test_code_path,
+        maybe_test_program_path,
     );
 
     ProfilerCallTrace {
@@ -66,7 +69,7 @@ pub fn build_profiler_call_trace(
         nested_calls: value
             .nested_calls
             .iter()
-            .map(|c| build_profiler_call_trace_node(c, contracts_data, sierra_test_code_path))
+            .map(|c| build_profiler_call_trace_node(c, contracts_data, maybe_test_program_path))
             .collect(),
         cairo_execution_info,
     }
@@ -76,11 +79,11 @@ fn build_cairo_execution_info(
     entry_point: &CallEntryPoint,
     vm_trace: Option<Vec<ProfilerTraceEntry>>,
     contracts_data: &ContractsData,
-    sierra_test_code_path: &SierraTestCodePath,
+    maybe_test_program_path: &Option<TestProgramPath>,
 ) -> Option<CairoExecutionInfo> {
     let contract_name = get_contract_name(entry_point.class_hash, contracts_data);
     let source_sierra_path = contract_name
-        .and_then(|name| get_source_sierra_path(&name, contracts_data, sierra_test_code_path));
+        .and_then(|name| get_source_sierra_path(&name, contracts_data, maybe_test_program_path));
 
     #[allow(clippy::unnecessary_unwrap)]
     if source_sierra_path.is_some() && vm_trace.is_some() {
@@ -96,10 +99,14 @@ fn build_cairo_execution_info(
 fn get_source_sierra_path(
     contract_name: &str,
     contracts_data: &ContractsData,
-    sierra_test_code_path: &SierraTestCodePath,
+    maybe_test_program_path: &Option<TestProgramPath>,
 ) -> Option<Utf8PathBuf> {
     if contract_name == TEST_CODE_CONTRACT_NAME {
-        Some(sierra_test_code_path.path.clone())
+        Some(
+            maybe_test_program_path
+                .clone()
+                .map_or_else(Utf8PathBuf::new, Into::into),
+        )
     } else {
         contracts_data
             .get_source_sierra_path(contract_name)
@@ -110,11 +117,11 @@ fn get_source_sierra_path(
 fn build_profiler_call_trace_node(
     value: &CallTraceNode,
     contracts_data: &ContractsData,
-    sierra_test_code_path: &SierraTestCodePath,
+    test_program_path: &Option<TestProgramPath>,
 ) -> ProfilerCallTraceNode {
     match value {
         CallTraceNode::EntryPointCall(trace) => ProfilerCallTraceNode::EntryPointCall(
-            build_profiler_call_trace(trace, contracts_data, sierra_test_code_path),
+            build_profiler_call_trace(trace, contracts_data, test_program_path),
         ),
         CallTraceNode::DeployWithoutConstructor => ProfilerCallTraceNode::DeployWithoutConstructor,
     }

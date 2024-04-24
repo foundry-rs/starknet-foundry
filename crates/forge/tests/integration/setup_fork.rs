@@ -18,9 +18,9 @@ use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::Contr
 use forge::compiled_raw::RawForkParams;
 use forge::scarb::{get_test_artifacts_path, load_test_artifacts};
 use forge_runner::forge_config::{
-    ExecutionDataToSave, ForgeConfig, OutputConfig, SierraTestCodePathConfig, TestRunnerConfig,
+    ExecutionDataToSave, ForgeConfig, OutputConfig, TestRunnerConfig,
 };
-use forge_runner::{CACHE_DIR, SIERRA_TEST_CODE_DIR};
+use forge_runner::CACHE_DIR;
 use shared::command::CommandExt;
 use test_utils::runner::{assert_case_output_contains, assert_failed, assert_passed, Contract};
 use test_utils::running_tests::run_test_case;
@@ -145,14 +145,6 @@ fn fork_aliased_decorator() {
                     detailed_resources: false,
                     execution_data_to_save: ExecutionDataToSave::None,
                 }),
-                sierra_test_code_path_config: SierraTestCodePathConfig {
-                    package_name: "test_package".to_string(),
-                    sierra_test_code_dir: Utf8PathBuf::from_path_buf(
-                        tempdir().unwrap().into_path(),
-                    )
-                    .unwrap()
-                    .join(SIERRA_TEST_CODE_DIR),
-                },
             }),
             &[ForkTarget::new(
                 "FORK_NAME_FROM_SCARB_TOML".to_string(),
@@ -163,6 +155,7 @@ fn fork_aliased_decorator() {
                 },
             )],
             &mut BlockNumberMap::default(),
+            Default::default(),
         ))
         .expect("Runner fail");
 

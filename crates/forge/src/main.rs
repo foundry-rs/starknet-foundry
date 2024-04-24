@@ -1,4 +1,5 @@
 use anyhow::{anyhow, Context, Result};
+use camino::{Utf8Path, Utf8PathBuf};
 use clap::{Parser, Subcommand, ValueEnum};
 use configuration::load_package_config;
 use forge::scarb::config::ForgeConfigFromScarb;
@@ -11,7 +12,7 @@ use forge::test_filter::TestsFilter;
 use forge::{pretty_printing, run};
 use forge_runner::test_case_summary::{AnyTestCaseSummary, TestCaseSummary};
 use forge_runner::test_crate_summary::TestCrateSummary;
-use forge_runner::{CACHE_DIR, SIERRA_TEST_CODE_DIR};
+use forge_runner::CACHE_DIR;
 use rand::{thread_rng, RngCore};
 use scarb_api::{
     get_contracts_artifacts_and_source_sierra_paths,
@@ -19,13 +20,14 @@ use scarb_api::{
     package_matches_version_requirement, target_dir_for_workspace, ScarbCommand,
 };
 use scarb_ui::args::PackagesFilter;
+use std::collections::HashMap;
 
-use camino::Utf8PathBuf;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use forge::block_number_map::BlockNumberMap;
+use forge::compiled_raw::{CompiledTestCrateRaw, CrateLocation};
+use forge_runner::build_trace_data::test_program_path::{TestProgramPath, TESTS_PROGRAMS_DIR};
 use forge_runner::forge_config::{
-    is_vm_trace_needed, ExecutionDataToSave, ForgeConfig, OutputConfig, SierraTestCodePathConfig,
-    TestRunnerConfig,
+    is_vm_trace_needed, ExecutionDataToSave, ForgeConfig, OutputConfig, TestRunnerConfig,
 };
 use semver::{Comparator, Op, Version, VersionReq};
 use shared::print::print_as_warning;
@@ -184,8 +186,6 @@ fn combine_configs(
     max_n_steps: Option<u32>,
     contracts_data: ContractsData,
     cache_dir: Utf8PathBuf,
-    sierra_test_code_dir: Utf8PathBuf,
-    package_name: String,
     forge_config_from_scarb: &ForgeConfigFromScarb,
 ) -> ForgeConfig {
     let execution_data_to_save = ExecutionDataToSave::from_flags(
@@ -212,10 +212,6 @@ fn combine_configs(
             detailed_resources: detailed_resources || forge_config_from_scarb.detailed_resources,
             execution_data_to_save,
         }),
-        sierra_test_code_path_config: SierraTestCodePathConfig {
-            package_name,
-            sierra_test_code_dir,
-        },
     }
 }
 
@@ -243,6 +239,34 @@ fn warn_if_snforge_std_not_compatible(scarb_metadata: &Metadata) -> Result<()> {
         print_as_warning(&anyhow!("Package snforge_std version does not meet the recommended version requirement {snforge_std_version_requirement}, it might result in unexpected behaviour"));
     }
     Ok(())
+}
+
+fn maybe_save_tests_sierra_programs(
+    compiled_test_crates: &Vec<CompiledTestCrateRaw>,
+    execution_data_to_save: ExecutionDataToSave,
+    tests_programs_dir: &Utf8Path,
+    package_name: &str,
+) -> Result<HashMap<CrateLocation, TestProgramPath>> {
+    let save_test_sierra_program = match execution_data_to_save {
+        ExecutionDataToSave::Trace | ExecutionDataToSave::TraceAndProfile => true,
+        ExecutionDataToSave::None => false,
+    };
+    let mut map = HashMap::new();
+
+    for test_crate in compiled_test_crates {
+        let test_program_path = tests_programs_dir.join(format!(
+            "{package_name}_{:?}.sierra.json",
+            test_crate.tests_location
+        ));
+
+        if save_test_sierra_program {
+            let test_program_path =
+                TestProgramPath::save_test_program(&test_crate.sierra_program, test_program_path)?;
+            map.insert(test_crate.tests_location, test_program_path.clone());
+        }
+    }
+
+    Ok(map)
 }
 
 #[allow(clippy::too_many_lines)]
@@ -289,7 +313,8 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
             let mut all_failed_tests = vec![];
 
             let cache_dir = workspace_root.join(CACHE_DIR);
-            let sierra_test_code_dir = workspace_root.join(SIERRA_TEST_CODE_DIR);
+            let tests_programs_dir = workspace_root.join(TESTS_PROGRAMS_DIR);
+
             for package in &packages {
                 env::set_current_dir(&package.root)?;
 
@@ -316,8 +341,6 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                     args.max_n_steps,
                     contracts_data,
                     cache_dir.clone(),
-                    sierra_test_code_dir.clone(),
-                    package.name.clone(),
                     &forge_config_from_scarb,
                 ));
 
@@ -330,6 +353,13 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                     workspace_root.join(CACHE_DIR),
                 );
 
+                let test_program_paths_map = maybe_save_tests_sierra_programs(
+                    &compiled_test_crates,
+                    forge_config.output_config.execution_data_to_save,
+                    &tests_programs_dir,
+                    &package.name,
+                )?;
+
                 let tests_file_summaries = run(
                     compiled_test_crates,
                     &package.name,
@@ -337,6 +367,7 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                     forge_config,
                     &forge_config_from_scarb.fork,
                     &mut block_number_map,
+                    test_program_paths_map,
                 )
                 .await?;
 
@@ -404,8 +435,6 @@ mod tests {
             None,
             Default::default(),
             Default::default(),
-            Default::default(),
-            Default::default(),
             &Default::default(),
         );
         let config2 = combine_configs(
@@ -416,8 +445,6 @@ mod tests {
             false,
             false,
             None,
-            Default::default(),
-            Default::default(),
             Default::default(),
             Default::default(),
             &Default::default(),
@@ -443,8 +470,6 @@ mod tests {
             None,
             Default::default(),
             Default::default(),
-            Default::default(),
-            Default::default(),
             &Default::default(),
         );
         assert_eq!(
@@ -464,10 +489,6 @@ mod tests {
                     detailed_resources: false,
                     execution_data_to_save: ExecutionDataToSave::None
                 }),
-                sierra_test_code_path_config: SierraTestCodePathConfig {
-                    package_name: Default::default(),
-                    sierra_test_code_dir: Default::default()
-                },
             }
         );
     }
@@ -495,8 +516,6 @@ mod tests {
             None,
             Default::default(),
             Default::default(),
-            Default::default(),
-            Default::default(),
             &config_from_scarb,
         );
         assert_eq!(
@@ -516,10 +535,6 @@ mod tests {
                     detailed_resources: true,
                     execution_data_to_save: ExecutionDataToSave::TraceAndProfile
                 }),
-                sierra_test_code_path_config: SierraTestCodePathConfig {
-                    package_name: Default::default(),
-                    sierra_test_code_dir: Default::default()
-                },
             }
         );
     }
@@ -546,8 +561,6 @@ mod tests {
             Some(1_000_000),
             Default::default(),
             Default::default(),
-            Default::default(),
-            Default::default(),
             &config_from_scarb,
         );
 
@@ -568,10 +581,6 @@ mod tests {
                     detailed_resources: true,
                     execution_data_to_save: ExecutionDataToSave::TraceAndProfile
                 }),
-                sierra_test_code_path_config: SierraTestCodePathConfig {
-                    package_name: Default::default(),
-                    sierra_test_code_dir: Default::default()
-                },
             }
         );
     }

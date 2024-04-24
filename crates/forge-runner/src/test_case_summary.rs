@@ -1,8 +1,8 @@
 use crate::build_trace_data::build_profiler_call_trace;
+use crate::build_trace_data::test_program_path::TestProgramPath;
 use crate::compiled_runnable::TestCaseRunnable;
 use crate::expected_result::{ExpectedPanicValue, ExpectedTestResult};
 use crate::gas::check_available_gas;
-use crate::sierra_test_code_path::SierraTestCodePath;
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{RunResult, RunResultValue};
@@ -216,7 +216,7 @@ impl TestCaseSummary<Single> {
         used_resources: UsedResources,
         call_trace: &Rc<RefCell<InternalCallTrace>>,
         contracts_data: &ContractsData,
-        sierra_test_code_path: &SierraTestCodePath,
+        maybe_test_program_path: &Option<TestProgramPath>,
     ) -> Self {
         let name = test_case.name.clone();
         let msg = extract_result_data(&run_result, &test_case.expected_result);
@@ -233,7 +233,7 @@ impl TestCaseSummary<Single> {
                         trace_data: build_profiler_call_trace(
                             call_trace,
                             contracts_data,
-                            sierra_test_code_path,
+                            maybe_test_program_path,
                         ),
                     };
                     check_available_gas(&test_case.available_gas, summary)
@@ -271,7 +271,7 @@ impl TestCaseSummary<Single> {
                         trace_data: build_profiler_call_trace(
                             call_trace,
                             contracts_data,
-                            sierra_test_code_path,
+                            maybe_test_program_path,
                         ),
                     },
                 },

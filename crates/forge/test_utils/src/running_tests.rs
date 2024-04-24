@@ -6,10 +6,10 @@ use forge::run;
 use forge::scarb::{get_test_artifacts_path, load_test_artifacts};
 use forge::test_filter::TestsFilter;
 use forge_runner::forge_config::{
-    ExecutionDataToSave, ForgeConfig, OutputConfig, SierraTestCodePathConfig, TestRunnerConfig,
+    ExecutionDataToSave, ForgeConfig, OutputConfig, TestRunnerConfig,
 };
 use forge_runner::test_crate_summary::TestCrateSummary;
-use forge_runner::{CACHE_DIR, SIERRA_TEST_CODE_DIR};
+use forge_runner::CACHE_DIR;
 use shared::command::CommandExt;
 use std::num::NonZeroU32;
 use std::process::Command;
@@ -56,15 +56,10 @@ pub fn run_test_case(test: &TestCase) -> Vec<TestCrateSummary> {
                 detailed_resources: false,
                 execution_data_to_save: ExecutionDataToSave::None,
             }),
-            sierra_test_code_path_config: SierraTestCodePathConfig {
-                package_name: "test_package".to_string(),
-                sierra_test_code_dir: Utf8PathBuf::from_path_buf(tempdir().unwrap().into_path())
-                    .unwrap()
-                    .join(SIERRA_TEST_CODE_DIR),
-            },
         }),
         &[],
         &mut BlockNumberMap::default(),
+        Default::default(),
     ))
     .expect("Runner fail")
 }

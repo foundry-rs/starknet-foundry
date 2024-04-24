@@ -1,4 +1,5 @@
 use anyhow::{anyhow, Result};
+use std::collections::HashMap;
 use warn::{
     warn_if_available_gas_used_with_incompatible_scarb_version, warn_if_incompatible_rpc_version,
 };
@@ -7,13 +8,14 @@ use forge_runner::test_case_summary::AnyTestCaseSummary;
 use std::sync::Arc;
 
 use compiled_raw::{CompiledTestCrateRaw, RawForkConfig, RawForkParams};
+use forge_runner::build_trace_data::test_program_path::TestProgramPath;
 use forge_runner::test_crate_summary::TestCrateSummary;
 use forge_runner::TestCrateRunResult;
 
 use crate::block_number_map::BlockNumberMap;
+use crate::compiled_raw::CrateLocation;
 use forge_runner::compiled_runnable::{CompiledTestCrateRunnable, TestCaseRunnable};
 use forge_runner::forge_config::ForgeConfig;
-use forge_runner::sierra_test_code_path::SierraTestCodePath;
 
 use crate::scarb::config::ForkTarget;
 use crate::test_filter::TestsFilter;
@@ -101,6 +103,7 @@ pub async fn run(
     forge_config: Arc<ForgeConfig>,
     fork_targets: &[ForkTarget],
     block_number_map: &mut BlockNumberMap,
+    test_program_paths_map: HashMap<CrateLocation, TestProgramPath>,
 ) -> Result<Vec<TestCrateSummary>> {
     let all_tests: usize = compiled_test_crates
         .iter()
@@ -130,23 +133,21 @@ pub async fn run(
             compiled_test_crate_raw.test_cases.len(),
         );
 
-        let tests_location = &format!("{:?}", compiled_test_crate_raw.tests_location);
+        let maybe_test_program_path = Arc::new(
+            test_program_paths_map
+                .get(&compiled_test_crate_raw.tests_location)
+                .cloned(),
+        );
+
         let compiled_test_crate =
             to_runnable(compiled_test_crate_raw, fork_targets, block_number_map).await?;
         let forge_config = forge_config.clone();
-
-        let sierra_test_code_path = Arc::new(SierraTestCodePath::new(
-            &compiled_test_crate,
-            forge_config
-                .sierra_test_code_path_config
-                .path_for_sierra(tests_location),
-        )?);
 
         let summary = forge_runner::run_tests_from_crate(
             compiled_test_crate,
             forge_config,
             tests_filter,
-            sierra_test_code_path,
+            maybe_test_program_path,
         )
         .await?;
 

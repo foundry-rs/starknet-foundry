@@ -17,8 +17,8 @@ use build_trace_data::save_trace_data;
 use profiler_api::run_profiler;
 use smol_str::SmolStr;
 
+use crate::build_trace_data::test_program_path::TestProgramPath;
 use crate::forge_config::{ExecutionDataToSave, ForgeConfig, TestRunnerConfig};
-use crate::sierra_test_code_path::SierraTestCodePath;
 use std::sync::Arc;
 use test_case_summary::{AnyTestCaseSummary, Fuzzing};
 use tokio::sync::mpsc::{channel, Sender};
@@ -30,7 +30,6 @@ pub mod compiled_runnable;
 pub mod expected_result;
 pub mod forge_config;
 pub mod profiler_api;
-pub mod sierra_test_code_path;
 pub mod test_case_summary;
 pub mod test_crate_summary;
 
@@ -40,7 +39,6 @@ mod printing;
 mod running;
 
 pub const CACHE_DIR: &str = ".snfoundry_cache";
-pub const SIERRA_TEST_CODE_DIR: &str = ".snfoundry_test_code";
 
 pub const BUILTINS: [&str; 8] = [
     "Pedersen",
@@ -78,7 +76,7 @@ pub async fn run_tests_from_crate(
     tests: CompiledTestCrateRunnable,
     forge_config: Arc<ForgeConfig>,
     tests_filter: &impl TestCaseFilter,
-    sierra_test_code_path: Arc<SierraTestCodePath>,
+    maybe_test_program_path: Arc<Option<TestProgramPath>>,
 ) -> Result<TestCrateRunResult> {
     let sierra_program = &tests.sierra_program.program;
     let casm_program = Arc::new(compile_sierra_to_casm(sierra_program)?);
@@ -121,7 +119,7 @@ pub async fn run_tests_from_crate(
             case,
             casm_program.clone(),
             forge_config.clone(),
-            sierra_test_code_path.clone(),
+            maybe_test_program_path.clone(),
             send.clone(),
         ));
     }
@@ -182,7 +180,7 @@ fn choose_test_strategy_and_run(
     case: Arc<TestCaseRunnable>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
     forge_config: Arc<ForgeConfig>,
-    sierra_test_code_path: Arc<SierraTestCodePath>,
+    maybe_test_program_path: Arc<Option<TestProgramPath>>,
     send: Sender<()>,
 ) -> JoinHandle<Result<AnyTestCaseSummary>> {
     if args.is_empty() {
@@ -191,7 +189,7 @@ fn choose_test_strategy_and_run(
                 case,
                 casm_program,
                 forge_config.test_runner_config.clone(),
-                sierra_test_code_path.clone(),
+                maybe_test_program_path.clone(),
                 send,
             )
             .await??;
@@ -204,7 +202,7 @@ fn choose_test_strategy_and_run(
                 case,
                 casm_program,
                 forge_config.test_runner_config.clone(),
-                sierra_test_code_path.clone(),
+                maybe_test_program_path.clone(),
                 send,
             )
             .await??;
@@ -218,7 +216,7 @@ fn run_with_fuzzing(
     case: Arc<TestCaseRunnable>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
     test_runner_config: Arc<TestRunnerConfig>,
-    sierra_test_code_path: Arc<SierraTestCodePath>,
+    maybe_test_program_path: Arc<Option<TestProgramPath>>,
     send: Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary<Fuzzing>>> {
     tokio::task::spawn(async move {
@@ -259,7 +257,7 @@ fn run_with_fuzzing(
                 case.clone(),
                 casm_program.clone(),
                 test_runner_config.clone(),
-                sierra_test_code_path.clone(),
+                maybe_test_program_path.clone(),
                 send.clone(),
                 fuzzing_send.clone(),
             ));

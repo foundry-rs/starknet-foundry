@@ -21,7 +21,7 @@ pub struct TestCaseRaw {
     pub test_details: TestDetails,
 }
 
-#[derive(Debug, PartialEq, Clone, Copy, Deserialize)]
+#[derive(Debug, PartialEq, Clone, Copy, Deserialize, Hash, Eq)]
 pub enum CrateLocation {
     /// Main crate in a package
     Lib,
