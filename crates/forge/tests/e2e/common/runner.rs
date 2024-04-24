@@ -104,10 +104,7 @@ pub(crate) fn setup_hello_workspace() -> TempDir {
                 starknet.workspace = true
                 fibonacci = {{ path = "crates/fibonacci" }}
                 addition = {{ path = "crates/addition" }}
-                
-                [[target.starknet-contract]]
-                sierra = true
-                casm = true
+
                 "#,
             snforge_std_path
         ))
@@ -154,10 +151,6 @@ pub(crate) fn setup_virtual_workspace() -> TempDir {
                 
                 [tool]
                 snforge.workspace = true
-                
-                [[target.starknet-contract]]
-                sierra = true
-                casm = true
                 "#,
             snforge_std_path
         ))

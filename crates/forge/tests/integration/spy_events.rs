@@ -12,8 +12,7 @@ fn spy_events_simple() {
             use array::ArrayTrait;
             use result::ResultTrait;
             use starknet::ContractAddress;
-            use snforge_std::{ declare, ContractClassTrait, spy_events, EventSpy, EventFetcher,
-                event_name_hash, EventAssertions, SpyOn };
+            use snforge_std::{ declare, ContractClassTrait, spy_events, EventSpy, EventFetcher, EventAssertions, SpyOn };
 
             #[starknet::interface]
             trait ISpyEventsChecker<TContractState> {
@@ -438,8 +437,10 @@ fn emit_unnamed_event() {
             use starknet::contract_address_const;
             use starknet::ContractAddress;
 
-            use snforge_std::{ declare, ContractClassTrait, spy_events, EventSpy, EventFetcher,
-                event_name_hash, EventAssertions, Event, SpyOn };
+            use snforge_std::{ 
+                declare, ContractClassTrait, spy_events, EventSpy, EventFetcher,
+                EventAssertions, Event, SpyOn
+            };
 
             #[starknet::interface]
             trait ISpyEventsChecker<TContractState> {
@@ -551,8 +552,10 @@ fn assert_not_emitted_fails() {
             use array::ArrayTrait;
             use result::ResultTrait;
             use starknet::ContractAddress;
-            use snforge_std::{ declare, ContractClassTrait, spy_events, EventSpy, EventFetcher,
-                event_name_hash, EventAssertions, SpyOn };
+            use snforge_std::{
+                declare, ContractClassTrait, spy_events, EventSpy, EventFetcher,
+                EventAssertions, SpyOn
+            };
 
             #[starknet::interface]
             trait ISpyEventsChecker<TContractState> {
@@ -627,7 +630,7 @@ fn capture_cairo0_event() {
             use result::ResultTrait;
             use starknet::{ContractAddress, contract_address_const};
             use snforge_std::{ declare, ContractClassTrait, spy_events, EventSpy, EventFetcher,
-                event_name_hash, EventAssertions, SpyOn };
+                EventAssertions, SpyOn };
 
             #[starknet::interface]
             trait ISpyEventsChecker<TContractState> {

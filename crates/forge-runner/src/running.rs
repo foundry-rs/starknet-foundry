@@ -32,7 +32,7 @@ use cairo_vm::serde::deserialize_program::HintParams;
 use cairo_vm::types::relocatable::{MaybeRelocatable, Relocatable};
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cairo_vm::vm::vm_core::VirtualMachine;
-use camino::Utf8Path;
+use camino::{Utf8Path, Utf8PathBuf};
 use cheatnet::constants as cheatnet_constants;
 use cheatnet::constants::build_test_entry_point;
 use cheatnet::forking::state::ForkStateReader;
@@ -86,6 +86,7 @@ pub fn run_test(
             &case,
             vec![],
             &test_runner_config.contracts_data,
+            &test_runner_config.test_artifacts_path,
         )
     })
 }
@@ -120,7 +121,13 @@ pub(crate) fn run_fuzz_test(
             return Ok(TestCaseSummary::Skipped {});
         }
 
-        extract_test_case_summary(run_result, &case, args, &test_runner_config.contracts_data)
+        extract_test_case_summary(
+            run_result,
+            &case,
+            args,
+            &test_runner_config.contracts_data,
+            &test_runner_config.test_artifacts_path,
+        )
     })
 }
 
@@ -346,6 +353,7 @@ fn extract_test_case_summary(
     case: &TestCaseRunnable,
     args: Vec<Felt252>,
     contracts_data: &ContractsData,
+    test_artifacts_path: &Utf8PathBuf,
 ) -> Result<TestCaseSummary<Single>> {
     match run_result {
         Ok(result_with_info) => {
@@ -358,6 +366,7 @@ fn extract_test_case_summary(
                     result_with_info.used_resources,
                     &result_with_info.call_trace,
                     contracts_data,
+                    test_artifacts_path,
                 )),
                 // CairoRunError comes from VirtualMachineError which may come from HintException that originates in TestExecutionSyscallHandler
                 Err(RunnerError::CairoRunError(error)) => Ok(TestCaseSummary::Failed {
