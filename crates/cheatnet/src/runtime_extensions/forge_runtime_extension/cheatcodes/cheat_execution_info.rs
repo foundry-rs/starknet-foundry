@@ -1,0 +1,196 @@
+use crate::{
+    state::{CheatSpan, CheatStatus},
+    CheatnetState,
+};
+use cairo_felt::Felt252;
+use starknet_api::core::{ContractAddress, EntryPointSelector};
+
+#[derive(Clone, Debug)]
+pub struct CheatArguments<T> {
+    value: T,
+    span: CheatSpan,
+    target: ContractAddress,
+}
+
+#[derive(Clone, Default, Debug)]
+pub enum Operation<T> {
+    StartGlobal(T),
+    Start(CheatArguments<T>),
+    Stop(ContractAddress),
+    StopGlobal,
+    #[default]
+    Retain,
+}
+
+#[derive(Clone, Default, Debug, PartialEq, Eq)]
+pub struct TxInfoMock {
+    pub version: CheatStatus<Felt252>,
+    pub account_contract_address: CheatStatus<Felt252>,
+    pub max_fee: CheatStatus<Felt252>,
+    pub signature: CheatStatus<Vec<Felt252>>,
+    pub transaction_hash: CheatStatus<Felt252>,
+    pub chain_id: CheatStatus<Felt252>,
+    pub nonce: CheatStatus<Felt252>,
+    pub resource_bounds: CheatStatus<Vec<Felt252>>,
+    pub tip: CheatStatus<Felt252>,
+    pub paymaster_data: CheatStatus<Vec<Felt252>>,
+    pub nonce_data_availability_mode: CheatStatus<Felt252>,
+    pub fee_data_availability_mode: CheatStatus<Felt252>,
+    pub account_deployment_data: CheatStatus<Vec<Felt252>>,
+}
+
+impl TxInfoMock {
+    pub fn is_mocked(&self) -> bool {
+        self != &Default::default()
+    }
+}
+
+#[derive(Clone, Default, Debug, PartialEq, Eq)]
+pub struct BlockInfoMock {
+    pub block_number: CheatStatus<u64>,
+    pub block_timestamp: CheatStatus<u64>,
+    pub sequencer_address: CheatStatus<ContractAddress>,
+}
+
+impl BlockInfoMock {
+    pub fn is_mocked(&self) -> bool {
+        self != &Default::default()
+    }
+}
+
+#[derive(Clone, Default, Debug)]
+pub struct ExecutionInfoMock {
+    pub block_info: BlockInfoMock,
+    pub tx_info: TxInfoMock,
+    pub caller_address: CheatStatus<ContractAddress>,
+    pub contract_address: CheatStatus<ContractAddress>,
+    pub entry_point_selector: CheatStatus<EntryPointSelector>,
+}
+
+#[derive(Clone, Default, Debug)]
+pub struct TxInfoDto {
+    pub version: Operation<Felt252>,
+    pub account_contract_address: Operation<Felt252>,
+    pub max_fee: Operation<Felt252>,
+    pub signature: Operation<Vec<Felt252>>,
+    pub transaction_hash: Operation<Felt252>,
+    pub chain_id: Operation<Felt252>,
+    pub nonce: Operation<Felt252>,
+    pub resource_bounds: Operation<Vec<Felt252>>,
+    pub tip: Operation<Felt252>,
+    pub paymaster_data: Operation<Vec<Felt252>>,
+    pub nonce_data_availability_mode: Operation<Felt252>,
+    pub fee_data_availability_mode: Operation<Felt252>,
+    pub account_deployment_data: Operation<Vec<Felt252>>,
+}
+
+#[derive(Clone, Default, Debug)]
+pub struct BlockInfoDto {
+    pub block_number: Operation<u64>,
+    pub block_timestamp: Operation<u64>,
+    pub sequencer_address: Operation<ContractAddress>,
+}
+
+#[derive(Clone, Default, Debug)]
+pub struct ExecutionInfoDto {
+    pub block_info: BlockInfoDto,
+    pub tx_info: TxInfoDto,
+    pub caller_address: Operation<ContractAddress>,
+    pub contract_address: Operation<ContractAddress>,
+    pub entry_point_selector: Operation<EntryPointSelector>,
+}
+
+macro_rules! for_all_fields {
+    ($ident:ident!) => {
+        $ident!(caller_address);
+        $ident!(contract_address);
+        $ident!(entry_point_selector);
+
+        $ident!(block_info.block_number);
+        $ident!(block_info.block_timestamp);
+        $ident!(block_info.sequencer_address);
+
+        $ident!(tx_info.version);
+        $ident!(tx_info.account_contract_address);
+        $ident!(tx_info.max_fee);
+        $ident!(tx_info.signature);
+        $ident!(tx_info.transaction_hash);
+        $ident!(tx_info.chain_id);
+        $ident!(tx_info.nonce);
+        $ident!(tx_info.resource_bounds);
+        $ident!(tx_info.tip);
+        $ident!(tx_info.paymaster_data);
+        $ident!(tx_info.nonce_data_availability_mode);
+        $ident!(tx_info.fee_data_availability_mode);
+        $ident!(tx_info.account_deployment_data);
+    };
+}
+
+impl CheatnetState {
+    fn get_cheated_execution_info_for_target(
+        &mut self,
+        target: &ContractAddress,
+    ) -> &mut ExecutionInfoMock {
+        self.cheated_execution_info_contracts
+            .get_mut(&target)
+            .unwrap()
+    }
+
+    pub fn cheat_execution_info(&mut self, execution_info_mock: ExecutionInfoDto) {
+        //TODO other fields
+        macro_rules! cheat {
+            ($($path:ident).+) => {
+                match execution_info_mock.$($path).+ {
+                    Operation::Retain => {}
+                    Operation::Start(CheatArguments {
+                        value,
+                        span,
+                        target,
+                    }) => {
+                        let cheated_info = self.get_cheated_execution_info_for_target(&target);
+
+                        cheated_info.$($path).+ = CheatStatus::Cheated(value, span);
+                    }
+                    Operation::Stop(target) => {
+                        let cheated_info = self.get_cheated_execution_info_for_target(&target);
+
+                        cheated_info.$($path).+ = CheatStatus::Uncheated;
+                    }
+                    Operation::StartGlobal(value) => {
+                        self.global_cheated_execution_info.$($path).+ =
+                            CheatStatus::Cheated(value.clone(), CheatSpan::Indefinite);
+
+                        for val in self.cheated_execution_info_contracts.values_mut() {
+                            val.$($path).+ = CheatStatus::Cheated(value.clone(), CheatSpan::Indefinite);
+                        }
+                    }
+                    Operation::StopGlobal => {
+                        self.global_cheated_execution_info.$($path).+ = CheatStatus::Uncheated
+                    }
+                };
+            };
+        }
+
+        for_all_fields!(cheat!);
+    }
+
+    pub fn progress_cheated_execution_info(&mut self, address: &ContractAddress) {
+        let mocks = self
+            .cheated_execution_info_contracts
+            .get_mut(address)
+            .unwrap();
+
+        macro_rules! decrement {
+            ($($path:ident).+) => {
+                mocks.$($path).+.decrement_cheat_span();
+            };
+        }
+
+        for_all_fields!(decrement!);
+    }
+
+    pub fn on_deploy_cheated_execution_info(&mut self, address: ContractAddress) {
+        self.cheated_execution_info_contracts
+            .insert(address, self.global_cheated_execution_info.clone());
+    }
+}

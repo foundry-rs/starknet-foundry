@@ -15,6 +15,7 @@ use runtime::starknet::state::DictStateReader;
 use starknet_api::core::EntryPointSelector;
 
 use crate::constants::{build_test_entry_point, TEST_CONTRACT_CLASS_HASH};
+use crate::runtime_extensions::forge_runtime_extension::cheatcodes::cheat_execution_info::ExecutionInfoMock;
 use blockifier::blockifier::block::BlockInfo;
 use blockifier::execution::call_info::OrderedL2ToL1Message;
 use blockifier::execution::syscalls::hint_processor::SyscallCounter;
@@ -44,7 +45,7 @@ pub enum CheatTarget {
 }
 
 // Specifies the duration of the cheat
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum CheatSpan {
     Indefinite,
     TargetCalls(usize),
@@ -131,9 +132,10 @@ impl StateReader for ExtendedStateReader {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Default, Debug, PartialEq, Eq)]
 pub enum CheatStatus<T> {
     Cheated(T, CheatSpan),
+    #[default]
     Uncheated,
 }
 
@@ -144,6 +146,13 @@ impl<T> CheatStatus<T> {
             if *n == 0 {
                 *self = CheatStatus::Uncheated;
             }
+        }
+    }
+
+    pub fn unwrap(self) -> (T, CheatSpan) {
+        match self {
+            Self::Cheated(value, span) => (value, span),
+            Self::Uncheated => panic!("Called CheatStatus::unwrap on CheatStatus::Uncheated"),
         }
     }
 }
@@ -265,6 +274,9 @@ pub struct TraceData {
 }
 
 pub struct CheatnetState {
+    pub cheated_execution_info_contracts: HashMap<ContractAddress, ExecutionInfoMock>,
+    pub global_cheated_execution_info: ExecutionInfoMock,
+
     pub rolled_contracts: HashMap<ContractAddress, CheatStatus<Felt252>>,
     pub global_roll: Option<(Felt252, CheatSpan)>,
     pub pranked_contracts: HashMap<ContractAddress, CheatStatus<ContractAddress>>,
@@ -294,6 +306,8 @@ impl Default for CheatnetState {
             ..CallTrace::default_successful_call()
         }));
         Self {
+            cheated_execution_info_contracts: Default::default(),
+            global_cheated_execution_info: Default::default(),
             rolled_contracts: Default::default(),
             global_roll: None,
             pranked_contracts: Default::default(),

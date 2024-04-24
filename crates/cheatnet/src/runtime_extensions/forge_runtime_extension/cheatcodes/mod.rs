@@ -3,6 +3,7 @@ use cairo_felt::Felt252;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use runtime::EnhancedHintError;
 
+pub mod cheat_execution_info;
 pub mod declare;
 pub mod deploy;
 pub mod elect;
