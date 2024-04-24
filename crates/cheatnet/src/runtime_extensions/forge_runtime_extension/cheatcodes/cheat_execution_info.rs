@@ -40,6 +40,7 @@ pub struct TxInfoMock {
 }
 
 impl TxInfoMock {
+    #[must_use]
     pub fn is_mocked(&self) -> bool {
         self != &Default::default()
     }
@@ -53,6 +54,7 @@ pub struct BlockInfoMock {
 }
 
 impl BlockInfoMock {
+    #[must_use]
     pub fn is_mocked(&self) -> bool {
         self != &Default::default()
     }
@@ -101,28 +103,28 @@ pub struct ExecutionInfoDto {
 }
 
 macro_rules! for_all_fields {
-    ($ident:ident!) => {
-        $ident!(caller_address);
-        $ident!(contract_address);
-        $ident!(entry_point_selector);
+    ($macro:ident!) => {
+        $macro!(caller_address);
+        $macro!(contract_address);
+        $macro!(entry_point_selector);
 
-        $ident!(block_info.block_number);
-        $ident!(block_info.block_timestamp);
-        $ident!(block_info.sequencer_address);
+        $macro!(block_info.block_number);
+        $macro!(block_info.block_timestamp);
+        $macro!(block_info.sequencer_address);
 
-        $ident!(tx_info.version);
-        $ident!(tx_info.account_contract_address);
-        $ident!(tx_info.max_fee);
-        $ident!(tx_info.signature);
-        $ident!(tx_info.transaction_hash);
-        $ident!(tx_info.chain_id);
-        $ident!(tx_info.nonce);
-        $ident!(tx_info.resource_bounds);
-        $ident!(tx_info.tip);
-        $ident!(tx_info.paymaster_data);
-        $ident!(tx_info.nonce_data_availability_mode);
-        $ident!(tx_info.fee_data_availability_mode);
-        $ident!(tx_info.account_deployment_data);
+        $macro!(tx_info.version);
+        $macro!(tx_info.account_contract_address);
+        $macro!(tx_info.max_fee);
+        $macro!(tx_info.signature);
+        $macro!(tx_info.transaction_hash);
+        $macro!(tx_info.chain_id);
+        $macro!(tx_info.nonce);
+        $macro!(tx_info.resource_bounds);
+        $macro!(tx_info.tip);
+        $macro!(tx_info.paymaster_data);
+        $macro!(tx_info.nonce_data_availability_mode);
+        $macro!(tx_info.fee_data_availability_mode);
+        $macro!(tx_info.account_deployment_data);
     };
 }
 
@@ -132,12 +134,11 @@ impl CheatnetState {
         target: &ContractAddress,
     ) -> &mut ExecutionInfoMock {
         self.cheated_execution_info_contracts
-            .get_mut(&target)
+            .get_mut(target)
             .unwrap()
     }
 
     pub fn cheat_execution_info(&mut self, execution_info_mock: ExecutionInfoDto) {
-        //TODO other fields
         macro_rules! cheat {
             ($($path:ident).+) => {
                 match execution_info_mock.$($path).+ {

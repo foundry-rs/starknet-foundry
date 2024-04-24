@@ -149,10 +149,10 @@ impl<T> CheatStatus<T> {
         }
     }
 
-    pub fn unwrap(self) -> (T, CheatSpan) {
+    pub fn as_option(self) -> Option<(T, CheatSpan)> {
         match self {
-            Self::Cheated(value, span) => (value, span),
-            Self::Uncheated => panic!("Called CheatStatus::unwrap on CheatStatus::Uncheated"),
+            Self::Cheated(value, span) => Some((value, span)),
+            Self::Uncheated => None,
         }
     }
 }
@@ -363,32 +363,6 @@ impl CheatnetState {
     #[must_use]
     pub fn get_salt(&self) -> ContractAddressSalt {
         ContractAddressSalt(StarkFelt::from(self.deploy_salt_base))
-    }
-
-    #[must_use]
-    pub fn address_is_rolled(&self, contract_address: &ContractAddress) -> bool {
-        self.get_cheated_block_number(contract_address).is_some()
-    }
-
-    #[must_use]
-    pub fn address_is_warped(&self, contract_address: &ContractAddress) -> bool {
-        self.get_cheated_block_timestamp(contract_address).is_some()
-    }
-
-    #[must_use]
-    pub fn address_is_pranked(&self, contract_address: &ContractAddress) -> bool {
-        self.get_cheated_caller_address(contract_address).is_some()
-    }
-
-    #[must_use]
-    pub fn address_is_elected(&self, contract_address: &ContractAddress) -> bool {
-        self.get_cheated_sequencer_address(contract_address)
-            .is_some()
-    }
-
-    #[must_use]
-    pub fn address_is_spoofed(&self, contract_address: &ContractAddress) -> bool {
-        self.get_cheated_tx_info(contract_address).is_some()
     }
 
     #[must_use]
