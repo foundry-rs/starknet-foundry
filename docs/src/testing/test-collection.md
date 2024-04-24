@@ -93,3 +93,15 @@ The package structure of tests makes it easy!
 In both of the above examples, you can
 make the functions from `tests/common/utils.cairo` available in `tests/test_contract.cairo` 
 by using a relative import: `use super::common::utils;`.
+
+### How Contracts Are Collected
+
+When you call `snforge test`, one of the things that Forge does is that it calls Scarb, particularly `scarb build`.
+Scarb then builds all contracts you're using and stores them inside the `target/{current_profile}` directory
+(read more on [Scarb website](https://docs.swmansion.com/scarb/docs/extensions/starknet/contract-target.html)).
+
+Then, for each package, Foundry loads compiled contracts from that package and uses them to run tests.
+
+> ⚠️ **Warning**
+> 
+> Make sure to define `[[target.starknet-contract]]` section in your Scarb.toml, otherwise Scarb won't build your contracts.

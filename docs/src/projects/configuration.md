@@ -23,7 +23,7 @@ exit_first = true
 To be able to work with the network, you need to supply `sncast` with a few parameters —
 namely the rpc node url and an account name that should be used to interact with it.
 This can be done
-by either supplying `sncast` with those parameters directly [see more detailed CLI description,](../appendix/sncast.md)
+by either supplying `sncast` with those parameters directly [(see more detailed CLI description)](../appendix/sncast.md),
 or you can put them into `snfoundry.toml` file:
 
 ```toml
@@ -39,13 +39,16 @@ With `snfoundry.toml` configured this way, we can just pass `--profile myprofile
 defined in the profile.
 
 > 📝 **Note**
+> 
 > `snfoundry.toml` file has to be present in current or any of the parent directories.
 
 > 📝 **Note**
+> 
 > If there is a profile with the same name in Scarb.toml, scarb will use this profile. If not, scarb will default to using the dev profile.
 > (This applies only to subcommands using scarb - namely `declare` and `script`).
 
 > 💡 **Info**
+> x
 > Not all parameters have to be present in the configuration - you can choose to include only some of them and supply
 > the rest of them using CLI flags. You can also override parameters from the configuration using CLI flags.
 
