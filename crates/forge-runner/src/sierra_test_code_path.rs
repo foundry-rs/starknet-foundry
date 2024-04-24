@@ -4,6 +4,7 @@ use anyhow::Result;
 use cairo_lang_sierra::program::VersionedProgram;
 use camino::Utf8PathBuf;
 use fs4::FileExt;
+use std::fs;
 use std::fs::File;
 use std::io::BufWriter;
 
@@ -14,6 +15,8 @@ pub struct SierraTestCodePath {
 impl SierraTestCodePath {
     pub fn new(test_crate: &CompiledTestCrateRunnable, output_path: Utf8PathBuf) -> Result<Self> {
         let versioned_program: VersionedProgram = test_crate.sierra_program.clone().into();
+        fs::create_dir_all(output_path.parent().unwrap())
+            .context("Failed to create directory for tests sierra programs")?;
         let output_file = File::options()
             .create(true)
             .write(true)
