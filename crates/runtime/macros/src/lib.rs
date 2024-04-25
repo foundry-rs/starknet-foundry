@@ -3,6 +3,8 @@ use quote::{quote, quote_spanned};
 use syn::spanned::Spanned;
 use syn::{parse_macro_input, parse_quote, Data, DeriveInput, Fields, GenericParam, Generics};
 
+// works by calling `FromReader::from_reader(reader)` on all fields of struct
+// for enums by reading 1 felt that is then matched on to determine which variant should be used
 #[proc_macro_derive(FromReader)]
 pub fn derive_from_reader(item: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let span = item.clone().into();
@@ -19,7 +21,6 @@ pub fn derive_from_reader(item: proc_macro::TokenStream) -> proc_macro::TokenStr
     let body = create_func_body(data, &span);
 
     quote! {
-        #[allow(clippy::all)]
         impl #impl_generics runtime::utils::from_reader::FromReader for #name #ty_generics #where_clause {
             fn from_reader(reader: &mut runtime::utils::buffer_reader::BufferReader<'_>) -> runtime::utils::buffer_reader::BufferReadResult<Self> {
                 #body
@@ -39,7 +40,8 @@ fn add_trait_bounds(generics: &mut Generics) {
     }
 }
 
-fn from_field(fields: &Fields) -> TokenStream {
+// generate code for struct/enum fields (named and tuple)
+fn call_trait_on_field(fields: &Fields) -> TokenStream {
     match fields {
         Fields::Named(fields) => {
             let recurse = fields.named.iter().map(|f| {
@@ -69,11 +71,12 @@ fn from_field(fields: &Fields) -> TokenStream {
     }
 }
 
+// creates code for `FromReader::from_reader` body
 fn create_func_body(data: &Data, span: &TokenStream) -> TokenStream {
     match data {
         Data::Struct(data) => match &data.fields {
             Fields::Named(_) | Fields::Unnamed(_) => {
-                let fields = from_field(&data.fields);
+                let fields = call_trait_on_field(&data.fields);
 
                 quote! {
                     Result::Ok(Self
@@ -86,9 +89,11 @@ fn create_func_body(data: &Data, span: &TokenStream) -> TokenStream {
             }
         },
         Data::Enum(data) => {
+            // generate match arms by matching on next integer literals (discriminator)
+            // then generate trait calls for variants fields
             let arms = data.variants.iter().enumerate().map(|(i, variant)| {
                 let name = &variant.ident;
-                let fields = from_field(&variant.fields);
+                let fields = call_trait_on_field(&variant.fields);
                 let lit = syn::parse_str::<syn::LitInt>(&i.to_string()).unwrap();
 
                 quote! {
@@ -98,7 +103,8 @@ fn create_func_body(data: &Data, span: &TokenStream) -> TokenStream {
 
             quote! {
                 let variant = reader.read_felt()?;
-                let variant = num_traits::cast::ToPrimitive::to_usize(&variant).unwrap();
+                let variant = num_traits::cast::ToPrimitive::to_usize(&variant)
+                    .ok_or(runtime::utils::buffer_reader::BufferReadError::ParseFailed)?;
 
                 let this = match variant {
                     #(#arms,)*
@@ -108,6 +114,8 @@ fn create_func_body(data: &Data, span: &TokenStream) -> TokenStream {
                 Result::Ok(this)
             }
         }
+        // can not determine which variant should be used
+        // use enum instead
         Data::Union(_) => syn::Error::new_spanned(
             span,
             "runtime::utils::from_reader::FromReader can be derived only on structs and enums",

@@ -162,7 +162,7 @@ use result::ResultTrait;
 use starknet::SyscallResultTrait;
 use starknet::ContractAddress;
 use snforge_std::{ declare, ContractClassTrait, spy_events, EventSpy, EventFetcher,
-    event_name_hash, EventAssertions, Event, SpyOn, test_address };
+    EventAssertions, Event, SpyOn, test_address };
 
 #[test]
 fn test_expect_events_simple() {

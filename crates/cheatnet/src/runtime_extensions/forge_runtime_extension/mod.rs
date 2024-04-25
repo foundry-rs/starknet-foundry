@@ -32,7 +32,6 @@ use blockifier::{
 };
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
-use cairo_lang_starknet_classes::keccak::starknet_keccak;
 use cairo_vm::vm::{
     errors::hint_errors::HintError, runners::cairo_runner::ExecutionResources,
     vm_core::VirtualMachine,
@@ -374,12 +373,6 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let mut result = vec![Felt252::from(emitted_events_len)];
                 result.extend(serialized_events);
                 Ok(CheatcodeHandlingResult::Handled(result))
-            }
-            "event_name_hash" => {
-                let name = input_reader.read()?;
-                let hash = starknet_keccak(as_cairo_short_string(&name).unwrap().as_bytes());
-
-                Ok(CheatcodeHandlingResult::Handled(vec![Felt252::from(hash)]))
             }
             "generate_stark_keys" => {
                 let key_pair = SigningKey::from_random();
