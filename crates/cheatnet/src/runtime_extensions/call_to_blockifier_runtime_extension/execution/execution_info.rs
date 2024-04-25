@@ -90,8 +90,19 @@ fn get_cheated_tx_info_ptr(
         new_tx_info[7] = MaybeRelocatable::Int(nonce);
     };
     if let Some(resource_bounds) = resource_bounds {
-        let (resource_bounds_start_ptr, resource_bounds_end_ptr) =
-            add_vec_memory_segment(&resource_bounds, vm);
+        let (resource_bounds_start_ptr, resource_bounds_end_ptr) = add_memory_segment(
+            &resource_bounds
+                .into_iter()
+                .flat_map(|resource_bound| {
+                    [
+                        MaybeRelocatable::from(resource_bound.resource),
+                        MaybeRelocatable::from(Felt252::from(resource_bound.max_amount)),
+                        MaybeRelocatable::from(Felt252::from(resource_bound.max_price_per_unit)),
+                    ]
+                })
+                .collect(),
+            vm,
+        );
         new_tx_info[8] = resource_bounds_start_ptr.into();
         new_tx_info[9] = resource_bounds_end_ptr.into();
     }
@@ -175,12 +186,18 @@ fn add_vec_memory_segment(
     vector: &[Felt252],
     vm: &mut VirtualMachine,
 ) -> (Relocatable, Relocatable) {
+    add_memory_segment(&vector.iter().map(MaybeRelocatable::from).collect(), vm)
+}
+
+fn add_memory_segment(
+    vector: &Vec<MaybeRelocatable>,
+    vm: &mut VirtualMachine,
+) -> (Relocatable, Relocatable) {
     let vector_len = vector.len();
     let vector_start_ptr = vm.add_memory_segment();
     let vector_end_ptr = (vector_start_ptr + vector_len).unwrap();
 
-    let vector: Vec<MaybeRelocatable> = vector.iter().map(MaybeRelocatable::from).collect();
-    vm.load_data(vector_start_ptr, &vector).unwrap();
+    vm.load_data(vector_start_ptr, vector).unwrap();
 
     (vector_start_ptr, vector_end_ptr)
 }
