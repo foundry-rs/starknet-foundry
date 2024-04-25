@@ -16,7 +16,7 @@ pub trait FromReader: Sized {
 }
 
 // not blanked T: FromConv<Felt252> because in different crate than FromConv so conflicting implementations
-macro_rules! impl_from_reader_for_felt_types {
+macro_rules! impl_from_reader_for_felt_type {
     ($type:ty) => {
         impl FromReader for $type {
             fn from_reader(reader: &mut BufferReader<'_>) -> BufferReadResult<Self> {
@@ -26,12 +26,12 @@ macro_rules! impl_from_reader_for_felt_types {
     };
 }
 
-impl_from_reader_for_felt_types!(FieldElement);
-impl_from_reader_for_felt_types!(ClassHash);
-impl_from_reader_for_felt_types!(StarkFelt);
-impl_from_reader_for_felt_types!(ContractAddress);
-impl_from_reader_for_felt_types!(Nonce);
-impl_from_reader_for_felt_types!(EntryPointSelector);
+impl_from_reader_for_felt_type!(FieldElement);
+impl_from_reader_for_felt_type!(ClassHash);
+impl_from_reader_for_felt_type!(StarkFelt);
+impl_from_reader_for_felt_type!(ContractAddress);
+impl_from_reader_for_felt_type!(Nonce);
+impl_from_reader_for_felt_type!(EntryPointSelector);
 
 impl FromReader for Felt252 {
     fn from_reader(reader: &mut BufferReader<'_>) -> BufferReadResult<Self> {
