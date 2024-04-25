@@ -9,19 +9,25 @@
 * [Scarb](getting-started/scarb.md)
 * [Project Configuration](projects/configuration.md)
 
-# `snforge` overview
+---
+
+# `snforge` Overview
 
 * [Running Tests](testing/running-tests.md)
 * [Writing Tests](testing/testing.md)
 * [Testing Smart Contracts](testing/contracts.md)
 * [Testing Contracts' Internals](testing/testing_contract_internals.md)
-* [Fork Testing](testing/fork-testing.md)
 * [Using Cheatcodes](testing/using-cheatcodes.md)
-* [Fuzz Testing](testing/fuzz-testing.md)
+* [Testing Events](testing/testing-events.md)
 * [Test Collection](testing/test-collection.md)
 * [Gas and VM Resources Estimation](testing/gas-and-resource-estimation.md)
-* [Profiling](testing/profiling.md)
 
+# `snforge` Advanced Features
+* [Fork Testing](snforge-advanced-features/fork-testing.md)
+* [Fuzz Testing](snforge-advanced-features/fuzz-testing.md)
+* [Profiling](snforge-advanced-features/profiling.md)
+
+--- 
 # `sncast` Overview
 
 * [Outline](starknet/index.md)
@@ -33,9 +39,13 @@
 * [Performing Multicall](starknet/multicall.md)
 * [Cairo Deployment Scripts](starknet/script.md)
 
+---
+
 # Foundry Development
 
 * [Environment Setup](development/environment-setup.md)
+
+--- 
 
 # Appendix
 

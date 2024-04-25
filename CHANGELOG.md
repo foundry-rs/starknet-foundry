@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
+
+#### Removed
+- `event_name_hash` removal, in favour of `selector!` usage
+
 #### Changed
 
 - the tool now always compiles Sierra contract artifacts to CASM using

@@ -5,6 +5,7 @@ use crate::gas::check_available_gas;
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{RunResult, RunResultValue};
+use camino::Utf8PathBuf;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::state::CallTrace as InternalCallTrace;
@@ -206,6 +207,7 @@ impl TestCaseSummary<Fuzzing> {
 
 impl TestCaseSummary<Single> {
     #[must_use]
+    #[allow(clippy::too_many_arguments)]
     pub(crate) fn from_run_result_and_info(
         run_result: RunResult,
         test_case: &TestCaseRunnable,
@@ -214,6 +216,7 @@ impl TestCaseSummary<Single> {
         used_resources: UsedResources,
         call_trace: &Rc<RefCell<InternalCallTrace>>,
         contracts_data: &ContractsData,
+        test_artifacts_path: &Utf8PathBuf,
     ) -> Self {
         let name = test_case.name.clone();
         let msg = extract_result_data(&run_result, &test_case.expected_result);
@@ -227,7 +230,11 @@ impl TestCaseSummary<Single> {
                         test_statistics: (),
                         gas_info: gas,
                         used_resources,
-                        trace_data: build_profiler_call_trace(call_trace, contracts_data),
+                        trace_data: build_profiler_call_trace(
+                            call_trace,
+                            contracts_data,
+                            test_artifacts_path,
+                        ),
                     };
                     check_available_gas(&test_case.available_gas, summary)
                 }
@@ -261,7 +268,11 @@ impl TestCaseSummary<Single> {
                         test_statistics: (),
                         gas_info: gas,
                         used_resources,
-                        trace_data: build_profiler_call_trace(call_trace, contracts_data),
+                        trace_data: build_profiler_call_trace(
+                            call_trace,
+                            contracts_data,
+                            test_artifacts_path,
+                        ),
                     },
                 },
             },
