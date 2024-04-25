@@ -34,7 +34,7 @@ where
         formatdoc!(
             r#"
                 #[executable("{exec_name}")]
-                fn {fn_name}() -> Option<snforge_std::_config_types::{return_type}> {{
+                fn {fn_name}() -> snforge_std::_config_types::{return_type} {{
                     {body}
                 }}
             "#
@@ -64,7 +64,7 @@ where
         let return_type = Self::RETURN_TYPE;
         let config_fn = Self::create_config_fn(
             func.declaration(db).name(db).text(db).as_str(),
-            &format!("Option::Some(snforge_std::_config_types::{return_type}{{{fn_body}}})",),
+            &format!("snforge_std::_config_types::{return_type}{{{fn_body}}}",),
         );
 
         Ok(TokenStream::new(formatdoc!(
