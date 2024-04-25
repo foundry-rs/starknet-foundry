@@ -63,7 +63,7 @@ fn store_and_load_map_entry() {
 ```
 
 ## Example: Complex structures in storage
-This example uses a complex key and value, with `serde` as default serialization method.
+This example uses a complex key and value, with default derived serialization methods (via `#[derive(starknet::Store)]`).
 
 ```rust
 use snforge_std::{ store, load, map_entry_address };
