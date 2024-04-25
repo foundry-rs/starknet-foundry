@@ -2,7 +2,7 @@ use super::buffer_reader::{BufferReadError, BufferReadResult, BufferReader};
 use cairo_felt::{felt_str, Felt252};
 use cairo_lang_runner::short_string::as_cairo_short_string_ex;
 use cairo_lang_utils::byte_array::{BYTES_IN_WORD, BYTE_ARRAY_MAGIC};
-use conversions::IntoConv;
+use conversions::{FromConv, IntoConv};
 use num_traits::cast::ToPrimitive;
 use num_traits::One;
 use starknet::core::types::FieldElement;
@@ -25,6 +25,19 @@ macro_rules! impl_from_reader_for_felt_type {
         }
     };
 }
+macro_rules! impl_from_reader_for_num_type {
+    ($type:ty) => {
+        impl FromReader for $type {
+            fn from_reader(reader: &mut BufferReader<'_>) -> BufferReadResult<Self> {
+                let felt = Felt252::from_reader(reader)?;
+
+                felt.to_bigint()
+                    .try_into()
+                    .map_err(|_| BufferReadError::ParseFailed)
+            }
+        }
+    };
+}
 
 impl_from_reader_for_felt_type!(FieldElement);
 impl_from_reader_for_felt_type!(ClassHash);
@@ -32,6 +45,13 @@ impl_from_reader_for_felt_type!(StarkFelt);
 impl_from_reader_for_felt_type!(ContractAddress);
 impl_from_reader_for_felt_type!(Nonce);
 impl_from_reader_for_felt_type!(EntryPointSelector);
+
+impl_from_reader_for_num_type!(u8);
+impl_from_reader_for_num_type!(u16);
+impl_from_reader_for_num_type!(u32);
+impl_from_reader_for_num_type!(u64);
+impl_from_reader_for_num_type!(u128);
+impl_from_reader_for_num_type!(usize);
 
 impl FromReader for Felt252 {
     fn from_reader(reader: &mut BufferReader<'_>) -> BufferReadResult<Self> {
@@ -43,32 +63,29 @@ impl FromReader for Felt252 {
     }
 }
 
-impl FromReader for Vec<Felt252> {
+impl<T> FromReader for Vec<T>
+where
+    T: FromConv<Felt252>,
+{
     fn from_reader(reader: &mut BufferReader<'_>) -> BufferReadResult<Self> {
-        let length = reader.read_felt()?;
-        let length = felt252_to_vec_length(&length)?;
-        Ok(reader.read_slice(length)?.to_owned())
+        let length: Felt252 = reader.read()?;
+        let length = length.to_usize().ok_or(BufferReadError::ParseFailed)?;
+
+        Ok(reader
+            .read_slice(length)?
+            .iter()
+            .map(|felt| felt.clone().into_())
+            .collect::<Vec<_>>())
     }
 }
 
-impl FromReader for Option<Vec<Felt252>> {
+impl<T> FromReader for Option<T>
+where
+    T: FromReader,
+{
     fn from_reader(reader: &mut BufferReader<'_>) -> BufferReadResult<Self> {
-        Ok(match reader.read_option_felt()? {
-            Some(count) => {
-                let count = felt252_to_vec_length(&count)?;
-                let result = reader.read_slice(count)?;
-
-                Some(result.to_owned())
-            }
-            None => None,
-        })
-    }
-}
-
-impl FromReader for Option<Felt252> {
-    fn from_reader(reader: &mut BufferReader<'_>) -> BufferReadResult<Self> {
-        match reader.read_felt() {
-            Ok(felt) if !felt.is_one() => Ok(Some(reader.read_felt()?)),
+        match reader.read::<Felt252>() {
+            Ok(felt) if !felt.is_one() => Ok(Some(reader.read()?)),
             _ => Ok(None),
         }
     }
@@ -76,7 +93,7 @@ impl FromReader for Option<Felt252> {
 
 impl FromReader for bool {
     fn from_reader(reader: &mut BufferReader<'_>) -> BufferReadResult<Self> {
-        reader.read_felt().map(|felt| felt == 1.into())
+        reader.read::<Felt252>().map(|felt| felt == 1.into())
     }
 }
 
@@ -94,10 +111,6 @@ impl FromReader for String {
 
         Ok(result)
     }
-}
-
-fn felt252_to_vec_length(vec_len: &Felt252) -> BufferReadResult<usize> {
-    vec_len.to_usize().ok_or(BufferReadError::ParseFailed)
 }
 
 fn try_format_string(values: &[Felt252]) -> Option<(String, usize)> {
