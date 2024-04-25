@@ -5,7 +5,7 @@ use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::spoof::Tx
 use cheatnet::state::{CheatSpan, CheatTarget};
 use conversions::IntoConv;
 use num_traits::ToPrimitive;
-use runtime::utils::BufferReader;
+use runtime::utils::buffer_reader::BufferReader;
 use starknet_api::{core::ContractAddress, transaction::TransactionHash};
 
 trait SpoofTrait {
@@ -104,10 +104,11 @@ impl TxInfo {
         let nonce = reader.read_felt().unwrap();
         let resource_bounds_len = reader.read_felt().unwrap();
         let resource_bounds = reader
-            .read_vec_body(
+            .read_slice(
                 3 * resource_bounds_len.to_usize().unwrap(), // ResourceBounds struct has 3 fields
             )
-            .unwrap();
+            .unwrap()
+            .to_owned();
         let tip = reader.read_felt().unwrap();
         let paymaster_data = reader.read_vec().unwrap();
         let nonce_data_availability_mode = reader.read_felt().unwrap();

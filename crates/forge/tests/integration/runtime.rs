@@ -83,7 +83,7 @@ fn cheatcode_invalid_args() {
         indoc!(
             r#"
                 "Reading from buffer failed, this can be caused by calling starknet::testing::cheatcode with invalid arguments.
-                    Probably snforge_std version is incompatible, check above for incompatibility warning.
+                    Probably `snforge_std`/`sncast_std` version is incompatible, check above for incompatibility warning.
                     "
             "#
         ),

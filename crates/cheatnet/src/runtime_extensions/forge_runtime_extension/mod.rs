@@ -44,7 +44,10 @@ use conversions::{
 };
 use num_traits::ToPrimitive;
 use runtime::{
-    utils::{BufferReadError, BufferReadResult, BufferReader},
+    utils::{
+        buffer_reader::{BufferReadError, BufferReadResult, BufferReader},
+        from_reader::FromReader,
+    },
     CheatcodeHandlingResult, EnhancedHintError, ExtendedRuntime, ExtensionLogic,
     SyscallHandlingResult,
 };
@@ -66,20 +69,15 @@ pub struct ForgeExtension<'a> {
     pub contracts_data: &'a ContractsData,
 }
 
-trait BufferReaderExt {
-    fn read_cheat_target(&mut self) -> BufferReadResult<CheatTarget>;
-    fn read_cheat_span(&mut self) -> BufferReadResult<CheatSpan>;
-}
-
-impl BufferReaderExt for BufferReader<'_> {
-    fn read_cheat_target(&mut self) -> BufferReadResult<CheatTarget> {
-        let cheat_target_variant = self.read_felt()?.to_u8();
+impl FromReader for CheatTarget {
+    fn from_reader(reader: &mut BufferReader<'_>) -> BufferReadResult<Self> {
+        let cheat_target_variant = reader.read_felt()?.to_u8();
 
         Ok(match cheat_target_variant {
             Some(0) => CheatTarget::All,
-            Some(1) => CheatTarget::One(self.read_felt()?.into_()),
+            Some(1) => CheatTarget::One(reader.read()?),
             Some(2) => {
-                let contract_addresses: Vec<_> = self
+                let contract_addresses: Vec<_> = reader
                     .read_vec()?
                     .iter()
                     .map(|el| ContractAddress::from_(el.clone()))
@@ -89,12 +87,14 @@ impl BufferReaderExt for BufferReader<'_> {
             _ => Err(BufferReadError::ParseFailed)?,
         })
     }
+}
 
-    fn read_cheat_span(&mut self) -> BufferReadResult<CheatSpan> {
-        let cheat_span_variant = self.read_felt()?.to_u8();
+impl FromReader for CheatSpan {
+    fn from_reader(reader: &mut BufferReader<'_>) -> BufferReadResult<Self> {
+        let cheat_span_variant = reader.read_felt()?.to_u8();
         Ok(match cheat_span_variant {
             Some(0) => CheatSpan::Indefinite,
-            Some(1) => CheatSpan::TargetCalls(self.read_felt()?.to_usize().unwrap()),
+            Some(1) => CheatSpan::TargetCalls(reader.read_felt()?.to_usize().unwrap()),
             _ => Err(BufferReadError::ParseFailed)?,
         })
     }
@@ -113,8 +113,8 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
     ) -> Result<CheatcodeHandlingResult, EnhancedHintError> {
         match selector {
             "roll" => {
-                let target = input_reader.read_cheat_target()?;
-                let span = input_reader.read_cheat_span()?;
+                let target = input_reader.read()?;
+                let span = input_reader.read()?;
                 let block_number = input_reader.read_felt()?;
 
                 extended_runtime
@@ -125,7 +125,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
             "stop_roll" => {
-                let target = input_reader.read_cheat_target()?;
+                let target = input_reader.read()?;
 
                 extended_runtime
                     .extended_runtime
@@ -135,8 +135,8 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
             "warp" => {
-                let target = input_reader.read_cheat_target()?;
-                let span = input_reader.read_cheat_span()?;
+                let target = input_reader.read()?;
+                let span = input_reader.read()?;
                 let warp_timestamp = input_reader.read_felt()?;
 
                 extended_runtime
@@ -148,7 +148,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
             "stop_warp" => {
-                let target = input_reader.read_cheat_target()?;
+                let target = input_reader.read()?;
 
                 extended_runtime
                     .extended_runtime
@@ -158,9 +158,9 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
             "elect" => {
-                let target = input_reader.read_cheat_target()?;
-                let span = input_reader.read_cheat_span()?;
-                let sequencer_address = input_reader.read_felt()?.into_();
+                let target = input_reader.read()?;
+                let span = input_reader.read()?;
+                let sequencer_address = input_reader.read()?;
 
                 extended_runtime
                     .extended_runtime
@@ -170,7 +170,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
             "stop_elect" => {
-                let target = input_reader.read_cheat_target()?;
+                let target = input_reader.read()?;
                 extended_runtime
                     .extended_runtime
                     .extension
@@ -179,10 +179,10 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
             "prank" => {
-                let target = input_reader.read_cheat_target()?;
-                let span = input_reader.read_cheat_span()?;
+                let target = input_reader.read()?;
+                let span = input_reader.read()?;
 
-                let caller_address = input_reader.read_felt()?.into_();
+                let caller_address = input_reader.read()?;
 
                 extended_runtime
                     .extended_runtime
@@ -192,7 +192,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
             "stop_prank" => {
-                let target = input_reader.read_cheat_target()?;
+                let target = input_reader.read()?;
 
                 extended_runtime
                     .extended_runtime
@@ -202,9 +202,9 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
             "mock_call" => {
-                let contract_address = input_reader.read_felt()?.into_();
+                let contract_address = input_reader.read()?;
                 let function_selector = input_reader.read_felt()?;
-                let span = input_reader.read_cheat_span()?;
+                let span = input_reader.read()?;
 
                 let ret_data = input_reader.read_vec()?;
 
@@ -216,7 +216,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
             "stop_mock_call" => {
-                let contract_address = input_reader.read_felt()?.into_();
+                let contract_address = input_reader.read()?;
                 let function_selector = input_reader.read_felt()?;
 
                 extended_runtime
@@ -227,8 +227,8 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
             "spoof" => {
-                let target = input_reader.read_cheat_target()?;
-                let span = input_reader.read_cheat_span()?;
+                let target = input_reader.read()?;
+                let span = input_reader.read()?;
 
                 let version = input_reader.read_option_felt()?;
                 let account_contract_address = input_reader.read_option_felt()?;
@@ -238,9 +238,13 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let chain_id = input_reader.read_option_felt()?;
                 let nonce = input_reader.read_option_felt()?;
                 let resource_bounds = match input_reader.read_option_felt()? {
-                    Some(resource_bounds_len) => Some(input_reader.read_vec_body(
-                        3 * resource_bounds_len.to_usize().unwrap(), // ResourceBounds struct has 3 fields
-                    )?),
+                    Some(resource_bounds_len) => Some(
+                        input_reader
+                            .read_slice(
+                                3 * resource_bounds_len.to_usize().unwrap(), // ResourceBounds struct has 3 fields
+                            )?
+                            .to_owned(),
+                    ),
                     None => None,
                 };
                 let tip = input_reader.read_option_felt()?;
@@ -273,7 +277,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
             "stop_spoof" => {
-                let target = input_reader.read_cheat_target()?;
+                let target = input_reader.read()?;
 
                 extended_runtime
                     .extended_runtime
@@ -283,8 +287,8 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
             "replace_bytecode" => {
-                let contract = input_reader.read_felt()?.into_();
-                let class = input_reader.read_felt()?.into_();
+                let contract = input_reader.read()?;
+                let class = input_reader.read()?;
 
                 extended_runtime
                     .extended_runtime
@@ -305,7 +309,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 handle_declare_result(declare(*state, &contract_name, self.contracts_data))
             }
             "deploy" => {
-                let class_hash = input_reader.read_felt()?.into_();
+                let class_hash = input_reader.read()?;
                 let calldata = input_reader.read_vec()?;
                 let cheatnet_runtime = &mut extended_runtime.extended_runtime;
                 let syscall_handler = &mut cheatnet_runtime.extended_runtime.hint_handler;
@@ -320,9 +324,9 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 ))
             }
             "deploy_at" => {
-                let class_hash = input_reader.read_felt()?.into_();
+                let class_hash = input_reader.read()?;
                 let calldata = input_reader.read_vec()?;
-                let contract_address = input_reader.read_felt()?.into_();
+                let contract_address = input_reader.read()?;
                 let cheatnet_runtime = &mut extended_runtime.extended_runtime;
                 let syscall_handler = &mut cheatnet_runtime.extended_runtime.hint_handler;
 
@@ -337,7 +341,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 ))
             }
             "precalculate_address" => {
-                let class_hash = input_reader.read_felt()?.into_();
+                let class_hash = input_reader.read()?;
                 let calldata = input_reader.read_vec()?;
 
                 let contract_address = extended_runtime
@@ -366,7 +370,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 Ok(CheatcodeHandlingResult::Handled(parsed_env_var))
             }
             "get_class_hash" => {
-                let contract_address = input_reader.read_felt()?.into_();
+                let contract_address = input_reader.read()?;
 
                 let state = &mut extended_runtime
                     .extended_runtime
@@ -383,7 +387,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 }
             }
             "l1_handler_execute" => {
-                let contract_address = input_reader.read_felt()?.into_();
+                let contract_address = input_reader.read()?;
                 let function_selector = input_reader.read_felt()?;
                 let from_address = input_reader.read_felt()?;
 
@@ -429,7 +433,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .expect("Invalid spy_target length");
                 let spy_on = match spy_target_variant {
                     0 => SpyTarget::All,
-                    1 => SpyTarget::One(input_reader.read_felt()?.into_()),
+                    1 => SpyTarget::One(input_reader.read()?),
                     _ => {
                         let addresses = input_reader
                             .read_vec()?
