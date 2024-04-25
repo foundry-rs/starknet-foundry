@@ -75,7 +75,6 @@
     * [get_call_trace](appendix/snforge-library/get_call_trace.md)
     * [fs](appendix/snforge-library/fs.md)
     * [env](appendix/snforge-library/env.md)
-        * [var](appendix/snforge-library/env/var.md)
     * [signature](appendix/snforge-library/signature.md)
 * [`sncast` Commands](appendix/sncast.md)
     * [common flags](appendix/sncast/common.md)
