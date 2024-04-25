@@ -21,7 +21,7 @@ Changes `TxInfo` returned by `get_tx_info()` for the targeted contract until the
 Cancels the `spoof` / `start_spoof` for the given target.
 
 
-## `TxInfoMock` & `TxInfoMockTrait`
+## `TxInfoMock` 
 
 A structure used for setting individual fields in `TxInfo`
 All fields are optional, with optional value meaning as defined:
@@ -37,7 +37,7 @@ struct TxInfoMock {
     chain_id: Option<felt252>,
     nonce: Option<felt252>,
     // starknet::info::v2::TxInfo fields
-    resource_bounds: Option<Span<ResourceBounds>>,
+    resource_bounds: Option<Span<starknet::info::v2::ResourceBounds>>,
     tip: Option<u128>,
     paymaster_data: Option<Span<felt252>>,
     nonce_data_availability_mode: Option<u32>,
@@ -46,10 +46,22 @@ struct TxInfoMock {
 }
 ```
 
-Returns a default object initialized with Option::None for each field
-Useful for setting only a few of fields instead of all of them
+### `starknet::info::v2::ResourceBounds`
+```
+pub struct ResourceBounds {
+    resource: felt252,
+    max_amount: u64,
+    max_price_per_unit: u128,
+}
+```
+A struct responsible for setting the resource bounds, used in `TxInfoMock`.
+
+## `TxInfoMockTrait`
 ```
 trait TxInfoMockTrait {
     fn default() -> TxInfoMock;
 }
 ```
+
+Returns a default object initialized with Option::None for each field
+Useful for setting only a few of fields instead of all of them
