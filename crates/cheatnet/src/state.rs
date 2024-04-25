@@ -399,7 +399,6 @@ impl CheatnetState {
         self.progress_cheated_execution_info(*address);
         update_cheat_for_contract(&self.global_roll, &mut self.rolled_contracts, address);
         update_cheat_for_contract(&self.global_warp, &mut self.warped_contracts, address);
-        update_cheat_for_contract(&self.global_prank, &mut self.pranked_contracts, address);
         update_cheat_for_contract(&self.global_elect, &mut self.elected_contracts, address);
         update_cheat_for_contract(&self.global_spoof, &mut self.spoofed_contracts, address);
     }

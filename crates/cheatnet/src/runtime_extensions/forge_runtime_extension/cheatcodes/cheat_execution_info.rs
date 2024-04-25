@@ -8,9 +8,9 @@ use starknet_api::core::{ContractAddress, EntryPointSelector};
 
 #[derive(FromReader, Clone, Debug)]
 pub struct CheatArguments<T> {
-    value: T,
-    span: CheatSpan,
-    target: ContractAddress,
+    pub value: T,
+    pub span: CheatSpan,
+    pub target: ContractAddress,
 }
 
 #[derive(FromReader, Clone, Default, Debug)]
@@ -130,7 +130,7 @@ macro_rules! for_all_fields {
 }
 
 impl CheatnetState {
-    fn get_cheated_execution_info_for_contract(
+    pub fn get_cheated_execution_info_for_contract(
         &mut self,
         target: ContractAddress,
     ) -> &mut ExecutionInfoMock {
