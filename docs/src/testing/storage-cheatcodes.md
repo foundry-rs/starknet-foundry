@@ -76,7 +76,8 @@ mod Contract {
         b: felt252,
     }
 
-    // Required for indexing of complex_mapping
+    // Required for lookup of complex_mapping values
+    // This is consistent with `map_entry_address`, which uses pedersen hashing of keys
     impl StructuredKeyHash of LegacyHash<MapKey> {
         fn hash(state: felt252, value: MapKey) -> felt252 {
             let state = LegacyHash::<felt252>::hash(state, value.a);
@@ -90,7 +91,7 @@ mod Contract {
         b: felt252,
     }
     
-    // Serialization of key with `Serde` (other methods are possible)
+    // Serialization of keys and values with `Serde` to make usage of `map_entry_address` easier 
     impl MapKeyIntoSpan of Into<MapKey, Span<felt252>> {
         fn into(self: MapKey) -> Span<felt252> {
             let mut serialized_struct: Array<felt252> = array![];
@@ -98,8 +99,6 @@ mod Contract {
             serialized_struct.span()
         }
     }
-    
-     // Serialization of value with `Serde` (other methods are possible)
     impl MapValueIntoSpan of Into<MapValue, Span<felt252>> {
         fn into(self: MapValue) -> Span<felt252> {
             let mut serialized_struct: Array<felt252> = array![];
@@ -124,7 +123,7 @@ fn store_in_complex_mapping() {
     
     store(
         contract_address, 
-        map_entry_address(
+        map_entry_address(        // Uses pedersen hashing for address calculation
             selector!("mapping"), // Providing variable name
             k.into()              // Providing mapping key
         ),
