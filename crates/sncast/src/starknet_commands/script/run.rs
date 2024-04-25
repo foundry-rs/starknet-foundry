@@ -115,7 +115,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 ))
             }
             "declare" => {
-                let contract_name = input_reader.read_string()?;
+                let contract_name: String = input_reader.read()?;
                 let max_fee = input_reader.read()?;
                 let nonce = input_reader.read()?;
 
@@ -152,7 +152,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
             }
             "deploy" => {
                 let class_hash = input_reader.read()?;
-                let constructor_calldata = input_reader.read_vec()?;
+                let constructor_calldata: Vec<_> = input_reader.read()?;
 
                 let salt = input_reader.read()?;
                 let unique = input_reader.read()?;
@@ -197,7 +197,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
             "invoke" => {
                 let contract_address = input_reader.read()?;
                 let function_selector = input_reader.read()?;
-                let calldata = input_reader.read_vec()?;
+                let calldata: Vec<_> = input_reader.read()?;
                 let max_fee = input_reader.read()?;
                 let nonce = input_reader.read()?;
 

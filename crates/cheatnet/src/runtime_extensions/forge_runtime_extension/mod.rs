@@ -170,7 +170,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let function_selector = input_reader.read()?;
                 let span = input_reader.read()?;
 
-                let ret_data = input_reader.read_vec()?;
+                let ret_data: Vec<_> = input_reader.read()?;
 
                 extended_runtime
                     .extended_runtime
@@ -231,13 +231,13 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .hint_handler
                     .state;
 
-                let contract_name = input_reader.read_string()?;
+                let contract_name: String = input_reader.read()?;
 
                 handle_declare_result(declare(*state, &contract_name, self.contracts_data))
             }
             "deploy" => {
                 let class_hash = input_reader.read()?;
-                let calldata = input_reader.read_vec()?;
+                let calldata: Vec<_> = input_reader.read()?;
                 let cheatnet_runtime = &mut extended_runtime.extended_runtime;
                 let syscall_handler = &mut cheatnet_runtime.extended_runtime.hint_handler;
 
@@ -252,7 +252,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
             }
             "deploy_at" => {
                 let class_hash = input_reader.read()?;
-                let calldata = input_reader.read_vec()?;
+                let calldata: Vec<_> = input_reader.read()?;
                 let contract_address = input_reader.read()?;
                 let cheatnet_runtime = &mut extended_runtime.extended_runtime;
                 let syscall_handler = &mut cheatnet_runtime.extended_runtime.hint_handler;
@@ -269,7 +269,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
             }
             "precalculate_address" => {
                 let class_hash = input_reader.read()?;
-                let calldata = input_reader.read_vec()?;
+                let calldata: Vec<_> = input_reader.read()?;
 
                 let contract_address = extended_runtime
                     .extended_runtime
@@ -284,7 +284,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 ]))
             }
             "var" => {
-                let name = input_reader.read_string()?;
+                let name: String = input_reader.read()?;
 
                 let env_var = self
                     .environment_variables
@@ -318,7 +318,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let function_selector = input_reader.read()?;
                 let from_address = input_reader.read()?;
 
-                let payload = input_reader.read_vec()?;
+                let payload: Vec<_> = input_reader.read()?;
 
                 let cheatnet_runtime = &mut extended_runtime.extended_runtime;
 
@@ -343,12 +343,12 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 }
             }
             "read_txt" => {
-                let file_path = input_reader.read_string()?;
+                let file_path: String = input_reader.read()?;
                 let parsed_content = file_operations::read_txt(file_path)?;
                 Ok(CheatcodeHandlingResult::Handled(parsed_content))
             }
             "read_json" => {
-                let file_path = input_reader.read_string()?;
+                let file_path: String = input_reader.read()?;
                 let parsed_content = file_operations::read_json(file_path)?;
 
                 Ok(CheatcodeHandlingResult::Handled(parsed_content))
@@ -442,10 +442,10 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
             }
             "ecdsa_sign_message" => {
                 let curve = as_cairo_short_string(&input_reader.read()?);
-                let sk_low = input_reader.read_felt()?;
-                let sk_high = input_reader.read_felt()?;
-                let msg_hash_low = input_reader.read_felt()?;
-                let msg_hash_high = input_reader.read_felt()?;
+                let sk_low: Felt252 = input_reader.read()?;
+                let sk_high: Felt252 = input_reader.read()?;
+                let msg_hash_low: Felt252 = input_reader.read()?;
+                let msg_hash_high: Felt252 = input_reader.read()?;
 
                 let secret_key = concat_u128_bytes(&sk_low.to_be_bytes(), &sk_high.to_be_bytes());
                 let msg_hash =
@@ -534,8 +534,8 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
             }
             "map_entry_address" => {
                 let map_selector = &input_reader.read()?;
-                let keys = &input_reader.read_vec()?;
-                let map_entry_address = calculate_variable_address(map_selector, Some(keys));
+                let keys: Vec<_> = input_reader.read()?;
+                let map_entry_address = calculate_variable_address(map_selector, Some(&keys));
                 Ok(CheatcodeHandlingResult::Handled(vec![map_entry_address]))
             }
             _ => Ok(CheatcodeHandlingResult::Forwarded),

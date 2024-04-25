@@ -2,7 +2,6 @@ use super::from_reader::FromReader;
 use crate::EnhancedHintError;
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
-use conversions::FromConv;
 use indoc::indoc;
 use thiserror::Error;
 
@@ -58,19 +57,8 @@ impl<'b> BufferReader<'b> {
         T::from_reader(self)
     }
 
-    pub fn read_felt(&mut self) -> BufferReadResult<Felt252> {
-        self.read()
-    }
-
-    pub fn read_vec<T: FromConv<Felt252>>(&mut self) -> BufferReadResult<Vec<T>> {
-        self.read()
-    }
-
-    pub fn read_string(&mut self) -> BufferReadResult<String> {
-        self.read()
-    }
-
     pub fn read_short_string(&mut self) -> BufferReadResult<Option<String>> {
-        self.read_felt().map(|felt| as_cairo_short_string(&felt))
+        self.read::<Felt252>()
+            .map(|felt| as_cairo_short_string(&felt))
     }
 }

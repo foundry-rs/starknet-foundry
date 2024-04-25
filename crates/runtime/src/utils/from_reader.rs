@@ -68,7 +68,7 @@ where
     T: FromConv<Felt252>,
 {
     fn from_reader(reader: &mut BufferReader<'_>) -> BufferReadResult<Self> {
-        let length = reader.read_felt()?;
+        let length: Felt252 = reader.read()?;
         let length = length.to_usize().ok_or(BufferReadError::ParseFailed)?;
 
         Ok(reader
@@ -84,7 +84,7 @@ where
     T: FromReader,
 {
     fn from_reader(reader: &mut BufferReader<'_>) -> BufferReadResult<Self> {
-        match reader.read_felt() {
+        match reader.read::<Felt252>() {
             Ok(felt) if !felt.is_one() => Ok(Some(reader.read()?)),
             _ => Ok(None),
         }
@@ -93,7 +93,7 @@ where
 
 impl FromReader for bool {
     fn from_reader(reader: &mut BufferReader<'_>) -> BufferReadResult<Self> {
-        reader.read_felt().map(|felt| felt == 1.into())
+        reader.read::<Felt252>().map(|felt| felt == 1.into())
     }
 }
 

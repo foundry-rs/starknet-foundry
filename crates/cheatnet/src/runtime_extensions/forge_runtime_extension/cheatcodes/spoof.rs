@@ -20,7 +20,7 @@ impl Deref for ResourceBounds {
 
 impl FromReader for ResourceBounds {
     fn from_reader(reader: &mut BufferReader<'_>) -> BufferReadResult<Self> {
-        let count = reader.read_felt()?;
+        let count: Felt252 = reader.read()?;
 
         let count = count.to_usize().ok_or(BufferReadError::ParseFailed)?;
         let result = reader.read_slice(count * 3)?; // ResourceBounds struct has 3 fields
