@@ -22,6 +22,7 @@ use blockifier::state::errors::StateError::UndeclaredClassHash;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cairo_vm::vm::trace::trace_entry::TraceEntry;
 use runtime::starknet::context::SerializableBlockInfo;
+use runtime::FromReader;
 use starknet_api::transaction::ContractAddressSalt;
 use starknet_api::{
     class_hash,
@@ -37,6 +38,7 @@ use trace_data::L1Resources;
 
 // Specifies which contracts to target
 // with a cheatcode function
+#[derive(FromReader)]
 pub enum CheatTarget {
     All,
     One(ContractAddress),
@@ -44,7 +46,7 @@ pub enum CheatTarget {
 }
 
 // Specifies the duration of the cheat
-#[derive(Clone, Debug)]
+#[derive(FromReader, Clone, Debug)]
 pub enum CheatSpan {
     Indefinite,
     TargetCalls(usize),
