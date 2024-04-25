@@ -70,7 +70,7 @@ pub struct ExecutionInfoMock {
 }
 
 #[derive(Clone, Default, Debug)]
-pub struct TxInfoDto {
+pub struct TxInfoMockOperations {
     pub version: Operation<Felt252>,
     pub account_contract_address: Operation<Felt252>,
     pub max_fee: Operation<Felt252>,
@@ -87,16 +87,16 @@ pub struct TxInfoDto {
 }
 
 #[derive(Clone, Default, Debug)]
-pub struct BlockInfoDto {
+pub struct BlockInfoMockOperations {
     pub block_number: Operation<u64>,
     pub block_timestamp: Operation<u64>,
     pub sequencer_address: Operation<ContractAddress>,
 }
 
 #[derive(Clone, Default, Debug)]
-pub struct ExecutionInfoDto {
-    pub block_info: BlockInfoDto,
-    pub tx_info: TxInfoDto,
+pub struct ExecutionInfoMockOperations {
+    pub block_info: BlockInfoMockOperations,
+    pub tx_info: TxInfoMockOperations,
     pub caller_address: Operation<ContractAddress>,
     pub contract_address: Operation<ContractAddress>,
     pub entry_point_selector: Operation<EntryPointSelector>,
@@ -138,7 +138,7 @@ impl CheatnetState {
             .or_insert_with(|| self.global_cheated_execution_info.clone())
     }
 
-    pub fn cheat_execution_info(&mut self, execution_info_mock: ExecutionInfoDto) {
+    pub fn cheat_execution_info(&mut self, execution_info_mock: ExecutionInfoMockOperations) {
         macro_rules! cheat {
             ($($path:ident).+) => {
                 match execution_info_mock.$($path).+ {
