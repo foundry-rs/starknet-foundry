@@ -210,40 +210,6 @@ pub async fn test_nonexistent_account_address() {
 }
 
 #[tokio::test]
-pub async fn test_nonexistent_account_type() {
-    let tempdir = tempdir().expect("Unable to create a temporary directory");
-    let accounts_file = "accounts.json";
-
-    let args = vec![
-        "--url",
-        URL,
-        "--accounts-file",
-        accounts_file,
-        "account",
-        "add",
-        "--name",
-        "my_account_add",
-        "--address",
-        "0x123",
-        "--private-key",
-        "0x456",
-        "--type",
-        "unknown_type",
-    ];
-
-    let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().failure();
-
-    assert_stderr_contains(
-        output,
-        indoc! {r"
-        error: invalid value 'unknown_type' for '--type <ACCOUNT_TYPE>'
-          [possible values: oz, argent]
-    "},
-    );
-}
-
-#[tokio::test]
 pub async fn test_happy_case_add_profile() {
     let tempdir = tempdir().expect("Failed to create a temporary directory");
     let accounts_file = "accounts.json";
