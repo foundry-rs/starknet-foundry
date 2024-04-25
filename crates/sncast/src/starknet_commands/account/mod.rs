@@ -36,7 +36,9 @@ pub enum Commands {
 
 #[derive(ValueEnum, Clone, Debug)]
 pub enum AccountType {
+    /// OpenZeppelin account implementation
     Oz,
+    /// Argent account implementation
     Argent,
 }
 
