@@ -3,16 +3,17 @@ use crate::{
     CheatnetState,
 };
 use cairo_felt::Felt252;
+use runtime::FromReader;
 use starknet_api::core::{ContractAddress, EntryPointSelector};
 
-#[derive(Clone, Debug)]
+#[derive(FromReader, Clone, Debug)]
 pub struct CheatArguments<T> {
     value: T,
     span: CheatSpan,
     target: ContractAddress,
 }
 
-#[derive(Clone, Default, Debug)]
+#[derive(FromReader, Clone, Default, Debug)]
 pub enum Operation<T> {
     StartGlobal(T),
     Start(CheatArguments<T>),
@@ -69,7 +70,7 @@ pub struct ExecutionInfoMock {
     pub entry_point_selector: CheatStatus<EntryPointSelector>,
 }
 
-#[derive(Clone, Default, Debug)]
+#[derive(FromReader, Clone, Default, Debug)]
 pub struct TxInfoMockOperations {
     pub version: Operation<Felt252>,
     pub account_contract_address: Operation<Felt252>,
@@ -86,14 +87,14 @@ pub struct TxInfoMockOperations {
     pub account_deployment_data: Operation<Vec<Felt252>>,
 }
 
-#[derive(Clone, Default, Debug)]
+#[derive(FromReader, Clone, Default, Debug)]
 pub struct BlockInfoMockOperations {
     pub block_number: Operation<u64>,
     pub block_timestamp: Operation<u64>,
     pub sequencer_address: Operation<ContractAddress>,
 }
 
-#[derive(Clone, Default, Debug)]
+#[derive(FromReader, Clone, Default, Debug)]
 pub struct ExecutionInfoMockOperations {
     pub block_info: BlockInfoMockOperations,
     pub tx_info: TxInfoMockOperations,
