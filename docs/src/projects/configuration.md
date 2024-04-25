@@ -48,7 +48,7 @@ defined in the profile.
 > (This applies only to subcommands using scarb - namely `declare` and `script`).
 
 > 💡 **Info**
-> x
+> 
 > Not all parameters have to be present in the configuration - you can choose to include only some of them and supply
 > the rest of them using CLI flags. You can also override parameters from the configuration using CLI flags.
 

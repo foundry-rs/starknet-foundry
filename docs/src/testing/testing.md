@@ -143,21 +143,3 @@ Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ```
 
 For more information about how starknet-foundry calculates those, see [gas and resource estimation](gas-and-resource-estimation.md) section.
-
-
-## Using External Contracts In Tests
-
-If you wish to use external contracts inside your tests (e.g. an ERC20 token, an account contract) from your dependencies,
-you first need to build them. 
-
-Fortunately, we can do that by using `build-external-contracts` property. For example, 
-if you want to build `Account` contract in `openzeppelin` package, simply add this to your `Scarb.toml`:
-
-```toml
-[[target.starknet-contract]]
-build-external-contracts = ["openzeppelin::account::account::Account"]
-```
-
-After building your project, you will be able to use the `Account` contract in your tests.
-
-For more information about `build-external-contracts`, see [Scarb documentation](https://docs.swmansion.com/scarb/docs/extensions/starknet/contract-target.html#compiling-external-contracts).
