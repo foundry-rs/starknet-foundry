@@ -103,7 +103,8 @@ fn create_func_body(data: &Data, span: &TokenStream) -> TokenStream {
 
             quote! {
                 let variant = reader.read_felt()?;
-                let variant = num_traits::cast::ToPrimitive::to_usize(&variant).unwrap();
+                let variant = num_traits::cast::ToPrimitive::to_usize(&variant)
+                    .ok_or(runtime::utils::buffer_reader::BufferReadError::ParseFailed)?;
 
                 let this = match variant {
                     #(#arms,)*
