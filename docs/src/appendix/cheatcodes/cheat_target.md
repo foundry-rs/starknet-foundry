@@ -16,28 +16,3 @@ enum CheatTarget {
 > 📝 **Note**
 > 
 > `CheatTarget::Multiple` acts as a helper for targeting every specified address separately with `CheatTarget::One`.
-> It does not treat the list of specified addresses as a group unit.
-
-
-
-An example with the [`start_warp`](./block_timestamp/start_warp.md) cheatcode:
-```rust 
-#[test]
-fn some_test() {
-    // ...
-    start_warp(CheatTarget::All, 123);
-    // block timestamp for every address is set to 123
-    start_warp(CheatTarget::One(10), 456);
-    // block timestamp:
-    //   - for address 10: 456
-    //   - for every other address: 123
-    stop_warp(CheatTarget::Multiple(array![20, 30]));
-    // block timestamp:
-    //   - for address 10: 456
-    //   - for addresses 20 and 30: not cheated 
-    //   - for every other address: 123
-    stop_warp(CheatTarget::All);
-    // block timestamp is not cheated for any address
-    // ...
-}
-```

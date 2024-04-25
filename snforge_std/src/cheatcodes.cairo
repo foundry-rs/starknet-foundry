@@ -9,16 +9,25 @@ mod tx_info;
 mod fork;
 mod storage;
 
+/// `CheatTarget` is an enum used to designate the contracts to which a cheat should be applied.
 #[derive(Drop, Serde, PartialEq, Clone, Debug, Display)]
 enum CheatTarget {
+    /// Applies the cheatcode to all contract addresses.
     All: (),
+    /// Applies the cheatcode to the given contract address.
     One: ContractAddress,
+    /// Applies the cheatcode to each given address.
     Multiple: Array<ContractAddress>
 }
 
+/// `CheatSpan` is an enum used to specify for how long the target should be cheated.
+/// Please note, that `CheatTarget::All` can only be used with `CheatSpan::Indefinite`.
 #[derive(Drop, Serde, PartialEq, Clone, Debug, Display)]
 enum CheatSpan {
+    /// Applies the cheatcode indefinitely, until the cheat is canceled manually (e.g. using `stop_warp`).
     Indefinite: (),
+    /// Applies the cheatcode for specified number of calls to target,
+    /// after which the cheat is canceled (or until the cheat is canceled manually).
     TargetCalls: usize,
 }
 
