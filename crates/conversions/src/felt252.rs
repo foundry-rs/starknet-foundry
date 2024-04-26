@@ -129,13 +129,14 @@ pub trait SerializeAsFelt252Vec: Sized {
     }
 }
 
-impl SerializeAsFelt252Vec for Vec<Felt252> {
+impl<T> SerializeAsFelt252Vec for Vec<T>
+where
+    T: SerializeAsFelt252Vec,
+{
     fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
-        output.extend(self);
-    }
-
-    fn serialize_as_felt252_vec(self) -> Vec<Felt252> {
-        self
+        for e in self {
+            e.serialize_into_felt252_vec(output);
+        }
     }
 }
 
