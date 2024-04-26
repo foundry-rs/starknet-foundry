@@ -63,5 +63,5 @@ trait TxInfoMockTrait {
 }
 ```
 
-Returns a default object initialized with Option::None for each field
-Useful for setting only a few of fields instead of all of them
+Returns a default object initialized with `Option::None` for each field.
+Useful for setting only a few of the fields instead of all of them.
