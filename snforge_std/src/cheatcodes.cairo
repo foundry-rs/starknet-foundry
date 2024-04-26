@@ -20,13 +20,13 @@ enum CheatTarget {
     Multiple: Array<ContractAddress>
 }
 
-/// `CheatSpan` is an enum used to specify for how long the target should be cheated.
-/// Please note, that `CheatTarget::All` can only be used with `CheatSpan::Indefinite`.
+/// `CheatSpan` is an enum used to specify how long the target should be cheated for.
+/// Please note that `CheatTarget::All` can only be used with `CheatSpan::Indefinite`.
 #[derive(Drop, Serde, PartialEq, Clone, Debug, Display)]
 enum CheatSpan {
     /// Applies the cheatcode indefinitely, until the cheat is canceled manually (e.g. using `stop_warp`).
     Indefinite: (),
-    /// Applies the cheatcode for specified number of calls to target,
+    /// Applies the cheatcode for a specified number of calls to the target,
     /// after which the cheat is canceled (or until the cheat is canceled manually).
     TargetCalls: usize,
 }
