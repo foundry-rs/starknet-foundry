@@ -19,6 +19,7 @@
 * [Using Cheatcodes](testing/using-cheatcodes.md)
 * [Fuzz Testing](testing/fuzz-testing.md)
 * [Test Collection](testing/test-collection.md)
+* [Contract Collection](testing/contracts-collection.md)
 * [Gas and VM Resources Estimation](testing/gas-and-resource-estimation.md)
 * [Profiling](testing/profiling.md)
 
