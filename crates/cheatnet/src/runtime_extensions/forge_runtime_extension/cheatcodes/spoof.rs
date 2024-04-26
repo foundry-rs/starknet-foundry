@@ -1,6 +1,7 @@
 use crate::state::{start_cheat, stop_cheat, CheatSpan, CheatTarget};
 use crate::CheatnetState;
 use cairo_felt::Felt252;
+use conversions::felt252::SerializeAsFelt252Vec;
 use runtime::FromReader;
 
 #[derive(FromReader, Clone, Default, Debug, PartialEq)]
@@ -8,6 +9,14 @@ pub struct ResourceBounds {
     pub resource: Felt252,
     pub max_amount: u64,
     pub max_price_per_unit: u128,
+}
+
+impl SerializeAsFelt252Vec for ResourceBounds {
+    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
+        output.push(self.resource);
+        output.push(self.max_amount.into());
+        output.push(self.max_price_per_unit.into());
+    }
 }
 
 #[derive(FromReader, Clone, Default, Debug)]
