@@ -58,7 +58,7 @@ struct TxInfo {
     pub transaction_hash: Felt252,
     pub chain_id: Felt252,
     pub nonce: Felt252,
-    pub resource_bounds: ResourceBounds,
+    pub resource_bounds: Vec<ResourceBounds>,
     pub tip: Felt252,
     pub paymaster_data: Vec<Felt252>,
     pub nonce_data_availability_mode: Felt252,
@@ -135,14 +135,18 @@ fn start_spoof_multiple_times() {
         transaction_hash: Some(Felt252::from(123)),
         chain_id: Some(Felt252::from(22)),
         nonce: Some(Felt252::from(33)),
-        resource_bounds: Some(ResourceBounds(vec![
-            Felt252::from(111),
-            Felt252::from(222),
-            Felt252::from(333),
-            Felt252::from(444),
-            Felt252::from(555),
-            Felt252::from(666),
-        ])),
+        resource_bounds: Some(vec![
+            ResourceBounds {
+                resource: Felt252::from(111),
+                max_amount: 222,
+                max_price_per_unit: 333,
+            },
+            ResourceBounds {
+                resource: Felt252::from(444),
+                max_amount: 555,
+                max_price_per_unit: 666,
+            },
+        ]),
         tip: Some(Felt252::from(777)),
         paymaster_data: Some(vec![
             Felt252::from(11),
