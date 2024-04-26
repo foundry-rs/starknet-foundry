@@ -34,6 +34,26 @@ Options:
 For more information, check out https://foundry-rs.github.io/starknet-foundry/getting-started/installation.html
 EOF
 }
+print_docs_and_community_info() {
+  cat <<EOF
+
+Read the docs:
+- Starknet Foundry Book: https://foundry-rs.github.io/starknet-foundry/
+- Cairo Book: https://book.cairo-lang.org/
+- Starknet Book: https://book.starknet.io/
+- Starknet Documentation: https://docs.starknet.io/
+- Scarb Documentation: https://docs.swmansion.com/scarb/docs.html
+
+Join the community:
+- Follow core developers on X: https://twitter.com/swmansionxyz
+- Get support via Telegram: https://t.me/starknet_foundry_support
+- Or discord: https://discord.gg/KZWaFtPZJf
+- Or join our general chat (Telegram): https://t.me/starknet_foundry
+
+Report bugs: https://github.com/foundry-rs/starknet-foundry/issues/new/choose
+
+EOF
+}
 
 main() {
   need_cmd chmod
@@ -119,6 +139,7 @@ main() {
   local _retval=$?
 
   echo
+  print_docs_and_community_info
   if echo ":$PATH:" | grep -q ":${LOCAL_BIN}:"; then
     echo "Starknet Foundry has been successfully installed and should be already available in your PATH."
     echo "Run 'snforge --version' and 'sncast --version' to verify your installation. Happy coding!"

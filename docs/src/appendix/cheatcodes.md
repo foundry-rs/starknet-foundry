@@ -11,9 +11,9 @@
 - [`warp`](cheatcodes/block_timestamp#warp) - changes the block timestamp for contracts, for a number of calls
 - [`start_warp`](cheatcodes/block_timestamp#start_warp) - changes the block timestamp for contracts
 - [`stop_warp`](cheatcodes/block_timestamp#stop_warp) - cancels the `warp` / `start_warp` for contracts
-- [`elect`](cheatcodes/sequencer_address/elect.md) - changes the sequencer address for contracts, for a number of calls
-- [`start_elect`](cheatcodes/sequencer_address/start_elect.md) - changes the sequencer address for contracts
-- [`stop_elect`](cheatcodes/sequencer_address/stop_elect.md) - cancels the `elect` / `start_elect` for contracts
+- [`elect`](cheatcodes/sequencer_address#elect) - changes the sequencer address for contracts, for a number of calls
+- [`start_elect`](cheatcodes/sequencer_address#start_elect) - changes the sequencer address for contracts
+- [`stop_elect`](cheatcodes/sequencer_address#stop_elect) - cancels the `elect` / `start_elect` for contracts
 - [`spoof`](cheatcodes/tx_info#spoof) - changes the transaction context for contracts, for a number of calls
 - [`start_spoof`](cheatcodes/tx_info#start_spoof) - changes the transaction context for contracts
 - [`stop_spoof`](cheatcodes/tx_info#stop_spoof) - cancels the `spoof` / `start_spoof` for contracts

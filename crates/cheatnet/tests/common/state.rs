@@ -29,7 +29,8 @@ pub fn create_fork_cached_state_at(
         ExtendedStateReader {
             dict_state_reader: build_testing_state(),
             fork_state_reader: Some(
-                ForkStateReader::new(node_url, BlockNumber(block_number), cache_dir).unwrap(),
+                ForkStateReader::new(node_url, BlockNumber(block_number), cache_dir.into())
+                    .unwrap(),
             ),
         },
         GlobalContractCache::new(GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST),

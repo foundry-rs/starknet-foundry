@@ -71,11 +71,8 @@ $ scarb add snforge_std \
  --tag v0.12.0
 ```
 
-Additionally, ensure that `casm` codegen is enabled in the `Scarb.toml` file.
+Additionally, ensure that starknet-contract target is enabled in the `Scarb.toml` file.
 
 ```toml
 # ...
 [[target.starknet-contract]]
-casm = true
-# ...
-```

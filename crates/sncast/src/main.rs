@@ -14,7 +14,7 @@ use shared::verify_and_warn_if_incompatible_rpc_version;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
 use sncast::helpers::scarb_utils::{
-    assert_manifest_path_exists, build_and_load_artifacts, get_package_metadata,
+    assert_manifest_path_exists, build, build_and_load_artifacts, get_package_metadata,
     get_scarb_metadata_with_deps, BuildConfig,
 };
 use sncast::response::errors::handle_starknet_command_error;
@@ -30,8 +30,36 @@ use tokio::runtime::Runtime;
 mod starknet_commands;
 
 #[derive(Parser)]
-#[command(version)]
-#[command(about = "sncast - a Starknet Foundry CLI", long_about = None)]
+#[command(
+    version,
+    help_template = "\
+{name} {version}
+{author-with-newline}{about-with-newline}
+Use -h for short descriptions and --help for more details.
+
+{before-help}{usage-heading} {usage}
+
+{all-args}{after-help}
+",
+    after_help = "Read the docs: https://foundry-rs.github.io/starknet-foundry/",
+    after_long_help = "\
+Read the docs:
+- Starknet Foundry Book: https://foundry-rs.github.io/starknet-foundry/
+- Cairo Book: https://book.cairo-lang.org/
+- Starknet Book: https://book.starknet.io/
+- Starknet Documentation: https://docs.starknet.io/
+- Scarb Documentation: https://docs.swmansion.com/scarb/docs.html
+
+Join the community:
+- Follow core developers on X: https://twitter.com/swmansionxyz
+- Get support via Telegram: https://t.me/starknet_foundry_support
+- Or discord: https://discord.gg/KZWaFtPZJf
+- Or join our general chat (Telegram): https://t.me/starknet_foundry
+
+Report bugs: https://github.com/foundry-rs/starknet-foundry/issues/new/choose\
+"
+)]
+#[command(about = "sncast - All-in-one tool for interacting with Starknet smart contracts", long_about = None)]
 #[clap(name = "sncast")]
 #[allow(clippy::struct_excessive_bools)]
 struct Cli {
@@ -434,6 +462,16 @@ fn run_script_command(
                     scarb_toml_path: manifest_path.clone(),
                     json: cli.json,
                     profile: cli.profile.clone().unwrap_or("dev".to_string()),
+                },
+            )
+            .expect("Failed to build artifacts");
+            // TODO(#2042): remove duplicated compilation
+            build(
+                &package_metadata,
+                &BuildConfig {
+                    scarb_toml_path: manifest_path.clone(),
+                    json: cli.json,
+                    profile: "dev".to_string(),
                 },
             )
             .expect("Failed to build script");
