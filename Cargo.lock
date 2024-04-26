@@ -4376,6 +4376,7 @@ dependencies = [
  "cairo-felt",
  "cairo-lang-runner",
  "console",
+ "dotenv",
  "regex",
  "semver",
  "snapbox",

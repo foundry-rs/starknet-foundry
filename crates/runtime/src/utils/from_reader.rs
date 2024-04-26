@@ -2,7 +2,7 @@ use super::buffer_reader::{BufferReadError, BufferReadResult, BufferReader};
 use cairo_felt::{felt_str, Felt252};
 use cairo_lang_runner::short_string::as_cairo_short_string_ex;
 use cairo_lang_utils::byte_array::{BYTES_IN_WORD, BYTE_ARRAY_MAGIC};
-use conversions::{FromConv, IntoConv};
+use conversions::IntoConv;
 use num_traits::cast::ToPrimitive;
 use num_traits::One;
 use starknet::core::types::FieldElement;
@@ -65,17 +65,19 @@ impl FromReader for Felt252 {
 
 impl<T> FromReader for Vec<T>
 where
-    T: FromConv<Felt252>,
+    T: FromReader,
 {
     fn from_reader(reader: &mut BufferReader<'_>) -> BufferReadResult<Self> {
         let length: Felt252 = reader.read()?;
         let length = length.to_usize().ok_or(BufferReadError::ParseFailed)?;
 
-        Ok(reader
-            .read_slice(length)?
-            .iter()
-            .map(|felt| felt.clone().into_())
-            .collect::<Vec<_>>())
+        let mut result = Vec::with_capacity(length);
+
+        for _ in 0..length {
+            result.push(reader.read()?);
+        }
+
+        Ok(result)
     }
 }
 
