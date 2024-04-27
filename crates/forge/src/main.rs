@@ -241,9 +241,22 @@ fn warn_if_snforge_std_not_compatible(scarb_metadata: &Metadata) -> Result<()> {
     Ok(())
 }
 
+fn save_test_sierra_programs_from_crate(
+    test_crate: &CompiledTestCrateRaw,
+    tests_programs_dir: &Utf8Path,
+    package_name: &str,
+) -> Result<TestProgramPath> {
+    let test_program_path = tests_programs_dir.join(format!(
+        "{package_name}_{:?}.sierra.json",
+        test_crate.tests_location
+    ));
+
+    TestProgramPath::save_test_program(&test_crate.sierra_program, test_program_path)
+}
+
 fn maybe_save_tests_sierra_programs(
-    compiled_test_crates: &Vec<CompiledTestCrateRaw>,
     execution_data_to_save: ExecutionDataToSave,
+    compiled_test_crates: &[CompiledTestCrateRaw],
     tests_programs_dir: &Utf8Path,
     package_name: &str,
 ) -> Result<HashMap<CrateLocation, TestProgramPath>> {
@@ -253,16 +266,12 @@ fn maybe_save_tests_sierra_programs(
     };
     let mut map = HashMap::new();
 
-    for test_crate in compiled_test_crates {
-        let test_program_path = tests_programs_dir.join(format!(
-            "{package_name}_{:?}.sierra.json",
-            test_crate.tests_location
-        ));
-
-        if save_test_sierra_program {
+    if save_test_sierra_program {
+        for test_crate in compiled_test_crates {
             let test_program_path =
-                TestProgramPath::save_test_program(&test_crate.sierra_program, test_program_path)?;
-            map.insert(test_crate.tests_location, test_program_path.clone());
+                save_test_sierra_programs_from_crate(test_crate, tests_programs_dir, package_name)?;
+
+            map.insert(test_crate.tests_location, test_program_path);
         }
     }
 
@@ -354,8 +363,8 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                 );
 
                 let test_program_paths_map = maybe_save_tests_sierra_programs(
-                    &compiled_test_crates,
                     forge_config.output_config.execution_data_to_save,
+                    &compiled_test_crates,
                     &tests_programs_dir,
                     &package.name,
                 )?;
