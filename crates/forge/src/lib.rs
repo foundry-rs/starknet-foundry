@@ -8,7 +8,7 @@ use forge_runner::test_case_summary::AnyTestCaseSummary;
 use std::sync::Arc;
 
 use compiled_raw::{CompiledTestCrateRaw, RawForkConfig, RawForkParams};
-use forge_runner::build_trace_data::test_program_path::TestProgramPath;
+use forge_runner::build_trace_data::test_sierra_program_path::TestSierraProgramPath;
 use forge_runner::test_crate_summary::TestCrateSummary;
 use forge_runner::TestCrateRunResult;
 
@@ -103,7 +103,7 @@ pub async fn run(
     forge_config: Arc<ForgeConfig>,
     fork_targets: &[ForkTarget],
     block_number_map: &mut BlockNumberMap,
-    test_program_paths_map: HashMap<CrateLocation, TestProgramPath>,
+    test_sierra_program_paths_map: HashMap<CrateLocation, TestSierraProgramPath>,
 ) -> Result<Vec<TestCrateSummary>> {
     let all_tests: usize = compiled_test_crates
         .iter()
@@ -133,8 +133,8 @@ pub async fn run(
             compiled_test_crate_raw.test_cases.len(),
         );
 
-        let maybe_test_program_path = Arc::new(
-            test_program_paths_map
+        let maybe_test_sierra_program_path = Arc::new(
+            test_sierra_program_paths_map
                 .get(&compiled_test_crate_raw.tests_location)
                 .cloned(),
         );
@@ -147,7 +147,7 @@ pub async fn run(
             compiled_test_crate,
             forge_config,
             tests_filter,
-            maybe_test_program_path,
+            maybe_test_sierra_program_path,
         )
         .await?;
 

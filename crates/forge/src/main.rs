@@ -25,7 +25,9 @@ use std::collections::HashMap;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use forge::block_number_map::BlockNumberMap;
 use forge::compiled_raw::{CompiledTestCrateRaw, CrateLocation};
-use forge_runner::build_trace_data::test_program_path::{TestProgramPath, TESTS_PROGRAMS_DIR};
+use forge_runner::build_trace_data::test_sierra_program_path::{
+    TestSierraProgramPath, TESTS_PROGRAMS_DIR,
+};
 use forge_runner::forge_config::{
     is_vm_trace_needed, ExecutionDataToSave, ForgeConfig, OutputConfig, TestRunnerConfig,
 };
@@ -241,25 +243,12 @@ fn warn_if_snforge_std_not_compatible(scarb_metadata: &Metadata) -> Result<()> {
     Ok(())
 }
 
-fn save_test_sierra_programs_from_crate(
-    test_crate: &CompiledTestCrateRaw,
-    tests_programs_dir: &Utf8Path,
-    package_name: &str,
-) -> Result<TestProgramPath> {
-    let test_program_path = tests_programs_dir.join(format!(
-        "{package_name}_{:?}.sierra.json",
-        test_crate.tests_location
-    ));
-
-    TestProgramPath::save_test_program(&test_crate.sierra_program, test_program_path)
-}
-
 fn maybe_save_tests_sierra_programs(
     execution_data_to_save: ExecutionDataToSave,
     compiled_test_crates: &[CompiledTestCrateRaw],
     tests_programs_dir: &Utf8Path,
     package_name: &str,
-) -> Result<HashMap<CrateLocation, TestProgramPath>> {
+) -> Result<HashMap<CrateLocation, TestSierraProgramPath>> {
     let save_test_sierra_program = match execution_data_to_save {
         ExecutionDataToSave::Trace | ExecutionDataToSave::TraceAndProfile => true,
         ExecutionDataToSave::None => false,
@@ -268,10 +257,15 @@ fn maybe_save_tests_sierra_programs(
 
     if save_test_sierra_program {
         for test_crate in compiled_test_crates {
-            let test_program_path =
-                save_test_sierra_programs_from_crate(test_crate, tests_programs_dir, package_name)?;
+            let test_sierra_program_path =
+                TestSierraProgramPath::save_sierra_test_program_from_test_crate(
+                    &test_crate.sierra_program,
+                    &format!("{:?}", test_crate.tests_location),
+                    tests_programs_dir,
+                    package_name,
+                )?;
 
-            map.insert(test_crate.tests_location, test_program_path);
+            map.insert(test_crate.tests_location, test_sierra_program_path);
         }
     }
 
@@ -362,7 +356,7 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                     workspace_root.join(CACHE_DIR),
                 );
 
-                let test_program_paths_map = maybe_save_tests_sierra_programs(
+                let test_sierra_program_paths_map = maybe_save_tests_sierra_programs(
                     forge_config.output_config.execution_data_to_save,
                     &compiled_test_crates,
                     &tests_programs_dir,
@@ -376,7 +370,7 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                     forge_config,
                     &forge_config_from_scarb.fork,
                     &mut block_number_map,
-                    test_program_paths_map,
+                    test_sierra_program_paths_map,
                 )
                 .await?;
 
