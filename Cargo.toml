@@ -8,6 +8,7 @@ members = [
     "crates/cheatnet",
     "crates/conversions",
     "crates/runtime",
+    "crates/runtime/macros",
     "crates/scarb-api",
     "crates/configuration",
     "crates/universal-sierra-compiler-api",

@@ -1,9 +1,8 @@
 use indoc::formatdoc;
+use shared::test_utils::node_url::node_rpc_url;
 use test_utils::runner::assert_passed;
 use test_utils::running_tests::run_test_case;
 use test_utils::test_case;
-
-static CHEATNET_RPC_URL: &str = "http://188.34.188.184:7070/rpc/v0_7";
 
 #[test]
 fn prank_cairo0_contract() {
@@ -44,7 +43,7 @@ fn prank_cairo0_contract() {
                 assert(unpranked_caller == caller, 'stop_prank does not work');
             }}
         "#,
-        CHEATNET_RPC_URL,
+        node_rpc_url().unwrap(),
     )
     .as_str());
 
@@ -92,7 +91,7 @@ fn roll_cairo0_contract() {
                 assert(unrolled_block_number == block_number, 'stop_roll does not work');
             }}
         "#,
-        CHEATNET_RPC_URL,
+        node_rpc_url().unwrap(),
     )
     .as_str());
 
@@ -142,7 +141,7 @@ fn warp_cairo0_contract() {
                 assert(unwarped_block_timestamp == block_timestamp, 'stop_warp does not work');
             }}
         "#,
-        CHEATNET_RPC_URL,
+        node_rpc_url().unwrap(),
     )
     .as_str());
 
@@ -183,7 +182,7 @@ fn mock_call_cairo0_contract() {
                 assert(eth_dispatcher.name() == 'Ether', 'invalid name after mock');
             }}
         "#,
-        CHEATNET_RPC_URL,
+        node_rpc_url().unwrap(),
     )
     .as_str());
 
@@ -228,7 +227,7 @@ fn store_load_cairo0_contract() {
                 assert(name == array!['NotEther'], 'invalid load2 name');
             }}
         "#,
-        CHEATNET_RPC_URL,
+        node_rpc_url().unwrap(),
     )
     .as_str());
 

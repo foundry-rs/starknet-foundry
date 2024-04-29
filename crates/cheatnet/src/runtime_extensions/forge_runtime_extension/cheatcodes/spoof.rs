@@ -1,8 +1,25 @@
 use crate::state::{start_cheat, stop_cheat, CheatSpan, CheatTarget};
 use crate::CheatnetState;
 use cairo_felt::Felt252;
+use conversions::felt252::SerializeAsFelt252Vec;
+use runtime::FromReader;
 
-#[derive(Clone, Default, Debug)]
+#[derive(FromReader, Clone, Default, Debug, PartialEq)]
+pub struct ResourceBounds {
+    pub resource: Felt252,
+    pub max_amount: u64,
+    pub max_price_per_unit: u128,
+}
+
+impl SerializeAsFelt252Vec for ResourceBounds {
+    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
+        output.push(self.resource);
+        output.push(self.max_amount.into());
+        output.push(self.max_price_per_unit.into());
+    }
+}
+
+#[derive(FromReader, Clone, Default, Debug)]
 pub struct TxInfoMock {
     pub version: Option<Felt252>,
     pub account_contract_address: Option<Felt252>,
@@ -11,7 +28,7 @@ pub struct TxInfoMock {
     pub transaction_hash: Option<Felt252>,
     pub chain_id: Option<Felt252>,
     pub nonce: Option<Felt252>,
-    pub resource_bounds: Option<Vec<Felt252>>,
+    pub resource_bounds: Option<Vec<ResourceBounds>>,
     pub tip: Option<Felt252>,
     pub paymaster_data: Option<Vec<Felt252>>,
     pub nonce_data_availability_mode: Option<Felt252>,

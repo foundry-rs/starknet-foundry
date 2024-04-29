@@ -11,7 +11,7 @@ mod tests {
     }
 
     #[test]
-    #[fork(url: "http://188.34.188.184:7070/rpc/v0_7", block_id: BlockId::Number(54060))]
+    #[fork(url: "{{ NODE_RPC_URL }}", block_id: BlockId::Number(54060))]
     fn test_fork_simple() {
         let dispatcher = IHelloStarknetDispatcher {
             contract_address: contract_address_const::<
@@ -29,7 +29,7 @@ mod tests {
     }
 
     #[test]
-    #[fork(url: "http://188.34.188.184:7070/rpc/v0_7", block_id: BlockId::Number(0xd32c))]
+    #[fork(url: "{{ NODE_RPC_URL }}", block_id: BlockId::Number(0xd32c))]
     fn test_fork_simple_number_hex() {
         let dispatcher = IHelloStarknetDispatcher {
             contract_address: contract_address_const::<
@@ -48,7 +48,7 @@ mod tests {
 
     #[test]
     #[fork(
-        url: "http://188.34.188.184:7070/rpc/v0_7",
+        url: "{{ NODE_RPC_URL }}",
         block_id: BlockId::Hash(0x06ae121e46f5375f93b00475fb130348ae38148e121f84b0865e17542e9485de)
     )]
     fn test_fork_simple_hash_hex() {
@@ -69,7 +69,7 @@ mod tests {
 
     #[test]
     #[fork(
-        url: "http://188.34.188.184:7070/rpc/v0_7",
+        url: "{{ NODE_RPC_URL }}",
         block_id: BlockId::Hash(
             3021433528476416000728121069095289682281028310523383289416465162415092565470
         )
@@ -91,7 +91,7 @@ mod tests {
     }
 
     #[test]
-    #[fork(url: "http://188.34.188.184:7070/rpc/v0_7", block_id: BlockId::Tag(Latest))]
+    #[fork(url: "{{ NODE_RPC_URL }}", block_id: BlockId::Tag(Latest))]
     fn print_block_number_when_latest() {
         assert(1 == 1, '');
     }
