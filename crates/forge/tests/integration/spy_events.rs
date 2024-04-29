@@ -1,4 +1,5 @@
-use indoc::indoc;
+use indoc::{formatdoc, indoc};
+use shared::test_utils::node_url::node_rpc_url;
 use std::path::Path;
 use test_utils::runner::{assert_case_output_contains, assert_failed, assert_passed, Contract};
 use test_utils::running_tests::run_test_case;
@@ -437,7 +438,7 @@ fn emit_unnamed_event() {
             use starknet::contract_address_const;
             use starknet::ContractAddress;
 
-            use snforge_std::{ 
+            use snforge_std::{
                 declare, ContractClassTrait, spy_events, EventSpy, EventFetcher,
                 EventAssertions, Event, SpyOn
             };
@@ -624,52 +625,52 @@ fn assert_not_emitted_fails() {
 #[test]
 fn capture_cairo0_event() {
     let test = test_case!(
-        indoc!(
+        formatdoc!(
             r#"
             use array::ArrayTrait;
             use result::ResultTrait;
-            use starknet::{ContractAddress, contract_address_const};
-            use snforge_std::{ declare, ContractClassTrait, spy_events, EventSpy, EventFetcher,
-                EventAssertions, SpyOn };
+            use starknet::{{ContractAddress, contract_address_const}};
+            use snforge_std::{{ declare, ContractClassTrait, spy_events, EventSpy, EventFetcher,
+                EventAssertions, SpyOn }};
 
             #[starknet::interface]
-            trait ISpyEventsChecker<TContractState> {
+            trait ISpyEventsChecker<TContractState> {{
                 fn emit_one_event(ref self: TContractState, some_data: felt252);
                 fn test_cairo0_event_collection(ref self: TContractState, cairo0_address: felt252);
-            }
+            }}
 
             #[starknet::contract]
-            mod SpyEventsChecker {
+            mod SpyEventsChecker {{
                 use starknet::ContractAddress;
 
                 #[storage]
-                struct Storage {}
+                struct Storage {{}}
 
                 #[event]
                 #[derive(Drop, starknet::Event)]
-                enum Event {
+                enum Event {{
                     FirstEvent: FirstEvent,
                     my_event: Cairo0Event,
-                }
+                }}
 
                 #[derive(Drop, starknet::Event)]
-                struct FirstEvent {
+                struct FirstEvent {{
                     some_data: felt252
-                }
+                }}
 
                 #[derive(Drop, starknet::Event)]
-                struct Cairo0Event {
+                struct Cairo0Event {{
                     some_data: felt252
-                }
-            }
+                }}
+            }}
 
             #[test]
-            #[fork(url: "http://188.34.188.184:7070/rpc/v0_7", block_id: BlockId::Tag(BlockTag::Latest))]
-            fn capture_cairo0_event() {
+            #[fork(url: "{}", block_id: BlockId::Tag(BlockTag::Latest))]
+            fn capture_cairo0_event() {{
                 let cairo0_contract_address = contract_address_const::<0x2c77ca97586968c6651a533bd5f58042c368b14cf5f526d2f42f670012e10ac>();
                 let contract = declare("SpyEventsChecker").unwrap();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
-                let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
+                let dispatcher = ISpyEventsCheckerDispatcher {{ contract_address }};
 
                 let mut spy = spy_events(SpyOn::All);
 
@@ -681,31 +682,32 @@ fn capture_cairo0_event() {
                     (
                         cairo0_contract_address,
                         SpyEventsChecker::Event::my_event(
-                            SpyEventsChecker::Cairo0Event {
+                            SpyEventsChecker::Cairo0Event {{
                                 some_data: 123456789
-                            }
+                            }}
                         )
                     ),
                     (
                         contract_address,
                         SpyEventsChecker::Event::FirstEvent(
-                            SpyEventsChecker::FirstEvent {
+                            SpyEventsChecker::FirstEvent {{
                                 some_data: 420
-                            }
+                            }}
                         )
                     ),
                     (
                         cairo0_contract_address,
                         SpyEventsChecker::Event::my_event(
-                            SpyEventsChecker::Cairo0Event {
+                            SpyEventsChecker::Cairo0Event {{
                                 some_data: 123456789
-                            }
+                            }}
                         )
                     )
                 ]);
-            }
-        "#
-        ),
+            }}
+        "#,
+            node_rpc_url().unwrap()
+        ).as_str(),
         Contract::from_code_path(
             "SpyEventsChecker".to_string(),
             Path::new("tests/data/contracts/spy_events_checker.cairo"),

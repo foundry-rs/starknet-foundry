@@ -1187,6 +1187,7 @@ dependencies = [
  "scarb-metadata",
  "serde",
  "serde_json",
+ "shared",
  "starknet",
  "starknet_api",
  "tempfile",
@@ -1994,6 +1995,7 @@ dependencies = [
  "trace-data",
  "universal-sierra-compiler-api",
  "url",
+ "walkdir",
 ]
 
 [[package]]
