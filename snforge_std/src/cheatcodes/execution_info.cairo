@@ -1,6 +1,6 @@
 use starknet::{ContractAddress, testing::cheatcode, contract_address_const};
 use starknet::info::v2::ResourceBounds;
-use snforge_std::cheatcodes::{CheatSpan, CheatTarget, validate_cheat_target_and_span};
+use snforge_std::cheatcodes::CheatSpan;
 use super::super::_cheatcode::handle_cheatcode;
 
 #[derive(Serde, Drop, Copy)]

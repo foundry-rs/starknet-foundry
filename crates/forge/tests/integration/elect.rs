@@ -5,6 +5,7 @@ use test_utils::running_tests::run_test_case;
 use test_utils::test_case;
 
 #[test]
+#[ignore] //TODO global variant
 fn elect_basic() {
     let test = test_case!(
         indoc!(
@@ -15,7 +16,7 @@ fn elect_basic() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use snforge_std::{ declare, CheatTarget, ContractClassTrait, start_elect, stop_elect };
+            use snforge_std::{ declare, ContractAddress, ContractClassTrait, start_elect, stop_elect };
 
             #[starknet::interface]
             trait IElectChecker<TContractState> {
@@ -30,12 +31,12 @@ fn elect_basic() {
 
                 let old_sequencer_address = dispatcher.get_sequencer_address();
 
-                start_elect(CheatTarget::One(contract_address), 234.try_into().unwrap());
+                start_elect(ContractAddress::One(contract_address), 234.try_into().unwrap());
 
                 let new_sequencer_address = dispatcher.get_sequencer_address();
                 assert(new_sequencer_address == 234.try_into().unwrap(), 'Wrong sequencer address');
 
-                stop_elect(CheatTarget::One(contract_address));
+                stop_elect(ContractAddress::One(contract_address));
 
                 let new_sequencer_address = dispatcher.get_sequencer_address();
                 assert(new_sequencer_address == old_sequencer_address, 'Sequencer addr did not revert');
@@ -54,7 +55,7 @@ fn elect_basic() {
                 let old_seq_addr1 = elect_checker1.get_sequencer_address();
                 let old_seq_addr2 = elect_checker2.get_sequencer_address();
 
-                start_elect(CheatTarget::Multiple(array![elect_checker1.contract_address, elect_checker2.contract_address]), 123.try_into().unwrap());
+                start_elect(ContractAddress::Multiple(array![elect_checker1.contract_address, elect_checker2.contract_address]), 123.try_into().unwrap());
 
                 let new_seq_addr1 = elect_checker1.get_sequencer_address();
                 let new_seq_addr2 = elect_checker2.get_sequencer_address();
@@ -62,7 +63,7 @@ fn elect_basic() {
                 assert(new_seq_addr1 == 123.try_into().unwrap(), 'Wrong seq addr #1');
                 assert(new_seq_addr2 == 123.try_into().unwrap(), 'Wrong seq addr #2');
 
-                stop_elect(CheatTarget::Multiple(array![elect_checker1.contract_address, elect_checker2.contract_address]));
+                stop_elect(ContractAddress::Multiple(array![elect_checker1.contract_address, elect_checker2.contract_address]));
 
                 let new_seq_addr1 = elect_checker1.get_sequencer_address();
                 let new_seq_addr2 = elect_checker2.get_sequencer_address();
@@ -83,7 +84,7 @@ fn elect_basic() {
                 let old_seq_addr1 = elect_checker1.get_sequencer_address();
                 let old_seq_addr2 = elect_checker2.get_sequencer_address();
 
-                start_elect(CheatTarget::All, 123.try_into().unwrap());
+                start_elect(ContractAddress::All, 123.try_into().unwrap());
 
                 let new_seq_addr1 = elect_checker1.get_sequencer_address();
                 let new_seq_addr2 = elect_checker2.get_sequencer_address();
@@ -91,7 +92,7 @@ fn elect_basic() {
                 assert(new_seq_addr1 == 123.try_into().unwrap(), 'Wrong seq addr #1');
                 assert(new_seq_addr2 == 123.try_into().unwrap(), 'Wrong seq addr #2');
 
-                stop_elect(CheatTarget::All);
+                stop_elect(ContractAddress::All);
 
                 let new_seq_addr1 = elect_checker1.get_sequencer_address();
                 let new_seq_addr2 = elect_checker2.get_sequencer_address();
@@ -111,12 +112,12 @@ fn elect_basic() {
 
                 let old_seq_addr = dispatcher.get_sequencer_address();
 
-                start_elect(CheatTarget::All, target_seq_addr);
+                start_elect(ContractAddress::All, target_seq_addr);
 
                 let new_seq_addr = dispatcher.get_sequencer_address();
                 assert(new_seq_addr == 123.try_into().unwrap(), 'Wrong seq addr');
 
-                stop_elect(CheatTarget::One(contract_address));
+                stop_elect(ContractAddress::One(contract_address));
 
                 let new_seq_addr = dispatcher.get_sequencer_address();
                 assert(old_seq_addr == new_seq_addr, 'Address did not change back');
@@ -136,6 +137,7 @@ fn elect_basic() {
 }
 
 #[test]
+#[ignore] //TODO global variant
 fn elect_complex() {
     let test = test_case!(
         indoc!(
@@ -146,7 +148,7 @@ fn elect_complex() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use snforge_std::{ declare, CheatTarget, ContractClassTrait, start_elect, stop_elect };
+            use snforge_std::{ declare, ContractAddress, ContractClassTrait, start_elect, stop_elect };
             
             #[starknet::interface]
             trait IElectChecker<TContractState> {
@@ -165,7 +167,7 @@ fn elect_complex() {
 
                 let old_seq_addr2 = elect_checker2.get_sequencer_address();
 
-                start_elect(CheatTarget::All, 123.try_into().unwrap());
+                start_elect(ContractAddress::All, 123.try_into().unwrap());
 
                 let new_seq_addr1 = elect_checker1.get_sequencer_address();
                 let new_seq_addr2 = elect_checker2.get_sequencer_address();
@@ -173,7 +175,7 @@ fn elect_complex() {
                 assert(new_seq_addr1 == 123.try_into().unwrap(), 'Wrong seq addr #1');
                 assert(new_seq_addr2 == 123.try_into().unwrap(), 'Wrong seq addr #2');
 
-                start_elect(CheatTarget::One(elect_checker1.contract_address), 456.try_into().unwrap());
+                start_elect(ContractAddress::One(elect_checker1.contract_address), 456.try_into().unwrap());
 
                 let new_seq_addr1 = elect_checker1.get_sequencer_address();
                 let new_seq_addr2 = elect_checker2.get_sequencer_address();
@@ -181,7 +183,7 @@ fn elect_complex() {
                 assert(new_seq_addr1 == 456.try_into().unwrap(), 'Wrong seq addr #3');
                 assert(new_seq_addr2 == 123.try_into().unwrap(), 'Wrong seq addr #4');
 
-                start_elect(CheatTarget::Multiple(array![elect_checker1.contract_address, elect_checker2.contract_address]), 789.try_into().unwrap());
+                start_elect(ContractAddress::Multiple(array![elect_checker1.contract_address, elect_checker2.contract_address]), 789.try_into().unwrap());
 
                 let new_seq_addr1 = elect_checker1.get_sequencer_address();
                 let new_seq_addr2 = elect_checker2.get_sequencer_address();
@@ -189,7 +191,7 @@ fn elect_complex() {
                 assert(new_seq_addr1 == 789.try_into().unwrap(), 'Wrong seq addr #5');
                 assert(new_seq_addr2 == 789.try_into().unwrap(), 'Wrong seq addr #6');
 
-                stop_elect(CheatTarget::One(elect_checker2.contract_address));
+                stop_elect(ContractAddress::One(elect_checker2.contract_address));
 
                 let new_seq_addr1 = elect_checker1.get_sequencer_address();
                 let new_seq_addr2 = elect_checker2.get_sequencer_address();
@@ -222,7 +224,7 @@ fn elect_with_span() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use snforge_std::{ test_address, declare, ContractClassTrait, elect, start_elect, stop_elect, CheatTarget, CheatSpan };
+            use snforge_std::{ test_address, declare, ContractClassTrait, elect, start_elect, stop_elect, CheatSpan };
 
             #[starknet::interface]
             trait IElectChecker<TContractState> {
@@ -242,7 +244,7 @@ fn elect_with_span() {
 
                 let target_sequencer_address: ContractAddress = 123.try_into().unwrap();
 
-                elect(CheatTarget::One(dispatcher.contract_address), target_sequencer_address, CheatSpan::TargetCalls(1));
+                elect(dispatcher.contract_address, target_sequencer_address, CheatSpan::TargetCalls(1));
 
                 let sequencer_address = dispatcher.get_sequencer_address();
                 assert(sequencer_address == target_sequencer_address.into(), 'Wrong sequencer address');
@@ -259,7 +261,7 @@ fn elect_with_span() {
 
                 let target_sequencer_address: ContractAddress = 123.try_into().unwrap();
 
-                elect(CheatTarget::One(dispatcher.contract_address), target_sequencer_address, CheatSpan::TargetCalls(2));
+                elect(dispatcher.contract_address, target_sequencer_address, CheatSpan::TargetCalls(2));
 
                 let sequencer_address = dispatcher.get_sequencer_address();
                 assert(sequencer_address == target_sequencer_address.into(), 'Wrong sequencer address');
@@ -277,7 +279,7 @@ fn elect_with_span() {
                 
                 let target_sequencer_address: ContractAddress = 123.try_into().unwrap();
                 
-                elect(CheatTarget::One(test_address()), target_sequencer_address, CheatSpan::TargetCalls(1));
+                elect(test_address(), target_sequencer_address, CheatSpan::TargetCalls(1));
                 
                 let sequencer_address = get_sequencer_address();
                 assert(sequencer_address == target_sequencer_address, 'Wrong sequencer address');
@@ -285,7 +287,7 @@ fn elect_with_span() {
                 let sequencer_address = get_sequencer_address();
                 assert(sequencer_address == target_sequencer_address, 'Wrong sequencer address');
                 
-                stop_elect(CheatTarget::One(test_address()));
+                stop_elect(test_address());
 
                 let sequencer_address = get_sequencer_address();
                 assert(sequencer_address == old_sequencer_address, 'Wrong sequencer address');

@@ -1,6 +1,7 @@
 use starknet::{ContractAddress, ClassHash, contract_address_const};
 use starknet::testing::cheatcode;
 use super::_cheatcode::handle_cheatcode;
+use execution_info::{cheat_execution_info, ExecutionInfoMock, CheatArguments, Operation};
 
 mod events;
 mod l1_handler;
@@ -9,13 +10,6 @@ mod tx_info;
 mod fork;
 mod storage;
 mod execution_info;
-
-#[derive(Drop, Serde, PartialEq, Clone, Debug, Display)]
-enum CheatTarget {
-    All: (),
-    One: ContractAddress,
-    Multiple: Array<ContractAddress>
-}
 
 #[derive(Copy, Drop, Serde, PartialEq, Clone, Debug, Display)]
 enum CheatSpan {
@@ -32,122 +26,131 @@ fn test_address() -> ContractAddress {
 }
 
 /// Changes the block number for the given target and span.
-/// - `target` - instance of `CheatTarget` specifying which contracts to roll
+/// - `target` - instance of `ContractAddress` specifying which contracts to roll
 /// - `block_number` - block number to be set
 /// - `span` - instance of `CheatSpan` specifying the number of target calls with the cheat applied
-fn roll(target: CheatTarget, block_number: u64, span: CheatSpan) {
-    validate_cheat_target_and_span(@target, @span);
+fn roll(target: ContractAddress, block_number: u64, span: CheatSpan) {
+    let mut execution_info: ExecutionInfoMock = Default::default();
 
-    let mut inputs = array![];
-    target.serialize(ref inputs);
-    span.serialize(ref inputs);
-    inputs.append(block_number.into());
-    handle_cheatcode(cheatcode::<'roll'>(inputs.span()));
+    execution_info
+        .block_info
+        .block_number = Operation::Start(CheatArguments { value: block_number, span, target });
+
+    cheat_execution_info(execution_info);
 }
 
 /// Changes the block number for the given target.
-/// - `target` - instance of `CheatTarget` specifying which contracts to roll
+/// - `target` - instance of `ContractAddress` specifying which contracts to roll
 /// - `block_number` - block number to be set
-fn start_roll(target: CheatTarget, block_number: u64) {
+fn start_roll(target: ContractAddress, block_number: u64) {
     roll(target, block_number, CheatSpan::Indefinite);
 }
 
 
 /// Cancels the `roll` / `start_roll` for the given target.
-/// - `target` - instance of `CheatTarget` specifying which contracts to stop rolling
-fn stop_roll(target: CheatTarget) {
-    let mut inputs = array![];
-    target.serialize(ref inputs);
-    handle_cheatcode(cheatcode::<'stop_roll'>(inputs.span()));
+/// - `target` - instance of `ContractAddress` specifying which contracts to stop rolling
+fn stop_roll(target: ContractAddress) {
+    let mut execution_info: ExecutionInfoMock = Default::default();
+
+    execution_info.block_info.block_number = Operation::Stop(target);
+
+    cheat_execution_info(execution_info);
 }
 
 /// Changes the caller address for the given target and span.
-/// - `target` - instance of `CheatTarget` specifying which contracts to prank
+/// - `target` - instance of `ContractAddress` specifying which contracts to prank
 /// - `caller_address` - caller address to be set
 /// - `span` - instance of `CheatSpan` specifying the number of target calls with the cheat applied
-fn prank(target: CheatTarget, caller_address: ContractAddress, span: CheatSpan) {
-    validate_cheat_target_and_span(@target, @span);
+fn prank(target: ContractAddress, caller_address: ContractAddress, span: CheatSpan) {
+    let mut execution_info: ExecutionInfoMock = Default::default();
 
-    let mut inputs = array![];
-    target.serialize(ref inputs);
-    span.serialize(ref inputs);
-    inputs.append(caller_address.into());
-    handle_cheatcode(cheatcode::<'prank'>(inputs.span()));
+    execution_info
+        .caller_address = Operation::Start(CheatArguments { value: caller_address, span, target });
+
+    cheat_execution_info(execution_info);
 }
 
 /// Changes the caller address for the given target.
 /// This change can be canceled with `stop_prank`.
-/// - `target` - instance of `CheatTarget` specifying which contracts to prank
+/// - `target` - instance of `ContractAddress` specifying which contracts to prank
 /// - `caller_address` - caller address to be set
-fn start_prank(target: CheatTarget, caller_address: ContractAddress) {
+fn start_prank(target: ContractAddress, caller_address: ContractAddress) {
     prank(target, caller_address, CheatSpan::Indefinite);
 }
 
 /// Cancels the `prank` / `start_prank` for the given target.
-/// - `target` - instance of `CheatTarget` specifying which contracts to stop pranking
-fn stop_prank(target: CheatTarget) {
-    let mut inputs = array![];
-    target.serialize(ref inputs);
-    handle_cheatcode(cheatcode::<'stop_prank'>(inputs.span()));
+/// - `target` - instance of `ContractAddress` specifying which contracts to stop pranking
+fn stop_prank(target: ContractAddress) {
+    let mut execution_info: ExecutionInfoMock = Default::default();
+
+    execution_info.caller_address = Operation::Stop(target);
+
+    cheat_execution_info(execution_info);
 }
 
 /// Changes the block timestamp for the given target and span.
-/// - `target` - instance of `CheatTarget` specifying which contracts to warp
+/// - `target` - instance of `ContractAddress` specifying which contracts to warp
 /// - `block_timestamp` - block timestamp to be set
 /// - `span` - instance of `CheatSpan` specifying the number of target calls with the cheat applied
-fn warp(target: CheatTarget, block_timestamp: u64, span: CheatSpan) {
-    validate_cheat_target_and_span(@target, @span);
+fn warp(target: ContractAddress, block_timestamp: u64, span: CheatSpan) {
+    let mut execution_info: ExecutionInfoMock = Default::default();
 
-    let mut inputs = array![];
-    target.serialize(ref inputs);
-    span.serialize(ref inputs);
-    inputs.append(block_timestamp.into());
-    handle_cheatcode(cheatcode::<'warp'>(inputs.span()));
+    execution_info
+        .block_info
+        .block_timestamp =
+            Operation::Start(CheatArguments { value: block_timestamp, span, target });
+
+    cheat_execution_info(execution_info);
 }
 
 /// Changes the block timestamp for the given target.
-/// - `target` - instance of `CheatTarget` specifying which contracts to warp
+/// - `target` - instance of `ContractAddress` specifying which contracts to warp
 /// - `block_timestamp` - block timestamp to be set
-fn start_warp(target: CheatTarget, block_timestamp: u64) {
+fn start_warp(target: ContractAddress, block_timestamp: u64) {
     warp(target, block_timestamp, CheatSpan::Indefinite);
 }
 
 /// Cancels the `warp` / `start_warp` for the given target.
-/// - `target` - instance of `CheatTarget` specifying which contracts to stop warping
-fn stop_warp(target: CheatTarget) {
-    let mut inputs = array![];
-    target.serialize(ref inputs);
-    handle_cheatcode(cheatcode::<'stop_warp'>(inputs.span()));
+/// - `target` - instance of `ContractAddress` specifying which contracts to stop warping
+fn stop_warp(target: ContractAddress) {
+    let mut execution_info: ExecutionInfoMock = Default::default();
+
+    execution_info.block_info.block_timestamp = Operation::Stop(target);
+
+    cheat_execution_info(execution_info);
 }
 
 /// Changes the sequencer address for the given target and span.
-/// `target` - instance of `CheatTarget` specifying which contracts to elect
+/// `target` - instance of `ContractAddress` specifying which contracts to elect
 /// `sequencer_address` - sequencer address to be set
 /// `span` - instance of `CheatSpan` specifying the number of target calls with the cheat applied
-fn elect(target: CheatTarget, sequencer_address: ContractAddress, span: CheatSpan) {
-    validate_cheat_target_and_span(@target, @span);
+fn elect(target: ContractAddress, sequencer_address: ContractAddress, span: CheatSpan) {
+    let mut execution_info: ExecutionInfoMock = Default::default();
 
-    let mut inputs = array![];
-    target.serialize(ref inputs);
-    span.serialize(ref inputs);
-    inputs.append(sequencer_address.into());
-    handle_cheatcode(cheatcode::<'elect'>(inputs.span()));
+    execution_info
+        .block_info
+        .sequencer_address =
+            Operation::Start(CheatArguments { value: sequencer_address, span, target });
+
+    cheat_execution_info(execution_info);
 }
 
 /// Changes the sequencer address for a given target.
-/// - `target` - instance of `CheatTarget` specifying which contracts to elect
+/// - `target` - instance of `ContractAddress` specifying which contracts to elect
 /// - `sequencer_address` - sequencer address to be set
-fn start_elect(target: CheatTarget, sequencer_address: ContractAddress) {
+fn start_elect(target: ContractAddress, sequencer_address: ContractAddress) {
     elect(target, sequencer_address, CheatSpan::Indefinite);
 }
 
 
 /// Cancels the `elect` / `start_elect` for the given target.
-/// - `target` - instance of `CheatTarget` specifying which contracts to stop electing
-fn stop_elect(target: CheatTarget) {
-    let mut inputs = array![];
-    target.serialize(ref inputs);
-    handle_cheatcode(cheatcode::<'stop_elect'>(inputs.span()));
+/// - `target` - instance of `ContractAddress` specifying which contracts to stop electing
+fn stop_elect(target: ContractAddress) {
+    let mut execution_info: ExecutionInfoMock = Default::default();
+
+    execution_info.block_info.sequencer_address = Operation::Stop(target);
+
+    cheat_execution_info(execution_info);
 }
 
 
@@ -220,19 +223,4 @@ fn replace_bytecode(contract: ContractAddress, new_class: ClassHash) {
     handle_cheatcode(
         cheatcode::<'replace_bytecode'>(array![contract.into(), new_class.into()].span())
     );
-}
-
-fn validate_cheat_target_and_span(target: @CheatTarget, span: @CheatSpan) {
-    validate_cheat_span(span);
-
-    if target == @CheatTarget::All {
-        assert!(
-            span == @CheatSpan::Indefinite,
-            "CheatTarget::All can only be used with CheatSpan::Indefinite"
-        );
-    }
-}
-
-fn validate_cheat_span(span: @CheatSpan) {
-    assert!(span != @CheatSpan::TargetCalls(0), "CheatSpan::TargetCalls must be greater than 0");
 }

@@ -75,7 +75,7 @@ impl<'a> DeprecatedExtensionLogic for DeprecatedCheatableStarknetRuntimeExtensio
             DeprecatedSyscallSelector::GetCallerAddress => {
                 if let Some(caller_address) = self
                     .cheatnet_state
-                    .get_cheated_caller_address(&contract_address)
+                    .get_cheated_caller_address(contract_address)
                 {
                     // Increment, since the selector was peeked into before
                     syscall_handler.syscall_ptr += 1;
@@ -94,7 +94,7 @@ impl<'a> DeprecatedExtensionLogic for DeprecatedCheatableStarknetRuntimeExtensio
             DeprecatedSyscallSelector::GetBlockNumber => {
                 if let Some(block_number) = self
                     .cheatnet_state
-                    .get_cheated_block_number(&contract_address)
+                    .get_cheated_block_number(contract_address)
                 {
                     syscall_handler.syscall_ptr += 1;
                     increment_syscall_count(syscall_handler, selector);
@@ -112,7 +112,7 @@ impl<'a> DeprecatedExtensionLogic for DeprecatedCheatableStarknetRuntimeExtensio
             DeprecatedSyscallSelector::GetBlockTimestamp => {
                 if let Some(block_timestamp) = self
                     .cheatnet_state
-                    .get_cheated_block_timestamp(&contract_address)
+                    .get_cheated_block_timestamp(contract_address)
                 {
                     syscall_handler.syscall_ptr += 1;
                     increment_syscall_count(syscall_handler, selector);
@@ -130,7 +130,7 @@ impl<'a> DeprecatedExtensionLogic for DeprecatedCheatableStarknetRuntimeExtensio
             DeprecatedSyscallSelector::GetSequencerAddress => {
                 if let Some(sequencer_address) = self
                     .cheatnet_state
-                    .get_cheated_sequencer_address(&contract_address)
+                    .get_cheated_sequencer_address(contract_address)
                 {
                     syscall_handler.syscall_ptr += 1;
                     increment_syscall_count(syscall_handler, selector);

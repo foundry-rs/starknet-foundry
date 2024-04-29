@@ -1,3 +1,4 @@
+use super::spoof::ResourceBounds;
 use crate::{
     state::{CheatSpan, CheatStatus},
     CheatnetState,
@@ -32,7 +33,7 @@ pub struct TxInfoMock {
     pub transaction_hash: CheatStatus<Felt252>,
     pub chain_id: CheatStatus<Felt252>,
     pub nonce: CheatStatus<Felt252>,
-    pub resource_bounds: CheatStatus<Vec<Felt252>>,
+    pub resource_bounds: CheatStatus<Vec<ResourceBounds>>,
     pub tip: CheatStatus<Felt252>,
     pub paymaster_data: CheatStatus<Vec<Felt252>>,
     pub nonce_data_availability_mode: CheatStatus<Felt252>,
@@ -79,7 +80,7 @@ pub struct TxInfoMockOperations {
     pub transaction_hash: Operation<Felt252>,
     pub chain_id: Operation<Felt252>,
     pub nonce: Operation<Felt252>,
-    pub resource_bounds: Operation<Vec<Felt252>>,
+    pub resource_bounds: Operation<Vec<ResourceBounds>>,
     pub tip: Operation<Felt252>,
     pub paymaster_data: Operation<Vec<Felt252>>,
     pub nonce_data_availability_mode: Operation<Felt252>,

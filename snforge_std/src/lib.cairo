@@ -5,8 +5,6 @@ use cheatcodes::contract_class::get_class_hash;
 use cheatcodes::contract_class::ContractClass;
 use cheatcodes::contract_class::ContractClassTrait;
 
-use cheatcodes::tx_info::TxInfoMock;
-use cheatcodes::tx_info::TxInfoMockTrait;
 use cheatcodes::tx_info::spoof;
 use cheatcodes::tx_info::start_spoof;
 use cheatcodes::tx_info::stop_spoof;
@@ -28,7 +26,7 @@ use cheatcodes::storage::store;
 use cheatcodes::storage::load;
 use cheatcodes::storage::map_entry_address;
 
-use cheatcodes::CheatTarget;
+use cheatcodes::ContractAddress;
 use cheatcodes::CheatSpan;
 use cheatcodes::test_address;
 use cheatcodes::test_selector;
@@ -48,6 +46,12 @@ use cheatcodes::mock_call;
 use cheatcodes::start_mock_call;
 use cheatcodes::stop_mock_call;
 use cheatcodes::replace_bytecode;
+use cheatcodes::cheat_execution_info;
+use cheatcodes::execution_info::ExecutionInfoMock;
+use cheatcodes::execution_info::BlockInfoMockImpl;
+use cheatcodes::execution_info::TxInfoMock;
+use cheatcodes::execution_info::Operation;
+use cheatcodes::execution_info::CheatArguments;
 
 mod fs;
 

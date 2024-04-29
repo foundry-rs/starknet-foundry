@@ -2,7 +2,7 @@ use crate::common::state::create_fork_cached_state;
 use crate::common::{call_contract, felt_selector_from_name};
 use cairo_felt::Felt252;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallResult;
-use cheatnet::state::{CheatTarget, CheatnetState};
+use cheatnet::state::CheatnetState;
 use conversions::string::TryFromHexStr;
 use starknet_api::core::ContractAddress;
 use tempfile::TempDir;
@@ -34,10 +34,7 @@ fn prank_cairo0_contract(selector: &str) {
     };
     let caller = &ret_data[0];
 
-    cheatnet_state.start_prank(
-        CheatTarget::One(contract_address),
-        ContractAddress::from(123_u128),
-    );
+    cheatnet_state.start_prank(contract_address, ContractAddress::from(123_u128));
 
     let output = call_contract(
         &mut cached_fork_state,
@@ -51,7 +48,7 @@ fn prank_cairo0_contract(selector: &str) {
     };
     let pranked_caller = &ret_data[0];
 
-    cheatnet_state.stop_prank(CheatTarget::One(contract_address));
+    cheatnet_state.stop_prank(contract_address);
 
     let output = call_contract(
         &mut cached_fork_state,
@@ -91,7 +88,7 @@ fn roll_cairo0_contract(selector: &str) {
     };
     let block_number = &ret_data[0];
 
-    cheatnet_state.start_roll(CheatTarget::One(contract_address), Felt252::from(123));
+    cheatnet_state.start_roll(contract_address, 123);
 
     let output = call_contract(
         &mut cached_fork_state,
@@ -105,7 +102,7 @@ fn roll_cairo0_contract(selector: &str) {
     };
     let rolled_block_number = &ret_data[0];
 
-    cheatnet_state.stop_roll(CheatTarget::One(contract_address));
+    cheatnet_state.stop_roll(contract_address);
 
     let output = call_contract(
         &mut cached_fork_state,
@@ -145,7 +142,7 @@ fn warp_cairo0_contract(selector: &str) {
     };
     let block_timestamp = &ret_data[0];
 
-    cheatnet_state.start_warp(CheatTarget::One(contract_address), Felt252::from(123));
+    cheatnet_state.start_warp(contract_address, 123);
     let output = call_contract(
         &mut cached_fork_state,
         &mut cheatnet_state,
@@ -158,7 +155,7 @@ fn warp_cairo0_contract(selector: &str) {
     };
     let warped_block_timestamp = &ret_data[0];
 
-    cheatnet_state.stop_warp(CheatTarget::One(contract_address));
+    cheatnet_state.stop_warp(contract_address);
 
     let output = call_contract(
         &mut cached_fork_state,

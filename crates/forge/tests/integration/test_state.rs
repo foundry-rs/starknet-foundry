@@ -456,14 +456,13 @@ fn simple_cheatcodes() {
         use array::SpanTrait;
         use starknet::ContractAddressIntoFelt252;
         use snforge_std::{
-            CheatTarget,
             start_elect, stop_elect,
             start_prank, stop_prank,
             start_roll, stop_roll,
             start_warp, stop_warp,
             start_spoof, stop_spoof,
-            TxInfoMockTrait,
-            test_address
+            test_address, TxInfoMock,
+            Operation, CheatArguments, CheatSpan
         };
         use starknet::{
             SyscallResultTrait, SyscallResult, syscalls::get_execution_info_v2_syscall,
@@ -475,11 +474,11 @@ fn simple_cheatcodes() {
             let caller_addr_before = starknet::get_caller_address();
             let target_caller_address: ContractAddress = (123_felt252).try_into().unwrap();
 
-            start_prank(CheatTarget::One(test_address), target_caller_address);
+            start_prank(test_address, target_caller_address);
             let caller_addr_after = starknet::get_caller_address();
             assert(caller_addr_after==target_caller_address, caller_addr_after.into());
 
-            stop_prank(CheatTarget::One(test_address));
+            stop_prank(test_address);
             let caller_addr_after = starknet::get_caller_address();
             assert(caller_addr_after==caller_addr_before, caller_addr_before.into());
         }
@@ -489,11 +488,11 @@ fn simple_cheatcodes() {
             let test_address: ContractAddress = test_address();
             let old_block_number = starknet::get_block_info().unbox().block_number;
 
-            start_roll(CheatTarget::One(test_address), 234);
+            start_roll(test_address, 234);
             let new_block_number = starknet::get_block_info().unbox().block_number;
             assert(new_block_number == 234, 'Wrong block number');
 
-            stop_roll(CheatTarget::One(test_address));
+            stop_roll(test_address);
             let new_block_number = starknet::get_block_info().unbox().block_number;
             assert(new_block_number == old_block_number, 'Block num did not change back');
         }
@@ -503,11 +502,11 @@ fn simple_cheatcodes() {
             let test_address: ContractAddress = test_address();
             let old_block_timestamp = starknet::get_block_info().unbox().block_timestamp;
 
-            start_warp(CheatTarget::One(test_address), 123);
+            start_warp(test_address, 123);
             let new_block_timestamp = starknet::get_block_info().unbox().block_timestamp;
             assert(new_block_timestamp == 123, 'Wrong block timestamp');
 
-            stop_warp(CheatTarget::One(test_address));
+            stop_warp(test_address);
             let new_block_timestamp = starknet::get_block_info().unbox().block_timestamp;
             assert(new_block_timestamp == old_block_timestamp, 'Timestamp did not change back')
         }
@@ -517,11 +516,11 @@ fn simple_cheatcodes() {
             let test_address: ContractAddress = test_address();
             let old_sequencer_address = starknet::get_block_info().unbox().sequencer_address;
 
-            start_elect(CheatTarget::One(test_address), 123.try_into().unwrap());
+            start_elect(test_address, 123.try_into().unwrap());
             let new_sequencer_address = starknet::get_block_info().unbox().sequencer_address;
             assert(new_sequencer_address == 123.try_into().unwrap(), 'Wrong sequencer address');
 
-            stop_elect(CheatTarget::One(test_address));
+            stop_elect(test_address);
             let new_sequencer_address = starknet::get_block_info().unbox().sequencer_address;
             assert(new_sequencer_address == old_sequencer_address, 'Sequencer addr did not revert')
         }
@@ -532,10 +531,14 @@ fn simple_cheatcodes() {
             let old_tx_info = starknet::get_tx_info().unbox();
             let old_tx_info_v2 = get_tx_info_v2().unbox();
 
-            let mut tx_info_mock = TxInfoMockTrait::default();
-            tx_info_mock.transaction_hash = Option::Some(421);
+            let mut tx_info_mock: TxInfoMock = Default::default();
+            tx_info_mock.transaction_hash = Operation::Start(CheatArguments {
+                value: 421,
+                target: test_address,
+                span: CheatSpan::Indefinite
+            });
 
-            start_spoof(CheatTarget::One(test_address), tx_info_mock);
+            start_spoof(test_address, tx_info_mock);
 
             let new_tx_info = starknet::get_tx_info().unbox();
             let new_tx_info_v2 = get_tx_info_v2().unbox();
@@ -544,7 +547,7 @@ fn simple_cheatcodes() {
             assert(new_tx_info_v2.tip == old_tx_info_v2.tip, 'Wrong tip');
             assert(new_tx_info.transaction_hash == 421, 'Wrong transaction_hash');
 
-            stop_spoof(CheatTarget::One(test_address));
+            stop_spoof(test_address);
             
             let new_tx_info = starknet::get_tx_info().unbox();
             let new_tx_info_v2 = get_tx_info_v2().unbox();
