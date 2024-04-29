@@ -1,4 +1,6 @@
-use super::cheat_execution_info::{CheatArguments, ExecutionInfoMockOperations, Operation, TxInfoMockOperations};
+use super::cheat_execution_info::{
+    CheatArguments, ExecutionInfoMockOperations, Operation, TxInfoMockOperations,
+};
 use crate::state::CheatSpan;
 use crate::CheatnetState;
 use cairo_felt::Felt252;
@@ -48,28 +50,25 @@ impl CheatnetState {
         self.cheat_execution_info(ExecutionInfoMockOperations {
             #[rustfmt::skip]
             tx_info: TxInfoMockOperations {
-                version                      :tx_info_mock.version                     .map_or(Operation::Retain, |value| Operation::Start(CheatArguments { value, span, target:contract_address })),             
-                account_contract_address     :tx_info_mock.account_contract_address    .map_or(Operation::Retain, |value| Operation::Start(CheatArguments { value, span, target:contract_address })),                            
-                max_fee                      :tx_info_mock.max_fee                     .map_or(Operation::Retain, |value| Operation::Start(CheatArguments { value, span, target:contract_address })),           
-                signature                    :tx_info_mock.signature                   .map_or(Operation::Retain, |value| Operation::Start(CheatArguments { value, span, target:contract_address })),             
-                transaction_hash             :tx_info_mock.transaction_hash            .map_or(Operation::Retain, |value| Operation::Start(CheatArguments { value, span, target:contract_address })),                    
-                chain_id                     :tx_info_mock.chain_id                    .map_or(Operation::Retain, |value| Operation::Start(CheatArguments { value, span, target:contract_address })),            
-                nonce                        :tx_info_mock.nonce                       .map_or(Operation::Retain, |value| Operation::Start(CheatArguments { value, span, target:contract_address })),         
-                resource_bounds              :tx_info_mock.resource_bounds             .map_or(Operation::Retain, |value| Operation::Start(CheatArguments { value, span, target:contract_address })),                   
-                tip                          :tx_info_mock.tip                         .map_or(Operation::Retain, |value| Operation::Start(CheatArguments { value, span, target:contract_address })),       
-                paymaster_data               :tx_info_mock.paymaster_data              .map_or(Operation::Retain, |value| Operation::Start(CheatArguments { value, span, target:contract_address })),                  
-                nonce_data_availability_mode :tx_info_mock.nonce_data_availability_mode.map_or(Operation::Retain, |value| Operation::Start(CheatArguments { value, span, target:contract_address })),                                
-                fee_data_availability_mode   :tx_info_mock.fee_data_availability_mode  .map_or(Operation::Retain, |value| Operation::Start(CheatArguments { value, span, target:contract_address })),                              
-                account_deployment_data      :tx_info_mock.account_deployment_data     .map_or(Operation::Retain, |value| Operation::Start(CheatArguments { value, span, target:contract_address })),                           
+                version                      :tx_info_mock.version                     .map_or(Operation::Retain, |value| Operation::Start(CheatArguments { value, span, target:contract_address })),
+                account_contract_address     :tx_info_mock.account_contract_address    .map_or(Operation::Retain, |value| Operation::Start(CheatArguments { value, span, target:contract_address })),
+                max_fee                      :tx_info_mock.max_fee                     .map_or(Operation::Retain, |value| Operation::Start(CheatArguments { value, span, target:contract_address })),
+                signature                    :tx_info_mock.signature                   .map_or(Operation::Retain, |value| Operation::Start(CheatArguments { value, span, target:contract_address })),
+                transaction_hash             :tx_info_mock.transaction_hash            .map_or(Operation::Retain, |value| Operation::Start(CheatArguments { value, span, target:contract_address })),
+                chain_id                     :tx_info_mock.chain_id                    .map_or(Operation::Retain, |value| Operation::Start(CheatArguments { value, span, target:contract_address })),
+                nonce                        :tx_info_mock.nonce                       .map_or(Operation::Retain, |value| Operation::Start(CheatArguments { value, span, target:contract_address })),
+                resource_bounds              :tx_info_mock.resource_bounds             .map_or(Operation::Retain, |value| Operation::Start(CheatArguments { value, span, target:contract_address })),
+                tip                          :tx_info_mock.tip                         .map_or(Operation::Retain, |value| Operation::Start(CheatArguments { value, span, target:contract_address })),
+                paymaster_data               :tx_info_mock.paymaster_data              .map_or(Operation::Retain, |value| Operation::Start(CheatArguments { value, span, target:contract_address })),
+                nonce_data_availability_mode :tx_info_mock.nonce_data_availability_mode.map_or(Operation::Retain, |value| Operation::Start(CheatArguments { value, span, target:contract_address })),
+                fee_data_availability_mode   :tx_info_mock.fee_data_availability_mode  .map_or(Operation::Retain, |value| Operation::Start(CheatArguments { value, span, target:contract_address })),
+                account_deployment_data      :tx_info_mock.account_deployment_data     .map_or(Operation::Retain, |value| Operation::Start(CheatArguments { value, span, target:contract_address })),
             },
             ..Default::default()
         });
     }
 
-    pub fn spoof_global(
-        &mut self,
-        tx_info_mock: TxInfoMock,
-    ) {
+    pub fn spoof_global(&mut self, tx_info_mock: TxInfoMock) {
         self.cheat_execution_info(ExecutionInfoMockOperations {
             #[rustfmt::skip]
             tx_info: TxInfoMockOperations {
@@ -99,19 +98,19 @@ impl CheatnetState {
         self.cheat_execution_info(ExecutionInfoMockOperations {
             #[rustfmt::skip]
             tx_info: TxInfoMockOperations {
-                version                      :Operation::Stop(contract_address),             
-                account_contract_address     :Operation::Stop(contract_address),                            
-                max_fee                      :Operation::Stop(contract_address),           
-                signature                    :Operation::Stop(contract_address),             
-                transaction_hash             :Operation::Stop(contract_address),                    
-                chain_id                     :Operation::Stop(contract_address),            
-                nonce                        :Operation::Stop(contract_address),         
-                resource_bounds              :Operation::Stop(contract_address),                   
-                tip                          :Operation::Stop(contract_address),       
-                paymaster_data               :Operation::Stop(contract_address),                  
-                nonce_data_availability_mode :Operation::Stop(contract_address),                                
-                fee_data_availability_mode   :Operation::Stop(contract_address),                              
-                account_deployment_data      :Operation::Stop(contract_address),                           
+                version                      :Operation::Stop(contract_address),
+                account_contract_address     :Operation::Stop(contract_address),
+                max_fee                      :Operation::Stop(contract_address),
+                signature                    :Operation::Stop(contract_address),
+                transaction_hash             :Operation::Stop(contract_address),
+                chain_id                     :Operation::Stop(contract_address),
+                nonce                        :Operation::Stop(contract_address),
+                resource_bounds              :Operation::Stop(contract_address),
+                tip                          :Operation::Stop(contract_address),
+                paymaster_data               :Operation::Stop(contract_address),
+                nonce_data_availability_mode :Operation::Stop(contract_address),
+                fee_data_availability_mode   :Operation::Stop(contract_address),
+                account_deployment_data      :Operation::Stop(contract_address),
             },
             ..Default::default()
         });
@@ -120,19 +119,19 @@ impl CheatnetState {
         self.cheat_execution_info(ExecutionInfoMockOperations {
             #[rustfmt::skip]
             tx_info: TxInfoMockOperations {
-                version                      :Operation::StopGlobal,             
-                account_contract_address     :Operation::StopGlobal,                            
-                max_fee                      :Operation::StopGlobal,           
-                signature                    :Operation::StopGlobal,             
-                transaction_hash             :Operation::StopGlobal,                    
-                chain_id                     :Operation::StopGlobal,            
-                nonce                        :Operation::StopGlobal,         
-                resource_bounds              :Operation::StopGlobal,                   
-                tip                          :Operation::StopGlobal,       
-                paymaster_data               :Operation::StopGlobal,                  
-                nonce_data_availability_mode :Operation::StopGlobal,                                
-                fee_data_availability_mode   :Operation::StopGlobal,                              
-                account_deployment_data      :Operation::StopGlobal,                           
+                version                      :Operation::StopGlobal,
+                account_contract_address     :Operation::StopGlobal,
+                max_fee                      :Operation::StopGlobal,
+                signature                    :Operation::StopGlobal,
+                transaction_hash             :Operation::StopGlobal,
+                chain_id                     :Operation::StopGlobal,
+                nonce                        :Operation::StopGlobal,
+                resource_bounds              :Operation::StopGlobal,
+                tip                          :Operation::StopGlobal,
+                paymaster_data               :Operation::StopGlobal,
+                nonce_data_availability_mode :Operation::StopGlobal,
+                fee_data_availability_mode   :Operation::StopGlobal,
+                account_deployment_data      :Operation::StopGlobal,
             },
             ..Default::default()
         });

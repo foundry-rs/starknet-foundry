@@ -24,7 +24,7 @@ pub enum Operation<T> {
 /// - `Retain` - unchanged
 /// - `Start` - changed for given contract and span
 /// - `Stop` - reset to the initial value for given contract and span
-/// - `StartGlobal` - changed for all contracts until overriden or stoped
+/// - `StartGlobal` - changed for all contracts until overridden or stopped
 /// - `StopGlobal` - reset to the initial value for all contracts
 #[derive(Copy, Drop, Serde)]
 struct TxInfoMock {
@@ -71,7 +71,7 @@ impl TxInfoMockImpl of Default<TxInfoMock> {
 /// - `Retain` - unchanged
 /// - `Start` - changed for given contract and span
 /// - `Stop` - reset to the initial value for given contract and span
-/// - `StartGlobal` - changed for all contracts until overriden or stoped
+/// - `StartGlobal` - changed for all contracts until overridden or stopped
 /// - `StopGlobal` - reset to the initial value for all contracts
 #[derive(Copy, Drop, Serde)]
 struct BlockInfoMock {
@@ -97,7 +97,7 @@ impl BlockInfoMockImpl of Default<BlockInfoMock> {
 /// - `Retain` - unchanged
 /// - `Start` - changed for given contract and span
 /// - `Stop` - reset to the initial value for given contract and span
-/// - `StartGlobal` - changed for all contracts until overriden or stoped
+/// - `StartGlobal` - changed for all contracts until overridden or stopped
 /// - `StopGlobal` - reset to the initial value for all contracts
 #[derive(Copy, Drop, Serde)]
 struct ExecutionInfoMock {
