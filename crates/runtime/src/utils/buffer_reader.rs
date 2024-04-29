@@ -40,16 +40,6 @@ impl<'b> BufferReader<'b> {
         BufferReader::<'a> { buffer, idx: 0 }
     }
 
-    pub fn read_slice(&mut self, length: usize) -> BufferReadResult<&'b [Felt252]> {
-        let start = self.idx;
-
-        self.idx += length;
-
-        self.buffer
-            .get(start..self.idx)
-            .ok_or(BufferReadError::EndOfBuffer)
-    }
-
     pub fn read<T>(&mut self) -> BufferReadResult<T>
     where
         T: FromReader,

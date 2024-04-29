@@ -4,6 +4,7 @@ use blockifier::state::cached_state::{
 use cheatnet::constants::build_testing_state;
 use cheatnet::forking::state::ForkStateReader;
 use cheatnet::state::ExtendedStateReader;
+use shared::test_utils::node_url::node_rpc_url;
 use starknet_api::block::BlockNumber;
 
 pub fn create_cached_state() -> CachedState<ExtendedStateReader> {
@@ -24,7 +25,7 @@ pub fn create_fork_cached_state_at(
     block_number: u64,
     cache_dir: &str,
 ) -> CachedState<ExtendedStateReader> {
-    let node_url = "http://188.34.188.184:7070/rpc/v0_7".parse().unwrap();
+    let node_url = node_rpc_url().unwrap();
     CachedState::new(
         ExtendedStateReader {
             dict_state_reader: build_testing_state(),

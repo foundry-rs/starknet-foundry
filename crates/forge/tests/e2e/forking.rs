@@ -1,13 +1,14 @@
 use super::common::runner::{
-    runner, setup_package, setup_package_with_file_patterns, test_runner, BASE_FILE_PATTERNS,
+    runner, setup_package_with_file_patterns, test_runner, BASE_FILE_PATTERNS,
 };
 use forge::shared_cache::CACHE_DIR;
-use indoc::indoc;
+use indoc::{formatdoc, indoc};
+use shared::test_utils::node_url::node_rpc_url;
 use shared::test_utils::output_assert::assert_stdout_contains;
 
 #[test]
 fn without_cache() {
-    let temp = setup_package("forking");
+    let temp = setup_package_with_file_patterns("forking", BASE_FILE_PATTERNS);
 
     let output = test_runner(&temp)
         .arg("forking::tests::test_fork_simple")
@@ -106,6 +107,7 @@ fn printing_latest_block_number() {
         "forking",
         &[BASE_FILE_PATTERNS, &[&format!("{CACHE_DIR}/*.json")]].concat(),
     );
+    let node_rpc_url = node_rpc_url().unwrap();
 
     let output = test_runner(&temp)
         .args(["--exact", "forking::tests::print_block_number_when_latest"])
@@ -114,7 +116,7 @@ fn printing_latest_block_number() {
 
     assert_stdout_contains(
         output,
-        indoc! {r"
+        formatdoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -124,7 +126,7 @@ fn printing_latest_block_number() {
         [PASS] forking::tests::print_block_number_when_latest [..]
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 4 filtered out
 
-        Latest block number = [..] for url = http://188.34.188.184:7070/rpc/v0_7
+        Latest block number = [..] for url = {node_rpc_url}
         "},
     );
 }
