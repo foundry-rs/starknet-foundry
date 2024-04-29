@@ -39,6 +39,25 @@ fn roll(target: ContractAddress, block_number: u64, span: CheatSpan) {
     cheat_execution_info(execution_info);
 }
 
+/// Changes the block number.
+/// - `block_number` - block number to be set
+fn roll_global(block_number: u64) {
+    let mut execution_info: ExecutionInfoMock = Default::default();
+
+    execution_info.block_info.block_number = Operation::StartGlobal(block_number);
+
+    cheat_execution_info(execution_info);
+}
+
+/// Cancels the `roll_global`
+fn stop_roll_global() {
+    let mut execution_info: ExecutionInfoMock = Default::default();
+
+    execution_info.block_info.block_number = Operation::StopGlobal;
+
+    cheat_execution_info(execution_info);
+}
+
 /// Changes the block number for the given target.
 /// - `target` - instance of `ContractAddress` specifying which contracts to roll
 /// - `block_number` - block number to be set
@@ -66,6 +85,25 @@ fn prank(target: ContractAddress, caller_address: ContractAddress, span: CheatSp
 
     execution_info
         .caller_address = Operation::Start(CheatArguments { value: caller_address, span, target });
+
+    cheat_execution_info(execution_info);
+}
+
+/// Changes the caller address.
+/// - `caller_address` - caller address to be set
+fn prank_global(caller_address: ContractAddress) {
+    let mut execution_info: ExecutionInfoMock = Default::default();
+
+    execution_info.caller_address = Operation::StartGlobal(caller_address);
+
+    cheat_execution_info(execution_info);
+}
+
+/// Cancels the `prank_global`
+fn stop_prank_global() {
+    let mut execution_info: ExecutionInfoMock = Default::default();
+
+    execution_info.caller_address = Operation::StopGlobal;
 
     cheat_execution_info(execution_info);
 }
@@ -103,6 +141,25 @@ fn warp(target: ContractAddress, block_timestamp: u64, span: CheatSpan) {
     cheat_execution_info(execution_info);
 }
 
+/// Changes the block timestamp.
+/// - `block_timestamp` - block timestamp to be set
+fn warp_global(block_timestamp: u64) {
+    let mut execution_info: ExecutionInfoMock = Default::default();
+
+    execution_info.block_info.block_timestamp = Operation::StartGlobal(block_timestamp);
+
+    cheat_execution_info(execution_info);
+}
+
+/// Cancels the `warp_global`
+fn stop_warp_global() {
+    let mut execution_info: ExecutionInfoMock = Default::default();
+
+    execution_info.block_info.block_timestamp = Operation::StopGlobal;
+
+    cheat_execution_info(execution_info);
+}
+
 /// Changes the block timestamp for the given target.
 /// - `target` - instance of `ContractAddress` specifying which contracts to warp
 /// - `block_timestamp` - block timestamp to be set
@@ -131,6 +188,25 @@ fn elect(target: ContractAddress, sequencer_address: ContractAddress, span: Chea
         .block_info
         .sequencer_address =
             Operation::Start(CheatArguments { value: sequencer_address, span, target });
+
+    cheat_execution_info(execution_info);
+}
+
+/// Changes the sequencer address.
+/// `sequencer_address` - sequencer address to be set
+fn elect_global(sequencer_address: ContractAddress) {
+    let mut execution_info: ExecutionInfoMock = Default::default();
+
+    execution_info.block_info.sequencer_address = Operation::StartGlobal(sequencer_address);
+
+    cheat_execution_info(execution_info);
+}
+
+/// Cancels the `elect_global`
+fn stop_elect_global() {
+    let mut execution_info: ExecutionInfoMock = Default::default();
+
+    execution_info.block_info.sequencer_address = Operation::StopGlobal;
 
     cheat_execution_info(execution_info);
 }

@@ -5,7 +5,6 @@ use test_utils::running_tests::run_test_case;
 use test_utils::test_case;
 
 #[test]
-#[ignore] //TODO global variant
 fn prank() {
     let test = test_case!(
         indoc!(
@@ -16,7 +15,7 @@ fn prank() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use snforge_std::{ declare, ContractClassTrait, start_prank, stop_prank, ContractAddress,};
+            use snforge_std::{ declare, ContractClassTrait, start_prank, stop_prank, stop_prank_global, prank_global };
 
             #[starknet::interface]
             trait IPrankChecker<TContractState> {
@@ -34,12 +33,12 @@ fn prank() {
 
                 let old_caller_address = dispatcher.get_caller_address();
 
-                start_prank(ContractAddress::One(contract_address), target_caller_address);
+                start_prank(contract_address, target_caller_address);
 
                 let new_caller_address = dispatcher.get_caller_address();
                 assert(new_caller_address == 123, 'Wrong caller address');
 
-                stop_prank(ContractAddress::One(contract_address));
+                stop_prank(contract_address);
 
                 let new_caller_address = dispatcher.get_caller_address();
                 assert(old_caller_address == new_caller_address, 'Address did not change back');
@@ -54,17 +53,15 @@ fn prank() {
                 let target_caller_address: felt252 = 123;
                 let target_caller_address: ContractAddress = target_caller_address.try_into().unwrap();
 
-                let old_caller_address = dispatcher.get_caller_address();
-
-                start_prank(ContractAddress::All, target_caller_address);
+                prank_global(target_caller_address);
 
                 let new_caller_address = dispatcher.get_caller_address();
                 assert(new_caller_address == 123, 'Wrong caller address');
 
-                stop_prank(ContractAddress::All);
+                stop_prank_global();
 
                 let new_caller_address = dispatcher.get_caller_address();
-                assert(old_caller_address == new_caller_address, 'Address did not change back');
+                assert(new_caller_address == 123, 'Wrong caller address');
             }
 
             #[test]
@@ -78,12 +75,12 @@ fn prank() {
 
                 let old_caller_address = dispatcher.get_caller_address();
 
-                start_prank(ContractAddress::All, target_caller_address);
+                prank_global(target_caller_address);
 
                 let new_caller_address = dispatcher.get_caller_address();
                 assert(new_caller_address == 123, 'Wrong caller address');
 
-                stop_prank(ContractAddress::One(contract_address));
+                stop_prank(contract_address);
 
                 let new_caller_address = dispatcher.get_caller_address();
                 assert(old_caller_address == new_caller_address, 'Address did not change back');
@@ -105,7 +102,8 @@ fn prank() {
                 let old_caller_address1 = dispatcher1.get_caller_address();
                 let old_caller_address2 = dispatcher2.get_caller_address();
 
-                start_prank(ContractAddress::Multiple(array![contract_address1, contract_address2]), target_caller_address);
+                start_prank(contract_address1, target_caller_address);
+                start_prank(contract_address2, target_caller_address);
 
                 let new_caller_address1 = dispatcher1.get_caller_address();
                 let new_caller_address2 = dispatcher2.get_caller_address();
@@ -113,7 +111,8 @@ fn prank() {
                 assert(new_caller_address1 == 123, 'Wrong caller address #1');
                 assert(new_caller_address2 == 123, 'Wrong caller address #2');
 
-                stop_prank(ContractAddress::Multiple(array![contract_address1, contract_address2]));
+                stop_prank(contract_address1);
+                stop_prank(contract_address2);
 
                 let new_caller_address1 = dispatcher1.get_caller_address();
                 let new_caller_address2 = dispatcher2.get_caller_address();

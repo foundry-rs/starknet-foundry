@@ -183,13 +183,12 @@ fn elect_library_call() {
 }
 
 #[test]
-#[ignore] //TODO global variant
 fn elect_all_simple() {
     let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("ElectChecker", &[]);
 
-    //test_env.start_elect(ContractAddress::All, 123);
+    test_env.cheatnet_state.elect_global(123_u8.into());
 
     assert_success(
         test_env.call_contract(&contract_address, "get_sequencer_address", &[]),
@@ -198,13 +197,13 @@ fn elect_all_simple() {
 }
 
 #[test]
-#[ignore] //TODO global variant
 fn elect_all_then_one() {
     let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("ElectChecker", &[]);
 
-    // test_env.start_elect(ContractAddress::All, 111);
+    test_env.cheatnet_state.elect_global(111_u8.into());
+
     test_env.start_elect(contract_address, 222);
 
     assert_success(
@@ -214,14 +213,13 @@ fn elect_all_then_one() {
 }
 
 #[test]
-#[ignore] //TODO global variant
 fn elect_one_then_all() {
     let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("ElectChecker", &[]);
 
     test_env.start_elect(contract_address, 111);
-    //  test_env.start_elect(ContractAddress::All, 222);
+    test_env.cheatnet_state.elect_global(222_u8.into());
 
     assert_success(
         test_env.call_contract(&contract_address, "get_sequencer_address", &[]),
@@ -230,20 +228,27 @@ fn elect_one_then_all() {
 }
 
 #[test]
-#[ignore] //TODO global variant
 fn elect_all_stop() {
     let mut test_env = TestEnvironment::new();
 
-    let contract_address = test_env.deploy("ElectChecker", &[]);
+    let elect_checker = test_env.declare("ElectChecker", &get_contracts());
+    let contract_address = test_env.deploy_wrapper(&elect_checker, &[]);
 
-    // test_env.start_elect(ContractAddress::All, 123);
+    test_env.cheatnet_state.elect_global(123_u8.into());
 
     assert_success(
         test_env.call_contract(&contract_address, "get_sequencer_address", &[]),
         &[Felt252::from(123)],
     );
 
-    // test_env.cheatnet_state.stop_elect(ContractAddress::All);
+    test_env.cheatnet_state.stop_elect_global();
+
+    assert_success(
+        test_env.call_contract(&contract_address, "get_sequencer_address", &[]),
+        &[Felt252::from(123)],
+    );
+
+    let contract_address = test_env.deploy_wrapper(&elect_checker, &[]);
 
     assert_success(
         test_env.call_contract(&contract_address, "get_sequencer_address", &[]),
@@ -436,35 +441,6 @@ fn elect_library_call_with_span() {
     );
     assert_success(
         test_env.call_contract(&contract_address, lib_call_selector, &[class_hash.into_()]),
-        &[contract_address!(SEQUENCER_ADDRESS).into_()],
-    );
-}
-
-#[test]
-#[ignore] //TODO global variant
-fn elect_all_span() {
-    let mut test_env = TestEnvironment::new();
-
-    let contract_address_1 = test_env.deploy("ElectChecker", &[]);
-    let contract_address_2 = test_env.deploy("ElectCheckerLibCall", &[]);
-
-    // test_env.elect(ContractAddress::All, 123, CheatSpan::TargetCalls(1));
-
-    assert_success(
-        test_env.call_contract(&contract_address_1, "get_sequencer_address", &[]),
-        &[Felt252::from(123)],
-    );
-    assert_success(
-        test_env.call_contract(&contract_address_1, "get_sequencer_address", &[]),
-        &[contract_address!(SEQUENCER_ADDRESS).into_()],
-    );
-
-    assert_success(
-        test_env.call_contract(&contract_address_2, "get_sequencer_address", &[]),
-        &[Felt252::from(123)],
-    );
-    assert_success(
-        test_env.call_contract(&contract_address_2, "get_sequencer_address", &[]),
         &[contract_address!(SEQUENCER_ADDRESS).into_()],
     );
 }

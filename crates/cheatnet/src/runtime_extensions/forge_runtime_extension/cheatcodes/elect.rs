@@ -33,10 +33,30 @@ impl CheatnetState {
         self.elect(contract_address, sequencer_address, CheatSpan::Indefinite);
     }
 
+    pub fn elect_global(&mut self, sequencer_address: ContractAddress) {
+        self.cheat_execution_info(ExecutionInfoMockOperations {
+            block_info: BlockInfoMockOperations {
+                sequencer_address: Operation::StartGlobal(sequencer_address),
+                ..Default::default()
+            },
+            ..Default::default()
+        });
+    }
+
     pub fn stop_elect(&mut self, contract_address: ContractAddress) {
         self.cheat_execution_info(ExecutionInfoMockOperations {
             block_info: BlockInfoMockOperations {
                 sequencer_address: Operation::Stop(contract_address),
+                ..Default::default()
+            },
+            ..Default::default()
+        });
+    }
+
+    pub fn stop_elect_global(&mut self) {
+        self.cheat_execution_info(ExecutionInfoMockOperations {
+            block_info: BlockInfoMockOperations {
+                sequencer_address: Operation::StopGlobal,
                 ..Default::default()
             },
             ..Default::default()

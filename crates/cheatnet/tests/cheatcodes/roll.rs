@@ -162,26 +162,24 @@ fn roll_library_call() {
 }
 
 #[test]
-#[ignore] //TODO global variant
 fn roll_all_simple() {
     let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("RollChecker", &[]);
 
-    // test_env.start_roll(ContractAddress::All, 123);
+    test_env.cheatnet_state.roll_global(123);
 
     let output = test_env.call_contract(&contract_address, "get_block_number", &[]);
     assert_success(output, &[Felt252::from(123)]);
 }
 
 #[test]
-#[ignore] //TODO global variant
 fn roll_all_then_one() {
     let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("RollChecker", &[]);
 
-    // test_env.start_roll(ContractAddress::All, 321);
+    test_env.cheatnet_state.roll_global(321);
     test_env.start_roll(contract_address, 123);
 
     let output = test_env.call_contract(&contract_address, "get_block_number", &[]);
@@ -189,34 +187,40 @@ fn roll_all_then_one() {
 }
 
 #[test]
-#[ignore] //TODO global variant
 fn roll_one_then_all() {
     let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("RollChecker", &[]);
 
     test_env.start_roll(contract_address, 123);
-    // test_env.start_roll(ContractAddress::All, 321);
+    test_env.cheatnet_state.roll_global(321);
 
     let output = test_env.call_contract(&contract_address, "get_block_number", &[]);
     assert_success(output, &[Felt252::from(321)]);
 }
 
 #[test]
-#[ignore] //TODO global variant
 fn roll_all_stop() {
     let mut test_env = TestEnvironment::new();
 
-    let contract_address = test_env.deploy("RollChecker", &[]);
+    let roll_checker = test_env.declare("RollChecker", &get_contracts());
+    let contract_address = test_env.deploy_wrapper(&roll_checker, &[]);
 
-    // test_env.start_roll(ContractAddress::All, 123);
+    test_env.cheatnet_state.roll_global(123);
 
     assert_success(
         test_env.call_contract(&contract_address, "get_block_number", &[]),
         &[Felt252::from(123)],
     );
 
-    // test_env.cheatnet_state.stop_roll(ContractAddress::All);
+    test_env.cheatnet_state.stop_roll_global();
+
+    assert_success(
+        test_env.call_contract(&contract_address, "get_block_number", &[]),
+        &[Felt252::from(123)],
+    );
+
+    let contract_address = test_env.deploy_wrapper(&roll_checker, &[]);
 
     assert_success(
         test_env.call_contract(&contract_address, "get_block_number", &[]),
@@ -402,35 +406,6 @@ fn roll_library_call_with_span() {
     );
     assert_success(
         test_env.call_contract(&contract_address, lib_call_selector, &[class_hash.into_()]),
-        &[Felt252::from(DEFAULT_BLOCK_NUMBER)],
-    );
-}
-
-#[test]
-#[ignore] //TODO global variant
-fn roll_all_span() {
-    let mut test_env = TestEnvironment::new();
-
-    let contract_address_1 = test_env.deploy("RollChecker", &[]);
-    let contract_address_2 = test_env.deploy("RollCheckerLibCall", &[]);
-
-    // test_env.roll(ContractAddress::All, 123, CheatSpan::TargetCalls(1));
-
-    assert_success(
-        test_env.call_contract(&contract_address_1, "get_block_number", &[]),
-        &[Felt252::from(123)],
-    );
-    assert_success(
-        test_env.call_contract(&contract_address_1, "get_block_number", &[]),
-        &[Felt252::from(DEFAULT_BLOCK_NUMBER)],
-    );
-
-    assert_success(
-        test_env.call_contract(&contract_address_2, "get_block_number", &[]),
-        &[Felt252::from(123)],
-    );
-    assert_success(
-        test_env.call_contract(&contract_address_2, "get_block_number", &[]),
         &[Felt252::from(DEFAULT_BLOCK_NUMBER)],
     );
 }

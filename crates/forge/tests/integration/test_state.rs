@@ -538,7 +538,7 @@ fn simple_cheatcodes() {
                 span: CheatSpan::Indefinite
             });
 
-            start_spoof(test_address, tx_info_mock);
+            start_spoof(tx_info_mock);
 
             let new_tx_info = starknet::get_tx_info().unbox();
             let new_tx_info_v2 = get_tx_info_v2().unbox();

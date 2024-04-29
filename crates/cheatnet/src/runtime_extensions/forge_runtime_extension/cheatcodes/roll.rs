@@ -20,6 +20,16 @@ impl CheatnetState {
         });
     }
 
+    pub fn roll_global(&mut self, block_number: u64) {
+        self.cheat_execution_info(ExecutionInfoMockOperations {
+            block_info: BlockInfoMockOperations {
+                block_number: Operation::StartGlobal(block_number),
+                ..Default::default()
+            },
+            ..Default::default()
+        });
+    }
+
     pub fn start_roll(&mut self, contract_address: ContractAddress, block_number: u64) {
         self.roll(contract_address, block_number, CheatSpan::Indefinite);
     }
@@ -28,6 +38,16 @@ impl CheatnetState {
         self.cheat_execution_info(ExecutionInfoMockOperations {
             block_info: BlockInfoMockOperations {
                 block_number: Operation::Stop(contract_address),
+                ..Default::default()
+            },
+            ..Default::default()
+        });
+    }
+
+    pub fn stop_roll_global(&mut self) {
+        self.cheat_execution_info(ExecutionInfoMockOperations {
+            block_info: BlockInfoMockOperations {
+                block_number: Operation::StopGlobal,
                 ..Default::default()
             },
             ..Default::default()

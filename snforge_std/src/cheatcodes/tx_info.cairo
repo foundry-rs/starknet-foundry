@@ -6,10 +6,8 @@ use super::execution_info::{cheat_execution_info, Operation, ExecutionInfoMock, 
 
 
 /// Changes `TxInfo` returned by `get_tx_info()` for the targeted contract and span.
-/// - `target` - instance of `ContractAddress` specifying which contracts to spoof
 /// - `tx_info_mock` - a struct with same structure as `TxInfo` (returned by `get_tx_info()`)
-/// - `span` - instance of `CheatSpan` specifying the number of target calls with the cheat applied
-fn spoof(target: ContractAddress, tx_info_mock: TxInfoMock, span: CheatSpan) {
+fn spoof(tx_info_mock: TxInfoMock) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info.tx_info = tx_info_mock;
@@ -18,13 +16,12 @@ fn spoof(target: ContractAddress, tx_info_mock: TxInfoMock, span: CheatSpan) {
 }
 
 /// Changes `TxInfo` returned by `get_tx_info()` for the targeted contract until the spoof is canceled with `stop_spoof`.
-/// - `target` - instance of `ContractAddress` specifying which contracts to spoof
 /// - `tx_info_mock` - a struct with same structure as `TxInfo` (returned by `get_tx_info()`)
-fn start_spoof(target: ContractAddress, tx_info_mock: TxInfoMock) {
-    spoof(target, tx_info_mock, CheatSpan::Indefinite);
+fn start_spoof(tx_info_mock: TxInfoMock) {
+    spoof(tx_info_mock);
 }
 
-/// Cancels the `spoof` / `start_spoof` for the given target.
+/// Cancels the `spoof` for the given target.
 /// - `target` - instance of `ContractAddress` specifying which contracts to stop spoofing
 fn stop_spoof(target: ContractAddress) {
     let mut execution_info: ExecutionInfoMock = Default::default();

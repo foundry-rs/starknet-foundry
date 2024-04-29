@@ -162,26 +162,25 @@ fn warp_library_call() {
 }
 
 #[test]
-#[ignore] //TODO global variant
 fn warp_all_simple() {
     let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("WarpChecker", &[]);
 
-    // test_env.start_warp(ContractAddress::All, 123);
+    test_env.cheatnet_state.warp_global(123);
 
     let output = test_env.call_contract(&contract_address, "get_block_timestamp", &[]);
     assert_success(output, &[Felt252::from(123)]);
 }
 
 #[test]
-#[ignore] //TODO global variant
 fn warp_all_then_one() {
     let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("WarpChecker", &[]);
 
-    //  test_env.start_warp(ContractAddress::All, 321);
+    test_env.cheatnet_state.warp_global(321);
+
     test_env.start_warp(contract_address, 123);
 
     let output = test_env.call_contract(&contract_address, "get_block_timestamp", &[]);
@@ -189,34 +188,42 @@ fn warp_all_then_one() {
 }
 
 #[test]
-#[ignore] //TODO global variant
 fn warp_one_then_all() {
     let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("WarpChecker", &[]);
 
     test_env.start_warp(contract_address, 123);
-    //  test_env.start_warp(ContractAddress::All, 321);
+
+    test_env.cheatnet_state.warp_global(321);
 
     let output = test_env.call_contract(&contract_address, "get_block_timestamp", &[]);
     assert_success(output, &[Felt252::from(321)]);
 }
 
 #[test]
-#[ignore] //TODO global variant
 fn warp_all_stop() {
     let mut test_env = TestEnvironment::new();
 
-    let contract_address = test_env.deploy("WarpChecker", &[]);
+    let warp_checker = test_env.declare("WarpChecker", &get_contracts());
 
-    // test_env.start_warp(ContractAddress::All, 123);
+    let contract_address = test_env.deploy_wrapper(&warp_checker, &[]);
+
+    test_env.cheatnet_state.warp_global(123);
 
     assert_success(
         test_env.call_contract(&contract_address, "get_block_timestamp", &[]),
         &[Felt252::from(123)],
     );
 
-    // test_env.cheatnet_state.stop_warp(ContractAddress::All);
+    test_env.cheatnet_state.stop_warp_global();
+
+    assert_success(
+        test_env.call_contract(&contract_address, "get_block_timestamp", &[]),
+        &[Felt252::from(123)],
+    );
+
+    let contract_address = test_env.deploy_wrapper(&warp_checker, &[]);
 
     assert_success(
         test_env.call_contract(&contract_address, "get_block_timestamp", &[]),
@@ -402,35 +409,6 @@ fn warp_library_call_with_span() {
     );
     assert_success(
         test_env.call_contract(&contract_address, lib_call_selector, &[class_hash.into_()]),
-        &[Felt252::from(DEFAULT_BLOCK_TIMESTAMP)],
-    );
-}
-
-#[test]
-#[ignore] //TODO global variant
-fn warp_all_span() {
-    let mut test_env = TestEnvironment::new();
-
-    let contract_address_1 = test_env.deploy("WarpChecker", &[]);
-    let contract_address_2 = test_env.deploy("WarpCheckerLibCall", &[]);
-
-    //test_env.warp(ContractAddress::All, 123, CheatSpan::TargetCalls(1));
-
-    assert_success(
-        test_env.call_contract(&contract_address_1, "get_block_timestamp", &[]),
-        &[Felt252::from(123)],
-    );
-    assert_success(
-        test_env.call_contract(&contract_address_1, "get_block_timestamp", &[]),
-        &[Felt252::from(DEFAULT_BLOCK_TIMESTAMP)],
-    );
-
-    assert_success(
-        test_env.call_contract(&contract_address_2, "get_block_timestamp", &[]),
-        &[Felt252::from(123)],
-    );
-    assert_success(
-        test_env.call_contract(&contract_address_2, "get_block_timestamp", &[]),
         &[Felt252::from(DEFAULT_BLOCK_TIMESTAMP)],
     );
 }

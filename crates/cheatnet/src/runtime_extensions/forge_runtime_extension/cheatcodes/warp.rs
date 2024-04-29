@@ -20,6 +20,16 @@ impl CheatnetState {
         });
     }
 
+    pub fn warp_global(&mut self, timestamp: u64) {
+        self.cheat_execution_info(ExecutionInfoMockOperations {
+            block_info: BlockInfoMockOperations {
+                block_timestamp: Operation::StartGlobal(timestamp),
+                ..Default::default()
+            },
+            ..Default::default()
+        });
+    }
+
     pub fn start_warp(&mut self, contract_address: ContractAddress, timestamp: u64) {
         self.warp(contract_address, timestamp, CheatSpan::Indefinite);
     }
@@ -28,6 +38,16 @@ impl CheatnetState {
         self.cheat_execution_info(ExecutionInfoMockOperations {
             block_info: BlockInfoMockOperations {
                 block_timestamp: Operation::Stop(contract_address),
+                ..Default::default()
+            },
+            ..Default::default()
+        });
+    }
+
+    pub fn stop_warp_global(&mut self) {
+        self.cheat_execution_info(ExecutionInfoMockOperations {
+            block_info: BlockInfoMockOperations {
+                block_timestamp: Operation::StopGlobal,
                 ..Default::default()
             },
             ..Default::default()

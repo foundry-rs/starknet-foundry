@@ -20,6 +20,13 @@ impl CheatnetState {
         });
     }
 
+    pub fn prank_global(&mut self, caller_address: ContractAddress) {
+        self.cheat_execution_info(ExecutionInfoMockOperations {
+            caller_address: Operation::StartGlobal(caller_address),
+            ..Default::default()
+        });
+    }
+
     pub fn start_prank(&mut self, target: ContractAddress, caller_address: ContractAddress) {
         self.prank(target, caller_address, CheatSpan::Indefinite);
     }
@@ -27,6 +34,13 @@ impl CheatnetState {
     pub fn stop_prank(&mut self, target: ContractAddress) {
         self.cheat_execution_info(ExecutionInfoMockOperations {
             caller_address: Operation::Stop(target),
+            ..Default::default()
+        });
+    }
+
+    pub fn stop_prank_global(&mut self) {
+        self.cheat_execution_info(ExecutionInfoMockOperations {
+            caller_address: Operation::StopGlobal,
             ..Default::default()
         });
     }

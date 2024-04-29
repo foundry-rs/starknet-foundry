@@ -66,6 +66,31 @@ impl CheatnetState {
         });
     }
 
+    pub fn spoof_global(
+        &mut self,
+        tx_info_mock: TxInfoMock,
+    ) {
+        self.cheat_execution_info(ExecutionInfoMockOperations {
+            #[rustfmt::skip]
+            tx_info: TxInfoMockOperations {
+                version                      :tx_info_mock.version                     .map(|value|Operation::StartGlobal(value)).unwrap_or(Operation::Retain),             
+                account_contract_address     :tx_info_mock.account_contract_address    .map(|value|Operation::StartGlobal(value)).unwrap_or(Operation::Retain),                            
+                max_fee                      :tx_info_mock.max_fee                     .map(|value|Operation::StartGlobal(value)).unwrap_or(Operation::Retain),           
+                signature                    :tx_info_mock.signature                   .map(|value|Operation::StartGlobal(value)).unwrap_or(Operation::Retain),             
+                transaction_hash             :tx_info_mock.transaction_hash            .map(|value|Operation::StartGlobal(value)).unwrap_or(Operation::Retain),                    
+                chain_id                     :tx_info_mock.chain_id                    .map(|value|Operation::StartGlobal(value)).unwrap_or(Operation::Retain),            
+                nonce                        :tx_info_mock.nonce                       .map(|value|Operation::StartGlobal(value)).unwrap_or(Operation::Retain),         
+                resource_bounds              :tx_info_mock.resource_bounds             .map(|value|Operation::StartGlobal(value)).unwrap_or(Operation::Retain),                   
+                tip                          :tx_info_mock.tip                         .map(|value|Operation::StartGlobal(value)).unwrap_or(Operation::Retain),       
+                paymaster_data               :tx_info_mock.paymaster_data              .map(|value|Operation::StartGlobal(value)).unwrap_or(Operation::Retain),                  
+                nonce_data_availability_mode :tx_info_mock.nonce_data_availability_mode.map(|value|Operation::StartGlobal(value)).unwrap_or(Operation::Retain),                                
+                fee_data_availability_mode   :tx_info_mock.fee_data_availability_mode  .map(|value|Operation::StartGlobal(value)).unwrap_or(Operation::Retain),                              
+                account_deployment_data      :tx_info_mock.account_deployment_data     .map(|value|Operation::StartGlobal(value)).unwrap_or(Operation::Retain),                           
+            },
+            ..Default::default()
+        });
+    }
+
     pub fn start_spoof(&mut self, contract_address: ContractAddress, tx_info_mock: TxInfoMock) {
         self.spoof(contract_address, tx_info_mock, CheatSpan::Indefinite);
     }
@@ -87,6 +112,27 @@ impl CheatnetState {
                 nonce_data_availability_mode :Operation::Stop(contract_address),                                
                 fee_data_availability_mode   :Operation::Stop(contract_address),                              
                 account_deployment_data      :Operation::Stop(contract_address),                           
+            },
+            ..Default::default()
+        });
+    }
+    pub fn stop_spoof_global(&mut self) {
+        self.cheat_execution_info(ExecutionInfoMockOperations {
+            #[rustfmt::skip]
+            tx_info: TxInfoMockOperations {
+                version                      :Operation::StopGlobal,             
+                account_contract_address     :Operation::StopGlobal,                            
+                max_fee                      :Operation::StopGlobal,           
+                signature                    :Operation::StopGlobal,             
+                transaction_hash             :Operation::StopGlobal,                    
+                chain_id                     :Operation::StopGlobal,            
+                nonce                        :Operation::StopGlobal,         
+                resource_bounds              :Operation::StopGlobal,                   
+                tip                          :Operation::StopGlobal,       
+                paymaster_data               :Operation::StopGlobal,                  
+                nonce_data_availability_mode :Operation::StopGlobal,                                
+                fee_data_availability_mode   :Operation::StopGlobal,                              
+                account_deployment_data      :Operation::StopGlobal,                           
             },
             ..Default::default()
         });

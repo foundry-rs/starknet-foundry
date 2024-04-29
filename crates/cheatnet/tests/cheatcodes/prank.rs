@@ -178,20 +178,27 @@ fn prank_library_call() {
 }
 
 #[test]
-#[ignore] //TODO global variant
 fn prank_all() {
     let mut test_env = TestEnvironment::new();
 
-    let contract_address = test_env.deploy("PrankChecker", &[]);
+    let prank_checker = test_env.declare("PrankChecker", &get_contracts());
+    let contract_address = test_env.deploy_wrapper(&prank_checker, &[]);
 
-    // test_env.start_prank(ContractAddress::All, 123);
+    test_env.cheatnet_state.prank_global(123_u8.into());
 
     assert_success(
         test_env.call_contract(&contract_address, "get_caller_address", &[]),
         &[Felt252::from(123)],
     );
 
-    // test_env.cheatnet_state.stop_prank(ContractAddress::All);
+    test_env.cheatnet_state.stop_prank_global();
+
+    assert_success(
+        test_env.call_contract(&contract_address, "get_caller_address", &[]),
+        &[Felt252::from(123)],
+    );
+
+    let contract_address = test_env.deploy_wrapper(&prank_checker, &[]);
 
     assert_success(
         test_env.call_contract(&contract_address, "get_caller_address", &[]),
@@ -235,13 +242,12 @@ fn prank_multiple() {
 }
 
 #[test]
-#[ignore] //TODO global variant
 fn prank_all_then_one() {
     let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("PrankChecker", &[]);
 
-    // test_env.start_prank(ContractAddress::All, 111);
+    test_env.cheatnet_state.prank_global(111_u8.into());
     test_env.start_prank(contract_address, 222);
 
     assert_success(
@@ -251,14 +257,13 @@ fn prank_all_then_one() {
 }
 
 #[test]
-#[ignore] //TODO global variant
 fn prank_one_then_all() {
     let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("PrankChecker", &[]);
 
     test_env.start_prank(contract_address, 111);
-    // test_env.start_prank(ContractAddress::All, 222);
+    test_env.cheatnet_state.prank_global(222_u8.into());
 
     assert_success(
         test_env.call_contract(&contract_address, "get_caller_address", &[]),
@@ -432,35 +437,6 @@ fn prank_library_call_with_span() {
     );
     assert_success(
         test_env.call_contract(&contract_address, lib_call_selector, &[class_hash.into_()]),
-        &[contract_address!(TEST_ADDRESS).into_()],
-    );
-}
-
-#[test]
-#[ignore] //TODO global variant
-fn prank_all_span() {
-    let mut test_env = TestEnvironment::new();
-
-    let contract_address_1 = test_env.deploy("PrankChecker", &[]);
-    let contract_address_2 = test_env.deploy("PrankCheckerLibCall", &[]);
-
-    // test_env.prank(ContractAddress::All, 123, CheatSpan::TargetCalls(1));
-
-    assert_success(
-        test_env.call_contract(&contract_address_1, "get_caller_address", &[]),
-        &[Felt252::from(123)],
-    );
-    assert_success(
-        test_env.call_contract(&contract_address_1, "get_caller_address", &[]),
-        &[contract_address!(TEST_ADDRESS).into_()],
-    );
-
-    assert_success(
-        test_env.call_contract(&contract_address_2, "get_caller_address", &[]),
-        &[Felt252::from(123)],
-    );
-    assert_success(
-        test_env.call_contract(&contract_address_2, "get_caller_address", &[]),
         &[contract_address!(TEST_ADDRESS).into_()],
     );
 }

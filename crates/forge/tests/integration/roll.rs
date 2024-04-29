@@ -5,7 +5,6 @@ use test_utils::running_tests::run_test_case;
 use test_utils::test_case;
 
 #[test]
-#[ignore] //TODO global variant
 fn roll_basic() {
     let test = test_case!(
         indoc!(
@@ -16,7 +15,7 @@ fn roll_basic() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use snforge_std::{ declare, ContractAddress, ContractClassTrait, start_roll, stop_roll };
+            use snforge_std::{ declare, ContractClassTrait, start_roll, stop_roll, stop_roll_global, roll_global };
 
             #[starknet::interface]
             trait IRollChecker<TContractState> {
@@ -31,12 +30,12 @@ fn roll_basic() {
 
                 let old_block_number = dispatcher.get_block_number();
 
-                start_roll(ContractAddress::One(contract_address), 234);
+                start_roll(contract_address, 234);
 
                 let new_block_number = dispatcher.get_block_number();
                 assert(new_block_number == 234, 'Wrong block number');
 
-                stop_roll(ContractAddress::One(contract_address));
+                stop_roll(contract_address);
 
                 let new_block_number = dispatcher.get_block_number();
                 assert(new_block_number == old_block_number, 'Block num did not change back');
@@ -52,24 +51,23 @@ fn roll_basic() {
                 let roll_checker1 = IRollCheckerDispatcher { contract_address: contract_address1 };
                 let roll_checker2 = IRollCheckerDispatcher { contract_address: contract_address2 };
 
-                let old_block_number1 = roll_checker1.get_block_number();
                 let old_block_number2 = roll_checker2.get_block_number();
 
-                start_roll(ContractAddress::Multiple(array![roll_checker1.contract_address, roll_checker2.contract_address]), 123);
+                start_roll(roll_checker1.contract_address, 123);
 
                 let new_block_number1 = roll_checker1.get_block_number();
                 let new_block_number2 = roll_checker2.get_block_number();
 
                 assert(new_block_number1 == 123, 'Wrong block number #1');
-                assert(new_block_number2 == 123, 'Wrong block number #2');
+                assert(new_block_number2 == old_block_number2, 'Wrong block number #2');
 
-                stop_roll(ContractAddress::Multiple(array![roll_checker1.contract_address, roll_checker2.contract_address]));
+                stop_roll(roll_checker2.contract_address);
 
                 let new_block_number1 = roll_checker1.get_block_number();
                 let new_block_number2 = roll_checker2.get_block_number();
 
-                assert(new_block_number1 == old_block_number1, 'Roll not stopped #1');
-                assert(new_block_number2 == old_block_number2, 'Roll not stopped #2');
+                assert(new_block_number1 == 123, 'Wrong block number #1');
+                assert(new_block_number2 == old_block_number2, 'Wrong block number #2');
             }
 
             #[test]
@@ -82,10 +80,7 @@ fn roll_basic() {
                 let roll_checker1 = IRollCheckerDispatcher { contract_address: contract_address1 };
                 let roll_checker2 = IRollCheckerDispatcher { contract_address: contract_address2 };
 
-                let old_block_number1 = roll_checker1.get_block_number();
-                let old_block_number2 = roll_checker2.get_block_number();
-
-                start_roll(ContractAddress::All, 123);
+                roll_global(123);
 
                 let new_block_number1 = roll_checker1.get_block_number();
                 let new_block_number2 = roll_checker2.get_block_number();
@@ -93,13 +88,13 @@ fn roll_basic() {
                 assert(new_block_number1 == 123, 'Wrong block number #1');
                 assert(new_block_number2 == 123, 'Wrong block number #2');
 
-                stop_roll(ContractAddress::All);
+                stop_roll_global();
 
                 let new_block_number1 = roll_checker1.get_block_number();
                 let new_block_number2 = roll_checker2.get_block_number();
 
-                assert(new_block_number1 == old_block_number1, 'Roll not stopped #1');
-                assert(new_block_number2 == old_block_number2, 'Roll not stopped #2');
+                assert(new_block_number1 == 123, 'Roll not stopped #1');
+                assert(new_block_number2 == 123, 'Roll not stopped #2');
             }
 
             #[test]
@@ -110,12 +105,12 @@ fn roll_basic() {
 
                 let old_block_number = dispatcher.get_block_number();
 
-                start_roll(ContractAddress::All, 234);
+                roll_global(234);
 
                 let new_block_number = dispatcher.get_block_number();
                 assert(new_block_number == 234, 'Wrong block number');
 
-                stop_roll(ContractAddress::One(contract_address));
+                stop_roll(contract_address);
 
                 let new_block_number = dispatcher.get_block_number();
                 assert(new_block_number == old_block_number, 'Block num did not change back');
@@ -135,7 +130,6 @@ fn roll_basic() {
 }
 
 #[test]
-#[ignore] //TODO global variant
 fn roll_complex() {
     let test = test_case!(
         indoc!(
@@ -146,7 +140,7 @@ fn roll_complex() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use snforge_std::{ declare, ContractAddress, ContractClassTrait, start_roll, stop_roll };
+            use snforge_std::{ declare, ContractClassTrait, start_roll, stop_roll, roll_global, stop_roll_global };
             
             #[starknet::interface]
             trait IRollChecker<TContractState> {
@@ -171,7 +165,7 @@ fn roll_complex() {
 
                 let old_block_number2 = roll_checker2.get_block_number();
 
-                start_roll(ContractAddress::All, 123);
+                roll_global(123);
 
                 let new_block_number1 = roll_checker1.get_block_number();
                 let new_block_number2 = roll_checker2.get_block_number();
@@ -179,7 +173,7 @@ fn roll_complex() {
                 assert(new_block_number1 == 123, 'Wrong block number #1');
                 assert(new_block_number2 == 123, 'Wrong block number #2');
 
-                start_roll(ContractAddress::One(roll_checker1.contract_address), 456);
+                start_roll(roll_checker1.contract_address, 456);
 
                 let new_block_number1 = roll_checker1.get_block_number();
                 let new_block_number2 = roll_checker2.get_block_number();
@@ -187,7 +181,8 @@ fn roll_complex() {
                 assert(new_block_number1 == 456, 'Wrong block number #3');
                 assert(new_block_number2 == 123, 'Wrong block number #4');
 
-                start_roll(ContractAddress::Multiple(array![roll_checker1.contract_address, roll_checker2.contract_address]), 789);
+                start_roll(roll_checker1.contract_address, 789);
+                start_roll(roll_checker2.contract_address, 789);
 
                 let new_block_number1 = roll_checker1.get_block_number();
                 let new_block_number2 = roll_checker2.get_block_number();
@@ -195,7 +190,7 @@ fn roll_complex() {
                 assert(new_block_number1 == 789, 'Wrong block number #5');
                 assert(new_block_number2 == 789, 'Wrong block number #6');
 
-                stop_roll(ContractAddress::One(roll_checker2.contract_address));
+                stop_roll(roll_checker2.contract_address);
 
                 let new_block_number1 = roll_checker1.get_block_number();
                 let new_block_number2 = roll_checker2.get_block_number();
