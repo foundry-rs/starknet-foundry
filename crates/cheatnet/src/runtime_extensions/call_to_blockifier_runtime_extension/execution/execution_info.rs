@@ -19,11 +19,11 @@ fn get_cheated_block_info_ptr(
 
     let mut new_block_info = original_block_info.to_owned();
 
-    if let Some(rolled_number) = cheated_data.block_number.clone() {
+    if let Some(rolled_number) = cheated_data.block_number {
         new_block_info[0] = MaybeRelocatable::Int(rolled_number.into());
     };
 
-    if let Some(warped_timestamp) = cheated_data.block_timestamp.clone() {
+    if let Some(warped_timestamp) = cheated_data.block_timestamp {
         new_block_info[1] = MaybeRelocatable::Int(warped_timestamp.into());
     }
 

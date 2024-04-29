@@ -107,6 +107,7 @@ fn start_and_stop_spoof_single_attribute() {
 }
 
 #[test]
+#[allow(clippy::too_many_lines)]
 fn start_spoof_all_attributes_mocked() {
     let test = test_case!(
         indoc!(

@@ -446,6 +446,7 @@ fn storage_access_default_values() {
 }
 
 #[test]
+#[allow(clippy::too_many_lines)]
 fn simple_cheatcodes() {
     let test = test_case!(indoc!(
         r"

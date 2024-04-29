@@ -34,7 +34,7 @@ use std::rc::Rc;
 use trace_data::L1Resources;
 
 // Specifies the duration of the cheat
-#[derive(FromReader, Clone, Debug, PartialEq, Eq)]
+#[derive(FromReader, Copy, Clone, Debug, PartialEq, Eq)]
 pub enum CheatSpan {
     Indefinite,
     TargetCalls(usize),
