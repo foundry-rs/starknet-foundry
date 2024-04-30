@@ -1,4 +1,4 @@
-mod cheat_block_number_checker;
-mod constructor_cheat_block_number_checker;
-mod cheat_block_number_checker_library_call;
-mod cheat_block_number_checker_proxy;
+mod roll_checker;
+mod constructor_roll_checker;
+mod roll_checker_library_call;
+mod roll_checker_proxy;
