@@ -69,8 +69,8 @@ fn cheat_sequencer_address_basic() {
                 let new_seq_addr1 = cheat_sequencer_address_checker1.get_sequencer_address();
                 let new_seq_addr2 = cheat_sequencer_address_checker2.get_sequencer_address();
 
-                assert(new_seq_addr1 == old_seq_addr1, 'CheatSequencerAddress not stopped #1');
-                assert(new_seq_addr2 == old_seq_addr2, 'CheatSequencerAddress not stopped #2');
+                assert(new_seq_addr1 == old_seq_addr1, 'not stopped #1');
+                assert(new_seq_addr2 == old_seq_addr2, 'not stopped #2');
             }
             #[test]
             fn test_cheat_sequencer_address_all() {
@@ -124,7 +124,7 @@ fn cheat_sequencer_address_basic() {
         ),
         Contract::from_code_path(
             "CheatSequencerAddressChecker".to_string(),
-            Path::new("tests/data/contracts/cheat_sequencer_address_checker.cairo"),
+            Path::new("tests/data/contracts/elect_checker.cairo"),
         )
         .unwrap()
     );
@@ -201,7 +201,7 @@ fn cheat_sequencer_address_complex() {
         ),
         Contract::from_code_path(
             "CheatSequencerAddressChecker".to_string(),
-            Path::new("tests/data/contracts/cheat_sequencer_address_checker.cairo"),
+            Path::new("tests/data/contracts/elect_checker.cairo"),
         )
         .unwrap()
     );
@@ -298,7 +298,7 @@ fn cheat_sequencer_address_with_span() {
         ),
         Contract::from_code_path(
             "CheatSequencerAddressChecker".to_string(),
-            Path::new("tests/data/contracts/cheat_sequencer_address_checker.cairo"),
+            Path::new("tests/data/contracts/elect_checker.cairo"),
         )
         .unwrap()
     );

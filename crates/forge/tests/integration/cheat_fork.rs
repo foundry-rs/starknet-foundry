@@ -39,8 +39,8 @@ fn cheat_caller_address_cairo0_contract() {
                     array![].span(),
                 ).unwrap_syscall()[0];
 
-                assert(*cheat_caller_addressed_caller == 123, 'start_cheat_caller_address does not work');
-                assert(uncheat_caller_addressed_caller == caller, 'stop_cheat_caller_address does not work');
+                assert(*cheat_caller_addressed_caller == 123, 'does not work');
+                assert(uncheat_caller_addressed_caller == caller, 'does not work');
             }}
         "#,
         node_rpc_url().unwrap(),
@@ -87,8 +87,8 @@ fn cheat_block_number_cairo0_contract() {
                     array![].span(),
                 ).unwrap_syscall()[0];
 
-                assert(*cheat_block_numbered_block_number == 123, 'start_cheat_block_number does not work');
-                assert(uncheat_block_numbered_block_number == block_number, 'stop_cheat_block_number does not work');
+                assert(*cheat_block_numbered_block_number == 123, 'does not work');
+                assert(uncheat_block_numbered_block_number == block_number, 'does not work');
             }}
         "#,
         node_rpc_url().unwrap(),
@@ -137,8 +137,8 @@ fn cheat_block_timestamp_cairo0_contract() {
                     array![].span(),
                 ).unwrap_syscall()[0];
 
-                assert(*cheat_block_timestamped_block_timestamp == 123, 'start_cheat_block_timestamp does not work');
-                assert(uncheat_block_timestamped_block_timestamp == block_timestamp, 'stop_cheat_block_timestamp does not work');
+                assert(*cheat_block_timestamped_block_timestamp == 123, 'does not work');
+                assert(uncheat_block_timestamped_block_timestamp == block_timestamp, 'does not work');
             }}
         "#,
         node_rpc_url().unwrap(),

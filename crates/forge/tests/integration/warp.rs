@@ -93,8 +93,8 @@ fn cheat_block_timestamp_basic() {
                 let new_block_timestamp1 = cheat_block_timestamp_checker1.get_block_timestamp();
                 let new_block_timestamp2 = cheat_block_timestamp_checker2.get_block_timestamp();
 
-                assert(new_block_timestamp1 == old_block_timestamp1, 'CheatBlockTimestamp not stopped #1');
-                assert(new_block_timestamp2 == old_block_timestamp2, 'CheatBlockTimestamp not stopped #2');
+                assert(new_block_timestamp1 == old_block_timestamp1, 'not stopped #1');
+                assert(new_block_timestamp2 == old_block_timestamp2, 'not stopped #2');
             }
 
             #[test]
@@ -127,7 +127,7 @@ fn cheat_block_timestamp_basic() {
         ),
         Contract::from_code_path(
             "CheatBlockTimestampChecker".to_string(),
-            Path::new("tests/data/contracts/cheat_block_timestamp_checker.cairo"),
+            Path::new("tests/data/contracts/warp_checker.cairo"),
         )
         .unwrap()
     );
@@ -213,7 +213,7 @@ fn cheat_block_timestamp_complex() {
         ),
         Contract::from_code_path(
             "CheatBlockTimestampChecker".to_string(),
-            Path::new("tests/data/contracts/cheat_block_timestamp_checker.cairo"),
+            Path::new("tests/data/contracts/warp_checker.cairo"),
         )
         .unwrap()
     );
@@ -310,7 +310,7 @@ fn cheat_block_timestamp_with_span() {
         ),
         Contract::from_code_path(
             "CheatBlockTimestampChecker".to_string(),
-            Path::new("tests/data/contracts/cheat_block_timestamp_checker.cairo"),
+            Path::new("tests/data/contracts/warp_checker.cairo"),
         )
         .unwrap()
     );

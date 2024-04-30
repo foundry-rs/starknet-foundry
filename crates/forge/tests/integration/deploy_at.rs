@@ -68,7 +68,7 @@ fn deploy_at_correct_address() {
         ),
         Contract::from_code_path(
             "CheatCallerAddressChecker".to_string(),
-            Path::new("tests/data/contracts/cheat_caller_address_checker.cairo"),
+            Path::new("tests/data/contracts/prank_checker.cairo"),
         )
         .unwrap()
     );
