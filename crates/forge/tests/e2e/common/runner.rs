@@ -70,7 +70,7 @@ fn replace_node_rpc_url_placeholders(dir_path: &Path) {
 
         let path = entry.path();
 
-        if path.is_file() {
+        if path.is_file() && path.extension().and_then(OsStr::to_str) == Some(".cairo.template") {
             let content = fs::read_to_string(path).unwrap();
 
             let modified_content = content.replace("{{ NODE_RPC_URL }}", url.as_str());
