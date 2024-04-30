@@ -1,14 +1,14 @@
 use starknet::ContractAddress;
 
 #[starknet::interface]
-trait IPrankChecker<TContractState> {
+trait ICheatCallerAddressChecker<TContractState> {
     fn get_caller_address(self: @TContractState) -> felt252;
     fn get_caller_address_and_emit_event(self: @TContractState) -> felt252;
 }
 
 #[starknet::interface]
-trait IPrankCheckerProxy<TContractState> {
-    fn get_prank_checkers_caller_address(
+trait ICheatCallerAddressCheckerProxy<TContractState> {
+    fn get_cheat_caller_address_checkers_caller_address(
         self: @TContractState, address: ContractAddress
     ) -> felt252;
     fn get_caller_address(self: @TContractState) -> felt252;
@@ -16,24 +16,24 @@ trait IPrankCheckerProxy<TContractState> {
 }
 
 #[starknet::contract]
-mod PrankCheckerProxy {
+mod CheatCallerAddressCheckerProxy {
     use starknet::ContractAddress;
-    use super::IPrankCheckerDispatcherTrait;
-    use super::IPrankCheckerDispatcher;
-    use super::IPrankCheckerProxyDispatcherTrait;
-    use super::IPrankCheckerProxyDispatcher;
+    use super::ICheatCallerAddressCheckerDispatcherTrait;
+    use super::ICheatCallerAddressCheckerDispatcher;
+    use super::ICheatCallerAddressCheckerProxyDispatcherTrait;
+    use super::ICheatCallerAddressCheckerProxyDispatcher;
     use starknet::{get_contract_address, get_caller_address};
 
     #[storage]
     struct Storage {}
 
     #[abi(embed_v0)]
-    impl IPrankCheckerProxy of super::IPrankCheckerProxy<ContractState> {
-        fn get_prank_checkers_caller_address(
+    impl ICheatCallerAddressCheckerProxy of super::ICheatCallerAddressCheckerProxy<ContractState> {
+        fn get_cheat_caller_address_checkers_caller_address(
             self: @ContractState, address: ContractAddress
         ) -> felt252 {
-            let prank_checker = IPrankCheckerDispatcher { contract_address: address };
-            prank_checker.get_caller_address()
+            let cheat_caller_address_checker = ICheatCallerAddressCheckerDispatcher { contract_address: address };
+            cheat_caller_address_checker.get_caller_address()
         }
 
         fn get_caller_address(self: @ContractState) -> felt252 {
@@ -41,9 +41,9 @@ mod PrankCheckerProxy {
         }
 
         fn call_proxy(self: @ContractState, address: ContractAddress) -> (felt252, felt252) {
-            let dispatcher = IPrankCheckerProxyDispatcher { contract_address: address };
+            let dispatcher = ICheatCallerAddressCheckerProxyDispatcher { contract_address: address };
             let caller_address: felt252 = get_caller_address().into();
-            let res = dispatcher.get_prank_checkers_caller_address(get_contract_address());
+            let res = dispatcher.get_cheat_caller_address_checkers_caller_address(get_contract_address());
             (caller_address, res)
         }
     }

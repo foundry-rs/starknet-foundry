@@ -1,11 +1,11 @@
 #[starknet::interface]
-trait IConstructorWarpChecker<TContractState> {
+trait IConstructorCheatBlockTimestampChecker<TContractState> {
     fn get_stored_block_timestamp(ref self: TContractState) -> u64;
     fn get_block_timestamp(ref self: TContractState) -> u64;
 }
 
 #[starknet::contract]
-mod ConstructorWarpChecker {
+mod ConstructorCheatBlockTimestampChecker {
     use box::BoxTrait;
     #[storage]
     struct Storage {
@@ -19,7 +19,7 @@ mod ConstructorWarpChecker {
     }
 
     #[abi(embed_v0)]
-    impl IConstructorWarpChecker of super::IConstructorWarpChecker<ContractState> {
+    impl IConstructorCheatBlockTimestampChecker of super::IConstructorCheatBlockTimestampChecker<ContractState> {
         fn get_stored_block_timestamp(ref self: ContractState) -> u64 {
             self.blk_timestamp.read()
         }

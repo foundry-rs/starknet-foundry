@@ -5,7 +5,7 @@ use test_utils::running_tests::run_test_case;
 use test_utils::test_case;
 
 #[test]
-fn warp_basic() {
+fn cheat_block_timestamp_basic() {
     let test = test_case!(
         indoc!(
             r#"
@@ -16,109 +16,109 @@ fn warp_basic() {
             use traits::Into;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use snforge_std::{ declare, ContractClassTrait, start_warp, stop_warp, start_roll, warp_global, stop_warp_global };
+            use snforge_std::{ declare, ContractClassTrait, start_cheat_block_timestamp, stop_cheat_block_timestamp, start_cheat_block_number, cheat_block_timestamp_global, stop_cheat_block_timestamp_global };
 
             #[starknet::interface]
-            trait IWarpChecker<TContractState> {
+            trait ICheatBlockTimestampChecker<TContractState> {
                 fn get_block_timestamp(ref self: TContractState) -> u64;
                 fn get_block_timestamp_and_emit_event(ref self: TContractState) -> u64;
                 fn get_block_timestamp_and_number(ref self: TContractState) -> (u64, u64);
             }
 
-            fn deploy_warp_checker()  -> IWarpCheckerDispatcher {
-                let contract = declare("WarpChecker").unwrap();
+            fn deploy_cheat_block_timestamp_checker()  -> ICheatBlockTimestampCheckerDispatcher {
+                let contract = declare("CheatBlockTimestampChecker").unwrap();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
-                IWarpCheckerDispatcher { contract_address }
+                ICheatBlockTimestampCheckerDispatcher { contract_address }
             }
 
             #[test]
-            fn test_warp() {
-                let warp_checker = deploy_warp_checker();
+            fn test_cheat_block_timestamp() {
+                let cheat_block_timestamp_checker = deploy_cheat_block_timestamp_checker();
 
-                let old_block_timestamp = warp_checker.get_block_timestamp();
+                let old_block_timestamp = cheat_block_timestamp_checker.get_block_timestamp();
 
-                start_warp(warp_checker.contract_address, 123);
+                start_cheat_block_timestamp(cheat_block_timestamp_checker.contract_address, 123);
 
-                let new_block_timestamp = warp_checker.get_block_timestamp();
+                let new_block_timestamp = cheat_block_timestamp_checker.get_block_timestamp();
                 assert(new_block_timestamp == 123, 'Wrong block timestamp');
 
-                stop_warp(warp_checker.contract_address);
+                stop_cheat_block_timestamp(cheat_block_timestamp_checker.contract_address);
 
-                let new_block_timestamp = warp_checker.get_block_timestamp();
+                let new_block_timestamp = cheat_block_timestamp_checker.get_block_timestamp();
                 assert(new_block_timestamp == old_block_timestamp, 'Timestamp did not change back')
             }
 
             #[test]
-            fn warp_all_stop_one() {
-                let warp_checker = deploy_warp_checker();
+            fn cheat_block_timestamp_all_stop_one() {
+                let cheat_block_timestamp_checker = deploy_cheat_block_timestamp_checker();
 
-                let old_block_timestamp = warp_checker.get_block_timestamp();
+                let old_block_timestamp = cheat_block_timestamp_checker.get_block_timestamp();
 
-                warp_global(123);
+                cheat_block_timestamp_global(123);
 
-                let new_block_timestamp = warp_checker.get_block_timestamp();
+                let new_block_timestamp = cheat_block_timestamp_checker.get_block_timestamp();
                 assert(new_block_timestamp == 123, 'Wrong block timestamp');
 
-                stop_warp(warp_checker.contract_address);
+                stop_cheat_block_timestamp(cheat_block_timestamp_checker.contract_address);
 
-                let new_block_timestamp = warp_checker.get_block_timestamp();
+                let new_block_timestamp = cheat_block_timestamp_checker.get_block_timestamp();
                 assert(new_block_timestamp == old_block_timestamp, 'Timestamp did not change back')
             }
 
             #[test]
-            fn warp_multiple() {
-                let contract = declare("WarpChecker").unwrap();
+            fn cheat_block_timestamp_multiple() {
+                let contract = declare("CheatBlockTimestampChecker").unwrap();
 
                 let (contract_address1, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let (contract_address2, _) = contract.deploy(@ArrayTrait::new()).unwrap();
 
-                let warp_checker1 = IWarpCheckerDispatcher { contract_address: contract_address1 };
-                let warp_checker2 = IWarpCheckerDispatcher { contract_address: contract_address2 };
+                let cheat_block_timestamp_checker1 = ICheatBlockTimestampCheckerDispatcher { contract_address: contract_address1 };
+                let cheat_block_timestamp_checker2 = ICheatBlockTimestampCheckerDispatcher { contract_address: contract_address2 };
 
-                let old_block_timestamp1 = warp_checker1.get_block_timestamp();
-                let old_block_timestamp2 = warp_checker2.get_block_timestamp();
+                let old_block_timestamp1 = cheat_block_timestamp_checker1.get_block_timestamp();
+                let old_block_timestamp2 = cheat_block_timestamp_checker2.get_block_timestamp();
 
-                start_warp(warp_checker1.contract_address, 123);
-                start_warp(warp_checker2.contract_address, 123);
+                start_cheat_block_timestamp(cheat_block_timestamp_checker1.contract_address, 123);
+                start_cheat_block_timestamp(cheat_block_timestamp_checker2.contract_address, 123);
 
-                let new_block_timestamp1 = warp_checker1.get_block_timestamp();
-                let new_block_timestamp2 = warp_checker2.get_block_timestamp();
+                let new_block_timestamp1 = cheat_block_timestamp_checker1.get_block_timestamp();
+                let new_block_timestamp2 = cheat_block_timestamp_checker2.get_block_timestamp();
 
                 assert(new_block_timestamp1 == 123, 'Wrong block timestamp #1');
                 assert(new_block_timestamp2 == 123, 'Wrong block timestamp #2');
 
-                stop_warp(warp_checker1.contract_address);
-                stop_warp(warp_checker2.contract_address);
+                stop_cheat_block_timestamp(cheat_block_timestamp_checker1.contract_address);
+                stop_cheat_block_timestamp(cheat_block_timestamp_checker2.contract_address);
 
-                let new_block_timestamp1 = warp_checker1.get_block_timestamp();
-                let new_block_timestamp2 = warp_checker2.get_block_timestamp();
+                let new_block_timestamp1 = cheat_block_timestamp_checker1.get_block_timestamp();
+                let new_block_timestamp2 = cheat_block_timestamp_checker2.get_block_timestamp();
 
-                assert(new_block_timestamp1 == old_block_timestamp1, 'Warp not stopped #1');
-                assert(new_block_timestamp2 == old_block_timestamp2, 'Warp not stopped #2');
+                assert(new_block_timestamp1 == old_block_timestamp1, 'CheatBlockTimestamp not stopped #1');
+                assert(new_block_timestamp2 == old_block_timestamp2, 'CheatBlockTimestamp not stopped #2');
             }
 
             #[test]
-            fn warp_all() {
-                let contract = declare("WarpChecker").unwrap();
+            fn cheat_block_timestamp_all() {
+                let contract = declare("CheatBlockTimestampChecker").unwrap();
 
                 let (contract_address1, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let (contract_address2, _) = contract.deploy(@ArrayTrait::new()).unwrap();
 
-                let warp_checker1 = IWarpCheckerDispatcher { contract_address: contract_address1 };
-                let warp_checker2 = IWarpCheckerDispatcher { contract_address: contract_address2 };
+                let cheat_block_timestamp_checker1 = ICheatBlockTimestampCheckerDispatcher { contract_address: contract_address1 };
+                let cheat_block_timestamp_checker2 = ICheatBlockTimestampCheckerDispatcher { contract_address: contract_address2 };
 
-                warp_global(123);
+                cheat_block_timestamp_global(123);
 
-                let new_block_timestamp1 = warp_checker1.get_block_timestamp();
-                let new_block_timestamp2 = warp_checker2.get_block_timestamp();
+                let new_block_timestamp1 = cheat_block_timestamp_checker1.get_block_timestamp();
+                let new_block_timestamp2 = cheat_block_timestamp_checker2.get_block_timestamp();
 
                 assert(new_block_timestamp1 == 123, 'Wrong block timestamp #1');
                 assert(new_block_timestamp2 == 123, 'Wrong block timestamp #2');
 
-                stop_warp_global();
+                stop_cheat_block_timestamp_global();
 
-                let new_block_timestamp1 = warp_checker1.get_block_timestamp();
-                let new_block_timestamp2 = warp_checker2.get_block_timestamp();
+                let new_block_timestamp1 = cheat_block_timestamp_checker1.get_block_timestamp();
+                let new_block_timestamp2 = cheat_block_timestamp_checker2.get_block_timestamp();
 
                 assert(new_block_timestamp1 == 123, 'Wrong block timestamp #1');
                 assert(new_block_timestamp2 == 123, 'Wrong block timestamp #2');
@@ -126,8 +126,8 @@ fn warp_basic() {
         "#
         ),
         Contract::from_code_path(
-            "WarpChecker".to_string(),
-            Path::new("tests/data/contracts/warp_checker.cairo"),
+            "CheatBlockTimestampChecker".to_string(),
+            Path::new("tests/data/contracts/cheat_block_timestamp_checker.cairo"),
         )
         .unwrap()
     );
@@ -138,7 +138,7 @@ fn warp_basic() {
 }
 
 #[test]
-fn warp_complex() {
+fn cheat_block_timestamp_complex() {
     let test = test_case!(
         indoc!(
             r#"
@@ -149,62 +149,62 @@ fn warp_complex() {
             use traits::Into;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use snforge_std::{ declare, ContractClassTrait, start_warp, stop_warp, start_roll, warp_global };
+            use snforge_std::{ declare, ContractClassTrait, start_cheat_block_timestamp, stop_cheat_block_timestamp, start_cheat_block_number, cheat_block_timestamp_global };
 
             #[starknet::interface]
-            trait IWarpChecker<TContractState> {
+            trait ICheatBlockTimestampChecker<TContractState> {
                 fn get_block_timestamp(ref self: TContractState) -> u64;
                 fn get_block_timestamp_and_emit_event(ref self: TContractState) -> u64;
                 fn get_block_timestamp_and_number(ref self: TContractState) -> (u64, u64);
             }
 
-            fn deploy_warp_checker()  -> IWarpCheckerDispatcher {
-                let contract = declare("WarpChecker").unwrap();
+            fn deploy_cheat_block_timestamp_checker()  -> ICheatBlockTimestampCheckerDispatcher {
+                let contract = declare("CheatBlockTimestampChecker").unwrap();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
-                IWarpCheckerDispatcher { contract_address }
+                ICheatBlockTimestampCheckerDispatcher { contract_address }
             }
 
             #[test]
-            fn warp_complex() {
-                let contract = declare("WarpChecker").unwrap();
+            fn cheat_block_timestamp_complex() {
+                let contract = declare("CheatBlockTimestampChecker").unwrap();
 
                 let (contract_address1, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let (contract_address2, _) = contract.deploy(@ArrayTrait::new()).unwrap();
 
-                let warp_checker1 = IWarpCheckerDispatcher { contract_address: contract_address1 };
-                let warp_checker2 = IWarpCheckerDispatcher { contract_address: contract_address2 };
+                let cheat_block_timestamp_checker1 = ICheatBlockTimestampCheckerDispatcher { contract_address: contract_address1 };
+                let cheat_block_timestamp_checker2 = ICheatBlockTimestampCheckerDispatcher { contract_address: contract_address2 };
 
-                let old_block_timestamp2 = warp_checker2.get_block_timestamp();
+                let old_block_timestamp2 = cheat_block_timestamp_checker2.get_block_timestamp();
 
-                warp_global(123);
+                cheat_block_timestamp_global(123);
 
-                let new_block_timestamp1 = warp_checker1.get_block_timestamp();
-                let new_block_timestamp2 = warp_checker2.get_block_timestamp();
+                let new_block_timestamp1 = cheat_block_timestamp_checker1.get_block_timestamp();
+                let new_block_timestamp2 = cheat_block_timestamp_checker2.get_block_timestamp();
                 
                 assert(new_block_timestamp1 == 123, 'Wrong block timestamp #1');
                 assert(new_block_timestamp2 == 123, 'Wrong block timestamp #2');
 
-                start_warp(warp_checker1.contract_address, 456);
+                start_cheat_block_timestamp(cheat_block_timestamp_checker1.contract_address, 456);
 
-                let new_block_timestamp1 = warp_checker1.get_block_timestamp();
-                let new_block_timestamp2 = warp_checker2.get_block_timestamp();
+                let new_block_timestamp1 = cheat_block_timestamp_checker1.get_block_timestamp();
+                let new_block_timestamp2 = cheat_block_timestamp_checker2.get_block_timestamp();
 
                 assert(new_block_timestamp1 == 456, 'Wrong block timestamp #3');
                 assert(new_block_timestamp2 == 123, 'Wrong block timestamp #4');
 
-                start_warp(warp_checker1.contract_address, 789);
-                start_warp(warp_checker2.contract_address, 789);
+                start_cheat_block_timestamp(cheat_block_timestamp_checker1.contract_address, 789);
+                start_cheat_block_timestamp(cheat_block_timestamp_checker2.contract_address, 789);
 
-                let new_block_timestamp1 = warp_checker1.get_block_timestamp();
-                let new_block_timestamp2 = warp_checker2.get_block_timestamp();
+                let new_block_timestamp1 = cheat_block_timestamp_checker1.get_block_timestamp();
+                let new_block_timestamp2 = cheat_block_timestamp_checker2.get_block_timestamp();
 
                 assert(new_block_timestamp1 == 789, 'Wrong block timestamp #5');
                 assert(new_block_timestamp2 == 789, 'Wrong block timestamp #6');
 
-                stop_warp(warp_checker2.contract_address);
+                stop_cheat_block_timestamp(cheat_block_timestamp_checker2.contract_address);
 
-                let new_block_timestamp1 = warp_checker1.get_block_timestamp();
-                let new_block_timestamp2 = warp_checker2.get_block_timestamp();
+                let new_block_timestamp1 = cheat_block_timestamp_checker1.get_block_timestamp();
+                let new_block_timestamp2 = cheat_block_timestamp_checker2.get_block_timestamp();
 
                 assert(new_block_timestamp1 == 789, 'Wrong block timestamp #7');
                 assert(new_block_timestamp2 == old_block_timestamp2, 'Wrong block timestamp #8');
@@ -212,8 +212,8 @@ fn warp_complex() {
         "#
         ),
         Contract::from_code_path(
-            "WarpChecker".to_string(),
-            Path::new("tests/data/contracts/warp_checker.cairo"),
+            "CheatBlockTimestampChecker".to_string(),
+            Path::new("tests/data/contracts/cheat_block_timestamp_checker.cairo"),
         )
         .unwrap()
     );
@@ -224,7 +224,7 @@ fn warp_complex() {
 }
 
 #[test]
-fn warp_with_span() {
+fn cheat_block_timestamp_with_span() {
     let test = test_case!(
         indoc!(
             r#"
@@ -234,27 +234,27 @@ fn warp_with_span() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use snforge_std::{ test_address, declare, ContractClassTrait, warp, start_warp, stop_warp, CheatSpan };
+            use snforge_std::{ test_address, declare, ContractClassTrait, cheat_block_timestamp, start_cheat_block_timestamp, stop_cheat_block_timestamp, CheatSpan };
 
             #[starknet::interface]
-            trait IWarpChecker<TContractState> {
+            trait ICheatBlockTimestampChecker<TContractState> {
                 fn get_block_timestamp(ref self: TContractState) -> felt252;
             }
 
-            fn deploy_warp_checker() -> IWarpCheckerDispatcher {
-                let (contract_address, _) = declare("WarpChecker").unwrap().deploy(@ArrayTrait::new()).unwrap();
-                IWarpCheckerDispatcher { contract_address }
+            fn deploy_cheat_block_timestamp_checker() -> ICheatBlockTimestampCheckerDispatcher {
+                let (contract_address, _) = declare("CheatBlockTimestampChecker").unwrap().deploy(@ArrayTrait::new()).unwrap();
+                ICheatBlockTimestampCheckerDispatcher { contract_address }
             }
 
             #[test]
-            fn test_warp_once() {
+            fn test_cheat_block_timestamp_once() {
                 let old_block_timestamp = get_block_timestamp();
                 
-                let dispatcher = deploy_warp_checker();
+                let dispatcher = deploy_cheat_block_timestamp_checker();
 
                 let target_block_timestamp = 123;
 
-                warp(dispatcher.contract_address, target_block_timestamp, CheatSpan::TargetCalls(1));
+                cheat_block_timestamp(dispatcher.contract_address, target_block_timestamp, CheatSpan::TargetCalls(1));
 
                 let block_timestamp = dispatcher.get_block_timestamp();
                 assert_eq!(block_timestamp, target_block_timestamp.into());
@@ -264,14 +264,14 @@ fn warp_with_span() {
             }
 
             #[test]
-            fn test_warp_twice() {
+            fn test_cheat_block_timestamp_twice() {
                 let old_block_timestamp = get_block_timestamp();
 
-                let dispatcher = deploy_warp_checker();
+                let dispatcher = deploy_cheat_block_timestamp_checker();
 
                 let target_block_timestamp = 123;
 
-                warp(dispatcher.contract_address, target_block_timestamp, CheatSpan::TargetCalls(2));
+                cheat_block_timestamp(dispatcher.contract_address, target_block_timestamp, CheatSpan::TargetCalls(2));
 
                 let block_timestamp = dispatcher.get_block_timestamp();
                 assert_eq!(block_timestamp, target_block_timestamp.into());
@@ -284,12 +284,12 @@ fn warp_with_span() {
             }
 
             #[test]
-            fn test_warp_test_address() {
+            fn test_cheat_block_timestamp_test_address() {
                 let old_block_timestamp = get_block_timestamp();
                 
                 let target_block_timestamp = 123;
                 
-                warp(test_address(), target_block_timestamp, CheatSpan::TargetCalls(1));
+                cheat_block_timestamp(test_address(), target_block_timestamp, CheatSpan::TargetCalls(1));
                 
                 let block_timestamp = get_block_timestamp();
                 assert_eq!(block_timestamp, target_block_timestamp.into());
@@ -297,7 +297,7 @@ fn warp_with_span() {
                 let block_timestamp = get_block_timestamp();
                 assert_eq!(block_timestamp, target_block_timestamp.into());
                 
-                stop_warp(test_address());
+                stop_cheat_block_timestamp(test_address());
 
                 let block_timestamp = get_block_timestamp();
                 assert_eq!(block_timestamp, old_block_timestamp.into());
@@ -309,8 +309,8 @@ fn warp_with_span() {
         "#
         ),
         Contract::from_code_path(
-            "WarpChecker".to_string(),
-            Path::new("tests/data/contracts/warp_checker.cairo"),
+            "CheatBlockTimestampChecker".to_string(),
+            Path::new("tests/data/contracts/cheat_block_timestamp_checker.cairo"),
         )
         .unwrap()
     );

@@ -1,4 +1,4 @@
-mod elect_checker;
-mod constructor_elect_checker;
-mod elect_checker_library_call;
-mod elect_checker_proxy;
+mod cheat_sequencer_address_checker;
+mod constructor_cheat_sequencer_address_checker;
+mod cheat_sequencer_address_checker_library_call;
+mod cheat_sequencer_address_checker_proxy;

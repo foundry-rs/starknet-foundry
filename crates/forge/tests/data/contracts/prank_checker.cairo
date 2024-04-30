@@ -1,11 +1,11 @@
 #[starknet::interface]
-trait IPrankChecker<TContractState> {
+trait ICheatCallerAddressChecker<TContractState> {
     fn get_caller_address(ref self: TContractState) -> felt252;
     fn get_caller_address_and_emit_event(ref self: TContractState) -> felt252;
 }
 
 #[starknet::contract]
-mod PrankChecker {
+mod CheatCallerAddressChecker {
     use box::BoxTrait;
     use starknet::ContractAddressIntoFelt252;
     use starknet::ContractAddress;
@@ -29,7 +29,7 @@ mod PrankChecker {
     }
 
     #[abi(embed_v0)]
-    impl IPrankChecker of super::IPrankChecker<ContractState> {
+    impl ICheatCallerAddressChecker of super::ICheatCallerAddressChecker<ContractState> {
         fn get_caller_address(ref self: ContractState) -> felt252 {
             starknet::get_caller_address().into()
         }

@@ -5,7 +5,7 @@ use test_utils::running_tests::run_test_case;
 use test_utils::test_case;
 
 #[test]
-fn roll_basic() {
+fn cheat_block_number_basic() {
     let test = test_case!(
         indoc!(
             r#"
@@ -15,102 +15,102 @@ fn roll_basic() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use snforge_std::{ declare, ContractClassTrait, start_roll, stop_roll, stop_roll_global, roll_global };
+            use snforge_std::{ declare, ContractClassTrait, start_cheat_block_number, stop_cheat_block_number, stop_cheat_block_number_global, cheat_block_number_global };
 
             #[starknet::interface]
-            trait IRollChecker<TContractState> {
+            trait ICheatBlockNumberChecker<TContractState> {
                 fn get_block_number(ref self: TContractState) -> u64;
             }
 
             #[test]
-            fn test_stop_roll() {
-                let contract = declare("RollChecker").unwrap();
+            fn test_stop_cheat_block_number() {
+                let contract = declare("CheatBlockNumberChecker").unwrap();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
-                let dispatcher = IRollCheckerDispatcher { contract_address };
+                let dispatcher = ICheatBlockNumberCheckerDispatcher { contract_address };
 
                 let old_block_number = dispatcher.get_block_number();
 
-                start_roll(contract_address, 234);
+                start_cheat_block_number(contract_address, 234);
 
                 let new_block_number = dispatcher.get_block_number();
                 assert(new_block_number == 234, 'Wrong block number');
 
-                stop_roll(contract_address);
+                stop_cheat_block_number(contract_address);
 
                 let new_block_number = dispatcher.get_block_number();
                 assert(new_block_number == old_block_number, 'Block num did not change back');
             }
 
             #[test]
-            fn test_roll_multiple() {
-                let contract = declare("RollChecker").unwrap();
+            fn test_cheat_block_number_multiple() {
+                let contract = declare("CheatBlockNumberChecker").unwrap();
 
                 let (contract_address1, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let (contract_address2, _) = contract.deploy(@ArrayTrait::new()).unwrap();
 
-                let roll_checker1 = IRollCheckerDispatcher { contract_address: contract_address1 };
-                let roll_checker2 = IRollCheckerDispatcher { contract_address: contract_address2 };
+                let cheat_block_number_checker1 = ICheatBlockNumberCheckerDispatcher { contract_address: contract_address1 };
+                let cheat_block_number_checker2 = ICheatBlockNumberCheckerDispatcher { contract_address: contract_address2 };
 
-                let old_block_number2 = roll_checker2.get_block_number();
+                let old_block_number2 = cheat_block_number_checker2.get_block_number();
 
-                start_roll(roll_checker1.contract_address, 123);
+                start_cheat_block_number(cheat_block_number_checker1.contract_address, 123);
 
-                let new_block_number1 = roll_checker1.get_block_number();
-                let new_block_number2 = roll_checker2.get_block_number();
+                let new_block_number1 = cheat_block_number_checker1.get_block_number();
+                let new_block_number2 = cheat_block_number_checker2.get_block_number();
 
                 assert(new_block_number1 == 123, 'Wrong block number #1');
                 assert(new_block_number2 == old_block_number2, 'Wrong block number #2');
 
-                stop_roll(roll_checker2.contract_address);
+                stop_cheat_block_number(cheat_block_number_checker2.contract_address);
 
-                let new_block_number1 = roll_checker1.get_block_number();
-                let new_block_number2 = roll_checker2.get_block_number();
+                let new_block_number1 = cheat_block_number_checker1.get_block_number();
+                let new_block_number2 = cheat_block_number_checker2.get_block_number();
 
                 assert(new_block_number1 == 123, 'Wrong block number #1');
                 assert(new_block_number2 == old_block_number2, 'Wrong block number #2');
             }
 
             #[test]
-            fn test_roll_all() {
-                let contract = declare("RollChecker").unwrap();
+            fn test_cheat_block_number_all() {
+                let contract = declare("CheatBlockNumberChecker").unwrap();
 
                 let (contract_address1, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let (contract_address2, _) = contract.deploy(@ArrayTrait::new()).unwrap();
 
-                let roll_checker1 = IRollCheckerDispatcher { contract_address: contract_address1 };
-                let roll_checker2 = IRollCheckerDispatcher { contract_address: contract_address2 };
+                let cheat_block_number_checker1 = ICheatBlockNumberCheckerDispatcher { contract_address: contract_address1 };
+                let cheat_block_number_checker2 = ICheatBlockNumberCheckerDispatcher { contract_address: contract_address2 };
 
-                roll_global(123);
+                cheat_block_number_global(123);
 
-                let new_block_number1 = roll_checker1.get_block_number();
-                let new_block_number2 = roll_checker2.get_block_number();
+                let new_block_number1 = cheat_block_number_checker1.get_block_number();
+                let new_block_number2 = cheat_block_number_checker2.get_block_number();
 
                 assert(new_block_number1 == 123, 'Wrong block number #1');
                 assert(new_block_number2 == 123, 'Wrong block number #2');
 
-                stop_roll_global();
+                stop_cheat_block_number_global();
 
-                let new_block_number1 = roll_checker1.get_block_number();
-                let new_block_number2 = roll_checker2.get_block_number();
+                let new_block_number1 = cheat_block_number_checker1.get_block_number();
+                let new_block_number2 = cheat_block_number_checker2.get_block_number();
 
-                assert(new_block_number1 == 123, 'Roll not stopped #1');
-                assert(new_block_number2 == 123, 'Roll not stopped #2');
+                assert(new_block_number1 == 123, 'CheatBlockNumber not stopped #1');
+                assert(new_block_number2 == 123, 'CheatBlockNumber not stopped #2');
             }
 
             #[test]
-            fn test_roll_all_stop_one() {
-                let contract = declare("RollChecker").unwrap();
+            fn test_cheat_block_number_all_stop_one() {
+                let contract = declare("CheatBlockNumberChecker").unwrap();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
-                let dispatcher = IRollCheckerDispatcher { contract_address };
+                let dispatcher = ICheatBlockNumberCheckerDispatcher { contract_address };
 
                 let old_block_number = dispatcher.get_block_number();
 
-                roll_global(234);
+                cheat_block_number_global(234);
 
                 let new_block_number = dispatcher.get_block_number();
                 assert(new_block_number == 234, 'Wrong block number');
 
-                stop_roll(contract_address);
+                stop_cheat_block_number(contract_address);
 
                 let new_block_number = dispatcher.get_block_number();
                 assert(new_block_number == old_block_number, 'Block num did not change back');
@@ -118,8 +118,8 @@ fn roll_basic() {
         "#
         ),
         Contract::from_code_path(
-            "RollChecker".to_string(),
-            Path::new("tests/data/contracts/roll_checker.cairo"),
+            "CheatBlockNumberChecker".to_string(),
+            Path::new("tests/data/contracts/cheat_block_number_checker.cairo"),
         )
         .unwrap()
     );
@@ -130,7 +130,7 @@ fn roll_basic() {
 }
 
 #[test]
-fn roll_complex() {
+fn cheat_block_number_complex() {
     let test = test_case!(
         indoc!(
             r#"
@@ -140,60 +140,60 @@ fn roll_complex() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use snforge_std::{ declare, ContractClassTrait, start_roll, stop_roll, roll_global, stop_roll_global };
+            use snforge_std::{ declare, ContractClassTrait, start_cheat_block_number, stop_cheat_block_number, cheat_block_number_global, stop_cheat_block_number_global };
             
             #[starknet::interface]
-            trait IRollChecker<TContractState> {
+            trait ICheatBlockNumberChecker<TContractState> {
                 fn get_block_number(ref self: TContractState) -> u64;
             }
 
-            fn deploy_roll_checker()  -> IRollCheckerDispatcher {
-                let contract = declare("RollChecker").unwrap();
+            fn deploy_cheat_block_number_checker()  -> ICheatBlockNumberCheckerDispatcher {
+                let contract = declare("CheatBlockNumberChecker").unwrap();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
-                IRollCheckerDispatcher { contract_address }
+                ICheatBlockNumberCheckerDispatcher { contract_address }
             }
 
             #[test]
-            fn roll_complex() {
-                let contract = declare("RollChecker").unwrap();
+            fn cheat_block_number_complex() {
+                let contract = declare("CheatBlockNumberChecker").unwrap();
 
                 let (contract_address1, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let (contract_address2, _) = contract.deploy(@ArrayTrait::new()).unwrap();
 
-                let roll_checker1 = IRollCheckerDispatcher { contract_address: contract_address1 };
-                let roll_checker2 = IRollCheckerDispatcher { contract_address: contract_address2 };
+                let cheat_block_number_checker1 = ICheatBlockNumberCheckerDispatcher { contract_address: contract_address1 };
+                let cheat_block_number_checker2 = ICheatBlockNumberCheckerDispatcher { contract_address: contract_address2 };
 
-                let old_block_number2 = roll_checker2.get_block_number();
+                let old_block_number2 = cheat_block_number_checker2.get_block_number();
 
-                roll_global(123);
+                cheat_block_number_global(123);
 
-                let new_block_number1 = roll_checker1.get_block_number();
-                let new_block_number2 = roll_checker2.get_block_number();
+                let new_block_number1 = cheat_block_number_checker1.get_block_number();
+                let new_block_number2 = cheat_block_number_checker2.get_block_number();
                 
                 assert(new_block_number1 == 123, 'Wrong block number #1');
                 assert(new_block_number2 == 123, 'Wrong block number #2');
 
-                start_roll(roll_checker1.contract_address, 456);
+                start_cheat_block_number(cheat_block_number_checker1.contract_address, 456);
 
-                let new_block_number1 = roll_checker1.get_block_number();
-                let new_block_number2 = roll_checker2.get_block_number();
+                let new_block_number1 = cheat_block_number_checker1.get_block_number();
+                let new_block_number2 = cheat_block_number_checker2.get_block_number();
 
                 assert(new_block_number1 == 456, 'Wrong block number #3');
                 assert(new_block_number2 == 123, 'Wrong block number #4');
 
-                start_roll(roll_checker1.contract_address, 789);
-                start_roll(roll_checker2.contract_address, 789);
+                start_cheat_block_number(cheat_block_number_checker1.contract_address, 789);
+                start_cheat_block_number(cheat_block_number_checker2.contract_address, 789);
 
-                let new_block_number1 = roll_checker1.get_block_number();
-                let new_block_number2 = roll_checker2.get_block_number();
+                let new_block_number1 = cheat_block_number_checker1.get_block_number();
+                let new_block_number2 = cheat_block_number_checker2.get_block_number();
 
                 assert(new_block_number1 == 789, 'Wrong block number #5');
                 assert(new_block_number2 == 789, 'Wrong block number #6');
 
-                stop_roll(roll_checker2.contract_address);
+                stop_cheat_block_number(cheat_block_number_checker2.contract_address);
 
-                let new_block_number1 = roll_checker1.get_block_number();
-                let new_block_number2 = roll_checker2.get_block_number();
+                let new_block_number1 = cheat_block_number_checker1.get_block_number();
+                let new_block_number2 = cheat_block_number_checker2.get_block_number();
                 
                 assert(new_block_number1 == 789, 'Wrong block number #7');
                 assert(new_block_number2 == old_block_number2, 'Wrong block number #8');
@@ -201,8 +201,8 @@ fn roll_complex() {
         "#
         ),
         Contract::from_code_path(
-            "RollChecker".to_string(),
-            Path::new("tests/data/contracts/roll_checker.cairo"),
+            "CheatBlockNumberChecker".to_string(),
+            Path::new("tests/data/contracts/cheat_block_number_checker.cairo"),
         )
         .unwrap()
     );
@@ -213,7 +213,7 @@ fn roll_complex() {
 }
 
 #[test]
-fn roll_with_span() {
+fn cheat_block_number_with_span() {
     let test = test_case!(
         indoc!(
             r#"
@@ -223,27 +223,27 @@ fn roll_with_span() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use snforge_std::{ test_address, declare, ContractClassTrait, roll, start_roll, stop_roll, CheatSpan };
+            use snforge_std::{ test_address, declare, ContractClassTrait, cheat_block_number, start_cheat_block_number, stop_cheat_block_number, CheatSpan };
 
             #[starknet::interface]
-            trait IRollChecker<TContractState> {
+            trait ICheatBlockNumberChecker<TContractState> {
                 fn get_block_number(ref self: TContractState) -> felt252;
             }
 
-            fn deploy_roll_checker() -> IRollCheckerDispatcher {
-                let (contract_address, _) = declare("RollChecker").unwrap().deploy(@ArrayTrait::new()).unwrap();
-                IRollCheckerDispatcher { contract_address }
+            fn deploy_cheat_block_number_checker() -> ICheatBlockNumberCheckerDispatcher {
+                let (contract_address, _) = declare("CheatBlockNumberChecker").unwrap().deploy(@ArrayTrait::new()).unwrap();
+                ICheatBlockNumberCheckerDispatcher { contract_address }
             }
 
             #[test]
-            fn test_roll_once() {
+            fn test_cheat_block_number_once() {
                 let old_block_number = get_block_number();
                 
-                let dispatcher = deploy_roll_checker();
+                let dispatcher = deploy_cheat_block_number_checker();
 
                 let target_block_number = 123;
 
-                roll(dispatcher.contract_address, target_block_number, CheatSpan::TargetCalls(1));
+                cheat_block_number(dispatcher.contract_address, target_block_number, CheatSpan::TargetCalls(1));
 
                 let block_number = dispatcher.get_block_number();
                 assert_eq!(block_number, target_block_number.into());
@@ -253,14 +253,14 @@ fn roll_with_span() {
             }
 
             #[test]
-            fn test_roll_twice() {
+            fn test_cheat_block_number_twice() {
                 let old_block_number = get_block_number();
 
-                let dispatcher = deploy_roll_checker();
+                let dispatcher = deploy_cheat_block_number_checker();
 
                 let target_block_number = 123;
 
-                roll(dispatcher.contract_address, target_block_number, CheatSpan::TargetCalls(2));
+                cheat_block_number(dispatcher.contract_address, target_block_number, CheatSpan::TargetCalls(2));
 
                 let block_number = dispatcher.get_block_number();
                 assert_eq!(block_number, target_block_number.into());
@@ -273,12 +273,12 @@ fn roll_with_span() {
             }
 
             #[test]
-            fn test_roll_test_address() {
+            fn test_cheat_block_number_test_address() {
                 let old_block_number = get_block_number();
                 
                 let target_block_number = 123;
                 
-                roll(test_address(), target_block_number, CheatSpan::TargetCalls(1));
+                cheat_block_number(test_address(), target_block_number, CheatSpan::TargetCalls(1));
                 
                 let block_number = get_block_number();
                 assert_eq!(block_number, target_block_number.into());
@@ -286,7 +286,7 @@ fn roll_with_span() {
                 let block_number = get_block_number();
                 assert_eq!(block_number, target_block_number.into());
                 
-                stop_roll(test_address());
+                stop_cheat_block_number(test_address());
 
                 let block_number = get_block_number();
                 assert_eq!(block_number, old_block_number.into());
@@ -298,8 +298,8 @@ fn roll_with_span() {
         "#
         ),
         Contract::from_code_path(
-            "RollChecker".to_string(),
-            Path::new("tests/data/contracts/roll_checker.cairo"),
+            "CheatBlockNumberChecker".to_string(),
+            Path::new("tests/data/contracts/cheat_block_number_checker.cairo"),
         )
         .unwrap()
     );

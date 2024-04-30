@@ -6,7 +6,7 @@ use crate::CheatnetState;
 use starknet_api::core::ContractAddress;
 
 impl CheatnetState {
-    pub fn elect(
+    pub fn cheat_sequencer_address(
         &mut self,
         contract_address: ContractAddress,
         sequencer_address: ContractAddress,
@@ -25,15 +25,15 @@ impl CheatnetState {
         });
     }
 
-    pub fn start_elect(
+    pub fn start_cheat_sequencer_address(
         &mut self,
         contract_address: ContractAddress,
         sequencer_address: ContractAddress,
     ) {
-        self.elect(contract_address, sequencer_address, CheatSpan::Indefinite);
+        self.cheat_sequencer_address(contract_address, sequencer_address, CheatSpan::Indefinite);
     }
 
-    pub fn elect_global(&mut self, sequencer_address: ContractAddress) {
+    pub fn cheat_sequencer_address_global(&mut self, sequencer_address: ContractAddress) {
         self.cheat_execution_info(ExecutionInfoMockOperations {
             block_info: BlockInfoMockOperations {
                 sequencer_address: Operation::StartGlobal(sequencer_address),
@@ -43,7 +43,7 @@ impl CheatnetState {
         });
     }
 
-    pub fn stop_elect(&mut self, contract_address: ContractAddress) {
+    pub fn stop_cheat_sequencer_address(&mut self, contract_address: ContractAddress) {
         self.cheat_execution_info(ExecutionInfoMockOperations {
             block_info: BlockInfoMockOperations {
                 sequencer_address: Operation::Stop(contract_address),
@@ -53,7 +53,7 @@ impl CheatnetState {
         });
     }
 
-    pub fn stop_elect_global(&mut self) {
+    pub fn stop_cheat_sequencer_address_global(&mut self) {
         self.cheat_execution_info(ExecutionInfoMockOperations {
             block_info: BlockInfoMockOperations {
                 sequencer_address: Operation::StopGlobal,

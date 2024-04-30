@@ -1,5 +1,5 @@
-mod prank_checker;
-mod constructor_prank_checker;
-mod prank_checker_library_call;
-mod prank_checker_proxy;
-mod prank_checker_cairo0;
+mod cheat_caller_address_checker;
+mod constructor_cheat_caller_address_checker;
+mod cheat_caller_address_checker_library_call;
+mod cheat_caller_address_checker_proxy;
+mod cheat_caller_address_checker_cairo0;

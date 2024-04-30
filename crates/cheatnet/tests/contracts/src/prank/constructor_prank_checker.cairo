@@ -1,13 +1,13 @@
 use starknet::ContractAddress;
 
 #[starknet::interface]
-trait IConstructorPrankChecker<TContractState> {
+trait IConstructorCheatCallerAddressChecker<TContractState> {
     fn get_stored_caller_address(ref self: TContractState) -> ContractAddress;
     fn get_caller_address(ref self: TContractState) -> felt252;
 }
 
 #[starknet::contract]
-mod ConstructorPrankChecker {
+mod ConstructorCheatCallerAddressChecker {
     use starknet::ContractAddress;
 
     #[storage]
@@ -22,7 +22,7 @@ mod ConstructorPrankChecker {
     }
 
     #[abi(embed_v0)]
-    impl IConstructorPrankChecker of super::IConstructorPrankChecker<ContractState> {
+    impl IConstructorCheatCallerAddressChecker of super::IConstructorCheatCallerAddressChecker<ContractState> {
         fn get_stored_caller_address(ref self: ContractState) -> ContractAddress {
             self.caller_address.read()
         }

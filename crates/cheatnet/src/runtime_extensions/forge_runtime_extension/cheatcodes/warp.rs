@@ -6,7 +6,7 @@ use crate::CheatnetState;
 use starknet_api::core::ContractAddress;
 
 impl CheatnetState {
-    pub fn warp(&mut self, contract_address: ContractAddress, timestamp: u64, span: CheatSpan) {
+    pub fn cheat_block_timestamp(&mut self, contract_address: ContractAddress, timestamp: u64, span: CheatSpan) {
         self.cheat_execution_info(ExecutionInfoMockOperations {
             block_info: BlockInfoMockOperations {
                 block_timestamp: Operation::Start(CheatArguments {
@@ -20,7 +20,7 @@ impl CheatnetState {
         });
     }
 
-    pub fn warp_global(&mut self, timestamp: u64) {
+    pub fn cheat_block_timestamp_global(&mut self, timestamp: u64) {
         self.cheat_execution_info(ExecutionInfoMockOperations {
             block_info: BlockInfoMockOperations {
                 block_timestamp: Operation::StartGlobal(timestamp),
@@ -30,11 +30,11 @@ impl CheatnetState {
         });
     }
 
-    pub fn start_warp(&mut self, contract_address: ContractAddress, timestamp: u64) {
-        self.warp(contract_address, timestamp, CheatSpan::Indefinite);
+    pub fn start_cheat_block_timestamp(&mut self, contract_address: ContractAddress, timestamp: u64) {
+        self.cheat_block_timestamp(contract_address, timestamp, CheatSpan::Indefinite);
     }
 
-    pub fn stop_warp(&mut self, contract_address: ContractAddress) {
+    pub fn stop_cheat_block_timestamp(&mut self, contract_address: ContractAddress) {
         self.cheat_execution_info(ExecutionInfoMockOperations {
             block_info: BlockInfoMockOperations {
                 block_timestamp: Operation::Stop(contract_address),
@@ -44,7 +44,7 @@ impl CheatnetState {
         });
     }
 
-    pub fn stop_warp_global(&mut self) {
+    pub fn stop_cheat_block_timestamp_global(&mut self) {
         self.cheat_execution_info(ExecutionInfoMockOperations {
             block_info: BlockInfoMockOperations {
                 block_timestamp: Operation::StopGlobal,

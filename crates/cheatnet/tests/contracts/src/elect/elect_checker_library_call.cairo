@@ -1,12 +1,12 @@
 use starknet::{ClassHash, ContractAddress};
 
 #[starknet::interface]
-trait IElectChecker<TContractState> {
+trait ICheatSequencerAddressChecker<TContractState> {
     fn get_sequencer_address(self: @TContractState) -> ContractAddress;
 }
 
 #[starknet::interface]
-trait IElectCheckerLibCall<TContractState> {
+trait ICheatSequencerAddressCheckerLibCall<TContractState> {
     fn get_sequencer_address_with_lib_call(
         self: @TContractState, class_hash: ClassHash
     ) -> ContractAddress;
@@ -14,20 +14,20 @@ trait IElectCheckerLibCall<TContractState> {
 }
 
 #[starknet::contract]
-mod ElectCheckerLibCall {
-    use super::{IElectCheckerDispatcherTrait, IElectCheckerLibraryDispatcher};
+mod CheatSequencerAddressCheckerLibCall {
+    use super::{ICheatSequencerAddressCheckerDispatcherTrait, ICheatSequencerAddressCheckerLibraryDispatcher};
     use starknet::{ClassHash, ContractAddress};
 
     #[storage]
     struct Storage {}
 
     #[abi(embed_v0)]
-    impl IElectCheckerLibCall of super::IElectCheckerLibCall<ContractState> {
+    impl ICheatSequencerAddressCheckerLibCall of super::ICheatSequencerAddressCheckerLibCall<ContractState> {
         fn get_sequencer_address_with_lib_call(
             self: @ContractState, class_hash: ClassHash
         ) -> ContractAddress {
-            let elect_checker = IElectCheckerLibraryDispatcher { class_hash };
-            elect_checker.get_sequencer_address()
+            let cheat_sequencer_address_checker = ICheatSequencerAddressCheckerLibraryDispatcher { class_hash };
+            cheat_sequencer_address_checker.get_sequencer_address()
         }
 
         fn get_sequencer_address(self: @ContractState) -> ContractAddress {

@@ -7,61 +7,61 @@ use starknet_api::core::ContractAddress;
 
 use super::test_environment::TestEnvironment;
 
-trait RollTrait {
-    fn roll(&mut self, contract_address: ContractAddress, block_number: u64, span: CheatSpan);
-    fn start_roll(&mut self, contract_address: ContractAddress, block_number: u64);
-    fn stop_roll(&mut self, contract_address: ContractAddress);
+trait CheatBlockNumberTrait {
+    fn cheat_block_number(&mut self, contract_address: ContractAddress, block_number: u64, span: CheatSpan);
+    fn start_cheat_block_number(&mut self, contract_address: ContractAddress, block_number: u64);
+    fn stop_cheat_block_number(&mut self, contract_address: ContractAddress);
 }
 
-impl RollTrait for TestEnvironment {
-    fn roll(&mut self, contract_address: ContractAddress, block_number: u64, span: CheatSpan) {
+impl CheatBlockNumberTrait for TestEnvironment {
+    fn cheat_block_number(&mut self, contract_address: ContractAddress, block_number: u64, span: CheatSpan) {
         self.cheatnet_state
-            .roll(contract_address, block_number, span);
+            .cheat_block_number(contract_address, block_number, span);
     }
 
-    fn start_roll(&mut self, contract_address: ContractAddress, block_number: u64) {
+    fn start_cheat_block_number(&mut self, contract_address: ContractAddress, block_number: u64) {
         self.cheatnet_state
-            .start_roll(contract_address, block_number);
+            .start_cheat_block_number(contract_address, block_number);
     }
 
-    fn stop_roll(&mut self, contract_address: ContractAddress) {
-        self.cheatnet_state.stop_roll(contract_address);
+    fn stop_cheat_block_number(&mut self, contract_address: ContractAddress) {
+        self.cheatnet_state.stop_cheat_block_number(contract_address);
     }
 }
 
 #[test]
-fn roll_simple() {
+fn cheat_block_number_simple() {
     let mut test_env = TestEnvironment::new();
 
-    let contract_address = test_env.deploy("RollChecker", &[]);
+    let contract_address = test_env.deploy("CheatBlockNumberChecker", &[]);
 
-    test_env.start_roll(contract_address, 123);
+    test_env.start_cheat_block_number(contract_address, 123);
 
     let output = test_env.call_contract(&contract_address, "get_block_number", &[]);
     assert_success(output, &[Felt252::from(123)]);
 }
 
 #[test]
-fn roll_with_other_syscall() {
+fn cheat_block_number_with_other_syscall() {
     let mut test_env = TestEnvironment::new();
 
-    let contract_address = test_env.deploy("RollChecker", &[]);
+    let contract_address = test_env.deploy("CheatBlockNumberChecker", &[]);
 
-    test_env.start_roll(contract_address, 123);
+    test_env.start_cheat_block_number(contract_address, 123);
 
     let output = test_env.call_contract(&contract_address, "get_block_number_and_emit_event", &[]);
     assert_success(output, &[Felt252::from(123)]);
 }
 
 #[test]
-fn roll_in_constructor() {
+fn cheat_block_number_in_constructor() {
     let mut test_env = TestEnvironment::new();
     let contracts_data = get_contracts();
 
-    let class_hash = test_env.declare("ConstructorRollChecker", &contracts_data);
+    let class_hash = test_env.declare("ConstructorCheatBlockNumberChecker", &contracts_data);
     let precalculated_address = test_env.precalculate_address(&class_hash, &[]);
 
-    test_env.start_roll(precalculated_address, 123);
+    test_env.start_cheat_block_number(precalculated_address, 123);
 
     let contract_address = test_env.deploy_wrapper(&class_hash, &[]);
     assert_eq!(precalculated_address, contract_address);
@@ -71,19 +71,19 @@ fn roll_in_constructor() {
 }
 
 #[test]
-fn roll_stop() {
+fn cheat_block_number_stop() {
     let mut test_env = TestEnvironment::new();
 
-    let contract_address = test_env.deploy("RollChecker", &[]);
+    let contract_address = test_env.deploy("CheatBlockNumberChecker", &[]);
 
-    test_env.start_roll(contract_address, 123);
+    test_env.start_cheat_block_number(contract_address, 123);
 
     assert_success(
         test_env.call_contract(&contract_address, "get_block_number", &[]),
         &[Felt252::from(123)],
     );
 
-    test_env.stop_roll(contract_address);
+    test_env.stop_cheat_block_number(contract_address);
 
     assert_success(
         test_env.call_contract(&contract_address, "get_block_number", &[]),
@@ -92,20 +92,20 @@ fn roll_stop() {
 }
 
 #[test]
-fn roll_double() {
+fn cheat_block_number_double() {
     let mut test_env = TestEnvironment::new();
 
-    let contract_address = test_env.deploy("RollChecker", &[]);
+    let contract_address = test_env.deploy("CheatBlockNumberChecker", &[]);
 
-    test_env.start_roll(contract_address, 123);
-    test_env.start_roll(contract_address, 123);
+    test_env.start_cheat_block_number(contract_address, 123);
+    test_env.start_cheat_block_number(contract_address, 123);
 
     assert_success(
         test_env.call_contract(&contract_address, "get_block_number", &[]),
         &[Felt252::from(123)],
     );
 
-    test_env.stop_roll(contract_address);
+    test_env.stop_cheat_block_number(contract_address);
 
     assert_success(
         test_env.call_contract(&contract_address, "get_block_number", &[]),
@@ -114,22 +114,22 @@ fn roll_double() {
 }
 
 #[test]
-fn roll_proxy() {
+fn cheat_block_number_proxy() {
     let mut test_env = TestEnvironment::new();
 
-    let contract_address = test_env.deploy("RollChecker", &[]);
-    let proxy_address = test_env.deploy("RollCheckerProxy", &[]);
+    let contract_address = test_env.deploy("CheatBlockNumberChecker", &[]);
+    let proxy_address = test_env.deploy("CheatBlockNumberCheckerProxy", &[]);
 
-    let proxy_selector = "get_roll_checkers_block_number";
+    let proxy_selector = "get_cheat_block_number_checkers_block_number";
 
-    test_env.start_roll(contract_address, 123);
+    test_env.start_cheat_block_number(contract_address, 123);
 
     assert_success(
         test_env.call_contract(&proxy_address, proxy_selector, &[contract_address.into_()]),
         &[Felt252::from(123)],
     );
 
-    test_env.stop_roll(contract_address);
+    test_env.stop_cheat_block_number(contract_address);
 
     assert_success(
         test_env.call_contract(&proxy_address, proxy_selector, &[contract_address.into_()]),
@@ -138,22 +138,22 @@ fn roll_proxy() {
 }
 
 #[test]
-fn roll_library_call() {
+fn cheat_block_number_library_call() {
     let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
-    let class_hash = test_env.declare("RollChecker", &contracts_data);
+    let class_hash = test_env.declare("CheatBlockNumberChecker", &contracts_data);
 
-    let lib_call_address = test_env.deploy("RollCheckerLibCall", &[]);
+    let lib_call_address = test_env.deploy("CheatBlockNumberCheckerLibCall", &[]);
     let lib_call_selector = "get_block_number_with_lib_call";
 
-    test_env.start_roll(lib_call_address, 123);
+    test_env.start_cheat_block_number(lib_call_address, 123);
 
     assert_success(
         test_env.call_contract(&lib_call_address, lib_call_selector, &[class_hash.into_()]),
         &[Felt252::from(123)],
     );
-    test_env.stop_roll(lib_call_address);
+    test_env.stop_cheat_block_number(lib_call_address);
 
     assert_success(
         test_env.call_contract(&lib_call_address, lib_call_selector, &[class_hash.into_()]),
@@ -162,65 +162,65 @@ fn roll_library_call() {
 }
 
 #[test]
-fn roll_all_simple() {
+fn cheat_block_number_all_simple() {
     let mut test_env = TestEnvironment::new();
 
-    let contract_address = test_env.deploy("RollChecker", &[]);
+    let contract_address = test_env.deploy("CheatBlockNumberChecker", &[]);
 
-    test_env.cheatnet_state.roll_global(123);
+    test_env.cheatnet_state.cheat_block_number_global(123);
 
     let output = test_env.call_contract(&contract_address, "get_block_number", &[]);
     assert_success(output, &[Felt252::from(123)]);
 }
 
 #[test]
-fn roll_all_then_one() {
+fn cheat_block_number_all_then_one() {
     let mut test_env = TestEnvironment::new();
 
-    let contract_address = test_env.deploy("RollChecker", &[]);
+    let contract_address = test_env.deploy("CheatBlockNumberChecker", &[]);
 
-    test_env.cheatnet_state.roll_global(321);
-    test_env.start_roll(contract_address, 123);
+    test_env.cheatnet_state.cheat_block_number_global(321);
+    test_env.start_cheat_block_number(contract_address, 123);
 
     let output = test_env.call_contract(&contract_address, "get_block_number", &[]);
     assert_success(output, &[Felt252::from(123)]);
 }
 
 #[test]
-fn roll_one_then_all() {
+fn cheat_block_number_one_then_all() {
     let mut test_env = TestEnvironment::new();
 
-    let contract_address = test_env.deploy("RollChecker", &[]);
+    let contract_address = test_env.deploy("CheatBlockNumberChecker", &[]);
 
-    test_env.start_roll(contract_address, 123);
-    test_env.cheatnet_state.roll_global(321);
+    test_env.start_cheat_block_number(contract_address, 123);
+    test_env.cheatnet_state.cheat_block_number_global(321);
 
     let output = test_env.call_contract(&contract_address, "get_block_number", &[]);
     assert_success(output, &[Felt252::from(321)]);
 }
 
 #[test]
-fn roll_all_stop() {
+fn cheat_block_number_all_stop() {
     let mut test_env = TestEnvironment::new();
 
-    let roll_checker = test_env.declare("RollChecker", &get_contracts());
-    let contract_address = test_env.deploy_wrapper(&roll_checker, &[]);
+    let cheat_block_number_checker = test_env.declare("CheatBlockNumberChecker", &get_contracts());
+    let contract_address = test_env.deploy_wrapper(&cheat_block_number_checker, &[]);
 
-    test_env.cheatnet_state.roll_global(123);
-
-    assert_success(
-        test_env.call_contract(&contract_address, "get_block_number", &[]),
-        &[Felt252::from(123)],
-    );
-
-    test_env.cheatnet_state.stop_roll_global();
+    test_env.cheatnet_state.cheat_block_number_global(123);
 
     assert_success(
         test_env.call_contract(&contract_address, "get_block_number", &[]),
         &[Felt252::from(123)],
     );
 
-    let contract_address = test_env.deploy_wrapper(&roll_checker, &[]);
+    test_env.cheatnet_state.stop_cheat_block_number_global();
+
+    assert_success(
+        test_env.call_contract(&contract_address, "get_block_number", &[]),
+        &[Felt252::from(123)],
+    );
+
+    let contract_address = test_env.deploy_wrapper(&cheat_block_number_checker, &[]);
 
     assert_success(
         test_env.call_contract(&contract_address, "get_block_number", &[]),
@@ -229,17 +229,17 @@ fn roll_all_stop() {
 }
 
 #[test]
-fn roll_multiple() {
+fn cheat_block_number_multiple() {
     let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
-    let class_hash = test_env.declare("RollChecker", &contracts_data);
+    let class_hash = test_env.declare("CheatBlockNumberChecker", &contracts_data);
 
     let contract_address1 = test_env.deploy_wrapper(&class_hash, &[]);
     let contract_address2 = test_env.deploy_wrapper(&class_hash, &[]);
 
-    test_env.cheatnet_state.start_roll(contract_address1, 123);
-    test_env.cheatnet_state.start_roll(contract_address2, 123);
+    test_env.cheatnet_state.start_cheat_block_number(contract_address1, 123);
+    test_env.cheatnet_state.start_cheat_block_number(contract_address2, 123);
 
     assert_success(
         test_env.call_contract(&contract_address1, "get_block_number", &[]),
@@ -250,8 +250,8 @@ fn roll_multiple() {
         &[Felt252::from(123)],
     );
 
-    test_env.cheatnet_state.stop_roll(contract_address1);
-    test_env.cheatnet_state.stop_roll(contract_address2);
+    test_env.cheatnet_state.stop_cheat_block_number(contract_address1);
+    test_env.cheatnet_state.stop_cheat_block_number(contract_address2);
 
     assert_success(
         test_env.call_contract(&contract_address1, "get_block_number", &[]),
@@ -264,12 +264,12 @@ fn roll_multiple() {
 }
 
 #[test]
-fn roll_simple_with_span() {
+fn cheat_block_number_simple_with_span() {
     let mut test_env = TestEnvironment::new();
 
-    let contract_address = test_env.deploy("RollChecker", &[]);
+    let contract_address = test_env.deploy("CheatBlockNumberChecker", &[]);
 
-    test_env.roll(contract_address, 123, CheatSpan::TargetCalls(2));
+    test_env.cheat_block_number(contract_address, 123, CheatSpan::TargetCalls(2));
 
     assert_success(
         test_env.call_contract(&contract_address, "get_block_number", &[]),
@@ -286,15 +286,15 @@ fn roll_simple_with_span() {
 }
 
 #[test]
-fn roll_proxy_with_span() {
+fn cheat_block_number_proxy_with_span() {
     let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
-    let class_hash = test_env.declare("RollCheckerProxy", &contracts_data);
+    let class_hash = test_env.declare("CheatBlockNumberCheckerProxy", &contracts_data);
     let contract_address_1 = test_env.deploy_wrapper(&class_hash, &[]);
     let contract_address_2 = test_env.deploy_wrapper(&class_hash, &[]);
 
-    test_env.roll(contract_address_1, 123, CheatSpan::TargetCalls(1));
+    test_env.cheat_block_number(contract_address_1, 123, CheatSpan::TargetCalls(1));
 
     let output = test_env.call_contract(
         &contract_address_1,
@@ -305,15 +305,15 @@ fn roll_proxy_with_span() {
 }
 
 #[test]
-fn roll_in_constructor_with_span() {
+fn cheat_block_number_in_constructor_with_span() {
     let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
 
-    let class_hash = test_env.declare("ConstructorRollChecker", &contracts_data);
+    let class_hash = test_env.declare("ConstructorCheatBlockNumberChecker", &contracts_data);
     let precalculated_address = test_env.precalculate_address(&class_hash, &[]);
 
-    test_env.roll(precalculated_address, 123, CheatSpan::TargetCalls(2));
+    test_env.cheat_block_number(precalculated_address, 123, CheatSpan::TargetCalls(2));
 
     let contract_address = test_env.deploy_wrapper(&class_hash, &[]);
     assert_eq!(precalculated_address, contract_address);
@@ -333,15 +333,15 @@ fn roll_in_constructor_with_span() {
 }
 
 #[test]
-fn roll_no_constructor_with_span() {
+fn cheat_block_number_no_constructor_with_span() {
     let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
 
-    let class_hash = test_env.declare("RollChecker", &contracts_data);
+    let class_hash = test_env.declare("CheatBlockNumberChecker", &contracts_data);
     let precalculated_address = test_env.precalculate_address(&class_hash, &[]);
 
-    test_env.roll(precalculated_address, 123, CheatSpan::TargetCalls(1));
+    test_env.cheat_block_number(precalculated_address, 123, CheatSpan::TargetCalls(1));
 
     let contract_address = test_env.deploy_wrapper(&class_hash, &[]);
     assert_eq!(precalculated_address, contract_address);
@@ -357,19 +357,19 @@ fn roll_no_constructor_with_span() {
 }
 
 #[test]
-fn roll_override_span() {
+fn cheat_block_number_override_span() {
     let mut test_env = TestEnvironment::new();
 
-    let contract_address = test_env.deploy("RollChecker", &[]);
+    let contract_address = test_env.deploy("CheatBlockNumberChecker", &[]);
 
-    test_env.roll(contract_address, 123, CheatSpan::TargetCalls(2));
+    test_env.cheat_block_number(contract_address, 123, CheatSpan::TargetCalls(2));
 
     assert_success(
         test_env.call_contract(&contract_address, "get_block_number", &[]),
         &[Felt252::from(123)],
     );
 
-    test_env.roll(contract_address, 321, CheatSpan::Indefinite);
+    test_env.cheat_block_number(contract_address, 321, CheatSpan::Indefinite);
 
     assert_success(
         test_env.call_contract(&contract_address, "get_block_number", &[]),
@@ -380,7 +380,7 @@ fn roll_override_span() {
         &[Felt252::from(321)],
     );
 
-    test_env.stop_roll(contract_address);
+    test_env.stop_cheat_block_number(contract_address);
 
     assert_success(
         test_env.call_contract(&contract_address, "get_block_number", &[]),
@@ -389,14 +389,14 @@ fn roll_override_span() {
 }
 
 #[test]
-fn roll_library_call_with_span() {
+fn cheat_block_number_library_call_with_span() {
     let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
-    let class_hash = test_env.declare("RollChecker", &contracts_data);
-    let contract_address = test_env.deploy("RollCheckerLibCall", &[]);
+    let class_hash = test_env.declare("CheatBlockNumberChecker", &contracts_data);
+    let contract_address = test_env.deploy("CheatBlockNumberCheckerLibCall", &[]);
 
-    test_env.roll(contract_address, 123, CheatSpan::TargetCalls(1));
+    test_env.cheat_block_number(contract_address, 123, CheatSpan::TargetCalls(1));
 
     let lib_call_selector = "get_block_number_with_lib_call";
 

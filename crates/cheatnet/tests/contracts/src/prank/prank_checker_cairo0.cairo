@@ -55,11 +55,11 @@ mod Cairo1Contract_v1 {
 
             self.expected_caller_address.write(expected_caller_address);
 
-            assert(expected_caller_address == get_caller_address(), 'address should be pranked');
+            assert(expected_caller_address == get_caller_address(), 'address should be cheat_caller_addressed');
 
             cairo0_contract.callback(contract_address.into());
 
-            assert(expected_caller_address == get_caller_address(), 'address should be pranked');
+            assert(expected_caller_address == get_caller_address(), 'address should be cheat_caller_addressed');
         }
 
         fn end(ref self: ContractState) {

@@ -26,10 +26,10 @@ fn test_address() -> ContractAddress {
 }
 
 /// Changes the block number for the given target and span.
-/// - `target` - instance of `ContractAddress` specifying which contracts to roll
+/// - `target` - instance of `ContractAddress` specifying which contracts to cheat_block_number
 /// - `block_number` - block number to be set
 /// - `span` - instance of `CheatSpan` specifying the number of target calls with the cheat applied
-fn roll(target: ContractAddress, block_number: u64, span: CheatSpan) {
+fn cheat_block_number(target: ContractAddress, block_number: u64, span: CheatSpan) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info
@@ -41,7 +41,7 @@ fn roll(target: ContractAddress, block_number: u64, span: CheatSpan) {
 
 /// Changes the block number.
 /// - `block_number` - block number to be set
-fn roll_global(block_number: u64) {
+fn cheat_block_number_global(block_number: u64) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info.block_info.block_number = Operation::StartGlobal(block_number);
@@ -49,8 +49,8 @@ fn roll_global(block_number: u64) {
     cheat_execution_info(execution_info);
 }
 
-/// Cancels the `roll_global`
-fn stop_roll_global() {
+/// Cancels the `cheat_block_number_global`
+fn stop_cheat_block_number_global() {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info.block_info.block_number = Operation::StopGlobal;
@@ -59,16 +59,16 @@ fn stop_roll_global() {
 }
 
 /// Changes the block number for the given target.
-/// - `target` - instance of `ContractAddress` specifying which contracts to roll
+/// - `target` - instance of `ContractAddress` specifying which contracts to cheat_block_number
 /// - `block_number` - block number to be set
-fn start_roll(target: ContractAddress, block_number: u64) {
-    roll(target, block_number, CheatSpan::Indefinite);
+fn start_cheat_block_number(target: ContractAddress, block_number: u64) {
+    cheat_block_number(target, block_number, CheatSpan::Indefinite);
 }
 
 
-/// Cancels the `roll` / `start_roll` for the given target.
-/// - `target` - instance of `ContractAddress` specifying which contracts to stop rolling
-fn stop_roll(target: ContractAddress) {
+/// Cancels the `cheat_block_number` / `start_cheat_block_number` for the given target.
+/// - `target` - instance of `ContractAddress` specifying which contracts to stop cheat_block_numbering
+fn stop_cheat_block_number(target: ContractAddress) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info.block_info.block_number = Operation::Stop(target);
@@ -77,10 +77,10 @@ fn stop_roll(target: ContractAddress) {
 }
 
 /// Changes the caller address for the given target and span.
-/// - `target` - instance of `ContractAddress` specifying which contracts to prank
+/// - `target` - instance of `ContractAddress` specifying which contracts to cheat_caller_address
 /// - `caller_address` - caller address to be set
 /// - `span` - instance of `CheatSpan` specifying the number of target calls with the cheat applied
-fn prank(target: ContractAddress, caller_address: ContractAddress, span: CheatSpan) {
+fn cheat_caller_address(target: ContractAddress, caller_address: ContractAddress, span: CheatSpan) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info
@@ -91,7 +91,7 @@ fn prank(target: ContractAddress, caller_address: ContractAddress, span: CheatSp
 
 /// Changes the caller address.
 /// - `caller_address` - caller address to be set
-fn prank_global(caller_address: ContractAddress) {
+fn cheat_caller_address_global(caller_address: ContractAddress) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info.caller_address = Operation::StartGlobal(caller_address);
@@ -99,8 +99,8 @@ fn prank_global(caller_address: ContractAddress) {
     cheat_execution_info(execution_info);
 }
 
-/// Cancels the `prank_global`
-fn stop_prank_global() {
+/// Cancels the `cheat_caller_address_global`
+fn stop_cheat_caller_address_global() {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info.caller_address = Operation::StopGlobal;
@@ -109,16 +109,16 @@ fn stop_prank_global() {
 }
 
 /// Changes the caller address for the given target.
-/// This change can be canceled with `stop_prank`.
-/// - `target` - instance of `ContractAddress` specifying which contracts to prank
+/// This change can be canceled with `stop_cheat_caller_address`.
+/// - `target` - instance of `ContractAddress` specifying which contracts to cheat_caller_address
 /// - `caller_address` - caller address to be set
-fn start_prank(target: ContractAddress, caller_address: ContractAddress) {
-    prank(target, caller_address, CheatSpan::Indefinite);
+fn start_cheat_caller_address(target: ContractAddress, caller_address: ContractAddress) {
+    cheat_caller_address(target, caller_address, CheatSpan::Indefinite);
 }
 
-/// Cancels the `prank` / `start_prank` for the given target.
-/// - `target` - instance of `ContractAddress` specifying which contracts to stop pranking
-fn stop_prank(target: ContractAddress) {
+/// Cancels the `cheat_caller_address` / `start_cheat_caller_address` for the given target.
+/// - `target` - instance of `ContractAddress` specifying which contracts to stop cheat_caller_addressing
+fn stop_cheat_caller_address(target: ContractAddress) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info.caller_address = Operation::Stop(target);
@@ -127,10 +127,10 @@ fn stop_prank(target: ContractAddress) {
 }
 
 /// Changes the block timestamp for the given target and span.
-/// - `target` - instance of `ContractAddress` specifying which contracts to warp
+/// - `target` - instance of `ContractAddress` specifying which contracts to cheat_block_timestamp
 /// - `block_timestamp` - block timestamp to be set
 /// - `span` - instance of `CheatSpan` specifying the number of target calls with the cheat applied
-fn warp(target: ContractAddress, block_timestamp: u64, span: CheatSpan) {
+fn cheat_block_timestamp(target: ContractAddress, block_timestamp: u64, span: CheatSpan) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info
@@ -143,7 +143,7 @@ fn warp(target: ContractAddress, block_timestamp: u64, span: CheatSpan) {
 
 /// Changes the block timestamp.
 /// - `block_timestamp` - block timestamp to be set
-fn warp_global(block_timestamp: u64) {
+fn cheat_block_timestamp_global(block_timestamp: u64) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info.block_info.block_timestamp = Operation::StartGlobal(block_timestamp);
@@ -151,8 +151,8 @@ fn warp_global(block_timestamp: u64) {
     cheat_execution_info(execution_info);
 }
 
-/// Cancels the `warp_global`
-fn stop_warp_global() {
+/// Cancels the `cheat_block_timestamp_global`
+fn stop_cheat_block_timestamp_global() {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info.block_info.block_timestamp = Operation::StopGlobal;
@@ -161,15 +161,15 @@ fn stop_warp_global() {
 }
 
 /// Changes the block timestamp for the given target.
-/// - `target` - instance of `ContractAddress` specifying which contracts to warp
+/// - `target` - instance of `ContractAddress` specifying which contracts to cheat_block_timestamp
 /// - `block_timestamp` - block timestamp to be set
-fn start_warp(target: ContractAddress, block_timestamp: u64) {
-    warp(target, block_timestamp, CheatSpan::Indefinite);
+fn start_cheat_block_timestamp(target: ContractAddress, block_timestamp: u64) {
+    cheat_block_timestamp(target, block_timestamp, CheatSpan::Indefinite);
 }
 
-/// Cancels the `warp` / `start_warp` for the given target.
-/// - `target` - instance of `ContractAddress` specifying which contracts to stop warping
-fn stop_warp(target: ContractAddress) {
+/// Cancels the `cheat_block_timestamp` / `start_cheat_block_timestamp` for the given target.
+/// - `target` - instance of `ContractAddress` specifying which contracts to stop cheat_block_timestamping
+fn stop_cheat_block_timestamp(target: ContractAddress) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info.block_info.block_timestamp = Operation::Stop(target);
@@ -178,10 +178,10 @@ fn stop_warp(target: ContractAddress) {
 }
 
 /// Changes the sequencer address for the given target and span.
-/// `target` - instance of `ContractAddress` specifying which contracts to elect
+/// `target` - instance of `ContractAddress` specifying which contracts to cheat_sequencer_address
 /// `sequencer_address` - sequencer address to be set
 /// `span` - instance of `CheatSpan` specifying the number of target calls with the cheat applied
-fn elect(target: ContractAddress, sequencer_address: ContractAddress, span: CheatSpan) {
+fn cheat_sequencer_address(target: ContractAddress, sequencer_address: ContractAddress, span: CheatSpan) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info
@@ -194,7 +194,7 @@ fn elect(target: ContractAddress, sequencer_address: ContractAddress, span: Chea
 
 /// Changes the sequencer address.
 /// `sequencer_address` - sequencer address to be set
-fn elect_global(sequencer_address: ContractAddress) {
+fn cheat_sequencer_address_global(sequencer_address: ContractAddress) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info.block_info.sequencer_address = Operation::StartGlobal(sequencer_address);
@@ -202,8 +202,8 @@ fn elect_global(sequencer_address: ContractAddress) {
     cheat_execution_info(execution_info);
 }
 
-/// Cancels the `elect_global`
-fn stop_elect_global() {
+/// Cancels the `cheat_sequencer_address_global`
+fn stop_cheat_sequencer_address_global() {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info.block_info.sequencer_address = Operation::StopGlobal;
@@ -212,16 +212,16 @@ fn stop_elect_global() {
 }
 
 /// Changes the sequencer address for a given target.
-/// - `target` - instance of `ContractAddress` specifying which contracts to elect
+/// - `target` - instance of `ContractAddress` specifying which contracts to cheat_sequencer_address
 /// - `sequencer_address` - sequencer address to be set
-fn start_elect(target: ContractAddress, sequencer_address: ContractAddress) {
-    elect(target, sequencer_address, CheatSpan::Indefinite);
+fn start_cheat_sequencer_address(target: ContractAddress, sequencer_address: ContractAddress) {
+    cheat_sequencer_address(target, sequencer_address, CheatSpan::Indefinite);
 }
 
 
-/// Cancels the `elect` / `start_elect` for the given target.
-/// - `target` - instance of `ContractAddress` specifying which contracts to stop electing
-fn stop_elect(target: ContractAddress) {
+/// Cancels the `cheat_sequencer_address` / `start_cheat_sequencer_address` for the given target.
+/// - `target` - instance of `ContractAddress` specifying which contracts to stop cheat_sequencer_addressing
+fn stop_cheat_sequencer_address(target: ContractAddress) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info.block_info.sequencer_address = Operation::Stop(target);

@@ -1,36 +1,36 @@
 use starknet::ContractAddress;
 
 #[starknet::interface]
-trait IWarpChecker<TContractState> {
+trait ICheatBlockTimestampChecker<TContractState> {
     fn get_block_timestamp(self: @TContractState) -> u64;
 }
 
 #[starknet::interface]
-trait IWarpCheckerProxy<TContractState> {
-    fn get_warp_checkers_block_timestamp(self: @TContractState, address: ContractAddress) -> u64;
+trait ICheatBlockTimestampCheckerProxy<TContractState> {
+    fn get_cheat_block_timestamp_checkers_block_timestamp(self: @TContractState, address: ContractAddress) -> u64;
     fn get_block_timestamp(self: @TContractState) -> u64;
     fn call_proxy(self: @TContractState, address: ContractAddress) -> (u64, u64);
 }
 
 #[starknet::contract]
-mod WarpCheckerProxy {
+mod CheatBlockTimestampCheckerProxy {
     use starknet::ContractAddress;
-    use super::IWarpCheckerDispatcherTrait;
-    use super::IWarpCheckerDispatcher;
-    use super::IWarpCheckerProxyDispatcher;
-    use super::IWarpCheckerProxyDispatcherTrait;
+    use super::ICheatBlockTimestampCheckerDispatcherTrait;
+    use super::ICheatBlockTimestampCheckerDispatcher;
+    use super::ICheatBlockTimestampCheckerProxyDispatcher;
+    use super::ICheatBlockTimestampCheckerProxyDispatcherTrait;
     use starknet::get_contract_address;
 
     #[storage]
     struct Storage {}
 
     #[abi(embed_v0)]
-    impl IWarpCheckerProxy of super::IWarpCheckerProxy<ContractState> {
-        fn get_warp_checkers_block_timestamp(
+    impl ICheatBlockTimestampCheckerProxy of super::ICheatBlockTimestampCheckerProxy<ContractState> {
+        fn get_cheat_block_timestamp_checkers_block_timestamp(
             self: @ContractState, address: ContractAddress
         ) -> u64 {
-            let warp_checker = IWarpCheckerDispatcher { contract_address: address };
-            warp_checker.get_block_timestamp()
+            let cheat_block_timestamp_checker = ICheatBlockTimestampCheckerDispatcher { contract_address: address };
+            cheat_block_timestamp_checker.get_block_timestamp()
         }
 
         fn get_block_timestamp(self: @ContractState) -> u64 {
@@ -38,9 +38,9 @@ mod WarpCheckerProxy {
         }
 
         fn call_proxy(self: @ContractState, address: ContractAddress) -> (u64, u64) {
-            let dispatcher = IWarpCheckerProxyDispatcher { contract_address: address };
+            let dispatcher = ICheatBlockTimestampCheckerProxyDispatcher { contract_address: address };
             let timestamp = self.get_block_timestamp();
-            let res = dispatcher.get_warp_checkers_block_timestamp(get_contract_address());
+            let res = dispatcher.get_cheat_block_timestamp_checkers_block_timestamp(get_contract_address());
             (timestamp, res)
         }
     }

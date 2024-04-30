@@ -13,7 +13,7 @@ const CAIRO0_TESTER_ADDRESS: &str =
 
 #[test_case("return_caller_address"; "when common call")]
 #[test_case("return_proxied_caller_address"; "when library call")]
-fn prank_cairo0_contract(selector: &str) {
+fn cheat_caller_address_cairo0_contract(selector: &str) {
     let cache_dir = TempDir::new().unwrap();
     let mut cached_fork_state = create_fork_cached_state(cache_dir.path().to_str().unwrap());
     let mut cheatnet_state = CheatnetState::default();
@@ -34,7 +34,7 @@ fn prank_cairo0_contract(selector: &str) {
     };
     let caller = &ret_data[0];
 
-    cheatnet_state.start_prank(contract_address, ContractAddress::from(123_u128));
+    cheatnet_state.start_cheat_caller_address(contract_address, ContractAddress::from(123_u128));
 
     let output = call_contract(
         &mut cached_fork_state,
@@ -46,9 +46,9 @@ fn prank_cairo0_contract(selector: &str) {
     let CallResult::Success { ret_data } = output else {
         panic!("Wrong call output")
     };
-    let pranked_caller = &ret_data[0];
+    let cheat_caller_addressed_caller = &ret_data[0];
 
-    cheatnet_state.stop_prank(contract_address);
+    cheatnet_state.stop_cheat_caller_address(contract_address);
 
     let output = call_contract(
         &mut cached_fork_state,
@@ -60,15 +60,15 @@ fn prank_cairo0_contract(selector: &str) {
     let CallResult::Success { ret_data } = output else {
         panic!("Wrong call output")
     };
-    let unpranked_caller = &ret_data[0];
+    let uncheat_caller_addressed_caller = &ret_data[0];
 
-    assert_eq!(pranked_caller, &Felt252::from(123));
-    assert_eq!(unpranked_caller, caller);
+    assert_eq!(cheat_caller_addressed_caller, &Felt252::from(123));
+    assert_eq!(uncheat_caller_addressed_caller, caller);
 }
 
 #[test_case("return_block_number"; "when common call")]
 #[test_case("return_proxied_block_number"; "when library call")]
-fn roll_cairo0_contract(selector: &str) {
+fn cheat_block_number_cairo0_contract(selector: &str) {
     let cache_dir = TempDir::new().unwrap();
     let mut cached_fork_state = create_fork_cached_state(cache_dir.path().to_str().unwrap());
     let mut cheatnet_state = CheatnetState::default();
@@ -88,7 +88,7 @@ fn roll_cairo0_contract(selector: &str) {
     };
     let block_number = &ret_data[0];
 
-    cheatnet_state.start_roll(contract_address, 123);
+    cheatnet_state.start_cheat_block_number(contract_address, 123);
 
     let output = call_contract(
         &mut cached_fork_state,
@@ -100,9 +100,9 @@ fn roll_cairo0_contract(selector: &str) {
     let CallResult::Success { ret_data } = output else {
         panic!("Wrong call output")
     };
-    let rolled_block_number = &ret_data[0];
+    let cheat_block_numbered_block_number = &ret_data[0];
 
-    cheatnet_state.stop_roll(contract_address);
+    cheatnet_state.stop_cheat_block_number(contract_address);
 
     let output = call_contract(
         &mut cached_fork_state,
@@ -114,15 +114,15 @@ fn roll_cairo0_contract(selector: &str) {
     let CallResult::Success { ret_data } = output else {
         panic!("Wrong call output")
     };
-    let unrolled_block_number = &ret_data[0];
+    let uncheat_block_numbered_block_number = &ret_data[0];
 
-    assert_eq!(rolled_block_number, &Felt252::from(123));
-    assert_eq!(unrolled_block_number, block_number);
+    assert_eq!(cheat_block_numbered_block_number, &Felt252::from(123));
+    assert_eq!(uncheat_block_numbered_block_number, block_number);
 }
 
 #[test_case("return_block_timestamp"; "when common call")]
 #[test_case("return_proxied_block_timestamp"; "when library call")]
-fn warp_cairo0_contract(selector: &str) {
+fn cheat_block_timestamp_cairo0_contract(selector: &str) {
     let cache_dir = TempDir::new().unwrap();
     let mut cached_fork_state = create_fork_cached_state(cache_dir.path().to_str().unwrap());
     let mut cheatnet_state = CheatnetState::default();
@@ -142,7 +142,7 @@ fn warp_cairo0_contract(selector: &str) {
     };
     let block_timestamp = &ret_data[0];
 
-    cheatnet_state.start_warp(contract_address, 123);
+    cheatnet_state.start_cheat_block_timestamp(contract_address, 123);
     let output = call_contract(
         &mut cached_fork_state,
         &mut cheatnet_state,
@@ -153,9 +153,9 @@ fn warp_cairo0_contract(selector: &str) {
     let CallResult::Success { ret_data } = output else {
         panic!("Wrong call output")
     };
-    let warped_block_timestamp = &ret_data[0];
+    let cheat_block_timestamped_block_timestamp = &ret_data[0];
 
-    cheatnet_state.stop_warp(contract_address);
+    cheatnet_state.stop_cheat_block_timestamp(contract_address);
 
     let output = call_contract(
         &mut cached_fork_state,
@@ -167,8 +167,8 @@ fn warp_cairo0_contract(selector: &str) {
     let CallResult::Success { ret_data } = output else {
         panic!("Wrong call output")
     };
-    let unwarped_block_timestamp = &ret_data[0];
+    let uncheat_block_timestamped_block_timestamp = &ret_data[0];
 
-    assert_eq!(warped_block_timestamp, &Felt252::from(123));
-    assert_eq!(unwarped_block_timestamp, block_timestamp);
+    assert_eq!(cheat_block_timestamped_block_timestamp, &Felt252::from(123));
+    assert_eq!(uncheat_block_timestamped_block_timestamp, block_timestamp);
 }

@@ -1,11 +1,11 @@
 #[starknet::interface]
-trait IConstructorRollChecker<TContractState> {
+trait IConstructorCheatBlockNumberChecker<TContractState> {
     fn get_stored_block_number(ref self: TContractState) -> u64;
     fn get_block_number(ref self: TContractState) -> u64;
 }
 
 #[starknet::contract]
-mod ConstructorRollChecker {
+mod ConstructorCheatBlockNumberChecker {
     use box::BoxTrait;
     #[storage]
     struct Storage {
@@ -19,7 +19,7 @@ mod ConstructorRollChecker {
     }
 
     #[abi(embed_v0)]
-    impl IConstructorRollChecker of super::IConstructorRollChecker<ContractState> {
+    impl IConstructorCheatBlockNumberChecker of super::IConstructorCheatBlockNumberChecker<ContractState> {
         fn get_stored_block_number(ref self: ContractState) -> u64 {
             self.blk_nb.read()
         }

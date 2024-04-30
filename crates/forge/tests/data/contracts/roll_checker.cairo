@@ -1,11 +1,11 @@
 #[starknet::interface]
-trait IRollChecker<TContractState> {
+trait ICheatBlockNumberChecker<TContractState> {
     fn get_block_number(ref self: TContractState) -> u64;
     fn get_block_number_and_emit_event(ref self: TContractState) -> u64;
 }
 
 #[starknet::contract]
-mod RollChecker {
+mod CheatBlockNumberChecker {
     use box::BoxTrait;
     #[storage]
     struct Storage {
@@ -24,7 +24,7 @@ mod RollChecker {
     }
 
     #[abi(embed_v0)]
-    impl IRollChecker of super::IRollChecker<ContractState> {
+    impl ICheatBlockNumberChecker of super::ICheatBlockNumberChecker<ContractState> {
         fn get_block_number(ref self: ContractState) -> u64 {
             starknet::get_block_info().unbox().block_number
         }

@@ -1,13 +1,13 @@
 use starknet::ContractAddress;
 
 #[starknet::interface]
-trait IElectChecker<TContractState> {
+trait ICheatSequencerAddressChecker<TContractState> {
     fn get_sequencer_address(ref self: TContractState) -> ContractAddress;
     fn get_seq_addr_and_emit_event(ref self: TContractState) -> ContractAddress;
 }
 
 #[starknet::contract]
-mod ElectChecker {
+mod CheatSequencerAddressChecker {
     use starknet::ContractAddress;
 
     #[storage]
@@ -25,7 +25,7 @@ mod ElectChecker {
     }
 
     #[abi(embed_v0)]
-    impl IElectChecker of super::IElectChecker<ContractState> {
+    impl ICheatSequencerAddressChecker of super::ICheatSequencerAddressChecker<ContractState> {
         fn get_sequencer_address(ref self: ContractState) -> ContractAddress {
             starknet::get_block_info().unbox().sequencer_address
         }

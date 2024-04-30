@@ -87,8 +87,8 @@ fn call_predefined_contract_from_proxy_contract() {
 
     let contracts_data = get_contracts();
 
-    let class_hash = declare(&mut cached_state, "PrankChecker", &contracts_data).unwrap();
-    let prank_checker_address = deploy_at_wrapper(
+    let class_hash = declare(&mut cached_state, "CheatCallerAddressChecker", &contracts_data).unwrap();
+    let cheat_caller_address_checker_address = deploy_at_wrapper(
         &mut cached_state,
         &mut cheatnet_state,
         &class_hash,
@@ -97,21 +97,21 @@ fn call_predefined_contract_from_proxy_contract() {
     )
     .unwrap();
 
-    assert_eq!(prank_checker_address, ContractAddress::from(1_u8));
+    assert_eq!(cheat_caller_address_checker_address, ContractAddress::from(1_u8));
 
     let proxy_address = deploy_contract(
         &mut cached_state,
         &mut cheatnet_state,
-        "PrankCheckerProxy",
+        "CheatCallerAddressCheckerProxy",
         &[],
     );
-    let proxy_selector = felt_selector_from_name("get_prank_checkers_caller_address");
+    let proxy_selector = felt_selector_from_name("get_cheat_caller_address_checkers_caller_address");
     let output = call_contract(
         &mut cached_state,
         &mut cheatnet_state,
         &proxy_address,
         &proxy_selector,
-        &[prank_checker_address.into_()],
+        &[cheat_caller_address_checker_address.into_()],
     );
 
     assert_success(output, &[proxy_address.into_()]);

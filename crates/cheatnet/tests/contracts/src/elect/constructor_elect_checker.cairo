@@ -1,13 +1,13 @@
 use starknet::ContractAddress;
 
 #[starknet::interface]
-trait IConstructorElectChecker<TContractState> {
+trait IConstructorCheatSequencerAddressChecker<TContractState> {
     fn get_stored_sequencer_address(ref self: TContractState) -> ContractAddress;
     fn get_sequencer_address(self: @TContractState) -> ContractAddress;
 }
 
 #[starknet::contract]
-mod ConstructorElectChecker {
+mod ConstructorCheatSequencerAddressChecker {
     use box::BoxTrait;
     use starknet::ContractAddress;
 
@@ -23,7 +23,7 @@ mod ConstructorElectChecker {
     }
 
     #[abi(embed_v0)]
-    impl IConstructorElectChecker of super::IConstructorElectChecker<ContractState> {
+    impl IConstructorCheatSequencerAddressChecker of super::IConstructorCheatSequencerAddressChecker<ContractState> {
         fn get_stored_sequencer_address(ref self: ContractState) -> ContractAddress {
             self.seq_addr.read()
         }

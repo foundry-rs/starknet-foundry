@@ -3,7 +3,7 @@ use cairo_vm::{
     types::relocatable::{MaybeRelocatable, Relocatable},
     vm::vm_core::VirtualMachine,
 };
-use conversions::{felt252::SerializeAsFelt252Vec, FromConv, IntoConv};
+use conversions::{felt252::SerializeAsFelt252Vec, IntoConv};
 
 use crate::{
     runtime_extensions::forge_runtime_extension::cheatcodes::spoof::TxInfoMock, state::CheatedData,
@@ -19,16 +19,16 @@ fn get_cheated_block_info_ptr(
 
     let mut new_block_info = original_block_info.to_owned();
 
-    if let Some(rolled_number) = cheated_data.block_number {
-        new_block_info[0] = MaybeRelocatable::Int(rolled_number.into());
+    if let Some(block_number) = cheated_data.block_number {
+        new_block_info[0] = MaybeRelocatable::Int(block_number.into());
     };
 
-    if let Some(warped_timestamp) = cheated_data.block_timestamp {
-        new_block_info[1] = MaybeRelocatable::Int(warped_timestamp.into());
+    if let Some(block_timestamp) = cheated_data.block_timestamp {
+        new_block_info[1] = MaybeRelocatable::Int(block_timestamp.into());
     }
 
-    if let Some(elected_address) = cheated_data.sequencer_address {
-        new_block_info[2] = MaybeRelocatable::Int(Felt252::from_(elected_address));
+    if let Some(sequencer_address) = cheated_data.sequencer_address {
+        new_block_info[2] = MaybeRelocatable::Int(sequencer_address.into_());
     };
 
     vm.load_data(ptr_cheated_block_info, &new_block_info)
@@ -159,7 +159,7 @@ pub fn get_cheated_exec_info_ptr(
         new_exec_info[2] = MaybeRelocatable::Int(
             (*cheated_data
                 .caller_address
-                .expect("No caller address value found for the pranked contract address")
+                .expect("No caller address value found for the cheat_caller_addressed contract address")
                 .0
                 .key())
             .into_(),
