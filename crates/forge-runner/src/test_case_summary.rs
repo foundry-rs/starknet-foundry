@@ -1,5 +1,5 @@
 use crate::build_trace_data::build_profiler_call_trace;
-use crate::build_trace_data::test_sierra_program_path::TestSierraProgramPath;
+use crate::build_trace_data::test_sierra_program_path::VersionedProgramPath;
 use crate::compiled_runnable::TestCaseRunnable;
 use crate::expected_result::{ExpectedPanicValue, ExpectedTestResult};
 use crate::gas::check_available_gas;
@@ -216,7 +216,7 @@ impl TestCaseSummary<Single> {
         used_resources: UsedResources,
         call_trace: &Rc<RefCell<InternalCallTrace>>,
         contracts_data: &ContractsData,
-        maybe_test_sierra_program_path: &Option<TestSierraProgramPath>,
+        maybe_versioned_program_path: &Option<VersionedProgramPath>,
     ) -> Self {
         let name = test_case.name.clone();
         let msg = extract_result_data(&run_result, &test_case.expected_result);
@@ -233,7 +233,7 @@ impl TestCaseSummary<Single> {
                         trace_data: build_profiler_call_trace(
                             call_trace,
                             contracts_data,
-                            maybe_test_sierra_program_path,
+                            maybe_versioned_program_path,
                         ),
                     };
                     check_available_gas(&test_case.available_gas, summary)
@@ -271,7 +271,7 @@ impl TestCaseSummary<Single> {
                         trace_data: build_profiler_call_trace(
                             call_trace,
                             contracts_data,
-                            maybe_test_sierra_program_path,
+                            maybe_versioned_program_path,
                         ),
                     },
                 },

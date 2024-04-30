@@ -1,3 +1,4 @@
+use crate::compiled_runnable::CrateLocation;
 use anyhow::Context;
 use anyhow::Result;
 use cairo_lang_sierra::program::VersionedProgram;
@@ -7,24 +8,24 @@ use std::fs;
 use std::fs::File;
 use std::io::BufWriter;
 
-pub const TESTS_PROGRAMS_DIR: &str = ".snfoundry_test_code";
+pub const VERSIONED_PROGRAMS_DIR: &str = ".snfoundry_versioned_programs";
 
 /// A path to a file with deserialized [`VersionedProgram`] that comes
 /// from compiled test crate. Needed to provide path to source sierra in
 /// [`trace_data::CairoExecutionInfo`].
 #[derive(Clone)]
-pub struct TestSierraProgramPath(Utf8PathBuf);
+pub struct VersionedProgramPath(Utf8PathBuf);
 
-impl TestSierraProgramPath {
-    pub fn save_sierra_test_program_from_test_crate(
-        versioned_program_from_crate: &VersionedProgram,
-        crate_location: &str,
+impl VersionedProgramPath {
+    pub fn save_versioned_program(
+        versioned_program: &VersionedProgram,
+        crate_location: CrateLocation,
         tests_programs_dir: &Utf8Path,
         package_name: &str,
     ) -> Result<Self> {
         // unique filename since pair (package_name, crate_location) is always unique
         let test_sierra_program_path =
-            tests_programs_dir.join(format!("{package_name}_{crate_location}.sierra.json",));
+            tests_programs_dir.join(format!("{package_name}_{crate_location:?}.sierra.json",));
 
         fs::create_dir_all(test_sierra_program_path.parent().unwrap())
             .context("Failed to create directory for tests sierra programs")?;
@@ -38,7 +39,7 @@ impl TestSierraProgramPath {
             format!("Couldn't lock the output file = {test_sierra_program_path}")
         })?;
         let file = BufWriter::new(&output_file);
-        serde_json::to_writer(file, &versioned_program_from_crate)
+        serde_json::to_writer(file, &versioned_program)
             .context("Failed to serialize VersionedProgram")?;
         output_file.unlock().with_context(|| {
             format!("Couldn't lock the output file = {test_sierra_program_path}")
@@ -48,8 +49,8 @@ impl TestSierraProgramPath {
     }
 }
 
-impl From<TestSierraProgramPath> for Utf8PathBuf {
-    fn from(value: TestSierraProgramPath) -> Self {
+impl From<VersionedProgramPath> for Utf8PathBuf {
+    fn from(value: VersionedProgramPath) -> Self {
         value.0
     }
 }

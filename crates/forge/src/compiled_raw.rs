@@ -1,5 +1,5 @@
 use cairo_lang_sierra::program::VersionedProgram;
-use forge_runner::compiled_runnable::{FuzzerConfig, TestDetails};
+use forge_runner::compiled_runnable::{CrateLocation, FuzzerConfig, TestDetails};
 use forge_runner::expected_result::ExpectedTestResult;
 use serde::Deserialize;
 
@@ -19,14 +19,6 @@ pub struct TestCaseRaw {
     pub fork_config: Option<RawForkConfig>,
     pub fuzzer_config: Option<FuzzerConfig>,
     pub test_details: TestDetails,
-}
-
-#[derive(Debug, PartialEq, Clone, Copy, Deserialize, Hash, Eq)]
-pub enum CrateLocation {
-    /// Main crate in a package
-    Lib,
-    /// Crate in the `tests/` directory
-    Tests,
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]

@@ -5,7 +5,7 @@ use std::marker::PhantomData;
 use std::rc::Rc;
 use std::sync::Arc;
 
-use crate::build_trace_data::test_sierra_program_path::TestSierraProgramPath;
+use crate::build_trace_data::test_sierra_program_path::VersionedProgramPath;
 use crate::compiled_runnable::ValidatedForkConfig;
 use crate::forge_config::{RuntimeConfig, TestRunnerConfig};
 use crate::gas::calculate_used_gas;
@@ -59,7 +59,7 @@ pub fn run_test(
     case: Arc<TestCaseRunnable>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
     test_runner_config: Arc<TestRunnerConfig>,
-    maybe_test_sierra_program_path: Arc<Option<TestSierraProgramPath>>,
+    maybe_versioned_program_path: Arc<Option<VersionedProgramPath>>,
     send: Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary<Single>>> {
     tokio::task::spawn_blocking(move || {
@@ -88,7 +88,7 @@ pub fn run_test(
             &case,
             vec![],
             &test_runner_config.contracts_data,
-            &maybe_test_sierra_program_path,
+            &maybe_versioned_program_path,
         )
     })
 }
@@ -98,7 +98,7 @@ pub(crate) fn run_fuzz_test(
     case: Arc<TestCaseRunnable>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
     test_runner_config: Arc<TestRunnerConfig>,
-    maybe_test_sierra_program_path: Arc<Option<TestSierraProgramPath>>,
+    maybe_versioned_program_path: Arc<Option<VersionedProgramPath>>,
     send: Sender<()>,
     fuzzing_send: Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary<Single>>> {
@@ -129,7 +129,7 @@ pub(crate) fn run_fuzz_test(
             &case,
             args,
             &test_runner_config.contracts_data,
-            &maybe_test_sierra_program_path,
+            &maybe_versioned_program_path,
         )
     })
 }
@@ -356,7 +356,7 @@ fn extract_test_case_summary(
     case: &TestCaseRunnable,
     args: Vec<Felt252>,
     contracts_data: &ContractsData,
-    test_sierra_program_path: &Option<TestSierraProgramPath>,
+    maybe_versioned_program_path: &Option<VersionedProgramPath>,
 ) -> Result<TestCaseSummary<Single>> {
     match run_result {
         Ok(result_with_info) => {
@@ -369,7 +369,7 @@ fn extract_test_case_summary(
                     result_with_info.used_resources,
                     &result_with_info.call_trace,
                     contracts_data,
-                    test_sierra_program_path,
+                    maybe_versioned_program_path,
                 )),
                 // CairoRunError comes from VirtualMachineError which may come from HintException that originates in TestExecutionSyscallHandler
                 Err(RunnerError::CairoRunError(error)) => Ok(TestCaseSummary::Failed {

@@ -1,5 +1,5 @@
 use anyhow::{anyhow, Context, Result};
-use camino::{Utf8Path, Utf8PathBuf};
+use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand, ValueEnum};
 use configuration::load_package_config;
 use forge::scarb::config::ForgeConfigFromScarb;
@@ -20,14 +20,10 @@ use scarb_api::{
     package_matches_version_requirement, target_dir_for_workspace, ScarbCommand,
 };
 use scarb_ui::args::PackagesFilter;
-use std::collections::HashMap;
 
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use forge::block_number_map::BlockNumberMap;
-use forge::compiled_raw::{CompiledTestCrateRaw, CrateLocation};
-use forge_runner::build_trace_data::test_sierra_program_path::{
-    TestSierraProgramPath, TESTS_PROGRAMS_DIR,
-};
+use forge_runner::build_trace_data::test_sierra_program_path::VERSIONED_PROGRAMS_DIR;
 use forge_runner::forge_config::{
     is_vm_trace_needed, ExecutionDataToSave, ForgeConfig, OutputConfig, TestRunnerConfig,
 };
@@ -188,6 +184,7 @@ fn combine_configs(
     max_n_steps: Option<u32>,
     contracts_data: ContractsData,
     cache_dir: Utf8PathBuf,
+    versioned_programs_dir: Utf8PathBuf,
     forge_config_from_scarb: &ForgeConfigFromScarb,
 ) -> ForgeConfig {
     let execution_data_to_save = ExecutionDataToSave::from_flags(
@@ -213,6 +210,7 @@ fn combine_configs(
         output_config: Arc::new(OutputConfig {
             detailed_resources: detailed_resources || forge_config_from_scarb.detailed_resources,
             execution_data_to_save,
+            versioned_programs_dir,
         }),
     }
 }
@@ -241,35 +239,6 @@ fn warn_if_snforge_std_not_compatible(scarb_metadata: &Metadata) -> Result<()> {
         print_as_warning(&anyhow!("Package snforge_std version does not meet the recommended version requirement {snforge_std_version_requirement}, it might result in unexpected behaviour"));
     }
     Ok(())
-}
-
-fn maybe_save_tests_sierra_programs(
-    execution_data_to_save: ExecutionDataToSave,
-    compiled_test_crates: &[CompiledTestCrateRaw],
-    tests_programs_dir: &Utf8Path,
-    package_name: &str,
-) -> Result<HashMap<CrateLocation, TestSierraProgramPath>> {
-    let save_test_sierra_program = match execution_data_to_save {
-        ExecutionDataToSave::Trace | ExecutionDataToSave::TraceAndProfile => true,
-        ExecutionDataToSave::None => false,
-    };
-    let mut map = HashMap::new();
-
-    if save_test_sierra_program {
-        for test_crate in compiled_test_crates {
-            let test_sierra_program_path =
-                TestSierraProgramPath::save_sierra_test_program_from_test_crate(
-                    &test_crate.sierra_program,
-                    &format!("{:?}", test_crate.tests_location),
-                    tests_programs_dir,
-                    package_name,
-                )?;
-
-            map.insert(test_crate.tests_location, test_sierra_program_path);
-        }
-    }
-
-    Ok(map)
 }
 
 #[allow(clippy::too_many_lines)]
@@ -316,7 +285,7 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
             let mut all_failed_tests = vec![];
 
             let cache_dir = workspace_root.join(CACHE_DIR);
-            let tests_programs_dir = workspace_root.join(TESTS_PROGRAMS_DIR);
+            let versioned_programs_dir = workspace_root.join(VERSIONED_PROGRAMS_DIR);
 
             for package in &packages {
                 env::set_current_dir(&package.root)?;
@@ -344,6 +313,7 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                     args.max_n_steps,
                     contracts_data,
                     cache_dir.clone(),
+                    versioned_programs_dir.clone(),
                     &forge_config_from_scarb,
                 ));
 
@@ -356,13 +326,6 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                     workspace_root.join(CACHE_DIR),
                 );
 
-                let test_sierra_program_paths_map = maybe_save_tests_sierra_programs(
-                    forge_config.output_config.execution_data_to_save,
-                    &compiled_test_crates,
-                    &tests_programs_dir,
-                    &package.name,
-                )?;
-
                 let tests_file_summaries = run(
                     compiled_test_crates,
                     &package.name,
@@ -370,7 +333,6 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                     forge_config,
                     &forge_config_from_scarb.fork,
                     &mut block_number_map,
-                    test_sierra_program_paths_map,
                 )
                 .await?;
 
@@ -438,6 +400,7 @@ mod tests {
             None,
             Default::default(),
             Default::default(),
+            Default::default(),
             &Default::default(),
         );
         let config2 = combine_configs(
@@ -448,6 +411,7 @@ mod tests {
             false,
             false,
             None,
+            Default::default(),
             Default::default(),
             Default::default(),
             &Default::default(),
@@ -473,6 +437,7 @@ mod tests {
             None,
             Default::default(),
             Default::default(),
+            Default::default(),
             &Default::default(),
         );
         assert_eq!(
@@ -490,7 +455,8 @@ mod tests {
                 }),
                 output_config: Arc::new(OutputConfig {
                     detailed_resources: false,
-                    execution_data_to_save: ExecutionDataToSave::None
+                    execution_data_to_save: ExecutionDataToSave::None,
+                    versioned_programs_dir: Default::default(),
                 }),
             }
         );
@@ -519,6 +485,7 @@ mod tests {
             None,
             Default::default(),
             Default::default(),
+            Default::default(),
             &config_from_scarb,
         );
         assert_eq!(
@@ -536,7 +503,8 @@ mod tests {
                 }),
                 output_config: Arc::new(OutputConfig {
                     detailed_resources: true,
-                    execution_data_to_save: ExecutionDataToSave::TraceAndProfile
+                    execution_data_to_save: ExecutionDataToSave::TraceAndProfile,
+                    versioned_programs_dir: Default::default(),
                 }),
             }
         );
@@ -564,6 +532,7 @@ mod tests {
             Some(1_000_000),
             Default::default(),
             Default::default(),
+            Default::default(),
             &config_from_scarb,
         );
 
@@ -582,7 +551,8 @@ mod tests {
                 }),
                 output_config: Arc::new(OutputConfig {
                     detailed_resources: true,
-                    execution_data_to_save: ExecutionDataToSave::TraceAndProfile
+                    execution_data_to_save: ExecutionDataToSave::TraceAndProfile,
+                    versioned_programs_dir: Default::default(),
                 }),
             }
         );
