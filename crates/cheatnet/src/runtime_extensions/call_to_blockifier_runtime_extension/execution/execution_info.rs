@@ -159,7 +159,9 @@ pub fn get_cheated_exec_info_ptr(
         new_exec_info[2] = MaybeRelocatable::Int(
             (*cheated_data
                 .caller_address
-                .expect("No caller address value found for the cheat_caller_addressed contract address")
+                .expect(
+                    "No caller address value found for the cheat_caller_addressed contract address",
+                )
                 .0
                 .key())
             .into_(),

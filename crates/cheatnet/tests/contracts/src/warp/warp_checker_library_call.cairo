@@ -13,18 +13,24 @@ trait ICheatBlockTimestampCheckerLibCall<TContractState> {
 
 #[starknet::contract]
 mod CheatBlockTimestampCheckerLibCall {
-    use super::{ICheatBlockTimestampCheckerDispatcherTrait, ICheatBlockTimestampCheckerLibraryDispatcher};
+    use super::{
+        ICheatBlockTimestampCheckerDispatcherTrait, ICheatBlockTimestampCheckerLibraryDispatcher
+    };
     use starknet::ClassHash;
 
     #[storage]
     struct Storage {}
 
     #[abi(embed_v0)]
-    impl ICheatBlockTimestampCheckerLibCall of super::ICheatBlockTimestampCheckerLibCall<ContractState> {
+    impl ICheatBlockTimestampCheckerLibCall of super::ICheatBlockTimestampCheckerLibCall<
+        ContractState
+    > {
         fn get_block_timestamp_with_lib_call(
             ref self: ContractState, class_hash: ClassHash
         ) -> u64 {
-            let cheat_block_timestamp_checker = ICheatBlockTimestampCheckerLibraryDispatcher { class_hash };
+            let cheat_block_timestamp_checker = ICheatBlockTimestampCheckerLibraryDispatcher {
+                class_hash
+            };
             cheat_block_timestamp_checker.get_block_timestamp()
         }
 

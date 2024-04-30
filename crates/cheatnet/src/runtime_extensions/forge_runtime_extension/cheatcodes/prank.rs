@@ -27,7 +27,11 @@ impl CheatnetState {
         });
     }
 
-    pub fn start_cheat_caller_address(&mut self, target: ContractAddress, caller_address: ContractAddress) {
+    pub fn start_cheat_caller_address(
+        &mut self,
+        target: ContractAddress,
+        caller_address: ContractAddress,
+    ) {
         self.cheat_caller_address(target, caller_address, CheatSpan::Indefinite);
     }
 

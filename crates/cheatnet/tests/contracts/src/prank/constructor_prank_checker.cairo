@@ -22,7 +22,9 @@ mod ConstructorCheatCallerAddressChecker {
     }
 
     #[abi(embed_v0)]
-    impl IConstructorCheatCallerAddressChecker of super::IConstructorCheatCallerAddressChecker<ContractState> {
+    impl IConstructorCheatCallerAddressChecker of super::IConstructorCheatCallerAddressChecker<
+        ContractState
+    > {
         fn get_stored_caller_address(ref self: ContractState) -> ContractAddress {
             self.caller_address.read()
         }

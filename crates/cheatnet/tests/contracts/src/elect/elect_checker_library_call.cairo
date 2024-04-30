@@ -15,18 +15,24 @@ trait ICheatSequencerAddressCheckerLibCall<TContractState> {
 
 #[starknet::contract]
 mod CheatSequencerAddressCheckerLibCall {
-    use super::{ICheatSequencerAddressCheckerDispatcherTrait, ICheatSequencerAddressCheckerLibraryDispatcher};
+    use super::{
+        ICheatSequencerAddressCheckerDispatcherTrait, ICheatSequencerAddressCheckerLibraryDispatcher
+    };
     use starknet::{ClassHash, ContractAddress};
 
     #[storage]
     struct Storage {}
 
     #[abi(embed_v0)]
-    impl ICheatSequencerAddressCheckerLibCall of super::ICheatSequencerAddressCheckerLibCall<ContractState> {
+    impl ICheatSequencerAddressCheckerLibCall of super::ICheatSequencerAddressCheckerLibCall<
+        ContractState
+    > {
         fn get_sequencer_address_with_lib_call(
             self: @ContractState, class_hash: ClassHash
         ) -> ContractAddress {
-            let cheat_sequencer_address_checker = ICheatSequencerAddressCheckerLibraryDispatcher { class_hash };
+            let cheat_sequencer_address_checker = ICheatSequencerAddressCheckerLibraryDispatcher {
+                class_hash
+            };
             cheat_sequencer_address_checker.get_sequencer_address()
         }
 

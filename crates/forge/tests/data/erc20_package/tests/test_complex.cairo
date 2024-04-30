@@ -1,7 +1,9 @@
 use starknet::ContractAddress;
 use starknet::Felt252TryIntoContractAddress;
 
-use snforge_std::{declare, ContractClassTrait, test_address, start_cheat_caller_address, stop_cheat_caller_address};
+use snforge_std::{
+    declare, ContractClassTrait, test_address, start_cheat_caller_address, stop_cheat_caller_address
+};
 
 use erc20_package::erc20::IERC20Dispatcher;
 use erc20_package::erc20::IERC20DispatcherTrait;

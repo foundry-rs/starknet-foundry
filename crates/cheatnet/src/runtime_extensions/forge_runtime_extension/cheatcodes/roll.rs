@@ -6,7 +6,12 @@ use crate::CheatnetState;
 use starknet_api::core::ContractAddress;
 
 impl CheatnetState {
-    pub fn cheat_block_number(&mut self, contract_address: ContractAddress, block_number: u64, span: CheatSpan) {
+    pub fn cheat_block_number(
+        &mut self,
+        contract_address: ContractAddress,
+        block_number: u64,
+        span: CheatSpan,
+    ) {
         self.cheat_execution_info(ExecutionInfoMockOperations {
             block_info: BlockInfoMockOperations {
                 block_number: Operation::Start(CheatArguments {
@@ -30,7 +35,11 @@ impl CheatnetState {
         });
     }
 
-    pub fn start_cheat_block_number(&mut self, contract_address: ContractAddress, block_number: u64) {
+    pub fn start_cheat_block_number(
+        &mut self,
+        contract_address: ContractAddress,
+        block_number: u64,
+    ) {
         self.cheat_block_number(contract_address, block_number, CheatSpan::Indefinite);
     }
 

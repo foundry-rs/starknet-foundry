@@ -19,7 +19,9 @@ mod ConstructorCheatBlockTimestampChecker {
     }
 
     #[abi(embed_v0)]
-    impl IConstructorCheatBlockTimestampChecker of super::IConstructorCheatBlockTimestampChecker<ContractState> {
+    impl IConstructorCheatBlockTimestampChecker of super::IConstructorCheatBlockTimestampChecker<
+        ContractState
+    > {
         fn get_stored_block_timestamp(ref self: ContractState) -> u64 {
             self.blk_timestamp.read()
         }

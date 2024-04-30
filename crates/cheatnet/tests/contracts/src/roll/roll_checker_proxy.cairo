@@ -7,7 +7,9 @@ trait ICheatBlockNumberChecker<TContractState> {
 
 #[starknet::interface]
 trait ICheatBlockNumberCheckerProxy<TContractState> {
-    fn get_cheat_block_number_checkers_block_number(self: @TContractState, address: ContractAddress) -> u64;
+    fn get_cheat_block_number_checkers_block_number(
+        self: @TContractState, address: ContractAddress
+    ) -> u64;
     fn get_block_number(self: @TContractState) -> u64;
     fn call_proxy(self: @TContractState, address: ContractAddress) -> (u64, u64);
 }
@@ -26,8 +28,12 @@ mod CheatBlockNumberCheckerProxy {
 
     #[abi(embed_v0)]
     impl ICheatBlockNumberCheckerProxy of super::ICheatBlockNumberCheckerProxy<ContractState> {
-        fn get_cheat_block_number_checkers_block_number(self: @ContractState, address: ContractAddress) -> u64 {
-            let cheat_block_number_checker = ICheatBlockNumberCheckerDispatcher { contract_address: address };
+        fn get_cheat_block_number_checkers_block_number(
+            self: @ContractState, address: ContractAddress
+        ) -> u64 {
+            let cheat_block_number_checker = ICheatBlockNumberCheckerDispatcher {
+                contract_address: address
+            };
             cheat_block_number_checker.get_block_number()
         }
 
@@ -38,7 +44,8 @@ mod CheatBlockNumberCheckerProxy {
         fn call_proxy(self: @ContractState, address: ContractAddress) -> (u64, u64) {
             let dispatcher = ICheatBlockNumberCheckerProxyDispatcher { contract_address: address };
             let block_number = self.get_block_number();
-            let res = dispatcher.get_cheat_block_number_checkers_block_number(get_contract_address());
+            let res = dispatcher
+                .get_cheat_block_number_checkers_block_number(get_contract_address());
             (block_number, res)
         }
     }

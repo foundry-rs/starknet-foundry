@@ -13,18 +13,24 @@ trait ICheatCallerAddressCheckerLibCall<TContractState> {
 
 #[starknet::contract]
 mod CheatCallerAddressCheckerLibCall {
-    use super::{ICheatCallerAddressCheckerDispatcherTrait, ICheatCallerAddressCheckerLibraryDispatcher};
+    use super::{
+        ICheatCallerAddressCheckerDispatcherTrait, ICheatCallerAddressCheckerLibraryDispatcher
+    };
     use starknet::ClassHash;
 
     #[storage]
     struct Storage {}
 
     #[abi(embed_v0)]
-    impl ICheatCallerAddressCheckerLibCall of super::ICheatCallerAddressCheckerLibCall<ContractState> {
+    impl ICheatCallerAddressCheckerLibCall of super::ICheatCallerAddressCheckerLibCall<
+        ContractState
+    > {
         fn get_caller_address_with_lib_call(
             ref self: ContractState, class_hash: ClassHash
         ) -> felt252 {
-            let cheat_caller_address_checker = ICheatCallerAddressCheckerLibraryDispatcher { class_hash };
+            let cheat_caller_address_checker = ICheatCallerAddressCheckerLibraryDispatcher {
+                class_hash
+            };
             cheat_caller_address_checker.get_caller_address()
         }
 

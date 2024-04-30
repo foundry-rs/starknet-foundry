@@ -181,7 +181,9 @@ fn stop_cheat_block_timestamp(target: ContractAddress) {
 /// `target` - instance of `ContractAddress` specifying which contracts to cheat_sequencer_address
 /// `sequencer_address` - sequencer address to be set
 /// `span` - instance of `CheatSpan` specifying the number of target calls with the cheat applied
-fn cheat_sequencer_address(target: ContractAddress, sequencer_address: ContractAddress, span: CheatSpan) {
+fn cheat_sequencer_address(
+    target: ContractAddress, sequencer_address: ContractAddress, span: CheatSpan
+) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info

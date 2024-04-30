@@ -15,7 +15,11 @@ trait CheatSequencerAddressTrait {
         sequencer_address: u128,
         span: CheatSpan,
     );
-    fn start_cheat_sequencer_address(&mut self, contract_address: ContractAddress, sequencer_address: u128);
+    fn start_cheat_sequencer_address(
+        &mut self,
+        contract_address: ContractAddress,
+        sequencer_address: u128,
+    );
     fn stop_cheat_sequencer_address(&mut self, contract_address: ContractAddress);
 }
 
@@ -33,13 +37,20 @@ impl CheatSequencerAddressTrait for TestEnvironment {
         );
     }
 
-    fn start_cheat_sequencer_address(&mut self, contract_address: ContractAddress, sequencer_address: u128) {
-        self.cheatnet_state
-            .start_cheat_sequencer_address(contract_address, ContractAddress::from(sequencer_address));
+    fn start_cheat_sequencer_address(
+        &mut self,
+        contract_address: ContractAddress,
+        sequencer_address: u128,
+    ) {
+        self.cheatnet_state.start_cheat_sequencer_address(
+            contract_address,
+            ContractAddress::from(sequencer_address),
+        );
     }
 
     fn stop_cheat_sequencer_address(&mut self, contract_address: ContractAddress) {
-        self.cheatnet_state.stop_cheat_sequencer_address(contract_address);
+        self.cheatnet_state
+            .stop_cheat_sequencer_address(contract_address);
     }
 }
 
@@ -104,7 +115,9 @@ fn cheat_sequencer_address_stop() {
         &[Felt252::from(123)],
     );
 
-    test_env.cheatnet_state.stop_cheat_sequencer_address(contract_address);
+    test_env
+        .cheatnet_state
+        .stop_cheat_sequencer_address(contract_address);
 
     assert_success(
         test_env.call_contract(&contract_address, "get_sequencer_address", &[]),
@@ -188,7 +201,9 @@ fn cheat_sequencer_address_all_simple() {
 
     let contract_address = test_env.deploy("CheatSequencerAddressChecker", &[]);
 
-    test_env.cheatnet_state.cheat_sequencer_address_global(123_u8.into());
+    test_env
+        .cheatnet_state
+        .cheat_sequencer_address_global(123_u8.into());
 
     assert_success(
         test_env.call_contract(&contract_address, "get_sequencer_address", &[]),
@@ -202,7 +217,9 @@ fn cheat_sequencer_address_all_then_one() {
 
     let contract_address = test_env.deploy("CheatSequencerAddressChecker", &[]);
 
-    test_env.cheatnet_state.cheat_sequencer_address_global(111_u8.into());
+    test_env
+        .cheatnet_state
+        .cheat_sequencer_address_global(111_u8.into());
 
     test_env.start_cheat_sequencer_address(contract_address, 222);
 
@@ -219,7 +236,9 @@ fn cheat_sequencer_address_one_then_all() {
     let contract_address = test_env.deploy("CheatSequencerAddressChecker", &[]);
 
     test_env.start_cheat_sequencer_address(contract_address, 111);
-    test_env.cheatnet_state.cheat_sequencer_address_global(222_u8.into());
+    test_env
+        .cheatnet_state
+        .cheat_sequencer_address_global(222_u8.into());
 
     assert_success(
         test_env.call_contract(&contract_address, "get_sequencer_address", &[]),
@@ -231,17 +250,22 @@ fn cheat_sequencer_address_one_then_all() {
 fn cheat_sequencer_address_all_stop() {
     let mut test_env = TestEnvironment::new();
 
-    let cheat_sequencer_address_checker = test_env.declare("CheatSequencerAddressChecker", &get_contracts());
+    let cheat_sequencer_address_checker =
+        test_env.declare("CheatSequencerAddressChecker", &get_contracts());
     let contract_address = test_env.deploy_wrapper(&cheat_sequencer_address_checker, &[]);
 
-    test_env.cheatnet_state.cheat_sequencer_address_global(123_u8.into());
+    test_env
+        .cheatnet_state
+        .cheat_sequencer_address_global(123_u8.into());
 
     assert_success(
         test_env.call_contract(&contract_address, "get_sequencer_address", &[]),
         &[Felt252::from(123)],
     );
 
-    test_env.cheatnet_state.stop_cheat_sequencer_address_global();
+    test_env
+        .cheatnet_state
+        .stop_cheat_sequencer_address_global();
 
     assert_success(
         test_env.call_contract(&contract_address, "get_sequencer_address", &[]),
@@ -278,8 +302,12 @@ fn cheat_sequencer_address_multiple() {
         &[Felt252::from(123)],
     );
 
-    test_env.cheatnet_state.stop_cheat_sequencer_address(contract_address1);
-    test_env.cheatnet_state.stop_cheat_sequencer_address(contract_address2);
+    test_env
+        .cheatnet_state
+        .stop_cheat_sequencer_address(contract_address1);
+    test_env
+        .cheatnet_state
+        .stop_cheat_sequencer_address(contract_address2);
 
     assert_success(
         test_env.call_contract(&contract_address1, "get_sequencer_address", &[]),

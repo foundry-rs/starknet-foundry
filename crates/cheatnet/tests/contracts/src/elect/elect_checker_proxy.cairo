@@ -29,11 +29,15 @@ mod CheatSequencerAddressCheckerProxy {
     struct Storage {}
 
     #[abi(embed_v0)]
-    impl ICheatSequencerAddressCheckerProxy of super::ICheatSequencerAddressCheckerProxy<ContractState> {
+    impl ICheatSequencerAddressCheckerProxy of super::ICheatSequencerAddressCheckerProxy<
+        ContractState
+    > {
         fn get_cheat_sequencer_address_checkers_seq_addr(
             self: @ContractState, address: ContractAddress
         ) -> ContractAddress {
-            let cheat_sequencer_address_checker = ICheatSequencerAddressCheckerDispatcher { contract_address: address };
+            let cheat_sequencer_address_checker = ICheatSequencerAddressCheckerDispatcher {
+                contract_address: address
+            };
             cheat_sequencer_address_checker.get_sequencer_address()
         }
 
@@ -44,9 +48,12 @@ mod CheatSequencerAddressCheckerProxy {
         fn call_proxy(
             self: @ContractState, address: ContractAddress
         ) -> (ContractAddress, ContractAddress) {
-            let dispatcher = ICheatSequencerAddressCheckerProxyDispatcher { contract_address: address };
+            let dispatcher = ICheatSequencerAddressCheckerProxyDispatcher {
+                contract_address: address
+            };
             let sequencer_address = self.get_sequencer_address();
-            let res = dispatcher.get_cheat_sequencer_address_checkers_seq_addr(get_contract_address());
+            let res = dispatcher
+                .get_cheat_sequencer_address_checkers_seq_addr(get_contract_address());
             (sequencer_address, res)
         }
     }

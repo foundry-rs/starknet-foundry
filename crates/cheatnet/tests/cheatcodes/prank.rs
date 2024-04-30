@@ -19,15 +19,28 @@ use crate::common::state::create_fork_cached_state_at;
 use conversions::string::TryFromHexStr;
 
 trait CheatCallerAddressTrait {
-    fn cheat_caller_address(&mut self, contract_address: ContractAddress, new_address: u128, span: CheatSpan);
+    fn cheat_caller_address(
+        &mut self,
+        contract_address: ContractAddress,
+        new_address: u128,
+        span: CheatSpan,
+    );
     fn start_cheat_caller_address(&mut self, contract_address: ContractAddress, new_address: u128);
     fn stop_cheat_caller_address(&mut self, contract_address: ContractAddress);
 }
 
 impl CheatCallerAddressTrait for TestEnvironment {
-    fn cheat_caller_address(&mut self, contract_address: ContractAddress, new_address: u128, span: CheatSpan) {
-        self.cheatnet_state
-            .cheat_caller_address(contract_address, ContractAddress::from(new_address), span);
+    fn cheat_caller_address(
+        &mut self,
+        contract_address: ContractAddress,
+        new_address: u128,
+        span: CheatSpan,
+    ) {
+        self.cheatnet_state.cheat_caller_address(
+            contract_address,
+            ContractAddress::from(new_address),
+            span,
+        );
     }
 
     fn start_cheat_caller_address(&mut self, contract_address: ContractAddress, new_address: u128) {
@@ -36,7 +49,8 @@ impl CheatCallerAddressTrait for TestEnvironment {
     }
 
     fn stop_cheat_caller_address(&mut self, contract_address: ContractAddress) {
-        self.cheatnet_state.stop_cheat_caller_address(contract_address);
+        self.cheatnet_state
+            .stop_cheat_caller_address(contract_address);
     }
 }
 
@@ -181,10 +195,13 @@ fn cheat_caller_address_library_call() {
 fn cheat_caller_address_all() {
     let mut test_env = TestEnvironment::new();
 
-    let cheat_caller_address_checker = test_env.declare("CheatCallerAddressChecker", &get_contracts());
+    let cheat_caller_address_checker =
+        test_env.declare("CheatCallerAddressChecker", &get_contracts());
     let contract_address = test_env.deploy_wrapper(&cheat_caller_address_checker, &[]);
 
-    test_env.cheatnet_state.cheat_caller_address_global(123_u8.into());
+    test_env
+        .cheatnet_state
+        .cheat_caller_address_global(123_u8.into());
 
     assert_success(
         test_env.call_contract(&contract_address, "get_caller_address", &[]),
@@ -228,8 +245,12 @@ fn cheat_caller_address_multiple() {
         &[Felt252::from(123)],
     );
 
-    test_env.cheatnet_state.stop_cheat_caller_address(contract_address1);
-    test_env.cheatnet_state.stop_cheat_caller_address(contract_address2);
+    test_env
+        .cheatnet_state
+        .stop_cheat_caller_address(contract_address1);
+    test_env
+        .cheatnet_state
+        .stop_cheat_caller_address(contract_address2);
 
     assert_success(
         test_env.call_contract(&contract_address1, "get_caller_address", &[]),
@@ -247,7 +268,9 @@ fn cheat_caller_address_all_then_one() {
 
     let contract_address = test_env.deploy("CheatCallerAddressChecker", &[]);
 
-    test_env.cheatnet_state.cheat_caller_address_global(111_u8.into());
+    test_env
+        .cheatnet_state
+        .cheat_caller_address_global(111_u8.into());
     test_env.start_cheat_caller_address(contract_address, 222);
 
     assert_success(
@@ -263,7 +286,9 @@ fn cheat_caller_address_one_then_all() {
     let contract_address = test_env.deploy("CheatCallerAddressChecker", &[]);
 
     test_env.start_cheat_caller_address(contract_address, 111);
-    test_env.cheatnet_state.cheat_caller_address_global(222_u8.into());
+    test_env
+        .cheatnet_state
+        .cheat_caller_address_global(222_u8.into());
 
     assert_success(
         test_env.call_contract(&contract_address, "get_caller_address", &[]),

@@ -9,22 +9,35 @@ use super::test_environment::TestEnvironment;
 const DEFAULT_BLOCK_TIMESTAMP: u64 = 0;
 
 trait CheatBlockTimestampTrait {
-    fn cheat_block_timestamp(&mut self, contract_address: ContractAddress, timestamp: u64, span: CheatSpan);
+    fn cheat_block_timestamp(
+        &mut self,
+        contract_address: ContractAddress,
+        timestamp: u64,
+        span: CheatSpan,
+    );
     fn start_cheat_block_timestamp(&mut self, contract_address: ContractAddress, timestamp: u64);
     fn stop_cheat_block_timestamp(&mut self, contract_address: ContractAddress);
 }
 
 impl CheatBlockTimestampTrait for TestEnvironment {
-    fn cheat_block_timestamp(&mut self, contract_address: ContractAddress, timestamp: u64, span: CheatSpan) {
-        self.cheatnet_state.cheat_block_timestamp(contract_address, timestamp, span);
+    fn cheat_block_timestamp(
+        &mut self,
+        contract_address: ContractAddress,
+        timestamp: u64,
+        span: CheatSpan,
+    ) {
+        self.cheatnet_state
+            .cheat_block_timestamp(contract_address, timestamp, span);
     }
 
     fn start_cheat_block_timestamp(&mut self, contract_address: ContractAddress, timestamp: u64) {
-        self.cheatnet_state.start_cheat_block_timestamp(contract_address, timestamp);
+        self.cheatnet_state
+            .start_cheat_block_timestamp(contract_address, timestamp);
     }
 
     fn stop_cheat_block_timestamp(&mut self, contract_address: ContractAddress) {
-        self.cheatnet_state.stop_cheat_block_timestamp(contract_address);
+        self.cheatnet_state
+            .stop_cheat_block_timestamp(contract_address);
     }
 }
 
@@ -205,7 +218,8 @@ fn cheat_block_timestamp_one_then_all() {
 fn cheat_block_timestamp_all_stop() {
     let mut test_env = TestEnvironment::new();
 
-    let cheat_block_timestamp_checker = test_env.declare("CheatBlockTimestampChecker", &get_contracts());
+    let cheat_block_timestamp_checker =
+        test_env.declare("CheatBlockTimestampChecker", &get_contracts());
 
     let contract_address = test_env.deploy_wrapper(&cheat_block_timestamp_checker, &[]);
 
@@ -241,8 +255,12 @@ fn cheat_block_timestamp_multiple() {
     let contract_address1 = test_env.deploy_wrapper(&class_hash, &[]);
     let contract_address2 = test_env.deploy_wrapper(&class_hash, &[]);
 
-    test_env.cheatnet_state.start_cheat_block_timestamp(contract_address1, 123);
-    test_env.cheatnet_state.start_cheat_block_timestamp(contract_address2, 123);
+    test_env
+        .cheatnet_state
+        .start_cheat_block_timestamp(contract_address1, 123);
+    test_env
+        .cheatnet_state
+        .start_cheat_block_timestamp(contract_address2, 123);
 
     assert_success(
         test_env.call_contract(&contract_address1, "get_block_timestamp", &[]),
@@ -253,8 +271,12 @@ fn cheat_block_timestamp_multiple() {
         &[Felt252::from(123)],
     );
 
-    test_env.cheatnet_state.stop_cheat_block_timestamp(contract_address1);
-    test_env.cheatnet_state.stop_cheat_block_timestamp(contract_address2);
+    test_env
+        .cheatnet_state
+        .stop_cheat_block_timestamp(contract_address1);
+    test_env
+        .cheatnet_state
+        .stop_cheat_block_timestamp(contract_address2);
 
     assert_success(
         test_env.call_contract(&contract_address1, "get_block_timestamp", &[]),

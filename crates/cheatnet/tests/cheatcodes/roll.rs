@@ -8,13 +8,23 @@ use starknet_api::core::ContractAddress;
 use super::test_environment::TestEnvironment;
 
 trait CheatBlockNumberTrait {
-    fn cheat_block_number(&mut self, contract_address: ContractAddress, block_number: u64, span: CheatSpan);
+    fn cheat_block_number(
+        &mut self,
+        contract_address: ContractAddress,
+        block_number: u64,
+        span: CheatSpan,
+    );
     fn start_cheat_block_number(&mut self, contract_address: ContractAddress, block_number: u64);
     fn stop_cheat_block_number(&mut self, contract_address: ContractAddress);
 }
 
 impl CheatBlockNumberTrait for TestEnvironment {
-    fn cheat_block_number(&mut self, contract_address: ContractAddress, block_number: u64, span: CheatSpan) {
+    fn cheat_block_number(
+        &mut self,
+        contract_address: ContractAddress,
+        block_number: u64,
+        span: CheatSpan,
+    ) {
         self.cheatnet_state
             .cheat_block_number(contract_address, block_number, span);
     }
@@ -25,7 +35,8 @@ impl CheatBlockNumberTrait for TestEnvironment {
     }
 
     fn stop_cheat_block_number(&mut self, contract_address: ContractAddress) {
-        self.cheatnet_state.stop_cheat_block_number(contract_address);
+        self.cheatnet_state
+            .stop_cheat_block_number(contract_address);
     }
 }
 
@@ -238,8 +249,12 @@ fn cheat_block_number_multiple() {
     let contract_address1 = test_env.deploy_wrapper(&class_hash, &[]);
     let contract_address2 = test_env.deploy_wrapper(&class_hash, &[]);
 
-    test_env.cheatnet_state.start_cheat_block_number(contract_address1, 123);
-    test_env.cheatnet_state.start_cheat_block_number(contract_address2, 123);
+    test_env
+        .cheatnet_state
+        .start_cheat_block_number(contract_address1, 123);
+    test_env
+        .cheatnet_state
+        .start_cheat_block_number(contract_address2, 123);
 
     assert_success(
         test_env.call_contract(&contract_address1, "get_block_number", &[]),
@@ -250,8 +265,12 @@ fn cheat_block_number_multiple() {
         &[Felt252::from(123)],
     );
 
-    test_env.cheatnet_state.stop_cheat_block_number(contract_address1);
-    test_env.cheatnet_state.stop_cheat_block_number(contract_address2);
+    test_env
+        .cheatnet_state
+        .stop_cheat_block_number(contract_address1);
+    test_env
+        .cheatnet_state
+        .stop_cheat_block_number(contract_address2);
 
     assert_success(
         test_env.call_contract(&contract_address1, "get_block_number", &[]),
