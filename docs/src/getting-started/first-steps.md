@@ -34,8 +34,8 @@ $ snforge test
 Collected 2 test(s) from test_name package
 Running 0 test(s) from src/
 Running 2 test(s) from tests/
-[PASS] tests::test_contract::test_increase_balance
-[PASS] tests::test_contract::test_cannot_increase_balance_with_zero_value
+[PASS] tests::test_contract::test_cannot_increase_balance_with_zero_value (gas: ~104)
+[PASS] tests::test_contract::test_increase_balance (gas: ~170)
 Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ```
 
@@ -50,14 +50,14 @@ Add the following line under `[dev-dependencies]` section in the `Scarb.toml` fi
 # ...
 
 [dev-dependencies]
-snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.12.0" }
+snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry", tag = "v0.22.0" }
 ```
 
 Make sure that the version in `tag` matches `snforge`. You can check the currently installed version with
 
 ```shell
 $ snforge --version
-snforge 0.12.0
+snforge 0.22.0
 ```
 
 It is also possible to add this dependency
@@ -68,7 +68,7 @@ command.
 $ scarb add snforge_std \ 
  --dev \
  --git https://github.com/foundry-rs/starknet-foundry.git \
- --tag v0.12.0
+ --tag v0.22.0
 ```
 
 Additionally, ensure that starknet-contract target is enabled in the `Scarb.toml` file.
