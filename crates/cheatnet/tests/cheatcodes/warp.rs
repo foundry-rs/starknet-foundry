@@ -133,7 +133,7 @@ fn cheat_block_timestamp_proxy() {
 
     let contract_address = test_env.deploy("CheatBlockTimestampChecker", &[]);
     let proxy_address = test_env.deploy("CheatBlockTimestampCheckerProxy", &[]);
-    let proxy_selector = "get_cheat_block_timestamp_checkers_block_timestamp";
+    let proxy_selector = "get_cheated_block_timestamp";
 
     test_env.start_cheat_block_timestamp(contract_address, 123);
 

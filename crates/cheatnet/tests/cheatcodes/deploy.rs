@@ -114,7 +114,7 @@ fn call_predefined_contract_from_proxy_contract() {
         &[],
     );
     let proxy_selector =
-        felt_selector_from_name("get_cheat_caller_address_checkers_caller_address");
+        felt_selector_from_name("get_cheated_caller_address");
     let output = call_contract(
         &mut cached_state,
         &mut cheatnet_state,

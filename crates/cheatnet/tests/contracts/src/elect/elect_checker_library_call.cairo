@@ -30,10 +30,10 @@ mod CheatSequencerAddressCheckerLibCall {
         fn get_sequencer_address_with_lib_call(
             self: @ContractState, class_hash: ClassHash
         ) -> ContractAddress {
-            let cheat_sequencer_address_checker = ICheatSequencerAddressCheckerLibraryDispatcher {
+            let sequencer_address_checker = ICheatSequencerAddressCheckerLibraryDispatcher {
                 class_hash
             };
-            cheat_sequencer_address_checker.get_sequencer_address()
+            sequencer_address_checker.get_sequencer_address()
         }
 
         fn get_sequencer_address(self: @ContractState) -> ContractAddress {

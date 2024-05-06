@@ -8,9 +8,7 @@ trait ICheatCallerAddressChecker<TContractState> {
 
 #[starknet::interface]
 trait ICheatCallerAddressCheckerProxy<TContractState> {
-    fn get_cheat_caller_address_checkers_caller_address(
-        self: @TContractState, address: ContractAddress
-    ) -> felt252;
+    fn get_cheated_caller_address(self: @TContractState, address: ContractAddress) -> felt252;
     fn get_caller_address(self: @TContractState) -> felt252;
     fn call_proxy(self: @TContractState, address: ContractAddress) -> (felt252, felt252);
 }
@@ -29,9 +27,7 @@ mod CheatCallerAddressCheckerProxy {
 
     #[abi(embed_v0)]
     impl ICheatCallerAddressCheckerProxy of super::ICheatCallerAddressCheckerProxy<ContractState> {
-        fn get_cheat_caller_address_checkers_caller_address(
-            self: @ContractState, address: ContractAddress
-        ) -> felt252 {
+        fn get_cheated_caller_address(self: @ContractState, address: ContractAddress) -> felt252 {
             let cheat_caller_address_checker = ICheatCallerAddressCheckerDispatcher {
                 contract_address: address
             };
@@ -47,8 +43,7 @@ mod CheatCallerAddressCheckerProxy {
                 contract_address: address
             };
             let caller_address: felt252 = get_caller_address().into();
-            let res = dispatcher
-                .get_cheat_caller_address_checkers_caller_address(get_contract_address());
+            let res = dispatcher.get_cheated_caller_address(get_contract_address());
             (caller_address, res)
         }
     }

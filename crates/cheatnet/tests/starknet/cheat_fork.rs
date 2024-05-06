@@ -46,7 +46,7 @@ fn cheat_caller_address_cairo0_contract(selector: &str) {
     let CallResult::Success { ret_data } = output else {
         panic!("Wrong call output")
     };
-    let cheat_caller_addressed_caller = &ret_data[0];
+    let cheated_caller_address = &ret_data[0];
 
     cheatnet_state.stop_cheat_caller_address(contract_address);
 
@@ -60,10 +60,10 @@ fn cheat_caller_address_cairo0_contract(selector: &str) {
     let CallResult::Success { ret_data } = output else {
         panic!("Wrong call output")
     };
-    let uncheat_caller_addressed_caller = &ret_data[0];
+    let uncheated_caller_address = &ret_data[0];
 
-    assert_eq!(cheat_caller_addressed_caller, &Felt252::from(123));
-    assert_eq!(uncheat_caller_addressed_caller, caller);
+    assert_eq!(cheated_caller_address, &Felt252::from(123));
+    assert_eq!(uncheated_caller_address, caller);
 }
 
 #[test_case("return_block_number"; "when common call")]
@@ -100,7 +100,7 @@ fn cheat_block_number_cairo0_contract(selector: &str) {
     let CallResult::Success { ret_data } = output else {
         panic!("Wrong call output")
     };
-    let cheat_block_numbered_block_number = &ret_data[0];
+    let cheated_block_number = &ret_data[0];
 
     cheatnet_state.stop_cheat_block_number(contract_address);
 
@@ -114,10 +114,10 @@ fn cheat_block_number_cairo0_contract(selector: &str) {
     let CallResult::Success { ret_data } = output else {
         panic!("Wrong call output")
     };
-    let uncheat_block_numbered_block_number = &ret_data[0];
+    let uncheated_block_number = &ret_data[0];
 
-    assert_eq!(cheat_block_numbered_block_number, &Felt252::from(123));
-    assert_eq!(uncheat_block_numbered_block_number, block_number);
+    assert_eq!(cheated_block_number, &Felt252::from(123));
+    assert_eq!(uncheated_block_number, block_number);
 }
 
 #[test_case("return_block_timestamp"; "when common call")]
@@ -153,7 +153,7 @@ fn cheat_block_timestamp_cairo0_contract(selector: &str) {
     let CallResult::Success { ret_data } = output else {
         panic!("Wrong call output")
     };
-    let cheat_block_timestamped_block_timestamp = &ret_data[0];
+    let cheated_block_timestamp = &ret_data[0];
 
     cheatnet_state.stop_cheat_block_timestamp(contract_address);
 
@@ -167,8 +167,8 @@ fn cheat_block_timestamp_cairo0_contract(selector: &str) {
     let CallResult::Success { ret_data } = output else {
         panic!("Wrong call output")
     };
-    let uncheat_block_timestamped_block_timestamp = &ret_data[0];
+    let uncheated_block_timestamp = &ret_data[0];
 
-    assert_eq!(cheat_block_timestamped_block_timestamp, &Felt252::from(123));
-    assert_eq!(uncheat_block_timestamped_block_timestamp, block_timestamp);
+    assert_eq!(cheated_block_timestamp, &Felt252::from(123));
+    assert_eq!(uncheated_block_timestamp, block_timestamp);
 }

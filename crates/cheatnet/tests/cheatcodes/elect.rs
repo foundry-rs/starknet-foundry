@@ -156,7 +156,7 @@ fn cheat_sequencer_address_proxy() {
 
     test_env.start_cheat_sequencer_address(contract_address, 123);
 
-    let selector = "get_cheat_sequencer_address_checkers_seq_addr";
+    let selector = "get_cheated_sequencer_address";
     assert_success(
         test_env.call_contract(&proxy_address, selector, &[contract_address.into_()]),
         &[Felt252::from(123)],

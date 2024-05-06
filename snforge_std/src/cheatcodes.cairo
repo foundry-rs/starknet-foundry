@@ -222,7 +222,7 @@ fn start_cheat_sequencer_address(target: ContractAddress, sequencer_address: Con
 
 
 /// Cancels the `cheat_sequencer_address` / `start_cheat_sequencer_address` for the given target.
-/// - `target` - instance of `ContractAddress` specifying which contracts to stop cheat_sequencer_addressing
+/// - `target` - instance of `ContractAddress` specifying which contracts to stop cheating sequencer address
 fn stop_cheat_sequencer_address(target: ContractAddress) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 

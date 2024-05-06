@@ -25,7 +25,7 @@ fn cheat_caller_address_cairo0_contract() {
 
                 start_cheat_caller_address(test_address(), 123.try_into().unwrap());
 
-                let cheat_caller_addressed_caller = starknet::library_call_syscall(
+                let cheated_caller_address = starknet::library_call_syscall(
                     CAIRO0_CLASS_HASH.try_into().unwrap(),
                     LIB_CALL_SELECTOR,
                     array![].span(),
@@ -33,14 +33,14 @@ fn cheat_caller_address_cairo0_contract() {
 
                 stop_cheat_caller_address(test_address());
 
-                let uncheat_caller_addressed_caller = starknet::library_call_syscall(
+                let uncheated_caller_address = starknet::library_call_syscall(
                     CAIRO0_CLASS_HASH.try_into().unwrap(),
                     LIB_CALL_SELECTOR,
                     array![].span(),
                 ).unwrap_syscall()[0];
 
-                assert(*cheat_caller_addressed_caller == 123, 'does not work');
-                assert(uncheat_caller_addressed_caller == caller, 'does not work');
+                assert(*cheated_caller_address == 123, 'does not work');
+                assert(uncheated_caller_address == caller, 'does not work');
             }}
         "#,
         node_rpc_url().unwrap(),
@@ -73,7 +73,7 @@ fn cheat_block_number_cairo0_contract() {
 
                 start_cheat_block_number(test_address(), 123);
 
-                let cheat_block_numbered_block_number = starknet::library_call_syscall(
+                let cheated_block_number = starknet::library_call_syscall(
                     CAIRO0_CLASS_HASH.try_into().unwrap(),
                     LIB_CALL_SELECTOR,
                     array![].span(),
@@ -81,14 +81,14 @@ fn cheat_block_number_cairo0_contract() {
 
                 stop_cheat_block_number(test_address());
 
-                let uncheat_block_numbered_block_number = starknet::library_call_syscall(
+                let uncheated_block_number = starknet::library_call_syscall(
                     CAIRO0_CLASS_HASH.try_into().unwrap(),
                     LIB_CALL_SELECTOR,
                     array![].span(),
                 ).unwrap_syscall()[0];
 
-                assert(*cheat_block_numbered_block_number == 123, 'does not work');
-                assert(uncheat_block_numbered_block_number == block_number, 'does not work');
+                assert(*cheated_block_number == 123, 'does not work');
+                assert(uncheated_block_number == block_number, 'does not work');
             }}
         "#,
         node_rpc_url().unwrap(),
@@ -123,7 +123,7 @@ fn cheat_block_timestamp_cairo0_contract() {
                     test_address(), 123
                 );
 
-                let cheat_block_timestamped_block_timestamp = starknet::library_call_syscall(
+                let cheated_block_timestamp = starknet::library_call_syscall(
                     CAIRO0_CLASS_HASH.try_into().unwrap(),
                     LIB_CALL_SELECTOR,
                     array![].span(),
@@ -131,14 +131,14 @@ fn cheat_block_timestamp_cairo0_contract() {
 
                 stop_cheat_block_timestamp(test_address());
 
-                let uncheat_block_timestamped_block_timestamp = starknet::library_call_syscall(
+                let uncheated_block_timestamp = starknet::library_call_syscall(
                     CAIRO0_CLASS_HASH.try_into().unwrap(),
                     LIB_CALL_SELECTOR,
                     array![].span(),
                 ).unwrap_syscall()[0];
 
-                assert(*cheat_block_timestamped_block_timestamp == 123, 'does not work');
-                assert(uncheat_block_timestamped_block_timestamp == block_timestamp, 'does not work');
+                assert(*cheated_block_timestamp == 123, 'does not work');
+                assert(uncheated_block_timestamp == block_timestamp, 'does not work');
             }}
         "#,
         node_rpc_url().unwrap(),

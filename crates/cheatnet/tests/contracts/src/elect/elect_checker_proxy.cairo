@@ -7,7 +7,7 @@ trait ICheatSequencerAddressChecker<TContractState> {
 
 #[starknet::interface]
 trait ICheatSequencerAddressCheckerProxy<TContractState> {
-    fn get_cheat_sequencer_address_checkers_seq_addr(
+    fn get_cheated_sequencer_address(
         self: @TContractState, address: ContractAddress
     ) -> ContractAddress;
     fn get_sequencer_address(self: @TContractState) -> ContractAddress;
@@ -32,13 +32,13 @@ mod CheatSequencerAddressCheckerProxy {
     impl ICheatSequencerAddressCheckerProxy of super::ICheatSequencerAddressCheckerProxy<
         ContractState
     > {
-        fn get_cheat_sequencer_address_checkers_seq_addr(
+        fn get_cheated_sequencer_address(
             self: @ContractState, address: ContractAddress
         ) -> ContractAddress {
-            let cheat_sequencer_address_checker = ICheatSequencerAddressCheckerDispatcher {
+            let sequencer_address_checker = ICheatSequencerAddressCheckerDispatcher {
                 contract_address: address
             };
-            cheat_sequencer_address_checker.get_sequencer_address()
+            sequencer_address_checker.get_sequencer_address()
         }
 
         fn get_sequencer_address(self: @ContractState) -> ContractAddress {
@@ -52,8 +52,7 @@ mod CheatSequencerAddressCheckerProxy {
                 contract_address: address
             };
             let sequencer_address = self.get_sequencer_address();
-            let res = dispatcher
-                .get_cheat_sequencer_address_checkers_seq_addr(get_contract_address());
+            let res = dispatcher.get_cheated_sequencer_address(get_contract_address());
             (sequencer_address, res)
         }
     }

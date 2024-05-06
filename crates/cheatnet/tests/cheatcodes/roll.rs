@@ -131,7 +131,7 @@ fn cheat_block_number_proxy() {
     let contract_address = test_env.deploy("CheatBlockNumberChecker", &[]);
     let proxy_address = test_env.deploy("CheatBlockNumberCheckerProxy", &[]);
 
-    let proxy_selector = "get_cheat_block_number_checkers_block_number";
+    let proxy_selector = "get_cheated_block_number";
 
     test_env.start_cheat_block_number(contract_address, 123);
 
