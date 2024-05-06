@@ -60,7 +60,7 @@ fn call_and_invoke() {
     // First declare and deploy a contract
     let contract = declare("HelloStarknet").unwrap();
     // Alternatively we could use `deploy_syscall` here
-    let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+    let (contract_address, _) = contract.deploy(@array![]).unwrap();
 
     // Create a Dispatcher object that will allow interacting with the deployed contract
     let dispatcher = IHelloStarknetDispatcher { contract_address };
@@ -78,6 +78,12 @@ fn call_and_invoke() {
     assert(balance == 100, 'balance == 100');
 }
 ```
+
+> 📝 **Note**
+> 
+> Notice that the arguments to the contract's constructor (the `deploy`'s `calldata` argument) need to be serialized with `Serde`.
+> 
+> `HelloStarknet` contract has no constructor, so the calldata remains empty in the example above.
 
 ```shell
 $ snforge test

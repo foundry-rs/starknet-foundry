@@ -8,6 +8,9 @@ on:
       - master
   workflow_dispatch:
 
+env:
+  SEPOLIA_RPC_URL: ${{ secrets.NODE_URL }}:7070/rpc/v0_7
+
 jobs:
   test-forge-unit-and-integration:
     name: Test Forge / Unit and Integration Tests
@@ -20,7 +23,8 @@ jobs:
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - run: cargo test --release --lib -p forge
       - run: cargo test --release --bin snforge
-      - run: cargo test --release integration -p forge
+      - name: Run Forge unit and integration tests
+        run: cargo test --release integration -p forge
 
   test-forge-e2e:
     name: Test Forge / E2E Tests
@@ -57,7 +61,8 @@ jobs:
       - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
       - uses: software-mansion/setup-scarb@v1.3.2
       - uses: software-mansion/setup-universal-sierra-compiler@v1
-      - run: cargo test --release e2e -p forge
+      - name: Run Forge E2E tests
+        run: cargo test --release e2e -p forge
 
   test-forge-runner:
     name: Test Forge Runner
@@ -89,17 +94,12 @@ jobs:
         with:
           toolchain: stable
       - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
-        with:
-          cache-directories: crates/sncast/tests/utils/devnet
       - name: Install starknet-devnet-rs
         run: ./scripts/install_devnet.sh
       - uses: software-mansion/setup-scarb@v1.3.2
       - uses: software-mansion/setup-universal-sierra-compiler@v1
-      - name: Run tests
-        env:
-          NODE_URL: ${{ secrets.NODE_URL }}
-        run: |
-          SEPOLIA_RPC_URL="${NODE_URL}:7070/rpc/v0_7" cargo test --release -p sncast
+      - name: Run Cast tests
+        run: cargo test --release -p sncast
 
   test-conversions:
     name: Test Conversions
@@ -128,8 +128,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+      - uses: software-mansion/setup-universal-sierra-compiler@v1
       - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
       - uses: software-mansion/setup-scarb@v1.3.2
+      - uses: software-mansion/setup-universal-sierra-compiler@v1
       - run: cargo test --release -p scarb-api
 
   scarbfmt:

@@ -2,7 +2,7 @@
 
 `snforge` considers all functions in your project marked with `#[test]` attribute as tests.
 By default, test functions run without any arguments.
-However, adding any arguments to function signature will enable [fuzz testing](./fuzz-testing.md) for this
+However, adding any arguments to function signature will enable [fuzz testing](../snforge-advanced-features/fuzz-testing.md) for this
 test case.
 
 `snforge` will collect tests only from these places:

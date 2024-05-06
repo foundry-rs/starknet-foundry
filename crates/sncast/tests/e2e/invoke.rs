@@ -6,8 +6,9 @@ use shared::test_utils::output_assert::assert_stderr_contains;
 use starknet::core::types::TransactionReceipt::Invoke;
 use test_case::test_case;
 
-#[test_case("cairo0"; "cairo_0_account")]
-#[test_case("cairo1"; "cairo_1_account")]
+#[test_case("oz_cairo_0"; "cairo_0_account")]
+#[test_case("oz_cairo_1"; "cairo_1_account")]
+#[test_case("argent"; "argent_account")]
 #[tokio::test]
 async fn test_happy_case(account: &str) {
     let mut args = default_cli_args();
@@ -118,7 +119,7 @@ fn test_too_low_max_fee() {
     let mut args = default_cli_args();
     args.append(&mut vec![
         "--account",
-        "user8",
+        "user11",
         "--wait",
         "invoke",
         "--contract-address",

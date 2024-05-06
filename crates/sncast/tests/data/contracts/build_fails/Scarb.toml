@@ -6,8 +6,6 @@ version = "0.1.0"
 starknet = ">=2.0.2"
 
 [[target.starknet-contract]]
-sierra = true
-casm = true
 
 [lib]
 sierra = false

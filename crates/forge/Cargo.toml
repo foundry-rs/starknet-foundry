@@ -74,3 +74,4 @@ axum.workspace = true
 lazy_static.workspace = true
 indoc.workspace = true
 tempfile.workspace = true
+walkdir.workspace = true

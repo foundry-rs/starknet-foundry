@@ -1,5 +1,7 @@
 use crate::helpers::constants::{FORK_BLOCK_NUMBER, SEED, URL};
-use crate::helpers::fixtures::{deploy_cairo_0_account, deploy_keystore_account, from_env};
+use crate::helpers::fixtures::{
+    deploy_argent_account, deploy_cairo_0_account, deploy_keystore_account, from_env,
+};
 use ctor::{ctor, dtor};
 use std::net::TcpStream;
 use std::process::{Command, Stdio};
@@ -34,7 +36,7 @@ fn start_devnet() {
     let sepolia_rpc_url =
         from_env("SEPOLIA_RPC_URL").expect("Failed to get SEPOLIA_RPC_URL environment variable");
 
-    Command::new("tests/utils/devnet/bin/starknet-devnet")
+    Command::new("tests/utils/devnet/starknet-devnet")
         .args([
             "--port",
             &port,
@@ -46,6 +48,10 @@ fn start_devnet() {
             &sepolia_rpc_url,
             "--fork-block",
             &FORK_BLOCK_NUMBER.to_string(),
+            "--initial-balance",
+            "9999999999999999999",
+            "--accounts",
+            "20",
         ])
         .stdout(Stdio::null())
         .spawn()
@@ -67,6 +73,7 @@ fn start_devnet() {
 
     rt.block_on(deploy_keystore_account());
     rt.block_on(deploy_cairo_0_account());
+    rt.block_on(deploy_argent_account());
 }
 
 #[cfg(test)]
