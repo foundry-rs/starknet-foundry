@@ -1,8 +1,8 @@
-use super::{AttributeInfo, AttributeReturnType};
+use super::{AttributeInfo, AttributeTypeData};
 use crate::{
     args::Arguments,
     attributes::{AttributeCollector, ErrorExt},
-    config_fn::ConfigFn,
+    config_fn::ExtendWithConfig,
     MacroResult,
 };
 use cairo_lang_macro::{Diagnostics, TokenStream};
@@ -15,9 +15,8 @@ impl AttributeInfo for AvailableGasCollector {
     const ARGS_FORM: &'static str = "<usize>";
 }
 
-impl AttributeReturnType for AvailableGasCollector {
-    const RETURN_TYPE: &'static str = "AvailableGasConfig";
-    const EXECUTABLE_NAME: &'static str = "__snforge_available_gas__";
+impl AttributeTypeData for AvailableGasCollector {
+    const CHEATCODE_NAME: &'static str = "set_config_available_gas";
 }
 
 impl AttributeCollector for AvailableGasCollector {
@@ -32,10 +31,12 @@ impl AttributeCollector for AvailableGasCollector {
             _ => Err(Self::error("argument should be number"))?,
         };
 
-        Ok(format!("gas: {gas}"))
+        Ok(format!(
+            "snforge_std::_config_types::AvailableGasConfig {{ gas: {gas} }}"
+        ))
     }
 }
 
 pub fn _available_gas(args: TokenStream, item: TokenStream) -> MacroResult {
-    AvailableGasCollector::extend_with_config_fn(args, item)
+    AvailableGasCollector::extend_with_config_cheatcodes(args, item)
 }

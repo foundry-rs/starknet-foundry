@@ -1,48 +1,45 @@
-#[derive(Drop)]
+#[derive(Drop, Serde)]
 struct AvailableGasConfig {
     gas: felt252
 }
 
-#[derive(Drop)]
+#[derive(Drop, Serde)]
 enum BlockId {
     BlockTag: (),
     BlockHash: felt252,
     BlockNumber: felt252
 }
 
-#[derive(Drop)]
-struct ForkConfig {
+#[derive(Drop, Serde)]
+struct InlineForkConfig {
     url: ByteArray,
     block: BlockId
 }
 
-#[derive(Drop)]
+#[derive(Drop, Serde)]
+enum ForkConfig {
+    Inline: InlineForkConfig,
+    Named: ByteArray
+}
+
+#[derive(Drop, Serde)]
 struct FuzzerConfig {
     runs: Option<felt252>,
     seed: Option<felt252>
 }
 
-#[derive(Drop)]
+#[derive(Drop, Serde)]
 enum String {
     Short: felt252,
     Normal: ByteArray
 }
 
-#[derive(Drop)]
+#[derive(Drop, Serde)]
 struct ShouldPanicConfig {
     expected: Array<String>,
 }
 
-#[derive(Drop)]
+#[derive(Drop, Serde)]
 struct IgnoreConfig {
     is_ignored: bool,
-}
-
-#[derive(Drop)]
-struct TestConfig {
-    gas: Option<AvailableGasConfig>,
-    fork: Option<ForkConfig>,
-    fuzzer: Option<FuzzerConfig>,
-    should_panic: Option<ShouldPanicConfig>,
-    ignore: Option<IgnoreConfig>,
 }

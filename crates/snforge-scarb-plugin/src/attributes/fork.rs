@@ -1,6 +1,8 @@
-use super::{AttributeInfo, AttributeReturnType};
-use crate::{args::Arguments, attributes::AttributeCollector, config_fn::ConfigFn, MacroResult};
-use cairo_lang_macro::{Diagnostics, TokenStream};
+use super::{AttributeInfo, AttributeTypeData};
+use crate::{
+    args::Arguments, attributes::AttributeCollector, config_fn::ExtendWithConfig, MacroResult,
+};
+use cairo_lang_macro::{Diagnostic, Diagnostics, TokenStream};
 use cairo_lang_syntax::node::db::SyntaxGroup;
 
 pub struct ForkCollector;
@@ -10,9 +12,8 @@ impl AttributeInfo for ForkCollector {
     const ARGS_FORM: &'static str = "<url>: `ByteArray`, (<block_hash>: `felt252` | <block_number>: `felt252` | <block_tag>: latest)";
 }
 
-impl AttributeReturnType for ForkCollector {
-    const RETURN_TYPE: &'static str = "ForkConfig";
-    const EXECUTABLE_NAME: &'static str = "__snforge_fork__";
+impl AttributeTypeData for ForkCollector {
+    const CHEATCODE_NAME: &'static str = "set_config_fork";
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -37,30 +38,52 @@ impl BlockId {
     }
 }
 
+fn inline_args<T: AttributeInfo>(
+    db: &dyn SyntaxGroup,
+    args: &Arguments,
+) -> Result<String, Diagnostic> {
+    let named_args = args.named_only::<T>()?;
+
+    let (block_id, block_args) =
+        named_args.one_of_once(&[BlockId::Hash, BlockId::Number, BlockId::Tag])?;
+
+    let url = named_args.as_once("url")?;
+    let url = validate::url::<T>(db, url)?;
+
+    let block_id_value = validate::block_id::<T>(db, block_id, block_args)?;
+
+    let block_id_value = match block_id {
+        BlockId::Hash => format!("BlockHash({block_id_value})"),
+        BlockId::Number => format!("BlockNumber({block_id_value})"),
+        BlockId::Tag => "BlockTag".to_string(),
+    };
+
+    Ok(format!("snforge_std::_config_types::ForkConfig::Inline(snforge_std::_config_types::InlineForkConfig {{ url: {url}, block: {block_id_value} }})"))
+}
+
+fn from_file_args<T: AttributeInfo>(
+    db: &dyn SyntaxGroup,
+    args: &Arguments,
+) -> Result<String, Diagnostic> {
+    let [arg] = args.unnamed_only::<T>()?.of_length::<1>()?;
+
+    let name = validate::string::<T>(db, arg)?;
+
+    Ok(format!(
+        r#"snforge_std::_config_types::ForkConfig::Named("{name}")"#
+    ))
+}
+
 impl AttributeCollector for ForkCollector {
     fn args_into_body(db: &dyn SyntaxGroup, args: Arguments) -> Result<String, Diagnostics> {
-        let named_args = args.named_only::<Self>()?;
-
-        let (block_id, block_args) =
-            named_args.one_of_once(&[BlockId::Hash, BlockId::Number, BlockId::Tag])?;
-
-        let url = named_args.as_once("url")?;
-        let url = validate::url::<Self>(db, url)?;
-
-        let block_id_value = validate::block_id::<Self>(db, block_id, block_args)?;
-
-        let block_id_value = match block_id {
-            BlockId::Hash => format!("BlockHash({block_id_value})"),
-            BlockId::Number => format!("BlockNumber({block_id_value})"),
-            BlockId::Tag => "BlockTag".to_string(),
-        };
-
-        Ok(format!("url: {url}, block: {block_id_value}"))
+        inline_args::<Self>(db, &args).or_else(|error| {
+            from_file_args::<Self>(db, &args).map_err(|next_error| vec![error, next_error].into())
+        })
     }
 }
 
 pub fn _fork(args: TokenStream, item: TokenStream) -> MacroResult {
-    ForkCollector::extend_with_config_fn(args, item)
+    ForkCollector::extend_with_config_cheatcodes(args, item)
 }
 
 mod validate {
@@ -81,6 +104,20 @@ mod validate {
             },
             _ => Err(T::error(
                 "<url> invalid type, should be: double quotted string",
+            )),
+        }
+    }
+    pub fn string<T: AttributeInfo>(
+        db: &dyn SyntaxGroup,
+        url: &Expr,
+    ) -> Result<String, Diagnostic> {
+        match url {
+            Expr::String(string) => match string.string_value(db) {
+                None => Err(T::error("<0> is not a valid string")),
+                Some(string) => Ok(string),
+            },
+            _ => Err(T::error(
+                "<0> invalid type, should be: double quotted string",
             )),
         }
     }

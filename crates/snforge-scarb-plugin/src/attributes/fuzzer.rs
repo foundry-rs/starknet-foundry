@@ -1,5 +1,7 @@
-use super::{AttributeInfo, AttributeReturnType};
-use crate::{args::Arguments, attributes::AttributeCollector, config_fn::ConfigFn, MacroResult};
+use super::{AttributeInfo, AttributeTypeData};
+use crate::{
+    args::Arguments, attributes::AttributeCollector, config_fn::ExtendWithConfig, MacroResult,
+};
 use cairo_lang_macro::{Diagnostics, TokenStream};
 use cairo_lang_syntax::node::db::SyntaxGroup;
 
@@ -10,9 +12,8 @@ impl AttributeInfo for FuzzerCollector {
     const ARGS_FORM: &'static str = "<runs>: `u64`, <seed>: `felt252`";
 }
 
-impl AttributeReturnType for FuzzerCollector {
-    const RETURN_TYPE: &'static str = "FuzzerConfig";
-    const EXECUTABLE_NAME: &'static str = "__snforge_fuzzer__";
+impl AttributeTypeData for FuzzerCollector {
+    const CHEATCODE_NAME: &'static str = "set_config_fuzzer";
 }
 
 impl AttributeCollector for FuzzerCollector {
@@ -22,12 +23,14 @@ impl AttributeCollector for FuzzerCollector {
         let seed = validate::maybe_number_value::<Self>(db, named_args, "seed")?;
         let runs = validate::maybe_number_value::<Self>(db, named_args, "runs")?;
 
-        Ok(format!("seed: {seed}, runs: {runs}"))
+        Ok(format!(
+            "snforge_std::_config_types::FuzzerConfig {{ seed: {seed}, runs: {runs} }}"
+        ))
     }
 }
 
 pub fn _fuzzer(args: TokenStream, item: TokenStream) -> MacroResult {
-    FuzzerCollector::extend_with_config_fn(args, item)
+    FuzzerCollector::extend_with_config_cheatcodes(args, item)
 }
 
 pub mod validate {

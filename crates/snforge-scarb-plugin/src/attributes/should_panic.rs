@@ -1,5 +1,7 @@
-use super::{AttributeInfo, AttributeReturnType};
-use crate::{args::Arguments, attributes::AttributeCollector, config_fn::ConfigFn, MacroResult};
+use super::{AttributeInfo, AttributeTypeData};
+use crate::{
+    args::Arguments, attributes::AttributeCollector, config_fn::ExtendWithConfig, MacroResult,
+};
 use cairo_lang_macro::{Diagnostics, TokenStream};
 use cairo_lang_syntax::node::db::SyntaxGroup;
 use std::fmt::Display;
@@ -12,9 +14,8 @@ impl AttributeInfo for ShouldPanicCollector {
         "[<expected>: `ByteArray` | `felt252` | ([`ByteArray` | `felt252`,])]";
 }
 
-impl AttributeReturnType for ShouldPanicCollector {
-    const RETURN_TYPE: &'static str = "ShouldPanicConfig";
-    const EXECUTABLE_NAME: &'static str = "__snforge_should_panic__";
+impl AttributeTypeData for ShouldPanicCollector {
+    const CHEATCODE_NAME: &'static str = "set_config_should_panic";
 }
 
 #[derive(Debug, Clone)]
@@ -49,12 +50,14 @@ impl AttributeCollector for ShouldPanicCollector {
             .collect::<Vec<_>>()
             .join(", ");
 
-        Ok(format!("expected: array![{expected}]"))
+        Ok(format!(
+            "snforge_std::_config_types::ShouldPanicConfig {{ expected: array![{expected}] }}"
+        ))
     }
 }
 
 pub fn _should_panic(args: TokenStream, item: TokenStream) -> MacroResult {
-    ShouldPanicCollector::extend_with_config_fn(args, item)
+    ShouldPanicCollector::extend_with_config_cheatcodes(args, item)
 }
 
 mod validate {

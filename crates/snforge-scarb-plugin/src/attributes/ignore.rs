@@ -1,7 +1,6 @@
-use super::{AttributeInfo, AttributeReturnType};
+use super::{AttributeInfo, AttributeTypeData};
 use crate::{
-    args::Arguments, asserts::assert_is_empty, attributes::AttributeCollector, config_fn::ConfigFn,
-    MacroResult,
+    args::Arguments, attributes::AttributeCollector, config_fn::ExtendWithConfig, MacroResult,
 };
 use cairo_lang_macro::{Diagnostics, TokenStream};
 use cairo_lang_syntax::node::db::SyntaxGroup;
@@ -13,19 +12,18 @@ impl AttributeInfo for IgnoreCollector {
     const ARGS_FORM: &'static str = "";
 }
 
-impl AttributeReturnType for IgnoreCollector {
-    const RETURN_TYPE: &'static str = "IgnoreConfig";
-    const EXECUTABLE_NAME: &'static str = "__snforge_ignore__";
+impl AttributeTypeData for IgnoreCollector {
+    const CHEATCODE_NAME: &'static str = "set_config_ignore";
 }
 
 impl AttributeCollector for IgnoreCollector {
-    fn args_into_body(_db: &dyn SyntaxGroup, _args: Arguments) -> Result<String, Diagnostics> {
-        Ok("is_ignored: true".to_string())
+    fn args_into_body(_db: &dyn SyntaxGroup, args: Arguments) -> Result<String, Diagnostics> {
+        args.assert_is_empty::<Self>()?;
+
+        Ok("snforge_std::_config_types::IgnoreConfig {{ is_ignored: true }}".to_string())
     }
 }
 
 pub fn _ignore(args: TokenStream, item: TokenStream) -> MacroResult {
-    assert_is_empty::<IgnoreCollector>(&args.to_string())?;
-
-    IgnoreCollector::extend_with_config_fn(args, item)
+    IgnoreCollector::extend_with_config_cheatcodes(args, item)
 }

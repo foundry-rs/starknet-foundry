@@ -26,7 +26,8 @@ fn load_felt252(target: ContractAddress, storage_address: felt252) -> felt252 {
     *handle_cheatcode(cheatcode::<'load'>(inputs.span())).at(0)
 }
 
-/// Stores felts from `serialized_value` in `target` contract's storage, starting at `storage_address`.
+/// Stores felts from `serialized_value` in `target` contract's storage, starting at
+/// `storage_address`.
 /// - `target` - address of the contract, which storage you want to modify
 /// - `storage_address` - offset of the data in the contract's storage
 /// - `serialized_value` - a sequence of felts that will be inserted starting at `storage_address`
@@ -41,7 +42,8 @@ fn store(target: ContractAddress, storage_address: felt252, serialized_value: Sp
     }
 }
 
-/// Loads `size` felts from `target` contract's storage into an `Array`, starting at `storage_address`.
+/// Loads `size` felts from `target` contract's storage into an `Array`, starting at
+/// `storage_address`.
 /// - `target` - address of the contract, which storage you want to modify
 /// - `storage_address` - offset of the data in the contract's storage
 /// - `size` - how many felts will be loaded into the result `Array`

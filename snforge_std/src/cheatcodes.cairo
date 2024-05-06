@@ -25,7 +25,8 @@ enum CheatTarget {
 /// `CheatTarget::All` can only be used with `CheatSpan::Indefinite`.
 #[derive(Drop, Serde, PartialEq, Clone, Debug, Display)]
 enum CheatSpan {
-    /// Applies the cheatcode indefinitely, until the cheat is canceled manually (e.g. using `stop_warp`).
+    /// Applies the cheatcode indefinitely, until the cheat is canceled manually (e.g. using
+    /// `stop_warp`).
     Indefinite: (),
     /// Applies the cheatcode for a specified number of calls to the target,
     /// after which the cheat is canceled (or until the cheat is canceled manually).

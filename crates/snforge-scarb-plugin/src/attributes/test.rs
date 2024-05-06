@@ -1,7 +1,8 @@
 use crate::{
-    asserts::{assert_is_empty, assert_is_used_once},
+    args::Arguments,
+    asserts::assert_is_used_once,
     attributes::AttributeInfo,
-    parse::parse,
+    parse::{parse, parse_args},
     MacroResult,
 };
 use cairo_lang_macro::TokenStream;
@@ -24,7 +25,12 @@ pub fn _test(args: TokenStream, item: TokenStream) -> MacroResult {
     let db = simple_db.upcast();
 
     assert_is_used_once::<TestCollector>(db, &func)?;
-    assert_is_empty::<TestCollector>(&args.to_string())?;
+
+    let (db, args) = parse_args::<TestCollector>(&args.to_string())?;
+
+    let (args, _warn) = Arguments::new::<TestCollector>(db.upcast(), args);
+
+    args.assert_is_empty::<TestCollector>()?;
 
     Ok(TokenStream::new(formatdoc!(
         r#"

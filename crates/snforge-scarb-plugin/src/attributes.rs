@@ -14,12 +14,11 @@ pub trait AttributeInfo {
     const ARGS_FORM: &'static str;
 }
 
-pub trait AttributeReturnType {
-    const RETURN_TYPE: &'static str;
-    const EXECUTABLE_NAME: &'static str;
+pub trait AttributeTypeData {
+    const CHEATCODE_NAME: &'static str;
 }
 
-pub trait AttributeCollector: AttributeInfo + AttributeReturnType {
+pub trait AttributeCollector: AttributeInfo + AttributeTypeData {
     fn args_into_body(db: &dyn SyntaxGroup, args: Arguments) -> Result<String, Diagnostics>;
 }
 

@@ -90,4 +90,13 @@ impl Arguments {
             Err(T::error("can be used with unnamed attributes only"))
         }
     }
+
+    #[inline]
+    pub fn assert_is_empty<T: AttributeInfo>(&self) -> Result<(), Diagnostic> {
+        if self.is_empty() {
+            Ok(())
+        } else {
+            Err(T::error("does not accept any arguments"))?
+        }
+    }
 }

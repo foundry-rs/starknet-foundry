@@ -792,7 +792,7 @@ source = "git+https://github.com/software-mansion/scarb#3e4919889ce25c14121d5bd4
 dependencies = [
  "quote",
  "scarb-stable-hash",
- "syn 2.0.48",
+ "syn 2.0.60",
 ]
 
 [[package]]
@@ -3041,7 +3041,7 @@ checksum = "adf157a4dc5a29b7b464aa8fe7edeff30076e07e13646a1c3874f58477dc99f8"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.48",
+ "syn 2.0.60",
 ]
 
 [[package]]
