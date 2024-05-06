@@ -134,6 +134,10 @@ where
     T: SerializeAsFelt252Vec,
 {
     fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
+        let len: Felt252 = self.len().into();
+
+        len.serialize_into_felt252_vec(output);
+
         for e in self {
             e.serialize_into_felt252_vec(output);
         }

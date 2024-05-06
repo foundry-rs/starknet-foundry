@@ -235,6 +235,14 @@ struct VmIoPointers<'a> {
     output_end: &'a CellRef,
 }
 
+struct SerializeAsIs(Vec<Felt252>);
+
+impl SerializeAsFelt252Vec for SerializeAsIs {
+    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
+        output.extend(self.0);
+    }
+}
+
 impl<Extension: ExtensionLogic> ExtendedRuntime<Extension> {
     fn execute_cheatcode_hint(
         &mut self,
@@ -266,8 +274,13 @@ impl<Extension: ExtensionLogic> ExtendedRuntime<Extension> {
                 );
                 return res;
             }
-            Ok(CheatcodeHandlingResult::Handled(res)) => Ok(res),
-            Err(err) => Err(ByteArray::from(err.to_string().as_str()).serialize_no_magic()),
+            Ok(CheatcodeHandlingResult::Handled(res)) => Ok(
+                // it is already serialized
+                // use this wrapper to NOT add extra length felt
+                // it is serialized again to add `Result` discriminator
+                SerializeAsIs(res),
+            ),
+            Err(err) => Err(ByteArray::from(err.to_string().as_str())),
         }
         .serialize_as_felt252_vec();
 

@@ -91,7 +91,7 @@ fn get_cheated_tx_info_ptr(
     };
     if let Some(resource_bounds) = resource_bounds {
         let (resource_bounds_start_ptr, resource_bounds_end_ptr) =
-            add_vec_memory_segment(&resource_bounds.serialize_as_felt252_vec(), vm);
+            add_vec_memory_segment(&resource_bounds.serialize_as_felt252_vec()[1..], vm);
         new_tx_info[8] = resource_bounds_start_ptr.into();
         new_tx_info[9] = resource_bounds_end_ptr.into();
     }
