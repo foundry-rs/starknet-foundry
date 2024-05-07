@@ -3,21 +3,21 @@ use cairo_felt::Felt252;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use runtime::EnhancedHintError;
 
+pub mod cheat_block_number;
+pub mod cheat_block_timestamp;
+pub mod cheat_caller_address;
 pub mod cheat_execution_info;
+pub mod cheat_sequencer_address;
 pub mod declare;
 pub mod deploy;
-pub mod elect;
 pub mod get_class_hash;
 pub mod l1_handler_execute;
 pub mod mock_call;
-pub mod prank;
 pub mod precalculate_address;
 pub mod replace_bytecode;
-pub mod roll;
 pub mod spoof;
 pub mod spy_events;
 pub mod storage;
-pub mod warp;
 
 /// A structure used for returning cheatcode errors in tests
 #[derive(Debug)]
