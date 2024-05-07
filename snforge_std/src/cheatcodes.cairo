@@ -11,9 +11,13 @@ mod fork;
 mod storage;
 mod execution_info;
 
+/// Enum used to specify how long the target should be cheated for.
 #[derive(Copy, Drop, Serde, PartialEq, Clone, Debug, Display)]
 enum CheatSpan {
+    /// Applies the cheatcode indefinitely, until the cheat is canceled manually (e.g. using `stop_warp`).
     Indefinite: (),
+    /// Applies the cheatcode for a specified number of calls to the target,
+    /// after which the cheat is canceled (or until the cheat is canceled manually).
     TargetCalls: usize,
 }
 
