@@ -47,5 +47,6 @@ ctor.workspace = true
 indoc.workspace = true
 rayon.workspace = true
 glob.workspace = true
+shared.workspace = true
 test-case.workspace = true
 tempfile.workspace = true

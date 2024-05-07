@@ -1,11 +1,13 @@
 use super::test_environment::TestEnvironment;
 use crate::common::{assertions::assert_success, get_contracts, recover_data};
 use cairo_felt::Felt252;
-use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::spoof::TxInfoMock;
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::spoof::{
+    ResourceBounds, TxInfoMock,
+};
 use cheatnet::state::{CheatSpan, CheatTarget};
 use conversions::IntoConv;
-use num_traits::ToPrimitive;
-use runtime::utils::BufferReader;
+use runtime::utils::buffer_reader::BufferReader;
+use runtime::FromReader;
 use starknet_api::{core::ContractAddress, transaction::TransactionHash};
 
 trait SpoofTrait {
@@ -47,7 +49,7 @@ impl TxInfoTrait for TestEnvironment {
     }
 }
 
-#[derive(Clone, Default, Debug, PartialEq)]
+#[derive(FromReader, Clone, Default, Debug, PartialEq)]
 struct TxInfo {
     pub version: Felt252,
     pub account_contract_address: Felt252,
@@ -56,7 +58,7 @@ struct TxInfo {
     pub transaction_hash: Felt252,
     pub chain_id: Felt252,
     pub nonce: Felt252,
-    pub resource_bounds: Vec<Felt252>,
+    pub resource_bounds: Vec<ResourceBounds>,
     pub tip: Felt252,
     pub paymaster_data: Vec<Felt252>,
     pub nonce_data_availability_mode: Felt252,
@@ -93,42 +95,7 @@ impl TxInfo {
     }
 
     fn deserialize(data: &[Felt252]) -> Self {
-        let mut reader = BufferReader::new(data);
-
-        let version = reader.read_felt().unwrap();
-        let account_contract_address = reader.read_felt().unwrap();
-        let max_fee = reader.read_felt().unwrap();
-        let signature = reader.read_vec().unwrap();
-        let transaction_hash = reader.read_felt().unwrap();
-        let chain_id = reader.read_felt().unwrap();
-        let nonce = reader.read_felt().unwrap();
-        let resource_bounds_len = reader.read_felt().unwrap();
-        let resource_bounds = reader
-            .read_vec_body(
-                3 * resource_bounds_len.to_usize().unwrap(), // ResourceBounds struct has 3 fields
-            )
-            .unwrap();
-        let tip = reader.read_felt().unwrap();
-        let paymaster_data = reader.read_vec().unwrap();
-        let nonce_data_availability_mode = reader.read_felt().unwrap();
-        let fee_data_availability_mode = reader.read_felt().unwrap();
-        let account_deployment_data = reader.read_vec().unwrap();
-
-        Self {
-            version,
-            account_contract_address,
-            max_fee,
-            signature,
-            transaction_hash,
-            chain_id,
-            nonce,
-            resource_bounds,
-            tip,
-            paymaster_data,
-            nonce_data_availability_mode,
-            fee_data_availability_mode,
-            account_deployment_data,
-        }
+        BufferReader::new(data).read().unwrap()
     }
 }
 
@@ -169,12 +136,16 @@ fn start_spoof_multiple_times() {
         chain_id: Some(Felt252::from(22)),
         nonce: Some(Felt252::from(33)),
         resource_bounds: Some(vec![
-            Felt252::from(111),
-            Felt252::from(222),
-            Felt252::from(333),
-            Felt252::from(444),
-            Felt252::from(555),
-            Felt252::from(666),
+            ResourceBounds {
+                resource: Felt252::from(111),
+                max_amount: 222,
+                max_price_per_unit: 333,
+            },
+            ResourceBounds {
+                resource: Felt252::from(444),
+                max_amount: 555,
+                max_price_per_unit: 666,
+            },
         ]),
         tip: Some(Felt252::from(777)),
         paymaster_data: Some(vec![

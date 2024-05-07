@@ -25,12 +25,13 @@ use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cairo_vm::vm::vm_core::VirtualMachine;
 use conversions::byte_array::ByteArray;
 use conversions::felt252::SerializeAsFelt252Vec;
+pub use runtime_macros::FromReader;
 use starknet_api::StarknetApiError;
 use std::any::Any;
 use std::collections::HashMap;
 use std::io;
 use thiserror::Error;
-use utils::BufferReader;
+use utils::buffer_reader::BufferReader;
 
 pub mod starknet;
 pub mod utils;

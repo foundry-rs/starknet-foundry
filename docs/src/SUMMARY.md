@@ -20,11 +20,13 @@
 * [Using Cheatcodes](testing/using-cheatcodes.md)
 * [Testing Events](testing/testing-events.md)
 * [Test Collection](testing/test-collection.md)
+* [Contract Collection](testing/contracts-collection.md)
 * [Gas and VM Resources Estimation](testing/gas-and-resource-estimation.md)
 
 # `snforge` Advanced Features
 * [Fork Testing](snforge-advanced-features/fork-testing.md)
 * [Fuzz Testing](snforge-advanced-features/fuzz-testing.md)
+* [Direct Storage Access](snforge-advanced-features/storage-cheatcodes.md)
 * [Profiling](snforge-advanced-features/profiling.md)
 
 --- 
@@ -74,7 +76,6 @@
     * [get_call_trace](appendix/snforge-library/get_call_trace.md)
     * [fs](appendix/snforge-library/fs.md)
     * [env](appendix/snforge-library/env.md)
-        * [var](appendix/snforge-library/env/var.md)
     * [signature](appendix/snforge-library/signature.md)
 * [`sncast` Commands](appendix/sncast.md)
     * [common flags](appendix/sncast/common.md)

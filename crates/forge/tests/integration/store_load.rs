@@ -1,4 +1,5 @@
 use indoc::{formatdoc, indoc};
+use shared::test_utils::node_url::node_rpc_url;
 use std::path::Path;
 use test_utils::runner::{assert_case_output_contains, assert_failed, assert_passed, Contract};
 use test_utils::running_tests::run_test_case;
@@ -554,7 +555,6 @@ fn store_load_felt_to_felt() {
 
     assert_passed(&result);
 }
-static INTEGRATION_RPC_URL: &str = "http://188.34.188.184:7070/rpc/v0_7";
 
 #[test]
 fn fork_store_load() {
@@ -587,7 +587,7 @@ fn fork_store_load() {
                 assert(balance == 100, 'Balance should be 100');
             }}
         "#,
-        INTEGRATION_RPC_URL
+        node_rpc_url().unwrap()
     ).as_str());
 
     let result = run_test_case(&test);
