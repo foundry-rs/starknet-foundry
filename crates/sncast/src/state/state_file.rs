@@ -204,15 +204,20 @@ impl From<DeployResponse> for ScriptTransactionOutput {
 
 #[must_use]
 pub fn serialize_as_script_function_result(output: ScriptTransactionOutput) -> Vec<Felt252> {
-    let res = match output {
-        ScriptTransactionOutput::InvokeResponse(val) => val.serialize_as_felt252_vec(),
-        ScriptTransactionOutput::DeclareResponse(val) => val.serialize_as_felt252_vec(),
-        ScriptTransactionOutput::DeployResponse(val) => val.serialize_as_felt252_vec(),
+    match output {
+        ScriptTransactionOutput::InvokeResponse(val) => {
+            Ok::<_, StarknetCommandError>(val).serialize_as_felt252_vec()
+        }
+        ScriptTransactionOutput::DeclareResponse(val) => {
+            Ok::<_, StarknetCommandError>(val).serialize_as_felt252_vec()
+        }
+        ScriptTransactionOutput::DeployResponse(val) => {
+            Ok::<_, StarknetCommandError>(val).serialize_as_felt252_vec()
+        }
         ScriptTransactionOutput::ErrorResponse(_) => {
             panic!("Cannot return ErrorResponse as script function response")
         }
-    };
-    Ok::<Vec<Felt252>, StarknetCommandError>(res).serialize_as_felt252_vec()
+    }
 }
 
 #[derive(Clone, Deserialize, Serialize, Debug, PartialEq)]
