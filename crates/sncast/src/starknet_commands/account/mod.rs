@@ -34,6 +34,7 @@ pub enum Commands {
     Delete(Delete),
 }
 
+#[allow(clippy::doc_markdown)]
 #[derive(ValueEnum, Clone, Debug)]
 pub enum AccountType {
     /// OpenZeppelin account implementation
