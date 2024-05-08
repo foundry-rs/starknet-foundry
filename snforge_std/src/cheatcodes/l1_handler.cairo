@@ -11,7 +11,9 @@ struct L1Handler {
 
 trait L1HandlerTrait {
     fn new(target: ContractAddress, selector: felt252) -> L1Handler;
-    fn execute(self: L1Handler, from_address: felt252, payload: Span::<felt252>) -> SyscallResult<()>;
+    fn execute(
+        self: L1Handler, from_address: felt252, payload: Span::<felt252>
+    ) -> SyscallResult<()>;
 }
 
 impl L1HandlerImpl of L1HandlerTrait {
@@ -19,16 +21,16 @@ impl L1HandlerImpl of L1HandlerTrait {
     /// `selector` - Selector of a `#[l1_handler]` function
     /// Returns a structure referring to a L1 handler function
     fn new(target: ContractAddress, selector: felt252) -> L1Handler {
-        L1Handler {
-            target, selector,
-        }
+        L1Handler { target, selector, }
     }
 
-    /// `self` - `L1Handler` structure refering to a L1 handler function
+    /// `self` - `L1Handler` structure referring to a L1 handler function
     /// `from_address` - Ethereum address of the contract that you want to a emulate message from
     /// `payload` - The message payload that may contain any Cairo data structure that can be serialized with
     /// Mocks a L1 -> L2 message from Ethereum handled by the given L1 handler function.
-    fn execute(self: L1Handler, from_address: felt252, payload: Span::<felt252>) -> SyscallResult<()> {
+    fn execute(
+        self: L1Handler, from_address: felt252, payload: Span::<felt252>
+    ) -> SyscallResult<()> {
         let mut inputs: Array::<felt252> = array![
             self.target.into(), self.selector, from_address.into(),
         ];
