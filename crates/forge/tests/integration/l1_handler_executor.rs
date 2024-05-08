@@ -1,7 +1,7 @@
 use indoc::indoc;
 use std::path::Path;
 use test_utils::runner::{assert_passed, Contract};
-use test_utils::running_tests::run_test_case;
+use test_utils::running_tests::run_test_case; 
 use test_utils::test_case;
 
 #[test]
@@ -25,6 +25,8 @@ fn l1_handler_execute() {
             use array::{ArrayTrait, SpanTrait};
             use core::result::ResultTrait;
             use snforge_std::{declare, ContractClassTrait, L1Handler, L1HandlerTrait};
+            use snforge_std::errors::{ SyscallResultStringErrorTrait, PanicDataOrString };
+            use starknet::{ContractAddress, contract_address_const};
 
             #[test]
             fn l1_handler_execute() {
@@ -74,7 +76,28 @@ fn l1_handler_execute() {
                     },
                 }
             }
-        "#
+
+            #[test]
+            fn l1_handler_function_missing() {
+                let calldata = array![0x123];
+
+                let contract = declare("l1_handler_executor").unwrap();
+                let (contract_address, _) = contract.deploy(@calldata).unwrap();
+
+
+                let mut l1_handler = L1HandlerTrait::new(
+                    contract_address,
+                    selector!("this_does_not_exist")
+                );
+
+                match l1_handler.execute(0x123, array![].span()){
+                    Result::Ok(_) => panic_with_felt252('should have panicked'),
+                    Result::Err(_) => {
+                        // Would be nice to assert the error here once it is be possible in cairo
+                    },
+                }
+            }
+        "#  
         ),
         Contract::from_code_path(
             "l1_handler_executor".to_string(),

@@ -47,6 +47,10 @@ mod l1_handler_executor {
         self.token_id.write(data.token_id);
     }
 
+    fn panicking(ref self: ContractState) {
+        panic(array!['custom', 'panic']);
+    }
+
     #[l1_handler]
     fn panicking_l1_handler(ref self: ContractState, from_address: felt252) {
         panic(array!['custom', 'panic']);
