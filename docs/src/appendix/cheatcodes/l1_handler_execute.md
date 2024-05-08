@@ -9,7 +9,7 @@ Returns a structure referring to a L1 handler function.
 
 > `fn execute(self: L1Handler) -> SyscallResult<()>`
 
-`self` - `L1Handler` structure refering to a L1 handler function
+`self` - `L1Handler` structure referring to a L1 handler function
 `from_address` - Ethereum address of the contract that you want to a emulate message from
 `payload` - The message payload that may contain any Cairo data structure that can be serialized with
 
