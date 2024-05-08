@@ -70,10 +70,8 @@ fn simple_package_with_git_dependency() {
             [package]
             name = "simple_package"
             version = "0.1.0"
-
+            
             [[target.starknet-contract]]
-            sierra = true
-            casm = true
 
             [dependencies]
             starknet = "2.5.4"
@@ -617,10 +615,6 @@ fn with_exit_first() {
             starknet = "2.4.0"
             snforge_std = {{ path = "{}" }}
 
-            [[target.starknet-contract]]
-            sierra = true
-            casm = true
-
             [tool.snforge]
             exit_first = true
             "#,
@@ -711,7 +705,7 @@ fn init_new_project_test() {
             snforge_std = {{ git = "https://github.com/foundry-rs/starknet-foundry", tag = "v{}" }}
 
             [[target.starknet-contract]]
-            casm = true
+            sierra = true
         "#,
         CAIRO_EDITION,
         version,
@@ -729,7 +723,6 @@ fn init_new_project_test() {
         version = "0.1.0"
 
         [[target.starknet-contract]]
-        casm = true
 
         [dependencies]
         starknet = "2.5.4"
@@ -886,7 +879,7 @@ fn incompatible_snforge_std_version_warning() {
         output,
         indoc! {r"
         [..]Updating git repository https://github.com/foundry-rs/starknet-foundry
-        [WARNING] Package snforge_std version does not meet the recommended version requirement =0.21.0, [..]
+        [WARNING] Package snforge_std version does not meet the recommended version requirement =0.22.0, [..]
         [..]Compiling[..]
         [..]Finished[..]
 

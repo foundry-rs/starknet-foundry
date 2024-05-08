@@ -19,5 +19,3 @@ package1 = { path = "crates/package1" }
 package2 = { path = "crates/package2" }
 
 [[target.starknet-contract]]
-sierra = true
-casm = true

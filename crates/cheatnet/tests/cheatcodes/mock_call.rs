@@ -22,12 +22,6 @@ trait MockCallTrait {
         ret_data: &[u128],
         span: CheatSpan,
     );
-    fn start_mock_call(
-        &mut self,
-        contract_address: &ContractAddress,
-        function_name: &str,
-        ret_data: &[u128],
-    );
     fn stop_mock_call(&mut self, contract_address: &ContractAddress, function_name: &str);
 }
 
@@ -46,21 +40,6 @@ impl MockCallTrait for TestEnvironment {
             function_selector.into_(),
             &ret_data,
             span,
-        );
-    }
-
-    fn start_mock_call(
-        &mut self,
-        contract_address: &ContractAddress,
-        function_name: &str,
-        ret_data: &[u128],
-    ) {
-        let ret_data: Vec<Felt252> = ret_data.iter().map(|x| Felt252::from(*x)).collect();
-        let function_selector = get_selector_from_name(function_name).unwrap();
-        self.cheatnet_state.start_mock_call(
-            *contract_address,
-            function_selector.into_(),
-            &ret_data,
         );
     }
 

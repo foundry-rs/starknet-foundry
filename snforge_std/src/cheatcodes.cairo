@@ -9,16 +9,26 @@ mod tx_info;
 mod fork;
 mod storage;
 
+/// Enum used to designate the contracts to which a cheat should be applied.
 #[derive(Drop, Serde, PartialEq, Clone, Debug, Display)]
 enum CheatTarget {
+    /// Applies the cheatcode to all contract addresses.
     All: (),
+    /// Applies the cheatcode to the given contract address.
     One: ContractAddress,
+    /// Applies the cheatcode to each given address.
     Multiple: Array<ContractAddress>
 }
 
+/// Enum used to specify how long the target should be cheated for.
+/// ### Note
+/// `CheatTarget::All` can only be used with `CheatSpan::Indefinite`.
 #[derive(Drop, Serde, PartialEq, Clone, Debug, Display)]
 enum CheatSpan {
+    /// Applies the cheatcode indefinitely, until the cheat is canceled manually (e.g. using `stop_warp`).
     Indefinite: (),
+    /// Applies the cheatcode for a specified number of calls to the target,
+    /// after which the cheat is canceled (or until the cheat is canceled manually).
     TargetCalls: usize,
 }
 
@@ -119,6 +129,10 @@ fn stop_warp(target: CheatTarget) {
     handle_cheatcode(cheatcode::<'stop_warp'>(inputs.span()));
 }
 
+/// Changes the sequencer address for the given target and span.
+/// `target` - instance of `CheatTarget` specifying which contracts to elect
+/// `sequencer_address` - sequencer address to be set
+/// `span` - instance of `CheatSpan` specifying the number of target calls with the cheat applied
 fn elect(target: CheatTarget, sequencer_address: ContractAddress, span: CheatSpan) {
     validate_cheat_target_and_span(@target, @span);
 
@@ -129,10 +143,16 @@ fn elect(target: CheatTarget, sequencer_address: ContractAddress, span: CheatSpa
     handle_cheatcode(cheatcode::<'elect'>(inputs.span()));
 }
 
+/// Changes the sequencer address for a given target.
+/// - `target` - instance of `CheatTarget` specifying which contracts to elect
+/// - `sequencer_address` - sequencer address to be set
 fn start_elect(target: CheatTarget, sequencer_address: ContractAddress) {
     elect(target, sequencer_address, CheatSpan::Indefinite);
 }
 
+
+/// Cancels the `elect` / `start_elect` for the given target.
+/// - `target` - instance of `CheatTarget` specifying which contracts to stop electing
 fn stop_elect(target: CheatTarget) {
     let mut inputs = array![];
     target.serialize(ref inputs);
@@ -200,6 +220,11 @@ fn stop_mock_call(contract_address: ContractAddress, function_selector: felt252)
     );
 }
 
+/// Replaces class for given contract address.
+/// The `new_class` hash has to be declared in order for the replacement class to execute the code,
+/// when interacting with the contract.
+/// - `contract` - address specifying which address will be replaced
+/// - `new_class` - class hash, that will be used now for given address
 fn replace_bytecode(contract: ContractAddress, new_class: ClassHash) {
     handle_cheatcode(
         cheatcode::<'replace_bytecode'>(array![contract.into(), new_class.into()].span())

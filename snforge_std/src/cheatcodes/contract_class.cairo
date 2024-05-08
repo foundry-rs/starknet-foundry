@@ -23,7 +23,7 @@ trait ContractClassTrait {
 
     /// Deploys a contract
     /// `self` - an instance of the struct `ContractClass` which is obtained by calling `declare`
-    /// `constructor_calldata` - serialized calldata for the constructor
+    /// `constructor_calldata` - calldata for the constructor, serialized with `Serde`
     /// Returns the address the contract was deployed at and serialized constructor return data, or panic data if it failed
     fn deploy(
         self: @ContractClass, constructor_calldata: @Array::<felt252>

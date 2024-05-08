@@ -1,16 +1,16 @@
-use crate::helpers::fixtures::{default_cli_args, from_env, invoke_contract};
+use crate::helpers::constants::MAP_CONTRACT_ADDRESS_SEPOLIA;
+use crate::helpers::fixtures::{default_cli_args, invoke_contract};
 use crate::helpers::runner::runner;
 use indoc::indoc;
 use shared::test_utils::output_assert::assert_stderr_contains;
 
 #[test]
 fn test_happy_case() {
-    let contract_address = from_env("CAST_MAP_ADDRESS").unwrap();
     let mut args = default_cli_args();
     args.append(&mut vec![
         "call",
         "--contract-address",
-        &contract_address,
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
         "get",
         "--calldata",
@@ -29,13 +29,19 @@ fn test_happy_case() {
 
 #[tokio::test]
 async fn test_call_after_storage_changed() {
-    let contract_address = from_env("CAST_MAP_ADDRESS").unwrap();
-    invoke_contract("user2", &contract_address, "put", None, &["0x2", "0x3"]).await;
+    invoke_contract(
+        "user2",
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "put",
+        None,
+        &["0x2", "0x3"],
+    )
+    .await;
     let mut args = default_cli_args();
     args.append(&mut vec![
         "call",
         "--contract-address",
-        &contract_address,
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
         "get",
         "--calldata",
@@ -75,12 +81,11 @@ async fn test_contract_does_not_exist() {
 
 #[test]
 fn test_wrong_function_name() {
-    let contract_address = from_env("CAST_MAP_ADDRESS").unwrap();
     let mut args = default_cli_args();
     args.append(&mut vec![
         "call",
         "--contract-address",
-        &contract_address,
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
         "nonexistent_get",
     ]);
@@ -99,12 +104,11 @@ fn test_wrong_function_name() {
 
 #[test]
 fn test_wrong_calldata() {
-    let contract_address = from_env("CAST_MAP_ADDRESS").unwrap();
     let mut args = default_cli_args();
     args.append(&mut vec![
         "call",
         "--contract-address",
-        &contract_address,
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--calldata",
         "0x1",
         "0x2",
@@ -126,12 +130,11 @@ fn test_wrong_calldata() {
 
 #[tokio::test]
 async fn test_invalid_selector() {
-    let address = from_env("CAST_MAP_ADDRESS").unwrap();
     let mut args = default_cli_args();
     args.append(&mut vec![
         "call",
         "--contract-address",
-        &address,
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
         "ą",
         "--calldata",
@@ -154,12 +157,11 @@ async fn test_invalid_selector() {
 
 #[test]
 fn test_wrong_block_id() {
-    let contract_address = from_env("CAST_MAP_ADDRESS").unwrap();
     let mut args = default_cli_args();
     args.append(&mut vec![
         "call",
         "--contract-address",
-        &contract_address,
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
         "get",
         "--calldata",

@@ -10,7 +10,7 @@ use std::{
 #[allow(clippy::module_name_repetitions)]
 #[allow(clippy::struct_excessive_bools)]
 #[derive(Debug, PartialEq, Default)]
-pub struct ForgeConfig {
+pub struct ForgeConfigFromScarb {
     /// Should runner exit after first failed test
     pub exit_first: bool,
     /// How many runs should fuzzer execute
@@ -115,7 +115,7 @@ fn validate_raw_fork_config(raw_config: RawForgeConfig) -> Result<RawForgeConfig
     Ok(raw_config)
 }
 
-impl TryFrom<RawForgeConfig> for ForgeConfig {
+impl TryFrom<RawForgeConfig> for ForgeConfigFromScarb {
     type Error = anyhow::Error;
 
     fn try_from(value: RawForgeConfig) -> Result<Self, Self::Error> {
@@ -136,7 +136,7 @@ impl TryFrom<RawForgeConfig> for ForgeConfig {
             ));
         }
 
-        Ok(ForgeConfig {
+        Ok(ForgeConfigFromScarb {
             exit_first: value.exit_first,
             fuzzer_runs: value.fuzzer_runs,
             fuzzer_seed: value.fuzzer_seed,
