@@ -23,6 +23,7 @@ pub trait AttributeCollector: AttributeInfo + AttributeTypeData {
 
 pub trait ErrorExt {
     fn error(message: impl ToString) -> Diagnostic;
+    fn warn(message: impl ToString) -> Diagnostic;
 }
 
 impl<T> ErrorExt for T
@@ -34,5 +35,12 @@ where
         let attr_name = Self::ATTR_NAME;
 
         Diagnostic::error(format!("#[{attr_name}] {message}"))
+    }
+
+    fn warn(message: impl ToString) -> Diagnostic {
+        let message = message.to_string();
+        let attr_name = Self::ATTR_NAME;
+
+        Diagnostic::warn(format!("#[{attr_name}] {message}"))
     }
 }

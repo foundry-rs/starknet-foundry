@@ -56,7 +56,7 @@ where
 
     let value = Collector::args_into_body(args_db.upcast(), args).map_err(|err| {
         if let Some(empty_args_list_warn) = &empty_args_list_warn {
-            err.warn(empty_args_list_warn)
+            err.warn(&empty_args_list_warn.message)
         } else {
             err
         }
@@ -77,7 +77,7 @@ where
 
     Ok((
         append_config_statements(db, &func, &config_cheatcode),
-        empty_args_list_warn.map(Diagnostic::warn),
+        empty_args_list_warn,
     ))
 }
 

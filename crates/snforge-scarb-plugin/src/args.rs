@@ -23,7 +23,7 @@ impl Arguments {
     pub fn new<T: AttributeInfo>(
         db: &dyn SyntaxGroup,
         args: OptionArgListParenthesized,
-    ) -> (Self, Option<String>) {
+    ) -> (Self, Option<Diagnostic>) {
         let mut warn = None;
 
         let args = match args {
@@ -32,9 +32,8 @@ impl Arguments {
                 let args = args.arguments(db).elements(db);
 
                 if args.is_empty() {
-                    warn = Some(format!(
-                        "#[{}] used with empty argument list. Either remove () or specify some arguments",
-                        T::ATTR_NAME
+                    warn = Some(T::warn(
+                        "used with empty argument list. Either remove () or specify some arguments",
                     ));
                 }
 
@@ -64,18 +63,13 @@ impl Arguments {
         (this, warn)
     }
 
-    #[inline]
-    fn is_both_empty<K2, K3, V2, V3>(a: &HashMap<K2, V2>, b: &HashMap<K3, V3>) -> bool {
-        a.is_empty() && b.is_empty()
-    }
-
     pub fn is_empty(&self) -> bool {
         self.named.is_empty() && self.unnamed.is_empty() && self.shorthand.is_empty()
     }
 
     #[inline]
     pub fn named_only<T: AttributeInfo>(&self) -> Result<&NamedArgs, Diagnostic> {
-        if Self::is_both_empty(&self.shorthand, &self.unnamed) {
+        if self.shorthand.is_empty() && self.unnamed.is_empty() {
             Ok(&self.named)
         } else {
             Err(T::error("can be used with named attributes only"))
@@ -84,7 +78,7 @@ impl Arguments {
 
     #[inline]
     pub fn unnamed_only<T: AttributeInfo>(&self) -> Result<UnnamedArgs, Diagnostic> {
-        if Self::is_both_empty(&self.shorthand, &self.named) {
+        if self.shorthand.is_empty() && self.named.is_empty() {
             Ok(UnnamedArgs::new(&self.unnamed))
         } else {
             Err(T::error("can be used with unnamed attributes only"))
