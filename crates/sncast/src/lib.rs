@@ -49,6 +49,7 @@ struct AccountData {
     deployed: Option<bool>,
     class_hash: Option<String>,
     legacy: Option<bool>,
+    account_type: Option<String>,
 }
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
@@ -316,6 +317,7 @@ fn get_account_data_from_keystore(
     let deployed =
         parse_to_string(&account_info, "deployment", "status").map(|status| &status == "deployed");
     let legacy = get_from_json(&account_info, "variant", "legacy").and_then(Value::as_bool);
+    let account_type = parse_to_string(&account_info, "variant", "type");
 
     Ok(AccountData {
         private_key,
@@ -325,6 +327,7 @@ fn get_account_data_from_keystore(
         deployed,
         class_hash,
         legacy,
+        account_type,
     })
 }
 
@@ -785,6 +788,7 @@ mod tests {
         assert_eq!(account.deployed, Some(true));
         assert_eq!(account.class_hash, None);
         assert_eq!(account.legacy, None);
+        assert_eq!(account.account_type, Some(String::from("open_zeppelin")));
     }
 
     #[test]
@@ -807,6 +811,7 @@ mod tests {
         assert_eq!(account.salt, None);
         assert_eq!(account.deployed, Some(true));
         assert_eq!(account.legacy, Some(true));
+        assert_eq!(account.account_type, Some(String::from("open_zeppelin")));
     }
 
     #[test]
