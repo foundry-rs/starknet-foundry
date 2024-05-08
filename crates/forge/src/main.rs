@@ -1,4 +1,5 @@
 use anyhow::{anyhow, Context, Result};
+use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand, ValueEnum};
 use configuration::load_package_config;
 use forge::scarb::config::ForgeConfigFromScarb;
@@ -20,9 +21,9 @@ use scarb_api::{
 };
 use scarb_ui::args::PackagesFilter;
 
-use camino::Utf8PathBuf;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use forge::block_number_map::BlockNumberMap;
+use forge_runner::build_trace_data::test_sierra_program_path::VERSIONED_PROGRAMS_DIR;
 use forge_runner::forge_config::{
     is_vm_trace_needed, ExecutionDataToSave, ForgeConfig, OutputConfig, TestRunnerConfig,
 };
@@ -183,7 +184,7 @@ fn combine_configs(
     max_n_steps: Option<u32>,
     contracts_data: ContractsData,
     cache_dir: Utf8PathBuf,
-    test_artifacts_path: Utf8PathBuf,
+    versioned_programs_dir: Utf8PathBuf,
     forge_config_from_scarb: &ForgeConfigFromScarb,
 ) -> ForgeConfig {
     let execution_data_to_save = ExecutionDataToSave::from_flags(
@@ -205,11 +206,11 @@ fn combine_configs(
             cache_dir,
             contracts_data,
             environment_variables: env::vars().collect(),
-            test_artifacts_path,
         }),
         output_config: Arc::new(OutputConfig {
             detailed_resources: detailed_resources || forge_config_from_scarb.detailed_resources,
             execution_data_to_save,
+            versioned_programs_dir,
         }),
     }
 }
@@ -284,6 +285,8 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
             let mut all_failed_tests = vec![];
 
             let cache_dir = workspace_root.join(CACHE_DIR);
+            let versioned_programs_dir = workspace_root.join(VERSIONED_PROGRAMS_DIR);
+
             for package in &packages {
                 env::set_current_dir(&package.root)?;
 
@@ -310,7 +313,7 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                     args.max_n_steps,
                     contracts_data,
                     cache_dir.clone(),
-                    test_artifacts_path,
+                    versioned_programs_dir.clone(),
                     &forge_config_from_scarb,
                 ));
 
@@ -449,11 +452,11 @@ mod tests {
                     cache_dir: Default::default(),
                     contracts_data: Default::default(),
                     environment_variables: config.test_runner_config.environment_variables.clone(),
-                    test_artifacts_path: Default::default(),
                 }),
                 output_config: Arc::new(OutputConfig {
                     detailed_resources: false,
-                    execution_data_to_save: ExecutionDataToSave::None
+                    execution_data_to_save: ExecutionDataToSave::None,
+                    versioned_programs_dir: Default::default(),
                 }),
             }
         );
@@ -497,11 +500,11 @@ mod tests {
                     cache_dir: Default::default(),
                     contracts_data: Default::default(),
                     environment_variables: config.test_runner_config.environment_variables.clone(),
-                    test_artifacts_path: Default::default(),
                 }),
                 output_config: Arc::new(OutputConfig {
                     detailed_resources: true,
-                    execution_data_to_save: ExecutionDataToSave::TraceAndProfile
+                    execution_data_to_save: ExecutionDataToSave::TraceAndProfile,
+                    versioned_programs_dir: Default::default(),
                 }),
             }
         );
@@ -545,11 +548,11 @@ mod tests {
                     cache_dir: Default::default(),
                     contracts_data: Default::default(),
                     environment_variables: config.test_runner_config.environment_variables.clone(),
-                    test_artifacts_path: Default::default(),
                 }),
                 output_config: Arc::new(OutputConfig {
                     detailed_resources: true,
-                    execution_data_to_save: ExecutionDataToSave::TraceAndProfile
+                    execution_data_to_save: ExecutionDataToSave::TraceAndProfile,
+                    versioned_programs_dir: Default::default(),
                 }),
             }
         );
