@@ -24,7 +24,7 @@ use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cairo_vm::vm::vm_core::VirtualMachine;
 use conversions::byte_array::ByteArray;
-use conversions::felt252::SerializeAsFelt252Vec;
+use conversions::felt252::{RawFeltVec, SerializeAsFelt252Vec};
 pub use runtime_macros::FromReader;
 use starknet_api::StarknetApiError;
 use std::any::Any;
@@ -266,8 +266,9 @@ impl<Extension: ExtensionLogic> ExtendedRuntime<Extension> {
                 );
                 return res;
             }
-            Ok(CheatcodeHandlingResult::Handled(res)) => Ok(res),
-            Err(err) => Err(ByteArray::from(err.to_string().as_str()).serialize_no_magic()),
+            // it is serialized again to add `Result` discriminator
+            Ok(CheatcodeHandlingResult::Handled(res)) => Ok(RawFeltVec::new(res)),
+            Err(err) => Err(ByteArray::from(err.to_string().as_str())),
         }
         .serialize_as_felt252_vec();
 

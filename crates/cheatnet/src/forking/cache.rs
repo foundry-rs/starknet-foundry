@@ -70,11 +70,12 @@ impl ForkCacheContent {
         self.compiled_contract_class
             .extend(other.compiled_contract_class.clone());
         if other.block_info.is_some() {
-            self.block_info = other.block_info.clone();
+            self.block_info.clone_from(&other.block_info);
         }
     }
 }
 
+#[allow(clippy::to_string_trait_impl)]
 impl ToString for ForkCacheContent {
     fn to_string(&self) -> String {
         serde_json::to_string(self).expect("Could not serialize json cache")
