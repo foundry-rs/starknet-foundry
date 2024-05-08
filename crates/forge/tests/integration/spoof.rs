@@ -19,15 +19,15 @@ fn start_and_stop_spoof_single_attribute() {
             use starknet::info::v2::ResourceBounds;
 
             #[starknet::interface]
-            trait ISpoofChecker<TContractState> {
+            trait ICheatTxInfoChecker<TContractState> {
                 fn get_tx_info(ref self: TContractState) -> starknet::info::v2::TxInfo;
             }
 
             #[test]
             fn start_spoof_single_attribute() {
-                let contract = declare("SpoofChecker").unwrap();
+                let contract = declare("CheatTxInfoChecker").unwrap();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
-                let dispatcher = ISpoofCheckerDispatcher { contract_address };
+                let dispatcher = ICheatTxInfoCheckerDispatcher { contract_address };
 
                 let tx_info_before = dispatcher.get_tx_info();
 
@@ -48,9 +48,9 @@ fn start_and_stop_spoof_single_attribute() {
 
             #[test]
             fn test_spoof_all_stop_one() {
-                let contract = declare("SpoofChecker").unwrap();
+                let contract = declare("CheatTxInfoChecker").unwrap();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
-                let dispatcher = ISpoofCheckerDispatcher { contract_address };
+                let dispatcher = ICheatTxInfoCheckerDispatcher { contract_address };
 
                 let tx_info_before = dispatcher.get_tx_info();
 
@@ -95,7 +95,7 @@ fn start_and_stop_spoof_single_attribute() {
         "#
         ),
         Contract::from_code_path(
-            "SpoofChecker".to_string(),
+            "CheatTxInfoChecker".to_string(),
             Path::new("tests/data/contracts/spoof_checker.cairo"),
         )
         .unwrap()
@@ -125,7 +125,7 @@ fn start_spoof_all_attributes_mocked() {
             use starknet::info::v2::ResourceBounds;
 
             #[starknet::interface]
-            trait ISpoofChecker<TContractState> {
+            trait ICheatTxInfoChecker<TContractState> {
                 fn get_tx_hash(ref self: TContractState) -> felt252;
                 fn get_nonce(ref self: TContractState) -> felt252;
                 fn get_account_contract_address(ref self: TContractState) -> ContractAddress;
@@ -143,9 +143,9 @@ fn start_spoof_all_attributes_mocked() {
 
             #[test]
             fn start_spoof_all_attributes_mocked() {
-                let contract = declare("SpoofChecker").unwrap();
+                let contract = declare("CheatTxInfoChecker").unwrap();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
-                let dispatcher = ISpoofCheckerDispatcher { contract_address };
+                let dispatcher = ICheatTxInfoCheckerDispatcher { contract_address };
 
                 let mut tx_info_mock: TxInfoMock = Default::default();
 
@@ -267,7 +267,7 @@ fn start_spoof_all_attributes_mocked() {
         "#
         ),
         Contract::from_code_path(
-            "SpoofChecker".to_string(),
+            "CheatTxInfoChecker".to_string(),
             Path::new("tests/data/contracts/spoof_checker.cairo"),
         )
         .unwrap()
@@ -293,15 +293,15 @@ fn start_spoof_cancel_mock_by_setting_attribute_to_none() {
             use starknet::info::v2::ResourceBounds;
 
             #[starknet::interface]
-            trait ISpoofChecker<TContractState> {
+            trait ICheatTxInfoChecker<TContractState> {
                 fn get_tx_info(ref self: TContractState) -> starknet::info::v2::TxInfo;
             }
 
             #[test]
             fn start_spoof_cancel_mock_by_setting_attribute_to_none() {
-                let contract = declare("SpoofChecker").unwrap();
+                let contract = declare("CheatTxInfoChecker").unwrap();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
-                let dispatcher = ISpoofCheckerDispatcher { contract_address };
+                let dispatcher = ICheatTxInfoCheckerDispatcher { contract_address };
 
                 let tx_info_before_mock = dispatcher.get_tx_info();
 
@@ -353,7 +353,7 @@ fn start_spoof_cancel_mock_by_setting_attribute_to_none() {
         "#
         ),
         Contract::from_code_path(
-            "SpoofChecker".to_string(),
+            "CheatTxInfoChecker".to_string(),
             Path::new("tests/data/contracts/spoof_checker.cairo"),
         )
         .unwrap()
@@ -381,15 +381,15 @@ fn start_spoof_no_attributes_mocked() {
             use starknet::info::v2::ResourceBounds;
 
             #[starknet::interface]
-            trait ISpoofChecker<TContractState> {
+            trait ICheatTxInfoChecker<TContractState> {
                 fn get_tx_info(ref self: TContractState) -> starknet::info::v2::TxInfo;
             }
 
             #[test]
             fn start_spoof_no_attributes_mocked() {
-                let contract = declare("SpoofChecker").unwrap();
+                let contract = declare("CheatTxInfoChecker").unwrap();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
-                let dispatcher = ISpoofCheckerDispatcher { contract_address };
+                let dispatcher = ICheatTxInfoCheckerDispatcher { contract_address };
 
                 let tx_info_before_mock = dispatcher.get_tx_info();
 
@@ -425,7 +425,7 @@ fn start_spoof_no_attributes_mocked() {
         "#
         ),
         Contract::from_code_path(
-            "SpoofChecker".to_string(),
+            "CheatTxInfoChecker".to_string(),
             Path::new("tests/data/contracts/spoof_checker.cairo"),
         )
         .unwrap()
@@ -452,19 +452,19 @@ fn start_spoof_multiple() {
             use snforge_std::{ declare, ContractClassTrait, start_spoof, TxInfoMock, Operation, CheatArguments, CheatSpan};
 
             #[starknet::interface]
-            trait ISpoofChecker<TContractState> {
+            trait ICheatTxInfoChecker<TContractState> {
                 fn get_tx_hash(ref self: TContractState) -> felt252;
             }
 
             #[test]
             fn start_spoof_multiple() {
-                let contract = declare("SpoofChecker").unwrap();
+                let contract = declare("CheatTxInfoChecker").unwrap();
                 
                 let (contract_address_1, _) = contract.deploy(@ArrayTrait::new()).unwrap();
-                let dispatcher_1 = ISpoofCheckerDispatcher { contract_address: contract_address_1 };
+                let dispatcher_1 = ICheatTxInfoCheckerDispatcher { contract_address: contract_address_1 };
                 
                 let (contract_address_2, _) = contract.deploy(@ArrayTrait::new()).unwrap();
-                let dispatcher_2 = ISpoofCheckerDispatcher { contract_address: contract_address_2 };
+                let dispatcher_2 = ICheatTxInfoCheckerDispatcher { contract_address: contract_address_2 };
 
                 let mut tx_info_mock: TxInfoMock = Default::default();
                 tx_info_mock.transaction_hash = Operation::Start(CheatArguments {
@@ -492,7 +492,7 @@ fn start_spoof_multiple() {
         "#
         ),
         Contract::from_code_path(
-            "SpoofChecker".to_string(),
+            "CheatTxInfoChecker".to_string(),
             Path::new("tests/data/contracts/spoof_checker.cairo"),
         )
         .unwrap()
@@ -521,7 +521,7 @@ fn start_spoof_all() {
             use starknet::info::v2::ResourceBounds;
 
             #[starknet::interface]
-            trait ISpoofChecker<TContractState> {
+            trait ICheatTxInfoChecker<TContractState> {
                 fn get_tx_hash(ref self: TContractState) -> felt252;
                 fn get_nonce(ref self: TContractState) -> felt252;
                 fn get_account_contract_address(ref self: TContractState) -> ContractAddress;
@@ -539,9 +539,9 @@ fn start_spoof_all() {
 
             #[test]
             fn start_spoof_all_one_param() {
-                let contract = declare("SpoofChecker").unwrap();
+                let contract = declare("CheatTxInfoChecker").unwrap();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
-                let dispatcher = ISpoofCheckerDispatcher { contract_address };
+                let dispatcher = ICheatTxInfoCheckerDispatcher { contract_address };
 
                 let mut tx_info_mock: TxInfoMock = Default::default();
                 tx_info_mock.transaction_hash = Operation::StartGlobal(421);
@@ -553,9 +553,9 @@ fn start_spoof_all() {
             
             #[test]
             fn start_spoof_all_multiple_params() {
-                let contract = declare("SpoofChecker").unwrap();
+                let contract = declare("CheatTxInfoChecker").unwrap();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
-                let dispatcher = ISpoofCheckerDispatcher { contract_address };
+                let dispatcher = ICheatTxInfoCheckerDispatcher { contract_address };
 
                 let mut tx_info_mock: TxInfoMock = Default::default();
                 tx_info_mock.nonce = Operation::StartGlobal(411);
@@ -624,7 +624,7 @@ fn start_spoof_all() {
         "#
         ),
         Contract::from_code_path(
-            "SpoofChecker".to_string(),
+            "CheatTxInfoChecker".to_string(),
             Path::new("tests/data/contracts/spoof_checker.cairo"),
         )
         .unwrap()
@@ -651,18 +651,18 @@ fn start_spoof_complex() {
             use snforge_std::{ declare, ContractClassTrait, start_spoof, TxInfoMock, Operation, CheatArguments, CheatSpan };
 
             #[starknet::interface]
-            trait ISpoofChecker<TContractState> {
+            trait ICheatTxInfoChecker<TContractState> {
                 fn get_tx_hash(ref self: TContractState) -> felt252;
             }
 
             #[test]
             fn start_spoof_complex() {
-                let contract = declare("SpoofChecker").unwrap();
+                let contract = declare("CheatTxInfoChecker").unwrap();
                 let (contract_address_1, _) = contract.deploy(@array![]).unwrap();
                 let (contract_address_2, _) = contract.deploy(@array![]).unwrap();
                 
-                let dispatcher_1 = ISpoofCheckerDispatcher { contract_address: contract_address_1 };
-                let dispatcher_2 = ISpoofCheckerDispatcher { contract_address: contract_address_2 };
+                let dispatcher_1 = ICheatTxInfoCheckerDispatcher { contract_address: contract_address_1 };
+                let dispatcher_2 = ICheatTxInfoCheckerDispatcher { contract_address: contract_address_2 };
 
                 let mut tx_info_mock: TxInfoMock = Default::default();
                 tx_info_mock.transaction_hash = Operation::StartGlobal(421);
@@ -694,7 +694,7 @@ fn start_spoof_complex() {
         "#
         ),
         Contract::from_code_path(
-            "SpoofChecker".to_string(),
+            "CheatTxInfoChecker".to_string(),
             Path::new("tests/data/contracts/spoof_checker.cairo"),
         )
         .unwrap()
@@ -720,13 +720,13 @@ fn spoof_with_span() {
             use starknet::info::v2::ResourceBounds;
 
             #[starknet::interface]
-            trait ISpoofChecker<TContractState> {
+            trait ICheatTxInfoChecker<TContractState> {
                 fn get_tx_info(ref self: TContractState) -> starknet::info::v2::TxInfo;
             }
             
-            fn deploy_spoof_checker() -> ISpoofCheckerDispatcher {
-                let (contract_address, _) = declare("SpoofChecker").unwrap().deploy(@ArrayTrait::new()).unwrap();
-                ISpoofCheckerDispatcher { contract_address }
+            fn deploy_spoof_checker() -> ICheatTxInfoCheckerDispatcher {
+                let (contract_address, _) = declare("CheatTxInfoChecker").unwrap().deploy(@ArrayTrait::new()).unwrap();
+                ICheatTxInfoCheckerDispatcher { contract_address }
             }
 
             fn assert_tx_info(tx_info: starknet::info::v2::TxInfo, expected_tx_info: starknet::info::v2::TxInfo) {
@@ -825,7 +825,7 @@ fn spoof_with_span() {
         "#
         ),
         Contract::from_code_path(
-            "SpoofChecker".to_string(),
+            "CheatTxInfoChecker".to_string(),
             Path::new("tests/data/contracts/spoof_checker.cairo"),
         )
         .unwrap()

@@ -13,7 +13,8 @@ mod execution_info;
 /// Enum used to specify how long the target should be cheated for.
 #[derive(Copy, Drop, Serde, PartialEq, Clone, Debug, Display)]
 enum CheatSpan {
-    /// Applies the cheatcode indefinitely, until the cheat is canceled manually (e.g. using `stop_warp`).
+    /// Applies the cheatcode indefinitely, until the cheat is canceled manually (e.g. using
+    /// `stop_warp`).
     Indefinite: (),
     /// Applies the cheatcode for a specified number of calls to the target,
     /// after which the cheat is canceled (or until the cheat is canceled manually).
@@ -28,14 +29,16 @@ fn test_address() -> ContractAddress {
     contract_address_const::<469394814521890341860918960550914>()
 }
 
-/// Mocks contract call to a `function_selector` of a contract at the given address, for `n_times` first calls that are made
-/// to the contract.
+/// Mocks contract call to a `function_selector` of a contract at the given address, for `n_times`
+/// first calls that are made to the contract.
 /// A call to function `function_selector` will return data provided in `ret_data` argument.
 /// An address with no contract can be mocked as well.
 /// An entrypoint that is not present on the deployed contract is also possible to mock.
-/// Note that the function is not meant for mocking internal calls - it works only for contract entry points.
+/// Note that the function is not meant for mocking internal calls - it works only for contract
+/// entry points.
 /// - `contract_address` - target contract address
-/// - `function_selector` - hashed name of the target function (can be obtained with `selector!` macro)
+/// - `function_selector` - hashed name of the target function (can be obtained with `selector!`
+/// macro)
 /// - `ret_data` - data to return by the function `function_selector`
 /// - `n_times` - number of calls to mock the function for
 fn mock_call<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: Destruct<T>>(
@@ -60,7 +63,8 @@ fn mock_call<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: Destruct<T>>
 /// Mocks contract call to a function of a contract at the given address, indefinitely.
 /// See `mock_call` for comprehensive definition of how it can be used.
 /// - `contract_address` - targeted contracts' address
-/// - `function_selector` - hashed name of the target function (can be obtained with `selector!` macro)
+/// - `function_selector` - hashed name of the target function (can be obtained with `selector!`
+/// macro)
 /// - `ret_data` - data to be returned by the function
 fn start_mock_call<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: Destruct<T>>(
     contract_address: ContractAddress, function_selector: felt252, ret_data: T
@@ -78,9 +82,11 @@ fn start_mock_call<T, impl TSerde: core::serde::Serde<T>, impl TDestruct: Destru
     handle_cheatcode(cheatcode::<'mock_call'>(inputs.span()));
 }
 
-/// Cancels the `mock_call` / `start_mock_call` for the function with given name and contract address.
+/// Cancels the `mock_call` / `start_mock_call` for the function with given name and contract
+/// address.
 /// - `contract_address` - targeted contracts' address
-/// - `function_selector` - hashed name of the target function (can be obtained with `selector!` macro)
+/// - `function_selector` - hashed name of the target function (can be obtained with `selector!`
+/// macro)
 fn stop_mock_call(contract_address: ContractAddress, function_selector: felt252) {
     let contract_address_felt: felt252 = contract_address.into();
     handle_cheatcode(

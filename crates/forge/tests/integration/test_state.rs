@@ -55,7 +55,7 @@ fn simple_syscalls() {
         use snforge_std::{ declare, ContractClassTrait, test_address };
 
         #[starknet::interface]
-        trait ISpoofChecker<TContractState> {
+        trait ICheatTxInfoChecker<TContractState> {
             fn get_tx_hash(ref self: TContractState) -> felt252;
             fn get_nonce(ref self: TContractState) -> felt252;
             fn get_account_contract_address(ref self: TContractState) -> ContractAddress;
@@ -105,9 +105,9 @@ fn simple_syscalls() {
             assert(dispatcher_cheat_block_timestamp.get_block_timestamp() == block_info.block_timestamp, 'Invalid block timestamp');
             assert(dispatcher_cheat_sequencer_address.get_sequencer_address() == block_info.sequencer_address, 'Invalid sequencer address');
 
-            let contract = declare("SpoofChecker").unwrap();
+            let contract = declare("CheatTxInfoChecker").unwrap();
             let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
-            let dispatcher = ISpoofCheckerDispatcher { contract_address };
+            let dispatcher = ICheatTxInfoCheckerDispatcher { contract_address };
 
             let tx_info = exec_info.tx_info.unbox();
             assert(tx_info.version == dispatcher.get_version(), 'Incorrect version');
@@ -121,7 +121,7 @@ fn simple_syscalls() {
     "#
         ),
         Contract::from_code_path(
-            "SpoofChecker".to_string(),
+            "CheatTxInfoChecker".to_string(),
             Path::new("tests/data/contracts/spoof_checker.cairo"),
         )
         .unwrap(),

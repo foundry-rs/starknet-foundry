@@ -141,7 +141,8 @@ impl ExecutionInfoMockImpl of Default<ExecutionInfoMock> {
 }
 
 /// Changes `ExecutionInfo` returned by `get_execution_info()`
-/// - `execution_info_mock` - a struct with same structure as `ExecutionInfo` (returned by `get_execution_info()`)
+/// - `execution_info_mock` - a struct with same structure as `ExecutionInfo` (returned by
+/// `get_execution_info()`)
 fn cheat_execution_info(execution_info_mock: ExecutionInfoMock) {
     let mut inputs = array![];
 

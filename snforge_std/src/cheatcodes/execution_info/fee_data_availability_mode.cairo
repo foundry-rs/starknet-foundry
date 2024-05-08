@@ -3,9 +3,10 @@ use super::{
 };
 
 /// Changes the transaction fee data availability mode for the given target and span.
-/// - `target` - instance of `ContractAddress` specifying which contracts to cheat_fee_data_availability_mode
-/// - `fee_data_availability_mode` - transaction fee data availability mode to be set
-/// - `span` - instance of `CheatSpan` specifying the number of target calls with the cheat applied
+/// - `target` - instance of `ContractAddress` specifying which contracts to
+/// cheat_fee_data_availability_mode - `fee_data_availability_mode` - transaction fee data
+/// availability mode to be set - `span` - instance of `CheatSpan` specifying the number of target
+/// calls with the cheat applied
 fn cheat_fee_data_availability_mode(
     target: ContractAddress, fee_data_availability_mode: u32, span: CheatSpan
 ) {
@@ -49,7 +50,8 @@ fn start_cheat_fee_data_availability_mode(
     cheat_fee_data_availability_mode(target, fee_data_availability_mode, CheatSpan::Indefinite);
 }
 
-/// Cancels the `cheat_fee_data_availability_mode` / `start_cheat_fee_data_availability_mode` for the given target.
+/// Cancels the `cheat_fee_data_availability_mode` / `start_cheat_fee_data_availability_mode` for
+/// the given target.
 /// - `target` - instance of `ContractAddress` specifying which contracts to stop cheating
 fn stop_cheat_fee_data_availability_mode(target: ContractAddress) {
     let mut execution_info: ExecutionInfoMock = Default::default();

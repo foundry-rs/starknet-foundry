@@ -114,7 +114,7 @@ impl TxInfo {
 fn spoof_simple() {
     let mut test_env = TestEnvironment::new();
 
-    let contract_address = test_env.deploy("SpoofChecker", &[]);
+    let contract_address = test_env.deploy("CheatTxInfoChecker", &[]);
 
     let tx_info_before = test_env.get_tx_info(&contract_address);
 
@@ -134,7 +134,7 @@ fn spoof_simple() {
 fn start_spoof_multiple_times() {
     let mut test_env = TestEnvironment::new();
 
-    let contract_address = test_env.deploy("SpoofChecker", &[]);
+    let contract_address = test_env.deploy("CheatTxInfoChecker", &[]);
 
     let tx_info_before = test_env.get_tx_info(&contract_address);
 
@@ -215,7 +215,7 @@ fn start_spoof_multiple_times() {
 fn spoof_start_stop() {
     let mut test_env = TestEnvironment::new();
 
-    let contract_address = test_env.deploy("SpoofChecker", &[]);
+    let contract_address = test_env.deploy("CheatTxInfoChecker", &[]);
 
     let tx_info_before = test_env.get_tx_info(&contract_address);
 
@@ -239,7 +239,7 @@ fn spoof_start_stop() {
 fn spoof_stop_no_effect() {
     let mut test_env = TestEnvironment::new();
 
-    let contract_address = test_env.deploy("SpoofChecker", &[]);
+    let contract_address = test_env.deploy("CheatTxInfoChecker", &[]);
 
     let tx_info_before = test_env.get_tx_info(&contract_address);
 
@@ -252,7 +252,7 @@ fn spoof_stop_no_effect() {
 fn spoof_with_other_syscall() {
     let mut test_env = TestEnvironment::new();
 
-    let contract_address = test_env.deploy("SpoofChecker", &[]);
+    let contract_address = test_env.deploy("CheatTxInfoChecker", &[]);
 
     let tx_info_mock = TxInfoMock {
         transaction_hash: Some(Felt252::from(123)),
@@ -272,7 +272,7 @@ fn spoof_in_constructor() {
 
     let contracts_data = get_contracts();
 
-    let class_hash = test_env.declare("ConstructorSpoofChecker", &contracts_data);
+    let class_hash = test_env.declare("TxHashChecker", &contracts_data);
     let precalculated_address = test_env.precalculate_address(&class_hash, &[]);
 
     let tx_info_mock = TxInfoMock {
@@ -294,7 +294,7 @@ fn spoof_in_constructor() {
 fn spoof_proxy() {
     let mut test_env = TestEnvironment::new();
 
-    let contract_address = test_env.deploy("SpoofChecker", &[]);
+    let contract_address = test_env.deploy("CheatTxInfoChecker", &[]);
 
     let tx_info_mock = TxInfoMock {
         transaction_hash: Some(Felt252::from(123)),
@@ -306,7 +306,7 @@ fn spoof_proxy() {
     let output = test_env.call_contract(&contract_address, "get_transaction_hash", &[]);
     assert_success(output, &[Felt252::from(123)]);
 
-    let proxy_address = test_env.deploy("SpoofCheckerProxy", &[]);
+    let proxy_address = test_env.deploy("TxHashCheckerProxy", &[]);
 
     let output = test_env.call_contract(
         &proxy_address,
@@ -322,9 +322,9 @@ fn spoof_library_call() {
     let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
-    let class_hash = test_env.declare("SpoofChecker", &contracts_data);
+    let class_hash = test_env.declare("CheatTxInfoChecker", &contracts_data);
 
-    let lib_call_address = test_env.deploy("SpoofCheckerLibCall", &[]);
+    let lib_call_address = test_env.deploy("CheatTxInfoCheckerLibCall", &[]);
 
     let tx_info_mock = TxInfoMock {
         transaction_hash: Some(Felt252::from(123)),
@@ -346,7 +346,7 @@ fn spoof_library_call() {
 fn spoof_all_simple() {
     let mut test_env = TestEnvironment::new();
 
-    let contract_address = test_env.deploy("SpoofChecker", &[]);
+    let contract_address = test_env.deploy("CheatTxInfoChecker", &[]);
 
     let tx_info_before = test_env.get_tx_info(&contract_address);
 
@@ -366,7 +366,7 @@ fn spoof_all_simple() {
 fn spoof_all_then_one() {
     let mut test_env = TestEnvironment::new();
 
-    let contract_address = test_env.deploy("SpoofChecker", &[]);
+    let contract_address = test_env.deploy("CheatTxInfoChecker", &[]);
 
     let tx_info_before = test_env.get_tx_info(&contract_address);
 
@@ -389,7 +389,7 @@ fn spoof_all_then_one() {
 fn spoof_one_then_all() {
     let mut test_env = TestEnvironment::new();
 
-    let contract_address = test_env.deploy("SpoofChecker", &[]);
+    let contract_address = test_env.deploy("CheatTxInfoChecker", &[]);
 
     let tx_info_before = test_env.get_tx_info(&contract_address);
 
@@ -412,7 +412,7 @@ fn spoof_one_then_all() {
 fn spoof_all_stop() {
     let mut test_env = TestEnvironment::new();
 
-    let contract_address = test_env.deploy("SpoofChecker", &[]);
+    let contract_address = test_env.deploy("CheatTxInfoChecker", &[]);
 
     let tx_info_before = test_env.get_tx_info(&contract_address);
 
@@ -435,7 +435,7 @@ fn spoof_multiple() {
     let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
-    let class_hash = test_env.declare("SpoofChecker", &contracts_data);
+    let class_hash = test_env.declare("CheatTxInfoChecker", &contracts_data);
 
     let contract_address_1 = test_env.deploy_wrapper(&class_hash, &[]);
 
@@ -467,7 +467,7 @@ fn spoof_multiple() {
 fn spoof_simple_with_span() {
     let mut test_env = TestEnvironment::new();
 
-    let contract_address = test_env.deploy("SpoofChecker", &[]);
+    let contract_address = test_env.deploy("CheatTxInfoChecker", &[]);
 
     let tx_info_before = test_env.get_tx_info(&contract_address);
     let tx_info_mock = TxInfoMock {
@@ -488,7 +488,7 @@ fn spoof_proxy_with_span() {
     let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
-    let class_hash = test_env.declare("SpoofCheckerProxy", &contracts_data);
+    let class_hash = test_env.declare("TxHashCheckerProxy", &contracts_data);
     let contract_address_1 = test_env.deploy_wrapper(&class_hash, &[]);
     let contract_address_2 = test_env.deploy_wrapper(&class_hash, &[]);
 
@@ -513,7 +513,7 @@ fn spoof_in_constructor_with_span() {
 
     let contracts_data = get_contracts();
 
-    let class_hash = test_env.declare("ConstructorSpoofChecker", &contracts_data);
+    let class_hash = test_env.declare("TxHashChecker", &contracts_data);
     let precalculated_address = test_env.precalculate_address(&class_hash, &[]);
 
     let tx_info_mock = TxInfoMock {
@@ -550,7 +550,7 @@ fn spoof_no_constructor_with_span() {
 
     let contracts_data = get_contracts();
 
-    let class_hash = test_env.declare("SpoofChecker", &contracts_data);
+    let class_hash = test_env.declare("CheatTxInfoChecker", &contracts_data);
     let precalculated_address = test_env.precalculate_address(&class_hash, &[]);
 
     let tx_info_mock = TxInfoMock {
@@ -581,7 +581,7 @@ fn spoof_no_constructor_with_span() {
 fn spoof_override_span() {
     let mut test_env = TestEnvironment::new();
 
-    let contract_address = test_env.deploy("SpoofChecker", &[]);
+    let contract_address = test_env.deploy("CheatTxInfoChecker", &[]);
 
     let tx_info_before = test_env.get_tx_info(&contract_address);
     let mut tx_info_mock = TxInfoMock {
@@ -613,8 +613,8 @@ fn spoof_library_call_with_span() {
     let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
-    let class_hash = test_env.declare("SpoofChecker", &contracts_data);
-    let contract_address = test_env.deploy("SpoofCheckerLibCall", &[]);
+    let class_hash = test_env.declare("CheatTxInfoChecker", &contracts_data);
+    let contract_address = test_env.deploy("CheatTxInfoCheckerLibCall", &[]);
 
     let tx_info_before = test_env.get_tx_info(&contract_address);
     let tx_info_mock = TxInfoMock {
