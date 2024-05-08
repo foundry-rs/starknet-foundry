@@ -5,7 +5,7 @@ use cairo_vm::{
 };
 use conversions::{
     felt252::{RawFeltVec, SerializeAsFelt252Vec},
-    FromConv, IntoConv,
+    IntoConv,
 };
 
 use crate::{
