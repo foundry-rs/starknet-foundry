@@ -3,9 +3,8 @@ use crate::{
     asserts::assert_is_used_once,
     attributes::AttributeCollector,
     parse::{parse, parse_args},
-    MacroResult,
 };
-use cairo_lang_macro::TokenStream;
+use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream};
 use cairo_lang_syntax::node::{
     ast::{Condition, Expr, FunctionWithBody, GenericArg, GenericArgValue, Statement},
     db::SyntaxGroup,
@@ -15,53 +14,71 @@ use cairo_lang_syntax::node::{
 use cairo_lang_utils::Upcast;
 use indoc::formatdoc;
 
-pub trait ExtendWithConfig {
-    fn extend_with_config_cheatcodes(args: TokenStream, item: TokenStream) -> MacroResult;
+#[allow(clippy::needless_pass_by_value)]
+pub fn extend_with_config_cheatcodes<Collector>(
+    args: TokenStream,
+    item: TokenStream,
+) -> ProcMacroResult
+where
+    Collector: AttributeCollector,
+{
+    match extend_with_config_cheatcodes_internal::<Collector>(&args, &item) {
+        Ok((item, warn)) => {
+            let result = ProcMacroResult::new(TokenStream::new(item));
+
+            if let Some(warn) = warn {
+                result.with_diagnostics(warn.into())
+            } else {
+                result
+            }
+        }
+        Err(diagnostics) => ProcMacroResult::new(item).with_diagnostics(diagnostics),
+    }
 }
 
-impl<T> ExtendWithConfig for T
+fn extend_with_config_cheatcodes_internal<Collector>(
+    args: &TokenStream,
+    item: &TokenStream,
+) -> Result<(String, Option<Diagnostic>), Diagnostics>
 where
-    T: AttributeCollector,
+    Collector: AttributeCollector,
 {
-    fn extend_with_config_cheatcodes(args: TokenStream, item: TokenStream) -> MacroResult {
-        let item = item.to_string();
-        let (db, func) = parse::<Self>(&item)?;
+    let item = item.to_string();
+    let (db, func) = parse::<Collector>(&item)?;
 
-        let db = db.upcast();
+    let db = db.upcast();
 
-        assert_is_used_once::<Self>(db, &func)?;
+    assert_is_used_once::<Collector>(db, &func)?;
 
-        let (args_db, args) = parse_args::<Self>(&args.to_string())?;
+    let (args_db, args) = parse_args::<Collector>(&args.to_string())?;
 
-        let (args, empty_args_list_warn) = Arguments::new::<Self>(args_db.upcast(), args);
+    let (args, empty_args_list_warn) = Arguments::new::<Collector>(args_db.upcast(), args);
 
-        let value = Self::args_into_body(args_db.upcast(), args).map_err(|err| {
-            if let Some(empty_args_list_warn) = empty_args_list_warn {
-                err.warn(empty_args_list_warn)
-            } else {
-                err
-            }
-        })?;
+    let value = Collector::args_into_body(args_db.upcast(), args).map_err(|err| {
+        if let Some(empty_args_list_warn) = &empty_args_list_warn {
+            err.warn(empty_args_list_warn)
+        } else {
+            err
+        }
+    })?;
 
-        let cheatcode_name = Self::CHEATCODE_NAME;
+    let cheatcode_name = Collector::CHEATCODE_NAME;
 
-        let config_cheatcode = formatdoc!(
-            r#"
-                let mut data = array![];
+    let config_cheatcode = formatdoc!(
+        r#"
+            let mut data = array![];
 
-                {value}
-                .serialize(ref data);
+            {value}
+            .serialize(ref data);
 
-                cheatcode::<'{cheatcode_name}'>(data);
-            "#
-        );
+            cheatcode::<'{cheatcode_name}'>(data);
+        "#
+    );
 
-        Ok(TokenStream::new(append_config_statements(
-            db,
-            &func,
-            &config_cheatcode,
-        )))
-    }
+    Ok((
+        append_config_statements(db, &func, &config_cheatcode),
+        empty_args_list_warn.map(Diagnostic::warn),
+    ))
 }
 
 const CONFIG_CHEATCODE: &str = "was_configuration_set";
@@ -115,7 +132,7 @@ fn append_config_statements(
         }
     });
 
-    // there was already config check, ommit it and collect remaining statements
+    // there was already config check, omit it and collect remaining statements
     let statements = if if_content.is_some() {
         &statements[1..]
     } else {

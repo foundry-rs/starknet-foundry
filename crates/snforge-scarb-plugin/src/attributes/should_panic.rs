@@ -1,8 +1,6 @@
 use super::{AttributeInfo, AttributeTypeData};
-use crate::{
-    args::Arguments, attributes::AttributeCollector, config_fn::ExtendWithConfig, MacroResult,
-};
-use cairo_lang_macro::{Diagnostics, TokenStream};
+use crate::{args::Arguments, attributes::AttributeCollector};
+use cairo_lang_macro::Diagnostics;
 use cairo_lang_syntax::node::db::SyntaxGroup;
 use std::fmt::Display;
 
@@ -54,10 +52,6 @@ impl AttributeCollector for ShouldPanicCollector {
             "snforge_std::_config_types::ShouldPanicConfig {{ expected: array![{expected}] }}"
         ))
     }
-}
-
-pub fn _should_panic(args: TokenStream, item: TokenStream) -> MacroResult {
-    ShouldPanicCollector::extend_with_config_cheatcodes(args, item)
 }
 
 mod validate {

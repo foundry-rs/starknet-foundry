@@ -1,8 +1,6 @@
 use super::{AttributeInfo, AttributeTypeData};
-use crate::{
-    args::Arguments, attributes::AttributeCollector, config_fn::ExtendWithConfig, MacroResult,
-};
-use cairo_lang_macro::{Diagnostics, TokenStream};
+use crate::{args::Arguments, attributes::AttributeCollector};
+use cairo_lang_macro::Diagnostics;
 use cairo_lang_syntax::node::db::SyntaxGroup;
 
 pub struct FuzzerCollector;
@@ -27,10 +25,6 @@ impl AttributeCollector for FuzzerCollector {
             "snforge_std::_config_types::FuzzerConfig {{ seed: {seed}, runs: {runs} }}"
         ))
     }
-}
-
-pub fn _fuzzer(args: TokenStream, item: TokenStream) -> MacroResult {
-    FuzzerCollector::extend_with_config_cheatcodes(args, item)
 }
 
 pub mod validate {

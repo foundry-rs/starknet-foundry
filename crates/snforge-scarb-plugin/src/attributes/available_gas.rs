@@ -2,10 +2,8 @@ use super::{AttributeInfo, AttributeTypeData};
 use crate::{
     args::Arguments,
     attributes::{AttributeCollector, ErrorExt},
-    config_fn::ExtendWithConfig,
-    MacroResult,
 };
-use cairo_lang_macro::{Diagnostics, TokenStream};
+use cairo_lang_macro::Diagnostics;
 use cairo_lang_syntax::node::{ast::Expr, db::SyntaxGroup, Terminal};
 
 pub struct AvailableGasCollector;
@@ -35,8 +33,4 @@ impl AttributeCollector for AvailableGasCollector {
             "snforge_std::_config_types::AvailableGasConfig {{ gas: {gas} }}"
         ))
     }
-}
-
-pub fn _available_gas(args: TokenStream, item: TokenStream) -> MacroResult {
-    AvailableGasCollector::extend_with_config_cheatcodes(args, item)
 }

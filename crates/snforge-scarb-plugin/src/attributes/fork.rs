@@ -1,8 +1,6 @@
 use super::{AttributeInfo, AttributeTypeData};
-use crate::{
-    args::Arguments, attributes::AttributeCollector, config_fn::ExtendWithConfig, MacroResult,
-};
-use cairo_lang_macro::{Diagnostic, Diagnostics, TokenStream};
+use crate::{args::Arguments, attributes::AttributeCollector};
+use cairo_lang_macro::{Diagnostic, Diagnostics};
 use cairo_lang_syntax::node::db::SyntaxGroup;
 
 pub struct ForkCollector;
@@ -80,10 +78,6 @@ impl AttributeCollector for ForkCollector {
             from_file_args::<Self>(db, &args).map_err(|next_error| vec![error, next_error].into())
         })
     }
-}
-
-pub fn _fork(args: TokenStream, item: TokenStream) -> MacroResult {
-    ForkCollector::extend_with_config_cheatcodes(args, item)
 }
 
 mod validate {

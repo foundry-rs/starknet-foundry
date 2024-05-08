@@ -7,7 +7,6 @@ pub mod fork;
 pub mod fuzzer;
 pub mod ignore;
 pub mod should_panic;
-pub mod test;
 
 pub trait AttributeInfo {
     const ATTR_NAME: &'static str;
