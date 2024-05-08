@@ -1,5 +1,7 @@
 use super::common::runner::{setup_package, test_runner};
 use crate::e2e::common::get_trace_from_trace_node;
+use cairo_lang_sierra::program::VersionedProgram;
+use cairo_lang_starknet_classes::contract_class::ContractClass;
 use forge_runner::build_trace_data::{TEST_CODE_CONTRACT_NAME, TEST_CODE_FUNCTION_NAME, TRACE_DIR};
 use std::fs;
 use trace_data::{CallTrace as ProfilerCallTrace, CallTraceNode as ProfilerCallTraceNode};
@@ -109,10 +111,16 @@ fn trace_has_cairo_execution_info() {
 }
 
 fn assert_cairo_execution_info_exists(trace: &ProfilerCallTrace) {
-    assert!(
-        trace.cairo_execution_info.is_some()
-            || trace.entry_point.function_name == Some(String::from("fail"))
-    );
+    if let Some(cairo_execution_info) = trace.cairo_execution_info.as_ref() {
+        let sierra_string = fs::read_to_string(&cairo_execution_info.source_sierra_path).unwrap();
+
+        assert!(
+            serde_json::from_str::<VersionedProgram>(&sierra_string).is_ok()
+                || serde_json::from_str::<ContractClass>(&sierra_string).is_ok()
+        );
+    } else {
+        assert_eq!(trace.entry_point.function_name, Some(String::from("fail")));
+    }
 
     for sub_trace_node in &trace.nested_calls {
         if let ProfilerCallTraceNode::EntryPointCall(sub_trace) = sub_trace_node {
