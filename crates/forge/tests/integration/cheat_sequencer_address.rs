@@ -124,7 +124,7 @@ fn cheat_sequencer_address_basic() {
         ),
         Contract::from_code_path(
             "CheatSequencerAddressChecker".to_string(),
-            Path::new("tests/data/contracts/elect_checker.cairo"),
+            Path::new("tests/data/contracts/cheat_sequencer_address_checker.cairo"),
         )
         .unwrap()
     );
@@ -201,7 +201,7 @@ fn cheat_sequencer_address_complex() {
         ),
         Contract::from_code_path(
             "CheatSequencerAddressChecker".to_string(),
-            Path::new("tests/data/contracts/elect_checker.cairo"),
+            Path::new("tests/data/contracts/cheat_sequencer_address_checker.cairo"),
         )
         .unwrap()
     );
@@ -298,7 +298,7 @@ fn cheat_sequencer_address_with_span() {
         ),
         Contract::from_code_path(
             "CheatSequencerAddressChecker".to_string(),
-            Path::new("tests/data/contracts/elect_checker.cairo"),
+            Path::new("tests/data/contracts/cheat_sequencer_address_checker.cairo"),
         )
         .unwrap()
     );
