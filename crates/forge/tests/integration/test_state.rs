@@ -127,17 +127,17 @@ fn simple_syscalls() {
         .unwrap(),
         Contract::from_code_path(
             "CheatBlockNumberChecker".to_string(),
-            Path::new("tests/data/contracts/roll_checker.cairo"),
+            Path::new("tests/data/contracts/cheat_block_number_checker.cairo"),
         )
         .unwrap(),
         Contract::from_code_path(
             "CheatBlockTimestampChecker".to_string(),
-            Path::new("tests/data/contracts/warp_checker.cairo"),
+            Path::new("tests/data/contracts/cheat_block_timestamp_checker.cairo"),
         )
         .unwrap(),
         Contract::from_code_path(
             "CheatSequencerAddressChecker".to_string(),
-            Path::new("tests/data/contracts/elect_checker.cairo")
+            Path::new("tests/data/contracts/cheat_sequencer_address_checker.cairo")
         )
         .unwrap()
     );
@@ -754,7 +754,7 @@ fn caller_address_in_called_contract() {
         ),
         Contract::from_code_path(
             "CheatCallerAddressChecker".to_string(),
-            Path::new("tests/data/contracts/prank_checker.cairo"),
+            Path::new("tests/data/contracts/cheat_caller_address_checker.cairo"),
         )
         .unwrap(),
         Contract::new(

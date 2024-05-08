@@ -3,7 +3,10 @@ use cairo_vm::{
     types::relocatable::{MaybeRelocatable, Relocatable},
     vm::vm_core::VirtualMachine,
 };
-use conversions::{felt252::SerializeAsFelt252Vec, IntoConv};
+use conversions::{
+    felt252::{RawFeltVec, SerializeAsFelt252Vec},
+    IntoConv,
+};
 
 use crate::{
     runtime_extensions::forge_runtime_extension::cheatcodes::spoof::TxInfoMock, state::CheatedData,
@@ -90,8 +93,10 @@ fn get_cheated_tx_info_ptr(
         new_tx_info[7] = MaybeRelocatable::Int(nonce);
     };
     if let Some(resource_bounds) = resource_bounds {
-        let (resource_bounds_start_ptr, resource_bounds_end_ptr) =
-            add_vec_memory_segment(&resource_bounds.serialize_as_felt252_vec(), vm);
+        let (resource_bounds_start_ptr, resource_bounds_end_ptr) = add_vec_memory_segment(
+            &RawFeltVec::new(resource_bounds).serialize_as_felt252_vec(),
+            vm,
+        );
         new_tx_info[8] = resource_bounds_start_ptr.into();
         new_tx_info[9] = resource_bounds_end_ptr.into();
     }
