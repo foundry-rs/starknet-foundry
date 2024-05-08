@@ -17,7 +17,9 @@ use build_trace_data::save_trace_data;
 use profiler_api::run_profiler;
 use smol_str::SmolStr;
 
+use crate::build_trace_data::test_sierra_program_path::VersionedProgramPath;
 use crate::forge_config::{ExecutionDataToSave, ForgeConfig, TestRunnerConfig};
+use camino::Utf8Path;
 use std::sync::Arc;
 use test_case_summary::{AnyTestCaseSummary, Fuzzing};
 use tokio::sync::mpsc::{channel, Sender};
@@ -75,12 +77,12 @@ pub async fn run_tests_from_crate(
     tests: CompiledTestCrateRunnable,
     forge_config: Arc<ForgeConfig>,
     tests_filter: &impl TestCaseFilter,
+    package_name: &str,
 ) -> Result<TestCrateRunResult> {
-    let sierra_program = &tests.sierra_program;
+    let sierra_program = &tests.sierra_program.program;
     let casm_program = Arc::new(compile_sierra_to_casm(sierra_program)?);
 
     let mut tasks = FuturesUnordered::new();
-    let test_cases = tests.test_cases;
     // Initiate two channels to manage the `--exit-first` flag.
     // Owing to `cheatnet` fork's utilization of its own Tokio runtime for RPC requests,
     // test execution must occur within a `tokio::spawn_blocking`.
@@ -88,7 +90,14 @@ pub async fn run_tests_from_crate(
     // a channel is used to signal the task that test processing is no longer necessary.
     let (send, mut rec) = channel(1);
 
-    for case in test_cases {
+    let maybe_versioned_program_path = Arc::new(maybe_save_versioned_program(
+        forge_config.output_config.execution_data_to_save,
+        &tests,
+        &forge_config.output_config.versioned_programs_dir,
+        package_name,
+    )?);
+
+    for case in tests.test_cases {
         let case_name = case.name.clone();
 
         if !tests_filter.should_be_run(&case) {
@@ -117,6 +126,7 @@ pub async fn run_tests_from_crate(
             case,
             casm_program.clone(),
             forge_config.clone(),
+            maybe_versioned_program_path.clone(),
             send.clone(),
         ));
     }
@@ -172,11 +182,37 @@ fn maybe_save_execution_data(
     Ok(())
 }
 
+fn maybe_save_versioned_program(
+    execution_data_to_save: ExecutionDataToSave,
+    compiled_test_crate_runnable: &CompiledTestCrateRunnable,
+    versioned_programs_dir: &Utf8Path,
+    package_name: &str,
+) -> Result<Option<VersionedProgramPath>> {
+    let save_versioned_program = match execution_data_to_save {
+        ExecutionDataToSave::Trace | ExecutionDataToSave::TraceAndProfile => true,
+        ExecutionDataToSave::None => false,
+    };
+
+    let maybe_versioned_program_path = if save_versioned_program {
+        Some(VersionedProgramPath::save_versioned_program(
+            &compiled_test_crate_runnable.sierra_program.clone().into(),
+            compiled_test_crate_runnable.tests_location,
+            versioned_programs_dir,
+            package_name,
+        )?)
+    } else {
+        None
+    };
+
+    Ok(maybe_versioned_program_path)
+}
+
 fn choose_test_strategy_and_run(
     args: Vec<ConcreteTypeId>,
     case: Arc<TestCaseRunnable>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
     forge_config: Arc<ForgeConfig>,
+    maybe_versioned_program_path: Arc<Option<VersionedProgramPath>>,
     send: Sender<()>,
 ) -> JoinHandle<Result<AnyTestCaseSummary>> {
     if args.is_empty() {
@@ -185,6 +221,7 @@ fn choose_test_strategy_and_run(
                 case,
                 casm_program,
                 forge_config.test_runner_config.clone(),
+                maybe_versioned_program_path,
                 send,
             )
             .await??;
@@ -197,6 +234,7 @@ fn choose_test_strategy_and_run(
                 case,
                 casm_program,
                 forge_config.test_runner_config.clone(),
+                maybe_versioned_program_path,
                 send,
             )
             .await??;
@@ -210,6 +248,7 @@ fn run_with_fuzzing(
     case: Arc<TestCaseRunnable>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
     test_runner_config: Arc<TestRunnerConfig>,
+    maybe_versioned_program_path: Arc<Option<VersionedProgramPath>>,
     send: Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary<Fuzzing>>> {
     tokio::task::spawn(async move {
@@ -250,6 +289,7 @@ fn run_with_fuzzing(
                 case.clone(),
                 casm_program.clone(),
                 test_runner_config.clone(),
+                maybe_versioned_program_path.clone(),
                 send.clone(),
                 fuzzing_send.clone(),
             ));
