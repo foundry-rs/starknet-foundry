@@ -129,11 +129,42 @@ pub trait SerializeAsFelt252Vec: Sized {
     }
 }
 
+/// use this wrapper to NOT add extra length felt
+/// useful e.g. when you need to pass an already serialized value
+pub struct RawFeltVec<T>(Vec<T>)
+where
+    T: SerializeAsFelt252Vec;
+
+impl<T> RawFeltVec<T>
+where
+    T: SerializeAsFelt252Vec,
+{
+    #[must_use]
+    pub fn new(vec: Vec<T>) -> Self {
+        Self(vec)
+    }
+}
+
+impl<T> SerializeAsFelt252Vec for RawFeltVec<T>
+where
+    T: SerializeAsFelt252Vec,
+{
+    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
+        for e in self.0 {
+            e.serialize_into_felt252_vec(output);
+        }
+    }
+}
+
 impl<T> SerializeAsFelt252Vec for Vec<T>
 where
     T: SerializeAsFelt252Vec,
 {
     fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
+        let len: Felt252 = self.len().into();
+
+        len.serialize_into_felt252_vec(output);
+
         for e in self {
             e.serialize_into_felt252_vec(output);
         }

@@ -15,7 +15,7 @@ mod ByteArrayPanickingContract {
         fn do_panic(self: @ContractState) {
             assert!(
                 false,
-                "This is a very long\n and multiline string, that will for sure saturate the pending_word"
+                "This is a very long\n and multi line string, that will for sure saturate the pending_word"
             );
         }
     }
