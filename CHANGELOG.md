@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast
+
+#### Added
+
+- New required flag `--type` to `account add` command
+
 ## [0.23.0] - 2024-05-08
 
 ### Forge
@@ -23,10 +29,6 @@ produced by Scarb if they were present. Setting up `casm = true` in `Scarb.toml`
 down the compilation.
 
 ### Cast
-
-#### Added
-
-- New required flag `--type` to `account add` command
 
 #### Changed
 
