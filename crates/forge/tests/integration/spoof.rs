@@ -804,10 +804,10 @@ fn spoof_with_span() {
 
                 let mut tx_info_mock: TxInfoMock = Default::default();
                 tx_info_mock.transaction_hash = Operation::Start(CheatArguments {
-                value: 421,
-                target: test_address(),
-                span: CheatSpan::TargetCalls(1)
-            });
+                    value: 421,
+                    target: test_address(),
+                    span: CheatSpan::TargetCalls(1)
+                });
 
                 spoof(tx_info_mock);
                 

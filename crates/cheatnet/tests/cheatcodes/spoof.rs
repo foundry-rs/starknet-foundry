@@ -1,8 +1,8 @@
 use super::test_environment::TestEnvironment;
 use crate::common::{assertions::assert_success, get_contracts, recover_data};
 use cairo_felt::Felt252;
-use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::spoof::{
-    ResourceBounds, TxInfoMock,
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::{
+    cheat_execution_info::ResourceBounds, spoof::TxInfoMock,
 };
 use cheatnet::state::CheatSpan;
 use conversions::IntoConv;

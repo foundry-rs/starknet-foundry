@@ -3,6 +3,24 @@ use starknet::info::v2::ResourceBounds;
 use snforge_std::cheatcodes::CheatSpan;
 use super::super::_cheatcode::handle_cheatcode;
 
+mod caller_address;
+mod block_number;
+mod block_timestamp;
+mod sequencer_address;
+mod version;
+mod max_fee;
+mod signature;
+mod transaction_hash;
+mod chain_id;
+mod nonce;
+mod resource_bounds;
+mod tip;
+mod paymaster_data;
+mod nonce_data_availability_mode;
+mod fee_data_availability_mode;
+mod account_deployment_data;
+
+
 #[derive(Serde, Drop, Copy)]
 pub struct CheatArguments<T> {
     value: T,
