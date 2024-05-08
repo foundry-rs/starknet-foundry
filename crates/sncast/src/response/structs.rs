@@ -1,7 +1,7 @@
 use cairo_felt::Felt252;
 use camino::Utf8PathBuf;
-use conversions::felt252::SerializeAsFelt252Vec;
 use conversions::FromConv;
+use conversions::{felt252::SerializeAsFelt252Vec, IntoConv};
 use serde::{Deserialize, Serialize, Serializer};
 use starknet::core::types::FieldElement;
 
@@ -9,6 +9,12 @@ pub struct Decimal(pub u64);
 
 #[derive(Clone, Debug, Deserialize, PartialEq)]
 pub struct Felt(pub FieldElement);
+
+impl FromConv<Felt> for Felt252 {
+    fn from_(value: Felt) -> Self {
+        value.0.into_()
+    }
+}
 
 impl Serialize for Decimal {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -47,8 +53,7 @@ impl CommandResponse for CallResponse {}
 
 impl SerializeAsFelt252Vec for CallResponse {
     fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
-        output.push(Felt252::from(self.response.len()));
-        output.extend(self.response.iter().map(|el| Felt252::from_(el.0)));
+        self.response.serialize_into_felt252_vec(output);
     }
 }
 
@@ -60,7 +65,7 @@ impl CommandResponse for InvokeResponse {}
 
 impl SerializeAsFelt252Vec for InvokeResponse {
     fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
-        output.push(Felt252::from_(self.transaction_hash.0));
+        self.transaction_hash.serialize_into_felt252_vec(output);
     }
 }
 
