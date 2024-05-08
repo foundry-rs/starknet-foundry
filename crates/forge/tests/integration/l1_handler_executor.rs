@@ -1,7 +1,7 @@
 use indoc::indoc;
 use std::path::Path;
 use test_utils::runner::{assert_passed, Contract};
-use test_utils::running_tests::run_test_case; 
+use test_utils::running_tests::run_test_case;
 use test_utils::test_case;
 
 #[test]
@@ -96,7 +96,7 @@ fn l1_handler_execute() {
                     },
                 }
             }
-        "#  
+        "#
         ),
         Contract::from_code_path(
             "l1_handler_executor".to_string(),
