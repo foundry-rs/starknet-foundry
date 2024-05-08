@@ -274,7 +274,11 @@ async fn deploy_oz_account(
     } else {
         match deployment.estimate_fee().await {
             Ok(max_fee) => max_fee.overall_fee,
-            Err(error) => return Err(handle_account_factory_error(error)),
+            Err(error) => {
+                return Err(handle_account_factory_error::<
+                    OpenZeppelinAccountFactory<LocalWallet, &JsonRpcClient<HttpTransport>>,
+                >(error))
+            }
         }
     };
     let result = deployment.max_fee(deploy_max_fee).send().await;

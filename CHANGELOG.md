@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - New required flag `--type` to `account add` command
+- Support for creating argent accounts
 
 ## [0.23.0] - 2024-05-08
 

@@ -350,6 +350,7 @@ async fn run_async_command(
                     config.keystore,
                     &provider,
                     chain_id,
+                    create.account_type,
                     create.salt,
                     create.add_profile,
                     create.class_hash,

@@ -29,8 +29,7 @@ use cairo_felt::Felt252;
 use conversions::felt252::SerializeAsFelt252Vec;
 use serde::de::DeserializeOwned;
 use shared::rpc::create_rpc_client;
-use starknet::accounts::AccountFactoryError;
-use starknet::signers::local_wallet::SignError;
+use starknet::accounts::{AccountFactory, AccountFactoryError};
 use std::collections::HashMap;
 use std::thread::sleep;
 use std::time::Duration;
@@ -571,10 +570,13 @@ pub fn handle_rpc_error(error: impl Into<SNCastProviderError>) -> Error {
 }
 
 #[must_use]
-pub fn handle_account_factory_error(err: AccountFactoryError<SignError>) -> anyhow::Error {
+pub fn handle_account_factory_error<T>(err: AccountFactoryError<T::SignError>) -> anyhow::Error
+where
+    T: AccountFactory + Sync,
+{
     match err {
         AccountFactoryError::Provider(error) => handle_rpc_error(error),
-        error => anyhow!(error),
+        error => anyhow!(error.to_string()),
     }
 }
 
