@@ -41,15 +41,42 @@ pub mod response;
 pub mod state;
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
-struct AccountData {
-    private_key: String,
-    public_key: String,
-    address: String,
-    salt: Option<String>,
-    deployed: Option<bool>,
-    class_hash: Option<String>,
-    legacy: Option<bool>,
-    account_type: Option<String>,
+pub struct AccountData {
+    pub private_key: String,
+    pub public_key: String,
+    pub address: Option<String>,
+    pub salt: Option<String>,
+    pub deployed: Option<bool>,
+    pub class_hash: Option<String>,
+    pub legacy: Option<bool>,
+
+    #[serde(default, rename(serialize = "type", deserialize = "type"))]
+    pub account_type: Option<String>,
+}
+
+impl AccountData {
+    pub fn get_address_as_felt(&self) -> Result<FieldElement> {
+        if self.address.is_none() {
+            bail!("Failed to get address - make sure the account is deployed")
+        }
+        Self::get_as_felt(&self.address, "address")
+    }
+    pub fn get_salt_as_felt(&self) -> Result<FieldElement> {
+        Self::get_as_felt(&self.salt, "salt")
+    }
+
+    pub fn get_class_hash_as_felt(&self) -> Result<FieldElement> {
+        Self::get_as_felt(&self.class_hash, "class_hash")
+    }
+
+    fn get_as_felt(value: &Option<String>, key_name: &str) -> Result<FieldElement> {
+        let value_to_parse = value
+            .as_ref()
+            .ok_or_else(|| anyhow!("Failed to get {key_name}"))?;
+        parse_number(value_to_parse).with_context(|| {
+            format!("Failed to convert {key_name} = {value_to_parse} to FieldElement")
+        })
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
@@ -76,6 +103,7 @@ impl NumbersFormat {
     }
 }
 
+#[derive(Clone, Copy)]
 pub struct WaitForTx {
     pub wait: bool,
     pub wait_params: ValidatedWaitParams,
@@ -218,22 +246,15 @@ async fn build_account(
         parse_number(&account_data.private_key)
             .context("Failed to convert private key to FieldElement")?,
     ));
-    let address = parse_number(&account_data.address).with_context(|| {
-        format!(
-            "Failed to convert account address = {} to FieldElement",
-            &account_data.address
-        )
-    })?;
+
+    let address = account_data.get_address_as_felt()?;
     verify_account_address(address, chain_id, provider).await?;
 
     let class_hash = account_data
         .class_hash
         .map(|class_hash| {
             parse_number(&class_hash).with_context(|| {
-                format!(
-                    "Failed to convert class hash = {} to FieldElement",
-                    &class_hash
-                )
+                format!("Failed to convert class hash = {class_hash} to FieldElement")
             })
         })
         .transpose()?;
@@ -282,7 +303,7 @@ pub async fn check_class_hash_exists(
     }
 }
 
-fn get_account_data_from_keystore(
+pub fn get_account_data_from_keystore(
     account: &str,
     keystore_path: &Utf8PathBuf,
 ) -> Result<AccountData> {
@@ -304,14 +325,10 @@ fn get_account_data_from_keystore(
             .map(str::to_string)
     };
 
-    let address = parse_to_string(&account_info, "deployment", "address").ok_or_else(|| {
-        anyhow::anyhow!(
-            "Failed to get address from account JSON file - make sure the account is deployed"
-        )
-    })?;
     let public_key = parse_to_string(&account_info, "variant", "public_key")
         .ok_or_else(|| anyhow::anyhow!("Failed to get public key from account JSON file"))?;
 
+    let address = parse_to_string(&account_info, "deployment", "address");
     let class_hash = parse_to_string(&account_info, "deployment", "class_hash");
     let salt = parse_to_string(&account_info, "deployment", "salt");
     let deployed =
@@ -338,7 +355,7 @@ fn get_from_json<'a>(entry: &'a Value, parent_key: &str, child_key: &str) -> Opt
         .get(child_key)
 }
 
-fn get_account_data_from_accounts_file(
+pub fn get_account_data_from_accounts_file(
     name: &str,
     chain_id: FieldElement,
     path: &Utf8PathBuf,
@@ -630,7 +647,7 @@ pub fn check_keystore_and_account_files_exist(
         bail!("Failed to find keystore file");
     }
     if account.is_empty() {
-        bail!("Passed empty path for `--account`");
+        bail!("Argument `--account` must be passed and be a path when using `--keystore`");
     }
     let path_to_account = Utf8PathBuf::from(account);
     if !path_to_account.exists() {
@@ -779,7 +796,7 @@ mod tests {
         );
         assert_eq!(
             account.address,
-            "0xf6ecd22832b7c3713cfa7826ee309ce96a2769833f093795fafa1b8f20c48b"
+            Some("0xf6ecd22832b7c3713cfa7826ee309ce96a2769833f093795fafa1b8f20c48b".to_string())
         );
         assert_eq!(
             account.salt,
@@ -806,7 +823,7 @@ mod tests {
         );
         assert_eq!(
             account.address,
-            "0xcce3217e4aea0ab738b55446b1b378750edfca617db549fda1ede28435206c"
+            Some("0xcce3217e4aea0ab738b55446b1b378750edfca617db549fda1ede28435206c".to_string())
         );
         assert_eq!(account.salt, None);
         assert_eq!(account.deployed, Some(true));

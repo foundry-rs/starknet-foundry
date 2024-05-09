@@ -368,25 +368,14 @@ async fn run_async_command(
             account::Commands::Deploy(deploy) => {
                 let chain_id = get_chain_id(&provider).await?;
                 let keystore_path = config.keystore.clone();
-                let account_path = Some(Utf8PathBuf::from(config.account.clone()))
-                    .filter(|p| *p != String::default());
-                let account = if config.keystore.is_none() {
-                    deploy
-                        .name
-                        .context("Required argument `--name` not provided")?
-                } else {
-                    config.account
-                };
                 let mut result = starknet_commands::account::deploy::deploy(
                     &provider,
                     config.accounts_file,
-                    account,
+                    deploy,
                     chain_id,
-                    deploy.max_fee,
                     wait_config,
-                    deploy.class_hash,
+                    &config.account,
                     keystore_path,
-                    account_path,
                 )
                 .await;
 
