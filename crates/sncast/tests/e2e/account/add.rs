@@ -220,7 +220,7 @@ pub async fn test_happy_case_add_profile() {
         DEVNET_OZ_CLASS_HASH_CAIRO_0,
         "--update-profile",
         "my_account_add",
-    ];
+        ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
 
