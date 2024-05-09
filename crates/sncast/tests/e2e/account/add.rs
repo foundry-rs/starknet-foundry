@@ -565,7 +565,9 @@ pub async fn test_empty_config_add_profile() {
         DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS,
         "--private-key",
         "0x456",
-        "--update-profile",
+        "--type",
+        "oz",
+        "--add-profile",
         "random",
     ];
 
