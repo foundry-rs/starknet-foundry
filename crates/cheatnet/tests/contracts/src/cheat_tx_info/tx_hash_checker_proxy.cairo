@@ -8,7 +8,7 @@ trait ICheatTxInfoChecker<TContractState> {
 
 #[starknet::interface]
 trait ITxHashCheckerProxy<TContractState> {
-    fn get_spoof_checkers_tx_hash(self: @TContractState, address: ContractAddress) -> felt252;
+    fn get_checkers_tx_hash(self: @TContractState, address: ContractAddress) -> felt252;
     fn get_transaction_hash(self: @TContractState) -> felt252;
     fn call_proxy(self: @TContractState, address: ContractAddress) -> (felt252, felt252);
 }
@@ -27,7 +27,7 @@ mod TxHashCheckerProxy {
 
     #[abi(embed_v0)]
     impl ITxHashCheckerProxy of super::ITxHashCheckerProxy<ContractState> {
-        fn get_spoof_checkers_tx_hash(self: @ContractState, address: ContractAddress) -> felt252 {
+        fn get_checkers_tx_hash(self: @ContractState, address: ContractAddress) -> felt252 {
             let tx_info_checker = ICheatTxInfoCheckerDispatcher { contract_address: address };
             tx_info_checker.get_transaction_hash()
         }
@@ -39,7 +39,7 @@ mod TxHashCheckerProxy {
         fn call_proxy(self: @ContractState, address: ContractAddress) -> (felt252, felt252) {
             let dispatcher = ITxHashCheckerProxyDispatcher { contract_address: address };
             let tx_hash = self.get_transaction_hash();
-            let res = dispatcher.get_spoof_checkers_tx_hash(get_contract_address());
+            let res = dispatcher.get_checkers_tx_hash(get_contract_address());
             (tx_hash, res)
         }
     }

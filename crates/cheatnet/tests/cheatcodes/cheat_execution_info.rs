@@ -1,8 +1,9 @@
 use super::test_environment::TestEnvironment;
 use crate::common::{assertions::assert_success, get_contracts, recover_data};
 use cairo_felt::Felt252;
-use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::{
-    cheat_execution_info::ResourceBounds, spoof::TxInfoMock,
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::cheat_execution_info::ResourceBounds;
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::cheat_execution_info::{
+    CheatArguments, ExecutionInfoMockOperations, Operation, TxInfoMockOperations,
 };
 use cheatnet::state::CheatSpan;
 use conversions::IntoConv;
@@ -10,35 +11,98 @@ use runtime::utils::buffer_reader::BufferReader;
 use runtime::FromReader;
 use starknet_api::{core::ContractAddress, transaction::TransactionHash};
 
-trait SpoofTrait {
-    fn spoof(
+trait CheatTransactionHashTrait {
+    fn cheat_transaction_hash(
         &mut self,
         contract_address: ContractAddress,
-        tx_info_mock: TxInfoMock,
+        transaction_hash: Felt252,
         span: CheatSpan,
     );
-    fn start_spoof(&mut self, contract_address: ContractAddress, tx_info_mock: TxInfoMock);
-    fn stop_spoof(&mut self, contract_address: ContractAddress);
-}
-
-impl SpoofTrait for TestEnvironment {
-    fn spoof(
+    fn start_cheat_transaction_hash(
         &mut self,
         contract_address: ContractAddress,
-        tx_info_mock: TxInfoMock,
+        transaction_hash: Felt252,
+    );
+    fn stop_cheat_transaction_hash(&mut self, contract_address: ContractAddress);
+    fn start_cheat_transaction_hash_global(&mut self, transaction_hash: Felt252);
+    fn stop_cheat_transaction_hash_global(&mut self);
+}
+impl CheatTransactionHashTrait for TestEnvironment {
+    fn cheat_transaction_hash(
+        &mut self,
+        contract_address: ContractAddress,
+        transaction_hash: Felt252,
         span: CheatSpan,
     ) {
+        let mut execution_info_mock = ExecutionInfoMockOperations::default();
+
+        execution_info_mock.tx_info.transaction_hash = Operation::Start(CheatArguments {
+            value: transaction_hash,
+            span,
+            target: contract_address,
+        });
+
         self.cheatnet_state
-            .spoof(contract_address, tx_info_mock, span);
+            .cheat_execution_info(execution_info_mock);
     }
 
-    fn start_spoof(&mut self, contract_address: ContractAddress, tx_info_mock: TxInfoMock) {
+    fn start_cheat_transaction_hash(
+        &mut self,
+        contract_address: ContractAddress,
+        transaction_hash: Felt252,
+    ) {
+        let mut execution_info_mock = ExecutionInfoMockOperations::default();
+
+        execution_info_mock.tx_info.transaction_hash = Operation::Start(CheatArguments {
+            value: transaction_hash,
+            span: CheatSpan::Indefinite,
+            target: contract_address,
+        });
+
         self.cheatnet_state
-            .start_spoof(contract_address, tx_info_mock);
+            .cheat_execution_info(execution_info_mock);
     }
 
-    fn stop_spoof(&mut self, contract_address: ContractAddress) {
-        self.cheatnet_state.stop_spoof(contract_address);
+    fn stop_cheat_transaction_hash(&mut self, contract_address: ContractAddress) {
+        let mut execution_info_mock = ExecutionInfoMockOperations::default();
+
+        execution_info_mock.tx_info.transaction_hash = Operation::Stop(contract_address);
+
+        self.cheatnet_state
+            .cheat_execution_info(execution_info_mock);
+    }
+
+    fn start_cheat_transaction_hash_global(&mut self, transaction_hash: Felt252) {
+        let mut execution_info_mock = ExecutionInfoMockOperations::default();
+
+        execution_info_mock.tx_info.transaction_hash = Operation::StartGlobal(transaction_hash);
+
+        self.cheatnet_state
+            .cheat_execution_info(execution_info_mock);
+    }
+    fn stop_cheat_transaction_hash_global(&mut self) {
+        let mut execution_info_mock = ExecutionInfoMockOperations::default();
+
+        execution_info_mock.tx_info.transaction_hash = Operation::StopGlobal;
+
+        self.cheatnet_state
+            .cheat_execution_info(execution_info_mock);
+    }
+}
+
+trait CheatTransactionInfoTrait {
+    fn cheat_transaction_info(&mut self, tx_info_mock: TxInfoMockOperations);
+}
+
+impl CheatTransactionInfoTrait for TestEnvironment {
+    fn cheat_transaction_info(&mut self, tx_info_mock: TxInfoMockOperations) {
+        let execution_info_mock_operations = ExecutionInfoMockOperations {
+            tx_info: tx_info_mock,
+            ..Default::default()
+        };
+
+        self.cheatnet_state
+            .cheat_execution_info(execution_info_mock_operations);
     }
 }
 
@@ -78,13 +142,19 @@ struct TxInfo {
 }
 
 impl TxInfo {
-    fn apply_mock_fields(tx_info_mock: &TxInfoMock, tx_info: &Self) -> Self {
+    fn apply_mock_fields(tx_info_mock: &TxInfoMockOperations, tx_info: &Self) -> Self {
         macro_rules! clone_field {
             ($field:ident) => {
-                tx_info_mock
-                    .$field
-                    .clone()
-                    .unwrap_or(tx_info.$field.clone())
+                if let Operation::Start(CheatArguments {
+                    value,
+                    span: CheatSpan::Indefinite,
+                    target: _contract_address,
+                }) = tx_info_mock.$field.clone()
+                {
+                    value
+                } else {
+                    tx_info.$field.clone()
+                }
             };
         }
 
@@ -111,155 +181,164 @@ impl TxInfo {
 }
 
 #[test]
-fn spoof_simple() {
+fn cheat_transaction_hash_simple() {
     let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("CheatTxInfoChecker", &[]);
 
     let tx_info_before = test_env.get_tx_info(&contract_address);
 
-    let tx_info_mock = TxInfoMock {
-        transaction_hash: Some(Felt252::from(123)),
-        ..Default::default()
-    };
+    let transaction_hash = Felt252::from(123);
+    let mut expected_tx_info = tx_info_before.clone();
 
-    let expected_tx_info = TxInfo::apply_mock_fields(&tx_info_mock, &tx_info_before);
+    expected_tx_info.transaction_hash = transaction_hash.clone();
 
-    test_env.start_spoof(contract_address, tx_info_mock);
+    test_env.start_cheat_transaction_hash(contract_address, transaction_hash);
 
     test_env.assert_tx_info(&contract_address, &expected_tx_info);
 }
 
 #[test]
-fn start_spoof_multiple_times() {
+fn start_cheat_execution_info_multiple_times() {
+    fn operation_start<T>(contract_address: ContractAddress, value: T) -> Operation<T> {
+        Operation::Start(CheatArguments {
+            value,
+            span: CheatSpan::Indefinite,
+            target: contract_address,
+        })
+    }
+
     let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("CheatTxInfoChecker", &[]);
 
     let tx_info_before = test_env.get_tx_info(&contract_address);
 
-    let initial_tx_info_mock = TxInfoMock {
-        version: Some(Felt252::from(13)),
-        account_contract_address: Some(Felt252::from(66)),
-        max_fee: Some(Felt252::from(77)),
-        signature: Some(vec![Felt252::from(88), Felt252::from(89)]),
-        transaction_hash: Some(Felt252::from(123)),
-        chain_id: Some(Felt252::from(22)),
-        nonce: Some(Felt252::from(33)),
-        resource_bounds: Some(vec![
-            ResourceBounds {
-                resource: Felt252::from(111),
-                max_amount: 222,
-                max_price_per_unit: 333,
-            },
-            ResourceBounds {
-                resource: Felt252::from(444),
-                max_amount: 555,
-                max_price_per_unit: 666,
-            },
-        ]),
-        tip: Some(Felt252::from(777)),
-        paymaster_data: Some(vec![
-            Felt252::from(11),
-            Felt252::from(22),
-            Felt252::from(33),
-            Felt252::from(44),
-        ]),
-        nonce_data_availability_mode: Some(Felt252::from(55)),
-        fee_data_availability_mode: Some(Felt252::from(66)),
-        account_deployment_data: Some(vec![
-            Felt252::from(777),
-            Felt252::from(888),
-            Felt252::from(999),
-        ]),
+    let initial_tx_info_mock = TxInfoMockOperations {
+        version: operation_start(contract_address, Felt252::from(13)),
+        account_contract_address: operation_start(contract_address, Felt252::from(66)),
+        max_fee: operation_start(contract_address, Felt252::from(77)),
+        signature: operation_start(contract_address, vec![Felt252::from(88), Felt252::from(89)]),
+        transaction_hash: operation_start(contract_address, Felt252::from(123)),
+        chain_id: operation_start(contract_address, Felt252::from(22)),
+        nonce: operation_start(contract_address, Felt252::from(33)),
+        resource_bounds: operation_start(
+            contract_address,
+            vec![
+                ResourceBounds {
+                    resource: Felt252::from(111),
+                    max_amount: 222,
+                    max_price_per_unit: 333,
+                },
+                ResourceBounds {
+                    resource: Felt252::from(444),
+                    max_amount: 555,
+                    max_price_per_unit: 666,
+                },
+            ],
+        ),
+        tip: operation_start(contract_address, Felt252::from(777)),
+        paymaster_data: operation_start(
+            contract_address,
+            vec![
+                Felt252::from(11),
+                Felt252::from(22),
+                Felt252::from(33),
+                Felt252::from(44),
+            ],
+        ),
+        nonce_data_availability_mode: operation_start(contract_address, Felt252::from(55)),
+        fee_data_availability_mode: operation_start(contract_address, Felt252::from(66)),
+        account_deployment_data: operation_start(
+            contract_address,
+            vec![Felt252::from(777), Felt252::from(888), Felt252::from(999)],
+        ),
     };
+
     let expected_tx_info = TxInfo::apply_mock_fields(&initial_tx_info_mock, &tx_info_before);
 
-    test_env.start_spoof(contract_address, initial_tx_info_mock.clone());
+    test_env.cheat_transaction_info(initial_tx_info_mock.clone());
 
     test_env.assert_tx_info(&contract_address, &expected_tx_info);
 
-    let tx_info_mock = TxInfoMock {
-        version: None,
-        max_fee: None,
-        transaction_hash: None,
-        nonce: None,
-        tip: None,
-        nonce_data_availability_mode: None,
-        account_deployment_data: None,
+    let tx_info_mock = TxInfoMockOperations {
+        version: Operation::Retain,
+        max_fee: Operation::Retain,
+        transaction_hash: Operation::Retain,
+        nonce: Operation::Retain,
+        tip: Operation::Retain,
+        nonce_data_availability_mode: Operation::Retain,
+        account_deployment_data: Operation::Retain,
         ..initial_tx_info_mock
     };
+
     let expected_tx_info = TxInfo::apply_mock_fields(&tx_info_mock, &expected_tx_info);
 
-    test_env.start_spoof(contract_address, tx_info_mock);
+    test_env.cheat_transaction_info(tx_info_mock);
 
     test_env.assert_tx_info(&contract_address, &expected_tx_info);
 
-    let tx_info_mock = TxInfoMock {
-        account_contract_address: None,
-        signature: None,
-        chain_id: None,
-        resource_bounds: None,
-        paymaster_data: None,
-        fee_data_availability_mode: None,
+    let tx_info_mock = TxInfoMockOperations {
+        account_contract_address: Operation::Retain,
+        signature: Operation::Retain,
+        chain_id: Operation::Retain,
+        resource_bounds: Operation::Retain,
+        paymaster_data: Operation::Retain,
+        fee_data_availability_mode: Operation::Retain,
         ..initial_tx_info_mock
     };
+
     let expected_tx_info = TxInfo::apply_mock_fields(&tx_info_mock, &expected_tx_info);
 
-    test_env.start_spoof(contract_address, tx_info_mock);
+    test_env.cheat_transaction_info(tx_info_mock);
 
     test_env.assert_tx_info(&contract_address, &expected_tx_info);
 }
 
 #[test]
-fn spoof_start_stop() {
+fn cheat_transaction_hash_start_stop() {
     let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("CheatTxInfoChecker", &[]);
 
     let tx_info_before = test_env.get_tx_info(&contract_address);
 
-    let tx_info_mock = TxInfoMock {
-        transaction_hash: Some(Felt252::from(123)),
-        ..Default::default()
-    };
+    let transaction_hash = Felt252::from(123);
+    let mut expected_tx_info = tx_info_before.clone();
 
-    let expected_tx_info = TxInfo::apply_mock_fields(&tx_info_mock, &tx_info_before);
+    expected_tx_info.transaction_hash = transaction_hash.clone();
 
-    test_env.start_spoof(contract_address, tx_info_mock);
+    test_env.start_cheat_transaction_hash(contract_address, transaction_hash);
 
     test_env.assert_tx_info(&contract_address, &expected_tx_info);
 
-    test_env.stop_spoof(contract_address);
+    test_env.stop_cheat_transaction_hash(contract_address);
 
     test_env.assert_tx_info(&contract_address, &tx_info_before);
 }
 
 #[test]
-fn spoof_stop_no_effect() {
+fn cheat_transaction_hash_stop_no_effect() {
     let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("CheatTxInfoChecker", &[]);
 
     let tx_info_before = test_env.get_tx_info(&contract_address);
 
-    test_env.stop_spoof(contract_address);
+    test_env.stop_cheat_transaction_hash(contract_address);
 
     test_env.assert_tx_info(&contract_address, &tx_info_before);
 }
 
 #[test]
-fn spoof_with_other_syscall() {
+fn cheat_transaction_hash_with_other_syscall() {
     let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("CheatTxInfoChecker", &[]);
 
-    let tx_info_mock = TxInfoMock {
-        transaction_hash: Some(Felt252::from(123)),
-        ..Default::default()
-    };
+    let transaction_hash = Felt252::from(123);
 
-    test_env.start_spoof(contract_address, tx_info_mock);
+    test_env.start_cheat_transaction_hash(contract_address, transaction_hash);
 
     let output = test_env.call_contract(&contract_address, "get_tx_hash_and_emit_event", &[]);
 
@@ -267,7 +346,7 @@ fn spoof_with_other_syscall() {
 }
 
 #[test]
-fn spoof_in_constructor() {
+fn cheat_transaction_hash_in_constructor() {
     let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
@@ -275,12 +354,9 @@ fn spoof_in_constructor() {
     let class_hash = test_env.declare("TxHashChecker", &contracts_data);
     let precalculated_address = test_env.precalculate_address(&class_hash, &[]);
 
-    let tx_info_mock = TxInfoMock {
-        transaction_hash: Some(Felt252::from(123)),
-        ..Default::default()
-    };
+    let transaction_hash = Felt252::from(123);
 
-    test_env.start_spoof(precalculated_address, tx_info_mock);
+    test_env.start_cheat_transaction_hash(precalculated_address, transaction_hash);
 
     let contract_address = test_env.deploy_wrapper(&class_hash, &[]);
 
@@ -291,17 +367,14 @@ fn spoof_in_constructor() {
 }
 
 #[test]
-fn spoof_proxy() {
+fn cheat_transaction_hash_proxy() {
     let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("CheatTxInfoChecker", &[]);
 
-    let tx_info_mock = TxInfoMock {
-        transaction_hash: Some(Felt252::from(123)),
-        ..Default::default()
-    };
+    let transaction_hash = Felt252::from(123);
 
-    test_env.start_spoof(contract_address, tx_info_mock);
+    test_env.start_cheat_transaction_hash(contract_address, transaction_hash);
 
     let output = test_env.call_contract(&contract_address, "get_transaction_hash", &[]);
     assert_success(output, &[Felt252::from(123)]);
@@ -310,7 +383,7 @@ fn spoof_proxy() {
 
     let output = test_env.call_contract(
         &proxy_address,
-        "get_spoof_checkers_tx_hash",
+        "get_checkers_tx_hash",
         &[contract_address.into_()],
     );
 
@@ -318,7 +391,7 @@ fn spoof_proxy() {
 }
 
 #[test]
-fn spoof_library_call() {
+fn cheat_transaction_hash_library_call() {
     let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
@@ -326,12 +399,9 @@ fn spoof_library_call() {
 
     let lib_call_address = test_env.deploy("CheatTxInfoCheckerLibCall", &[]);
 
-    let tx_info_mock = TxInfoMock {
-        transaction_hash: Some(Felt252::from(123)),
-        ..Default::default()
-    };
+    let transaction_hash = Felt252::from(123);
 
-    test_env.start_spoof(lib_call_address, tx_info_mock);
+    test_env.start_cheat_transaction_hash(lib_call_address, transaction_hash);
 
     let output = test_env.call_contract(
         &lib_call_address,
@@ -343,95 +413,85 @@ fn spoof_library_call() {
 }
 
 #[test]
-fn spoof_all_simple() {
+fn cheat_transaction_hash_all_simple() {
     let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("CheatTxInfoChecker", &[]);
 
     let tx_info_before = test_env.get_tx_info(&contract_address);
 
-    let tx_info_mock = TxInfoMock {
-        transaction_hash: Some(Felt252::from(123)),
-        ..Default::default()
-    };
+    let transaction_hash = Felt252::from(123);
+    let mut expected_tx_info = tx_info_before.clone();
 
-    let expected_tx_info = TxInfo::apply_mock_fields(&tx_info_mock, &tx_info_before);
+    expected_tx_info.transaction_hash = transaction_hash.clone();
 
-    test_env.cheatnet_state.spoof_global(tx_info_mock);
+    test_env.start_cheat_transaction_hash_global(transaction_hash);
 
     test_env.assert_tx_info(&contract_address, &expected_tx_info);
 }
 
 #[test]
-fn spoof_all_then_one() {
+fn cheat_transaction_hash_all_then_one() {
     let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("CheatTxInfoChecker", &[]);
 
     let tx_info_before = test_env.get_tx_info(&contract_address);
 
-    let mut tx_info_mock = TxInfoMock {
-        transaction_hash: Some(Felt252::from(123)),
-        ..Default::default()
-    };
+    let transaction_hash = Felt252::from(321);
+    let mut expected_tx_info = tx_info_before.clone();
 
-    test_env.cheatnet_state.spoof_global(tx_info_mock.clone());
+    expected_tx_info.transaction_hash = transaction_hash.clone();
 
-    tx_info_mock.transaction_hash = Some(Felt252::from(321));
-    let expected_tx_info = TxInfo::apply_mock_fields(&tx_info_mock, &tx_info_before);
+    test_env.start_cheat_transaction_hash_global(Felt252::from(123));
 
-    test_env.start_spoof(contract_address, tx_info_mock);
+    test_env.start_cheat_transaction_hash(contract_address, transaction_hash);
 
     test_env.assert_tx_info(&contract_address, &expected_tx_info);
 }
 
 #[test]
-fn spoof_one_then_all() {
+fn cheat_transaction_hash_one_then_all() {
     let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("CheatTxInfoChecker", &[]);
 
     let tx_info_before = test_env.get_tx_info(&contract_address);
 
-    let mut tx_info_mock = TxInfoMock {
-        transaction_hash: Some(Felt252::from(123)),
-        ..Default::default()
-    };
+    let transaction_hash = Felt252::from(321);
+    let mut expected_tx_info = tx_info_before.clone();
 
-    test_env.start_spoof(contract_address, tx_info_mock.clone());
+    expected_tx_info.transaction_hash = transaction_hash.clone();
 
-    tx_info_mock.transaction_hash = Some(Felt252::from(321));
-    let expected_tx_info = TxInfo::apply_mock_fields(&tx_info_mock, &tx_info_before);
+    test_env.start_cheat_transaction_hash(contract_address, Felt252::from(123));
 
-    test_env.cheatnet_state.spoof_global(tx_info_mock);
+    test_env.start_cheat_transaction_hash_global(transaction_hash);
 
     test_env.assert_tx_info(&contract_address, &expected_tx_info);
 }
 
 #[test]
-fn spoof_all_stop() {
+fn cheat_transaction_hash_all_stop() {
     let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("CheatTxInfoChecker", &[]);
 
     let tx_info_before = test_env.get_tx_info(&contract_address);
 
-    let tx_info_mock = TxInfoMock {
-        transaction_hash: Some(Felt252::from(123)),
-        ..Default::default()
-    };
+    let transaction_hash = Felt252::from(123);
+    let mut expected_tx_info = tx_info_before.clone();
 
-    let expected_tx_info = TxInfo::apply_mock_fields(&tx_info_mock, &tx_info_before);
+    expected_tx_info.transaction_hash = transaction_hash.clone();
 
-    test_env.cheatnet_state.spoof_global(tx_info_mock);
+    test_env.start_cheat_transaction_hash_global(transaction_hash);
 
-    test_env.cheatnet_state.stop_spoof_global();
+    test_env.stop_cheat_transaction_hash_global();
 
     test_env.assert_tx_info(&contract_address, &expected_tx_info);
 }
 
 #[test]
-fn spoof_multiple() {
+fn cheat_transaction_hash_multiple() {
     let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
@@ -444,39 +504,43 @@ fn spoof_multiple() {
     let tx_info_before_1 = test_env.get_tx_info(&contract_address_1);
     let tx_info_before_2 = test_env.get_tx_info(&contract_address_2);
 
-    let tx_info_mock = TxInfoMock {
-        transaction_hash: Some(Felt252::from(123)),
-        ..Default::default()
-    };
-    let expected_tx_info_1 = TxInfo::apply_mock_fields(&tx_info_mock, &tx_info_before_1);
-    let expected_tx_info_2 = TxInfo::apply_mock_fields(&tx_info_mock, &tx_info_before_2);
+    let transaction_hash = Felt252::from(123);
+    let mut expected_tx_info_1 = tx_info_before_1;
+    let mut expected_tx_info_2 = tx_info_before_2;
 
-    test_env.start_spoof(contract_address_1, tx_info_mock.clone());
-    test_env.start_spoof(contract_address_2, tx_info_mock);
+    expected_tx_info_1.transaction_hash = transaction_hash.clone();
+
+    expected_tx_info_2.transaction_hash = transaction_hash.clone();
+
+    test_env.start_cheat_transaction_hash(contract_address_1, transaction_hash.clone());
+    test_env.start_cheat_transaction_hash(contract_address_2, transaction_hash);
 
     test_env.assert_tx_info(&contract_address_1, &expected_tx_info_1);
     test_env.assert_tx_info(&contract_address_2, &expected_tx_info_2);
 
-    test_env.cheatnet_state.stop_spoof_global();
+    test_env.stop_cheat_transaction_hash_global();
 
     test_env.assert_tx_info(&contract_address_1, &expected_tx_info_1);
     test_env.assert_tx_info(&contract_address_2, &expected_tx_info_2);
 }
 
 #[test]
-fn spoof_simple_with_span() {
+fn cheat_transaction_hash_simple_with_span() {
     let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("CheatTxInfoChecker", &[]);
 
     let tx_info_before = test_env.get_tx_info(&contract_address);
-    let tx_info_mock = TxInfoMock {
-        transaction_hash: Some(Felt252::from(123)),
-        ..Default::default()
-    };
-    let expected_tx_info = TxInfo::apply_mock_fields(&tx_info_mock, &tx_info_before);
+    let transaction_hash = Felt252::from(123);
 
-    test_env.spoof(contract_address, tx_info_mock, CheatSpan::TargetCalls(2));
+    let mut expected_tx_info = tx_info_before.clone();
+    expected_tx_info.transaction_hash = transaction_hash.clone();
+
+    test_env.cheat_transaction_hash(
+        contract_address,
+        transaction_hash,
+        CheatSpan::TargetCalls(2),
+    );
 
     test_env.assert_tx_info(&contract_address, &expected_tx_info);
     test_env.assert_tx_info(&contract_address, &expected_tx_info);
@@ -484,7 +548,7 @@ fn spoof_simple_with_span() {
 }
 
 #[test]
-fn spoof_proxy_with_span() {
+fn cheat_transaction_hash_proxy_with_span() {
     let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
@@ -492,12 +556,11 @@ fn spoof_proxy_with_span() {
     let contract_address_1 = test_env.deploy_wrapper(&class_hash, &[]);
     let contract_address_2 = test_env.deploy_wrapper(&class_hash, &[]);
 
-    let tx_info_mock = TxInfoMock {
-        transaction_hash: Some(Felt252::from(123)),
-        ..Default::default()
-    };
-
-    test_env.spoof(contract_address_1, tx_info_mock, CheatSpan::TargetCalls(1));
+    test_env.cheat_transaction_hash(
+        contract_address_1,
+        Felt252::from(123),
+        CheatSpan::TargetCalls(1),
+    );
 
     let output = test_env.call_contract(
         &contract_address_1,
@@ -508,7 +571,7 @@ fn spoof_proxy_with_span() {
 }
 
 #[test]
-fn spoof_in_constructor_with_span() {
+fn cheat_transaction_hash_in_constructor_with_span() {
     let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
@@ -516,14 +579,9 @@ fn spoof_in_constructor_with_span() {
     let class_hash = test_env.declare("TxHashChecker", &contracts_data);
     let precalculated_address = test_env.precalculate_address(&class_hash, &[]);
 
-    let tx_info_mock = TxInfoMock {
-        transaction_hash: Some(Felt252::from(123)),
-        ..Default::default()
-    };
-
-    test_env.spoof(
+    test_env.cheat_transaction_hash(
         precalculated_address,
-        tx_info_mock,
+        Felt252::from(123),
         CheatSpan::TargetCalls(2),
     );
 
@@ -545,7 +603,7 @@ fn spoof_in_constructor_with_span() {
 }
 
 #[test]
-fn spoof_no_constructor_with_span() {
+fn cheat_transaction_hash_no_constructor_with_span() {
     let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
@@ -553,14 +611,9 @@ fn spoof_no_constructor_with_span() {
     let class_hash = test_env.declare("CheatTxInfoChecker", &contracts_data);
     let precalculated_address = test_env.precalculate_address(&class_hash, &[]);
 
-    let tx_info_mock = TxInfoMock {
-        transaction_hash: Some(Felt252::from(123)),
-        ..Default::default()
-    };
-
-    test_env.spoof(
+    test_env.cheat_transaction_hash(
         precalculated_address,
-        tx_info_mock,
+        Felt252::from(123),
         CheatSpan::TargetCalls(1),
     );
 
@@ -578,38 +631,37 @@ fn spoof_no_constructor_with_span() {
 }
 
 #[test]
-fn spoof_override_span() {
+fn cheat_transaction_hash_override_span() {
     let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("CheatTxInfoChecker", &[]);
 
     let tx_info_before = test_env.get_tx_info(&contract_address);
-    let mut tx_info_mock = TxInfoMock {
-        transaction_hash: Some(Felt252::from(123)),
-        ..Default::default()
-    };
-    let expected_tx_info = TxInfo::apply_mock_fields(&tx_info_mock, &tx_info_before);
+    let transaction_hash = Felt252::from(123);
 
-    test_env.spoof(
-        contract_address,
-        tx_info_mock.clone(),
-        CheatSpan::Indefinite,
-    );
+    let mut expected_tx_info = tx_info_before.clone();
+    expected_tx_info.transaction_hash = transaction_hash.clone();
+
+    test_env.cheat_transaction_hash(contract_address, transaction_hash, CheatSpan::Indefinite);
 
     test_env.assert_tx_info(&contract_address, &expected_tx_info);
 
-    tx_info_mock.transaction_hash = Some(Felt252::from(321));
+    let transaction_hash = Felt252::from(321);
 
-    let expected_tx_info = TxInfo::apply_mock_fields(&tx_info_mock, &tx_info_before);
+    expected_tx_info.transaction_hash = transaction_hash.clone();
 
-    test_env.spoof(contract_address, tx_info_mock, CheatSpan::TargetCalls(1));
+    test_env.cheat_transaction_hash(
+        contract_address,
+        transaction_hash,
+        CheatSpan::TargetCalls(1),
+    );
 
     test_env.assert_tx_info(&contract_address, &expected_tx_info);
     test_env.assert_tx_info(&contract_address, &tx_info_before);
 }
 
 #[test]
-fn spoof_library_call_with_span() {
+fn cheat_transaction_hash_library_call_with_span() {
     let mut test_env = TestEnvironment::new();
 
     let contracts_data = get_contracts();
@@ -617,12 +669,12 @@ fn spoof_library_call_with_span() {
     let contract_address = test_env.deploy("CheatTxInfoCheckerLibCall", &[]);
 
     let tx_info_before = test_env.get_tx_info(&contract_address);
-    let tx_info_mock = TxInfoMock {
-        transaction_hash: Some(Felt252::from(123)),
-        ..Default::default()
-    };
 
-    test_env.spoof(contract_address, tx_info_mock, CheatSpan::TargetCalls(1));
+    test_env.cheat_transaction_hash(
+        contract_address,
+        Felt252::from(123),
+        CheatSpan::TargetCalls(1),
+    );
 
     let lib_call_selector = "get_tx_hash_with_lib_call";
 

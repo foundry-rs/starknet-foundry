@@ -1,8 +1,9 @@
 use crate::constants::{build_test_entry_point, TEST_CONTRACT_CLASS_HASH};
 use crate::forking::state::ForkStateReader;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallResult;
-use crate::runtime_extensions::forge_runtime_extension::cheatcodes::cheat_execution_info::ExecutionInfoMock;
-use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spoof::TxInfoMock;
+use crate::runtime_extensions::forge_runtime_extension::cheatcodes::cheat_execution_info::{
+    ExecutionInfoMock, ResourceBounds,
+};
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::{
     Event, SpyTarget,
 };
@@ -15,6 +16,7 @@ use blockifier::{
     execution::contract_class::ContractClass,
     state::state_api::{StateReader, StateResult},
 };
+use cairo_felt::Felt252;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cairo_vm::vm::trace::trace_entry::TraceEntry;
 use runtime::starknet::context::SerializableBlockInfo;
@@ -251,13 +253,37 @@ impl NotEmptyCallStack {
     }
 }
 
+#[derive(Clone, Default, Debug, PartialEq, Eq)]
+pub struct CheatedTxInfo {
+    pub version: Option<Felt252>,
+    pub account_contract_address: Option<Felt252>,
+    pub max_fee: Option<Felt252>,
+    pub signature: Option<Vec<Felt252>>,
+    pub transaction_hash: Option<Felt252>,
+    pub chain_id: Option<Felt252>,
+    pub nonce: Option<Felt252>,
+    pub resource_bounds: Option<Vec<ResourceBounds>>,
+    pub tip: Option<Felt252>,
+    pub paymaster_data: Option<Vec<Felt252>>,
+    pub nonce_data_availability_mode: Option<Felt252>,
+    pub fee_data_availability_mode: Option<Felt252>,
+    pub account_deployment_data: Option<Vec<Felt252>>,
+}
+
+impl CheatedTxInfo {
+    #[must_use]
+    pub fn is_mocked(&self) -> bool {
+        self != &Default::default()
+    }
+}
+
 #[derive(Clone, Default, Debug)]
 pub struct CheatedData {
     pub block_number: Option<u64>,
     pub block_timestamp: Option<u64>,
     pub caller_address: Option<ContractAddress>,
     pub sequencer_address: Option<ContractAddress>,
-    pub tx_info: Option<TxInfoMock>,
+    pub tx_info: CheatedTxInfo,
 }
 
 pub struct TraceData {
@@ -307,12 +333,37 @@ impl Default for CheatnetState {
 impl CheatnetState {
     #[must_use]
     pub fn create_cheated_data(&mut self, contract_address: ContractAddress) -> CheatedData {
+        let execution_info = self.get_cheated_execution_info_for_contract(contract_address);
+
         CheatedData {
-            block_number: self.get_cheated_block_number(contract_address),
-            block_timestamp: self.get_cheated_block_timestamp(contract_address),
-            caller_address: self.get_cheated_caller_address(contract_address),
-            sequencer_address: self.get_cheated_sequencer_address(contract_address),
-            tx_info: self.get_cheated_tx_info(contract_address),
+            block_number: execution_info.block_info.block_number.as_value(),
+            block_timestamp: execution_info.block_info.block_timestamp.as_value(),
+            caller_address: execution_info.caller_address.as_value(),
+            sequencer_address: execution_info.block_info.sequencer_address.as_value(),
+            tx_info: CheatedTxInfo {
+                version: execution_info.tx_info.version.as_value(),
+                account_contract_address: execution_info
+                    .tx_info
+                    .account_contract_address
+                    .as_value(),
+                max_fee: execution_info.tx_info.max_fee.as_value(),
+                signature: execution_info.tx_info.signature.as_value(),
+                transaction_hash: execution_info.tx_info.transaction_hash.as_value(),
+                chain_id: execution_info.tx_info.chain_id.as_value(),
+                nonce: execution_info.tx_info.nonce.as_value(),
+                resource_bounds: execution_info.tx_info.resource_bounds.as_value(),
+                tip: execution_info.tx_info.tip.as_value(),
+                paymaster_data: execution_info.tx_info.paymaster_data.as_value(),
+                nonce_data_availability_mode: execution_info
+                    .tx_info
+                    .nonce_data_availability_mode
+                    .as_value(),
+                fee_data_availability_mode: execution_info
+                    .tx_info
+                    .fee_data_availability_mode
+                    .as_value(),
+                account_deployment_data: execution_info.tx_info.account_deployment_data.as_value(),
+            },
         }
     }
 
@@ -362,31 +413,6 @@ impl CheatnetState {
             .block_info
             .sequencer_address
             .as_value()
-    }
-
-    #[must_use]
-    pub fn get_cheated_tx_info(&mut self, address: ContractAddress) -> Option<TxInfoMock> {
-        let tx_info = &self
-            .get_cheated_execution_info_for_contract(address)
-            .tx_info;
-
-        let tx_info = TxInfoMock {
-            version: tx_info.version.as_value(),
-            account_contract_address: tx_info.account_contract_address.as_value(),
-            max_fee: tx_info.max_fee.as_value(),
-            signature: tx_info.signature.as_value(),
-            transaction_hash: tx_info.transaction_hash.as_value(),
-            chain_id: tx_info.chain_id.as_value(),
-            nonce: tx_info.nonce.as_value(),
-            resource_bounds: tx_info.resource_bounds.as_value(),
-            tip: tx_info.tip.as_value(),
-            paymaster_data: tx_info.paymaster_data.as_value(),
-            nonce_data_availability_mode: tx_info.nonce_data_availability_mode.as_value(),
-            fee_data_availability_mode: tx_info.fee_data_availability_mode.as_value(),
-            account_deployment_data: tx_info.account_deployment_data.as_value(),
-        };
-
-        Some(tx_info)
     }
 
     #[must_use]

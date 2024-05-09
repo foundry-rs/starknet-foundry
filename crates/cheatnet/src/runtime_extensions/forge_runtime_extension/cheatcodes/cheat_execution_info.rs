@@ -56,25 +56,11 @@ pub struct TxInfoMock {
     pub account_deployment_data: CheatStatus<Vec<Felt252>>,
 }
 
-impl TxInfoMock {
-    #[must_use]
-    pub fn is_mocked(&self) -> bool {
-        self != &Default::default()
-    }
-}
-
 #[derive(Clone, Default, Debug, PartialEq, Eq)]
 pub struct BlockInfoMock {
     pub block_number: CheatStatus<u64>,
     pub block_timestamp: CheatStatus<u64>,
     pub sequencer_address: CheatStatus<ContractAddress>,
-}
-
-impl BlockInfoMock {
-    #[must_use]
-    pub fn is_mocked(&self) -> bool {
-        self != &Default::default()
-    }
 }
 
 #[derive(Clone, Default, Debug)]
