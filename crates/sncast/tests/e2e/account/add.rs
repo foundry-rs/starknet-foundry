@@ -218,7 +218,9 @@ pub async fn test_happy_case_add_profile() {
         "0x3",
         "--class-hash",
         DEVNET_OZ_CLASS_HASH_CAIRO_0,
-        "--update-profile",
+        --type,
+        "oz",
+        --add-profile,
         "my_account_add",
         ];
 
