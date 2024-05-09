@@ -37,9 +37,10 @@ pub async fn test_happy_case() {
     assert!(stdout_str.contains("max_fee: "));
     assert!(!stdout_str.contains("max_fee: 0x"));
     assert!(stdout_str.contains("address: 0x"));
-    assert!(stdout_str.contains(
-        "add_profile: No profile added or updated in snfoundry.toml"
-    ));
+    assert!(stdout_str.contains("add_profile: No profile added or updated in snfoundry.toml"));
+    // assert!(stdout_str.contains(
+    //     "add_profile: No profile added or updated in snfoundry.toml"
+    // ));
 
     let contents = fs::read_to_string(temp_dir.path().join(accounts_file))
         .expect("Unable to read created file");
