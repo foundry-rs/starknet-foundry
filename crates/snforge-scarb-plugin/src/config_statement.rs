@@ -81,13 +81,7 @@ where
     ))
 }
 
-const CONFIG_CHEATCODE: &str = "was_configuration_set";
-
-macro_rules! propagate {
-    ($pattern:pat = $expression:expr) => {
-        let $pattern = $expression else { return None };
-    };
-}
+const CONFIG_CHEATCODE: &str = "is_config_mode";
 
 fn append_config_statements(
     db: &dyn SyntaxGroup,
@@ -101,16 +95,26 @@ fn append_config_statements(
 
     let if_content = statements.first().and_then(|stmt| {
         // first statement is `if`
-        propagate!(Statement::Expr(expr) = stmt);
-        propagate!(Expr::If(if_expr) = expr.expr(db));
+        let Statement::Expr(expr) = stmt else {
+            return None;
+        };
+        let Expr::If(if_expr) = expr.expr(db) else {
+            return None;
+        };
         // it's condition is function call
-        propagate!(Condition::Expr(expr) = if_expr.condition(db));
-        propagate!(Expr::FunctionCall(expr) = expr.expr(db));
+        let Condition::Expr(expr) = if_expr.condition(db) else {
+            return None;
+        };
+        let Expr::FunctionCall(expr) = expr.expr(db) else {
+            return None;
+        };
 
         // this function is named "cheatcode"
         let segments = expr.path(db).elements(db);
 
-        propagate!([segment] = segments.as_slice());
+        let [segment] = segments.as_slice() else {
+            return None;
+        };
 
         if segment.identifier(db) != "cheatcode" {
             return None;
@@ -119,10 +123,16 @@ fn append_config_statements(
         // it has single, unnamed generic argument
         let generics = segment.generic_args(db)?;
 
-        propagate!([GenericArg::Unnamed(cheatcode)] = generics.as_slice());
-        propagate!(GenericArgValue::Expr(expr) = cheatcode.value(db));
+        let [GenericArg::Unnamed(cheatcode)] = generics.as_slice() else {
+            return None;
+        };
+        let GenericArgValue::Expr(expr) = cheatcode.value(db) else {
+            return None;
+        };
         // of type short string
-        propagate!(Expr::ShortString(str) = expr.expr(db));
+        let Expr::ShortString(str) = expr.expr(db) else {
+            return None;
+        };
 
         // equal to configuration cheatcode
         if str.string_value(db)? == CONFIG_CHEATCODE {
@@ -133,8 +143,9 @@ fn append_config_statements(
     });
 
     // there was already config check, omit it and collect remaining statements
+    // also omit last one (`return;`) as it have to be inserted after all new statements
     let statements = if if_content.is_some() {
-        &statements[1..]
+        &statements[1..statements.len() - 1]
     } else {
         &statements[..]
     }
@@ -153,6 +164,8 @@ fn append_config_statements(
                     {if_content}
 
                     {extra_statements}
+
+                    return;
                 }}
 
                 {statements}
