@@ -13,15 +13,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - New required flag `--type` to `account add` command
 
-## [0.23.0] - 2024-05-08
-
 ### Forge
 
 #### Changed
 
-### Forge
 - `L1HandlerTrait::execute()` takes source address and payloads as arguments [MORE](https://foundry-rs.github.io/starknet-foundry/appendix/cheatcodes/l1_handler_execute.html)
 
+
+## [0.23.0] - 2024-05-08
+
+### Forge
 
 #### Removed
 - `event_name_hash` removal, in favour of `selector!` usage
