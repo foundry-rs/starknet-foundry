@@ -20,23 +20,13 @@ pub struct TestRunnerConfig {
     pub cache_dir: Utf8PathBuf,
     pub contracts_data: ContractsData,
     pub environment_variables: HashMap<String, String>,
-    pub test_artifacts_path: Utf8PathBuf,
 }
 
 #[derive(Debug, PartialEq)]
 pub struct OutputConfig {
     pub detailed_resources: bool,
     pub execution_data_to_save: ExecutionDataToSave,
-}
-
-impl OutputConfig {
-    #[must_use]
-    pub fn new(detailed_resources: bool, save_trace_data: bool, build_profile: bool) -> Self {
-        Self {
-            detailed_resources,
-            execution_data_to_save: ExecutionDataToSave::from_flags(save_trace_data, build_profile),
-        }
-    }
+    pub versioned_programs_dir: Utf8PathBuf,
 }
 
 #[derive(Debug, PartialEq, Clone, Copy)]
