@@ -4,8 +4,8 @@ use clap::Args;
 use serde_json::Map;
 use sncast::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
 use sncast::response::structs::{Felt, InvokeResponse};
-use starknet::accounts::AccountFactoryError;
 use starknet::accounts::{AccountFactory, OpenZeppelinAccountFactory};
+use starknet::accounts::{AccountFactoryError, ArgentAccountFactory};
 use starknet::core::types::BlockTag::Pending;
 use starknet::core::types::{BlockId, FieldElement, StarknetError::ClassHashNotFound};
 use starknet::core::utils::get_contract_address;
@@ -100,12 +100,15 @@ async fn deploy_from_keystore(
     let salt = account_data.get_salt_as_felt()?;
     let class_hash = account_data.get_class_hash_as_felt()?;
 
-    let address = get_contract_address(
-        salt,
-        class_hash,
-        &[private_key.verifying_key().scalar()],
-        FieldElement::ZERO,
-    );
+    // TODO: Improve code for checking if address exists or remove this logic
+    let account_type = &account_data.get_account_type()?;
+    let calldata = match account_type.as_str() {
+        "open_zeppelin" => vec![private_key.verifying_key().scalar()],
+        "argent" => vec![private_key.verifying_key().scalar(), FieldElement::ZERO],
+        _ => panic!("Invalid account type"),
+    };
+
+    let address = get_contract_address(salt, class_hash, &calldata, FieldElement::ZERO);
 
     let result = if provider
         .get_class_hash_at(BlockId::Tag(Pending), address)
@@ -116,8 +119,9 @@ async fn deploy_from_keystore(
             transaction_hash: Felt(FieldElement::ZERO),
         }
     } else {
-        deploy_oz_account(
+        get_deployment_result(
             provider,
+            account_type.as_str(),
             class_hash,
             private_key,
             salt,
@@ -147,8 +151,9 @@ async fn deploy_from_accounts_file(
         parse_number(&account_data.private_key).context("Failed to parse private key")?,
     );
 
-    let result = deploy_oz_account(
+    let result = get_deployment_result(
         provider,
+        &account_data.get_account_type()?,
         account_data.get_class_hash_as_felt()?,
         private_key,
         account_data.get_salt_as_felt()?,
@@ -163,9 +168,51 @@ async fn deploy_from_accounts_file(
     Ok(result)
 }
 
+#[allow(clippy::too_many_arguments)]
+async fn get_deployment_result(
+    provider: &JsonRpcClient<HttpTransport>,
+    account_type: &str,
+    class_hash: FieldElement,
+    private_key: SigningKey,
+    salt: FieldElement,
+    chain_id: FieldElement,
+    max_fee: Option<FieldElement>,
+    wait_config: WaitForTx,
+) -> Result<InvokeResponse> {
+    match account_type {
+        "argent" => {
+            deploy_argent_account(
+                provider,
+                class_hash,
+                private_key,
+                salt,
+                chain_id,
+                max_fee,
+                wait_config,
+            )
+            .await
+        }
+        "open_zeppelin" => {
+            deploy_oz_account(
+                provider,
+                class_hash,
+                private_key,
+                salt,
+                chain_id,
+                max_fee,
+                wait_config,
+            )
+            .await
+        }
+        _ => Err(anyhow!(
+            "Incorrect account type, possible values are ['open_zeppelin', 'argent']"
+        )),
+    }
+}
+
 async fn deploy_oz_account(
     provider: &JsonRpcClient<HttpTransport>,
-    oz_class_hash: FieldElement,
+    class_hash: FieldElement,
     private_key: SigningKey,
     salt: FieldElement,
     chain_id: FieldElement,
@@ -173,24 +220,56 @@ async fn deploy_oz_account(
     wait_config: WaitForTx,
 ) -> Result<InvokeResponse> {
     let factory = OpenZeppelinAccountFactory::new(
-        oz_class_hash,
+        class_hash,
         chain_id,
         LocalWallet::from_signing_key(private_key),
         provider,
     )
     .await?;
 
-    let deployment = factory.deploy(salt);
+    deploy_account(factory, provider, salt, max_fee, wait_config, class_hash).await
+}
+
+async fn deploy_argent_account(
+    provider: &JsonRpcClient<HttpTransport>,
+    class_hash: FieldElement,
+    private_key: SigningKey,
+    salt: FieldElement,
+    chain_id: FieldElement,
+    max_fee: Option<FieldElement>,
+    wait_config: WaitForTx,
+) -> Result<InvokeResponse> {
+    let factory = ArgentAccountFactory::new(
+        class_hash,
+        chain_id,
+        FieldElement::ZERO,
+        LocalWallet::from_signing_key(private_key),
+        provider,
+    )
+    .await?;
+
+    deploy_account(factory, provider, salt, max_fee, wait_config, class_hash).await
+}
+
+async fn deploy_account<T>(
+    account_factory: T,
+    provider: &JsonRpcClient<HttpTransport>,
+    salt: FieldElement,
+    max_fee: Option<FieldElement>,
+    wait_config: WaitForTx,
+    class_hash: FieldElement,
+) -> Result<InvokeResponse>
+where
+    T: AccountFactory + Sync,
+{
+    let deployment = account_factory.deploy(salt);
+
     let deploy_max_fee = if let Some(max_fee) = max_fee {
         max_fee
     } else {
         match deployment.estimate_fee().await {
             Ok(max_fee) => max_fee.overall_fee,
-            Err(error) => {
-                return Err(handle_account_factory_error::<
-                    OpenZeppelinAccountFactory<LocalWallet, &JsonRpcClient<HttpTransport>>,
-                >(error))
-            }
+            Err(error) => return Err(handle_account_factory_error::<T>(error)),
         }
     };
     let result = deployment.max_fee(deploy_max_fee).send().await;
@@ -199,7 +278,7 @@ async fn deploy_oz_account(
         Err(AccountFactoryError::Provider(error)) => match error {
             StarknetError(ClassHashNotFound) => Err(anyhow!(
                 "Provided class hash {:#x} does not exist",
-                oz_class_hash,
+                class_hash,
             )),
             _ => Err(handle_rpc_error(error)),
         },

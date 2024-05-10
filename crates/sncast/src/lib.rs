@@ -69,6 +69,12 @@ impl AccountData {
         Self::get_as_felt(&self.class_hash, "class_hash")
     }
 
+    pub fn get_account_type(&self) -> Result<String> {
+        self.account_type
+            .clone()
+            .ok_or_else(|| anyhow!("Failed to get account type"))
+    }
+
     fn get_as_felt(value: &Option<String>, key_name: &str) -> Result<FieldElement> {
         let value_to_parse = value
             .as_ref()
@@ -325,9 +331,6 @@ pub fn get_account_data_from_keystore(
             .map(str::to_string)
     };
 
-    let public_key = parse_to_string(&account_info, "variant", "public_key")
-        .ok_or_else(|| anyhow::anyhow!("Failed to get public key from account JSON file"))?;
-
     let address = parse_to_string(&account_info, "deployment", "address");
     let class_hash = parse_to_string(&account_info, "deployment", "class_hash");
     let salt = parse_to_string(&account_info, "deployment", "salt");
@@ -335,6 +338,18 @@ pub fn get_account_data_from_keystore(
         parse_to_string(&account_info, "deployment", "status").map(|status| &status == "deployed");
     let legacy = get_from_json(&account_info, "variant", "legacy").and_then(Value::as_bool);
     let account_type = parse_to_string(&account_info, "variant", "type");
+
+    let public_key_field = match account_type
+        .clone()
+        .ok_or_else(|| anyhow!("Failed to get type key"))?
+        .as_str()
+    {
+        "argent" => "owner",
+        _ => "public_key",
+    };
+
+    let public_key = parse_to_string(&account_info, "variant", public_key_field)
+        .ok_or_else(|| anyhow::anyhow!("Failed to get public key from account JSON file"))?;
 
     Ok(AccountData {
         private_key,
