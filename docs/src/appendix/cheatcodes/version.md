@@ -1,6 +1,6 @@
 # `version`
 
-Cheatcodes modifying `version`:
+Cheatcodes modifying transaction `version`:
 
 ## `cheat_transaction_version`
 > `fn cheat_transaction_version(target: ContractAddress, version: felt252, span: CheatSpan)`
