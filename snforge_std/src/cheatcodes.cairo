@@ -232,14 +232,18 @@ pub enum ReplaceBytecodeError {
 /// - `contract` - address specifying which address will be replaced
 /// - `new_class` - class hash, that will be used now for given address
 /// Returns `Result::Ok` if the replacement succeeded, and a `ReplaceBytecodeError` with appropriate error type otherwise
-fn replace_bytecode(contract: ContractAddress, new_class: ClassHash) -> Result<(), ReplaceBytecodeError> {
-    let cheat_result = handle_cheatcode(cheatcode::<'replace_bytecode'>(array![contract.into(), new_class.into()].span()));
+fn replace_bytecode(
+    contract: ContractAddress, new_class: ClassHash
+) -> Result<(), ReplaceBytecodeError> {
+    let cheat_result = handle_cheatcode(
+        cheatcode::<'replace_bytecode'>(array![contract.into(), new_class.into()].span())
+    );
     let status = *cheat_result.at(0);
     if status == 1 {
         let error_code = *cheat_result.at(1);
         Result::Err(
             match error_code {
-                 0 => ReplaceBytecodeError::ContractNotDeployed(()),
+                0 => ReplaceBytecodeError::ContractNotDeployed(()),
                 _ => panic!("Unrecognized input for ReplaceBytecodeError"),
             }
         )
