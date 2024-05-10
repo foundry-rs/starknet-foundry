@@ -220,15 +220,32 @@ fn stop_mock_call(contract_address: ContractAddress, function_selector: felt252)
     );
 }
 
+#[derive(Drop, Serde, PartialEq, Debug)]
+pub enum ReplaceBytecodeError {
+    /// Means that the contract does not exist, and thus bytecode cannot be replaced
+    ContractNotDeployed,
+}
+
 /// Replaces class for given contract address.
 /// The `new_class` hash has to be declared in order for the replacement class to execute the code,
 /// when interacting with the contract.
 /// - `contract` - address specifying which address will be replaced
 /// - `new_class` - class hash, that will be used now for given address
-fn replace_bytecode(contract: ContractAddress, new_class: ClassHash) {
-    handle_cheatcode(
-        cheatcode::<'replace_bytecode'>(array![contract.into(), new_class.into()].span())
-    );
+/// Returns `Result::Ok` if the replacement succeeded, and a `ReplaceBytecodeError` with appropriate error type otherwise
+fn replace_bytecode(contract: ContractAddress, new_class: ClassHash) -> Result<(), ReplaceBytecodeError> {
+    let cheat_result = handle_cheatcode(cheatcode::<'replace_bytecode'>(array![contract.into(), new_class.into()].span()));
+    let status = *cheat_result.at(0);
+    if status == 1 {
+        let error_code = *cheat_result.at(1);
+        Result::Err(
+            match error_code {
+                 0 => ReplaceBytecodeError::ContractNotDeployed(()),
+                _ => panic!("Unrecognized input for ReplaceBytecodeError"),
+            }
+        )
+    } else {
+        Result::Ok(())
+    }
 }
 
 fn validate_cheat_target_and_span(target: @CheatTarget, span: @CheatSpan) {

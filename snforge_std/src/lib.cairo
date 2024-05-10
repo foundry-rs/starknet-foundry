@@ -30,6 +30,7 @@ use cheatcodes::storage::map_entry_address;
 
 use cheatcodes::CheatTarget;
 use cheatcodes::CheatSpan;
+use cheatcodes::ReplaceBytecodeError;
 use cheatcodes::test_address;
 use cheatcodes::test_selector;
 use cheatcodes::prank;

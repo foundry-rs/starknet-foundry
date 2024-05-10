@@ -1,4 +1,5 @@
 use self::contracts_data::ContractsData;
+use crate::runtime_extensions::forge_runtime_extension::cheatcodes::replace_bytecode::ReplaceBytecodeError;
 use crate::state::CallTraceNode;
 use crate::{
     runtime_extensions::{
@@ -217,12 +218,34 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let contract = input_reader.read()?;
                 let class = input_reader.read()?;
 
+                let cls_hash = extended_runtime
+                    .extended_runtime
+                    .extended_runtime
+                    .hint_handler
+                    .state
+                    .get_class_hash_at(contract);
+                if extended_runtime
+                    .extended_runtime
+                    .extended_runtime
+                    .hint_handler
+                    .state
+                    .get_class_hash_at(contract)
+                    .unwrap()
+                    == ClassHash::default()
+                {
+                    return Ok(CheatcodeHandlingResult::Handled(vec![
+                        Felt252::from(1),
+                        ReplaceBytecodeError::ContractNotDeployed.into_(),
+                    ]));
+                }
+
                 extended_runtime
                     .extended_runtime
                     .extension
                     .cheatnet_state
                     .replace_class_for_contract(contract, class);
-                Ok(CheatcodeHandlingResult::Handled(vec![]))
+
+                Ok(CheatcodeHandlingResult::Handled(vec![Felt252::from(0)]))
             }
             "declare" => {
                 let state = &mut extended_runtime
