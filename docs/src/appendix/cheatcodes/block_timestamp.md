@@ -2,19 +2,27 @@
 
 Cheatcodes modifying `block_timestamp`:
 
-## `warp`
-
-> `fn warp(target: CheatTarget, block_timestamp: u64, span: CheatSpan)`
+## `cheat_block_timestamp`
+> `fn cheat_block_timestamp(target: ContractAddress, block_timestamp: u64, span: CheatSpan)`
 
 Changes the block timestamp for the given target and span.
 
-## `start_warp`
-> `fn start_warp(target: CheatTarget, block_timestamp: u64)`
+## `cheat_block_timestamp_global`
+> `fn cheat_block_timestamp_global(block_timestamp: u64)`
+
+Changes the block timestamp for all targets.
+
+## `start_cheat_block_timestamp`
+> `fn start_cheat_block_timestamp(target: ContractAddress, block_timestamp: u64)`
 
 Changes the block timestamp for the given target.
 
-## `stop_warp`
+# `stop_cheat_block_timestamp`
+> `fn stop_cheat_block_timestamp(target: ContractAddress)`
 
-> `fn stop_warp(target: CheatTarget)`
+Cancels the `cheat_block_timestamp` / `start_cheat_block_timestamp` for the given target.
 
-Cancels the `warp` / `start_warp` for the given target.
+# `stop_cheat_block_timestamp_global`
+> `fn stop_cheat_block_timestamp_global(target: ContractAddress)`
+
+Cancels the `cheat_block_timestamp_global`.
