@@ -43,7 +43,7 @@ pub struct Create {
     pub add_profile: Option<String>,
 
     /// Custom contract class hash of declared contract
-    #[clap(short, long)]
+    #[clap(short, long, requires = "account_type")]
     pub class_hash: Option<FieldElement>,
 }
 

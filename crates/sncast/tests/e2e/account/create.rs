@@ -85,6 +85,8 @@ pub async fn test_invalid_class_hash() {
         accounts_file,
         "account",
         "create",
+        "--type",
+        "oz",
         "--class-hash",
         "0x10101",
         "--name",
@@ -121,6 +123,8 @@ pub async fn test_happy_case_generate_salt() {
         "my_account",
         "--class-hash",
         DEVNET_OZ_CLASS_HASH_CAIRO_0,
+        "--type",
+        "oz",
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
@@ -162,8 +166,6 @@ pub async fn test_happy_case_add_profile() {
         "my_account",
         "--add-profile",
         "my_account",
-        "--class-hash",
-        DEVNET_OZ_CLASS_HASH_CAIRO_0,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -200,8 +202,6 @@ pub async fn test_happy_case_accounts_file_already_exists() {
         "my_account",
         "--salt",
         "0x1",
-        "--class-hash",
-        DEVNET_OZ_CLASS_HASH_CAIRO_0,
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
@@ -237,8 +237,6 @@ pub async fn test_profile_already_exists() {
         "myprofile",
         "--add-profile",
         "default",
-        "--class-hash",
-        DEVNET_OZ_CLASS_HASH_CAIRO_0,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -257,14 +255,7 @@ pub async fn test_profile_already_exists() {
 pub async fn test_account_already_exists() {
     let mut args = default_cli_args();
     args.append(&mut vec![
-        "account",
-        "create",
-        "--name",
-        "user1",
-        "--salt",
-        "0x1",
-        "--class-hash",
-        DEVNET_OZ_CLASS_HASH_CAIRO_0,
+        "account", "create", "--name", "user1", "--salt", "0x1",
     ]);
 
     let snapbox = runner(&args);
@@ -338,8 +329,6 @@ pub async fn test_happy_case_keystore_add_profile() {
         account_file,
         "account",
         "create",
-        "--class-hash",
-        DEVNET_OZ_CLASS_HASH_CAIRO_0,
         "--add-profile",
         "with_keystore",
     ];
@@ -356,7 +345,7 @@ pub async fn test_happy_case_keystore_add_profile() {
     assert!(contents.contains("\"deployment\": {"));
     assert!(contents.contains("\"variant\": {"));
     assert!(contents.contains("\"version\": 1"));
-    assert!(contents.contains("\"legacy\": true"));
+    assert!(contents.contains("\"legacy\": false"));
 
     let contents = fs::read_to_string(tempdir.path().join("snfoundry.toml"))
         .expect("Unable to read snfoundry.toml");
@@ -381,8 +370,6 @@ pub async fn test_keystore_without_account() {
         keystore_file,
         "account",
         "create",
-        "--class-hash",
-        DEVNET_OZ_CLASS_HASH_CAIRO_0,
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
@@ -419,8 +406,6 @@ pub async fn test_keystore_file_already_exists() {
         account_file,
         "account",
         "create",
-        "--class-hash",
-        DEVNET_OZ_CLASS_HASH_CAIRO_0,
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
@@ -458,8 +443,6 @@ pub async fn test_keystore_account_file_already_exists() {
         account_file,
         "account",
         "create",
-        "--class-hash",
-        DEVNET_OZ_CLASS_HASH_CAIRO_0,
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
@@ -494,6 +477,8 @@ pub async fn test_happy_case_keystore_int_format() {
         "create",
         "--class-hash",
         DEVNET_OZ_CLASS_HASH_CAIRO_0,
+        "--type",
+        "oz",
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
@@ -532,8 +517,6 @@ pub async fn test_happy_case_keystore_hex_format() {
         "--hex-format",
         "account",
         "create",
-        "--class-hash",
-        DEVNET_OZ_CLASS_HASH_CAIRO_0,
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
@@ -551,7 +534,7 @@ pub async fn test_happy_case_keystore_hex_format() {
     assert!(contents.contains("\"deployment\": {"));
     assert!(contents.contains("\"variant\": {"));
     assert!(contents.contains("\"version\": 1"));
-    assert!(contents.contains("\"legacy\": true"));
+    assert!(contents.contains("\"legacy\": false"));
 }
 
 fn get_formatted_account_type(account_type: &str) -> &str {
