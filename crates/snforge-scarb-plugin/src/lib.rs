@@ -1,3 +1,4 @@
+use crate::attributes::test::test;
 use attributes::{
     available_gas::AvailableGasCollector, fork::ForkCollector, fuzzer::FuzzerCollector,
     ignore::IgnoreCollector, should_panic::ShouldPanicCollector,
@@ -11,7 +12,13 @@ mod attributes;
 mod config_statement;
 mod parse;
 
-executable_attribute!("test");
+executable_attribute!("test_executable");
+
+#[attribute_macro]
+#[allow(clippy::needless_pass_by_value)]
+fn test(_args: TokenStream, item: TokenStream) -> ProcMacroResult {
+    test(item)
+}
 
 #[attribute_macro]
 fn ignore(args: TokenStream, item: TokenStream) -> ProcMacroResult {

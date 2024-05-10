@@ -83,7 +83,7 @@ where
 
 const CONFIG_CHEATCODE: &str = "is_config_mode";
 
-fn append_config_statements(
+pub fn append_config_statements(
     db: &dyn SyntaxGroup,
     func: &FunctionWithBody,
     extra_statements: &str,
