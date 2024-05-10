@@ -218,12 +218,6 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let contract = input_reader.read()?;
                 let class = input_reader.read()?;
 
-                let cls_hash = extended_runtime
-                    .extended_runtime
-                    .extended_runtime
-                    .hint_handler
-                    .state
-                    .get_class_hash_at(contract);
                 if extended_runtime
                     .extended_runtime
                     .extended_runtime
