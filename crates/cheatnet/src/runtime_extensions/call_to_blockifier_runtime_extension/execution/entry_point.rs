@@ -97,7 +97,10 @@ pub fn execute_call_entry_point(
         .get(&storage_address)
         .copied();
 
-    let class_hash = maybe_replacement_class.unwrap_or(storage_class_hash); // If not given, take the storage contract class hash.
+    let class_hash = entry_point
+        .class_hash
+        .or(maybe_replacement_class)
+        .unwrap_or(storage_class_hash); // If not given, take the storage contract class hash.
 
     // region: Modified blockifier code
     cheatnet_state
