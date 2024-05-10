@@ -11,11 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Removed
 
-`prank`, `warp`, `roll`, `elect`, `spoof` cheatcodes
+- `prank`, `warp`, `roll`, `elect`, `spoof` cheatcodes
 
 #### Added
 
-`cheat_execution_info` cheatcode and per variable helpers for it
+- `cheat_execution_info` cheatcode and per variable helpers for it
 
 ## [0.23.0] - 2024-05-08
 

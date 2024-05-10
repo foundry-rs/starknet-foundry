@@ -17,12 +17,12 @@ Changes the transaction fee data availability mode for all targets.
 
 Changes the transaction fee data availability mode for the given target.
 
-# `stop_cheat_fee_data_availability_mode`
+## `stop_cheat_fee_data_availability_mode`
 > `fn stop_cheat_fee_data_availability_mode(target: ContractAddress)`
 
 Cancels the `cheat_fee_data_availability_mode` / `start_cheat_fee_data_availability_mode` for the given target.
 
-# `stop_cheat_fee_data_availability_mode_global`
+## `stop_cheat_fee_data_availability_mode_global`
 > `fn stop_cheat_fee_data_availability_mode_global(target: ContractAddress)`
 
 Cancels the `cheat_fee_data_availability_mode_global`.

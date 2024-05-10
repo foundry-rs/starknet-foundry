@@ -17,12 +17,12 @@ Changes the transaction paymaster data for all targets.
 
 Changes the transaction paymaster data for the given target.
 
-# `stop_cheat_paymaster_data`
+## `stop_cheat_paymaster_data`
 > `fn stop_cheat_paymaster_data(target: ContractAddress)`
 
 Cancels the `cheat_paymaster_data` / `start_cheat_paymaster_data` for the given target.
 
-# `stop_cheat_paymaster_data_global`
+## `stop_cheat_paymaster_data_global`
 > `fn stop_cheat_paymaster_data_global(target: ContractAddress)`
 
 Cancels the `cheat_paymaster_data_global`.

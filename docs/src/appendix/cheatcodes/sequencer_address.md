@@ -17,12 +17,12 @@ Changes the sequencer address for all targets.
 
 Changes the sequencer address for the given target.
 
-# `stop_cheat_sequencer_address`
+## `stop_cheat_sequencer_address`
 > `fn stop_cheat_sequencer_address(target: ContractAddress)`
 
 Cancels the `cheat_sequencer_address` / `start_cheat_sequencer_address` for the given target.
 
-# `stop_cheat_sequencer_address_global`
+## `stop_cheat_sequencer_address_global`
 > `fn stop_cheat_sequencer_address_global(target: ContractAddress)`
 
 Cancels the `cheat_sequencer_address_global`.

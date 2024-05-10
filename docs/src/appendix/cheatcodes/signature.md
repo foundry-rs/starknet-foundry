@@ -17,12 +17,12 @@ Changes the transaction signature for all targets.
 
 Changes the transaction signature for the given target.
 
-# `stop_cheat_signature`
+## `stop_cheat_signature`
 > `fn stop_cheat_signature(target: ContractAddress)`
 
 Cancels the `cheat_signature` / `start_cheat_signature` for the given target.
 
-# `stop_cheat_signature_global`
+## `stop_cheat_signature_global`
 > `fn stop_cheat_signature_global(target: ContractAddress)`
 
 Cancels the `cheat_signature_global`.

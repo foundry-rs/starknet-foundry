@@ -17,12 +17,12 @@ Changes the transaction hash for all targets.
 
 Changes the transaction hash for the given target.
 
-# `stop_cheat_transaction_hash`
+## `stop_cheat_transaction_hash`
 > `fn stop_cheat_transaction_hash(target: ContractAddress)`
 
 Cancels the `cheat_transaction_hash` / `start_cheat_transaction_hash` for the given target.
 
-# `stop_cheat_transaction_hash_global`
+## `stop_cheat_transaction_hash_global`
 > `fn stop_cheat_transaction_hash_global(target: ContractAddress)`
 
 Cancels the `cheat_transaction_hash_global`.

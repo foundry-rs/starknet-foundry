@@ -2,27 +2,27 @@
 
 Cheatcodes modifying `version`:
 
-## `cheat_version`
-> `fn cheat_version(target: ContractAddress, version: felt252, span: CheatSpan)`
+## `cheat_transaction_version`
+> `fn cheat_transaction_version(target: ContractAddress, version: felt252, span: CheatSpan)`
 
 Changes the transaction version for the given target and span.
 
-## `cheat_version_global`
-> `fn cheat_version_global(version: felt252)`
+## `cheat_transaction_version_global`
+> `fn cheat_transaction_version_global(version: felt252)`
 
 Changes the transaction version for all targets.
 
-## `start_cheat_version`
-> `fn start_cheat_version(target: ContractAddress, version: felt252)`
+## `start_cheat_transaction_version`
+> `fn start_cheat_transaction_version(target: ContractAddress, version: felt252)`
 
 Changes the transaction version for the given target.
 
-# `stop_cheat_version`
-> `fn stop_cheat_version(target: ContractAddress)`
+## `stop_cheat_transaction_version`
+> `fn stop_cheat_transaction_version(target: ContractAddress)`
 
-Cancels the `cheat_version` / `start_cheat_version` for the given target.
+Cancels the `cheat_transaction_version` / `start_cheat_transaction_version` for the given target.
 
-# `stop_cheat_version_global`
-> `fn stop_cheat_version_global(target: ContractAddress)`
+## `stop_cheat_transaction_version_global`
+> `fn stop_cheat_transaction_version_global(target: ContractAddress)`
 
-Cancels the `cheat_version_global`.
+Cancels the `cheat_transaction_version_global`.

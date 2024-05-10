@@ -17,12 +17,12 @@ Changes the transaction tip for all targets.
 
 Changes the transaction tip for the given target.
 
-# `stop_cheat_tip`
+## `stop_cheat_tip`
 > `fn stop_cheat_tip(target: ContractAddress)`
 
 Cancels the `cheat_tip` / `start_cheat_tip` for the given target.
 
-# `stop_cheat_tip_global`
+## `stop_cheat_tip_global`
 > `fn stop_cheat_tip_global(target: ContractAddress)`
 
 Cancels the `cheat_tip_global`.

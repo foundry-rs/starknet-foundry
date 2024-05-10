@@ -17,12 +17,12 @@ Changes the transaction account deployment data for all targets.
 
 Changes the transaction account deployment data for the given target.
 
-# `stop_cheat_account_deployment_data`
+## `stop_cheat_account_deployment_data`
 > `fn stop_cheat_account_deployment_data(target: ContractAddress)`
 
 Cancels the `cheat_account_deployment_data` / `start_cheat_account_deployment_data` for the given target.
 
-# `stop_cheat_account_deployment_data_global`
+## `stop_cheat_account_deployment_data_global`
 > `fn stop_cheat_account_deployment_data_global(target: ContractAddress)`
 
 Cancels the `cheat_account_deployment_data_global`.

@@ -17,12 +17,12 @@ Changes the caller address for all targets.
 
 Changes the caller address for the given target.
 
-# `stop_cheat_caller_address`
+## `stop_cheat_caller_address`
 > `fn stop_cheat_caller_address(target: ContractAddress)`
 
 Cancels the `cheat_caller_address` / `start_cheat_caller_address` for the given target.
 
-# `stop_cheat_caller_address_global`
+## `stop_cheat_caller_address_global`
 > `fn stop_cheat_caller_address_global(target: ContractAddress)`
 
 Cancels the `cheat_caller_address_global`.

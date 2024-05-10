@@ -17,12 +17,12 @@ Changes the transaction resource bounds for all targets.
 
 Changes the transaction resource bounds for the given target.
 
-# `stop_cheat_resource_bounds`
+## `stop_cheat_resource_bounds`
 > `fn stop_cheat_resource_bounds(target: ContractAddress)`
 
 Cancels the `cheat_resource_bounds` / `start_cheat_resource_bounds` for the given target.
 
-# `stop_cheat_resource_bounds_global`
+## `stop_cheat_resource_bounds_global`
 > `fn stop_cheat_resource_bounds_global(target: ContractAddress)`
 
 Cancels the `cheat_resource_bounds_global`.

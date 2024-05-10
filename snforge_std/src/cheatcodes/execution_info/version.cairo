@@ -3,10 +3,10 @@ use super::{
 };
 
 /// Changes the transaction version for the given target and span.
-/// - `target` - instance of `ContractAddress` specifying which contracts to cheat_version
+/// - `target` - instance of `ContractAddress` specifying which contracts to cheat_transaction_version
 /// - `version` - transaction version to be set
 /// - `span` - instance of `CheatSpan` specifying the number of target calls with the cheat applied
-fn cheat_version(target: ContractAddress, version: felt252, span: CheatSpan) {
+fn cheat_transaction_version(target: ContractAddress, version: felt252, span: CheatSpan) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info
@@ -18,7 +18,7 @@ fn cheat_version(target: ContractAddress, version: felt252, span: CheatSpan) {
 
 /// Changes the transaction version.
 /// - `version` - transaction version to be set
-fn cheat_version_global(version: felt252) {
+fn cheat_transaction_version_global(version: felt252) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info.tx_info.version = Operation::StartGlobal(version);
@@ -26,8 +26,8 @@ fn cheat_version_global(version: felt252) {
     cheat_execution_info(execution_info);
 }
 
-/// Cancels the `cheat_version_global`
-fn stop_cheat_version_global() {
+/// Cancels the `cheat_transaction_version_global`
+fn stop_cheat_transaction_version_global() {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info.tx_info.version = Operation::StopGlobal;
@@ -38,13 +38,13 @@ fn stop_cheat_version_global() {
 /// Changes the transaction version for the given target.
 /// - `target` - instance of `ContractAddress` specifying which contracts to cheat
 /// - `version` - transaction version to be set
-fn start_cheat_version(target: ContractAddress, version: felt252) {
-    cheat_version(target, version, CheatSpan::Indefinite);
+fn start_cheat_transaction_version(target: ContractAddress, version: felt252) {
+    cheat_transaction_version(target, version, CheatSpan::Indefinite);
 }
 
-/// Cancels the `cheat_version` / `start_cheat_version` for the given target.
+/// Cancels the `cheat_transaction_version` / `start_cheat_transaction_version` for the given target.
 /// - `target` - instance of `ContractAddress` specifying which contracts to stop cheating
-fn stop_cheat_version(target: ContractAddress) {
+fn stop_cheat_transaction_version(target: ContractAddress) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info.tx_info.version = Operation::Stop(target);

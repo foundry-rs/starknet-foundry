@@ -17,12 +17,12 @@ Changes the transaction max fee for all targets.
 
 Changes the transaction max fee for the given target.
 
-# `stop_cheat_max_fee`
+## `stop_cheat_max_fee`
 > `fn stop_cheat_max_fee(target: ContractAddress)`
 
 Cancels the `cheat_max_fee` / `start_cheat_max_fee` for the given target.
 
-# `stop_cheat_max_fee_global`
+## `stop_cheat_max_fee_global`
 > `fn stop_cheat_max_fee_global(target: ContractAddress)`
 
 Cancels the `cheat_max_fee_global`.

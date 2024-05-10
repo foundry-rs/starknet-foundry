@@ -57,11 +57,11 @@ use cheatcodes::execution_info::sequencer_address::cheat_sequencer_address_globa
 use cheatcodes::execution_info::sequencer_address::stop_cheat_sequencer_address;
 use cheatcodes::execution_info::sequencer_address::stop_cheat_sequencer_address_global;
 use cheatcodes::execution_info::sequencer_address::start_cheat_sequencer_address;
-use cheatcodes::execution_info::version::cheat_version;
-use cheatcodes::execution_info::version::cheat_version_global;
-use cheatcodes::execution_info::version::stop_cheat_version;
-use cheatcodes::execution_info::version::stop_cheat_version_global;
-use cheatcodes::execution_info::version::start_cheat_version;
+use cheatcodes::execution_info::version::cheat_transaction_version;
+use cheatcodes::execution_info::version::cheat_transaction_version_global;
+use cheatcodes::execution_info::version::stop_cheat_transaction_version;
+use cheatcodes::execution_info::version::stop_cheat_transaction_version_global;
+use cheatcodes::execution_info::version::start_cheat_transaction_version;
 use cheatcodes::execution_info::max_fee::cheat_max_fee;
 use cheatcodes::execution_info::max_fee::cheat_max_fee_global;
 use cheatcodes::execution_info::max_fee::stop_cheat_max_fee;

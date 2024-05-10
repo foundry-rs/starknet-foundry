@@ -17,12 +17,12 @@ Changes the block number for all targets.
 
 Changes the block number for the given target.
 
-# `stop_cheat_block_number`
+## `stop_cheat_block_number`
 > `fn stop_cheat_block_number(target: ContractAddress)`
 
 Cancels the `cheat_block_number` / `start_cheat_block_number` for the given target.
 
-# `stop_cheat_block_number_global`
+## `stop_cheat_block_number_global`
 > `fn stop_cheat_block_number_global(target: ContractAddress)`
 
 Cancels the `cheat_block_number_global`.

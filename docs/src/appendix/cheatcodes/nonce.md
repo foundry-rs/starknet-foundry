@@ -17,12 +17,12 @@ Changes the transaction nonce for all targets.
 
 Changes the transaction nonce for the given target.
 
-# `stop_cheat_nonce`
+## `stop_cheat_nonce`
 > `fn stop_cheat_nonce(target: ContractAddress)`
 
 Cancels the `cheat_nonce` / `start_cheat_nonce` for the given target.
 
-# `stop_cheat_nonce_global`
+## `stop_cheat_nonce_global`
 > `fn stop_cheat_nonce_global(target: ContractAddress)`
 
 Cancels the `cheat_nonce_global`.
