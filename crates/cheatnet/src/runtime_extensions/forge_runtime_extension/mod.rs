@@ -227,10 +227,12 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .unwrap()
                     == ClassHash::default()
                 {
-                    return Ok(CheatcodeHandlingResult::Handled(vec![
-                        Felt252::from(1),
-                        ReplaceBytecodeError::ContractNotDeployed.into_(),
-                    ]));
+                    return Ok(CheatcodeHandlingResult::from_serializable(Result::<
+                        (),
+                        ReplaceBytecodeError,
+                    >::Err(
+                        ReplaceBytecodeError::ContractNotDeployed,
+                    )));
                 }
 
                 extended_runtime
@@ -239,7 +241,12 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .cheatnet_state
                     .replace_class_for_contract(contract, class);
 
-                Ok(CheatcodeHandlingResult::Handled(vec![Felt252::from(0)]))
+                Ok(CheatcodeHandlingResult::from_serializable(Result::<
+                    (),
+                    ReplaceBytecodeError,
+                >::Ok(
+                    ()
+                )))
             }
             "declare" => {
                 let state = &mut extended_runtime

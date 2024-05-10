@@ -235,21 +235,11 @@ pub enum ReplaceBytecodeError {
 fn replace_bytecode(
     contract: ContractAddress, new_class: ClassHash
 ) -> Result<(), ReplaceBytecodeError> {
-    let cheat_result = handle_cheatcode(
+    let mut cheat_result = handle_cheatcode(
         cheatcode::<'replace_bytecode'>(array![contract.into(), new_class.into()].span())
     );
-    let status = *cheat_result.at(0);
-    if status == 1 {
-        let error_code = *cheat_result.at(1);
-        Result::Err(
-            match error_code {
-                0 => ReplaceBytecodeError::ContractNotDeployed(()),
-                _ => panic!("Unrecognized input for ReplaceBytecodeError"),
-            }
-        )
-    } else {
-        Result::Ok(())
-    }
+
+    Serde::deserialize(ref cheat_result).unwrap()
 }
 
 fn validate_cheat_target_and_span(target: @CheatTarget, span: @CheatSpan) {

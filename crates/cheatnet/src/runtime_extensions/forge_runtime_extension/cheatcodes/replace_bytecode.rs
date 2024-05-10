@@ -1,6 +1,6 @@
 use crate::CheatnetState;
 use cairo_felt::Felt252;
-use conversions::IntoConv;
+use conversions::felt252::SerializeAsFelt252Vec;
 use starknet_api::core::{ClassHash, ContractAddress};
 
 impl CheatnetState {
@@ -18,10 +18,10 @@ pub enum ReplaceBytecodeError {
     ContractNotDeployed,
 }
 
-impl IntoConv<Felt252> for ReplaceBytecodeError {
-    fn into_(self) -> Felt252 {
-        match self {
+impl SerializeAsFelt252Vec for ReplaceBytecodeError {
+    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
+        output.push(match self {
             ReplaceBytecodeError::ContractNotDeployed => Felt252::from(0),
-        }
+        })
     }
 }
