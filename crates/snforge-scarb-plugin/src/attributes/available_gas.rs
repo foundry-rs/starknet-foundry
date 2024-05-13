@@ -1,6 +1,9 @@
-use super::{AttributeInfo, AttributeTypeData};
-use crate::{args::Arguments, attributes::AttributeCollector, validate};
-use cairo_lang_macro::Diagnostics;
+use crate::{
+    args::Arguments,
+    attributes::{AttributeCollector, AttributeInfo, AttributeTypeData},
+    validate,
+};
+use cairo_lang_macro::{Diagnostic, Diagnostics};
 use cairo_lang_syntax::node::db::SyntaxGroup;
 
 pub struct AvailableGasCollector;
@@ -18,6 +21,7 @@ impl AttributeCollector for AvailableGasCollector {
     fn args_into_config_expression(
         db: &dyn SyntaxGroup,
         args: Arguments,
+        _warns: &mut Vec<Diagnostic>,
     ) -> Result<String, Diagnostics> {
         let [arg] = args.unnamed_only::<Self>()?.of_length::<1>()?;
 

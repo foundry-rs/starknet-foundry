@@ -22,24 +22,22 @@ pub fn extend_with_config_cheatcodes<Collector>(
 where
     Collector: AttributeCollector,
 {
-    match extend_with_config_cheatcodes_internal::<Collector>(&args, &item) {
-        Ok((item, warn)) => {
-            let result = ProcMacroResult::new(TokenStream::new(item));
+    let mut warns = vec![]; // Vec<Diagnostic> instead of Diagnostics because it does not allow to push ready Diagnostic
 
-            if let Some(warn) = warn {
-                result.with_diagnostics(warn.into())
-            } else {
-                result
-            }
-        }
-        Err(diagnostics) => ProcMacroResult::new(item).with_diagnostics(diagnostics),
+    match extend_with_config_cheatcodes_internal::<Collector>(&args, &item, &mut warns) {
+        Ok(item) => ProcMacroResult::new(TokenStream::new(item)).with_diagnostics(warns.into()),
+        Err(diagnostics) => ProcMacroResult::new(item).with_diagnostics(
+            //TODO extend with warns
+            diagnostics,
+        ),
     }
 }
 
 fn extend_with_config_cheatcodes_internal<Collector>(
     args: &TokenStream,
     item: &TokenStream,
-) -> Result<(String, Option<Diagnostic>), Diagnostics>
+    warns: &mut Vec<Diagnostic>,
+) -> Result<String, Diagnostics>
 where
     Collector: AttributeCollector,
 {
@@ -52,15 +50,9 @@ where
 
     let (args_db, args) = parse_args::<Collector>(&args.to_string())?;
 
-    let (args, empty_args_list_warn) = Arguments::new::<Collector>(args_db.upcast(), args);
+    let args = Arguments::new::<Collector>(args_db.upcast(), args, warns);
 
-    let value = Collector::args_into_config_expression(args_db.upcast(), args).map_err(|err| {
-        if let Some(empty_args_list_warn) = &empty_args_list_warn {
-            err.warn(&empty_args_list_warn.message)
-        } else {
-            err
-        }
-    })?;
+    let value = Collector::args_into_config_expression(args_db.upcast(), args, warns)?;
 
     let cheatcode_name = Collector::CHEATCODE_NAME;
 
@@ -71,14 +63,11 @@ where
             {value}
             .serialize(ref data);
 
-            cheatcode::<'{cheatcode_name}'>(data);
+            starknet::testing::cheatcode::<'{cheatcode_name}'>(data);
         "#
     );
 
-    Ok((
-        append_config_statements(db, &func, &config_cheatcode),
-        empty_args_list_warn,
-    ))
+    Ok(append_config_statements(db, &func, &config_cheatcode))
 }
 
 const CONFIG_CHEATCODE: &str = "is_config_mode";

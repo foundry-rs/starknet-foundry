@@ -1,12 +1,14 @@
-use super::{AttributeInfo, AttributeTypeData};
 use crate::{
     args::Arguments,
-    attributes::{AttributeCollector, ErrorExt},
+    attributes::{AttributeCollector, AttributeInfo, AttributeTypeData, ErrorExt},
     utils::branch,
     validate,
 };
 use cairo_lang_macro::{Diagnostic, Diagnostics};
 use cairo_lang_syntax::node::{ast::Expr, db::SyntaxGroup, helpers::GetIdentifier};
+use indoc::formatdoc;
+use std::fmt::Display;
+
 pub struct ForkCollector;
 
 impl AttributeInfo for ForkCollector {
@@ -18,6 +20,16 @@ impl AttributeTypeData for ForkCollector {
     const CHEATCODE_NAME: &'static str = "set_config_fork";
 }
 
+impl AttributeCollector for ForkCollector {
+    fn args_into_config_expression(
+        db: &dyn SyntaxGroup,
+        args: Arguments,
+        _warns: &mut Vec<Diagnostic>,
+    ) -> Result<String, Diagnostics> {
+        branch(|| inline_args(db, &args), || from_file_args(db, &args))
+    }
+}
+
 #[derive(Debug, Clone, Copy)]
 enum BlockId {
     Hash,
@@ -25,18 +37,13 @@ enum BlockId {
     Tag,
 }
 
-impl From<BlockId> for &str {
-    fn from(value: BlockId) -> Self {
-        match value {
-            BlockId::Hash => "block_hash",
-            BlockId::Number => "block_number",
-            BlockId::Tag => "block_tag",
+impl Display for BlockId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            BlockId::Hash => write!(f, "block_hash"),
+            BlockId::Number => write!(f, "block_number"),
+            BlockId::Tag => write!(f, "block_tag"),
         }
-    }
-}
-impl BlockId {
-    fn as_str(self) -> &'static str {
-        self.into()
     }
 }
 
@@ -47,7 +54,7 @@ fn inline_args(db: &dyn SyntaxGroup, args: &Arguments) -> Result<String, Diagnos
         named_args.one_of_once(&[BlockId::Hash, BlockId::Number, BlockId::Tag])?;
 
     let url = named_args.as_once("url")?;
-    let url = validate::url::<ForkCollector>(db, url)?;
+    let url = validate::url::<ForkCollector>(db, url, "url")?;
 
     let block_id_value = validate_block_id(db, block_id, block_args)?;
 
@@ -57,26 +64,26 @@ fn inline_args(db: &dyn SyntaxGroup, args: &Arguments) -> Result<String, Diagnos
         BlockId::Tag => "BlockTag".to_string(),
     };
 
-    Ok(format!("snforge_std::_config_types::ForkConfig::Inline(snforge_std::_config_types::InlineForkConfig {{ url: {url}, block: {block_id_value} }})"))
+    Ok(formatdoc!(
+        "
+            snforge_std::_config_types::ForkConfig::Inline(
+                snforge_std::_config_types::InlineForkConfig {{
+                    url: {url},
+                    block: {block_id_value}
+                }}
+            )
+        "
+    ))
 }
 
 fn from_file_args(db: &dyn SyntaxGroup, args: &Arguments) -> Result<String, Diagnostic> {
     let [arg] = args.unnamed_only::<ForkCollector>()?.of_length::<1>()?;
 
-    let name = validate::string::<ForkCollector>(db, arg)?;
+    let name = validate::string::<ForkCollector>(db, arg, "0")?;
 
     Ok(format!(
         r#"snforge_std::_config_types::ForkConfig::Named("{name}")"#
     ))
-}
-
-impl AttributeCollector for ForkCollector {
-    fn args_into_config_expression(
-        db: &dyn SyntaxGroup,
-        args: Arguments,
-    ) -> Result<String, Diagnostics> {
-        branch(|| inline_args(db, &args), || from_file_args(db, &args))
-    }
 }
 
 fn validate_block_id(
@@ -100,11 +107,11 @@ fn validate_block_id(
             }
             Err(ForkCollector::error(format!(
                 "<{}> value incorrect, expected: latest",
-                BlockId::Tag.as_str(),
+                BlockId::Tag,
             )))
         }
         BlockId::Hash | BlockId::Number => {
-            crate::validate::number::<ForkCollector>(db, block_args, block_id.as_str())
+            crate::validate::number::<ForkCollector>(db, block_args, block_id.to_string().as_str())
         }
     }
 }

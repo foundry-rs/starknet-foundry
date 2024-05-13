@@ -3,6 +3,7 @@ use cairo_lang_syntax::node::ast::Expr;
 use smol_str::SmolStr;
 use std::{
     collections::HashMap,
+    fmt::Display,
     ops::{Deref, DerefMut},
 };
 
@@ -53,31 +54,25 @@ impl NamedArgs {
         }
     }
 
-    pub fn one_of_once<T: Into<&'static str> + Copy>(
-        &self,
-        args: &[T],
-    ) -> Result<(T, &Expr), Diagnostic> {
+    pub fn one_of_once<T: Display + Copy>(&self, args: &[T]) -> Result<(T, &Expr), Diagnostic> {
         let (field, values) = self.one_of(args)?;
 
-        let value = Self::once(values, field.into())?;
+        let value = Self::once(values, &field.to_string())?;
 
         Ok((field, value))
     }
 
-    pub fn one_of<T: Into<&'static str> + Copy>(
-        &self,
-        args: &[T],
-    ) -> Result<(T, &Vec<Expr>), Diagnostic> {
-        fn message<T: Iterator<Item = Item>, Item: Into<&'static str>>(fields: T) -> String {
+    pub fn one_of<T: Display + Copy>(&self, args: &[T]) -> Result<(T, &Vec<Expr>), Diagnostic> {
+        fn message<T: Iterator<Item = Item>, Item: Display>(fields: T) -> String {
             fields
-                .map(|field| format!("<{}>", field.into()))
+                .map(|field| format!("<{field}>"))
                 .collect::<Vec<_>>()
                 .join(" | ")
         }
 
         let mut existing = args
             .iter()
-            .filter(|arg| self.0.contains_key((**arg).into()))
+            .filter(|arg| self.0.contains_key(arg.to_string().as_str()))
             .peekable();
 
         let first = existing.next();
@@ -93,7 +88,7 @@ impl NamedArgs {
                     "one of {} must be specified",
                     message(args.iter().copied())
                 )),
-                Some(field) => Ok((*field, self.0.get((*field).into()).unwrap())),
+                Some(field) => Ok((*field, self.0.get(field.to_string().as_str()).unwrap())),
             }
         }
         .map_err(Diagnostic::error)

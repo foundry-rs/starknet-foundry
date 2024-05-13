@@ -33,7 +33,7 @@ pub fn parse<T: AttributeInfo>(
     if let Some(ModuleItem::FreeFunction(func)) = elements.into_iter().next() {
         Ok((simple_db, func))
     } else {
-        Err(T::error(" can be used only on a function"))
+        Err(T::error("can be used only on a function"))
     }
 }
 

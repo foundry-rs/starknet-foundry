@@ -23,16 +23,15 @@ impl Arguments {
     pub fn new<T: AttributeInfo>(
         db: &dyn SyntaxGroup,
         args: OptionArgListParenthesized,
-    ) -> (Self, Option<Diagnostic>) {
-        let mut warn = None;
-
+        warns: &mut Vec<Diagnostic>,
+    ) -> Self {
         let args = match args {
             OptionArgListParenthesized::Empty(_) => vec![],
             OptionArgListParenthesized::ArgListParenthesized(args) => {
                 let args = args.arguments(db).elements(db);
 
                 if args.is_empty() {
-                    warn = Some(T::warn(
+                    warns.push(T::warn(
                         "used with empty argument list. Either remove () or specify some arguments",
                     ));
                 }
@@ -60,7 +59,7 @@ impl Arguments {
             };
         }
 
-        (this, warn)
+        this
     }
 
     pub fn is_empty(&self) -> bool {

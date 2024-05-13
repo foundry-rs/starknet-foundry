@@ -1,6 +1,6 @@
 use super::{AttributeInfo, AttributeTypeData};
 use crate::{args::Arguments, attributes::AttributeCollector, validate};
-use cairo_lang_macro::Diagnostics;
+use cairo_lang_macro::{Diagnostic, Diagnostics};
 use cairo_lang_syntax::node::db::SyntaxGroup;
 
 pub struct FuzzerCollector;
@@ -18,6 +18,7 @@ impl AttributeCollector for FuzzerCollector {
     fn args_into_config_expression(
         db: &dyn SyntaxGroup,
         args: Arguments,
+        _warns: &mut Vec<Diagnostic>,
     ) -> Result<String, Diagnostics> {
         let named_args = args.named_only::<Self>()?;
 

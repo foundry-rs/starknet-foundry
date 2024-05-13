@@ -19,13 +19,10 @@ world',
 
     assert(content.len() == expected.len(), 'lengths not equal');
     let mut i = 0;
-    loop {
-        if i == content.len() {
-            break;
-        }
+    while i != content.len() {
         assert(*content[i] == *expected[i], 'unexpected content');
         i += 1;
-    };
+    }
 }
 fn compare_with_expected_content_json(content: Array<felt252>) {
     let hello: ByteArray = "hello";
@@ -52,13 +49,10 @@ world";
     assert(content.len() == expected.len(), 'lengths not equal');
 
     let mut i = 0;
-    loop {
-        if i == content.len() {
-            break;
-        }
+    while i != content.len() {
         assert(*content[i] == *expected[i], 'unexpected content');
         i += 1;
-    };
+    }
 }
 
 #[derive(Serde, Drop, PartialEq)]
@@ -189,10 +183,7 @@ fn valid_content_different_folder() {
 
     assert(content.len() == expected.len(), 'lengths not equal');
     let mut i = 0;
-    loop {
-        if i == content.len() {
-            break;
-        }
+    while i != content.len() {
         assert(*content[i] == *expected[i], 'unexpected content');
         i += 1;
     };

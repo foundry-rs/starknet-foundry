@@ -1,7 +1,9 @@
-use super::{AttributeInfo, AttributeTypeData};
-use crate::{args::Arguments, attributes::AttributeCollector};
-use cairo_lang_macro::Diagnostics;
-use cairo_lang_syntax::node::db::SyntaxGroup;
+use crate::{
+    args::Arguments,
+    attributes::{AttributeCollector, AttributeInfo, AttributeTypeData, ErrorExt},
+};
+use cairo_lang_macro::{Diagnostic, Diagnostics};
+use cairo_lang_syntax::node::{ast::Expr, db::SyntaxGroup};
 use std::fmt::Display;
 
 pub struct ShouldPanicCollector;
@@ -49,13 +51,14 @@ impl AttributeCollector for ShouldPanicCollector {
     fn args_into_config_expression(
         db: &dyn SyntaxGroup,
         args: Arguments,
+        _warns: &mut Vec<Diagnostic>,
     ) -> Result<String, Diagnostics> {
         let named_args = args.named_only::<Self>()?;
 
         let expected = named_args.as_once_optional("expected")?;
 
         let expected = expected
-            .map(|expr| validate::expected_value::<Self>(db, expr))
+            .map(|expr| validate_expected_value(db, expr))
             .transpose()?
             .unwrap_or_default();
 
@@ -65,58 +68,48 @@ impl AttributeCollector for ShouldPanicCollector {
     }
 }
 
-mod validate {
-    use super::Expected;
-    use crate::attributes::{AttributeInfo, ErrorExt};
-    use cairo_lang_macro::Diagnostic;
-    use cairo_lang_syntax::node::{ast::Expr, db::SyntaxGroup};
+fn validate_expected_value(db: &dyn SyntaxGroup, expr: &Expr) -> Result<Expected, Diagnostic> {
+    match expr {
+        Expr::ShortString(string) => {
+            let string = string.string_value(db).unwrap();
 
-    pub fn expected_value<T: AttributeInfo>(
-        db: &dyn SyntaxGroup,
-        expr: &Expr,
-    ) -> Result<Expected, Diagnostic> {
-        match expr {
-            Expr::ShortString(string) => {
-                let string = string.string_value(db).unwrap();
-
-                Ok(Expected::ShortString(string))
-            }
-            Expr::String(string) => {
-                let string = string.string_value(db).unwrap();
-
-                Ok(Expected::ByteArray(string))
-            }
-            Expr::Tuple(expressions) => {
-                let elements = expressions
-                    .expressions(db)
-                    .elements(db)
-                    .into_iter()
-                    .map(|expression| -> Result<String, Diagnostic> {
-                        match expression {
-                            Expr::ShortString(string) => {
-                                let string = string.string_value(db).unwrap();
-
-                                Ok(string)
-                            }
-                            Expr::Literal(string) => {
-                                let string = string.numeric_value(db).unwrap();
-
-                                Ok(format!("0x{}", string.to_str_radix(16)))
-                            }
-                            _ => Err(T::error(format!(
-                                "<expected> argument must be in form: {}",
-                                T::ARGS_FORM
-                            )))?,
-                        }
-                    })
-                    .collect::<Result<Vec<String>, Diagnostic>>()?;
-
-                Ok(Expected::Array(elements))
-            }
-            _ => Err(T::error(format!(
-                "<expected> argument must be in form: {}",
-                T::ARGS_FORM
-            ))),
+            Ok(Expected::ShortString(string))
         }
+        Expr::String(string) => {
+            let string = string.string_value(db).unwrap();
+
+            Ok(Expected::ByteArray(string))
+        }
+        Expr::Tuple(expressions) => {
+            let elements = expressions
+                .expressions(db)
+                .elements(db)
+                .into_iter()
+                .map(|expression| -> Result<String, Diagnostic> {
+                    match expression {
+                        Expr::ShortString(string) => {
+                            let string = string.string_value(db).unwrap();
+
+                            Ok(string)
+                        }
+                        Expr::Literal(string) => {
+                            let string = string.numeric_value(db).unwrap();
+
+                            Ok(format!("0x{}", string.to_str_radix(16)))
+                        }
+                        _ => Err(ShouldPanicCollector::error(format!(
+                            "<expected> argument must be in form: {}",
+                            ShouldPanicCollector::ARGS_FORM
+                        )))?,
+                    }
+                })
+                .collect::<Result<Vec<String>, Diagnostic>>()?;
+
+            Ok(Expected::Array(elements))
+        }
+        _ => Err(ShouldPanicCollector::error(format!(
+            "<expected> argument must be in form: {}",
+            ShouldPanicCollector::ARGS_FORM
+        ))),
     }
 }

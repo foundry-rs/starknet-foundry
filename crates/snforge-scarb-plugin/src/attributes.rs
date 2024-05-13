@@ -20,7 +20,11 @@ pub trait AttributeTypeData {
 }
 
 pub trait AttributeCollector: AttributeInfo + AttributeTypeData {
-    fn args_into_config_expression(db: &dyn SyntaxGroup, args: Arguments) -> Result<String, Diagnostics>;
+    fn args_into_config_expression(
+        db: &dyn SyntaxGroup,
+        args: Arguments,
+        warns: &mut Vec<Diagnostic>,
+    ) -> Result<String, Diagnostics>;
 }
 
 pub trait ErrorExt {

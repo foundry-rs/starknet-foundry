@@ -14,18 +14,18 @@ mod parse;
 mod utils;
 mod validate;
 
-executable_attribute!("test_executable");
+executable_attribute!("snforge_internal_test_executable");
 
 #[attribute_macro]
 #[allow(clippy::needless_pass_by_value)]
-fn internal_config_statement(_args: TokenStream, item: TokenStream) -> ProcMacroResult {
+fn __internal_config_statement(_args: TokenStream, item: TokenStream) -> ProcMacroResult {
     internal_config_statement(item)
 }
 
 #[attribute_macro]
 #[allow(clippy::needless_pass_by_value)]
 fn test(_args: TokenStream, item: TokenStream) -> ProcMacroResult {
-    test(item)
+    test(&item)
 }
 
 #[attribute_macro]

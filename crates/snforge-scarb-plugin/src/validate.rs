@@ -36,29 +36,31 @@ pub fn number<T: AttributeInfo>(
     }
 }
 
-pub fn url<T: AttributeInfo>(db: &dyn SyntaxGroup, url: &Expr) -> Result<String, Diagnostic> {
-    match url {
-        Expr::String(string) => match string.string_value(db) {
-            None => Err(T::error("<url> is not a valid string")),
-            Some(url) => match Url::parse(&url) {
-                Ok(_) => Ok(url),
-                Err(_) => Err(T::error("<url> is not a valid url")),
-            },
-        },
-        _ => Err(T::error(
-            "<url> invalid type, should be: double quotted string",
-        )),
+pub fn url<T: AttributeInfo>(
+    db: &dyn SyntaxGroup,
+    url: &Expr,
+    arg: &str,
+) -> Result<String, Diagnostic> {
+    let url = string::<T>(db, url, arg)?;
+
+    match Url::parse(&url) {
+        Ok(_) => Ok(url),
+        Err(_) => Err(T::error(format!("<{arg}> is not a valid url"))),
     }
 }
 
-pub fn string<T: AttributeInfo>(db: &dyn SyntaxGroup, url: &Expr) -> Result<String, Diagnostic> {
+pub fn string<T: AttributeInfo>(
+    db: &dyn SyntaxGroup,
+    url: &Expr,
+    arg: &str,
+) -> Result<String, Diagnostic> {
     match url {
         Expr::String(string) => match string.string_value(db) {
-            None => Err(T::error("<0> is not a valid string")),
+            None => Err(T::error(format!("<{arg}> is not a valid string"))),
             Some(string) => Ok(string),
         },
-        _ => Err(T::error(
-            "<0> invalid type, should be: double quotted string",
-        )),
+        _ => Err(T::error(format!(
+            "<{arg}> invalid type, should be: double quotted string"
+        ))),
     }
 }

@@ -1,6 +1,6 @@
 use super::{AttributeInfo, AttributeTypeData};
 use crate::{args::Arguments, attributes::AttributeCollector};
-use cairo_lang_macro::Diagnostics;
+use cairo_lang_macro::{Diagnostic, Diagnostics};
 use cairo_lang_syntax::node::db::SyntaxGroup;
 
 pub struct IgnoreCollector;
@@ -15,7 +15,11 @@ impl AttributeTypeData for IgnoreCollector {
 }
 
 impl AttributeCollector for IgnoreCollector {
-    fn args_into_config_expression(_db: &dyn SyntaxGroup, args: Arguments) -> Result<String, Diagnostics> {
+    fn args_into_config_expression(
+        _db: &dyn SyntaxGroup,
+        args: Arguments,
+        _warns: &mut Vec<Diagnostic>,
+    ) -> Result<String, Diagnostics> {
         args.assert_is_empty::<Self>()?;
 
         Ok("snforge_std::_config_types::IgnoreConfig {{ is_ignored: true }}".to_string())

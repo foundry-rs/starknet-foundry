@@ -9,14 +9,14 @@ impl AttributeInfo for TestCollector {
     const ARGS_FORM: &'static str = "";
 }
 
-pub fn test(item: TokenStream) -> ProcMacroResult {
+pub fn test(item: &TokenStream) -> ProcMacroResult {
     let func = item.to_string();
 
     let config = InternalConfigStatementCollector::ATTR_NAME;
 
     let result = formatdoc!(
         "
-            #[test_executable]
+            #[snforge_internal_test_executable]
             #[{config}]
             {func}
         "
