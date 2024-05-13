@@ -130,3 +130,40 @@ fn contract_not_deployed() {
 
     assert_passed(&result);
 }
+
+#[test]
+fn class_hash_not_declared() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use snforge_std::{declare, ContractClassTrait, replace_bytecode, ReplaceBytecodeError};
+            use starknet::{ClassHash, contract_address_const};
+
+            #[test]
+            fn class_hash_not_declared() {
+                let contract = declare("ReplaceBytecodeA").unwrap();
+                let undeclared_class_hash: ClassHash = 0x5.try_into().unwrap();
+                let (contract_address, _) = contract.deploy(@array![]).unwrap(); 
+                
+                match replace_bytecode(contract_address, undeclared_class_hash) {
+                    Result::Ok(()) => {
+                        panic!("Wrong return type");
+                    },
+                    Result::Err(err) => {
+                        assert(err == ReplaceBytecodeError::UndeclaredClassHash(()), 'Wrong error type');
+                    }
+                }
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "ReplaceBytecodeA",
+            Path::new("tests/data/contracts/two_implementations.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test);
+
+    assert_passed(&result);
+}

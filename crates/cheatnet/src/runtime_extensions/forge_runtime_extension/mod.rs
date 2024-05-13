@@ -21,6 +21,7 @@ use crate::{
     state::CallTrace,
 };
 use anyhow::{anyhow, Context, Result};
+use blockifier::state::errors::StateError;
 use blockifier::{
     context::TransactionContext,
     execution::{
@@ -228,6 +229,16 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     == ClassHash::default()
                 {
                     Err(ReplaceBytecodeError::ContractNotDeployed)
+                } else if matches!(
+                    extended_runtime
+                        .extended_runtime
+                        .extended_runtime
+                        .hint_handler
+                        .state
+                        .get_compiled_contract_class(class),
+                    Err(StateError::UndeclaredClassHash(_))
+                ) {
+                    Err(ReplaceBytecodeError::UndeclaredClassHash)
                 } else {
                     extended_runtime
                         .extended_runtime

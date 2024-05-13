@@ -224,6 +224,8 @@ fn stop_mock_call(contract_address: ContractAddress, function_selector: felt252)
 pub enum ReplaceBytecodeError {
     /// Means that the contract does not exist, and thus bytecode cannot be replaced
     ContractNotDeployed,
+    /// Means that the given class for replacement is not declared
+    UndeclaredClassHash,
 }
 
 /// Replaces class for given contract address.

@@ -13,5 +13,7 @@ An enum with appropriate type of replacement failure
 pub enum ReplaceBytecodeError {
     /// Means that the contract does not exist, and thus bytecode cannot be replaced
     ContractNotDeployed,
+    /// Means that the given class for replacement is not declared
+    UndeclaredClassHash,
 }
 ```

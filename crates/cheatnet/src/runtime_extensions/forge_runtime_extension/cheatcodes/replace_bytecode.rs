@@ -16,12 +16,14 @@ impl CheatnetState {
 
 pub enum ReplaceBytecodeError {
     ContractNotDeployed,
+    UndeclaredClassHash,
 }
 
 impl SerializeAsFelt252Vec for ReplaceBytecodeError {
     fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
         match self {
             ReplaceBytecodeError::ContractNotDeployed => output.push(Felt252::from(0)),
+            ReplaceBytecodeError::UndeclaredClassHash => output.push(Felt252::from(1)),
         }
     }
 }
