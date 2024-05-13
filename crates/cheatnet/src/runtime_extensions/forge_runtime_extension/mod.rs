@@ -218,7 +218,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let contract = input_reader.read()?;
                 let class = input_reader.read()?;
 
-                if extended_runtime
+                let res = if extended_runtime
                     .extended_runtime
                     .extended_runtime
                     .hint_handler
@@ -227,26 +227,17 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .unwrap()
                     == ClassHash::default()
                 {
-                    return Ok(CheatcodeHandlingResult::from_serializable(Result::<
-                        (),
-                        ReplaceBytecodeError,
-                    >::Err(
-                        ReplaceBytecodeError::ContractNotDeployed,
-                    )));
-                }
+                    Err(ReplaceBytecodeError::ContractNotDeployed)
+                } else {
+                    extended_runtime
+                        .extended_runtime
+                        .extension
+                        .cheatnet_state
+                        .replace_class_for_contract(contract, class);
+                    Ok(())
+                };
 
-                extended_runtime
-                    .extended_runtime
-                    .extension
-                    .cheatnet_state
-                    .replace_class_for_contract(contract, class);
-
-                Ok(CheatcodeHandlingResult::from_serializable(Result::<
-                    (),
-                    ReplaceBytecodeError,
-                >::Ok(
-                    ()
-                )))
+                Ok(CheatcodeHandlingResult::from_serializable(res))
             }
             "declare" => {
                 let state = &mut extended_runtime

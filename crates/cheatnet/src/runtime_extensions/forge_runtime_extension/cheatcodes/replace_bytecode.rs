@@ -20,8 +20,8 @@ pub enum ReplaceBytecodeError {
 
 impl SerializeAsFelt252Vec for ReplaceBytecodeError {
     fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
-        output.push(match self {
-            ReplaceBytecodeError::ContractNotDeployed => Felt252::from(0),
-        })
+        match self {
+            ReplaceBytecodeError::ContractNotDeployed => output.push(Felt252::from(0)),
+        }
     }
 }
