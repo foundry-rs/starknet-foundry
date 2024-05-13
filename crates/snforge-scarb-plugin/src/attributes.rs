@@ -6,6 +6,7 @@ pub mod available_gas;
 pub mod fork;
 pub mod fuzzer;
 pub mod ignore;
+pub mod internal_config_statement;
 pub mod should_panic;
 pub mod test;
 
@@ -19,7 +20,7 @@ pub trait AttributeTypeData {
 }
 
 pub trait AttributeCollector: AttributeInfo + AttributeTypeData {
-    fn args_into_body(db: &dyn SyntaxGroup, args: Arguments) -> Result<String, Diagnostics>;
+    fn args_into_config_expression(db: &dyn SyntaxGroup, args: Arguments) -> Result<String, Diagnostics>;
 }
 
 pub trait ErrorExt {

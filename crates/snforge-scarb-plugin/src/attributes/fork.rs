@@ -1,8 +1,12 @@
 use super::{AttributeInfo, AttributeTypeData};
-use crate::{args::Arguments, attributes::AttributeCollector};
+use crate::{
+    args::Arguments,
+    attributes::{AttributeCollector, ErrorExt},
+    utils::branch,
+    validate,
+};
 use cairo_lang_macro::{Diagnostic, Diagnostics};
-use cairo_lang_syntax::node::db::SyntaxGroup;
-
+use cairo_lang_syntax::node::{ast::Expr, db::SyntaxGroup, helpers::GetIdentifier};
 pub struct ForkCollector;
 
 impl AttributeInfo for ForkCollector {
@@ -36,19 +40,16 @@ impl BlockId {
     }
 }
 
-fn inline_args<T: AttributeInfo>(
-    db: &dyn SyntaxGroup,
-    args: &Arguments,
-) -> Result<String, Diagnostic> {
-    let named_args = args.named_only::<T>()?;
+fn inline_args(db: &dyn SyntaxGroup, args: &Arguments) -> Result<String, Diagnostic> {
+    let named_args = args.named_only::<ForkCollector>()?;
 
     let (block_id, block_args) =
         named_args.one_of_once(&[BlockId::Hash, BlockId::Number, BlockId::Tag])?;
 
     let url = named_args.as_once("url")?;
-    let url = validate::url::<T>(db, url)?;
+    let url = validate::url::<ForkCollector>(db, url)?;
 
-    let block_id_value = validate::block_id::<T>(db, block_id, block_args)?;
+    let block_id_value = validate_block_id(db, block_id, block_args)?;
 
     let block_id_value = match block_id {
         BlockId::Hash => format!("BlockHash({block_id_value})"),
@@ -59,13 +60,10 @@ fn inline_args<T: AttributeInfo>(
     Ok(format!("snforge_std::_config_types::ForkConfig::Inline(snforge_std::_config_types::InlineForkConfig {{ url: {url}, block: {block_id_value} }})"))
 }
 
-fn from_file_args<T: AttributeInfo>(
-    db: &dyn SyntaxGroup,
-    args: &Arguments,
-) -> Result<String, Diagnostic> {
-    let [arg] = args.unnamed_only::<T>()?.of_length::<1>()?;
+fn from_file_args(db: &dyn SyntaxGroup, args: &Arguments) -> Result<String, Diagnostic> {
+    let [arg] = args.unnamed_only::<ForkCollector>()?.of_length::<1>()?;
 
-    let name = validate::string::<T>(db, arg)?;
+    let name = validate::string::<ForkCollector>(db, arg)?;
 
     Ok(format!(
         r#"snforge_std::_config_types::ForkConfig::Named("{name}")"#
@@ -73,76 +71,40 @@ fn from_file_args<T: AttributeInfo>(
 }
 
 impl AttributeCollector for ForkCollector {
-    fn args_into_body(db: &dyn SyntaxGroup, args: Arguments) -> Result<String, Diagnostics> {
-        inline_args::<Self>(db, &args).or_else(|error| {
-            from_file_args::<Self>(db, &args).map_err(|next_error| vec![error, next_error].into())
-        })
+    fn args_into_config_expression(
+        db: &dyn SyntaxGroup,
+        args: Arguments,
+    ) -> Result<String, Diagnostics> {
+        branch(|| inline_args(db, &args), || from_file_args(db, &args))
     }
 }
 
-mod validate {
-    use super::BlockId;
-    use crate::attributes::{fuzzer, AttributeInfo, ErrorExt};
-    use cairo_lang_macro::Diagnostic;
-    use cairo_lang_syntax::node::{ast::Expr, db::SyntaxGroup, helpers::GetIdentifier};
-    use url::Url;
+fn validate_block_id(
+    db: &dyn SyntaxGroup,
+    block_id: BlockId,
+    block_args: &Expr,
+) -> Result<String, Diagnostic> {
+    match block_id {
+        BlockId::Tag => {
+            if let Expr::Path(path) = block_args {
+                let segments = path.elements(db);
 
-    pub fn url<T: AttributeInfo>(db: &dyn SyntaxGroup, url: &Expr) -> Result<String, Diagnostic> {
-        match url {
-            Expr::String(string) => match string.string_value(db) {
-                None => Err(T::error("<url> is not a valid string")),
-                Some(url) => match Url::parse(&url) {
-                    Ok(_) => Ok(url),
-                    Err(_) => Err(T::error("<url> is not a valid url")),
-                },
-            },
-            _ => Err(T::error(
-                "<url> invalid type, should be: double quotted string",
-            )),
-        }
-    }
-    pub fn string<T: AttributeInfo>(
-        db: &dyn SyntaxGroup,
-        url: &Expr,
-    ) -> Result<String, Diagnostic> {
-        match url {
-            Expr::String(string) => match string.string_value(db) {
-                None => Err(T::error("<0> is not a valid string")),
-                Some(string) => Ok(string),
-            },
-            _ => Err(T::error(
-                "<0> invalid type, should be: double quotted string",
-            )),
-        }
-    }
+                if segments.len() == 1 {
+                    let segment = segments.last().unwrap();
 
-    pub fn block_id<T: AttributeInfo>(
-        db: &dyn SyntaxGroup,
-        block_id: BlockId,
-        block_args: &Expr,
-    ) -> Result<String, Diagnostic> {
-        match block_id {
-            BlockId::Tag => {
-                if let Expr::Path(path) = block_args {
-                    let segments = path.elements(db);
-
-                    if segments.len() == 1 {
-                        let segment = segments.last().unwrap();
-
-                        // currently no other tags
-                        if segment.identifier(db).as_str() == "latest" {
-                            return Ok(String::new());
-                        }
+                    // currently no other tags
+                    if segment.identifier(db).as_str() == "latest" {
+                        return Ok(String::new());
                     }
                 }
-                Err(T::error(format!(
-                    "<{}> value incorrect, expected: latest",
-                    BlockId::Tag.as_str(),
-                )))
             }
-            BlockId::Hash | BlockId::Number => {
-                fuzzer::validate::number::<T>(db, block_args, block_id.as_str())
-            }
+            Err(ForkCollector::error(format!(
+                "<{}> value incorrect, expected: latest",
+                BlockId::Tag.as_str(),
+            )))
+        }
+        BlockId::Hash | BlockId::Number => {
+            crate::validate::number::<ForkCollector>(db, block_args, block_id.as_str())
         }
     }
 }

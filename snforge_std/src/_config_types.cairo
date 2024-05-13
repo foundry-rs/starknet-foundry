@@ -29,14 +29,16 @@ struct FuzzerConfig {
 }
 
 #[derive(Drop, Serde)]
-enum String {
-    Short: felt252,
-    Normal: ByteArray
+enum Expected {
+    ShortString: felt252,
+    ByteArray: ByteArray,
+    Array: Array<felt252>,
+    Any
 }
 
 #[derive(Drop, Serde)]
 struct ShouldPanicConfig {
-    expected: Array<String>,
+    expected: Expected,
 }
 
 #[derive(Drop, Serde)]

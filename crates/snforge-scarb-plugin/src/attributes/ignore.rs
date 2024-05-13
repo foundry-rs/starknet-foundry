@@ -15,7 +15,7 @@ impl AttributeTypeData for IgnoreCollector {
 }
 
 impl AttributeCollector for IgnoreCollector {
-    fn args_into_body(_db: &dyn SyntaxGroup, args: Arguments) -> Result<String, Diagnostics> {
+    fn args_into_config_expression(_db: &dyn SyntaxGroup, args: Arguments) -> Result<String, Diagnostics> {
         args.assert_is_empty::<Self>()?;
 
         Ok("snforge_std::_config_types::IgnoreConfig {{ is_ignored: true }}".to_string())

@@ -8,101 +8,115 @@ pub struct ShouldPanicCollector;
 
 impl AttributeInfo for ShouldPanicCollector {
     const ATTR_NAME: &'static str = "should_panic";
-    const ARGS_FORM: &'static str =
-        "[<expected>: `ByteArray` | `felt252` | ([`ByteArray` | `felt252`,])]";
+    const ARGS_FORM: &'static str = "[<expected>: `ByteArray` | `felt252` | [`felt252`,]]";
 }
 
 impl AttributeTypeData for ShouldPanicCollector {
     const CHEATCODE_NAME: &'static str = "set_config_should_panic";
 }
 
-#[derive(Debug, Clone)]
-enum CairoString {
-    Short(String),
-    Normal(String),
+#[derive(Debug, Clone, Default)]
+enum Expected {
+    ShortString(String),
+    ByteArray(String),
+    Array(Vec<String>),
+    #[default]
+    Any,
 }
 
-impl Display for CairoString {
+impl Display for Expected {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Normal(string) => write!(f, r#"String::Normal("{string}")"#),
-            Self::Short(string) => write!(f, "String::Short('{string}')"),
+            Self::ShortString(string) => write!(
+                f,
+                "snforge_std::_config_types::Expected::ShortString('{string}')"
+            ),
+            Self::ByteArray(string) => write!(
+                f,
+                r#"snforge_std::_config_types::Expected::ByteArray("{string}")"#
+            ),
+            Self::Array(strings) => {
+                let arr = strings.join(",");
+
+                write!(f, "snforge_std::_config_types::Expected::Array([{arr}])")
+            }
+            Self::Any => write!(f, "snforge_std::_config_types::Expected::Any"),
         }
     }
 }
 
 impl AttributeCollector for ShouldPanicCollector {
-    fn args_into_body(db: &dyn SyntaxGroup, args: Arguments) -> Result<String, Diagnostics> {
+    fn args_into_config_expression(
+        db: &dyn SyntaxGroup,
+        args: Arguments,
+    ) -> Result<String, Diagnostics> {
         let named_args = args.named_only::<Self>()?;
 
         let expected = named_args.as_once_optional("expected")?;
 
         let expected = expected
-            .map(|expr| validate::list_of_strings::<Self>(db, expr))
+            .map(|expr| validate::expected_value::<Self>(db, expr))
             .transpose()?
             .unwrap_or_default();
 
-        let expected = expected
-            .iter()
-            .map(ToString::to_string)
-            .collect::<Vec<_>>()
-            .join(", ");
-
         Ok(format!(
-            "snforge_std::_config_types::ShouldPanicConfig {{ expected: array![{expected}] }}"
+            "snforge_std::_config_types::ShouldPanicConfig {{ expected: {expected} }}"
         ))
     }
 }
 
 mod validate {
-    use super::CairoString;
+    use super::Expected;
     use crate::attributes::{AttributeInfo, ErrorExt};
     use cairo_lang_macro::Diagnostic;
     use cairo_lang_syntax::node::{ast::Expr, db::SyntaxGroup};
 
-    pub fn list_of_strings<T: AttributeInfo>(
+    pub fn expected_value<T: AttributeInfo>(
         db: &dyn SyntaxGroup,
         expr: &Expr,
-    ) -> Result<Vec<CairoString>, Diagnostic> {
-        let mut strings = vec![];
-
+    ) -> Result<Expected, Diagnostic> {
         match expr {
             Expr::ShortString(string) => {
                 let string = string.string_value(db).unwrap();
 
-                strings.push(CairoString::Short(string));
+                Ok(Expected::ShortString(string))
             }
             Expr::String(string) => {
                 let string = string.string_value(db).unwrap();
 
-                strings.push(CairoString::Normal(string));
+                Ok(Expected::ByteArray(string))
             }
             Expr::Tuple(expressions) => {
-                for expression in &expressions.expressions(db).elements(db) {
-                    match expression {
-                        Expr::ShortString(string) => {
-                            let string = string.string_value(db).unwrap();
+                let elements = expressions
+                    .expressions(db)
+                    .elements(db)
+                    .into_iter()
+                    .map(|expression| -> Result<String, Diagnostic> {
+                        match expression {
+                            Expr::ShortString(string) => {
+                                let string = string.string_value(db).unwrap();
 
-                            strings.push(CairoString::Short(string));
-                        }
-                        Expr::String(string) => {
-                            let string = string.string_value(db).unwrap();
+                                Ok(string)
+                            }
+                            Expr::Literal(string) => {
+                                let string = string.numeric_value(db).unwrap();
 
-                            strings.push(CairoString::Normal(string));
+                                Ok(format!("0x{}", string.to_str_radix(16)))
+                            }
+                            _ => Err(T::error(format!(
+                                "<expected> argument must be in form: {}",
+                                T::ARGS_FORM
+                            )))?,
                         }
-                        _ => Err(T::error(format!(
-                            "<expected> argument must be in form: {}",
-                            T::ARGS_FORM
-                        )))?,
-                    }
-                }
+                    })
+                    .collect::<Result<Vec<String>, Diagnostic>>()?;
+
+                Ok(Expected::Array(elements))
             }
             _ => Err(T::error(format!(
                 "<expected> argument must be in form: {}",
                 T::ARGS_FORM
-            )))?,
-        };
-
-        Ok(strings)
+            ))),
+        }
     }
 }

@@ -1,10 +1,7 @@
 use super::{AttributeInfo, AttributeTypeData};
-use crate::{
-    args::Arguments,
-    attributes::{AttributeCollector, ErrorExt},
-};
+use crate::{args::Arguments, attributes::AttributeCollector, validate};
 use cairo_lang_macro::Diagnostics;
-use cairo_lang_syntax::node::{ast::Expr, db::SyntaxGroup, Terminal};
+use cairo_lang_syntax::node::db::SyntaxGroup;
 
 pub struct AvailableGasCollector;
 
@@ -18,16 +15,13 @@ impl AttributeTypeData for AvailableGasCollector {
 }
 
 impl AttributeCollector for AvailableGasCollector {
-    fn args_into_body(db: &dyn SyntaxGroup, args: Arguments) -> Result<String, Diagnostics> {
+    fn args_into_config_expression(
+        db: &dyn SyntaxGroup,
+        args: Arguments,
+    ) -> Result<String, Diagnostics> {
         let [arg] = args.unnamed_only::<Self>()?.of_length::<1>()?;
 
-        let gas: u64 = match arg {
-            Expr::Literal(literal) => match literal.text(db).parse() {
-                Ok(gas) => gas,
-                Err(_) => Err(Self::error("argument should be number"))?,
-            },
-            _ => Err(Self::error("argument should be number"))?,
-        };
+        let gas = validate::number::<Self>(db, arg, "0")?;
 
         Ok(format!(
             "snforge_std::_config_types::AvailableGasConfig {{ gas: {gas} }}"

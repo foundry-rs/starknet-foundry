@@ -1,7 +1,7 @@
-use crate::attributes::test::test;
 use attributes::{
     available_gas::AvailableGasCollector, fork::ForkCollector, fuzzer::FuzzerCollector,
-    ignore::IgnoreCollector, should_panic::ShouldPanicCollector,
+    ignore::IgnoreCollector, internal_config_statement::internal_config_statement,
+    should_panic::ShouldPanicCollector, test::test,
 };
 use cairo_lang_macro::{attribute_macro, executable_attribute, ProcMacroResult, TokenStream};
 use config_statement::extend_with_config_cheatcodes;
@@ -11,8 +11,16 @@ mod asserts;
 mod attributes;
 mod config_statement;
 mod parse;
+mod utils;
+mod validate;
 
 executable_attribute!("test_executable");
+
+#[attribute_macro]
+#[allow(clippy::needless_pass_by_value)]
+fn internal_config_statement(_args: TokenStream, item: TokenStream) -> ProcMacroResult {
+    internal_config_statement(item)
+}
 
 #[attribute_macro]
 #[allow(clippy::needless_pass_by_value)]

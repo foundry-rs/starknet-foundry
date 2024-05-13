@@ -54,7 +54,7 @@ where
 
     let (args, empty_args_list_warn) = Arguments::new::<Collector>(args_db.upcast(), args);
 
-    let value = Collector::args_into_body(args_db.upcast(), args).map_err(|err| {
+    let value = Collector::args_into_config_expression(args_db.upcast(), args).map_err(|err| {
         if let Some(empty_args_list_warn) = &empty_args_list_warn {
             err.warn(&empty_args_list_warn.message)
         } else {
@@ -109,19 +109,22 @@ pub fn append_config_statements(
             return None;
         };
 
-        // this function is named "cheatcode"
+        // this function is named "starknet::testing::cheatcode"
         let segments = expr.path(db).elements(db);
 
-        let [segment] = segments.as_slice() else {
+        let [starknet, testing, cheatcode] = segments.as_slice() else {
             return None;
         };
 
-        if segment.identifier(db) != "cheatcode" {
+        if starknet.identifier(db) != "starknet"
+            || testing.identifier(db) != "testing"
+            || cheatcode.identifier(db) != "cheatcode"
+        {
             return None;
         }
 
         // it has single, unnamed generic argument
-        let generics = segment.generic_args(db)?;
+        let generics = cheatcode.generic_args(db)?;
 
         let [GenericArg::Unnamed(cheatcode)] = generics.as_slice() else {
             return None;
@@ -160,7 +163,7 @@ pub fn append_config_statements(
         "
             {attrs}
             {vis} {declaration} {{
-                if cheatcode::<'{CONFIG_CHEATCODE}'>() {{
+                if starknet::testing::cheatcode::<'{CONFIG_CHEATCODE}'>() {{
                     {if_content}
 
                     {extra_statements}
