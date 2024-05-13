@@ -1,5 +1,6 @@
 use crate::starknet_commands::account::{
     add_created_profile_to_configuration, prepare_account_json, write_account_to_accounts_file,
+    AccountType,
 };
 use anyhow::{ensure, Context, Result};
 use camino::Utf8PathBuf;
@@ -22,6 +23,10 @@ pub struct Add {
     /// Address of the account
     #[clap(short, long, requires = "private_key_input")]
     pub address: FieldElement,
+
+    /// Type of the account
+    #[clap(short = 't', long = "type")]
+    pub account_type: AccountType,
 
     /// Class hash of the account
     #[clap(short, long)]
@@ -97,6 +102,7 @@ pub async fn add(
         add.address,
         deployed,
         legacy,
+        &add.account_type,
         class_hash,
         add.salt,
     );
