@@ -28,7 +28,7 @@ fn fuzzing() {
 
         [PASS] fuzzing::tests::custom_fuzzer_config (runs: 10, [..]
         [PASS] fuzzing::tests::uint8_arg (runs: 256, [..]
-        [PASS] fuzzing::tests::fuzzed_loop (runs: 256, gas: {max: ~[..], min: ~[..], mean: ~[..], std deviation: ~[..]})
+        [PASS] fuzzing::tests::fuzzed_while_loop (runs: 256, gas: {max: ~[..], min: ~[..], mean: ~[..], std deviation: ~[..]})
         [PASS] fuzzing::tests::uint16_arg (runs: 256, [..]
         [PASS] fuzzing::tests::uint32_arg (runs: 256, [..]
         [PASS] fuzzing::tests::uint64_arg (runs: 256, [..]
@@ -73,7 +73,7 @@ fn fuzzing_set_runs() {
 
         [PASS] fuzzing::tests::custom_fuzzer_config (runs: 10, [..]
         [PASS] fuzzing::tests::uint8_arg (runs: 10, [..]
-        [PASS] fuzzing::tests::fuzzed_loop (runs: 256, [..]
+        [PASS] fuzzing::tests::fuzzed_while_loop (runs: 256, [..]
         [PASS] fuzzing::tests::uint16_arg (runs: 10, [..]
         [PASS] fuzzing::tests::uint32_arg (runs: 10, [..]
         [PASS] fuzzing::tests::uint64_arg (runs: 10, [..]
@@ -118,7 +118,7 @@ fn fuzzing_set_seed() {
 
         [PASS] fuzzing::tests::custom_fuzzer_config (runs: 10, [..]
         [PASS] fuzzing::tests::uint8_arg (runs: 256, [..]
-        [PASS] fuzzing::tests::fuzzed_loop (runs: 256, [..]
+        [PASS] fuzzing::tests::fuzzed_while_loop (runs: 256, [..]
         [PASS] fuzzing::tests::uint16_arg (runs: 256, [..]
         [PASS] fuzzing::tests::uint32_arg (runs: 256, [..]
         [PASS] fuzzing::tests::uint64_arg (runs: 256, [..]

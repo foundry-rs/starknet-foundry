@@ -22,14 +22,14 @@ mod account_deployment_data;
 
 
 #[derive(Serde, Drop, Copy)]
-pub struct CheatArguments<T> {
+struct CheatArguments<T> {
     value: T,
     span: CheatSpan,
     target: ContractAddress,
 }
 
 #[derive(Serde, Drop, Copy)]
-pub enum Operation<T> {
+enum Operation<T> {
     StartGlobal: T,
     Start: CheatArguments<T>,
     Stop: ContractAddress,
@@ -38,7 +38,7 @@ pub enum Operation<T> {
 }
 
 /// A structure used for setting individual fields in `TxInfo`
-/// All fields are optional, with optional value meaning that the field will be:
+/// All fields are wrapped into `Operation`, meaning that the field will be:
 /// - `Retain` - unchanged
 /// - `Start` - changed for given contract and span
 /// - `Stop` - reset to the initial value for given contract and span
@@ -85,7 +85,7 @@ impl TxInfoMockImpl of Default<TxInfoMock> {
 }
 
 /// A structure used for setting individual fields in `BlockInfo`
-/// All fields are optional, with optional value meaning that the field will be:
+/// All fields are wrapped into `Operation`, meaning that the field will be:
 /// - `Retain` - unchanged
 /// - `Start` - changed for given contract and span
 /// - `Stop` - reset to the initial value for given contract and span
@@ -111,7 +111,7 @@ impl BlockInfoMockImpl of Default<BlockInfoMock> {
 }
 
 /// A structure used for setting individual fields in `ExecutionInfo`
-/// All fields are optional, with optional value meaning that the field will be:
+/// All fields are wrapped into `Operation`, meaning that the field will be:
 /// - `Retain` - unchanged
 /// - `Start` - changed for given contract and span
 /// - `Stop` - reset to the initial value for given contract and span
