@@ -2,14 +2,14 @@ use super::{
     ExecutionInfoMock, Operation, CheatArguments, CheatSpan, cheat_execution_info, ContractAddress
 };
 
-/// Changes the transaction nonce for the given target and span.
-/// - `target` - instance of `ContractAddress` specifying which contracts to cheat_nonce
+/// Changes the transaction nonce for the given contract address and span.
+/// - `contract_address` - instance of `ContractAddress` specifying which contract to cheat
 /// - `nonce` - transaction nonce to be set
-/// - `span` - instance of `CheatSpan` specifying the number of target calls with the cheat applied
-fn cheat_nonce(target: ContractAddress, nonce: felt252, span: CheatSpan) {
+/// - `span` - instance of `CheatSpan` specifying the number of contract_address calls with the cheat applied
+fn cheat_nonce(contract_address: ContractAddress, nonce: felt252, span: CheatSpan) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
-    execution_info.tx_info.nonce = Operation::Start(CheatArguments { value: nonce, span, target, });
+    execution_info.tx_info.nonce = Operation::Start(CheatArguments { value: nonce, span, target: contract_address, });
 
     cheat_execution_info(execution_info);
 }
@@ -33,19 +33,19 @@ fn stop_cheat_nonce_global() {
     cheat_execution_info(execution_info);
 }
 
-/// Changes the transaction nonce for the given target.
-/// - `target` - instance of `ContractAddress` specifying which contracts to cheat
+/// Changes the transaction nonce for the given contract_address.
+/// - `contract_address` - instance of `ContractAddress` specifying which contract to cheat
 /// - `nonce` - transaction nonce to be set
-fn start_cheat_nonce(target: ContractAddress, nonce: felt252) {
-    cheat_nonce(target, nonce, CheatSpan::Indefinite);
+fn start_cheat_nonce(contract_address: ContractAddress, nonce: felt252) {
+    cheat_nonce(contract_address, nonce, CheatSpan::Indefinite);
 }
 
-/// Cancels the `cheat_nonce` / `start_cheat_nonce` for the given target.
-/// - `target` - instance of `ContractAddress` specifying which contracts to stop cheating
-fn stop_cheat_nonce(target: ContractAddress) {
+/// Cancels the `cheat_nonce` / `start_cheat_nonce` for the given contract_address.
+/// - `contract_address` - instance of `ContractAddress` specifying which contract to stop cheating
+fn stop_cheat_nonce(contract_address: ContractAddress) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
-    execution_info.tx_info.nonce = Operation::Stop(target);
+    execution_info.tx_info.nonce = Operation::Stop(contract_address);
 
     cheat_execution_info(execution_info);
 }
