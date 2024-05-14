@@ -12,7 +12,7 @@ Changes the block number for the given target and span.
 
 Changes the block number for the given target.
 
-# `stop_roll`
+## `stop_roll`
 > `fn stop_roll(target: CheatTarget)`
 
 Cancels the `roll` / `start_roll` for the given target.
