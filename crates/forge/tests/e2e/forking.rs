@@ -1,5 +1,5 @@
 use super::common::runner::{
-    runner, setup_package_with_file_patterns, test_runner, BASE_FILE_PATTERNS,
+    runner, setup_package, setup_package_with_file_patterns, test_runner, BASE_FILE_PATTERNS,
 };
 use forge::shared_cache::CACHE_DIR;
 use indoc::{formatdoc, indoc};
@@ -8,7 +8,7 @@ use shared::test_utils::output_assert::assert_stdout_contains;
 
 #[test]
 fn without_cache() {
-    let temp = setup_package_with_file_patterns("forking", BASE_FILE_PATTERNS);
+    let temp = setup_package("forking");
 
     let output = test_runner(&temp)
         .arg("forking::tests::test_fork_simple")

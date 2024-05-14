@@ -1,4 +1,4 @@
-use super::common::runner::{setup_package_with_file_patterns, test_runner, BASE_FILE_PATTERNS};
+use super::common::runner::{setup_package, test_runner};
 use indoc::formatdoc;
 use shared::test_utils::node_url::node_rpc_url;
 use shared::test_utils::output_assert::assert_stderr_contains;
@@ -6,8 +6,7 @@ use shared::test_utils::output_assert::assert_stderr_contains;
 #[test]
 fn print_error_if_attributes_incorrect() {
     let node_rpc_url = node_rpc_url().unwrap();
-    let mock_tests_dir =
-        setup_package_with_file_patterns("diagnostics_and_plugins", BASE_FILE_PATTERNS);
+    let mock_tests_dir = setup_package("diagnostics_and_plugins");
     let output = test_runner(&mock_tests_dir).assert().code(2);
 
     assert_stderr_contains(
