@@ -32,10 +32,7 @@ fn load_felt252(target: ContractAddress, storage_address: felt252) -> felt252 {
 /// - `serialized_value` - a sequence of felts that will be inserted starting at `storage_address`
 fn store(target: ContractAddress, storage_address: felt252, serialized_value: Span<felt252>) {
     let mut offset: usize = 0;
-    loop {
-        if offset == serialized_value.len() {
-            break;
-        }
+    while offset != serialized_value.len() {
         store_felt252(target, storage_address + offset.into(), *serialized_value.at(offset));
         offset += 1;
     }
@@ -49,11 +46,7 @@ fn load(target: ContractAddress, storage_address: felt252, size: felt252) -> Arr
     let mut output_array: Array<felt252> = array![];
     let mut offset: usize = 0;
 
-    loop {
-        if offset.into() == size {
-            break;
-        }
-
+    while offset.into() != size {
         let loaded = load_felt252(target, storage_address + offset.into());
         output_array.append(loaded);
         offset += 1;

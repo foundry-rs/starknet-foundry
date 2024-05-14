@@ -1,5 +1,6 @@
 use crate::starknet_commands::account::{
     add_created_profile_to_configuration, prepare_account_json, write_account_to_accounts_file,
+    AccountType,
 };
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
@@ -143,6 +144,7 @@ async fn generate_account(
         address,
         false,
         legacy,
+        &AccountType::Oz,
         Some(class_hash),
         Some(salt),
     );
