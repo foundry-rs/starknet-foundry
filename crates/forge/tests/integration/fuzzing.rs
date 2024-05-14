@@ -47,18 +47,14 @@ fn fuzzer_different_types() {
 }
 
 #[test]
-fn fuzzed_loop() {
+fn fuzzed_while_loop() {
     let test = test_case!(indoc!(
         r"
         #[test]
         #[fuzzer(runs: 256, seed: 100)]
-        fn fuzzed_loop(a: u8) {
+        fn fuzzed_while_loop(a: u8) {
             let mut i: u8 = 0;
-            loop {
-                if (i == a) {
-                    break;
-                }
-
+            while i != a {
                 i += 1;
             };
 
