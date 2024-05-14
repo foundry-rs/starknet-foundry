@@ -5,13 +5,16 @@ use super::{
 /// Changes the block number for the given contract address and span.
 /// - `contract_address` - instance of `ContractAddress` specifying which contract to cheat
 /// - `block_number` - block number to be set
-/// - `span` - instance of `CheatSpan` specifying the number of contract_address calls with the cheat applied
+/// - `span` - instance of `CheatSpan` specifying the number of contract calls with the cheat applied
 fn cheat_block_number(contract_address: ContractAddress, block_number: u64, span: CheatSpan) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info
         .block_info
-        .block_number = Operation::Start(CheatArguments { value: block_number, span, target: contract_address, });
+        .block_number =
+            Operation::Start(
+                CheatArguments { value: block_number, span, target: contract_address, }
+            );
 
     cheat_execution_info(execution_info);
 }

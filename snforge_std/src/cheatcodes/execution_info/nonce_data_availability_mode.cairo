@@ -3,10 +3,9 @@ use super::{
 };
 
 /// Changes the transaction nonce data availability mode for the given contract address and span.
-/// - `contract_address` - instance of `ContractAddress` specifying which contracts to
-/// cheat_nonce_data_availability_mode - `nonce_data_availability_mode` - transaction nonce data
-/// availability mode to be set - `span` - instance of `CheatSpan` specifying the number of contract_address
-/// calls with the cheat applied
+/// - `contract_address` - instance of `ContractAddress` specifying which contracts to cheat
+/// - `nonce_data_availability_mode` - transaction nonce data availability mode to be set
+/// - `span` - instance of `CheatSpan` specifying the number of contract calls with the cheat applied
 fn cheat_nonce_data_availability_mode(
     contract_address: ContractAddress, nonce_data_availability_mode: u32, span: CheatSpan
 ) {
@@ -15,7 +14,11 @@ fn cheat_nonce_data_availability_mode(
     execution_info
         .tx_info
         .nonce_data_availability_mode =
-            Operation::Start(CheatArguments { value: nonce_data_availability_mode, span, target: contract_address, });
+            Operation::Start(
+                CheatArguments {
+                    value: nonce_data_availability_mode, span, target: contract_address,
+                }
+            );
 
     cheat_execution_info(execution_info);
 }
@@ -47,7 +50,9 @@ fn stop_cheat_nonce_data_availability_mode_global() {
 fn start_cheat_nonce_data_availability_mode(
     contract_address: ContractAddress, nonce_data_availability_mode: u32
 ) {
-    cheat_nonce_data_availability_mode(contract_address, nonce_data_availability_mode, CheatSpan::Indefinite);
+    cheat_nonce_data_availability_mode(
+        contract_address, nonce_data_availability_mode, CheatSpan::Indefinite
+    );
 }
 
 /// Cancels the `cheat_nonce_data_availability_mode` / `start_cheat_nonce_data_availability_mode`
