@@ -107,6 +107,8 @@ pub fn run(project_name: &str) -> Result<()> {
 
     let scarb = std::env::var("SCARB").ok();
 
+    // this check if command is run by scarb itself by checking if SCARB env exists
+    // this way we will not run `scarb new` again when `scarb new/init --snforge` is used
     if scarb.is_none() {
         ScarbCommand::new_with_stdio()
             .current_dir(std::env::current_dir().context("Failed to get current directory")?)
