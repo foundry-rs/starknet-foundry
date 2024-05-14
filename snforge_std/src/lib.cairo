@@ -22,7 +22,6 @@ use cheatcodes::storage::store;
 use cheatcodes::storage::load;
 use cheatcodes::storage::map_entry_address;
 
-use cheatcodes::ContractAddress;
 use cheatcodes::CheatSpan;
 use cheatcodes::test_address;
 use cheatcodes::test_selector;

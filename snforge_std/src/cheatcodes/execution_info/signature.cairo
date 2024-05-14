@@ -2,16 +2,16 @@ use super::{
     ExecutionInfoMock, Operation, CheatArguments, CheatSpan, cheat_execution_info, ContractAddress
 };
 
-/// Changes the transaction signature for the given target and span.
-/// - `target` - instance of `ContractAddress` specifying which contracts to cheat_signature
+/// Changes the transaction signature for the given contract address and span.
+/// - `contract_address` - instance of `ContractAddress` specifying which contract to cheat
 /// - `signature` - transaction signature to be set
-/// - `span` - instance of `CheatSpan` specifying the number of target calls with the cheat applied
-fn cheat_signature(target: ContractAddress, signature: Span<felt252>, span: CheatSpan) {
+/// - `span` - instance of `CheatSpan` specifying the number of contract_address calls with the cheat applied
+fn cheat_signature(contract_address: ContractAddress, signature: Span<felt252>, span: CheatSpan) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info
         .tx_info
-        .signature = Operation::Start(CheatArguments { value: signature, span, target, });
+        .signature = Operation::Start(CheatArguments { value: signature, span, target: contract_address, });
 
     cheat_execution_info(execution_info);
 }
@@ -35,19 +35,19 @@ fn stop_cheat_signature_global() {
     cheat_execution_info(execution_info);
 }
 
-/// Changes the transaction signature for the given target.
-/// - `target` - instance of `ContractAddress` specifying which contracts to cheat
+/// Changes the transaction signature for the given contract_address.
+/// - `contract_address` - instance of `ContractAddress` specifying which contract to cheat
 /// - `signature` - transaction signature to be set
-fn start_cheat_signature(target: ContractAddress, signature: Span<felt252>) {
-    cheat_signature(target, signature, CheatSpan::Indefinite);
+fn start_cheat_signature(contract_address: ContractAddress, signature: Span<felt252>) {
+    cheat_signature(contract_address, signature, CheatSpan::Indefinite);
 }
 
-/// Cancels the `cheat_signature` / `start_cheat_signature` for the given target.
-/// - `target` - instance of `ContractAddress` specifying which contracts to stop cheating
-fn stop_cheat_signature(target: ContractAddress) {
+/// Cancels the `cheat_signature` / `start_cheat_signature` for the given contract_address.
+/// - `contract_address` - instance of `ContractAddress` specifying which contract to stop cheating
+fn stop_cheat_signature(contract_address: ContractAddress) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
-    execution_info.tx_info.signature = Operation::Stop(target);
+    execution_info.tx_info.signature = Operation::Stop(contract_address);
 
     cheat_execution_info(execution_info);
 }

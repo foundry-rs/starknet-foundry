@@ -2,16 +2,16 @@ use super::{
     ExecutionInfoMock, Operation, CheatArguments, CheatSpan, cheat_execution_info, ContractAddress
 };
 
-/// Changes the block number for the given target and span.
-/// - `target` - instance of `ContractAddress` specifying which contracts to cheat_block_number
+/// Changes the block number for the given contract address and span.
+/// - `contract_address` - instance of `ContractAddress` specifying which contract to cheat
 /// - `block_number` - block number to be set
-/// - `span` - instance of `CheatSpan` specifying the number of target calls with the cheat applied
-fn cheat_block_number(target: ContractAddress, block_number: u64, span: CheatSpan) {
+/// - `span` - instance of `CheatSpan` specifying the number of contract_address calls with the cheat applied
+fn cheat_block_number(contract_address: ContractAddress, block_number: u64, span: CheatSpan) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info
         .block_info
-        .block_number = Operation::Start(CheatArguments { value: block_number, span, target, });
+        .block_number = Operation::Start(CheatArguments { value: block_number, span, target: contract_address, });
 
     cheat_execution_info(execution_info);
 }
@@ -35,19 +35,19 @@ fn stop_cheat_block_number_global() {
     cheat_execution_info(execution_info);
 }
 
-/// Changes the block number for the given target.
-/// - `target` - instance of `ContractAddress` specifying which contracts to cheat
+/// Changes the block number for the given contract_address.
+/// - `contract_address` - instance of `ContractAddress` specifying which contract to cheat
 /// - `block_number` - block number to be set
-fn start_cheat_block_number(target: ContractAddress, block_number: u64) {
-    cheat_block_number(target, block_number, CheatSpan::Indefinite);
+fn start_cheat_block_number(contract_address: ContractAddress, block_number: u64) {
+    cheat_block_number(contract_address, block_number, CheatSpan::Indefinite);
 }
 
-/// Cancels the `cheat_block_number` / `start_cheat_block_number` for the given target.
-/// - `target` - instance of `ContractAddress` specifying which contracts to stop cheating
-fn stop_cheat_block_number(target: ContractAddress) {
+/// Cancels the `cheat_block_number` / `start_cheat_block_number` for the given contract_address.
+/// - `contract_address` - instance of `ContractAddress` specifying which contract to stop cheating
+fn stop_cheat_block_number(contract_address: ContractAddress) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
-    execution_info.block_info.block_number = Operation::Stop(target);
+    execution_info.block_info.block_number = Operation::Stop(contract_address);
 
     cheat_execution_info(execution_info);
 }
