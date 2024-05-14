@@ -5,14 +5,18 @@ use super::{
 /// Changes the transaction hash for the given contract address and span.
 /// - `contract_address` - instance of `ContractAddress` specifying which contract to cheat
 /// - `transaction_hash` - transaction hash to be set
-/// - `span` - instance of `CheatSpan` specifying the number of contract_address calls with the cheat applied
-fn cheat_transaction_hash(contract_address: ContractAddress, transaction_hash: felt252, span: CheatSpan) {
+/// - `span` - instance of `CheatSpan` specifying the number of contract calls with the cheat applied
+fn cheat_transaction_hash(
+    contract_address: ContractAddress, transaction_hash: felt252, span: CheatSpan
+) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info
         .tx_info
         .transaction_hash =
-            Operation::Start(CheatArguments { value: transaction_hash, span, target: contract_address, });
+            Operation::Start(
+                CheatArguments { value: transaction_hash, span, target: contract_address, }
+            );
 
     cheat_execution_info(execution_info);
 }

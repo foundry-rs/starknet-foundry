@@ -5,13 +5,14 @@ use super::{
 /// Changes the transaction max fee for the given contract address and span.
 /// - `contract_address` - instance of `ContractAddress` specifying which contract to cheat
 /// - `max_fee` - transaction max fee to be set
-/// - `span` - instance of `CheatSpan` specifying the number of contract_address calls with the cheat applied
+/// - `span` - instance of `CheatSpan` specifying the number of contract calls with the cheat applied
 fn cheat_max_fee(contract_address: ContractAddress, max_fee: u128, span: CheatSpan) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info
         .tx_info
-        .max_fee = Operation::Start(CheatArguments { value: max_fee, span, target: contract_address, });
+        .max_fee =
+            Operation::Start(CheatArguments { value: max_fee, span, target: contract_address, });
 
     cheat_execution_info(execution_info);
 }
