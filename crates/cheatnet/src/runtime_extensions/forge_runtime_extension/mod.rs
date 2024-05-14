@@ -219,25 +219,28 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let contract = input_reader.read()?;
                 let class = input_reader.read()?;
 
+                let is_undeclared = match extended_runtime
+                    .extended_runtime
+                    .extended_runtime
+                    .hint_handler
+                    .state
+                    .get_compiled_contract_class(class)
+                {
+                    Err(StateError::UndeclaredClassHash(_)) => true,
+                    Err(err) => return Err(err.into()),
+                    _ => false,
+                };
+
                 let res = if extended_runtime
                     .extended_runtime
                     .extended_runtime
                     .hint_handler
                     .state
-                    .get_class_hash_at(contract)
-                    .unwrap()
+                    .get_class_hash_at(contract)?
                     == ClassHash::default()
                 {
                     Err(ReplaceBytecodeError::ContractNotDeployed)
-                } else if matches!(
-                    extended_runtime
-                        .extended_runtime
-                        .extended_runtime
-                        .hint_handler
-                        .state
-                        .get_compiled_contract_class(class),
-                    Err(StateError::UndeclaredClassHash(_))
-                ) {
+                } else if is_undeclared {
                     Err(ReplaceBytecodeError::UndeclaredClassHash)
                 } else {
                     extended_runtime
