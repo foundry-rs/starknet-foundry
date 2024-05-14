@@ -105,16 +105,18 @@ fn libcall_in_cheated() {
 
 #[test]
 fn contract_not_deployed() {
-    let test = test_case!(indoc!(
-        r#"
+    let test = test_case!(
+        indoc!(
+            r#"
             use snforge_std::{declare, replace_bytecode, ReplaceBytecodeError};
             use starknet::{ClassHash, contract_address_const};
 
             #[test]
             fn contract_not_deployed() {
-                let arbitrary_class_hash: ClassHash = 0x5.try_into().unwrap();
+                let class_hash = declare("ReplaceBytecodeA").unwrap().class_hash;
+               
                 let non_existing_contract_address = contract_address_const::<0x2>();
-                match replace_bytecode(non_existing_contract_address, arbitrary_class_hash) {
+                match replace_bytecode(non_existing_contract_address, class_hash) {
                     Result::Ok(()) => {
                         panic!("Wrong return type");
                     },
@@ -124,7 +126,13 @@ fn contract_not_deployed() {
                 }
             }
         "#
-    ));
+        ),
+        Contract::from_code_path(
+            "ReplaceBytecodeA",
+            Path::new("tests/data/contracts/two_implementations.cairo"),
+        )
+        .unwrap()
+    );
 
     let result = run_test_case(&test);
 
