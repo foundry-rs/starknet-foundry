@@ -706,6 +706,9 @@ fn init_new_project_test() {
 
             [[target.starknet-contract]]
             sierra = true
+
+            [scripts]
+            test = "snforge test"
         "#,
         CAIRO_EDITION,
         version,
