@@ -3,14 +3,15 @@ use crate::{
     CheatnetState,
 };
 use cairo_felt::Felt252;
+use conversions::felt252::SerializeAsFelt252Vec;
 use runtime::FromReader;
 use starknet_api::core::{ContractAddress, EntryPointSelector};
 
 #[derive(FromReader, Clone, Debug)]
 pub struct CheatArguments<T> {
-    value: T,
-    span: CheatSpan,
-    target: ContractAddress,
+    pub value: T,
+    pub span: CheatSpan,
+    pub target: ContractAddress,
 }
 
 #[derive(FromReader, Clone, Default, Debug)]
@@ -23,6 +24,21 @@ pub enum Operation<T> {
     Retain,
 }
 
+#[derive(FromReader, Clone, Default, Debug, Eq, PartialEq)]
+pub struct ResourceBounds {
+    pub resource: Felt252,
+    pub max_amount: u64,
+    pub max_price_per_unit: u128,
+}
+
+impl SerializeAsFelt252Vec for ResourceBounds {
+    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
+        output.push(self.resource);
+        output.push(self.max_amount.into());
+        output.push(self.max_price_per_unit.into());
+    }
+}
+
 #[derive(Clone, Default, Debug, PartialEq, Eq)]
 pub struct TxInfoMock {
     pub version: CheatStatus<Felt252>,
@@ -32,7 +48,7 @@ pub struct TxInfoMock {
     pub transaction_hash: CheatStatus<Felt252>,
     pub chain_id: CheatStatus<Felt252>,
     pub nonce: CheatStatus<Felt252>,
-    pub resource_bounds: CheatStatus<Vec<Felt252>>,
+    pub resource_bounds: CheatStatus<Vec<ResourceBounds>>,
     pub tip: CheatStatus<Felt252>,
     pub paymaster_data: CheatStatus<Vec<Felt252>>,
     pub nonce_data_availability_mode: CheatStatus<Felt252>,
@@ -40,25 +56,11 @@ pub struct TxInfoMock {
     pub account_deployment_data: CheatStatus<Vec<Felt252>>,
 }
 
-impl TxInfoMock {
-    #[must_use]
-    pub fn is_mocked(&self) -> bool {
-        self != &Default::default()
-    }
-}
-
 #[derive(Clone, Default, Debug, PartialEq, Eq)]
 pub struct BlockInfoMock {
     pub block_number: CheatStatus<u64>,
     pub block_timestamp: CheatStatus<u64>,
     pub sequencer_address: CheatStatus<ContractAddress>,
-}
-
-impl BlockInfoMock {
-    #[must_use]
-    pub fn is_mocked(&self) -> bool {
-        self != &Default::default()
-    }
 }
 
 #[derive(Clone, Default, Debug)]
@@ -79,7 +81,7 @@ pub struct TxInfoMockOperations {
     pub transaction_hash: Operation<Felt252>,
     pub chain_id: Operation<Felt252>,
     pub nonce: Operation<Felt252>,
-    pub resource_bounds: Operation<Vec<Felt252>>,
+    pub resource_bounds: Operation<Vec<ResourceBounds>>,
     pub tip: Operation<Felt252>,
     pub paymaster_data: Operation<Vec<Felt252>>,
     pub nonce_data_availability_mode: Operation<Felt252>,
@@ -130,7 +132,7 @@ macro_rules! for_all_fields {
 }
 
 impl CheatnetState {
-    fn get_cheated_execution_info_for_contract(
+    pub fn get_cheated_execution_info_for_contract(
         &mut self,
         target: ContractAddress,
     ) -> &mut ExecutionInfoMock {

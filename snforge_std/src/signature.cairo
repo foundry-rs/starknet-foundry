@@ -20,14 +20,16 @@ trait KeyPairTrait<SK, PK> {
 trait SignerTrait<T, H, U> {
     /// Signs given message hash
     /// `self` - KeyPair used for signing
-    /// `message_hash` - input to sign bounded by the curve type (u256 for 256bit curves, felt252 for StarkCurve)
+    /// `message_hash` - input to sign bounded by the curve type (u256 for 256bit curves, felt252
+    /// for StarkCurve)
     /// Returns the signature components (usually r,s tuple)
     fn sign(self: T, message_hash: H) -> U;
 }
 
 trait VerifierTrait<T, H, U> {
     /// `self` - KeyPair used for verifying
-    /// `message_hash` - input to verify bounded by the curve type (u256 for 256bit curves, felt252 for StarkCurve)
+    /// `message_hash` - input to verify bounded by the curve type (u256 for 256bit curves, felt252
+    /// for StarkCurve)
     /// `signature` - the signature components (usually r,s tuple)
     /// Returns a boolean representing the validity of the signature
     fn verify(self: T, message_hash: H, signature: U) -> bool;
