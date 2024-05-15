@@ -161,7 +161,7 @@ fn trace_call() {
     let test = test_case!(
         indoc!(
             r#"
-            use snforge_std::{declare, ContractClassTrait, test_address, test_selector, start_prank, CheatTarget};
+            use snforge_std::{declare, ContractClassTrait, test_address, test_selector, start_cheat_caller_address};
             use snforge_std::trace::{CallTrace, CallEntryPoint, CallType, EntryPointType, get_call_trace, CallResult};
             
             use starknet::{ContractAddress, ClassHash};
