@@ -1,7 +1,9 @@
 use starknet::ContractAddress;
 use starknet::Felt252TryIntoContractAddress;
 
-use snforge_std::{declare, ContractClassTrait, test_address, start_prank, stop_prank};
+use snforge_std::{
+    declare, ContractClassTrait, test_address, start_cheat_caller_address, stop_cheat_caller_address
+};
 
 use erc20_package::erc20::IERC20Dispatcher;
 use erc20_package::erc20::IERC20DispatcherTrait;
@@ -44,7 +46,7 @@ fn complex() {
     let spender_balance = dispatcher.balance_of(spender);
     assert(spender_balance == 2, 'invalid spender balance');
 
-    start_prank(erc20_address, spender);
+    start_cheat_caller_address(erc20_address, spender);
 
     // GetExecutionInfo: 1, StorageRead: 2, StorageWrite: 2, EmitEvent: 1
     dispatcher.increase_allowance(test_address(), 2);
@@ -53,7 +55,7 @@ fn complex() {
     let allowance = dispatcher.allowance(spender, test_address());
     assert(allowance == 2, 'invalid allowance');
 
-    stop_prank(erc20_address);
+    stop_cheat_caller_address(erc20_address);
 
     // GetExecutionInfo: 1, StorageRead: 6, StorageWrite: 6, EmitEvent: 2
     dispatcher.transfer_from(spender, test_address(), 2);
