@@ -192,7 +192,7 @@ fn handling_errors() {
             match safe_dispatcher.do_a_panic() {
                 Result::Ok(_) => panic_with_felt252('shouldve panicked'),
                 Result::Err(_) => {
-                    // Would be nice to assert the error here once it is be possible in cairo
+                    // Would be nice to assert the error here once it is possible in cairo
                 }
             };
         }
