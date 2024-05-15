@@ -14,7 +14,6 @@ use starknet_api::core::ContractAddress;
 
 // We've decided that the nonce should not change in tests
 // and should remain 0 at all times, this may be revised in the future.
-// For now to test nonce `spoof` should be used.
 
 fn check_nonce(
     state: &mut dyn State,

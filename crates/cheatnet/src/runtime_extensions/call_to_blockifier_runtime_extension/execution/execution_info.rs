@@ -1,3 +1,4 @@
+use crate::state::{CheatedData, CheatedTxInfo};
 use cairo_felt::Felt252;
 use cairo_vm::{
     types::relocatable::{MaybeRelocatable, Relocatable},
@@ -6,10 +7,6 @@ use cairo_vm::{
 use conversions::{
     felt252::{RawFeltVec, SerializeAsFelt252Vec},
     IntoConv,
-};
-
-use crate::{
-    runtime_extensions::forge_runtime_extension::cheatcodes::spoof::TxInfoMock, state::CheatedData,
 };
 
 fn get_cheated_block_info_ptr(
@@ -49,9 +46,9 @@ fn get_cheated_tx_info_ptr(
 
     let mut new_tx_info = original_tx_info.to_owned();
 
-    let tx_info_mock = cheated_data.tx_info.clone().unwrap();
+    let tx_info_mock = cheated_data.tx_info.clone();
 
-    let TxInfoMock {
+    let CheatedTxInfo {
         version,
         account_contract_address,
         max_fee,
@@ -149,7 +146,7 @@ pub fn get_cheated_exec_info_ptr(
         }
     }
 
-    if cheated_data.tx_info.is_some() {
+    if cheated_data.tx_info.is_mocked() {
         let data = vm.get_range(execution_info_ptr, 2)[1].clone();
         if let MaybeRelocatable::RelocatableValue(tx_info_ptr) = data.unwrap().into_owned() {
             let original_tx_info = vm.get_continuous_range(tx_info_ptr, 17).unwrap();

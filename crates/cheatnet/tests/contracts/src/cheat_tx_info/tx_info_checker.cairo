@@ -1,12 +1,12 @@
 #[starknet::interface]
-trait ISpoofChecker<TContractState> {
+trait ICheatTxInfoChecker<TContractState> {
     fn get_transaction_hash(self: @TContractState) -> felt252;
     fn get_tx_hash_and_emit_event(ref self: TContractState) -> felt252;
     fn get_tx_info(self: @TContractState) -> starknet::info::v2::TxInfo;
 }
 
 #[starknet::contract]
-mod SpoofChecker {
+mod CheatTxInfoChecker {
     use starknet::{SyscallResultTrait, SyscallResult, syscalls::get_execution_info_v2_syscall};
 
     #[storage]
@@ -24,7 +24,7 @@ mod SpoofChecker {
     }
 
     #[abi(embed_v0)]
-    impl ISpoofChecker of super::ISpoofChecker<ContractState> {
+    impl ICheatTxInfoChecker of super::ICheatTxInfoChecker<ContractState> {
         fn get_transaction_hash(self: @ContractState) -> felt252 {
             starknet::get_tx_info().unbox().transaction_hash
         }

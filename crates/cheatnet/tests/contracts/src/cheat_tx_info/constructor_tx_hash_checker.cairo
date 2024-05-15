@@ -1,11 +1,11 @@
 #[starknet::interface]
-trait IConstructorSpoofChecker<TContractState> {
+trait ITxHashChecker<TContractState> {
     fn get_stored_tx_hash(self: @TContractState) -> felt252;
     fn get_transaction_hash(self: @TContractState) -> felt252;
 }
 
 #[starknet::contract]
-mod ConstructorSpoofChecker {
+mod TxHashChecker {
     use box::BoxTrait;
 
     #[storage]
@@ -20,7 +20,7 @@ mod ConstructorSpoofChecker {
     }
 
     #[abi(embed_v0)]
-    impl IConstructorSpoofChecker of super::IConstructorSpoofChecker<ContractState> {
+    impl ITxHashChecker of super::ITxHashChecker<ContractState> {
         fn get_stored_tx_hash(self: @ContractState) -> felt252 {
             self.stored_tx_hash.read()
         }

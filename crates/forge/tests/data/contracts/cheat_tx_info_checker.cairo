@@ -6,7 +6,7 @@ use starknet::ContractAddress;
 use starknet::info::v2::ResourceBounds;
 
 #[starknet::interface]
-trait ISpoofChecker<TContractState> {
+trait ICheatTxInfoChecker<TContractState> {
     fn get_tx_hash(self: @TContractState) -> felt252;
     fn get_nonce(self: @TContractState) -> felt252;
     fn get_account_contract_address(self: @TContractState) -> ContractAddress;
@@ -24,7 +24,7 @@ trait ISpoofChecker<TContractState> {
 }
 
 #[starknet::contract]
-mod SpoofChecker {
+mod CheatTxInfoChecker {
     use serde::Serde;
     use starknet::info::TxInfo;
     use box::BoxTrait;
@@ -38,7 +38,7 @@ mod SpoofChecker {
     }
 
     #[abi(embed_v0)]
-    impl ISpoofChecker of super::ISpoofChecker<ContractState> {
+    impl ICheatTxInfoChecker of super::ICheatTxInfoChecker<ContractState> {
         fn get_tx_hash(self: @ContractState) -> felt252 {
             starknet::get_tx_info().unbox().transaction_hash
         }
