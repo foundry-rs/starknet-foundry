@@ -61,7 +61,7 @@ fn init_scarb_project(script_name: &str, script_root_dir: &Utf8PathBuf) -> Resul
         .args([
             "new",
             "--name",
-            &script_name,
+            script_name,
             "--no-vcs",
             "--quiet",
             script_root_dir.as_str(),

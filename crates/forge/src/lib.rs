@@ -77,11 +77,8 @@ async fn to_runnable(
     }
 
     Ok(CompiledTestCrateRunnable {
-        sierra_program: compiled_test_crate
-            .sierra_program
-            .into_v1()
-            .unwrap()
-            .program,
+        tests_location: compiled_test_crate.tests_location,
+        sierra_program: compiled_test_crate.sierra_program.into_v1().unwrap(),
         test_cases,
     })
 }
@@ -127,19 +124,23 @@ pub async fn run(
 
     let mut summaries = vec![];
 
-    for compiled_test_crate in test_crates {
+    for compiled_test_crate_raw in test_crates {
         pretty_printing::print_running_tests(
-            compiled_test_crate.tests_location,
-            compiled_test_crate.test_cases.len(),
+            compiled_test_crate_raw.tests_location,
+            compiled_test_crate_raw.test_cases.len(),
         );
 
         let compiled_test_crate =
-            to_runnable(compiled_test_crate, fork_targets, block_number_map).await?;
+            to_runnable(compiled_test_crate_raw, fork_targets, block_number_map).await?;
         let forge_config = forge_config.clone();
 
-        let summary =
-            forge_runner::run_tests_from_crate(compiled_test_crate, forge_config, tests_filter)
-                .await?;
+        let summary = forge_runner::run_tests_from_crate(
+            compiled_test_crate,
+            forge_config,
+            tests_filter,
+            package_name,
+        )
+        .await?;
 
         match summary {
             TestCrateRunResult::Ok(summary) => {
@@ -176,9 +177,10 @@ pub async fn run(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::compiled_raw::{CompiledTestCrateRaw, CrateLocation, TestCaseRaw};
+    use crate::compiled_raw::{CompiledTestCrateRaw, TestCaseRaw};
     use cairo_lang_sierra::program::{ProgramArtifact, Version, VersionedProgram};
     use cairo_lang_sierra::{ids::GenericTypeId, program::Program};
+    use forge_runner::compiled_runnable::CrateLocation;
     use forge_runner::{compiled_runnable::TestDetails, expected_result::ExpectedTestResult};
 
     fn program_for_testing() -> VersionedProgram {
