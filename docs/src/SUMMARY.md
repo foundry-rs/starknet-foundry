@@ -66,7 +66,7 @@
     * [sequencer_address](appendix/cheatcodes/sequencer_address.md)
     * [get_class_hash](appendix/cheatcodes/get_class_hash.md)
     * [replace_bytecode](appendix/cheatcodes/replace_bytecode.md)
-    * [l1_handler_execute](appendix/cheatcodes/l1_handler_execute.md)
+    * [l1_handler](appendix/cheatcodes/l1_handler.md)
     * [spy_events](appendix/cheatcodes/spy_events.md)
     * [store](appendix/cheatcodes/store.md)
     * [load](appendix/cheatcodes/load.md)
