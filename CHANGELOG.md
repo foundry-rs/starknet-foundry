@@ -13,10 +13,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - New required flag `--type` to `account add` command
 
+### Forge
+
+#### Changed
+
+- `L1HandlerTrait::execute()` takes source address and payloads as arguments [Read more here](https://foundry-rs.github.io/starknet-foundry/appendix/cheatcodes/l1_handler.html)
+
+- When calling to an address which does not exists, error is forwarded to cairo runtime instead of failing the test
+
+
 ## [0.23.0] - 2024-05-08
 
 ### Forge
-
 
 #### Removed
 - `event_name_hash` removal, in favour of `selector!` usage

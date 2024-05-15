@@ -49,9 +49,9 @@ pub fn execute_call_entry_point(
             .top_cheated_data()
             .clone()
     } else {
-        let contract_address = &entry_point.storage_address;
+        let contract_address = entry_point.storage_address;
         let cheated_data_ = cheatnet_state.create_cheated_data(contract_address);
-        cheatnet_state.update_cheats(contract_address);
+        cheatnet_state.update_cheats(&contract_address);
         cheated_data_
     };
 
