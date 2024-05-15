@@ -51,4 +51,3 @@ fn stop_cheat_tip(contract_address: ContractAddress) {
 
     cheat_execution_info(execution_info);
 }
-;
