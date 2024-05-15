@@ -64,7 +64,7 @@ fn advanced_types() {
         use traits::TryInto;
         use starknet::ContractAddress;
         use starknet::Felt252TryIntoContractAddress;
-        use snforge_std::{ declare, ContractClassTrait, start_prank, CheatTarget };
+        use snforge_std::{ declare, ContractClassTrait, start_cheat_caller_address };
 
         #[starknet::interface]
         trait IERC20<TContractState> {
@@ -104,7 +104,7 @@ fn advanced_types() {
             let balance = dispatcher.balance_of(user_address);
             assert(balance == 1111_u256, 'balance == 1111');
 
-            start_prank(CheatTarget::One(contract_address), user_address);
+            start_cheat_caller_address(contract_address, user_address);
             dispatcher.transfer(other_user_address, 1000_u256);
         
             let balance = dispatcher.balance_of(user_address);

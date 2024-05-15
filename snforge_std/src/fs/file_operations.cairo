@@ -33,7 +33,8 @@ fn read_txt(file: @File) -> Array<felt252> {
 }
 
 /// `file` - a `File` struct to read json data from
-/// Returns an array of felts read from the file, panics if read was not possible, or json was incorrect
+/// Returns an array of felts read from the file, panics if read was not possible, or json was
+/// incorrect
 fn read_json(file: @File) -> Array<felt252> {
     let content = handle_cheatcode(
         cheatcode::<'read_json'>(byte_array_as_felt_array(file.path).span())
