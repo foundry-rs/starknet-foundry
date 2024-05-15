@@ -76,6 +76,17 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
         extended_runtime: &mut Self::Runtime,
     ) -> Result<CheatcodeHandlingResult, EnhancedHintError> {
         match selector {
+            "cheat_execution_info" => {
+                let execution_info = input_reader.read()?;
+
+                extended_runtime
+                    .extended_runtime
+                    .extension
+                    .cheatnet_state
+                    .cheat_execution_info(execution_info);
+
+                Ok(CheatcodeHandlingResult::Handled(vec![]))
+            }
             "roll" => {
                 let target = input_reader.read()?;
                 let span = input_reader.read()?;

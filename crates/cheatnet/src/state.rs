@@ -15,6 +15,7 @@ use runtime::starknet::state::DictStateReader;
 use starknet_api::core::EntryPointSelector;
 
 use crate::constants::{build_test_entry_point, TEST_CONTRACT_CLASS_HASH};
+use crate::runtime_extensions::forge_runtime_extension::cheatcodes::cheat_execution_info::ExecutionInfoMock;
 use blockifier::blockifier::block::BlockInfo;
 use blockifier::execution::call_info::OrderedL2ToL1Message;
 use blockifier::execution::syscalls::hint_processor::SyscallCounter;
@@ -46,7 +47,7 @@ pub enum CheatTarget {
 }
 
 // Specifies the duration of the cheat
-#[derive(FromReader, Clone, Debug)]
+#[derive(FromReader, Clone, Debug, PartialEq, Eq)]
 pub enum CheatSpan {
     Indefinite,
     TargetCalls(usize),
@@ -133,9 +134,10 @@ impl StateReader for ExtendedStateReader {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Default, Debug, PartialEq, Eq)]
 pub enum CheatStatus<T> {
     Cheated(T, CheatSpan),
+    #[default]
     Uncheated,
 }
 
@@ -146,6 +148,13 @@ impl<T> CheatStatus<T> {
             if *n == 0 {
                 *self = CheatStatus::Uncheated;
             }
+        }
+    }
+
+    pub fn as_option(self) -> Option<(T, CheatSpan)> {
+        match self {
+            Self::Cheated(value, span) => Some((value, span)),
+            Self::Uncheated => None,
         }
     }
 }
@@ -267,6 +276,9 @@ pub struct TraceData {
 }
 
 pub struct CheatnetState {
+    pub cheated_execution_info_contracts: HashMap<ContractAddress, ExecutionInfoMock>,
+    pub global_cheated_execution_info: ExecutionInfoMock,
+
     pub rolled_contracts: HashMap<ContractAddress, CheatStatus<Felt252>>,
     pub global_roll: Option<(Felt252, CheatSpan)>,
     pub pranked_contracts: HashMap<ContractAddress, CheatStatus<ContractAddress>>,
@@ -296,6 +308,8 @@ impl Default for CheatnetState {
             ..CallTrace::default_successful_call()
         }));
         Self {
+            cheated_execution_info_contracts: Default::default(),
+            global_cheated_execution_info: Default::default(),
             rolled_contracts: Default::default(),
             global_roll: None,
             pranked_contracts: Default::default(),
@@ -354,32 +368,6 @@ impl CheatnetState {
     }
 
     #[must_use]
-    pub fn address_is_rolled(&self, contract_address: &ContractAddress) -> bool {
-        self.get_cheated_block_number(contract_address).is_some()
-    }
-
-    #[must_use]
-    pub fn address_is_warped(&self, contract_address: &ContractAddress) -> bool {
-        self.get_cheated_block_timestamp(contract_address).is_some()
-    }
-
-    #[must_use]
-    pub fn address_is_pranked(&self, contract_address: &ContractAddress) -> bool {
-        self.get_cheated_caller_address(contract_address).is_some()
-    }
-
-    #[must_use]
-    pub fn address_is_elected(&self, contract_address: &ContractAddress) -> bool {
-        self.get_cheated_sequencer_address(contract_address)
-            .is_some()
-    }
-
-    #[must_use]
-    pub fn address_is_spoofed(&self, contract_address: &ContractAddress) -> bool {
-        self.get_cheated_tx_info(contract_address).is_some()
-    }
-
-    #[must_use]
     pub fn get_cheated_block_number(&self, address: &ContractAddress) -> Option<Felt252> {
         get_cheat_for_contract(&self.global_roll, &self.rolled_contracts, address)
     }
@@ -408,6 +396,7 @@ impl CheatnetState {
     }
 
     pub fn update_cheats(&mut self, address: &ContractAddress) {
+        self.progress_cheated_execution_info(*address);
         update_cheat_for_contract(&self.global_roll, &mut self.rolled_contracts, address);
         update_cheat_for_contract(&self.global_warp, &mut self.warped_contracts, address);
         update_cheat_for_contract(&self.global_prank, &mut self.pranked_contracts, address);
