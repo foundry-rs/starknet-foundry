@@ -118,9 +118,15 @@ impl CallFailure {
             EntryPointExecutionError::PreExecutionError(
                 PreExecutionError::UninitializedStorageAddress(contract_address),
             ) => {
-                let address = contract_address.0.key().to_string();
-                let msg = format!("Contract not deployed at address: {address}");
-                CallFailure::Error { msg }
+                let address_str = contract_address.0.key().to_string();
+                let msg = format!("Contract not deployed at address: {address_str}");
+
+                let panic_data_felts: Vec<Felt252> =
+                    ByteArray::from(msg.as_str()).serialize_with_magic();
+
+                CallFailure::Panic {
+                    panic_data: panic_data_felts,
+                }
             }
             EntryPointExecutionError::StateError(StateError::StateReadError(msg)) => {
                 CallFailure::Error { msg: msg.clone() }

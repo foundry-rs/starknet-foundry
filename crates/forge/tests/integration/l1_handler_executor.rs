@@ -26,6 +26,7 @@ fn l1_handler_execute() {
             use core::result::ResultTrait;
             use snforge_std::{declare, ContractClassTrait, L1Handler, L1HandlerTrait};
             use snforge_std::errors::{ SyscallResultStringErrorTrait, PanicDataOrString };
+            use starknet::contract_address_const;
 
             #[test]
             fn l1_handler_execute() {
@@ -95,6 +96,20 @@ fn l1_handler_execute() {
                         // Would be nice to assert the error here once it is be possible in cairo
                     },
                 }
+            }
+
+            #[test] 
+            #[should_panic]
+            fn l1_handler_contract_missing() {
+                let dispatcher = IBalanceTokenDispatcher { contract_address: contract_address_const::<421984739218742310>() };
+                dispatcher.get_balance();
+
+                let mut l1_handler = L1HandlerTrait::new(
+                    contract_address_const::<421984739218742310>(),
+                    selector!("process_l1_message")
+                );
+
+                l1_handler.execute(0x123, array![].span());
             }
         "#
         ),
