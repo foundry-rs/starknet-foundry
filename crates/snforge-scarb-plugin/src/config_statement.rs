@@ -75,7 +75,7 @@ const CONFIG_CHEATCODE: &str = "is_config_mode";
 pub fn append_config_statements(
     db: &dyn SyntaxGroup,
     func: &FunctionWithBody,
-    extra_statements: &str,
+    config_statements: &str,
 ) -> String {
     let vis = func.visibility(db).as_syntax_node().get_text(db);
     let attrs = func.attributes(db).as_syntax_node().get_text(db);
@@ -155,7 +155,7 @@ pub fn append_config_statements(
                 if starknet::testing::cheatcode::<'{CONFIG_CHEATCODE}'>() {{
                     {if_content}
 
-                    {extra_statements}
+                    {config_statements}
 
                     return;
                 }}
