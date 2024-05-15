@@ -36,6 +36,7 @@ use cairo_vm::vm::{
     errors::hint_errors::HintError, runners::cairo_runner::ExecutionResources,
     vm_core::VirtualMachine,
 };
+use conversions::felt252::SerializeAsFelt252Vec;
 use conversions::{
     byte_array::ByteArray,
     felt252::{FromShortString, TryInferFormat},
@@ -510,11 +511,13 @@ fn serialize_call_trace(call_trace: &CallTrace, output: &mut Vec<Felt252>) {
 }
 
 fn serialize_call_entry_point(call_entry_point: &CallEntryPoint, output: &mut Vec<Felt252>) {
-    let entry_point_type = match call_entry_point.entry_point_type {
-        EntryPointType::Constructor => 0,
-        EntryPointType::External => 1,
-        EntryPointType::L1Handler => 2,
+    match call_entry_point.entry_point_type {
+        EntryPointType::Constructor => output.push(0.into()),
+        EntryPointType::External => output.push(1.into()),
+        EntryPointType::L1Handler => output.push(2.into()),
     };
+
+    output.push(call_entry_point.entry_point_selector.0.into_());
 
     let calldata = call_entry_point
         .calldata
@@ -523,19 +526,16 @@ fn serialize_call_entry_point(call_entry_point: &CallEntryPoint, output: &mut Ve
         .copied()
         .map(IntoConv::into_)
         .collect::<Vec<_>>();
-
-    let call_type = match call_entry_point.call_type {
-        CallType::Call => 0,
-        CallType::Delegate => 1,
-    };
-
-    output.push(Felt252::from(entry_point_type));
-    output.push(call_entry_point.entry_point_selector.0.into_());
     output.push(Felt252::from(calldata.len()));
     output.extend(calldata);
+
     output.push(call_entry_point.storage_address.into_());
     output.push(call_entry_point.caller_address.into_());
-    output.push(Felt252::from(call_type));
+
+    match call_entry_point.call_type {
+        CallType::Call => output.push(0.into()),
+        CallType::Delegate => output.push(1.into()),
+    };
 }
 
 fn serialize_call_result(call_result: &CallResult, output: &mut Vec<Felt252>) {
@@ -546,31 +546,26 @@ fn serialize_call_result(call_result: &CallResult, output: &mut Vec<Felt252>) {
             output.extend(ret_data.iter().cloned());
         }
         CallResult::Failure(call_failure) => {
+            output.push(Felt252::from(1));
+
             match call_failure {
                 CallFailure::Panic { panic_data } => {
-                    serialize_failure_data(0, panic_data.iter().cloned(), panic_data.len(), output);
+                    output.push(Felt252::from(0));
+
+                    output.push(Felt252::from(panic_data.len()));
+                    output.extend(panic_data.iter().cloned());
                 }
                 CallFailure::Error { msg } => {
-                    let data = ByteArray::from(msg.as_str()).serialize_no_magic();
-                    let len = data.len();
-                    serialize_failure_data(1, data, len, output);
+                    output.push(Felt252::from(1));
+
+                    let data = ByteArray::from(msg.as_str()).serialize_as_felt252_vec();
+
+                    output.push(Felt252::from(data.len()));
+                    output.extend(data);
                 }
             };
         }
     };
-}
-
-#[inline]
-fn serialize_failure_data(
-    call_failure_variant: u8,
-    failure_data: impl IntoIterator<Item = Felt252>,
-    failure_data_len: usize,
-    output: &mut Vec<Felt252>,
-) {
-    output.push(Felt252::from(1));
-    output.push(Felt252::from(call_failure_variant));
-    output.push(Felt252::from(failure_data_len));
-    output.extend(failure_data);
 }
 
 #[must_use]

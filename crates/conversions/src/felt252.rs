@@ -111,7 +111,7 @@ impl TryInferFormat for Felt252 {
         } else if value.starts_with('"') && value.ends_with('"') {
             let value = resolve(value).replace("\\\"", "\"");
 
-            Ok(ByteArray::from(value.as_str()).serialize_no_magic())
+            Ok(ByteArray::from(value.as_str()).serialize_as_felt252_vec())
         } else {
             Felt252::try_from_hex_str(value)
                 .or_else(|_| Felt252::try_from_dec_str(value))

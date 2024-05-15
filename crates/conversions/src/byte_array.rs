@@ -5,8 +5,8 @@ use cairo_lang_utils::byte_array::{BYTES_IN_WORD, BYTE_ARRAY_MAGIC};
 #[derive(Clone)]
 pub struct ByteArray {
     words: Vec<Felt252>,
-    pending_word_len: usize,
     pending_word: Felt252,
+    pending_word_len: usize,
 }
 
 impl From<&str> for ByteArray {

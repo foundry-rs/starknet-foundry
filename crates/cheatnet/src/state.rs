@@ -153,13 +153,16 @@ impl<T> CheatStatus<T> {
 
 /// Tree structure representing trace of a call.
 pub struct CallTrace {
+    // only these are serialized
     pub entry_point: CallEntryPoint,
+    pub nested_calls: Vec<CallTraceNode>,
+    pub result: CallResult,
+    // serialize end
+
     // These also include resources used by internal calls
     pub used_execution_resources: ExecutionResources,
     pub used_l1_resources: L1Resources,
     pub used_syscalls: SyscallCounter,
-    pub nested_calls: Vec<CallTraceNode>,
-    pub result: CallResult,
     pub vm_trace: Option<Vec<TraceEntry>>,
 }
 

@@ -6,7 +6,6 @@ use execution_info::{cheat_execution_info, ExecutionInfoMock, CheatArguments, Op
 mod events;
 mod l1_handler;
 mod contract_class;
-mod fork;
 mod storage;
 mod execution_info;
 
