@@ -55,7 +55,7 @@ fn simple_syscalls() {
         use snforge_std::{ declare, ContractClassTrait, test_address };
 
         #[starknet::interface]
-        trait ISpoofChecker<TContractState> {
+        trait ICheatTxInfoChecker<TContractState> {
             fn get_tx_hash(ref self: TContractState) -> felt252;
             fn get_nonce(ref self: TContractState) -> felt252;
             fn get_account_contract_address(ref self: TContractState) -> ContractAddress;
@@ -105,9 +105,9 @@ fn simple_syscalls() {
             assert(dispatcher_cheat_block_timestamp.get_block_timestamp() == block_info.block_timestamp, 'Invalid block timestamp');
             assert(dispatcher_cheat_sequencer_address.get_sequencer_address() == block_info.sequencer_address, 'Invalid sequencer address');
 
-            let contract = declare("SpoofChecker").unwrap();
+            let contract = declare("CheatTxInfoChecker").unwrap();
             let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
-            let dispatcher = ISpoofCheckerDispatcher { contract_address };
+            let dispatcher = ICheatTxInfoCheckerDispatcher { contract_address };
 
             let tx_info = exec_info.tx_info.unbox();
             assert(tx_info.version == dispatcher.get_version(), 'Incorrect version');
@@ -121,8 +121,8 @@ fn simple_syscalls() {
     "#
         ),
         Contract::from_code_path(
-            "SpoofChecker".to_string(),
-            Path::new("tests/data/contracts/spoof_checker.cairo"),
+            "CheatTxInfoChecker".to_string(),
+            Path::new("tests/data/contracts/cheat_tx_info_checker.cairo"),
         )
         .unwrap(),
         Contract::from_code_path(
@@ -461,7 +461,7 @@ fn simple_cheatcodes() {
             start_cheat_caller_address, stop_cheat_caller_address,
             start_cheat_block_number, stop_cheat_block_number,
             start_cheat_block_timestamp, stop_cheat_block_timestamp,
-            start_spoof, stop_spoof,
+            start_cheat_transaction_hash, stop_cheat_transaction_hash,
             test_address, TxInfoMock,
             Operation, CheatArguments, CheatSpan
         };
@@ -527,19 +527,12 @@ fn simple_cheatcodes() {
         }
 
         #[test]
-        fn spoof_test_state() {
+        fn transaction_hash_test_state() {
             let test_address: ContractAddress = test_address();
             let old_tx_info = starknet::get_tx_info().unbox();
             let old_tx_info_v2 = get_tx_info_v2().unbox();
 
-            let mut tx_info_mock: TxInfoMock = Default::default();
-            tx_info_mock.transaction_hash = Operation::Start(CheatArguments {
-                value: 421,
-                target: test_address,
-                span: CheatSpan::Indefinite
-            });
-
-            start_spoof(tx_info_mock);
+            start_cheat_transaction_hash(test_address, 421);
 
             let new_tx_info = starknet::get_tx_info().unbox();
             let new_tx_info_v2 = get_tx_info_v2().unbox();
@@ -548,7 +541,7 @@ fn simple_cheatcodes() {
             assert(new_tx_info_v2.tip == old_tx_info_v2.tip, 'Wrong tip');
             assert(new_tx_info.transaction_hash == 421, 'Wrong transaction_hash');
 
-            stop_spoof(test_address);
+            stop_cheat_transaction_hash(test_address);
             
             let new_tx_info = starknet::get_tx_info().unbox();
             let new_tx_info_v2 = get_tx_info_v2().unbox();

@@ -5,7 +5,7 @@ mod mock;
 mod cheat_caller_address;
 mod replace_bytecode;
 mod cheat_block_number;
-mod spoof;
+mod cheat_tx_info;
 mod cheat_sequencer_address;
 mod starknet;
 mod cheat_block_timestamp;

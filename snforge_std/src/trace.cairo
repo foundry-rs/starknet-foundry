@@ -3,7 +3,8 @@ use core::starknet::testing::cheatcode;
 use core::starknet::ContractAddress;
 use super::_cheatcode::handle_cheatcode;
 
-/// Tree-like structure which contains all of the starknet calls and sub-calls along with the results
+/// Tree-like structure which contains all of the starknet calls and sub-calls along with the
+/// results
 #[derive(Drop, Serde, PartialEq)]
 struct CallTrace {
     entry_point: CallEntryPoint,

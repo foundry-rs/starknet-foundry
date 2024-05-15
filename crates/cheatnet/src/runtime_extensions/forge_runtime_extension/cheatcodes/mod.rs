@@ -15,7 +15,6 @@ pub mod l1_handler_execute;
 pub mod mock_call;
 pub mod precalculate_address;
 pub mod replace_bytecode;
-pub mod spoof;
 pub mod spy_events;
 pub mod storage;
 
