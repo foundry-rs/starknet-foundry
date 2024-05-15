@@ -73,12 +73,17 @@ impl<'a> DeprecatedExtensionLogic for DeprecatedCheatableStarknetRuntimeExtensio
         let contract_address = syscall_handler.storage_address;
         match selector {
             DeprecatedSyscallSelector::GetCallerAddress => {
-                if self.cheatnet_state.address_is_pranked(&contract_address) {
+                if let Some(caller_address) = self
+                    .cheatnet_state
+                    .get_cheated_caller_address(contract_address)
+                {
                     // Increment, since the selector was peeked into before
                     syscall_handler.syscall_ptr += 1;
                     increment_syscall_count(syscall_handler, selector);
 
-                    let response = get_caller_address(self, contract_address);
+                    let response = GetContractAddressResponse {
+                        address: caller_address,
+                    };
 
                     response.write(vm, &mut syscall_handler.syscall_ptr)?;
                     Ok(SyscallHandlingResult::Handled(()))
@@ -87,11 +92,16 @@ impl<'a> DeprecatedExtensionLogic for DeprecatedCheatableStarknetRuntimeExtensio
                 }
             }
             DeprecatedSyscallSelector::GetBlockNumber => {
-                if self.cheatnet_state.address_is_rolled(&contract_address) {
+                if let Some(block_number) = self
+                    .cheatnet_state
+                    .get_cheated_block_number(contract_address)
+                {
                     syscall_handler.syscall_ptr += 1;
                     increment_syscall_count(syscall_handler, selector);
 
-                    let response = get_block_number(self, contract_address);
+                    let response = GetBlockNumberResponse {
+                        block_number: BlockNumber(block_number.to_u64().unwrap()),
+                    };
 
                     response.write(vm, &mut syscall_handler.syscall_ptr)?;
                     Ok(SyscallHandlingResult::Handled(()))
@@ -100,11 +110,16 @@ impl<'a> DeprecatedExtensionLogic for DeprecatedCheatableStarknetRuntimeExtensio
                 }
             }
             DeprecatedSyscallSelector::GetBlockTimestamp => {
-                if self.cheatnet_state.address_is_warped(&contract_address) {
+                if let Some(block_timestamp) = self
+                    .cheatnet_state
+                    .get_cheated_block_timestamp(contract_address)
+                {
                     syscall_handler.syscall_ptr += 1;
                     increment_syscall_count(syscall_handler, selector);
 
-                    let response = get_block_timestamp(self, contract_address);
+                    let response = GetBlockTimestampResponse {
+                        block_timestamp: BlockTimestamp(block_timestamp.to_u64().unwrap()),
+                    };
 
                     response.write(vm, &mut syscall_handler.syscall_ptr)?;
                     Ok(SyscallHandlingResult::Handled(()))
@@ -113,12 +128,18 @@ impl<'a> DeprecatedExtensionLogic for DeprecatedCheatableStarknetRuntimeExtensio
                 }
             }
             DeprecatedSyscallSelector::GetSequencerAddress => {
-                if self.cheatnet_state.address_is_elected(&contract_address) {
+                if let Some(sequencer_address) = self
+                    .cheatnet_state
+                    .get_cheated_sequencer_address(contract_address)
+                {
                     syscall_handler.syscall_ptr += 1;
                     increment_syscall_count(syscall_handler, selector);
 
-                    let response =
-                        get_sequencer_address(self, syscall_handler, contract_address).unwrap();
+                    syscall_handler.verify_not_in_validate_mode("get_sequencer_address")?;
+
+                    let response = GetContractAddressResponse {
+                        address: sequencer_address,
+                    };
 
                     response.write(vm, &mut syscall_handler.syscall_ptr)?;
 
@@ -331,71 +352,6 @@ fn library_call(
 
     Ok(SingleSegmentResponse {
         segment: retdata_segment,
-    })
-}
-
-// blockifier/src/execution/deprecated_syscalls/mod.rs:426 (get_caller_address)
-fn get_caller_address(
-    syscall_handler: &mut DeprecatedCheatableStarknetRuntimeExtension<'_>,
-    contract_address: ContractAddress,
-) -> GetContractAddressResponse {
-    GetContractAddressResponse {
-        address: syscall_handler
-            .cheatnet_state
-            .get_cheated_caller_address(&contract_address)
-            .unwrap(),
-    }
-}
-
-// blockifier/src/execution/deprecated_syscalls/mod.rs:387 (get_block_number)
-fn get_block_number(
-    syscall_handler: &mut DeprecatedCheatableStarknetRuntimeExtension<'_>,
-    contract_address: ContractAddress,
-) -> GetBlockNumberResponse {
-    GetBlockNumberResponse {
-        block_number: BlockNumber(
-            syscall_handler
-                .cheatnet_state
-                .get_cheated_block_number(&contract_address)
-                .unwrap()
-                .to_u64()
-                .unwrap(),
-        ),
-    }
-}
-
-// blockifier/src/execution/deprecated_syscalls/mod.rs:411 (get_block_timestamp)
-fn get_block_timestamp(
-    syscall_handler: &mut DeprecatedCheatableStarknetRuntimeExtension<'_>,
-    contract_address: ContractAddress,
-) -> GetBlockTimestampResponse {
-    GetBlockTimestampResponse {
-        block_timestamp: BlockTimestamp(
-            syscall_handler
-                .cheatnet_state
-                .get_cheated_block_timestamp(&contract_address)
-                .unwrap()
-                .to_u64()
-                .unwrap(),
-        ),
-    }
-}
-
-// blockifier/src/execution/deprecated_syscalls/mod.rs:470 (get_sequencer_address)
-type GetSequencerAddressResponse = GetContractAddressResponse;
-
-fn get_sequencer_address(
-    cheatable_syscall_handler: &mut DeprecatedCheatableStarknetRuntimeExtension<'_>,
-    syscall_handler: &mut DeprecatedSyscallHintProcessor<'_>,
-    contract_address: ContractAddress,
-) -> DeprecatedSyscallResult<GetSequencerAddressResponse> {
-    syscall_handler.verify_not_in_validate_mode("get_sequencer_address")?;
-
-    Ok(GetSequencerAddressResponse {
-        address: cheatable_syscall_handler
-            .cheatnet_state
-            .get_cheated_sequencer_address(&contract_address)
-            .unwrap(),
     })
 }
 

@@ -76,93 +76,15 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
         extended_runtime: &mut Self::Runtime,
     ) -> Result<CheatcodeHandlingResult, EnhancedHintError> {
         match selector {
-            "roll" => {
-                let target = input_reader.read()?;
-                let span = input_reader.read()?;
-                let block_number = input_reader.read()?;
+            "cheat_execution_info" => {
+                let execution_info = input_reader.read()?;
 
                 extended_runtime
                     .extended_runtime
                     .extension
                     .cheatnet_state
-                    .roll(target, block_number, span);
-                Ok(CheatcodeHandlingResult::Handled(vec![]))
-            }
-            "stop_roll" => {
-                let target = input_reader.read()?;
+                    .cheat_execution_info(execution_info);
 
-                extended_runtime
-                    .extended_runtime
-                    .extension
-                    .cheatnet_state
-                    .stop_roll(target);
-                Ok(CheatcodeHandlingResult::Handled(vec![]))
-            }
-            "warp" => {
-                let target = input_reader.read()?;
-                let span = input_reader.read()?;
-                let warp_timestamp = input_reader.read()?;
-
-                extended_runtime
-                    .extended_runtime
-                    .extension
-                    .cheatnet_state
-                    .warp(target, warp_timestamp, span);
-
-                Ok(CheatcodeHandlingResult::Handled(vec![]))
-            }
-            "stop_warp" => {
-                let target = input_reader.read()?;
-
-                extended_runtime
-                    .extended_runtime
-                    .extension
-                    .cheatnet_state
-                    .stop_warp(target);
-                Ok(CheatcodeHandlingResult::Handled(vec![]))
-            }
-            "elect" => {
-                let target = input_reader.read()?;
-                let span = input_reader.read()?;
-                let sequencer_address = input_reader.read()?;
-
-                extended_runtime
-                    .extended_runtime
-                    .extension
-                    .cheatnet_state
-                    .elect(target, sequencer_address, span);
-                Ok(CheatcodeHandlingResult::Handled(vec![]))
-            }
-            "stop_elect" => {
-                let target = input_reader.read()?;
-                extended_runtime
-                    .extended_runtime
-                    .extension
-                    .cheatnet_state
-                    .stop_elect(target);
-                Ok(CheatcodeHandlingResult::Handled(vec![]))
-            }
-            "prank" => {
-                let target = input_reader.read()?;
-                let span = input_reader.read()?;
-
-                let caller_address = input_reader.read()?;
-
-                extended_runtime
-                    .extended_runtime
-                    .extension
-                    .cheatnet_state
-                    .prank(target, caller_address, span);
-                Ok(CheatcodeHandlingResult::Handled(vec![]))
-            }
-            "stop_prank" => {
-                let target = input_reader.read()?;
-
-                extended_runtime
-                    .extended_runtime
-                    .extension
-                    .cheatnet_state
-                    .stop_prank(target);
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
             "mock_call" => {
@@ -188,29 +110,6 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .extension
                     .cheatnet_state
                     .stop_mock_call(contract_address, function_selector);
-                Ok(CheatcodeHandlingResult::Handled(vec![]))
-            }
-            "spoof" => {
-                let target = input_reader.read()?;
-                let span = input_reader.read()?;
-
-                let tx_info_mock = input_reader.read()?;
-
-                extended_runtime
-                    .extended_runtime
-                    .extension
-                    .cheatnet_state
-                    .spoof(target, tx_info_mock, span);
-                Ok(CheatcodeHandlingResult::Handled(vec![]))
-            }
-            "stop_spoof" => {
-                let target = input_reader.read()?;
-
-                extended_runtime
-                    .extended_runtime
-                    .extension
-                    .cheatnet_state
-                    .stop_spoof(target);
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
             "replace_bytecode" => {
