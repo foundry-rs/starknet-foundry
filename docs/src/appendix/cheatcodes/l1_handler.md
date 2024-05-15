@@ -1,4 +1,4 @@
-# `l1_handler_execute`
+# `l1_handler`
 
 > `fn new(target: ContractAddress, selector: felt252) -> L1Handler`
 Returns a structure referring to a L1 handler function.

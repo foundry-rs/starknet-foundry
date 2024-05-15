@@ -22,7 +22,7 @@
 - [`stop_mock_call`](cheatcodes/mock_call.md#stop_mock_call) - cancels the `mock_call` / `start_mock_call` for an entry point
 - [`get_class_hash`](cheatcodes/get_class_hash.md) - retrieves a class hash of a contract
 - [`replace_bytecode`](cheatcodes/replace_bytecode.md) - replace the class hash of a contract
-- [`l1_handler_execute`](cheatcodes/l1_handler_execute.md) - executes a `#[l1_handler]` function to mock a message arriving from Ethereum
+- [`l1_handler`](cheatcodes/l1_handler.md) - executes a `#[l1_handler]` function to mock a message arriving from Ethereum
 - [`spy_events`](cheatcodes/spy_events.md) - creates `EventSpy` instance which spies on events emitted by contracts
 - [`store`](cheatcodes/store.md) - stores values in targeted contact's storage
 - [`load`](cheatcodes/load.md) - loads values directly from targeted contact's storage
