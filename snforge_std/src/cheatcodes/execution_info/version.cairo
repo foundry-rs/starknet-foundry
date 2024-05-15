@@ -27,7 +27,7 @@ fn cheat_transaction_version_global(version: felt252) {
     cheat_execution_info(execution_info);
 }
 
-/// Cancels the `cheat_transaction_version_global`
+/// Cancels the `cheat_transaction_version_global`.
 fn stop_cheat_transaction_version_global() {
     let mut execution_info: ExecutionInfoMock = Default::default();
 

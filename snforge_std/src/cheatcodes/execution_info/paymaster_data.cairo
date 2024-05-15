@@ -31,7 +31,7 @@ fn cheat_paymaster_data_global(paymaster_data: Span<felt252>) {
     cheat_execution_info(execution_info);
 }
 
-/// Cancels the `cheat_paymaster_data_global`
+/// Cancels the `cheat_paymaster_data_global`.
 fn stop_cheat_paymaster_data_global() {
     let mut execution_info: ExecutionInfoMock = Default::default();
 

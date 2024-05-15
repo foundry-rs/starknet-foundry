@@ -31,7 +31,7 @@ fn cheat_sequencer_address_global(sequencer_address: ContractAddress) {
     cheat_execution_info(execution_info);
 }
 
-/// Cancels the `cheat_sequencer_address_global`
+/// Cancels the `cheat_sequencer_address_global`.
 fn stop_cheat_sequencer_address_global() {
     let mut execution_info: ExecutionInfoMock = Default::default();
 

@@ -27,7 +27,7 @@ fn cheat_signature_global(signature: Span<felt252>) {
     cheat_execution_info(execution_info);
 }
 
-/// Cancels the `cheat_signature_global`
+/// Cancels the `cheat_signature_global`.
 fn stop_cheat_signature_global() {
     let mut execution_info: ExecutionInfoMock = Default::default();
 

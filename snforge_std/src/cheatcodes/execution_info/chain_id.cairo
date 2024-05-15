@@ -27,7 +27,7 @@ fn cheat_chain_id_global(chain_id: felt252) {
     cheat_execution_info(execution_info);
 }
 
-/// Cancels the `cheat_chain_id_global`
+/// Cancels the `cheat_chain_id_global`.
 fn stop_cheat_chain_id_global() {
     let mut execution_info: ExecutionInfoMock = Default::default();
 

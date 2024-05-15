@@ -29,7 +29,7 @@ fn cheat_block_number_global(block_number: u64) {
     cheat_execution_info(execution_info);
 }
 
-/// Cancels the `cheat_block_number_global`
+/// Cancels the `cheat_block_number_global`.
 fn stop_cheat_block_number_global() {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
