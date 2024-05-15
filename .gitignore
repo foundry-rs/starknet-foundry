@@ -4,7 +4,6 @@ pyproject.toml
 */.tool-versions
 target
 .vscode/
-.env
 Scarb.lock
 !snforge_std/Scarb.lock
 !sncast_std/Scarb.lock
@@ -12,4 +11,3 @@ Scarb.lock
 .spr.yml
 .snfoundry_cache/
 .snfoundry_trace/
-.env
