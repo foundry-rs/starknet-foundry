@@ -26,3 +26,4 @@ Cancels the `cheat_block_number` / `start_cheat_block_number` for the given targ
 > `fn stop_cheat_block_number_global(target: ContractAddress)`
 
 Cancels the `cheat_block_number_global`.
+
