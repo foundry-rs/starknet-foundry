@@ -144,3 +144,26 @@ where
         Self(vec)
     }
 }
+
+macro_rules! impl_serialize_for_tuple {
+    ($($ty:ident),*) => {
+        impl<$( $ty ),*> SerializeAsFelt252Vec for ( $( $ty, )* )
+        where
+        $( $ty: SerializeAsFelt252Vec, )*
+        {
+            #[allow(non_snake_case)]
+            #[allow(unused_variables)]
+            fn serialize_into_felt252_vec(&self, output: &mut Vec<Felt252>) {
+                let ( $( $ty, )* ) = self;
+
+                $( $ty.serialize_into_felt252_vec(output); )*
+            }
+        }
+    };
+}
+
+impl_serialize_for_tuple!();
+impl_serialize_for_tuple!(A);
+impl_serialize_for_tuple!(A, B);
+impl_serialize_for_tuple!(A, B, C);
+impl_serialize_for_tuple!(A, B, C, D); // cairo serde supports tuples in range 0 - 4 only
