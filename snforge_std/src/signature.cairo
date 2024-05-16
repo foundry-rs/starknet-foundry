@@ -17,13 +17,13 @@ trait KeyPairTrait<SK, PK> {
     fn from_secret_key(secret_key: SK) -> KeyPair<SK, PK>;
 }
 
-trait SignerTrait<T, H, U, E> {
+trait SignerTrait<T, H, U> {
     /// Signs given message hash
     /// `self` - KeyPair used for signing
     /// `message_hash` - input to sign bounded by the curve type (u256 for 256bit curves, felt252
     /// for StarkCurve)
     /// Returns the signature components (usually r,s tuple) or error
-    fn sign(self: T, message_hash: H) -> Result<U, E>;
+    fn sign(self: T, message_hash: H) -> Result<U, SignError>;
 }
 
 trait VerifierTrait<T, H, U> {

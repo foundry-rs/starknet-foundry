@@ -37,8 +37,8 @@ trait KeyPairTrait<SK, PK> {
 ## `SignerTrait`
 
 ```rust
-trait SignerTrait<T, H, U, E> {
-    fn sign(self: T, message_hash: H) -> Result<U, E> ;
+trait SignerTrait<T, H, U> {
+    fn sign(self: T, message_hash: H) -> Result<U, SignError> ;
 }
 ```
 

@@ -37,9 +37,7 @@ impl Secp256k1CurveKeyPairImpl of KeyPairTrait<u256, Secp256k1Point> {
     }
 }
 
-impl Secp256k1CurveSignerImpl of SignerTrait<
-    KeyPair<u256, Secp256k1Point>, u256, (u256, u256), SignError
-> {
+impl Secp256k1CurveSignerImpl of SignerTrait<KeyPair<u256, Secp256k1Point>, u256, (u256, u256)> {
     fn sign(
         self: KeyPair<u256, Secp256k1Point>, message_hash: u256
     ) -> Result<(u256, u256), SignError> {

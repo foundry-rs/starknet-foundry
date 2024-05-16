@@ -31,9 +31,7 @@ impl StarkCurveKeyPairImpl of KeyPairTrait<felt252, felt252> {
     }
 }
 
-impl StarkCurveSignerImpl of SignerTrait<
-    KeyPair<felt252, felt252>, felt252, (felt252, felt252), SignError
-> {
+impl StarkCurveSignerImpl of SignerTrait<KeyPair<felt252, felt252>, felt252, (felt252, felt252)> {
     fn sign(
         self: KeyPair<felt252, felt252>, message_hash: felt252
     ) -> Result<(felt252, felt252), SignError> {
