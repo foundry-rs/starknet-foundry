@@ -186,6 +186,10 @@ impl<T: SerializeAsFelt252Vec, E: SerializeAsFelt252Vec> SerializeAsFelt252Vec f
     }
 }
 
+impl SerializeAsFelt252Vec for () {
+    fn serialize_into_felt252_vec(self, _output: &mut Vec<Felt252>) {}
+}
+
 impl<T> SerializeAsFelt252Vec for T
 where
     T: IntoConv<Felt252>,

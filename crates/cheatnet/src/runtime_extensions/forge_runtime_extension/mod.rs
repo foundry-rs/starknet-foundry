@@ -1,4 +1,5 @@
 use self::contracts_data::ContractsData;
+use crate::runtime_extensions::forge_runtime_extension::cheatcodes::replace_bytecode::ReplaceBytecodeError;
 use crate::state::CallTraceNode;
 use crate::{
     runtime_extensions::{
@@ -20,6 +21,7 @@ use crate::{
     state::CallTrace,
 };
 use anyhow::{anyhow, Context, Result};
+use blockifier::state::errors::StateError;
 use blockifier::{
     context::TransactionContext,
     execution::{
@@ -114,12 +116,39 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let contract = input_reader.read()?;
                 let class = input_reader.read()?;
 
-                extended_runtime
+                let is_undeclared = match extended_runtime
                     .extended_runtime
-                    .extension
-                    .cheatnet_state
-                    .replace_class_for_contract(contract, class);
-                Ok(CheatcodeHandlingResult::Handled(vec![]))
+                    .extended_runtime
+                    .hint_handler
+                    .state
+                    .get_compiled_contract_class(class)
+                {
+                    Err(StateError::UndeclaredClassHash(_)) => true,
+                    Err(err) => return Err(err.into()),
+                    _ => false,
+                };
+
+                let res = if extended_runtime
+                    .extended_runtime
+                    .extended_runtime
+                    .hint_handler
+                    .state
+                    .get_class_hash_at(contract)?
+                    == ClassHash::default()
+                {
+                    Err(ReplaceBytecodeError::ContractNotDeployed)
+                } else if is_undeclared {
+                    Err(ReplaceBytecodeError::UndeclaredClassHash)
+                } else {
+                    extended_runtime
+                        .extended_runtime
+                        .extension
+                        .cheatnet_state
+                        .replace_class_for_contract(contract, class);
+                    Ok(())
+                };
+
+                Ok(CheatcodeHandlingResult::from_serializable(res))
             }
             "declare" => {
                 let state = &mut extended_runtime
