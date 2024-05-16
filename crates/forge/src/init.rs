@@ -108,8 +108,9 @@ pub fn run(project_name: &str) -> Result<()> {
     let scarb = std::env::var("SCARB").ok();
 
     // if there is no Scarb.toml run `scarb new`
-    if project_path.join("Scarb.toml").is_file() {
+    if !project_path.join("Scarb.toml").is_file() {
         ScarbCommand::new_with_stdio()
+            .maybe_set_scarb_path(scarb.clone())
             .current_dir(std::env::current_dir().context("Failed to get current directory")?)
             .arg("new")
             .arg(&project_path)
