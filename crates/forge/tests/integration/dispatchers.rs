@@ -138,6 +138,7 @@ fn handling_errors() {
         use starknet::ContractAddress;
         use starknet::Felt252TryIntoContractAddress;
         use snforge_std::{ declare, ContractClassTrait };
+        use starknet::contract_address_const;
 
         #[starknet::interface]
         trait IHelloStarknet<TContractState> {
@@ -149,7 +150,7 @@ fn handling_errors() {
 
         #[test]
         #[feature("safe_dispatcher")]
-        fn handling_errors() {
+        fn handling_execution_errors() {
             let contract = declare("HelloStarknet").unwrap();
             let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
             let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
@@ -177,6 +178,21 @@ fn handling_errors() {
                 Result::Ok(_) => panic_with_felt252('shouldve panicked'),
                 Result::Err(panic_data) => {
                     assert(panic_data.len() == 0, 'Non-empty panic_data');
+                }
+            };
+        }
+
+        #[test]
+        #[feature("safe_dispatcher")]
+        fn handling_missing_contract_error() {
+            let safe_dispatcher = IHelloStarknetSafeDispatcher { 
+                contract_address: contract_address_const::<371937219379012>() 
+            };
+        
+            match safe_dispatcher.do_a_panic() {
+                Result::Ok(_) => panic_with_felt252('shouldve panicked'),
+                Result::Err(_) => {
+                    // Would be nice to assert the error here once it is possible in cairo
                 }
             };
         }

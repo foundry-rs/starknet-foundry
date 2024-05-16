@@ -102,3 +102,76 @@ fn libcall_in_cheated() {
 
     assert_passed(&result);
 }
+
+#[test]
+fn contract_not_deployed() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use snforge_std::{declare, replace_bytecode, ReplaceBytecodeError};
+            use starknet::{ClassHash, contract_address_const};
+
+            #[test]
+            fn contract_not_deployed() {
+                let class_hash = declare("ReplaceBytecodeA").unwrap().class_hash;
+               
+                let non_existing_contract_address = contract_address_const::<0x2>();
+                match replace_bytecode(non_existing_contract_address, class_hash) {
+                    Result::Ok(()) => {
+                        panic!("Wrong return type");
+                    },
+                    Result::Err(err) => {
+                        assert(err == ReplaceBytecodeError::ContractNotDeployed(()), 'Wrong error type');
+                    }
+                }
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "ReplaceBytecodeA",
+            Path::new("tests/data/contracts/two_implementations.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test);
+
+    assert_passed(&result);
+}
+
+#[test]
+fn class_hash_not_declared() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use snforge_std::{declare, ContractClassTrait, replace_bytecode, ReplaceBytecodeError};
+            use starknet::{ClassHash, contract_address_const};
+
+            #[test]
+            fn class_hash_not_declared() {
+                let contract = declare("ReplaceBytecodeA").unwrap();
+                let undeclared_class_hash: ClassHash = 0x5.try_into().unwrap();
+                let (contract_address, _) = contract.deploy(@array![]).unwrap(); 
+                
+                match replace_bytecode(contract_address, undeclared_class_hash) {
+                    Result::Ok(()) => {
+                        panic!("Wrong return type");
+                    },
+                    Result::Err(err) => {
+                        assert(err == ReplaceBytecodeError::UndeclaredClassHash(()), 'Wrong error type');
+                    }
+                }
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "ReplaceBytecodeA",
+            Path::new("tests/data/contracts/two_implementations.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test);
+
+    assert_passed(&result);
+}
