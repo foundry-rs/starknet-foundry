@@ -17,13 +17,13 @@ trait KeyPairTrait<SK, PK> {
     fn from_secret_key(secret_key: SK) -> KeyPair<SK, PK>;
 }
 
-trait SignerTrait<T, H, U> {
+trait SignerTrait<T, H, U, E> {
     /// Signs given message hash
     /// `self` - KeyPair used for signing
     /// `message_hash` - input to sign bounded by the curve type (u256 for 256bit curves, felt252
     /// for StarkCurve)
-    /// Returns the signature components (usually r,s tuple)
-    fn sign(self: T, message_hash: H) -> U;
+    /// Returns the signature components (usually r,s tuple) or error
+    fn sign(self: T, message_hash: H) -> Result<U, E>;
 }
 
 trait VerifierTrait<T, H, U> {
@@ -35,10 +35,8 @@ trait VerifierTrait<T, H, U> {
     fn verify(self: T, message_hash: H, signature: U) -> bool;
 }
 
-fn to_u256(low: felt252, high: felt252) -> u256 {
-    u256 { low: low.try_into().unwrap(), high: high.try_into().unwrap() }
-}
-
-fn from_u256(x: u256) -> (felt252, felt252) {
-    (x.low.into(), x.high.into())
+#[derive(Copy, Drop, Serde, PartialEq)]
+enum SignError {
+    InvalidSecretKey,
+    HashOutOfRange
 }

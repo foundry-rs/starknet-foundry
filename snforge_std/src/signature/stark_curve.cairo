@@ -1,6 +1,7 @@
 use core::ecdsa::check_ecdsa_signature;
 use core::ec::{EcPointImpl, EcPoint, stark_curve};
 use super::super::_cheatcode::handle_cheatcode;
+use super::SignError;
 
 use starknet::testing::cheatcode;
 
@@ -8,10 +9,9 @@ use snforge_std::signature::{KeyPair, KeyPairTrait, SignerTrait, VerifierTrait};
 
 impl StarkCurveKeyPairImpl of KeyPairTrait<felt252, felt252> {
     fn generate() -> KeyPair<felt252, felt252> {
-        let output = handle_cheatcode(cheatcode::<'generate_stark_keys'>(array![].span()));
+        let mut output = handle_cheatcode(cheatcode::<'generate_stark_keys'>(array![].span()));
 
-        let secret_key = *output[0];
-        let public_key = *output[1];
+        let (secret_key, public_key): (felt252, felt252) = Serde::deserialize(ref output).unwrap();
 
         KeyPair { secret_key, public_key }
     }
@@ -31,19 +31,17 @@ impl StarkCurveKeyPairImpl of KeyPairTrait<felt252, felt252> {
     }
 }
 
-impl StarkCurveSignerImpl of SignerTrait<KeyPair<felt252, felt252>, felt252, (felt252, felt252)> {
-    fn sign(self: KeyPair<felt252, felt252>, message_hash: felt252) -> (felt252, felt252) {
-        let output = handle_cheatcode(
+impl StarkCurveSignerImpl of SignerTrait<
+    KeyPair<felt252, felt252>, felt252, (felt252, felt252), SignError
+> {
+    fn sign(
+        self: KeyPair<felt252, felt252>, message_hash: felt252
+    ) -> Result<(felt252, felt252), SignError> {
+        let mut output = handle_cheatcode(
             cheatcode::<'stark_sign_message'>(array![self.secret_key, message_hash].span())
         );
-        if *output[0] == 1 {
-            core::panic_with_felt252(*output[1]);
-        }
 
-        let r = *output[1];
-        let s = *output[2];
-
-        (r, s)
+        Serde::deserialize(ref output).unwrap()
     }
 }
 
