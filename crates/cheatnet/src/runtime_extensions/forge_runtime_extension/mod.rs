@@ -1,25 +1,22 @@
 use self::contracts_data::ContractsData;
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::replace_bytecode::ReplaceBytecodeError;
-use crate::state::CallTraceNode;
-use crate::{
-    runtime_extensions::{
-        call_to_blockifier_runtime_extension::{
-            rpc::{CallFailure, CallResult, UsedResources},
-            CallToBlockifierRuntime,
-        },
-        cheatable_starknet_runtime_extension::SyscallSelector,
-        common::{get_relocated_vm_trace, sum_syscall_counters},
-        forge_runtime_extension::cheatcodes::{
-            declare::declare,
-            deploy::{deploy, deploy_at},
-            get_class_hash::get_class_hash,
-            l1_handler_execute::l1_handler_execute,
-            storage::{calculate_variable_address, load, store},
-            CheatcodeError,
-        },
+use crate::runtime_extensions::{
+    call_to_blockifier_runtime_extension::{
+        rpc::{CallFailure, CallResult, UsedResources},
+        CallToBlockifierRuntime,
     },
-    state::CallTrace,
+    cheatable_starknet_runtime_extension::SyscallSelector,
+    common::{get_relocated_vm_trace, sum_syscall_counters},
+    forge_runtime_extension::cheatcodes::{
+        declare::declare,
+        deploy::{deploy, deploy_at},
+        get_class_hash::get_class_hash,
+        l1_handler_execute::l1_handler_execute,
+        storage::{calculate_variable_address, load, store},
+        CheatcodeError,
+    },
 };
+use crate::state::CallTraceNode;
 use anyhow::{anyhow, Context, Result};
 use blockifier::state::errors::StateError;
 use blockifier::{
@@ -27,7 +24,6 @@ use blockifier::{
     execution::{
         call_info::{CallExecution, CallInfo},
         deprecated_syscalls::DeprecatedSyscallSelector,
-        entry_point::{CallEntryPoint, CallType},
         syscalls::hint_processor::SyscallCounter,
     },
     versioned_constants::VersionedConstants,
@@ -39,7 +35,7 @@ use cairo_vm::vm::{
     vm_core::VirtualMachine,
 };
 use conversions::felt252::SerializeAsFelt252Vec;
-use conversions::{byte_array::ByteArray, felt252::TryInferFormat, IntoConv};
+use conversions::{felt252::TryInferFormat, IntoConv};
 use runtime::FromReader;
 use runtime::{
     utils::buffer_reader::BufferReader, CheatcodeHandlingResult, EnhancedHintError,
@@ -47,10 +43,7 @@ use runtime::{
 };
 use starknet::core::types::FieldElement;
 use starknet::signers::SigningKey;
-use starknet_api::{
-    core::{ClassHash, ContractAddress},
-    deprecated_contract_class::EntryPointType::{self, L1Handler},
-};
+use starknet_api::{core::ClassHash, deprecated_contract_class::EntryPointType::L1Handler};
 use std::collections::HashMap;
 
 pub mod cheatcodes;
@@ -159,7 +152,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 let contract_name: String = input_reader.read()?;
 
-                handle_declare_result(declare(*state, &contract_name, self.contracts_data))
+                handle_declare_deploy_result(declare(*state, &contract_name, self.contracts_data))
             }
             "deploy" => {
                 let class_hash = input_reader.read()?;
@@ -169,7 +162,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 syscall_handler.increment_syscall_count_by(&DeprecatedSyscallSelector::Deploy, 1);
 
-                handle_deploy_result(deploy(
+                handle_declare_deploy_result(deploy(
                     syscall_handler,
                     cheatnet_runtime.extension.cheatnet_state,
                     &class_hash,
@@ -185,7 +178,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 syscall_handler.increment_syscall_count_by(&DeprecatedSyscallSelector::Deploy, 1);
 
-                handle_deploy_result(deploy_at(
+                handle_declare_deploy_result(deploy_at(
                     syscall_handler,
                     cheatnet_runtime.extension.cheatnet_state,
                     &class_hash,
@@ -261,7 +254,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                         Ok(CheatcodeHandlingResult::Handled(vec![Felt252::from(0)]))
                     }
                     CallResult::Failure(CallFailure::Panic { panic_data }) => Ok(
-                        CheatcodeHandlingResult::Handled(cheatcode_panic_result(panic_data)),
+                        CheatcodeHandlingResult::from_serializable(Err::<(), _>(panic_data)),
                     ),
                     CallResult::Failure(CallFailure::Error { msg }) => Err(
                         EnhancedHintError::from(HintError::CustomHint(Box::from(msg))),
@@ -424,10 +417,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .current_call_stack
                     .borrow_full_trace();
 
-                let mut output = vec![];
-                serialize_call_trace(call_trace, &mut output);
-
-                Ok(CheatcodeHandlingResult::Handled(output))
+                Ok(CheatcodeHandlingResult::from_serializable(call_trace))
             }
             "store" => {
                 let state = &mut extended_runtime
@@ -525,126 +515,16 @@ impl SerializeAsFelt252Vec for SignError {
     }
 }
 
-fn handle_declare_result(
-    declare_result: Result<ClassHash, CheatcodeError>,
+fn handle_declare_deploy_result<T: SerializeAsFelt252Vec>(
+    declare_result: Result<T, CheatcodeError>,
 ) -> Result<CheatcodeHandlingResult, EnhancedHintError> {
-    match declare_result {
-        Ok(class_hash) => {
-            let result_arr = vec![Felt252::from(0), class_hash.into_()];
-            Ok(CheatcodeHandlingResult::Handled(result_arr))
-        }
-        Err(CheatcodeError::Recoverable(panic_data)) => Ok(CheatcodeHandlingResult::Handled(
-            cheatcode_panic_result(panic_data),
-        )),
-        Err(CheatcodeError::Unrecoverable(err)) => Err(err),
-    }
-}
-
-fn handle_deploy_result(
-    deploy_result: Result<(ContractAddress, Vec<Felt252>), CheatcodeError>,
-) -> Result<CheatcodeHandlingResult, EnhancedHintError> {
-    match deploy_result {
-        Ok((contract_address, retdata)) => {
-            let mut result = Vec::new();
-            result.push(Felt252::from(0));
-            result.push(contract_address.into_());
-            result.push(retdata.len().into());
-            result.extend(retdata);
-            Ok(CheatcodeHandlingResult::Handled(result))
-        }
-        Err(CheatcodeError::Recoverable(panic_data)) => Ok(CheatcodeHandlingResult::Handled(
-            cheatcode_panic_result(panic_data),
-        )),
-        Err(CheatcodeError::Unrecoverable(err)) => Err(err),
-    }
-}
-
-// append all to one output Vec instead of allocating new one for each nested call
-fn serialize_call_trace(call_trace: &CallTrace, output: &mut Vec<Felt252>) {
-    serialize_call_entry_point(&call_trace.entry_point, output);
-
-    let visible_calls: Vec<_> = call_trace
-        .nested_calls
-        .iter()
-        .filter_map(CallTraceNode::extract_entry_point_call)
-        .collect();
-
-    output.push(Felt252::from(visible_calls.len()));
-
-    for call_trace_node in visible_calls {
-        serialize_call_trace(&call_trace_node.borrow(), output);
-    }
-
-    serialize_call_result(&call_trace.result, output);
-}
-
-fn serialize_call_entry_point(call_entry_point: &CallEntryPoint, output: &mut Vec<Felt252>) {
-    match call_entry_point.entry_point_type {
-        EntryPointType::Constructor => output.push(0.into()),
-        EntryPointType::External => output.push(1.into()),
-        EntryPointType::L1Handler => output.push(2.into()),
+    let result = match declare_result {
+        Ok(data) => Ok(data),
+        Err(CheatcodeError::Recoverable(panic_data)) => Err(panic_data),
+        Err(CheatcodeError::Unrecoverable(err)) => return Err(err),
     };
 
-    output.push(call_entry_point.entry_point_selector.0.into_());
-
-    let calldata = call_entry_point
-        .calldata
-        .0
-        .iter()
-        .copied()
-        .map(IntoConv::into_)
-        .collect::<Vec<_>>();
-    output.push(Felt252::from(calldata.len()));
-    output.extend(calldata);
-
-    output.push(call_entry_point.storage_address.into_());
-    output.push(call_entry_point.caller_address.into_());
-
-    match call_entry_point.call_type {
-        CallType::Call => output.push(0.into()),
-        CallType::Delegate => output.push(1.into()),
-    };
-}
-
-fn serialize_call_result(call_result: &CallResult, output: &mut Vec<Felt252>) {
-    match call_result {
-        CallResult::Success { ret_data } => {
-            output.push(Felt252::from(0));
-            output.push(Felt252::from(ret_data.len()));
-            output.extend(ret_data.iter().cloned());
-        }
-        CallResult::Failure(call_failure) => {
-            output.push(Felt252::from(1));
-
-            match call_failure {
-                CallFailure::Panic { panic_data } => {
-                    output.push(Felt252::from(0));
-
-                    output.push(Felt252::from(panic_data.len()));
-                    output.extend(panic_data.iter().cloned());
-                }
-                CallFailure::Error { msg } => {
-                    output.push(Felt252::from(1));
-
-                    let data = ByteArray::from(msg.as_str()).serialize_as_felt252_vec();
-
-                    output.push(Felt252::from(data.len()));
-                    output.extend(data);
-                }
-            };
-        }
-    };
-}
-
-#[must_use]
-pub fn cheatcode_panic_result(panic_data: Vec<Felt252>) -> Vec<Felt252> {
-    let mut result = Vec::with_capacity(panic_data.len() + 2);
-
-    result.push(Felt252::from(1));
-    result.push(Felt252::from(panic_data.len()));
-
-    result.extend(panic_data);
-    result
+    Ok(CheatcodeHandlingResult::from_serializable(result))
 }
 
 pub fn update_top_call_execution_resources(runtime: &mut ForgeRuntime) {

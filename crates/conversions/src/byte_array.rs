@@ -20,8 +20,8 @@ impl From<&str> for ByteArray {
 
         Self {
             words,
-            pending_word_len,
             pending_word,
+            pending_word_len,
         }
     }
 }
@@ -31,7 +31,7 @@ impl SerializeAsFelt252Vec for ByteArray {
         self.words.serialize_into_felt252_vec(output);
         self.pending_word.serialize_into_felt252_vec(output);
 
-        output.push(self.pending_word_len.into())
+        output.push(self.pending_word_len.into());
     }
 }
 

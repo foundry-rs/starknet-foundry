@@ -1,4 +1,5 @@
 use crate::{
+    byte_array::ByteArray,
     felt252::{RawFeltVec, SerializeAsFelt252Vec},
     IntoConv,
 };
@@ -11,7 +12,11 @@ use starknet_api::{
     hash::StarkFelt,
     transaction::Calldata,
 };
-use std::{cell::RefCell, rc::Rc, sync::Arc};
+use std::{
+    cell::{Ref, RefCell},
+    rc::Rc,
+    sync::Arc,
+};
 
 impl SerializeAsFelt252Vec for CallEntryPoint {
     fn serialize_into_felt252_vec(&self, output: &mut Vec<Felt252>) {
@@ -26,7 +31,7 @@ impl SerializeAsFelt252Vec for CallEntryPoint {
 
 impl SerializeAsFelt252Vec for Calldata {
     fn serialize_into_felt252_vec(&self, output: &mut Vec<Felt252>) {
-        self.0.serialize_into_felt252_vec(output)
+        self.0.serialize_into_felt252_vec(output);
     }
 }
 
@@ -72,7 +77,16 @@ where
     T: SerializeAsFelt252Vec,
 {
     fn serialize_into_felt252_vec(&self, output: &mut Vec<Felt252>) {
-        self.borrow().serialize_into_felt252_vec(output)
+        self.borrow().serialize_into_felt252_vec(output);
+    }
+}
+
+impl<T> SerializeAsFelt252Vec for Ref<'_, T>
+where
+    T: SerializeAsFelt252Vec,
+{
+    fn serialize_into_felt252_vec(&self, output: &mut Vec<Felt252>) {
+        T::serialize_into_felt252_vec(self, output);
     }
 }
 
@@ -117,13 +131,9 @@ impl<T: SerializeAsFelt252Vec, E: SerializeAsFelt252Vec> SerializeAsFelt252Vec f
     }
 }
 
-impl SerializeAsFelt252Vec for () {
-    fn serialize_into_felt252_vec(&self, _output: &mut Vec<Felt252>) {}
-}
-
 impl SerializeAsFelt252Vec for &str {
     fn serialize_into_felt252_vec(&self, output: &mut Vec<Felt252>) {
-        output.extend(self.serialize_as_felt252_vec());
+        ByteArray::from(*self).serialize_into_felt252_vec(output);
     }
 }
 
