@@ -27,28 +27,18 @@ impl From<&str> for ByteArray {
 }
 
 impl SerializeAsFelt252Vec for ByteArray {
-    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
-        output.extend(self.serialize_no_magic());
-    }
+    fn serialize_into_felt252_vec(&self, output: &mut Vec<Felt252>) {
+        self.words.serialize_into_felt252_vec(output);
+        self.pending_word.serialize_into_felt252_vec(output);
 
-    fn serialize_as_felt252_vec(self) -> Vec<Felt252> {
-        let len = self.words.len().into();
-
-        let mut result = self.words;
-
-        result.insert(0, len);
-
-        result.push(self.pending_word);
-        result.push(self.pending_word_len.into());
-
-        result
+        output.push(self.pending_word_len.into())
     }
 }
 
 impl ByteArray {
     #[must_use]
-    pub fn serialize_with_magic(self) -> Vec<Felt252> {
-        let mut result = self.serialize_as_felt252_vec();
+    pub fn serialize_with_magic(&self) -> Vec<Felt252> {
+        let mut result = self.serialize_no_magic();
 
         result.insert(
             0,
@@ -59,7 +49,7 @@ impl ByteArray {
     }
 
     #[must_use]
-    pub fn serialize_no_magic(self) -> Vec<Felt252> {
+    pub fn serialize_no_magic(&self) -> Vec<Felt252> {
         self.serialize_as_felt252_vec()
     }
 }

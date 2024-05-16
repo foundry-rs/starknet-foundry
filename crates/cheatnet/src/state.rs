@@ -19,6 +19,7 @@ use blockifier::{
 use cairo_felt::Felt252;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cairo_vm::vm::trace::trace_entry::TraceEntry;
+use conversions::felt252::SerializeAsFelt252Vec;
 use runtime::starknet::context::SerializableBlockInfo;
 use runtime::starknet::state::DictStateReader;
 use runtime::FromReader;
@@ -164,6 +165,28 @@ pub struct CallTrace {
     pub used_l1_resources: L1Resources,
     pub used_syscalls: SyscallCounter,
     pub vm_trace: Option<Vec<TraceEntry>>,
+}
+
+impl SerializeAsFelt252Vec for CallTrace {
+    fn serialize_into_felt252_vec(&self, output: &mut Vec<Felt252>) {
+        self.entry_point.serialize_into_felt252_vec(output);
+
+        let visible_calls: Vec<_> = self
+            .nested_calls
+            .iter()
+            .filter_map(CallTraceNode::extract_entry_point_call)
+            .collect();
+
+        visible_calls.serialize_into_felt252_vec(output);
+
+        output.push(Felt252::from(visible_calls.len()));
+
+        for call_trace_node in visible_calls {
+            call_trace_node.serialize_into_felt252_vec(output);
+        }
+
+        self.result.serialize_into_felt252_vec(output);
+    }
 }
 
 impl CallTrace {
