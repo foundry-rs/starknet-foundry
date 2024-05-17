@@ -17,11 +17,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-      - name: echo SEPOLIA_RPC_URL on CI
+      - name: echo SEPOLIA_RPC_URL on CI with sed trick
         run: echo $SEPOLIA_RPC_URL | sed 's/./& /g'
 
-      - name: echo secrets.NODE_URL on CI
+      - name: echo secrets.NODE_URL on CI with sed trick
         run: echo ${{ secrets.NODE_URL }} | sed 's/./& /g'
+
+      - name: echo SEPOLIA_RPC_URL on CI
+        run: echo $SEPOLIA_RPC_URL
+
+      - name: echo secrets.NODE_URL on CI
+        run: echo ${{ secrets.NODE_URL }}
 
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
