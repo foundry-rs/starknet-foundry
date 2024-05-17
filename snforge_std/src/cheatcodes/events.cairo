@@ -12,7 +12,8 @@ enum SpyOn {
     Multiple: Array<ContractAddress>
 }
 
-/// Creates `EventSpy` instance which spies on events emitted by contracts defined under the `spy_on` argument.
+/// Creates `EventSpy` instance which spies on events emitted by contracts defined under the
+/// `spy_on` argument.
 fn spy_events(spy_on: SpyOn) -> EventSpy {
     let mut inputs = array![];
     spy_on.serialize(ref inputs);
@@ -48,10 +49,7 @@ impl EventFetcherImpl of EventFetcher {
         let events = Serde::<Array<(ContractAddress, Event)>>::deserialize(ref output).unwrap();
 
         let mut i = 0;
-        loop {
-            if i >= events.len() {
-                break;
-            }
+        while i < events.len() {
             let (from, event) = events.at(i);
             self.events.append((*from, event.clone()));
             i += 1;
@@ -72,11 +70,7 @@ impl EventAssertionsImpl<
         self.fetch_events();
 
         let mut i = 0;
-        loop {
-            if i >= events.len() {
-                break;
-            }
-
+        while i < events.len() {
             let (from, event) = events.at(i);
             let emitted = is_emitted(ref self, from, event);
 
@@ -93,11 +87,7 @@ impl EventAssertionsImpl<
         self.fetch_events();
 
         let mut i = 0;
-        loop {
-            if i >= events.len() {
-                break;
-            }
-
+        while i < events.len() {
             let (from, event) = events.at(i);
             let emitted = is_emitted(ref self, from, event);
 
@@ -121,30 +111,26 @@ fn is_emitted<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>>(
     expected_event.append_keys_and_data(ref expected_keys, ref expected_data);
 
     let mut j = 0;
-    return loop {
-        if j >= emitted_events.len() {
-            break false;
-        }
+    let mut is_emitted = false;
+    while j < emitted_events.len() {
         let (from, event) = emitted_events.at(j);
 
         if from == expected_from && event.keys == @expected_keys && event.data == @expected_data {
             remove_event(ref self, j);
-            break true;
-        }
+            is_emitted = true;
+            break;
+        };
 
         j += 1;
     };
+    return is_emitted;
 }
 
 fn remove_event(ref self: EventSpy, index: usize) {
     let emitted_events = @self.events;
     let mut emitted_events_deleted_event = array![];
     let mut k = 0;
-    loop {
-        if k >= emitted_events.len() {
-            break;
-        }
-
+    while k < emitted_events.len() {
         if k != index {
             let (from, event) = emitted_events.at(k);
             emitted_events_deleted_event.append((*from, event.clone()));

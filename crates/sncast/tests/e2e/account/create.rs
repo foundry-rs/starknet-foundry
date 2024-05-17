@@ -51,6 +51,7 @@ pub async fn test_happy_case() {
     assert!(contents.contains("salt"));
     assert!(contents.contains("class_hash"));
     assert!(contents.contains("legacy"));
+    assert!(contents.contains("type"));
 }
 
 #[tokio::test]
@@ -123,6 +124,7 @@ pub async fn test_happy_case_generate_salt() {
     assert!(contents.contains("salt"));
     assert!(contents.contains("class_hash"));
     assert!(contents.contains("legacy"));
+    assert!(contents.contains("type"));
 }
 
 #[tokio::test]

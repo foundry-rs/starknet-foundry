@@ -706,6 +706,9 @@ fn init_new_project_test() {
 
             [[target.starknet-contract]]
             sierra = true
+
+            [scripts]
+            test = "snforge test"
         "#,
         CAIRO_EDITION,
         version,
@@ -879,7 +882,7 @@ fn incompatible_snforge_std_version_warning() {
         output,
         indoc! {r"
         [..]Updating git repository https://github.com/foundry-rs/starknet-foundry
-        [WARNING] Package snforge_std version does not meet the recommended version requirement =0.22.0, [..]
+        [WARNING] Package snforge_std version does not meet the recommended version requirement =0.23.0, [..]
         [..]Compiling[..]
         [..]Finished[..]
 

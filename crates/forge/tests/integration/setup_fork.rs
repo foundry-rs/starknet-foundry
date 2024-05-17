@@ -16,6 +16,7 @@ use tokio::runtime::Runtime;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use forge::compiled_raw::RawForkParams;
 use forge::scarb::{get_test_artifacts_path, load_test_artifacts};
+use forge_runner::build_trace_data::test_sierra_program_path::VERSIONED_PROGRAMS_DIR;
 use forge_runner::forge_config::{
     ExecutionDataToSave, ForgeConfig, OutputConfig, TestRunnerConfig,
 };
@@ -138,11 +139,15 @@ fn fork_aliased_decorator() {
                         .join(CACHE_DIR),
                     contracts_data: ContractsData::try_from(test.contracts().unwrap()).unwrap(),
                     environment_variables: test.env().clone(),
-                    test_artifacts_path,
                 }),
                 output_config: Arc::new(OutputConfig {
                     detailed_resources: false,
                     execution_data_to_save: ExecutionDataToSave::None,
+                    versioned_programs_dir: Utf8PathBuf::from_path_buf(
+                        tempdir().unwrap().into_path(),
+                    )
+                    .unwrap()
+                    .join(VERSIONED_PROGRAMS_DIR),
                 }),
             }),
             &[ForkTarget::new(

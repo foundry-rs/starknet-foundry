@@ -1,4 +1,5 @@
 use self::contracts_data::ContractsData;
+use crate::runtime_extensions::forge_runtime_extension::cheatcodes::replace_bytecode::ReplaceBytecodeError;
 use crate::state::CallTraceNode;
 use crate::{
     runtime_extensions::{
@@ -20,6 +21,7 @@ use crate::{
     state::CallTrace,
 };
 use anyhow::{anyhow, Context, Result};
+use blockifier::state::errors::StateError;
 use blockifier::{
     context::TransactionContext,
     execution::{
@@ -36,11 +38,9 @@ use cairo_vm::vm::{
     errors::hint_errors::HintError, runners::cairo_runner::ExecutionResources,
     vm_core::VirtualMachine,
 };
-use conversions::{
-    byte_array::ByteArray,
-    felt252::{FromShortString, TryInferFormat},
-    FromConv, IntoConv,
-};
+use conversions::felt252::SerializeAsFelt252Vec;
+use conversions::{byte_array::ByteArray, felt252::TryInferFormat, IntoConv};
+use runtime::FromReader;
 use runtime::{
     utils::buffer_reader::BufferReader, CheatcodeHandlingResult, EnhancedHintError,
     ExtendedRuntime, ExtensionLogic, SyscallHandlingResult,
@@ -76,93 +76,15 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
         extended_runtime: &mut Self::Runtime,
     ) -> Result<CheatcodeHandlingResult, EnhancedHintError> {
         match selector {
-            "roll" => {
-                let target = input_reader.read()?;
-                let span = input_reader.read()?;
-                let block_number = input_reader.read()?;
+            "cheat_execution_info" => {
+                let execution_info = input_reader.read()?;
 
                 extended_runtime
                     .extended_runtime
                     .extension
                     .cheatnet_state
-                    .roll(target, block_number, span);
-                Ok(CheatcodeHandlingResult::Handled(vec![]))
-            }
-            "stop_roll" => {
-                let target = input_reader.read()?;
+                    .cheat_execution_info(execution_info);
 
-                extended_runtime
-                    .extended_runtime
-                    .extension
-                    .cheatnet_state
-                    .stop_roll(target);
-                Ok(CheatcodeHandlingResult::Handled(vec![]))
-            }
-            "warp" => {
-                let target = input_reader.read()?;
-                let span = input_reader.read()?;
-                let warp_timestamp = input_reader.read()?;
-
-                extended_runtime
-                    .extended_runtime
-                    .extension
-                    .cheatnet_state
-                    .warp(target, warp_timestamp, span);
-
-                Ok(CheatcodeHandlingResult::Handled(vec![]))
-            }
-            "stop_warp" => {
-                let target = input_reader.read()?;
-
-                extended_runtime
-                    .extended_runtime
-                    .extension
-                    .cheatnet_state
-                    .stop_warp(target);
-                Ok(CheatcodeHandlingResult::Handled(vec![]))
-            }
-            "elect" => {
-                let target = input_reader.read()?;
-                let span = input_reader.read()?;
-                let sequencer_address = input_reader.read()?;
-
-                extended_runtime
-                    .extended_runtime
-                    .extension
-                    .cheatnet_state
-                    .elect(target, sequencer_address, span);
-                Ok(CheatcodeHandlingResult::Handled(vec![]))
-            }
-            "stop_elect" => {
-                let target = input_reader.read()?;
-                extended_runtime
-                    .extended_runtime
-                    .extension
-                    .cheatnet_state
-                    .stop_elect(target);
-                Ok(CheatcodeHandlingResult::Handled(vec![]))
-            }
-            "prank" => {
-                let target = input_reader.read()?;
-                let span = input_reader.read()?;
-
-                let caller_address = input_reader.read()?;
-
-                extended_runtime
-                    .extended_runtime
-                    .extension
-                    .cheatnet_state
-                    .prank(target, caller_address, span);
-                Ok(CheatcodeHandlingResult::Handled(vec![]))
-            }
-            "stop_prank" => {
-                let target = input_reader.read()?;
-
-                extended_runtime
-                    .extended_runtime
-                    .extension
-                    .cheatnet_state
-                    .stop_prank(target);
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
             "mock_call" => {
@@ -190,39 +112,43 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .stop_mock_call(contract_address, function_selector);
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
-            "spoof" => {
-                let target = input_reader.read()?;
-                let span = input_reader.read()?;
-
-                let tx_info_mock = input_reader.read()?;
-
-                extended_runtime
-                    .extended_runtime
-                    .extension
-                    .cheatnet_state
-                    .spoof(target, tx_info_mock, span);
-                Ok(CheatcodeHandlingResult::Handled(vec![]))
-            }
-            "stop_spoof" => {
-                let target = input_reader.read()?;
-
-                extended_runtime
-                    .extended_runtime
-                    .extension
-                    .cheatnet_state
-                    .stop_spoof(target);
-                Ok(CheatcodeHandlingResult::Handled(vec![]))
-            }
             "replace_bytecode" => {
                 let contract = input_reader.read()?;
                 let class = input_reader.read()?;
 
-                extended_runtime
+                let is_undeclared = match extended_runtime
                     .extended_runtime
-                    .extension
-                    .cheatnet_state
-                    .replace_class_for_contract(contract, class);
-                Ok(CheatcodeHandlingResult::Handled(vec![]))
+                    .extended_runtime
+                    .hint_handler
+                    .state
+                    .get_compiled_contract_class(class)
+                {
+                    Err(StateError::UndeclaredClassHash(_)) => true,
+                    Err(err) => return Err(err.into()),
+                    _ => false,
+                };
+
+                let res = if extended_runtime
+                    .extended_runtime
+                    .extended_runtime
+                    .hint_handler
+                    .state
+                    .get_class_hash_at(contract)?
+                    == ClassHash::default()
+                {
+                    Err(ReplaceBytecodeError::ContractNotDeployed)
+                } else if is_undeclared {
+                    Err(ReplaceBytecodeError::UndeclaredClassHash)
+                } else {
+                    extended_runtime
+                        .extended_runtime
+                        .extension
+                        .cheatnet_state
+                        .replace_class_for_contract(contract, class);
+                    Ok(())
+                };
+
+                Ok(CheatcodeHandlingResult::from_serializable(res))
             }
             "declare" => {
                 let state = &mut extended_runtime
@@ -377,30 +303,30 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
             "generate_stark_keys" => {
                 let key_pair = SigningKey::from_random();
 
-                Ok(CheatcodeHandlingResult::Handled(vec![
-                    key_pair.secret_scalar().into_(),
-                    key_pair.verifying_key().scalar().into_(),
-                ]))
+                Ok(CheatcodeHandlingResult::from_serializable((
+                    key_pair.secret_scalar(),
+                    key_pair.verifying_key().scalar(),
+                )))
             }
             "stark_sign_message" => {
                 let private_key = input_reader.read()?;
                 let message_hash = input_reader.read()?;
 
                 if private_key == FieldElement::from(0_u8) {
-                    return Ok(handle_cheatcode_error("invalid secret_key"));
+                    return Ok(CheatcodeHandlingResult::from_serializable(Err::<(), _>(
+                        SignError::InvalidSecretKey,
+                    )));
                 }
 
                 let key_pair = SigningKey::from_secret_scalar(private_key);
 
-                if let Ok(signature) = key_pair.sign(&message_hash) {
-                    Ok(CheatcodeHandlingResult::Handled(vec![
-                        Felt252::from(0),
-                        Felt252::from_(signature.r),
-                        Felt252::from_(signature.s),
-                    ]))
+                let result = if let Ok(signature) = key_pair.sign(&message_hash) {
+                    Ok((signature.r, signature.s))
                 } else {
-                    Ok(handle_cheatcode_error("message_hash out of range"))
-                }
+                    Err(SignError::HashOutOfRange)
+                };
+
+                Ok(CheatcodeHandlingResult::from_serializable(result))
             }
             "generate_ecdsa_keys" => {
                 let curve = as_cairo_short_string(&input_reader.read()?);
@@ -431,69 +357,63 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     }
                 };
 
-                Ok(CheatcodeHandlingResult::Handled(vec![
-                    Felt252::from_bytes_be(&signing_key_bytes[16..32]), // 16 low  bytes of secret_key
-                    Felt252::from_bytes_be(&signing_key_bytes[0..16]), // 16 high bytes of secret_key
-                    Felt252::from_bytes_be(&verifying_key_bytes[17..33]), // 16 low  bytes of public_key's x-coordinate
-                    Felt252::from_bytes_be(&verifying_key_bytes[1..17]), // 16 high bytes of public_key's x-coordinate
-                    Felt252::from_bytes_be(&verifying_key_bytes[49..65]), // 16 low  bytes of public_key's y-coordinate
-                    Felt252::from_bytes_be(&verifying_key_bytes[33..49]), // 16 high bytes of public_key's y-coordinate
-                ]))
+                Ok(CheatcodeHandlingResult::from_serializable((
+                    CairoU256::from_bytes(&signing_key_bytes),
+                    CairoU256::from_bytes(&verifying_key_bytes[1..]), // bytes of public_key's x-coordinate
+                    CairoU256::from_bytes(&verifying_key_bytes[33..]), // bytes of public_key's y-coordinate
+                )))
             }
             "ecdsa_sign_message" => {
-                let curve = as_cairo_short_string(&input_reader.read()?);
-                let sk_low: Felt252 = input_reader.read()?;
-                let sk_high: Felt252 = input_reader.read()?;
-                let msg_hash_low: Felt252 = input_reader.read()?;
-                let msg_hash_high: Felt252 = input_reader.read()?;
+                let curve = input_reader.read_short_string()?;
+                let secret_key: CairoU256 = input_reader.read()?;
+                let msg_hash: CairoU256 = input_reader.read()?;
 
-                let secret_key = concat_u128_bytes(&sk_low.to_be_bytes(), &sk_high.to_be_bytes());
-                let msg_hash =
-                    concat_u128_bytes(&msg_hash_low.to_be_bytes(), &msg_hash_high.to_be_bytes());
-
-                let (r_bytes, s_bytes) = {
+                let result = {
                     match curve.as_deref() {
                         Some("Secp256k1") => {
-                            let Ok(signing_key) = k256::ecdsa::SigningKey::from_slice(&secret_key)
-                            else {
-                                return Ok(handle_cheatcode_error("invalid secret_key"));
-                            };
+                            if let Ok(signing_key) =
+                                k256::ecdsa::SigningKey::from_slice(&secret_key.to_be_bytes())
+                            {
+                                let signature: k256::ecdsa::Signature =
+                                    k256::ecdsa::signature::hazmat::PrehashSigner::sign_prehash(
+                                        &signing_key,
+                                        &msg_hash.to_be_bytes(),
+                                    )
+                                    .unwrap();
 
-                            let signature: k256::ecdsa::Signature =
-                                k256::ecdsa::signature::hazmat::PrehashSigner::sign_prehash(
-                                    &signing_key,
-                                    &msg_hash,
-                                )
-                                .unwrap();
-
-                            signature.split_bytes()
+                                Ok(signature.split_bytes())
+                            } else {
+                                Err(SignError::InvalidSecretKey)
+                            }
                         }
                         Some("Secp256r1") => {
-                            let Ok(signing_key) = p256::ecdsa::SigningKey::from_slice(&secret_key)
-                            else {
-                                return Ok(handle_cheatcode_error("invalid secret_key"));
-                            };
+                            if let Ok(signing_key) =
+                                p256::ecdsa::SigningKey::from_slice(&secret_key.to_be_bytes())
+                            {
+                                let signature: p256::ecdsa::Signature =
+                                    p256::ecdsa::signature::hazmat::PrehashSigner::sign_prehash(
+                                        &signing_key,
+                                        &msg_hash.to_be_bytes(),
+                                    )
+                                    .unwrap();
 
-                            let signature: p256::ecdsa::Signature =
-                                p256::ecdsa::signature::hazmat::PrehashSigner::sign_prehash(
-                                    &signing_key,
-                                    &msg_hash,
-                                )
-                                .unwrap();
-
-                            signature.split_bytes()
+                                Ok(signature.split_bytes())
+                            } else {
+                                Err(SignError::InvalidSecretKey)
+                            }
                         }
                         _ => return Ok(CheatcodeHandlingResult::Forwarded),
                     }
                 };
 
-                Ok(CheatcodeHandlingResult::Handled(vec![
-                    Felt252::from(0),
-                    Felt252::from_bytes_be(&r_bytes[16..32]), // 16 low  bytes of r
-                    Felt252::from_bytes_be(&r_bytes[0..16]),  // 16 high bytes of r
-                    Felt252::from_bytes_be(&s_bytes[16..32]), // 16 low  bytes of s
-                    Felt252::from_bytes_be(&s_bytes[0..16]),  // 16 high bytes of s
-                ]))
+                let result = result.map(|(r_bytes, s_bytes)| {
+                    (
+                        CairoU256::from_bytes(&r_bytes),
+                        CairoU256::from_bytes(&s_bytes),
+                    )
+                });
+
+                Ok(CheatcodeHandlingResult::from_serializable(result))
             }
             "get_call_trace" => {
                 let call_trace = &extended_runtime
@@ -554,6 +474,54 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
             ))),
             _ => Ok(SyscallHandlingResult::Forwarded),
         }
+    }
+}
+
+#[derive(FromReader)]
+struct CairoU256 {
+    low: u128,
+    high: u128,
+}
+
+impl CairoU256 {
+    fn from_bytes(bytes: &[u8]) -> Self {
+        Self {
+            low: u128::from_be_bytes(bytes[16..32].try_into().unwrap()),
+            high: u128::from_be_bytes(bytes[0..16].try_into().unwrap()),
+        }
+    }
+
+    fn to_be_bytes(&self) -> [u8; 32] {
+        let mut result = [0; 32];
+
+        result[16..].copy_from_slice(&self.low.to_be_bytes());
+        result[..16].copy_from_slice(&self.high.to_be_bytes());
+
+        result
+    }
+}
+
+impl SerializeAsFelt252Vec for CairoU256 {
+    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
+        let low: Felt252 = self.low.into();
+        let high: Felt252 = self.high.into();
+
+        output.push(low);
+        output.push(high);
+    }
+}
+
+enum SignError {
+    InvalidSecretKey,
+    HashOutOfRange,
+}
+
+impl SerializeAsFelt252Vec for SignError {
+    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
+        match self {
+            Self::InvalidSecretKey => output.push(0.into()),
+            Self::HashOutOfRange => output.push(1.into()),
+        };
     }
 }
 
@@ -682,22 +650,6 @@ pub fn cheatcode_panic_result(panic_data: Vec<Felt252>) -> Vec<Felt252> {
     result.push(Felt252::from(panic_data.len()));
 
     result.extend(panic_data);
-    result
-}
-
-fn handle_cheatcode_error(error_short_string: &str) -> CheatcodeHandlingResult {
-    CheatcodeHandlingResult::Handled(vec![
-        Felt252::from(1),
-        Felt252::from_short_string(error_short_string)
-            .expect("Should convert shortstring to Felt252"),
-    ])
-}
-
-fn concat_u128_bytes(low: &[u8; 32], high: &[u8; 32]) -> [u8; 32] {
-    let mut result = [0; 32];
-    // the values of u128 are contained in the last 16 bytes
-    result[..16].copy_from_slice(&high[16..32]);
-    result[16..].copy_from_slice(&low[16..32]);
     result
 }
 

@@ -1,5 +1,6 @@
 use crate::expected_result::ExpectedTestResult;
-use cairo_lang_sierra::{ids::GenericTypeId, program::Program};
+use cairo_lang_sierra::ids::GenericTypeId;
+use cairo_lang_sierra::program::ProgramArtifact;
 use serde::Deserialize;
 use starknet_api::block::BlockNumber;
 use std::num::NonZeroU32;
@@ -7,8 +8,17 @@ use url::Url;
 
 #[derive(Debug, Clone)]
 pub struct CompiledTestCrateRunnable {
-    pub sierra_program: Program,
+    pub tests_location: CrateLocation,
+    pub sierra_program: ProgramArtifact,
     pub test_cases: Vec<TestCaseRunnable>,
+}
+
+#[derive(Debug, PartialEq, Clone, Copy, Deserialize, Hash, Eq)]
+pub enum CrateLocation {
+    /// Main crate in a package
+    Lib,
+    /// Crate in the `tests/` directory
+    Tests,
 }
 
 #[derive(Debug, Clone)]
