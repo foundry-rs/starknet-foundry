@@ -16,6 +16,10 @@ jobs:
     name: Test Forge / Unit and Integration Tests
     runs-on: ubuntu-latest
     steps:
+
+      - name: echo on CI
+        run: echo $SEPOLIA_RPC_URL
+
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
