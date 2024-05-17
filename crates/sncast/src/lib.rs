@@ -26,7 +26,10 @@ use starknet::{
 use crate::helpers::constants::{DEFAULT_STATE_FILE_SUFFIX, WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
 use crate::response::errors::SNCastProviderError;
 use cairo_felt::Felt252;
-use conversions::felt252::SerializeAsFelt252Vec;
+use conversions::{
+    byte_array::ByteArray,
+    serde::serialize::{BufferWriter, CairoSerialize},
+};
 use serde::de::DeserializeOwned;
 use shared::rpc::create_rpc_client;
 use starknet::accounts::AccountFactoryError;
@@ -471,29 +474,29 @@ pub enum WaitForTransactionError {
     ProviderError(#[from] SNCastProviderError),
 }
 
-impl SerializeAsFelt252Vec for WaitForTransactionError {
-    fn serialize_into_felt252_vec(&self, output: &mut Vec<Felt252>) {
+impl CairoSerialize for WaitForTransactionError {
+    fn serialize(&self, output: &mut BufferWriter) {
         match self {
             WaitForTransactionError::TransactionError(err) => {
-                output.push(Felt252::from(0));
-                err.serialize_into_felt252_vec(output);
+                output.write_felt(Felt252::from(0));
+                err.serialize(output);
             }
-            WaitForTransactionError::TimedOut => output.push(Felt252::from(1)),
+            WaitForTransactionError::TimedOut => output.write_felt(Felt252::from(1)),
             WaitForTransactionError::ProviderError(err) => {
-                output.push(Felt252::from(2));
-                err.serialize_into_felt252_vec(output);
+                output.write_felt(Felt252::from(2));
+                err.serialize(output);
             }
         }
     }
 }
 
-impl SerializeAsFelt252Vec for TransactionError {
-    fn serialize_into_felt252_vec(&self, output: &mut Vec<Felt252>) {
+impl CairoSerialize for TransactionError {
+    fn serialize(&self, output: &mut BufferWriter) {
         match self {
-            TransactionError::Rejected => output.push(Felt252::from(0)),
+            TransactionError::Rejected => output.write_felt(Felt252::from(0)),
             TransactionError::Reverted(err) => {
-                output.push(Felt252::from(1));
-                err.data.serialize_into_felt252_vec(output);
+                output.write_felt(Felt252::from(1));
+                ByteArray::from(err.data.as_str()).serialize(output);
             }
         }
     }

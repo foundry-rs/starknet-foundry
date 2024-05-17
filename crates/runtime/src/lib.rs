@@ -24,14 +24,14 @@ use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cairo_vm::vm::vm_core::VirtualMachine;
 use conversions::byte_array::ByteArray;
-use conversions::felt252::{RawFeltVec, SerializeAsFelt252Vec};
-pub use runtime_macros::FromReader;
+use conversions::serde::deserialize::BufferReader;
+use conversions::serde::serialize::raw::RawFeltVec;
+use conversions::serde::serialize::{CairoSerialize, SerializeToFeltVec};
 use starknet_api::StarknetApiError;
 use std::any::Any;
 use std::collections::HashMap;
 use std::io;
 use thiserror::Error;
-use utils::buffer_reader::BufferReader;
 
 pub mod starknet;
 pub mod utils;
@@ -270,7 +270,7 @@ impl<Extension: ExtensionLogic> ExtendedRuntime<Extension> {
             Ok(CheatcodeHandlingResult::Handled(res)) => Ok(RawFeltVec::new(res)),
             Err(err) => Err(ByteArray::from(err.to_string().as_str())),
         }
-        .serialize_as_felt252_vec();
+        .serialize_to_vec();
 
         let mut buffer = MemBuffer::new_segment(vm);
         let result_start = buffer.ptr;
@@ -395,8 +395,8 @@ pub enum CheatcodeHandlingResult {
 }
 
 impl CheatcodeHandlingResult {
-    pub fn from_serializable(serializable: impl SerializeAsFelt252Vec) -> Self {
-        Self::Handled(serializable.serialize_as_felt252_vec())
+    pub fn from_serializable(serializable: impl CairoSerialize) -> Self {
+        Self::Handled(serializable.serialize_to_vec())
     }
 }
 

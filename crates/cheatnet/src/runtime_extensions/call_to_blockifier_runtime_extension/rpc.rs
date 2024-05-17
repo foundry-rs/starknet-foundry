@@ -15,7 +15,11 @@ use blockifier::state::errors::StateError;
 use cairo_felt::Felt252;
 use cairo_lang_runner::casm_run::format_next_item;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
-use conversions::{byte_array::ByteArray, felt252::SerializeAsFelt252Vec, IntoConv};
+use conversions::{
+    byte_array::ByteArray,
+    serde::serialize::{BufferWriter, CairoSerialize},
+    IntoConv,
+};
 use serde::{Deserialize, Serialize};
 use starknet_api::transaction::EventContent;
 use starknet_api::{
@@ -39,16 +43,16 @@ pub enum CallResult {
     Failure(CallFailure),
 }
 
-impl SerializeAsFelt252Vec for CallResult {
-    fn serialize_into_felt252_vec(&self, output: &mut Vec<Felt252>) {
+impl CairoSerialize for CallResult {
+    fn serialize(&self, output: &mut BufferWriter) {
         match self {
             Self::Success { ret_data } => {
-                output.push(0.into());
-                ret_data.serialize_into_felt252_vec(output);
+                output.write_felt(0.into());
+                output.write(ret_data);
             }
             Self::Failure(call_failure) => {
-                output.push(1.into());
-                call_failure.serialize_into_felt252_vec(output);
+                output.write_felt(1.into());
+                output.write(call_failure);
             }
         }
     }
@@ -63,16 +67,16 @@ pub enum CallFailure {
     Error { msg: String },
 }
 
-impl SerializeAsFelt252Vec for CallFailure {
-    fn serialize_into_felt252_vec(&self, output: &mut Vec<Felt252>) {
+impl CairoSerialize for CallFailure {
+    fn serialize(&self, output: &mut BufferWriter) {
         match self {
             Self::Panic { panic_data } => {
-                output.push(0.into());
-                panic_data.serialize_into_felt252_vec(output);
+                output.write_felt(0.into());
+                output.write(panic_data);
             }
             Self::Error { msg } => {
-                output.push(1.into());
-                msg.serialize_into_felt252_vec(output);
+                output.write_felt(1.into());
+                output.write(ByteArray::from(msg.as_str()));
             }
         }
     }

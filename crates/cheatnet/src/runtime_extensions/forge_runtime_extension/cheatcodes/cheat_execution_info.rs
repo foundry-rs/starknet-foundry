@@ -3,18 +3,20 @@ use crate::{
     CheatnetState,
 };
 use cairo_felt::Felt252;
-use conversions::felt252::SerializeAsFelt252Vec;
-use runtime::FromReader;
+use conversions::serde::{
+    deserialize::CairoDeserialize,
+    serialize::{BufferWriter, CairoSerialize},
+};
 use starknet_api::core::{ContractAddress, EntryPointSelector};
 
-#[derive(FromReader, Clone, Debug)]
+#[derive(CairoDeserialize, Clone, Debug)]
 pub struct CheatArguments<T> {
     pub value: T,
     pub span: CheatSpan,
     pub target: ContractAddress,
 }
 
-#[derive(FromReader, Clone, Default, Debug)]
+#[derive(CairoDeserialize, Clone, Default, Debug)]
 pub enum Operation<T> {
     StartGlobal(T),
     Start(CheatArguments<T>),
@@ -24,18 +26,18 @@ pub enum Operation<T> {
     Retain,
 }
 
-#[derive(FromReader, Clone, Default, Debug, Eq, PartialEq)]
+#[derive(CairoDeserialize, Clone, Default, Debug, Eq, PartialEq)]
 pub struct ResourceBounds {
     pub resource: Felt252,
     pub max_amount: u64,
     pub max_price_per_unit: u128,
 }
 
-impl SerializeAsFelt252Vec for ResourceBounds {
-    fn serialize_into_felt252_vec(&self, output: &mut Vec<Felt252>) {
-        self.resource.serialize_into_felt252_vec(output);
-        output.push(self.max_amount.into());
-        output.push(self.max_price_per_unit.into());
+impl CairoSerialize for ResourceBounds {
+    fn serialize(&self, output: &mut BufferWriter) {
+        self.resource.serialize(output);
+        output.write_felt(self.max_amount.into());
+        output.write_felt(self.max_price_per_unit.into());
     }
 }
 
@@ -72,7 +74,7 @@ pub struct ExecutionInfoMock {
     pub entry_point_selector: CheatStatus<EntryPointSelector>,
 }
 
-#[derive(FromReader, Clone, Default, Debug)]
+#[derive(CairoDeserialize, Clone, Default, Debug)]
 pub struct TxInfoMockOperations {
     pub version: Operation<Felt252>,
     pub account_contract_address: Operation<Felt252>,
@@ -89,14 +91,14 @@ pub struct TxInfoMockOperations {
     pub account_deployment_data: Operation<Vec<Felt252>>,
 }
 
-#[derive(FromReader, Clone, Default, Debug)]
+#[derive(CairoDeserialize, Clone, Default, Debug)]
 pub struct BlockInfoMockOperations {
     pub block_number: Operation<u64>,
     pub block_timestamp: Operation<u64>,
     pub sequencer_address: Operation<ContractAddress>,
 }
 
-#[derive(FromReader, Clone, Default, Debug)]
+#[derive(CairoDeserialize, Clone, Default, Debug)]
 pub struct ExecutionInfoMockOperations {
     pub block_info: BlockInfoMockOperations,
     pub tx_info: TxInfoMockOperations,

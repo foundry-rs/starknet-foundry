@@ -1,7 +1,5 @@
-use cairo_felt::Felt252;
 use camino::Utf8PathBuf;
-use conversions::felt252::SerializeAsFelt252Vec;
-use conversions::FromConv;
+use conversions::serde::serialize::{BufferWriter, CairoSerialize};
 use serde::{Deserialize, Serialize, Serializer};
 use starknet::core::types::FieldElement;
 
@@ -10,9 +8,9 @@ pub struct Decimal(pub u64);
 #[derive(Clone, Debug, Deserialize, PartialEq)]
 pub struct Felt(pub FieldElement);
 
-impl SerializeAsFelt252Vec for Felt {
-    fn serialize_into_felt252_vec(&self, output: &mut Vec<Felt252>) {
-        self.0.serialize_into_felt252_vec(output);
+impl CairoSerialize for Felt {
+    fn serialize(&self, output: &mut BufferWriter) {
+        CairoSerialize::serialize(&self.0, output);
     }
 }
 
@@ -51,9 +49,9 @@ pub struct CallResponse {
 }
 impl CommandResponse for CallResponse {}
 
-impl SerializeAsFelt252Vec for CallResponse {
-    fn serialize_into_felt252_vec(&self, output: &mut Vec<Felt252>) {
-        self.response.serialize_into_felt252_vec(output);
+impl CairoSerialize for CallResponse {
+    fn serialize(&self, output: &mut BufferWriter) {
+        CairoSerialize::serialize(&self.response, output);
     }
 }
 
@@ -63,9 +61,9 @@ pub struct InvokeResponse {
 }
 impl CommandResponse for InvokeResponse {}
 
-impl SerializeAsFelt252Vec for InvokeResponse {
-    fn serialize_into_felt252_vec(&self, output: &mut Vec<Felt252>) {
-        self.transaction_hash.serialize_into_felt252_vec(output);
+impl CairoSerialize for InvokeResponse {
+    fn serialize(&self, output: &mut BufferWriter) {
+        output.write(&self.transaction_hash);
     }
 }
 
@@ -76,12 +74,10 @@ pub struct DeployResponse {
 }
 impl CommandResponse for DeployResponse {}
 
-impl SerializeAsFelt252Vec for DeployResponse {
-    fn serialize_into_felt252_vec(&self, output: &mut Vec<Felt252>) {
-        output.extend([
-            Felt252::from_(self.contract_address.0),
-            Felt252::from_(self.transaction_hash.0),
-        ]);
+impl CairoSerialize for DeployResponse {
+    fn serialize(&self, output: &mut BufferWriter) {
+        output.write(self.contract_address.0);
+        output.write(self.transaction_hash.0);
     }
 }
 
@@ -92,12 +88,10 @@ pub struct DeclareResponse {
 }
 impl CommandResponse for DeclareResponse {}
 
-impl SerializeAsFelt252Vec for DeclareResponse {
-    fn serialize_into_felt252_vec(&self, output: &mut Vec<Felt252>) {
-        output.extend([
-            Felt252::from_(self.class_hash.0),
-            Felt252::from_(self.transaction_hash.0),
-        ]);
+impl CairoSerialize for DeclareResponse {
+    fn serialize(&self, output: &mut BufferWriter) {
+        output.write(self.class_hash.0);
+        output.write(self.transaction_hash.0);
     }
 }
 

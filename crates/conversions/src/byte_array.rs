@@ -1,8 +1,14 @@
-use crate::{felt252::SerializeAsFelt252Vec, string::TryFromHexStr};
+use crate as conversions; // trick for CairoDeserialize macro
+use crate::{
+    serde::serialize::{BufferWriter, CairoSerialize, SerializeToFeltVec},
+    string::TryFromHexStr,
+};
 use cairo_felt::Felt252;
+use cairo_lang_runner::short_string::as_cairo_short_string_ex;
 use cairo_lang_utils::byte_array::{BYTES_IN_WORD, BYTE_ARRAY_MAGIC};
+use cairo_serde_macros::CairoDeserialize;
 
-#[derive(Clone)]
+#[derive(CairoDeserialize, Clone)]
 pub struct ByteArray {
     words: Vec<Felt252>,
     pending_word: Felt252,
@@ -26,19 +32,19 @@ impl From<&str> for ByteArray {
     }
 }
 
-impl SerializeAsFelt252Vec for ByteArray {
-    fn serialize_into_felt252_vec(&self, output: &mut Vec<Felt252>) {
-        self.words.serialize_into_felt252_vec(output);
-        self.pending_word.serialize_into_felt252_vec(output);
+impl CairoSerialize for ByteArray {
+    fn serialize(&self, output: &mut BufferWriter) {
+        self.words.serialize(output);
+        self.pending_word.serialize(output);
 
-        output.push(self.pending_word_len.into());
+        output.write_felt(self.pending_word_len.into());
     }
 }
 
 impl ByteArray {
     #[must_use]
     pub fn serialize_with_magic(&self) -> Vec<Felt252> {
-        let mut result = self.serialize_no_magic();
+        let mut result = self.serialize_to_vec();
 
         result.insert(
             0,
@@ -47,9 +53,19 @@ impl ByteArray {
 
         result
     }
+}
 
-    #[must_use]
-    pub fn serialize_no_magic(&self) -> Vec<Felt252> {
-        self.serialize_as_felt252_vec()
+impl From<ByteArray> for String {
+    fn from(value: ByteArray) -> Self {
+        let full_words_string = value
+            .words
+            .iter()
+            .map(|word| as_cairo_short_string_ex(word, BYTES_IN_WORD).unwrap())
+            .collect::<String>();
+
+        let pending_word_string =
+            as_cairo_short_string_ex(&value.pending_word, value.pending_word_len).unwrap();
+
+        format!("{full_words_string}{pending_word_string}")
     }
 }

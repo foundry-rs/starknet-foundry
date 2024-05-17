@@ -1,7 +1,8 @@
 use crate::{handle_rpc_error, ErrorData, WaitForTransactionError};
 use anyhow::anyhow;
 use cairo_felt::Felt252;
-use conversions::felt252::SerializeAsFelt252Vec;
+use conversions::byte_array::ByteArray;
+use conversions::serde::serialize::{BufferWriter, CairoSerialize};
 use starknet::core::types::StarknetError::{
     ContractError, TransactionExecutionError, ValidationFailure,
 };
@@ -21,24 +22,24 @@ pub enum StarknetCommandError {
     ProviderError(#[from] SNCastProviderError),
 }
 
-impl SerializeAsFelt252Vec for StarknetCommandError {
-    fn serialize_into_felt252_vec(&self, output: &mut Vec<Felt252>) {
+impl CairoSerialize for StarknetCommandError {
+    fn serialize(&self, output: &mut BufferWriter) {
         match self {
             StarknetCommandError::UnknownError(err) => {
-                output.push(Felt252::from(0));
-                err.to_string().serialize_into_felt252_vec(output);
+                output.write_felt(Felt252::from(0));
+                output.write(ByteArray::from(err.to_string().as_str()));
             }
             StarknetCommandError::ContractArtifactsNotFound(err) => {
-                output.push(Felt252::from(1));
-                err.data.serialize_into_felt252_vec(output);
+                output.write_felt(Felt252::from(1));
+                output.write(ByteArray::from(err.data.as_str()));
             }
             StarknetCommandError::WaitForTransactionError(err) => {
-                output.push(Felt252::from(2));
-                err.serialize_into_felt252_vec(output);
+                output.write_felt(Felt252::from(2));
+                err.serialize(output);
             }
             StarknetCommandError::ProviderError(err) => {
-                output.push(Felt252::from(3));
-                err.serialize_into_felt252_vec(output);
+                output.write_felt(Felt252::from(3));
+                err.serialize(output);
             }
         }
     }
@@ -62,17 +63,17 @@ pub enum SNCastProviderError {
     UnknownError(#[from] anyhow::Error),
 }
 
-impl SerializeAsFelt252Vec for SNCastProviderError {
-    fn serialize_into_felt252_vec(&self, output: &mut Vec<Felt252>) {
+impl CairoSerialize for SNCastProviderError {
+    fn serialize(&self, output: &mut BufferWriter) {
         match self {
             SNCastProviderError::StarknetError(err) => {
-                output.push(Felt252::from(0));
-                err.serialize_into_felt252_vec(output);
+                output.write_felt(Felt252::from(0));
+                err.serialize(output);
             }
-            SNCastProviderError::RateLimited => output.push(Felt252::from(1)),
+            SNCastProviderError::RateLimited => output.write_felt(Felt252::from(1)),
             SNCastProviderError::UnknownError(err) => {
-                output.push(Felt252::from(2));
-                err.to_string().serialize_into_felt252_vec(output);
+                output.write_felt(Felt252::from(2));
+                output.write(ByteArray::from(err.to_string().as_str()));
             }
         }
     }
@@ -178,41 +179,46 @@ impl From<StarknetError> for SNCastStarknetError {
     }
 }
 
-impl SerializeAsFelt252Vec for SNCastStarknetError {
-    fn serialize_into_felt252_vec(&self, output: &mut Vec<Felt252>) {
+impl CairoSerialize for SNCastStarknetError {
+    fn serialize(&self, output: &mut BufferWriter) {
         match self {
-            SNCastStarknetError::FailedToReceiveTransaction => output.push(Felt252::from(0)),
-            SNCastStarknetError::ContractNotFound => output.push(Felt252::from(1)),
-            SNCastStarknetError::BlockNotFound => output.push(Felt252::from(2)),
-            SNCastStarknetError::InvalidTransactionIndex => output.push(Felt252::from(3)),
-            SNCastStarknetError::ClassHashNotFound => output.push(Felt252::from(4)),
-            SNCastStarknetError::TransactionHashNotFound => output.push(Felt252::from(5)),
+            SNCastStarknetError::FailedToReceiveTransaction => output.write_felt(Felt252::from(0)),
+            SNCastStarknetError::ContractNotFound => output.write_felt(Felt252::from(1)),
+            SNCastStarknetError::BlockNotFound => output.write_felt(Felt252::from(2)),
+            SNCastStarknetError::InvalidTransactionIndex => output.write_felt(Felt252::from(3)),
+            SNCastStarknetError::ClassHashNotFound => output.write_felt(Felt252::from(4)),
+            SNCastStarknetError::TransactionHashNotFound => output.write_felt(Felt252::from(5)),
             SNCastStarknetError::ContractError(err) => {
-                output.push(Felt252::from(6));
-                err.revert_error.serialize_into_felt252_vec(output);
+                output.write_felt(Felt252::from(6));
+                output.write(ByteArray::from(err.revert_error.as_str()));
             }
             SNCastStarknetError::TransactionExecutionError(err) => {
-                output.extend([Felt252::from(7), Felt252::from(err.transaction_index)]);
-                err.execution_error.serialize_into_felt252_vec(output);
+                output.write(Felt252::from(7));
+                output.write(Felt252::from(err.transaction_index));
+                output.write(ByteArray::from(err.execution_error.as_str()));
             }
-            SNCastStarknetError::ClassAlreadyDeclared => output.push(Felt252::from(8)),
-            SNCastStarknetError::InvalidTransactionNonce => output.push(Felt252::from(9)),
-            SNCastStarknetError::InsufficientMaxFee => output.push(Felt252::from(10)),
-            SNCastStarknetError::InsufficientAccountBalance => output.push(Felt252::from(11)),
+            SNCastStarknetError::ClassAlreadyDeclared => output.write_felt(Felt252::from(8)),
+            SNCastStarknetError::InvalidTransactionNonce => output.write_felt(Felt252::from(9)),
+            SNCastStarknetError::InsufficientMaxFee => output.write_felt(Felt252::from(10)),
+            SNCastStarknetError::InsufficientAccountBalance => output.write_felt(Felt252::from(11)),
             SNCastStarknetError::ValidationFailure(err) => {
-                output.push(Felt252::from(12));
-                err.serialize_into_felt252_vec(output);
+                output.write_felt(Felt252::from(12));
+                output.write(ByteArray::from(err.as_str()));
             }
-            SNCastStarknetError::CompilationFailed => output.push(Felt252::from(13)),
-            SNCastStarknetError::ContractClassSizeIsTooLarge => output.push(Felt252::from(14)),
-            SNCastStarknetError::NonAccount => output.push(Felt252::from(15)),
-            SNCastStarknetError::DuplicateTx => output.push(Felt252::from(16)),
-            SNCastStarknetError::CompiledClassHashMismatch => output.push(Felt252::from(17)),
-            SNCastStarknetError::UnsupportedTxVersion => output.push(Felt252::from(18)),
-            SNCastStarknetError::UnsupportedContractClassVersion => output.push(Felt252::from(19)),
+            SNCastStarknetError::CompilationFailed => output.write_felt(Felt252::from(13)),
+            SNCastStarknetError::ContractClassSizeIsTooLarge => {
+                output.write_felt(Felt252::from(14));
+            }
+            SNCastStarknetError::NonAccount => output.write_felt(Felt252::from(15)),
+            SNCastStarknetError::DuplicateTx => output.write_felt(Felt252::from(16)),
+            SNCastStarknetError::CompiledClassHashMismatch => output.write_felt(Felt252::from(17)),
+            SNCastStarknetError::UnsupportedTxVersion => output.write_felt(Felt252::from(18)),
+            SNCastStarknetError::UnsupportedContractClassVersion => {
+                output.write_felt(Felt252::from(19));
+            }
             SNCastStarknetError::UnexpectedError(err) => {
-                output.push(Felt252::from(20));
-                err.to_string().serialize_into_felt252_vec(output);
+                output.write_felt(Felt252::from(20));
+                output.write(ByteArray::from(err.to_string().as_str()));
             }
         }
     }

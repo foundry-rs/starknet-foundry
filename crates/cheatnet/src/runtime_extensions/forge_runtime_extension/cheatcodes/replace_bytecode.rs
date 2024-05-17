@@ -1,6 +1,6 @@
 use crate::CheatnetState;
 use cairo_felt::Felt252;
-use conversions::felt252::SerializeAsFelt252Vec;
+use conversions::serde::serialize::{BufferWriter, CairoSerialize};
 use starknet_api::core::{ClassHash, ContractAddress};
 
 impl CheatnetState {
@@ -19,11 +19,11 @@ pub enum ReplaceBytecodeError {
     UndeclaredClassHash,
 }
 
-impl SerializeAsFelt252Vec for ReplaceBytecodeError {
-    fn serialize_into_felt252_vec(&self, output: &mut Vec<Felt252>) {
+impl CairoSerialize for ReplaceBytecodeError {
+    fn serialize(&self, output: &mut BufferWriter) {
         match self {
-            ReplaceBytecodeError::ContractNotDeployed => output.push(Felt252::from(0)),
-            ReplaceBytecodeError::UndeclaredClassHash => output.push(Felt252::from(1)),
+            ReplaceBytecodeError::ContractNotDeployed => output.write_felt(Felt252::from(0)),
+            ReplaceBytecodeError::UndeclaredClassHash => output.write_felt(Felt252::from(1)),
         }
     }
 }

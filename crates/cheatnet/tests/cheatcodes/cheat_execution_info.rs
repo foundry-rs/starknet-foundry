@@ -6,9 +6,8 @@ use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::cheat_exe
     CheatArguments, ExecutionInfoMockOperations, Operation, TxInfoMockOperations,
 };
 use cheatnet::state::CheatSpan;
+use conversions::serde::deserialize::{BufferReader, CairoDeserialize};
 use conversions::IntoConv;
-use runtime::utils::buffer_reader::BufferReader;
-use runtime::FromReader;
 use starknet_api::{core::ContractAddress, transaction::TransactionHash};
 
 trait CheatTransactionHashTrait {
@@ -124,7 +123,7 @@ impl TxInfoTrait for TestEnvironment {
     }
 }
 
-#[derive(FromReader, Clone, Default, Debug, PartialEq)]
+#[derive(CairoDeserialize, Clone, Default, Debug, PartialEq)]
 struct TxInfo {
     pub version: Felt252,
     pub account_contract_address: Felt252,

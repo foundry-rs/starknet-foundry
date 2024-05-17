@@ -34,12 +34,13 @@ use cairo_vm::vm::{
     errors::hint_errors::HintError, runners::cairo_runner::ExecutionResources,
     vm_core::VirtualMachine,
 };
-use conversions::felt252::SerializeAsFelt252Vec;
+use conversions::byte_array::ByteArray;
+use conversions::serde::deserialize::{BufferReader, CairoDeserialize};
+use conversions::serde::serialize::{BufferWriter, CairoSerialize};
 use conversions::{felt252::TryInferFormat, IntoConv};
-use runtime::FromReader;
 use runtime::{
-    utils::buffer_reader::BufferReader, CheatcodeHandlingResult, EnhancedHintError,
-    ExtendedRuntime, ExtensionLogic, SyscallHandlingResult,
+    CheatcodeHandlingResult, EnhancedHintError, ExtendedRuntime, ExtensionLogic,
+    SyscallHandlingResult,
 };
 use starknet::core::types::FieldElement;
 use starknet::signers::SigningKey;
@@ -150,7 +151,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .hint_handler
                     .state;
 
-                let contract_name: String = input_reader.read()?;
+                let contract_name: String = input_reader.read::<ByteArray>()?.into();
 
                 handle_declare_deploy_result(declare(*state, &contract_name, self.contracts_data))
             }
@@ -203,7 +204,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 ]))
             }
             "var" => {
-                let name: String = input_reader.read()?;
+                let name: String = input_reader.read::<ByteArray>()?.into();
 
                 let env_var = self
                     .environment_variables
@@ -262,12 +263,12 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 }
             }
             "read_txt" => {
-                let file_path: String = input_reader.read()?;
+                let file_path: String = input_reader.read::<ByteArray>()?.into();
                 let parsed_content = file_operations::read_txt(file_path)?;
                 Ok(CheatcodeHandlingResult::Handled(parsed_content))
             }
             "read_json" => {
-                let file_path: String = input_reader.read()?;
+                let file_path: String = input_reader.read::<ByteArray>()?.into();
                 let parsed_content = file_operations::read_json(file_path)?;
 
                 Ok(CheatcodeHandlingResult::Handled(parsed_content))
@@ -467,7 +468,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
     }
 }
 
-#[derive(FromReader)]
+#[derive(CairoDeserialize)]
 struct CairoU256 {
     low: u128,
     high: u128,
@@ -491,13 +492,13 @@ impl CairoU256 {
     }
 }
 
-impl SerializeAsFelt252Vec for CairoU256 {
-    fn serialize_into_felt252_vec(&self, output: &mut Vec<Felt252>) {
+impl CairoSerialize for CairoU256 {
+    fn serialize(&self, output: &mut BufferWriter) {
         let low: Felt252 = self.low.into();
         let high: Felt252 = self.high.into();
 
-        output.push(low);
-        output.push(high);
+        output.write_felt(low);
+        output.write_felt(high);
     }
 }
 
@@ -506,16 +507,16 @@ enum SignError {
     HashOutOfRange,
 }
 
-impl SerializeAsFelt252Vec for SignError {
-    fn serialize_into_felt252_vec(&self, output: &mut Vec<Felt252>) {
+impl CairoSerialize for SignError {
+    fn serialize(&self, output: &mut BufferWriter) {
         match self {
-            Self::InvalidSecretKey => output.push(0.into()),
-            Self::HashOutOfRange => output.push(1.into()),
+            Self::InvalidSecretKey => output.write_felt(0.into()),
+            Self::HashOutOfRange => output.write_felt(1.into()),
         };
     }
 }
 
-fn handle_declare_deploy_result<T: SerializeAsFelt252Vec>(
+fn handle_declare_deploy_result<T: CairoSerialize>(
     declare_result: Result<T, CheatcodeError>,
 ) -> Result<CheatcodeHandlingResult, EnhancedHintError> {
     let result = match declare_result {
