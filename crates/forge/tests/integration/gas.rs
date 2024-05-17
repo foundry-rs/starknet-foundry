@@ -91,7 +91,8 @@ fn snforge_std_deploy_cost() {
 
     let result = run_test_case(&test);
 
-    assert_passed(&result);println!("{result:#?}");
+    assert_passed(&result);
+    println!("{result:#?}");
     // 96 = gas cost of onchain data (deploy cost)
     // int(4406 & 0.0025) = 12 = steps cost
     assert_gas(&result, "deploy_cost", 96 + 12);
