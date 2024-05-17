@@ -32,8 +32,8 @@ pub struct ResourceBounds {
 }
 
 impl SerializeAsFelt252Vec for ResourceBounds {
-    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
-        output.push(self.resource);
+    fn serialize_into_felt252_vec(&self, output: &mut Vec<Felt252>) {
+        self.resource.serialize_into_felt252_vec(output);
         output.push(self.max_amount.into());
         output.push(self.max_price_per_unit.into());
     }

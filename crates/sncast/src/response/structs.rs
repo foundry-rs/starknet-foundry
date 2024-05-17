@@ -1,7 +1,7 @@
 use cairo_felt::Felt252;
 use camino::Utf8PathBuf;
+use conversions::felt252::SerializeAsFelt252Vec;
 use conversions::FromConv;
-use conversions::{felt252::SerializeAsFelt252Vec, IntoConv};
 use serde::{Deserialize, Serialize, Serializer};
 use starknet::core::types::FieldElement;
 
@@ -10,9 +10,9 @@ pub struct Decimal(pub u64);
 #[derive(Clone, Debug, Deserialize, PartialEq)]
 pub struct Felt(pub FieldElement);
 
-impl FromConv<Felt> for Felt252 {
-    fn from_(value: Felt) -> Self {
-        value.0.into_()
+impl SerializeAsFelt252Vec for Felt {
+    fn serialize_into_felt252_vec(&self, output: &mut Vec<Felt252>) {
+        self.0.serialize_into_felt252_vec(output);
     }
 }
 
@@ -52,7 +52,7 @@ pub struct CallResponse {
 impl CommandResponse for CallResponse {}
 
 impl SerializeAsFelt252Vec for CallResponse {
-    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
+    fn serialize_into_felt252_vec(&self, output: &mut Vec<Felt252>) {
         self.response.serialize_into_felt252_vec(output);
     }
 }
@@ -64,7 +64,7 @@ pub struct InvokeResponse {
 impl CommandResponse for InvokeResponse {}
 
 impl SerializeAsFelt252Vec for InvokeResponse {
-    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
+    fn serialize_into_felt252_vec(&self, output: &mut Vec<Felt252>) {
         self.transaction_hash.serialize_into_felt252_vec(output);
     }
 }
@@ -77,7 +77,7 @@ pub struct DeployResponse {
 impl CommandResponse for DeployResponse {}
 
 impl SerializeAsFelt252Vec for DeployResponse {
-    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
+    fn serialize_into_felt252_vec(&self, output: &mut Vec<Felt252>) {
         output.extend([
             Felt252::from_(self.contract_address.0),
             Felt252::from_(self.transaction_hash.0),
@@ -93,7 +93,7 @@ pub struct DeclareResponse {
 impl CommandResponse for DeclareResponse {}
 
 impl SerializeAsFelt252Vec for DeclareResponse {
-    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
+    fn serialize_into_felt252_vec(&self, output: &mut Vec<Felt252>) {
         output.extend([
             Felt252::from_(self.class_hash.0),
             Felt252::from_(self.transaction_hash.0),

@@ -7,8 +7,8 @@ use blockifier::{
     execution::contract_class::{ContractClass as BlockifierContractClass, ContractClassV1},
     state::{errors::StateError, state_api::State},
 };
-use conversions::byte_array::ByteArray;
 use conversions::IntoConv;
+use conversions::{byte_array::ByteArray, felt252::SerializeAsFelt252Vec};
 use starknet::core::types::contract::SierraClass;
 use starknet_api::core::ClassHash;
 
@@ -20,7 +20,7 @@ pub fn declare(
 ) -> Result<ClassHash, CheatcodeError> {
     let contract_artifact = contracts_data.get_artifacts(contract_name).with_context(|| {
             format!("Failed to get contract artifact for name = {contract_name}. Make sure starknet target is correctly defined in Scarb.toml file.")
-        }).map_err::<EnhancedHintError, _>(From::from)?;
+        }).map_err(EnhancedHintError::from)?;
 
     let contract_class = ContractClassV1::try_from_json_string(&contract_artifact.casm)
         .expect("Failed to read contract class from json");
@@ -55,7 +55,7 @@ pub fn declare(
             let error = format!("Class hash {class_hash} is already declared");
             let byte_array = ByteArray::from(error.as_str());
             Err(CheatcodeError::Recoverable(
-                byte_array.serialize_with_magic(),
+                byte_array.serialize_as_felt252_vec(),
             ))
         }
     }
