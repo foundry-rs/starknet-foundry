@@ -179,12 +179,6 @@ impl SerializeAsFelt252Vec for CallTrace {
 
         visible_calls.serialize_into_felt252_vec(output);
 
-        output.push(Felt252::from(visible_calls.len()));
-
-        for call_trace_node in visible_calls {
-            call_trace_node.serialize_into_felt252_vec(output);
-        }
-
         self.result.serialize_into_felt252_vec(output);
     }
 }
