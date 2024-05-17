@@ -1,6 +1,5 @@
 use crate::CheatnetState;
-use cairo_felt::Felt252;
-use conversions::serde::serialize::{BufferWriter, CairoSerialize};
+use conversions::serde::serialize::CairoSerialize;
 use starknet_api::core::{ClassHash, ContractAddress};
 
 impl CheatnetState {
@@ -14,16 +13,8 @@ impl CheatnetState {
     }
 }
 
+#[derive(CairoSerialize)]
 pub enum ReplaceBytecodeError {
     ContractNotDeployed,
     UndeclaredClassHash,
-}
-
-impl CairoSerialize for ReplaceBytecodeError {
-    fn serialize(&self, output: &mut BufferWriter) {
-        match self {
-            ReplaceBytecodeError::ContractNotDeployed => output.write_felt(Felt252::from(0)),
-            ReplaceBytecodeError::UndeclaredClassHash => output.write_felt(Felt252::from(1)),
-        }
-    }
 }

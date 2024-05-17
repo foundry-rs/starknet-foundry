@@ -1,18 +1,12 @@
 use camino::Utf8PathBuf;
-use conversions::serde::serialize::{BufferWriter, CairoSerialize};
+use conversions::serde::serialize::CairoSerialize;
 use serde::{Deserialize, Serialize, Serializer};
 use starknet::core::types::FieldElement;
 
 pub struct Decimal(pub u64);
 
-#[derive(Clone, Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, CairoSerialize, PartialEq)]
 pub struct Felt(pub FieldElement);
-
-impl CairoSerialize for Felt {
-    fn serialize(&self, output: &mut BufferWriter) {
-        CairoSerialize::serialize(&self.0, output);
-    }
-}
 
 impl Serialize for Decimal {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -43,57 +37,31 @@ where
 
 pub trait CommandResponse: Serialize {}
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, CairoSerialize, Clone)]
 pub struct CallResponse {
     pub response: Vec<Felt>,
 }
 impl CommandResponse for CallResponse {}
 
-impl CairoSerialize for CallResponse {
-    fn serialize(&self, output: &mut BufferWriter) {
-        CairoSerialize::serialize(&self.response, output);
-    }
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, CairoSerialize, Clone, Debug, PartialEq)]
 pub struct InvokeResponse {
     pub transaction_hash: Felt,
 }
 impl CommandResponse for InvokeResponse {}
 
-impl CairoSerialize for InvokeResponse {
-    fn serialize(&self, output: &mut BufferWriter) {
-        output.write(&self.transaction_hash);
-    }
-}
-
-#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
 pub struct DeployResponse {
     pub contract_address: Felt,
     pub transaction_hash: Felt,
 }
 impl CommandResponse for DeployResponse {}
 
-impl CairoSerialize for DeployResponse {
-    fn serialize(&self, output: &mut BufferWriter) {
-        output.write(self.contract_address.0);
-        output.write(self.transaction_hash.0);
-    }
-}
-
-#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
 pub struct DeclareResponse {
     pub class_hash: Felt,
     pub transaction_hash: Felt,
 }
 impl CommandResponse for DeclareResponse {}
-
-impl CairoSerialize for DeclareResponse {
-    fn serialize(&self, output: &mut BufferWriter) {
-        output.write(self.class_hash.0);
-        output.write(self.transaction_hash.0);
-    }
-}
 
 #[derive(Serialize)]
 pub struct AccountCreateResponse {

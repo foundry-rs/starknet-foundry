@@ -1,8 +1,6 @@
 use crate::{handle_rpc_error, ErrorData, WaitForTransactionError};
 use anyhow::anyhow;
-use cairo_felt::Felt252;
-use conversions::byte_array::ByteArray;
-use conversions::serde::serialize::{BufferWriter, CairoSerialize};
+use conversions::serde::serialize::CairoSerialize;
 use starknet::core::types::StarknetError::{
     ContractError, TransactionExecutionError, ValidationFailure,
 };
@@ -10,7 +8,7 @@ use starknet::core::types::{ContractErrorData, StarknetError, TransactionExecuti
 use starknet::providers::ProviderError;
 use thiserror::Error;
 
-#[derive(Error, Debug)]
+#[derive(Error, Debug, CairoSerialize)]
 pub enum StarknetCommandError {
     #[error(transparent)]
     UnknownError(#[from] anyhow::Error),
@@ -22,29 +20,6 @@ pub enum StarknetCommandError {
     ProviderError(#[from] SNCastProviderError),
 }
 
-impl CairoSerialize for StarknetCommandError {
-    fn serialize(&self, output: &mut BufferWriter) {
-        match self {
-            StarknetCommandError::UnknownError(err) => {
-                output.write_felt(Felt252::from(0));
-                output.write(ByteArray::from(err.to_string().as_str()));
-            }
-            StarknetCommandError::ContractArtifactsNotFound(err) => {
-                output.write_felt(Felt252::from(1));
-                output.write(ByteArray::from(err.data.as_str()));
-            }
-            StarknetCommandError::WaitForTransactionError(err) => {
-                output.write_felt(Felt252::from(2));
-                err.serialize(output);
-            }
-            StarknetCommandError::ProviderError(err) => {
-                output.write_felt(Felt252::from(3));
-                err.serialize(output);
-            }
-        }
-    }
-}
-
 #[must_use]
 pub fn handle_starknet_command_error(error: StarknetCommandError) -> anyhow::Error {
     match error {
@@ -53,7 +28,7 @@ pub fn handle_starknet_command_error(error: StarknetCommandError) -> anyhow::Err
     }
 }
 
-#[derive(Debug, Error)]
+#[derive(Debug, Error, CairoSerialize)]
 pub enum SNCastProviderError {
     #[error(transparent)]
     StarknetError(SNCastStarknetError),
@@ -61,22 +36,6 @@ pub enum SNCastProviderError {
     RateLimited,
     #[error("Unknown RPC error: {0}")]
     UnknownError(#[from] anyhow::Error),
-}
-
-impl CairoSerialize for SNCastProviderError {
-    fn serialize(&self, output: &mut BufferWriter) {
-        match self {
-            SNCastProviderError::StarknetError(err) => {
-                output.write_felt(Felt252::from(0));
-                err.serialize(output);
-            }
-            SNCastProviderError::RateLimited => output.write_felt(Felt252::from(1)),
-            SNCastProviderError::UnknownError(err) => {
-                output.write_felt(Felt252::from(2));
-                output.write(ByteArray::from(err.to_string().as_str()));
-            }
-        }
-    }
 }
 
 impl From<ProviderError> for SNCastProviderError {
@@ -92,7 +51,7 @@ impl From<ProviderError> for SNCastProviderError {
     }
 }
 
-#[derive(Debug, Error)]
+#[derive(Debug, Error, CairoSerialize)]
 pub enum SNCastStarknetError {
     #[error("Node failed to receive transaction")]
     FailedToReceiveTransaction,
@@ -175,51 +134,6 @@ impl From<StarknetError> for SNCastStarknetError {
                 SNCastStarknetError::UnexpectedError(anyhow!(err))
             }
             other => SNCastStarknetError::UnexpectedError(anyhow!(other)),
-        }
-    }
-}
-
-impl CairoSerialize for SNCastStarknetError {
-    fn serialize(&self, output: &mut BufferWriter) {
-        match self {
-            SNCastStarknetError::FailedToReceiveTransaction => output.write_felt(Felt252::from(0)),
-            SNCastStarknetError::ContractNotFound => output.write_felt(Felt252::from(1)),
-            SNCastStarknetError::BlockNotFound => output.write_felt(Felt252::from(2)),
-            SNCastStarknetError::InvalidTransactionIndex => output.write_felt(Felt252::from(3)),
-            SNCastStarknetError::ClassHashNotFound => output.write_felt(Felt252::from(4)),
-            SNCastStarknetError::TransactionHashNotFound => output.write_felt(Felt252::from(5)),
-            SNCastStarknetError::ContractError(err) => {
-                output.write_felt(Felt252::from(6));
-                output.write(ByteArray::from(err.revert_error.as_str()));
-            }
-            SNCastStarknetError::TransactionExecutionError(err) => {
-                output.write(Felt252::from(7));
-                output.write(Felt252::from(err.transaction_index));
-                output.write(ByteArray::from(err.execution_error.as_str()));
-            }
-            SNCastStarknetError::ClassAlreadyDeclared => output.write_felt(Felt252::from(8)),
-            SNCastStarknetError::InvalidTransactionNonce => output.write_felt(Felt252::from(9)),
-            SNCastStarknetError::InsufficientMaxFee => output.write_felt(Felt252::from(10)),
-            SNCastStarknetError::InsufficientAccountBalance => output.write_felt(Felt252::from(11)),
-            SNCastStarknetError::ValidationFailure(err) => {
-                output.write_felt(Felt252::from(12));
-                output.write(ByteArray::from(err.as_str()));
-            }
-            SNCastStarknetError::CompilationFailed => output.write_felt(Felt252::from(13)),
-            SNCastStarknetError::ContractClassSizeIsTooLarge => {
-                output.write_felt(Felt252::from(14));
-            }
-            SNCastStarknetError::NonAccount => output.write_felt(Felt252::from(15)),
-            SNCastStarknetError::DuplicateTx => output.write_felt(Felt252::from(16)),
-            SNCastStarknetError::CompiledClassHashMismatch => output.write_felt(Felt252::from(17)),
-            SNCastStarknetError::UnsupportedTxVersion => output.write_felt(Felt252::from(18)),
-            SNCastStarknetError::UnsupportedContractClassVersion => {
-                output.write_felt(Felt252::from(19));
-            }
-            SNCastStarknetError::UnexpectedError(err) => {
-                output.write_felt(Felt252::from(20));
-                output.write(ByteArray::from(err.to_string().as_str()));
-            }
         }
     }
 }

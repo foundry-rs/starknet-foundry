@@ -1,8 +1,8 @@
 use super::{BufferWriter, CairoSerialize};
-use crate::IntoConv;
+use crate::{byte_array::ByteArray, IntoConv};
 use blockifier::execution::entry_point::{CallEntryPoint, CallType};
 use cairo_felt::Felt252;
-use starknet::core::types::FieldElement;
+use starknet::core::types::{ContractErrorData, FieldElement, TransactionExecutionErrorData};
 use starknet_api::{
     core::{ClassHash, ContractAddress, EntryPointSelector, Nonce},
     deprecated_contract_class::EntryPointType,
@@ -23,6 +23,25 @@ impl CairoSerialize for CallEntryPoint {
         self.storage_address.serialize(output);
         self.caller_address.serialize(output);
         self.call_type.serialize(output);
+    }
+}
+
+impl CairoSerialize for ContractErrorData {
+    fn serialize(&self, output: &mut BufferWriter) {
+        self.revert_error.serialize(output);
+    }
+}
+
+impl CairoSerialize for TransactionExecutionErrorData {
+    fn serialize(&self, output: &mut BufferWriter) {
+        self.transaction_index.serialize(output);
+        self.execution_error.serialize(output);
+    }
+}
+
+impl CairoSerialize for anyhow::Error {
+    fn serialize(&self, output: &mut BufferWriter) {
+        self.to_string().serialize(output);
     }
 }
 
@@ -84,6 +103,19 @@ where
 {
     fn serialize(&self, output: &mut BufferWriter) {
         T::serialize(self, output);
+    }
+}
+
+// Try remove impls for String, ByteArray should be used explicitly instead
+impl CairoSerialize for &str {
+    fn serialize(&self, output: &mut BufferWriter) {
+        ByteArray::from(*self).serialize(output);
+    }
+}
+
+impl CairoSerialize for String {
+    fn serialize(&self, output: &mut BufferWriter) {
+        self.as_str().serialize(output);
     }
 }
 

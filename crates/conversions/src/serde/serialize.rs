@@ -1,5 +1,7 @@
 use cairo_felt::Felt252;
 
+pub use cairo_serde_macros::CairoSerialize;
+
 pub mod raw;
 mod serialize_impl;
 

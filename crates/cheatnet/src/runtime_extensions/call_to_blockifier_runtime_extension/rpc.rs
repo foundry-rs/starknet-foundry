@@ -15,11 +15,7 @@ use blockifier::state::errors::StateError;
 use cairo_felt::Felt252;
 use cairo_lang_runner::casm_run::format_next_item;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
-use conversions::{
-    byte_array::ByteArray,
-    serde::serialize::{BufferWriter, CairoSerialize},
-    IntoConv,
-};
+use conversions::{byte_array::ByteArray, serde::serialize::CairoSerialize, IntoConv};
 use serde::{Deserialize, Serialize};
 use starknet_api::transaction::EventContent;
 use starknet_api::{
@@ -37,49 +33,19 @@ pub struct UsedResources {
 }
 
 /// Enum representing possible call execution result, along with the data
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, CairoSerialize, Serialize, Deserialize)]
 pub enum CallResult {
     Success { ret_data: Vec<Felt252> },
     Failure(CallFailure),
 }
 
-impl CairoSerialize for CallResult {
-    fn serialize(&self, output: &mut BufferWriter) {
-        match self {
-            Self::Success { ret_data } => {
-                output.write_felt(0.into());
-                output.write(ret_data);
-            }
-            Self::Failure(call_failure) => {
-                output.write_felt(1.into());
-                output.write(call_failure);
-            }
-        }
-    }
-}
-
 /// Enum representing possible call failure and its type.
 /// `Panic` - Recoverable, meant to be caught by the user.
 /// `Error` - Unrecoverable, equivalent of panic! in rust.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, CairoSerialize, Serialize, Deserialize)]
 pub enum CallFailure {
     Panic { panic_data: Vec<Felt252> },
     Error { msg: String },
-}
-
-impl CairoSerialize for CallFailure {
-    fn serialize(&self, output: &mut BufferWriter) {
-        match self {
-            Self::Panic { panic_data } => {
-                output.write_felt(0.into());
-                output.write(panic_data);
-            }
-            Self::Error { msg } => {
-                output.write_felt(1.into());
-                output.write(ByteArray::from(msg.as_str()));
-            }
-        }
-    }
 }
 
 pub enum AddressOrClassHash {

@@ -3,10 +3,7 @@ use crate::{
     CheatnetState,
 };
 use cairo_felt::Felt252;
-use conversions::serde::{
-    deserialize::CairoDeserialize,
-    serialize::{BufferWriter, CairoSerialize},
-};
+use conversions::serde::{deserialize::CairoDeserialize, serialize::CairoSerialize};
 use starknet_api::core::{ContractAddress, EntryPointSelector};
 
 #[derive(CairoDeserialize, Clone, Debug)]
@@ -26,19 +23,11 @@ pub enum Operation<T> {
     Retain,
 }
 
-#[derive(CairoDeserialize, Clone, Default, Debug, Eq, PartialEq)]
+#[derive(CairoDeserialize, CairoSerialize, Clone, Default, Debug, Eq, PartialEq)]
 pub struct ResourceBounds {
     pub resource: Felt252,
     pub max_amount: u64,
     pub max_price_per_unit: u128,
-}
-
-impl CairoSerialize for ResourceBounds {
-    fn serialize(&self, output: &mut BufferWriter) {
-        self.resource.serialize(output);
-        output.write_felt(self.max_amount.into());
-        output.write_felt(self.max_price_per_unit.into());
-    }
 }
 
 #[derive(Clone, Default, Debug, PartialEq, Eq)]

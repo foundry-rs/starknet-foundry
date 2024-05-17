@@ -36,7 +36,7 @@ use cairo_vm::vm::{
 };
 use conversions::byte_array::ByteArray;
 use conversions::serde::deserialize::{BufferReader, CairoDeserialize};
-use conversions::serde::serialize::{BufferWriter, CairoSerialize};
+use conversions::serde::serialize::CairoSerialize;
 use conversions::{felt252::TryInferFormat, IntoConv};
 use runtime::{
     CheatcodeHandlingResult, EnhancedHintError, ExtendedRuntime, ExtensionLogic,
@@ -468,7 +468,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
     }
 }
 
-#[derive(CairoDeserialize)]
+#[derive(CairoDeserialize, CairoSerialize)]
 struct CairoU256 {
     low: u128,
     high: u128,
@@ -492,28 +492,10 @@ impl CairoU256 {
     }
 }
 
-impl CairoSerialize for CairoU256 {
-    fn serialize(&self, output: &mut BufferWriter) {
-        let low: Felt252 = self.low.into();
-        let high: Felt252 = self.high.into();
-
-        output.write_felt(low);
-        output.write_felt(high);
-    }
-}
-
+#[derive(CairoSerialize)]
 enum SignError {
     InvalidSecretKey,
     HashOutOfRange,
-}
-
-impl CairoSerialize for SignError {
-    fn serialize(&self, output: &mut BufferWriter) {
-        match self {
-            Self::InvalidSecretKey => output.write_felt(0.into()),
-            Self::HashOutOfRange => output.write_felt(1.into()),
-        };
-    }
 }
 
 fn handle_declare_deploy_result<T: CairoSerialize>(

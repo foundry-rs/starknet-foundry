@@ -1,14 +1,11 @@
 use crate as conversions; // trick for CairoDeserialize macro
-use crate::{
-    serde::serialize::{BufferWriter, CairoSerialize, SerializeToFeltVec},
-    string::TryFromHexStr,
-};
+use crate::{serde::serialize::SerializeToFeltVec, string::TryFromHexStr};
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string_ex;
 use cairo_lang_utils::byte_array::{BYTES_IN_WORD, BYTE_ARRAY_MAGIC};
-use cairo_serde_macros::CairoDeserialize;
+use cairo_serde_macros::{CairoDeserialize, CairoSerialize};
 
-#[derive(CairoDeserialize, Clone)]
+#[derive(CairoDeserialize, CairoSerialize, Clone)]
 pub struct ByteArray {
     words: Vec<Felt252>,
     pending_word: Felt252,
@@ -29,15 +26,6 @@ impl From<&str> for ByteArray {
             pending_word,
             pending_word_len,
         }
-    }
-}
-
-impl CairoSerialize for ByteArray {
-    fn serialize(&self, output: &mut BufferWriter) {
-        self.words.serialize(output);
-        self.pending_word.serialize(output);
-
-        output.write_felt(self.pending_word_len.into());
     }
 }
 

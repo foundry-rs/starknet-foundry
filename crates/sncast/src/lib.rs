@@ -25,11 +25,7 @@ use starknet::{
 
 use crate::helpers::constants::{DEFAULT_STATE_FILE_SUFFIX, WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
 use crate::response::errors::SNCastProviderError;
-use cairo_felt::Felt252;
-use conversions::{
-    byte_array::ByteArray,
-    serde::serialize::{BufferWriter, CairoSerialize},
-};
+use conversions::serde::serialize::CairoSerialize;
 use serde::de::DeserializeOwned;
 use shared::rpc::create_rpc_client;
 use starknet::accounts::AccountFactoryError;
@@ -436,7 +432,7 @@ pub fn get_block_id(value: &str) -> Result<BlockId> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, CairoSerialize)]
 pub struct ErrorData {
     pub data: String,
 }
@@ -456,7 +452,7 @@ impl From<ContractErrorData> for ErrorData {
     }
 }
 
-#[derive(Error, Debug)]
+#[derive(Error, Debug, CairoSerialize)]
 pub enum TransactionError {
     #[error("Transaction has been rejected")]
     Rejected,
@@ -464,7 +460,7 @@ pub enum TransactionError {
     Reverted(ErrorData),
 }
 
-#[derive(Error, Debug)]
+#[derive(Error, Debug, CairoSerialize)]
 pub enum WaitForTransactionError {
     #[error(transparent)]
     TransactionError(TransactionError),
@@ -472,34 +468,6 @@ pub enum WaitForTransactionError {
     TimedOut,
     #[error(transparent)]
     ProviderError(#[from] SNCastProviderError),
-}
-
-impl CairoSerialize for WaitForTransactionError {
-    fn serialize(&self, output: &mut BufferWriter) {
-        match self {
-            WaitForTransactionError::TransactionError(err) => {
-                output.write_felt(Felt252::from(0));
-                err.serialize(output);
-            }
-            WaitForTransactionError::TimedOut => output.write_felt(Felt252::from(1)),
-            WaitForTransactionError::ProviderError(err) => {
-                output.write_felt(Felt252::from(2));
-                err.serialize(output);
-            }
-        }
-    }
-}
-
-impl CairoSerialize for TransactionError {
-    fn serialize(&self, output: &mut BufferWriter) {
-        match self {
-            TransactionError::Rejected => output.write_felt(Felt252::from(0)),
-            TransactionError::Reverted(err) => {
-                output.write_felt(Felt252::from(1));
-                ByteArray::from(err.data.as_str()).serialize(output);
-            }
-        }
-    }
 }
 
 pub async fn wait_for_tx(
