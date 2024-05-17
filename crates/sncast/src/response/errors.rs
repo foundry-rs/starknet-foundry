@@ -22,7 +22,7 @@ pub enum StarknetCommandError {
 }
 
 impl SerializeAsFelt252Vec for StarknetCommandError {
-    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
+    fn serialize_into_felt252_vec(&self, output: &mut Vec<Felt252>) {
         match self {
             StarknetCommandError::UnknownError(err) => {
                 output.push(Felt252::from(0));
@@ -63,7 +63,7 @@ pub enum SNCastProviderError {
 }
 
 impl SerializeAsFelt252Vec for SNCastProviderError {
-    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
+    fn serialize_into_felt252_vec(&self, output: &mut Vec<Felt252>) {
         match self {
             SNCastProviderError::StarknetError(err) => {
                 output.push(Felt252::from(0));
@@ -179,7 +179,7 @@ impl From<StarknetError> for SNCastStarknetError {
 }
 
 impl SerializeAsFelt252Vec for SNCastStarknetError {
-    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
+    fn serialize_into_felt252_vec(&self, output: &mut Vec<Felt252>) {
         match self {
             SNCastStarknetError::FailedToReceiveTransaction => output.push(Felt252::from(0)),
             SNCastStarknetError::ContractNotFound => output.push(Felt252::from(1)),

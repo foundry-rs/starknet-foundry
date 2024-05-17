@@ -12,12 +12,9 @@ pub fn try_extract_panic_data(err: &str) -> Option<Vec<Felt252>> {
 
     if let Some(captures) = re_felt_array.captures(err) {
         if let Some(panic_data_match) = captures.get(1) {
-            if panic_data_match.as_str().is_empty() {
-                return Some(vec![]);
-            }
             let panic_data_felts: Vec<Felt252> = panic_data_match
                 .as_str()
-                .split(", ")
+                .split_terminator(", ")
                 .map(|s| Felt252::from_bytes_be(s.as_bytes()))
                 .collect();
 

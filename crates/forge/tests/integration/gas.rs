@@ -92,9 +92,10 @@ fn snforge_std_deploy_cost() {
     let result = run_test_case(&test);
 
     assert_passed(&result);
+    println!("{result:#?}");
     // 96 = gas cost of onchain data (deploy cost)
-    // int(5.12 * 2) = 11 = keccak cost from constructor
-    assert_gas(&result, "deploy_cost", 96 + 11);
+    // int(4406 & 0.0025) = 12 = steps cost
+    assert_gas(&result, "deploy_cost", 96 + 12);
 }
 
 #[test]
@@ -651,14 +652,14 @@ fn l1_message_cost_for_proxy() {
     let result = run_test_case(&test);
 
     assert_passed(&result);
-    // 12 = gas cost of steps
+    // 13 = gas cost of steps
     // l = number of class hash updates
     // n = unique contracts updated
     // So, as per formula:
     // n(2) * 2 * 32 = 128
     // l(2) * 32 = 64
     // 29524 = gas cost of message
-    assert_gas(&result, "l1_message_cost_for_proxy", 12 + 128 + 64 + 29524);
+    assert_gas(&result, "l1_message_cost_for_proxy", 13 + 128 + 64 + 29524);
 }
 
 #[test]

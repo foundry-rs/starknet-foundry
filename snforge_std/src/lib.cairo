@@ -23,6 +23,7 @@ use cheatcodes::storage::load;
 use cheatcodes::storage::map_entry_address;
 
 use cheatcodes::CheatSpan;
+use cheatcodes::ReplaceBytecodeError;
 use cheatcodes::test_address;
 use cheatcodes::test_selector;
 use cheatcodes::mock_call;
