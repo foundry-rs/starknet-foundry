@@ -112,3 +112,4 @@
     * [invoke](appendix/sncast-library/invoke.md)
     * [call](appendix/sncast-library/call.md)
     * [get_nonce](appendix/sncast-library/get_nonce.md)
+    * [errors](appendix/sncast-library/errors.md)

@@ -53,11 +53,11 @@
 
 ### Transaction Version
 
-- [`cheat_transaction_version`](cheatcodes/version.md#cheat_transaction_version) - changes the transaction version for contracts, for a number of calls
-- [`cheat_transaction_version_global`](cheatcodes/version.md#cheat_transaction_version_global) - changes the transaction version for all contracts
-- [`start_cheat_transaction_version`](cheatcodes/version.md#start_cheat_transaction_version) - changes the transaction version for contracts
-- [`stop_cheat_transaction_version`](cheatcodes/version.md#stop_cheat_transaction_version) - cancels the `cheat_transaction_version` / `start_cheat_transaction_version` for contracts
-- [`stop_cheat_transaction_version_global`](cheatcodes/version.md#stop_cheat_transaction_version_global) - cancels the `cheat_transaction_version_global`
+- [`cheat_transaction_version`](cheatcodes/transaction_version.md#cheat_transaction_version) - changes the transaction version for contracts, for a number of calls
+- [`cheat_transaction_version_global`](cheatcodes/transaction_version.md#cheat_transaction_version_global) - changes the transaction version for all contracts
+- [`start_cheat_transaction_version`](cheatcodes/transaction_version.md#start_cheat_transaction_version) - changes the transaction version for contracts
+- [`stop_cheat_transaction_version`](cheatcodes/transaction_version.md#stop_cheat_transaction_version) - cancels the `cheat_transaction_version` / `start_cheat_transaction_version` for contracts
+- [`stop_cheat_transaction_version_global`](cheatcodes/transaction_version.md#stop_cheat_transaction_version_global) - cancels the `cheat_transaction_version_global`
 
 ### Transaction Max Fee
 
