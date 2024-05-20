@@ -68,7 +68,7 @@ impl<'a> ExtensionLogic for CallToBlockifierExtension<'a> {
                     .hint_handler
                     .increment_syscall_count_by(&selector, 1);
 
-                Ok(SyscallHandlingResult::Handled(()))
+                Ok(SyscallHandlingResult::Handled)
             }
             DeprecatedSyscallSelector::LibraryCall => {
                 execute_syscall::<LibraryCallRequest>(vm, extended_runtime)?;
@@ -78,7 +78,7 @@ impl<'a> ExtensionLogic for CallToBlockifierExtension<'a> {
                     .hint_handler
                     .increment_syscall_count_by(&selector, 1);
 
-                Ok(SyscallHandlingResult::Handled(()))
+                Ok(SyscallHandlingResult::Handled)
             }
             _ => Ok(SyscallHandlingResult::Forwarded),
         }

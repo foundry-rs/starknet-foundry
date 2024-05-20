@@ -306,7 +306,7 @@ impl<Extension: ExtensionLogic> ExtendedRuntime<Extension> {
             &vm.get_integer(*self.get_mut_syscall_ptr()).unwrap(),
         ))?;
 
-        if let SyscallHandlingResult::Handled(()) =
+        if let SyscallHandlingResult::Handled =
             self.extension
                 .override_system_call(selector, vm, &mut self.extended_runtime)?
         {
@@ -384,7 +384,7 @@ impl<Extension: ExtensionLogic> ResourceTracker for ExtendedRuntime<Extension> {
 #[derive(Debug)]
 pub enum SyscallHandlingResult {
     Forwarded,
-    Handled(()),
+    Handled,
 }
 
 #[allow(dead_code)]
