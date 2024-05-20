@@ -165,7 +165,7 @@ fn create_func_body(data: &Data, span: &TokenStream) -> TokenStream {
                     };
                 }
             }
- 
+
         }
         // can not determine which variant should be used
         // use enum instead
