@@ -54,7 +54,7 @@ impl CairoDeserialize for bool {
     }
 }
 
-macro_rules! impl_from_reader_for_felt_type {
+macro_rules! impl_deserialize_for_felt_type {
     ($type:ty) => {
         impl CairoDeserialize for $type {
             fn deserialize(reader: &mut BufferReader<'_>) -> BufferReadResult<Self> {
@@ -63,7 +63,7 @@ macro_rules! impl_from_reader_for_felt_type {
         }
     };
 }
-macro_rules! impl_from_reader_for_num_type {
+macro_rules! impl_deserialize_for_num_type {
     ($type:ty) => {
         impl CairoDeserialize for $type {
             fn deserialize(reader: &mut BufferReader<'_>) -> BufferReadResult<Self> {
@@ -77,16 +77,16 @@ macro_rules! impl_from_reader_for_num_type {
     };
 }
 
-impl_from_reader_for_felt_type!(FieldElement);
-impl_from_reader_for_felt_type!(ClassHash);
-impl_from_reader_for_felt_type!(StarkFelt);
-impl_from_reader_for_felt_type!(ContractAddress);
-impl_from_reader_for_felt_type!(Nonce);
-impl_from_reader_for_felt_type!(EntryPointSelector);
+impl_deserialize_for_felt_type!(FieldElement);
+impl_deserialize_for_felt_type!(ClassHash);
+impl_deserialize_for_felt_type!(StarkFelt);
+impl_deserialize_for_felt_type!(ContractAddress);
+impl_deserialize_for_felt_type!(Nonce);
+impl_deserialize_for_felt_type!(EntryPointSelector);
 
-impl_from_reader_for_num_type!(u8);
-impl_from_reader_for_num_type!(u16);
-impl_from_reader_for_num_type!(u32);
-impl_from_reader_for_num_type!(u64);
-impl_from_reader_for_num_type!(u128);
-impl_from_reader_for_num_type!(usize);
+impl_deserialize_for_num_type!(u8);
+impl_deserialize_for_num_type!(u16);
+impl_deserialize_for_num_type!(u32);
+impl_deserialize_for_num_type!(u64);
+impl_deserialize_for_num_type!(u128);
+impl_deserialize_for_num_type!(usize);

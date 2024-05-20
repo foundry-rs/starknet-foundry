@@ -287,7 +287,8 @@ fn handle_cheatcode(input: Span<felt252>) -> Span<felt252> {
     let input = input.slice(1, input.len() - 1);
 
     if first == 1 {
-        let mut arr = array![];
+        // it's in fact core::byte_array::BYTE_ARRAY_MAGIC but it can't be imported here
+        let mut arr = array![0x46a6158a16a947e5916b2a2ca68501a45e93d7110e81aa2d6438b1c57c879a3];
 
         arr.append_span(input);
 

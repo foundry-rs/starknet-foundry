@@ -70,7 +70,7 @@ fn call_trait_on_field(fields: &Fields) -> TokenStream {
     }
 }
 
-// creates code for `CairoDeserialize::from_reader` body
+// creates code for `CairoDeserialize::deserialize` body
 fn create_func_body(data: &Data, span: &TokenStream) -> TokenStream {
     match data {
         Data::Struct(data) => match &data.fields {

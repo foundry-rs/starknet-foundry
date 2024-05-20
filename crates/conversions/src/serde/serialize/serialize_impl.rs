@@ -158,7 +158,7 @@ where
     }
 }
 
-macro_rules! impl_serialize_as_felt252_vec_for_felt_type {
+macro_rules! impl_serialize_for_felt_type {
     ($type:ty) => {
         impl CairoSerialize for $type {
             fn serialize(&self, output: &mut BufferWriter) {
@@ -168,13 +168,11 @@ macro_rules! impl_serialize_as_felt252_vec_for_felt_type {
     };
 }
 
-macro_rules! impl_serialize_as_felt252_vec_for_num_type {
+macro_rules! impl_serialize_for_num_type {
     ($type:ty) => {
         impl CairoSerialize for $type {
             fn serialize(&self, output: &mut BufferWriter) {
-                let felt = Felt252::from(*self);
-
-                felt.serialize(output);
+                Felt252::from(*self).serialize(output);
             }
         }
     };
@@ -197,20 +195,20 @@ macro_rules! impl_serialize_for_tuple {
     };
 }
 
-impl_serialize_as_felt252_vec_for_felt_type!(Felt252);
-impl_serialize_as_felt252_vec_for_felt_type!(FieldElement);
-impl_serialize_as_felt252_vec_for_felt_type!(ClassHash);
-impl_serialize_as_felt252_vec_for_felt_type!(StarkFelt);
-impl_serialize_as_felt252_vec_for_felt_type!(ContractAddress);
-impl_serialize_as_felt252_vec_for_felt_type!(Nonce);
-impl_serialize_as_felt252_vec_for_felt_type!(EntryPointSelector);
+impl_serialize_for_felt_type!(Felt252);
+impl_serialize_for_felt_type!(FieldElement);
+impl_serialize_for_felt_type!(ClassHash);
+impl_serialize_for_felt_type!(StarkFelt);
+impl_serialize_for_felt_type!(ContractAddress);
+impl_serialize_for_felt_type!(Nonce);
+impl_serialize_for_felt_type!(EntryPointSelector);
 
-impl_serialize_as_felt252_vec_for_num_type!(u8);
-impl_serialize_as_felt252_vec_for_num_type!(u16);
-impl_serialize_as_felt252_vec_for_num_type!(u32);
-impl_serialize_as_felt252_vec_for_num_type!(u64);
-impl_serialize_as_felt252_vec_for_num_type!(u128);
-impl_serialize_as_felt252_vec_for_num_type!(usize);
+impl_serialize_for_num_type!(u8);
+impl_serialize_for_num_type!(u16);
+impl_serialize_for_num_type!(u32);
+impl_serialize_for_num_type!(u64);
+impl_serialize_for_num_type!(u128);
+impl_serialize_for_num_type!(usize);
 
 impl_serialize_for_tuple!();
 impl_serialize_for_tuple!(A);
