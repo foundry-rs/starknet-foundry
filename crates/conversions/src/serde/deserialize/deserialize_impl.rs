@@ -50,7 +50,13 @@ where
 
 impl CairoDeserialize for bool {
     fn deserialize(reader: &mut BufferReader<'_>) -> BufferReadResult<Self> {
-        reader.read::<Felt252>().map(|felt| felt == 1.into())
+        let num: usize = reader.read()?;
+
+        match num {
+            0 => Ok(false),
+            1 => Ok(true),
+            _ => Err(BufferReadError::ParseFailed),
+        }
     }
 }
 
