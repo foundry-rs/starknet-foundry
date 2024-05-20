@@ -5,7 +5,7 @@ use crate::{
 use cairo_felt::Felt252;
 use conversions::felt252::SerializeAsFelt252Vec;
 use runtime::FromReader;
-use starknet_api::core::{ContractAddress, EntryPointSelector};
+use starknet_api::core::ContractAddress;
 
 #[derive(FromReader, Clone, Debug)]
 pub struct CheatArguments<T> {
@@ -68,8 +68,6 @@ pub struct ExecutionInfoMock {
     pub block_info: BlockInfoMock,
     pub tx_info: TxInfoMock,
     pub caller_address: CheatStatus<ContractAddress>,
-    pub contract_address: CheatStatus<ContractAddress>,
-    pub entry_point_selector: CheatStatus<EntryPointSelector>,
 }
 
 #[derive(FromReader, Clone, Default, Debug)]
@@ -101,15 +99,11 @@ pub struct ExecutionInfoMockOperations {
     pub block_info: BlockInfoMockOperations,
     pub tx_info: TxInfoMockOperations,
     pub caller_address: Operation<ContractAddress>,
-    pub contract_address: Operation<ContractAddress>,
-    pub entry_point_selector: Operation<EntryPointSelector>,
 }
 
 macro_rules! for_all_fields {
     ($macro:ident!) => {
         $macro!(caller_address);
-        $macro!(contract_address);
-        $macro!(entry_point_selector);
 
         $macro!(block_info.block_number);
         $macro!(block_info.block_timestamp);
@@ -169,7 +163,11 @@ impl CheatnetState {
                         }
                     }
                     Operation::StopGlobal => {
-                        self.global_cheated_execution_info.$($path).+ = CheatStatus::Uncheated
+                        self.global_cheated_execution_info.$($path).+ = CheatStatus::Uncheated;
+
+                        for val in self.cheated_execution_info_contracts.values_mut() {
+                            val.$($path).+ = CheatStatus::Uncheated;
+                        }
                     }
                 };
             };

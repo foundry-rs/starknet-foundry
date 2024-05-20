@@ -269,7 +269,7 @@ fn cheat_sequencer_address_all_stop() {
 
     assert_success(
         test_env.call_contract(&contract_address, "get_sequencer_address", &[]),
-        &[Felt252::from(123)],
+        &[contract_address!(SEQUENCER_ADDRESS).into_()],
     );
 
     let contract_address = test_env.deploy_wrapper(&cheat_sequencer_address_checker, &[]);

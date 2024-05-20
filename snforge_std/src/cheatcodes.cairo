@@ -14,7 +14,7 @@ mod execution_info;
 #[derive(Copy, Drop, Serde, PartialEq, Clone, Debug, Display)]
 enum CheatSpan {
     /// Applies the cheatcode indefinitely, until the cheat is canceled manually (e.g. using
-    /// `stop_warp`).
+    /// `stop_cheat_block_timestamp`).
     Indefinite: (),
     /// Applies the cheatcode for a specified number of calls to the target,
     /// after which the cheat is canceled (or until the cheat is canceled manually).

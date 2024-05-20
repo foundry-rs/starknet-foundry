@@ -228,7 +228,7 @@ fn cheat_block_number_all_stop() {
 
     assert_success(
         test_env.call_contract(&contract_address, "get_block_number", &[]),
-        &[Felt252::from(123)],
+        &[Felt252::from(DEFAULT_BLOCK_NUMBER)],
     );
 
     let contract_address = test_env.deploy_wrapper(&cheat_block_number_checker, &[]);
