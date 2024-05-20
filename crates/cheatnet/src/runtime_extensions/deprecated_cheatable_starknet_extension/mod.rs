@@ -86,7 +86,7 @@ impl<'a> DeprecatedExtensionLogic for DeprecatedCheatableStarknetRuntimeExtensio
                     };
 
                     response.write(vm, &mut syscall_handler.syscall_ptr)?;
-                    Ok(SyscallHandlingResult::Handled(()))
+                    Ok(SyscallHandlingResult::Handled)
                 } else {
                     Ok(SyscallHandlingResult::Forwarded)
                 }
@@ -104,7 +104,7 @@ impl<'a> DeprecatedExtensionLogic for DeprecatedCheatableStarknetRuntimeExtensio
                     };
 
                     response.write(vm, &mut syscall_handler.syscall_ptr)?;
-                    Ok(SyscallHandlingResult::Handled(()))
+                    Ok(SyscallHandlingResult::Handled)
                 } else {
                     Ok(SyscallHandlingResult::Forwarded)
                 }
@@ -122,7 +122,7 @@ impl<'a> DeprecatedExtensionLogic for DeprecatedCheatableStarknetRuntimeExtensio
                     };
 
                     response.write(vm, &mut syscall_handler.syscall_ptr)?;
-                    Ok(SyscallHandlingResult::Handled(()))
+                    Ok(SyscallHandlingResult::Handled)
                 } else {
                     Ok(SyscallHandlingResult::Forwarded)
                 }
@@ -143,7 +143,7 @@ impl<'a> DeprecatedExtensionLogic for DeprecatedCheatableStarknetRuntimeExtensio
 
                     response.write(vm, &mut syscall_handler.syscall_ptr)?;
 
-                    Ok(SyscallHandlingResult::Handled(()))
+                    Ok(SyscallHandlingResult::Handled)
                 } else {
                     Ok(SyscallHandlingResult::Forwarded)
                 }
@@ -153,28 +153,28 @@ impl<'a> DeprecatedExtensionLogic for DeprecatedCheatableStarknetRuntimeExtensio
                 increment_syscall_count(syscall_handler, selector);
 
                 self.execute_syscall(vm, delegate_call, syscall_handler)?;
-                Ok(SyscallHandlingResult::Handled(()))
+                Ok(SyscallHandlingResult::Handled)
             }
             DeprecatedSyscallSelector::LibraryCall => {
                 syscall_handler.syscall_ptr += 1;
                 increment_syscall_count(syscall_handler, selector);
 
                 self.execute_syscall(vm, library_call, syscall_handler)?;
-                Ok(SyscallHandlingResult::Handled(()))
+                Ok(SyscallHandlingResult::Handled)
             }
             DeprecatedSyscallSelector::CallContract => {
                 syscall_handler.syscall_ptr += 1;
                 increment_syscall_count(syscall_handler, selector);
 
                 self.execute_syscall(vm, call_contract, syscall_handler)?;
-                Ok(SyscallHandlingResult::Handled(()))
+                Ok(SyscallHandlingResult::Handled)
             }
             DeprecatedSyscallSelector::Deploy => {
                 syscall_handler.syscall_ptr += 1;
                 increment_syscall_count(syscall_handler, selector);
 
                 self.execute_syscall(vm, deploy, syscall_handler)?;
-                Ok(SyscallHandlingResult::Handled(()))
+                Ok(SyscallHandlingResult::Handled)
             }
             _ => Ok(SyscallHandlingResult::Forwarded),
         }

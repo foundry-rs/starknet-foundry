@@ -152,7 +152,7 @@ impl<Extension: DeprecatedExtensionLogic> DeprecatedExtendedRuntime<Extension> {
             &initial_syscall_ptr,
         )?)?;
 
-        if let SyscallHandlingResult::Handled(()) =
+        if let SyscallHandlingResult::Handled =
             self.extension
                 .override_system_call(selector, vm, &mut self.extended_runtime)?
         {
