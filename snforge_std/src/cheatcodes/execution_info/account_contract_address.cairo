@@ -48,7 +48,9 @@ fn stop_cheat_account_contract_address_global() {
 fn start_cheat_account_contract_address(
     contract_address: ContractAddress, account_contract_address: ContractAddress
 ) {
-    cheat_account_contract_address(contract_address, account_contract_address, CheatSpan::Indefinite);
+    cheat_account_contract_address(
+        contract_address, account_contract_address, CheatSpan::Indefinite
+    );
 }
 
 /// Cancels the `cheat_account_contract_address` / `start_cheat_account_contract_address` for the
