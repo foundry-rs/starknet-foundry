@@ -124,7 +124,7 @@ By using cheatcodes, we can change various properties of transaction info, block
 For example, we can use the [`start_cheat_caller_address`](../appendix/cheatcodes/caller_address.md) cheatcode to change the caller
 address, so it passes our validation.
 
-### Pranking the Address
+### Cheating an Address
 
 ```rust
 use snforge_std::{ declare, ContractClassTrait, start_cheat_caller_address };
@@ -159,7 +159,7 @@ Running 1 test(s) from tests/
 Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ```
 
-### Canceling the Prank
+### Canceling the Cheat
 
 Most cheatcodes come with corresponding `start_` and `stop_` functions that can be used to start and stop the state
 change.
@@ -200,7 +200,7 @@ Failures:
     tests::call_and_invoke
 ```
 
-### Pranking the Constructor
+### Cheating the Constructor
 
 Most of the cheatcodes like `cheat_caller_address`, `mock_call`, `cheat_block_timestamp`, `cheat_block_number`, `elect` do work in the constructor of the contracts.
 
@@ -276,7 +276,7 @@ fn call_and_invoke() {
     // requires the caller_address to be 123
     let cheat_caller_addressed_address: ContractAddress = 123.try_into().unwrap();
 
-    // Prank the contract_address for a span of 2 target calls (here, calls to contract_address)
+    // Change the caller address for the contract_address for a span of 2 target calls (here, calls to contract_address)
     cheat_caller_address(contract_address, cheat_caller_addressed_address, CheatSpan::TargetCalls(2));
 
     // Call #1 should succeed

@@ -16,3 +16,8 @@ runnable = false
 [output.html.fold]
 enable = true
 level = 0
+
+[output.linkcheck]
+follow-web-links = true
+warning-policy = "error"
+traverse-parent-directories = false
