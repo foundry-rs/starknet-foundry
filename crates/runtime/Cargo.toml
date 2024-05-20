@@ -7,7 +7,6 @@ edition.workspace = true
 testing = []
 
 [dependencies]
-runtime-macros = { path = "./macros" }
 indoc.workspace = true
 anyhow.workspace = true
 conversions.workspace = true

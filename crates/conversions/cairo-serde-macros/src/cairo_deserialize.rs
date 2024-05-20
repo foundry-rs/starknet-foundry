@@ -3,10 +3,9 @@ use quote::{quote, quote_spanned};
 use syn::spanned::Spanned;
 use syn::{parse_macro_input, parse_quote, Data, DeriveInput, Fields, GenericParam, Generics};
 
-// works by calling `FromReader::from_reader(reader)` on all fields of struct
+// works by calling `CairoDeserialize::deserialize(reader)` on all fields of struct
 // for enums by reading 1 felt that is then matched on to determine which variant should be used
-#[proc_macro_derive(FromReader)]
-pub fn derive_from_reader(item: proc_macro::TokenStream) -> proc_macro::TokenStream {
+pub fn derive_deserialize(item: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let span = item.clone().into();
     let mut input = parse_macro_input!(item as DeriveInput);
 
@@ -21,8 +20,8 @@ pub fn derive_from_reader(item: proc_macro::TokenStream) -> proc_macro::TokenStr
     let body = create_func_body(data, &span);
 
     quote! {
-        impl #impl_generics runtime::utils::from_reader::FromReader for #name #ty_generics #where_clause {
-            fn from_reader(reader: &mut runtime::utils::buffer_reader::BufferReader<'_>) -> runtime::utils::buffer_reader::BufferReadResult<Self> {
+        impl #impl_generics conversions::serde::deserialize::CairoDeserialize for #name #ty_generics #where_clause {
+            fn deserialize(reader: &mut conversions::serde::deserialize::BufferReader<'_>) -> conversions::serde::deserialize::BufferReadResult<Self> {
                 #body
             }
         }
@@ -33,9 +32,9 @@ pub fn derive_from_reader(item: proc_macro::TokenStream) -> proc_macro::TokenStr
 fn add_trait_bounds(generics: &mut Generics) {
     for param in &mut generics.params {
         if let GenericParam::Type(type_param) = param {
-            type_param
-                .bounds
-                .push(parse_quote!(runtime::utils::from_reader::FromReader));
+            type_param.bounds.push(parse_quote!(
+                conversions::serde::deserialize::CairoDeserialize
+            ));
         }
     }
 }
@@ -48,7 +47,7 @@ fn call_trait_on_field(fields: &Fields) -> TokenStream {
                 let name = &f.ident;
 
                 quote_spanned! {f.span() =>
-                    #name: runtime::utils::from_reader::FromReader::from_reader(reader)?,
+                    #name: conversions::serde::deserialize::CairoDeserialize::deserialize(reader)?,
                 }
             });
 
@@ -59,7 +58,7 @@ fn call_trait_on_field(fields: &Fields) -> TokenStream {
         Fields::Unnamed(fields) => {
             let recurse = fields.unnamed.iter().map(|f| {
                 quote_spanned! {f.span()=>
-                    runtime::utils::from_reader::FromReader::from_reader(reader)?
+                    conversions::serde::deserialize::CairoDeserialize::deserialize(reader)?
                 }
             });
 
@@ -71,7 +70,7 @@ fn call_trait_on_field(fields: &Fields) -> TokenStream {
     }
 }
 
-// creates code for `FromReader::from_reader` body
+// creates code for `CairoDeserialize::deserialize` body
 fn create_func_body(data: &Data, span: &TokenStream) -> TokenStream {
     match data {
         Data::Struct(data) => match &data.fields {
@@ -104,11 +103,11 @@ fn create_func_body(data: &Data, span: &TokenStream) -> TokenStream {
             quote! {
                 let variant: cairo_felt::Felt252 = reader.read()?;
                 let variant = num_traits::cast::ToPrimitive::to_usize(&variant)
-                    .ok_or(runtime::utils::buffer_reader::BufferReadError::ParseFailed)?;
+                    .ok_or(conversions::serde::deserialize::BufferReadError::ParseFailed)?;
 
                 let this = match variant {
                     #(#arms,)*
-                    _ => Result::Err(runtime::utils::buffer_reader::BufferReadError::ParseFailed)?,
+                    _ => Result::Err(conversions::serde::deserialize::BufferReadError::ParseFailed)?,
                 };
 
                 Result::Ok(this)
@@ -118,7 +117,7 @@ fn create_func_body(data: &Data, span: &TokenStream) -> TokenStream {
         // use enum instead
         Data::Union(_) => syn::Error::new_spanned(
             span,
-            "runtime::utils::from_reader::FromReader can be derived only on structs and enums",
+            "conversions::serde::deserialize::CairoDeserialize can be derived only on structs and enums",
         )
         .into_compile_error(),
     }

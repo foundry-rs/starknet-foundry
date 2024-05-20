@@ -1100,6 +1100,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "cairo-serde-macros"
+version = "1.0.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.60",
+]
+
+[[package]]
 name = "cairo-vm"
 version = "0.9.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1358,6 +1367,7 @@ dependencies = [
  "cairo-lang-runner",
  "cairo-lang-starknet",
  "cairo-lang-utils",
+ "cairo-serde-macros",
  "cairo-vm",
  "ctor",
  "indoc",
@@ -3910,21 +3920,11 @@ dependencies = [
  "num-bigint",
  "num-traits 0.2.18",
  "once_cell",
- "runtime-macros",
  "serde",
  "serde_json",
  "starknet",
  "starknet_api",
  "thiserror",
-]
-
-[[package]]
-name = "runtime-macros"
-version = "1.0.0"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.60",
 ]
 
 [[package]]

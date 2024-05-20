@@ -1,5 +1,5 @@
 [package]
-name = "runtime-macros"
+name = "cairo-serde-macros"
 version = "1.0.0"
 edition.workspace = true
 
