@@ -30,7 +30,7 @@ fn cheat_caller_address_global(caller_address: ContractAddress) {
     cheat_execution_info(execution_info);
 }
 
-/// Cancels the `cheat_caller_address_global`
+/// Cancels the `cheat_caller_address_global`.
 fn stop_cheat_caller_address_global() {
     let mut execution_info: ExecutionInfoMock = Default::default();
 

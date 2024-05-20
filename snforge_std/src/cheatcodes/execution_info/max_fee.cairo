@@ -27,7 +27,7 @@ fn cheat_max_fee_global(max_fee: u128) {
     cheat_execution_info(execution_info);
 }
 
-/// Cancels the `cheat_max_fee_global`
+/// Cancels the `cheat_max_fee_global`.
 fn stop_cheat_max_fee_global() {
     let mut execution_info: ExecutionInfoMock = Default::default();
 

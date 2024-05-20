@@ -26,7 +26,7 @@ fn cheat_nonce_global(nonce: felt252) {
     cheat_execution_info(execution_info);
 }
 
-/// Cancels the `cheat_nonce_global`
+/// Cancels the `cheat_nonce_global`.
 fn stop_cheat_nonce_global() {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
