@@ -284,15 +284,15 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 Ok(CheatcodeHandlingResult::Handled(vec![Felt252::from(id)]))
             }
             "fetch_events" => {
-                let id = &input_reader.read()?;
-                let (emitted_events_len, serialized_events) = extended_runtime
+                let id = input_reader.read()?;
+
+                let events = extended_runtime
                     .extended_runtime
                     .extension
                     .cheatnet_state
-                    .fetch_events(id);
-                let mut result = vec![Felt252::from(emitted_events_len)];
-                result.extend(serialized_events);
-                Ok(CheatcodeHandlingResult::Handled(result))
+                    .fetch_events(&id);
+
+                Ok(CheatcodeHandlingResult::from_serializable(events))
             }
             "generate_stark_keys" => {
                 let key_pair = SigningKey::from_random();
