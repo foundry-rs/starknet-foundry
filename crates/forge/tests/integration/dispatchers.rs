@@ -217,7 +217,7 @@ fn handling_bytearray_based_errors() {
             r#"
         use starknet::ContractAddress;
         use snforge_std::{ declare, ContractClassTrait };
-        use snforge_std::errors::{ SyscallResultStringErrorTrait, PanicDataOrString };
+        use snforge_std::byte_array::try_deserialize_bytearray_error;
 
         #[starknet::interface]
         trait IHelloStarknet<TContractState> {
@@ -231,18 +231,14 @@ fn handling_bytearray_based_errors() {
             let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
             let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
         
-            match safe_dispatcher.do_a_panic_with_bytearray().map_error_to_string() {
+            match safe_dispatcher.do_a_panic_with_bytearray() {
                 Result::Ok(_) => panic_with_felt252('shouldve panicked'),
-                Result::Err(x) => {
-                        match x {
-                            PanicDataOrString::PanicData(_) => panic_with_felt252('wrong format'),
-                            PanicDataOrString::String(str) => {
-                                assert(
-                                    str == "This is a very long\n and multiline message that is certain to fill the buffer", 
-                                    'wrong string received'
-                                );
-                        }
-                    }
+                Result::Err(panic_data) => {
+                    let str_err = try_deserialize_bytearray_error(panic_data).expect('wrong format');
+                    assert(
+                        str_err == "This is a very long\n and multiline message that is certain to fill the buffer", 
+                        'wrong string received'
+                    );
                 }
             };
         }
