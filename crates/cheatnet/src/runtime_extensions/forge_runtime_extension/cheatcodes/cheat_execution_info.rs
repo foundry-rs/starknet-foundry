@@ -4,7 +4,7 @@ use crate::{
 };
 use cairo_felt::Felt252;
 use conversions::serde::{deserialize::CairoDeserialize, serialize::CairoSerialize};
-use starknet_api::core::{ContractAddress, EntryPointSelector};
+use starknet_api::core::ContractAddress;
 
 #[derive(CairoDeserialize, Clone, Debug)]
 pub struct CheatArguments<T> {
