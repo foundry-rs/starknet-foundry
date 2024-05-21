@@ -53,6 +53,8 @@ fn cheat_caller_address() {
                 let target_caller_address: felt252 = 123;
                 let target_caller_address: ContractAddress = target_caller_address.try_into().unwrap();
 
+                let old_caller_address = dispatcher.get_caller_address();
+
                 cheat_caller_address_global(target_caller_address);
 
                 let new_caller_address = dispatcher.get_caller_address();
@@ -61,7 +63,7 @@ fn cheat_caller_address() {
                 stop_cheat_caller_address_global();
 
                 let new_caller_address = dispatcher.get_caller_address();
-                assert(new_caller_address == 123, 'Wrong caller address');
+                assert(new_caller_address == old_caller_address, 'Wrong caller address');
             }
 
             #[test]

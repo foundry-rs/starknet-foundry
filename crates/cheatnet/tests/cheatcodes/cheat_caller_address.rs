@@ -212,7 +212,7 @@ fn cheat_caller_address_all() {
 
     assert_success(
         test_env.call_contract(&contract_address, "get_caller_address", &[]),
-        &[Felt252::from(123)],
+        &[contract_address!(TEST_ADDRESS).into_()],
     );
 
     let contract_address = test_env.deploy_wrapper(&cheat_caller_address_checker, &[]);

@@ -234,7 +234,7 @@ fn cheat_block_timestamp_all_stop() {
 
     assert_success(
         test_env.call_contract(&contract_address, "get_block_timestamp", &[]),
-        &[Felt252::from(123)],
+        &[Felt252::from(DEFAULT_BLOCK_TIMESTAMP)],
     );
 
     let contract_address = test_env.deploy_wrapper(&cheat_block_timestamp_checker, &[]);

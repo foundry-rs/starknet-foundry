@@ -478,9 +478,7 @@ fn cheat_transaction_hash_all_stop() {
     let tx_info_before = test_env.get_tx_info(&contract_address);
 
     let transaction_hash = Felt252::from(123);
-    let mut expected_tx_info = tx_info_before.clone();
-
-    expected_tx_info.transaction_hash = transaction_hash.clone();
+    let expected_tx_info = tx_info_before.clone();
 
     test_env.start_cheat_transaction_hash_global(transaction_hash);
 
@@ -504,8 +502,8 @@ fn cheat_transaction_hash_multiple() {
     let tx_info_before_2 = test_env.get_tx_info(&contract_address_2);
 
     let transaction_hash = Felt252::from(123);
-    let mut expected_tx_info_1 = tx_info_before_1;
-    let mut expected_tx_info_2 = tx_info_before_2;
+    let mut expected_tx_info_1 = tx_info_before_1.clone();
+    let mut expected_tx_info_2 = tx_info_before_2.clone();
 
     expected_tx_info_1.transaction_hash = transaction_hash.clone();
 
@@ -519,8 +517,8 @@ fn cheat_transaction_hash_multiple() {
 
     test_env.stop_cheat_transaction_hash_global();
 
-    test_env.assert_tx_info(&contract_address_1, &expected_tx_info_1);
-    test_env.assert_tx_info(&contract_address_2, &expected_tx_info_2);
+    test_env.assert_tx_info(&contract_address_1, &tx_info_before_1);
+    test_env.assert_tx_info(&contract_address_2, &tx_info_before_2);
 }
 
 #[test]

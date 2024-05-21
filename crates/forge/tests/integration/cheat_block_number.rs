@@ -80,6 +80,9 @@ fn cheat_block_number_basic() {
                 let cheat_block_number_checker1 = ICheatBlockNumberCheckerDispatcher { contract_address: contract_address1 };
                 let cheat_block_number_checker2 = ICheatBlockNumberCheckerDispatcher { contract_address: contract_address2 };
 
+                let old_block_number1 = cheat_block_number_checker1.get_block_number();
+                let old_block_number2 = cheat_block_number_checker2.get_block_number();
+
                 cheat_block_number_global(123);
 
                 let new_block_number1 = cheat_block_number_checker1.get_block_number();
@@ -93,8 +96,8 @@ fn cheat_block_number_basic() {
                 let new_block_number1 = cheat_block_number_checker1.get_block_number();
                 let new_block_number2 = cheat_block_number_checker2.get_block_number();
 
-                assert(new_block_number1 == 123, 'CheatBlockNumber not stopped #1');
-                assert(new_block_number2 == 123, 'CheatBlockNumber not stopped #2');
+                assert(new_block_number1 == old_block_number1, 'CheatBlockNumber not stopped #1');
+                assert(new_block_number2 == old_block_number2, 'CheatBlockNumber not stopped #2');
             }
 
             #[test]

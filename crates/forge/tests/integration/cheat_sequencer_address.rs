@@ -82,6 +82,9 @@ fn cheat_sequencer_address_basic() {
                 let cheat_sequencer_address_checker1 = ICheatSequencerAddressCheckerDispatcher { contract_address: contract_address1 };
                 let cheat_sequencer_address_checker2 = ICheatSequencerAddressCheckerDispatcher { contract_address: contract_address2 };
 
+                let old_seq_addr1 = cheat_sequencer_address_checker1.get_sequencer_address();
+                let old_seq_addr2 = cheat_sequencer_address_checker2.get_sequencer_address();
+
                 cheat_sequencer_address_global(123.try_into().unwrap());
 
                 let new_seq_addr1 = cheat_sequencer_address_checker1.get_sequencer_address();
@@ -95,8 +98,8 @@ fn cheat_sequencer_address_basic() {
                 let new_seq_addr1 = cheat_sequencer_address_checker1.get_sequencer_address();
                 let new_seq_addr2 = cheat_sequencer_address_checker2.get_sequencer_address();
 
-                assert(new_seq_addr1 == 123.try_into().unwrap(), 'Wrong seq addr #1');
-                assert(new_seq_addr2 == 123.try_into().unwrap(), 'Wrong seq addr #2');
+                assert(new_seq_addr1 == old_seq_addr1, 'Wrong seq addr #1');
+                assert(new_seq_addr2 == old_seq_addr2, 'Wrong seq addr #2');
             }
 
             #[test]
