@@ -1,20 +1,12 @@
-use cairo_felt::Felt252;
 use camino::Utf8PathBuf;
-use conversions::felt252::SerializeAsFelt252Vec;
-use conversions::FromConv;
+use conversions::serde::serialize::CairoSerialize;
 use serde::{Deserialize, Serialize, Serializer};
 use starknet::core::types::FieldElement;
 
 pub struct Decimal(pub u64);
 
-#[derive(Clone, Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, CairoSerialize, PartialEq)]
 pub struct Felt(pub FieldElement);
-
-impl SerializeAsFelt252Vec for Felt {
-    fn serialize_into_felt252_vec(&self, output: &mut Vec<Felt252>) {
-        self.0.serialize_into_felt252_vec(output);
-    }
-}
 
 impl Serialize for Decimal {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -45,61 +37,31 @@ where
 
 pub trait CommandResponse: Serialize {}
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, CairoSerialize, Clone)]
 pub struct CallResponse {
     pub response: Vec<Felt>,
 }
 impl CommandResponse for CallResponse {}
 
-impl SerializeAsFelt252Vec for CallResponse {
-    fn serialize_into_felt252_vec(&self, output: &mut Vec<Felt252>) {
-        self.response.serialize_into_felt252_vec(output);
-    }
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, CairoSerialize, Clone, Debug, PartialEq)]
 pub struct InvokeResponse {
     pub transaction_hash: Felt,
 }
 impl CommandResponse for InvokeResponse {}
 
-impl SerializeAsFelt252Vec for InvokeResponse {
-    fn serialize_into_felt252_vec(&self, output: &mut Vec<Felt252>) {
-        self.transaction_hash.serialize_into_felt252_vec(output);
-    }
-}
-
-#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
 pub struct DeployResponse {
     pub contract_address: Felt,
     pub transaction_hash: Felt,
 }
 impl CommandResponse for DeployResponse {}
 
-impl SerializeAsFelt252Vec for DeployResponse {
-    fn serialize_into_felt252_vec(&self, output: &mut Vec<Felt252>) {
-        output.extend([
-            Felt252::from_(self.contract_address.0),
-            Felt252::from_(self.transaction_hash.0),
-        ]);
-    }
-}
-
-#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
 pub struct DeclareResponse {
     pub class_hash: Felt,
     pub transaction_hash: Felt,
 }
 impl CommandResponse for DeclareResponse {}
-
-impl SerializeAsFelt252Vec for DeclareResponse {
-    fn serialize_into_felt252_vec(&self, output: &mut Vec<Felt252>) {
-        output.extend([
-            Felt252::from_(self.class_hash.0),
-            Felt252::from_(self.transaction_hash.0),
-        ]);
-    }
-}
 
 #[derive(Serialize)]
 pub struct AccountCreateResponse {

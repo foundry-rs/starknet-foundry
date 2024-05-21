@@ -241,8 +241,13 @@ fn warn_if_snforge_std_not_compatible(scarb_metadata: &Metadata) -> Result<()> {
     Ok(())
 }
 
+enum ExitStatus {
+    Success,
+    Failure,
+}
+
 #[allow(clippy::too_many_lines)]
-fn test_workspace(args: TestArgs) -> Result<bool> {
+fn test_workspace(args: TestArgs) -> Result<ExitStatus> {
     match args.color {
         ColorOption::Always => env::set_var("CLICOLOR_FORCE", "1"),
         ColorOption::Never => env::set_var("CLICOLOR", "0"),
@@ -350,11 +355,14 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
 
     pretty_printing::print_failures(&all_failed_tests);
 
-    Ok(all_failed_tests.is_empty())
+    Ok(if all_failed_tests.is_empty() {
+        ExitStatus::Success
+    } else {
+        ExitStatus::Failure
+    })
 }
 
-#[allow(clippy::too_many_lines)]
-fn main_execution() -> Result<bool> {
+fn main_execution() -> Result<ExitStatus> {
     let cli = Cli::parse();
 
     ScarbCommand::new().ensure_available()?;
@@ -363,11 +371,11 @@ fn main_execution() -> Result<bool> {
     match cli.subcommand {
         ForgeSubcommand::Init { name } => {
             init::run(name.as_str())?;
-            Ok(true)
+            Ok(ExitStatus::Success)
         }
         ForgeSubcommand::CleanCache {} => {
             clean_cache()?;
-            Ok(true)
+            Ok(ExitStatus::Success)
         }
         ForgeSubcommand::Test { args } => test_workspace(args),
     }
@@ -375,8 +383,8 @@ fn main_execution() -> Result<bool> {
 
 fn main() {
     match main_execution() {
-        Ok(true) => std::process::exit(0),
-        Ok(false) => std::process::exit(1),
+        Ok(ExitStatus::Success) => std::process::exit(0),
+        Ok(ExitStatus::Failure) => std::process::exit(1),
         Err(error) => {
             pretty_printing::print_error_message(&error);
             std::process::exit(2);
