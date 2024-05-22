@@ -19,6 +19,7 @@ mod paymaster_data;
 mod nonce_data_availability_mode;
 mod fee_data_availability_mode;
 mod account_deployment_data;
+mod account_contract_address;
 
 
 #[derive(Serde, Drop, Copy)]
