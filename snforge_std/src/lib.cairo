@@ -117,6 +117,11 @@ use cheatcodes::execution_info::account_deployment_data::cheat_account_deploymen
 use cheatcodes::execution_info::account_deployment_data::stop_cheat_account_deployment_data;
 use cheatcodes::execution_info::account_deployment_data::stop_cheat_account_deployment_data_global;
 use cheatcodes::execution_info::account_deployment_data::start_cheat_account_deployment_data;
+use cheatcodes::execution_info::account_contract_address::cheat_account_contract_address;
+use cheatcodes::execution_info::account_contract_address::cheat_account_contract_address_global;
+use cheatcodes::execution_info::account_contract_address::stop_cheat_account_contract_address;
+use cheatcodes::execution_info::account_contract_address::stop_cheat_account_contract_address_global;
+use cheatcodes::execution_info::account_contract_address::start_cheat_account_contract_address;
 
 
 mod fs;
