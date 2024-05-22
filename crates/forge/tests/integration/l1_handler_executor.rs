@@ -25,7 +25,6 @@ fn l1_handler_execute() {
             use array::{ArrayTrait, SpanTrait};
             use core::result::ResultTrait;
             use snforge_std::{declare, ContractClassTrait, L1Handler, L1HandlerTrait};
-            use snforge_std::errors::{ SyscallResultStringErrorTrait, PanicDataOrString };
             use starknet::contract_address_const;
 
             #[test]
