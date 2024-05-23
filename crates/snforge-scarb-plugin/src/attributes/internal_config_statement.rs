@@ -13,7 +13,7 @@ impl AttributeInfo for InternalConfigStatementCollector {
 }
 
 // we need to insert empty config statement in case there was no config used
-// so function will be stoped in configuration mode run
+// so function will be stopped in configuration mode run
 pub fn internal_config_statement(item: TokenStream) -> ProcMacroResult {
     let parse_and_assert_result = parse::<InternalConfigStatementCollector>(&item.to_string())
         .and_then(|(db, func)| {
