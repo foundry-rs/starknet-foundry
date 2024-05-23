@@ -6,7 +6,7 @@ use forge::CAIRO_EDITION;
 use scarb_api::ScarbCommand;
 use std::fs::{self, OpenOptions};
 use std::io::Write;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use toml_edit::{value, ArrayOfTables, DocumentMut, Item, Table};
 
 static TEMPLATE: Dir = include_dir!("starknet_forge_template");
@@ -49,10 +49,18 @@ fn update_config(config_path: &Path) -> Result<()> {
 
     add_target_to_toml(&mut document);
     set_cairo_edition(&mut document, CAIRO_EDITION);
+    add_test_script(&mut document);
 
     fs::write(config_path, document.to_string())?;
 
     Ok(())
+}
+
+fn add_test_script(document: &mut DocumentMut) {
+    let mut test = Table::new();
+
+    test.insert("test", value("snforge test"));
+    document.insert("scripts", Item::Table(test));
 }
 
 fn add_target_to_toml(document: &mut DocumentMut) {
@@ -81,19 +89,39 @@ fn extend_gitignore(path: &Path) -> Result<()> {
     Ok(())
 }
 
+trait ScarbCommandExt {
+    fn maybe_set_scarb_path(&mut self, path: Option<impl Into<PathBuf>>) -> &mut Self;
+}
+
+impl ScarbCommandExt for ScarbCommand {
+    fn maybe_set_scarb_path(&mut self, path: Option<impl Into<PathBuf>>) -> &mut Self {
+        if let Some(path) = path {
+            self.scarb_path(path);
+        }
+        self
+    }
+}
+
 pub fn run(project_name: &str) -> Result<()> {
     let project_path = std::env::current_dir()?.join(project_name);
 
-    ScarbCommand::new_with_stdio()
-        .current_dir(std::env::current_dir().context("Failed to get current directory")?)
-        .arg("new")
-        .arg(&project_path)
-        .run()
-        .context("Failed to initialize a new project")?;
+    let scarb = std::env::var("SCARB").ok();
+
+    // if there is no Scarb.toml run `scarb new`
+    if !project_path.join("Scarb.toml").is_file() {
+        ScarbCommand::new_with_stdio()
+            .maybe_set_scarb_path(scarb.clone())
+            .current_dir(std::env::current_dir().context("Failed to get current directory")?)
+            .arg("new")
+            .arg(&project_path)
+            .run()
+            .context("Failed to initialize a new project")?;
+    }
 
     let version = env!("CARGO_PKG_VERSION");
 
     ScarbCommand::new_with_stdio()
+        .maybe_set_scarb_path(scarb.clone())
         .current_dir(&project_path)
         .offline()
         .arg("add")
@@ -107,7 +135,9 @@ pub fn run(project_name: &str) -> Result<()> {
         .context("Failed to add snforge_std")?;
 
     let cairo_version = ScarbCommand::version().run()?.cairo;
+
     ScarbCommand::new_with_stdio()
+        .maybe_set_scarb_path(scarb)
         .current_dir(&project_path)
         .offline()
         .arg("add")

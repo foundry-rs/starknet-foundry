@@ -55,7 +55,7 @@ fn simple_syscalls() {
         use snforge_std::{ declare, ContractClassTrait, test_address };
 
         #[starknet::interface]
-        trait ISpoofChecker<TContractState> {
+        trait ICheatTxInfoChecker<TContractState> {
             fn get_tx_hash(ref self: TContractState) -> felt252;
             fn get_nonce(ref self: TContractState) -> felt252;
             fn get_account_contract_address(ref self: TContractState) -> ContractAddress;
@@ -65,17 +65,17 @@ fn simple_syscalls() {
             fn get_chain_id(ref self: TContractState) -> felt252;
         }
         #[starknet::interface]
-        trait IRollChecker<TContractState> {
+        trait ICheatBlockNumberChecker<TContractState> {
             fn get_block_number(ref self: TContractState) -> u64;
         }
 
         #[starknet::interface]
-        trait IWarpChecker<TContractState> {
+        trait ICheatBlockTimestampChecker<TContractState> {
             fn get_block_timestamp(ref self: TContractState) -> u64;
         }
 
         #[starknet::interface]
-        trait IElectChecker<TContractState> {
+        trait ICheatSequencerAddressChecker<TContractState> {
             fn get_sequencer_address(ref self: TContractState) -> ContractAddress;
         }
 
@@ -89,25 +89,25 @@ fn simple_syscalls() {
 
             let block_info = exec_info.block_info.unbox();
 
-            let contract_roll = declare("RollChecker").unwrap();
-            let (contract_address_roll, _) = contract_roll.deploy(@ArrayTrait::new()).unwrap();
-            let dispatcher_roll = IRollCheckerDispatcher { contract_address: contract_address_roll };
+            let contract_cheat_block_number = declare("CheatBlockNumberChecker").unwrap();
+            let (contract_address_cheat_block_number, _) = contract_cheat_block_number.deploy(@ArrayTrait::new()).unwrap();
+            let dispatcher_cheat_block_number = ICheatBlockNumberCheckerDispatcher { contract_address: contract_address_cheat_block_number };
 
-            let contract_warp = declare("WarpChecker").unwrap();
-            let (contract_address_warp, _) = contract_warp.deploy(@ArrayTrait::new()).unwrap();
-            let dispatcher_warp = IWarpCheckerDispatcher { contract_address: contract_address_warp };
+            let contract_cheat_block_timestamp = declare("CheatBlockTimestampChecker").unwrap();
+            let (contract_address_cheat_block_timestamp, _) = contract_cheat_block_timestamp.deploy(@ArrayTrait::new()).unwrap();
+            let dispatcher_cheat_block_timestamp = ICheatBlockTimestampCheckerDispatcher { contract_address: contract_address_cheat_block_timestamp };
             
-            let contract_elect = declare("ElectChecker").unwrap();
-            let (contract_address_elect, _) = contract_elect.deploy(@ArrayTrait::new()).unwrap();
-            let dispatcher_elect = IElectCheckerDispatcher { contract_address: contract_address_elect };
+            let contract_cheat_sequencer_address = declare("CheatSequencerAddressChecker").unwrap();
+            let (contract_address_cheat_sequencer_address, _) = contract_cheat_sequencer_address.deploy(@ArrayTrait::new()).unwrap();
+            let dispatcher_cheat_sequencer_address = ICheatSequencerAddressCheckerDispatcher { contract_address: contract_address_cheat_sequencer_address };
 
-            assert(dispatcher_roll.get_block_number() == block_info.block_number, 'Invalid block number');
-            assert(dispatcher_warp.get_block_timestamp() == block_info.block_timestamp, 'Invalid block timestamp');
-            assert(dispatcher_elect.get_sequencer_address() == block_info.sequencer_address, 'Invalid sequencer address');
+            assert(dispatcher_cheat_block_number.get_block_number() == block_info.block_number, 'Invalid block number');
+            assert(dispatcher_cheat_block_timestamp.get_block_timestamp() == block_info.block_timestamp, 'Invalid block timestamp');
+            assert(dispatcher_cheat_sequencer_address.get_sequencer_address() == block_info.sequencer_address, 'Invalid sequencer address');
 
-            let contract = declare("SpoofChecker").unwrap();
+            let contract = declare("CheatTxInfoChecker").unwrap();
             let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
-            let dispatcher = ISpoofCheckerDispatcher { contract_address };
+            let dispatcher = ICheatTxInfoCheckerDispatcher { contract_address };
 
             let tx_info = exec_info.tx_info.unbox();
             assert(tx_info.version == dispatcher.get_version(), 'Incorrect version');
@@ -121,23 +121,23 @@ fn simple_syscalls() {
     "#
         ),
         Contract::from_code_path(
-            "SpoofChecker".to_string(),
-            Path::new("tests/data/contracts/spoof_checker.cairo"),
+            "CheatTxInfoChecker".to_string(),
+            Path::new("tests/data/contracts/cheat_tx_info_checker.cairo"),
         )
         .unwrap(),
         Contract::from_code_path(
-            "RollChecker".to_string(),
-            Path::new("tests/data/contracts/roll_checker.cairo"),
+            "CheatBlockNumberChecker".to_string(),
+            Path::new("tests/data/contracts/cheat_block_number_checker.cairo"),
         )
         .unwrap(),
         Contract::from_code_path(
-            "WarpChecker".to_string(),
-            Path::new("tests/data/contracts/warp_checker.cairo"),
+            "CheatBlockTimestampChecker".to_string(),
+            Path::new("tests/data/contracts/cheat_block_timestamp_checker.cairo"),
         )
         .unwrap(),
         Contract::from_code_path(
-            "ElectChecker".to_string(),
-            Path::new("tests/data/contracts/elect_checker.cairo")
+            "CheatSequencerAddressChecker".to_string(),
+            Path::new("tests/data/contracts/cheat_sequencer_address_checker.cairo")
         )
         .unwrap()
     );
@@ -446,6 +446,7 @@ fn storage_access_default_values() {
 }
 
 #[test]
+#[allow(clippy::too_many_lines)]
 fn simple_cheatcodes() {
     let test = test_case!(indoc!(
         r"
@@ -456,86 +457,82 @@ fn simple_cheatcodes() {
         use array::SpanTrait;
         use starknet::ContractAddressIntoFelt252;
         use snforge_std::{
-            CheatTarget,
-            start_elect, stop_elect,
-            start_prank, stop_prank,
-            start_roll, stop_roll,
-            start_warp, stop_warp,
-            start_spoof, stop_spoof,
-            TxInfoMockTrait,
-            test_address
+            start_cheat_sequencer_address, stop_cheat_sequencer_address,
+            start_cheat_caller_address, stop_cheat_caller_address,
+            start_cheat_block_number, stop_cheat_block_number,
+            start_cheat_block_timestamp, stop_cheat_block_timestamp,
+            start_cheat_transaction_hash, stop_cheat_transaction_hash,
+            test_address, TxInfoMock,
+            Operation, CheatArguments, CheatSpan
         };
         use starknet::{
             SyscallResultTrait, SyscallResult, syscalls::get_execution_info_v2_syscall,
         };
 
         #[test]
-        fn prank_test_state() {
+        fn cheat_caller_address_test_state() {
             let test_address: ContractAddress = test_address();
             let caller_addr_before = starknet::get_caller_address();
             let target_caller_address: ContractAddress = (123_felt252).try_into().unwrap();
 
-            start_prank(CheatTarget::One(test_address), target_caller_address);
+            start_cheat_caller_address(test_address, target_caller_address);
             let caller_addr_after = starknet::get_caller_address();
             assert(caller_addr_after==target_caller_address, caller_addr_after.into());
 
-            stop_prank(CheatTarget::One(test_address));
+            stop_cheat_caller_address(test_address);
             let caller_addr_after = starknet::get_caller_address();
             assert(caller_addr_after==caller_addr_before, caller_addr_before.into());
         }
 
         #[test]
-        fn roll_test_state() {
+        fn cheat_block_number_test_state() {
             let test_address: ContractAddress = test_address();
             let old_block_number = starknet::get_block_info().unbox().block_number;
 
-            start_roll(CheatTarget::One(test_address), 234);
+            start_cheat_block_number(test_address, 234);
             let new_block_number = starknet::get_block_info().unbox().block_number;
             assert(new_block_number == 234, 'Wrong block number');
 
-            stop_roll(CheatTarget::One(test_address));
+            stop_cheat_block_number(test_address);
             let new_block_number = starknet::get_block_info().unbox().block_number;
             assert(new_block_number == old_block_number, 'Block num did not change back');
         }
 
         #[test]
-        fn warp_test_state() {
+        fn cheat_block_timestamp_test_state() {
             let test_address: ContractAddress = test_address();
             let old_block_timestamp = starknet::get_block_info().unbox().block_timestamp;
 
-            start_warp(CheatTarget::One(test_address), 123);
+            start_cheat_block_timestamp(test_address, 123);
             let new_block_timestamp = starknet::get_block_info().unbox().block_timestamp;
             assert(new_block_timestamp == 123, 'Wrong block timestamp');
 
-            stop_warp(CheatTarget::One(test_address));
+            stop_cheat_block_timestamp(test_address);
             let new_block_timestamp = starknet::get_block_info().unbox().block_timestamp;
             assert(new_block_timestamp == old_block_timestamp, 'Timestamp did not change back')
         }
 
         #[test]
-        fn elect_test_state() {
+        fn cheat_sequencer_address_test_state() {
             let test_address: ContractAddress = test_address();
             let old_sequencer_address = starknet::get_block_info().unbox().sequencer_address;
 
-            start_elect(CheatTarget::One(test_address), 123.try_into().unwrap());
+            start_cheat_sequencer_address(test_address, 123.try_into().unwrap());
             let new_sequencer_address = starknet::get_block_info().unbox().sequencer_address;
             assert(new_sequencer_address == 123.try_into().unwrap(), 'Wrong sequencer address');
 
-            stop_elect(CheatTarget::One(test_address));
+            stop_cheat_sequencer_address(test_address);
             let new_sequencer_address = starknet::get_block_info().unbox().sequencer_address;
             assert(new_sequencer_address == old_sequencer_address, 'Sequencer addr did not revert')
         }
 
         #[test]
-        fn spoof_test_state() {
+        fn transaction_hash_test_state() {
             let test_address: ContractAddress = test_address();
             let old_tx_info = starknet::get_tx_info().unbox();
             let old_tx_info_v2 = get_tx_info_v2().unbox();
 
-            let mut tx_info_mock = TxInfoMockTrait::default();
-            tx_info_mock.transaction_hash = Option::Some(421);
-
-            start_spoof(CheatTarget::One(test_address), tx_info_mock);
+            start_cheat_transaction_hash(test_address, 421);
 
             let new_tx_info = starknet::get_tx_info().unbox();
             let new_tx_info_v2 = get_tx_info_v2().unbox();
@@ -544,7 +541,7 @@ fn simple_cheatcodes() {
             assert(new_tx_info_v2.tip == old_tx_info_v2.tip, 'Wrong tip');
             assert(new_tx_info.transaction_hash == 421, 'Wrong transaction_hash');
 
-            stop_spoof(CheatTarget::One(test_address));
+            stop_cheat_transaction_hash(test_address);
             
             let new_tx_info = starknet::get_tx_info().unbox();
             let new_tx_info_v2 = get_tx_info_v2().unbox();
@@ -721,51 +718,51 @@ fn caller_address_in_called_contract() {
         use snforge_std::{ declare, ContractClassTrait, test_address };
 
         #[starknet::interface]
-        trait IPrankChecker<TContractState> {
+        trait ICheatCallerAddressChecker<TContractState> {
             fn get_caller_address(ref self: TContractState) -> felt252;
         }
 
         #[starknet::interface]
-        trait IConstructorPrankChecker<TContractState> {
+        trait IConstructorCheatCallerAddressChecker<TContractState> {
             fn get_stored_caller_address(ref self: TContractState) -> ContractAddress;
         }
 
         #[test]
         fn caller_address_in_called_contract() {
-            let prank_checker = declare("PrankChecker").unwrap();
-            let (contract_address_prank_checker, _) = prank_checker.deploy(@ArrayTrait::new()).unwrap();
-            let dispatcher_prank_checker = IPrankCheckerDispatcher { contract_address: contract_address_prank_checker };
+            let cheat_caller_address_checker = declare("CheatCallerAddressChecker").unwrap();
+            let (contract_address_cheat_caller_address_checker, _) = cheat_caller_address_checker.deploy(@ArrayTrait::new()).unwrap();
+            let dispatcher_cheat_caller_address_checker = ICheatCallerAddressCheckerDispatcher { contract_address: contract_address_cheat_caller_address_checker };
 
-            assert(dispatcher_prank_checker.get_caller_address() == test_address().into(), 'Incorrect caller address');
+            assert(dispatcher_cheat_caller_address_checker.get_caller_address() == test_address().into(), 'Incorrect caller address');
 
 
-            let constructor_prank_checker = declare("ConstructorPrankChecker").unwrap();
-            let (contract_address_constructor_prank_checker, _) = constructor_prank_checker.deploy(@ArrayTrait::new()).unwrap();
-            let dispatcher_constructor_prank_checker = IConstructorPrankCheckerDispatcher { contract_address: contract_address_constructor_prank_checker };
+            let constructor_cheat_caller_address_checker = declare("ConstructorCheatCallerAddressChecker").unwrap();
+            let (contract_address_constructor_cheat_caller_address_checker, _) = constructor_cheat_caller_address_checker.deploy(@ArrayTrait::new()).unwrap();
+            let dispatcher_constructor_cheat_caller_address_checker = IConstructorCheatCallerAddressCheckerDispatcher { contract_address: contract_address_constructor_cheat_caller_address_checker };
 
-            assert(dispatcher_constructor_prank_checker.get_stored_caller_address() == test_address(), 'Incorrect caller address');
+            assert(dispatcher_constructor_cheat_caller_address_checker.get_stored_caller_address() == test_address(), 'Incorrect caller address');
 
         }
     "#
         ),
         Contract::from_code_path(
-            "PrankChecker".to_string(),
-            Path::new("tests/data/contracts/prank_checker.cairo"),
+            "CheatCallerAddressChecker".to_string(),
+            Path::new("tests/data/contracts/cheat_caller_address_checker.cairo"),
         )
         .unwrap(),
         Contract::new(
-            "ConstructorPrankChecker",
+            "ConstructorCheatCallerAddressChecker",
             indoc!(
                 r"
             use starknet::ContractAddress;
 
             #[starknet::interface]
-            trait IConstructorPrankChecker<TContractState> {
+            trait IConstructorCheatCallerAddressChecker<TContractState> {
                 fn get_stored_caller_address(ref self: TContractState) -> ContractAddress;
             }
 
             #[starknet::contract]
-            mod ConstructorPrankChecker {
+            mod ConstructorCheatCallerAddressChecker {
                 use starknet::ContractAddress;
 
                 #[storage]
@@ -780,7 +777,7 @@ fn caller_address_in_called_contract() {
                 }
 
                 #[abi(embed_v0)]
-                impl IConstructorPrankChecker of super::IConstructorPrankChecker<ContractState> {
+                impl IConstructorCheatCallerAddressChecker of super::IConstructorCheatCallerAddressChecker<ContractState> {
                     fn get_stored_caller_address(ref self: ContractState) -> ContractAddress {
                         self.caller_address.read()
                     }

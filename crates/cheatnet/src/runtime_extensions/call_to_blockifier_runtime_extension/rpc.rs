@@ -15,7 +15,7 @@ use blockifier::state::errors::StateError;
 use cairo_felt::Felt252;
 use cairo_lang_runner::casm_run::format_next_item;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
-use conversions::{byte_array::ByteArray, IntoConv};
+use conversions::{byte_array::ByteArray, serde::serialize::CairoSerialize, IntoConv};
 use serde::{Deserialize, Serialize};
 use starknet_api::transaction::EventContent;
 use starknet_api::{
@@ -33,7 +33,7 @@ pub struct UsedResources {
 }
 
 /// Enum representing possible call execution result, along with the data
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, CairoSerialize, Serialize, Deserialize)]
 pub enum CallResult {
     Success { ret_data: Vec<Felt252> },
     Failure(CallFailure),
@@ -42,7 +42,7 @@ pub enum CallResult {
 /// Enum representing possible call failure and its type.
 /// `Panic` - Recoverable, meant to be caught by the user.
 /// `Error` - Unrecoverable, equivalent of panic! in rust.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, CairoSerialize, Serialize, Deserialize)]
 pub enum CallFailure {
     Panic { panic_data: Vec<Felt252> },
     Error { msg: String },
@@ -118,9 +118,15 @@ impl CallFailure {
             EntryPointExecutionError::PreExecutionError(
                 PreExecutionError::UninitializedStorageAddress(contract_address),
             ) => {
-                let address = contract_address.0.key().to_string();
-                let msg = format!("Contract not deployed at address: {address}");
-                CallFailure::Error { msg }
+                let address_str = contract_address.0.key().to_string();
+                let msg = format!("Contract not deployed at address: {address_str}");
+
+                let panic_data_felts: Vec<Felt252> =
+                    ByteArray::from(msg.as_str()).serialize_with_magic();
+
+                CallFailure::Panic {
+                    panic_data: panic_data_felts,
+                }
             }
             EntryPointExecutionError::StateError(StateError::StateReadError(msg)) => {
                 CallFailure::Error { msg: msg.clone() }

@@ -23,12 +23,13 @@ use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use camino::Utf8PathBuf;
 use clap::Args;
-use conversions::felt252::SerializeAsFelt252Vec;
+use conversions::byte_array::ByteArray;
+use conversions::serde::deserialize::BufferReader;
+use conversions::serde::serialize::SerializeToFeltVec;
 use conversions::FromConv;
 use itertools::chain;
 use runtime::starknet::context::{build_context, SerializableBlockInfo};
 use runtime::starknet::state::DictStateReader;
-use runtime::utils::buffer_reader::BufferReader;
 use runtime::{
     CheatcodeHandlingResult, EnhancedHintError, ExtendedRuntime, ExtensionLogic, StarknetRuntime,
     SyscallHandlingResult,
@@ -111,11 +112,11 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     &BlockId::Tag(Pending),
                 ));
                 Ok(CheatcodeHandlingResult::Handled(
-                    call_result.serialize_as_felt252_vec(),
+                    call_result.serialize_to_vec(),
                 ))
             }
             "declare" => {
-                let contract_name: String = input_reader.read()?;
+                let contract_name: String = input_reader.read::<ByteArray>()?.into();
                 let max_fee = input_reader.read()?;
                 let nonce = input_reader.read()?;
 
@@ -147,7 +148,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     &declare_result,
                 )?;
                 Ok(CheatcodeHandlingResult::Handled(
-                    declare_result.serialize_as_felt252_vec(),
+                    declare_result.serialize_to_vec(),
                 ))
             }
             "deploy" => {
@@ -191,7 +192,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 )?;
 
                 Ok(CheatcodeHandlingResult::Handled(
-                    deploy_result.serialize_as_felt252_vec(),
+                    deploy_result.serialize_to_vec(),
                 ))
             }
             "invoke" => {
@@ -232,7 +233,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 )?;
 
                 Ok(CheatcodeHandlingResult::Handled(
-                    invoke_result.serialize_as_felt252_vec(),
+                    invoke_result.serialize_to_vec(),
                 ))
             }
             "get_nonce" => {

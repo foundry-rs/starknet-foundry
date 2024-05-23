@@ -7,16 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.0] - 2024-05-22
+
+### Forge
+
+#### Removed
+
+- `prank`, `warp`, `roll`, `elect`, `spoof` cheatcodes in favour of `cheat_execution_info`
+
+#### Added
+
+- `cheat_execution_info` cheatcode and per variable helpers for it
+
 ### Cast
 
 #### Added
 
 - New required flag `--type` to `account add` command
 
+### Forge
+
+#### Changed
+
+- `SignerTrait::sign` now returns `Result` instead of failing the test
+
+- `L1HandlerTrait::execute()` takes source address and payloads as arguments [Read more here](https://foundry-rs.github.io/starknet-foundry/appendix/cheatcodes/l1_handler.html)
+
+- When calling to an address which does not exists, error is forwarded to cairo runtime instead of failing the test
+
+
 ## [0.23.0] - 2024-05-08
 
 ### Forge
-
 
 #### Removed
 - `event_name_hash` removal, in favour of `selector!` usage
@@ -27,6 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [`USC`](https://github.com/software-mansion/universal-sierra-compiler) - before it used to consume CASM artifacts
 produced by Scarb if they were present. Setting up `casm = true` in `Scarb.toml` is no longer recommended - it may slow
 down the compilation.
+- The `replace_bytecode` cheatcode now returns `Result` with a possible `ReplaceBytecodeError`, since it may cause unexpected errors down the line when not handled properly
 
 ### Cast
 

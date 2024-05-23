@@ -88,7 +88,7 @@ fn test_using_second_fork() {
 
 Once the fork is configured, the test will run on top of the forked state, meaning that it will have access to every contract deployed on the real network.
 
-With that, you can now interact with any contract from the chain [the same way you would in a standard test](./contracts.md).
+With that, you can now interact with any contract from the chain [the same way you would in a standard test](../testing/contracts.md).
 
 > ⚠️ **Warning**
 > 

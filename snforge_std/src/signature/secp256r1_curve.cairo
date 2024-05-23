@@ -3,17 +3,16 @@ use starknet::secp256r1::{Secp256r1Point, Secp256r1Impl, Secp256r1PointImpl};
 use starknet::{SyscallResultTrait};
 use starknet::testing::cheatcode;
 use super::super::_cheatcode::handle_cheatcode;
-use snforge_std::signature::{KeyPair, KeyPairTrait, SignerTrait, VerifierTrait, to_u256, from_u256};
+use super::SignError;
+use snforge_std::signature::{KeyPair, KeyPairTrait, SignerTrait, VerifierTrait};
 
 impl Secp256r1CurveKeyPairImpl of KeyPairTrait<u256, Secp256r1Point> {
     fn generate() -> KeyPair<u256, Secp256r1Point> {
-        let output = handle_cheatcode(
+        let mut output = handle_cheatcode(
             cheatcode::<'generate_ecdsa_keys'>(array!['Secp256r1'].span())
         );
 
-        let secret_key = to_u256(*output[0], *output[1]);
-        let pk_x = to_u256(*output[2], *output[3]);
-        let pk_y = to_u256(*output[4], *output[5]);
+        let (secret_key, pk_x, pk_y): (u256, u256, u256) = Serde::deserialize(ref output).unwrap();
 
         let public_key = Secp256r1Impl::secp256_ec_new_syscall(pk_x, pk_y)
             .unwrap_syscall()
@@ -36,24 +35,16 @@ impl Secp256r1CurveKeyPairImpl of KeyPairTrait<u256, Secp256r1Point> {
 }
 
 impl Secp256r1CurveSignerImpl of SignerTrait<KeyPair<u256, Secp256r1Point>, u256, (u256, u256)> {
-    fn sign(self: KeyPair<u256, Secp256r1Point>, message_hash: u256) -> (u256, u256) {
-        let (sk_low, sk_high) = from_u256(self.secret_key);
-        let (msg_hash_low, msg_hash_high) = from_u256(message_hash);
+    fn sign(
+        self: KeyPair<u256, Secp256r1Point>, message_hash: u256
+    ) -> Result<(u256, u256), SignError> {
+        let mut input = array!['Secp256r1'];
+        self.secret_key.serialize(ref input);
+        message_hash.serialize(ref input);
 
-        let output = handle_cheatcode(
-            cheatcode::<
-                'ecdsa_sign_message'
-            >(array!['Secp256r1', sk_low, sk_high, msg_hash_low, msg_hash_high].span())
-        );
+        let mut output = handle_cheatcode(cheatcode::<'ecdsa_sign_message'>(input.span()));
 
-        if *output[0] == 1 {
-            core::panic_with_felt252(*output[1]);
-        }
-
-        let r = to_u256(*output[1], *output[2]);
-        let s = to_u256(*output[3], *output[4]);
-
-        (r, s)
+        Serde::deserialize(ref output).unwrap()
     }
 }
 

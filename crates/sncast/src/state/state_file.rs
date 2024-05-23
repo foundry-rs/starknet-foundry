@@ -7,7 +7,7 @@ use crate::WaitForTransactionError;
 use anyhow::{anyhow, Context, Result};
 use cairo_felt::Felt252;
 use camino::Utf8PathBuf;
-use conversions::felt252::SerializeAsFelt252Vec;
+use conversions::serde::serialize::SerializeToFeltVec;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
@@ -206,13 +206,13 @@ impl From<DeployResponse> for ScriptTransactionOutput {
 pub fn serialize_as_script_function_result(output: ScriptTransactionOutput) -> Vec<Felt252> {
     match output {
         ScriptTransactionOutput::InvokeResponse(val) => {
-            Ok::<_, StarknetCommandError>(val).serialize_as_felt252_vec()
+            Ok::<_, StarknetCommandError>(val).serialize_to_vec()
         }
         ScriptTransactionOutput::DeclareResponse(val) => {
-            Ok::<_, StarknetCommandError>(val).serialize_as_felt252_vec()
+            Ok::<_, StarknetCommandError>(val).serialize_to_vec()
         }
         ScriptTransactionOutput::DeployResponse(val) => {
-            Ok::<_, StarknetCommandError>(val).serialize_as_felt252_vec()
+            Ok::<_, StarknetCommandError>(val).serialize_to_vec()
         }
         ScriptTransactionOutput::ErrorResponse(_) => {
             panic!("Cannot return ErrorResponse as script function response")

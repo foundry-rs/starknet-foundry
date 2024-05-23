@@ -1,12 +1,15 @@
-use crate::{felt252::SerializeAsFelt252Vec, string::TryFromHexStr};
+use crate as conversions; // trick for CairoDeserialize macro
+use crate::{serde::serialize::SerializeToFeltVec, string::TryFromHexStr};
 use cairo_felt::Felt252;
+use cairo_lang_runner::short_string::as_cairo_short_string_ex;
 use cairo_lang_utils::byte_array::{BYTES_IN_WORD, BYTE_ARRAY_MAGIC};
+use cairo_serde_macros::{CairoDeserialize, CairoSerialize};
 
-#[derive(Clone)]
+#[derive(CairoDeserialize, CairoSerialize, Clone)]
 pub struct ByteArray {
     words: Vec<Felt252>,
-    pending_word_len: usize,
     pending_word: Felt252,
+    pending_word_len: usize,
 }
 
 impl From<&str> for ByteArray {
@@ -20,35 +23,16 @@ impl From<&str> for ByteArray {
 
         Self {
             words,
-            pending_word_len,
             pending_word,
+            pending_word_len,
         }
-    }
-}
-
-impl SerializeAsFelt252Vec for ByteArray {
-    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
-        output.extend(self.serialize_no_magic());
-    }
-
-    fn serialize_as_felt252_vec(self) -> Vec<Felt252> {
-        let len = self.words.len().into();
-
-        let mut result = self.words;
-
-        result.insert(0, len);
-
-        result.push(self.pending_word);
-        result.push(self.pending_word_len.into());
-
-        result
     }
 }
 
 impl ByteArray {
     #[must_use]
-    pub fn serialize_with_magic(self) -> Vec<Felt252> {
-        let mut result = self.serialize_as_felt252_vec();
+    pub fn serialize_with_magic(&self) -> Vec<Felt252> {
+        let mut result = self.serialize_to_vec();
 
         result.insert(
             0,
@@ -57,9 +41,19 @@ impl ByteArray {
 
         result
     }
+}
 
-    #[must_use]
-    pub fn serialize_no_magic(self) -> Vec<Felt252> {
-        self.serialize_as_felt252_vec()
+impl From<ByteArray> for String {
+    fn from(value: ByteArray) -> Self {
+        let full_words_string = value
+            .words
+            .iter()
+            .map(|word| as_cairo_short_string_ex(word, BYTES_IN_WORD).unwrap())
+            .collect::<String>();
+
+        let pending_word_string =
+            as_cairo_short_string_ex(&value.pending_word, value.pending_word_len).unwrap();
+
+        format!("{full_words_string}{pending_word_string}")
     }
 }
