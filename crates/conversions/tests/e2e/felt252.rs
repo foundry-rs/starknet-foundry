@@ -3,7 +3,8 @@ mod tests_felt252 {
     use cairo_felt::{Felt252, PRIME_STR};
     use cairo_lang_runner::short_string::as_cairo_short_string;
     use conversions::byte_array::ByteArray;
-    use conversions::felt252::{FromShortString, SerializeAsFelt252Vec};
+    use conversions::felt252::FromShortString;
+    use conversions::serde::serialize::SerializeToFeltVec;
     use conversions::string::{IntoDecStr, TryFromDecStr, TryFromHexStr};
     use conversions::{FromConv, IntoConv};
     use itertools::chain;
@@ -109,19 +110,10 @@ mod tests_felt252 {
         let res: Result<ByteArray, ByteArray> = Ok(val.clone());
         let expected: Vec<Felt252> =
             chain!(vec![Felt252::from(0)], serialised_val.clone()).collect();
-        assert_eq!(res.serialize_as_felt252_vec(), expected);
+        assert_eq!(res.serialize_to_vec(), expected);
 
         let res: Result<ByteArray, ByteArray> = Err(val);
         let expected: Vec<Felt252> = chain!(vec![Felt252::from(1)], serialised_val).collect();
-        assert_eq!(res.serialize_as_felt252_vec(), expected);
-    }
-
-    #[test]
-    fn test_str_to_felt252_vec() {
-        let val = "abc";
-        assert_eq!(
-            val.serialize_as_felt252_vec(),
-            ByteArray::from(val).serialize_no_magic()
-        );
+        assert_eq!(res.serialize_to_vec(), expected);
     }
 }

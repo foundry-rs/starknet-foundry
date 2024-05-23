@@ -1,12 +1,9 @@
 use cairo_felt::Felt252;
-use runtime::{
-    utils::{buffer_reader::BufferReader, from_reader::FromReader},
-    FromReader,
-};
+use conversions::serde::deserialize::{BufferReader, CairoDeserialize};
 
 macro_rules! from_felts {
     ($($exprs:expr),*) => {
-        FromReader::from_reader(&mut BufferReader::new(&[
+        CairoDeserialize::deserialize(&mut BufferReader::new(&[
             $(
                 Felt252::from($exprs)
             ),*
@@ -16,7 +13,7 @@ macro_rules! from_felts {
 
 #[test]
 fn work_on_struct() {
-    #[derive(FromReader, Debug, PartialEq, Eq)]
+    #[derive(CairoDeserialize, Debug, PartialEq, Eq)]
     struct Foo {
         a: Felt252,
     }
@@ -33,7 +30,7 @@ fn work_on_struct() {
 
 #[test]
 fn work_on_empty_struct() {
-    #[derive(FromReader, Debug, PartialEq, Eq)]
+    #[derive(CairoDeserialize, Debug, PartialEq, Eq)]
     struct Foo {}
 
     let value: Foo = from_felts!();
@@ -43,7 +40,7 @@ fn work_on_empty_struct() {
 
 #[test]
 fn work_on_tuple_struct() {
-    #[derive(FromReader, Debug, PartialEq, Eq)]
+    #[derive(CairoDeserialize, Debug, PartialEq, Eq)]
     struct Foo(Felt252);
 
     let value: Foo = from_felts!(123);
@@ -53,7 +50,7 @@ fn work_on_tuple_struct() {
 
 #[test]
 fn work_on_empty_tuple_struct() {
-    #[derive(FromReader, Debug, PartialEq, Eq)]
+    #[derive(CairoDeserialize, Debug, PartialEq, Eq)]
     struct Foo();
 
     let value: Foo = from_felts!();
@@ -63,7 +60,7 @@ fn work_on_empty_tuple_struct() {
 
 #[test]
 fn work_on_unit_struct() {
-    #[derive(FromReader, Debug, PartialEq, Eq)]
+    #[derive(CairoDeserialize, Debug, PartialEq, Eq)]
     struct Foo;
 
     let value: Foo = from_felts!();
@@ -73,7 +70,7 @@ fn work_on_unit_struct() {
 
 #[test]
 fn work_on_enum() {
-    #[derive(FromReader, Debug, PartialEq, Eq)]
+    #[derive(CairoDeserialize, Debug, PartialEq, Eq)]
     enum Foo {
         A,
         B(Felt252),
@@ -98,7 +95,7 @@ fn work_on_enum() {
 #[test]
 #[should_panic(expected = "called `Result::unwrap()` on an `Err` value: ParseFailed")]
 fn fail_on_empty_enum() {
-    #[derive(FromReader, Debug, PartialEq, Eq)]
+    #[derive(CairoDeserialize, Debug, PartialEq, Eq)]
     enum Foo {}
 
     let _: Foo = from_felts!(0);
@@ -106,14 +103,14 @@ fn fail_on_empty_enum() {
 
 #[test]
 fn work_with_nested() {
-    #[derive(FromReader, Debug, PartialEq, Eq)]
+    #[derive(CairoDeserialize, Debug, PartialEq, Eq)]
     enum Foo {
         A,
         B(Felt252),
         C { a: Bar },
     }
 
-    #[derive(FromReader, Debug, PartialEq, Eq)]
+    #[derive(CairoDeserialize, Debug, PartialEq, Eq)]
     struct Bar {
         a: Felt252,
     }
@@ -133,7 +130,7 @@ fn work_with_nested() {
 #[test]
 #[should_panic(expected = "called `Result::unwrap()` on an `Err` value: EndOfBuffer")]
 fn fail_on_too_short_data() {
-    #[derive(FromReader, Debug, PartialEq, Eq)]
+    #[derive(CairoDeserialize, Debug, PartialEq, Eq)]
     struct Foo {
         a: Felt252,
         b: Felt252,

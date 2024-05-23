@@ -19,10 +19,10 @@ use blockifier::{
 use cairo_felt::Felt252;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cairo_vm::vm::trace::trace_entry::TraceEntry;
-use conversions::felt252::SerializeAsFelt252Vec;
+use conversions::serde::deserialize::CairoDeserialize;
+use conversions::serde::serialize::{BufferWriter, CairoSerialize};
 use runtime::starknet::context::SerializableBlockInfo;
 use runtime::starknet::state::DictStateReader;
-use runtime::FromReader;
 use starknet_api::core::EntryPointSelector;
 use starknet_api::transaction::ContractAddressSalt;
 use starknet_api::{
@@ -37,7 +37,7 @@ use std::rc::Rc;
 use trace_data::L1Resources;
 
 // Specifies the duration of the cheat
-#[derive(FromReader, Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(CairoDeserialize, Copy, Clone, Debug, PartialEq, Eq)]
 pub enum CheatSpan {
     Indefinite,
     TargetCalls(usize),
@@ -167,9 +167,9 @@ pub struct CallTrace {
     pub vm_trace: Option<Vec<TraceEntry>>,
 }
 
-impl SerializeAsFelt252Vec for CallTrace {
-    fn serialize_into_felt252_vec(&self, output: &mut Vec<Felt252>) {
-        self.entry_point.serialize_into_felt252_vec(output);
+impl CairoSerialize for CallTrace {
+    fn serialize(&self, output: &mut BufferWriter) {
+        self.entry_point.serialize(output);
 
         let visible_calls: Vec<_> = self
             .nested_calls
@@ -177,9 +177,9 @@ impl SerializeAsFelt252Vec for CallTrace {
             .filter_map(CallTraceNode::extract_entry_point_call)
             .collect();
 
-        visible_calls.serialize_into_felt252_vec(output);
+        visible_calls.serialize(output);
 
-        self.result.serialize_into_felt252_vec(output);
+        self.result.serialize(output);
     }
 }
 

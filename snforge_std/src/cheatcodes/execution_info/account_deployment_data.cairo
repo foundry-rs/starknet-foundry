@@ -33,7 +33,7 @@ fn cheat_account_deployment_data_global(account_deployment_data: Span<felt252>) 
     cheat_execution_info(execution_info);
 }
 
-/// Cancels the `cheat_account_deployment_data_global`
+/// Cancels the `cheat_account_deployment_data_global`.
 fn stop_cheat_account_deployment_data_global() {
     let mut execution_info: ExecutionInfoMock = Default::default();
 

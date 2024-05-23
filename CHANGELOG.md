@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.0] - 2024-05-22
+
+### Forge
+
+#### Removed
+
+- `prank`, `warp`, `roll`, `elect`, `spoof` cheatcodes in favour of `cheat_execution_info`
+
+#### Added
+
+- `cheat_execution_info` cheatcode and per variable helpers for it
+
 ### Cast
 
 #### Added

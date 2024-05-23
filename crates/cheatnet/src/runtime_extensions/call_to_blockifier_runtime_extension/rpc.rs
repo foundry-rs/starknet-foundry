@@ -15,7 +15,7 @@ use blockifier::state::errors::StateError;
 use cairo_felt::Felt252;
 use cairo_lang_runner::casm_run::format_next_item;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
-use conversions::{byte_array::ByteArray, felt252::SerializeAsFelt252Vec, IntoConv};
+use conversions::{byte_array::ByteArray, serde::serialize::CairoSerialize, IntoConv};
 use serde::{Deserialize, Serialize};
 use starknet_api::transaction::EventContent;
 use starknet_api::{
@@ -33,49 +33,19 @@ pub struct UsedResources {
 }
 
 /// Enum representing possible call execution result, along with the data
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, CairoSerialize, Serialize, Deserialize)]
 pub enum CallResult {
     Success { ret_data: Vec<Felt252> },
     Failure(CallFailure),
 }
 
-impl SerializeAsFelt252Vec for CallResult {
-    fn serialize_into_felt252_vec(&self, output: &mut Vec<Felt252>) {
-        match self {
-            Self::Success { ret_data } => {
-                output.push(0.into());
-                ret_data.serialize_into_felt252_vec(output);
-            }
-            Self::Failure(call_failure) => {
-                output.push(1.into());
-                call_failure.serialize_into_felt252_vec(output);
-            }
-        }
-    }
-}
-
 /// Enum representing possible call failure and its type.
 /// `Panic` - Recoverable, meant to be caught by the user.
 /// `Error` - Unrecoverable, equivalent of panic! in rust.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, CairoSerialize, Serialize, Deserialize)]
 pub enum CallFailure {
     Panic { panic_data: Vec<Felt252> },
     Error { msg: String },
-}
-
-impl SerializeAsFelt252Vec for CallFailure {
-    fn serialize_into_felt252_vec(&self, output: &mut Vec<Felt252>) {
-        match self {
-            Self::Panic { panic_data } => {
-                output.push(0.into());
-                panic_data.serialize_into_felt252_vec(output);
-            }
-            Self::Error { msg } => {
-                output.push(1.into());
-                msg.serialize_into_felt252_vec(output);
-            }
-        }
-    }
 }
 
 pub enum AddressOrClassHash {

@@ -3,18 +3,17 @@ use crate::{
     CheatnetState,
 };
 use cairo_felt::Felt252;
-use conversions::felt252::SerializeAsFelt252Vec;
-use runtime::FromReader;
-use starknet_api::core::{ContractAddress, EntryPointSelector};
+use conversions::serde::{deserialize::CairoDeserialize, serialize::CairoSerialize};
+use starknet_api::core::ContractAddress;
 
-#[derive(FromReader, Clone, Debug)]
+#[derive(CairoDeserialize, Clone, Debug)]
 pub struct CheatArguments<T> {
     pub value: T,
     pub span: CheatSpan,
     pub target: ContractAddress,
 }
 
-#[derive(FromReader, Clone, Default, Debug)]
+#[derive(CairoDeserialize, Clone, Default, Debug)]
 pub enum Operation<T> {
     StartGlobal(T),
     Start(CheatArguments<T>),
@@ -24,19 +23,11 @@ pub enum Operation<T> {
     Retain,
 }
 
-#[derive(FromReader, Clone, Default, Debug, Eq, PartialEq)]
+#[derive(CairoDeserialize, CairoSerialize, Clone, Default, Debug, Eq, PartialEq)]
 pub struct ResourceBounds {
     pub resource: Felt252,
     pub max_amount: u64,
     pub max_price_per_unit: u128,
-}
-
-impl SerializeAsFelt252Vec for ResourceBounds {
-    fn serialize_into_felt252_vec(&self, output: &mut Vec<Felt252>) {
-        self.resource.serialize_into_felt252_vec(output);
-        output.push(self.max_amount.into());
-        output.push(self.max_price_per_unit.into());
-    }
 }
 
 #[derive(Clone, Default, Debug, PartialEq, Eq)]
@@ -68,11 +59,9 @@ pub struct ExecutionInfoMock {
     pub block_info: BlockInfoMock,
     pub tx_info: TxInfoMock,
     pub caller_address: CheatStatus<ContractAddress>,
-    pub contract_address: CheatStatus<ContractAddress>,
-    pub entry_point_selector: CheatStatus<EntryPointSelector>,
 }
 
-#[derive(FromReader, Clone, Default, Debug)]
+#[derive(CairoDeserialize, Clone, Default, Debug)]
 pub struct TxInfoMockOperations {
     pub version: Operation<Felt252>,
     pub account_contract_address: Operation<Felt252>,
@@ -89,27 +78,23 @@ pub struct TxInfoMockOperations {
     pub account_deployment_data: Operation<Vec<Felt252>>,
 }
 
-#[derive(FromReader, Clone, Default, Debug)]
+#[derive(CairoDeserialize, Clone, Default, Debug)]
 pub struct BlockInfoMockOperations {
     pub block_number: Operation<u64>,
     pub block_timestamp: Operation<u64>,
     pub sequencer_address: Operation<ContractAddress>,
 }
 
-#[derive(FromReader, Clone, Default, Debug)]
+#[derive(CairoDeserialize, Clone, Default, Debug)]
 pub struct ExecutionInfoMockOperations {
     pub block_info: BlockInfoMockOperations,
     pub tx_info: TxInfoMockOperations,
     pub caller_address: Operation<ContractAddress>,
-    pub contract_address: Operation<ContractAddress>,
-    pub entry_point_selector: Operation<EntryPointSelector>,
 }
 
 macro_rules! for_all_fields {
     ($macro:ident!) => {
         $macro!(caller_address);
-        $macro!(contract_address);
-        $macro!(entry_point_selector);
 
         $macro!(block_info.block_number);
         $macro!(block_info.block_timestamp);
@@ -169,7 +154,11 @@ impl CheatnetState {
                         }
                     }
                     Operation::StopGlobal => {
-                        self.global_cheated_execution_info.$($path).+ = CheatStatus::Uncheated
+                        self.global_cheated_execution_info.$($path).+ = CheatStatus::Uncheated;
+
+                        for val in self.cheated_execution_info_contracts.values_mut() {
+                            val.$($path).+ = CheatStatus::Uncheated;
+                        }
                     }
                 };
             };

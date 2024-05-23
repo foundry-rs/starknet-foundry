@@ -107,6 +107,9 @@ fn cheat_block_timestamp_basic() {
                 let cheat_block_timestamp_checker1 = ICheatBlockTimestampCheckerDispatcher { contract_address: contract_address1 };
                 let cheat_block_timestamp_checker2 = ICheatBlockTimestampCheckerDispatcher { contract_address: contract_address2 };
 
+                let old_block_timestamp1 = cheat_block_timestamp_checker1.get_block_timestamp();
+                let old_block_timestamp2 = cheat_block_timestamp_checker2.get_block_timestamp();
+
                 cheat_block_timestamp_global(123);
 
                 let new_block_timestamp1 = cheat_block_timestamp_checker1.get_block_timestamp();
@@ -120,8 +123,8 @@ fn cheat_block_timestamp_basic() {
                 let new_block_timestamp1 = cheat_block_timestamp_checker1.get_block_timestamp();
                 let new_block_timestamp2 = cheat_block_timestamp_checker2.get_block_timestamp();
 
-                assert(new_block_timestamp1 == 123, 'Wrong block timestamp #1');
-                assert(new_block_timestamp2 == 123, 'Wrong block timestamp #2');
+                assert(new_block_timestamp1 == old_block_timestamp1, 'Wrong block timestamp #1');
+                assert(new_block_timestamp2 == old_block_timestamp2, 'Wrong block timestamp #2');
             }
         "#
         ),

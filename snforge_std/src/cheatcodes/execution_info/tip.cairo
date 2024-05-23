@@ -26,7 +26,7 @@ fn cheat_tip_global(tip: u128) {
     cheat_execution_info(execution_info);
 }
 
-/// Cancels the `cheat_tip_global`
+/// Cancels the `cheat_tip_global`.
 fn stop_cheat_tip_global() {
     let mut execution_info: ExecutionInfoMock = Default::default();
 

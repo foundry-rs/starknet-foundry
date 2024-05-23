@@ -14,3 +14,9 @@ $ snforge test --save-trace-data
 
 Each one of these files can then be used as an input
 for the [cairo-profiler](https://github.com/software-mansion/cairo-profiler).
+
+If you want `snforge` to call `cairo-profiler` on generated files automatically, use [`--build-profile`](../appendix/snforge/test.md#--build-profile) flag:
+
+```shell
+$ snforge test --build-profile
+``` 

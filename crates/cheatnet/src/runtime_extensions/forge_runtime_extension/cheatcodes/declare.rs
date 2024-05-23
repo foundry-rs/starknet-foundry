@@ -8,7 +8,7 @@ use blockifier::{
     state::{errors::StateError, state_api::State},
 };
 use conversions::IntoConv;
-use conversions::{byte_array::ByteArray, felt252::SerializeAsFelt252Vec};
+use conversions::{byte_array::ByteArray, serde::serialize::SerializeToFeltVec};
 use starknet::core::types::contract::SierraClass;
 use starknet_api::core::ClassHash;
 
@@ -54,9 +54,7 @@ pub fn declare(
             // (i.e., make sure the leaf is uninitialized).
             let error = format!("Class hash {class_hash} is already declared");
             let byte_array = ByteArray::from(error.as_str());
-            Err(CheatcodeError::Recoverable(
-                byte_array.serialize_as_felt252_vec(),
-            ))
+            Err(CheatcodeError::Recoverable(byte_array.serialize_to_vec()))
         }
     }
 }

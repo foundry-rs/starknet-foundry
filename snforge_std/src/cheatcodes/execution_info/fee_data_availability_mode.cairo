@@ -35,7 +35,7 @@ fn cheat_fee_data_availability_mode_global(fee_data_availability_mode: u32) {
     cheat_execution_info(execution_info);
 }
 
-/// Cancels the `cheat_fee_data_availability_mode_global`
+/// Cancels the `cheat_fee_data_availability_mode_global`.
 fn stop_cheat_fee_data_availability_mode_global() {
     let mut execution_info: ExecutionInfoMock = Default::default();
 

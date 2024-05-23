@@ -33,7 +33,7 @@ fn cheat_resource_bounds_global(resource_bounds: Span<ResourceBounds>) {
     cheat_execution_info(execution_info);
 }
 
-/// Cancels the `cheat_resource_bounds_global`
+/// Cancels the `cheat_resource_bounds_global`.
 fn stop_cheat_resource_bounds_global() {
     let mut execution_info: ExecutionInfoMock = Default::default();
 

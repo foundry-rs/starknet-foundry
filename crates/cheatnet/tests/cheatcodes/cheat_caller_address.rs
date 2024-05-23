@@ -1,4 +1,3 @@
-use crate::cheatcodes::spy_events::felt_vec_to_event_vec;
 use crate::common::assertions::assert_success;
 use crate::common::get_contracts;
 use cairo_felt::Felt252;
@@ -212,7 +211,7 @@ fn cheat_caller_address_all() {
 
     assert_success(
         test_env.call_contract(&contract_address, "get_caller_address", &[]),
-        &[Felt252::from(123)],
+        &[contract_address!(TEST_ADDRESS).into_()],
     );
 
     let contract_address = test_env.deploy_wrapper(&cheat_caller_address_checker, &[]);
@@ -327,9 +326,7 @@ fn cheat_caller_address_cairo0_callback() {
         &[],
     );
 
-    let (_, events) = test_env.cheatnet_state.fetch_events(&Felt252::from(id));
-
-    let events = felt_vec_to_event_vec(&events);
+    let events = test_env.cheatnet_state.fetch_events(&Felt252::from(id));
 
     // make sure end() was called by cairo0 contract
     assert_eq!(

@@ -19,6 +19,7 @@ mod paymaster_data;
 mod nonce_data_availability_mode;
 mod fee_data_availability_mode;
 mod account_deployment_data;
+mod account_contract_address;
 
 
 #[derive(Serde, Drop, Copy)]
@@ -122,8 +123,6 @@ struct ExecutionInfoMock {
     block_info: BlockInfoMock,
     tx_info: TxInfoMock,
     caller_address: Operation<ContractAddress>,
-    contract_address: Operation<ContractAddress>,
-    entry_point_selector: Operation<felt252>,
 }
 
 impl ExecutionInfoMockImpl of Default<ExecutionInfoMock> {
@@ -134,8 +133,6 @@ impl ExecutionInfoMockImpl of Default<ExecutionInfoMock> {
             block_info: Default::default(),
             tx_info: Default::default(),
             caller_address: Operation::Retain,
-            contract_address: Operation::Retain,
-            entry_point_selector: Operation::Retain,
         }
     }
 }

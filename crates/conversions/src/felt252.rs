@@ -1,5 +1,6 @@
 use crate::{
     byte_array::ByteArray,
+    serde::serialize::SerializeToFeltVec,
     string::{TryFromDecStr, TryFromHexStr},
     FromConv, IntoConv,
 };
@@ -111,7 +112,7 @@ impl TryInferFormat for Felt252 {
         } else if value.starts_with('"') && value.ends_with('"') {
             let value = resolve(value).replace("\\\"", "\"");
 
-            Ok(ByteArray::from(value.as_str()).serialize_as_felt252_vec())
+            Ok(ByteArray::from(value.as_str()).serialize_to_vec())
         } else {
             Felt252::try_from_hex_str(value)
                 .or_else(|_| Felt252::try_from_dec_str(value))
@@ -119,51 +120,3 @@ impl TryInferFormat for Felt252 {
         }
     }
 }
-
-pub trait SerializeAsFelt252Vec {
-    fn serialize_into_felt252_vec(&self, output: &mut Vec<Felt252>);
-    fn serialize_as_felt252_vec(&self) -> Vec<Felt252> {
-        let mut result = vec![];
-        self.serialize_into_felt252_vec(&mut result);
-        result
-    }
-}
-
-/// use this wrapper to NOT add extra length felt
-/// useful e.g. when you need to pass an already serialized value
-pub struct RawFeltVec<T>(pub(crate) Vec<T>)
-where
-    T: SerializeAsFelt252Vec;
-
-impl<T> RawFeltVec<T>
-where
-    T: SerializeAsFelt252Vec,
-{
-    #[must_use]
-    pub fn new(vec: Vec<T>) -> Self {
-        Self(vec)
-    }
-}
-
-macro_rules! impl_serialize_for_tuple {
-    ($($ty:ident),*) => {
-        impl<$( $ty ),*> SerializeAsFelt252Vec for ( $( $ty, )* )
-        where
-        $( $ty: SerializeAsFelt252Vec, )*
-        {
-            #[allow(non_snake_case)]
-            #[allow(unused_variables)]
-            fn serialize_into_felt252_vec(&self, output: &mut Vec<Felt252>) {
-                let ( $( $ty, )* ) = self;
-
-                $( $ty.serialize_into_felt252_vec(output); )*
-            }
-        }
-    };
-}
-
-impl_serialize_for_tuple!();
-impl_serialize_for_tuple!(A);
-impl_serialize_for_tuple!(A, B);
-impl_serialize_for_tuple!(A, B, C);
-impl_serialize_for_tuple!(A, B, C, D); // cairo serde supports tuples in range 0 - 4 only

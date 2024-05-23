@@ -31,7 +31,7 @@ fn cheat_transaction_hash_global(transaction_hash: felt252) {
     cheat_execution_info(execution_info);
 }
 
-/// Cancels the `cheat_transaction_hash_global`
+/// Cancels the `cheat_transaction_hash_global`.
 fn stop_cheat_transaction_hash_global() {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
