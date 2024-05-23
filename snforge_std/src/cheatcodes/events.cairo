@@ -12,8 +12,7 @@ enum SpyOn {
     Multiple: Array<ContractAddress>
 }
 
-/// Creates `EventSpy` instance which spies on events emitted by contracts defined under the
-/// `spy_on` argument.
+/// Creates `EventSpy` instance which spies on events emitted by contracts defined under the `spy_on` argument.
 fn spy_events(spy_on: SpyOn) -> EventSpy {
     let mut inputs = array![];
     spy_on.serialize(ref inputs);

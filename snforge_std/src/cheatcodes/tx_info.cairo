@@ -66,8 +66,7 @@ fn spoof(target: CheatTarget, tx_info_mock: TxInfoMock, span: CheatSpan) {
     handle_cheatcode(cheatcode::<'spoof'>(inputs.span()));
 }
 
-/// Changes `TxInfo` returned by `get_tx_info()` for the targeted contract until the spoof is
-/// canceled with `stop_spoof`.
+/// Changes `TxInfo` returned by `get_tx_info()` for the targeted contract until the spoof is canceled with `stop_spoof`.
 /// - `target` - instance of `CheatTarget` specifying which contracts to spoof
 /// - `tx_info_mock` - a struct with same structure as `TxInfo` (returned by `get_tx_info()`)
 fn start_spoof(target: CheatTarget, tx_info_mock: TxInfoMock) {
