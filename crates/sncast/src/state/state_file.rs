@@ -205,13 +205,13 @@ impl CairoSerialize for ScriptTransactionOutput {
     fn serialize(&self, output: &mut BufferWriter) {
         match self {
             ScriptTransactionOutput::InvokeResponse(val) => {
-                Ok::<_, StarknetCommandError>(val).serialize(output)
+                Ok::<_, StarknetCommandError>(val).serialize(output);
             }
             ScriptTransactionOutput::DeclareResponse(val) => {
-                Ok::<_, StarknetCommandError>(val).serialize(output)
+                Ok::<_, StarknetCommandError>(val).serialize(output);
             }
             ScriptTransactionOutput::DeployResponse(val) => {
-                Ok::<_, StarknetCommandError>(val).serialize(output)
+                Ok::<_, StarknetCommandError>(val).serialize(output);
             }
             ScriptTransactionOutput::ErrorResponse(_) => {
                 panic!("Cannot return ErrorResponse as script function response")
