@@ -1,5 +1,4 @@
 use cairo_felt::Felt252;
-use cairo_lang_runner::short_string::as_cairo_short_string;
 use thiserror::Error;
 
 pub use cairo_serde_macros::CairoDeserialize;
@@ -44,10 +43,5 @@ impl<'b> BufferReader<'b> {
         T: CairoDeserialize,
     {
         T::deserialize(self)
-    }
-
-    pub fn read_short_string(&mut self) -> BufferReadResult<Option<String>> {
-        self.read::<Felt252>()
-            .map(|felt| as_cairo_short_string(&felt))
     }
 }

@@ -15,7 +15,7 @@ use blockifier::state::errors::StateError;
 use cairo_felt::Felt252;
 use cairo_lang_runner::casm_run::format_next_item;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
-use conversions::{byte_array::ByteArray, serde::serialize::CairoSerialize, IntoConv};
+use conversions::{byte_array::ByteArray, serde::serialize::CairoSerialize, FromConv, IntoConv};
 use serde::{Deserialize, Serialize};
 use starknet_api::transaction::EventContent;
 use starknet_api::{
@@ -62,11 +62,6 @@ impl CallFailure {
     ) -> Self {
         match err {
             EntryPointExecutionError::ExecutionFailed { error_data } => {
-                let err_data: Vec<Felt252> = error_data
-                    .iter()
-                    .map(|data| Felt252::from_bytes_be(data.bytes()))
-                    .collect();
-
                 // blockifier/src/execution_utils:274 (format_panic_data) (modified)
                 let err_data_str = {
                     let mut felts = error_data.iter().map(|felt| (*felt).into_());
@@ -91,7 +86,10 @@ impl CallFailure {
                 }
 
                 CallFailure::Panic {
-                    panic_data: err_data,
+                    panic_data: error_data
+                        .iter()
+                        .map(|data| Felt252::from_(*data))
+                        .collect(),
                 }
             }
             EntryPointExecutionError::PreExecutionError(PreExecutionError::EntryPointNotFound(
