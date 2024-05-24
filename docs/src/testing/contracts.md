@@ -218,7 +218,7 @@ fn handling_string_errors() {
     match safe_dispatcher.do_a_panic_with_bytearray() {
         Result::Ok(_) => panic_with_felt252('shouldve panicked'),
         Result::Err(panic_data) => {
-            let str_err = try_deserialize_bytearray_error(panic_data).expect('wrong format');
+            let str_err = try_deserialize_bytearray_error(panic_data.span()).expect('wrong format');
             assert(
                 str_err == "This is a very long\n and multiline message that is certain to fill the buffer", 
                 'wrong string received'
