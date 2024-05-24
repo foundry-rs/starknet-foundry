@@ -16,12 +16,12 @@ fn try_deserialize_bytearray_error(x: Span<felt252>) -> Result<ByteArray, ByteAr
     if x.len() > 0 && *x.at(0) == BYTE_ARRAY_MAGIC {
         let mut x_span = x.slice(1, x.len() - 1);
         let deserialization = Serde::<ByteArray>::deserialize(ref x_span);
-            if deserialization.is_none() {
-                return Result::Err("Malformed input provided");
-            }
-            
-            return Result::Ok(deserialization.unwrap());    
+        if deserialization.is_none() {
+            return Result::Err("Malformed input provided");
         }
-    
+
+        return Result::Ok(deserialization.unwrap());
+    }
+
     Result::Err("Input is not a ByteArray-formatted error")
 }
