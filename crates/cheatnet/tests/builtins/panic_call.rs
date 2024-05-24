@@ -26,7 +26,7 @@ fn call_contract_error() {
         &[Felt252::from(420)],
     );
 
-    assert_error(output, "0x496e70757420746f6f206c6f6e6720666f7220617267756d656e7473 ('Input too long for arguments')");
+    assert_error(output, "\n    0x496e70757420746f6f206c6f6e6720666f7220617267756d656e7473 ('Input too long for arguments')\n");
 }
 
 #[test]

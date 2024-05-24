@@ -79,7 +79,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .cheatnet_state
                     .cheat_execution_info(execution_info);
 
-                Ok(CheatcodeHandlingResult::Handled(vec![]))
+                Ok(CheatcodeHandlingResult::from_serializable(()))
             }
             "mock_call" => {
                 let contract_address = input_reader.read()?;
@@ -93,7 +93,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .extension
                     .cheatnet_state
                     .mock_call(contract_address, function_selector, &ret_data, span);
-                Ok(CheatcodeHandlingResult::Handled(vec![]))
+                Ok(CheatcodeHandlingResult::from_serializable(()))
             }
             "stop_mock_call" => {
                 let contract_address = input_reader.read()?;
@@ -104,7 +104,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .extension
                     .cheatnet_state
                     .stop_mock_call(contract_address, function_selector);
-                Ok(CheatcodeHandlingResult::Handled(vec![]))
+                Ok(CheatcodeHandlingResult::from_serializable(()))
             }
             "replace_bytecode" => {
                 let contract = input_reader.read()?;
@@ -199,9 +199,9 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 let felt_contract_address: Felt252 = contract_address.into_();
 
-                Ok(CheatcodeHandlingResult::Handled(vec![
+                Ok(CheatcodeHandlingResult::from_serializable(
                     felt_contract_address,
-                ]))
+                ))
             }
             "var" => {
                 let name: String = input_reader.read::<ByteArray>()?.into();
@@ -226,9 +226,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .state;
 
                 match get_class_hash(*state, contract_address) {
-                    Ok(class_hash) => {
-                        Ok(CheatcodeHandlingResult::Handled(vec![class_hash.into_()]))
-                    }
+                    Ok(class_hash) => Ok(CheatcodeHandlingResult::from_serializable(class_hash)),
                     Err(CheatcodeError::Recoverable(_)) => unreachable!(),
                     Err(CheatcodeError::Unrecoverable(err)) => Err(err),
                 }
@@ -252,7 +250,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     &payload,
                 ) {
                     CallResult::Success { .. } => {
-                        Ok(CheatcodeHandlingResult::Handled(vec![Felt252::from(0)]))
+                        Ok(CheatcodeHandlingResult::from_serializable(0_u8))
                     }
                     CallResult::Failure(CallFailure::Panic { panic_data }) => Ok(
                         CheatcodeHandlingResult::from_serializable(Err::<(), _>(panic_data)),
@@ -265,6 +263,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
             "read_txt" => {
                 let file_path: String = input_reader.read::<ByteArray>()?.into();
                 let parsed_content = file_operations::read_txt(file_path)?;
+
                 Ok(CheatcodeHandlingResult::Handled(parsed_content))
             }
             "read_json" => {
@@ -281,7 +280,8 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .extension
                     .cheatnet_state
                     .spy_events(spy_on);
-                Ok(CheatcodeHandlingResult::Handled(vec![Felt252::from(id)]))
+
+                Ok(CheatcodeHandlingResult::from_serializable(id))
             }
             "fetch_events" => {
                 let id = input_reader.read()?;
@@ -358,7 +358,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 )))
             }
             "ecdsa_sign_message" => {
-                let curve = input_reader.read_short_string()?;
+                let curve = as_cairo_short_string(&input_reader.read()?);
                 let secret_key: CairoU256 = input_reader.read()?;
                 let msg_hash: CairoU256 = input_reader.read()?;
 
@@ -429,8 +429,9 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let target = input_reader.read()?;
                 let storage_address = input_reader.read()?;
                 store(*state, target, &storage_address, input_reader.read()?)
-                    .expect("Failed to store");
-                Ok(CheatcodeHandlingResult::Handled(vec![]))
+                    .context("Failed to store")?;
+
+                Ok(CheatcodeHandlingResult::from_serializable(()))
             }
             "load" => {
                 let state = &mut extended_runtime
@@ -440,14 +441,18 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .state;
                 let target = input_reader.read()?;
                 let storage_address = &input_reader.read()?;
-                let loaded = load(*state, target, storage_address).expect("Failed to load");
-                Ok(CheatcodeHandlingResult::Handled(vec![loaded]))
+                let loaded = load(*state, target, storage_address).context("Failed to load")?;
+
+                Ok(CheatcodeHandlingResult::from_serializable(loaded))
             }
             "map_entry_address" => {
                 let map_selector = &input_reader.read()?;
                 let keys: Vec<_> = input_reader.read()?;
                 let map_entry_address = calculate_variable_address(map_selector, Some(&keys));
-                Ok(CheatcodeHandlingResult::Handled(vec![map_entry_address]))
+
+                Ok(CheatcodeHandlingResult::from_serializable(
+                    map_entry_address,
+                ))
             }
             _ => Ok(CheatcodeHandlingResult::Forwarded),
         }

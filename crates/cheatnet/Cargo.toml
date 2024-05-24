@@ -41,12 +41,12 @@ runtime = { path = "../runtime" }
 universal-sierra-compiler-api = { path = "../universal-sierra-compiler-api" }
 k256.workspace = true
 p256.workspace = true
+shared.workspace = true
 
 [dev-dependencies]
 ctor.workspace = true
 indoc.workspace = true
 rayon.workspace = true
 glob.workspace = true
-shared.workspace = true
 test-case.workspace = true
 tempfile.workspace = true

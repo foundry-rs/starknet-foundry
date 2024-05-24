@@ -124,9 +124,7 @@ where
     T: CairoSerialize,
 {
     fn serialize(&self, output: &mut BufferWriter) {
-        let len: Felt252 = self.len().into();
-
-        len.serialize(output);
+        self.len().serialize(output);
 
         for e in self {
             e.serialize(output);
