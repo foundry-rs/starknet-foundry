@@ -217,11 +217,13 @@ fn handling_bytearray_based_errors() {
             r#"
         use starknet::ContractAddress;
         use snforge_std::{ declare, ContractClassTrait };
-        use snforge_std::errors::{ SyscallResultStringErrorTrait, PanicDataOrString };
+        use snforge_std::byte_array::try_deserialize_bytearray_error;
+        use core::byte_array::BYTE_ARRAY_MAGIC;
 
         #[starknet::interface]
         trait IHelloStarknet<TContractState> {
             fn do_a_panic_with_bytearray(self: @TContractState);
+            fn do_a_panic_with(self: @TContractState, args: Array<felt252>);
         }
 
         #[test]
@@ -231,20 +233,20 @@ fn handling_bytearray_based_errors() {
             let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
             let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
         
-            match safe_dispatcher.do_a_panic_with_bytearray().map_error_to_string() {
-                Result::Ok(_) => panic_with_felt252('shouldve panicked'),
-                Result::Err(x) => {
-                        match x {
-                            PanicDataOrString::PanicData(_) => panic_with_felt252('wrong format'),
-                            PanicDataOrString::String(str) => {
-                                assert(
-                                    str == "This is a very long\n and multiline message that is certain to fill the buffer", 
-                                    'wrong string received'
-                                );
-                        }
-                    }
-                }
-            };
+            let panic_data = safe_dispatcher.do_a_panic_with_bytearray().unwrap_err();
+            let str_err = try_deserialize_bytearray_error(panic_data.span()).expect('wrong format');
+            assert(
+                str_err == "This is a very long\n and multiline message that is certain to fill the buffer", 
+                'wrong string received'
+            );
+            
+           // Not a bytearray
+           let panic_data = safe_dispatcher.do_a_panic_with(array![123, 321]).unwrap_err();
+           try_deserialize_bytearray_error(panic_data.span()).expect_err('Parsing unexpectedy succeeded');
+           
+           // Malformed bytearray
+           let panic_data = safe_dispatcher.do_a_panic_with(array![BYTE_ARRAY_MAGIC, 321]).unwrap_err();
+           try_deserialize_bytearray_error(panic_data.span()).expect_err('Parsing unexpectedy succeeded');   
         }
     "#
         ),
