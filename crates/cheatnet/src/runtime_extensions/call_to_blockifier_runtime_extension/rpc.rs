@@ -13,10 +13,10 @@ use blockifier::execution::{
 };
 use blockifier::state::errors::StateError;
 use cairo_felt::Felt252;
-use cairo_lang_runner::casm_run::format_next_item;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use conversions::{byte_array::ByteArray, serde::serialize::CairoSerialize, FromConv, IntoConv};
 use serde::{Deserialize, Serialize};
+use shared::utils::build_readable_text;
 use starknet_api::transaction::EventContent;
 use starknet_api::{
     core::{ClassHash, ContractAddress},
@@ -62,34 +62,21 @@ impl CallFailure {
     ) -> Self {
         match err {
             EntryPointExecutionError::ExecutionFailed { error_data } => {
-                // blockifier/src/execution_utils:274 (format_panic_data) (modified)
-                let err_data_str = {
-                    let mut felts = error_data.iter().map(|felt| (*felt).into_());
-                    let mut items = Vec::new();
-                    while let Some(item) = format_next_item(&mut felts) {
-                        items.push(item.quote_if_string());
-                    }
-                    if let [item] = &items[..] {
-                        item.clone()
-                    } else {
-                        items.join("\n")
-                    }
-                };
+                let err_data: Vec<_> = error_data
+                    .iter()
+                    .map(|data| Felt252::from_(*data))
+                    .collect();
 
-                for invalid_calldata_msg in [
-                    "Failed to deserialize param #",
-                    "Input too long for arguments",
-                ] {
-                    if err_data_str.contains(invalid_calldata_msg) {
-                        return CallFailure::Error { msg: err_data_str };
-                    }
-                }
+                let err_data_str = build_readable_text(&err_data).unwrap_or_default();
 
-                CallFailure::Panic {
-                    panic_data: error_data
-                        .iter()
-                        .map(|data| Felt252::from_(*data))
-                        .collect(),
+                if err_data_str.contains("Failed to deserialize param #")
+                    || err_data_str.contains("Input too long for arguments")
+                {
+                    CallFailure::Error { msg: err_data_str }
+                } else {
+                    CallFailure::Panic {
+                        panic_data: err_data,
+                    }
                 }
             }
             EntryPointExecutionError::PreExecutionError(PreExecutionError::EntryPointNotFound(
@@ -106,8 +93,7 @@ impl CallFailure {
                     ),
                 };
 
-                let panic_data_felts: Vec<Felt252> =
-                    ByteArray::from(msg.as_str()).serialize_with_magic();
+                let panic_data_felts = ByteArray::from(msg.as_str()).serialize_with_magic();
 
                 CallFailure::Panic {
                     panic_data: panic_data_felts,
@@ -119,8 +105,7 @@ impl CallFailure {
                 let address_str = contract_address.0.key().to_string();
                 let msg = format!("Contract not deployed at address: {address_str}");
 
-                let panic_data_felts: Vec<Felt252> =
-                    ByteArray::from(msg.as_str()).serialize_with_magic();
+                let panic_data_felts = ByteArray::from(msg.as_str()).serialize_with_magic();
 
                 CallFailure::Panic {
                     panic_data: panic_data_felts,
