@@ -1,19 +1,24 @@
+use self::block_id::{BlockId, BlockIdVariants};
 use crate::{
     args::Arguments,
-    attributes::{AttributeCollector, AttributeInfo, AttributeTypeData, ErrorExt},
+    attributes::{AttributeCollector, AttributeInfo, AttributeTypeData},
+    cairo_expression::CairoExpression,
+    config_statement::extend_with_config_cheatcodes,
+    types::ParseFromExpr,
     utils::branch,
-    validate,
 };
-use cairo_lang_macro::{Diagnostic, Diagnostics};
-use cairo_lang_syntax::node::{ast::Expr, db::SyntaxGroup, helpers::GetIdentifier};
+use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream};
+use cairo_lang_syntax::node::db::SyntaxGroup;
 use indoc::formatdoc;
-use std::fmt::Display;
+use url::Url;
+
+mod block_id;
 
 pub struct ForkCollector;
 
 impl AttributeInfo for ForkCollector {
     const ATTR_NAME: &'static str = "fork";
-    const ARGS_FORM: &'static str = "<url>: `ByteArray`, (<block_hash>: `felt252` | <block_number>: `felt252` | <block_tag>: latest)";
+    const ARGS_FORM: &'static str = "<url>: `String`, (<block_hash>: `felt252` | <block_number>: `felt252` | <block_tag>: latest)";
 }
 
 impl AttributeTypeData for ForkCollector {
@@ -26,50 +31,31 @@ impl AttributeCollector for ForkCollector {
         args: Arguments,
         _warns: &mut Vec<Diagnostic>,
     ) -> Result<String, Diagnostics> {
-        branch(|| inline_args(db, &args), || from_file_args(db, &args))
-    }
-}
-
-#[derive(Debug, Clone, Copy)]
-enum BlockId {
-    Hash,
-    Number,
-    Tag,
-}
-
-impl Display for BlockId {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            BlockId::Hash => write!(f, "block_hash"),
-            BlockId::Number => write!(f, "block_number"),
-            BlockId::Tag => write!(f, "block_tag"),
-        }
+        branch(inline_args(db, &args), || from_file_args(db, &args))
     }
 }
 
 fn inline_args(db: &dyn SyntaxGroup, args: &Arguments) -> Result<String, Diagnostic> {
     let named_args = args.named_only::<ForkCollector>()?;
 
-    let (block_id, block_args) =
-        named_args.one_of_once(&[BlockId::Hash, BlockId::Number, BlockId::Tag])?;
-
+    let block_id = named_args.one_of_once(&[
+        BlockIdVariants::Hash,
+        BlockIdVariants::Number,
+        BlockIdVariants::Tag,
+    ])?;
     let url = named_args.as_once("url")?;
-    let url = validate::url::<ForkCollector>(db, url, "url")?;
 
-    let block_id_value = validate_block_id(db, block_id, block_args)?;
+    let block_id = BlockId::parse_from_expr::<ForkCollector>(db, &block_id, block_id.0.as_ref())?;
+    let url = Url::parse_from_expr::<ForkCollector>(db, url, "url")?;
 
-    let block_id_value = match block_id {
-        BlockId::Hash => format!("BlockHash({block_id_value})"),
-        BlockId::Number => format!("BlockNumber({block_id_value})"),
-        BlockId::Tag => "BlockTag".to_string(),
-    };
+    let block_id = block_id.as_cairo_expression();
 
     Ok(formatdoc!(
         "
             snforge_std::_config_types::ForkConfig::Inline(
                 snforge_std::_config_types::InlineForkConfig {{
                     url: {url},
-                    block: {block_id_value}
+                    block: {block_id}
                 }}
             )
         "
@@ -77,41 +63,15 @@ fn inline_args(db: &dyn SyntaxGroup, args: &Arguments) -> Result<String, Diagnos
 }
 
 fn from_file_args(db: &dyn SyntaxGroup, args: &Arguments) -> Result<String, Diagnostic> {
-    let [arg] = args.unnamed_only::<ForkCollector>()?.of_length::<1>()?;
+    let &[arg] = args.unnamed_only::<ForkCollector>()?.of_length::<1>()?;
 
-    let name = validate::string::<ForkCollector>(db, arg, "0")?;
+    let name = String::parse_from_expr::<ForkCollector>(db, arg, "0")?;
 
     Ok(format!(
         r#"snforge_std::_config_types::ForkConfig::Named("{name}")"#
     ))
 }
 
-fn validate_block_id(
-    db: &dyn SyntaxGroup,
-    block_id: BlockId,
-    block_args: &Expr,
-) -> Result<String, Diagnostic> {
-    match block_id {
-        BlockId::Tag => {
-            if let Expr::Path(path) = block_args {
-                let segments = path.elements(db);
-
-                if segments.len() == 1 {
-                    let segment = segments.last().unwrap();
-
-                    // currently no other tags
-                    if segment.identifier(db).as_str() == "latest" {
-                        return Ok(String::new());
-                    }
-                }
-            }
-            Err(ForkCollector::error(format!(
-                "<{}> value incorrect, expected: latest",
-                BlockId::Tag,
-            )))
-        }
-        BlockId::Hash | BlockId::Number => {
-            crate::validate::number::<ForkCollector>(db, block_args, block_id.to_string().as_str())
-        }
-    }
+pub fn fork(args: TokenStream, item: TokenStream) -> ProcMacroResult {
+    extend_with_config_cheatcodes::<ForkCollector>(args, item)
 }

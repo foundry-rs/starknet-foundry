@@ -1,18 +1,17 @@
 use attributes::{
-    available_gas::AvailableGasCollector, fork::ForkCollector, fuzzer::FuzzerCollector,
-    ignore::IgnoreCollector, internal_config_statement::internal_config_statement,
-    should_panic::ShouldPanicCollector, test::test,
+    available_gas::available_gas, fork::fork, fuzzer::fuzzer, ignore::ignore,
+    internal_config_statement::internal_config_statement, should_panic::should_panic, test::test,
 };
 use cairo_lang_macro::{attribute_macro, executable_attribute, ProcMacroResult, TokenStream};
-use config_statement::extend_with_config_cheatcodes;
 
 mod args;
 mod asserts;
 mod attributes;
+mod cairo_expression;
 mod config_statement;
 mod parse;
+mod types;
 mod utils;
-mod validate;
 
 executable_attribute!("snforge_internal_test_executable");
 
@@ -30,25 +29,25 @@ fn test(_args: TokenStream, item: TokenStream) -> ProcMacroResult {
 
 #[attribute_macro]
 fn ignore(args: TokenStream, item: TokenStream) -> ProcMacroResult {
-    extend_with_config_cheatcodes::<IgnoreCollector>(args, item)
+    ignore(args, item)
 }
 
 #[attribute_macro]
 fn fuzzer(args: TokenStream, item: TokenStream) -> ProcMacroResult {
-    extend_with_config_cheatcodes::<FuzzerCollector>(args, item)
+    fuzzer(args, item)
 }
 
 #[attribute_macro]
 fn fork(args: TokenStream, item: TokenStream) -> ProcMacroResult {
-    extend_with_config_cheatcodes::<ForkCollector>(args, item)
+    fork(args, item)
 }
 
 #[attribute_macro]
 fn available_gas(args: TokenStream, item: TokenStream) -> ProcMacroResult {
-    extend_with_config_cheatcodes::<AvailableGasCollector>(args, item)
+    available_gas(args, item)
 }
 
 #[attribute_macro]
 fn should_panic(args: TokenStream, item: TokenStream) -> ProcMacroResult {
-    extend_with_config_cheatcodes::<ShouldPanicCollector>(args, item)
+    should_panic(args, item)
 }

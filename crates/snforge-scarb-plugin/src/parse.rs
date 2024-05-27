@@ -40,7 +40,7 @@ pub fn parse<T: AttributeInfo>(
 struct InternalCollector;
 
 impl AttributeInfo for InternalCollector {
-    const ATTR_NAME: &'static str = "__INTERNAL_ATTR__";
+    const ATTR_NAME: &'static str = "__SNFORGE_INTERNAL_ATTR__";
     const ARGS_FORM: &'static str = "";
 }
 
@@ -50,7 +50,7 @@ pub fn parse_args<T: AttributeInfo>(
     let (simple_db, func) = parse::<InternalCollector>(&formatdoc!(
         "
             #[{}{args}]
-            fn __INTERNAL_FN__(){{}}
+            fn __SNFORGE_INTERNAL_FN__(){{}}
         ",
         InternalCollector::ATTR_NAME
     ))?;

@@ -3,7 +3,6 @@ use cairo_lang_syntax::node::ast::Expr;
 use smol_str::SmolStr;
 use std::{
     collections::HashMap,
-    fmt::Display,
     ops::{Deref, DerefMut},
 };
 
@@ -54,42 +53,30 @@ impl NamedArgs {
         }
     }
 
-    pub fn one_of_once<T: Display + Copy>(&self, args: &[T]) -> Result<(T, &Expr), Diagnostic> {
+    pub fn one_of_once<T: AsRef<str> + Copy>(&self, args: &[T]) -> Result<(T, &Expr), Diagnostic> {
         let (field, values) = self.one_of(args)?;
 
-        let value = Self::once(values, &field.to_string())?;
+        let value = Self::once(values, field.as_ref())?;
 
         Ok((field, value))
     }
 
-    pub fn one_of<T: Display + Copy>(&self, args: &[T]) -> Result<(T, &Vec<Expr>), Diagnostic> {
-        fn message<T: Iterator<Item = Item>, Item: Display>(fields: T) -> String {
-            fields
-                .map(|field| format!("<{field}>"))
-                .collect::<Vec<_>>()
-                .join(" | ")
-        }
-
-        let mut existing = args
+    pub fn one_of<T: AsRef<str> + Copy>(&self, args: &[T]) -> Result<(T, &Vec<Expr>), Diagnostic> {
+        let occured_args: Vec<_> = args
             .iter()
-            .filter(|arg| self.0.contains_key(arg.to_string().as_str()))
-            .peekable();
+            .filter(|arg| self.0.contains_key(arg.as_ref()))
+            .collect();
 
-        let first = existing.next();
-
-        if existing.peek().is_some() {
-            Err(format!(
-                "only one of {} should be specified",
-                message(std::iter::once(*first.unwrap()).chain(existing.copied()))
-            ))
-        } else {
-            match first {
-                None => Err(format!(
-                    "one of {} must be specified",
-                    message(args.iter().copied())
-                )),
-                Some(field) => Ok((*field, self.0.get(field.to_string().as_str()).unwrap())),
-            }
+        match occured_args.as_slice() {
+            [field] => Ok((**field, self.0.get(field.as_ref()).unwrap())),
+            _ => Err(format!(
+                "exactly one of {} should be specified, got {}",
+                args.iter()
+                    .map(|field| format!("<{}>", field.as_ref()))
+                    .collect::<Vec<_>>()
+                    .join(" | "),
+                occured_args.len()
+            )),
         }
         .map_err(Diagnostic::error)
     }

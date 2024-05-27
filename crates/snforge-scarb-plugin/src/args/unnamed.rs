@@ -25,21 +25,9 @@ impl UnnamedArgs<'_> {
 }
 
 impl<'a> UnnamedArgs<'a> {
-    pub fn of_length<const T: usize>(&self) -> Result<[&'a Expr; T], Diagnostic> {
-        if self.len() == T {
-            let result: [&'a Expr; T] = self
-                .as_slice()
-                .try_into()
-                //checked if self.len() == T
-                .unwrap();
-
-            Ok(result)
-        } else {
-            Err(Diagnostic::error(format!(
-                "expected {} arguments, got: {}",
-                T,
-                self.len()
-            )))
-        }
+    pub fn of_length<const T: usize>(&self) -> Result<&[&'a Expr; T], Diagnostic> {
+        self.as_slice().try_into().map_err(|_| {
+            Diagnostic::error(format!("expected {} arguments, got: {}", T, self.len()))
+        })
     }
 }

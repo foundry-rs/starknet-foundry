@@ -135,9 +135,8 @@ pub fn append_config_statements(
     });
 
     // there was already config check, omit it and collect remaining statements
-    // also omit last one (`return;`) as it have to be inserted after all new statements
     let statements = if if_content.is_some() {
-        &statements[1..statements.len() - 1]
+        &statements[1..]
     } else {
         &statements[..]
     }
@@ -147,6 +146,9 @@ pub fn append_config_statements(
     });
 
     let if_content = if_content.unwrap_or_default();
+
+    // omit last one (`return;`) as it have to be inserted after all new statements
+    let if_content = if_content.trim_end_matches("return;");
 
     formatdoc!(
         "
