@@ -35,6 +35,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - When calling to an address which does not exists, error is forwarded to cairo runtime instead of failing the test
 
+- `SyscallResultStringErrorTrait::map_error_to_string` removed in favor of utility function (`snforge_std::byte_array::try_deserialize_bytearray_error`)
+
 
 ## [0.23.0] - 2024-05-08
 
