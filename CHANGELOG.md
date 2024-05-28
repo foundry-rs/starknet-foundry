@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast
+
+#### Added
+
+- `tx-status` subcommand to get transaction status
+
 ## [0.24.0] - 2024-05-22
 
 ### Forge

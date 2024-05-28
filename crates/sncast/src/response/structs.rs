@@ -1,7 +1,7 @@
 use camino::Utf8PathBuf;
 use conversions::serde::serialize::CairoSerialize;
 use serde::{Deserialize, Serialize, Serializer};
-use starknet::core::types::FieldElement;
+use starknet::core::types::{FieldElement, TransactionStatus};
 
 pub struct Decimal(pub u64);
 
@@ -122,3 +122,5 @@ pub struct ScriptInitResponse {
 }
 
 impl CommandResponse for ScriptInitResponse {}
+
+impl CommandResponse for TransactionStatus {}
