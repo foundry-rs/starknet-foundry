@@ -1,8 +1,7 @@
 # `add`
 Import an account to accounts file.
 
-Account information will be saved to the file specified by `--accounts-file` argument,
-which is `~/.starknet_accounts/starknet_open_zeppelin_accounts.json` by default.
+Account information will be saved to `~/.starknet_accounts/starknet_open_zeppelin_accounts.json`.
 
 ## Required Common Arguments — Passed By CLI or Specified in `snfoundry.toml`
 

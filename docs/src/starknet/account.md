@@ -30,8 +30,6 @@ Do the following to start interacting with the Starknet:
     max_fee: 0x64a7168300
     address: 0x7a949e83b243068d0cbedd8d5b8b32fafea66c54de23c40e68b126b5c845b61
     ```
-
-    You can also pass common `--accounts-file` argument with a path to (existing or not existing) file where you want to save account info.
     
     For a detailed CLI description, see [account create command reference](../appendix/sncast/account/create.md).
 
