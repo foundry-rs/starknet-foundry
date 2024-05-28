@@ -12,7 +12,7 @@ pub struct AvailableGasCollector;
 
 impl AttributeInfo for AvailableGasCollector {
     const ATTR_NAME: &'static str = "available_gas";
-    const ARGS_FORM: &'static str = "<usize>";
+    const ARGS_FORM: &'static str = "<number>";
 }
 
 impl AttributeTypeData for AvailableGasCollector {
@@ -25,7 +25,7 @@ impl AttributeCollector for AvailableGasCollector {
         args: Arguments,
         _warns: &mut Vec<Diagnostic>,
     ) -> Result<String, Diagnostics> {
-        let &[arg] = args.unnamed_only::<Self>()?.of_length::<1>()?;
+        let &[arg] = args.unnamed_only::<Self>()?.of_length::<1, Self>()?;
 
         let gas = Number::parse_from_expr::<Self>(db, arg, "0")?;
 
@@ -37,6 +37,7 @@ impl AttributeCollector for AvailableGasCollector {
     }
 }
 
+#[must_use]
 pub fn available_gas(args: TokenStream, item: TokenStream) -> ProcMacroResult {
     extend_with_config_cheatcodes::<AvailableGasCollector>(args, item)
 }

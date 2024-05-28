@@ -44,16 +44,16 @@ impl AttributeInfo for InternalCollector {
     const ARGS_FORM: &'static str = "";
 }
 
-pub fn parse_args<T: AttributeInfo>(
-    args: &str,
-) -> Result<(SimpleParserDatabase, OptionArgListParenthesized), Diagnostic> {
+pub fn parse_args(args: &str) -> (SimpleParserDatabase, OptionArgListParenthesized) {
     let (simple_db, func) = parse::<InternalCollector>(&formatdoc!(
         "
             #[{}{args}]
             fn __SNFORGE_INTERNAL_FN__(){{}}
         ",
         InternalCollector::ATTR_NAME
-    ))?;
+    ))
+    .expect("scarb provided args must be correct");
+
     let db = simple_db.upcast();
 
     let args = func
@@ -62,5 +62,5 @@ pub fn parse_args<T: AttributeInfo>(
         .unwrap()
         .arguments(db);
 
-    Ok((simple_db, args))
+    (simple_db, args)
 }

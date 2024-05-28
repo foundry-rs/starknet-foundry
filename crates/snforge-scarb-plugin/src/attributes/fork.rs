@@ -18,7 +18,7 @@ pub struct ForkCollector;
 
 impl AttributeInfo for ForkCollector {
     const ATTR_NAME: &'static str = "fork";
-    const ARGS_FORM: &'static str = "<url>: `String`, (<block_hash>: `felt252` | <block_number>: `felt252` | <block_tag>: latest)";
+    const ARGS_FORM: &'static str = r#"<url>: "double quotted string", (<block_hash>: 'single quotted string' | <block_number>: 'single quotted string' | <block_tag>: latest)"#;
 }
 
 impl AttributeTypeData for ForkCollector {
@@ -31,7 +31,9 @@ impl AttributeCollector for ForkCollector {
         args: Arguments,
         _warns: &mut Vec<Diagnostic>,
     ) -> Result<String, Diagnostics> {
-        branch(inline_args(db, &args), || from_file_args(db, &args))
+        let expr = branch(inline_args(db, &args), || from_file_args(db, &args))?;
+
+        Ok(expr)
     }
 }
 
@@ -63,15 +65,20 @@ fn inline_args(db: &dyn SyntaxGroup, args: &Arguments) -> Result<String, Diagnos
 }
 
 fn from_file_args(db: &dyn SyntaxGroup, args: &Arguments) -> Result<String, Diagnostic> {
-    let &[arg] = args.unnamed_only::<ForkCollector>()?.of_length::<1>()?;
+    let &[arg] = args
+        .unnamed_only::<ForkCollector>()?
+        .of_length::<1, ForkCollector>()?;
 
     let name = String::parse_from_expr::<ForkCollector>(db, arg, "0")?;
 
+    let name = name.as_cairo_expression();
+
     Ok(format!(
-        r#"snforge_std::_config_types::ForkConfig::Named("{name}")"#
+        r#"snforge_std::_config_types::ForkConfig::Named({name})"#
     ))
 }
 
+#[must_use]
 pub fn fork(args: TokenStream, item: TokenStream) -> ProcMacroResult {
     extend_with_config_cheatcodes::<ForkCollector>(args, item)
 }

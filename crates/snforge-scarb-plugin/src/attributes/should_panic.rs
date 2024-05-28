@@ -15,7 +15,7 @@ pub struct ShouldPanicCollector;
 
 impl AttributeInfo for ShouldPanicCollector {
     const ATTR_NAME: &'static str = "should_panic";
-    const ARGS_FORM: &'static str = "[<expected>: `String` | `felt252` | [`felt252`,]]";
+    const ARGS_FORM: &'static str = r#"[<expected>: "double quotted string" | 'single quotted string' | ['single quotted string',]]"#;
 }
 
 impl AttributeTypeData for ShouldPanicCollector {
@@ -45,6 +45,7 @@ impl AttributeCollector for ShouldPanicCollector {
     }
 }
 
+#[must_use]
 pub fn should_panic(args: TokenStream, item: TokenStream) -> ProcMacroResult {
     extend_with_config_cheatcodes::<ShouldPanicCollector>(args, item)
 }

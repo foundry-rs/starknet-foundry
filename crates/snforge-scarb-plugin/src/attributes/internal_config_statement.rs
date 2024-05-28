@@ -1,9 +1,11 @@
 use super::AttributeInfo;
 use crate::{
-    asserts::assert_is_used_once, config_statement::append_config_statements, parse::parse,
+    args::Arguments,
+    common::{into_proc_macro_result, with_parsed_values},
+    config_statement::append_config_statements,
 };
-use cairo_lang_macro::{ProcMacroResult, TokenStream};
-use cairo_lang_utils::Upcast;
+use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream};
+use cairo_lang_syntax::node::{ast::FunctionWithBody, db::SyntaxGroup};
 
 pub struct InternalConfigStatementCollector;
 
@@ -12,22 +14,30 @@ impl AttributeInfo for InternalConfigStatementCollector {
     const ARGS_FORM: &'static str = "";
 }
 
+#[must_use]
+pub fn internal_config_statement(args: TokenStream, item: TokenStream) -> ProcMacroResult {
+    into_proc_macro_result(args, item, |args, item, warns| {
+        with_parsed_values::<InternalConfigStatementCollector>(
+            args,
+            item,
+            warns,
+            internal_config_statement_internal,
+        )
+    })
+}
+
 // we need to insert empty config statement in case there was no config used
 // so function will be stopped in configuration mode run
-pub fn internal_config_statement(item: TokenStream) -> ProcMacroResult {
-    let parse_and_assert_result = parse::<InternalConfigStatementCollector>(&item.to_string())
-        .and_then(|(db, func)| {
-            assert_is_used_once::<InternalConfigStatementCollector>(db.upcast(), &func)?;
+#[allow(clippy::ptr_arg)]
+#[allow(clippy::needless_pass_by_value)]
+fn internal_config_statement_internal(
+    db: &dyn SyntaxGroup,
+    func: &FunctionWithBody,
+    _args_db: &dyn SyntaxGroup,
+    args: Arguments,
+    _warns: &mut Vec<Diagnostic>,
+) -> Result<String, Diagnostics> {
+    args.assert_is_empty::<InternalConfigStatementCollector>()?;
 
-            Ok((db, func))
-        });
-
-    match parse_and_assert_result {
-        Ok((db, func)) => ProcMacroResult::new(TokenStream::new(append_config_statements(
-            db.upcast(),
-            &func,
-            "",
-        ))),
-        Err(diagnostics) => ProcMacroResult::new(item).with_diagnostics(diagnostics.into()),
-    }
+    Ok(append_config_statements(db, func, ""))
 }

@@ -2,16 +2,16 @@ use super::ShouldPanicCollector;
 use crate::{
     attributes::{AttributeInfo, ErrorExt},
     cairo_expression::CairoExpression,
-    types::ParseFromExpr,
+    types::{ParseFromExpr, ShortString},
 };
 use cairo_lang_macro::Diagnostic;
 use cairo_lang_syntax::node::{ast::Expr, db::SyntaxGroup};
 
 #[derive(Debug, Clone, Default)]
 pub enum Expected {
-    ShortString(String),
+    ShortString(ShortString),
     ByteArray(String),
-    Array(Vec<String>),
+    Array(Vec<ShortString>),
     #[default]
     Any,
 }
@@ -20,15 +20,19 @@ impl CairoExpression for Expected {
     fn as_cairo_expression(&self) -> String {
         match self {
             Self::ShortString(string) => {
-                format!("snforge_std::_config_types::Expected::ShortString('{string}')")
+                let string = string.as_cairo_expression();
+
+                format!("snforge_std::_config_types::Expected::ShortString({string})")
             }
             Self::ByteArray(string) => {
-                format!(r#"snforge_std::_config_types::Expected::ByteArray("{string}")"#)
+                let string = string.as_cairo_expression();
+
+                format!(r#"snforge_std::_config_types::Expected::ByteArray({string})"#)
             }
             Self::Array(strings) => {
-                let arr = strings.join(",");
+                let arr = strings.as_cairo_expression();
 
-                format!("snforge_std::_config_types::Expected::Array([{arr}])")
+                format!("snforge_std::_config_types::Expected::Array({arr})")
             }
             Self::Any => "snforge_std::_config_types::Expected::Any".to_string(),
         }
@@ -45,7 +49,7 @@ impl ParseFromExpr<Expr> for Expected {
             Expr::ShortString(string) => {
                 let string = string.string_value(db).unwrap();
 
-                Ok(Self::ShortString(string))
+                Ok(Self::ShortString(ShortString(string)))
             }
             Expr::String(string) => {
                 let string = string.string_value(db).unwrap();
@@ -75,7 +79,8 @@ impl ParseFromExpr<Expr> for Expected {
                             )))?,
                         }
                     })
-                    .collect::<Result<Vec<String>, Diagnostic>>()?;
+                    .map(|r| r.map(ShortString))
+                    .collect::<Result<Vec<ShortString>, Diagnostic>>()?;
 
                 Ok(Self::Array(elements))
             }

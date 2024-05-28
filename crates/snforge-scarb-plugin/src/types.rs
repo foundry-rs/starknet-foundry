@@ -15,11 +15,20 @@ pub trait ParseFromExpr<E>: Sized {
 }
 
 #[derive(Debug, Clone)]
-pub struct Number(String);
+pub struct Number(pub(crate) String);
+
+#[derive(Debug, Clone)]
+pub struct ShortString(pub(crate) String);
 
 impl CairoExpression for Number {
     fn as_cairo_expression(&self) -> String {
         format!("0x{}", self.0)
+    }
+}
+
+impl CairoExpression for ShortString {
+    fn as_cairo_expression(&self) -> String {
+        format!("'{}'", self.0)
     }
 }
 
@@ -70,5 +79,28 @@ impl ParseFromExpr<Expr> for String {
                 "<{arg_name}> invalid type, should be: double quotted string"
             ))),
         }
+    }
+}
+impl ParseFromExpr<Expr> for ShortString {
+    fn parse_from_expr<T: AttributeInfo>(
+        db: &dyn SyntaxGroup,
+        expr: &Expr,
+        arg_name: &str,
+    ) -> Result<Self, Diagnostic> {
+        match expr {
+            Expr::ShortString(string) => match string.string_value(db) {
+                None => Err(T::error(format!("<{arg_name}> is not a valid string"))),
+                Some(string) => Ok(ShortString(string)),
+            },
+            _ => Err(T::error(format!(
+                "<{arg_name}> invalid type, should be: double quotted string"
+            ))),
+        }
+    }
+}
+
+impl CairoExpression for String {
+    fn as_cairo_expression(&self) -> String {
+        format!(r#""{self}""#)
     }
 }

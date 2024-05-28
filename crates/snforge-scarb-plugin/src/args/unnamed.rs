@@ -1,3 +1,4 @@
+use crate::attributes::{AttributeInfo, ErrorExt};
 use cairo_lang_macro::Diagnostic;
 use cairo_lang_syntax::node::ast::Expr;
 use std::{collections::HashMap, ops::Deref};
@@ -25,9 +26,11 @@ impl UnnamedArgs<'_> {
 }
 
 impl<'a> UnnamedArgs<'a> {
-    pub fn of_length<const T: usize>(&self) -> Result<&[&'a Expr; T], Diagnostic> {
-        self.as_slice().try_into().map_err(|_| {
-            Diagnostic::error(format!("expected {} arguments, got: {}", T, self.len()))
-        })
+    pub fn of_length<const N: usize, T: AttributeInfo>(
+        &self,
+    ) -> Result<&[&'a Expr; N], Diagnostic> {
+        self.as_slice()
+            .try_into()
+            .map_err(|_| T::error(format!("expected {} arguments, got: {}", N, self.len())))
     }
 }

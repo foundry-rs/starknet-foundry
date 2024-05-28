@@ -1,8 +1,7 @@
 use crate::{
     args::Arguments,
-    asserts::assert_is_used_once,
     attributes::AttributeCollector,
-    parse::{parse, parse_args},
+    common::{into_proc_macro_result, with_parsed_values},
 };
 use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream};
 use cairo_lang_syntax::node::{
@@ -11,7 +10,6 @@ use cairo_lang_syntax::node::{
     helpers::{GetIdentifier, PathSegmentEx},
     TypedSyntaxNode,
 };
-use cairo_lang_utils::Upcast;
 use indoc::formatdoc;
 
 #[allow(clippy::needless_pass_by_value)]
@@ -22,37 +20,22 @@ pub fn extend_with_config_cheatcodes<Collector>(
 where
     Collector: AttributeCollector,
 {
-    let mut warns = vec![]; // Vec<Diagnostic> instead of Diagnostics because it does not allow to push ready Diagnostic
-
-    match extend_with_config_cheatcodes_internal::<Collector>(&args, &item, &mut warns) {
-        Ok(item) => ProcMacroResult::new(TokenStream::new(item)).with_diagnostics(warns.into()),
-        Err(diagnostics) => ProcMacroResult::new(item).with_diagnostics(
-            //TODO extend with warns
-            diagnostics,
-        ),
-    }
+    into_proc_macro_result(args, item, |args, item, warns| {
+        with_parsed_values::<Collector>(args, item, warns, with_config_cheatcodes::<Collector>)
+    })
 }
 
-fn extend_with_config_cheatcodes_internal<Collector>(
-    args: &TokenStream,
-    item: &TokenStream,
+fn with_config_cheatcodes<Collector>(
+    db: &dyn SyntaxGroup,
+    func: &FunctionWithBody,
+    args_db: &dyn SyntaxGroup,
+    args: Arguments,
     warns: &mut Vec<Diagnostic>,
 ) -> Result<String, Diagnostics>
 where
     Collector: AttributeCollector,
 {
-    let item = item.to_string();
-    let (db, func) = parse::<Collector>(&item)?;
-
-    let db = db.upcast();
-
-    assert_is_used_once::<Collector>(db, &func)?;
-
-    let (args_db, args) = parse_args::<Collector>(&args.to_string())?;
-
-    let args = Arguments::new::<Collector>(args_db.upcast(), args, warns);
-
-    let value = Collector::args_into_config_expression(args_db.upcast(), args, warns)?;
+    let value = Collector::args_into_config_expression(args_db, args, warns)?;
 
     let cheatcode_name = Collector::CHEATCODE_NAME;
 
@@ -67,7 +50,7 @@ where
         "#
     );
 
-    Ok(append_config_statements(db, &func, &config_cheatcode))
+    Ok(append_config_statements(db, func, &config_cheatcode))
 }
 
 const CONFIG_CHEATCODE: &str = "is_config_mode";

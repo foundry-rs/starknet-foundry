@@ -6,8 +6,9 @@ use cairo_lang_macro::{attribute_macro, executable_attribute, ProcMacroResult, T
 
 mod args;
 mod asserts;
-mod attributes;
+pub mod attributes;
 mod cairo_expression;
+mod common;
 mod config_statement;
 mod parse;
 mod types;
@@ -17,14 +18,14 @@ executable_attribute!("snforge_internal_test_executable");
 
 #[attribute_macro]
 #[allow(clippy::needless_pass_by_value)]
-fn __internal_config_statement(_args: TokenStream, item: TokenStream) -> ProcMacroResult {
-    internal_config_statement(item)
+fn __internal_config_statement(args: TokenStream, item: TokenStream) -> ProcMacroResult {
+    internal_config_statement(args, item)
 }
 
 #[attribute_macro]
 #[allow(clippy::needless_pass_by_value)]
-fn test(_args: TokenStream, item: TokenStream) -> ProcMacroResult {
-    test(&item)
+fn test(args: TokenStream, item: TokenStream) -> ProcMacroResult {
+    test(args, item)
 }
 
 #[attribute_macro]

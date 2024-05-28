@@ -13,7 +13,7 @@ pub struct FuzzerCollector;
 
 impl AttributeInfo for FuzzerCollector {
     const ATTR_NAME: &'static str = "fuzzer";
-    const ARGS_FORM: &'static str = "<runs>: `u64`, <seed>: `felt252`";
+    const ARGS_FORM: &'static str = "<runs>: number (greater than 0), <seed>: number";
 }
 
 impl AttributeTypeData for FuzzerCollector {
@@ -38,6 +38,8 @@ impl AttributeCollector for FuzzerCollector {
             .map(|arg| Number::parse_from_expr::<Self>(db, arg, "runs"))
             .transpose()?;
 
+        //TODO validate runs > 0
+
         let seed = seed.as_cairo_expression();
         let runs = runs.as_cairo_expression();
 
@@ -47,6 +49,7 @@ impl AttributeCollector for FuzzerCollector {
     }
 }
 
+#[must_use]
 pub fn fuzzer(args: TokenStream, item: TokenStream) -> ProcMacroResult {
     extend_with_config_cheatcodes::<FuzzerCollector>(args, item)
 }
