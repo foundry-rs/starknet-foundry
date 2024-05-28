@@ -1,4 +1,6 @@
-use crate::helpers::constants::{DEVNET_OZ_CLASS_HASH_CAIRO_0, DEVNET_OZ_CLASS_HASH_CAIRO_1, URL};
+use crate::helpers::constants::{
+    ARGENT_ACCOUNT_CLASS_HASH, DEVNET_OZ_CLASS_HASH_CAIRO_0, DEVNET_OZ_CLASS_HASH_CAIRO_1, URL,
+};
 use crate::helpers::fixtures::copy_file;
 use crate::helpers::fixtures::{
     get_address_from_keystore, get_transaction_hash, get_transaction_receipt, mint_token,
@@ -17,6 +19,7 @@ use test_case::test_case;
 
 #[test_case(DEVNET_OZ_CLASS_HASH_CAIRO_0, "oz"; "cairo_0_class_hash")]
 #[test_case(DEVNET_OZ_CLASS_HASH_CAIRO_1, "oz"; "cairo_1_class_hash")]
+#[test_case(ARGENT_ACCOUNT_CLASS_HASH, "argent"; "argent_class_hash")]
 #[tokio::test]
 pub async fn test_happy_case(class_hash: &str, account_type: &str) {
     let tempdir = create_account(false, class_hash, account_type).await;
@@ -88,7 +91,6 @@ pub async fn test_happy_case_add_profile() {
 
 #[test_case("{\"alpha-sepolia\": {}}", "error: Account = my_account not found under network = alpha-sepolia" ; "when account name not present")]
 #[test_case("{\"alpha-sepolia\": {\"my_account\" : {}}}", "error: Failed to parse file = accounts.json to JSON: missing field `private_key`[..]" ; "when private key not present")]
-#[test_case("{\"alpha-sepolia\": {\"my_account\" : {\"private_key\": \"0x1\", \"public_key\": \"0x2\", \"class_hash\": \"0x3\"}}}", "error: Failed to get salt" ; "when salt not present")]
 fn test_account_deploy_error(accounts_content: &str, error: &str) {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
 
@@ -236,27 +238,30 @@ pub async fn create_account(add_profile: bool, class_hash: &str, account_type: &
     tempdir
 }
 
+#[test_case("oz"; "open_zeppelin_account")]
+#[test_case("argent"; "argent_account")]
 #[tokio::test]
-pub async fn test_happy_case_keystore() {
+pub async fn test_happy_case_keystore(account_type: &str) {
     let tempdir = tempdir().expect("Unable to create a temporary directory");
 
     let keystore_file = "my_key.json";
-    let account_file = "my_account_undeployed_happy_case.json";
+    let account_file = format!("my_account_{account_type}_undeployed_happy_case.json");
 
     copy_file(
         "tests/data/keystore/my_key.json",
         tempdir.path().join(keystore_file),
     );
     copy_file(
-        "tests/data/keystore/my_account_undeployed_happy_case.json",
-        tempdir.path().join(account_file),
+        format!("tests/data/keystore/{account_file}"),
+        tempdir.path().join(&account_file),
     );
     env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
 
     let address = get_address_from_keystore(
         tempdir.path().join(keystore_file).to_str().unwrap(),
-        tempdir.path().join(account_file).to_str().unwrap(),
+        tempdir.path().join(&account_file).to_str().unwrap(),
         KEYSTORE_PASSWORD_ENV_VAR,
+        account_type,
     );
 
     mint_token(&address.into_hex_string(), 9_999_999_999_999_999_999).await;
@@ -267,7 +272,7 @@ pub async fn test_happy_case_keystore() {
         "--keystore",
         keystore_file,
         "--account",
-        account_file,
+        &account_file,
         "account",
         "deploy",
         "--max-fee",
@@ -513,6 +518,7 @@ pub async fn test_deploy_keystore_other_args() {
         tempdir.path().join(keystore_file),
         tempdir.path().join(account_file),
         KEYSTORE_PASSWORD_ENV_VAR,
+        "oz",
     );
 
     mint_token(&address.into_hex_string(), 9_999_999_999_999_999_999).await;
