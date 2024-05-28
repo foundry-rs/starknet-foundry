@@ -67,7 +67,7 @@ pub fn assert_diagnostics(result: &ProcMacroResult, expected: &[(Severity, &str)
     );
 }
 
-// generated code is terribly formated so replace all whitespace sequences with single one
+// generated code is terribly formatted so replace all whitespace sequences with single one
 // this wont work if we emit string literals with whitespaces
 // but we don't others than user provided ones and it's faster and easier than scarb fmt
 pub fn assert_output(result: &ProcMacroResult, expected: &str) {

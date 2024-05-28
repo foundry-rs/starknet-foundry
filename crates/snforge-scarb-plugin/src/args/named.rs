@@ -62,12 +62,12 @@ impl NamedArgs {
     }
 
     pub fn one_of<T: AsRef<str> + Copy>(&self, args: &[T]) -> Result<(T, &Vec<Expr>), Diagnostic> {
-        let occured_args: Vec<_> = args
+        let occurred_args: Vec<_> = args
             .iter()
             .filter(|arg| self.0.contains_key(arg.as_ref()))
             .collect();
 
-        match occured_args.as_slice() {
+        match occurred_args.as_slice() {
             [field] => Ok((**field, self.0.get(field.as_ref()).unwrap())),
             _ => Err(format!(
                 "exactly one of {} should be specified, got {}",
@@ -75,7 +75,7 @@ impl NamedArgs {
                     .map(|field| format!("<{}>", field.as_ref()))
                     .collect::<Vec<_>>()
                     .join(" | "),
-                occured_args.len()
+                occurred_args.len()
             )),
         }
         .map_err(Diagnostic::error)

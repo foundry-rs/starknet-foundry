@@ -85,26 +85,3 @@ fn works_with_few_attributes() {
         "#,
     );
 }
-
-
-// "
-//     #[snforge_internal_test_executable]
-//     #[__internal_config_statement]
-//     fn empty_fn() {
-//         if starknet::testing::cheatcode::<'is_config_mode'>() {
-//             let mut data = array![];
-            
-//             snforge_std::_config_types::AvailableGasConfig { gas: 0x7b }
-//                 .serialize(ref data);
-            
-//             let mut data = array![];
-            
-//             snforge_std::_config_types::ForkConfig::Named(\"test\")
-//                 .serialize(ref data);
-            
-//             starknet::testing::cheatcode::<'set_config_fork'>(data);
-            
-//             return;
-//         }
-//     }
-// "
