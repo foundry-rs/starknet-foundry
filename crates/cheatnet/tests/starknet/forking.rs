@@ -1,4 +1,4 @@
-use crate::common::assertions::{assert_error, assert_success};
+use crate::common::assertions::{assert_error, assert_panic, assert_success};
 use crate::common::cache::{purge_cache, read_cache};
 use crate::common::state::{create_fork_cached_state, create_fork_cached_state_at};
 use crate::common::{call_contract, deploy_contract, deploy_wrapper, felt_selector_from_name};
@@ -12,6 +12,7 @@ use cheatnet::constants::build_testing_state;
 use cheatnet::forking::{cache::CACHE_VERSION, state::ForkStateReader};
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
 use cheatnet::state::{BlockInfoReader, CheatnetState, ExtendedStateReader};
+use conversions::byte_array::ByteArray;
 use conversions::string::TryFromHexStr;
 use conversions::IntoConv;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
@@ -79,10 +80,10 @@ fn try_calling_nonexistent_contract() {
         &selector,
         &[],
     );
-    assert_error(
-        output,
-        "Contract not deployed at address: 0x0000000000000000000000000000000000000000000000000000000000000001"
-    );
+
+    let msg = "Contract not deployed at address: 0x0000000000000000000000000000000000000000000000000000000000000001";
+    let panic_data_felts: Vec<Felt252> = ByteArray::from(msg).serialize_with_magic();
+    assert_panic(output, &panic_data_felts);
 }
 
 #[test]
@@ -131,10 +132,9 @@ fn test_forking_at_block_number() {
             &[],
         );
 
-        assert_error(
-            output,
-            "Contract not deployed at address: 0x0202de98471a4fae6bcbabb96cab00437d381abc58b02509043778074d6781e9"
-        );
+        let msg = "Contract not deployed at address: 0x0202de98471a4fae6bcbabb96cab00437d381abc58b02509043778074d6781e9";
+        let panic_data_felts: Vec<Felt252> = ByteArray::from(msg).serialize_with_magic();
+        assert_panic(output, &panic_data_felts);
 
         let selector = felt_selector_from_name("get_balance");
         let output = call_contract(

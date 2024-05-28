@@ -68,7 +68,7 @@ impl<'a> ExtensionLogic for CallToBlockifierExtension<'a> {
                     .hint_handler
                     .increment_syscall_count_by(&selector, 1);
 
-                Ok(SyscallHandlingResult::Handled(()))
+                Ok(SyscallHandlingResult::Handled)
             }
             DeprecatedSyscallSelector::LibraryCall => {
                 execute_syscall::<LibraryCallRequest>(vm, extended_runtime)?;
@@ -78,7 +78,7 @@ impl<'a> ExtensionLogic for CallToBlockifierExtension<'a> {
                     .hint_handler
                     .increment_syscall_count_by(&selector, 1);
 
-                Ok(SyscallHandlingResult::Handled(()))
+                Ok(SyscallHandlingResult::Handled)
             }
             _ => Ok(SyscallHandlingResult::Forwarded),
         }
@@ -183,7 +183,7 @@ fn write_call_response(
     call_result: CallResult,
 ) -> Result<(), HintError> {
     let response_wrapper: SyscallResponseWrapper<SingleSegmentResponse> = match call_result {
-        CallResult::Success { ret_data, .. } => {
+        CallResult::Success { ret_data } => {
             let memory_segment_start_ptr = syscall_handler
                 .read_only_segments
                 .allocate(vm, &ret_data.iter().map(Into::into).collect())?;
@@ -199,14 +199,14 @@ fn write_call_response(
             }
         }
         CallResult::Failure(failure_type) => match failure_type {
-            CallFailure::Panic { panic_data, .. } => SyscallResponseWrapper::Failure {
+            CallFailure::Panic { panic_data } => SyscallResponseWrapper::Failure {
                 gas_counter,
                 error_data: panic_data
                     .iter()
                     .map(|el| StarkFelt::from_(el.clone()))
                     .collect(),
             },
-            CallFailure::Error { msg, .. } => return Err(HintError::CustomHint(Box::from(msg))),
+            CallFailure::Error { msg } => return Err(HintError::CustomHint(Box::from(msg))),
         },
     };
 

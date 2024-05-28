@@ -1,5 +1,6 @@
 use crate::{
     byte_array::ByteArray,
+    serde::serialize::SerializeToFeltVec,
     string::{TryFromDecStr, TryFromHexStr},
     FromConv, IntoConv,
 };
@@ -111,110 +112,11 @@ impl TryInferFormat for Felt252 {
         } else if value.starts_with('"') && value.ends_with('"') {
             let value = resolve(value).replace("\\\"", "\"");
 
-            Ok(ByteArray::from(value.as_str()).serialize_no_magic())
+            Ok(ByteArray::from(value.as_str()).serialize_to_vec())
         } else {
             Felt252::try_from_hex_str(value)
                 .or_else(|_| Felt252::try_from_dec_str(value))
                 .map(|felt| vec![felt])
         }
-    }
-}
-
-pub trait SerializeAsFelt252Vec: Sized {
-    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>);
-    fn serialize_as_felt252_vec(self) -> Vec<Felt252> {
-        let mut result = vec![];
-        self.serialize_into_felt252_vec(&mut result);
-        result
-    }
-}
-
-/// use this wrapper to NOT add extra length felt
-/// useful e.g. when you need to pass an already serialized value
-pub struct RawFeltVec<T>(Vec<T>)
-where
-    T: SerializeAsFelt252Vec;
-
-impl<T> RawFeltVec<T>
-where
-    T: SerializeAsFelt252Vec,
-{
-    #[must_use]
-    pub fn new(vec: Vec<T>) -> Self {
-        Self(vec)
-    }
-}
-
-impl<T> SerializeAsFelt252Vec for RawFeltVec<T>
-where
-    T: SerializeAsFelt252Vec,
-{
-    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
-        for e in self.0 {
-            e.serialize_into_felt252_vec(output);
-        }
-    }
-}
-
-impl<T> SerializeAsFelt252Vec for Vec<T>
-where
-    T: SerializeAsFelt252Vec,
-{
-    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
-        let len: Felt252 = self.len().into();
-
-        len.serialize_into_felt252_vec(output);
-
-        for e in self {
-            e.serialize_into_felt252_vec(output);
-        }
-    }
-}
-
-impl<T: SerializeAsFelt252Vec, E: SerializeAsFelt252Vec> SerializeAsFelt252Vec for Result<T, E> {
-    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
-        match self {
-            Ok(val) => {
-                output.push(Felt252::from(0));
-                val.serialize_into_felt252_vec(output);
-            }
-            Err(err) => {
-                output.push(Felt252::from(1));
-                err.serialize_into_felt252_vec(output);
-            }
-        }
-    }
-}
-
-impl<T> SerializeAsFelt252Vec for T
-where
-    T: IntoConv<Felt252>,
-{
-    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
-        output.push(self.into_());
-    }
-
-    fn serialize_as_felt252_vec(self) -> Vec<Felt252> {
-        vec![self.into_()]
-    }
-}
-
-impl SerializeAsFelt252Vec for &str {
-    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
-        output.extend(self.serialize_as_felt252_vec());
-    }
-
-    fn serialize_as_felt252_vec(self) -> Vec<Felt252> {
-        ByteArray::from(self).serialize_no_magic()
-    }
-}
-
-impl SerializeAsFelt252Vec for String {
-    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
-        self.as_str().serialize_into_felt252_vec(output);
-    }
-
-    fn serialize_as_felt252_vec(self) -> Vec<Felt252> {
-        self.as_str().serialize_as_felt252_vec()
     }
 }

@@ -2,20 +2,27 @@
 
 Cheatcodes modifying `sequencer_address`:
 
-## `elect`
-
-> `fn elect(target: CheatTarget, sequencer_address: ContractAddress, span: CheatSpan)`
+## `cheat_sequencer_address`
+> `fn cheat_sequencer_address(target: ContractAddress, sequencer_address: ContractAddress, span: CheatSpan)`
 
 Changes the sequencer address for the given target and span.
 
-## `start_elect`
+## `cheat_sequencer_address_global`
+> `fn cheat_sequencer_address_global(sequencer_address: ContractAddress)`
 
-> `fn start_elect(target: CheatTarget, sequencer_address: ContractAddress)`
+Changes the sequencer address for all targets.
 
-Changes the sequencer address for a given target.
+## `start_cheat_sequencer_address`
+> `fn start_cheat_sequencer_address(target: ContractAddress, sequencer_address: ContractAddress)`
 
-## `stop_elect`
+Changes the sequencer address for the given target.
 
-> `fn stop_elect(target: CheatTarget)`
+## `stop_cheat_sequencer_address`
+> `fn stop_cheat_sequencer_address(target: ContractAddress)`
 
-Cancels the `elect` / `start_elect` for the given target.
+Cancels the `cheat_sequencer_address` / `start_cheat_sequencer_address` for the given target.
+
+## `stop_cheat_sequencer_address_global`
+> `fn stop_cheat_sequencer_address_global(target: ContractAddress)`
+
+Cancels the `cheat_sequencer_address_global`.

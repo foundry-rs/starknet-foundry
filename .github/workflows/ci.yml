@@ -189,6 +189,9 @@ jobs:
       - name: Install mdBook
         run: |
           cargo install --version ${MDBOOK_VERSION} mdbook
+      - name: Install mdBook Link-Check
+        run: |
+          cargo install mdbook-linkcheck
       - name: Build with mdBook
         run: mdbook build
         working-directory: ./docs

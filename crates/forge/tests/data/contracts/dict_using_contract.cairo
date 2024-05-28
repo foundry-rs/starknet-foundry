@@ -5,6 +5,7 @@ mod DictUsingContract {
     fn unique_count(mut ary: Array<felt252>) -> u32 {
         let mut dict: Felt252Dict<felt252> = Default::default();
         let mut counter = 0;
+        // TODO
         loop {
             match ary.pop_front() {
                 Option::Some(value) => {

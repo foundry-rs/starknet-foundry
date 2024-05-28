@@ -23,7 +23,7 @@ Mocks contract call to a `function_selector` of a contract at the given address,
 See `mock_call` for comprehensive definition of how it can be used.
 
 
-## `stop_mock_call`
+### `stop_mock_call`
 
 > `fn stop_mock_call(contract_address: ContractAddress, function_selector: felt252)`
 

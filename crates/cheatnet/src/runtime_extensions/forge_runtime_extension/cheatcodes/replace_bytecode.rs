@@ -1,4 +1,5 @@
 use crate::CheatnetState;
+use conversions::serde::serialize::CairoSerialize;
 use starknet_api::core::{ClassHash, ContractAddress};
 
 impl CheatnetState {
@@ -10,4 +11,10 @@ impl CheatnetState {
         self.replaced_bytecode_contracts
             .insert(contract_address, class_hash);
     }
+}
+
+#[derive(CairoSerialize)]
+pub enum ReplaceBytecodeError {
+    ContractNotDeployed,
+    UndeclaredClassHash,
 }

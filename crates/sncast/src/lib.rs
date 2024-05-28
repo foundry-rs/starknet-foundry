@@ -25,8 +25,7 @@ use starknet::{
 
 use crate::helpers::constants::{DEFAULT_STATE_FILE_SUFFIX, WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
 use crate::response::errors::SNCastProviderError;
-use cairo_felt::Felt252;
-use conversions::felt252::SerializeAsFelt252Vec;
+use conversions::serde::serialize::CairoSerialize;
 use serde::de::DeserializeOwned;
 use shared::rpc::create_rpc_client;
 use starknet::accounts::{AccountFactory, AccountFactoryError};
@@ -467,7 +466,7 @@ pub fn get_block_id(value: &str) -> Result<BlockId> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, CairoSerialize)]
 pub struct ErrorData {
     pub data: String,
 }
@@ -487,7 +486,7 @@ impl From<ContractErrorData> for ErrorData {
     }
 }
 
-#[derive(Error, Debug)]
+#[derive(Error, Debug, CairoSerialize)]
 pub enum TransactionError {
     #[error("Transaction has been rejected")]
     Rejected,
@@ -495,7 +494,7 @@ pub enum TransactionError {
     Reverted(ErrorData),
 }
 
-#[derive(Error, Debug)]
+#[derive(Error, Debug, CairoSerialize)]
 pub enum WaitForTransactionError {
     #[error(transparent)]
     TransactionError(TransactionError),
@@ -503,34 +502,6 @@ pub enum WaitForTransactionError {
     TimedOut,
     #[error(transparent)]
     ProviderError(#[from] SNCastProviderError),
-}
-
-impl SerializeAsFelt252Vec for WaitForTransactionError {
-    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
-        match self {
-            WaitForTransactionError::TransactionError(err) => {
-                output.push(Felt252::from(0));
-                err.serialize_into_felt252_vec(output);
-            }
-            WaitForTransactionError::TimedOut => output.push(Felt252::from(1)),
-            WaitForTransactionError::ProviderError(err) => {
-                output.push(Felt252::from(2));
-                err.serialize_into_felt252_vec(output);
-            }
-        }
-    }
-}
-
-impl SerializeAsFelt252Vec for TransactionError {
-    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
-        match self {
-            TransactionError::Rejected => output.push(Felt252::from(0)),
-            TransactionError::Reverted(err) => {
-                output.push(Felt252::from(1));
-                err.data.serialize_into_felt252_vec(output);
-            }
-        }
-    }
 }
 
 pub async fn wait_for_tx(

@@ -87,8 +87,13 @@ fn call_predefined_contract_from_proxy_contract() {
 
     let contracts_data = get_contracts();
 
-    let class_hash = declare(&mut cached_state, "PrankChecker", &contracts_data).unwrap();
-    let prank_checker_address = deploy_at_wrapper(
+    let class_hash = declare(
+        &mut cached_state,
+        "CheatCallerAddressChecker",
+        &contracts_data,
+    )
+    .unwrap();
+    let cheat_caller_address_checker_address = deploy_at_wrapper(
         &mut cached_state,
         &mut cheatnet_state,
         &class_hash,
@@ -97,21 +102,24 @@ fn call_predefined_contract_from_proxy_contract() {
     )
     .unwrap();
 
-    assert_eq!(prank_checker_address, ContractAddress::from(1_u8));
+    assert_eq!(
+        cheat_caller_address_checker_address,
+        ContractAddress::from(1_u8)
+    );
 
     let proxy_address = deploy_contract(
         &mut cached_state,
         &mut cheatnet_state,
-        "PrankCheckerProxy",
+        "CheatCallerAddressCheckerProxy",
         &[],
     );
-    let proxy_selector = felt_selector_from_name("get_prank_checkers_caller_address");
+    let proxy_selector = felt_selector_from_name("get_cheated_caller_address");
     let output = call_contract(
         &mut cached_state,
         &mut cheatnet_state,
         &proxy_address,
         &proxy_selector,
-        &[prank_checker_address.into_()],
+        &[cheat_caller_address_checker_address.into_()],
     );
 
     assert_success(output, &[proxy_address.into_()]);
@@ -235,7 +243,7 @@ fn deploy_missing_arguments_in_constructor() {
 
     assert!(match output {
         Err(CheatcodeError::Unrecoverable(EnhancedHintError::Hint(HintError::CustomHint(msg)))) =>
-            msg.as_ref() == "0x4661696c656420746f20646573657269616c697a6520706172616d202332 ('Failed to deserialize param #2')",
+            msg.as_ref() == "\n    0x4661696c656420746f20646573657269616c697a6520706172616d202332 ('Failed to deserialize param #2')\n",
         _ => false,
     });
 }
@@ -258,7 +266,7 @@ fn deploy_too_many_arguments_in_constructor() {
 
     assert!(match output {
         Err(CheatcodeError::Unrecoverable(EnhancedHintError::Hint(HintError::CustomHint(msg)))) =>
-            msg.as_ref() == "0x496e70757420746f6f206c6f6e6720666f7220617267756d656e7473 ('Input too long for arguments')",
+            msg.as_ref() == "\n    0x496e70757420746f6f206c6f6e6720666f7220617267756d656e7473 ('Input too long for arguments')\n",
         _ => false,
     });
 }

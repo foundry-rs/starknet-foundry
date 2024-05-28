@@ -62,33 +62,32 @@ This code contains some caveats:
 
 That function returns the contract address of the test.
 It is useful, when you want to:
-- Mock the context (`prank`, `warp`, `roll`, `spoof`)
+- Mock the context (`cheat_caller_address`, `cheat_block_timestamp`, `cheat_block_number`, ...)
 - Spy for events emitted in the test
 
 Example usages:
 #### 1. Mocking the context info
-Example for `roll`, same can be implemented for `prank`/`spoof`/`warp`/`elect` etc.
+Example for `cheat_block_number`, same can be implemented for `cheat_caller_address`/`cheat_block_timestamp`/`elect` etc.
 
 ```rust
 use result::ResultTrait;
 use box::BoxTrait;
 use starknet::ContractAddress;
 use snforge_std::{
-    CheatTarget,
-    start_roll, stop_roll,
+    start_cheat_block_number, stop_cheat_block_number,
     test_address
 };
 
 #[test]
-fn test_roll_test_state() {
+fn test_cheat_block_number_test_state() {
     let test_address: ContractAddress = test_address();
     let old_block_number = starknet::get_block_info().unbox().block_number;
 
-    start_roll(CheatTarget::One(test_address), 234);
+    start_cheat_block_number(test_address, 234);
     let new_block_number = starknet::get_block_info().unbox().block_number;
     assert(new_block_number == 234, 'Wrong block number');
 
-    stop_roll(CheatTarget::One(test_address));
+    stop_cheat_block_number(test_address);
     let new_block_number = starknet::get_block_info().unbox().block_number;
     assert(new_block_number == old_block_number, 'Block num did not change back');
 }

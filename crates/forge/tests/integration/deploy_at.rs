@@ -19,8 +19,8 @@ fn deploy_at_correct_address() {
 
         #[test]
         fn deploy_at_correct_address() {
-            let contract = declare("PrankChecker").unwrap();
-            let (prank_checker, _) = contract.deploy(@array![]).unwrap();
+            let contract = declare("CheatCallerAddressChecker").unwrap();
+            let (cheat_caller_address_checker, _) = contract.deploy(@array![]).unwrap();
         
             let contract = declare("Proxy").unwrap();
             let deploy_at_address = 123;
@@ -28,7 +28,7 @@ fn deploy_at_correct_address() {
             let (contract_address, _) = contract.deploy_at(@array![], deploy_at_address.try_into().unwrap()).unwrap();
             assert(deploy_at_address == contract_address.into(), 'addresses should be the same');
             
-            let real_address = IProxyDispatcher{ contract_address }.get_caller_address(prank_checker);
+            let real_address = IProxyDispatcher{ contract_address }.get_caller_address(cheat_caller_address_checker);
             assert(real_address == contract_address.into(), 'addresses should be the same');
         }
     "#
@@ -52,14 +52,14 @@ fn deploy_at_correct_address() {
                     struct Storage {}
 
                     #[starknet::interface]
-                    trait IPrankChecker<TContractState> {
+                    trait ICheatCallerAddressChecker<TContractState> {
                         fn get_caller_address(ref self: TContractState) -> felt252;
                     }
                 
                     #[abi(embed_v0)]
                     impl ProxyImpl of super::IProxy<ContractState> {
                         fn get_caller_address(ref self: ContractState, checker_address: ContractAddress) -> felt252 {
-                            IPrankCheckerDispatcher{ contract_address: checker_address}.get_caller_address()
+                            ICheatCallerAddressCheckerDispatcher{ contract_address: checker_address}.get_caller_address()
                         }
                     }
                 }
@@ -67,8 +67,8 @@ fn deploy_at_correct_address() {
             )
         ),
         Contract::from_code_path(
-            "PrankChecker".to_string(),
-            Path::new("tests/data/contracts/prank_checker.cairo"),
+            "CheatCallerAddressChecker".to_string(),
+            Path::new("tests/data/contracts/cheat_caller_address_checker.cairo"),
         )
         .unwrap()
     );

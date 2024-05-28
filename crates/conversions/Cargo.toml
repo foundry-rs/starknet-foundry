@@ -23,6 +23,7 @@ serde_json.workspace = true
 serde.workspace = true
 num-traits.workspace = true
 itertools.workspace = true
+cairo-serde-macros = { path = "cairo-serde-macros" }
 
 [dev-dependencies]
 ctor.workspace = true

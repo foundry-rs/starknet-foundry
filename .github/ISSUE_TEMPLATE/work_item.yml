@@ -9,6 +9,7 @@ body:
       options:
         - snforge
         - sncast
+        - cairo-profiler
         - other (describe below)
     validations:
       required: true

@@ -7,15 +7,15 @@ members = [
     "crates/sncast",
     "crates/cheatnet",
     "crates/conversions",
+    "crates/conversions/cairo-serde-macros",
     "crates/runtime",
-    "crates/runtime/macros",
     "crates/scarb-api",
     "crates/configuration",
     "crates/universal-sierra-compiler-api",
 ]
 
 [workspace.package]
-version = "0.23.0"
+version = "0.24.0"
 edition = "2021"
 repository = "https://github.com/foundry-rs/starknet-foundry"
 license = "MIT"

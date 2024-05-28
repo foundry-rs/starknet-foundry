@@ -496,7 +496,7 @@ pub fn assert_tx_entry_failed(
     assert_eq!(tx_entry.name, name);
     assert_eq!(tx_entry.status, status);
 
-    let ScriptTransactionOutput::ErrorResponse(response) = tx_entry.output.clone() else {
+    let ScriptTransactionOutput::ErrorResponse(response) = &tx_entry.output else {
         panic!("Wrong response")
     };
     for msg in msg_contains {

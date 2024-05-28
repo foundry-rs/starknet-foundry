@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Result};
 use cairo_felt::{Felt252, ParseFeltError};
 use conversions::{
-    felt252::{SerializeAsFelt252Vec, TryInferFormat},
+    byte_array::ByteArray, felt252::TryInferFormat, serde::serialize::SerializeToFeltVec,
     string::TryFromDecStr,
 };
 use flatten_serde_json::flatten;
@@ -58,7 +58,7 @@ fn value_into_vec(value: &Value, output: &mut Vec<Felt252>) -> Result<(), ParseF
             Ok(())
         }
         Value::String(string) => {
-            output.extend(string.as_str().serialize_as_felt252_vec());
+            output.extend(ByteArray::from(string.as_str()).serialize_to_vec());
 
             Ok(())
         }
@@ -72,7 +72,7 @@ fn value_into_vec(value: &Value, output: &mut Vec<Felt252>) -> Result<(), ParseF
 mod tests {
     use super::read_json;
     use cairo_felt::Felt252;
-    use conversions::felt252::SerializeAsFelt252Vec;
+    use conversions::{byte_array::ByteArray, serde::serialize::SerializeToFeltVec};
     use std::fs;
     use tempfile::TempDir;
 
@@ -105,7 +105,7 @@ mod tests {
             Felt252::from(12),
             Felt252::from(43),
         ];
-        expected_result.extend("Joh".serialize_as_felt252_vec());
+        expected_result.extend(ByteArray::from("Joh").serialize_to_vec());
 
         assert_eq!(result, expected_result);
 
@@ -116,11 +116,11 @@ mod tests {
         }"#;
         let (_temp, file_path) = create_file(string);
         let result = read_json(file_path).unwrap();
-        let mut expected_result = "string".serialize_as_felt252_vec();
+        let mut expected_result = ByteArray::from("string").serialize_to_vec();
         expected_result.push(Felt252::from(4));
-        expected_result.extend("1".serialize_as_felt252_vec());
+        expected_result.extend(ByteArray::from("1").serialize_to_vec());
         expected_result.push(Felt252::from(2));
-        expected_result.extend("3".serialize_as_felt252_vec());
+        expected_result.extend(ByteArray::from("3").serialize_to_vec());
         expected_result.push(Felt252::from(4));
 
         assert_eq!(result, expected_result);

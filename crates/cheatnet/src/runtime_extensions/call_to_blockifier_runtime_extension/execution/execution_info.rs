@@ -1,15 +1,12 @@
+use crate::state::{CheatedData, CheatedTxInfo};
 use cairo_felt::Felt252;
 use cairo_vm::{
     types::relocatable::{MaybeRelocatable, Relocatable},
     vm::vm_core::VirtualMachine,
 };
 use conversions::{
-    felt252::{RawFeltVec, SerializeAsFelt252Vec},
-    FromConv, IntoConv,
-};
-
-use crate::{
-    runtime_extensions::forge_runtime_extension::cheatcodes::spoof::TxInfoMock, state::CheatedData,
+    serde::serialize::{raw::RawFeltVec, SerializeToFeltVec},
+    IntoConv,
 };
 
 fn get_cheated_block_info_ptr(
@@ -22,16 +19,16 @@ fn get_cheated_block_info_ptr(
 
     let mut new_block_info = original_block_info.to_owned();
 
-    if let Some(rolled_number) = cheated_data.block_number.clone() {
-        new_block_info[0] = MaybeRelocatable::Int(rolled_number);
+    if let Some(block_number) = cheated_data.block_number {
+        new_block_info[0] = MaybeRelocatable::Int(block_number.into());
     };
 
-    if let Some(warped_timestamp) = cheated_data.block_timestamp.clone() {
-        new_block_info[1] = MaybeRelocatable::Int(warped_timestamp);
+    if let Some(block_timestamp) = cheated_data.block_timestamp {
+        new_block_info[1] = MaybeRelocatable::Int(block_timestamp.into());
     }
 
-    if let Some(elected_address) = cheated_data.sequencer_address {
-        new_block_info[2] = MaybeRelocatable::Int(Felt252::from_(elected_address));
+    if let Some(sequencer_address) = cheated_data.sequencer_address {
+        new_block_info[2] = MaybeRelocatable::Int(sequencer_address.into_());
     };
 
     vm.load_data(ptr_cheated_block_info, &new_block_info)
@@ -49,9 +46,9 @@ fn get_cheated_tx_info_ptr(
 
     let mut new_tx_info = original_tx_info.to_owned();
 
-    let tx_info_mock = cheated_data.tx_info.clone().unwrap();
+    let tx_info_mock = cheated_data.tx_info.clone();
 
-    let TxInfoMock {
+    let CheatedTxInfo {
         version,
         account_contract_address,
         max_fee,
@@ -93,10 +90,8 @@ fn get_cheated_tx_info_ptr(
         new_tx_info[7] = MaybeRelocatable::Int(nonce);
     };
     if let Some(resource_bounds) = resource_bounds {
-        let (resource_bounds_start_ptr, resource_bounds_end_ptr) = add_vec_memory_segment(
-            &RawFeltVec::new(resource_bounds).serialize_as_felt252_vec(),
-            vm,
-        );
+        let (resource_bounds_start_ptr, resource_bounds_end_ptr) =
+            add_vec_memory_segment(&RawFeltVec::new(resource_bounds).serialize_to_vec(), vm);
         new_tx_info[8] = resource_bounds_start_ptr.into();
         new_tx_info[9] = resource_bounds_end_ptr.into();
     }
@@ -149,7 +144,7 @@ pub fn get_cheated_exec_info_ptr(
         }
     }
 
-    if cheated_data.tx_info.is_some() {
+    if cheated_data.tx_info.is_mocked() {
         let data = vm.get_range(execution_info_ptr, 2)[1].clone();
         if let MaybeRelocatable::RelocatableValue(tx_info_ptr) = data.unwrap().into_owned() {
             let original_tx_info = vm.get_continuous_range(tx_info_ptr, 17).unwrap();
@@ -162,12 +157,10 @@ pub fn get_cheated_exec_info_ptr(
 
     if cheated_data.caller_address.is_some() {
         new_exec_info[2] = MaybeRelocatable::Int(
-            (*cheated_data
+            cheated_data
                 .caller_address
-                .expect("No caller address value found for the pranked contract address")
-                .0
-                .key())
-            .into_(),
+                .expect("No caller address value found for the cheated caller address contract")
+                .into_(),
         );
     }
 
