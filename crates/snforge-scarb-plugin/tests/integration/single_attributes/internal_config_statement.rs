@@ -47,7 +47,7 @@ fn is_used_once() {
             {EMPTY_FN}
         "
     ));
-    let args = TokenStream::new(String::new()); //TODO check args empty
+    let args = TokenStream::new(String::new());
 
     let result = internal_config_statement(args, item);
 

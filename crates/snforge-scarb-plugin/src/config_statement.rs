@@ -111,7 +111,16 @@ pub fn append_config_statements(
 
         // equal to configuration cheatcode
         if str.string_value(db)? == CONFIG_CHEATCODE {
-            Some(if_expr.if_block(db).as_syntax_node().get_text(db))
+            let statements = if_expr.if_block(db).statements(db).elements(db);
+
+            // omit last one (`return;`) as it have to be inserted after all new statements
+            Some(
+                statements[..statements.len() - 1]
+                    .iter()
+                    .fold(String::new(), |acc, statement| {
+                        acc + "\n" + &statement.as_syntax_node().get_text(db)
+                    }),
+            )
         } else {
             None
         }
@@ -129,9 +138,6 @@ pub fn append_config_statements(
     });
 
     let if_content = if_content.unwrap_or_default();
-
-    // omit last one (`return;`) as it have to be inserted after all new statements
-    let if_content = if_content.trim_end_matches("return;");
 
     formatdoc!(
         "

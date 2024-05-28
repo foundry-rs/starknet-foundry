@@ -6,7 +6,7 @@ use snforge_scarb_plugin::attributes::test::test;
 #[test]
 fn appends_internal_config_and_executable() {
     let item = TokenStream::new(EMPTY_FN.into());
-    let args = TokenStream::new(String::new()); //TODO assert empty args
+    let args = TokenStream::new(String::new());
 
     let result = test(args, item);
 
