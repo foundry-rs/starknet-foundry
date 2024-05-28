@@ -15,11 +15,11 @@ use std::{env, fs};
 use tempfile::{tempdir, TempDir};
 use test_case::test_case;
 
-#[test_case(DEVNET_OZ_CLASS_HASH_CAIRO_0; "cairo_0_class_hash")]
-#[test_case(DEVNET_OZ_CLASS_HASH_CAIRO_1; "cairo_1_class_hash")]
+#[test_case(DEVNET_OZ_CLASS_HASH_CAIRO_0, "oz"; "cairo_0_class_hash")]
+#[test_case(DEVNET_OZ_CLASS_HASH_CAIRO_1, "oz"; "cairo_1_class_hash")]
 #[tokio::test]
-pub async fn test_happy_case(class_hash: &str) {
-    let tempdir = create_account(false, class_hash).await;
+pub async fn test_happy_case(class_hash: &str, account_type: &str) {
+    let tempdir = create_account(false, class_hash, account_type).await;
     let accounts_file = "accounts.json";
 
     let args = vec![
@@ -56,7 +56,7 @@ pub async fn test_happy_case(class_hash: &str) {
 
 #[tokio::test]
 pub async fn test_happy_case_add_profile() {
-    let tempdir = create_account(true, DEVNET_OZ_CLASS_HASH_CAIRO_1).await;
+    let tempdir = create_account(true, DEVNET_OZ_CLASS_HASH_CAIRO_1, "oz").await;
     let accounts_file = "accounts.json";
 
     let args = vec![
@@ -117,7 +117,7 @@ fn test_account_deploy_error(accounts_content: &str, error: &str) {
 
 #[tokio::test]
 async fn test_too_low_max_fee() {
-    let tempdir = create_account(false, DEVNET_OZ_CLASS_HASH_CAIRO_1).await;
+    let tempdir = create_account(false, DEVNET_OZ_CLASS_HASH_CAIRO_1, "oz").await;
     let accounts_file = "accounts.json";
 
     let args = vec![
@@ -148,7 +148,7 @@ async fn test_too_low_max_fee() {
 
 #[tokio::test]
 pub async fn test_invalid_class_hash() {
-    let tempdir = create_account(true, DEVNET_OZ_CLASS_HASH_CAIRO_1).await;
+    let tempdir = create_account(true, DEVNET_OZ_CLASS_HASH_CAIRO_1, "oz").await;
     let accounts_file = "accounts.json";
 
     let args = vec![
@@ -180,7 +180,7 @@ pub async fn test_invalid_class_hash() {
 
 #[tokio::test]
 pub async fn test_valid_class_hash() {
-    let tempdir = create_account(true, DEVNET_OZ_CLASS_HASH_CAIRO_1).await;
+    let tempdir = create_account(true, DEVNET_OZ_CLASS_HASH_CAIRO_1, "oz").await;
     let accounts_file = "accounts.json";
 
     let args = vec![
@@ -206,7 +206,7 @@ pub async fn test_valid_class_hash() {
 
 #[tokio::test]
 pub async fn test_valid_no_max_fee() {
-    let tempdir = create_account(true, DEVNET_OZ_CLASS_HASH_CAIRO_1).await;
+    let tempdir = create_account(true, DEVNET_OZ_CLASS_HASH_CAIRO_1, "oz").await;
     let accounts_file = "accounts.json";
 
     let args = vec![
@@ -230,7 +230,7 @@ pub async fn test_valid_no_max_fee() {
     "});
 }
 
-pub async fn create_account(add_profile: bool, class_hash: &str) -> TempDir {
+pub async fn create_account(add_profile: bool, class_hash: &str, account_type: &str) -> TempDir {
     let tempdir = copy_config_to_tempdir("tests/data/files/correct_snfoundry.toml", None).unwrap();
     let accounts_file = "accounts.json";
 
@@ -245,6 +245,8 @@ pub async fn create_account(add_profile: bool, class_hash: &str) -> TempDir {
         "my_account",
         "--class-hash",
         class_hash,
+        "--type",
+        account_type,
     ];
     if add_profile {
         args.push("--add-profile");
