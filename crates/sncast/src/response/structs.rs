@@ -1,7 +1,7 @@
 use camino::Utf8PathBuf;
 use conversions::serde::serialize::CairoSerialize;
 use serde::{Deserialize, Serialize, Serializer};
-use starknet::core::types::{FieldElement, TransactionExecutionStatus, TransactionStatus};
+use starknet::core::types::FieldElement;
 
 pub struct Decimal(pub u64);
 
@@ -141,38 +141,6 @@ pub enum ExecutionStatus {
 pub struct TransactionStatusResponse {
     pub finality_status: FinalityStatus,
     pub execution_status: Option<ExecutionStatus>,
-}
-
-impl From<TransactionStatus> for TransactionStatusResponse {
-    fn from(status: TransactionStatus) -> Self {
-        match status {
-            TransactionStatus::Received => Self {
-                finality_status: FinalityStatus::Received,
-                execution_status: None,
-            },
-            TransactionStatus::Rejected => Self {
-                finality_status: FinalityStatus::Rejected,
-                execution_status: None,
-            },
-            TransactionStatus::AcceptedOnL2(execution_status) => Self {
-                finality_status: FinalityStatus::AcceptedOnL2,
-                execution_status: Some(execution_status.into()),
-            },
-            TransactionStatus::AcceptedOnL1(execution_status) => Self {
-                finality_status: FinalityStatus::AcceptedOnL1,
-                execution_status: Some(execution_status.into()),
-            },
-        }
-    }
-}
-
-impl From<TransactionExecutionStatus> for ExecutionStatus {
-    fn from(status: TransactionExecutionStatus) -> Self {
-        match status {
-            TransactionExecutionStatus::Succeeded => Self::Succeeded,
-            TransactionExecutionStatus::Reverted => Self::Reverted,
-        }
-    }
 }
 
 impl CommandResponse for TransactionStatusResponse {}
