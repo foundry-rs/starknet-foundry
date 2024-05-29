@@ -143,7 +143,7 @@ pub fn append_config_statements(
         "
             {attrs}
             {vis} {declaration} {{
-                if starknet::testing::cheatcode::<'{CONFIG_CHEATCODE}'>() {{
+                if *starknet::testing::cheatcode::<'{CONFIG_CHEATCODE}'>(array![].span()).at(0) == 1 {{
                     {if_content}
 
                     {config_statements}

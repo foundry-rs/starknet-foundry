@@ -16,7 +16,7 @@ fn work_without_args() {
         &result,
         "
             fn empty_fn() {
-                if starknet::testing::cheatcode::<'is_config_mode'>() {
+                if *starknet::testing::cheatcode::<'is_config_mode'>(array![].span()).at(0) == 1 {
                     let mut data = array![];
 
                     snforge_std::_config_types::FuzzerConfig {
@@ -47,7 +47,7 @@ fn work_with_both_args() {
         &result,
         "
             fn empty_fn() {
-                if starknet::testing::cheatcode::<'is_config_mode'>() {
+                if *starknet::testing::cheatcode::<'is_config_mode'>(array![].span()).at(0) == 1 {
                     let mut data = array![];
 
                     snforge_std::_config_types::FuzzerConfig {
@@ -78,7 +78,7 @@ fn work_with_runs_only() {
         &result,
         "
             fn empty_fn() {
-                if starknet::testing::cheatcode::<'is_config_mode'>() {
+                if *starknet::testing::cheatcode::<'is_config_mode'>(array![].span()).at(0) == 1 {
                     let mut data = array![];
 
                     snforge_std::_config_types::FuzzerConfig {
@@ -109,7 +109,7 @@ fn work_with_seed_only() {
         &result,
         "
             fn empty_fn() {
-                if starknet::testing::cheatcode::<'is_config_mode'>() {
+                if *starknet::testing::cheatcode::<'is_config_mode'>(array![].span()).at(0) == 1 {
                     let mut data = array![];
 
                     snforge_std::_config_types::FuzzerConfig {
