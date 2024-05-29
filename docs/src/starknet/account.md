@@ -9,7 +9,9 @@ and the second one deploys it to the network. After deployment, account can be u
 To remove an account from the accounts file, you can use  `sncast account delete`. Please note this only removes the account information stored locally - this will not remove the account from Starknet.
 
 > 💡 **Info**
-> Currently, only OpenZeppelin account creation and deployment is supported.
+> Accounts creation and deployment is supported for
+>  - OpenZeppelin
+>  - Argent (with guardian set to 0)
 
 ## Examples
 
