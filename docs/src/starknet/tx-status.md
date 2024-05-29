@@ -23,14 +23,3 @@ execution_status: SUCCEEDED
 finality_status: ACCEPTED_ON_L2
 ```
 
-> 📝 **Note**
->
-> - The `transaction_finality_status` can be one of the following:
->     - `Received`
->     - `Rejected`
->     - `AcceptedOnL2`
->     - `AcceptedOnL1`
->
-> - The `transaction_execution_status` can be one of the following:
->     - `SUCCEEDED`
->     - `REVERTED`

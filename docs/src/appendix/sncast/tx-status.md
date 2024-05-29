@@ -10,4 +10,4 @@ Get the status of a transaction
 
 Required.
 
-Hash of the transaction to get the status
+Hash of the transaction

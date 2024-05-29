@@ -29,8 +29,8 @@ async fn test_succeeded() {
 
     snapbox.assert().success().stdout_eq(indoc! {r"
         command: tx-status
-        execution_status: SUCCEEDED
-        finality_status: ACCEPTED_ON_L2
+        execution_status: Succeeded
+        finality_status: AcceptedOnL1
     "});
 }
 
@@ -41,7 +41,7 @@ async fn test_reverted() {
 
     snapbox.assert().success().stdout_eq(indoc! {r"
         command: tx-status
-        execution_status: REVERTED
-        finality_status: ACCEPTED_ON_L2
+        execution_status: Reverted
+        finality_status: AcceptedOnL1
     "});
 }
