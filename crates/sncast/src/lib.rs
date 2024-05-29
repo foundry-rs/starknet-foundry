@@ -55,32 +55,41 @@ pub struct AccountData {
 
 impl AccountData {
     pub fn get_address_as_felt(&self) -> Result<FieldElement> {
-        if self.address.is_none() {
-            bail!("Failed to get address - make sure the account is deployed")
-        }
-        Self::get_as_felt(&self.address, "address")
+        let value_to_parse = self
+            .address
+            .as_ref()
+            .ok_or_else(|| anyhow!("Failed to get address - make sure the account is deployed"))?;
+
+        parse_number(value_to_parse).with_context(|| {
+            format!("Failed to convert address = {value_to_parse} to FieldElement")
+        })
     }
+
     pub fn get_salt_as_felt(&self) -> Result<FieldElement> {
-        Self::get_as_felt(&self.salt, "salt")
+        let value_to_parse = self
+            .salt
+            .as_ref()
+            .ok_or_else(|| anyhow!("Failed to get salt"))?;
+
+        parse_number(value_to_parse)
+            .with_context(|| format!("Failed to convert salt = {value_to_parse} to FieldElement"))
     }
 
     pub fn get_class_hash_as_felt(&self) -> Result<FieldElement> {
-        Self::get_as_felt(&self.class_hash, "class_hash")
-    }
-
-    pub fn get_account_type(&self) -> Result<String> {
-        self.account_type
-            .clone()
-            .ok_or_else(|| anyhow!("Failed to get account type"))
-    }
-
-    fn get_as_felt(value: &Option<String>, key_name: &str) -> Result<FieldElement> {
-        let value_to_parse = value
+        let value_to_parse = self
+            .class_hash
             .as_ref()
-            .ok_or_else(|| anyhow!("Failed to get {key_name}"))?;
+            .ok_or_else(|| anyhow!("Failed to get class_hash"))?;
+
         parse_number(value_to_parse).with_context(|| {
-            format!("Failed to convert {key_name} = {value_to_parse} to FieldElement")
+            format!("Failed to convert class_hash = {value_to_parse} to FieldElement")
         })
+    }
+
+    pub fn get_account_type(&self) -> Result<&str> {
+        self.account_type
+            .as_deref()
+            .ok_or_else(|| anyhow!("Failed to get account type"))
     }
 }
 

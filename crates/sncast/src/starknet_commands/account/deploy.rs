@@ -101,8 +101,8 @@ async fn deploy_from_keystore(
     let class_hash = account_data.get_class_hash_as_felt()?;
 
     // TODO: Improve code for checking if address exists or remove this logic
-    let account_type = &account_data.get_account_type()?;
-    let calldata = match account_type.as_str() {
+    let account_type = account_data.get_account_type()?;
+    let calldata = match account_type {
         "open_zeppelin" => vec![private_key.verifying_key().scalar()],
         "argent" => vec![private_key.verifying_key().scalar(), FieldElement::ZERO],
         _ => panic!("Invalid account type"),
@@ -121,7 +121,7 @@ async fn deploy_from_keystore(
     } else {
         get_deployment_result(
             provider,
-            account_type.as_str(),
+            account_type,
             class_hash,
             private_key,
             salt,
@@ -153,7 +153,7 @@ async fn deploy_from_accounts_file(
 
     let result = get_deployment_result(
         provider,
-        &account_data.get_account_type()?,
+        account_data.get_account_type()?,
         account_data.get_class_hash_as_felt()?,
         private_key,
         account_data.get_salt_as_felt()?,
