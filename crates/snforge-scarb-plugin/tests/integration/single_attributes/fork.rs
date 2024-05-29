@@ -111,7 +111,7 @@ fn accepts_string() {
         &result,
         r#"
             fn empty_fn() {
-                if *starknet::testing::cheatcode::<'is_config_mode'>(array![].span()).at(0) == 1 {
+                if snforge_std::_cheatcode::_is_config_run() {
 
                     let mut data = array![];
 
@@ -140,7 +140,7 @@ fn accepts_inline_config() {
         &result,
         "
             fn empty_fn() {
-                if *starknet::testing::cheatcode::<'is_config_mode'>(array![].span()).at(0) == 1 {
+                if snforge_std::_cheatcode::_is_config_run() {
 
                     let mut data = array![];
 

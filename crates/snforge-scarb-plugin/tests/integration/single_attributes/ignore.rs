@@ -29,7 +29,7 @@ fn works_without_args() {
         &result,
         "
             fn empty_fn() {
-                if *starknet::testing::cheatcode::<'is_config_mode'>(array![].span()).at(0) == 1 {
+                if snforge_std::_cheatcode::_is_config_run() {
                     let mut data = array![];
 
                     snforge_std::_config_types::IgnoreConfig {

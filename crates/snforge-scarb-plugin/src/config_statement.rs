@@ -5,9 +5,9 @@ use crate::{
 };
 use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream};
 use cairo_lang_syntax::node::{
-    ast::{Condition, Expr, FunctionWithBody, GenericArg, GenericArgValue, Statement},
+    ast::{Condition, Expr, FunctionWithBody, Statement},
     db::SyntaxGroup,
-    helpers::{GetIdentifier, PathSegmentEx},
+    helpers::GetIdentifier,
     TypedSyntaxNode,
 };
 use indoc::formatdoc;
@@ -53,8 +53,6 @@ where
     Ok(append_config_statements(db, func, &config_cheatcode))
 }
 
-const CONFIG_CHEATCODE: &str = "is_config_mode";
-
 pub fn append_config_statements(
     db: &dyn SyntaxGroup,
     func: &FunctionWithBody,
@@ -81,49 +79,30 @@ pub fn append_config_statements(
             return None;
         };
 
-        // this function is named "starknet::testing::cheatcode"
+        // this function is named "snforge_std::_cheatcode::_is_config_run"
         let segments = expr.path(db).elements(db);
 
-        let [starknet, testing, cheatcode] = segments.as_slice() else {
+        let [snforge_std, cheatcode, is_config_run] = segments.as_slice() else {
             return None;
         };
 
-        if starknet.identifier(db) != "starknet"
-            || testing.identifier(db) != "testing"
-            || cheatcode.identifier(db) != "cheatcode"
+        if snforge_std.identifier(db) != "snforge_std"
+            || cheatcode.identifier(db) != "_cheatcode"
+            || is_config_run.identifier(db) != "_is_config_run"
         {
             return None;
         }
 
-        // it has single, unnamed generic argument
-        let generics = cheatcode.generic_args(db)?;
+        let statements = if_expr.if_block(db).statements(db).elements(db);
 
-        let [GenericArg::Unnamed(cheatcode)] = generics.as_slice() else {
-            return None;
-        };
-        let GenericArgValue::Expr(expr) = cheatcode.value(db) else {
-            return None;
-        };
-        // of type short string
-        let Expr::ShortString(str) = expr.expr(db) else {
-            return None;
-        };
-
-        // equal to configuration cheatcode
-        if str.string_value(db)? == CONFIG_CHEATCODE {
-            let statements = if_expr.if_block(db).statements(db).elements(db);
-
-            // omit last one (`return;`) as it have to be inserted after all new statements
-            Some(
-                statements[..statements.len() - 1]
-                    .iter()
-                    .fold(String::new(), |acc, statement| {
-                        acc + "\n" + &statement.as_syntax_node().get_text(db)
-                    }),
-            )
-        } else {
-            None
-        }
+        // omit last one (`return;`) as it have to be inserted after all new statements
+        Some(
+            statements[..statements.len() - 1]
+                .iter()
+                .fold(String::new(), |acc, statement| {
+                    acc + "\n" + &statement.as_syntax_node().get_text(db)
+                }),
+        )
     });
 
     // there was already config check, omit it and collect remaining statements
@@ -143,7 +122,7 @@ pub fn append_config_statements(
         "
             {attrs}
             {vis} {declaration} {{
-                if *starknet::testing::cheatcode::<'{CONFIG_CHEATCODE}'>(array![].span()).at(0) == 1 {{
+                if snforge_std::_cheatcode::_is_config_run() {{
                     {if_content}
 
                     {config_statements}
