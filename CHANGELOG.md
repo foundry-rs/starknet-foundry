@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast
+
+#### Added
+
+- Support for creating argent accounts
+
+### Forge
+
+#### Changed
+
+- `SyscallResultStringErrorTrait::map_error_to_string` removed in favor of utility function (`snforge_std::byte_array::try_deserialize_bytearray_error`)
+
 ## [0.24.0] - 2024-05-22
 
 ### Forge
@@ -24,7 +36,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - New required flag `--type` to `account add` command
-- Support for creating argent accounts
 
 ### Forge
 
@@ -35,9 +46,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `L1HandlerTrait::execute()` takes source address and payloads as arguments [Read more here](https://foundry-rs.github.io/starknet-foundry/appendix/cheatcodes/l1_handler.html)
 
 - When calling to an address which does not exists, error is forwarded to cairo runtime instead of failing the test
-
-- `SyscallResultStringErrorTrait::map_error_to_string` removed in favor of utility function (`snforge_std::byte_array::try_deserialize_bytearray_error`)
-
 
 ## [0.23.0] - 2024-05-08
 
