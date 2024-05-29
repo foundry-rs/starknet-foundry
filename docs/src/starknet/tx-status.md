@@ -19,7 +19,7 @@ $ sncast \
  0x07d2067cd7675f88493a9d773b456c8d941457ecc2f6201d2fe6b0607daadfd1 
 
 command: tx-status
-execution_status: SUCCEEDED
-finality_status: ACCEPTED_ON_L2
+execution_status: Succeeded
+finality_status: AcceptedOnL2
 ```
 
