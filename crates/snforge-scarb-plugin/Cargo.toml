@@ -8,7 +8,7 @@ publish = false
 crate-type = ["rlib", "cdylib"]
 
 [dependencies]
-cairo-lang-macro = { git = "https://github.com/software-mansion/scarb", rev = "327bd6b"}
+cairo-lang-macro = { git = "https://github.com/software-mansion/scarb", rev = "327bd6b" }
 
 cairo-lang-parser.workspace = true
 cairo-lang-utils.workspace = true
@@ -20,8 +20,7 @@ cairo-lang-sierra.workspace = true
 url.workspace = true
 indoc.workspace = true
 serde_json.workspace = true
-scarb-api = { path = "../scarb-api" }
-smol_str = "0.2.1"
+smol_str.workspace = true
 
 [dev-dependencies]
 lazy_static = "1.4.0"

@@ -4610,7 +4610,6 @@ dependencies = [
  "indoc",
  "lazy_static",
  "regex",
- "scarb-api",
  "serde_json",
  "smol_str",
  "url",
