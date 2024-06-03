@@ -282,6 +282,63 @@ pub fn get_nonce(block_tag: felt252) -> felt252 {
     *buf[0]
 }
 
+#[derive(Drop, Clone, Debug, Serde, PartialEq)]
+pub enum FinalityStatus {
+    Received,
+    Rejected,
+    AcceptedOnL2,
+    AcceptedOnL1
+}
+
+
+#[derive(Drop, Copy, Debug, Serde, PartialEq)]
+pub enum ExecutionStatus {
+    Succeeded,
+    Reverted,
+}
+
+
+#[derive(Drop, Clone, Debug, Serde, PartialEq)]
+pub struct TxStatusResult {
+    pub finality_status: FinalityStatus,
+    pub execution_status: Option<ExecutionStatus>
+}
+
+pub impl DisplayTxStatusResult of Display<TxStatusResult> {
+    fn fmt(self: @TxStatusResult, ref f: Formatter) -> Result<(), Error> {
+        let finality_status: ByteArray = match self.finality_status {
+            FinalityStatus::Received => "Received",
+            FinalityStatus::Rejected => "Rejected",
+            FinalityStatus::AcceptedOnL2 => "AcceptedOnL2",
+            FinalityStatus::AcceptedOnL1 => "AcceptedOnL1",
+        };
+        let execution_status = *self.execution_status;
+        if execution_status.is_none() {
+            return write!(f, "finality_status: {}", finality_status);
+        }
+
+        let execution_status: ByteArray = match execution_status.unwrap() {
+            ExecutionStatus::Succeeded => "Succeeded",
+            ExecutionStatus::Reverted => "Reverted"
+        };
+        write!(f, "finality_status: {}, execution_status: {}", finality_status, execution_status)
+    }
+}
+
+pub fn tx_status(transaction_hash: felt252) -> Result<TxStatusResult, ScriptCommandError> {
+    let mut inputs = array![transaction_hash];
+
+    let mut buf = handle_cheatcode(cheatcode::<'tx_status'>(inputs.span()));
+
+    let mut result_data: Result<TxStatusResult, ScriptCommandError> =
+        match Serde::<Result<TxStatusResult>>::deserialize(ref buf) {
+        Option::Some(result_data) => result_data,
+        Option::None => panic!("tx_status deserialize failed")
+    };
+
+    result_data
+}
+
 fn handle_cheatcode(input: Span<felt252>) -> Span<felt252> {
     let first = *input.at(0);
     let input = input.slice(1, input.len() - 1);

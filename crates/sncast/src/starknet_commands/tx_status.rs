@@ -1,5 +1,5 @@
-use anyhow::{Context, Result};
 use clap::Args;
+use sncast::response::errors::StarknetCommandError;
 use sncast::response::structs::{ExecutionStatus, FinalityStatus, TransactionStatusResponse};
 use starknet::core::types::{FieldElement, TransactionExecutionStatus, TransactionStatus};
 use starknet::providers::jsonrpc::HttpTransport;
@@ -15,12 +15,12 @@ pub struct TxStatus {
 pub async fn tx_status(
     provider: &JsonRpcClient<HttpTransport>,
     transaction_hash: FieldElement,
-) -> Result<TransactionStatusResponse> {
+) -> Result<TransactionStatusResponse, StarknetCommandError> {
     provider
         .get_transaction_status(transaction_hash)
         .await
-        .context("Failed to get transaction status")
         .map(|status| build_transaction_status_response(&status))
+        .map_err(|error| StarknetCommandError::ProviderError(error.into()))
 }
 
 fn build_transaction_status_response(status: &TransactionStatus) -> TransactionStatusResponse {
