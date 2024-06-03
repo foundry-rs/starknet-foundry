@@ -34,13 +34,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Cast
 
-#### Added
-
-- New required flag `--type` to `account add` command
-
 #### Removed
 
 - `--class-hash` flag from `account deploy` command
+
+#### Added
+
+- New required flag `--type` to `account add` command
 - Support for creating argent accounts
 
 ### Forge
