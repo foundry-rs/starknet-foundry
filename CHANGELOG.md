@@ -38,6 +38,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - New required flag `--type` to `account add` command
 
+#### Removed
+
+- `--class-hash` flag from `account deploy` command
+- Support for creating argent accounts
+
 ### Forge
 
 #### Changed

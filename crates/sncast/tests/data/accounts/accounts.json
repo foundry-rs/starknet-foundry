@@ -10,7 +10,8 @@
             "public_key": "0x17b62d16ee2b9b5ccd3320e2c0b234dfbdd1d01d09d0aa29ce164827cddf46a",
             "salt": "0x14b6b215424909f34f417ddd7cbaca48de2d505d03c92467367d275e847d252",
             "address": "0xf6ecd22832b7c3713cfa7826ee309ce96a2769833f093795fafa1b8f20c48b",
-            "deployed": true
+            "deployed": true,
+            "type": "open_zeppelin"
         },
         "user2": {
             "private_key": "0xd55976edf8fadf692436af68f7476817",

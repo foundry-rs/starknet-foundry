@@ -432,6 +432,7 @@ pub fn get_address_from_keystore(
     keystore_path: impl AsRef<std::path::Path>,
     account_path: impl AsRef<std::path::Path>,
     password: &str,
+    account_type: &str,
 ) -> FieldElement {
     let contents = std::fs::read_to_string(account_path).unwrap();
     let items: Map<String, serde_json::Value> = serde_json::from_str(&contents).unwrap();
@@ -457,12 +458,13 @@ pub fn get_address_from_keystore(
     )
     .unwrap();
 
-    get_contract_address(
-        salt,
-        oz_class_hash,
-        &[private_key.verifying_key().scalar()],
-        FieldElement::ZERO,
-    )
+    let calldata = match account_type {
+        "oz" => vec![private_key.verifying_key().scalar()],
+        "argent" => vec![private_key.verifying_key().scalar(), FieldElement::ZERO],
+        _ => panic!("Invalid account type"),
+    };
+
+    get_contract_address(salt, oz_class_hash, &calldata, FieldElement::ZERO)
 }
 #[must_use]
 pub fn get_accounts_path(relative_path_from_cargo_toml: &str) -> String {

@@ -1,4 +1,6 @@
-use crate::helpers::constants::{DEVNET_OZ_CLASS_HASH_CAIRO_0, DEVNET_OZ_CLASS_HASH_CAIRO_1, URL};
+use crate::helpers::constants::{
+    ARGENT_ACCOUNT_CLASS_HASH, DEVNET_OZ_CLASS_HASH_CAIRO_0, DEVNET_OZ_CLASS_HASH_CAIRO_1, URL,
+};
 use crate::helpers::fixtures::copy_file;
 use crate::helpers::fixtures::{
     get_address_from_keystore, get_transaction_hash, get_transaction_receipt, mint_token,
@@ -17,6 +19,7 @@ use test_case::test_case;
 
 #[test_case(DEVNET_OZ_CLASS_HASH_CAIRO_0, "oz"; "cairo_0_class_hash")]
 #[test_case(DEVNET_OZ_CLASS_HASH_CAIRO_1, "oz"; "cairo_1_class_hash")]
+#[test_case(ARGENT_ACCOUNT_CLASS_HASH, "argent"; "argent_class_hash")]
 #[tokio::test]
 pub async fn test_happy_case(class_hash: &str, account_type: &str) {
     let tempdir = create_account(false, class_hash, account_type).await;
@@ -86,10 +89,8 @@ pub async fn test_happy_case_add_profile() {
     assert!(stdout_str.contains("transaction_hash"));
 }
 
-#[test_case("{}", "error: No accounts defined for network alpha-sepolia" ; "when empty file")]
-#[test_case("{\"alpha-sepolia\": {}}", "error: Account with name my_account does not exist" ; "when account name not present")]
-#[test_case("{\"alpha-sepolia\": {\"my_account\" : {}}}", "error: Failed to get private key from accounts file" ; "when private key not present")]
-#[test_case("{\"alpha-sepolia\": {\"my_account\" : {\"private_key\": \"0x1\"}}}", "error: Failed to get salt from accounts file" ; "when salt not present")]
+#[test_case("{\"alpha-sepolia\": {}}", "error: Account = my_account not found under network = alpha-sepolia" ; "when account name not present")]
+#[test_case("{\"alpha-sepolia\": {\"my_account\" : {}}}", "error: Failed to parse file = accounts.json to JSON: missing field `private_key`[..]" ; "when private key not present")]
 fn test_account_deploy_error(accounts_content: &str, error: &str) {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
 
@@ -142,38 +143,6 @@ async fn test_too_low_max_fee() {
         indoc! {r"
         command: account deploy
         error: Max fee is smaller than the minimal transaction cost
-        "},
-    );
-}
-
-#[tokio::test]
-pub async fn test_invalid_class_hash() {
-    let tempdir = create_account(true, DEVNET_OZ_CLASS_HASH_CAIRO_1, "oz").await;
-    let accounts_file = "accounts.json";
-
-    let args = vec![
-        "--profile",
-        "deploy_profile",
-        "--accounts-file",
-        accounts_file,
-        "account",
-        "deploy",
-        "--name",
-        "my_account",
-        "--max-fee",
-        "10000000000000000",
-        "--class-hash",
-        "0x123",
-    ];
-
-    let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().success();
-
-    assert_stderr_contains(
-        output,
-        indoc! {r"
-        command: account deploy
-        error: Provided class hash 0x123 does not exist
         "},
     );
 }
@@ -269,27 +238,30 @@ pub async fn create_account(add_profile: bool, class_hash: &str, account_type: &
     tempdir
 }
 
+#[test_case("oz"; "open_zeppelin_account")]
+#[test_case("argent"; "argent_account")]
 #[tokio::test]
-pub async fn test_happy_case_keystore() {
+pub async fn test_happy_case_keystore(account_type: &str) {
     let tempdir = tempdir().expect("Unable to create a temporary directory");
 
     let keystore_file = "my_key.json";
-    let account_file = "my_account_undeployed_happy_case.json";
+    let account_file = format!("my_account_{account_type}_undeployed_happy_case.json");
 
     copy_file(
         "tests/data/keystore/my_key.json",
         tempdir.path().join(keystore_file),
     );
     copy_file(
-        "tests/data/keystore/my_account_undeployed_happy_case.json",
-        tempdir.path().join(account_file),
+        format!("tests/data/keystore/{account_file}"),
+        tempdir.path().join(&account_file),
     );
     env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
 
     let address = get_address_from_keystore(
         tempdir.path().join(keystore_file).to_str().unwrap(),
-        tempdir.path().join(account_file).to_str().unwrap(),
+        tempdir.path().join(&account_file).to_str().unwrap(),
         KEYSTORE_PASSWORD_ENV_VAR,
+        account_type,
     );
 
     mint_token(&address.into_hex_string(), 9_999_999_999_999_999_999).await;
@@ -300,13 +272,11 @@ pub async fn test_happy_case_keystore() {
         "--keystore",
         keystore_file,
         "--account",
-        account_file,
+        &account_file,
         "account",
         "deploy",
         "--max-fee",
         "99999999999999999",
-        "--class-hash",
-        DEVNET_OZ_CLASS_HASH_CAIRO_1,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -352,8 +322,6 @@ pub async fn test_keystore_already_deployed() {
         "deploy",
         "--max-fee",
         "10000000000000000",
-        "--class-hash",
-        DEVNET_OZ_CLASS_HASH_CAIRO_1,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -397,8 +365,6 @@ pub async fn test_keystore_key_mismatch() {
         "deploy",
         "--max-fee",
         "10000000000000000",
-        "--class-hash",
-        DEVNET_OZ_CLASS_HASH_CAIRO_1,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -437,8 +403,6 @@ pub async fn test_deploy_keystore_inexistent_keystore_file() {
         "deploy",
         "--max-fee",
         "10000000000000000",
-        "--class-hash",
-        DEVNET_OZ_CLASS_HASH_CAIRO_1,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -448,7 +412,7 @@ pub async fn test_deploy_keystore_inexistent_keystore_file() {
         output,
         indoc! {r"
         command: account deploy
-        error: Failed to read keystore file
+        error: Failed to find keystore file
         "},
     );
 }
@@ -477,8 +441,6 @@ pub async fn test_deploy_keystore_inexistent_account_file() {
         "deploy",
         "--max-fee",
         "10000000000000000",
-        "--class-hash",
-        DEVNET_OZ_CLASS_HASH_CAIRO_1,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -488,7 +450,7 @@ pub async fn test_deploy_keystore_inexistent_account_file() {
         output,
         indoc! {r"
         command: account deploy
-        error: Failed to read account file[..]
+        error: File containing the account does not exist: When using `--keystore` argument, the `--account` argument should be a path to the starkli JSON account file
         "},
     );
 }
@@ -521,8 +483,6 @@ pub async fn test_deploy_keystore_no_status() {
         "deploy",
         "--max-fee",
         "10000000000000000",
-        "--class-hash",
-        DEVNET_OZ_CLASS_HASH_CAIRO_1,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -532,7 +492,7 @@ pub async fn test_deploy_keystore_no_status() {
         output,
         indoc! {r"
         command: account deploy
-        error: Failed to get status from account JSON file
+        error: Failed to get status key from account JSON file
         "},
     );
 }
@@ -558,6 +518,7 @@ pub async fn test_deploy_keystore_other_args() {
         tempdir.path().join(keystore_file),
         tempdir.path().join(account_file),
         KEYSTORE_PASSWORD_ENV_VAR,
+        "oz",
     );
 
     mint_token(&address.into_hex_string(), 9_999_999_999_999_999_999).await;
@@ -577,8 +538,6 @@ pub async fn test_deploy_keystore_other_args() {
         "some-name",
         "--max-fee",
         "99999999999999999",
-        "--class-hash",
-        DEVNET_OZ_CLASS_HASH_CAIRO_1,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());

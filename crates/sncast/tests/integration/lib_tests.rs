@@ -137,7 +137,7 @@ async fn test_get_account_failed_to_convert_field_elements() {
     let err2 = account2.unwrap_err();
     assert!(err2
         .to_string()
-        .contains("Failed to convert account address = address to FieldElement"));
+        .contains("Failed to convert address = address to FieldElement"));
 
     let account3 = get_account(
         "with_wrong_class_hash",
