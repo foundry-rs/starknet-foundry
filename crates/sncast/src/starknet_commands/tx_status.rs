@@ -20,10 +20,10 @@ pub async fn tx_status(
         .get_transaction_status(transaction_hash)
         .await
         .context("Failed to get transaction status")
-        .map(|status| to_response(&status))
+        .map(|status| build_transaction_status_response(&status))
 }
 
-fn to_response(status: &TransactionStatus) -> TransactionStatusResponse {
+fn build_transaction_status_response(status: &TransactionStatus) -> TransactionStatusResponse {
     match status {
         TransactionStatus::Received => TransactionStatusResponse {
             finality_status: FinalityStatus::Received,
@@ -35,16 +35,16 @@ fn to_response(status: &TransactionStatus) -> TransactionStatusResponse {
         },
         TransactionStatus::AcceptedOnL2(tx_exec_status) => TransactionStatusResponse {
             finality_status: FinalityStatus::AcceptedOnL2,
-            execution_status: Some(to_exec_status(*tx_exec_status)),
+            execution_status: Some(build_execution_status(*tx_exec_status)),
         },
         TransactionStatus::AcceptedOnL1(tx_exec_status) => TransactionStatusResponse {
             finality_status: FinalityStatus::AcceptedOnL1,
-            execution_status: Some(to_exec_status(*tx_exec_status)),
+            execution_status: Some(build_execution_status(*tx_exec_status)),
         },
     }
 }
 
-fn to_exec_status(status: TransactionExecutionStatus) -> ExecutionStatus {
+fn build_execution_status(status: TransactionExecutionStatus) -> ExecutionStatus {
     match status {
         TransactionExecutionStatus::Succeeded => ExecutionStatus::Succeeded,
         TransactionExecutionStatus::Reverted => ExecutionStatus::Reverted,
