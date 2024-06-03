@@ -122,3 +122,25 @@ pub struct ScriptInitResponse {
 }
 
 impl CommandResponse for ScriptInitResponse {}
+
+#[derive(Serialize)]
+pub enum FinalityStatus {
+    Received,
+    Rejected,
+    AcceptedOnL2,
+    AcceptedOnL1,
+}
+
+#[derive(Serialize)]
+pub enum ExecutionStatus {
+    Succeeded,
+    Reverted,
+}
+
+#[derive(Serialize)]
+pub struct TransactionStatusResponse {
+    pub finality_status: FinalityStatus,
+    pub execution_status: Option<ExecutionStatus>,
+}
+
+impl CommandResponse for TransactionStatusResponse {}
