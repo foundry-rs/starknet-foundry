@@ -290,11 +290,33 @@ pub enum FinalityStatus {
     AcceptedOnL1
 }
 
+pub impl DisplayFinalityStatus of Display<FinalityStatus> {
+    fn fmt(self: @FinalityStatus, ref f: Formatter) -> Result<(), Error> {
+        let finality_status: ByteArray = match self {
+            FinalityStatus::Received => "Received",
+            FinalityStatus::Rejected => "Rejected",
+            FinalityStatus::AcceptedOnL2 => "AcceptedOnL2",
+            FinalityStatus::AcceptedOnL1 => "AcceptedOnL1",
+        };
+        write!(f, "{finality_status}")
+    }
+}
+
 
 #[derive(Drop, Copy, Debug, Serde, PartialEq)]
 pub enum ExecutionStatus {
     Succeeded,
     Reverted,
+}
+
+pub impl DisplayExecutionStatus of Display<ExecutionStatus> {
+    fn fmt(self: @ExecutionStatus, ref f: Formatter) -> Result<(), Error> {
+        let execution_status: ByteArray = match self {
+            ExecutionStatus::Succeeded => "Succeeded",
+            ExecutionStatus::Reverted => "Reverted"
+        };
+        write!(f, "{execution_status}")
+    }
 }
 
 
@@ -306,22 +328,12 @@ pub struct TxStatusResult {
 
 pub impl DisplayTxStatusResult of Display<TxStatusResult> {
     fn fmt(self: @TxStatusResult, ref f: Formatter) -> Result<(), Error> {
-        let finality_status: ByteArray = match self.finality_status {
-            FinalityStatus::Received => "Received",
-            FinalityStatus::Rejected => "Rejected",
-            FinalityStatus::AcceptedOnL2 => "AcceptedOnL2",
-            FinalityStatus::AcceptedOnL1 => "AcceptedOnL1",
-        };
-        let execution_status = *self.execution_status;
-        if execution_status.is_none() {
-            return write!(f, "finality_status: {}", finality_status);
+        match self.execution_status {
+            Option::Some(status) => write!(
+                f, "finality_status: {}, execution_status: {}", self.finality_status, status
+            ),
+            Option::None => write!(f, "finality_status: {}", self.finality_status),
         }
-
-        let execution_status: ByteArray = match execution_status.unwrap() {
-            ExecutionStatus::Succeeded => "Succeeded",
-            ExecutionStatus::Reverted => "Reverted"
-        };
-        write!(f, "finality_status: {}, execution_status: {}", finality_status, execution_status)
     }
 }
 

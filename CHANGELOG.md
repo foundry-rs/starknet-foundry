@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - `tx-status` subcommand to get transaction status. [Read more here](./docs/src/starknet/tx-status.md)
+- `tx_status` function to cast_std. [Read more here](./docs/src/appendix/sncast-library/tx_status.md)
 - Support for creating argent accounts
 
 ## [0.24.0] - 2024-05-22
