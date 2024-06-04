@@ -24,7 +24,7 @@ fn work_with_empty() {
                     }
                     .serialize(ref data);
 
-                    starknet::testing::cheatcode::<'set_config_should_panic'>(data);
+                    starknet::testing::cheatcode::<'set_config_should_panic'>(data.span());
                     return;
                 }
             }
@@ -53,7 +53,7 @@ fn work_with_expected_string() {
                     }
                     .serialize(ref data);
 
-                    starknet::testing::cheatcode::<'set_config_should_panic'>(data);
+                    starknet::testing::cheatcode::<'set_config_should_panic'>(data.span());
                     return;
                 }
             }
@@ -82,7 +82,7 @@ fn work_with_expected_short_string() {
                     }
                     .serialize(ref data);
 
-                    starknet::testing::cheatcode::<'set_config_should_panic'>(data);
+                    starknet::testing::cheatcode::<'set_config_should_panic'>(data.span());
                     return;
                 }
             }
@@ -111,7 +111,7 @@ fn work_with_expected_tuple() {
                     }
                     .serialize(ref data);
 
-                    starknet::testing::cheatcode::<'set_config_should_panic'>(data);
+                    starknet::testing::cheatcode::<'set_config_should_panic'>(data.span());
                     return;
                 }
             }

@@ -46,7 +46,7 @@ where
             {value}
             .serialize(ref data);
 
-            starknet::testing::cheatcode::<'{cheatcode_name}'>(data);
+            starknet::testing::cheatcode::<'{cheatcode_name}'>(data.span());
         "#
     );
 

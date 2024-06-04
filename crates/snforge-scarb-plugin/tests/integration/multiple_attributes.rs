@@ -41,7 +41,7 @@ fn works_with_few_attributes() {
                     }
                     .serialize(ref data);
 
-                    starknet::testing::cheatcode::<'set_config_available_gas'>(data);
+                    starknet::testing::cheatcode::<'set_config_available_gas'>(data.span());
 
                     return; 
                 }
@@ -70,14 +70,14 @@ fn works_with_few_attributes() {
                     }
                     .serialize(ref data);
 
-                    starknet::testing::cheatcode::<'set_config_available_gas'>(data);
+                    starknet::testing::cheatcode::<'set_config_available_gas'>(data.span());
 
                     let mut data = array![];
 
                     snforge_std::_config_types::ForkConfig::Named("test")
                         .serialize(ref data);
 
-                    starknet::testing::cheatcode::<'set_config_fork'>(data);
+                    starknet::testing::cheatcode::<'set_config_fork'>(data.span());
 
                     return; 
                 }

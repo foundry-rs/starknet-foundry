@@ -25,7 +25,7 @@ fn work_without_args() {
                     }
                     .serialize(ref data);
 
-                    starknet::testing::cheatcode::<'set_config_fuzzer'>(data);
+                    starknet::testing::cheatcode::<'set_config_fuzzer'>(data.span());
 
                     return;
                 }
@@ -56,7 +56,7 @@ fn work_with_both_args() {
                     }
                     .serialize(ref data);
 
-                    starknet::testing::cheatcode::<'set_config_fuzzer'>(data);
+                    starknet::testing::cheatcode::<'set_config_fuzzer'>(data.span());
 
                     return;
                 }
@@ -87,7 +87,7 @@ fn work_with_runs_only() {
                     }
                     .serialize(ref data);
 
-                    starknet::testing::cheatcode::<'set_config_fuzzer'>(data);
+                    starknet::testing::cheatcode::<'set_config_fuzzer'>(data.span());
 
                     return;
                 }
@@ -118,7 +118,7 @@ fn work_with_seed_only() {
                     }
                     .serialize(ref data);
 
-                    starknet::testing::cheatcode::<'set_config_fuzzer'>(data);
+                    starknet::testing::cheatcode::<'set_config_fuzzer'>(data.span());
 
                     return;
                 }

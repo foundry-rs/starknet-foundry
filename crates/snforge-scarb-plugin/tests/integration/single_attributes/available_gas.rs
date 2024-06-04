@@ -72,7 +72,7 @@ fn work_with_number() {
                     }
                     .serialize(ref data);
 
-                    starknet::testing::cheatcode::<'set_config_available_gas'>(data);
+                    starknet::testing::cheatcode::<'set_config_available_gas'>(data.span());
 
                     return;
                 }

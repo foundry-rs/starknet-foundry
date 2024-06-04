@@ -118,7 +118,7 @@ fn accepts_string() {
                     snforge_std::_config_types::ForkConfig::Named("test")
                         .serialize(ref data);
 
-                    starknet::testing::cheatcode::<'set_config_fork'>(data);
+                    starknet::testing::cheatcode::<'set_config_fork'>(data.span());
 
                     return;
                 }
@@ -152,7 +152,7 @@ fn accepts_inline_config() {
                     )
                     .serialize(ref data);
 
-                    starknet::testing::cheatcode::<'set_config_fork'>(data);
+                    starknet::testing::cheatcode::<'set_config_fork'>(data.span());
 
                     return;
                 }

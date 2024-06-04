@@ -5,3 +5,4 @@ edition = "2023_10"
 
 [dependencies]
 starknet = "2.4.0"
+snforge_scarb_plugin = { path = "../crates/snforge-scarb-plugin" }
