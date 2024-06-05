@@ -11,7 +11,8 @@ use conversions::string::IntoHexStr;
 use indoc::indoc;
 use serde_json::Value;
 use shared::test_utils::output_assert::{assert_stderr_contains, AsOutput};
-use sncast::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
+use sncast::helpers::constants::{BRAAVOS_CLASS_HASH, KEYSTORE_PASSWORD_ENV_VAR};
+use sncast::AccountType;
 use starknet::core::types::TransactionReceipt::DeployAccount;
 use std::{env, fs};
 use tempfile::{tempdir, TempDir};
@@ -20,6 +21,7 @@ use test_case::test_case;
 #[test_case(DEVNET_OZ_CLASS_HASH_CAIRO_0, "oz"; "cairo_0_class_hash")]
 #[test_case(DEVNET_OZ_CLASS_HASH_CAIRO_1, "oz"; "cairo_1_class_hash")]
 #[test_case(ARGENT_ACCOUNT_CLASS_HASH, "argent"; "argent_class_hash")]
+#[test_case(BRAAVOS_CLASS_HASH, "braavos"; "braavos_class_hash")]
 #[tokio::test]
 pub async fn test_happy_case(class_hash: &str, account_type: &str) {
     let tempdir = create_account(false, class_hash, account_type).await;
@@ -240,6 +242,7 @@ pub async fn create_account(add_profile: bool, class_hash: &str, account_type: &
 
 #[test_case("oz"; "open_zeppelin_account")]
 #[test_case("argent"; "argent_account")]
+#[test_case("braavos"; "braavos_account")]
 #[tokio::test]
 pub async fn test_happy_case_keystore(account_type: &str) {
     let tempdir = tempdir().expect("Unable to create a temporary directory");
@@ -261,7 +264,7 @@ pub async fn test_happy_case_keystore(account_type: &str) {
         tempdir.path().join(keystore_file).to_str().unwrap(),
         tempdir.path().join(&account_file).to_str().unwrap(),
         KEYSTORE_PASSWORD_ENV_VAR,
-        account_type,
+        &account_type.parse().unwrap(),
     );
 
     mint_token(&address.into_hex_string(), 9_999_999_999_999_999_999).await;
@@ -518,7 +521,7 @@ pub async fn test_deploy_keystore_other_args() {
         tempdir.path().join(keystore_file),
         tempdir.path().join(account_file),
         KEYSTORE_PASSWORD_ENV_VAR,
-        "oz",
+        &AccountType::Oz,
     );
 
     mint_token(&address.into_hex_string(), 9_999_999_999_999_999_999).await;

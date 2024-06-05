@@ -2,7 +2,7 @@ use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
 use serde_json::Map;
-use sncast::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
+use sncast::helpers::constants::{BRAAVOS_BASE_ACCOUNT_CLASS_HASH, KEYSTORE_PASSWORD_ENV_VAR};
 use sncast::response::structs::{Felt, InvokeResponse};
 use starknet::accounts::{AccountFactory, OpenZeppelinAccountFactory};
 use starknet::accounts::{AccountFactoryError, ArgentAccountFactory};
@@ -14,10 +14,11 @@ use starknet::providers::ProviderError::StarknetError;
 use starknet::providers::{JsonRpcClient, Provider};
 use starknet::signers::{LocalWallet, SigningKey};
 
+use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::{
     chain_id_to_network_name, check_account_file_exists, get_account_data_from_accounts_file,
     get_account_data_from_keystore, get_keystore_password, handle_account_factory_error,
-    handle_rpc_error, handle_wait_for_tx, parse_number, WaitForTx,
+    handle_rpc_error, handle_wait_for_tx, parse_number, AccountType, WaitForTx,
 };
 
 #[derive(Args, Debug)]
@@ -98,17 +99,33 @@ async fn deploy_from_keystore(
     }
 
     let salt = account_data.get_salt_as_felt()?;
-    let class_hash = account_data.get_class_hash_as_felt()?;
 
     // TODO: Improve code for checking if address exists or remove this logic
     let account_type = account_data.get_account_type()?;
-    let calldata = match account_type {
-        "open_zeppelin" => vec![private_key.verifying_key().scalar()],
-        "argent" => vec![private_key.verifying_key().scalar(), FieldElement::ZERO],
-        _ => panic!("Invalid account type"),
-    };
+    let class_hash = account_data.get_class_hash_as_felt()?;
+    account_data.get_class_hash_as_felt()?;
 
-    let address = get_contract_address(salt, class_hash, &calldata, FieldElement::ZERO);
+    let address = match account_type {
+        AccountType::Argent => get_contract_address(
+            salt,
+            class_hash,
+            &[private_key.verifying_key().scalar(), FieldElement::ZERO],
+            FieldElement::ZERO,
+        ),
+        AccountType::Oz => get_contract_address(
+            salt,
+            class_hash,
+            &[private_key.verifying_key().scalar()],
+            chain_id,
+        ),
+        AccountType::Braavos => get_contract_address(
+            salt,
+            parse_number(BRAAVOS_BASE_ACCOUNT_CLASS_HASH)
+                .expect("Failed to parse Braavos account class hash"),
+            &[private_key.verifying_key().scalar()],
+            chain_id,
+        ),
+    };
 
     let result = if provider
         .get_class_hash_at(BlockId::Tag(Pending), address)
@@ -171,7 +188,7 @@ async fn deploy_from_accounts_file(
 #[allow(clippy::too_many_arguments)]
 async fn get_deployment_result(
     provider: &JsonRpcClient<HttpTransport>,
-    account_type: &str,
+    account_type: AccountType,
     class_hash: FieldElement,
     private_key: SigningKey,
     salt: FieldElement,
@@ -180,7 +197,7 @@ async fn get_deployment_result(
     wait_config: WaitForTx,
 ) -> Result<InvokeResponse> {
     match account_type {
-        "argent" => {
+        AccountType::Argent => {
             deploy_argent_account(
                 provider,
                 class_hash,
@@ -192,7 +209,7 @@ async fn get_deployment_result(
             )
             .await
         }
-        "open_zeppelin" => {
+        AccountType::Oz => {
             deploy_oz_account(
                 provider,
                 class_hash,
@@ -204,9 +221,18 @@ async fn get_deployment_result(
             )
             .await
         }
-        _ => Err(anyhow!(
-            "Incorrect account type, possible values are ['open_zeppelin', 'argent']"
-        )),
+        AccountType::Braavos => {
+            deploy_braavos_account(
+                provider,
+                class_hash,
+                private_key,
+                salt,
+                chain_id,
+                max_fee,
+                wait_config,
+            )
+            .await
+        }
     }
 }
 
@@ -243,6 +269,30 @@ async fn deploy_argent_account(
         class_hash,
         chain_id,
         FieldElement::ZERO,
+        LocalWallet::from_signing_key(private_key),
+        provider,
+    )
+    .await?;
+
+    deploy_account(factory, provider, salt, max_fee, wait_config, class_hash).await
+}
+
+async fn deploy_braavos_account(
+    provider: &JsonRpcClient<HttpTransport>,
+    class_hash: FieldElement,
+    private_key: SigningKey,
+    salt: FieldElement,
+    chain_id: FieldElement,
+    max_fee: Option<FieldElement>,
+    wait_config: WaitForTx,
+) -> Result<InvokeResponse> {
+    let base_class_hash = FieldElement::from_hex_be(BRAAVOS_BASE_ACCOUNT_CLASS_HASH)
+        .expect("Failed to parse Braavos base class hash");
+
+    let factory = BraavosAccountFactory::new(
+        class_hash,
+        base_class_hash,
+        chain_id,
         LocalWallet::from_signing_key(private_key),
         provider,
     )

@@ -30,6 +30,7 @@ use serde::de::DeserializeOwned;
 use shared::rpc::create_rpc_client;
 use starknet::accounts::{AccountFactory, AccountFactoryError};
 use std::collections::HashMap;
+use std::str::FromStr;
 use std::thread::sleep;
 use std::time::Duration;
 use std::{env, fs};
@@ -39,6 +40,27 @@ pub mod helpers;
 pub mod response;
 pub mod state;
 
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum AccountType {
+    #[serde(rename = "open_zeppelin")]
+    Oz,
+    Argent,
+    Braavos,
+}
+
+impl FromStr for AccountType {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "open_zeppelin" | "oz" => Ok(AccountType::Oz),
+            "argent" => Ok(AccountType::Argent),
+            "braavos" => Ok(AccountType::Braavos),
+            account_type => Err(anyhow!("Invalid account type = {account_type}")),
+        }
+    }
+}
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct AccountData {
     pub private_key: String,
@@ -50,7 +72,7 @@ pub struct AccountData {
     pub legacy: Option<bool>,
 
     #[serde(default, rename(serialize = "type", deserialize = "type"))]
-    pub account_type: Option<String>,
+    pub account_type: Option<AccountType>,
 }
 
 impl AccountData {
@@ -86,9 +108,9 @@ impl AccountData {
         })
     }
 
-    pub fn get_account_type(&self) -> Result<&str> {
+    pub fn get_account_type(&self) -> Result<AccountType> {
         self.account_type
-            .as_deref()
+            .clone()
             .ok_or_else(|| anyhow!("Failed to get account type"))
     }
 }
@@ -345,19 +367,44 @@ pub fn get_account_data_from_keystore(
     let deployed =
         parse_to_string(&account_info, "deployment", "status").map(|status| &status == "deployed");
     let legacy = get_from_json(&account_info, "variant", "legacy").and_then(Value::as_bool);
-    let account_type = parse_to_string(&account_info, "variant", "type");
+    let account_type: Option<AccountType> = parse_to_string(&account_info, "variant", "type")
+        .and_then(|account_type| account_type.parse().ok());
 
-    let public_key_field = match account_type
+    let public_key = match account_type
         .clone()
         .ok_or_else(|| anyhow!("Failed to get type key"))?
-        .as_str()
     {
-        "argent" => "owner",
-        _ => "public_key",
-    };
+        AccountType::Argent => parse_to_string(&account_info, "variant", "owner"),
+        AccountType::Oz => parse_to_string(&account_info, "variant", "public_key"),
+        AccountType::Braavos => {
+            let variant = account_info.get("variant");
+            let multi_sig = variant
+                .and_then(|variant| variant.get("multisig"))
+                .and_then(|multisig| multisig.get("status"))
+                .and_then(Value::as_str);
+            if let Some(multi_sig) = multi_sig {
+                if multi_sig != "off" {
+                    bail!("Braavos accounts cannot be deployed with multisig on");
+                }
+            }
+            let signers = variant
+                .and_then(|variant| variant.get("signers"))
+                .and_then(Value::as_array);
 
-    let public_key = parse_to_string(&account_info, "variant", public_key_field)
-        .ok_or_else(|| anyhow::anyhow!("Failed to get public key from account JSON file"))?;
+            if let Some(signers) = signers {
+                if signers.len() != 1 {
+                    bail!("Braavos accounts can only be deployed with one seed signer");
+                }
+            };
+
+            signers
+                .and_then(|signers| signers.first())
+                .and_then(|first_signer| first_signer.get("public_key"))
+                .and_then(Value::as_str)
+                .map(str::to_string)
+        }
+    }
+    .ok_or_else(|| anyhow::anyhow!("Failed to get public key from account JSON file"))?;
 
     Ok(AccountData {
         private_key,
@@ -685,7 +732,7 @@ mod tests {
     use crate::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
     use crate::{
         chain_id_to_network_name, extract_or_generate_salt, get_account_data_from_accounts_file,
-        get_account_data_from_keystore, get_block_id, udc_uniqueness,
+        get_account_data_from_keystore, get_block_id, udc_uniqueness, AccountType,
     };
     use camino::Utf8PathBuf;
     use starknet::core::types::{
@@ -800,7 +847,7 @@ mod tests {
         assert_eq!(account.deployed, Some(true));
         assert_eq!(account.class_hash, None);
         assert_eq!(account.legacy, None);
-        assert_eq!(account.account_type, Some(String::from("open_zeppelin")));
+        assert_eq!(account.account_type, Some(AccountType::Oz));
     }
 
     #[test]
@@ -823,7 +870,35 @@ mod tests {
         assert_eq!(account.salt, None);
         assert_eq!(account.deployed, Some(true));
         assert_eq!(account.legacy, Some(true));
-        assert_eq!(account.account_type, Some(String::from("open_zeppelin")));
+        assert_eq!(account.account_type, Some(AccountType::Oz));
+    }
+
+    #[test]
+    fn test_get_braavos_account_from_keystore_with_multisig_on() {
+        env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
+        let account = get_account_data_from_keystore(
+            "tests/data/keystore/my_account_braavos_invalid_multisig.json",
+            &Utf8PathBuf::from("tests/data/keystore/my_key.json"),
+        )
+        .unwrap_err();
+
+        assert!(account
+            .to_string()
+            .contains("Braavos accounts cannot be deployed with multisig on"));
+    }
+
+    #[test]
+    fn test_get_braavos_account_from_keystore_multiple_signers() {
+        env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
+        let account = get_account_data_from_keystore(
+            "tests/data/keystore/my_account_braavos_multiple_signers.json",
+            &Utf8PathBuf::from("tests/data/keystore/my_key.json"),
+        )
+        .unwrap_err();
+
+        assert!(account
+            .to_string()
+            .contains("Braavos accounts can only be deployed with one seed signer"));
     }
 
     #[test]

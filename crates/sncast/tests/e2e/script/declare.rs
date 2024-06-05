@@ -9,6 +9,7 @@ use test_case::test_case;
 #[test_case("oz_cairo_0"; "cairo_0_account")]
 #[test_case("oz_cairo_1"; "cairo_1_account")]
 #[test_case("argent"; "argent_account")]
+#[test_case("braavos"; "braavos_account")]
 #[tokio::test]
 async fn test_wrong_contract_name(account: &str) {
     let contract_dir = duplicate_contract_directory_with_salt(
