@@ -223,7 +223,10 @@ async fn test_keystore_account_required() {
     let snapbox = runner(&args);
     let output = snapbox.assert().failure();
 
-    assert_stderr_contains(output, "Error: Passed empty path for `--account`");
+    assert_stderr_contains(
+        output,
+        "Error: Argument `--account` must be passed and be a path when using `--keystore`",
+    );
 }
 
 #[tokio::test]

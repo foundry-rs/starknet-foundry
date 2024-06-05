@@ -2,7 +2,7 @@ use crate::starknet_commands::account::Account;
 use crate::starknet_commands::show_config::ShowConfig;
 use crate::starknet_commands::{
     account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,
-    script::Script,
+    script::Script, tx_status::TxStatus,
 };
 use anyhow::{Context, Result};
 use configuration::load_global_config;
@@ -138,6 +138,9 @@ enum Commands {
 
     /// Run or initialize a deployment script
     Script(Script),
+
+    /// Get the status of a transaction
+    TxStatus(TxStatus),
 }
 
 fn main() -> Result<()> {
@@ -350,6 +353,7 @@ async fn run_async_command(
                     config.keystore,
                     &provider,
                     chain_id,
+                    create.account_type,
                     create.salt,
                     create.add_profile,
                     create.class_hash,
@@ -367,25 +371,14 @@ async fn run_async_command(
             account::Commands::Deploy(deploy) => {
                 let chain_id = get_chain_id(&provider).await?;
                 let keystore_path = config.keystore.clone();
-                let account_path = Some(Utf8PathBuf::from(config.account.clone()))
-                    .filter(|p| *p != String::default());
-                let account = if config.keystore.is_none() {
-                    deploy
-                        .name
-                        .context("Required argument `--name` not provided")?
-                } else {
-                    config.account
-                };
                 let mut result = starknet_commands::account::deploy::deploy(
                     &provider,
                     config.accounts_file,
-                    account,
+                    deploy,
                     chain_id,
-                    deploy.max_fee,
                     wait_config,
-                    deploy.class_hash,
+                    &config.account,
                     keystore_path,
-                    account_path,
                 )
                 .await;
 
@@ -423,6 +416,13 @@ async fn run_async_command(
             let mut result =
                 starknet_commands::show_config::show_config(&provider, config, cli.profile).await;
             print_command_result("show-config", &mut result, numbers_format, &output_format)?;
+            Ok(())
+        }
+        Commands::TxStatus(tx_status) => {
+            let mut result =
+                starknet_commands::tx_status::tx_status(&provider, tx_status.transaction_hash)
+                    .await;
+            print_command_result("tx-status", &mut result, numbers_format, &output_format)?;
             Ok(())
         }
         Commands::Script(_) => unreachable!(),
