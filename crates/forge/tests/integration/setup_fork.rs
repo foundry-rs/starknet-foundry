@@ -7,8 +7,8 @@ use std::sync::Arc;
 
 use camino::Utf8PathBuf;
 use forge::block_number_map::BlockNumberMap;
-use forge::run;
 use forge::scarb::config::ForkTarget;
+use forge::test::run;
 use forge::test_filter::TestsFilter;
 use tempfile::tempdir;
 use tokio::runtime::Runtime;

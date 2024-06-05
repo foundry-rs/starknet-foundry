@@ -1,281 +1,165 @@
-use anyhow::{anyhow, Result};
-use warn::{
-    warn_if_available_gas_used_with_incompatible_scarb_version, warn_if_incompatible_rpc_version,
-};
-
-use forge_runner::test_case_summary::AnyTestCaseSummary;
-use std::sync::Arc;
-
-use compiled_raw::{CompiledTestCrateRaw, RawForkConfig, RawForkParams};
-use forge_runner::test_crate_summary::TestCrateSummary;
-use forge_runner::TestCrateRunResult;
-
-use crate::block_number_map::BlockNumberMap;
-use forge_runner::compiled_runnable::{CompiledTestCrateRunnable, TestCaseRunnable};
-use forge_runner::forge_config::ForgeConfig;
-
-use crate::scarb::config::ForkTarget;
-use crate::test_filter::TestsFilter;
+use crate::shared_cache::FailedTestsCache;
+use anyhow::Result;
+use clap::{Parser, Subcommand, ValueEnum};
+use forge_runner::CACHE_DIR;
+use scarb_api::{metadata::MetadataCommandExt, ScarbCommand};
+use scarb_ui::args::PackagesFilter;
+use std::num::NonZeroU32;
+use test::workspace::test_workspace;
+use universal_sierra_compiler_api::UniversalSierraCompilerCommand;
 
 pub mod block_number_map;
+mod combine_configs;
 pub mod compiled_raw;
-
+mod init;
 pub mod pretty_printing;
 pub mod scarb;
-pub mod shared_cache;
+mod shared_cache;
+pub mod test;
 pub mod test_filter;
 mod warn;
 
 pub const CAIRO_EDITION: &str = "2023_11";
 
-pub(crate) fn replace_id_with_params<'a>(
-    raw_fork_config: &'a RawForkConfig,
-    fork_targets: &'a [ForkTarget],
-) -> Result<&'a RawForkParams> {
-    match raw_fork_config {
-        RawForkConfig::Params(raw_fork_params) => Ok(raw_fork_params),
-        RawForkConfig::Id(name) => {
-            let fork_target_from_runner_config = fork_targets
-                .iter()
-                .find(|fork| fork.name() == name)
-                .ok_or_else(|| {
-                    anyhow!("Fork configuration named = {name} not found in the Scarb.toml")
-                })?;
+#[derive(Parser, Debug)]
+#[command(
+    version,
+    help_template = "\
+{name} {version}
+{author-with-newline}{about-with-newline}
+Use -h for short descriptions and --help for more details.
 
-            Ok(fork_target_from_runner_config.params())
-        }
-    }
+{before-help}{usage-heading} {usage}
+
+{all-args}{after-help}
+",
+    after_help = "Read the docs: https://foundry-rs.github.io/starknet-foundry/",
+    after_long_help = "\
+Read the docs:
+- Starknet Foundry Book: https://foundry-rs.github.io/starknet-foundry/
+- Cairo Book: https://book.cairo-lang.org/
+- Starknet Book: https://book.starknet.io/
+- Starknet Documentation: https://docs.starknet.io/
+- Scarb Documentation: https://docs.swmansion.com/scarb/docs.html
+
+Join the community:
+- Follow core developers on X: https://twitter.com/swmansionxyz
+- Get support via Telegram: https://t.me/starknet_foundry_support
+- Or discord: https://discord.gg/KZWaFtPZJf
+- Or join our general chat (Telegram): https://t.me/starknet_foundry
+
+Report bugs: https://github.com/foundry-rs/starknet-foundry/issues/new/choose\
+"
+)]
+#[command(about = "snforge - a testing tool for Starknet contracts", long_about = None)]
+#[clap(name = "snforge")]
+struct Cli {
+    #[command(subcommand)]
+    subcommand: ForgeSubcommand,
 }
 
-async fn to_runnable(
-    compiled_test_crate: CompiledTestCrateRaw,
-    fork_targets: &[ForkTarget],
-    block_number_map: &mut BlockNumberMap,
-) -> Result<CompiledTestCrateRunnable> {
-    let mut test_cases = vec![];
-
-    for case in compiled_test_crate.test_cases {
-        let fork_config = if let Some(fc) = case.fork_config {
-            let raw_fork_params = replace_id_with_params(&fc, fork_targets)?;
-            let fork_config = block_number_map
-                .validated_fork_config_from_fork_params(raw_fork_params)
-                .await?;
-            Some(fork_config)
-        } else {
-            None
-        };
-
-        test_cases.push(TestCaseRunnable {
-            name: case.name,
-            available_gas: case.available_gas,
-            ignored: case.ignored,
-            expected_result: case.expected_result,
-            fork_config,
-            fuzzer_config: case.fuzzer_config,
-            test_details: case.test_details,
-        });
-    }
-
-    Ok(CompiledTestCrateRunnable {
-        tests_location: compiled_test_crate.tests_location,
-        sierra_program: compiled_test_crate.sierra_program.into_v1().unwrap(),
-        test_cases,
-    })
+#[derive(Subcommand, Debug)]
+enum ForgeSubcommand {
+    /// Run tests for a project in the current directory
+    Test {
+        #[command(flatten)]
+        args: TestArgs,
+    },
+    /// Create a new directory with a Forge project
+    Init {
+        /// Name of a new project
+        name: String,
+    },
+    /// Clean Forge cache directory
+    CleanCache {},
 }
 
-/// Run the tests in the package at the given path
-///
-/// # Arguments
-///
-/// * `package_name` - Name of the package specified in Scarb.toml
-/// * `snforge_target_dir_path` - Absolute path to the directory with snforge test artifacts (usually `{package_path}/target/{profile_name}/snforge`)
-/// * `tests_filter` - `TestFilter` structure used to determine what tests to run
-/// * `runner_config` - A configuration of the test runner
-/// * `runner_params` - A struct with parameters required to run tests e.g. map with contracts
-/// * `fork_target` - A configuration of forks used in tests
-#[allow(clippy::implicit_hasher)]
-pub async fn run(
-    compiled_test_crates: Vec<CompiledTestCrateRaw>,
-    package_name: &str,
-    tests_filter: &TestsFilter,
-    forge_config: Arc<ForgeConfig>,
-    fork_targets: &[ForkTarget],
-    block_number_map: &mut BlockNumberMap,
-) -> Result<Vec<TestCrateSummary>> {
-    let all_tests: usize = compiled_test_crates
-        .iter()
-        .map(|tc| tc.test_cases.len())
-        .sum();
-
-    let test_crates = compiled_test_crates
-        .into_iter()
-        .map(|tc| tests_filter.filter_tests(tc))
-        .collect::<Result<Vec<CompiledTestCrateRaw>>>()?;
-    let not_filtered: usize = test_crates.iter().map(|tc| tc.test_cases.len()).sum();
-    let filtered = all_tests - not_filtered;
-
-    warn_if_available_gas_used_with_incompatible_scarb_version(&test_crates)?;
-    warn_if_incompatible_rpc_version(&test_crates, fork_targets).await?;
-
-    pretty_printing::print_collected_tests_count(
-        test_crates.iter().map(|tests| tests.test_cases.len()).sum(),
-        package_name,
-    );
-
-    let mut summaries = vec![];
-
-    for compiled_test_crate_raw in test_crates {
-        pretty_printing::print_running_tests(
-            compiled_test_crate_raw.tests_location,
-            compiled_test_crate_raw.test_cases.len(),
-        );
-
-        let compiled_test_crate =
-            to_runnable(compiled_test_crate_raw, fork_targets, block_number_map).await?;
-        let forge_config = forge_config.clone();
-
-        let summary = forge_runner::run_tests_from_crate(
-            compiled_test_crate,
-            forge_config,
-            tests_filter,
-            package_name,
-        )
-        .await?;
-
-        match summary {
-            TestCrateRunResult::Ok(summary) => {
-                summaries.push(summary);
-            }
-            TestCrateRunResult::Interrupted(summary) => {
-                summaries.push(summary);
-                // Handle scenario for --exit-first flag.
-                // Because snforge runs test crates one by one synchronously.
-                // In case of test FAIL with --exit-first flag stops processing the next crates
-                break;
-            }
-            _ => unreachable!("Unsupported TestCrateRunResult encountered"),
-        }
-    }
-
-    pretty_printing::print_test_summary(&summaries, filtered);
-
-    let any_fuzz_test_was_run = summaries.iter().any(|crate_summary| {
-        crate_summary
-            .test_case_summaries
-            .iter()
-            .filter(|summary| matches!(summary, AnyTestCaseSummary::Fuzzing(_)))
-            .any(|summary| summary.is_passed() || summary.is_failed())
-    });
-
-    if any_fuzz_test_was_run {
-        pretty_printing::print_test_seed(forge_config.test_runner_config.fuzzer_seed);
-    }
-
-    Ok(summaries)
+#[derive(ValueEnum, Debug, Clone)]
+enum ColorOption {
+    Auto,
+    Always,
+    Never,
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::compiled_raw::{CompiledTestCrateRaw, TestCaseRaw};
-    use cairo_lang_sierra::program::{ProgramArtifact, Version, VersionedProgram};
-    use cairo_lang_sierra::{ids::GenericTypeId, program::Program};
-    use forge_runner::compiled_runnable::CrateLocation;
-    use forge_runner::{compiled_runnable::TestDetails, expected_result::ExpectedTestResult};
+#[derive(Parser, Debug)]
+#[allow(clippy::struct_excessive_bools)]
+pub struct TestArgs {
+    /// Name used to filter tests
+    test_filter: Option<String>,
+    /// Use exact matches for `test_filter`
+    #[arg(short, long)]
+    exact: bool,
 
-    fn program_for_testing() -> VersionedProgram {
-        VersionedProgram::V1 {
-            version: Version::<1>,
-            program: ProgramArtifact {
-                program: Program {
-                    type_declarations: vec![],
-                    libfunc_declarations: vec![],
-                    statements: vec![],
-                    funcs: vec![],
-                },
-                debug_info: None,
-            },
+    /// Stop executing tests after the first failed test
+    #[arg(short = 'x', long)]
+    exit_first: bool,
+
+    #[command(flatten)]
+    packages_filter: PackagesFilter,
+
+    /// Number of fuzzer runs
+    #[arg(short = 'r', long)]
+    fuzzer_runs: Option<NonZeroU32>,
+    /// Seed for the fuzzer
+    #[arg(short = 's', long)]
+    fuzzer_seed: Option<u64>,
+
+    /// Run only tests marked with `#[ignore]` attribute
+    #[arg(long = "ignored")]
+    only_ignored: bool,
+    /// Run all tests regardless of `#[ignore]` attribute
+    #[arg(long, conflicts_with = "only_ignored")]
+    include_ignored: bool,
+
+    /// Display more detailed info about used resources
+    #[arg(long)]
+    detailed_resources: bool,
+
+    /// Control when colored output is used
+    #[arg(value_enum, long, default_value_t = ColorOption::Auto, value_name="WHEN")]
+    color: ColorOption,
+
+    /// Run tests that failed during the last run
+    #[arg(long)]
+    rerun_failed: bool,
+
+    /// Save execution traces of all test which have passed and are not fuzz tests
+    #[arg(long)]
+    save_trace_data: bool,
+
+    /// Build profiles of all test which have passed and are not fuzz tests using the cairo-profiler
+    #[arg(long)]
+    build_profile: bool,
+
+    /// Number of maximum steps during a single test. For fuzz tests this value is applied to each subtest separately.
+    #[arg(long)]
+    max_n_steps: Option<u32>,
+}
+
+pub enum ExitStatus {
+    Success,
+    Failure,
+}
+
+pub fn main_execution() -> Result<ExitStatus> {
+    let cli = Cli::parse();
+
+    ScarbCommand::new().ensure_available()?;
+    UniversalSierraCompilerCommand::ensure_available()?;
+
+    match cli.subcommand {
+        ForgeSubcommand::Init { name } => {
+            init::run(name.as_str())?;
+            Ok(ExitStatus::Success)
         }
-    }
+        ForgeSubcommand::CleanCache {} => {
+            let scarb_metadata = ScarbCommand::metadata().inherit_stderr().run()?;
+            let cache_dir = scarb_metadata.workspace.root.join(CACHE_DIR);
 
-    #[tokio::test]
-    async fn to_runnable_unparsable_url() {
-        let mocked_tests = CompiledTestCrateRaw {
-            sierra_program: program_for_testing(),
-            test_cases: vec![TestCaseRaw {
-                name: "crate1::do_thing".to_string(),
-                available_gas: None,
-                ignored: false,
-                expected_result: ExpectedTestResult::Success,
-                fork_config: Some(RawForkConfig::Params(RawForkParams {
-                    url: "unparsable_url".to_string(),
-                    block_id_type: "Tag".to_string(),
-                    block_id_value: "Latest".to_string(),
-                })),
-                fuzzer_config: None,
-                test_details: TestDetails {
-                    sierra_entry_point_statement_idx: 100,
-                    parameter_types: vec![
-                        (GenericTypeId("RangeCheck".into()), 1),
-                        (GenericTypeId("GasBuiltin".into()), 1),
-                    ],
-                    return_types: vec![
-                        (GenericTypeId("RangeCheck".into()), 1),
-                        (GenericTypeId("GasBuiltin".into()), 1),
-                        (GenericTypeId("Enum".into()), 3),
-                    ],
-                },
-            }],
-            tests_location: CrateLocation::Lib,
-        };
+            FailedTestsCache::new(cache_dir).clean()?;
 
-        assert!(
-            to_runnable(mocked_tests, &[], &mut BlockNumberMap::default())
-                .await
-                .is_err()
-        );
-    }
-
-    #[tokio::test]
-    async fn to_runnable_non_existent_id() {
-        let mocked_tests = CompiledTestCrateRaw {
-            sierra_program: program_for_testing(),
-            test_cases: vec![TestCaseRaw {
-                name: "crate1::do_thing".to_string(),
-                available_gas: None,
-                ignored: false,
-                expected_result: ExpectedTestResult::Success,
-                fork_config: Some(RawForkConfig::Id("non_existent".to_string())),
-                fuzzer_config: None,
-                test_details: TestDetails {
-                    sierra_entry_point_statement_idx: 100,
-                    parameter_types: vec![
-                        (GenericTypeId("RangeCheck".into()), 1),
-                        (GenericTypeId("GasBuiltin".into()), 1),
-                    ],
-                    return_types: vec![
-                        (GenericTypeId("RangeCheck".into()), 1),
-                        (GenericTypeId("GasBuiltin".into()), 1),
-                        (GenericTypeId("Enum".into()), 3),
-                    ],
-                },
-            }],
-            tests_location: CrateLocation::Lib,
-        };
-
-        assert!(to_runnable(
-            mocked_tests,
-            &[ForkTarget::new(
-                "definitely_non_existing".to_string(),
-                RawForkParams {
-                    url: "https://not_taken.com".to_string(),
-                    block_id_type: "Number".to_string(),
-                    block_id_value: "120".to_string(),
-                },
-            )],
-            &mut BlockNumberMap::default()
-        )
-        .await
-        .is_err());
+            Ok(ExitStatus::Success)
+        }
+        ForgeSubcommand::Test { args } => test_workspace(args),
     }
 }

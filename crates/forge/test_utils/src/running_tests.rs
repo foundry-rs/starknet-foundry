@@ -1,10 +1,12 @@
 use crate::runner::TestCase;
 use camino::Utf8PathBuf;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
-use forge::block_number_map::BlockNumberMap;
-use forge::run;
-use forge::scarb::{get_test_artifacts_path, load_test_artifacts};
-use forge::test_filter::TestsFilter;
+use forge::{
+    block_number_map::BlockNumberMap,
+    scarb::{get_test_artifacts_path, load_test_artifacts},
+    test::run,
+    test_filter::TestsFilter,
+};
 use forge_runner::build_trace_data::test_sierra_program_path::VERSIONED_PROGRAMS_DIR;
 use forge_runner::forge_config::{
     ExecutionDataToSave, ForgeConfig, OutputConfig, TestRunnerConfig,

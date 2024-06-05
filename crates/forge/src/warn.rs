@@ -1,9 +1,10 @@
 use crate::{
-    compiled_raw::CompiledTestCrateRaw, replace_id_with_params, scarb::config::ForkTarget,
+    compiled_raw::CompiledTestCrateRaw, scarb::config::ForkTarget, test::replace_id_with_params,
 };
 use anyhow::{anyhow, Result};
-use scarb_api::ScarbCommand;
-use semver::Version;
+use scarb_api::{package_matches_version_requirement, ScarbCommand};
+use scarb_metadata::Metadata;
+use semver::{Comparator, Op, Version, VersionReq};
 use shared::print::print_as_warning;
 use shared::rpc::create_rpc_client;
 use shared::verify_and_warn_if_incompatible_rpc_version;
@@ -61,5 +62,31 @@ pub(crate) async fn warn_if_incompatible_rpc_version(
         handle.await??;
     }
 
+    Ok(())
+}
+
+fn snforge_std_version_requirement() -> VersionReq {
+    let version = Version::parse(env!("CARGO_PKG_VERSION")).unwrap();
+    let comparator = Comparator {
+        op: Op::Exact,
+        major: version.major,
+        minor: Some(version.minor),
+        patch: Some(version.patch),
+        pre: version.pre,
+    };
+    VersionReq {
+        comparators: vec![comparator],
+    }
+}
+
+pub fn warn_if_snforge_std_not_compatible(scarb_metadata: &Metadata) -> Result<()> {
+    let snforge_std_version_requirement = snforge_std_version_requirement();
+    if !package_matches_version_requirement(
+        scarb_metadata,
+        "snforge_std",
+        &snforge_std_version_requirement,
+    )? {
+        print_as_warning(&anyhow!("Package snforge_std version does not meet the recommended version requirement {snforge_std_version_requirement}, it might result in unexpected behaviour"));
+    }
     Ok(())
 }
