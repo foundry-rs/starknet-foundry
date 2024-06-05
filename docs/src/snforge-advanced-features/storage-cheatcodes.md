@@ -7,7 +7,8 @@ which allow manipulating the storage directly (reading and writing).
 In order to obtain the variable address that you'd like to write to, or read from, you need to use either:
 - `selector!` macro - if the variable is not a mapping
 - `map_entry_address` function in tandem with `selector!` - for key-value pair of a map variable
-
+- `starknet::storage_access::storage_address_from_base`
+  
 ## Example: Felt-only storage
 This example uses only felts for simplicity
 
@@ -160,4 +161,41 @@ fn store_in_complex_mapping() {
 > The `load` cheatcode will return zeros for memory you haven't written into yet (it is a default storage value for Starknet contracts' storage).
 
 
+## Example with `storage_address_from_base`
+
+This example use `storage_address_from_base` with `address` function of the [storage variable](https://book.cairo-lang.org/ch14-01-contract-storage.html#addresses-of-storage-variables).
+
+```rust
+#[starknet::contract]
+mod Contract {
+    #[storage]
+    struct Storage {
+        votes: LegacyMap::<(u8, u32), u32>,
+    }
+}
+
+// ...
+use starknet::storage_access::storage_address_from_base;
+use Contract::votesContractMemberStateTrait;
+
+#[test]
+fn update_mapping() {
+    let index = 1_u8;
+    let day = 10_u32;
+    let vote = 42_u32;
+
+    // ...
+    let mut state = doc::Contract::contract_state_for_testing();
+    let storage_address: felt252 = storage_address_from_base(
+        state.votes.address((index, day))
+    )
+    .into();
+    let storage_value: Span<felt252> = array![vote.into()].span();
+    snf::store(contract_address, storage_address, storage_value);
+
+    let read_vote = IContractDispatcher { contract_address: contract_address}.get_vote(index, day);
+    assert_eq!(read_vote, vote, "Storage update failed")
+}
+
+```
 
