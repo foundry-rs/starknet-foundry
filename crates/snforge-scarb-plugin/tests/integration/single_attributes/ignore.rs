@@ -1,5 +1,5 @@
 use crate::utils::{assert_diagnostics, assert_output, EMPTY_FN};
-use cairo_lang_macro::{Severity, TokenStream};
+use cairo_lang_macro::{Diagnostic, TokenStream};
 use indoc::formatdoc;
 use snforge_scarb_plugin::attributes::ignore::ignore;
 
@@ -12,7 +12,7 @@ fn fails_with_args() {
 
     assert_diagnostics(
         &result,
-        &[(Severity::Error, "#[ignore] does not accept any arguments")],
+        &[Diagnostic::error("#[ignore] does not accept any arguments")],
     );
 }
 
@@ -60,6 +60,8 @@ fn is_used_once() {
 
     assert_diagnostics(
         &result,
-        &[(Severity::Error, "#[ignore] can only be used once per item")],
+        &[Diagnostic::error(
+            "#[ignore] can only be used once per item",
+        )],
     );
 }

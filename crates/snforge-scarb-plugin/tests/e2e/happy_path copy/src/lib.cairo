@@ -1,4 +1,3 @@
-
 #[cfg(test)]
 mod xd {
     #[test]
@@ -15,5 +14,4 @@ mod xd {
     fn with_args(a: felt252, b: u8) {
         assert(true, '');
     }
-
 }

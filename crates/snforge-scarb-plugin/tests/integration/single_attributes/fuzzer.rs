@@ -1,5 +1,5 @@
 use crate::utils::{assert_diagnostics, assert_output, EMPTY_FN};
-use cairo_lang_macro::{Severity, TokenStream};
+use cairo_lang_macro::{Diagnostic, TokenStream};
 use indoc::formatdoc;
 use snforge_scarb_plugin::attributes::fuzzer::fuzzer;
 
@@ -136,7 +136,9 @@ fn fail_with_invalid_args() {
 
     assert_diagnostics(
         &result,
-        &[(Severity::Error, "#[fuzzer] <seed> should be number literal")],
+        &[Diagnostic::error(
+            "#[fuzzer] <seed> should be number literal",
+        )],
     );
 }
 
@@ -154,6 +156,8 @@ fn is_used_once() {
 
     assert_diagnostics(
         &result,
-        &[(Severity::Error, "#[fuzzer] can only be used once per item")],
+        &[Diagnostic::error(
+            "#[fuzzer] can only be used once per item",
+        )],
     );
 }

@@ -8,7 +8,7 @@ publish = false
 crate-type = ["rlib", "cdylib"]
 
 [dependencies]
-cairo-lang-macro = { git = "https://github.com/software-mansion/scarb", rev = "327bd6b" }
+cairo-lang-macro = { git = "https://github.com/software-mansion/scarb", rev = "31bdbe4" }
 
 cairo-lang-parser.workspace = true
 cairo-lang-utils.workspace = true

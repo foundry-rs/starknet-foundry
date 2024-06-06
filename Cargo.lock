@@ -746,7 +746,7 @@ dependencies = [
 [[package]]
 name = "cairo-lang-macro"
 version = "0.0.1"
-source = "git+https://github.com/software-mansion/scarb?rev=327bd6b#327bd6b5b55484c4381f1af5b003e82009a03df6"
+source = "git+https://github.com/software-mansion/scarb?rev=31bdbe4#31bdbe4f9dbb927f9818ea395097b21fbe4590a5"
 dependencies = [
  "cairo-lang-macro-attributes",
  "cairo-lang-macro-stable",
@@ -756,7 +756,7 @@ dependencies = [
 [[package]]
 name = "cairo-lang-macro-attributes"
 version = "0.0.1"
-source = "git+https://github.com/software-mansion/scarb?rev=327bd6b#327bd6b5b55484c4381f1af5b003e82009a03df6"
+source = "git+https://github.com/software-mansion/scarb?rev=31bdbe4#31bdbe4f9dbb927f9818ea395097b21fbe4590a5"
 dependencies = [
  "quote",
  "scarb-stable-hash",
@@ -766,7 +766,7 @@ dependencies = [
 [[package]]
 name = "cairo-lang-macro-stable"
 version = "1.0.0"
-source = "git+https://github.com/software-mansion/scarb?rev=327bd6b#327bd6b5b55484c4381f1af5b003e82009a03df6"
+source = "git+https://github.com/software-mansion/scarb?rev=31bdbe4#31bdbe4f9dbb927f9818ea395097b21fbe4590a5"
 
 [[package]]
 name = "cairo-lang-parser"
@@ -4168,7 +4168,7 @@ dependencies = [
 [[package]]
 name = "scarb-stable-hash"
 version = "1.0.0"
-source = "git+https://github.com/software-mansion/scarb?rev=327bd6b#327bd6b5b55484c4381f1af5b003e82009a03df6"
+source = "git+https://github.com/software-mansion/scarb?rev=31bdbe4#31bdbe4f9dbb927f9818ea395097b21fbe4590a5"
 dependencies = [
  "data-encoding",
  "xxhash-rust",

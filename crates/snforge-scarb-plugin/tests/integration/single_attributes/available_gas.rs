@@ -1,5 +1,5 @@
 use crate::utils::{assert_diagnostics, assert_output, EMPTY_FN};
-use cairo_lang_macro::{Severity, TokenStream};
+use cairo_lang_macro::{Diagnostic, TokenStream};
 use indoc::formatdoc;
 use snforge_scarb_plugin::attributes::available_gas::available_gas;
 
@@ -12,8 +12,7 @@ fn fails_with_empty() {
 
     assert_diagnostics(
         &result,
-        &[(
-            Severity::Error,
+        &[Diagnostic::error(
             "#[available_gas] expected 1 arguments, got: 0",
         )],
     );
@@ -28,8 +27,7 @@ fn fails_with_more_than_one() {
 
     assert_diagnostics(
         &result,
-        &[(
-            Severity::Error,
+        &[Diagnostic::error(
             "#[available_gas] expected 1 arguments, got: 3",
         )],
     );
@@ -44,8 +42,7 @@ fn fails_with_non_number_literal() {
 
     assert_diagnostics(
         &result,
-        &[(
-            Severity::Error,
+        &[Diagnostic::error(
             "#[available_gas] <0> should be number literal",
         )],
     );
@@ -95,8 +92,7 @@ fn is_used_once() {
 
     assert_diagnostics(
         &result,
-        &[(
-            Severity::Error,
+        &[Diagnostic::error(
             "#[available_gas] can only be used once per item",
         )],
     );

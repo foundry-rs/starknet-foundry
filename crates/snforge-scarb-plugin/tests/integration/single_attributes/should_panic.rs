@@ -1,5 +1,5 @@
 use crate::utils::{assert_diagnostics, assert_output, EMPTY_FN};
-use cairo_lang_macro::{Severity, TokenStream};
+use cairo_lang_macro::{Diagnostic, TokenStream};
 use indoc::formatdoc;
 use snforge_scarb_plugin::attributes::should_panic::should_panic;
 
@@ -133,8 +133,7 @@ fn is_used_once() {
 
     assert_diagnostics(
         &result,
-        &[(
-            Severity::Error,
+        &[Diagnostic::error(
             "#[should_panic] can only be used once per item",
         )],
     );

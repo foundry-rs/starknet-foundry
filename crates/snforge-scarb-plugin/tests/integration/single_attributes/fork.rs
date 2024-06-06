@@ -1,5 +1,5 @@
 use crate::utils::{assert_diagnostics, assert_output, EMPTY_FN};
-use cairo_lang_macro::{Severity, TokenStream};
+use cairo_lang_macro::{Diagnostic, TokenStream};
 use indoc::formatdoc;
 use snforge_scarb_plugin::attributes::fork::fork;
 
@@ -13,17 +13,14 @@ fn fails_without_block() {
     assert_diagnostics(
         &result,
         &[
-            (
-                Severity::Error,
-                &formatdoc!(
-                    "
-                        Both options failed
-                        First variant: exactly one of <block_hash> | <block_number> | <block_tag> should be specified, got 0
-                        Second variant: #[fork] can be used with unnamed attributes only
-                        Resolve at least one of them
-                    "
-                )
-            ),
+           Diagnostic::error(formatdoc!(
+                "
+                    Both options failed
+                    First variant: exactly one of <block_hash> | <block_number> | <block_tag> should be specified, got 0
+                    Second variant: #[fork] can be used with unnamed attributes only
+                    Resolve at least one of them
+                "
+            ))
         ],
     );
 }
@@ -37,17 +34,14 @@ fn fails_without_url() {
 
     assert_diagnostics(
         &result,
-        &[(
-            Severity::Error,
-            &formatdoc!(
-                "
-                        Both options failed
-                        First variant: <url> argument is missing
-                        Second variant: #[fork] can be used with unnamed attributes only
-                        Resolve at least one of them
-                    "
-            ),
-        )],
+        &[Diagnostic::error(formatdoc!(
+            "
+                Both options failed
+                First variant: <url> argument is missing
+                Second variant: #[fork] can be used with unnamed attributes only
+                Resolve at least one of them
+            "
+        ))],
     );
 }
 
@@ -61,16 +55,13 @@ fn fails_without_args() {
     assert_diagnostics(
         &result,
         &[
-            (
-                Severity::Error,
-                &formatdoc!(
-                "
-                    Both options failed
-                    First variant: exactly one of <block_hash> | <block_number> | <block_tag> should be specified, got 0
-                    Second variant: #[fork] expected 1 arguments, got: 0
-                    Resolve at least one of them
-                ")
-            ),
+          Diagnostic::error(formatdoc!(
+            "
+                Both options failed
+                First variant: exactly one of <block_hash> | <block_number> | <block_tag> should be specified, got 0
+                Second variant: #[fork] expected 1 arguments, got: 0
+                Resolve at least one of them
+            "))
         ],
     );
 }
@@ -84,17 +75,14 @@ fn fails_with_invalid_url() {
 
     assert_diagnostics(
         &result,
-        &[(
-            Severity::Error,
-            &formatdoc!(
-                "
-                    Both options failed
-                    First variant: #[fork] <url> is not a valid url
-                    Second variant: #[fork] can be used with unnamed attributes only
-                    Resolve at least one of them
-                "
-            ),
-        )],
+        &[Diagnostic::error(formatdoc!(
+            "
+                Both options failed
+                First variant: #[fork] <url> is not a valid url
+                Second variant: #[fork] can be used with unnamed attributes only
+                Resolve at least one of them
+            "
+        ))],
     );
 }
 
@@ -175,6 +163,6 @@ fn is_used_once() {
 
     assert_diagnostics(
         &result,
-        &[(Severity::Error, "#[fork] can only be used once per item")],
+        &[Diagnostic::error("#[fork] can only be used once per item")],
     );
 }

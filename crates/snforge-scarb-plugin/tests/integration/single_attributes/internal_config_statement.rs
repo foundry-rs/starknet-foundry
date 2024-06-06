@@ -1,5 +1,5 @@
 use crate::utils::{assert_diagnostics, assert_output, EMPTY_FN};
-use cairo_lang_macro::{Severity, TokenStream};
+use cairo_lang_macro::{Diagnostic, TokenStream};
 use indoc::formatdoc;
 use snforge_scarb_plugin::attributes::internal_config_statement::internal_config_statement;
 
@@ -12,8 +12,7 @@ fn fails_with_non_empty_args() {
 
     assert_diagnostics(
         &result,
-        &[(
-            Severity::Error,
+        &[Diagnostic::error(
             "#[__internal_config_statement] does not accept any arguments",
         )],
     );
@@ -53,8 +52,7 @@ fn is_used_once() {
 
     assert_diagnostics(
         &result,
-        &[(
-            Severity::Error,
+        &[Diagnostic::error(
             "#[__internal_config_statement] can only be used once per item",
         )],
     );

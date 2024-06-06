@@ -1,47 +1,20 @@
-use cairo_lang_macro::{ProcMacroResult, Severity};
+use cairo_lang_macro::{Diagnostic, ProcMacroResult};
 use lazy_static::lazy_static;
 use regex::Regex;
 use std::collections::HashSet;
 
 pub const EMPTY_FN: &str = "fn empty_fn(){}";
 
-pub fn assert_diagnostics(result: &ProcMacroResult, expected: &[(Severity, &str)]) {
-    let diagnostics: HashSet<_> = result
-        .diagnostics
-        .iter()
-        .map(|d| {
-            (
-                match d.severity {
-                    Severity::Error => 0,
-                    Severity::Warning => 1,
-                },
-                d.message.as_str(),
-            )
-        })
-        .collect();
-    let expected: HashSet<_> = expected
-        .iter()
-        .map(|d| {
-            (
-                match d.0 {
-                    Severity::Error => 0,
-                    Severity::Warning => 1,
-                },
-                d.1,
-            )
-        })
-        .collect();
+pub fn assert_diagnostics(result: &ProcMacroResult, expected: &[Diagnostic]) {
+    let diagnostics: HashSet<_> = result.diagnostics.iter().collect();
+    let expected: HashSet<_> = expected.iter().collect();
 
     let remaining_diagnostics: Vec<_> = diagnostics
         .difference(&expected)
         .map(|diff| {
             format!(
-                "Diagnostic where emitted and unexpected:\n {} => \"{}\"\n",
-                match diff.0 {
-                    0 => "Severity::Error",
-                    _ => "Severity::Warning",
-                },
-                diff.1,
+                "Diagnostic where emitted and unexpected:\n {:?} => \"{}\"\n",
+                diff.severity, diff.message,
             )
         })
         .collect();
@@ -50,12 +23,8 @@ pub fn assert_diagnostics(result: &ProcMacroResult, expected: &[(Severity, &str)
         .difference(&diagnostics)
         .map(|diff| {
             format!(
-                "Diagnostic where expected but not emitted:\n {} => \"{}\"\n",
-                match diff.0 {
-                    0 => "Severity::Error",
-                    _ => "Severity::Warning",
-                },
-                diff.1,
+                "Diagnostic where expected but not emitted:\n {:?} => \"{}\"\n",
+                diff.severity, diff.message,
             )
         })
         .collect();
