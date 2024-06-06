@@ -14,6 +14,7 @@ traverse-parent-directories = false
 [output.html]
 git-repository-url = "https://github.com/foundry-rs/starknet-foundry/"
 edit-url-template = "https://github.com/foundry-rs/starknet-foundry/edit/master/docs/{path}"
+additional-js = ["count.js"]
 
 [output.html.playground]
 runnable = false
