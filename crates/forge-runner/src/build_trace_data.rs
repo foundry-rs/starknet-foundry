@@ -24,8 +24,8 @@ use starknet_api::deprecated_contract_class::EntryPointType;
 use starknet_api::hash::StarkHash;
 use trace_data::{
     CairoExecutionInfo, CallEntryPoint as ProfilerCallEntryPoint, CallTrace as ProfilerCallTrace,
-    CallTraceNode as ProfilerCallTraceNode, CallType as ProfilerCallType, ContractAddress,
-    DeprecatedSyscallSelector as ProfilerDeprecatedSyscallSelector,
+    CallTraceNode as ProfilerCallTraceNode, CallType as ProfilerCallType, CasmLevelInfo,
+    ContractAddress, DeprecatedSyscallSelector as ProfilerDeprecatedSyscallSelector,
     EntryPointSelector as ProfilerEntryPointSelector, EntryPointType as ProfilerEntryPointType,
     ExecutionResources as ProfilerExecutionResources, TraceEntry as ProfilerTraceEntry,
     VmExecutionResources,
@@ -57,6 +57,7 @@ pub fn build_profiler_call_trace(
         vm_trace,
         contracts_data,
         maybe_versioned_program_path,
+        value.run_with_call_header,
     );
 
     ProfilerCallTrace {
@@ -82,6 +83,7 @@ fn build_cairo_execution_info(
     vm_trace: Option<Vec<ProfilerTraceEntry>>,
     contracts_data: &ContractsData,
     maybe_test_sierra_program_path: &Option<VersionedProgramPath>,
+    run_with_call_header: bool,
 ) -> Option<CairoExecutionInfo> {
     let contract_name = get_contract_name(entry_point.class_hash, contracts_data);
     let source_sierra_path = contract_name.and_then(|name| {
@@ -91,7 +93,10 @@ fn build_cairo_execution_info(
     #[allow(clippy::unnecessary_unwrap)]
     if source_sierra_path.is_some() && vm_trace.is_some() {
         Some(CairoExecutionInfo {
-            vm_trace: vm_trace.unwrap(),
+            casm_level_info: CasmLevelInfo {
+                run_with_call_header,
+                vm_trace: vm_trace.unwrap(),
+            },
             source_sierra_path: source_sierra_path.unwrap(),
         })
     } else {

@@ -154,6 +154,7 @@ impl<T> CheatStatus<T> {
 
 /// Tree structure representing trace of a call.
 pub struct CallTrace {
+    pub run_with_call_header: bool,
     // only these are serialized
     pub entry_point: CallEntryPoint,
     pub nested_calls: Vec<CallTraceNode>,
@@ -184,8 +185,9 @@ impl CairoSerialize for CallTrace {
 }
 
 impl CallTrace {
-    fn default_successful_call() -> Self {
+    fn default_successful_call(run_with_call_header: bool) -> Self {
         Self {
+            run_with_call_header,
             entry_point: Default::default(),
             used_execution_resources: Default::default(),
             used_l1_resources: Default::default(),
@@ -331,7 +333,7 @@ impl Default for CheatnetState {
         test_code_entry_point.class_hash = Some(class_hash!(TEST_CONTRACT_CLASS_HASH));
         let test_call = Rc::new(RefCell::new(CallTrace {
             entry_point: test_code_entry_point,
-            ..CallTrace::default_successful_call()
+            ..CallTrace::default_successful_call(true)
         }));
         Self {
             cheated_execution_info_contracts: Default::default(),
@@ -459,7 +461,7 @@ impl TraceData {
     ) {
         let new_call = Rc::new(RefCell::new(CallTrace {
             entry_point,
-            ..CallTrace::default_successful_call()
+            ..CallTrace::default_successful_call(false)
         }));
         let current_call = self.current_call_stack.top();
 
