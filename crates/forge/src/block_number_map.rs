@@ -1,8 +1,7 @@
-use crate::compiled_raw::RawForkParams;
 use anyhow::{anyhow, Result};
 use cairo_felt::Felt252;
 use conversions::IntoConv;
-use forge_runner::compiled_runnable::ValidatedForkConfig;
+use forge_runner::compiled_runnable::{ForkConfig, RawForkParams};
 use num_bigint::BigInt;
 use starknet::core::types::{BlockId, MaybePendingBlockWithTxHashes};
 use starknet::providers::jsonrpc::HttpTransport;
@@ -45,7 +44,7 @@ impl BlockNumberMap {
     pub async fn validated_fork_config_from_fork_params(
         &mut self,
         fork_params_string: &RawForkParams,
-    ) -> Result<ValidatedForkConfig> {
+    ) -> Result<ForkConfig> {
         let url_str = fork_params_string.url.clone();
         let url = fork_params_string.url.parse()?;
         let block_number = match fork_params_string.block_id_type.to_lowercase().as_str() {
@@ -75,7 +74,7 @@ impl BlockNumberMap {
             }
             _ => unreachable!(),
         };
-        Ok(ValidatedForkConfig { url, block_number })
+        Ok(ForkConfig { url, block_number })
     }
 }
 

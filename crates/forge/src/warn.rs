@@ -1,7 +1,5 @@
-use crate::{
-    compiled_raw::CompiledTestCrateRaw, scarb::config::ForkTarget, test::replace_id_with_params,
-};
 use anyhow::{anyhow, Result};
+use forge_runner::compiled_runnable::TestTargetWithResolvedConfig;
 use scarb_api::{package_matches_version_requirement, ScarbCommand};
 use scarb_metadata::Metadata;
 use semver::{Comparator, Op, Version, VersionReq};
@@ -9,13 +7,14 @@ use shared::print::print_as_warning;
 use shared::rpc::create_rpc_client;
 use shared::verify_and_warn_if_incompatible_rpc_version;
 use std::collections::HashSet;
+use url::Url;
 
 pub(crate) fn warn_if_available_gas_used_with_incompatible_scarb_version(
-    test_crates: &[CompiledTestCrateRaw],
+    test_crates: &[TestTargetWithResolvedConfig],
 ) -> Result<()> {
     for test_crate in test_crates {
         for case in &test_crate.test_cases {
-            if case.available_gas == Some(0)
+            if case.config.available_gas == Some(0)
                 && ScarbCommand::version().run()?.scarb <= Version::new(2, 4, 3)
             {
                 print_as_warning(&anyhow!(
@@ -30,21 +29,18 @@ pub(crate) fn warn_if_available_gas_used_with_incompatible_scarb_version(
 }
 
 pub(crate) async fn warn_if_incompatible_rpc_version(
-    test_crates: &[CompiledTestCrateRaw],
-    fork_targets: &[ForkTarget],
+    test_crates: &[TestTargetWithResolvedConfig],
 ) -> Result<()> {
-    let mut urls = HashSet::<String>::new();
+    let mut urls = HashSet::<Url>::new();
 
     // collect urls
     for test_crate in test_crates {
-        for raw_fork_config in test_crate
+        for fork_config in test_crate
             .test_cases
             .iter()
-            .filter_map(|tc| tc.fork_config.as_ref())
+            .filter_map(|tc| tc.config.fork_config.as_ref())
         {
-            let params = replace_id_with_params(raw_fork_config, fork_targets)?;
-
-            urls.insert(params.url.clone());
+            urls.insert(fork_config.url.clone());
         }
     }
 
@@ -52,7 +48,7 @@ pub(crate) async fn warn_if_incompatible_rpc_version(
 
     for url in urls {
         handles.push(tokio::spawn(async move {
-            let client = create_rpc_client(&url)?;
+            let client = create_rpc_client(url.as_ref())?; //TODO pass url directly
 
             verify_and_warn_if_incompatible_rpc_version(&client, &url).await
         }));

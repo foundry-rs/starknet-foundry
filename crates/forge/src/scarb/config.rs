@@ -1,5 +1,5 @@
-use crate::compiled_raw::RawForkParams;
 use anyhow::{bail, Result};
+use forge_runner::compiled_runnable::RawForkParams;
 use itertools::Itertools;
 use serde::Deserialize;
 use std::{

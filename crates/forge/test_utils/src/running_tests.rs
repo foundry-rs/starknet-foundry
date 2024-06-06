@@ -3,8 +3,8 @@ use camino::Utf8PathBuf;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use forge::{
     block_number_map::BlockNumberMap,
-    scarb::{get_test_artifacts_path, load_test_artifacts},
-    test::run,
+    run_tests::run_crate::{run_from_crate, RunFromCrateArgs},
+    scarb::load_test_artifacts,
     test_filter::TestsFilter,
 };
 use forge_runner::build_trace_data::test_sierra_program_path::VERSIONED_PROGRAMS_DIR;
@@ -32,38 +32,49 @@ pub fn run_test_case(test: &TestCase) -> Vec<TestCrateSummary> {
         .unwrap();
 
     let rt = Runtime::new().expect("Could not instantiate Runtime");
-    let test_artifacts_path = get_test_artifacts_path(
+    let compiled_test_crates = load_test_artifacts(
         &test.path().unwrap().join("target/dev/snforge"),
         "test_package",
-    );
-    let compiled_test_crates = load_test_artifacts(&test_artifacts_path).unwrap();
+    )
+    .unwrap();
 
-    rt.block_on(run(
-        compiled_test_crates,
-        "test_package",
-        &TestsFilter::from_flags(None, false, false, false, false, Default::default()),
-        Arc::new(ForgeConfig {
-            test_runner_config: Arc::new(TestRunnerConfig {
-                exit_first: false,
-                fuzzer_runs: NonZeroU32::new(256).unwrap(),
-                fuzzer_seed: 12345,
-                max_n_steps: None,
-                is_vm_trace_needed: false,
-                cache_dir: Utf8PathBuf::from_path_buf(tempdir().unwrap().into_path())
-                    .unwrap()
-                    .join(CACHE_DIR),
-                contracts_data: ContractsData::try_from(test.contracts().unwrap()).unwrap(),
-                environment_variables: test.env().clone(),
-            }),
-            output_config: Arc::new(OutputConfig {
-                detailed_resources: false,
-                execution_data_to_save: ExecutionDataToSave::None,
-                versioned_programs_dir: Utf8PathBuf::from_path_buf(tempdir().unwrap().into_path())
+    rt.block_on(run_from_crate(
+        RunFromCrateArgs {
+            compiled_test_crates: compiled_test_crates.into_iter().map(From::from).collect(),
+            package_name: "test_package".to_string(),
+            tests_filter: TestsFilter::from_flags(
+                None,
+                false,
+                false,
+                false,
+                false,
+                Default::default(),
+            ),
+            forge_config: Arc::new(ForgeConfig {
+                test_runner_config: Arc::new(TestRunnerConfig {
+                    exit_first: false,
+                    fuzzer_runs: NonZeroU32::new(256).unwrap(),
+                    fuzzer_seed: 12345,
+                    max_n_steps: None,
+                    is_vm_trace_needed: false,
+                    cache_dir: Utf8PathBuf::from_path_buf(tempdir().unwrap().into_path())
+                        .unwrap()
+                        .join(CACHE_DIR),
+                    contracts_data: ContractsData::try_from(test.contracts().unwrap()).unwrap(),
+                    environment_variables: test.env().clone(),
+                }),
+                output_config: Arc::new(OutputConfig {
+                    detailed_resources: false,
+                    execution_data_to_save: ExecutionDataToSave::None,
+                    versioned_programs_dir: Utf8PathBuf::from_path_buf(
+                        tempdir().unwrap().into_path(),
+                    )
                     .unwrap()
                     .join(VERSIONED_PROGRAMS_DIR),
+                }),
             }),
-        }),
-        &[],
+            fork_targets: vec![],
+        },
         &mut BlockNumberMap::default(),
     ))
     .expect("Runner fail")

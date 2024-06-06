@@ -1,53 +1,69 @@
 use super::replace_id_with_params;
-use crate::{
-    block_number_map::BlockNumberMap, compiled_raw::CompiledTestCrateRaw, scarb::config::ForkTarget,
-};
+use crate::{block_number_map::BlockNumberMap, scarb::config::ForkTarget};
 use anyhow::Result;
-use forge_runner::compiled_runnable::{CompiledTestCrateRunnable, TestCaseRunnable};
+use forge_runner::compiled_runnable::{
+    ForkConfig, RawForkConfig, TestCaseResolvedConfig, TestCaseWithResolvedConfig,
+    TestTargetWithConfig, TestTargetWithResolvedConfig,
+};
 
-pub async fn to_runnable(
-    compiled_test_crate: CompiledTestCrateRaw,
+pub async fn with_config(
+    compiled_test_crate: TestTargetWithConfig,
     fork_targets: &[ForkTarget],
     block_number_map: &mut BlockNumberMap,
-) -> Result<CompiledTestCrateRunnable> {
+) -> Result<TestTargetWithResolvedConfig> {
     let mut test_cases = vec![];
 
     for case in compiled_test_crate.test_cases {
-        let fork_config = if let Some(fc) = case.fork_config {
-            let raw_fork_params = replace_id_with_params(&fc, fork_targets)?;
-            let fork_config = block_number_map
-                .validated_fork_config_from_fork_params(raw_fork_params)
-                .await?;
-            Some(fork_config)
-        } else {
-            None
-        };
-
-        test_cases.push(TestCaseRunnable {
-            name: case.name,
-            available_gas: case.available_gas,
-            ignored: case.ignored,
-            expected_result: case.expected_result,
-            fork_config,
-            fuzzer_config: case.fuzzer_config,
-            test_details: case.test_details,
+        test_cases.push(TestCaseWithResolvedConfig {
+            test_case: case.test_case,
+            config: TestCaseResolvedConfig {
+                available_gas: case.config.available_gas,
+                ignored: case.config.ignored,
+                expected_result: case.config.expected_result,
+                fork_config: resolve_fork_config(
+                    &case.config.fork_config,
+                    block_number_map,
+                    fork_targets,
+                )
+                .await?,
+                fuzzer_config: case.config.fuzzer_config,
+            },
         });
     }
 
-    Ok(CompiledTestCrateRunnable {
+    Ok(TestTargetWithResolvedConfig {
         tests_location: compiled_test_crate.tests_location,
-        sierra_program: compiled_test_crate.sierra_program.into_v1().unwrap(),
+        sierra_program: compiled_test_crate.sierra_program,
         test_cases,
     })
+}
+
+async fn resolve_fork_config(
+    fork_config: &Option<RawForkConfig>,
+    block_number_map: &mut BlockNumberMap,
+    fork_targets: &[ForkTarget],
+) -> Result<Option<ForkConfig>> {
+    let result = if let Some(fc) = fork_config {
+        let raw_fork_params = replace_id_with_params(fc, fork_targets)?;
+        let fork_config = block_number_map
+            .validated_fork_config_from_fork_params(raw_fork_params)
+            .await?;
+        Some(fork_config)
+    } else {
+        None
+    };
+
+    Ok(result)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::compiled_raw::{CompiledTestCrateRaw, RawForkConfig, RawForkParams, TestCaseRaw};
     use cairo_lang_sierra::program::{ProgramArtifact, Version, VersionedProgram};
     use cairo_lang_sierra::{ids::GenericTypeId, program::Program};
-    use forge_runner::compiled_runnable::CrateLocation;
+    use forge_runner::compiled_runnable::{
+        CompiledTestCrateRaw, CrateLocation, RawForkParams, TestCaseRaw,
+    };
     use forge_runner::{compiled_runnable::TestDetails, expected_result::ExpectedTestResult};
 
     fn program_for_testing() -> VersionedProgram {
@@ -97,7 +113,7 @@ mod tests {
         };
 
         assert!(
-            to_runnable(mocked_tests, &[], &mut BlockNumberMap::default())
+            with_config(mocked_tests.into(), &[], &mut BlockNumberMap::default())
                 .await
                 .is_err()
         );
@@ -130,8 +146,8 @@ mod tests {
             tests_location: CrateLocation::Lib,
         };
 
-        assert!(to_runnable(
-            mocked_tests,
+        assert!(with_config(
+            mocked_tests.into(),
             &[ForkTarget::new(
                 "definitely_non_existing".to_string(),
                 RawForkParams {

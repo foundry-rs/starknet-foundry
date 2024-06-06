@@ -1,8 +1,8 @@
-use crate::compiled_raw::CompiledTestCrateRaw;
 use crate::scarb::config::{ForgeConfigFromScarb, RawForgeConfig};
 use anyhow::{Context, Result};
-use camino::{Utf8Path, Utf8PathBuf};
+use camino::Utf8Path;
 use configuration::PackageConfig;
+use forge_runner::compiled_runnable::CompiledTestCrateRaw;
 use scarb_api::ScarbCommand;
 use scarb_ui::args::PackagesFilter;
 
@@ -43,15 +43,13 @@ pub fn build_test_artifacts_with_scarb(filter: PackagesFilter) -> Result<()> {
     Ok(())
 }
 
-#[must_use]
-pub fn get_test_artifacts_path(
+pub fn load_test_artifacts(
     snforge_target_dir_path: &Utf8Path,
     package_name: &str,
-) -> Utf8PathBuf {
-    snforge_target_dir_path.join(format!("{package_name}.snforge_sierra.json"))
-}
+) -> Result<Vec<CompiledTestCrateRaw>> {
+    let test_artifacts_path =
+        snforge_target_dir_path.join(format!("{package_name}.snforge_sierra.json"));
 
-pub fn load_test_artifacts(test_artifacts_path: &Utf8PathBuf) -> Result<Vec<CompiledTestCrateRaw>> {
     Ok(serde_json::from_str::<Vec<CompiledTestCrateRaw>>(
         &std::fs::read_to_string(test_artifacts_path)?,
     )?)
@@ -60,12 +58,12 @@ pub fn load_test_artifacts(test_artifacts_path: &Utf8PathBuf) -> Result<Vec<Comp
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::compiled_raw::RawForkParams;
     use crate::scarb::config::ForkTarget;
     use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
     use assert_fs::TempDir;
     use camino::Utf8PathBuf;
     use configuration::load_package_config;
+    use forge_runner::compiled_runnable::RawForkParams;
     use indoc::{formatdoc, indoc};
     use scarb_api::metadata::MetadataCommandExt;
     use scarb_metadata::PackageId;

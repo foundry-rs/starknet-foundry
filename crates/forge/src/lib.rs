@@ -2,20 +2,20 @@ use crate::shared_cache::FailedTestsCache;
 use anyhow::Result;
 use clap::{Parser, Subcommand, ValueEnum};
 use forge_runner::CACHE_DIR;
+use run_tests::workspace::prepare_and_run_workspace;
 use scarb_api::{metadata::MetadataCommandExt, ScarbCommand};
 use scarb_ui::args::PackagesFilter;
-use std::num::NonZeroU32;
-use test::workspace::test_workspace;
+use std::{num::NonZeroU32, thread::available_parallelism};
+use tokio::runtime::Builder;
 use universal_sierra_compiler_api::UniversalSierraCompilerCommand;
 
 pub mod block_number_map;
 mod combine_configs;
-pub mod compiled_raw;
 mod init;
 pub mod pretty_printing;
+pub mod run_tests;
 pub mod scarb;
 mod shared_cache;
-pub mod test;
 pub mod test_filter;
 mod warn;
 
@@ -160,6 +160,20 @@ pub fn main_execution() -> Result<ExitStatus> {
 
             Ok(ExitStatus::Success)
         }
-        ForgeSubcommand::Test { args } => test_workspace(args),
+        ForgeSubcommand::Test { args } => {
+            let cores = if let Ok(available_cores) = available_parallelism() {
+                available_cores.get()
+            } else {
+                eprintln!("Failed to get the number of available cores, defaulting to 1");
+                1
+            };
+
+            let rt = Builder::new_multi_thread()
+                .max_blocking_threads(cores)
+                .enable_all()
+                .build()?;
+
+            rt.block_on(prepare_and_run_workspace(args))
+        }
     }
 }

@@ -1,4 +1,4 @@
-use crate::compiled_runnable::{CompiledTestCrateRunnable, FuzzerConfig, TestCaseRunnable};
+use crate::compiled_runnable::FuzzerConfig;
 use crate::fuzzer::RandomFuzzer;
 use crate::printing::print_test_result;
 use crate::running::{run_fuzz_test, run_test};
@@ -20,6 +20,7 @@ use smol_str::SmolStr;
 use crate::build_trace_data::test_sierra_program_path::VersionedProgramPath;
 use crate::forge_config::{ExecutionDataToSave, ForgeConfig, TestRunnerConfig};
 use camino::Utf8Path;
+use compiled_runnable::{TestCaseWithResolvedConfig, TestTargetWithResolvedConfig};
 use std::sync::Arc;
 use test_case_summary::{AnyTestCaseSummary, Fuzzing};
 use tokio::sync::mpsc::{channel, Sender};
@@ -64,7 +65,7 @@ pub enum RunnerStatus {
 }
 
 pub trait TestCaseFilter {
-    fn should_be_run(&self, test_case: &TestCaseRunnable) -> bool;
+    fn should_be_run(&self, is_ignored: bool) -> bool;
 }
 
 #[non_exhaustive]
@@ -74,7 +75,7 @@ pub enum TestCrateRunResult {
 }
 
 pub async fn run_tests_from_crate(
-    tests: CompiledTestCrateRunnable,
+    tests: TestTargetWithResolvedConfig,
     forge_config: Arc<ForgeConfig>,
     tests_filter: &impl TestCaseFilter,
     package_name: &str,
@@ -98,9 +99,9 @@ pub async fn run_tests_from_crate(
     )?);
 
     for case in tests.test_cases {
-        let case_name = case.name.clone();
+        let case_name = case.test_case.name.clone();
 
-        if !tests_filter.should_be_run(&case) {
+        if !tests_filter.should_be_run(case.config.ignored) {
             tasks.push(tokio::task::spawn(async {
                 // TODO TestCaseType should also be encoded in the test case definition
                 Ok(AnyTestCaseSummary::Single(TestCaseSummary::Ignored {
@@ -184,7 +185,7 @@ fn maybe_save_execution_data(
 
 fn maybe_save_versioned_program(
     execution_data_to_save: ExecutionDataToSave,
-    compiled_test_crate_runnable: &CompiledTestCrateRunnable,
+    compiled_test_crate_runnable: &TestTargetWithResolvedConfig,
     versioned_programs_dir: &Utf8Path,
     package_name: &str,
 ) -> Result<Option<VersionedProgramPath>> {
@@ -209,7 +210,7 @@ fn maybe_save_versioned_program(
 
 fn choose_test_strategy_and_run(
     args: Vec<ConcreteTypeId>,
-    case: Arc<TestCaseRunnable>,
+    case: Arc<TestCaseWithResolvedConfig>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
     forge_config: Arc<ForgeConfig>,
     maybe_versioned_program_path: Arc<Option<VersionedProgramPath>>,
@@ -245,7 +246,7 @@ fn choose_test_strategy_and_run(
 
 fn run_with_fuzzing(
     args: Vec<ConcreteTypeId>,
-    case: Arc<TestCaseRunnable>,
+    case: Arc<TestCaseWithResolvedConfig>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
     test_runner_config: Arc<TestRunnerConfig>,
     maybe_versioned_program_path: Arc<Option<VersionedProgramPath>>,
@@ -267,7 +268,7 @@ fn run_with_fuzzing(
             })
             .collect::<Result<Vec<_>>>()?;
 
-        let (fuzzer_runs, fuzzer_seed) = match case.fuzzer_config {
+        let (fuzzer_runs, fuzzer_seed) = match case.config.fuzzer_config {
             Some(FuzzerConfig {
                 fuzzer_runs,
                 fuzzer_seed,
