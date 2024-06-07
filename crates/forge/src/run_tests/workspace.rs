@@ -60,7 +60,7 @@ pub async fn run_for_workspace(args: TestArgs) -> Result<ExitStatus> {
             package,
             &scarb_metadata,
             &args,
-            cache_dir.clone(),
+            &cache_dir,
             &snforge_target_dir_path,
             versioned_programs_dir.clone(),
         )?;
@@ -70,7 +70,7 @@ pub async fn run_for_workspace(args: TestArgs) -> Result<ExitStatus> {
         all_failed_tests.extend(extract_failed_tests(tests_file_summaries));
     }
 
-    FailedTestsCache::new(cache_dir).save_failed_tests(&all_failed_tests)?;
+    FailedTestsCache::new(&cache_dir).save_failed_tests(&all_failed_tests)?;
 
     pretty_printing::print_latest_blocks_numbers(block_number_map.get_url_to_latest_block_number());
     pretty_printing::print_failures(&all_failed_tests);

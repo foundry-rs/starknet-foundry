@@ -48,7 +48,7 @@ impl RunForPackageArgs {
         package: PackageMetadata,
         scarb_metadata: &Metadata,
         args: &TestArgs,
-        cache_dir: Utf8PathBuf,
+        cache_dir: &Utf8PathBuf,
         snforge_target_dir_path: &Utf8Path,
         versioned_programs_dir: Utf8PathBuf,
     ) -> Result<RunForPackageArgs> {
