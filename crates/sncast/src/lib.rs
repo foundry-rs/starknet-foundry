@@ -355,56 +355,28 @@ pub fn get_account_data_from_keystore(
 
     let account_info: Value = read_and_parse_json_file(&path_to_account)?;
 
-    let parse_to_string = |entry: &Value, parent_key: &str, child_key: &str| -> Option<String> {
-        get_from_json(entry, parent_key, child_key)
-            .and_then(Value::as_str)
-            .map(str::to_string)
-    };
+    let parse_to_string =
+        |pointer: &str| -> Option<String> { get_string_value_from_json(&account_info, pointer) };
 
-    let address = parse_to_string(&account_info, "deployment", "address");
-    let class_hash = parse_to_string(&account_info, "deployment", "class_hash");
-    let salt = parse_to_string(&account_info, "deployment", "salt");
-    let deployed =
-        parse_to_string(&account_info, "deployment", "status").map(|status| &status == "deployed");
-    let legacy = get_from_json(&account_info, "variant", "legacy").and_then(Value::as_bool);
-    let account_type: Option<AccountType> = parse_to_string(&account_info, "variant", "type")
-        .and_then(|account_type| account_type.parse().ok());
+    let address = parse_to_string("/deployment/address");
+    let class_hash = parse_to_string("/deployment/class_hash");
+    let salt = parse_to_string("/deployment/salt");
+    let deployed = parse_to_string("/deployment/status").map(|status| status == "deployed");
+    let legacy = account_info
+        .pointer("/variant/legacy")
+        .and_then(Value::as_bool);
+    let account_type =
+        parse_to_string("/variant/type").and_then(|account_type| account_type.parse().ok());
 
     let public_key = match account_type
         .clone()
         .ok_or_else(|| anyhow!("Failed to get type key"))?
     {
-        AccountType::Argent => parse_to_string(&account_info, "variant", "owner"),
-        AccountType::Oz => parse_to_string(&account_info, "variant", "public_key"),
-        AccountType::Braavos => {
-            let variant = account_info.get("variant");
-            let multi_sig = variant
-                .and_then(|variant| variant.get("multisig"))
-                .and_then(|multisig| multisig.get("status"))
-                .and_then(Value::as_str);
-            if let Some(multi_sig) = multi_sig {
-                if multi_sig != "off" {
-                    bail!("Braavos accounts cannot be deployed with multisig on");
-                }
-            }
-            let signers = variant
-                .and_then(|variant| variant.get("signers"))
-                .and_then(Value::as_array);
-
-            if let Some(signers) = signers {
-                if signers.len() != 1 {
-                    bail!("Braavos accounts can only be deployed with one seed signer");
-                }
-            };
-
-            signers
-                .and_then(|signers| signers.first())
-                .and_then(|first_signer| first_signer.get("public_key"))
-                .and_then(Value::as_str)
-                .map(str::to_string)
-        }
+        AccountType::Argent => parse_to_string("/variant/owner"),
+        AccountType::Oz => parse_to_string("/variant/public_key"),
+        AccountType::Braavos => get_braavos_account_public_key(&account_info)?,
     }
-    .ok_or_else(|| anyhow::anyhow!("Failed to get public key from account JSON file"))?;
+    .ok_or_else(|| anyhow!("Failed to get public key from account JSON file"))?;
 
     Ok(AccountData {
         private_key,
@@ -417,14 +389,27 @@ pub fn get_account_data_from_keystore(
         account_type,
     })
 }
+fn get_braavos_account_public_key(account_info: &Value) -> Result<Option<String>> {
+    get_string_value_from_json(account_info, "/variant/multisig/status")
+        .filter(|status| status == "off")
+        .ok_or_else(|| anyhow!("Braavos accounts cannot be deployed with multisig on"))?;
 
-fn get_from_json<'a>(entry: &'a Value, parent_key: &str, child_key: &str) -> Option<&'a Value> {
-    entry
-        .get(parent_key)
-        .expect("Failed to get key from the account JSON file")
-        .get(child_key)
+    account_info
+        .pointer("/variant/signers")
+        .and_then(Value::as_array)
+        .filter(|signers| signers.len() == 1)
+        .ok_or_else(|| anyhow!("Braavos accounts can only be deployed with one seed signer"))?;
+
+    Ok(get_string_value_from_json(
+        account_info,
+        "/variant/signers/0/public_key",
+    ))
 }
-
+fn get_string_value_from_json(json: &Value, pointer: &str) -> Option<String> {
+    json.pointer(pointer)
+        .and_then(Value::as_str)
+        .map(str::to_string)
+}
 pub fn get_account_data_from_accounts_file(
     name: &str,
     chain_id: FieldElement,
@@ -876,13 +861,13 @@ mod tests {
     #[test]
     fn test_get_braavos_account_from_keystore_with_multisig_on() {
         env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
-        let account = get_account_data_from_keystore(
+        let err = get_account_data_from_keystore(
             "tests/data/keystore/my_account_braavos_invalid_multisig.json",
             &Utf8PathBuf::from("tests/data/keystore/my_key.json"),
         )
         .unwrap_err();
 
-        assert!(account
+        assert!(err
             .to_string()
             .contains("Braavos accounts cannot be deployed with multisig on"));
     }
