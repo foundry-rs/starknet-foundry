@@ -5290,7 +5290,7 @@ checksum = "b6bc1c9ce2b5135ac7f93c72918fc37feb872bdc6a5533a8b85eb4b86bfdae52"
 [[package]]
 name = "trace-data"
 version = "0.3.0"
-source = "git+https://github.com/software-mansion/cairo-profiler/?rev=8c96eaf#8c96eafaf0eeb23973044970bafdb126066dcf5c"
+source = "git+https://github.com/software-mansion/cairo-profiler/?rev=e031b09#e031b09722a3129bf63d3c6f2012c302b4e7bf10"
 dependencies = [
  "camino",
  "serde",
