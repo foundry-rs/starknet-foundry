@@ -1,48 +1,42 @@
-use crate::compiled_runnable::FuzzerConfig;
-use crate::fuzzer::RandomFuzzer;
-use crate::printing::print_test_result;
-use crate::running::{run_fuzz_test, run_test};
-use crate::test_case_summary::TestCaseSummary;
-use crate::test_crate_summary::TestCrateSummary;
-use anyhow::{anyhow, Result};
-
-use cairo_lang_runner::RunnerError;
-use cairo_lang_sierra::ids::ConcreteTypeId;
-use cairo_lang_sierra::program::Function;
-
-use futures::stream::FuturesUnordered;
-use futures::StreamExt;
-
-use build_trace_data::save_trace_data;
-use profiler_api::run_profiler;
-use smol_str::SmolStr;
-
 use crate::build_trace_data::test_sierra_program_path::VersionedProgramPath;
 use crate::forge_config::{ExecutionDataToSave, ForgeConfig, TestRunnerConfig};
+use crate::fuzzer::RandomFuzzer;
+use crate::running::{run_fuzz_test, run_test};
+use crate::test_case_summary::TestCaseSummary;
+use anyhow::{anyhow, Result};
+use build_trace_data::save_trace_data;
+use cairo_lang_sierra::ids::ConcreteTypeId;
+use cairo_lang_sierra::program::Function;
 use camino::Utf8Path;
-use compiled_runnable::{TestCaseWithResolvedConfig, TestTargetWithResolvedConfig};
+use futures::stream::FuturesUnordered;
+use futures::StreamExt;
+use package_tests::with_config_resolved::{
+    ResolvedFuzzerConfig, TestCaseWithResolvedConfig, TestTargetWithResolvedConfig,
+};
+use profiler_api::run_profiler;
+use smol_str::SmolStr;
 use std::sync::Arc;
 use test_case_summary::{AnyTestCaseSummary, Fuzzing};
 use tokio::sync::mpsc::{channel, Sender};
 use tokio::task::JoinHandle;
-use universal_sierra_compiler_api::{compile_sierra_to_casm, AssembledProgramWithDebugInfo};
+use universal_sierra_compiler_api::AssembledProgramWithDebugInfo;
 
 pub mod build_trace_data;
-pub mod compiled_runnable;
 pub mod expected_result;
 pub mod forge_config;
+pub mod package_tests;
 pub mod profiler_api;
 pub mod test_case_summary;
 pub mod test_crate_summary;
 
 mod fuzzer;
 mod gas;
-mod printing;
+pub mod printing;
 mod running;
 
 pub const CACHE_DIR: &str = ".snfoundry_cache";
 
-pub const BUILTINS: [&str; 8] = [
+const BUILTINS: [&str; 8] = [
     "Pedersen",
     "RangeCheck",
     "Bitwise",
@@ -53,115 +47,11 @@ pub const BUILTINS: [&str; 8] = [
     "System",
 ];
 
-/// Exit status of the runner
-#[derive(Debug, PartialEq, Clone, Copy)]
-pub enum RunnerStatus {
-    /// Runner exited without problems
-    Default,
-    /// Some test failed
-    TestFailed,
-    /// Runner did not run, e.g. when test cases got skipped
-    DidNotRun,
-}
-
 pub trait TestCaseFilter {
     fn should_be_run(&self, is_ignored: bool) -> bool;
 }
 
-#[non_exhaustive]
-pub enum TestCrateRunResult {
-    Ok(TestCrateSummary),
-    Interrupted(TestCrateSummary),
-}
-
-pub async fn run_tests_from_crate(
-    tests: TestTargetWithResolvedConfig,
-    forge_config: Arc<ForgeConfig>,
-    tests_filter: &impl TestCaseFilter,
-    package_name: &str,
-) -> Result<TestCrateRunResult> {
-    let sierra_program = &tests.sierra_program.program;
-    let casm_program = Arc::new(compile_sierra_to_casm(sierra_program)?);
-
-    let mut tasks = FuturesUnordered::new();
-    // Initiate two channels to manage the `--exit-first` flag.
-    // Owing to `cheatnet` fork's utilization of its own Tokio runtime for RPC requests,
-    // test execution must occur within a `tokio::spawn_blocking`.
-    // As `spawn_blocking` can't be prematurely cancelled (refer: https://dtantsur.github.io/rust-openstack/tokio/task/fn.spawn_blocking.html),
-    // a channel is used to signal the task that test processing is no longer necessary.
-    let (send, mut rec) = channel(1);
-
-    let maybe_versioned_program_path = Arc::new(maybe_save_versioned_program(
-        forge_config.output_config.execution_data_to_save,
-        &tests,
-        &forge_config.output_config.versioned_programs_dir,
-        package_name,
-    )?);
-
-    for case in tests.test_cases {
-        let case_name = case.test_case.name.clone();
-
-        if !tests_filter.should_be_run(case.config.ignored) {
-            tasks.push(tokio::task::spawn(async {
-                // TODO TestCaseType should also be encoded in the test case definition
-                Ok(AnyTestCaseSummary::Single(TestCaseSummary::Ignored {
-                    name: case_name,
-                }))
-            }));
-            continue;
-        };
-
-        let function = sierra_program
-            .funcs
-            .iter()
-            .find(|f| f.id.debug_name.as_ref().unwrap().ends_with(&case_name))
-            .ok_or(RunnerError::MissingFunction { suffix: case_name })?;
-
-        let args = function_args(function, &BUILTINS);
-
-        let case = Arc::new(case);
-        let args: Vec<ConcreteTypeId> = args.into_iter().cloned().collect();
-
-        tasks.push(choose_test_strategy_and_run(
-            args,
-            case,
-            casm_program.clone(),
-            forge_config.clone(),
-            maybe_versioned_program_path.clone(),
-            send.clone(),
-        ));
-    }
-
-    let mut results = vec![];
-    let mut interrupted = false;
-
-    while let Some(task) = tasks.next().await {
-        let result = task??;
-
-        print_test_result(&result, forge_config.output_config.detailed_resources);
-        maybe_save_execution_data(&result, forge_config.output_config.execution_data_to_save)?;
-
-        if result.is_failed() && forge_config.test_runner_config.exit_first {
-            interrupted = true;
-            rec.close();
-        }
-
-        results.push(result);
-    }
-
-    let summary = TestCrateSummary {
-        test_case_summaries: results,
-        runner_exit_status: RunnerStatus::Default,
-    };
-
-    if interrupted {
-        Ok(TestCrateRunResult::Interrupted(summary))
-    } else {
-        Ok(TestCrateRunResult::Ok(summary))
-    }
-}
-
-fn maybe_save_execution_data(
+pub fn maybe_save_execution_data(
     result: &AnyTestCaseSummary,
     execution_data_to_save: ExecutionDataToSave,
 ) -> Result<()> {
@@ -183,7 +73,7 @@ fn maybe_save_execution_data(
     Ok(())
 }
 
-fn maybe_save_versioned_program(
+pub fn maybe_save_versioned_program(
     execution_data_to_save: ExecutionDataToSave,
     compiled_test_crate_runnable: &TestTargetWithResolvedConfig,
     versioned_programs_dir: &Utf8Path,
@@ -208,7 +98,8 @@ fn maybe_save_versioned_program(
     Ok(maybe_versioned_program_path)
 }
 
-fn choose_test_strategy_and_run(
+#[must_use]
+pub fn run_test_case(
     args: Vec<ConcreteTypeId>,
     case: Arc<TestCaseWithResolvedConfig>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
@@ -269,7 +160,7 @@ fn run_with_fuzzing(
             .collect::<Result<Vec<_>>>()?;
 
         let (fuzzer_runs, fuzzer_seed) = match case.config.fuzzer_config {
-            Some(FuzzerConfig {
+            Some(ResolvedFuzzerConfig {
                 fuzzer_runs,
                 fuzzer_seed,
             }) => (fuzzer_runs, fuzzer_seed),
@@ -335,8 +226,9 @@ fn run_with_fuzzing(
     })
 }
 
-fn function_args<'a>(function: &'a Function, builtins: &[&str]) -> Vec<&'a ConcreteTypeId> {
-    let builtins: Vec<_> = builtins
+#[must_use]
+pub fn function_args(function: &Function) -> Vec<&ConcreteTypeId> {
+    let builtins: Vec<_> = BUILTINS
         .iter()
         .map(|builtin| Some(SmolStr::new(builtin)))
         .collect();

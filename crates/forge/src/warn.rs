@@ -1,5 +1,5 @@
 use anyhow::{anyhow, Result};
-use forge_runner::compiled_runnable::TestTargetWithResolvedConfig;
+use forge_runner::package_tests::with_config_resolved::TestTargetWithResolvedConfig;
 use scarb_api::{package_matches_version_requirement, ScarbCommand};
 use scarb_metadata::Metadata;
 use semver::{Comparator, Op, Version, VersionReq};

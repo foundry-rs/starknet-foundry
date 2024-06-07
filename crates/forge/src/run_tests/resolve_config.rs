@@ -1,17 +1,20 @@
-use super::replace_id_with_params;
 use crate::{block_number_map::BlockNumberMap, scarb::config::ForkTarget};
-use anyhow::Result;
-use forge_runner::compiled_runnable::{
-    ForkConfig, RawForkConfig, TestCaseResolvedConfig, TestCaseWithResolvedConfig,
-    TestTargetWithConfig, TestTargetWithResolvedConfig,
+use anyhow::{anyhow, Result};
+use forge_runner::package_tests::{
+    raw::{RawForkConfig, RawForkParams},
+    with_config::TestTargetWithConfig,
+    with_config_resolved::{
+        ResolvedForkConfig, TestCaseResolvedConfig, TestCaseWithResolvedConfig,
+        TestTargetWithResolvedConfig,
+    },
 };
 
-pub async fn with_config(
+pub async fn resolve_config(
     compiled_test_crate: TestTargetWithConfig,
     fork_targets: &[ForkTarget],
     block_number_map: &mut BlockNumberMap,
 ) -> Result<TestTargetWithResolvedConfig> {
-    let mut test_cases = vec![];
+    let mut test_cases = Vec::with_capacity(compiled_test_crate.test_cases.len());
 
     for case in compiled_test_crate.test_cases {
         test_cases.push(TestCaseWithResolvedConfig {
@@ -42,7 +45,7 @@ async fn resolve_fork_config(
     fork_config: &Option<RawForkConfig>,
     block_number_map: &mut BlockNumberMap,
     fork_targets: &[ForkTarget],
-) -> Result<Option<ForkConfig>> {
+) -> Result<Option<ResolvedForkConfig>> {
     let result = if let Some(fc) = fork_config {
         let raw_fork_params = replace_id_with_params(fc, fork_targets)?;
         let fork_config = block_number_map
@@ -56,15 +59,33 @@ async fn resolve_fork_config(
     Ok(result)
 }
 
+fn replace_id_with_params<'a>(
+    raw_fork_config: &'a RawForkConfig,
+    fork_targets: &'a [ForkTarget],
+) -> Result<&'a RawForkParams> {
+    match raw_fork_config {
+        RawForkConfig::Params(raw_fork_params) => Ok(raw_fork_params),
+        RawForkConfig::Id(name) => {
+            let fork_target_from_runner_config = fork_targets
+                .iter()
+                .find(|fork| fork.name() == name)
+                .ok_or_else(|| {
+                    anyhow!("Fork configuration named = {name} not found in the Scarb.toml")
+                })?;
+
+            Ok(fork_target_from_runner_config.params())
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use cairo_lang_sierra::program::{ProgramArtifact, Version, VersionedProgram};
     use cairo_lang_sierra::{ids::GenericTypeId, program::Program};
-    use forge_runner::compiled_runnable::{
-        CompiledTestCrateRaw, CrateLocation, RawForkParams, TestCaseRaw,
-    };
-    use forge_runner::{compiled_runnable::TestDetails, expected_result::ExpectedTestResult};
+    use forge_runner::package_tests::raw::{RawForkParams, TestCaseRaw, TestCrateRaw};
+    use forge_runner::package_tests::TestTargetLocation;
+    use forge_runner::{expected_result::ExpectedTestResult, package_tests::TestDetails};
 
     fn program_for_testing() -> VersionedProgram {
         VersionedProgram::V1 {
@@ -83,7 +104,7 @@ mod tests {
 
     #[tokio::test]
     async fn to_runnable_unparsable_url() {
-        let mocked_tests = CompiledTestCrateRaw {
+        let mocked_tests = TestCrateRaw {
             sierra_program: program_for_testing(),
             test_cases: vec![TestCaseRaw {
                 name: "crate1::do_thing".to_string(),
@@ -109,19 +130,21 @@ mod tests {
                     ],
                 },
             }],
-            tests_location: CrateLocation::Lib,
+            tests_location: TestTargetLocation::Lib,
         };
 
-        assert!(
-            with_config(mocked_tests.into(), &[], &mut BlockNumberMap::default())
-                .await
-                .is_err()
-        );
+        assert!(resolve_config(
+            mocked_tests.with_config(),
+            &[],
+            &mut BlockNumberMap::default()
+        )
+        .await
+        .is_err());
     }
 
     #[tokio::test]
     async fn to_runnable_non_existent_id() {
-        let mocked_tests = CompiledTestCrateRaw {
+        let mocked_tests = TestCrateRaw {
             sierra_program: program_for_testing(),
             test_cases: vec![TestCaseRaw {
                 name: "crate1::do_thing".to_string(),
@@ -143,11 +166,11 @@ mod tests {
                     ],
                 },
             }],
-            tests_location: CrateLocation::Lib,
+            tests_location: TestTargetLocation::Lib,
         };
 
-        assert!(with_config(
-            mocked_tests.into(),
+        assert!(resolve_config(
+            mocked_tests.with_config(),
             &[ForkTarget::new(
                 "definitely_non_existing".to_string(),
                 RawForkParams {

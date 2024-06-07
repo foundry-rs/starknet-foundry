@@ -1,8 +1,8 @@
-use super::run_crate::prepare_crate;
+use super::package::prepare_package;
 use crate::{
     block_number_map::BlockNumberMap,
     pretty_printing,
-    run_tests::run_crate::run_from_crate,
+    run_tests::package::run_from_package,
     scarb::{build_contracts_with_scarb, build_test_artifacts_with_scarb},
     shared_cache::FailedTestsCache,
     warn::warn_if_snforge_std_not_compatible,
@@ -13,7 +13,7 @@ use forge_runner::{
     build_trace_data::test_sierra_program_path::VERSIONED_PROGRAMS_DIR,
     test_case_summary::{AnyTestCaseSummary, TestCaseSummary},
 };
-use forge_runner::{test_crate_summary::TestCrateSummary, CACHE_DIR};
+use forge_runner::{test_crate_summary::TestTargetSummary, CACHE_DIR};
 use scarb_api::{
     metadata::{Metadata, MetadataCommandExt, PackageMetadata},
     target_dir_for_workspace, ScarbCommand,
@@ -54,7 +54,7 @@ pub async fn prepare_and_run_workspace(args: TestArgs) -> Result<ExitStatus> {
     let versioned_programs_dir = workspace_root.join(VERSIONED_PROGRAMS_DIR);
 
     for package in packages {
-        let run_from_crate_args = prepare_crate(
+        let run_from_crate_args = prepare_package(
             package,
             &scarb_metadata,
             &args,
@@ -64,7 +64,7 @@ pub async fn prepare_and_run_workspace(args: TestArgs) -> Result<ExitStatus> {
         )?;
 
         let tests_file_summaries =
-            run_from_crate(run_from_crate_args, &mut block_number_map).await?;
+            run_from_package(run_from_crate_args, &mut block_number_map).await?;
 
         all_failed_tests.extend(extract_failed_tests(tests_file_summaries));
     }
@@ -82,7 +82,7 @@ pub async fn prepare_and_run_workspace(args: TestArgs) -> Result<ExitStatus> {
 }
 
 fn extract_failed_tests(
-    tests_summaries: Vec<TestCrateSummary>,
+    tests_summaries: Vec<TestTargetSummary>,
 ) -> impl Iterator<Item = AnyTestCaseSummary> {
     tests_summaries
         .into_iter()

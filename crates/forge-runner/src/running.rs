@@ -6,9 +6,9 @@ use std::rc::Rc;
 use std::sync::Arc;
 
 use crate::build_trace_data::test_sierra_program_path::VersionedProgramPath;
-use crate::compiled_runnable::{ForkConfig, TestCaseWithResolvedConfig};
 use crate::forge_config::{RuntimeConfig, TestRunnerConfig};
 use crate::gas::calculate_used_gas;
+use crate::package_tests::with_config_resolved::{ResolvedForkConfig, TestCaseWithResolvedConfig};
 use crate::test_case_summary::{Single, TestCaseSummary};
 use anyhow::{bail, ensure, Result};
 use blockifier::execution::entry_point::EntryPointExecutionContext;
@@ -402,11 +402,11 @@ fn extract_test_case_summary(
 
 fn get_fork_state_reader(
     cache_dir: &Utf8Path,
-    fork_config: &Option<ForkConfig>,
+    fork_config: &Option<ResolvedForkConfig>,
 ) -> Result<Option<ForkStateReader>> {
     fork_config
         .as_ref()
-        .map(|ForkConfig { url, block_number }| {
+        .map(|ResolvedForkConfig { url, block_number }| {
             ForkStateReader::new(url.clone(), *block_number, cache_dir)
         })
         .transpose()

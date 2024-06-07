@@ -1,8 +1,8 @@
 use crate::build_trace_data::build_profiler_call_trace;
 use crate::build_trace_data::test_sierra_program_path::VersionedProgramPath;
-use crate::compiled_runnable::TestCaseWithResolvedConfig;
 use crate::expected_result::{ExpectedPanicValue, ExpectedTestResult};
 use crate::gas::check_available_gas;
+use crate::package_tests::with_config_resolved::TestCaseWithResolvedConfig;
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{RunResult, RunResultValue};

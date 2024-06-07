@@ -1,7 +1,8 @@
 use anyhow::{anyhow, Result};
 use cairo_felt::Felt252;
 use conversions::IntoConv;
-use forge_runner::compiled_runnable::{ForkConfig, RawForkParams};
+use forge_runner::package_tests::raw::RawForkParams;
+use forge_runner::package_tests::with_config_resolved::ResolvedForkConfig;
 use num_bigint::BigInt;
 use starknet::core::types::{BlockId, MaybePendingBlockWithTxHashes};
 use starknet::providers::jsonrpc::HttpTransport;
@@ -44,9 +45,9 @@ impl BlockNumberMap {
     pub async fn validated_fork_config_from_fork_params(
         &mut self,
         fork_params_string: &RawForkParams,
-    ) -> Result<ForkConfig> {
+    ) -> Result<ResolvedForkConfig> {
         let url_str = fork_params_string.url.clone();
-        let url = fork_params_string.url.parse()?;
+        let url: Url = fork_params_string.url.parse()?;
         let block_number = match fork_params_string.block_id_type.to_lowercase().as_str() {
             "number" => BlockNumber(fork_params_string.block_id_value.parse()?),
             "hash" => {
@@ -57,7 +58,7 @@ impl BlockNumberMap {
                 {
                     *block_number
                 } else {
-                    let block_number = get_block_number_from_hash(&url, &block_hash).await?;
+                    let block_number = get_block_number_from_hash(url.clone(), &block_hash).await?;
                     self.add_block_number_for_hash(url_str, block_hash, block_number);
                     block_number
                 }
@@ -67,19 +68,19 @@ impl BlockNumberMap {
                 if let Some(block_number) = self.get_latest_block_number(&url_str) {
                     *block_number
                 } else {
-                    let latest_block_number = get_latest_block_number(&url).await?;
+                    let latest_block_number = get_latest_block_number(url.clone()).await?;
                     self.add_latest_block_number(url_str, latest_block_number);
                     latest_block_number
                 }
             }
             _ => unreachable!(),
         };
-        Ok(ForkConfig { url, block_number })
+        Ok(ResolvedForkConfig { url, block_number })
     }
 }
 
-async fn get_latest_block_number(url: &Url) -> Result<BlockNumber> {
-    let client = JsonRpcClient::new(HttpTransport::new(url.clone()));
+async fn get_latest_block_number(url: Url) -> Result<BlockNumber> {
+    let client = JsonRpcClient::new(HttpTransport::new(url));
 
     Handle::current()
         .spawn(async move { client.block_number().await })
@@ -88,8 +89,8 @@ async fn get_latest_block_number(url: &Url) -> Result<BlockNumber> {
         .map_err(|x| anyhow!(x.to_string()))
 }
 
-async fn get_block_number_from_hash(url: &Url, block_hash: &Felt252) -> Result<BlockNumber> {
-    let client = JsonRpcClient::new(HttpTransport::new(url.clone()));
+async fn get_block_number_from_hash(url: Url, block_hash: &Felt252) -> Result<BlockNumber> {
+    let client = JsonRpcClient::new(HttpTransport::new(url));
 
     let hash = BlockId::Hash((*block_hash).clone().into_());
     match Handle::current()

@@ -8,7 +8,7 @@ use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use camino::Utf8PathBuf;
 use forge_runner::{
     test_case_summary::{AnyTestCaseSummary, TestCaseSummary},
-    test_crate_summary::TestCrateSummary,
+    test_crate_summary::TestTargetSummary,
 };
 use indoc::formatdoc;
 use scarb_api::{
@@ -208,7 +208,7 @@ impl<'a> TestCase {
     }
 
     #[must_use]
-    pub fn find_test_result(results: &[TestCrateSummary]) -> &TestCrateSummary {
+    pub fn find_test_result(results: &[TestTargetSummary]) -> &TestTargetSummary {
         results
             .iter()
             .find(|tc| !tc.test_case_summaries.is_empty())
@@ -230,7 +230,7 @@ macro_rules! test_case {
     });
 }
 
-pub fn assert_passed(result: &[TestCrateSummary]) {
+pub fn assert_passed(result: &[TestTargetSummary]) {
     let result = &TestCase::find_test_result(result).test_case_summaries;
 
     assert!(!result.is_empty(), "No test results found");
@@ -240,7 +240,7 @@ pub fn assert_passed(result: &[TestCrateSummary]) {
     );
 }
 
-pub fn assert_failed(result: &[TestCrateSummary]) {
+pub fn assert_failed(result: &[TestTargetSummary]) {
     let result = &TestCase::find_test_result(result).test_case_summaries;
 
     assert!(!result.is_empty(), "No test results found");
@@ -251,7 +251,7 @@ pub fn assert_failed(result: &[TestCrateSummary]) {
 }
 
 pub fn assert_case_output_contains(
-    result: &[TestCrateSummary],
+    result: &[TestTargetSummary],
     test_case_name: &str,
     asserted_msg: &str,
 ) {
@@ -271,7 +271,7 @@ pub fn assert_case_output_contains(
     }));
 }
 
-pub fn assert_gas(result: &[TestCrateSummary], test_case_name: &str, asserted_gas: u128) {
+pub fn assert_gas(result: &[TestTargetSummary], test_case_name: &str, asserted_gas: u128) {
     let test_name_suffix = format!("::{test_case_name}");
 
     let result = TestCase::find_test_result(result);
@@ -296,7 +296,7 @@ pub fn assert_gas(result: &[TestCrateSummary], test_case_name: &str, asserted_ga
 }
 
 pub fn assert_syscall(
-    result: &[TestCrateSummary],
+    result: &[TestTargetSummary],
     test_case_name: &str,
     syscall: DeprecatedSyscallSelector,
     expected_count: usize,
@@ -325,7 +325,7 @@ pub fn assert_syscall(
 }
 
 pub fn assert_builtin(
-    result: &[TestCrateSummary],
+    result: &[TestTargetSummary],
     test_case_name: &str,
     builtin: &str,
     expected_count: usize,

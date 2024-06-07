@@ -7,20 +7,21 @@ use std::sync::Arc;
 
 use camino::Utf8PathBuf;
 use forge::block_number_map::BlockNumberMap;
-use forge::run_tests::run_crate::run_from_crate;
+use forge::run_tests::package::run_from_package;
 use forge::scarb::config::ForkTarget;
 use forge::test_filter::TestsFilter;
 use tempfile::tempdir;
 use tokio::runtime::Runtime;
 
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
-use forge::run_tests::run_crate::RunFromCrateArgs;
+use forge::run_tests::package::RunFromCrateArgs;
 use forge::scarb::load_test_artifacts;
 use forge_runner::build_trace_data::test_sierra_program_path::VERSIONED_PROGRAMS_DIR;
-use forge_runner::compiled_runnable::RawForkParams;
 use forge_runner::forge_config::{
     ExecutionDataToSave, ForgeConfig, OutputConfig, TestRunnerConfig,
 };
+use forge_runner::package_tests::raw::RawForkParams;
+use forge_runner::package_tests::raw::TestCrateRaw;
 use forge_runner::CACHE_DIR;
 use shared::command::CommandExt;
 use shared::test_utils::node_url::node_rpc_url;
@@ -124,9 +125,12 @@ fn fork_aliased_decorator() {
     .unwrap();
 
     let result = rt
-        .block_on(run_from_crate(
+        .block_on(run_from_package(
             RunFromCrateArgs {
-                compiled_test_crates: compiled_test_crates.into_iter().map(From::from).collect(),
+                test_targets: compiled_test_crates
+                    .into_iter()
+                    .map(TestCrateRaw::with_config)
+                    .collect(),
                 package_name: "test_package".to_string(),
                 tests_filter: TestsFilter::from_flags(
                     None,

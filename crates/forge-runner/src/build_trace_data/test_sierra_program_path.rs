@@ -1,4 +1,4 @@
-use crate::compiled_runnable::CrateLocation;
+use crate::package_tests::TestTargetLocation;
 use anyhow::Context;
 use anyhow::Result;
 use cairo_lang_sierra::program::VersionedProgram;
@@ -19,7 +19,7 @@ pub struct VersionedProgramPath(Utf8PathBuf);
 impl VersionedProgramPath {
     pub fn save_versioned_program(
         versioned_program: &VersionedProgram,
-        crate_location: CrateLocation,
+        crate_location: TestTargetLocation,
         tests_programs_dir: &Utf8Path,
         package_name: &str,
     ) -> Result<Self> {

@@ -1,6 +1,6 @@
 use crate::shared_cache::FailedTestsCache;
 use anyhow::Result;
-use forge_runner::compiled_runnable::TestCaseWithResolvedConfig;
+use forge_runner::package_tests::with_config_resolved::TestCaseWithResolvedConfig;
 use forge_runner::TestCaseFilter;
 
 #[derive(Debug, PartialEq)]
@@ -123,11 +123,11 @@ impl TestCaseFilter for TestsFilter {
 mod tests {
     use crate::test_filter::TestsFilter;
     use cairo_lang_sierra::program::{Program, ProgramArtifact, Version, VersionedProgram};
-    use forge_runner::compiled_runnable::{
-        CrateLocation, TestCase, TestCaseResolvedConfig, TestCaseWithResolvedConfig, TestDetails,
-        TestTargetWithResolvedConfig,
-    };
     use forge_runner::expected_result::ExpectedTestResult;
+    use forge_runner::package_tests::with_config_resolved::{
+        TestCaseResolvedConfig, TestCaseWithResolvedConfig, TestTargetWithResolvedConfig,
+    };
+    use forge_runner::package_tests::{TestCase, TestDetails, TestTargetLocation};
 
     fn program_for_testing() -> VersionedProgram {
         VersionedProgram::V1 {
@@ -215,7 +215,7 @@ mod tests {
                     },
                 },
             ],
-            tests_location: CrateLocation::Lib,
+            tests_location: TestTargetLocation::Lib,
         };
 
         let tests_filter = TestsFilter::from_flags(
@@ -391,19 +391,6 @@ mod tests {
                 },
                 TestCaseWithResolvedConfig {
                     test_case: TestCase {
-                        name: "crate1::do_thing".to_string(),
-                        test_details: TestDetails::default(),
-                    },
-                    config: TestCaseResolvedConfig {
-                        available_gas: None,
-                        ignored: true,
-                        expected_result: ExpectedTestResult::Success,
-                        fork_config: None,
-                        fuzzer_config: None,
-                    },
-                },
-                TestCaseWithResolvedConfig {
-                    test_case: TestCase {
                         name: "crate2::run_other_thing".to_string(),
                         test_details: TestDetails::default(),
                     },
@@ -450,7 +437,7 @@ mod tests {
         let mocked_tests = TestTargetWithResolvedConfig {
             sierra_program: program_for_testing().into_v1().unwrap(),
             test_cases: vec![],
-            tests_location: CrateLocation::Lib,
+            tests_location: TestTargetLocation::Lib,
         };
 
         let tests_filter = TestsFilter::from_flags(
@@ -541,7 +528,7 @@ mod tests {
                     },
                 },
             ],
-            tests_location: CrateLocation::Tests,
+            tests_location: TestTargetLocation::Tests,
         };
 
         let tests_filter = TestsFilter::from_flags(
@@ -732,7 +719,7 @@ mod tests {
                     },
                 },
             ],
-            tests_location: CrateLocation::Tests,
+            tests_location: TestTargetLocation::Tests,
         };
 
         let tests_filter =
@@ -832,7 +819,7 @@ mod tests {
                     },
                 },
             ],
-            tests_location: CrateLocation::Tests,
+            tests_location: TestTargetLocation::Tests,
         };
 
         let tests_filter =

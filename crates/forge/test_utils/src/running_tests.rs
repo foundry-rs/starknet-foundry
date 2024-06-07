@@ -3,16 +3,19 @@ use camino::Utf8PathBuf;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use forge::{
     block_number_map::BlockNumberMap,
-    run_tests::run_crate::{run_from_crate, RunFromCrateArgs},
+    run_tests::package::{run_from_package, RunFromCrateArgs},
     scarb::load_test_artifacts,
     test_filter::TestsFilter,
 };
-use forge_runner::build_trace_data::test_sierra_program_path::VERSIONED_PROGRAMS_DIR;
 use forge_runner::forge_config::{
     ExecutionDataToSave, ForgeConfig, OutputConfig, TestRunnerConfig,
 };
-use forge_runner::test_crate_summary::TestCrateSummary;
+use forge_runner::test_crate_summary::TestTargetSummary;
 use forge_runner::CACHE_DIR;
+use forge_runner::{
+    build_trace_data::test_sierra_program_path::VERSIONED_PROGRAMS_DIR,
+    package_tests::raw::TestCrateRaw,
+};
 use shared::command::CommandExt;
 use std::num::NonZeroU32;
 use std::process::Command;
@@ -22,7 +25,7 @@ use tempfile::tempdir;
 use tokio::runtime::Runtime;
 
 #[must_use]
-pub fn run_test_case(test: &TestCase) -> Vec<TestCrateSummary> {
+pub fn run_test_case(test: &TestCase) -> Vec<TestTargetSummary> {
     Command::new("scarb")
         .current_dir(test.path().unwrap())
         .arg("snforge-test-collector")
@@ -38,9 +41,12 @@ pub fn run_test_case(test: &TestCase) -> Vec<TestCrateSummary> {
     )
     .unwrap();
 
-    rt.block_on(run_from_crate(
+    rt.block_on(run_from_package(
         RunFromCrateArgs {
-            compiled_test_crates: compiled_test_crates.into_iter().map(From::from).collect(),
+            test_targets: compiled_test_crates
+                .into_iter()
+                .map(TestCrateRaw::with_config)
+                .collect(),
             package_name: "test_package".to_string(),
             tests_filter: TestsFilter::from_flags(
                 None,

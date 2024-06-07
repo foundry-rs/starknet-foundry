@@ -1,7 +1,7 @@
 use anyhow::Error;
 use console::style;
-use forge_runner::compiled_runnable::CrateLocation;
-use forge_runner::{test_case_summary::AnyTestCaseSummary, test_crate_summary::TestCrateSummary};
+use forge_runner::package_tests::TestTargetLocation;
+use forge_runner::{test_case_summary::AnyTestCaseSummary, test_crate_summary::TestTargetSummary};
 use starknet_api::block::BlockNumber;
 use std::collections::HashMap;
 
@@ -15,21 +15,21 @@ pub(crate) fn print_collected_tests_count(tests_num: usize, package_name: &str) 
     println!("{}", style(plain_text).bold());
 }
 
-pub(crate) fn print_running_tests(test_crate_file: CrateLocation, tests_num: usize) {
+pub(crate) fn print_running_tests(test_crate_file: TestTargetLocation, tests_num: usize) {
     let dir_name = match test_crate_file {
-        CrateLocation::Lib => "src",
-        CrateLocation::Tests => "tests",
+        TestTargetLocation::Lib => "src",
+        TestTargetLocation::Tests => "tests",
     };
     let plain_text = format!("Running {tests_num} test(s) from {dir_name}/");
 
     println!("{}", style(plain_text).bold());
 }
 
-pub(crate) fn print_test_summary(summaries: &[TestCrateSummary], filtered: usize) {
-    let passed: usize = summaries.iter().map(TestCrateSummary::count_passed).sum();
-    let failed: usize = summaries.iter().map(TestCrateSummary::count_failed).sum();
-    let skipped: usize = summaries.iter().map(TestCrateSummary::count_skipped).sum();
-    let ignored: usize = summaries.iter().map(TestCrateSummary::count_ignored).sum();
+pub(crate) fn print_test_summary(summaries: &[TestTargetSummary], filtered: usize) {
+    let passed: usize = summaries.iter().map(TestTargetSummary::count_passed).sum();
+    let failed: usize = summaries.iter().map(TestTargetSummary::count_failed).sum();
+    let skipped: usize = summaries.iter().map(TestTargetSummary::count_skipped).sum();
+    let ignored: usize = summaries.iter().map(TestTargetSummary::count_ignored).sum();
 
     println!(
         "{}: {} passed, {} failed, {} skipped, {} ignored, {} filtered out",

@@ -1,4 +1,7 @@
-use super::with_config;
+use super::{
+    resolve_config::resolve_config,
+    test_target::{run_test_target, TestTargetRunResult},
+};
 use crate::{
     block_number_map::BlockNumberMap,
     combine_configs::combine_configs,
@@ -20,25 +23,27 @@ use camino::{Utf8Path, Utf8PathBuf};
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use configuration::load_package_config;
 use forge_runner::{
-    compiled_runnable::{TestTargetWithConfig, TestTargetWithResolvedConfig},
     forge_config::ForgeConfig,
+    package_tests::{
+        raw::TestCrateRaw, with_config::TestTargetWithConfig,
+        with_config_resolved::TestTargetWithResolvedConfig,
+    },
     test_case_summary::AnyTestCaseSummary,
-    test_crate_summary::TestCrateSummary,
-    TestCrateRunResult,
+    test_crate_summary::TestTargetSummary,
 };
 use scarb_api::get_contracts_artifacts_and_source_sierra_paths;
 use scarb_metadata::{Metadata, PackageMetadata};
 use std::{env, sync::Arc};
 
 pub struct RunFromCrateArgs {
-    pub compiled_test_crates: Vec<TestTargetWithConfig>,
+    pub test_targets: Vec<TestTargetWithConfig>,
     pub tests_filter: TestsFilter,
     pub forge_config: Arc<ForgeConfig>,
     pub fork_targets: Vec<ForkTarget>,
     pub package_name: String,
 }
 
-pub fn prepare_crate(
+pub fn prepare_package(
     package: PackageMetadata,
     scarb_metadata: &Metadata,
     args: &TestArgs,
@@ -80,7 +85,10 @@ pub fn prepare_crate(
     );
 
     Ok(RunFromCrateArgs {
-        compiled_test_crates: compiled_test_crates.into_iter().map(From::from).collect(),
+        test_targets: compiled_test_crates
+            .into_iter()
+            .map(TestCrateRaw::with_config)
+            .collect(),
         forge_config,
         tests_filter: test_filter,
         fork_targets: forge_config_from_scarb.fork,
@@ -88,22 +96,22 @@ pub fn prepare_crate(
     })
 }
 
-pub async fn run_from_crate(
+pub async fn run_from_package(
     RunFromCrateArgs {
-        compiled_test_crates,
+        test_targets,
         forge_config,
         tests_filter,
         fork_targets,
         package_name,
     }: RunFromCrateArgs,
     block_number_map: &mut BlockNumberMap,
-) -> Result<Vec<TestCrateSummary>> {
+) -> Result<Vec<TestTargetSummary>> {
     let mut test_targets_with_resolved_config: Vec<TestTargetWithResolvedConfig> =
-        Vec::with_capacity(compiled_test_crates.len());
+        Vec::with_capacity(test_targets.len());
 
-    for compiled_test_crate in compiled_test_crates {
+    for test_target in test_targets {
         let compiled_test_crate =
-            with_config(compiled_test_crate, &fork_targets, block_number_map).await?;
+            resolve_config(test_target, &fork_targets, block_number_map).await?;
 
         test_targets_with_resolved_config.push(compiled_test_crate);
     }
@@ -113,51 +121,45 @@ pub async fn run_from_crate(
         .map(|tc| tc.test_cases.len())
         .sum();
 
-    let test_crates = test_targets_with_resolved_config
+    let test_targets = test_targets_with_resolved_config
         .into_iter()
         .map(|mut tc| {
             tests_filter.filter_tests(&mut tc.test_cases)?;
             Ok(tc)
         })
         .collect::<Result<Vec<TestTargetWithResolvedConfig>>>()?;
-    let not_filtered: usize = test_crates.iter().map(|tc| tc.test_cases.len()).sum();
+    let not_filtered: usize = test_targets.iter().map(|tc| tc.test_cases.len()).sum();
     let filtered = all_tests - not_filtered;
 
-    warn_if_available_gas_used_with_incompatible_scarb_version(&test_crates)?;
-    warn_if_incompatible_rpc_version(&test_crates).await?;
+    warn_if_available_gas_used_with_incompatible_scarb_version(&test_targets)?;
+    warn_if_incompatible_rpc_version(&test_targets).await?;
 
     pretty_printing::print_collected_tests_count(not_filtered, &package_name);
 
     let mut summaries = vec![];
 
-    for compiled_test_crate in test_crates {
+    for test_target in test_targets {
         pretty_printing::print_running_tests(
-            compiled_test_crate.tests_location,
-            compiled_test_crate.test_cases.len(),
+            test_target.tests_location,
+            test_target.test_cases.len(),
         );
 
         let forge_config = forge_config.clone();
 
-        let summary = forge_runner::run_tests_from_crate(
-            compiled_test_crate,
-            forge_config,
-            &tests_filter,
-            &package_name,
-        )
-        .await?;
+        let summary =
+            run_test_target(test_target, forge_config, &tests_filter, &package_name).await?;
 
         match summary {
-            TestCrateRunResult::Ok(summary) => {
+            TestTargetRunResult::Ok(summary) => {
                 summaries.push(summary);
             }
-            TestCrateRunResult::Interrupted(summary) => {
+            TestTargetRunResult::Interrupted(summary) => {
                 summaries.push(summary);
                 // Handle scenario for --exit-first flag.
                 // Because snforge runs test crates one by one synchronously.
                 // In case of test FAIL with --exit-first flag stops processing the next crates
                 break;
             }
-            _ => unreachable!("Unsupported TestCrateRunResult encountered"),
         }
     }
 
