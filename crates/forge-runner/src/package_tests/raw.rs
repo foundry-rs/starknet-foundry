@@ -7,6 +7,9 @@ use cairo_lang_sierra::program::VersionedProgram;
 use serde::Deserialize;
 use std::num::NonZeroU32;
 
+/// these structs are represenation of scarb output when collection tests
+
+/// produced by scarb
 #[derive(Debug, Clone, Deserialize)]
 pub struct TestTargetRaw {
     pub sierra_program: VersionedProgram,
@@ -39,6 +42,7 @@ impl TestTargetRaw {
     }
 }
 
+/// produced by scarb
 #[derive(Debug, PartialEq, Clone, Deserialize)]
 pub struct TestCaseRaw {
     pub name: String,
@@ -50,12 +54,14 @@ pub struct TestCaseRaw {
     pub test_details: TestDetails,
 }
 
+/// produced by scarb
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub enum RawForkConfig {
     Id(String),
     Params(RawForkParams),
 }
 
+/// produced by scarb
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct RawForkParams {
     pub url: String,
@@ -63,6 +69,7 @@ pub struct RawForkParams {
     pub block_id_value: String,
 }
 
+/// produced by scarb
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct RawFuzzerConfig {
     pub fuzzer_runs: NonZeroU32,

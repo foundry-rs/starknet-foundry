@@ -4,6 +4,7 @@ use forge_runner::package_tests::TestTargetLocation;
 use forge_runner::{test_case_summary::AnyTestCaseSummary, test_target_summary::TestTargetSummary};
 use starknet_api::block::BlockNumber;
 use std::collections::HashMap;
+use url::Url;
 
 pub fn print_error_message(error: &Error) {
     let error_tag = style("ERROR").red();
@@ -61,7 +62,7 @@ pub fn print_failures(all_failed_tests: &[AnyTestCaseSummary]) {
 }
 
 #[allow(clippy::implicit_hasher)]
-pub fn print_latest_blocks_numbers(url_to_latest_block_number_map: &HashMap<String, BlockNumber>) {
+pub fn print_latest_blocks_numbers(url_to_latest_block_number_map: &HashMap<Url, BlockNumber>) {
     if !url_to_latest_block_number_map.is_empty() {
         println!();
     }
