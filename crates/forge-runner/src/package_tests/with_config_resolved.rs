@@ -13,6 +13,7 @@ pub struct ResolvedForkConfig {
     pub block_number: BlockNumber,
 }
 
+/// Test case with config that has been resolved (`#[fork("name")]` -> url and block id etc.)
 #[derive(Debug, Clone, PartialEq)]
 pub struct TestCaseResolvedConfig {
     pub available_gas: Option<usize>,

@@ -8,6 +8,7 @@ pub type TestTargetWithConfig = TestTarget<TestCaseConfig>;
 
 pub type TestCaseWithConfig = TestCase<TestCaseConfig>;
 
+/// Test case with config that has not yet been resolved (`#[fork("name")]` -> url and block id etc.)
 #[derive(Debug, Clone)]
 pub struct TestCaseConfig {
     pub available_gas: Option<usize>,
