@@ -193,7 +193,7 @@ fn should_print_foreach() {
                 Failure[..]
                 Tests: 0 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
 
-                Latest block number = [..] for url = http://127.0.0.1:3030?url={node_url}
+                Latest block number = [..] for url = http://127.0.0.1:3030/?url={node_url}
                 Latest block number = [..] for url = {node_url}
 
                 Failures:

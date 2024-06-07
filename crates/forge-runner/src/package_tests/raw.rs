@@ -7,7 +7,7 @@ use cairo_lang_sierra::program::VersionedProgram;
 use serde::Deserialize;
 use std::num::NonZeroU32;
 
-/// these structs are represenation of scarb output when collection tests
+/// these structs are representation of scarb output when collection tests
 
 /// produced by scarb
 #[derive(Debug, Clone, Deserialize)]
