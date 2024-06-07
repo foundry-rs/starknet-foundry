@@ -178,7 +178,7 @@ fn should_print_foreach() {
             r"
                 [..]Compiling[..]
                 [..]Finished[..]
-                [WARNING] RPC node with the url http://127.0.0.1:3030?url={node_url} uses incompatible version 0.5.1. Expected version: {EXPECTED_RPC_VERSION}
+                [WARNING] RPC node with the url http://127.0.0.1:3030/?url={node_url} uses incompatible version 0.5.1. Expected version: {EXPECTED_RPC_VERSION}
                 [WARNING] RPC node with the url {node_url} uses incompatible version 0.5.1. Expected version: {EXPECTED_RPC_VERSION}
 
 
