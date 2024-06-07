@@ -80,7 +80,7 @@ impl AccountData {
         let value_to_parse = self
             .address
             .as_ref()
-            .ok_or_else(|| anyhow!("Failed to get address - make sure the account is deployed"))?;
+            .context("Failed to get address - make sure the account is deployed")?;
 
         parse_number(value_to_parse).with_context(|| {
             format!("Failed to convert address = {value_to_parse} to FieldElement")
@@ -368,15 +368,12 @@ pub fn get_account_data_from_keystore(
     let account_type =
         parse_to_string("/variant/type").and_then(|account_type| account_type.parse().ok());
 
-    let public_key = match account_type
-        .clone()
-        .ok_or_else(|| anyhow!("Failed to get type key"))?
-    {
+    let public_key = match account_type.clone().context("Failed to get type key")? {
         AccountType::Argent => parse_to_string("/variant/owner"),
         AccountType::Oz => parse_to_string("/variant/public_key"),
         AccountType::Braavos => get_braavos_account_public_key(&account_info)?,
     }
-    .ok_or_else(|| anyhow!("Failed to get public key from account JSON file"))?;
+    .context("Failed to get public key from account JSON file")?;
 
     Ok(AccountData {
         private_key,
@@ -392,13 +389,13 @@ pub fn get_account_data_from_keystore(
 fn get_braavos_account_public_key(account_info: &Value) -> Result<Option<String>> {
     get_string_value_from_json(account_info, "/variant/multisig/status")
         .filter(|status| status == "off")
-        .ok_or_else(|| anyhow!("Braavos accounts cannot be deployed with multisig on"))?;
+        .context("Braavos accounts cannot be deployed with multisig on")?;
 
     account_info
         .pointer("/variant/signers")
         .and_then(Value::as_array)
         .filter(|signers| signers.len() == 1)
-        .ok_or_else(|| anyhow!("Braavos accounts can only be deployed with one seed signer"))?;
+        .context("Braavos accounts can only be deployed with one seed signer")?;
 
     Ok(get_string_value_from_json(
         account_info,
