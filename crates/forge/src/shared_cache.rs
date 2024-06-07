@@ -6,20 +6,20 @@ use std::io::{BufRead, BufReader, BufWriter, ErrorKind, Write};
 
 #[derive(Debug, PartialEq, Default, Clone)]
 pub struct FailedTestsCache {
-    cache_dir: Utf8PathBuf,
+    cache_file: Utf8PathBuf,
 }
 
-const PREV_TESTS_FAILED: &str = ".prev_tests_failed";
+const FILE_WITH_PREV_TESTS_FAILED: &str = ".prev_tests_failed";
 
 impl FailedTestsCache {
     pub fn new(cache_dir: Utf8PathBuf) -> Self {
-        Self { cache_dir }
+        Self {
+            cache_file: cache_dir.join(FILE_WITH_PREV_TESTS_FAILED),
+        }
     }
 
     pub fn load(&self) -> Result<Vec<String>> {
-        let tests_failed_path = self.cache_dir.join(PREV_TESTS_FAILED);
-
-        let file = match File::open(tests_failed_path) {
+        let file = match File::open(&self.cache_file) {
             Ok(file) => file,
             Err(err) if err.kind() == ErrorKind::NotFound => return Ok(vec![]),
             Err(err) => Err(err)?,
@@ -32,11 +32,9 @@ impl FailedTestsCache {
     }
 
     pub fn save_failed_tests(&self, all_failed_tests: &[AnyTestCaseSummary]) -> Result<()> {
-        std::fs::create_dir_all(&self.cache_dir)?;
+        std::fs::create_dir_all(&self.cache_file)?;
 
-        let tests_failed_path = self.cache_dir.join(PREV_TESTS_FAILED);
-
-        let file = File::create(tests_failed_path)?;
+        let file = File::create(&self.cache_file)?;
 
         let mut file = BufWriter::new(file);
 
