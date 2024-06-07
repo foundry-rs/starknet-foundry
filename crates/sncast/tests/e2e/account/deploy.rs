@@ -295,6 +295,7 @@ pub async fn test_happy_case_keystore(account_type: &str) {
     assert_eq!(items["deployment"]["status"], "deployed");
     assert!(!items["deployment"]["address"].is_null());
     assert!(items["deployment"]["salt"].is_null());
+    assert!(items["deployment"]["context"].is_null());
 }
 
 #[tokio::test]

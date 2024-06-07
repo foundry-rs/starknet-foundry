@@ -100,7 +100,6 @@ async fn deploy_from_keystore(
 
     let salt = account_data.get_salt_as_felt()?;
 
-    // TODO: Improve code for checking if address exists or remove this logic
     let account_type = account_data.get_account_type()?;
     let class_hash = account_data.get_class_hash_as_felt()?;
     account_data.get_class_hash_as_felt()?;
@@ -379,12 +378,12 @@ fn update_keystore_account(account: &str, address: FieldElement) -> Result<()> {
         .map_err(|_| anyhow!("Failed to parse account file at {account_path}"))?;
 
     items["deployment"]["status"] = serde_json::Value::from("deployed");
-    items.get_mut("deployment").and_then(|deployment| {
-        deployment
-            .as_object_mut()
-            .expect("Failed to get deployment as an object")
-            .remove("salt")
-    });
+    items
+        .get_mut("deployment")
+        .and_then(|deployment| deployment.as_object_mut())
+        .expect("Failed to get deployment as an object")
+        .retain(|key, _| key != "salt" && key != "context");
+
     items["deployment"]["address"] = format!("{address:#x}").into();
 
     std::fs::write(&account_path, serde_json::to_string_pretty(&items).unwrap())

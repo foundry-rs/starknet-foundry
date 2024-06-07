@@ -890,13 +890,13 @@ mod tests {
     #[test]
     fn test_get_braavos_account_from_keystore_multiple_signers() {
         env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
-        let account = get_account_data_from_keystore(
+        let err = get_account_data_from_keystore(
             "tests/data/keystore/my_account_braavos_multiple_signers.json",
             &Utf8PathBuf::from("tests/data/keystore/my_key.json"),
         )
         .unwrap_err();
 
-        assert!(account
+        assert!(err
             .to_string()
             .contains("Braavos accounts can only be deployed with one seed signer"));
     }
