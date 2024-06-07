@@ -6,9 +6,9 @@ use forge_runner::{
     function_args, maybe_save_execution_data, maybe_save_versioned_program,
     package_tests::with_config_resolved::TestTargetWithResolvedConfig,
     printing::print_test_result,
-    run_test_case,
+    run_for_test_case,
     test_case_summary::{AnyTestCaseSummary, TestCaseSummary},
-    test_crate_summary::TestTargetSummary,
+    test_target_summary::TestTargetSummary,
     TestCaseFilter,
 };
 use futures::{stream::FuturesUnordered, StreamExt};
@@ -22,7 +22,7 @@ pub enum TestTargetRunResult {
     Interrupted(TestTargetSummary),
 }
 
-pub async fn run_test_target(
+pub async fn run_for_test_target(
     tests: TestTargetWithResolvedConfig,
     forge_config: Arc<ForgeConfig>,
     tests_filter: &impl TestCaseFilter,
@@ -47,9 +47,9 @@ pub async fn run_test_target(
     )?);
 
     for case in tests.test_cases {
-        let case_name = case.test_case.name.clone();
+        let case_name = case.name.clone();
 
-        if !tests_filter.should_be_run(case.config.ignored) {
+        if !tests_filter.should_be_run(&case) {
             tasks.push(tokio::task::spawn(async {
                 // TODO TestCaseType should also be encoded in the test case definition
                 Ok(AnyTestCaseSummary::Single(TestCaseSummary::Ignored {
@@ -70,7 +70,7 @@ pub async fn run_test_target(
         let case = Arc::new(case);
         let args: Vec<ConcreteTypeId> = args.into_iter().cloned().collect();
 
-        tasks.push(run_test_case(
+        tasks.push(run_for_test_case(
             args,
             case,
             casm_program.clone(),

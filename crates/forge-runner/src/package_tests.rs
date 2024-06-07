@@ -23,14 +23,15 @@ pub struct TestDetails {
 }
 
 #[derive(Debug, Clone)]
-pub struct TestTarget {
+pub struct TestTarget<C> {
     pub tests_location: TestTargetLocation,
     pub sierra_program: ProgramArtifact,
-    pub test_cases: Vec<TestCase>,
+    pub test_cases: Vec<TestCase<C>>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct TestCase {
+pub struct TestCase<C> {
     pub test_details: TestDetails,
     pub name: String,
+    pub config: C,
 }

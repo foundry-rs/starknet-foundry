@@ -19,13 +19,14 @@ pub struct VersionedProgramPath(Utf8PathBuf);
 impl VersionedProgramPath {
     pub fn save_versioned_program(
         versioned_program: &VersionedProgram,
-        crate_location: TestTargetLocation,
+        test_target_location: TestTargetLocation,
         tests_programs_dir: &Utf8Path,
         package_name: &str,
     ) -> Result<Self> {
-        // unique filename since pair (package_name, crate_location) is always unique
-        let test_sierra_program_path =
-            tests_programs_dir.join(format!("{package_name}_{crate_location:?}.sierra.json",));
+        // unique filename since pair (package_name, test_target_location) is always unique
+        let test_sierra_program_path = tests_programs_dir.join(format!(
+            "{package_name}_{test_target_location:?}.sierra.json",
+        ));
 
         fs::create_dir_all(test_sierra_program_path.parent().unwrap())
             .context("Failed to create directory for tests sierra programs")?;

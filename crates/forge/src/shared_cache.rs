@@ -1,7 +1,7 @@
 use anyhow::Result;
 use camino::Utf8PathBuf;
 use forge_runner::test_case_summary::AnyTestCaseSummary;
-use std::fs::{self, File};
+use std::fs::File;
 use std::io::{BufRead, BufReader, BufWriter, ErrorKind, Write};
 
 #[derive(Debug, PartialEq, Default, Clone)]
@@ -44,13 +44,6 @@ impl FailedTestsCache {
             let name = line.name().unwrap();
 
             writeln!(file, "{name}")?;
-        }
-        Ok(())
-    }
-
-    pub fn clean(&self) -> Result<()> {
-        if self.cache_dir.exists() {
-            fs::remove_dir_all(&self.cache_dir)?;
         }
         Ok(())
     }

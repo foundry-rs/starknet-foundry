@@ -1,21 +1,12 @@
 use super::{
-    raw::RawForkConfig, with_config_resolved::ResolvedFuzzerConfig, TestCase, TestTargetLocation,
+    raw::{RawForkConfig, RawFuzzerConfig},
+    TestCase, TestTarget,
 };
 use crate::expected_result::ExpectedTestResult;
-use cairo_lang_sierra::program::ProgramArtifact;
 
-#[derive(Debug, Clone)]
-pub struct TestTargetWithConfig {
-    pub tests_location: TestTargetLocation,
-    pub sierra_program: ProgramArtifact,
-    pub test_cases: Vec<TestCaseWithConfig>,
-}
+pub type TestTargetWithConfig = TestTarget<TestCaseConfig>;
 
-#[derive(Debug, Clone)]
-pub struct TestCaseWithConfig {
-    pub test_case: TestCase,
-    pub config: TestCaseConfig,
-}
+pub type TestCaseWithConfig = TestCase<TestCaseConfig>;
 
 #[derive(Debug, Clone)]
 pub struct TestCaseConfig {
@@ -23,5 +14,5 @@ pub struct TestCaseConfig {
     pub ignored: bool,
     pub expected_result: ExpectedTestResult,
     pub fork_config: Option<RawForkConfig>,
-    pub fuzzer_config: Option<ResolvedFuzzerConfig>,
+    pub fuzzer_config: Option<RawFuzzerConfig>,
 }

@@ -10,8 +10,9 @@ use cairo_lang_sierra::program::Function;
 use camino::Utf8Path;
 use futures::stream::FuturesUnordered;
 use futures::StreamExt;
+use package_tests::raw::RawFuzzerConfig;
 use package_tests::with_config_resolved::{
-    ResolvedFuzzerConfig, TestCaseWithResolvedConfig, TestTargetWithResolvedConfig,
+    TestCaseWithResolvedConfig, TestTargetWithResolvedConfig,
 };
 use profiler_api::run_profiler;
 use smol_str::SmolStr;
@@ -27,7 +28,7 @@ pub mod forge_config;
 pub mod package_tests;
 pub mod profiler_api;
 pub mod test_case_summary;
-pub mod test_crate_summary;
+pub mod test_target_summary;
 
 mod fuzzer;
 mod gas;
@@ -48,7 +49,7 @@ const BUILTINS: [&str; 8] = [
 ];
 
 pub trait TestCaseFilter {
-    fn should_be_run(&self, is_ignored: bool) -> bool;
+    fn should_be_run(&self, test_case: &TestCaseWithResolvedConfig) -> bool;
 }
 
 pub fn maybe_save_execution_data(
@@ -75,7 +76,7 @@ pub fn maybe_save_execution_data(
 
 pub fn maybe_save_versioned_program(
     execution_data_to_save: ExecutionDataToSave,
-    compiled_test_crate_runnable: &TestTargetWithResolvedConfig,
+    test_target: &TestTargetWithResolvedConfig,
     versioned_programs_dir: &Utf8Path,
     package_name: &str,
 ) -> Result<Option<VersionedProgramPath>> {
@@ -86,8 +87,8 @@ pub fn maybe_save_versioned_program(
 
     let maybe_versioned_program_path = if save_versioned_program {
         Some(VersionedProgramPath::save_versioned_program(
-            &compiled_test_crate_runnable.sierra_program.clone().into(),
-            compiled_test_crate_runnable.tests_location,
+            &test_target.sierra_program.clone().into(),
+            test_target.tests_location,
             versioned_programs_dir,
             package_name,
         )?)
@@ -99,7 +100,7 @@ pub fn maybe_save_versioned_program(
 }
 
 #[must_use]
-pub fn run_test_case(
+pub fn run_for_test_case(
     args: Vec<ConcreteTypeId>,
     case: Arc<TestCaseWithResolvedConfig>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
@@ -160,7 +161,7 @@ fn run_with_fuzzing(
             .collect::<Result<Vec<_>>>()?;
 
         let (fuzzer_runs, fuzzer_seed) = match case.config.fuzzer_config {
-            Some(ResolvedFuzzerConfig {
+            Some(RawFuzzerConfig {
                 fuzzer_runs,
                 fuzzer_seed,
             }) => (fuzzer_runs, fuzzer_seed),

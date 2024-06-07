@@ -80,11 +80,11 @@ impl TestsFilter {
         match &self.name_filter {
             NameFilter::All => {}
             NameFilter::Match(filter) => {
-                test_cases.retain(|tc| tc.test_case.name.contains(filter));
+                test_cases.retain(|tc| tc.name.contains(filter));
             }
 
             NameFilter::ExactMatch(name) => {
-                test_cases.retain(|tc| tc.test_case.name == *name);
+                test_cases.retain(|tc| tc.name == *name);
             }
         };
 
@@ -92,7 +92,7 @@ impl TestsFilter {
             match self.failed_tests_cache.load()?.as_slice() {
                 [] => {}
                 result => {
-                    test_cases.retain(|tc| result.iter().any(|name| name == &tc.test_case.name));
+                    test_cases.retain(|tc| result.iter().any(|name| name == &tc.name));
                 }
             }
         }
@@ -110,7 +110,9 @@ impl TestsFilter {
 }
 
 impl TestCaseFilter for TestsFilter {
-    fn should_be_run(&self, ignored: bool) -> bool {
+    fn should_be_run(&self, test_case: &TestCaseWithResolvedConfig) -> bool {
+        let ignored = test_case.config.ignored;
+
         match self.ignored_filter {
             IgnoredFilter::All => true,
             IgnoredFilter::Ignored => ignored,
@@ -127,7 +129,7 @@ mod tests {
     use forge_runner::package_tests::with_config_resolved::{
         TestCaseResolvedConfig, TestCaseWithResolvedConfig, TestTargetWithResolvedConfig,
     };
-    use forge_runner::package_tests::{TestCase, TestDetails, TestTargetLocation};
+    use forge_runner::package_tests::{TestDetails, TestTargetLocation};
 
     fn program_for_testing() -> VersionedProgram {
         VersionedProgram::V1 {
@@ -163,10 +165,9 @@ mod tests {
             sierra_program: program_for_testing().into_v1().unwrap(),
             test_cases: vec![
                 TestCaseWithResolvedConfig {
-                    test_case: TestCase {
-                        name: "crate1::do_thing".to_string(),
-                        test_details: TestDetails::default(),
-                    },
+                    name: "crate1::do_thing".to_string(),
+                    test_details: TestDetails::default(),
+
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: false,
@@ -176,10 +177,9 @@ mod tests {
                     },
                 },
                 TestCaseWithResolvedConfig {
-                    test_case: TestCase {
-                        name: "crate2::run_other_thing".to_string(),
-                        test_details: TestDetails::default(),
-                    },
+                    name: "crate2::run_other_thing".to_string(),
+                    test_details: TestDetails::default(),
+
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: true,
@@ -189,10 +189,9 @@ mod tests {
                     },
                 },
                 TestCaseWithResolvedConfig {
-                    test_case: TestCase {
-                        name: "outer::crate2::execute_next_thing".to_string(),
-                        test_details: TestDetails::default(),
-                    },
+                    name: "outer::crate2::execute_next_thing".to_string(),
+                    test_details: TestDetails::default(),
+
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: true,
@@ -202,10 +201,9 @@ mod tests {
                     },
                 },
                 TestCaseWithResolvedConfig {
-                    test_case: TestCase {
-                        name: "thing".to_string(),
-                        test_details: TestDetails::default(),
-                    },
+                    name: "thing".to_string(),
+                    test_details: TestDetails::default(),
+
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: false,
@@ -234,10 +232,9 @@ mod tests {
         assert_eq!(
             filtered.test_cases,
             vec![TestCaseWithResolvedConfig {
-                test_case: TestCase {
-                    name: "crate1::do_thing".to_string(),
-                    test_details: TestDetails::default(),
-                },
+                name: "crate1::do_thing".to_string(),
+                test_details: TestDetails::default(),
+
                 config: TestCaseResolvedConfig {
                     available_gas: None,
                     ignored: false,
@@ -263,10 +260,9 @@ mod tests {
         assert_eq!(
             filtered.test_cases,
             vec![TestCaseWithResolvedConfig {
-                test_case: TestCase {
-                    name: "crate2::run_other_thing".to_string(),
-                    test_details: TestDetails::default(),
-                },
+                name: "crate2::run_other_thing".to_string(),
+                test_details: TestDetails::default(),
+
                 config: TestCaseResolvedConfig {
                     available_gas: None,
                     ignored: true,
@@ -293,10 +289,9 @@ mod tests {
             filtered.test_cases,
             vec![
                 TestCaseWithResolvedConfig {
-                    test_case: TestCase {
-                        name: "crate1::do_thing".to_string(),
-                        test_details: TestDetails::default(),
-                    },
+                    name: "crate1::do_thing".to_string(),
+                    test_details: TestDetails::default(),
+
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: false,
@@ -306,10 +301,9 @@ mod tests {
                     },
                 },
                 TestCaseWithResolvedConfig {
-                    test_case: TestCase {
-                        name: "crate2::run_other_thing".to_string(),
-                        test_details: TestDetails::default(),
-                    },
+                    name: "crate2::run_other_thing".to_string(),
+                    test_details: TestDetails::default(),
+
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: true,
@@ -319,10 +313,9 @@ mod tests {
                     },
                 },
                 TestCaseWithResolvedConfig {
-                    test_case: TestCase {
-                        name: "outer::crate2::execute_next_thing".to_string(),
-                        test_details: TestDetails::default(),
-                    },
+                    name: "outer::crate2::execute_next_thing".to_string(),
+                    test_details: TestDetails::default(),
+
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: true,
@@ -332,10 +325,9 @@ mod tests {
                     },
                 },
                 TestCaseWithResolvedConfig {
-                    test_case: TestCase {
-                        name: "thing".to_string(),
-                        test_details: TestDetails::default(),
-                    },
+                    name: "thing".to_string(),
+                    test_details: TestDetails::default(),
+
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: false,
@@ -377,10 +369,9 @@ mod tests {
             filtered.test_cases,
             vec![
                 TestCaseWithResolvedConfig {
-                    test_case: TestCase {
-                        name: "crate1::do_thing".to_string(),
-                        test_details: TestDetails::default(),
-                    },
+                    name: "crate1::do_thing".to_string(),
+                    test_details: TestDetails::default(),
+
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: false,
@@ -390,10 +381,9 @@ mod tests {
                     },
                 },
                 TestCaseWithResolvedConfig {
-                    test_case: TestCase {
-                        name: "crate2::run_other_thing".to_string(),
-                        test_details: TestDetails::default(),
-                    },
+                    name: "crate2::run_other_thing".to_string(),
+                    test_details: TestDetails::default(),
+
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: true,
@@ -403,10 +393,9 @@ mod tests {
                     },
                 },
                 TestCaseWithResolvedConfig {
-                    test_case: TestCase {
-                        name: "outer::crate2::execute_next_thing".to_string(),
-                        test_details: TestDetails::default(),
-                    },
+                    name: "outer::crate2::execute_next_thing".to_string(),
+                    test_details: TestDetails::default(),
+
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: true,
@@ -416,10 +405,9 @@ mod tests {
                     },
                 },
                 TestCaseWithResolvedConfig {
-                    test_case: TestCase {
-                        name: "thing".to_string(),
-                        test_details: TestDetails::default(),
-                    },
+                    name: "thing".to_string(),
+                    test_details: TestDetails::default(),
+
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: false,
@@ -476,10 +464,9 @@ mod tests {
             sierra_program: program_for_testing().into_v1().unwrap(),
             test_cases: vec![
                 TestCaseWithResolvedConfig {
-                    test_case: TestCase {
-                        name: "crate1::do_thing".to_string(),
-                        test_details: TestDetails::default(),
-                    },
+                    name: "crate1::do_thing".to_string(),
+                    test_details: TestDetails::default(),
+
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: false,
@@ -489,10 +476,9 @@ mod tests {
                     },
                 },
                 TestCaseWithResolvedConfig {
-                    test_case: TestCase {
-                        name: "crate2::run_other_thing".to_string(),
-                        test_details: TestDetails::default(),
-                    },
+                    name: "crate2::run_other_thing".to_string(),
+                    test_details: TestDetails::default(),
+
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: true,
@@ -502,10 +488,9 @@ mod tests {
                     },
                 },
                 TestCaseWithResolvedConfig {
-                    test_case: TestCase {
-                        name: "outer::crate3::run_other_thing".to_string(),
-                        test_details: TestDetails::default(),
-                    },
+                    name: "outer::crate3::run_other_thing".to_string(),
+                    test_details: TestDetails::default(),
+
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: true,
@@ -515,10 +500,9 @@ mod tests {
                     },
                 },
                 TestCaseWithResolvedConfig {
-                    test_case: TestCase {
-                        name: "do_thing".to_string(),
-                        test_details: TestDetails::default(),
-                    },
+                    name: "do_thing".to_string(),
+                    test_details: TestDetails::default(),
+
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: false,
@@ -574,10 +558,9 @@ mod tests {
         assert_eq!(
             filtered.test_cases,
             vec![TestCaseWithResolvedConfig {
-                test_case: TestCase {
-                    name: "do_thing".to_string(),
-                    test_details: TestDetails::default(),
-                },
+                name: "do_thing".to_string(),
+                test_details: TestDetails::default(),
+
                 config: TestCaseResolvedConfig {
                     available_gas: None,
                     ignored: false,
@@ -603,10 +586,9 @@ mod tests {
         assert_eq!(
             filtered.test_cases,
             vec![TestCaseWithResolvedConfig {
-                test_case: TestCase {
-                    name: "crate1::do_thing".to_string(),
-                    test_details: TestDetails::default(),
-                },
+                name: "crate1::do_thing".to_string(),
+                test_details: TestDetails::default(),
+
                 config: TestCaseResolvedConfig {
                     available_gas: None,
                     ignored: false,
@@ -646,10 +628,9 @@ mod tests {
         assert_eq!(
             filtered.test_cases,
             vec![TestCaseWithResolvedConfig {
-                test_case: TestCase {
-                    name: "outer::crate3::run_other_thing".to_string(),
-                    test_details: TestDetails::default(),
-                },
+                name: "outer::crate3::run_other_thing".to_string(),
+                test_details: TestDetails::default(),
+
                 config: TestCaseResolvedConfig {
                     available_gas: None,
                     ignored: true,
@@ -667,10 +648,9 @@ mod tests {
             sierra_program: program_for_testing().into_v1().unwrap(),
             test_cases: vec![
                 TestCaseWithResolvedConfig {
-                    test_case: TestCase {
-                        name: "crate1::do_thing".to_string(),
-                        test_details: TestDetails::default(),
-                    },
+                    name: "crate1::do_thing".to_string(),
+                    test_details: TestDetails::default(),
+
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: false,
@@ -680,10 +660,9 @@ mod tests {
                     },
                 },
                 TestCaseWithResolvedConfig {
-                    test_case: TestCase {
-                        name: "crate2::run_other_thing".to_string(),
-                        test_details: TestDetails::default(),
-                    },
+                    name: "crate2::run_other_thing".to_string(),
+                    test_details: TestDetails::default(),
+
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: true,
@@ -693,10 +672,9 @@ mod tests {
                     },
                 },
                 TestCaseWithResolvedConfig {
-                    test_case: TestCase {
-                        name: "outer::crate3::run_other_thing".to_string(),
-                        test_details: TestDetails::default(),
-                    },
+                    name: "outer::crate3::run_other_thing".to_string(),
+                    test_details: TestDetails::default(),
+
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: true,
@@ -706,10 +684,9 @@ mod tests {
                     },
                 },
                 TestCaseWithResolvedConfig {
-                    test_case: TestCase {
-                        name: "do_thing".to_string(),
-                        test_details: TestDetails::default(),
-                    },
+                    name: "do_thing".to_string(),
+                    test_details: TestDetails::default(),
+
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: false,
@@ -731,10 +708,9 @@ mod tests {
             filtered.test_cases,
             vec![
                 TestCaseWithResolvedConfig {
-                    test_case: TestCase {
-                        name: "crate2::run_other_thing".to_string(),
-                        test_details: TestDetails::default(),
-                    },
+                    name: "crate2::run_other_thing".to_string(),
+                    test_details: TestDetails::default(),
+
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: true,
@@ -744,10 +720,9 @@ mod tests {
                     },
                 },
                 TestCaseWithResolvedConfig {
-                    test_case: TestCase {
-                        name: "outer::crate3::run_other_thing".to_string(),
-                        test_details: TestDetails::default(),
-                    },
+                    name: "outer::crate3::run_other_thing".to_string(),
+                    test_details: TestDetails::default(),
+
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: true,
@@ -767,10 +742,9 @@ mod tests {
             sierra_program: program_for_testing().into_v1().unwrap(),
             test_cases: vec![
                 TestCaseWithResolvedConfig {
-                    test_case: TestCase {
-                        name: "crate1::do_thing".to_string(),
-                        test_details: TestDetails::default(),
-                    },
+                    name: "crate1::do_thing".to_string(),
+                    test_details: TestDetails::default(),
+
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: false,
@@ -780,10 +754,9 @@ mod tests {
                     },
                 },
                 TestCaseWithResolvedConfig {
-                    test_case: TestCase {
-                        name: "crate2::run_other_thing".to_string(),
-                        test_details: TestDetails::default(),
-                    },
+                    name: "crate2::run_other_thing".to_string(),
+                    test_details: TestDetails::default(),
+
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: true,
@@ -793,10 +766,9 @@ mod tests {
                     },
                 },
                 TestCaseWithResolvedConfig {
-                    test_case: TestCase {
-                        name: "outer::crate3::run_other_thing".to_string(),
-                        test_details: TestDetails::default(),
-                    },
+                    name: "outer::crate3::run_other_thing".to_string(),
+                    test_details: TestDetails::default(),
+
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: true,
@@ -806,10 +778,9 @@ mod tests {
                     },
                 },
                 TestCaseWithResolvedConfig {
-                    test_case: TestCase {
-                        name: "do_thing".to_string(),
-                        test_details: TestDetails::default(),
-                    },
+                    name: "do_thing".to_string(),
+                    test_details: TestDetails::default(),
+
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: false,
@@ -831,10 +802,9 @@ mod tests {
             filtered.test_cases,
             vec![
                 TestCaseWithResolvedConfig {
-                    test_case: TestCase {
-                        name: "crate1::do_thing".to_string(),
-                        test_details: TestDetails::default(),
-                    },
+                    name: "crate1::do_thing".to_string(),
+                    test_details: TestDetails::default(),
+
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: false,
@@ -844,10 +814,9 @@ mod tests {
                     },
                 },
                 TestCaseWithResolvedConfig {
-                    test_case: TestCase {
-                        name: "crate2::run_other_thing".to_string(),
-                        test_details: TestDetails::default(),
-                    },
+                    name: "crate2::run_other_thing".to_string(),
+                    test_details: TestDetails::default(),
+
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: true,
@@ -857,10 +826,9 @@ mod tests {
                     },
                 },
                 TestCaseWithResolvedConfig {
-                    test_case: TestCase {
-                        name: "outer::crate3::run_other_thing".to_string(),
-                        test_details: TestDetails::default(),
-                    },
+                    name: "outer::crate3::run_other_thing".to_string(),
+                    test_details: TestDetails::default(),
+
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: true,
@@ -870,10 +838,9 @@ mod tests {
                     },
                 },
                 TestCaseWithResolvedConfig {
-                    test_case: TestCase {
-                        name: "do_thing".to_string(),
-                        test_details: TestDetails::default(),
-                    },
+                    name: "do_thing".to_string(),
+                    test_details: TestDetails::default(),
+
                     config: TestCaseResolvedConfig {
                         available_gas: None,
                         ignored: false,

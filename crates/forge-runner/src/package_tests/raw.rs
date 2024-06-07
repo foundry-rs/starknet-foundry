@@ -1,20 +1,20 @@
 use super::{
     with_config::{TestCaseConfig, TestCaseWithConfig, TestTargetWithConfig},
-    with_config_resolved::ResolvedFuzzerConfig,
-    TestCase, TestDetails, TestTargetLocation,
+    TestDetails, TestTargetLocation,
 };
 use crate::expected_result::ExpectedTestResult;
 use cairo_lang_sierra::program::VersionedProgram;
 use serde::Deserialize;
+use std::num::NonZeroU32;
 
 #[derive(Debug, Clone, Deserialize)]
-pub struct TestCrateRaw {
+pub struct TestTargetRaw {
     pub sierra_program: VersionedProgram,
     pub test_cases: Vec<TestCaseRaw>,
     pub tests_location: TestTargetLocation,
 }
 
-impl TestCrateRaw {
+impl TestTargetRaw {
     #[must_use]
     pub fn with_config(self) -> TestTargetWithConfig {
         TestTargetWithConfig {
@@ -24,10 +24,8 @@ impl TestCrateRaw {
                 .test_cases
                 .into_iter()
                 .map(|case| TestCaseWithConfig {
-                    test_case: TestCase {
-                        name: case.name,
-                        test_details: case.test_details,
-                    },
+                    name: case.name,
+                    test_details: case.test_details,
                     config: TestCaseConfig {
                         available_gas: case.available_gas,
                         ignored: case.ignored,
@@ -48,7 +46,7 @@ pub struct TestCaseRaw {
     pub ignored: bool,
     pub expected_result: ExpectedTestResult,
     pub fork_config: Option<RawForkConfig>,
-    pub fuzzer_config: Option<ResolvedFuzzerConfig>,
+    pub fuzzer_config: Option<RawFuzzerConfig>,
     pub test_details: TestDetails,
 }
 
@@ -63,4 +61,10 @@ pub struct RawForkParams {
     pub url: String,
     pub block_id_type: String,
     pub block_id_value: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Deserialize)]
+pub struct RawFuzzerConfig {
+    pub fuzzer_runs: NonZeroU32,
+    pub fuzzer_seed: u64,
 }

@@ -1,6 +1,6 @@
 use super::{
     resolve_config::resolve_config,
-    test_target::{run_test_target, TestTargetRunResult},
+    test_target::{run_for_test_target, TestTargetRunResult},
 };
 use crate::{
     block_number_map::BlockNumberMap,
@@ -25,17 +25,17 @@ use configuration::load_package_config;
 use forge_runner::{
     forge_config::ForgeConfig,
     package_tests::{
-        raw::TestCrateRaw, with_config::TestTargetWithConfig,
+        raw::TestTargetRaw, with_config::TestTargetWithConfig,
         with_config_resolved::TestTargetWithResolvedConfig,
     },
     test_case_summary::AnyTestCaseSummary,
-    test_crate_summary::TestTargetSummary,
+    test_target_summary::TestTargetSummary,
 };
 use scarb_api::get_contracts_artifacts_and_source_sierra_paths;
 use scarb_metadata::{Metadata, PackageMetadata};
-use std::{env, sync::Arc};
+use std::sync::Arc;
 
-pub struct RunFromCrateArgs {
+pub struct RunForPackageArgs {
     pub test_targets: Vec<TestTargetWithConfig>,
     pub tests_filter: TestsFilter,
     pub forge_config: Arc<ForgeConfig>,
@@ -43,77 +43,76 @@ pub struct RunFromCrateArgs {
     pub package_name: String,
 }
 
-pub fn prepare_package(
-    package: PackageMetadata,
-    scarb_metadata: &Metadata,
-    args: &TestArgs,
-    cache_dir: Utf8PathBuf,
-    snforge_target_dir_path: &Utf8Path,
-    versioned_programs_dir: Utf8PathBuf,
-) -> Result<RunFromCrateArgs> {
-    env::set_current_dir(&package.root)?;
+impl RunForPackageArgs {
+    pub fn build(
+        package: PackageMetadata,
+        scarb_metadata: &Metadata,
+        args: &TestArgs,
+        cache_dir: Utf8PathBuf,
+        snforge_target_dir_path: &Utf8Path,
+        versioned_programs_dir: Utf8PathBuf,
+    ) -> Result<RunForPackageArgs> {
+        let raw_test_targets = load_test_artifacts(snforge_target_dir_path, &package.name)?;
 
-    let compiled_test_crates = load_test_artifacts(snforge_target_dir_path, &package.name)?;
+        let contracts =
+            get_contracts_artifacts_and_source_sierra_paths(scarb_metadata, &package.id, None)?;
+        let contracts_data = ContractsData::try_from(contracts)?;
 
-    let contracts =
-        get_contracts_artifacts_and_source_sierra_paths(scarb_metadata, &package.id, None)?;
-    let contracts_data = ContractsData::try_from(contracts)?;
+        let forge_config_from_scarb =
+            load_package_config::<ForgeConfigFromScarb>(scarb_metadata, &package.id)?;
+        let forge_config = Arc::new(combine_configs(
+            args.exit_first,
+            args.fuzzer_runs,
+            args.fuzzer_seed,
+            args.detailed_resources,
+            args.save_trace_data,
+            args.build_profile,
+            args.max_n_steps,
+            contracts_data,
+            cache_dir.clone(),
+            versioned_programs_dir,
+            &forge_config_from_scarb,
+        ));
 
-    let forge_config_from_scarb =
-        load_package_config::<ForgeConfigFromScarb>(scarb_metadata, &package.id)?;
-    let forge_config = Arc::new(combine_configs(
-        args.exit_first,
-        args.fuzzer_runs,
-        args.fuzzer_seed,
-        args.detailed_resources,
-        args.save_trace_data,
-        args.build_profile,
-        args.max_n_steps,
-        contracts_data,
-        cache_dir.clone(),
-        versioned_programs_dir,
-        &forge_config_from_scarb,
-    ));
+        let test_filter = TestsFilter::from_flags(
+            args.test_filter.clone(),
+            args.exact,
+            args.only_ignored,
+            args.include_ignored,
+            args.rerun_failed,
+            FailedTestsCache::new(cache_dir),
+        );
 
-    let test_filter = TestsFilter::from_flags(
-        args.test_filter.clone(),
-        args.exact,
-        args.only_ignored,
-        args.include_ignored,
-        args.rerun_failed,
-        FailedTestsCache::new(cache_dir),
-    );
-
-    Ok(RunFromCrateArgs {
-        test_targets: compiled_test_crates
-            .into_iter()
-            .map(TestCrateRaw::with_config)
-            .collect(),
-        forge_config,
-        tests_filter: test_filter,
-        fork_targets: forge_config_from_scarb.fork,
-        package_name: package.name,
-    })
+        Ok(RunForPackageArgs {
+            test_targets: raw_test_targets
+                .into_iter()
+                .map(TestTargetRaw::with_config)
+                .collect(),
+            forge_config,
+            tests_filter: test_filter,
+            fork_targets: forge_config_from_scarb.fork,
+            package_name: package.name,
+        })
+    }
 }
 
-pub async fn run_from_package(
-    RunFromCrateArgs {
+pub async fn run_for_package(
+    RunForPackageArgs {
         test_targets,
         forge_config,
         tests_filter,
         fork_targets,
         package_name,
-    }: RunFromCrateArgs,
+    }: RunForPackageArgs,
     block_number_map: &mut BlockNumberMap,
 ) -> Result<Vec<TestTargetSummary>> {
     let mut test_targets_with_resolved_config: Vec<TestTargetWithResolvedConfig> =
         Vec::with_capacity(test_targets.len());
 
     for test_target in test_targets {
-        let compiled_test_crate =
-            resolve_config(test_target, &fork_targets, block_number_map).await?;
+        let test_target = resolve_config(test_target, &fork_targets, block_number_map).await?;
 
-        test_targets_with_resolved_config.push(compiled_test_crate);
+        test_targets_with_resolved_config.push(test_target);
     }
 
     let all_tests: usize = test_targets_with_resolved_config
@@ -147,7 +146,7 @@ pub async fn run_from_package(
         let forge_config = forge_config.clone();
 
         let summary =
-            run_test_target(test_target, forge_config, &tests_filter, &package_name).await?;
+            run_for_test_target(test_target, forge_config, &tests_filter, &package_name).await?;
 
         match summary {
             TestTargetRunResult::Ok(summary) => {
@@ -165,8 +164,8 @@ pub async fn run_from_package(
 
     pretty_printing::print_test_summary(&summaries, filtered);
 
-    let any_fuzz_test_was_run = summaries.iter().any(|crate_summary| {
-        crate_summary
+    let any_fuzz_test_was_run = summaries.iter().any(|test_target_summary| {
+        test_target_summary
             .test_case_summaries
             .iter()
             .filter(|summary| matches!(summary, AnyTestCaseSummary::Fuzzing(_)))

@@ -8,7 +8,7 @@ use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use camino::Utf8PathBuf;
 use forge_runner::{
     test_case_summary::{AnyTestCaseSummary, TestCaseSummary},
-    test_crate_summary::TestTargetSummary,
+    test_target_summary::TestTargetSummary,
 };
 use indoc::formatdoc;
 use scarb_api::{

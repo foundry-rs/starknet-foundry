@@ -1,7 +1,7 @@
 use anyhow::Error;
 use console::style;
 use forge_runner::package_tests::TestTargetLocation;
-use forge_runner::{test_case_summary::AnyTestCaseSummary, test_crate_summary::TestTargetSummary};
+use forge_runner::{test_case_summary::AnyTestCaseSummary, test_target_summary::TestTargetSummary};
 use starknet_api::block::BlockNumber;
 use std::collections::HashMap;
 
@@ -15,8 +15,8 @@ pub(crate) fn print_collected_tests_count(tests_num: usize, package_name: &str) 
     println!("{}", style(plain_text).bold());
 }
 
-pub(crate) fn print_running_tests(test_crate_file: TestTargetLocation, tests_num: usize) {
-    let dir_name = match test_crate_file {
+pub(crate) fn print_running_tests(test_target_location: TestTargetLocation, tests_num: usize) {
+    let dir_name = match test_target_location {
         TestTargetLocation::Lib => "src",
         TestTargetLocation::Tests => "tests",
     };

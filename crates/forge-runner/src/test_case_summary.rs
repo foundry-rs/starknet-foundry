@@ -218,7 +218,7 @@ impl TestCaseSummary<Single> {
         contracts_data: &ContractsData,
         maybe_versioned_program_path: &Option<VersionedProgramPath>,
     ) -> Self {
-        let name = test_case.test_case.name.clone();
+        let name = test_case.name.clone();
         let msg = extract_result_data(&run_result, &test_case.config.expected_result);
         match run_result.value {
             RunResultValue::Success(_) => match &test_case.config.expected_result {

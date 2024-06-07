@@ -7,21 +7,21 @@ use std::sync::Arc;
 
 use camino::Utf8PathBuf;
 use forge::block_number_map::BlockNumberMap;
-use forge::run_tests::package::run_from_package;
+use forge::run_tests::package::run_for_package;
 use forge::scarb::config::ForkTarget;
 use forge::test_filter::TestsFilter;
 use tempfile::tempdir;
 use tokio::runtime::Runtime;
 
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
-use forge::run_tests::package::RunFromCrateArgs;
+use forge::run_tests::package::RunForPackageArgs;
 use forge::scarb::load_test_artifacts;
 use forge_runner::build_trace_data::test_sierra_program_path::VERSIONED_PROGRAMS_DIR;
 use forge_runner::forge_config::{
     ExecutionDataToSave, ForgeConfig, OutputConfig, TestRunnerConfig,
 };
 use forge_runner::package_tests::raw::RawForkParams;
-use forge_runner::package_tests::raw::TestCrateRaw;
+use forge_runner::package_tests::raw::TestTargetRaw;
 use forge_runner::CACHE_DIR;
 use shared::command::CommandExt;
 use shared::test_utils::node_url::node_rpc_url;
@@ -118,18 +118,18 @@ fn fork_aliased_decorator() {
         .output_checked()
         .unwrap();
 
-    let compiled_test_crates = load_test_artifacts(
+    let raw_test_targets = load_test_artifacts(
         &test.path().unwrap().join("target/dev/snforge"),
         "test_package",
     )
     .unwrap();
 
     let result = rt
-        .block_on(run_from_package(
-            RunFromCrateArgs {
-                test_targets: compiled_test_crates
+        .block_on(run_for_package(
+            RunForPackageArgs {
+                test_targets: raw_test_targets
                     .into_iter()
-                    .map(TestCrateRaw::with_config)
+                    .map(TestTargetRaw::with_config)
                     .collect(),
                 package_name: "test_package".to_string(),
                 tests_filter: TestsFilter::from_flags(

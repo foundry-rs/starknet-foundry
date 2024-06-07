@@ -2,7 +2,7 @@ use crate::scarb::config::{ForgeConfigFromScarb, RawForgeConfig};
 use anyhow::{Context, Result};
 use camino::Utf8Path;
 use configuration::PackageConfig;
-use forge_runner::package_tests::raw::TestCrateRaw;
+use forge_runner::package_tests::raw::TestTargetRaw;
 use scarb_api::ScarbCommand;
 use scarb_ui::args::PackagesFilter;
 
@@ -46,11 +46,11 @@ pub fn build_test_artifacts_with_scarb(filter: PackagesFilter) -> Result<()> {
 pub fn load_test_artifacts(
     snforge_target_dir_path: &Utf8Path,
     package_name: &str,
-) -> Result<Vec<TestCrateRaw>> {
+) -> Result<Vec<TestTargetRaw>> {
     let test_artifacts_path =
         snforge_target_dir_path.join(format!("{package_name}.snforge_sierra.json"));
 
-    Ok(serde_json::from_str::<Vec<TestCrateRaw>>(
+    Ok(serde_json::from_str::<Vec<TestTargetRaw>>(
         &std::fs::read_to_string(test_artifacts_path)?,
     )?)
 }

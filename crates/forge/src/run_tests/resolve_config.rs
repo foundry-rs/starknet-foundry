@@ -10,15 +10,16 @@ use forge_runner::package_tests::{
 };
 
 pub async fn resolve_config(
-    compiled_test_crate: TestTargetWithConfig,
+    test_target: TestTargetWithConfig,
     fork_targets: &[ForkTarget],
     block_number_map: &mut BlockNumberMap,
 ) -> Result<TestTargetWithResolvedConfig> {
-    let mut test_cases = Vec::with_capacity(compiled_test_crate.test_cases.len());
+    let mut test_cases = Vec::with_capacity(test_target.test_cases.len());
 
-    for case in compiled_test_crate.test_cases {
+    for case in test_target.test_cases {
         test_cases.push(TestCaseWithResolvedConfig {
-            test_case: case.test_case,
+            name: case.name,
+            test_details: case.test_details,
             config: TestCaseResolvedConfig {
                 available_gas: case.config.available_gas,
                 ignored: case.config.ignored,
@@ -35,8 +36,8 @@ pub async fn resolve_config(
     }
 
     Ok(TestTargetWithResolvedConfig {
-        tests_location: compiled_test_crate.tests_location,
-        sierra_program: compiled_test_crate.sierra_program,
+        tests_location: test_target.tests_location,
+        sierra_program: test_target.sierra_program,
         test_cases,
     })
 }
@@ -83,7 +84,7 @@ mod tests {
     use super::*;
     use cairo_lang_sierra::program::{ProgramArtifact, Version, VersionedProgram};
     use cairo_lang_sierra::{ids::GenericTypeId, program::Program};
-    use forge_runner::package_tests::raw::{RawForkParams, TestCaseRaw, TestCrateRaw};
+    use forge_runner::package_tests::raw::{RawForkParams, TestCaseRaw, TestTargetRaw};
     use forge_runner::package_tests::TestTargetLocation;
     use forge_runner::{expected_result::ExpectedTestResult, package_tests::TestDetails};
 
@@ -104,7 +105,7 @@ mod tests {
 
     #[tokio::test]
     async fn to_runnable_unparsable_url() {
-        let mocked_tests = TestCrateRaw {
+        let mocked_tests = TestTargetRaw {
             sierra_program: program_for_testing(),
             test_cases: vec![TestCaseRaw {
                 name: "crate1::do_thing".to_string(),
@@ -144,7 +145,7 @@ mod tests {
 
     #[tokio::test]
     async fn to_runnable_non_existent_id() {
-        let mocked_tests = TestCrateRaw {
+        let mocked_tests = TestTargetRaw {
             sierra_program: program_for_testing(),
             test_cases: vec![TestCaseRaw {
                 name: "crate1::do_thing".to_string(),

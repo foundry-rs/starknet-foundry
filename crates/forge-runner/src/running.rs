@@ -189,12 +189,12 @@ pub fn run_test_case(
 
     let initial_gas = usize::MAX;
     let runner_args: Vec<Arg> = args.into_iter().map(Arg::Value).collect();
-    let sierra_instruction_idx = case.test_case.test_details.sierra_entry_point_statement_idx;
+    let sierra_instruction_idx = case.test_details.sierra_entry_point_statement_idx;
     let casm_entry_point_offset =
         get_casm_instruction_offset(&casm_program.debug_info, sierra_instruction_idx);
 
     let (entry_code, builtins) = SierraCasmRunner::create_entry_code_from_params(
-        &case.test_case.test_details.parameter_types,
+        &case.test_details.parameter_types,
         &runner_args,
         initial_gas,
         casm_entry_point_offset,
@@ -233,7 +233,7 @@ pub fn run_test_case(
         &string_to_hint,
         &mut execution_resources,
         &mut context,
-        get_syscall_segment_index(&case.test_case.test_details.parameter_types),
+        get_syscall_segment_index(&case.test_details.parameter_types),
     );
 
     let mut cheatnet_state = CheatnetState {
@@ -300,11 +300,8 @@ pub fn run_test_case(
             let cells = runner.relocated_memory;
             let ap = vm.get_relocated_trace().unwrap().last().unwrap().ap;
 
-            let (results_data, gas_counter) = SierraCasmRunner::get_results_data(
-                &case.test_case.test_details.return_types,
-                &cells,
-                ap,
-            );
+            let (results_data, gas_counter) =
+                SierraCasmRunner::get_results_data(&case.test_details.return_types, &cells, ap);
             assert_eq!(results_data.len(), 1);
 
             let (_, values) = results_data[0].clone();
@@ -378,7 +375,7 @@ fn extract_test_case_summary(
                 )),
                 // CairoRunError comes from VirtualMachineError which may come from HintException that originates in TestExecutionSyscallHandler
                 Err(RunnerError::CairoRunError(error)) => Ok(TestCaseSummary::Failed {
-                    name: case.test_case.name.clone(),
+                    name: case.name.clone(),
                     msg: Some(format!(
                         "\n    {}\n",
                         error.to_string().replace(" Custom Hint Error: ", "\n    ")
@@ -392,7 +389,7 @@ fn extract_test_case_summary(
         // `ForkStateReader.get_block_info`, `get_fork_state_reader, `calculate_used_gas` may return an error
         // `available_gas` may be specified with Scarb ~2.4
         Err(error) => Ok(TestCaseSummary::Failed {
-            name: case.test_case.name.clone(),
+            name: case.name.clone(),
             msg: Some(error.to_string()),
             arguments: args,
             test_statistics: (),

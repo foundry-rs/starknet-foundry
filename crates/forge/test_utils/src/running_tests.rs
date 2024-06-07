@@ -3,18 +3,18 @@ use camino::Utf8PathBuf;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use forge::{
     block_number_map::BlockNumberMap,
-    run_tests::package::{run_from_package, RunFromCrateArgs},
+    run_tests::package::{run_for_package, RunForPackageArgs},
     scarb::load_test_artifacts,
     test_filter::TestsFilter,
 };
 use forge_runner::forge_config::{
     ExecutionDataToSave, ForgeConfig, OutputConfig, TestRunnerConfig,
 };
-use forge_runner::test_crate_summary::TestTargetSummary;
+use forge_runner::test_target_summary::TestTargetSummary;
 use forge_runner::CACHE_DIR;
 use forge_runner::{
     build_trace_data::test_sierra_program_path::VERSIONED_PROGRAMS_DIR,
-    package_tests::raw::TestCrateRaw,
+    package_tests::raw::TestTargetRaw,
 };
 use shared::command::CommandExt;
 use std::num::NonZeroU32;
@@ -35,17 +35,17 @@ pub fn run_test_case(test: &TestCase) -> Vec<TestTargetSummary> {
         .unwrap();
 
     let rt = Runtime::new().expect("Could not instantiate Runtime");
-    let compiled_test_crates = load_test_artifacts(
+    let raw_test_targets = load_test_artifacts(
         &test.path().unwrap().join("target/dev/snforge"),
         "test_package",
     )
     .unwrap();
 
-    rt.block_on(run_from_package(
-        RunFromCrateArgs {
-            test_targets: compiled_test_crates
+    rt.block_on(run_for_package(
+        RunForPackageArgs {
+            test_targets: raw_test_targets
                 .into_iter()
-                .map(TestCrateRaw::with_config)
+                .map(TestTargetRaw::with_config)
                 .collect(),
             package_name: "test_package".to_string(),
             tests_filter: TestsFilter::from_flags(
