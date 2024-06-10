@@ -165,7 +165,7 @@ fn store_in_complex_mapping() {
 
 This example uses `storage_address_from_base` with `address` function of the [storage variable](https://book.cairo-lang.org/ch14-01-contract-storage.html#addresses-of-storage-variables).
 
-To retrieve storage address of a given `field`, you need to import `{field_name}ContractMemberStateTrait`
+To retrieve storage address of a given `field`, you need to import `{field_name}ContractMemberStateTrait` from the contract.
 
 ```rust
 #[starknet::contract]
@@ -183,14 +183,13 @@ use Contract::mapContractMemberStateTrait;
 
 #[test]
 fn update_mapping() {
-    let index = 1_u8;
-    let day = 10_u32;
+    let key = (1_u8, 10_u32);
     let data = 42_u32;
 
     // ...
     let mut state = Contract::contract_state_for_testing();
     let storage_address: felt252 = storage_address_from_base(
-        state.map.address((index, day))
+        state.map.address(key)
     )
     .into();
     let storage_value: Span<felt252> = array![data.into()].span();
