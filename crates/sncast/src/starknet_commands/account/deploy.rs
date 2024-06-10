@@ -102,7 +102,6 @@ async fn deploy_from_keystore(
 
     let account_type = account_data.get_account_type()?;
     let class_hash = account_data.get_class_hash_as_felt()?;
-    account_data.get_class_hash_as_felt()?;
 
     let address = match account_type {
         AccountType::Argent => get_contract_address(
