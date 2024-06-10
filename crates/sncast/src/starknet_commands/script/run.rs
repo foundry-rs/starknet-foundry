@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::fs;
 
-use crate::starknet_commands::{call, declare, deploy, invoke};
+use crate::starknet_commands::{call, declare, deploy, invoke, tx_status};
 use crate::{get_account, get_nonce, WaitForTx};
 use anyhow::{anyhow, Context, Result};
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
@@ -231,6 +231,15 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 ))?;
 
                 Ok(CheatcodeHandlingResult::from_serializable(nonce))
+            }
+            "tx_status" => {
+                let transaction_hash = input_reader.read()?;
+
+                let tx_status_result = self
+                    .tokio_runtime
+                    .block_on(tx_status::tx_status(self.provider, transaction_hash));
+
+                Ok(CheatcodeHandlingResult::from_serializable(tx_status_result))
             }
             _ => Ok(CheatcodeHandlingResult::Forwarded),
         };

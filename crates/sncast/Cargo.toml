@@ -44,6 +44,8 @@ semver.workspace = true
 console.workspace = true
 sha3.workspace = true
 base16ct.workspace = true
+starknet-crypto.workspace = true
+async-trait.workspace = true
 
 [dev-dependencies]
 ctor.workspace = true

@@ -6,9 +6,11 @@ use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
 use serde_json::json;
+use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{
-    ARGENT_CLASS_HASH, CREATE_KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH,
+    ARGENT_CLASS_HASH, BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH,
+    CREATE_KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH,
 };
 use sncast::response::structs::{AccountCreateResponse, Felt};
 use sncast::{
@@ -68,6 +70,8 @@ pub async fn create(
         AccountType::Argent => {
             FieldElement::from_hex_be(ARGENT_CLASS_HASH).expect("Failed to parse Argent class hash")
         }
+        AccountType::Braavos => FieldElement::from_hex_be(BRAAVOS_CLASS_HASH)
+            .expect("Failed to parse Braavos class hash"),
     });
     check_class_hash_exists(provider, class_hash).await?;
 
@@ -163,6 +167,14 @@ async fn generate_account(
                 provider,
             )
             .await?;
+            get_address_and_deployment_fee(factory, salt).await?
+        }
+        AccountType::Braavos => {
+            let base_class_hash = FieldElement::from_hex_be(BRAAVOS_BASE_ACCOUNT_CLASS_HASH)
+                .expect("Failed to parse Braavos base class hash");
+            let factory =
+                BraavosAccountFactory::new(class_hash, base_class_hash, chain_id, signer, provider)
+                    .await?;
             get_address_and_deployment_fee(factory, salt).await?
         }
     };
@@ -262,6 +274,35 @@ fn create_to_keystore(
                     "salt": format!("{salt:#x}"),
                 }
             })
+        }
+        AccountType::Braavos => {
+            json!(
+                {
+                  "version": 1,
+                  "variant": {
+                    "type": format!("{account_type}"),
+                    "version": 1,
+                    "multisig": {
+                      "status": "off"
+                    },
+                    "signers": [
+                      {
+                        "type": "stark",
+                        "public_key": format!("{:#x}", private_key.verifying_key().scalar())
+                      }
+                    ]
+                  },
+                  "deployment": {
+                    "status": "undeployed",
+                    "class_hash": format!("{class_hash:#x}"),
+                    "salt": format!("{salt:#x}"),
+                    "context": {
+                      "variant": "braavos",
+                      "base_account_class_hash": BRAAVOS_BASE_ACCOUNT_CLASS_HASH
+                    }
+                  }
+                }
+            )
         }
     };
 

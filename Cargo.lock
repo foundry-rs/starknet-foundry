@@ -4451,7 +4451,6 @@ dependencies = [
  "cairo-felt",
  "cairo-lang-runner",
  "console",
- "dotenv",
  "regex",
  "semver",
  "snapbox",
@@ -4550,6 +4549,7 @@ name = "sncast"
 version = "0.24.0"
 dependencies = [
  "anyhow",
+ "async-trait",
  "base16ct",
  "blockifier",
  "cairo-felt",
@@ -4588,6 +4588,7 @@ dependencies = [
  "shellexpand",
  "snapbox",
  "starknet",
+ "starknet-crypto 0.6.1 (git+https://github.com/xJonathanLEI/starknet-rs?rev=d980869)",
  "tempfile",
  "test-case",
  "thiserror",

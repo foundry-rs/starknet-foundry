@@ -63,7 +63,7 @@ pub(crate) fn setup_package(package_name: &str) -> TempDir {
 }
 
 fn replace_node_rpc_url_placeholders(dir_path: &Path) {
-    let url = node_rpc_url().unwrap();
+    let url = node_rpc_url();
     let temp_dir_files = WalkDir::new(dir_path);
     for entry in temp_dir_files {
         let entry = entry.unwrap();

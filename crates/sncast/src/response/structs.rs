@@ -123,7 +123,7 @@ pub struct ScriptInitResponse {
 
 impl CommandResponse for ScriptInitResponse {}
 
-#[derive(Serialize)]
+#[derive(Serialize, CairoSerialize)]
 pub enum FinalityStatus {
     Received,
     Rejected,
@@ -131,13 +131,13 @@ pub enum FinalityStatus {
     AcceptedOnL1,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, CairoSerialize)]
 pub enum ExecutionStatus {
     Succeeded,
     Reverted,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, CairoSerialize)]
 pub struct TransactionStatusResponse {
     pub finality_status: FinalityStatus,
     pub execution_status: Option<ExecutionStatus>,

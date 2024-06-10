@@ -1,8 +1,6 @@
+use crate::CAIRO_EDITION;
 use anyhow::{anyhow, Context, Ok, Result};
-
 use include_dir::{include_dir, Dir};
-
-use forge::CAIRO_EDITION;
 use scarb_api::ScarbCommand;
 use std::fs::{self, OpenOptions};
 use std::io::Write;

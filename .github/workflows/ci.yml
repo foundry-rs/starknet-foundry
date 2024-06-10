@@ -8,9 +8,6 @@ on:
       - master
   workflow_dispatch:
 
-env:
-  SEPOLIA_RPC_URL: ${{ secrets.NODE_URL }}:7070/rpc/v0_7
-
 jobs:
   test-forge-unit-and-integration:
     name: Test Forge / Unit and Integration Tests
@@ -23,8 +20,7 @@ jobs:
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - run: cargo test --release --lib -p forge
       - run: cargo test --release --bin snforge
-      - name: Run Forge unit and integration tests
-        run: cargo test --release integration -p forge
+      - run: cargo test --release integration -p forge
 
   test-forge-e2e:
     name: Test Forge / E2E Tests
@@ -61,8 +57,7 @@ jobs:
       - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
       - uses: software-mansion/setup-scarb@v1.3.2
       - uses: software-mansion/setup-universal-sierra-compiler@v1
-      - name: Run Forge E2E tests
-        run: cargo test --release e2e -p forge
+      - run: cargo test --release e2e -p forge
 
   test-forge-runner:
     name: Test Forge Runner
@@ -102,7 +97,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@bb45937a053e097f8591208d8e74c90db1873d07
+      - uses: dtolnay/rust-toolchain@d8352f6b1d2e870bc5716e7a6d9b65c4cc244a1a
         with:
           toolchain: stable
       - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
@@ -110,15 +105,18 @@ jobs:
         run: ./scripts/install_devnet.sh
       - uses: software-mansion/setup-scarb@v1.3.2
       - uses: software-mansion/setup-universal-sierra-compiler@v1
-      - name: Run Cast tests
-        run: cargo test --release -p sncast
+      - name: Run tests
+        env:
+          NODE_URL: ${{ secrets.NODE_URL }}
+        run: |
+          SEPOLIA_RPC_URL="${NODE_URL}:7070/rpc/v0_7" cargo test --release -p sncast
 
   test-conversions:
     name: Test Conversions
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@bb45937a053e097f8591208d8e74c90db1873d07
+      - uses: dtolnay/rust-toolchain@d8352f6b1d2e870bc5716e7a6d9b65c4cc244a1a
         with:
           toolchain: stable
       - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
@@ -167,7 +165,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@bb45937a053e097f8591208d8e74c90db1873d07
+      - uses: dtolnay/rust-toolchain@d8352f6b1d2e870bc5716e7a6d9b65c4cc244a1a
         with:
           toolchain: stable
       - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
@@ -181,7 +179,7 @@ jobs:
       RUSTFLAGS: "-Dwarnings"
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@bb45937a053e097f8591208d8e74c90db1873d07
+      - uses: dtolnay/rust-toolchain@d8352f6b1d2e870bc5716e7a6d9b65c4cc244a1a
         with:
           toolchain: stable
       - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
@@ -193,7 +191,7 @@ jobs:
     env:
       MDBOOK_VERSION: 0.4.31
     steps:
-      - uses: dtolnay/rust-toolchain@bb45937a053e097f8591208d8e74c90db1873d07
+      - uses: dtolnay/rust-toolchain@d8352f6b1d2e870bc5716e7a6d9b65c4cc244a1a
         with:
           toolchain: stable
       - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
@@ -214,4 +212,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: typos-action
-        uses: crate-ci/typos@v1.21.0
+        uses: crate-ci/typos@v1.22.3

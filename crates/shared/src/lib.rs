@@ -4,6 +4,7 @@ use crate::rpc::{get_rpc_version, is_expected_version};
 use anyhow::{anyhow, Result};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
+use std::fmt::Display;
 
 pub mod command;
 pub mod consts;
@@ -14,7 +15,7 @@ pub mod utils;
 
 pub async fn verify_and_warn_if_incompatible_rpc_version(
     client: &JsonRpcClient<HttpTransport>,
-    url: &str,
+    url: impl Display,
 ) -> Result<()> {
     let node_spec_version = get_rpc_version(client).await?;
     if !is_expected_version(&node_spec_version) {

@@ -6,11 +6,13 @@ use camino::{Utf8Path, Utf8PathBuf};
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
 use serde_json::{json, Map, Value};
+use sncast::helpers::braavos::BraavosAccountFactory;
+use sncast::helpers::constants::{BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH};
 use sncast::helpers::scarb_utils::get_package_metadata;
 use sncast::state::state_file::{
     ScriptTransactionEntry, ScriptTransactionOutput, ScriptTransactionStatus,
 };
-use sncast::{apply_optional, get_chain_id, get_keystore_password};
+use sncast::{apply_optional, get_chain_id, get_keystore_password, AccountType};
 use sncast::{get_account, get_provider, parse_number};
 use starknet::accounts::{
     Account, AccountFactory, ArgentAccountFactory, Call, Execution, OpenZeppelinAccountFactory,
@@ -80,6 +82,31 @@ pub async fn deploy_argent_account() {
         parse_number(ARGENT_ACCOUNT_CLASS_HASH).expect("Failed to parse class hash"),
         chain_id,
         FieldElement::ZERO,
+        LocalWallet::from_signing_key(private_key),
+        provider,
+    )
+    .await
+    .expect("Failed to create Account Factory");
+
+    deploy_account_to_devnet(factory, address.as_str(), salt.as_str()).await;
+}
+
+pub async fn deploy_braavos_account() {
+    let provider = get_provider(URL).expect("Failed to get the provider");
+    let chain_id = get_chain_id(&provider)
+        .await
+        .expect("Failed to get chain id");
+
+    let (address, salt, private_key) = get_account_deployment_data("braavos");
+
+    let base_class_hash = parse_number(BRAAVOS_BASE_ACCOUNT_CLASS_HASH)
+        .expect("Failed to parse Braavos base class hash");
+    let class_hash = parse_number(BRAAVOS_CLASS_HASH).expect("Failed to parse Braavos class hash");
+
+    let factory = BraavosAccountFactory::new(
+        class_hash,
+        base_class_hash,
+        chain_id,
         LocalWallet::from_signing_key(private_key),
         provider,
     )
@@ -432,7 +459,7 @@ pub fn get_address_from_keystore(
     keystore_path: impl AsRef<std::path::Path>,
     account_path: impl AsRef<std::path::Path>,
     password: &str,
-    account_type: &str,
+    account_type: &AccountType,
 ) -> FieldElement {
     let contents = std::fs::read_to_string(account_path).unwrap();
     let items: Map<String, serde_json::Value> = serde_json::from_str(&contents).unwrap();
@@ -450,21 +477,24 @@ pub fn get_address_from_keystore(
             .unwrap(),
     )
     .unwrap();
-    let oz_class_hash = FieldElement::from_hex_be(
-        deployment
-            .get("class_hash")
-            .and_then(serde_json::Value::as_str)
-            .unwrap(),
-    )
-    .unwrap();
-
-    let calldata = match account_type {
-        "oz" => vec![private_key.verifying_key().scalar()],
-        "argent" => vec![private_key.verifying_key().scalar(), FieldElement::ZERO],
-        _ => panic!("Invalid account type"),
+    let class_hash = match account_type {
+        AccountType::Braavos => parse_number(BRAAVOS_BASE_ACCOUNT_CLASS_HASH)
+            .expect("Failed to parse Braavos account class hash"),
+        AccountType::Oz | AccountType::Argent => FieldElement::from_hex_be(
+            deployment
+                .get("class_hash")
+                .and_then(serde_json::Value::as_str)
+                .unwrap(),
+        )
+        .unwrap(),
     };
 
-    get_contract_address(salt, oz_class_hash, &calldata, FieldElement::ZERO)
+    let calldata = match account_type {
+        AccountType::Oz | AccountType::Braavos => vec![private_key.verifying_key().scalar()],
+        AccountType::Argent => vec![private_key.verifying_key().scalar(), FieldElement::ZERO],
+    };
+
+    get_contract_address(salt, class_hash, &calldata, FieldElement::ZERO)
 }
 #[must_use]
 pub fn get_accounts_path(relative_path_from_cargo_toml: &str) -> String {

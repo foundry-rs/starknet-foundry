@@ -7,19 +7,21 @@ use std::sync::Arc;
 
 use camino::Utf8PathBuf;
 use forge::block_number_map::BlockNumberMap;
-use forge::run;
+use forge::run_tests::package::run_for_package;
 use forge::scarb::config::ForkTarget;
 use forge::test_filter::TestsFilter;
 use tempfile::tempdir;
 use tokio::runtime::Runtime;
 
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
-use forge::compiled_raw::RawForkParams;
-use forge::scarb::{get_test_artifacts_path, load_test_artifacts};
+use forge::run_tests::package::RunForPackageArgs;
+use forge::scarb::load_test_artifacts;
 use forge_runner::build_trace_data::test_sierra_program_path::VERSIONED_PROGRAMS_DIR;
 use forge_runner::forge_config::{
     ExecutionDataToSave, ForgeConfig, OutputConfig, TestRunnerConfig,
 };
+use forge_runner::package_tests::raw::RawForkParams;
+use forge_runner::package_tests::raw::TestTargetRaw;
 use forge_runner::CACHE_DIR;
 use shared::command::CommandExt;
 use shared::test_utils::node_url::node_rpc_url;
@@ -62,7 +64,7 @@ fn fork_simple_decorator() {
                 assert(balance == 100, 'Balance should be 100');
             }}
         "#,
-        node_rpc_url().unwrap()
+        node_rpc_url()
     ).as_str());
 
     let result = run_test_case(&test);
@@ -116,48 +118,60 @@ fn fork_aliased_decorator() {
         .output_checked()
         .unwrap();
 
-    let test_artifacts_path = get_test_artifacts_path(
+    let raw_test_targets = load_test_artifacts(
         &test.path().unwrap().join("target/dev/snforge"),
         "test_package",
-    );
-    let compiled_test_crates = load_test_artifacts(&test_artifacts_path).unwrap();
+    )
+    .unwrap();
 
     let result = rt
-        .block_on(run(
-            compiled_test_crates,
-            "test_package",
-            &TestsFilter::from_flags(None, false, false, false, false, Default::default()),
-            Arc::new(ForgeConfig {
-                test_runner_config: Arc::new(TestRunnerConfig {
-                    exit_first: false,
-                    fuzzer_runs: NonZeroU32::new(256).unwrap(),
-                    fuzzer_seed: 12345,
-                    max_n_steps: None,
-                    is_vm_trace_needed: false,
-                    cache_dir: Utf8PathBuf::from_path_buf(tempdir().unwrap().into_path())
+        .block_on(run_for_package(
+            RunForPackageArgs {
+                test_targets: raw_test_targets
+                    .into_iter()
+                    .map(TestTargetRaw::with_config)
+                    .collect(),
+                package_name: "test_package".to_string(),
+                tests_filter: TestsFilter::from_flags(
+                    None,
+                    false,
+                    false,
+                    false,
+                    false,
+                    Default::default(),
+                ),
+                forge_config: Arc::new(ForgeConfig {
+                    test_runner_config: Arc::new(TestRunnerConfig {
+                        exit_first: false,
+                        fuzzer_runs: NonZeroU32::new(256).unwrap(),
+                        fuzzer_seed: 12345,
+                        max_n_steps: None,
+                        is_vm_trace_needed: false,
+                        cache_dir: Utf8PathBuf::from_path_buf(tempdir().unwrap().into_path())
+                            .unwrap()
+                            .join(CACHE_DIR),
+                        contracts_data: ContractsData::try_from(test.contracts().unwrap()).unwrap(),
+                        environment_variables: test.env().clone(),
+                    }),
+                    output_config: Arc::new(OutputConfig {
+                        detailed_resources: false,
+                        execution_data_to_save: ExecutionDataToSave::None,
+                        versioned_programs_dir: Utf8PathBuf::from_path_buf(
+                            tempdir().unwrap().into_path(),
+                        )
                         .unwrap()
-                        .join(CACHE_DIR),
-                    contracts_data: ContractsData::try_from(test.contracts().unwrap()).unwrap(),
-                    environment_variables: test.env().clone(),
+                        .join(VERSIONED_PROGRAMS_DIR),
+                    }),
                 }),
-                output_config: Arc::new(OutputConfig {
-                    detailed_resources: false,
-                    execution_data_to_save: ExecutionDataToSave::None,
-                    versioned_programs_dir: Utf8PathBuf::from_path_buf(
-                        tempdir().unwrap().into_path(),
-                    )
-                    .unwrap()
-                    .join(VERSIONED_PROGRAMS_DIR),
-                }),
-            }),
-            &[ForkTarget::new(
-                "FORK_NAME_FROM_SCARB_TOML".to_string(),
-                RawForkParams {
-                    url: node_rpc_url().unwrap().to_string(),
-                    block_id_type: "Tag".to_string(),
-                    block_id_value: "Latest".to_string(),
-                },
-            )],
+                fork_targets: vec![ForkTarget::new(
+                    "FORK_NAME_FROM_SCARB_TOML".to_string(),
+                    RawForkParams {
+                        url: node_rpc_url().to_string(),
+                        block_id_type: "Tag".to_string(),
+                        block_id_value: "Latest".to_string(),
+                    },
+                )],
+            },
             &mut BlockNumberMap::default(),
         ))
         .expect("Runner fail");
@@ -187,7 +201,7 @@ fn fork_cairo0_contract() {
                 assert(total_supply == 88730316280408105750094, 'Wrong total supply');
             }}
         "#,
-        node_rpc_url().unwrap()
+        node_rpc_url()
     ).as_str());
 
     let result = run_test_case(&test);
@@ -263,7 +277,7 @@ fn get_block_info_in_forked_block() {
                 assert(block_info.block_number > 54060, block_info.block_number.into());
             }}
         "#,
-        node_rpc_url = node_rpc_url().unwrap()
+        node_rpc_url = node_rpc_url()
     ).as_str(),
     Contract::from_code_path(
         "BlockInfoChecker".to_string(),
@@ -285,7 +299,7 @@ fn fork_get_block_info_fails() {
                 starknet::get_block_info();
             }}
         "#,
-        node_rpc_url().unwrap()
+        node_rpc_url()
     )
     .as_str());
 
@@ -324,7 +338,7 @@ fn incompatible_abi() {
                 assert(propdetails.payload == 8, 'payload not match');
             }}
         "#,
-        node_rpc_url().unwrap()
+        node_rpc_url()
     )
     .as_str());
 
