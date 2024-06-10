@@ -1,6 +1,13 @@
+use anyhow::{anyhow, Result};
 use cairo_felt::Felt252;
+use conversions::IntoConv;
+use starknet::{
+    core::types::{BlockId, MaybePendingBlockWithTxHashes},
+    providers::{jsonrpc::HttpTransport, JsonRpcClient, Provider},
+};
 use starknet_api::block::BlockNumber;
 use std::collections::HashMap;
+use tokio::runtime::Handle;
 use url::Url;
 
 #[derive(Default)]
@@ -10,31 +17,71 @@ pub struct BlockNumberMap {
 }
 
 impl BlockNumberMap {
-    pub fn add_latest_block_number(&mut self, url: Url, latest_block_number: BlockNumber) {
-        self.url_to_latest_block_number
-            .insert(url, latest_block_number);
+    pub async fn get_latest_block_number(&mut self, url: Url) -> Result<BlockNumber> {
+        let block_number = if let Some(block_number) = self.url_to_latest_block_number.get(&url) {
+            *block_number
+        } else {
+            let latest_block_number = fetch_latest_block_number(url.clone()).await?;
+
+            self.url_to_latest_block_number
+                .insert(url, latest_block_number);
+
+            latest_block_number
+        };
+
+        Ok(block_number)
     }
 
-    pub fn add_block_number_for_hash(
+    pub async fn get_block_number_for_hash(
         &mut self,
         url: Url,
         hash: Felt252,
-        block_number: BlockNumber,
-    ) {
-        self.url_and_hash_to_block_number
-            .insert((url, hash), block_number);
-    }
+    ) -> Result<BlockNumber> {
+        let block_number = if let Some(block_number) = self
+            .url_and_hash_to_block_number
+            .get(&(url.clone(), hash.clone()))
+        {
+            *block_number
+        } else {
+            let block_number = fetch_block_number_for_hash(url.clone(), &hash).await?;
 
-    pub fn get_latest_block_number(&mut self, url: &Url) -> Option<&BlockNumber> {
-        self.url_to_latest_block_number.get(url)
-    }
+            self.url_and_hash_to_block_number
+                .insert((url, hash), block_number);
 
-    pub fn get_block_number_for_hash(&mut self, url: Url, hash: Felt252) -> Option<&BlockNumber> {
-        self.url_and_hash_to_block_number.get(&(url, hash))
+            block_number
+        };
+
+        Ok(block_number)
     }
 
     #[must_use]
     pub fn get_url_to_latest_block_number(&self) -> &HashMap<Url, BlockNumber> {
         &self.url_to_latest_block_number
+    }
+}
+
+async fn fetch_latest_block_number(url: Url) -> Result<BlockNumber> {
+    let client = JsonRpcClient::new(HttpTransport::new(url));
+
+    Ok(Handle::current()
+        .spawn(async move { client.block_number().await })
+        .await?
+        .map(BlockNumber)?)
+}
+
+async fn fetch_block_number_for_hash(url: Url, block_hash: &Felt252) -> Result<BlockNumber> {
+    let client = JsonRpcClient::new(HttpTransport::new(url));
+
+    let hash = BlockId::Hash(block_hash.clone().into_());
+
+    match Handle::current()
+        .spawn(async move { client.get_block_with_tx_hashes(hash).await })
+        .await?
+    {
+        Ok(MaybePendingBlockWithTxHashes::Block(block)) => Ok(BlockNumber(block.block_number)),
+        _ => Err(anyhow!(
+            "Could not get the block number for block with hash 0x{}",
+            block_hash.to_str_radix(16)
+        )),
     }
 }
