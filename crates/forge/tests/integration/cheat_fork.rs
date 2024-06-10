@@ -43,7 +43,7 @@ fn cheat_caller_address_cairo0_contract() {
                 assert(uncheated_caller_address == caller, 'does not work');
             }}
         "#,
-        node_rpc_url().unwrap(),
+        node_rpc_url(),
     )
     .as_str());
 
@@ -91,7 +91,7 @@ fn cheat_block_number_cairo0_contract() {
                 assert(uncheated_block_number == block_number, 'does not work');
             }}
         "#,
-        node_rpc_url().unwrap(),
+        node_rpc_url(),
     )
     .as_str());
 
@@ -141,7 +141,7 @@ fn cheat_block_timestamp_cairo0_contract() {
                 assert(uncheated_block_timestamp == block_timestamp, 'does not work');
             }}
         "#,
-        node_rpc_url().unwrap(),
+        node_rpc_url(),
     )
     .as_str());
 
@@ -182,7 +182,7 @@ fn mock_call_cairo0_contract() {
                 assert(eth_dispatcher.name() == 'Ether', 'invalid name after mock');
             }}
         "#,
-        node_rpc_url().unwrap(),
+        node_rpc_url(),
     )
     .as_str());
 
@@ -227,7 +227,7 @@ fn store_load_cairo0_contract() {
                 assert(name == array!['NotEther'], 'invalid load2 name');
             }}
         "#,
-        node_rpc_url().unwrap(),
+        node_rpc_url(),
     )
     .as_str());
 
