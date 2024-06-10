@@ -163,38 +163,41 @@ fn store_in_complex_mapping() {
 
 ## Example with `storage_address_from_base`
 
-This example use `storage_address_from_base` with `address` function of the [storage variable](https://book.cairo-lang.org/ch14-01-contract-storage.html#addresses-of-storage-variables).
+This example uses `storage_address_from_base` with `address` function of the [storage variable](https://book.cairo-lang.org/ch14-01-contract-storage.html#addresses-of-storage-variables).
+
+To retrieve storage address of a given `field`, you need to import `{field_name}ContractMemberStateTrait`
 
 ```rust
 #[starknet::contract]
 mod Contract {
     #[storage]
     struct Storage {
-        votes: LegacyMap::<(u8, u32), u32>,
+        map: LegacyMap::<(u8, u32), u32>,
     }
 }
 
 // ...
 use starknet::storage_access::storage_address_from_base;
-use Contract::votesContractMemberStateTrait;
+use snforge_std::{ store, load };
+use Contract::mapContractMemberStateTrait;
 
 #[test]
 fn update_mapping() {
     let index = 1_u8;
     let day = 10_u32;
-    let vote = 42_u32;
+    let data = 42_u32;
 
     // ...
-    let mut state = doc::Contract::contract_state_for_testing();
+    let mut state = Contract::contract_state_for_testing();
     let storage_address: felt252 = storage_address_from_base(
-        state.votes.address((index, day))
+        state.map.address((index, day))
     )
     .into();
-    let storage_value: Span<felt252> = array![vote.into()].span();
-    snf::store(contract_address, storage_address, storage_value);
+    let storage_value: Span<felt252> = array![data.into()].span();
+    store(contract_address, storage_address, storage_value);
 
-    let read_vote = IContractDispatcher { contract_address: contract_address}.get_vote(index, day);
-    assert_eq!(read_vote, vote, "Storage update failed")
+    let read_data: u32 = load(contract_address, storage_address, 1).at(0).try_into().unwrap():
+    assert_eq!(read_data, data, "Storage update failed")
 }
 
 ```
