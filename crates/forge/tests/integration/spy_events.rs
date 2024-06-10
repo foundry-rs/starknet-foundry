@@ -706,7 +706,7 @@ fn capture_cairo0_event() {
                 ]);
             }}
         "#,
-            node_rpc_url().unwrap()
+            node_rpc_url()
         ).as_str(),
         Contract::from_code_path(
             "SpyEventsChecker".to_string(),

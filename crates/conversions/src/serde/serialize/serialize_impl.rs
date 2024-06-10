@@ -147,6 +147,18 @@ impl<T: CairoSerialize, E: CairoSerialize> CairoSerialize for Result<T, E> {
     }
 }
 
+impl<T: CairoSerialize> CairoSerialize for Option<T> {
+    fn serialize(&self, output: &mut BufferWriter) {
+        match self {
+            Some(val) => {
+                output.write_felt(Felt252::from(0));
+                val.serialize(output);
+            }
+            None => output.write_felt(Felt252::from(1)),
+        }
+    }
+}
+
 impl<T> CairoSerialize for &T
 where
     T: CairoSerialize + ?Sized,

@@ -41,7 +41,7 @@ fn setup_redirect_server() {
 #[test]
 fn should_print_warning() {
     let temp = setup_package("empty");
-    let mut node_url = node_url().unwrap();
+    let mut node_url = node_url();
     node_url.set_path("rpc/v0_5");
 
     temp.child("tests/test.cairo")
@@ -90,7 +90,7 @@ fn should_print_warning() {
 #[test]
 fn should_dedup_urls() {
     let temp = setup_package("empty");
-    let mut node_url = node_url().unwrap();
+    let mut node_url = node_url();
     node_url.set_path("rpc/v0_5");
 
     temp.child("tests/test.cairo")
@@ -150,7 +150,7 @@ fn should_print_foreach() {
     setup_redirect_server();
 
     let temp = setup_package("empty");
-    let mut node_url = node_url().unwrap();
+    let mut node_url = node_url();
     node_url.set_path("rpc/v0_5");
 
     temp.child("tests/test.cairo")
@@ -178,7 +178,7 @@ fn should_print_foreach() {
             r"
                 [..]Compiling[..]
                 [..]Finished[..]
-                [WARNING] RPC node with the url http://127.0.0.1:3030?url={node_url} uses incompatible version 0.5.1. Expected version: {EXPECTED_RPC_VERSION}
+                [WARNING] RPC node with the url http://127.0.0.1:3030/?url={node_url} uses incompatible version 0.5.1. Expected version: {EXPECTED_RPC_VERSION}
                 [WARNING] RPC node with the url {node_url} uses incompatible version 0.5.1. Expected version: {EXPECTED_RPC_VERSION}
 
 
@@ -193,7 +193,7 @@ fn should_print_foreach() {
                 Failure[..]
                 Tests: 0 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
 
-                Latest block number = [..] for url = http://127.0.0.1:3030?url={node_url}
+                Latest block number = [..] for url = http://127.0.0.1:3030/?url={node_url}
                 Latest block number = [..] for url = {node_url}
 
                 Failures:

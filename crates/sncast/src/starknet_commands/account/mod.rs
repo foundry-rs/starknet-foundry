@@ -41,6 +41,8 @@ pub enum AccountType {
     Oz,
     /// Argent account implementation
     Argent,
+    /// Braavos account implementation
+    Braavos,
 }
 
 impl fmt::Display for AccountType {
@@ -48,6 +50,7 @@ impl fmt::Display for AccountType {
         match *self {
             AccountType::Oz => write!(f, "open_zeppelin"),
             AccountType::Argent => write!(f, "argent"),
+            AccountType::Braavos => write!(f, "braavos"),
         }
     }
 }

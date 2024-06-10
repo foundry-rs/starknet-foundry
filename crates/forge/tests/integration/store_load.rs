@@ -587,7 +587,7 @@ fn fork_store_load() {
                 assert(balance == 100, 'Balance should be 100');
             }}
         "#,
-        node_rpc_url().unwrap()
+        node_rpc_url()
     ).as_str());
 
     let result = run_test_case(&test);

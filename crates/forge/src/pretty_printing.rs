@@ -1,9 +1,10 @@
 use anyhow::Error;
 use console::style;
-use forge_runner::compiled_runnable::CrateLocation;
-use forge_runner::{test_case_summary::AnyTestCaseSummary, test_crate_summary::TestCrateSummary};
+use forge_runner::package_tests::TestTargetLocation;
+use forge_runner::{test_case_summary::AnyTestCaseSummary, test_target_summary::TestTargetSummary};
 use starknet_api::block::BlockNumber;
 use std::collections::HashMap;
+use url::Url;
 
 pub fn print_error_message(error: &Error) {
     let error_tag = style("ERROR").red();
@@ -15,21 +16,21 @@ pub(crate) fn print_collected_tests_count(tests_num: usize, package_name: &str) 
     println!("{}", style(plain_text).bold());
 }
 
-pub(crate) fn print_running_tests(test_crate_file: CrateLocation, tests_num: usize) {
-    let dir_name = match test_crate_file {
-        CrateLocation::Lib => "src",
-        CrateLocation::Tests => "tests",
+pub(crate) fn print_running_tests(test_target_location: TestTargetLocation, tests_num: usize) {
+    let dir_name = match test_target_location {
+        TestTargetLocation::Lib => "src",
+        TestTargetLocation::Tests => "tests",
     };
     let plain_text = format!("Running {tests_num} test(s) from {dir_name}/");
 
     println!("{}", style(plain_text).bold());
 }
 
-pub(crate) fn print_test_summary(summaries: &[TestCrateSummary], filtered: usize) {
-    let passed: usize = summaries.iter().map(TestCrateSummary::count_passed).sum();
-    let failed: usize = summaries.iter().map(TestCrateSummary::count_failed).sum();
-    let skipped: usize = summaries.iter().map(TestCrateSummary::count_skipped).sum();
-    let ignored: usize = summaries.iter().map(TestCrateSummary::count_ignored).sum();
+pub(crate) fn print_test_summary(summaries: &[TestTargetSummary], filtered: usize) {
+    let passed: usize = summaries.iter().map(TestTargetSummary::count_passed).sum();
+    let failed: usize = summaries.iter().map(TestTargetSummary::count_failed).sum();
+    let skipped: usize = summaries.iter().map(TestTargetSummary::count_skipped).sum();
+    let ignored: usize = summaries.iter().map(TestTargetSummary::count_ignored).sum();
 
     println!(
         "{}: {} passed, {} failed, {} skipped, {} ignored, {} filtered out",
@@ -61,7 +62,7 @@ pub fn print_failures(all_failed_tests: &[AnyTestCaseSummary]) {
 }
 
 #[allow(clippy::implicit_hasher)]
-pub fn print_latest_blocks_numbers(url_to_latest_block_number_map: &HashMap<String, BlockNumber>) {
+pub fn print_latest_blocks_numbers(url_to_latest_block_number_map: &HashMap<Url, BlockNumber>) {
     if !url_to_latest_block_number_map.is_empty() {
         println!();
     }

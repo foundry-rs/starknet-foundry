@@ -1,5 +1,6 @@
 use crate::helpers::constants::{
-    ARGENT_ACCOUNT_CLASS_HASH, DEVNET_OZ_CLASS_HASH_CAIRO_0, DEVNET_OZ_CLASS_HASH_CAIRO_1, URL,
+    ARGENT_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH, DEVNET_OZ_CLASS_HASH_CAIRO_0,
+    DEVNET_OZ_CLASS_HASH_CAIRO_1, URL,
 };
 use crate::helpers::fixtures::{copy_file, default_cli_args};
 use crate::helpers::runner::runner;
@@ -9,13 +10,17 @@ use indoc::indoc;
 use serde_json::{json, to_string_pretty};
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 use snapbox::assert_matches;
-use sncast::helpers::constants::CREATE_KEYSTORE_PASSWORD_ENV_VAR;
+use sncast::helpers::constants::{
+    BRAAVOS_BASE_ACCOUNT_CLASS_HASH, CREATE_KEYSTORE_PASSWORD_ENV_VAR,
+};
+use sncast::AccountType;
 use std::{env, fs};
 use tempfile::tempdir;
 use test_case::test_case;
 
 #[test_case("oz"; "oz_account_type")]
 #[test_case("argent"; "argent_account_type")]
+#[test_case("braavos"; "braavos_account_type")]
 #[tokio::test]
 pub async fn test_happy_case(account_type: &str) {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
@@ -272,6 +277,7 @@ pub async fn test_account_already_exists() {
 
 #[test_case("oz"; "oz_account_type")]
 #[test_case("argent"; "argent_account_type")]
+#[test_case("braavos"; "braavos_account_type")]
 #[tokio::test]
 pub async fn test_happy_case_keystore(account_type: &str) {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
@@ -307,7 +313,10 @@ pub async fn test_happy_case_keystore(account_type: &str) {
     let contents = fs::read_to_string(temp_dir.path().join(account_file))
         .expect("Unable to read created file");
 
-    assert_matches(get_keystore_account_pattern(account_type, None), contents);
+    assert_matches(
+        get_keystore_account_pattern(&account_type.parse().unwrap(), None),
+        contents,
+    );
 }
 
 #[tokio::test]
@@ -544,9 +553,9 @@ fn get_formatted_account_type(account_type: &str) -> &str {
     }
 }
 
-fn get_keystore_account_pattern(account_type: &str, class_hash: Option<&str>) -> String {
+fn get_keystore_account_pattern(account_type: &AccountType, class_hash: Option<&str>) -> String {
     let account_json = match account_type {
-        "oz" => {
+        AccountType::Oz => {
             json!(
                 {
                     "version": 1,
@@ -564,7 +573,7 @@ fn get_keystore_account_pattern(account_type: &str, class_hash: Option<&str>) ->
                 }
             )
         }
-        "argent" => {
+        AccountType::Argent => {
             json!(
                 {
                     "version": 1,
@@ -582,7 +591,35 @@ fn get_keystore_account_pattern(account_type: &str, class_hash: Option<&str>) ->
                 }
             )
         }
-        _ => panic!("Incorrect account type"),
+        AccountType::Braavos => {
+            json!(
+                {
+                  "version": 1,
+                  "variant": {
+                    "type": "braavos",
+                    "version": 1,
+                    "multisig": {
+                      "status": "off"
+                    },
+                    "signers": [
+                      {
+                        "type": "stark",
+                        "public_key": "0x[..]"
+                      }
+                    ]
+                  },
+                  "deployment": {
+                    "status": "undeployed",
+                    "class_hash": class_hash.unwrap_or(BRAAVOS_CLASS_HASH),
+                    "salt": "0x[..]",
+                    "context": {
+                      "variant": "braavos",
+                      "base_account_class_hash": BRAAVOS_BASE_ACCOUNT_CLASS_HASH
+                    }
+                  }
+                }
+            )
+        }
     };
 
     to_string_pretty(&account_json).unwrap()
