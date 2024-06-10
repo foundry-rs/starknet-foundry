@@ -1,57 +1,48 @@
-pub const CACHE_DIR: &str = ".snfoundry_cache";
-pub const PREV_TESTS_FAILED: &str = ".prev_tests_failed";
-
-use anyhow::{Ok, Result};
+use anyhow::Result;
 use camino::Utf8PathBuf;
 use forge_runner::test_case_summary::AnyTestCaseSummary;
-use scarb_api::{metadata::MetadataCommandExt, ScarbCommand};
-use std::fs::{self, File};
-use std::io::{BufRead, BufReader, BufWriter, Write};
+use std::fs::File;
+use std::io::{BufRead, BufReader, BufWriter, ErrorKind, Write};
 
-pub fn cached_failed_tests_names(cache_dir_path: &Utf8PathBuf) -> Result<Option<Vec<String>>> {
-    let tests_failed_path = cache_dir_path.join(PREV_TESTS_FAILED);
-    if !tests_failed_path.exists() {
-        return Ok(None);
-    }
-
-    let file = File::open(tests_failed_path)?;
-    let buf: BufReader<File> = BufReader::new(file);
-    let tests: Vec<String> = buf
-        .lines()
-        .map(|l| l.expect("Could not parse line"))
-        .collect();
-    if tests.is_empty() {
-        return Ok(None);
-    }
-    Ok(Some(tests))
+#[derive(Debug, PartialEq, Default, Clone)]
+pub struct FailedTestsCache {
+    cache_file: Utf8PathBuf,
 }
 
-fn get_or_create_cache_dir(cache_dir_path: &Utf8PathBuf) -> Result<&Utf8PathBuf> {
-    std::fs::create_dir_all(cache_dir_path)?;
-    Ok(cache_dir_path)
-}
+const FILE_WITH_PREV_TESTS_FAILED: &str = ".prev_tests_failed";
 
-pub fn set_cached_failed_tests_names(
-    all_failed_tests: &[AnyTestCaseSummary],
-    cache_dir_path: &Utf8PathBuf,
-) -> Result<()> {
-    let tests_failed_path = get_or_create_cache_dir(cache_dir_path)?.join(PREV_TESTS_FAILED);
-
-    let file = File::create(tests_failed_path)?;
-    let mut file = BufWriter::new(file);
-    for line in all_failed_tests {
-        let name = line.name().unwrap();
-        writeln!(file, "{name}")?;
+impl FailedTestsCache {
+    pub fn new(cache_dir: &Utf8PathBuf) -> Self {
+        Self {
+            cache_file: cache_dir.join(FILE_WITH_PREV_TESTS_FAILED),
+        }
     }
-    Ok(())
-}
 
-pub fn clean_cache() -> Result<()> {
-    let scarb_metadata = ScarbCommand::metadata().inherit_stderr().run()?;
-    let workspace_root = scarb_metadata.workspace.root.clone();
-    let cache_dir = workspace_root.join(CACHE_DIR);
-    if cache_dir.exists() {
-        fs::remove_dir_all(cache_dir)?;
+    pub fn load(&self) -> Result<Vec<String>> {
+        let file = match File::open(&self.cache_file) {
+            Ok(file) => file,
+            Err(err) if err.kind() == ErrorKind::NotFound => return Ok(vec![]),
+            Err(err) => Err(err)?,
+        };
+        let buf: BufReader<File> = BufReader::new(file);
+
+        let tests = buf.lines().collect::<Result<Vec<_>, _>>()?;
+
+        Ok(tests)
     }
-    Ok(())
+
+    pub fn save_failed_tests(&self, all_failed_tests: &[AnyTestCaseSummary]) -> Result<()> {
+        std::fs::create_dir_all(self.cache_file.parent().unwrap())?;
+
+        let file = File::create(&self.cache_file)?;
+
+        let mut file = BufWriter::new(file);
+
+        for line in all_failed_tests {
+            let name = line.name().unwrap();
+
+            writeln!(file, "{name}")?;
+        }
+        Ok(())
+    }
 }

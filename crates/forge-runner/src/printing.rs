@@ -2,10 +2,7 @@ use crate::test_case_summary::{AnyTestCaseSummary, FuzzingStatistics, TestCaseSu
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use console::style;
 
-pub(crate) fn print_test_result(
-    any_test_result: &AnyTestCaseSummary,
-    print_detailed_resources: bool,
-) {
+pub fn print_test_result(any_test_result: &AnyTestCaseSummary, print_detailed_resources: bool) {
     if any_test_result.is_skipped() {
         return;
     }

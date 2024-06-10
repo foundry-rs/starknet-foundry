@@ -6,11 +6,10 @@ use std::rc::Rc;
 use std::sync::Arc;
 
 use crate::build_trace_data::test_sierra_program_path::VersionedProgramPath;
-use crate::compiled_runnable::ValidatedForkConfig;
 use crate::forge_config::{RuntimeConfig, TestRunnerConfig};
 use crate::gas::calculate_used_gas;
+use crate::package_tests::with_config_resolved::{ResolvedForkConfig, TestCaseWithResolvedConfig};
 use crate::test_case_summary::{Single, TestCaseSummary};
-use crate::TestCaseRunnable;
 use anyhow::{bail, ensure, Result};
 use blockifier::execution::entry_point::EntryPointExecutionContext;
 use blockifier::execution::execution_utils::ReadOnlySegments;
@@ -56,7 +55,7 @@ use universal_sierra_compiler_api::{
 };
 
 pub fn run_test(
-    case: Arc<TestCaseRunnable>,
+    case: Arc<TestCaseWithResolvedConfig>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
     test_runner_config: Arc<TestRunnerConfig>,
     maybe_versioned_program_path: Arc<Option<VersionedProgramPath>>,
@@ -95,7 +94,7 @@ pub fn run_test(
 
 pub(crate) fn run_fuzz_test(
     args: Vec<Felt252>,
-    case: Arc<TestCaseRunnable>,
+    case: Arc<TestCaseWithResolvedConfig>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
     test_runner_config: Arc<TestRunnerConfig>,
     maybe_versioned_program_path: Arc<Option<VersionedProgramPath>>,
@@ -179,12 +178,12 @@ pub struct RunResultWithInfo {
 #[allow(clippy::too_many_lines)]
 pub fn run_test_case(
     args: Vec<Felt252>,
-    case: &TestCaseRunnable,
+    case: &TestCaseWithResolvedConfig,
     casm_program: &AssembledProgramWithDebugInfo,
     runtime_config: &RuntimeConfig,
 ) -> Result<RunResultWithInfo> {
     ensure!(
-        case.available_gas != Some(0),
+        case.config.available_gas != Some(0),
         "\n\t`available_gas` attribute was incorrectly configured. Make sure you use scarb >= 2.4.4\n"
     );
 
@@ -212,7 +211,10 @@ pub fn run_test_case(
 
     let mut state_reader = ExtendedStateReader {
         dict_state_reader: cheatnet_constants::build_testing_state(),
-        fork_state_reader: get_fork_state_reader(runtime_config.cache_dir, &case.fork_config)?,
+        fork_state_reader: get_fork_state_reader(
+            runtime_config.cache_dir,
+            &case.config.fork_config,
+        )?,
     };
     let block_info = state_reader.get_block_info()?;
 
@@ -353,7 +355,7 @@ fn get_casm_instruction_offset(
 
 fn extract_test_case_summary(
     run_result: Result<RunResultWithInfo>,
-    case: &TestCaseRunnable,
+    case: &TestCaseWithResolvedConfig,
     args: Vec<Felt252>,
     contracts_data: &ContractsData,
     maybe_versioned_program_path: &Option<VersionedProgramPath>,
@@ -397,11 +399,11 @@ fn extract_test_case_summary(
 
 fn get_fork_state_reader(
     cache_dir: &Utf8Path,
-    fork_config: &Option<ValidatedForkConfig>,
+    fork_config: &Option<ResolvedForkConfig>,
 ) -> Result<Option<ForkStateReader>> {
     fork_config
         .as_ref()
-        .map(|ValidatedForkConfig { url, block_number }| {
+        .map(|ResolvedForkConfig { url, block_number }| {
             ForkStateReader::new(url.clone(), *block_number, cache_dir)
         })
         .transpose()
