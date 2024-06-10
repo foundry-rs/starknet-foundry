@@ -63,6 +63,7 @@ regex = "1.10.4"
 serde = { version = "1.0.199", features = ["derive"] }
 serde_json = "1.0.116"
 starknet = { git = "https://github.com/xJonathanLEI/starknet-rs", rev = "d980869" }
+starknet-crypto = { git = "https://github.com/xJonathanLEI/starknet-rs", rev = "d980869" }
 trace-data = { git = "https://github.com/software-mansion/cairo-profiler/", rev = "e031b09" }
 tempfile = "3.10.1"
 thiserror = "1.0.59"
@@ -113,3 +114,4 @@ glob = "0.3.1"
 sha3 = "0.10.8"
 base16ct = { version = "0.2.0", features = ["alloc"] }
 fs4 = "0.7"
+async-trait = "0.1.74"

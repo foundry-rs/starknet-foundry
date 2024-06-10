@@ -30,6 +30,7 @@ use serde::de::DeserializeOwned;
 use shared::rpc::create_rpc_client;
 use starknet::accounts::{AccountFactory, AccountFactoryError};
 use std::collections::HashMap;
+use std::str::FromStr;
 use std::thread::sleep;
 use std::time::Duration;
 use std::{env, fs};
@@ -39,6 +40,27 @@ pub mod helpers;
 pub mod response;
 pub mod state;
 
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum AccountType {
+    #[serde(rename = "open_zeppelin")]
+    Oz,
+    Argent,
+    Braavos,
+}
+
+impl FromStr for AccountType {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "open_zeppelin" | "oz" => Ok(AccountType::Oz),
+            "argent" => Ok(AccountType::Argent),
+            "braavos" => Ok(AccountType::Braavos),
+            account_type => Err(anyhow!("Invalid account type = {account_type}")),
+        }
+    }
+}
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct AccountData {
     pub private_key: String,
@@ -50,7 +72,7 @@ pub struct AccountData {
     pub legacy: Option<bool>,
 
     #[serde(default, rename(serialize = "type", deserialize = "type"))]
-    pub account_type: Option<String>,
+    pub account_type: Option<AccountType>,
 }
 
 impl AccountData {
@@ -58,7 +80,7 @@ impl AccountData {
         let value_to_parse = self
             .address
             .as_ref()
-            .ok_or_else(|| anyhow!("Failed to get address - make sure the account is deployed"))?;
+            .context("Failed to get address - make sure the account is deployed")?;
 
         parse_number(value_to_parse).with_context(|| {
             format!("Failed to convert address = {value_to_parse} to FieldElement")
@@ -86,9 +108,9 @@ impl AccountData {
         })
     }
 
-    pub fn get_account_type(&self) -> Result<&str> {
+    pub fn get_account_type(&self) -> Result<AccountType> {
         self.account_type
-            .as_deref()
+            .clone()
             .ok_or_else(|| anyhow!("Failed to get account type"))
     }
 }
@@ -333,31 +355,25 @@ pub fn get_account_data_from_keystore(
 
     let account_info: Value = read_and_parse_json_file(&path_to_account)?;
 
-    let parse_to_string = |entry: &Value, parent_key: &str, child_key: &str| -> Option<String> {
-        get_from_json(entry, parent_key, child_key)
-            .and_then(Value::as_str)
-            .map(str::to_string)
-    };
+    let parse_to_string =
+        |pointer: &str| -> Option<String> { get_string_value_from_json(&account_info, pointer) };
 
-    let address = parse_to_string(&account_info, "deployment", "address");
-    let class_hash = parse_to_string(&account_info, "deployment", "class_hash");
-    let salt = parse_to_string(&account_info, "deployment", "salt");
-    let deployed =
-        parse_to_string(&account_info, "deployment", "status").map(|status| &status == "deployed");
-    let legacy = get_from_json(&account_info, "variant", "legacy").and_then(Value::as_bool);
-    let account_type = parse_to_string(&account_info, "variant", "type");
+    let address = parse_to_string("/deployment/address");
+    let class_hash = parse_to_string("/deployment/class_hash");
+    let salt = parse_to_string("/deployment/salt");
+    let deployed = parse_to_string("/deployment/status").map(|status| status == "deployed");
+    let legacy = account_info
+        .pointer("/variant/legacy")
+        .and_then(Value::as_bool);
+    let account_type =
+        parse_to_string("/variant/type").and_then(|account_type| account_type.parse().ok());
 
-    let public_key_field = match account_type
-        .clone()
-        .ok_or_else(|| anyhow!("Failed to get type key"))?
-        .as_str()
-    {
-        "argent" => "owner",
-        _ => "public_key",
-    };
-
-    let public_key = parse_to_string(&account_info, "variant", public_key_field)
-        .ok_or_else(|| anyhow::anyhow!("Failed to get public key from account JSON file"))?;
+    let public_key = match account_type.clone().context("Failed to get type key")? {
+        AccountType::Argent => parse_to_string("/variant/owner"),
+        AccountType::Oz => parse_to_string("/variant/public_key"),
+        AccountType::Braavos => get_braavos_account_public_key(&account_info)?,
+    }
+    .context("Failed to get public key from account JSON file")?;
 
     Ok(AccountData {
         private_key,
@@ -370,14 +386,27 @@ pub fn get_account_data_from_keystore(
         account_type,
     })
 }
+fn get_braavos_account_public_key(account_info: &Value) -> Result<Option<String>> {
+    get_string_value_from_json(account_info, "/variant/multisig/status")
+        .filter(|status| status == "off")
+        .context("Braavos accounts cannot be deployed with multisig on")?;
 
-fn get_from_json<'a>(entry: &'a Value, parent_key: &str, child_key: &str) -> Option<&'a Value> {
-    entry
-        .get(parent_key)
-        .expect("Failed to get key from the account JSON file")
-        .get(child_key)
+    account_info
+        .pointer("/variant/signers")
+        .and_then(Value::as_array)
+        .filter(|signers| signers.len() == 1)
+        .context("Braavos accounts can only be deployed with one seed signer")?;
+
+    Ok(get_string_value_from_json(
+        account_info,
+        "/variant/signers/0/public_key",
+    ))
 }
-
+fn get_string_value_from_json(json: &Value, pointer: &str) -> Option<String> {
+    json.pointer(pointer)
+        .and_then(Value::as_str)
+        .map(str::to_string)
+}
 pub fn get_account_data_from_accounts_file(
     name: &str,
     chain_id: FieldElement,
@@ -685,7 +714,7 @@ mod tests {
     use crate::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
     use crate::{
         chain_id_to_network_name, extract_or_generate_salt, get_account_data_from_accounts_file,
-        get_account_data_from_keystore, get_block_id, udc_uniqueness,
+        get_account_data_from_keystore, get_block_id, udc_uniqueness, AccountType,
     };
     use camino::Utf8PathBuf;
     use starknet::core::types::{
@@ -800,7 +829,7 @@ mod tests {
         assert_eq!(account.deployed, Some(true));
         assert_eq!(account.class_hash, None);
         assert_eq!(account.legacy, None);
-        assert_eq!(account.account_type, Some(String::from("open_zeppelin")));
+        assert_eq!(account.account_type, Some(AccountType::Oz));
     }
 
     #[test]
@@ -823,7 +852,35 @@ mod tests {
         assert_eq!(account.salt, None);
         assert_eq!(account.deployed, Some(true));
         assert_eq!(account.legacy, Some(true));
-        assert_eq!(account.account_type, Some(String::from("open_zeppelin")));
+        assert_eq!(account.account_type, Some(AccountType::Oz));
+    }
+
+    #[test]
+    fn test_get_braavos_account_from_keystore_with_multisig_on() {
+        env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
+        let err = get_account_data_from_keystore(
+            "tests/data/keystore/my_account_braavos_invalid_multisig.json",
+            &Utf8PathBuf::from("tests/data/keystore/my_key.json"),
+        )
+        .unwrap_err();
+
+        assert!(err
+            .to_string()
+            .contains("Braavos accounts cannot be deployed with multisig on"));
+    }
+
+    #[test]
+    fn test_get_braavos_account_from_keystore_multiple_signers() {
+        env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
+        let err = get_account_data_from_keystore(
+            "tests/data/keystore/my_account_braavos_multiple_signers.json",
+            &Utf8PathBuf::from("tests/data/keystore/my_key.json"),
+        )
+        .unwrap_err();
+
+        assert!(err
+            .to_string()
+            .contains("Braavos accounts can only be deployed with one seed signer"));
     }
 
     #[test]

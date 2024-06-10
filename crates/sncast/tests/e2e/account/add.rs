@@ -14,6 +14,7 @@ use test_case::test_case;
 
 #[test_case("oz", "open_zeppelin"; "oz_account_type")]
 #[test_case("argent", "argent"; "argent_account_type")]
+#[test_case("braavos", "braavos"; "braavos_account_type")]
 #[tokio::test]
 pub async fn test_happy_case(input_account_type: &str, saved_type: &str) {
     let tempdir = tempdir().expect("Unable to create a temporary directory");

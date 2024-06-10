@@ -119,6 +119,16 @@
             "private_key": "0x48c8aa111cc645462239d7117d3f2dd3c7c4fb498bda63df9cccf60f829e30",
             "public_key": "0x6d3a3cb3dee41f7240e0d63e23e8828191090ec50e49b65ddb81bd78fa83979",
             "salt": "0x1"
+        },
+        "braavos": {
+            "address": "0x2bcefefb391c0e87170c6200e762f3e6aa8610a2e27fc51cc30d4a403b30549",
+            "class_hash": "0x816dd0297efc55dc1e7559020a3a825e81ef734b558f03c83325d4da7e6253",
+            "deployed": false,
+            "legacy": false,
+            "private_key": "0x6a14df4b659ec3bd2c00660878202b2527cd854af3d76cc03127e6f94505032",
+            "public_key": "0x515f196ae6e5c062ed82d3182a6115faf9117450ac3f1b1daeb67bda0580c26",
+            "salt": "0x5bb823302091cf89",
+            "type": "braavos"
         }
     }
 }

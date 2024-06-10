@@ -25,7 +25,7 @@ pub fn create_fork_cached_state_at(
     block_number: u64,
     cache_dir: &str,
 ) -> CachedState<ExtendedStateReader> {
-    let node_url = node_rpc_url().unwrap();
+    let node_url = node_rpc_url();
     CachedState::new(
         ExtendedStateReader {
             dict_state_reader: build_testing_state(),
