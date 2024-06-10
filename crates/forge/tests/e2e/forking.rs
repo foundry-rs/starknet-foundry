@@ -107,7 +107,7 @@ fn printing_latest_block_number() {
         "forking",
         &[BASE_FILE_PATTERNS, &[&format!("{CACHE_DIR}/*.json")]].concat(),
     );
-    let node_rpc_url = node_rpc_url().unwrap();
+    let node_rpc_url = node_rpc_url();
 
     let output = test_runner(&temp)
         .args(["--exact", "forking::tests::print_block_number_when_latest"])

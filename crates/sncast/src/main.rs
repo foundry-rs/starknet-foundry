@@ -421,7 +421,8 @@ async fn run_async_command(
         Commands::TxStatus(tx_status) => {
             let mut result =
                 starknet_commands::tx_status::tx_status(&provider, tx_status.transaction_hash)
-                    .await;
+                    .await
+                    .context("Failed to get transaction status");
             print_command_result("tx-status", &mut result, numbers_format, &output_format)?;
             Ok(())
         }

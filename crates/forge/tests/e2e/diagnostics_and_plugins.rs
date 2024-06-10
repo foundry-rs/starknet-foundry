@@ -5,7 +5,7 @@ use shared::test_utils::output_assert::assert_stderr_contains;
 
 #[test]
 fn print_error_if_attributes_incorrect() {
-    let node_rpc_url = node_rpc_url().unwrap();
+    let node_rpc_url = node_rpc_url();
     let mock_tests_dir =
         setup_package_with_file_patterns("diagnostics_and_plugins", BASE_FILE_PATTERNS);
     let output = test_runner(&mock_tests_dir).assert().code(2);

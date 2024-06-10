@@ -64,7 +64,7 @@ fn fork_simple_decorator() {
                 assert(balance == 100, 'Balance should be 100');
             }}
         "#,
-        node_rpc_url().unwrap()
+        node_rpc_url()
     ).as_str());
 
     let result = run_test_case(&test);
@@ -201,7 +201,7 @@ fn fork_cairo0_contract() {
                 assert(total_supply == 88730316280408105750094, 'Wrong total supply');
             }}
         "#,
-        node_rpc_url().unwrap()
+        node_rpc_url()
     ).as_str());
 
     let result = run_test_case(&test);
@@ -277,7 +277,7 @@ fn get_block_info_in_forked_block() {
                 assert(block_info.block_number > 54060, block_info.block_number.into());
             }}
         "#,
-        node_rpc_url = node_rpc_url().unwrap()
+        node_rpc_url = node_rpc_url()
     ).as_str(),
     Contract::from_code_path(
         "BlockInfoChecker".to_string(),
@@ -299,7 +299,7 @@ fn fork_get_block_info_fails() {
                 starknet::get_block_info();
             }}
         "#,
-        node_rpc_url().unwrap()
+        node_rpc_url()
     )
     .as_str());
 
@@ -338,7 +338,7 @@ fn incompatible_abi() {
                 assert(propdetails.payload == 8, 'payload not match');
             }}
         "#,
-        node_rpc_url().unwrap()
+        node_rpc_url()
     )
     .as_str());
 

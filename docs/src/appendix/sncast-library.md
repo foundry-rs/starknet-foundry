@@ -5,6 +5,7 @@
 * [`invoke`](sncast-library/invoke.md) - invokes a contract's function
 * [`call`](sncast-library/call.md) - calls a contract's function
 * [`get_nonce`](sncast-library/get_nonce.md) - gets account's nonce for a given block tag
+* [`tx_status`](sncast-library/tx_status.md) - gets the status of a transaction using its hash
 * [`errors`](sncast-library/errors.md) - sncast_std error types reference
 
 > ℹ️ **Info**

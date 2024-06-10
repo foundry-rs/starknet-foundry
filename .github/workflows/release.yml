@@ -195,7 +195,7 @@ jobs:
       - name: Smoke test
         shell: bash
         env:
-          NODE_URL: ${{ secrets.NODE_URL }}
+          RPC_URL: ${{ secrets.CHEATNET_RPC_URL }}
         run: |
           BINARY_PATH="${{ env.BINARY_PATH }}"
           BINARY_PATH="${BINARY_PATH%.tar.gz}"
@@ -213,7 +213,7 @@ jobs:
           REPO_URL=${{ github.repositoryUrl }}
           REVISION=${{ github.sha }}
           
-          ./scripts/smoke_test.sh "${NODE_URL}:7070/rpc/v0_7" "$SNFORGE_PATH" "$SNCAST_PATH" "$REPO_URL" "$REVISION"
+          ./scripts/smoke_test.sh "$RPC_URL" "$SNFORGE_PATH" "$SNCAST_PATH" "$REPO_URL" "$REVISION"
 
   create-release:
     name: Create release
