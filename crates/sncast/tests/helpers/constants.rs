@@ -1,5 +1,6 @@
 pub const ACCOUNT: &str = "user1";
 pub const ACCOUNT_FILE_PATH: &str = "tests/data/accounts/accounts.json";
+pub const SEPOLIA_RPC_URL: &str = "http://188.34.188.184:7070/rpc/v0_7";
 
 pub const URL: &str = "http://127.0.0.1:5055/rpc";
 pub const NETWORK: &str = "testnet";
