@@ -448,13 +448,6 @@ pub fn get_deps_map_from_paths(
     deps
 }
 
-pub fn from_env(name: &str) -> Result<String, String> {
-    match env::var(name) {
-        Ok(value) => Ok(value),
-        Err(_) => Err(format!("Variable {name} not available in env!")),
-    }
-}
-
 pub fn get_address_from_keystore(
     keystore_path: impl AsRef<std::path::Path>,
     account_path: impl AsRef<std::path::Path>,
