@@ -1,14 +1,1 @@
-# chain-interactions
-/crates/sncast/             @foundry-rs/starknet-foundry-cast
-/sncast_std                 @foundry-rs/starknet-foundry-cast
-
-# snforge
-/crates/forge               @foundry-rs/starknet-foundry-forge
-/crates/forge-runner        @foundry-rs/starknet-foundry-forge
-/crates/cheatnet            @foundry-rs/starknet-foundry-forge
-/starknet_forge_template    @foundry-rs/starknet-foundry-forge
-/snforge_std                @foundry-rs/starknet-foundry-forge
-
-# common
-/crates/runtime             @foundry-rs/starknet-foundry-forge @foundry-rs/starknet-foundry-cast
-/crates/conversions         @foundry-rs/starknet-foundry-forge @foundry-rs/starknet-foundry-cast
+* @arcticae @draggu @ksew1 @tomek0123456789
