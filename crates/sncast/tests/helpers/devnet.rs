@@ -41,7 +41,7 @@ fn start_devnet() {
             "--state-archive-capacity",
             "full",
             "--fork-network",
-            &SEPOLIA_RPC_URL,
+            SEPOLIA_RPC_URL,
             "--fork-block",
             &FORK_BLOCK_NUMBER.to_string(),
             "--initial-balance",
