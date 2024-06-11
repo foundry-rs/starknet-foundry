@@ -55,7 +55,6 @@ project-root.workspace = true
 tempfile.workspace = true
 test-case.workspace = true
 fs_extra.workspace = true
-dotenv.workspace = true
 
 [[bin]]
 name = "sncast"
