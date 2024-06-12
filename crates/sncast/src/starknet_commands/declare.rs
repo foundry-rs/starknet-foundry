@@ -1,13 +1,13 @@
+use crate::response::structs::DeclareResponse;
+use crate::response::structs::Felt;
+use crate::{apply_optional, handle_wait_for_tx, ErrorData, WaitForTx};
 use anyhow::{anyhow, Context, Result};
 use clap::Args;
 use scarb_api::StarknetContractArtifacts;
-use sncast::response::structs::DeclareResponse;
-use sncast::response::structs::Felt;
-use sncast::{apply_optional, handle_wait_for_tx, ErrorData, WaitForTx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{ConnectedAccount, Declaration};
 
-use sncast::response::errors::StarknetCommandError;
+use crate::response::errors::StarknetCommandError;
 use starknet::core::types::FieldElement;
 use starknet::{
     accounts::{Account, SingleOwnerAccount},
@@ -38,7 +38,7 @@ pub struct Declare {
     pub package: Option<String>,
 }
 
-#[allow(clippy::too_many_lines)]
+#[allow(clippy::implicit_hasher)]
 pub async fn declare(
     contract_name: &str,
     max_fee: Option<FieldElement>,

@@ -7,6 +7,7 @@ use crate::starknet_commands::{
 use anyhow::{Context, Result};
 use configuration::load_global_config;
 use sncast::response::print::{print_command_result, OutputFormat};
+use sncast::starknet_commands;
 
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand};
@@ -20,14 +21,12 @@ use sncast::helpers::scarb_utils::{
 use sncast::response::errors::handle_starknet_command_error;
 use sncast::{
     chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_default_state_file_name,
-    get_nonce, get_provider, NumbersFormat, ValidatedWaitParams, WaitForTx,
+    get_provider, NumbersFormat, ValidatedWaitParams, WaitForTx,
 };
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use tokio::runtime::Runtime;
-
-mod starknet_commands;
 
 #[derive(Parser)]
 #[command(

@@ -22,11 +22,10 @@ use starknet::{
     signers::{LocalWallet, SigningKey},
 };
 
-use crate::helpers::accounts_format::AccountKeystore;
 use crate::helpers::constants::{DEFAULT_STATE_FILE_SUFFIX, WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
 use crate::response::errors::SNCastProviderError;
+use crate::starknet_commands::account::accounts_format::{AccountData, AccountKeystore};
 use conversions::serde::serialize::CairoSerialize;
-use helpers::accounts_format::AccountData;
 use serde::de::DeserializeOwned;
 use shared::rpc::create_rpc_client;
 use starknet::accounts::{AccountFactory, AccountFactoryError};
@@ -39,6 +38,7 @@ use thiserror::Error;
 
 pub mod helpers;
 pub mod response;
+pub mod starknet_commands;
 pub mod state;
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
@@ -571,8 +571,8 @@ pub fn get_default_state_file_name(script_name: &str, chain_id: &str) -> String 
 
 #[cfg(test)]
 mod tests {
-    use crate::helpers::accounts_format::AccountType;
     use crate::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
+    use crate::starknet_commands::account::accounts_format::AccountType;
     use crate::{
         chain_id_to_network_name, extract_or_generate_salt, get_account_data_from_accounts_file,
         get_account_data_from_keystore, get_block_id, udc_uniqueness,

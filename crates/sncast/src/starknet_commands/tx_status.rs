@@ -1,6 +1,6 @@
+use crate::response::errors::StarknetCommandError;
+use crate::response::structs::{ExecutionStatus, FinalityStatus, TransactionStatusResponse};
 use clap::Args;
-use sncast::response::errors::StarknetCommandError;
-use sncast::response::structs::{ExecutionStatus, FinalityStatus, TransactionStatusResponse};
 use starknet::core::types::{FieldElement, TransactionExecutionStatus, TransactionStatus};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::{JsonRpcClient, Provider};

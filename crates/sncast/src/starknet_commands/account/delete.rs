@@ -1,9 +1,9 @@
+use crate::response::structs::AccountDeleteResponse;
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
 use promptly::prompt;
 use serde_json::Map;
-use sncast::response::structs::AccountDeleteResponse;
 
 #[derive(Args, Debug)]
 #[command(about = "Delete account information from the accounts file")]

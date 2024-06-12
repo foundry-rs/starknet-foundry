@@ -1,5 +1,5 @@
-use crate::helpers::accounts_format::AccountType;
 use crate::helpers::constants::BRAAVOS_BASE_ACCOUNT_CLASS_HASH;
+use crate::starknet_commands::account::accounts_format::AccountType;
 use async_trait::async_trait;
 use starknet::signers::LocalWallet;
 use starknet::{

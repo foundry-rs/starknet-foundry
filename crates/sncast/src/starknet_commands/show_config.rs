@@ -1,9 +1,9 @@
+use crate::helpers::configuration::CastConfig;
+use crate::response::structs::{Decimal, ShowConfigResponse};
+use crate::{chain_id_to_network_name, get_chain_id};
 use anyhow::Result;
 use camino::Utf8PathBuf;
 use clap::Args;
-use sncast::helpers::configuration::CastConfig;
-use sncast::response::structs::{Decimal, ShowConfigResponse};
-use sncast::{chain_id_to_network_name, get_chain_id};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 

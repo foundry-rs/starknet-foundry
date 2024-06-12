@@ -2,13 +2,13 @@ use anyhow::{anyhow, ensure, Context, Ok, Result};
 use camino::Utf8PathBuf;
 use std::fs;
 
+use crate::helpers::constants::INIT_SCRIPTS_DIR;
+use crate::helpers::scarb_utils::get_cairo_version;
+use crate::response::structs::ScriptInitResponse;
 use clap::Args;
 use indoc::{formatdoc, indoc};
 use scarb_api::ScarbCommand;
 use shared::print::print_as_warning;
-use sncast::helpers::constants::INIT_SCRIPTS_DIR;
-use sncast::helpers::scarb_utils::get_cairo_version;
-use sncast::response::structs::ScriptInitResponse;
 
 #[derive(Args, Debug)]
 pub struct Init {

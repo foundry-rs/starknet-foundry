@@ -1,19 +1,21 @@
+use crate::starknet_commands::account::accounts_format::AccountData;
 use crate::starknet_commands::account::add::Add;
 use crate::starknet_commands::account::create::Create;
 use crate::starknet_commands::account::delete::Delete;
 use crate::starknet_commands::account::deploy::Deploy;
+use crate::{chain_id_to_network_name, decode_chain_id, helpers::configuration::CastConfig};
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use clap::{Args, Subcommand};
 use configuration::{
     find_config_file, load_global_config, search_config_upwards_relative_to, CONFIG_FILENAME,
 };
-use sncast::helpers::accounts_format::AccountData;
-use sncast::{chain_id_to_network_name, decode_chain_id, helpers::configuration::CastConfig};
 use starknet::core::types::FieldElement;
 use std::{fs::OpenOptions, io::Write};
 use toml::Value;
 
+pub mod account_factory;
+pub mod accounts_format;
 pub mod add;
 pub mod create;
 pub mod delete;
@@ -134,10 +136,10 @@ pub fn add_created_profile_to_configuration(
 
 #[cfg(test)]
 mod tests {
+    use crate::helpers::configuration::CastConfig;
+    use crate::helpers::constants::DEFAULT_ACCOUNTS_FILE;
     use camino::Utf8PathBuf;
     use configuration::copy_config_to_tempdir;
-    use sncast::helpers::configuration::CastConfig;
-    use sncast::helpers::constants::DEFAULT_ACCOUNTS_FILE;
     use std::fs;
 
     use crate::starknet_commands::account::add_created_profile_to_configuration;

@@ -1,9 +1,8 @@
+use crate::helpers::constants::BRAAVOS_BASE_ACCOUNT_CLASS_HASH;
+use crate::response::structs::{Felt, InvokeResponse};
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
-use serde_json::Map;
-use sncast::helpers::constants::{BRAAVOS_BASE_ACCOUNT_CLASS_HASH, KEYSTORE_PASSWORD_ENV_VAR};
-use sncast::response::structs::{Felt, InvokeResponse};
 use starknet::accounts::AccountFactoryError;
 use starknet::core::types::BlockTag::Pending;
 use starknet::core::types::{BlockId, FieldElement, StarknetError::ClassHashNotFound};
@@ -13,12 +12,13 @@ use starknet::providers::ProviderError::StarknetError;
 use starknet::providers::{JsonRpcClient, Provider};
 use starknet::signers::{LocalWallet, SigningKey};
 
-use sncast::helpers::accounts_format::AccountType;
-use sncast::helpers::factory::{create_account_factory, AccountFactory};
-use sncast::{
-    chain_id_to_network_name, check_account_file_exists, get_account_data_from_accounts_file,
-    get_account_data_from_keystore, get_keystore_password, handle_account_factory_error,
-    handle_rpc_error, handle_wait_for_tx, WaitForTx,
+use crate::starknet_commands::account::account_factory::{create_account_factory, AccountFactory};
+use crate::starknet_commands::account::accounts_format::{
+    AccountData, AccountKeystore, AccountType,
+};
+use crate::{
+    chain_id_to_network_name, get_account_data_from_accounts_file, get_account_data_from_keystore,
+    handle_account_factory_error, handle_rpc_error, handle_wait_for_tx, WaitForTx,
 };
 
 #[derive(Args, Debug)]
@@ -43,89 +43,71 @@ pub async fn deploy(
     account: &str,
     keystore_path: Option<Utf8PathBuf>,
 ) -> Result<InvokeResponse> {
-    if let Some(keystore_path_) = keystore_path {
-        deploy_from_keystore(
+    if let Some(keystore_path) = keystore_path {
+        let account_data = get_account_data_from_keystore(account, &keystore_path)?;
+
+        if let Some(true) = account_data.deployed {
+            bail!("Account already deployed");
+        }
+
+        let account_data = AccountData {
+            address: Some(get_account_address(&account_data, chain_id)?),
+            ..account_data
+        };
+        let (result, account_data) = deploy_from_data(
             provider,
+            account_data,
             chain_id,
             deploy_args.max_fee,
             wait_config,
-            account,
-            keystore_path_,
         )
-        .await
+        .await?;
+
+        update_keystore_account(account, &AccountKeystore::try_from(&account_data)?)?;
+
+        Ok(result)
     } else {
         let account_name = deploy_args
             .name
             .ok_or_else(|| anyhow!("Required argument `--name` not provided"))?;
-        check_account_file_exists(&accounts_file)?;
-        deploy_from_accounts_file(
+        let account_data =
+            get_account_data_from_accounts_file(&account_name, chain_id, &accounts_file)?;
+
+        let (result, account_data) = deploy_from_data(
             provider,
-            accounts_file,
-            account_name,
+            account_data,
             chain_id,
             deploy_args.max_fee,
             wait_config,
         )
-        .await
+        .await?;
+        update_account_in_accounts_file(accounts_file, &account_name, chain_id, account_data)?;
+
+        Ok(result)
     }
 }
 
-async fn deploy_from_keystore(
+async fn deploy_from_data(
     provider: &JsonRpcClient<HttpTransport>,
+    account_data: AccountData,
     chain_id: FieldElement,
     max_fee: Option<FieldElement>,
     wait_config: WaitForTx,
-    account: &str,
-    keystore_path: Utf8PathBuf,
-) -> Result<InvokeResponse> {
-    let account_data = get_account_data_from_keystore(account, &keystore_path)?;
-
+) -> Result<(InvokeResponse, AccountData)> {
     if let Some(true) = account_data.deployed {
         bail!("Account already deployed");
     }
 
-    let private_key = SigningKey::from_keystore(
-        keystore_path,
-        get_keystore_password(KEYSTORE_PASSWORD_ENV_VAR)?.as_str(),
-    )?;
-
+    let private_key = SigningKey::from_secret_scalar(account_data.private_key);
     if account_data.public_key != private_key.verifying_key().scalar() {
         bail!("Public key and private key from keystore do not match");
     }
 
-    let salt = account_data
-        .salt
-        .context("Failed to get salt from keystore format")?;
-    let account_type = account_data
-        .account_type
-        .context("Failed to get account type from keystore format")?;
-    let class_hash = account_data
-        .class_hash
-        .context("Failed to get class hash from keystore format")?;
-
-    let address = match account_type {
-        AccountType::Argent => get_contract_address(
-            salt,
-            class_hash,
-            &[private_key.verifying_key().scalar(), FieldElement::ZERO],
-            FieldElement::ZERO,
-        ),
-        AccountType::Oz => get_contract_address(
-            salt,
-            class_hash,
-            &[private_key.verifying_key().scalar()],
-            chain_id,
-        ),
-        AccountType::Braavos => get_contract_address(
-            salt,
-            BRAAVOS_BASE_ACCOUNT_CLASS_HASH,
-            &[private_key.verifying_key().scalar()],
-            chain_id,
-        ),
-    };
-
     let result = if provider
-        .get_class_hash_at(BlockId::Tag(Pending), address)
+        .get_class_hash_at(
+            BlockId::Tag(Pending),
+            account_data.address.context("Failed to get address")?,
+        )
         .await
         .is_ok()
     {
@@ -133,91 +115,43 @@ async fn deploy_from_keystore(
             transaction_hash: Felt(FieldElement::ZERO),
         }
     } else {
-        get_deployment_result(
-            provider,
+        let account_type = account_data
+            .account_type
+            .clone()
+            .context("Failed to get account type")?;
+        let class_hash = account_data
+            .class_hash
+            .context("Failed to get class hash")?;
+        let salt = account_data.salt.context("Failed to get salt")?;
+
+        let factory = create_account_factory(
             account_type,
             class_hash,
-            private_key,
-            salt,
             chain_id,
-            max_fee,
-            wait_config,
+            LocalWallet::from_signing_key(private_key),
+            provider,
         )
-        .await?
+        .await
+        .context("Failed to create account factory")?;
+
+        match factory {
+            AccountFactory::Oz(factory) => {
+                deploy_account(factory, provider, salt, max_fee, wait_config, class_hash).await
+            }
+            AccountFactory::Argent(factory) => {
+                deploy_account(factory, provider, salt, max_fee, wait_config, class_hash).await
+            }
+            AccountFactory::Braavos(factory) => {
+                deploy_account(factory, provider, salt, max_fee, wait_config, class_hash).await
+            }
+        }?
     };
 
-    update_keystore_account(account, address)?;
-
-    Ok(result)
-}
-
-async fn deploy_from_accounts_file(
-    provider: &JsonRpcClient<HttpTransport>,
-    accounts_file: Utf8PathBuf,
-    name: String,
-    chain_id: FieldElement,
-    max_fee: Option<FieldElement>,
-    wait_config: WaitForTx,
-) -> Result<InvokeResponse> {
-    let account_data = get_account_data_from_accounts_file(&name, chain_id, &accounts_file)?;
-
-    let private_key = SigningKey::from_secret_scalar(account_data.private_key);
-
-    let result = get_deployment_result(
-        provider,
-        account_data
-            .account_type
-            .context("Failed to get account type from accounts file")?,
-        account_data
-            .class_hash
-            .context("Failed to get class hash from accounts file")?,
-        private_key,
-        account_data
-            .salt
-            .context("Failed to get salt from accounts file")?,
-        chain_id,
-        max_fee,
-        wait_config,
-    )
-    .await?;
-
-    update_account_in_accounts_file(accounts_file, &name, chain_id)?;
-
-    Ok(result)
-}
-
-#[allow(clippy::too_many_arguments)]
-async fn get_deployment_result(
-    provider: &JsonRpcClient<HttpTransport>,
-    account_type: AccountType,
-    class_hash: FieldElement,
-    private_key: SigningKey,
-    salt: FieldElement,
-    chain_id: FieldElement,
-    max_fee: Option<FieldElement>,
-    wait_config: WaitForTx,
-) -> Result<InvokeResponse> {
-    let factory = create_account_factory(
-        account_type,
-        class_hash,
-        chain_id,
-        LocalWallet::from_signing_key(private_key),
-        provider,
-    )
-    .await
-    .context("Failed to create account factory")?;
-
-    match factory {
-        AccountFactory::Oz(factory) => {
-            deploy_account(factory, provider, salt, max_fee, wait_config, class_hash).await
-        }
-        AccountFactory::Argent(factory) => {
-            deploy_account(factory, provider, salt, max_fee, wait_config, class_hash).await
-        }
-        AccountFactory::Braavos(factory) => {
-            deploy_account(factory, provider, salt, max_fee, wait_config, class_hash).await
-        }
-    }
+    let account_data = AccountData {
+        deployed: Some(true),
+        ..account_data
+    };
+    Ok((result, account_data))
 }
 
 async fn deploy_account<T>(
@@ -272,10 +206,43 @@ where
     }
 }
 
+fn get_account_address(account_data: &AccountData, chain_id: FieldElement) -> Result<FieldElement> {
+    let salt = account_data
+        .salt
+        .context("Failed to get salt from keystore format")?;
+    let account_type = account_data
+        .account_type
+        .clone()
+        .context("Failed to get account type from keystore format")?;
+    let class_hash = account_data
+        .class_hash
+        .context("Failed to get class hash from keystore format")?;
+
+    let address = match account_type {
+        AccountType::Argent => get_contract_address(
+            salt,
+            class_hash,
+            &[account_data.public_key, FieldElement::ZERO],
+            FieldElement::ZERO,
+        ),
+        AccountType::Oz => {
+            get_contract_address(salt, class_hash, &[account_data.public_key], chain_id)
+        }
+        AccountType::Braavos => get_contract_address(
+            salt,
+            BRAAVOS_BASE_ACCOUNT_CLASS_HASH,
+            &[account_data.private_key],
+            chain_id,
+        ),
+    };
+    Ok(address)
+}
+
 fn update_account_in_accounts_file(
     accounts_file: Utf8PathBuf,
     account_name: &str,
     chain_id: FieldElement,
+    account_data: AccountData,
 ) -> Result<()> {
     let network_name = chain_id_to_network_name(chain_id);
 
@@ -283,31 +250,20 @@ fn update_account_in_accounts_file(
         std::fs::read_to_string(accounts_file.clone()).context("Failed to read accounts file")?;
     let mut items: serde_json::Value = serde_json::from_str(&contents)
         .with_context(|| format!("Failed to parse accounts file at = {accounts_file}"))?;
-    items[&network_name][account_name]["deployed"] = serde_json::Value::from(true);
+    items[&network_name][account_name] = serde_json::to_value(account_data)?;
     std::fs::write(accounts_file, serde_json::to_string_pretty(&items).unwrap())
         .context("Failed to write to accounts file")?;
 
     Ok(())
 }
 
-fn update_keystore_account(account: &str, address: FieldElement) -> Result<()> {
+fn update_keystore_account(account: &str, account_data: &AccountKeystore) -> Result<()> {
     let account_path = Utf8PathBuf::from(account.to_string());
-    let contents =
-        std::fs::read_to_string(account_path.clone()).context("Failed to read account file")?;
-    let mut items: Map<String, serde_json::Value> = serde_json::from_str(&contents)
-        .map_err(|_| anyhow!("Failed to parse account file at {account_path}"))?;
-
-    items["deployment"]["status"] = serde_json::Value::from("deployed");
-    items
-        .get_mut("deployment")
-        .and_then(|deployment| deployment.as_object_mut())
-        .expect("Failed to get deployment as an object")
-        .retain(|key, _| key != "salt" && key != "context");
-
-    items["deployment"]["address"] = format!("{address:#x}").into();
-
-    std::fs::write(&account_path, serde_json::to_string_pretty(&items).unwrap())
-        .context("Failed to write to account file")?;
+    std::fs::write(
+        account_path,
+        serde_json::to_string_pretty(&account_data).unwrap(),
+    )
+    .context("Failed to write to account file")?;
 
     Ok(())
 }

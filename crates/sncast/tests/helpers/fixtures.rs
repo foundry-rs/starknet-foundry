@@ -6,10 +6,10 @@ use camino::{Utf8Path, Utf8PathBuf};
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
 use serde_json::{json, Map, Value};
-use sncast::helpers::accounts_format::AccountType;
 use sncast::helpers::constants::{BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH};
-use sncast::helpers::factory::{create_account_factory, AccountFactory};
 use sncast::helpers::scarb_utils::get_package_metadata;
+use sncast::starknet_commands::account::account_factory::{create_account_factory, AccountFactory};
+use sncast::starknet_commands::account::accounts_format::AccountType;
 use sncast::state::state_file::{
     ScriptTransactionEntry, ScriptTransactionOutput, ScriptTransactionStatus,
 };

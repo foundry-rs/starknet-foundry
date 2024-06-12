@@ -1,14 +1,14 @@
+use crate::helpers::configuration::CastConfig;
+use crate::response::structs::AccountAddResponse;
+use crate::starknet_commands::account::accounts_format::{AccountData, AccountType};
 use crate::starknet_commands::account::{
     add_created_profile_to_configuration, write_account_to_accounts_file,
 };
+use crate::{check_class_hash_exists, get_chain_id, parse_number};
+use crate::{check_if_legacy_contract, get_class_hash_by_address};
 use anyhow::{ensure, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
-use sncast::helpers::accounts_format::{AccountData, AccountType};
-use sncast::helpers::configuration::CastConfig;
-use sncast::response::structs::AccountAddResponse;
-use sncast::{check_class_hash_exists, get_chain_id, parse_number};
-use sncast::{check_if_legacy_contract, get_class_hash_by_address};
 use starknet::core::types::FieldElement;
 use starknet::providers::jsonrpc::{HttpTransport, JsonRpcClient};
 use starknet::signers::SigningKey;

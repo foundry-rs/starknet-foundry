@@ -1,7 +1,12 @@
 use std::collections::HashMap;
 use std::fs;
 
+use crate::helpers::configuration::CastConfig;
+use crate::helpers::constants::SCRIPT_LIB_ARTIFACT_NAME;
+use crate::response::structs::ScriptRunResponse;
 use crate::starknet_commands::{call, declare, deploy, invoke, tx_status};
+use crate::state::hashing::{generate_declare_tx_id, generate_deploy_tx_id, generate_invoke_tx_id};
+use crate::state::state_file::StateManager;
 use crate::{get_account, get_nonce, WaitForTx};
 use anyhow::{anyhow, Context, Result};
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
@@ -37,13 +42,6 @@ use scarb_metadata::{Metadata, PackageMetadata};
 use semver::{Comparator, Op, Version, VersionReq};
 use shared::print::print_as_warning;
 use shared::utils::build_readable_text;
-use sncast::helpers::configuration::CastConfig;
-use sncast::helpers::constants::SCRIPT_LIB_ARTIFACT_NAME;
-use sncast::response::structs::ScriptRunResponse;
-use sncast::state::hashing::{
-    generate_declare_tx_id, generate_deploy_tx_id, generate_invoke_tx_id,
-};
-use sncast::state::state_file::StateManager;
 use starknet::accounts::{Account, SingleOwnerAccount};
 use starknet::core::types::{BlockId, BlockTag::Pending};
 use starknet::providers::jsonrpc::HttpTransport;
@@ -259,7 +257,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
     }
 }
 
-#[allow(clippy::too_many_arguments)]
+#[allow(clippy::too_many_arguments, clippy::implicit_hasher)]
 pub fn run(
     module_name: &str,
     metadata: &Metadata,

@@ -1,9 +1,9 @@
 use anyhow::{anyhow, Result};
 use clap::Args;
 
-use sncast::response::errors::StarknetCommandError;
-use sncast::response::structs::{Felt, InvokeResponse};
-use sncast::{apply_optional, handle_wait_for_tx, WaitForTx};
+use crate::response::errors::StarknetCommandError;
+use crate::response::structs::{Felt, InvokeResponse};
+use crate::{apply_optional, handle_wait_for_tx, WaitForTx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{Account, Call, ConnectedAccount, Execution, SingleOwnerAccount};
 use starknet::core::types::FieldElement;

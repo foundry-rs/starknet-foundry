@@ -1,9 +1,9 @@
+use crate::{
+    helpers::constants::DEFAULT_MULTICALL_CONTENTS, response::structs::MulticallNewResponse,
+};
 use anyhow::{bail, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
-use sncast::{
-    helpers::constants::DEFAULT_MULTICALL_CONTENTS, response::structs::MulticallNewResponse,
-};
 
 #[derive(Args, Debug)]
 #[command(about = "Generate a template for the multicall .toml file", long_about = None)]

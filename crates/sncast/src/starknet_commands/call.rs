@@ -1,7 +1,7 @@
+use crate::response::errors::StarknetCommandError;
+use crate::response::structs::{CallResponse, Felt};
 use anyhow::Result;
 use clap::Args;
-use sncast::response::errors::StarknetCommandError;
-use sncast::response::structs::{CallResponse, Felt};
 use starknet::core::types::{BlockId, FieldElement, FunctionCall};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::{JsonRpcClient, Provider};

@@ -1,6 +1,6 @@
+use crate::response::structs::{DeployResponse, Felt};
 use anyhow::{anyhow, Result};
 use clap::Args;
-use sncast::response::structs::{DeployResponse, Felt};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{Account, ConnectedAccount, SingleOwnerAccount};
 use starknet::contract::ContractFactory;
@@ -10,9 +10,9 @@ use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
 
-use sncast::response::errors::StarknetCommandError;
-use sncast::{extract_or_generate_salt, udc_uniqueness};
-use sncast::{handle_wait_for_tx, WaitForTx};
+use crate::response::errors::StarknetCommandError;
+use crate::{extract_or_generate_salt, udc_uniqueness};
+use crate::{handle_wait_for_tx, WaitForTx};
 
 #[derive(Args)]
 #[command(about = "Deploy a contract on Starknet")]
