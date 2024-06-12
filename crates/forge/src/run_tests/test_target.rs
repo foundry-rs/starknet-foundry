@@ -14,7 +14,6 @@ use forge_runner::{
 use futures::{stream::FuturesUnordered, StreamExt};
 use std::sync::Arc;
 use tokio::sync::mpsc::channel;
-use universal_sierra_compiler_api::compile_sierra_to_casm;
 
 #[non_exhaustive]
 pub enum TestTargetRunResult {
@@ -29,7 +28,7 @@ pub async fn run_for_test_target(
     package_name: &str,
 ) -> Result<TestTargetRunResult> {
     let sierra_program = &tests.sierra_program.program;
-    let casm_program = Arc::new(compile_sierra_to_casm(sierra_program)?);
+    let casm_program = tests.casm_program.clone();
 
     let mut tasks = FuturesUnordered::new();
     // Initiate two channels to manage the `--exit-first` flag.
