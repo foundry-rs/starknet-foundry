@@ -1,10 +1,10 @@
 use crate::starknet_commands::account::{
-    add_created_profile_to_configuration, prepare_account_json, write_account_to_accounts_file,
-    AccountType,
+    add_created_profile_to_configuration, write_account_to_accounts_file,
 };
 use anyhow::{ensure, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
+use sncast::helpers::accounts_format::{AccountData, AccountType};
 use sncast::helpers::configuration::CastConfig;
 use sncast::response::structs::AccountAddResponse;
 use sncast::{check_class_hash_exists, get_chain_id, parse_number};
@@ -97,18 +97,19 @@ pub async fn add(
 
     let legacy = check_if_legacy_contract(class_hash, add.address, provider).await?;
 
-    let account_json = prepare_account_json(
-        private_key,
-        add.address,
-        deployed,
-        legacy,
-        &add.account_type,
+    let account_data = AccountData {
+        private_key: private_key.secret_scalar(),
+        public_key: private_key.verifying_key().scalar(),
+        address: Some(add.address),
+        account_type: Some(add.account_type.clone()),
+        deployed: Some(deployed),
+        legacy: Some(legacy),
+        salt: add.salt,
         class_hash,
-        add.salt,
-    );
+    };
 
     let chain_id = get_chain_id(provider).await?;
-    write_account_to_accounts_file(account, accounts_file, chain_id, account_json.clone())?;
+    write_account_to_accounts_file(account, accounts_file, chain_id, &account_data)?;
 
     if add.add_profile.is_some() {
         let config = CastConfig {

@@ -11,8 +11,8 @@ use conversions::string::IntoHexStr;
 use indoc::indoc;
 use serde_json::Value;
 use shared::test_utils::output_assert::{assert_stderr_contains, AsOutput};
+use sncast::helpers::accounts_format::AccountType;
 use sncast::helpers::constants::{BRAAVOS_CLASS_HASH, KEYSTORE_PASSWORD_ENV_VAR};
-use sncast::AccountType;
 use starknet::core::types::TransactionReceipt::DeployAccount;
 use std::{env, fs};
 use tempfile::{tempdir, TempDir};
@@ -21,7 +21,7 @@ use test_case::test_case;
 #[test_case(DEVNET_OZ_CLASS_HASH_CAIRO_0, "oz"; "cairo_0_class_hash")]
 #[test_case(DEVNET_OZ_CLASS_HASH_CAIRO_1, "oz"; "cairo_1_class_hash")]
 #[test_case(ARGENT_ACCOUNT_CLASS_HASH, "argent"; "argent_class_hash")]
-#[test_case(BRAAVOS_CLASS_HASH, "braavos"; "braavos_class_hash")]
+#[test_case(BRAAVOS_CLASS_HASH.to_string().as_str(), "braavos"; "braavos_class_hash")]
 #[tokio::test]
 pub async fn test_happy_case(class_hash: &str, account_type: &str) {
     let tempdir = create_account(false, class_hash, account_type).await;
@@ -496,7 +496,7 @@ pub async fn test_deploy_keystore_no_status() {
         output,
         indoc! {r"
         command: account deploy
-        error: Failed to get status key from account JSON file
+        error: missing field `status` at line 11 column 5
         "},
     );
 }

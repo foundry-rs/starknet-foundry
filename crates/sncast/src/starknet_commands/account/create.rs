@@ -1,25 +1,22 @@
 use crate::starknet_commands::account::{
-    add_created_profile_to_configuration, prepare_account_json, write_account_to_accounts_file,
-    AccountType,
+    add_created_profile_to_configuration, write_account_to_accounts_file,
 };
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
-use serde_json::json;
-use sncast::helpers::braavos::BraavosAccountFactory;
+use sncast::helpers::accounts_format;
+use sncast::helpers::accounts_format::{AccountData, AccountKeystore, AccountType};
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{
-    ARGENT_CLASS_HASH, BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH,
-    CREATE_KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH,
+    ARGENT_CLASS_HASH, BRAAVOS_CLASS_HASH, CREATE_KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH,
 };
+use sncast::helpers::factory::{create_account_factory, AccountFactory};
 use sncast::response::structs::{AccountCreateResponse, Felt};
 use sncast::{
     check_class_hash_exists, check_if_legacy_contract, extract_or_generate_salt, get_chain_id,
-    get_keystore_password, handle_account_factory_error, parse_number,
+    get_keystore_password, handle_account_factory_error,
 };
-use starknet::accounts::{
-    AccountDeployment, AccountFactory, ArgentAccountFactory, OpenZeppelinAccountFactory,
-};
+use starknet::accounts::AccountDeployment;
 use starknet::core::types::{FeeEstimate, FieldElement};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
@@ -29,7 +26,7 @@ use starknet::signers::{LocalWallet, SigningKey};
 #[command(about = "Create an account with all important secrets")]
 pub struct Create {
     /// Type of the account
-    #[clap(value_enum, short = 't', long = "type", default_value_t = AccountType::Oz)]
+    #[clap(value_enum, short = 't', long = "type", default_value_t = accounts_format::AccountType::Oz)]
     pub account_type: AccountType,
 
     /// Account name under which account information is going to be saved
@@ -63,26 +60,17 @@ pub async fn create(
     class_hash: Option<FieldElement>,
 ) -> Result<AccountCreateResponse> {
     let salt = extract_or_generate_salt(salt);
-    let class_hash = class_hash.unwrap_or_else(|| match account_type {
-        AccountType::Oz => {
-            FieldElement::from_hex_be(OZ_CLASS_HASH).expect("Failed to parse OZ class hash")
-        }
-        AccountType::Argent => {
-            FieldElement::from_hex_be(ARGENT_CLASS_HASH).expect("Failed to parse Argent class hash")
-        }
-        AccountType::Braavos => FieldElement::from_hex_be(BRAAVOS_CLASS_HASH)
-            .expect("Failed to parse Braavos class hash"),
+    let class_hash = class_hash.unwrap_or(match account_type {
+        AccountType::Oz => OZ_CLASS_HASH,
+        AccountType::Argent => ARGENT_CLASS_HASH,
+        AccountType::Braavos => BRAAVOS_CLASS_HASH,
     });
     check_class_hash_exists(provider, class_hash).await?;
 
-    let (account_json, max_fee) =
+    let (account_data, max_fee) =
         generate_account(provider, salt, class_hash, &account_type).await?;
 
-    let address = parse_number(
-        account_json["address"]
-            .as_str()
-            .context("Invalid address")?,
-    )?;
+    let address = account_data.address.context("Failed to get address")?;
 
     if let Some(keystore) = keystore.clone() {
         let account_path = Utf8PathBuf::from(&account);
@@ -90,26 +78,9 @@ pub async fn create(
             bail!("Argument `--account` must be passed and be a path when using `--keystore`");
         }
 
-        let private_key = parse_number(
-            account_json["private_key"]
-                .as_str()
-                .context("Invalid private_key")?,
-        )?;
-        let legacy = account_json["legacy"]
-            .as_bool()
-            .expect("Invalid legacy entry");
-
-        create_to_keystore(
-            private_key,
-            salt,
-            class_hash,
-            &account_type,
-            &keystore,
-            &account_path,
-            legacy,
-        )?;
+        write_to_keystore(&account_data, &keystore, &account_path)?;
     } else {
-        write_account_to_accounts_file(account, accounts_file, chain_id, account_json.clone())?;
+        write_account_to_accounts_file(account, accounts_file, chain_id, &account_data)?;
     }
 
     if add_profile.is_some() {
@@ -134,10 +105,10 @@ pub async fn create(
         } else {
             "--add-profile flag was not set. No profile added to snfoundry.toml".to_string()
         },
-        message: if account_json["deployed"] == json!(false) {
-            "Account successfully created. Prefund generated address with at least <max_fee> tokens. It is good to send more in the case of higher demand.".to_string()
-        } else {
+        message: if account_data.clone().deployed.unwrap_or(false) {
             "Account already deployed".to_string()
+        } else {
+            "Account successfully created. Prefund generated address with at least <max_fee> tokens. It is good to send more in the case of higher demand.".to_string()
         },
     })
 }
@@ -147,51 +118,35 @@ async fn generate_account(
     salt: FieldElement,
     class_hash: FieldElement,
     account_type: &AccountType,
-) -> Result<(serde_json::Value, FieldElement)> {
+) -> Result<(AccountData, FieldElement)> {
     let chain_id = get_chain_id(provider).await?;
     let private_key = SigningKey::from_random();
     let signer = LocalWallet::from_signing_key(private_key.clone());
 
-    let (address, fee_estimate) = match account_type {
-        AccountType::Oz => {
-            let factory =
-                OpenZeppelinAccountFactory::new(class_hash, chain_id, signer, provider).await?;
-            get_address_and_deployment_fee(factory, salt).await?
-        }
-        AccountType::Argent => {
-            let factory = ArgentAccountFactory::new(
-                class_hash,
-                chain_id,
-                FieldElement::ZERO,
-                signer,
-                provider,
-            )
+    let factory =
+        create_account_factory(account_type.clone(), class_hash, chain_id, signer, provider)
             .await?;
-            get_address_and_deployment_fee(factory, salt).await?
-        }
-        AccountType::Braavos => {
-            let base_class_hash = FieldElement::from_hex_be(BRAAVOS_BASE_ACCOUNT_CLASS_HASH)
-                .expect("Failed to parse Braavos base class hash");
-            let factory =
-                BraavosAccountFactory::new(class_hash, base_class_hash, chain_id, signer, provider)
-                    .await?;
-            get_address_and_deployment_fee(factory, salt).await?
-        }
-    };
+
+    let (address, fee_estimate) = match factory {
+        AccountFactory::Oz(factory) => get_address_and_deployment_fee(factory, salt).await,
+        AccountFactory::Argent(factory) => get_address_and_deployment_fee(factory, salt).await,
+        AccountFactory::Braavos(factory) => get_address_and_deployment_fee(factory, salt).await,
+    }?;
 
     let legacy = check_if_legacy_contract(Some(class_hash), address, provider).await?;
 
-    let account_json = prepare_account_json(
-        &private_key,
-        address,
-        false,
-        legacy,
-        account_type,
-        Some(class_hash),
-        Some(salt),
-    );
+    let account = AccountData {
+        private_key: private_key.secret_scalar(),
+        public_key: private_key.verifying_key().scalar(),
+        address: Some(address),
+        deployed: Some(false),
+        legacy: Some(legacy),
+        account_type: Some(account_type.clone()),
+        class_hash: Some(class_hash),
+        salt: Some(salt),
+    };
 
-    Ok((account_json, fee_estimate.overall_fee))
+    Ok((account, fee_estimate.overall_fee))
 }
 
 async fn get_address_and_deployment_fee<T>(
@@ -199,7 +154,7 @@ async fn get_address_and_deployment_fee<T>(
     salt: FieldElement,
 ) -> Result<(FieldElement, FeeEstimate)>
 where
-    T: AccountFactory + Sync,
+    T: starknet::accounts::AccountFactory + Sync,
 {
     let deployment = account_factory.deploy(salt);
     Ok((deployment.address(), get_deployment_fee(&deployment).await?))
@@ -209,7 +164,7 @@ async fn get_deployment_fee<'a, T>(
     account_deployment: &AccountDeployment<'a, T>,
 ) -> Result<FeeEstimate>
 where
-    T: AccountFactory + Sync,
+    T: starknet::accounts::AccountFactory + Sync,
 {
     let fee_estimate = account_deployment.estimate_fee().await;
 
@@ -222,15 +177,10 @@ where
     }
 }
 
-#[allow(clippy::too_many_arguments)]
-fn create_to_keystore(
-    private_key: FieldElement,
-    salt: FieldElement,
-    class_hash: FieldElement,
-    account_type: &AccountType,
+fn write_to_keystore(
+    account_data: &AccountData,
     keystore_path: &Utf8PathBuf,
     account_path: &Utf8PathBuf,
-    legacy: bool,
 ) -> Result<()> {
     if keystore_path.exists() {
         bail!("Keystore file {keystore_path} already exists");
@@ -239,73 +189,10 @@ fn create_to_keystore(
         bail!("Account file {account_path} already exists");
     }
     let password = get_keystore_password(CREATE_KEYSTORE_PASSWORD_ENV_VAR)?;
-    let private_key = SigningKey::from_secret_scalar(private_key);
+    let private_key = SigningKey::from_secret_scalar(account_data.private_key);
     private_key.save_as_keystore(keystore_path, &password)?;
 
-    let account_json = match account_type {
-        AccountType::Oz => {
-            json!({
-                "version": 1,
-                "variant": {
-                    "type": format!("{account_type}"),
-                    "version": 1,
-                    "public_key": format!("{:#x}", private_key.verifying_key().scalar()),
-                    "legacy": legacy,
-                },
-                "deployment": {
-                    "status": "undeployed",
-                    "class_hash": format!("{class_hash:#x}"),
-                    "salt": format!("{salt:#x}"),
-                }
-            })
-        }
-        AccountType::Argent => {
-            json!({
-                "version": 1,
-                "variant": {
-                    "type": format!("{account_type}"),
-                    "version": 1,
-                    "owner": format!("{:#x}", private_key.verifying_key().scalar()),
-                    "guardian": "0x0",
-                },
-                "deployment": {
-                    "status": "undeployed",
-                    "class_hash": format!("{class_hash:#x}"),
-                    "salt": format!("{salt:#x}"),
-                }
-            })
-        }
-        AccountType::Braavos => {
-            json!(
-                {
-                  "version": 1,
-                  "variant": {
-                    "type": format!("{account_type}"),
-                    "version": 1,
-                    "multisig": {
-                      "status": "off"
-                    },
-                    "signers": [
-                      {
-                        "type": "stark",
-                        "public_key": format!("{:#x}", private_key.verifying_key().scalar())
-                      }
-                    ]
-                  },
-                  "deployment": {
-                    "status": "undeployed",
-                    "class_hash": format!("{class_hash:#x}"),
-                    "salt": format!("{salt:#x}"),
-                    "context": {
-                      "variant": "braavos",
-                      "base_account_class_hash": BRAAVOS_BASE_ACCOUNT_CLASS_HASH
-                    }
-                  }
-                }
-            )
-        }
-    };
-
+    let account_json = serde_json::to_value(AccountKeystore::try_from(account_data)?)?;
     write_account_to_file(&account_json, account_path)
 }
 
@@ -313,9 +200,9 @@ fn write_account_to_file(
     account_json: &serde_json::Value,
     account_file: &Utf8PathBuf,
 ) -> Result<()> {
-    std::fs::create_dir_all(account_file.clone().parent().unwrap())?;
+    std::fs::create_dir_all(account_file.parent().unwrap())?;
     std::fs::write(
-        account_file.clone(),
+        account_file,
         serde_json::to_string_pretty(&account_json).unwrap(),
     )?;
     Ok(())

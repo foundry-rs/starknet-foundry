@@ -1,6 +1,6 @@
 use crate::helpers::constants::{
-    ARGENT_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH, DEVNET_OZ_CLASS_HASH_CAIRO_0,
-    DEVNET_OZ_CLASS_HASH_CAIRO_1, URL,
+    ARGENT_ACCOUNT_CLASS_HASH, BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH,
+    DEVNET_OZ_CLASS_HASH_CAIRO_0, DEVNET_OZ_CLASS_HASH_CAIRO_1, URL,
 };
 use crate::helpers::fixtures::{copy_file, default_cli_args};
 use crate::helpers::runner::runner;
@@ -10,10 +10,8 @@ use indoc::indoc;
 use serde_json::{json, to_string_pretty};
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 use snapbox::assert_matches;
-use sncast::helpers::constants::{
-    BRAAVOS_BASE_ACCOUNT_CLASS_HASH, CREATE_KEYSTORE_PASSWORD_ENV_VAR,
-};
-use sncast::AccountType;
+use sncast::helpers::accounts_format::AccountType;
+use sncast::helpers::constants::CREATE_KEYSTORE_PASSWORD_ENV_VAR;
 use std::{env, fs};
 use tempfile::tempdir;
 use test_case::test_case;

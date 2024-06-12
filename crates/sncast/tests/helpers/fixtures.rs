@@ -6,17 +6,16 @@ use camino::{Utf8Path, Utf8PathBuf};
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
 use serde_json::{json, Map, Value};
-use sncast::helpers::braavos::BraavosAccountFactory;
+use sncast::helpers::accounts_format::AccountType;
 use sncast::helpers::constants::{BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH};
+use sncast::helpers::factory::{create_account_factory, AccountFactory};
 use sncast::helpers::scarb_utils::get_package_metadata;
 use sncast::state::state_file::{
     ScriptTransactionEntry, ScriptTransactionOutput, ScriptTransactionStatus,
 };
-use sncast::{apply_optional, get_chain_id, get_keystore_password, AccountType};
+use sncast::{apply_optional, get_chain_id, get_keystore_password};
 use sncast::{get_account, get_provider, parse_number};
-use starknet::accounts::{
-    Account, AccountFactory, ArgentAccountFactory, Call, Execution, OpenZeppelinAccountFactory,
-};
+use starknet::accounts::{Account, Call, Execution};
 use starknet::core::types::TransactionReceipt;
 use starknet::core::types::{FieldElement, InvokeTransactionResult};
 use starknet::core::utils::get_contract_address;
@@ -71,70 +70,71 @@ pub async fn deploy_cairo_0_account() {
 }
 
 pub async fn deploy_argent_account() {
-    let provider = get_provider(URL).expect("Failed to get the provider");
-    let chain_id = get_chain_id(&provider)
-        .await
-        .expect("Failed to get chain id");
-
     let (address, salt, private_key) = get_account_deployment_data("argent");
-
-    let factory = ArgentAccountFactory::new(
-        parse_number(ARGENT_ACCOUNT_CLASS_HASH).expect("Failed to parse class hash"),
-        chain_id,
-        FieldElement::ZERO,
-        LocalWallet::from_signing_key(private_key),
-        provider,
+    deploy_account(
+        AccountType::Argent,
+        address.as_str(),
+        ARGENT_ACCOUNT_CLASS_HASH,
+        salt.as_str(),
+        private_key,
     )
-    .await
-    .expect("Failed to create Account Factory");
-
-    deploy_account_to_devnet(factory, address.as_str(), salt.as_str()).await;
+    .await;
 }
 
 pub async fn deploy_braavos_account() {
-    let provider = get_provider(URL).expect("Failed to get the provider");
-    let chain_id = get_chain_id(&provider)
-        .await
-        .expect("Failed to get chain id");
-
     let (address, salt, private_key) = get_account_deployment_data("braavos");
-
-    let base_class_hash = parse_number(BRAAVOS_BASE_ACCOUNT_CLASS_HASH)
-        .expect("Failed to parse Braavos base class hash");
-    let class_hash = parse_number(BRAAVOS_CLASS_HASH).expect("Failed to parse Braavos class hash");
-
-    let factory = BraavosAccountFactory::new(
-        class_hash,
-        base_class_hash,
-        chain_id,
-        LocalWallet::from_signing_key(private_key),
-        provider,
+    deploy_account(
+        AccountType::Braavos,
+        address.as_str(),
+        BRAAVOS_CLASS_HASH.to_string().as_str(),
+        salt.as_str(),
+        private_key,
     )
-    .await
-    .expect("Failed to create Account Factory");
-
-    deploy_account_to_devnet(factory, address.as_str(), salt.as_str()).await;
+    .await;
 }
 
 async fn deploy_oz_account(address: &str, class_hash: &str, salt: &str, private_key: SigningKey) {
+    deploy_account(AccountType::Oz, address, class_hash, salt, private_key).await;
+}
+
+async fn deploy_account(
+    account_type: AccountType,
+    address: &str,
+    class_hash: &str,
+    salt: &str,
+    private_key: SigningKey,
+) {
     let provider = get_provider(URL).expect("Failed to get the provider");
     let chain_id = get_chain_id(&provider)
         .await
         .expect("Failed to get chain id");
 
-    let factory = OpenZeppelinAccountFactory::new(
+    let factory = create_account_factory(
+        account_type,
         parse_number(class_hash).expect("Failed to parse class hash"),
         chain_id,
         LocalWallet::from_signing_key(private_key),
-        provider,
+        &provider,
     )
     .await
     .expect("Failed to create Account Factory");
 
-    deploy_account_to_devnet(factory, address, salt).await;
+    match factory {
+        AccountFactory::Oz(factory) => deploy_account_to_devnet(factory, address, salt).await,
+        AccountFactory::Argent(factory) => {
+            deploy_account_to_devnet(factory, address, salt).await;
+        }
+        AccountFactory::Braavos(factory) => {
+            deploy_account_to_devnet(factory, address, salt).await;
+        }
+    };
 }
 
-async fn deploy_account_to_devnet<T: AccountFactory + Sync>(factory: T, address: &str, salt: &str) {
+async fn deploy_account_to_devnet<T: starknet::accounts::AccountFactory + Sync>(
+    factory: T,
+    address: &str,
+    salt: &str,
+) {
     mint_token(address, u64::MAX).await;
     factory
         .deploy(parse_number(salt).expect("Failed to parse salt"))
@@ -471,8 +471,7 @@ pub fn get_address_from_keystore(
     )
     .unwrap();
     let class_hash = match account_type {
-        AccountType::Braavos => parse_number(BRAAVOS_BASE_ACCOUNT_CLASS_HASH)
-            .expect("Failed to parse Braavos account class hash"),
+        AccountType::Braavos => BRAAVOS_BASE_ACCOUNT_CLASS_HASH,
         AccountType::Oz | AccountType::Argent => FieldElement::from_hex_be(
             deployment
                 .get("class_hash")

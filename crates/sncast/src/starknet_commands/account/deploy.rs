@@ -4,8 +4,7 @@ use clap::Args;
 use serde_json::Map;
 use sncast::helpers::constants::{BRAAVOS_BASE_ACCOUNT_CLASS_HASH, KEYSTORE_PASSWORD_ENV_VAR};
 use sncast::response::structs::{Felt, InvokeResponse};
-use starknet::accounts::{AccountFactory, OpenZeppelinAccountFactory};
-use starknet::accounts::{AccountFactoryError, ArgentAccountFactory};
+use starknet::accounts::AccountFactoryError;
 use starknet::core::types::BlockTag::Pending;
 use starknet::core::types::{BlockId, FieldElement, StarknetError::ClassHashNotFound};
 use starknet::core::utils::get_contract_address;
@@ -14,11 +13,12 @@ use starknet::providers::ProviderError::StarknetError;
 use starknet::providers::{JsonRpcClient, Provider};
 use starknet::signers::{LocalWallet, SigningKey};
 
-use sncast::helpers::braavos::BraavosAccountFactory;
+use sncast::helpers::accounts_format::AccountType;
+use sncast::helpers::factory::{create_account_factory, AccountFactory};
 use sncast::{
     chain_id_to_network_name, check_account_file_exists, get_account_data_from_accounts_file,
     get_account_data_from_keystore, get_keystore_password, handle_account_factory_error,
-    handle_rpc_error, handle_wait_for_tx, parse_number, AccountType, WaitForTx,
+    handle_rpc_error, handle_wait_for_tx, WaitForTx,
 };
 
 #[derive(Args, Debug)]
@@ -80,10 +80,7 @@ async fn deploy_from_keystore(
 ) -> Result<InvokeResponse> {
     let account_data = get_account_data_from_keystore(account, &keystore_path)?;
 
-    let is_deployed = account_data
-        .deployed
-        .ok_or_else(|| anyhow!("Failed to get status key from account JSON file"))?;
-    if is_deployed {
+    if let Some(true) = account_data.deployed {
         bail!("Account already deployed");
     }
 
@@ -91,17 +88,20 @@ async fn deploy_from_keystore(
         keystore_path,
         get_keystore_password(KEYSTORE_PASSWORD_ENV_VAR)?.as_str(),
     )?;
-    let public_key =
-        parse_number(&account_data.public_key).context("Failed to parse public key")?;
 
-    if public_key != private_key.verifying_key().scalar() {
+    if account_data.public_key != private_key.verifying_key().scalar() {
         bail!("Public key and private key from keystore do not match");
     }
 
-    let salt = account_data.get_salt_as_felt()?;
-
-    let account_type = account_data.get_account_type()?;
-    let class_hash = account_data.get_class_hash_as_felt()?;
+    let salt = account_data
+        .salt
+        .context("Failed to get salt from keystore format")?;
+    let account_type = account_data
+        .account_type
+        .context("Failed to get account type from keystore format")?;
+    let class_hash = account_data
+        .class_hash
+        .context("Failed to get class hash from keystore format")?;
 
     let address = match account_type {
         AccountType::Argent => get_contract_address(
@@ -118,8 +118,7 @@ async fn deploy_from_keystore(
         ),
         AccountType::Braavos => get_contract_address(
             salt,
-            parse_number(BRAAVOS_BASE_ACCOUNT_CLASS_HASH)
-                .expect("Failed to parse Braavos account class hash"),
+            BRAAVOS_BASE_ACCOUNT_CLASS_HASH,
             &[private_key.verifying_key().scalar()],
             chain_id,
         ),
@@ -162,16 +161,20 @@ async fn deploy_from_accounts_file(
 ) -> Result<InvokeResponse> {
     let account_data = get_account_data_from_accounts_file(&name, chain_id, &accounts_file)?;
 
-    let private_key = SigningKey::from_secret_scalar(
-        parse_number(&account_data.private_key).context("Failed to parse private key")?,
-    );
+    let private_key = SigningKey::from_secret_scalar(account_data.private_key);
 
     let result = get_deployment_result(
         provider,
-        account_data.get_account_type()?,
-        account_data.get_class_hash_as_felt()?,
+        account_data
+            .account_type
+            .context("Failed to get account type from accounts file")?,
+        account_data
+            .class_hash
+            .context("Failed to get class hash from accounts file")?,
         private_key,
-        account_data.get_salt_as_felt()?,
+        account_data
+            .salt
+            .context("Failed to get salt from accounts file")?,
         chain_id,
         max_fee,
         wait_config,
@@ -194,109 +197,27 @@ async fn get_deployment_result(
     max_fee: Option<FieldElement>,
     wait_config: WaitForTx,
 ) -> Result<InvokeResponse> {
-    match account_type {
-        AccountType::Argent => {
-            deploy_argent_account(
-                provider,
-                class_hash,
-                private_key,
-                salt,
-                chain_id,
-                max_fee,
-                wait_config,
-            )
-            .await
+    let factory = create_account_factory(
+        account_type,
+        class_hash,
+        chain_id,
+        LocalWallet::from_signing_key(private_key),
+        provider,
+    )
+    .await
+    .context("Failed to create account factory")?;
+
+    match factory {
+        AccountFactory::Oz(factory) => {
+            deploy_account(factory, provider, salt, max_fee, wait_config, class_hash).await
         }
-        AccountType::Oz => {
-            deploy_oz_account(
-                provider,
-                class_hash,
-                private_key,
-                salt,
-                chain_id,
-                max_fee,
-                wait_config,
-            )
-            .await
+        AccountFactory::Argent(factory) => {
+            deploy_account(factory, provider, salt, max_fee, wait_config, class_hash).await
         }
-        AccountType::Braavos => {
-            deploy_braavos_account(
-                provider,
-                class_hash,
-                private_key,
-                salt,
-                chain_id,
-                max_fee,
-                wait_config,
-            )
-            .await
+        AccountFactory::Braavos(factory) => {
+            deploy_account(factory, provider, salt, max_fee, wait_config, class_hash).await
         }
     }
-}
-
-async fn deploy_oz_account(
-    provider: &JsonRpcClient<HttpTransport>,
-    class_hash: FieldElement,
-    private_key: SigningKey,
-    salt: FieldElement,
-    chain_id: FieldElement,
-    max_fee: Option<FieldElement>,
-    wait_config: WaitForTx,
-) -> Result<InvokeResponse> {
-    let factory = OpenZeppelinAccountFactory::new(
-        class_hash,
-        chain_id,
-        LocalWallet::from_signing_key(private_key),
-        provider,
-    )
-    .await?;
-
-    deploy_account(factory, provider, salt, max_fee, wait_config, class_hash).await
-}
-
-async fn deploy_argent_account(
-    provider: &JsonRpcClient<HttpTransport>,
-    class_hash: FieldElement,
-    private_key: SigningKey,
-    salt: FieldElement,
-    chain_id: FieldElement,
-    max_fee: Option<FieldElement>,
-    wait_config: WaitForTx,
-) -> Result<InvokeResponse> {
-    let factory = ArgentAccountFactory::new(
-        class_hash,
-        chain_id,
-        FieldElement::ZERO,
-        LocalWallet::from_signing_key(private_key),
-        provider,
-    )
-    .await?;
-
-    deploy_account(factory, provider, salt, max_fee, wait_config, class_hash).await
-}
-
-async fn deploy_braavos_account(
-    provider: &JsonRpcClient<HttpTransport>,
-    class_hash: FieldElement,
-    private_key: SigningKey,
-    salt: FieldElement,
-    chain_id: FieldElement,
-    max_fee: Option<FieldElement>,
-    wait_config: WaitForTx,
-) -> Result<InvokeResponse> {
-    let base_class_hash = FieldElement::from_hex_be(BRAAVOS_BASE_ACCOUNT_CLASS_HASH)
-        .expect("Failed to parse Braavos base class hash");
-
-    let factory = BraavosAccountFactory::new(
-        class_hash,
-        base_class_hash,
-        chain_id,
-        LocalWallet::from_signing_key(private_key),
-        provider,
-    )
-    .await?;
-
-    deploy_account(factory, provider, salt, max_fee, wait_config, class_hash).await
 }
 
 async fn deploy_account<T>(
@@ -308,7 +229,7 @@ async fn deploy_account<T>(
     class_hash: FieldElement,
 ) -> Result<InvokeResponse>
 where
-    T: AccountFactory + Sync,
+    T: starknet::accounts::AccountFactory + Sync,
 {
     let deployment = account_factory.deploy(salt);
 

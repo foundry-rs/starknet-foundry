@@ -4,14 +4,14 @@ use crate::starknet_commands::account::delete::Delete;
 use crate::starknet_commands::account::deploy::Deploy;
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
-use clap::{Args, Subcommand, ValueEnum};
+use clap::{Args, Subcommand};
 use configuration::{
     find_config_file, load_global_config, search_config_upwards_relative_to, CONFIG_FILENAME,
 };
-use serde_json::json;
+use sncast::helpers::accounts_format::AccountData;
 use sncast::{chain_id_to_network_name, decode_chain_id, helpers::configuration::CastConfig};
-use starknet::{core::types::FieldElement, signers::SigningKey};
-use std::{fmt, fs::OpenOptions, io::Write};
+use starknet::core::types::FieldElement;
+use std::{fs::OpenOptions, io::Write};
 use toml::Value;
 
 pub mod add;
@@ -34,62 +34,14 @@ pub enum Commands {
     Delete(Delete),
 }
 
-#[allow(clippy::doc_markdown)]
-#[derive(ValueEnum, Clone, Debug)]
-pub enum AccountType {
-    /// OpenZeppelin account implementation
-    Oz,
-    /// Argent account implementation
-    Argent,
-    /// Braavos account implementation
-    Braavos,
-}
-
-impl fmt::Display for AccountType {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            AccountType::Oz => write!(f, "open_zeppelin"),
-            AccountType::Argent => write!(f, "argent"),
-            AccountType::Braavos => write!(f, "braavos"),
-        }
-    }
-}
-
-pub fn prepare_account_json(
-    private_key: &SigningKey,
-    address: FieldElement,
-    deployed: bool,
-    legacy: bool,
-    account_type: &AccountType,
-    class_hash: Option<FieldElement>,
-    salt: Option<FieldElement>,
-) -> serde_json::Value {
-    let mut account_json = json!({
-        "private_key": format!("{:#x}", private_key.secret_scalar()),
-        "public_key": format!("{:#x}", private_key.verifying_key().scalar()),
-        "address": format!("{address:#x}"),
-        "type": format!("{account_type}"),
-        "deployed": deployed,
-        "legacy": legacy,
-    });
-
-    if let Some(salt) = salt {
-        account_json["salt"] = serde_json::Value::String(format!("{salt:#x}"));
-    }
-    if let Some(class_hash) = class_hash {
-        account_json["class_hash"] = serde_json::Value::String(format!("{class_hash:#x}"));
-    }
-
-    account_json
-}
-
 #[allow(clippy::too_many_arguments)]
 pub fn write_account_to_accounts_file(
     account: &str,
     accounts_file: &Utf8PathBuf,
     chain_id: FieldElement,
-    account_json: serde_json::Value,
+    account_data: &AccountData,
 ) -> Result<()> {
+    let account_json = serde_json::to_value(account_data)?;
     if !accounts_file.exists() {
         std::fs::create_dir_all(accounts_file.clone().parent().unwrap())?;
         std::fs::write(accounts_file.clone(), "{}")?;

@@ -1,0 +1,11 @@
+{
+    "alpha-sepolia": {
+        "with_wrong_private_key": {
+            "private_key": "key",
+            "public_key": "0x14b491156e96ecf11dace8999b1e5e30888548a581c067b1956b7468bb279b9",
+            "salt": "0x14b6b215424909f34f417ddd7cbaca48de2d505d03c92467367d275e847d252",
+            "address": "0x76e7ce6466e353a00b614ee763f1bc93dba01a57925784a7682efa6b1879c3d",
+            "deployed": true
+        }
+    }
+}

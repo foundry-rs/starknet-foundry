@@ -39,3 +39,6 @@ pub const ARGENT_ACCOUNT_CLASS_HASH: &str =
 
 pub const BRAAVOS_CLASS_HASH: &str =
     "0x816dd0297efc55dc1e7559020a3a825e81ef734b558f03c83325d4da7e6253";
+
+pub const BRAAVOS_BASE_ACCOUNT_CLASS_HASH: &str =
+    "0x13bfe114fb1cf405bfc3a7f8dbe2d91db146c17521d40dcf57e16d6b59fa8e6";

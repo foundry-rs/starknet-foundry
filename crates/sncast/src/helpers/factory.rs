@@ -1,11 +1,53 @@
+use crate::helpers::accounts_format::AccountType;
+use crate::helpers::constants::BRAAVOS_BASE_ACCOUNT_CLASS_HASH;
 use async_trait::async_trait;
+use starknet::accounts::{ArgentAccountFactory, OpenZeppelinAccountFactory};
+use starknet::providers::jsonrpc::HttpTransport;
+use starknet::providers::JsonRpcClient;
+use starknet::signers::LocalWallet;
 use starknet::{
-    accounts::{AccountFactory, PreparedAccountDeployment, RawAccountDeployment},
+    accounts::{PreparedAccountDeployment, RawAccountDeployment},
     core::types::{BlockId, BlockTag, FieldElement},
     providers::Provider,
     signers::Signer,
 };
 use starknet_crypto::poseidon_hash_many;
+
+pub enum AccountFactory<'a> {
+    Oz(OpenZeppelinAccountFactory<LocalWallet, &'a JsonRpcClient<HttpTransport>>),
+    Argent(ArgentAccountFactory<LocalWallet, &'a JsonRpcClient<HttpTransport>>),
+    Braavos(BraavosAccountFactory<LocalWallet, &'a JsonRpcClient<HttpTransport>>),
+}
+
+pub async fn create_account_factory(
+    account_type: AccountType,
+    class_hash: FieldElement,
+    chain_id: FieldElement,
+    signer: LocalWallet,
+    provider: &JsonRpcClient<HttpTransport>,
+) -> anyhow::Result<AccountFactory> {
+    let factory = match account_type {
+        AccountType::Oz => AccountFactory::Oz(
+            OpenZeppelinAccountFactory::new(class_hash, chain_id, signer, provider).await?,
+        ),
+        AccountType::Argent => AccountFactory::Argent(
+            ArgentAccountFactory::new(class_hash, chain_id, FieldElement::ZERO, signer, provider)
+                .await?,
+        ),
+        AccountType::Braavos => AccountFactory::Braavos(
+            BraavosAccountFactory::new(
+                class_hash,
+                BRAAVOS_BASE_ACCOUNT_CLASS_HASH,
+                chain_id,
+                signer,
+                provider,
+            )
+            .await?,
+        ),
+    };
+
+    Ok(factory)
+}
 
 // Adapted from strakli as there is currently no implementation of braavos account factory in starknet-rs
 pub struct BraavosAccountFactory<S, P> {
@@ -48,7 +90,7 @@ where
 }
 
 #[async_trait]
-impl<S, P> AccountFactory for BraavosAccountFactory<S, P>
+impl<S, P> starknet::accounts::AccountFactory for BraavosAccountFactory<S, P>
 where
     S: Signer + Sync + Send,
     P: Provider + Sync + Send,
