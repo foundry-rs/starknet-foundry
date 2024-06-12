@@ -31,14 +31,6 @@ pub enum DeploymentStatus {
     Deployed(DeployedStatus),
 }
 
-pub enum AccountVariantType {
-    OpenZeppelinLegacy,
-    ArgentLegacy,
-    BraavosLegacy,
-    Argent,
-    Braavos,
-    OpenZeppelin,
-}
 
 #[derive(Serialize, Deserialize)]
 pub struct OzAccountConfig {
