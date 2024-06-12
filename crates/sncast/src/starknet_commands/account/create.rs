@@ -15,7 +15,7 @@ use sncast::helpers::constants::{
 use sncast::response::structs::{AccountCreateResponse, Felt};
 use sncast::{
     check_class_hash_exists, check_if_legacy_contract, extract_or_generate_salt, get_chain_id,
-    get_keystore_password, handle_account_factory_error, parse_number,
+    get_keystore_password, handle_account_factory_error,
 };
 use starknet::accounts::{
     AccountDeployment, AccountFactory, ArgentAccountFactory, OpenZeppelinAccountFactory,
@@ -63,26 +63,20 @@ pub async fn create(
     class_hash: Option<FieldElement>,
 ) -> Result<AccountCreateResponse> {
     let salt = extract_or_generate_salt(salt);
-    let class_hash = class_hash.unwrap_or_else(|| match account_type {
-        AccountType::Oz => {
-            FieldElement::from_hex_be(OZ_CLASS_HASH).expect("Failed to parse OZ class hash")
-        }
-        AccountType::Argent => {
-            FieldElement::from_hex_be(ARGENT_CLASS_HASH).expect("Failed to parse Argent class hash")
-        }
-        AccountType::Braavos => FieldElement::from_hex_be(BRAAVOS_CLASS_HASH)
-            .expect("Failed to parse Braavos class hash"),
+    let class_hash = class_hash.unwrap_or(match account_type {
+        AccountType::Oz => OZ_CLASS_HASH,
+        AccountType::Argent => ARGENT_CLASS_HASH,
+        AccountType::Braavos => BRAAVOS_CLASS_HASH,
     });
     check_class_hash_exists(provider, class_hash).await?;
 
     let (account_json, max_fee) =
         generate_account(provider, salt, class_hash, &account_type).await?;
 
-    let address = parse_number(
-        account_json["address"]
-            .as_str()
-            .context("Invalid address")?,
-    )?;
+    let address = account_json["address"]
+        .as_str()
+        .context("Invalid address")?
+        .parse()?;
 
     if let Some(keystore) = keystore.clone() {
         let account_path = Utf8PathBuf::from(&account);
@@ -90,11 +84,10 @@ pub async fn create(
             bail!("Argument `--account` must be passed and be a path when using `--keystore`");
         }
 
-        let private_key = parse_number(
-            account_json["private_key"]
-                .as_str()
-                .context("Invalid private_key")?,
-        )?;
+        let private_key = account_json["private_key"]
+            .as_str()
+            .context("Invalid private_key")?
+            .parse()?;
         let legacy = account_json["legacy"]
             .as_bool()
             .expect("Invalid legacy entry");
@@ -170,11 +163,14 @@ async fn generate_account(
             get_address_and_deployment_fee(factory, salt).await?
         }
         AccountType::Braavos => {
-            let base_class_hash = FieldElement::from_hex_be(BRAAVOS_BASE_ACCOUNT_CLASS_HASH)
-                .expect("Failed to parse Braavos base class hash");
-            let factory =
-                BraavosAccountFactory::new(class_hash, base_class_hash, chain_id, signer, provider)
-                    .await?;
+            let factory = BraavosAccountFactory::new(
+                class_hash,
+                BRAAVOS_BASE_ACCOUNT_CLASS_HASH,
+                chain_id,
+                signer,
+                provider,
+            )
+            .await?;
             get_address_and_deployment_fee(factory, salt).await?
         }
     };

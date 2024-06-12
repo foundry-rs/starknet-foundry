@@ -18,7 +18,7 @@ use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::{
     chain_id_to_network_name, check_account_file_exists, get_account_data_from_accounts_file,
     get_account_data_from_keystore, get_keystore_password, handle_account_factory_error,
-    handle_rpc_error, handle_wait_for_tx, parse_number, AccountType, WaitForTx,
+    handle_rpc_error, handle_wait_for_tx, AccountType, WaitForTx,
 };
 
 #[derive(Args, Debug)]
@@ -91,8 +91,10 @@ async fn deploy_from_keystore(
         keystore_path,
         get_keystore_password(KEYSTORE_PASSWORD_ENV_VAR)?.as_str(),
     )?;
-    let public_key =
-        parse_number(&account_data.public_key).context("Failed to parse public key")?;
+    let public_key: FieldElement = account_data
+        .public_key
+        .parse()
+        .context("Failed to parse public key")?;
 
     if public_key != private_key.verifying_key().scalar() {
         bail!("Public key and private key from keystore do not match");
@@ -118,8 +120,7 @@ async fn deploy_from_keystore(
         ),
         AccountType::Braavos => get_contract_address(
             salt,
-            parse_number(BRAAVOS_BASE_ACCOUNT_CLASS_HASH)
-                .expect("Failed to parse Braavos account class hash"),
+            BRAAVOS_BASE_ACCOUNT_CLASS_HASH,
             &[private_key.verifying_key().scalar()],
             chain_id,
         ),
@@ -163,7 +164,10 @@ async fn deploy_from_accounts_file(
     let account_data = get_account_data_from_accounts_file(&name, chain_id, &accounts_file)?;
 
     let private_key = SigningKey::from_secret_scalar(
-        parse_number(&account_data.private_key).context("Failed to parse private key")?,
+        account_data
+            .private_key
+            .parse()
+            .context("Failed to parse private key")?,
     );
 
     let result = get_deployment_result(
@@ -284,12 +288,9 @@ async fn deploy_braavos_account(
     max_fee: Option<FieldElement>,
     wait_config: WaitForTx,
 ) -> Result<InvokeResponse> {
-    let base_class_hash = FieldElement::from_hex_be(BRAAVOS_BASE_ACCOUNT_CLASS_HASH)
-        .expect("Failed to parse Braavos base class hash");
-
     let factory = BraavosAccountFactory::new(
         class_hash,
-        base_class_hash,
+        BRAAVOS_BASE_ACCOUNT_CLASS_HASH,
         chain_id,
         LocalWallet::from_signing_key(private_key),
         provider,
