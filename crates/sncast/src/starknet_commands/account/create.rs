@@ -4,7 +4,6 @@ use crate::starknet_commands::account::{
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
-use sncast::helpers::accounts_format;
 use sncast::helpers::accounts_format::{AccountData, AccountKeystore, AccountType};
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{
@@ -26,7 +25,7 @@ use starknet::signers::{LocalWallet, SigningKey};
 #[command(about = "Create an account with all important secrets")]
 pub struct Create {
     /// Type of the account
-    #[clap(value_enum, short = 't', long = "type", default_value_t = accounts_format::AccountType::Oz)]
+    #[clap(value_enum, short = 't', long = "type", default_value_t = AccountType::Oz)]
     pub account_type: AccountType,
 
     /// Account name under which account information is going to be saved

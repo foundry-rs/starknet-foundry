@@ -1,14 +1,14 @@
 use crate::helpers::accounts_format::AccountType;
 use crate::helpers::constants::BRAAVOS_BASE_ACCOUNT_CLASS_HASH;
 use async_trait::async_trait;
-use starknet::accounts::{ArgentAccountFactory, OpenZeppelinAccountFactory};
-use starknet::providers::jsonrpc::HttpTransport;
-use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
 use starknet::{
-    accounts::{PreparedAccountDeployment, RawAccountDeployment},
+    accounts::{
+        ArgentAccountFactory, OpenZeppelinAccountFactory, PreparedAccountDeployment,
+        RawAccountDeployment,
+    },
     core::types::{BlockId, BlockTag, FieldElement},
-    providers::Provider,
+    providers::{jsonrpc::HttpTransport, JsonRpcClient, Provider},
     signers::Signer,
 };
 use starknet_crypto::poseidon_hash_many;

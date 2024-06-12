@@ -31,7 +31,6 @@ pub enum DeploymentStatus {
     Deployed(DeployedStatus),
 }
 
-
 #[derive(Serialize, Deserialize)]
 pub struct OzAccountConfig {
     pub version: u64,
