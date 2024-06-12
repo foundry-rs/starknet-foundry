@@ -5,7 +5,7 @@ use cairo_lang_runner::short_string::as_cairo_short_string_ex;
 use cairo_lang_utils::byte_array::{BYTES_IN_WORD, BYTE_ARRAY_MAGIC};
 use cairo_serde_macros::{CairoDeserialize, CairoSerialize};
 
-#[derive(CairoDeserialize, CairoSerialize, Clone)]
+#[derive(CairoDeserialize, CairoSerialize, Clone, Debug, PartialEq)]
 pub struct ByteArray {
     words: Vec<Felt252>,
     pending_word: Felt252,
