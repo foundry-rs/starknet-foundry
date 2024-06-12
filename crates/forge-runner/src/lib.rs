@@ -8,9 +8,9 @@ use build_trace_data::save_trace_data;
 use cairo_lang_sierra::ids::ConcreteTypeId;
 use cairo_lang_sierra::program::Function;
 use camino::Utf8Path;
+use cheatnet::runtime_extensions::forge_config_extension::config::RawFuzzerConfig;
 use futures::stream::FuturesUnordered;
 use futures::StreamExt;
-use package_tests::raw::RawFuzzerConfig;
 use package_tests::with_config_resolved::{
     TestCaseWithResolvedConfig, TestTargetWithResolvedConfig,
 };
@@ -33,7 +33,7 @@ pub mod test_target_summary;
 mod fuzzer;
 mod gas;
 pub mod printing;
-mod running;
+pub mod running;
 
 pub const CACHE_DIR: &str = ".snfoundry_cache";
 
@@ -87,7 +87,7 @@ pub fn maybe_save_versioned_program(
 
     let maybe_versioned_program_path = if save_versioned_program {
         Some(VersionedProgramPath::save_versioned_program(
-            &test_target.sierra_program.clone().into(),
+            &test_target.sierra_program.program.clone().into_artifact(),
             test_target.tests_location,
             versioned_programs_dir,
             package_name,
@@ -161,10 +161,10 @@ fn run_with_fuzzing(
             .collect::<Result<Vec<_>>>()?;
 
         let (fuzzer_runs, fuzzer_seed) = match case.config.fuzzer_config {
-            Some(RawFuzzerConfig {
-                fuzzer_runs,
-                fuzzer_seed,
-            }) => (fuzzer_runs, fuzzer_seed),
+            Some(RawFuzzerConfig { runs, seed }) => (
+                runs.unwrap_or(test_runner_config.fuzzer_runs),
+                seed.unwrap_or(test_runner_config.fuzzer_seed),
+            ),
             _ => (
                 test_runner_config.fuzzer_runs,
                 test_runner_config.fuzzer_seed,
