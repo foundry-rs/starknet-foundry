@@ -77,7 +77,10 @@ async fn test_get_account_invalid_file() {
     )
     .await;
     let err = account.unwrap_err();
-    assert!(err.is::<serde_json::Error>());
+    assert!(err
+        .to_string()
+        .contains("Failed to parse file = tests/data/accounts/invalid_format.json to JSON: expected `,` or `}` at line 8 column 9")
+    );
 }
 
 #[tokio::test]
@@ -116,40 +119,16 @@ async fn test_get_account_no_user_for_network() {
 async fn test_get_account_failed_to_convert_field_elements() {
     let provider = create_test_provider();
     let account1 = get_account(
-        "with_wrong_private_key",
-        &Utf8PathBuf::from("tests/data/accounts/faulty_accounts.json"),
+        "with_invalid_private_key",
+        &Utf8PathBuf::from("tests/data/accounts/faulty_accounts_invalid_felt.json"),
         &provider,
         None,
     )
     .await;
-    let err1 = account1.unwrap_err();
-    assert!(err1
-        .to_string()
-        .contains("Failed to convert private key to FieldElement"));
-
-    let account2 = get_account(
-        "with_wrong_address",
-        &Utf8PathBuf::from("tests/data/accounts/faulty_accounts.json"),
-        &provider,
-        None,
-    )
-    .await;
-    let err2 = account2.unwrap_err();
-    assert!(err2
-        .to_string()
-        .contains("Failed to convert address = address to FieldElement"));
-
-    let account3 = get_account(
-        "with_wrong_class_hash",
-        &Utf8PathBuf::from("tests/data/accounts/faulty_accounts.json"),
-        &provider,
-        None,
-    )
-    .await;
-    let err3 = account3.unwrap_err();
-    assert!(err3
-        .to_string()
-        .contains("Failed to convert class hash = class_hash to FieldElement"));
+    let err = account1.unwrap_err();
+    assert!(err.to_string().contains(
+        "Failed to parse file = tests/data/accounts/faulty_accounts_invalid_felt.json to JSON: invalid character at line 4 column 40"
+    ));
 }
 
 // TODO (#1690): Move this test to the shared crate and execute it for a real node

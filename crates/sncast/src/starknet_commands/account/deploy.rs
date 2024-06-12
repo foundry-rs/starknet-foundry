@@ -91,17 +91,22 @@ async fn deploy_from_keystore(
         keystore_path,
         get_keystore_password(KEYSTORE_PASSWORD_ENV_VAR)?.as_str(),
     )?;
-    let public_key =
-        parse_number(&account_data.public_key).context("Failed to parse public key")?;
+    let public_key = account_data.public_key;
 
     if public_key != private_key.verifying_key().scalar() {
         bail!("Public key and private key from keystore do not match");
     }
 
-    let salt = account_data.get_salt_as_felt()?;
+    let salt = account_data
+        .salt
+        .context("Failed to get salt from keystore")?;
 
-    let account_type = account_data.get_account_type()?;
-    let class_hash = account_data.get_class_hash_as_felt()?;
+    let account_type = account_data
+        .account_type
+        .context("Failed to get account type from keystore")?;
+    let class_hash = account_data
+        .class_hash
+        .context("Failed to get class hash from keystore")?;
 
     let address = match account_type {
         AccountType::Argent => get_contract_address(
@@ -162,16 +167,20 @@ async fn deploy_from_accounts_file(
 ) -> Result<InvokeResponse> {
     let account_data = get_account_data_from_accounts_file(&name, chain_id, &accounts_file)?;
 
-    let private_key = SigningKey::from_secret_scalar(
-        parse_number(&account_data.private_key).context("Failed to parse private key")?,
-    );
+    let private_key = SigningKey::from_secret_scalar(account_data.private_key);
 
     let result = get_deployment_result(
         provider,
-        account_data.get_account_type()?,
-        account_data.get_class_hash_as_felt()?,
+        account_data
+            .account_type
+            .context("Failed to get account type from accounts file")?,
+        account_data
+            .class_hash
+            .context("Failed to get class hash from accounts file")?,
         private_key,
-        account_data.get_salt_as_felt()?,
+        account_data
+            .salt
+            .context("Failed to get salt from accounts file")?,
         chain_id,
         max_fee,
         wait_config,
