@@ -1,5 +1,4 @@
 use anyhow::{bail, Result};
-use forge_runner::package_tests::raw::RawForkParams;
 use itertools::Itertools;
 use serde::Deserialize;
 use std::{
@@ -31,24 +30,21 @@ pub struct ForgeConfigFromScarb {
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct ForkTarget {
-    name: String,
-    params: RawForkParams,
+    pub name: String,
+    pub url: String,
+    pub block_id_type: String,
+    pub block_id_value: String,
 }
 
 impl ForkTarget {
     #[must_use]
-    pub fn new(name: String, params: RawForkParams) -> Self {
-        Self { name, params }
-    }
-
-    #[must_use]
-    pub fn name(&self) -> &str {
-        &self.name
-    }
-
-    #[must_use]
-    pub fn params(&self) -> &RawForkParams {
-        &self.params
+    pub fn new(name: String, url: String, block_id_type: String, block_id_value: String) -> Self {
+        Self {
+            name,
+            url,
+            block_id_type,
+            block_id_value,
+        }
     }
 }
 
@@ -128,11 +124,9 @@ impl TryFrom<RawForgeConfig> for ForgeConfigFromScarb {
 
             fork_targets.push(ForkTarget::new(
                 raw_fork_target.name,
-                RawForkParams {
-                    url: raw_fork_target.url,
-                    block_id_type: block_id_type.to_string(),
-                    block_id_value: block_id_value.clone(),
-                },
+                raw_fork_target.url,
+                block_id_type.to_string(),
+                block_id_value.clone(),
             ));
         }
 
