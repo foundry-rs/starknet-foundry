@@ -38,6 +38,7 @@ use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
 use universal_sierra_compiler_api::AssembledProgramWithDebugInfo;
 
+pub mod config_run;
 mod helpers;
 
 #[must_use]
