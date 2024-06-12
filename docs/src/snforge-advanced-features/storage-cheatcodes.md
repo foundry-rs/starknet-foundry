@@ -7,7 +7,8 @@ which allow manipulating the storage directly (reading and writing).
 In order to obtain the variable address that you'd like to write to, or read from, you need to use either:
 - `selector!` macro - if the variable is not a mapping
 - `map_entry_address` function in tandem with `selector!` - for key-value pair of a map variable
-
+- `starknet::storage_access::storage_address_from_base`
+  
 ## Example: Felt-only storage
 This example uses only felts for simplicity
 
@@ -160,4 +161,43 @@ fn store_in_complex_mapping() {
 > The `load` cheatcode will return zeros for memory you haven't written into yet (it is a default storage value for Starknet contracts' storage).
 
 
+## Example with `storage_address_from_base`
+
+This example uses `storage_address_from_base` with `address` function of the [storage variable](https://book.cairo-lang.org/ch14-01-contract-storage.html#addresses-of-storage-variables).
+
+To retrieve storage address of a given `field`, you need to import `{field_name}ContractMemberStateTrait` from the contract.
+
+```rust
+#[starknet::contract]
+mod Contract {
+    #[storage]
+    struct Storage {
+        map: LegacyMap::<(u8, u32), u32>,
+    }
+}
+
+// ...
+use starknet::storage_access::storage_address_from_base;
+use snforge_std::{ store, load };
+use Contract::mapContractMemberStateTrait;
+
+#[test]
+fn update_mapping() {
+    let key = (1_u8, 10_u32);
+    let data = 42_u32;
+
+    // ...
+    let mut state = Contract::contract_state_for_testing();
+    let storage_address: felt252 = storage_address_from_base(
+        state.map.address(key)
+    )
+    .into();
+    let storage_value: Span<felt252> = array![data.into()].span();
+    store(contract_address, storage_address, storage_value);
+
+    let read_data: u32 = load(contract_address, storage_address, 1).at(0).try_into().unwrap():
+    assert_eq!(read_data, data, "Storage update failed")
+}
+
+```
 

@@ -106,10 +106,7 @@ jobs:
       - uses: software-mansion/setup-scarb@v1.3.2
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - name: Run tests
-        env:
-          NODE_URL: ${{ secrets.NODE_URL }}
-        run: |
-          SEPOLIA_RPC_URL="${NODE_URL}:7070/rpc/v0_7" cargo test --release -p sncast
+        run: cargo test --release -p sncast
 
   test-conversions:
     name: Test Conversions
