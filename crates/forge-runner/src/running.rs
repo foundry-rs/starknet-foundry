@@ -40,6 +40,7 @@ use universal_sierra_compiler_api::AssembledProgramWithDebugInfo;
 
 pub mod config_run;
 mod helpers;
+pub mod with_config;
 
 #[must_use]
 pub fn run_test(
