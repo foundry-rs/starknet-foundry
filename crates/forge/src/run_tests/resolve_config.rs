@@ -1,7 +1,9 @@
 use crate::{block_number_map::BlockNumberMap, scarb::config::ForkTarget};
 use anyhow::{anyhow, Result};
+use cheatnet::runtime_extensions::forge_config_extension::config::{
+    BlockId, InlineForkConfig, RawForkConfig,
+};
 use forge_runner::package_tests::{
-    raw::{RawForkConfig, RawForkParams},
     with_config::TestTargetWithConfig,
     with_config_resolved::{
         ResolvedForkConfig, TestCaseResolvedConfig, TestCaseWithResolvedConfig,
@@ -10,7 +12,6 @@ use forge_runner::package_tests::{
 };
 use num_bigint::BigInt;
 use starknet_api::block::BlockNumber;
-use url::Url;
 
 pub async fn resolve_config(
     test_target: TestTargetWithConfig,
@@ -28,7 +29,7 @@ pub async fn resolve_config(
                 ignored: case.config.ignored,
                 expected_result: case.config.expected_result,
                 fork_config: resolve_fork_config(
-                    &case.config.fork_config,
+                    case.config.fork_config,
                     block_number_map,
                     fork_targets,
                 )
@@ -41,12 +42,13 @@ pub async fn resolve_config(
     Ok(TestTargetWithResolvedConfig {
         tests_location: test_target.tests_location,
         sierra_program: test_target.sierra_program,
+        casm_program: test_target.casm_program,
         test_cases,
     })
 }
 
 async fn resolve_fork_config(
-    fork_config: &Option<RawForkConfig>,
+    fork_config: Option<RawForkConfig>,
     block_number_map: &mut BlockNumberMap,
     fork_targets: &[ForkTarget],
 ) -> Result<Option<ResolvedForkConfig>> {
@@ -56,45 +58,68 @@ async fn resolve_fork_config(
 
     let raw_fork_params = replace_id_with_params(fc, fork_targets)?;
 
-    let url: Url = raw_fork_params.url.parse()?;
+    let url = raw_fork_params.url;
 
-    let block_number = match raw_fork_params.block_id_type.to_lowercase().as_str() {
-        "number" => BlockNumber(raw_fork_params.block_id_value.parse()?),
-        "hash" => {
-            let block_hash = raw_fork_params.block_id_value.parse::<BigInt>()?;
-
+    let block_number = match raw_fork_params.block {
+        BlockId::BlockNumber(block_number) => BlockNumber(block_number),
+        BlockId::BlockHash(hash) => {
             block_number_map
-                .get_block_number_for_hash(url.clone(), block_hash.into())
+                .get_block_number_for_hash(url.clone(), hash)
                 .await?
         }
-        "tag" => {
-            assert_eq!(raw_fork_params.block_id_value, "Latest");
-
+        BlockId::BlockTag => {
             block_number_map
                 .get_latest_block_number(url.clone())
                 .await?
         }
-        _ => panic!(),
     };
 
     Ok(Some(ResolvedForkConfig { url, block_number }))
 }
 
-fn replace_id_with_params<'a>(
-    raw_fork_config: &'a RawForkConfig,
-    fork_targets: &'a [ForkTarget],
-) -> Result<&'a RawForkParams> {
+fn parse_block_id(fork_target: &ForkTarget) -> Result<BlockId> {
+    let block_id = match fork_target.block_id_type.as_str() {
+        "number" => BlockId::BlockNumber(fork_target.block_id_value.parse()?),
+        "hash" => {
+            let block_hash = fork_target.block_id_value.parse::<BigInt>()?;
+
+            BlockId::BlockHash(block_hash.into())
+        }
+        "tag" => {
+            if fork_target.block_id_value == "Latest" {
+                BlockId::BlockTag
+            } else {
+                Err(anyhow!(r#"block tag must be "Latest""#))?
+            }
+        }
+        _ => Err(anyhow!("block_id must be one of (number | hash | tag)"))?,
+    };
+
+    Ok(block_id)
+}
+
+fn replace_id_with_params(
+    raw_fork_config: RawForkConfig,
+    fork_targets: &[ForkTarget],
+) -> Result<InlineForkConfig> {
     match raw_fork_config {
-        RawForkConfig::Params(raw_fork_params) => Ok(raw_fork_params),
-        RawForkConfig::Id(name) => {
+        RawForkConfig::Inline(raw_fork_params) => Ok(raw_fork_params),
+        RawForkConfig::Named(name) => {
             let fork_target_from_runner_config = fork_targets
                 .iter()
-                .find(|fork| fork.name() == name)
+                .find(|fork| fork.name == String::from(name.clone()))
                 .ok_or_else(|| {
+                    let name = String::from(name);
+
                     anyhow!("Fork configuration named = {name} not found in the Scarb.toml")
                 })?;
 
-            Ok(fork_target_from_runner_config.params())
+            let block_id = parse_block_id(fork_target_from_runner_config)?;
+
+            Ok(InlineForkConfig {
+                url: fork_target_from_runner_config.url.parse()?,
+                block: block_id,
+            })
         }
     }
 }
