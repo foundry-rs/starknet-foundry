@@ -2,9 +2,12 @@ use crate::scarb::config::{ForgeConfigFromScarb, RawForgeConfig};
 use anyhow::{Context, Result};
 use camino::Utf8Path;
 use configuration::PackageConfig;
-use forge_runner::package_tests::raw::TestTargetRaw;
+use forge_runner::package_tests::raw::{TestCompilation, TestTargetRaw};
+use forge_runner::package_tests::TestTargetLocation;
 use scarb_api::ScarbCommand;
 use scarb_ui::args::PackagesFilter;
+use std::fs::read_to_string;
+use std::io::ErrorKind;
 
 pub mod config;
 
@@ -36,7 +39,8 @@ pub fn build_contracts_with_scarb(filter: PackagesFilter) -> Result<()> {
 
 pub fn build_test_artifacts_with_scarb(filter: PackagesFilter) -> Result<()> {
     ScarbCommand::new_with_stdio()
-        .arg("snforge-test-collector")
+        .arg("build")
+        .arg("--test")
         .packages_filter(filter)
         .run()
         .context("Failed to build test artifacts with Scarb")?;
@@ -44,15 +48,41 @@ pub fn build_test_artifacts_with_scarb(filter: PackagesFilter) -> Result<()> {
 }
 
 pub fn load_test_artifacts(
-    snforge_target_dir_path: &Utf8Path,
+    target_dir: &Utf8Path,
     package_name: &str,
 ) -> Result<Vec<TestTargetRaw>> {
-    let test_artifacts_path =
-        snforge_target_dir_path.join(format!("{package_name}.snforge_sierra.json"));
+    let maybe_read_file = |file: String, tests_location| -> Result<Option<TestTargetRaw>> {
+        match read_to_string(target_dir.join(file)) {
+            Ok(value) => {
+                let test_compilation = serde_json::from_str::<TestCompilation>(&value)?;
 
-    Ok(serde_json::from_str::<Vec<TestTargetRaw>>(
-        &std::fs::read_to_string(test_artifacts_path)?,
-    )?)
+                let test_target = TestTargetRaw {
+                    sierra_program: test_compilation.sierra_program,
+                    tests_location,
+                };
+
+                Ok(Some(test_target))
+            }
+            Err(err) if err.kind() == ErrorKind::NotFound => Ok(None),
+            Err(err) => Err(err)?,
+        }
+    };
+
+    let targets = [
+        maybe_read_file(
+            format!("{package_name}_unittest.test.json"),
+            TestTargetLocation::Lib,
+        )?,
+        maybe_read_file(
+            format!("{package_name}_integrationtest.test.json"),
+            TestTargetLocation::Tests,
+        )?,
+    ]
+    .into_iter()
+    .flatten()
+    .collect();
+
+    Ok(targets)
 }
 
 #[cfg(test)]

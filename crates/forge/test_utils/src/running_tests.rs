@@ -16,22 +16,19 @@ use forge_runner::{
     build_trace_data::test_sierra_program_path::VERSIONED_PROGRAMS_DIR,
     package_tests::raw::TestTargetRaw,
 };
+use scarb_api::ScarbCommand;
 use shared::command::CommandExt;
 use std::num::NonZeroU32;
-use std::process::Command;
-use std::process::Stdio;
 use std::sync::Arc;
 use tempfile::tempdir;
 use tokio::runtime::Runtime;
 
 #[must_use]
 pub fn run_test_case(test: &TestCase) -> Vec<TestTargetSummary> {
-    Command::new("scarb")
-        .current_dir(test.path().unwrap())
-        .arg("snforge-test-collector")
-        .stdout(Stdio::inherit())
-        .stderr(Stdio::inherit())
-        .output_checked()
+    ScarbCommand::new_with_stdio()
+        .arg("build")
+        .arg("--test")
+        .run()
         .unwrap();
 
     let rt = Runtime::new().expect("Could not instantiate Runtime");

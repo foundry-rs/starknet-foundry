@@ -112,17 +112,15 @@ fn fork_aliased_decorator() {
 
     Command::new("scarb")
         .current_dir(test.path().unwrap())
-        .arg("snforge-test-collector")
+        .arg("build")
+        .arg("--test")
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit())
         .output_checked()
         .unwrap();
 
-    let raw_test_targets = load_test_artifacts(
-        &test.path().unwrap().join("target/dev/snforge"),
-        "test_package",
-    )
-    .unwrap();
+    let raw_test_targets =
+        load_test_artifacts(&test.path().unwrap().join("target/dev"), "test_package").unwrap();
 
     let result = rt
         .block_on(run_for_package(

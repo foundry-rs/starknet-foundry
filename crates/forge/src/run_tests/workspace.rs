@@ -32,9 +32,8 @@ pub async fn run_for_workspace(args: TestArgs) -> Result<ExitStatus> {
     let scarb_metadata = ScarbCommand::metadata().inherit_stderr().run()?;
     warn_if_snforge_std_not_compatible(&scarb_metadata)?;
 
-    let snforge_target_dir_path = target_dir_for_workspace(&scarb_metadata)
-        .join(&scarb_metadata.current_profile)
-        .join("snforge");
+    let snforge_target_dir_path =
+        target_dir_for_workspace(&scarb_metadata).join(&scarb_metadata.current_profile);
 
     let packages: Vec<PackageMetadata> = args
         .packages_filter
