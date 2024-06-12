@@ -122,7 +122,7 @@ impl<'a> TestCase {
         let dir = tempdir_with_tool_versions()?;
         let test_file = dir.child(Self::TEST_PATH);
         test_file.touch()?;
-        test_file.write_str(test_code)?;
+        test_file.write_str(&format!("#[cfg(test)] mod tests {{{test_code}}}"))?;
 
         dir.child("src/lib.cairo").touch().unwrap();
 

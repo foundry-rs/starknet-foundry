@@ -127,42 +127,40 @@ fn replace_id_with_params(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use cairo_lang_sierra::program::{ProgramArtifact, Version, VersionedProgram};
     use cairo_lang_sierra::{ids::GenericTypeId, program::Program};
-    use forge_runner::package_tests::raw::{RawForkParams, TestCaseRaw, TestTargetRaw};
+    use forge_runner::package_tests::raw::{DebugInfo, ProgramArtifact};
+    use forge_runner::package_tests::with_config::{TestCaseConfig, TestCaseWithConfig};
     use forge_runner::package_tests::TestTargetLocation;
     use forge_runner::{expected_result::ExpectedTestResult, package_tests::TestDetails};
+    use std::sync::Arc;
+    use universal_sierra_compiler_api::compile_sierra_to_casm;
 
-    fn program_for_testing() -> VersionedProgram {
-        VersionedProgram::V1 {
-            version: Version::<1>,
-            program: ProgramArtifact {
-                program: Program {
-                    type_declarations: vec![],
-                    libfunc_declarations: vec![],
-                    statements: vec![],
-                    funcs: vec![],
-                },
-                debug_info: None,
+    fn program_for_testing() -> ProgramArtifact {
+        ProgramArtifact {
+            program: Program {
+                type_declarations: vec![],
+                libfunc_declarations: vec![],
+                statements: vec![],
+                funcs: vec![],
             },
+            debug_info: DebugInfo::default(),
         }
     }
 
     #[tokio::test]
     async fn to_runnable_unparsable_url() {
-        let mocked_tests = TestTargetRaw {
+        let mocked_tests = TestTargetWithConfig {
             sierra_program: program_for_testing(),
-            test_cases: vec![TestCaseRaw {
+            casm_program: Arc::new(compile_sierra_to_casm(&program_for_testing().program).unwrap()),
+            test_cases: vec![TestCaseWithConfig {
                 name: "crate1::do_thing".to_string(),
-                available_gas: None,
-                ignored: false,
-                expected_result: ExpectedTestResult::Success,
-                fork_config: Some(RawForkConfig::Params(RawForkParams {
-                    url: "unparsable_url".to_string(),
-                    block_id_type: "Tag".to_string(),
-                    block_id_value: "Latest".to_string(),
-                })),
-                fuzzer_config: None,
+                config: TestCaseConfig {
+                    available_gas: None,
+                    ignored: false,
+                    expected_result: ExpectedTestResult::Success,
+                    fork_config: Some(RawForkConfig::Named("SOME_NAME".into())),
+                    fuzzer_config: None,
+                },
                 test_details: TestDetails {
                     sierra_entry_point_statement_idx: 100,
                     parameter_types: vec![
@@ -180,8 +178,13 @@ mod tests {
         };
 
         assert!(resolve_config(
-            mocked_tests.with_config(),
-            &[],
+            mocked_tests,
+            &[ForkTarget {
+                name: "SOME_NAME".to_string(),
+                url: "unparsable_url".to_string(),
+                block_id_type: "Tag".to_string(),
+                block_id_value: "Latest".to_string(),
+            }],
             &mut BlockNumberMap::default()
         )
         .await
@@ -190,15 +193,18 @@ mod tests {
 
     #[tokio::test]
     async fn to_runnable_non_existent_id() {
-        let mocked_tests = TestTargetRaw {
+        let mocked_tests = TestTargetWithConfig {
             sierra_program: program_for_testing(),
-            test_cases: vec![TestCaseRaw {
+            casm_program: Arc::new(compile_sierra_to_casm(&program_for_testing().program).unwrap()),
+            test_cases: vec![TestCaseWithConfig {
                 name: "crate1::do_thing".to_string(),
-                available_gas: None,
-                ignored: false,
-                expected_result: ExpectedTestResult::Success,
-                fork_config: Some(RawForkConfig::Id("non_existent".to_string())),
-                fuzzer_config: None,
+                config: TestCaseConfig {
+                    available_gas: None,
+                    ignored: false,
+                    expected_result: ExpectedTestResult::Success,
+                    fork_config: Some(RawForkConfig::Named("non_existent".into())),
+                    fuzzer_config: None,
+                },
                 test_details: TestDetails {
                     sierra_entry_point_statement_idx: 100,
                     parameter_types: vec![
@@ -216,14 +222,12 @@ mod tests {
         };
 
         assert!(resolve_config(
-            mocked_tests.with_config(),
+            mocked_tests,
             &[ForkTarget::new(
                 "definitely_non_existing".to_string(),
-                RawForkParams {
-                    url: "https://not_taken.com".to_string(),
-                    block_id_type: "Number".to_string(),
-                    block_id_value: "120".to_string(),
-                },
+                "https://not_taken.com".to_string(),
+                "Number".to_string(),
+                "120".to_string(),
             )],
             &mut BlockNumberMap::default()
         )

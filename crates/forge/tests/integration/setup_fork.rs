@@ -20,8 +20,6 @@ use forge_runner::build_trace_data::test_sierra_program_path::VERSIONED_PROGRAMS
 use forge_runner::forge_config::{
     ExecutionDataToSave, ForgeConfig, OutputConfig, TestRunnerConfig,
 };
-use forge_runner::package_tests::raw::RawForkParams;
-use forge_runner::package_tests::raw::TestTargetRaw;
 use forge_runner::CACHE_DIR;
 use shared::command::CommandExt;
 use shared::test_utils::node_url::node_rpc_url;
@@ -125,10 +123,7 @@ fn fork_aliased_decorator() {
     let result = rt
         .block_on(run_for_package(
             RunForPackageArgs {
-                test_targets: raw_test_targets
-                    .into_iter()
-                    .map(TestTargetRaw::with_config)
-                    .collect(),
+                test_targets: raw_test_targets,
                 package_name: "test_package".to_string(),
                 tests_filter: TestsFilter::from_flags(
                     None,
@@ -163,11 +158,9 @@ fn fork_aliased_decorator() {
                 }),
                 fork_targets: vec![ForkTarget::new(
                     "FORK_NAME_FROM_SCARB_TOML".to_string(),
-                    RawForkParams {
-                        url: node_rpc_url().to_string(),
-                        block_id_type: "Tag".to_string(),
-                        block_id_value: "Latest".to_string(),
-                    },
+                    node_rpc_url().to_string(),
+                    "Tag".to_string(),
+                    "Latest".to_string(),
                 )],
             },
             &mut BlockNumberMap::default(),

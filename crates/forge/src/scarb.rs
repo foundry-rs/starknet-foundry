@@ -93,7 +93,6 @@ mod tests {
     use assert_fs::TempDir;
     use camino::Utf8PathBuf;
     use configuration::load_package_config;
-    use forge_runner::package_tests::raw::RawForkParams;
     use indoc::{formatdoc, indoc};
     use scarb_api::metadata::MetadataCommandExt;
     use scarb_metadata::PackageId;
@@ -173,27 +172,21 @@ mod tests {
                 fork: vec![
                     ForkTarget::new(
                         "FIRST_FORK_NAME".to_string(),
-                        RawForkParams {
-                            url: "http://some.rpc.url".to_string(),
-                            block_id_type: "number".to_string(),
-                            block_id_value: "1".to_string(),
-                        },
+                        "http://some.rpc.url".to_string(),
+                        "number".to_string(),
+                        "1".to_string(),
                     ),
                     ForkTarget::new(
                         "SECOND_FORK_NAME".to_string(),
-                        RawForkParams {
-                            url: "http://some.rpc.url".to_string(),
-                            block_id_type: "hash".to_string(),
-                            block_id_value: "1".to_string(),
-                        },
+                        "http://some.rpc.url".to_string(),
+                        "hash".to_string(),
+                        "1".to_string(),
                     ),
                     ForkTarget::new(
                         "THIRD_FORK_NAME".to_string(),
-                        RawForkParams {
-                            url: "http://some.rpc.url".to_string(),
-                            block_id_type: "tag".to_string(),
-                            block_id_value: "Latest".to_string(),
-                        },
+                        "http://some.rpc.url".to_string(),
+                        "tag".to_string(),
+                        "Latest".to_string(),
                     )
                 ],
                 fuzzer_runs: None,
@@ -420,11 +413,9 @@ mod tests {
                 exit_first: false,
                 fork: vec![ForkTarget::new(
                     "ENV_URL_FORK".to_string(),
-                    RawForkParams {
-                        url: "http://some.rpc.url_from_env".to_string(),
-                        block_id_type: "number".to_string(),
-                        block_id_value: "1".to_string(),
-                    },
+                    "http://some.rpc.url_from_env".to_string(),
+                    "number".to_string(),
+                    "1".to_string(),
                 )],
                 fuzzer_runs: None,
                 fuzzer_seed: None,
