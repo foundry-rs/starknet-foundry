@@ -70,6 +70,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
         extended_runtime: &mut Self::Runtime,
     ) -> Result<CheatcodeHandlingResult, EnhancedHintError> {
         match selector {
+            "is_config_mode" => Ok(CheatcodeHandlingResult::from_serializable(false)),
             "cheat_execution_info" => {
                 let execution_info = input_reader.read()?;
 
