@@ -2,7 +2,6 @@ use super::common::runner::{setup_package, test_runner};
 use forge_runner::profiler_api::PROFILE_DIR;
 
 #[test]
-#[ignore]
 fn simple_package_build_profile() {
     let temp = setup_package("simple_package");
 
