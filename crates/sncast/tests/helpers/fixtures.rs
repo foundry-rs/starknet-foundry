@@ -1,19 +1,19 @@
-use crate::helpers::constants::{
-    ACCOUNT_FILE_PATH, ARGENT_ACCOUNT_CLASS_HASH, DEVNET_OZ_CLASS_HASH_CAIRO_0, URL,
-};
+use crate::helpers::constants::{ACCOUNT_FILE_PATH, DEVNET_OZ_CLASS_HASH_CAIRO_0, URL};
 use anyhow::Context;
 use camino::{Utf8Path, Utf8PathBuf};
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
 use serde_json::{json, Map, Value};
 use sncast::helpers::braavos::BraavosAccountFactory;
-use sncast::helpers::constants::{BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH};
+use sncast::helpers::constants::{
+    ARGENT_CLASS_HASH, BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH,
+};
 use sncast::helpers::scarb_utils::get_package_metadata;
 use sncast::state::state_file::{
     ScriptTransactionEntry, ScriptTransactionOutput, ScriptTransactionStatus,
 };
 use sncast::{apply_optional, get_chain_id, get_keystore_password, AccountType};
-use sncast::{get_account, get_provider, parse_number};
+use sncast::{get_account, get_provider};
 use starknet::accounts::{
     Account, AccountFactory, ArgentAccountFactory, Call, Execution, OpenZeppelinAccountFactory,
 };
@@ -79,7 +79,7 @@ pub async fn deploy_argent_account() {
     let (address, salt, private_key) = get_account_deployment_data("argent");
 
     let factory = ArgentAccountFactory::new(
-        parse_number(ARGENT_ACCOUNT_CLASS_HASH).expect("Failed to parse class hash"),
+        ARGENT_CLASS_HASH,
         chain_id,
         FieldElement::ZERO,
         LocalWallet::from_signing_key(private_key),
@@ -99,13 +99,9 @@ pub async fn deploy_braavos_account() {
 
     let (address, salt, private_key) = get_account_deployment_data("braavos");
 
-    let base_class_hash = parse_number(BRAAVOS_BASE_ACCOUNT_CLASS_HASH)
-        .expect("Failed to parse Braavos base class hash");
-    let class_hash = parse_number(BRAAVOS_CLASS_HASH).expect("Failed to parse Braavos class hash");
-
     let factory = BraavosAccountFactory::new(
-        class_hash,
-        base_class_hash,
+        BRAAVOS_CLASS_HASH,
+        BRAAVOS_BASE_ACCOUNT_CLASS_HASH,
         chain_id,
         LocalWallet::from_signing_key(private_key),
         provider,
@@ -123,7 +119,7 @@ async fn deploy_oz_account(address: &str, class_hash: &str, salt: &str, private_
         .expect("Failed to get chain id");
 
     let factory = OpenZeppelinAccountFactory::new(
-        parse_number(class_hash).expect("Failed to parse class hash"),
+        class_hash.parse().expect("Failed to parse class hash"),
         chain_id,
         LocalWallet::from_signing_key(private_key),
         provider,
@@ -137,7 +133,7 @@ async fn deploy_oz_account(address: &str, class_hash: &str, salt: &str, private_
 async fn deploy_account_to_devnet<T: AccountFactory + Sync>(factory: T, address: &str, salt: &str) {
     mint_token(address, u64::MAX).await;
     factory
-        .deploy(parse_number(salt).expect("Failed to parse salt"))
+        .deploy(salt.parse().expect("Failed to parse salt"))
         .send()
         .await
         .expect("Failed to deploy account");
@@ -158,7 +154,9 @@ fn get_account_deployment_data(account: &str) -> (String, String, SigningKey) {
     let private_key = get_from_json_as_str(account_data, "private_key");
 
     let private_key = SigningKey::from_secret_scalar(
-        parse_number(private_key).expect("Failed to convert private key to FieldElement"),
+        private_key
+            .parse()
+            .expect("Failed to convert private key to FieldElement"),
     );
 
     (address.to_string(), salt.to_string(), private_key)
@@ -191,12 +189,14 @@ pub async fn invoke_contract(
     let mut calldata: Vec<FieldElement> = vec![];
 
     for value in constructor_calldata {
-        let value: FieldElement = parse_number(value).expect("Could not parse the calldata");
+        let value: FieldElement = value.parse().expect("Could not parse the calldata");
         calldata.push(value);
     }
 
     let call = Call {
-        to: parse_number(contract_address).expect("Could not parse the contract address"),
+        to: contract_address
+            .parse()
+            .expect("Could not parse the contract address"),
         selector: get_selector_from_name(entry_point_name)
             .unwrap_or_else(|_| panic!("Could not get selector from {entry_point_name}")),
         calldata,
@@ -255,7 +255,10 @@ struct TransactionHashOutput {
 #[must_use]
 pub fn get_transaction_hash(output: &[u8]) -> FieldElement {
     let output = parse_output::<TransactionHashOutput>(output);
-    parse_number(output.transaction_hash.as_str()).expect("Could not parse a number")
+    output
+        .transaction_hash
+        .parse()
+        .expect("Could not parse a number")
 }
 
 pub async fn get_transaction_receipt(tx_hash: FieldElement) -> TransactionReceipt {
@@ -471,8 +474,7 @@ pub fn get_address_from_keystore(
     )
     .unwrap();
     let class_hash = match account_type {
-        AccountType::Braavos => parse_number(BRAAVOS_BASE_ACCOUNT_CLASS_HASH)
-            .expect("Failed to parse Braavos account class hash"),
+        AccountType::Braavos => BRAAVOS_BASE_ACCOUNT_CLASS_HASH,
         AccountType::Oz | AccountType::Argent => FieldElement::from_hex_be(
             deployment
                 .get("class_hash")

@@ -5,7 +5,7 @@ use crate::helpers::fixtures::create_test_provider;
 
 use camino::Utf8PathBuf;
 use shared::rpc::{get_rpc_version, is_expected_version};
-use sncast::{check_if_legacy_contract, get_account, get_provider, parse_number};
+use sncast::{check_if_legacy_contract, get_account, get_provider};
 use std::fs;
 use url::ParseError;
 
@@ -142,9 +142,10 @@ async fn test_supported_rpc_version_matches_devnet_version() {
 #[tokio::test]
 async fn test_check_if_legacy_contract_by_class_hash() {
     let provider = create_test_provider();
-    let class_hash = parse_number(DEVNET_OZ_CLASS_HASH_CAIRO_0)
+    let class_hash = DEVNET_OZ_CLASS_HASH_CAIRO_0
+        .parse()
         .expect("Failed to parse DEVNET_OZ_CLASS_HASH_CAIRO_0");
-    let mock_address = parse_number("0x1").unwrap();
+    let mock_address = "0x1".parse().unwrap();
     let is_legacy = check_if_legacy_contract(Some(class_hash), mock_address, &provider)
         .await
         .unwrap();
@@ -154,7 +155,8 @@ async fn test_check_if_legacy_contract_by_class_hash() {
 #[tokio::test]
 async fn test_check_if_legacy_contract_by_address() {
     let provider = create_test_provider();
-    let address = parse_number(DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS)
+    let address = DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS
+        .parse()
         .expect("Failed to parse DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS");
     let is_legacy = check_if_legacy_contract(None, address, &provider)
         .await

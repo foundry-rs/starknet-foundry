@@ -6,7 +6,7 @@ use serde::Deserialize;
 use sncast::helpers::constants::UDC_ADDRESS;
 use sncast::response::errors::handle_starknet_command_error;
 use sncast::response::structs::InvokeResponse;
-use sncast::{extract_or_generate_salt, parse_number, udc_uniqueness, WaitForTx};
+use sncast::{extract_or_generate_salt, udc_uniqueness, WaitForTx};
 use starknet::accounts::{Account, Call, SingleOwnerAccount};
 use starknet::core::types::FieldElement;
 use starknet::core::utils::{get_selector_from_name, get_udc_deployed_address};
@@ -83,7 +83,7 @@ pub async fn run(
                 calldata.extend(&parsed_inputs);
 
                 parsed_calls.push(Call {
-                    to: parse_number(UDC_ADDRESS)?,
+                    to: UDC_ADDRESS,
                     selector: get_selector_from_name("deployContract")?,
                     calldata,
                 });
@@ -107,7 +107,8 @@ pub async fn run(
                 let calldata = parse_inputs(&invoke_call.inputs, &contracts)?;
 
                 parsed_calls.push(Call {
-                    to: parse_number(contract_address)
+                    to: contract_address
+                        .parse()
                         .context("Failed to parse contract address to FieldElement")?,
                     selector: get_selector_from_name(&invoke_call.function)?,
                     calldata,
@@ -132,8 +133,11 @@ fn parse_inputs(
     let mut parsed_inputs = Vec::new();
     for input in inputs {
         let current_input = contracts.get(input).unwrap_or(input);
-        parsed_inputs
-            .push(parse_number(current_input).context("Failed to parse input to FieldElement")?);
+        parsed_inputs.push(
+            current_input
+                .parse()
+                .context("Failed to parse input to FieldElement")?,
+        );
     }
 
     Ok(parsed_inputs)

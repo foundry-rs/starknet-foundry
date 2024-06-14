@@ -1,13 +1,14 @@
 use crate::helpers::constants::{
-    DEVNET_OZ_CLASS_HASH_CAIRO_0, DEVNET_OZ_CLASS_HASH_CAIRO_1, DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS,
-    URL,
+    DEVNET_OZ_CLASS_HASH_CAIRO_0, DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS, URL,
 };
 use crate::helpers::runner::runner;
 use camino::Utf8PathBuf;
 use configuration::CONFIG_FILENAME;
+use conversions::string::IntoHexStr;
 use indoc::{formatdoc, indoc};
 use serde_json::json;
 use shared::test_utils::output_assert::assert_stderr_contains;
+use sncast::helpers::constants::OZ_CLASS_HASH;
 use std::fs::{self, File};
 use tempfile::tempdir;
 use test_case::test_case;
@@ -103,7 +104,7 @@ pub async fn test_existent_account_address() {
                 "alpha-sepolia": {
                   "my_account_add": {
                     "address": DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS,
-                    "class_hash": DEVNET_OZ_CLASS_HASH_CAIRO_1,
+                    "class_hash": &OZ_CLASS_HASH.into_hex_string(),
                     "deployed": true,
                     "legacy": false,
                     "private_key": "0x456",
@@ -316,7 +317,7 @@ pub async fn test_detect_deployed() {
                 "alpha-sepolia": {
                   "my_account_add": {
                     "address": DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS,
-                    "class_hash": DEVNET_OZ_CLASS_HASH_CAIRO_1,
+                    "class_hash": &OZ_CLASS_HASH.into_hex_string(),
                     "deployed": true,
                     "private_key": "0x5",
                     "public_key": "0x788435d61046d3eec54d77d25bd194525f4fa26ebe6575536bc6f656656b74c",
@@ -572,7 +573,7 @@ pub async fn test_private_key_as_int_in_file() {
                     "legacy": false,
                     "private_key": "0x456",
                     "public_key": "0x5f679dacd8278105bd3b84a15548fe84079068276b0e84d6cc093eb5430f063",
-                    "class_hash": DEVNET_OZ_CLASS_HASH_CAIRO_1,
+                    "class_hash": &OZ_CLASS_HASH.into_hex_string(),
                     "type": "open_zeppelin"
                   }
                 }

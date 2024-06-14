@@ -1,6 +1,4 @@
-use crate::helpers::constants::{
-    ARGENT_ACCOUNT_CLASS_HASH, DEVNET_OZ_CLASS_HASH_CAIRO_0, DEVNET_OZ_CLASS_HASH_CAIRO_1, URL,
-};
+use crate::helpers::constants::{DEVNET_OZ_CLASS_HASH_CAIRO_0, URL};
 use crate::helpers::fixtures::copy_file;
 use crate::helpers::fixtures::{
     get_address_from_keystore, get_transaction_hash, get_transaction_receipt, mint_token,
@@ -11,7 +9,9 @@ use conversions::string::IntoHexStr;
 use indoc::indoc;
 use serde_json::Value;
 use shared::test_utils::output_assert::{assert_stderr_contains, AsOutput};
-use sncast::helpers::constants::{BRAAVOS_CLASS_HASH, KEYSTORE_PASSWORD_ENV_VAR};
+use sncast::helpers::constants::{
+    ARGENT_CLASS_HASH, BRAAVOS_CLASS_HASH, KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH,
+};
 use sncast::AccountType;
 use starknet::core::types::TransactionReceipt::DeployAccount;
 use std::{env, fs};
@@ -19,9 +19,9 @@ use tempfile::{tempdir, TempDir};
 use test_case::test_case;
 
 #[test_case(DEVNET_OZ_CLASS_HASH_CAIRO_0, "oz"; "cairo_0_class_hash")]
-#[test_case(DEVNET_OZ_CLASS_HASH_CAIRO_1, "oz"; "cairo_1_class_hash")]
-#[test_case(ARGENT_ACCOUNT_CLASS_HASH, "argent"; "argent_class_hash")]
-#[test_case(BRAAVOS_CLASS_HASH, "braavos"; "braavos_class_hash")]
+#[test_case(&OZ_CLASS_HASH.into_hex_string(), "oz"; "cairo_1_class_hash")]
+#[test_case(&ARGENT_CLASS_HASH.into_hex_string(), "argent"; "argent_class_hash")]
+#[test_case(&BRAAVOS_CLASS_HASH.into_hex_string(), "braavos"; "braavos_class_hash")]
 #[tokio::test]
 pub async fn test_happy_case(class_hash: &str, account_type: &str) {
     let tempdir = create_account(false, class_hash, account_type).await;
@@ -61,7 +61,7 @@ pub async fn test_happy_case(class_hash: &str, account_type: &str) {
 
 #[tokio::test]
 pub async fn test_happy_case_add_profile() {
-    let tempdir = create_account(true, DEVNET_OZ_CLASS_HASH_CAIRO_1, "oz").await;
+    let tempdir = create_account(true, &OZ_CLASS_HASH.into_hex_string(), "oz").await;
     let accounts_file = "accounts.json";
 
     let args = vec![
@@ -120,7 +120,7 @@ fn test_account_deploy_error(accounts_content: &str, error: &str) {
 
 #[tokio::test]
 async fn test_too_low_max_fee() {
-    let tempdir = create_account(false, DEVNET_OZ_CLASS_HASH_CAIRO_1, "oz").await;
+    let tempdir = create_account(false, &OZ_CLASS_HASH.into_hex_string(), "oz").await;
     let accounts_file = "accounts.json";
 
     let args = vec![
@@ -151,7 +151,7 @@ async fn test_too_low_max_fee() {
 
 #[tokio::test]
 pub async fn test_valid_class_hash() {
-    let tempdir = create_account(true, DEVNET_OZ_CLASS_HASH_CAIRO_1, "oz").await;
+    let tempdir = create_account(true, &OZ_CLASS_HASH.into_hex_string(), "oz").await;
     let accounts_file = "accounts.json";
 
     let args = vec![
@@ -177,7 +177,7 @@ pub async fn test_valid_class_hash() {
 
 #[tokio::test]
 pub async fn test_valid_no_max_fee() {
-    let tempdir = create_account(true, DEVNET_OZ_CLASS_HASH_CAIRO_1, "oz").await;
+    let tempdir = create_account(true, &OZ_CLASS_HASH.into_hex_string(), "oz").await;
     let accounts_file = "accounts.json";
 
     let args = vec![
