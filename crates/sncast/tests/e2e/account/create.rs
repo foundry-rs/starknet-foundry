@@ -1,17 +1,16 @@
-use crate::helpers::constants::{
-    ARGENT_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH, DEVNET_OZ_CLASS_HASH_CAIRO_0,
-    DEVNET_OZ_CLASS_HASH_CAIRO_1, URL,
-};
+use crate::helpers::constants::{DEVNET_OZ_CLASS_HASH_CAIRO_0, URL};
 use crate::helpers::fixtures::{copy_file, default_cli_args};
 use crate::helpers::runner::runner;
 use configuration::copy_config_to_tempdir;
 use indoc::indoc;
 
+use conversions::string::IntoHexStr;
 use serde_json::{json, to_string_pretty};
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 use snapbox::assert_matches;
 use sncast::helpers::constants::{
-    BRAAVOS_BASE_ACCOUNT_CLASS_HASH, CREATE_KEYSTORE_PASSWORD_ENV_VAR,
+    ARGENT_CLASS_HASH, BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH,
+    CREATE_KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH,
 };
 use sncast::AccountType;
 use std::{env, fs};
@@ -567,7 +566,7 @@ fn get_keystore_account_pattern(account_type: &AccountType, class_hash: Option<&
                     },
                     "deployment": {
                         "status": "undeployed",
-                        "class_hash": class_hash.unwrap_or(DEVNET_OZ_CLASS_HASH_CAIRO_1),
+                        "class_hash": class_hash.unwrap_or(&OZ_CLASS_HASH.into_hex_string()),
                         "salt": "0x[..]",
                     }
                 }
@@ -585,7 +584,7 @@ fn get_keystore_account_pattern(account_type: &AccountType, class_hash: Option<&
                     },
                     "deployment": {
                         "status": "undeployed",
-                        "class_hash": class_hash.unwrap_or(ARGENT_ACCOUNT_CLASS_HASH),
+                        "class_hash": class_hash.unwrap_or(&ARGENT_CLASS_HASH.into_hex_string()),
                         "salt": "0x[..]",
                     }
                 }
@@ -610,7 +609,7 @@ fn get_keystore_account_pattern(account_type: &AccountType, class_hash: Option<&
                   },
                   "deployment": {
                     "status": "undeployed",
-                    "class_hash": class_hash.unwrap_or(BRAAVOS_CLASS_HASH),
+                    "class_hash": class_hash.unwrap_or(&BRAAVOS_CLASS_HASH.into_hex_string()),
                     "salt": "0x[..]",
                     "context": {
                       "variant": "braavos",

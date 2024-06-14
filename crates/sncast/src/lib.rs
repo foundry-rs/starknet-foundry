@@ -82,7 +82,7 @@ impl AccountData {
             .as_ref()
             .context("Failed to get address - make sure the account is deployed")?;
 
-        parse_number(value_to_parse).with_context(|| {
+        value_to_parse.parse().with_context(|| {
             format!("Failed to convert address = {value_to_parse} to FieldElement")
         })
     }
@@ -93,7 +93,8 @@ impl AccountData {
             .as_ref()
             .ok_or_else(|| anyhow!("Failed to get salt"))?;
 
-        parse_number(value_to_parse)
+        value_to_parse
+            .parse()
             .with_context(|| format!("Failed to convert salt = {value_to_parse} to FieldElement"))
     }
 
@@ -103,7 +104,7 @@ impl AccountData {
             .as_ref()
             .ok_or_else(|| anyhow!("Failed to get class_hash"))?;
 
-        parse_number(value_to_parse).with_context(|| {
+        value_to_parse.parse().with_context(|| {
             format!("Failed to convert class_hash = {value_to_parse} to FieldElement")
         })
     }
@@ -279,7 +280,9 @@ async fn build_account(
     provider: &JsonRpcClient<HttpTransport>,
 ) -> Result<SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>> {
     let signer = LocalWallet::from(SigningKey::from_secret_scalar(
-        parse_number(&account_data.private_key)
+        account_data
+            .private_key
+            .parse()
             .context("Failed to convert private key to FieldElement")?,
     ));
 
@@ -289,7 +292,7 @@ async fn build_account(
     let class_hash = account_data
         .class_hash
         .map(|class_hash| {
-            parse_number(&class_hash).with_context(|| {
+            class_hash.parse().with_context(|| {
                 format!("Failed to convert class hash = {class_hash} to FieldElement")
             })
         })
@@ -640,14 +643,6 @@ pub async fn handle_wait_for_tx<T>(
     Ok(return_value)
 }
 
-pub fn parse_number(number_as_str: &str) -> Result<FieldElement> {
-    let contract_address = match &number_as_str[..2] {
-        "0x" => FieldElement::from_hex_be(number_as_str)?,
-        _ => FieldElement::from_dec_str(number_as_str)?,
-    };
-    Ok(contract_address)
-}
-
 pub fn raise_if_empty(value: &str, value_name: &str) -> Result<()> {
     if value.is_empty() {
         bail!("{value_name} not passed nor found in snfoundry.toml")
@@ -690,7 +685,7 @@ pub fn udc_uniqueness(unique: bool, account_address: FieldElement) -> UdcUniquen
     if unique {
         Unique(UdcUniqueSettings {
             deployer_address: account_address,
-            udc_contract_address: parse_number(UDC_ADDRESS).expect("Failed to parse UDC address"),
+            udc_contract_address: UDC_ADDRESS,
         })
     } else {
         NotUnique
