@@ -7,7 +7,7 @@ use camino::Utf8PathBuf;
 use clap::Args;
 use sncast::helpers::configuration::CastConfig;
 use sncast::response::structs::AccountAddResponse;
-use sncast::{check_class_hash_exists, get_chain_id, parse_number};
+use sncast::{check_class_hash_exists, get_chain_id};
 use sncast::{check_if_legacy_contract, get_class_hash_by_address};
 use starknet::core::types::FieldElement;
 use starknet::providers::jsonrpc::{HttpTransport, JsonRpcClient};
@@ -134,5 +134,5 @@ pub async fn add(
 
 fn get_private_key_from_file(file_path: &Utf8PathBuf) -> Result<FieldElement> {
     let private_key_string = std::fs::read_to_string(file_path.clone())?;
-    parse_number(&private_key_string)
+    Ok(private_key_string.parse()?)
 }
