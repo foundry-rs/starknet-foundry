@@ -208,7 +208,7 @@ async fn run_async_command(
             .expect("Failed to build contract");
             let mut result = starknet_commands::declare::declare(
                 &declare.contract,
-                declare.max_fee,
+                declare.fee.max_fee,
                 &account,
                 declare.nonce,
                 &artifacts,
@@ -233,7 +233,7 @@ async fn run_async_command(
                 deploy.constructor_calldata,
                 deploy.salt,
                 deploy.unique,
-                deploy.max_fee,
+                deploy.fee.max_fee,
                 &account,
                 deploy.nonce,
                 wait_config,
@@ -274,7 +274,7 @@ async fn run_async_command(
                 get_selector_from_name(&invoke.function)
                     .context("Failed to convert entry point selector to FieldElement")?,
                 invoke.calldata,
-                invoke.max_fee,
+                invoke.fee.max_fee,
                 &account,
                 invoke.nonce,
                 wait_config,

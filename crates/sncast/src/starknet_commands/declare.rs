@@ -7,6 +7,7 @@ use sncast::{apply_optional, handle_wait_for_tx, ErrorData, WaitForTx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{ConnectedAccount, DeclarationV2};
 
+use crate::starknet_commands::helpers::fee::Fee;
 use sncast::response::errors::StarknetCommandError;
 use starknet::core::types::FieldElement;
 use starknet::{
@@ -25,9 +26,8 @@ pub struct Declare {
     #[clap(short = 'c', long = "contract-name")]
     pub contract: String,
 
-    /// Max fee for the transaction. If not provided, max fee will be automatically estimated
-    #[clap(short, long)]
-    pub max_fee: Option<FieldElement>,
+    #[clap(flatten)]
+    pub fee: Fee,
 
     /// Nonce of the transaction. If not provided, nonce will be set automatically
     #[clap(short, long)]
