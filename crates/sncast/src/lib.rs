@@ -4,7 +4,7 @@ use helpers::constants::{KEYSTORE_PASSWORD_ENV_VAR, UDC_ADDRESS};
 use rand::rngs::OsRng;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use serde_json::{Deserializer, Value};
 use starknet::core::types::{
     BlockId, BlockTag,
     BlockTag::{Latest, Pending},
@@ -381,8 +381,14 @@ pub fn get_account_data_from_accounts_file(
 fn read_and_parse_json_file<T: DeserializeOwned>(path: &Utf8PathBuf) -> Result<T> {
     let file_content =
         fs::read_to_string(path).with_context(|| format!("Failed to read a file = {path}"))?;
-    serde_json::from_str(&file_content)
-        .map_err(|err| anyhow!("Failed to parse file = {path} to JSON: {err}"))
+    let deserializer = &mut Deserializer::from_str(&file_content);
+    serde_path_to_error::deserialize(deserializer).map_err(|err| {
+        let path_to_field = err.path().to_string();
+        anyhow!(
+            "Failed to parse field `{path_to_field}` in file '{path}': {}",
+            err.into_inner()
+        )
+    })
 }
 
 async fn get_account_encoding(

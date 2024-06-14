@@ -79,7 +79,7 @@ async fn test_get_account_invalid_file() {
     let err = account.unwrap_err();
     assert!(err
         .to_string()
-        .contains("Failed to parse file = tests/data/accounts/invalid_format.json to JSON: expected `,` or `}` at line 8 column 9")
+        .contains("Failed to parse field `alpha-sepolia.?` in file 'tests/data/accounts/invalid_format.json': expected `,` or `}` at line 8 column 9")
     );
 }
 
@@ -127,7 +127,7 @@ async fn test_get_account_failed_to_convert_field_elements() {
     .await;
     let err = account1.unwrap_err();
     assert!(err.to_string().contains(
-        "Failed to parse file = tests/data/accounts/faulty_accounts_invalid_felt.json to JSON: invalid character at line 4 column 40"
+        "Failed to parse field `alpha-sepolia.with_invalid_private_key.private_key` in file 'tests/data/accounts/faulty_accounts_invalid_felt.json': invalid character at line 4 column 40"
     ));
 }
 

@@ -92,7 +92,7 @@ pub async fn test_happy_case_add_profile() {
 }
 
 #[test_case("{\"alpha-sepolia\": {}}", "error: Account = my_account not found under network = alpha-sepolia" ; "when account name not present")]
-#[test_case("{\"alpha-sepolia\": {\"my_account\" : {}}}", "error: Failed to parse file = accounts.json to JSON: missing field `private_key`[..]" ; "when private key not present")]
+#[test_case("{\"alpha-sepolia\": {\"my_account\" : {}}}", "error: Failed to parse field `alpha-sepolia.my_account` in file 'accounts.json': missing field `private_key`[..]" ; "when private key not present")]
 fn test_account_deploy_error(accounts_content: &str, error: &str) {
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
 
