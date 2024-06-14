@@ -554,7 +554,8 @@ async fn get_revert_reason(
         .await
         .map_err(SNCastProviderError::from)?;
 
-    if let starknet::core::types::ExecutionResult::Reverted { reason } = receipt.execution_result()
+    if let starknet::core::types::ExecutionResult::Reverted { reason } =
+        receipt.receipt.execution_result()
     {
         Err(WaitForTransactionError::TransactionError(
             TransactionError::Reverted(ErrorData {
