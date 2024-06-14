@@ -315,7 +315,7 @@ async fn deploy_account<T>(
 where
     T: AccountFactory + Sync,
 {
-    let deployment = account_factory.deploy(salt);
+    let deployment = account_factory.deploy_v1(salt);
 
     let deploy_max_fee = if let Some(max_fee) = max_fee {
         max_fee
