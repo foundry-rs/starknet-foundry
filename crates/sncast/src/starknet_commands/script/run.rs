@@ -11,7 +11,6 @@ use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::state::cached_state::{
     CachedState, GlobalContractCache, GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST,
 };
-use cairo_lang_casm::hints::Hint;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{build_hints_dict, RunResultValue, SierraCasmRunner};
 use cairo_lang_sierra::program::VersionedProgram;
@@ -69,7 +68,6 @@ pub struct Run {
 }
 
 pub struct CastScriptExtension<'a> {
-    pub hints: &'a HashMap<String, Hint>,
     pub provider: &'a JsonRpcClient<HttpTransport>,
     pub account: Option<&'a SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, LocalWallet>>,
     pub tokio_runtime: Runtime,
@@ -345,7 +343,6 @@ pub fn run(
     let state = StateManager::from(state_file_path)?;
 
     let cast_extension = CastScriptExtension {
-        hints: &string_to_hint,
         provider,
         tokio_runtime,
         config,
