@@ -29,10 +29,3 @@ pub struct DebugInfo {
     #[serde(default)]
     pub executables: HashMap<SmolStr, Vec<FunctionId>>,
 }
-
-//TODO this should be cairo_lang_sierra::TestCompilation but can't bump cairo_lang_sierra dependency
-#[derive(Clone, Debug, Eq, PartialEq, Deserialize)]
-pub struct TestCompilation {
-    // here are more fields but we don't need these
-    pub sierra_program: ProgramArtifact,
-}

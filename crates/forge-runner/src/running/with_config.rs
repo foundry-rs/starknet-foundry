@@ -28,6 +28,13 @@ pub fn test_target_with_config(test_target_raw: TestTargetRaw) -> Result<TestTar
         .iter()
         .map(|f| (f.id.id, f))
         .collect();
+    let type_declarations: HashMap<_, _> = test_target_raw
+        .sierra_program
+        .program
+        .type_declarations
+        .iter()
+        .map(|f| (f.id.id, f))
+        .collect();
 
     let types: HashMap<_, _> = test_target_raw
         .sierra_program
@@ -85,7 +92,8 @@ pub fn test_target_with_config(test_target_raw: TestTargetRaw) -> Result<TestTar
                     return_types: map_types(&func.signature.ret_types, &types, &type_size_map),
                 };
 
-                let args = function_args(func);
+                let args = function_args(func, &type_declarations);
+
                 let raw_config = get_config_for_test_case(
                     vec![Felt252::from(0_u8); args.len()],
                     &test_details,

@@ -2,7 +2,7 @@ use crate::scarb::config::{ForgeConfigFromScarb, RawForgeConfig};
 use anyhow::{Context, Result};
 use camino::Utf8Path;
 use configuration::PackageConfig;
-use forge_runner::package_tests::raw::{TestCompilation, TestTargetRaw};
+use forge_runner::package_tests::raw::{ProgramArtifact, TestTargetRaw};
 use forge_runner::package_tests::TestTargetLocation;
 use scarb_api::ScarbCommand;
 use scarb_ui::args::PackagesFilter;
@@ -54,10 +54,10 @@ pub fn load_test_artifacts(
     let maybe_read_file = |file: String, tests_location| -> Result<Option<TestTargetRaw>> {
         match read_to_string(target_dir.join(file)) {
             Ok(value) => {
-                let test_compilation = serde_json::from_str::<TestCompilation>(&value)?;
+                let sierra_program = serde_json::from_str::<ProgramArtifact>(&value)?;
 
                 let test_target = TestTargetRaw {
-                    sierra_program: test_compilation.sierra_program,
+                    sierra_program,
                     tests_location,
                 };
 
@@ -70,11 +70,11 @@ pub fn load_test_artifacts(
 
     let targets = [
         maybe_read_file(
-            format!("{package_name}_unittest.test.json"),
+            format!("{package_name}_unittest.test.sierra.json"),
             TestTargetLocation::Lib,
         )?,
         maybe_read_file(
-            format!("{package_name}_integrationtest.test.json"),
+            format!("{package_name}_integrationtest.test.sierra.json"),
             TestTargetLocation::Tests,
         )?,
     ]
