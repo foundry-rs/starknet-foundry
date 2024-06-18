@@ -94,8 +94,30 @@ pub fn test_target_with_config(test_target_raw: TestTargetRaw) -> Result<TestTar
 
                 let args = function_args(func, &type_declarations);
 
+                // trick to fix current fuzzer,
+                // it supports only u256 from types bigger than 1 felt
+                // since we have arguments count we need to know how many u256
+                // are there and add this to length, this way we got
+                // correct unmber of felts, this
+                // should be removed with new fuzzer logic so it is not extensible
+                let u256_occurences = args
+                    .iter()
+                    .filter(|arg| {
+                        arg.generic_id.0 == "Struct"
+                            && matches!(
+                                arg.generic_args.first(),
+                                Some(cairo_lang_sierra::program::GenericArg::UserType(
+                                    cairo_lang_sierra::ids::UserTypeId {
+                                        debug_name: Some(name),
+                                        ..
+                                    }
+                                )) if name == "core::integer::u256"
+                            )
+                    })
+                    .count();
+
                 let raw_config = get_config_for_test_case(
-                    vec![Felt252::from(0_u8); args.len()],
+                    vec![Felt252::from(0_u8); args.len() + u256_occurences],
                     &test_details,
                     &casm_program,
                 )?;
