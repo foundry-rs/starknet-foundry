@@ -15,7 +15,6 @@ pub struct ShouldPanicCollector;
 
 impl AttributeInfo for ShouldPanicCollector {
     const ATTR_NAME: &'static str = "should_panic";
-    const ARGS_FORM: &'static str = r#"[<expected>: "double quotted string" | 'single quotted string' | ['single quotted string',]]"#;
 }
 
 impl AttributeTypeData for ShouldPanicCollector {

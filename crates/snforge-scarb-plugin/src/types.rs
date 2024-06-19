@@ -4,6 +4,7 @@ use crate::{
 };
 use cairo_lang_macro::Diagnostic;
 use cairo_lang_syntax::node::{ast::Expr, db::SyntaxGroup};
+use num_bigint::BigInt;
 use url::Url;
 
 pub trait ParseFromExpr<E>: Sized {
@@ -15,14 +16,14 @@ pub trait ParseFromExpr<E>: Sized {
 }
 
 #[derive(Debug, Clone)]
-pub struct Number(pub(crate) String);
+pub struct Number(pub(crate) BigInt);
 
 #[derive(Debug, Clone)]
 pub struct ShortString(pub(crate) String);
 
 impl CairoExpression for Number {
     fn as_cairo_expression(&self) -> String {
-        format!("0x{}", self.0)
+        format!("0x{}", self.0.to_str_radix(16))
     }
 }
 
@@ -42,8 +43,7 @@ impl ParseFromExpr<Expr> for Number {
             Expr::Literal(literal) => {
                 let num = literal
                     .numeric_value(db)
-                    .ok_or_else(|| T::error(format!("<{arg_name}> got invalid number literal")))?
-                    .to_str_radix(16);
+                    .ok_or_else(|| T::error(format!("<{arg_name}> got invalid number literal")))?;
 
                 Ok(Self(num))
             }
@@ -100,6 +100,12 @@ impl ParseFromExpr<Expr> for ShortString {
 }
 
 impl CairoExpression for String {
+    fn as_cairo_expression(&self) -> String {
+        format!(r#""{self}""#)
+    }
+}
+
+impl CairoExpression for Url {
     fn as_cairo_expression(&self) -> String {
         format!(r#""{self}""#)
     }

@@ -18,7 +18,6 @@ pub struct ForkCollector;
 
 impl AttributeInfo for ForkCollector {
     const ATTR_NAME: &'static str = "fork";
-    const ARGS_FORM: &'static str = r#"<url>: "double quotted string", (<block_hash>: 'single quotted string' | <block_number>: 'single quotted string' | <block_tag>: latest)"#;
 }
 
 impl AttributeTypeData for ForkCollector {
@@ -51,6 +50,7 @@ fn inline_args(db: &dyn SyntaxGroup, args: &Arguments) -> Result<String, Diagnos
     let url = Url::parse_from_expr::<ForkCollector>(db, url, "url")?;
 
     let block_id = block_id.as_cairo_expression();
+    let url = url.as_cairo_expression();
 
     Ok(formatdoc!(
         "

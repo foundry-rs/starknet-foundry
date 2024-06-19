@@ -12,7 +12,6 @@ pub struct AvailableGasCollector;
 
 impl AttributeInfo for AvailableGasCollector {
     const ATTR_NAME: &'static str = "available_gas";
-    const ARGS_FORM: &'static str = "<number>";
 }
 
 impl AttributeTypeData for AvailableGasCollector {

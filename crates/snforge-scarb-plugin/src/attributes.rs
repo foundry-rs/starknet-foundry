@@ -12,7 +12,6 @@ pub mod test;
 
 pub trait AttributeInfo {
     const ATTR_NAME: &'static str;
-    const ARGS_FORM: &'static str;
 }
 
 pub trait AttributeTypeData {

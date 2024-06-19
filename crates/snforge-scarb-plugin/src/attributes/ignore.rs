@@ -10,7 +10,6 @@ pub struct IgnoreCollector;
 
 impl AttributeInfo for IgnoreCollector {
     const ATTR_NAME: &'static str = "ignore";
-    const ARGS_FORM: &'static str = "";
 }
 
 impl AttributeTypeData for IgnoreCollector {
