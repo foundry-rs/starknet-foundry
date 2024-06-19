@@ -7,6 +7,7 @@ use forge_runner::package_tests::TestTargetLocation;
 use scarb_api::ScarbCommand;
 use scarb_metadata::PackageMetadata;
 use scarb_ui::args::PackagesFilter;
+use std::collections::HashMap;
 use std::fs::read_to_string;
 use std::io::ErrorKind;
 
@@ -54,24 +55,30 @@ pub fn load_test_artifacts(
 ) -> Result<Vec<TestTargetRaw>> {
     let mut targets = vec![];
 
-    for target in package
+    let dedup_targets: HashMap<_, _> = package
         .targets
         .iter()
         .filter(|target| target.kind == "test")
-    {
+        .map(|target| {
+            (
+                target
+                    .params
+                    .get("group-id")
+                    .and_then(|v| v.as_str())
+                    .map(ToString::to_string)
+                    .unwrap_or(target.name.clone()),
+                target,
+            )
+        })
+        .collect();
+
+    for (target_name, target) in dedup_targets {
         let tests_location =
             if target.params.get("test-type").and_then(|v| v.as_str()) == Some("unit") {
                 TestTargetLocation::Lib
             } else {
                 TestTargetLocation::Tests
             };
-
-        let target_name = target
-            .params
-            .get("group-id")
-            .and_then(|v| v.as_str())
-            .map(ToString::to_string)
-            .unwrap_or(target.name.clone());
 
         let target_file = format!("{target_name}.test.sierra.json");
 

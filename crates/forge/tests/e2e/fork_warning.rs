@@ -97,12 +97,12 @@ fn should_dedup_urls() {
         .write_str(
             formatdoc!(
                 r#"
-                #[fork(url: "{node_url}", block_id: BlockId::Tag(BlockTag::Latest))]
+                #[fork(url: "{node_url}", block_tag: latest)]
                 #[test]
                 fn t1() {{
                     assert!(false);
                 }}
-                #[fork(url: "{node_url}", block_id: BlockId::Tag(BlockTag::Latest))]
+                #[fork(url: "{node_url}", block_tag: latest)]
                 #[test]
                 fn t2() {{
                     assert!(false);
