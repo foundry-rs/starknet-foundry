@@ -1,16 +1,22 @@
 # `spy_events`
 
-> `fn spy_events(spy_on: SpyOn) -> EventSpy`
+> `fn spy_events() -> EventSpy`
 
-Creates `EventSpy` instance which spies on events emitted by contracts defined under the `spy_on` argument.
+Creates `EventSpy` instance which spies on events emitted after its creation.
 
 ```rust
 struct EventSpy {
-    events: Array<(ContractAddress, Event)>,
+    _event_offset: usize
 }
 ```
-An event spy structure, along with the events collected so far in the test.
-`events` are mutable and can be updated with `fetch_events`.
+An event spy structure (with an internal field marking how many events have been emitted before its creation).
+
+```rust
+struct Events {
+    events: Array<(ContractAddress, Event)>
+}
+```
+A wrapper structure on an array of events to handle event filtering. 
 
 ```rust
 struct Event {
@@ -18,38 +24,34 @@ struct Event {
     data: Array<felt252>
 }
 ```
-
 Raw event format (as seen via the RPC-API), can be used for asserting the emitted events.
-
-```rust
-enum SpyOn {
-    All: (),
-    One: ContractAddress,
-    Multiple: Array<ContractAddress>
-}
-```
-
-Allows specifying which contracts you want to capture events from.
 
 ## Implemented traits
 
-### EventFetcher
+### EventSpyTrait
 
 ```rust
-trait EventFetcher {
-    fn fetch_events(ref self: EventSpy);
+trait EventSpyTrait {
+    fn get_events(ref self: EventSpy) -> Events;
 }
 ```
+Gets all events since the creation of the given `EventSpy`. 
 
-Allows to update the structs' events field, from the spied contracts.
-
-### EventAssertions
+### EventSpyAssertionsTrait
 
 ```rust
-trait EventAssertions<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>> {
+trait EventSpyAssertionsTrait<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>> {
     fn assert_emitted(ref self: EventSpy, events: @Array<(ContractAddress, T)>);
     fn assert_not_emitted(ref self: EventSpy, events: @Array<(ContractAddress, T)>);
 }
 ```
+Allows to assert the expected events emission (or lack thereof), in the scope of the `EventSpy` structure.
 
-Allows to assert the expected events emission (or lack thereof), in the scope of the spy.
+### EventsFilterTrait
+
+```rust
+trait EventsFilterTrait {
+    fn emitted_by(self: @Events, contract_address: ContractAddress) -> Events;
+}
+```
+Filters events emitted by a given `ContractAddress`.
