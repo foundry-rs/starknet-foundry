@@ -1,8 +1,6 @@
 use indoc::{formatdoc, indoc};
 use std::num::NonZeroU32;
 use std::path::Path;
-use std::process::Command;
-use std::process::Stdio;
 use std::sync::Arc;
 
 use camino::Utf8PathBuf;
@@ -21,7 +19,8 @@ use forge_runner::forge_config::{
     ExecutionDataToSave, ForgeConfig, OutputConfig, TestRunnerConfig,
 };
 use forge_runner::CACHE_DIR;
-use shared::command::CommandExt;
+use scarb_api::metadata::MetadataCommandExt;
+use scarb_api::ScarbCommand;
 use shared::test_utils::node_url::node_rpc_url;
 use test_utils::runner::{assert_case_output_contains, assert_failed, assert_passed, Contract};
 use test_utils::running_tests::run_test_case;
@@ -108,17 +107,26 @@ fn fork_aliased_decorator() {
 
     let rt = Runtime::new().expect("Could not instantiate Runtime");
 
-    Command::new("scarb")
+    ScarbCommand::new_with_stdio()
         .current_dir(test.path().unwrap())
         .arg("build")
         .arg("--test")
-        .stdout(Stdio::inherit())
-        .stderr(Stdio::inherit())
-        .output_checked()
+        .run()
+        .unwrap();
+
+    let metadata = ScarbCommand::metadata()
+        .current_dir(test.path().unwrap())
+        .run()
+        .unwrap();
+
+    let package = metadata
+        .packages
+        .iter()
+        .find(|p| p.name == "test_package")
         .unwrap();
 
     let raw_test_targets =
-        load_test_artifacts(&test.path().unwrap().join("target/dev"), "test_package").unwrap();
+        load_test_artifacts(&test.path().unwrap().join("target/dev"), package).unwrap();
 
     let result = rt
         .block_on(run_for_package(
