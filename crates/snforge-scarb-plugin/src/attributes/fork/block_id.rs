@@ -34,9 +34,15 @@ pub enum BlockId {
 impl CairoExpression for BlockId {
     fn as_cairo_expression(&self) -> String {
         match self {
-            Self::Hash(hash) => format!("BlockHash({})", hash.as_cairo_expression()),
-            Self::Number(number) => format!("BlockNumber({})", number.as_cairo_expression()),
-            Self::Tag => "BlockTag".to_string(),
+            Self::Hash(hash) => format!(
+                "snforge_std::_config_types::BlockId::BlockHash({})",
+                hash.as_cairo_expression()
+            ),
+            Self::Number(number) => format!(
+                "snforge_std::_config_types::BlockId::BlockNumber({})",
+                number.as_cairo_expression()
+            ),
+            Self::Tag => "snforge_std::_config_types::BlockId::BlockTag".to_string(),
         }
     }
 }
