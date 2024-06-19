@@ -236,6 +236,7 @@ fn run_with_fuzzing(
     })
 }
 
+#[allow(clippy::implicit_hasher)]
 #[must_use]
 pub fn function_args(
     function: &Function,
