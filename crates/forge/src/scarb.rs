@@ -5,6 +5,7 @@ use configuration::PackageConfig;
 use forge_runner::package_tests::raw::{ProgramArtifact, TestTargetRaw};
 use forge_runner::package_tests::TestTargetLocation;
 use scarb_api::ScarbCommand;
+use scarb_metadata::PackageMetadata;
 use scarb_ui::args::PackagesFilter;
 use std::fs::read_to_string;
 use std::io::ErrorKind;
@@ -49,10 +50,32 @@ pub fn build_test_artifacts_with_scarb(filter: PackagesFilter) -> Result<()> {
 
 pub fn load_test_artifacts(
     target_dir: &Utf8Path,
-    package_name: &str,
+    package: &PackageMetadata,
 ) -> Result<Vec<TestTargetRaw>> {
-    let maybe_read_file = |file: String, tests_location| -> Result<Option<TestTargetRaw>> {
-        match read_to_string(target_dir.join(file)) {
+    let mut targets = vec![];
+
+    for target in package
+        .targets
+        .iter()
+        .filter(|target| target.kind == "test")
+    {
+        let tests_location =
+            if target.params.get("test-type").and_then(|v| v.as_str()) == Some("unit") {
+                TestTargetLocation::Lib
+            } else {
+                TestTargetLocation::Tests
+            };
+
+        let target_name = target
+            .params
+            .get("group-id")
+            .and_then(|v| v.as_str())
+            .map(ToString::to_string)
+            .unwrap_or(target.name.clone());
+
+        let target_file = format!("{target_name}.test.sierra.json");
+
+        match read_to_string(target_dir.join(target_file)) {
             Ok(value) => {
                 let sierra_program = serde_json::from_str::<ProgramArtifact>(&value)?;
 
@@ -61,26 +84,12 @@ pub fn load_test_artifacts(
                     tests_location,
                 };
 
-                Ok(Some(test_target))
+                targets.push(test_target);
             }
-            Err(err) if err.kind() == ErrorKind::NotFound => Ok(None),
+            Err(err) if err.kind() == ErrorKind::NotFound => {}
             Err(err) => Err(err)?,
         }
-    };
-
-    let targets = [
-        maybe_read_file(
-            format!("{package_name}_unittest.test.sierra.json"),
-            TestTargetLocation::Lib,
-        )?,
-        maybe_read_file(
-            format!("{package_name}_integrationtest.test.sierra.json"),
-            TestTargetLocation::Tests,
-        )?,
-    ]
-    .into_iter()
-    .flatten()
-    .collect();
+    }
 
     Ok(targets)
 }

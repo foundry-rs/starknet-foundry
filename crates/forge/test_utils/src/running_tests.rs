@@ -13,7 +13,7 @@ use forge_runner::forge_config::{
 };
 use forge_runner::test_target_summary::TestTargetSummary;
 use forge_runner::CACHE_DIR;
-use scarb_api::ScarbCommand;
+use scarb_api::{metadata::MetadataCommandExt, ScarbCommand};
 use std::num::NonZeroU32;
 use std::sync::Arc;
 use tempfile::tempdir;
@@ -28,9 +28,20 @@ pub fn run_test_case(test: &TestCase) -> Vec<TestTargetSummary> {
         .run()
         .unwrap();
 
+    let metadata = ScarbCommand::metadata()
+        .current_dir(test.path().unwrap())
+        .run()
+        .unwrap();
+
+    let package = metadata
+        .packages
+        .iter()
+        .find(|p| p.name == "test_package")
+        .unwrap();
+
     let rt = Runtime::new().expect("Could not instantiate Runtime");
     let raw_test_targets =
-        load_test_artifacts(&test.path().unwrap().join("target/dev"), "test_package").unwrap();
+        load_test_artifacts(&test.path().unwrap().join("target/dev"), package).unwrap();
 
     rt.block_on(run_for_package(
         RunForPackageArgs {

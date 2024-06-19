@@ -50,7 +50,7 @@ impl RunForPackageArgs {
         snforge_target_dir_path: &Utf8Path,
         versioned_programs_dir: Utf8PathBuf,
     ) -> Result<RunForPackageArgs> {
-        let raw_test_targets = load_test_artifacts(snforge_target_dir_path, &package.name)?;
+        let raw_test_targets = load_test_artifacts(snforge_target_dir_path, &package)?;
 
         let contracts =
             get_contracts_artifacts_and_source_sierra_paths(scarb_metadata, &package.id, None)?;
