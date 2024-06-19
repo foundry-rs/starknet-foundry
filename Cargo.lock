@@ -4603,6 +4603,7 @@ dependencies = [
  "cairo-lang-utils",
  "indoc",
  "lazy_static",
+ "num-bigint",
  "regex",
  "serde_json",
  "smol_str",

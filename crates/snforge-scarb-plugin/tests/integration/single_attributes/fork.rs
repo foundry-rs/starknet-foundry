@@ -126,7 +126,7 @@ fn accepts_inline_config() {
 
     assert_output(
         &result,
-        "
+        r#"
             fn empty_fn() {
                 if snforge_std::_cheatcode::_is_config_run() {
 
@@ -134,7 +134,7 @@ fn accepts_inline_config() {
 
                     snforge_std::_config_types::ForkConfig::Inline(
                         snforge_std::_config_types::InlineForkConfig {
-                            url: http://example.com/,
+                            url: "http://example.com/",
                             block: BlockNumber(0x17)
                         }
                     )
@@ -145,7 +145,7 @@ fn accepts_inline_config() {
                     return;
                 }
             }
-        ",
+        "#,
     );
 }
 
