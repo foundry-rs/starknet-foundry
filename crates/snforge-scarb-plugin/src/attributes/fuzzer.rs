@@ -1,19 +1,19 @@
 use super::{AttributeInfo, AttributeTypeData};
 use crate::{
     args::Arguments,
-    attributes::AttributeCollector,
+    attributes::{AttributeCollector, ErrorExt},
     cairo_expression::CairoExpression,
     config_statement::extend_with_config_cheatcodes,
     types::{Number, ParseFromExpr},
 };
 use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream};
 use cairo_lang_syntax::node::db::SyntaxGroup;
+use num_bigint::BigInt;
 
 pub struct FuzzerCollector;
 
 impl AttributeInfo for FuzzerCollector {
     const ATTR_NAME: &'static str = "fuzzer";
-    const ARGS_FORM: &'static str = "<runs>: number (greater than 0), <seed>: number";
 }
 
 impl AttributeTypeData for FuzzerCollector {
@@ -38,7 +38,11 @@ impl AttributeCollector for FuzzerCollector {
             .map(|arg| Number::parse_from_expr::<Self>(db, arg, "runs"))
             .transpose()?;
 
-        //TODO validate runs > 0
+        if let Some(Number(ref runs)) = runs {
+            if runs <= &BigInt::from(0) {
+                Err(Self::error("runs must be greater than 0"))?;
+            }
+        }
 
         let seed = seed.as_cairo_expression();
         let runs = runs.as_cairo_expression();

@@ -41,7 +41,6 @@ struct InternalCollector;
 
 impl AttributeInfo for InternalCollector {
     const ATTR_NAME: &'static str = "__SNFORGE_INTERNAL_ATTR__";
-    const ARGS_FORM: &'static str = "";
 }
 
 pub fn parse_args(args: &str) -> (SimpleParserDatabase, OptionArgListParenthesized) {

@@ -74,8 +74,7 @@ impl ParseFromExpr<Expr> for Expected {
                                 Ok(format!("0x{}", string.to_str_radix(16)))
                             }
                             _ => Err(ShouldPanicCollector::error(format!(
-                                "<{arg_name}> argument must be in form: {}",
-                                ShouldPanicCollector::ARGS_FORM
+                                "<{arg_name}> argument must be in form: [<expected>: \"double quotted string\" | 'single quotted string' | ['single quotted string',]]"
                             )))?,
                         }
                     })
@@ -85,8 +84,7 @@ impl ParseFromExpr<Expr> for Expected {
                 Ok(Self::Array(elements))
             }
             _ => Err(ShouldPanicCollector::error(format!(
-                "<{arg_name}> argument must be in form: {}",
-                ShouldPanicCollector::ARGS_FORM
+                "<{arg_name}> argument must be in form: [<expected>: \"double quotted string\" | 'single quotted string' | ['single quotted string',]]"
             ))),
         }
     }

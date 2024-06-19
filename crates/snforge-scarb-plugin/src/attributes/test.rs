@@ -11,7 +11,6 @@ struct TestCollector;
 
 impl AttributeInfo for TestCollector {
     const ATTR_NAME: &'static str = "test";
-    const ARGS_FORM: &'static str = "";
 }
 
 #[must_use]

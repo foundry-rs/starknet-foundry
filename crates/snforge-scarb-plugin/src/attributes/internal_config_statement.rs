@@ -11,7 +11,6 @@ pub struct InternalConfigStatementCollector;
 
 impl AttributeInfo for InternalConfigStatementCollector {
     const ATTR_NAME: &'static str = "__internal_config_statement";
-    const ARGS_FORM: &'static str = "";
 }
 
 #[must_use]
