@@ -191,9 +191,8 @@ fn fuzzing_exit_first() {
 
 
         Collected 2 test(s) from fuzzing package
-        Running 0 test(s) from src/
         Running 2 test(s) from tests/
-        [FAIL] tests::exit_first_fuzz::exit_first_fails_test (runs: 1, arguments: [..])
+        [FAIL] fuzzing_integrationtest::exit_first_fuzz::exit_first_fails_test (runs: 1, arguments: [..])
 
         Failure data:
             0x32202b2062203d3d2032202b2062 ('2 + b == 2 + b')
@@ -202,7 +201,7 @@ fn fuzzing_exit_first() {
 
         Fuzzer seed: [..]
         Failures:
-            tests::exit_first_fuzz::exit_first_fails_test
+            fuzzing_integrationtest::exit_first_fuzz::exit_first_fails_test
         "},
     );
 }
@@ -224,15 +223,14 @@ fn fuzzing_exit_first_single_fail() {
 
 
         Collected 2 test(s) from fuzzing package
-        Running 0 test(s) from src/
         Running 2 test(s) from tests/
-        [FAIL] tests::exit_first_single_fail::exit_first_fails_test
+        [FAIL] fuzzing_integrationtest::exit_first_single_fail::exit_first_fails_test
 
         Failure data:
             0x32202b2062203d3d2032202b2062 ('2 + b == 2 + b')
 
         Failures:
-            tests::exit_first_single_fail::exit_first_fails_test
+            fuzzing_integrationtest::exit_first_single_fail::exit_first_fails_test
 
         Tests: 0 passed, 1 failed, 1 skipped, 0 ignored, 17 filtered out
         "},

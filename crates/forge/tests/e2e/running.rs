@@ -766,9 +766,7 @@ fn init_new_project_test() {
 
 #[test]
 fn should_panic() {
-    let temp = tempdir_with_tool_versions().unwrap();
-    temp.copy_from("tests/data/should_panic_test", &["**/*.cairo", "**/*.toml"])
-        .unwrap();
+    let temp = setup_package("should_panic_test");
 
     let output = test_runner(&temp).assert().code(1);
 
@@ -782,38 +780,38 @@ fn should_panic() {
         Collected 8 test(s) from should_panic_test package
         Running 0 test(s) from src/
         Running 8 test(s) from tests/
-        [FAIL] tests::should_panic_test::expected_panic_but_didnt
+        [FAIL] should_panic_test_integrationtest::should_panic_test::expected_panic_but_didnt
         
         Failure data:
             Expected to panic but didn't
 
-        [PASS] tests::should_panic_test::should_panic_check_data [..]
-        [PASS] tests::should_panic_test::should_panic_multiple_messages [..]
-        [PASS] tests::should_panic_test::should_panic_no_data [..]
+        [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_check_data [..]
+        [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_multiple_messages [..]
+        [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_no_data [..]
         
         Success data:
             0x0 ('')
         
-        [FAIL] tests::should_panic_test::should_panic_with_non_matching_data
+        [FAIL] should_panic_test_integrationtest::should_panic_test::should_panic_with_non_matching_data
         
         Failure data:
             Incorrect panic data
             Actual:    [8111420071579136082810415440747] (failing check)
             Expected:  [0] ()
         
-        [FAIL] tests::should_panic_test::expected_panic_but_didnt_with_expected
+        [FAIL] should_panic_test_integrationtest::should_panic_test::expected_panic_but_didnt_with_expected
         
         Failure data:
             Expected to panic but didn't
             Expected panic data:  [8903707727067478891290643490661] (panic message)
         
-        [FAIL] tests::should_panic_test::expected_panic_but_didnt_with_expected_multiple
+        [FAIL] should_panic_test_integrationtest::should_panic_test::expected_panic_but_didnt_with_expected_multiple
         
         Failure data:
             Expected to panic but didn't
             Expected panic data:  [8903707727067478891290643490661, 2340509922561928411394884117817189] (panic message, second message)
         
-        [FAIL] tests::should_panic_test::didnt_expect_panic
+        [FAIL] should_panic_test_integrationtest::should_panic_test::didnt_expect_panic
         
         Failure data:
             0x756e65787065637465642070616e6963 ('unexpected panic')
@@ -821,11 +819,11 @@ fn should_panic() {
         Tests: 3 passed, 5 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:
-            tests::should_panic_test::expected_panic_but_didnt
-            tests::should_panic_test::should_panic_with_non_matching_data
-            tests::should_panic_test::expected_panic_but_didnt_with_expected
-            tests::should_panic_test::expected_panic_but_didnt_with_expected_multiple
-            tests::should_panic_test::didnt_expect_panic
+            should_panic_test_integrationtest::should_panic_test::expected_panic_but_didnt
+            should_panic_test_integrationtest::should_panic_test::should_panic_with_non_matching_data
+            should_panic_test_integrationtest::should_panic_test::expected_panic_but_didnt_with_expected
+            should_panic_test_integrationtest::should_panic_test::expected_panic_but_didnt_with_expected_multiple
+            should_panic_test_integrationtest::should_panic_test::didnt_expect_panic
         "},
     );
 }
@@ -854,8 +852,8 @@ fn printing_in_contracts() {
         Running 0 test(s) from src/
         Running 2 test(s) from tests/
         Hello world!
-        [PASS] tests::test_contract::test_increase_balance [..]
-        [PASS] tests::test_contract::test_cannot_increase_balance_with_zero_value [..]
+        [PASS] contract_printing_integrationtest::test_contract::test_increase_balance [..]
+        [PASS] contract_printing_integrationtest::test_contract::test_cannot_increase_balance_with_zero_value [..]
         Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         "#},
     );
@@ -928,7 +926,7 @@ fn detailed_resources_flag() {
         Collected 1 test(s) from erc20_package package
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
-        [PASS] tests::test_complex::complex[..]
+        [PASS] erc20_package_integrationtest::test_complex::complex[..]
                 steps: [..]
                 memory holes: [..]
                 builtins: ([..])
@@ -968,7 +966,7 @@ fn catch_runtime_errors() {
             r#"
                 [..]Compiling[..]
                 [..]Finished[..]
-                [PASS] tests::test::catch_no_such_file [..]
+                [PASS] simple_package_integrationtest::test::catch_no_such_file [..]
             "#
         ),
     );

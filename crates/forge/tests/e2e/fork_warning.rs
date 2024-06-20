@@ -48,7 +48,7 @@ fn should_print_warning() {
         .write_str(
             formatdoc!(
                 r#"
-                #[fork(url: "{node_url}", block_id: BlockId::Tag(BlockTag::Latest))]
+                #[fork(url: "{node_url}", block_tag: latest)]
                 #[test]
                 fn t1() {{
                     assert!(false);
@@ -73,7 +73,7 @@ fn should_print_warning() {
                 Collected 1 test(s) from empty package
                 Running 0 test(s) from src/
                 Running 1 test(s) from tests/
-                [FAIL] tests::test::t1
+                [FAIL] empty_integrationtest::test::t1
 
                 Failure[..]
                 Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
@@ -81,7 +81,7 @@ fn should_print_warning() {
                 Latest block number = [..] for url = {node_url}
 
                 Failures:
-                    tests::test::t1
+                    empty_integrationtest::test::t1
             "
         ),
     );
@@ -127,10 +127,10 @@ fn should_dedup_urls() {
                 Collected 2 test(s) from empty package
                 Running 0 test(s) from src/
                 Running 2 test(s) from tests/
-                [FAIL] tests::test::t1
+                [FAIL] empty_integrationtest::test::t1
 
                 Failure[..]
-                [FAIL] tests::test::t2
+                [FAIL] empty_integrationtest::test::t2
 
                 Failure[..]
                 Tests: 0 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
@@ -138,8 +138,8 @@ fn should_dedup_urls() {
                 Latest block number = [..] for url = {node_url}
 
                 Failures:
-                    tests::test::t1
-                    tests::test::t2
+                    empty_integrationtest::test::t1
+                    empty_integrationtest::test::t2
             "
         ),
     );
@@ -156,12 +156,12 @@ fn should_print_foreach() {
     temp.child("tests/test.cairo")
         .write_str(formatdoc!(
             r#"
-                #[fork(url: "http://127.0.0.1:3030?url={node_url}", block_id: BlockId::Tag(BlockTag::Latest))]
+                #[fork(url: "http://127.0.0.1:3030?url={node_url}", block_tag: latest)]
                 #[test]
                 fn t1() {{
                     assert!(false);
                 }}
-                #[fork(url: "{node_url}", block_id: BlockId::Tag(BlockTag::Latest))]
+                #[fork(url: "{node_url}", block_tag: latest)]
                 #[test]
                 fn t2() {{
                     assert!(false);
@@ -185,10 +185,10 @@ fn should_print_foreach() {
                 Collected 2 test(s) from empty package
                 Running 0 test(s) from src/
                 Running 2 test(s) from tests/
-                [FAIL] tests::test::t1
+                [FAIL] empty_integrationtest::test::t1
 
                 Failure[..]
-                [FAIL] tests::test::t2
+                [FAIL] empty_integrationtest::test::t2
 
                 Failure[..]
                 Tests: 0 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
@@ -197,8 +197,8 @@ fn should_print_foreach() {
                 Latest block number = [..] for url = {node_url}
 
                 Failures:
-                    tests::test::t1
-                    tests::test::t2
+                    empty_integrationtest::test::t1
+                    empty_integrationtest::test::t2
             "
         ),
     );
