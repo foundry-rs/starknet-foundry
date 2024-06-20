@@ -1,12 +1,14 @@
 use anyhow::{bail, ensure, Result};
 use clap::{Args, ValueEnum};
+use sncast::handle_account_factory_error;
+use starknet::accounts::{AccountDeploymentV1, AccountDeploymentV3, AccountFactory};
 use starknet::core::types::FieldElement;
 
 #[derive(Args, Debug)]
 pub struct FeeArgs {
     /// Token that transaction fee will be paid in
     #[clap(long)]
-    pub fee_token: FeeToken,
+    pub fee_token: Option<FeeToken>,
 
     /// Max fee for the transaction. If not provided, will be automatically estimated. (Only for ETH fee payment)
     #[clap(short, long)]
@@ -25,7 +27,10 @@ impl TryFrom<FeeArgs> for FeeSettings {
     type Error = anyhow::Error;
 
     fn try_from(args: FeeArgs) -> Result<Self> {
-        match args.fee_token {
+        match args
+            .fee_token
+            .ok_or_else(|| anyhow::anyhow!("Fee token is not provided"))?
+        {
             FeeToken::Eth => {
                 ensure!(
                     args.max_gas.is_none(),
@@ -73,18 +78,50 @@ pub enum FeeToken {
     Strk,
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(Debug, PartialEq)]
 pub struct EthFeeSettings {
     pub max_fee: FieldElement,
 }
 
-#[derive(PartialEq, Debug)]
+impl EthFeeSettings {
+    pub async fn estimate<T>(deployment: &AccountDeploymentV1<'_, T>) -> Result<Self>
+    where
+        T: AccountFactory + Sync,
+    {
+        deployment
+            .estimate_fee()
+            .await
+            .map_err(handle_account_factory_error::<T>)
+            .map(|estimated_fee| Self {
+                max_fee: estimated_fee.overall_fee,
+            })
+    }
+}
+
+#[derive(Debug, PartialEq)]
 pub struct StrkFeeSettings {
     pub max_gas: u64,
     pub max_gas_unit_price: u128,
 }
 
-#[derive(PartialEq, Debug)]
+impl StrkFeeSettings {
+    pub async fn estimate<T>(deployment: &AccountDeploymentV3<'_, T>) -> Result<Self>
+    where
+        T: AccountFactory + Sync,
+    {
+        let estimate_fee = deployment
+            .estimate_fee()
+            .await
+            .map_err(handle_account_factory_error::<T>)?;
+
+        Ok(Self {
+            max_gas: estimate_fee.gas_consumed.try_into()?,
+            max_gas_unit_price: estimate_fee.gas_price.try_into()?,
+        })
+    }
+}
+
+#[derive(Debug, PartialEq)]
 pub enum FeeSettings {
     Eth(Option<EthFeeSettings>),
     Strk(Option<StrkFeeSettings>),
@@ -97,7 +134,7 @@ mod tests {
     #[test]
     fn test_happy_case_eth() {
         let args = FeeArgs {
-            fee_token: FeeToken::Eth,
+            fee_token: Some(FeeToken::Eth),
             max_fee: Some(100_u32.into()),
             max_gas: None,
             max_gas_unit_price: None,
@@ -116,7 +153,7 @@ mod tests {
     #[test]
     fn test_happy_case_strk() {
         let args = FeeArgs {
-            fee_token: FeeToken::Strk,
+            fee_token: Some(FeeToken::Strk),
             max_fee: None,
             max_gas: Some(100_u32.into()),
             max_gas_unit_price: Some(100_u32.into()),
@@ -136,7 +173,7 @@ mod tests {
     #[test]
     fn test_max_gas_eth() {
         let args = FeeArgs {
-            fee_token: FeeToken::Eth,
+            fee_token: Some(FeeToken::Eth),
             max_fee: Some(100_u32.into()),
             max_gas: Some(100_u32.into()),
             max_gas_unit_price: None,
@@ -152,7 +189,7 @@ mod tests {
     #[test]
     fn test_max_gas_unit_price_eth() {
         let args = FeeArgs {
-            fee_token: FeeToken::Eth,
+            fee_token: Some(FeeToken::Eth),
             max_fee: Some(100_u32.into()),
             max_gas: None,
             max_gas_unit_price: Some(100_u32.into()),
@@ -168,7 +205,7 @@ mod tests {
     #[test]
     fn test_max_fee_strk() {
         let args = FeeArgs {
-            fee_token: FeeToken::Strk,
+            fee_token: Some(FeeToken::Strk),
             max_fee: Some(100_u32.into()),
             max_gas: Some(100_u32.into()),
             max_gas_unit_price: Some(100_u32.into()),
@@ -184,7 +221,7 @@ mod tests {
     #[test]
     fn test_max_gas_strk() {
         let args = FeeArgs {
-            fee_token: FeeToken::Strk,
+            fee_token: Some(FeeToken::Strk),
             max_fee: None,
             max_gas: None,
             max_gas_unit_price: Some(100_u32.into()),
@@ -200,7 +237,7 @@ mod tests {
     #[test]
     fn test_max_gas_unit_price_strk() {
         let args = FeeArgs {
-            fee_token: FeeToken::Strk,
+            fee_token: Some(FeeToken::Strk),
             max_fee: None,
             max_gas: Some(100_u32.into()),
             max_gas_unit_price: None,
@@ -211,5 +248,19 @@ mod tests {
         assert!(error
             .to_string()
             .contains("You only provided max gas amount, but not max gas unit price"));
+    }
+
+    #[test]
+    fn test_no_fee_token() {
+        let args = FeeArgs {
+            fee_token: None,
+            max_fee: Some(100_u32.into()),
+            max_gas: Some(100_u32.into()),
+            max_gas_unit_price: Some(100_u32.into()),
+        };
+
+        let error = FeeSettings::try_from(args).unwrap_err();
+
+        assert!(error.to_string().contains("Fee token is not provided"));
     }
 }
