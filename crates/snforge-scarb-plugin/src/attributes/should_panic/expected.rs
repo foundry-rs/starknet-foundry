@@ -2,16 +2,16 @@ use super::ShouldPanicCollector;
 use crate::{
     attributes::{AttributeInfo, ErrorExt},
     cairo_expression::CairoExpression,
-    types::{ParseFromExpr, ShortString},
+    types::{Felt, ParseFromExpr},
 };
 use cairo_lang_macro::Diagnostic;
 use cairo_lang_syntax::node::{ast::Expr, db::SyntaxGroup};
 
 #[derive(Debug, Clone, Default)]
 pub enum Expected {
-    ShortString(ShortString),
+    Felt(Felt),
     ByteArray(String),
-    Array(Vec<ShortString>),
+    Array(Vec<Felt>),
     #[default]
     Any,
 }
@@ -19,8 +19,8 @@ pub enum Expected {
 impl CairoExpression for Expected {
     fn as_cairo_expression(&self) -> String {
         match self {
-            Self::ShortString(string) => {
-                let string = string.as_cairo_expression();
+            Self::Felt(felt) => {
+                let string = felt.as_cairo_expression();
 
                 format!("snforge_std::_config_types::Expected::ShortString({string})")
             }
@@ -45,11 +45,17 @@ impl ParseFromExpr<Expr> for Expected {
         expr: &Expr,
         arg_name: &str,
     ) -> Result<Self, Diagnostic> {
-        match expr {
-            Expr::ShortString(string) => {
-                let string = string.string_value(db).unwrap();
+        let error_msg = format!(
+            "<{arg_name}> argument must be string, short string, number or list of short strings or numbers in regular brackets ()"
+        );
 
-                Ok(Self::ShortString(ShortString(string)))
+        match expr {
+            Expr::ShortString(_) | Expr::Literal(_) => {
+                Ok(Self::Felt(
+                    Felt::parse_from_expr::<ShouldPanicCollector>(db, &expr, arg_name)
+                        // this unwrap is safe because we checked if expression is valid short string or number
+                        .unwrap(),
+                ))
             }
             Expr::String(string) => {
                 let string = string.string_value(db).unwrap();
@@ -61,31 +67,13 @@ impl ParseFromExpr<Expr> for Expected {
                     .expressions(db)
                     .elements(db)
                     .into_iter()
-                    .map(|expression| -> Result<String, Diagnostic> {
-                        match expression {
-                            Expr::ShortString(string) => {
-                                let string = string.string_value(db).unwrap();
-
-                                Ok(string)
-                            }
-                            Expr::Literal(string) => {
-                                let string = string.numeric_value(db).unwrap();
-
-                                Ok(format!("0x{}", string.to_str_radix(16)))
-                            }
-                            _ => Err(ShouldPanicCollector::error(format!(
-                                "<{arg_name}> argument must be in form: [<expected>: \"double quotted string\" | 'single quotted string' | ['single quotted string',]]"
-                            )))?,
-                        }
-                    })
-                    .map(|r| r.map(ShortString))
-                    .collect::<Result<Vec<ShortString>, Diagnostic>>()?;
+                    .map(|expr| Felt::parse_from_expr::<ShouldPanicCollector>(db, &expr, arg_name))
+                    .collect::<Result<Vec<Felt>, Diagnostic>>()
+                    .map_err(|_| ShouldPanicCollector::error(error_msg))?;
 
                 Ok(Self::Array(elements))
             }
-            _ => Err(ShouldPanicCollector::error(format!(
-                "<{arg_name}> argument must be in form: [<expected>: \"double quotted string\" | 'single quotted string' | ['single quotted string',]]"
-            ))),
+            _ => Err(ShouldPanicCollector::error(error_msg)),
         }
     }
 }

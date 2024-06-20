@@ -4,7 +4,7 @@ use include_dir::{include_dir, Dir};
 use scarb_api::ScarbCommand;
 use std::fs::{self, OpenOptions};
 use std::io::Write;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use toml_edit::{value, ArrayOfTables, DocumentMut, Item, Table};
 
 static TEMPLATE: Dir = include_dir!("starknet_forge_template");
@@ -87,29 +87,15 @@ fn extend_gitignore(path: &Path) -> Result<()> {
     Ok(())
 }
 
-trait ScarbCommandExt {
-    fn maybe_set_scarb_path(&mut self, path: Option<impl Into<PathBuf>>) -> &mut Self;
-}
-
-impl ScarbCommandExt for ScarbCommand {
-    fn maybe_set_scarb_path(&mut self, path: Option<impl Into<PathBuf>>) -> &mut Self {
-        if let Some(path) = path {
-            self.scarb_path(path);
-        }
-        self
-    }
-}
-
 pub fn run(project_name: &str) -> Result<()> {
-    let project_path = std::env::current_dir()?.join(project_name);
-
-    let scarb = std::env::var("SCARB").ok();
+    let current_dir = std::env::current_dir().context("Failed to get current directory")?;
+    let project_path = current_dir.join(project_name);
+    let manifest_path = project_path.join("Scarb.toml");
 
     // if there is no Scarb.toml run `scarb new`
-    if !project_path.join("Scarb.toml").is_file() {
+    if !manifest_path.is_file() {
         ScarbCommand::new_with_stdio()
-            .maybe_set_scarb_path(scarb.clone())
-            .current_dir(std::env::current_dir().context("Failed to get current directory")?)
+            .current_dir(current_dir)
             .arg("new")
             .arg(&project_path)
             .run()
@@ -119,8 +105,8 @@ pub fn run(project_name: &str) -> Result<()> {
     let version = env!("CARGO_PKG_VERSION");
 
     ScarbCommand::new_with_stdio()
-        .maybe_set_scarb_path(scarb.clone())
         .current_dir(&project_path)
+        .manifest_path(manifest_path.clone())
         .offline()
         .arg("add")
         .arg("--dev")
@@ -135,8 +121,8 @@ pub fn run(project_name: &str) -> Result<()> {
     let cairo_version = ScarbCommand::version().run()?.cairo;
 
     ScarbCommand::new_with_stdio()
-        .maybe_set_scarb_path(scarb)
         .current_dir(&project_path)
+        .manifest_path(manifest_path.clone())
         .offline()
         .arg("add")
         .arg(format!("starknet@{cairo_version}"))
@@ -147,6 +133,13 @@ pub fn run(project_name: &str) -> Result<()> {
     extend_gitignore(&project_path)?;
     overwrite_files_from_scarb_template("src", &project_path, project_name)?;
     overwrite_files_from_scarb_template("tests", &project_path, project_name)?;
+
+    // Fetch to create lock file.
+    ScarbCommand::new_with_stdio()
+        .manifest_path(manifest_path)
+        .arg("fetch")
+        .run()
+        .context("Failed to fetch created project")?;
 
     Ok(())
 }
