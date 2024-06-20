@@ -6,7 +6,7 @@ use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_co
 fn fuzzing() {
     let temp = setup_package("fuzzing");
 
-    let output = test_runner(&temp).arg("fuzzing").assert().code(1);
+    let output = test_runner(&temp).arg("fuzzing::").assert().code(1);
 
     assert_stdout_contains(
         output,
@@ -49,7 +49,7 @@ fn fuzzing_set_runs() {
     let temp = setup_package("fuzzing");
 
     let output = test_runner(&temp)
-        .args(["fuzzing", "--fuzzer-runs", "10"])
+        .args(["fuzzing::", "--fuzzer-runs", "10"])
         .assert()
         .code(1);
 
@@ -94,7 +94,7 @@ fn fuzzing_set_seed() {
     let temp = setup_package("fuzzing");
 
     let output = test_runner(&temp)
-        .args(["fuzzing", "--fuzzer-seed", "1234"])
+        .args(["fuzzing::", "--fuzzer-seed", "1234"])
         .assert()
         .code(1);
 
@@ -139,7 +139,7 @@ fn fuzzing_incorrect_runs() {
     let temp = setup_package("fuzzing");
 
     let output = test_runner(&temp)
-        .args(["fuzzing", "--fuzzer-runs", "0"])
+        .args(["fuzzing::", "--fuzzer-runs", "0"])
         .assert()
         .code(2);
 
