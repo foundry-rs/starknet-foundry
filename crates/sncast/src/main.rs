@@ -369,6 +369,7 @@ async fn run_async_command(
                 Ok(())
             }
             account::Commands::Deploy(deploy) => {
+                deploy.validate()?;
                 let chain_id = get_chain_id(&provider).await?;
                 let keystore_path = config.keystore.clone();
                 let mut result = starknet_commands::account::deploy::deploy(
