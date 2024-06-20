@@ -16,6 +16,43 @@ pub trait ParseFromExpr<E>: Sized {
 }
 
 #[derive(Debug, Clone)]
+pub enum Felt {
+    Number(Number),
+    ShortString(ShortString),
+}
+
+impl CairoExpression for Felt {
+    fn as_cairo_expression(&self) -> String {
+        match self {
+            Self::Number(number) => number.as_cairo_expression(),
+            Self::ShortString(string) => string.as_cairo_expression(),
+        }
+    }
+}
+
+impl ParseFromExpr<Expr> for Felt {
+    fn parse_from_expr<T: AttributeInfo>(
+        db: &dyn SyntaxGroup,
+        expr: &Expr,
+        arg_name: &str,
+    ) -> Result<Self, Diagnostic> {
+        match expr {
+            Expr::ShortString(string) => {
+                let string = string.string_value(db).unwrap();
+
+                Ok(Self::ShortString(ShortString(string)))
+            }
+            Expr::Literal(string) => {
+                let num = string.numeric_value(db).unwrap();
+
+                Ok(Self::Number(Number(num)))
+            }
+            _ => Err(T::error(format!("<{arg_name}> argument must be felt")))?,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
 pub struct Number(pub(crate) BigInt);
 
 #[derive(Debug, Clone)]
