@@ -167,7 +167,7 @@ fn fork_aliased_decorator() {
                 fork_targets: vec![ForkTarget::new(
                     "FORK_NAME_FROM_SCARB_TOML".to_string(),
                     node_rpc_url().to_string(),
-                    "Tag".to_string(),
+                    "tag".to_string(),
                     "Latest".to_string(),
                 )],
             },
