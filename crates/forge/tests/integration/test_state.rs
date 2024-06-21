@@ -23,7 +23,7 @@ fn storage_access_from_tests() {
             }
         }
 
-        use tests::test_case::Contract::balanceContractMemberStateTrait;
+        use starknet::storage::StorageMemberAccessTrait;
 
         #[test]
         fn storage_access_from_tests() {
@@ -420,9 +420,7 @@ fn storage_access_default_values() {
             }
         }
 
-        use Contract::balanceContractMemberStateTrait;
-        use Contract::legacy_mapContractMemberStateTrait;
-        use Contract::custom_structContractMemberStateTrait;
+        use starknet::storage::{StorageMemberAccessTrait, StorageLegacyMapMemberAccessTrait};
 
         #[test]
         fn storage_access_default_values() {

@@ -74,7 +74,7 @@ fn simple_package_with_git_dependency() {
             [[target.starknet-contract]]
 
             [dependencies]
-            starknet = "2.5.4"
+            starknet = "2.6.4"
             snforge_std = {{ git = "https://github.com/{}", branch = "{}" }}
             "#,
             remote_url,
@@ -98,30 +98,30 @@ fn simple_package_with_git_dependency() {
         [PASS] simple_package::tests::test_fib [..]
         [IGNORE] simple_package::tests::ignored_test
         Running 11 test(s) from tests/
-        [PASS] tests::contract::call_and_invoke [..]
-        [PASS] tests::ext_function_test::test_my_test [..]
-        [IGNORE] tests::ext_function_test::ignored_test
-        [PASS] tests::ext_function_test::test_simple [..]
-        [PASS] tests::test_simple::test_simple [..]
-        [PASS] tests::test_simple::test_simple2 [..]
-        [PASS] tests::test_simple::test_two [..]
-        [PASS] tests::test_simple::test_two_and_two [..]
-        [FAIL] tests::test_simple::test_failing
+        [PASS] simple_package_integrationtest::contract::call_and_invoke [..]
+        [PASS] simple_package_integrationtest::ext_function_test::test_my_test [..]
+        [IGNORE] simple_package_integrationtest::ext_function_test::ignored_test
+        [PASS] simple_package_integrationtest::ext_function_test::test_simple [..]
+        [PASS] simple_package_integrationtest::test_simple::test_simple [..]
+        [PASS] simple_package_integrationtest::test_simple::test_simple2 [..]
+        [PASS] simple_package_integrationtest::test_simple::test_two [..]
+        [PASS] simple_package_integrationtest::test_simple::test_two_and_two [..]
+        [FAIL] simple_package_integrationtest::test_simple::test_failing
         
         Failure data:
             0x6661696c696e6720636865636b ('failing check')
         
-        [FAIL] tests::test_simple::test_another_failing
+        [FAIL] simple_package_integrationtest::test_simple::test_another_failing
         
         Failure data:
             0x6661696c696e6720636865636b ('failing check')
         
-        [PASS] tests::without_prefix::five [..]
+        [PASS] simple_package_integrationtest::without_prefix::five [..]
         Tests: 9 passed, 2 failed, 0 skipped, 2 ignored, 0 filtered out
         
         Failures:
-            tests::test_simple::test_failing
-            tests::test_simple::test_another_failing
+            simple_package_integrationtest::test_simple::test_failing
+            simple_package_integrationtest::test_simple::test_another_failing
         ",
             remote_url.trim_end_matches(".git")
         ),
@@ -864,23 +864,23 @@ fn incompatible_snforge_std_version_warning() {
 
         Collected 4 test(s) from steps package
         Running 4 test(s) from src/
-        [PASS] steps::tests::steps_570031 [..]
-        [FAIL] steps::tests::steps_4000006
+        [PASS] steps::tests::steps_570030 [..]
+        [FAIL] steps::tests::steps_4000005
         
         Failure data:
             Could not reach the end of the program. RunResources has no remaining steps.
         
-        [FAIL] steps::tests::steps_5700031
+        [FAIL] steps::tests::steps_5699625
         
         Failure data:
             Could not reach the end of the program. RunResources has no remaining steps.
         
-        [PASS] steps::tests::steps_3999987 [..]
+        [PASS] steps::tests::steps_3999990 [..]
         Tests: 2 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:
-            steps::tests::steps_4000006
-            steps::tests::steps_5700031
+            steps::tests::steps_4000005
+            steps::tests::steps_5699625
         "},
     );
 }
