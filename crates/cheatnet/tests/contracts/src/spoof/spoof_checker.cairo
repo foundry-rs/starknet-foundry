@@ -1,32 +1,16 @@
-use starknet::info::TxInfo;
-use serde::Serde;
-use option::OptionTrait;
-use array::ArrayTrait;
-use starknet::ContractAddress;
-
 #[starknet::interface]
 trait ISpoofChecker<TContractState> {
-    fn get_tx_hash(ref self: TContractState) -> felt252;
-    fn get_nonce(ref self: TContractState) -> felt252;
-    fn get_account_contract_address(ref self: TContractState) -> ContractAddress;
-    fn get_signature(ref self: TContractState) -> Span<felt252>;
-    fn get_version(ref self: TContractState) -> felt252;
-    fn get_max_fee(ref self: TContractState) -> u128;
-    fn get_chain_id(ref self: TContractState) -> felt252;
+    fn get_transaction_hash(self: @TContractState) -> felt252;
     fn get_tx_hash_and_emit_event(ref self: TContractState) -> felt252;
+    fn get_tx_info(self: @TContractState) -> starknet::info::v2::TxInfo;
 }
 
 #[starknet::contract]
 mod SpoofChecker {
-    use serde::Serde;
-    use starknet::info::TxInfo;
-    use box::BoxTrait;
-    use starknet::ContractAddress;
+    use starknet::{SyscallResultTrait, SyscallResult, syscalls::get_execution_info_v2_syscall};
 
     #[storage]
-    struct Storage {
-        balance: felt252,
-    }
+    struct Storage {}
 
     #[event]
     #[derive(Drop, starknet::Event)]
@@ -39,40 +23,21 @@ mod SpoofChecker {
         tx_hash: felt252
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl ISpoofChecker of super::ISpoofChecker<ContractState> {
-        fn get_tx_hash(ref self: ContractState) -> felt252 {
+        fn get_transaction_hash(self: @ContractState) -> felt252 {
             starknet::get_tx_info().unbox().transaction_hash
-        }
-
-        fn get_nonce(ref self: ContractState) -> felt252 {
-            starknet::get_tx_info().unbox().nonce
-        }
-
-        fn get_account_contract_address(ref self: ContractState) -> ContractAddress {
-            starknet::get_tx_info().unbox().account_contract_address
-        }
-
-        fn get_signature(ref self: ContractState) -> Span<felt252> {
-            starknet::get_tx_info().unbox().signature
-        }
-
-        fn get_version(ref self: ContractState) -> felt252 {
-            starknet::get_tx_info().unbox().version
-        }
-
-        fn get_max_fee(ref self: ContractState) -> u128 {
-            starknet::get_tx_info().unbox().max_fee
-        }
-
-        fn get_chain_id(ref self: ContractState) -> felt252 {
-            starknet::get_tx_info().unbox().chain_id
         }
 
         fn get_tx_hash_and_emit_event(ref self: ContractState) -> felt252 {
             let tx_hash = starknet::get_tx_info().unbox().transaction_hash;
             self.emit(Event::TxHashEmitted(TxHashEmitted { tx_hash }));
             tx_hash
+        }
+
+        fn get_tx_info(self: @ContractState) -> starknet::info::v2::TxInfo {
+            let execution_info = get_execution_info_v2_syscall().unwrap_syscall().unbox();
+            execution_info.tx_info.unbox()
         }
     }
 }

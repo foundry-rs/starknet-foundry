@@ -9,30 +9,34 @@ use snforge_std::{declare, ContractClass, ContractClassTrait};
 
 use contract_printing::IHelloStarknetSafeDispatcher;
 use contract_printing::IHelloStarknetSafeDispatcherTrait;
+use contract_printing::IHelloStarknetDispatcher;
+use contract_printing::IHelloStarknetDispatcherTrait;
 
-fn deploy_contract(name: felt252) -> ContractAddress {
-    let contract = declare(name);
-    contract.deploy(@ArrayTrait::new()).unwrap()
+fn deploy_contract(name: ByteArray) -> ContractAddress {
+    let contract = declare(name).unwrap();
+    let (address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+    address
 }
 
 #[test]
 fn test_increase_balance() {
-    let contract_address = deploy_contract('HelloStarknet');
+    let contract_address = deploy_contract("HelloStarknet");
 
-    let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
+    let dispatcher = IHelloStarknetDispatcher { contract_address };
 
-    let balance_before = safe_dispatcher.get_balance().unwrap();
+    let balance_before = dispatcher.get_balance();
     assert(balance_before == 0, 'Invalid balance');
 
-    safe_dispatcher.increase_balance(42).unwrap();
+    dispatcher.increase_balance(42);
 
-    let balance_after = safe_dispatcher.get_balance().unwrap();
+    let balance_after = dispatcher.get_balance();
     assert(balance_after == 42, 'Invalid balance');
 }
 
 #[test]
+#[feature("safe_dispatcher")]
 fn test_cannot_increase_balance_with_zero_value() {
-    let contract_address = deploy_contract('HelloStarknet');
+    let contract_address = deploy_contract("HelloStarknet");
 
     let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
 

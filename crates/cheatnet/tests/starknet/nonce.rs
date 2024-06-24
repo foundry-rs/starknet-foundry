@@ -1,17 +1,15 @@
+use crate::common::{call_contract, deploy_wrapper};
 use crate::{
-    assert_success,
+    common::assertions::assert_success,
     common::{
         deploy_contract, felt_selector_from_name, get_contracts, recover_data,
-        state::{create_cached_state, create_cheatnet_state},
+        state::create_cached_state,
     },
 };
+use blockifier::state::state_api::State;
 use cairo_felt::Felt252;
-use cheatnet::cheatcodes::deploy::deploy;
-use cheatnet::{
-    rpc::call_contract,
-    state::{BlockifierState, CheatnetState},
-};
-use conversions::StarknetConversions;
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
+use cheatnet::state::CheatnetState;
 use starknet_api::core::ContractAddress;
 
 // We've decided that the nonce should not change in tests
@@ -19,32 +17,18 @@ use starknet_api::core::ContractAddress;
 // For now to test nonce `spoof` should be used.
 
 fn check_nonce(
-    blockifier_state: &mut BlockifierState,
+    state: &mut dyn State,
     cheatnet_state: &mut CheatnetState,
     contract_address: &ContractAddress,
 ) -> Felt252 {
     let write_nonce = felt_selector_from_name("write_nonce");
     let read_nonce = felt_selector_from_name("read_nonce");
 
-    let output = call_contract(
-        blockifier_state,
-        cheatnet_state,
-        contract_address,
-        &write_nonce,
-        &[],
-    )
-    .unwrap();
+    let output = call_contract(state, cheatnet_state, contract_address, &write_nonce, &[]);
 
-    assert_success!(output, vec![]);
+    assert_success(output, &[]);
 
-    let output = call_contract(
-        blockifier_state,
-        cheatnet_state,
-        contract_address,
-        &read_nonce,
-        &[],
-    )
-    .unwrap();
+    let output = call_contract(state, cheatnet_state, contract_address, &read_nonce, &[]);
 
     recover_data(output)[0].clone()
 }
@@ -52,21 +36,12 @@ fn check_nonce(
 #[test]
 fn nonce_transactions() {
     let mut cached_state = create_cached_state();
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
+    let mut cheatnet_state = CheatnetState::default();
 
-    let contract_address =
-        deploy_contract(&mut blockifier_state, &mut cheatnet_state, "Noncer", &[]);
+    let contract_address = deploy_contract(&mut cached_state, &mut cheatnet_state, "Noncer", &[]);
 
-    let old_nonce = check_nonce(
-        &mut blockifier_state,
-        &mut cheatnet_state,
-        &contract_address,
-    );
-    let new_nonce = check_nonce(
-        &mut blockifier_state,
-        &mut cheatnet_state,
-        &contract_address,
-    );
+    let old_nonce = check_nonce(&mut cached_state, &mut cheatnet_state, &contract_address);
+    let new_nonce = check_nonce(&mut cached_state, &mut cheatnet_state, &contract_address);
 
     assert_eq!(old_nonce, Felt252::from(0));
     assert_eq!(old_nonce, new_nonce);
@@ -75,36 +50,21 @@ fn nonce_transactions() {
 #[test]
 fn nonce_declare_deploy() {
     let mut cached_state = create_cached_state();
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
-    let contract_address =
-        deploy_contract(&mut blockifier_state, &mut cheatnet_state, "Noncer", &[]);
+    let mut cheatnet_state = CheatnetState::default();
 
-    let contracts = get_contracts();
-    let contract_name = "HelloStarknet".to_owned().to_felt252();
+    let contract_address = deploy_contract(&mut cached_state, &mut cheatnet_state, "Noncer", &[]);
 
-    let nonce1 = check_nonce(
-        &mut blockifier_state,
-        &mut cheatnet_state,
-        &contract_address,
-    );
+    let contracts_data = get_contracts();
 
-    let class_hash = blockifier_state
-        .declare(&contract_name, &contracts)
-        .unwrap();
+    let nonce1 = check_nonce(&mut cached_state, &mut cheatnet_state, &contract_address);
 
-    let nonce2 = check_nonce(
-        &mut blockifier_state,
-        &mut cheatnet_state,
-        &contract_address,
-    );
+    let class_hash = declare(&mut cached_state, "HelloStarknet", &contracts_data).unwrap();
 
-    deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[]).unwrap();
+    let nonce2 = check_nonce(&mut cached_state, &mut cheatnet_state, &contract_address);
 
-    let nonce3 = check_nonce(
-        &mut blockifier_state,
-        &mut cheatnet_state,
-        &contract_address,
-    );
+    deploy_wrapper(&mut cached_state, &mut cheatnet_state, &class_hash, &[]).unwrap();
+
+    let nonce3 = check_nonce(&mut cached_state, &mut cheatnet_state, &contract_address);
 
     assert_eq!(nonce1, Felt252::from(0));
     assert_eq!(nonce1, nonce2);

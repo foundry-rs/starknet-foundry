@@ -31,7 +31,7 @@ Propose a solution with an example syntax, that would allow to write deployment 
 This section is split into smaller subsections describing things we will need to tackle while implementing the solution.
 
 ### sncast commands
-Specific sncast commands (declare, deploy, account) could be imported as regular functions to the scipts, and called as such.
+Specific sncast commands (declare, deploy, account) could be imported as regular functions to the scripts, and called as such.
 Our functions return specific types (structs defined in `cast/src/helpers/response_structs.rs`), that make retrieving
 essential information easier, so we should be good on that front.
 
@@ -225,10 +225,10 @@ An example deployment script could look like this:
 
 ```cairo
 // we might need to rename account functions to avoid confusion
-use cast::starknet_commands::account::create::create as create_account
-use cast::starknet_commands::account::deploy::deploy as deploy_account
-use cast::{get_provider, get_account};
-use cast::starknet_commands::{declare, deploy, invoke, call};
+use sncast::starknet_commands::account::create::create as create_account
+use sncast::starknet_commands::account::deploy::deploy as deploy_account
+use sncast::{get_provider, get_account};
+use sncast::starknet_commands::{declare, deploy, invoke, call};
 (...)
 
 fn make_account(provider: &JsonRpcClient<HttpTransport>) -> Result<SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, LocalWallet>> {

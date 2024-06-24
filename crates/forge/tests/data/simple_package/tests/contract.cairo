@@ -5,16 +5,16 @@ use traits::TryInto;
 use starknet::ContractAddress;
 use starknet::Felt252TryIntoContractAddress;
 
-use snforge_std::{ declare, ContractClassTrait };
+use snforge_std::{declare, ContractClassTrait};
 
 use simple_package::hello_starknet::IHelloStarknetDispatcher;
 use simple_package::hello_starknet::IHelloStarknetDispatcherTrait;
 
 #[test]
 fn call_and_invoke() {
-    let contract = declare('HelloStarknet');
+    let contract = declare("HelloStarknet").unwrap();
     let constructor_calldata = @ArrayTrait::new();
-    let contract_address = contract.deploy(constructor_calldata).unwrap();
+    let (contract_address, _) = contract.deploy(constructor_calldata).unwrap();
     let dispatcher = IHelloStarknetDispatcher { contract_address };
 
     let balance = dispatcher.get_balance();

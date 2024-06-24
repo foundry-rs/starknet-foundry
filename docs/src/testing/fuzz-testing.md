@@ -5,7 +5,7 @@ While it is possible to come up with these cases on your own, it is often imprac
 against a large number of possible arguments.
 
 > ℹ️ **Info**
-> Currently, Forge fuzzer only supports using randomly generated values.
+> Currently, `snforge` fuzzer only supports using randomly generated values.
 > This way of fuzzing doesn't support any kind of value generation based on code analysis, test coverage or results of
 > other fuzzer runs.
 > In the future, more advanced fuzzing execution modes will be added.
@@ -27,14 +27,15 @@ fn test_sum(x: felt252, y: felt252) {
 }
 ```
 
-Then run `snforge` like usual.
+Then run `snforge test` like usual.
 
 ```shell
-$ snforge
+$ snforge test
 Collected 1 test(s) from package_name package
-Running 1 test(s) from src/
-[PASS] package_name::test_sum (fuzzer runs = 256)
-Tests: 1 passed, 0 failed, 0 skipped
+Running 0 test(s) from src/
+Running 1 test(s) from tests/
+[PASS] tests::test_sum (runs: 256)
+Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 Fuzzer seed: [..]
 ```
 
@@ -67,7 +68,7 @@ fn test_sum(x: felt252, y: felt252) {
 It can also be configured globally, via command line arguments:
 
 ```shell
-$ snforge --fuzzer-runs 1234 --fuzzer-seed 1111
+$ snforge test --fuzzer-runs 1234 --fuzzer-seed 1111
 ```
 
 Or in `Scarb.toml` file:

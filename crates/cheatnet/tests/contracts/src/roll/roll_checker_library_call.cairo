@@ -8,6 +8,7 @@ trait IRollChecker<TContractState> {
 #[starknet::interface]
 trait IRollCheckerLibCall<TContractState> {
     fn get_block_number_with_lib_call(ref self: TContractState, class_hash: ClassHash) -> u64;
+    fn get_block_number(ref self: TContractState) -> u64;
 }
 
 #[starknet::contract]
@@ -18,11 +19,15 @@ mod RollCheckerLibCall {
     #[storage]
     struct Storage {}
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl IRollCheckerLibCall of super::IRollCheckerLibCall<ContractState> {
         fn get_block_number_with_lib_call(ref self: ContractState, class_hash: ClassHash) -> u64 {
             let roll_checker = IRollCheckerLibraryDispatcher { class_hash };
             roll_checker.get_block_number()
+        }
+
+        fn get_block_number(ref self: ContractState) -> u64 {
+            starknet::get_block_info().unbox().block_number
         }
     }
 }

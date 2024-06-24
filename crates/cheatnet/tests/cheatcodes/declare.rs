@@ -1,77 +1,82 @@
-use crate::common::state::create_cheatnet_state;
 use crate::common::{get_contracts, state::create_cached_state};
-use cairo_felt::Felt252;
-use cheatnet::cheatcodes::{CheatcodeError, EnhancedHintError};
-use conversions::StarknetConversions;
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::{
+    declare, get_class_hash,
+};
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
+use runtime::EnhancedHintError;
+use scarb_api::StarknetContractArtifacts;
+use starknet_api::core::ClassHash;
+use std::collections::HashMap;
+
+fn get_contract_class_hash(
+    contract_name: &str,
+    contracts: &HashMap<String, StarknetContractArtifacts>,
+) -> ClassHash {
+    let contract = contracts.get(contract_name).unwrap();
+    let sierra_class = serde_json::from_str(&contract.sierra).unwrap();
+    get_class_hash(&sierra_class).unwrap()
+}
 
 #[test]
 fn declare_simple() {
+    let contract_name = "HelloStarknet";
+
     let mut cached_state = create_cached_state();
-    let (mut blockifier_state, _) = create_cheatnet_state(&mut cached_state);
 
-    let contract = "HelloStarknet".to_owned().to_felt252();
-    let contracts = get_contracts();
+    let contracts_data = get_contracts();
 
-    let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
+    let class_hash = declare(&mut cached_state, contract_name, &contracts_data).unwrap();
+    let expected_class_hash = get_contract_class_hash(contract_name, &contracts_data.contracts);
 
-    assert_ne!(class_hash, Felt252::from(0).to_class_hash());
+    assert_eq!(class_hash, expected_class_hash);
 }
 
 #[test]
 fn declare_multiple() {
+    let contract_names = vec!["HelloStarknet", "ConstructorSimple"];
+
     let mut cached_state = create_cached_state();
-    let (mut blockifier_state, _) = create_cheatnet_state(&mut cached_state);
 
-    let contract = "HelloStarknet".to_owned().to_felt252();
-    let contracts = get_contracts();
+    let contracts_data = get_contracts();
 
-    let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
-
-    let contract = "ConstructorSimple".to_owned().to_felt252();
-
-    let class_hash2 = blockifier_state.declare(&contract, &contracts).unwrap();
-
-    assert_ne!(class_hash, Felt252::from(0).to_class_hash());
-    assert_ne!(class_hash2, Felt252::from(0).to_class_hash());
-    assert_ne!(class_hash, class_hash2);
+    for contract_name in contract_names {
+        let class_hash = declare(&mut cached_state, contract_name, &contracts_data).unwrap();
+        let expected_class_hash = get_contract_class_hash(contract_name, &contracts_data.contracts);
+        assert_eq!(class_hash, expected_class_hash);
+    }
 }
 
 #[test]
 fn declare_same_contract() {
+    let contract_name = "HelloStarknet";
+
     let mut cached_state = create_cached_state();
-    let (mut blockifier_state, _) = create_cheatnet_state(&mut cached_state);
 
-    let contract = "HelloStarknet".to_owned().to_felt252();
-    let contracts = get_contracts();
+    let contracts_data = get_contracts();
 
-    let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
-    assert_ne!(class_hash, Felt252::from(0).to_class_hash());
+    let class_hash = declare(&mut cached_state, contract_name, &contracts_data).unwrap();
+    let expected_class_hash = get_contract_class_hash(contract_name, &contracts_data.contracts);
+    assert_eq!(class_hash, expected_class_hash);
 
-    let contract = "HelloStarknet".to_owned().to_felt252();
+    let output = declare(&mut cached_state, contract_name, &contracts_data);
 
-    let output = blockifier_state.declare(&contract, &contracts);
-
-    assert!(match output {
-        Err(CheatcodeError::Unrecoverable(EnhancedHintError::Anyhow(msg))) => {
-            msg.to_string().contains("is already declared")
-        }
-        _ => false,
-    });
+    assert!(matches!(output, Err(CheatcodeError::Recoverable(_))));
 }
 
 #[test]
-fn declare_non_existant() {
+fn declare_non_existent() {
+    let contract_name = "GoodbyeStarknet";
+
     let mut cached_state = create_cached_state();
-    let (mut blockifier_state, _) = create_cheatnet_state(&mut cached_state);
 
-    let contract = "GoodbyeStarknet".to_owned().to_felt252();
-    let contracts = get_contracts();
+    let contracts_data = get_contracts();
 
-    let output = blockifier_state.declare(&contract, &contracts);
+    let output = declare(&mut cached_state, contract_name, &contracts_data);
 
     assert!(match output {
         Err(CheatcodeError::Unrecoverable(EnhancedHintError::Anyhow(msg))) => {
-            msg.to_string().contains("Failed") && msg.to_string().contains("GoodbyeStarknet")
+            let msg = msg.to_string();
+            msg.contains("Failed") && msg.contains(contract_name)
         }
         _ => false,
     });

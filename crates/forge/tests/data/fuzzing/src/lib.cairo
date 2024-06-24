@@ -2,7 +2,7 @@ fn adder(a: felt252, b: felt252) -> felt252 {
     a + b
 }
 
-fn always_five(a: felt252, b: felt252) -> felt252{
+fn always_five(a: felt252, b: felt252) -> felt252 {
     5
 }
 
@@ -18,7 +18,6 @@ fn fib(a: felt252, b: felt252, n: felt252) -> felt252 {
 mod tests {
     use super::adder;
     use super::always_five;
-    use snforge_std::PrintTrait;
 
     #[test]
     fn adding() {
@@ -115,5 +114,20 @@ mod tests {
             let x = a - 5_u256;
             assert(x == a - 5_u256, 'x != a - 5');
         }
+    }
+
+    #[test]
+    #[fuzzer(runs: 256, seed: 100)]
+    fn fuzzed_loop(a: u8) {
+        let mut i: u8 = 0;
+        loop {
+            if (i == a) {
+                break;
+            }
+
+            i += 1;
+        };
+
+        assert(1 == 1, '');
     }
 }

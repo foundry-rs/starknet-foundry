@@ -7,6 +7,12 @@ fn test_my_test() {
 }
 
 #[test]
+#[ignore]
+fn ignored_test() {
+    assert(1 == 2, 'not passing');
+}
+
+#[test]
 fn test_simple() {
     assert(1 == 1, 'simple check');
 }

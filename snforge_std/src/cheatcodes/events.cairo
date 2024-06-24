@@ -1,12 +1,8 @@
-use array::ArrayTrait;
-use array::SpanTrait;
-use clone::Clone;
-use serde::Serde;
-use option::OptionTrait;
-use traits::Into;
-
+use core::array::ArrayTrait;
+use core::option::OptionTrait;
 use starknet::testing::cheatcode;
 use starknet::ContractAddress;
+use super::super::_cheatcode::handle_cheatcode;
 
 #[derive(Drop, Serde)]
 enum SpyOn {
@@ -18,13 +14,13 @@ enum SpyOn {
 fn spy_events(spy_on: SpyOn) -> EventSpy {
     let mut inputs = array![];
     spy_on.serialize(ref inputs);
-    let output = cheatcode::<'spy_events'>(inputs.span());
+    let output = handle_cheatcode(cheatcode::<'spy_events'>(inputs.span()));
 
     EventSpy { _id: *output[0], events: array![] }
 }
 
 fn event_name_hash(name: felt252) -> felt252 {
-    let mut output = cheatcode::<'event_name_hash'>(array![name].span());
+    let mut output = handle_cheatcode(cheatcode::<'event_name_hash'>(array![name].span()));
     *output[0]
 }
 
@@ -46,7 +42,7 @@ trait EventFetcher {
 
 impl EventFetcherImpl of EventFetcher {
     fn fetch_events(ref self: EventSpy) {
-        let mut output = cheatcode::<'fetch_events'>(array![self._id].span());
+        let mut output = handle_cheatcode(cheatcode::<'fetch_events'>(array![self._id].span()));
         let events = Serde::<Array<(ContractAddress, Event)>>::deserialize(ref output).unwrap();
 
         let mut i = 0;
@@ -63,6 +59,7 @@ impl EventFetcherImpl of EventFetcher {
 
 trait EventAssertions<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>> {
     fn assert_emitted(ref self: EventSpy, events: @Array<(ContractAddress, T)>);
+    fn assert_not_emitted(ref self: EventSpy, events: @Array<(ContractAddress, T)>);
 }
 
 impl EventAssertionsImpl<
@@ -78,14 +75,32 @@ impl EventAssertionsImpl<
             }
 
             let (from, event) = events.at(i);
-            let emitted = assert_if_emitted(ref self, from, event);
+            let emitted = is_emitted(ref self, from, event);
 
             if !emitted {
-                panic(
-                    array![
-                        'Event with matching data and', 'keys was not emitted from', (*from).into()
-                    ]
-                );
+                let from: felt252 = (*from).into();
+                panic!("Event with matching data and keys was not emitted from {}", from);
+            }
+
+            i += 1;
+        };
+    }
+
+    fn assert_not_emitted(ref self: EventSpy, events: @Array<(ContractAddress, T)>) {
+        self.fetch_events();
+
+        let mut i = 0;
+        loop {
+            if i >= events.len() {
+                break;
+            }
+
+            let (from, event) = events.at(i);
+            let emitted = is_emitted(ref self, from, event);
+
+            if emitted {
+                let from: felt252 = (*from).into();
+                panic!("Event with matching data and keys was emitted from {}", from);
             }
 
             i += 1;
@@ -93,7 +108,7 @@ impl EventAssertionsImpl<
     }
 }
 
-fn assert_if_emitted<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>>(
+fn is_emitted<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>>(
     ref self: EventSpy, expected_from: @ContractAddress, expected_event: @T
 ) -> bool {
     let emitted_events = @self.events;
@@ -138,25 +153,11 @@ fn remove_event(ref self: EventSpy, index: usize) {
 
 impl EventTraitImpl of starknet::Event<Event> {
     fn append_keys_and_data(self: @Event, ref keys: Array<felt252>, ref data: Array<felt252>) {
-        array_extend(ref keys, self.keys);
-        array_extend(ref data, self.data);
+        keys.append_span(self.keys.span());
+        data.append_span(self.data.span());
     }
 
     fn deserialize(ref keys: Span<felt252>, ref data: Span<felt252>) -> Option<Event> {
         Option::None
     }
-}
-
-fn array_extend<T, impl TCopy: Copy<T>, impl TDrop: Drop<T>>(
-    ref array: Array<T>, other: @Array<T>
-) {
-    let mut i = 0;
-    loop {
-        if i == other.len() {
-            break;
-        }
-        array.append(*other.at(i));
-
-        i += 1;
-    };
 }

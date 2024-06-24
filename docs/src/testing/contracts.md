@@ -3,11 +3,11 @@
 > ℹ️ **Info**
 > To use the library functions designed for testing smart contracts,
 > you need to add `snforge_std` package as a dependency in
-> your [`Scarb.toml`](https://docs.swmansion.com/scarb/docs/guides/dependencies.html#adding-a-dependency) 
+> your [`Scarb.toml`](https://docs.swmansion.com/scarb/docs/guides/dependencies.html#development-dependencies)
 > using appropriate release tag.
 >```toml
-> [dependencies]
-> snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.7.1" }
+> [dev-dependencies]
+> snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.12.0" }
 > ```
 
 Using unit testing as much as possible is a good practice, as it makes your test suites run faster. However, when
@@ -31,14 +31,14 @@ mod HelloStarknet {
         balance: felt252,
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl HelloStarknetImpl of super::IHelloStarknet<ContractState> {
         // Increases the balance by the given amount.
         fn increase_balance(ref self: ContractState, amount: felt252) {
             self.balance.write(self.balance.read() + amount);
         }
 
-        // Gets the balance. 
+        // Gets the balance.
         fn get_balance(self: @ContractState) -> felt252 {
             self.balance.read()
         }
@@ -58,10 +58,10 @@ use snforge_std::{ declare, ContractClassTrait };
 #[test]
 fn call_and_invoke() {
     // First declare and deploy a contract
-    let contract = declare('HelloStarknet');
+    let contract = declare("HelloStarknet").unwrap();
     // Alternatively we could use `deploy_syscall` here
-    let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
-    
+    let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+
     // Create a Dispatcher object that will allow interacting with the deployed contract
     let dispatcher = IHelloStarknetDispatcher { contract_address };
 
@@ -80,11 +80,12 @@ fn call_and_invoke() {
 ```
 
 ```shell
-$ snforge
+$ snforge test
 Collected 1 test(s) from using_dispatchers package
-Running 1 test(s) from src/
-[PASS] using_dispatchers::call_and_invoke
-Tests: 1 passed, 0 failed, 0 skipped
+Running 0 test(s) from src/
+Running 1 test(s) from tests/
+[PASS] tests::call_and_invoke
+Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ```
 
 ## Handling Errors
@@ -100,6 +101,7 @@ First, let's add a new, panicking function to our contract.
 trait IHelloStarknet<TContractState> {
     // ...
     fn do_a_panic(self: @TContractState);
+    fn do_a_string_panic(self: @TContractState);
 }
 
 #[starknet::contract]
@@ -107,8 +109,8 @@ mod HelloStarknet {
     use array::ArrayTrait;
 
     // ...
-    
-    #[external(v0)]
+
+    #[abi(embed_v0)]
     impl HelloStarknetImpl of super::IHelloStarknet<ContractState> {
         // ...
 
@@ -119,6 +121,10 @@ mod HelloStarknet {
             arr.append('DAYTAH');
             panic(arr);
         }
+
+        fn do_a_string_panic(self: @ContractState) {
+            assert!(false, "This is panicking with a string, which can be longer than 31 characters");
+        }
     }
 }
 ```
@@ -127,10 +133,11 @@ If we called this function in a test, it would result in a failure.
 
 ```rust
 #[test]
+#[feature("safe_dispatcher")]
 fn failing() {
     // ...
 
-    let contract_address = contract.deploy(@calldata).unwrap();
+    let (contract_address, _) = contract.deploy(@calldata).unwrap();
     let dispatcher = IHelloStarknetDispatcher { contract_address };
 
     dispatcher.do_a_panic();
@@ -138,19 +145,19 @@ fn failing() {
 ```
 
 ```shell
-$ snforge
+$ snforge test
 Collected 1 test(s) from package_name package
-Running 1 test(s) from src/
-[FAIL] package_name::failing
+Running 0 test(s) from src/
+Running 1 test(s) from tests/
+[FAIL] tests::failing
 
 Failure data:
-    original value: [344693033283], converted to a string: [PANIC]
-    original value: [75047462256968], converted to a string: [DAYTAH]
+    (0x50414e4943 ('PANIC'), 0x444159544148 ('DAYTAH'))
 
-Tests: 0 passed, 1 failed, 0 skipped
+Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
 
 Failures:
-    package_name::failing
+    tests::failing
 ```
 
 ### `SafeDispatcher`
@@ -159,11 +166,13 @@ Using `SafeDispatcher` we can test that the function in fact panics with an expe
 
 ```rust
 #[test]
+#[feature("safe_dispatcher")]
 fn handling_errors() {
     // ...
-    
-    let contract_address = contract.deploy(@calldata).unwrap();
+
+    let (contract_address, _) = contract.deploy(@calldata).unwrap();
     let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
+
 
     match safe_dispatcher.do_a_panic() {
         Result::Ok(_) => panic_with_felt252('shouldve panicked'),
@@ -178,12 +187,66 @@ fn handling_errors() {
 Now the test passes as expected.
 
 ```shell
-$ snforge
+$ snforge test
 Collected 1 test(s) from package_name package
-Running 1 test(s) from src/
-[PASS] package_name::handling_errors
-Tests: 1 passed, 0 failed, 0 skipped
+Running 0 test(s) from src/
+Running 1 test(s) from tests/
+[PASS] tests::handling_errors
+Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ```
+
+Similarly, you can handle the panics which use string as an argument (like an `assert!` macro)
+
+```rust
+// Necessary struct and trait imports for string errors mapping
+use snforge_std::errors::{ SyscallResultStringErrorTrait, PanicDataOrString };
+// ...
+#[test]
+#[feature("safe_dispatcher")]
+fn handling_string_errors() {
+    // ...
+    let (contract_address, _) = contract.deploy(@calldata).unwrap();
+    let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
+    
+    // Notice the `map_error_to_string` helper usage here, and different error type
+    match safe_dispatcher.do_a_string_panic().map_error_to_string() { 
+        Result::Ok(_) => panic_with_felt252('shouldve panicked'),
+        Result::Err(panic_data) => {
+            match x { 
+                PanicDataOrString::PanicData(_) => panic_with_felt252('wrong format'),
+                PanicDataOrString::String(str) => {
+                    assert(
+                        str == "This a panicking with a string, which can be longer", 
+                        'wrong string received'
+                    );
+                }
+            }
+        }
+    };
+}
+```
+You also could skip the de-serialization of the `panic_data`, and not use `map_error_to_string`, but this way you can actually use assertions on the `ByteArray` that was used to panic. 
+
+> 📝 **Note**
+> 
+> To operate with `SafeDispatcher` it's required to annotage its usage with `#[feature("safe_dispatcher")]`.
+> 
+> There are 3 options:
+> - module-level declaration
+>   ```rust
+>   #[feature("safe_dispatcher")]
+>   mod my_module;    
+>   ```
+> - function-level declaration
+>   ```rust
+>   #[feature("safe_dispatcher")]
+>   fn my_function() { ... }    
+>   ```
+> - directly before the usage
+>   ```rust
+>   #[feature("safe_dispatcher")]
+>   let result = safe_dispatcher.some_function();
+>   ```
 
 ### Expecting Test Failure
 

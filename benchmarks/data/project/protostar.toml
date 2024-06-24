@@ -1,4 +1,0 @@
-[project]
-protostar-version = "0.0.0"
-[contracts]
-HelloStarknet = ["src"]

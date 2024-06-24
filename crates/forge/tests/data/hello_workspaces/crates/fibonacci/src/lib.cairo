@@ -15,7 +15,7 @@ mod FibonacciContract {
     #[storage]
     struct Storage {}
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     fn answer(ref self: ContractState) -> felt252 {
         add(fib(0, 1, 16), fib(0, 1, 8))
     }
@@ -27,14 +27,13 @@ mod tests {
     use snforge_std::declare;
 
     #[test]
-    #[available_gas(100000)]
     fn it_works() {
         assert(fib(0, 1, 16) == 987, 'it works!');
     }
 
     #[test]
     fn contract_test() {
-        declare('FibonacciContract');
-        declare('AdditionContract');
+        declare("FibonacciContract").unwrap();
+        declare("AdditionContract").unwrap();
     }
 }

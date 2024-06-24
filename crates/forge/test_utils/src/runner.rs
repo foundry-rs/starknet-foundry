@@ -1,0 +1,355 @@
+use crate::tempdir_with_tool_versions;
+use anyhow::{anyhow, Context, Result};
+use assert_fs::{
+    fixture::{FileTouch, FileWriteStr, PathChild},
+    TempDir,
+};
+use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
+use camino::Utf8PathBuf;
+use forge_runner::{
+    test_case_summary::{AnyTestCaseSummary, TestCaseSummary},
+    test_crate_summary::TestCrateSummary,
+};
+use indoc::formatdoc;
+use scarb_api::{
+    get_contracts_map, metadata::MetadataCommandExt, ScarbCommand, StarknetContractArtifacts,
+};
+use shared::command::CommandExt;
+use std::{
+    collections::HashMap,
+    fs,
+    path::{Path, PathBuf},
+    process::{Command, Stdio},
+    str::FromStr,
+};
+
+/// Represents a dependency of a Cairo project
+#[derive(Debug, Clone)]
+pub struct LinkedLibrary {
+    pub name: String,
+    pub path: PathBuf,
+}
+
+#[derive(Debug, Clone)]
+pub struct Contract {
+    name: String,
+    code: String,
+}
+
+impl Contract {
+    #[must_use]
+    pub fn new(name: impl Into<String>, code: impl Into<String>) -> Self {
+        Self {
+            name: name.into(),
+            code: code.into(),
+        }
+    }
+
+    pub fn from_code_path(name: impl Into<String>, path: &Path) -> Result<Self> {
+        let code = fs::read_to_string(path)?;
+        Ok(Self {
+            name: name.into(),
+            code,
+        })
+    }
+
+    fn generate_sierra_and_casm(self) -> Result<(String, String)> {
+        let dir = tempdir_with_tool_versions()?;
+
+        let contract_path = dir.child("src/lib.cairo");
+        contract_path.touch()?;
+        contract_path.write_str(&self.code)?;
+
+        let scarb_toml_path = dir.child("Scarb.toml");
+        scarb_toml_path
+            .write_str(&formatdoc!(
+                r#"
+                [package]
+                name = "contract"
+                version = "0.1.0"
+
+                [[target.starknet-contract]]
+                sierra = true
+
+                [dependencies]
+                starknet = "2.4.0"
+                "#,
+            ))
+            .unwrap();
+
+        Command::new("scarb")
+            .current_dir(&dir)
+            .arg("build")
+            .stdout(Stdio::inherit())
+            .stderr(Stdio::inherit())
+            .output_checked()
+            .context("Failed to build contracts with Scarb")?;
+
+        let scarb_metadata = ScarbCommand::metadata()
+            .current_dir(dir.path())
+            .inherit_stderr()
+            .run()?;
+        let package = scarb_metadata
+            .packages
+            .iter()
+            .find(|package| package.name == "contract")
+            .unwrap();
+
+        let contract = get_contracts_map(&scarb_metadata, &package.id, None)
+            .unwrap()
+            .remove(&self.name)
+            .ok_or(anyhow!("there is no contract with name {}", self.name))?;
+
+        Ok((contract.sierra, contract.casm))
+    }
+}
+
+#[derive(Debug)]
+pub struct TestCase {
+    dir: TempDir,
+    contracts: Vec<Contract>,
+    environment_variables: HashMap<String, String>,
+}
+
+impl<'a> TestCase {
+    pub const TEST_PATH: &'a str = "tests/test_case.cairo";
+    const PACKAGE_NAME: &'a str = "my_package";
+
+    pub fn from(test_code: &str, contracts: Vec<Contract>) -> Result<Self> {
+        let dir = tempdir_with_tool_versions()?;
+        let test_file = dir.child(Self::TEST_PATH);
+        test_file.touch()?;
+        test_file.write_str(test_code)?;
+
+        dir.child("src/lib.cairo").touch().unwrap();
+
+        let snforge_std_path = Utf8PathBuf::from_str("../../snforge_std")
+            .unwrap()
+            .canonicalize_utf8()
+            .unwrap()
+            .to_string()
+            .replace('\\', "/");
+
+        let scarb_toml_path = dir.child("Scarb.toml");
+        scarb_toml_path
+            .write_str(&formatdoc!(
+                r#"
+                [package]
+                name = "test_package"
+                version = "0.1.0"
+
+                [[target.starknet-contract]]
+                sierra = true
+                casm = true
+
+                [dependencies]
+                starknet = "2.4.0"
+                snforge_std = {{ path = "{}" }}
+                "#,
+                snforge_std_path
+            ))
+            .unwrap();
+
+        Ok(Self {
+            dir,
+            contracts,
+            environment_variables: HashMap::new(),
+        })
+    }
+
+    pub fn set_env(&mut self, key: &str, value: &str) {
+        self.environment_variables.insert(key.into(), value.into());
+    }
+
+    #[must_use]
+    pub fn env(&self) -> &HashMap<String, String> {
+        &self.environment_variables
+    }
+
+    pub fn path(&self) -> Result<Utf8PathBuf> {
+        Utf8PathBuf::from_path_buf(self.dir.path().to_path_buf())
+            .map_err(|_| anyhow!("Failed to convert TestCase path to Utf8PathBuf"))
+    }
+
+    #[must_use]
+    pub fn linked_libraries(&self) -> Vec<LinkedLibrary> {
+        let snforge_std_path = PathBuf::from_str("../../snforge_std")
+            .unwrap()
+            .canonicalize()
+            .unwrap();
+        vec![
+            LinkedLibrary {
+                name: Self::PACKAGE_NAME.to_string(),
+                path: self.dir.path().join("src"),
+            },
+            LinkedLibrary {
+                name: "snforge_std".to_string(),
+                path: snforge_std_path.join("src"),
+            },
+        ]
+    }
+
+    pub fn contracts(&self) -> Result<HashMap<String, StarknetContractArtifacts>> {
+        self.contracts
+            .clone()
+            .into_iter()
+            .map(|contract| {
+                let name = contract.name.clone();
+                let (sierra, casm) = contract.generate_sierra_and_casm()?;
+
+                Ok((name, StarknetContractArtifacts { sierra, casm }))
+            })
+            .collect()
+    }
+
+    #[must_use]
+    pub fn find_test_result(results: &[TestCrateSummary]) -> &TestCrateSummary {
+        results
+            .iter()
+            .find(|tc| !tc.test_case_summaries.is_empty())
+            .unwrap()
+    }
+}
+
+#[macro_export]
+macro_rules! test_case {
+    ( $test_code:expr ) => ({
+        use $crate::runner::TestCase;
+        TestCase::from($test_code, vec![]).unwrap()
+    });
+    ( $test_code:expr, $( $contract:expr ),*) => ({
+        use $crate::runner::TestCase;
+
+        let contracts = vec![$($contract,)*];
+        TestCase::from($test_code, contracts).unwrap()
+    });
+}
+
+pub fn assert_passed(result: &[TestCrateSummary]) {
+    let result = &TestCase::find_test_result(result).test_case_summaries;
+
+    assert!(!result.is_empty(), "No test results found");
+    assert!(
+        result.iter().all(AnyTestCaseSummary::is_passed),
+        "Some tests didn't pass"
+    );
+}
+
+pub fn assert_failed(result: &[TestCrateSummary]) {
+    let result = &TestCase::find_test_result(result).test_case_summaries;
+
+    assert!(!result.is_empty(), "No test results found");
+    assert!(
+        result.iter().all(AnyTestCaseSummary::is_failed),
+        "Some tests didn't fail"
+    );
+}
+
+pub fn assert_case_output_contains(
+    result: &[TestCrateSummary],
+    test_case_name: &str,
+    asserted_msg: &str,
+) {
+    let test_name_suffix = format!("::{test_case_name}");
+
+    let result = TestCase::find_test_result(result);
+
+    assert!(result.test_case_summaries.iter().any(|any_case| {
+        if any_case.is_passed() || any_case.is_failed() {
+            return any_case.msg().unwrap().contains(asserted_msg)
+                && any_case
+                    .name()
+                    .unwrap()
+                    .ends_with(test_name_suffix.as_str());
+        }
+        false
+    }));
+}
+
+pub fn assert_gas(result: &[TestCrateSummary], test_case_name: &str, asserted_gas: u128) {
+    let test_name_suffix = format!("::{test_case_name}");
+
+    let result = TestCase::find_test_result(result);
+
+    assert!(result.test_case_summaries.iter().any(|any_case| {
+        match any_case {
+            AnyTestCaseSummary::Fuzzing(_) => {
+                panic!("Cannot use assert_gas! for fuzzing tests")
+            }
+            AnyTestCaseSummary::Single(case) => match case {
+                TestCaseSummary::Passed { gas_info: gas, .. } => {
+                    *gas == asserted_gas
+                        && any_case
+                            .name()
+                            .unwrap()
+                            .ends_with(test_name_suffix.as_str())
+                }
+                _ => false,
+            },
+        }
+    }));
+}
+
+pub fn assert_syscall(
+    result: &[TestCrateSummary],
+    test_case_name: &str,
+    syscall: DeprecatedSyscallSelector,
+    expected_count: usize,
+) {
+    let test_name_suffix = format!("::{test_case_name}");
+
+    let result = TestCase::find_test_result(result);
+
+    assert!(result.test_case_summaries.iter().any(|any_case| {
+        match any_case {
+            AnyTestCaseSummary::Fuzzing(_) => {
+                panic!("Cannot use assert_syscall! for fuzzing tests")
+            }
+            AnyTestCaseSummary::Single(case) => match case {
+                TestCaseSummary::Passed { used_resources, .. } => {
+                    used_resources.syscall_counter.get(&syscall).unwrap_or(&0) == &expected_count
+                        && any_case
+                            .name()
+                            .unwrap()
+                            .ends_with(test_name_suffix.as_str())
+                }
+                _ => false,
+            },
+        }
+    }));
+}
+
+pub fn assert_builtin(
+    result: &[TestCrateSummary],
+    test_case_name: &str,
+    builtin: &str,
+    expected_count: usize,
+) {
+    let test_name_suffix = format!("::{test_case_name}");
+    let builtin = builtin.to_string();
+
+    let result = TestCase::find_test_result(result);
+
+    assert!(result.test_case_summaries.iter().any(|any_case| {
+        match any_case {
+            AnyTestCaseSummary::Fuzzing(_) => {
+                panic!("Cannot use assert_builtin! for fuzzing tests")
+            }
+            AnyTestCaseSummary::Single(case) => match case {
+                TestCaseSummary::Passed { used_resources, .. } => {
+                    used_resources
+                        .execution_resources
+                        .builtin_instance_counter
+                        .get(&builtin)
+                        .unwrap_or(&0)
+                        == &expected_count
+                        && any_case
+                            .name()
+                            .unwrap()
+                            .ends_with(test_name_suffix.as_str())
+                }
+                _ => false,
+            },
+        }
+    }));
+}

@@ -1,72 +1,113 @@
 [workspace]
 resolver = "2"
 members = [
+    "crates/shared",
     "crates/forge",
-    "crates/test-collector",
-    "crates/cast",
+    "crates/forge-runner",
+    "crates/sncast",
     "crates/cheatnet",
     "crates/conversions",
+    "crates/runtime",
+    "crates/scarb-api",
+    "crates/configuration",
+    "crates/universal-sierra-compiler-api",
 ]
 
 [workspace.package]
-version = "0.8.3"
+version = "0.21.0"
 edition = "2021"
 repository = "https://github.com/foundry-rs/starknet-foundry"
 license = "MIT"
 license-file = "LICENSE"
 
 [workspace.dependencies]
-async-trait = "0.1.74"
-blockifier = { git = "https://github.com/starkware-libs/blockifier.git", rev = "ea6a3f7" }
-starknet_api = "0.4.1"
-cairo-lang-casm = "2.2.0"
-cairo-lang-runner = "2.2.0"
-cairo-lang-sierra-to-casm = "2.2.0"
-cairo-lang-sierra = "2.2.0"
-cairo-lang-utils = "2.2.0"
-cairo-lang-starknet = "2.2.0"
-cairo-lang-compiler = "2.2.0"
-cairo-lang-filesystem = "2.2.0"
-cairo-lang-debug = "2.2.0"
-cairo-lang-defs = "2.2.0"
-cairo-lang-diagnostics = "2.2.0"
-cairo-lang-lowering = "2.2.0"
-cairo-lang-plugins = "2.2.0"
-cairo-lang-project = "2.2.0"
-cairo-lang-semantic = "2.2.0"
-cairo-lang-sierra-ap-change = "2.2.0"
-cairo-lang-sierra-gas = "2.2.0"
-cairo-lang-sierra-generator = "2.2.0"
-cairo-lang-syntax = "2.2.0"
-cairo-vm = "0.8.2"
-cairo-felt = "0.8.2"
-anyhow = "1.0.75"
-assert_fs = "1.0.13"
+blockifier = "0.7.0-dev.1"
+starknet_api = "0.12.0-dev.1"
+cairo-lang-casm = { version = "2.6.0", features = ["serde"] }
+cairo-lang-runner = "2.6.0"
+cairo-lang-sierra-to-casm = "2.6.0"
+cairo-lang-sierra = "2.6.0"
+cairo-lang-utils = "2.6.0"
+cairo-lang-starknet = "2.6.0"
+cairo-lang-compiler = "2.6.0"
+cairo-lang-filesystem = "2.6.0"
+cairo-lang-debug = "2.6.0"
+cairo-lang-defs = "2.6.0"
+cairo-lang-diagnostics = "2.6.0"
+cairo-lang-lowering = "2.6.0"
+cairo-lang-plugins = "2.6.0"
+cairo-lang-project = "2.6.0"
+cairo-lang-semantic = "2.6.0"
+cairo-lang-sierra-ap-change = "2.6.0"
+cairo-lang-sierra-gas = "2.6.0"
+cairo-lang-sierra-type-size = "2.6.0"
+cairo-lang-sierra-generator = "2.6.0"
+cairo-lang-syntax = "2.6.0"
+cairo-lang-test-plugin = "2.6.0"
+cairo-lang-starknet-classes = "2.6.0"
+cairo-vm = "0.9.1"
+cairo-felt = "0.9.1"
+anyhow = "1.0.81"
+assert_fs = "1.1.1"
 camino = { version = "1.1.4", features = ["serde1"] }
-clap = { version = "4.3.23", features = ["derive"] }
-console = "0.15.7"
+clap = { version = "4.5.4", features = ["derive"] }
+console = "0.15.8"
 include_dir = "0.7.3"
 indoc = "2"
 itertools = "0.11.0"
-num-traits = "0.2.16"
+num-traits = "0.2.18"
 once_cell = "1.18.0"
-rayon = "1.8"
-regex = "1.9.6"
-serde = { version = "1.0.163", features = ["derive"] }
-serde_json = "1.0.104"
-starknet = "0.5.0"
-tempfile = "3.8.0"
-thiserror = "1.0.49"
-ctor = "0.2.4"
-url = "2.4.0"
-tokio = { version = "1.28.2", features = ["full"] }
+rayon = "1.10"
+regex = "1.10.4"
+serde = { version = "1.0.197", features = ["derive"] }
+serde_json = "1.0.115"
+starknet = { git = "https://github.com/xJonathanLEI/starknet-rs", rev = "d980869" }
+trace-data = { git = "https://github.com/software-mansion/cairo-profiler/", rev = "3af0782" }
+tempfile = "3.10.1"
+thiserror = "1.0.58"
+ctor = "0.2.7"
+url = "2.5.0"
+tokio = { version = "1.37.0", features = ["full"] }
 tokio-util = "0.7.9"
-futures = "0.3.28"
+futures = "0.3.30"
 num-bigint = { version = "0.4.4", features = ["rand"] }
-walkdir = "2.4.0"
+walkdir = "2.5.0"
 dotenv = "0.15.0"
 rand = "0.8.5"
 project-root = "0.2.2"
-which = "4.4.0"
+which = "5.0.0"
 conversions = { path = "./crates/conversions" }
+shared = { path = "./crates/shared" }
 test-case = "3.1.0"
+scarb-metadata = "1.11.1"
+flatten-serde-json = "0.1.0"
+snapbox = "0.4.17"
+smol_str = "0.2.1"
+num-integer = "0.1.46"
+scarb-ui = "0.1.3"
+semver = "1.0.22"
+bimap = "0.6.3"
+primitive-types = "0.12.1"
+shellexpand = "3.1.0"
+toml = "0.8.12"
+rpassword = "7.3.1"
+promptly = "0.3.1"
+# Freeze reqwest dependency, because newer versions cause cast tests to fail on macs
+reqwest = "=0.11.18"
+fs_extra = "1.3.0"
+schemars = { version = "0.8.12", features = ["preserve_order"] }
+ark-ff = "0.4.0-alpha.7"
+ark-std = "0.4.0"
+ark-secp256k1 = "0.4.0"
+ark-secp256r1 = "0.4.0"
+openssl = { version = "0.10", features = ["vendored"] }
+toml_edit = "0.22.6"
+axum = "0.7.5"
+lazy_static = "1.4.0"
+fs2 = "0.4.3"
+flate2 = "1.0.27"
+k256 = { version = "0.13.2", features = ["sha256", "ecdsa", "serde"] }
+p256 = { version = "0.13.2", features = ["sha256", "ecdsa", "serde"] }
+glob = "0.3.1"
+sha3 = "0.10.8"
+base16ct = { version = "0.2.0", features = ["alloc"] }

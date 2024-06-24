@@ -1,8 +1,11 @@
-use crate::integration::common::running_tests::run_test_case;
-use crate::{assert_case_output_contains, assert_failed, assert_passed, test_case};
 use cairo_felt::Felt252;
 use indoc::indoc;
 use num_bigint::BigUint;
+use test_utils::running_tests::run_test_case;
+use test_utils::{
+    runner::{assert_case_output_contains, assert_failed, assert_passed},
+    test_case,
+};
 
 #[test]
 fn read_short_string() {
@@ -11,9 +14,9 @@ fn read_short_string() {
         use snforge_std::env::var;
 
         #[test]
-        fn test_read_short_string() {
-            let result = var('MY_ENV_VAR');
-            assert(result == 'env_var_value', 'failed reading env var');
+        fn read_short_string() {
+            let result = var("MY_ENV_VAR");
+            assert(result == array!['env_var_value'], 'failed reading env var');
         }
     "#
     ));
@@ -21,7 +24,7 @@ fn read_short_string() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
@@ -31,9 +34,9 @@ fn read_felt252() {
         use snforge_std::env::var;
 
         #[test]
-        fn test_read_felt252() {
-            let result = var('MY_ENV_VAR');
-            assert(result == 1234567, 'failed reading env var');
+        fn read_felt252() {
+            let result = var("MY_ENV_VAR");
+            assert(result == array![1234567], 'failed reading env var');
         }
     "#
     ));
@@ -41,18 +44,43 @@ fn read_felt252() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }
 
 #[test]
-fn read_invalid_felt252() {
+fn read_bytearray() {
     let mut test = test_case!(indoc!(
         r#"
         use snforge_std::env::var;
 
         #[test]
-        fn test_read_invalid_felt252() {
-            let result = var('MY_ENV_VAR');
+        fn read_bytearray() {
+            let mut result = var("MY_ENV_VAR").span();
+            let result_bytearray = Serde::<ByteArray>::deserialize(ref result).unwrap();
+            assert(result_bytearray == "very long string literal very very long very very long", 'failed reading env var');
+        }
+    "#
+    ));
+    test.set_env(
+        "MY_ENV_VAR",
+        r#""very long string literal very very long very very long""#,
+    );
+
+    let result = run_test_case(&test);
+
+    assert_passed(&result);
+}
+
+#[test]
+fn read_overflow_felt252() {
+    let mut test = test_case!(indoc!(
+        r#"
+        use snforge_std::env::var;
+
+        #[test]
+        fn read_overflow_felt252() {
+            let result = var("MY_ENV_VAR");
+            assert(result == array![1], '');
         }
     "#
     ));
@@ -62,12 +90,7 @@ fn read_invalid_felt252() {
 
     let result = run_test_case(&test);
 
-    assert_failed!(result);
-    assert_case_output_contains!(
-        result,
-        "test_read_invalid_felt252",
-        &format!("Failed to parse value = {value} to felt")
-    );
+    assert_passed(&result);
 }
 
 #[test]
@@ -77,8 +100,8 @@ fn read_invalid_short_string() {
         use snforge_std::env::var;
 
         #[test]
-        fn test_read_invalid_short_string() {
-            let result = var('MY_ENV_VAR');
+        fn read_invalid_short_string() {
+            var("MY_ENV_VAR");
         }
     "#
     ));
@@ -89,11 +112,11 @@ fn read_invalid_short_string() {
 
     let result = run_test_case(&test);
 
-    assert_failed!(result);
-    assert_case_output_contains!(
-        result,
-        "test_read_invalid_short_string",
-        &format!("Failed to parse value = {value} to felt")
+    assert_failed(&result);
+    assert_case_output_contains(
+        &result,
+        "read_invalid_short_string",
+        &format!("Failed to parse value = {value} to felt"),
     );
 }
 
@@ -104,17 +127,17 @@ fn read_non_existent() {
         use snforge_std::env::var;
 
         #[test]
-        fn test_read_invalid_short_string() {
-            let result = var('MY_ENV_VAR');
+        fn read_invalid_short_string() {
+            var("MY_ENV_VAR");
         }
     "#
     ));
     let result = run_test_case(&test);
 
-    assert_failed!(result);
-    assert_case_output_contains!(
-        result,
-        "test_read_invalid_short_string",
-        "Failed to read from env var = MY_ENV_VAR"
+    assert_failed(&result);
+    assert_case_output_contains(
+        &result,
+        "read_invalid_short_string",
+        "Failed to read from env var = MY_ENV_VAR",
     );
 }

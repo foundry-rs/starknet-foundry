@@ -23,7 +23,7 @@ mod SpyEventsCheckerProxy {
 
     #[storage]
     struct Storage {
-        proxied_address: ContractAddress, 
+        proxied_address: ContractAddress,
     }
 
     #[event]
@@ -58,7 +58,7 @@ mod SpyEventsCheckerProxy {
         self.proxied_address.write(proxied_address);
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl ISpyEventsChecker of super::ISpyEventsChecker<ContractState> {
         fn do_not_emit(ref self: ContractState) {
             let spy_events_checker = ISpyEventsCheckerDispatcher {

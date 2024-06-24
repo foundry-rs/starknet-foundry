@@ -1,8 +1,8 @@
-use crate::integration::common::runner::Contract;
-use crate::integration::common::running_tests::run_test_case;
-use crate::{assert_passed, test_case};
 use indoc::indoc;
 use std::path::Path;
+use test_utils::runner::{assert_passed, Contract};
+use test_utils::running_tests::run_test_case;
+use test_utils::test_case;
 
 #[test]
 fn precalculate_address() {
@@ -17,14 +17,14 @@ fn precalculate_address() {
         use starknet::ContractAddressIntoFelt252;
 
         #[test]
-        fn get_contract_precalculate_address() {
+        fn precalculate_address() {
             let mut calldata = ArrayTrait::new();
 
-            let contract = declare('HelloStarknet');
+            let contract = declare("HelloStarknet").unwrap();
             let contract_address_pre = contract.precalculate_address(@calldata);
-            let contract_address = contract.deploy(@calldata).unwrap();
+            let (contract_address, _) = contract.deploy(@calldata).unwrap();
             let contract_address_pre2 = contract.precalculate_address(@calldata);
-            let contract_address2 = contract.deploy(@calldata).unwrap();
+            let (contract_address2, _) = contract.deploy(@calldata).unwrap();
 
             assert(contract_address_pre == contract_address, 'must be eq');
             assert(contract_address_pre2 == contract_address2, 'must be eq');
@@ -41,5 +41,5 @@ fn precalculate_address() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }

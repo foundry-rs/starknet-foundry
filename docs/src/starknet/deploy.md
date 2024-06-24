@@ -2,15 +2,15 @@
 
 ## Overview
 
-Starknet Foundry cast supports deploying smart contracts to a given network with the `sncast deploy` command.
+Starknet Foundry `sncast` supports deploying smart contracts to a given network with the `sncast deploy` command.
 
 It works by invoking a [Universal Deployer Contract](https://docs.openzeppelin.com/contracts-cairo/0.6.1/udc), which deploys the contract with the given class hash and constructor arguments.
 
-For detailed CLI description, see [deploy command reference](../appendix/cast/deploy.md).
+For detailed CLI description, see [deploy command reference](../appendix/sncast/deploy.md).
 
-## Usage examples
+## Usage Examples
 
-### General example
+### General Example
 
 After [declaring your contract](./declare.md), you can deploy it the following way:
 
@@ -29,7 +29,7 @@ transaction_hash: 0x64a62a000240e034d1862c2bbfa154aac6a8195b4b2e570f38bf4fd47a5a
 > 💡 **Info**
 > Max fee will be automatically computed if `--max-fee <MAX_FEE>` is not passed.
 
-### Deploying contract with constructor
+### Deploying Contract With Constructor
 
 For such a constructor in the declared contract
 
@@ -57,7 +57,7 @@ transaction_hash: 0x64a62a000240e034d1862c2bbfa154aac6a8195b4b2e570f38bf4fd47a5a
 > It is important to know how types are serialized because all values passed as constructor calldata are
 > interpreted as a field elements (felt252).
 
-### Passing `salt` argument
+### Passing `salt` Argument
 
 Salt is a parameter which modifies contract's address, if not passed it will be automatically generated.
 
@@ -71,7 +71,7 @@ contract_address: 0x301316d47a81b39c5e27cca4a7b8ca4773edbf1103218588d6da4d3ed530
 transaction_hash: 0x64a62a000240e034d1862c2bbfa154aac6a8195b4b2e570f38bf4fd47a5ab1e
 ```
 
-### Passing `unique` argument
+### Passing `unique` Argument
 
 Unique is a parameter which modifies contract's salt with the deployer address.
 It can be passed even if the `salt` argument was not provided.

@@ -1,0 +1,27 @@
+{
+    "alpha-sepolia": {
+        "with_wrong_private_key": {
+            "private_key": "privatekey",
+            "public_key": "0x14b491156e96ecf11dace8999b1e5e30888548a581c067b1956b7468bb279b9",
+            "salt": "0x14b6b215424909f34f417ddd7cbaca48de2d505d03c92467367d275e847d252",
+            "address": "0x76e7ce6466e353a00b614ee763f1bc93dba01a57925784a7682efa6b1879c3d",
+            "deployed": true
+        },
+        "with_wrong_class_hash": {
+            "private_key": "0x88ecc06581d81c76cef06d6f4f0c1b28",
+            "public_key": "0x8cdbe26bc82084b04eccb3c6f8a76f12ad6c4015b3dc8ab90dc840d42cac29",
+            "address": "0x691a61b12a7105b1372cc377f135213c11e8400a546f6b0e7ea0296046690ce",
+            "class_hash": "class_hash"
+        },
+        "with_wrong_address": {
+            "private_key": "0xe3e70682c2094cac629f6fbed82c07cd",
+            "public_key": "0x7e52885445756b313ea16849145363ccb73fb4ab0440dbac333cf9d13de82b9",
+            "address": "address"
+        },
+        "with_nonexistent_address": {
+            "private_key": "0xe3e70682c2094cac629f6fbed82c07cd",
+            "public_key": "0x7e52885445756b313ea16849145363ccb73fb4ab0440dbac333cf9d13de82b9",
+            "address": "0x1010101010011aaabbcc"
+        }
+    }
+}

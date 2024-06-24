@@ -39,7 +39,7 @@ Address of the contract to be submitted for verification.
 #### `--verifier <VERIFIER NAME>`
 
 Required.
-Specifies the Blockchan Explorer to verify with.  
+Specifies the Blockchain Explorer to verify with.  
 
 Options as of writing of this document: 
  - voyager

@@ -11,6 +11,8 @@ snforge.workspace = true
 [dependencies]
 subtraction = { path = "../subtraction" }
 starknet.workspace = true
+
+[dev-dependencies]
 snforge_std.workspace = true
 
 [[target.starknet-contract]]

@@ -7,7 +7,6 @@ trait IUpgradeable<T> {
 
 #[starknet::contract]
 mod GetClassHashCheckerUpg {
-
     use starknet::ClassHash;
     use result::ResultTrait;
 
@@ -16,7 +15,7 @@ mod GetClassHashCheckerUpg {
         inner: felt252,
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl IUpgradeableImpl of super::IUpgradeable<ContractState> {
         fn upgrade(ref self: ContractState, class_hash: ClassHash) {
             _upgrade(class_hash);

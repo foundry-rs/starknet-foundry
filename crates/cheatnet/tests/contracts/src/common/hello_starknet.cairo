@@ -8,10 +8,10 @@ trait IHelloStarknet<TContractState> {
 mod HelloStarknet {
     #[storage]
     struct Storage {
-        balance: felt252, 
+        balance: felt252,
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl HelloStarknetImpl of super::IHelloStarknet<ContractState> {
         fn increase_balance(ref self: ContractState, amount: felt252) {
             assert(amount != 0, 'Amount cannot be 0');

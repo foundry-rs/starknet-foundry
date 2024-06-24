@@ -5,8 +5,11 @@
 [![Telegram Chat][tg-badge]][tg-url] [![Telegram Support][tg-support-badge]][tg-support-url]
 
 [tg-badge]: https://img.shields.io/endpoint?color=neon&logo=telegram&label=chat&style=flat-square&url=https%3A%2F%2Ftg.sumanjay.workers.dev%2Fstarknet_foundry
+
 [tg-url]: https://t.me/starknet_foundry
+
 [tg-support-badge]: https://img.shields.io/endpoint?color=neon&logo=telegram&label=support&style=flat-square&url=https%3A%2F%2Ftg.sumanjay.workers.dev%2Fstarknet_foundry_support
+
 [tg-support-url]: https://t.me/starknet_foundry_support
 
 
@@ -22,33 +25,38 @@ Need help getting started with Starknet Foundry? Read the
 
 Starknet Foundry, like its [Ethereum counterpart](https://github.com/foundry-rs/foundry), consists of different modules
 
-- [Forge](https://github.com/foundry-rs/starknet-foundry/tree/master/crates/forge): Starknet testing
+- [`snforge`](https://github.com/foundry-rs/starknet-foundry/tree/master/crates/forge): Starknet testing
   framework (like Truffle, Hardhat and DappTools but for Starknet).
-- [Cast](https://github.com/foundry-rs/starknet-foundry/tree/master/crates/cast): All-in-one tool for
+- [`sncast`](https://github.com/foundry-rs/starknet-foundry/tree/master/crates/sncast): All-in-one tool for
   interacting with Starknet smart contracts, sending transactions and getting chain data.
 
 ## Installation
 
-To install Starknet Foundry, run:
+To install Starknet Foundry, first install `snfoundryup` by running:
 
 ```shell
 curl -L https://raw.githubusercontent.com/foundry-rs/starknet-foundry/master/scripts/install.sh | sh
 ```
 
+Follow the instructions and then run
+
+```shell
+snfoundryup
+```
+
 You can also specify a version you wish to install:
 
 ```shell
-curl -L https://raw.githubusercontent.com/foundry-rs/starknet-foundry/master/scripts/install.sh | sh -s -- -v 0.3.0
+snfoundryup -v 0.9.0
 ```
 
 To verify that the Starknet Foundry is installed correctly, run `snforge --version` and `sncast --version`.
 
-
 ## Features
 
-- Fast testing framework `Forge` written in Rust
+- Fast testing framework `snforge` written in Rust
 - High-quality dependency management using [scarb](https://github.com/software-mansion/scarb)
-- Intuitive interactions and deployment of Starknet contracts through `Cast`
+- Intuitive interactions and deployment of Starknet contracts through `sncast`
 
 ## Roadmap
 
@@ -61,21 +69,19 @@ Starknet Foundry is under active development! Expect a lot of new features to ap
 - [x] Cheatcodes
 - [x] Starknet state forking
 - [x] Fuzz testing
-- [ ] Parallel tests execution
-- [ ] Performance improvements
-- [ ] Deployment scripts written in Cairo
-- [ ] Advanced debugging utilities
+- [x] Parallel tests execution
+- [x] Performance improvements
+- [x] Deployment scripts written in Cairo
+- [ ] Transactions profiling 🏗️
+- [ ] Debugging utilities 🏗️
 - [ ] L1 ↔ L2 messaging and cross-chain testing
-- [ ] Transactions profiling
 - [ ] Test coverage reports
 
 ## Performance
 
-Forge achieves performance comparable to the Cairo Test Runner with improved user experience. All that is possible on just a single thread and multithreading is well on its way!
+![Performance plot](.github/images/plot.png)
 
-![Starknet test framework speed comparison](./benchmarks/plot.png)
-
-To learn more about our benchmark methodology check [here](./benchmarks/).
+`snforge` achieves performance comparable to the Cairo Test Runner with improved user experience.
 
 ## Getting Help
 

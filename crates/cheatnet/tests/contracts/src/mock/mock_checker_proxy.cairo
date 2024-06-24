@@ -9,7 +9,9 @@ trait IMockChecker<TContractState> {
 #[starknet::interface]
 trait IMockCheckerProxy<TContractState> {
     fn get_thing_from_contract(ref self: TContractState, address: ContractAddress) -> felt252;
-    fn get_thing_from_contract_and_emit_event(ref self: TContractState, address: ContractAddress) -> felt252;
+    fn get_thing_from_contract_and_emit_event(
+        ref self: TContractState, address: ContractAddress
+    ) -> felt252;
 }
 
 #[starknet::contract]
@@ -32,14 +34,16 @@ mod MockCheckerProxy {
         thing: felt252
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl IMockCheckerProxy of super::IMockCheckerProxy<ContractState> {
         fn get_thing_from_contract(ref self: ContractState, address: ContractAddress) -> felt252 {
             let dispatcher = IMockCheckerDispatcher { contract_address: address };
             dispatcher.get_thing()
         }
 
-        fn get_thing_from_contract_and_emit_event(ref self: ContractState, address: ContractAddress) -> felt252 {
+        fn get_thing_from_contract_and_emit_event(
+            ref self: ContractState, address: ContractAddress
+        ) -> felt252 {
             let dispatcher = IMockCheckerDispatcher { contract_address: address };
             let thing = dispatcher.get_thing();
             self.emit(Event::ThingEmitted(ThingEmitted { thing }));

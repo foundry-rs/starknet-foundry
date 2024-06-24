@@ -1,0 +1,65 @@
+{
+    "alpha-sepolia": {
+        "user0": {
+            "private_key": "0x56c12e097e49ea382ca8eadec0839401",
+            "public_key": "0x48234b9bc6c1e749f4b908d310d8c53dae6564110b05ccf79016dca8ce7dfac",
+            "address": "0x6f4621e7ad43707b3f69f9df49425c3d94fdc5ab2e444bfa0e7e4edeff7992d"
+        },
+        "user1": {
+            "private_key": "0xffd33878eed7767e7c546ce3fc026295",
+            "public_key": "0x17b62d16ee2b9b5ccd3320e2c0b234dfbdd1d01d09d0aa29ce164827cddf46a",
+            "salt": "0x14b6b215424909f34f417ddd7cbaca48de2d505d03c92467367d275e847d252",
+            "address": "0xf6ecd22832b7c3713cfa7826ee309ce96a2769833f093795fafa1b8f20c48b",
+            "deployed": true
+        },
+        "user2": {
+            "private_key": "0xd55976edf8fadf692436af68f7476817",
+            "public_key": "0x4db538fb2e14aaa37a635d17464e15b5b20e1ab92485c841f0c90ff2061119d",
+            "address": "0x3e40c4c2770812f69166a12b0462e887ecf58a2eba5b7be1fba78450fd07dbd"
+        },
+        "user3": {
+            "private_key": "0x7e7f595383c98deeb705a6a06e1bc8ff",
+            "public_key": "0x126ae3ef8f5c843112eed75876ce5bc650f01d33d1917c24f0cd0cee57869ef",
+            "address": "0x4f740e090e9930518a3a7efc76c6a61b9dffa09dfb20aae645645af739cfac8"
+        },
+        "user4": {
+            "private_key": "0x7d4ad2e3c3e6f34ccaae5cf34bfcecb5",
+            "public_key": "0x2598e6ec76379ce596506499ddf1c339e46dbc5d80569ceccee3880421ad237",
+            "address": "0x3ffc270312cbefaf2fb4a88e97cc186797bada41a291331186ec5ca316e32fa"
+        },
+        "user5": {
+            "private_key": "0xa93f89e75aaf77eaa26fa0292becb8f0",
+            "public_key": "0x3de0121583da0bbc0836e8be45fb93391057fcd0082cb6aae6b941c4a680969",
+            "address": "0x51b3c1e02298485322763acbe269b53f46217adc1dc66f07e3e6f6d0fe885b7"
+        },
+        "user6": {
+            "private_key": "0x9255d1e74778df39cb6514fd143a431",
+            "public_key": "0x6ec12575eb96e09affeeb84551c7e0e21f5c33ba2b379794285f224aabe2140",
+            "address": "0x6ccfd328e3512986cde1de944f3f6598e5381aae635839cbf7d4db01b8bee0a"
+        },
+        "user7": {
+            "private_key": "0xb302d1b22f135036dfbd79198777c7e9",
+            "public_key": "0x43916246826b183daf4f9235572ae46b2eabd1a5f3bea14f52d123a88e1dcf2",
+            "address": "0x65b2c72a2fe093c135ab191c2e7ce181205bb10d59a366942a1cbf284b98662"
+        },
+        "user8": {
+            "private_key": "0xe087cfde9474b2e716b1aeda95a02081",
+            "public_key": "0x4fdaeb60e75399877bd5d14d3dac2e805f3c2a6732851a19db63fee0cfae00d",
+            "address": "0x68d6e92b8e2310c550178b2fe484d5cb89dd6aa93ae804afd4d124e9d6c3cd3"
+        },
+        "cairo1": {
+            "private_key": "0x88ecc06581d81c76cef06d6f4f0c1b28",
+            "public_key": "0x8cdbe26bc82084b04eccb3c6f8a76f12ad6c4015b3dc8ab90dc840d42cac29",
+            "address": "0x691a61b12a7105b1372cc377f135213c11e8400a546f6b0e7ea0296046690ce",
+            "legacy": false
+        },
+        "cairo0": {
+            "private_key": "0x45136b667118bab7f2a9d656d08981ecd7065feb420c3f81c3ed8f461072b0a",
+            "public_key": "0x6b35e242f65996a44b6cf808b954785926eb89e8f4b6441b65780c4eacb9668",
+            "address": "0x5c8fb90cc7249383cbc83c682565720a6d3df92840c02424a6c230e26464c4c",
+            "class_hah": "0x4d07e40e93398ed3c76981e72dd1fd22557a78ce36c0515f679e27f0bb5bc5f",
+            "salt": "0xe35eea9d1b0fa729",
+            "legacy": true
+        }
+    }
+}

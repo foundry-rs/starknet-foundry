@@ -3,7 +3,11 @@ use starknet::ContractAddress;
 #[starknet::interface]
 trait ISpyEventsOrderChecker<TContractState> {
     fn emit_and_call_another(
-        ref self: TContractState, first_data: felt252, second_data: felt252, third_data: felt252, another_contract_address: ContractAddress
+        ref self: TContractState,
+        first_data: felt252,
+        second_data: felt252,
+        third_data: felt252,
+        another_contract_address: ContractAddress
     );
 }
 
@@ -36,10 +40,14 @@ mod SpyEventsOrderChecker {
         data: felt252
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl ISpyEventsOrderCheckerImpl of super::ISpyEventsOrderChecker<ContractState> {
         fn emit_and_call_another(
-            ref self: ContractState, first_data: felt252, second_data: felt252, third_data: felt252, another_contract_address: ContractAddress
+            ref self: ContractState,
+            first_data: felt252,
+            second_data: felt252,
+            third_data: felt252,
+            another_contract_address: ContractAddress
         ) {
             self.emit(Event::SecondEvent(SecondEvent { data: first_data }));
 

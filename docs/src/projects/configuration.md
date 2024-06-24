@@ -1,10 +1,10 @@
 # Project Configuration
 
-## Forge
+## `snforge`
 
-### Configuring Forge Settings in `Scarb.toml`
+### Configuring `snforge` Settings in `Scarb.toml`
 
-It is possible to configure forge for all test runs through `Scarb.toml`.
+It is possible to configure `snforge` for all test runs through `Scarb.toml`.
 Instead of passing arguments in the command line, set them directly in the file.
 
 ```toml
@@ -14,33 +14,36 @@ exit_first = true
 # ...
 ```
 
-Forge automatically looks for `Scarb.toml` in the directory you are running the tests in or in any of its parents.
+`snforge` automatically looks for `Scarb.toml` in the directory you are running the tests in or in any of its parents.
 
-## Cast
+## `sncast`
 
-### Defining Profiles in `Scarb.toml`
+### Defining Profiles in `snfoundry.toml`
 
-To be able to work with the network, you need to supply cast with a few parameters —
+To be able to work with the network, you need to supply `sncast` with a few parameters —
 namely the rpc node url and an account name that should be used to interact with it.
 This can be done
-by either supplying cast with those parameters directly [see more detailed CLI description,](../appendix/cast.md)
-or you can put them into `Scarb.toml` file:
+by either supplying `sncast` with those parameters directly [see more detailed CLI description,](../appendix/sncast.md)
+or you can put them into `snfoundry.toml` file:
 
 ```toml
 # ...
-[tool.sncast.myprofile]
+[sncast.myprofile]
 account = "user"
 accounts-file = "~/my_accounts.json"
 url = "http://127.0.0.1:5050/rpc"
 # ...
 ```
 
-With `Scarb.toml` configured this way, we can just pass `--profile myprofile` argument to make sure cast uses parameters
+With `snfoundry.toml` configured this way, we can just pass `--profile myprofile` argument to make sure `sncast` uses parameters
 defined in the profile.
 
 > 📝 **Note**
-> `Scarb.toml` file has to be present in current or any of the parent directories.
-> Alternatively, you can also point to `Scarb.toml` path with `--path-to-scarb-toml <PATH>` flag.
+> `snfoundry.toml` file has to be present in current or any of the parent directories.
+
+> 📝 **Note**
+> If there is a profile with the same name in Scarb.toml, scarb will use this profile. If not, scarb will default to using the dev profile.
+> (This applies only to subcommands using scarb - namely `declare` and `script`).
 
 > 💡 **Info**
 > Not all parameters have to be present in the configuration - you can choose to include only some of them and supply
@@ -60,22 +63,22 @@ response: [0x0]
 
 ### Multiple Profiles
 
-You can have multiple profiles defined in the `Scarb.toml`.
+You can have multiple profiles defined in the `snfoundry.toml`.
 
 ### Default Profile
 
-If you don't need multiple profiles, you can define the parameters without specifying one:
+There is also an option to set up a default profile, which can be utilized without the need to specify a `--profile`. Here's an example:
 
 ```toml
 # ...
-[tool.sncast]
+[sncast.default]
 account = "user123"
 accounts-file = "~/my_accounts.json"
 url = "http://127.0.0.1:5050/rpc"
 # ...
 ```
 
-That way, you can omit passing `--profile` parameter:
+With this, there's no need to include the `--profile` argument when using `sncast`.
 
 ```shell
 $ sncast call \
@@ -87,3 +90,20 @@ $ sncast call \
 command: call
 response: [0x1, 0x23, 0x4]
 ```
+
+## Environmental variables
+
+Programmers can use environmental variables in both `Scarb.toml::tool::snforge` and in `snfoundry.toml`. To use an environmental variable as a value, use its name prefixed with `$`. 
+This might be useful, for example, to hide node urls in the public repositories. 
+As an example:
+
+```toml
+# ...
+[sncast.default]
+account = "my_account"
+accounts-file = "~/my_accounts.json"
+url = "$NODE_URL"
+# ...
+```
+
+Variable value are automatically resolved to numbers and booleans (strings `true`, `false`) if it is possible.

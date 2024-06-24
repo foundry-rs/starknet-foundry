@@ -5,7 +5,12 @@ fn fob_fn(a: felt252, b: felt252, n: felt252) -> felt252 {
     }
 }
 
-#[test]
-fn test_fob() {
-    assert(fob_fn(0, 1, 10) == 55, fob_fn(0, 1, 10));
+#[cfg(test)]
+mod tests {
+    use super::fob_fn;
+
+    #[test]
+    fn test_fob() {
+        assert(fob_fn(0, 1, 10) == 55, fob_fn(0, 1, 10));
+    }
 }

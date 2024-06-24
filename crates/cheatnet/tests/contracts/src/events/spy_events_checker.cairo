@@ -51,7 +51,7 @@ mod SpyEventsChecker {
         even_more_data: u256
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl ISpyEventsChecker of super::ISpyEventsChecker<ContractState> {
         fn do_not_emit(ref self: ContractState) {}
 
@@ -78,7 +78,8 @@ mod SpyEventsChecker {
         }
 
         fn emit_event_syscall(ref self: ContractState, some_key: felt252, some_data: felt252) {
-            starknet::emit_event_syscall(array![some_key].span(), array![some_data].span()).unwrap_syscall();
+            starknet::emit_event_syscall(array![some_key].span(), array![some_data].span())
+                .unwrap_syscall();
         }
     }
 }

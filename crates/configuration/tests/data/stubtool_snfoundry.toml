@@ -1,0 +1,34 @@
+[stubtool.default]
+url = "http://127.0.0.1:5055/rpc"
+accounts-file = "../account-file"
+account = "user1"
+
+[stubtool.profile1]
+url = "http://127.0.0.1:5050/rpc"
+account = "user3"
+
+[stubtool.profile2]
+url = "http://127.0.0.1:5055/rpc"
+accounts-file = "../account-file"
+account = "user100"
+
+[stubtool.profile3]
+url = "http://127.0.0.1:5055/rpc"
+account = "/path/to/account.json"
+keystore = "../keystore"
+
+[stubtool.profile4]
+url = "http://127.0.0.1:5055/rpc"
+accounts-file = "../account-file"
+account = "user3"
+
+[stubtool.profile5]
+url = "http://127.0.0.1:5055/rpc"
+account = "user8"
+
+[stubtool.with-envs]
+url = "$VALUE_STRING123132"
+account = "$VALUE_INT123132"
+[stubtool.with-envs.nested]
+list-example = [ "$VALUE_BOOL1231321", "$VALUE_BOOL1231322"  ]
+url-nested = "$VALUE_FLOAT123132"

@@ -1,55 +1,55 @@
-use std::path::PathBuf;
-
-use crate::assert_stdout_contains;
+use super::common::runner::{setup_hello_workspace, setup_virtual_workspace, test_runner};
 use indoc::indoc;
-
-use crate::e2e::common::runner::{runner, setup_hello_workspace, setup_virtual_workspace};
+use shared::test_utils::output_assert::assert_stdout_contains;
+use std::path::PathBuf;
 
 #[test]
 fn root_workspace_without_arguments() {
     let temp = setup_hello_workspace();
 
-    let snapbox = runner();
-    let output = snapbox.current_dir(&temp).assert().code(1);
-    assert_stdout_contains!(
+    let output = test_runner(&temp).assert().code(1);
+    assert_stdout_contains(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
 
 
         Collected 3 test(s) from hello_workspaces package
         Running 1 test(s) from src/
-        [PASS] hello_workspaces::test_simple
+        [PASS] hello_workspaces::tests::test_simple [..]
         Running 2 test(s) from tests/
         [FAIL] tests::test_failing::test_failing
         
         Failure data:
-            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+            0x6661696c696e6720636865636b ('failing check')
         
         [FAIL] tests::test_failing::test_another_failing
 
         Failure data:
-            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+            0x6661696c696e6720636865636b ('failing check')
         
-        Tests: 1 passed, 2 failed, 0 skipped
+        Tests: 1 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:
             tests::test_failing::test_failing
             tests::test_failing::test_another_failing
-        "#}
+        "},
     );
 }
 
 #[test]
 fn root_workspace_specific_package() {
     let temp = setup_hello_workspace();
-    let snapbox = runner().arg("--package").arg("addition");
 
-    let output = snapbox.current_dir(&temp).assert().success();
-    assert_stdout_contains!(
+    let output = test_runner(&temp)
+        .args(["--package", "addition"])
+        .assert()
+        .success();
+
+    assert_stdout_contains(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Compiling[..]
         [..]Finished[..]
@@ -57,26 +57,29 @@ fn root_workspace_specific_package() {
 
         Collected 5 test(s) from addition package
         Running 1 test(s) from src/
-        [PASS] addition::tests::it_works
+        [PASS] addition::tests::it_works [..]
         Running 4 test(s) from tests/
-        [PASS] tests::nested::simple_case
-        [PASS] tests::nested::contract_test
-        [PASS] tests::nested::test_nested::test_two
-        [PASS] tests::nested::test_nested::test_two_and_two
-        Tests: 5 passed, 0 failed, 0 skipped
-        "#}
+        [PASS] tests::nested::simple_case [..]
+        [PASS] tests::nested::contract_test [..]
+        [PASS] tests::nested::test_nested::test_two [..]
+        [PASS] tests::nested::test_nested::test_two_and_two [..]
+        Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+        "},
     );
 }
 
 #[test]
 fn root_workspace_specific_package2() {
     let temp = setup_hello_workspace();
-    let snapbox = runner().arg("--package").arg("fibonacci");
 
-    let output = snapbox.current_dir(&temp).assert().code(1);
-    assert_stdout_contains!(
+    let output = test_runner(&temp)
+        .args(["--package", "fibonacci"])
+        .assert()
+        .code(1);
+
+    assert_stdout_contains(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Compiling[..]
         [..]Finished[..]
@@ -84,34 +87,37 @@ fn root_workspace_specific_package2() {
 
         Collected 6 test(s) from fibonacci package
         Running 2 test(s) from src/
-        [PASS] fibonacci::tests::it_works
-        [PASS] fibonacci::tests::contract_test
+        [PASS] fibonacci::tests::it_works [..]
+        [PASS] fibonacci::tests::contract_test [..]
         Running 4 test(s) from tests/
-        [PASS] tests::lib_test
-        [PASS] tests::abc::abc_test
-        [PASS] tests::abc::efg::efg_test
+        [PASS] tests::lib_test [..]
+        [PASS] tests::abc::abc_test [..]
+        [PASS] tests::abc::efg::efg_test [..]
         [FAIL] tests::abc::efg::failing_test
         
         Failure data:
-            original value: [0], converted to a string: []
+            0x0 ('')
         
-        Tests: 5 passed, 1 failed, 0 skipped
+        Tests: 5 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:
             tests::abc::efg::failing_test
-        "#}
+        "},
     );
 }
 
 #[test]
 fn root_workspace_specific_package_and_name() {
     let temp = setup_hello_workspace();
-    let snapbox = runner().arg("simple").arg("--package").arg("addition");
 
-    let output = snapbox.current_dir(&temp).assert().success();
-    assert_stdout_contains!(
+    let output = test_runner(&temp)
+        .args(["simple", "--package", "addition"])
+        .assert()
+        .success();
+
+    assert_stdout_contains(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Compiling[..]
         [..]Finished[..]
@@ -120,59 +126,63 @@ fn root_workspace_specific_package_and_name() {
         Collected 1 test(s) from addition package
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
-        [PASS] tests::nested::simple_case
-        Tests: 1 passed, 0 failed, 0 skipped
-        "#}
+        [PASS] tests::nested::simple_case [..]
+        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 4 filtered out
+        "},
     );
 }
 
 #[test]
 fn root_workspace_specify_root_package() {
     let temp = setup_hello_workspace();
-    let snapbox = runner().arg("--package").arg("hello_workspaces");
 
-    let output = snapbox.current_dir(&temp).assert().code(1);
-    assert_stdout_contains!(
+    let output = test_runner(&temp)
+        .args(["--package", "hello_workspaces"])
+        .assert()
+        .code(1);
+
+    assert_stdout_contains(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
 
 
         Collected 3 test(s) from hello_workspaces package
         Running 1 test(s) from src/
-        [PASS] hello_workspaces::test_simple
+        [PASS] hello_workspaces::tests::test_simple [..]
         Running 2 test(s) from tests/
         [FAIL] tests::test_failing::test_failing
         
         Failure data:
-            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+            0x6661696c696e6720636865636b ('failing check')
         
         [FAIL] tests::test_failing::test_another_failing
 
         Failure data:
-            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+            0x6661696c696e6720636865636b ('failing check')
         
-        Tests: 1 passed, 2 failed, 0 skipped
+        Tests: 1 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:
             tests::test_failing::test_failing
             tests::test_failing::test_another_failing
-        "#}
+        "},
     );
 }
 
 #[test]
 fn root_workspace_inside_nested_package() {
     let temp = setup_hello_workspace();
-    let package_dir = temp.join(PathBuf::from("crates/addition"));
 
-    let snapbox = runner();
+    let output = test_runner(&temp)
+        .current_dir(temp.join("crates/addition"))
+        .assert()
+        .success();
 
-    let output = snapbox.current_dir(package_dir).assert().success();
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Compiling[..]
         [..]Finished[..]
@@ -180,97 +190,101 @@ fn root_workspace_inside_nested_package() {
 
         Collected 5 test(s) from addition package
         Running 1 test(s) from src/
-        [PASS] addition::tests::it_works
+        [PASS] addition::tests::it_works [..]
         Running 4 test(s) from tests/
-        [PASS] tests::nested::simple_case
-        [PASS] tests::nested::contract_test
-        [PASS] tests::nested::test_nested::test_two
-        [PASS] tests::nested::test_nested::test_two_and_two
-        Tests: 5 passed, 0 failed, 0 skipped
-        "#}
+        [PASS] tests::nested::simple_case [..]
+        [PASS] tests::nested::contract_test [..]
+        [PASS] tests::nested::test_nested::test_two [..]
+        [PASS] tests::nested::test_nested::test_two_and_two [..]
+        Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+        "},
     );
 }
 
 #[test]
 fn root_workspace_for_entire_workspace() {
     let temp = setup_hello_workspace();
-    let snapbox = runner().arg("--workspace");
 
-    let output = snapbox.current_dir(&temp).assert().code(1);
-    assert_stdout_contains!(
+    let output = test_runner(&temp).arg("--workspace").assert().code(1);
+
+    assert_stdout_contains(
         output,
-        indoc! {r#"
-         [..]Compiling[..]
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Compiling[..]
+        [..]Compiling[..]
+        [..]Compiling[..]
         [..]Compiling[..]
         [..]Finished[..]
         
         
         Collected 5 test(s) from addition package
         Running 1 test(s) from src/
-        [PASS] addition::tests::it_works
+        [PASS] addition::tests::it_works [..]
         Running 4 test(s) from tests/
-        [PASS] tests::nested::simple_case
-        [PASS] tests::nested::contract_test
-        [PASS] tests::nested::test_nested::test_two
-        [PASS] tests::nested::test_nested::test_two_and_two
-        Tests: 5 passed, 0 failed, 0 skipped
-        [..]Compiling[..]
-        [..]Compiling[..]
-        [..]Finished[..]
+        [PASS] tests::nested::simple_case [..]
+        [PASS] tests::nested::contract_test [..]
+        [PASS] tests::nested::test_nested::test_two [..]
+        [PASS] tests::nested::test_nested::test_two_and_two [..]
+        Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         
         
         Collected 6 test(s) from fibonacci package
         Running 2 test(s) from src/
-        [PASS] fibonacci::tests::it_works
-        [PASS] fibonacci::tests::contract_test
+        [PASS] fibonacci::tests::it_works [..]
+        [PASS] fibonacci::tests::contract_test [..]
         Running 4 test(s) from tests/
-        [PASS] tests::lib_test
-        [PASS] tests::abc::abc_test
-        [PASS] tests::abc::efg::efg_test
+        [PASS] tests::lib_test [..]
+        [PASS] tests::abc::abc_test [..]
+        [PASS] tests::abc::efg::efg_test [..]
         [FAIL] tests::abc::efg::failing_test
         
         Failure data:
-            original value: [0], converted to a string: []
+            0x0 ('')
         
-        Tests: 5 passed, 1 failed, 0 skipped
-        [..]Compiling[..]
-        [..]Finished[..]
+        Tests: 5 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
         
         
         Collected 3 test(s) from hello_workspaces package
         Running 1 test(s) from src/
-        [PASS] hello_workspaces::test_simple
+        [PASS] hello_workspaces::tests::test_simple [..]
         Running 2 test(s) from tests/
         [FAIL] tests::test_failing::test_failing
         
         Failure data:
-            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+            0x6661696c696e6720636865636b ('failing check')
         
         [FAIL] tests::test_failing::test_another_failing
 
         Failure data:
-            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+            0x6661696c696e6720636865636b ('failing check')
         
-        Tests: 1 passed, 2 failed, 0 skipped
+        Tests: 1 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:
             tests::abc::efg::failing_test
             tests::test_failing::test_failing
             tests::test_failing::test_another_failing
-        "#}
+        "},
     );
 }
 
 #[test]
 fn root_workspace_for_entire_workspace_inside_package() {
     let temp = setup_hello_workspace();
-    let package_dir = temp.join(PathBuf::from("crates/fibonacci"));
 
-    let snapbox = runner().arg("--workspace");
-    let output = snapbox.current_dir(package_dir).assert().code(1);
-    assert_stdout_contains!(
+    let output = test_runner(&temp)
+        .current_dir(temp.join("crates/fibonacci"))
+        .arg("--workspace")
+        .assert()
+        .code(1);
+
+    assert_stdout_contains(
         output,
-        indoc! {r#"
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Compiling[..]
+        [..]Compiling[..]
         [..]Compiling[..]
         [..]Compiling[..]
         [..]Finished[..]
@@ -278,66 +292,63 @@ fn root_workspace_for_entire_workspace_inside_package() {
         
         Collected 5 test(s) from addition package
         Running 1 test(s) from src/
-        [PASS] addition::tests::it_works
+        [PASS] addition::tests::it_works [..]
         Running 4 test(s) from tests/
-        [PASS] tests::nested::simple_case
-        [PASS] tests::nested::contract_test
-        [PASS] tests::nested::test_nested::test_two
-        [PASS] tests::nested::test_nested::test_two_and_two
-        Tests: 5 passed, 0 failed, 0 skipped
-        [..]Compiling[..]
-        [..]Compiling[..]
-        [..]Finished[..]
+        [PASS] tests::nested::simple_case [..]
+        [PASS] tests::nested::contract_test [..]
+        [PASS] tests::nested::test_nested::test_two [..]
+        [PASS] tests::nested::test_nested::test_two_and_two [..]
+        Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         
         
         Collected 6 test(s) from fibonacci package
         Running 2 test(s) from src/
-        [PASS] fibonacci::tests::it_works
-        [PASS] fibonacci::tests::contract_test
+        [PASS] fibonacci::tests::it_works [..]
+        [PASS] fibonacci::tests::contract_test [..]
         Running 4 test(s) from tests/
-        [PASS] tests::lib_test
-        [PASS] tests::abc::abc_test
-        [PASS] tests::abc::efg::efg_test
+        [PASS] tests::lib_test [..]
+        [PASS] tests::abc::abc_test [..]
+        [PASS] tests::abc::efg::efg_test [..]
         [FAIL] tests::abc::efg::failing_test
         
         Failure data:
-            original value: [0], converted to a string: []
+            0x0 ('')
         
-        Tests: 5 passed, 1 failed, 0 skipped
-        [..]Compiling[..]
-        [..]Finished[..]
+        Tests: 5 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
         
         
         Collected 3 test(s) from hello_workspaces package
         Running 1 test(s) from src/
-        [PASS] hello_workspaces::test_simple
+        [PASS] hello_workspaces::tests::test_simple [..]
         Running 2 test(s) from tests/
         [FAIL] tests::test_failing::test_failing
         
         Failure data:
-            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+            0x6661696c696e6720636865636b ('failing check')
         
         [FAIL] tests::test_failing::test_another_failing
 
         Failure data:
-            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+            0x6661696c696e6720636865636b ('failing check')
         
-        Tests: 1 passed, 2 failed, 0 skipped
+        Tests: 1 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:
             tests::abc::efg::failing_test
             tests::test_failing::test_failing
             tests::test_failing::test_another_failing
-        "#}
+        "},
     );
 }
 
 #[test]
 fn root_workspace_for_entire_workspace_and_specific_package() {
     let temp = setup_hello_workspace();
-    let snapbox = runner().arg("--workspace").arg("--package").arg("addition");
 
-    let result = snapbox.current_dir(&temp).assert().code(2);
+    let result = test_runner(&temp)
+        .args(["--workspace", "--package", "addition"])
+        .assert()
+        .code(2);
 
     let stderr = String::from_utf8_lossy(&result.get_output().stderr);
 
@@ -347,9 +358,11 @@ fn root_workspace_for_entire_workspace_and_specific_package() {
 #[test]
 fn root_workspace_missing_package() {
     let temp = setup_hello_workspace();
-    let snapbox = runner().arg("--package").arg("missing_package");
 
-    let result = snapbox.current_dir(&temp).assert().code(2);
+    let result = test_runner(&temp)
+        .args(["--package", "missing_package"])
+        .assert()
+        .code(2);
 
     let stdout = String::from_utf8_lossy(&result.get_output().stdout);
 
@@ -359,60 +372,59 @@ fn root_workspace_missing_package() {
 #[test]
 fn virtual_workspace_without_arguments() {
     let temp = setup_virtual_workspace();
-    let snapbox = runner();
+    let snapbox = test_runner(&temp);
 
     let output = snapbox.current_dir(&temp).assert().code(1);
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
-        indoc! {r#"
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Compiling[..]
         [..]Compiling[..]
         [..]Finished[..]
         
         
         Collected 6 test(s) from fibonacci2 package
         Running 2 test(s) from src/
-        [PASS] fibonacci2::tests::it_works
-        [PASS] fibonacci2::tests::contract_test
+        [PASS] fibonacci2::tests::it_works [..]
+        [PASS] fibonacci2::tests::contract_test [..]
         Running 4 test(s) from tests/
-        [PASS] tests::lib_test
-        [PASS] tests::abc::abc_test
-        [PASS] tests::abc::efg::efg_test
+        [PASS] tests::lib_test [..]
+        [PASS] tests::abc::abc_test [..]
+        [PASS] tests::abc::efg::efg_test [..]
         [FAIL] tests::abc::efg::failing_test
         
         Failure data:
-            original value: [0], converted to a string: []
+            0x0 ('')
         
-        Tests: 5 passed, 1 failed, 0 skipped
-        [..]Compiling[..]
-        [..]Compiling[..]
-        [..]Finished[..]
+        Tests: 5 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
 
 
         Collected 5 test(s) from subtraction package
         Running 1 test(s) from src/
-        [PASS] subtraction::tests::it_works
+        [PASS] subtraction::tests::it_works [..]
         Running 4 test(s) from tests/
-        [PASS] tests::nested::simple_case
-        [PASS] tests::nested::contract_test
-        [PASS] tests::nested::test_nested::test_two
-        [PASS] tests::nested::test_nested::test_two_and_two
-        Tests: 5 passed, 0 failed, 0 skipped
+        [PASS] tests::nested::simple_case [..]
+        [PASS] tests::nested::contract_test [..]
+        [PASS] tests::nested::test_nested::test_two [..]
+        [PASS] tests::nested::test_nested::test_two_and_two [..]
+        Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:
             tests::abc::efg::failing_test
-        "#}
+        "},
     );
 }
 
 #[test]
 fn virtual_workspace_specify_package() {
     let temp = setup_virtual_workspace();
-    let snapbox = runner().arg("--package").arg("subtraction");
+    let snapbox = test_runner(&temp).arg("--package").arg("subtraction");
 
     let output = snapbox.current_dir(&temp).assert().success();
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Compiling[..]
         [..]Finished[..]
@@ -420,60 +432,63 @@ fn virtual_workspace_specify_package() {
 
         Collected 5 test(s) from subtraction package
         Running 1 test(s) from src/
-        [PASS] subtraction::tests::it_works
+        [PASS] subtraction::tests::it_works [..]
         Running 4 test(s) from tests/
-        [PASS] tests::nested::simple_case
-        [PASS] tests::nested::contract_test
-        [PASS] tests::nested::test_nested::test_two
-        [PASS] tests::nested::test_nested::test_two_and_two
-        Tests: 5 passed, 0 failed, 0 skipped
-        "#}
+        [PASS] tests::nested::simple_case [..]
+        [PASS] tests::nested::contract_test [..]
+        [PASS] tests::nested::test_nested::test_two [..]
+        [PASS] tests::nested::test_nested::test_two_and_two [..]
+        Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+        "},
     );
 }
 
 #[test]
 fn virtual_workspace_specific_package2() {
     let temp = setup_virtual_workspace();
-    let snapbox = runner().arg("--package").arg("fibonacci2");
+    let snapbox = test_runner(&temp).arg("--package").arg("fibonacci2");
 
     let output = snapbox.current_dir(&temp).assert().code(1);
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
         
         
         Collected 6 test(s) from fibonacci2 package
         Running 2 test(s) from src/
-        [PASS] fibonacci2::tests::it_works
-        [PASS] fibonacci2::tests::contract_test
+        [PASS] fibonacci2::tests::it_works [..]
+        [PASS] fibonacci2::tests::contract_test [..]
         Running 4 test(s) from tests/
-        [PASS] tests::lib_test
-        [PASS] tests::abc::abc_test
-        [PASS] tests::abc::efg::efg_test
+        [PASS] tests::lib_test [..]
+        [PASS] tests::abc::abc_test [..]
+        [PASS] tests::abc::efg::efg_test [..]
         [FAIL] tests::abc::efg::failing_test
         
         Failure data:
-            original value: [0], converted to a string: []
+            0x0 ('')
         
-        Tests: 5 passed, 1 failed, 0 skipped
+        Tests: 5 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:
             tests::abc::efg::failing_test
-        "#}
+        "},
     );
 }
 
 #[test]
 fn virtual_workspace_specific_package_and_name() {
     let temp = setup_virtual_workspace();
-    let snapbox = runner().arg("simple").arg("--package").arg("subtraction");
+    let snapbox = test_runner(&temp)
+        .arg("simple")
+        .arg("--package")
+        .arg("subtraction");
 
     let output = snapbox.current_dir(&temp).assert().success();
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Compiling[..]
         [..]Finished[..]
@@ -482,9 +497,9 @@ fn virtual_workspace_specific_package_and_name() {
         Collected 1 test(s) from subtraction package
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
-        [PASS] tests::nested::simple_case
-        Tests: 1 passed, 0 failed, 0 skipped
-        "#}
+        [PASS] tests::nested::simple_case [..]
+        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 4 filtered out
+        "},
     );
 }
 
@@ -493,12 +508,12 @@ fn virtual_workspace_inside_nested_package() {
     let temp = setup_virtual_workspace();
     let package_dir = temp.join(PathBuf::from("dummy_name/subtraction"));
 
-    let snapbox = runner();
+    let snapbox = test_runner(&temp);
 
     let output = snapbox.current_dir(package_dir).assert().success();
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Compiling[..]
         [..]Finished[..]
@@ -506,62 +521,61 @@ fn virtual_workspace_inside_nested_package() {
 
         Collected 5 test(s) from subtraction package
         Running 1 test(s) from src/
-        [PASS] subtraction::tests::it_works
+        [PASS] subtraction::tests::it_works [..]
         Running 4 test(s) from tests/
-        [PASS] tests::nested::simple_case
-        [PASS] tests::nested::contract_test
-        [PASS] tests::nested::test_nested::test_two
-        [PASS] tests::nested::test_nested::test_two_and_two
-        Tests: 5 passed, 0 failed, 0 skipped
-        "#}
+        [PASS] tests::nested::simple_case [..]
+        [PASS] tests::nested::contract_test [..]
+        [PASS] tests::nested::test_nested::test_two [..]
+        [PASS] tests::nested::test_nested::test_two_and_two [..]
+        Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+        "},
     );
 }
 
 #[test]
 fn virtual_workspace_for_entire_workspace() {
     let temp = setup_virtual_workspace();
-    let snapbox = runner().arg("--workspace");
+    let snapbox = test_runner(&temp).arg("--workspace");
 
     let output = snapbox.current_dir(&temp).assert().code(1);
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
-        indoc! {r#"
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Compiling[..]
         [..]Compiling[..]
         [..]Finished[..]
         
         
         Collected 6 test(s) from fibonacci2 package
         Running 2 test(s) from src/
-        [PASS] fibonacci2::tests::it_works
-        [PASS] fibonacci2::tests::contract_test
+        [PASS] fibonacci2::tests::it_works [..]
+        [PASS] fibonacci2::tests::contract_test [..]
         Running 4 test(s) from tests/
-        [PASS] tests::lib_test
-        [PASS] tests::abc::abc_test
-        [PASS] tests::abc::efg::efg_test
+        [PASS] tests::lib_test [..]
+        [PASS] tests::abc::abc_test [..]
+        [PASS] tests::abc::efg::efg_test [..]
         [FAIL] tests::abc::efg::failing_test
         
         Failure data:
-            original value: [0], converted to a string: []
+            0x0 ('')
         
-        Tests: 5 passed, 1 failed, 0 skipped
-        [..]Compiling[..]
-        [..]Compiling[..]
-        [..]Finished[..]
+        Tests: 5 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
 
 
         Collected 5 test(s) from subtraction package
         Running 1 test(s) from src/
-        [PASS] subtraction::tests::it_works
+        [PASS] subtraction::tests::it_works [..]
         Running 4 test(s) from tests/
-        [PASS] tests::nested::simple_case
-        [PASS] tests::nested::contract_test
-        [PASS] tests::nested::test_nested::test_two
-        [PASS] tests::nested::test_nested::test_two_and_two
-        Tests: 5 passed, 0 failed, 0 skipped
+        [PASS] tests::nested::simple_case [..]
+        [PASS] tests::nested::contract_test [..]
+        [PASS] tests::nested::test_nested::test_two [..]
+        [PASS] tests::nested::test_nested::test_two_and_two [..]
+        Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:
             tests::abc::efg::failing_test
-        "#}
+        "},
     );
 }
 
@@ -570,54 +584,53 @@ fn virtual_workspace_for_entire_workspace_inside_package() {
     let temp = setup_virtual_workspace();
     let package_dir = temp.join(PathBuf::from("dummy_name/fibonacci2"));
 
-    let snapbox = runner().arg("--workspace");
+    let snapbox = test_runner(&temp).arg("--workspace");
     let output = snapbox.current_dir(package_dir).assert().code(1);
-    assert_stdout_contains!(
+    assert_stdout_contains(
         output,
-        indoc! {r#"
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Compiling[..]
         [..]Compiling[..]
         [..]Finished[..]
         
         
         Collected 6 test(s) from fibonacci2 package
         Running 2 test(s) from src/
-        [PASS] fibonacci2::tests::it_works
-        [PASS] fibonacci2::tests::contract_test
+        [PASS] fibonacci2::tests::it_works [..]
+        [PASS] fibonacci2::tests::contract_test [..]
         Running 4 test(s) from tests/
-        [PASS] tests::lib_test
-        [PASS] tests::abc::abc_test
-        [PASS] tests::abc::efg::efg_test
+        [PASS] tests::lib_test [..]
+        [PASS] tests::abc::abc_test [..]
+        [PASS] tests::abc::efg::efg_test [..]
         [FAIL] tests::abc::efg::failing_test
         
         Failure data:
-            original value: [0], converted to a string: []
+            0x0 ('')
         
-        Tests: 5 passed, 1 failed, 0 skipped
-        [..]Compiling[..]
-        [..]Compiling[..]
-        [..]Finished[..]
+        Tests: 5 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
 
 
         Collected 5 test(s) from subtraction package
         Running 1 test(s) from src/
-        [PASS] subtraction::tests::it_works
+        [PASS] subtraction::tests::it_works [..]
         Running 4 test(s) from tests/
-        [PASS] tests::nested::simple_case
-        [PASS] tests::nested::contract_test
-        [PASS] tests::nested::test_nested::test_two
-        [PASS] tests::nested::test_nested::test_two_and_two
-        Tests: 5 passed, 0 failed, 0 skipped
+        [PASS] tests::nested::simple_case [..]
+        [PASS] tests::nested::contract_test [..]
+        [PASS] tests::nested::test_nested::test_two [..]
+        [PASS] tests::nested::test_nested::test_two_and_two [..]
+        Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:
             tests::abc::efg::failing_test
-        "#}
+        "},
     );
 }
 
 #[test]
 fn virtual_workspace_for_entire_workspace_and_specific_package() {
     let temp = setup_virtual_workspace();
-    let snapbox = runner()
+    let snapbox = test_runner(&temp)
         .arg("--workspace")
         .arg("--package")
         .arg("subtraction");
@@ -632,7 +645,7 @@ fn virtual_workspace_for_entire_workspace_and_specific_package() {
 #[test]
 fn virtual_workspace_missing_package() {
     let temp = setup_virtual_workspace();
-    let snapbox = runner().arg("--package").arg("missing_package");
+    let snapbox = test_runner(&temp).arg("--package").arg("missing_package");
 
     let result = snapbox.current_dir(&temp).assert().code(2);
 

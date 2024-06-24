@@ -4,10 +4,11 @@ version.workspace = true
 
 [dependencies]
 starknet.workspace = true
+
+[dev-dependencies]
 snforge_std.workspace = true
 
 [[target.starknet-contract]]
 sierra = true
-casm = true
 
 [lib]

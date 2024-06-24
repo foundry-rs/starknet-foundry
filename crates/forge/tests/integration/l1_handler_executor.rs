@@ -1,11 +1,11 @@
-use crate::integration::common::runner::Contract;
-use crate::integration::common::running_tests::run_test_case;
-use crate::{assert_passed, test_case};
 use indoc::indoc;
 use std::path::Path;
+use test_utils::runner::{assert_passed, Contract};
+use test_utils::running_tests::run_test_case;
+use test_utils::test_case;
 
 #[test]
-fn l1_handler_executor() {
+fn l1_handler_execute() {
     let test = test_case!(
         indoc!(
             r#"
@@ -24,14 +24,14 @@ fn l1_handler_executor() {
             use serde::Serde;
             use array::{ArrayTrait, SpanTrait};
             use core::result::ResultTrait;
-            use snforge_std::{declare, ContractClassTrait, L1Handler, L1HandlerTrait, RevertedTransaction};
+            use snforge_std::{declare, ContractClassTrait, L1Handler, L1HandlerTrait};
 
             #[test]
-            fn test_l1_handler_execute() {
+            fn l1_handler_execute() {
                 let calldata = array![0x123];
 
-                let contract = declare('l1_handler_executor');
-                let contract_address = contract.deploy(@calldata).unwrap();
+                let contract = declare("l1_handler_executor").unwrap();
+                let (contract_address, _) = contract.deploy(@calldata).unwrap();
 
                 let l1_data = L1Data {
                     balance: 42,
@@ -43,7 +43,7 @@ fn l1_handler_executor() {
 
                 let mut l1_handler = L1HandlerTrait::new(
                     contract_address,
-                    function_name: 'process_l1_message'
+                    selector!("process_l1_message")
                 );
 
                 l1_handler.from_address = 0x123;
@@ -57,23 +57,23 @@ fn l1_handler_executor() {
             }
              
             #[test]
-            fn test_l1_handler_execute_panicking() {
+            fn l1_handler_execute_panicking() {
                 let calldata = array![0x123];
 
-                let contract = declare('l1_handler_executor');
-                let contract_address = contract.deploy(@calldata).unwrap();
+                let contract = declare("l1_handler_executor").unwrap();
+                let (contract_address, _) = contract.deploy(@calldata).unwrap();
 
 
                 let mut l1_handler = L1HandlerTrait::new(
                     contract_address,
-                    function_name: 'panicking_l1_handler'
+                    selector!("panicking_l1_handler")
                 );
 
                 l1_handler.from_address = 0x123;
                 l1_handler.payload = array![].span();
                 match l1_handler.execute() {
                     Result::Ok(_) => panic_with_felt252('should have panicked'),
-                    Result::Err(RevertedTransaction { panic_data }) => {
+                    Result::Err(panic_data) => {
                         assert(*panic_data.at(0) == 'custom', 'Wrong 1st panic datum');
                         assert(*panic_data.at(1) == 'panic', 'Wrong 2nd panic datum');
                     },
@@ -90,5 +90,5 @@ fn l1_handler_executor() {
 
     let result = run_test_case(&test);
 
-    assert_passed!(result);
+    assert_passed(&result);
 }

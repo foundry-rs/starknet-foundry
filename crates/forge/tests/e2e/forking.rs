@@ -1,66 +1,73 @@
-use crate::assert_stdout_contains;
-use crate::e2e::common::runner::{
-    runner, setup_package, setup_package_with_file_patterns, BASE_FILE_PATTERNS,
+use super::common::runner::{
+    runner, setup_package, setup_package_with_file_patterns, test_runner, BASE_FILE_PATTERNS,
 };
+use forge::shared_cache::CACHE_DIR;
 use indoc::indoc;
+use shared::test_utils::output_assert::assert_stdout_contains;
 
 #[test]
 fn without_cache() {
     let temp = setup_package("forking");
-    let snapbox = runner();
 
-    let output = snapbox
-        .current_dir(&temp)
-        .args(["--exact", "forking::test_fork_simple"])
+    let output = test_runner(&temp)
+        .arg("forking::tests::test_fork_simple")
         .assert()
         .code(0);
-    assert_stdout_contains!(
+
+    assert_stdout_contains(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
 
 
-        Collected 1 test(s) from forking package
-        Running 1 test(s) from src/
-        [PASS] forking::test_fork_simple
-        Tests: 1 passed, 0 failed, 0 skipped
-        "#}
+        Collected 4 test(s) from forking package
+        Running 4 test(s) from src/
+        [PASS] forking::tests::test_fork_simple [..]
+        [PASS] forking::tests::test_fork_simple_number_hex [..]
+        [PASS] forking::tests::test_fork_simple_hash_hex [..]
+        [PASS] forking::tests::test_fork_simple_hash_number [..]
+        Tests: 4 passed, 0 failed, 0 skipped, 0 ignored, 1 filtered out
+        "},
     );
 }
 
 #[test]
-/// The cache file at `forking/.snfoundry_cache/` was modified to have different value stored
+/// The cache file at `forking/$CACHE_DIR` was modified to have different value stored
 /// that this from the real network. We use it to verify that values from cache are actually used.
 ///
 /// The test that passed when using data from network, should fail for fabricated data.
 fn with_cache() {
     let temp = setup_package_with_file_patterns(
         "forking",
-        &[BASE_FILE_PATTERNS, &[".snfoundry_cache/*.json"]].concat(),
+        &[BASE_FILE_PATTERNS, &[&format!("{CACHE_DIR}/*.json")]].concat(),
     );
-    let snapbox = runner();
 
-    let output = snapbox.current_dir(&temp).assert().code(1);
-    assert_stdout_contains!(
+    let output = test_runner(&temp)
+        .args(["--exact", "forking::tests::test_fork_simple"])
+        .assert()
+        // if this fails after bumping rpc version change cache file name (name contains url) in tests/data/forking/.snfoundry_cache/
+        .code(1);
+
+    assert_stdout_contains(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
 
 
         Collected 1 test(s) from forking package
         Running 1 test(s) from src/
-        [FAIL] forking::test_fork_simple
-        
+        [FAIL] forking::tests::test_fork_simple
+
         Failure data:
-            original value: [1480335954842313548834020101284630397133856818], converted to a string: [Balance should be 2]
-        
-        Tests: 0 passed, 1 failed, 0 skipped
+            0x42616c616e63652073686f756c642062652030 ('Balance should be 0')
+
+        Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 4 filtered out
 
         Failures:
-            forking::test_fork_simple
-        "#}
+            forking::tests::test_fork_simple
+        "},
     );
 }
 
@@ -68,26 +75,56 @@ fn with_cache() {
 fn with_clean_cache() {
     let temp = setup_package_with_file_patterns(
         "forking",
-        &[BASE_FILE_PATTERNS, &[".snfoundry_cache/*.json"]].concat(),
+        &[BASE_FILE_PATTERNS, &[&format!("{CACHE_DIR}/*.json")]].concat(),
     );
-    let snapbox = runner();
 
-    let output = snapbox
-        .current_dir(&temp)
-        .arg("--clean-cache")
+    runner(&temp).arg("clean-cache").assert().code(0);
+
+    let output = test_runner(&temp)
+        .args(["--exact", "forking::tests::test_fork_simple"])
         .assert()
         .code(0);
-    assert_stdout_contains!(
+
+    assert_stdout_contains(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
 
 
         Collected 1 test(s) from forking package
         Running 1 test(s) from src/
-        [PASS] forking::test_fork_simple
-        Tests: 1 passed, 0 failed, 0 skipped
-        "#}
+        [PASS] forking::tests::test_fork_simple [..]
+        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 4 filtered out
+        "},
+    );
+}
+
+#[test]
+fn printing_latest_block_number() {
+    let temp = setup_package_with_file_patterns(
+        "forking",
+        &[BASE_FILE_PATTERNS, &[&format!("{CACHE_DIR}/*.json")]].concat(),
+    );
+
+    let output = test_runner(&temp)
+        .args(["--exact", "forking::tests::print_block_number_when_latest"])
+        .assert()
+        .code(0);
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+
+        Collected 1 test(s) from forking package
+        Running 1 test(s) from src/
+        [PASS] forking::tests::print_block_number_when_latest [..]
+        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 4 filtered out
+
+        Latest block number = [..] for url = http://188.34.188.184:7070/rpc/v0_7
+        "},
     );
 }

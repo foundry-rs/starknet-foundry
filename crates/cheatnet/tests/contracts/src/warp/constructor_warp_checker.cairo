@@ -1,6 +1,7 @@
 #[starknet::interface]
 trait IConstructorWarpChecker<TContractState> {
     fn get_stored_block_timestamp(ref self: TContractState) -> u64;
+    fn get_block_timestamp(ref self: TContractState) -> u64;
 }
 
 #[starknet::contract]
@@ -17,10 +18,14 @@ mod ConstructorWarpChecker {
         self.blk_timestamp.write(blk_timestamp);
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl IConstructorWarpChecker of super::IConstructorWarpChecker<ContractState> {
         fn get_stored_block_timestamp(ref self: ContractState) -> u64 {
             self.blk_timestamp.read()
+        }
+
+        fn get_block_timestamp(ref self: ContractState) -> u64 {
+            starknet::get_block_info().unbox().block_timestamp
         }
     }
 }

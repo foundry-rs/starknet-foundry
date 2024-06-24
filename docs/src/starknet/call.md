@@ -2,7 +2,7 @@
 
 ## Overview
 
-Starknet Foundry cast supports calling smart contracts on a given network with the `sncast call` command.
+Starknet Foundry `sncast` supports calling smart contracts on a given network with the `sncast call` command.
 
 The basic inputs that you need for this command are:
 
@@ -10,15 +10,15 @@ The basic inputs that you need for this command are:
 - Function name
 - Inputs to the function
 
-For a detailed CLI description, see the [call command reference](../appendix/cast/call.md).
+For a detailed CLI description, see the [call command reference](../appendix/sncast/call.md).
 
 ## Examples
 
-### General example
+### General Example
 
 ```shell
 $ sncast \
-  --rpc_url http://127.0.0.1:5050 \
+  --url http://127.0.0.1:5050 \
   call \
   --contract-address 0x4a739ab73aa3cac01f9da5d55f49fb67baee4919224454a2e3f85b16462a911 \
   --function "some_function" \
@@ -31,9 +31,9 @@ response: [0x1, 0x23, 0x4]
 > 📝 **Note**
 > Call does not require passing account-connected parameters (`account` and `accounts-file`) because it doesn't create a transaction.
 
-### Passing `block-id` argument
+### Passing `block-id` Argument
 
-You can call a contract at the specific blok by passing `--block-id` argument.
+You can call a contract at the specific block by passing `--block-id` argument.
 
 ```shell
 $ sncast call \
