@@ -3,9 +3,7 @@ use crate::common::get_contracts;
 use cairo_felt::Felt252;
 use cairo_lang_starknet_classes::keccak::starknet_keccak;
 use cheatnet::constants::TEST_ADDRESS;
-use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::{
-    Event, SpyTarget,
-};
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::Event;
 use cheatnet::state::CheatSpan;
 use conversions::IntoConv;
 use starknet_api::core::{ContractAddress, PatriciaKey};
@@ -306,7 +304,6 @@ fn cheat_caller_address_cairo0_callback() {
     let contract_address = test_env.deploy("Cairo1Contract_v1", &[]);
 
     test_env.start_cheat_caller_address(contract_address, 123);
-    let id = test_env.cheatnet_state.spy_events(SpyTarget::All);
 
     let expected_caller_address = Felt252::from(123);
 
@@ -326,7 +323,7 @@ fn cheat_caller_address_cairo0_callback() {
         &[],
     );
 
-    let events = test_env.cheatnet_state.fetch_events(&Felt252::from(id));
+    let events = test_env.cheatnet_state.get_events(0);
 
     // make sure end() was called by cairo0 contract
     assert_eq!(

@@ -98,6 +98,7 @@ pub fn run(project_name: &str) -> Result<()> {
             .current_dir(current_dir)
             .arg("new")
             .arg(&project_path)
+            .arg("--snforge")
             .run()
             .context("Failed to initialize a new project")?;
     }
@@ -117,16 +118,6 @@ pub fn run(project_name: &str) -> Result<()> {
         .arg(format!("v{version}"))
         .run()
         .context("Failed to add snforge_std")?;
-
-    ScarbCommand::new_with_stdio()
-        .current_dir(&project_path)
-        .manifest_path(manifest_path.clone())
-        .offline()
-        .arg("remove")
-        .arg("--dev")
-        .arg("cairo_test")
-        .run()
-        .context("Failed to remove cairo_test")?;
 
     let cairo_version = ScarbCommand::version().run()?.cairo;
 

@@ -132,13 +132,13 @@ You can implement this test:
 use array::ArrayTrait;
 use snforge_std::{ 
     declare, ContractClassTrait, spy_events, 
-    EventSpy, EventFetcher, 
-    EventAssertions, Event, SpyOn, test_address 
+    EventSpy, EventSpyTrait, EventSpyAssertionsTrait, 
+    Event, test_address 
 };
 #[test]
 fn test_expect_event() {
     let contract_address = test_address();
-    let mut spy = spy_events(SpyOn::One(contract_address));
+    let mut spy = spy_events();
     
     let mut testing_state = Emitter::contract_state_for_testing();
     Emitter::emit_event(ref testing_state);
@@ -160,14 +160,13 @@ use array::ArrayTrait;
 use result::ResultTrait;
 use starknet::SyscallResultTrait;
 use starknet::ContractAddress;
-use snforge_std::{ declare, ContractClassTrait, spy_events, EventSpy, EventFetcher,
-    EventAssertions, Event, SpyOn, test_address };
+use snforge_std::{ declare, ContractClassTrait, spy_events, EventSpy, EventSpyTrait,
+    EventSpyAssertionsTrait, Event, test_address };
 
 #[test]
 fn test_expect_events_simple() {
     let test_address = test_address();
-    let mut spy = spy_events(SpyOn::One(test_address));
-    assert(spy._id == 0, 'Id should be 0');
+    let mut spy = spy_events();
 
     starknet::emit_event_syscall(array![1234].span(), array![2345].span()).unwrap_syscall();
 

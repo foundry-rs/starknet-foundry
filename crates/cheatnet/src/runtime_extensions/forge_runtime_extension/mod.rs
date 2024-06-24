@@ -274,24 +274,23 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 Ok(CheatcodeHandlingResult::Handled(parsed_content))
             }
             "spy_events" => {
-                let spy_on = input_reader.read()?;
-
-                let id = extended_runtime
+                let events_offset = extended_runtime
                     .extended_runtime
                     .extension
                     .cheatnet_state
-                    .spy_events(spy_on);
+                    .detected_events
+                    .len();
 
-                Ok(CheatcodeHandlingResult::from_serializable(id))
+                Ok(CheatcodeHandlingResult::from_serializable(events_offset))
             }
-            "fetch_events" => {
-                let id = input_reader.read()?;
+            "get_events" => {
+                let events_offset = input_reader.read()?;
 
                 let events = extended_runtime
                     .extended_runtime
                     .extension
                     .cheatnet_state
-                    .fetch_events(&id);
+                    .get_events(events_offset);
 
                 Ok(CheatcodeHandlingResult::from_serializable(events))
             }

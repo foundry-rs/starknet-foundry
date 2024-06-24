@@ -4,9 +4,7 @@ use crate::common::state::create_fork_cached_state_at;
 use crate::common::{call_contract, deploy_contract, felt_selector_from_name};
 use cairo_felt::Felt252;
 use cairo_lang_starknet_classes::keccak::starknet_keccak;
-use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::{
-    Event, SpyTarget,
-};
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::Event;
 use cheatnet::state::CheatnetState;
 use conversions::string::TryFromHexStr;
 use conversions::IntoConv;
@@ -14,31 +12,24 @@ use std::vec;
 use tempfile::TempDir;
 
 trait SpyTrait {
-    fn spy_events(&mut self, spy_on: SpyTarget) -> usize;
-    fn fetch_events(&mut self, id: usize) -> Vec<Event>;
+    fn get_events(&mut self, id: usize) -> Vec<Event>;
 }
 
 impl SpyTrait for TestEnvironment {
-    fn spy_events(&mut self, spy_on: SpyTarget) -> usize {
-        self.cheatnet_state.spy_events(spy_on)
-    }
-
-    fn fetch_events(&mut self, id: usize) -> Vec<Event> {
-        self.cheatnet_state.fetch_events(&Felt252::from(id))
+    fn get_events(&mut self, events_offset: usize) -> Vec<Event> {
+        self.cheatnet_state.get_events(events_offset)
     }
 }
 
 #[test]
-fn spy_events_complex() {
+fn spy_events_zero_offset() {
     let mut test_env = TestEnvironment::new();
 
     let contract_address = test_env.deploy("SpyEventsChecker", &[]);
 
-    let id = test_env.spy_events(SpyTarget::All);
-
     test_env.call_contract(&contract_address, "emit_one_event", &[Felt252::from(123)]);
 
-    let events = test_env.fetch_events(id);
+    let events = test_env.get_events(0);
 
     assert_eq!(events.len(), 1, "There should be one event");
     assert_eq!(
@@ -53,11 +44,41 @@ fn spy_events_complex() {
 
     test_env.call_contract(&contract_address, "emit_one_event", &[Felt252::from(123)]);
 
-    let length = test_env.fetch_events(id).len();
-    assert_eq!(length, 1, "There should be one new event");
+    let length = test_env.get_events(0).len();
+    assert_eq!(length, 2, "There should be one more new event");
+}
 
-    let length = test_env.fetch_events(id).len();
-    assert_eq!(length, 0, "There should be no new events");
+#[test]
+fn spy_events_some_offset() {
+    let mut test_env = TestEnvironment::new();
+
+    let contract_address = test_env.deploy("SpyEventsChecker", &[]);
+
+    test_env.call_contract(&contract_address, "emit_one_event", &[Felt252::from(123)]);
+    test_env.call_contract(&contract_address, "emit_one_event", &[Felt252::from(123)]);
+    test_env.call_contract(&contract_address, "emit_one_event", &[Felt252::from(123)]);
+
+    let events = test_env.get_events(2);
+
+    assert_eq!(
+        events.len(),
+        1,
+        "There should be only one event fetched after accounting for an offset of 2"
+    );
+    assert_eq!(
+        events[0],
+        Event {
+            from: contract_address,
+            keys: vec![starknet_keccak("FirstEvent".as_ref()).into()],
+            data: vec![Felt252::from(123)]
+        },
+        "Wrong event"
+    );
+
+    test_env.call_contract(&contract_address, "emit_one_event", &[Felt252::from(123)]);
+
+    let length = test_env.get_events(2).len();
+    assert_eq!(length, 2, "There should be one more new event");
 }
 
 #[test]
@@ -66,8 +87,6 @@ fn check_events_order() {
 
     let spy_events_checker_address = test_env.deploy("SpyEventsChecker", &[]);
     let spy_events_order_checker_address = test_env.deploy("SpyEventsOrderChecker", &[]);
-
-    let id = test_env.spy_events(SpyTarget::All);
 
     test_env.call_contract(
         &spy_events_order_checker_address,
@@ -80,7 +99,7 @@ fn check_events_order() {
         ],
     );
 
-    let events = test_env.fetch_events(id);
+    let events = test_env.get_events(0);
 
     assert_eq!(events.len(), 3, "There should be three events");
     assert_eq!(
@@ -113,66 +132,6 @@ fn check_events_order() {
 }
 
 #[test]
-fn check_events_captured_only_for_spied_contracts() {
-    let mut test_env = TestEnvironment::new();
-
-    let spy_events_checker_address = test_env.deploy("SpyEventsChecker", &[]);
-
-    test_env.call_contract(
-        &spy_events_checker_address,
-        "emit_one_event",
-        &[Felt252::from(123)],
-    );
-
-    let id = test_env.spy_events(SpyTarget::One(spy_events_checker_address));
-    test_env.call_contract(
-        &spy_events_checker_address,
-        "emit_one_event",
-        &[Felt252::from(123)],
-    );
-
-    let events = test_env.fetch_events(id);
-
-    assert_eq!(events.len(), 1, "There should be one event");
-    assert_eq!(
-        events[0],
-        Event {
-            from: spy_events_checker_address,
-            keys: vec![starknet_keccak("FirstEvent".as_ref()).into()],
-            data: vec![Felt252::from(123)]
-        },
-        "Wrong event"
-    );
-}
-
-#[test]
-fn duplicate_spies_on_one_address() {
-    let mut test_env = TestEnvironment::new();
-
-    let contract_address = test_env.deploy("SpyEventsChecker", &[]);
-
-    let id1 = test_env.spy_events(SpyTarget::One(contract_address));
-    let id2 = test_env.spy_events(SpyTarget::One(contract_address));
-
-    test_env.call_contract(&contract_address, "emit_one_event", &[Felt252::from(123)]);
-
-    let events1 = test_env.fetch_events(id1);
-    let length2 = test_env.fetch_events(id2).len();
-
-    assert_eq!(events1.len(), 1, "There should be one event");
-    assert_eq!(length2, 0, "There should be no events");
-    assert_eq!(
-        events1[0],
-        Event {
-            from: contract_address,
-            keys: vec![starknet_keccak("FirstEvent".as_ref()).into()],
-            data: vec![Felt252::from(123)]
-        },
-        "Wrong event"
-    );
-}
-
-#[test]
 fn library_call_emits_event() {
     let mut test_env = TestEnvironment::new();
 
@@ -180,15 +139,13 @@ fn library_call_emits_event() {
     let class_hash = test_env.declare("SpyEventsChecker", &contracts_data);
     let contract_address = test_env.deploy("SpyEventsLibCall", &[]);
 
-    let id = test_env.spy_events(SpyTarget::All);
-
     test_env.call_contract(
         &contract_address,
         "call_lib_call",
         &[Felt252::from(123), class_hash.into_()],
     );
 
-    let events = test_env.fetch_events(id);
+    let events = test_env.get_events(0);
 
     assert_eq!(events.len(), 1, "There should be one event");
     assert_eq!(
@@ -206,52 +163,15 @@ fn library_call_emits_event() {
 fn event_emitted_in_constructor() {
     let mut test_env = TestEnvironment::new();
 
-    let id = test_env.spy_events(SpyTarget::All);
-
     let contract_address = test_env.deploy("ConstructorSpyEventsChecker", &[Felt252::from(123)]);
 
-    let events = test_env.fetch_events(id);
+    let events = test_env.get_events(0);
 
     assert_eq!(events.len(), 1, "There should be one event");
     assert_eq!(
         events[0],
         Event {
             from: contract_address,
-            keys: vec![starknet_keccak("FirstEvent".as_ref()).into()],
-            data: vec![Felt252::from(123)]
-        },
-        "Wrong event"
-    );
-}
-
-#[test]
-fn check_if_there_is_no_interference() {
-    let mut test_env = TestEnvironment::new();
-
-    let contracts_data = get_contracts();
-    let class_hash = test_env.declare("SpyEventsChecker", &contracts_data);
-
-    let spy_events_checker_address = test_env.deploy_wrapper(&class_hash, &[]);
-    let other_spy_events_checker_address = test_env.deploy_wrapper(&class_hash, &[]);
-
-    let id1 = test_env.spy_events(SpyTarget::One(spy_events_checker_address));
-    let id2 = test_env.spy_events(SpyTarget::One(other_spy_events_checker_address));
-
-    test_env.call_contract(
-        &spy_events_checker_address,
-        "emit_one_event",
-        &[Felt252::from(123)],
-    );
-
-    let events1 = test_env.fetch_events(id1);
-    let length2 = test_env.fetch_events(id2).len();
-
-    assert_eq!(events1.len(), 1, "There should be one event");
-    assert_eq!(length2, 0, "There should be no events");
-    assert_eq!(
-        events1[0],
-        Event {
-            from: spy_events_checker_address,
             keys: vec![starknet_keccak("FirstEvent".as_ref()).into()],
             data: vec![Felt252::from(123)]
         },
@@ -273,15 +193,13 @@ fn test_nested_calls() {
     let spy_events_checker_top_proxy_address =
         test_env.deploy_wrapper(&class_hash, &[spy_events_checker_proxy_address.into_()]);
 
-    let id = test_env.spy_events(SpyTarget::All);
-
     test_env.call_contract(
         &spy_events_checker_top_proxy_address,
         "emit_one_event",
         &[Felt252::from(123)],
     );
 
-    let events = test_env.fetch_events(id);
+    let events = test_env.get_events(0);
 
     assert_eq!(events.len(), 3, "There should be three events");
     assert_eq!(
@@ -327,32 +245,32 @@ fn use_multiple_spies() {
     let spy_events_checker_top_proxy_address =
         test_env.deploy_wrapper(&class_hash, &[spy_events_checker_proxy_address.into_()]);
 
-    let id1 = test_env.spy_events(SpyTarget::One(spy_events_checker_address));
-    let id2 = test_env.spy_events(SpyTarget::One(spy_events_checker_proxy_address));
-    let id3 = test_env.spy_events(SpyTarget::One(spy_events_checker_top_proxy_address));
-
+    // Events emitted in the order of:
+    // - spy_events_checker_top_proxy_address,
+    // - spy_events_checker_proxy_address,
+    // - spy_events_checker_address
     test_env.call_contract(
         &spy_events_checker_top_proxy_address,
         "emit_one_event",
         &[Felt252::from(123)],
     );
 
-    let events1 = test_env.fetch_events(id1);
-    let events2 = test_env.fetch_events(id2);
-    let events3 = test_env.fetch_events(id3);
+    let events1 = test_env.get_events(0);
+    let events2 = test_env.get_events(1);
+    let events3 = test_env.get_events(2);
 
-    assert_eq!(events1.len(), 1, "There should be one event");
-    assert_eq!(events2.len(), 1, "There should be one event");
+    assert_eq!(events1.len(), 3, "There should be one event");
+    assert_eq!(events2.len(), 2, "There should be one event");
     assert_eq!(events3.len(), 1, "There should be one event");
 
     assert_eq!(
         events1[0],
         Event {
-            from: spy_events_checker_address,
+            from: spy_events_checker_top_proxy_address,
             keys: vec![starknet_keccak("FirstEvent".as_ref()).into()],
             data: vec![Felt252::from(123)]
         },
-        "Wrong spy_events_checker event"
+        "Wrong spy_events_checker_top_proxy event"
     );
     assert_eq!(
         events2[0],
@@ -366,11 +284,11 @@ fn use_multiple_spies() {
     assert_eq!(
         events3[0],
         Event {
-            from: spy_events_checker_top_proxy_address,
+            from: spy_events_checker_address,
             keys: vec![starknet_keccak("FirstEvent".as_ref()).into()],
             data: vec![Felt252::from(123)]
         },
-        "Wrong spy_events_checker_top_proxy event"
+        "Wrong spy_events_checker event"
     );
 }
 
@@ -380,15 +298,13 @@ fn test_emitted_by_emit_events_syscall() {
 
     let contract_address = test_env.deploy("SpyEventsChecker", &[]);
 
-    let id = test_env.spy_events(SpyTarget::All);
-
     test_env.call_contract(
         &contract_address,
         "emit_event_syscall",
         &[Felt252::from(123), Felt252::from(456)],
     );
 
-    let events = test_env.fetch_events(id);
+    let events = test_env.get_events(0);
 
     assert_eq!(events.len(), 1, "There should be one event");
     assert_eq!(
@@ -415,8 +331,6 @@ fn capture_cairo0_event() {
         &[],
     );
 
-    let id = cheatnet_state.spy_events(SpyTarget::All);
-
     let selector = felt_selector_from_name("test_cairo0_event_collection");
 
     let cairo0_contract_address = Felt252::try_from_hex_str(
@@ -432,7 +346,7 @@ fn capture_cairo0_event() {
         &[cairo0_contract_address.clone()],
     );
 
-    let events = cheatnet_state.fetch_events(&Felt252::from(id));
+    let events = cheatnet_state.get_events(0);
 
     assert_eq!(events.len(), 1, "There should be one event");
 
