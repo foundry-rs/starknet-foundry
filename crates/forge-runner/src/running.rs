@@ -12,6 +12,7 @@ use cairo_felt::Felt252;
 use cairo_lang_runner::{RunResult, RunnerError, SierraCasmRunner};
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use camino::Utf8Path;
+use casm::{get_assembled_program, run_assembled_program};
 use cheatnet::constants as cheatnet_constants;
 use cheatnet::forking::state::ForkStateReader;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
@@ -23,10 +24,8 @@ use cheatnet::runtime_extensions::forge_runtime_extension::{
     update_top_call_vm_trace, ForgeExtension, ForgeRuntime,
 };
 use cheatnet::state::{BlockInfoReader, CallTrace, CheatnetState, ExtendedStateReader};
-use helpers::{
-    build_syscall_handler, create_entry_code, create_hints_dict, get_assembled_program,
-    get_syscall_segment_index, run_with_runner,
-};
+use entry_code::create_entry_code;
+use hints::{hints_by_representation, hints_to_params};
 use runtime::starknet::context::{build_context, set_max_steps};
 use runtime::{ExtendedRuntime, StarknetRuntime};
 use std::cell::RefCell;
@@ -34,12 +33,16 @@ use std::default::Default;
 use std::marker::PhantomData;
 use std::rc::Rc;
 use std::sync::Arc;
+use syscall_handler::build_syscall_handler;
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
 use universal_sierra_compiler_api::AssembledProgramWithDebugInfo;
 
+mod casm;
 pub mod config_run;
-mod helpers;
+mod entry_code;
+mod hints;
+mod syscall_handler;
 pub mod with_config;
 
 #[must_use]
@@ -143,11 +146,10 @@ pub fn run_test_case(
 
     let (entry_code, builtins) = create_entry_code(args, &case.test_details, casm_program);
 
-    let footer = SierraCasmRunner::create_code_footer();
+    let assembled_program = get_assembled_program(casm_program, entry_code);
 
-    let assembled_program = get_assembled_program(casm_program, entry_code, footer);
-
-    let (string_to_hint, hints_dict) = create_hints_dict(&assembled_program);
+    let string_to_hint = hints_by_representation(&assembled_program);
+    let hints_dict = hints_to_params(&assembled_program);
 
     let mut state_reader = ExtendedStateReader {
         dict_state_reader: cheatnet_constants::build_testing_state(),
@@ -173,7 +175,7 @@ pub fn run_test_case(
         &string_to_hint,
         &mut execution_resources,
         &mut context,
-        get_syscall_segment_index(&case.test_details.parameter_types),
+        &case.test_details.parameter_types,
     );
 
     let mut cheatnet_state = CheatnetState {
@@ -208,7 +210,7 @@ pub fn run_test_case(
     };
 
     let run_result =
-        match run_with_runner(&assembled_program, builtins, hints_dict, &mut forge_runtime) {
+        match run_assembled_program(&assembled_program, builtins, hints_dict, &mut forge_runtime) {
             Ok((vm, runner)) => {
                 let vm_resources_without_inner_calls = runner
                     .get_execution_resources(&vm)

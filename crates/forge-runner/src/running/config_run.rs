@@ -1,8 +1,9 @@
-use super::helpers::{create_entry_code, get_assembled_program, run_with_runner};
-use crate::{
-    package_tests::TestDetails,
-    running::{build_syscall_handler, create_hints_dict, get_syscall_segment_index},
+use super::{
+    casm::{get_assembled_program, run_assembled_program},
+    entry_code::create_entry_code,
+    hints::{hints_by_representation, hints_to_params},
 };
+use crate::{package_tests::TestDetails, running::build_syscall_handler};
 use anyhow::Result;
 use blockifier::{
     blockifier::block::{BlockInfo, GasPrices},
@@ -12,7 +13,6 @@ use blockifier::{
     },
 };
 use cairo_felt::Felt252;
-use cairo_lang_runner::SierraCasmRunner;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cheatnet::runtime_extensions::forge_config_extension::{
     config::RawForgeConfig, ForgeConfigExtension,
@@ -61,7 +61,7 @@ impl StateReader for FakeStateReader {
 }
 
 #[allow(clippy::too_many_lines)]
-pub fn get_config_for_test_case(
+pub fn run_config_pass(
     args: Vec<Felt252>,
     test_details: &TestDetails,
     casm_program: &AssembledProgramWithDebugInfo,
@@ -83,11 +83,11 @@ pub fn get_config_for_test_case(
         use_kzg_da: true,
     };
     let (entry_code, builtins) = create_entry_code(args, test_details, casm_program);
-    let footer = SierraCasmRunner::create_code_footer();
 
-    let assembled_program = get_assembled_program(casm_program, entry_code, footer);
+    let assembled_program = get_assembled_program(casm_program, entry_code);
 
-    let (string_to_hint, hints_dict) = create_hints_dict(&assembled_program);
+    let string_to_hint = hints_by_representation(&assembled_program);
+    let hints_dict = hints_to_params(&assembled_program);
 
     let mut context = build_context(&block_info);
 
@@ -98,7 +98,7 @@ pub fn get_config_for_test_case(
         &string_to_hint,
         &mut execution_resources,
         &mut context,
-        get_syscall_segment_index(&test_details.parameter_types),
+        &test_details.parameter_types,
     );
 
     let mut config = RawForgeConfig::default();
@@ -112,7 +112,7 @@ pub fn get_config_for_test_case(
         },
     };
 
-    run_with_runner(
+    run_assembled_program(
         &assembled_program,
         builtins,
         hints_dict,
