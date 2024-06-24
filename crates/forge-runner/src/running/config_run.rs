@@ -1,7 +1,7 @@
 use super::{
     casm::{get_assembled_program, run_assembled_program},
     entry_code::create_entry_code,
-    hints::{hints_by_repressentation, hints_to_params},
+    hints::{hints_by_representation, hints_to_params},
 };
 use crate::{package_tests::TestDetails, running::build_syscall_handler};
 use anyhow::Result;
@@ -86,7 +86,7 @@ pub fn run_config_pass(
 
     let assembled_program = get_assembled_program(casm_program, entry_code);
 
-    let string_to_hint = hints_by_repressentation(&assembled_program);
+    let string_to_hint = hints_by_representation(&assembled_program);
     let hints_dict = hints_to_params(&assembled_program);
 
     let mut context = build_context(&block_info);

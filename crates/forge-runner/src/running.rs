@@ -25,7 +25,7 @@ use cheatnet::runtime_extensions::forge_runtime_extension::{
 };
 use cheatnet::state::{BlockInfoReader, CallTrace, CheatnetState, ExtendedStateReader};
 use entry_code::create_entry_code;
-use hints::{hints_by_repressentation, hints_to_params};
+use hints::{hints_by_representation, hints_to_params};
 use runtime::starknet::context::{build_context, set_max_steps};
 use runtime::{ExtendedRuntime, StarknetRuntime};
 use std::cell::RefCell;
@@ -148,7 +148,7 @@ pub fn run_test_case(
 
     let assembled_program = get_assembled_program(casm_program, entry_code);
 
-    let string_to_hint = hints_by_repressentation(&assembled_program);
+    let string_to_hint = hints_by_representation(&assembled_program);
     let hints_dict = hints_to_params(&assembled_program);
 
     let mut state_reader = ExtendedStateReader {

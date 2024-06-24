@@ -4,7 +4,7 @@ use cairo_vm::serde::deserialize_program::HintParams;
 use std::collections::HashMap;
 use universal_sierra_compiler_api::AssembledCairoProgramWithSerde;
 
-pub fn hints_by_repressentation(
+pub fn hints_by_representation(
     assembled_program: &AssembledCairoProgramWithSerde,
 ) -> HashMap<String, Hint> {
     assembled_program

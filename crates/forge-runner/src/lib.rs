@@ -166,7 +166,7 @@ fn run_with_fuzzing(
         }
 
         let (fuzzing_send, mut fuzzing_rec) = channel(1);
-        let args = args.iter().map(argument_type_name).collect::<Vec<_>>();
+        let arg_types = args.iter().map(argument_type_name).collect::<Vec<_>>();
 
         let (fuzzer_runs, fuzzer_seed) = match case.config.fuzzer_config {
             Some(RawFuzzerConfig { runs, seed }) => (
@@ -178,7 +178,7 @@ fn run_with_fuzzing(
                 test_runner_config.fuzzer_seed,
             ),
         };
-        let mut fuzzer = RandomFuzzer::create(fuzzer_seed, fuzzer_runs, &args)?;
+        let mut fuzzer = RandomFuzzer::create(fuzzer_seed, fuzzer_runs, &arg_types)?;
 
         let mut tasks = FuturesUnordered::new();
 
