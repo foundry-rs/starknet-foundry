@@ -577,14 +577,16 @@ fn spy_events_simple() {
             use result::ResultTrait;
             use starknet::SyscallResultTrait;
             use starknet::ContractAddress;
-            use snforge_std::{ declare, ContractClassTrait, spy_events, EventSpy, EventFetcher,
-                EventAssertions, Event, SpyOn, test_address };
+            use snforge_std::{
+                declare, ContractClassTrait, spy_events, Event, EventSpy,
+                EventSpyTrait, EventSpyAssertionsTrait, EventsFilterTrait, test_address
+            };
 
             #[test]
             fn spy_events_simple() {
                 let contract_address = test_address();
-                let mut spy = spy_events(SpyOn::One(contract_address));
-                assert(spy._id == 0, 'Id should be 0');
+                let mut spy = spy_events();
+                assert(spy._event_offset == 0, 'Events offset should be 0');
 
                 starknet::emit_event_syscall(array![1234].span(), array![2345].span()).unwrap_syscall();
 
@@ -594,8 +596,6 @@ fn spy_events_simple() {
                         Event { keys: array![1234], data: array![2345] }
                     )
                 ]);
-
-                assert(spy.events.len() == 0, 'There should be no events left');
             }
         "
     ),);
@@ -610,10 +610,9 @@ fn spy_struct_events() {
     let test = test_case!(indoc!(
         r"
             use array::ArrayTrait;
-            use snforge_std::{ 
-                declare, ContractClassTrait, spy_events, 
-                EventSpy, EventFetcher, 
-                EventAssertions, Event, SpyOn, test_address 
+            use snforge_std::{
+                declare, ContractClassTrait, spy_events, EventSpy,
+                EventSpyTrait, EventSpyAssertionsTrait, EventsFilterTrait, test_address
             };
 
             #[starknet::interface]
@@ -653,11 +652,11 @@ fn spy_struct_events() {
             #[test]
             fn spy_struct_events() {
                 let contract_address = test_address();
-                let mut spy = spy_events(SpyOn::One(contract_address));
+                let mut spy = spy_events();
                 
                 let mut testing_state = Emitter::contract_state_for_testing();
                 Emitter::EmitterImpl::emit_event(ref testing_state);
-                
+
                 spy.assert_emitted(
                     @array![
                         (
