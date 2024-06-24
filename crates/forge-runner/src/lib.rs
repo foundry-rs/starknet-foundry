@@ -135,6 +135,23 @@ pub fn run_for_test_case(
     }
 }
 
+fn argument_type_name(arg: &ConcreteTypeLongId) -> &str {
+    let name = arg.generic_id.0.as_str();
+
+    if name == "Struct" {
+        if let cairo_lang_sierra::program::GenericArg::UserType(
+            cairo_lang_sierra::ids::UserTypeId { ref debug_name, .. },
+        ) = arg.generic_args[0]
+        {
+            debug_name.as_ref().unwrap().as_str()
+        } else {
+            name
+        }
+    } else {
+        name
+    }
+}
+
 fn run_with_fuzzing(
     args: Vec<ConcreteTypeLongId>,
     case: Arc<TestCaseWithResolvedConfig>,
@@ -149,25 +166,7 @@ fn run_with_fuzzing(
         }
 
         let (fuzzing_send, mut fuzzing_rec) = channel(1);
-        let args = args
-            .iter()
-            .map(|arg| {
-                let name = arg.generic_id.0.as_str();
-
-                if name == "Struct" {
-                    if let cairo_lang_sierra::program::GenericArg::UserType(
-                        cairo_lang_sierra::ids::UserTypeId { ref debug_name, .. },
-                    ) = arg.generic_args[0]
-                    {
-                        debug_name.as_ref().unwrap().as_str()
-                    } else {
-                        name
-                    }
-                } else {
-                    name
-                }
-            })
-            .collect::<Vec<_>>();
+        let args = args.iter().map(argument_type_name).collect::<Vec<_>>();
 
         let (fuzzer_runs, fuzzer_seed) = match case.config.fuzzer_config {
             Some(RawFuzzerConfig { runs, seed }) => (

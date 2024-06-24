@@ -47,7 +47,7 @@ pub fn get_assembled_program(
     assembled_program
 }
 
-pub fn run_with_runner(
+pub fn run_casm_program(
     assembled_program: &AssembledCairoProgramWithSerde,
     builtins: Vec<BuiltinName>,
     hints_dict: std::collections::HashMap<usize, Vec<HintParams>>,

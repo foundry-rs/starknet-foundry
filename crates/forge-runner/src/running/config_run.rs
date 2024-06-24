@@ -1,4 +1,4 @@
-use super::helpers::{create_entry_code, get_assembled_program, run_with_runner};
+use super::helpers::{create_entry_code, get_assembled_program, run_casm_program};
 use crate::{
     package_tests::TestDetails,
     running::{build_syscall_handler, create_hints_dict, get_syscall_segment_index},
@@ -61,7 +61,7 @@ impl StateReader for FakeStateReader {
 }
 
 #[allow(clippy::too_many_lines)]
-pub fn get_config_for_test_case(
+pub fn run_config_pass(
     args: Vec<Felt252>,
     test_details: &TestDetails,
     casm_program: &AssembledProgramWithDebugInfo,
@@ -112,7 +112,7 @@ pub fn get_config_for_test_case(
         },
     };
 
-    run_with_runner(
+    run_casm_program(
         &assembled_program,
         builtins,
         hints_dict,

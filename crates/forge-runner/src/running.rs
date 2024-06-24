@@ -25,7 +25,7 @@ use cheatnet::runtime_extensions::forge_runtime_extension::{
 use cheatnet::state::{BlockInfoReader, CallTrace, CheatnetState, ExtendedStateReader};
 use helpers::{
     build_syscall_handler, create_entry_code, create_hints_dict, get_assembled_program,
-    get_syscall_segment_index, run_with_runner,
+    get_syscall_segment_index, run_casm_program,
 };
 use runtime::starknet::context::{build_context, set_max_steps};
 use runtime::{ExtendedRuntime, StarknetRuntime};
@@ -208,7 +208,7 @@ pub fn run_test_case(
     };
 
     let run_result =
-        match run_with_runner(&assembled_program, builtins, hints_dict, &mut forge_runtime) {
+        match run_casm_program(&assembled_program, builtins, hints_dict, &mut forge_runtime) {
             Ok((vm, runner)) => {
                 let vm_resources_without_inner_calls = runner
                     .get_execution_resources(&vm)
