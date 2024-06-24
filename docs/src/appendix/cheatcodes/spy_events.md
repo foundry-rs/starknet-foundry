@@ -6,10 +6,10 @@ Creates `EventSpy` instance which spies on events emitted after its creation.
 
 ```rust
 struct EventSpy {
-    _event_offset: usize
+    ...
 }
 ```
-An event spy structure (with an internal field marking how many events have been emitted before its creation).
+An event spy structure.
 
 ```rust
 struct Events {
