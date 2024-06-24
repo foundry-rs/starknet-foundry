@@ -16,7 +16,7 @@ There are two ways of configuring a fork:
 ### Configure a Fork in the Attribute
 
 It is possible to pass `url` and only one of `block_number`, `block_hash`, `block_tag` arguments to the `fork` attribute:
-- `url` - RPC URL (short string)
+- `url` - RPC URL (string)
 - `block_number` - number of block which will be pin to fork
 - `block_hash` - hash of block which will be pin to fork
 - `block_tag` - tag of block which will be pin to fork. Currently only `latest` is supported
@@ -56,7 +56,7 @@ the same fork in tests.
 [[tool.snforge.fork]]
 name = "SOME_NAME"
 url = "http://your.rpc.url"
-block_id.tag = "Latest"
+block_id.tag = "latest"
 
 [[tool.snforge.fork]]
 name = "SOME_SECOND_NAME"
