@@ -23,8 +23,7 @@ use sncast::{
     get_nonce, get_provider, NumbersFormat, ValidatedWaitParams, WaitForTx,
 };
 use starknet::core::utils::get_selector_from_name;
-use starknet::providers::jsonrpc::HttpTransport;
-use starknet::providers::JsonRpcClient;
+use starknet_commands::verify::Verify;
 use tokio::runtime::Runtime;
 
 mod starknet_commands;
@@ -141,6 +140,9 @@ enum Commands {
 
     /// Get the status of a transaction
     TxStatus(TxStatus),
+
+    /// Verify a contract
+    Verify(Verify),
 }
 
 fn main() -> Result<()> {
@@ -156,11 +158,9 @@ fn main() -> Result<()> {
     } else {
         let mut config = load_global_config::<CastConfig>(&None, &cli.profile)?;
         update_cast_config(&mut config, &cli);
-        let provider = get_provider(&config.url)?;
         runtime.block_on(run_async_command(
             cli,
             config,
-            provider,
             numbers_format,
             output_format,
         ))
@@ -171,16 +171,34 @@ fn main() -> Result<()> {
 async fn run_async_command(
     cli: Cli,
     config: CastConfig,
-    provider: JsonRpcClient<HttpTransport>,
     numbers_format: NumbersFormat,
     output_format: OutputFormat,
 ) -> Result<()> {
-    verify_and_warn_if_incompatible_rpc_version(&provider, &config.url).await?;
-
     let wait_config = WaitForTx {
         wait: cli.wait,
         wait_params: config.wait_params,
     };
+
+    match cli.command {
+        Commands::Verify(verify) => {
+            let manifest_path = assert_manifest_path_exists()?;
+            let mut result = starknet_commands::verify::verify(
+                verify.contract_address,
+                verify.contract_name,
+                verify.verifier,
+                verify.network,
+                &manifest_path,
+            )
+            .await;
+
+            print_command_result("verify", &mut result, numbers_format, &output_format)?;
+            return Ok(());
+        }
+        _ => {}
+    };
+
+    let provider = get_provider(&config.url)?;
+    verify_and_warn_if_incompatible_rpc_version(&provider, &config.url).await?;
 
     match cli.command {
         Commands::Declare(declare) => {
@@ -427,6 +445,7 @@ async fn run_async_command(
             Ok(())
         }
         Commands::Script(_) => unreachable!(),
+        Commands::Verify(_) => unreachable!(),
     }
 }
 
