@@ -52,7 +52,7 @@ impl ParseFromExpr<Expr> for Expected {
         match expr {
             Expr::ShortString(_) | Expr::Literal(_) => {
                 Ok(Self::Felt(
-                    Felt::parse_from_expr::<ShouldPanicCollector>(db, &expr, arg_name)
+                    Felt::parse_from_expr::<ShouldPanicCollector>(db, expr, arg_name)
                         // this unwrap is safe because we checked if expression is valid short string or number
                         .unwrap(),
                 ))
