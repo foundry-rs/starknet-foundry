@@ -150,8 +150,7 @@ impl DisplayDeclareResult of Display<DeclareResult> {
 pub fn declare(
     contract_name: ByteArray, max_fee: Option<felt252>, nonce: Option<felt252>
 ) -> Result<DeclareResult, ScriptCommandError> {
-    // it's in fact core::byte_array::BYTE_ARRAY_MAGIC but it can't be imported here
-    let mut inputs = array![0x46a6158a16a947e5916b2a2ca68501a45e93d7110e81aa2d6438b1c57c879a3];
+    let mut inputs = array![];
 
     contract_name.serialize(ref inputs);
 
@@ -281,6 +280,75 @@ pub fn get_nonce(block_tag: felt252) -> felt252 {
     let inputs = array![block_tag];
     let buf = handle_cheatcode(cheatcode::<'get_nonce'>(inputs.span()));
     *buf[0]
+}
+
+#[derive(Drop, Clone, Debug, Serde, PartialEq)]
+pub enum FinalityStatus {
+    Received,
+    Rejected,
+    AcceptedOnL2,
+    AcceptedOnL1
+}
+
+pub impl DisplayFinalityStatus of Display<FinalityStatus> {
+    fn fmt(self: @FinalityStatus, ref f: Formatter) -> Result<(), Error> {
+        let finality_status: ByteArray = match self {
+            FinalityStatus::Received => "Received",
+            FinalityStatus::Rejected => "Rejected",
+            FinalityStatus::AcceptedOnL2 => "AcceptedOnL2",
+            FinalityStatus::AcceptedOnL1 => "AcceptedOnL1",
+        };
+        write!(f, "{finality_status}")
+    }
+}
+
+
+#[derive(Drop, Copy, Debug, Serde, PartialEq)]
+pub enum ExecutionStatus {
+    Succeeded,
+    Reverted,
+}
+
+pub impl DisplayExecutionStatus of Display<ExecutionStatus> {
+    fn fmt(self: @ExecutionStatus, ref f: Formatter) -> Result<(), Error> {
+        let execution_status: ByteArray = match self {
+            ExecutionStatus::Succeeded => "Succeeded",
+            ExecutionStatus::Reverted => "Reverted"
+        };
+        write!(f, "{execution_status}")
+    }
+}
+
+
+#[derive(Drop, Clone, Debug, Serde, PartialEq)]
+pub struct TxStatusResult {
+    pub finality_status: FinalityStatus,
+    pub execution_status: Option<ExecutionStatus>
+}
+
+pub impl DisplayTxStatusResult of Display<TxStatusResult> {
+    fn fmt(self: @TxStatusResult, ref f: Formatter) -> Result<(), Error> {
+        match self.execution_status {
+            Option::Some(status) => write!(
+                f, "finality_status: {}, execution_status: {}", self.finality_status, status
+            ),
+            Option::None => write!(f, "finality_status: {}", self.finality_status),
+        }
+    }
+}
+
+pub fn tx_status(transaction_hash: felt252) -> Result<TxStatusResult, ScriptCommandError> {
+    let mut inputs = array![transaction_hash];
+
+    let mut buf = handle_cheatcode(cheatcode::<'tx_status'>(inputs.span()));
+
+    let mut result_data: Result<TxStatusResult, ScriptCommandError> =
+        match Serde::<Result<TxStatusResult>>::deserialize(ref buf) {
+        Option::Some(result_data) => result_data,
+        Option::None => panic!("tx_status deserialize failed")
+    };
+
+    result_data
 }
 
 fn handle_cheatcode(input: Span<felt252>) -> Span<felt252> {

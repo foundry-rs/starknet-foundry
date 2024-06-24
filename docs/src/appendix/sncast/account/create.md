@@ -13,6 +13,11 @@ Required.
 
 Account name under which account information is going to be saved.
 
+## `--type, -t <ACCOUNT_TYPE>`
+Optional. Required if `--class-hash` is passed.
+
+Type of the account. Possible values: oz, argent. Defaults to oz.
+
 ## `--salt, -s <SALT>`
 Optional.
 

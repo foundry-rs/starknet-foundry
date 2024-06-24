@@ -161,7 +161,7 @@ fn trace_call() {
     let test = test_case!(
         indoc!(
             r#"
-            use snforge_std::{declare, ContractClassTrait, test_address, test_selector, start_prank, CheatTarget};
+            use snforge_std::{declare, ContractClassTrait, test_address, test_selector, start_cheat_caller_address};
             use snforge_std::trace::{CallTrace, CallEntryPoint, CallType, EntryPointType, get_call_trace, CallResult};
             
             use starknet::{ContractAddress, ClassHash};
@@ -896,10 +896,7 @@ fn trace_l1_handler() {
             
                 let mut l1_handler = L1HandlerTrait::new(checker_address, selector!("handle_l1_message"));
             
-                l1_handler.from_address = 123;
-                l1_handler.payload = array![proxy_address.into()].span();
-            
-                l1_handler.execute().unwrap();
+                l1_handler.execute(123, array![proxy_address.into()].span()).unwrap();
                 assert_trace(get_call_trace(), proxy_address, checker_address);
             }
             

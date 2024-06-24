@@ -5,7 +5,7 @@ use crate::helpers::fixtures::create_test_provider;
 
 use camino::Utf8PathBuf;
 use shared::rpc::{get_rpc_version, is_expected_version};
-use sncast::{check_if_legacy_contract, get_account, get_provider, parse_number};
+use sncast::{check_if_legacy_contract, get_account, get_provider};
 use std::fs;
 use url::ParseError;
 
@@ -77,7 +77,10 @@ async fn test_get_account_invalid_file() {
     )
     .await;
     let err = account.unwrap_err();
-    assert!(err.is::<serde_json::Error>());
+    assert!(err
+        .to_string()
+        .contains("Failed to parse field `alpha-sepolia.?` in file 'tests/data/accounts/invalid_format.json': expected `,` or `}` at line 8 column 9")
+    );
 }
 
 #[tokio::test]
@@ -100,7 +103,7 @@ async fn test_get_account_no_account() {
 async fn test_get_account_no_user_for_network() {
     let provider = create_test_provider();
     let account = get_account(
-        "user10",
+        "user100",
         &Utf8PathBuf::from("tests/data/accounts/accounts.json"),
         &provider,
         None,
@@ -109,47 +112,23 @@ async fn test_get_account_no_user_for_network() {
     let err = account.unwrap_err();
     assert!(err
         .to_string()
-        .contains("Account = user10 not found under network = alpha-sepolia"));
+        .contains("Account = user100 not found under network = alpha-sepolia"));
 }
 
 #[tokio::test]
 async fn test_get_account_failed_to_convert_field_elements() {
     let provider = create_test_provider();
     let account1 = get_account(
-        "with_wrong_private_key",
-        &Utf8PathBuf::from("tests/data/accounts/faulty_accounts.json"),
+        "with_invalid_private_key",
+        &Utf8PathBuf::from("tests/data/accounts/faulty_accounts_invalid_felt.json"),
         &provider,
         None,
     )
     .await;
-    let err1 = account1.unwrap_err();
-    assert!(err1
-        .to_string()
-        .contains("Failed to convert private key to FieldElement"));
-
-    let account2 = get_account(
-        "with_wrong_address",
-        &Utf8PathBuf::from("tests/data/accounts/faulty_accounts.json"),
-        &provider,
-        None,
-    )
-    .await;
-    let err2 = account2.unwrap_err();
-    assert!(err2
-        .to_string()
-        .contains("Failed to convert account address = address to FieldElement"));
-
-    let account3 = get_account(
-        "with_wrong_class_hash",
-        &Utf8PathBuf::from("tests/data/accounts/faulty_accounts.json"),
-        &provider,
-        None,
-    )
-    .await;
-    let err3 = account3.unwrap_err();
-    assert!(err3
-        .to_string()
-        .contains("Failed to convert class hash = class_hash to FieldElement"));
+    let err = account1.unwrap_err();
+    assert!(err.to_string().contains(
+        "Failed to parse field `alpha-sepolia.with_invalid_private_key.private_key` in file 'tests/data/accounts/faulty_accounts_invalid_felt.json': invalid character at line 4 column 40"
+    ));
 }
 
 // TODO (#1690): Move this test to the shared crate and execute it for a real node
@@ -163,9 +142,10 @@ async fn test_supported_rpc_version_matches_devnet_version() {
 #[tokio::test]
 async fn test_check_if_legacy_contract_by_class_hash() {
     let provider = create_test_provider();
-    let class_hash = parse_number(DEVNET_OZ_CLASS_HASH_CAIRO_0)
+    let class_hash = DEVNET_OZ_CLASS_HASH_CAIRO_0
+        .parse()
         .expect("Failed to parse DEVNET_OZ_CLASS_HASH_CAIRO_0");
-    let mock_address = parse_number("0x1").unwrap();
+    let mock_address = "0x1".parse().unwrap();
     let is_legacy = check_if_legacy_contract(Some(class_hash), mock_address, &provider)
         .await
         .unwrap();
@@ -175,7 +155,8 @@ async fn test_check_if_legacy_contract_by_class_hash() {
 #[tokio::test]
 async fn test_check_if_legacy_contract_by_address() {
     let provider = create_test_provider();
-    let address = parse_number(DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS)
+    let address = DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS
+        .parse()
         .expect("Failed to parse DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS");
     let is_legacy = check_if_legacy_contract(None, address, &provider)
         .await

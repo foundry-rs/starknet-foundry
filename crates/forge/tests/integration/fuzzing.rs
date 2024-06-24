@@ -47,18 +47,14 @@ fn fuzzer_different_types() {
 }
 
 #[test]
-fn fuzzed_loop() {
+fn fuzzed_while_loop() {
     let test = test_case!(indoc!(
         r"
         #[test]
         #[fuzzer(runs: 256, seed: 100)]
-        fn fuzzed_loop(a: u8) {
+        fn fuzzed_while_loop(a: u8) {
             let mut i: u8 = 0;
-            loop {
-                if (i == a) {
-                    break;
-                }
-
+            while i != a {
                 i += 1;
             };
 
@@ -69,9 +65,9 @@ fn fuzzed_loop() {
 
     let result = run_test_case(&test);
 
-    let crate_summary = TestCase::find_test_result(&result);
+    let test_target_summary = TestCase::find_test_result(&result);
     let AnyTestCaseSummary::Fuzzing(TestCaseSummary::Passed { gas_info, .. }) =
-        &crate_summary.test_case_summaries[0]
+        &test_target_summary.test_case_summaries[0]
     else {
         panic!()
     };

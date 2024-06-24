@@ -4,7 +4,7 @@ use helpers::constants::{KEYSTORE_PASSWORD_ENV_VAR, UDC_ADDRESS};
 use rand::rngs::OsRng;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use serde_json::{Deserializer, Value};
 use starknet::core::types::{
     BlockId, BlockTag,
     BlockTag::{Latest, Pending},
@@ -25,13 +25,12 @@ use starknet::{
 
 use crate::helpers::constants::{DEFAULT_STATE_FILE_SUFFIX, WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
 use crate::response::errors::SNCastProviderError;
-use cairo_felt::Felt252;
-use conversions::felt252::SerializeAsFelt252Vec;
+use conversions::serde::serialize::CairoSerialize;
 use serde::de::DeserializeOwned;
 use shared::rpc::create_rpc_client;
-use starknet::accounts::AccountFactoryError;
-use starknet::signers::local_wallet::SignError;
+use starknet::accounts::{AccountFactory, AccountFactoryError};
 use std::collections::HashMap;
+use std::str::FromStr;
 use std::thread::sleep;
 use std::time::Duration;
 use std::{env, fs};
@@ -41,15 +40,39 @@ pub mod helpers;
 pub mod response;
 pub mod state;
 
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum AccountType {
+    #[serde(rename = "open_zeppelin")]
+    Oz,
+    Argent,
+    Braavos,
+}
+
+impl FromStr for AccountType {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "open_zeppelin" | "oz" => Ok(AccountType::Oz),
+            "argent" => Ok(AccountType::Argent),
+            "braavos" => Ok(AccountType::Braavos),
+            account_type => Err(anyhow!("Invalid account type = {account_type}")),
+        }
+    }
+}
 #[derive(Deserialize, Serialize, Clone, Debug)]
-struct AccountData {
-    private_key: String,
-    public_key: String,
-    address: String,
-    salt: Option<String>,
-    deployed: Option<bool>,
-    class_hash: Option<String>,
-    legacy: Option<bool>,
+pub struct AccountData {
+    pub private_key: FieldElement,
+    pub public_key: FieldElement,
+    pub address: Option<FieldElement>,
+    pub salt: Option<FieldElement>,
+    pub deployed: Option<bool>,
+    pub class_hash: Option<FieldElement>,
+    pub legacy: Option<bool>,
+
+    #[serde(default, rename(serialize = "type", deserialize = "type"))]
+    pub account_type: Option<AccountType>,
 }
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
@@ -76,6 +99,7 @@ impl NumbersFormat {
     }
 }
 
+#[derive(Clone, Copy)]
 pub struct WaitForTx {
     pub wait: bool,
     pub wait_params: ValidatedWaitParams,
@@ -214,29 +238,14 @@ async fn build_account(
     chain_id: FieldElement,
     provider: &JsonRpcClient<HttpTransport>,
 ) -> Result<SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>> {
-    let signer = LocalWallet::from(SigningKey::from_secret_scalar(
-        parse_number(&account_data.private_key)
-            .context("Failed to convert private key to FieldElement")?,
-    ));
-    let address = parse_number(&account_data.address).with_context(|| {
-        format!(
-            "Failed to convert account address = {} to FieldElement",
-            &account_data.address
-        )
-    })?;
+    let signer = LocalWallet::from(SigningKey::from_secret_scalar(account_data.private_key));
+
+    let address = account_data
+        .address
+        .context("Failed to get address - make sure the account is deployed")?;
     verify_account_address(address, chain_id, provider).await?;
 
-    let class_hash = account_data
-        .class_hash
-        .map(|class_hash| {
-            parse_number(&class_hash).with_context(|| {
-                format!(
-                    "Failed to convert class hash = {} to FieldElement",
-                    &class_hash
-                )
-            })
-        })
-        .transpose()?;
+    let class_hash = account_data.class_hash;
 
     let account_encoding =
         get_account_encoding(account_data.legacy, class_hash, address, provider).await?;
@@ -282,7 +291,7 @@ pub async fn check_class_hash_exists(
     }
 }
 
-fn get_account_data_from_keystore(
+pub fn get_account_data_from_keystore(
     account: &str,
     keystore_path: &Utf8PathBuf,
 ) -> Result<AccountData> {
@@ -294,29 +303,30 @@ fn get_account_data_from_keystore(
         get_keystore_password(KEYSTORE_PASSWORD_ENV_VAR)?.as_str(),
     )?
     .secret_scalar();
-    let private_key = format!("{private_key:#x}");
 
     let account_info: Value = read_and_parse_json_file(&path_to_account)?;
 
-    let parse_to_string = |entry: &Value, parent_key: &str, child_key: &str| -> Option<String> {
-        get_from_json(entry, parent_key, child_key)
-            .and_then(Value::as_str)
-            .map(str::to_string)
+    let parse_to_felt = |pointer: &str| -> Option<FieldElement> {
+        get_string_value_from_json(&account_info, pointer).and_then(|value| value.parse().ok())
     };
 
-    let address = parse_to_string(&account_info, "deployment", "address").ok_or_else(|| {
-        anyhow::anyhow!(
-            "Failed to get address from account JSON file - make sure the account is deployed"
-        )
-    })?;
-    let public_key = parse_to_string(&account_info, "variant", "public_key")
-        .ok_or_else(|| anyhow::anyhow!("Failed to get public key from account JSON file"))?;
+    let address = parse_to_felt("/deployment/address");
+    let class_hash = parse_to_felt("/deployment/class_hash");
+    let salt = parse_to_felt("/deployment/salt");
+    let deployed = get_string_value_from_json(&account_info, "/deployment/status")
+        .map(|status| status == "deployed");
+    let legacy = account_info
+        .pointer("/variant/legacy")
+        .and_then(Value::as_bool);
+    let account_type = get_string_value_from_json(&account_info, "/variant/type")
+        .and_then(|account_type| account_type.parse().ok());
 
-    let class_hash = parse_to_string(&account_info, "deployment", "class_hash");
-    let salt = parse_to_string(&account_info, "deployment", "salt");
-    let deployed =
-        parse_to_string(&account_info, "deployment", "status").map(|status| &status == "deployed");
-    let legacy = get_from_json(&account_info, "variant", "legacy").and_then(Value::as_bool);
+    let public_key = match account_type.clone().context("Failed to get type key")? {
+        AccountType::Argent => parse_to_felt("/variant/owner"),
+        AccountType::Oz => parse_to_felt("/variant/public_key"),
+        AccountType::Braavos => get_braavos_account_public_key(&account_info)?,
+    }
+    .context("Failed to get public key from account JSON file")?;
 
     Ok(AccountData {
         private_key,
@@ -326,17 +336,31 @@ fn get_account_data_from_keystore(
         deployed,
         class_hash,
         legacy,
+        account_type,
     })
 }
+fn get_braavos_account_public_key(account_info: &Value) -> Result<Option<FieldElement>> {
+    get_string_value_from_json(account_info, "/variant/multisig/status")
+        .filter(|status| status == "off")
+        .context("Braavos accounts cannot be deployed with multisig on")?;
 
-fn get_from_json<'a>(entry: &'a Value, parent_key: &str, child_key: &str) -> Option<&'a Value> {
-    entry
-        .get(parent_key)
-        .expect("Failed to get key from the account JSON file")
-        .get(child_key)
+    account_info
+        .pointer("/variant/signers")
+        .and_then(Value::as_array)
+        .filter(|signers| signers.len() == 1)
+        .context("Braavos accounts can only be deployed with one seed signer")?;
+
+    Ok(
+        get_string_value_from_json(account_info, "/variant/signers/0/public_key")
+            .and_then(|value| value.parse().ok()),
+    )
 }
-
-fn get_account_data_from_accounts_file(
+fn get_string_value_from_json(json: &Value, pointer: &str) -> Option<String> {
+    json.pointer(pointer)
+        .and_then(Value::as_str)
+        .map(str::to_string)
+}
+pub fn get_account_data_from_accounts_file(
     name: &str,
     chain_id: FieldElement,
     path: &Utf8PathBuf,
@@ -357,8 +381,14 @@ fn get_account_data_from_accounts_file(
 fn read_and_parse_json_file<T: DeserializeOwned>(path: &Utf8PathBuf) -> Result<T> {
     let file_content =
         fs::read_to_string(path).with_context(|| format!("Failed to read a file = {path}"))?;
-    serde_json::from_str(&file_content)
-        .with_context(|| format!("Failed to parse file = {path} to JSON"))
+    let deserializer = &mut Deserializer::from_str(&file_content);
+    serde_path_to_error::deserialize(deserializer).map_err(|err| {
+        let path_to_field = err.path().to_string();
+        anyhow!(
+            "Failed to parse field `{path_to_field}` in file '{path}': {}",
+            err.into_inner()
+        )
+    })
 }
 
 async fn get_account_encoding(
@@ -433,7 +463,7 @@ pub fn get_block_id(value: &str) -> Result<BlockId> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, CairoSerialize)]
 pub struct ErrorData {
     pub data: String,
 }
@@ -453,7 +483,7 @@ impl From<ContractErrorData> for ErrorData {
     }
 }
 
-#[derive(Error, Debug)]
+#[derive(Error, Debug, CairoSerialize)]
 pub enum TransactionError {
     #[error("Transaction has been rejected")]
     Rejected,
@@ -461,7 +491,7 @@ pub enum TransactionError {
     Reverted(ErrorData),
 }
 
-#[derive(Error, Debug)]
+#[derive(Error, Debug, CairoSerialize)]
 pub enum WaitForTransactionError {
     #[error(transparent)]
     TransactionError(TransactionError),
@@ -469,34 +499,6 @@ pub enum WaitForTransactionError {
     TimedOut,
     #[error(transparent)]
     ProviderError(#[from] SNCastProviderError),
-}
-
-impl SerializeAsFelt252Vec for WaitForTransactionError {
-    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
-        match self {
-            WaitForTransactionError::TransactionError(err) => {
-                output.push(Felt252::from(0));
-                err.serialize_into_felt252_vec(output);
-            }
-            WaitForTransactionError::TimedOut => output.push(Felt252::from(1)),
-            WaitForTransactionError::ProviderError(err) => {
-                output.push(Felt252::from(2));
-                err.serialize_into_felt252_vec(output);
-            }
-        }
-    }
-}
-
-impl SerializeAsFelt252Vec for TransactionError {
-    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
-        match self {
-            TransactionError::Rejected => output.push(Felt252::from(0)),
-            TransactionError::Reverted(err) => {
-                output.push(Felt252::from(1));
-                err.data.serialize_into_felt252_vec(output);
-            }
-        }
-    }
 }
 
 pub async fn wait_for_tx(
@@ -571,10 +573,13 @@ pub fn handle_rpc_error(error: impl Into<SNCastProviderError>) -> Error {
 }
 
 #[must_use]
-pub fn handle_account_factory_error(err: AccountFactoryError<SignError>) -> anyhow::Error {
+pub fn handle_account_factory_error<T>(err: AccountFactoryError<T::SignError>) -> anyhow::Error
+where
+    T: AccountFactory + Sync,
+{
     match err {
         AccountFactoryError::Provider(error) => handle_rpc_error(error),
-        error => anyhow!(error),
+        error => anyhow!(error.to_string()),
     }
 }
 
@@ -592,14 +597,6 @@ pub async fn handle_wait_for_tx<T>(
     }
 
     Ok(return_value)
-}
-
-pub fn parse_number(number_as_str: &str) -> Result<FieldElement> {
-    let contract_address = match &number_as_str[..2] {
-        "0x" => FieldElement::from_hex_be(number_as_str)?,
-        _ => FieldElement::from_dec_str(number_as_str)?,
-    };
-    Ok(contract_address)
 }
 
 pub fn raise_if_empty(value: &str, value_name: &str) -> Result<()> {
@@ -625,7 +622,7 @@ pub fn check_keystore_and_account_files_exist(
         bail!("Failed to find keystore file");
     }
     if account.is_empty() {
-        bail!("Passed empty path for `--account`");
+        bail!("Argument `--account` must be passed and be a path when using `--keystore`");
     }
     let path_to_account = Utf8PathBuf::from(account);
     if !path_to_account.exists() {
@@ -644,7 +641,7 @@ pub fn udc_uniqueness(unique: bool, account_address: FieldElement) -> UdcUniquen
     if unique {
         Unique(UdcUniqueSettings {
             deployer_address: account_address,
-            udc_contract_address: parse_number(UDC_ADDRESS).expect("Failed to parse UDC address"),
+            udc_contract_address: UDC_ADDRESS,
         })
     } else {
         NotUnique
@@ -668,9 +665,10 @@ mod tests {
     use crate::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
     use crate::{
         chain_id_to_network_name, extract_or_generate_salt, get_account_data_from_accounts_file,
-        get_account_data_from_keystore, get_block_id, udc_uniqueness,
+        get_account_data_from_keystore, get_block_id, udc_uniqueness, AccountType,
     };
     use camino::Utf8PathBuf;
+    use conversions::string::IntoHexStr;
     use starknet::core::types::{
         BlockId,
         BlockTag::{Latest, Pending},
@@ -767,22 +765,26 @@ mod tests {
             &Utf8PathBuf::from("tests/data/accounts/accounts.json"),
         )
         .unwrap();
-        assert_eq!(account.private_key, "0xffd33878eed7767e7c546ce3fc026295");
         assert_eq!(
-            account.public_key,
+            account.private_key.into_hex_string(),
+            "0xffd33878eed7767e7c546ce3fc026295"
+        );
+        assert_eq!(
+            account.public_key.into_hex_string(),
             "0x17b62d16ee2b9b5ccd3320e2c0b234dfbdd1d01d09d0aa29ce164827cddf46a"
         );
         assert_eq!(
-            account.address,
-            "0xf6ecd22832b7c3713cfa7826ee309ce96a2769833f093795fafa1b8f20c48b"
+            account.address.map(IntoHexStr::into_hex_string),
+            Some("0xf6ecd22832b7c3713cfa7826ee309ce96a2769833f093795fafa1b8f20c48b".to_string())
         );
         assert_eq!(
-            account.salt,
+            account.salt.map(IntoHexStr::into_hex_string),
             Some("0x14b6b215424909f34f417ddd7cbaca48de2d505d03c92467367d275e847d252".to_string())
         );
         assert_eq!(account.deployed, Some(true));
         assert_eq!(account.class_hash, None);
         assert_eq!(account.legacy, None);
+        assert_eq!(account.account_type, Some(AccountType::Oz));
     }
 
     #[test]
@@ -793,18 +795,50 @@ mod tests {
             &Utf8PathBuf::from("tests/data/keystore/my_key.json"),
         )
         .unwrap();
-        assert_eq!(account.private_key, "0x55ae34c86281fbd19292c7e3bfdfceb4");
         assert_eq!(
-            account.public_key,
+            account.private_key.into_hex_string(),
+            "0x55ae34c86281fbd19292c7e3bfdfceb4"
+        );
+        assert_eq!(
+            account.public_key.into_hex_string(),
             "0xe2d3d7080bfc665e0060a06e8e95c3db3ff78a1fec4cc81ddc87e49a12e0a"
         );
         assert_eq!(
-            account.address,
-            "0xcce3217e4aea0ab738b55446b1b378750edfca617db549fda1ede28435206c"
+            account.address.map(IntoHexStr::into_hex_string),
+            Some("0xcce3217e4aea0ab738b55446b1b378750edfca617db549fda1ede28435206c".to_string())
         );
         assert_eq!(account.salt, None);
         assert_eq!(account.deployed, Some(true));
         assert_eq!(account.legacy, Some(true));
+        assert_eq!(account.account_type, Some(AccountType::Oz));
+    }
+
+    #[test]
+    fn test_get_braavos_account_from_keystore_with_multisig_on() {
+        env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
+        let err = get_account_data_from_keystore(
+            "tests/data/keystore/my_account_braavos_invalid_multisig.json",
+            &Utf8PathBuf::from("tests/data/keystore/my_key.json"),
+        )
+        .unwrap_err();
+
+        assert!(err
+            .to_string()
+            .contains("Braavos accounts cannot be deployed with multisig on"));
+    }
+
+    #[test]
+    fn test_get_braavos_account_from_keystore_multiple_signers() {
+        env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
+        let err = get_account_data_from_keystore(
+            "tests/data/keystore/my_account_braavos_multiple_signers.json",
+            &Utf8PathBuf::from("tests/data/keystore/my_key.json"),
+        )
+        .unwrap_err();
+
+        assert!(err
+            .to_string()
+            .contains("Braavos accounts can only be deployed with one seed signer"));
     }
 
     #[test]

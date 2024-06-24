@@ -5,48 +5,63 @@ use std::fs;
 use std::path::PathBuf;
 use std::rc::Rc;
 
+use crate::build_trace_data::test_sierra_program_path::VersionedProgramPath;
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::entry_point::{CallEntryPoint, CallType};
 use blockifier::execution::syscalls::hint_processor::SyscallCounter;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cairo_vm::vm::trace::trace_entry::TraceEntry;
+use camino::Utf8PathBuf;
 use cheatnet::constants::{TEST_CONTRACT_CLASS_HASH, TEST_ENTRY_POINT_SELECTOR};
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
-use cheatnet::state::CallTrace;
+use cheatnet::state::{CallTrace, CallTraceNode};
 use conversions::IntoConv;
 use itertools::Itertools;
 use starknet::core::utils::get_selector_from_name;
 use starknet_api::class_hash;
-use starknet_api::core::ClassHash;
+use starknet_api::core::{ClassHash, EntryPointSelector};
 use starknet_api::deprecated_contract_class::EntryPointType;
 use starknet_api::hash::StarkHash;
 use trace_data::{
-    CallEntryPoint as ProfilerCallEntryPoint, CallTrace as ProfilerCallTrace,
-    CallType as ProfilerCallType, ContractAddress,
-    DeprecatedSyscallSelector as ProfilerDeprecatedSyscallSelector, EntryPointSelector,
-    EntryPointType as ProfilerEntryPointType, ExecutionResources as ProfilerExecutionResources,
-    TraceEntry as ProfilerTraceEntry, VmExecutionResources,
+    CairoExecutionInfo, CallEntryPoint as ProfilerCallEntryPoint, CallTrace as ProfilerCallTrace,
+    CallTraceNode as ProfilerCallTraceNode, CallType as ProfilerCallType, CasmLevelInfo,
+    ContractAddress, DeprecatedSyscallSelector as ProfilerDeprecatedSyscallSelector,
+    EntryPointSelector as ProfilerEntryPointSelector, EntryPointType as ProfilerEntryPointType,
+    ExecutionResources as ProfilerExecutionResources, TraceEntry as ProfilerTraceEntry,
+    VmExecutionResources,
 };
 
+pub mod test_sierra_program_path;
+
 pub const TRACE_DIR: &str = ".snfoundry_trace";
+
 pub const TEST_CODE_CONTRACT_NAME: &str = "SNFORGE_TEST_CODE";
 pub const TEST_CODE_FUNCTION_NAME: &str = "SNFORGE_TEST_CODE_FUNCTION";
 
 pub fn build_profiler_call_trace(
     value: &Rc<RefCell<CallTrace>>,
     contracts_data: &ContractsData,
+    maybe_versioned_program_path: &Option<VersionedProgramPath>,
 ) -> ProfilerCallTrace {
     let value = value.borrow();
 
+    let entry_point = build_profiler_call_entry_point(value.entry_point.clone(), contracts_data);
     let vm_trace = value.vm_trace.as_ref().map(|trace_data| {
         trace_data
             .iter()
             .map(build_profiler_trace_entry)
             .collect_vec()
     });
+    let cairo_execution_info = build_cairo_execution_info(
+        &value.entry_point,
+        vm_trace,
+        contracts_data,
+        maybe_versioned_program_path,
+        value.run_with_call_header,
+    );
 
     ProfilerCallTrace {
-        entry_point: build_profiler_call_entry_point(value.entry_point.clone(), contracts_data),
+        entry_point,
         cumulative_resources: build_profiler_execution_resources(
             value.used_execution_resources.clone(),
             value.used_syscalls.clone(),
@@ -55,9 +70,68 @@ pub fn build_profiler_call_trace(
         nested_calls: value
             .nested_calls
             .iter()
-            .map(|c| build_profiler_call_trace(c, contracts_data))
+            .map(|c| {
+                build_profiler_call_trace_node(c, contracts_data, maybe_versioned_program_path)
+            })
             .collect(),
-        vm_trace,
+        cairo_execution_info,
+    }
+}
+
+fn build_cairo_execution_info(
+    entry_point: &CallEntryPoint,
+    vm_trace: Option<Vec<ProfilerTraceEntry>>,
+    contracts_data: &ContractsData,
+    maybe_test_sierra_program_path: &Option<VersionedProgramPath>,
+    run_with_call_header: bool,
+) -> Option<CairoExecutionInfo> {
+    let contract_name = get_contract_name(entry_point.class_hash, contracts_data);
+    let source_sierra_path = contract_name.and_then(|name| {
+        get_source_sierra_path(&name, contracts_data, maybe_test_sierra_program_path)
+    });
+
+    #[allow(clippy::unnecessary_unwrap)]
+    if source_sierra_path.is_some() && vm_trace.is_some() {
+        Some(CairoExecutionInfo {
+            casm_level_info: CasmLevelInfo {
+                run_with_call_header,
+                vm_trace: vm_trace.unwrap(),
+            },
+            source_sierra_path: source_sierra_path.unwrap(),
+        })
+    } else {
+        None
+    }
+}
+
+fn get_source_sierra_path(
+    contract_name: &str,
+    contracts_data: &ContractsData,
+    maybe_versioned_program_path: &Option<VersionedProgramPath>,
+) -> Option<Utf8PathBuf> {
+    if contract_name == TEST_CODE_CONTRACT_NAME {
+        Some(
+            maybe_versioned_program_path
+                .clone()
+                .map_or_else(Utf8PathBuf::new, Into::into),
+        )
+    } else {
+        contracts_data
+            .get_source_sierra_path(contract_name)
+            .cloned()
+    }
+}
+
+fn build_profiler_call_trace_node(
+    value: &CallTraceNode,
+    contracts_data: &ContractsData,
+    maybe_versioned_program_path: &Option<VersionedProgramPath>,
+) -> ProfilerCallTraceNode {
+    match value {
+        CallTraceNode::EntryPointCall(trace) => ProfilerCallTraceNode::EntryPointCall(
+            build_profiler_call_trace(trace, contracts_data, maybe_versioned_program_path),
+        ),
+        CallTraceNode::DeployWithoutConstructor => ProfilerCallTraceNode::DeployWithoutConstructor,
     }
 }
 
@@ -95,29 +169,47 @@ pub fn build_profiler_call_entry_point(
         ..
     } = value;
 
-    let mut contract_name = class_hash
-        .and_then(|c| contracts_data.class_hashes.get_by_right(&c))
-        .cloned();
-    let mut function_name = contracts_data.selectors.get(&entry_point_selector).cloned();
-
-    if entry_point_selector.0
-        == get_selector_from_name(TEST_ENTRY_POINT_SELECTOR)
-            .unwrap()
-            .into_()
-        && class_hash == Some(class_hash!(TEST_CONTRACT_CLASS_HASH))
-    {
-        contract_name = Some(String::from(TEST_CODE_CONTRACT_NAME));
-        function_name = Some(String::from(TEST_CODE_FUNCTION_NAME));
-    }
+    let contract_name = get_contract_name(class_hash, contracts_data);
+    let function_name = get_function_name(&entry_point_selector, contracts_data);
 
     ProfilerCallEntryPoint {
         class_hash: class_hash.map(|ch| trace_data::ClassHash(ch.to_string())),
         entry_point_type: build_profiler_entry_point_type(entry_point_type),
-        entry_point_selector: EntryPointSelector(format!("{}", entry_point_selector.0)),
+        entry_point_selector: ProfilerEntryPointSelector(format!("{}", entry_point_selector.0)),
         contract_address: ContractAddress(format!("{}", storage_address.0.key())),
         call_type: build_profiler_call_type(call_type),
         contract_name,
         function_name,
+    }
+}
+
+fn get_contract_name(
+    class_hash: Option<ClassHash>,
+    contracts_data: &ContractsData,
+) -> Option<String> {
+    if class_hash == Some(class_hash!(TEST_CONTRACT_CLASS_HASH)) {
+        Some(String::from(TEST_CODE_CONTRACT_NAME))
+    } else {
+        class_hash
+            .and_then(|c| contracts_data.get_contract_name(&c))
+            .cloned()
+    }
+}
+
+fn get_function_name(
+    entry_point_selector: &EntryPointSelector,
+    contracts_data: &ContractsData,
+) -> Option<String> {
+    if entry_point_selector.0
+        == get_selector_from_name(TEST_ENTRY_POINT_SELECTOR)
+            .unwrap()
+            .into_()
+    {
+        Some(String::from(TEST_CODE_FUNCTION_NAME))
+    } else {
+        contracts_data
+            .get_function_name(entry_point_selector)
+            .cloned()
     }
 }
 

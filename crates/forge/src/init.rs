@@ -1,8 +1,6 @@
+use crate::CAIRO_EDITION;
 use anyhow::{anyhow, Context, Ok, Result};
-
 use include_dir::{include_dir, Dir};
-
-use forge::CAIRO_EDITION;
 use scarb_api::ScarbCommand;
 use std::fs::{self, OpenOptions};
 use std::io::Write;
@@ -49,21 +47,30 @@ fn update_config(config_path: &Path) -> Result<()> {
 
     add_target_to_toml(&mut document);
     set_cairo_edition(&mut document, CAIRO_EDITION);
+    add_test_script(&mut document);
 
     fs::write(config_path, document.to_string())?;
 
     Ok(())
 }
 
+fn add_test_script(document: &mut DocumentMut) {
+    let mut test = Table::new();
+
+    test.insert("test", value("snforge test"));
+    document.insert("scripts", Item::Table(test));
+}
+
 fn add_target_to_toml(document: &mut DocumentMut) {
     let mut array_of_tables = ArrayOfTables::new();
-    let mut casm = Table::new();
+    let mut sierra = Table::new();
     let mut contract = Table::new();
     contract.set_implicit(true);
 
-    casm.insert("casm", Item::Value(true.into()));
-    array_of_tables.push(casm);
+    sierra.insert("sierra", Item::Value(true.into()));
+    array_of_tables.push(sierra);
     contract.insert("starknet-contract", Item::ArrayOfTables(array_of_tables));
+
     document.insert("target", Item::Table(contract));
 }
 
@@ -81,19 +88,25 @@ fn extend_gitignore(path: &Path) -> Result<()> {
 }
 
 pub fn run(project_name: &str) -> Result<()> {
-    let project_path = std::env::current_dir()?.join(project_name);
+    let current_dir = std::env::current_dir().context("Failed to get current directory")?;
+    let project_path = current_dir.join(project_name);
+    let manifest_path = project_path.join("Scarb.toml");
 
-    ScarbCommand::new_with_stdio()
-        .current_dir(std::env::current_dir().context("Failed to get current directory")?)
-        .arg("new")
-        .arg(&project_path)
-        .run()
-        .context("Failed to initialize a new project")?;
+    // if there is no Scarb.toml run `scarb new`
+    if !manifest_path.is_file() {
+        ScarbCommand::new_with_stdio()
+            .current_dir(current_dir)
+            .arg("new")
+            .arg(&project_path)
+            .run()
+            .context("Failed to initialize a new project")?;
+    }
 
     let version = env!("CARGO_PKG_VERSION");
 
     ScarbCommand::new_with_stdio()
         .current_dir(&project_path)
+        .manifest_path(manifest_path.clone())
         .offline()
         .arg("add")
         .arg("--dev")
@@ -106,8 +119,10 @@ pub fn run(project_name: &str) -> Result<()> {
         .context("Failed to add snforge_std")?;
 
     let cairo_version = ScarbCommand::version().run()?.cairo;
+
     ScarbCommand::new_with_stdio()
         .current_dir(&project_path)
+        .manifest_path(manifest_path.clone())
         .offline()
         .arg("add")
         .arg(format!("starknet@{cairo_version}"))
@@ -118,6 +133,13 @@ pub fn run(project_name: &str) -> Result<()> {
     extend_gitignore(&project_path)?;
     overwrite_files_from_scarb_template("src", &project_path, project_name)?;
     overwrite_files_from_scarb_template("tests", &project_path, project_name)?;
+
+    // Fetch to create lock file.
+    ScarbCommand::new_with_stdio()
+        .manifest_path(manifest_path)
+        .arg("fetch")
+        .run()
+        .context("Failed to fetch created project")?;
 
     Ok(())
 }

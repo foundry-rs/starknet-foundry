@@ -17,3 +17,4 @@
     * [init](./sncast/script/init.md)
     * [run](./sncast/script/run.md)
 * [show-config](./sncast/show_config.md)
+* [tx-status](./sncast/tx-status.md)

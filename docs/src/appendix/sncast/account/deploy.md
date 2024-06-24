@@ -14,8 +14,3 @@ Name of the (previously created) account to be deployed.
 Optional.
 
 Maximum fee for the `deploy_account` transaction. When not used, defaults to auto-estimation.
-
-## `--class-hash, -c`
-Optional.
-
-Class hash of a custom OpenZeppelin account contract declared to the network.

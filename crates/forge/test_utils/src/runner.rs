@@ -8,11 +8,12 @@ use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use camino::Utf8PathBuf;
 use forge_runner::{
     test_case_summary::{AnyTestCaseSummary, TestCaseSummary},
-    test_crate_summary::TestCrateSummary,
+    test_target_summary::TestTargetSummary,
 };
 use indoc::formatdoc;
 use scarb_api::{
-    get_contracts_map, metadata::MetadataCommandExt, ScarbCommand, StarknetContractArtifacts,
+    get_contracts_artifacts_and_source_sierra_paths, metadata::MetadataCommandExt, ScarbCommand,
+    StarknetContractArtifacts,
 };
 use shared::command::CommandExt;
 use std::{
@@ -95,10 +96,12 @@ impl Contract {
             .find(|package| package.name == "contract")
             .unwrap();
 
-        let contract = get_contracts_map(&scarb_metadata, &package.id, None)
-            .unwrap()
-            .remove(&self.name)
-            .ok_or(anyhow!("there is no contract with name {}", self.name))?;
+        let contract =
+            get_contracts_artifacts_and_source_sierra_paths(&scarb_metadata, &package.id, None)
+                .unwrap()
+                .remove(&self.name)
+                .ok_or(anyhow!("there is no contract with name {}", self.name))?
+                .0;
 
         Ok((contract.sierra, contract.casm))
     }
@@ -137,10 +140,6 @@ impl<'a> TestCase {
                 [package]
                 name = "test_package"
                 version = "0.1.0"
-
-                [[target.starknet-contract]]
-                sierra = true
-                casm = true
 
                 [dependencies]
                 starknet = "2.4.0"
@@ -189,7 +188,7 @@ impl<'a> TestCase {
         ]
     }
 
-    pub fn contracts(&self) -> Result<HashMap<String, StarknetContractArtifacts>> {
+    pub fn contracts(&self) -> Result<HashMap<String, (StarknetContractArtifacts, Utf8PathBuf)>> {
         self.contracts
             .clone()
             .into_iter()
@@ -197,13 +196,19 @@ impl<'a> TestCase {
                 let name = contract.name.clone();
                 let (sierra, casm) = contract.generate_sierra_and_casm()?;
 
-                Ok((name, StarknetContractArtifacts { sierra, casm }))
+                Ok((
+                    name,
+                    (
+                        StarknetContractArtifacts { sierra, casm },
+                        Default::default(),
+                    ),
+                ))
             })
             .collect()
     }
 
     #[must_use]
-    pub fn find_test_result(results: &[TestCrateSummary]) -> &TestCrateSummary {
+    pub fn find_test_result(results: &[TestTargetSummary]) -> &TestTargetSummary {
         results
             .iter()
             .find(|tc| !tc.test_case_summaries.is_empty())
@@ -225,7 +230,7 @@ macro_rules! test_case {
     });
 }
 
-pub fn assert_passed(result: &[TestCrateSummary]) {
+pub fn assert_passed(result: &[TestTargetSummary]) {
     let result = &TestCase::find_test_result(result).test_case_summaries;
 
     assert!(!result.is_empty(), "No test results found");
@@ -235,7 +240,7 @@ pub fn assert_passed(result: &[TestCrateSummary]) {
     );
 }
 
-pub fn assert_failed(result: &[TestCrateSummary]) {
+pub fn assert_failed(result: &[TestTargetSummary]) {
     let result = &TestCase::find_test_result(result).test_case_summaries;
 
     assert!(!result.is_empty(), "No test results found");
@@ -246,7 +251,7 @@ pub fn assert_failed(result: &[TestCrateSummary]) {
 }
 
 pub fn assert_case_output_contains(
-    result: &[TestCrateSummary],
+    result: &[TestTargetSummary],
     test_case_name: &str,
     asserted_msg: &str,
 ) {
@@ -266,7 +271,7 @@ pub fn assert_case_output_contains(
     }));
 }
 
-pub fn assert_gas(result: &[TestCrateSummary], test_case_name: &str, asserted_gas: u128) {
+pub fn assert_gas(result: &[TestTargetSummary], test_case_name: &str, asserted_gas: u128) {
     let test_name_suffix = format!("::{test_case_name}");
 
     let result = TestCase::find_test_result(result);
@@ -291,7 +296,7 @@ pub fn assert_gas(result: &[TestCrateSummary], test_case_name: &str, asserted_ga
 }
 
 pub fn assert_syscall(
-    result: &[TestCrateSummary],
+    result: &[TestTargetSummary],
     test_case_name: &str,
     syscall: DeprecatedSyscallSelector,
     expected_count: usize,
@@ -320,7 +325,7 @@ pub fn assert_syscall(
 }
 
 pub fn assert_builtin(
-    result: &[TestCrateSummary],
+    result: &[TestTargetSummary],
     test_case_name: &str,
     builtin: &str,
     expected_count: usize,

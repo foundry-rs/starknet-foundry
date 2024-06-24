@@ -7,6 +7,86 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.25.0] - 2024-06-12
+
+### Forge
+
+#### Changed
+
+- `SyscallResultStringErrorTrait::map_error_to_string` removed in favor of utility function (`snforge_std::byte_array::try_deserialize_bytearray_error`)
+- Updated event testing - read more [here](./docs/src/testing/testing-events.md) on how it now works and [here](./docs/src/appendix/cheatcodes/spy_events.md)
+about updated `spy_events` cheatcode
+
+### Cast
+
+#### Removed
+- `--class-hash` flag from `account deploy` command
+
+#### Added
+
+- `tx-status` subcommand to get transaction status. [Read more here](./docs/src/starknet/tx-status.md)
+- `tx_status` function to cast_std. [Read more here](./docs/src/appendix/sncast-library/tx_status.md)
+- Support for creating argent accounts
+- Support for creating braavos accounts
+
+## [0.24.0] - 2024-05-22
+
+### Forge
+
+#### Removed
+
+- `prank`, `warp`, `roll`, `elect`, `spoof` cheatcodes in favour of `cheat_execution_info`
+
+#### Added
+
+- `cheat_execution_info` cheatcode and per variable helpers for it
+
+### Cast
+
+
+#### Added
+
+- New required flag `--type` to `account add` command
+
+### Forge
+
+#### Changed
+
+- `SignerTrait::sign` now returns `Result` instead of failing the test
+
+- `L1HandlerTrait::execute()` takes source address and payloads as arguments [Read more here](https://foundry-rs.github.io/starknet-foundry/appendix/cheatcodes/l1_handler.html)
+
+- When calling to an address which does not exists, error is forwarded to cairo runtime instead of failing the test
+
+## [0.23.0] - 2024-05-08
+
+### Forge
+
+#### Removed
+- `event_name_hash` removal, in favour of `selector!` usage
+
+#### Changed
+
+- the tool now always compiles Sierra contract artifacts to CASM using
+[`USC`](https://github.com/software-mansion/universal-sierra-compiler) - before it used to consume CASM artifacts
+produced by Scarb if they were present. Setting up `casm = true` in `Scarb.toml` is no longer recommended - it may slow
+down the compilation.
+- The `replace_bytecode` cheatcode now returns `Result` with a possible `ReplaceBytecodeError`, since it may cause unexpected errors down the line when not handled properly
+
+### Cast
+
+#### Changed
+
+- the tool now always compiles Sierra contract artifacts to CASM using
+[`USC`](https://github.com/software-mansion/universal-sierra-compiler) - before it used to consume CASM artifacts
+produced by Scarb if they were present. Setting up `casm = true` in `Scarb.toml` is no longer recommended - it may slow
+down the compilation.
+
+#### Fixed
+- scripts built with release profile are now properly recognized and ran 
+
+## [0.22.0] - 2024-04-17
+
 ### Forge
 
 #### Changed

@@ -1,13 +1,15 @@
 use crate::CheatnetState;
 use blockifier::execution::call_info::OrderedEvent;
 use cairo_felt::Felt252;
-use cairo_vm::hint_processor::hint_processor_utils::felt_to_usize;
-use conversions::FromConv;
+use conversions::{
+    serde::{deserialize::CairoDeserialize, serialize::CairoSerialize},
+    FromConv,
+};
 use starknet_api::core::ContractAddress;
 
 /// Represents an emitted event. It is used in the `CheatnetState` to keep track of events
 /// emitted in the `cheatnet::src::rpc::call_contract`
-#[derive(Debug, PartialEq, Clone)]
+#[derive(CairoSerialize, Debug, PartialEq, Clone)]
 pub struct Event {
     pub from: ContractAddress,
     pub keys: Vec<Felt252>,
@@ -40,7 +42,7 @@ impl Event {
 }
 
 /// Specifies which contract are spied on.
-#[derive(Debug)]
+#[derive(CairoDeserialize, Debug)]
 pub enum SpyTarget {
     All,
     One(ContractAddress),
@@ -59,37 +61,7 @@ impl SpyTarget {
 }
 
 impl CheatnetState {
-    pub fn spy_events(&mut self, spy_on: SpyTarget) -> usize {
-        self.spies.push(spy_on);
-        self.spies.len() - 1
-    }
-
-    pub fn fetch_events(&mut self, id: &Felt252) -> (usize, Vec<Felt252>) {
-        let spy_on = &self.spies[felt_to_usize(id).unwrap()];
-        let mut spied_events_len = 0;
-        let mut unconsumed_emitted_events: Vec<Event> = vec![];
-
-        let serialized_events: Vec<Felt252> = self
-            .detected_events
-            .iter()
-            .flat_map(|event| {
-                let mut flattened_event = vec![];
-                if spy_on.does_spy(event.from) {
-                    flattened_event.push(Felt252::from_(event.from));
-                    flattened_event.push(Felt252::from(event.keys.len()));
-                    flattened_event.append(&mut event.keys.clone());
-                    flattened_event.push(Felt252::from(event.data.len()));
-                    flattened_event.append(&mut event.data.clone());
-
-                    spied_events_len += 1;
-                } else {
-                    unconsumed_emitted_events.push(event.clone());
-                }
-                flattened_event
-            })
-            .collect();
-
-        self.detected_events = unconsumed_emitted_events;
-        (spied_events_len, serialized_events)
+    pub fn get_events(&mut self, event_offset: usize) -> Vec<Event> {
+        self.detected_events[event_offset..].to_vec()
     }
 }

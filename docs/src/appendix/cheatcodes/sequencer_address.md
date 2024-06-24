@@ -1,0 +1,28 @@
+# `sequencer_address`
+
+Cheatcodes modifying `sequencer_address`:
+
+## `cheat_sequencer_address`
+> `fn cheat_sequencer_address(target: ContractAddress, sequencer_address: ContractAddress, span: CheatSpan)`
+
+Changes the sequencer address for the given target and span.
+
+## `cheat_sequencer_address_global`
+> `fn cheat_sequencer_address_global(sequencer_address: ContractAddress)`
+
+Changes the sequencer address for all targets.
+
+## `start_cheat_sequencer_address`
+> `fn start_cheat_sequencer_address(target: ContractAddress, sequencer_address: ContractAddress)`
+
+Changes the sequencer address for the given target.
+
+## `stop_cheat_sequencer_address`
+> `fn stop_cheat_sequencer_address(target: ContractAddress)`
+
+Cancels the `cheat_sequencer_address` / `start_cheat_sequencer_address` for the given target.
+
+## `stop_cheat_sequencer_address_global`
+> `fn stop_cheat_sequencer_address_global(target: ContractAddress)`
+
+Cancels the `cheat_sequencer_address_global`.

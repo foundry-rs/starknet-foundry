@@ -1,7 +1,8 @@
 use crate::build_trace_data::build_profiler_call_trace;
-use crate::compiled_runnable::TestCaseRunnable;
+use crate::build_trace_data::test_sierra_program_path::VersionedProgramPath;
 use crate::expected_result::{ExpectedPanicValue, ExpectedTestResult};
 use crate::gas::check_available_gas;
+use crate::package_tests::with_config_resolved::TestCaseWithResolvedConfig;
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{RunResult, RunResultValue};
@@ -206,19 +207,21 @@ impl TestCaseSummary<Fuzzing> {
 
 impl TestCaseSummary<Single> {
     #[must_use]
+    #[allow(clippy::too_many_arguments)]
     pub(crate) fn from_run_result_and_info(
         run_result: RunResult,
-        test_case: &TestCaseRunnable,
+        test_case: &TestCaseWithResolvedConfig,
         arguments: Vec<Felt252>,
         gas: u128,
         used_resources: UsedResources,
         call_trace: &Rc<RefCell<InternalCallTrace>>,
         contracts_data: &ContractsData,
+        maybe_versioned_program_path: &Option<VersionedProgramPath>,
     ) -> Self {
         let name = test_case.name.clone();
-        let msg = extract_result_data(&run_result, &test_case.expected_result);
+        let msg = extract_result_data(&run_result, &test_case.config.expected_result);
         match run_result.value {
-            RunResultValue::Success(_) => match &test_case.expected_result {
+            RunResultValue::Success(_) => match &test_case.config.expected_result {
                 ExpectedTestResult::Success => {
                     let summary = TestCaseSummary::Passed {
                         name,
@@ -227,9 +230,13 @@ impl TestCaseSummary<Single> {
                         test_statistics: (),
                         gas_info: gas,
                         used_resources,
-                        trace_data: build_profiler_call_trace(call_trace, contracts_data),
+                        trace_data: build_profiler_call_trace(
+                            call_trace,
+                            contracts_data,
+                            maybe_versioned_program_path,
+                        ),
                     };
-                    check_available_gas(&test_case.available_gas, summary)
+                    check_available_gas(&test_case.config.available_gas, summary)
                 }
                 ExpectedTestResult::Panics(_) => TestCaseSummary::Failed {
                     name,
@@ -238,7 +245,7 @@ impl TestCaseSummary<Single> {
                     test_statistics: (),
                 },
             },
-            RunResultValue::Panic(value) => match &test_case.expected_result {
+            RunResultValue::Panic(value) => match &test_case.config.expected_result {
                 ExpectedTestResult::Success => TestCaseSummary::Failed {
                     name,
                     msg,
@@ -261,7 +268,11 @@ impl TestCaseSummary<Single> {
                         test_statistics: (),
                         gas_info: gas,
                         used_resources,
-                        trace_data: build_profiler_call_trace(call_trace, contracts_data),
+                        trace_data: build_profiler_call_trace(
+                            call_trace,
+                            contracts_data,
+                            maybe_versioned_program_path,
+                        ),
                     },
                 },
             },

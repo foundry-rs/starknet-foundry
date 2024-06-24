@@ -38,7 +38,7 @@ trait KeyPairTrait<SK, PK> {
 
 ```rust
 trait SignerTrait<T, H, U> {
-    fn sign(self: T, message_hash: H) -> U;
+    fn sign(self: T, message_hash: H) -> Result<U, SignError> ;
 }
 ```
 
@@ -68,17 +68,17 @@ use core::starknet::SyscallResultTrait;
 fn test_using_curves() {
     // Secp256r1
     let key_pair = KeyPairTrait::<u256, Secp256r1Point>::generate();
-    let (r, s): (u256, u256) = key_pair.sign(msg_hash);
+    let (r, s): (u256, u256) = key_pair.sign(msg_hash).unwrap();
     let is_valid = key_pair.verify(msg_hash, (r, s));
     
     // Secp256k1
     let key_pair = KeyPairTrait::<u256, Secp256k1Point>::generate();
-    let (r, s): (u256, u256) = key_pair.sign(msg_hash);
+    let (r, s): (u256, u256) = key_pair.sign(msg_hash).unwrap();
     let is_valid = key_pair.verify(msg_hash, (r, s));
     
     // StarkCurve
     let key_pair = KeyPairTrait::<felt252, felt252>::generate();
-    let (r, s): (felt252, felt252) = key_pair.sign(msg_hash);
+    let (r, s): (felt252, felt252) = key_pair.sign(msg_hash).unwrap();
     let is_valid = key_pair.verify(msg_hash, (r, s));
 }
 ```

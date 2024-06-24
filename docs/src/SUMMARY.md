@@ -9,19 +9,27 @@
 * [Scarb](getting-started/scarb.md)
 * [Project Configuration](projects/configuration.md)
 
-# `snforge` overview
+---
+
+# `snforge` Overview
 
 * [Running Tests](testing/running-tests.md)
 * [Writing Tests](testing/testing.md)
 * [Testing Smart Contracts](testing/contracts.md)
 * [Testing Contracts' Internals](testing/testing_contract_internals.md)
-* [Fork Testing](testing/fork-testing.md)
 * [Using Cheatcodes](testing/using-cheatcodes.md)
-* [Fuzz Testing](testing/fuzz-testing.md)
+* [Testing Events](testing/testing-events.md)
 * [Test Collection](testing/test-collection.md)
+* [Contract Collection](testing/contracts-collection.md)
 * [Gas and VM Resources Estimation](testing/gas-and-resource-estimation.md)
-* [Profiling](testing/profiling.md)
 
+# `snforge` Advanced Features
+* [Fork Testing](snforge-advanced-features/fork-testing.md)
+* [Fuzz Testing](snforge-advanced-features/fuzz-testing.md)
+* [Direct Storage Access](snforge-advanced-features/storage-cheatcodes.md)
+* [Profiling](snforge-advanced-features/profiling.md)
+
+--- 
 # `sncast` Overview
 
 * [Outline](starknet/index.md)
@@ -32,10 +40,15 @@
 * [Calling Contracts](starknet/call.md)
 * [Performing Multicall](starknet/multicall.md)
 * [Cairo Deployment Scripts](starknet/script.md)
+* [Inspecting Transactions](starknet/tx-status.md)
+
+---
 
 # Foundry Development
 
 * [Environment Setup](development/environment-setup.md)
+
+--- 
 
 # Appendix
 
@@ -44,32 +57,28 @@
     * [init](appendix/snforge/init.md)
     * [clean-cache](appendix/snforge/clean-cache.md)
 * [Cheatcodes Reference](appendix/cheatcodes.md)
-    * [CheatTarget](appendix/cheatcodes/cheat_target.md)
     * [CheatSpan](appendix/cheatcodes/cheat_span.md)
+    * [caller_address](appendix/cheatcodes/caller_address.md)
+    * [block_number](appendix/cheatcodes/block_number.md)
     * [block_timestamp](appendix/cheatcodes/block_timestamp.md)
-    * [caller_address](appendix/cheatcodes/caller_address/README.md)
-        * [prank](appendix/cheatcodes/caller_address/prank.md)
-        * [start_prank](appendix/cheatcodes/caller_address/start_prank.md)
-        * [stop_prank](appendix/cheatcodes/caller_address/stop_prank.md)
-    * [sequencer_address](appendix/cheatcodes/sequencer_address/README.md)
-        * [elect](appendix/cheatcodes/sequencer_address/elect.md)
-        * [start_elect](appendix/cheatcodes/sequencer_address/start_elect.md)
-        * [stop_elect](appendix/cheatcodes/sequencer_address/stop_elect.md)
-    * [block_number](appendix/cheatcodes/block_number/README.md)
-        * [roll](appendix/cheatcodes/block_number/roll.md)
-        * [start_roll](appendix/cheatcodes/block_number/start_roll.md)
-        * [stop_roll](appendix/cheatcodes/block_number/stop_roll.md)
-    * [tx_info](appendix/cheatcodes/tx_info/README.md)
-        * [spoof](appendix/cheatcodes/tx_info/spoof.md)
-        * [start_spoof](appendix/cheatcodes/tx_info/start_spoof.md)
-        * [stop_spoof](appendix/cheatcodes/tx_info/stop_spoof.md)
-    * [mock](appendix/cheatcodes/mock/README.md)
-        * [mock_call](appendix/cheatcodes/mock/mock_call.md)
-        * [start_mock_call](appendix/cheatcodes/mock/start_mock_call.md)
-        * [stop_mock_call](appendix/cheatcodes/mock/stop_mock_call.md)
+    * [sequencer_address](appendix/cheatcodes/sequencer_address.md)
+    * [version](appendix/cheatcodes/transaction_version.md)
+    * [account_contract_address](appendix/cheatcodes/account_contract_address.md)
+    * [max_fee](appendix/cheatcodes/max_fee.md)
+    * [signature](appendix/cheatcodes/signature.md)
+    * [transaction_hash](appendix/cheatcodes/transaction_hash.md)
+    * [chain_id](appendix/cheatcodes/chain_id.md)
+    * [nonce](appendix/cheatcodes/nonce.md)
+    * [resource_bounds](appendix/cheatcodes/resource_bounds.md)
+    * [tip](appendix/cheatcodes/tip.md)
+    * [paymaster_data](appendix/cheatcodes/paymaster_data.md)
+    * [nonce_data_availability_mode](appendix/cheatcodes/nonce_data_availability_mode.md)
+    * [fee_data_availability_mode](appendix/cheatcodes/fee_data_availability_mode.md)
+    * [account_deployment_data](appendix/cheatcodes/account_deployment_data.md)
+    * [mock_call](appendix/cheatcodes/mock_call.md)
     * [get_class_hash](appendix/cheatcodes/get_class_hash.md)
     * [replace_bytecode](appendix/cheatcodes/replace_bytecode.md)
-    * [l1_handler_execute](appendix/cheatcodes/l1_handler_execute.md)
+    * [l1_handler](appendix/cheatcodes/l1_handler.md)
     * [spy_events](appendix/cheatcodes/spy_events.md)
     * [store](appendix/cheatcodes/store.md)
     * [load](appendix/cheatcodes/load.md)
@@ -78,12 +87,7 @@
     * [contract_class](appendix/snforge-library/contract_class.md)
     * [get_call_trace](appendix/snforge-library/get_call_trace.md)
     * [fs](appendix/snforge-library/fs.md)
-        * [read_txt](appendix/snforge-library/fs/read_txt.md)
-        * [parse_txt](appendix/snforge-library/fs/parse_txt.md)
-        * [read_json](appendix/snforge-library/fs/read_json.md)
-        * [parse_json](appendix/snforge-library/fs/parse_json.md)
     * [env](appendix/snforge-library/env.md)
-        * [var](appendix/snforge-library/env/var.md)
     * [signature](appendix/snforge-library/signature.md)
 * [`sncast` Commands](appendix/sncast.md)
     * [common flags](appendix/sncast/common.md)
@@ -103,9 +107,12 @@
     * [script](appendix/sncast/script/script.md)
         * [init](appendix/sncast/script/init.md)
         * [run](appendix/sncast/script/run.md)
+    * [tx-status](appendix/sncast/tx-status.md)
 * [`sncast` Library Functions References](appendix/sncast-library.md)
     * [declare](appendix/sncast-library/declare.md)
     * [deploy](appendix/sncast-library/deploy.md)
     * [invoke](appendix/sncast-library/invoke.md)
     * [call](appendix/sncast-library/call.md)
     * [get_nonce](appendix/sncast-library/get_nonce.md)
+    * [tx_status](appendix/sncast-library/tx_status.md)
+    * [errors](appendix/sncast-library/errors.md)

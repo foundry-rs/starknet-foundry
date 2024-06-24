@@ -28,13 +28,16 @@ jobs:
     env:
       MDBOOK_VERSION: 0.4.31
     steps:
-      - uses: dtolnay/rust-toolchain@dc6353516c68da0f06325f42ad880f76a5e77ec9
+      - uses: dtolnay/rust-toolchain@d8352f6b1d2e870bc5716e7a6d9b65c4cc244a1a
         with:
           toolchain: stable
       - uses: actions/checkout@v4
       - name: Install mdBook
         run: |
           cargo install --version ${MDBOOK_VERSION} mdbook
+      - name: Install mdBook Link-Check
+        run: |
+          cargo install mdbook-linkcheck
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v5
@@ -44,7 +47,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./docs/book
+          path: ./docs/book/html
   # Deployment job
   deploy:
     environment:

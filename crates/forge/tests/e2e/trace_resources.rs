@@ -1,9 +1,10 @@
 use super::common::runner::{setup_package, test_runner};
+use crate::e2e::common::get_trace_from_trace_node;
 use assert_fs::TempDir;
 use forge_runner::build_trace_data::TRACE_DIR;
 use std::{collections::HashMap, fs};
 use trace_data::{
-    CallTrace as ProfilerCallTrace,
+    CallTrace as ProfilerCallTrace, CallTraceNode as ProfilerCallTraceNode,
     DeprecatedSyscallSelector::{
         CallContract, Deploy, EmitEvent, GetBlockHash, GetExecutionInfo, Keccak, LibraryCall,
         SendMessageToL1, StorageRead, StorageWrite,
@@ -75,8 +76,10 @@ fn check_vm_resources_and_easily_unifiable_syscalls(
     call_trace: &ProfilerCallTrace,
 ) -> &ProfilerExecutionResources {
     let mut child_resources = vec![];
-    for call in &call_trace.nested_calls {
-        child_resources.push(check_vm_resources_and_easily_unifiable_syscalls(call));
+    for call_node in &call_trace.nested_calls {
+        if let trace_data::CallTraceNode::EntryPointCall(call) = call_node {
+            child_resources.push(check_vm_resources_and_easily_unifiable_syscalls(call));
+        }
     }
 
     let mut sum_child_resources = ProfilerExecutionResources::default();
@@ -146,83 +149,86 @@ fn assert_l2_l1_messages(call_trace: &ProfilerCallTrace) {
     );
 }
 
-// When sth fails in the functions below and you didn't change anything in the cairo code it is a BUG.
+// When sth fails in the functions below, and you didn't change anything in the cairo code it is a BUG.
 // If you changed the corresponding cairo code count the expected occurrences of syscalls manually first, then assert them.
 // TL;DR: DON't mindlessly change numbers to fix the tests if they ever fail.
 fn check_call(test_call_trace: &ProfilerCallTrace) {
     assert_not_easily_unifiable_syscalls(test_call_trace, 14, 8, 1);
 
-    let regular_call = &test_call_trace.nested_calls[1];
+    let regular_call = get_trace_from_trace_node(&test_call_trace.nested_calls[4]);
     assert_not_easily_unifiable_syscalls(regular_call, 2, 1, 0);
 
-    let from_proxy = &regular_call.nested_calls[0];
+    let from_proxy = get_trace_from_trace_node(&regular_call.nested_calls[1]);
     assert_not_easily_unifiable_syscalls(from_proxy, 1, 0, 0);
 
-    let with_libcall = &test_call_trace.nested_calls[2];
+    let with_libcall = get_trace_from_trace_node(&test_call_trace.nested_calls[5]);
     assert_not_easily_unifiable_syscalls(with_libcall, 2, 0, 1);
 
-    let from_proxy = &with_libcall.nested_calls[0];
+    let from_proxy = get_trace_from_trace_node(&with_libcall.nested_calls[1]);
     assert_not_easily_unifiable_syscalls(from_proxy, 1, 0, 0);
 
-    let call_two = &test_call_trace.nested_calls[3];
+    let call_two = get_trace_from_trace_node(&test_call_trace.nested_calls[6]);
     assert_not_easily_unifiable_syscalls(call_two, 3, 2, 0);
 
-    let from_proxy = &call_two.nested_calls[0];
+    let from_proxy = get_trace_from_trace_node(&call_two.nested_calls[0]);
     assert_not_easily_unifiable_syscalls(from_proxy, 1, 0, 0);
 
-    let from_proxy_dummy = &call_two.nested_calls[1];
+    let from_proxy_dummy = get_trace_from_trace_node(&call_two.nested_calls[2]);
     assert_not_easily_unifiable_syscalls(from_proxy_dummy, 1, 0, 0);
 
-    let from_proxy = &test_call_trace.nested_calls[4];
+    let from_proxy = get_trace_from_trace_node(&test_call_trace.nested_calls[7]);
     assert_not_easily_unifiable_syscalls(from_proxy, 1, 0, 0);
 }
 
 fn check_deploy(test_call_trace: &ProfilerCallTrace) {
     assert_not_easily_unifiable_syscalls(test_call_trace, 14, 4, 0);
 
-    for deploy_proxy in &test_call_trace.nested_calls {
-        assert_not_easily_unifiable_syscalls(deploy_proxy, 2, 1, 0);
+    for deploy_proxy_node in &test_call_trace.nested_calls {
+        if let ProfilerCallTraceNode::EntryPointCall(deploy_proxy) = deploy_proxy_node {
+            assert_not_easily_unifiable_syscalls(deploy_proxy, 2, 1, 0);
 
-        let from_proxy = &deploy_proxy.nested_calls[0];
-        assert_not_easily_unifiable_syscalls(from_proxy, 1, 0, 0);
+            let from_proxy = get_trace_from_trace_node(&deploy_proxy.nested_calls[1]);
+            assert_not_easily_unifiable_syscalls(from_proxy, 1, 0, 0);
+        }
     }
 }
 
 fn check_l1_handler(test_call_trace: &ProfilerCallTrace) {
     assert_not_easily_unifiable_syscalls(test_call_trace, 8, 3, 0);
 
-    let handle_l1 = &test_call_trace.nested_calls[1];
+    let handle_l1 = get_trace_from_trace_node(&test_call_trace.nested_calls[3]);
     assert_not_easily_unifiable_syscalls(handle_l1, 3, 2, 0);
 
-    let regular_call = &handle_l1.nested_calls[0];
+    let regular_call = get_trace_from_trace_node(&handle_l1.nested_calls[1]);
     assert_not_easily_unifiable_syscalls(regular_call, 2, 1, 0);
 
-    let from_proxy = &regular_call.nested_calls[0];
+    let from_proxy = get_trace_from_trace_node(&regular_call.nested_calls[1]);
     assert_not_easily_unifiable_syscalls(from_proxy, 1, 0, 0);
 }
 
 fn check_libcall(test_call_trace: &ProfilerCallTrace) {
     assert_not_easily_unifiable_syscalls(test_call_trace, 11, 3, 5);
 
-    let regular_call = &test_call_trace.nested_calls[0];
+    let regular_call = get_trace_from_trace_node(&test_call_trace.nested_calls[3]);
+
     assert_not_easily_unifiable_syscalls(regular_call, 2, 1, 0);
 
-    let from_proxy = &regular_call.nested_calls[0];
+    let from_proxy = get_trace_from_trace_node(&regular_call.nested_calls[1]);
     assert_not_easily_unifiable_syscalls(from_proxy, 1, 0, 0);
 
-    let with_libcall = &test_call_trace.nested_calls[1];
+    let with_libcall = get_trace_from_trace_node(&test_call_trace.nested_calls[4]);
     assert_not_easily_unifiable_syscalls(with_libcall, 2, 0, 1);
 
-    let call_two = &test_call_trace.nested_calls[2];
+    let call_two = get_trace_from_trace_node(&test_call_trace.nested_calls[5]);
     assert_not_easily_unifiable_syscalls(call_two, 3, 2, 0);
 
-    let from_proxy = &call_two.nested_calls[0];
+    let from_proxy = get_trace_from_trace_node(&call_two.nested_calls[0]);
     assert_not_easily_unifiable_syscalls(from_proxy, 1, 0, 0);
 
-    let from_proxy_dummy = &call_two.nested_calls[1];
+    let from_proxy_dummy = get_trace_from_trace_node(&call_two.nested_calls[2]);
     assert_not_easily_unifiable_syscalls(from_proxy_dummy, 1, 0, 0);
 
-    let from_proxy = &test_call_trace.nested_calls[3];
+    let from_proxy = get_trace_from_trace_node(&test_call_trace.nested_calls[6]);
     assert_not_easily_unifiable_syscalls(from_proxy, 1, 0, 0);
 }
 

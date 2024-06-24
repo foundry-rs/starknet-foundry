@@ -53,24 +53,6 @@ asdf install starknet-foundry latest
 
 See [asdf guide](https://asdf-vm.com/guide/getting-started.html) for more details.
 
-### Universal-Sierra-Compiler update
-
-If you would like to bump the USC manually (e.g. when the new Sierra version is released) you can do it by running:
-
-```shell
-curl -L https://raw.githubusercontent.com/software-mansion/universal-sierra-compiler/master/scripts/install.sh | sh
-```
-
-## How to build Starknet Foundry from source code
-
-If you are unable to install Starknet Foundry using the instructions above, you can try building it from
-the [source code](https://github.com/foundry-rs/starknet-foundry) as follows:
-
-1. [Set up a development environment.](../development/environment-setup.md)
-2. Run `cd starknet-foundry && cargo build --release`. This will create a `target` directory.
-3. Move the `target` directory to the desired location (e.g. `~/.starknet-foundry`).
-4. Add `DESIRED_LOCATION/target/release/` to your `PATH`.
-
 ### Installation on Windows
 
 As for now, Starknet Foundry on Windows needs manual installation, but necessary steps are kept to minimum:
@@ -92,3 +74,21 @@ As for now, Starknet Foundry on Windows needs manual installation, but necessary
 snforge --version
 sncast --version
 ```
+
+### Universal-Sierra-Compiler update
+
+If you would like to bump the USC manually (e.g. when the new Sierra version is released) you can do it by running:
+
+```shell
+curl -L https://raw.githubusercontent.com/software-mansion/universal-sierra-compiler/master/scripts/install.sh | sh
+```
+
+## How to build Starknet Foundry from source code
+
+If you are unable to install Starknet Foundry using the instructions above, you can try building it from
+the [source code](https://github.com/foundry-rs/starknet-foundry) as follows:
+
+1. [Set up a development environment.](../development/environment-setup.md)
+2. Run `cd starknet-foundry && cargo build --release`. This will create a `target` directory.
+3. Move the `target` directory to the desired location (e.g. `~/.starknet-foundry`).
+4. Add `DESIRED_LOCATION/target/release/` to your `PATH`.

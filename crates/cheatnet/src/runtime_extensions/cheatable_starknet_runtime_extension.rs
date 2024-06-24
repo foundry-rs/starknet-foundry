@@ -52,7 +52,7 @@ impl<'a> ExtensionLogic for CheatableStarknetRuntimeExtension<'a> {
                     cheated_syscalls::get_execution_info_syscall,
                     SyscallSelector::GetExecutionInfo,
                 )
-                .map(|()| SyscallHandlingResult::Handled(())),
+                .map(|()| SyscallHandlingResult::Handled),
 
             SyscallSelector::CallContract => self
                 .execute_syscall(
@@ -61,7 +61,7 @@ impl<'a> ExtensionLogic for CheatableStarknetRuntimeExtension<'a> {
                     cheated_syscalls::call_contract_syscall,
                     SyscallSelector::CallContract,
                 )
-                .map(|()| SyscallHandlingResult::Handled(())),
+                .map(|()| SyscallHandlingResult::Handled),
             SyscallSelector::LibraryCall => self
                 .execute_syscall(
                     syscall_handler,
@@ -69,7 +69,7 @@ impl<'a> ExtensionLogic for CheatableStarknetRuntimeExtension<'a> {
                     cheated_syscalls::library_call_syscall,
                     SyscallSelector::LibraryCall,
                 )
-                .map(|()| SyscallHandlingResult::Handled(())),
+                .map(|()| SyscallHandlingResult::Handled),
             SyscallSelector::Deploy => self
                 .execute_syscall(
                     syscall_handler,
@@ -77,7 +77,7 @@ impl<'a> ExtensionLogic for CheatableStarknetRuntimeExtension<'a> {
                     cheated_syscalls::deploy_syscall,
                     SyscallSelector::Deploy,
                 )
-                .map(|()| SyscallHandlingResult::Handled(())),
+                .map(|()| SyscallHandlingResult::Handled),
             _ => Ok(SyscallHandlingResult::Forwarded),
         }
     }

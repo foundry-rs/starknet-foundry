@@ -6,7 +6,5 @@ version = "0.1.0"
 starknet.workspace = true
 
 [[target.starknet-contract]]
-sierra = true
-casm = true
 
 [lib]

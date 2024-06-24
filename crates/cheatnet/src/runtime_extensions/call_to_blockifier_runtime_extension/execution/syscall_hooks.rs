@@ -37,14 +37,7 @@ pub fn emit_event_hook(
 ) {
     let contract_address = syscall_handler.contract_address();
     let last_event = syscall_handler.last_event();
-    let is_spied_on = cheatnet_state
-        .spies
-        .iter()
-        .any(|spy_on| spy_on.does_spy(contract_address));
-
-    if is_spied_on {
-        cheatnet_state
-            .detected_events
-            .push(Event::from_ordered_event(last_event, contract_address));
-    }
+    cheatnet_state
+        .detected_events
+        .push(Event::from_ordered_event(last_event, contract_address));
 }

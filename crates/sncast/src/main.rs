@@ -2,7 +2,7 @@ use crate::starknet_commands::account::Account;
 use crate::starknet_commands::show_config::ShowConfig;
 use crate::starknet_commands::{
     account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,
-    script::Script,
+    script::Script, tx_status::TxStatus,
 };
 use anyhow::{Context, Result};
 use configuration::load_global_config;
@@ -14,7 +14,7 @@ use shared::verify_and_warn_if_incompatible_rpc_version;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
 use sncast::helpers::scarb_utils::{
-    assert_manifest_path_exists, build_and_load_artifacts, get_package_metadata,
+    assert_manifest_path_exists, build, build_and_load_artifacts, get_package_metadata,
     get_scarb_metadata_with_deps, BuildConfig,
 };
 use sncast::response::errors::handle_starknet_command_error;
@@ -30,8 +30,36 @@ use tokio::runtime::Runtime;
 mod starknet_commands;
 
 #[derive(Parser)]
-#[command(version)]
-#[command(about = "sncast - a Starknet Foundry CLI", long_about = None)]
+#[command(
+    version,
+    help_template = "\
+{name} {version}
+{author-with-newline}{about-with-newline}
+Use -h for short descriptions and --help for more details.
+
+{before-help}{usage-heading} {usage}
+
+{all-args}{after-help}
+",
+    after_help = "Read the docs: https://foundry-rs.github.io/starknet-foundry/",
+    after_long_help = "\
+Read the docs:
+- Starknet Foundry Book: https://foundry-rs.github.io/starknet-foundry/
+- Cairo Book: https://book.cairo-lang.org/
+- Starknet Book: https://book.starknet.io/
+- Starknet Documentation: https://docs.starknet.io/
+- Scarb Documentation: https://docs.swmansion.com/scarb/docs.html
+
+Join the community:
+- Follow core developers on X: https://twitter.com/swmansionxyz
+- Get support via Telegram: https://t.me/starknet_foundry_support
+- Or discord: https://discord.gg/KZWaFtPZJf
+- Or join our general chat (Telegram): https://t.me/starknet_foundry
+
+Report bugs: https://github.com/foundry-rs/starknet-foundry/issues/new/choose\
+"
+)]
+#[command(about = "sncast - All-in-one tool for interacting with Starknet smart contracts", long_about = None)]
 #[clap(name = "sncast")]
 #[allow(clippy::struct_excessive_bools)]
 struct Cli {
@@ -110,6 +138,9 @@ enum Commands {
 
     /// Run or initialize a deployment script
     Script(Script),
+
+    /// Get the status of a transaction
+    TxStatus(TxStatus),
 }
 
 fn main() -> Result<()> {
@@ -322,6 +353,7 @@ async fn run_async_command(
                     config.keystore,
                     &provider,
                     chain_id,
+                    create.account_type,
                     create.salt,
                     create.add_profile,
                     create.class_hash,
@@ -339,25 +371,14 @@ async fn run_async_command(
             account::Commands::Deploy(deploy) => {
                 let chain_id = get_chain_id(&provider).await?;
                 let keystore_path = config.keystore.clone();
-                let account_path = Some(Utf8PathBuf::from(config.account.clone()))
-                    .filter(|p| *p != String::default());
-                let account = if config.keystore.is_none() {
-                    deploy
-                        .name
-                        .context("Required argument `--name` not provided")?
-                } else {
-                    config.account
-                };
                 let mut result = starknet_commands::account::deploy::deploy(
                     &provider,
                     config.accounts_file,
-                    account,
+                    deploy,
                     chain_id,
-                    deploy.max_fee,
                     wait_config,
-                    deploy.class_hash,
+                    &config.account,
                     keystore_path,
-                    account_path,
                 )
                 .await;
 
@@ -397,6 +418,14 @@ async fn run_async_command(
             print_command_result("show-config", &mut result, numbers_format, &output_format)?;
             Ok(())
         }
+        Commands::TxStatus(tx_status) => {
+            let mut result =
+                starknet_commands::tx_status::tx_status(&provider, tx_status.transaction_hash)
+                    .await
+                    .context("Failed to get transaction status");
+            print_command_result("tx-status", &mut result, numbers_format, &output_format)?;
+            Ok(())
+        }
         Commands::Script(_) => unreachable!(),
     }
 }
@@ -434,6 +463,16 @@ fn run_script_command(
                     scarb_toml_path: manifest_path.clone(),
                     json: cli.json,
                     profile: cli.profile.clone().unwrap_or("dev".to_string()),
+                },
+            )
+            .expect("Failed to build artifacts");
+            // TODO(#2042): remove duplicated compilation
+            build(
+                &package_metadata,
+                &BuildConfig {
+                    scarb_toml_path: manifest_path.clone(),
+                    json: cli.json,
+                    profile: "dev".to_string(),
                 },
             )
             .expect("Failed to build script");

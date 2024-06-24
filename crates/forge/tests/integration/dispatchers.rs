@@ -64,7 +64,7 @@ fn advanced_types() {
         use traits::TryInto;
         use starknet::ContractAddress;
         use starknet::Felt252TryIntoContractAddress;
-        use snforge_std::{ declare, ContractClassTrait, start_prank, CheatTarget };
+        use snforge_std::{ declare, ContractClassTrait, start_cheat_caller_address };
 
         #[starknet::interface]
         trait IERC20<TContractState> {
@@ -104,7 +104,7 @@ fn advanced_types() {
             let balance = dispatcher.balance_of(user_address);
             assert(balance == 1111_u256, 'balance == 1111');
 
-            start_prank(CheatTarget::One(contract_address), user_address);
+            start_cheat_caller_address(contract_address, user_address);
             dispatcher.transfer(other_user_address, 1000_u256);
         
             let balance = dispatcher.balance_of(user_address);
@@ -138,6 +138,7 @@ fn handling_errors() {
         use starknet::ContractAddress;
         use starknet::Felt252TryIntoContractAddress;
         use snforge_std::{ declare, ContractClassTrait };
+        use starknet::contract_address_const;
 
         #[starknet::interface]
         trait IHelloStarknet<TContractState> {
@@ -149,7 +150,7 @@ fn handling_errors() {
 
         #[test]
         #[feature("safe_dispatcher")]
-        fn handling_errors() {
+        fn handling_execution_errors() {
             let contract = declare("HelloStarknet").unwrap();
             let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
             let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
@@ -180,6 +181,21 @@ fn handling_errors() {
                 }
             };
         }
+
+        #[test]
+        #[feature("safe_dispatcher")]
+        fn handling_missing_contract_error() {
+            let safe_dispatcher = IHelloStarknetSafeDispatcher { 
+                contract_address: contract_address_const::<371937219379012>() 
+            };
+        
+            match safe_dispatcher.do_a_panic() {
+                Result::Ok(_) => panic_with_felt252('shouldve panicked'),
+                Result::Err(_) => {
+                    // Would be nice to assert the error here once it is possible in cairo
+                }
+            };
+        }
     "#
         ),
         Contract::from_code_path(
@@ -201,11 +217,13 @@ fn handling_bytearray_based_errors() {
             r#"
         use starknet::ContractAddress;
         use snforge_std::{ declare, ContractClassTrait };
-        use snforge_std::errors::{ SyscallResultStringErrorTrait, PanicDataOrString };
+        use snforge_std::byte_array::try_deserialize_bytearray_error;
+        use core::byte_array::BYTE_ARRAY_MAGIC;
 
         #[starknet::interface]
         trait IHelloStarknet<TContractState> {
             fn do_a_panic_with_bytearray(self: @TContractState);
+            fn do_a_panic_with(self: @TContractState, args: Array<felt252>);
         }
 
         #[test]
@@ -215,20 +233,20 @@ fn handling_bytearray_based_errors() {
             let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
             let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
         
-            match safe_dispatcher.do_a_panic_with_bytearray().map_error_to_string() {
-                Result::Ok(_) => panic_with_felt252('shouldve panicked'),
-                Result::Err(x) => {
-                        match x {
-                            PanicDataOrString::PanicData(_) => panic_with_felt252('wrong format'),
-                            PanicDataOrString::String(str) => {
-                                assert(
-                                    str == "This is a very long\n and multiline message that is certain to fill the buffer", 
-                                    'wrong string received'
-                                );
-                        }
-                    }
-                }
-            };
+            let panic_data = safe_dispatcher.do_a_panic_with_bytearray().unwrap_err();
+            let str_err = try_deserialize_bytearray_error(panic_data.span()).expect('wrong format');
+            assert(
+                str_err == "This is a very long\n and multiline message that is certain to fill the buffer", 
+                'wrong string received'
+            );
+            
+           // Not a bytearray
+           let panic_data = safe_dispatcher.do_a_panic_with(array![123, 321]).unwrap_err();
+           try_deserialize_bytearray_error(panic_data.span()).expect_err('Parsing unexpectedy succeeded');
+           
+           // Malformed bytearray
+           let panic_data = safe_dispatcher.do_a_panic_with(array![BYTE_ARRAY_MAGIC, 321]).unwrap_err();
+           try_deserialize_bytearray_error(panic_data.span()).expect_err('Parsing unexpectedy succeeded');   
         }
     "#
         ),

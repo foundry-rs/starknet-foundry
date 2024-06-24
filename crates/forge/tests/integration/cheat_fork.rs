@@ -1,50 +1,49 @@
 use indoc::formatdoc;
+use shared::test_utils::node_url::node_rpc_url;
 use test_utils::runner::assert_passed;
 use test_utils::running_tests::run_test_case;
 use test_utils::test_case;
 
-static CHEATNET_RPC_URL: &str = "http://188.34.188.184:7070/rpc/v0_7";
-
 #[test]
-fn prank_cairo0_contract() {
+fn cheat_caller_address_cairo0_contract() {
     let test = test_case!(formatdoc!(
         r#"
             use starknet::{{class_hash::Felt252TryIntoClassHash, SyscallResultTrait}};
-            use snforge_std::{{start_prank, stop_prank, test_address, CheatTarget}};
+            use snforge_std::{{start_cheat_caller_address, stop_cheat_caller_address, test_address}};
 
             const CAIRO0_CLASS_HASH: felt252 = 0x029c0caff0aef71bd089d58b25bcc5c23458d080b2d1b75e423de86f95176818;
             const LIB_CALL_SELECTOR: felt252 = 219972792400094465318120350250971259539342451068659710037080072200128459645;
 
             #[test]
             #[fork(url: "{}", block_id: BlockId::Number(54060))]
-            fn prank_cairo0_contract() {{
+            fn cheat_caller_address_cairo0_contract() {{
                 let caller = starknet::library_call_syscall(
                     CAIRO0_CLASS_HASH.try_into().unwrap(),
                     LIB_CALL_SELECTOR,
                     array![].span(),
                 ).unwrap_syscall()[0];
 
-                start_prank(CheatTarget::One(test_address()), 123.try_into().unwrap());
+                start_cheat_caller_address(test_address(), 123.try_into().unwrap());
 
-                let pranked_caller = starknet::library_call_syscall(
+                let cheated_caller_address = starknet::library_call_syscall(
                     CAIRO0_CLASS_HASH.try_into().unwrap(),
                     LIB_CALL_SELECTOR,
                     array![].span(),
                 ).unwrap_syscall()[0];
 
-                stop_prank(CheatTarget::One(test_address()));
+                stop_cheat_caller_address(test_address());
 
-                let unpranked_caller = starknet::library_call_syscall(
+                let uncheated_caller_address = starknet::library_call_syscall(
                     CAIRO0_CLASS_HASH.try_into().unwrap(),
                     LIB_CALL_SELECTOR,
                     array![].span(),
                 ).unwrap_syscall()[0];
 
-                assert(*pranked_caller == 123, 'start_prank does not work');
-                assert(unpranked_caller == caller, 'stop_prank does not work');
+                assert(*cheated_caller_address == 123, 'does not work');
+                assert(uncheated_caller_address == caller, 'does not work');
             }}
         "#,
-        CHEATNET_RPC_URL,
+        node_rpc_url(),
     )
     .as_str());
 
@@ -54,45 +53,45 @@ fn prank_cairo0_contract() {
 }
 
 #[test]
-fn roll_cairo0_contract() {
+fn cheat_block_number_cairo0_contract() {
     let test = test_case!(formatdoc!(
         r#"
             use starknet::{{class_hash::Felt252TryIntoClassHash, SyscallResultTrait}};
-            use snforge_std::{{start_roll, stop_roll, test_address, CheatTarget}};
+            use snforge_std::{{start_cheat_block_number, stop_cheat_block_number, test_address}};
 
             const CAIRO0_CLASS_HASH: felt252 = 0x029c0caff0aef71bd089d58b25bcc5c23458d080b2d1b75e423de86f95176818;
             const LIB_CALL_SELECTOR: felt252 = 1043360521069001059812816533306435120284814797591254795559962622467917544215;
 
             #[test]
             #[fork(url: "{}", block_id: BlockId::Number(54060))]
-            fn roll_cairo0_contract() {{
+            fn cheat_block_number_cairo0_contract() {{
                 let block_number = starknet::library_call_syscall(
                     CAIRO0_CLASS_HASH.try_into().unwrap(),
                     LIB_CALL_SELECTOR,
                     array![].span(),
                 ).unwrap_syscall()[0];
 
-                start_roll(CheatTarget::One(test_address()), 123);
+                start_cheat_block_number(test_address(), 123);
 
-                let rolled_block_number = starknet::library_call_syscall(
+                let cheated_block_number = starknet::library_call_syscall(
                     CAIRO0_CLASS_HASH.try_into().unwrap(),
                     LIB_CALL_SELECTOR,
                     array![].span(),
                 ).unwrap_syscall()[0];
 
-                stop_roll(CheatTarget::One(test_address()));
+                stop_cheat_block_number(test_address());
 
-                let unrolled_block_number = starknet::library_call_syscall(
+                let uncheated_block_number = starknet::library_call_syscall(
                     CAIRO0_CLASS_HASH.try_into().unwrap(),
                     LIB_CALL_SELECTOR,
                     array![].span(),
                 ).unwrap_syscall()[0];
 
-                assert(*rolled_block_number == 123, 'start_roll does not work');
-                assert(unrolled_block_number == block_number, 'stop_roll does not work');
+                assert(*cheated_block_number == 123, 'does not work');
+                assert(uncheated_block_number == block_number, 'does not work');
             }}
         "#,
-        CHEATNET_RPC_URL,
+        node_rpc_url(),
     )
     .as_str());
 
@@ -102,47 +101,47 @@ fn roll_cairo0_contract() {
 }
 
 #[test]
-fn warp_cairo0_contract() {
+fn cheat_block_timestamp_cairo0_contract() {
     let test = test_case!(formatdoc!(
         r#"
             use starknet::{{class_hash::Felt252TryIntoClassHash, SyscallResultTrait}};
-            use snforge_std::{{start_warp, stop_warp, test_address, CheatTarget}};
+            use snforge_std::{{start_cheat_block_timestamp, stop_cheat_block_timestamp, test_address}};
 
             const CAIRO0_CLASS_HASH: felt252 = 0x029c0caff0aef71bd089d58b25bcc5c23458d080b2d1b75e423de86f95176818;
             const LIB_CALL_SELECTOR: felt252 = 1104673410415683966349700971986586038248888383055081852378797598061780438342;
 
             #[test]
             #[fork(url: "{}", block_id: BlockId::Number(54060))]
-            fn warp_cairo0_contract() {{
+            fn cheat_block_timestamp_cairo0_contract() {{
                 let block_timestamp = starknet::library_call_syscall(
                     CAIRO0_CLASS_HASH.try_into().unwrap(),
                     LIB_CALL_SELECTOR,
                     array![].span(),
                 ).unwrap_syscall()[0];
 
-                start_warp(
-                    CheatTarget::One(test_address()), 123
+                start_cheat_block_timestamp(
+                    test_address(), 123
                 );
 
-                let warped_block_timestamp = starknet::library_call_syscall(
+                let cheated_block_timestamp = starknet::library_call_syscall(
                     CAIRO0_CLASS_HASH.try_into().unwrap(),
                     LIB_CALL_SELECTOR,
                     array![].span(),
                 ).unwrap_syscall()[0];
 
-                stop_warp(CheatTarget::One(test_address()));
+                stop_cheat_block_timestamp(test_address());
 
-                let unwarped_block_timestamp = starknet::library_call_syscall(
+                let uncheated_block_timestamp = starknet::library_call_syscall(
                     CAIRO0_CLASS_HASH.try_into().unwrap(),
                     LIB_CALL_SELECTOR,
                     array![].span(),
                 ).unwrap_syscall()[0];
 
-                assert(*warped_block_timestamp == 123, 'start_warp does not work');
-                assert(unwarped_block_timestamp == block_timestamp, 'stop_warp does not work');
+                assert(*cheated_block_timestamp == 123, 'does not work');
+                assert(uncheated_block_timestamp == block_timestamp, 'does not work');
             }}
         "#,
-        CHEATNET_RPC_URL,
+        node_rpc_url(),
     )
     .as_str());
 
@@ -183,7 +182,7 @@ fn mock_call_cairo0_contract() {
                 assert(eth_dispatcher.name() == 'Ether', 'invalid name after mock');
             }}
         "#,
-        CHEATNET_RPC_URL,
+        node_rpc_url(),
     )
     .as_str());
 
@@ -228,7 +227,7 @@ fn store_load_cairo0_contract() {
                 assert(name == array!['NotEther'], 'invalid load2 name');
             }}
         "#,
-        CHEATNET_RPC_URL,
+        node_rpc_url(),
     )
     .as_str());
 

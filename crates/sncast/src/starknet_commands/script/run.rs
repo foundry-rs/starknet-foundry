@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::fs;
 
-use crate::starknet_commands::{call, declare, deploy, invoke};
+use crate::starknet_commands::{call, declare, deploy, invoke, tx_status};
 use crate::{get_account, get_nonce, WaitForTx};
 use anyhow::{anyhow, Context, Result};
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
@@ -11,8 +11,7 @@ use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::state::cached_state::{
     CachedState, GlobalContractCache, GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST,
 };
-use cairo_felt::Felt252;
-use cairo_lang_casm::hints::Hint;
+use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{build_hints_dict, RunResultValue, SierraCasmRunner};
 use cairo_lang_sierra::program::VersionedProgram;
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
@@ -23,12 +22,11 @@ use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use camino::Utf8PathBuf;
 use clap::Args;
-use conversions::felt252::SerializeAsFelt252Vec;
-use conversions::{FromConv, IntoConv};
+use conversions::byte_array::ByteArray;
+use conversions::serde::deserialize::BufferReader;
 use itertools::chain;
 use runtime::starknet::context::{build_context, SerializableBlockInfo};
 use runtime::starknet::state::DictStateReader;
-use runtime::utils::BufferReader;
 use runtime::{
     CheatcodeHandlingResult, EnhancedHintError, ExtendedRuntime, ExtensionLogic, StarknetRuntime,
     SyscallHandlingResult,
@@ -44,9 +42,9 @@ use sncast::response::structs::ScriptRunResponse;
 use sncast::state::hashing::{
     generate_declare_tx_id, generate_deploy_tx_id, generate_invoke_tx_id,
 };
-use sncast::state::state_file::{serialize_as_script_function_result, StateManager};
+use sncast::state::state_file::StateManager;
 use starknet::accounts::{Account, SingleOwnerAccount};
-use starknet::core::types::{BlockId, BlockTag::Pending, FieldElement};
+use starknet::core::types::{BlockId, BlockTag::Pending};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
@@ -70,7 +68,6 @@ pub struct Run {
 }
 
 pub struct CastScriptExtension<'a> {
-    pub hints: &'a HashMap<String, Hint>,
     pub provider: &'a JsonRpcClient<HttpTransport>,
     pub account: Option<&'a SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, LocalWallet>>,
     pub tokio_runtime: Runtime,
@@ -99,13 +96,9 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
     ) -> Result<CheatcodeHandlingResult, EnhancedHintError> {
         let res = match selector {
             "call" => {
-                let contract_address = input_reader.read_felt()?.into_();
-                let function_selector = input_reader.read_felt()?.into_();
-                let calldata = input_reader.read_vec()?;
-                let calldata_felts: Vec<FieldElement> = calldata
-                    .iter()
-                    .map(|el| FieldElement::from_(el.clone()))
-                    .collect();
+                let contract_address = input_reader.read()?;
+                let function_selector = input_reader.read()?;
+                let calldata_felts = input_reader.read()?;
 
                 let call_result = self.tokio_runtime.block_on(call::call(
                     contract_address,
@@ -114,27 +107,19 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     self.provider,
                     &BlockId::Tag(Pending),
                 ));
-                Ok(CheatcodeHandlingResult::Handled(
-                    call_result.serialize_as_felt252_vec(),
-                ))
+                Ok(CheatcodeHandlingResult::from_serializable(call_result))
             }
             "declare" => {
-                let contract_name = input_reader.read_string()?;
-                let max_fee = input_reader
-                    .read_option_felt()?
-                    .map(conversions::IntoConv::into_);
-                let nonce = input_reader
-                    .read_option_felt()?
-                    .map(conversions::IntoConv::into_);
+                let contract_name: String = input_reader.read::<ByteArray>()?.into();
+                let max_fee = input_reader.read()?;
+                let nonce = input_reader.read()?;
 
                 let declare_tx_id = generate_declare_tx_id(contract_name.as_str());
 
                 if let Some(success_output) =
                     self.state.get_output_if_success(declare_tx_id.as_str())
                 {
-                    return Ok(CheatcodeHandlingResult::Handled(
-                        serialize_as_script_function_result(success_output),
-                    ));
+                    return Ok(CheatcodeHandlingResult::from_serializable(success_output));
                 }
 
                 let declare_result = self.tokio_runtime.block_on(declare::declare(
@@ -154,28 +139,16 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     selector,
                     &declare_result,
                 )?;
-                Ok(CheatcodeHandlingResult::Handled(
-                    declare_result.serialize_as_felt252_vec(),
-                ))
+                Ok(CheatcodeHandlingResult::from_serializable(declare_result))
             }
             "deploy" => {
-                let class_hash = input_reader.read_felt()?.into_();
-                let constructor_calldata: Vec<FieldElement> = input_reader
-                    .read_vec()?
-                    .iter()
-                    .map(|el| FieldElement::from_(el.clone()))
-                    .collect();
+                let class_hash = input_reader.read()?;
+                let constructor_calldata: Vec<_> = input_reader.read()?;
 
-                let salt = input_reader
-                    .read_option_felt()?
-                    .map(conversions::IntoConv::into_);
-                let unique = input_reader.read_bool()?;
-                let max_fee = input_reader
-                    .read_option_felt()?
-                    .map(conversions::IntoConv::into_);
-                let nonce = input_reader
-                    .read_option_felt()?
-                    .map(conversions::IntoConv::into_);
+                let salt = input_reader.read()?;
+                let unique = input_reader.read()?;
+                let max_fee = input_reader.read()?;
+                let nonce = input_reader.read()?;
 
                 let deploy_tx_id =
                     generate_deploy_tx_id(class_hash, &constructor_calldata, salt, unique);
@@ -183,9 +156,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 if let Some(success_output) =
                     self.state.get_output_if_success(deploy_tx_id.as_str())
                 {
-                    return Ok(CheatcodeHandlingResult::Handled(
-                        serialize_as_script_function_result(success_output),
-                    ));
+                    return Ok(CheatcodeHandlingResult::from_serializable(success_output));
                 }
 
                 let deploy_result = self.tokio_runtime.block_on(deploy::deploy(
@@ -208,24 +179,14 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     &deploy_result,
                 )?;
 
-                Ok(CheatcodeHandlingResult::Handled(
-                    deploy_result.serialize_as_felt252_vec(),
-                ))
+                Ok(CheatcodeHandlingResult::from_serializable(deploy_result))
             }
             "invoke" => {
-                let contract_address = input_reader.read_felt()?.into_();
-                let function_selector = input_reader.read_felt()?.into_();
-                let calldata: Vec<FieldElement> = input_reader
-                    .read_vec()?
-                    .iter()
-                    .map(|el| FieldElement::from_(el.clone()))
-                    .collect();
-                let max_fee = input_reader
-                    .read_option_felt()?
-                    .map(conversions::IntoConv::into_);
-                let nonce = input_reader
-                    .read_option_felt()?
-                    .map(conversions::IntoConv::into_);
+                let contract_address = input_reader.read()?;
+                let function_selector = input_reader.read()?;
+                let calldata: Vec<_> = input_reader.read()?;
+                let max_fee = input_reader.read()?;
+                let nonce = input_reader.read()?;
 
                 let invoke_tx_id =
                     generate_invoke_tx_id(contract_address, function_selector, &calldata);
@@ -233,9 +194,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 if let Some(success_output) =
                     self.state.get_output_if_success(invoke_tx_id.as_str())
                 {
-                    return Ok(CheatcodeHandlingResult::Handled(
-                        serialize_as_script_function_result(success_output),
-                    ));
+                    return Ok(CheatcodeHandlingResult::from_serializable(success_output));
                 }
 
                 let invoke_result = self.tokio_runtime.block_on(invoke::invoke(
@@ -257,13 +216,10 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     &invoke_result,
                 )?;
 
-                Ok(CheatcodeHandlingResult::Handled(
-                    invoke_result.serialize_as_felt252_vec(),
-                ))
+                Ok(CheatcodeHandlingResult::from_serializable(invoke_result))
             }
             "get_nonce" => {
-                let block_id = input_reader
-                    .read_short_string()?
+                let block_id = as_cairo_short_string(&input_reader.read()?)
                     .expect("Failed to convert entry point name to short string");
 
                 let nonce = self.tokio_runtime.block_on(get_nonce(
@@ -272,8 +228,16 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     self.account()?.address(),
                 ))?;
 
-                let res: Vec<Felt252> = vec![Felt252::from_(nonce)];
-                Ok(CheatcodeHandlingResult::Handled(res))
+                Ok(CheatcodeHandlingResult::from_serializable(nonce))
+            }
+            "tx_status" => {
+                let transaction_hash = input_reader.read()?;
+
+                let tx_status_result = self
+                    .tokio_runtime
+                    .block_on(tx_status::tx_status(self.provider, transaction_hash));
+
+                Ok(CheatcodeHandlingResult::from_serializable(tx_status_result))
             }
             _ => Ok(CheatcodeHandlingResult::Forwarded),
         };
@@ -326,7 +290,8 @@ pub fn run(
     .with_context(|| "Failed to set up runner")?;
 
     let name_suffix = module_name.to_string() + "::main";
-    let func = runner.find_function(name_suffix.as_str())?;
+    let func = runner.find_function(name_suffix.as_str())
+        .context("Failed to find main function in script - please make sure `sierra-replace-ids` is not set to `false` for `dev` profile in script's Scarb.toml")?;
 
     let (entry_code, builtins) = runner.create_entry_code(func, &Vec::new(), usize::MAX)?;
     let footer = SierraCasmRunner::create_code_footer();
@@ -378,7 +343,6 @@ pub fn run(
     let state = StateManager::from(state_file_path)?;
 
     let cast_extension = CastScriptExtension {
-        hints: &string_to_hint,
         provider,
         tokio_runtime,
         config,
@@ -454,9 +418,8 @@ fn inject_lib_artifact(
         .target_dir
         .clone()
         .unwrap_or_else(|| metadata.workspace.root.join("target"));
-    let sierra_path = &target_dir
-        .join(&metadata.current_profile)
-        .join(sierra_filename);
+    // TODO(#2042)
+    let sierra_path = &target_dir.join("dev").join(sierra_filename);
 
     let lib_artifacts = ScriptStarknetContractArtifacts {
         sierra: fs::read_to_string(sierra_path)?,

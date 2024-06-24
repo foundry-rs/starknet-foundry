@@ -26,7 +26,7 @@ fn call_contract_error() {
         &[Felt252::from(420)],
     );
 
-    assert_error(output, "0x496e70757420746f6f206c6f6e6720666f7220617267756d656e7473 ('Input too long for arguments')");
+    assert_error(output, "\n    0x496e70757420746f6f206c6f6e6720666f7220617267756d656e7473 ('Input too long for arguments')\n");
 }
 
 #[test]
@@ -91,10 +91,10 @@ fn call_proxied_contract_bytearray_panic() {
         &[
             Felt252::from_str_radix(BYTE_ARRAY_MAGIC, 16).unwrap(),
             Felt252::from(2),
-            Felt252::from_short_string("This is a very long\n and multil").unwrap(),
-            Felt252::from_short_string("ine string, that will for sure ").unwrap(),
-            Felt252::from_short_string("saturate the pending_word").unwrap(),
-            Felt252::from(25),
+            Felt252::from_short_string("This is a very long\n and multi ").unwrap(),
+            Felt252::from_short_string("line string, that will for sure").unwrap(),
+            Felt252::from_short_string(" saturate the pending_word").unwrap(),
+            Felt252::from(26),
         ],
     );
 }

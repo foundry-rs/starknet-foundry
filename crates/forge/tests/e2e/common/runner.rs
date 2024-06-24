@@ -3,12 +3,15 @@ use assert_fs::TempDir;
 use camino::Utf8PathBuf;
 use indoc::formatdoc;
 use shared::command::CommandExt;
+use shared::test_utils::node_url::node_rpc_url;
 use snapbox::cmd::{cargo_bin, Command as SnapboxCommand};
+use std::path::Path;
 use std::process::Command;
 use std::str::FromStr;
 use std::{env, fs};
 use test_utils::tempdir_with_tool_versions;
 use toml_edit::{value, DocumentMut};
+use walkdir::WalkDir;
 
 pub(crate) fn runner(temp_dir: &TempDir) -> SnapboxCommand {
     SnapboxCommand::new(cargo_bin!("snforge"))
@@ -49,11 +52,32 @@ pub(crate) fn setup_package_with_file_patterns(
 
     manifest_path.write_str(&scarb_toml.to_string()).unwrap();
 
+    // TODO (#2074): do that on .cairo.template files only
+    replace_node_rpc_url_placeholders(temp.path());
+
     temp
 }
 
 pub(crate) fn setup_package(package_name: &str) -> TempDir {
     setup_package_with_file_patterns(package_name, BASE_FILE_PATTERNS)
+}
+
+fn replace_node_rpc_url_placeholders(dir_path: &Path) {
+    let url = node_rpc_url();
+    let temp_dir_files = WalkDir::new(dir_path);
+    for entry in temp_dir_files {
+        let entry = entry.unwrap();
+
+        let path = entry.path();
+
+        if path.is_file() {
+            let content = fs::read_to_string(path).unwrap();
+
+            let modified_content = content.replace("{{ NODE_RPC_URL }}", url.as_str());
+
+            fs::write(path, modified_content).unwrap();
+        }
+    }
 }
 
 pub(crate) fn setup_hello_workspace() -> TempDir {
@@ -104,10 +128,7 @@ pub(crate) fn setup_hello_workspace() -> TempDir {
                 starknet.workspace = true
                 fibonacci = {{ path = "crates/fibonacci" }}
                 addition = {{ path = "crates/addition" }}
-                
-                [[target.starknet-contract]]
-                sierra = true
-                casm = true
+
                 "#,
             snforge_std_path
         ))
@@ -154,10 +175,6 @@ pub(crate) fn setup_virtual_workspace() -> TempDir {
                 
                 [tool]
                 snforge.workspace = true
-                
-                [[target.starknet-contract]]
-                sierra = true
-                casm = true
                 "#,
             snforge_std_path
         ))

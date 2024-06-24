@@ -29,7 +29,7 @@ jobs:
 
       - name: Get version from Cargo.toml
         id: lookupVersion
-        uses: mikefarah/yq@c35ec752e38ea0c096d3c44e13cfc0797ac394d8
+        uses: mikefarah/yq@557dcb87b8efe786f89a12c09e9046b4753ab72e
         with:
           cmd: yq -oy '"v" + .workspace.package.version' 'Cargo.toml'
 
@@ -99,7 +99,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: dtolnay/rust-toolchain@dc6353516c68da0f06325f42ad880f76a5e77ec9
+      - uses: dtolnay/rust-toolchain@d8352f6b1d2e870bc5716e7a6d9b65c4cc244a1a
         with:
           toolchain: stable
           target: ${{ matrix.target }}
@@ -195,7 +195,7 @@ jobs:
       - name: Smoke test
         shell: bash
         env:
-          RPC_URL: ${{ secrets.CHEATNET_RPC_URL }}
+          RPC_URL: "http://188.34.188.184:7070/rpc/v0_7"
         run: |
           BINARY_PATH="${{ env.BINARY_PATH }}"
           BINARY_PATH="${BINARY_PATH%.tar.gz}"
@@ -234,7 +234,7 @@ jobs:
 
       - name: Create GitHub release
         id: create-release
-        uses: taiki-e/create-gh-release-action@8df4de6534ceacdaed10a08f73418ca751f31793
+        uses: taiki-e/create-gh-release-action@72d65cee1f8033ef0c8b5d79eaf0c45c7c578ce3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           changelog: CHANGELOG.md

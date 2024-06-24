@@ -60,7 +60,7 @@ fn call_and_invoke() {
     // First declare and deploy a contract
     let contract = declare("HelloStarknet").unwrap();
     // Alternatively we could use `deploy_syscall` here
-    let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+    let (contract_address, _) = contract.deploy(@array![]).unwrap();
 
     // Create a Dispatcher object that will allow interacting with the deployed contract
     let dispatcher = IHelloStarknetDispatcher { contract_address };
@@ -78,6 +78,12 @@ fn call_and_invoke() {
     assert(balance == 100, 'balance == 100');
 }
 ```
+
+> 📝 **Note**
+> 
+> Notice that the arguments to the contract's constructor (the `deploy`'s `calldata` argument) need to be serialized with `Serde`.
+> 
+> `HelloStarknet` contract has no constructor, so the calldata remains empty in the example above.
 
 ```shell
 $ snforge test
@@ -195,11 +201,12 @@ Running 1 test(s) from tests/
 Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ```
 
-Similarly, you can handle the panics which use string as an argument (like an `assert!` macro)
+Similarly, you can handle the panics which use `ByteArray` as an argument (like an `assert!` or `panic!` macro)
 
 ```rust
-// Necessary struct and trait imports for string errors mapping
-use snforge_std::errors::{ SyscallResultStringErrorTrait, PanicDataOrString };
+// Necessary utility function import
+use snforge_std::byte_array::try_deserialize_bytearray_error;
+
 // ...
 #[test]
 #[feature("safe_dispatcher")]
@@ -208,24 +215,19 @@ fn handling_string_errors() {
     let (contract_address, _) = contract.deploy(@calldata).unwrap();
     let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
     
-    // Notice the `map_error_to_string` helper usage here, and different error type
-    match safe_dispatcher.do_a_string_panic().map_error_to_string() { 
+    match safe_dispatcher.do_a_panic_with_bytearray() {
         Result::Ok(_) => panic_with_felt252('shouldve panicked'),
         Result::Err(panic_data) => {
-            match x { 
-                PanicDataOrString::PanicData(_) => panic_with_felt252('wrong format'),
-                PanicDataOrString::String(str) => {
-                    assert(
-                        str == "This a panicking with a string, which can be longer", 
-                        'wrong string received'
-                    );
-                }
-            }
+            let str_err = try_deserialize_bytearray_error(panic_data.span()).expect('wrong format');
+            assert(
+                str_err == "This is a very long\n and multiline message that is certain to fill the buffer", 
+                'wrong string received'
+            );
         }
     };
 }
 ```
-You also could skip the de-serialization of the `panic_data`, and not use `map_error_to_string`, but this way you can actually use assertions on the `ByteArray` that was used to panic. 
+You also could skip the de-serialization of the `panic_data`, and not use `try_deserialize_bytearray_error`, but this way you can actually use assertions on the `ByteArray` that was used to panic. 
 
 > 📝 **Note**
 > 

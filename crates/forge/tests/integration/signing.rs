@@ -6,7 +6,7 @@ use test_utils::{runner::assert_passed, test_case};
 fn test_stark_sign_msg_hash_range() {
     let test = test_case!(indoc!(
         r"
-            use snforge_std::signature::KeyPairTrait;
+            use snforge_std::signature::{KeyPairTrait, SignError};
             use snforge_std::signature::stark_curve::{StarkCurveKeyPairImpl, StarkCurveSignerImpl, StarkCurveVerifierImpl};
             
             const UPPER_BOUND: felt252 = 0x800000000000000000000000000000000000000000000000000000000000000;
@@ -16,21 +16,20 @@ fn test_stark_sign_msg_hash_range() {
                 let key_pair = KeyPairTrait::<felt252, felt252>::generate();
                 
                 let msg_hash = UPPER_BOUND - 1;
-                let (r, s): (felt252, felt252) = key_pair.sign(msg_hash);
+                let (r, s): (felt252, felt252) = key_pair.sign(msg_hash).unwrap();
             
                 let is_valid = key_pair.verify(msg_hash, (r, s));
                 assert(is_valid, 'Signature should be valid');
             }
 
             #[test]
-            #[should_panic(expected: ('message_hash out of range', ))]
             fn invalid_range() {
                 let key_pair = KeyPairTrait::<felt252, felt252>::generate();
                 
                 // message_hash should be smaller than UPPER_BOUND
                 // https://github.com/starkware-libs/crypto-cpp/blob/78e3ed8dc7a0901fe6d62f4e99becc6e7936adfd/src/starkware/crypto/ecdsa.cc#L65
                 let msg_hash = UPPER_BOUND;
-                key_pair.sign(msg_hash);
+                assert(key_pair.sign(msg_hash).unwrap_err() == SignError::HashOutOfRange, '');
             }
         "
     ));
@@ -52,7 +51,7 @@ fn test_stark_curve() {
             let key_pair = KeyPairTrait::<felt252, felt252>::generate();
             
             let msg_hash = 0xbadc0ffee;
-            let (r, s): (felt252, felt252) = key_pair.sign(msg_hash);
+            let (r, s): (felt252, felt252) = key_pair.sign(msg_hash).unwrap();
         
             let is_valid = key_pair.verify(msg_hash, (r, s));
             assert(is_valid, 'Signature should be valid');
@@ -83,7 +82,7 @@ fn test_secp256k1_curve() {
                 let key_pair = KeyPairTrait::<u256, Secp256k1Point>::generate();
                 
                 let msg_hash = 0xbadc0ffee;
-                let (r, s): (u256, u256) = key_pair.sign(msg_hash);
+                let (r, s): (u256, u256) = key_pair.sign(msg_hash).unwrap();
             
                 let is_valid = key_pair.verify(msg_hash, (r, s));
                 assert(is_valid, 'Signature should be valid');
@@ -114,7 +113,7 @@ fn test_secp256r1_curve() {
                 let key_pair = KeyPairTrait::<u256, Secp256r1Point>::generate();
                 
                 let msg_hash = 0xbadc0ffee;
-                let (r, s): (u256, u256) = key_pair.sign(msg_hash);
+                let (r, s): (u256, u256) = key_pair.sign(msg_hash).unwrap();
             
                 let is_valid = key_pair.verify(msg_hash, (r, s));
                 assert(is_valid, 'Signature should be valid');
@@ -154,8 +153,8 @@ fn test_secp256_curves() {
 
                 let msg_hash: u256 = 0xbadc0ffee;
 
-                let sig_k1 = key_pair_k1.sign(msg_hash);
-                let sig_r1 = key_pair_r1.sign(msg_hash);
+                let sig_k1 = key_pair_k1.sign(msg_hash).unwrap();
+                let sig_r1 = key_pair_r1.sign(msg_hash).unwrap();
                 
                 assert(sig_k1 != sig_r1, 'Signatures should be different');
 
@@ -198,8 +197,8 @@ fn test_stark_secp256k1_curves() {
             
                 let msg_hash = 0xbadc0ffee;
             
-                let (r_stark, s_stark): (felt252, felt252) = key_pair_stark.sign(msg_hash);
-                let (r_secp256k1, s_secp256k1): (u256, u256) = key_pair_secp256k1.sign(msg_hash.into());
+                let (r_stark, s_stark): (felt252, felt252) = key_pair_stark.sign(msg_hash).unwrap();
+                let (r_secp256k1, s_secp256k1): (u256, u256) = key_pair_secp256k1.sign(msg_hash.into()).unwrap();
                 
                 assert(r_stark.into() != r_secp256k1, 'Signatures should be different');
                 assert(s_stark.into() != s_secp256k1, 'Signatures should be different');
@@ -221,7 +220,7 @@ fn test_stark_secp256k1_curves() {
 fn test_invalid_secret_key() {
     let test = test_case!(indoc!(
         r"
-            use snforge_std::signature::{KeyPair, KeyPairTrait};
+            use snforge_std::signature::{KeyPair, KeyPairTrait, SignError};
             use snforge_std::signature::stark_curve::{StarkCurveKeyPairImpl, StarkCurveSignerImpl};
             use snforge_std::signature::secp256k1_curve::{Secp256k1CurveKeyPairImpl, Secp256k1CurveSignerImpl};
             use snforge_std::signature::secp256r1_curve::{Secp256r1CurveKeyPairImpl, Secp256r1CurveSignerImpl};
@@ -247,26 +246,23 @@ fn test_invalid_secret_key() {
             }
             
             #[test]
-            #[should_panic(expected: ('invalid secret_key', ))]
             fn sign_stark() {
                 let key_pair = KeyPair { secret_key: 0, public_key: 0x321 } ;
-                key_pair.sign(123);
+                assert(key_pair.sign(123).unwrap_err() == SignError::InvalidSecretKey, '');
             }
             
             #[test]
-            #[should_panic(expected: ('invalid secret_key', ))]
             fn sign_secp256k1() {
                 let generator = Secp256k1Impl::get_generator_point();
                 let key_pair = KeyPair { secret_key: 0, public_key: generator } ;
-                key_pair.sign(123);
+                assert(key_pair.sign(123).unwrap_err() == SignError::InvalidSecretKey, '');
             }
             
             #[test]
-            #[should_panic(expected: ('invalid secret_key', ))]
             fn sign_secp256r1() {
                 let generator = Secp256r1Impl::get_generator_point();
                 let key_pair = KeyPair { secret_key: 0, public_key: generator } ;
-                key_pair.sign(123);
+                assert(key_pair.sign(123).unwrap_err() == SignError::InvalidSecretKey, '');
             }
         "
     ));
