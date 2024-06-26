@@ -15,9 +15,6 @@ Currently, those attributes are supported:
 ### `#[test]`
 
 Marks the function as a test case, to be visible for test collector.
-The function marked with this attribute must be "panickable" (have at least a theoretical possibility of panic) 
-in order to be run & assessed correctly. 
-
 Read more about test collection [here](./test-collection.md).
 
 ### `#[ignore]`
