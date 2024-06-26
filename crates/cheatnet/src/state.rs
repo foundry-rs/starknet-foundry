@@ -4,9 +4,7 @@ use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallRe
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::cheat_execution_info::{
     ExecutionInfoMock, ResourceBounds,
 };
-use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::{
-    Event, SpyTarget,
-};
+use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::Event;
 use blockifier::blockifier::block::BlockInfo;
 use blockifier::execution::call_info::OrderedL2ToL1Message;
 use blockifier::execution::entry_point::CallEntryPoint;
@@ -320,7 +318,6 @@ pub struct CheatnetState {
     pub mocked_functions:
         HashMap<ContractAddress, HashMap<EntryPointSelector, CheatStatus<Vec<StarkFelt>>>>,
     pub replaced_bytecode_contracts: HashMap<ContractAddress, ClassHash>,
-    pub spies: Vec<SpyTarget>,
     pub detected_events: Vec<Event>,
     pub deploy_salt_base: u32,
     pub block_info: BlockInfo,
@@ -341,7 +338,6 @@ impl Default for CheatnetState {
             global_cheated_execution_info: Default::default(),
             mocked_functions: Default::default(),
             replaced_bytecode_contracts: Default::default(),
-            spies: vec![],
             detected_events: vec![],
             deploy_salt_base: 0,
             block_info: SerializableBlockInfo::default().into(),

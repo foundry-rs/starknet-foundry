@@ -27,8 +27,8 @@ This is the simpler way, in which you don't have to fetch the events explicitly.
 See the below code for reference:
 
 ```rust
-use snforge_std::{declare, ContractClassTrait, spy_events, SpyOn, EventSpy,
-    EventAssertions};
+use snforge_std::{declare, ContractClassTrait, spy_events, EventSpy, EventSpyTrait,
+      EventSpyAssertionsTrait};
 
 use SpyEventsChecker;
 
@@ -43,11 +43,11 @@ fn test_simple_assertions() {
     let (contract_address, _) = contract.deploy(array![]).unwrap();
     let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
 
-    let mut spy = spy_events(SpyOn::One(contract_address));
+    let mut spy = spy_events();  // Ad. 1
 
     dispatcher.emit_one_event(123);
 
-    spy.assert_emitted(@array![
+    spy.assert_emitted(@array![  // Ad. 2
         (
             contract_address,
             SpyEventsChecker::Event::FirstEvent(
@@ -55,16 +55,15 @@ fn test_simple_assertions() {
             )
         )
     ]);
-    assert(spy.events.len() == 0, 'There should be no events');
 }
 ```
 
 Let's go through the code:
 
-1. After the contract is called, we don't have to call `fetch_events` on the spy (it is done inside
-  the `assert_emitted` method).
-2. `assert_emitted` takes the array snapshot of tuples `(ContractAddress, event)` we expect were emitted.
-3. After the assertion, found events are removed from the spy. It stays clean and ready for the next events.
+1. After contract deployment, we created the spy using `spy_events` cheatcode. From this moment all emitted events 
+will be spied.
+2. Asserting is done using the `assert_emitted` method. It takes an array snapshot of `(ContractAddress, event)`
+tuples we expect that were emitted.
 
 > 📝 **Note**
 > We can pass events defined in the contract and construct them like in the `self.emit` method!
@@ -92,11 +91,13 @@ Note that both the event name and event data are checked.
 If a function emitted an event with the same name but a different payload, the `assert_not_emitted` function will pass.
 
 ## Asserting the events manually
-You can also use the `event` field directly and assert data selectively, if you don't want to assert the whole thing.
-This however, requires you to fetch the events **manually**.
- 
+If you wish to assert the data manually, you can do that on the `Events` structure. 
+Simply call `get_events()` on your `EventSpy` and access `events`  field on the returned `Events` value.
+Then, you can access the events and assert data by yourself.
+
 ```rust
-use snforge_std::{declare, ContractClassTrait, spy_events, SpyOn, EventSpy, EventFetcher, Event};
+use snforge_std::{declare, ContractClassTrait, spy_events, EventSpyTrait, EventsAssertionsTrait,
+      Event};
 
 #[starknet::interface]
 trait ISpyEventsChecker<TContractState> {
@@ -109,50 +110,44 @@ fn test_complex_assertions() {
     let (contract_address, _) = contract.deploy(array![]).unwrap();
     let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
 
-    let mut spy = spy_events(SpyOn::One(contract_address)); // Ad 1.
+    let mut spy = spy_events(); // Ad 1.
 
     dispatcher.emit_one_event(123);
 
-    spy.fetch_events();  // Ad 2.
+    let events = spy.get_events();  // Ad 2.
 
-    assert(spy.events.len() == 1, 'There should be one event');
+    assert(events.events.len() == 1, 'There should be one event');
 
-    let (from, event) = spy.events.at(0); // Ad 3.
+    let (from, event) = events.events.at(0); // Ad 3.
     assert(from == @contract_address, 'Emitted from wrong address');
     assert(event.keys.len() == 1, 'There should be one key');
     assert(event.keys.at(0) == @selector!("FirstEvent"), 'Wrong event name'); // Ad 4.
     assert(event.data.len() == 1, 'There should be one data');
-
-    dispatcher.emit_one_event(123);
-    assert(spy.events.len() == 1, 'There should be one event'); // Ad 5. - Still one event
-
-    spy.fetch_events();
-    assert(spy.events.len() == 2, 'There should be two events');
 }
 ```
 
 Let's go through important parts of the provided code:
 
 1. After contract deployment we created the spy with `spy_events` cheatcode.
-  From this moment all events emitted by the `SpyEventsChecker` contract will be spied.
-2. We have to call `fetch_events` method on the created spy to load emitted events into it.
-3. When events are fetched they are loaded into the `events` property of our spy, and we can assert them.
+From this moment all events emitted by the `SpyEventsChecker` contract will be spied.
+2. We have to call `get_events` method on the created spy to fetch our events and get the `Events` structure.
+3. To get our particular event, we need to access the `events` property and get the event under an index.
+Since `events` is an array holding a tuple of `ContractAddress` and `Event`, we unpack it using `let (from, event)`.
 4. If the event is emitted by calling `self.emit` method, its hashed name is saved under the `keys.at(0)`
 (this way Starknet handles events)
-5. It is worth noting that when we call the method which emits an event, `spy` is not updated immediately.
 
 > 📝 **Note**
 > To assert the `name` property we have to hash a string with the `selector!` macro.
 
 
-## Splitting Events Between Multiple Spies
+## Filtering Events
 
-Sometimes it is easier to split events between multiple spies.
-For example - one spy for ERC20 contract, and one for your own contracts. 
-Let's do it.
+Sometimes, when you assert the events manually, you might not want to get all the events, but only ones from
+a particular address. You can address that by using the method `emitted_by` on the `Events` structure. 
 
 ```rust
-use snforge_std::{declare, ContractClassTrait, spy_events, SpyOn, EventSpy, EventAssertions};
+use snforge_std::{declare, ContractClassTrait, spy_events, EventSpyTrait,
+      EventsAssertionsTrait, EventsFilterTrait};
 
 use SpyEventsChecker;
 
@@ -162,49 +157,39 @@ trait ISpyEventsChecker<TContractState> {
 }
 
 #[test]
-fn test_simple_assertions() {
+fn test_assertions_with_filtering() {
     let contract = declare("SpyEventsChecker").unwrap();
     let (first_address, _) = contract.deploy(array![]).unwrap();
     let (second_address, _) = contract.deploy(array![]).unwrap();
-    let (third_address, _) = contract.deploy(array![]).unwrap();
 
-    let first_dispatcher = ISpyEventsCheckerDispatcher { first_address };
-    let second_dispatcher = ISpyEventsCheckerDispatcher { second_address };
-    let third_dispatcher = ISpyEventsCheckerDispatcher { third_address };
+    let first_dispatcher = ISpyEventsCheckerDispatcher { contract_address: first_address };
+    let second_dispatcher = ISpyEventsCheckerDispatcher { contract_address: second_address };
 
-    let mut spy_one = spy_events(SpyOn::One(first_address));
-    let mut spy_two = spy_events(SpyOn::Multiple(array![second_address, third_address]));
+    let mut spy = spy_events();
 
     first_dispatcher.emit_one_event(123);
     second_dispatcher.emit_one_event(234);
-    third_dispatcher.emit_one_event(345);
+    second_dispatcher.emit_one_event(345);
 
-    spy_one.assert_emitted(@array![
-        (
-            first_address,
-            SpyEventsChecker::Event::FirstEvent(
-                SpyEventsChecker::FirstEvent { some_data: 123 }
-            )
-        )
-    ]);
-    spy_two.assert_emitted(@array![
-        (
-            second_address,
-            SpyEventsChecker::Event::FirstEvent(
-                SpyEventsChecker::FirstEvent { some_data: 234 }
-            )
-        ),
-        (
-            third_address,
-            SpyEventsChecker::Event::FirstEvent(
-                SpyEventsChecker::FirstEvent { some_data: 345 }
-            )
-        )
-    ]);
+    let events_from_first_address = spy.get_events().emitted_by(first_address);
+    let events_from_second_address = spy.get_events().emitted_by(second_address);
+
+    let (from_first, event_from_first) = events_from_first_address.events.at(0);
+    assert(from_first == @first_address, 'Emitted from wrong address');
+    assert(event_from_first.data.at(0) == @123.into(), 'Data should be 123');
+
+    let (from_second_one, event_from_second_one) = events_from_second_address.events.at(0);
+    assert(from_second_one == @second_address, 'Emitted from wrong address');
+    assert(event_from_second_one.data.at(0) == @234.into(), 'Data should be 234');
+
+    let (from_second_two, event_from_second_two) = events_from_second_address.events.at(1);
+    assert(from_second_two == @second_address, 'Emitted from wrong address');
+    assert(event_from_second_two.data.at(0) == @345.into(), 'Data should be 345');
 }
 ```
 
-The first spy gets events emitted by the first contract only. Second one gets events emitted by the rest.
+`events_from_first_address` has events emitted by the first contract only.
+Similarly, `events_from_second_address` has events emitted by the second contract.
 
 ## Asserting Events Emitted With `emit_event_syscall`
 
@@ -222,8 +207,8 @@ fn emit_event_syscall(ref self: ContractState, some_key: felt252, some_data: fel
 And the test.
 
 ```rust
-use snforge_std::{ declare, ContractClassTrait, spy_events, EventSpy, EventFetcher,
-    EventAssertions, Event, SpyOn };
+use snforge_std::{ declare, ContractClassTrait, spy_events, EventSpyTrait,
+    EventsAssertionsTrait, Event };
 
 #[starknet::interface]
 trait ISpyEventsChecker<TContractState> {
@@ -231,12 +216,12 @@ trait ISpyEventsChecker<TContractState> {
 }
 
 #[test]
-fn test_simple_assertions() {
+fn test_nonstandard_events() {
     let contract = declare("SpyEventsChecker").unwrap();
     let (contract_address, _) = contract.deploy(array![]).unwrap();
     let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
 
-    let mut spy = spy_events(SpyOn::One(contract_address));
+    let mut spy = spy_events();
     dispatcher.emit_event_syscall(123, 456);
 
     spy.assert_emitted(@array![
@@ -250,9 +235,3 @@ fn test_simple_assertions() {
 
 Using `Event` struct from the `snforge_std` library we can easily assert nonstandard events.
 This also allows for testing the events you don't have the code of, or you don't want to import those.
-
-
-> ⚠️ **Warning**
->
-> Spying on the same contract with multiple spies can result in unexpected behavior — avoid it if possible.
-
