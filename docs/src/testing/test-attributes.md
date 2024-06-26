@@ -33,13 +33,19 @@ Moreover, it can be used with either a tuple of shortstrings or a string for ass
 (depending on what your contract throws).
 
 #### Usage
+Asserting the panic data can be done with multiple types of inputs:
 
-Asserting the panic data with bytearray: 
+Bytearray: 
 ```rust
 #[should_panic(expected: "No such file or directory (os error 2)")]
 ```
 
-Asserting the panic data with array of shortstrings: 
+Shortstring:
+```rust
+#[should_panic(expected: 'panic message')]
+```
+
+Array of shortstrings: 
 ```rust
 #[should_panic(expected: ('panic message', 'second message',)]
 ```
@@ -84,6 +90,11 @@ Usage with `block_hash` as the reference:
 #[fork(url: "http://example.com", block_hash: 0x123deadbeef)]
 ```
 
+Usage with `block_tag` as the reference:
+```rust
+#[fork(url: "http://example.com", block_tag: latest)]
+```
+
 Or if you define fork config in your `Scarb.toml` like this:
 ```toml
 [[tool.snforge.fork]]
@@ -112,6 +123,13 @@ Configures how many runs will be performed, and the starting seed (for repeatabi
 #[fuzzer(runs: 10, seed: 123)]
 ```
 
+Both parameters (or just one of them as well) can be omitted like this:
+```rust
+#[fuzzer]
+```
+And will be filled in with default values in that case.
+
 > ⚠️ **Warning**
+> 
 > Please note, that the test function needs to have some parameters in order for fuzzer to have something to fuzz. 
 > Otherwise it will fail to execute and crash the runner. 
