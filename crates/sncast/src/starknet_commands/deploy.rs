@@ -10,7 +10,7 @@ use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
 
-use crate::starknet_commands::helpers::fee::FeeArgs;
+use sncast::helpers::fee::FeeArgs;
 use sncast::response::errors::StarknetCommandError;
 use sncast::{extract_or_generate_salt, udc_uniqueness};
 use sncast::{handle_wait_for_tx, WaitForTx};

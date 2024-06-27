@@ -7,7 +7,7 @@ use sncast::{apply_optional, handle_wait_for_tx, ErrorData, WaitForTx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{ConnectedAccount, DeclarationV2};
 
-use crate::starknet_commands::helpers::fee::FeeArgs;
+use sncast::helpers::fee::FeeArgs;
 use sncast::response::errors::StarknetCommandError;
 use starknet::core::types::FieldElement;
 use starknet::{
