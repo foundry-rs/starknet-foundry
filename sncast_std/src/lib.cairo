@@ -113,6 +113,27 @@ impl DisplayCallResult of Display<CallResult> {
     }
 }
 
+/// Calls a contract
+/// - `contract_address` - address of the contract which will be called
+/// - `function_selector` - hashed name of the target function (can be obtained with `selector!` macro)
+/// - `calldata` - calldata for the function inputs, serialized with `Serde`
+/// Returns [`CallResult`] with the returned data from the called function, or  [`ScriptCommandError`] in case of failure
+///
+/// Usage example:
+/// ```
+///  use sncast_std::{call, CallResult};
+///  use starknet::{ContractAddress};
+///
+///  fn main() {
+///      let contract_address: ContractAddress = 0x1e52f6ebc3e594d2a6dc2a0d7d193cb50144cfdfb7fdd9519135c29b67e427
+///          .try_into()
+///          .expect('Invalid contract address value');
+///
+///      let call_result = call(contract_address, selector!("get"), array![0x1]).expect('call failed');
+///      println!("call_result: {}", call_result);
+///      println!("debug call_result: {:?}", call_result);
+///  }
+/// ```
 pub fn call(
     contract_address: ContractAddress, function_selector: felt252, calldata: Array::<felt252>
 ) -> Result<CallResult, ScriptCommandError> {
@@ -135,9 +156,12 @@ pub fn call(
     result_data
 }
 
+/// Result of successfully submitting a `Declare` transaction
 #[derive(Drop, Clone, Debug, Serde)]
 pub struct DeclareResult {
+    /// Resulting class hash which was declared during the transaction
     pub class_hash: ClassHash,
+    /// A hash which references the transaction in which the declaration was made
     pub transaction_hash: felt252,
 }
 
@@ -146,7 +170,27 @@ impl DisplayDeclareResult of Display<DeclareResult> {
         write!(f, "class_hash: {}, transaction_hash: {}", *self.class_hash, *self.transaction_hash)
     }
 }
-
+/// Declares a contract from the project on the network
+/// - `contract_name` - name of a contract as Cairo string.
+///     It is a name of the contract (part after `mod` keyword) e.g. `"HelloStarknet"`.
+/// - `max_fee` - The fee in tokens you're willing to pay for the transaction.
+///     If not provided, max fee will be automatically estimated via estimation endpoint.
+/// - `nonce` - Account nonce for declare transaction.
+///     If not provided, nonce will be set automatically (by fetching it from the account contract in the background).
+/// Returns [`DeclareResult`] if declare was successful or a [`ScriptCommandError`] in case of failure
+///
+/// Usage example:
+/// ```
+/// use sncast_std::{declare, DeclareResult};
+///
+/// fn main() {
+///     let max_fee = 9999999;
+///     let declare_result = declare("HelloStarknet", Option::Some(max_fee), Option::None).expect('declare failed');
+///
+///     println!("declare_result: {}", declare_result);
+///     println!("debug declare_result: {:?}", declare_result);
+/// }
+/// ```
 pub fn declare(
     contract_name: ByteArray, max_fee: Option<felt252>, nonce: Option<felt252>
 ) -> Result<DeclareResult, ScriptCommandError> {
@@ -191,6 +235,45 @@ impl DisplayDeployResult of Display<DeployResult> {
     }
 }
 
+/// Submits a deployment transaction, via invocation of Universal Deployer Contract (UDC)
+/// - `class_hash` - class hash (retrieved from [`declare`]) of a contract to deploy
+/// - `constructor_calldata` - calldata for the constructor, serialized with `Serde`
+/// - `salt` - optional salt for the contract address, used for providing address uniqueness
+/// - `unique` - determines if the deployment should be origin dependent or not.
+        Origin independent calculation only takes into account class hash, salt and constructor arguments.
+        Origin dependent address calculation additionally includes account address and UDC address
+        in the resulting contracts' address.
+/// - `max_fee` - The fee in tokens you're willing to pay for the transaction.
+///     If not provided, max fee will be automatically estimated via estimation endpoint.
+/// - `nonce` - Account nonce for declare transaction.
+///     If not provided, nonce will be set automatically (by fetching it from the account contract in the background).
+/// Returns `DeployResult` or `ScriptCommandError` in case of failure
+///
+/// Usage example:
+/// ```
+/// use sncast_std::{deploy, DeployResult};
+///
+/// fn main() {
+///     let max_fee = 9999999;
+///     let salt = 0x1;
+///     let nonce = 0x1;
+///     let class_hash: ClassHash = 0x03a8b191831033ba48ee176d5dde7088e71c853002b02a1cfa5a760aa98be046
+///         .try_into()
+///         .expect('Invalid class hash value');
+///
+///     let deploy_result = deploy(
+///         class_hash,
+///         ArrayTrait::new(),
+///         Option::Some(salt),
+///         true,
+///         Option::Some(max_fee),
+///         Option::Some(nonce)
+///     ).expect('deploy failed');
+///
+///     println!("deploy_result: {}", deploy_result);
+///     println!("debug deploy_result: {:?}", deploy_result);
+/// }
+/// ```
 pub fn deploy(
     class_hash: ClassHash,
     constructor_calldata: Array::<felt252>,
@@ -242,6 +325,34 @@ impl DisplayInvokeResult of Display<InvokeResult> {
     }
 }
 
+/// Submits a transaction with given contracts' function invocation
+/// - `contract_address` - address of the contract which will be invoked
+/// - `entry_point_selector` - hashed name of the target function (can be obtained with `selector!` macro)
+/// - `calldata` - inputs for the invoked function, serialized with `Serde`
+/// - `max_fee` - The fee in tokens you're willing to pay for the transaction.
+///     If not provided, max fee will be automatically estimated via estimation endpoint.
+/// - `nonce` - Account nonce for declare transaction.
+///     If not provided, nonce will be set automatically (by fetching it from the account contract in the background).
+/// Returns `InvokeResult` or `ScriptCommandError` if *submitting* the transaction failed
+///
+/// Usage example:
+/// ```
+/// use sncast_std::{invoke, InvokeResult};
+/// use starknet::{ContractAddress};
+///
+/// fn main() {
+///     let contract_address: ContractAddress = 0x1e52f6ebc3e594d2a6dc2a0d7d193cb50144cfdfb7fdd9519135c29b67e427
+///         .try_into()
+///         .expect('Invalid contract address value');
+///
+///     let invoke_result = invoke(
+///         contract_address, selector!("put"), array![0x1, 0x2], Option::None, Option::None
+///     ).expect('invoke failed');
+///
+///     println!("invoke_result: {}", invoke_result);
+///     println!("debug invoke_result: {:?}", invoke_result);
+/// }
+/// ```
 pub fn invoke(
     contract_address: ContractAddress,
     entry_point_selector: felt252,
@@ -276,17 +387,36 @@ pub fn invoke(
     result_data
 }
 
+/// Gets nonce of an account for a given block tag
+/// - `block_tag` - block tag name in form of shortstring (one of 'pending' or 'latest').
+/// Returns active accounts' nonce as `felt252`.
+///
+/// Usage example:
+/// ```
+/// use sncast_std::{get_nonce};
+///
+/// fn main() {
+///     let nonce = get_nonce('latest');
+///     println!("nonce: {}", nonce);
+///     println!("debug nonce: {:?}", nonce);
+/// }
+/// ```
 pub fn get_nonce(block_tag: felt252) -> felt252 {
     let inputs = array![block_tag];
     let buf = handle_cheatcode(cheatcode::<'get_nonce'>(inputs.span()));
     *buf[0]
 }
 
+/// Represents the status in the transaction lifecycle and its' User -> L2 -> L1 journey
 #[derive(Drop, Clone, Debug, Serde, PartialEq)]
 pub enum FinalityStatus {
+    /// Transaction was received by the node successfully
     Received,
+    /// Transaction was rejected on stage of validation by sequencer
     Rejected,
+    /// Transaction was executed and entered an actual created block on L2
     AcceptedOnL2,
+    /// The transaction was accepted on Ethereum
     AcceptedOnL1
 }
 
@@ -303,9 +433,12 @@ pub impl DisplayFinalityStatus of Display<FinalityStatus> {
 }
 
 
+/// Result of cairo code execution for the transaction after validation
 #[derive(Drop, Copy, Debug, Serde, PartialEq)]
 pub enum ExecutionStatus {
+    /// The transaction was successfully executed by the sequencer
     Succeeded,
+    /// The transaction passed validation but failed during execution in the sequencer
     Reverted,
 }
 
@@ -319,10 +452,12 @@ pub impl DisplayExecutionStatus of Display<ExecutionStatus> {
     }
 }
 
-
+/// A structure representing status of the transaction execution after its' submission
 #[derive(Drop, Clone, Debug, Serde, PartialEq)]
 pub struct TxStatusResult {
+    /// Represents the status of the transaction in the L2 -> L1 pipeline
     pub finality_status: FinalityStatus,
+    /// Result of the cairo code execution. Present when the transaction was actually included in the block.
     pub execution_status: Option<ExecutionStatus>
 }
 
@@ -337,6 +472,22 @@ pub impl DisplayTxStatusResult of Display<TxStatusResult> {
     }
 }
 
+
+/// Gets the status of a transaction. Useful for assessment of completion status for the transaction.
+/// - `transaction_hash` - A `felt252` representing hash of the transaction (i.e. result of `deploy`/`invoke`/`declare`)
+///  Returns `TxStatusResult` or `ScriptCommandError` if retrieving the status failed
+///
+/// Usage example:
+/// ```
+/// use sncast_std::{tx_status};
+///
+/// fn main() {
+///     let transaction_hash = 0x00ae35dacba17cde62b8ceb12e3b18f4ab6e103fa2d5e3d9821cb9dc59d59a3c;
+///     let status = tx_status(transaction_hash).expect("Failed to get transaction status");
+///
+///     println!("transaction status: {:?}", status);
+/// }
+/// ```
 pub fn tx_status(transaction_hash: felt252) -> Result<TxStatusResult, ScriptCommandError> {
     let mut inputs = array![transaction_hash];
 
