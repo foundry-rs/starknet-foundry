@@ -240,9 +240,9 @@ impl DisplayDeployResult of Display<DeployResult> {
 /// - `constructor_calldata` - calldata for the constructor, serialized with `Serde`
 /// - `salt` - optional salt for the contract address, used for providing address uniqueness
 /// - `unique` - determines if the deployment should be origin dependent or not.
-        Origin independent calculation only takes into account class hash, salt and constructor arguments.
-        Origin dependent address calculation additionally includes account address and UDC address
-        in the resulting contracts' address.
+///     Origin independent calculation only takes into account class hash, salt and constructor arguments.
+///     Origin dependent address calculation additionally includes account address and UDC address
+///     in the resulting contracts' address.
 /// - `max_fee` - The fee in tokens you're willing to pay for the transaction.
 ///     If not provided, max fee will be automatically estimated via estimation endpoint.
 /// - `nonce` - Account nonce for declare transaction.
