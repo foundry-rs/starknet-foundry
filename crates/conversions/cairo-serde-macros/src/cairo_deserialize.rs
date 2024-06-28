@@ -101,9 +101,7 @@ fn create_func_body(data: &Data, span: &TokenStream) -> TokenStream {
             });
 
             quote! {
-                let variant: cairo_felt::Felt252 = reader.read()?;
-                let variant = num_traits::cast::ToPrimitive::to_usize(&variant)
-                    .ok_or(conversions::serde::deserialize::BufferReadError::ParseFailed)?;
+                let variant: usize = reader.read()?;
 
                 let this = match variant {
                     #(#arms,)*

@@ -1,7 +1,3 @@
-use std::collections::BTreeMap;
-use std::num::NonZeroU128;
-use std::sync::Arc;
-
 use blockifier::blockifier::block::{BlockInfo, GasPrices};
 use blockifier::context::{BlockContext, ChainInfo, FeeTokenAddresses, TransactionContext};
 use blockifier::execution::common_hints::ExecutionMode;
@@ -10,18 +6,19 @@ use blockifier::transaction::objects::{
     CommonAccountFields, CurrentTransactionInfo, TransactionInfo,
 };
 use blockifier::versioned_constants::VersionedConstants;
+use starknet_types_core::felt::Felt;
+use std::collections::BTreeMap;
+use std::num::NonZeroU128;
+use std::sync::Arc;
 
 use cairo_vm::vm::runners::cairo_runner::RunResources;
+use conversions::string::TryFromHexStr;
 use serde::{Deserialize, Serialize};
-use starknet_api::data_availability::DataAvailabilityMode;
-
 use starknet_api::block::{BlockNumber, BlockTimestamp};
+use starknet_api::data_availability::DataAvailabilityMode;
 use starknet_api::transaction::{Resource, ResourceBounds, ResourceBoundsMapping};
 use starknet_api::{
-    contract_address,
-    core::{ChainId, ContractAddress, Nonce, PatriciaKey},
-    hash::{StarkFelt, StarkHash},
-    patricia_key,
+    core::{ChainId, ContractAddress, Nonce},
     transaction::{TransactionHash, TransactionSignature, TransactionVersion},
 };
 
@@ -31,13 +28,15 @@ pub const ERC20_CONTRACT_ADDRESS: &str = "0x1001";
 
 #[must_use]
 pub fn build_block_context(block_info: &BlockInfo) -> BlockContext {
+    let erc20_contract_address = TryFromHexStr::try_from_hex_str(ERC20_CONTRACT_ADDRESS).unwrap();
+
     BlockContext::new_unchecked(
         block_info,
         &ChainInfo {
-            chain_id: ChainId("SN_SEPOLIA".to_string()),
+            chain_id: ChainId::Sepolia,
             fee_token_addresses: FeeTokenAddresses {
-                strk_fee_token_address: contract_address!(ERC20_CONTRACT_ADDRESS),
-                eth_fee_token_address: contract_address!(ERC20_CONTRACT_ADDRESS),
+                strk_fee_token_address: erc20_contract_address,
+                eth_fee_token_address: erc20_contract_address,
             },
         },
         VersionedConstants::latest_constants(), // 0.13.1
@@ -50,7 +49,7 @@ fn build_tx_info() -> TransactionInfo {
             transaction_hash: TransactionHash::default(),
             version: TransactionVersion::THREE,
             signature: TransactionSignature::default(),
-            nonce: Nonce(StarkFelt::from(0_u8)),
+            nonce: Nonce(Felt::from(0_u8)),
             sender_address: ContractAddress::default(),
             only_query: false,
         },
@@ -132,7 +131,7 @@ impl Default for SerializableBlockInfo {
         Self {
             block_number: BlockNumber(DEFAULT_BLOCK_NUMBER),
             block_timestamp: BlockTimestamp::default(),
-            sequencer_address: contract_address!(SEQUENCER_ADDRESS),
+            sequencer_address: TryFromHexStr::try_from_hex_str(SEQUENCER_ADDRESS).unwrap(),
             gas_prices: SerializableGasPrices::default(),
             use_kzg_da: true,
         }

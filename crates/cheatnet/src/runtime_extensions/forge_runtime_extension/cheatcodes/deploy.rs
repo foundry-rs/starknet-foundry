@@ -4,17 +4,12 @@ use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
 };
 use anyhow::Result;
 use blockifier::execution::entry_point::ConstructorContext;
-use blockifier::execution::execution_utils::felt_to_stark_felt;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
-use conversions::FromConv;
 use runtime::EnhancedHintError;
 use std::sync::Arc;
 
-use cairo_felt::Felt252;
 use cairo_vm::vm::errors::hint_errors::HintError::CustomHint;
-use starknet_api::core::PatriciaKey;
-use starknet_api::hash::StarkHash;
-use starknet_api::{contract_address, patricia_key};
+use cairo_vm::Felt252;
 
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::cheated_syscalls;
 use starknet_api::core::{ClassHash, ContractAddress};
@@ -22,6 +17,7 @@ use starknet_api::transaction::Calldata;
 
 use super::CheatcodeError;
 use crate::state::CheatnetState;
+use conversions::string::TryFromHexStr;
 
 pub fn deploy_at(
     syscall_handler: &mut SyscallHintProcessor,
@@ -42,19 +38,17 @@ pub fn deploy_at(
         class_hash: *class_hash,
         code_address: Some(contract_address),
         storage_address: contract_address,
-        caller_address: contract_address!(TEST_ADDRESS),
+        caller_address: TryFromHexStr::try_from_hex_str(TEST_ADDRESS).unwrap(),
     };
 
-    let calldata = Calldata(Arc::new(
-        calldata.to_vec().iter().map(felt_to_stark_felt).collect(),
-    ));
+    let calldata = Calldata(Arc::new(calldata.to_vec()));
 
     let exec_result = cheated_syscalls::execute_deployment(
         syscall_handler.state,
         cheatnet_state,
         syscall_handler.resources,
         syscall_handler.context,
-        ctor_context,
+        &ctor_context,
         calldata,
         u64::MAX,
     );
@@ -63,7 +57,6 @@ pub fn deploy_at(
     match exec_result {
         Ok(call_info) => {
             let retdata = call_info.execution.retdata.0.clone();
-            let retdata: Vec<Felt252> = retdata.into_iter().map(Felt252::from_).collect();
             syscall_handler.inner_calls.push(call_info);
             Ok((contract_address, retdata))
         }

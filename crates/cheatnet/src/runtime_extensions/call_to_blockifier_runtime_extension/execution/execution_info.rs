@@ -1,5 +1,5 @@
 use crate::state::{CheatedData, CheatedTxInfo};
-use cairo_felt::Felt252;
+use cairo_vm::Felt252;
 use cairo_vm::{
     types::relocatable::{MaybeRelocatable, Relocatable},
     vm::vm_core::VirtualMachine,

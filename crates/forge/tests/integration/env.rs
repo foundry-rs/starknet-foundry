@@ -1,4 +1,4 @@
-use cairo_felt::Felt252;
+use cairo_vm::Felt252;
 use indoc::indoc;
 use num_bigint::BigUint;
 use test_utils::running_tests::run_test_case;

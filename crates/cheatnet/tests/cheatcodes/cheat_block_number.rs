@@ -1,5 +1,5 @@
 use crate::{common::assertions::assert_success, common::get_contracts};
-use cairo_felt::Felt252;
+use cairo_vm::Felt252;
 use cheatnet::state::CheatSpan;
 use conversions::IntoConv;
 use runtime::starknet::context::DEFAULT_BLOCK_NUMBER;

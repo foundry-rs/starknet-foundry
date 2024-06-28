@@ -8,7 +8,6 @@ use crate::{
     running::config_run::run_config_pass,
 };
 use anyhow::{anyhow, Result};
-use cairo_felt::Felt252;
 use cairo_lang_sierra::{
     extensions::core::{CoreLibfunc, CoreType},
     ids::ConcreteTypeId,
@@ -17,6 +16,7 @@ use cairo_lang_sierra::{
 };
 use cairo_lang_sierra_type_size::get_type_size_map;
 use cairo_lang_utils::unordered_hash_map::UnorderedHashMap;
+use cairo_vm::Felt252;
 use std::{collections::HashMap, sync::Arc};
 use universal_sierra_compiler_api::compile_sierra_to_casm;
 

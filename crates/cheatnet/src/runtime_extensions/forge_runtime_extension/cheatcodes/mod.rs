@@ -1,6 +1,6 @@
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallFailure;
-use cairo_felt::Felt252;
 use cairo_vm::vm::errors::hint_errors::HintError;
+use cairo_vm::Felt252;
 use runtime::EnhancedHintError;
 
 pub mod cheat_block_number;

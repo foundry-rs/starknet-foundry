@@ -1,18 +1,16 @@
 use anyhow::Result;
-use cairo_felt::Felt252;
 use cairo_lang_casm::instructions::Instruction;
 use cairo_lang_runner::{
     casm_run::{build_cairo_runner, run_function_with_runner},
     initialize_vm, SierraCasmRunner,
 };
+use cairo_vm::Felt252;
 use cairo_vm::{
     hint_processor::hint_processor_definition::HintProcessor,
-    serde::deserialize_program::{BuiltinName, HintParams},
+    serde::deserialize_program::HintParams,
+    types::builtin_name::BuiltinName,
     types::relocatable::MaybeRelocatable,
-    vm::{
-        errors::cairo_run_errors::CairoRunError, runners::cairo_runner::CairoRunner,
-        vm_core::VirtualMachine,
-    },
+    vm::{errors::cairo_run_errors::CairoRunError, runners::cairo_runner::CairoRunner},
 };
 use universal_sierra_compiler_api::{
     AssembledCairoProgramWithSerde, AssembledProgramWithDebugInfo,
@@ -36,9 +34,7 @@ pub fn run_assembled_program(
     builtins: Vec<BuiltinName>,
     hints_dict: std::collections::HashMap<usize, Vec<HintParams>>,
     hint_processor: &mut dyn HintProcessor,
-) -> Result<(VirtualMachine, CairoRunner), Box<CairoRunError>> {
-    let mut vm = VirtualMachine::new(true);
-
+) -> Result<CairoRunner, Box<CairoRunError>> {
     let data: Vec<MaybeRelocatable> = assembled_program
         .bytecode
         .iter()
@@ -49,15 +45,9 @@ pub fn run_assembled_program(
 
     let mut runner = build_cairo_runner(data, builtins, hints_dict)?;
 
-    run_function_with_runner(
-        &mut vm,
-        data_len,
-        initialize_vm,
-        hint_processor,
-        &mut runner,
-    )?;
+    run_function_with_runner(data_len, initialize_vm, hint_processor, &mut runner)?;
 
-    Ok((vm, runner))
+    Ok(runner)
 }
 
 fn add_header(

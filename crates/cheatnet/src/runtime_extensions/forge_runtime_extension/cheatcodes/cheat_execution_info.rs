@@ -2,7 +2,7 @@ use crate::{
     state::{CheatSpan, CheatStatus},
     CheatnetState,
 };
-use cairo_felt::Felt252;
+use cairo_vm::Felt252;
 use conversions::serde::{deserialize::CairoDeserialize, serialize::CairoSerialize};
 use starknet_api::core::ContractAddress;
 
