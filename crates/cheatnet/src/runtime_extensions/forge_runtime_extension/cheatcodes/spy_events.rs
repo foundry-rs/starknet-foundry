@@ -1,10 +1,7 @@
 use crate::CheatnetState;
 use blockifier::execution::call_info::OrderedEvent;
 use cairo_vm::Felt252;
-use conversions::{
-    serde::{deserialize::CairoDeserialize, serialize::CairoSerialize},
-    FromConv,
-};
+use conversions::{serde::serialize::CairoSerialize, FromConv};
 use starknet_api::core::ContractAddress;
 
 /// Represents an emitted event. It is used in the `CheatnetState` to keep track of events
@@ -37,25 +34,6 @@ impl Event {
                 .iter()
                 .map(|el| Felt252::from_(*el))
                 .collect(),
-        }
-    }
-}
-
-/// Specifies which contract are spied on.
-#[derive(CairoDeserialize, Debug)]
-pub enum SpyTarget {
-    All,
-    One(ContractAddress),
-    Multiple(Vec<ContractAddress>),
-}
-
-impl SpyTarget {
-    #[must_use]
-    pub fn does_spy(&self, contract_address: ContractAddress) -> bool {
-        match self {
-            SpyTarget::All => true,
-            SpyTarget::One(address) => *address == contract_address,
-            SpyTarget::Multiple(addresses) => addresses.contains(&contract_address),
         }
     }
 }
