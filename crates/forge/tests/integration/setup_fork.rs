@@ -1,8 +1,6 @@
 use indoc::{formatdoc, indoc};
 use std::num::NonZeroU32;
 use std::path::Path;
-use std::process::Command;
-use std::process::Stdio;
 use std::sync::Arc;
 
 use camino::Utf8PathBuf;
@@ -20,10 +18,9 @@ use forge_runner::build_trace_data::test_sierra_program_path::VERSIONED_PROGRAMS
 use forge_runner::forge_config::{
     ExecutionDataToSave, ForgeConfig, OutputConfig, TestRunnerConfig,
 };
-use forge_runner::package_tests::raw::RawForkParams;
-use forge_runner::package_tests::raw::TestTargetRaw;
 use forge_runner::CACHE_DIR;
-use shared::command::CommandExt;
+use scarb_api::metadata::MetadataCommandExt;
+use scarb_api::ScarbCommand;
 use shared::test_utils::node_url::node_rpc_url;
 use test_utils::runner::{assert_case_output_contains, assert_failed, assert_passed, Contract};
 use test_utils::running_tests::run_test_case;
@@ -110,27 +107,31 @@ fn fork_aliased_decorator() {
 
     let rt = Runtime::new().expect("Could not instantiate Runtime");
 
-    Command::new("scarb")
+    ScarbCommand::new_with_stdio()
         .current_dir(test.path().unwrap())
-        .arg("snforge-test-collector")
-        .stdout(Stdio::inherit())
-        .stderr(Stdio::inherit())
-        .output_checked()
+        .arg("build")
+        .arg("--test")
+        .run()
         .unwrap();
 
-    let raw_test_targets = load_test_artifacts(
-        &test.path().unwrap().join("target/dev/snforge"),
-        "test_package",
-    )
-    .unwrap();
+    let metadata = ScarbCommand::metadata()
+        .current_dir(test.path().unwrap())
+        .run()
+        .unwrap();
+
+    let package = metadata
+        .packages
+        .iter()
+        .find(|p| p.name == "test_package")
+        .unwrap();
+
+    let raw_test_targets =
+        load_test_artifacts(&test.path().unwrap().join("target/dev"), package).unwrap();
 
     let result = rt
         .block_on(run_for_package(
             RunForPackageArgs {
-                test_targets: raw_test_targets
-                    .into_iter()
-                    .map(TestTargetRaw::with_config)
-                    .collect(),
+                test_targets: raw_test_targets,
                 package_name: "test_package".to_string(),
                 tests_filter: TestsFilter::from_flags(
                     None,
@@ -165,11 +166,9 @@ fn fork_aliased_decorator() {
                 }),
                 fork_targets: vec![ForkTarget::new(
                     "FORK_NAME_FROM_SCARB_TOML".to_string(),
-                    RawForkParams {
-                        url: node_rpc_url().to_string(),
-                        block_id_type: "Tag".to_string(),
-                        block_id_value: "Latest".to_string(),
-                    },
+                    node_rpc_url().to_string(),
+                    "Tag".to_string(),
+                    "Latest".to_string(),
                 )],
             },
             &mut BlockNumberMap::default(),

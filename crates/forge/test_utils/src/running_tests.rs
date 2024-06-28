@@ -7,46 +7,45 @@ use forge::{
     scarb::load_test_artifacts,
     test_filter::TestsFilter,
 };
+use forge_runner::build_trace_data::test_sierra_program_path::VERSIONED_PROGRAMS_DIR;
 use forge_runner::forge_config::{
     ExecutionDataToSave, ForgeConfig, OutputConfig, TestRunnerConfig,
 };
 use forge_runner::test_target_summary::TestTargetSummary;
 use forge_runner::CACHE_DIR;
-use forge_runner::{
-    build_trace_data::test_sierra_program_path::VERSIONED_PROGRAMS_DIR,
-    package_tests::raw::TestTargetRaw,
-};
-use shared::command::CommandExt;
+use scarb_api::{metadata::MetadataCommandExt, ScarbCommand};
 use std::num::NonZeroU32;
-use std::process::Command;
-use std::process::Stdio;
 use std::sync::Arc;
 use tempfile::tempdir;
 use tokio::runtime::Runtime;
 
 #[must_use]
 pub fn run_test_case(test: &TestCase) -> Vec<TestTargetSummary> {
-    Command::new("scarb")
+    ScarbCommand::new_with_stdio()
         .current_dir(test.path().unwrap())
-        .arg("snforge-test-collector")
-        .stdout(Stdio::inherit())
-        .stderr(Stdio::inherit())
-        .output_checked()
+        .arg("build")
+        .arg("--test")
+        .run()
+        .unwrap();
+
+    let metadata = ScarbCommand::metadata()
+        .current_dir(test.path().unwrap())
+        .run()
+        .unwrap();
+
+    let package = metadata
+        .packages
+        .iter()
+        .find(|p| p.name == "test_package")
         .unwrap();
 
     let rt = Runtime::new().expect("Could not instantiate Runtime");
-    let raw_test_targets = load_test_artifacts(
-        &test.path().unwrap().join("target/dev/snforge"),
-        "test_package",
-    )
-    .unwrap();
+    let raw_test_targets =
+        load_test_artifacts(&test.path().unwrap().join("target/dev"), package).unwrap();
 
     rt.block_on(run_for_package(
         RunForPackageArgs {
-            test_targets: raw_test_targets
-                .into_iter()
-                .map(TestTargetRaw::with_config)
-                .collect(),
+            test_targets: raw_test_targets,
             package_name: "test_package".to_string(),
             tests_filter: TestsFilter::from_flags(
                 None,

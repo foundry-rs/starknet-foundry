@@ -1,12 +1,13 @@
 use cairo_lang_sierra::ids::GenericTypeId;
-use cairo_lang_sierra::program::ProgramArtifact;
-use serde::Deserialize;
+use raw::ProgramArtifact;
+use std::sync::Arc;
+use universal_sierra_compiler_api::AssembledProgramWithDebugInfo;
 
 pub mod raw;
 pub mod with_config;
 pub mod with_config_resolved;
 
-#[derive(Debug, PartialEq, Clone, Copy, Deserialize, Hash, Eq)]
+#[derive(Debug, PartialEq, Clone, Copy, Hash, Eq)]
 pub enum TestTargetLocation {
     /// Main crate in a package
     Lib,
@@ -14,9 +15,8 @@ pub enum TestTargetLocation {
     Tests,
 }
 
-#[derive(Debug, PartialEq, Clone, Deserialize, Default)]
+#[derive(Debug, PartialEq, Clone, Default)]
 pub struct TestDetails {
-    #[serde(rename = "entry_point_offset")]
     pub sierra_entry_point_statement_idx: usize,
     pub parameter_types: Vec<(GenericTypeId, i16)>,
     pub return_types: Vec<(GenericTypeId, i16)>,
@@ -26,6 +26,7 @@ pub struct TestDetails {
 pub struct TestTarget<C> {
     pub tests_location: TestTargetLocation,
     pub sierra_program: ProgramArtifact,
+    pub casm_program: Arc<AssembledProgramWithDebugInfo>,
     pub test_cases: Vec<TestCase<C>>,
 }
 

@@ -1,6 +1,5 @@
 use anyhow::Result;
 use cairo_lang_runner::RunnerError;
-use cairo_lang_sierra::ids::ConcreteTypeId;
 use forge_runner::{
     forge_config::ForgeConfig,
     function_args, maybe_save_execution_data, maybe_save_versioned_program,
@@ -12,9 +11,8 @@ use forge_runner::{
     TestCaseFilter,
 };
 use futures::{stream::FuturesUnordered, StreamExt};
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 use tokio::sync::mpsc::channel;
-use universal_sierra_compiler_api::compile_sierra_to_casm;
 
 #[non_exhaustive]
 pub enum TestTargetRunResult {
@@ -29,7 +27,7 @@ pub async fn run_for_test_target(
     package_name: &str,
 ) -> Result<TestTargetRunResult> {
     let sierra_program = &tests.sierra_program.program;
-    let casm_program = Arc::new(compile_sierra_to_casm(sierra_program)?);
+    let casm_program = tests.casm_program.clone();
 
     let mut tasks = FuturesUnordered::new();
     // Initiate two channels to manage the `--exit-first` flag.
@@ -45,6 +43,12 @@ pub async fn run_for_test_target(
         &forge_config.output_config.versioned_programs_dir,
         package_name,
     )?);
+
+    let type_declarations: HashMap<_, _> = sierra_program
+        .type_declarations
+        .iter()
+        .map(|f| (f.id.id, f))
+        .collect();
 
     for case in tests.test_cases {
         let case_name = case.name.clone();
@@ -65,10 +69,9 @@ pub async fn run_for_test_target(
             .find(|f| f.id.debug_name.as_ref().unwrap().ends_with(&case_name))
             .ok_or(RunnerError::MissingFunction { suffix: case_name })?;
 
-        let args = function_args(function);
+        let args = function_args(function, &type_declarations);
 
         let case = Arc::new(case);
-        let args: Vec<ConcreteTypeId> = args.into_iter().cloned().collect();
 
         tasks.push(run_for_test_case(
             args,
