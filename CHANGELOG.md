@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Changed
+
+- `#[fork]` attribute parameters
+
 ## [0.25.0] - 2024-06-12
 
 ### Forge
