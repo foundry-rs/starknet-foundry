@@ -11,7 +11,7 @@ mod storage;
 mod execution_info;
 
 /// Enum used to specify how long the target should be cheated for.
-#[derive(Copy, Drop, Serde, PartialEq, Clone, Debug, Display)]
+#[derive(Copy, Drop, Serde, PartialEq, Clone, Debug)]
 enum CheatSpan {
     /// Applies the cheatcode indefinitely, until the cheat is canceled manually (e.g. using
     /// `stop_cheat_block_timestamp`).

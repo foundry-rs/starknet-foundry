@@ -15,7 +15,7 @@ fn cheat_caller_address_cairo0_contract() {
             const LIB_CALL_SELECTOR: felt252 = 219972792400094465318120350250971259539342451068659710037080072200128459645;
 
             #[test]
-            #[fork(url: "{}", block_id: BlockId::Number(54060))]
+            #[fork(url: "{}", block_number: 54060)]
             fn cheat_caller_address_cairo0_contract() {{
                 let caller = starknet::library_call_syscall(
                     CAIRO0_CLASS_HASH.try_into().unwrap(),
@@ -63,7 +63,7 @@ fn cheat_block_number_cairo0_contract() {
             const LIB_CALL_SELECTOR: felt252 = 1043360521069001059812816533306435120284814797591254795559962622467917544215;
 
             #[test]
-            #[fork(url: "{}", block_id: BlockId::Number(54060))]
+            #[fork(url: "{}", block_number: 54060)]
             fn cheat_block_number_cairo0_contract() {{
                 let block_number = starknet::library_call_syscall(
                     CAIRO0_CLASS_HASH.try_into().unwrap(),
@@ -111,7 +111,7 @@ fn cheat_block_timestamp_cairo0_contract() {
             const LIB_CALL_SELECTOR: felt252 = 1104673410415683966349700971986586038248888383055081852378797598061780438342;
 
             #[test]
-            #[fork(url: "{}", block_id: BlockId::Number(54060))]
+            #[fork(url: "{}", block_number: 54060)]
             fn cheat_block_timestamp_cairo0_contract() {{
                 let block_timestamp = starknet::library_call_syscall(
                     CAIRO0_CLASS_HASH.try_into().unwrap(),
@@ -163,7 +163,7 @@ fn mock_call_cairo0_contract() {
             }}
 
             #[test]
-            #[fork(url: "{}", block_id: BlockId::Number(54060))]
+            #[fork(url: "{}", block_number: 54060)]
             fn mock_call_cairo0_contract() {{
                 let eth_dispatcher = IERC20Dispatcher {{
                     contract_address: contract_address_const::<
@@ -204,7 +204,7 @@ fn store_load_cairo0_contract() {
             }}
 
             #[test]
-            #[fork(url: "{}", block_id: BlockId::Number(54060))]
+            #[fork(url: "{}", block_number: 54060)]
             fn mock_call_cairo0_contract() {{
                 let eth_dispatcher = IERC20Dispatcher {{
                     contract_address: contract_address_const::<

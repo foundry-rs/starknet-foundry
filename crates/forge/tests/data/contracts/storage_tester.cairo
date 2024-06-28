@@ -25,11 +25,11 @@ mod StorageTester {
         }
     }
 
-    #[derive(Serde, Drop, starknet::Store, LegacyHash)]
+    #[derive(Serde, Drop, starknet::Store)]
     struct NestedKey {
         c: felt252
     }
-    #[derive(Serde, Drop, starknet::Store, LegacyHash)]
+    #[derive(Serde, Drop, starknet::Store)]
     struct StructuredKey {
         a: felt252,
         b: NestedKey,

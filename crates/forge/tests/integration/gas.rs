@@ -92,10 +92,9 @@ fn snforge_std_deploy_cost() {
     let result = run_test_case(&test);
 
     assert_passed(&result);
-    println!("{result:#?}");
     // 96 = gas cost of onchain data (deploy cost)
-    // int(4406 & 0.0025) = 12 = steps cost
-    assert_gas(&result, "deploy_cost", 96 + 12);
+    // int(5.12 * 2) = 11 = keccak cost
+    assert_gas(&result, "deploy_cost", 96 + 11);
 }
 
 #[test]
@@ -467,10 +466,10 @@ fn storage_write_cost() {
     let result = run_test_case(&test);
 
     assert_passed(&result);
-    // 7 = gas cost of steps
+    // 6 = gas cost of steps
     // 96 = gas cost of deployment
     // storage_updates(1) * 2 * 32 = 64
-    assert_gas(&result, "storage_write_cost", 7 + 96 + 64);
+    assert_gas(&result, "storage_write_cost", 6 + 96 + 64);
 }
 
 #[test]
@@ -485,7 +484,7 @@ fn storage_write_from_test_cost() {
             }
         }
 
-        use tests::test_case::Contract::balanceContractMemberStateTrait;
+        use starknet::storage::StorageMemberAccessTrait;
 
         #[test]
         fn storage_write_from_test_cost() {
@@ -540,7 +539,7 @@ fn multiple_storage_writes_cost() {
     let result = run_test_case(&test);
 
     assert_passed(&result);
-    // 9 = gas cost of steps
+    // 8 = gas cost of steps
     // l = number of class hash updates
     // n = unique contracts updated
     // m = unique(!) values updated
@@ -548,7 +547,7 @@ fn multiple_storage_writes_cost() {
     // n(1) * 2 * 32 = 64
     // m(1) * 2 * 32 = 64
     // l(1) * 32 = 32
-    assert_gas(&result, "multiple_storage_writes_cost", 9 + 64 + 64 + 32);
+    assert_gas(&result, "multiple_storage_writes_cost", 8 + 64 + 64 + 32);
 }
 
 #[test]
@@ -583,10 +582,10 @@ fn l1_message_cost() {
     let result = run_test_case(&test);
 
     assert_passed(&result);
-    // 7 = gas cost of steps
+    // 6 = gas cost of steps
     // 96 = gas cost of deployment
     // 29524 = gas cost of onchain data
-    assert_gas(&result, "l1_message_cost", 7 + 96 + 29524);
+    assert_gas(&result, "l1_message_cost", 6 + 96 + 29524);
 }
 
 #[test]
@@ -652,14 +651,14 @@ fn l1_message_cost_for_proxy() {
     let result = run_test_case(&test);
 
     assert_passed(&result);
-    // 13 = gas cost of steps
+    // 11 = gas cost of steps
     // l = number of class hash updates
     // n = unique contracts updated
     // So, as per formula:
     // n(2) * 2 * 32 = 128
     // l(2) * 32 = 64
     // 29524 = gas cost of message
-    assert_gas(&result, "l1_message_cost_for_proxy", 13 + 128 + 64 + 29524);
+    assert_gas(&result, "l1_message_cost_for_proxy", 11 + 128 + 64 + 29524);
 }
 
 #[test]
@@ -720,10 +719,10 @@ fn events_cost() {
     let result = run_test_case(&test);
 
     assert_passed(&result);
-    // 2991 steps and memholes * 0.0025 ~= 8
+    // 156 range_check_builtin ~= 7
     // 6 gas for 50 event values
     // ~13 gas for 50 event keys
-    assert_gas(&result, "events_cost", 8 + 6 + 13);
+    assert_gas(&result, "events_cost", 7 + 6 + 13);
 }
 
 #[test]
@@ -756,9 +755,9 @@ fn events_contract_cost() {
 
     let result = run_test_case(&test);
     assert_passed(&result);
-    // 14 = gas cost of steps
+    // 10 = gas cost of steps
     // 96 = gas cost of onchain data (deploy cost)
     // 6 gas for 50 event values
     // ~13 gas for 50 event keys
-    assert_gas(&result, "event_emission_cost", 14 + 96 + 6 + 13);
+    assert_gas(&result, "event_emission_cost", 10 + 96 + 6 + 13);
 }

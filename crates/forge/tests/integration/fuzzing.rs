@@ -73,7 +73,7 @@ fn fuzzed_while_loop() {
     };
 
     assert_eq!(gas_info.min, 1);
-    assert_eq!(gas_info.max, 28);
-    assert!((gas_info.mean - 14.).abs() < f64::EPSILON);
-    assert!((gas_info.std_deviation - 8.21).abs() < 0.01);
+    assert_eq!(gas_info.max, 21);
+    assert!((gas_info.mean - 11.).abs() < f64::EPSILON);
+    assert!((gas_info.std_deviation - 6.09).abs() < 0.01);
 }

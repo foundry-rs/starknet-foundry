@@ -49,7 +49,7 @@ fn builtins_count() {
     assert_passed(&result);
 
     // No ECDSA and Keccak builtins
-    assert_builtin(&result, "range_check", "range_check_builtin", 1);
+    assert_builtin(&result, "range_check", "range_check_builtin", 4);
     assert_builtin(&result, "bitwise", "bitwise_builtin", 1);
     assert_builtin(&result, "pedersen", "pedersen_builtin", 1);
     assert_builtin(&result, "poseidon", "poseidon_builtin", 1);
@@ -224,11 +224,11 @@ fn estimation_includes_os_resources() {
     assert_passed(&result);
     // Cost of storage write in builtins is 1 range check and 89 steps
     // Steps are pretty hard to verify so this test is based on range check diff
-    assert_builtin(&result, "syscall_storage_write", "range_check_builtin", 6);
+    assert_builtin(&result, "syscall_storage_write", "range_check_builtin", 9);
     assert_builtin(
         &result,
         "syscall_storage_write_baseline",
         "range_check_builtin",
-        3,
+        6,
     );
 }

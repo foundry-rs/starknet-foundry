@@ -13,7 +13,7 @@ fn simple_package_build_profile() {
         .is_file());
     assert!(!temp
         .join(PROFILE_DIR)
-        .join("tests::test_simple::test_failing.pb.gz")
+        .join("simple_package_integrationtest::test_simple::test_failing.pb.gz")
         .is_file());
     assert!(!temp
         .join(PROFILE_DIR)
@@ -21,7 +21,7 @@ fn simple_package_build_profile() {
         .is_file());
     assert!(temp
         .join(PROFILE_DIR)
-        .join("tests::ext_function_test::test_simple.pb.gz")
+        .join("simple_package_integrationtest::ext_function_test::test_simple.pb.gz")
         .is_file());
 
     // Check if it doesn't crash in case some data already exists

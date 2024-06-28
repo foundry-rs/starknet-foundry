@@ -677,7 +677,7 @@ fn capture_cairo0_event() {
             }}
 
             #[test]
-            #[fork(url: "{}", block_id: BlockId::Tag(BlockTag::Latest))]
+            #[fork(url: "{}", block_tag: latest)]
             fn capture_cairo0_event() {{
                 let cairo0_contract_address = contract_address_const::<0x2c77ca97586968c6651a533bd5f58042c368b14cf5f526d2f42f670012e10ac>();
                 let contract = declare("SpyEventsChecker").unwrap();

@@ -80,7 +80,7 @@ fn trace_info_print() {
                 Entry point type: External
                 Selector: 1423007881864269398513176851135908567621420218646181695002463829511917924133
                 Calldata: [5, 1, 2, 3, 4, 5]
-                Storage address: 3447179351737797591242797233952749538061496839896319750579571119352735823363
+                Storage address: [..]
                 Caller address: 469394814521890341860918960550914
                 Call type: Call
                 Nested Calls: []
@@ -89,7 +89,7 @@ fn trace_info_print() {
         ]
         Call Result: Success: []
         
-        [PASS] tests::test_trace::test_trace (gas: [..]
+        [PASS] trace_info_integrationtest::test_trace::test_trace (gas: [..]
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         "},
     );

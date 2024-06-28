@@ -21,22 +21,22 @@ fn should_allow_less_than_default() {
 
                 Collected 4 test(s) from steps package
                 Running 4 test(s) from src/
-                [FAIL] steps::tests::steps_4000006
+                [FAIL] steps::tests::steps_4000005
                 
                 Failure data:
                     Could not reach the end of the program. RunResources has no remaining steps.
                 
-                [FAIL] steps::tests::steps_5700031
+                [FAIL] steps::tests::steps_5699625
                 
                 Failure data:
                     Could not reach the end of the program. RunResources has no remaining steps.
                 
-                [FAIL] steps::tests::steps_3999987
+                [FAIL] steps::tests::steps_3999990
                 
                 Failure data:
                     Could not reach the end of the program. RunResources has no remaining steps.
                 
-                [FAIL] steps::tests::steps_570031
+                [FAIL] steps::tests::steps_570030
                 
                 Failure data:
                     Could not reach the end of the program. RunResources has no remaining steps.
@@ -44,10 +44,10 @@ fn should_allow_less_than_default() {
                 Tests: 0 passed, 4 failed, 0 skipped, 0 ignored, 0 filtered out
                 
                 Failures:
-                    steps::tests::steps_4000006
-                    steps::tests::steps_5700031
-                    steps::tests::steps_3999987
-                    steps::tests::steps_570031
+                    steps::tests::steps_4000005
+                    steps::tests::steps_5699625
+                    steps::tests::steps_3999990
+                    steps::tests::steps_570030
             "
         ),
     );
@@ -72,10 +72,10 @@ fn should_allow_more_than_4m() {
 
                 Collected 4 test(s) from steps package
                 Running 4 test(s) from src/
-                [PASS] steps::tests::steps_570031 [..]
-                [PASS] steps::tests::steps_4000006 [..]
-                [PASS] steps::tests::steps_3999987 [..]
-                [PASS] steps::tests::steps_5700031 [..]
+                [PASS] steps::tests::steps_570030 [..]
+                [PASS] steps::tests::steps_4000005 [..]
+                [PASS] steps::tests::steps_3999990 [..]
+                [PASS] steps::tests::steps_5699625 [..]
                 Tests: 4 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
             "
         ),
@@ -97,23 +97,23 @@ fn should_default_to_4m() {
 
                 Collected 4 test(s) from steps package
                 Running 4 test(s) from src/
-                [PASS] steps::tests::steps_570031 [..]
-                [FAIL] steps::tests::steps_4000006
+                [PASS] steps::tests::steps_570030 [..]
+                [FAIL] steps::tests::steps_4000005
                 
                 Failure data:
                     Could not reach the end of the program. RunResources has no remaining steps.
                 
-                [FAIL] steps::tests::steps_5700031
+                [FAIL] steps::tests::steps_5699625
                 
                 Failure data:
                     Could not reach the end of the program. RunResources has no remaining steps.
                 
-                [PASS] steps::tests::steps_3999987 [..]
+                [PASS] steps::tests::steps_3999990 [..]
                 Tests: 2 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
                 
                 Failures:
-                    steps::tests::steps_4000006
-                    steps::tests::steps_5700031
+                    steps::tests::steps_4000005
+                    steps::tests::steps_5699625
             "
         ),
     );

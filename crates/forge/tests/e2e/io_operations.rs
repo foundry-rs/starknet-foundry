@@ -18,50 +18,50 @@ fn file_reading() {
         Collected 11 test(s) from file_reading package
         Running 0 test(s) from src/
         Running 11 test(s) from tests/
-        [FAIL] tests::test::json_non_existent
+        [FAIL] file_reading_integrationtest::test::json_non_existent
         
         Failure data:
             "No such file or directory [..]"
         
-        [FAIL] tests::test::invalid_json
+        [FAIL] file_reading_integrationtest::test::invalid_json
         
         Failure data:
             "Parse JSON error: invalid type: integer `231232`, expected a map at line 1 column 6 , in file data/json/invalid.json"
         
-        [FAIL] tests::test::non_existent
+        [FAIL] file_reading_integrationtest::test::non_existent
         
         Failure data:
             "No such file or directory [..]"
         
-        [FAIL] tests::test::non_ascii
+        [FAIL] file_reading_integrationtest::test::non_ascii
         
         Failure data:
             "Failed to parse data/non_ascii.txt file"
         
-        [PASS] tests::test::valid_content_and_same_content_no_matter_newlines [..]
-        [PASS] tests::test::serialization [..]
-        [PASS] tests::test::json_with_array [..]
-        [FAIL] tests::test::negative_number
+        [PASS] file_reading_integrationtest::test::valid_content_and_same_content_no_matter_newlines [..]
+        [PASS] file_reading_integrationtest::test::serialization [..]
+        [PASS] file_reading_integrationtest::test::json_with_array [..]
+        [FAIL] file_reading_integrationtest::test::negative_number
             "Failed to parse data/negative_number.txt file"
         
         Failure data:
         
-        [FAIL] tests::test::valid_content_different_folder
+        [FAIL] file_reading_integrationtest::test::valid_content_different_folder
         
         Failure data:
             0x756e657870656374656420636f6e74656e74 ('unexpected content')
         
-        [PASS] tests::test::json_serialization [..]
-        [PASS] tests::test::json_deserialization [..]
+        [PASS] file_reading_integrationtest::test::json_serialization [..]
+        [PASS] file_reading_integrationtest::test::json_deserialization [..]
         Tests: 5 passed, 6 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:
-            tests::test::json_non_existent
-            tests::test::invalid_json
-            tests::test::non_existent
-            tests::test::non_ascii
-            tests::test::valid_content_different_folder
-            tests::test::negative_number
+            file_reading_integrationtest::test::json_non_existent
+            file_reading_integrationtest::test::invalid_json
+            file_reading_integrationtest::test::non_existent
+            file_reading_integrationtest::test::non_ascii
+            file_reading_integrationtest::test::valid_content_different_folder
+            file_reading_integrationtest::test::negative_number
     "#};
 
     // run from different directories to make sure cwd is always set to package directory
