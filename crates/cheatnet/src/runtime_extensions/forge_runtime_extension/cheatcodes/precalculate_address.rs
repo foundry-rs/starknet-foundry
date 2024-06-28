@@ -1,5 +1,5 @@
 use crate::CheatnetState;
-use cairo_felt::Felt252;
+use cairo_vm::Felt252;
 use conversions::IntoConv;
 use starknet::core::types::FieldElement;
 use starknet_api::core::{calculate_contract_address, ClassHash, ContractAddress};

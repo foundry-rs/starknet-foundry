@@ -1,6 +1,6 @@
 use super::test_environment::TestEnvironment;
 use crate::common::{assertions::assert_success, get_contracts, recover_data};
-use cairo_felt::Felt252;
+use cairo_vm::Felt252;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::cheat_execution_info::ResourceBounds;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::cheat_execution_info::{
     CheatArguments, ExecutionInfoMockOperations, Operation, TxInfoMockOperations,
@@ -190,7 +190,7 @@ fn cheat_transaction_hash_simple() {
     let transaction_hash = Felt252::from(123);
     let mut expected_tx_info = tx_info_before.clone();
 
-    expected_tx_info.transaction_hash = transaction_hash.clone();
+    expected_tx_info.transaction_hash = transaction_hash;
 
     test_env.start_cheat_transaction_hash(contract_address, transaction_hash);
 
@@ -305,7 +305,7 @@ fn cheat_transaction_hash_start_stop() {
     let transaction_hash = Felt252::from(123);
     let mut expected_tx_info = tx_info_before.clone();
 
-    expected_tx_info.transaction_hash = transaction_hash.clone();
+    expected_tx_info.transaction_hash = transaction_hash;
 
     test_env.start_cheat_transaction_hash(contract_address, transaction_hash);
 
@@ -422,7 +422,7 @@ fn cheat_transaction_hash_all_simple() {
     let transaction_hash = Felt252::from(123);
     let mut expected_tx_info = tx_info_before.clone();
 
-    expected_tx_info.transaction_hash = transaction_hash.clone();
+    expected_tx_info.transaction_hash = transaction_hash;
 
     test_env.start_cheat_transaction_hash_global(transaction_hash);
 
@@ -440,7 +440,7 @@ fn cheat_transaction_hash_all_then_one() {
     let transaction_hash = Felt252::from(321);
     let mut expected_tx_info = tx_info_before.clone();
 
-    expected_tx_info.transaction_hash = transaction_hash.clone();
+    expected_tx_info.transaction_hash = transaction_hash;
 
     test_env.start_cheat_transaction_hash_global(Felt252::from(123));
 
@@ -460,7 +460,7 @@ fn cheat_transaction_hash_one_then_all() {
     let transaction_hash = Felt252::from(321);
     let mut expected_tx_info = tx_info_before.clone();
 
-    expected_tx_info.transaction_hash = transaction_hash.clone();
+    expected_tx_info.transaction_hash = transaction_hash;
 
     test_env.start_cheat_transaction_hash(contract_address, Felt252::from(123));
 
@@ -505,11 +505,11 @@ fn cheat_transaction_hash_multiple() {
     let mut expected_tx_info_1 = tx_info_before_1.clone();
     let mut expected_tx_info_2 = tx_info_before_2.clone();
 
-    expected_tx_info_1.transaction_hash = transaction_hash.clone();
+    expected_tx_info_1.transaction_hash = transaction_hash;
 
-    expected_tx_info_2.transaction_hash = transaction_hash.clone();
+    expected_tx_info_2.transaction_hash = transaction_hash;
 
-    test_env.start_cheat_transaction_hash(contract_address_1, transaction_hash.clone());
+    test_env.start_cheat_transaction_hash(contract_address_1, transaction_hash);
     test_env.start_cheat_transaction_hash(contract_address_2, transaction_hash);
 
     test_env.assert_tx_info(&contract_address_1, &expected_tx_info_1);
@@ -531,7 +531,7 @@ fn cheat_transaction_hash_simple_with_span() {
     let transaction_hash = Felt252::from(123);
 
     let mut expected_tx_info = tx_info_before.clone();
-    expected_tx_info.transaction_hash = transaction_hash.clone();
+    expected_tx_info.transaction_hash = transaction_hash;
 
     test_env.cheat_transaction_hash(
         contract_address,
@@ -637,7 +637,7 @@ fn cheat_transaction_hash_override_span() {
     let transaction_hash = Felt252::from(123);
 
     let mut expected_tx_info = tx_info_before.clone();
-    expected_tx_info.transaction_hash = transaction_hash.clone();
+    expected_tx_info.transaction_hash = transaction_hash;
 
     test_env.cheat_transaction_hash(contract_address, transaction_hash, CheatSpan::Indefinite);
 
@@ -645,7 +645,7 @@ fn cheat_transaction_hash_override_span() {
 
     let transaction_hash = Felt252::from(321);
 
-    expected_tx_info.transaction_hash = transaction_hash.clone();
+    expected_tx_info.transaction_hash = transaction_hash;
 
     test_env.cheat_transaction_hash(
         contract_address,

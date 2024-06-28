@@ -7,7 +7,7 @@ use crate::{
     },
 };
 use blockifier::state::state_api::State;
-use cairo_felt::Felt252;
+use cairo_vm::Felt252;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
 use cheatnet::state::CheatnetState;
 use starknet_api::core::ContractAddress;
@@ -23,13 +23,13 @@ fn check_nonce(
     let write_nonce = felt_selector_from_name("write_nonce");
     let read_nonce = felt_selector_from_name("read_nonce");
 
-    let output = call_contract(state, cheatnet_state, contract_address, &write_nonce, &[]);
+    let output = call_contract(state, cheatnet_state, contract_address, write_nonce, &[]);
 
     assert_success(output, &[]);
 
-    let output = call_contract(state, cheatnet_state, contract_address, &read_nonce, &[]);
+    let output = call_contract(state, cheatnet_state, contract_address, read_nonce, &[]);
 
-    recover_data(output)[0].clone()
+    recover_data(output)[0]
 }
 
 #[test]

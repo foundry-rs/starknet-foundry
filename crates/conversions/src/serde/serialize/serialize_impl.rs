@@ -1,14 +1,13 @@
 use super::{BufferWriter, CairoSerialize};
 use crate::{byte_array::ByteArray, IntoConv};
 use blockifier::execution::entry_point::{CallEntryPoint, CallType};
-use cairo_felt::Felt252;
 use starknet::core::types::{ContractErrorData, FieldElement, TransactionExecutionErrorData};
 use starknet_api::{
     core::{ClassHash, ContractAddress, EntryPointSelector, Nonce},
     deprecated_contract_class::EntryPointType,
-    hash::StarkFelt,
     transaction::Calldata,
 };
+use starknet_types_core::felt::Felt as Felt252;
 use std::{
     cell::{Ref, RefCell},
     rc::Rc,
@@ -218,7 +217,6 @@ macro_rules! impl_serialize_for_tuple {
 impl_serialize_for_felt_type!(Felt252);
 impl_serialize_for_felt_type!(FieldElement);
 impl_serialize_for_felt_type!(ClassHash);
-impl_serialize_for_felt_type!(StarkFelt);
 impl_serialize_for_felt_type!(ContractAddress);
 impl_serialize_for_felt_type!(Nonce);
 impl_serialize_for_felt_type!(EntryPointSelector);

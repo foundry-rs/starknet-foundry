@@ -1,5 +1,5 @@
 use anyhow::{anyhow, Result};
-use cairo_felt::Felt252;
+use cairo_vm::Felt252;
 use num_bigint::{BigUint, RandBigInt};
 use num_integer::Integer;
 use num_traits::{One, Zero};

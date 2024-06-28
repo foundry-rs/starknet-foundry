@@ -1,12 +1,11 @@
 use super::test_environment::TestEnvironment;
 use crate::{common::assertions::assert_success, common::get_contracts};
-use cairo_felt::Felt252;
+use cairo_vm::Felt252;
 use cheatnet::state::CheatSpan;
+use conversions::string::TryFromHexStr;
 use conversions::IntoConv;
 use runtime::starknet::context::SEQUENCER_ADDRESS;
-use starknet_api::core::{ContractAddress, PatriciaKey};
-use starknet_api::hash::StarkHash;
-use starknet_api::{contract_address, patricia_key};
+use starknet_api::core::ContractAddress;
 
 trait CheatSequencerAddressTrait {
     fn cheat_sequencer_address(
@@ -121,7 +120,7 @@ fn cheat_sequencer_address_stop() {
 
     assert_success(
         test_env.call_contract(&contract_address, "get_sequencer_address", &[]),
-        &[contract_address!(SEQUENCER_ADDRESS).into_()],
+        &[TryFromHexStr::try_from_hex_str(SEQUENCER_ADDRESS).unwrap()],
     );
 }
 
@@ -143,7 +142,7 @@ fn cheat_sequencer_address_double() {
 
     assert_success(
         test_env.call_contract(&contract_address, "get_sequencer_address", &[]),
-        &[contract_address!(SEQUENCER_ADDRESS).into_()],
+        &[TryFromHexStr::try_from_hex_str(SEQUENCER_ADDRESS).unwrap()],
     );
 }
 
@@ -166,7 +165,7 @@ fn cheat_sequencer_address_proxy() {
 
     assert_success(
         test_env.call_contract(&proxy_address, selector, &[contract_address.into_()]),
-        &[contract_address!(SEQUENCER_ADDRESS).into_()],
+        &[TryFromHexStr::try_from_hex_str(SEQUENCER_ADDRESS).unwrap()],
     );
 }
 
@@ -191,7 +190,7 @@ fn cheat_sequencer_address_library_call() {
 
     assert_success(
         test_env.call_contract(&lib_call_address, lib_call_selector, &[class_hash.into_()]),
-        &[contract_address!(SEQUENCER_ADDRESS).into_()],
+        &[TryFromHexStr::try_from_hex_str(SEQUENCER_ADDRESS).unwrap()],
     );
 }
 
@@ -269,14 +268,14 @@ fn cheat_sequencer_address_all_stop() {
 
     assert_success(
         test_env.call_contract(&contract_address, "get_sequencer_address", &[]),
-        &[contract_address!(SEQUENCER_ADDRESS).into_()],
+        &[TryFromHexStr::try_from_hex_str(SEQUENCER_ADDRESS).unwrap()],
     );
 
     let contract_address = test_env.deploy_wrapper(&cheat_sequencer_address_checker, &[]);
 
     assert_success(
         test_env.call_contract(&contract_address, "get_sequencer_address", &[]),
-        &[contract_address!(SEQUENCER_ADDRESS).into_()],
+        &[TryFromHexStr::try_from_hex_str(SEQUENCER_ADDRESS).unwrap()],
     );
 }
 
@@ -311,11 +310,11 @@ fn cheat_sequencer_address_multiple() {
 
     assert_success(
         test_env.call_contract(&contract_address1, "get_sequencer_address", &[]),
-        &[contract_address!(SEQUENCER_ADDRESS).into_()],
+        &[TryFromHexStr::try_from_hex_str(SEQUENCER_ADDRESS).unwrap()],
     );
     assert_success(
         test_env.call_contract(&contract_address2, "get_sequencer_address", &[]),
-        &[contract_address!(SEQUENCER_ADDRESS).into_()],
+        &[TryFromHexStr::try_from_hex_str(SEQUENCER_ADDRESS).unwrap()],
     );
 }
 
@@ -337,7 +336,7 @@ fn cheat_sequencer_address_simple_with_span() {
     );
     assert_success(
         test_env.call_contract(&contract_address, "get_sequencer_address", &[]),
-        &[contract_address!(SEQUENCER_ADDRESS).into_()],
+        &[TryFromHexStr::try_from_hex_str(SEQUENCER_ADDRESS).unwrap()],
     );
 }
 
@@ -359,7 +358,10 @@ fn cheat_sequencer_address_proxy_with_span() {
     );
     assert_success(
         output,
-        &[123.into(), contract_address!(SEQUENCER_ADDRESS).into_()],
+        &[
+            123.into(),
+            TryFromHexStr::try_from_hex_str(SEQUENCER_ADDRESS).unwrap(),
+        ],
     );
 }
 
@@ -385,7 +387,7 @@ fn cheat_sequencer_address_in_constructor_with_span() {
     );
     assert_success(
         test_env.call_contract(&contract_address, "get_sequencer_address", &[]),
-        &[contract_address!(SEQUENCER_ADDRESS).into_()],
+        &[TryFromHexStr::try_from_hex_str(SEQUENCER_ADDRESS).unwrap()],
     );
     assert_success(
         test_env.call_contract(&contract_address, "get_stored_sequencer_address", &[]),
@@ -415,7 +417,7 @@ fn cheat_sequencer_address_no_constructor_with_span() {
     );
     assert_success(
         test_env.call_contract(&contract_address, "get_sequencer_address", &[]),
-        &[contract_address!(SEQUENCER_ADDRESS).into_()],
+        &[TryFromHexStr::try_from_hex_str(SEQUENCER_ADDRESS).unwrap()],
     );
 }
 
@@ -447,7 +449,7 @@ fn cheat_sequencer_address_override_span() {
 
     assert_success(
         test_env.call_contract(&contract_address, "get_sequencer_address", &[]),
-        &[contract_address!(SEQUENCER_ADDRESS).into_()],
+        &[TryFromHexStr::try_from_hex_str(SEQUENCER_ADDRESS).unwrap()],
     );
 }
 
@@ -469,6 +471,6 @@ fn cheat_sequencer_address_library_call_with_span() {
     );
     assert_success(
         test_env.call_contract(&contract_address, lib_call_selector, &[class_hash.into_()]),
-        &[contract_address!(SEQUENCER_ADDRESS).into_()],
+        &[TryFromHexStr::try_from_hex_str(SEQUENCER_ADDRESS).unwrap()],
     );
 }

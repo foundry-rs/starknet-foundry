@@ -772,20 +772,20 @@ fn should_panic() {
         
         Failure data:
             Incorrect panic data
-            Actual:    [8111420071579136082810415440747] (failing check)
-            Expected:  [0] ()
+            Actual:    [0x000000000000000000000000000000000000006661696c696e6720636865636b] (failing check)
+            Expected:  [0x0000000000000000000000000000000000000000000000000000000000000000] ()
         
         [FAIL] should_panic_test_integrationtest::should_panic_test::expected_panic_but_didnt_with_expected
         
         Failure data:
             Expected to panic but didn't
-            Expected panic data:  [8903707727067478891290643490661] (panic message)
+            Expected panic data:  [0x0000000000000000000000000000000000000070616e6963206d657373616765] (panic message)
         
         [FAIL] should_panic_test_integrationtest::should_panic_test::expected_panic_but_didnt_with_expected_multiple
         
         Failure data:
             Expected to panic but didn't
-            Expected panic data:  [8903707727067478891290643490661, 2340509922561928411394884117817189] (panic message, second message)
+            Expected panic data:  [0x0000000000000000000000000000000000000070616e6963206d657373616765, 0x0000000000000000000000000000000000007365636f6e64206d657373616765] (panic message, second message)
         
         [FAIL] should_panic_test_integrationtest::should_panic_test::didnt_expect_panic
         

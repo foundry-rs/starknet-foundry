@@ -1,6 +1,4 @@
-use std::{any::Any, collections::HashMap};
-
-use crate::runtime_extensions::cheatable_starknet_runtime_extension::stark_felt_from_ptr_immutable;
+use crate::runtime_extensions::cheatable_starknet_runtime_extension::felt_from_ptr_immutable;
 use anyhow::Result;
 use blockifier::execution::{
     deprecated_syscalls::{
@@ -9,7 +7,6 @@ use blockifier::execution::{
     hint_code,
     syscalls::{hint_processor::SyscallExecutionError, SyscallResult},
 };
-use cairo_felt::Felt252;
 use cairo_vm::{
     hint_processor::{
         builtin_hint_processor::{
@@ -24,8 +21,10 @@ use cairo_vm::{
         runners::cairo_runner::{ResourceTracker, RunResources},
         vm_core::VirtualMachine,
     },
+    Felt252,
 };
 use runtime::{SyscallHandlingResult, SyscallPtrAccess};
+use std::{any::Any, collections::HashMap};
 
 pub struct DeprecatedStarknetRuntime<'a> {
     pub hint_handler: DeprecatedSyscallHintProcessor<'a>,
@@ -147,7 +146,7 @@ impl<Extension: DeprecatedExtensionLogic> DeprecatedExtendedRuntime<Extension> {
     ) -> Result<(), HintError> {
         let initial_syscall_ptr = get_ptr_from_var_name("syscall_ptr", vm, ids_data, ap_tracking)?;
         self.verify_syscall_ptr(initial_syscall_ptr)?;
-        let selector = DeprecatedSyscallSelector::try_from(stark_felt_from_ptr_immutable(
+        let selector = DeprecatedSyscallSelector::try_from(felt_from_ptr_immutable(
             vm,
             &initial_syscall_ptr,
         )?)?;

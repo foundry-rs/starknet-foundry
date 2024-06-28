@@ -25,9 +25,9 @@ pub fn build_syscall_handler<'a>(
         .iter()
         .any(|(ty, _)| ty == &SegmentArenaType::ID)
     {
-        12
+        16
     } else {
-        10
+        14
     };
 
     let entry_point = build_test_entry_point();

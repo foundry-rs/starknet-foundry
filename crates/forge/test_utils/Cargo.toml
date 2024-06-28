@@ -9,6 +9,7 @@ edition = "2021"
 anyhow.workspace = true
 shared.workspace = true
 blockifier.workspace = true
+cairo-vm.workspace = true
 assert_fs.workspace = true
 camino.workspace = true
 indoc.workspace = true

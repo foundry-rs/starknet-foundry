@@ -11,15 +11,10 @@ use indoc::indoc;
 use starknet::core::utils::get_selector_from_name;
 use starknet_api::deprecated_contract_class::EntryPointType;
 
+use conversions::string::TryFromHexStr;
 use runtime::starknet::context::ERC20_CONTRACT_ADDRESS;
 use runtime::starknet::state::DictStateReader;
-use starknet_api::{
-    class_hash, contract_address,
-    core::{ClassHash, ContractAddress, PatriciaKey},
-    hash::StarkHash,
-    patricia_key,
-    transaction::Calldata,
-};
+use starknet_api::{core::ContractAddress, transaction::Calldata};
 
 pub const MAX_FEE: u128 = 1_000_000 * 100_000_000_000; // 1000000 * min_gas_price.
 pub const INITIAL_BALANCE: u128 = 10 * MAX_FEE;
@@ -62,8 +57,10 @@ fn contract_class_no_entrypoints() -> ContractClass {
 // Account does not include validations
 #[must_use]
 pub fn build_testing_state() -> DictStateReader {
-    let test_erc20_class_hash = class_hash!(TEST_ERC20_CONTRACT_CLASS_HASH);
-    let test_contract_class_hash = class_hash!(TEST_CONTRACT_CLASS_HASH);
+    let test_erc20_class_hash =
+        TryFromHexStr::try_from_hex_str(TEST_ERC20_CONTRACT_CLASS_HASH).unwrap();
+    let test_contract_class_hash =
+        TryFromHexStr::try_from_hex_str(TEST_CONTRACT_CLASS_HASH).unwrap();
 
     let class_hash_to_class = HashMap::from([
         // This is dummy put here only to satisfy blockifier
@@ -71,8 +68,8 @@ pub fn build_testing_state() -> DictStateReader {
         (test_contract_class_hash, contract_class_no_entrypoints()),
     ]);
 
-    let test_erc20_address = contract_address!(ERC20_CONTRACT_ADDRESS);
-    let test_address = contract_address!(TEST_ADDRESS);
+    let test_erc20_address = TryFromHexStr::try_from_hex_str(ERC20_CONTRACT_ADDRESS).unwrap();
+    let test_address = TryFromHexStr::try_from_hex_str(TEST_ADDRESS).unwrap();
     let address_to_class_hash = HashMap::from([
         (test_erc20_address, test_erc20_class_hash),
         (test_address, test_contract_class_hash),
@@ -91,11 +88,11 @@ pub fn build_test_entry_point() -> CallEntryPoint {
     let entry_point_selector = test_selector.into_();
     CallEntryPoint {
         class_hash: None,
-        code_address: Some(contract_address!(TEST_ADDRESS)),
+        code_address: Some(TryFromHexStr::try_from_hex_str(TEST_ADDRESS).unwrap()),
         entry_point_type: EntryPointType::External,
         entry_point_selector,
         calldata: Calldata(Arc::new(vec![])),
-        storage_address: contract_address!(TEST_ADDRESS),
+        storage_address: TryFromHexStr::try_from_hex_str(TEST_ADDRESS).unwrap(),
         caller_address: ContractAddress::default(),
         call_type: CallType::Call,
         initial_gas: u64::MAX,

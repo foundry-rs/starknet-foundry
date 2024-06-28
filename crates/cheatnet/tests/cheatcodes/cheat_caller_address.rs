@@ -1,14 +1,12 @@
 use crate::common::assertions::assert_success;
 use crate::common::get_contracts;
-use cairo_felt::Felt252;
 use cairo_lang_starknet_classes::keccak::starknet_keccak;
+use cairo_vm::Felt252;
 use cheatnet::constants::TEST_ADDRESS;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::Event;
 use cheatnet::state::CheatSpan;
 use conversions::IntoConv;
-use starknet_api::core::{ContractAddress, PatriciaKey};
-use starknet_api::hash::StarkHash;
-use starknet_api::{contract_address, patricia_key};
+use starknet_api::core::ContractAddress;
 use tempfile::TempDir;
 
 use super::test_environment::TestEnvironment;
@@ -115,7 +113,7 @@ fn cheat_caller_address_stop() {
 
     assert_success(
         test_env.call_contract(&contract_address, "get_caller_address", &[]),
-        &[contract_address!(TEST_ADDRESS).into_()],
+        &[TryFromHexStr::try_from_hex_str(TEST_ADDRESS).unwrap()],
     );
 }
 
@@ -137,7 +135,7 @@ fn cheat_caller_address_double() {
 
     assert_success(
         test_env.call_contract(&contract_address, "get_caller_address", &[]),
-        &[contract_address!(TEST_ADDRESS).into_()],
+        &[TryFromHexStr::try_from_hex_str(TEST_ADDRESS).unwrap()],
     );
 }
 
@@ -184,7 +182,7 @@ fn cheat_caller_address_library_call() {
 
     assert_success(
         test_env.call_contract(&lib_call_address, lib_call_selector, &[class_hash.into_()]),
-        &[contract_address!(TEST_ADDRESS).into_()],
+        &[TryFromHexStr::try_from_hex_str(TEST_ADDRESS).unwrap()],
     );
 }
 
@@ -209,14 +207,14 @@ fn cheat_caller_address_all() {
 
     assert_success(
         test_env.call_contract(&contract_address, "get_caller_address", &[]),
-        &[contract_address!(TEST_ADDRESS).into_()],
+        &[TryFromHexStr::try_from_hex_str(TEST_ADDRESS).unwrap()],
     );
 
     let contract_address = test_env.deploy_wrapper(&cheat_caller_address_checker, &[]);
 
     assert_success(
         test_env.call_contract(&contract_address, "get_caller_address", &[]),
-        &[contract_address!(TEST_ADDRESS).into_()],
+        &[TryFromHexStr::try_from_hex_str(TEST_ADDRESS).unwrap()],
     );
 }
 
@@ -251,11 +249,11 @@ fn cheat_caller_address_multiple() {
 
     assert_success(
         test_env.call_contract(&contract_address1, "get_caller_address", &[]),
-        &[contract_address!(TEST_ADDRESS).into_()],
+        &[TryFromHexStr::try_from_hex_str(TEST_ADDRESS).unwrap()],
     );
     assert_success(
         test_env.call_contract(&contract_address2, "get_caller_address", &[]),
-        &[contract_address!(TEST_ADDRESS).into_()],
+        &[TryFromHexStr::try_from_hex_str(TEST_ADDRESS).unwrap()],
     );
 }
 
@@ -317,7 +315,7 @@ fn cheat_caller_address_cairo0_callback() {
                     "0x18783f6c124c3acc504f300cb6b3a33def439681744d027be8d7fd5d3551565",
                 )
                 .unwrap(),
-                expected_caller_address.clone(),
+                expected_caller_address,
             ],
         ),
         &[],
@@ -355,7 +353,7 @@ fn cheat_caller_address_simple_with_span() {
     );
     assert_success(
         test_env.call_contract(&contract_address, "get_caller_address", &[]),
-        &[contract_address!(TEST_ADDRESS).into_()],
+        &[TryFromHexStr::try_from_hex_str(TEST_ADDRESS).unwrap()],
     );
 }
 
@@ -407,7 +405,7 @@ fn cheat_caller_address_override_span() {
 
     assert_success(
         test_env.call_contract(&contract_address, "get_caller_address", &[]),
-        &[contract_address!(TEST_ADDRESS).into_()],
+        &[TryFromHexStr::try_from_hex_str(TEST_ADDRESS).unwrap()],
     );
 }
 
@@ -434,7 +432,7 @@ fn cheat_caller_address_constructor_with_span() {
     );
     assert_success(
         test_env.call_contract(&contract_address, "get_caller_address", &[]),
-        &[contract_address!(TEST_ADDRESS).into_()],
+        &[TryFromHexStr::try_from_hex_str(TEST_ADDRESS).unwrap()],
     );
 }
 
@@ -456,6 +454,6 @@ fn cheat_caller_address_library_call_with_span() {
     );
     assert_success(
         test_env.call_contract(&contract_address, lib_call_selector, &[class_hash.into_()]),
-        &[contract_address!(TEST_ADDRESS).into_()],
+        &[TryFromHexStr::try_from_hex_str(TEST_ADDRESS).unwrap()],
     );
 }

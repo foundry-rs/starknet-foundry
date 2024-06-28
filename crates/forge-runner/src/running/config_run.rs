@@ -7,13 +7,10 @@ use crate::{package_tests::TestDetails, running::build_syscall_handler};
 use anyhow::Result;
 use blockifier::{
     blockifier::block::{BlockInfo, GasPrices},
-    state::{
-        cached_state::{CachedState, GlobalContractCache, GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST},
-        state_api::StateReader,
-    },
+    state::{cached_state::CachedState, state_api::StateReader},
 };
-use cairo_felt::Felt252;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
+use cairo_vm::Felt252;
 use cheatnet::runtime_extensions::forge_config_extension::{
     config::RawForgeConfig, ForgeConfigExtension,
 };
@@ -55,7 +52,7 @@ impl StateReader for FakeStateReader {
         &self,
         _contract_address: starknet_api::core::ContractAddress,
         _key: starknet_api::state::StorageKey,
-    ) -> blockifier::state::state_api::StateResult<starknet_api::hash::StarkFelt> {
+    ) -> blockifier::state::state_api::StateResult<Felt252> {
         unreachable!()
     }
 }
@@ -66,10 +63,7 @@ pub fn run_config_pass(
     test_details: &TestDetails,
     casm_program: &AssembledProgramWithDebugInfo,
 ) -> Result<RawForgeConfig> {
-    let mut cached_state = CachedState::new(
-        FakeStateReader,
-        GlobalContractCache::new(GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST),
-    );
+    let mut cached_state = CachedState::new(FakeStateReader);
     let block_info = BlockInfo {
         block_number: BlockNumber(0),
         block_timestamp: BlockTimestamp(0),

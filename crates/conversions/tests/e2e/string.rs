@@ -1,8 +1,8 @@
-use cairo_felt::Felt252;
 use conversions::string::{IntoDecStr, TryFromDecStr};
 use starknet::core::types::FieldElement;
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, Nonce};
-use starknet_api::hash::{StarkFelt, StarkHash};
+use starknet_api::hash::StarkHash;
+use starknet_types_core::felt::Felt as Felt252;
 
 #[test]
 fn test_short_strings_conversions_happy_case() {
@@ -31,10 +31,6 @@ fn test_short_strings_conversions_happy_case() {
     assert_eq!(
         short_string,
         (EntryPointSelector::try_from_dec_str(short_string).unwrap()).into_dec_string()
-    );
-    assert_eq!(
-        short_string,
-        (StarkFelt::try_from_dec_str(short_string).unwrap()).into_dec_string()
     );
     assert_eq!(
         short_string,
@@ -72,10 +68,6 @@ fn test_short_strings_conversions_zero() {
     );
     assert_eq!(
         short_string,
-        (StarkFelt::try_from_dec_str(short_string).unwrap()).into_dec_string()
-    );
-    assert_eq!(
-        short_string,
         (StarkHash::try_from_dec_str(short_string).unwrap()).into_dec_string()
     );
 }
@@ -104,10 +96,6 @@ fn test_short_string_conversions_limit() {
     assert_eq!(
         short_string,
         (EntryPointSelector::try_from_dec_str(short_string).unwrap()).into_dec_string()
-    );
-    assert_eq!(
-        short_string,
-        (StarkFelt::try_from_dec_str(short_string).unwrap()).into_dec_string()
     );
     assert_eq!(
         short_string,

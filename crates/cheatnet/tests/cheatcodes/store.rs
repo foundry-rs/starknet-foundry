@@ -1,18 +1,18 @@
 use crate::cheatcodes::{map_entry_address, variable_address};
 use crate::common::assertions::assert_success;
 use crate::common::get_contracts;
-use cairo_felt::Felt252;
+use cairo_vm::Felt252;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::storage::store;
 use starknet_api::core::ContractAddress;
 
 use super::test_environment::TestEnvironment;
 
 trait StoreTrait {
-    fn store(&mut self, target: ContractAddress, storage_address: &Felt252, value: u128);
+    fn store(&mut self, target: ContractAddress, storage_address: Felt252, value: u128);
 }
 
 impl StoreTrait for TestEnvironment {
-    fn store(&mut self, target: ContractAddress, storage_address: &Felt252, value: u128) {
+    fn store(&mut self, target: ContractAddress, storage_address: Felt252, value: u128) {
         store(
             &mut self.cached_state,
             target,
@@ -32,7 +32,7 @@ fn store_simple_state() {
     let class_hash = test_env.declare("HelloStarknet", &contracts_data);
     let contract_address = test_env.deploy_wrapper(&class_hash, &[]);
 
-    test_env.store(contract_address, &variable_address("balance"), 666);
+    test_env.store(contract_address, variable_address("balance"), 666);
 
     assert_success(
         test_env.call_contract(&contract_address, "get_balance", &[]),
@@ -53,8 +53,8 @@ fn store_state_map_simple_value() {
     let map_key = Felt252::from(420);
     let inserted_value = 69;
 
-    let entry_address = map_entry_address("values", &[map_key.clone()]);
-    test_env.store(contract_address, &entry_address, inserted_value);
+    let entry_address = map_entry_address("values", &[map_key]);
+    test_env.store(contract_address, entry_address, inserted_value);
 
     assert_success(
         test_env.call_contract(&contract_address, "read", &[map_key]),

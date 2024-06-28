@@ -1,17 +1,17 @@
 use crate::cheatcodes::{map_entry_address, variable_address};
 use crate::common::get_contracts;
-use cairo_felt::Felt252;
+use cairo_vm::Felt252;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::storage::load;
 use starknet_api::core::ContractAddress;
 
 use super::test_environment::TestEnvironment;
 
 trait LoadTrait {
-    fn load(&mut self, target: ContractAddress, storage_address: &Felt252) -> Felt252;
+    fn load(&mut self, target: ContractAddress, storage_address: Felt252) -> Felt252;
 }
 
 impl LoadTrait for TestEnvironment {
-    fn load(&mut self, target: ContractAddress, storage_address: &Felt252) -> Felt252 {
+    fn load(&mut self, target: ContractAddress, storage_address: Felt252) -> Felt252 {
         load(&mut self.cached_state, target, storage_address).unwrap()
     }
 }
@@ -26,7 +26,7 @@ fn load_simple_state() {
 
     test_env.call_contract(&contract_address, "increase_balance", &[Felt252::from(420)]);
 
-    let balance_value = test_env.load(contract_address, &variable_address("balance"));
+    let balance_value = test_env.load(contract_address, variable_address("balance"));
 
     assert_eq!(
         balance_value,
@@ -45,14 +45,10 @@ fn load_state_map_simple_value() {
 
     let map_key = Felt252::from(420);
     let inserted_value = Felt252::from(69);
-    test_env.call_contract(
-        &contract_address,
-        "insert",
-        &[map_key.clone(), inserted_value.clone()],
-    );
+    test_env.call_contract(&contract_address, "insert", &[map_key, inserted_value]);
 
     let var_address = map_entry_address("values", &[map_key]);
-    let map_value = test_env.load(contract_address, &var_address);
+    let map_value = test_env.load(contract_address, var_address);
 
     assert_eq!(
         map_value, inserted_value,

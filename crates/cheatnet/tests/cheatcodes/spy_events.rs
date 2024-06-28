@@ -2,8 +2,8 @@ use crate::cheatcodes::test_environment::TestEnvironment;
 use crate::common::get_contracts;
 use crate::common::state::create_fork_cached_state_at;
 use crate::common::{call_contract, deploy_contract, felt_selector_from_name};
-use cairo_felt::Felt252;
 use cairo_lang_starknet_classes::keccak::starknet_keccak;
+use cairo_vm::Felt252;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::Event;
 use cheatnet::state::CheatnetState;
 use conversions::string::TryFromHexStr;
@@ -342,8 +342,8 @@ fn capture_cairo0_event() {
         &mut cached_state,
         &mut cheatnet_state,
         &contract_address,
-        &selector,
-        &[cairo0_contract_address.clone()],
+        selector,
+        &[cairo0_contract_address],
     );
 
     let events = cheatnet_state.get_events(0);

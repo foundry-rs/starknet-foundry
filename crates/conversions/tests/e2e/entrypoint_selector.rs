@@ -1,16 +1,16 @@
 #[cfg(test)]
 mod tests_entrypoint_selector {
-    use cairo_felt::{Felt252, PRIME_STR};
+    use cairo_vm::utils::PRIME_STR;
     use conversions::string::{IntoDecStr, TryFromDecStr, TryFromHexStr};
     use conversions::{FromConv, IntoConv};
-    use num_traits::Bounded;
     use starknet::core::types::FieldElement;
     use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, Nonce};
-    use starknet_api::hash::{StarkFelt, StarkHash};
+    use starknet_api::hash::StarkHash;
+    use starknet_types_core::felt::Felt as Felt252;
 
     #[test]
     fn test_entrypoint_selector_conversions_happy_case() {
-        let felt: StarkFelt = StarkFelt::new([1u8; 32]).unwrap();
+        let felt = Felt252::from_bytes_be(&[1u8; 32]);
         let entrypoint_selector = EntryPointSelector(felt);
 
         assert_eq!(
@@ -28,10 +28,6 @@ mod tests_entrypoint_selector {
         assert_eq!(
             entrypoint_selector,
             FieldElement::from_(entrypoint_selector).into_()
-        );
-        assert_eq!(
-            entrypoint_selector,
-            StarkFelt::from_(entrypoint_selector).into_()
         );
         assert_eq!(
             entrypoint_selector,
@@ -50,7 +46,7 @@ mod tests_entrypoint_selector {
 
     #[test]
     fn test_entrypoint_selector_conversions_zero() {
-        let felt: StarkFelt = StarkFelt::new([0u8; 32]).unwrap();
+        let felt = Felt252::ZERO;
         let entrypoint_selector = EntryPointSelector(felt);
 
         assert_eq!(
@@ -71,10 +67,6 @@ mod tests_entrypoint_selector {
         );
         assert_eq!(
             entrypoint_selector,
-            StarkFelt::from_(entrypoint_selector).into_()
-        );
-        assert_eq!(
-            entrypoint_selector,
             StarkHash::from_(entrypoint_selector).into_()
         );
         assert_eq!(
@@ -90,7 +82,7 @@ mod tests_entrypoint_selector {
 
     #[test]
     fn test_entrypoint_selector_conversions_limit() {
-        let mut entrypoint_selector: EntryPointSelector = Felt252::max_value().into_();
+        let mut entrypoint_selector: EntryPointSelector = Felt252::MAX.into_();
 
         assert_eq!(
             entrypoint_selector,
@@ -103,10 +95,6 @@ mod tests_entrypoint_selector {
         assert_eq!(
             entrypoint_selector,
             ClassHash::from_(entrypoint_selector).into_()
-        );
-        assert_eq!(
-            entrypoint_selector,
-            StarkFelt::from_(entrypoint_selector).into_()
         );
         assert_eq!(
             entrypoint_selector,

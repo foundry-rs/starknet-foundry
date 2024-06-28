@@ -1,8 +1,7 @@
 use crate::package_tests::TestDetails;
-use cairo_felt::Felt252;
 use cairo_lang_casm::instructions::Instruction;
 use cairo_lang_runner::{Arg, SierraCasmRunner};
-use cairo_vm::serde::deserialize_program::BuiltinName;
+use cairo_vm::{types::builtin_name::BuiltinName, Felt252};
 use universal_sierra_compiler_api::AssembledProgramWithDebugInfo;
 
 pub fn create_entry_code(

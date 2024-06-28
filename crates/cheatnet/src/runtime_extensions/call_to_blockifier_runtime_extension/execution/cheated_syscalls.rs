@@ -92,7 +92,7 @@ pub fn deploy_syscall(
         cheatnet_state,
         syscall_handler.resources,
         syscall_handler.context,
-        ctor_context,
+        &ctor_context,
         request.constructor_calldata,
         *remaining_gas,
     )?;
@@ -115,7 +115,7 @@ pub fn execute_deployment(
     cheatnet_state: &mut CheatnetState,
     resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
-    ctor_context: ConstructorContext,
+    ctor_context: &ConstructorContext,
     constructor_calldata: Calldata,
     remaining_gas: u64,
 ) -> EntryPointExecutionResult<CallInfo> {

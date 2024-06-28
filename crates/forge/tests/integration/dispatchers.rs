@@ -780,7 +780,7 @@ fn nonexistent_libcall_function() {
     assert_case_output_contains(
        & result,
         "nonexistent_libcall_function",
-        "Entry point EntryPointSelector(StarkFelt(\"0x01fdb214e1495025fa4baf660d34f03c0d8b5037cf10311d2a3202a806aa9485\")) not found in contract"
+        "Entry point EntryPointSelector(0x01fdb214e1495025fa4baf660d34f03c0d8b5037cf10311d2a3202a806aa9485) not found in contract"
     );
 }
 

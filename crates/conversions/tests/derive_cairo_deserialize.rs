@@ -1,5 +1,5 @@
-use cairo_felt::Felt252;
 use conversions::serde::deserialize::{BufferReader, CairoDeserialize};
+use starknet_types_core::felt::Felt as Felt252;
 
 macro_rules! from_felts {
     ($($exprs:expr),*) => {

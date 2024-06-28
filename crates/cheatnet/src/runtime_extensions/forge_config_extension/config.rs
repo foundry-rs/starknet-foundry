@@ -1,4 +1,4 @@
-use cairo_felt::Felt252;
+use cairo_vm::Felt252;
 use conversions::{byte_array::ByteArray, serde::deserialize::CairoDeserialize};
 use std::num::NonZeroU32;
 use url::Url;

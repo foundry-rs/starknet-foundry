@@ -5,12 +5,10 @@ use crate::package_tests::with_config_resolved::{ResolvedForkConfig, TestCaseWit
 use crate::test_case_summary::{Single, TestCaseSummary};
 use anyhow::{bail, ensure, Result};
 use blockifier::execution::entry_point::EntryPointExecutionContext;
-use blockifier::state::cached_state::{
-    CachedState, GlobalContractCache, GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST,
-};
-use cairo_felt::Felt252;
+use blockifier::state::cached_state::CachedState;
 use cairo_lang_runner::{RunResult, RunnerError, SierraCasmRunner};
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
+use cairo_vm::Felt252;
 use camino::Utf8Path;
 use casm::{get_assembled_program, run_assembled_program};
 use cheatnet::constants as cheatnet_constants;
@@ -165,10 +163,7 @@ pub fn run_test_case(
     if let Some(max_n_steps) = runtime_config.max_n_steps {
         set_max_steps(&mut context, max_n_steps);
     }
-    let mut cached_state = CachedState::new(
-        state_reader,
-        GlobalContractCache::new(GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST),
-    );
+    let mut cached_state = CachedState::new(state_reader);
     let mut execution_resources = ExecutionResources::default();
     let syscall_handler = build_syscall_handler(
         &mut cached_state,
@@ -211,9 +206,9 @@ pub fn run_test_case(
 
     let run_result =
         match run_assembled_program(&assembled_program, builtins, hints_dict, &mut forge_runtime) {
-            Ok((vm, runner)) => {
+            Ok(runner) => {
                 let vm_resources_without_inner_calls = runner
-                    .get_execution_resources(&vm)
+                    .get_execution_resources()
                     .unwrap()
                     .filter_unused_builtins();
                 *forge_runtime
@@ -223,11 +218,13 @@ pub fn run_test_case(
                     .hint_handler
                     .resources += &vm_resources_without_inner_calls;
 
-                let cells = runner.relocated_memory;
-                let ap = vm.get_relocated_trace().unwrap().last().unwrap().ap;
+                let ap = runner.relocated_trace.as_ref().unwrap().last().unwrap().ap;
 
-                let (results_data, gas_counter) =
-                    SierraCasmRunner::get_results_data(&case.test_details.return_types, &cells, ap);
+                let (results_data, gas_counter) = SierraCasmRunner::get_results_data(
+                    &case.test_details.return_types,
+                    &runner.relocated_memory,
+                    ap,
+                );
                 assert_eq!(results_data.len(), 1);
 
                 let (_, values) = results_data[0].clone();
@@ -237,17 +234,12 @@ pub fn run_test_case(
                     // this logic will need to be updated
                     Some(0),
                     values,
-                    &cells,
+                    &runner.relocated_memory,
                 );
 
-                update_top_call_vm_trace(&mut forge_runtime, &vm);
+                update_top_call_vm_trace(&mut forge_runtime, &runner);
 
-                Ok(RunResult {
-                    gas_counter,
-                    memory: cells,
-                    value,
-                    profiling_info: None,
-                })
+                Ok((gas_counter, runner.relocated_memory, value))
             }
             Err(err) => Err(RunnerError::CairoRunError(err)),
         };
@@ -265,7 +257,13 @@ pub fn run_test_case(
     )?;
 
     Ok(RunResultWithInfo {
-        run_result,
+        run_result: run_result.map(|(gas_counter, memory, value)| RunResult {
+            used_resources: used_resources.execution_resources.clone(),
+            gas_counter,
+            memory,
+            value,
+            profiling_info: None,
+        }),
         gas_used: gas,
         used_resources,
         call_trace: call_trace_ref,

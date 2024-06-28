@@ -1,7 +1,7 @@
 use crate::common::{call_contract, deploy_wrapper};
 use crate::common::{deploy_contract, felt_selector_from_name, state::create_cached_state};
 use blockifier::state::cached_state::CachedState;
-use cairo_felt::Felt252;
+use cairo_vm::Felt252;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallResult;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
@@ -61,7 +61,7 @@ impl TestEnvironment {
             &mut self.cached_state,
             &mut self.cheatnet_state,
             contract_address,
-            &felt_selector_from_name(selector),
+            felt_selector_from_name(selector),
             calldata,
         )
     }

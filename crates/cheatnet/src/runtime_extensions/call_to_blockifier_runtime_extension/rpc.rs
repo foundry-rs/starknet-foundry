@@ -12,12 +12,14 @@ use blockifier::execution::{
     syscalls::hint_processor::{SyscallCounter, SyscallHintProcessor},
 };
 use blockifier::state::errors::StateError;
-use cairo_felt::Felt252;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
-use conversions::{byte_array::ByteArray, serde::serialize::CairoSerialize, FromConv, IntoConv};
+use cairo_vm::Felt252;
+use conversions::{
+    byte_array::ByteArray, serde::serialize::CairoSerialize, string::IntoHexStr, FromConv, IntoConv,
+};
 use serde::{Deserialize, Serialize};
 use shared::utils::build_readable_text;
-use starknet_api::transaction::EventContent;
+use starknet_api::{core::EntryPointSelector, transaction::EventContent};
 use starknet_api::{
     core::{ClassHash, ContractAddress},
     deprecated_contract_class::EntryPointType,
@@ -82,14 +84,15 @@ impl CallFailure {
             EntryPointExecutionError::PreExecutionError(PreExecutionError::EntryPointNotFound(
                 selector,
             )) => {
-                let selector_hash = selector.0;
+                let selector_hash = selector.into_hex_string();
                 let msg = match starknet_identifier {
                     AddressOrClassHash::ContractAddress(address) => format!(
                         "Entry point selector {selector_hash} not found in contract {}",
-                        address.0.key()
+                        address.into_hex_string()
                     ),
                     AddressOrClassHash::ClassHash(class_hash) => format!(
-                        "Entry point selector {selector_hash} not found for class hash {class_hash}"
+                        "Entry point selector {selector_hash} not found for class hash {}",
+                        class_hash.into_hex_string()
                     ),
                 };
 
@@ -102,7 +105,7 @@ impl CallFailure {
             EntryPointExecutionError::PreExecutionError(
                 PreExecutionError::UninitializedStorageAddress(contract_address),
             ) => {
-                let address_str = contract_address.0.key().to_string();
+                let address_str = contract_address.into_hex_string();
                 let msg = format!("Contract not deployed at address: {address_str}");
 
                 let panic_data_felts = ByteArray::from(msg.as_str()).serialize_with_magic();
@@ -162,7 +165,7 @@ pub fn call_l1_handler(
     syscall_handler: &mut SyscallHintProcessor,
     cheatnet_state: &mut CheatnetState,
     contract_address: &ContractAddress,
-    entry_point_selector: &Felt252,
+    entry_point_selector: EntryPointSelector,
     calldata: &[Felt252],
 ) -> CallResult {
     let calldata = create_execute_calldata(calldata);
@@ -171,7 +174,7 @@ pub fn call_l1_handler(
         class_hash: None,
         code_address: Some(*contract_address),
         entry_point_type: EntryPointType::L1Handler,
-        entry_point_selector: entry_point_selector.clone().into_(),
+        entry_point_selector,
         calldata,
         storage_address: *contract_address,
         caller_address: ContractAddress::default(),

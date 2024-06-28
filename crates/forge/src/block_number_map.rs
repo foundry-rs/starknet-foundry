@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Result};
-use cairo_felt::Felt252;
-use conversions::IntoConv;
+use cairo_vm::Felt252;
+use conversions::{string::IntoHexStr, IntoConv};
 use starknet::{
     core::types::{BlockId, MaybePendingBlockWithTxHashes},
     providers::{jsonrpc::HttpTransport, JsonRpcClient, Provider},
@@ -37,13 +37,12 @@ impl BlockNumberMap {
         url: Url,
         hash: Felt252,
     ) -> Result<BlockNumber> {
-        let block_number = if let Some(block_number) = self
-            .url_and_hash_to_block_number
-            .get(&(url.clone(), hash.clone()))
+        let block_number = if let Some(block_number) =
+            self.url_and_hash_to_block_number.get(&(url.clone(), hash))
         {
             *block_number
         } else {
-            let block_number = fetch_block_number_for_hash(url.clone(), &hash).await?;
+            let block_number = fetch_block_number_for_hash(url.clone(), hash).await?;
 
             self.url_and_hash_to_block_number
                 .insert((url, hash), block_number);
@@ -69,10 +68,10 @@ async fn fetch_latest_block_number(url: Url) -> Result<BlockNumber> {
         .map(BlockNumber)?)
 }
 
-async fn fetch_block_number_for_hash(url: Url, block_hash: &Felt252) -> Result<BlockNumber> {
+async fn fetch_block_number_for_hash(url: Url, block_hash: Felt252) -> Result<BlockNumber> {
     let client = JsonRpcClient::new(HttpTransport::new(url));
 
-    let hash = BlockId::Hash(block_hash.clone().into_());
+    let hash = BlockId::Hash(block_hash.into_());
 
     match Handle::current()
         .spawn(async move { client.get_block_with_tx_hashes(hash).await })
@@ -81,7 +80,7 @@ async fn fetch_block_number_for_hash(url: Url, block_hash: &Felt252) -> Result<B
         Ok(MaybePendingBlockWithTxHashes::Block(block)) => Ok(BlockNumber(block.block_number)),
         _ => Err(anyhow!(
             "Could not get the block number for block with hash 0x{}",
-            block_hash.to_str_radix(16)
+            block_hash.into_hex_string()
         )),
     }
 }
