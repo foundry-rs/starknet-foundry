@@ -4,7 +4,7 @@ use camino::Utf8PathBuf;
 use clap::Args;
 use reqwest::StatusCode;
 use serde::Serialize;
-use sncast::response::structs::{VerificationStatus, VerifyResponse};
+use sncast::response::structs::VerifyResponse;
 use starknet::core::types::FieldElement;
 use std::ffi::OsStr;
 use walkdir::WalkDir;
@@ -84,21 +84,18 @@ impl VerificationInterface for WalnutVerificationInterface {
             .send()
             .await?;
 
-        let verification_status = match &api_res.status() {
-            &StatusCode::OK => VerificationStatus::OK,
-            _ => VerificationStatus::Error,
-        };
-
-        Ok(VerifyResponse {
-            verification_status,
-            message: api_res.text().await.ok(),
-        })
+        match &api_res.status() {
+            &StatusCode::OK => Ok(VerifyResponse {
+                message: api_res.text().await?,
+            }),
+            _ => Err(anyhow!(api_res.text().await?)),
+        }
     }
 
     fn gen_explorer_url(&self) -> Result<String> {
         let explorer_url: &str = match self.network.as_str() {
-            "mainnet" => Ok("http://api.walnut.dev/v1/sn_main/verify"),
-            "goerli" => Ok("https://api.walnut.dev/v1/sn_goerli/verify"),
+            "mainnet" => Ok("https://api.walnut.dev/v1/sn_main/verify"),
+            "sepolia" => Ok("https://api.walnut.dev/v1/sn_sepolia/verify"),
             _ => Err(anyhow!("Unknown network")),
         }?;
         Ok(explorer_url.to_string())

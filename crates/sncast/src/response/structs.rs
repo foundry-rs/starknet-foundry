@@ -146,15 +146,8 @@ pub struct TransactionStatusResponse {
 impl CommandResponse for TransactionStatusResponse {}
 
 #[derive(Serialize)]
-pub enum VerificationStatus {
-    OK,
-    Error,
-}
-
-#[derive(Serialize)]
 pub struct VerifyResponse {
-    pub verification_status: VerificationStatus,
-    pub message: Option<String>,
+    pub message: String,
 }
 
 impl CommandResponse for VerifyResponse {}
