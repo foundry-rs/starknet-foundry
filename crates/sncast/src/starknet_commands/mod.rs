@@ -2,6 +2,7 @@ pub mod account;
 pub mod call;
 pub mod declare;
 pub mod deploy;
+mod helpers;
 pub mod invoke;
 pub mod multicall;
 pub mod script;

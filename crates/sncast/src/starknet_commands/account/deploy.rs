@@ -14,6 +14,7 @@ use starknet::providers::ProviderError::StarknetError;
 use starknet::providers::{JsonRpcClient, Provider};
 use starknet::signers::{LocalWallet, SigningKey};
 
+use crate::starknet_commands::helpers::fee::Fee;
 use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::{
     chain_id_to_network_name, check_account_file_exists, get_account_data_from_accounts_file,
@@ -28,9 +29,8 @@ pub struct Deploy {
     #[clap(short, long)]
     pub name: Option<String>,
 
-    /// Max fee for the transaction
-    #[clap(short, long)]
-    pub max_fee: Option<FieldElement>,
+    #[clap(flatten)]
+    pub fee: Fee,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -47,7 +47,7 @@ pub async fn deploy(
         deploy_from_keystore(
             provider,
             chain_id,
-            deploy_args.max_fee,
+            deploy_args.fee.max_fee,
             wait_config,
             account,
             keystore_path_,
@@ -63,7 +63,7 @@ pub async fn deploy(
             accounts_file,
             account_name,
             chain_id,
-            deploy_args.max_fee,
+            deploy_args.fee.max_fee,
             wait_config,
         )
         .await
