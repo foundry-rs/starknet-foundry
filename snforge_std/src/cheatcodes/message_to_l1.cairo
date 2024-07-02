@@ -117,7 +117,7 @@ impl MessageToL1SpyAssertionsTraitImpl of MessageToL1SpyAssertionsTrait {
 
             if emitted {
                 let from: felt252 = (*from).into();
-                panic!("Message with matching data and keys was sent from {}", from);
+                panic!("Message with matching data and receiver was sent from {}", from);
             }
 
             i += 1;
