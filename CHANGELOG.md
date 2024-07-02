@@ -28,6 +28,7 @@ about updated `spy_events` cheatcode
 - `tx_status` function to cast_std. [Read more here](./docs/src/appendix/sncast-library/tx_status.md)
 - Support for creating argent accounts
 - Support for creating braavos accounts
+- `verify` subcommand to verify contract. [Read more here](./docs/src/appendix/sncast/verify.md)
 
 ## [0.24.0] - 2024-05-22
 
