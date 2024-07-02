@@ -11,7 +11,7 @@ mod storage;
 mod execution_info;
 
 /// Enum used to specify how long the target should be cheated for.
-#[derive(Copy, Drop, Serde, PartialEq, Clone, Debug, Display)]
+#[derive(Copy, Drop, Serde, PartialEq, Clone, Debug)]
 enum CheatSpan {
     /// Applies the cheatcode indefinitely, until the cheat is canceled manually (e.g. using
     /// `stop_cheat_block_timestamp`).
@@ -22,7 +22,8 @@ enum CheatSpan {
 }
 
 fn test_selector() -> felt252 {
-    selector!("TEST_CONTRACT_SELECTOR")
+    // Result of selector!("TEST_CONTRACT_SELECTOR") since `selector!` macro requires dependency on `starknet`.
+    655947323460646800722791151288222075903983590237721746322261907338444055163
 }
 
 fn test_address() -> ContractAddress {
