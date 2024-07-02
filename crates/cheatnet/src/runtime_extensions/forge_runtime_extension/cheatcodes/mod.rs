@@ -16,6 +16,7 @@ pub mod mock_call;
 pub mod precalculate_address;
 pub mod replace_bytecode;
 pub mod spy_events;
+pub mod spy_messages_to_l1;
 pub mod storage;
 
 /// A structure used for returning cheatcode errors in tests

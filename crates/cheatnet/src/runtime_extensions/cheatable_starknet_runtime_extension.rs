@@ -92,6 +92,9 @@ impl<'a> ExtensionLogic for CheatableStarknetRuntimeExtension<'a> {
         if let SyscallSelector::EmitEvent = selector {
             syscall_hooks::emit_event_hook(syscall_handler, self.cheatnet_state);
         }
+        if let SyscallSelector::SendMessageToL1 = selector {
+            syscall_hooks::send_message_to_l1_syscall_hook(syscall_handler, self.cheatnet_state);
+        }
     }
 }
 

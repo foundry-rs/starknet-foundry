@@ -293,6 +293,27 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 Ok(CheatcodeHandlingResult::from_serializable(events))
             }
+            "spy_messages_to_l1" => {
+                let messages_offset = extended_runtime
+                    .extended_runtime
+                    .extension
+                    .cheatnet_state
+                    .detected_messages_to_l1
+                    .len();
+
+                Ok(CheatcodeHandlingResult::from_serializable(messages_offset))
+            }
+            "get_messages_to_l1" => {
+                let messages_offset = input_reader.read()?;
+
+                let events = extended_runtime
+                    .extended_runtime
+                    .extension
+                    .cheatnet_state
+                    .get_messages_to_l1(messages_offset);
+
+                Ok(CheatcodeHandlingResult::from_serializable(events))
+            }
             "generate_stark_keys" => {
                 let key_pair = SigningKey::from_random();
 
