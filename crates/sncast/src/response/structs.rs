@@ -144,3 +144,10 @@ pub struct TransactionStatusResponse {
 }
 
 impl CommandResponse for TransactionStatusResponse {}
+
+#[derive(Serialize)]
+pub struct VerifyResponse {
+    pub message: String,
+}
+
+impl CommandResponse for VerifyResponse {}

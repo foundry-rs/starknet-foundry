@@ -25,6 +25,7 @@ use sncast::{
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
+use starknet_commands::verify::Verify;
 use tokio::runtime::Runtime;
 
 mod starknet_commands;
@@ -141,6 +142,9 @@ enum Commands {
 
     /// Get the status of a transaction
     TxStatus(TxStatus),
+
+    /// Verify a contract
+    Verify(Verify),
 }
 
 fn main() -> Result<()> {
@@ -425,6 +429,20 @@ async fn run_async_command(
                     .context("Failed to get transaction status");
             print_command_result("tx-status", &mut result, numbers_format, &output_format)?;
             Ok(())
+        }
+        Commands::Verify(verify) => {
+            let manifest_path = assert_manifest_path_exists()?;
+            let mut result = starknet_commands::verify::verify(
+                verify.contract_address,
+                verify.contract_name,
+                verify.verifier,
+                verify.network,
+                &manifest_path,
+            )
+            .await;
+
+            print_command_result("verify", &mut result, numbers_format, &output_format)?;
+            return Ok(());
         }
         Commands::Script(_) => unreachable!(),
     }
