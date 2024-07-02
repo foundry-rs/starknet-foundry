@@ -181,6 +181,45 @@ pub async fn test_happy_case_v3() {
     let items: Value = serde_json::from_str(&contents).expect("Failed to parse accounts file at ");
     assert_eq!(items["alpha-sepolia"]["my_account"]["deployed"], true);
 }
+
+#[tokio::test]
+pub async fn test_happy_case_strk_max_fee() {
+    let tempdir = create_account(false, &OZ_CLASS_HASH.into_hex_string(), "oz").await;
+    let accounts_file = "accounts.json";
+
+    let args = vec![
+        "--url",
+        URL,
+        "--accounts-file",
+        accounts_file,
+        "--json",
+        "account",
+        "deploy",
+        "--name",
+        "my_account",
+        "--fee-token",
+        "strk",
+        "--max-fee",
+        "100000000000000",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let bdg = snapbox.assert();
+
+    let hash = get_transaction_hash(&bdg.get_output().stdout);
+    let receipt = get_transaction_receipt(hash).await;
+
+    assert!(matches!(receipt, DeployAccount(_)));
+
+    let stdout_str = bdg.as_stdout();
+    assert!(stdout_str.contains("account deploy"));
+    assert!(stdout_str.contains("transaction_hash"));
+
+    let contents = fs::read_to_string(tempdir.path().join(accounts_file)).unwrap();
+    let items: Value = serde_json::from_str(&contents).expect("Failed to parse accounts file at ");
+    assert_eq!(items["alpha-sepolia"]["my_account"]["deployed"], true);
+}
+
 #[tokio::test]
 pub async fn test_happy_case_add_profile() {
     let tempdir = create_account(true, &OZ_CLASS_HASH.into_hex_string(), "oz").await;

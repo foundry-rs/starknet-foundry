@@ -15,10 +15,8 @@ use starknet::providers::ProviderError::StarknetError;
 use starknet::providers::{JsonRpcClient, Provider};
 use starknet::signers::{LocalWallet, SigningKey};
 
-use crate::starknet_commands::helpers::fee::{
-    EthFeeSettings, FeeArgs, FeeSettings, FeeToken, StrkFeeSettings,
-};
 use sncast::helpers::braavos::BraavosAccountFactory;
+use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken};
 use sncast::{
     chain_id_to_network_name, check_account_file_exists, get_account_data_from_accounts_file,
     get_account_data_from_keystore, get_keystore_password, handle_rpc_error, handle_wait_for_tx,
@@ -337,21 +335,15 @@ where
     let result = match fee_settings {
         FeeSettings::Eth(settings) => {
             let deployment = account_factory.deploy_v1(salt);
-            let settings = match settings {
-                None => EthFeeSettings::estimate(&deployment).await?,
-                Some(settings) => settings,
-            };
-            deployment.max_fee(settings.max_fee).send().await
+            let eth_fee = settings.get_or_estimate(&deployment).await?;
+            deployment.max_fee(eth_fee.max_fee).send().await
         }
         FeeSettings::Strk(settings) => {
             let deployment = account_factory.deploy_v3(salt);
-            let settings = match settings {
-                None => StrkFeeSettings::estimate(&deployment).await?,
-                Some(settings) => settings,
-            };
+            let strk_fee = settings.get_or_estimate(&deployment).await?;
             deployment
-                .gas(settings.max_gas)
-                .gas_price(settings.max_gas_unit_price)
+                .gas(strk_fee.max_gas)
+                .gas_price(strk_fee.max_gas_unit_price)
                 .send()
                 .await
         }

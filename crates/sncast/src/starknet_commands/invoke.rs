@@ -1,6 +1,6 @@
-use crate::starknet_commands::helpers::fee::FeeArgs;
 use anyhow::{anyhow, Result};
 use clap::Args;
+use sncast::helpers::fee::FeeArgs;
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::structs::{Felt, InvokeResponse};
 use sncast::{apply_optional, handle_wait_for_tx, WaitForTx};
