@@ -5,7 +5,7 @@ use sncast::response::structs::DeclareResponse;
 use sncast::response::structs::Felt;
 use sncast::{apply_optional, handle_wait_for_tx, ErrorData, WaitForTx};
 use starknet::accounts::AccountError::Provider;
-use starknet::accounts::{ConnectedAccount, Declaration};
+use starknet::accounts::{ConnectedAccount, DeclarationV2};
 
 use sncast::response::errors::StarknetCommandError;
 use starknet::core::types::FieldElement;
@@ -64,13 +64,13 @@ pub async fn declare(
         .class_hash()
         .map_err(anyhow::Error::from)?;
 
-    let declaration = account.declare(
+    let declaration = account.declare_v2(
         Arc::new(contract_definition.flatten().map_err(anyhow::Error::from)?),
         casm_class_hash,
     );
 
-    let declaration = apply_optional(declaration, max_fee, Declaration::max_fee);
-    let declaration = apply_optional(declaration, nonce, Declaration::nonce);
+    let declaration = apply_optional(declaration, max_fee, DeclarationV2::max_fee);
+    let declaration = apply_optional(declaration, nonce, DeclarationV2::nonce);
     let declared = declaration.send().await;
     match declared {
         Ok(result) => handle_wait_for_tx(

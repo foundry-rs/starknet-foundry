@@ -1,6 +1,9 @@
 use async_trait::async_trait;
 use starknet::{
-    accounts::{AccountFactory, PreparedAccountDeployment, RawAccountDeployment},
+    accounts::{
+        AccountFactory, PreparedAccountDeploymentV1, PreparedAccountDeploymentV3,
+        RawAccountDeploymentV1, RawAccountDeploymentV3,
+    },
     core::types::{BlockId, BlockTag, FieldElement},
     providers::Provider,
     signers::Signer,
@@ -45,6 +48,53 @@ where
         self.block_id = block_id;
         self
     }
+
+    async fn sign_deployment(
+        &self,
+        tx_hash: FieldElement,
+    ) -> Result<Vec<FieldElement>, S::SignError> {
+        let signature = self.signer.sign_hash(&tx_hash).await?;
+
+        // You can see params here:
+        // https://github.com/myBraavos/braavos-account-cairo/blob/6efdfd597bb051e99c79a512fccd14ee2523c898/src/presets/braavos_account.cairo#L104
+        // Order of the params is important, you can see way and order of deserialization here:
+        // https://github.com/myBraavos/braavos-account-cairo/blob/6efdfd597bb051e99c79a512fccd14ee2523c898/src/presets/braavos_account.cairo#L141
+        let aux_data: Vec<FieldElement> = vec![
+            // account_implementation
+            self.class_hash,
+            // signer_type
+            FieldElement::ZERO,
+            // secp256r1_signer.x.low
+            FieldElement::ZERO,
+            // secp256r1_signer.x.high
+            FieldElement::ZERO,
+            // secp256r1_signer.y.low
+            FieldElement::ZERO,
+            // secp256r1_signer.y.high
+            FieldElement::ZERO,
+            // multisig_threshold
+            FieldElement::ZERO,
+            // withdrawal_limit_low
+            FieldElement::ZERO,
+            // fee_rate
+            FieldElement::ZERO,
+            // stark_fee_rate
+            FieldElement::ZERO,
+            // chain_id
+            self.chain_id,
+        ];
+
+        let aux_hash = poseidon_hash_many(&aux_data);
+
+        let aux_signature = self.signer.sign_hash(&aux_hash).await?;
+
+        Ok([
+            vec![signature.r, signature.s],
+            aux_data,
+            vec![aux_signature.r, aux_signature.s],
+        ]
+        .concat())
+    }
 }
 
 #[async_trait]
@@ -77,49 +127,21 @@ where
         self.block_id
     }
 
-    async fn sign_deployment(
+    async fn sign_deployment_v1(
         &self,
-        deployment: &RawAccountDeployment,
+        deployment: &RawAccountDeploymentV1,
     ) -> Result<Vec<FieldElement>, Self::SignError> {
         let tx_hash =
-            PreparedAccountDeployment::from_raw(deployment.clone(), self).transaction_hash();
+            PreparedAccountDeploymentV1::from_raw(deployment.clone(), self).transaction_hash();
+        self.sign_deployment(tx_hash).await
+    }
 
-        let signature = self.signer.sign_hash(&tx_hash).await?;
-
-        let mut aux_data = vec![
-            // account_implementation
-            self.class_hash,
-            // signer_type
-            FieldElement::ZERO,
-            // secp256r1_signer.x.low
-            FieldElement::ZERO,
-            // secp256r1_signer.x.high
-            FieldElement::ZERO,
-            // secp256r1_signer.y.low
-            FieldElement::ZERO,
-            // secp256r1_signer.y.high
-            FieldElement::ZERO,
-            // multisig_threshold
-            FieldElement::ZERO,
-            // withdrawal_limit_low
-            FieldElement::ZERO,
-            // fee_rate
-            FieldElement::ZERO,
-            // stark_fee_rate
-            FieldElement::ZERO,
-            // chain_id
-            self.chain_id,
-        ];
-
-        let aux_hash = poseidon_hash_many(&aux_data);
-
-        let aux_signature = self.signer.sign_hash(&aux_hash).await?;
-
-        let mut full_signature_payload = vec![signature.r, signature.s];
-        full_signature_payload.append(&mut aux_data);
-        full_signature_payload.push(aux_signature.r);
-        full_signature_payload.push(aux_signature.s);
-
-        Ok(full_signature_payload)
+    async fn sign_deployment_v3(
+        &self,
+        deployment: &RawAccountDeploymentV3,
+    ) -> Result<Vec<FieldElement>, Self::SignError> {
+        let tx_hash =
+            PreparedAccountDeploymentV3::from_raw(deployment.clone(), self).transaction_hash();
+        self.sign_deployment(tx_hash).await
     }
 }

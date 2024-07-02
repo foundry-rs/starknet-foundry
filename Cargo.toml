@@ -62,8 +62,8 @@ rayon = "1.10"
 regex = "1.10.5"
 serde = { version = "1.0.203", features = ["derive"] }
 serde_json = "1.0.117"
-starknet = { git = "https://github.com/xJonathanLEI/starknet-rs", rev = "d980869" }
-starknet-crypto = { git = "https://github.com/xJonathanLEI/starknet-rs", rev = "d980869" }
+starknet = { git = "https://github.com/xJonathanLEI/starknet-rs", rev = "56177d2" }
+starknet-crypto = { git = "https://github.com/xJonathanLEI/starknet-rs", rev = "56177d2" }
 trace-data = { git = "https://github.com/software-mansion/cairo-profiler/", rev = "e031b09" }
 tempfile = "3.10.1"
 thiserror = "1.0.61"

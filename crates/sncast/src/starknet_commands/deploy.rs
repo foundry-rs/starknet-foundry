@@ -55,7 +55,7 @@ pub async fn deploy(
 ) -> Result<DeployResponse, StarknetCommandError> {
     let salt = extract_or_generate_salt(salt);
     let factory = ContractFactory::new(class_hash, account);
-    let execution = factory.deploy(constructor_calldata.clone(), salt, unique);
+    let execution = factory.deploy_v1(constructor_calldata.clone(), salt, unique);
 
     // TODO(#1396): use apply_optional here when `Deployment` in starknet-rs is public
     //  otherwise we cannot pass the necessary reference to a function

@@ -549,12 +549,13 @@ async fn get_revert_reason(
     provider: &JsonRpcClient<HttpTransport>,
     tx_hash: FieldElement,
 ) -> Result<&str, WaitForTransactionError> {
-    let receipt = provider
+    let receipt_with_block_info = provider
         .get_transaction_receipt(tx_hash)
         .await
         .map_err(SNCastProviderError::from)?;
 
-    if let starknet::core::types::ExecutionResult::Reverted { reason } = receipt.execution_result()
+    if let starknet::core::types::ExecutionResult::Reverted { reason } =
+        receipt_with_block_info.receipt.execution_result()
     {
         Err(WaitForTransactionError::TransactionError(
             TransactionError::Reverted(ErrorData {

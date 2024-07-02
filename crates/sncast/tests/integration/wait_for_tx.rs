@@ -43,7 +43,7 @@ async fn test_rejected_transaction() {
 
     let factory = ContractFactory::new(MAP_CONTRACT_CLASS_HASH_SEPOLIA.parse().unwrap(), account);
     let deployment = factory
-        .deploy(Vec::new(), FieldElement::ONE, false)
+        .deploy_v1(Vec::new(), FieldElement::ONE, false)
         .max_fee(FieldElement::ONE);
     let resp = deployment.send().await.unwrap_err();
 
