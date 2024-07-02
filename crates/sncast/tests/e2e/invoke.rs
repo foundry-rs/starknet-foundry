@@ -27,6 +27,8 @@ async fn test_happy_case(account: &str) {
         "0x1 0x2",
         "--max-fee",
         "99999999999999999",
+        "--fee-token",
+        "eth",
     ]);
 
     let snapbox = runner(&args);
@@ -49,6 +51,8 @@ async fn test_contract_does_not_exist() {
         "0x1",
         "--function",
         "put",
+        "--fee-token",
+        "eth",
     ]);
 
     let snapbox = runner(&args);
@@ -74,6 +78,8 @@ fn test_wrong_function_name() {
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
         "nonexistent_put",
+        "--fee-token",
+        "eth",
     ]);
 
     let snapbox = runner(&args);
@@ -101,6 +107,8 @@ fn test_wrong_calldata() {
         "put",
         "--calldata",
         "0x1",
+        "--fee-token",
+        "eth",
     ]);
 
     let snapbox = runner(&args);
@@ -132,6 +140,8 @@ fn test_too_low_max_fee() {
         "0x2",
         "--max-fee",
         "1",
+        "--fee-token",
+        "eth",
     ]);
 
     let snapbox = runner(&args);

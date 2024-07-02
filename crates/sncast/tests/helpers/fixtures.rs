@@ -212,19 +212,22 @@ pub async fn invoke_contract(
 // but serde_json cannot serialize numbers this big
 pub async fn mint_token(recipient: &str, amount: u64) {
     let client = reqwest::Client::new();
-    let json = json!(
-        {
-            "address": recipient,
-            "amount": amount
-        }
-    );
-    client
-        .post("http://127.0.0.1:5055/mint")
-        .header("Content-Type", "application/json")
-        .body(json.to_string())
-        .send()
-        .await
-        .expect("Error occurred while minting tokens");
+    for unit in ["FRI", "WEI"] {
+        let json = json!(
+            {
+                "address": recipient,
+                "amount": amount,
+                "unit": unit,
+            }
+        );
+        client
+            .post("http://127.0.0.1:5055/mint")
+            .header("Content-Type", "application/json")
+            .body(json.to_string())
+            .send()
+            .await
+            .expect("Error occurred while minting tokens");
+    }
 }
 
 #[must_use]

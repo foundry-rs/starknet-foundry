@@ -1,4 +1,4 @@
-use crate::starknet_commands::helpers::fee::Fee;
+use crate::starknet_commands::helpers::fee::FeeArgs;
 use anyhow::{anyhow, Result};
 use clap::Args;
 use sncast::response::errors::StarknetCommandError;
@@ -27,7 +27,7 @@ pub struct Invoke {
     pub calldata: Vec<FieldElement>,
 
     #[clap(flatten)]
-    pub fee: Fee,
+    pub fee: FeeArgs,
 
     /// Nonce of the transaction. If not provided, nonce will be set automatically
     #[clap(short, long)]
