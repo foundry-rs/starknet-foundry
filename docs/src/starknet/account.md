@@ -50,6 +50,7 @@ Do the following to start interacting with the Starknet:
       --url http://127.0.0.1:5050 \
       account deploy
       --name some-name \
+      --fee-token strk \
       --max-fee 9999999999999
     
     command: account deploy
@@ -61,6 +62,8 @@ Do the following to start interacting with the Starknet:
     
     For a detailed CLI description, see [account deploy command reference](../appendix/sncast/account/deploy.md).
 
+> 💡 **Info**
+> You can also choose to pay in Ethereum by setting `--fee-token` to eth.
 
 ### `account create` With Salt Argument
 
