@@ -6,6 +6,7 @@ use reqwest::StatusCode;
 use serde::Serialize;
 use sncast::response::structs::VerifyResponse;
 use starknet::core::types::FieldElement;
+use std::env;
 use std::ffi::OsStr;
 use walkdir::WalkDir;
 
@@ -82,23 +83,33 @@ impl VerificationInterface for WalnutVerificationInterface {
             .header("Content-Type", "application/json")
             .body(json_payload)
             .send()
-            .await?;
+            .await
+            .context("Failed to send request to verifier API")?;
 
-        match &api_res.status() {
-            &StatusCode::OK => Ok(VerifyResponse {
-                message: api_res.text().await?,
-            }),
-            _ => Err(anyhow!(api_res.text().await?)),
+        match api_res.status() {
+            StatusCode::OK => {
+                let message = api_res
+                    .text()
+                    .await
+                    .context("Failed to read verifier API response")?;
+                Ok(VerifyResponse { message })
+            }
+            _ => {
+                let message = api_res.text().await.context("Failed to verify contract")?;
+                Err(anyhow!(message))
+            }
         }
     }
 
     fn gen_explorer_url(&self) -> Result<String> {
-        let explorer_url: &str = match self.network.as_str() {
-            "mainnet" => Ok("https://api.walnut.dev/v1/sn_main/verify"),
-            "sepolia" => Ok("https://api.walnut.dev/v1/sn_sepolia/verify"),
-            _ => Err(anyhow!("Unknown network")),
-        }?;
-        Ok(explorer_url.to_string())
+        let api_base_url =
+            env::var("WALNUT_API_URL").unwrap_or_else(|_| "https://api.walnut.dev".to_string());
+        let path = match self.network.as_str() {
+            "mainnet" => "/v1/sn_main/verify",
+            "sepolia" => "/v1/sn_sepolia/verify",
+            _ => return Err(anyhow!("Unknown network")),
+        };
+        Ok(format!("{}{}", api_base_url, path))
     }
 }
 
@@ -118,7 +129,7 @@ pub struct Verify {
     pub verifier: String,
 
     /// The network on which block explorer will do the verification
-    #[clap(short = 'n', long = "network", value_parser = ["mainnet", "goerli"])]
+    #[clap(short = 'n', long = "network", value_parser = ["mainnet", "sepolia"])]
     pub network: String,
 }
 
@@ -145,10 +156,7 @@ pub async fn verify(
     match verifier.as_str() {
         "walnut" => {
             let walnut = WalnutVerificationInterface::new(network, workspace_dir.to_path_buf());
-            walnut
-                .verify(contract_address, contract_name)
-                .await
-                .context("Failed to verify contract")
+            walnut.verify(contract_address, contract_name).await
         }
         _ => Err(anyhow!("Unknown verifier")),
     }

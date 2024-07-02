@@ -115,3 +115,4 @@ base16ct = { version = "0.2.0", features = ["alloc"] }
 fs4 = "0.7"
 async-trait = "0.1.80"
 serde_path_to_error = "0.1.16"
+wiremock = "0.6.0"
