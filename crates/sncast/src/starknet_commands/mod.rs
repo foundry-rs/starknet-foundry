@@ -6,5 +6,5 @@ pub mod invoke;
 pub mod multicall;
 pub mod script;
 pub mod show_config;
-pub mod verify;
 pub mod tx_status;
+pub mod verify;

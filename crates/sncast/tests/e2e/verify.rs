@@ -5,7 +5,7 @@ use indoc::formatdoc;
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 use wiremock::matchers::{method, path};
 use wiremock::{Mock, MockServer, ResponseTemplate};
- 
+
 #[tokio::test]
 async fn test_happy_case() {
     let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
@@ -128,7 +128,7 @@ async fn test_failed_verification() {
         "--network",
         "sepolia",
     ]);
-    
+
     let snapbox_voyager = runner(&args_voyager)
         .env("VOYAGER_API_URL", &mock_server.uri())
         .current_dir(contract_path.path());
