@@ -10,6 +10,13 @@ use std::env;
 use std::ffi::OsStr;
 use walkdir::WalkDir;
 
+#[derive(Serialize, Debug)]
+struct VerificationPayload {
+    contract_name: String,
+    contract_address: String,
+    source_code: serde_json::Value,
+}
+
 struct VoyagerVerificationInterface {
     network: String,
     workspace_dir: Utf8PathBuf,
@@ -223,13 +230,6 @@ pub struct Verify {
     /// The network on which block explorer will do the verification
     #[clap(short = 'n', long = "network", value_parser = ["mainnet", "sepolia"])]
     pub network: String,
-}
-
-#[derive(Serialize, Debug)]
-struct VerificationPayload {
-    contract_name: String,
-    contract_address: String,
-    source_code: serde_json::Value,
 }
 
 pub async fn verify(
