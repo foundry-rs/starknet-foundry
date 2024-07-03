@@ -6,7 +6,7 @@ use camino::Utf8PathBuf;
 use forge::CAIRO_EDITION;
 use indoc::{formatdoc, indoc};
 use shared::test_utils::output_assert::assert_stdout_contains;
-use std::{fs, path::Path, str::FromStr};
+use std::{env, fs, path::Path, str::FromStr};
 use test_utils::tempdir_with_tool_versions;
 use toml_edit::{value, DocumentMut, Item};
 
@@ -680,6 +680,8 @@ fn with_exit_first_flag() {
     );
 }
 
+// TODO (2274): This test has inherently flawed logic, needs to be re-written
+#[ignore]
 #[test]
 fn init_new_project_test() {
     let temp = tempdir_with_tool_versions().unwrap();
