@@ -4,9 +4,11 @@ use camino::Utf8PathBuf;
 use clap::Args;
 use promptly::prompt;
 use reqwest::StatusCode;
+use scarb_api::StarknetContractArtifacts;
 use serde::Serialize;
 use sncast::response::structs::VerifyResponse;
 use starknet::core::types::FieldElement;
+use std::collections::HashMap;
 use std::env;
 use std::ffi::OsStr;
 use walkdir::WalkDir;
@@ -149,6 +151,7 @@ pub async fn verify(
     network: String,
     yes: bool,
     manifest_path: &Utf8PathBuf,
+    artifacts: &HashMap<String, StarknetContractArtifacts>,
 ) -> Result<VerifyResponse> {
     // Let's ask confirmation
     if !yes {
@@ -159,6 +162,10 @@ pub async fn verify(
         if !input.starts_with('Y') {
             bail!("Verification aborted");
         }
+    }
+
+    if !artifacts.contains_key(&contract_name) {
+        return Err(anyhow!("Contract named '{contract_name}' was not found"));
     }
 
     // Build JSON Payload for the verification request

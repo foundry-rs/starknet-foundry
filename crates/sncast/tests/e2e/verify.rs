@@ -80,7 +80,7 @@ async fn test_failed_verification() {
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--contract-name",
-        "nonexistent",
+        "Map",
         "--verifier",
         "walnut",
         "--network",
@@ -133,6 +133,38 @@ async fn test_verification_abort() {
             r"
         command: verify
         error: Verification aborted
+        "
+        ),
+    );
+}
+
+#[tokio::test]
+async fn test_wrong_contract_name_passed() {
+    let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
+
+    let mut args = default_cli_args();
+    args.append(&mut vec![
+        "verify",
+        "--contract-address",
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--contract-name",
+        "nonexistent",
+        "--verifier",
+        "walnut",
+        "--network",
+        "sepolia",
+    ]);
+
+    let snapbox = runner(&args).current_dir(contract_path.path()).stdin("Y");
+
+    let output = snapbox.assert().success();
+
+    assert_stderr_contains(
+        output,
+        formatdoc!(
+            r"
+        command: verify
+        error: Contract named 'nonexistent' was not found
         "
         ),
     );
