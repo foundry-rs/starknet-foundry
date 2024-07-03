@@ -15,7 +15,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.25.0"
+version = "0.26.0"
 edition = "2021"
 repository = "https://github.com/foundry-rs/starknet-foundry"
 license = "MIT"
