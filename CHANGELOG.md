@@ -13,6 +13,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `verify` subcommand to verify contract. [Read more here](./docs/src/appendix/sncast/verify.md)
 
+
+## [0.26.0] - 2024-07-03
+
+### Forge 
+
+#### Changed
+- Updated event testing - read more [here](./docs/src/testing/testing-events.md) on how it now works and [here](./docs/src/appendix/cheatcodes/spy_events.md)
+about updated `spy_events` cheatcode
+
 ## [0.25.0] - 2024-06-12
 
 ### Forge
@@ -20,8 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - `SyscallResultStringErrorTrait::map_error_to_string` removed in favor of utility function (`snforge_std::byte_array::try_deserialize_bytearray_error`)
-- Updated event testing - read more [here](./docs/src/testing/testing-events.md) on how it now works and [here](./docs/src/appendix/cheatcodes/spy_events.md)
-about updated `spy_events` cheatcode
+
 
 ### Cast
 
