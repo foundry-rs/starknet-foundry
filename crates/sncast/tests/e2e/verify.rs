@@ -39,7 +39,8 @@ async fn test_happy_case() {
 
     let snapbox = runner(&args)
         .env("WALNUT_API_URL", mock_server.uri())
-        .current_dir(contract_path.path());
+        .current_dir(contract_path.path())
+        .stdin("Y");
 
     let output = snapbox.assert().success();
 
@@ -61,7 +62,7 @@ async fn test_failed_verification() {
 
     let mock_server = MockServer::start().await;
 
-    let verifier_response = "An error occurred during verification: wrong contract class name";
+    let verifier_response = "An error occurred during verification: contract class isn't declared";
 
     Mock::given(method("POST"))
         .and(path("/v1/sn_sepolia/verify"))
@@ -88,7 +89,8 @@ async fn test_failed_verification() {
 
     let snapbox = runner(&args)
         .env("WALNUT_API_URL", mock_server.uri())
-        .current_dir(contract_path.path());
+        .current_dir(contract_path.path())
+        .stdin("Y");
 
     let output = snapbox.assert().success();
 
@@ -100,6 +102,38 @@ async fn test_failed_verification() {
         error: {}
         ",
             verifier_response
+        ),
+    );
+}
+
+#[tokio::test]
+async fn test_verification_abort() {
+    let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
+
+    let mut args = default_cli_args();
+    args.append(&mut vec![
+        "verify",
+        "--contract-address",
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--contract-name",
+        "nonexistent",
+        "--verifier",
+        "walnut",
+        "--network",
+        "sepolia",
+    ]);
+
+    let snapbox = runner(&args).current_dir(contract_path.path()).stdin("n");
+
+    let output = snapbox.assert().success();
+
+    assert_stderr_contains(
+        output,
+        formatdoc!(
+            r"
+        command: verify
+        error: Verification aborted
+        "
         ),
     );
 }
