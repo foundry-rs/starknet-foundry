@@ -5,7 +5,7 @@ use indoc::formatdoc;
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 use wiremock::matchers::{method, path};
 use wiremock::{Mock, MockServer, ResponseTemplate};
-
+ 
 #[tokio::test]
 async fn test_happy_case() {
     let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
@@ -24,8 +24,22 @@ async fn test_happy_case() {
         .mount(&mock_server)
         .await;
 
-    let mut args = default_cli_args();
-    args.append(&mut vec![
+    let mut args_voyager = default_cli_args();
+
+    args_voyager.append(&mut vec![
+        "verify",
+        "--contract-address",
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--contract-name",
+        "Map",
+        "--verifier",
+        "voyager",
+        "--network",
+        "sepolia",
+    ]);
+
+    let mut args_walnut = default_cli_args();
+    args_walnut.append(&mut vec![
         "verify",
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
@@ -37,14 +51,30 @@ async fn test_happy_case() {
         "sepolia",
     ]);
 
-    let snapbox = runner(&args)
+    let snapbox_voyager = runner(&args_voyager)
+        .env("VOYAGER_API_URL", &mock_server.uri())
+        .current_dir(contract_path.path());
+
+    let snapbox_walnut = runner(&args_walnut)
         .env("WALNUT_API_URL", &mock_server.uri())
         .current_dir(contract_path.path());
 
-    let output = snapbox.assert().success();
+    let output_voyager = snapbox_voyager.assert().success();
+    let output_walnut = snapbox_walnut.assert().success();
 
     assert_stdout_contains(
-        output,
+        output_voyager,
+        formatdoc!(
+            r"
+        command: verify
+        message: {}
+        ",
+            verifier_response
+        ),
+    );
+
+    assert_stdout_contains(
+        output_walnut,
         formatdoc!(
             r"
         command: verify
@@ -73,8 +103,21 @@ async fn test_failed_verification() {
         .mount(&mock_server)
         .await;
 
-    let mut args = default_cli_args();
-    args.append(&mut vec![
+    let mut args_voyager = default_cli_args();
+    args_voyager.append(&mut vec![
+        "verify",
+        "--contract-address",
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--contract-name",
+        "nonexistent",
+        "--verifier",
+        "voyager",
+        "--network",
+        "sepolia",
+    ]);
+
+    let mut args_walnut = default_cli_args();
+    args_walnut.append(&mut vec![
         "verify",
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
@@ -85,15 +128,32 @@ async fn test_failed_verification() {
         "--network",
         "sepolia",
     ]);
+    
+    let snapbox_voyager = runner(&args_voyager)
+        .env("VOYAGER_API_URL", &mock_server.uri())
+        .current_dir(contract_path.path());
 
-    let snapbox = runner(&args)
+    let snapbox_walnut = runner(&args_walnut)
         .env("WALNUT_API_URL", &mock_server.uri())
         .current_dir(contract_path.path());
 
-    let output = snapbox.assert().success();
+    let output_voyager = snapbox_voyager.assert().success();
+
+    let output_walnut = snapbox_walnut.assert().success();
 
     assert_stderr_contains(
-        output,
+        output_voyager,
+        formatdoc!(
+            r"
+        command: verify
+        error: {}
+        ",
+            verifier_response
+        ),
+    );
+
+    assert_stderr_contains(
+        output_walnut,
         formatdoc!(
             r"
         command: verify
