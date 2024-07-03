@@ -38,7 +38,7 @@ async fn test_happy_case() {
     ]);
 
     let snapbox = runner(&args)
-        .env("WALNUT_API_URL", &mock_server.uri())
+        .env("WALNUT_API_URL", mock_server.uri())
         .current_dir(contract_path.path());
 
     let output = snapbox.assert().success();
@@ -87,7 +87,7 @@ async fn test_failed_verification() {
     ]);
 
     let snapbox = runner(&args)
-        .env("WALNUT_API_URL", &mock_server.uri())
+        .env("WALNUT_API_URL", mock_server.uri())
         .current_dir(contract_path.path());
 
     let output = snapbox.assert().success();

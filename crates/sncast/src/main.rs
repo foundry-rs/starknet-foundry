@@ -442,7 +442,7 @@ async fn run_async_command(
             .await;
 
             print_command_result("verify", &mut result, numbers_format, &output_format)?;
-            return Ok(());
+            Ok(())
         }
         Commands::Script(_) => unreachable!(),
     }

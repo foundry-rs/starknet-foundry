@@ -86,18 +86,15 @@ impl VerificationInterface for WalnutVerificationInterface {
             .await
             .context("Failed to send request to verifier API")?;
 
-        match api_res.status() {
-            StatusCode::OK => {
-                let message = api_res
-                    .text()
-                    .await
-                    .context("Failed to read verifier API response")?;
-                Ok(VerifyResponse { message })
-            }
-            _ => {
-                let message = api_res.text().await.context("Failed to verify contract")?;
-                Err(anyhow!(message))
-            }
+        if api_res.status() == StatusCode::OK {
+            let message = api_res
+                .text()
+                .await
+                .context("Failed to read verifier API response")?;
+            Ok(VerifyResponse { message })
+        } else {
+            let message = api_res.text().await.context("Failed to verify contract")?;
+            Err(anyhow!(message))
         }
     }
 
@@ -109,7 +106,7 @@ impl VerificationInterface for WalnutVerificationInterface {
             "sepolia" => "/v1/sn_sepolia/verify",
             _ => return Err(anyhow!("Unknown network")),
         };
-        Ok(format!("{}{}", api_base_url, path))
+        Ok(format!("{api_base_url}{path}"))
     }
 }
 
