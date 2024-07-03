@@ -1,7 +1,8 @@
-use anyhow::Ok;
 use anyhow::{anyhow, Context, Result};
+use anyhow::{bail, Ok};
 use camino::Utf8PathBuf;
 use clap::Args;
+use promptly::prompt;
 use reqwest::StatusCode;
 use serde::Serialize;
 use sncast::response::structs::VerifyResponse;
@@ -122,12 +123,16 @@ pub struct Verify {
     pub contract_name: String,
 
     /// Block explorer to use for the verification
-    #[clap(short = 'v', long = "verifier", value_parser = ["walnut"])]
+    #[clap(short = 'v', long = "verifier", value_parser = ["walnut"], default_value = "walnut")]
     pub verifier: String,
 
     /// The network on which block explorer will do the verification
     #[clap(short = 'n', long = "network", value_parser = ["mainnet", "sepolia"])]
     pub network: String,
+
+    /// Assume "yes" as answer to confirmation prompt and run non-interactively
+    #[clap(long, default_value = "false")]
+    pub yes: bool,
 }
 
 #[derive(Serialize, Debug)]
@@ -142,8 +147,20 @@ pub async fn verify(
     contract_name: String,
     verifier: String,
     network: String,
+    yes: bool,
     manifest_path: &Utf8PathBuf,
 ) -> Result<VerifyResponse> {
+    // Let's ask confirmation
+    if !yes {
+        let prompt_text =
+            format!("You are about to submit the entire workspace's code to the third-party chosen verifier at {verifier}, and the code will be publicly available through {verifier}'s APIs. Are you sure? (Y/n)");
+        let input: String = prompt(prompt_text)?;
+
+        if !input.starts_with('Y') {
+            bail!("Verification aborted");
+        }
+    }
+
     // Build JSON Payload for the verification request
     // get the parent dir of the manifest path
     let workspace_dir = manifest_path

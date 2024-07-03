@@ -437,6 +437,7 @@ async fn run_async_command(
                 verify.contract_name,
                 verify.verifier,
                 verify.network,
+                verify.yes,
                 &manifest_path,
             )
             .await;
