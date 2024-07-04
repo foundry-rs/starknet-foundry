@@ -1,12 +1,13 @@
 use crate::helpers::constants::{ACCOUNT_FILE_PATH, DEVNET_OZ_CLASS_HASH_CAIRO_0, URL};
 use anyhow::Context;
 use camino::{Utf8Path, Utf8PathBuf};
+use conversions::string::IntoHexStr;
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
 use serde_json::{json, Map, Value};
 use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::helpers::constants::{
-    ARGENT_CLASS_HASH, BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH,
+    ARGENT_CLASS_HASH, BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH,
 };
 use sncast::helpers::scarb_utils::get_package_metadata;
 use sncast::state::state_file::{
@@ -69,7 +70,16 @@ pub async fn deploy_cairo_0_account() {
     )
     .await;
 }
-
+pub async fn deploy_latest_oz_account() {
+    let (address, salt, private_key) = get_account_deployment_data("oz");
+    deploy_oz_account(
+        address.as_str(),
+        OZ_CLASS_HASH.into_hex_string().as_str(),
+        salt.as_str(),
+        private_key,
+    )
+    .await;
+}
 pub async fn deploy_argent_account() {
     let provider = get_provider(URL).expect("Failed to get the provider");
     let chain_id = get_chain_id(&provider)
