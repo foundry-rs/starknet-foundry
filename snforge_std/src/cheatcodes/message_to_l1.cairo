@@ -12,7 +12,7 @@ fn spy_messages_to_l1() -> MessageToL1Spy {
     MessageToL1Spy { _message_offset: parsed_message_offset }
 }
 
-/// Raw message to l1 format (as seen via the RPC-API), can be used for asserting the sent messages.
+/// Raw message to L1 format (as seen via the RPC-API), can be used for asserting the sent messages.
 #[derive(Drop, Clone, Serde)]
 struct MessageToL1 {
     /// An ethereum address where the message is destined to go
@@ -53,7 +53,7 @@ impl MessageToL1SpyTraitImpl of MessageToL1SpyTrait {
 trait MessageToL1FilterTrait {
     /// Filter messages emitted by a sender of a given [`ContractAddress`]
     fn sent_by(self: @MessagesToL1, contract_address: ContractAddress) -> MessagesToL1;
-    /// Filter messages emitted by a receiver of a given ethereum address (`felt252`)
+    /// Filter messages emitted by a receiver of a given ethereum address
     fn sent_to(self: @MessagesToL1, to_address: EthAddress) -> MessagesToL1;
 }
 
