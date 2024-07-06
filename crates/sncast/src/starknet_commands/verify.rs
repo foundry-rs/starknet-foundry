@@ -134,7 +134,7 @@ pub struct Verify {
 
     /// Assume "yes" as answer to confirmation prompt and run non-interactively
     #[clap(long, default_value = "false")]
-    pub yes: bool,
+    pub confirm_verification: bool,
 }
 
 #[derive(Serialize, Debug)]
@@ -149,12 +149,12 @@ pub async fn verify(
     contract_name: String,
     verifier: String,
     network: String,
-    yes: bool,
+    confirm_verification: bool,
     manifest_path: &Utf8PathBuf,
     artifacts: &HashMap<String, StarknetContractArtifacts>,
 ) -> Result<VerifyResponse> {
     // Let's ask confirmation
-    if !yes {
+    if !confirm_verification {
         let prompt_text =
             format!("You are about to submit the entire workspace's code to the third-party chosen verifier at {verifier}, and the code will be publicly available through {verifier}'s APIs. Are you sure? (Y/n)");
         let input: String = prompt(prompt_text)?;
