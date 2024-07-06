@@ -1,26 +1,27 @@
 use anyhow::{anyhow, Context, Result};
 use anyhow::{bail, Ok};
 use camino::Utf8PathBuf;
-use clap::Args;
+use clap::{Args, ValueEnum};
 use promptly::prompt;
 use reqwest::StatusCode;
 use scarb_api::StarknetContractArtifacts;
 use serde::Serialize;
 use sncast::response::structs::VerifyResponse;
+use sncast::Network;
 use starknet::core::types::FieldElement;
 use std::collections::HashMap;
-use std::env;
 use std::ffi::OsStr;
+use std::{env, fmt};
 use walkdir::WalkDir;
 
 struct WalnutVerificationInterface {
-    network: String,
+    network: Network,
     workspace_dir: Utf8PathBuf,
 }
 
 #[async_trait::async_trait]
 trait VerificationInterface {
-    fn new(network: String, workspace_dir: Utf8PathBuf) -> Self;
+    fn new(network: Network, workspace_dir: Utf8PathBuf) -> Self;
     async fn verify(
         &self,
         contract_address: FieldElement,
@@ -31,7 +32,7 @@ trait VerificationInterface {
 
 #[async_trait::async_trait]
 impl VerificationInterface for WalnutVerificationInterface {
-    fn new(network: String, workspace_dir: Utf8PathBuf) -> Self {
+    fn new(network: Network, workspace_dir: Utf8PathBuf) -> Self {
         WalnutVerificationInterface {
             network,
             workspace_dir,
@@ -104,10 +105,9 @@ impl VerificationInterface for WalnutVerificationInterface {
     fn gen_explorer_url(&self) -> Result<String> {
         let api_base_url =
             env::var("WALNUT_API_URL").unwrap_or_else(|_| "https://api.walnut.dev".to_string());
-        let path = match self.network.as_str() {
-            "mainnet" => "/v1/sn_main/verify",
-            "sepolia" => "/v1/sn_sepolia/verify",
-            _ => return Err(anyhow!("Unknown network")),
+        let path = match self.network {
+            Network::Mainnet => "/v1/sn_main/verify",
+            Network::Sepolia => "/v1/sn_sepolia/verify",
         };
         Ok(format!("{api_base_url}{path}"))
     }
@@ -125,16 +125,29 @@ pub struct Verify {
     pub contract_name: String,
 
     /// Block explorer to use for the verification
-    #[clap(short = 'v', long = "verifier", value_parser = ["walnut"], default_value = "walnut")]
-    pub verifier: String,
+    #[clap(short, long, value_enum, default_value_t = Verifier::Walnut)]
+    pub verifier: Verifier,
 
     /// The network on which block explorer will do the verification
-    #[clap(short = 'n', long = "network", value_parser = ["mainnet", "sepolia"])]
-    pub network: String,
+    #[clap(short, long, value_enum)]
+    pub network: Network,
 
     /// Assume "yes" as answer to confirmation prompt and run non-interactively
     #[clap(long, default_value = "false")]
     pub confirm_verification: bool,
+}
+
+#[derive(ValueEnum, Clone, Debug)]
+pub enum Verifier {
+    Walnut,
+}
+
+impl fmt::Display for Verifier {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            Verifier::Walnut => write!(f, "walnut"),
+        }
+    }
 }
 
 #[derive(Serialize, Debug)]
@@ -147,8 +160,8 @@ struct VerificationPayload {
 pub async fn verify(
     contract_address: FieldElement,
     contract_name: String,
-    verifier: String,
-    network: String,
+    verifier: Verifier,
+    network: Network,
     confirm_verification: bool,
     manifest_path: &Utf8PathBuf,
     artifacts: &HashMap<String, StarknetContractArtifacts>,
@@ -174,11 +187,10 @@ pub async fn verify(
         .parent()
         .ok_or(anyhow!("Failed to obtain workspace dir"))?;
 
-    match verifier.as_str() {
-        "walnut" => {
+    match verifier {
+        Verifier::Walnut => {
             let walnut = WalnutVerificationInterface::new(network, workspace_dir.to_path_buf());
             walnut.verify(contract_address, contract_name).await
         }
-        _ => Err(anyhow!("Unknown verifier")),
     }
 }
