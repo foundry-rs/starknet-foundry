@@ -12,7 +12,7 @@ Required.
 The name of the contract. The contract name is the part after the `mod` keyword in your contract file.
 
 ## `--verifier, -v <VERIFIER>`
-Required.
+Optional.
 
 The verification provider to use for the verification. Possible values are:
 * `walnut`
