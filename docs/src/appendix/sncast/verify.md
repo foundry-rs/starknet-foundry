@@ -23,3 +23,8 @@ Required.
 The network on which block explorer will perform the verification. Possible values are:
 * `mainnet`
 * `sepolia`
+
+## `--confirm-verification`
+Optional.
+
+If passed, assume "yes" as answer to confirmation prompt and run non-interactively.
