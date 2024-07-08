@@ -68,7 +68,7 @@ use cheatcodes::execution_info::max_fee::stop_cheat_max_fee;
 use cheatcodes::execution_info::max_fee::stop_cheat_max_fee_global;
 use cheatcodes::execution_info::max_fee::start_cheat_max_fee;
 use cheatcodes::execution_info::signature::cheat_signature;
-use cheatcodes::execution_info::signature::cheat_signature_global;
+use cheatcodes::execution_info::signature::start_cheat_signature_global;
 use cheatcodes::execution_info::signature::stop_cheat_signature;
 use cheatcodes::execution_info::signature::stop_cheat_signature_global;
 use cheatcodes::execution_info::signature::start_cheat_signature;

@@ -70,7 +70,7 @@
 ### Transaction Signature
 
 - [`cheat_signature`](cheatcodes/signature.md#cheat_signature) - changes the transaction signature for contracts, for a number of calls
-- [`cheat_signature_global`](cheatcodes/signature.md#cheat_signature_global) - changes the transaction signature for all contracts
+- [`start_cheat_signature_global`](cheatcodes/signature.md#cheat_signature_global) - changes the transaction signature for all contracts
 - [`start_cheat_signature`](cheatcodes/signature.md#start_cheat_signature) - changes the transaction signature for contracts
 - [`stop_cheat_signature`](cheatcodes/signature.md#stop_cheat_signature) - cancels the `cheat_signature` / `start_cheat_signature` for contracts
 - [`stop_cheat_signature_global`](cheatcodes/signature.md#stop_cheat_signature_global) - cancels the `cheat_signature_global`
