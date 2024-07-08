@@ -78,7 +78,7 @@
 ### Transaction Hash
 
 - [`cheat_transaction_hash`](cheatcodes/transaction_hash.md#cheat_transaction_hash) - changes the transaction hash for contracts, for a number of calls
-- [`cheat_transaction_hash_global`](cheatcodes/transaction_hash.md#cheat_transaction_hash_global) - changes the transaction hash for all contracts
+- [`start_cheat_transaction_hash_global`](cheatcodes/transaction_hash.md#cheat_transaction_hash_global) - changes the transaction hash for all contracts
 - [`start_cheat_transaction_hash`](cheatcodes/transaction_hash.md#start_cheat_transaction_hash) - changes the transaction hash for contracts
 - [`stop_cheat_transaction_hash`](cheatcodes/transaction_hash.md#stop_cheat_transaction_hash) - cancels the `cheat_transaction_hash` / `start_cheat_transaction_hash` for contracts
 - [`stop_cheat_transaction_hash_global`](cheatcodes/transaction_hash.md#stop_cheat_transaction_hash_global) - cancels the `cheat_transaction_hash_global`

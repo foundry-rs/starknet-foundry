@@ -7,7 +7,7 @@ Cheatcodes modifying `transaction_hash`:
 
 Changes the transaction hash for the given target and span.
 
-## `cheat_transaction_hash_global`
+## `start_cheat_transaction_hash_global`
 > `fn cheat_transaction_hash_global(transaction_hash: felt252)`
 
 Changes the transaction hash for all targets.
@@ -25,4 +25,4 @@ Cancels the `cheat_transaction_hash` / `start_cheat_transaction_hash` for the gi
 ## `stop_cheat_transaction_hash_global`
 > `fn stop_cheat_transaction_hash_global(target: ContractAddress)`
 
-Cancels the `cheat_transaction_hash_global`.
+Cancels the `start_cheat_transaction_hash_global`.
