@@ -18,7 +18,7 @@
 ### Caller Address
 
 - [`cheat_caller_address`](cheatcodes/caller_address.md#cheat_caller_address) - changes the caller address for contracts, for a number of calls
-- [`cheat_caller_address_global`](cheatcodes/caller_address.md#cheat_caller_address_global) - changes the caller address for all contracts
+- [`start_cheat_caller_address_global`](cheatcodes/caller_address.md#cheat_caller_address_global) - changes the caller address for all contracts
 - [`start_cheat_caller_address`](cheatcodes/caller_address.md#start_cheat_caller_address) - changes the caller address for contracts
 - [`stop_cheat_caller_address`](cheatcodes/caller_address.md#stop_cheat_caller_address) - cancels the `cheat_caller_address` / `start_cheat_caller_address` for contracts
 - [`stop_cheat_caller_address_global`](cheatcodes/caller_address.md#stop_cheat_caller_address_global) - cancels the `cheat_caller_address_global`

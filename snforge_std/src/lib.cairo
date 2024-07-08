@@ -38,7 +38,7 @@ use cheatcodes::execution_info::Operation;
 use cheatcodes::execution_info::CheatArguments;
 
 use cheatcodes::execution_info::caller_address::cheat_caller_address;
-use cheatcodes::execution_info::caller_address::cheat_caller_address_global;
+use cheatcodes::execution_info::caller_address::start_cheat_caller_address_global;
 use cheatcodes::execution_info::caller_address::stop_cheat_caller_address;
 use cheatcodes::execution_info::caller_address::stop_cheat_caller_address_global;
 use cheatcodes::execution_info::caller_address::start_cheat_caller_address;

@@ -7,7 +7,7 @@ Cheatcodes modifying `caller_address`:
 
 Changes the caller address for the given target and span.
 
-## `cheat_caller_address_global`
+## `start_cheat_caller_address_global`
 > `fn cheat_caller_address_global(caller_address: ContractAddress)`
 
 Changes the caller address for all targets.
@@ -25,4 +25,4 @@ Cancels the `cheat_caller_address` / `start_cheat_caller_address` for the given 
 ## `stop_cheat_caller_address_global`
 > `fn stop_cheat_caller_address_global(target: ContractAddress)`
 
-Cancels the `cheat_caller_address_global`.
+Cancels the `start_cheat_caller_address_global`.
