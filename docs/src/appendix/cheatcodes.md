@@ -36,7 +36,7 @@
 ### Block Timestamp
 
 - [`cheat_block_timestamp`](cheatcodes/block_timestamp.md#cheat_block_timestamp) - changes the block timestamp for contracts, for a number of calls
-- [`cheat_block_timestamp_global`](cheatcodes/block_timestamp.md#cheat_block_timestamp_global) - changes the block timestamp for all contracts
+- [`start_cheat_block_timestamp_global`](cheatcodes/block_timestamp.md#cheat_block_timestamp_global) - changes the block timestamp for all contracts
 - [`start_cheat_block_timestamp`](cheatcodes/block_timestamp.md#start_cheat_block_timestamp) - changes the block timestamp for contracts
 - [`stop_cheat_block_timestamp`](cheatcodes/block_timestamp.md#stop_cheat_block_timestamp) - cancels the `cheat_block_timestamp` / `start_cheat_block_timestamp` for contracts
 - [`stop_cheat_block_timestamp_global`](cheatcodes/block_timestamp.md#stop_cheat_block_timestamp_global) - cancels the `cheat_block_timestamp_global`

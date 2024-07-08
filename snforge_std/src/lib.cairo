@@ -48,7 +48,7 @@ use cheatcodes::execution_info::block_number::stop_cheat_block_number;
 use cheatcodes::execution_info::block_number::stop_cheat_block_number_global;
 use cheatcodes::execution_info::block_number::start_cheat_block_number;
 use cheatcodes::execution_info::block_timestamp::cheat_block_timestamp;
-use cheatcodes::execution_info::block_timestamp::cheat_block_timestamp_global;
+use cheatcodes::execution_info::block_timestamp::start_cheat_block_timestamp_global;
 use cheatcodes::execution_info::block_timestamp::stop_cheat_block_timestamp;
 use cheatcodes::execution_info::block_timestamp::stop_cheat_block_timestamp_global;
 use cheatcodes::execution_info::block_timestamp::start_cheat_block_timestamp;

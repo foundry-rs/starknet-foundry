@@ -7,7 +7,7 @@ Cheatcodes modifying `block_timestamp`:
 
 Changes the block timestamp for the given target and span.
 
-## `cheat_block_timestamp_global`
+## `start_cheat_block_timestamp_global`
 > `fn cheat_block_timestamp_global(block_timestamp: u64)`
 
 Changes the block timestamp for all targets.
@@ -25,4 +25,4 @@ Cancels the `cheat_block_timestamp` / `start_cheat_block_timestamp` for the give
 ## `stop_cheat_block_timestamp_global`
 > `fn stop_cheat_block_timestamp_global(target: ContractAddress)`
 
-Cancels the `cheat_block_timestamp_global`.
+Cancels the `start_cheat_block_timestamp_global`.
