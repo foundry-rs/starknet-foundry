@@ -62,7 +62,7 @@
 ### Transaction Max Fee
 
 - [`cheat_max_fee`](cheatcodes/max_fee.md#cheat_max_fee) - changes the transaction max fee for contracts, for a number of calls
-- [`cheat_max_fee_global`](cheatcodes/max_fee.md#cheat_max_fee_global) - changes the transaction max fee for all contracts
+- [`start_cheat_max_fee_global`](cheatcodes/max_fee.md#cheat_max_fee_global) - changes the transaction max fee for all contracts
 - [`start_cheat_max_fee`](cheatcodes/max_fee.md#start_cheat_max_fee) - changes the transaction max fee for contracts
 - [`stop_cheat_max_fee`](cheatcodes/max_fee.md#stop_cheat_max_fee) - cancels the `cheat_max_fee` / `start_cheat_max_fee` for contracts
 - [`stop_cheat_max_fee_global`](cheatcodes/max_fee.md#stop_cheat_max_fee_global) - cancels the `cheat_max_fee_global`

@@ -63,7 +63,7 @@ use cheatcodes::execution_info::version::stop_cheat_transaction_version;
 use cheatcodes::execution_info::version::stop_cheat_transaction_version_global;
 use cheatcodes::execution_info::version::start_cheat_transaction_version;
 use cheatcodes::execution_info::max_fee::cheat_max_fee;
-use cheatcodes::execution_info::max_fee::cheat_max_fee_global;
+use cheatcodes::execution_info::max_fee::start_cheat_max_fee_global;
 use cheatcodes::execution_info::max_fee::stop_cheat_max_fee;
 use cheatcodes::execution_info::max_fee::stop_cheat_max_fee_global;
 use cheatcodes::execution_info::max_fee::start_cheat_max_fee;
