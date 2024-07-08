@@ -78,7 +78,7 @@ use cheatcodes::execution_info::transaction_hash::stop_cheat_transaction_hash;
 use cheatcodes::execution_info::transaction_hash::stop_cheat_transaction_hash_global;
 use cheatcodes::execution_info::transaction_hash::start_cheat_transaction_hash;
 use cheatcodes::execution_info::chain_id::cheat_chain_id;
-use cheatcodes::execution_info::chain_id::cheat_chain_id_global;
+use cheatcodes::execution_info::chain_id::start_cheat_chain_id_global;
 use cheatcodes::execution_info::chain_id::stop_cheat_chain_id;
 use cheatcodes::execution_info::chain_id::stop_cheat_chain_id_global;
 use cheatcodes::execution_info::chain_id::start_cheat_chain_id;

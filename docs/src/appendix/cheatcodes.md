@@ -86,7 +86,7 @@
 ### Transaction Chain ID
 
 - [`cheat_chain_id`](cheatcodes/chain_id.md#cheat_chain_id) - changes the transaction chain_id for contracts, for a number of calls
-- [`cheat_chain_id_global`](cheatcodes/chain_id.md#cheat_chain_id_global) - changes the transaction chain_id for all contracts
+- [`start_cheat_chain_id_global`](cheatcodes/chain_id.md#cheat_chain_id_global) - changes the transaction chain_id for all contracts
 - [`start_cheat_chain_id`](cheatcodes/chain_id.md#start_cheat_chain_id) - changes the transaction chain_id for contracts
 - [`stop_cheat_chain_id`](cheatcodes/chain_id.md#stop_cheat_chain_id) - cancels the `cheat_chain_id` / `start_cheat_chain_id` for contracts
 - [`stop_cheat_chain_id_global`](cheatcodes/chain_id.md#stop_cheat_chain_id_global) - cancels the `cheat_chain_id_global`
