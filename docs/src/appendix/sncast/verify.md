@@ -24,6 +24,13 @@ The network on which block explorer will perform the verification. Possible valu
 * `mainnet`
 * `sepolia`
 
+## `--package <NAME>`
+Optional.
+
+Name of the package that should be used.
+
+If supplied, a contract from this package will be used. Required if more than one package exists in a workspace.
+
 ## `--confirm-verification`
 Optional.
 
