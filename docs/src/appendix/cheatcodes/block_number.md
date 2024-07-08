@@ -7,7 +7,7 @@ Cheatcodes modifying `block_number`:
 
 Changes the block number for the given target and span.
 
-## `cheat_block_number_global`
+## `start_cheat_block_number_global`
 > `fn cheat_block_number_global(block_number: u64)`
 
 Changes the block number for all targets.
@@ -25,5 +25,5 @@ Cancels the `cheat_block_number` / `start_cheat_block_number` for the given targ
 ## `stop_cheat_block_number_global`
 > `fn stop_cheat_block_number_global(target: ContractAddress)`
 
-Cancels the `cheat_block_number_global`.
+Cancels the `start_cheat_block_number_global`.
 

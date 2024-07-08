@@ -43,7 +43,7 @@ use cheatcodes::execution_info::caller_address::stop_cheat_caller_address;
 use cheatcodes::execution_info::caller_address::stop_cheat_caller_address_global;
 use cheatcodes::execution_info::caller_address::start_cheat_caller_address;
 use cheatcodes::execution_info::block_number::cheat_block_number;
-use cheatcodes::execution_info::block_number::cheat_block_number_global;
+use cheatcodes::execution_info::block_number::start_cheat_block_number_global;
 use cheatcodes::execution_info::block_number::stop_cheat_block_number;
 use cheatcodes::execution_info::block_number::stop_cheat_block_number_global;
 use cheatcodes::execution_info::block_number::start_cheat_block_number;

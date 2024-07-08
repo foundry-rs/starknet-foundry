@@ -28,7 +28,7 @@
 ### Block Number
 
 - [`cheat_block_number`](cheatcodes/block_number.md#cheat_block_number) - changes the block number for contracts, for a number of calls
-- [`cheat_block_number_global`](cheatcodes/block_number.md#cheat_block_number_global) - changes the block number for all contracts
+- [`start_cheat_block_number_global`](cheatcodes/block_number.md#cheat_block_number_global) - changes the block number for all contracts
 - [`start_cheat_block_number`](cheatcodes/block_number.md#start_cheat_block_number) - changes the block number for contracts
 - [`stop_cheat_block_number`](cheatcodes/block_number.md#stop_cheat_block_number) - cancels the `cheat_block_number` / `start_cheat_block_number` for contracts
 - [`stop_cheat_block_number_global`](cheatcodes/block_number.md#stop_cheat_block_number_global) - cancels the `cheat_block_number_global`
