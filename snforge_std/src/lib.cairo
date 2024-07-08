@@ -53,7 +53,7 @@ use cheatcodes::execution_info::block_timestamp::stop_cheat_block_timestamp;
 use cheatcodes::execution_info::block_timestamp::stop_cheat_block_timestamp_global;
 use cheatcodes::execution_info::block_timestamp::start_cheat_block_timestamp;
 use cheatcodes::execution_info::sequencer_address::cheat_sequencer_address;
-use cheatcodes::execution_info::sequencer_address::cheat_sequencer_address_global;
+use cheatcodes::execution_info::sequencer_address::start_cheat_sequencer_address_global;
 use cheatcodes::execution_info::sequencer_address::stop_cheat_sequencer_address;
 use cheatcodes::execution_info::sequencer_address::stop_cheat_sequencer_address_global;
 use cheatcodes::execution_info::sequencer_address::start_cheat_sequencer_address;

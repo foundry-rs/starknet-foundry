@@ -44,7 +44,7 @@
 ### Sequencer Address
 
 - [`cheat_sequencer_address`](cheatcodes/sequencer_address.md#cheat_sequencer_address) - changes the sequencer address for contracts, for a number of calls
-- [`cheat_sequencer_address_global`](cheatcodes/sequencer_address.md#cheat_sequencer_address_global) - changes the sequencer address for all contracts
+- [`start_cheat_sequencer_address_global`](cheatcodes/sequencer_address.md#cheat_sequencer_address_global) - changes the sequencer address for all contracts
 - [`start_cheat_sequencer_address`](cheatcodes/sequencer_address.md#start_cheat_sequencer_address) - changes the sequencer address for contracts
 - [`stop_cheat_sequencer_address`](cheatcodes/sequencer_address.md#stop_cheat_sequencer_address) - cancels the `cheat_sequencer_address` / `start_cheat_sequencer_address` for contracts
 - [`stop_cheat_sequencer_address_global`](cheatcodes/sequencer_address.md#stop_cheat_sequencer_address_global) - cancels the `cheat_sequencer_address_global`
