@@ -7,7 +7,7 @@ Cheatcodes modifying transaction `version`:
 
 Changes the transaction version for the given target and span.
 
-## `cheat_transaction_version_global`
+## `start_cheat_transaction_version_global`
 > `fn cheat_transaction_version_global(version: felt252)`
 
 Changes the transaction version for all targets.
@@ -25,4 +25,4 @@ Cancels the `cheat_transaction_version` / `start_cheat_transaction_version` for 
 ## `stop_cheat_transaction_version_global`
 > `fn stop_cheat_transaction_version_global(target: ContractAddress)`
 
-Cancels the `cheat_transaction_version_global`.
+Cancels the `start_cheat_transaction_version_global`.

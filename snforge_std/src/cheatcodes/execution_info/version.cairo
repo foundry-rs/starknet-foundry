@@ -19,7 +19,7 @@ fn cheat_transaction_version(contract_address: ContractAddress, version: felt252
 
 /// Changes the transaction version.
 /// - `version` - transaction version to be set
-fn cheat_transaction_version_global(version: felt252) {
+fn start_cheat_transaction_version_global(version: felt252) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info.tx_info.version = Operation::StartGlobal(version);
@@ -27,7 +27,7 @@ fn cheat_transaction_version_global(version: felt252) {
     cheat_execution_info(execution_info);
 }
 
-/// Cancels the `cheat_transaction_version_global`.
+/// Cancels the `start_cheat_transaction_version_global`.
 fn stop_cheat_transaction_version_global() {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
