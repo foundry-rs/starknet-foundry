@@ -219,3 +219,141 @@ async fn test_happy_case_with_confirm_verification_flag() {
         ),
     );
 }
+
+#[tokio::test]
+async fn test_happy_case_specify_package() {
+    let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/multiple_packages");
+
+    let mock_server = MockServer::start().await;
+
+    let verifier_response = "Contract successfully verified";
+
+    Mock::given(method("POST"))
+        .and(path("/v1/sn_sepolia/verify"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .append_header("content-type", "text/plain")
+                .set_body_string(verifier_response),
+        )
+        .mount(&mock_server)
+        .await;
+
+    let mut args = default_cli_args();
+    args.append(&mut vec![
+        "verify",
+        "--contract-address",
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--contract-name",
+        "supercomplexcode",
+        "--verifier",
+        "walnut",
+        "--network",
+        "sepolia",
+        "--package",
+        "main_workspace",
+    ]);
+
+    let snapbox = runner(&args)
+        .env("WALNUT_API_URL", mock_server.uri())
+        .current_dir(tempdir.path())
+        .stdin("Y");
+
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        formatdoc!(
+            r"
+        command: verify
+        message: {}
+        ",
+            verifier_response
+        ),
+    );
+}
+
+#[tokio::test]
+async fn test_worskpaces_package_specified_virtual_fibonacci() {
+    let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/virtual_workspace");
+
+    let mock_server = MockServer::start().await;
+
+    let verifier_response = "Contract successfully verified";
+
+    Mock::given(method("POST"))
+        .and(path("/v1/sn_sepolia/verify"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .append_header("content-type", "text/plain")
+                .set_body_string(verifier_response),
+        )
+        .mount(&mock_server)
+        .await;
+
+    let mut args = default_cli_args();
+    args.append(&mut vec![
+        "verify",
+        "--contract-address",
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--contract-name",
+        "FibonacciContract",
+        "--verifier",
+        "walnut",
+        "--network",
+        "sepolia",
+        "--package",
+        "cast_fibonacci",
+    ]);
+
+    let snapbox = runner(&args)
+        .env("WALNUT_API_URL", mock_server.uri())
+        .current_dir(tempdir.path())
+        .stdin("Y");
+
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        formatdoc!(
+            r"
+        command: verify
+        message: {}
+        ",
+            verifier_response
+        ),
+    );
+}
+
+#[tokio::test]
+async fn test_worskpaces_package_no_contract() {
+    let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/virtual_workspace");
+
+    let mut args = default_cli_args();
+    args.append(&mut vec![
+        "verify",
+        "--contract-address",
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--contract-name",
+        "nonexistent",
+        "--verifier",
+        "walnut",
+        "--network",
+        "sepolia",
+        "--package",
+        "cast_addition",
+    ]);
+
+    let snapbox = runner(&args).current_dir(tempdir.path()).stdin("Y");
+
+    let output = snapbox.assert().success();
+
+    assert_stderr_contains(
+        output,
+        formatdoc!(
+            r"
+        command: verify
+        error: Contract named 'nonexistent' was not found
+        "
+        ),
+    );
+}

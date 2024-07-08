@@ -135,6 +135,10 @@ pub struct Verify {
     /// Assume "yes" as answer to confirmation prompt and run non-interactively
     #[clap(long, default_value = "false")]
     pub confirm_verification: bool,
+
+    /// Specifies scarb package to be used
+    #[clap(long)]
+    pub package: Option<String>,
 }
 
 #[derive(ValueEnum, Clone, Debug)]
