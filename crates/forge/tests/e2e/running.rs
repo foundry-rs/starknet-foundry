@@ -61,7 +61,7 @@ fn simple_package_with_git_dependency() {
 
     temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
         .unwrap();
-    let remote_url = get_remote_url();
+    let remote_url = get_remote_url().to_lowercase();
     let branch = get_current_branch();
     let manifest_path = temp.child("Scarb.toml");
     manifest_path
