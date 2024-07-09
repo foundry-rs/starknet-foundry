@@ -149,9 +149,9 @@
 
 ## Account Contract Address
 
-- [`cheat_account_contract_address`](cheatcodes/account_contract_address.md#cheat_account_contract_address) - changes the addres of an account which the transaction originates from, for the given target and span
-- [`start_cheat_account_contract_address_global`](cheatcodes/account_contract_address.md#start_cheat_account_contract_address_global) - changes the addres of an account which the transaction originates from, for all targets
-- [`start_cheat_account_contract_address`](cheatcodes/account_contract_address.md#start_cheat_account_contract_address) - changes the addres of an account which the transaction originates from, for the given target 
+- [`cheat_account_contract_address`](cheatcodes/account_contract_address.md#cheat_account_contract_address) - changes the address of an account which the transaction originates from, for the given target and span
+- [`start_cheat_account_contract_address_global`](cheatcodes/account_contract_address.md#start_cheat_account_contract_address_global) - changes the address of an account which the transaction originates from, for all targets
+- [`start_cheat_account_contract_address`](cheatcodes/account_contract_address.md#start_cheat_account_contract_address) - changes the address of an account which the transaction originates from, for the given target 
 - [`stop_cheat_account_contract_address`](cheatcodes/account_deployment_data.md#stop_cheat_account_contract_address) - cancels the `cheat_account_deployment_data` / `start_cheat_account_deployment_data` for the given target
 - [`stop_cheat_account_contract_address_global`](cheatcodes/account_deployment_data.md#stop_cheat_account_contract_address_global) - cancels the `start_cheat_account_contract_address_global`
 
