@@ -16,6 +16,7 @@ Optional.
 
 The verification provider to use for the verification. Possible values are:
 * `walnut`
+* `voyager`
 
 ## `--network, -n <NETWORK>`
 Required.
