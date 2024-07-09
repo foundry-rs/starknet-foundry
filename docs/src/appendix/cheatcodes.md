@@ -110,7 +110,7 @@
 ### Transaction Tip
 
 - [`cheat_tip`](cheatcodes/tip.md#cheat_tip) - changes the transaction tip for contracts, for a number of calls
-- [`cheat_tip_global`](cheatcodes/tip.md#cheat_tip_global) - changes the transaction tip for all contracts
+- [`start_cheat_tip_global`](cheatcodes/tip.md#cheat_tip_global) - changes the transaction tip for all contracts
 - [`start_cheat_tip`](cheatcodes/tip.md#start_cheat_tip) - changes the transaction tip for contracts
 - [`stop_cheat_tip`](cheatcodes/tip.md#stop_cheat_tip) - cancels the `cheat_tip` / `start_cheat_tip` for contracts
 - [`stop_cheat_tip_global`](cheatcodes/tip.md#stop_cheat_tip_global) - cancels the `cheat_tip_global`

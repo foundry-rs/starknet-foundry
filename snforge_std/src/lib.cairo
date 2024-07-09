@@ -93,7 +93,7 @@ use cheatcodes::execution_info::resource_bounds::stop_cheat_resource_bounds;
 use cheatcodes::execution_info::resource_bounds::stop_cheat_resource_bounds_global;
 use cheatcodes::execution_info::resource_bounds::start_cheat_resource_bounds;
 use cheatcodes::execution_info::tip::cheat_tip;
-use cheatcodes::execution_info::tip::cheat_tip_global;
+use cheatcodes::execution_info::tip::start_cheat_tip_global;
 use cheatcodes::execution_info::tip::stop_cheat_tip;
 use cheatcodes::execution_info::tip::stop_cheat_tip_global;
 use cheatcodes::execution_info::tip::start_cheat_tip;
