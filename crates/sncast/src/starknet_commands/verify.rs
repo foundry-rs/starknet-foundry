@@ -191,8 +191,8 @@ impl VerificationInterface for VoyagerVerificationInterface {
     }
 
     fn gen_explorer_url(&self) -> Result<String> {
-        let api_base_url =
-            env::var("VOYAGER_API_URL").unwrap_or_else(|_| "https://api.voyager.online/beta".to_string());
+        let api_base_url = env::var("VOYAGER_API_URL")
+            .unwrap_or_else(|_| "https://api.voyager.online/beta".to_string());
         let path = match self.network {
             Network::Mainnet => "/v1/sn_main/verify",
             Network::Sepolia => "/v1/sn_sepolia/verify",
@@ -232,7 +232,7 @@ pub struct Verify {
 #[derive(ValueEnum, Clone, Debug)]
 pub enum Verifier {
     Walnut,
-    Voyager
+    Voyager,
 }
 
 impl fmt::Display for Verifier {

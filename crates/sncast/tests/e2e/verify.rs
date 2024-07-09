@@ -82,7 +82,7 @@ async fn test_happy_case_voyager() {
         "--contract-name",
         "Map",
         "--verifier",
-        "walnut",
+        "voyager",
         "--network",
         "sepolia",
     ]);
@@ -182,7 +182,7 @@ async fn test_failed_verification_voyager() {
         "--contract-name",
         "Map",
         "--verifier",
-        "walnut",
+        "voyager",
         "--network",
         "sepolia",
     ]);
@@ -320,7 +320,6 @@ async fn test_happy_case_with_confirm_verification_flag() {
     );
 }
 
-
 #[tokio::test]
 async fn test_happy_case_with_confirm_verification_flag_voyager() {
     let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
@@ -347,7 +346,7 @@ async fn test_happy_case_with_confirm_verification_flag_voyager() {
         "--contract-name",
         "Map",
         "--verifier",
-        "walnut",
+        "voyager",
         "--network",
         "sepolia",
         "--confirm-verification",
@@ -449,7 +448,7 @@ async fn test_happy_case_specify_package_voyager() {
         "--contract-name",
         "supercomplexcode",
         "--verifier",
-        "walnut",
+        "voyager",
         "--network",
         "sepolia",
         "--package",
@@ -474,7 +473,6 @@ async fn test_happy_case_specify_package_voyager() {
         ),
     );
 }
-
 
 #[tokio::test]
 async fn test_worskpaces_package_specified_virtual_fibonacci() {
@@ -554,7 +552,7 @@ async fn test_worskpaces_package_specified_virtual_fibonacci_voyager() {
         "--contract-name",
         "FibonacciContract",
         "--verifier",
-        "walnut",
+        "voyager",
         "--network",
         "sepolia",
         "--package",
@@ -579,7 +577,6 @@ async fn test_worskpaces_package_specified_virtual_fibonacci_voyager() {
         ),
     );
 }
-
 
 #[tokio::test]
 async fn test_worskpaces_package_no_contract() {
