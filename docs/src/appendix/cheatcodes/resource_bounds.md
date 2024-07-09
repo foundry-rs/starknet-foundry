@@ -8,7 +8,7 @@ Cheatcodes modifying `resource_bounds`:
 Changes the transaction resource bounds for the given target and span.
 
 ## `start_cheat_resource_bounds_global`
-> `fn cheat_resource_bounds_global(resource_bounds: Span<ResourceBounds>)`
+> `fn start_cheat_resource_bounds_global(resource_bounds: Span<ResourceBounds>)`
 
 Changes the transaction resource bounds for all targets.
 

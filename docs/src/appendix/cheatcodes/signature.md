@@ -8,7 +8,7 @@ Cheatcodes modifying `signature`:
 Changes the transaction signature for the given target and span.
 
 ## `start_cheat_signature_global`
-> `fn cheat_signature_global(signature: Span<felt252>)`
+> `fn start_cheat_signature_global(signature: Span<felt252>)`
 
 Changes the transaction signature for all targets.
 

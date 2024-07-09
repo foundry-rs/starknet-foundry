@@ -8,7 +8,7 @@ Cheatcodes modifying `block_number`:
 Changes the block number for the given target and span.
 
 ## `start_cheat_block_number_global`
-> `fn cheat_block_number_global(block_number: u64)`
+> `fn start_cheat_block_number_global(block_number: u64)`
 
 Changes the block number for all targets.
 

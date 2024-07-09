@@ -8,7 +8,7 @@ Cheatcodes modifying `tip`:
 Changes the transaction tip for the given target and span.
 
 ## `start_cheat_tip_global`
-> `fn cheat_tip_global(tip: u128)`
+> `fn start_cheat_tip_global(tip: u128)`
 
 Changes the transaction tip for all targets.
 

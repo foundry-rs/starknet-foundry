@@ -8,7 +8,7 @@ Cheatcodes modifying `paymaster_data`:
 Changes the transaction paymaster data for the given target and span.
 
 ## `start_cheat_paymaster_data_global`
-> `fn cheat_paymaster_data_global(paymaster_data: Span<felt252>)`
+> `fn start_cheat_paymaster_data_global(paymaster_data: Span<felt252>)`
 
 Changes the transaction paymaster data for all targets.
 

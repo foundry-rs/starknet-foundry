@@ -8,7 +8,7 @@ Cheatcodes modifying transaction `version`:
 Changes the transaction version for the given target and span.
 
 ## `start_cheat_transaction_version_global`
-> `fn cheat_transaction_version_global(version: felt252)`
+> `fn start_cheat_transaction_version_global(version: felt252)`
 
 Changes the transaction version for all targets.
 

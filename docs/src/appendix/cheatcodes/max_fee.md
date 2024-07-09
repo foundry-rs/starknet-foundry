@@ -8,7 +8,7 @@ Cheatcodes modifying `max_fee`:
 Changes the transaction max fee for the given target and span.
 
 ## `start_cheat_max_fee_global`
-> `fn cheat_max_fee_global(max_fee: u128)`
+> `fn start_cheat_max_fee_global(max_fee: u128)`
 
 Changes the transaction max fee for all targets.
 

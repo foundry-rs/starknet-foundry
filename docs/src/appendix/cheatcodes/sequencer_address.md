@@ -8,7 +8,7 @@ Cheatcodes modifying `sequencer_address`:
 Changes the sequencer address for the given target and span.
 
 ## `start_cheat_sequencer_address_global`
-> `fn cheat_sequencer_address_global(sequencer_address: ContractAddress)`
+> `fn start_cheat_sequencer_address_global(sequencer_address: ContractAddress)`
 
 Changes the sequencer address for all targets.
 

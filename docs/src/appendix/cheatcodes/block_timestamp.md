@@ -8,7 +8,7 @@ Cheatcodes modifying `block_timestamp`:
 Changes the block timestamp for the given target and span.
 
 ## `start_cheat_block_timestamp_global`
-> `fn cheat_block_timestamp_global(block_timestamp: u64)`
+> `fn start_cheat_block_timestamp_global(block_timestamp: u64)`
 
 Changes the block timestamp for all targets.
 

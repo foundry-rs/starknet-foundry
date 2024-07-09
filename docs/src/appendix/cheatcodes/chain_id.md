@@ -8,7 +8,7 @@ Cheatcodes modifying `chain_id`:
 Changes the transaction chain_id for the given target and span.
 
 ## `start_cheat_chain_id_global`
-> `fn cheat_chain_id_global(chain_id: felt252)`
+> `fn start_cheat_chain_id_global(chain_id: felt252)`
 
 Changes the transaction chain_id for all targets.
 

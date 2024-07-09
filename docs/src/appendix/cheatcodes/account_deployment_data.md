@@ -8,7 +8,7 @@ Cheatcodes modifying `account_deployment_data`:
 Changes the transaction account deployment data for the given target and span.
 
 ## `start_cheat_account_deployment_data_global`
-> `fn cheat_account_deployment_data_global(account_deployment_data: Span<felt252>)`
+> `fn start_cheat_account_deployment_data_global(account_deployment_data: Span<felt252>)`
 
 Changes the transaction account deployment data for all targets.
 
