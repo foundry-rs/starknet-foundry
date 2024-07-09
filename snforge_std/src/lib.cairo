@@ -103,7 +103,7 @@ use cheatcodes::execution_info::paymaster_data::stop_cheat_paymaster_data;
 use cheatcodes::execution_info::paymaster_data::stop_cheat_paymaster_data_global;
 use cheatcodes::execution_info::paymaster_data::start_cheat_paymaster_data;
 use cheatcodes::execution_info::nonce_data_availability_mode::cheat_nonce_data_availability_mode;
-use cheatcodes::execution_info::nonce_data_availability_mode::cheat_nonce_data_availability_mode_global;
+use cheatcodes::execution_info::nonce_data_availability_mode::start_cheat_nonce_data_availability_mode_global;
 use cheatcodes::execution_info::nonce_data_availability_mode::stop_cheat_nonce_data_availability_mode;
 use cheatcodes::execution_info::nonce_data_availability_mode::stop_cheat_nonce_data_availability_mode_global;
 use cheatcodes::execution_info::nonce_data_availability_mode::start_cheat_nonce_data_availability_mode;
