@@ -142,7 +142,7 @@
 ### Transaction Account Deployment
 
 - [`cheat_account_deployment_data`](cheatcodes/account_deployment_data.md#cheat_account_deployment_data) - changes the transaction account deployment data for contracts, for a number of calls
-- [`cheat_account_deployment_data_global`](cheatcodes/account_deployment_data.md#cheat_account_deployment_data_global) - changes the transaction account deployment data for all contracts
+- [`start_cheat_account_deployment_data_global`](cheatcodes/account_deployment_data.md#cheat_account_deployment_data_global) - changes the transaction account deployment data for all contracts
 - [`start_cheat_account_deployment_data`](cheatcodes/account_deployment_data.md#start_cheat_account_deployment_data) - changes the transaction account deployment data for contracts
 - [`stop_cheat_account_deployment_data`](cheatcodes/account_deployment_data.md#stop_cheat_account_deployment_data) - cancels the `cheat_account_deployment_data` / `start_cheat_account_deployment_data` for contracts
 - [`stop_cheat_account_deployment_data_global`](cheatcodes/account_deployment_data.md#stop_cheat_account_deployment_data_global) - cancels the `cheat_account_deployment_data_global`

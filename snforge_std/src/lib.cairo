@@ -113,7 +113,7 @@ use cheatcodes::execution_info::fee_data_availability_mode::stop_cheat_fee_data_
 use cheatcodes::execution_info::fee_data_availability_mode::stop_cheat_fee_data_availability_mode_global;
 use cheatcodes::execution_info::fee_data_availability_mode::start_cheat_fee_data_availability_mode;
 use cheatcodes::execution_info::account_deployment_data::cheat_account_deployment_data;
-use cheatcodes::execution_info::account_deployment_data::cheat_account_deployment_data_global;
+use cheatcodes::execution_info::account_deployment_data::start_cheat_account_deployment_data_global;
 use cheatcodes::execution_info::account_deployment_data::stop_cheat_account_deployment_data;
 use cheatcodes::execution_info::account_deployment_data::stop_cheat_account_deployment_data_global;
 use cheatcodes::execution_info::account_deployment_data::start_cheat_account_deployment_data;
