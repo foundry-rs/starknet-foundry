@@ -1,5 +1,6 @@
 use anyhow::{anyhow, bail, Context, Error, Result};
 use camino::Utf8PathBuf;
+use clap::ValueEnum;
 use helpers::constants::{KEYSTORE_PASSWORD_ENV_VAR, UDC_ADDRESS};
 use rand::rngs::OsRng;
 use rand::RngCore;
@@ -61,6 +62,13 @@ impl FromStr for AccountType {
         }
     }
 }
+
+#[derive(ValueEnum, Clone, Debug)]
+pub enum Network {
+    Mainnet,
+    Sepolia,
+}
+
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct AccountData {
     pub private_key: FieldElement,

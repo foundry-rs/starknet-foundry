@@ -109,6 +109,7 @@
         * [init](appendix/sncast/script/init.md)
         * [run](appendix/sncast/script/run.md)
     * [tx-status](appendix/sncast/tx-status.md)
+    * [verify](appendix/sncast/verify.md)
 * [`sncast` Library Functions References](appendix/sncast-library.md)
     * [declare](appendix/sncast-library/declare.md)
     * [deploy](appendix/sncast-library/deploy.md)

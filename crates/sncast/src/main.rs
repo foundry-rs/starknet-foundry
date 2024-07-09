@@ -25,6 +25,7 @@ use sncast::{
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
+use starknet_commands::verify::Verify;
 use tokio::runtime::Runtime;
 
 mod starknet_commands;
@@ -141,6 +142,9 @@ enum Commands {
 
     /// Get the status of a transaction
     TxStatus(TxStatus),
+
+    /// Verify a contract
+    Verify(Verify),
 }
 
 fn main() -> Result<()> {
@@ -424,6 +428,32 @@ async fn run_async_command(
                     .await
                     .context("Failed to get transaction status");
             print_command_result("tx-status", &mut result, numbers_format, &output_format)?;
+            Ok(())
+        }
+        Commands::Verify(verify) => {
+            let manifest_path = assert_manifest_path_exists()?;
+            let package_metadata = get_package_metadata(&manifest_path, &verify.package)?;
+            let artifacts = build_and_load_artifacts(
+                &package_metadata,
+                &BuildConfig {
+                    scarb_toml_path: manifest_path.clone(),
+                    json: cli.json,
+                    profile: cli.profile.unwrap_or("dev".to_string()),
+                },
+            )
+            .expect("Failed to build contract");
+            let mut result = starknet_commands::verify::verify(
+                verify.contract_address,
+                verify.contract_name,
+                verify.verifier,
+                verify.network,
+                verify.confirm_verification,
+                &package_metadata.manifest_path,
+                &artifacts,
+            )
+            .await;
+
+            print_command_result("verify", &mut result, numbers_format, &output_format)?;
             Ok(())
         }
         Commands::Script(_) => unreachable!(),

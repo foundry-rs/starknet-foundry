@@ -12,6 +12,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 - Renamed global cheatcodes listed [here](./docs/src/appendix/cheatcodes.md) - cheatcode invocations affecting the global scope and working indefinitely, already marked marked with a `_global` suffix, received a `start_` prefix
 
+### Cast
+
+#### Added
+
+- `verify` subcommand to verify contract (walnut APIs supported as of this version). [Read more here](./docs/src/appendix/sncast/verify.md)
+
 ## [0.26.0] - 2024-07-03
 
 ### Forge 
