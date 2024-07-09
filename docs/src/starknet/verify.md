@@ -13,7 +13,7 @@ For detailed CLI description, see [verify command reference](../appendix/sncast/
 
 ### Walnut
 
-Walnut is a tool for step-by-step debugging of StarkNet transactions. You can request early access to Walnut on [walnut.dev](https://walnut.dev). Note that Walnut requires you to specify the Starknet version in your `Scarb.toml` config file.
+Walnut is a tool for step-by-step debugging of Starknet transactions. You can learn more about Walnut here [walnut.dev](https://walnut.dev). Note that Walnut requires you to specify the Starknet version in your `Scarb.toml` config file.
 
 ## Example
 
