@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Forge
 
 #### Changed
-- Renamed global cheatcodes listed [here](./docs/src/appendix/cheatcodes.md) - cheatcode invocations affecting the global scope and working indefinitely, already marked marked with a `_global` suffix, received a `start_` prefix
+- Renamed global cheatcodes listed [here](./docs/src/appendix/cheatcodes.md) - cheatcode invocations affecting the global scope and working indefinitely, already marked with a `_global` suffix, received a `start_` prefix
 
 ### Cast
 
