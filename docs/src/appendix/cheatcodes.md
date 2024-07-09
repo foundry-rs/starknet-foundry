@@ -102,7 +102,7 @@
 ### Transaction Resource Bounds
 
 - [`cheat_resource_bounds`](cheatcodes/resource_bounds.md#cheat_resource_bounds) - changes the transaction resource bounds for contracts, for a number of calls
-- [`cheat_resource_bounds_global`](cheatcodes/resource_bounds.md#cheat_resource_bounds_global) - changes the transaction resource bounds for all contracts
+- [`start_cheat_resource_bounds_global`](cheatcodes/resource_bounds.md#cheat_resource_bounds_global) - changes the transaction resource bounds for all contracts
 - [`start_cheat_resource_bounds`](cheatcodes/resource_bounds.md#start_cheat_resource_bounds) - changes the transaction resource bounds for contracts
 - [`stop_cheat_resource_bounds`](cheatcodes/resource_bounds.md#stop_cheat_resource_bounds) - cancels the `cheat_resource_bounds` / `start_cheat_resource_bounds` for contracts
 - [`stop_cheat_resource_bounds_global`](cheatcodes/resource_bounds.md#stop_cheat_resource_bounds_global) - cancels the `cheat_resource_bounds_global`

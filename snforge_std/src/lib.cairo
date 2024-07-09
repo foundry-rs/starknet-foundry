@@ -88,7 +88,7 @@ use cheatcodes::execution_info::nonce::stop_cheat_nonce;
 use cheatcodes::execution_info::nonce::stop_cheat_nonce_global;
 use cheatcodes::execution_info::nonce::start_cheat_nonce;
 use cheatcodes::execution_info::resource_bounds::cheat_resource_bounds;
-use cheatcodes::execution_info::resource_bounds::cheat_resource_bounds_global;
+use cheatcodes::execution_info::resource_bounds::start_cheat_resource_bounds_global;
 use cheatcodes::execution_info::resource_bounds::stop_cheat_resource_bounds;
 use cheatcodes::execution_info::resource_bounds::stop_cheat_resource_bounds_global;
 use cheatcodes::execution_info::resource_bounds::start_cheat_resource_bounds;
