@@ -108,7 +108,7 @@ use cheatcodes::execution_info::nonce_data_availability_mode::stop_cheat_nonce_d
 use cheatcodes::execution_info::nonce_data_availability_mode::stop_cheat_nonce_data_availability_mode_global;
 use cheatcodes::execution_info::nonce_data_availability_mode::start_cheat_nonce_data_availability_mode;
 use cheatcodes::execution_info::fee_data_availability_mode::cheat_fee_data_availability_mode;
-use cheatcodes::execution_info::fee_data_availability_mode::cheat_fee_data_availability_mode_global;
+use cheatcodes::execution_info::fee_data_availability_mode::start_cheat_fee_data_availability_mode_global;
 use cheatcodes::execution_info::fee_data_availability_mode::stop_cheat_fee_data_availability_mode;
 use cheatcodes::execution_info::fee_data_availability_mode::stop_cheat_fee_data_availability_mode_global;
 use cheatcodes::execution_info::fee_data_availability_mode::start_cheat_fee_data_availability_mode;

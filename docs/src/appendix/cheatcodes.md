@@ -134,7 +134,7 @@
 ### Transaction Fee Data Availability Mode
 
 - [`cheat_fee_data_availability_mode`](cheatcodes/fee_data_availability_mode.md#cheat_fee_data_availability_mode) - changes the transaction fee data availability mode for contracts, for a number of calls
-- [`cheat_fee_data_availability_mode_global`](cheatcodes/fee_data_availability_mode.md#cheat_fee_data_availability_mode_global) - changes the transaction fee data availability mode for all contracts
+- [`start_cheat_fee_data_availability_mode_global`](cheatcodes/fee_data_availability_mode.md#cheat_fee_data_availability_mode_global) - changes the transaction fee data availability mode for all contracts
 - [`start_cheat_fee_data_availability_mode`](cheatcodes/fee_data_availability_mode.md#start_cheat_fee_data_availability_mode) - changes the transaction fee data availability mode for contracts
 - [`stop_cheat_fee_data_availability_mode`](cheatcodes/fee_data_availability_mode.md#stop_cheat_fee_data_availability_mode) - cancels the `cheat_fee_data_availability_mode` / `start_cheat_fee_data_availability_mode` for contracts
 - [`stop_cheat_fee_data_availability_mode_global`](cheatcodes/fee_data_availability_mode.md#stop_cheat_fee_data_availability_mode_global) - cancels the `cheat_fee_data_availability_mode_global`

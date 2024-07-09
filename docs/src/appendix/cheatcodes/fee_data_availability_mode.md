@@ -7,7 +7,7 @@ Cheatcodes modifying `fee_data_availability_mode`:
 
 Changes the transaction fee data availability mode for the given target and span.
 
-## `cheat_fee_data_availability_mode_global`
+## start_`cheat_fee_data_availability_mode_global`
 > `fn cheat_fee_data_availability_mode_global(fee_data_availability_mode: u32)`
 
 Changes the transaction fee data availability mode for all targets.
@@ -25,4 +25,4 @@ Cancels the `cheat_fee_data_availability_mode` / `start_cheat_fee_data_availabil
 ## `stop_cheat_fee_data_availability_mode_global`
 > `fn stop_cheat_fee_data_availability_mode_global(target: ContractAddress)`
 
-Cancels the `cheat_fee_data_availability_mode_global`.
+Cancels the `start_cheat_fee_data_availability_mode_global`.
