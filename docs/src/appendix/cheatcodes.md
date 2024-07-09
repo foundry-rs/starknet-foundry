@@ -118,7 +118,7 @@
 ### Transaction Paymaster Data
 
 - [`cheat_paymaster_data`](cheatcodes/paymaster_data.md#cheat_paymaster_data) - changes the transaction paymaster data for contracts, for a number of calls
-- [`cheat_paymaster_data_global`](cheatcodes/paymaster_data.md#cheat_paymaster_data_global) - changes the transaction paymaster data for all contracts
+- [`start_cheat_paymaster_data_global`](cheatcodes/paymaster_data.md#cheat_paymaster_data_global) - changes the transaction paymaster data for all contracts
 - [`start_cheat_paymaster_data`](cheatcodes/paymaster_data.md#start_cheat_paymaster_data) - changes the transaction paymaster data for contracts
 - [`stop_cheat_paymaster_data`](cheatcodes/paymaster_data.md#stop_cheat_paymaster_data) - cancels the `cheat_paymaster_data` / `start_cheat_paymaster_data` for contracts
 - [`stop_cheat_paymaster_data_global`](cheatcodes/paymaster_data.md#stop_cheat_paymaster_data_global) - cancels the `cheat_paymaster_data_global`

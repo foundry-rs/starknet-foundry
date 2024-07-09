@@ -98,7 +98,7 @@ use cheatcodes::execution_info::tip::stop_cheat_tip;
 use cheatcodes::execution_info::tip::stop_cheat_tip_global;
 use cheatcodes::execution_info::tip::start_cheat_tip;
 use cheatcodes::execution_info::paymaster_data::cheat_paymaster_data;
-use cheatcodes::execution_info::paymaster_data::cheat_paymaster_data_global;
+use cheatcodes::execution_info::paymaster_data::start_cheat_paymaster_data_global;
 use cheatcodes::execution_info::paymaster_data::stop_cheat_paymaster_data;
 use cheatcodes::execution_info::paymaster_data::stop_cheat_paymaster_data_global;
 use cheatcodes::execution_info::paymaster_data::start_cheat_paymaster_data;
