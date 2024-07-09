@@ -1,6 +1,7 @@
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
-use clap::Args;
+use clap::{Args, ValueEnum};
+use indoc::indoc;
 use serde_json::Map;
 use sncast::helpers::constants::{BRAAVOS_BASE_ACCOUNT_CLASS_HASH, KEYSTORE_PASSWORD_ENV_VAR};
 use sncast::response::structs::{Felt, InvokeResponse};
@@ -15,11 +16,31 @@ use starknet::providers::{JsonRpcClient, Provider};
 use starknet::signers::{LocalWallet, SigningKey};
 
 use sncast::helpers::braavos::BraavosAccountFactory;
+use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken};
 use sncast::{
     chain_id_to_network_name, check_account_file_exists, get_account_data_from_accounts_file,
-    get_account_data_from_keystore, get_keystore_password, handle_account_factory_error,
-    handle_rpc_error, handle_wait_for_tx, AccountType, WaitForTx,
+    get_account_data_from_keystore, get_keystore_password, handle_rpc_error, handle_wait_for_tx,
+    AccountType, WaitForTx,
 };
+
+fn token_not_supported_error_msg(fee_token: &str, deployment: &str) -> String {
+    format!(
+        indoc! {
+            r"
+            {} fee token is not supported for {} deployment.
+
+            Possible values:
+            +---------+----------+
+            | Version | FeeToken |
+            +---------+----------+
+            | v1      | eth      |
+            | v3      | strk     |
+            +---------+----------+
+            "
+        },
+        fee_token, deployment
+    )
+}
 
 #[derive(Args, Debug)]
 #[command(about = "Deploy an account to the Starknet")]
@@ -28,9 +49,33 @@ pub struct Deploy {
     #[clap(short, long)]
     pub name: Option<String>,
 
-    /// Max fee for the transaction
+    #[clap(flatten)]
+    pub fee_args: FeeArgs,
+
+    /// Version of the account deployment (can be inferred from fee token)
     #[clap(short, long)]
-    pub max_fee: Option<FieldElement>,
+    pub version: Option<AccountDeployVersion>,
+}
+
+impl Deploy {
+    pub fn validate(&self) -> Result<()> {
+        match (&self.version, &self.fee_args.fee_token) {
+            (Some(AccountDeployVersion::V3), Some(FeeToken::Eth)) => {
+                Err(anyhow!(token_not_supported_error_msg("eth", "v3")))
+            }
+            (Some(AccountDeployVersion::V1), Some(FeeToken::Strk)) => {
+                Err(anyhow!(token_not_supported_error_msg("strk", "v1")))
+            }
+            (None, None) => Err(anyhow!("Either --fee-token or --version must be provided")),
+            _ => Ok(()),
+        }
+    }
+}
+
+#[derive(ValueEnum, Debug, Clone)]
+pub enum AccountDeployVersion {
+    V1,
+    V3,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -43,11 +88,22 @@ pub async fn deploy(
     account: &str,
     keystore_path: Option<Utf8PathBuf>,
 ) -> Result<InvokeResponse> {
+    let fee_token_from_version = deploy_args.version.map(|version| match version {
+        AccountDeployVersion::V1 => FeeToken::Eth,
+        AccountDeployVersion::V3 => FeeToken::Strk,
+    });
+
+    let fee_settings = FeeArgs {
+        fee_token: fee_token_from_version.or(deploy_args.fee_args.fee_token),
+        ..deploy_args.fee_args
+    }
+    .try_into()?;
+
     if let Some(keystore_path_) = keystore_path {
         deploy_from_keystore(
             provider,
             chain_id,
-            deploy_args.max_fee,
+            fee_settings,
             wait_config,
             account,
             keystore_path_,
@@ -63,7 +119,7 @@ pub async fn deploy(
             accounts_file,
             account_name,
             chain_id,
-            deploy_args.max_fee,
+            fee_settings,
             wait_config,
         )
         .await
@@ -73,7 +129,7 @@ pub async fn deploy(
 async fn deploy_from_keystore(
     provider: &JsonRpcClient<HttpTransport>,
     chain_id: FieldElement,
-    max_fee: Option<FieldElement>,
+    fee_settings: FeeSettings,
     wait_config: WaitForTx,
     account: &str,
     keystore_path: Utf8PathBuf,
@@ -145,7 +201,7 @@ async fn deploy_from_keystore(
             private_key,
             salt,
             chain_id,
-            max_fee,
+            fee_settings,
             wait_config,
         )
         .await?
@@ -161,7 +217,7 @@ async fn deploy_from_accounts_file(
     accounts_file: Utf8PathBuf,
     name: String,
     chain_id: FieldElement,
-    max_fee: Option<FieldElement>,
+    fee_settings: FeeSettings,
     wait_config: WaitForTx,
 ) -> Result<InvokeResponse> {
     let account_data = get_account_data_from_accounts_file(&name, chain_id, &accounts_file)?;
@@ -181,7 +237,7 @@ async fn deploy_from_accounts_file(
             .salt
             .context("Failed to get salt from accounts file")?,
         chain_id,
-        max_fee,
+        fee_settings,
         wait_config,
     )
     .await?;
@@ -199,133 +255,99 @@ async fn get_deployment_result(
     private_key: SigningKey,
     salt: FieldElement,
     chain_id: FieldElement,
-    max_fee: Option<FieldElement>,
+    fee_settings: FeeSettings,
     wait_config: WaitForTx,
 ) -> Result<InvokeResponse> {
     match account_type {
         AccountType::Argent => {
-            deploy_argent_account(
-                provider,
+            let factory = ArgentAccountFactory::new(
                 class_hash,
-                private_key,
-                salt,
                 chain_id,
-                max_fee,
+                FieldElement::ZERO,
+                LocalWallet::from_signing_key(private_key),
+                provider,
+            )
+            .await?;
+
+            deploy_account(
+                factory,
+                provider,
+                salt,
+                fee_settings,
                 wait_config,
+                class_hash,
             )
             .await
         }
         AccountType::Oz => {
-            deploy_oz_account(
-                provider,
+            let factory = OpenZeppelinAccountFactory::new(
                 class_hash,
-                private_key,
-                salt,
                 chain_id,
-                max_fee,
+                LocalWallet::from_signing_key(private_key),
+                provider,
+            )
+            .await?;
+
+            deploy_account(
+                factory,
+                provider,
+                salt,
+                fee_settings,
                 wait_config,
+                class_hash,
             )
             .await
         }
         AccountType::Braavos => {
-            deploy_braavos_account(
-                provider,
+            let factory = BraavosAccountFactory::new(
                 class_hash,
-                private_key,
-                salt,
+                BRAAVOS_BASE_ACCOUNT_CLASS_HASH,
                 chain_id,
-                max_fee,
+                LocalWallet::from_signing_key(private_key),
+                provider,
+            )
+            .await?;
+
+            deploy_account(
+                factory,
+                provider,
+                salt,
+                fee_settings,
                 wait_config,
+                class_hash,
             )
             .await
         }
     }
 }
 
-async fn deploy_oz_account(
-    provider: &JsonRpcClient<HttpTransport>,
-    class_hash: FieldElement,
-    private_key: SigningKey,
-    salt: FieldElement,
-    chain_id: FieldElement,
-    max_fee: Option<FieldElement>,
-    wait_config: WaitForTx,
-) -> Result<InvokeResponse> {
-    let factory = OpenZeppelinAccountFactory::new(
-        class_hash,
-        chain_id,
-        LocalWallet::from_signing_key(private_key),
-        provider,
-    )
-    .await?;
-
-    deploy_account(factory, provider, salt, max_fee, wait_config, class_hash).await
-}
-
-async fn deploy_argent_account(
-    provider: &JsonRpcClient<HttpTransport>,
-    class_hash: FieldElement,
-    private_key: SigningKey,
-    salt: FieldElement,
-    chain_id: FieldElement,
-    max_fee: Option<FieldElement>,
-    wait_config: WaitForTx,
-) -> Result<InvokeResponse> {
-    let factory = ArgentAccountFactory::new(
-        class_hash,
-        chain_id,
-        FieldElement::ZERO,
-        LocalWallet::from_signing_key(private_key),
-        provider,
-    )
-    .await?;
-
-    deploy_account(factory, provider, salt, max_fee, wait_config, class_hash).await
-}
-
-async fn deploy_braavos_account(
-    provider: &JsonRpcClient<HttpTransport>,
-    class_hash: FieldElement,
-    private_key: SigningKey,
-    salt: FieldElement,
-    chain_id: FieldElement,
-    max_fee: Option<FieldElement>,
-    wait_config: WaitForTx,
-) -> Result<InvokeResponse> {
-    let factory = BraavosAccountFactory::new(
-        class_hash,
-        BRAAVOS_BASE_ACCOUNT_CLASS_HASH,
-        chain_id,
-        LocalWallet::from_signing_key(private_key),
-        provider,
-    )
-    .await?;
-
-    deploy_account(factory, provider, salt, max_fee, wait_config, class_hash).await
-}
-
 async fn deploy_account<T>(
     account_factory: T,
     provider: &JsonRpcClient<HttpTransport>,
     salt: FieldElement,
-    max_fee: Option<FieldElement>,
+    fee_settings: FeeSettings,
     wait_config: WaitForTx,
     class_hash: FieldElement,
 ) -> Result<InvokeResponse>
 where
     T: AccountFactory + Sync,
 {
-    let deployment = account_factory.deploy(salt);
-
-    let deploy_max_fee = if let Some(max_fee) = max_fee {
-        max_fee
-    } else {
-        match deployment.estimate_fee().await {
-            Ok(max_fee) => max_fee.overall_fee,
-            Err(error) => return Err(handle_account_factory_error::<T>(error)),
+    let result = match fee_settings {
+        FeeSettings::Eth(settings) => {
+            let deployment = account_factory.deploy_v1(salt);
+            let eth_fee = settings.get_or_estimate(&deployment).await?;
+            deployment.max_fee(eth_fee.max_fee).send().await
+        }
+        FeeSettings::Strk(settings) => {
+            let deployment = account_factory.deploy_v3(salt);
+            let strk_fee = settings.get_or_estimate(&deployment).await?;
+            deployment
+                .gas(strk_fee.max_gas)
+                .gas_price(strk_fee.max_gas_unit_price)
+                .send()
+                .await
         }
     };
-    let result = deployment.max_fee(deploy_max_fee).send().await;
 
     match result {
         Err(AccountFactoryError::Provider(error)) => match error {

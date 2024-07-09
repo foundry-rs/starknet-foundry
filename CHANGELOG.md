@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - `verify` subcommand to verify contract (walnut APIs supported as of this version). [Read more here](./docs/src/appendix/sncast/verify.md)
+- support for v3 transactions on account deploy
 
 ## [0.26.0] - 2024-07-03
 
