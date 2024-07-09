@@ -41,6 +41,7 @@
 * [Performing Multicall](starknet/multicall.md)
 * [Cairo Deployment Scripts](starknet/script.md)
 * [Inspecting Transactions](starknet/tx-status.md)
+* [Verifying Contracts](starknet/verify.md)
 
 ---
 
