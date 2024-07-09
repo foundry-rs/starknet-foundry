@@ -23,7 +23,7 @@ fn cheat_account_contract_address(
 
 /// Changes the transaction account deployment data.
 /// - `account_contract_address` - transaction account deployment data to be set
-fn start_cheat_account_contract_address_global(account_contract_address: ContractAddress) {
+fn cheat_account_contract_address_global(account_contract_address: ContractAddress) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info
@@ -33,7 +33,7 @@ fn start_cheat_account_contract_address_global(account_contract_address: Contrac
     cheat_execution_info(execution_info);
 }
 
-/// Cancels the `start_cheat_account_contract_address_global`.
+/// Cancels the `cheat_account_contract_address_global`.
 fn stop_cheat_account_contract_address_global() {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
