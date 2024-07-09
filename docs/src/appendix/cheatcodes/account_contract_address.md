@@ -7,8 +7,8 @@ Cheatcodes modifying `account_contract_address`:
 
 Changes the transaction account deployment data for the given target and span.
 
-## `cheat_account_contract_address_global`
-> `fn cheat_account_contract_address_global(account_contract_address: ContractAddress)`
+## `start_cheat_account_contract_address_global`
+> `fn start_cheat_account_contract_address_global(account_contract_address: ContractAddress)`
 
 Changes the transaction account deployment data for all targets.
 
@@ -25,4 +25,4 @@ Cancels the `cheat_account_contract_address` / `start_cheat_account_contract_add
 ## `stop_cheat_account_contract_address_global`
 > `fn stop_cheat_account_contract_address_global(target: ContractAddress)`
 
-Cancels the `cheat_account_contract_address_global`.
+Cancels the `start_cheat_account_contract_address_global`.
