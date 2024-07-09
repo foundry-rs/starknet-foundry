@@ -6,7 +6,13 @@ Required.
 
 The address of the contract that is to be verified.
 
-## `--contract-name <CONTRACT_NAME>`
+
+## `--class-hash, -c <CONTRACT_ADDRESS>`
+Required.
+
+The address of the contract that is to be verified.
+
+## `--class-name <CONTRACT_NAME>`
 Required.
 
 The name of the contract. The contract name is the part after the `mod` keyword in your contract file.
@@ -16,6 +22,7 @@ Optional.
 
 The verification provider to use for the verification. Possible values are:
 * `walnut`
+* `voyager`
 
 ## `--network, -n <NETWORK>`
 Required.

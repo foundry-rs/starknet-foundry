@@ -30,7 +30,7 @@ use starknet::core::types::ContractClass;
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::Provider;
 use starknet_commands::account::list::print_account_list;
-use starknet_commands::verify::Verify;
+use starknet_commands::verification::verify::Verify;
 use starknet_types_core::felt::Felt;
 use tokio::runtime::Runtime;
 
@@ -623,9 +623,10 @@ async fn run_async_command(
                 false,
             )
             .expect("Failed to build contract");
-            let result = starknet_commands::verify::verify(
+            let mut result = starknet_commands::verification::verify::verify(
                 verify.contract_address,
-                verify.contract_name,
+                verify.class_hash,
+                verify.class_name,
                 verify.verifier,
                 verify.network,
                 verify.confirm_verification,
