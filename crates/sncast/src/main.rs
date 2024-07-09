@@ -155,19 +155,28 @@ fn main() -> Result<()> {
 
     let runtime = Runtime::new().expect("Failed to instantiate Runtime");
 
-    if let Commands::Script(script) = &cli.command {
-        run_script_command(&cli, runtime, script, numbers_format, &output_format)
-    } else {
-        let mut config = load_global_config::<CastConfig>(&None, &cli.profile)?;
-        update_cast_config(&mut config, &cli);
-        let provider = get_provider(&config.url)?;
-        runtime.block_on(run_async_command(
-            cli,
-            config,
-            provider,
+    match &cli.command {
+        Commands::Script(script) => {
+            run_script_command(&cli, runtime, script, numbers_format, &output_format)
+        }
+        Commands::Verify(verify) => runtime.block_on(run_verify_command(
+            &cli,
+            verify,
             numbers_format,
-            output_format,
-        ))
+            &output_format,
+        )),
+        _ => {
+            let mut config = load_global_config::<CastConfig>(&None, &cli.profile)?;
+            update_cast_config(&mut config, &cli);
+            let provider = get_provider(&config.url)?;
+            runtime.block_on(run_async_command(
+                cli,
+                config,
+                provider,
+                numbers_format,
+                output_format,
+            ))
+        }
     }
 }
 
@@ -430,32 +439,7 @@ async fn run_async_command(
             print_command_result("tx-status", &mut result, numbers_format, &output_format)?;
             Ok(())
         }
-        Commands::Verify(verify) => {
-            let manifest_path = assert_manifest_path_exists()?;
-            let package_metadata = get_package_metadata(&manifest_path, &verify.package)?;
-            let artifacts = build_and_load_artifacts(
-                &package_metadata,
-                &BuildConfig {
-                    scarb_toml_path: manifest_path.clone(),
-                    json: cli.json,
-                    profile: cli.profile.unwrap_or("dev".to_string()),
-                },
-            )
-            .expect("Failed to build contract");
-            let mut result = starknet_commands::verify::verify(
-                verify.contract_address,
-                verify.contract_name,
-                verify.verifier,
-                verify.network,
-                verify.confirm_verification,
-                &package_metadata.manifest_path,
-                &artifacts,
-            )
-            .await;
-
-            print_command_result("verify", &mut result, numbers_format, &output_format)?;
-            Ok(())
-        }
+        Commands::Verify(_) => unreachable!(),
         Commands::Script(_) => unreachable!(),
     }
 }
@@ -533,6 +517,38 @@ fn run_script_command(
         }
     }
 
+    Ok(())
+}
+
+async fn run_verify_command(
+    cli: &Cli,
+    verify: &Verify,
+    numbers_format: NumbersFormat,
+    output_format: &OutputFormat,
+) -> Result<()> {
+    let manifest_path = assert_manifest_path_exists()?;
+    let package_metadata = get_package_metadata(&manifest_path, &verify.package)?;
+    let artifacts = build_and_load_artifacts(
+        &package_metadata,
+        &BuildConfig {
+            scarb_toml_path: manifest_path.clone(),
+            json: cli.json,
+            profile: cli.profile.clone().unwrap_or("dev".to_string()),
+        },
+    )
+    .expect("Failed to build contract");
+    let mut result = starknet_commands::verify::verify(
+        verify.contract_address.clone(),
+        verify.contract_name.clone(),
+        verify.verifier.clone(),
+        verify.network.clone(),
+        verify.confirm_verification,
+        &package_metadata.manifest_path,
+        &artifacts,
+    )
+    .await;
+
+    print_command_result("verify", &mut result, numbers_format, &output_format)?;
     Ok(())
 }
 
