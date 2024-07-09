@@ -7,7 +7,7 @@ Cheatcodes modifying `nonce`:
 
 Changes the transaction nonce for the given target and span.
 
-## `cheat_nonce_global`
+## `start_cheat_nonce_global`
 > `fn cheat_nonce_global(nonce: felt252)`
 
 Changes the transaction nonce for all targets.
@@ -25,4 +25,4 @@ Cancels the `cheat_nonce` / `start_cheat_nonce` for the given target.
 ## `stop_cheat_nonce_global`
 > `fn stop_cheat_nonce_global(target: ContractAddress)`
 
-Cancels the `cheat_nonce_global`.
+Cancels the `start_cheat_nonce_global`.

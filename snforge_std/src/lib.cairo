@@ -83,7 +83,7 @@ use cheatcodes::execution_info::chain_id::stop_cheat_chain_id;
 use cheatcodes::execution_info::chain_id::stop_cheat_chain_id_global;
 use cheatcodes::execution_info::chain_id::start_cheat_chain_id;
 use cheatcodes::execution_info::nonce::cheat_nonce;
-use cheatcodes::execution_info::nonce::cheat_nonce_global;
+use cheatcodes::execution_info::nonce::start_cheat_nonce_global;
 use cheatcodes::execution_info::nonce::stop_cheat_nonce;
 use cheatcodes::execution_info::nonce::stop_cheat_nonce_global;
 use cheatcodes::execution_info::nonce::start_cheat_nonce;

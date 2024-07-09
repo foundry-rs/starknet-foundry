@@ -94,7 +94,7 @@
 ### Transaction Nonce
 
 - [`cheat_nonce`](cheatcodes/nonce.md#cheat_nonce) - changes the transaction nonce for contracts, for a number of calls
-- [`cheat_nonce_global`](cheatcodes/nonce.md#cheat_nonce_global) - changes the transaction nonce for all contracts
+- [`start_cheat_nonce_global`](cheatcodes/nonce.md#cheat_nonce_global) - changes the transaction nonce for all contracts
 - [`start_cheat_nonce`](cheatcodes/nonce.md#start_cheat_nonce) - changes the transaction nonce for contracts
 - [`stop_cheat_nonce`](cheatcodes/nonce.md#stop_cheat_nonce) - cancels the `cheat_nonce` / `start_cheat_nonce` for contracts
 - [`stop_cheat_nonce_global`](cheatcodes/nonce.md#stop_cheat_nonce_global) - cancels the `cheat_nonce_global`
