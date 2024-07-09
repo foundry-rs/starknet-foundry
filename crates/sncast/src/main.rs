@@ -439,8 +439,7 @@ async fn run_async_command(
             print_command_result("tx-status", &mut result, numbers_format, &output_format)?;
             Ok(())
         }
-        Commands::Verify(_) => unreachable!(),
-        Commands::Script(_) => unreachable!(),
+        Commands::Verify(_) | Commands::Script(_) => unreachable!(),
     }
 }
 
@@ -538,7 +537,7 @@ async fn run_verify_command(
     )
     .expect("Failed to build contract");
     let mut result = starknet_commands::verify::verify(
-        verify.contract_address.clone(),
+        verify.contract_address,
         verify.contract_name.clone(),
         verify.verifier.clone(),
         verify.network.clone(),
@@ -548,7 +547,7 @@ async fn run_verify_command(
     )
     .await;
 
-    print_command_result("verify", &mut result, numbers_format, &output_format)?;
+    print_command_result("verify", &mut result, numbers_format, output_format)?;
     Ok(())
 }
 
