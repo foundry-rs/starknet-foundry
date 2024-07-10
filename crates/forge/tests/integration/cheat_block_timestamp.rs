@@ -16,7 +16,7 @@ fn cheat_block_timestamp_basic() {
             use traits::Into;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use snforge_std::{ declare, ContractClassTrait, start_cheat_block_timestamp, stop_cheat_block_timestamp, start_cheat_block_number, cheat_block_timestamp_global, stop_cheat_block_timestamp_global };
+            use snforge_std::{ declare, ContractClassTrait, start_cheat_block_timestamp, stop_cheat_block_timestamp, start_cheat_block_number, start_cheat_block_timestamp_global, stop_cheat_block_timestamp_global };
 
             #[starknet::interface]
             trait ICheatBlockTimestampChecker<TContractState> {
@@ -54,7 +54,7 @@ fn cheat_block_timestamp_basic() {
 
                 let old_block_timestamp = cheat_block_timestamp_checker.get_block_timestamp();
 
-                cheat_block_timestamp_global(123);
+                start_cheat_block_timestamp_global(123);
 
                 let new_block_timestamp = cheat_block_timestamp_checker.get_block_timestamp();
                 assert(new_block_timestamp == 123, 'Wrong block timestamp');
@@ -110,7 +110,7 @@ fn cheat_block_timestamp_basic() {
                 let old_block_timestamp1 = cheat_block_timestamp_checker1.get_block_timestamp();
                 let old_block_timestamp2 = cheat_block_timestamp_checker2.get_block_timestamp();
 
-                cheat_block_timestamp_global(123);
+                start_cheat_block_timestamp_global(123);
 
                 let new_block_timestamp1 = cheat_block_timestamp_checker1.get_block_timestamp();
                 let new_block_timestamp2 = cheat_block_timestamp_checker2.get_block_timestamp();
@@ -152,7 +152,7 @@ fn cheat_block_timestamp_complex() {
             use traits::Into;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use snforge_std::{ declare, ContractClassTrait, start_cheat_block_timestamp, stop_cheat_block_timestamp, start_cheat_block_number, cheat_block_timestamp_global };
+            use snforge_std::{ declare, ContractClassTrait, start_cheat_block_timestamp, stop_cheat_block_timestamp, start_cheat_block_number, start_cheat_block_timestamp_global };
 
             #[starknet::interface]
             trait ICheatBlockTimestampChecker<TContractState> {
@@ -179,7 +179,7 @@ fn cheat_block_timestamp_complex() {
 
                 let old_block_timestamp2 = cheat_block_timestamp_checker2.get_block_timestamp();
 
-                cheat_block_timestamp_global(123);
+                start_cheat_block_timestamp_global(123);
 
                 let new_block_timestamp1 = cheat_block_timestamp_checker1.get_block_timestamp();
                 let new_block_timestamp2 = cheat_block_timestamp_checker2.get_block_timestamp();

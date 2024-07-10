@@ -19,7 +19,7 @@ fn cheat_chain_id(contract_address: ContractAddress, chain_id: felt252, span: Ch
 
 /// Changes the transaction chain_id.
 /// - `chain_id` - transaction chain_id to be set
-fn cheat_chain_id_global(chain_id: felt252) {
+fn start_cheat_chain_id_global(chain_id: felt252) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info.tx_info.chain_id = Operation::StartGlobal(chain_id);
@@ -27,7 +27,7 @@ fn cheat_chain_id_global(chain_id: felt252) {
     cheat_execution_info(execution_info);
 }
 
-/// Cancels the `cheat_chain_id_global`.
+/// Cancels the `start_cheat_chain_id_global`.
 fn stop_cheat_chain_id_global() {
     let mut execution_info: ExecutionInfoMock = Default::default();
 

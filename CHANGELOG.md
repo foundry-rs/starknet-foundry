@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
+#### Changed
+- Renamed global cheatcodes listed [here](https://foundry-rs.github.io/starknet-foundry/appendix/cheatcodes.html) - cheatcode invocations affecting the global scope and working indefinitely, already marked with a `_global` suffix, received a `start_` prefix
+
+### Cast
+
 #### Added 
 
 - `spy_messages_to_l1()` for listening in on messages to L1 sent by your contracts. [Read more here](https://foundry-rs.github.io/starknet-foundry/testing/testing-messages-to-l1.html).

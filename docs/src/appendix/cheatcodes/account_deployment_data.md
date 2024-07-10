@@ -7,8 +7,8 @@ Cheatcodes modifying `account_deployment_data`:
 
 Changes the transaction account deployment data for the given target and span.
 
-## `cheat_account_deployment_data_global`
-> `fn cheat_account_deployment_data_global(account_deployment_data: Span<felt252>)`
+## `start_cheat_account_deployment_data_global`
+> `fn start_cheat_account_deployment_data_global(account_deployment_data: Span<felt252>)`
 
 Changes the transaction account deployment data for all targets.
 
@@ -25,4 +25,4 @@ Cancels the `cheat_account_deployment_data` / `start_cheat_account_deployment_da
 ## `stop_cheat_account_deployment_data_global`
 > `fn stop_cheat_account_deployment_data_global(target: ContractAddress)`
 
-Cancels the `cheat_account_deployment_data_global`.
+Cancels the `start_cheat_account_deployment_data_global`.
