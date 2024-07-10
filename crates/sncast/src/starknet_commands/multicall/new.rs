@@ -9,7 +9,7 @@ use sncast::{
 #[command(about = "Generate a template for the multicall .toml file", long_about = None)]
 pub struct New {
     /// Output path to the file where the template is going to be saved
-    #[clap(short = 'p', long = "output-path")]
+    #[arg(required = true, num_args = 1)]
     pub output_path: Option<Utf8PathBuf>,
 
     /// If the file specified in output-path exists, this flag decides if it is going to be overwritten
@@ -24,8 +24,8 @@ pub fn new(output_path: &Utf8PathBuf, overwrite: bool) -> Result<MulticallNewRes
         }
         if !overwrite {
             bail!(
-                    "Output file already exists, if you want to overwrite it, use the `--overwrite` flag"
-                );
+                "Output file already exists, if you want to overwrite it, use the `--overwrite` flag"
+            );
         }
     }
     std::fs::write(output_path.clone(), DEFAULT_MULTICALL_CONTENTS)?;
