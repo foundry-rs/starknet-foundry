@@ -34,10 +34,8 @@ $ sncast --url http://127.0.0.1:5050/rpc \
 You are about to submit the entire workspace's code to the third-party chosen verifier at walnut, and the code will be publicly available through walnut's APIs. Are you sure? (Y/n) Y
 
 command: verify
-message: Contract successfully verified
+message: Contract has been successfully verified. You can check the verification status at the following link: https://api.walnut.dev/v1/sn_main/classes/0x03498e7edbc5f953315db118401fe7ea1eef637f63c56b45bd54e35150929ca3
 ```
-
-After verification with Walnut verifier, the contract can be debugged using Walnut's transaction step-by-step debugger.
 
 > 📝 **Note**
 > Contract name is a part after the `mod` keyword in your contract file. It may differ from package name defined in `Scarb.toml` file.
