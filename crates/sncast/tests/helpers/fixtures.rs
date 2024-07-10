@@ -1,12 +1,14 @@
 use crate::helpers::constants::{ACCOUNT_FILE_PATH, DEVNET_OZ_CLASS_HASH_CAIRO_0, URL};
+use crate::helpers::runner::runner;
 use anyhow::Context;
 use camino::{Utf8Path, Utf8PathBuf};
+use conversions::string::IntoHexStr;
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
 use serde_json::{json, Map, Value};
 use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::helpers::constants::{
-    ARGENT_CLASS_HASH, BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH,
+    ARGENT_CLASS_HASH, BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH,
 };
 use sncast::helpers::scarb_utils::get_package_metadata;
 use sncast::state::state_file::{
@@ -29,7 +31,7 @@ use std::env;
 use std::fs;
 use std::fs::File;
 use std::io::{BufRead, Write};
-use tempfile::TempDir;
+use tempfile::{tempdir, TempDir};
 use toml::Table;
 use url::Url;
 
@@ -547,4 +549,69 @@ pub fn assert_tx_entry_success(tx_entry: &ScriptTransactionEntry, name: &str) {
     assert_eq!(expected_selector, name);
 
     assert!(tx_entry.timestamp > SCRIPT_ORIGIN_TIMESTAMP);
+}
+
+pub async fn create_and_deploy_oz_account() -> TempDir {
+    create_and_deploy_account(OZ_CLASS_HASH, AccountType::Oz).await
+}
+pub async fn create_and_deploy_account(
+    class_hash: FieldElement,
+    account_type: AccountType,
+) -> TempDir {
+    let class_hash = &class_hash.into_hex_string();
+    let account_type = match account_type {
+        AccountType::Oz => "oz",
+        AccountType::Argent => "argent",
+        AccountType::Braavos => "braavos",
+    };
+    let tempdir = tempdir().unwrap();
+    let accounts_file = "accounts.json";
+
+    let args = vec![
+        "--url",
+        URL,
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "create",
+        "--name",
+        "my_account",
+        "--class-hash",
+        class_hash,
+        "--type",
+        account_type,
+    ];
+
+    runner(&args).current_dir(tempdir.path()).assert().success();
+
+    let contents = fs::read_to_string(tempdir.path().join(accounts_file)).unwrap();
+    let items: Value = serde_json::from_str(&contents).unwrap();
+
+    mint_token(
+        items["alpha-sepolia"]["my_account"]["address"]
+            .as_str()
+            .unwrap(),
+        u64::MAX,
+    )
+    .await;
+
+    let args = vec![
+        "--url",
+        URL,
+        "--accounts-file",
+        accounts_file,
+        "--json",
+        "account",
+        "deploy",
+        "--name",
+        "my_account",
+        "--max-fee",
+        "99999999999999999",
+        "--fee-token",
+        "eth",
+    ];
+
+    runner(&args).current_dir(tempdir.path()).assert().success();
+
+    tempdir
 }

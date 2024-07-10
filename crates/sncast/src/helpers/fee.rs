@@ -1,6 +1,7 @@
 use crate::handle_account_factory_error;
 use anyhow::{anyhow, bail, ensure, Result};
 use clap::{Args, ValueEnum};
+use conversions::serde::deserialize::CairoDeserialize;
 use starknet::accounts::{AccountDeploymentV1, AccountDeploymentV3, AccountFactory};
 use starknet::core::types::FieldElement;
 
@@ -21,6 +22,35 @@ pub struct FeeArgs {
     /// Max gas price in Fri. If not provided, will be automatically estimated. (Only for STRK fee payment)
     #[clap(long)]
     pub max_gas_unit_price: Option<FieldElement>,
+}
+
+impl FeeArgs {
+    #[must_use]
+    pub fn fee_token(self, fee_token: Option<FeeToken>) -> Self {
+        Self {
+            fee_token: fee_token.or(self.fee_token),
+            ..self
+        }
+    }
+}
+
+impl From<FeeSettings> for FeeArgs {
+    fn from(settings: FeeSettings) -> Self {
+        match settings {
+            FeeSettings::Eth(settings) => FeeArgs {
+                fee_token: Some(FeeToken::Eth),
+                max_fee: settings.max_fee,
+                max_gas: None,
+                max_gas_unit_price: None,
+            },
+            FeeSettings::Strk(settings) => FeeArgs {
+                fee_token: Some(FeeToken::Strk),
+                max_fee: settings.max_fee,
+                max_gas: settings.max_gas.map(Into::into),
+                max_gas_unit_price: settings.max_gas_unit_price.map(Into::into),
+            },
+        }
+    }
 }
 
 impl TryFrom<FeeArgs> for FeeSettings {
@@ -87,7 +117,7 @@ pub enum FeeToken {
     Strk,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, CairoDeserialize)]
 pub struct EthFeeSettings {
     pub max_fee: Option<FieldElement>,
 }
@@ -117,7 +147,7 @@ impl EthFeeSettings {
     }
 }
 #[allow(clippy::struct_field_names)]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, CairoDeserialize)]
 pub struct StrkFeeSettings {
     pub max_fee: Option<FieldElement>,
     pub max_gas: Option<u64>,
@@ -166,7 +196,7 @@ impl StrkFeeSettings {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, CairoDeserialize)]
 pub enum FeeSettings {
     Eth(EthFeeSettings),
     Strk(StrkFeeSettings),
