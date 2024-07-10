@@ -7,11 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
 ### Cast
 
 #### Added
 
 - `verify` subcommand to verify contract (walnut APIs supported as of this version). [Read more here](./docs/src/appendix/sncast/verify.md)
+
+#### Changed
+
+- `multicall new` no longer prints generated template to stdout and now requires specifing output path. [Read more here]() 
 
 ## [0.26.0] - 2024-07-03
 
