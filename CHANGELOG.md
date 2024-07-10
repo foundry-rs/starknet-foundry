@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `spy_messages_to_l1()` for listening in on messages to L1 sent by your contracts. [Read more here](https://foundry-rs.github.io/starknet-foundry/testing/testing-messages-to-l1.html).
 
 #### Cast
-- `verify` subcommand to verify contract (walnut APIs supported as of this version). [Read more here](./docs/src/appendix/sncast/verify.md)
+- `verify` subcommand to verify contract (walnut APIs supported as of this version). [Read more here](https://foundry-rs.github.io/starknet-foundry/appendix/sncast/verify.html)
 - support for v3 transactions on account deploy
 
 ## [0.26.0] - 2024-07-03
