@@ -8,7 +8,7 @@ use tempfile::tempdir;
 #[tokio::test]
 async fn test_happy_case_file() {
     let mut args = default_cli_args();
-    let tmp_dir = tempdir().expect("failed to create temporary directory");
+    let tmp_dir = tempdir().expect("Failed to create temporary directory");
     let multicall_toml_file = "multicall.toml";
 
     args.append(&mut vec!["multicall", "new", multicall_toml_file]);
@@ -27,6 +27,7 @@ async fn test_happy_case_file() {
 
     let contents = std::fs::read_to_string(tmp_dir.path().join(multicall_toml_file))
         .expect("Should have been able to read the file");
+
     assert!(contents.contains(DEFAULT_MULTICALL_CONTENTS));
 }
 

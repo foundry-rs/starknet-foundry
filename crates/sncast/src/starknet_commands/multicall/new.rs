@@ -17,17 +17,22 @@ pub struct New {
     pub overwrite: bool,
 }
 
-pub fn new(output_path: &Utf8PathBuf, overwrite: bool) -> Result<MulticallNewResponse> {
+pub fn write_empty_template(
+    output_path: &Utf8PathBuf,
+    overwrite: bool,
+) -> Result<MulticallNewResponse> {
     if output_path.exists() {
         if !output_path.is_file() {
             bail!("Output file cannot be a directory");
         }
+
         if !overwrite {
             bail!(
                 "Output file already exists, if you want to overwrite it, use the `--overwrite` flag"
             );
         }
     }
+
     std::fs::write(output_path.clone(), DEFAULT_MULTICALL_CONTENTS)?;
 
     Ok(MulticallNewResponse {
