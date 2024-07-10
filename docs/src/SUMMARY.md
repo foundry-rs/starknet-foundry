@@ -19,6 +19,7 @@
 * [Testing Contracts' Internals](testing/testing_contract_internals.md)
 * [Using Cheatcodes](testing/using-cheatcodes.md)
 * [Testing Events](testing/testing-events.md)
+* [Testing Messages to L1](testing/testing-messages-to-l1.md)
 * [Test Collection](testing/test-collection.md)
 * [Contract Collection](testing/contracts-collection.md)
 * [Gas and VM Resources Estimation](testing/gas-and-resource-estimation.md)
@@ -41,6 +42,7 @@
 * [Performing Multicall](starknet/multicall.md)
 * [Cairo Deployment Scripts](starknet/script.md)
 * [Inspecting Transactions](starknet/tx-status.md)
+* [Fees and Versions](starknet/fees-and-versions.md)
 * [Verifying Contracts](starknet/verify.md)
 
 ---
@@ -81,6 +83,7 @@
     * [replace_bytecode](appendix/cheatcodes/replace_bytecode.md)
     * [l1_handler](appendix/cheatcodes/l1_handler.md)
     * [spy_events](appendix/cheatcodes/spy_events.md)
+    * [spy_messages_to_l1](appendix/cheatcodes/spy_messages_to_l1.md)
     * [store](appendix/cheatcodes/store.md)
     * [load](appendix/cheatcodes/load.md)
 * [`snforge` Library Reference](appendix/snforge-library.md)

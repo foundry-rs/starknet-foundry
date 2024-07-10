@@ -10,6 +10,7 @@ use test_case::test_case;
 
 #[test_case("oz_cairo_0"; "cairo_0_account")]
 #[test_case("oz_cairo_1"; "cairo_1_account")]
+#[test_case("oz"; "oz_account")]
 #[test_case("argent"; "argent_account")]
 #[test_case("braavos"; "braavos_account")]
 #[tokio::test]
@@ -28,6 +29,8 @@ async fn test_happy_case(account: &str) {
         "--unique",
         "--max-fee",
         "99999999999999999",
+        "--fee-token",
+        "eth",
     ]);
 
     let snapbox = runner(&args);
@@ -48,6 +51,8 @@ async fn test_happy_case_with_constructor() {
         "--int-format",
         "--json",
         "deploy",
+        "--fee-token",
+        "eth",
         "--constructor-calldata",
         "0x1",
         "0x1",
@@ -72,6 +77,8 @@ fn test_wrong_calldata() {
         "--account",
         "user9",
         "deploy",
+        "--fee-token",
+        "eth",
         "--class-hash",
         CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA,
         "--constructor-calldata",
@@ -99,6 +106,8 @@ async fn test_contract_not_declared() {
         "deploy",
         "--class-hash",
         "0x1",
+        "--fee-token",
+        "eth",
     ]);
 
     let snapbox = runner(&args);
@@ -124,6 +133,8 @@ fn test_contract_already_deployed() {
         MAP_CONTRACT_CLASS_HASH_SEPOLIA,
         "--salt",
         "0x1",
+        "--fee-token",
+        "eth",
     ]);
 
     let snapbox = runner(&args);
@@ -153,6 +164,8 @@ fn test_too_low_max_fee() {
         "--unique",
         "--max-fee",
         "1",
+        "--fee-token",
+        "eth",
     ]);
 
     let snapbox = runner(&args);

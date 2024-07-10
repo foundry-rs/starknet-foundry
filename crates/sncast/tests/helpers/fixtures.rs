@@ -1,12 +1,13 @@
 use crate::helpers::constants::{ACCOUNT_FILE_PATH, DEVNET_OZ_CLASS_HASH_CAIRO_0, URL};
 use anyhow::Context;
 use camino::{Utf8Path, Utf8PathBuf};
+use conversions::string::IntoHexStr;
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
 use serde_json::{json, Map, Value};
 use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::helpers::constants::{
-    ARGENT_CLASS_HASH, BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH,
+    ARGENT_CLASS_HASH, BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH,
 };
 use sncast::helpers::scarb_utils::get_package_metadata;
 use sncast::state::state_file::{
@@ -15,7 +16,7 @@ use sncast::state::state_file::{
 use sncast::{apply_optional, get_chain_id, get_keystore_password, AccountType};
 use sncast::{get_account, get_provider};
 use starknet::accounts::{
-    Account, AccountFactory, ArgentAccountFactory, Call, Execution, OpenZeppelinAccountFactory,
+    Account, AccountFactory, ArgentAccountFactory, Call, ExecutionV1, OpenZeppelinAccountFactory,
 };
 use starknet::core::types::TransactionReceipt;
 use starknet::core::types::{FieldElement, InvokeTransactionResult};
@@ -69,7 +70,16 @@ pub async fn deploy_cairo_0_account() {
     )
     .await;
 }
-
+pub async fn deploy_latest_oz_account() {
+    let (address, salt, private_key) = get_account_deployment_data("oz");
+    deploy_oz_account(
+        address.as_str(),
+        OZ_CLASS_HASH.into_hex_string().as_str(),
+        salt.as_str(),
+        private_key,
+    )
+    .await;
+}
 pub async fn deploy_argent_account() {
     let provider = get_provider(URL).expect("Failed to get the provider");
     let chain_id = get_chain_id(&provider)
@@ -133,7 +143,7 @@ async fn deploy_oz_account(address: &str, class_hash: &str, salt: &str, private_
 async fn deploy_account_to_devnet<T: AccountFactory + Sync>(factory: T, address: &str, salt: &str) {
     mint_token(address, u64::MAX).await;
     factory
-        .deploy(salt.parse().expect("Failed to parse salt"))
+        .deploy_v1(salt.parse().expect("Failed to parse salt"))
         .send()
         .await
         .expect("Failed to deploy account");
@@ -202,8 +212,8 @@ pub async fn invoke_contract(
         calldata,
     };
 
-    let execution = account.execute(vec![call]);
-    let execution = apply_optional(execution, max_fee, Execution::max_fee);
+    let execution = account.execute_v1(vec![call]);
+    let execution = apply_optional(execution, max_fee, ExecutionV1::max_fee);
 
     execution.send().await.unwrap()
 }
@@ -212,19 +222,22 @@ pub async fn invoke_contract(
 // but serde_json cannot serialize numbers this big
 pub async fn mint_token(recipient: &str, amount: u64) {
     let client = reqwest::Client::new();
-    let json = json!(
-        {
-            "address": recipient,
-            "amount": amount
-        }
-    );
-    client
-        .post("http://127.0.0.1:5055/mint")
-        .header("Content-Type", "application/json")
-        .body(json.to_string())
-        .send()
-        .await
-        .expect("Error occurred while minting tokens");
+    for unit in ["FRI", "WEI"] {
+        let json = json!(
+            {
+                "address": recipient,
+                "amount": amount,
+                "unit": unit,
+            }
+        );
+        client
+            .post("http://127.0.0.1:5055/mint")
+            .header("Content-Type", "application/json")
+            .body(json.to_string())
+            .send()
+            .await
+            .expect("Error occurred while minting tokens");
+    }
 }
 
 #[must_use]

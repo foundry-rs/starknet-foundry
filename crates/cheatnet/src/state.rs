@@ -5,6 +5,7 @@ use crate::runtime_extensions::forge_runtime_extension::cheatcodes::cheat_execut
     ExecutionInfoMock, ResourceBounds,
 };
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::Event;
+use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_messages_to_l1::MessageToL1;
 use blockifier::blockifier::block::BlockInfo;
 use blockifier::execution::call_info::OrderedL2ToL1Message;
 use blockifier::execution::entry_point::CallEntryPoint;
@@ -319,6 +320,7 @@ pub struct CheatnetState {
         HashMap<ContractAddress, HashMap<EntryPointSelector, CheatStatus<Vec<StarkFelt>>>>,
     pub replaced_bytecode_contracts: HashMap<ContractAddress, ClassHash>,
     pub detected_events: Vec<Event>,
+    pub detected_messages_to_l1: Vec<MessageToL1>,
     pub deploy_salt_base: u32,
     pub block_info: BlockInfo,
     pub trace_data: TraceData,
@@ -339,6 +341,7 @@ impl Default for CheatnetState {
             mocked_functions: Default::default(),
             replaced_bytecode_contracts: Default::default(),
             detected_events: vec![],
+            detected_messages_to_l1: vec![],
             deploy_salt_base: 0,
             block_info: SerializableBlockInfo::default().into(),
             trace_data: TraceData {

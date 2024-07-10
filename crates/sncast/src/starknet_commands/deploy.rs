@@ -10,6 +10,7 @@ use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
 
+use sncast::helpers::fee::FeeArgs;
 use sncast::response::errors::StarknetCommandError;
 use sncast::{extract_or_generate_salt, udc_uniqueness};
 use sncast::{handle_wait_for_tx, WaitForTx};
@@ -33,9 +34,8 @@ pub struct Deploy {
     #[clap(short, long)]
     pub unique: bool,
 
-    /// Max fee for the transaction. If not provided, max fee will be automatically estimated
-    #[clap(short, long)]
-    pub max_fee: Option<FieldElement>,
+    #[clap(flatten)]
+    pub fee: FeeArgs,
 
     /// Nonce of the transaction. If not provided, nonce will be set automatically
     #[clap(short, long)]
@@ -55,7 +55,7 @@ pub async fn deploy(
 ) -> Result<DeployResponse, StarknetCommandError> {
     let salt = extract_or_generate_salt(salt);
     let factory = ContractFactory::new(class_hash, account);
-    let execution = factory.deploy(constructor_calldata.clone(), salt, unique);
+    let execution = factory.deploy_v1(constructor_calldata.clone(), salt, unique);
 
     // TODO(#1396): use apply_optional here when `Deployment` in starknet-rs is public
     //  otherwise we cannot pass the necessary reference to a function
