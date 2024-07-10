@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `verify` subcommand to verify contract (walnut APIs supported as of this version). [Read more here](./docs/src/appendix/sncast/verify.md)
 
+### Forge
+
+#### Changed
+
+- Updated `cheat_account_contract_address` cheatcode - read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/cheatcodes/account_contract_address.html) - added a `start_` prefix to the `..._global` invocation which works globally and indefinitely
+
 ## [0.26.0] - 2024-07-03
 
 ### Forge 
@@ -20,7 +26,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 - Updated event testing - read more [here](./docs/src/testing/testing-events.md) on how it now works and [here](./docs/src/appendix/cheatcodes/spy_events.md)
 about updated `spy_events` cheatcode
-- Updated `cheat_account_contract_address` docs [here](./docs/src/appendix/cheatcodes.md#account-contract-address) and added a `start_` prefix to the `..._global` invocation which works globally and indefinitely
 
 ## [0.25.0] - 2024-06-12
 
