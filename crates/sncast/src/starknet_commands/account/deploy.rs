@@ -1,7 +1,6 @@
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use clap::{Args, ValueEnum};
-use indoc::indoc;
 use serde_json::Map;
 use sncast::helpers::constants::{BRAAVOS_BASE_ACCOUNT_CLASS_HASH, KEYSTORE_PASSWORD_ENV_VAR};
 use sncast::response::structs::{Felt, InvokeResponse};
@@ -16,31 +15,13 @@ use starknet::providers::{JsonRpcClient, Provider};
 use starknet::signers::{LocalWallet, SigningKey};
 
 use sncast::helpers::braavos::BraavosAccountFactory;
+use sncast::helpers::error::token_not_supported_error_msg;
 use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken};
 use sncast::{
     chain_id_to_network_name, check_account_file_exists, get_account_data_from_accounts_file,
     get_account_data_from_keystore, get_keystore_password, handle_rpc_error, handle_wait_for_tx,
     AccountType, WaitForTx,
 };
-
-fn token_not_supported_error_msg(fee_token: &str, deployment: &str) -> String {
-    format!(
-        indoc! {
-            r"
-            {} fee token is not supported for {} deployment.
-
-            Possible values:
-            +---------+----------+
-            | Version | FeeToken |
-            +---------+----------+
-            | v1      | eth      |
-            | v3      | strk     |
-            +---------+----------+
-            "
-        },
-        fee_token, deployment
-    )
-}
 
 #[derive(Args, Debug)]
 #[command(about = "Deploy an account to the Starknet")]
@@ -78,6 +59,15 @@ pub enum AccountDeployVersion {
     V3,
 }
 
+impl From<AccountDeployVersion> for FeeToken {
+    fn from(version: AccountDeployVersion) -> Self {
+        match version {
+            AccountDeployVersion::V1 => FeeToken::Eth,
+            AccountDeployVersion::V3 => FeeToken::Strk,
+        }
+    }
+}
+
 #[allow(clippy::too_many_arguments)]
 pub async fn deploy(
     provider: &JsonRpcClient<HttpTransport>,
@@ -88,16 +78,10 @@ pub async fn deploy(
     account: &str,
     keystore_path: Option<Utf8PathBuf>,
 ) -> Result<InvokeResponse> {
-    let fee_token_from_version = deploy_args.version.map(|version| match version {
-        AccountDeployVersion::V1 => FeeToken::Eth,
-        AccountDeployVersion::V3 => FeeToken::Strk,
-    });
-
-    let fee_settings = FeeArgs {
-        fee_token: fee_token_from_version.or(deploy_args.fee_args.fee_token),
-        ..deploy_args.fee_args
-    }
-    .try_into()?;
+    let fee_settings = deploy_args
+        .fee_args
+        .fee_token(deploy_args.version.map(Into::into))
+        .try_into()?;
 
     if let Some(keystore_path_) = keystore_path {
         deploy_from_keystore(
