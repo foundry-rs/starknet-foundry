@@ -53,11 +53,15 @@ transaction_hash: 0x38fb8a0432f71bf2dae746a1b4f159a75a862e253002b48599c9611fa271
 
 ### `multicall new` Example
 
-You can also generate multicall template with `multicall new` command.
-
+You can also generate multicall template with `multicall new` command, specifying output path.
 ```shell
-$ sncast multicall new
+$ sncast multicall new ./template.toml
 
+Multicall template successfully saved in ./template.toml
+```
+
+Resulting in output:
+```toml
 [[call]]
 call_type = "deploy"
 class_hash = ""
@@ -72,25 +76,15 @@ function = ""
 inputs = []
 ```
 
-### `multicall new` With `output-path` Argument
-
-Template can be automatically saved to file.
-
-```shell
-$ sncast multicall new \
-    --output-path ./new_multicall_template.toml
-
-Multicall template successfully saved in ./new_multicall_template.toml
-```
+> ⚠️ **Warning**
+> Trying to pass any existing file as an output for `multicall new` will result in error, as the command doesn't overwrite by default.
 
 ### `multicall new` With `overwrite` Argument
 
-If there is a file with the same name as passed in the `--output-path` argument it can be overwritten.
+If there is a file with the same name as provided, it can be overwritten.
 
 ```shell
-$ sncast multicall new \
-    --output-path ./new_multicall_template.toml \
-    --overwrite
+$ sncast multicall new ./template.toml --overwrite
 
 Multicall template successfully saved in ./new_multicall_template.toml
 ```
