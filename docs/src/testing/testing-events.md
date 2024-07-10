@@ -3,18 +3,25 @@ Examples are based on the following `SpyEventsChecker` contract implementation:
 
 ```rust
 #[starknet::contract]
-mod SpyEventsChecker {
+pub mod SpyEventsChecker {
     // ...
-
+    #[storage]
+    struct Storage {}
+    
     #[event]
     #[derive(Drop, starknet::Event)]
-    enum Event {
+    pub enum Event {
         FirstEvent: FirstEvent
     }
 
     #[derive(Drop, starknet::Event)]
-    struct FirstEvent {
-        some_data: felt252
+    pub struct FirstEvent {
+        pub some_data: felt252
+    }
+    
+    #[external(v0)]
+    fn emit_one_event(ref self: ContractState, some_data: felt252) {
+        self.emit(FirstEvent { some_data });
     }
 
     // ...
@@ -27,8 +34,11 @@ This is the simpler way, in which you don't have to fetch the events explicitly.
 See the below code for reference:
 
 ```rust
-use snforge_std::{declare, ContractClassTrait, spy_events, EventSpy, EventSpyTrait,
-      EventSpyAssertionsTrait};
+use snforge_std::{
+    declare, ContractClassTrait, 
+    spy_events,
+    EventSpyAssertionsTrait,  // Add for assertions on the EventSpy 
+};
 
 use SpyEventsChecker;
 
@@ -40,7 +50,7 @@ trait ISpyEventsChecker<TContractState> {
 #[test]
 fn test_simple_assertions() {
     let contract = declare("SpyEventsChecker").unwrap();
-    let (contract_address, _) = contract.deploy(array![]).unwrap();
+    let (contract_address, _) = contract.deploy(@array![]).unwrap();
     let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
 
     let mut spy = spy_events();  // Ad. 1
@@ -96,8 +106,13 @@ Simply call `get_events()` on your `EventSpy` and access `events`  field on the 
 Then, you can access the events and assert data by yourself.
 
 ```rust
-use snforge_std::{declare, ContractClassTrait, spy_events, EventSpyTrait, EventsAssertionsTrait,
-      Event};
+use snforge_std::{
+    declare, ContractClassTrait, 
+    spy_events, 
+    EventSpyAssertionsTrait, 
+    EventSpyTrait,  // Add for fetching events directly  
+    Event,          // A structure describing a raw `Event`
+};
 
 #[starknet::interface]
 trait ISpyEventsChecker<TContractState> {
@@ -107,7 +122,7 @@ trait ISpyEventsChecker<TContractState> {
 #[test]
 fn test_complex_assertions() {
     let contract = declare("SpyEventsChecker").unwrap();
-    let (contract_address, _) = contract.deploy(array![]).unwrap();
+    let (contract_address, _) = contract.deploy(@array![]).unwrap();
     let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
 
     let mut spy = spy_events(); // Ad 1.
@@ -146,8 +161,14 @@ Sometimes, when you assert the events manually, you might not want to get all th
 a particular address. You can address that by using the method `emitted_by` on the `Events` structure. 
 
 ```rust
-use snforge_std::{declare, ContractClassTrait, spy_events, EventSpyTrait,
-      EventsAssertionsTrait, EventsFilterTrait};
+use snforge_std::{
+    declare, ContractClassTrait, 
+    spy_events, 
+    EventSpyAssertionsTrait, 
+    EventSpyTrait,  
+    Event,
+    EventsFilterTrait, // Add for filtering the Events object (result of `get_events`) 
+};
 
 use SpyEventsChecker;
 
@@ -159,8 +180,8 @@ trait ISpyEventsChecker<TContractState> {
 #[test]
 fn test_assertions_with_filtering() {
     let contract = declare("SpyEventsChecker").unwrap();
-    let (first_address, _) = contract.deploy(array![]).unwrap();
-    let (second_address, _) = contract.deploy(array![]).unwrap();
+    let (first_address, _) = contract.deploy(@array![]).unwrap();
+    let (second_address, _) = contract.deploy(@array![]).unwrap();
 
     let first_dispatcher = ISpyEventsCheckerDispatcher { contract_address: first_address };
     let second_dispatcher = ISpyEventsCheckerDispatcher { contract_address: second_address };
@@ -196,33 +217,43 @@ Similarly, `events_from_second_address` has events emitted by the second contrac
 Events emitted with `emit_event_syscall` could have nonstandard (not defined anywhere) keys and data.
 They can also be asserted with `spy.assert_emitted` method.
 
-Let's consider such a method in the `SpyEventsChecker` contract.
+Let's add such a method in the `SpyEventsChecker` contract:
 
 ```rust
-fn emit_event_syscall(ref self: ContractState, some_key: felt252, some_data: felt252) {
-    starknet::emit_event_syscall(array![some_key].span(), array![some_data].span()).unwrap_syscall();
+use core::starknet::syscalls::emit_event_syscall;
+use core::starknet::SyscallResultTrait;
+
+#[external(v0)]
+fn emit_event_with_syscall(ref self: ContractState, some_key: felt252, some_data: felt252) {
+    emit_event_syscall(array![some_key].span(), array![some_data].span()).unwrap_syscall();
 }
 ```
 
-And the test.
+And add a test for it:
 
 ```rust
-use snforge_std::{ declare, ContractClassTrait, spy_events, EventSpyTrait,
-    EventsAssertionsTrait, Event };
+use snforge_std::{
+    declare, ContractClassTrait, 
+    spy_events, 
+    EventSpyAssertionsTrait, 
+    EventSpyTrait,  
+    Event,
+    EventsFilterTrait, 
+};
 
 #[starknet::interface]
 trait ISpyEventsChecker<TContractState> {
-    fn emit_event_syscall(ref self: TContractState, some_key: felt252, some_data: felt252);
+    fn emit_event_with_syscall(ref self: TContractState, some_key: felt252, some_data: felt252);
 }
 
 #[test]
 fn test_nonstandard_events() {
     let contract = declare("SpyEventsChecker").unwrap();
-    let (contract_address, _) = contract.deploy(array![]).unwrap();
+    let (contract_address, _) = contract.deploy(@array![]).unwrap();
     let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
 
     let mut spy = spy_events();
-    dispatcher.emit_event_syscall(123, 456);
+    dispatcher.emit_event_with_syscall(123, 456);
 
     spy.assert_emitted(@array![
         (
