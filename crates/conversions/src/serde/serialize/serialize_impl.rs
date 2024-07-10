@@ -3,6 +3,7 @@ use crate::{byte_array::ByteArray, IntoConv};
 use blockifier::execution::entry_point::{CallEntryPoint, CallType};
 use cairo_felt::Felt252;
 use starknet::core::types::{ContractErrorData, FieldElement, TransactionExecutionErrorData};
+use starknet_api::core::EthAddress;
 use starknet_api::{
     core::{ClassHash, ContractAddress, EntryPointSelector, Nonce},
     deprecated_contract_class::EntryPointType,
@@ -212,6 +213,7 @@ impl_serialize_for_felt_type!(StarkFelt);
 impl_serialize_for_felt_type!(ContractAddress);
 impl_serialize_for_felt_type!(Nonce);
 impl_serialize_for_felt_type!(EntryPointSelector);
+impl_serialize_for_felt_type!(EthAddress);
 
 impl_serialize_for_num_type!(u8);
 impl_serialize_for_num_type!(u16);

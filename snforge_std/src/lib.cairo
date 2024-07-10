@@ -18,6 +18,11 @@ use cheatcodes::events::EventSpyAssertionsTrait;
 use cheatcodes::events::EventsFilterTrait;
 use cheatcodes::events::spy_events;
 
+use cheatcodes::message_to_l1::{
+    spy_messages_to_l1, MessageToL1, MessageToL1Spy, MessageToL1SpyTrait, MessageToL1FilterTrait,
+    MessageToL1SpyAssertionsTrait,
+};
+
 use cheatcodes::storage::store;
 use cheatcodes::storage::load;
 use cheatcodes::storage::map_entry_address;

@@ -18,7 +18,7 @@ use sncast::{
     get_keystore_password, handle_account_factory_error,
 };
 use starknet::accounts::{
-    AccountDeployment, AccountFactory, ArgentAccountFactory, OpenZeppelinAccountFactory,
+    AccountDeploymentV1, AccountFactory, ArgentAccountFactory, OpenZeppelinAccountFactory,
 };
 use starknet::core::types::{FeeEstimate, FieldElement};
 use starknet::providers::jsonrpc::HttpTransport;
@@ -197,12 +197,12 @@ async fn get_address_and_deployment_fee<T>(
 where
     T: AccountFactory + Sync,
 {
-    let deployment = account_factory.deploy(salt);
+    let deployment = account_factory.deploy_v1(salt);
     Ok((deployment.address(), get_deployment_fee(&deployment).await?))
 }
 
 async fn get_deployment_fee<'a, T>(
-    account_deployment: &AccountDeployment<'a, T>,
+    account_deployment: &AccountDeploymentV1<'a, T>,
 ) -> Result<FeeEstimate>
 where
     T: AccountFactory + Sync,

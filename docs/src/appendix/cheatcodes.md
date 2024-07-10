@@ -8,6 +8,7 @@
 - [`replace_bytecode`](cheatcodes/replace_bytecode.md) - replace the class hash of a contract
 - [`l1_handler`](cheatcodes/l1_handler.md) - executes a `#[l1_handler]` function to mock a message arriving from Ethereum
 - [`spy_events`](cheatcodes/spy_events.md) - creates `EventSpy` instance which spies on events emitted by contracts
+- [`spy_messages_to_l1`](cheatcodes/spy_messages_to_l1.md) - creates `L1MessageSpy` instance which spies on messages to L1 sent by contracts
 - [`store`](cheatcodes/store.md) - stores values in targeted contact's storage
 - [`load`](cheatcodes/load.md) - loads values directly from targeted contact's storage
 
