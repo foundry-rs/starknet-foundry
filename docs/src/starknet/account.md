@@ -12,6 +12,7 @@ To remove an account from the accounts file, you can use  `sncast account delete
 > Accounts creation and deployment is supported for
 >  - OpenZeppelin
 >  - Argent (with guardian set to 0)
+>  - Braavos
 
 ## Examples
 
@@ -102,15 +103,15 @@ For a detailed CLI description, see [account delete command reference](../append
 
 ### Custom Account Contract
 
-By default, `sncast` creates/deploys an account using [openzeppelin contract's class hash](https://starkscan.co/class/0x058d97f7d76e78f44905cc30cb65b91ea49a4b908a76703c54197bca90f81773).
-It is possible to create an account using custom openzeppelin contract declared to starknet. This can be achieved
+By default, `sncast` creates/deploys an account using [OpenZeppelin's account contract class hash](https://starkscan.co/class/0x00e2eb8f5672af4e6a4e8a8f1b44989685e668489b0a25437733756c5a34a1d6).
+It is possible to create an account using custom openzeppelin, argent or braavos contract declared to starknet. This can be achieved
 with `--class-hash` flag:
 
 ```shell
 $ sncast \
     account create \
     --name some-name \
-    --class-hash 0x058d97f7d76e78f44905cc30cb65b91ea49a4b908a76703c54197bca90f81773
+    --class-hash 0x00e2eb8f5672af4e6a4e8a8f1b44989685e668489b0a25437733756c5a34a1d6
 
 Account successfully created. Prefund generated address with at least 432300000000 tokens. It is good to send more in the case of higher demand, max_fee * 2 = 864600000000
 command: account create

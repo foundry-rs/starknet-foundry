@@ -21,7 +21,7 @@ Address of the account.
 ## `--type, -t <ACCOUNT_TYPE>`
 Required.
 
-Type of the account. Possible values: oz, argent.
+Type of the account. Possible values: oz, argent, braavos.
 
 ## `--class-hash, -c <CLASS_HASH>`
 Optional.
