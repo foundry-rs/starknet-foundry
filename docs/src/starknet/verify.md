@@ -37,5 +37,7 @@ command: verify
 message: Contract successfully verified
 ```
 
+After verification with Walnut verifier, the contract can be debugged using Walnut's transaction step-by-step debugger.
+
 > 📝 **Note**
 > Contract name is a part after the `mod` keyword in your contract file. It may differ from package name defined in `Scarb.toml` file.
