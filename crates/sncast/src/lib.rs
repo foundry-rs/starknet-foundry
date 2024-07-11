@@ -2,6 +2,7 @@ use anyhow::{anyhow, bail, Context, Error, Result};
 use camino::Utf8PathBuf;
 use clap::ValueEnum;
 use helpers::constants::{KEYSTORE_PASSWORD_ENV_VAR, UDC_ADDRESS};
+use indoc::indoc;
 use rand::rngs::OsRng;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
@@ -30,10 +31,10 @@ use conversions::serde::serialize::CairoSerialize;
 use serde::de::DeserializeOwned;
 use shared::rpc::create_rpc_client;
 use starknet::accounts::{AccountFactory, AccountFactoryError};
-use std::collections::HashMap;
 use std::str::FromStr;
 use std::thread::sleep;
 use std::time::Duration;
+use std::{collections::HashMap, fmt::Display};
 use std::{env, fs};
 use thiserror::Error;
 
@@ -81,6 +82,49 @@ pub struct AccountData {
 
     #[serde(default, rename(serialize = "type", deserialize = "type"))]
     pub account_type: Option<AccountType>,
+}
+
+impl Display for AccountData {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        macro_rules! repr_or_unspecified {
+            ($item:expr) => {
+                ($item).map_or("unspecified".to_string(), |it| it.to_string())
+            };
+        }
+
+        macro_rules! hex {
+            ($item:expr) => {
+                format!("{:#x}", $item)
+            };
+        }
+
+        macro_rules! hex_or_unspecified {
+            ($item:expr) => {
+                ($item).map_or("unspecified".to_string(), |it| hex!(it))
+            };
+        }
+
+        let repr = format!(
+            indoc! {"
+                private key: {}
+                public key: {}
+                address: {}
+                salt: {}
+                class hash: {}
+                deployed: {}
+                legacy: {}
+            "},
+            hex!(self.private_key),
+            hex!(self.public_key),
+            hex_or_unspecified!(self.address),
+            hex_or_unspecified!(self.salt),
+            hex_or_unspecified!(self.class_hash),
+            repr_or_unspecified!(self.deployed),
+            repr_or_unspecified!(self.legacy)
+        );
+
+        write!(f, "{repr}")
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
@@ -386,7 +430,7 @@ pub fn get_account_data_from_accounts_file(
         .ok_or_else(|| anyhow!("Account = {name} not found under network = {network_name}"))
 }
 
-fn read_and_parse_json_file<T: DeserializeOwned>(path: &Utf8PathBuf) -> Result<T> {
+pub fn read_and_parse_json_file<T: DeserializeOwned>(path: &Utf8PathBuf) -> Result<T> {
     let file_content =
         fs::read_to_string(path).with_context(|| format!("Failed to read a file = {path}"))?;
     let deserializer = &mut Deserializer::from_str(&file_content);
