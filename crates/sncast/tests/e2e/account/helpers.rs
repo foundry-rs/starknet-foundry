@@ -4,6 +4,25 @@ use tokio::fs::File;
 use tokio::io::AsyncWriteExt;
 
 #[must_use]
+pub async fn create_tempdir_with_empty_json(file_name: &str) -> TempDir {
+    let tempdir = tempdir().expect("Unable to create temporary directory");
+
+    let data = r#"{}"#;
+
+    let mut file = File::create(tempdir.path().join(file_name))
+        .await
+        .expect("Could not create temporary accounts file!");
+
+    file.write_all(data.as_bytes())
+        .await
+        .expect("Could not write temporary testing accounts");
+
+    let _ = file.flush().await;
+
+    tempdir
+}
+
+#[must_use]
 pub async fn create_tempdir_with_accounts_file(file_name: &str) -> TempDir {
     let tempdir = tempdir().expect("Unable to create temporary directory");
 

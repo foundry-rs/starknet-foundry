@@ -34,7 +34,7 @@ pub enum Commands {
     Create(Create),
     Deploy(Deploy),
     Delete(Delete),
-    List(List)
+    List(List),
 }
 
 #[allow(clippy::doc_markdown)]

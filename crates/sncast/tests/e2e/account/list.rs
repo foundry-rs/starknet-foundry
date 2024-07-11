@@ -3,7 +3,7 @@ use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_co
 use tempfile::tempdir;
 
 use crate::{
-    e2e::account::helpers::create_tempdir_with_accounts_file,
+    e2e::account::helpers::{create_tempdir_with_accounts_file, create_tempdir_with_empty_json},
     helpers::{constants::URL, runner::runner},
 };
 
@@ -86,4 +86,25 @@ fn test_accounts_file_does_not_exist() {
         to supply correct path to it with `--accounts-file` argument.";
 
     assert_stderr_contains(output, expected);
+}
+
+#[tokio::test]
+async fn test_no_accounts_available() {
+    let accounts_file_name = "temp_accounts.json";
+    let temp_dir = create_tempdir_with_empty_json(&accounts_file_name).await;
+
+    let args = vec![
+        "--url",
+        URL,
+        "--accounts-file",
+        &accounts_file_name,
+        "account",
+        "list",
+    ];
+
+    let snapbox = runner(&args).current_dir(temp_dir.path());
+    let output = snapbox.assert().success();
+
+    assert!(output.as_stderr().is_empty());
+    assert_stdout_contains(output, "No accounts available");
 }
