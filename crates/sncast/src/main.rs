@@ -293,7 +293,7 @@ async fn run_async_command(
                             output_path,
                             new.overwrite,
                         );
-                        
+
                         print_command_result(
                             "multicall new",
                             &mut result,
