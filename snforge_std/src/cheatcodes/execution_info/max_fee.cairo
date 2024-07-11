@@ -19,7 +19,7 @@ fn cheat_max_fee(contract_address: ContractAddress, max_fee: u128, span: CheatSp
 
 /// Changes the transaction max fee.
 /// - `max_fee` - transaction max fee to be set
-fn cheat_max_fee_global(max_fee: u128) {
+fn start_cheat_max_fee_global(max_fee: u128) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info.tx_info.max_fee = Operation::StartGlobal(max_fee);
@@ -27,7 +27,7 @@ fn cheat_max_fee_global(max_fee: u128) {
     cheat_execution_info(execution_info);
 }
 
-/// Cancels the `cheat_max_fee_global`.
+/// Cancels the `start_cheat_max_fee_global`.
 fn stop_cheat_max_fee_global() {
     let mut execution_info: ExecutionInfoMock = Default::default();
 

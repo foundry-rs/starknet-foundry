@@ -19,7 +19,7 @@ fn cheat_signature(contract_address: ContractAddress, signature: Span<felt252>, 
 
 /// Changes the transaction signature.
 /// - `signature` - transaction signature to be set
-fn cheat_signature_global(signature: Span<felt252>) {
+fn start_cheat_signature_global(signature: Span<felt252>) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info.tx_info.signature = Operation::StartGlobal(signature);
@@ -27,7 +27,7 @@ fn cheat_signature_global(signature: Span<felt252>) {
     cheat_execution_info(execution_info);
 }
 
-/// Cancels the `cheat_signature_global`.
+/// Cancels the `start_cheat_signature_global`.
 fn stop_cheat_signature_global() {
     let mut execution_info: ExecutionInfoMock = Default::default();
 

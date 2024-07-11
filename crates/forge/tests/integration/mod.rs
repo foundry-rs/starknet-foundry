@@ -15,6 +15,7 @@ mod fuzzing;
 mod gas;
 mod get_class_hash;
 mod l1_handler_executor;
+mod message_to_l1;
 mod mock_call;
 mod precalculate_address;
 mod pure_cairo;
