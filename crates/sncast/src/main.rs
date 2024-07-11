@@ -289,8 +289,11 @@ async fn run_async_command(
             match &multicall.command {
                 starknet_commands::multicall::Commands::New(new) => {
                     if let Some(output_path) = &new.output_path {
-                        let mut result =
-                            starknet_commands::multicall::new::new(output_path, new.overwrite);
+                        let mut result = starknet_commands::multicall::new::write_empty_template(
+                            output_path,
+                            new.overwrite,
+                        );
+
                         print_command_result(
                             "multicall new",
                             &mut result,
