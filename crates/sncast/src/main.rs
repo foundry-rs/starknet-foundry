@@ -25,6 +25,7 @@ use sncast::{
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
+use starknet_commands::account::list::list;
 use starknet_commands::verify::Verify;
 use tokio::runtime::Runtime;
 
@@ -73,7 +74,7 @@ struct Cli {
     rpc_url: Option<String>,
 
     /// Account to be used for contract declaration;
-    /// When using keystore (`--keystore`), this should be a path to account file    
+    /// When using keystore (`--keystore`), this should be a path to account file
     /// When using accounts file, this should be an account name
     #[clap(short = 'a', long)]
     account: Option<String>,
@@ -220,6 +221,7 @@ async fn run_async_command(
             print_command_result("declare", &mut result, numbers_format, &output_format)?;
             Ok(())
         }
+
         Commands::Deploy(deploy) => {
             let account = get_account(
                 &config.account,
@@ -244,6 +246,7 @@ async fn run_async_command(
             print_command_result("deploy", &mut result, numbers_format, &output_format)?;
             Ok(())
         }
+
         Commands::Call(call) => {
             let block_id = get_block_id(&call.block_id)?;
 
@@ -261,6 +264,7 @@ async fn run_async_command(
             print_command_result("call", &mut result, numbers_format, &output_format)?;
             Ok(())
         }
+
         Commands::Invoke(invoke) => {
             let account = get_account(
                 &config.account,
@@ -285,6 +289,7 @@ async fn run_async_command(
             print_command_result("invoke", &mut result, numbers_format, &output_format)?;
             Ok(())
         }
+
         Commands::Multicall(multicall) => {
             match &multicall.command {
                 starknet_commands::multicall::Commands::New(new) => {
@@ -327,6 +332,7 @@ async fn run_async_command(
             }
             Ok(())
         }
+
         Commands::Account(account) => match account.command {
             account::Commands::Add(add) => {
                 let mut result = starknet_commands::account::add::add(
@@ -341,6 +347,7 @@ async fn run_async_command(
                 print_command_result("account add", &mut result, numbers_format, &output_format)?;
                 Ok(())
             }
+
             account::Commands::Create(create) => {
                 let chain_id = get_chain_id(&provider).await?;
                 let account = if config.keystore.is_none() {
@@ -372,6 +379,7 @@ async fn run_async_command(
                 )?;
                 Ok(())
             }
+
             account::Commands::Deploy(deploy) => {
                 deploy.validate()?;
                 let chain_id = get_chain_id(&provider).await?;
@@ -395,6 +403,7 @@ async fn run_async_command(
                 )?;
                 Ok(())
             }
+
             account::Commands::Delete(delete) => {
                 let network_name = match delete.network {
                     Some(network) => network,
@@ -416,13 +425,20 @@ async fn run_async_command(
                 )?;
                 Ok(())
             }
+
+            account::Commands::List(_) => {
+                list(&config.accounts_file)?;
+                Ok(())
+            }
         },
+
         Commands::ShowConfig(_) => {
             let mut result =
                 starknet_commands::show_config::show_config(&provider, config, cli.profile).await;
             print_command_result("show-config", &mut result, numbers_format, &output_format)?;
             Ok(())
         }
+
         Commands::TxStatus(tx_status) => {
             let mut result =
                 starknet_commands::tx_status::tx_status(&provider, tx_status.transaction_hash)
@@ -431,6 +447,7 @@ async fn run_async_command(
             print_command_result("tx-status", &mut result, numbers_format, &output_format)?;
             Ok(())
         }
+
         Commands::Verify(verify) => {
             let manifest_path = assert_manifest_path_exists()?;
             let package_metadata = get_package_metadata(&manifest_path, &verify.package)?;
@@ -457,6 +474,7 @@ async fn run_async_command(
             print_command_result("verify", &mut result, numbers_format, &output_format)?;
             Ok(())
         }
+
         Commands::Script(_) => unreachable!(),
     }
 }
