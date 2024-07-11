@@ -11,5 +11,5 @@ Scarb.lock
 */node_modules
 .spr.yml
 .snfoundry_cache/
-.snfoundry_trace/
+snfoundry_trace/
 .snfoundry_versioned_programs/
