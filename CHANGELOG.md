@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Changed
 
-- `multicall new` no longer prints generated template to stdout and now requires specifing output path. [Read more here]() 
+- `multicall new` no longer prints generated template to stdout and now requires specifing output path. [Read more here](https://foundry-rs.github.io/starknet-foundry/appendix/sncast/multicall/new.html) 
 
 ## [0.26.0] - 2024-07-03
 
