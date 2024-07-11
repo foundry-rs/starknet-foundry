@@ -2,7 +2,6 @@ use anyhow::{anyhow, bail, Context, Error, Result};
 use camino::Utf8PathBuf;
 use clap::ValueEnum;
 use helpers::constants::{KEYSTORE_PASSWORD_ENV_VAR, UDC_ADDRESS};
-use indoc::indoc;
 use rand::rngs::OsRng;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
@@ -105,15 +104,15 @@ impl Display for AccountData {
         }
 
         let repr = format!(
-            indoc! {"
-                private key: {}
-                public key: {}
-                address: {}
-                salt: {}
-                class hash: {}
-                deployed: {}
-                legacy: {}
-            "},
+            concat!(
+                "  private key: {}\n",
+                "  public key: {}\n",
+                "  address: {}\n",
+                "  salt: {}\n",
+                "  class hash: {}\n",
+                "  deployed: {}\n",
+                "  legacy: {}\n"
+            ),
             hex!(self.private_key),
             hex!(self.public_key),
             hex_or_unspecified!(self.address),
