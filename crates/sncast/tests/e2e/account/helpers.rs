@@ -7,7 +7,7 @@ use tokio::io::AsyncWriteExt;
 pub async fn create_tempdir_with_empty_json(file_name: &str) -> TempDir {
     let tempdir = tempdir().expect("Unable to create temporary directory");
 
-    let data = r#"{}"#;
+    let data = r"{}";
 
     let mut file = File::create(tempdir.path().join(file_name))
         .await
