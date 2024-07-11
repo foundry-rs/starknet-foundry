@@ -10,7 +10,7 @@ use crate::{
 #[tokio::test]
 async fn test_happy_case() {
     let accounts_file_name = "temp_accounts.json";
-    let temp_dir = create_tempdir_with_accounts_file(&accounts_file_name).await;
+    let temp_dir = create_tempdir_with_accounts_file(accounts_file_name).await;
 
     let args = vec![
         "--url",
@@ -91,7 +91,7 @@ fn test_accounts_file_does_not_exist() {
 #[tokio::test]
 async fn test_no_accounts_available() {
     let accounts_file_name = "temp_accounts.json";
-    let temp_dir = create_tempdir_with_empty_json(&accounts_file_name).await;
+    let temp_dir = create_tempdir_with_empty_json(accounts_file_name).await;
 
     let args = vec![
         "--url",
