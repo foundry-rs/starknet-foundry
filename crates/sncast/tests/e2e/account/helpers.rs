@@ -32,7 +32,8 @@ pub async fn create_tempdir_with_accounts_file(file_name: &str) -> TempDir {
             "user0": {
                 "private_key": "0x1e9038bdc68ce1d27d54205256988e85",
                 "public_key": "0x2f91ed13f8f0f7d39b942c80bfcd3d0967809d99e0cc083606cbe59033d2b39",
-                "address": "0x4f5f24ceaae64434fa2bc2befd08976b51cf8f6a5d8257f7ec3616f61de263a"
+                "address": "0x4f5f24ceaae64434fa2bc2befd08976b51cf8f6a5d8257f7ec3616f61de263a",
+                "type": "open_zeppelin"
             }
         },
         "custom-network": {

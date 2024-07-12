@@ -27,6 +27,7 @@ use starknet::{
 use crate::helpers::constants::{DEFAULT_STATE_FILE_SUFFIX, WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
 use crate::response::errors::SNCastProviderError;
 use conversions::serde::serialize::CairoSerialize;
+use indoc::writedoc;
 use serde::de::DeserializeOwned;
 use shared::rpc::create_rpc_client;
 use starknet::accounts::{AccountFactory, AccountFactoryError};
@@ -41,7 +42,7 @@ pub mod helpers;
 pub mod response;
 pub mod state;
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum AccountType {
     #[serde(rename = "open_zeppelin")]
@@ -60,6 +61,24 @@ impl FromStr for AccountType {
             "braavos" => Ok(AccountType::Braavos),
             account_type => Err(anyhow!("Invalid account type = {account_type}")),
         }
+    }
+}
+
+impl AccountType {
+    fn to_string_pretty(&self) -> String {
+        let repr = match self {
+            AccountType::Oz => "OpenZeppelin",
+            AccountType::Argent => "Argent",
+            AccountType::Braavos => "Braavos",
+        };
+
+        repr.to_string()
+    }
+}
+
+impl Display for AccountType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.to_string_pretty())
     }
 }
 
@@ -103,26 +122,28 @@ impl Display for AccountData {
             };
         }
 
-        let repr = format!(
-            concat!(
-                "  private key: {}\n",
-                "  public key: {}\n",
-                "  address: {}\n",
-                "  salt: {}\n",
-                "  class hash: {}\n",
-                "  deployed: {}\n",
-                "  legacy: {}\n"
-            ),
+        writedoc!(
+            f,
+            "
+            Account data:
+              private key: {}
+              public key: {}
+              address: {}
+              salt: {}
+              class hash: {}
+              deployed: {}
+              legacy: {}
+              type: {}
+            ",
             hex!(self.private_key),
             hex!(self.public_key),
             hex_or_unspecified!(self.address),
             hex_or_unspecified!(self.salt),
             hex_or_unspecified!(self.class_hash),
             repr_or_unspecified!(self.deployed),
-            repr_or_unspecified!(self.legacy)
-        );
-
-        write!(f, "{repr}")
+            repr_or_unspecified!(self.legacy),
+            repr_or_unspecified!(self.account_type)
+        )
     }
 }
 
