@@ -1,4 +1,4 @@
-use indoc::indoc;
+use indoc::formatdoc;
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains, AsOutput};
 use tempfile::tempdir;
 
@@ -11,6 +11,12 @@ use crate::{
 async fn test_happy_case() {
     let accounts_file_name = "temp_accounts.json";
     let temp_dir = create_tempdir_with_accounts_file(accounts_file_name).await;
+
+    let accounts_file_path = temp_dir
+        .path()
+        .canonicalize()
+        .expect("Failed to resolve temporary directory path")
+        .join(accounts_file_name);
 
     let args = vec![
         "--url",
@@ -26,8 +32,10 @@ async fn test_happy_case() {
 
     assert!(output.as_stderr().is_empty());
 
-    let expected = indoc! {"
-        Available accounts:
+    let expected = formatdoc!(
+        "
+        Available accounts (at {}):
+
         Network \"alpha-sepolia\":
         - user0:
         Account data:
@@ -50,7 +58,9 @@ async fn test_happy_case() {
           address: 0x7ccdf182d27c7aaa2e733b94db4a3f7b28ff56336b34abf43c15e3a9edfbe91
           salt: 0x54aa715a5cff30ccf7845ad4659eb1dac5b730c2541263c358c7e3a4c4a8064
           deployed: true
-    "};
+        ",
+        accounts_file_path.to_str().unwrap()
+    );
 
     assert_stdout_contains(output, expected);
 }
@@ -87,6 +97,12 @@ async fn test_no_accounts_available() {
     let accounts_file_name = "temp_accounts.json";
     let temp_dir = create_tempdir_with_empty_json(accounts_file_name).await;
 
+    let accounts_file_path = temp_dir
+        .path()
+        .canonicalize()
+        .expect("Failed to resolve temporary directory path")
+        .join(accounts_file_name);
+
     let args = vec![
         "--url",
         URL,
@@ -100,5 +116,11 @@ async fn test_no_accounts_available() {
     let output = snapbox.assert().success();
 
     assert!(output.as_stderr().is_empty());
-    assert_stdout_contains(output, "No accounts available");
+    assert_stdout_contains(
+        output,
+        format!(
+            "No accounts available at {}",
+            accounts_file_path.to_str().unwrap()
+        ),
+    );
 }
