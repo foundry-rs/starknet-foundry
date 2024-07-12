@@ -65,7 +65,7 @@ impl FromStr for AccountType {
 }
 
 impl AccountType {
-    fn to_string_pretty(&self) -> String {
+    fn to_string_pretty(self) -> String {
         let repr = match self {
             AccountType::Oz => "OpenZeppelin",
             AccountType::Argent => "Argent",
@@ -393,7 +393,7 @@ pub fn get_account_data_from_keystore(
     let account_type = get_string_value_from_json(&account_info, "/variant/type")
         .and_then(|account_type| account_type.parse().ok());
 
-    let public_key = match account_type.clone().context("Failed to get type key")? {
+    let public_key = match account_type.context("Failed to get type key")? {
         AccountType::Argent => parse_to_felt("/variant/owner"),
         AccountType::Oz => parse_to_felt("/variant/public_key"),
         AccountType::Braavos => get_braavos_account_public_key(&account_info)?,
