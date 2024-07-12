@@ -104,21 +104,12 @@ pub struct AccountData {
 
 impl Display for AccountData {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        macro_rules! repr_or_unspecified {
-            ($item:expr) => {
-                ($item).map_or("unspecified".to_string(), |it| it.to_string())
-            };
-        }
-
-        macro_rules! hex {
-            ($item:expr) => {
-                format!("{:#x}", $item)
-            };
-        }
-
-        macro_rules! hex_or_unspecified {
-            ($item:expr) => {
-                ($item).map_or("unspecified".to_string(), |it| hex!(it))
+        macro_rules! write_some {
+            ($dest:expr, $format_spec:expr, $item:expr) => {
+                match $item {
+                    Some(it) => write!($dest, $format_spec, it),
+                    None => Ok(()),
+                }
             };
         }
 
@@ -126,24 +117,21 @@ impl Display for AccountData {
             f,
             "
             Account data:
-              private key: {}
-              public key: {}
-              address: {}
-              salt: {}
-              class hash: {}
-              deployed: {}
-              legacy: {}
-              type: {}
+              private key: {:#x}
+              public key: {:#x}
             ",
-            hex!(self.private_key),
-            hex!(self.public_key),
-            hex_or_unspecified!(self.address),
-            hex_or_unspecified!(self.salt),
-            hex_or_unspecified!(self.class_hash),
-            repr_or_unspecified!(self.deployed),
-            repr_or_unspecified!(self.legacy),
-            repr_or_unspecified!(self.account_type)
-        )
+            self.private_key,
+            self.public_key,
+        )?;
+
+        write_some!(f, "  address: {:#x}\n", self.address)?;
+        write_some!(f, "  salt: {:#x}\n", self.salt)?;
+        write_some!(f, "  class hash: {:#x}\n", self.class_hash)?;
+        write_some!(f, "  deployed: {}\n", self.deployed)?;
+        write_some!(f, "  legacy: {}\n", self.legacy)?;
+        write_some!(f, "  type: {}\n", self.account_type)?;
+
+        Ok(())
     }
 }
 
