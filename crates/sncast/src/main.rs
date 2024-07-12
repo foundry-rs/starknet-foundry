@@ -25,7 +25,7 @@ use sncast::{
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
-use starknet_commands::account::list::list;
+use starknet_commands::account::list::print_account_list;
 use starknet_commands::verify::Verify;
 use tokio::runtime::Runtime;
 
@@ -430,7 +430,7 @@ async fn run_async_command(
             }
 
             account::Commands::List(_) => {
-                list(&config.accounts_file)?;
+                print_account_list(&config.accounts_file)?;
                 Ok(())
             }
         },

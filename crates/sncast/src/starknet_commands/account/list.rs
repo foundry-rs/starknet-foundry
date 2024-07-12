@@ -9,7 +9,7 @@ use sncast::{check_account_file_exists, read_and_parse_json_file, AccountData};
 #[command(about = "List available accounts")]
 pub struct List {}
 
-pub fn list(accounts_file: &Utf8PathBuf) -> anyhow::Result<()> {
+pub fn print_account_list(accounts_file: &Utf8PathBuf) -> anyhow::Result<()> {
     check_account_file_exists(accounts_file)?;
 
     let networks: HashMap<String, HashMap<String, AccountData>> =
