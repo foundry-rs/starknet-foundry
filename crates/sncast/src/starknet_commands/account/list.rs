@@ -8,7 +8,11 @@ use itertools::Itertools;
 use sncast::{check_account_file_exists, read_and_parse_json_file, AccountData};
 
 #[derive(Args, Debug)]
-#[command(about = "List available accounts")]
+#[command(
+    name = "list",
+    about = "List available accounts",
+    before_help = "Warning! This command exposes cryptographic information, e.g. accounts' private keys"
+)]
 pub struct List {}
 
 pub fn print_account_list(accounts_file: &Utf8PathBuf) -> anyhow::Result<()> {

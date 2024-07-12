@@ -108,7 +108,8 @@ List all accounts saved in `accounts file`, grouped based on the networks they a
 ```shell
 $ sncast --accounts-file my-account-file.json account list
 
-Available accounts:
+Available accounts (at <current-directory>/my-account-file.json):
+
 Network "alpha-sepolia":
 - user0
 private key: 0x1e9038bdc68ce1d27d54205256988e85
