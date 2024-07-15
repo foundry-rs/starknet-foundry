@@ -1,8 +1,7 @@
 # `list`
 List all available accounts.
 
-Account information will be retrieved from the file specified by `--accounts-file` argument,
-which is `~/.starknet_accounts/starknet_open_zeppelin_accounts.json` by default.
+Account information will be retrieved from the file specified in user's environment.
 Hides user's private keys by default.
 
 > ⚠️ **Warning**
@@ -12,6 +11,7 @@ Hides user's private keys by default.
 ## Required Common Arguments — Passed By CLI or Specified in `snfoundry.toml`
 
 * [`url`](../common.md#--url--u-rpc_url)
+* [`accounts-file`](../common.md#--accounts-file--f-path_to_accounts_file)
 
 ## `--display-private-keys`, `-p`
 Optional.
