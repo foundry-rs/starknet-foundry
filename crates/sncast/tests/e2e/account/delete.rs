@@ -4,8 +4,8 @@ use crate::{e2e::account::helpers::create_tempdir_with_accounts_file, helpers::c
 use indoc::indoc;
 use shared::test_utils::output_assert::{assert_stderr_contains, AsOutput};
 
-#[tokio::test]
-pub async fn test_no_accounts_in_network() {
+#[test]
+pub fn test_no_accounts_in_network() {
     let mut args = default_cli_args();
     args.append(&mut vec![
         "account",
@@ -28,8 +28,8 @@ pub async fn test_no_accounts_in_network() {
     );
 }
 
-#[tokio::test]
-pub async fn test_account_does_not_exist() {
+#[test]
+pub fn test_account_does_not_exist() {
     let mut args = default_cli_args();
     args.append(&mut vec!["account", "delete", "--name", "user99"]);
 
@@ -45,11 +45,11 @@ pub async fn test_account_does_not_exist() {
     );
 }
 
-#[tokio::test]
-pub async fn test_delete_abort() {
+#[test]
+pub fn test_delete_abort() {
     // Creating dummy accounts test file
     let accounts_file_name = "temp_accounts.json";
-    let temp_dir = create_tempdir_with_accounts_file(accounts_file_name, true).await;
+    let temp_dir = create_tempdir_with_accounts_file(accounts_file_name, true);
 
     // Now delete dummy account
     let args = vec![
@@ -78,11 +78,11 @@ pub async fn test_delete_abort() {
     );
 }
 
-#[tokio::test]
-pub async fn test_happy_case() {
+#[test]
+pub fn test_happy_case() {
     // Creating dummy accounts test file
     let accounts_file_name = "temp_accounts.json";
-    let temp_dir = create_tempdir_with_accounts_file(accounts_file_name, true).await;
+    let temp_dir = create_tempdir_with_accounts_file(accounts_file_name, true);
 
     // Now delete dummy account
     let args = vec![
@@ -107,11 +107,11 @@ pub async fn test_happy_case() {
     "});
 }
 
-#[tokio::test]
-pub async fn test_happy_case_without_network_args() {
+#[test]
+pub fn test_happy_case_without_network_args() {
     // Creating dummy accounts test file
     let accounts_file_name = "temp_accounts.json";
-    let temp_dir = create_tempdir_with_accounts_file(accounts_file_name, true).await;
+    let temp_dir = create_tempdir_with_accounts_file(accounts_file_name, true);
 
     // Now delete dummy account
     let args = vec![
@@ -134,11 +134,11 @@ pub async fn test_happy_case_without_network_args() {
     "});
 }
 
-#[tokio::test]
-pub async fn test_happy_case_with_yes_flag() {
+#[test]
+pub fn test_happy_case_with_yes_flag() {
     // Creating dummy accounts test file
     let accounts_file_name = "temp_accounts.json";
-    let temp_dir = create_tempdir_with_accounts_file(accounts_file_name, true).await;
+    let temp_dir = create_tempdir_with_accounts_file(accounts_file_name, true);
 
     // Now delete dummy account
     let args = vec![

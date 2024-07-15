@@ -7,10 +7,10 @@ use crate::{
     helpers::{constants::URL, runner::runner},
 };
 
-#[tokio::test]
-async fn test_happy_case() {
+#[test]
+fn test_happy_case() {
     let accounts_file_name = "temp_accounts.json";
-    let temp_dir = create_tempdir_with_accounts_file(accounts_file_name, true).await;
+    let temp_dir = create_tempdir_with_accounts_file(accounts_file_name, true);
 
     let accounts_file_path = temp_dir
         .path()
@@ -92,10 +92,10 @@ fn test_accounts_file_does_not_exist() {
     assert_stderr_contains(output, expected);
 }
 
-#[tokio::test]
-async fn test_no_accounts_available() {
+#[test]
+fn test_no_accounts_available() {
     let accounts_file_name = "temp_accounts.json";
-    let temp_dir = create_tempdir_with_accounts_file(accounts_file_name, false).await;
+    let temp_dir = create_tempdir_with_accounts_file(accounts_file_name, false);
 
     let accounts_file_path = temp_dir
         .path()

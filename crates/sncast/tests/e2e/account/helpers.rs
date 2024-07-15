@@ -1,16 +1,13 @@
 use indoc::indoc;
+use std::{fs::File, io::Write};
 use tempfile::{tempdir, TempDir};
-use tokio::fs::File;
-use tokio::io::AsyncWriteExt;
 
 #[must_use]
-pub async fn create_tempdir_with_accounts_file(file_name: &str, with_sample_data: bool) -> TempDir {
+pub fn create_tempdir_with_accounts_file(file_name: &str, with_sample_data: bool) -> TempDir {
     let dir = tempdir().expect("Unable to create a temporary directory");
     let location = dir.path().join(file_name);
 
-    let mut file = File::create(location)
-        .await
-        .expect("Unable to create a temporary accounts file");
+    let mut file = File::create(location).expect("Unable to create a temporary accounts file");
 
     let data = if with_sample_data {
         indoc! {r#"
@@ -44,12 +41,9 @@ pub async fn create_tempdir_with_accounts_file(file_name: &str, with_sample_data
     };
 
     file.write_all(data.as_bytes())
-        .await
         .expect("Unable to write test data to a temporary file");
 
-    file.flush()
-        .await
-        .expect("Unable to flush a temporary file");
+    file.flush().expect("Unable to flush a temporary file");
 
     dir
 }
