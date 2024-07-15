@@ -5,7 +5,7 @@
     constructor_calldata: Array::<felt252>,
     salt: Option<felt252>,
     unique: bool,
-    max_fee: Option<felt252>,
+    fee_settings: FeeSettings,
     nonce: Option<felt252>
 ) -> Result<DeployResult, ScriptCommandError>`
 
@@ -17,17 +17,36 @@ pub struct DeployResult {
     pub contract_address: ContractAddress,
     pub transaction_hash: felt252,
 }
+
+#[derive(Drop, Clone, Debug, Serde, PartialEq)]
+pub enum FeeSettings {
+    Eth: EthFeeSettings,
+    Strk: StrkFeeSettings
+}
+
+#[derive(Drop, Clone, Debug, Serde, PartialEq)]
+pub struct EthFeeSettings {
+    pub max_fee: Option<felt252>,
+}
+
+#[derive(Drop, Clone, Debug, Serde, PartialEq)]
+pub struct StrkFeeSettings {
+    pub max_fee: Option<felt252>,
+    pub max_gas: Option<u64>,
+    pub max_gas_unit_price: Option<u128>,
+}
+
 ```
 
 - `class_hash` - class hash of a contract to deploy.
 - `constructor_calldata` - calldata for the contract constructor.
 - `salt` - salt for the contract address.
 - `unique` - determines if salt should be further modified with the account address.
-- `max_fee` - max fee for declare transaction. If not provided, max fee will be automatically estimated.
+- `fee_settings` - fee settings for the transaction. Can be `Eth` or `Strk`. Read more about it [here](../../starknet/fees-and-versions.md) 
 - `nonce` - nonce for declare transaction. If not provided, nonce will be set automatically.
 
 ```rust
-use sncast_std::{deploy, DeployResult};
+use sncast_std::{deploy, DeployResult, FeeSettings, EthFeeSettings};
 
 fn main() {
     let max_fee = 9999999;
@@ -42,8 +61,8 @@ fn main() {
         ArrayTrait::new(),
         Option::Some(salt),
         true,
-        Option::Some(max_fee),
-        Option::Some(nonce)
+        FeeSettings::Eth(EthFeeSettings {max_fee: Option::Some(max_fee)}),
+        Option::Some(deploy_nonce)
     ).expect('deploy failed');
 
     println!("deploy_result: {}", deploy_result);
