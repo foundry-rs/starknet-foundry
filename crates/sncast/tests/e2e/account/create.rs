@@ -554,7 +554,7 @@ fn get_formatted_account_type(account_type: &str) -> &str {
 
 fn get_keystore_account_pattern(account_type: AccountType, class_hash: Option<&str>) -> String {
     let account_json = match account_type {
-        AccountType::Oz => {
+        AccountType::OpenZeppelin => {
             json!(
                 {
                     "version": 1,

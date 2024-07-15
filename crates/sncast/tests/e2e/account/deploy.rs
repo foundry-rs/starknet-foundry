@@ -762,7 +762,7 @@ pub async fn test_deploy_keystore_other_args() {
         tempdir.path().join(keystore_file),
         tempdir.path().join(account_file),
         KEYSTORE_PASSWORD_ENV_VAR,
-        &AccountType::Oz,
+        &AccountType::OpenZeppelin,
     );
 
     mint_token(&address.into_hex_string(), 9_999_999_999_999_999_999).await;

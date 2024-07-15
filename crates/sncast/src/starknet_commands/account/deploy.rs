@@ -171,7 +171,7 @@ async fn deploy_from_keystore(
             &[private_key.verifying_key().scalar(), FieldElement::ZERO],
             FieldElement::ZERO,
         ),
-        AccountType::Oz => get_contract_address(
+        AccountType::OpenZeppelin => get_contract_address(
             salt,
             class_hash,
             &[private_key.verifying_key().scalar()],
@@ -279,7 +279,7 @@ async fn get_deployment_result(
             )
             .await
         }
-        AccountType::Oz => {
+        AccountType::OpenZeppelin => {
             let factory = OpenZeppelinAccountFactory::new(
                 class_hash,
                 chain_id,

@@ -46,7 +46,7 @@ pub mod state;
 #[serde(rename_all = "lowercase")]
 pub enum AccountType {
     #[serde(rename = "open_zeppelin")]
-    Oz,
+    OpenZeppelin,
     Argent,
     Braavos,
 }
@@ -56,7 +56,7 @@ impl FromStr for AccountType {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "open_zeppelin" | "oz" => Ok(AccountType::Oz),
+            "open_zeppelin" | "oz" => Ok(AccountType::OpenZeppelin),
             "argent" => Ok(AccountType::Argent),
             "braavos" => Ok(AccountType::Braavos),
             account_type => Err(anyhow!("Invalid account type = {account_type}")),
@@ -64,21 +64,9 @@ impl FromStr for AccountType {
     }
 }
 
-impl AccountType {
-    fn to_string_pretty(self) -> String {
-        let repr = match self {
-            AccountType::Oz => "OpenZeppelin",
-            AccountType::Argent => "Argent",
-            AccountType::Braavos => "Braavos",
-        };
-
-        repr.to_string()
-    }
-}
-
 impl Display for AccountType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.to_string_pretty())
+        write!(f, "{self:?}")
     }
 }
 
@@ -383,7 +371,7 @@ pub fn get_account_data_from_keystore(
 
     let public_key = match account_type.context("Failed to get type key")? {
         AccountType::Argent => parse_to_felt("/variant/owner"),
-        AccountType::Oz => parse_to_felt("/variant/public_key"),
+        AccountType::OpenZeppelin => parse_to_felt("/variant/public_key"),
         AccountType::Braavos => get_braavos_account_public_key(&account_info)?,
     }
     .context("Failed to get public key from account JSON file")?;
@@ -845,7 +833,7 @@ mod tests {
         assert_eq!(account.deployed, Some(true));
         assert_eq!(account.class_hash, None);
         assert_eq!(account.legacy, None);
-        assert_eq!(account.account_type, Some(AccountType::Oz));
+        assert_eq!(account.account_type, Some(AccountType::OpenZeppelin));
     }
 
     #[test]
@@ -871,7 +859,7 @@ mod tests {
         assert_eq!(account.salt, None);
         assert_eq!(account.deployed, Some(true));
         assert_eq!(account.legacy, Some(true));
-        assert_eq!(account.account_type, Some(AccountType::Oz));
+        assert_eq!(account.account_type, Some(AccountType::OpenZeppelin));
     }
 
     #[test]
