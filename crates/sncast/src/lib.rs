@@ -2,7 +2,6 @@ use anyhow::{anyhow, bail, Context, Error, Result};
 use camino::Utf8PathBuf;
 use clap::ValueEnum;
 use helpers::constants::{KEYSTORE_PASSWORD_ENV_VAR, UDC_ADDRESS};
-use itertools::Itertools;
 use rand::rngs::OsRng;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
@@ -28,7 +27,6 @@ use starknet::{
 use crate::helpers::constants::{DEFAULT_STATE_FILE_SUFFIX, WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
 use crate::response::errors::SNCastProviderError;
 use conversions::serde::serialize::CairoSerialize;
-use indoc::formatdoc;
 use serde::de::DeserializeOwned;
 use shared::rpc::create_rpc_client;
 use starknet::accounts::{AccountFactory, AccountFactoryError};
@@ -89,47 +87,6 @@ pub struct AccountData {
 
     #[serde(default, rename(serialize = "type", deserialize = "type"))]
     pub account_type: Option<AccountType>,
-}
-
-impl AccountData {
-    #[must_use]
-    pub fn to_string_pretty(&self, display_private_key: bool) -> String {
-        macro_rules! format_some {
-            ( $format_spec:expr, $item:expr) => {
-                match $item {
-                    Some(it) => format!($format_spec, it),
-                    None => String::new(),
-                }
-            };
-        }
-
-        let header = formatdoc!(
-            "
-            Account data:
-              public key: {:#x}
-            ",
-            self.public_key,
-        );
-
-        let private = if display_private_key {
-            format!("  private key: {:#x}", self.private_key)
-        } else {
-            String::new()
-        };
-
-        let lines = [
-            header,
-            private,
-            format_some!("  address: {:#x}", self.address),
-            format_some!("  salt: {:#x}", self.salt),
-            format_some!("  class hash: {:#x}", self.class_hash),
-            format_some!("  deployed: {}", self.deployed),
-            format_some!("  legacy: {}", self.legacy),
-            format_some!("  type: {}", self.account_type),
-        ];
-
-        lines.iter().format("\n").to_string()
-    }
 }
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]

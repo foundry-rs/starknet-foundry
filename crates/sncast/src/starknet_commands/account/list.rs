@@ -3,7 +3,6 @@ use std::collections::HashMap;
 use anyhow::Context;
 use camino::Utf8PathBuf;
 use clap::Args;
-use indoc::printdoc;
 use itertools::Itertools;
 use sncast::{check_account_file_exists, read_and_parse_json_file, AccountData};
 
@@ -17,6 +16,32 @@ pub struct List {
     /// Display private keys
     #[arg(short = 'p', long = "display-private-keys")]
     pub display_private_keys: bool,
+}
+
+fn print_pretty(account: &AccountData, name: &str, network: &str, display_private_keys: bool) {
+    macro_rules! println_some {
+        ( $format_spec:expr, $item:expr) => {
+            if let Some(it) = $item {
+                println!($format_spec, it);
+            }
+        };
+    }
+
+    println!("- {name}:");
+
+    if display_private_keys {
+        println!("  private key: {:#x}", account.private_key);
+    };
+
+    println!("  public key: {:#x}", account.public_key);
+    println!("  network: {network}");
+    println_some!("  address: {:#x}", account.address);
+    println_some!("  salt: {:#x}", account.salt);
+    println_some!("  class hash: {:#x}", account.class_hash);
+    println_some!("  deployed: {}", account.deployed);
+    println_some!("  legacy: {}", account.legacy);
+    println_some!("  type: {}", account.account_type);
+    println!();
 }
 
 pub fn print_account_list(
@@ -38,32 +63,13 @@ pub fn print_account_list(
         return Ok(());
     }
 
-    let repr = networks
-        .iter()
-        .sorted_by_key(|(name, _)| *name)
-        .map(|(name, accounts)| {
-            format!(
-                "Network \"{}\":\n{}",
-                name,
-                accounts
-                    .iter()
-                    .sorted_by_key(|(name, _)| *name)
-                    .map(|(name, account)| format!(
-                        "- {}:\n{}",
-                        name,
-                        account.to_string_pretty(display_private_keys)
-                    ))
-                    .format("\n")
-            )
-        })
-        .format("\n");
+    println!("Available accounts (at {accounts_file_path}):");
 
-    printdoc!(
-        "
-        Available accounts (at {accounts_file_path}):
-        {repr}
-        "
-    );
+    for (network, accounts) in networks.iter().sorted_by_key(|(name, _)| *name) {
+        for (name, data) in accounts.iter().sorted_by_key(|(name, _)| *name) {
+            print_pretty(data, name, network, display_private_keys);
+        }
+    }
 
     if !display_private_keys {
         println!("\nTo show private keys too, run with --display-private-keys or -p");
