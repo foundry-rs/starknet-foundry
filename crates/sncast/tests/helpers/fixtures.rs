@@ -563,7 +563,7 @@ pub fn assert_tx_entry_success(tx_entry: &ScriptTransactionEntry, name: &str) {
 }
 
 pub async fn create_and_deploy_oz_account() -> TempDir {
-    create_and_deploy_account(OZ_CLASS_HASH, AccountType::Oz).await
+    create_and_deploy_account(OZ_CLASS_HASH, AccountType::OpenZeppelin).await
 }
 pub async fn create_and_deploy_account(
     class_hash: FieldElement,
@@ -571,7 +571,7 @@ pub async fn create_and_deploy_account(
 ) -> TempDir {
     let class_hash = &class_hash.into_hex_string();
     let account_type = match account_type {
-        AccountType::Oz => "oz",
+        AccountType::OpenZeppelin => "oz",
         AccountType::Argent => "argent",
         AccountType::Braavos => "braavos",
     };
