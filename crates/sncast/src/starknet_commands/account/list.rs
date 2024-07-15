@@ -26,10 +26,7 @@ pub fn print_account_list(accounts_file: &Utf8PathBuf) -> anyhow::Result<()> {
     let networks: HashMap<String, HashMap<String, AccountData>> =
         read_and_parse_json_file(accounts_file)?;
 
-    let no_networks = networks.is_empty();
-    let no_accounts = networks.values().all(|net| net.values().len() == 0);
-
-    if no_networks || no_accounts {
+    if networks.values().all(|net| net.values().len() == 0) {
         println!("No accounts available at {accounts_file_path}");
         return Ok(());
     }

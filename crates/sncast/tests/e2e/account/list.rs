@@ -3,14 +3,14 @@ use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_co
 use tempfile::tempdir;
 
 use crate::{
-    e2e::account::helpers::{create_tempdir_with_accounts_file, create_tempdir_with_empty_json},
+    e2e::account::helpers::create_tempdir_with_accounts_file,
     helpers::{constants::URL, runner::runner},
 };
 
 #[tokio::test]
 async fn test_happy_case() {
     let accounts_file_name = "temp_accounts.json";
-    let temp_dir = create_tempdir_with_accounts_file(accounts_file_name).await;
+    let temp_dir = create_tempdir_with_accounts_file(accounts_file_name, true).await;
 
     let accounts_file_path = temp_dir
         .path()
@@ -95,7 +95,7 @@ fn test_accounts_file_does_not_exist() {
 #[tokio::test]
 async fn test_no_accounts_available() {
     let accounts_file_name = "temp_accounts.json";
-    let temp_dir = create_tempdir_with_empty_json(accounts_file_name).await;
+    let temp_dir = create_tempdir_with_accounts_file(accounts_file_name, false).await;
 
     let accounts_file_path = temp_dir
         .path()

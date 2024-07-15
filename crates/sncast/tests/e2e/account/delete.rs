@@ -49,7 +49,7 @@ pub async fn test_account_does_not_exist() {
 pub async fn test_delete_abort() {
     // Creating dummy accounts test file
     let accounts_file_name = "temp_accounts.json";
-    let temp_dir = create_tempdir_with_accounts_file(accounts_file_name).await;
+    let temp_dir = create_tempdir_with_accounts_file(accounts_file_name, true).await;
 
     // Now delete dummy account
     let args = vec![
@@ -82,7 +82,7 @@ pub async fn test_delete_abort() {
 pub async fn test_happy_case() {
     // Creating dummy accounts test file
     let accounts_file_name = "temp_accounts.json";
-    let temp_dir = create_tempdir_with_accounts_file(accounts_file_name).await;
+    let temp_dir = create_tempdir_with_accounts_file(accounts_file_name, true).await;
 
     // Now delete dummy account
     let args = vec![
@@ -111,7 +111,7 @@ pub async fn test_happy_case() {
 pub async fn test_happy_case_without_network_args() {
     // Creating dummy accounts test file
     let accounts_file_name = "temp_accounts.json";
-    let temp_dir = create_tempdir_with_accounts_file(accounts_file_name).await;
+    let temp_dir = create_tempdir_with_accounts_file(accounts_file_name, true).await;
 
     // Now delete dummy account
     let args = vec![
@@ -138,7 +138,7 @@ pub async fn test_happy_case_without_network_args() {
 pub async fn test_happy_case_with_yes_flag() {
     // Creating dummy accounts test file
     let accounts_file_name = "temp_accounts.json";
-    let temp_dir = create_tempdir_with_accounts_file(accounts_file_name).await;
+    let temp_dir = create_tempdir_with_accounts_file(accounts_file_name, true).await;
 
     // Now delete dummy account
     let args = vec![
