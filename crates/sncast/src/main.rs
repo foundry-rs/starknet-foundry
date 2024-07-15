@@ -223,6 +223,7 @@ async fn run_async_command(
         }
 
         Commands::Deploy(deploy) => {
+            deploy.validate()?;
             let account = get_account(
                 &config.account,
                 &config.accounts_file,
@@ -230,18 +231,10 @@ async fn run_async_command(
                 config.keystore,
             )
             .await?;
-            let mut result = starknet_commands::deploy::deploy(
-                deploy.class_hash,
-                deploy.constructor_calldata,
-                deploy.salt,
-                deploy.unique,
-                deploy.fee.max_fee,
-                &account,
-                deploy.nonce,
-                wait_config,
-            )
-            .await
-            .map_err(handle_starknet_command_error);
+
+            let mut result = starknet_commands::deploy::deploy(deploy, &account, wait_config)
+                .await
+                .map_err(handle_starknet_command_error);
 
             print_command_result("deploy", &mut result, numbers_format, &output_format)?;
             Ok(())

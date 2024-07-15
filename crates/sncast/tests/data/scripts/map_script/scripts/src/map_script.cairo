@@ -1,5 +1,6 @@
 use sncast_std::{
-    declare, deploy, invoke, call, DeclareResult, DeployResult, InvokeResult, CallResult, get_nonce
+    declare, deploy, invoke, call, DeclareResult, DeployResult, InvokeResult, CallResult, get_nonce,
+    FeeSettings, EthFeeSettings
 };
 
 fn second_contract() {
@@ -11,7 +12,7 @@ fn second_contract() {
         ArrayTrait::new(),
         Option::None,
         false,
-        Option::None,
+        FeeSettings::Eth(EthFeeSettings { max_fee: Option::None }),
         Option::None
     )
         .expect('mapa deploy failed');
@@ -47,7 +48,7 @@ fn main() {
         ArrayTrait::new(),
         Option::Some(salt),
         true,
-        Option::Some(max_fee),
+        FeeSettings::Eth(EthFeeSettings { max_fee: Option::Some(max_fee) }),
         Option::Some(deploy_nonce)
     )
         .expect('mapa deploy failed');

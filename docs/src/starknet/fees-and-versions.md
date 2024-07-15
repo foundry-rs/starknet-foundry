@@ -60,3 +60,13 @@ $ sncast account deploy \
 
 > 📝 **Note**
 > The unit used in `--max-fee` flag is the smallest unit of the given fee token. For ETH it is Wei, for STRK it is Fri.
+
+## sncast deploy
+
+Currently, there are two versions of the deployment transaction: v1 and v3. The table below shows which token is used for which version of the transaction:
+
+
+| Version | FeeToken |
+|---------|----------|
+| v1      | eth      |
+| v3      | strk     |

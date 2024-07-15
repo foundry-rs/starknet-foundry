@@ -42,6 +42,37 @@ async fn test_with_calldata(account: &str) {
 }
 
 #[tokio::test]
+async fn test_with_fee_settings() {
+    let tempdir =
+        copy_script_directory_to_tempdir(SCRIPTS_DIR.to_owned() + "/deploy", Vec::<String>::new());
+    let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
+
+    let script_name = "strk_fee_settings";
+    let args = vec![
+        "--accounts-file",
+        accounts_json_path.as_str(),
+        "--account",
+        "user7",
+        "--url",
+        URL,
+        "script",
+        "run",
+        &script_name,
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        command: script run
+        status: success
+        "},
+    );
+}
+
+#[tokio::test]
 async fn test_same_salt_and_class_hash_deployed_twice() {
     let tempdir =
         copy_script_directory_to_tempdir(SCRIPTS_DIR.to_owned() + "/deploy", Vec::<String>::new());
