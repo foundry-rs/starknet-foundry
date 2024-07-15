@@ -15,7 +15,7 @@ async fn test_happy_case() {
     let accounts_file_path = temp_dir
         .path()
         .canonicalize()
-        .expect("Failed to resolve temporary directory path")
+        .expect("Unable to resolve a temporary directory path")
         .join(accounts_file_name);
 
     let args = vec![
@@ -68,7 +68,7 @@ async fn test_happy_case() {
 #[test]
 fn test_accounts_file_does_not_exist() {
     let accounts_file_name = "some_inexistent_file.json";
-    let temp_dir = tempdir().expect("Unable to create temporary directory");
+    let temp_dir = tempdir().expect("Unable to create a temporary directory");
 
     let args = vec![
         "--url",
@@ -100,7 +100,7 @@ async fn test_no_accounts_available() {
     let accounts_file_path = temp_dir
         .path()
         .canonicalize()
-        .expect("Failed to resolve temporary directory path")
+        .expect("Unable to resolve a temporary directory path")
         .join(accounts_file_name);
 
     let args = vec![
