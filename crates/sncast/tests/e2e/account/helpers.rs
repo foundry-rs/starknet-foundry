@@ -49,7 +49,7 @@ pub async fn create_tempdir_with_accounts_file(file_name: &str, with_sample_data
 
     file.flush()
         .await
-        .expect("Unable to fulsh a temporary file");
+        .expect("Unable to flush a temporary file");
 
     dir
 }
