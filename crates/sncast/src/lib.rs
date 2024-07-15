@@ -107,7 +107,7 @@ impl Display for AccountData {
         macro_rules! write_some {
             ($dest:expr, $format_spec:expr, $item:expr) => {
                 match $item {
-                    Some(it) => write!($dest, $format_spec, it),
+                    Some(it) => writeln!($dest, $format_spec, it),
                     None => Ok(()),
                 }
             };
@@ -124,12 +124,12 @@ impl Display for AccountData {
             self.public_key,
         )?;
 
-        write_some!(f, "  address: {:#x}\n", self.address)?;
-        write_some!(f, "  salt: {:#x}\n", self.salt)?;
-        write_some!(f, "  class hash: {:#x}\n", self.class_hash)?;
-        write_some!(f, "  deployed: {}\n", self.deployed)?;
-        write_some!(f, "  legacy: {}\n", self.legacy)?;
-        write_some!(f, "  type: {}\n", self.account_type)?;
+        write_some!(f, "  address: {:#x}", self.address)?;
+        write_some!(f, "  salt: {:#x}", self.salt)?;
+        write_some!(f, "  class hash: {:#x}", self.class_hash)?;
+        write_some!(f, "  deployed: {}", self.deployed)?;
+        write_some!(f, "  legacy: {}", self.legacy)?;
+        write_some!(f, "  type: {}", self.account_type)?;
 
         Ok(())
     }
