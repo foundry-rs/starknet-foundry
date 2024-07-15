@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use anyhow::anyhow;
+use anyhow::Context;
 use camino::Utf8PathBuf;
 use clap::Args;
 use indoc::printdoc;
@@ -26,9 +26,9 @@ pub fn print_account_list(
     check_account_file_exists(accounts_file)?;
 
     let accounts_file_path = accounts_file.canonicalize()?;
-    let accounts_file_path = accounts_file_path.to_str().ok_or(anyhow!(
-        "Failed to resolve an absolute path to the accounts file"
-    ))?;
+    let accounts_file_path = accounts_file_path
+        .to_str()
+        .context("Failed to resolve an absolute path to the accounts file")?;
 
     let networks: HashMap<String, HashMap<String, AccountData>> =
         read_and_parse_json_file(accounts_file)?;
