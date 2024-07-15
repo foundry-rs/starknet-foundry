@@ -15,7 +15,7 @@ use starknet::providers::{JsonRpcClient, Provider};
 use starknet::signers::{LocalWallet, SigningKey};
 
 use sncast::helpers::braavos::BraavosAccountFactory;
-use sncast::helpers::error::token_not_supported_error_msg;
+use sncast::helpers::error::token_not_supported_for_deployment;
 use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken};
 use sncast::{
     chain_id_to_network_name, check_account_file_exists, get_account_data_from_accounts_file,
@@ -42,10 +42,10 @@ impl Deploy {
     pub fn validate(&self) -> Result<()> {
         match (&self.version, &self.fee_args.fee_token) {
             (Some(AccountDeployVersion::V3), Some(FeeToken::Eth)) => {
-                Err(anyhow!(token_not_supported_error_msg("eth", "v3")))
+                Err(anyhow!(token_not_supported_for_deployment("eth", "v3")))
             }
             (Some(AccountDeployVersion::V1), Some(FeeToken::Strk)) => {
-                Err(anyhow!(token_not_supported_error_msg("strk", "v1")))
+                Err(anyhow!(token_not_supported_for_deployment("strk", "v1")))
             }
             (None, None) => Err(anyhow!("Either --fee-token or --version must be provided")),
             _ => Ok(()),

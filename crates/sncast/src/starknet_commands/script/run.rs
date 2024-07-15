@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::fs;
 
+use crate::starknet_commands::declare::Declare;
 use crate::starknet_commands::deploy::Deploy;
 use crate::starknet_commands::{call, declare, deploy, invoke, tx_status};
 use crate::{get_account, get_nonce, WaitForTx};
@@ -112,11 +113,19 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 Ok(CheatcodeHandlingResult::from_serializable(call_result))
             }
             "declare" => {
-                let contract_name: String = input_reader.read::<ByteArray>()?.into();
-                let max_fee = input_reader.read()?;
+                let contract: String = input_reader.read::<ByteArray>()?.into();
+                let fee_args = input_reader.read::<FeeSettings>()?.into();
                 let nonce = input_reader.read()?;
 
-                let declare_tx_id = generate_declare_tx_id(contract_name.as_str());
+                let declare = Declare {
+                    contract: contract.clone(),
+                    fee_args,
+                    nonce,
+                    package: None,
+                    version: None,
+                };
+
+                let declare_tx_id = generate_declare_tx_id(contract.as_str());
 
                 if let Some(success_output) =
                     self.state.get_output_if_success(declare_tx_id.as_str())
@@ -125,10 +134,8 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 }
 
                 let declare_result = self.tokio_runtime.block_on(declare::declare(
-                    &contract_name,
-                    max_fee,
+                    declare,
                     self.account()?,
-                    nonce,
                     self.artifacts,
                     WaitForTx {
                         wait: true,

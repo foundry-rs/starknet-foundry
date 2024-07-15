@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Result};
 use clap::{Args, ValueEnum};
-use sncast::helpers::error::token_not_supported_error_msg;
+use sncast::helpers::error::token_not_supported_for_deployment;
 use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken};
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::structs::{DeployResponse, Felt};
@@ -42,7 +42,7 @@ pub struct Deploy {
     pub nonce: Option<FieldElement>,
 
     /// Version of the deployment (can be inferred from fee token)
-    #[clap(short, long)]
+    #[clap(short, long, ignore_case = true)]
     pub version: Option<DeployVersion>,
 }
 
@@ -50,10 +50,10 @@ impl Deploy {
     pub fn validate(&self) -> Result<()> {
         match (&self.version, &self.fee_args.fee_token) {
             (Some(DeployVersion::V3), Some(FeeToken::Eth)) => {
-                Err(anyhow!(token_not_supported_error_msg("eth", "v3")))
+                Err(anyhow!(token_not_supported_for_deployment("eth", "v3")))
             }
             (Some(DeployVersion::V1), Some(FeeToken::Strk)) => {
-                Err(anyhow!(token_not_supported_error_msg("strk", "v1")))
+                Err(anyhow!(token_not_supported_for_deployment("strk", "v1")))
             }
             (None, None) => Err(anyhow!("--fee-token or --version must be provided")),
             _ => Ok(()),

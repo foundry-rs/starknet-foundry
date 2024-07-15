@@ -3,6 +3,7 @@ use crate::helpers::runner::runner;
 use anyhow::Context;
 use camino::{Utf8Path, Utf8PathBuf};
 use conversions::string::IntoHexStr;
+use fs_extra::dir::{copy, CopyOptions};
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
 use serde_json::{json, Map, Value};
@@ -623,4 +624,13 @@ pub async fn create_and_deploy_account(
     runner(&args).current_dir(tempdir.path()).assert().success();
 
     tempdir
+}
+
+pub fn join_tempdirs(from: &TempDir, to: &TempDir) {
+    copy(
+        from.path(),
+        to.path(),
+        &CopyOptions::new().overwrite(true).content_only(true),
+    )
+    .expect("Failed to copy the directory");
 }

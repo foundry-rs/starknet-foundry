@@ -188,6 +188,7 @@ async fn run_async_command(
 
     match cli.command {
         Commands::Declare(declare) => {
+            declare.validate()?;
             let account = get_account(
                 &config.account,
                 &config.accounts_file,
@@ -206,16 +207,10 @@ async fn run_async_command(
                 },
             )
             .expect("Failed to build contract");
-            let mut result = starknet_commands::declare::declare(
-                &declare.contract,
-                declare.fee.max_fee,
-                &account,
-                declare.nonce,
-                &artifacts,
-                wait_config,
-            )
-            .await
-            .map_err(handle_starknet_command_error);
+            let mut result =
+                starknet_commands::declare::declare(declare, &account, &artifacts, wait_config)
+                    .await
+                    .map_err(handle_starknet_command_error);
 
             print_command_result("declare", &mut result, numbers_format, &output_format)?;
             Ok(())
