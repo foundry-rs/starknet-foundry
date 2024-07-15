@@ -429,8 +429,8 @@ async fn run_async_command(
                 Ok(())
             }
 
-            account::Commands::List(_) => {
-                print_account_list(&config.accounts_file)?;
+            account::Commands::List(options) => {
+                print_account_list(&config.accounts_file, options.display_private_keys)?;
                 Ok(())
             }
         },

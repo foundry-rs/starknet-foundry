@@ -2,6 +2,7 @@ use anyhow::{anyhow, bail, Context, Error, Result};
 use camino::Utf8PathBuf;
 use clap::ValueEnum;
 use helpers::constants::{KEYSTORE_PASSWORD_ENV_VAR, UDC_ADDRESS};
+use itertools::Itertools;
 use rand::rngs::OsRng;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
@@ -27,7 +28,7 @@ use starknet::{
 use crate::helpers::constants::{DEFAULT_STATE_FILE_SUFFIX, WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
 use crate::response::errors::SNCastProviderError;
 use conversions::serde::serialize::CairoSerialize;
-use indoc::writedoc;
+use indoc::formatdoc;
 use serde::de::DeserializeOwned;
 use shared::rpc::create_rpc_client;
 use starknet::accounts::{AccountFactory, AccountFactoryError};
@@ -90,36 +91,44 @@ pub struct AccountData {
     pub account_type: Option<AccountType>,
 }
 
-impl Display for AccountData {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        macro_rules! write_some {
-            ($dest:expr, $format_spec:expr, $item:expr) => {
+impl AccountData {
+    #[must_use]
+    pub fn to_string_pretty(&self, display_private_key: bool) -> String {
+        macro_rules! format_some {
+            ( $format_spec:expr, $item:expr) => {
                 match $item {
-                    Some(it) => writeln!($dest, $format_spec, it),
-                    None => Ok(()),
+                    Some(it) => format!($format_spec, it),
+                    None => String::new(),
                 }
             };
         }
 
-        writedoc!(
-            f,
+        let header = formatdoc!(
             "
             Account data:
-              private key: {:#x}
               public key: {:#x}
             ",
-            self.private_key,
             self.public_key,
-        )?;
+        );
 
-        write_some!(f, "  address: {:#x}", self.address)?;
-        write_some!(f, "  salt: {:#x}", self.salt)?;
-        write_some!(f, "  class hash: {:#x}", self.class_hash)?;
-        write_some!(f, "  deployed: {}", self.deployed)?;
-        write_some!(f, "  legacy: {}", self.legacy)?;
-        write_some!(f, "  type: {}", self.account_type)?;
+        let private = if display_private_key {
+            format!("  private key: {:#x}", self.private_key)
+        } else {
+            String::new()
+        };
 
-        Ok(())
+        let lines = [
+            header,
+            private,
+            format_some!("  address: {:#x}", self.address),
+            format_some!("  salt: {:#x}", self.salt),
+            format_some!("  class hash: {:#x}", self.class_hash),
+            format_some!("  deployed: {}", self.deployed),
+            format_some!("  legacy: {}", self.legacy),
+            format_some!("  type: {}", self.account_type),
+        ];
+
+        lines.iter().format("\n").to_string()
     }
 }
 

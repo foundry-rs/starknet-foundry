@@ -11,11 +11,18 @@ use sncast::{check_account_file_exists, read_and_parse_json_file, AccountData};
 #[command(
     name = "list",
     about = "List available accounts",
-    before_help = "Warning! This command exposes cryptographic information, e.g. accounts' private keys"
+    before_help = "Warning! This command may expose vulnerable cryptographic information, e.g. accounts' private keys"
 )]
-pub struct List {}
+pub struct List {
+    /// Display private keys
+    #[arg(short = 'p', long = "display-private-keys")]
+    pub display_private_keys: bool,
+}
 
-pub fn print_account_list(accounts_file: &Utf8PathBuf) -> anyhow::Result<()> {
+pub fn print_account_list(
+    accounts_file: &Utf8PathBuf,
+    display_private_keys: bool,
+) -> anyhow::Result<()> {
     check_account_file_exists(accounts_file)?;
 
     let accounts_file_path = accounts_file.canonicalize()?;
@@ -41,7 +48,11 @@ pub fn print_account_list(accounts_file: &Utf8PathBuf) -> anyhow::Result<()> {
                 accounts
                     .iter()
                     .sorted_by_key(|(name, _)| *name)
-                    .map(|(name, account)| format!("- {name}:\n{account}"))
+                    .map(|(name, account)| format!(
+                        "- {}:\n{}",
+                        name,
+                        account.to_string_pretty(display_private_keys)
+                    ))
                     .format("\n")
             )
         })
@@ -53,6 +64,10 @@ pub fn print_account_list(accounts_file: &Utf8PathBuf) -> anyhow::Result<()> {
         {repr}
         "
     );
+
+    if !display_private_keys {
+        println!("\nTo show private keys too, run with --display-private-keys or -p");
+    }
 
     Ok(())
 }
