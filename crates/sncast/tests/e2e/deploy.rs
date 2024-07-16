@@ -173,7 +173,7 @@ async fn test_happy_case_strk_different_fees(
 }
 
 #[test_case("eth", "v3"; "eth-v3")]
-#[test_case("strk", "v1"; "strk-v3")]
+#[test_case("strk", "v1"; "strk-v1")]
 #[tokio::test]
 async fn test_invalid_version_and_token_combination(fee_token: &str, version: &str) {
     let tempdir = create_and_deploy_oz_account().await;

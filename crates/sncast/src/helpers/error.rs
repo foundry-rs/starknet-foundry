@@ -11,6 +11,11 @@ pub fn token_not_supported_for_declaration(fee_token: &str, declaration: &str) -
 }
 
 #[must_use]
+pub fn token_not_supported_for_invoke(fee_token: &str, declaration: &str) -> String {
+    token_not_supported_error_msg(fee_token, declaration, "invoke", "v1")
+}
+
+#[must_use]
 fn token_not_supported_error_msg(
     fee_token: &str,
     deployment: &str,

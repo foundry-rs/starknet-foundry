@@ -42,7 +42,7 @@ fn main() {
         deploy_result.contract_address,
         selector!("put"),
         array![0x1, 0x2],
-        Option::Some(max_fee),
+        FeeSettings::Eth(EthFeeSettings { max_fee: Option::Some(max_fee) }),
         Option::Some(invoke_nonce)
     )
         .expect('invoke failed');

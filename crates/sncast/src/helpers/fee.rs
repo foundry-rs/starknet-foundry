@@ -56,11 +56,11 @@ impl FeeArgs {
     }
 
     pub async fn try_into_fee_settings<P: Provider>(
-        self,
+        &self,
         provider: P,
         block_id: BlockId,
     ) -> Result<FeeSettings> {
-        match self.fee_token.unwrap_or_else(|| unreachable!()) {
+        match self.fee_token.clone().unwrap_or_else(|| unreachable!()) {
             FeeToken::Eth => {
                 ensure!(
                     self.max_gas.is_none(),

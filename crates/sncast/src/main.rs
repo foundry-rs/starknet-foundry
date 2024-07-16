@@ -255,6 +255,7 @@ async fn run_async_command(
         }
 
         Commands::Invoke(invoke) => {
+            invoke.validate()?;
             let account = get_account(
                 &config.account,
                 &config.accounts_file,
@@ -263,13 +264,10 @@ async fn run_async_command(
             )
             .await?;
             let mut result = starknet_commands::invoke::invoke(
-                invoke.contract_address,
+                invoke.clone(),
                 get_selector_from_name(&invoke.function)
                     .context("Failed to convert entry point selector to FieldElement")?,
-                invoke.calldata,
-                invoke.fee.max_fee,
                 &account,
-                invoke.nonce,
                 wait_config,
             )
             .await
@@ -299,6 +297,7 @@ async fn run_async_command(
                     }
                 }
                 starknet_commands::multicall::Commands::Run(run) => {
+                    run.validate()?;
                     let account = get_account(
                         &config.account,
                         &config.accounts_file,
@@ -306,13 +305,9 @@ async fn run_async_command(
                         config.keystore,
                     )
                     .await?;
-                    let mut result = starknet_commands::multicall::run::run(
-                        &run.path,
-                        &account,
-                        run.max_fee,
-                        wait_config,
-                    )
-                    .await;
+                    let mut result =
+                        starknet_commands::multicall::run::run(run.clone(), &account, wait_config)
+                            .await;
 
                     print_command_result(
                         "multicall run",

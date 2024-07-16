@@ -38,7 +38,7 @@ fn main() {
         map_contract_address,
         selector!("put"),
         array![0x1, 0x2],
-        Option::Some(max_fee),
+        FeeSettings::Eth(EthFeeSettings { max_fee: Option::Some(max_fee) }),
         Option::Some(invoke_nonce)
     )
         .expect_err('error expected invoke');

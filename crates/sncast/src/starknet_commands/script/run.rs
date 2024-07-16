@@ -3,6 +3,7 @@ use std::fs;
 
 use crate::starknet_commands::declare::Declare;
 use crate::starknet_commands::deploy::Deploy;
+use crate::starknet_commands::invoke::Invoke;
 use crate::starknet_commands::{call, declare, deploy, invoke, tx_status};
 use crate::{get_account, get_nonce, WaitForTx};
 use anyhow::{anyhow, Context, Result};
@@ -198,8 +199,17 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 let contract_address = input_reader.read()?;
                 let function_selector = input_reader.read()?;
                 let calldata: Vec<_> = input_reader.read()?;
-                let max_fee = input_reader.read()?;
+                let fee_args = input_reader.read::<ScriptFeeSettings>()?.into();
                 let nonce = input_reader.read()?;
+
+                let invoke = Invoke {
+                    contract_address,
+                    function: String::new(),
+                    calldata: calldata.clone(),
+                    fee_args,
+                    nonce,
+                    version: None,
+                };
 
                 let invoke_tx_id =
                     generate_invoke_tx_id(contract_address, function_selector, &calldata);
@@ -211,12 +221,9 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 }
 
                 let invoke_result = self.tokio_runtime.block_on(invoke::invoke(
-                    contract_address,
+                    invoke,
                     function_selector,
-                    calldata,
-                    max_fee,
                     self.account()?,
-                    nonce,
                     WaitForTx {
                         wait: true,
                         wait_params: self.config.wait_params,
