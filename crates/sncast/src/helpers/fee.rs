@@ -4,7 +4,7 @@ use conversions::serde::deserialize::CairoDeserialize;
 use starknet::core::types::{BlockId, FieldElement};
 use starknet::providers::Provider;
 
-#[derive(Args, Debug)]
+#[derive(Args, Debug, Clone)]
 pub struct FeeArgs {
     /// Token that transaction fee will be paid in
     #[clap(long)]
@@ -123,7 +123,7 @@ impl FeeArgs {
     }
 }
 
-#[derive(ValueEnum, Debug, Clone)]
+#[derive(ValueEnum, Debug, Clone, PartialEq)]
 pub enum FeeToken {
     Eth,
     Strk,
@@ -152,4 +152,45 @@ pub enum FeeSettings {
         max_gas: Option<u64>,
         max_gas_unit_price: Option<u128>,
     },
+}
+
+pub trait PayableTransaction {
+    fn error_message(&self, token: &str, version: &str) -> String;
+    fn validate(&self) -> Result<()>;
+    fn token_from_version(&self) -> Option<FeeToken>;
+}
+
+#[macro_export]
+macro_rules! impl_payable_transaction {
+    ($type:ty, $err_func:ident, $($version:pat => $token:expr),+) => {
+        impl PayableTransaction for $type {
+            fn error_message(&self, token: &str, version: &str) -> String {
+                $err_func(token, version)
+            }
+
+            fn validate(&self) -> Result<()> {
+                match (
+                    &self.token_from_version(),
+                    &self.fee_args.fee_token,
+                ) {
+                    (Some(token_from_version), Some(token)) if token_from_version != token => {
+                        Err(anyhow!(self.error_message(
+                            &format!("{token:?}").to_lowercase(),
+                            &format!("{:?}", self.version.clone().unwrap()).to_lowercase()
+                        )))
+                    }
+                    (None, None) => {
+                        Err(anyhow!("Either --fee-token or --version must be provided"))
+                    }
+                    _ => Ok(()),
+                }
+            }
+
+            fn token_from_version(&self) -> Option<FeeToken> {
+                self.version.clone().map(|version| match version {
+                    $($version => $token),+
+                })
+            }
+        }
+    };
 }

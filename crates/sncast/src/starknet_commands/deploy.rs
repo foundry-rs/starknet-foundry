@@ -1,10 +1,10 @@
 use anyhow::{anyhow, Result};
 use clap::{Args, ValueEnum};
-use sncast::helpers::error::token_not_supported_error_msg;
-use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken};
+use sncast::helpers::error::token_not_supported_for_deployment;
+use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken, PayableTransaction};
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::structs::{DeployResponse, Felt};
-use sncast::{extract_or_generate_salt, udc_uniqueness};
+use sncast::{extract_or_generate_salt, impl_payable_transaction, udc_uniqueness};
 use sncast::{handle_wait_for_tx, WaitForTx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{Account, ConnectedAccount, SingleOwnerAccount};
@@ -46,35 +46,16 @@ pub struct Deploy {
     pub version: Option<DeployVersion>,
 }
 
-impl Deploy {
-    pub fn validate(&self) -> Result<()> {
-        match (&self.version, &self.fee_args.fee_token) {
-            (Some(DeployVersion::V3), Some(FeeToken::Eth)) => {
-                Err(anyhow!(token_not_supported_error_msg("eth", "v3")))
-            }
-            (Some(DeployVersion::V1), Some(FeeToken::Strk)) => {
-                Err(anyhow!(token_not_supported_error_msg("strk", "v1")))
-            }
-            (None, None) => Err(anyhow!("--fee-token or --version must be provided")),
-            _ => Ok(()),
-        }
-    }
-}
-
 #[derive(ValueEnum, Debug, Clone)]
 pub enum DeployVersion {
     V1,
     V3,
 }
 
-impl From<DeployVersion> for FeeToken {
-    fn from(version: DeployVersion) -> Self {
-        match version {
-            DeployVersion::V1 => FeeToken::Eth,
-            DeployVersion::V3 => FeeToken::Strk,
-        }
-    }
-}
+impl_payable_transaction!(Deploy, token_not_supported_for_deployment,
+    DeployVersion::V1 => FeeToken::Eth,
+    DeployVersion::V3 => FeeToken::Strk
+);
 
 pub async fn deploy(
     deploy: Deploy,
@@ -83,7 +64,8 @@ pub async fn deploy(
 ) -> Result<DeployResponse, StarknetCommandError> {
     let fee_settings = deploy
         .fee_args
-        .fee_token(deploy.version.map(Into::into))
+        .clone()
+        .fee_token(deploy.token_from_version())
         .try_into_fee_settings(account.provider(), account.block_id())
         .await?;
 

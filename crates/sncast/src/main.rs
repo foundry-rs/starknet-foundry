@@ -13,6 +13,7 @@ use clap::{Parser, Subcommand};
 use shared::verify_and_warn_if_incompatible_rpc_version;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
+use sncast::helpers::fee::PayableTransaction;
 use sncast::helpers::scarb_utils::{
     assert_manifest_path_exists, build, build_and_load_artifacts, get_package_metadata,
     get_scarb_metadata_with_deps, BuildConfig,
@@ -189,6 +190,7 @@ async fn run_async_command(
 
     match cli.command {
         Commands::Declare(declare) => {
+            declare.validate()?;
             let account = get_account(
                 &config.account,
                 &config.accounts_file,
@@ -207,16 +209,10 @@ async fn run_async_command(
                 },
             )
             .expect("Failed to build contract");
-            let mut result = starknet_commands::declare::declare(
-                &declare.contract,
-                declare.fee.max_fee,
-                &account,
-                declare.nonce,
-                &artifacts,
-                wait_config,
-            )
-            .await
-            .map_err(handle_starknet_command_error);
+            let mut result =
+                starknet_commands::declare::declare(declare, &account, &artifacts, wait_config)
+                    .await
+                    .map_err(handle_starknet_command_error);
 
             print_command_result("declare", &mut result, numbers_format, &output_format)?;
             Ok(())

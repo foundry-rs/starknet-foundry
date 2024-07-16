@@ -12,7 +12,11 @@ fn main() {
     println!("declare_nonce: {}", declare_nonce);
     println!("debug declare_nonce: {:?}", declare_nonce);
 
-    let declare_result = declare("Mapa", Option::Some(max_fee), Option::Some(declare_nonce))
+    let declare_result = declare(
+        "Mapa",
+        FeeSettings::Eth(EthFeeSettings { max_fee: Option::Some(max_fee) }),
+        Option::Some(declare_nonce)
+    )
         .expect('declare failed');
     println!("declare_result: {}", declare_result);
     println!("debug declare_result: {:?}", declare_result);

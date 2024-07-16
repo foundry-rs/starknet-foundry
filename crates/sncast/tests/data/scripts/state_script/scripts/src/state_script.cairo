@@ -8,7 +8,11 @@ fn main() {
     let salt = 0x5;
 
     let declare_nonce = get_nonce('latest');
-    let declare_result = declare("State", Option::Some(max_fee), Option::Some(declare_nonce))
+    let declare_result = declare(
+        "State",
+        FeeSettings::Eth(EthFeeSettings { max_fee: Option::Some(max_fee) }),
+        Option::Some(declare_nonce)
+    )
         .expect('state declare failed');
 
     let class_hash = declare_result.class_hash;
