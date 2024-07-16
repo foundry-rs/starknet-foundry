@@ -84,15 +84,16 @@ pub async fn deploy(
     let fee_settings = deploy
         .fee_args
         .fee_token(deploy.version.map(Into::into))
-        .try_into()?;
+        .try_into_fee_settings(account.provider(), account.block_id())
+        .await?;
 
     let salt = extract_or_generate_salt(deploy.salt);
     let factory = ContractFactory::new(deploy.class_hash, account);
     let result = match fee_settings {
-        FeeSettings::Eth(settings) => {
+        FeeSettings::Eth { max_fee } => {
             let execution =
                 factory.deploy_v1(deploy.constructor_calldata.clone(), salt, deploy.unique);
-            let execution = match settings.max_fee {
+            let execution = match max_fee {
                 None => execution,
                 Some(max_fee) => execution.max_fee(max_fee),
             };
@@ -102,14 +103,18 @@ pub async fn deploy(
             };
             execution.send().await
         }
-        FeeSettings::Strk(settings) => {
+        FeeSettings::Strk {
+            max_gas,
+            max_gas_unit_price,
+        } => {
             let execution =
                 factory.deploy_v3(deploy.constructor_calldata.clone(), salt, deploy.unique);
-            let execution = match settings.max_gas {
+
+            let execution = match max_gas {
                 None => execution,
                 Some(max_gas) => execution.gas(max_gas),
             };
-            let execution = match settings.max_gas_unit_price {
+            let execution = match max_gas_unit_price {
                 None => execution,
                 Some(max_gas_unit_price) => execution.gas_price(max_gas_unit_price),
             };

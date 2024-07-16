@@ -39,7 +39,7 @@ use shared::print::print_as_warning;
 use shared::utils::build_readable_text;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::SCRIPT_LIB_ARTIFACT_NAME;
-use sncast::helpers::fee::FeeSettings;
+use sncast::helpers::fee::ScriptFeeSettings;
 use sncast::response::structs::ScriptRunResponse;
 use sncast::state::hashing::{
     generate_declare_tx_id, generate_deploy_tx_id, generate_invoke_tx_id,
@@ -148,7 +148,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 let constructor_calldata = input_reader.read()?;
                 let salt = input_reader.read()?;
                 let unique = input_reader.read()?;
-                let fee_args = input_reader.read::<FeeSettings>()?.into();
+                let fee_args = input_reader.read::<ScriptFeeSettings>()?.into();
                 let nonce = input_reader.read()?;
 
                 let deploy = Deploy {
