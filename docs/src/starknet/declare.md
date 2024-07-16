@@ -21,6 +21,7 @@ Then run:
 $ sncast --account myuser \
     --url http://127.0.0.1:5050/rpc \ 
     declare \
+    --fee-token strk \
     --contract-name SimpleBalance
 
 command: declare
@@ -38,3 +39,8 @@ transaction_hash: 0x7ad0d6e449e33b6581a4bb8df866c0fce3919a5ee05a30840ba521dafee2
 
 > 💡 **Info**
 > Max fee will be automatically computed if `--max-fee <MAX_FEE>` is not passed.
+
+
+> 💡 **Info**
+> You can also choose to pay in Ether by setting `--fee-token` to `eth`.
+
