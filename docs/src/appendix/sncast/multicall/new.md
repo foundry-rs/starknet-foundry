@@ -8,10 +8,6 @@ Generates an empty template for the multicall `.toml` file that may be later use
 ## Arguments
 `OUTPUT-PATH` - a path to a file to write the generated `.toml` to.
 
-## Required Common Arguments — Passed By CLI or Specified in `snfoundry.toml`
-
-* [`url`](../common.md#--url--u-rpc_url)
-
 ## `--output-path, -p <PATH>`
 Optional.
 
