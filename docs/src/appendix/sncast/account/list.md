@@ -2,6 +2,7 @@
 List all available accounts.
 
 Account information will be retrieved from the file specified in user's environment.
+The output format is dependent on user's configuration, either provided via CLI or specified in `snfoundry.toml`.
 Hides user's private keys by default.
 
 > ⚠️ **Warning**
@@ -12,6 +13,11 @@ Hides user's private keys by default.
 
 * [`url`](../common.md#--url--u-rpc_url)
 * [`accounts-file`](../common.md#--accounts-file--f-path_to_accounts_file)
+
+## Optional Common Arguments — Passed By CLI or Specified in `snfoundry.toml`
+* [`int-format`]()
+* [`hex-format`]()
+* [`json`]()
 
 ## `--display-private-keys`, `-p`
 Optional.
