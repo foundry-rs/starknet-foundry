@@ -61,3 +61,22 @@ Tests: 3 passed, 1 failed, 2 skipped, 0 ignored, 0 filtered out
 Failures:
     package_name::tests::failing
 ```
+
+## Displaying Resources Used During Tests
+
+To track resources like `builtins` / `syscalls` that are used when running tests, use `snforge test --detailed-resources`.
+
+```shell
+$ snforge test --detailed-resources
+Collected 1 test(s) from package_name package
+Running 1 test(s) from src/
+[PASS] package_name::tests::resources (gas: ~2213)
+        steps: 881
+        memory holes: 36
+        builtins: ("range_check_builtin": 32)
+        syscalls: (StorageWrite: 1, StorageRead: 1, CallContract: 1)
+
+Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+```
+
+For more information about how starknet-foundry calculates those, see [gas and resource estimation](gas-and-resource-estimation.md) section.
