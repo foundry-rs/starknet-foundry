@@ -10,7 +10,6 @@ use sncast::response::print::{print_command_result, OutputFormat};
 
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand};
-use shared::verify_and_warn_if_incompatible_rpc_version;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
 use sncast::helpers::scarb_utils::{
@@ -20,7 +19,7 @@ use sncast::helpers::scarb_utils::{
 use sncast::response::errors::handle_starknet_command_error;
 use sncast::{
     chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_default_state_file_name,
-    get_nonce, get_provider, NumbersFormat, ValidatedWaitParams, WaitForTx,
+    get_nonce, get_provider_and_verify_rpc_version, NumbersFormat, ValidatedWaitParams, WaitForTx,
 };
 use starknet::core::utils::get_selector_from_name;
 use starknet_commands::verify::Verify;
@@ -182,8 +181,7 @@ async fn run_async_command(
 
     match cli.command {
         Commands::Declare(declare) => {
-            let provider = get_provider(&config.url)?;
-            verify_and_warn_if_incompatible_rpc_version(&provider, &config.url).await?;
+            let provider = get_provider_and_verify_rpc_version(&config.url).await?;
 
             let account = get_account(
                 &config.account,
@@ -218,8 +216,7 @@ async fn run_async_command(
             Ok(())
         }
         Commands::Deploy(deploy) => {
-            let provider = get_provider(&config.url)?;
-            verify_and_warn_if_incompatible_rpc_version(&provider, &config.url).await?;
+            let provider = get_provider_and_verify_rpc_version(&config.url).await?;
 
             deploy.validate()?;
             let account = get_account(
@@ -238,8 +235,7 @@ async fn run_async_command(
             Ok(())
         }
         Commands::Call(call) => {
-            let provider = get_provider(&config.url)?;
-            verify_and_warn_if_incompatible_rpc_version(&provider, &config.url).await?;
+            let provider = get_provider_and_verify_rpc_version(&config.url).await?;
 
             let block_id = get_block_id(&call.block_id)?;
 
@@ -258,8 +254,7 @@ async fn run_async_command(
             Ok(())
         }
         Commands::Invoke(invoke) => {
-            let provider = get_provider(&config.url)?;
-            verify_and_warn_if_incompatible_rpc_version(&provider, &config.url).await?;
+            let provider = get_provider_and_verify_rpc_version(&config.url).await?;
 
             let account = get_account(
                 &config.account,
@@ -304,8 +299,7 @@ async fn run_async_command(
                     }
                 }
                 starknet_commands::multicall::Commands::Run(run) => {
-                    let provider = get_provider(&config.url)?;
-                    verify_and_warn_if_incompatible_rpc_version(&provider, &config.url).await?;
+                    let provider = get_provider_and_verify_rpc_version(&config.url).await?;
 
                     let account = get_account(
                         &config.account,
@@ -334,8 +328,7 @@ async fn run_async_command(
         }
         Commands::Account(account) => match account.command {
             account::Commands::Add(add) => {
-                let provider = get_provider(&config.url)?;
-                verify_and_warn_if_incompatible_rpc_version(&provider, &config.url).await?;
+                let provider = get_provider_and_verify_rpc_version(&config.url).await?;
 
                 let mut result = starknet_commands::account::add::add(
                     &config.url,
@@ -350,8 +343,7 @@ async fn run_async_command(
                 Ok(())
             }
             account::Commands::Create(create) => {
-                let provider = get_provider(&config.url)?;
-                verify_and_warn_if_incompatible_rpc_version(&provider, &config.url).await?;
+                let provider = get_provider_and_verify_rpc_version(&config.url).await?;
 
                 let chain_id = get_chain_id(&provider).await?;
                 let account = if config.keystore.is_none() {
@@ -386,8 +378,7 @@ async fn run_async_command(
             account::Commands::Deploy(deploy) => {
                 deploy.validate()?;
 
-                let provider = get_provider(&config.url)?;
-                verify_and_warn_if_incompatible_rpc_version(&provider, &config.url).await?;
+                let provider = get_provider_and_verify_rpc_version(&config.url).await?;
 
                 let chain_id = get_chain_id(&provider).await?;
                 let keystore_path = config.keystore.clone();
@@ -411,8 +402,7 @@ async fn run_async_command(
                 Ok(())
             }
             account::Commands::Delete(delete) => {
-                let provider = get_provider(&config.url)?;
-                verify_and_warn_if_incompatible_rpc_version(&provider, &config.url).await?;
+                let provider = get_provider_and_verify_rpc_version(&config.url).await?;
 
                 let network_name = match delete.network {
                     Some(network) => network,
@@ -436,8 +426,7 @@ async fn run_async_command(
             }
         },
         Commands::ShowConfig(_) => {
-            let provider = get_provider(&config.url)?;
-            verify_and_warn_if_incompatible_rpc_version(&provider, &config.url).await?;
+            let provider = get_provider_and_verify_rpc_version(&config.url).await?;
 
             let mut result =
                 starknet_commands::show_config::show_config(&provider, config, cli.profile).await;
@@ -445,8 +434,7 @@ async fn run_async_command(
             Ok(())
         }
         Commands::TxStatus(tx_status) => {
-            let provider = get_provider(&config.url)?;
-            verify_and_warn_if_incompatible_rpc_version(&provider, &config.url).await?;
+            let provider = get_provider_and_verify_rpc_version(&config.url).await?;
 
             let mut result =
                 starknet_commands::tx_status::tx_status(&provider, tx_status.transaction_hash)
@@ -506,11 +494,7 @@ fn run_script_command(
                 &cli.profile,
             )?;
             update_cast_config(&mut config, cli);
-            let provider = get_provider(&config.url)?;
-            runtime.block_on(verify_and_warn_if_incompatible_rpc_version(
-                &provider,
-                &config.url,
-            ))?;
+            let provider = runtime.block_on(get_provider_and_verify_rpc_version(&config.url))?;
 
             let mut artifacts = build_and_load_artifacts(
                 &package_metadata,
