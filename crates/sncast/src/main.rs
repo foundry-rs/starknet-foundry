@@ -422,10 +422,12 @@ async fn run_async_command(
                 Ok(())
             }
 
-            account::Commands::List(options) => {
-                print_account_list(&config.accounts_file, options.display_private_keys)?;
-                Ok(())
-            }
+            account::Commands::List(options) => print_account_list(
+                &config.accounts_file,
+                options.display_private_keys,
+                numbers_format,
+                &output_format,
+            ),
         },
 
         Commands::ShowConfig(_) => {
