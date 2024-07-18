@@ -49,8 +49,8 @@ async fn test_happy_case_eth(account: &str) {
     assert!(matches!(receipt, Deploy(_)));
 }
 
-#[test_case(DEVNET_OZ_CLASS_HASH_CAIRO_0.parse().unwrap(), AccountType::Oz; "cairo_0_class_hash")]
-#[test_case(OZ_CLASS_HASH, AccountType::Oz; "cairo_1_class_hash")]
+#[test_case(DEVNET_OZ_CLASS_HASH_CAIRO_0.parse().unwrap(), AccountType::OpenZeppelin; "cairo_0_class_hash")]
+#[test_case(OZ_CLASS_HASH, AccountType::OpenZeppelin; "cairo_1_class_hash")]
 #[test_case(ARGENT_CLASS_HASH, AccountType::Argent; "argent_class_hash")]
 #[test_case(BRAAVOS_CLASS_HASH, AccountType::Braavos; "braavos_class_hash")]
 #[tokio::test]

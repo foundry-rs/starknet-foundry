@@ -22,6 +22,7 @@ use sncast::{
     get_nonce, get_provider_and_verify_rpc_version, NumbersFormat, ValidatedWaitParams, WaitForTx,
 };
 use starknet::core::utils::get_selector_from_name;
+use starknet_commands::account::list::print_account_list;
 use starknet_commands::verify::Verify;
 use tokio::runtime::Runtime;
 
@@ -215,6 +216,7 @@ async fn run_async_command(
             print_command_result("declare", &mut result, numbers_format, &output_format)?;
             Ok(())
         }
+
         Commands::Deploy(deploy) => {
             let provider = get_provider_and_verify_rpc_version(&config.url).await?;
 
@@ -234,6 +236,7 @@ async fn run_async_command(
             print_command_result("deploy", &mut result, numbers_format, &output_format)?;
             Ok(())
         }
+
         Commands::Call(call) => {
             let provider = get_provider_and_verify_rpc_version(&config.url).await?;
 
@@ -253,6 +256,7 @@ async fn run_async_command(
             print_command_result("call", &mut result, numbers_format, &output_format)?;
             Ok(())
         }
+
         Commands::Invoke(invoke) => {
             let provider = get_provider_and_verify_rpc_version(&config.url).await?;
 
@@ -279,6 +283,7 @@ async fn run_async_command(
             print_command_result("invoke", &mut result, numbers_format, &output_format)?;
             Ok(())
         }
+
         Commands::Multicall(multicall) => {
             match &multicall.command {
                 starknet_commands::multicall::Commands::New(new) => {
@@ -326,6 +331,7 @@ async fn run_async_command(
             }
             Ok(())
         }
+
         Commands::Account(account) => match account.command {
             account::Commands::Add(add) => {
                 let provider = get_provider_and_verify_rpc_version(&config.url).await?;
@@ -342,6 +348,7 @@ async fn run_async_command(
                 print_command_result("account add", &mut result, numbers_format, &output_format)?;
                 Ok(())
             }
+
             account::Commands::Create(create) => {
                 let provider = get_provider_and_verify_rpc_version(&config.url).await?;
 
@@ -375,6 +382,7 @@ async fn run_async_command(
                 )?;
                 Ok(())
             }
+
             account::Commands::Deploy(deploy) => {
                 deploy.validate()?;
 
@@ -401,6 +409,7 @@ async fn run_async_command(
                 )?;
                 Ok(())
             }
+
             account::Commands::Delete(delete) => {
                 let provider = get_provider_and_verify_rpc_version(&config.url).await?;
 
@@ -424,7 +433,15 @@ async fn run_async_command(
                 )?;
                 Ok(())
             }
+
+            account::Commands::List(options) => print_account_list(
+                &config.accounts_file,
+                options.display_private_keys,
+                numbers_format,
+                &output_format,
+            ),
         },
+
         Commands::ShowConfig(_) => {
             let provider = get_provider_and_verify_rpc_version(&config.url).await?;
 
@@ -433,6 +450,7 @@ async fn run_async_command(
             print_command_result("show-config", &mut result, numbers_format, &output_format)?;
             Ok(())
         }
+
         Commands::TxStatus(tx_status) => {
             let provider = get_provider_and_verify_rpc_version(&config.url).await?;
 
@@ -443,6 +461,7 @@ async fn run_async_command(
             print_command_result("tx-status", &mut result, numbers_format, &output_format)?;
             Ok(())
         }
+
         Commands::Verify(verify) => {
             let manifest_path = assert_manifest_path_exists()?;
             let package_metadata = get_package_metadata(&manifest_path, &verify.package)?;
@@ -469,6 +488,7 @@ async fn run_async_command(
             print_command_result("verify", &mut result, numbers_format, &output_format)?;
             Ok(())
         }
+
         Commands::Script(_) => unreachable!(),
     }
 }
