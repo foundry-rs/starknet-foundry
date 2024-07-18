@@ -20,6 +20,7 @@
 * [Using Cheatcodes](testing/using-cheatcodes.md)
 * [Testing Events](testing/testing-events.md)
 * [Testing Messages to L1](testing/testing-messages-to-l1.md)
+* [Testing Workspaces](testing/testing-workspaces.md)
 * [Test Collection](testing/test-collection.md)
 * [Contract Collection](testing/contracts-collection.md)
 * [Gas and VM Resources Estimation](testing/gas-and-resource-estimation.md)
