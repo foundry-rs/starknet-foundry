@@ -313,7 +313,7 @@ pub async fn test_happy_case_keystore(account_type: &str) {
         .expect("Unable to read created file");
 
     assert_matches(
-        get_keystore_account_pattern(&account_type.parse().unwrap(), None),
+        get_keystore_account_pattern(account_type.parse().unwrap(), None),
         contents,
     );
 }
@@ -552,9 +552,9 @@ fn get_formatted_account_type(account_type: &str) -> &str {
     }
 }
 
-fn get_keystore_account_pattern(account_type: &AccountType, class_hash: Option<&str>) -> String {
+fn get_keystore_account_pattern(account_type: AccountType, class_hash: Option<&str>) -> String {
     let account_json = match account_type {
-        AccountType::Oz => {
+        AccountType::OpenZeppelin => {
             json!(
                 {
                     "version": 1,

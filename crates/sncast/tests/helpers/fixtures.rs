@@ -489,7 +489,7 @@ pub fn get_address_from_keystore(
     .unwrap();
     let class_hash = match account_type {
         AccountType::Braavos => BRAAVOS_BASE_ACCOUNT_CLASS_HASH,
-        AccountType::Oz | AccountType::Argent => FieldElement::from_hex_be(
+        AccountType::OpenZeppelin | AccountType::Argent => FieldElement::from_hex_be(
             deployment
                 .get("class_hash")
                 .and_then(serde_json::Value::as_str)
@@ -499,7 +499,9 @@ pub fn get_address_from_keystore(
     };
 
     let calldata = match account_type {
-        AccountType::Oz | AccountType::Braavos => vec![private_key.verifying_key().scalar()],
+        AccountType::OpenZeppelin | AccountType::Braavos => {
+            vec![private_key.verifying_key().scalar()]
+        }
         AccountType::Argent => vec![private_key.verifying_key().scalar(), FieldElement::ZERO],
     };
 
@@ -561,7 +563,7 @@ pub fn assert_tx_entry_success(tx_entry: &ScriptTransactionEntry, name: &str) {
 }
 
 pub async fn create_and_deploy_oz_account() -> TempDir {
-    create_and_deploy_account(OZ_CLASS_HASH, AccountType::Oz).await
+    create_and_deploy_account(OZ_CLASS_HASH, AccountType::OpenZeppelin).await
 }
 pub async fn create_and_deploy_account(
     class_hash: FieldElement,
@@ -569,7 +571,7 @@ pub async fn create_and_deploy_account(
 ) -> TempDir {
     let class_hash = &class_hash.into_hex_string();
     let account_type = match account_type {
-        AccountType::Oz => "oz",
+        AccountType::OpenZeppelin => "oz",
         AccountType::Argent => "argent",
         AccountType::Braavos => "braavos",
     };

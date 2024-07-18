@@ -101,6 +101,41 @@ result: Account successfully removed
 
 For a detailed CLI description, see [account delete command reference](../appendix/sncast/account/delete.md).
 
+### `account list`
+
+List all accounts saved in `accounts file`, grouped based on the networks they are defined on.
+
+```shell
+$ sncast --accounts-file my-account-file.json account list
+Available accounts (at <current-directory>/my-account-file.json):
+- user0
+public key: 0x2f91ed13f8f0f7d39b942c80bfcd3d0967809d99e0cc083606cbe59033d2b39
+network: alpha-sepolia
+address: 0x4f5f24ceaae64434fa2bc2befd08976b51cf8f6a5d8257f7ec3616f61de263a
+type: OpenZeppelin
+deployed: false
+legacy: false
+
+- user1
+[...]
+
+To show private keys too, run with --display-private-keys or -p
+
+$ sncast --accounts-file my-account-file.json account list --display-private-keys
+Available accounts (at <current-directory>/my-account-file.json):
+- user0
+private key: 0x1e9038bdc68ce1d27d54205256988e85
+public key: 0x2f91ed13f8f0f7d39b942c80bfcd3d0967809d99e0cc083606cbe59033d2b39
+network: alpha-sepolia
+address: 0x4f5f24ceaae64434fa2bc2befd08976b51cf8f6a5d8257f7ec3616f61de263a
+type: OpenZeppelin
+deployed: false
+legacy: false
+
+- user1
+[...]
+```
+
 ### Custom Account Contract
 
 By default, `sncast` creates/deploys an account using [OpenZeppelin's account contract class hash](https://starkscan.co/class/0x00e2eb8f5672af4e6a4e8a8f1b44989685e668489b0a25437733756c5a34a1d6).
