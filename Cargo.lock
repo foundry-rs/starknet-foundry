@@ -2061,6 +2061,7 @@ dependencies = [
  "conversions",
  "flatten-serde-json",
  "forge_runner",
+ "fs_extra",
  "futures",
  "include_dir",
  "indoc",
