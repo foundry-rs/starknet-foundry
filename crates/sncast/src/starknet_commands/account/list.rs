@@ -87,34 +87,29 @@ impl AccountDataRepresentation {
 
 type NestedMap<T> = HashMap<String, HashMap<String, T>>;
 
-fn represent(
-    data: &NestedMap<AccountData>,
+fn read_and_flatten(
+    accounts_file: &Utf8PathBuf,
     display_private_keys: bool,
     numbers_format: NumbersFormat,
-) -> NestedMap<AccountDataRepresentation> {
-    data.iter()
-        .map(|(network, accounts)| {
-            let accounts = accounts
-                .iter()
-                .map(|(name, account)| {
-                    (
-                        name.to_owned(),
-                        AccountDataRepresentation::new(
-                            account,
-                            display_private_keys,
-                            numbers_format,
-                        ),
-                    )
-                })
-                .collect::<HashMap<_, _>>();
+) -> anyhow::Result<HashMap<String, AccountDataRepresentation>> {
+    let networks: NestedMap<AccountData> = read_and_parse_json_file(accounts_file)?;
+    let mut result = HashMap::new();
 
-            (network.to_owned(), accounts)
-        })
-        .collect::<HashMap<_, _>>()
+    for (network, accounts) in networks.iter().sorted_by_key(|(name, _)| *name) {
+        for (name, data) in accounts.iter().sorted_by_key(|(name, _)| *name) {
+            let mut data_repr =
+                AccountDataRepresentation::new(data, display_private_keys, numbers_format);
+
+            data_repr.set_network(network);
+            result.insert(name.to_owned(), data_repr);
+        }
+    }
+
+    Ok(result)
 }
 
-fn print_as_json(networks: &NestedMap<AccountDataRepresentation>) -> anyhow::Result<()> {
-    if networks.values().all(|net| net.values().len() == 0) {
+fn print_as_json(networks: &HashMap<String, AccountDataRepresentation>) -> anyhow::Result<()> {
+    if networks.is_empty() {
         println!("{{}}");
         return Ok(());
     }
@@ -146,26 +141,19 @@ fn print_pretty(data: &AccountDataRepresentation, name: &str) {
 }
 
 fn print_as_human(
-    networks: &HashMap<String, HashMap<String, AccountData>>,
+    accounts: &HashMap<String, AccountDataRepresentation>,
     accounts_file_path: &str,
     display_private_keys: bool,
-    numbers_format: NumbersFormat,
 ) {
-    if networks.values().all(|net| net.values().len() == 0) {
+    if accounts.is_empty() {
         println!("No accounts available at {accounts_file_path}");
         return;
     }
 
     println!("Available accounts (at {accounts_file_path}):");
 
-    for (network, accounts) in networks.iter().sorted_by_key(|(name, _)| *name) {
-        for (name, data) in accounts.iter().sorted_by_key(|(name, _)| *name) {
-            let mut data_repr =
-                AccountDataRepresentation::new(data, display_private_keys, numbers_format);
-
-            data_repr.set_network(network);
-            print_pretty(&data_repr, name);
-        }
+    for (name, data) in accounts.iter().sorted_by_key(|(name, _)| *name) {
+        print_pretty(data, name);
     }
 
     if !display_private_keys {
@@ -186,24 +174,11 @@ pub fn print_account_list(
         .to_str()
         .context("Failed to resolve an absolute path to the accounts file")?;
 
+    let networks = read_and_flatten(accounts_file, display_private_keys, numbers_format)?;
+
     match output_format {
-        OutputFormat::Json => {
-            let networks: NestedMap<AccountData> = read_and_parse_json_file(accounts_file)?;
-            let networks = represent(&networks, display_private_keys, numbers_format);
-
-            print_as_json(&networks)?;
-        }
-        OutputFormat::Human => {
-            let networks: HashMap<String, HashMap<String, AccountData>> =
-                read_and_parse_json_file(accounts_file)?;
-
-            print_as_human(
-                &networks,
-                accounts_file_path,
-                display_private_keys,
-                numbers_format,
-            );
-        }
+        OutputFormat::Json => print_as_json(&networks)?,
+        OutputFormat::Human => print_as_human(&networks, accounts_file_path, display_private_keys),
     }
 
     Ok(())

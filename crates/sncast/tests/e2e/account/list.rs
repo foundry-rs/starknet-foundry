@@ -260,25 +260,24 @@ fn test_happy_case_json() {
 
     let expected = json!(
         {
-          "custom-network": {
             "user3": {
               "address": "0x7e00d496e324876bbc8531f2d9a82bf154d1a04a50218ee74cdd372f75a551a",
-              "public_key": "0x7e52885445756b313ea16849145363ccb73fb4ab0440dbac333cf9d13de82b9"
+              "public_key": "0x7e52885445756b313ea16849145363ccb73fb4ab0440dbac333cf9d13de82b9",
+              "network": "custom-network"
             },
             "user4": {
               "public_key": "0x43a74f86b7e204f1ba081636c9d4015e1f54f5bb03a4ae8741602a15ffbb182",
               "address": "0x7ccdf182d27c7aaa2e733b94db4a3f7b28ff56336b34abf43c15e3a9edfbe91",
               "salt": "0x54aa715a5cff30ccf7845ad4659eb1dac5b730c2541263c358c7e3a4c4a8064",
-              "deployed": true
-            }
-          },
-          "alpha-sepolia": {
+              "deployed": true,
+              "network": "custom-network"
+            },
             "user0": {
               "public_key": "0x2f91ed13f8f0f7d39b942c80bfcd3d0967809d99e0cc083606cbe59033d2b39",
               "address": "0x4f5f24ceaae64434fa2bc2befd08976b51cf8f6a5d8257f7ec3616f61de263a",
-              "type": "open_zeppelin"
+              "type": "open_zeppelin",
+              "network": "alpha-sepolia"
             }
-          }
         }
     );
 
@@ -313,27 +312,26 @@ fn test_happy_case_with_private_keys_json() {
 
     let expected = json!(
         {
-          "custom-network": {
-            "user3": {
+          "user3": {
               "address": "0x7e00d496e324876bbc8531f2d9a82bf154d1a04a50218ee74cdd372f75a551a",
               "private_key": "0xe3e70682c2094cac629f6fbed82c07cd",
-              "public_key": "0x7e52885445756b313ea16849145363ccb73fb4ab0440dbac333cf9d13de82b9"
-            },
-            "user4": {
-              "public_key": "0x43a74f86b7e204f1ba081636c9d4015e1f54f5bb03a4ae8741602a15ffbb182",
-              "address": "0x7ccdf182d27c7aaa2e733b94db4a3f7b28ff56336b34abf43c15e3a9edfbe91",
-              "salt": "0x54aa715a5cff30ccf7845ad4659eb1dac5b730c2541263c358c7e3a4c4a8064",
-              "private_key": "0x73fbb3c1eff11167598455d0408f3932e42c678bd8f7fbc6028c716867cc01f",
-              "deployed": true
-            }
+              "public_key": "0x7e52885445756b313ea16849145363ccb73fb4ab0440dbac333cf9d13de82b9",
+              "network": "custom-network"
           },
-          "alpha-sepolia": {
-            "user0": {
-              "public_key": "0x2f91ed13f8f0f7d39b942c80bfcd3d0967809d99e0cc083606cbe59033d2b39",
-              "private_key": "0x1e9038bdc68ce1d27d54205256988e85",
-              "address": "0x4f5f24ceaae64434fa2bc2befd08976b51cf8f6a5d8257f7ec3616f61de263a",
-              "type": "open_zeppelin"
-            }
+          "user4": {
+            "public_key": "0x43a74f86b7e204f1ba081636c9d4015e1f54f5bb03a4ae8741602a15ffbb182",
+            "address": "0x7ccdf182d27c7aaa2e733b94db4a3f7b28ff56336b34abf43c15e3a9edfbe91",
+            "salt": "0x54aa715a5cff30ccf7845ad4659eb1dac5b730c2541263c358c7e3a4c4a8064",
+            "private_key": "0x73fbb3c1eff11167598455d0408f3932e42c678bd8f7fbc6028c716867cc01f",
+            "deployed": true,
+            "network": "custom-network"
+          },
+          "user0": {
+            "public_key": "0x2f91ed13f8f0f7d39b942c80bfcd3d0967809d99e0cc083606cbe59033d2b39",
+            "address": "0x4f5f24ceaae64434fa2bc2befd08976b51cf8f6a5d8257f7ec3616f61de263a",
+            "type": "open_zeppelin",
+            "network": "alpha-sepolia",
+            "private_key": "0x1e9038bdc68ce1d27d54205256988e85",
           }
         }
     );
@@ -370,27 +368,26 @@ fn test_happy_case_with_private_keys_json_int_format() {
 
     let expected = json!(
         {
-          "custom-network": {
-            "user3": {
-              "address": "3562055384976875123115280411327378123839557441680670463096306030682092229914",
-              "private_key": "302934307671667531413257853548643485645",
-              "public_key": "3571077580641057962019375980836964323430604474979724507958294224671833227961"
-            },
-            "user4": {
-              "public_key": "1912535824053513524044241194146845716933313499165320136252999660831350960514",
-              "address": "3528166482527127075479645747648835917396168866434791003742065878852209458833",
-              "salt": "2393464100970799969082151102468006585314800480204341526354458084672178651236",
-              "private_key": "3278793552591849920356004222758625564696225216399892679169751024513874444319",
-              "deployed": true
-            }
+          "user3": {
+            "address": "3562055384976875123115280411327378123839557441680670463096306030682092229914",
+            "private_key": "302934307671667531413257853548643485645",
+            "public_key": "3571077580641057962019375980836964323430604474979724507958294224671833227961",
+            "network": "custom-network"
           },
-          "alpha-sepolia": {
-            "user0": {
-              "public_key": "1344783310009133679377326611173868415467858937993314384123595886829324020537",
-              "private_key": "40625681471685359029804301037638028933",
-              "address": "2243801221490456549135145738506528093449479171219304558490820973710020585018",
-              "type": "open_zeppelin"
-            }
+          "user4": {
+            "public_key": "1912535824053513524044241194146845716933313499165320136252999660831350960514",
+            "address": "3528166482527127075479645747648835917396168866434791003742065878852209458833",
+            "salt": "2393464100970799969082151102468006585314800480204341526354458084672178651236",
+            "private_key": "3278793552591849920356004222758625564696225216399892679169751024513874444319",
+            "deployed": true,
+            "network": "custom-network"
+            },
+          "user0": {
+            "public_key": "1344783310009133679377326611173868415467858937993314384123595886829324020537",
+            "private_key": "40625681471685359029804301037638028933",
+            "address": "2243801221490456549135145738506528093449479171219304558490820973710020585018",
+            "type": "open_zeppelin",
+            "network": "alpha-sepolia"
           }
         }
     );
