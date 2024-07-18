@@ -109,11 +109,6 @@ fn read_and_flatten(
 }
 
 fn print_as_json(networks: &HashMap<String, AccountDataRepresentation>) -> anyhow::Result<()> {
-    if networks.is_empty() {
-        println!("{{}}");
-        return Ok(());
-    }
-
     let json = serde_json::to_string_pretty(networks)?;
     print!("{json}");
 
