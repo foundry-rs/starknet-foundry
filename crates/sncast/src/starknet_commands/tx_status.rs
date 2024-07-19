@@ -10,6 +10,10 @@ use starknet::providers::{JsonRpcClient, Provider};
 pub struct TxStatus {
     /// Hash of the transaction
     pub transaction_hash: FieldElement,
+
+    /// RPC provider url address; overrides url from snfoundry.toml
+    #[clap(short = 'u', long = "url")]
+    pub rpc_url: Option<String>,
 }
 
 pub async fn tx_status(

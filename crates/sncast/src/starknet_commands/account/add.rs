@@ -52,6 +52,10 @@ pub struct Add {
     #[allow(clippy::struct_field_names)]
     #[clap(long)]
     pub add_profile: Option<String>,
+
+    /// RPC provider url address; overrides url from snfoundry.toml
+    #[clap(short = 'u', long = "url")]
+    pub rpc_url: Option<String>,
 }
 
 pub async fn add(

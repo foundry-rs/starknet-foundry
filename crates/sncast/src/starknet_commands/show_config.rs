@@ -9,7 +9,11 @@ use starknet::providers::JsonRpcClient;
 
 #[derive(Args)]
 #[command(about = "Show current configuration being used", long_about = None)]
-pub struct ShowConfig {}
+pub struct ShowConfig {
+    /// RPC provider url address; overrides url from snfoundry.toml
+    #[clap(short = 'u', long = "url")]
+    pub rpc_url: Option<String>,
+}
 
 #[allow(clippy::ptr_arg)]
 pub async fn show_config(

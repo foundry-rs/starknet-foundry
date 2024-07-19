@@ -47,6 +47,10 @@ pub struct Create {
     /// Custom contract class hash of declared contract
     #[clap(short, long, requires = "account_type")]
     pub class_hash: Option<FieldElement>,
+
+    /// RPC provider url address; overrides url from snfoundry.toml
+    #[clap(short = 'u', long = "url")]
+    pub rpc_url: Option<String>,
 }
 
 #[allow(clippy::too_many_arguments)]

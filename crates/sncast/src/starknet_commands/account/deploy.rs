@@ -36,6 +36,10 @@ pub struct Deploy {
     /// Version of the account deployment (can be inferred from fee token)
     #[clap(short, long)]
     pub version: Option<AccountDeployVersion>,
+
+    /// RPC provider url address; overrides url from snfoundry.toml
+    #[clap(short = 'u', long = "url")]
+    pub rpc_url: Option<String>,
 }
 
 impl Deploy {

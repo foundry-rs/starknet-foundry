@@ -25,6 +25,10 @@ pub struct Run {
     /// Max fee for the transaction. If not provided, max fee will be automatically estimated
     #[clap(short, long)]
     pub max_fee: Option<FieldElement>,
+
+    /// RPC provider url address; overrides url from snfoundry.toml
+    #[clap(short = 'u', long = "url")]
+    pub rpc_url: Option<String>,
 }
 
 #[allow(dead_code)]

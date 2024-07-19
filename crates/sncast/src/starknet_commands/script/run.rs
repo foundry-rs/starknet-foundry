@@ -67,6 +67,10 @@ pub struct Run {
     /// Do not use the state file
     #[clap(long)]
     pub no_state_file: bool,
+
+    /// RPC provider url address; overrides url from snfoundry.toml
+    #[clap(short = 'u', long = "url")]
+    pub rpc_url: Option<String>,
 }
 
 pub struct CastScriptExtension<'a> {
@@ -159,6 +163,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     fee_args,
                     nonce,
                     version: None,
+                    rpc_url: None,
                 };
 
                 let deploy_tx_id =

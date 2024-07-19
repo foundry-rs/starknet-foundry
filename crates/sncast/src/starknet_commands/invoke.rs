@@ -32,6 +32,10 @@ pub struct Invoke {
     /// Nonce of the transaction. If not provided, nonce will be set automatically
     #[clap(short, long)]
     pub nonce: Option<FieldElement>,
+
+    /// RPC provider url address; overrides url from snfoundry.toml
+    #[clap(short = 'u', long = "url")]
+    pub rpc_url: Option<String>,
 }
 
 pub async fn invoke(

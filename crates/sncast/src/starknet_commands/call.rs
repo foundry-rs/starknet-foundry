@@ -26,6 +26,10 @@ pub struct Call {
     /// and block number (u64)
     #[clap(short, long, default_value = "pending")]
     pub block_id: String,
+
+    /// RPC provider url address; overrides url from snfoundry.toml
+    #[clap(short = 'u', long = "url")]
+    pub rpc_url: Option<String>,
 }
 
 #[allow(clippy::ptr_arg)]

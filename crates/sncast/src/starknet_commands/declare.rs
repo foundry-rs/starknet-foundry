@@ -36,6 +36,10 @@ pub struct Declare {
     /// Specifies scarb package to be used
     #[clap(long)]
     pub package: Option<String>,
+
+    /// RPC provider url address; overrides url from snfoundry.toml
+    #[clap(short = 'u', long = "url")]
+    pub rpc_url: Option<String>,
 }
 
 #[allow(clippy::too_many_lines)]

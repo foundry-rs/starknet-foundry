@@ -23,7 +23,9 @@ use sncast::{
 };
 use starknet::core::utils::get_selector_from_name;
 use starknet_commands::account::list::print_account_list;
+use starknet_commands::multicall::{self};
 use starknet_commands::verify::Verify;
+use starknet_commands::{call, declare, deploy, invoke, script, show_config, tx_status};
 use tokio::runtime::Runtime;
 
 mod starknet_commands;
@@ -572,7 +574,6 @@ fn update_cast_config(config: &mut CastConfig, cli: &Cli) {
         };
     }
 
-    config.url = clone_or_else!(cli.rpc_url, config.url);
     config.account = clone_or_else!(cli.account, config.account);
     config.keystore = cli.keystore.clone().or(config.keystore.clone());
 
@@ -590,4 +591,29 @@ fn update_cast_config(config: &mut CastConfig, cli: &Cli) {
         ),
         clone_or_else!(cli.wait_timeout, config.wait_params.get_timeout()),
     );
+
+    let url = match cli.command {
+        Commands::Declare(declare::Declare { ref rpc_url, .. }) => rpc_url,
+        Commands::Deploy(deploy::Deploy { ref rpc_url, .. }) => rpc_url,
+        Commands::Call(call::Call { ref rpc_url, .. }) => rpc_url,
+        Commands::Invoke(invoke::Invoke { ref rpc_url, .. }) => rpc_url,
+        Commands::Multicall(Multicall {
+            command: multicall::Commands::Run(multicall::run::Run { ref rpc_url, .. }),
+        }) => rpc_url,
+        Commands::ShowConfig(show_config::ShowConfig { ref rpc_url, .. }) => rpc_url,
+        Commands::Script(script::Script {
+            command: script::Commands::Run(script::run::Run { ref rpc_url, .. }),
+        }) => rpc_url,
+        Commands::TxStatus(tx_status::TxStatus { ref rpc_url, .. }) => rpc_url,
+        Commands::Account(Account { ref command }) => match command {
+            account::Commands::Add(account::add::Add { ref rpc_url, .. }) => rpc_url,
+            account::Commands::Create(account::create::Create { ref rpc_url, .. }) => rpc_url,
+            account::Commands::Deploy(account::deploy::Deploy { ref rpc_url, .. }) => rpc_url,
+            account::Commands::Delete(account::delete::Delete { ref rpc_url, .. }) => rpc_url,
+            _ => &None,
+        },
+        _ => &None,
+    };
+
+    config.url = clone_or_else!(url, config.url);
 }

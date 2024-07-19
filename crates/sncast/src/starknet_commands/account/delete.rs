@@ -19,6 +19,10 @@ pub struct Delete {
     /// Assume "yes" as answer to confirmation prompt and run non-interactively
     #[clap(long, default_value = "false")]
     pub yes: bool,
+
+    /// RPC provider url address; overrides url from snfoundry.toml
+    #[clap(short = 'u', long = "url")]
+    pub rpc_url: Option<String>,
 }
 
 #[allow(clippy::too_many_arguments)]
