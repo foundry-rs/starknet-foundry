@@ -4,7 +4,9 @@ use clap::{Args, ValueEnum};
 use serde_json::Map;
 use sncast::helpers::constants::{BRAAVOS_BASE_ACCOUNT_CLASS_HASH, KEYSTORE_PASSWORD_ENV_VAR};
 use sncast::response::structs::{Felt, InvokeResponse};
-use starknet::accounts::{AccountFactory, OpenZeppelinAccountFactory};
+use starknet::accounts::{
+    AccountDeploymentV1, AccountDeploymentV3, AccountFactory, OpenZeppelinAccountFactory,
+};
 use starknet::accounts::{AccountFactoryError, ArgentAccountFactory};
 use starknet::core::types::BlockTag::Pending;
 use starknet::core::types::{BlockId, FieldElement, StarknetError::ClassHashNotFound};
@@ -15,12 +17,12 @@ use starknet::providers::{JsonRpcClient, Provider};
 use starknet::signers::{LocalWallet, SigningKey};
 
 use sncast::helpers::braavos::BraavosAccountFactory;
-use sncast::helpers::error::token_not_supported_error_msg;
-use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken};
+use sncast::helpers::error::token_not_supported_for_deployment;
+use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken, PayableTransaction};
 use sncast::{
-    chain_id_to_network_name, check_account_file_exists, get_account_data_from_accounts_file,
-    get_account_data_from_keystore, get_keystore_password, handle_rpc_error, handle_wait_for_tx,
-    AccountType, WaitForTx,
+    apply_optional, chain_id_to_network_name, check_account_file_exists,
+    get_account_data_from_accounts_file, get_account_data_from_keystore, get_keystore_password,
+    handle_rpc_error, handle_wait_for_tx, impl_payable_transaction, AccountType, WaitForTx,
 };
 
 #[derive(Args, Debug)]
@@ -38,35 +40,16 @@ pub struct Deploy {
     pub version: Option<AccountDeployVersion>,
 }
 
-impl Deploy {
-    pub fn validate(&self) -> Result<()> {
-        match (&self.version, &self.fee_args.fee_token) {
-            (Some(AccountDeployVersion::V3), Some(FeeToken::Eth)) => {
-                Err(anyhow!(token_not_supported_error_msg("eth", "v3")))
-            }
-            (Some(AccountDeployVersion::V1), Some(FeeToken::Strk)) => {
-                Err(anyhow!(token_not_supported_error_msg("strk", "v1")))
-            }
-            (None, None) => Err(anyhow!("Either --fee-token or --version must be provided")),
-            _ => Ok(()),
-        }
-    }
-}
-
 #[derive(ValueEnum, Debug, Clone)]
 pub enum AccountDeployVersion {
     V1,
     V3,
 }
 
-impl From<AccountDeployVersion> for FeeToken {
-    fn from(version: AccountDeployVersion) -> Self {
-        match version {
-            AccountDeployVersion::V1 => FeeToken::Eth,
-            AccountDeployVersion::V3 => FeeToken::Strk,
-        }
-    }
-}
+impl_payable_transaction!(Deploy, token_not_supported_for_deployment,
+    AccountDeployVersion::V1 => FeeToken::Eth,
+    AccountDeployVersion::V3 => FeeToken::Strk
+);
 
 #[allow(clippy::too_many_arguments)]
 pub async fn deploy(
@@ -78,16 +61,16 @@ pub async fn deploy(
     account: &str,
     keystore_path: Option<Utf8PathBuf>,
 ) -> Result<InvokeResponse> {
-    let fee_settings = deploy_args
+    let fee_args = deploy_args
         .fee_args
-        .fee_token(deploy_args.version.map(Into::into))
-        .try_into()?;
+        .clone()
+        .fee_token(deploy_args.token_from_version());
 
     if let Some(keystore_path_) = keystore_path {
         deploy_from_keystore(
             provider,
             chain_id,
-            fee_settings,
+            fee_args,
             wait_config,
             account,
             keystore_path_,
@@ -103,7 +86,7 @@ pub async fn deploy(
             accounts_file,
             account_name,
             chain_id,
-            fee_settings,
+            fee_args,
             wait_config,
         )
         .await
@@ -113,7 +96,7 @@ pub async fn deploy(
 async fn deploy_from_keystore(
     provider: &JsonRpcClient<HttpTransport>,
     chain_id: FieldElement,
-    fee_settings: FeeSettings,
+    fee_args: FeeArgs,
     wait_config: WaitForTx,
     account: &str,
     keystore_path: Utf8PathBuf,
@@ -185,7 +168,7 @@ async fn deploy_from_keystore(
             private_key,
             salt,
             chain_id,
-            fee_settings,
+            fee_args,
             wait_config,
         )
         .await?
@@ -201,7 +184,7 @@ async fn deploy_from_accounts_file(
     accounts_file: Utf8PathBuf,
     name: String,
     chain_id: FieldElement,
-    fee_settings: FeeSettings,
+    fee_args: FeeArgs,
     wait_config: WaitForTx,
 ) -> Result<InvokeResponse> {
     let account_data = get_account_data_from_accounts_file(&name, chain_id, &accounts_file)?;
@@ -221,7 +204,7 @@ async fn deploy_from_accounts_file(
             .salt
             .context("Failed to get salt from accounts file")?,
         chain_id,
-        fee_settings,
+        fee_args,
         wait_config,
     )
     .await?;
@@ -239,7 +222,7 @@ async fn get_deployment_result(
     private_key: SigningKey,
     salt: FieldElement,
     chain_id: FieldElement,
-    fee_settings: FeeSettings,
+    fee_args: FeeArgs,
     wait_config: WaitForTx,
 ) -> Result<InvokeResponse> {
     match account_type {
@@ -253,15 +236,7 @@ async fn get_deployment_result(
             )
             .await?;
 
-            deploy_account(
-                factory,
-                provider,
-                salt,
-                fee_settings,
-                wait_config,
-                class_hash,
-            )
-            .await
+            deploy_account(factory, provider, salt, fee_args, wait_config, class_hash).await
         }
         AccountType::OpenZeppelin => {
             let factory = OpenZeppelinAccountFactory::new(
@@ -272,15 +247,7 @@ async fn get_deployment_result(
             )
             .await?;
 
-            deploy_account(
-                factory,
-                provider,
-                salt,
-                fee_settings,
-                wait_config,
-                class_hash,
-            )
-            .await
+            deploy_account(factory, provider, salt, fee_args, wait_config, class_hash).await
         }
         AccountType::Braavos => {
             let factory = BraavosAccountFactory::new(
@@ -292,15 +259,7 @@ async fn get_deployment_result(
             )
             .await?;
 
-            deploy_account(
-                factory,
-                provider,
-                salt,
-                fee_settings,
-                wait_config,
-                class_hash,
-            )
-            .await
+            deploy_account(factory, provider, salt, fee_args, wait_config, class_hash).await
         }
     }
 }
@@ -309,27 +268,34 @@ async fn deploy_account<T>(
     account_factory: T,
     provider: &JsonRpcClient<HttpTransport>,
     salt: FieldElement,
-    fee_settings: FeeSettings,
+    fee_args: FeeArgs,
     wait_config: WaitForTx,
     class_hash: FieldElement,
 ) -> Result<InvokeResponse>
 where
     T: AccountFactory + Sync,
 {
+    let fee_settings = fee_args
+        .try_into_fee_settings(account_factory.provider(), account_factory.block_id())
+        .await?;
     let result = match fee_settings {
-        FeeSettings::Eth(settings) => {
+        FeeSettings::Eth { max_fee } => {
             let deployment = account_factory.deploy_v1(salt);
-            let eth_fee = settings.get_or_estimate(&deployment).await?;
-            deployment.max_fee(eth_fee.max_fee).send().await
+            let deployment = apply_optional(deployment, max_fee, AccountDeploymentV1::max_fee);
+            deployment.send().await
         }
-        FeeSettings::Strk(settings) => {
+        FeeSettings::Strk {
+            max_gas,
+            max_gas_unit_price,
+        } => {
             let deployment = account_factory.deploy_v3(salt);
-            let strk_fee = settings.get_or_estimate(&deployment).await?;
-            deployment
-                .gas(strk_fee.max_gas)
-                .gas_price(strk_fee.max_gas_unit_price)
-                .send()
-                .await
+            let deployment = apply_optional(deployment, max_gas, AccountDeploymentV3::gas);
+            let deployment = apply_optional(
+                deployment,
+                max_gas_unit_price,
+                AccountDeploymentV3::gas_price,
+            );
+            deployment.send().await
         }
     };
 
