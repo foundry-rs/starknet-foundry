@@ -22,12 +22,12 @@ pub async fn test_happy_case(input_account_type: &str, saved_type: &str) {
     let accounts_file = "accounts.json";
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "account",
         "add",
+        "--url",
+        URL,
         "--name",
         "my_account_add",
         "--address",
@@ -76,12 +76,12 @@ pub async fn test_existent_account_address() {
     let accounts_file = "accounts.json";
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "account",
         "add",
+        "--url",
+        URL,
         "--name",
         "my_account_add",
         "--address",
@@ -123,12 +123,12 @@ pub async fn test_existent_account_address_and_incorrect_class_hash() {
     let accounts_file = "accounts.json";
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "account",
         "add",
+        "--url",
+        URL,
         "--name",
         "my_account_add",
         "--address",
@@ -155,12 +155,12 @@ pub async fn test_nonexistent_account_address_and_nonexistent_class_hash() {
     let accounts_file = "accounts.json";
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "account",
         "add",
+        "--url",
+        URL,
         "--name",
         "my_account_add",
         "--address",
@@ -187,12 +187,12 @@ pub async fn test_nonexistent_account_address() {
     let accounts_file = "accounts.json";
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "account",
         "add",
+        "--url",
+        URL,
         "--name",
         "my_account_add",
         "--address",
@@ -217,12 +217,12 @@ pub async fn test_happy_case_add_profile() {
     let accounts_file = "accounts.json";
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "account",
         "add",
+        "--url",
+        URL,
         "--name",
         "my_account_add",
         "--address",
@@ -284,12 +284,12 @@ pub async fn test_detect_deployed() {
     let accounts_file = "accounts.json";
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "account",
         "add",
+        "--url",
+        URL,
         "--name",
         "my_account_add",
         "--address",
@@ -333,10 +333,10 @@ pub async fn test_detect_deployed() {
 #[tokio::test]
 pub async fn test_invalid_public_key() {
     let args = vec![
-        "--url",
-        URL,
         "account",
         "add",
+        "--url",
+        URL,
         "--name",
         "my_account_add",
         "--address",
@@ -388,12 +388,12 @@ pub async fn test_private_key_from_file() {
     fs::write(temp_dir.path().join(private_key_file), "0x456").unwrap();
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "account",
         "add",
+        "--url",
+        URL,
         "--name",
         "my_account_add",
         "--address",
@@ -463,10 +463,10 @@ pub async fn test_accept_only_one_private_key() {
 #[tokio::test]
 pub async fn test_invalid_private_key_file_path() {
     let args = vec![
-        "--url",
-        URL,
         "account",
         "add",
+        "--url",
+        URL,
         "--name",
         "my_account_add",
         "--address",
@@ -501,12 +501,12 @@ pub async fn test_invalid_private_key_in_file() {
     .unwrap();
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         "accounts.json",
         "account",
         "add",
+        "--url",
+        URL,
         "--name",
         "my_account_add",
         "--address",
@@ -538,12 +538,12 @@ pub async fn test_private_key_as_int_in_file() {
     fs::write(temp_dir.path().join(private_key_file), "1110").unwrap();
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "account",
         "add",
+        "--url",
+        URL,
         "--name",
         "my_account_add",
         "--address",
@@ -589,12 +589,12 @@ pub async fn test_empty_config_add_profile() {
     let accounts_file = "accounts.json";
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "account",
         "add",
+        "--url",
+        URL,
         "--name",
         "my_account_add",
         "--address",

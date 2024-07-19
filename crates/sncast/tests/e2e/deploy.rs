@@ -1,10 +1,10 @@
 use crate::helpers::constants::{
-    ACCOUNT, CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA, DEVNET_OZ_CLASS_HASH_CAIRO_0,
-    MAP_CONTRACT_CLASS_HASH_SEPOLIA, URL,
+    ACCOUNT, ACCOUNT_FILE_PATH, CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA,
+    DEVNET_OZ_CLASS_HASH_CAIRO_0, MAP_CONTRACT_CLASS_HASH_SEPOLIA, URL,
 };
 use crate::helpers::fixtures::{
-    create_and_deploy_account, create_and_deploy_oz_account, default_cli_args,
-    get_transaction_hash, get_transaction_receipt,
+    create_and_deploy_account, create_and_deploy_oz_account, get_transaction_hash,
+    get_transaction_receipt,
 };
 use crate::helpers::runner::runner;
 use indoc::indoc;
@@ -22,13 +22,16 @@ use test_case::test_case;
 #[test_case("braavos"; "braavos_account")]
 #[tokio::test]
 async fn test_happy_case_eth(account: &str) {
-    let mut args = default_cli_args();
-    args.append(&mut vec![
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
         "--account",
         account,
         "--int-format",
         "--json",
         "deploy",
+        "--url",
+        URL,
         "--class-hash",
         MAP_CONTRACT_CLASS_HASH_SEPOLIA,
         "--salt",
@@ -38,7 +41,7 @@ async fn test_happy_case_eth(account: &str) {
         "99999999999999999",
         "--fee-token",
         "eth",
-    ]);
+    ];
 
     let snapbox = runner(&args);
     let output = snapbox.assert().success().get_output().stdout.clone();
@@ -57,8 +60,6 @@ async fn test_happy_case_eth(account: &str) {
 async fn test_happy_case_strk(class_hash: FieldElement, account_type: AccountType) {
     let tempdir = create_and_deploy_account(class_hash, account_type).await;
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         "accounts.json",
         "--account",
@@ -66,6 +67,8 @@ async fn test_happy_case_strk(class_hash: FieldElement, account_type: AccountTyp
         "--int-format",
         "--json",
         "deploy",
+        "--url",
+        URL,
         "--class-hash",
         MAP_CONTRACT_CLASS_HASH_SEPOLIA,
         "--salt",
@@ -91,8 +94,6 @@ async fn test_happy_case_strk(class_hash: FieldElement, account_type: AccountTyp
 async fn test_happy_case_versions(version: &str) {
     let tempdir = create_and_deploy_oz_account().await;
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         "accounts.json",
         "--account",
@@ -100,6 +101,8 @@ async fn test_happy_case_versions(version: &str) {
         "--int-format",
         "--json",
         "deploy",
+        "--url",
+        URL,
         "--class-hash",
         MAP_CONTRACT_CLASS_HASH_SEPOLIA,
         "--salt",
@@ -135,8 +138,6 @@ async fn test_happy_case_strk_different_fees(
     let tempdir = create_and_deploy_oz_account().await;
 
     let mut args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         "accounts.json",
         "--account",
@@ -144,6 +145,8 @@ async fn test_happy_case_strk_different_fees(
         "--int-format",
         "--json",
         "deploy",
+        "--url",
+        URL,
         "--class-hash",
         MAP_CONTRACT_CLASS_HASH_SEPOLIA,
         "--salt",
@@ -179,8 +182,6 @@ async fn test_invalid_version_and_token_combination(fee_token: &str, version: &s
     let tempdir = create_and_deploy_oz_account().await;
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         "accounts.json",
         "--account",
@@ -188,6 +189,8 @@ async fn test_invalid_version_and_token_combination(fee_token: &str, version: &s
         "--int-format",
         "--json",
         "deploy",
+        "--url",
+        URL,
         "--class-hash",
         MAP_CONTRACT_CLASS_HASH_SEPOLIA,
         "--salt",
@@ -209,13 +212,16 @@ async fn test_invalid_version_and_token_combination(fee_token: &str, version: &s
 }
 #[tokio::test]
 async fn test_happy_case_with_constructor() {
-    let mut args = default_cli_args();
-    args.append(&mut vec![
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
         "--account",
         "user4",
         "--int-format",
         "--json",
         "deploy",
+        "--url",
+        URL,
         "--fee-token",
         "eth",
         "--constructor-calldata",
@@ -224,7 +230,7 @@ async fn test_happy_case_with_constructor() {
         "0x0",
         "--class-hash",
         CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA,
-    ]);
+    ];
 
     let snapbox = runner(&args);
     let output = snapbox.assert().success().get_output().stdout.clone();
@@ -237,18 +243,21 @@ async fn test_happy_case_with_constructor() {
 
 #[test]
 fn test_wrong_calldata() {
-    let mut args = default_cli_args();
-    args.append(&mut vec![
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
         "--account",
         "user9",
         "deploy",
+        "--url",
+        URL,
         "--fee-token",
         "eth",
         "--class-hash",
         CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA,
         "--constructor-calldata",
         "0x1 0x1",
-    ]);
+    ];
 
     let snapbox = runner(&args);
     let output = snapbox.assert().success();
@@ -264,16 +273,19 @@ fn test_wrong_calldata() {
 
 #[tokio::test]
 async fn test_contract_not_declared() {
-    let mut args = default_cli_args();
-    args.append(&mut vec![
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
         "--account",
         ACCOUNT,
         "deploy",
+        "--url",
+        URL,
         "--class-hash",
         "0x1",
         "--fee-token",
         "eth",
-    ]);
+    ];
 
     let snapbox = runner(&args);
     let output = snapbox.assert().success();
@@ -289,18 +301,21 @@ async fn test_contract_not_declared() {
 
 #[test]
 fn test_contract_already_deployed() {
-    let mut args = default_cli_args();
-    args.append(&mut vec![
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
         "--account",
         "user1",
         "deploy",
+        "--url",
+        URL,
         "--class-hash",
         MAP_CONTRACT_CLASS_HASH_SEPOLIA,
         "--salt",
         "0x1",
         "--fee-token",
         "eth",
-    ]);
+    ];
 
     let snapbox = runner(&args);
     let output = snapbox.assert().success();
@@ -316,12 +331,15 @@ fn test_contract_already_deployed() {
 
 #[test]
 fn test_too_low_max_fee() {
-    let mut args = default_cli_args();
-    args.append(&mut vec![
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
         "--account",
         "user7",
         "--wait",
         "deploy",
+        "--url",
+        URL,
         "--class-hash",
         MAP_CONTRACT_CLASS_HASH_SEPOLIA,
         "--salt",
@@ -331,7 +349,7 @@ fn test_too_low_max_fee() {
         "1",
         "--fee-token",
         "eth",
-    ]);
+    ];
 
     let snapbox = runner(&args);
     let output = snapbox.assert().success();

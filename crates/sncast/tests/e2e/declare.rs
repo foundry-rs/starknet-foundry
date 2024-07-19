@@ -22,8 +22,6 @@ async fn test_happy_case(account: &str) {
         duplicate_contract_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", account);
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_json_path.as_str(),
         "--account",
@@ -31,6 +29,8 @@ async fn test_happy_case(account: &str) {
         "--int-format",
         "--json",
         "declare",
+        "--url",
+        URL,
         "--contract-name",
         "Map",
         "--max-fee",
@@ -53,8 +53,6 @@ async fn test_happy_case_specify_package() {
     let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/multiple_packages");
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_json_path.as_str(),
         "--account",
@@ -62,6 +60,8 @@ async fn test_happy_case_specify_package() {
         "--int-format",
         "--json",
         "declare",
+        "--url",
+        URL,
         "--contract-name",
         "supercomplexcode",
         "--package",
@@ -88,13 +88,13 @@ async fn test_contract_already_declared() {
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_json_path.as_str(),
         "--account",
         "user1",
         "declare",
+        "--url",
+        URL,
         "--contract-name",
         "Map",
         "--fee-token",
@@ -119,14 +119,14 @@ async fn test_invalid_nonce() {
         duplicate_contract_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "1123");
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_json_path.as_str(),
         "--account",
         "user8",
         "--int-format",
         "declare",
+        "--url",
+        URL,
         "--contract-name",
         "Map",
         "--max-fee",
@@ -155,13 +155,13 @@ async fn test_wrong_contract_name_passed() {
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_json_path.as_str(),
         "--account",
         "user1",
         "declare",
+        "--url",
+        URL,
         "--contract-name",
         "nonexistent",
         "--fee-token",
@@ -185,13 +185,13 @@ fn test_scarb_build_fails_when_wrong_cairo_path() {
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_json_path.as_str(),
         "--account",
         "user1",
         "declare",
+        "--url",
+        URL,
         "--contract-name",
         "BuildFails",
         "--fee-token",
@@ -213,13 +213,13 @@ fn test_scarb_build_fails_scarb_toml_does_not_exist() {
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_json_path.as_str(),
         "--account",
         "user1",
         "declare",
+        "--url",
+        URL,
         "--contract-name",
         "BuildFails",
         "--fee-token",
@@ -235,13 +235,13 @@ fn test_scarb_build_fails_manifest_does_not_exist() {
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_json_path.as_str(),
         "--account",
         "user1",
         "declare",
+        "--url",
+        URL,
         "--contract-name",
         "BuildFails",
         "--fee-token",
@@ -266,14 +266,14 @@ fn test_too_low_max_fee() {
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_json_path.as_str(),
         "--account",
         "user6",
         "--wait",
         "declare",
+        "--url",
+        URL,
         "--contract-name",
         "Map",
         "--max-fee",
@@ -301,13 +301,13 @@ fn test_scarb_no_sierra_artifact() {
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_json_path.as_str(),
         "--account",
         "user1",
         "declare",
+        "--url",
+        URL,
         "--contract-name",
         "minimal_contract",
         "--fee-token",
@@ -323,13 +323,13 @@ fn test_scarb_no_casm_artifact() {
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_json_path.as_str(),
         "--account",
         "user1",
         "declare",
+        "--url",
+        URL,
         "--contract-name",
         "minimal_contract",
         "--fee-token",
@@ -354,8 +354,6 @@ async fn test_many_packages_default() {
     let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/multiple_packages");
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_json_path.as_str(),
         "--account",
@@ -363,6 +361,8 @@ async fn test_many_packages_default() {
         "--int-format",
         "--json",
         "declare",
+        "--url",
+        URL,
         "--contract-name",
         "supercomplexcode2",
         "--max-fee",
@@ -385,8 +385,6 @@ async fn test_worskpaces_package_specified_virtual_fibonacci() {
     let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/virtual_workspace");
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_json_path.as_str(),
         "--account",
@@ -394,6 +392,8 @@ async fn test_worskpaces_package_specified_virtual_fibonacci() {
         "--int-format",
         "--json",
         "declare",
+        "--url",
+        URL,
         "--package",
         "cast_fibonacci",
         "--contract-name",
@@ -418,14 +418,14 @@ async fn test_worskpaces_package_no_contract() {
     let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/virtual_workspace");
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_json_path.as_str(),
         "--account",
         "user8",
         "--int-format",
         "declare",
+        "--url",
+        URL,
         "--package",
         "cast_addition",
         "--contract-name",
@@ -459,13 +459,13 @@ async fn test_no_scarb_profile() {
     .expect("Failed to copy config file to temp dir");
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_json_path.as_str(),
         "--profile",
         "profile5",
         "declare",
+        "--url",
+        URL,
         "--contract-name",
         "Map",
         "--max-fee",

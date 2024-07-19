@@ -579,12 +579,12 @@ pub async fn create_and_deploy_account(
     let accounts_file = "accounts.json";
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "account",
         "create",
+        "--url",
+        URL,
         "--name",
         "my_account",
         "--class-hash",
@@ -607,13 +607,13 @@ pub async fn create_and_deploy_account(
     .await;
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "--json",
         "account",
         "deploy",
+        "--url",
+        URL,
         "--name",
         "my_account",
         "--max-fee",

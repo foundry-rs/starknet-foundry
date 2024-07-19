@@ -1,4 +1,4 @@
-use crate::helpers::fixtures::default_cli_args;
+use crate::helpers::constants::ACCOUNT_FILE_PATH;
 use crate::helpers::runner::runner;
 use crate::{e2e::account::helpers::create_tempdir_with_accounts_file, helpers::constants::URL};
 use indoc::indoc;
@@ -6,15 +6,18 @@ use shared::test_utils::output_assert::{assert_stderr_contains, AsOutput};
 
 #[test]
 pub fn test_no_accounts_in_network() {
-    let mut args = default_cli_args();
-    args.append(&mut vec![
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
         "account",
         "delete",
+        "--url",
+        URL,
         "--name",
         "user99",
         "--network",
         "my-custom-network",
-    ]);
+    ];
 
     let snapbox = runner(&args);
     let output = snapbox.assert().success();
@@ -30,8 +33,16 @@ pub fn test_no_accounts_in_network() {
 
 #[test]
 pub fn test_account_does_not_exist() {
-    let mut args = default_cli_args();
-    args.append(&mut vec!["account", "delete", "--name", "user99"]);
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "account",
+        "delete",
+        "--url",
+        URL,
+        "--name",
+        "user99",
+    ];
 
     let snapbox = runner(&args);
     let output = snapbox.assert().success();
@@ -53,12 +64,12 @@ pub fn test_delete_abort() {
 
     // Now delete dummy account
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         &accounts_file_name,
         "account",
         "delete",
+        "--url",
+        URL,
         "--name",
         "user3",
         "--network",
@@ -86,12 +97,12 @@ pub fn test_happy_case() {
 
     // Now delete dummy account
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         &accounts_file_name,
         "account",
         "delete",
+        "--url",
+        URL,
         "--name",
         "user3",
         "--network",
@@ -115,12 +126,12 @@ pub fn test_happy_case_without_network_args() {
 
     // Now delete dummy account
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         &accounts_file_name,
         "account",
         "delete",
+        "--url",
+        URL,
         "--name",
         "user0",
     ];
@@ -142,12 +153,12 @@ pub fn test_happy_case_with_yes_flag() {
 
     // Now delete dummy account
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         &accounts_file_name,
         "account",
         "delete",
+        "--url",
+        URL,
         "--name",
         "user3",
         "--network",
