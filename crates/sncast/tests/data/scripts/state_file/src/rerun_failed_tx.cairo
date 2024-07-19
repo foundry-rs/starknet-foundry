@@ -1,5 +1,6 @@
 use sncast_std::{
-    declare, deploy, invoke, call, DeclareResult, DeployResult, InvokeResult, CallResult, get_nonce
+    declare, deploy, invoke, call, DeclareResult, DeployResult, InvokeResult, CallResult, get_nonce,
+    FeeSettings, EthFeeSettings
 };
 
 fn main() {
@@ -7,6 +8,12 @@ fn main() {
         .try_into()
         .expect('Invalid contract address value');
 
-    invoke(map_contract_address, selector!("put"), array![0x10, 0x1], Option::None, Option::None)
+    invoke(
+        map_contract_address,
+        selector!("put"),
+        array![0x10, 0x1],
+        FeeSettings::Eth(EthFeeSettings { max_fee: Option::None }),
+        Option::None
+    )
         .unwrap();
 }

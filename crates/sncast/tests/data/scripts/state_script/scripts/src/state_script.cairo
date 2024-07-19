@@ -8,7 +8,11 @@ fn main() {
     let salt = 0x5;
 
     let declare_nonce = get_nonce('latest');
-    let declare_result = declare("State", Option::Some(max_fee), Option::Some(declare_nonce))
+    let declare_result = declare(
+        "State",
+        FeeSettings::Eth(EthFeeSettings { max_fee: Option::Some(max_fee) }),
+        Option::Some(declare_nonce)
+    )
         .expect('state declare failed');
 
     let class_hash = declare_result.class_hash;
@@ -29,7 +33,7 @@ fn main() {
         deploy_result.contract_address,
         selector!("put"),
         array![0x1, 0x2],
-        Option::Some(max_fee),
+        FeeSettings::Eth(EthFeeSettings { max_fee: Option::Some(max_fee) }),
         Option::Some(invoke_nonce)
     )
         .expect('state invoke failed');

@@ -1,7 +1,9 @@
 use std::collections::HashMap;
 use std::fs;
 
+use crate::starknet_commands::declare::Declare;
 use crate::starknet_commands::deploy::Deploy;
+use crate::starknet_commands::invoke::Invoke;
 use crate::starknet_commands::{call, declare, deploy, invoke, tx_status};
 use crate::{get_account, get_nonce, WaitForTx};
 use anyhow::{anyhow, Context, Result};
@@ -39,7 +41,7 @@ use shared::print::print_as_warning;
 use shared::utils::build_readable_text;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::SCRIPT_LIB_ARTIFACT_NAME;
-use sncast::helpers::fee::FeeSettings;
+use sncast::helpers::fee::ScriptFeeSettings;
 use sncast::response::structs::ScriptRunResponse;
 use sncast::state::hashing::{
     generate_declare_tx_id, generate_deploy_tx_id, generate_invoke_tx_id,
@@ -116,11 +118,20 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 Ok(CheatcodeHandlingResult::from_serializable(call_result))
             }
             "declare" => {
-                let contract_name: String = input_reader.read::<ByteArray>()?.into();
-                let max_fee = input_reader.read()?;
+                let contract: String = input_reader.read::<ByteArray>()?.into();
+                let fee_args = input_reader.read::<ScriptFeeSettings>()?.into();
                 let nonce = input_reader.read()?;
 
-                let declare_tx_id = generate_declare_tx_id(contract_name.as_str());
+                let declare = Declare {
+                    contract: contract.clone(),
+                    fee_args,
+                    nonce,
+                    package: None,
+                    version: None,
+                    rpc_url: None,
+                };
+
+                let declare_tx_id = generate_declare_tx_id(contract.as_str());
 
                 if let Some(success_output) =
                     self.state.get_output_if_success(declare_tx_id.as_str())
@@ -129,10 +140,8 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 }
 
                 let declare_result = self.tokio_runtime.block_on(declare::declare(
-                    &contract_name,
-                    max_fee,
+                    declare,
                     self.account()?,
-                    nonce,
                     self.artifacts,
                     WaitForTx {
                         wait: true,
@@ -152,7 +161,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 let constructor_calldata = input_reader.read()?;
                 let salt = input_reader.read()?;
                 let unique = input_reader.read()?;
-                let fee_args = input_reader.read::<FeeSettings>()?.into();
+                let fee_args = input_reader.read::<ScriptFeeSettings>()?.into();
                 let nonce = input_reader.read()?;
 
                 let deploy = Deploy {
@@ -196,8 +205,18 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 let contract_address = input_reader.read()?;
                 let function_selector = input_reader.read()?;
                 let calldata: Vec<_> = input_reader.read()?;
-                let max_fee = input_reader.read()?;
+                let fee_args = input_reader.read::<ScriptFeeSettings>()?.into();
                 let nonce = input_reader.read()?;
+
+                let invoke = Invoke {
+                    contract_address,
+                    function: String::new(),
+                    calldata: calldata.clone(),
+                    fee_args,
+                    nonce,
+                    version: None,
+                    rpc_url: None,
+                };
 
                 let invoke_tx_id =
                     generate_invoke_tx_id(contract_address, function_selector, &calldata);
@@ -209,12 +228,9 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 }
 
                 let invoke_result = self.tokio_runtime.block_on(invoke::invoke(
-                    contract_address,
+                    invoke,
                     function_selector,
-                    calldata,
-                    max_fee,
                     self.account()?,
-                    nonce,
                     WaitForTx {
                         wait: true,
                         wait_params: self.config.wait_params,

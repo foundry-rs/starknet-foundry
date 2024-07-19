@@ -126,7 +126,7 @@ async fn test_happy_case_versions(version: &str) {
 #[test_case(None, Some("999"), None; "max_gas")]
 #[test_case(None, None, Some("999999999999"); "max_gas_unit_price")]
 #[test_case(None, None, None; "none")]
-#[test_case(Some("9999999999999"), None, Some("999999999999"); "max_fee_max_gas_unit_price")]
+#[test_case(Some("999999999999999"), None, Some("999999999999"); "max_fee_max_gas_unit_price")]
 #[test_case(None, Some("999"), Some("999999999999"); "max_gas_max_gas_unit_price")]
 #[test_case(Some("999999999999999"), Some("999"), None; "max_fee_max_gas")]
 #[tokio::test]
@@ -176,7 +176,7 @@ async fn test_happy_case_strk_different_fees(
 }
 
 #[test_case("eth", "v3"; "eth-v3")]
-#[test_case("strk", "v1"; "strk-v3")]
+#[test_case("strk", "v1"; "strk-v1")]
 #[tokio::test]
 async fn test_invalid_version_and_token_combination(fee_token: &str, version: &str) {
     let tempdir = create_and_deploy_oz_account().await;

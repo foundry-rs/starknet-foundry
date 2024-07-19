@@ -22,8 +22,13 @@ contracts from within Cairo, its interface, internals and feature set can change
 >
 > Example:
 >
->```cairo
->  let declare_result = declare("Map", Option::Some(max_fee), Option::Some(nonce)).expect('declare failed');
+>```rust
+>      let declare_result = declare(
+>        "Map",
+>        FeeSettings::Eth(EthFeeSettings { max_fee: Option::Some(max_fee) }),
+>        Option::Some(nonce)
+>    )
+>        .expect('declare failed');
 >```
 
 Some of the planned features that will be included in future versions are:
@@ -171,7 +176,7 @@ For more details, see [init command](../appendix/sncast/script/init.md).
 
 This example shows how to call an already deployed contract. Please find full example with contract deployment [here](#full-example-with-contract-deployment).
 
-```cairo
+```rust
 use sncast_std::{invoke, call, CallResult};
 
 fn main() {
@@ -225,7 +230,8 @@ This example script declares, deploys and interacts with an example [map contrac
 
 ```rust
 use sncast_std::{
-    declare, deploy, invoke, call, DeclareResult, DeployResult, InvokeResult, CallResult, get_nonce, FeeSettings, EthFeeSettings
+    declare, deploy, invoke, call, DeclareResult, DeployResult, InvokeResult, CallResult, get_nonce,
+    FeeSettings, EthFeeSettings
 };
 
 fn main() {
@@ -233,7 +239,11 @@ fn main() {
     let salt = 0x3;
 
     let declare_nonce = get_nonce('latest');
-    let declare_result = declare("Map", Option::Some(max_fee), Option::Some(declare_nonce))
+    let declare_result = declare(
+        "Map",
+        FeeSettings::Eth(EthFeeSettings { max_fee: Option::Some(max_fee) }),
+        Option::Some(declare_nonce)
+    )
         .expect('map declare failed');
 
     let class_hash = declare_result.class_hash;
@@ -243,7 +253,7 @@ fn main() {
         ArrayTrait::new(),
         Option::Some(salt),
         true,
-        FeeSettings::Eth(EthFeeSettings {max_fee: Option::Some(max_fee)}),
+        FeeSettings::Eth(EthFeeSettings { max_fee: Option::Some(max_fee) }),
         Option::Some(deploy_nonce)
     )
         .expect('map deploy failed');
@@ -254,7 +264,7 @@ fn main() {
         deploy_result.contract_address,
         selector!("put"),
         array![0x1, 0x2],
-        Option::Some(max_fee),
+        FeeSettings::Eth(EthFeeSettings { max_fee: Option::Some(max_fee) }),
         Option::Some(invoke_nonce)
     )
         .expect('map invoke failed');
@@ -263,9 +273,7 @@ fn main() {
     let call_result = call(deploy_result.contract_address, selector!("get"), array![0x1])
         .expect('map call failed');
     assert(call_result.data == array![0x2], *call_result.data.at(0));
-
 }
-
 ```
 
 The script should be included in a scarb package. The directory structure and config for this example looks like this:
@@ -367,14 +375,19 @@ Script errors implement `Debug` trait, allowing the error to be printed to stdou
 
 ```rust
 use sncast_std::{
-    get_nonce, declare, DeclareResult, ScriptCommandError, ProviderError, StarknetError
+    get_nonce, declare, DeclareResult, ScriptCommandError, ProviderError, StarknetError,
+    FeeSettings, EthFeeSettings
 };
 
 fn main() {
     let max_fee = 9999999999999999999999999999999999;
 
     let declare_nonce = get_nonce('latest');
-    let declare_result = declare("Map", Option::Some(max_fee), Option::Some(declare_nonce))
+    let declare_result = declare(
+        "Map",
+        FeeSettings::Eth(EthFeeSettings { max_fee: Option::Some(max_fee) }),
+        Option::Some(declare_nonce)
+    )
         .unwrap_err();
     println!("{:?}", declare_result);
 
@@ -385,6 +398,7 @@ fn main() {
         'ohno'
     )
 }
+
 ```
 
 stdout:

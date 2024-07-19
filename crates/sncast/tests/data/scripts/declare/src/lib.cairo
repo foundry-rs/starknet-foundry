@@ -4,4 +4,5 @@ mod with_invalid_max_fee;
 mod with_invalid_nonce;
 mod insufficient_account_balance;
 mod time_out;
+mod strk_fee_settings;
 

@@ -18,10 +18,10 @@ the `--version` and `--fee-token` flags.
 
 When deploying an account, you can specify the version of the transaction and the fee token to use. The table below shows which token is used for which version of the transaction:
 
-| Version | FeeToken |
-|---------|----------|
-| v1      | eth      |
-| v3      | strk     |
+| Version | Fee Token |
+|---------|-----------|
+| v1      | eth       |
+| v3      | strk      |
 
 When paying in STRK, you need to either set `--fee-token` to `strk`:
 
@@ -66,7 +66,27 @@ $ sncast account deploy \
 Currently, there are two versions of the deployment transaction: v1 and v3. The table below shows which token is used for which version of the transaction:
 
 
-| Version | FeeToken |
-|---------|----------|
-| v1      | eth      |
-| v3      | strk     |
+| Version | Fee Token |
+|---------|-----------|
+| v1      | eth       |
+| v3      | strk      |
+
+## sncast declare
+
+Currently, there are two versions of the declare transaction: v2 and v3. The table below shows which token is used for which version of the transaction:
+
+
+| Version | Fee Token |
+|---------|-----------|
+| v2      | eth       |
+| v3      | strk      |
+
+## sncast invoke and sncast multicall run
+
+Currently, there are two versions of invoke transaction: v1 and v3. The table below shows which token is used for which version of the transaction:
+
+
+| Version | Fee Token |
+|---------|-----------|
+| v1      | eth       |
+| v3      | strk      |
