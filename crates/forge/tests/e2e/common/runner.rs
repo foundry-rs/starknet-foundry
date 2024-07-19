@@ -16,7 +16,7 @@ use test_utils::tempdir_with_tool_versions;
 use toml_edit::{value, DocumentMut};
 use walkdir::WalkDir;
 
-/// To avoid rebuilding `snforge_std` for each test, we cache it in a directory and copy it to the e2e test temp directory.
+/// To avoid rebuilding `snforge_std` and associated plugin for each test, we cache it in a directory and copy it to the e2e test temp directory.
 static BASE_CACHE_DIR: Lazy<PathBuf> =
     Lazy::new(|| init_base_cache_dir().expect("Failed to initialize base cache directory"));
 
