@@ -49,3 +49,41 @@ fn expected_panic_but_didnt_with_expected() {
 fn expected_panic_but_didnt_with_expected_multiple() {
     assert(1 == 1, 'err');
 }
+
+#[test]
+#[should_panic(expected: "will panicc")]
+fn should_panic_not_matching_suffix() {
+    panic!("This will panic");
+}
+
+#[test]
+#[should_panic(expected: "TThis will")]
+fn should_panic_not_matching_prefix() {
+    panic!("This will panic");
+}
+
+#[test]
+#[should_panic(expected: "wiell")]
+fn should_panic_not_matching_in_the_middle() {
+    panic!("This will panic");
+}
+
+
+#[test]
+#[should_panic(expected: ('This will panic',))]
+fn should_panic_byte_array_with_felt() {
+    panic!("This will panic");
+}
+
+#[test]
+#[should_panic(expected: "This will panic")]
+fn should_panic_felt_with_byte_array() {
+    panic_with_felt252('This will panic');
+}
+
+#[test]
+#[should_panic(expected: "This will panic")]
+fn should_panic_expected_contains_error() {
+    panic!("will");
+}
+

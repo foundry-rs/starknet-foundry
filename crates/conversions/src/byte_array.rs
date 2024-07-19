@@ -1,5 +1,7 @@
 use crate as conversions; // trick for CairoDeserialize macro
+use crate::serde::deserialize::BufferReader;
 use crate::{serde::serialize::SerializeToFeltVec, string::TryFromHexStr};
+use anyhow::ensure;
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string_ex;
 use cairo_lang_utils::byte_array::{BYTES_IN_WORD, BYTE_ARRAY_MAGIC};
@@ -55,5 +57,19 @@ impl From<ByteArray> for String {
             as_cairo_short_string_ex(&value.pending_word, value.pending_word_len).unwrap();
 
         format!("{full_words_string}{pending_word_string}")
+    }
+}
+
+impl TryFrom<&[Felt252]> for ByteArray {
+    type Error = anyhow::Error;
+
+    fn try_from(value: &[Felt252]) -> Result<Self, Self::Error> {
+        ensure!(
+            value.first()
+                == Some(&Felt252::try_from_hex_str(&format!("0x{BYTE_ARRAY_MAGIC}")).unwrap()),
+            "ByteArray magic is missing at the beginning of the array"
+        );
+
+        Ok(BufferReader::new(&value[1..]).read()?)
     }
 }
