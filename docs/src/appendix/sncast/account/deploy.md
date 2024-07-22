@@ -1,14 +1,17 @@
 # `deploy`
 Deploy previously created account to Starknet.
 
-## Required Common Arguments — Passed By CLI or Specified in `snfoundry.toml`
-
-* [`url`](../common.md#--url--u-rpc_url)
-
 ## `--name, -n <ACCOUNT_NAME>`
 Required.
 
 Name of the (previously created) account to be deployed.
+
+## `--url, -u <RPC_URL>`
+Optional.
+
+Starknet RPC node url address.
+
+Overrides url from `snfoundry.toml`.
 
 ## `--max-fee, -m <MAX_FEE>`
 Optional.
