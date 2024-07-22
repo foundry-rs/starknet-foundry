@@ -28,6 +28,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `multicall new` no longer prints generated template to stdout and now requires specifying output path. [Read more here](https://foundry-rs.github.io/starknet-foundry/appendix/sncast/multicall/new.html)
 
+- `sncast` no longer expects `--url` as a common argument. It is now required specifically by commands that utilise it, i.e. `account add`, `account create`, `account delete`, `account deploy`, `multicall run`, `script run`, `call`, `declare`, `deploy`, `invoke`, `show_config`, `tx_status`.
+Commands that require `--url` no more: `account list`, `multicall new`, `scripy iniy`, `verify`
+
 ## [0.26.0] - 2024-07-03
 
 ### Forge
