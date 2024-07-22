@@ -28,6 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `multicall new` no longer prints generated template to stdout and now requires specifying output path. [Read more here](https://foundry-rs.github.io/starknet-foundry/appendix/sncast/multicall/new.html)
 
+- `account create` outputs hint about the type of the tokens required to prefund a newly created account with before deployment
+
 ## [0.26.0] - 2024-07-03
 
 ### Forge
