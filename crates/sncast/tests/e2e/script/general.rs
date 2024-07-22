@@ -292,7 +292,7 @@ async fn test_no_account_passed() {
         output,
         indoc! {r#"
         command: script run
-        message:
+        message: 
             "Account not defined. Please ensure the correct account is passed to `script run` command"
         "#},
     );
