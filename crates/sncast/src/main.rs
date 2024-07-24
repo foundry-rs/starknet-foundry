@@ -228,7 +228,7 @@ async fn run_async_command(
                 deploy.try_into().unwrap()
             } else {
                 let contract = deploy.build_artifacts(cli.json, &cli.profile)?;
-                let class_hash = contract.hash.clone();
+                let class_hash = contract.hash;
 
                 if !contract.is_declared(&provider).await {
                     let declare = deploy.declare_data()?;

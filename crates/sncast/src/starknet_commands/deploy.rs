@@ -29,7 +29,8 @@ pub struct Deploy {
     #[clap(long, conflicts_with = "class_hash")]
     pub contract_name: Option<String>,
 
-    #[clap(long)]
+    // A package to deploy a contract from, relevant only for by-name deployment
+    #[clap(long, conflicts_with = "class_hash")]
     pub package: Option<String>,
 
     /// Calldata for the contract constructor
@@ -74,12 +75,12 @@ impl Deploy {
             contract_name
         ))?;
 
-        CompiledContract::from(&contract_artifacts)
+        CompiledContract::from(contract_artifacts)
     }
 
     pub fn declare_data(&self) -> Result<Declare> {
         if self.contract_name.is_none() {
-            bail!("Deploy-by-name data unspecified");
+            bail!("Contract name unspecified");
         }
 
         let Deploy {

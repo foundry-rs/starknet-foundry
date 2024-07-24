@@ -225,7 +225,7 @@ impl CompiledContract {
 
     pub async fn is_declared(&self, provider: &JsonRpcClient<HttpTransport>) -> bool {
         let block_id = BlockId::Tag(starknet::core::types::BlockTag::Pending);
-        let class_hash = self.hash.clone();
+        let class_hash = self.hash;
         provider.get_class(block_id, class_hash).await.is_ok()
     }
 }

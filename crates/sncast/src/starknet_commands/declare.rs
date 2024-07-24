@@ -136,8 +136,8 @@ pub async fn declare_compiled(
     wait_config: WaitForTx,
 ) -> Result<DeclareResponse, StarknetCommandError> {
     let fee_settings = get_fee_settings(&declare, account).await?;
-    let declared = send_declaration(contract, &account, declare.nonce, fee_settings).await;
-    handle_declaration(declared, &account, wait_config).await
+    let declared = send_declaration(contract, account, declare.nonce, fee_settings).await;
+    handle_declaration(declared, account, wait_config).await
 }
 
 pub async fn declare(
@@ -153,7 +153,7 @@ pub async fn declare(
                 ErrorData::new(declare.contract.clone()),
             ))?;
 
-    let contract = CompiledContract::from(&contract_artifacts)?;
+    let contract = CompiledContract::from(contract_artifacts)?;
 
     declare_compiled(declare, account, contract, wait_config).await
 }
