@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast
+
+### Added
+- `sncast deploy` can now deploy contracts by name instead of class hash. [Read more here](https://foundry-rs.github.io/starknet-foundry/appendix/sncast/deploy.html)
+
 ## [0.27.0] - 2024-07-24
 
 ### Forge

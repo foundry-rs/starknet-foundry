@@ -7,9 +7,25 @@ Deploy a contract to Starknet.
 * [`account`](./common.md#--account--a-account_name)
 
 ## `--class-hash, -g <CLASS_HASH>`
-Required.
+Optional (either this or the `--contract-name` must be specified).
 
 Class hash of contract to deploy.
+
+## `--contract-name <CONTRACT_NAME>`
+Optional (either this or the `--class-hash` must be specified).
+
+Name of contract to deploy.
+Cannot be used together with `--class-hash`.
+
+## `--package <PACKAGE_NAME>`
+Optional.
+
+Name of the package that should be used.
+
+If supplied, a contract from this package will be used.
+Required if more than one package exists in a workspace.
+Can only be used along with a `--contract-name`.
+Cannot be used together with `--class-hash`.
 
 ## `--constructor-calldata, -c <CONSTRUCTOR_CALLDATA>`
 Optional.
