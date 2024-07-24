@@ -54,14 +54,14 @@ Add the following line under `[dev-dependencies]` section in the `Scarb.toml` fi
 # ...
 
 [dev-dependencies]
-snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.26.0" }
+snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.27.0" }
 ```
 
 Make sure that the version in `tag` matches `snforge`. You can check the currently installed version with
 
 ```shell
 $ snforge --version
-snforge 0.26.0
+snforge 0.27.0
 ```
 
 It is also possible to add this dependency
@@ -72,7 +72,7 @@ command.
 $ scarb add snforge_std \ 
  --dev \
  --git https://github.com/foundry-rs/starknet-foundry.git \
- --tag v0.26.0
+ --tag v0.27.0
 ```
 
 Additionally, ensure that starknet-contract target is enabled in the `Scarb.toml` file.
