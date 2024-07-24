@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
+#### Added
+- `spy_messages_to_l1()` for listening in on messages to L1 sent by your contracts. [Read more here](https://foundry-rs.github.io/starknet-foundry/testing/testing-messages-to-l1.html).
+
 #### Changed
 - Renamed global cheatcodes listed [here](https://foundry-rs.github.io/starknet-foundry/appendix/cheatcodes.html) - cheatcode invocations affecting the global scope and working indefinitely, already marked with a `_global` suffix, received a `start_` prefix
 - Updated `cheat_account_contract_address` cheatcode - read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/cheatcodes/account_contract_address.html) - added a `start_` prefix to the `..._global` invocation which works globally and indefinitely
@@ -18,16 +21,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Cast
 
 #### Added
-
-- `spy_messages_to_l1()` for listening in on messages to L1 sent by your contracts. [Read more here](https://foundry-rs.github.io/starknet-foundry/testing/testing-messages-to-l1.html).
-
 - `verify` subcommand to verify contract (walnut APIs supported as of this version). [Read more here](https://foundry-rs.github.io/starknet-foundry/appendix/sncast/verify.html)
 - support for v3 transactions on account deploy, deploy, declare, invoke
 - Newest class hash for OpenZeppelin account contracts
 - `account list` subcommand for listing all available accounts [Read more here](https://foundry-rs.github.io/starknet-foundry/appendix/sncast/account/list.html)
 
 #### Changed
-
 - `multicall new` no longer prints generated template to stdout and now requires specifying output path. [Read more here](https://foundry-rs.github.io/starknet-foundry/appendix/sncast/multicall/new.html)
 
 ## [0.26.0] - 2024-07-03
