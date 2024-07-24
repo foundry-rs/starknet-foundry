@@ -415,7 +415,7 @@ fn test_scarb_build_fails_scarb_toml_does_not_exist() {
     assert_stderr_contains(
         output,
         "Error: Path to Scarb.toml manifest does not exist =[..]",
-    )
+    );
 }
 
 #[test]
@@ -514,7 +514,7 @@ fn test_scarb_no_sierra_artifact() {
         "
     };
 
-    assert_stderr_contains(output, expected)
+    assert_stderr_contains(output, expected);
 }
 
 #[test]

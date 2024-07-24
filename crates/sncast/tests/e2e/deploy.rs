@@ -346,6 +346,27 @@ fn test_too_low_max_fee() {
 }
 
 #[test]
+fn test_no_class_hash_and_no_name() {
+    let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
+    let accounts_file = get_accounts_path(ACCOUNT_FILE_PATH);
+
+    let args = vec![
+        "--accounts-file",
+        accounts_file.as_str(),
+        "--url",
+        URL,
+        "--account",
+        "user1",
+        "deploy",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(output, "Error: Contract name unspecified");
+}
+
+#[test]
 fn test_happy_case_by_name() {
     let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
     let accounts_file = get_accounts_path(ACCOUNT_FILE_PATH);
@@ -378,4 +399,83 @@ fn test_happy_case_by_name() {
     };
 
     assert_stdout_contains(output, expected);
+}
+
+#[test]
+fn test_non_existent_name() {
+    let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
+    let accounts_file = get_accounts_path(ACCOUNT_FILE_PATH);
+
+    let args = vec![
+        "--accounts-file",
+        accounts_file.as_str(),
+        "--url",
+        URL,
+        "--account",
+        "user1",
+        "deploy",
+        "--contract-name",
+        "some-non-existent-contract",
+        "--max-fee",
+        "99999999999999999",
+        "--fee-token",
+        "eth",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(output, "Error: No artifacts found for contract: [..]");
+}
+
+#[test]
+fn test_by_name_multiple_packages() {
+    let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/multiple_packages");
+    let accounts_file = get_accounts_path(ACCOUNT_FILE_PATH);
+
+    let args = vec![
+        "--accounts-file",
+        accounts_file.as_str(),
+        "--url",
+        URL,
+        "--account",
+        "user1",
+        "deploy",
+        "--contract-name",
+        "supercomplexcode2",
+        "--max-fee",
+        "99999999999999999",
+        "--fee-token",
+        "eth",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(output, "Error: More than one package found in scarb metadata - specify package using --package flag");
+}
+
+#[test]
+fn test_by_name_no_name() {
+    let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/multiple_packages");
+    let accounts_file = get_accounts_path(ACCOUNT_FILE_PATH);
+
+    let args = vec![
+        "--accounts-file",
+        accounts_file.as_str(),
+        "--url",
+        URL,
+        "--account",
+        "user1",
+        "deploy",
+        "--max-fee",
+        "99999999999999999",
+        "--fee-token",
+        "eth",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(output, "Error: Contract name unspecified");
 }
