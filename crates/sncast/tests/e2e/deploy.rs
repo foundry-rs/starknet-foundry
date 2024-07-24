@@ -1,14 +1,14 @@
 use crate::helpers::constants::{
-    ACCOUNT, CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA, DEVNET_OZ_CLASS_HASH_CAIRO_0,
-    MAP_CONTRACT_CLASS_HASH_SEPOLIA, URL,
+    ACCOUNT, ACCOUNT_FILE_PATH, CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA, CONTRACTS_DIR,
+    DEVNET_OZ_CLASS_HASH_CAIRO_0, MAP_CONTRACT_CLASS_HASH_SEPOLIA, URL,
 };
 use crate::helpers::fixtures::{
-    create_and_deploy_account, create_and_deploy_oz_account, default_cli_args,
-    get_transaction_hash, get_transaction_receipt,
+    copy_directory_to_tempdir, create_and_deploy_account, create_and_deploy_oz_account,
+    default_cli_args, get_accounts_path, get_transaction_hash, get_transaction_receipt,
 };
 use crate::helpers::runner::runner;
 use indoc::indoc;
-use shared::test_utils::output_assert::assert_stderr_contains;
+use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 use sncast::helpers::constants::{ARGENT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH};
 use sncast::AccountType;
 use starknet::core::types::TransactionReceipt::Deploy;
@@ -343,4 +343,39 @@ fn test_too_low_max_fee() {
         error: Max fee is smaller than the minimal transaction cost
         "},
     );
+}
+
+#[test]
+fn test_happy_case_by_name() {
+    let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
+    let accounts_file = get_accounts_path(ACCOUNT_FILE_PATH);
+
+    let args = vec![
+        "--accounts-file",
+        accounts_file.as_str(),
+        "--url",
+        URL,
+        "--account",
+        "user1",
+        "deploy",
+        "--contract-name",
+        "Map",
+        "--max-fee",
+        "99999999999999999",
+        "--fee-token",
+        "eth",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().success();
+
+    let expected = indoc! {
+        "
+        command: deploy
+        contract_address: [..]
+        transaction_hash: [..]
+        "
+    };
+
+    assert_stdout_contains(output, expected);
 }

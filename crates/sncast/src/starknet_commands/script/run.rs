@@ -2,10 +2,10 @@ use std::collections::HashMap;
 use std::fs;
 
 use crate::starknet_commands::declare::Declare;
-use crate::starknet_commands::deploy::Deploy;
+use crate::starknet_commands::deploy::DeployResolved;
 use crate::starknet_commands::invoke::Invoke;
 use crate::starknet_commands::{call, declare, deploy, invoke, tx_status};
-use crate::{get_account, get_nonce, WaitForTx};
+use crate::{get_account, WaitForTx};
 use anyhow::{anyhow, Context, Result};
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::entry_point::CallEntryPoint;
@@ -39,6 +39,7 @@ use scarb_metadata::{Metadata, PackageMetadata};
 use semver::{Comparator, Op, Version, VersionReq};
 use shared::print::print_as_warning;
 use shared::utils::build_readable_text;
+use sncast::get_nonce;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::SCRIPT_LIB_ARTIFACT_NAME;
 use sncast::helpers::fee::ScriptFeeSettings;
@@ -159,7 +160,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 let fee_args = input_reader.read::<ScriptFeeSettings>()?.into();
                 let nonce = input_reader.read()?;
 
-                let deploy = Deploy {
+                let deploy = DeployResolved {
                     class_hash,
                     constructor_calldata,
                     salt,

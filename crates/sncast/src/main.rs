@@ -16,17 +16,18 @@ use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTEN
 use sncast::helpers::fee::PayableTransaction;
 use sncast::helpers::scarb_utils::{
     assert_manifest_path_exists, build, build_and_load_artifacts, get_package_metadata,
-    get_scarb_metadata_with_deps, BuildConfig,
+    get_scarb_metadata_with_deps, read_manifest_and_build_artifacts, BuildConfig,
 };
 use sncast::response::errors::handle_starknet_command_error;
 use sncast::{
     chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_default_state_file_name,
-    get_nonce, get_provider, NumbersFormat, ValidatedWaitParams, WaitForTx,
+    get_provider, NumbersFormat, ValidatedWaitParams, WaitForTx,
 };
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet_commands::account::list::print_account_list;
+use starknet_commands::deploy::DeployResolved;
 use starknet_commands::verify::Verify;
 use tokio::runtime::Runtime;
 
@@ -198,28 +199,23 @@ async fn run_async_command(
                 config.keystore,
             )
             .await?;
-            let manifest_path = assert_manifest_path_exists()?;
-            let package_metadata = get_package_metadata(&manifest_path, &declare.package)?;
-            let artifacts = build_and_load_artifacts(
-                &package_metadata,
-                &BuildConfig {
-                    scarb_toml_path: manifest_path,
-                    json: cli.json,
-                    profile: cli.profile.unwrap_or("dev".to_string()),
-                },
-            )
-            .expect("Failed to build contract");
-            let mut result =
-                starknet_commands::declare::declare(declare, &account, &artifacts, wait_config)
-                    .await
-                    .map_err(handle_starknet_command_error);
 
-            print_command_result("declare", &mut result, numbers_format, &output_format)?;
-            Ok(())
+            let artifacts =
+                read_manifest_and_build_artifacts(&declare.package, cli.json, &cli.profile)?;
+
+            let mut result = crate::starknet_commands::declare::declare(
+                declare,
+                &account,
+                &artifacts,
+                wait_config,
+            )
+            .await
+            .map_err(handle_starknet_command_error);
+
+            print_command_result("declare", &mut result, numbers_format, &output_format)
         }
 
         Commands::Deploy(deploy) => {
-            deploy.validate()?;
             let account = get_account(
                 &config.account,
                 &config.accounts_file,
@@ -228,12 +224,37 @@ async fn run_async_command(
             )
             .await?;
 
+            let deploy: DeployResolved = if deploy.class_hash.is_some() {
+                deploy.try_into().unwrap()
+            } else {
+                let contract = deploy.build_artifacts(cli.json, &cli.profile)?;
+                let class_hash = contract.hash.clone();
+
+                if !contract.is_declared(&provider).await {
+                    let declare = deploy.declare_data()?;
+
+                    let mut result = crate::starknet_commands::declare::declare_compiled(
+                        declare,
+                        &account,
+                        contract,
+                        wait_config,
+                    )
+                    .await
+                    .map_err(handle_starknet_command_error);
+
+                    print_command_result("declare", &mut result, numbers_format, &output_format)?;
+                }
+
+                deploy.resolve_class_hash(class_hash)
+            };
+
+            deploy.validate()?;
+
             let mut result = starknet_commands::deploy::deploy(deploy, &account, wait_config)
                 .await
                 .map_err(handle_starknet_command_error);
 
-            print_command_result("deploy", &mut result, numbers_format, &output_format)?;
-            Ok(())
+            print_command_result("deploy", &mut result, numbers_format, &output_format)
         }
 
         Commands::Call(call) => {
