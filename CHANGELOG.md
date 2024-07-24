@@ -7,10 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.27.0] - 2024-07-24
+
 ### Forge
 
 #### Changed
-- Renamed global cheatcodes listed [here](https://foundry-rs.github.io/starknet-foundry/appendix/cheatcodes.html) - cheatcode invocations affecting the global scope and working indefinitely, already marked with a `_global` suffix, received a `start_` prefix
+- Renamed global cheatcodes listed [here](https://foundry-rs.github.io/stark`net-foundry/appendix/cheatcodes.html) - cheatcode invocations affecting the global scope and working indefinitely, already marked with a `_global` suffix, received a `start_` prefix
 - Updated `cheat_account_contract_address` cheatcode - read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/cheatcodes/account_contract_address.html) - added a `start_` prefix to the `..._global` invocation which works globally and indefinitely
 
 ### Cast
