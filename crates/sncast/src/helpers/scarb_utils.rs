@@ -7,6 +7,14 @@ use scarb_api::{
 };
 use scarb_ui::args::PackagesFilter;
 use shared::{command::CommandExt, print::print_as_warning};
+use starknet::{
+    core::types::{
+        contract::{CompiledClass, SierraClass},
+        BlockId, FlattenedSierraClass,
+    },
+    providers::{jsonrpc::HttpTransport, JsonRpcClient, Provider},
+};
+use starknet_crypto::FieldElement;
 use std::collections::HashMap;
 use std::env;
 use std::str::FromStr;
@@ -173,6 +181,52 @@ pub fn build_and_load_artifacts(
                 .map(|(name, (artifacts, _))| (name, artifacts))
                 .collect(),
         )
+    }
+}
+
+pub fn read_manifest_and_build_artifacts(
+    package: &Option<String>,
+    json: bool,
+    profile: &Option<String>,
+) -> Result<HashMap<String, StarknetContractArtifacts>> {
+    let manifest_path = assert_manifest_path_exists()?;
+    let package_metadata = get_package_metadata(&manifest_path, package)?;
+
+    let profile = profile.to_owned().unwrap_or("dev".to_string());
+
+    let build_config = BuildConfig {
+        scarb_toml_path: manifest_path,
+        json,
+        profile,
+    };
+
+    build_and_load_artifacts(&package_metadata, &build_config).context("Failed to build contract")
+}
+
+pub struct CompiledContract {
+    pub class: FlattenedSierraClass,
+    pub hash: FieldElement,
+}
+
+impl CompiledContract {
+    pub fn from(artifacts: &StarknetContractArtifacts) -> Result<Self> {
+        let class: SierraClass =
+            serde_json::from_str(&artifacts.sierra).context("Failed to parse sierra artifact")?;
+
+        let class = class.flatten().map_err(anyhow::Error::from)?;
+
+        let compiled_class: CompiledClass =
+            serde_json::from_str(&artifacts.casm).context("Failed to parse casm artifact")?;
+
+        let hash = compiled_class.class_hash().map_err(anyhow::Error::from)?;
+
+        Ok(Self { class, hash })
+    }
+
+    pub async fn is_declared(&self, provider: &JsonRpcClient<HttpTransport>) -> bool {
+        let block_id = BlockId::Tag(starknet::core::types::BlockTag::Pending);
+        let class_hash = self.hash.clone();
+        provider.get_class(block_id, class_hash).await.is_ok()
     }
 }
 
