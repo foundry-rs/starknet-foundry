@@ -6,6 +6,7 @@ use crate::starknet_commands::{
 };
 use anyhow::{Context, Result};
 use configuration::load_global_config;
+use sncast::response::explorer_link::print_block_explorer_link_if_allowed;
 use sncast::response::print::{print_command_result, OutputFormat};
 
 use camino::Utf8PathBuf;
@@ -215,6 +216,7 @@ async fn run_async_command(
                     .map_err(handle_starknet_command_error);
 
             print_command_result("declare", &result, numbers_format, output_format)?;
+            print_block_explorer_link_if_allowed(&result, output_format);
             Ok(())
         }
 
@@ -233,6 +235,7 @@ async fn run_async_command(
                 .map_err(handle_starknet_command_error);
 
             print_command_result("deploy", &result, numbers_format, output_format)?;
+            print_block_explorer_link_if_allowed(&result, output_format);
             Ok(())
         }
 
@@ -354,6 +357,7 @@ async fn run_async_command(
                 .await;
 
                 print_command_result("account create", &result, numbers_format, output_format)?;
+                print_block_explorer_link_if_allowed(&result, output_format);
                 Ok(())
             }
 
@@ -373,6 +377,7 @@ async fn run_async_command(
                 .await;
 
                 print_command_result("account deploy", &result, numbers_format, output_format)?;
+                print_block_explorer_link_if_allowed(&result, output_format);
                 Ok(())
             }
 

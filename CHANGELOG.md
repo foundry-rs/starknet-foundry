@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast
+
+#### Added
+- Commands that commit transactions now display links to block explorers. When in human-readable mode, `declare`, `deploy`, `account create` and `account deploy` will display additional information with an url.
+
 ## [0.27.0] - 2024-07-24
 
 ### Forge

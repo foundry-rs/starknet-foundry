@@ -151,3 +151,35 @@ pub struct VerifyResponse {
 }
 
 impl CommandResponse for VerifyResponse {}
+
+pub trait OutputLink {
+    fn link_tail(&self) -> String;
+
+    fn format_url(&self, base: &'static str) -> String {
+        format!("{base}/{}", self.link_tail())
+    }
+}
+
+impl OutputLink for InvokeResponse {
+    fn link_tail(&self) -> String {
+        self.transaction_hash.0.to_string()
+    }
+}
+
+impl OutputLink for DeployResponse {
+    fn link_tail(&self) -> String {
+        self.transaction_hash.0.to_string()
+    }
+}
+
+impl OutputLink for DeclareResponse {
+    fn link_tail(&self) -> String {
+        self.transaction_hash.0.to_string()
+    }
+}
+
+impl OutputLink for AccountCreateResponse {
+    fn link_tail(&self) -> String {
+        self.address.0.to_string()
+    }
+}
