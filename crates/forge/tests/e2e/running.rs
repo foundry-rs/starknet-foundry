@@ -784,12 +784,12 @@ fn should_panic() {
         Collected 14 test(s) from should_panic_test package
         Running 0 test(s) from src/
         Running 14 test(s) from tests/
-        [FAIL] tests::should_panic_test::expected_panic_but_didnt_with_expected
+        [FAIL] tests::should_panic_test::didnt_expect_panic
 
         Failure data:
-            Expected to panic but didn't
-            Expected panic data:  [8903707727067478891290643490661] (panic message)
+            0x756e65787065637465642070616e6963 ('unexpected panic')
 
+        [PASS] tests::should_panic_test::should_panic_match_suffix [..]
         [FAIL] tests::should_panic_test::should_panic_with_non_matching_data
 
         Failure data:
@@ -797,18 +797,20 @@ fn should_panic() {
             Actual:    [8111420071579136082810415440747] (failing check)
             Expected:  [0] ()
 
-        [FAIL] tests::should_panic_test::should_panic_not_matching_in_the_middle
+        [PASS] tests::should_panic_test::should_panic_felt_matching [..]
+        [FAIL] tests::should_panic_test::should_panic_byte_array_with_felt
 
         Failure data:
             Incorrect panic data
             Actual:    [1997209042069643135709344952807065910992472029923670688473712229447419591075, 0, 438270661302794954290694912750807395, 15] (This will panic)
-            Expected:  [1997209042069643135709344952807065910992472029923670688473712229447419591075, 0, 512869362796, 5] (wiell)
+            Expected:  [438270661302794954290694912750807395] (This will panic)
 
         [PASS] tests::should_panic_test::should_panic_check_data [..]
-        [FAIL] tests::should_panic_test::didnt_expect_panic
+        [FAIL] tests::should_panic_test::expected_panic_but_didnt_with_expected
 
         Failure data:
-            0x756e65787065637465642070616e6963 ('unexpected panic')
+            Expected to panic but didn't
+            Expected panic data:  [8903707727067478891290643490661] (panic message)
 
         [FAIL] tests::should_panic_test::expected_panic_but_didnt_with_expected_multiple
 
@@ -816,24 +818,10 @@ fn should_panic() {
             Expected to panic but didn't
             Expected panic data:  [8903707727067478891290643490661, 2340509922561928411394884117817189] (panic message, second message)
 
-        [PASS] tests::should_panic_test::should_panic_no_data [..]
-
-        Success data:
-            0x0 ('')
-
-        [FAIL] tests::should_panic_test::should_panic_not_matching_prefix
+        [FAIL] tests::should_panic_test::expected_panic_but_didnt
 
         Failure data:
-            Incorrect panic data
-            Actual:    [1997209042069643135709344952807065910992472029923670688473712229447419591075, 0, 438270661302794954290694912750807395, 15] (This will panic)
-            Expected:  [1997209042069643135709344952807065910992472029923670688473712229447419591075, 0, 398235834734477578955884, 10] (TThis will)
-
-        [FAIL] tests::should_panic_test::should_panic_felt_with_byte_array
-
-        Failure data:
-            Incorrect panic data
-            Actual:    [438270661302794954290694912750807395] (This will panic)
-            Expected:  [1997209042069643135709344952807065910992472029923670688473712229447419591075, 0, 438270661302794954290694912750807395, 15] (This will panic)
+            Expected to panic but didn't
 
         [FAIL] tests::should_panic_test::should_panic_not_matching_suffix
 
@@ -843,11 +831,6 @@ fn should_panic() {
             Expected:  [1997209042069643135709344952807065910992472029923670688473712229447419591075, 0, 144360021054553064286544739, 11] (will panicc)
 
         [PASS] tests::should_panic_test::should_panic_multiple_messages [..]
-        [FAIL] tests::should_panic_test::expected_panic_but_didnt
-
-        Failure data:
-            Expected to panic but didn't
-
         [FAIL] tests::should_panic_test::should_panic_expected_contains_error
 
         Failure data:
@@ -855,27 +838,30 @@ fn should_panic() {
             Actual:    [1997209042069643135709344952807065910992472029923670688473712229447419591075, 0, 2003397740, 4] (will)
             Expected:  [1997209042069643135709344952807065910992472029923670688473712229447419591075, 0, 438270661302794954290694912750807395, 15] (This will panic)
 
-        [FAIL] tests::should_panic_test::should_panic_byte_array_with_felt
+        [PASS] tests::should_panic_test::should_panic_no_data [..]
+
+        Success data:
+            0x0 ('')
+
+        [FAIL] tests::should_panic_test::should_panic_felt_with_byte_array
 
         Failure data:
             Incorrect panic data
-            Actual:    [1997209042069643135709344952807065910992472029923670688473712229447419591075, 0, 438270661302794954290694912750807395, 15] (This will panic)
-            Expected:  [438270661302794954290694912750807395] (This will panic)
+            Actual:    [438270661302794954290694912750807395] (This will panic)
+            Expected:  [1997209042069643135709344952807065910992472029923670688473712229447419591075, 0, 438270661302794954290694912750807395, 15] (This will panic)
 
-        Tests: 3 passed, 11 failed, 0 skipped, 0 ignored, 0 filtered out
+        Tests: 5 passed, 9 failed, 0 skipped, 0 ignored, 0 filtered out
 
         Failures:
-            tests::should_panic_test::expected_panic_but_didnt_with_expected
-            tests::should_panic_test::should_panic_with_non_matching_data
-            tests::should_panic_test::should_panic_not_matching_in_the_middle
             tests::should_panic_test::didnt_expect_panic
-            tests::should_panic_test::expected_panic_but_didnt_with_expected_multiple
-            tests::should_panic_test::should_panic_not_matching_prefix
-            tests::should_panic_test::should_panic_felt_with_byte_array
-            tests::should_panic_test::should_panic_not_matching_suffix
-            tests::should_panic_test::expected_panic_but_didnt
-            tests::should_panic_test::should_panic_expected_contains_error
+            tests::should_panic_test::should_panic_with_non_matching_data
             tests::should_panic_test::should_panic_byte_array_with_felt
+            tests::should_panic_test::expected_panic_but_didnt_with_expected
+            tests::should_panic_test::expected_panic_but_didnt_with_expected_multiple
+            tests::should_panic_test::expected_panic_but_didnt
+            tests::should_panic_test::should_panic_not_matching_suffix
+            tests::should_panic_test::should_panic_expected_contains_error
+            tests::should_panic_test::should_panic_felt_with_byte_array
         "},
     );
 }

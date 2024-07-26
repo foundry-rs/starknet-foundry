@@ -254,7 +254,7 @@ impl TestCaseSummary<Single> {
                     test_statistics: (),
                 },
                 ExpectedTestResult::Panics(panic_expectation) => match panic_expectation {
-                    ExpectedPanicValue::Exact(expected) if !matches(&value, expected) => {
+                    ExpectedPanicValue::Exact(expected) if !is_matching(&value, expected) => {
                         TestCaseSummary::Failed {
                             name,
                             msg,
@@ -288,7 +288,7 @@ fn join_short_strings(data: &[Felt252]) -> String {
         .join(", ")
 }
 
-fn matches(data: &[Felt252], pattern: &[Felt252]) -> bool {
+fn is_matching(data: &[Felt252], pattern: &[Felt252]) -> bool {
     let data_str = convert_felts_to_byte_array_string(data);
     let pattern_str = convert_felts_to_byte_array_string(pattern);
 
@@ -299,7 +299,7 @@ fn matches(data: &[Felt252], pattern: &[Felt252]) -> bool {
     }
 }
 fn convert_felts_to_byte_array_string(data: &[Felt252]) -> Option<String> {
-    ByteArray::try_from(data).map(Into::into).ok()
+    ByteArray::deserialize_with_magic(data).map(Into::into).ok()
 }
 
 /// Returns a string with the data that was produced by the test case.
@@ -331,7 +331,7 @@ fn extract_result_data(run_result: &RunResult, expectation: &ExpectedTestResult)
             };
 
             match expected_data {
-                Some(expected) if matches(panic_data, expected) => None,
+                Some(expected) if is_matching(panic_data, expected) => None,
                 Some(expected) => {
                     let panic_string = convert_felts_to_byte_array_string(panic_data)
                         .unwrap_or_else(|| join_short_strings(panic_data));

@@ -83,14 +83,19 @@ expected.
 
 To mark a test as expected to fail, use the `#[should_panic]` attribute.
 
-You can specify the expected failure message in two ways:
+You can specify the expected failure message in three ways:
 
-1. **With tuple of felts**:
+1. **With felt**
+   ```rust
+   #[should_panic(expected: 'panic message')]
+   ```
+
+2. **With tuple of felts**:
    ```rust
    #[should_panic(expected: ('panic message', 'eventual second message',))]
    ```
 
-2. **With ByteArray**:
+3. **With ByteArray**:
    ```rust
    #[should_panic(expected: "panic message")]
    ```
@@ -103,6 +108,12 @@ mod tests {
     use core::panic_with_felt252;
     
     // all test below will pass
+    #[test]
+    #[should_panic(expected: 'panic message')]
+    fn should_panic_felt_matching() {
+       assert(1 != 1, 'panic message');
+    }
+   
     #[test]
     #[should_panic(expected: ('panic message', ))]
     fn should_panic_check_data() {
