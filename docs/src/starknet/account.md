@@ -33,7 +33,7 @@ command: account create
 max_fee: 0x64a7168300
 address: 0x7a949e83b243068d0cbedd8d5b8b32fafea66c54de23c40e68b126b5c845b61
 
-Visit https://starkscan.co/search/0x7a949e83b2[..]
+Visit https://starkscan.co/search/0x7a949e83b2...
 to see transaction details
     ```
 
@@ -60,7 +60,7 @@ $ sncast \
 command: account deploy
 transaction_hash: 0x20b20896ce63371ef015d66b4dd89bf18c5510a840b4a85a43a983caa6e2579
     
-Visit https://starkscan.co/search/0x20b20896ce[..]
+Visit https://starkscan.co/search/0x20b20896ce...
 to see transaction details
     ```
   
@@ -87,7 +87,7 @@ command: account create
 max_fee: 0x64a7168300
 address: 0x7a949e83b243068d0cbedd8d5b8b32fafea66c54de23c40e68b126b5c845b61
 
-Visit https://starkscan.co/search/0x7ad0d6e449[..]
+Visit https://starkscan.co/search/0x7ad0d6e449...
 to see transaction details
 ```
 
@@ -162,7 +162,7 @@ command: account create
 max_fee: 0x64a7168300
 address: 0x7a949e83b243068d0cbedd8d5b8b32fafea66c54de23c40e68b126b5c845b61
 
-Visit https://starkscan.co/search/0x7a949e83b2[..]
+Visit https://starkscan.co/search/0x7a949e83b2...
 to see transaction details
 
 $ sncast \
@@ -173,7 +173,7 @@ $ sncast \
 command: account deploy
 transaction_hash: 0x20b20896ce63371ef015d66b4dd89bf18c5510a840b4a85a43a983caa6e2579
 
-Visit https://starkscan.co/search/0x20b20896ce[..]
+Visit https://starkscan.co/search/0x20b20896ce...
 to see transaction details
 ```
 
@@ -221,7 +221,7 @@ $ sncast \
     --account my_account.json \
     account create
 
-Visit https://starkscan.co/search/[..]
+Visit https://starkscan.co/search/...
 to see transaction details
 ```
 

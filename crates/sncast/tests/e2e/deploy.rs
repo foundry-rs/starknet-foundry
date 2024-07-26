@@ -75,12 +75,12 @@ async fn test_happy_case_human_output() {
         output,
         indoc! {
             "
-        contract_address: [..]
-        transaction_hash: [..]
+            contract_address: [..]
+            transaction_hash: [..]
 
-        Visit [..]
-        to see transaction details
-        "
+            Visit [..]
+            to see transaction details
+            "
         },
     );
 }

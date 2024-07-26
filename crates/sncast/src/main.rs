@@ -277,6 +277,7 @@ async fn run_async_command(
             .map_err(handle_starknet_command_error);
 
             print_command_result("invoke", &result, numbers_format, output_format)?;
+            print_block_explorer_link_if_allowed(&result, output_format);
             Ok(())
         }
 
