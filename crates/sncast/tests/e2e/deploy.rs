@@ -8,7 +8,7 @@ use crate::helpers::fixtures::{
 };
 use crate::helpers::runner::runner;
 use indoc::indoc;
-use shared::test_utils::output_assert::assert_stderr_contains;
+use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 use sncast::helpers::constants::{ARGENT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH};
 use sncast::AccountType;
 use starknet::core::types::TransactionReceipt::Deploy;
@@ -47,6 +47,42 @@ async fn test_happy_case_eth(account: &str) {
     let receipt = get_transaction_receipt(hash).await;
 
     assert!(matches!(receipt, Deploy(_)));
+}
+
+#[tokio::test]
+async fn test_happy_case_human_output() {
+    let mut args = default_cli_args();
+    args.append(&mut vec![
+        "--account",
+        "oz",
+        "--int-format",
+        "deploy",
+        "--class-hash",
+        MAP_CONTRACT_CLASS_HASH_SEPOLIA,
+        "--salt",
+        "0x2",
+        "--unique",
+        "--max-fee",
+        "99999999999999999",
+        "--fee-token",
+        "eth",
+    ]);
+
+    let snapbox = runner(&args);
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {
+            "
+        contract_address: [..]
+        transaction_hash: [..]
+
+        Visit [..]
+        to see transaction details
+        "
+        },
+    );
 }
 
 #[test_case(DEVNET_OZ_CLASS_HASH_CAIRO_0.parse().unwrap(), AccountType::OpenZeppelin; "cairo_0_class_hash")]

@@ -162,24 +162,24 @@ pub trait OutputLink {
 
 impl OutputLink for InvokeResponse {
     fn link_tail(&self) -> String {
-        self.transaction_hash.0.to_string()
+        format!("{:x}", self.transaction_hash.0)
     }
 }
 
 impl OutputLink for DeployResponse {
     fn link_tail(&self) -> String {
-        self.transaction_hash.0.to_string()
+        format!("{:x}", self.transaction_hash.0)
     }
 }
 
 impl OutputLink for DeclareResponse {
     fn link_tail(&self) -> String {
-        self.transaction_hash.0.to_string()
+        format!("{:x}", self.transaction_hash.0)
     }
 }
 
 impl OutputLink for AccountCreateResponse {
     fn link_tail(&self) -> String {
-        self.address.0.to_string()
+        format!("{:x}", self.address.0)
     }
 }

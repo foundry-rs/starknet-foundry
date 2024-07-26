@@ -28,6 +28,7 @@ pub trait Format
 where
     Self: Sized,
 {
+    #[must_use]
     fn format_with(self, _: NumbersFormat) -> Self {
         self
     }
@@ -192,7 +193,7 @@ pub fn print_command_result<T: CommandResponse>(
         }
         Err(_) => {
             eprintln!("command: {command}");
-            eprintln!("{repr}")
+            eprintln!("{repr}");
         }
     }
 

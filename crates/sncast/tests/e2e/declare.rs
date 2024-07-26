@@ -658,5 +658,8 @@ async fn test_no_scarb_profile() {
         command: declare
         class_hash: [..]
         transaction_hash: [..]
+
+        Visit [..]
+        to see transaction details
     "});
 }

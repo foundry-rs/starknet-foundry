@@ -51,6 +51,9 @@ pub async fn test_happy_case(account_type: &str) {
         address: 0x[..]
         max_fee: [..]
         message: Account successfully created. Prefund generated address with at least <max_fee> tokens. It is good to send more in the case of higher demand.
+
+        Visit [..]
+        to see transaction details
         "},
     );
 
@@ -139,6 +142,9 @@ pub async fn test_happy_case_generate_salt() {
         address: 0x[..]
         max_fee: [..]
         message: Account successfully created[..]
+
+        Visit [..]
+        to see transaction details
         "});
 
     let contents = fs::read_to_string(temp_dir.path().join(accounts_file))
@@ -216,6 +222,9 @@ pub async fn test_happy_case_accounts_file_already_exists() {
         address: 0x[..]
         max_fee: [..]
         message: Account successfully created[..]
+
+        Visit [..]
+        to see transaction details
         "});
 
     let contents = fs::read_to_string(temp_dir.path().join(accounts_file))
@@ -305,6 +314,9 @@ pub async fn test_happy_case_keystore(account_type: &str) {
         address: 0x[..]
         max_fee: [..]
         message: Account successfully created[..]
+
+        Visit [..]
+        to see transaction details
     "});
 
     assert!(temp_dir.path().join(keystore_file).exists());
@@ -497,6 +509,9 @@ pub async fn test_happy_case_keystore_int_format() {
         address: [..]
         max_fee: [..]
         message: Account successfully created[..]
+
+        Visit [..]
+        to see transaction details
     "});
 
     let contents = fs::read_to_string(temp_dir.path().join(account_file))
@@ -535,6 +550,9 @@ pub async fn test_happy_case_keystore_hex_format() {
         address: 0x[..]
         max_fee: 0x[..]
         message: Account successfully created[..]
+
+        Visit [..]
+        to see transaction details
     "});
 
     let contents = fs::read_to_string(temp_dir.path().join(account_file))

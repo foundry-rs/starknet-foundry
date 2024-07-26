@@ -284,14 +284,14 @@ async fn run_async_command(
             match &multicall.command {
                 starknet_commands::multicall::Commands::New(new) => {
                     if let Some(output_path) = &new.output_path {
-                        let mut result = starknet_commands::multicall::new::write_empty_template(
+                        let result = starknet_commands::multicall::new::write_empty_template(
                             output_path,
                             new.overwrite,
                         );
 
                         print_command_result(
                             "multicall new",
-                            &mut result,
+                            &result,
                             numbers_format,
                             output_format,
                         )?;
@@ -320,7 +320,7 @@ async fn run_async_command(
 
         Commands::Account(account) => match account.command {
             account::Commands::Add(add) => {
-                let mut result = starknet_commands::account::add::add(
+                let result = starknet_commands::account::add::add(
                     &config.url,
                     &add.name.clone(),
                     &config.accounts_file,
@@ -329,7 +329,7 @@ async fn run_async_command(
                 )
                 .await;
 
-                print_command_result("account add", &mut result, numbers_format, output_format)?;
+                print_command_result("account add", &result, numbers_format, output_format)?;
                 Ok(())
             }
 
@@ -402,7 +402,7 @@ async fn run_async_command(
                 &config.accounts_file,
                 options.display_private_keys,
                 numbers_format,
-                &output_format,
+                output_format,
             ),
         },
 
