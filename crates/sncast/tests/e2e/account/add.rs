@@ -363,7 +363,7 @@ pub async fn test_invalid_public_key() {
 
 #[tokio::test]
 pub async fn test_missing_arguments() {
-    let args = vec!["--url", URL, "account", "add", "--name", "my_account_add"];
+    let args = vec!["account", "add", "--url", URL, "--name", "my_account_add"];
 
     let snapbox = runner(&args);
     let output = snapbox.assert().failure();

@@ -61,8 +61,6 @@ async fn test_happy_case(account: &str) {
 async fn test_happy_case_strk(class_hash: FieldElement, account_type: AccountType) {
     let tempdir = create_and_deploy_account(class_hash, account_type).await;
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         "accounts.json",
         "--account",
@@ -70,6 +68,8 @@ async fn test_happy_case_strk(class_hash: FieldElement, account_type: AccountTyp
         "--int-format",
         "--json",
         "invoke",
+        "--url",
+        URL,
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
@@ -97,8 +97,6 @@ async fn test_happy_case_strk(class_hash: FieldElement, account_type: AccountTyp
 async fn test_happy_case_versions(version: &str) {
     let tempdir = create_and_deploy_oz_account().await;
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         "accounts.json",
         "--account",
@@ -106,6 +104,8 @@ async fn test_happy_case_versions(version: &str) {
         "--int-format",
         "--json",
         "invoke",
+        "--url",
+        URL,
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
@@ -141,8 +141,6 @@ async fn test_happy_case_strk_different_fees(
 ) {
     let tempdir = create_and_deploy_oz_account().await;
     let mut args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         "accounts.json",
         "--account",
@@ -150,6 +148,8 @@ async fn test_happy_case_strk_different_fees(
         "--int-format",
         "--json",
         "invoke",
+        "--url",
+        URL,
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
@@ -186,8 +186,6 @@ async fn test_happy_case_strk_different_fees(
 async fn test_invalid_version_and_token_combination(fee_token: &str, version: &str) {
     let tempdir = create_and_deploy_oz_account().await;
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         "accounts.json",
         "--account",
@@ -195,6 +193,8 @@ async fn test_invalid_version_and_token_combination(fee_token: &str, version: &s
         "--int-format",
         "--json",
         "invoke",
+        "--url",
+        URL,
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",

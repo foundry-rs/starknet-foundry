@@ -69,10 +69,6 @@ struct Cli {
     #[clap(short, long)]
     profile: Option<String>,
 
-    /// RPC provider url address; overrides url from snfoundry.toml
-    #[clap(short = 'u', long = "url")]
-    rpc_url: Option<String>,
-
     /// Account to be used for contract declaration;
     /// When using keystore (`--keystore`), this should be a path to account file
     /// When using accounts file, this should be an account name
@@ -585,8 +581,6 @@ fn update_cast_config(config: &mut CastConfig, cli: &Cli) {
         ),
         clone_or_else!(cli.wait_timeout, config.wait_params.get_timeout()),
     );
-
-    config.url = clone_or_else!(cli.rpc_url, config.url);
 
     let url = match cli.command {
         Commands::Declare(declare::Declare { ref rpc_url, .. })

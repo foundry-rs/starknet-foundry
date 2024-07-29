@@ -252,10 +252,10 @@ async fn test_strk_fee_settings() {
         accounts_json_path.as_str(),
         "--account",
         "user4",
-        "--url",
-        URL,
         "script",
         "run",
+        "--url",
+        URL,
         &script_name,
     ];
 
