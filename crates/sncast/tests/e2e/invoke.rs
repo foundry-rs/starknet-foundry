@@ -51,10 +51,15 @@ async fn test_happy_case_eth(account: &str) {
 
 #[tokio::test]
 async fn test_happy_case_human_readable() {
-    let mut args = default_cli_args();
-    args.append(&mut vec![
+    let tempdir = create_and_deploy_account(OZ_CLASS_HASH, AccountType::OpenZeppelin).await;
+
+    let args = vec![
+        "--url",
+        URL,
+        "--accounts-file",
+        "accounts.json",
         "--account",
-        "oz",
+        "my_account",
         "--int-format",
         "invoke",
         "--contract-address",
@@ -67,15 +72,16 @@ async fn test_happy_case_human_readable() {
         "99999999999999999",
         "--fee-token",
         "eth",
-    ]);
+    ];
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
 
     assert_stdout_contains(
         output,
         indoc! {
             "
+            command: invoke
             transaction_hash: [..]
 
             Visit [..]
