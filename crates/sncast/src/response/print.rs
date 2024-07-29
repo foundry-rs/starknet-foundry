@@ -153,22 +153,29 @@ impl From<Value> for OutputData {
 }
 
 impl OutputData {
-    fn to_json(&self) -> Result<String> {
-        let mapping: HashMap<_, _> = self.0.clone().into_iter().collect();
+    fn to_json(&self, command: &str) -> Result<String> {
+        let mut mapping: HashMap<_, _> = self.0.clone().into_iter().collect();
+        mapping.insert(
+            String::from("command"),
+            OutputValue::String(command.to_owned()),
+        );
         serde_json::to_string(&mapping).map_err(anyhow::Error::from)
     }
 
-    fn to_lines(&self) -> String {
-        self.0
+    fn to_lines(&self, command: &str) -> String {
+        let fields = self
+            .0
             .iter()
             .map(|(key, val)| format!("{key}: {val}"))
-            .join("\n")
+            .join("\n");
+
+        format!("command: {command}\n{fields}")
     }
 
-    fn to_string_pretty(&self, output_format: OutputFormat) -> Result<String> {
+    fn to_string_pretty(&self, command: &str, output_format: OutputFormat) -> Result<String> {
         match output_format {
-            OutputFormat::Json => self.to_json(),
-            OutputFormat::Human => Ok(self.to_lines()),
+            OutputFormat::Json => self.to_json(command),
+            OutputFormat::Human => Ok(self.to_lines(command)),
         }
     }
 }
@@ -179,22 +186,14 @@ pub fn print_command_result<T: CommandResponse>(
     numbers_format: NumbersFormat,
     output_format: OutputFormat,
 ) -> Result<()> {
-    let command = command.to_owned();
-
     let output: OutputData = result.into();
     let repr = output
         .format_with(numbers_format)
-        .to_string_pretty(output_format)?;
+        .to_string_pretty(command, output_format)?;
 
     match result {
-        Ok(_) => {
-            println!("command: {command}");
-            println!("{repr}");
-        }
-        Err(_) => {
-            eprintln!("command: {command}");
-            eprintln!("{repr}");
-        }
+        Ok(_) => println!("{repr}"),
+        Err(_) => eprintln!("{repr}"),
     }
 
     Ok(())
