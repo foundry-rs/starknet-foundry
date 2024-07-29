@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 - Commands that commit transactions now display links to block explorers. When in human-readable mode, `invoke`, `declare`, `deploy`, `account create` and `account deploy` will display additional information with an url.
 
+#### Changed
+- `account create` outputs hint about the type of the tokens required to prefund a newly created account with before deployment
+
 ## [0.27.0] - 2024-07-24
 
 ### Forge

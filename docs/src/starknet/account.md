@@ -43,9 +43,12 @@ to see transaction details
 
 
 - prefund generated address with tokens
-  
+
+	To deploy an account in the next step, you need to prefund it with either STRK or ETH tokens (read more about them [here](https://docs.starknet.io/architecture-and-concepts/economics-of-starknet/)).
     You can do it both by sending tokens from another starknet account or by bridging them with [StarkGate](https://starkgate.starknet.io/).
 
+ >💡 **Info**
+> When deploying on a Sepolia test network, you can also fund your account with artificial tokens via the [Starknet Faucet](https://starknet-faucet.vercel.app)
 
 - deploy account with the `sncast account deploy` command
 
