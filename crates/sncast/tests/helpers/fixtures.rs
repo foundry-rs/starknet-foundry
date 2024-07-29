@@ -255,7 +255,9 @@ fn parse_output<T: DeserializeOwned>(output: &[u8]) -> T {
             Err(_) => continue,
         }
     }
-    panic!("Failed to deserialize stdout JSON to struct");
+
+    let input = String::from_utf8(output.to_vec()).unwrap();
+    panic!("Failed to deserialize stdout JSON to struct: \"{input}\"");
 }
 
 #[derive(Deserialize)]
