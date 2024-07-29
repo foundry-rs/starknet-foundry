@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast
+
+#### Changed
+- `account create` outputs hint about the type of the tokens required to prefund a newly created account with before deployment
+
 ## [0.27.0] - 2024-07-24
 
 ### Forge
@@ -29,8 +34,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - `multicall new` no longer prints generated template to stdout and now requires specifying output path. [Read more here](https://foundry-rs.github.io/starknet-foundry/appendix/sncast/multicall/new.html)
-
-- `account create` outputs hint about the type of the tokens required to prefund a newly created account with before deployment
 
 ## [0.26.0] - 2024-07-03
 
