@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - `sncast deploy` can now deploy contracts by name instead of class hash. [Read more here](https://foundry-rs.github.io/starknet-foundry/appendix/sncast/deploy.html)
 
+#### Changed
+- `account create` outputs hint about the type of the tokens required to prefund a newly created account with before deployment
+
+
 ## [0.27.0] - 2024-07-24
 
 ### Forge
