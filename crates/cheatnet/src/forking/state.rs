@@ -57,12 +57,8 @@ impl ForkStateReader {
     }
 
     pub fn chain_id(&self) -> Result<ChainId> {
-        let id = self
-            .runtime
-            .block_on(self.client.chain_id())
-            .map_err(anyhow::Error::from)?;
-
-        let id = parse_cairo_short_string(&id).map_err(anyhow::Error::from)?;
+        let id = self.runtime.block_on(self.client.chain_id())?;
+        let id = parse_cairo_short_string(&id)?;
         Ok(ChainId(id))
     }
 
