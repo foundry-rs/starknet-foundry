@@ -1,4 +1,4 @@
-use sncast_std::{deploy, DeployResult};
+use sncast_std::{deploy, DeployResult, FeeSettings, EthFeeSettings};
 use starknet::{ClassHash, Felt252TryIntoClassHash};
 use traits::Into;
 
@@ -14,7 +14,7 @@ fn main() {
         array![0x2, 0x2, 0x0],
         Option::Some(salt),
         true,
-        Option::Some(max_fee),
+        FeeSettings::Eth(EthFeeSettings { max_fee: Option::Some(max_fee) }),
         Option::None
     )
         .expect('deploy failed');

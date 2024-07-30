@@ -22,7 +22,7 @@ fn cheat_caller_address(
 
 /// Changes the caller address.
 /// - `caller_address` - caller address to be set
-fn cheat_caller_address_global(caller_address: ContractAddress) {
+fn start_cheat_caller_address_global(caller_address: ContractAddress) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info.caller_address = Operation::StartGlobal(caller_address);
@@ -30,7 +30,7 @@ fn cheat_caller_address_global(caller_address: ContractAddress) {
     cheat_execution_info(execution_info);
 }
 
-/// Cancels the `cheat_caller_address_global`.
+/// Cancels the `start_cheat_caller_address_global`.
 fn stop_cheat_caller_address_global() {
     let mut execution_info: ExecutionInfoMock = Default::default();
 

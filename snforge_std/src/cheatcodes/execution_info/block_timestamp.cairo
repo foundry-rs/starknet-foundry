@@ -21,7 +21,7 @@ fn cheat_block_timestamp(contract_address: ContractAddress, block_timestamp: u64
 
 /// Changes the block timestamp.
 /// - `block_timestamp` - block timestamp to be set
-fn cheat_block_timestamp_global(block_timestamp: u64) {
+fn start_cheat_block_timestamp_global(block_timestamp: u64) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info.block_info.block_timestamp = Operation::StartGlobal(block_timestamp);
@@ -29,7 +29,7 @@ fn cheat_block_timestamp_global(block_timestamp: u64) {
     cheat_execution_info(execution_info);
 }
 
-/// Cancels the `cheat_block_timestamp_global`.
+/// Cancels the `start_cheat_block_timestamp_global`.
 fn stop_cheat_block_timestamp_global() {
     let mut execution_info: ExecutionInfoMock = Default::default();
 

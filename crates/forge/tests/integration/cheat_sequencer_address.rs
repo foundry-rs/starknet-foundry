@@ -15,7 +15,7 @@ fn cheat_sequencer_address_basic() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use snforge_std::{ declare, ContractClassTrait, start_cheat_sequencer_address, cheat_sequencer_address_global, stop_cheat_sequencer_address_global, stop_cheat_sequencer_address };
+            use snforge_std::{ declare, ContractClassTrait, start_cheat_sequencer_address, start_cheat_sequencer_address_global, stop_cheat_sequencer_address_global, stop_cheat_sequencer_address };
 
             #[starknet::interface]
             trait ICheatSequencerAddressChecker<TContractState> {
@@ -85,7 +85,7 @@ fn cheat_sequencer_address_basic() {
                 let old_seq_addr1 = cheat_sequencer_address_checker1.get_sequencer_address();
                 let old_seq_addr2 = cheat_sequencer_address_checker2.get_sequencer_address();
 
-                cheat_sequencer_address_global(123.try_into().unwrap());
+                start_cheat_sequencer_address_global(123.try_into().unwrap());
 
                 let new_seq_addr1 = cheat_sequencer_address_checker1.get_sequencer_address();
                 let new_seq_addr2 = cheat_sequencer_address_checker2.get_sequencer_address();
@@ -113,7 +113,7 @@ fn cheat_sequencer_address_basic() {
 
                 let old_seq_addr = dispatcher.get_sequencer_address();
 
-                cheat_sequencer_address_global(target_seq_addr);
+                start_cheat_sequencer_address_global(target_seq_addr);
 
                 let new_seq_addr = dispatcher.get_sequencer_address();
                 assert(new_seq_addr == 123.try_into().unwrap(), 'Wrong seq addr');
@@ -148,7 +148,7 @@ fn cheat_sequencer_address_complex() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use snforge_std::{ declare, ContractClassTrait, start_cheat_sequencer_address, cheat_sequencer_address_global, stop_cheat_sequencer_address };
+            use snforge_std::{ declare, ContractClassTrait, start_cheat_sequencer_address, start_cheat_sequencer_address_global, stop_cheat_sequencer_address };
             
             #[starknet::interface]
             trait ICheatSequencerAddressChecker<TContractState> {
@@ -167,7 +167,7 @@ fn cheat_sequencer_address_complex() {
 
                 let old_seq_addr2 = cheat_sequencer_address_checker2.get_sequencer_address();
 
-                cheat_sequencer_address_global(123.try_into().unwrap());
+                start_cheat_sequencer_address_global(123.try_into().unwrap());
 
                 let new_seq_addr1 = cheat_sequencer_address_checker1.get_sequencer_address();
                 let new_seq_addr2 = cheat_sequencer_address_checker2.get_sequencer_address();

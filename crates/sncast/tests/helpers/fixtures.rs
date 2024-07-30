@@ -1,12 +1,15 @@
 use crate::helpers::constants::{ACCOUNT_FILE_PATH, DEVNET_OZ_CLASS_HASH_CAIRO_0, URL};
+use crate::helpers::runner::runner;
 use anyhow::Context;
 use camino::{Utf8Path, Utf8PathBuf};
+use conversions::string::IntoHexStr;
+use fs_extra::dir::{copy, CopyOptions};
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
 use serde_json::{json, Map, Value};
 use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::helpers::constants::{
-    ARGENT_CLASS_HASH, BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH,
+    ARGENT_CLASS_HASH, BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH,
 };
 use sncast::helpers::scarb_utils::get_package_metadata;
 use sncast::state::state_file::{
@@ -15,7 +18,7 @@ use sncast::state::state_file::{
 use sncast::{apply_optional, get_chain_id, get_keystore_password, AccountType};
 use sncast::{get_account, get_provider};
 use starknet::accounts::{
-    Account, AccountFactory, ArgentAccountFactory, Call, Execution, OpenZeppelinAccountFactory,
+    Account, AccountFactory, ArgentAccountFactory, Call, ExecutionV1, OpenZeppelinAccountFactory,
 };
 use starknet::core::types::TransactionReceipt;
 use starknet::core::types::{FieldElement, InvokeTransactionResult};
@@ -29,7 +32,7 @@ use std::env;
 use std::fs;
 use std::fs::File;
 use std::io::{BufRead, Write};
-use tempfile::TempDir;
+use tempfile::{tempdir, TempDir};
 use toml::Table;
 use url::Url;
 
@@ -69,7 +72,16 @@ pub async fn deploy_cairo_0_account() {
     )
     .await;
 }
-
+pub async fn deploy_latest_oz_account() {
+    let (address, salt, private_key) = get_account_deployment_data("oz");
+    deploy_oz_account(
+        address.as_str(),
+        OZ_CLASS_HASH.into_hex_string().as_str(),
+        salt.as_str(),
+        private_key,
+    )
+    .await;
+}
 pub async fn deploy_argent_account() {
     let provider = get_provider(URL).expect("Failed to get the provider");
     let chain_id = get_chain_id(&provider)
@@ -133,7 +145,7 @@ async fn deploy_oz_account(address: &str, class_hash: &str, salt: &str, private_
 async fn deploy_account_to_devnet<T: AccountFactory + Sync>(factory: T, address: &str, salt: &str) {
     mint_token(address, u64::MAX).await;
     factory
-        .deploy(salt.parse().expect("Failed to parse salt"))
+        .deploy_v1(salt.parse().expect("Failed to parse salt"))
         .send()
         .await
         .expect("Failed to deploy account");
@@ -202,8 +214,8 @@ pub async fn invoke_contract(
         calldata,
     };
 
-    let execution = account.execute(vec![call]);
-    let execution = apply_optional(execution, max_fee, Execution::max_fee);
+    let execution = account.execute_v1(vec![call]);
+    let execution = apply_optional(execution, max_fee, ExecutionV1::max_fee);
 
     execution.send().await.unwrap()
 }
@@ -212,19 +224,22 @@ pub async fn invoke_contract(
 // but serde_json cannot serialize numbers this big
 pub async fn mint_token(recipient: &str, amount: u64) {
     let client = reqwest::Client::new();
-    let json = json!(
-        {
-            "address": recipient,
-            "amount": amount
-        }
-    );
-    client
-        .post("http://127.0.0.1:5055/mint")
-        .header("Content-Type", "application/json")
-        .body(json.to_string())
-        .send()
-        .await
-        .expect("Error occurred while minting tokens");
+    for unit in ["FRI", "WEI"] {
+        let json = json!(
+            {
+                "address": recipient,
+                "amount": amount,
+                "unit": unit,
+            }
+        );
+        client
+            .post("http://127.0.0.1:5055/mint")
+            .header("Content-Type", "application/json")
+            .body(json.to_string())
+            .send()
+            .await
+            .expect("Error occurred while minting tokens");
+    }
 }
 
 #[must_use]
@@ -475,7 +490,7 @@ pub fn get_address_from_keystore(
     .unwrap();
     let class_hash = match account_type {
         AccountType::Braavos => BRAAVOS_BASE_ACCOUNT_CLASS_HASH,
-        AccountType::Oz | AccountType::Argent => FieldElement::from_hex_be(
+        AccountType::OpenZeppelin | AccountType::Argent => FieldElement::from_hex_be(
             deployment
                 .get("class_hash")
                 .and_then(serde_json::Value::as_str)
@@ -485,7 +500,9 @@ pub fn get_address_from_keystore(
     };
 
     let calldata = match account_type {
-        AccountType::Oz | AccountType::Braavos => vec![private_key.verifying_key().scalar()],
+        AccountType::OpenZeppelin | AccountType::Braavos => {
+            vec![private_key.verifying_key().scalar()]
+        }
         AccountType::Argent => vec![private_key.verifying_key().scalar(), FieldElement::ZERO],
     };
 
@@ -544,4 +561,78 @@ pub fn assert_tx_entry_success(tx_entry: &ScriptTransactionEntry, name: &str) {
     assert_eq!(expected_selector, name);
 
     assert!(tx_entry.timestamp > SCRIPT_ORIGIN_TIMESTAMP);
+}
+
+pub async fn create_and_deploy_oz_account() -> TempDir {
+    create_and_deploy_account(OZ_CLASS_HASH, AccountType::OpenZeppelin).await
+}
+pub async fn create_and_deploy_account(
+    class_hash: FieldElement,
+    account_type: AccountType,
+) -> TempDir {
+    let class_hash = &class_hash.into_hex_string();
+    let account_type = match account_type {
+        AccountType::OpenZeppelin => "oz",
+        AccountType::Argent => "argent",
+        AccountType::Braavos => "braavos",
+    };
+    let tempdir = tempdir().unwrap();
+    let accounts_file = "accounts.json";
+
+    let args = vec![
+        "--url",
+        URL,
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "create",
+        "--name",
+        "my_account",
+        "--class-hash",
+        class_hash,
+        "--type",
+        account_type,
+    ];
+
+    runner(&args).current_dir(tempdir.path()).assert().success();
+
+    let contents = fs::read_to_string(tempdir.path().join(accounts_file)).unwrap();
+    let items: Value = serde_json::from_str(&contents).unwrap();
+
+    mint_token(
+        items["alpha-sepolia"]["my_account"]["address"]
+            .as_str()
+            .unwrap(),
+        u64::MAX,
+    )
+    .await;
+
+    let args = vec![
+        "--url",
+        URL,
+        "--accounts-file",
+        accounts_file,
+        "--json",
+        "account",
+        "deploy",
+        "--name",
+        "my_account",
+        "--max-fee",
+        "99999999999999999",
+        "--fee-token",
+        "eth",
+    ];
+
+    runner(&args).current_dir(tempdir.path()).assert().success();
+
+    tempdir
+}
+
+pub fn join_tempdirs(from: &TempDir, to: &TempDir) {
+    copy(
+        from.path(),
+        to.path(),
+        &CopyOptions::new().overwrite(true).content_only(true),
+    )
+    .expect("Failed to copy the directory");
 }

@@ -33,7 +33,7 @@ impl CheatnetState {
         self.cheat_sequencer_address(contract_address, sequencer_address, CheatSpan::Indefinite);
     }
 
-    pub fn cheat_sequencer_address_global(&mut self, sequencer_address: ContractAddress) {
+    pub fn start_cheat_sequencer_address_global(&mut self, sequencer_address: ContractAddress) {
         self.cheat_execution_info(ExecutionInfoMockOperations {
             block_info: BlockInfoMockOperations {
                 sequencer_address: Operation::StartGlobal(sequencer_address),

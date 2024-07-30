@@ -8,6 +8,7 @@ use test_case::test_case;
 
 #[test_case("oz_cairo_0"; "cairo_0_account")]
 #[test_case("oz_cairo_1"; "cairo_1_account")]
+#[test_case("oz"; "oz_account")]
 #[test_case("argent"; "argent_account")]
 #[test_case("braavos"; "braavos_account")]
 #[tokio::test]
@@ -226,6 +227,42 @@ async fn test_sncast_timed_out() {
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
         ScriptCommandError::WaitForTransactionError(WaitForTransactionError::TimedOut(()))
+        command: script run
+        status: success
+    "});
+}
+
+#[tokio::test]
+async fn test_strk_fee_settings() {
+    let contract_dir = duplicate_contract_directory_with_salt(
+        SCRIPTS_DIR.to_owned() + "/map_script/contracts/",
+        "dummy",
+        "100",
+    );
+    let script_dir = copy_script_directory_to_tempdir(
+        SCRIPTS_DIR.to_owned() + "/declare/",
+        vec![contract_dir.as_ref()],
+    );
+
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
+
+    let script_name = "strk_fee_settings";
+    let args = vec![
+        "--accounts-file",
+        accounts_json_path.as_str(),
+        "--account",
+        "user4",
+        "--url",
+        URL,
+        "script",
+        "run",
+        &script_name,
+    ];
+
+    let snapbox = runner(&args).current_dir(script_dir.path());
+    snapbox.assert().success().stdout_matches(indoc! {r"
+        ...
+        success
         command: script run
         status: success
     "});
