@@ -10,7 +10,7 @@ Required.
 
 Name of the contract. Contract name is a part after the mod keyword in your contract file.
 
-## `--url <RPC_URL>`
+## `--url, -u <RPC_URL>`
 Optional.
 
 Starknet RPC node url address.

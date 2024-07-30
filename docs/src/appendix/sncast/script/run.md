@@ -10,7 +10,7 @@ Required.
 
 Script module name that contains the 'main' function that will be executed.
 
-## `--url <RPC_URL>`
+## `--url, -u <RPC_URL>`
 Optional.
 
 Starknet RPC node url address.

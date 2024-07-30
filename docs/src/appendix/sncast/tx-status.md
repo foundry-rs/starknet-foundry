@@ -8,7 +8,7 @@ Required.
 
 Hash of the transaction
 
-## `--url <RPC_URL>`
+## `--url, -u <RPC_URL>`
 Optional.
 
 Starknet RPC node url address.

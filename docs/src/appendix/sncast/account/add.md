@@ -19,7 +19,7 @@ Required.
 
 Type of the account. Possible values: oz, argent, braavos.
 
-## `--url <RPC_URL>`
+## `--url, -u <RPC_URL>`
 Optional.
 
 Starknet RPC node url address.

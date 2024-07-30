@@ -6,7 +6,7 @@ Required.
 
 Name of the (previously created) account to be deployed.
 
-## `--url <RPC_URL>`
+## `--url, -u <RPC_URL>`
 Optional.
 
 Starknet RPC node url address.

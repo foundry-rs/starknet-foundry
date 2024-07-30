@@ -33,7 +33,7 @@ pub struct Deploy {
     pub salt: Option<FieldElement>,
 
     /// If true, salt will be modified with an account address
-    #[clap(short, long)]
+    #[clap(long)]
     pub unique: bool,
 
     #[clap(flatten)]
