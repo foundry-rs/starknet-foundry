@@ -30,12 +30,16 @@ pub const DEFAULT_BLOCK_NUMBER: u64 = 2000;
 pub const SEQUENCER_ADDRESS: &str = "0x1000";
 pub const ERC20_CONTRACT_ADDRESS: &str = "0x1001";
 
+fn default_chain_id() -> ChainId {
+    ChainId(String::from(DEFAULT_CHAIN_ID))
+}
+
 #[must_use]
 pub fn build_block_context(block_info: &BlockInfo, chain_id: Option<ChainId>) -> BlockContext {
     BlockContext::new_unchecked(
         block_info,
         &ChainInfo {
-            chain_id: chain_id.unwrap_or(ChainId(String::from(DEFAULT_CHAIN_ID))),
+            chain_id: chain_id.unwrap_or_else(default_chain_id),
             fee_token_addresses: FeeTokenAddresses {
                 strk_fee_token_address: contract_address!(ERC20_CONTRACT_ADDRESS),
                 eth_fee_token_address: contract_address!(ERC20_CONTRACT_ADDRESS),

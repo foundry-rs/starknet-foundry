@@ -47,8 +47,6 @@ use cheatnet::runtime_extensions::forge_runtime_extension::{
 use cheatnet::state::{BlockInfoReader, CallTrace, CheatnetState, ExtendedStateReader};
 use runtime::starknet::context::{build_context, set_max_steps};
 use runtime::{ExtendedRuntime, StarknetRuntime};
-use starknet::core::utils::parse_cairo_short_string;
-use starknet_api::core::ChainId;
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
 use universal_sierra_compiler_api::{
@@ -219,12 +217,7 @@ pub fn run_test_case(
         )?,
     };
     let block_info = state_reader.get_block_info()?;
-    let chain_id = state_reader
-        .get_chain_id()?
-        .as_ref()
-        .map(parse_cairo_short_string)
-        .transpose()?
-        .map(ChainId);
+    let chain_id = state_reader.get_chain_id()?;
 
     let mut context = build_context(&block_info, chain_id);
 
