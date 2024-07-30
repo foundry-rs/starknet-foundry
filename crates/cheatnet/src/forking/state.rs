@@ -55,6 +55,12 @@ impl ForkStateReader {
         })
     }
 
+    pub fn get_chain_id(&self) -> Result<FieldElement> {
+        self.runtime
+            .block_on(self.client.chain_id())
+            .map_err(anyhow::Error::from)
+    }
+
     fn block_id(&self) -> BlockId {
         BlockId::Number(self.block_number.0)
     }

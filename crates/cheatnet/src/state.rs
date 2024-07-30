@@ -22,6 +22,7 @@ use conversions::serde::deserialize::CairoDeserialize;
 use conversions::serde::serialize::{BufferWriter, CairoSerialize};
 use runtime::starknet::context::SerializableBlockInfo;
 use runtime::starknet::state::DictStateReader;
+use starknet::core::types::FieldElement;
 use starknet_api::core::EntryPointSelector;
 use starknet_api::transaction::ContractAddressSalt;
 use starknet_api::{
@@ -120,6 +121,15 @@ impl StateReader for ExtendedStateReader {
             .dict_state_reader
             .get_compiled_class_hash(class_hash)
             .unwrap_or_default())
+    }
+}
+
+impl ExtendedStateReader {
+    pub fn get_chain_id(&self) -> anyhow::Result<Option<FieldElement>> {
+        self.fork_state_reader
+            .as_ref()
+            .map(ForkStateReader::get_chain_id)
+            .transpose()
     }
 }
 
