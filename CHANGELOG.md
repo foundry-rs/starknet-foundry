@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 - Renamed global cheatcodes listed [here](https://foundry-rs.github.io/starknet-foundry/appendix/cheatcodes.html) - cheatcode invocations affecting the global scope and working indefinitely, already marked with a `_global` suffix, received a `start_` prefix
 - Updated `cheat_account_contract_address` cheatcode - read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/cheatcodes/account_contract_address.html) - added a `start_` prefix to the `..._global` invocation which works globally and indefinitely
+- `#[should_panic]` attribute for `ByteArray` messages now matches by substring, not by exact message. [Read more here](https://foundry-rs.github.io/starknet-foundry/testing/testing.html#expected-failures)
 
 ### Cast
 
