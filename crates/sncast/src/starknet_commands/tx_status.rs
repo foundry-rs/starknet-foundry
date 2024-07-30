@@ -5,15 +5,25 @@ use starknet::core::types::{FieldElement, TransactionExecutionStatus, Transactio
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::{JsonRpcClient, Provider};
 
+use super::rpc::{self, RpcArgs};
+
 #[derive(Args)]
 #[command(about = "Get the status of a transaction")]
 pub struct TxStatus {
     /// Hash of the transaction
     pub transaction_hash: FieldElement,
 
-    /// RPC provider url address; overrides url from snfoundry.toml
-    #[clap(short = 'u', long = "url")]
-    pub rpc_url: Option<String>,
+    #[clap(flatten)]
+    pub rpc_args: RpcArgs,
+}
+
+impl rpc::Provider for TxStatus {
+    async fn get_provider(
+        &self,
+        config: &sncast::helpers::configuration::CastConfig,
+    ) -> anyhow::Result<JsonRpcClient<HttpTransport>> {
+        self.rpc_args.get_provider(config).await
+    }
 }
 
 pub async fn tx_status(

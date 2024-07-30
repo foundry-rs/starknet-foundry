@@ -20,13 +20,12 @@ use sncast::helpers::scarb_utils::{
 use sncast::response::errors::handle_starknet_command_error;
 use sncast::{
     chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_default_state_file_name,
-    get_nonce, get_provider_and_verify_rpc_version, NumbersFormat, ValidatedWaitParams, WaitForTx,
+    get_nonce, NumbersFormat, ValidatedWaitParams, WaitForTx,
 };
 use starknet::core::utils::get_selector_from_name;
 use starknet_commands::account::list::print_account_list;
-use starknet_commands::multicall::{self};
+use starknet_commands::rpc::Provider;
 use starknet_commands::verify::Verify;
-use starknet_commands::{call, declare, deploy, invoke, script, show_config, tx_status};
 use tokio::runtime::Runtime;
 
 mod starknet_commands;
@@ -181,7 +180,7 @@ async fn run_async_command(
 
     match cli.command {
         Commands::Declare(declare) => {
-            let provider = get_provider_and_verify_rpc_version(&config.url).await?;
+            let provider = declare.get_provider(&config).await?;
 
             declare.validate()?;
 
@@ -213,7 +212,7 @@ async fn run_async_command(
         }
 
         Commands::Deploy(deploy) => {
-            let provider = get_provider_and_verify_rpc_version(&config.url).await?;
+            let provider = deploy.get_provider(&config).await?;
 
             deploy.validate()?;
             let account = get_account(
@@ -233,7 +232,7 @@ async fn run_async_command(
         }
 
         Commands::Call(call) => {
-            let provider = get_provider_and_verify_rpc_version(&config.url).await?;
+            let provider = call.get_provider(&config).await?;
 
             let block_id = get_block_id(&call.block_id)?;
 
@@ -253,7 +252,7 @@ async fn run_async_command(
         }
 
         Commands::Invoke(invoke) => {
-            let provider = get_provider_and_verify_rpc_version(&config.url).await?;
+            let provider = invoke.get_provider(&config).await?;
 
             invoke.validate()?;
 
@@ -298,7 +297,7 @@ async fn run_async_command(
                     }
                 }
                 starknet_commands::multicall::Commands::Run(run) => {
-                    let provider = get_provider_and_verify_rpc_version(&config.url).await?;
+                    let provider = run.get_provider(&config).await?;
 
                     run.validate()?;
 
@@ -326,7 +325,7 @@ async fn run_async_command(
 
         Commands::Account(account) => match account.command {
             account::Commands::Add(add) => {
-                let provider = get_provider_and_verify_rpc_version(&config.url).await?;
+                let provider = add.get_provider(&config).await?;
 
                 let mut result = starknet_commands::account::add::add(
                     &config.url,
@@ -342,7 +341,7 @@ async fn run_async_command(
             }
 
             account::Commands::Create(create) => {
-                let provider = get_provider_and_verify_rpc_version(&config.url).await?;
+                let provider = create.get_provider(&config).await?;
 
                 let chain_id = get_chain_id(&provider).await?;
                 let account = if config.keystore.is_none() {
@@ -378,7 +377,7 @@ async fn run_async_command(
             account::Commands::Deploy(deploy) => {
                 deploy.validate()?;
 
-                let provider = get_provider_and_verify_rpc_version(&config.url).await?;
+                let provider = deploy.get_provider(&config).await?;
 
                 let chain_id = get_chain_id(&provider).await?;
                 let keystore_path = config.keystore.clone();
@@ -403,7 +402,7 @@ async fn run_async_command(
             }
 
             account::Commands::Delete(delete) => {
-                let provider = get_provider_and_verify_rpc_version(&config.url).await?;
+                let provider = delete.get_provider(&config).await?;
 
                 let network_name = match delete.network {
                     Some(network) => network,
@@ -434,17 +433,18 @@ async fn run_async_command(
             ),
         },
 
-        Commands::ShowConfig(_) => {
-            let provider = get_provider_and_verify_rpc_version(&config.url).await?;
+        Commands::ShowConfig(show) => {
+            let provider = show.get_provider(&config).await?;
 
             let mut result =
-                starknet_commands::show_config::show_config(&provider, config, cli.profile).await;
+                starknet_commands::show_config::show_config(&show, &provider, config, cli.profile)
+                    .await;
             print_command_result("show-config", &mut result, numbers_format, &output_format)?;
             Ok(())
         }
 
         Commands::TxStatus(tx_status) => {
-            let provider = get_provider_and_verify_rpc_version(&config.url).await?;
+            let provider = tx_status.get_provider(&config).await?;
 
             let mut result =
                 starknet_commands::tx_status::tx_status(&provider, tx_status.transaction_hash)
@@ -506,7 +506,7 @@ fn run_script_command(
                 &cli.profile,
             )?;
             update_cast_config(&mut config, cli);
-            let provider = runtime.block_on(get_provider_and_verify_rpc_version(&config.url))?;
+            let provider = runtime.block_on(run.get_provider(&config))?;
 
             let mut artifacts = build_and_load_artifacts(
                 &package_metadata,
@@ -581,29 +581,4 @@ fn update_cast_config(config: &mut CastConfig, cli: &Cli) {
         ),
         clone_or_else!(cli.wait_timeout, config.wait_params.get_timeout()),
     );
-
-    let url = match cli.command {
-        Commands::Declare(declare::Declare { ref rpc_url, .. })
-        | Commands::Deploy(deploy::Deploy { ref rpc_url, .. })
-        | Commands::Call(call::Call { ref rpc_url, .. })
-        | Commands::Invoke(invoke::Invoke { ref rpc_url, .. })
-        | Commands::Multicall(Multicall {
-            command: multicall::Commands::Run(multicall::run::Run { ref rpc_url, .. }),
-        })
-        | Commands::ShowConfig(show_config::ShowConfig { ref rpc_url, .. })
-        | Commands::Script(script::Script {
-            command: script::Commands::Run(script::run::Run { ref rpc_url, .. }),
-        })
-        | Commands::TxStatus(tx_status::TxStatus { ref rpc_url, .. }) => rpc_url,
-        Commands::Account(Account { ref command }) => match command {
-            account::Commands::Add(account::add::Add { ref rpc_url, .. })
-            | account::Commands::Create(account::create::Create { ref rpc_url, .. })
-            | account::Commands::Deploy(account::deploy::Deploy { ref rpc_url, .. })
-            | account::Commands::Delete(account::delete::Delete { ref rpc_url, .. }) => rpc_url,
-            account::Commands::List(_) => &None,
-        },
-        _ => &None,
-    };
-
-    config.url = clone_or_else!(url, config.url);
 }

@@ -9,7 +9,7 @@ Required.
 
 Account name under which account information is going to be saved.
 
-## `--url, -u <RPC_URL>`
+## `--url <RPC_URL>`
 Optional.
 
 Starknet RPC node url address.

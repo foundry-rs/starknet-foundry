@@ -25,6 +25,8 @@ use sncast::{
     handle_rpc_error, handle_wait_for_tx, impl_payable_transaction, AccountType, WaitForTx,
 };
 
+use crate::starknet_commands::rpc::{self, RpcArgs};
+
 #[derive(Args, Debug)]
 #[command(about = "Deploy an account to the Starknet")]
 pub struct Deploy {
@@ -39,9 +41,17 @@ pub struct Deploy {
     #[clap(short, long)]
     pub version: Option<AccountDeployVersion>,
 
-    /// RPC provider url address; overrides url from snfoundry.toml
-    #[clap(short = 'u', long = "url")]
-    pub rpc_url: Option<String>,
+    #[clap(flatten)]
+    pub rpc_args: RpcArgs,
+}
+
+impl rpc::Provider for Deploy {
+    async fn get_provider(
+        &self,
+        config: &sncast::helpers::configuration::CastConfig,
+    ) -> anyhow::Result<JsonRpcClient<HttpTransport>> {
+        self.rpc_args.get_provider(config).await
+    }
 }
 
 #[derive(ValueEnum, Debug, Clone)]

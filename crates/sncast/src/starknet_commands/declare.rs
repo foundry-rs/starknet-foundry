@@ -20,6 +20,8 @@ use starknet::{
 use std::collections::HashMap;
 use std::sync::Arc;
 
+use super::rpc::{self, RpcArgs};
+
 #[derive(Args)]
 #[command(about = "Declare a contract to starknet", long_about = None)]
 pub struct Declare {
@@ -38,13 +40,21 @@ pub struct Declare {
     #[clap(long)]
     pub package: Option<String>,
 
-    /// RPC provider url address; overrides url from snfoundry.toml
-    #[clap(short = 'u', long = "url")]
-    pub rpc_url: Option<String>,
-
     /// Version of the declaration (can be inferred from fee token)
     #[clap(short, long)]
     pub version: Option<DeclareVersion>,
+
+    #[clap(flatten)]
+    pub rpc_args: RpcArgs,
+}
+
+impl rpc::Provider for Declare {
+    async fn get_provider(
+        &self,
+        config: &sncast::helpers::configuration::CastConfig,
+    ) -> anyhow::Result<JsonRpcClient<HttpTransport>> {
+        self.rpc_args.get_provider(config).await
+    }
 }
 
 #[derive(ValueEnum, Debug, Clone)]

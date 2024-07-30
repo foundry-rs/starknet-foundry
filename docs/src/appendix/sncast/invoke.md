@@ -21,7 +21,7 @@ Optional.
 Inputs to the function, represented by a list of space-delimited values `0x1 2 0x3`.
 Calldata arguments may be either 0x hex or decimal felts.
 
-## `--url, -u <RPC_URL>`
+## `--url <RPC_URL>`
 Optional.
 
 Starknet RPC node url address.

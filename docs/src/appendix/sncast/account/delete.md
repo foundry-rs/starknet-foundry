@@ -6,7 +6,7 @@ Required.
 
 Account name which is going to be deleted.
 
-## `--url, -u <RPC_URL>`
+## `--url <RPC_URL>`
 Optional.
 
 Starknet RPC node url address.

@@ -5,6 +5,8 @@ use promptly::prompt;
 use serde_json::Map;
 use sncast::response::structs::AccountDeleteResponse;
 
+use crate::starknet_commands::rpc::{Provider, RpcArgs};
+
 #[derive(Args, Debug)]
 #[command(about = "Delete account information from the accounts file")]
 pub struct Delete {
@@ -20,9 +22,19 @@ pub struct Delete {
     #[clap(long, default_value = "false")]
     pub yes: bool,
 
-    /// RPC provider url address; overrides url from snfoundry.toml
-    #[clap(short = 'u', long = "url")]
-    pub rpc_url: Option<String>,
+    #[clap(flatten)]
+    pub rpc_args: RpcArgs,
+}
+
+impl Provider for Delete {
+    async fn get_provider(
+        &self,
+        config: &sncast::helpers::configuration::CastConfig,
+    ) -> anyhow::Result<
+        starknet::providers::JsonRpcClient<starknet::providers::jsonrpc::HttpTransport>,
+    > {
+        self.rpc_args.get_provider(config).await
+    }
 }
 
 #[allow(clippy::too_many_arguments)]

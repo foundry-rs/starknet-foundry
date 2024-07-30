@@ -11,7 +11,7 @@ Required.
 
 Path to a TOML file with call declarations.
 
-## `--url, -u <RPC_URL>`
+## `--url <RPC_URL>`
 Optional.
 
 Starknet RPC node url address.

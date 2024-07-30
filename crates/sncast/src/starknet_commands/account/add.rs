@@ -2,6 +2,7 @@ use crate::starknet_commands::account::{
     add_created_profile_to_configuration, prepare_account_json, write_account_to_accounts_file,
     AccountType,
 };
+use crate::starknet_commands::rpc::{Provider, RpcArgs};
 use anyhow::{ensure, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
@@ -53,9 +54,17 @@ pub struct Add {
     #[clap(long)]
     pub add_profile: Option<String>,
 
-    /// RPC provider url address; overrides url from snfoundry.toml
-    #[clap(short = 'u', long = "url")]
-    pub rpc_url: Option<String>,
+    #[clap(flatten)]
+    pub rpc_args: RpcArgs,
+}
+
+impl Provider for Add {
+    async fn get_provider(
+        &self,
+        config: &CastConfig,
+    ) -> anyhow::Result<JsonRpcClient<HttpTransport>> {
+        self.rpc_args.get_provider(config).await
+    }
 }
 
 pub async fn add(

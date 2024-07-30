@@ -6,6 +6,8 @@ use starknet::core::types::{BlockId, FieldElement, FunctionCall};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::{JsonRpcClient, Provider};
 
+use super::rpc::{self, RpcArgs};
+
 #[derive(Args)]
 #[command(about = "Call a contract instance on Starknet", long_about = None)]
 pub struct Call {
@@ -27,9 +29,17 @@ pub struct Call {
     #[clap(short, long, default_value = "pending")]
     pub block_id: String,
 
-    /// RPC provider url address; overrides url from snfoundry.toml
-    #[clap(short = 'u', long = "url")]
-    pub rpc_url: Option<String>,
+    #[clap(flatten)]
+    pub rpc_args: RpcArgs,
+}
+
+impl rpc::Provider for Call {
+    async fn get_provider(
+        &self,
+        config: &sncast::helpers::configuration::CastConfig,
+    ) -> anyhow::Result<JsonRpcClient<HttpTransport>> {
+        self.rpc_args.get_provider(config).await
+    }
 }
 
 #[allow(clippy::ptr_arg)]

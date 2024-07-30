@@ -11,7 +11,7 @@ Required.
 
 The name of the function being called.
 
-## `--url, -u <RPC_URL>`
+## `--url <RPC_URL>`
 Optional.
 
 Starknet RPC node url address.

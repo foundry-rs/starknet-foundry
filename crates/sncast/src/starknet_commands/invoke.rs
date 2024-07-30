@@ -14,6 +14,8 @@ use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
 
+use super::rpc::{self, RpcArgs};
+
 #[derive(Args, Clone)]
 #[command(about = "Invoke a contract on Starknet")]
 pub struct Invoke {
@@ -36,13 +38,21 @@ pub struct Invoke {
     #[clap(short, long)]
     pub nonce: Option<FieldElement>,
 
-    /// RPC provider url address; overrides url from snfoundry.toml
-    #[clap(short = 'u', long = "url")]
-    pub rpc_url: Option<String>,
-
     /// Version of invoke (can be inferred from fee token)
     #[clap(short, long)]
     pub version: Option<InvokeVersion>,
+
+    #[clap(flatten)]
+    pub rpc_args: RpcArgs,
+}
+
+impl rpc::Provider for Invoke {
+    async fn get_provider(
+        &self,
+        config: &sncast::helpers::configuration::CastConfig,
+    ) -> anyhow::Result<JsonRpcClient<HttpTransport>> {
+        self.rpc_args.get_provider(config).await
+    }
 }
 
 #[derive(ValueEnum, Debug, Clone)]
