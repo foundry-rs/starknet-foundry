@@ -12,21 +12,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Forge
 
 #### Added
+
 - `spy_messages_to_l1()` for listening in on messages to L1 sent by your contracts. [Read more here](https://foundry-rs.github.io/starknet-foundry/testing/testing-messages-to-l1.html).
 
 #### Changed
+
 - Renamed global cheatcodes listed [here](https://foundry-rs.github.io/starknet-foundry/appendix/cheatcodes.html) - cheatcode invocations affecting the global scope and working indefinitely, already marked with a `_global` suffix, received a `start_` prefix
 - Updated `cheat_account_contract_address` cheatcode - read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/cheatcodes/account_contract_address.html)
 
 ### Cast
 
 #### Added
+
 - `verify` subcommand to verify contract (walnut APIs supported as of this version). [Read more here](https://foundry-rs.github.io/starknet-foundry/appendix/sncast/verify.html)
 - support for v3 transactions on account deploy, deploy, declare, invoke
 - Newest class hash for OpenZeppelin account contracts
 - `account list` subcommand for listing all available accounts [Read more here](https://foundry-rs.github.io/starknet-foundry/appendix/sncast/account/list.html)
 
 #### Changed
+
 - `multicall new` no longer prints generated template to stdout and now requires specifying output path. [Read more here](https://foundry-rs.github.io/starknet-foundry/appendix/sncast/multicall/new.html)
 
 ## [0.26.0] - 2024-07-03
@@ -44,7 +48,6 @@ about updated `spy_events` cheatcode
 #### Changed
 
 - `SyscallResultStringErrorTrait::map_error_to_string` removed in favor of utility function (`snforge_std::byte_array::try_deserialize_bytearray_error`)
-
 
 ### Cast
 
@@ -72,7 +75,6 @@ about updated `spy_events` cheatcode
 
 ### Cast
 
-
 #### Added
 
 - New required flag `--type` to `account add` command
@@ -92,6 +94,7 @@ about updated `spy_events` cheatcode
 ### Forge
 
 #### Removed
+
 - `event_name_hash` removal, in favour of `selector!` usage
 
 #### Changed
@@ -112,6 +115,7 @@ produced by Scarb if they were present. Setting up `casm = true` in `Scarb.toml`
 down the compilation.
 
 #### Fixed
+
 - scripts built with release profile are now properly recognized and ran
 
 ## [0.22.0] - 2024-04-17
@@ -419,7 +423,7 @@ PS: Credits to @bllu404 for the help with the new interfaces for cheats!
 
 ### Cast
 
-### Added
+#### Added
 
 - MVP for cairo deployment scripts with declare, deploy, invoke and call
 
@@ -506,6 +510,7 @@ Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/snforge.
 - `--hex-format` flag has been added
 
 #### Removed
+
 - `-i` short for `--int-format` is removed, now have to use the full form `--int-format`
 
 ## [0.8.3] - 2023-10-17
