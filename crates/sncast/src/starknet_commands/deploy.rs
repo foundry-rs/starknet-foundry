@@ -1,3 +1,4 @@
+use super::rpc::RpcArgs;
 use anyhow::{anyhow, Result};
 use clap::{Args, ValueEnum};
 use sncast::helpers::error::token_not_supported_for_deployment;
@@ -14,8 +15,6 @@ use starknet::core::utils::get_udc_deployed_address;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
-
-use super::rpc::{self, RpcArgs};
 
 #[derive(Args)]
 #[command(about = "Deploy a contract on Starknet")]
@@ -48,16 +47,7 @@ pub struct Deploy {
     pub version: Option<DeployVersion>,
 
     #[clap(flatten)]
-    pub rpc_args: RpcArgs,
-}
-
-impl rpc::Provider for Deploy {
-    async fn get_provider(
-        &self,
-        config: &sncast::helpers::configuration::CastConfig,
-    ) -> anyhow::Result<JsonRpcClient<HttpTransport>> {
-        self.rpc_args.get_provider(config).await
-    }
+    pub rpc: RpcArgs,
 }
 
 #[derive(ValueEnum, Debug, Clone)]

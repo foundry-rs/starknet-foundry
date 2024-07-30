@@ -16,6 +16,7 @@ use starknet::providers::ProviderError::StarknetError;
 use starknet::providers::{JsonRpcClient, Provider};
 use starknet::signers::{LocalWallet, SigningKey};
 
+use crate::starknet_commands::rpc::RpcArgs;
 use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::helpers::error::token_not_supported_for_deployment;
 use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken, PayableTransaction};
@@ -24,8 +25,6 @@ use sncast::{
     get_account_data_from_accounts_file, get_account_data_from_keystore, get_keystore_password,
     handle_rpc_error, handle_wait_for_tx, impl_payable_transaction, AccountType, WaitForTx,
 };
-
-use crate::starknet_commands::rpc::{self, RpcArgs};
 
 #[derive(Args, Debug)]
 #[command(about = "Deploy an account to the Starknet")]
@@ -42,16 +41,7 @@ pub struct Deploy {
     pub version: Option<AccountDeployVersion>,
 
     #[clap(flatten)]
-    pub rpc_args: RpcArgs,
-}
-
-impl rpc::Provider for Deploy {
-    async fn get_provider(
-        &self,
-        config: &sncast::helpers::configuration::CastConfig,
-    ) -> anyhow::Result<JsonRpcClient<HttpTransport>> {
-        self.rpc_args.get_provider(config).await
-    }
+    pub rpc: RpcArgs,
 }
 
 #[derive(ValueEnum, Debug, Clone)]

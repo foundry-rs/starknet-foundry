@@ -1,11 +1,10 @@
+use super::rpc::RpcArgs;
 use clap::Args;
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::structs::{ExecutionStatus, FinalityStatus, TransactionStatusResponse};
 use starknet::core::types::{FieldElement, TransactionExecutionStatus, TransactionStatus};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::{JsonRpcClient, Provider};
-
-use super::rpc::{self, RpcArgs};
 
 #[derive(Args)]
 #[command(about = "Get the status of a transaction")]
@@ -14,16 +13,7 @@ pub struct TxStatus {
     pub transaction_hash: FieldElement,
 
     #[clap(flatten)]
-    pub rpc_args: RpcArgs,
-}
-
-impl rpc::Provider for TxStatus {
-    async fn get_provider(
-        &self,
-        config: &sncast::helpers::configuration::CastConfig,
-    ) -> anyhow::Result<JsonRpcClient<HttpTransport>> {
-        self.rpc_args.get_provider(config).await
-    }
+    pub rpc: RpcArgs,
 }
 
 pub async fn tx_status(

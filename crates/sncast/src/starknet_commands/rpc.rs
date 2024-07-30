@@ -1,5 +1,6 @@
 use clap::Args;
-use sncast::{get_provider_and_verify_rpc_version, helpers::configuration::CastConfig};
+use shared::verify_and_warn_if_incompatible_rpc_version;
+use sncast::{get_provider, helpers::configuration::CastConfig};
 use starknet::providers::{jsonrpc::HttpTransport, JsonRpcClient};
 
 #[derive(Args, Clone, Debug, Default)]
@@ -9,18 +10,16 @@ pub struct RpcArgs {
     pub url: Option<String>,
 }
 
-pub trait Provider {
-    async fn get_provider(
-        &self,
-        config: &CastConfig,
-    ) -> anyhow::Result<JsonRpcClient<HttpTransport>>;
-}
-
-impl Provider for RpcArgs {
-    async fn get_provider(
+impl RpcArgs {
+    pub async fn get_provider(
         &self,
         config: &CastConfig,
     ) -> anyhow::Result<JsonRpcClient<HttpTransport>> {
-        get_provider_and_verify_rpc_version(self.url.as_ref().unwrap_or(&config.url)).await
+        let url = self.url.as_ref().unwrap_or(&config.url).to_owned();
+        let provider = get_provider(&url)?;
+
+        verify_and_warn_if_incompatible_rpc_version(&provider, &url).await?;
+
+        Ok(provider)
     }
 }

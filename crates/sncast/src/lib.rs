@@ -28,7 +28,7 @@ use crate::helpers::constants::{DEFAULT_STATE_FILE_SUFFIX, WAIT_RETRY_INTERVAL, 
 use crate::response::errors::SNCastProviderError;
 use conversions::serde::serialize::CairoSerialize;
 use serde::de::DeserializeOwned;
-use shared::{rpc::create_rpc_client, verify_and_warn_if_incompatible_rpc_version};
+use shared::rpc::create_rpc_client;
 use starknet::accounts::{AccountFactory, AccountFactoryError};
 use std::str::FromStr;
 use std::thread::sleep;
@@ -175,14 +175,6 @@ impl Default for ValidatedWaitParams {
 pub fn get_provider(url: &str) -> Result<JsonRpcClient<HttpTransport>> {
     raise_if_empty(url, "RPC url")?;
     create_rpc_client(url)
-}
-
-pub async fn get_provider_and_verify_rpc_version(
-    url: &str,
-) -> Result<JsonRpcClient<HttpTransport>> {
-    let provider = get_provider(url)?;
-    verify_and_warn_if_incompatible_rpc_version(&provider, url).await?;
-    Ok(provider)
 }
 
 pub async fn get_chain_id(provider: &JsonRpcClient<HttpTransport>) -> Result<FieldElement> {

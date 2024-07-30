@@ -1,5 +1,5 @@
 use crate::starknet_commands::invoke::{execute_calls, InvokeVersion};
-use crate::starknet_commands::rpc::{Provider, RpcArgs};
+use crate::starknet_commands::rpc::RpcArgs;
 use anyhow::anyhow;
 use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
@@ -34,16 +34,7 @@ pub struct Run {
     pub version: Option<InvokeVersion>,
 
     #[clap(flatten)]
-    pub rpc_args: RpcArgs,
-}
-
-impl Provider for Run {
-    async fn get_provider(
-        &self,
-        config: &sncast::helpers::configuration::CastConfig,
-    ) -> anyhow::Result<JsonRpcClient<HttpTransport>> {
-        self.rpc_args.get_provider(config).await
-    }
+    pub rpc: RpcArgs,
 }
 
 impl_payable_transaction!(Run, token_not_supported_for_invoke,

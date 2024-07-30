@@ -1,3 +1,4 @@
+use super::rpc::RpcArgs;
 use anyhow::Result;
 use clap::Args;
 use sncast::response::errors::StarknetCommandError;
@@ -5,8 +6,6 @@ use sncast::response::structs::{CallResponse, Felt};
 use starknet::core::types::{BlockId, FieldElement, FunctionCall};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::{JsonRpcClient, Provider};
-
-use super::rpc::{self, RpcArgs};
 
 #[derive(Args)]
 #[command(about = "Call a contract instance on Starknet", long_about = None)]
@@ -30,16 +29,7 @@ pub struct Call {
     pub block_id: String,
 
     #[clap(flatten)]
-    pub rpc_args: RpcArgs,
-}
-
-impl rpc::Provider for Call {
-    async fn get_provider(
-        &self,
-        config: &sncast::helpers::configuration::CastConfig,
-    ) -> anyhow::Result<JsonRpcClient<HttpTransport>> {
-        self.rpc_args.get_provider(config).await
-    }
+    pub rpc: RpcArgs,
 }
 
 #[allow(clippy::ptr_arg)]

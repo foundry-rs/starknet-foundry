@@ -7,6 +7,7 @@ use sncast::{apply_optional, handle_wait_for_tx, impl_payable_transaction, Error
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{ConnectedAccount, DeclarationV2, DeclarationV3};
 
+use super::rpc::RpcArgs;
 use sncast::helpers::error::token_not_supported_for_declaration;
 use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken, PayableTransaction};
 use sncast::response::errors::StarknetCommandError;
@@ -19,8 +20,6 @@ use starknet::{
 };
 use std::collections::HashMap;
 use std::sync::Arc;
-
-use super::rpc::{self, RpcArgs};
 
 #[derive(Args)]
 #[command(about = "Declare a contract to starknet", long_about = None)]
@@ -45,16 +44,7 @@ pub struct Declare {
     pub version: Option<DeclareVersion>,
 
     #[clap(flatten)]
-    pub rpc_args: RpcArgs,
-}
-
-impl rpc::Provider for Declare {
-    async fn get_provider(
-        &self,
-        config: &sncast::helpers::configuration::CastConfig,
-    ) -> anyhow::Result<JsonRpcClient<HttpTransport>> {
-        self.rpc_args.get_provider(config).await
-    }
+    pub rpc: RpcArgs,
 }
 
 #[derive(ValueEnum, Debug, Clone)]

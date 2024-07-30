@@ -4,7 +4,7 @@ use std::fs;
 use crate::starknet_commands::declare::Declare;
 use crate::starknet_commands::deploy::Deploy;
 use crate::starknet_commands::invoke::Invoke;
-use crate::starknet_commands::rpc::{Provider, RpcArgs};
+use crate::starknet_commands::rpc::RpcArgs;
 use crate::starknet_commands::{call, declare, deploy, invoke, tx_status};
 use crate::{get_account, get_nonce, WaitForTx};
 use anyhow::{anyhow, Context, Result};
@@ -72,16 +72,7 @@ pub struct Run {
     pub no_state_file: bool,
 
     #[clap(flatten)]
-    pub rpc_args: RpcArgs,
-}
-
-impl Provider for Run {
-    async fn get_provider(
-        &self,
-        config: &CastConfig,
-    ) -> anyhow::Result<JsonRpcClient<HttpTransport>> {
-        self.rpc_args.get_provider(config).await
-    }
+    pub rpc: RpcArgs,
 }
 
 pub struct CastScriptExtension<'a> {
@@ -137,7 +128,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     nonce,
                     package: None,
                     version: None,
-                    rpc_args: RpcArgs::default(),
+                    rpc: RpcArgs::default(),
                 };
 
                 let declare_tx_id = generate_declare_tx_id(contract.as_str());
@@ -181,7 +172,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     fee_args,
                     nonce,
                     version: None,
-                    rpc_args: RpcArgs::default(),
+                    rpc: RpcArgs::default(),
                 };
 
                 let deploy_tx_id =
@@ -224,7 +215,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     fee_args,
                     nonce,
                     version: None,
-                    rpc_args: RpcArgs::default(),
+                    rpc: RpcArgs::default(),
                 };
 
                 let invoke_tx_id =

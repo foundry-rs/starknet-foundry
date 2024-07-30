@@ -1,3 +1,4 @@
+use super::rpc::RpcArgs;
 use anyhow::Result;
 use camino::Utf8PathBuf;
 use clap::Args;
@@ -7,22 +8,11 @@ use sncast::{chain_id_to_network_name, get_chain_id};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 
-use super::rpc::{Provider, RpcArgs};
-
 #[derive(Args)]
 #[command(about = "Show current configuration being used", long_about = None)]
 pub struct ShowConfig {
     #[clap(flatten)]
-    pub rpc_args: RpcArgs,
-}
-
-impl Provider for ShowConfig {
-    async fn get_provider(
-        &self,
-        config: &CastConfig,
-    ) -> anyhow::Result<JsonRpcClient<HttpTransport>> {
-        self.rpc_args.get_provider(config).await
-    }
+    pub rpc: RpcArgs,
 }
 
 #[allow(clippy::ptr_arg)]
@@ -34,8 +24,7 @@ pub async fn show_config(
 ) -> Result<ShowConfigResponse> {
     let chain_id_field = get_chain_id(provider).await?;
     let chain_id = chain_id_to_network_name(chain_id_field);
-    let rpc_url =
-        Some(show.rpc_args.url.clone().unwrap_or(cast_config.url)).filter(|p| !p.is_empty());
+    let rpc_url = Some(show.rpc.url.clone().unwrap_or(cast_config.url)).filter(|p| !p.is_empty());
     let account = Some(cast_config.account).filter(|p| !p.is_empty());
     let mut accounts_file_path =
         Some(cast_config.accounts_file).filter(|p| p != &Utf8PathBuf::default());

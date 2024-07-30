@@ -1,3 +1,4 @@
+use super::rpc::RpcArgs;
 use anyhow::{anyhow, Result};
 use clap::{Args, ValueEnum};
 use sncast::helpers::error::token_not_supported_for_invoke;
@@ -13,8 +14,6 @@ use starknet::core::types::FieldElement;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
-
-use super::rpc::{self, RpcArgs};
 
 #[derive(Args, Clone)]
 #[command(about = "Invoke a contract on Starknet")]
@@ -43,16 +42,7 @@ pub struct Invoke {
     pub version: Option<InvokeVersion>,
 
     #[clap(flatten)]
-    pub rpc_args: RpcArgs,
-}
-
-impl rpc::Provider for Invoke {
-    async fn get_provider(
-        &self,
-        config: &sncast::helpers::configuration::CastConfig,
-    ) -> anyhow::Result<JsonRpcClient<HttpTransport>> {
-        self.rpc_args.get_provider(config).await
-    }
+    pub rpc: RpcArgs,
 }
 
 #[derive(ValueEnum, Debug, Clone)]

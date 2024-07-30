@@ -1,11 +1,10 @@
+use crate::starknet_commands::rpc::RpcArgs;
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
 use promptly::prompt;
 use serde_json::Map;
 use sncast::response::structs::AccountDeleteResponse;
-
-use crate::starknet_commands::rpc::{Provider, RpcArgs};
 
 #[derive(Args, Debug)]
 #[command(about = "Delete account information from the accounts file")]
@@ -23,18 +22,7 @@ pub struct Delete {
     pub yes: bool,
 
     #[clap(flatten)]
-    pub rpc_args: RpcArgs,
-}
-
-impl Provider for Delete {
-    async fn get_provider(
-        &self,
-        config: &sncast::helpers::configuration::CastConfig,
-    ) -> anyhow::Result<
-        starknet::providers::JsonRpcClient<starknet::providers::jsonrpc::HttpTransport>,
-    > {
-        self.rpc_args.get_provider(config).await
-    }
+    pub rpc: RpcArgs,
 }
 
 #[allow(clippy::too_many_arguments)]
