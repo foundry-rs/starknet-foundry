@@ -58,7 +58,7 @@ pub struct Deploy {
 }
 
 impl Deploy {
-    pub fn build_artifacts(
+    pub fn build_artifacts_and_get_compiled_contract(
         &self,
         json: bool,
         profile: &Option<String>,
