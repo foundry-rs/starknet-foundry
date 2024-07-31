@@ -25,16 +25,21 @@ use starknet_api::{
     transaction::{TransactionHash, TransactionSignature, TransactionVersion},
 };
 
+pub const DEFAULT_CHAIN_ID: &str = "SN_SEPOLIA";
 pub const DEFAULT_BLOCK_NUMBER: u64 = 2000;
 pub const SEQUENCER_ADDRESS: &str = "0x1000";
 pub const ERC20_CONTRACT_ADDRESS: &str = "0x1001";
 
+fn default_chain_id() -> ChainId {
+    ChainId(String::from(DEFAULT_CHAIN_ID))
+}
+
 #[must_use]
-pub fn build_block_context(block_info: &BlockInfo) -> BlockContext {
+pub fn build_block_context(block_info: &BlockInfo, chain_id: Option<ChainId>) -> BlockContext {
     BlockContext::new_unchecked(
         block_info,
         &ChainInfo {
-            chain_id: ChainId("SN_SEPOLIA".to_string()),
+            chain_id: chain_id.unwrap_or_else(default_chain_id),
             fee_token_addresses: FeeTokenAddresses {
                 strk_fee_token_address: contract_address!(ERC20_CONTRACT_ADDRESS),
                 eth_fee_token_address: contract_address!(ERC20_CONTRACT_ADDRESS),
@@ -79,16 +84,22 @@ fn build_tx_info() -> TransactionInfo {
 }
 
 #[must_use]
-pub fn build_transaction_context(block_info: &BlockInfo) -> TransactionContext {
+pub fn build_transaction_context(
+    block_info: &BlockInfo,
+    chain_id: Option<ChainId>,
+) -> TransactionContext {
     TransactionContext {
-        block_context: build_block_context(block_info),
+        block_context: build_block_context(block_info, chain_id),
         tx_info: build_tx_info(),
     }
 }
 
 #[must_use]
-pub fn build_context(block_info: &BlockInfo) -> EntryPointExecutionContext {
-    let transaction_context = Arc::new(build_transaction_context(block_info));
+pub fn build_context(
+    block_info: &BlockInfo,
+    chain_id: Option<ChainId>,
+) -> EntryPointExecutionContext {
+    let transaction_context = Arc::new(build_transaction_context(block_info, chain_id));
 
     EntryPointExecutionContext::new(transaction_context, ExecutionMode::Execute, false).unwrap()
 }

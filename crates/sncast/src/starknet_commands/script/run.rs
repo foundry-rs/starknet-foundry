@@ -329,7 +329,7 @@ pub fn run(
         .assemble_ex(&entry_code, &footer);
 
     // hint processor
-    let mut context = build_context(&SerializableBlockInfo::default().into());
+    let mut context = build_context(&SerializableBlockInfo::default().into(), None);
 
     let mut blockifier_state = CachedState::new(
         DictStateReader::default(),
