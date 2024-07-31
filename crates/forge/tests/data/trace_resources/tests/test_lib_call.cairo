@@ -1,3 +1,5 @@
+use core::clone::Clone;
+use snforge_std::cheatcodes::contract_class::DeclareResultTrait;
 use snforge_std::{declare, ContractClassTrait};
 
 use trace_resources::{
@@ -7,10 +9,10 @@ use trace_resources::{
 
 #[test]
 fn test_lib_call() {
-    let empty_hash = declare("Empty").unwrap().class_hash;
-    let proxy_hash = declare("TraceInfoProxy").unwrap().class_hash;
-    let checker = declare("TraceInfoChecker").unwrap();
-    let dummy = declare("TraceDummy").unwrap();
+    let empty_hash = declare("Empty").unwrap().success_contract_class().class_hash.clone();
+    let proxy_hash = declare("TraceInfoProxy").unwrap().success_contract_class().class_hash.clone();
+    let checker = declare("TraceInfoChecker").unwrap().success_contract_class().clone();
+    let dummy = declare("TraceDummy").unwrap().success_contract_class();
 
     trace_resources::use_builtins_and_syscalls(empty_hash, 7);
 

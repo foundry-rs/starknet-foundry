@@ -15,7 +15,7 @@ fn cheat_caller_address() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use snforge_std::{ declare, ContractClassTrait, start_cheat_caller_address, stop_cheat_caller_address, stop_cheat_caller_address_global, start_cheat_caller_address_global };
+            use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, start_cheat_caller_address, stop_cheat_caller_address, stop_cheat_caller_address_global, start_cheat_caller_address_global };
 
             #[starknet::interface]
             trait ICheatCallerAddressChecker<TContractState> {
@@ -24,7 +24,7 @@ fn cheat_caller_address() {
 
             #[test]
             fn test_stop_cheat_caller_address() {
-                let contract = declare("CheatCallerAddressChecker").unwrap();
+                let contract = declare("CheatCallerAddressChecker").unwrap().success_contract_class();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ICheatCallerAddressCheckerDispatcher { contract_address };
 
@@ -46,7 +46,7 @@ fn cheat_caller_address() {
 
             #[test]
             fn test_cheat_caller_address_all() {
-                let contract = declare("CheatCallerAddressChecker").unwrap();
+                let contract = declare("CheatCallerAddressChecker").unwrap().success_contract_class();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ICheatCallerAddressCheckerDispatcher { contract_address };
 
@@ -68,7 +68,7 @@ fn cheat_caller_address() {
 
             #[test]
             fn test_cheat_caller_address_all_stop_one() {
-                let contract = declare("CheatCallerAddressChecker").unwrap();
+                let contract = declare("CheatCallerAddressChecker").unwrap().success_contract_class();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ICheatCallerAddressCheckerDispatcher { contract_address };
 
@@ -90,7 +90,7 @@ fn cheat_caller_address() {
 
             #[test]
             fn test_cheat_caller_address_multiple() {
-                let contract = declare("CheatCallerAddressChecker").unwrap();
+                let contract = declare("CheatCallerAddressChecker").unwrap().success_contract_class();
 
                 let (contract_address1, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let (contract_address2, _) = contract.deploy(@ArrayTrait::new()).unwrap();
@@ -147,7 +147,7 @@ fn cheat_caller_address_with_span() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use snforge_std::{ test_address, declare, ContractClassTrait, cheat_caller_address, start_cheat_caller_address, stop_cheat_caller_address, CheatSpan };
+            use snforge_std::{ test_address, declare, ContractClassTrait, DeclareResultTrait, cheat_caller_address, start_cheat_caller_address, stop_cheat_caller_address, CheatSpan };
 
             #[starknet::interface]
             trait ICheatCallerAddressChecker<TContractState> {
@@ -155,7 +155,7 @@ fn cheat_caller_address_with_span() {
             }
 
             fn deploy_cheat_caller_address_checker() -> ICheatCallerAddressCheckerDispatcher {
-                let (contract_address, _) = declare("CheatCallerAddressChecker").unwrap().deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = declare("CheatCallerAddressChecker").unwrap().success_contract_class().deploy(@ArrayTrait::new()).unwrap();
                 ICheatCallerAddressCheckerDispatcher { contract_address }
             }
 
@@ -184,7 +184,7 @@ fn cheat_caller_address_with_span() {
 
                 let caller_address = dispatcher.get_caller_address();
                 assert(caller_address == target_caller_address.into(), 'Wrong caller address');
-                
+
                 let caller_address = dispatcher.get_caller_address();
                 assert(caller_address == target_caller_address.into(), 'Wrong caller address');
 
@@ -195,17 +195,17 @@ fn cheat_caller_address_with_span() {
             #[test]
             fn test_cheat_caller_address_test_address() {
                 let old_caller_address = starknet::get_caller_address();
-                
+
                 let target_caller_address: ContractAddress = 123.try_into().unwrap();
-                
+
                 cheat_caller_address(test_address(), target_caller_address, CheatSpan::TargetCalls(1));
-                
+
                 let caller_address = starknet::get_caller_address();
                 assert(caller_address == target_caller_address, 'Wrong caller address');
 
                 let caller_address = starknet::get_caller_address();
                 assert(caller_address == target_caller_address, 'Wrong caller address');
-                
+
                 stop_cheat_caller_address(test_address());
 
                 let caller_address = starknet::get_caller_address();

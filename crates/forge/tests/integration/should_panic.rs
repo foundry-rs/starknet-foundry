@@ -48,14 +48,14 @@ fn should_panic_unknown_entry_point() {
             use starknet::{call_contract_syscall, ContractAddress, Felt252TryIntoContractAddress};
             use result::ResultTrait;
 
-            use snforge_std::{declare, ContractClass, ContractClassTrait};
+            use snforge_std::{declare, ContractClass, ContractClassTrait, DeclareResultTrait};
 
             #[test]
             #[should_panic]
             fn should_panic_with_no_expected_data() {
-                let contract = declare("HelloStarknet").unwrap();
+                let contract = declare("HelloStarknet").unwrap().success_contract_class();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
-            
+
                 match call_contract_syscall(
                     contract_address,
                     'inexistent_entry_point',

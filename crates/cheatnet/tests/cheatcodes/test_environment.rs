@@ -1,3 +1,4 @@
+use crate::common::assertions::ClassHashAssert;
 use crate::common::{call_contract, deploy_wrapper};
 use crate::common::{deploy_contract, felt_selector_from_name, state::create_cached_state};
 use blockifier::state::cached_state::CachedState;
@@ -25,7 +26,9 @@ impl TestEnvironment {
     }
 
     pub fn declare(&mut self, contract_name: &str, contracts_data: &ContractsData) -> ClassHash {
-        declare(&mut self.cached_state, contract_name, contracts_data).unwrap()
+        declare(&mut self.cached_state, contract_name, contracts_data)
+            .unwrap()
+            .success_class_hash()
     }
 
     pub fn deploy(&mut self, contract_name: &str, calldata: &[Felt252]) -> ContractAddress {

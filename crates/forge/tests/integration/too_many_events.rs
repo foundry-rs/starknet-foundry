@@ -16,17 +16,17 @@ fn ok_events() {
         &formatdoc!(
             r#"
             use starknet::ContractAddress;
-            use snforge_std::{{ declare, ContractClassTrait, store, load }};
-            
+            use snforge_std::{{ declare, ContractClassTrait, DeclareResultTrait, store, load }};
+
             #[starknet::interface]
             trait ITooManyEvents<TContractState> {{
                 fn emit_too_many_events(self: @TContractState, count: felt252);
                 fn emit_too_many_keys(self: @TContractState, count: felt252);
                 fn emit_too_many_data(self: @TContractState, count: felt252);
             }}
-            
+
             fn deploy_contract() -> ITooManyEventsDispatcher {{
-                let contract = declare("TooManyEvents").unwrap();
+                let contract = declare("TooManyEvents").unwrap().success_contract_class();
                 let (contract_address, _) = contract.deploy(@array![]).unwrap();
                 ITooManyEventsDispatcher {{ contract_address }}
             }}
@@ -34,7 +34,7 @@ fn ok_events() {
             #[test]
             fn emit_ok_many_events() {{
                 let deployed = deploy_contract();
-                
+
                 deployed.emit_too_many_events({max_n_emitted_events});
 
                 assert(1 == 1, '');
@@ -42,7 +42,7 @@ fn ok_events() {
             #[test]
             fn emit_ok_many_keys() {{
                 let deployed = deploy_contract();
-                
+
                 deployed.emit_too_many_keys({max_keys_length});
 
                 assert(1 == 1, '');
@@ -50,7 +50,7 @@ fn ok_events() {
             #[test]
             fn emit_ok_many_data() {{
                 let deployed = deploy_contract();
-                
+
                 deployed.emit_too_many_data({max_data_length});
 
                 assert(1 == 1, '');
@@ -84,17 +84,17 @@ fn too_many_events() {
         &formatdoc!(
             r#"
             use starknet::ContractAddress;
-            use snforge_std::{{ declare, ContractClassTrait, store, load }};
-            
+            use snforge_std::{{ declare, ContractClassTrait, DeclareResultTrait, store, load }};
+
             #[starknet::interface]
             trait ITooManyEvents<TContractState> {{
                 fn emit_too_many_events(self: @TContractState, count: felt252);
                 fn emit_too_many_keys(self: @TContractState, count: felt252);
                 fn emit_too_many_data(self: @TContractState, count: felt252);
             }}
-            
+
             fn deploy_contract() -> ITooManyEventsDispatcher {{
-                let contract = declare("TooManyEvents").unwrap();
+                let contract = declare("TooManyEvents").unwrap().success_contract_class();
                 let (contract_address, _) = contract.deploy(@array![]).unwrap();
                 ITooManyEventsDispatcher {{ contract_address }}
             }}
@@ -102,7 +102,7 @@ fn too_many_events() {
             #[test]
             fn emit_too_many_events() {{
                 let deployed = deploy_contract();
-                
+
                 deployed.emit_too_many_events({emit_too_many_events});
 
                 assert(1 == 1, '');
@@ -110,7 +110,7 @@ fn too_many_events() {
             #[test]
             fn emit_too_many_keys() {{
                 let deployed = deploy_contract();
-                
+
                 deployed.emit_too_many_keys({emit_too_many_keys});
 
                 assert(1 == 1, '');
@@ -118,7 +118,7 @@ fn too_many_events() {
             #[test]
             fn emit_too_many_data() {{
                 let deployed = deploy_contract();
-                
+
                 deployed.emit_too_many_data({emit_too_many_data});
 
                 assert(1 == 1, '');

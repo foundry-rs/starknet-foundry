@@ -1,3 +1,4 @@
+use crate::common::assertions::ClassHashAssert;
 use crate::common::{call_contract, deploy_wrapper};
 use crate::{
     common::assertions::assert_success,
@@ -11,7 +12,6 @@ use cairo_felt::Felt252;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
 use cheatnet::state::CheatnetState;
 use starknet_api::core::ContractAddress;
-
 // We've decided that the nonce should not change in tests
 // and should remain 0 at all times, this may be revised in the future.
 
@@ -57,7 +57,9 @@ fn nonce_declare_deploy() {
 
     let nonce1 = check_nonce(&mut cached_state, &mut cheatnet_state, &contract_address);
 
-    let class_hash = declare(&mut cached_state, "HelloStarknet", &contracts_data).unwrap();
+    let class_hash = declare(&mut cached_state, "HelloStarknet", &contracts_data)
+        .unwrap()
+        .success_class_hash();
 
     let nonce2 = check_nonce(&mut cached_state, &mut cheatnet_state, &contract_address);
 

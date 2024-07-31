@@ -4,6 +4,8 @@ use cheatcodes::contract_class::declare;
 use cheatcodes::contract_class::get_class_hash;
 use cheatcodes::contract_class::ContractClass;
 use cheatcodes::contract_class::ContractClassTrait;
+use cheatcodes::contract_class::DeclareResult;
+use cheatcodes::contract_class::DeclareResultTrait;
 
 use cheatcodes::l1_handler::L1Handler;
 use cheatcodes::l1_handler::L1HandlerTrait;

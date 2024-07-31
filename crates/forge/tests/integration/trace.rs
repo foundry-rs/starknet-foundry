@@ -10,34 +10,35 @@ fn trace_deploy() {
     let test = test_case!(
         indoc!(
             r#"
-            use snforge_std::{declare, ContractClassTrait, test_address, test_selector};
+            use core::clone::Clone;
+            use snforge_std::{declare, ContractClassTrait, DeclareResultTrait, test_address, test_selector};
             use snforge_std::trace::{CallEntryPoint, CallType, EntryPointType, get_call_trace, CallTrace, CallResult};
-            
+
             use starknet::{SyscallResultTrait, deploy_syscall, ContractAddress};
-            
+
             #[test]
             fn test_deploy_trace_info() {
-                let proxy = declare("TraceInfoProxy").unwrap();
-                let checker = declare("TraceInfoChecker").unwrap();
-            
+                let proxy = declare("TraceInfoProxy").unwrap().success_contract_class().clone();
+                let checker = declare("TraceInfoChecker").unwrap().success_contract_class();
+
                 let (checker_address, _) = checker.deploy(@array![]).unwrap();
-            
+
                 let (proxy_address1, _) = proxy.deploy(@array![checker_address.into()]).unwrap();
-            
+
                 let (proxy_address2, _) = deploy_syscall(
                     proxy.class_hash, 0, array![checker_address.into()].span(), false
                 )
                     .unwrap_syscall();
-            
+
                 let (proxy_address_3, _) = proxy
                     .deploy_at(@array![checker_address.into()], 123.try_into().unwrap())
                     .unwrap();
-                    
+
                 assert_trace(
                     get_call_trace(), proxy_address1, proxy_address2, proxy_address_3, checker_address
                 );
             }
-            
+
             fn assert_trace(
                 trace: CallTrace,
                 proxy_address1: ContractAddress,
@@ -133,7 +134,7 @@ fn trace_deploy() {
                     ],
                     result: CallResult::Success(array![])
                 };
-            
+
                 assert(trace == expected_trace, '');
             }
         "#
@@ -161,11 +162,12 @@ fn trace_call() {
     let test = test_case!(
         indoc!(
             r#"
-            use snforge_std::{declare, ContractClassTrait, test_address, test_selector, start_cheat_caller_address};
+            use core::clone::Clone;
+            use snforge_std::{declare, ContractClassTrait, DeclareResultTrait, test_address, test_selector, start_cheat_caller_address};
             use snforge_std::trace::{CallTrace, CallEntryPoint, CallType, EntryPointType, get_call_trace, CallResult};
-            
+
             use starknet::{ContractAddress, ClassHash};
-            
+
             #[starknet::interface]
             trait ITraceInfoProxy<T> {
                 fn with_libcall(self: @T, class_hash: ClassHash) -> felt252;
@@ -173,42 +175,42 @@ fn trace_call() {
                 fn with_panic(self: @T, contract_address: ContractAddress);
                 fn call_two(self: @T, checker_address: ContractAddress, dummy_address: ContractAddress);
             }
-            
+
             #[starknet::interface]
             trait ITraceInfoChecker<T> {
                 fn from_proxy(self: @T, data: felt252) -> felt252;
                 fn panic(self: @T);
             }
-            
+
             #[starknet::interface]
             trait ITraceDummy<T> {
                 fn from_proxy(ref self: T);
             }
-            
+
             #[test]
             fn test_call_trace_info() {
-                let proxy = declare("TraceInfoProxy").unwrap();
-                let checker = declare("TraceInfoChecker").unwrap();
-                let dummy = declare("TraceDummy").unwrap();
-            
+                let proxy = declare("TraceInfoProxy").unwrap().success_contract_class();
+                let checker = declare("TraceInfoChecker").unwrap().success_contract_class().clone();
+                let dummy = declare("TraceDummy").unwrap().success_contract_class();
+
                 let (checker_address, _) = checker.deploy(@array![]).unwrap();
                 let (proxy_address, _) = proxy.deploy(@array![checker_address.into()]).unwrap();
                 let (dummy_address, _) = dummy.deploy(@array![]).unwrap();
-            
+
                 let proxy_dispatcher = ITraceInfoProxyDispatcher { contract_address: proxy_address };
-            
+
                 proxy_dispatcher.regular_call(checker_address);
                 proxy_dispatcher.with_libcall(checker.class_hash);
                 proxy_dispatcher.call_two(checker_address, dummy_address);
-            
+
                 let chcecker_dispatcher = ITraceInfoCheckerDispatcher { contract_address: checker_address };
                 chcecker_dispatcher.from_proxy(4);
-                
+
                 assert_trace(
                     get_call_trace(), proxy_address, checker_address, dummy_address, checker.class_hash
                 );
             }
-            
+
             fn assert_trace(
                 trace: CallTrace,
                 proxy_address: ContractAddress,
@@ -353,7 +355,7 @@ fn trace_call() {
                     ],
                     result: CallResult::Success(array![])
                 };
-            
+
                 assert(expected == trace, '');
             }
         "#
@@ -386,48 +388,48 @@ fn trace_failed_call() {
     let test = test_case!(
         indoc!(
             r#"
-            use snforge_std::{declare, ContractClassTrait, test_address, test_selector};
+            use snforge_std::{declare, ContractClassTrait, DeclareResultTrait, test_address, test_selector};
             use snforge_std::trace::{CallEntryPoint, CallType, EntryPointType, get_call_trace, CallTrace, CallResult, CallFailure};
-            
+
             use starknet::{ContractAddress, ClassHash};
-            
+
             #[starknet::interface]
             trait ITraceInfoProxy<T> {
                 fn with_libcall(self: @T, class_hash: ClassHash) -> felt252;
                 fn regular_call(self: @T, contract_address: ContractAddress) -> felt252;
                 fn with_panic(self: @T, contract_address: ContractAddress);
             }
-            
+
             #[starknet::interface]
             trait ITraceInfoChecker<T> {
                 fn from_proxy(self: @T, data: felt252) -> felt252;
                 fn panic(self: @T);
             }
-            
+
             #[test]
             #[feature("safe_dispatcher")]
             fn test_failed_call_trace_info() {
-                let proxy = declare("TraceInfoProxy").unwrap();
-                let checker = declare("TraceInfoChecker").unwrap();
-            
+                let proxy = declare("TraceInfoProxy").unwrap().success_contract_class();
+                let checker = declare("TraceInfoChecker").unwrap().success_contract_class();
+
                 let (checker_address, _) = checker.deploy(@array![]).unwrap();
                 let (proxy_address, _) = proxy.deploy(@array![checker_address.into()]).unwrap();
-            
+
                 let proxy_dispatcher = ITraceInfoProxySafeDispatcher { contract_address: proxy_address };
                 match proxy_dispatcher.with_panic(checker_address) {
                     Result::Ok(_) => panic_with_felt252('shouldve panicked'),
                     Result::Err(panic_data) => { assert(*panic_data.at(0) == 'panic', *panic_data.at(0)); }
                 }
-            
+
                 let chcecker_dispatcher = ITraceInfoCheckerSafeDispatcher { contract_address: checker_address };
                 match chcecker_dispatcher.panic() {
                     Result::Ok(_) => panic_with_felt252('shouldve panicked'),
                     Result::Err(panic_data) => { assert(*panic_data.at(0) == 'panic', *panic_data.at(0)); }
                 }
-                
+
                 assert_trace(get_call_trace(), proxy_address, checker_address);
             }
-            
+
             fn assert_trace(
                 trace: CallTrace, proxy_address: ContractAddress, checker_address: ContractAddress
             ) {
@@ -506,7 +508,7 @@ fn trace_failed_call() {
                     ],
                     result: CallResult::Success(array![])
                 };
-            
+
                 assert(expected == trace, '');
             }
         "#
@@ -534,11 +536,12 @@ fn trace_library_call_from_test() {
     let test = test_case!(
         indoc!(
             r#"
-            use snforge_std::{declare, ContractClassTrait, test_address, test_selector};
+            use core::clone::Clone;
+            use snforge_std::{declare, ContractClassTrait, DeclareResultTrait, test_address, test_selector};
             use snforge_std::trace::{CallEntryPoint, CallType, EntryPointType, get_call_trace, CallTrace, CallResult};
-            
+
             use starknet::{ContractAddress, ClassHash};
-            
+
             #[starknet::interface]
             trait ITraceInfoProxy<T> {
                 fn with_libcall(self: @T, class_hash: ClassHash) -> felt252;
@@ -546,42 +549,42 @@ fn trace_library_call_from_test() {
                 fn with_panic(self: @T, contract_address: ContractAddress);
                 fn call_two(self: @T, checker_address: ContractAddress, dummy_address: ContractAddress);
             }
-            
+
             #[starknet::interface]
             trait ITraceInfoChecker<T> {
                 fn from_proxy(self: @T, data: felt252) -> felt252;
                 fn panic(self: @T);
             }
-            
+
             #[starknet::interface]
             trait ITraceDummy<T> {
                 fn from_proxy(ref self: T);
             }
-            
+
             #[test]
             fn test_library_call_trace_info() {
-                let proxy_hash = declare("TraceInfoProxy").unwrap().class_hash;
-                let checker = declare("TraceInfoChecker").unwrap();
-                let dummy = declare("TraceDummy").unwrap();
-            
+                let proxy_hash = declare("TraceInfoProxy").unwrap().success_contract_class().class_hash.clone();
+                let checker = declare("TraceInfoChecker").unwrap().success_contract_class().clone();
+                let dummy = declare("TraceDummy").unwrap().success_contract_class();
+
                 let (checker_address, _) = checker.deploy(@array![]).unwrap();
                 let (dummy_address, _) = dummy.deploy(@array![]).unwrap();
-            
+
                 let proxy_lib_dispatcher = ITraceInfoProxyLibraryDispatcher { class_hash: proxy_hash };
-            
+
                 proxy_lib_dispatcher.regular_call(checker_address);
                 proxy_lib_dispatcher.with_libcall(checker.class_hash);
                 proxy_lib_dispatcher.call_two(checker_address, dummy_address);
-            
+
                 let chcecker_lib_dispatcher = ITraceInfoCheckerLibraryDispatcher {
                     class_hash: checker.class_hash
                 };
-            
+
                 chcecker_lib_dispatcher.from_proxy(4);
-                
+
                 assert_trace(get_call_trace(), checker_address, dummy_address, checker.class_hash);
             }
-            
+
             fn assert_trace(
                 trace: CallTrace,
                 checker_address: ContractAddress,
@@ -700,7 +703,7 @@ fn trace_library_call_from_test() {
                     ],
                     result: CallResult::Success(array![])
                 };
-            
+
                 assert(expected == trace, '');
             }
         "#
@@ -733,48 +736,48 @@ fn trace_failed_library_call_from_test() {
     let test = test_case!(
         indoc!(
             r#"
-            use snforge_std::{declare, ContractClassTrait, test_address, test_selector};
+            use snforge_std::{declare, ContractClassTrait, DeclareResultTrait, test_address, test_selector};
             use snforge_std::trace::{CallEntryPoint, CallType, EntryPointType, get_call_trace, CallTrace, CallResult, CallFailure};
-            
+
             use starknet::{ContractAddress, ClassHash};
-            
+
             #[starknet::interface]
             trait ITraceInfoProxy<T> {
                 fn with_libcall(self: @T, class_hash: ClassHash) -> felt252;
                 fn regular_call(self: @T, contract_address: ContractAddress) -> felt252;
                 fn with_panic(self: @T, contract_address: ContractAddress);
             }
-            
+
             #[starknet::interface]
             trait ITraceInfoChecker<T> {
                 fn from_proxy(self: @T, data: felt252) -> felt252;
                 fn panic(self: @T);
             }
-            
+
             #[test]
             #[feature("safe_dispatcher")]
             fn test_failed_call_trace_info() {
-                let proxy = declare("TraceInfoProxy").unwrap();
-                let checker = declare("TraceInfoChecker").unwrap();
-            
+                let proxy = declare("TraceInfoProxy").unwrap().success_contract_class();
+                let checker = declare("TraceInfoChecker").unwrap().success_contract_class();
+
                 let (checker_address, _) = checker.deploy(@array![]).unwrap();
                 let (proxy_address, _) = proxy.deploy(@array![checker_address.into()]).unwrap();
-            
+
                 let proxy_dispatcher = ITraceInfoProxySafeDispatcher { contract_address: proxy_address };
                 match proxy_dispatcher.with_panic(checker_address) {
                     Result::Ok(_) => panic_with_felt252('shouldve panicked'),
                     Result::Err(panic_data) => { assert(*panic_data.at(0) == 'panic', *panic_data.at(0)); }
                 }
-            
+
                 let chcecker_dispatcher = ITraceInfoCheckerSafeDispatcher { contract_address: checker_address };
                 match chcecker_dispatcher.panic() {
                     Result::Ok(_) => panic_with_felt252('shouldve panicked'),
                     Result::Err(panic_data) => { assert(*panic_data.at(0) == 'panic', *panic_data.at(0)); }
                 }
-                
+
                 assert_trace(get_call_trace(), proxy_address, checker_address);
             }
-            
+
             fn assert_trace(
                 trace: CallTrace, proxy_address: ContractAddress, checker_address: ContractAddress
             ) {
@@ -853,7 +856,7 @@ fn trace_failed_library_call_from_test() {
                     ],
                     result: CallResult::Success(array![])
                 };
-            
+
                 assert(expected == trace, '');
             }
         "#
@@ -881,25 +884,25 @@ fn trace_l1_handler() {
     let test = test_case!(
         indoc!(
             r#"
-            use snforge_std::{declare, ContractClassTrait, test_address, test_selector, L1HandlerTrait,};
+            use snforge_std::{declare, ContractClassTrait, DeclareResultTrait, test_address, test_selector, L1HandlerTrait,};
             use snforge_std::trace::{CallEntryPoint, CallType, EntryPointType, get_call_trace, CallTrace, CallResult};
-            
+
             use starknet::ContractAddress;
-            
+
             #[test]
             fn test_l1_handler_call_trace_info() {
-                let proxy = declare("TraceInfoProxy").unwrap();
-                let checker = declare("TraceInfoChecker").unwrap();
-            
+                let proxy = declare("TraceInfoProxy").unwrap().success_contract_class();
+                let checker = declare("TraceInfoChecker").unwrap().success_contract_class();
+
                 let (checker_address, _) = checker.deploy(@array![]).unwrap();
                 let (proxy_address, _) = proxy.deploy(@array![checker_address.into()]).unwrap();
-            
+
                 let mut l1_handler = L1HandlerTrait::new(checker_address, selector!("handle_l1_message"));
-            
+
                 l1_handler.execute(123, array![proxy_address.into()].span()).unwrap();
                 assert_trace(get_call_trace(), proxy_address, checker_address);
             }
-            
+
             fn assert_trace(
                 trace: CallTrace, proxy_address: ContractAddress, checker_address: ContractAddress
             ) {
@@ -979,7 +982,7 @@ fn trace_l1_handler() {
                     ],
                     result: CallResult::Success(array![])
                 };
-            
+
                 assert(trace == expected_trace, '');
             }
         "#

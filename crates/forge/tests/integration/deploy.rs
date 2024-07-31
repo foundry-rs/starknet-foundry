@@ -10,12 +10,12 @@ fn error_handling() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use snforge_std::{ declare, ContractClass, ContractClassTrait };
+        use snforge_std::{ declare, ContractClass, ContractClassTrait, DeclareResultTrait };
         use array::ArrayTrait;
 
         #[test]
         fn error_handling() {
-            let contract = declare("PanickingConstructor").unwrap();
+            let contract = declare("PanickingConstructor").unwrap().success_contract_class();
 
             match contract.deploy(@ArrayTrait::new()) {
                 Result::Ok(_) => panic_with_felt252('Should have panicked'),
@@ -44,9 +44,10 @@ fn deploy_syscall_check() {
     let test = test_case!(
         indoc!(
             r#"
-        use snforge_std::{declare, test_address};
+        use core::clone::Clone;
+        use snforge_std::{declare, test_address, DeclareResultTrait};
         use starknet::{SyscallResult, deploy_syscall};
-        
+
         #[starknet::interface]
         trait IDeployChecker<T> {
             fn get_balance(self: @T) -> felt252;
@@ -55,13 +56,13 @@ fn deploy_syscall_check() {
 
         #[test]
         fn deploy_syscall_check() {
-            let contract = declare("DeployChecker").unwrap();
+            let contract = declare("DeployChecker").unwrap().success_contract_class().clone();
             let salt = 1;
             let calldata = array![10];
-        
+
             let (contract_address, span) = deploy_syscall(contract.class_hash, salt, calldata.span(), false).unwrap();
             assert(*span[0] == test_address().into() && *span[1] == 10, 'constructor return mismatch');
-            
+
             let dispatcher = IDeployCheckerDispatcher { contract_address };
             assert(dispatcher.get_balance() == 10, 'balance mismatch');
             assert(dispatcher.get_caller() == test_address(), 'caller mismatch');
@@ -89,12 +90,12 @@ fn constructor_retdata_span() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use snforge_std::{ declare, ContractClass, ContractClassTrait };
+        use snforge_std::{ declare, ContractClass, ContractClassTrait, DeclareResultTrait };
         use array::ArrayTrait;
 
         #[test]
         fn constructor_retdata_span() {
-            let contract = declare("ConstructorRetdata").unwrap();
+            let contract = declare("ConstructorRetdata").unwrap().success_contract_class();
 
             let (_contract_address, retdata) = contract.deploy(@ArrayTrait::new()).unwrap();
             assert_eq!(retdata, array![3, 2, 3, 4].span());
@@ -133,12 +134,12 @@ fn constructor_retdata_felt() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use snforge_std::{ declare, ContractClass, ContractClassTrait };
+        use snforge_std::{ declare, ContractClass, ContractClassTrait, DeclareResultTrait };
         use array::ArrayTrait;
 
         #[test]
         fn constructor_retdata_felt() {
-            let contract = declare("ConstructorRetdata").unwrap();
+            let contract = declare("ConstructorRetdata").unwrap().success_contract_class();
 
             let (_contract_address, retdata) = contract.deploy(@ArrayTrait::new()).unwrap();
             assert_eq!(retdata, array![5].span());
@@ -177,12 +178,12 @@ fn constructor_retdata_struct() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use snforge_std::{ declare, ContractClass, ContractClassTrait };
+        use snforge_std::{ declare, ContractClass, ContractClassTrait, DeclareResultTrait };
         use array::ArrayTrait;
 
         #[test]
         fn constructor_retdata_struct() {
-            let contract = declare("ConstructorRetdata").unwrap();
+            let contract = declare("ConstructorRetdata").unwrap().success_contract_class();
 
             let (_contract_address, retdata) = contract.deploy(@ArrayTrait::new()).unwrap();
             assert_eq!(retdata, array![0, 6, 2, 7, 8, 9].span());

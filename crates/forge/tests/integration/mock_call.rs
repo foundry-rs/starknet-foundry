@@ -10,7 +10,7 @@ fn mock_call_simple() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use snforge_std::{ declare, ContractClassTrait, start_mock_call, stop_mock_call };
+        use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, start_mock_call, stop_mock_call };
 
         #[starknet::interface]
         trait IMockChecker<TContractState> {
@@ -21,7 +21,7 @@ fn mock_call_simple() {
         fn mock_call_simple() {
             let calldata = array![420];
 
-            let contract = declare("MockChecker").unwrap();
+            let contract = declare("MockChecker").unwrap().success_contract_class();
             let (contract_address, _) = contract.deploy(@calldata).unwrap();
 
             let dispatcher = IMockCheckerDispatcher { contract_address };
@@ -41,7 +41,7 @@ fn mock_call_simple() {
         fn mock_call_simple_before_dispatcher_created() {
             let calldata = array![420];
 
-            let contract = declare("MockChecker").unwrap();
+            let contract = declare("MockChecker").unwrap().success_contract_class();
             let (contract_address, _) = contract.deploy(@calldata).unwrap();
 
             let mock_ret_data = 421;
@@ -73,7 +73,7 @@ fn mock_call_complex_types() {
         use result::ResultTrait;
         use array::ArrayTrait;
         use serde::Serde;
-        use snforge_std::{ declare, ContractClassTrait, start_mock_call };
+        use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, start_mock_call };
 
         #[starknet::interface]
         trait IMockChecker<TContractState> {
@@ -91,7 +91,7 @@ fn mock_call_complex_types() {
         fn start_mock_call_return_struct() {
             let calldata = array![420];
 
-            let contract = declare("MockChecker").unwrap();
+            let contract = declare("MockChecker").unwrap().success_contract_class();
             let (contract_address, _) = contract.deploy(@calldata).unwrap();
 
             let dispatcher = IMockCheckerDispatcher { contract_address };
@@ -109,7 +109,7 @@ fn mock_call_complex_types() {
         fn start_mock_call_return_arr() {
             let calldata = array![420];
 
-            let contract = declare("MockChecker").unwrap();
+            let contract = declare("MockChecker").unwrap().success_contract_class();
             let (contract_address, _) = contract.deploy(@calldata).unwrap();
 
             let dispatcher = IMockCheckerDispatcher { contract_address };
@@ -146,7 +146,7 @@ fn mock_calls() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use snforge_std::{ declare, ContractClassTrait, mock_call, start_mock_call, stop_mock_call };
+        use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, mock_call, start_mock_call, stop_mock_call };
 
         #[starknet::interface]
         trait IMockChecker<TContractState> {
@@ -157,7 +157,7 @@ fn mock_calls() {
         fn mock_call_one() {
             let calldata = array![420];
 
-            let contract = declare("MockChecker").unwrap();
+            let contract = declare("MockChecker").unwrap().success_contract_class();
             let (contract_address, _) = contract.deploy(@calldata).unwrap();
 
             let dispatcher = IMockCheckerDispatcher { contract_address };
@@ -177,7 +177,7 @@ fn mock_calls() {
         fn mock_call_twice() {
             let calldata = array![420];
 
-            let contract = declare("MockChecker").unwrap();
+            let contract = declare("MockChecker").unwrap().success_contract_class();
             let (contract_address, _) = contract.deploy(@calldata).unwrap();
 
             let dispatcher = IMockCheckerDispatcher { contract_address };

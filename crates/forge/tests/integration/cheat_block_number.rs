@@ -15,7 +15,10 @@ fn cheat_block_number_basic() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use snforge_std::{ declare, ContractClassTrait, start_cheat_block_number, stop_cheat_block_number, stop_cheat_block_number_global, start_cheat_block_number_global };
+            use snforge_std::{
+                declare, ContractClassTrait, DeclareResultTrait, start_cheat_block_number,
+                stop_cheat_block_number, stop_cheat_block_number_global, start_cheat_block_number_global
+            };
 
             #[starknet::interface]
             trait ICheatBlockNumberChecker<TContractState> {
@@ -24,7 +27,7 @@ fn cheat_block_number_basic() {
 
             #[test]
             fn test_stop_cheat_block_number() {
-                let contract = declare("CheatBlockNumberChecker").unwrap();
+                let contract = declare("CheatBlockNumberChecker").unwrap().success_contract_class();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ICheatBlockNumberCheckerDispatcher { contract_address };
 
@@ -43,7 +46,7 @@ fn cheat_block_number_basic() {
 
             #[test]
             fn test_cheat_block_number_multiple() {
-                let contract = declare("CheatBlockNumberChecker").unwrap();
+                let contract = declare("CheatBlockNumberChecker").unwrap().success_contract_class();
 
                 let (contract_address1, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let (contract_address2, _) = contract.deploy(@ArrayTrait::new()).unwrap();
@@ -72,7 +75,7 @@ fn cheat_block_number_basic() {
 
             #[test]
             fn test_cheat_block_number_all() {
-                let contract = declare("CheatBlockNumberChecker").unwrap();
+                let contract = declare("CheatBlockNumberChecker").unwrap().success_contract_class();
 
                 let (contract_address1, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let (contract_address2, _) = contract.deploy(@ArrayTrait::new()).unwrap();
@@ -102,7 +105,7 @@ fn cheat_block_number_basic() {
 
             #[test]
             fn test_cheat_block_number_all_stop_one() {
-                let contract = declare("CheatBlockNumberChecker").unwrap();
+                let contract = declare("CheatBlockNumberChecker").unwrap().success_contract_class();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ICheatBlockNumberCheckerDispatcher { contract_address };
 
@@ -143,22 +146,22 @@ fn cheat_block_number_complex() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use snforge_std::{ declare, ContractClassTrait, start_cheat_block_number, stop_cheat_block_number, start_cheat_block_number_global, stop_cheat_block_number_global };
-            
+            use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, start_cheat_block_number, stop_cheat_block_number, start_cheat_block_number_global, stop_cheat_block_number_global };
+
             #[starknet::interface]
             trait ICheatBlockNumberChecker<TContractState> {
                 fn get_block_number(ref self: TContractState) -> u64;
             }
 
             fn deploy_cheat_block_number_checker()  -> ICheatBlockNumberCheckerDispatcher {
-                let contract = declare("CheatBlockNumberChecker").unwrap();
+                let contract = declare("CheatBlockNumberChecker").unwrap().success_contract_class();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 ICheatBlockNumberCheckerDispatcher { contract_address }
             }
 
             #[test]
             fn cheat_block_number_complex() {
-                let contract = declare("CheatBlockNumberChecker").unwrap();
+                let contract = declare("CheatBlockNumberChecker").unwrap().success_contract_class();
 
                 let (contract_address1, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let (contract_address2, _) = contract.deploy(@ArrayTrait::new()).unwrap();
@@ -172,7 +175,7 @@ fn cheat_block_number_complex() {
 
                 let new_block_number1 = cheat_block_number_checker1.get_block_number();
                 let new_block_number2 = cheat_block_number_checker2.get_block_number();
-                
+
                 assert(new_block_number1 == 123, 'Wrong block number #1');
                 assert(new_block_number2 == 123, 'Wrong block number #2');
 
@@ -197,7 +200,7 @@ fn cheat_block_number_complex() {
 
                 let new_block_number1 = cheat_block_number_checker1.get_block_number();
                 let new_block_number2 = cheat_block_number_checker2.get_block_number();
-                
+
                 assert(new_block_number1 == 789, 'Wrong block number #7');
                 assert(new_block_number2 == old_block_number2, 'Wrong block number #8');
             }
@@ -226,7 +229,7 @@ fn cheat_block_number_with_span() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use snforge_std::{ test_address, declare, ContractClassTrait, cheat_block_number, start_cheat_block_number, stop_cheat_block_number, CheatSpan };
+            use snforge_std::{ test_address, declare, ContractClassTrait, DeclareResultTrait, cheat_block_number, start_cheat_block_number, stop_cheat_block_number, CheatSpan };
 
             #[starknet::interface]
             trait ICheatBlockNumberChecker<TContractState> {
@@ -234,14 +237,14 @@ fn cheat_block_number_with_span() {
             }
 
             fn deploy_cheat_block_number_checker() -> ICheatBlockNumberCheckerDispatcher {
-                let (contract_address, _) = declare("CheatBlockNumberChecker").unwrap().deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = declare("CheatBlockNumberChecker").unwrap().success_contract_class().deploy(@ArrayTrait::new()).unwrap();
                 ICheatBlockNumberCheckerDispatcher { contract_address }
             }
 
             #[test]
             fn test_cheat_block_number_once() {
                 let old_block_number = get_block_number();
-                
+
                 let dispatcher = deploy_cheat_block_number_checker();
 
                 let target_block_number = 123;
@@ -267,7 +270,7 @@ fn cheat_block_number_with_span() {
 
                 let block_number = dispatcher.get_block_number();
                 assert_eq!(block_number, target_block_number.into());
-                
+
                 let block_number = dispatcher.get_block_number();
                 assert_eq!(block_number, target_block_number.into());
 
@@ -278,17 +281,17 @@ fn cheat_block_number_with_span() {
             #[test]
             fn test_cheat_block_number_test_address() {
                 let old_block_number = get_block_number();
-                
+
                 let target_block_number = 123;
-                
+
                 cheat_block_number(test_address(), target_block_number, CheatSpan::TargetCalls(1));
-                
+
                 let block_number = get_block_number();
                 assert_eq!(block_number, target_block_number.into());
 
                 let block_number = get_block_number();
                 assert_eq!(block_number, target_block_number.into());
-                
+
                 stop_cheat_block_number(test_address());
 
                 let block_number = get_block_number();

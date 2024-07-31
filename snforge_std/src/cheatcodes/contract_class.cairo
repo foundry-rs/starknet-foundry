@@ -1,3 +1,4 @@
+use core::clone::Clone;
 use core::serde::Serde;
 use core::traits::TryInto;
 use starknet::{ContractAddress, ClassHash, testing::cheatcode, SyscallResult};
@@ -5,9 +6,15 @@ use super::super::byte_array::byte_array_as_felt_array;
 use super::super::_cheatcode::handle_cheatcode;
 use core::traits::Into;
 
-#[derive(Drop, Serde, Clone, Copy)]
+#[derive(Drop, Serde, Copy)]
 struct ContractClass {
     class_hash: ClassHash,
+}
+
+#[derive(Drop, Serde, Clone)]
+enum DeclareResult {
+    Success: ContractClass,
+    AlreadyDeclared: ContractClass,
 }
 
 trait ContractClassTrait {
@@ -87,11 +94,33 @@ impl ContractClassImpl of ContractClassTrait {
     }
 }
 
+trait DeclareResultTrait {
+    fn contract_class(self: @DeclareResult) -> @ContractClass;
+
+    fn success_contract_class(self: @DeclareResult) -> @ContractClass;
+}
+
+impl DeclareResultImpl of DeclareResultTrait {
+    fn contract_class(self: @DeclareResult) -> @ContractClass {
+        match self {
+            DeclareResult::Success(contract_class) => contract_class,
+            DeclareResult::AlreadyDeclared(contract_class) => contract_class
+        }
+    }
+
+    fn success_contract_class(self: @DeclareResult) -> @ContractClass {
+        match self {
+            DeclareResult::Success(contract_class) => contract_class,
+            DeclareResult::AlreadyDeclared(_) => panic!("Class hash is already declared")
+        }
+    }
+}
+
 /// Declares a contract
 /// `contract` - name of a contract as Cairo string. It is a name of the contract (part after mod
 /// keyword) e.g. "HelloStarknet"
 /// Returns the `ContractClass` which was declared or panic data if declaration failed
-fn declare(contract: ByteArray) -> Result<ContractClass, Array<felt252>> {
+fn declare(contract: ByteArray) -> Result<DeclareResult, Array<felt252>> {
     let mut span = handle_cheatcode(
         cheatcode::<'declare'>(byte_array_as_felt_array(@contract).span())
     );

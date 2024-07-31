@@ -9,9 +9,9 @@ fn deploy_at_correct_address() {
     let test = test_case!(
         indoc!(
             r#"
-        use snforge_std::{ declare, ContractClassTrait };
+        use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait };
         use starknet::ContractAddress;
-        
+
         #[starknet::interface]
         trait IProxy<TContractState> {
             fn get_caller_address(ref self: TContractState, checker_address: ContractAddress) -> felt252;
@@ -19,15 +19,15 @@ fn deploy_at_correct_address() {
 
         #[test]
         fn deploy_at_correct_address() {
-            let contract = declare("CheatCallerAddressChecker").unwrap();
+            let contract = declare("CheatCallerAddressChecker").unwrap().success_contract_class();
             let (cheat_caller_address_checker, _) = contract.deploy(@array![]).unwrap();
-        
-            let contract = declare("Proxy").unwrap();
+
+            let contract = declare("Proxy").unwrap().success_contract_class();
             let deploy_at_address = 123;
 
             let (contract_address, _) = contract.deploy_at(@array![], deploy_at_address.try_into().unwrap()).unwrap();
             assert(deploy_at_address == contract_address.into(), 'addresses should be the same');
-            
+
             let real_address = IProxyDispatcher{ contract_address }.get_caller_address(cheat_caller_address_checker);
             assert(real_address == contract_address.into(), 'addresses should be the same');
         }
@@ -83,14 +83,14 @@ fn deploy_two_at_the_same_address() {
     let test = test_case!(
         indoc!(
             r#"
-        use snforge_std::{ declare, ContractClassTrait };
+        use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait };
         use starknet::ContractAddress;
 
         #[test]
         fn deploy_two_at_the_same_address() {
             let contract_address = 123;
-        
-            let contract = declare("HelloStarknet").unwrap();
+
+            let contract = declare("HelloStarknet").unwrap().success_contract_class();
             let (real_address, _) = contract.deploy_at(@array![], contract_address.try_into().unwrap()).unwrap();
             assert(real_address.into() == contract_address, 'addresses should be the same');
             contract.deploy_at(@array![], contract_address.try_into().unwrap()).unwrap();
@@ -120,14 +120,14 @@ fn deploy_at_error_handling() {
         indoc!(
             r#"
         use array::ArrayTrait;
-        use snforge_std::{ declare, ContractClassTrait };
+        use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait };
         use starknet::ContractAddress;
 
         #[test]
         fn deploy_at_error_handling() {
             let contract_address = 123;
-        
-            let contract = declare("PanickingConstructor").unwrap();
+
+            let contract = declare("PanickingConstructor").unwrap().success_contract_class();
             match contract.deploy_at(@array![], contract_address.try_into().unwrap()) {
                 Result::Ok(_) => panic_with_felt252('shouldve panicked'),
                 Result::Err(panic_data) => {

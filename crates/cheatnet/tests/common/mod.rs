@@ -1,3 +1,4 @@
+use assertions::ClassHashAssert;
 use blockifier::execution::entry_point::{CallEntryPoint, CallType, EntryPointExecutionContext};
 use blockifier::execution::execution_utils::ReadOnlySegments;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
@@ -90,7 +91,9 @@ pub fn deploy_contract(
 ) -> ContractAddress {
     let contracts_data = get_contracts();
 
-    let class_hash = declare(state, contract_name, &contracts_data).unwrap();
+    let class_hash = declare(state, contract_name, &contracts_data)
+        .unwrap()
+        .success_class_hash();
 
     let mut execution_resources = ExecutionResources::default();
     let mut entry_point_execution_context = build_context(&cheatnet_state.block_info, None);

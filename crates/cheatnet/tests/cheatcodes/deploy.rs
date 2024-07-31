@@ -1,4 +1,4 @@
-use crate::common::assertions::assert_success;
+use crate::common::assertions::{assert_success, ClassHashAssert};
 use crate::common::state::create_cached_state;
 use crate::common::{
     call_contract, deploy_at_wrapper, deploy_contract, deploy_wrapper, felt_selector_from_name,
@@ -24,7 +24,9 @@ fn deploy_at_predefined_address() {
 
     let contracts_data = get_contracts();
 
-    let class_hash = declare(&mut cached_state, "HelloStarknet", &contracts_data).unwrap();
+    let class_hash = declare(&mut cached_state, "HelloStarknet", &contracts_data)
+        .unwrap()
+        .success_class_hash();
     let contract_address = deploy_at_wrapper(
         &mut cached_state,
         &mut cheatnet_state,
@@ -55,7 +57,9 @@ fn deploy_two_at_the_same_address() {
 
     let contracts_data = get_contracts();
 
-    let class_hash = declare(&mut cached_state, "HelloStarknet", &contracts_data).unwrap();
+    let class_hash = declare(&mut cached_state, "HelloStarknet", &contracts_data)
+        .unwrap()
+        .success_class_hash();
     deploy_at_wrapper(
         &mut cached_state,
         &mut cheatnet_state,
@@ -92,7 +96,8 @@ fn call_predefined_contract_from_proxy_contract() {
         "CheatCallerAddressChecker",
         &contracts_data,
     )
-    .unwrap();
+    .unwrap()
+    .success_class_hash();
     let cheat_caller_address_checker_address = deploy_at_wrapper(
         &mut cached_state,
         &mut cheatnet_state,
@@ -157,7 +162,9 @@ fn deploy_contract_on_predefined_address_after_its_usage() {
 
     let contracts_data = get_contracts();
 
-    let class_hash = declare(&mut cached_state, "SpyEventsChecker", &contracts_data).unwrap();
+    let class_hash = declare(&mut cached_state, "SpyEventsChecker", &contracts_data)
+        .unwrap()
+        .success_class_hash();
     deploy_at_wrapper(
         &mut cached_state,
         &mut cheatnet_state,
@@ -185,7 +192,9 @@ fn try_to_deploy_at_0() {
 
     let contracts_data = get_contracts();
 
-    let class_hash = declare(&mut cached_state, "HelloStarknet", &contracts_data).unwrap();
+    let class_hash = declare(&mut cached_state, "HelloStarknet", &contracts_data)
+        .unwrap()
+        .success_class_hash();
     let output = deploy_at_wrapper(
         &mut cached_state,
         &mut cheatnet_state,
@@ -208,7 +217,9 @@ fn deploy_calldata_no_constructor() {
 
     let contracts_data = get_contracts();
 
-    let class_hash = declare(&mut cached_state, "HelloStarknet", &contracts_data).unwrap();
+    let class_hash = declare(&mut cached_state, "HelloStarknet", &contracts_data)
+        .unwrap()
+        .success_class_hash();
 
     let output = deploy_wrapper(
         &mut cached_state,
@@ -232,7 +243,9 @@ fn deploy_missing_arguments_in_constructor() {
 
     let contracts_data = get_contracts();
 
-    let class_hash = declare(&mut cached_state, "ConstructorSimple2", &contracts_data).unwrap();
+    let class_hash = declare(&mut cached_state, "ConstructorSimple2", &contracts_data)
+        .unwrap()
+        .success_class_hash();
 
     let output = deploy_wrapper(
         &mut cached_state,
@@ -255,7 +268,9 @@ fn deploy_too_many_arguments_in_constructor() {
 
     let contracts_data = get_contracts();
 
-    let class_hash = declare(&mut cached_state, "ConstructorSimple", &contracts_data).unwrap();
+    let class_hash = declare(&mut cached_state, "ConstructorSimple", &contracts_data)
+        .unwrap()
+        .success_class_hash();
 
     let output = deploy_wrapper(
         &mut cached_state,
@@ -326,7 +341,9 @@ fn deploy_at_invokes_constructor() {
 
     let contracts_data = get_contracts();
 
-    let class_hash = declare(&mut cached_state, "ConstructorSimple", &contracts_data).unwrap();
+    let class_hash = declare(&mut cached_state, "ConstructorSimple", &contracts_data)
+        .unwrap()
+        .success_class_hash();
 
     let contract_address = deploy_at_wrapper(
         &mut cached_state,
