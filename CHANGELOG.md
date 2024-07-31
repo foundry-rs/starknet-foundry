@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Cast
 
 #### Added
-- Commands that commit transactions now display links to block explorers. When in human-readable mode, `invoke`, `declare`, `deploy`, `account create` and `account deploy` will display additional information with an url. Also, a new key in Cast congirutation - `block-explorer-search-url` determines which block explorer service the displayed link leads to.
+- Commands that commit transactions now display links to block explorers. When in human-readable mode, `invoke`, `declare`, `deploy`, `multicall run`, `account create` and `account deploy` will display additional information with an url. A new key in Cast congirutation - `block-explorer-search-url` determines which block explorer service the displayed link leads to
 
 #### Changed
 - `account create` outputs hint about the type of the tokens required to prefund a newly created account with before deployment

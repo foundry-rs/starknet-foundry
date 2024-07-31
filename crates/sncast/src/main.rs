@@ -326,6 +326,11 @@ async fn run_async_command(
                             .await;
 
                     print_command_result("multicall run", &result, numbers_format, output_format)?;
+                    print_block_explorer_link_if_allowed(
+                        &result,
+                        output_format,
+                        &config.block_explorer_search_url,
+                    );
                 }
             }
             Ok(())

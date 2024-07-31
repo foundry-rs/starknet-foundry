@@ -10,7 +10,7 @@ pub fn print_block_explorer_link_if_allowed<T: OutputLink>(
     if let (Ok(response), OutputFormat::Human) = (result, output_format) {
         let service = match search_url {
             None => STARKSCAN_SEARCH,
-            Some(ref url) => url.trim_end_matches("/"),
+            Some(ref url) => url.trim_end_matches('/'),
         };
 
         let url = response.format_url(service);
