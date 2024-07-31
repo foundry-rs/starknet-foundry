@@ -33,9 +33,9 @@ command: account create
 max_fee: 0x64a7168300
 address: 0x7a949e83b243068d0cbedd8d5b8b32fafea66c54de23c40e68b126b5c845b61
 
-Visit https://starkscan.co/search/0x7a949e83b2...
-to see transaction details
-    ```
+Details:
+account: https://starkscan.co/search/0x7a949e83b2...
+```
 
     You can also pass common `--accounts-file` argument with a path to (existing or not existing) file where you want to save account info.
     
@@ -63,8 +63,8 @@ $ sncast \
 command: account deploy
 transaction_hash: 0x20b20896ce63371ef015d66b4dd89bf18c5510a840b4a85a43a983caa6e2579
     
-Visit https://starkscan.co/search/0x20b20896ce...
-to see transaction details
+Details:
+transaction: https://starkscan.co/search/0x20b20896ce...
     ```
   
     Note that you don't have to pass `url`, `accounts-file` and `network` parameters if `add-profile` flag
@@ -90,8 +90,8 @@ command: account create
 max_fee: 0x64a7168300
 address: 0x7a949e83b243068d0cbedd8d5b8b32fafea66c54de23c40e68b126b5c845b61
 
-Visit https://starkscan.co/search/0x7ad0d6e449...
-to see transaction details
+Details:
+account: https://starkscan.co/search/0x7ad0d6e449...
 ```
 
 ### `account delete`
@@ -165,8 +165,8 @@ command: account create
 max_fee: 0x64a7168300
 address: 0x7a949e83b243068d0cbedd8d5b8b32fafea66c54de23c40e68b126b5c845b61
 
-Visit https://starkscan.co/search/0x7a949e83b2...
-to see transaction details
+Details:
+account: https://starkscan.co/search/0x7a949e83b2...
 
 $ sncast \
   account deploy \
@@ -176,8 +176,8 @@ $ sncast \
 command: account deploy
 transaction_hash: 0x20b20896ce63371ef015d66b4dd89bf18c5510a840b4a85a43a983caa6e2579
 
-Visit https://starkscan.co/search/0x20b20896ce...
-to see transaction details
+Details:
+transaction: https://starkscan.co/search/0x20b20896ce...
 ```
 
 ### Using Keystore and Starkli Account
@@ -224,8 +224,8 @@ $ sncast \
     --account my_account.json \
     account create
 
-Visit https://starkscan.co/search/...
-to see transaction details
+Details:
+transaction: https://starkscan.co/search/...
 ```
 
 The command above will generate a keystore file containing the private key, as well as an account file containing the openzeppelin account info that can later be used with starkli.

@@ -400,8 +400,8 @@ pub async fn test_valid_class_hash() {
         command: account deploy
         transaction_hash: [..]
 
-        Visit [..]
-        to see transaction details
+        Details:
+        transaction: [..]
     "});
 }
 
@@ -431,8 +431,8 @@ pub async fn test_valid_no_max_fee() {
         command: account deploy
         transaction_hash: [..]
 
-        Visit [..]
-        to see transaction details
+        Details:
+        transaction: [..]
     "});
 }
 
@@ -525,8 +525,8 @@ pub async fn test_happy_case_keystore(account_type: &str) {
         command: account deploy
         transaction_hash: 0x[..]
 
-        Visit [..]
-        to see transaction details
+        Details:
+        transaction: [..]
     "});
 
     let contents = fs::read_to_string(tempdir.path().join(account_file)).unwrap();
@@ -800,7 +800,7 @@ pub async fn test_deploy_keystore_other_args() {
         command: account deploy
         transaction_hash: 0x[..]
 
-        Visit [..]
-        to see transaction details
+        Details:
+        transaction: [..]
     "});
 }

@@ -1,7 +1,10 @@
 use camino::Utf8PathBuf;
 use conversions::serde::serialize::CairoSerialize;
+use indoc::formatdoc;
 use serde::{Deserialize, Serialize, Serializer};
 use starknet::core::types::FieldElement;
+
+use super::explorer_link::OutputLink;
 
 pub struct Decimal(pub u64);
 
@@ -152,34 +155,40 @@ pub struct VerifyResponse {
 
 impl CommandResponse for VerifyResponse {}
 
-pub trait OutputLink {
-    fn link_tail(&self) -> String;
-
-    fn format_url(&self, base: &str) -> String {
-        format!("{base}/{}", self.link_tail())
-    }
-}
-
 impl OutputLink for InvokeResponse {
-    fn link_tail(&self) -> String {
-        format!("{:x}", self.transaction_hash.0)
+    fn format_links(&self, service: &str) -> String {
+        format!("transaction: {service}/{:x}", self.transaction_hash.0)
     }
 }
 
 impl OutputLink for DeployResponse {
-    fn link_tail(&self) -> String {
-        format!("{:x}", self.transaction_hash.0)
+    fn format_links(&self, service: &str) -> String {
+        formatdoc!(
+            "
+            contract: {service}/{:x}
+            transaction: {service}/{:x}
+            ",
+            self.contract_address.0,
+            self.transaction_hash.0
+        )
     }
 }
 
 impl OutputLink for DeclareResponse {
-    fn link_tail(&self) -> String {
-        format!("{:x}", self.transaction_hash.0)
+    fn format_links(&self, service: &str) -> String {
+        formatdoc!(
+            "
+            class: {service}/{:x}
+            transaction: {service}/{:x}
+            ",
+            self.class_hash.0,
+            self.transaction_hash.0
+        )
     }
 }
 
 impl OutputLink for AccountCreateResponse {
-    fn link_tail(&self) -> String {
-        format!("{:x}", self.address.0)
+    fn format_links(&self, service: &str) -> String {
+        format!("account: {service}/{:x}", self.address.0)
     }
 }

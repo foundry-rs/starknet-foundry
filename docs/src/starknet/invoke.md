@@ -29,8 +29,8 @@ $ sncast \
 command: invoke
 transaction_hash: 0x7ad0d6e449e33b6581a4bb8df866c0fce3919a5ee05a30840ba521dafee217f
 
-Visit https://starkscan.co/search/0x7ad0d6e449...
-to see transaction details
+Details:
+transaction: https://starkscan.co/search/0x7ad0d6e449...
 ```
 
 > 💡 **Info**
@@ -52,6 +52,6 @@ $ sncast invoke \
 command: invoke
 transaction_hash: 0x7ad0d6e449e33b6581a4bb8df866c0fce3919a5ee05a30840ba521dafee217f
 
-Visit https://starkscan.co/search/0x7ad0d6e449...
-to see transaction details
+Details:
+transaction: https://starkscan.co/search/0x7ad0d6e449...
 ```

@@ -50,7 +50,7 @@ async fn test_happy_case_eth(account: &str) {
 }
 
 #[tokio::test]
-async fn test_happy_case_human_output() {
+async fn test_happy_case_human_readable() {
     let tempdir = create_and_deploy_account(OZ_CLASS_HASH, AccountType::OpenZeppelin).await;
 
     let args = vec![
@@ -84,8 +84,9 @@ async fn test_happy_case_human_output() {
             contract_address: [..]
             transaction_hash: [..]
 
-            Visit [..]
-            to see transaction details
+            Details:
+            contract: [..]
+            transaction: [..]
             "
         },
     );

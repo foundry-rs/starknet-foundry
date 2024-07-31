@@ -1,4 +1,8 @@
-use super::{print::OutputFormat, structs::OutputLink};
+use super::print::OutputFormat;
+
+pub trait OutputLink {
+    fn format_links(&self, base: &str) -> String;
+}
 
 const STARKSCAN_SEARCH: &str = "https://starkscan.co/search";
 
@@ -13,7 +17,7 @@ pub fn print_block_explorer_link_if_allowed<T: OutputLink>(
             Some(ref url) => url.trim_end_matches('/'),
         };
 
-        let url = response.format_url(service);
-        println!("\nVisit {url}\nto see transaction details");
+        let urls = response.format_links(service);
+        println!("\nDetails:\n{urls}");
     }
 }

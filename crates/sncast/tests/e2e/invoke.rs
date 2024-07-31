@@ -84,8 +84,8 @@ async fn test_happy_case_human_readable() {
             command: invoke
             transaction_hash: [..]
 
-            Visit [..]
-            to see transaction details
+            Details:
+            transaction: [..]
             "
         },
     );
