@@ -1,11 +1,13 @@
+use core::clone::Clone;
+use snforge_std::cheatcodes::contract_class::DeclareResultTrait;
 use snforge_std::{declare, ContractClassTrait};
 use starknet::{SyscallResultTrait, deploy_syscall};
 
 #[test]
 fn test_deploy() {
-    let empty_hash = declare("Empty").unwrap().class_hash;
-    let proxy = declare("TraceInfoProxy").unwrap();
-    let checker = declare("TraceInfoChecker").unwrap();
+    let empty_hash = declare("Empty").unwrap().contract_class().class_hash.clone();
+    let proxy = declare("TraceInfoProxy").unwrap().contract_class().clone();
+    let checker = declare("TraceInfoChecker").unwrap().contract_class();
 
     trace_resources::use_builtins_and_syscalls(empty_hash, 7);
 

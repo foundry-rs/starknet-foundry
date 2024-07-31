@@ -1,3 +1,4 @@
+use snforge_std::cheatcodes::contract_class::DeclareResultTrait;
 use array::ArrayTrait;
 use result::ResultTrait;
 use option::OptionTrait;
@@ -12,7 +13,7 @@ use component_macros::example::{IMyContractDispatcherTrait, IMyContractDispatche
 
 #[test]
 fn test_mint() {
-    let contract = declare("MyContract").unwrap();
+    let contract = declare("MyContract").unwrap().contract_class();
     let (address, _) = contract.deploy(@array!['minter']).unwrap();
     let minter: ContractAddress = 'minter'.try_into().unwrap();
 
