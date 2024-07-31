@@ -1,10 +1,6 @@
-use std::collections::HashMap;
-use std::fs;
-
 use crate::starknet_commands::declare::Declare;
 use crate::starknet_commands::deploy::Deploy;
 use crate::starknet_commands::invoke::Invoke;
-use crate::starknet_commands::rpc::RpcArgs;
 use crate::starknet_commands::{call, declare, deploy, invoke, tx_status};
 use crate::{get_account, get_nonce, WaitForTx};
 use anyhow::{anyhow, Context, Result};
@@ -43,6 +39,7 @@ use shared::utils::build_readable_text;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::SCRIPT_LIB_ARTIFACT_NAME;
 use sncast::helpers::fee::ScriptFeeSettings;
+use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::ScriptRunResponse;
 use sncast::state::hashing::{
     generate_declare_tx_id, generate_deploy_tx_id, generate_invoke_tx_id,
@@ -53,6 +50,8 @@ use starknet::core::types::{BlockId, BlockTag::Pending};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
+use std::collections::HashMap;
+use std::fs;
 use tokio::runtime::Runtime;
 
 type ScriptStarknetContractArtifacts = StarknetContractArtifacts;

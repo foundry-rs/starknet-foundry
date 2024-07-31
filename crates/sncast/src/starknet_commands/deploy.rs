@@ -1,8 +1,8 @@
-use super::rpc::RpcArgs;
 use anyhow::{anyhow, Result};
 use clap::{Args, ValueEnum};
 use sncast::helpers::error::token_not_supported_for_deployment;
 use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken, PayableTransaction};
+use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::structs::{DeployResponse, Felt};
 use sncast::{extract_or_generate_salt, impl_payable_transaction, udc_uniqueness};

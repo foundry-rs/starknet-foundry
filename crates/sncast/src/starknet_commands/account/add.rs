@@ -2,11 +2,11 @@ use crate::starknet_commands::account::{
     add_created_profile_to_configuration, prepare_account_json, write_account_to_accounts_file,
     AccountType,
 };
-use crate::starknet_commands::rpc::RpcArgs;
 use anyhow::{ensure, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
 use sncast::helpers::configuration::CastConfig;
+use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::AccountAddResponse;
 use sncast::{check_class_hash_exists, get_chain_id};
 use sncast::{check_if_legacy_contract, get_class_hash_by_address};

@@ -1,6 +1,6 @@
+use crate::{get_provider, helpers::configuration::CastConfig};
 use clap::Args;
 use shared::verify_and_warn_if_incompatible_rpc_version;
-use sncast::{get_provider, helpers::configuration::CastConfig};
 use starknet::providers::{jsonrpc::HttpTransport, JsonRpcClient};
 
 #[derive(Args, Clone, Debug, Default)]

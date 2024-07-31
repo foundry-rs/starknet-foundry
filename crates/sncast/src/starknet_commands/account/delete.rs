@@ -1,9 +1,9 @@
-use crate::starknet_commands::rpc::RpcArgs;
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
 use promptly::prompt;
 use serde_json::Map;
+use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::AccountDeleteResponse;
 
 #[derive(Args, Debug)]

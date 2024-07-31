@@ -1,5 +1,5 @@
-use super::rpc::RpcArgs;
 use clap::Args;
+use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::structs::{ExecutionStatus, FinalityStatus, TransactionStatusResponse};
 use starknet::core::types::{FieldElement, TransactionExecutionStatus, TransactionStatus};

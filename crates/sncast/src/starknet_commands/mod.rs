@@ -4,7 +4,6 @@ pub mod declare;
 pub mod deploy;
 pub mod invoke;
 pub mod multicall;
-pub mod rpc;
 pub mod script;
 pub mod show_config;
 pub mod tx_status;
