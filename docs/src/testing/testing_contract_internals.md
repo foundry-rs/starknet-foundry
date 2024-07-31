@@ -219,7 +219,7 @@ We use the `SafeLibraryDispatcher` like this:
 ```rust
 use result::ResultTrait;
 use starknet::{ ClassHash, library_call_syscall, ContractAddress };
-use snforge_std::{ declare };
+use snforge_std::{ declare, DeclareResultTrait };
 
 #[starknet::interface]
 trait ILibraryContract<TContractState> {
@@ -235,7 +235,7 @@ trait ILibraryContract<TContractState> {
 
 #[test]
 fn test_library_calls() {
-    let class_hash = declare("LibraryContract").class_hash;
+    let class_hash = declare("LibraryContract").unwrap().success_contract_class().class_hash;
     let lib_dispatcher = ILibraryContractSafeLibraryDispatcher { class_hash };
     let value = lib_dispatcher.get_value().unwrap();
     assert(value == 0, 'Incorrect state');

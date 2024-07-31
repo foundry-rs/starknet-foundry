@@ -127,11 +127,11 @@ address, so it passes our validation.
 ### Cheating an Address
 
 ```rust
-use snforge_std::{ declare, ContractClassTrait, start_cheat_caller_address };
+use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, start_cheat_caller_address };
 
 #[test]
 fn call_and_invoke() {
-    let contract = declare("HelloStarknet").unwrap();
+    let contract = declare("HelloStarknet").unwrap().success_contract_class();
     let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
     let dispatcher = IHelloStarknetDispatcher { contract_address };
 
@@ -209,11 +209,11 @@ Let's say, that you have a contract that saves the caller address (deployer) in 
 To `cheat_caller_address` the constructor, you need to `start_cheat_caller_address` before it is invoked, with the right address. To achieve this, you need to precalculate the address of the contract by using the `precalculate_address` function of `ContractClassTrait` on the declared contract, and then use it in `start_cheat_caller_address` as an argument:
 
 ```rust
-use snforge_std::{ declare, ContractClassTrait, start_cheat_caller_address };
+use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, start_cheat_caller_address };
 
 #[test]
 fn mock_constructor_with_cheat_caller_address() {
-    let contract = declare("HelloStarknet").unwrap();
+    let contract = declare("HelloStarknet").unwrap().success_contract_class();
     let constructor_arguments = @ArrayTrait::new();
 
     // Precalculate the address to obtain the contract address before the constructor call (deploy) itself
@@ -259,13 +259,13 @@ To better understand the functionality of `CheatSpan`, here's a full example:
 
 ```rust
 use snforge_std::{
-    declare, ContractClass, ContractClassTrait, cheat_caller_address, CheatSpan
+    declare, ContractClass, ContractClassTrait, DeclareResultTrait, cheat_caller_address, CheatSpan
 };
 
 #[test]
 #[feature("safe_dispatcher")]
 fn call_and_invoke() {
-    let contract = declare("HelloStarknet").unwrap();
+    let contract = declare("HelloStarknet").unwrap().success_contract_class();
     let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
     let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
 

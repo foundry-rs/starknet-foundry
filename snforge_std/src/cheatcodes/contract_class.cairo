@@ -21,7 +21,7 @@ trait ContractClassTrait {
     /// Calculates an address of a contract in advance that would be returned when calling `deploy`
     /// The precalculated address is only correct for the very next deployment
     /// The `constructor_calldata` has a direct impact on the resulting contract address
-    /// `self` - an instance of the struct `ContractClass` which is obtained by calling `declare`
+    /// `self` - an instance of the struct `ContractClass` which is obtained by calling `declare` and unpacking `DeclareResult`
     /// `constructor_calldata` - serialized calldata for the deploy constructor
     /// Returns the precalculated `ContractAddress`
     fn precalculate_address(
@@ -29,7 +29,7 @@ trait ContractClassTrait {
     ) -> ContractAddress;
 
     /// Deploys a contract
-    /// `self` - an instance of the struct `ContractClass` which is obtained by calling `declare`
+    /// `self` - an instance of the struct `ContractClass` which is obtained by calling `declare` and unpacking `DeclareResult`
     /// `constructor_calldata` - calldata for the constructor, serialized with `Serde`
     /// Returns the address the contract was deployed at and serialized constructor return data, or
     /// panic data if it failed
@@ -38,7 +38,7 @@ trait ContractClassTrait {
     ) -> SyscallResult<(ContractAddress, Span<felt252>)>;
 
     /// Deploys a contract at a given address
-    /// `self` - an instance of the struct `ContractClass` which is obtained by calling `declare`
+    /// `self` - an instance of the struct `ContractClass` which is obtained by calling `declare` and unpacking `DeclareResult`
     /// `constructor_calldata` - serialized calldata for the constructor
     /// `contract_address` - address the contract should be deployed at
     /// Returns the address the contract was deployed at and serialized constructor return data, or
@@ -95,8 +95,14 @@ impl ContractClassImpl of ContractClassTrait {
 }
 
 trait DeclareResultTrait {
+    /// Gets inner `ContractClass`
+    /// `self` - an instance of the struct `DeclareResult` which is obtained by calling `declare`
+    // Returns the `@ContractClass`
     fn contract_class(self: @DeclareResult) -> @ContractClass;
 
+    /// Gets inner `ContractClass` if istance is `DeclareResult::Success`, else panics
+    /// `self` - an instance of the struct `DeclareResult` which is obtained by calling `declare`
+    // Returns the `@ContractClass`
     fn success_contract_class(self: @DeclareResult) -> @ContractClass;
 }
 
@@ -119,7 +125,9 @@ impl DeclareResultImpl of DeclareResultTrait {
 /// Declares a contract
 /// `contract` - name of a contract as Cairo string. It is a name of the contract (part after mod
 /// keyword) e.g. "HelloStarknet"
-/// Returns the `ContractClass` which was declared or panic data if declaration failed
+/// Returns the `DeclareResult` that encapsulated possible outcomes in the enum:
+/// - `Success`: Contains the successfully declared `ContractClass`.
+/// - `AlreadyDeclared`: Contains `ContractClass` and signals that the contract has already been declared.
 fn declare(contract: ByteArray) -> Result<DeclareResult, Array<felt252>> {
     let mut span = handle_cheatcode(
         cheatcode::<'declare'>(byte_array_as_felt_array(@contract).span())
