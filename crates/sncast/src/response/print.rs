@@ -29,9 +29,7 @@ where
     Self: Sized,
 {
     #[must_use]
-    fn format_with(self, _: NumbersFormat) -> Self {
-        self
-    }
+    fn format_with(self, _: NumbersFormat) -> Self;
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
