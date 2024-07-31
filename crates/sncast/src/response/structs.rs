@@ -155,7 +155,7 @@ impl CommandResponse for VerifyResponse {}
 pub trait OutputLink {
     fn link_tail(&self) -> String;
 
-    fn format_url(&self, base: &'static str) -> String {
+    fn format_url(&self, base: &str) -> String {
         format!("{base}/{}", self.link_tail())
     }
 }

@@ -216,7 +216,11 @@ async fn run_async_command(
                     .map_err(handle_starknet_command_error);
 
             print_command_result("declare", &result, numbers_format, output_format)?;
-            print_block_explorer_link_if_allowed(&result, output_format);
+            print_block_explorer_link_if_allowed(
+                &result,
+                output_format,
+                &config.block_explorer_search_url,
+            );
             Ok(())
         }
 
@@ -235,7 +239,11 @@ async fn run_async_command(
                 .map_err(handle_starknet_command_error);
 
             print_command_result("deploy", &result, numbers_format, output_format)?;
-            print_block_explorer_link_if_allowed(&result, output_format);
+            print_block_explorer_link_if_allowed(
+                &result,
+                output_format,
+                &config.block_explorer_search_url,
+            );
             Ok(())
         }
 
@@ -277,7 +285,11 @@ async fn run_async_command(
             .map_err(handle_starknet_command_error);
 
             print_command_result("invoke", &result, numbers_format, output_format)?;
-            print_block_explorer_link_if_allowed(&result, output_format);
+            print_block_explorer_link_if_allowed(
+                &result,
+                output_format,
+                &config.block_explorer_search_url,
+            );
             Ok(())
         }
 
@@ -358,7 +370,11 @@ async fn run_async_command(
                 .await;
 
                 print_command_result("account create", &result, numbers_format, output_format)?;
-                print_block_explorer_link_if_allowed(&result, output_format);
+                print_block_explorer_link_if_allowed(
+                    &result,
+                    output_format,
+                    &config.block_explorer_search_url,
+                );
                 Ok(())
             }
 
@@ -378,7 +394,11 @@ async fn run_async_command(
                 .await;
 
                 print_command_result("account deploy", &result, numbers_format, output_format)?;
-                print_block_explorer_link_if_allowed(&result, output_format);
+                print_block_explorer_link_if_allowed(
+                    &result,
+                    output_format,
+                    &config.block_explorer_search_url,
+                );
                 Ok(())
             }
 

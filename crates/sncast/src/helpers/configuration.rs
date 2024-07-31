@@ -26,6 +26,16 @@ pub struct CastConfig {
         rename(serialize = "wait-params", deserialize = "wait-params")
     )]
     pub wait_params: ValidatedWaitParams,
+
+    #[serde(
+        default,
+        rename(
+            serialize = "block-explorer-search-url",
+            deserialize = "block-explorer-search-url"
+        )
+    )]
+    /// URL to an endpoint allowing contract address/class hash search in a block explorer
+    pub block_explorer_search_url: Option<String>,
 }
 
 impl GlobalConfig for CastConfig {
