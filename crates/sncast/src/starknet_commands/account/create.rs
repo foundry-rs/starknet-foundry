@@ -132,7 +132,7 @@ pub async fn create(
             "--add-profile flag was not set. No profile added to snfoundry.toml".to_string()
         },
         message: if account_json["deployed"] == json!(false) {
-            "Account successfully created. Prefund generated address with at least <max_fee> tokens. It is good to send more in the case of higher demand.".to_string()
+            "Account successfully created. Prefund generated address with at least <max_fee> STRK tokens or an equivalent amount of ETH tokens. It is good to send more in the case of higher demand.".to_string()
         } else {
             "Account already deployed".to_string()
         },
