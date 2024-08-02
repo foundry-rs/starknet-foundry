@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 - `account create` outputs hint about the type of the tokens required to prefund a newly created account with before deployment
 
+- `sncast` no longer expects `--url` as a common argument. It is now required specifically by commands that utilise it, i.e. `account add`, `account create`, `account delete`, `account deploy`, `multicall run`, `script run`, `call`, `declare`, `deploy`, `invoke`, `show-config`, `tx-status`.
+Commands that do not require `--url` anymore: `account list`, `multicall new`, `script init`, `verify`
+
 ### Forge
 
 #### Changed
@@ -41,9 +44,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - `multicall new` no longer prints generated template to stdout and now requires specifying output path. [Read more here](https://foundry-rs.github.io/starknet-foundry/appendix/sncast/multicall/new.html)
-
-- `sncast` no longer expects `--url` as a common argument. It is now required specifically by commands that utilise it, i.e. `account add`, `account create`, `account delete`, `account deploy`, `multicall run`, `script run`, `call`, `declare`, `deploy`, `invoke`, `show-config`, `tx-status`.
-Commands that do not require `--url` anymore: `account list`, `multicall new`, `script init`, `verify`
 
 ## [0.26.0] - 2024-07-03
 
