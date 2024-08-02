@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Changed
 - Fork tests now discover chain ID via provided RPC URL, defaulting to `SN_SEPOLIA`
+- `#[fork]` attribute parameters
 
 ## [0.27.0] - 2024-07-24
 

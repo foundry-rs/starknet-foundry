@@ -20,10 +20,10 @@ use starknet_api::transaction::{Resource, ResourceBounds, ResourceBoundsMapping}
 use starknet_api::{
     contract_address,
     core::{ChainId, ContractAddress, Nonce, PatriciaKey},
-    hash::{StarkFelt, StarkHash},
-    patricia_key,
+    felt, patricia_key,
     transaction::{TransactionHash, TransactionSignature, TransactionVersion},
 };
+use starknet_types_core::felt::Felt;
 
 pub const DEFAULT_CHAIN_ID: &str = "SN_SEPOLIA";
 pub const DEFAULT_BLOCK_NUMBER: u64 = 2000;
@@ -31,7 +31,7 @@ pub const SEQUENCER_ADDRESS: &str = "0x1000";
 pub const ERC20_CONTRACT_ADDRESS: &str = "0x1001";
 
 fn default_chain_id() -> ChainId {
-    ChainId(String::from(DEFAULT_CHAIN_ID))
+    ChainId::from(String::from(DEFAULT_CHAIN_ID))
 }
 
 #[must_use]
@@ -55,7 +55,7 @@ fn build_tx_info() -> TransactionInfo {
             transaction_hash: TransactionHash::default(),
             version: TransactionVersion::THREE,
             signature: TransactionSignature::default(),
-            nonce: Nonce(StarkFelt::from(0_u8)),
+            nonce: Nonce(Felt::ZERO),
             sender_address: ContractAddress::default(),
             only_query: false,
         },
