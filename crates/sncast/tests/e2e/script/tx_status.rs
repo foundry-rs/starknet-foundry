@@ -12,7 +12,7 @@ async fn test_tx_status_status_reverted() {
     );
 
     let script_name = "status_reverted";
-    let args = vec!["--url", URL, "script", "run", &script_name];
+    let args = vec!["script", "run", &script_name, "--url", URL];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
@@ -36,7 +36,7 @@ async fn test_tx_status_status_succeeded() {
     );
 
     let script_name = "status_succeeded";
-    let args = vec!["--url", URL, "script", "run", &script_name];
+    let args = vec!["script", "run", &script_name, "--url", URL];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
@@ -60,7 +60,7 @@ async fn test_tx_status_incorrect_transaction_hash() {
     );
 
     let script_name = "incorrect_transaction_hash";
-    let args = vec!["--url", URL, "script", "run", &script_name];
+    let args = vec!["script", "run", &script_name, "--url", URL];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
