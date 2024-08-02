@@ -50,7 +50,7 @@ pub async fn test_happy_case(account_type: &str) {
         add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
         address: 0x[..]
         max_fee: [..]
-        message: Account successfully created. Prefund generated address with at least <max_fee> tokens. It is good to send more in the case of higher demand.
+        message: Account successfully created. Prefund generated address with at least <max_fee> STRK tokens or an equivalent amount of ETH tokens. It is good to send more in the case of higher demand.
         "},
     );
 
@@ -313,7 +313,7 @@ pub async fn test_happy_case_keystore(account_type: &str) {
         .expect("Unable to read created file");
 
     assert_matches(
-        get_keystore_account_pattern(&account_type.parse().unwrap(), None),
+        get_keystore_account_pattern(account_type.parse().unwrap(), None),
         contents,
     );
 }
@@ -552,9 +552,9 @@ fn get_formatted_account_type(account_type: &str) -> &str {
     }
 }
 
-fn get_keystore_account_pattern(account_type: &AccountType, class_hash: Option<&str>) -> String {
+fn get_keystore_account_pattern(account_type: AccountType, class_hash: Option<&str>) -> String {
     let account_json = match account_type {
-        AccountType::Oz => {
+        AccountType::OpenZeppelin => {
             json!(
                 {
                     "version": 1,

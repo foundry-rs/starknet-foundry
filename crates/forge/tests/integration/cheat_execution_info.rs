@@ -15,7 +15,7 @@ fn start_and_stop_cheat_transaction_hash_single_attribute() {
             use serde::Serde;
             use starknet::ContractAddress;
             use array::SpanTrait;
-            use snforge_std::{ declare, ContractClassTrait, start_cheat_transaction_hash, cheat_transaction_hash_global, stop_cheat_transaction_hash };
+            use snforge_std::{ declare, ContractClassTrait, start_cheat_transaction_hash, start_cheat_transaction_hash_global, stop_cheat_transaction_hash };
             use starknet::info::v2::ResourceBounds;
 
             #[starknet::interface]
@@ -51,7 +51,7 @@ fn start_and_stop_cheat_transaction_hash_single_attribute() {
 
                 let tx_info_before = dispatcher.get_tx_info();
 
-                cheat_transaction_hash_global(421);
+                start_cheat_transaction_hash_global(421);
 
                 let mut expected_tx_info = tx_info_before;
                 expected_tx_info.transaction_hash = 421;
@@ -546,7 +546,7 @@ fn start_cheat_transaction_hash_complex() {
             use starknet::ContractAddress;
             use starknet::ContractAddressIntoFelt252;
             use array::SpanTrait;
-            use snforge_std::{ declare, ContractClassTrait, start_cheat_transaction_hash, cheat_transaction_hash_global, TxInfoMock, Operation, CheatArguments, CheatSpan };
+            use snforge_std::{ declare, ContractClassTrait, start_cheat_transaction_hash, start_cheat_transaction_hash_global, TxInfoMock, Operation, CheatArguments, CheatSpan };
 
             #[starknet::interface]
             trait ICheatTxInfoChecker<TContractState> {
@@ -562,7 +562,7 @@ fn start_cheat_transaction_hash_complex() {
                 let dispatcher_1 = ICheatTxInfoCheckerDispatcher { contract_address: contract_address_1 };
                 let dispatcher_2 = ICheatTxInfoCheckerDispatcher { contract_address: contract_address_2 };
 
-                cheat_transaction_hash_global(421);
+                start_cheat_transaction_hash_global(421);
 
                 let transaction_hash_1 = dispatcher_1.get_tx_hash();
                 let transaction_hash_2 = dispatcher_2.get_tx_hash();

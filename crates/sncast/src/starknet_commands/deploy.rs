@@ -1,6 +1,11 @@
 use anyhow::{anyhow, Result};
-use clap::Args;
+use clap::{Args, ValueEnum};
+use sncast::helpers::error::token_not_supported_for_deployment;
+use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken, PayableTransaction};
+use sncast::response::errors::StarknetCommandError;
 use sncast::response::structs::{DeployResponse, Felt};
+use sncast::{extract_or_generate_salt, impl_payable_transaction, udc_uniqueness};
+use sncast::{handle_wait_for_tx, WaitForTx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{Account, ConnectedAccount, SingleOwnerAccount};
 use starknet::contract::ContractFactory;
@@ -9,10 +14,6 @@ use starknet::core::utils::get_udc_deployed_address;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
-
-use sncast::response::errors::StarknetCommandError;
-use sncast::{extract_or_generate_salt, udc_uniqueness};
-use sncast::{handle_wait_for_tx, WaitForTx};
 
 #[derive(Args)]
 #[command(about = "Deploy a contract on Starknet")]
@@ -33,45 +34,80 @@ pub struct Deploy {
     #[clap(short, long)]
     pub unique: bool,
 
-    /// Max fee for the transaction. If not provided, max fee will be automatically estimated
-    #[clap(short, long)]
-    pub max_fee: Option<FieldElement>,
+    #[clap(flatten)]
+    pub fee_args: FeeArgs,
 
     /// Nonce of the transaction. If not provided, nonce will be set automatically
     #[clap(short, long)]
     pub nonce: Option<FieldElement>,
+
+    /// Version of the deployment (can be inferred from fee token)
+    #[clap(short, long)]
+    pub version: Option<DeployVersion>,
 }
 
-#[allow(clippy::too_many_arguments)]
+#[derive(ValueEnum, Debug, Clone)]
+pub enum DeployVersion {
+    V1,
+    V3,
+}
+
+impl_payable_transaction!(Deploy, token_not_supported_for_deployment,
+    DeployVersion::V1 => FeeToken::Eth,
+    DeployVersion::V3 => FeeToken::Strk
+);
+
 pub async fn deploy(
-    class_hash: FieldElement,
-    constructor_calldata: Vec<FieldElement>,
-    salt: Option<FieldElement>,
-    unique: bool,
-    max_fee: Option<FieldElement>,
+    deploy: Deploy,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
-    nonce: Option<FieldElement>,
     wait_config: WaitForTx,
 ) -> Result<DeployResponse, StarknetCommandError> {
-    let salt = extract_or_generate_salt(salt);
-    let factory = ContractFactory::new(class_hash, account);
-    let execution = factory.deploy(constructor_calldata.clone(), salt, unique);
+    let fee_settings = deploy
+        .fee_args
+        .clone()
+        .fee_token(deploy.token_from_version())
+        .try_into_fee_settings(account.provider(), account.block_id())
+        .await?;
 
-    // TODO(#1396): use apply_optional here when `Deployment` in starknet-rs is public
-    //  otherwise we cannot pass the necessary reference to a function
-    let execution = if let Some(max_fee) = max_fee {
-        execution.max_fee(max_fee)
-    } else {
-        execution
+    let salt = extract_or_generate_salt(deploy.salt);
+    let factory = ContractFactory::new(deploy.class_hash, account);
+    let result = match fee_settings {
+        FeeSettings::Eth { max_fee } => {
+            let execution =
+                factory.deploy_v1(deploy.constructor_calldata.clone(), salt, deploy.unique);
+            let execution = match max_fee {
+                None => execution,
+                Some(max_fee) => execution.max_fee(max_fee),
+            };
+            let execution = match deploy.nonce {
+                None => execution,
+                Some(nonce) => execution.nonce(nonce),
+            };
+            execution.send().await
+        }
+        FeeSettings::Strk {
+            max_gas,
+            max_gas_unit_price,
+        } => {
+            let execution =
+                factory.deploy_v3(deploy.constructor_calldata.clone(), salt, deploy.unique);
+
+            let execution = match max_gas {
+                None => execution,
+                Some(max_gas) => execution.gas(max_gas),
+            };
+            let execution = match max_gas_unit_price {
+                None => execution,
+                Some(max_gas_unit_price) => execution.gas_price(max_gas_unit_price),
+            };
+            let execution = match deploy.nonce {
+                None => execution,
+                Some(nonce) => execution.nonce(nonce),
+            };
+            execution.send().await
+        }
     };
 
-    let execution = if let Some(nonce) = nonce {
-        execution.nonce(nonce)
-    } else {
-        execution
-    };
-
-    let result = execution.send().await;
     match result {
         Ok(result) => handle_wait_for_tx(
             account.provider(),
@@ -79,9 +115,9 @@ pub async fn deploy(
             DeployResponse {
                 contract_address: Felt(get_udc_deployed_address(
                     salt,
-                    class_hash,
-                    &udc_uniqueness(unique, account.address()),
-                    &constructor_calldata,
+                    deploy.class_hash,
+                    &udc_uniqueness(deploy.unique, account.address()),
+                    &deploy.constructor_calldata,
                 )),
                 transaction_hash: Felt(result.transaction_hash),
             },

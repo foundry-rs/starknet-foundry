@@ -8,6 +8,7 @@ use test_case::test_case;
 
 #[test_case("oz_cairo_0"; "cairo_0_account")]
 #[test_case("oz_cairo_1"; "cairo_1_account")]
+#[test_case("oz"; "oz_account")]
 #[test_case("argent"; "argent_account")]
 #[test_case("braavos"; "braavos_account")]
 #[tokio::test]
@@ -21,7 +22,14 @@ async fn test_happy_case(account: &str) {
         .join("deploy_invoke.toml");
     let path_str = path.to_str().expect("failed converting path to str");
 
-    args.append(&mut vec!["multicall", "run", "--path", path_str]);
+    args.append(&mut vec![
+        "multicall",
+        "run",
+        "--path",
+        path_str,
+        "--fee-token",
+        "eth",
+    ]);
 
     let snapbox = runner(&args);
     let output = snapbox.assert();
@@ -49,7 +57,14 @@ async fn test_calldata_ids() {
         .join("deploy_invoke_calldata_ids.toml");
     let path_str = path.to_str().expect("failed converting path to str");
 
-    args.append(&mut vec!["multicall", "run", "--path", path_str]);
+    args.append(&mut vec![
+        "multicall",
+        "run",
+        "--path",
+        path_str,
+        "--fee-token",
+        "eth",
+    ]);
 
     let snapbox = runner(&args);
     let output = snapbox.assert();
@@ -71,7 +86,14 @@ async fn test_invalid_path() {
     let mut args = default_cli_args();
     args.append(&mut vec!["--account", "user2"]);
 
-    args.append(&mut vec!["multicall", "run", "--path", "non-existent"]);
+    args.append(&mut vec![
+        "multicall",
+        "run",
+        "--path",
+        "non-existent",
+        "--fee-token",
+        "eth",
+    ]);
 
     let snapbox = runner(&args);
     let output = snapbox.assert().success();
@@ -97,7 +119,14 @@ async fn test_deploy_fail() {
         .join("deploy_invalid.toml");
     let path_str = path.to_str().expect("failed converting path to str");
 
-    args.append(&mut vec!["multicall", "run", "--path", path_str]);
+    args.append(&mut vec![
+        "multicall",
+        "run",
+        "--path",
+        path_str,
+        "--fee-token",
+        "eth",
+    ]);
 
     let snapbox = runner(&args);
     let output = snapbox.assert().success();
@@ -122,7 +151,14 @@ async fn test_invoke_fail() {
         .join("invoke_invalid.toml");
     let path_str = path.to_str().expect("failed converting path to str");
 
-    args.append(&mut vec!["multicall", "run", "--path", path_str]);
+    args.append(&mut vec![
+        "multicall",
+        "run",
+        "--path",
+        path_str,
+        "--fee-token",
+        "eth",
+    ]);
 
     let snapbox = runner(&args);
     let output = snapbox.assert().success();
@@ -147,7 +183,14 @@ async fn test_deploy_success_invoke_fails() {
         .join("deploy_succ_invoke_fail.toml");
     let path_str = path.to_str().expect("failed converting path to str");
 
-    args.append(&mut vec!["multicall", "run", "--path", path_str]);
+    args.append(&mut vec![
+        "multicall",
+        "run",
+        "--path",
+        path_str,
+        "--fee-token",
+        "eth",
+    ]);
 
     let snapbox = runner(&args);
 

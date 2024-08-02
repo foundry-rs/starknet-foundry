@@ -31,7 +31,7 @@ use trace_data::{
 
 pub mod test_sierra_program_path;
 
-pub const TRACE_DIR: &str = ".snfoundry_trace";
+pub const TRACE_DIR: &str = "snfoundry_trace";
 
 pub const TEST_CODE_CONTRACT_NAME: &str = "SNFORGE_TEST_CODE";
 pub const TEST_CODE_FUNCTION_NAME: &str = "SNFORGE_TEST_CODE_FUNCTION";

@@ -23,7 +23,7 @@ fn cheat_sequencer_address(
 
 /// Changes the sequencer address.
 /// - `sequencer_address` - sequencer address to be set
-fn cheat_sequencer_address_global(sequencer_address: ContractAddress) {
+fn start_cheat_sequencer_address_global(sequencer_address: ContractAddress) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info.block_info.sequencer_address = Operation::StartGlobal(sequencer_address);
@@ -31,7 +31,7 @@ fn cheat_sequencer_address_global(sequencer_address: ContractAddress) {
     cheat_execution_info(execution_info);
 }
 
-/// Cancels the `cheat_sequencer_address_global`.
+/// Cancels the `start_cheat_sequencer_address_global`.
 fn stop_cheat_sequencer_address_global() {
     let mut execution_info: ExecutionInfoMock = Default::default();
 

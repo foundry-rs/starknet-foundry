@@ -12,6 +12,7 @@ To remove an account from the accounts file, you can use  `sncast account delete
 > Accounts creation and deployment is supported for
 >  - OpenZeppelin
 >  - Argent (with guardian set to 0)
+>  - Braavos
 
 ## Examples
 
@@ -39,9 +40,12 @@ Do the following to start interacting with the Starknet:
 
 
 - prefund generated address with tokens
-  
+
+	To deploy an account in the next step, you need to prefund it with either STRK or ETH tokens (read more about them [here](https://docs.starknet.io/architecture-and-concepts/economics-of-starknet/)).
     You can do it both by sending tokens from another starknet account or by bridging them with [StarkGate](https://starkgate.starknet.io/).
 
+ >💡 **Info**
+> When deploying on a Sepolia test network, you can also fund your account with artificial tokens via the [Starknet Faucet](https://starknet-faucet.vercel.app)
 
 - deploy account with the `sncast account deploy` command
 
@@ -50,6 +54,7 @@ Do the following to start interacting with the Starknet:
       --url http://127.0.0.1:5050 \
       account deploy
       --name some-name \
+      --fee-token strk \
       --max-fee 9999999999999
     
     command: account deploy
@@ -61,6 +66,8 @@ Do the following to start interacting with the Starknet:
     
     For a detailed CLI description, see [account deploy command reference](../appendix/sncast/account/deploy.md).
 
+> 💡 **Info**
+> You can also choose to pay in Ether by setting `--fee-token` to `eth`.
 
 ### `account create` With Salt Argument
 
@@ -97,17 +104,52 @@ result: Account successfully removed
 
 For a detailed CLI description, see [account delete command reference](../appendix/sncast/account/delete.md).
 
+### `account list`
+
+List all accounts saved in `accounts file`, grouped based on the networks they are defined on.
+
+```shell
+$ sncast --accounts-file my-account-file.json account list
+Available accounts (at <current-directory>/my-account-file.json):
+- user0
+public key: 0x2f91ed13f8f0f7d39b942c80bfcd3d0967809d99e0cc083606cbe59033d2b39
+network: alpha-sepolia
+address: 0x4f5f24ceaae64434fa2bc2befd08976b51cf8f6a5d8257f7ec3616f61de263a
+type: OpenZeppelin
+deployed: false
+legacy: false
+
+- user1
+[...]
+
+To show private keys too, run with --display-private-keys or -p
+
+$ sncast --accounts-file my-account-file.json account list --display-private-keys
+Available accounts (at <current-directory>/my-account-file.json):
+- user0
+private key: 0x1e9038bdc68ce1d27d54205256988e85
+public key: 0x2f91ed13f8f0f7d39b942c80bfcd3d0967809d99e0cc083606cbe59033d2b39
+network: alpha-sepolia
+address: 0x4f5f24ceaae64434fa2bc2befd08976b51cf8f6a5d8257f7ec3616f61de263a
+type: OpenZeppelin
+deployed: false
+legacy: false
+
+- user1
+[...]
+```
+
 ### Custom Account Contract
 
-By default, `sncast` creates/deploys an account using [openzeppelin contract's class hash](https://starkscan.co/class/0x058d97f7d76e78f44905cc30cb65b91ea49a4b908a76703c54197bca90f81773).
-It is possible to create an account using custom openzeppelin contract declared to starknet. This can be achieved
+By default, `sncast` creates/deploys an account using [OpenZeppelin's account contract class hash](https://starkscan.co/class/0x00e2eb8f5672af4e6a4e8a8f1b44989685e668489b0a25437733756c5a34a1d6).
+It is possible to create an account using custom openzeppelin, argent or braavos contract declared to starknet. This can be achieved
 with `--class-hash` flag:
 
 ```shell
 $ sncast \
     account create \
     --name some-name \
-    --class-hash 0x058d97f7d76e78f44905cc30cb65b91ea49a4b908a76703c54197bca90f81773
+    --class-hash 0x00e2eb8f5672af4e6a4e8a8f1b44989685e668489b0a25437733756c5a34a1d6
 
 Account successfully created. Prefund generated address with at least 432300000000 tokens. It is good to send more in the case of higher demand, max_fee * 2 = 864600000000
 command: account create

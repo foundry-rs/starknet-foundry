@@ -14,7 +14,27 @@ Name of the contract. Contract name is a part after the mod keyword in your cont
 ## `--max-fee, -m <MAX_FEE>`
 Optional.
 
-Max fee for transaction. If not provided, max fee will be automatically estimated.
+Maximum fee for the `declare` transaction in Fri or Wei depending on fee token or transaction version. When not used, defaults to auto-estimation.
+
+## `--fee-token <FEE_TOKEN>`
+Optional. Required if `--version` is not provided.
+
+Token used for fee payment. Possible values: ETH, STRK.
+
+## `--max-gas <MAX_GAS>`
+Optional.
+
+Maximum gas for the `declare` transaction. When not used, defaults to auto-estimation. (Only for STRK fee payment)
+
+## ` --max-gas-unit-price <MAX_GAS_UNIT_PRICE>`
+Optional.
+
+Maximum gas unit price for the `declare` transaction paid in Fri. When not used, defaults to auto-estimation. (Only for STRK fee payment)
+
+## `--version, -v <VERSION>`
+Optional. Required if `--fee-token` is not provided.
+
+Version of the deployment transaction. Possible values: v2, v3.
 
 ## `--nonce, -n <NONCE>`
 Optional.

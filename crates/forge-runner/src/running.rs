@@ -157,8 +157,9 @@ pub fn run_test_case(
         )?,
     };
     let block_info = state_reader.get_block_info()?;
+    let chain_id = state_reader.get_chain_id()?;
 
-    let mut context = build_context(&block_info);
+    let mut context = build_context(&block_info, chain_id);
 
     if let Some(max_n_steps) = runtime_config.max_n_steps {
         set_max_steps(&mut context, max_n_steps);

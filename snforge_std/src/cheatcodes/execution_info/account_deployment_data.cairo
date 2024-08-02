@@ -23,7 +23,7 @@ fn cheat_account_deployment_data(
 
 /// Changes the transaction account deployment data.
 /// - `account_deployment_data` - transaction account deployment data to be set
-fn cheat_account_deployment_data_global(account_deployment_data: Span<felt252>) {
+fn start_cheat_account_deployment_data_global(account_deployment_data: Span<felt252>) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info
