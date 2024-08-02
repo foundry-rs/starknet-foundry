@@ -2,8 +2,17 @@ use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use clap::{Args, ValueEnum};
 use serde_json::Map;
+use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::helpers::constants::{BRAAVOS_BASE_ACCOUNT_CLASS_HASH, KEYSTORE_PASSWORD_ENV_VAR};
+use sncast::helpers::error::token_not_supported_for_deployment;
+use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken, PayableTransaction};
+use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::{Felt, InvokeResponse};
+use sncast::{
+    apply_optional, chain_id_to_network_name, check_account_file_exists,
+    get_account_data_from_accounts_file, get_account_data_from_keystore, get_keystore_password,
+    handle_rpc_error, handle_wait_for_tx, impl_payable_transaction, AccountType, WaitForTx,
+};
 use starknet::accounts::{
     AccountDeploymentV1, AccountDeploymentV3, AccountFactory, OpenZeppelinAccountFactory,
 };
@@ -15,15 +24,6 @@ use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::ProviderError::StarknetError;
 use starknet::providers::{JsonRpcClient, Provider};
 use starknet::signers::{LocalWallet, SigningKey};
-
-use sncast::helpers::braavos::BraavosAccountFactory;
-use sncast::helpers::error::token_not_supported_for_deployment;
-use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken, PayableTransaction};
-use sncast::{
-    apply_optional, chain_id_to_network_name, check_account_file_exists,
-    get_account_data_from_accounts_file, get_account_data_from_keystore, get_keystore_password,
-    handle_rpc_error, handle_wait_for_tx, impl_payable_transaction, AccountType, WaitForTx,
-};
 
 #[derive(Args, Debug)]
 #[command(about = "Deploy an account to the Starknet")]
@@ -38,6 +38,9 @@ pub struct Deploy {
     /// Version of the account deployment (can be inferred from fee token)
     #[clap(short, long)]
     pub version: Option<AccountDeployVersion>,
+
+    #[clap(flatten)]
+    pub rpc: RpcArgs,
 }
 
 #[derive(ValueEnum, Debug, Clone)]

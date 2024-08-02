@@ -2,6 +2,7 @@ use anyhow::{anyhow, Result};
 use clap::{Args, ValueEnum};
 use sncast::helpers::error::token_not_supported_for_invoke;
 use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken, PayableTransaction};
+use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::structs::{Felt, InvokeResponse};
 use sncast::{apply_optional, handle_wait_for_tx, impl_payable_transaction, WaitForTx};
@@ -39,6 +40,9 @@ pub struct Invoke {
     /// Version of invoke (can be inferred from fee token)
     #[clap(short, long)]
     pub version: Option<InvokeVersion>,
+
+    #[clap(flatten)]
+    pub rpc: RpcArgs,
 }
 
 #[derive(ValueEnum, Debug, Clone)]

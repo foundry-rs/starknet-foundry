@@ -18,6 +18,8 @@ async fn test_happy_case_from_sncast_config() {
         "--accounts-file",
         ACCOUNT_FILE_PATH,
         "call",
+        "--url",
+        URL,
         "--contract-address",
         "0x0",
         "--function",
@@ -41,11 +43,11 @@ async fn test_happy_case_from_cli_no_scarb() {
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
-        "--url",
-        URL,
         "--account",
         ACCOUNT,
         "call",
+        "--url",
+        URL,
         "--contract-address",
         "0x0",
         "--function",
@@ -72,11 +74,11 @@ async fn test_happy_case_from_cli_with_sncast_config() {
         ACCOUNT_FILE_PATH,
         "--profile",
         "default",
-        "--url",
-        URL,
         "--account",
         ACCOUNT,
         "call",
+        "--url",
+        URL,
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
@@ -132,9 +134,9 @@ async fn test_nonexistent_account_address() {
         accounts_json_path.as_str(),
         "--account",
         "with_nonexistent_address",
+        "declare",
         "--url",
         URL,
-        "declare",
         "--contract-name",
         "Map",
         "--fee-token",
@@ -155,9 +157,9 @@ async fn test_missing_account_flag() {
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
+        "declare",
         "--url",
         URL,
-        "declare",
         "--contract-name",
         "whatever",
         "--fee-token",
@@ -199,11 +201,11 @@ async fn test_missing_url() {
 #[tokio::test]
 async fn test_inexistent_keystore() {
     let args = vec![
-        "--url",
-        URL,
         "--keystore",
         "inexistent_key.json",
         "declare",
+        "--url",
+        URL,
         "--contract-name",
         "my_contract",
         "--fee-token",
@@ -219,11 +221,11 @@ async fn test_inexistent_keystore() {
 #[tokio::test]
 async fn test_keystore_account_required() {
     let args = vec![
-        "--url",
-        URL,
         "--keystore",
         "tests/data/keystore/my_key.json",
         "declare",
+        "--url",
+        URL,
         "--contract-name",
         "my_contract",
         "--fee-token",
@@ -242,13 +244,13 @@ async fn test_keystore_account_required() {
 #[tokio::test]
 async fn test_keystore_inexistent_account() {
     let args = vec![
-        "--url",
-        URL,
         "--keystore",
         "tests/data/keystore/my_key.json",
         "--account",
         "inexistent_account",
         "declare",
+        "--url",
+        URL,
         "--contract-name",
         "my_contract",
         "--fee-token",
@@ -273,13 +275,13 @@ async fn test_keystore_undeployed_account() {
         get_keystores_path("tests/data/keystore/my_account_undeployed.json");
 
     let args = vec![
-        "--url",
-        URL,
         "--keystore",
         my_key_path.as_str(),
         "--account",
         my_account_undeployed_path.as_str(),
         "declare",
+        "--url",
+        URL,
         "--contract-name",
         "Map",
         "--fee-token",
@@ -300,13 +302,13 @@ async fn test_keystore_declare() {
     let my_key_path = get_keystores_path("tests/data/keystore/predeployed_key.json");
     let my_account_path = get_keystores_path("tests/data/keystore/predeployed_account.json");
     let args = vec![
-        "--url",
-        URL,
         "--keystore",
         my_key_path.as_str(),
         "--account",
         my_account_path.as_str(),
         "declare",
+        "--url",
+        URL,
         "--contract-name",
         "Map",
         "--fee-token",

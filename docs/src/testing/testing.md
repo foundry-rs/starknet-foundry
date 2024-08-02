@@ -81,22 +81,57 @@ Failures:
 Sometimes you want to mark a test as expected to fail. This is useful when you want to verify that an action fails as
 expected.
 
-To mark a test as expected to fail, use the `#[should_panic]` attribute. You can pass the expected failure message as an
-argument to the attribute to verify that the test fails with the expected message
-with `#[should_panic(expected: ('panic message', 'eventual second message',))]`.
+To mark a test as expected to fail, use the `#[should_panic]` attribute.
 
-```rust
-#[cfg(test)]
-mod tests {
-    use core::panic_with_felt252;
+You can specify the expected failure message in three ways:
 
-    #[should_panic(expected: ('panic message', ))]
+1. **With ByteArray**:
+   ```rust
     #[test]
+    #[should_panic(expected: "This will panic")]
+    fn should_panic_exact() {
+        panic!("This will panic");
+    }
+
+    // here the expected message is a substring of the actual message
+    #[test]
+    #[should_panic(expected: "will panic")]
+    fn should_panic_expected_is_substring() {
+        panic!("This will panic");
+    }
+   ```
+   With this format, the expected error message needs to be a substring of the actual error message. This is particularly useful when the error message includes dynamic data such as a hash or address.
+
+2. **With felt**
+   ```rust
+    #[test]
+    #[should_panic(expected: 'panic message')]
+    fn should_panic_felt_matching() {
+       assert(1 != 1, 'panic message');
+    }
+   ```
+
+3. **With tuple of felts**:
+   ```rust
+    use core::panic_with_felt252;
+   
+    #[test]
+    #[should_panic(expected: ('panic message', ))]
     fn should_panic_check_data() {
         panic_with_felt252('panic message');
     }
-}
-``` 
+
+    // works for multiple messages
+    #[test]
+    #[should_panic(expected: ('panic message', 'second message',))]
+    fn should_panic_multiple_messages() {
+        let mut arr = ArrayTrait::new();
+        arr.append('panic message');
+        arr.append('second message');
+        panic(arr);
+    }
+   ```
+   
 
 ```shell
 $ snforge test

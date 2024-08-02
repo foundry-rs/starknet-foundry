@@ -12,19 +12,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 - `account create` outputs hint about the type of the tokens required to prefund a newly created account with before deployment
 
-## [0.27.0] - 2024-07-24
+- `sncast` no longer expects `--url` as a common argument. It is now required specifically by commands that utilise it, i.e. `account add`, `account create`, `account delete`, `account deploy`, `multicall run`, `script run`, `call`, `declare`, `deploy`, `invoke`, `show-config`, `tx-status`.
+Commands that do not require `--url` anymore: `account list`, `multicall new`, `script init`, `verify`
 
 ### Forge
 
 #### Changed
-- Renamed global cheatcodes listed [here](https://foundry-rs.github.io/starknet-foundry/appendix/cheatcodes.html) - cheatcode invocations affecting the global scope and working indefinitely, already marked with a `_global` suffix, received a `start_` prefix
-- Updated `cheat_account_contract_address` cheatcode - read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/cheatcodes/account_contract_address.html) - added a `start_` prefix to the `..._global` invocation which works globally and indefinitely
+- Fork tests now discover chain ID via provided RPC URL, defaulting to `SN_SEPOLIA`
 
-### Cast
+## [0.27.0] - 2024-07-24
+
+### Forge
 
 #### Added
 
 - `spy_messages_to_l1()` for listening in on messages to L1 sent by your contracts. [Read more here](https://foundry-rs.github.io/starknet-foundry/testing/testing-messages-to-l1.html).
+
+#### Changed
+
+- Renamed global cheatcodes listed [here](https://foundry-rs.github.io/starknet-foundry/appendix/cheatcodes.html) - cheatcode invocations affecting the global scope and working indefinitely, already marked with a `_global` suffix, received a `start_` prefix
+
+### Cast
+
+#### Added
 
 - `verify` subcommand to verify contract (walnut APIs supported as of this version). [Read more here](https://foundry-rs.github.io/starknet-foundry/appendix/sncast/verify.html)
 - support for v3 transactions on account deploy, deploy, declare, invoke
@@ -50,7 +60,6 @@ about updated `spy_events` cheatcode
 #### Changed
 
 - `SyscallResultStringErrorTrait::map_error_to_string` removed in favor of utility function (`snforge_std::byte_array::try_deserialize_bytearray_error`)
-
 
 ### Cast
 
@@ -78,7 +87,6 @@ about updated `spy_events` cheatcode
 
 ### Cast
 
-
 #### Added
 
 - New required flag `--type` to `account add` command
@@ -98,6 +106,7 @@ about updated `spy_events` cheatcode
 ### Forge
 
 #### Removed
+
 - `event_name_hash` removal, in favour of `selector!` usage
 
 #### Changed
@@ -118,6 +127,7 @@ produced by Scarb if they were present. Setting up `casm = true` in `Scarb.toml`
 down the compilation.
 
 #### Fixed
+
 - scripts built with release profile are now properly recognized and ran
 
 ## [0.22.0] - 2024-04-17
@@ -425,7 +435,7 @@ PS: Credits to @bllu404 for the help with the new interfaces for cheats!
 
 ### Cast
 
-### Added
+#### Added
 
 - MVP for cairo deployment scripts with declare, deploy, invoke and call
 
@@ -512,6 +522,7 @@ Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/snforge.
 - `--hex-format` flag has been added
 
 #### Removed
+
 - `-i` short for `--int-format` is removed, now have to use the full form `--int-format`
 
 ## [0.8.3] - 2023-10-17

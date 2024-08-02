@@ -1,5 +1,5 @@
-use crate::helpers::constants::{DEVNET_OZ_CLASS_HASH_CAIRO_0, URL};
-use crate::helpers::fixtures::{copy_file, default_cli_args};
+use crate::helpers::constants::{ACCOUNT_FILE_PATH, DEVNET_OZ_CLASS_HASH_CAIRO_0, URL};
+use crate::helpers::fixtures::copy_file;
 use crate::helpers::runner::runner;
 use configuration::copy_config_to_tempdir;
 use indoc::indoc;
@@ -26,12 +26,12 @@ pub async fn test_happy_case(account_type: &str) {
     let accounts_file = "accounts.json";
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "account",
         "create",
+        "--url",
+        URL,
         "--name",
         "my_account",
         "--salt",
@@ -83,12 +83,12 @@ pub async fn test_invalid_class_hash() {
     let accounts_file = "accounts.json";
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "account",
         "create",
+        "--url",
+        URL,
         "--type",
         "oz",
         "--class-hash",
@@ -117,12 +117,12 @@ pub async fn test_happy_case_generate_salt() {
     let accounts_file = "accounts.json";
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "account",
         "create",
+        "--url",
+        URL,
         "--name",
         "my_account",
         "--class-hash",
@@ -160,12 +160,12 @@ pub async fn test_happy_case_add_profile() {
     let accounts_file = "accounts.json";
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "account",
         "create",
+        "--url",
+        URL,
         "--name",
         "my_account",
         "--add-profile",
@@ -196,12 +196,12 @@ pub async fn test_happy_case_accounts_file_already_exists() {
         temp_dir.path().join(accounts_file),
     );
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "account",
         "create",
+        "--url",
+        URL,
         "--name",
         "my_account",
         "--salt",
@@ -231,12 +231,12 @@ pub async fn test_profile_already_exists() {
     let accounts_file = "accounts.json";
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "account",
         "create",
+        "--url",
+        URL,
         "--name",
         "myprofile",
         "--add-profile",
@@ -257,10 +257,18 @@ pub async fn test_profile_already_exists() {
 
 #[tokio::test]
 pub async fn test_account_already_exists() {
-    let mut args = default_cli_args();
-    args.append(&mut vec![
-        "account", "create", "--name", "user1", "--salt", "0x1",
-    ]);
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "account",
+        "create",
+        "--url",
+        URL,
+        "--name",
+        "user1",
+        "--salt",
+        "0x1",
+    ];
 
     let snapbox = runner(&args);
     let output = snapbox.assert().success();
@@ -285,14 +293,14 @@ pub async fn test_happy_case_keystore(account_type: &str) {
     env::set_var(CREATE_KEYSTORE_PASSWORD_ENV_VAR, "123");
 
     let args = vec![
-        "--url",
-        URL,
         "--keystore",
         keystore_file,
         "--account",
         account_file,
         "account",
         "create",
+        "--url",
+        URL,
         "--type",
         account_type,
     ];
@@ -327,8 +335,6 @@ pub async fn test_happy_case_keystore_add_profile() {
     env::set_var(CREATE_KEYSTORE_PASSWORD_ENV_VAR, "123");
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_json_file,
         "--keystore",
@@ -337,6 +343,8 @@ pub async fn test_happy_case_keystore_add_profile() {
         account_file,
         "account",
         "create",
+        "--url",
+        URL,
         "--add-profile",
         "with_keystore",
     ];
@@ -372,12 +380,12 @@ pub async fn test_keystore_without_account() {
     env::set_var(CREATE_KEYSTORE_PASSWORD_ENV_VAR, "123");
 
     let args = vec![
-        "--url",
-        URL,
         "--keystore",
         keystore_file,
         "account",
         "create",
+        "--url",
+        URL,
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
@@ -406,14 +414,14 @@ pub async fn test_keystore_file_already_exists() {
     env::set_var(CREATE_KEYSTORE_PASSWORD_ENV_VAR, "123");
 
     let args = vec![
-        "--url",
-        URL,
         "--keystore",
         keystore_file,
         "--account",
         account_file,
         "account",
         "create",
+        "--url",
+        URL,
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
@@ -443,14 +451,14 @@ pub async fn test_keystore_account_file_already_exists() {
     env::set_var(CREATE_KEYSTORE_PASSWORD_ENV_VAR, "123");
 
     let args = vec![
-        "--url",
-        URL,
         "--keystore",
         keystore_file,
         "--account",
         account_file,
         "account",
         "create",
+        "--url",
+        URL,
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
@@ -474,8 +482,6 @@ pub async fn test_happy_case_keystore_int_format() {
     env::set_var(CREATE_KEYSTORE_PASSWORD_ENV_VAR, "123");
 
     let args = vec![
-        "--url",
-        URL,
         "--keystore",
         keystore_file,
         "--account",
@@ -483,6 +489,8 @@ pub async fn test_happy_case_keystore_int_format() {
         "--int-format",
         "account",
         "create",
+        "--url",
+        URL,
         "--class-hash",
         DEVNET_OZ_CLASS_HASH_CAIRO_0,
         "--type",
@@ -516,8 +524,6 @@ pub async fn test_happy_case_keystore_hex_format() {
     env::set_var(CREATE_KEYSTORE_PASSWORD_ENV_VAR, "123");
 
     let args = vec![
-        "--url",
-        URL,
         "--keystore",
         keystore_file,
         "--account",
@@ -525,6 +531,8 @@ pub async fn test_happy_case_keystore_hex_format() {
         "--hex-format",
         "account",
         "create",
+        "--url",
+        URL,
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());

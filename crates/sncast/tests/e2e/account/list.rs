@@ -4,10 +4,7 @@ use serde_json::{json, Value};
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains, AsOutput};
 use tempfile::tempdir;
 
-use crate::{
-    e2e::account::helpers::create_tempdir_with_accounts_file,
-    helpers::{constants::URL, runner::runner},
-};
+use crate::{e2e::account::helpers::create_tempdir_with_accounts_file, helpers::runner::runner};
 
 #[test]
 fn test_happy_case() {
@@ -20,14 +17,7 @@ fn test_happy_case() {
         .expect("Unable to resolve a temporary directory path")
         .join(accounts_file_name);
 
-    let args = vec![
-        "--url",
-        URL,
-        "--accounts-file",
-        &accounts_file_name,
-        "account",
-        "list",
-    ];
+    let args = vec!["--accounts-file", &accounts_file_name, "account", "list"];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
     let output = snapbox.assert().success();
@@ -75,8 +65,6 @@ fn test_happy_case_with_private_keys() {
         .join(accounts_file_name);
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         &accounts_file_name,
         "account",
@@ -131,8 +119,6 @@ fn test_happy_case_hex_format() {
         .join(accounts_file_name);
 
     let args = vec![
-        "--url",
-        URL,
         "--hex-format",
         "--accounts-file",
         &accounts_file_name,
@@ -188,8 +174,6 @@ fn test_happy_case_int_format() {
         .join(accounts_file_name);
 
     let args = vec![
-        "--url",
-        URL,
         "--int-format",
         "--accounts-file",
         &accounts_file_name,
@@ -239,8 +223,6 @@ fn test_happy_case_json() {
     let temp_dir = create_tempdir_with_accounts_file(accounts_file_name, true);
 
     let args = vec![
-        "--url",
-        URL,
         "--json",
         "--accounts-file",
         &accounts_file_name,
@@ -290,8 +272,6 @@ fn test_happy_case_with_private_keys_json() {
     let temp_dir = create_tempdir_with_accounts_file(accounts_file_name, true);
 
     let args = vec![
-        "--url",
-        URL,
         "--json",
         "--accounts-file",
         &accounts_file_name,
@@ -345,8 +325,6 @@ fn test_happy_case_with_private_keys_json_int_format() {
     let temp_dir = create_tempdir_with_accounts_file(accounts_file_name, true);
 
     let args = vec![
-        "--url",
-        URL,
         "--json",
         "--int-format",
         "--accounts-file",
@@ -400,14 +378,7 @@ fn test_accounts_file_does_not_exist() {
     let accounts_file_name = "some_inexistent_file.json";
     let temp_dir = tempdir().expect("Unable to create a temporary directory");
 
-    let args = vec![
-        "--url",
-        URL,
-        "--accounts-file",
-        &accounts_file_name,
-        "account",
-        "list",
-    ];
+    let args = vec!["--accounts-file", &accounts_file_name, "account", "list"];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
     let output = snapbox.assert().failure();
@@ -433,14 +404,7 @@ fn test_no_accounts_available() {
         .expect("Unable to resolve a temporary directory path")
         .join(accounts_file_name);
 
-    let args = vec![
-        "--url",
-        URL,
-        "--accounts-file",
-        &accounts_file_name,
-        "account",
-        "list",
-    ];
+    let args = vec!["--accounts-file", &accounts_file_name, "account", "list"];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
     let output = snapbox.assert().success();
