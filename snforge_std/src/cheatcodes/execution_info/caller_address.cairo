@@ -5,7 +5,8 @@ use super::{
 /// Changes the caller address for the given contract address and span.
 /// - `contract_address` - instance of `ContractAddress` specifying which contract to cheat
 /// - `caller_address` - caller address to be set
-/// - `span` - instance of `CheatSpan` specifying the number of contract calls with the cheat applied
+/// - `span` - instance of `CheatSpan` specifying the number of contract calls with the cheat
+/// applied
 fn cheat_caller_address(
     contract_address: ContractAddress, caller_address: ContractAddress, span: CheatSpan
 ) {
@@ -46,7 +47,8 @@ fn start_cheat_caller_address(contract_address: ContractAddress, caller_address:
     cheat_caller_address(contract_address, caller_address, CheatSpan::Indefinite);
 }
 
-/// Cancels the `cheat_caller_address` / `start_cheat_caller_address` for the given contract_address.
+/// Cancels the `cheat_caller_address` / `start_cheat_caller_address` for the given
+/// contract_address.
 /// - `contract_address` - instance of `ContractAddress` specifying which contract to stop cheating
 fn stop_cheat_caller_address(contract_address: ContractAddress) {
     let mut execution_info: ExecutionInfoMock = Default::default();

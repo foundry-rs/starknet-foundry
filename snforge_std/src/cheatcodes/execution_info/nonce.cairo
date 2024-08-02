@@ -5,7 +5,8 @@ use super::{
 /// Changes the transaction nonce for the given contract address and span.
 /// - `contract_address` - instance of `ContractAddress` specifying which contract to cheat
 /// - `nonce` - transaction nonce to be set
-/// - `span` - instance of `CheatSpan` specifying the number of contract calls with the cheat applied
+/// - `span` - instance of `CheatSpan` specifying the number of contract calls with the cheat
+/// applied
 fn cheat_nonce(contract_address: ContractAddress, nonce: felt252, span: CheatSpan) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 

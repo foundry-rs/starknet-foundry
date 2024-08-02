@@ -5,4 +5,4 @@ edition = "2023_10"
 
 [dependencies]
 snforge_scarb_plugin = { path = "../crates/snforge-scarb-plugin" }
-cairo_test_asserts = "0.1.0"
+assert_macros = "0.1.0"
