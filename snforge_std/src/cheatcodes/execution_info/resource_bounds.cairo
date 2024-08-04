@@ -25,7 +25,7 @@ fn cheat_resource_bounds(
 
 /// Changes the transaction resource bounds.
 /// - `resource_bounds` - transaction resource bounds to be set
-fn cheat_resource_bounds_global(resource_bounds: Span<ResourceBounds>) {
+fn start_cheat_resource_bounds_global(resource_bounds: Span<ResourceBounds>) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info.tx_info.resource_bounds = Operation::StartGlobal(resource_bounds);
@@ -33,7 +33,7 @@ fn cheat_resource_bounds_global(resource_bounds: Span<ResourceBounds>) {
     cheat_execution_info(execution_info);
 }
 
-/// Cancels the `cheat_resource_bounds_global`.
+/// Cancels the `start_cheat_resource_bounds_global`.
 fn stop_cheat_resource_bounds_global() {
     let mut execution_info: ExecutionInfoMock = Default::default();
 

@@ -20,7 +20,7 @@ impl CheatnetState {
         });
     }
 
-    pub fn cheat_caller_address_global(&mut self, caller_address: ContractAddress) {
+    pub fn start_cheat_caller_address_global(&mut self, caller_address: ContractAddress) {
         self.cheat_execution_info(ExecutionInfoMockOperations {
             caller_address: Operation::StartGlobal(caller_address),
             ..Default::default()

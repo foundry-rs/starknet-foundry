@@ -1,10 +1,12 @@
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
-use clap::Args;
+use clap::{Args, ValueEnum};
 use serde_json::Map;
 use sncast::helpers::constants::{BRAAVOS_BASE_ACCOUNT_CLASS_HASH, KEYSTORE_PASSWORD_ENV_VAR};
 use sncast::response::structs::{Felt, InvokeResponse};
-use starknet::accounts::{AccountFactory, OpenZeppelinAccountFactory};
+use starknet::accounts::{
+    AccountDeploymentV1, AccountDeploymentV3, AccountFactory, OpenZeppelinAccountFactory,
+};
 use starknet::accounts::{AccountFactoryError, ArgentAccountFactory};
 use starknet::core::types::BlockTag::Pending;
 use starknet::core::types::{BlockId, FieldElement, StarknetError::ClassHashNotFound};
@@ -15,10 +17,12 @@ use starknet::providers::{JsonRpcClient, Provider};
 use starknet::signers::{LocalWallet, SigningKey};
 
 use sncast::helpers::braavos::BraavosAccountFactory;
+use sncast::helpers::error::token_not_supported_for_deployment;
+use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken, PayableTransaction};
 use sncast::{
-    chain_id_to_network_name, check_account_file_exists, get_account_data_from_accounts_file,
-    get_account_data_from_keystore, get_keystore_password, handle_account_factory_error,
-    handle_rpc_error, handle_wait_for_tx, AccountType, WaitForTx,
+    apply_optional, chain_id_to_network_name, check_account_file_exists,
+    get_account_data_from_accounts_file, get_account_data_from_keystore, get_keystore_password,
+    handle_rpc_error, handle_wait_for_tx, impl_payable_transaction, AccountType, WaitForTx,
 };
 
 #[derive(Args, Debug)]
@@ -28,10 +32,24 @@ pub struct Deploy {
     #[clap(short, long)]
     pub name: Option<String>,
 
-    /// Max fee for the transaction
+    #[clap(flatten)]
+    pub fee_args: FeeArgs,
+
+    /// Version of the account deployment (can be inferred from fee token)
     #[clap(short, long)]
-    pub max_fee: Option<FieldElement>,
+    pub version: Option<AccountDeployVersion>,
 }
+
+#[derive(ValueEnum, Debug, Clone)]
+pub enum AccountDeployVersion {
+    V1,
+    V3,
+}
+
+impl_payable_transaction!(Deploy, token_not_supported_for_deployment,
+    AccountDeployVersion::V1 => FeeToken::Eth,
+    AccountDeployVersion::V3 => FeeToken::Strk
+);
 
 #[allow(clippy::too_many_arguments)]
 pub async fn deploy(
@@ -43,11 +61,16 @@ pub async fn deploy(
     account: &str,
     keystore_path: Option<Utf8PathBuf>,
 ) -> Result<InvokeResponse> {
+    let fee_args = deploy_args
+        .fee_args
+        .clone()
+        .fee_token(deploy_args.token_from_version());
+
     if let Some(keystore_path_) = keystore_path {
         deploy_from_keystore(
             provider,
             chain_id,
-            deploy_args.max_fee,
+            fee_args,
             wait_config,
             account,
             keystore_path_,
@@ -63,7 +86,7 @@ pub async fn deploy(
             accounts_file,
             account_name,
             chain_id,
-            deploy_args.max_fee,
+            fee_args,
             wait_config,
         )
         .await
@@ -73,7 +96,7 @@ pub async fn deploy(
 async fn deploy_from_keystore(
     provider: &JsonRpcClient<HttpTransport>,
     chain_id: FieldElement,
-    max_fee: Option<FieldElement>,
+    fee_args: FeeArgs,
     wait_config: WaitForTx,
     account: &str,
     keystore_path: Utf8PathBuf,
@@ -115,7 +138,7 @@ async fn deploy_from_keystore(
             &[private_key.verifying_key().scalar(), FieldElement::ZERO],
             FieldElement::ZERO,
         ),
-        AccountType::Oz => get_contract_address(
+        AccountType::OpenZeppelin => get_contract_address(
             salt,
             class_hash,
             &[private_key.verifying_key().scalar()],
@@ -145,7 +168,7 @@ async fn deploy_from_keystore(
             private_key,
             salt,
             chain_id,
-            max_fee,
+            fee_args,
             wait_config,
         )
         .await?
@@ -161,7 +184,7 @@ async fn deploy_from_accounts_file(
     accounts_file: Utf8PathBuf,
     name: String,
     chain_id: FieldElement,
-    max_fee: Option<FieldElement>,
+    fee_args: FeeArgs,
     wait_config: WaitForTx,
 ) -> Result<InvokeResponse> {
     let account_data = get_account_data_from_accounts_file(&name, chain_id, &accounts_file)?;
@@ -181,7 +204,7 @@ async fn deploy_from_accounts_file(
             .salt
             .context("Failed to get salt from accounts file")?,
         chain_id,
-        max_fee,
+        fee_args,
         wait_config,
     )
     .await?;
@@ -199,133 +222,82 @@ async fn get_deployment_result(
     private_key: SigningKey,
     salt: FieldElement,
     chain_id: FieldElement,
-    max_fee: Option<FieldElement>,
+    fee_args: FeeArgs,
     wait_config: WaitForTx,
 ) -> Result<InvokeResponse> {
     match account_type {
         AccountType::Argent => {
-            deploy_argent_account(
-                provider,
+            let factory = ArgentAccountFactory::new(
                 class_hash,
-                private_key,
-                salt,
                 chain_id,
-                max_fee,
-                wait_config,
+                FieldElement::ZERO,
+                LocalWallet::from_signing_key(private_key),
+                provider,
             )
-            .await
+            .await?;
+
+            deploy_account(factory, provider, salt, fee_args, wait_config, class_hash).await
         }
-        AccountType::Oz => {
-            deploy_oz_account(
-                provider,
+        AccountType::OpenZeppelin => {
+            let factory = OpenZeppelinAccountFactory::new(
                 class_hash,
-                private_key,
-                salt,
                 chain_id,
-                max_fee,
-                wait_config,
+                LocalWallet::from_signing_key(private_key),
+                provider,
             )
-            .await
+            .await?;
+
+            deploy_account(factory, provider, salt, fee_args, wait_config, class_hash).await
         }
         AccountType::Braavos => {
-            deploy_braavos_account(
-                provider,
+            let factory = BraavosAccountFactory::new(
                 class_hash,
-                private_key,
-                salt,
+                BRAAVOS_BASE_ACCOUNT_CLASS_HASH,
                 chain_id,
-                max_fee,
-                wait_config,
+                LocalWallet::from_signing_key(private_key),
+                provider,
             )
-            .await
+            .await?;
+
+            deploy_account(factory, provider, salt, fee_args, wait_config, class_hash).await
         }
     }
-}
-
-async fn deploy_oz_account(
-    provider: &JsonRpcClient<HttpTransport>,
-    class_hash: FieldElement,
-    private_key: SigningKey,
-    salt: FieldElement,
-    chain_id: FieldElement,
-    max_fee: Option<FieldElement>,
-    wait_config: WaitForTx,
-) -> Result<InvokeResponse> {
-    let factory = OpenZeppelinAccountFactory::new(
-        class_hash,
-        chain_id,
-        LocalWallet::from_signing_key(private_key),
-        provider,
-    )
-    .await?;
-
-    deploy_account(factory, provider, salt, max_fee, wait_config, class_hash).await
-}
-
-async fn deploy_argent_account(
-    provider: &JsonRpcClient<HttpTransport>,
-    class_hash: FieldElement,
-    private_key: SigningKey,
-    salt: FieldElement,
-    chain_id: FieldElement,
-    max_fee: Option<FieldElement>,
-    wait_config: WaitForTx,
-) -> Result<InvokeResponse> {
-    let factory = ArgentAccountFactory::new(
-        class_hash,
-        chain_id,
-        FieldElement::ZERO,
-        LocalWallet::from_signing_key(private_key),
-        provider,
-    )
-    .await?;
-
-    deploy_account(factory, provider, salt, max_fee, wait_config, class_hash).await
-}
-
-async fn deploy_braavos_account(
-    provider: &JsonRpcClient<HttpTransport>,
-    class_hash: FieldElement,
-    private_key: SigningKey,
-    salt: FieldElement,
-    chain_id: FieldElement,
-    max_fee: Option<FieldElement>,
-    wait_config: WaitForTx,
-) -> Result<InvokeResponse> {
-    let factory = BraavosAccountFactory::new(
-        class_hash,
-        BRAAVOS_BASE_ACCOUNT_CLASS_HASH,
-        chain_id,
-        LocalWallet::from_signing_key(private_key),
-        provider,
-    )
-    .await?;
-
-    deploy_account(factory, provider, salt, max_fee, wait_config, class_hash).await
 }
 
 async fn deploy_account<T>(
     account_factory: T,
     provider: &JsonRpcClient<HttpTransport>,
     salt: FieldElement,
-    max_fee: Option<FieldElement>,
+    fee_args: FeeArgs,
     wait_config: WaitForTx,
     class_hash: FieldElement,
 ) -> Result<InvokeResponse>
 where
     T: AccountFactory + Sync,
 {
-    let deployment = account_factory.deploy(salt);
-
-    let deploy_max_fee = if let Some(max_fee) = max_fee {
-        max_fee
-    } else {
-        match deployment.estimate_fee().await {
-            Ok(max_fee) => max_fee.overall_fee,
-            Err(error) => return Err(handle_account_factory_error::<T>(error)),
+    let fee_settings = fee_args
+        .try_into_fee_settings(account_factory.provider(), account_factory.block_id())
+        .await?;
+    let result = match fee_settings {
+        FeeSettings::Eth { max_fee } => {
+            let deployment = account_factory.deploy_v1(salt);
+            let deployment = apply_optional(deployment, max_fee, AccountDeploymentV1::max_fee);
+            deployment.send().await
+        }
+        FeeSettings::Strk {
+            max_gas,
+            max_gas_unit_price,
+        } => {
+            let deployment = account_factory.deploy_v3(salt);
+            let deployment = apply_optional(deployment, max_gas, AccountDeploymentV3::gas);
+            let deployment = apply_optional(
+                deployment,
+                max_gas_unit_price,
+                AccountDeploymentV3::gas_price,
+            );
+            deployment.send().await
         }
     };
-    let result = deployment.max_fee(deploy_max_fee).send().await;
 
     match result {
         Err(AccountFactoryError::Provider(error)) => match error {

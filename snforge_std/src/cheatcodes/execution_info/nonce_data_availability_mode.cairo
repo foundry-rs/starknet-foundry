@@ -25,7 +25,7 @@ fn cheat_nonce_data_availability_mode(
 
 /// Changes the transaction nonce data availability mode.
 /// - `nonce_data_availability_mode` - transaction nonce data availability mode to be set
-fn cheat_nonce_data_availability_mode_global(nonce_data_availability_mode: u32) {
+fn start_cheat_nonce_data_availability_mode_global(nonce_data_availability_mode: u32) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info
@@ -35,7 +35,7 @@ fn cheat_nonce_data_availability_mode_global(nonce_data_availability_mode: u32) 
     cheat_execution_info(execution_info);
 }
 
-/// Cancels the `cheat_nonce_data_availability_mode_global`.
+/// Cancels the `start_cheat_nonce_data_availability_mode_global`.
 fn stop_cheat_nonce_data_availability_mode_global() {
     let mut execution_info: ExecutionInfoMock = Default::default();
 

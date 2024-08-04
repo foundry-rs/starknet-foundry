@@ -1,5 +1,6 @@
 use sncast_std::{
-    declare, deploy, invoke, call, DeclareResult, DeployResult, InvokeResult, CallResult, get_nonce
+    declare, deploy, invoke, call, DeclareResult, DeployResult, InvokeResult, CallResult, get_nonce,
+    FeeSettings, EthFeeSettings
 };
 use starknet::{ClassHash, ContractAddress};
 
@@ -14,7 +15,11 @@ fn main() {
         .expect('Invalid contract address value');
 
     let declare_nonce = get_nonce('latest');
-    declare("Not_this_time", Option::Some(max_fee), Option::Some(declare_nonce))
+    declare(
+        "Not_this_time",
+        FeeSettings::Eth(EthFeeSettings { max_fee: Option::Some(max_fee) }),
+        Option::Some(declare_nonce)
+    )
         .expect_err('error expected declare');
 
     let deploy_nonce = get_nonce('pending');
@@ -23,7 +28,7 @@ fn main() {
         ArrayTrait::new(),
         Option::Some(salt),
         true,
-        Option::Some(max_fee),
+        FeeSettings::Eth(EthFeeSettings { max_fee: Option::Some(max_fee) }),
         Option::Some(deploy_nonce)
     )
         .expect_err('error expected deploy');
@@ -33,7 +38,7 @@ fn main() {
         map_contract_address,
         selector!("put"),
         array![0x1, 0x2],
-        Option::Some(max_fee),
+        FeeSettings::Eth(EthFeeSettings { max_fee: Option::Some(max_fee) }),
         Option::Some(invoke_nonce)
     )
         .expect_err('error expected invoke');

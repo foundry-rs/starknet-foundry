@@ -15,7 +15,7 @@ fn cheat_block_number_basic() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use snforge_std::{ declare, ContractClassTrait, start_cheat_block_number, stop_cheat_block_number, stop_cheat_block_number_global, cheat_block_number_global };
+            use snforge_std::{ declare, ContractClassTrait, start_cheat_block_number, stop_cheat_block_number, stop_cheat_block_number_global, start_cheat_block_number_global };
 
             #[starknet::interface]
             trait ICheatBlockNumberChecker<TContractState> {
@@ -83,7 +83,7 @@ fn cheat_block_number_basic() {
                 let old_block_number1 = cheat_block_number_checker1.get_block_number();
                 let old_block_number2 = cheat_block_number_checker2.get_block_number();
 
-                cheat_block_number_global(123);
+                start_cheat_block_number_global(123);
 
                 let new_block_number1 = cheat_block_number_checker1.get_block_number();
                 let new_block_number2 = cheat_block_number_checker2.get_block_number();
@@ -108,7 +108,7 @@ fn cheat_block_number_basic() {
 
                 let old_block_number = dispatcher.get_block_number();
 
-                cheat_block_number_global(234);
+                start_cheat_block_number_global(234);
 
                 let new_block_number = dispatcher.get_block_number();
                 assert(new_block_number == 234, 'Wrong block number');
@@ -143,7 +143,7 @@ fn cheat_block_number_complex() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use snforge_std::{ declare, ContractClassTrait, start_cheat_block_number, stop_cheat_block_number, cheat_block_number_global, stop_cheat_block_number_global };
+            use snforge_std::{ declare, ContractClassTrait, start_cheat_block_number, stop_cheat_block_number, start_cheat_block_number_global, stop_cheat_block_number_global };
             
             #[starknet::interface]
             trait ICheatBlockNumberChecker<TContractState> {
@@ -168,7 +168,7 @@ fn cheat_block_number_complex() {
 
                 let old_block_number2 = cheat_block_number_checker2.get_block_number();
 
-                cheat_block_number_global(123);
+                start_cheat_block_number_global(123);
 
                 let new_block_number1 = cheat_block_number_checker1.get_block_number();
                 let new_block_number2 = cheat_block_number_checker2.get_block_number();

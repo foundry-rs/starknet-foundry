@@ -6,3 +6,4 @@ It has the following subcommands:
 * [`create`](./create.md)
 * [`deploy`](./deploy.md)
 * [`delete`](./delete.md)
+* [`list`](./list.md)
