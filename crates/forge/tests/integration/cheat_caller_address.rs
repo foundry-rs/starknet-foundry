@@ -15,7 +15,7 @@ fn cheat_caller_address() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use snforge_std::{ declare, ContractClassTrait, start_cheat_caller_address, stop_cheat_caller_address, stop_cheat_caller_address_global, cheat_caller_address_global };
+            use snforge_std::{ declare, ContractClassTrait, start_cheat_caller_address, stop_cheat_caller_address, stop_cheat_caller_address_global, start_cheat_caller_address_global };
 
             #[starknet::interface]
             trait ICheatCallerAddressChecker<TContractState> {
@@ -55,7 +55,7 @@ fn cheat_caller_address() {
 
                 let old_caller_address = dispatcher.get_caller_address();
 
-                cheat_caller_address_global(target_caller_address);
+                start_cheat_caller_address_global(target_caller_address);
 
                 let new_caller_address = dispatcher.get_caller_address();
                 assert(new_caller_address == 123, 'Wrong caller address');
@@ -77,7 +77,7 @@ fn cheat_caller_address() {
 
                 let old_caller_address = dispatcher.get_caller_address();
 
-                cheat_caller_address_global(target_caller_address);
+                start_cheat_caller_address_global(target_caller_address);
 
                 let new_caller_address = dispatcher.get_caller_address();
                 assert(new_caller_address == 123, 'Wrong caller address');

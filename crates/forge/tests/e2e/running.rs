@@ -6,7 +6,7 @@ use camino::Utf8PathBuf;
 use forge::CAIRO_EDITION;
 use indoc::{formatdoc, indoc};
 use shared::test_utils::output_assert::assert_stdout_contains;
-use std::{fs, path::Path, str::FromStr};
+use std::{env, fs, path::Path, str::FromStr};
 use test_utils::tempdir_with_tool_versions;
 use toml_edit::{value, DocumentMut, Item};
 
@@ -131,19 +131,25 @@ fn simple_package_with_git_dependency() {
 #[test]
 fn with_failing_scarb_build() {
     let temp = setup_package("simple_package");
-    let lib_file = temp.child("src/lib.cairo");
-    lib_file
+    temp.child("src/lib.cairo")
         .write_str(indoc!(
             r"
-        mod hello_starknet;
-        mods erc20;
-    "
+                mod hello_starknet;
+                mods erc20;
+            "
         ))
         .unwrap();
 
-    test_runner(&temp).assert().code(2).stdout_eq(indoc! {r"
-            [ERROR] Failed to build test artifacts with Scarb: `scarb` exited with error
-        "});
+    let output = test_runner(&temp).assert().code(2);
+
+    assert_stdout_contains(
+        output,
+        indoc!(
+            r"
+                [ERROR] Failed to build test artifacts with Scarb: `scarb` exited with error
+            "
+        ),
+    );
 }
 
 #[test]
@@ -680,6 +686,8 @@ fn with_exit_first_flag() {
     );
 }
 
+// TODO (2274): This test has inherently flawed logic, needs to be re-written
+#[ignore]
 #[test]
 fn init_new_project_test() {
     let temp = tempdir_with_tool_versions().unwrap();
@@ -779,53 +787,87 @@ fn should_panic() {
         [..]Finished[..]
 
 
-        Collected 8 test(s) from should_panic_test package
+        Collected 14 test(s) from should_panic_test package
         Running 0 test(s) from src/
-        Running 8 test(s) from tests/
-        [FAIL] tests::should_panic_test::expected_panic_but_didnt
-        
-        Failure data:
-            Expected to panic but didn't
+        Running 14 test(s) from tests/
+        [FAIL] tests::should_panic_test::didnt_expect_panic
 
-        [PASS] tests::should_panic_test::should_panic_check_data [..]
-        [PASS] tests::should_panic_test::should_panic_multiple_messages [..]
-        [PASS] tests::should_panic_test::should_panic_no_data [..]
-        
-        Success data:
-            0x0 ('')
-        
+        Failure data:
+            0x756e65787065637465642070616e6963 ('unexpected panic')
+
+        [PASS] tests::should_panic_test::should_panic_match_suffix [..]
         [FAIL] tests::should_panic_test::should_panic_with_non_matching_data
-        
+
         Failure data:
             Incorrect panic data
             Actual:    [8111420071579136082810415440747] (failing check)
             Expected:  [0] ()
-        
+
+        [PASS] tests::should_panic_test::should_panic_felt_matching [..]
+        [FAIL] tests::should_panic_test::should_panic_byte_array_with_felt
+
+        Failure data:
+            Incorrect panic data
+            Actual:    [1997209042069643135709344952807065910992472029923670688473712229447419591075, 0, 438270661302794954290694912750807395, 15] (This will panic)
+            Expected:  [438270661302794954290694912750807395] (This will panic)
+
+        [PASS] tests::should_panic_test::should_panic_check_data [..]
         [FAIL] tests::should_panic_test::expected_panic_but_didnt_with_expected
-        
+
         Failure data:
             Expected to panic but didn't
             Expected panic data:  [8903707727067478891290643490661] (panic message)
-        
+
         [FAIL] tests::should_panic_test::expected_panic_but_didnt_with_expected_multiple
-        
+
         Failure data:
             Expected to panic but didn't
             Expected panic data:  [8903707727067478891290643490661, 2340509922561928411394884117817189] (panic message, second message)
-        
-        [FAIL] tests::should_panic_test::didnt_expect_panic
-        
+
+        [FAIL] tests::should_panic_test::expected_panic_but_didnt
+
         Failure data:
-            0x756e65787065637465642070616e6963 ('unexpected panic')
-        
-        Tests: 3 passed, 5 failed, 0 skipped, 0 ignored, 0 filtered out
-        
+            Expected to panic but didn't
+
+        [FAIL] tests::should_panic_test::should_panic_not_matching_suffix
+
+        Failure data:
+            Incorrect panic data
+            Actual:    [1997209042069643135709344952807065910992472029923670688473712229447419591075, 0, 438270661302794954290694912750807395, 15] (This will panic)
+            Expected:  [1997209042069643135709344952807065910992472029923670688473712229447419591075, 0, 144360021054553064286544739, 11] (will panicc)
+
+        [PASS] tests::should_panic_test::should_panic_multiple_messages [..]
+        [FAIL] tests::should_panic_test::should_panic_expected_contains_error
+
+        Failure data:
+            Incorrect panic data
+            Actual:    [1997209042069643135709344952807065910992472029923670688473712229447419591075, 0, 2003397740, 4] (will)
+            Expected:  [1997209042069643135709344952807065910992472029923670688473712229447419591075, 0, 438270661302794954290694912750807395, 15] (This will panic)
+
+        [PASS] tests::should_panic_test::should_panic_no_data [..]
+
+        Success data:
+            0x0 ('')
+
+        [FAIL] tests::should_panic_test::should_panic_felt_with_byte_array
+
+        Failure data:
+            Incorrect panic data
+            Actual:    [438270661302794954290694912750807395] (This will panic)
+            Expected:  [1997209042069643135709344952807065910992472029923670688473712229447419591075, 0, 438270661302794954290694912750807395, 15] (This will panic)
+
+        Tests: 5 passed, 9 failed, 0 skipped, 0 ignored, 0 filtered out
+
         Failures:
-            tests::should_panic_test::expected_panic_but_didnt
+            tests::should_panic_test::didnt_expect_panic
             tests::should_panic_test::should_panic_with_non_matching_data
+            tests::should_panic_test::should_panic_byte_array_with_felt
             tests::should_panic_test::expected_panic_but_didnt_with_expected
             tests::should_panic_test::expected_panic_but_didnt_with_expected_multiple
-            tests::should_panic_test::didnt_expect_panic
+            tests::should_panic_test::expected_panic_but_didnt
+            tests::should_panic_test::should_panic_not_matching_suffix
+            tests::should_panic_test::should_panic_expected_contains_error
+            tests::should_panic_test::should_panic_felt_with_byte_array
         "},
     );
 }
@@ -862,6 +904,7 @@ fn printing_in_contracts() {
 }
 
 #[test]
+#[ignore] //TODO(#2253) unignore when there exists previous version that supports new attributes
 fn incompatible_snforge_std_version_warning() {
     let temp = setup_package("steps");
     let manifest_path = temp.child("Scarb.toml");

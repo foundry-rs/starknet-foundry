@@ -26,6 +26,7 @@ fn color_always() {
 }
 
 #[test]
+#[ignore] // TODO: Fix this test, compiling of snforge_scarb_plugin is causing issues only in CI
 fn color_never() {
     let temp = setup_package("simple_package");
     let snapbox = runner_color("never");
