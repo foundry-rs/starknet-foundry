@@ -14,8 +14,9 @@ fn is_colored(output: &OutputAssert) -> bool {
         .contains("\x1b[")
 }
 
+// Join this two tests together so that they won't overwrite each other's ENV
 #[test]
-fn color_always() {
+fn color_always_and_never() {
     let temp = setup_package("simple_package");
     let snapbox = runner_color("always");
     let output = snapbox.current_dir(&temp).assert().code(1);
@@ -23,11 +24,7 @@ fn color_always() {
         is_colored(&output),
         "output expected to be colored but it is not"
     );
-}
 
-#[test]
-#[ignore] // TODO: Fix this test, compiling of snforge_scarb_plugin is causing issues only in CI
-fn color_never() {
     let temp = setup_package("simple_package");
     let snapbox = runner_color("never");
     let output = snapbox.current_dir(&temp).assert().code(1);
