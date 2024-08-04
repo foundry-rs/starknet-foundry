@@ -61,6 +61,7 @@ futures.workspace = true
 num-integer.workspace = true
 url.workspace = true
 trace-data.workspace = true
+fs_extra.workspace = true
 
 [[bin]]
 name = "snforge"
