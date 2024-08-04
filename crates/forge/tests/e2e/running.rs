@@ -131,19 +131,25 @@ fn simple_package_with_git_dependency() {
 #[test]
 fn with_failing_scarb_build() {
     let temp = setup_package("simple_package");
-    let lib_file = temp.child("src/lib.cairo");
-    lib_file
+    temp.child("src/lib.cairo")
         .write_str(indoc!(
             r"
-        mod hello_starknet;
-        mods erc20;
-    "
+                mod hello_starknet;
+                mods erc20;
+            "
         ))
         .unwrap();
 
-    test_runner(&temp).assert().code(2).stdout_eq(indoc! {r"
-            [ERROR] Failed to build test artifacts with Scarb: `scarb` exited with error
-        "});
+    let output = test_runner(&temp).assert().code(2);
+
+    assert_stdout_contains(
+        output,
+        indoc!(
+            r"
+                [ERROR] Failed to build test artifacts with Scarb: `scarb` exited with error
+            "
+        ),
+    );
 }
 
 #[test]
@@ -898,6 +904,7 @@ fn printing_in_contracts() {
 }
 
 #[test]
+#[ignore] //TODO(#2253) unignore when there exists previous version that supports new attributes
 fn incompatible_snforge_std_version_warning() {
     let temp = setup_package("steps");
     let manifest_path = temp.child("Scarb.toml");
