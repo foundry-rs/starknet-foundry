@@ -21,7 +21,7 @@ static BASE_CACHE_DIR: LazyLock<PathBuf> =
     LazyLock::new(|| init_base_cache_dir().expect("Failed to initialize base cache directory"));
 
 fn init_base_cache_dir() -> anyhow::Result<PathBuf> {
-    let cache_dir_path = env::current_dir()?.join("forge_e2e_cache");
+    let cache_dir_path = env::current_dir()?.join(".forge_e2e_cache");
     if cache_dir_path.exists() {
         remove_dir_all(&cache_dir_path)?;
     }
