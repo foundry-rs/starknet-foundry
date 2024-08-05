@@ -1,8 +1,9 @@
 use crate::scarb::config::{ForgeConfigFromScarb, RawForgeConfig};
 use anyhow::{Context, Result};
+use cairo_lang_sierra::program::VersionedProgram;
 use camino::Utf8Path;
 use configuration::PackageConfig;
-use forge_runner::package_tests::raw::{ProgramArtifact, TestTargetRaw};
+use forge_runner::package_tests::raw::TestTargetRaw;
 use forge_runner::package_tests::TestTargetLocation;
 use scarb_api::ScarbCommand;
 use scarb_metadata::{PackageMetadata, TargetMetadata};
@@ -90,7 +91,11 @@ pub fn load_test_artifacts(
 
         match read_to_string(target_dir.join(target_file)) {
             Ok(value) => {
-                let sierra_program = serde_json::from_str::<ProgramArtifact>(&value)?;
+                let versioned_program = serde_json::from_str::<VersionedProgram>(&value)?;
+
+                let sierra_program = match versioned_program {
+                    VersionedProgram::V1 { program, .. } => program,
+                };
 
                 let test_target = TestTargetRaw {
                     sierra_program,

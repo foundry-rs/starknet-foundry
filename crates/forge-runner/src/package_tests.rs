@@ -1,5 +1,5 @@
 use cairo_lang_sierra::ids::GenericTypeId;
-use raw::ProgramArtifact;
+use cairo_lang_sierra::program::ProgramArtifact;
 use std::sync::Arc;
 use universal_sierra_compiler_api::AssembledProgramWithDebugInfo;
 

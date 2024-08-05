@@ -18,7 +18,6 @@ use runtime::{starknet::context::build_context, ExtendedRuntime, StarknetRuntime
 use starknet_api::block::{BlockNumber, BlockTimestamp};
 use std::{default::Default, num::NonZeroU128};
 use universal_sierra_compiler_api::AssembledProgramWithDebugInfo;
-
 struct FakeStateReader;
 
 impl StateReader for FakeStateReader {
