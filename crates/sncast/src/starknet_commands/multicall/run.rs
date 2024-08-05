@@ -7,6 +7,7 @@ use serde::Deserialize;
 use sncast::helpers::constants::UDC_ADDRESS;
 use sncast::helpers::error::token_not_supported_for_invoke;
 use sncast::helpers::fee::{FeeArgs, FeeToken, PayableTransaction};
+use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::handle_starknet_command_error;
 use sncast::response::structs::InvokeResponse;
 use sncast::{extract_or_generate_salt, impl_payable_transaction, udc_uniqueness, WaitForTx};
@@ -31,6 +32,9 @@ pub struct Run {
     /// Version of invoke (can be inferred from fee token)
     #[clap(short, long)]
     pub version: Option<InvokeVersion>,
+
+    #[clap(flatten)]
+    pub rpc: RpcArgs,
 }
 
 impl_payable_transaction!(Run, token_not_supported_for_invoke,

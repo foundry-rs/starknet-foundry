@@ -3,7 +3,6 @@ use assert_fs::TempDir;
 use camino::Utf8PathBuf;
 use fs_extra::dir::{copy, CopyOptions};
 use indoc::formatdoc;
-use once_cell::sync::Lazy;
 use shared::command::CommandExt;
 use shared::test_utils::node_url::node_rpc_url;
 use snapbox::cmd::{cargo_bin, Command as SnapboxCommand};
@@ -11,17 +10,18 @@ use std::fs::{create_dir_all, remove_dir_all};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::str::FromStr;
+use std::sync::LazyLock;
 use std::{env, fs};
 use test_utils::tempdir_with_tool_versions;
 use toml_edit::{value, DocumentMut};
 use walkdir::WalkDir;
 
 /// To avoid rebuilding `snforge_std` and associated plugin for each test, we cache it in a directory and copy it to the e2e test temp directory.
-static BASE_CACHE_DIR: Lazy<PathBuf> =
-    Lazy::new(|| init_base_cache_dir().expect("Failed to initialize base cache directory"));
+static BASE_CACHE_DIR: LazyLock<PathBuf> =
+    LazyLock::new(|| init_base_cache_dir().expect("Failed to initialize base cache directory"));
 
 fn init_base_cache_dir() -> anyhow::Result<PathBuf> {
-    let cache_dir_path = env::current_dir()?.join("forge_e2e_cache");
+    let cache_dir_path = env::current_dir()?.join(".forge_e2e_cache");
     if cache_dir_path.exists() {
         remove_dir_all(&cache_dir_path)?;
     }

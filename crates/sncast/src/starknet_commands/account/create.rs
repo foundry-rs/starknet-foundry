@@ -12,6 +12,7 @@ use sncast::helpers::constants::{
     ARGENT_CLASS_HASH, BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH,
     CREATE_KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH,
 };
+use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::{AccountCreateResponse, Felt};
 use sncast::{
     check_class_hash_exists, check_if_legacy_contract, extract_or_generate_salt, get_chain_id,
@@ -47,6 +48,9 @@ pub struct Create {
     /// Custom contract class hash of declared contract
     #[clap(short, long, requires = "account_type")]
     pub class_hash: Option<FieldElement>,
+
+    #[clap(flatten)]
+    pub rpc: RpcArgs,
 }
 
 #[allow(clippy::too_many_arguments)]

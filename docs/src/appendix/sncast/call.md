@@ -1,10 +1,6 @@
 # `call`
 Call a smart contract on Starknet with the given parameters.
 
-## Required Common Arguments — Passed By CLI or Specified in `snfoundry.toml`
-
-* [`url`](./common.md#--url--u-rpc_url)
-
 ## `--contract-address, -a <CONTRACT_ADDRESS>`
 Required.
 
@@ -14,6 +10,13 @@ The address of the contract being called in hex (prefixed with '0x') or decimal 
 Required.
 
 The name of the function being called.
+
+## `--url, -u <RPC_URL>`
+Optional.
+
+Starknet RPC node url address.
+
+Overrides url from `snfoundry.toml`.
 
 ## `--calldata, -c <CALLDATA>`
 Optional.
