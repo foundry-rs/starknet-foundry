@@ -178,7 +178,7 @@ fn cheat_block_number_all_simple() {
 
     let contract_address = test_env.deploy("CheatBlockNumberChecker", &[]);
 
-    test_env.cheatnet_state.cheat_block_number_global(123);
+    test_env.cheatnet_state.start_cheat_block_number_global(123);
 
     let output = test_env.call_contract(&contract_address, "get_block_number", &[]);
     assert_success(output, &[Felt252::from(123)]);
@@ -190,7 +190,7 @@ fn cheat_block_number_all_then_one() {
 
     let contract_address = test_env.deploy("CheatBlockNumberChecker", &[]);
 
-    test_env.cheatnet_state.cheat_block_number_global(321);
+    test_env.cheatnet_state.start_cheat_block_number_global(321);
     test_env.start_cheat_block_number(contract_address, 123);
 
     let output = test_env.call_contract(&contract_address, "get_block_number", &[]);
@@ -204,7 +204,7 @@ fn cheat_block_number_one_then_all() {
     let contract_address = test_env.deploy("CheatBlockNumberChecker", &[]);
 
     test_env.start_cheat_block_number(contract_address, 123);
-    test_env.cheatnet_state.cheat_block_number_global(321);
+    test_env.cheatnet_state.start_cheat_block_number_global(321);
 
     let output = test_env.call_contract(&contract_address, "get_block_number", &[]);
     assert_success(output, &[Felt252::from(321)]);
@@ -217,7 +217,7 @@ fn cheat_block_number_all_stop() {
     let cheat_block_number_checker = test_env.declare("CheatBlockNumberChecker", &get_contracts());
     let contract_address = test_env.deploy_wrapper(&cheat_block_number_checker, &[]);
 
-    test_env.cheatnet_state.cheat_block_number_global(123);
+    test_env.cheatnet_state.start_cheat_block_number_global(123);
 
     assert_success(
         test_env.call_contract(&contract_address, "get_block_number", &[]),

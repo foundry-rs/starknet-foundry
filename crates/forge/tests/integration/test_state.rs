@@ -23,7 +23,6 @@ fn storage_access_from_tests() {
             }
         }
 
-        use starknet::storage::StorageMemberAccessTrait;
 
         #[test]
         fn storage_access_from_tests() {
@@ -420,7 +419,6 @@ fn storage_access_default_values() {
             }
         }
 
-        use starknet::storage::{StorageMemberAccessTrait, StorageLegacyMapMemberAccessTrait};
 
         #[test]
         fn storage_access_default_values() {
