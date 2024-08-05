@@ -2,12 +2,15 @@
 
 Get the status of a transaction
 
-## Required Common Arguments — Passed By CLI or Specified in `snfoundry.toml`
-
-* [`url`](./common.md#--url--u-rpc_url)
-
 ## `<TRANSACTION_HASH>`
 
 Required.
 
 Hash of the transaction
+
+## `--url, -u <RPC_URL>`
+Optional.
+
+Starknet RPC node url address.
+
+Overrides url from `snfoundry.toml`.

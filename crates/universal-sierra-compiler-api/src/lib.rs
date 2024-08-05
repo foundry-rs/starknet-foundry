@@ -26,6 +26,7 @@ pub struct AssembledProgramWithDebugInfo {
     /// `StatementIdx(i)` (i-th index in Sierra statements vector):
     /// - code offset in the CASM bytecode
     /// - index in CASM instructions vector
+    ///
     /// Those 2 values are usually not equal since the instruction sizes in CASM may vary
     pub debug_info: Vec<(CasmCodeOffset, CasmInstructionIdx)>,
 }

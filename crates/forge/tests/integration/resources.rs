@@ -15,7 +15,7 @@ fn builtins_count() {
         r"
             #[test]
             fn range_check() {
-                assert(1_u8 >= 1_u8, 'error message');
+                assert((1_u8 + 1_u8) >= 1_u8, 'error message');
             }
 
             #[test]

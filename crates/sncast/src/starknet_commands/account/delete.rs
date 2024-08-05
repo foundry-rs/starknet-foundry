@@ -3,6 +3,7 @@ use camino::Utf8PathBuf;
 use clap::Args;
 use promptly::prompt;
 use serde_json::Map;
+use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::AccountDeleteResponse;
 
 #[derive(Args, Debug)]
@@ -19,6 +20,9 @@ pub struct Delete {
     /// Assume "yes" as answer to confirmation prompt and run non-interactively
     #[clap(long, default_value = "false")]
     pub yes: bool,
+
+    #[clap(flatten)]
+    pub rpc: RpcArgs,
 }
 
 #[allow(clippy::too_many_arguments)]

@@ -5,6 +5,7 @@ use crate::runtime_extensions::forge_runtime_extension::cheatcodes::cheat_execut
     ExecutionInfoMock, ResourceBounds,
 };
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::Event;
+use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_messages_to_l1::MessageToL1;
 use blockifier::blockifier::block::BlockInfo;
 use blockifier::execution::call_info::OrderedL2ToL1Message;
 use blockifier::execution::entry_point::CallEntryPoint;
@@ -22,7 +23,7 @@ use conversions::serde::serialize::{BufferWriter, CairoSerialize};
 use conversions::string::TryFromHexStr;
 use runtime::starknet::context::SerializableBlockInfo;
 use runtime::starknet::state::DictStateReader;
-use starknet_api::core::EntryPointSelector;
+use starknet_api::core::{ChainId, EntryPointSelector};
 use starknet_api::transaction::ContractAddressSalt;
 use starknet_api::{
     core::{ClassHash, CompiledClassHash, ContractAddress, Nonce},
@@ -118,6 +119,15 @@ impl StateReader for ExtendedStateReader {
             .dict_state_reader
             .get_compiled_class_hash(class_hash)
             .unwrap_or_default())
+    }
+}
+
+impl ExtendedStateReader {
+    pub fn get_chain_id(&self) -> anyhow::Result<Option<ChainId>> {
+        self.fork_state_reader
+            .as_ref()
+            .map(ForkStateReader::chain_id)
+            .transpose()
     }
 }
 
@@ -318,6 +328,7 @@ pub struct CheatnetState {
         HashMap<ContractAddress, HashMap<EntryPointSelector, CheatStatus<Vec<Felt252>>>>,
     pub replaced_bytecode_contracts: HashMap<ContractAddress, ClassHash>,
     pub detected_events: Vec<Event>,
+    pub detected_messages_to_l1: Vec<MessageToL1>,
     pub deploy_salt_base: u32,
     pub block_info: BlockInfo,
     pub trace_data: TraceData,
@@ -339,6 +350,7 @@ impl Default for CheatnetState {
             mocked_functions: Default::default(),
             replaced_bytecode_contracts: Default::default(),
             detected_events: vec![],
+            detected_messages_to_l1: vec![],
             deploy_salt_base: 0,
             block_info: SerializableBlockInfo::default().into(),
             trace_data: TraceData {

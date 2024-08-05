@@ -7,6 +7,7 @@ use test_case::test_case;
 
 #[test_case("oz_cairo_0"; "cairo_0_account")]
 #[test_case("oz_cairo_1"; "cairo_1_account")]
+#[test_case("oz"; "oz_account")]
 #[test_case("argent"; "argent_account")]
 #[test_case("braavos"; "braavos_account")]
 #[tokio::test]
@@ -21,11 +22,42 @@ async fn test_with_calldata(account: &str) {
         accounts_json_path.as_str(),
         "--account",
         account,
-        "--url",
-        URL,
         "script",
         "run",
         &script_name,
+        "--url",
+        URL,
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        command: script run
+        status: success
+        "},
+    );
+}
+
+#[tokio::test]
+async fn test_with_fee_settings() {
+    let tempdir =
+        copy_script_directory_to_tempdir(SCRIPTS_DIR.to_owned() + "/deploy", Vec::<String>::new());
+    let accounts_json_path = get_accounts_path(ACCOUNT_FILE_PATH);
+
+    let script_name = "strk_fee_settings";
+    let args = vec![
+        "--accounts-file",
+        accounts_json_path.as_str(),
+        "--account",
+        "user7",
+        "script",
+        "run",
+        &script_name,
+        "--url",
+        URL,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -52,11 +84,11 @@ async fn test_same_salt_and_class_hash_deployed_twice() {
         accounts_json_path.as_str(),
         "--account",
         "user3",
-        "--url",
-        URL,
         "script",
         "run",
         &script_name,
+        "--url",
+        URL,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -87,11 +119,11 @@ async fn test_invalid_class_hash() {
         accounts_json_path.as_str(),
         "--account",
         "user2",
-        "--url",
-        URL,
         "script",
         "run",
         &script_name,
+        "--url",
+        URL,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -126,11 +158,11 @@ async fn test_invalid_call_data() {
         accounts_json_path.as_str(),
         "--account",
         "user5",
-        "--url",
-        URL,
         "script",
         "run",
         &script_name,
+        "--url",
+        URL,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -161,11 +193,11 @@ async fn test_invalid_nonce() {
         accounts_json_path.as_str(),
         "--account",
         "user5",
-        "--url",
-        URL,
         "script",
         "run",
         &script_name,
+        "--url",
+        URL,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());

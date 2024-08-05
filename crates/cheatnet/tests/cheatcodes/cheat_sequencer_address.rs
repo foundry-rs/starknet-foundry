@@ -202,7 +202,7 @@ fn cheat_sequencer_address_all_simple() {
 
     test_env
         .cheatnet_state
-        .cheat_sequencer_address_global(123_u8.into());
+        .start_cheat_sequencer_address_global(123_u8.into());
 
     assert_success(
         test_env.call_contract(&contract_address, "get_sequencer_address", &[]),
@@ -218,7 +218,7 @@ fn cheat_sequencer_address_all_then_one() {
 
     test_env
         .cheatnet_state
-        .cheat_sequencer_address_global(111_u8.into());
+        .start_cheat_sequencer_address_global(111_u8.into());
 
     test_env.start_cheat_sequencer_address(contract_address, 222);
 
@@ -237,7 +237,7 @@ fn cheat_sequencer_address_one_then_all() {
     test_env.start_cheat_sequencer_address(contract_address, 111);
     test_env
         .cheatnet_state
-        .cheat_sequencer_address_global(222_u8.into());
+        .start_cheat_sequencer_address_global(222_u8.into());
 
     assert_success(
         test_env.call_contract(&contract_address, "get_sequencer_address", &[]),
@@ -255,7 +255,7 @@ fn cheat_sequencer_address_all_stop() {
 
     test_env
         .cheatnet_state
-        .cheat_sequencer_address_global(123_u8.into());
+        .start_cheat_sequencer_address_global(123_u8.into());
 
     assert_success(
         test_env.call_contract(&contract_address, "get_sequencer_address", &[]),

@@ -2,6 +2,7 @@ use crate::starknet_commands::account::add::Add;
 use crate::starknet_commands::account::create::Create;
 use crate::starknet_commands::account::delete::Delete;
 use crate::starknet_commands::account::deploy::Deploy;
+use crate::starknet_commands::account::list::List;
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use clap::{Args, Subcommand, ValueEnum};
@@ -18,6 +19,7 @@ pub mod add;
 pub mod create;
 pub mod delete;
 pub mod deploy;
+pub mod list;
 
 #[derive(Args)]
 #[command(about = "Creates and deploys an account to the Starknet")]
@@ -32,6 +34,7 @@ pub enum Commands {
     Create(Create),
     Deploy(Deploy),
     Delete(Delete),
+    List(List),
 }
 
 #[allow(clippy::doc_markdown)]

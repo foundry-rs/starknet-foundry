@@ -23,7 +23,6 @@ starknet-types-core.workspace = true
 starknet_api.workspace = true
 starknet.workspace = true
 futures.workspace = true
-once_cell.workspace = true
 tokio.workspace = true
 tokio-util.workspace = true
 smol_str.workspace = true

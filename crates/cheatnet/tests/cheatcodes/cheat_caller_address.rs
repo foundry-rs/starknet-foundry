@@ -196,7 +196,7 @@ fn cheat_caller_address_all() {
 
     test_env
         .cheatnet_state
-        .cheat_caller_address_global(123_u8.into());
+        .start_cheat_caller_address_global(123_u8.into());
 
     assert_success(
         test_env.call_contract(&contract_address, "get_caller_address", &[]),
@@ -265,7 +265,7 @@ fn cheat_caller_address_all_then_one() {
 
     test_env
         .cheatnet_state
-        .cheat_caller_address_global(111_u8.into());
+        .start_cheat_caller_address_global(111_u8.into());
     test_env.start_cheat_caller_address(contract_address, 222);
 
     assert_success(
@@ -283,7 +283,7 @@ fn cheat_caller_address_one_then_all() {
     test_env.start_cheat_caller_address(contract_address, 111);
     test_env
         .cheatnet_state
-        .cheat_caller_address_global(222_u8.into());
+        .start_cheat_caller_address_global(222_u8.into());
 
     assert_success(
         test_env.call_contract(&contract_address, "get_caller_address", &[]),

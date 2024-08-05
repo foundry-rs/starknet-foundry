@@ -1,10 +1,12 @@
 # `new`
 
-Generates an empty template for the multicall `.toml` file that may be later used with the `run` subcommand. It either outputs it to a new file or to the standard output.
+Generates an empty template for the multicall `.toml` file that may be later used with the `run` subcommand. It writes it to a file provided as a required argument.
 
-## Required Common Arguments — Passed By CLI or Specified in `snfoundry.toml`
+## Usage
+## `multicall new <OUTPUT-PATH> [OPTIONS]`
 
-* [`url`](../common.md#--url--u-rpc_url)
+## Arguments
+`OUTPUT-PATH` - a path to a file to write the generated `.toml` to.
 
 ## `--output-path, -p <PATH>`
 Optional.

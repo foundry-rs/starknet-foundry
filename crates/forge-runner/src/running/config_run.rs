@@ -83,7 +83,7 @@ pub fn run_config_pass(
     let string_to_hint = hints_by_representation(&assembled_program);
     let hints_dict = hints_to_params(&assembled_program);
 
-    let mut context = build_context(&block_info);
+    let mut context = build_context(&block_info, None);
 
     let mut execution_resources = ExecutionResources::default();
 

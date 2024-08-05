@@ -425,11 +425,11 @@ fn store_load_structure_to_felt() {
             use starknet::ContractAddress;
             use snforge_std::{ declare, ContractClassTrait, store, load, map_entry_address };
             
-            #[derive(Serde, Copy, Drop, starknet::Store)]
+            #[derive(Serde, Copy, Drop, starknet::Store, Hash)]
             struct NestedKey {
                 c: felt252
             }
-            #[derive(Serde, Copy, Drop, starknet::Store)]
+            #[derive(Serde, Copy, Drop, starknet::Store, Hash)]
             struct StructuredKey {
                 a: felt252,
                 b: NestedKey,
