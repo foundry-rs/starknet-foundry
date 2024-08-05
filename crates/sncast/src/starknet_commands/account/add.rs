@@ -6,6 +6,7 @@ use anyhow::{ensure, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
 use sncast::helpers::configuration::CastConfig;
+use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::AccountAddResponse;
 use sncast::{check_class_hash_exists, get_chain_id};
 use sncast::{check_if_legacy_contract, get_class_hash_by_address};
@@ -52,6 +53,9 @@ pub struct Add {
     #[allow(clippy::struct_field_names)]
     #[clap(long)]
     pub add_profile: Option<String>,
+
+    #[clap(flatten)]
+    pub rpc: RpcArgs,
 }
 
 pub async fn add(

@@ -154,8 +154,9 @@ fn should_print_foreach() {
     node_url.set_path("rpc/v0_5");
 
     temp.child("tests/test.cairo")
-        .write_str(formatdoc!(
-            r#"
+        .write_str(
+            formatdoc!(
+                r#"
                 #[fork(url: "http://127.0.0.1:3030?url={node_url}", block_tag: latest)]
                 #[test]
                 fn t1() {{
@@ -167,7 +168,9 @@ fn should_print_foreach() {
                     assert!(false);
                 }}
             "#
-        ).as_str())
+            )
+            .as_str(),
+        )
         .unwrap();
 
     let output = test_runner(&temp).assert();

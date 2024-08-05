@@ -484,7 +484,6 @@ fn storage_write_from_test_cost() {
             }
         }
 
-        use starknet::storage::StorageMemberAccessTrait;
 
         #[test]
         fn storage_write_from_test_cost() {

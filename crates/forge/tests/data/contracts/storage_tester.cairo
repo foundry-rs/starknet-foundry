@@ -1,6 +1,6 @@
 #[starknet::contract]
 mod StorageTester {
-    use hash::LegacyHash;
+    use starknet::storage::Map;
 
     #[derive(Serde, Drop, starknet::Store)]
     struct NestedStructure {
@@ -12,24 +12,11 @@ mod StorageTester {
         b: NestedStructure,
     }
 
-    impl NestedKeyHash of LegacyHash<NestedKey> {
-        fn hash(state: felt252, value: NestedKey) -> felt252 {
-            LegacyHash::<felt252>::hash(state, value.c)
-        }
-    }
-
-    impl StructuredKeyHash of LegacyHash<StructuredKey> {
-        fn hash(state: felt252, value: StructuredKey) -> felt252 {
-            let state = LegacyHash::<felt252>::hash(state, value.a);
-            LegacyHash::<NestedKey>::hash(state, value.b)
-        }
-    }
-
-    #[derive(Serde, Drop, starknet::Store)]
+    #[derive(Serde, Drop, starknet::Store, Hash)]
     struct NestedKey {
         c: felt252
     }
-    #[derive(Serde, Drop, starknet::Store)]
+    #[derive(Serde, Drop, starknet::Store, Hash)]
     struct StructuredKey {
         a: felt252,
         b: NestedKey,
@@ -38,9 +25,9 @@ mod StorageTester {
     #[storage]
     struct Storage {
         structure: StoredStructure,
-        felt_to_structure: LegacyMap<felt252, StoredStructure>,
-        structure_to_felt: LegacyMap<StructuredKey, felt252>,
-        felt_to_felt: LegacyMap<felt252, felt252>,
+        felt_to_structure: Map<felt252, StoredStructure>,
+        structure_to_felt: Map<StructuredKey, felt252>,
+        felt_to_felt: Map<felt252, felt252>,
     }
 
     #[external(v0)]

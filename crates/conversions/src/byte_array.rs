@@ -1,4 +1,5 @@
 use crate as conversions; // trick for CairoDeserialize macro
+use crate::serde::deserialize::{BufferReadError, BufferReadResult, BufferReader};
 use crate::{serde::serialize::SerializeToFeltVec, string::TryFromHexStr};
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string_ex;
@@ -40,6 +41,16 @@ impl ByteArray {
         );
 
         result
+    }
+
+    pub fn deserialize_with_magic(value: &[Felt252]) -> BufferReadResult<ByteArray> {
+        if value.first()
+            == Some(&Felt252::try_from_hex_str(&format!("0x{BYTE_ARRAY_MAGIC}")).unwrap())
+        {
+            BufferReader::new(&value[1..]).read()
+        } else {
+            Err(BufferReadError::ParseFailed)
+        }
     }
 }
 
