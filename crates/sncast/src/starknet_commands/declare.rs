@@ -1,6 +1,8 @@
+use super::declare_deploy::DeclareDeploy;
 use anyhow::{anyhow, Result};
 use clap::{Args, ValueEnum};
 use scarb_api::StarknetContractArtifacts;
+use sncast::helpers::deploy::DeployArgs;
 use sncast::helpers::error::token_not_supported_for_declaration;
 use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken, PayableTransaction};
 use sncast::helpers::scarb_utils::CompiledContract;
@@ -55,6 +57,29 @@ impl_payable_transaction!(Declare, token_not_supported_for_declaration,
     DeclareVersion::V3 => FeeToken::Strk
 );
 
+impl From<&DeclareDeploy> for Declare {
+    fn from(declare_deploy: &DeclareDeploy) -> Self {
+        let DeclareDeploy {
+            contract_name,
+            deploy_args: DeployArgs { package, .. },
+            fee_token,
+        } = &declare_deploy;
+
+        let fee_args = FeeArgs {
+            fee_token: Some(fee_token.to_owned()),
+            ..Default::default()
+        };
+
+        Declare {
+            contract: contract_name.to_owned(),
+            fee_args,
+            nonce: None,
+            package: package.to_owned(),
+            version: None,
+        }
+    }
+}
+
 type SendDeclarationError<'client> = AccountError<<SingleOwnerAccount<&'client JsonRpcClient<HttpTransport>, LocalWallet> as starknet::accounts::Account>::SignError>;
 
 async fn send_declaration<'client>(
@@ -63,11 +88,11 @@ async fn send_declaration<'client>(
     nonce: Option<FieldElement>,
     fee_settings: FeeSettings,
 ) -> Result<DeclareTransactionResult, SendDeclarationError<'client>> {
-    let CompiledContract { class, hash } = contract;
+    let CompiledContract { class, class_hash } = contract;
 
     match fee_settings {
         FeeSettings::Eth { max_fee } => {
-            let declaration = account.declare_v2(Arc::new(class), hash);
+            let declaration = account.declare_v2(Arc::new(class), class_hash);
 
             let declaration = apply_optional(declaration, max_fee, DeclarationV2::max_fee);
             let declaration = apply_optional(declaration, nonce, DeclarationV2::nonce);
@@ -79,7 +104,7 @@ async fn send_declaration<'client>(
             max_gas,
             max_gas_unit_price,
         } => {
-            let declaration = account.declare_v3(Arc::new(class), hash);
+            let declaration = account.declare_v3(Arc::new(class), class_hash);
 
             let declaration = apply_optional(declaration, max_gas, DeclarationV3::gas);
             let declaration =
@@ -153,7 +178,7 @@ pub async fn declare(
                 ErrorData::new(declare.contract.clone()),
             ))?;
 
-    let contract = CompiledContract::from(contract_artifacts)?;
+    let contract = contract_artifacts.try_into()?;
 
     declare_compiled(declare, account, contract, wait_config).await
 }

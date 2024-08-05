@@ -4,7 +4,7 @@ use crate::starknet_commands::{
     account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,
     script::Script, tx_status::TxStatus,
 };
-use anyhow::{Context, Result};
+use anyhow::{bail, Context, Result};
 use configuration::load_global_config;
 use sncast::response::print::{print_command_result, OutputFormat};
 
@@ -19,6 +19,7 @@ use sncast::helpers::scarb_utils::{
     get_scarb_metadata_with_deps, read_manifest_and_build_artifacts, BuildConfig,
 };
 use sncast::response::errors::handle_starknet_command_error;
+use sncast::response::structs::DeclareDeployResponse;
 use sncast::{
     chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_default_state_file_name,
     get_provider, NumbersFormat, ValidatedWaitParams, WaitForTx,
@@ -27,6 +28,7 @@ use starknet::core::utils::get_selector_from_name;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet_commands::account::list::print_account_list;
+use starknet_commands::declare_deploy::DeclareDeploy;
 use starknet_commands::deploy::DeployResolved;
 use starknet_commands::verify::Verify;
 use tokio::runtime::Runtime;
@@ -124,6 +126,9 @@ enum Commands {
 
     /// Deploy a contract
     Deploy(Deploy),
+
+    // Declare a contract if it has not been yet and deploy it
+    DeclareDeploy(DeclareDeploy),
 
     /// Call a contract
     Call(Call),
@@ -225,28 +230,17 @@ async fn run_async_command(
             .await?;
 
             let deploy: DeployResolved = if deploy.class_hash.is_some() {
-                deploy.try_into().unwrap()
+                deploy.into()
             } else {
                 let contract =
                     deploy.build_artifacts_and_get_compiled_contract(cli.json, &cli.profile)?;
-                let class_hash = contract.hash;
+                let class_hash = contract.class_hash;
 
-                if !contract.is_declared(&provider).await {
-                    let declare = deploy.declare_data()?;
-
-                    let mut result = crate::starknet_commands::declare::declare_compiled(
-                        declare,
-                        &account,
-                        contract,
-                        wait_config,
-                    )
-                    .await
-                    .map_err(handle_starknet_command_error);
-
-                    print_command_result("declare", &mut result, numbers_format, &output_format)?;
+                if !contract.is_declared(&provider).await? {
+                    bail!("Contract with class hash {:x} is not declared", class_hash);
                 }
 
-                deploy.resolve_class_hash(class_hash)
+                deploy.resolved_with_class_hash(class_hash)
             };
 
             deploy.validate()?;
@@ -256,6 +250,78 @@ async fn run_async_command(
                 .map_err(handle_starknet_command_error);
 
             print_command_result("deploy", &mut result, numbers_format, &output_format)
+        }
+
+        Commands::DeclareDeploy(declare_deploy) => {
+            let account = get_account(
+                &config.account,
+                &config.accounts_file,
+                &provider,
+                config.keystore,
+            )
+            .await?;
+
+            let declare = Declare::from(&declare_deploy);
+            let deploy = Deploy::from(declare_deploy);
+
+            let contract =
+                deploy.build_artifacts_and_get_compiled_contract(cli.json, &cli.profile)?;
+            let class_hash = contract.class_hash;
+
+            let needs_declaration = !contract.is_declared(&provider).await?;
+
+            let declare_result = if needs_declaration {
+                let mut result = crate::starknet_commands::declare::declare_compiled(
+                    declare,
+                    &account,
+                    contract,
+                    wait_config,
+                )
+                .await
+                .map_err(handle_starknet_command_error);
+
+                if result.is_err() {
+                    return print_command_result(
+                        "declare-deploy",
+                        &mut result,
+                        numbers_format,
+                        &output_format,
+                    );
+                }
+
+                Some(result.unwrap())
+            } else {
+                None
+            };
+
+            let deploy = deploy.resolved_with_class_hash(class_hash);
+            deploy.validate()?;
+
+            let mut deploy_result =
+                starknet_commands::deploy::deploy(deploy, &account, wait_config)
+                    .await
+                    .map_err(handle_starknet_command_error);
+
+            if deploy_result.is_err() {
+                return print_command_result(
+                    "declare-deploy",
+                    &mut deploy_result,
+                    numbers_format,
+                    &output_format,
+                );
+            }
+
+            let mut result = Ok(DeclareDeployResponse::new(
+                declare_result,
+                deploy_result.unwrap(),
+            ));
+
+            print_command_result(
+                "declare-deploy",
+                &mut result,
+                numbers_format,
+                &output_format,
+            )
         }
 
         Commands::Call(call) => {

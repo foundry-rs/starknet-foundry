@@ -1,10 +1,11 @@
 use crate::helpers::constants::{
     ACCOUNT, ACCOUNT_FILE_PATH, CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA, CONTRACTS_DIR,
-    DEVNET_OZ_CLASS_HASH_CAIRO_0, MAP_CONTRACT_CLASS_HASH_SEPOLIA, URL,
+    DEVNET_OZ_CLASS_HASH_CAIRO_0, MAP_CONTRACT_CLASS_HASH_SEPOLIA, MAP_CONTRACT_NAME, URL,
 };
 use crate::helpers::fixtures::{
     copy_directory_to_tempdir, create_and_deploy_account, create_and_deploy_oz_account,
-    default_cli_args, get_accounts_path, get_transaction_hash, get_transaction_receipt,
+    default_cli_args, duplicate_contract_directory_with_salt, get_accounts_path,
+    get_transaction_hash, get_transaction_receipt,
 };
 use crate::helpers::runner::runner;
 use indoc::indoc;
@@ -346,6 +347,80 @@ fn test_too_low_max_fee() {
 }
 
 #[test]
+fn test_happy_case_by_name() {
+    let tempdir = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/map",
+        "put",
+        "salty_put",
+    );
+
+    let accounts_file = get_accounts_path(ACCOUNT_FILE_PATH);
+
+    let mut args = vec![
+        "--accounts-file",
+        accounts_file.as_str(),
+        "--url",
+        URL,
+        "--account",
+        "user1",
+        "declare",
+        "--contract-name",
+        MAP_CONTRACT_NAME,
+        "--fee-token",
+        "eth",
+    ];
+
+    runner(&args).current_dir(tempdir.path()).assert().success();
+
+    args[6] = "deploy";
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().success();
+
+    let expected = indoc!(
+        "
+        [..]
+        command: deploy
+        contract_address: [..]
+        transaction_hash: [..]
+        "
+    );
+
+    assert_stdout_contains(output, expected);
+}
+
+#[tokio::test]
+async fn test_by_name_undeclared() {
+    let tempdir =
+        duplicate_contract_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "dupa");
+    let accounts_file = get_accounts_path(ACCOUNT_FILE_PATH);
+
+    let args = vec![
+        "--accounts-file",
+        accounts_file.as_str(),
+        "--url",
+        URL,
+        "--account",
+        "user1",
+        "deploy",
+        "--contract-name",
+        MAP_CONTRACT_NAME,
+        "--max-fee",
+        "99999999999999999",
+        "--fee-token",
+        "eth",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().failure();
+
+    assert_stderr_contains(
+        output,
+        "Error: Contract with class hash [..] is not declared",
+    );
+}
+
+#[test]
 fn test_no_class_hash_and_no_name() {
     let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
     let accounts_file = get_accounts_path(ACCOUNT_FILE_PATH);
@@ -363,42 +438,7 @@ fn test_no_class_hash_and_no_name() {
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().failure();
 
-    assert_stderr_contains(output, "Error: Contract name unspecified");
-}
-
-#[test]
-fn test_happy_case_by_name() {
-    let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
-    let accounts_file = get_accounts_path(ACCOUNT_FILE_PATH);
-
-    let args = vec![
-        "--accounts-file",
-        accounts_file.as_str(),
-        "--url",
-        URL,
-        "--account",
-        "user1",
-        "deploy",
-        "--contract-name",
-        "Map",
-        "--max-fee",
-        "99999999999999999",
-        "--fee-token",
-        "eth",
-    ];
-
-    let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().success();
-
-    let expected = indoc! {
-        "
-        command: deploy
-        contract_address: [..]
-        transaction_hash: [..]
-        "
-    };
-
-    assert_stdout_contains(output, expected);
+    assert_stderr_contains(output, "Error: Contract name and class hash unspecified");
 }
 
 #[test]
@@ -477,5 +517,5 @@ fn test_by_name_no_name() {
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().failure();
 
-    assert_stderr_contains(output, "Error: Contract name unspecified");
+    assert_stderr_contains(output, "Error: Contract name and class hash unspecified");
 }

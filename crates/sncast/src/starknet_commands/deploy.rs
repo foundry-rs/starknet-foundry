@@ -1,5 +1,7 @@
-use anyhow::{anyhow, bail, Result};
-use clap::{Args, ValueEnum};
+use super::declare_deploy::DeclareDeploy;
+use anyhow::{anyhow, Result};
+use clap::Args;
+use sncast::helpers::deploy::{DeployArgs, DeployVersion};
 use sncast::helpers::error::token_not_supported_for_deployment;
 use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken, PayableTransaction};
 use sncast::helpers::scarb_utils::{read_manifest_and_build_artifacts, CompiledContract};
@@ -16,8 +18,6 @@ use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
 
-use super::declare::Declare;
-
 #[derive(Args)]
 #[command(about = "Deploy a contract on Starknet")]
 pub struct Deploy {
@@ -29,32 +29,33 @@ pub struct Deploy {
     #[clap(long, conflicts_with = "class_hash")]
     pub contract_name: Option<String>,
 
-    // A package to deploy a contract from, relevant only for by-name deployment
-    #[clap(long, conflicts_with = "class_hash")]
-    pub package: Option<String>,
-
-    /// Calldata for the contract constructor
-    #[clap(short, long, value_delimiter = ' ', num_args = 1..)]
-    pub constructor_calldata: Vec<FieldElement>,
-
-    /// Salt for the address
-    #[clap(short, long)]
-    pub salt: Option<FieldElement>,
-
-    /// If true, salt will be modified with an account address
-    #[clap(short, long)]
-    pub unique: bool,
+    #[clap(flatten)]
+    pub args: DeployArgs,
 
     #[clap(flatten)]
     pub fee_args: FeeArgs,
+}
 
-    /// Nonce of the transaction. If not provided, nonce will be set automatically
-    #[clap(short, long)]
-    pub nonce: Option<FieldElement>,
+impl From<DeclareDeploy> for Deploy {
+    fn from(declare_deploy: DeclareDeploy) -> Self {
+        let DeclareDeploy {
+            contract_name,
+            deploy_args,
+            fee_token,
+        } = declare_deploy;
 
-    /// Version of the deployment (can be inferred from fee token)
-    #[clap(short, long)]
-    pub version: Option<DeployVersion>,
+        let fee_args = FeeArgs {
+            fee_token: Some(fee_token),
+            ..Default::default()
+        };
+
+        Deploy {
+            class_hash: None,
+            contract_name: Some(contract_name),
+            args: deploy_args,
+            fee_args,
+        }
+    }
 }
 
 impl Deploy {
@@ -66,78 +67,21 @@ impl Deploy {
         let contract_name = self
             .contract_name
             .clone()
-            .ok_or(anyhow!("Contract name unspecified"))?;
+            .ok_or(anyhow!("Contract name and class hash unspecified"))?;
 
-        let artifacts = read_manifest_and_build_artifacts(&self.package, json, profile)?;
+        let artifacts = read_manifest_and_build_artifacts(&self.args.package, json, profile)?;
 
         let contract_artifacts = artifacts.get(&contract_name).ok_or(anyhow!(
             "No artifacts found for contract: {}",
             contract_name
         ))?;
 
-        CompiledContract::from(contract_artifacts)
+        contract_artifacts.try_into()
     }
 
-    pub fn declare_data(&self) -> Result<Declare> {
-        if self.contract_name.is_none() {
-            bail!("Contract name unspecified");
-        }
-
-        let Deploy {
-            contract_name,
-            package,
-            fee_args,
-            ..
-        } = &self;
-
-        let declare = Declare {
-            contract: contract_name.to_owned().unwrap(),
-            fee_args: fee_args.to_owned(),
-            nonce: None,
-            package: package.to_owned(),
-            version: None,
-        };
-
-        Ok(declare)
-    }
-
-    pub fn resolve_class_hash(mut self, value: FieldElement) -> DeployResolved {
-        if self.class_hash.is_none() {
-            self.class_hash = Some(value);
-        }
-
-        self.try_into().unwrap()
-    }
-}
-
-impl TryInto<DeployResolved> for Deploy {
-    type Error = anyhow::Error;
-
-    fn try_into(self) -> std::result::Result<DeployResolved, Self::Error> {
-        if self.class_hash.is_none() {
-            bail!("Class hash unspecified");
-        }
-
-        let Deploy {
-            class_hash,
-            constructor_calldata,
-            salt,
-            unique,
-            fee_args,
-            nonce,
-            version,
-            ..
-        } = self;
-
-        Ok(DeployResolved {
-            class_hash: class_hash.unwrap(),
-            constructor_calldata,
-            salt,
-            unique,
-            fee_args,
-            nonce,
-            version,
-        })
+    pub fn resolved_with_class_hash(mut self, value: FieldElement) -> DeployResolved {
+        self.class_hash = Some(value);
+        self.into()
     }
 }
 
@@ -151,10 +95,33 @@ pub struct DeployResolved {
     pub version: Option<DeployVersion>,
 }
 
-#[derive(ValueEnum, Debug, Clone)]
-pub enum DeployVersion {
-    V1,
-    V3,
+impl From<Deploy> for DeployResolved {
+    fn from(deploy: Deploy) -> Self {
+        let Deploy {
+            class_hash,
+            args:
+                DeployArgs {
+                    constructor_calldata,
+                    salt,
+                    unique,
+                    nonce,
+                    version,
+                    ..
+                },
+            fee_args,
+            ..
+        } = deploy;
+
+        DeployResolved {
+            class_hash: class_hash.unwrap(),
+            constructor_calldata,
+            salt,
+            unique,
+            fee_args,
+            nonce,
+            version,
+        }
+    }
 }
 
 impl_payable_transaction!(DeployResolved, token_not_supported_for_deployment,

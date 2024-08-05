@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
 use scarb_api::{
     get_contracts_artifacts_and_source_sierra_paths,
@@ -8,11 +8,8 @@ use scarb_api::{
 use scarb_ui::args::PackagesFilter;
 use shared::{command::CommandExt, print::print_as_warning};
 use starknet::{
-    core::types::{
-        contract::{CompiledClass, SierraClass},
-        BlockId, FlattenedSierraClass,
-    },
-    providers::{jsonrpc::HttpTransport, JsonRpcClient, Provider},
+    core::types::{contract::SierraClass, BlockId, FlattenedSierraClass},
+    providers::{jsonrpc::HttpTransport, JsonRpcClient, Provider, ProviderError},
 };
 use starknet_crypto::FieldElement;
 use std::collections::HashMap;
@@ -205,28 +202,37 @@ pub fn read_manifest_and_build_artifacts(
 
 pub struct CompiledContract {
     pub class: FlattenedSierraClass,
-    pub hash: FieldElement,
+    pub class_hash: FieldElement,
+}
+
+impl TryFrom<&StarknetContractArtifacts> for CompiledContract {
+    type Error = anyhow::Error;
+
+    fn try_from(artifacts: &StarknetContractArtifacts) -> Result<Self, Self::Error> {
+        let class = serde_json::from_str::<SierraClass>(&artifacts.sierra)
+            .context("Failed to parse sierra artifact")?
+            .flatten()?;
+
+        let class_hash = class.class_hash();
+
+        Ok(Self { class, class_hash })
+    }
 }
 
 impl CompiledContract {
-    pub fn from(artifacts: &StarknetContractArtifacts) -> Result<Self> {
-        let class: SierraClass =
-            serde_json::from_str(&artifacts.sierra).context("Failed to parse sierra artifact")?;
-
-        let class = class.flatten().map_err(anyhow::Error::from)?;
-
-        let compiled_class: CompiledClass =
-            serde_json::from_str(&artifacts.casm).context("Failed to parse casm artifact")?;
-
-        let hash = compiled_class.class_hash().map_err(anyhow::Error::from)?;
-
-        Ok(Self { class, hash })
-    }
-
-    pub async fn is_declared(&self, provider: &JsonRpcClient<HttpTransport>) -> bool {
+    pub async fn is_declared(&self, provider: &JsonRpcClient<HttpTransport>) -> Result<bool> {
         let block_id = BlockId::Tag(starknet::core::types::BlockTag::Pending);
-        let class_hash = self.hash;
-        provider.get_class(block_id, class_hash).await.is_ok()
+        let class_hash = self.class_hash;
+
+        let response = provider.get_class(block_id, class_hash).await;
+
+        match response {
+            Ok(_) => Ok(true),
+            Err(ProviderError::StarknetError(
+                starknet::core::types::StarknetError::ClassHashNotFound,
+            )) => Ok(false),
+            Err(other) => bail!(other),
+        }
     }
 }
 

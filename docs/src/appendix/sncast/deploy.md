@@ -10,6 +10,7 @@ Deploy a contract to Starknet.
 Optional (either this or the `--contract-name` must be specified).
 
 Class hash of contract to deploy.
+Cannot be used together with `--contract-name`.
 
 ## `--contract-name <CONTRACT_NAME>`
 Optional (either this or the `--class-hash` must be specified).

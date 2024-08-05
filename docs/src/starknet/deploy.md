@@ -35,7 +35,7 @@ transaction_hash: 0x64a62a000240e034d1862c2bbfa154aac6a8195b4b2e570f38bf4fd47a5a
 
 ### Deploying contract by name
 
-A contract can also be deployed by specifying its name as a `--contract-name` argument, instead of a class hash. The contract is going to be automatically declared if it hasn't been yet.
+	A contract can also be deployed by specifying its name as a `--contract-name` argument, instead of a class hash.
 
 ```shell
 $ sncast deploy \

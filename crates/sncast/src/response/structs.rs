@@ -123,6 +123,38 @@ pub struct ScriptInitResponse {
 
 impl CommandResponse for ScriptInitResponse {}
 
+#[derive(Serialize)]
+pub struct DeclareDeployResponse {
+    class_hash: Option<Felt>,
+    declare_transaction_hash: Option<Felt>,
+    contract_address: Felt,
+    deploy_transaction_hash: Felt,
+}
+
+impl DeclareDeployResponse {
+    pub fn new(declare: Option<DeclareResponse>, deploy: DeployResponse) -> Self {
+        let class_hash = declare.as_ref().map(|it| it.class_hash.clone());
+        let declare_transaction_hash = declare.as_ref().map(|it| it.transaction_hash.clone());
+
+        let DeployResponse {
+            contract_address,
+            transaction_hash: deploy_transaction_hash,
+        } = deploy;
+
+        let contract_address = contract_address;
+        let deploy_transaction_hash = deploy_transaction_hash;
+
+        Self {
+            class_hash,
+            declare_transaction_hash,
+            contract_address,
+            deploy_transaction_hash,
+        }
+    }
+}
+
+impl CommandResponse for DeclareDeployResponse {}
+
 #[derive(Serialize, CairoSerialize)]
 pub enum FinalityStatus {
     Received,
