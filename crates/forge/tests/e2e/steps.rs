@@ -82,7 +82,6 @@ fn should_allow_more_than_4m() {
     );
 }
 #[test]
-#[ignore] // This is fixed in this PR: https://github.com/foundry-rs/starknet-foundry/pull/2237
 fn should_default_to_4m() {
     let temp = setup_package("steps");
 
