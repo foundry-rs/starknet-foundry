@@ -18,9 +18,9 @@ use runtime::{starknet::context::build_context, ExtendedRuntime, StarknetRuntime
 use starknet_api::block::{BlockNumber, BlockTimestamp};
 use std::{default::Default, num::NonZeroU128};
 use universal_sierra_compiler_api::AssembledProgramWithDebugInfo;
-struct FakeStateReader;
+struct PhantomStateReader;
 
-impl StateReader for FakeStateReader {
+impl StateReader for PhantomStateReader {
     fn get_class_hash_at(
         &self,
         _contract_address: starknet_api::core::ContractAddress,
@@ -62,7 +62,7 @@ pub fn run_config_pass(
     test_details: &TestDetails,
     casm_program: &AssembledProgramWithDebugInfo,
 ) -> Result<RawForgeConfig> {
-    let mut cached_state = CachedState::new(FakeStateReader);
+    let mut cached_state = CachedState::new(PhantomStateReader);
     let block_info = BlockInfo {
         block_number: BlockNumber(0),
         block_timestamp: BlockTimestamp(0),
