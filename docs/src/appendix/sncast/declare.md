@@ -3,13 +3,19 @@ Send a declare transaction of Cairo contract to Starknet.
 
 ## Required Common Arguments — Passed By CLI or Specified in `snfoundry.toml`
 
-* [`url`](./common.md#--url--u-rpc_url)
 * [`account`](./common.md#--account--a-account_name)
 
 ## `--contract-name, -c <CONTRACT_NAME>`
 Required.
 
 Name of the contract. Contract name is a part after the `mod` keyword in your contract file.
+
+## `--url, -u <RPC_URL>`
+Optional.
+
+Starknet RPC node url address.
+
+Overrides url from `snfoundry.toml`.
 
 ## `--max-fee, -m <MAX_FEE>`
 Optional.

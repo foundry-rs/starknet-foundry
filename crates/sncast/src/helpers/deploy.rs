@@ -22,7 +22,7 @@ pub struct DeployArgs {
     pub salt: Option<FieldElement>,
 
     /// If true, salt will be modified with an account address
-    #[clap(short, long)]
+    #[clap(long)]
     pub unique: bool,
 
     /// Nonce of the transaction. If not provided, nonce will be set automatically

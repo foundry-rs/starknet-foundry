@@ -38,11 +38,11 @@ async fn test_happy_case(account: &str) {
         accounts_json_path.as_str(),
         "--account",
         account,
-        "--url",
-        URL,
         "script",
         "run",
         &script_name,
+        "--url",
+        URL,
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
@@ -65,11 +65,11 @@ async fn test_run_script_from_different_directory_no_path_to_scarb_toml() {
         accounts_json_path.as_str(),
         "--account",
         "user1",
-        "--url",
-        URL,
         "script",
         "run",
         &script_name,
+        "--url",
+        URL,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -93,11 +93,11 @@ async fn test_fail_when_using_starknet_syscall() {
         accounts_json_path.as_str(),
         "--account",
         "user1",
-        "--url",
-        URL,
         "script",
         "run",
         &script_name,
+        "--url",
+        URL,
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
@@ -123,11 +123,11 @@ async fn test_incompatible_sncast_std_version() {
         accounts_json_path.as_str(),
         "--account",
         "user4",
-        "--url",
-        URL,
         "script",
         "run",
         &script_name,
+        "--url",
+        URL,
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
@@ -154,11 +154,11 @@ async fn test_multiple_packages_not_picked() {
         accounts_json_path.as_str(),
         "--account",
         "user4",
-        "--url",
-        URL,
         "script",
         "run",
         &script_name,
+        "--url",
+        URL,
     ];
 
     let snapbox = runner(&args).current_dir(workspace_dir.path());
@@ -185,13 +185,13 @@ async fn test_multiple_packages_happy_case() {
         accounts_json_path.as_str(),
         "--account",
         "user4",
-        "--url",
-        URL,
         "script",
         "run",
         "--package",
         &script_name,
         &script_name,
+        "--url",
+        URL,
     ];
 
     let snapbox = runner(&args).current_dir(workspace_dir.path());
@@ -223,11 +223,11 @@ async fn test_run_script_display_debug_traits() {
         accounts_json_path.as_str(),
         "--account",
         "user6",
-        "--url",
-        URL,
         "script",
         "run",
         &script_name,
+        "--url",
+        URL,
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
@@ -261,11 +261,11 @@ async fn test_nonexistent_account_address() {
         "../../../accounts/faulty_accounts.json",
         "--account",
         "with_nonexistent_address",
-        "--url",
-        URL,
         "script",
         "run",
         &script_name,
+        "--url",
+        URL,
     ];
 
     let snapbox = runner(&args).current_dir(SCRIPTS_DIR.to_owned() + "/map_script/scripts");
@@ -283,7 +283,7 @@ async fn test_nonexistent_account_address() {
 #[tokio::test]
 async fn test_no_account_passed() {
     let script_name = "map_script";
-    let args = vec!["--url", URL, "script", "run", &script_name];
+    let args = vec!["script", "run", &script_name, "--url", URL];
 
     let snapbox = runner(&args).current_dir(SCRIPTS_DIR.to_owned() + "/map_script/scripts");
     let output = snapbox.assert().success();
@@ -312,11 +312,11 @@ async fn test_missing_field() {
         accounts_json_path.as_str(),
         "--account",
         "user4",
-        "--url",
-        URL,
         "script",
         "run",
         &script_name,
+        "--url",
+        URL,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -347,11 +347,11 @@ async fn test_run_script_twice_with_state_file_enabled() {
         accounts_json_path.as_str(),
         "--account",
         "user7",
-        "--url",
-        URL,
         "script",
         "run",
         &script_name,
+        "--url",
+        URL,
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
@@ -405,11 +405,11 @@ async fn test_state_file_contains_all_failed_txs() {
         accounts_json_path.as_str(),
         "--account",
         "user10",
-        "--url",
-        URL,
         "script",
         "run",
         &script_name,
+        "--url",
+        URL,
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
@@ -487,11 +487,11 @@ async fn test_state_file_rerun_failed_tx() {
         accounts_json_path.as_str(),
         "--account",
         "user4",
-        "--url",
-        URL,
         "script",
         "run",
         &script_name,
+        "--url",
+        URL,
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
@@ -529,13 +529,13 @@ async fn test_using_release_profile() {
         accounts_json_path.as_str(),
         "--account",
         "user5",
-        "--url",
-        URL,
         "--profile",
         "release",
         "script",
         "run",
         &script_name,
+        "--url",
+        URL,
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());

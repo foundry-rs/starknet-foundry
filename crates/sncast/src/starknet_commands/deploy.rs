@@ -4,6 +4,7 @@ use clap::Args;
 use sncast::helpers::deploy::{DeployArgs, DeployVersion};
 use sncast::helpers::error::token_not_supported_for_deployment;
 use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken, PayableTransaction};
+use sncast::helpers::rpc::RpcArgs;
 use sncast::helpers::scarb_utils::{read_manifest_and_build_artifacts, CompiledContract};
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::structs::{DeployResponse, Felt};
@@ -34,6 +35,9 @@ pub struct Deploy {
 
     #[clap(flatten)]
     pub fee_args: FeeArgs,
+
+    #[clap(flatten)]
+    pub rpc: RpcArgs,
 }
 
 impl From<DeclareDeploy> for Deploy {
@@ -42,6 +46,7 @@ impl From<DeclareDeploy> for Deploy {
             contract_name,
             deploy_args,
             fee_token,
+            rpc,
         } = declare_deploy;
 
         let fee_args = FeeArgs {
@@ -54,6 +59,7 @@ impl From<DeclareDeploy> for Deploy {
             contract_name: Some(contract_name),
             args: deploy_args,
             fee_args,
+            rpc,
         }
     }
 }

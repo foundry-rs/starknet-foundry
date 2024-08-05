@@ -5,6 +5,7 @@ use scarb_api::StarknetContractArtifacts;
 use sncast::helpers::deploy::DeployArgs;
 use sncast::helpers::error::token_not_supported_for_declaration;
 use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken, PayableTransaction};
+use sncast::helpers::rpc::RpcArgs;
 use sncast::helpers::scarb_utils::CompiledContract;
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::structs::DeclareResponse;
@@ -44,6 +45,9 @@ pub struct Declare {
     /// Version of the declaration (can be inferred from fee token)
     #[clap(short, long)]
     pub version: Option<DeclareVersion>,
+
+    #[clap(flatten)]
+    pub rpc: RpcArgs,
 }
 
 #[derive(ValueEnum, Debug, Clone)]
@@ -63,6 +67,7 @@ impl From<&DeclareDeploy> for Declare {
             contract_name,
             deploy_args: DeployArgs { package, .. },
             fee_token,
+            rpc,
         } = &declare_deploy;
 
         let fee_args = FeeArgs {
@@ -76,6 +81,7 @@ impl From<&DeclareDeploy> for Declare {
             nonce: None,
             package: package.to_owned(),
             version: None,
+            rpc: rpc.to_owned(),
         }
     }
 }

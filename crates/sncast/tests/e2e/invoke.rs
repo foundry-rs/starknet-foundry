@@ -1,9 +1,9 @@
 use crate::helpers::constants::{
-    ACCOUNT, DEVNET_OZ_CLASS_HASH_CAIRO_0, MAP_CONTRACT_ADDRESS_SEPOLIA, URL,
+    ACCOUNT, ACCOUNT_FILE_PATH, DEVNET_OZ_CLASS_HASH_CAIRO_0, MAP_CONTRACT_ADDRESS_SEPOLIA, URL,
 };
 use crate::helpers::fixtures::{
-    create_and_deploy_account, create_and_deploy_oz_account, default_cli_args,
-    get_transaction_hash, get_transaction_receipt,
+    create_and_deploy_account, create_and_deploy_oz_account, get_transaction_hash,
+    get_transaction_receipt,
 };
 use crate::helpers::runner::runner;
 use indoc::indoc;
@@ -20,14 +20,18 @@ use test_case::test_case;
 #[test_case("argent"; "argent_account")]
 #[test_case("braavos"; "braavos_account")]
 #[tokio::test]
-async fn test_happy_case_eth(account: &str) {
-    let mut args = default_cli_args();
-    args.append(&mut vec![
+
+async fn test_happy_case(account: &str) {
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
         "--account",
         account,
         "--int-format",
         "--json",
         "invoke",
+        "--url",
+        URL,
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
@@ -38,7 +42,7 @@ async fn test_happy_case_eth(account: &str) {
         "99999999999999999",
         "--fee-token",
         "eth",
-    ]);
+    ];
 
     let snapbox = runner(&args);
     let output = snapbox.assert().success().get_output().stdout.clone();
@@ -57,8 +61,6 @@ async fn test_happy_case_eth(account: &str) {
 async fn test_happy_case_strk(class_hash: FieldElement, account_type: AccountType) {
     let tempdir = create_and_deploy_account(class_hash, account_type).await;
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         "accounts.json",
         "--account",
@@ -66,6 +68,8 @@ async fn test_happy_case_strk(class_hash: FieldElement, account_type: AccountTyp
         "--int-format",
         "--json",
         "invoke",
+        "--url",
+        URL,
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
@@ -93,8 +97,6 @@ async fn test_happy_case_strk(class_hash: FieldElement, account_type: AccountTyp
 async fn test_happy_case_versions(version: &str) {
     let tempdir = create_and_deploy_oz_account().await;
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         "accounts.json",
         "--account",
@@ -102,6 +104,8 @@ async fn test_happy_case_versions(version: &str) {
         "--int-format",
         "--json",
         "invoke",
+        "--url",
+        URL,
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
@@ -137,8 +141,6 @@ async fn test_happy_case_strk_different_fees(
 ) {
     let tempdir = create_and_deploy_oz_account().await;
     let mut args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         "accounts.json",
         "--account",
@@ -146,6 +148,8 @@ async fn test_happy_case_strk_different_fees(
         "--int-format",
         "--json",
         "invoke",
+        "--url",
+        URL,
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
@@ -182,8 +186,6 @@ async fn test_happy_case_strk_different_fees(
 async fn test_invalid_version_and_token_combination(fee_token: &str, version: &str) {
     let tempdir = create_and_deploy_oz_account().await;
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         "accounts.json",
         "--account",
@@ -191,6 +193,8 @@ async fn test_invalid_version_and_token_combination(fee_token: &str, version: &s
         "--int-format",
         "--json",
         "invoke",
+        "--url",
+        URL,
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
@@ -216,18 +220,21 @@ async fn test_invalid_version_and_token_combination(fee_token: &str, version: &s
 
 #[tokio::test]
 async fn test_contract_does_not_exist() {
-    let mut args = default_cli_args();
-    args.append(&mut vec![
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
         "--account",
         ACCOUNT,
         "invoke",
+        "--url",
+        URL,
         "--contract-address",
         "0x1",
         "--function",
         "put",
         "--fee-token",
         "eth",
-    ]);
+    ];
 
     let snapbox = runner(&args);
     let output = snapbox.assert().success();
@@ -243,18 +250,21 @@ async fn test_contract_does_not_exist() {
 
 #[test]
 fn test_wrong_function_name() {
-    let mut args = default_cli_args();
-    args.append(&mut vec![
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
         "--account",
         "user2",
         "invoke",
+        "--url",
+        URL,
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
         "nonexistent_put",
         "--fee-token",
         "eth",
-    ]);
+    ];
 
     let snapbox = runner(&args);
     let output = snapbox.assert().success();
@@ -270,11 +280,14 @@ fn test_wrong_function_name() {
 
 #[test]
 fn test_wrong_calldata() {
-    let mut args = default_cli_args();
-    args.append(&mut vec![
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
         "--account",
         "user5",
         "invoke",
+        "--url",
+        URL,
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
@@ -283,7 +296,7 @@ fn test_wrong_calldata() {
         "0x1",
         "--fee-token",
         "eth",
-    ]);
+    ];
 
     let snapbox = runner(&args);
     let output = snapbox.assert().success();
@@ -299,12 +312,15 @@ fn test_wrong_calldata() {
 
 #[test]
 fn test_too_low_max_fee() {
-    let mut args = default_cli_args();
-    args.append(&mut vec![
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
         "--account",
         "user11",
         "--wait",
         "invoke",
+        "--url",
+        URL,
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
@@ -316,7 +332,7 @@ fn test_too_low_max_fee() {
         "1",
         "--fee-token",
         "eth",
-    ]);
+    ];
 
     let snapbox = runner(&args);
     let output = snapbox.assert().success();

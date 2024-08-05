@@ -23,8 +23,6 @@ fn test_happy_case_eth(account: &str) {
     let accounts_file = &get_accounts_path(ACCOUNT_FILE_PATH)[..];
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "--account",
@@ -32,6 +30,8 @@ fn test_happy_case_eth(account: &str) {
         "--int-format",
         "--json",
         "declare-deploy",
+        "--url",
+        URL,
         "--contract-name",
         MAP_CONTRACT_NAME,
         "--fee-token",
@@ -60,8 +60,6 @@ fn test_happy_case_strk(account: &str) {
     let accounts_file = &get_accounts_path(ACCOUNT_FILE_PATH)[..];
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "--account",
@@ -69,6 +67,8 @@ fn test_happy_case_strk(account: &str) {
         "--int-format",
         "--json",
         "declare-deploy",
+        "--url",
+        URL,
         "--contract-name",
         MAP_CONTRACT_NAME,
         "--fee-token",
@@ -98,8 +98,6 @@ fn test_happy_case_specify_package() {
     let accounts_file = &get_accounts_path(ACCOUNT_FILE_PATH)[..];
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "--account",
@@ -107,6 +105,8 @@ fn test_happy_case_specify_package() {
         "--int-format",
         "--json",
         "declare-deploy",
+        "--url",
+        URL,
         "--contract-name",
         "supercomplexcode",
         "--salt",
@@ -141,14 +141,14 @@ fn test_happy_case_contract_already_declared() {
     let accounts_file = &get_accounts_path("tests/data/accounts/accounts.json")[..];
 
     let mut args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "--account",
         "user1",
         "--json",
         "declare",
+        "--url",
+        URL,
         "--contract-name",
         MAP_CONTRACT_NAME,
         "--fee-token",
@@ -157,7 +157,7 @@ fn test_happy_case_contract_already_declared() {
 
     runner(&args).current_dir(tempdir.path()).assert().success();
 
-    args[7] = "declare-deploy";
+    args[5] = "declare-deploy";
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
@@ -175,13 +175,13 @@ fn test_nonexistent_contract() {
     let accounts_file = &get_accounts_path("tests/data/accounts/accounts.json")[..];
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "--account",
         "user1",
         "declare-deploy",
+        "--url",
+        URL,
         "--contract-name",
         "some_non_existent_name",
         "--fee-token",
@@ -208,14 +208,14 @@ fn test_multiple_packages() {
     let accounts_file = &get_accounts_path(ACCOUNT_FILE_PATH)[..];
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "--account",
         "user1",
         "--int-format",
         "declare-deploy",
+        "--url",
+        URL,
         "--contract-name",
         "supercomplexcode",
         "--salt",
@@ -243,14 +243,14 @@ fn test_invalid_nonce() {
     let accounts_file = &get_accounts_path(ACCOUNT_FILE_PATH)[..];
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "--account",
         "user1",
         "--json",
         "declare-deploy",
+        "--url",
+        URL,
         "--contract-name",
         MAP_CONTRACT_NAME,
         "--fee-token",
@@ -277,13 +277,13 @@ fn test_no_scarb_toml() {
     let accounts_file = &get_accounts_path("tests/data/accounts/accounts.json")[..];
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "--account",
         "user1",
         "declare-deploy",
+        "--url",
+        URL,
         "--contract-name",
         "some_non_existent_name",
         "--fee-token",
@@ -316,8 +316,6 @@ fn test_no_scarb_profile() {
     .expect("Failed to copy config file to temp dir");
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "--account",
@@ -325,6 +323,8 @@ fn test_no_scarb_profile() {
         "--profile",
         "profile5",
         "declare-deploy",
+        "--url",
+        URL,
         "--contract-name",
         MAP_CONTRACT_NAME,
         "--fee-token",

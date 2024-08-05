@@ -5,12 +5,9 @@ use crate::starknet_commands::{
     script::Script, tx_status::TxStatus,
 };
 use anyhow::{bail, Context, Result};
-use configuration::load_global_config;
-use sncast::response::print::{print_command_result, OutputFormat};
-
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand};
-use shared::verify_and_warn_if_incompatible_rpc_version;
+use configuration::load_global_config;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
 use sncast::helpers::fee::PayableTransaction;
@@ -19,14 +16,13 @@ use sncast::helpers::scarb_utils::{
     get_scarb_metadata_with_deps, read_manifest_and_build_artifacts, BuildConfig,
 };
 use sncast::response::errors::handle_starknet_command_error;
+use sncast::response::print::{print_command_result, OutputFormat};
 use sncast::response::structs::DeclareDeployResponse;
 use sncast::{
     chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_default_state_file_name,
-    get_provider, NumbersFormat, ValidatedWaitParams, WaitForTx,
+    NumbersFormat, ValidatedWaitParams, WaitForTx,
 };
 use starknet::core::utils::get_selector_from_name;
-use starknet::providers::jsonrpc::HttpTransport;
-use starknet::providers::JsonRpcClient;
 use starknet_commands::account::list::print_account_list;
 use starknet_commands::declare_deploy::DeclareDeploy;
 use starknet_commands::deploy::DeployResolved;
@@ -72,10 +68,6 @@ struct Cli {
     /// Profile name in snfoundry.toml config file
     #[clap(short, long)]
     profile: Option<String>,
-
-    /// RPC provider url address; overrides url from snfoundry.toml
-    #[clap(short = 'u', long = "url")]
-    rpc_url: Option<String>,
 
     /// Account to be used for contract declaration;
     /// When using keystore (`--keystore`), this should be a path to account file
@@ -168,11 +160,10 @@ fn main() -> Result<()> {
     } else {
         let mut config = load_global_config::<CastConfig>(&None, &cli.profile)?;
         update_cast_config(&mut config, &cli);
-        let provider = get_provider(&config.url)?;
+
         runtime.block_on(run_async_command(
             cli,
             config,
-            provider,
             numbers_format,
             output_format,
         ))
@@ -183,12 +174,9 @@ fn main() -> Result<()> {
 async fn run_async_command(
     cli: Cli,
     config: CastConfig,
-    provider: JsonRpcClient<HttpTransport>,
     numbers_format: NumbersFormat,
     output_format: OutputFormat,
 ) -> Result<()> {
-    verify_and_warn_if_incompatible_rpc_version(&provider, &config.url).await?;
-
     let wait_config = WaitForTx {
         wait: cli.wait,
         wait_params: config.wait_params,
@@ -196,7 +184,10 @@ async fn run_async_command(
 
     match cli.command {
         Commands::Declare(declare) => {
+            let provider = declare.rpc.get_provider(&config).await?;
+
             declare.validate()?;
+
             let account = get_account(
                 &config.account,
                 &config.accounts_file,
@@ -221,6 +212,8 @@ async fn run_async_command(
         }
 
         Commands::Deploy(deploy) => {
+            let provider = deploy.rpc.get_provider(&config).await?;
+
             let account = get_account(
                 &config.account,
                 &config.accounts_file,
@@ -253,6 +246,8 @@ async fn run_async_command(
         }
 
         Commands::DeclareDeploy(declare_deploy) => {
+            let provider = declare_deploy.rpc.get_provider(&config).await?;
+
             let account = get_account(
                 &config.account,
                 &config.accounts_file,
@@ -325,6 +320,8 @@ async fn run_async_command(
         }
 
         Commands::Call(call) => {
+            let provider = call.rpc.get_provider(&config).await?;
+
             let block_id = get_block_id(&call.block_id)?;
 
             let mut result = starknet_commands::call::call(
@@ -343,7 +340,10 @@ async fn run_async_command(
         }
 
         Commands::Invoke(invoke) => {
+            let provider = invoke.rpc.get_provider(&config).await?;
+
             invoke.validate()?;
+
             let account = get_account(
                 &config.account,
                 &config.accounts_file,
@@ -385,7 +385,10 @@ async fn run_async_command(
                     }
                 }
                 starknet_commands::multicall::Commands::Run(run) => {
+                    let provider = run.rpc.get_provider(&config).await?;
+
                     run.validate()?;
+
                     let account = get_account(
                         &config.account,
                         &config.accounts_file,
@@ -410,6 +413,8 @@ async fn run_async_command(
 
         Commands::Account(account) => match account.command {
             account::Commands::Add(add) => {
+                let provider = add.rpc.get_provider(&config).await?;
+
                 let mut result = starknet_commands::account::add::add(
                     &config.url,
                     &add.name.clone(),
@@ -424,6 +429,8 @@ async fn run_async_command(
             }
 
             account::Commands::Create(create) => {
+                let provider = create.rpc.get_provider(&config).await?;
+
                 let chain_id = get_chain_id(&provider).await?;
                 let account = if config.keystore.is_none() {
                     create
@@ -457,6 +464,9 @@ async fn run_async_command(
 
             account::Commands::Deploy(deploy) => {
                 deploy.validate()?;
+
+                let provider = deploy.rpc.get_provider(&config).await?;
+
                 let chain_id = get_chain_id(&provider).await?;
                 let keystore_path = config.keystore.clone();
                 let mut result = starknet_commands::account::deploy::deploy(
@@ -480,6 +490,8 @@ async fn run_async_command(
             }
 
             account::Commands::Delete(delete) => {
+                let provider = delete.rpc.get_provider(&config).await?;
+
                 let network_name = match delete.network {
                     Some(network) => network,
                     None => chain_id_to_network_name(get_chain_id(&provider).await?),
@@ -509,14 +521,19 @@ async fn run_async_command(
             ),
         },
 
-        Commands::ShowConfig(_) => {
+        Commands::ShowConfig(show) => {
+            let provider = show.rpc.get_provider(&config).await?;
+
             let mut result =
-                starknet_commands::show_config::show_config(&provider, config, cli.profile).await;
+                starknet_commands::show_config::show_config(&show, &provider, config, cli.profile)
+                    .await;
             print_command_result("show-config", &mut result, numbers_format, &output_format)?;
             Ok(())
         }
 
         Commands::TxStatus(tx_status) => {
+            let provider = tx_status.rpc.get_provider(&config).await?;
+
             let mut result =
                 starknet_commands::tx_status::tx_status(&provider, tx_status.transaction_hash)
                     .await
@@ -577,11 +594,7 @@ fn run_script_command(
                 &cli.profile,
             )?;
             update_cast_config(&mut config, cli);
-            let provider = get_provider(&config.url)?;
-            runtime.block_on(verify_and_warn_if_incompatible_rpc_version(
-                &provider,
-                &config.url,
-            ))?;
+            let provider = runtime.block_on(run.rpc.get_provider(&config))?;
 
             let mut artifacts = build_and_load_artifacts(
                 &package_metadata,
@@ -639,7 +652,6 @@ fn update_cast_config(config: &mut CastConfig, cli: &Cli) {
         };
     }
 
-    config.url = clone_or_else!(cli.rpc_url, config.url);
     config.account = clone_or_else!(cli.account, config.account);
     config.keystore = cli.keystore.clone().or(config.keystore.clone());
 
