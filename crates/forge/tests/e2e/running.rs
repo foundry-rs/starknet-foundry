@@ -868,7 +868,7 @@ fn printing_in_contracts() {
 }
 
 #[test]
-#[ignore] //TODO(#2253) unignore when there exists prvious version that supports new attributes
+#[ignore] //TODO(#2253) unignore when there exists previous version that supports new attributes
 fn incompatible_snforge_std_version_warning() {
     let temp = setup_package("steps");
     let manifest_path = temp.child("Scarb.toml");
