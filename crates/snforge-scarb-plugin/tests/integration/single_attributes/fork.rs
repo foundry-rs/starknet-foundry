@@ -135,7 +135,7 @@ fn accepts_inline_config() {
                     snforge_std::_config_types::ForkConfig::Inline(
                         snforge_std::_config_types::InlineForkConfig {
                             url: "http://example.com/",
-                            block: BlockNumber(0x17)
+                            block: snforge_std::_config_types::BlockId::BlockNumber(0x17)
                         }
                     )
                     .serialize(ref data);
