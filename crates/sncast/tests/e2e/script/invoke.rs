@@ -22,11 +22,11 @@ async fn test_max_fee_too_low(account: &str) {
         accounts_json_path.as_str(),
         "--account",
         account,
-        "--url",
-        URL,
         "script",
         "run",
         &script_name,
+        "--url",
+        URL,
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
@@ -54,11 +54,11 @@ async fn test_contract_does_not_exist() {
         accounts_json_path.as_str(),
         "--account",
         "user4",
-        "--url",
-        URL,
         "script",
         "run",
         &script_name,
+        "--url",
+        URL,
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
@@ -87,11 +87,11 @@ fn test_wrong_function_name() {
         accounts_json_path.as_str(),
         "--account",
         "user4",
-        "--url",
-        URL,
         "script",
         "run",
         &script_name,
+        "--url",
+        URL,
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
@@ -120,11 +120,11 @@ fn test_wrong_calldata() {
         accounts_json_path.as_str(),
         "--account",
         "user4",
-        "--url",
-        URL,
         "script",
         "run",
         &script_name,
+        "--url",
+        URL,
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());

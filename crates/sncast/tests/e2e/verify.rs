@@ -1,5 +1,5 @@
-use crate::helpers::constants::{CONTRACTS_DIR, MAP_CONTRACT_ADDRESS_SEPOLIA};
-use crate::helpers::fixtures::{copy_directory_to_tempdir, default_cli_args};
+use crate::helpers::constants::{ACCOUNT_FILE_PATH, CONTRACTS_DIR, MAP_CONTRACT_ADDRESS_SEPOLIA};
+use crate::helpers::fixtures::copy_directory_to_tempdir;
 use crate::helpers::runner::runner;
 use indoc::formatdoc;
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
@@ -24,8 +24,9 @@ async fn test_happy_case() {
         .mount(&mock_server)
         .await;
 
-    let mut args = default_cli_args();
-    args.append(&mut vec![
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
         "verify",
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
@@ -35,7 +36,7 @@ async fn test_happy_case() {
         "walnut",
         "--network",
         "sepolia",
-    ]);
+    ];
 
     let snapbox = runner(&args)
         .env("WALNUT_API_URL", mock_server.uri())
@@ -74,8 +75,9 @@ async fn test_failed_verification() {
         .mount(&mock_server)
         .await;
 
-    let mut args = default_cli_args();
-    args.append(&mut vec![
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
         "verify",
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
@@ -85,7 +87,7 @@ async fn test_failed_verification() {
         "walnut",
         "--network",
         "sepolia",
-    ]);
+    ];
 
     let snapbox = runner(&args)
         .env("WALNUT_API_URL", mock_server.uri())
@@ -110,8 +112,9 @@ async fn test_failed_verification() {
 async fn test_verification_abort() {
     let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
 
-    let mut args = default_cli_args();
-    args.append(&mut vec![
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
         "verify",
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
@@ -121,7 +124,7 @@ async fn test_verification_abort() {
         "walnut",
         "--network",
         "sepolia",
-    ]);
+    ];
 
     let snapbox = runner(&args).current_dir(contract_path.path()).stdin("n");
 
@@ -142,8 +145,9 @@ async fn test_verification_abort() {
 async fn test_wrong_contract_name_passed() {
     let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
 
-    let mut args = default_cli_args();
-    args.append(&mut vec![
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
         "verify",
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
@@ -153,7 +157,7 @@ async fn test_wrong_contract_name_passed() {
         "walnut",
         "--network",
         "sepolia",
-    ]);
+    ];
 
     let snapbox = runner(&args).current_dir(contract_path.path()).stdin("Y");
 
@@ -188,8 +192,9 @@ async fn test_happy_case_with_confirm_verification_flag() {
         .mount(&mock_server)
         .await;
 
-    let mut args = default_cli_args();
-    args.append(&mut vec![
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
         "verify",
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
@@ -200,7 +205,7 @@ async fn test_happy_case_with_confirm_verification_flag() {
         "--network",
         "sepolia",
         "--confirm-verification",
-    ]);
+    ];
 
     let snapbox = runner(&args)
         .env("WALNUT_API_URL", mock_server.uri())
@@ -238,8 +243,9 @@ async fn test_happy_case_specify_package() {
         .mount(&mock_server)
         .await;
 
-    let mut args = default_cli_args();
-    args.append(&mut vec![
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
         "verify",
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
@@ -251,7 +257,7 @@ async fn test_happy_case_specify_package() {
         "sepolia",
         "--package",
         "main_workspace",
-    ]);
+    ];
 
     let snapbox = runner(&args)
         .env("WALNUT_API_URL", mock_server.uri())
@@ -290,8 +296,9 @@ async fn test_worskpaces_package_specified_virtual_fibonacci() {
         .mount(&mock_server)
         .await;
 
-    let mut args = default_cli_args();
-    args.append(&mut vec![
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
         "verify",
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
@@ -303,7 +310,7 @@ async fn test_worskpaces_package_specified_virtual_fibonacci() {
         "sepolia",
         "--package",
         "cast_fibonacci",
-    ]);
+    ];
 
     let snapbox = runner(&args)
         .env("WALNUT_API_URL", mock_server.uri())
@@ -328,8 +335,9 @@ async fn test_worskpaces_package_specified_virtual_fibonacci() {
 async fn test_worskpaces_package_no_contract() {
     let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/virtual_workspace");
 
-    let mut args = default_cli_args();
-    args.append(&mut vec![
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
         "verify",
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
@@ -341,7 +349,7 @@ async fn test_worskpaces_package_no_contract() {
         "sepolia",
         "--package",
         "cast_addition",
-    ]);
+    ];
 
     let snapbox = runner(&args).current_dir(tempdir.path()).stdin("Y");
 

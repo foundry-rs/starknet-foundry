@@ -3,7 +3,6 @@ Send an invoke transaction to Starknet.
 
 ## Required Common Arguments — Passed By CLI or Specified in `snfoundry.toml`
 
-* [`url`](./common.md#--url--u-rpc_url)
 * [`account`](./common.md#--account--a-account_name)
 
 ## `--contract-address, -a <CONTRACT_ADDRESS>`
@@ -21,6 +20,13 @@ Optional.
 
 Inputs to the function, represented by a list of space-delimited values `0x1 2 0x3`.
 Calldata arguments may be either 0x hex or decimal felts.
+
+## `--url, -u <RPC_URL>`
+Optional.
+
+Starknet RPC node url address.
+
+Overrides url from `snfoundry.toml`.
 
 ## `--max-fee, -m <MAX_FEE>`
 Optional.
