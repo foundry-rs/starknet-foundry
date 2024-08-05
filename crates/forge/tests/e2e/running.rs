@@ -613,7 +613,6 @@ fn with_exit_first() {
 
 
         Collected 2 test(s) from exit_first package
-        Running 0 test(s) from src/
         Running 2 test(s) from tests/
         [FAIL] exit_first_integrationtest::ext_function_test::simple_test
 
