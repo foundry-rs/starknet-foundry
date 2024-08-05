@@ -78,7 +78,7 @@ fn try_calling_nonexistent_contract() {
         &[],
     );
 
-    let msg = "Contract not deployed at address: 0x0000000000000000000000000000000000000000000000000000000000000001";
+    let msg = "Contract not deployed at address: 0x1";
     let panic_data_felts: Vec<Felt252> = ByteArray::from(msg).serialize_with_magic();
     assert_panic(output, &panic_data_felts);
 }
@@ -129,7 +129,7 @@ fn test_forking_at_block_number() {
             &[],
         );
 
-        let msg = "Contract not deployed at address: 0x0202de98471a4fae6bcbabb96cab00437d381abc58b02509043778074d6781e9";
+        let msg = "Contract not deployed at address: 0x202de98471a4fae6bcbabb96cab00437d381abc58b02509043778074d6781e9";
         let panic_data_felts: Vec<Felt252> = ByteArray::from(msg).serialize_with_magic();
         assert_panic(output, &panic_data_felts);
 
