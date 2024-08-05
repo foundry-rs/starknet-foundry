@@ -570,7 +570,7 @@ fn fork_store_load() {
             }}
 
             #[test]
-            #[fork(url: "{}", block_id: BlockId::Number(54060))]
+            #[fork(url: "{}", block_number: 54060)]
             fn fork_simple_decorator() {{
                 let dispatcher = IHelloStarknetDispatcher {{
                     contract_address: contract_address_const::<0x202de98471a4fae6bcbabb96cab00437d381abc58b02509043778074d6781e9>()

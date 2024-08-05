@@ -27,30 +27,30 @@ fn simple_package() {
     [PASS] simple_package::tests::test_fib [..]
     [IGNORE] simple_package::tests::ignored_test
     Running 11 test(s) from tests/
-    [PASS] tests::contract::call_and_invoke [..]
-    [PASS] tests::ext_function_test::test_my_test [..]
-    [IGNORE] tests::ext_function_test::ignored_test
-    [PASS] tests::ext_function_test::test_simple [..]
-    [PASS] tests::test_simple::test_simple [..]
-    [PASS] tests::test_simple::test_simple2 [..]
-    [PASS] tests::test_simple::test_two [..]
-    [PASS] tests::test_simple::test_two_and_two [..]
-    [FAIL] tests::test_simple::test_failing
+    [PASS] simple_package_integrationtest::contract::call_and_invoke [..]
+    [PASS] simple_package_integrationtest::ext_function_test::test_my_test [..]
+    [IGNORE] simple_package_integrationtest::ext_function_test::ignored_test
+    [PASS] simple_package_integrationtest::ext_function_test::test_simple [..]
+    [PASS] simple_package_integrationtest::test_simple::test_simple [..]
+    [PASS] simple_package_integrationtest::test_simple::test_simple2 [..]
+    [PASS] simple_package_integrationtest::test_simple::test_two [..]
+    [PASS] simple_package_integrationtest::test_simple::test_two_and_two [..]
+    [FAIL] simple_package_integrationtest::test_simple::test_failing
     
     Failure data:
         0x6661696c696e6720636865636b ('failing check')
     
-    [FAIL] tests::test_simple::test_another_failing
+    [FAIL] simple_package_integrationtest::test_simple::test_another_failing
     
     Failure data:
         0x6661696c696e6720636865636b ('failing check')
     
-    [PASS] tests::without_prefix::five [..]
+    [PASS] simple_package_integrationtest::without_prefix::five [..]
     Tests: 9 passed, 2 failed, 0 skipped, 2 ignored, 0 filtered out
     
     Failures:
-        tests::test_simple::test_failing
-        tests::test_simple::test_another_failing
+        simple_package_integrationtest::test_simple::test_failing
+        simple_package_integrationtest::test_simple::test_another_failing
     "},
     );
 }
@@ -74,7 +74,7 @@ fn simple_package_with_git_dependency() {
             [[target.starknet-contract]]
 
             [dependencies]
-            starknet = "2.5.4"
+            starknet = "2.6.4"
             snforge_std = {{ git = "https://github.com/{}", branch = "{}" }}
             "#,
             remote_url,
@@ -98,30 +98,30 @@ fn simple_package_with_git_dependency() {
         [PASS] simple_package::tests::test_fib [..]
         [IGNORE] simple_package::tests::ignored_test
         Running 11 test(s) from tests/
-        [PASS] tests::contract::call_and_invoke [..]
-        [PASS] tests::ext_function_test::test_my_test [..]
-        [IGNORE] tests::ext_function_test::ignored_test
-        [PASS] tests::ext_function_test::test_simple [..]
-        [PASS] tests::test_simple::test_simple [..]
-        [PASS] tests::test_simple::test_simple2 [..]
-        [PASS] tests::test_simple::test_two [..]
-        [PASS] tests::test_simple::test_two_and_two [..]
-        [FAIL] tests::test_simple::test_failing
+        [PASS] simple_package_integrationtest::contract::call_and_invoke [..]
+        [PASS] simple_package_integrationtest::ext_function_test::test_my_test [..]
+        [IGNORE] simple_package_integrationtest::ext_function_test::ignored_test
+        [PASS] simple_package_integrationtest::ext_function_test::test_simple [..]
+        [PASS] simple_package_integrationtest::test_simple::test_simple [..]
+        [PASS] simple_package_integrationtest::test_simple::test_simple2 [..]
+        [PASS] simple_package_integrationtest::test_simple::test_two [..]
+        [PASS] simple_package_integrationtest::test_simple::test_two_and_two [..]
+        [FAIL] simple_package_integrationtest::test_simple::test_failing
         
         Failure data:
             0x6661696c696e6720636865636b ('failing check')
         
-        [FAIL] tests::test_simple::test_another_failing
+        [FAIL] simple_package_integrationtest::test_simple::test_another_failing
         
         Failure data:
             0x6661696c696e6720636865636b ('failing check')
         
-        [PASS] tests::without_prefix::five [..]
+        [PASS] simple_package_integrationtest::without_prefix::five [..]
         Tests: 9 passed, 2 failed, 0 skipped, 2 ignored, 0 filtered out
         
         Failures:
-            tests::test_simple::test_failing
-            tests::test_simple::test_another_failing
+            simple_package_integrationtest::test_simple::test_failing
+            simple_package_integrationtest::test_simple::test_another_failing
         ",
             remote_url.trim_end_matches(".git")
         ),
@@ -166,10 +166,9 @@ fn with_filter() {
 
 
         Collected 2 test(s) from simple_package package
-        Running 0 test(s) from src/
         Running 2 test(s) from tests/
-        [PASS] tests::test_simple::test_two [..]
-        [PASS] tests::test_simple::test_two_and_two [..]
+        [PASS] simple_package_integrationtest::test_simple::test_two [..]
+        [PASS] simple_package_integrationtest::test_simple::test_two_and_two [..]
         Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 11 filtered out
         "},
     );
@@ -192,11 +191,10 @@ fn with_filter_matching_module() {
         
         
         Collected 3 test(s) from simple_package package
-        Running 0 test(s) from src/
         Running 3 test(s) from tests/
-        [PASS] tests::ext_function_test::test_my_test [..]
-        [IGNORE] tests::ext_function_test::ignored_test
-        [PASS] tests::ext_function_test::test_simple [..]
+        [PASS] simple_package_integrationtest::ext_function_test::test_my_test [..]
+        [IGNORE] simple_package_integrationtest::ext_function_test::ignored_test
+        [PASS] simple_package_integrationtest::ext_function_test::test_simple [..]
         Tests: 2 passed, 0 failed, 0 skipped, 1 ignored, 10 filtered out
         "},
     );
@@ -207,7 +205,7 @@ fn with_exact_filter() {
     let temp = setup_package("simple_package");
 
     let output = test_runner(&temp)
-        .arg("tests::test_simple::test_two")
+        .arg("simple_package_integrationtest::test_simple::test_two")
         .arg("--exact")
         .assert()
         .success();
@@ -222,32 +220,7 @@ fn with_exact_filter() {
         Collected 1 test(s) from simple_package package
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
-        [PASS] tests::test_simple::test_two [..]
-        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 12 filtered out
-        "},
-    );
-}
-#[test]
-fn with_gas_usage() {
-    let temp = setup_package("simple_package");
-
-    let output = test_runner(&temp)
-        .arg("tests::test_simple::test_two")
-        .arg("--exact")
-        .assert()
-        .success();
-
-    assert_stdout_contains(
-        output,
-        indoc! {r"
-        [..]Compiling[..]
-        [..]Finished[..]
-
-
-        Collected 1 test(s) from simple_package package
-        Running 0 test(s) from src/
-        Running 1 test(s) from tests/
-        [PASS] tests::test_simple::test_two (gas: ~1)
+        [PASS] simple_package_integrationtest::test_simple::test_two [..]
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 12 filtered out
         "},
     );
@@ -291,7 +264,7 @@ fn with_ignored_flag() {
         Running 1 test(s) from src/
         [PASS] simple_package::tests::ignored_test [..]
         Running 1 test(s) from tests/
-        [FAIL] tests::ext_function_test::ignored_test
+        [FAIL] simple_package_integrationtest::ext_function_test::ignored_test
         
         Failure data:
             0x6e6f742070617373696e67 ('not passing')
@@ -299,7 +272,7 @@ fn with_ignored_flag() {
         Tests: 1 passed, 1 failed, 0 skipped, 0 ignored, 11 filtered out
         
         Failures:
-            tests::ext_function_test::ignored_test
+            simple_package_integrationtest::ext_function_test::ignored_test
         "},
     );
 }
@@ -322,35 +295,35 @@ fn with_include_ignored_flag() {
         [PASS] simple_package::tests::test_fib [..]
         [PASS] simple_package::tests::ignored_test [..]
         Running 11 test(s) from tests/
-        [PASS] tests::contract::call_and_invoke [..]
-        [PASS] tests::ext_function_test::test_my_test [..]
-        [FAIL] tests::ext_function_test::ignored_test
+        [PASS] simple_package_integrationtest::contract::call_and_invoke [..]
+        [PASS] simple_package_integrationtest::ext_function_test::test_my_test [..]
+        [FAIL] simple_package_integrationtest::ext_function_test::ignored_test
         
         Failure data:
             0x6e6f742070617373696e67 ('not passing')
         
-        [PASS] tests::ext_function_test::test_simple [..]
-        [PASS] tests::test_simple::test_simple [..]
-        [PASS] tests::test_simple::test_simple2 [..]
-        [PASS] tests::test_simple::test_two [..]
-        [PASS] tests::test_simple::test_two_and_two [..]
-        [FAIL] tests::test_simple::test_failing
+        [PASS] simple_package_integrationtest::ext_function_test::test_simple [..]
+        [PASS] simple_package_integrationtest::test_simple::test_simple [..]
+        [PASS] simple_package_integrationtest::test_simple::test_simple2 [..]
+        [PASS] simple_package_integrationtest::test_simple::test_two [..]
+        [PASS] simple_package_integrationtest::test_simple::test_two_and_two [..]
+        [FAIL] simple_package_integrationtest::test_simple::test_failing
         
         Failure data:
             0x6661696c696e6720636865636b ('failing check')
         
-        [FAIL] tests::test_simple::test_another_failing
+        [FAIL] simple_package_integrationtest::test_simple::test_another_failing
         
         Failure data:
             0x6661696c696e6720636865636b ('failing check')
         
-        [PASS] tests::without_prefix::five [..]
+        [PASS] simple_package_integrationtest::without_prefix::five [..]
         Tests: 10 passed, 3 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:
-            tests::ext_function_test::ignored_test
-            tests::test_simple::test_failing
-            tests::test_simple::test_another_failing
+            simple_package_integrationtest::ext_function_test::ignored_test
+            simple_package_integrationtest::test_simple::test_failing
+            simple_package_integrationtest::test_simple::test_another_failing
         "},
     );
 }
@@ -375,7 +348,7 @@ fn with_ignored_flag_and_filter() {
         Collected 1 test(s) from simple_package package
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
-        [FAIL] tests::ext_function_test::ignored_test
+        [FAIL] simple_package_integrationtest::ext_function_test::ignored_test
  
         Failure data:
             0x6e6f742070617373696e67 ('not passing')
@@ -383,7 +356,7 @@ fn with_ignored_flag_and_filter() {
         Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 12 filtered out
         
         Failures:
-            tests::ext_function_test::ignored_test
+            simple_package_integrationtest::ext_function_test::ignored_test
         "},
     );
 }
@@ -409,7 +382,7 @@ fn with_include_ignored_flag_and_filter() {
         Running 1 test(s) from src/
         [PASS] simple_package::tests::ignored_test [..]
         Running 1 test(s) from tests/
-        [FAIL] tests::ext_function_test::ignored_test
+        [FAIL] simple_package_integrationtest::ext_function_test::ignored_test
         
         Failure data:
             0x6e6f742070617373696e67 ('not passing')
@@ -417,7 +390,7 @@ fn with_include_ignored_flag_and_filter() {
         Tests: 1 passed, 1 failed, 0 skipped, 0 ignored, 11 filtered out
         
         Failures:
-            tests::ext_function_test::ignored_test
+            simple_package_integrationtest::ext_function_test::ignored_test
         "},
     );
 }
@@ -439,27 +412,27 @@ fn with_rerun_failed_flag_without_cache() {
         Running 2 test(s) from src/
         [PASS] simple_package::tests::test_fib [..]
         Running 11 test(s) from tests/
-        [PASS] tests::contract::call_and_invoke [..]
-        [PASS] tests::ext_function_test::test_my_test [..]
+        [PASS] simple_package_integrationtest::contract::call_and_invoke [..]
+        [PASS] simple_package_integrationtest::ext_function_test::test_my_test [..]
 
-        [PASS] tests::ext_function_test::test_simple [..]
-        [PASS] tests::test_simple::test_simple [..]
-        [PASS] tests::test_simple::test_simple2 [..]
-        [PASS] tests::test_simple::test_two [..]
-        [PASS] tests::test_simple::test_two_and_two [..]
-        [FAIL] tests::test_simple::test_failing
+        [PASS] simple_package_integrationtest::ext_function_test::test_simple [..]
+        [PASS] simple_package_integrationtest::test_simple::test_simple [..]
+        [PASS] simple_package_integrationtest::test_simple::test_simple2 [..]
+        [PASS] simple_package_integrationtest::test_simple::test_two [..]
+        [PASS] simple_package_integrationtest::test_simple::test_two_and_two [..]
+        [FAIL] simple_package_integrationtest::test_simple::test_failing
 
         Failure data:
             0x6661696c696e6720636865636b ('failing check')
 
-        [FAIL] tests::test_simple::test_another_failing
+        [FAIL] simple_package_integrationtest::test_simple::test_another_failing
 
-        [PASS] tests::without_prefix::five [..]
+        [PASS] simple_package_integrationtest::without_prefix::five [..]
         Failures:
-            tests::test_simple::test_failing
-            tests::test_simple::test_another_failing
+            simple_package_integrationtest::test_simple::test_failing
+            simple_package_integrationtest::test_simple::test_another_failing
         [IGNORE] simple_package::tests::ignored_test
-        [IGNORE] tests::ext_function_test::ignored_test
+        [IGNORE] simple_package_integrationtest::ext_function_test::ignored_test
         Tests: 9 passed, 2 failed, 0 skipped, 2 ignored, 0 filtered out
         Failure data:
             0x6661696c696e6720636865636b ('failing check')
@@ -487,9 +460,8 @@ fn with_rerun_failed_flag_and_name_filter() {
         [..]Finished[..]
 
         Collected 1 test(s) from simple_package package
-        Running 0 test(s) from src/
         Running 1 test(s) from tests/
-        [FAIL] tests::test_simple::test_another_failing
+        [FAIL] simple_package_integrationtest::test_simple::test_another_failing
 
         Failure data:
             0x6661696c696e6720636865636b ('failing check')
@@ -497,7 +469,7 @@ fn with_rerun_failed_flag_and_name_filter() {
         Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 12 filtered out
 
         Failures:
-            tests::test_simple::test_another_failing
+            simple_package_integrationtest::test_simple::test_another_failing
 
         "},
     );
@@ -520,12 +492,12 @@ fn with_rerun_failed_flag() {
         Collected 2 test(s) from simple_package package
         Running 0 test(s) from src/
         Running 2 test(s) from tests/
-        [FAIL] tests::test_simple::test_another_failing
+        [FAIL] simple_package_integrationtest::test_simple::test_another_failing
 
         Failure data:
             0x6661696c696e6720636865636b ('failing check')
 
-        [FAIL] tests::test_simple::test_failing
+        [FAIL] simple_package_integrationtest::test_simple::test_failing
 
         Failure data:
             0x6661696c696e6720636865636b ('failing check')
@@ -533,8 +505,8 @@ fn with_rerun_failed_flag() {
         Tests: 0 passed, 2 failed, 0 skipped, 0 ignored, 11 filtered out
 
         Failures:
-            tests::test_simple::test_another_failing
-            tests::test_simple::test_failing
+            simple_package_integrationtest::test_simple::test_another_failing
+            simple_package_integrationtest::test_simple::test_failing
 
         "},
     );
@@ -554,38 +526,37 @@ fn with_panic_data_decoding() {
 
 
         Collected 8 test(s) from panic_decoding package
-        Running 0 test(s) from src/
         Running 8 test(s) from tests/
-        [FAIL] tests::test_panic_decoding::test_panic_decoding2
+        [FAIL] panic_decoding_integrationtest::test_panic_decoding::test_panic_decoding2
         
         Failure data:
             0x80
         
-        [FAIL] tests::test_panic_decoding::test_assert
+        [FAIL] panic_decoding_integrationtest::test_panic_decoding::test_assert
         
         Failure data:
             "assertion failed: `x`."
         
-        [FAIL] tests::test_panic_decoding::test_panic_decoding
+        [FAIL] panic_decoding_integrationtest::test_panic_decoding::test_panic_decoding
         
         Failure data:
             (0x7b ('{'), 0x616161 ('aaa'), 0x800000000000011000000000000000000000000000000000000000000000000, 0x98, 0x7c ('|'), 0x95)
         
-        [PASS] tests::test_panic_decoding::test_simple2 (gas: ~1)
-        [PASS] tests::test_panic_decoding::test_simple (gas: ~1)
-        [FAIL] tests::test_panic_decoding::test_assert_eq
+        [PASS] panic_decoding_integrationtest::test_panic_decoding::test_simple2 (gas: ~1)
+        [PASS] panic_decoding_integrationtest::test_panic_decoding::test_simple (gas: ~1)
+        [FAIL] panic_decoding_integrationtest::test_panic_decoding::test_assert_eq
         
         Failure data:
             "assertion `x == y` failed.
             x: 5
             y: 6"
         
-        [FAIL] tests::test_panic_decoding::test_assert_message
+        [FAIL] panic_decoding_integrationtest::test_panic_decoding::test_assert_message
         
         Failure data:
             "Another identifiable and meaningful error message"
         
-        [FAIL] tests::test_panic_decoding::test_assert_eq_message
+        [FAIL] panic_decoding_integrationtest::test_panic_decoding::test_assert_eq_message
         
         Failure data:
             "assertion `x == y` failed: An identifiable and meaningful error message
@@ -595,12 +566,12 @@ fn with_panic_data_decoding() {
         Tests: 2 passed, 6 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:
-            tests::test_panic_decoding::test_panic_decoding2
-            tests::test_panic_decoding::test_assert
-            tests::test_panic_decoding::test_panic_decoding
-            tests::test_panic_decoding::test_assert_eq
-            tests::test_panic_decoding::test_assert_message
-            tests::test_panic_decoding::test_assert_eq_message
+            panic_decoding_integrationtest::test_panic_decoding::test_panic_decoding2
+            panic_decoding_integrationtest::test_panic_decoding::test_assert
+            panic_decoding_integrationtest::test_panic_decoding::test_panic_decoding
+            panic_decoding_integrationtest::test_panic_decoding::test_assert_eq
+            panic_decoding_integrationtest::test_panic_decoding::test_assert_message
+            panic_decoding_integrationtest::test_panic_decoding::test_assert_eq_message
         "#},
     );
 }
@@ -642,9 +613,8 @@ fn with_exit_first() {
 
 
         Collected 2 test(s) from exit_first package
-        Running 0 test(s) from src/
         Running 2 test(s) from tests/
-        [FAIL] tests::ext_function_test::simple_test
+        [FAIL] exit_first_integrationtest::ext_function_test::simple_test
 
         Failure data:
             0x73696d706c6520636865636b ('simple check')
@@ -652,7 +622,7 @@ fn with_exit_first() {
         Tests: 0 passed, 1 failed, 1 skipped, 0 ignored, 0 filtered out
 
         Failures:
-            tests::ext_function_test::simple_test
+            exit_first_integrationtest::ext_function_test::simple_test
         "},
     );
 }
@@ -671,9 +641,8 @@ fn with_exit_first_flag() {
 
 
         Collected 2 test(s) from exit_first package
-        Running 0 test(s) from src/
         Running 2 test(s) from tests/
-        [FAIL] tests::ext_function_test::simple_test
+        [FAIL] exit_first_integrationtest::ext_function_test::simple_test
 
         Failure data:
             0x73696d706c6520636865636b ('simple check')
@@ -681,7 +650,7 @@ fn with_exit_first_flag() {
         Tests: 0 passed, 1 failed, 1 skipped, 0 ignored, 0 filtered out
 
         Failures:
-            tests::ext_function_test::simple_test
+            exit_first_integrationtest::ext_function_test::simple_test
         "},
     );
 }
@@ -707,7 +676,7 @@ fn init_new_project_test() {
             # See more keys and their definitions at https://docs.swmansion.com/scarb/docs/reference/manifest.html
 
             [dependencies]
-            starknet = "2.5.4"
+            starknet = "2.6.4"
 
             [dev-dependencies]
             snforge_std = {{ git = "https://github.com/foundry-rs/starknet-foundry", tag = "v{}" }}
@@ -763,8 +732,8 @@ fn init_new_project_test() {
         Collected 2 test(s) from test_name package
         Running 0 test(s) from src/
         Running 2 test(s) from tests/
-        [PASS] tests::test_contract::test_increase_balance [..]
-        [PASS] tests::test_contract::test_cannot_increase_balance_with_zero_value [..]
+        [PASS] test_name_integrationtest::test_contract::test_increase_balance [..]
+        [PASS] test_name_integrationtest::test_contract::test_cannot_increase_balance_with_zero_value [..]
         Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
     ",
             remote_url.trim_end_matches(".git")
@@ -774,100 +743,94 @@ fn init_new_project_test() {
 
 #[test]
 fn should_panic() {
-    let temp = tempdir_with_tool_versions().unwrap();
-    temp.copy_from("tests/data/should_panic_test", &["**/*.cairo", "**/*.toml"])
-        .unwrap();
+    let temp = setup_package("should_panic_test");
 
     let output = test_runner(&temp).assert().code(1);
 
     assert_stdout_contains(
         output,
         indoc! { r"
-        [..]Compiling[..]
-        [..]Finished[..]
-
-
         Collected 14 test(s) from should_panic_test package
-        Running 0 test(s) from src/
         Running 14 test(s) from tests/
-        [FAIL] tests::should_panic_test::didnt_expect_panic
-
-        Failure data:
-            0x756e65787065637465642070616e6963 ('unexpected panic')
-
-        [PASS] tests::should_panic_test::should_panic_match_suffix [..]
-        [FAIL] tests::should_panic_test::should_panic_with_non_matching_data
-
-        Failure data:
-            Incorrect panic data
-            Actual:    [8111420071579136082810415440747] (failing check)
-            Expected:  [0] ()
-
-        [PASS] tests::should_panic_test::should_panic_felt_matching [..]
-        [FAIL] tests::should_panic_test::should_panic_byte_array_with_felt
+        [FAIL] should_panic_test_integrationtest::should_panic_test::should_panic_byte_array_with_felt
 
         Failure data:
             Incorrect panic data
             Actual:    [1997209042069643135709344952807065910992472029923670688473712229447419591075, 0, 438270661302794954290694912750807395, 15] (This will panic)
             Expected:  [438270661302794954290694912750807395] (This will panic)
 
-        [PASS] tests::should_panic_test::should_panic_check_data [..]
-        [FAIL] tests::should_panic_test::expected_panic_but_didnt_with_expected
+        [FAIL] should_panic_test_integrationtest::should_panic_test::didnt_expect_panic
 
         Failure data:
-            Expected to panic but didn't
-            Expected panic data:  [8903707727067478891290643490661] (panic message)
+            0x756e65787065637465642070616e6963 ('unexpected panic')
 
-        [FAIL] tests::should_panic_test::expected_panic_but_didnt_with_expected_multiple
-
-        Failure data:
-            Expected to panic but didn't
-            Expected panic data:  [8903707727067478891290643490661, 2340509922561928411394884117817189] (panic message, second message)
-
-        [FAIL] tests::should_panic_test::expected_panic_but_didnt
+        [FAIL] should_panic_test_integrationtest::should_panic_test::expected_panic_but_didnt
 
         Failure data:
             Expected to panic but didn't
 
-        [FAIL] tests::should_panic_test::should_panic_not_matching_suffix
-
-        Failure data:
-            Incorrect panic data
-            Actual:    [1997209042069643135709344952807065910992472029923670688473712229447419591075, 0, 438270661302794954290694912750807395, 15] (This will panic)
-            Expected:  [1997209042069643135709344952807065910992472029923670688473712229447419591075, 0, 144360021054553064286544739, 11] (will panicc)
-
-        [PASS] tests::should_panic_test::should_panic_multiple_messages [..]
-        [FAIL] tests::should_panic_test::should_panic_expected_contains_error
-
-        Failure data:
-            Incorrect panic data
-            Actual:    [1997209042069643135709344952807065910992472029923670688473712229447419591075, 0, 2003397740, 4] (will)
-            Expected:  [1997209042069643135709344952807065910992472029923670688473712229447419591075, 0, 438270661302794954290694912750807395, 15] (This will panic)
-
-        [PASS] tests::should_panic_test::should_panic_no_data [..]
-
-        Success data:
-            0x0 ('')
-
-        [FAIL] tests::should_panic_test::should_panic_felt_with_byte_array
+        [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_felt_matching [..]
+        [FAIL] should_panic_test_integrationtest::should_panic_test::should_panic_felt_with_byte_array
 
         Failure data:
             Incorrect panic data
             Actual:    [438270661302794954290694912750807395] (This will panic)
             Expected:  [1997209042069643135709344952807065910992472029923670688473712229447419591075, 0, 438270661302794954290694912750807395, 15] (This will panic)
 
+        [FAIL] should_panic_test_integrationtest::should_panic_test::should_panic_expected_contains_error
+
+        Failure data:
+            Incorrect panic data
+            Actual:    [1997209042069643135709344952807065910992472029923670688473712229447419591075, 0, 2003397740, 4] (will)
+            Expected:  [1997209042069643135709344952807065910992472029923670688473712229447419591075, 0, 438270661302794954290694912750807395, 15] (This will panic)
+
+        [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_match_suffix [..]
+        [FAIL] should_panic_test_integrationtest::should_panic_test::expected_panic_but_didnt_with_expected_multiple
+
+        Failure data:
+            Expected to panic but didn't
+            Expected panic data:  [8903707727067478891290643490661, 2340509922561928411394884117817189] (panic message, second message)
+
+        [FAIL] should_panic_test_integrationtest::should_panic_test::should_panic_not_matching_suffix
+
+        Failure data:
+            Incorrect panic data
+            Actual:    [1997209042069643135709344952807065910992472029923670688473712229447419591075, 0, 438270661302794954290694912750807395, 15] (This will panic)
+            Expected:  [1997209042069643135709344952807065910992472029923670688473712229447419591075, 0, 144360021054553064286544739, 11] (will panicc)
+
+        [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_check_data [..]
+        [FAIL] should_panic_test_integrationtest::should_panic_test::expected_panic_but_didnt_with_expected
+
+        Failure data:
+            Expected to panic but didn't
+            Expected panic data:  [8903707727067478891290643490661] (panic message)
+
+        [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_multiple_messages [..]
+        [PASS] should_panic_test_integrationtest::should_panic_test::should_panic_no_data [..]
+
+        Success data:
+            0x0 ('')
+
+        [FAIL] should_panic_test_integrationtest::should_panic_test::should_panic_with_non_matching_data
+
+        Failure data:
+            Incorrect panic data
+            Actual:    [8111420071579136082810415440747] (failing check)
+            Expected:  [0] ()
+
+        Running 0 test(s) from src/
         Tests: 5 passed, 9 failed, 0 skipped, 0 ignored, 0 filtered out
 
         Failures:
-            tests::should_panic_test::didnt_expect_panic
-            tests::should_panic_test::should_panic_with_non_matching_data
-            tests::should_panic_test::should_panic_byte_array_with_felt
-            tests::should_panic_test::expected_panic_but_didnt_with_expected
-            tests::should_panic_test::expected_panic_but_didnt_with_expected_multiple
-            tests::should_panic_test::expected_panic_but_didnt
-            tests::should_panic_test::should_panic_not_matching_suffix
-            tests::should_panic_test::should_panic_expected_contains_error
-            tests::should_panic_test::should_panic_felt_with_byte_array
+            should_panic_test_integrationtest::should_panic_test::should_panic_byte_array_with_felt
+            should_panic_test_integrationtest::should_panic_test::didnt_expect_panic
+            should_panic_test_integrationtest::should_panic_test::expected_panic_but_didnt
+            should_panic_test_integrationtest::should_panic_test::should_panic_felt_with_byte_array
+            should_panic_test_integrationtest::should_panic_test::should_panic_expected_contains_error
+            should_panic_test_integrationtest::should_panic_test::expected_panic_but_didnt_with_expected_multiple
+            should_panic_test_integrationtest::should_panic_test::should_panic_not_matching_suffix
+            should_panic_test_integrationtest::should_panic_test::expected_panic_but_didnt_with_expected
+            should_panic_test_integrationtest::should_panic_test::should_panic_with_non_matching_data
         "},
     );
 }
@@ -896,8 +859,8 @@ fn printing_in_contracts() {
         Running 0 test(s) from src/
         Running 2 test(s) from tests/
         Hello world!
-        [PASS] tests::test_contract::test_increase_balance [..]
-        [PASS] tests::test_contract::test_cannot_increase_balance_with_zero_value [..]
+        [PASS] contract_printing_integrationtest::test_contract::test_increase_balance [..]
+        [PASS] contract_printing_integrationtest::test_contract::test_cannot_increase_balance_with_zero_value [..]
         Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         "#},
     );
@@ -932,23 +895,23 @@ fn incompatible_snforge_std_version_warning() {
 
         Collected 4 test(s) from steps package
         Running 4 test(s) from src/
-        [PASS] steps::tests::steps_570031 [..]
-        [FAIL] steps::tests::steps_4000006
+        [PASS] steps::tests::steps_570030 [..]
+        [FAIL] steps::tests::steps_4000005
         
         Failure data:
             Could not reach the end of the program. RunResources has no remaining steps.
         
-        [FAIL] steps::tests::steps_5700031
+        [FAIL] steps::tests::steps_5699625
         
         Failure data:
             Could not reach the end of the program. RunResources has no remaining steps.
         
-        [PASS] steps::tests::steps_3999987 [..]
+        [PASS] steps::tests::steps_3999990 [..]
         Tests: 2 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:
-            steps::tests::steps_4000006
-            steps::tests::steps_5700031
+            steps::tests::steps_4000005
+            steps::tests::steps_5699625
         "},
     );
 }
@@ -971,7 +934,7 @@ fn detailed_resources_flag() {
         Collected 1 test(s) from erc20_package package
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
-        [PASS] tests::test_complex::complex[..]
+        [PASS] erc20_package_integrationtest::test_complex::complex[..]
                 steps: [..]
                 memory holes: [..]
                 builtins: ([..])
@@ -1011,7 +974,7 @@ fn catch_runtime_errors() {
             r#"
                 [..]Compiling[..]
                 [..]Finished[..]
-                [PASS] tests::test::catch_no_such_file [..]
+                [PASS] simple_package_integrationtest::test::catch_no_such_file [..]
             "#
         ),
     );
