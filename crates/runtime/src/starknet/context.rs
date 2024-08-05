@@ -18,7 +18,9 @@ use starknet_api::block::{BlockNumber, BlockTimestamp};
 use starknet_api::data_availability::DataAvailabilityMode;
 use starknet_api::transaction::{Resource, ResourceBounds, ResourceBoundsMapping};
 use starknet_api::{
-    core::{ChainId, ContractAddress, Nonce},
+    contract_address,
+    core::{ChainId, ContractAddress, Nonce, PatriciaKey},
+    felt, patricia_key,
     transaction::{TransactionHash, TransactionSignature, TransactionVersion},
 };
 
@@ -28,7 +30,7 @@ pub const SEQUENCER_ADDRESS: &str = "0x1000";
 pub const ERC20_CONTRACT_ADDRESS: &str = "0x1001";
 
 fn default_chain_id() -> ChainId {
-    ChainId(String::from(DEFAULT_CHAIN_ID))
+    ChainId::from(String::from(DEFAULT_CHAIN_ID))
 }
 
 #[must_use]

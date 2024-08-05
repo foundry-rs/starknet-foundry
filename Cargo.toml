@@ -48,6 +48,7 @@ cairo-lang-syntax = "2.7.0-rc.0"
 cairo-lang-test-plugin = "2.7.0-rc.0"
 cairo-lang-starknet-classes = "2.7.0-rc.0"
 cairo-lang-parser = "2.7.0-rc.0"
+cairo-lang-macro = "0.1.0"
 cairo-vm = "1.0.0-rc3"
 starknet-types-core = { version = "0.1.2", features = ["hash", "prime-bigint"] }
 anyhow = "1.0.86"

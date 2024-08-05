@@ -1,8 +1,8 @@
 use crate::state::CheatnetState;
 use blockifier::execution::call_info::OrderedL2ToL1Message;
-use cairo_felt::Felt252;
 use conversions::serde::serialize::CairoSerialize;
 use starknet_api::core::{ContractAddress, EthAddress};
+use starknet_types_core::felt::Felt as Felt252;
 
 #[derive(CairoSerialize, Clone)]
 pub struct MessageToL1 {

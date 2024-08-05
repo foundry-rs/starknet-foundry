@@ -59,7 +59,7 @@ impl ForkStateReader {
     pub fn chain_id(&self) -> Result<ChainId> {
         let id = self.runtime.block_on(self.client.chain_id())?;
         let id = parse_cairo_short_string(&id)?;
-        Ok(ChainId(id))
+        Ok(ChainId::from(id))
     }
 
     fn block_id(&self) -> BlockId {

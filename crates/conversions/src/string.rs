@@ -34,6 +34,6 @@ where
     T: IntoConv<Felt252>,
 {
     fn into_hex_string(self) -> String {
-        self.into_().to_fixed_hex_string()
+        self.into_().to_hex_string()
     }
 }

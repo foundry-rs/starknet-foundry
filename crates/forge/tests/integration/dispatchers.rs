@@ -682,7 +682,7 @@ fn nonexistent_method_call() {
     assert_case_output_contains(
        & result,
         "nonexistent_method_call",
-        "Entry point selector 0x01fdb214e1495025fa4baf660d34f03c0d8b5037cf10311d2a3202a806aa9485 not found in contract"
+        "Entry point selector 0x1fdb214e1495025fa4baf660d34f03c0d8b5037cf10311d2a3202a806aa9485 not found in contract"
     );
 }
 
@@ -809,9 +809,9 @@ fn undeclared_class_call() {
 
     assert_failed(&result);
     assert_case_output_contains(
-       & result,
+        &result,
         "undeclared_class_call",
-        "Contract not deployed at address: 0x0000000000000000000000000000000000000000000000000000000000000005"
+        "Contract not deployed at address: 0x5",
     );
 }
 
