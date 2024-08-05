@@ -1,4 +1,4 @@
-use crate::helpers::fixtures::default_cli_args;
+use crate::helpers::constants::ACCOUNT_FILE_PATH;
 use crate::helpers::runner::runner;
 use indoc::indoc;
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains, AsOutput};
@@ -7,11 +7,16 @@ use tempfile::tempdir;
 
 #[tokio::test]
 async fn test_happy_case_file() {
-    let mut args = default_cli_args();
     let tmp_dir = tempdir().expect("Failed to create temporary directory");
     let multicall_toml_file = "multicall.toml";
 
-    args.append(&mut vec!["multicall", "new", multicall_toml_file]);
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "multicall",
+        "new",
+        multicall_toml_file,
+    ];
 
     let snapbox = runner(&args).current_dir(tmp_dir.path());
     let output = snapbox.assert().success();
@@ -33,9 +38,7 @@ async fn test_happy_case_file() {
 
 #[tokio::test]
 async fn test_no_output_path_specified() {
-    let mut args = default_cli_args();
-
-    args.append(&mut vec!["multicall", "new"]);
+    let args = vec!["--accounts-file", ACCOUNT_FILE_PATH, "multicall", "new"];
 
     let snapbox = runner(&args);
     let output = snapbox.assert().failure();
@@ -55,12 +58,16 @@ async fn test_no_output_path_specified() {
 
 #[tokio::test]
 async fn test_directory_non_existent() {
-    let mut args = default_cli_args();
-
     let tmp_dir = tempdir().expect("failed to create temporary directory");
     let multicall_toml_path = "non_existent_directory/multicall.toml";
 
-    args.append(&mut vec!["multicall", "new", multicall_toml_path]);
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "multicall",
+        "new",
+        multicall_toml_path,
+    ];
 
     let snapbox = runner(&args).current_dir(tmp_dir.path());
     let output = snapbox.assert().success();
@@ -77,15 +84,19 @@ async fn test_directory_non_existent() {
 
 #[tokio::test]
 async fn test_file_invalid_path() {
-    let mut args = default_cli_args();
-
     let tmp_dir = tempdir().expect("failed to create temporary directory");
     let tmp_path = tmp_dir
         .path()
         .to_str()
         .expect("failed to convert path to string");
 
-    args.append(&mut vec!["multicall", "new", tmp_path]);
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "multicall",
+        "new",
+        tmp_path,
+    ];
 
     let snapbox = runner(&args).current_dir(tmp_dir.path());
     let output = snapbox.assert().success();

@@ -9,7 +9,7 @@ const REVERTED_TX_HASH: &str = "0x00ae35dacba17cde62b8ceb12e3b18f4ab6e103fa2d5e3
 
 #[tokio::test]
 async fn test_incorrect_transaction_hash() {
-    let args = vec!["--url", URL, "tx-status", "0x1"];
+    let args = vec!["tx-status", "0x1", "--url", URL];
     let snapbox = runner(&args);
     let output = snapbox.assert().success();
 
@@ -24,7 +24,7 @@ async fn test_incorrect_transaction_hash() {
 
 #[tokio::test]
 async fn test_succeeded() {
-    let args = vec!["--url", URL, "tx-status", SUCCEEDED_TX_HASH];
+    let args = vec!["tx-status", SUCCEEDED_TX_HASH, "--url", URL];
     let snapbox = runner(&args);
 
     snapbox.assert().success().stdout_eq(indoc! {r"
@@ -36,7 +36,7 @@ async fn test_succeeded() {
 
 #[tokio::test]
 async fn test_reverted() {
-    let args = vec!["--url", URL, "tx-status", REVERTED_TX_HASH];
+    let args = vec!["tx-status", REVERTED_TX_HASH, "--url", URL];
     let snapbox = runner(&args);
 
     snapbox.assert().success().stdout_eq(indoc! {r"

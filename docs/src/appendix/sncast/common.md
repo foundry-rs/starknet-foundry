@@ -6,13 +6,6 @@ Optional.
 Used for both `snfoundry.toml` and `Scarb.toml` if specified.
 Defaults to `default` (`snfoundry.toml`) and `dev` (`Scarb.toml`).
 
-## `--url, -u <RPC_URL>`
-Optional.
-
-Starknet RPC node url address.
-
-Overrides url from `snfoundry.toml`.
-
 ## `--account, -a <ACCOUNT_NAME>`
 Optional.
 

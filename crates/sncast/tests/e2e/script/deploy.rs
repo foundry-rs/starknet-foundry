@@ -22,11 +22,11 @@ async fn test_with_calldata(account: &str) {
         accounts_json_path.as_str(),
         "--account",
         account,
-        "--url",
-        URL,
         "script",
         "run",
         &script_name,
+        "--url",
+        URL,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -53,11 +53,11 @@ async fn test_with_fee_settings() {
         accounts_json_path.as_str(),
         "--account",
         "user7",
-        "--url",
-        URL,
         "script",
         "run",
         &script_name,
+        "--url",
+        URL,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -84,11 +84,11 @@ async fn test_same_salt_and_class_hash_deployed_twice() {
         accounts_json_path.as_str(),
         "--account",
         "user3",
-        "--url",
-        URL,
         "script",
         "run",
         &script_name,
+        "--url",
+        URL,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -119,11 +119,11 @@ async fn test_invalid_class_hash() {
         accounts_json_path.as_str(),
         "--account",
         "user2",
-        "--url",
-        URL,
         "script",
         "run",
         &script_name,
+        "--url",
+        URL,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -158,11 +158,11 @@ async fn test_invalid_call_data() {
         accounts_json_path.as_str(),
         "--account",
         "user5",
-        "--url",
-        URL,
         "script",
         "run",
         &script_name,
+        "--url",
+        URL,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -193,11 +193,11 @@ async fn test_invalid_nonce() {
         accounts_json_path.as_str(),
         "--account",
         "user5",
-        "--url",
-        URL,
         "script",
         "run",
         &script_name,
+        "--url",
+        URL,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());

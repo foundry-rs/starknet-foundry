@@ -1,8 +1,9 @@
 # `show_config`
 Prints the config currently being used
 
-## Required Common Arguments — Passed By CLI or Specified in `snfoundry.toml`
+## `--url, -u <RPC_URL>`
+Optional.
 
-* [`url`](./common.md#--url--u-rpc_url)
+Starknet RPC node url address.
 
-This doesn't take any arguments of its own.
+Overrides url from `snfoundry.toml`.

@@ -24,7 +24,7 @@ First, ensure that you have created a `Scarb.toml` file for your contract (it sh
 Then run:
 
 ```shell
-$ sncast --url http://127.0.0.1:5050/rpc \
+$ sncast \
     verify \
     --contract-address 0x8448a68b5ea1affc45e3fd4b8b480ea36a51dc34e337a16d2567d32d0c6f8b \
     --contract-name SimpleBalance \

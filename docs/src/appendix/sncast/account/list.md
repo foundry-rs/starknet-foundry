@@ -11,10 +11,10 @@ Hides user's private keys by default.
 
 ## Required Common Arguments — Passed By CLI or Specified in `snfoundry.toml`
 
-* [`url`](../common.md#--url--u-rpc_url)
 * [`accounts-file`](../common.md#--accounts-file--f-path_to_accounts_file)
 
 ## Optional Common Arguments — Passed By CLI or Specified in `snfoundry.toml`
+
 * [`int-format`]()
 * [`hex-format`]()
 * [`json`]()
