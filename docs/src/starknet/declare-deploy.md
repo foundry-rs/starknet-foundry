@@ -1,6 +1,6 @@
 # Joining the Declaration and Deployment Together
 
-`sncast` allows declaring and deploying contracts throught dedicated commands. However, sometimes contracts are meant to be only instantiated once, thus the standard way of declaration and deployment is unnecessarily time-consuming.
+`sncast` allows declaring and deploying contracts through dedicated commands. However, sometimes contracts are meant to be only instantiated once, thus the standard way of declaration and deployment is unnecessarily time-consuming.
 
 The `declare-deploy` command allows performing both actions at once.
 

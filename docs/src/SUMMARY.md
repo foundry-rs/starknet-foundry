@@ -38,6 +38,7 @@
 * [Creating And Deploying Accounts](starknet/account.md)
 * [Declaring New Contracts](starknet/declare.md)
 * [Deploying New Contracts](starknet/deploy.md)
+* [Declaring and Deploying at Once](starknet/declare-deploy.md)
 * [Invoking Contracts](starknet/invoke.md)
 * [Calling Contracts](starknet/call.md)
 * [Performing Multicall](starknet/multicall.md)
