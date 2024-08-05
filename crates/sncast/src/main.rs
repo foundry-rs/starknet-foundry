@@ -312,7 +312,7 @@ async fn run_async_command(
             }
 
             let mut result = Ok(DeclareDeployResponse::new(
-                declare_result,
+                &declare_result,
                 deploy_result.unwrap(),
             ));
 

@@ -637,10 +637,10 @@ pub fn join_tempdirs(from: &TempDir, to: &TempDir) {
     .expect("Failed to copy the directory");
 }
 
+#[must_use]
 pub fn last_line_as_json(output: &str) -> Value {
     let last_line = output.trim_end_matches('\n').split('\n').last().unwrap();
 
-    serde_json::from_str::<Value>(&last_line).expect(&format!(
-        "Failed to deserialize output as JSON:\n{last_line}"
-    ))
+    serde_json::from_str::<Value>(last_line)
+        .unwrap_or_else(|_| panic!("Failed to deserialize output as JSON:\n{last_line}"))
 }

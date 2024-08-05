@@ -40,7 +40,7 @@ fn test_happy_case_eth(account: &str) {
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
-    let json = last_line_as_json(&output.as_stdout());
+    let json = last_line_as_json(output.as_stdout());
 
     assert_eq!(output.as_stderr(), "");
     assert_eq!(json["command"], "declare-deploy");
@@ -77,7 +77,7 @@ fn test_happy_case_strk(account: &str) {
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
-    let json = last_line_as_json(&output.as_stdout());
+    let json = last_line_as_json(output.as_stdout());
 
     assert_eq!(output.as_stderr(), "");
     assert_eq!(json["command"], "declare-deploy");
@@ -120,7 +120,7 @@ fn test_happy_case_specify_package() {
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
-    let json = last_line_as_json(&output.as_stdout());
+    let json = last_line_as_json(output.as_stdout());
 
     assert_eq!(output.as_stderr(), "");
     assert_eq!(json["command"], "declare-deploy");
@@ -161,7 +161,7 @@ fn test_happy_case_contract_already_declared() {
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
-    let json = last_line_as_json(&output.as_stdout());
+    let json = last_line_as_json(output.as_stdout());
 
     assert_eq!(output.as_stderr(), "");
     assert_eq!(json["command"], "declare-deploy");
@@ -262,7 +262,7 @@ fn test_invalid_nonce() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     let output = snapbox.assert().success();
-    let output = last_line_as_json(&output.as_stderr());
+    let output = last_line_as_json(output.as_stderr());
 
     assert_eq!(output["command"], "declare-deploy");
     assert_matches(

@@ -132,7 +132,8 @@ pub struct DeclareDeployResponse {
 }
 
 impl DeclareDeployResponse {
-    pub fn new(declare: Option<DeclareResponse>, deploy: DeployResponse) -> Self {
+    #[must_use]
+    pub fn new(declare: &Option<DeclareResponse>, deploy: DeployResponse) -> Self {
         let class_hash = declare.as_ref().map(|it| it.class_hash.clone());
         let declare_transaction_hash = declare.as_ref().map(|it| it.transaction_hash.clone());
 
@@ -140,9 +141,6 @@ impl DeclareDeployResponse {
             contract_address,
             transaction_hash: deploy_transaction_hash,
         } = deploy;
-
-        let contract_address = contract_address;
-        let deploy_transaction_hash = deploy_transaction_hash;
 
         Self {
             class_hash,
