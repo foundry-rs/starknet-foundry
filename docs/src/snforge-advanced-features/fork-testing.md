@@ -17,9 +17,9 @@ There are two ways of configuring a fork:
 
 It is possible to pass `url` and only one of `block_number`, `block_hash`, `block_tag` arguments to the `fork` attribute:
 - `url` - RPC URL (string)
-- `block_number` - number of block which will be pin to fork
-- `block_hash` - hash of block which will be pin to fork
-- `block_tag` - tag of block which will be pin to fork. Currently only `latest` is supported
+- `block_number` - number of block which fork will be pinned to
+- `block_hash` - hash of block which fork will be pinned to
+- `block_tag` - tag of block which fork will be pinned to. Currently only `latest` is supported
 
 
 ```rust
