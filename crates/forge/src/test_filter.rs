@@ -124,25 +124,25 @@ impl TestCaseFilter for TestsFilter {
 #[cfg(test)]
 mod tests {
     use crate::test_filter::TestsFilter;
-    use cairo_lang_sierra::program::{Program, ProgramArtifact, Version, VersionedProgram};
+    use cairo_lang_sierra::program::Program;
     use forge_runner::expected_result::ExpectedTestResult;
+    use forge_runner::package_tests::raw::{DebugInfo, ProgramArtifact};
     use forge_runner::package_tests::with_config_resolved::{
         TestCaseResolvedConfig, TestCaseWithResolvedConfig, TestTargetWithResolvedConfig,
     };
     use forge_runner::package_tests::{TestDetails, TestTargetLocation};
+    use std::sync::Arc;
+    use universal_sierra_compiler_api::compile_sierra_to_casm;
 
-    fn program_for_testing() -> VersionedProgram {
-        VersionedProgram::V1 {
-            version: Version::<1>,
-            program: ProgramArtifact {
-                program: Program {
-                    type_declarations: vec![],
-                    libfunc_declarations: vec![],
-                    statements: vec![],
-                    funcs: vec![],
-                },
-                debug_info: None,
+    fn program_for_testing() -> ProgramArtifact {
+        ProgramArtifact {
+            program: Program {
+                type_declarations: vec![],
+                libfunc_declarations: vec![],
+                statements: vec![],
+                funcs: vec![],
             },
+            debug_info: DebugInfo::default(),
         }
     }
 
@@ -162,7 +162,8 @@ mod tests {
     #[allow(clippy::too_many_lines)]
     fn filtering_tests() {
         let mocked_tests = TestTargetWithResolvedConfig {
-            sierra_program: program_for_testing().into_v1().unwrap(),
+            sierra_program: program_for_testing(),
+            casm_program: Arc::new(compile_sierra_to_casm(&program_for_testing().program).unwrap()),
             test_cases: vec![
                 TestCaseWithResolvedConfig {
                     name: "crate1::do_thing".to_string(),
@@ -423,7 +424,8 @@ mod tests {
     #[test]
     fn filtering_with_no_tests() {
         let mocked_tests = TestTargetWithResolvedConfig {
-            sierra_program: program_for_testing().into_v1().unwrap(),
+            sierra_program: program_for_testing(),
+            casm_program: Arc::new(compile_sierra_to_casm(&program_for_testing().program).unwrap()),
             test_cases: vec![],
             tests_location: TestTargetLocation::Lib,
         };
@@ -461,7 +463,8 @@ mod tests {
     #[allow(clippy::too_many_lines)]
     fn filtering_with_exact_match() {
         let mocked_tests = TestTargetWithResolvedConfig {
-            sierra_program: program_for_testing().into_v1().unwrap(),
+            sierra_program: program_for_testing(),
+            casm_program: Arc::new(compile_sierra_to_casm(&program_for_testing().program).unwrap()),
             test_cases: vec![
                 TestCaseWithResolvedConfig {
                     name: "crate1::do_thing".to_string(),
@@ -645,7 +648,8 @@ mod tests {
     #[test]
     fn filtering_with_only_ignored() {
         let mocked_tests = TestTargetWithResolvedConfig {
-            sierra_program: program_for_testing().into_v1().unwrap(),
+            sierra_program: program_for_testing(),
+            casm_program: Arc::new(compile_sierra_to_casm(&program_for_testing().program).unwrap()),
             test_cases: vec![
                 TestCaseWithResolvedConfig {
                     name: "crate1::do_thing".to_string(),
@@ -739,7 +743,8 @@ mod tests {
     #[allow(clippy::too_many_lines)]
     fn filtering_with_include_ignored() {
         let mocked_tests = TestTargetWithResolvedConfig {
-            sierra_program: program_for_testing().into_v1().unwrap(),
+            sierra_program: program_for_testing(),
+            casm_program: Arc::new(compile_sierra_to_casm(&program_for_testing().program).unwrap()),
             test_cases: vec![
                 TestCaseWithResolvedConfig {
                     name: "crate1::do_thing".to_string(),

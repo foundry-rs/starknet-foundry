@@ -71,6 +71,16 @@ impl CairoSerialize for CallType {
     }
 }
 
+impl CairoSerialize for bool {
+    fn serialize(&self, output: &mut BufferWriter) {
+        if *self {
+            Felt252::from(1).serialize(output);
+        } else {
+            Felt252::from(0).serialize(output);
+        }
+    }
+}
+
 impl<T> CairoSerialize for Arc<T>
 where
     T: CairoSerialize,

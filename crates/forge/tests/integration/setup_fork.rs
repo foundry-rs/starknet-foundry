@@ -1,8 +1,6 @@
 use indoc::{formatdoc, indoc};
 use std::num::NonZeroU32;
 use std::path::Path;
-use std::process::Command;
-use std::process::Stdio;
 use std::sync::Arc;
 
 use camino::Utf8PathBuf;
@@ -20,10 +18,9 @@ use forge_runner::build_trace_data::test_sierra_program_path::VERSIONED_PROGRAMS
 use forge_runner::forge_config::{
     ExecutionDataToSave, ForgeConfig, OutputConfig, TestRunnerConfig,
 };
-use forge_runner::package_tests::raw::RawForkParams;
-use forge_runner::package_tests::raw::TestTargetRaw;
 use forge_runner::CACHE_DIR;
-use shared::command::CommandExt;
+use scarb_api::metadata::MetadataCommandExt;
+use scarb_api::ScarbCommand;
 use shared::test_utils::node_url::node_rpc_url;
 use test_utils::runner::{assert_case_output_contains, assert_failed, assert_passed, Contract};
 use test_utils::running_tests::run_test_case;
@@ -49,7 +46,7 @@ fn fork_simple_decorator() {
             }}
 
             #[test]
-            #[fork(url: "{}", block_id: BlockId::Number(54060))]
+            #[fork(url: "{}", block_number: 54060)]
             fn fork_simple_decorator() {{
                 let dispatcher = IHelloStarknetDispatcher {{
                     contract_address: contract_address_const::<0x202de98471a4fae6bcbabb96cab00437d381abc58b02509043778074d6781e9>()
@@ -110,27 +107,31 @@ fn fork_aliased_decorator() {
 
     let rt = Runtime::new().expect("Could not instantiate Runtime");
 
-    Command::new("scarb")
+    ScarbCommand::new_with_stdio()
         .current_dir(test.path().unwrap())
-        .arg("snforge-test-collector")
-        .stdout(Stdio::inherit())
-        .stderr(Stdio::inherit())
-        .output_checked()
+        .arg("build")
+        .arg("--test")
+        .run()
         .unwrap();
 
-    let raw_test_targets = load_test_artifacts(
-        &test.path().unwrap().join("target/dev/snforge"),
-        "test_package",
-    )
-    .unwrap();
+    let metadata = ScarbCommand::metadata()
+        .current_dir(test.path().unwrap())
+        .run()
+        .unwrap();
+
+    let package = metadata
+        .packages
+        .iter()
+        .find(|p| p.name == "test_package")
+        .unwrap();
+
+    let raw_test_targets =
+        load_test_artifacts(&test.path().unwrap().join("target/dev"), package).unwrap();
 
     let result = rt
         .block_on(run_for_package(
             RunForPackageArgs {
-                test_targets: raw_test_targets
-                    .into_iter()
-                    .map(TestTargetRaw::with_config)
-                    .collect(),
+                test_targets: raw_test_targets,
                 package_name: "test_package".to_string(),
                 tests_filter: TestsFilter::from_flags(
                     None,
@@ -165,11 +166,9 @@ fn fork_aliased_decorator() {
                 }),
                 fork_targets: vec![ForkTarget::new(
                     "FORK_NAME_FROM_SCARB_TOML".to_string(),
-                    RawForkParams {
-                        url: node_rpc_url().to_string(),
-                        block_id_type: "Tag".to_string(),
-                        block_id_value: "Latest".to_string(),
-                    },
+                    node_rpc_url().to_string(),
+                    "tag".to_string(),
+                    "Latest".to_string(),
                 )],
             },
             &mut BlockNumberMap::default(),
@@ -191,7 +190,7 @@ fn fork_cairo0_contract() {
             }}
 
             #[test]
-            #[fork(url: "{}", block_id: BlockId::Number(54060))]
+            #[fork(url: "{}", block_number: 54060)]
             fn fork_cairo0_contract() {{
                 let contract_address = contract_address_const::<0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7>();
 
@@ -226,7 +225,7 @@ fn get_block_info_in_forked_block() {
             }}
 
             #[test]
-            #[fork(url: "{node_rpc_url}", block_id: BlockId::Number(54060))]
+            #[fork(url: "{node_rpc_url}", block_number: 54060)]
             fn test_fork_get_block_info_contract_on_testnet() {{
                 let dispatcher = IBlockInfoCheckerDispatcher {{
                     contract_address: contract_address_const::<0x3d80c579ad7d83ff46634abe8f91f9d2080c5c076d4f0f59dd810f9b3f01164>()
@@ -243,7 +242,7 @@ fn get_block_info_in_forked_block() {
             }}
 
             #[test]
-            #[fork(url: "{node_rpc_url}", block_id: BlockId::Number(54060))]
+            #[fork(url: "{node_rpc_url}", block_number: 54060)]
             fn test_fork_get_block_info_test_state() {{
                 let block_info = starknet::get_block_info().unbox();
                 assert(block_info.block_timestamp == 1711645884, block_info.block_timestamp.into());
@@ -253,7 +252,7 @@ fn get_block_info_in_forked_block() {
             }}
 
             #[test]
-            #[fork(url: "{node_rpc_url}", block_id: BlockId::Number(54060))]
+            #[fork(url: "{node_rpc_url}", block_number: 54060)]
             fn test_fork_get_block_info_contract_deployed() {{
                 let contract = declare("BlockInfoChecker").unwrap();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
@@ -270,7 +269,7 @@ fn get_block_info_in_forked_block() {
             }}
 
             #[test]
-            #[fork(url: "{node_rpc_url}", block_id: BlockId::Tag(BlockTag::Latest))]
+            #[fork(url: "{node_rpc_url}", block_tag: latest)]
             fn test_fork_get_block_info_latest_block() {{
                 let block_info = starknet::get_block_info().unbox();
                 assert(block_info.block_timestamp > 1711645884, block_info.block_timestamp.into());
@@ -294,7 +293,7 @@ fn fork_get_block_info_fails() {
     let test = test_case!(formatdoc!(
         r#"
             #[test]
-            #[fork(url: "{}", block_id: BlockId::Number(999999999999))]
+            #[fork(url: "{}", block_number: 999999999999)]
             fn fork_get_block_info_fails() {{
                 starknet::get_block_info();
             }}
@@ -330,7 +329,7 @@ fn incompatible_abi() {
             }}
 
             #[test]
-            #[fork(url: "{}", block_id: BlockId::Tag(BlockTag::Latest))]
+            #[fork(url: "{}", block_tag: latest)]
             fn test_forking_functionality() {{
                 let gov_contract_addr: starknet::ContractAddress = 0x66e4b798c66160bd5fd04056938e5c9f65d67f183dfab9d7d0d2ed9413276fe.try_into().unwrap();
                 let dispatcher = IResponseWith2FeltsDispatcher {{ contract_address: gov_contract_addr }};
