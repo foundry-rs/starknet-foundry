@@ -15,9 +15,9 @@ replace any subcommand (and its parameters) with `show-config` and it will show 
 
 ```shell
 $ sncast \
-  --url http://127.0.0.1:5050 \
-  --account user1
-  show-config
+  --account user1 \
+  show-config \
+  --url http://127.0.0.1:5050
 
 command: show-config
 account: user1

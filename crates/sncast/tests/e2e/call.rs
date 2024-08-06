@@ -1,14 +1,17 @@
-use crate::helpers::constants::MAP_CONTRACT_ADDRESS_SEPOLIA;
-use crate::helpers::fixtures::{default_cli_args, invoke_contract};
+use crate::helpers::constants::{ACCOUNT_FILE_PATH, MAP_CONTRACT_ADDRESS_SEPOLIA, URL};
+use crate::helpers::fixtures::invoke_contract;
 use crate::helpers::runner::runner;
 use indoc::indoc;
 use shared::test_utils::output_assert::assert_stderr_contains;
 
 #[test]
 fn test_happy_case() {
-    let mut args = default_cli_args();
-    args.append(&mut vec![
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
         "call",
+        "--url",
+        URL,
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
@@ -17,7 +20,7 @@ fn test_happy_case() {
         "0x0",
         "--block-id",
         "latest",
-    ]);
+    ];
 
     let snapbox = runner(&args);
 
@@ -37,16 +40,20 @@ async fn test_call_after_storage_changed() {
         &["0x2", "0x3"],
     )
     .await;
-    let mut args = default_cli_args();
-    args.append(&mut vec![
+
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
         "call",
+        "--url",
+        URL,
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
         "get",
         "--calldata",
         "0x2",
-    ]);
+    ];
 
     let snapbox = runner(&args);
 
@@ -58,14 +65,17 @@ async fn test_call_after_storage_changed() {
 
 #[tokio::test]
 async fn test_contract_does_not_exist() {
-    let mut args = default_cli_args();
-    args.append(&mut vec![
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
         "call",
+        "--url",
+        URL,
         "--contract-address",
         "0x1",
         "--function",
         "get",
-    ]);
+    ];
 
     let snapbox = runner(&args);
     let output = snapbox.assert().success();
@@ -81,14 +91,17 @@ async fn test_contract_does_not_exist() {
 
 #[test]
 fn test_wrong_function_name() {
-    let mut args = default_cli_args();
-    args.append(&mut vec![
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
         "call",
+        "--url",
+        URL,
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
         "nonexistent_get",
-    ]);
+    ];
 
     let snapbox = runner(&args);
     let output = snapbox.assert().success();
@@ -104,9 +117,12 @@ fn test_wrong_function_name() {
 
 #[test]
 fn test_wrong_calldata() {
-    let mut args = default_cli_args();
-    args.append(&mut vec![
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
         "call",
+        "--url",
+        URL,
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--calldata",
@@ -114,7 +130,7 @@ fn test_wrong_calldata() {
         "0x2",
         "--function",
         "get",
-    ]);
+    ];
 
     let snapbox = runner(&args);
     let output = snapbox.assert().success();
@@ -130,16 +146,19 @@ fn test_wrong_calldata() {
 
 #[tokio::test]
 async fn test_invalid_selector() {
-    let mut args = default_cli_args();
-    args.append(&mut vec![
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
         "call",
+        "--url",
+        URL,
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
         "ą",
         "--calldata",
         "0x1 0x2",
-    ]);
+    ];
 
     let snapbox = runner(&args);
     let output = snapbox.assert().failure();
@@ -148,7 +167,7 @@ async fn test_invalid_selector() {
         output,
         indoc! {r"
         Error: Failed to convert entry point selector to FieldElement
-    
+
         Caused by:
             the provided name contains non-ASCII characters
   "},
@@ -157,9 +176,12 @@ async fn test_invalid_selector() {
 
 #[test]
 fn test_wrong_block_id() {
-    let mut args = default_cli_args();
-    args.append(&mut vec![
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
         "call",
+        "--url",
+        URL,
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
         "--function",
@@ -168,7 +190,7 @@ fn test_wrong_block_id() {
         "0x0",
         "--block-id",
         "0x10101",
-    ]);
+    ];
 
     let snapbox = runner(&args);
     let output = snapbox.assert().success();

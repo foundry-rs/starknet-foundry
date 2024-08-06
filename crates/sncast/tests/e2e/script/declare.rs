@@ -30,11 +30,11 @@ async fn test_wrong_contract_name(account: &str) {
         accounts_json_path.as_str(),
         "--account",
         account,
-        "--url",
-        URL,
         "script",
         "run",
         &script_name,
+        "--url",
+        URL,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -70,11 +70,11 @@ async fn test_same_contract_twice() {
         accounts_json_path.as_str(),
         "--account",
         "user4",
-        "--url",
-        URL,
         "script",
         "run",
         &script_name,
+        "--url",
+        URL,
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
@@ -106,11 +106,11 @@ async fn test_with_invalid_max_fee() {
         accounts_json_path.as_str(),
         "--account",
         "user2",
-        "--url",
-        URL,
         "script",
         "run",
         &script_name,
+        "--url",
+        URL,
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
@@ -141,11 +141,11 @@ async fn test_with_invalid_nonce() {
         accounts_json_path.as_str(),
         "--account",
         "user4",
-        "--url",
-        URL,
         "script",
         "run",
         &script_name,
+        "--url",
+        URL,
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
@@ -176,11 +176,11 @@ async fn test_insufficient_account_balance() {
         accounts_json_path.as_str(),
         "--account",
         "user6",
-        "--url",
-        URL,
         "script",
         "run",
         &script_name,
+        "--url",
+        URL,
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
@@ -212,8 +212,6 @@ async fn test_sncast_timed_out() {
         accounts_json_path.as_str(),
         "--account",
         "user8",
-        "--url",
-        URL,
         "--wait-timeout",
         "1",
         "--wait-retry-interval",
@@ -221,6 +219,8 @@ async fn test_sncast_timed_out() {
         "script",
         "run",
         &script_name,
+        "--url",
+        URL,
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
@@ -252,10 +252,10 @@ async fn test_strk_fee_settings() {
         accounts_json_path.as_str(),
         "--account",
         "user4",
-        "--url",
-        URL,
         "script",
         "run",
+        "--url",
+        URL,
         &script_name,
     ];
 

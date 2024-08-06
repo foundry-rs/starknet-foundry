@@ -3,13 +3,19 @@ Deploy a contract to Starknet.
 
 ## Required Common Arguments — Passed By CLI or Specified in `snfoundry.toml`
 
-* [`url`](./common.md#--url--u-rpc_url)
 * [`account`](./common.md#--account--a-account_name)
 
 ## `--class-hash, -g <CLASS_HASH>`
 Required.
 
 Class hash of contract to deploy.
+
+## `--url, -u <RPC_URL>`
+Optional.
+
+Starknet RPC node url address.
+
+Overrides url from `snfoundry.toml`.
 
 ## `--constructor-calldata, -c <CONSTRUCTOR_CALLDATA>`
 Optional.
@@ -21,7 +27,7 @@ Optional.
 
 Salt for the contract address.
 
-## `--unique, -u`
+## `--unique`
 Optional.
 
 If passed, the salt will be additionally modified with an account address.

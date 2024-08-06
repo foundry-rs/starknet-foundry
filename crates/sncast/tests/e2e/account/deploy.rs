@@ -28,13 +28,13 @@ pub async fn test_happy_case_eth(class_hash: &str, account_type: &str) {
     let accounts_file = "accounts.json";
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "--json",
         "account",
         "deploy",
+        "--url",
+        URL,
         "--name",
         "my_account",
         "--max-fee",
@@ -66,13 +66,13 @@ pub async fn test_happy_case_v1() {
     let accounts_file = "accounts.json";
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "--json",
         "account",
         "deploy",
+        "--url",
+        URL,
         "--name",
         "my_account",
         "--max-fee",
@@ -108,13 +108,13 @@ pub async fn test_happy_case_strk(class_hash: &str, account_type: &str) {
     let accounts_file = "accounts.json";
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "--json",
         "account",
         "deploy",
+        "--url",
+        URL,
         "--name",
         "my_account",
         "--fee-token",
@@ -148,13 +148,13 @@ pub async fn test_happy_case_v3() {
     let accounts_file = "accounts.json";
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "--json",
         "account",
         "deploy",
+        "--url",
+        URL,
         "--name",
         "my_account",
         "--version",
@@ -188,13 +188,13 @@ pub async fn test_happy_case_strk_max_fee() {
     let accounts_file = "accounts.json";
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "--json",
         "account",
         "deploy",
+        "--url",
+        URL,
         "--name",
         "my_account",
         "--fee-token",
@@ -263,12 +263,12 @@ fn test_account_deploy_error(accounts_content: &str, error: &str) {
     fs::write(temp_dir.path().join(accounts_file), accounts_content).unwrap();
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "account",
         "deploy",
+        "--url",
+        URL,
         "--name",
         "my_account",
         "--max-fee",
@@ -289,13 +289,13 @@ async fn test_too_low_max_fee() {
     let accounts_file = "accounts.json";
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "--wait",
         "account",
         "deploy",
+        "--url",
+        URL,
         "--name",
         "my_account",
         "--max-fee",
@@ -324,13 +324,13 @@ async fn test_invalid_version_and_token_combination(fee_token: &str, version: &s
     let accounts_file = "accounts.json";
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "--wait",
         "account",
         "deploy",
+        "--url",
+        URL,
         "--name",
         "my_account",
         "--fee-token",
@@ -354,13 +354,13 @@ async fn test_no_version_and_token() {
     let accounts_file = "accounts.json";
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "--wait",
         "account",
         "deploy",
+        "--url",
+        URL,
         "--name",
         "my_account",
     ];
@@ -411,14 +411,14 @@ pub async fn test_valid_no_max_fee() {
     let accounts_file = "accounts.json";
 
     let args = vec![
-        "--url",
-        URL,
         "--profile",
         "deploy_profile",
         "--accounts-file",
         accounts_file,
         "account",
         "deploy",
+        "--url",
+        URL,
         "--name",
         "my_account",
         "--fee-token",
@@ -441,12 +441,12 @@ pub async fn create_account(add_profile: bool, class_hash: &str, account_type: &
     let accounts_file = "accounts.json";
 
     let mut args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "account",
         "create",
+        "--url",
+        URL,
         "--name",
         "my_account",
         "--class-hash",
@@ -505,14 +505,14 @@ pub async fn test_happy_case_keystore(account_type: &str) {
     mint_token(&address.into_hex_string(), 9_999_999_999_999_999_999).await;
 
     let args = vec![
-        "--url",
-        URL,
         "--keystore",
         keystore_file,
         "--account",
         &account_file,
         "account",
         "deploy",
+        "--url",
+        URL,
         "--max-fee",
         "99999999999999999",
         "--fee-token",
@@ -555,14 +555,14 @@ pub async fn test_keystore_already_deployed() {
     env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
 
     let args = vec![
-        "--url",
-        URL,
         "--keystore",
         keystore_file,
         "--account",
         account_file,
         "account",
         "deploy",
+        "--url",
+        URL,
         "--max-fee",
         "10000000000000000",
         "--fee-token",
@@ -600,14 +600,14 @@ pub async fn test_keystore_key_mismatch() {
     env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
 
     let args = vec![
-        "--url",
-        URL,
         "--keystore",
         keystore_file,
         "--account",
         account_file,
         "account",
         "deploy",
+        "--url",
+        URL,
         "--max-fee",
         "10000000000000000",
         "--fee-token",
@@ -640,14 +640,14 @@ pub async fn test_deploy_keystore_inexistent_keystore_file() {
     env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
 
     let args = vec![
-        "--url",
-        URL,
         "--keystore",
         keystore_file,
         "--account",
         account_file,
         "account",
         "deploy",
+        "--url",
+        URL,
         "--max-fee",
         "10000000000000000",
         "--fee-token",
@@ -680,14 +680,14 @@ pub async fn test_deploy_keystore_inexistent_account_file() {
     env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
 
     let args = vec![
-        "--url",
-        URL,
         "--keystore",
         keystore_file,
         "--account",
         account_file,
         "account",
         "deploy",
+        "--url",
+        URL,
         "--max-fee",
         "10000000000000000",
         "--fee-token",
@@ -724,14 +724,14 @@ pub async fn test_deploy_keystore_no_status() {
     env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
 
     let args = vec![
-        "--url",
-        URL,
         "--keystore",
         keystore_file,
         "--account",
         account_file,
         "account",
         "deploy",
+        "--url",
+        URL,
         "--max-fee",
         "10000000000000000",
         "--fee-token",
@@ -777,8 +777,6 @@ pub async fn test_deploy_keystore_other_args() {
     mint_token(&address.into_hex_string(), 9_999_999_999_999_999_999).await;
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         "accounts.json",
         "--keystore",
@@ -787,6 +785,8 @@ pub async fn test_deploy_keystore_other_args() {
         account_file,
         "account",
         "deploy",
+        "--url",
+        URL,
         "--name",
         "some-name",
         "--max-fee",

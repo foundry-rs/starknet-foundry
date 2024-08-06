@@ -1,15 +1,15 @@
 use anyhow::{anyhow, Context, Result};
 use clap::{Args, ValueEnum};
 use scarb_api::StarknetContractArtifacts;
+use sncast::helpers::error::token_not_supported_for_declaration;
+use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken, PayableTransaction};
+use sncast::helpers::rpc::RpcArgs;
+use sncast::response::errors::StarknetCommandError;
 use sncast::response::structs::DeclareResponse;
 use sncast::response::structs::Felt;
 use sncast::{apply_optional, handle_wait_for_tx, impl_payable_transaction, ErrorData, WaitForTx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{ConnectedAccount, DeclarationV2, DeclarationV3};
-
-use sncast::helpers::error::token_not_supported_for_declaration;
-use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken, PayableTransaction};
-use sncast::response::errors::StarknetCommandError;
 use starknet::core::types::FieldElement;
 use starknet::{
     accounts::{Account, SingleOwnerAccount},
@@ -41,6 +41,9 @@ pub struct Declare {
     /// Version of the declaration (can be inferred from fee token)
     #[clap(short, long)]
     pub version: Option<DeclareVersion>,
+
+    #[clap(flatten)]
+    pub rpc: RpcArgs,
 }
 
 #[derive(ValueEnum, Debug, Clone)]

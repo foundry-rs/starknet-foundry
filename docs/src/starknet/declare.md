@@ -19,8 +19,8 @@ Then run:
 
 ```shell
 $ sncast --account myuser \
-    --url http://127.0.0.1:5050/rpc \ 
     declare \
+	--url http://127.0.0.1:5050/rpc \ 
     --fee-token strk \
     --contract-name SimpleBalance
 

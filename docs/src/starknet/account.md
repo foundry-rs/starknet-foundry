@@ -24,8 +24,8 @@ Do the following to start interacting with the Starknet:
 
     ```shell
 $ sncast \
-	--url http://127.0.0.1:5050 \
 	account create \
+  --url http://127.0.0.1:5050 \
 	--name some-name
       
 Account successfully created. Prefund generated address with at least 432300000000 tokens. It is good to send more in the case of higher demand, max_fee * 2 = 864600000000
@@ -54,8 +54,8 @@ account: https://starkscan.co/search/0x7a949e83b2...
 
 ```shell
 $ sncast \
-	--url http://127.0.0.1:5050 \
 	account deploy
+  --url http://127.0.0.1:5050 \
 	--name some-name \
 	--fee-token strk \
 	--max-fee 9999999999999
@@ -189,10 +189,10 @@ Accounts created and deployed with [starkli](https://book.starkli.rs/accounts#ac
 
 ```shell
 $ sncast \
-    --url http://127.0.0.1:5050 \
     --keystore path/to/keystore.json \
     --account path/to/account.json  \
     declare \
+	--url http://127.0.0.1:5050 \
     --contract-name my_contract
 ```
 
@@ -202,8 +202,8 @@ To import an account into the file holding the accounts info (`~/.starknet_accou
 
 ```shell
 $ sncast \
-    --url http://127.0.0.1:5050 \
     account add \
+	--url http://127.0.0.1:5050 \
     --name my_imported_account \
     --address 0x1 \
     --private-key 0x2 \
@@ -219,10 +219,10 @@ It is possible to create an openzeppelin account with keystore in a similar way 
 
 ```shell
 $ sncast \
-    --url http://127.0.0.1:5050 \
     --keystore my_key.json \
     --account my_account.json \
     account create
+    --url http://127.0.0.1:5050 \
 
 To see account creation details, visit:
 transaction: https://starkscan.co/search/...
