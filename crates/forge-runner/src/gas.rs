@@ -130,6 +130,7 @@ fn clear_compiled_class_hash_update(
     state_changes: blockifier::state::cached_state::StateChanges,
 ) -> blockifier::state::cached_state::StateChanges {
     // copy-pasted blockifier::state::cached_state::StateChanges
+    // link: https://github.com/starkware-libs/blockifier/blob/eb4958ad98d92dc8f8b493edc8dce1a79038c94d/crates/blockifier/src/state/cached_state.rs#L319
     struct StateMapsCopy {
         _nonces: HashMap<ContractAddress, Nonce>,
         _class_hashes: HashMap<ContractAddress, ClassHash>,
