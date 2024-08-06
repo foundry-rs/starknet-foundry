@@ -44,7 +44,7 @@ async fn test_happy_case(account: &str) {
         command: multicall run
         transaction_hash: 0x[..]
 
-        Details:
+        To see invocation details, visit:
         transaction: [..]
     "});
 }
@@ -82,7 +82,7 @@ async fn test_calldata_ids() {
         command: multicall run
         transaction_hash: 0x[..]
 
-        Details:
+        To see invocation details, visit:
         transaction: [..]
     "});
 }

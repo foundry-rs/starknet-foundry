@@ -663,7 +663,7 @@ async fn test_no_scarb_profile() {
             class_hash: [..]
             transaction_hash: [..]
 
-            Details:
+            To see declaration details, visit:
             class: [..]
             transaction: [..]
         "},

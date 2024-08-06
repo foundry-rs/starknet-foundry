@@ -156,12 +156,16 @@ pub struct VerifyResponse {
 impl CommandResponse for VerifyResponse {}
 
 impl OutputLink for InvokeResponse {
+    const TITLE: &'static str = "invocation";
+
     fn format_links(&self, service: &str) -> String {
         format!("transaction: {service}/{:x}", self.transaction_hash.0)
     }
 }
 
 impl OutputLink for DeployResponse {
+    const TITLE: &'static str = "deployment";
+
     fn format_links(&self, service: &str) -> String {
         formatdoc!(
             "
@@ -175,6 +179,8 @@ impl OutputLink for DeployResponse {
 }
 
 impl OutputLink for DeclareResponse {
+    const TITLE: &'static str = "declaration";
+
     fn format_links(&self, service: &str) -> String {
         formatdoc!(
             "
@@ -188,6 +194,8 @@ impl OutputLink for DeclareResponse {
 }
 
 impl OutputLink for AccountCreateResponse {
+    const TITLE: &'static str = "account creation";
+
     fn format_links(&self, service: &str) -> String {
         format!("account: {service}/{:x}", self.address.0)
     }

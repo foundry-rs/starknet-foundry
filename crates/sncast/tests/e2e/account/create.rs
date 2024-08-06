@@ -52,7 +52,7 @@ pub async fn test_happy_case(account_type: &str) {
         max_fee: [..]
         message: Account successfully created. Prefund generated address with at least <max_fee> STRK tokens or an equivalent amount of ETH tokens. It is good to send more in the case of higher demand.
 
-        Details:
+        To see account creation details, visit:
         account: [..]
         "},
     );
@@ -143,7 +143,7 @@ pub async fn test_happy_case_generate_salt() {
         max_fee: [..]
         message: Account successfully created[..]
 
-        Details:
+        To see account creation details, visit:
         account: [..]
         "});
 
@@ -223,7 +223,7 @@ pub async fn test_happy_case_accounts_file_already_exists() {
         max_fee: [..]
         message: Account successfully created[..]
 
-        Details:
+        To see account creation details, visit:
         account: [..]
         "});
 
@@ -315,7 +315,7 @@ pub async fn test_happy_case_keystore(account_type: &str) {
         max_fee: [..]
         message: Account successfully created[..]
 
-        Details:
+        To see account creation details, visit:
         account: [..]
     "});
 
@@ -510,7 +510,7 @@ pub async fn test_happy_case_keystore_int_format() {
         max_fee: [..]
         message: Account successfully created[..]
 
-        Details:
+        To see account creation details, visit:
         account: [..]
     "});
 
@@ -551,7 +551,7 @@ pub async fn test_happy_case_keystore_hex_format() {
         max_fee: 0x[..]
         message: Account successfully created[..]
 
-        Details:
+        To see account creation details, visit:
         account: [..]
     "});
 

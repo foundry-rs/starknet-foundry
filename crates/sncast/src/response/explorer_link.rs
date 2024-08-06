@@ -1,6 +1,8 @@
 use super::print::OutputFormat;
 
 pub trait OutputLink {
+    const TITLE: &'static str;
+
     fn format_links(&self, base: &str) -> String;
 }
 
@@ -17,7 +19,9 @@ pub fn print_block_explorer_link_if_allowed<T: OutputLink>(
             Some(ref url) => url.trim_end_matches('/'),
         };
 
+        let title = T::TITLE;
         let urls = response.format_links(service);
-        println!("\nDetails:\n{urls}");
+
+        println!("\nTo see {title} details, visit:\n{urls}");
     }
 }

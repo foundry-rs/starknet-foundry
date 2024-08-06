@@ -400,7 +400,7 @@ pub async fn test_valid_class_hash() {
         command: account deploy
         transaction_hash: [..]
 
-        Details:
+        To see invocation details, visit:
         transaction: [..]
     "});
 }
@@ -431,7 +431,7 @@ pub async fn test_valid_no_max_fee() {
         command: account deploy
         transaction_hash: [..]
 
-        Details:
+        To see invocation details, visit:
         transaction: [..]
     "});
 }
@@ -525,7 +525,7 @@ pub async fn test_happy_case_keystore(account_type: &str) {
         command: account deploy
         transaction_hash: 0x[..]
 
-        Details:
+        To see invocation details, visit:
         transaction: [..]
     "});
 
@@ -800,7 +800,7 @@ pub async fn test_deploy_keystore_other_args() {
         command: account deploy
         transaction_hash: 0x[..]
 
-        Details:
+        To see invocation details, visit:
         transaction: [..]
     "});
 }

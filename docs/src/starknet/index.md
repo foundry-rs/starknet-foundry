@@ -70,7 +70,7 @@ command: deploy
 contract_address: 0x1d91599ec661e97fdcbb10c642a1c4f920986f1a7a9659d157d0db09baaa29e
 transaction_hash: 0x3062310a1e40d4b66d8987ba7447d1c7317381d0295d62cb12f2fe3f11e6983
 
-Details:
+To see deployment details, visit:
 contract: https://starkscan.co/search/0x1d91599ec6...
 transaction: https://starkscan.co/search/0x3062310a1e...
 ```

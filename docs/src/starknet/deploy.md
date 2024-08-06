@@ -26,7 +26,7 @@ command: Deploy
 contract_address: 0x301316d47a81b39c5e27cca4a7b8ca4773edbf1103218588d6da4d3ed53035a
 transaction_hash: 0x64a62a000240e034d1862c2bbfa154aac6a8195b4b2e570f38bf4fd47a5ab1e
 
-Details:
+To see deployment details, visit:
 contract: https://starkscan.co/search/0x301316d47a...
 transaction: https://starkscan.co/search/0x64a62a0002...
 ```
@@ -60,7 +60,7 @@ command: deploy
 contract_address: 0x301316d47a81b39c5e27cca4a7b8ca4773edbf1103218588d6da4d3ed53035a
 transaction_hash: 0x64a62a000240e034d1862c2bbfa154aac6a8195b4b2e570f38bf4fd47a5ab1e
 
-Details:
+To see deployment details, visit:
 contract: https://starkscan.co/search/0x301316d47a...
 transaction: https://starkscan.co/search/0x64a62a0002...
 ```
@@ -84,7 +84,7 @@ command: deploy
 contract_address: 0x301316d47a81b39c5e27cca4a7b8ca4773edbf1103218588d6da4d3ed5303bc
 transaction_hash: 0x64a62a000240e034d1862c2bbfa154aac6a8195b4b2e570f38bf4fd47a5ab1e
 
-Details:
+To see deployment details, visit:
 contract: https://starkscan.co/search/0x301316d47a...
 transaction: https://starkscan.co/search/0x64a62a0002...
 ```

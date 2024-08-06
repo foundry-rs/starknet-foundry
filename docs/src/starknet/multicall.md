@@ -46,7 +46,7 @@ $ sncast multicall run --path /Users/john/Desktop/multicall_example.toml --fee-t
 command: multicall
 transaction_hash: 0x38fb8a0432f71bf2dae746a1b4f159a75a862e253002b48599c9611fa271dcb
 
-Details:
+To see invocation details, visit:
 transaction: https://starkscan.co/search/0x38fb8a0432...
 ```
 

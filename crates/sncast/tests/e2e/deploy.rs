@@ -84,7 +84,7 @@ async fn test_happy_case_human_readable() {
             contract_address: [..]
             transaction_hash: [..]
 
-            Details:
+            To see deployment details, visit:
             contract: [..]
             transaction: [..]
             "
