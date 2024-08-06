@@ -18,6 +18,7 @@ pub fn parse<T: AttributeInfo>(
     let simple_db = SimpleParserDatabase::default();
     let code = Arc::new(code.to_string());
     let db: &dyn SyntaxGroup = simple_db.upcast();
+    // TODO(#2357): Use `db.parse_virtual` here instead of creating the virtual file manually
     let virtual_file = db.intern_file(FileLongId::Virtual(VirtualFile {
         parent: None,
         name: "test_function".into(),
@@ -51,7 +52,7 @@ pub fn parse_args(args: &str) -> (SimpleParserDatabase, OptionArgListParenthesiz
         ",
         InternalCollector::ATTR_NAME
     ))
-    .expect("scarb provided args must be correct");
+    .expect("Parsing the arguments shouldn't fail at this stage"); // Arguments were parsed previously, so they should pass parsing here
 
     let db = simple_db.upcast();
 
