@@ -1,6 +1,3 @@
-use std::collections::HashMap;
-use std::fs;
-
 use crate::starknet_commands::declare::Declare;
 use crate::starknet_commands::deploy::Deploy;
 use crate::starknet_commands::invoke::Invoke;
@@ -42,6 +39,7 @@ use shared::utils::build_readable_text;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::SCRIPT_LIB_ARTIFACT_NAME;
 use sncast::helpers::fee::ScriptFeeSettings;
+use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::ScriptRunResponse;
 use sncast::state::hashing::{
     generate_declare_tx_id, generate_deploy_tx_id, generate_invoke_tx_id,
@@ -52,6 +50,8 @@ use starknet::core::types::{BlockId, BlockTag::Pending};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
+use std::collections::HashMap;
+use std::fs;
 use tokio::runtime::Runtime;
 
 type ScriptStarknetContractArtifacts = StarknetContractArtifacts;
@@ -69,6 +69,9 @@ pub struct Run {
     /// Do not use the state file
     #[clap(long)]
     pub no_state_file: bool,
+
+    #[clap(flatten)]
+    pub rpc: RpcArgs,
 }
 
 pub struct CastScriptExtension<'a> {
@@ -124,6 +127,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     nonce,
                     package: None,
                     version: None,
+                    rpc: RpcArgs::default(),
                 };
 
                 let declare_tx_id = generate_declare_tx_id(contract.as_str());
@@ -167,6 +171,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     fee_args,
                     nonce,
                     version: None,
+                    rpc: RpcArgs::default(),
                 };
 
                 let deploy_tx_id =
@@ -209,6 +214,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     fee_args,
                     nonce,
                     version: None,
+                    rpc: RpcArgs::default(),
                 };
 
                 let invoke_tx_id =
@@ -328,7 +334,7 @@ pub fn run(
         .assemble_ex(&entry_code, &footer);
 
     // hint processor
-    let mut context = build_context(&SerializableBlockInfo::default().into());
+    let mut context = build_context(&SerializableBlockInfo::default().into(), None);
 
     let mut blockifier_state = CachedState::new(
         DictStateReader::default(),

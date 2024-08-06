@@ -2,6 +2,7 @@ use anyhow::{anyhow, Result};
 use clap::{Args, ValueEnum};
 use sncast::helpers::error::token_not_supported_for_deployment;
 use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken, PayableTransaction};
+use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::structs::{DeployResponse, Felt};
 use sncast::{extract_or_generate_salt, impl_payable_transaction, udc_uniqueness};
@@ -31,7 +32,7 @@ pub struct Deploy {
     pub salt: Option<FieldElement>,
 
     /// If true, salt will be modified with an account address
-    #[clap(short, long)]
+    #[clap(long)]
     pub unique: bool,
 
     #[clap(flatten)]
@@ -44,6 +45,9 @@ pub struct Deploy {
     /// Version of the deployment (can be inferred from fee token)
     #[clap(short, long)]
     pub version: Option<DeployVersion>,
+
+    #[clap(flatten)]
+    pub rpc: RpcArgs,
 }
 
 #[derive(ValueEnum, Debug, Clone)]

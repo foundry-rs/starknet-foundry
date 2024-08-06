@@ -4,13 +4,19 @@ Execute a single multicall transaction containing every call from passed file.
 
 ## Required Common Arguments — Passed By CLI or Specified in `snfoundry.toml`
 
-* [`url`](../common.md#--url--u-rpc_url)
 * [`account`](../common.md#--account--a-account_name)
 
 ## `--path, -p <PATH>`
 Required.
 
 Path to a TOML file with call declarations.
+
+## `--url, -u <RPC_URL>`
+Optional.
+
+Starknet RPC node url address.
+
+Overrides url from `snfoundry.toml`.
 
 ## `--max-fee, -m <MAX_FEE>`
 Optional.

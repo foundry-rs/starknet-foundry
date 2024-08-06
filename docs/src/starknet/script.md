@@ -217,8 +217,8 @@ To run the script, do:
 
 ```shell
 $ sncast \
-  --url http://127.0.0.1:5050 \
   script run my_script
+  --url http://127.0.0.1:5050 \
 
 command: script run
 status: success
@@ -318,9 +318,9 @@ To run the script, do:
 
 ```shell
 $ sncast \
-  --url http://127.0.0.1:5050 \
   --account example_user \
-  script run map_script
+  script run map_script \
+  --url http://127.0.0.1:5050
 
 Class hash of the declared contract: 685896493695476540388232336434993540241192267040651919145140488413686992233
 ...
@@ -338,9 +338,9 @@ and only `call` functions are being executed (as they do not change the network 
 
 ```shell
 $ sncast \
-  --url http://127.0.0.1:5050 \
   --account example_user \
-  script run map_script
+  script run map_script \
+  --url http://127.0.0.1:5050
 
 Class hash of the declared contract: 1922774777685257258886771026518018305931014651657879651971507142160195873652
 Deployed the contract to address: 3478557462226312644848472512920965457566154264259286784215363579593349825684
@@ -354,9 +354,10 @@ whereas, when we run the same script once again with `--no-state-file` flag set,
 
 ```shell
 $ sncast \
-  --url http://127.0.0.1:5050 \
   --account example_user \
-  script run map_script --no-state-file
+  script run map_script \
+  --url http://127.0.0.1:5050 \
+  --no-state-file
 
 command: script run
 message:

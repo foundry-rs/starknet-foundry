@@ -1,4 +1,5 @@
 use clap::Args;
+use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::structs::{ExecutionStatus, FinalityStatus, TransactionStatusResponse};
 use starknet::core::types::{FieldElement, TransactionExecutionStatus, TransactionStatus};
@@ -10,6 +11,9 @@ use starknet::providers::{JsonRpcClient, Provider};
 pub struct TxStatus {
     /// Hash of the transaction
     pub transaction_hash: FieldElement,
+
+    #[clap(flatten)]
+    pub rpc: RpcArgs,
 }
 
 pub async fn tx_status(
