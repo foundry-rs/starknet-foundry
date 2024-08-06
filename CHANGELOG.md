@@ -21,7 +21,7 @@ Commands that do not require `--url` anymore: `account list`, `multicall new`, `
 - Fork tests now discover chain ID via provided RPC URL, defaulting to `SN_SEPOLIA`
 - `#[fork]` attribute parameters format. [Read more here](https://foundry-rs.github.io/starknet-foundry/snforge-advanced-features/fork-testing.html)
 - steps counting
-- Block tag `Latest` change name to `latest`
+- Block tag changed name from `Latest`  to `latest`
 
 ## [0.27.0] - 2024-07-24
 
