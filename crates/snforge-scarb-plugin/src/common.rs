@@ -19,7 +19,7 @@ pub fn into_proc_macro_result(
     match handler(&args, &item, &mut warns) {
         Ok(item) => ProcMacroResult::new(TokenStream::new(item)).with_diagnostics(warns.into()),
         Err(diagnostics) => ProcMacroResult::new(item).with_diagnostics(
-            //TODO extend with warns
+            //TODO(#2358) extend with warns
             diagnostics,
         ),
     }
