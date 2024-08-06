@@ -168,7 +168,7 @@ fn fork_aliased_decorator() {
                     "FORK_NAME_FROM_SCARB_TOML".to_string(),
                     node_rpc_url().to_string(),
                     "tag".to_string(),
-                    "Latest".to_string(),
+                    "latest".to_string(),
                 )],
             },
             &mut BlockNumberMap::default(),
