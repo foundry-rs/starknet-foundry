@@ -86,10 +86,10 @@ fn parse_block_id(fork_target: &ForkTarget) -> Result<BlockId> {
             BlockId::BlockHash(block_hash.into())
         }
         "tag" => {
-            if fork_target.block_id_value == "Latest" {
+            if fork_target.block_id_value == "latest" {
                 BlockId::BlockTag
             } else {
-                Err(anyhow!(r#"only "Latest" block tag is supported"#))?
+                Err(anyhow!(r#"only "latest" block tag is supported"#))?
             }
         }
         _ => Err(anyhow!("block_id must be one of (number | hash | tag)"))?,

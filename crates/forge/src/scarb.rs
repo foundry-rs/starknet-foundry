@@ -54,7 +54,7 @@ pub fn build_test_artifacts_with_scarb(filter: PackagesFilter) -> Result<()> {
 /// we do it because they use same sierra and we display them without distinction anyway
 fn test_targets_by_name(package: &PackageMetadata) -> HashMap<String, &TargetMetadata> {
     fn test_target_name(target: &TargetMetadata) -> String {
-        // this is logic copied from scarb
+        // this is logic copied from scarb: https://github.com/software-mansion/scarb/blob/90ab01cb6deee48210affc2ec1dc94d540ab4aea/extensions/scarb-cairo-test/src/main.rs#L115
         target
             .params
             .get("group-id") // by unit tests grouping

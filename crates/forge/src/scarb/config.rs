@@ -28,6 +28,7 @@ pub struct ForgeConfigFromScarb {
     pub max_n_steps: Option<u32>,
 }
 
+#[non_exhaustive]
 #[derive(Debug, PartialEq, Clone)]
 pub struct ForkTarget {
     pub name: String,
