@@ -57,14 +57,14 @@ async fn test_happy_case_human_readable() {
     let tempdir = create_and_deploy_account(OZ_CLASS_HASH, AccountType::OpenZeppelin).await;
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         "accounts.json",
         "--account",
         "my_account",
         "--int-format",
         "deploy",
+        "--url",
+        URL,
         "--class-hash",
         MAP_CONTRACT_CLASS_HASH_SEPOLIA,
         "--salt",

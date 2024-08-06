@@ -21,7 +21,7 @@ use sncast::helpers::scarb_utils::{
 use sncast::response::errors::handle_starknet_command_error;
 use sncast::{
     chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_default_state_file_name,
-    get_nonce, NumbersFormat, ValidatedWaitParams, WaitForTx,
+    NumbersFormat, ValidatedWaitParams, WaitForTx,
 };
 use starknet::core::utils::get_selector_from_name;
 use starknet_commands::account::list::print_account_list;
@@ -444,23 +444,24 @@ async fn run_async_command(
 
         Commands::ShowConfig(show) => {
             let provider = show.rpc.get_provider(&config).await?;
-            
+
             let result =
-                starknet_commands::show_config::show_config(&provider, config, cli.profile).await;
-            
+                starknet_commands::show_config::show_config(&show, &provider, config, cli.profile)
+                    .await;
+
             print_command_result("show-config", &result, numbers_format, output_format)?;
-          
+
             Ok(())
         }
 
         Commands::TxStatus(tx_status) => {
             let provider = tx_status.rpc.get_provider(&config).await?;
-            
+
             let result =
                 starknet_commands::tx_status::tx_status(&provider, tx_status.transaction_hash)
                     .await
                     .context("Failed to get transaction status");
- 
+
             print_command_result("tx-status", &result, numbers_format, output_format)?;
             Ok(())
         }
