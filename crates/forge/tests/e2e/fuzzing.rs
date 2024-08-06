@@ -6,7 +6,7 @@ use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_co
 fn fuzzing() {
     let temp = setup_package("fuzzing");
 
-    let output = test_runner(&temp).arg("fuzzing::").assert().code(1);
+    let output = test_runner(&temp).arg("fuzzing").assert().code(1);
 
     assert_stdout_contains(
         output,
@@ -49,7 +49,7 @@ fn fuzzing_set_runs() {
     let temp = setup_package("fuzzing");
 
     let output = test_runner(&temp)
-        .args(["fuzzing::", "--fuzzer-runs", "10"])
+        .args(["fuzzing", "--fuzzer-runs", "10"])
         .assert()
         .code(1);
 
@@ -94,7 +94,7 @@ fn fuzzing_set_seed() {
     let temp = setup_package("fuzzing");
 
     let output = test_runner(&temp)
-        .args(["fuzzing::", "--fuzzer-seed", "1234"])
+        .args(["fuzzing", "--fuzzer-seed", "1234"])
         .assert()
         .code(1);
 
@@ -139,7 +139,7 @@ fn fuzzing_incorrect_runs() {
     let temp = setup_package("fuzzing");
 
     let output = test_runner(&temp)
-        .args(["fuzzing::", "--fuzzer-runs", "0"])
+        .args(["fuzzing", "--fuzzer-runs", "0"])
         .assert()
         .code(2);
 
@@ -167,8 +167,9 @@ fn fuzzing_incorrect_function_args() {
         
         
         Collected 2 test(s) from fuzzing package
+        Running 0 test(s) from src/
         Running 2 test(s) from tests/
-        [ERROR] Tried to use incorrect type for fuzzing. Type = fuzzing_integrationtest::incorrect_args::MyStruct is not supported
+        [ERROR] Tried to use incorrect type for fuzzing. Type = tests::incorrect_args::MyStruct is not supported
         "},
     );
 }
@@ -190,8 +191,9 @@ fn fuzzing_exit_first() {
 
 
         Collected 2 test(s) from fuzzing package
+        Running 0 test(s) from src/
         Running 2 test(s) from tests/
-        [FAIL] fuzzing_integrationtest::exit_first_fuzz::exit_first_fails_test (runs: 1, arguments: [..])
+        [FAIL] tests::exit_first_fuzz::exit_first_fails_test (runs: 1, arguments: [..])
 
         Failure data:
             0x32202b2062203d3d2032202b2062 ('2 + b == 2 + b')
@@ -200,7 +202,7 @@ fn fuzzing_exit_first() {
 
         Fuzzer seed: [..]
         Failures:
-            fuzzing_integrationtest::exit_first_fuzz::exit_first_fails_test
+            tests::exit_first_fuzz::exit_first_fails_test
         "},
     );
 }
@@ -222,14 +224,15 @@ fn fuzzing_exit_first_single_fail() {
 
 
         Collected 2 test(s) from fuzzing package
+        Running 0 test(s) from src/
         Running 2 test(s) from tests/
-        [FAIL] fuzzing_integrationtest::exit_first_single_fail::exit_first_fails_test
+        [FAIL] tests::exit_first_single_fail::exit_first_fails_test
 
         Failure data:
             0x32202b2062203d3d2032202b2062 ('2 + b == 2 + b')
 
         Failures:
-            fuzzing_integrationtest::exit_first_single_fail::exit_first_fails_test
+            tests::exit_first_single_fail::exit_first_fails_test
 
         Tests: 0 passed, 1 failed, 1 skipped, 0 ignored, 17 filtered out
         "},

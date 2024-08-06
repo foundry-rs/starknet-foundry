@@ -1,4 +1,5 @@
 use anyhow::{bail, Result};
+use forge_runner::package_tests::raw::RawForkParams;
 use itertools::Itertools;
 use serde::Deserialize;
 use std::{
@@ -28,24 +29,26 @@ pub struct ForgeConfigFromScarb {
     pub max_n_steps: Option<u32>,
 }
 
-#[non_exhaustive]
 #[derive(Debug, PartialEq, Clone)]
 pub struct ForkTarget {
-    pub name: String,
-    pub url: String,
-    pub block_id_type: String,
-    pub block_id_value: String,
+    name: String,
+    params: RawForkParams,
 }
 
 impl ForkTarget {
     #[must_use]
-    pub fn new(name: String, url: String, block_id_type: String, block_id_value: String) -> Self {
-        Self {
-            name,
-            url,
-            block_id_type,
-            block_id_value,
-        }
+    pub fn new(name: String, params: RawForkParams) -> Self {
+        Self { name, params }
+    }
+
+    #[must_use]
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    #[must_use]
+    pub fn params(&self) -> &RawForkParams {
+        &self.params
     }
 }
 
@@ -125,9 +128,11 @@ impl TryFrom<RawForgeConfig> for ForgeConfigFromScarb {
 
             fork_targets.push(ForkTarget::new(
                 raw_fork_target.name,
-                raw_fork_target.url,
-                block_id_type.to_string(),
-                block_id_value.clone(),
+                RawForkParams {
+                    url: raw_fork_target.url,
+                    block_id_type: block_id_type.to_string(),
+                    block_id_value: block_id_value.clone(),
+                },
             ));
         }
 

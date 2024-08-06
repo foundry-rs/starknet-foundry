@@ -1,6 +1,5 @@
-use super::{TestCase, TestTarget};
+use super::{raw::RawFuzzerConfig, TestCase, TestTarget};
 use crate::expected_result::ExpectedTestResult;
-use cheatnet::runtime_extensions::forge_config_extension::config::RawFuzzerConfig;
 use starknet_api::block::BlockNumber;
 use url::Url;
 
