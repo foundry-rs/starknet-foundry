@@ -127,7 +127,6 @@ fn replace_id_with_params(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use cairo_lang_sierra::debug_info::DebugInfo;
     use cairo_lang_sierra::program::ProgramArtifact;
     use cairo_lang_sierra::{ids::GenericTypeId, program::Program};
     use forge_runner::package_tests::with_config::{TestCaseConfig, TestCaseWithConfig};
@@ -144,7 +143,7 @@ mod tests {
                 statements: vec![],
                 funcs: vec![],
             },
-            debug_info: Some(DebugInfo::default()),
+            debug_info: None,
         }
     }
 

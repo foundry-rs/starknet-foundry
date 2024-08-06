@@ -124,7 +124,6 @@ impl TestCaseFilter for TestsFilter {
 #[cfg(test)]
 mod tests {
     use crate::test_filter::TestsFilter;
-    use cairo_lang_sierra::debug_info::DebugInfo;
     use cairo_lang_sierra::program::Program;
     use cairo_lang_sierra::program::ProgramArtifact;
     use forge_runner::expected_result::ExpectedTestResult;
@@ -143,7 +142,7 @@ mod tests {
                 statements: vec![],
                 funcs: vec![],
             },
-            debug_info: Some(DebugInfo::default()),
+            debug_info: None,
         }
     }
 
