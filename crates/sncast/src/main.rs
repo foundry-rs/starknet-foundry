@@ -25,7 +25,7 @@ use sncast::{
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
-use starknet_commands::verify::Verify;
+use starknet_commands::verify::verify::Verify;
 use tokio::runtime::Runtime;
 
 mod starknet_commands;
@@ -536,7 +536,7 @@ async fn run_verify_command(
         },
     )
     .expect("Failed to build contract");
-    let mut result = starknet_commands::verify::verify(
+    let mut result = starknet_commands::verify::verify::verify(
         verify.contract_address,
         verify.contract_name.clone(),
         verify.verifier.clone(),
