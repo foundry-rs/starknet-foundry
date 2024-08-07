@@ -26,7 +26,7 @@ impl VerificationInterface for WalnutVerificationInterface {
         &self,
         contract_address: Option<FieldElement>,
         class_hash: Option<FieldElement>,
-        class_name: String
+        class_name: String,
     ) -> Result<VerifyResponse> {
         let file_data = self.base.read_workspace_files()?;
         let source_code = serde_json::Value::Object(file_data);

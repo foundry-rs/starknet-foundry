@@ -92,11 +92,15 @@ pub async fn verify(
     match verifier {
         Verifier::Walnut => {
             let walnut = WalnutVerificationInterface::new(network, workspace_dir.to_path_buf());
-            walnut.verify(contract_address, class_hash, class_name).await
+            walnut
+                .verify(contract_address, class_hash, class_name)
+                .await
         }
         Verifier::Voyager => {
             let voyager = VoyagerVerificationInterface::new(network, workspace_dir.to_path_buf());
-            voyager.verify(contract_address, class_hash, class_name).await
+            voyager
+                .verify(contract_address, class_hash, class_name)
+                .await
         }
     }
 }
