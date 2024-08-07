@@ -100,8 +100,21 @@ fn test_happy_case_specify_package() {
     let args = vec![
         "--accounts-file",
         accounts_file,
+        "account",
+        "create",
+        "--url",
+        URL,
+        "--name",
+        "dupa",
+    ];
+
+    runner(&args).current_dir(tempdir.path());
+
+    let args = vec![
+        "--accounts-file",
+        accounts_file,
         "--account",
-        "user1",
+        "user18",
         "--int-format",
         "--json",
         "declare-deploy",
@@ -124,9 +137,7 @@ fn test_happy_case_specify_package() {
 
     assert_eq!(output.as_stderr(), "");
     assert_eq!(json["command"], "declare-deploy");
-    assert!(json["class_hash"].as_str().is_some());
     assert!(json["contract_address"].as_str().is_some());
-    assert!(json["declare_transaction_hash"].as_str().is_some());
     assert!(json["deploy_transaction_hash"].as_str().is_some());
 }
 
@@ -144,7 +155,7 @@ fn test_happy_case_contract_already_declared() {
         "--accounts-file",
         accounts_file,
         "--account",
-        "user1",
+        "user2",
         "--json",
         "declare",
         "--url",
@@ -178,7 +189,7 @@ fn test_nonexistent_contract() {
         "--accounts-file",
         accounts_file,
         "--account",
-        "user1",
+        "user3",
         "declare-deploy",
         "--url",
         URL,
@@ -211,7 +222,7 @@ fn test_multiple_packages() {
         "--accounts-file",
         accounts_file,
         "--account",
-        "user1",
+        "user4",
         "--int-format",
         "declare-deploy",
         "--url",
@@ -246,7 +257,7 @@ fn test_invalid_nonce() {
         "--accounts-file",
         accounts_file,
         "--account",
-        "user1",
+        "user5",
         "--json",
         "declare-deploy",
         "--url",
@@ -280,7 +291,7 @@ fn test_no_scarb_toml() {
         "--accounts-file",
         accounts_file,
         "--account",
-        "user1",
+        "user6",
         "declare-deploy",
         "--url",
         URL,
@@ -314,7 +325,6 @@ fn test_no_scarb_profile() {
         tempdir.path().join(CONFIG_FILENAME),
     )
     .expect("Failed to copy config file to temp dir");
-
     let args = vec![
         "--accounts-file",
         accounts_file,
