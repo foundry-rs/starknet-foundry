@@ -14,6 +14,8 @@ pub struct TestsFilter {
     last_failed_filter: bool,
 
     failed_tests_cache: FailedTestsCache,
+    // based on exclude_pattern flag
+    exclude_pattern: Option<Regex>
 }
 
 #[derive(Debug, PartialEq)]
@@ -40,6 +42,7 @@ impl TestsFilter {
         include_ignored: bool,
         rerun_failed: bool,
         failed_tests_cache: FailedTestsCache,
+        exclude_pattern: Option<String>,
     ) -> Self {
         assert!(
             !(only_ignored && include_ignored),
@@ -70,6 +73,7 @@ impl TestsFilter {
             ignored_filter,
             last_failed_filter: rerun_failed,
             failed_tests_cache,
+            exclude_pattern,
         }
     }
 
@@ -97,6 +101,10 @@ impl TestsFilter {
             }
         }
 
+        if let Some(pattern) = &self.exclude_pattern {
+            test_cases.retain(|tc| !pattern.is_match(&tc.name));
+        }
+
         match self.ignored_filter {
             // if NotIgnored (default) we filter ignored tests later and display them as ignored
             IgnoredFilter::All | IgnoredFilter::NotIgnored => {}
@@ -106,6 +114,13 @@ impl TestsFilter {
         };
 
         Ok(())
+    }
+
+    pub(crate) fn is_excluded(&self, test_case: &TestCaseWithResolvedConfig) -> bool {
+        if let Some(pattern) = &self.exclude_pattern {
+            return pattern.is_match(&test_case.name);
+        }
+        false
     }
 }
 

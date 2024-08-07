@@ -39,6 +39,7 @@ pub struct RunForPackageArgs {
     pub forge_config: Arc<ForgeConfig>,
     pub fork_targets: Vec<ForkTarget>,
     pub package_name: String,
+    pub exclude_pattern: Option<String>
 }
 
 impl RunForPackageArgs {
@@ -79,6 +80,7 @@ impl RunForPackageArgs {
             args.include_ignored,
             args.rerun_failed,
             FailedTestsCache::new(cache_dir),
+            args.exclude_pattern.clone(),
         );
 
         Ok(RunForPackageArgs {
@@ -87,6 +89,7 @@ impl RunForPackageArgs {
             tests_filter: test_filter,
             fork_targets: forge_config_from_scarb.fork,
             package_name: package.name,
+            exclude_pattern: args.exclude_pattern.clone(),
         })
     }
 }
@@ -120,6 +123,7 @@ pub async fn run_for_package(
         tests_filter,
         fork_targets,
         package_name,
+        exclude_pattern,
     }: RunForPackageArgs,
     block_number_map: &mut BlockNumberMap,
 ) -> Result<Vec<TestTargetSummary>> {
@@ -129,6 +133,12 @@ pub async fn run_for_package(
 
     for test_target in &mut test_targets {
         tests_filter.filter_tests(&mut test_target.test_cases)?;
+
+        // Exclude tests based on the exclude_pattern option
+        if let Some(pattern) = &exclude_pattern {
+            let regex = Regex::new(&pattern).expect("Invalid regex pattern");
+            test_target.test_cases.retain(|case| !regex.is_match(&case.name));
+        }
     }
 
     warn_if_available_gas_used_with_incompatible_scarb_version(&test_targets)?;

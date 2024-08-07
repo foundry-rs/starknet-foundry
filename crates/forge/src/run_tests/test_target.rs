@@ -53,9 +53,15 @@ pub async fn run_for_test_target(
     for case in tests.test_cases {
         let case_name = case.name.clone();
 
+        // Check if the test case should be excluded
+        if let Some(filter) = tests_filter.as_any().downcast_ref::<TestsFilter>() {
+            if filter.is_excluded(&case) {
+                continue;
+            }
+        }
+
         if !tests_filter.should_be_run(&case) {
             tasks.push(tokio::task::spawn(async {
-                // TODO TestCaseType should also be encoded in the test case definition
                 Ok(AnyTestCaseSummary::Single(TestCaseSummary::Ignored {
                     name: case_name,
                 }))

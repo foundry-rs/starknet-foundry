@@ -89,6 +89,10 @@ pub struct TestArgs {
     #[arg(short, long)]
     exact: bool,
 
+    /// Exclude tests matching the specified regex pattern
+    #[arg(long)]
+    exclude_pattern: Option<String>
+
     /// Stop executing tests after the first failed test
     #[arg(short = 'x', long)]
     exit_first: bool,
