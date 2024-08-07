@@ -1,5 +1,6 @@
 use crate::helpers::constants::{
-    DEVNET_OZ_CLASS_HASH_CAIRO_0, DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS, URL,
+    DEVNET_OZ_CLASS_HASH_CAIRO_0, DEVNET_OZ_CLASS_HASH_CAIRO_1, DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS,
+    URL,
 };
 use crate::helpers::runner::runner;
 use camino::Utf8PathBuf;
@@ -8,7 +9,6 @@ use conversions::string::IntoHexStr;
 use indoc::{formatdoc, indoc};
 use serde_json::json;
 use shared::test_utils::output_assert::assert_stderr_contains;
-use sncast::helpers::constants::OZ_CLASS_HASH;
 use std::fs::{self, File};
 use tempfile::tempdir;
 use test_case::test_case;
@@ -22,12 +22,12 @@ pub async fn test_happy_case(input_account_type: &str, saved_type: &str) {
     let accounts_file = "accounts.json";
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "account",
         "add",
+        "--url",
+        URL,
         "--name",
         "my_account_add",
         "--address",
@@ -76,12 +76,12 @@ pub async fn test_existent_account_address() {
     let accounts_file = "accounts.json";
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "account",
         "add",
+        "--url",
+        URL,
         "--name",
         "my_account_add",
         "--address",
@@ -104,7 +104,7 @@ pub async fn test_existent_account_address() {
                 "alpha-sepolia": {
                   "my_account_add": {
                     "address": DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS,
-                    "class_hash": &OZ_CLASS_HASH.into_hex_string(),
+                    "class_hash": &DEVNET_OZ_CLASS_HASH_CAIRO_1.into_hex_string(),
                     "deployed": true,
                     "legacy": false,
                     "private_key": "0x456",
@@ -123,12 +123,12 @@ pub async fn test_existent_account_address_and_incorrect_class_hash() {
     let accounts_file = "accounts.json";
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "account",
         "add",
+        "--url",
+        URL,
         "--name",
         "my_account_add",
         "--address",
@@ -155,12 +155,12 @@ pub async fn test_nonexistent_account_address_and_nonexistent_class_hash() {
     let accounts_file = "accounts.json";
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "account",
         "add",
+        "--url",
+        URL,
         "--name",
         "my_account_add",
         "--address",
@@ -187,12 +187,12 @@ pub async fn test_nonexistent_account_address() {
     let accounts_file = "accounts.json";
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "account",
         "add",
+        "--url",
+        URL,
         "--name",
         "my_account_add",
         "--address",
@@ -217,12 +217,12 @@ pub async fn test_happy_case_add_profile() {
     let accounts_file = "accounts.json";
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "account",
         "add",
+        "--url",
+        URL,
         "--name",
         "my_account_add",
         "--address",
@@ -284,12 +284,12 @@ pub async fn test_detect_deployed() {
     let accounts_file = "accounts.json";
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "account",
         "add",
+        "--url",
+        URL,
         "--name",
         "my_account_add",
         "--address",
@@ -317,7 +317,7 @@ pub async fn test_detect_deployed() {
                 "alpha-sepolia": {
                   "my_account_add": {
                     "address": DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS,
-                    "class_hash": &OZ_CLASS_HASH.into_hex_string(),
+                    "class_hash": &DEVNET_OZ_CLASS_HASH_CAIRO_1.into_hex_string(),
                     "deployed": true,
                     "private_key": "0x5",
                     "public_key": "0x788435d61046d3eec54d77d25bd194525f4fa26ebe6575536bc6f656656b74c",
@@ -333,10 +333,10 @@ pub async fn test_detect_deployed() {
 #[tokio::test]
 pub async fn test_invalid_public_key() {
     let args = vec![
-        "--url",
-        URL,
         "account",
         "add",
+        "--url",
+        URL,
         "--name",
         "my_account_add",
         "--address",
@@ -363,7 +363,7 @@ pub async fn test_invalid_public_key() {
 
 #[tokio::test]
 pub async fn test_missing_arguments() {
-    let args = vec!["--url", URL, "account", "add", "--name", "my_account_add"];
+    let args = vec!["account", "add", "--url", URL, "--name", "my_account_add"];
 
     let snapbox = runner(&args);
     let output = snapbox.assert().failure();
@@ -388,12 +388,12 @@ pub async fn test_private_key_from_file() {
     fs::write(temp_dir.path().join(private_key_file), "0x456").unwrap();
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "account",
         "add",
+        "--url",
+        URL,
         "--name",
         "my_account_add",
         "--address",
@@ -463,10 +463,10 @@ pub async fn test_accept_only_one_private_key() {
 #[tokio::test]
 pub async fn test_invalid_private_key_file_path() {
     let args = vec![
-        "--url",
-        URL,
         "account",
         "add",
+        "--url",
+        URL,
         "--name",
         "my_account_add",
         "--address",
@@ -501,12 +501,12 @@ pub async fn test_invalid_private_key_in_file() {
     .unwrap();
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         "accounts.json",
         "account",
         "add",
+        "--url",
+        URL,
         "--name",
         "my_account_add",
         "--address",
@@ -538,12 +538,12 @@ pub async fn test_private_key_as_int_in_file() {
     fs::write(temp_dir.path().join(private_key_file), "1110").unwrap();
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "account",
         "add",
+        "--url",
+        URL,
         "--name",
         "my_account_add",
         "--address",
@@ -573,7 +573,7 @@ pub async fn test_private_key_as_int_in_file() {
                     "legacy": false,
                     "private_key": "0x456",
                     "public_key": "0x5f679dacd8278105bd3b84a15548fe84079068276b0e84d6cc093eb5430f063",
-                    "class_hash": &OZ_CLASS_HASH.into_hex_string(),
+                    "class_hash": &DEVNET_OZ_CLASS_HASH_CAIRO_1.into_hex_string(),
                     "type": "open_zeppelin"
                   }
                 }
@@ -589,12 +589,12 @@ pub async fn test_empty_config_add_profile() {
     let accounts_file = "accounts.json";
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "account",
         "add",
+        "--url",
+        URL,
         "--name",
         "my_account_add",
         "--address",

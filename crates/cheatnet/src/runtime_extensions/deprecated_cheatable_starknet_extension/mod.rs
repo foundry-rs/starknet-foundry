@@ -16,10 +16,10 @@ use blockifier::execution::execution_utils::{
 use conversions::FromConv;
 
 use ::runtime::SyscallHandlingResult;
-use cairo_felt::Felt252;
 use cairo_vm::types::relocatable::{MaybeRelocatable, Relocatable};
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::vm_core::VirtualMachine;
+use cairo_vm::Felt252;
 use num_traits::ToPrimitive;
 use starknet_api::block::{BlockNumber, BlockTimestamp};
 use starknet_api::core::{
@@ -186,8 +186,17 @@ impl<'a> DeprecatedExtensionLogic for DeprecatedCheatableStarknetRuntimeExtensio
         extended_runtime: &mut Self::Runtime,
     ) {
         let syscall_handler = &extended_runtime.hint_handler;
-        if let DeprecatedSyscallSelector::EmitEvent = selector {
-            syscall_hooks::emit_event_hook(syscall_handler, self.cheatnet_state);
+        match selector {
+            DeprecatedSyscallSelector::EmitEvent => {
+                syscall_hooks::emit_event_hook(syscall_handler, self.cheatnet_state);
+            }
+            DeprecatedSyscallSelector::SendMessageToL1 => {
+                syscall_hooks::send_message_to_l1_syscall_hook(
+                    syscall_handler,
+                    self.cheatnet_state,
+                );
+            }
+            _ => {}
         }
     }
 }

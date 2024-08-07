@@ -4,7 +4,7 @@ use crate::common::{
     state::create_cached_state,
 };
 use blockifier::state::state_api::State;
-use cairo_felt::Felt252;
+use cairo_vm::Felt252;
 use cheatnet::state::CheatnetState;
 use starknet_api::core::ContractAddress;
 
@@ -19,7 +19,7 @@ fn check_block(
     let read_sequencer_address = felt_selector_from_name("read_sequencer_address");
     let read_block_hash = felt_selector_from_name("read_block_hash");
 
-    let output = call_contract(state, cheatnet_state, contract_address, &write_block, &[]);
+    let output = call_contract(state, cheatnet_state, contract_address, write_block, &[]);
 
     assert_success(output, &[]);
 
@@ -27,7 +27,7 @@ fn check_block(
         state,
         cheatnet_state,
         contract_address,
-        &read_block_number,
+        read_block_number,
         &[],
     );
 
@@ -37,7 +37,7 @@ fn check_block(
         state,
         cheatnet_state,
         contract_address,
-        &read_block_timestamp,
+        read_block_timestamp,
         &[],
     );
 
@@ -47,7 +47,7 @@ fn check_block(
         state,
         cheatnet_state,
         contract_address,
-        &read_sequencer_address,
+        read_sequencer_address,
         &[],
     );
 
@@ -57,17 +57,17 @@ fn check_block(
         state,
         cheatnet_state,
         contract_address,
-        &read_block_hash,
+        read_block_hash,
         &[],
     );
 
     let block_hash = &recover_data(output)[0];
 
     (
-        block_number.clone(),
-        block_timestamp.clone(),
-        sequencer_address.clone(),
-        block_hash.clone(),
+        *block_number,
+        *block_timestamp,
+        *sequencer_address,
+        *block_hash,
     )
 }
 

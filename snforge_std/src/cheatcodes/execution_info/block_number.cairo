@@ -5,7 +5,8 @@ use super::{
 /// Changes the block number for the given contract address and span.
 /// - `contract_address` - instance of `ContractAddress` specifying which contract to cheat
 /// - `block_number` - block number to be set
-/// - `span` - instance of `CheatSpan` specifying the number of contract calls with the cheat applied
+/// - `span` - instance of `CheatSpan` specifying the number of contract calls with the cheat
+/// applied
 fn cheat_block_number(contract_address: ContractAddress, block_number: u64, span: CheatSpan) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
@@ -21,7 +22,7 @@ fn cheat_block_number(contract_address: ContractAddress, block_number: u64, span
 
 /// Changes the block number.
 /// - `block_number` - block number to be set
-fn cheat_block_number_global(block_number: u64) {
+fn start_cheat_block_number_global(block_number: u64) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info.block_info.block_number = Operation::StartGlobal(block_number);
@@ -29,7 +30,7 @@ fn cheat_block_number_global(block_number: u64) {
     cheat_execution_info(execution_info);
 }
 
-/// Cancels the `cheat_block_number_global`.
+/// Cancels the `start_cheat_block_number_global`.
 fn stop_cheat_block_number_global() {
     let mut execution_info: ExecutionInfoMock = Default::default();
 

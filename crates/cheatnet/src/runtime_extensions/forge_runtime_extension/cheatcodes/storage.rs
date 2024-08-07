@@ -1,7 +1,6 @@
 use blockifier::state::state_api::State;
-use cairo_felt::Felt252;
+use cairo_vm::Felt252;
 use conversions::{FromConv, IntoConv};
-use num_traits::Pow;
 use starknet::core::crypto::pedersen_hash;
 use starknet::core::types::FieldElement;
 use starknet_api::core::{ContractAddress, PatriciaKey};
@@ -21,7 +20,7 @@ use starknet_api::state::StorageKey;
 pub fn store(
     state: &mut dyn State,
     target: ContractAddress,
-    storage_address: &Felt252,
+    storage_address: Felt252,
     value: Felt252,
 ) -> Result<(), anyhow::Error> {
     state.set_storage_at(target, storage_key(storage_address)?, value.into_())?;
@@ -40,7 +39,7 @@ pub fn store(
 pub fn load(
     state: &mut dyn State,
     target: ContractAddress,
-    storage_address: &Felt252,
+    storage_address: Felt252,
 ) -> Result<Felt252, anyhow::Error> {
     Ok(state
         .get_storage_at(target, storage_key(storage_address)?)?
@@ -52,26 +51,26 @@ pub fn load(
 /// <https://docs.starknet.io/documentation/architecture_and_concepts/Smart_Contracts/contract-storage>
 #[must_use]
 fn normalize_storage_address(address: FieldElement) -> FieldElement {
-    let modulus = Felt252::from(2).pow(251) - Felt252::from(256);
+    let modulus: Felt252 = Felt252::from(2).pow(251_u128) - Felt252::from(256);
     address % modulus.into_()
 }
 
 #[must_use]
-pub fn calculate_variable_address(selector: &Felt252, key: Option<&[Felt252]>) -> Felt252 {
-    let mut address: FieldElement = selector.clone().into_();
+pub fn calculate_variable_address(selector: Felt252, key: Option<&[Felt252]>) -> Felt252 {
+    let mut address: FieldElement = selector.into_();
     match key {
         None => address.into_(),
         Some(key) => {
             for key_part in key {
-                address = pedersen_hash(&address, &(key_part.clone().into_()));
+                address = pedersen_hash(&address, &((*key_part).into_()));
             }
             normalize_storage_address(address).into_()
         }
     }
 }
 
-fn storage_key(storage_address: &Felt252) -> Result<StorageKey, anyhow::Error> {
+fn storage_key(storage_address: Felt252) -> Result<StorageKey, anyhow::Error> {
     Ok(StorageKey(PatriciaKey::try_from(StarkHash::from_(
-        storage_address.clone(),
+        storage_address,
     ))?))
 }

@@ -4,11 +4,11 @@ pub mod byte_array;
 pub mod class_hash;
 pub mod contract_address;
 pub mod entrypoint_selector;
+pub mod eth_address;
 pub mod felt252;
 pub mod field_element;
 pub mod nonce;
 pub mod serde;
-pub mod stark_felt;
 pub mod string;
 
 pub trait FromConv<T>: Sized {

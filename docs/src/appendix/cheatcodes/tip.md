@@ -7,8 +7,8 @@ Cheatcodes modifying `tip`:
 
 Changes the transaction tip for the given target and span.
 
-## `cheat_tip_global`
-> `fn cheat_tip_global(tip: u128)`
+## `start_cheat_tip_global`
+> `fn start_cheat_tip_global(tip: u128)`
 
 Changes the transaction tip for all targets.
 
@@ -25,4 +25,4 @@ Cancels the `cheat_tip` / `start_cheat_tip` for the given target.
 ## `stop_cheat_tip_global`
 > `fn stop_cheat_tip_global(target: ContractAddress)`
 
-Cancels the `cheat_tip_global`.
+Cancels the `start_cheat_tip_global`.

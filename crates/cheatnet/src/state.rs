@@ -5,6 +5,7 @@ use crate::runtime_extensions::forge_runtime_extension::cheatcodes::cheat_execut
     ExecutionInfoMock, ResourceBounds,
 };
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::Event;
+use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_messages_to_l1::MessageToL1;
 use blockifier::blockifier::block::BlockInfo;
 use blockifier::execution::call_info::OrderedL2ToL1Message;
 use blockifier::execution::entry_point::CallEntryPoint;
@@ -14,19 +15,18 @@ use blockifier::{
     execution::contract_class::ContractClass,
     state::state_api::{StateReader, StateResult},
 };
-use cairo_felt::Felt252;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
-use cairo_vm::vm::trace::trace_entry::TraceEntry;
+use cairo_vm::vm::trace::trace_entry::RelocatedTraceEntry;
+use cairo_vm::Felt252;
 use conversions::serde::deserialize::CairoDeserialize;
 use conversions::serde::serialize::{BufferWriter, CairoSerialize};
+use conversions::string::TryFromHexStr;
 use runtime::starknet::context::SerializableBlockInfo;
 use runtime::starknet::state::DictStateReader;
-use starknet_api::core::EntryPointSelector;
+use starknet_api::core::{ChainId, EntryPointSelector};
 use starknet_api::transaction::ContractAddressSalt;
 use starknet_api::{
-    class_hash,
     core::{ClassHash, CompiledClassHash, ContractAddress, Nonce},
-    hash::{StarkFelt, StarkHash},
     state::StorageKey,
 };
 use std::cell::{Ref, RefCell};
@@ -66,7 +66,7 @@ impl StateReader for ExtendedStateReader {
         &self,
         contract_address: ContractAddress,
         key: StorageKey,
-    ) -> StateResult<StarkFelt> {
+    ) -> StateResult<Felt252> {
         self.dict_state_reader
             .get_storage_at(contract_address, key)
             .or_else(|_| {
@@ -122,6 +122,15 @@ impl StateReader for ExtendedStateReader {
     }
 }
 
+impl ExtendedStateReader {
+    pub fn get_chain_id(&self) -> anyhow::Result<Option<ChainId>> {
+        self.fork_state_reader
+            .as_ref()
+            .map(ForkStateReader::chain_id)
+            .transpose()
+    }
+}
+
 #[derive(Clone, Default, Debug, PartialEq, Eq)]
 pub enum CheatStatus<T> {
     Cheated(T, CheatSpan),
@@ -163,7 +172,7 @@ pub struct CallTrace {
     pub used_execution_resources: ExecutionResources,
     pub used_l1_resources: L1Resources,
     pub used_syscalls: SyscallCounter,
-    pub vm_trace: Option<Vec<TraceEntry>>,
+    pub vm_trace: Option<Vec<RelocatedTraceEntry>>,
 }
 
 impl CairoSerialize for CallTrace {
@@ -316,9 +325,10 @@ pub struct CheatnetState {
     pub global_cheated_execution_info: ExecutionInfoMock,
 
     pub mocked_functions:
-        HashMap<ContractAddress, HashMap<EntryPointSelector, CheatStatus<Vec<StarkFelt>>>>,
+        HashMap<ContractAddress, HashMap<EntryPointSelector, CheatStatus<Vec<Felt252>>>>,
     pub replaced_bytecode_contracts: HashMap<ContractAddress, ClassHash>,
     pub detected_events: Vec<Event>,
+    pub detected_messages_to_l1: Vec<MessageToL1>,
     pub deploy_salt_base: u32,
     pub block_info: BlockInfo,
     pub trace_data: TraceData,
@@ -327,7 +337,8 @@ pub struct CheatnetState {
 impl Default for CheatnetState {
     fn default() -> Self {
         let mut test_code_entry_point = build_test_entry_point();
-        test_code_entry_point.class_hash = Some(class_hash!(TEST_CONTRACT_CLASS_HASH));
+        test_code_entry_point.class_hash =
+            Some(TryFromHexStr::try_from_hex_str(TEST_CONTRACT_CLASS_HASH).unwrap());
         let test_call = Rc::new(RefCell::new(CallTrace {
             entry_point: test_code_entry_point,
             run_with_call_header: true,
@@ -339,6 +350,7 @@ impl Default for CheatnetState {
             mocked_functions: Default::default(),
             replaced_bytecode_contracts: Default::default(),
             detected_events: vec![],
+            detected_messages_to_l1: vec![],
             deploy_salt_base: 0,
             block_info: SerializableBlockInfo::default().into(),
             trace_data: TraceData {
@@ -404,7 +416,7 @@ impl CheatnetState {
 
     #[must_use]
     pub fn get_salt(&self) -> ContractAddressSalt {
-        ContractAddressSalt(StarkFelt::from(self.deploy_salt_base))
+        ContractAddressSalt(Felt252::from(self.deploy_salt_base))
     }
 
     #[must_use]
@@ -483,7 +495,7 @@ impl TraceData {
         used_syscalls: SyscallCounter,
         result: CallResult,
         l2_to_l1_messages: &[OrderedL2ToL1Message],
-        vm_trace: Option<Vec<TraceEntry>>,
+        vm_trace: Option<Vec<RelocatedTraceEntry>>,
     ) {
         let CallStackElement {
             resources_used_before_call,

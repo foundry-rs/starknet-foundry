@@ -25,7 +25,7 @@ impl CheatnetState {
         });
     }
 
-    pub fn cheat_block_timestamp_global(&mut self, timestamp: u64) {
+    pub fn start_cheat_block_timestamp_global(&mut self, timestamp: u64) {
         self.cheat_execution_info(ExecutionInfoMockOperations {
             block_info: BlockInfoMockOperations {
                 block_timestamp: Operation::StartGlobal(timestamp),

@@ -30,10 +30,10 @@ use conversions::serde::serialize::CairoSerialize;
 use serde::de::DeserializeOwned;
 use shared::rpc::create_rpc_client;
 use starknet::accounts::{AccountFactory, AccountFactoryError};
-use std::collections::HashMap;
 use std::str::FromStr;
 use std::thread::sleep;
 use std::time::Duration;
+use std::{collections::HashMap, fmt::Display};
 use std::{env, fs};
 use thiserror::Error;
 
@@ -41,11 +41,11 @@ pub mod helpers;
 pub mod response;
 pub mod state;
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum AccountType {
     #[serde(rename = "open_zeppelin")]
-    Oz,
+    OpenZeppelin,
     Argent,
     Braavos,
 }
@@ -55,11 +55,17 @@ impl FromStr for AccountType {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "open_zeppelin" | "oz" => Ok(AccountType::Oz),
+            "open_zeppelin" | "oz" => Ok(AccountType::OpenZeppelin),
             "argent" => Ok(AccountType::Argent),
             "braavos" => Ok(AccountType::Braavos),
             account_type => Err(anyhow!("Invalid account type = {account_type}")),
         }
+    }
+}
+
+impl Display for AccountType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{self:?}")
     }
 }
 
@@ -329,9 +335,9 @@ pub fn get_account_data_from_keystore(
     let account_type = get_string_value_from_json(&account_info, "/variant/type")
         .and_then(|account_type| account_type.parse().ok());
 
-    let public_key = match account_type.clone().context("Failed to get type key")? {
+    let public_key = match account_type.context("Failed to get type key")? {
         AccountType::Argent => parse_to_felt("/variant/owner"),
-        AccountType::Oz => parse_to_felt("/variant/public_key"),
+        AccountType::OpenZeppelin => parse_to_felt("/variant/public_key"),
         AccountType::Braavos => get_braavos_account_public_key(&account_info)?,
     }
     .context("Failed to get public key from account JSON file")?;
@@ -386,7 +392,7 @@ pub fn get_account_data_from_accounts_file(
         .ok_or_else(|| anyhow!("Account = {name} not found under network = {network_name}"))
 }
 
-fn read_and_parse_json_file<T: DeserializeOwned>(path: &Utf8PathBuf) -> Result<T> {
+pub fn read_and_parse_json_file<T: DeserializeOwned>(path: &Utf8PathBuf) -> Result<T> {
     let file_content =
         fs::read_to_string(path).with_context(|| format!("Failed to read a file = {path}"))?;
     let deserializer = &mut Deserializer::from_str(&file_content);
@@ -557,12 +563,13 @@ async fn get_revert_reason(
     provider: &JsonRpcClient<HttpTransport>,
     tx_hash: FieldElement,
 ) -> Result<&str, WaitForTransactionError> {
-    let receipt = provider
+    let receipt_with_block_info = provider
         .get_transaction_receipt(tx_hash)
         .await
         .map_err(SNCastProviderError::from)?;
 
-    if let starknet::core::types::ExecutionResult::Reverted { reason } = receipt.execution_result()
+    if let starknet::core::types::ExecutionResult::Reverted { reason } =
+        receipt_with_block_info.receipt.execution_result()
     {
         Err(WaitForTransactionError::TransactionError(
             TransactionError::Reverted(ErrorData {
@@ -792,7 +799,7 @@ mod tests {
         assert_eq!(account.deployed, Some(true));
         assert_eq!(account.class_hash, None);
         assert_eq!(account.legacy, None);
-        assert_eq!(account.account_type, Some(AccountType::Oz));
+        assert_eq!(account.account_type, Some(AccountType::OpenZeppelin));
     }
 
     #[test]
@@ -818,7 +825,7 @@ mod tests {
         assert_eq!(account.salt, None);
         assert_eq!(account.deployed, Some(true));
         assert_eq!(account.legacy, Some(true));
-        assert_eq!(account.account_type, Some(AccountType::Oz));
+        assert_eq!(account.account_type, Some(AccountType::OpenZeppelin));
     }
 
     #[test]

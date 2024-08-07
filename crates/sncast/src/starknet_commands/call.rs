@@ -1,5 +1,6 @@
 use anyhow::Result;
 use clap::Args;
+use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::structs::{CallResponse, Felt};
 use starknet::core::types::{BlockId, FieldElement, FunctionCall};
@@ -26,6 +27,9 @@ pub struct Call {
     /// and block number (u64)
     #[clap(short, long, default_value = "pending")]
     pub block_id: String,
+
+    #[clap(flatten)]
+    pub rpc: RpcArgs,
 }
 
 #[allow(clippy::ptr_arg)]

@@ -2,10 +2,10 @@ use blockifier::execution::entry_point::{CallEntryPoint, CallType, EntryPointExe
 use blockifier::execution::execution_utils::ReadOnlySegments;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::state::state_api::State;
-use cairo_felt::Felt252;
 use cairo_lang_casm::hints::Hint;
 use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
+use cairo_vm::Felt252;
 use cheatnet::constants::TEST_ADDRESS;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     call_entry_point, AddressOrClassHash,
@@ -21,16 +21,14 @@ use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::{
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::state::CheatnetState;
+use conversions::string::TryFromHexStr;
 use conversions::IntoConv;
 use runtime::starknet::context::build_context;
 use scarb_api::metadata::MetadataCommandExt;
 use scarb_api::{get_contracts_artifacts_and_source_sierra_paths, ScarbCommand};
 use starknet::core::utils::get_selector_from_name;
-use starknet_api::core::PatriciaKey;
-use starknet_api::core::{ClassHash, ContractAddress};
+use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector};
 use starknet_api::deprecated_contract_class::EntryPointType;
-use starknet_api::hash::StarkHash;
-use starknet_api::patricia_key;
 use std::collections::HashMap;
 
 pub mod assertions;
@@ -93,7 +91,7 @@ pub fn deploy_contract(
     let class_hash = declare(state, contract_name, &contracts_data).unwrap();
 
     let mut execution_resources = ExecutionResources::default();
-    let mut entry_point_execution_context = build_context(&cheatnet_state.block_info);
+    let mut entry_point_execution_context = build_context(&cheatnet_state.block_info, None);
     let hints = HashMap::new();
 
     let mut syscall_hint_processor = build_syscall_hint_processor(
@@ -122,7 +120,7 @@ pub fn deploy_wrapper(
     calldata: &[Felt252],
 ) -> Result<ContractAddress, CheatcodeError> {
     let mut execution_resources = ExecutionResources::default();
-    let mut entry_point_execution_context = build_context(&cheatnet_state.block_info);
+    let mut entry_point_execution_context = build_context(&cheatnet_state.block_info, None);
     let hints = HashMap::new();
 
     let mut syscall_hint_processor = build_syscall_hint_processor(
@@ -151,7 +149,7 @@ pub fn deploy_at_wrapper(
     contract_address: ContractAddress,
 ) -> Result<ContractAddress, CheatcodeError> {
     let mut execution_resources = ExecutionResources::default();
-    let mut entry_point_execution_context = build_context(&cheatnet_state.block_info);
+    let mut entry_point_execution_context = build_context(&cheatnet_state.block_info, None);
     let hints = HashMap::new();
 
     let mut syscall_hint_processor = build_syscall_hint_processor(
@@ -179,7 +177,7 @@ pub fn call_contract(
     state: &mut dyn State,
     cheatnet_state: &mut CheatnetState,
     contract_address: &ContractAddress,
-    entry_point_selector: &Felt252,
+    entry_point_selector: EntryPointSelector,
     calldata: &[Felt252],
 ) -> CallResult {
     let calldata = create_execute_calldata(calldata);
@@ -188,16 +186,16 @@ pub fn call_contract(
         class_hash: None,
         code_address: Some(*contract_address),
         entry_point_type: EntryPointType::External,
-        entry_point_selector: entry_point_selector.clone().into_(),
+        entry_point_selector,
         calldata,
         storage_address: *contract_address,
-        caller_address: ContractAddress(patricia_key!(TEST_ADDRESS)),
+        caller_address: TryFromHexStr::try_from_hex_str(TEST_ADDRESS).unwrap(),
         call_type: CallType::Call,
         initial_gas: u64::MAX,
     };
 
     let mut execution_resources = ExecutionResources::default();
-    let mut entry_point_execution_context = build_context(&cheatnet_state.block_info);
+    let mut entry_point_execution_context = build_context(&cheatnet_state.block_info, None);
     let hints = HashMap::new();
 
     let mut syscall_hint_processor = build_syscall_hint_processor(
@@ -217,7 +215,7 @@ pub fn call_contract(
 }
 
 #[must_use]
-pub fn felt_selector_from_name(name: &str) -> Felt252 {
+pub fn felt_selector_from_name(name: &str) -> EntryPointSelector {
     let selector = get_selector_from_name(name).unwrap();
-    Felt252::from_bytes_be(&selector.to_bytes_be())
+    selector.into_()
 }

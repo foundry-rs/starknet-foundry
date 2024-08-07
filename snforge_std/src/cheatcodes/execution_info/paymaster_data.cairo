@@ -5,7 +5,8 @@ use super::{
 /// Changes the transaction paymaster data for the given contract address and span.
 /// - `contract_address` - instance of `ContractAddress` specifying which contract to cheat
 /// - `paymaster_data` - transaction paymaster data to be set
-/// - `span` - instance of `CheatSpan` specifying the number of contract calls with the cheat applied
+/// - `span` - instance of `CheatSpan` specifying the number of contract calls with the cheat
+/// applied
 fn cheat_paymaster_data(
     contract_address: ContractAddress, paymaster_data: Span<felt252>, span: CheatSpan
 ) {
@@ -23,7 +24,7 @@ fn cheat_paymaster_data(
 
 /// Changes the transaction paymaster data.
 /// - `paymaster_data` - transaction paymaster data to be set
-fn cheat_paymaster_data_global(paymaster_data: Span<felt252>) {
+fn start_cheat_paymaster_data_global(paymaster_data: Span<felt252>) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info.tx_info.paymaster_data = Operation::StartGlobal(paymaster_data);
@@ -31,7 +32,7 @@ fn cheat_paymaster_data_global(paymaster_data: Span<felt252>) {
     cheat_execution_info(execution_info);
 }
 
-/// Cancels the `cheat_paymaster_data_global`.
+/// Cancels the `start_cheat_paymaster_data_global`.
 fn stop_cheat_paymaster_data_global() {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
@@ -47,7 +48,8 @@ fn start_cheat_paymaster_data(contract_address: ContractAddress, paymaster_data:
     cheat_paymaster_data(contract_address, paymaster_data, CheatSpan::Indefinite);
 }
 
-/// Cancels the `cheat_paymaster_data` / `start_cheat_paymaster_data` for the given contract_address.
+/// Cancels the `cheat_paymaster_data` / `start_cheat_paymaster_data` for the given
+/// contract_address.
 /// - `contract_address` - instance of `ContractAddress` specifying which contract to stop cheating
 fn stop_cheat_paymaster_data(contract_address: ContractAddress) {
     let mut execution_info: ExecutionInfoMock = Default::default();

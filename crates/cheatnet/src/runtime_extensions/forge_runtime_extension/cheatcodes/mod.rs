@@ -1,6 +1,6 @@
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallFailure;
-use cairo_felt::Felt252;
 use cairo_vm::vm::errors::hint_errors::HintError;
+use cairo_vm::Felt252;
 use runtime::EnhancedHintError;
 
 pub mod cheat_block_number;
@@ -16,6 +16,7 @@ pub mod mock_call;
 pub mod precalculate_address;
 pub mod replace_bytecode;
 pub mod spy_events;
+pub mod spy_messages_to_l1;
 pub mod storage;
 
 /// A structure used for returning cheatcode errors in tests

@@ -45,7 +45,7 @@ fn get_class_hash_upgrade() {
         &mut cached_state,
         &mut cheatnet_state,
         &contract_address,
-        &selector,
+        selector,
         &[hello_starknet_class_hash.into_()],
     );
 

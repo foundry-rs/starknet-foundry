@@ -19,7 +19,7 @@ fn segment_arena_simple() {
         &mut cached_state,
         &mut cheatnet_state,
         &contract_address,
-        &selector,
+        selector,
         &[],
     );
 

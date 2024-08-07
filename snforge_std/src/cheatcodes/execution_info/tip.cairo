@@ -5,7 +5,8 @@ use super::{
 /// Changes the transaction tip for the given contract address and span.
 /// - `contract_address` - instance of `ContractAddress` specifying which contract to cheat
 /// - `tip` - transaction tip to be set
-/// - `span` - instance of `CheatSpan` specifying the number of contract calls with the cheat applied
+/// - `span` - instance of `CheatSpan` specifying the number of contract calls with the cheat
+/// applied
 fn cheat_tip(contract_address: ContractAddress, tip: u128, span: CheatSpan) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
@@ -18,7 +19,7 @@ fn cheat_tip(contract_address: ContractAddress, tip: u128, span: CheatSpan) {
 
 /// Changes the transaction tip.
 /// - `tip` - transaction tip to be set
-fn cheat_tip_global(tip: u128) {
+fn start_cheat_tip_global(tip: u128) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info.tx_info.tip = Operation::StartGlobal(tip);
@@ -26,7 +27,7 @@ fn cheat_tip_global(tip: u128) {
     cheat_execution_info(execution_info);
 }
 
-/// Cancels the `cheat_tip_global`.
+/// Cancels the `start_cheat_tip_global`.
 fn stop_cheat_tip_global() {
     let mut execution_info: ExecutionInfoMock = Default::default();
 

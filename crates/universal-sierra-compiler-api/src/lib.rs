@@ -18,7 +18,7 @@ mod command;
 pub type CasmCodeOffset = usize;
 pub type CasmInstructionIdx = usize;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct AssembledProgramWithDebugInfo {
     pub assembled_cairo_program: AssembledCairoProgramWithSerde,
     /// `debug_info[i]` contains the following information about the first CASM instruction that
@@ -26,11 +26,12 @@ pub struct AssembledProgramWithDebugInfo {
     /// `StatementIdx(i)` (i-th index in Sierra statements vector):
     /// - code offset in the CASM bytecode
     /// - index in CASM instructions vector
+    ///
     /// Those 2 values are usually not equal since the instruction sizes in CASM may vary
     pub debug_info: Vec<(CasmCodeOffset, CasmInstructionIdx)>,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct AssembledCairoProgramWithSerde {
     pub bytecode: Vec<BigInt>,
     pub hints: Vec<(usize, Vec<Hint>)>,
