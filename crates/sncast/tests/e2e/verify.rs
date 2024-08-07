@@ -1,5 +1,5 @@
 use crate::helpers::constants::{ACCOUNT_FILE_PATH, CONTRACTS_DIR, MAP_CONTRACT_ADDRESS_SEPOLIA};
-use crate::helpers::fixtures::copy_directory_to_tempdir;
+use crate::helpers::fixtures::{copy_directory_to_tempdir, default_cli_args};
 use crate::helpers::runner::runner;
 use indoc::formatdoc;
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};

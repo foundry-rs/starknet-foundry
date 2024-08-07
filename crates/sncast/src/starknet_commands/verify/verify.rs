@@ -1,16 +1,16 @@
-use super::walnut::WalnutVerificationInterface;
-use super::voyager::VoyagerVerificationInterface;
 use super::base::VerificationInterface;
-use sncast::response::structs::VerifyResponse;
+use super::voyager::VoyagerVerificationInterface;
+use super::walnut::WalnutVerificationInterface;
 use anyhow::{anyhow, bail, Result};
 use camino::Utf8PathBuf;
 use clap::{Parser, ValueEnum};
 use promptly::prompt;
+use scarb_api::StarknetContractArtifacts;
+use sncast::response::structs::VerifyResponse;
 use sncast::Network;
 use starknet::core::types::FieldElement;
 use std::collections::HashMap;
 use std::fmt;
-use scarb_api::StarknetContractArtifacts;
 
 #[derive(Parser)]
 #[command(about = "Verify a contract through a block explorer")]
