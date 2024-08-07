@@ -5,7 +5,6 @@ mod build_trace_data;
 mod collection;
 mod color;
 mod components;
-mod diagnostics_and_plugins;
 mod env;
 mod fork_warning;
 mod forking;

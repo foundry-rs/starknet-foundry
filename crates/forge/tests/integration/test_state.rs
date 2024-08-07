@@ -23,7 +23,6 @@ fn storage_access_from_tests() {
             }
         }
 
-        use tests::test_case::Contract::balanceContractMemberStateTrait;
 
         #[test]
         fn storage_access_from_tests() {
@@ -420,9 +419,6 @@ fn storage_access_default_values() {
             }
         }
 
-        use tests::test_case::Contract::balanceContractMemberStateTrait;
-        use tests::test_case::Contract::legacy_mapContractMemberStateTrait;
-        use tests::test_case::Contract::custom_structContractMemberStateTrait;
 
         #[test]
         fn storage_access_default_values() {

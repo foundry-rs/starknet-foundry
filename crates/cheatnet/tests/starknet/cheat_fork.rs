@@ -1,6 +1,6 @@
 use crate::common::state::create_fork_cached_state;
 use crate::common::{call_contract, felt_selector_from_name};
-use cairo_felt::Felt252;
+use cairo_vm::Felt252;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallResult;
 use cheatnet::state::CheatnetState;
 use conversions::string::TryFromHexStr;
@@ -25,7 +25,7 @@ fn cheat_caller_address_cairo0_contract(selector: &str) {
         &mut cached_fork_state,
         &mut cheatnet_state,
         &contract_address,
-        &selector,
+        selector,
         &[],
     );
 
@@ -40,7 +40,7 @@ fn cheat_caller_address_cairo0_contract(selector: &str) {
         &mut cached_fork_state,
         &mut cheatnet_state,
         &contract_address,
-        &selector,
+        selector,
         &[],
     );
     let CallResult::Success { ret_data } = output else {
@@ -54,7 +54,7 @@ fn cheat_caller_address_cairo0_contract(selector: &str) {
         &mut cached_fork_state,
         &mut cheatnet_state,
         &contract_address,
-        &selector,
+        selector,
         &[],
     );
     let CallResult::Success { ret_data } = output else {
@@ -80,7 +80,7 @@ fn cheat_block_number_cairo0_contract(selector: &str) {
         &mut cached_fork_state,
         &mut cheatnet_state,
         &contract_address,
-        &selector,
+        selector,
         &[],
     );
     let CallResult::Success { ret_data } = output else {
@@ -94,7 +94,7 @@ fn cheat_block_number_cairo0_contract(selector: &str) {
         &mut cached_fork_state,
         &mut cheatnet_state,
         &contract_address,
-        &selector,
+        selector,
         &[],
     );
     let CallResult::Success { ret_data } = output else {
@@ -108,7 +108,7 @@ fn cheat_block_number_cairo0_contract(selector: &str) {
         &mut cached_fork_state,
         &mut cheatnet_state,
         &contract_address,
-        &selector,
+        selector,
         &[],
     );
     let CallResult::Success { ret_data } = output else {
@@ -134,7 +134,7 @@ fn cheat_block_timestamp_cairo0_contract(selector: &str) {
         &mut cached_fork_state,
         &mut cheatnet_state,
         &contract_address,
-        &selector,
+        selector,
         &[],
     );
     let CallResult::Success { ret_data } = output else {
@@ -147,7 +147,7 @@ fn cheat_block_timestamp_cairo0_contract(selector: &str) {
         &mut cached_fork_state,
         &mut cheatnet_state,
         &contract_address,
-        &selector,
+        selector,
         &[],
     );
     let CallResult::Success { ret_data } = output else {
@@ -161,7 +161,7 @@ fn cheat_block_timestamp_cairo0_contract(selector: &str) {
         &mut cached_fork_state,
         &mut cheatnet_state,
         &contract_address,
-        &selector,
+        selector,
         &[],
     );
     let CallResult::Success { ret_data } = output else {

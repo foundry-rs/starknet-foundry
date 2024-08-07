@@ -5,7 +5,8 @@ use super::{
 /// Changes the transaction account deployment data for the given contract address and span.
 /// - `contract_address` - instance of `ContractAddress` specifying which contracts to cheat
 /// - `account_deployment_data` - transaction account deployment data to be set
-/// - `span` - instance of `CheatSpan` specifying the number of contract calls with the cheat applied
+/// - `span` - instance of `CheatSpan` specifying the number of contract calls with the cheat
+/// applied
 fn cheat_account_deployment_data(
     contract_address: ContractAddress, account_deployment_data: Span<felt252>, span: CheatSpan
 ) {

@@ -1,5 +1,5 @@
-use cairo_felt::Felt252;
 use conversions::serde::serialize::{CairoSerialize, SerializeToFeltVec};
+use starknet_types_core::felt::Felt as Felt252;
 
 macro_rules! from_felts {
     ($($exprs:expr),*) => {

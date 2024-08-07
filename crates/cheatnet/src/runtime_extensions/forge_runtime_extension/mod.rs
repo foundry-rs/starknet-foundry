@@ -28,16 +28,17 @@ use blockifier::{
     },
     versioned_constants::VersionedConstants,
 };
-use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
+use cairo_vm::vm::runners::cairo_runner::CairoRunner;
 use cairo_vm::vm::{
     errors::hint_errors::HintError, runners::cairo_runner::ExecutionResources,
     vm_core::VirtualMachine,
 };
+use cairo_vm::Felt252;
 use conversions::byte_array::ByteArray;
+use conversions::felt252::TryInferFormat;
 use conversions::serde::deserialize::{BufferReader, CairoDeserialize};
 use conversions::serde::serialize::CairoSerialize;
-use conversions::{felt252::TryInferFormat, IntoConv};
 use runtime::{
     CheatcodeHandlingResult, EnhancedHintError, ExtendedRuntime, ExtensionLogic,
     SyscallHandlingResult,
@@ -70,6 +71,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
         extended_runtime: &mut Self::Runtime,
     ) -> Result<CheatcodeHandlingResult, EnhancedHintError> {
         match selector {
+            "is_config_mode" => Ok(CheatcodeHandlingResult::from_serializable(false)),
             "cheat_execution_info" => {
                 let execution_info = input_reader.read()?;
 
@@ -197,11 +199,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .cheatnet_state
                     .precalculate_address(&class_hash, &calldata);
 
-                let felt_contract_address: Felt252 = contract_address.into_();
-
-                Ok(CheatcodeHandlingResult::from_serializable(
-                    felt_contract_address,
-                ))
+                Ok(CheatcodeHandlingResult::from_serializable(contract_address))
             }
             "var" => {
                 let name: String = input_reader.read::<ByteArray>()?.into();
@@ -245,8 +243,8 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     syscall_handler,
                     cheatnet_runtime.extension.cheatnet_state,
                     contract_address,
-                    &function_selector,
-                    &from_address,
+                    function_selector,
+                    from_address,
                     &payload,
                 ) {
                     CallResult::Success { .. } => {
@@ -448,7 +446,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .state;
                 let target = input_reader.read()?;
                 let storage_address = input_reader.read()?;
-                store(*state, target, &storage_address, input_reader.read()?)
+                store(*state, target, storage_address, input_reader.read()?)
                     .context("Failed to store")?;
 
                 Ok(CheatcodeHandlingResult::from_serializable(()))
@@ -460,13 +458,13 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     .hint_handler
                     .state;
                 let target = input_reader.read()?;
-                let storage_address = &input_reader.read()?;
+                let storage_address = input_reader.read()?;
                 let loaded = load(*state, target, storage_address).context("Failed to load")?;
 
                 Ok(CheatcodeHandlingResult::from_serializable(loaded))
             }
             "map_entry_address" => {
-                let map_selector = &input_reader.read()?;
+                let map_selector = input_reader.read()?;
                 let keys: Vec<_> = input_reader.read()?;
                 let map_entry_address = calculate_variable_address(map_selector, Some(&keys));
 
@@ -613,7 +611,7 @@ pub fn update_top_call_l1_resources(runtime: &mut ForgeRuntime) {
     top_call.borrow_mut().used_l1_resources.l2_l1_message_sizes = all_l2_l1_message_sizes;
 }
 
-pub fn update_top_call_vm_trace(runtime: &mut ForgeRuntime, vm: &VirtualMachine) {
+pub fn update_top_call_vm_trace(runtime: &mut ForgeRuntime, cairo_runner: &CairoRunner) {
     let trace_data = &mut runtime
         .extended_runtime
         .extended_runtime
@@ -623,7 +621,7 @@ pub fn update_top_call_vm_trace(runtime: &mut ForgeRuntime, vm: &VirtualMachine)
 
     if trace_data.is_vm_trace_needed {
         trace_data.current_call_stack.top().borrow_mut().vm_trace =
-            Some(get_relocated_vm_trace(vm));
+            Some(get_relocated_vm_trace(cairo_runner));
     }
 }
 fn add_syscall_resources(

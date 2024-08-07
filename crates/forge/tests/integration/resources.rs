@@ -2,6 +2,7 @@ use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector::{
     Deploy, EmitEvent, GetBlockHash, GetExecutionInfo, Keccak, SendMessageToL1, StorageRead,
     StorageWrite,
 };
+use cairo_vm::types::builtin_name::BuiltinName;
 use indoc::indoc;
 use std::path::Path;
 use test_utils::runner::{assert_builtin, assert_passed, assert_syscall, Contract};
@@ -14,7 +15,7 @@ fn builtins_count() {
         r"
             #[test]
             fn range_check() {
-                assert(1_u8 >= 1_u8, 'error message');
+                assert((1_u8 + 1_u8) >= 1_u8, 'error message');
             }
 
             #[test]
@@ -49,11 +50,11 @@ fn builtins_count() {
     assert_passed(&result);
 
     // No ECDSA and Keccak builtins
-    assert_builtin(&result, "range_check", "range_check_builtin", 1);
-    assert_builtin(&result, "bitwise", "bitwise_builtin", 1);
-    assert_builtin(&result, "pedersen", "pedersen_builtin", 1);
-    assert_builtin(&result, "poseidon", "poseidon_builtin", 1);
-    assert_builtin(&result, "ec_op", "ec_op_builtin", 1);
+    assert_builtin(&result, "range_check", BuiltinName::range_check, 4);
+    assert_builtin(&result, "bitwise", BuiltinName::bitwise, 1);
+    assert_builtin(&result, "pedersen", BuiltinName::pedersen, 1);
+    assert_builtin(&result, "poseidon", BuiltinName::poseidon, 1);
+    assert_builtin(&result, "ec_op", BuiltinName::ec_op, 1);
 }
 
 #[test]
@@ -224,11 +225,16 @@ fn estimation_includes_os_resources() {
     assert_passed(&result);
     // Cost of storage write in builtins is 1 range check and 89 steps
     // Steps are pretty hard to verify so this test is based on range check diff
-    assert_builtin(&result, "syscall_storage_write", "range_check_builtin", 6);
+    assert_builtin(
+        &result,
+        "syscall_storage_write",
+        BuiltinName::range_check,
+        9,
+    );
     assert_builtin(
         &result,
         "syscall_storage_write_baseline",
-        "range_check_builtin",
-        3,
+        BuiltinName::range_check,
+        6,
     );
 }

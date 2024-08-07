@@ -1,11 +1,12 @@
 #[cfg(test)]
 mod tests_field_elements {
-    use cairo_felt::{Felt252, PRIME_STR};
+    use cairo_vm::utils::PRIME_STR;
     use conversions::string::{IntoDecStr, TryFromDecStr, TryFromHexStr};
     use conversions::{FromConv, IntoConv};
     use starknet::core::types::FieldElement;
     use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, Nonce};
-    use starknet_api::hash::{StarkFelt, StarkHash};
+    use starknet_api::hash::StarkHash;
+    use starknet_types_core::felt::Felt as Felt252;
 
     #[test]
     fn test_field_elements_conversions_happy_case() {
@@ -19,7 +20,6 @@ mod tests_field_elements {
             field_element,
             EntryPointSelector::from_(field_element).into_()
         );
-        assert_eq!(field_element, StarkFelt::from_(field_element).into_());
         assert_eq!(field_element, StarkHash::from_(field_element).into_());
 
         assert_eq!(
@@ -40,7 +40,6 @@ mod tests_field_elements {
             field_element,
             EntryPointSelector::from_(field_element).into_()
         );
-        assert_eq!(field_element, StarkFelt::from_(field_element).into_());
         assert_eq!(field_element, StarkHash::from_(field_element).into_());
 
         assert_eq!(

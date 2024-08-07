@@ -7,7 +7,8 @@ use starknet::info::v2::ResourceBounds;
 /// Changes the transaction resource bounds for the given contract address and span.
 /// - `contract_address` - instance of `ContractAddress` specifying which contract to cheat
 /// - `resource_bounds` - transaction resource bounds to be set
-/// - `span` - instance of `CheatSpan` specifying the number of contract calls with the cheat applied
+/// - `span` - instance of `CheatSpan` specifying the number of contract calls with the cheat
+/// applied
 fn cheat_resource_bounds(
     contract_address: ContractAddress, resource_bounds: Span<ResourceBounds>, span: CheatSpan
 ) {
@@ -51,7 +52,8 @@ fn start_cheat_resource_bounds(
     cheat_resource_bounds(contract_address, resource_bounds, CheatSpan::Indefinite);
 }
 
-/// Cancels the `cheat_resource_bounds` / `start_cheat_resource_bounds` for the given contract_address.
+/// Cancels the `cheat_resource_bounds` / `start_cheat_resource_bounds` for the given
+/// contract_address.
 /// - `contract_address` - instance of `ContractAddress` specifying which contract to stop cheating
 fn stop_cheat_resource_bounds(contract_address: ContractAddress) {
     let mut execution_info: ExecutionInfoMock = Default::default();

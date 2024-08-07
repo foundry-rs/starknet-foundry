@@ -5,7 +5,8 @@ use super::{
 /// Changes the sequencer address for the given contract address and span.
 /// - `contract_address` - instance of `ContractAddress` specifying which contract to cheat
 /// - `sequencer_address` - sequencer address to be set
-/// - `span` - instance of `CheatSpan` specifying the number of contract calls with the cheat applied
+/// - `span` - instance of `CheatSpan` specifying the number of contract calls with the cheat
+/// applied
 fn cheat_sequencer_address(
     contract_address: ContractAddress, sequencer_address: ContractAddress, span: CheatSpan
 ) {
@@ -49,7 +50,8 @@ fn start_cheat_sequencer_address(
     cheat_sequencer_address(contract_address, sequencer_address, CheatSpan::Indefinite);
 }
 
-/// Cancels the `cheat_sequencer_address` / `start_cheat_sequencer_address` for the given contract_address.
+/// Cancels the `cheat_sequencer_address` / `start_cheat_sequencer_address` for the given
+/// contract_address.
 /// - `contract_address` - instance of `ContractAddress` specifying which contract to stop cheating
 fn stop_cheat_sequencer_address(contract_address: ContractAddress) {
     let mut execution_info: ExecutionInfoMock = Default::default();

@@ -425,11 +425,11 @@ fn store_load_structure_to_felt() {
             use starknet::ContractAddress;
             use snforge_std::{ declare, ContractClassTrait, store, load, map_entry_address };
             
-            #[derive(Serde, Copy, Drop, starknet::Store, LegacyHash)]
+            #[derive(Serde, Copy, Drop, starknet::Store, Hash)]
             struct NestedKey {
                 c: felt252
             }
-            #[derive(Serde, Copy, Drop, starknet::Store, LegacyHash)]
+            #[derive(Serde, Copy, Drop, starknet::Store, Hash)]
             struct StructuredKey {
                 a: felt252,
                 b: NestedKey,
@@ -570,7 +570,7 @@ fn fork_store_load() {
             }}
 
             #[test]
-            #[fork(url: "{}", block_id: BlockId::Number(54060))]
+            #[fork(url: "{}", block_number: 54060)]
             fn fork_simple_decorator() {{
                 let dispatcher = IHelloStarknetDispatcher {{
                     contract_address: contract_address_const::<0x202de98471a4fae6bcbabb96cab00437d381abc58b02509043778074d6781e9>()

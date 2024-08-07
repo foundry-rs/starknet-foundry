@@ -1,12 +1,12 @@
 use crate as conversions; // trick for CairoDeserialize macro
 use crate::serde::deserialize::{BufferReadError, BufferReadResult, BufferReader};
 use crate::{serde::serialize::SerializeToFeltVec, string::TryFromHexStr};
-use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string_ex;
 use cairo_lang_utils::byte_array::{BYTES_IN_WORD, BYTE_ARRAY_MAGIC};
 use cairo_serde_macros::{CairoDeserialize, CairoSerialize};
+use starknet_types_core::felt::Felt as Felt252;
 
-#[derive(CairoDeserialize, CairoSerialize, Clone)]
+#[derive(CairoDeserialize, CairoSerialize, Clone, Debug, PartialEq)]
 pub struct ByteArray {
     words: Vec<Felt252>,
     pending_word: Felt252,
@@ -19,8 +19,8 @@ impl From<&str> for ByteArray {
         let remainder = chunks.remainder();
         let pending_word_len = remainder.len();
 
-        let words = chunks.map(Felt252::from_bytes_be).collect();
-        let pending_word = Felt252::from_bytes_be(remainder);
+        let words = chunks.map(Felt252::from_bytes_be_slice).collect();
+        let pending_word = Felt252::from_bytes_be_slice(remainder);
 
         Self {
             words,

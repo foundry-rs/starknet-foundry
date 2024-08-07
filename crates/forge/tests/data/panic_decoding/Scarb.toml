@@ -1,3 +1,6 @@
 [package]
 name = "panic_decoding"
 version = "0.1.0"
+
+[dependencies]
+assert_macros = "0.1.0"
