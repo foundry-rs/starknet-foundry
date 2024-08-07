@@ -24,14 +24,16 @@ impl VerificationInterface for VoyagerVerificationInterface {
 
     async fn verify(
         &self,
-        contract_address: FieldElement,
-        contract_name: String,
+        contract_address: Option<FieldElement>,
+        class_hash: Option<FieldElement>,
+        class_name: String,
     ) -> Result<VerifyResponse> {
         let file_data = self.base.read_workspace_files()?;
         let source_code = serde_json::Value::Object(file_data);
         let payload = VerificationPayload {
-            contract_name,
-            contract_address: contract_address.to_string(),
+            class_name,
+            class_hash: class_hash,
+            contract_address: contract_address,
             source_code,
         };
         let url = self.gen_explorer_url()?;

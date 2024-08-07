@@ -14,8 +14,9 @@ pub trait VerificationInterface {
     fn new(network: Network, workspace_dir: Utf8PathBuf) -> Self;
     async fn verify(
         &self,
-        contract_address: FieldElement,
-        contract_name: String,
+        contract_address: Option<FieldElement>,
+        class_hash: Option<FieldElement>,
+        class_name: String,
     ) -> Result<VerifyResponse>;
     fn gen_explorer_url(&self) -> Result<String>;
 }
@@ -82,7 +83,8 @@ impl BaseVerificationInterface {
 
 #[derive(Serialize, Debug)]
 pub struct VerificationPayload {
-    pub contract_name: String,
-    pub contract_address: String,
+    pub class_name: String,
+    pub contract_address: Option<FieldElement>,
+    pub class_hash: Option<FieldElement>,
     pub source_code: serde_json::Value,
 }

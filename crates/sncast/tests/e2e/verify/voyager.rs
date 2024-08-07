@@ -30,7 +30,7 @@ async fn test_happy_case() {
         "verify",
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
-        "--contract-name",
+        "--class-name",
         "Map",
         "--verifier",
         "voyager",
@@ -81,7 +81,7 @@ async fn test_failed_verification() {
         "verify",
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
-        "--contract-name",
+        "--class-name",
         "Map",
         "--verifier",
         "voyager",
@@ -118,7 +118,7 @@ async fn test_verification_abort() {
         "verify",
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
-        "--contract-name",
+        "--class-name",
         "nonexistent",
         "--verifier",
         "voyager",
@@ -151,7 +151,7 @@ async fn test_wrong_contract_name_passed() {
         "verify",
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
-        "--contract-name",
+        "--class-name",
         "nonexistent",
         "--verifier",
         "voyager",
@@ -169,6 +169,37 @@ async fn test_wrong_contract_name_passed() {
             r"
         command: verify
         error: Contract named 'nonexistent' was not found
+        "
+        ),
+    );
+}
+
+#[tokio::test]
+async fn test_no_class_hash_or_contract_address_provided() {
+    let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
+
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "verify",
+        "--class-name",
+        "Map",
+        "--verifier",
+        "voyager",
+        "--network",
+        "sepolia",
+    ];
+
+    let snapbox = runner(&args).current_dir(contract_path.path()).stdin("Y");
+
+    let output = snapbox.assert().success();
+
+    assert_stderr_contains(
+        output,
+        formatdoc!(
+            r"
+        command: verify
+        Error: Either contract_address or class_hash must be provided
         "
         ),
     );
@@ -198,7 +229,7 @@ async fn test_happy_case_with_confirm_verification_flag() {
         "verify",
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
-        "--contract-name",
+        "--class-name",
         "Map",
         "--verifier",
         "voyager",
@@ -249,7 +280,7 @@ async fn test_happy_case_specify_package() {
         "verify",
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
-        "--contract-name",
+        "--class-name",
         "supercomplexcode",
         "--verifier",
         "voyager",
@@ -302,7 +333,7 @@ async fn test_worskpaces_package_specified_virtual_fibonacci() {
         "verify",
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
-        "--contract-name",
+        "--class-name",
         "FibonacciContract",
         "--verifier",
         "voyager",
@@ -341,7 +372,7 @@ async fn test_worskpaces_package_no_contract() {
         "verify",
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
-        "--contract-name",
+        "--class-name",
         "nonexistent",
         "--verifier",
         "voyager",
