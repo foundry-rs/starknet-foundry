@@ -52,6 +52,8 @@ impl fmt::Display for Verifier {
     }
 }
 
+// disable too many arguments clippy warning
+#[allow(clippy::too_many_arguments)]
 pub async fn verify(
     contract_address: Option<FieldElement>,
     class_hash: Option<FieldElement>,

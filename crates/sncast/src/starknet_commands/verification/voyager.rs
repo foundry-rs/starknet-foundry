@@ -32,8 +32,8 @@ impl VerificationInterface for VoyagerVerificationInterface {
         let source_code = serde_json::Value::Object(file_data);
         let payload = VerificationPayload {
             class_name,
-            class_hash: class_hash,
-            contract_address: contract_address,
+            contract_address,
+            class_hash,
             source_code,
         };
         let url = self.gen_explorer_url()?;
