@@ -11,10 +11,8 @@ use sncast::response::errors::StarknetCommandError;
 use sncast::response::structs::DeclareResponse;
 use sncast::response::structs::Felt;
 use sncast::{apply_optional, handle_wait_for_tx, impl_payable_transaction, ErrorData, WaitForTx};
-use starknet::accounts::AccountError;
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{ConnectedAccount, DeclarationV2, DeclarationV3};
-use starknet::core::types::DeclareTransactionResult;
 use starknet::core::types::FieldElement;
 use starknet::{
     accounts::{Account, SingleOwnerAccount},
@@ -86,22 +84,27 @@ impl From<&DeclareDeploy> for Declare {
     }
 }
 
-type SendDeclarationError<'client> = AccountError<<SingleOwnerAccount<&'client JsonRpcClient<HttpTransport>, LocalWallet> as starknet::accounts::Account>::SignError>;
-
-async fn send_declaration<'client>(
+pub async fn declare_compiled(
+    declare: Declare,
+    account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     contract: CompiledContract,
-    account: &'client SingleOwnerAccount<&'client JsonRpcClient<HttpTransport>, LocalWallet>,
-    nonce: Option<FieldElement>,
-    fee_settings: FeeSettings,
-) -> Result<DeclareTransactionResult, SendDeclarationError<'client>> {
+    wait_config: WaitForTx,
+) -> Result<DeclareResponse, StarknetCommandError> {
+    let fee_settings = declare
+        .fee_args
+        .clone()
+        .fee_token(declare.token_from_version())
+        .try_into_fee_settings(account.provider(), account.block_id())
+        .await?;
+
     let CompiledContract { class, class_hash } = contract;
 
-    match fee_settings {
+    let result = match fee_settings {
         FeeSettings::Eth { max_fee } => {
             let declaration = account.declare_v2(Arc::new(class), class_hash);
 
             let declaration = apply_optional(declaration, max_fee, DeclarationV2::max_fee);
-            let declaration = apply_optional(declaration, nonce, DeclarationV2::nonce);
+            let declaration = apply_optional(declaration, declare.nonce, DeclarationV2::nonce);
 
             declaration.send().await
         }
@@ -115,18 +118,12 @@ async fn send_declaration<'client>(
             let declaration = apply_optional(declaration, max_gas, DeclarationV3::gas);
             let declaration =
                 apply_optional(declaration, max_gas_unit_price, DeclarationV3::gas_price);
-            let declaration = apply_optional(declaration, nonce, DeclarationV3::nonce);
+            let declaration = apply_optional(declaration, declare.nonce, DeclarationV3::nonce);
 
             declaration.send().await
         }
-    }
-}
+    };
 
-async fn handle_declaration<'client>(
-    result: Result<DeclareTransactionResult, SendDeclarationError<'client>>,
-    account: &'client SingleOwnerAccount<&'client JsonRpcClient<HttpTransport>, LocalWallet>,
-    wait_config: WaitForTx,
-) -> Result<DeclareResponse, StarknetCommandError> {
     match result {
         Ok(result) => {
             let wait = handle_wait_for_tx(
@@ -146,29 +143,6 @@ async fn handle_declaration<'client>(
 
         _ => Err(anyhow!("Unknown RPC error").into()),
     }
-}
-
-async fn get_fee_settings(
-    declare: &Declare,
-    account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
-) -> Result<FeeSettings> {
-    declare
-        .fee_args
-        .clone()
-        .fee_token(declare.token_from_version())
-        .try_into_fee_settings(account.provider(), account.block_id())
-        .await
-}
-
-pub async fn declare_compiled(
-    declare: Declare,
-    account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
-    contract: CompiledContract,
-    wait_config: WaitForTx,
-) -> Result<DeclareResponse, StarknetCommandError> {
-    let fee_settings = get_fee_settings(&declare, account).await?;
-    let declared = send_declaration(contract, account, declare.nonce, fee_settings).await;
-    handle_declaration(declared, account, wait_config).await
 }
 
 pub async fn declare(
