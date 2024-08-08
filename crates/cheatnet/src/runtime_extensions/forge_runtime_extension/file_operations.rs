@@ -1,5 +1,5 @@
 use anyhow::{anyhow, Result};
-use cairo_felt::{Felt252, ParseFeltError};
+use cairo_vm::Felt252;
 use conversions::{
     byte_array::ByteArray, felt252::TryInferFormat, serde::serialize::SerializeToFeltVec,
     string::TryFromDecStr,
@@ -7,6 +7,7 @@ use conversions::{
 use flatten_serde_json::flatten;
 use runtime::EnhancedHintError;
 use serde_json::{Map, Value};
+use starknet_types_core::felt::FromStrError;
 use std::fs::read_to_string;
 
 pub(super) fn read_txt(path: String) -> Result<Vec<Felt252>, EnhancedHintError> {
@@ -41,7 +42,7 @@ pub(super) fn read_json(path: String) -> Result<Vec<Felt252>, EnhancedHintError>
     Ok(result)
 }
 
-fn value_into_vec(value: &Value, output: &mut Vec<Felt252>) -> Result<(), ParseFeltError> {
+fn value_into_vec(value: &Value, output: &mut Vec<Felt252>) -> Result<(), FromStrError> {
     match value {
         Value::Array(vec) => {
             output.push(vec.len().into());
@@ -71,7 +72,7 @@ fn value_into_vec(value: &Value, output: &mut Vec<Felt252>) -> Result<(), ParseF
 #[cfg(test)]
 mod tests {
     use super::read_json;
-    use cairo_felt::Felt252;
+    use cairo_vm::Felt252;
     use conversions::{byte_array::ByteArray, serde::serialize::SerializeToFeltVec};
     use std::fs;
     use tempfile::TempDir;

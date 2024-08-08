@@ -2,10 +2,12 @@ use super::{
     ExecutionInfoMock, Operation, CheatArguments, CheatSpan, cheat_execution_info, ContractAddress
 };
 
-/// Changes the address of an account which the transaction originates from, for the given contract address and span.
+/// Changes the address of an account which the transaction originates from, for the given contract
+/// address and span.
 /// - `contract_address` - instance of `ContractAddress` specifying which contracts to cheat
 /// - `account_contract_address` - transaction account deployment data to be set
-/// - `span` - instance of `CheatSpan` specifying the number of contract calls with the cheat applied
+/// - `span` - instance of `CheatSpan` specifying the number of contract calls with the cheat
+/// applied
 fn cheat_account_contract_address(
     contract_address: ContractAddress, account_contract_address: ContractAddress, span: CheatSpan
 ) {
@@ -42,7 +44,8 @@ fn stop_cheat_account_contract_address_global() {
     cheat_execution_info(execution_info);
 }
 
-/// Changes the address of an account which the transaction originates from, for the given contract_address.
+/// Changes the address of an account which the transaction originates from, for the given
+/// contract_address.
 /// - `contract_address` - instance of `ContractAddress` specifying which contract to cheat
 /// - `account_contract_address` - transaction account deployment data to be set
 fn start_cheat_account_contract_address(

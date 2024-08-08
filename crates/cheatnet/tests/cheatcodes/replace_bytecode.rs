@@ -2,15 +2,11 @@ use crate::{
     cheatcodes::test_environment::TestEnvironment,
     common::{assertions::assert_success, get_contracts, state::create_fork_cached_state_at},
 };
-use cairo_felt::Felt252;
+use cairo_vm::Felt252;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallResult;
+use conversions::string::TryFromHexStr;
 use num_traits::Zero;
-use starknet_api::{
-    contract_address,
-    core::{ClassHash, ContractAddress, PatriciaKey},
-    hash::StarkHash,
-    patricia_key,
-};
+use starknet_api::core::{ClassHash, ContractAddress};
 use tempfile::TempDir;
 
 trait ReplaceBytecodeTrait {
@@ -40,8 +36,10 @@ fn fork() {
     let contracts_data = get_contracts();
 
     let class_hash = test_env.declare("ReplaceInFork", &contracts_data);
-    let contract =
-        contract_address!("0x06fdb5ef99e9def44484a3f8540bc42333e321e9b24a397d6bc0c8860bb7da8f");
+    let contract = TryFromHexStr::try_from_hex_str(
+        "0x06fdb5ef99e9def44484a3f8540bc42333e321e9b24a397d6bc0c8860bb7da8f",
+    )
+    .unwrap();
 
     let output = test_env.call_contract(&contract, "get_owner", &[]);
 

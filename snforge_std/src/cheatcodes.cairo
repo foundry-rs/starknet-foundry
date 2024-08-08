@@ -23,7 +23,8 @@ enum CheatSpan {
 }
 
 fn test_selector() -> felt252 {
-    // Result of selector!("TEST_CONTRACT_SELECTOR") since `selector!` macro requires dependency on `starknet`.
+    // Result of selector!("TEST_CONTRACT_SELECTOR") since `selector!` macro requires dependency on
+    // `starknet`.
     655947323460646800722791151288222075903983590237721746322261907338444055163
 }
 
@@ -109,7 +110,8 @@ pub enum ReplaceBytecodeError {
 /// when interacting with the contract.
 /// - `contract` - address specifying which address will be replaced
 /// - `new_class` - class hash, that will be used now for given address
-/// Returns `Result::Ok` if the replacement succeeded, and a `ReplaceBytecodeError` with appropriate error type otherwise
+/// Returns `Result::Ok` if the replacement succeeded, and a `ReplaceBytecodeError` with appropriate
+/// error type otherwise
 fn replace_bytecode(
     contract: ContractAddress, new_class: ClassHash
 ) -> Result<(), ReplaceBytecodeError> {

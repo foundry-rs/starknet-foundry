@@ -1,10 +1,16 @@
 use crate::scarb::config::{ForgeConfigFromScarb, RawForgeConfig};
 use anyhow::{Context, Result};
+use cairo_lang_sierra::program::VersionedProgram;
 use camino::Utf8Path;
 use configuration::PackageConfig;
 use forge_runner::package_tests::raw::TestTargetRaw;
+use forge_runner::package_tests::TestTargetLocation;
 use scarb_api::ScarbCommand;
+use scarb_metadata::{PackageMetadata, TargetMetadata};
 use scarb_ui::args::PackagesFilter;
+use std::collections::HashMap;
+use std::fs::read_to_string;
+use std::io::ErrorKind;
 
 pub mod config;
 
@@ -36,23 +42,74 @@ pub fn build_contracts_with_scarb(filter: PackagesFilter) -> Result<()> {
 
 pub fn build_test_artifacts_with_scarb(filter: PackagesFilter) -> Result<()> {
     ScarbCommand::new_with_stdio()
-        .arg("snforge-test-collector")
+        .arg("build")
+        .arg("--test")
         .packages_filter(filter)
         .run()
         .context("Failed to build test artifacts with Scarb")?;
     Ok(())
 }
 
-pub fn load_test_artifacts(
-    snforge_target_dir_path: &Utf8Path,
-    package_name: &str,
-) -> Result<Vec<TestTargetRaw>> {
-    let test_artifacts_path =
-        snforge_target_dir_path.join(format!("{package_name}.snforge_sierra.json"));
+/// collecting by name allow us to dedup targets
+/// we do it because they use same sierra and we display them without distinction anyway
+fn test_targets_by_name(package: &PackageMetadata) -> HashMap<String, &TargetMetadata> {
+    fn test_target_name(target: &TargetMetadata) -> String {
+        // this is logic copied from scarb: https://github.com/software-mansion/scarb/blob/90ab01cb6deee48210affc2ec1dc94d540ab4aea/extensions/scarb-cairo-test/src/main.rs#L115
+        target
+            .params
+            .get("group-id") // by unit tests grouping
+            .and_then(|v| v.as_str())
+            .map(ToString::to_string)
+            .unwrap_or(target.name.clone()) // else by integration test name
+    }
 
-    Ok(serde_json::from_str::<Vec<TestTargetRaw>>(
-        &std::fs::read_to_string(test_artifacts_path)?,
-    )?)
+    package
+        .targets
+        .iter()
+        .filter(|target| target.kind == "test")
+        .map(|target| (test_target_name(target), target))
+        .collect()
+}
+
+pub fn load_test_artifacts(
+    target_dir: &Utf8Path,
+    package: &PackageMetadata,
+) -> Result<Vec<TestTargetRaw>> {
+    let mut targets = vec![];
+
+    let dedup_targets = test_targets_by_name(package);
+
+    for (target_name, target) in dedup_targets {
+        let tests_location =
+            if target.params.get("test-type").and_then(|v| v.as_str()) == Some("unit") {
+                TestTargetLocation::Lib
+            } else {
+                TestTargetLocation::Tests
+            };
+
+        let target_file = format!("{target_name}.test.sierra.json");
+
+        match read_to_string(target_dir.join(target_file)) {
+            Ok(value) => {
+                let versioned_program = serde_json::from_str::<VersionedProgram>(&value)?;
+
+                let sierra_program = match versioned_program {
+                    VersionedProgram::V1 { program, .. } => program,
+                };
+
+                let test_target = TestTargetRaw {
+                    sierra_program,
+                    tests_location,
+                };
+
+                targets.push(test_target);
+            }
+            Err(err) if err.kind() == ErrorKind::NotFound => {}
+            Err(err) => Err(err)?,
+        }
+    }
+
+    Ok(targets)
 }
 
 #[cfg(test)]
@@ -63,7 +120,6 @@ mod tests {
     use assert_fs::TempDir;
     use camino::Utf8PathBuf;
     use configuration::load_package_config;
-    use forge_runner::package_tests::raw::RawForkParams;
     use indoc::{formatdoc, indoc};
     use scarb_api::metadata::MetadataCommandExt;
     use scarb_metadata::PackageId;
@@ -143,27 +199,21 @@ mod tests {
                 fork: vec![
                     ForkTarget::new(
                         "FIRST_FORK_NAME".to_string(),
-                        RawForkParams {
-                            url: "http://some.rpc.url".to_string(),
-                            block_id_type: "number".to_string(),
-                            block_id_value: "1".to_string(),
-                        },
+                        "http://some.rpc.url".to_string(),
+                        "number".to_string(),
+                        "1".to_string(),
                     ),
                     ForkTarget::new(
                         "SECOND_FORK_NAME".to_string(),
-                        RawForkParams {
-                            url: "http://some.rpc.url".to_string(),
-                            block_id_type: "hash".to_string(),
-                            block_id_value: "1".to_string(),
-                        },
+                        "http://some.rpc.url".to_string(),
+                        "hash".to_string(),
+                        "1".to_string(),
                     ),
                     ForkTarget::new(
                         "THIRD_FORK_NAME".to_string(),
-                        RawForkParams {
-                            url: "http://some.rpc.url".to_string(),
-                            block_id_type: "tag".to_string(),
-                            block_id_value: "Latest".to_string(),
-                        },
+                        "http://some.rpc.url".to_string(),
+                        "tag".to_string(),
+                        "Latest".to_string(),
                     )
                 ],
                 fuzzer_runs: None,
@@ -390,11 +440,9 @@ mod tests {
                 exit_first: false,
                 fork: vec![ForkTarget::new(
                     "ENV_URL_FORK".to_string(),
-                    RawForkParams {
-                        url: "http://some.rpc.url_from_env".to_string(),
-                        block_id_type: "number".to_string(),
-                        block_id_value: "1".to_string(),
-                    },
+                    "http://some.rpc.url_from_env".to_string(),
+                    "number".to_string(),
+                    "1".to_string(),
                 )],
                 fuzzer_runs: None,
                 fuzzer_seed: None,

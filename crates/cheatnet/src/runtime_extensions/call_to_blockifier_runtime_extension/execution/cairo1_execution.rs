@@ -16,13 +16,10 @@ use blockifier::{
     state::state_api::State,
 };
 use cairo_vm::vm::errors::cairo_run_errors::CairoRunError;
-use cairo_vm::vm::trace::trace_entry::TraceEntry;
+use cairo_vm::vm::trace::trace_entry::RelocatedTraceEntry;
 use cairo_vm::{
     hint_processor::hint_processor_definition::HintProcessor,
-    vm::{
-        runners::cairo_runner::{CairoArg, CairoRunner, ExecutionResources},
-        vm_core::VirtualMachine,
-    },
+    vm::runners::cairo_runner::{CairoArg, CairoRunner, ExecutionResources},
 };
 use runtime::{ExtendedRuntime, StarknetRuntime};
 
@@ -34,10 +31,9 @@ pub fn execute_entry_point_call_cairo1(
     cheatnet_state: &mut CheatnetState, // Added parameter
     resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
-) -> EntryPointExecutionResult<(CallInfo, SyscallCounter, Option<Vec<TraceEntry>>)> {
+) -> EntryPointExecutionResult<(CallInfo, SyscallCounter, Option<Vec<RelocatedTraceEntry>>)> {
     let VmExecutionContext {
         mut runner,
-        mut vm,
         mut syscall_handler,
         initial_syscall_ptr,
         entry_point,
@@ -46,7 +42,7 @@ pub fn execute_entry_point_call_cairo1(
 
     let args = prepare_call_arguments(
         &syscall_handler.call,
-        &mut vm,
+        &mut runner,
         initial_syscall_ptr,
         &mut syscall_handler.read_only_segments,
         &entry_point,
@@ -67,7 +63,6 @@ pub fn execute_entry_point_call_cairo1(
 
     // Execute.
     cheatable_run_entry_point(
-        &mut vm,
         &mut runner,
         &mut cheatable_runtime,
         &entry_point,
@@ -81,7 +76,7 @@ pub fn execute_entry_point_call_cairo1(
         .trace_data
         .is_vm_trace_needed
     {
-        Some(get_relocated_vm_trace(&vm))
+        Some(get_relocated_vm_trace(&runner))
     } else {
         None
     };
@@ -92,7 +87,6 @@ pub fn execute_entry_point_call_cairo1(
         .clone();
 
     let call_info = finalize_execution(
-        vm,
         runner,
         cheatable_runtime.extended_runtime.hint_handler,
         previous_vm_resources,
@@ -111,7 +105,6 @@ pub fn execute_entry_point_call_cairo1(
 
 // crates/blockifier/src/execution/cairo1_execution.rs:236 (run_entry_point)
 pub fn cheatable_run_entry_point(
-    vm: &mut VirtualMachine,
     runner: &mut CairoRunner,
     hint_processor: &mut dyn HintProcessor,
     entry_point: &EntryPointV1,
@@ -129,13 +122,12 @@ pub fn cheatable_run_entry_point(
         &args,
         verify_secure,
         Some(program_segment_size),
-        vm,
         hint_processor,
     )?;
 
     // region: Modified blockifier code
     // Relocate trace to then collect it
-    runner.relocate(vm, true).map_err(CairoRunError::from)?;
+    runner.relocate(true).map_err(CairoRunError::from)?;
     // endregion
 
     Ok(())

@@ -1,6 +1,6 @@
 use crate::fuzzer::RunParams;
 use anyhow::Result;
-use cairo_felt::Felt252;
+use cairo_vm::Felt252;
 use rand::prelude::StdRng;
 use rand::SeedableRng;
 use std::num::NonZeroU32;

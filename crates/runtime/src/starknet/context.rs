@@ -1,7 +1,3 @@
-use std::collections::BTreeMap;
-use std::num::NonZeroU128;
-use std::sync::Arc;
-
 use blockifier::blockifier::block::{BlockInfo, GasPrices};
 use blockifier::context::{BlockContext, ChainInfo, FeeTokenAddresses, TransactionContext};
 use blockifier::execution::common_hints::ExecutionMode;
@@ -10,18 +6,21 @@ use blockifier::transaction::objects::{
     CommonAccountFields, CurrentTransactionInfo, TransactionInfo,
 };
 use blockifier::versioned_constants::VersionedConstants;
+use starknet_types_core::felt::Felt;
+use std::collections::BTreeMap;
+use std::num::NonZeroU128;
+use std::sync::Arc;
 
 use cairo_vm::vm::runners::cairo_runner::RunResources;
+use conversions::string::TryFromHexStr;
 use serde::{Deserialize, Serialize};
-use starknet_api::data_availability::DataAvailabilityMode;
-
 use starknet_api::block::{BlockNumber, BlockTimestamp};
+use starknet_api::data_availability::DataAvailabilityMode;
 use starknet_api::transaction::{Resource, ResourceBounds, ResourceBoundsMapping};
 use starknet_api::{
     contract_address,
     core::{ChainId, ContractAddress, Nonce, PatriciaKey},
-    hash::{StarkFelt, StarkHash},
-    patricia_key,
+    felt, patricia_key,
     transaction::{TransactionHash, TransactionSignature, TransactionVersion},
 };
 
@@ -31,7 +30,7 @@ pub const SEQUENCER_ADDRESS: &str = "0x1000";
 pub const ERC20_CONTRACT_ADDRESS: &str = "0x1001";
 
 fn default_chain_id() -> ChainId {
-    ChainId(String::from(DEFAULT_CHAIN_ID))
+    ChainId::from(String::from(DEFAULT_CHAIN_ID))
 }
 
 #[must_use]
@@ -55,7 +54,7 @@ fn build_tx_info() -> TransactionInfo {
             transaction_hash: TransactionHash::default(),
             version: TransactionVersion::THREE,
             signature: TransactionSignature::default(),
-            nonce: Nonce(StarkFelt::from(0_u8)),
+            nonce: Nonce(Felt::from(0_u8)),
             sender_address: ContractAddress::default(),
             only_query: false,
         },
@@ -143,7 +142,7 @@ impl Default for SerializableBlockInfo {
         Self {
             block_number: BlockNumber(DEFAULT_BLOCK_NUMBER),
             block_timestamp: BlockTimestamp::default(),
-            sequencer_address: contract_address!(SEQUENCER_ADDRESS),
+            sequencer_address: TryFromHexStr::try_from_hex_str(SEQUENCER_ADDRESS).unwrap(),
             gas_prices: SerializableGasPrices::default(),
             use_kzg_da: true,
         }

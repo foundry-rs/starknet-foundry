@@ -100,10 +100,9 @@ mod tests {
     use crate::state::hashing::{
         generate_declare_tx_id, generate_deploy_tx_id, generate_id, generate_invoke_tx_id,
     };
-    use cairo_felt::Felt252;
     use conversions::IntoConv;
-    use num_traits::Num;
     use starknet::core::types::FieldElement;
+    use starknet_types_core::felt::Felt as Felt252;
 
     #[test]
     fn basic_case() {
@@ -126,9 +125,8 @@ mod tests {
 
     #[test]
     fn deploy() {
-        let class_hash: FieldElement = Felt252::from_str_radix(
+        let class_hash: FieldElement = Felt252::from_dec_str(
             "3372465304726137760522924034754430320558984443503992760655017624209518336998",
-            10,
         )
         .unwrap()
         .into_();
@@ -145,9 +143,8 @@ mod tests {
 
     #[test]
     fn invoke() {
-        let contract_address = Felt252::from_str_radix(
+        let contract_address = Felt252::from_dec_str(
             "379396891768624119314138643760266110764950106055405813326441497989022918556",
-            10,
         )
         .unwrap()
         .into_();

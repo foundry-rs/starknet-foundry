@@ -1,0 +1,27 @@
+[package]
+name = "snforge-scarb-plugin"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+crate-type = ["rlib", "cdylib"]
+
+[dependencies]
+cairo-lang-macro.workspace = true
+cairo-lang-parser.workspace = true
+cairo-lang-utils.workspace = true
+cairo-lang-syntax.workspace = true
+cairo-lang-diagnostics.workspace = true
+cairo-lang-filesystem.workspace = true
+cairo-lang-sierra.workspace = true
+
+url.workspace = true
+indoc.workspace = true
+serde_json.workspace = true
+smol_str.workspace = true
+num-bigint.workspace = true
+
+[dev-dependencies]
+lazy_static = "1.4.0"
+regex = "1.10.4"

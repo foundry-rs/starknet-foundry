@@ -5,7 +5,8 @@ use super::{
 /// Changes the transaction nonce data availability mode for the given contract address and span.
 /// - `contract_address` - instance of `ContractAddress` specifying which contracts to cheat
 /// - `nonce_data_availability_mode` - transaction nonce data availability mode to be set
-/// - `span` - instance of `CheatSpan` specifying the number of contract calls with the cheat applied
+/// - `span` - instance of `CheatSpan` specifying the number of contract calls with the cheat
+/// applied
 fn cheat_nonce_data_availability_mode(
     contract_address: ContractAddress, nonce_data_availability_mode: u32, span: CheatSpan
 ) {
