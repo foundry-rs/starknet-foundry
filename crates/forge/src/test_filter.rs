@@ -1,7 +1,6 @@
 use crate::shared_cache::FailedTestsCache;
 use anyhow::Result;
-use forge_runner::package_tests::with_config_resolved::TestCaseWithResolvedConfig;
-use forge_runner::TestCaseFilter;
+use forge_runner::{package_tests::with_config_resolved::TestCaseWithResolvedConfig, TestCaseFilter};
 
 #[derive(Debug, PartialEq)]
 // Specifies what tests should be included
@@ -14,15 +13,16 @@ pub struct TestsFilter {
     last_failed_filter: bool,
 
     failed_tests_cache: FailedTestsCache,
-    // based on exclude_pattern flag
-    exclude_pattern: Option<Regex>
+    // based on exclude filter
+    exclude_filter: Option<NameFilter>,
 }
 
 #[derive(Debug, PartialEq)]
-pub(crate) enum NameFilter {
+pub enum NameFilter {
     All,
     Match(String),
     ExactMatch(String),
+    Exclude(String),
 }
 
 #[derive(Debug, PartialEq)]
@@ -42,7 +42,7 @@ impl TestsFilter {
         include_ignored: bool,
         rerun_failed: bool,
         failed_tests_cache: FailedTestsCache,
-        exclude_pattern: Option<String>,
+        exclude_filter: Option<String>,
     ) -> Self {
         assert!(
             !(only_ignored && include_ignored),
@@ -68,12 +68,14 @@ impl TestsFilter {
             NameFilter::All
         };
 
+        let exclude_filter = exclude_filter.map(NameFilter::Exclude);
+
         Self {
             name_filter,
             ignored_filter,
             last_failed_filter: rerun_failed,
             failed_tests_cache,
-            exclude_pattern,
+            exclude_filter,
         }
     }
 
@@ -90,6 +92,8 @@ impl TestsFilter {
             NameFilter::ExactMatch(name) => {
                 test_cases.retain(|tc| tc.name == *name);
             }
+
+            NameFilter::Exclude(_) => {}
         };
 
         if self.last_failed_filter {
@@ -101,8 +105,8 @@ impl TestsFilter {
             }
         }
 
-        if let Some(pattern) = &self.exclude_pattern {
-            test_cases.retain(|tc| !pattern.is_match(&tc.name));
+        if let Some(NameFilter::Exclude(filter)) = &self.exclude_filter {
+            test_cases.retain(|tc| !tc.name.contains(filter));
         }
 
         match self.ignored_filter {
@@ -117,8 +121,8 @@ impl TestsFilter {
     }
 
     pub(crate) fn is_excluded(&self, test_case: &TestCaseWithResolvedConfig) -> bool {
-        if let Some(pattern) = &self.exclude_pattern {
-            return pattern.is_match(&test_case.name);
+        if let Some(NameFilter::Exclude(filter)) = &self.exclude_filter {
+            return test_case.name.contains(filter);
         }
         false
     }

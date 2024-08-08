@@ -13,6 +13,7 @@ use forge_runner::{
 use futures::{stream::FuturesUnordered, StreamExt};
 use std::{collections::HashMap, sync::Arc};
 use tokio::sync::mpsc::channel;
+use crate::test_filter::TestsFilter;
 
 #[non_exhaustive]
 pub enum TestTargetRunResult {
@@ -23,7 +24,7 @@ pub enum TestTargetRunResult {
 pub async fn run_for_test_target(
     tests: TestTargetWithResolvedConfig,
     forge_config: Arc<ForgeConfig>,
-    tests_filter: &impl TestCaseFilter,
+    tests_filter: &TestsFilter,
     package_name: &str,
 ) -> Result<TestTargetRunResult> {
     let sierra_program = &tests.sierra_program.program;
@@ -54,10 +55,8 @@ pub async fn run_for_test_target(
         let case_name = case.name.clone();
 
         // Check if the test case should be excluded
-        if let Some(filter) = tests_filter.as_any().downcast_ref::<TestsFilter>() {
-            if filter.is_excluded(&case) {
-                continue;
-            }
+        if tests_filter.is_excluded(&case) {
+            continue;
         }
 
         if !tests_filter.should_be_run(&case) {
