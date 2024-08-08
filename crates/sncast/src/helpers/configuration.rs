@@ -4,6 +4,8 @@ use camino::Utf8PathBuf;
 use configuration::GlobalConfig;
 use serde::{Deserialize, Serialize};
 
+use super::block_explorer;
+
 #[derive(Default, Deserialize, Serialize, Clone, Debug, PartialEq)]
 pub struct CastConfig {
     #[serde(default)]
@@ -29,13 +31,10 @@ pub struct CastConfig {
 
     #[serde(
         default,
-        rename(
-            serialize = "block-explorer-search-url",
-            deserialize = "block-explorer-search-url"
-        )
+        rename(serialize = "block-explorer", deserialize = "block-explorer")
     )]
-    /// URL to an endpoint allowing contract address/class hash search in a block explorer
-    pub block_explorer_search_url: Option<String>,
+    /// A block explorer service, used to display links to transaction details
+    pub block_explorer: Option<block_explorer::Service>,
 }
 
 impl GlobalConfig for CastConfig {

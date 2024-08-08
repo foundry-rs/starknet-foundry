@@ -4,6 +4,8 @@ use indoc::formatdoc;
 use serde::{Deserialize, Serialize, Serializer};
 use starknet::core::types::FieldElement;
 
+use crate::helpers::block_explorer;
+
 use super::explorer_link::OutputLink;
 
 pub struct Decimal(pub u64);
@@ -158,22 +160,29 @@ impl CommandResponse for VerifyResponse {}
 impl OutputLink for InvokeResponse {
     const TITLE: &'static str = "invocation";
 
-    fn format_links(&self, service: &str) -> String {
-        format!("transaction: {service}/{:x}", self.transaction_hash.0)
+    fn format_links(&self, service: block_explorer::Service) -> String {
+        let provider = service.as_provider();
+
+        format!(
+            "transaction: {}",
+            provider.transaction(self.transaction_hash.0)
+        )
     }
 }
 
 impl OutputLink for DeployResponse {
     const TITLE: &'static str = "deployment";
 
-    fn format_links(&self, service: &str) -> String {
+    fn format_links(&self, service: block_explorer::Service) -> String {
+        let provider = service.as_provider();
+
         formatdoc!(
             "
-            contract: {service}/{:x}
-            transaction: {service}/{:x}
+            contract: {}
+            transaction: {}
             ",
-            self.contract_address.0,
-            self.transaction_hash.0
+            provider.contract(self.contract_address.0),
+            provider.transaction(self.transaction_hash.0)
         )
     }
 }
@@ -181,14 +190,16 @@ impl OutputLink for DeployResponse {
 impl OutputLink for DeclareResponse {
     const TITLE: &'static str = "declaration";
 
-    fn format_links(&self, service: &str) -> String {
+    fn format_links(&self, service: block_explorer::Service) -> String {
+        let provider = service.as_provider();
+
         formatdoc!(
             "
-            class: {service}/{:x}
-            transaction: {service}/{:x}
+            class: {}
+            transaction: {}
             ",
-            self.class_hash.0,
-            self.transaction_hash.0
+            provider.class(self.class_hash.0),
+            provider.transaction(self.transaction_hash.0)
         )
     }
 }
@@ -196,7 +207,9 @@ impl OutputLink for DeclareResponse {
 impl OutputLink for AccountCreateResponse {
     const TITLE: &'static str = "account creation";
 
-    fn format_links(&self, service: &str) -> String {
-        format!("account: {service}/{:x}", self.address.0)
+    fn format_links(&self, service: block_explorer::Service) -> String {
+        let provider = service.as_provider();
+
+        format!("account: {}", provider.account(self.address.0))
     }
 }
