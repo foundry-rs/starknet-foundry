@@ -252,7 +252,7 @@ async fn test_no_class_hash_or_contract_address_provided() {
         formatdoc!(
             r"
         command: verify
-        Error: Either contract_address or class_hash must be provided
+        error: Either contract_address or class_hash must be provided
         "
         ),
     );
