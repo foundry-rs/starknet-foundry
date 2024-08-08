@@ -17,7 +17,7 @@ fn simple_package_save_trace() {
         .exists());
     assert!(!temp
         .join(TRACE_DIR)
-        .join("tests::test_simple::test_failing.json")
+        .join("simple_package_integrationtest::test_simple::test_failing.json")
         .exists());
     assert!(!temp
         .join(TRACE_DIR)
@@ -25,12 +25,12 @@ fn simple_package_save_trace() {
         .exists());
     assert!(temp
         .join(TRACE_DIR)
-        .join("tests::ext_function_test::test_simple.json")
+        .join("simple_package_integrationtest::ext_function_test::test_simple.json")
         .exists());
 
     let trace_data = fs::read_to_string(
         temp.join(TRACE_DIR)
-            .join("tests::ext_function_test::test_simple.json"),
+            .join("simple_package_integrationtest::ext_function_test::test_simple.json"),
     )
     .unwrap();
 
@@ -53,7 +53,7 @@ fn trace_has_contract_and_function_names() {
 
     let trace_data = fs::read_to_string(
         temp.join(TRACE_DIR)
-            .join("tests::test_trace::test_trace.json"),
+            .join("trace_info_integrationtest::test_trace::test_trace.json"),
     )
     .unwrap();
 
@@ -100,7 +100,7 @@ fn trace_has_cairo_execution_info() {
 
     let trace_data = fs::read_to_string(
         temp.join(TRACE_DIR)
-            .join("tests::test_trace::test_trace.json"),
+            .join("trace_info_integrationtest::test_trace::test_trace.json"),
     )
     .unwrap();
 
@@ -142,7 +142,7 @@ fn trace_has_deploy_with_no_constructor_phantom_nodes() {
 
     let trace_data = fs::read_to_string(
         temp.join(TRACE_DIR)
-            .join("tests::test_trace::test_trace.json"),
+            .join("trace_info_integrationtest::test_trace::test_trace.json"),
     )
     .unwrap();
 

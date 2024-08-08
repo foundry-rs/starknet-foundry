@@ -1,6 +1,6 @@
 // Our custom structs used to prevent name changes in structs on side of cairo compiler from breaking the test collector backwards compatibility
-use cairo_felt::Felt252;
 use cairo_lang_test_plugin::test_config::{PanicExpectation, TestExpectation};
+use cairo_vm::Felt252;
 use serde::Deserialize;
 
 /// Expectation for a panic case.

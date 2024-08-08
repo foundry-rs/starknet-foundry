@@ -1,3 +1,4 @@
+use core::option::OptionTrait;
 use core::array::ArrayTrait;
 use core::traits::Into;
 use core::array::SpanTrait;
@@ -15,4 +16,12 @@ pub fn handle_cheatcode(input: Span<felt252>) -> Span<felt252> {
     } else {
         input
     }
+}
+
+fn _is_config_run() -> bool {
+    let mut res = handle_cheatcode(
+        starknet::testing::cheatcode::<'is_config_mode'>(array![].span())
+    );
+
+    Serde::deserialize(ref res).unwrap_or(false)
 }

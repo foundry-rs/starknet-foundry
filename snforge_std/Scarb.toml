@@ -2,3 +2,6 @@
 name = "snforge_std"
 version = "0.27.0"
 edition = "2023_10"
+
+[dependencies]
+snforge_scarb_plugin = { path = "../crates/snforge-scarb-plugin" }

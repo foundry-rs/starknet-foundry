@@ -1,12 +1,24 @@
 use super::{BufferReadError, BufferReadResult, BufferReader, CairoDeserialize};
-use crate::IntoConv;
-use cairo_felt::Felt252;
+use crate::{byte_array::ByteArray, IntoConv};
 use num_traits::cast::ToPrimitive;
-use starknet::core::types::FieldElement;
-use starknet_api::{
-    core::{ClassHash, ContractAddress, EntryPointSelector, Nonce},
-    hash::StarkFelt,
-};
+use starknet::{core::types::FieldElement, providers::Url};
+use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, Nonce};
+use starknet_types_core::felt::Felt as Felt252;
+use std::num::NonZeroU32;
+
+impl CairoDeserialize for Url {
+    fn deserialize(reader: &mut BufferReader<'_>) -> BufferReadResult<Self> {
+        let url: String = reader.read::<ByteArray>()?.into();
+
+        Url::parse(&url).map_err(|_| BufferReadError::ParseFailed)
+    }
+}
+
+impl CairoDeserialize for NonZeroU32 {
+    fn deserialize(reader: &mut BufferReader<'_>) -> BufferReadResult<Self> {
+        NonZeroU32::new(reader.read()?).ok_or(BufferReadError::ParseFailed)
+    }
+}
 
 impl CairoDeserialize for Felt252 {
     fn deserialize(reader: &mut BufferReader<'_>) -> BufferReadResult<Self> {
@@ -85,7 +97,6 @@ macro_rules! impl_deserialize_for_num_type {
 
 impl_deserialize_for_felt_type!(FieldElement);
 impl_deserialize_for_felt_type!(ClassHash);
-impl_deserialize_for_felt_type!(StarkFelt);
 impl_deserialize_for_felt_type!(ContractAddress);
 impl_deserialize_for_felt_type!(Nonce);
 impl_deserialize_for_felt_type!(EntryPointSelector);

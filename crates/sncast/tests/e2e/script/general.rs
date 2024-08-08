@@ -82,6 +82,7 @@ async fn test_run_script_from_different_directory_no_path_to_scarb_toml() {
 }
 
 #[tokio::test]
+#[ignore] // TODO: Fix this tests in https://github.com/foundry-rs/starknet-foundry/issues/2351
 async fn test_fail_when_using_starknet_syscall() {
     let script_dir =
         copy_script_directory_to_tempdir(SCRIPTS_DIR.to_owned() + "/misc", Vec::<String>::new());

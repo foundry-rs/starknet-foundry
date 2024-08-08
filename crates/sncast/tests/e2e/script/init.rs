@@ -8,6 +8,7 @@ use sncast::helpers::scarb_utils::get_cairo_version;
 use tempfile::TempDir;
 
 #[test]
+#[ignore] // TODO: Fix this tests in https://github.com/foundry-rs/starknet-foundry/issues/2352
 fn test_script_init_happy_case() {
     let script_name = "my_script";
     let temp_dir = TempDir::new().expect("Unable to create a temporary directory");

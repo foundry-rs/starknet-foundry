@@ -8,9 +8,7 @@ use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::entry_point::CallEntryPoint;
 use blockifier::execution::execution_utils::ReadOnlySegments;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
-use blockifier::state::cached_state::{
-    CachedState, GlobalContractCache, GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST,
-};
+use blockifier::state::cached_state::CachedState;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{build_hints_dict, RunResultValue, SierraCasmRunner};
 use cairo_lang_sierra::program::VersionedProgram;
@@ -336,10 +334,7 @@ pub fn run(
     // hint processor
     let mut context = build_context(&SerializableBlockInfo::default().into(), None);
 
-    let mut blockifier_state = CachedState::new(
-        DictStateReader::default(),
-        GlobalContractCache::new(GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST),
-    );
+    let mut blockifier_state = CachedState::new(DictStateReader::default());
     let mut execution_resources = ExecutionResources::default();
 
     let syscall_handler = SyscallHintProcessor::new(
@@ -384,10 +379,8 @@ pub fn run(
         },
     };
 
-    let mut vm = VirtualMachine::new(true);
-    match runner.run_function_with_vm(
+    match runner.run_function(
         func,
-        &mut vm,
         &mut cast_runtime,
         hints_dict,
         assembled_program.bytecode.iter(),

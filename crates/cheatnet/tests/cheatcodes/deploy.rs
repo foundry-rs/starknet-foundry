@@ -4,8 +4,8 @@ use crate::common::{
     call_contract, deploy_at_wrapper, deploy_contract, deploy_wrapper, felt_selector_from_name,
     get_contracts,
 };
-use cairo_felt::Felt252;
 use cairo_vm::vm::errors::hint_errors::HintError;
+use cairo_vm::Felt252;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     CallFailure, CallResult,
 };
@@ -41,7 +41,7 @@ fn deploy_at_predefined_address() {
         &mut cached_state,
         &mut cheatnet_state,
         &contract_address,
-        &selector,
+        selector,
         &[],
     );
 
@@ -118,7 +118,7 @@ fn call_predefined_contract_from_proxy_contract() {
         &mut cached_state,
         &mut cheatnet_state,
         &proxy_address,
-        &proxy_selector,
+        proxy_selector,
         &[cheat_caller_address_checker_address.into_()],
     );
 
@@ -142,7 +142,7 @@ fn deploy_contract_on_predefined_address_after_its_usage() {
         &mut cached_state,
         &mut cheatnet_state,
         &proxy_address,
-        &proxy_selector,
+        proxy_selector,
         &[Felt252::from(323)],
     );
 
@@ -171,7 +171,7 @@ fn deploy_contract_on_predefined_address_after_its_usage() {
         &mut cached_state,
         &mut cheatnet_state,
         &proxy_address,
-        &proxy_selector,
+        proxy_selector,
         &[Felt252::from(323)],
     );
 
@@ -312,7 +312,7 @@ fn deploy_invokes_constructor() {
         &mut cached_state,
         &mut cheatnet_state,
         &contract_address,
-        &selector,
+        selector,
         &[],
     );
 
@@ -343,7 +343,7 @@ fn deploy_at_invokes_constructor() {
         &mut cached_state,
         &mut cheatnet_state,
         &contract_address,
-        &selector,
+        selector,
         &[],
     );
 

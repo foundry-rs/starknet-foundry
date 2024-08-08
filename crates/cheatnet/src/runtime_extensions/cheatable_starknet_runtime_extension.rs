@@ -11,10 +11,9 @@ use blockifier::execution::syscalls::{
 use blockifier::execution::{
     common_hints::HintExecutionResult,
     deprecated_syscalls::DeprecatedSyscallSelector,
-    execution_utils::felt_to_stark_felt,
     syscalls::hint_processor::{SyscallExecutionError, SyscallHintProcessor},
 };
-use cairo_felt::Felt252;
+use cairo_vm::Felt252;
 use cairo_vm::{
     types::relocatable::Relocatable,
     vm::{
@@ -22,8 +21,8 @@ use cairo_vm::{
         vm_core::VirtualMachine,
     },
 };
+use conversions::string::TryFromHexStr;
 use runtime::{ExtendedRuntime, ExtensionLogic, StarknetRuntime, SyscallHandlingResult};
-use starknet_api::hash::StarkFelt;
 
 pub type SyscallSelector = DeprecatedSyscallSelector;
 
@@ -104,13 +103,6 @@ impl<'a> ExtensionLogic for CheatableStarknetRuntimeExtension<'a> {
     }
 }
 
-pub fn stark_felt_from_ptr_immutable(
-    vm: &VirtualMachine,
-    ptr: &Relocatable,
-) -> Result<StarkFelt, VirtualMachineError> {
-    Ok(felt_to_stark_felt(&felt_from_ptr_immutable(vm, ptr)?))
-}
-
 pub fn felt_from_ptr_immutable(
     vm: &VirtualMachine,
     ptr: &Relocatable,
@@ -167,8 +159,8 @@ impl CheatableStarknetRuntimeExtension<'_> {
 
         if gas_counter < required_gas {
             //  Out of gas failure.
-            let out_of_gas_error =
-                StarkFelt::try_from(OUT_OF_GAS_ERROR).map_err(SyscallExecutionError::from)?;
+            let out_of_gas_error = TryFromHexStr::try_from_hex_str(OUT_OF_GAS_ERROR)
+                .map_err(SyscallExecutionError::from)?;
             let response: SyscallResponseWrapper<Response> = SyscallResponseWrapper::Failure {
                 gas_counter,
                 error_data: vec![out_of_gas_error],
