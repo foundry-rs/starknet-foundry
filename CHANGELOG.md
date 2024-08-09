@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Cast
 
+### Added
+- `sncast deploy` can now deploy contracts by name instead of class hash. [Read more here](https://foundry-rs.github.io/starknet-foundry/starknet/deploy.html)
+- `sncast declare-deploy` allows to declare and deploy contract at once. [Read more here](https://foundry-rs.github.io/starknet-foundry/starknet/declare-deploy.html)
+
 #### Changed
 - `account create` outputs hint about the type of the tokens required to prefund a newly created account with before deployment
 

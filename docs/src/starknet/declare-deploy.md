@@ -1,0 +1,32 @@
+# Joining the Declaration and Deployment Together
+
+`sncast` allows declaring and deploying contracts through dedicated commands.
+The `declare-deploy` command simplifies this pipeline by performing these two actions one after the other. It is used to declare a contract and deploy it immediately.
+
+For detailed description, see [declare-deploy command reference](../appendix/sncast/declare-deploy.md).
+
+## Examples
+
+Command operates under all the circumstances [`declare`](./declare.md) and [`deploy`](./deploy.md) would do when invoked separately.
+
+### General Example
+
+Make sure you have a `Scarb.toml` in your project directory. Suppose we would like to declare and instantly deploy an example contract named `SimpleBalance`, defined in the default project.
+
+Running:
+
+```shell
+$ sncast --account myuser \
+    --url http://127.0.0.1:5050/rpc \ 
+    declare-deploy \
+    --fee-token strk \
+    --contract-name SimpleBalance
+```
+
+results in declaration and deployment.
+
+> 📝 **Note**
+> This command relies on auto-estimation and does not allow specifying max fees explicitly.
+
+> 📝 **Note**
+> Only a `fee-token` can be specified. Transaction versions for both declaration and deployment are inferred from token type.

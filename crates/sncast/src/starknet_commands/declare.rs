@@ -1,9 +1,12 @@
-use anyhow::{anyhow, Context, Result};
+use super::declare_deploy::DeclareDeploy;
+use anyhow::{anyhow, Result};
 use clap::{Args, ValueEnum};
 use scarb_api::StarknetContractArtifacts;
+use sncast::helpers::deploy::DeployArgs;
 use sncast::helpers::error::token_not_supported_for_declaration;
 use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken, PayableTransaction};
 use sncast::helpers::rpc::RpcArgs;
+use sncast::helpers::scarb_utils::CompiledContract;
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::structs::DeclareResponse;
 use sncast::response::structs::Felt;
@@ -13,7 +16,6 @@ use starknet::accounts::{ConnectedAccount, DeclarationV2, DeclarationV3};
 use starknet::core::types::FieldElement;
 use starknet::{
     accounts::{Account, SingleOwnerAccount},
-    core::types::contract::{CompiledClass, SierraClass},
     providers::jsonrpc::{HttpTransport, JsonRpcClient},
     signers::LocalWallet,
 };
@@ -57,11 +59,35 @@ impl_payable_transaction!(Declare, token_not_supported_for_declaration,
     DeclareVersion::V3 => FeeToken::Strk
 );
 
-#[allow(clippy::too_many_lines)]
-pub async fn declare(
+impl From<&DeclareDeploy> for Declare {
+    fn from(declare_deploy: &DeclareDeploy) -> Self {
+        let DeclareDeploy {
+            contract_name,
+            deploy_args: DeployArgs { package, .. },
+            fee_token,
+            rpc,
+        } = &declare_deploy;
+
+        let fee_args = FeeArgs {
+            fee_token: Some(fee_token.to_owned()),
+            ..Default::default()
+        };
+
+        Declare {
+            contract: contract_name.to_owned(),
+            fee_args,
+            nonce: None,
+            package: package.to_owned(),
+            version: None,
+            rpc: rpc.to_owned(),
+        }
+    }
+}
+
+pub async fn declare_compiled(
     declare: Declare,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
-    artifacts: &HashMap<String, StarknetContractArtifacts>,
+    contract: CompiledContract,
     wait_config: WaitForTx,
 ) -> Result<DeclareResponse, StarknetCommandError> {
     let fee_settings = declare
@@ -71,42 +97,23 @@ pub async fn declare(
         .try_into_fee_settings(account.provider(), account.block_id())
         .await?;
 
-    let contract_artifacts =
-        artifacts
-            .get(&declare.contract)
-            .ok_or(StarknetCommandError::ContractArtifactsNotFound(
-                ErrorData::new(declare.contract),
-            ))?;
+    let CompiledContract { class, class_hash } = contract;
 
-    let contract_definition: SierraClass = serde_json::from_str(&contract_artifacts.sierra)
-        .context("Failed to parse sierra artifact")?;
-    let casm_contract_definition: CompiledClass =
-        serde_json::from_str(&contract_artifacts.casm).context("Failed to parse casm artifact")?;
-
-    let casm_class_hash = casm_contract_definition
-        .class_hash()
-        .map_err(anyhow::Error::from)?;
-
-    let declared = match fee_settings {
+    let result = match fee_settings {
         FeeSettings::Eth { max_fee } => {
-            let declaration = account.declare_v2(
-                Arc::new(contract_definition.flatten().map_err(anyhow::Error::from)?),
-                casm_class_hash,
-            );
+            let declaration = account.declare_v2(Arc::new(class), class_hash);
 
             let declaration = apply_optional(declaration, max_fee, DeclarationV2::max_fee);
             let declaration = apply_optional(declaration, declare.nonce, DeclarationV2::nonce);
 
             declaration.send().await
         }
+
         FeeSettings::Strk {
             max_gas,
             max_gas_unit_price,
         } => {
-            let declaration = account.declare_v3(
-                Arc::new(contract_definition.flatten().map_err(anyhow::Error::from)?),
-                casm_class_hash,
-            );
+            let declaration = account.declare_v3(Arc::new(class), class_hash);
 
             let declaration = apply_optional(declaration, max_gas, DeclarationV3::gas);
             let declaration =
@@ -117,19 +124,38 @@ pub async fn declare(
         }
     };
 
-    match declared {
-        Ok(result) => handle_wait_for_tx(
-            account.provider(),
-            result.transaction_hash,
-            DeclareResponse {
-                class_hash: Felt(result.class_hash),
-                transaction_hash: Felt(result.transaction_hash),
-            },
-            wait_config,
-        )
-        .await
-        .map_err(StarknetCommandError::from),
+    match result {
+        Ok(result) => {
+            let wait = handle_wait_for_tx(
+                account.provider(),
+                result.transaction_hash,
+                DeclareResponse {
+                    class_hash: Felt(result.class_hash),
+                    transaction_hash: Felt(result.transaction_hash),
+                },
+                wait_config,
+            );
+
+            wait.await.map_err(StarknetCommandError::from)
+        }
+
         Err(Provider(error)) => Err(StarknetCommandError::ProviderError(error.into())),
+
         _ => Err(anyhow!("Unknown RPC error").into()),
     }
+}
+
+pub async fn declare(
+    declare: Declare,
+    account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
+    artifacts: &HashMap<String, StarknetContractArtifacts>,
+    wait_config: WaitForTx,
+) -> Result<DeclareResponse, StarknetCommandError> {
+    let contract_artifacts = artifacts.get(&declare.contract).ok_or_else(|| {
+        StarknetCommandError::ContractArtifactsNotFound(ErrorData::new(declare.contract.clone()))
+    })?;
+
+    let contract = contract_artifacts.try_into()?;
+
+    declare_compiled(declare, account, contract, wait_config).await
 }
