@@ -1,3 +1,4 @@
+use snforge_std::cheatcodes::contract_class::DeclareResultTrait;
 use snforge_std::{declare, ContractClassTrait};
 use snforge_std::trace::{get_call_trace};
 
@@ -9,7 +10,7 @@ use trace_info::{
 #[test]
 #[feature("safe_dispatcher")]
 fn test_trace() {
-    let sc = declare("SimpleContract").unwrap();
+    let sc = declare("SimpleContract").unwrap().contract_class();
 
     let (contract_address_A, _) = sc.deploy(@array![]).unwrap();
     let (contract_address_B, _) = sc.deploy(@array![]).unwrap();

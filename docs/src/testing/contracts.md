@@ -54,13 +54,13 @@ Note that the name after `mod` will be used as the contract name for testing pur
 Let's write a test that will deploy the `HelloStarknet` contract and call some functions.
 
 ```rust
-use snforge_std::{ declare, ContractClassTrait };
+use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait };
 use using_dispatchers::{ IHelloStarknetDispatcher, IHelloStarknetDispatcherTrait };
 
 #[test]
 fn call_and_invoke() {
     // First declare and deploy a contract
-    let contract = declare("HelloStarknet").unwrap();
+    let contract = declare("HelloStarknet").unwrap().contract_class();
     // Alternatively we could use `deploy_syscall` here
     let (contract_address, _) = contract.deploy(@array![]).unwrap();
 
@@ -140,7 +140,7 @@ If we called this function in a test, it would result in a failure.
 ```rust
 #[test]
 fn failing() {
-    let contract = declare("HelloStarknet").unwrap();
+    let contract = declare("HelloStarknet").unwrap().contract_class();
     let (contract_address, _) = contract.deploy(@array![]).unwrap();
     let dispatcher = IHelloStarknetDispatcher { contract_address };
 
@@ -180,8 +180,8 @@ use using_dispatchers::{ IHelloStarknetSafeDispatcher, IHelloStarknetSafeDispatc
 #[feature("safe_dispatcher")]
 fn handling_errors() {
     // ...
-    let contract = declare("HelloStarknet").unwrap();
-    let (contract_address, _) = contract.deploy(@calldata).unwrap();
+    let contract = declare("HelloStarknet").unwrap().contract_class();
+    let (contract_address, _) = contract.deploy(@calldata).unwrap().contract_class();
     let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
 
     match safe_dispatcher.do_a_panic() {
@@ -210,21 +210,22 @@ Similarly, you can handle the panics which use `ByteArray` as an argument (like 
 ```rust
 // Necessary utility function import
 use snforge_std::byte_array::try_deserialize_bytearray_error;
+use snforge_std::{declare, DeclareResultTrait};
 
 #[test]
 #[feature("safe_dispatcher")]
 fn handling_string_errors() {
     // ...
-    let contract = declare("HelloStarknet").unwrap();
+    let contract = declare("HelloStarknet").unwrap().contract_class();
     let (contract_address, _) = contract.deploy(@array![]).unwrap();
     let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
-    
+
     match safe_dispatcher.do_a_string_panic() {
         Result::Ok(_) => panic!("Entrypoint did not panic"),
         Result::Err(panic_data) => {
             let str_err = try_deserialize_bytearray_error(panic_data.span()).expect('wrong format');
             assert(
-                str_err == "This is panicking with a string, which can be longer than 31 characters", 
+                str_err == "This is panicking with a string, which can be longer than 31 characters",
                 'wrong string received'
             );
         }

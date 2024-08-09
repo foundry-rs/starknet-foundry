@@ -1,3 +1,4 @@
+use snforge_std::cheatcodes::contract_class::DeclareResultTrait;
 use starknet::ContractAddress;
 use starknet::Felt252TryIntoContractAddress;
 
@@ -16,7 +17,7 @@ const INITIAL_SUPPLY: u256 = 10;
 fn deploy_erc20(
     name: felt252, symbol: felt252, decimals: u8, initial_supply: u256, recipient: ContractAddress
 ) -> ContractAddress {
-    let contract = declare("ERC20").unwrap();
+    let contract = declare("ERC20").unwrap().contract_class();
 
     let mut constructor_calldata: Array::<felt252> = array![name, symbol, decimals.into()];
 

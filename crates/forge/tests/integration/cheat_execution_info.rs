@@ -15,7 +15,7 @@ fn start_and_stop_cheat_transaction_hash_single_attribute() {
             use serde::Serde;
             use starknet::ContractAddress;
             use array::SpanTrait;
-            use snforge_std::{ declare, ContractClassTrait, start_cheat_transaction_hash, start_cheat_transaction_hash_global, stop_cheat_transaction_hash };
+            use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, start_cheat_transaction_hash, start_cheat_transaction_hash_global, stop_cheat_transaction_hash };
             use starknet::info::v2::ResourceBounds;
 
             #[starknet::interface]
@@ -25,7 +25,7 @@ fn start_and_stop_cheat_transaction_hash_single_attribute() {
 
             #[test]
             fn start_cheat_transaction_hash_single_attribute() {
-                let contract = declare("CheatTxInfoChecker").unwrap();
+                let contract = declare("CheatTxInfoChecker").unwrap().contract_class();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ICheatTxInfoCheckerDispatcher { contract_address };
 
@@ -45,7 +45,7 @@ fn start_and_stop_cheat_transaction_hash_single_attribute() {
 
             #[test]
             fn test_cheat_transaction_hash_all_stop_one() {
-                let contract = declare("CheatTxInfoChecker").unwrap();
+                let contract = declare("CheatTxInfoChecker").unwrap().contract_class();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ICheatTxInfoCheckerDispatcher { contract_address };
 
@@ -79,7 +79,7 @@ fn start_and_stop_cheat_transaction_hash_single_attribute() {
                 expected_tx_info.resource_bounds.serialize(ref expected_resource_bounds);
 
                 assert(resource_bounds == expected_resource_bounds, 'Invalid resource bounds');
-                
+
                 assert(tx_info.tip == expected_tx_info.tip, 'Invalid tip');
                 assert(tx_info.paymaster_data == expected_tx_info.paymaster_data, 'Invalid paymaster_data');
                 assert(tx_info.nonce_data_availability_mode == expected_tx_info.nonce_data_availability_mode, 'Invalid nonce_data_av_mode');
@@ -115,7 +115,7 @@ fn start_cheat_execution_info_all_attributes_mocked() {
             use starknet::ContractAddressIntoFelt252;
             use starknet::Felt252TryIntoContractAddress;
             use array::SpanTrait;
-            use snforge_std::{ declare, ContractClassTrait, cheat_execution_info, ExecutionInfoMock, Operation, CheatArguments, CheatSpan};
+            use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, cheat_execution_info, ExecutionInfoMock, Operation, CheatArguments, CheatSpan};
             use starknet::info::v2::ResourceBounds;
 
             #[starknet::interface]
@@ -137,7 +137,7 @@ fn start_cheat_execution_info_all_attributes_mocked() {
 
             #[test]
             fn start_cheat_execution_info_all_attributes_mocked() {
-                let contract = declare("CheatTxInfoChecker").unwrap();
+                let contract = declare("CheatTxInfoChecker").unwrap().contract_class();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ICheatTxInfoCheckerDispatcher { contract_address };
 
@@ -283,7 +283,7 @@ fn start_cheat_transaction_hash_cancel_mock_by_setting_attribute_to_none() {
             use serde::Serde;
             use starknet::ContractAddress;
             use array::SpanTrait;
-            use snforge_std::{ declare, ContractClassTrait, start_cheat_transaction_hash, stop_cheat_transaction_hash, TxInfoMock, Operation, CheatArguments, CheatSpan };
+            use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, start_cheat_transaction_hash, stop_cheat_transaction_hash, TxInfoMock, Operation, CheatArguments, CheatSpan };
             use starknet::info::v2::ResourceBounds;
 
             #[starknet::interface]
@@ -293,7 +293,7 @@ fn start_cheat_transaction_hash_cancel_mock_by_setting_attribute_to_none() {
 
             #[test]
             fn start_cheat_transaction_hash_cancel_mock_by_setting_attribute_to_none() {
-                let contract = declare("CheatTxInfoChecker").unwrap();
+                let contract = declare("CheatTxInfoChecker").unwrap().contract_class();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ICheatTxInfoCheckerDispatcher { contract_address };
 
@@ -327,7 +327,7 @@ fn start_cheat_transaction_hash_cancel_mock_by_setting_attribute_to_none() {
                 expected_tx_info.resource_bounds.serialize(ref expected_resource_bounds);
 
                 assert(resource_bounds == expected_resource_bounds, 'Invalid resource bounds');
-                
+
                 assert(tx_info.tip == expected_tx_info.tip, 'Invalid tip');
                 assert(tx_info.paymaster_data == expected_tx_info.paymaster_data, 'Invalid paymaster_data');
                 assert(tx_info.nonce_data_availability_mode == expected_tx_info.nonce_data_availability_mode, 'Invalid nonce_data_av_mode');
@@ -361,7 +361,7 @@ fn start_cheat_transaction_hash_multiple() {
             use starknet::ContractAddress;
             use starknet::ContractAddressIntoFelt252;
             use array::SpanTrait;
-            use snforge_std::{ declare, ContractClassTrait, start_cheat_transaction_hash, TxInfoMock, Operation, CheatArguments, CheatSpan};
+            use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, start_cheat_transaction_hash, TxInfoMock, Operation, CheatArguments, CheatSpan};
 
             #[starknet::interface]
             trait ICheatTxInfoChecker<TContractState> {
@@ -370,20 +370,20 @@ fn start_cheat_transaction_hash_multiple() {
 
             #[test]
             fn start_cheat_transaction_hash_multiple() {
-                let contract = declare("CheatTxInfoChecker").unwrap();
-                
+                let contract = declare("CheatTxInfoChecker").unwrap().contract_class();
+
                 let (contract_address_1, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher_1 = ICheatTxInfoCheckerDispatcher { contract_address: contract_address_1 };
-                
+
                 let (contract_address_2, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher_2 = ICheatTxInfoCheckerDispatcher { contract_address: contract_address_2 };
-                
+
                 start_cheat_transaction_hash(contract_address_1, 421);
                 start_cheat_transaction_hash(contract_address_2, 421);
 
                 let transaction_hash = dispatcher_1.get_tx_hash();
                 assert(transaction_hash == 421, 'Invalid tx hash');
-                
+
                 let transaction_hash = dispatcher_2.get_tx_hash();
                 assert(transaction_hash == 421, 'Invalid tx hash');
             }
@@ -415,7 +415,7 @@ fn start_cheat_execution_info_all() {
             use starknet::ContractAddress;
             use starknet::ContractAddressIntoFelt252;
             use array::SpanTrait;
-            use snforge_std::{ declare, ContractClassTrait, cheat_execution_info, ExecutionInfoMock, Operation, CheatArguments, CheatSpan };
+            use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, cheat_execution_info, ExecutionInfoMock, Operation, CheatArguments, CheatSpan };
             use starknet::info::v2::ResourceBounds;
 
             #[starknet::interface]
@@ -437,7 +437,7 @@ fn start_cheat_execution_info_all() {
 
             #[test]
             fn start_cheat_execution_info_all_one_param() {
-                let contract = declare("CheatTxInfoChecker").unwrap();
+                let contract = declare("CheatTxInfoChecker").unwrap().contract_class();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ICheatTxInfoCheckerDispatcher { contract_address };
 
@@ -448,10 +448,10 @@ fn start_cheat_execution_info_all() {
                 let transaction_hash = dispatcher.get_tx_hash();
                 assert(transaction_hash == 421, 'Invalid tx hash');
             }
-            
+
             #[test]
             fn start_cheat_execution_info_all_multiple_params() {
-                let contract = declare("CheatTxInfoChecker").unwrap();
+                let contract = declare("CheatTxInfoChecker").unwrap().contract_class();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ICheatTxInfoCheckerDispatcher { contract_address };
 
@@ -546,7 +546,7 @@ fn start_cheat_transaction_hash_complex() {
             use starknet::ContractAddress;
             use starknet::ContractAddressIntoFelt252;
             use array::SpanTrait;
-            use snforge_std::{ declare, ContractClassTrait, start_cheat_transaction_hash, start_cheat_transaction_hash_global, TxInfoMock, Operation, CheatArguments, CheatSpan };
+            use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, start_cheat_transaction_hash, start_cheat_transaction_hash_global, TxInfoMock, Operation, CheatArguments, CheatSpan };
 
             #[starknet::interface]
             trait ICheatTxInfoChecker<TContractState> {
@@ -555,10 +555,10 @@ fn start_cheat_transaction_hash_complex() {
 
             #[test]
             fn start_cheat_transaction_hash_complex() {
-                let contract = declare("CheatTxInfoChecker").unwrap();
+                let contract = declare("CheatTxInfoChecker").unwrap().contract_class();
                 let (contract_address_1, _) = contract.deploy(@array![]).unwrap();
                 let (contract_address_2, _) = contract.deploy(@array![]).unwrap();
-                
+
                 let dispatcher_1 = ICheatTxInfoCheckerDispatcher { contract_address: contract_address_1 };
                 let dispatcher_2 = ICheatTxInfoCheckerDispatcher { contract_address: contract_address_2 };
 
@@ -578,7 +578,7 @@ fn start_cheat_transaction_hash_complex() {
 
                 start_cheat_transaction_hash(contract_address_1, 821);
                 start_cheat_transaction_hash(contract_address_2, 821);
-                
+
                 let transaction_hash_1 = dispatcher_1.get_tx_hash();
                 let transaction_hash_2 = dispatcher_2.get_tx_hash();
                 assert(transaction_hash_1 == 821, 'Invalid tx hash');
@@ -609,16 +609,16 @@ fn cheat_transaction_hash_with_span() {
             use serde::Serde;
             use starknet::ContractAddress;
             use array::SpanTrait;
-            use snforge_std::{ test_address, declare, ContractClassTrait, cheat_transaction_hash, stop_cheat_transaction_hash, CheatSpan, Operation, CheatArguments};
+            use snforge_std::{ test_address, declare, ContractClassTrait, DeclareResultTrait, cheat_transaction_hash, stop_cheat_transaction_hash, CheatSpan, Operation, CheatArguments};
             use starknet::info::v2::ResourceBounds;
 
             #[starknet::interface]
             trait ICheatTxInfoChecker<TContractState> {
                 fn get_tx_info(ref self: TContractState) -> starknet::info::v2::TxInfo;
             }
-            
+
             fn deploy_cheat_transaction_hash_checker() -> ICheatTxInfoCheckerDispatcher {
-                let (contract_address, _) = declare("CheatTxInfoChecker").unwrap().deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = declare("CheatTxInfoChecker").unwrap().contract_class().deploy(@ArrayTrait::new()).unwrap();
                 ICheatTxInfoCheckerDispatcher { contract_address }
             }
 
@@ -638,7 +638,7 @@ fn cheat_transaction_hash_with_span() {
                 expected_tx_info.resource_bounds.serialize(ref expected_resource_bounds);
 
                 assert(resource_bounds == expected_resource_bounds, 'Invalid resource bounds');
-                
+
                 assert(tx_info.tip == expected_tx_info.tip, 'Invalid tip');
                 assert(tx_info.paymaster_data == expected_tx_info.paymaster_data, 'Invalid paymaster_data');
                 assert(tx_info.nonce_data_availability_mode == expected_tx_info.nonce_data_availability_mode, 'Invalid nonce_data_av_mode');
