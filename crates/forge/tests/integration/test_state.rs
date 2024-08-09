@@ -51,7 +51,7 @@ fn simple_syscalls() {
         use serde::Serde;
         use starknet::{ContractAddress, get_block_hash_syscall};
         use array::SpanTrait;
-        use snforge_std::{ declare, ContractClassTrait, test_address };
+        use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, test_address };
 
         #[starknet::interface]
         trait ICheatTxInfoChecker<TContractState> {
@@ -88,15 +88,15 @@ fn simple_syscalls() {
 
             let block_info = exec_info.block_info.unbox();
 
-            let contract_cheat_block_number = declare("CheatBlockNumberChecker").unwrap();
+            let contract_cheat_block_number = declare("CheatBlockNumberChecker").unwrap().contract_class();
             let (contract_address_cheat_block_number, _) = contract_cheat_block_number.deploy(@ArrayTrait::new()).unwrap();
             let dispatcher_cheat_block_number = ICheatBlockNumberCheckerDispatcher { contract_address: contract_address_cheat_block_number };
 
-            let contract_cheat_block_timestamp = declare("CheatBlockTimestampChecker").unwrap();
+            let contract_cheat_block_timestamp = declare("CheatBlockTimestampChecker").unwrap().contract_class();
             let (contract_address_cheat_block_timestamp, _) = contract_cheat_block_timestamp.deploy(@ArrayTrait::new()).unwrap();
             let dispatcher_cheat_block_timestamp = ICheatBlockTimestampCheckerDispatcher { contract_address: contract_address_cheat_block_timestamp };
-            
-            let contract_cheat_sequencer_address = declare("CheatSequencerAddressChecker").unwrap();
+
+            let contract_cheat_sequencer_address = declare("CheatSequencerAddressChecker").unwrap().contract_class();
             let (contract_address_cheat_sequencer_address, _) = contract_cheat_sequencer_address.deploy(@ArrayTrait::new()).unwrap();
             let dispatcher_cheat_sequencer_address = ICheatSequencerAddressCheckerDispatcher { contract_address: contract_address_cheat_sequencer_address };
 
@@ -104,7 +104,7 @@ fn simple_syscalls() {
             assert(dispatcher_cheat_block_timestamp.get_block_timestamp() == block_info.block_timestamp, 'Invalid block timestamp');
             assert(dispatcher_cheat_sequencer_address.get_sequencer_address() == block_info.sequencer_address, 'Invalid sequencer address');
 
-            let contract = declare("CheatTxInfoChecker").unwrap();
+            let contract = declare("CheatTxInfoChecker").unwrap().contract_class();
             let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
             let dispatcher = ICheatTxInfoCheckerDispatcher { contract_address };
 
@@ -157,7 +157,7 @@ fn get_block_hash_syscall_in_dispatcher() {
         use serde::Serde;
         use starknet::{ContractAddress, get_block_hash_syscall};
         use array::SpanTrait;
-        use snforge_std::{ declare, ContractClassTrait, test_address };
+        use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, test_address };
 
         #[starknet::interface]
         trait BlockHashChecker<TContractState> {
@@ -167,12 +167,12 @@ fn get_block_hash_syscall_in_dispatcher() {
 
         #[test]
         fn get_block_hash_syscall_in_dispatcher() {
-            let block_hash_checker = declare("BlockHashChecker").unwrap();
+            let block_hash_checker = declare("BlockHashChecker").unwrap().contract_class();
             let (block_hash_checker_address, _) = block_hash_checker.deploy(@ArrayTrait::new()).unwrap();
             let block_hash_checker_dispatcher = BlockHashCheckerDispatcher { contract_address: block_hash_checker_address };
-            
+
             block_hash_checker_dispatcher.write_block();
-            
+
             let stored_blk_hash = block_hash_checker_dispatcher.read_block_hash();
             assert(stored_blk_hash == 0, 'Wrong stored blk hash');
         }
@@ -195,9 +195,10 @@ fn library_calls() {
     let test = test_case!(
         indoc!(
             r#"
+        use core::clone::Clone;
         use result::ResultTrait;
         use starknet::{ ClassHash, library_call_syscall, ContractAddress };
-        use snforge_std::{ declare };
+        use snforge_std::{ declare, DeclareResultTrait };
 
         #[starknet::interface]
         trait ILibraryContract<TContractState> {
@@ -213,7 +214,7 @@ fn library_calls() {
 
         #[test]
         fn library_calls() {
-            let class_hash = declare("LibraryContract").unwrap().class_hash;
+            let class_hash = declare("LibraryContract").unwrap().contract_class().class_hash.clone();
             let lib_dispatcher = ILibraryContractLibraryDispatcher { class_hash };
             let value = lib_dispatcher.get_value();
             assert(value == 0, 'Incorrect state');
@@ -337,7 +338,7 @@ fn cant_call_test_contract() {
             r#"
         use result::ResultTrait;
         use starknet::{ClassHash, ContractAddress, deploy_syscall, replace_class_syscall, get_block_hash_syscall};
-        use snforge_std::{ declare, ContractClassTrait, test_address };
+        use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, test_address };
 
         #[starknet::interface]
         trait ICallsBack<TContractState> {
@@ -346,7 +347,7 @@ fn cant_call_test_contract() {
 
         #[test]
         fn cant_call_test_contract() {
-            let contract = declare("CallsBack").unwrap();
+            let contract = declare("CallsBack").unwrap().contract_class();
             let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
             let dispatcher = ICallsBackDispatcher { contract_address: contract_address };
             dispatcher.call_back(test_address());
@@ -710,7 +711,7 @@ fn caller_address_in_called_contract() {
         use traits::TryInto;
         use starknet::ContractAddress;
         use starknet::Felt252TryIntoContractAddress;
-        use snforge_std::{ declare, ContractClassTrait, test_address };
+        use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, test_address };
 
         #[starknet::interface]
         trait ICheatCallerAddressChecker<TContractState> {
@@ -724,14 +725,14 @@ fn caller_address_in_called_contract() {
 
         #[test]
         fn caller_address_in_called_contract() {
-            let cheat_caller_address_checker = declare("CheatCallerAddressChecker").unwrap();
+            let cheat_caller_address_checker = declare("CheatCallerAddressChecker").unwrap().contract_class();
             let (contract_address_cheat_caller_address_checker, _) = cheat_caller_address_checker.deploy(@ArrayTrait::new()).unwrap();
             let dispatcher_cheat_caller_address_checker = ICheatCallerAddressCheckerDispatcher { contract_address: contract_address_cheat_caller_address_checker };
 
             assert(dispatcher_cheat_caller_address_checker.get_caller_address() == test_address().into(), 'Incorrect caller address');
 
 
-            let constructor_cheat_caller_address_checker = declare("ConstructorCheatCallerAddressChecker").unwrap();
+            let constructor_cheat_caller_address_checker = declare("ConstructorCheatCallerAddressChecker").unwrap().contract_class();
             let (contract_address_constructor_cheat_caller_address_checker, _) = constructor_cheat_caller_address_checker.deploy(@ArrayTrait::new()).unwrap();
             let dispatcher_constructor_cheat_caller_address_checker = IConstructorCheatCallerAddressCheckerDispatcher { contract_address: contract_address_constructor_cheat_caller_address_checker };
 

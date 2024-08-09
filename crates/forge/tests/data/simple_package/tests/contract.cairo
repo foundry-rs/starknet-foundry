@@ -6,13 +6,14 @@ use starknet::ContractAddress;
 use starknet::Felt252TryIntoContractAddress;
 
 use snforge_std::{declare, ContractClassTrait};
+use snforge_std::cheatcodes::contract_class::DeclareResultTrait;
 
 use simple_package::hello_starknet::IHelloStarknetDispatcher;
 use simple_package::hello_starknet::IHelloStarknetDispatcherTrait;
 
 #[test]
 fn call_and_invoke() {
-    let contract = declare("HelloStarknet").unwrap();
+    let contract = declare("HelloStarknet").unwrap().contract_class();
     let constructor_calldata = @ArrayTrait::new();
     let (contract_address, _) = contract.deploy(constructor_calldata).unwrap();
     let dispatcher = IHelloStarknetDispatcher { contract_address };

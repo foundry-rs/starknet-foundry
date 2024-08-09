@@ -15,7 +15,7 @@ fn cheat_sequencer_address_basic() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use snforge_std::{ declare, ContractClassTrait, start_cheat_sequencer_address, start_cheat_sequencer_address_global, stop_cheat_sequencer_address_global, stop_cheat_sequencer_address };
+            use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, start_cheat_sequencer_address, start_cheat_sequencer_address_global, stop_cheat_sequencer_address_global, stop_cheat_sequencer_address };
 
             #[starknet::interface]
             trait ICheatSequencerAddressChecker<TContractState> {
@@ -24,7 +24,7 @@ fn cheat_sequencer_address_basic() {
 
             #[test]
             fn test_stop_cheat_sequencer_address() {
-                let contract = declare("CheatSequencerAddressChecker").unwrap();
+                let contract = declare("CheatSequencerAddressChecker").unwrap().contract_class();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ICheatSequencerAddressCheckerDispatcher { contract_address };
 
@@ -43,7 +43,7 @@ fn cheat_sequencer_address_basic() {
 
             #[test]
             fn test_cheat_sequencer_address_multiple() {
-                let contract = declare("CheatSequencerAddressChecker").unwrap();
+                let contract = declare("CheatSequencerAddressChecker").unwrap().contract_class();
 
                 let (contract_address1, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let (contract_address2, _) = contract.deploy(@ArrayTrait::new()).unwrap();
@@ -74,7 +74,7 @@ fn cheat_sequencer_address_basic() {
             }
             #[test]
             fn test_cheat_sequencer_address_all() {
-                let contract = declare("CheatSequencerAddressChecker").unwrap();
+                let contract = declare("CheatSequencerAddressChecker").unwrap().contract_class();
 
                 let (contract_address1, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let (contract_address2, _) = contract.deploy(@ArrayTrait::new()).unwrap();
@@ -104,7 +104,7 @@ fn cheat_sequencer_address_basic() {
 
             #[test]
             fn test_cheat_sequencer_address_all_stop_one() {
-                let contract = declare("CheatSequencerAddressChecker").unwrap();
+                let contract = declare("CheatSequencerAddressChecker").unwrap().contract_class();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ICheatSequencerAddressCheckerDispatcher { contract_address };
 
@@ -148,8 +148,8 @@ fn cheat_sequencer_address_complex() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use snforge_std::{ declare, ContractClassTrait, start_cheat_sequencer_address, start_cheat_sequencer_address_global, stop_cheat_sequencer_address };
-            
+            use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, start_cheat_sequencer_address, start_cheat_sequencer_address_global, stop_cheat_sequencer_address };
+
             #[starknet::interface]
             trait ICheatSequencerAddressChecker<TContractState> {
                 fn get_sequencer_address(ref self: TContractState) -> ContractAddress;
@@ -157,7 +157,7 @@ fn cheat_sequencer_address_complex() {
 
             #[test]
             fn test_cheat_sequencer_address_complex() {
-                let contract = declare("CheatSequencerAddressChecker").unwrap();
+                let contract = declare("CheatSequencerAddressChecker").unwrap().contract_class();
 
                 let (contract_address1, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let (contract_address2, _) = contract.deploy(@ArrayTrait::new()).unwrap();
@@ -171,7 +171,7 @@ fn cheat_sequencer_address_complex() {
 
                 let new_seq_addr1 = cheat_sequencer_address_checker1.get_sequencer_address();
                 let new_seq_addr2 = cheat_sequencer_address_checker2.get_sequencer_address();
-                
+
                 assert(new_seq_addr1 == 123.try_into().unwrap(), 'Wrong seq addr #1');
                 assert(new_seq_addr2 == 123.try_into().unwrap(), 'Wrong seq addr #2');
 
@@ -196,7 +196,7 @@ fn cheat_sequencer_address_complex() {
 
                 let new_seq_addr1 = cheat_sequencer_address_checker1.get_sequencer_address();
                 let new_seq_addr2 = cheat_sequencer_address_checker2.get_sequencer_address();
-                
+
                 assert(new_seq_addr1 == 789.try_into().unwrap(), 'Wrong seq addr #7');
                 assert(new_seq_addr2 == old_seq_addr2, 'Wrong seq addr #8');
             }
@@ -225,7 +225,7 @@ fn cheat_sequencer_address_with_span() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use snforge_std::{ test_address, declare, ContractClassTrait, cheat_sequencer_address, start_cheat_sequencer_address, stop_cheat_sequencer_address, CheatSpan };
+            use snforge_std::{ test_address, declare, ContractClassTrait, DeclareResultTrait, cheat_sequencer_address, start_cheat_sequencer_address, stop_cheat_sequencer_address, CheatSpan };
 
             #[starknet::interface]
             trait ICheatSequencerAddressChecker<TContractState> {
@@ -233,14 +233,14 @@ fn cheat_sequencer_address_with_span() {
             }
 
             fn deploy_cheat_sequencer_address_checker() -> ICheatSequencerAddressCheckerDispatcher {
-                let (contract_address, _) = declare("CheatSequencerAddressChecker").unwrap().deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = declare("CheatSequencerAddressChecker").unwrap().contract_class().deploy(@ArrayTrait::new()).unwrap();
                 ICheatSequencerAddressCheckerDispatcher { contract_address }
             }
 
             #[test]
             fn test_cheat_sequencer_address_once() {
                 let old_sequencer_address = get_sequencer_address();
-                
+
                 let dispatcher = deploy_cheat_sequencer_address_checker();
 
                 let target_sequencer_address: ContractAddress = 123.try_into().unwrap();
@@ -266,7 +266,7 @@ fn cheat_sequencer_address_with_span() {
 
                 let sequencer_address = dispatcher.get_sequencer_address();
                 assert(sequencer_address == target_sequencer_address.into(), 'Wrong sequencer address');
-                
+
                 let sequencer_address = dispatcher.get_sequencer_address();
                 assert(sequencer_address == target_sequencer_address.into(), 'Wrong sequencer address');
 
@@ -277,17 +277,17 @@ fn cheat_sequencer_address_with_span() {
             #[test]
             fn test_cheat_sequencer_address_test_address() {
                 let old_sequencer_address = get_sequencer_address();
-                
+
                 let target_sequencer_address: ContractAddress = 123.try_into().unwrap();
-                
+
                 cheat_sequencer_address(test_address(), target_sequencer_address, CheatSpan::TargetCalls(1));
-                
+
                 let sequencer_address = get_sequencer_address();
                 assert(sequencer_address == target_sequencer_address, 'Wrong sequencer address');
 
                 let sequencer_address = get_sequencer_address();
                 assert(sequencer_address == target_sequencer_address, 'Wrong sequencer address');
-                
+
                 stop_cheat_sequencer_address(test_address());
 
                 let sequencer_address = get_sequencer_address();

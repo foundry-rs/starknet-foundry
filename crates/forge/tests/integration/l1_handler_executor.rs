@@ -24,14 +24,14 @@ fn l1_handler_execute() {
             use serde::Serde;
             use array::{ArrayTrait, SpanTrait};
             use core::result::ResultTrait;
-            use snforge_std::{declare, ContractClassTrait, L1Handler, L1HandlerTrait};
+            use snforge_std::{declare, ContractClassTrait, DeclareResultTrait, L1Handler, L1HandlerTrait};
             use starknet::contract_address_const;
 
             #[test]
             fn l1_handler_execute() {
                 let calldata = array![0x123];
 
-                let contract = declare("l1_handler_executor").unwrap();
+                let contract = declare("l1_handler_executor").unwrap().contract_class();
                 let (contract_address, _) = contract.deploy(@calldata).unwrap();
 
                 let l1_data = L1Data {
@@ -48,17 +48,17 @@ fn l1_handler_execute() {
                 );
 
                 l1_handler.execute(0x123, payload.span()).unwrap();
-                    
+
                 let dispatcher = IBalanceTokenDispatcher { contract_address };
                 assert(dispatcher.get_balance() == 42, dispatcher.get_balance());
                 assert(dispatcher.get_token_id() == 8888_u256, 'Invalid token id');
             }
-             
+
             #[test]
             fn l1_handler_execute_panicking() {
                 let calldata = array![0x123];
 
-                let contract = declare("l1_handler_executor").unwrap();
+                let contract = declare("l1_handler_executor").unwrap().contract_class();
                 let (contract_address, _) = contract.deploy(@calldata).unwrap();
 
 
@@ -80,7 +80,7 @@ fn l1_handler_execute() {
             fn l1_handler_function_missing() {
                 let calldata = array![0x123];
 
-                let contract = declare("l1_handler_executor").unwrap();
+                let contract = declare("l1_handler_executor").unwrap().contract_class();
                 let (contract_address, _) = contract.deploy(@calldata).unwrap();
 
 
@@ -97,7 +97,7 @@ fn l1_handler_execute() {
                 }
             }
 
-            #[test] 
+            #[test]
             #[should_panic]
             fn l1_handler_contract_missing() {
                 let dispatcher = IBalanceTokenDispatcher { contract_address: contract_address_const::<421984739218742310>() };

@@ -13,8 +13,8 @@ fn spy_messages_to_l1_simple() {
             use result::ResultTrait;
             use starknet::{ContractAddress, EthAddress};
             use snforge_std::{
-                declare, ContractClassTrait, 
-                spy_messages_to_l1, 
+                declare, ContractClassTrait, DeclareResultTrait,
+                spy_messages_to_l1,
                 MessageToL1, MessageToL1SpyAssertionsTrait
             };
 
@@ -24,10 +24,10 @@ fn spy_messages_to_l1_simple() {
             }
 
             fn deploy_message_to_l1_checker()  -> IMessageToL1CheckerDispatcher {
-               let declared = declare("MessageToL1Checker").unwrap();
+               let declared = declare("MessageToL1Checker").unwrap().contract_class();
                let (contract_address, _) = declared.deploy(@array![]).unwrap();
-               
-               IMessageToL1CheckerDispatcher { contract_address }   
+
+               IMessageToL1CheckerDispatcher { contract_address }
             }
 
             #[test]
@@ -36,7 +36,7 @@ fn spy_messages_to_l1_simple() {
 
                let mut spy = spy_messages_to_l1();
                message_to_l1_checker.send_message(
-                    array![123, 321, 420], 
+                    array![123, 321, 420],
                     0x123.try_into().unwrap()
                );
 
@@ -45,7 +45,7 @@ fn spy_messages_to_l1_simple() {
                         (
                             message_to_l1_checker.contract_address,
                             MessageToL1 {
-                                to_address: 0x123.try_into().unwrap(), 
+                                to_address: 0x123.try_into().unwrap(),
                                 payload: array![123, 321, 420]
                             }
                         )
@@ -122,8 +122,8 @@ fn expect_three_messages_while_two_sent() {
             use result::ResultTrait;
             use starknet::{ContractAddress, EthAddress};
             use snforge_std::{
-                declare, ContractClassTrait, 
-                spy_messages_to_l1, 
+                declare, ContractClassTrait, DeclareResultTrait,
+                spy_messages_to_l1,
                 MessageToL1, MessageToL1SpyAssertionsTrait
             };
 
@@ -133,10 +133,10 @@ fn expect_three_messages_while_two_sent() {
             }
 
             fn deploy_message_to_l1_checker()  -> IMessageToL1CheckerDispatcher {
-               let declared = declare("MessageToL1Checker").unwrap();
+               let declared = declare("MessageToL1Checker").unwrap().contract_class();
                let (contract_address, _) = declared.deploy(@array![]).unwrap();
-               
-               IMessageToL1CheckerDispatcher { contract_address }   
+
+               IMessageToL1CheckerDispatcher { contract_address }
             }
 
             #[test]
@@ -145,11 +145,11 @@ fn expect_three_messages_while_two_sent() {
 
                let mut spy = spy_messages_to_l1();
                message_to_l1_checker.send_message(
-                    array![123, 321, 420], 
+                    array![123, 321, 420],
                     0x123.try_into().unwrap()
                );
                message_to_l1_checker.send_message(
-                    array![420, 123, 321], 
+                    array![420, 123, 321],
                     0x321.try_into().unwrap()
                );
 
@@ -158,21 +158,21 @@ fn expect_three_messages_while_two_sent() {
                         (
                             message_to_l1_checker.contract_address,
                             MessageToL1 {
-                                to_address: 0x123.try_into().unwrap(), 
+                                to_address: 0x123.try_into().unwrap(),
                                 payload: array![123, 321, 420]
                             }
                         ),
                         (
                             message_to_l1_checker.contract_address,
                             MessageToL1 {
-                                to_address: 0x321.try_into().unwrap(), 
+                                to_address: 0x321.try_into().unwrap(),
                                 payload: array![420, 123, 321]
                             }
                         ),
                         (
                             message_to_l1_checker.contract_address,
                             MessageToL1 {
-                                to_address: 0x456.try_into().unwrap(), 
+                                to_address: 0x456.try_into().unwrap(),
                                 payload: array![567, 8910, 111213]
                             }
                         ),
@@ -211,7 +211,7 @@ fn expect_two_messages_while_three_sent() {
             use array::ArrayTrait;
             use starknet::{ContractAddress, EthAddress};
             use snforge_std::{
-                ContractClassTrait, declare, spy_messages_to_l1,
+                ContractClassTrait, DeclareResultTrait, declare, spy_messages_to_l1,
                 MessageToL1, MessageToL1SpyAssertionsTrait
             };
             use traits::Into;
@@ -222,10 +222,10 @@ fn expect_two_messages_while_three_sent() {
             }
 
             fn deploy_message_to_l1_checker()  -> IMessageToL1CheckerDispatcher {
-               let declared = declare("MessageToL1Checker").unwrap();
+               let declared = declare("MessageToL1Checker").unwrap().contract_class();
                let (contract_address, _) = declared.deploy(@array![]).unwrap();
-               
-               IMessageToL1CheckerDispatcher { contract_address }   
+
+               IMessageToL1CheckerDispatcher { contract_address }
             }
 
             #[test]
@@ -234,15 +234,15 @@ fn expect_two_messages_while_three_sent() {
 
                let mut spy = spy_messages_to_l1();
                message_to_l1_checker.send_message(
-                    array![123, 321, 420],  
+                    array![123, 321, 420],
                     0x123.try_into().unwrap()
                );
                message_to_l1_checker.send_message(
-                    array![420, 123, 321], 
+                    array![420, 123, 321],
                     0x321.try_into().unwrap()
                );
                message_to_l1_checker.send_message(
-                    array![567, 8910, 111213], 
+                    array![567, 8910, 111213],
                     0x456.try_into().unwrap()
                );
 
@@ -251,14 +251,14 @@ fn expect_two_messages_while_three_sent() {
                         (
                             message_to_l1_checker.contract_address,
                             MessageToL1 {
-                                to_address: 0x123.try_into().unwrap(), 
+                                to_address: 0x123.try_into().unwrap(),
                                 payload: array![123, 321, 420]
                             }
                         ),
                         (
                             message_to_l1_checker.contract_address,
                             MessageToL1 {
-                                to_address: 0x321.try_into().unwrap(), 
+                                to_address: 0x321.try_into().unwrap(),
                                 payload: array![420, 123, 321]
                             }
                         )
@@ -287,21 +287,21 @@ fn message_sent_but_wrong_data_asserted() {
             use array::ArrayTrait;
             use starknet::{ContractAddress, EthAddress};
             use snforge_std::{
-                declare, ContractClassTrait, 
-                spy_messages_to_l1, 
+                declare, ContractClassTrait, DeclareResultTrait,
+                spy_messages_to_l1,
                 MessageToL1, MessageToL1SpyAssertionsTrait
             };
-            
+
             #[starknet::interface]
             trait IMessageToL1Checker<TContractState> {
                 fn send_message(ref self: TContractState, some_data: Array<felt252>, to_address: EthAddress);
             }
 
             fn deploy_message_to_l1_checker()  -> IMessageToL1CheckerDispatcher {
-               let declared = declare("MessageToL1Checker").unwrap();
+               let declared = declare("MessageToL1Checker").unwrap().contract_class();
                let (contract_address, _) = declared.deploy(@array![]).unwrap();
-               
-               IMessageToL1CheckerDispatcher { contract_address }   
+
+               IMessageToL1CheckerDispatcher { contract_address }
             }
 
             #[test]
@@ -310,7 +310,7 @@ fn message_sent_but_wrong_data_asserted() {
 
                let mut spy = spy_messages_to_l1();
                message_to_l1_checker.send_message(
-                    array![123, 321, 420],  
+                    array![123, 321, 420],
                     0x123.try_into().unwrap()
                );
 
@@ -319,7 +319,7 @@ fn message_sent_but_wrong_data_asserted() {
                         (
                             message_to_l1_checker.contract_address,
                             MessageToL1 {
-                                to_address: 0x123.try_into().unwrap(), 
+                                to_address: 0x123.try_into().unwrap(),
                                 payload: array![420, 321, 123]
                             }
                         )
@@ -399,20 +399,20 @@ fn assert_not_sent_fails() {
             use array::ArrayTrait;
             use starknet::{ContractAddress, EthAddress};
             use snforge_std::{
-                ContractClassTrait, declare, spy_messages_to_l1,
+                ContractClassTrait, DeclareResultTrait, declare, spy_messages_to_l1,
                 MessageToL1, MessageToL1SpyAssertionsTrait
             };
-            
+
             #[starknet::interface]
             trait IMessageToL1Checker<TContractState> {
                 fn send_message(ref self: TContractState, some_data: Array<felt252>, to_address: EthAddress);
             }
 
             fn deploy_message_to_l1_checker()  -> IMessageToL1CheckerDispatcher {
-               let declared = declare("MessageToL1Checker").unwrap();
+               let declared = declare("MessageToL1Checker").unwrap().contract_class();
                let (contract_address, _) = declared.deploy(@array![]).unwrap();
-               
-               IMessageToL1CheckerDispatcher { contract_address }   
+
+               IMessageToL1CheckerDispatcher { contract_address }
             }
 
             #[test]
@@ -421,7 +421,7 @@ fn assert_not_sent_fails() {
 
                let mut spy = spy_messages_to_l1();
                message_to_l1_checker.send_message(
-                    array![123, 321, 420], 
+                    array![123, 321, 420],
                     0x123.try_into().unwrap()
                );
 
@@ -430,7 +430,7 @@ fn assert_not_sent_fails() {
                         (
                             message_to_l1_checker.contract_address,
                             MessageToL1 {
-                                to_address: 0x123.try_into().unwrap(), 
+                                to_address: 0x123.try_into().unwrap(),
                                 payload: array![123, 321, 420]
                             }
                         )
@@ -466,22 +466,22 @@ fn test_filtering() {
             use result::ResultTrait;
             use starknet::{ContractAddress, EthAddress};
             use snforge_std::{
-                declare, ContractClassTrait, spy_messages_to_l1,
+                declare, ContractClassTrait, DeclareResultTrait, spy_messages_to_l1,
                 MessageToL1, MessageToL1SpyAssertionsTrait, MessageToL1FilterTrait, MessageToL1SpyTrait
             };
- 
 
-           fn deploy_message_to_l1_checkers()  -> (IMessageToL1CheckerDispatcher, IMessageToL1CheckerDispatcher) {
-               let declared = declare("MessageToL1Checker").unwrap();
+
+            fn deploy_message_to_l1_checkers()  -> (IMessageToL1CheckerDispatcher, IMessageToL1CheckerDispatcher) {
+               let declared = declare("MessageToL1Checker").unwrap().contract_class();
                let (contract_address_1, _) = declared.deploy(@array![]).unwrap();
                let (contract_address_2, _) = declared.deploy(@array![]).unwrap();
-               
+
                (
-                    IMessageToL1CheckerDispatcher { contract_address: contract_address_1 }, 
+                    IMessageToL1CheckerDispatcher { contract_address: contract_address_1 },
                     IMessageToL1CheckerDispatcher { contract_address: contract_address_2 }
                )
-           }
-            
+            }
+
             #[starknet::interface]
             trait IMessageToL1Checker<TContractState> {
                 fn send_message(ref self: TContractState, some_data: Array<felt252>, to_address: EthAddress);
@@ -492,16 +492,16 @@ fn test_filtering() {
                 let (first_dispatcher, second_dispatcher) = deploy_message_to_l1_checkers();
                 let first_address = first_dispatcher.contract_address;
                 let second_address = second_dispatcher.contract_address;
-                
+
                 let mut spy = spy_messages_to_l1();
                 assert(spy._message_offset == 0, 'Message offset should be 0');
 
                 first_dispatcher.send_message(
-                    array![123, 421, 420], 
+                    array![123, 421, 420],
                     0x123.try_into().unwrap()
                  );
                 second_dispatcher.send_message(
-                    array![123, 124, 420], 
+                    array![123, 124, 420],
                     0x125.try_into().unwrap()
                 );
 
@@ -512,7 +512,7 @@ fn test_filtering() {
                 assert!(from == @first_address, "Sent from wrong address");
                 assert!(message.payload.len() == 3, "There should be 3 items in the data");
                 assert!(*message.payload.at(1) == 421, "Expected 421 in payload");
-                
+
                 let (from, message) = messages_from_second_address.messages.at(0);
                 assert!(from == @second_address, "Sent from wrong address");
                 assert!(message.payload.len() == 3, "There should be 3 items in the data");

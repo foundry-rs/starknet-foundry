@@ -26,6 +26,7 @@ Commands that do not require `--url` anymore: `account list`, `multicall new`, `
 - `#[fork]` attribute parameters format. [Read more here](https://foundry-rs.github.io/starknet-foundry/snforge-advanced-features/fork-testing.html)
 - steps counting
 - Block tag changed name from `Latest`  to `latest`
+- `declare` cheatcode now returns `Result<DeclareResult, Array<felt252>>` [Read more here](https://foundry-rs.github.io/starknet-foundry/appendix/snforge-library/declare.html)
 
 ## [0.27.0] - 2024-07-24
 
