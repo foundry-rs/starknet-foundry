@@ -4,7 +4,7 @@ use indoc::formatdoc;
 use serde::{Deserialize, Serialize, Serializer};
 use starknet::core::types::FieldElement;
 
-use crate::helpers::block_explorer;
+use crate::helpers::block_explorer::LinkProvider;
 
 use super::explorer_link::OutputLink;
 
@@ -160,9 +160,7 @@ impl CommandResponse for VerifyResponse {}
 impl OutputLink for InvokeResponse {
     const TITLE: &'static str = "invocation";
 
-    fn format_links(&self, service: block_explorer::Service) -> String {
-        let provider = service.as_provider();
-
+    fn format_links(&self, provider: Box<dyn LinkProvider>) -> String {
         format!(
             "transaction: {}",
             provider.transaction(self.transaction_hash.0)
@@ -173,9 +171,7 @@ impl OutputLink for InvokeResponse {
 impl OutputLink for DeployResponse {
     const TITLE: &'static str = "deployment";
 
-    fn format_links(&self, service: block_explorer::Service) -> String {
-        let provider = service.as_provider();
-
+    fn format_links(&self, provider: Box<dyn LinkProvider>) -> String {
         formatdoc!(
             "
             contract: {}
@@ -190,9 +186,7 @@ impl OutputLink for DeployResponse {
 impl OutputLink for DeclareResponse {
     const TITLE: &'static str = "declaration";
 
-    fn format_links(&self, service: block_explorer::Service) -> String {
-        let provider = service.as_provider();
-
+    fn format_links(&self, provider: Box<dyn LinkProvider>) -> String {
         formatdoc!(
             "
             class: {}
@@ -207,9 +201,7 @@ impl OutputLink for DeclareResponse {
 impl OutputLink for AccountCreateResponse {
     const TITLE: &'static str = "account creation";
 
-    fn format_links(&self, service: block_explorer::Service) -> String {
-        let provider = service.as_provider();
-
+    fn format_links(&self, provider: Box<dyn LinkProvider>) -> String {
         format!("account: {}", provider.account(self.address.0))
     }
 }
