@@ -45,6 +45,9 @@ async fn test_happy_case(account: &str) {
     output.stdout_matches(indoc! {r"
         command: multicall run
         transaction_hash: 0x[..]
+
+        To see invocation details, visit:
+        transaction: [..]
     "});
 }
 
@@ -83,6 +86,9 @@ async fn test_calldata_ids() {
     output.stdout_matches(indoc! {r"
         command: multicall run
         transaction_hash: 0x[..]
+
+        To see invocation details, visit:
+        transaction: [..]
     "});
 }
 

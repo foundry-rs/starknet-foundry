@@ -6,6 +6,7 @@ use crate::starknet_commands::{
 };
 use anyhow::{Context, Result};
 use configuration::load_global_config;
+use sncast::response::explorer_link::print_block_explorer_link_if_allowed;
 use sncast::response::print::{print_command_result, OutputFormat};
 
 use camino::Utf8PathBuf;
@@ -20,7 +21,7 @@ use sncast::helpers::scarb_utils::{
 use sncast::response::errors::handle_starknet_command_error;
 use sncast::{
     chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_default_state_file_name,
-    get_nonce, NumbersFormat, ValidatedWaitParams, WaitForTx,
+    NumbersFormat, ValidatedWaitParams, WaitForTx,
 };
 use starknet::core::utils::get_selector_from_name;
 use starknet_commands::account::list::print_account_list;
@@ -151,7 +152,7 @@ fn main() -> Result<()> {
     let runtime = Runtime::new().expect("Failed to instantiate Runtime");
 
     if let Commands::Script(script) = &cli.command {
-        run_script_command(&cli, runtime, script, numbers_format, &output_format)
+        run_script_command(&cli, runtime, script, numbers_format, output_format)
     } else {
         let mut config = load_global_config::<CastConfig>(&None, &cli.profile)?;
         update_cast_config(&mut config, &cli);
@@ -201,12 +202,13 @@ async fn run_async_command(
                 },
             )
             .expect("Failed to build contract");
-            let mut result =
+            let result =
                 starknet_commands::declare::declare(declare, &account, &artifacts, wait_config)
                     .await
                     .map_err(handle_starknet_command_error);
 
-            print_command_result("declare", &mut result, numbers_format, &output_format)?;
+            print_command_result("declare", &result, numbers_format, output_format)?;
+            print_block_explorer_link_if_allowed(&result, output_format, config.block_explorer);
             Ok(())
         }
 
@@ -222,11 +224,12 @@ async fn run_async_command(
             )
             .await?;
 
-            let mut result = starknet_commands::deploy::deploy(deploy, &account, wait_config)
+            let result = starknet_commands::deploy::deploy(deploy, &account, wait_config)
                 .await
                 .map_err(handle_starknet_command_error);
 
-            print_command_result("deploy", &mut result, numbers_format, &output_format)?;
+            print_command_result("deploy", &result, numbers_format, output_format)?;
+            print_block_explorer_link_if_allowed(&result, output_format, config.block_explorer);
             Ok(())
         }
 
@@ -235,7 +238,7 @@ async fn run_async_command(
 
             let block_id = get_block_id(&call.block_id)?;
 
-            let mut result = starknet_commands::call::call(
+            let result = starknet_commands::call::call(
                 call.contract_address,
                 get_selector_from_name(&call.function)
                     .context("Failed to convert entry point selector to FieldElement")?,
@@ -246,7 +249,7 @@ async fn run_async_command(
             .await
             .map_err(handle_starknet_command_error);
 
-            print_command_result("call", &mut result, numbers_format, &output_format)?;
+            print_command_result("call", &result, numbers_format, output_format)?;
             Ok(())
         }
 
@@ -262,7 +265,7 @@ async fn run_async_command(
                 config.keystore,
             )
             .await?;
-            let mut result = starknet_commands::invoke::invoke(
+            let result = starknet_commands::invoke::invoke(
                 invoke.clone(),
                 get_selector_from_name(&invoke.function)
                     .context("Failed to convert entry point selector to FieldElement")?,
@@ -272,7 +275,8 @@ async fn run_async_command(
             .await
             .map_err(handle_starknet_command_error);
 
-            print_command_result("invoke", &mut result, numbers_format, &output_format)?;
+            print_command_result("invoke", &result, numbers_format, output_format)?;
+            print_block_explorer_link_if_allowed(&result, output_format, config.block_explorer);
             Ok(())
         }
 
@@ -280,16 +284,16 @@ async fn run_async_command(
             match &multicall.command {
                 starknet_commands::multicall::Commands::New(new) => {
                     if let Some(output_path) = &new.output_path {
-                        let mut result = starknet_commands::multicall::new::write_empty_template(
+                        let result = starknet_commands::multicall::new::write_empty_template(
                             output_path,
                             new.overwrite,
                         );
 
                         print_command_result(
                             "multicall new",
-                            &mut result,
+                            &result,
                             numbers_format,
-                            &output_format,
+                            output_format,
                         )?;
                     } else {
                         println!("{DEFAULT_MULTICALL_CONTENTS}");
@@ -307,16 +311,16 @@ async fn run_async_command(
                         config.keystore,
                     )
                     .await?;
-                    let mut result =
+                    let result =
                         starknet_commands::multicall::run::run(run.clone(), &account, wait_config)
                             .await;
 
-                    print_command_result(
-                        "multicall run",
-                        &mut result,
-                        numbers_format,
-                        &output_format,
-                    )?;
+                    print_command_result("multicall run", &result, numbers_format, output_format)?;
+                    print_block_explorer_link_if_allowed(
+                        &result,
+                        output_format,
+                        config.block_explorer,
+                    );
                 }
             }
             Ok(())
@@ -325,8 +329,7 @@ async fn run_async_command(
         Commands::Account(account) => match account.command {
             account::Commands::Add(add) => {
                 let provider = add.rpc.get_provider(&config).await?;
-
-                let mut result = starknet_commands::account::add::add(
+                let result = starknet_commands::account::add::add(
                     &config.url,
                     &add.name.clone(),
                     &config.accounts_file,
@@ -335,7 +338,7 @@ async fn run_async_command(
                 )
                 .await;
 
-                print_command_result("account add", &mut result, numbers_format, &output_format)?;
+                print_command_result("account add", &result, numbers_format, output_format)?;
                 Ok(())
             }
 
@@ -350,7 +353,7 @@ async fn run_async_command(
                 } else {
                     config.account
                 };
-                let mut result = starknet_commands::account::create::create(
+                let result = starknet_commands::account::create::create(
                     &config.url,
                     &account,
                     &config.accounts_file,
@@ -364,12 +367,8 @@ async fn run_async_command(
                 )
                 .await;
 
-                print_command_result(
-                    "account create",
-                    &mut result,
-                    numbers_format,
-                    &output_format,
-                )?;
+                print_command_result("account create", &result, numbers_format, output_format)?;
+                print_block_explorer_link_if_allowed(&result, output_format, config.block_explorer);
                 Ok(())
             }
 
@@ -380,7 +379,7 @@ async fn run_async_command(
 
                 let chain_id = get_chain_id(&provider).await?;
                 let keystore_path = config.keystore.clone();
-                let mut result = starknet_commands::account::deploy::deploy(
+                let result = starknet_commands::account::deploy::deploy(
                     &provider,
                     config.accounts_file,
                     deploy,
@@ -391,12 +390,8 @@ async fn run_async_command(
                 )
                 .await;
 
-                print_command_result(
-                    "account deploy",
-                    &mut result,
-                    numbers_format,
-                    &output_format,
-                )?;
+                print_command_result("account deploy", &result, numbers_format, output_format)?;
+                print_block_explorer_link_if_allowed(&result, output_format, config.block_explorer);
                 Ok(())
             }
 
@@ -408,19 +403,14 @@ async fn run_async_command(
                     None => chain_id_to_network_name(get_chain_id(&provider).await?),
                 };
 
-                let mut result = starknet_commands::account::delete::delete(
+                let result = starknet_commands::account::delete::delete(
                     &delete.name,
                     &config.accounts_file,
                     &network_name,
                     delete.yes,
                 );
 
-                print_command_result(
-                    "account delete",
-                    &mut result,
-                    numbers_format,
-                    &output_format,
-                )?;
+                print_command_result("account delete", &result, numbers_format, output_format)?;
                 Ok(())
             }
 
@@ -428,28 +418,31 @@ async fn run_async_command(
                 &config.accounts_file,
                 options.display_private_keys,
                 numbers_format,
-                &output_format,
+                output_format,
             ),
         },
 
         Commands::ShowConfig(show) => {
             let provider = show.rpc.get_provider(&config).await?;
 
-            let mut result =
+            let result =
                 starknet_commands::show_config::show_config(&show, &provider, config, cli.profile)
                     .await;
-            print_command_result("show-config", &mut result, numbers_format, &output_format)?;
+
+            print_command_result("show-config", &result, numbers_format, output_format)?;
+
             Ok(())
         }
 
         Commands::TxStatus(tx_status) => {
             let provider = tx_status.rpc.get_provider(&config).await?;
 
-            let mut result =
+            let result =
                 starknet_commands::tx_status::tx_status(&provider, tx_status.transaction_hash)
                     .await
                     .context("Failed to get transaction status");
-            print_command_result("tx-status", &mut result, numbers_format, &output_format)?;
+
+            print_command_result("tx-status", &result, numbers_format, output_format)?;
             Ok(())
         }
 
@@ -465,7 +458,7 @@ async fn run_async_command(
                 },
             )
             .expect("Failed to build contract");
-            let mut result = starknet_commands::verify::verify(
+            let result = starknet_commands::verify::verify(
                 verify.contract_address,
                 verify.contract_name,
                 verify.verifier,
@@ -476,7 +469,7 @@ async fn run_async_command(
             )
             .await;
 
-            print_command_result("verify", &mut result, numbers_format, &output_format)?;
+            print_command_result("verify", &result, numbers_format, output_format)?;
             Ok(())
         }
 
@@ -489,12 +482,12 @@ fn run_script_command(
     runtime: Runtime,
     script: &Script,
     numbers_format: NumbersFormat,
-    output_format: &OutputFormat,
+    output_format: OutputFormat,
 ) -> Result<()> {
     match &script.command {
         starknet_commands::script::Commands::Init(init) => {
-            let mut result = starknet_commands::script::init::init(init);
-            print_command_result("script init", &mut result, numbers_format, output_format)?;
+            let result = starknet_commands::script::init::init(init);
+            print_command_result("script init", &result, numbers_format, output_format)?;
         }
         starknet_commands::script::Commands::Run(run) => {
             let manifest_path = assert_manifest_path_exists()?;
@@ -538,7 +531,7 @@ fn run_script_command(
                 )))
             };
 
-            let mut result = starknet_commands::script::run::run(
+            let result = starknet_commands::script::run::run(
                 &run.script_name,
                 &metadata_with_deps,
                 &package_metadata,
@@ -549,7 +542,7 @@ fn run_script_command(
                 state_file_path,
             );
 
-            print_command_result("script run", &mut result, numbers_format, output_format)?;
+            print_command_result("script run", &result, numbers_format, output_format)?;
         }
     }
 
