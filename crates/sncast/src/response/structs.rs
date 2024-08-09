@@ -202,6 +202,6 @@ impl OutputLink for AccountCreateResponse {
     const TITLE: &'static str = "account creation";
 
     fn format_links(&self, provider: Box<dyn LinkProvider>) -> String {
-        format!("account: {}", provider.account(self.address.0))
+        format!("account: {}", provider.contract(self.address.0))
     }
 }

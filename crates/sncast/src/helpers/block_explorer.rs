@@ -33,7 +33,6 @@ impl Service {
 pub trait LinkProvider {
     fn transaction(&self, hash: FieldElement) -> String;
     fn class(&self, hash: FieldElement) -> String;
-    fn account(&self, address: FieldElement) -> String;
     fn contract(&self, address: FieldElement) -> String;
 }
 
@@ -46,10 +45,6 @@ impl LinkProvider for StarkScan {
 
     fn class(&self, hash: FieldElement) -> String {
         format!("{STARKSCAN}/{hash:x}")
-    }
-
-    fn account(&self, address: FieldElement) -> String {
-        format!("{STARKSCAN}/{address:x}")
     }
 
     fn contract(&self, address: FieldElement) -> String {
@@ -68,10 +63,6 @@ impl LinkProvider for Voyager {
         format!("{VOYAGER}/class/{hash:x}")
     }
 
-    fn account(&self, address: FieldElement) -> String {
-        format!("{VOYAGER}/contract/{address:x}")
-    }
-
     fn contract(&self, address: FieldElement) -> String {
         format!("{VOYAGER}/contract/{address:x}")
     }
@@ -86,10 +77,6 @@ impl LinkProvider for ViewBlock {
 
     fn class(&self, hash: FieldElement) -> String {
         format!("{VIEWBLOCK}/class/{hash:x}")
-    }
-
-    fn account(&self, address: FieldElement) -> String {
-        format!("{VIEWBLOCK}/contract/{address:x}")
     }
 
     fn contract(&self, address: FieldElement) -> String {
@@ -108,10 +95,6 @@ impl LinkProvider for OkLink {
         format!("{OKLINK}/class/{hash:x}")
     }
 
-    fn account(&self, address: FieldElement) -> String {
-        format!("{OKLINK}/contract/{address:x}")
-    }
-
     fn contract(&self, address: FieldElement) -> String {
         format!("{OKLINK}/contract/{address:x}")
     }
@@ -126,10 +109,6 @@ impl LinkProvider for NftScan {
 
     fn class(&self, hash: FieldElement) -> String {
         format!("{NFTSCAN}/{hash:x}")
-    }
-
-    fn account(&self, address: FieldElement) -> String {
-        format!("{NFTSCAN}/{address:x}")
     }
 
     fn contract(&self, address: FieldElement) -> String {
