@@ -62,65 +62,66 @@ fn syscalls_count() {
     let test = test_case!(
         indoc!(
             r#"
+            use core::clone::Clone;
             use starknet::syscalls::{
                 call_contract_syscall, keccak_syscall, deploy_syscall, get_block_hash_syscall, emit_event_syscall,
                 send_message_to_l1_syscall, get_execution_info_syscall, get_execution_info_v2_syscall,
                 SyscallResult
             };
             use starknet::SyscallResultTrait;
-            use snforge_std::{declare, ContractClass, ContractClassTrait};
-            
+            use snforge_std::{declare, ContractClass, ContractClassTrait, DeclareResultTrait};
+
             #[test]
             fn keccak() {
                 let input = array![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
                 keccak_syscall(input.span()).unwrap_syscall();
             }
-            
+
             #[test]
             fn deploy() {
-                let contract = declare("HelloStarknet").unwrap();
+                let contract = declare("HelloStarknet").unwrap().contract_class().clone();
                 deploy_syscall(contract.class_hash, 0, array![].span(), false).unwrap_syscall();
             }
-            
+
             #[test]
             fn storage_read() {
-                let contract = declare("HelloStarknet").unwrap();
+                let contract = declare("HelloStarknet").unwrap().contract_class().clone();
                 let (address, _) = deploy_syscall(contract.class_hash, 0, array![].span(), false)
                     .unwrap_syscall();
-            
+
                 call_contract_syscall(address, selector!("get_balance"), array![].span()).unwrap_syscall();
             }
-            
+
             #[test]
             fn storage_write() {
-                let contract = declare("HelloStarknet").unwrap();
+                let contract = declare("HelloStarknet").unwrap().contract_class().clone();
                 let (address, _) = deploy_syscall(contract.class_hash, 0, array![].span(), false)
                     .unwrap_syscall();
-            
+
                 call_contract_syscall(address, selector!("increase_balance"), array![123].span())
                     .unwrap_syscall();
             }
-            
+
             #[test]
             fn get_block_hash() {
                 get_block_hash_syscall(1).unwrap_syscall();
             }
-            
+
             #[test]
             fn get_execution_info() {
                 get_execution_info_syscall().unwrap_syscall();
             }
-            
+
             #[test]
             fn get_execution_info_v2() {
                 get_execution_info_v2_syscall().unwrap_syscall();
             }
-            
+
             #[test]
             fn send_message_to_l1() {
                 send_message_to_l1_syscall(1, array![1].span()).unwrap_syscall();
             }
-            
+
             #[test]
             fn emit_event() {
                 emit_event_syscall(array![1].span(), array![2].span()).unwrap_syscall();
@@ -154,7 +155,7 @@ fn accumulate_syscalls() {
     let test = test_case!(
         indoc!(
             r#"
-            use snforge_std::{ declare, ContractClassTrait };
+            use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait };
 
             #[starknet::interface]
             trait IGasChecker<TContractState> {
@@ -163,7 +164,7 @@ fn accumulate_syscalls() {
 
             #[test]
             fn single_write() {
-                let contract = declare("GasChecker").unwrap();
+                let contract = declare("GasChecker").unwrap().contract_class();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IGasCheckerDispatcher { contract_address };
 
@@ -172,7 +173,7 @@ fn accumulate_syscalls() {
 
             #[test]
             fn double_write() {
-                let contract = declare("GasChecker").unwrap();
+                let contract = declare("GasChecker").unwrap().contract_class();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IGasCheckerDispatcher { contract_address };
 

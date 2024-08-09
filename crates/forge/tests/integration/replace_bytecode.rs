@@ -9,7 +9,8 @@ fn override_entrypoint() {
     let test = test_case!(
         indoc!(
             r#"
-            use snforge_std::{declare, replace_bytecode, ContractClassTrait};
+            use core::clone::Clone;
+            use snforge_std::{declare, replace_bytecode, ContractClassTrait, DeclareResultTrait};
 
             #[starknet::interface]
             trait IReplaceBytecode<TContractState> {
@@ -18,8 +19,8 @@ fn override_entrypoint() {
 
             #[test]
             fn override_entrypoint() {
-                let contract = declare("ReplaceBytecodeA").unwrap();
-                let contract_b_class = declare("ReplaceBytecodeB").unwrap().class_hash;
+                let contract = declare("ReplaceBytecodeA").unwrap().contract_class();
+                let contract_b_class = declare("ReplaceBytecodeB").unwrap().contract_class().class_hash.clone();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IReplaceBytecodeDispatcher { contract_address };
 
@@ -53,13 +54,14 @@ fn libcall_in_cheated() {
     let test = test_case!(
         indoc!(
             r#"
-            use snforge_std::{declare, replace_bytecode, ContractClassTrait};
+            use core::clone::Clone;
+            use snforge_std::{declare, replace_bytecode, ContractClassTrait, DeclareResultTrait};
 
             #[starknet::interface]
             trait IReplaceBytecode<TContractState> {
                 fn libcall(self: @TContractState, class_hash: starknet::ClassHash) -> felt252;
             }
-            
+
             #[starknet::interface]
             trait ILib<TContractState> {
                 fn get(self: @TContractState) -> felt252;
@@ -67,9 +69,9 @@ fn libcall_in_cheated() {
 
             #[test]
             fn override_entrypoint() {
-                let contract = declare("ReplaceBytecodeA").unwrap();
-                let contract_b_class = declare("ReplaceBytecodeB").unwrap().class_hash;
-                let lib = declare("Lib").unwrap().class_hash;
+                let contract = declare("ReplaceBytecodeA").unwrap().contract_class();
+                let contract_b_class = declare("ReplaceBytecodeB").unwrap().contract_class().clone().class_hash;
+                let lib = declare("Lib").unwrap().contract_class().clone().class_hash;
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IReplaceBytecodeDispatcher { contract_address };
 
@@ -108,13 +110,14 @@ fn contract_not_deployed() {
     let test = test_case!(
         indoc!(
             r#"
-            use snforge_std::{declare, replace_bytecode, ReplaceBytecodeError};
+            use core::clone::Clone;
+            use snforge_std::{declare, replace_bytecode, ReplaceBytecodeError, DeclareResultTrait};
             use starknet::{ClassHash, contract_address_const};
 
             #[test]
             fn contract_not_deployed() {
-                let class_hash = declare("ReplaceBytecodeA").unwrap().class_hash;
-               
+                let class_hash = declare("ReplaceBytecodeA").unwrap().contract_class().clone().class_hash;
+
                 let non_existing_contract_address = contract_address_const::<0x2>();
                 match replace_bytecode(non_existing_contract_address, class_hash) {
                     Result::Ok(()) => {
@@ -144,15 +147,15 @@ fn class_hash_not_declared() {
     let test = test_case!(
         indoc!(
             r#"
-            use snforge_std::{declare, ContractClassTrait, replace_bytecode, ReplaceBytecodeError};
+            use snforge_std::{declare, ContractClassTrait, replace_bytecode, ReplaceBytecodeError, DeclareResultTrait};
             use starknet::{ClassHash, contract_address_const};
 
             #[test]
             fn class_hash_not_declared() {
-                let contract = declare("ReplaceBytecodeA").unwrap();
+                let contract = declare("ReplaceBytecodeA").unwrap().contract_class();
                 let undeclared_class_hash: ClassHash = 0x5.try_into().unwrap();
-                let (contract_address, _) = contract.deploy(@array![]).unwrap(); 
-                
+                let (contract_address, _) = contract.deploy(@array![]).unwrap();
+
                 match replace_bytecode(contract_address, undeclared_class_hash) {
                     Result::Ok(()) => {
                         panic!("Wrong return type");
