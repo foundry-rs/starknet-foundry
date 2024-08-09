@@ -1,3 +1,4 @@
+use crate::common::assertions::ClassHashAssert;
 use crate::common::state::create_cached_state;
 use crate::common::{call_contract, deploy_wrapper};
 use crate::common::{felt_selector_from_name, get_contracts};
@@ -12,7 +13,9 @@ fn get_class_hash_simple() {
     let mut cheatnet_state = CheatnetState::default();
 
     let contracts_data = get_contracts();
-    let class_hash = declare(&mut cached_state, "HelloStarknet", &contracts_data).unwrap();
+    let class_hash = declare(&mut cached_state, "HelloStarknet", &contracts_data)
+        .unwrap()
+        .unwrap_success();
     let contract_address =
         deploy_wrapper(&mut cached_state, &mut cheatnet_state, &class_hash, &[]).unwrap();
 
@@ -28,7 +31,9 @@ fn get_class_hash_upgrade() {
     let mut cheatnet_state = CheatnetState::default();
 
     let contracts_data = get_contracts();
-    let class_hash = declare(&mut cached_state, "GetClassHashCheckerUpg", &contracts_data).unwrap();
+    let class_hash = declare(&mut cached_state, "GetClassHashCheckerUpg", &contracts_data)
+        .unwrap()
+        .unwrap_success();
     let contract_address =
         deploy_wrapper(&mut cached_state, &mut cheatnet_state, &class_hash, &[]).unwrap();
 
@@ -37,8 +42,9 @@ fn get_class_hash_upgrade() {
         get_class_hash(&mut cached_state, contract_address).unwrap()
     );
 
-    let hello_starknet_class_hash =
-        declare(&mut cached_state, "HelloStarknet", &contracts_data).unwrap();
+    let hello_starknet_class_hash = declare(&mut cached_state, "HelloStarknet", &contracts_data)
+        .unwrap()
+        .unwrap_success();
 
     let selector = felt_selector_from_name("upgrade");
     call_contract(

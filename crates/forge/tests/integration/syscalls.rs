@@ -10,9 +10,10 @@ fn library_call_syscall_is_usable() {
     let test = test_case!(
         indoc!(
             r#"
+        use core::clone::Clone;
         use starknet::ContractAddress;
         use starknet::ClassHash;
-        use snforge_std::{ declare, ContractClassTrait };
+        use snforge_std::{ declare, DeclareResultTrait, ContractClassTrait };
 
         #[starknet::interface]
         trait ICaller<TContractState> {
@@ -28,7 +29,7 @@ fn library_call_syscall_is_usable() {
         }
 
         fn deploy_contract(name: ByteArray) -> ContractAddress {
-            let contract = declare(name).unwrap();
+            let contract = declare(name).unwrap().contract_class();
             let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
             contract_address
         }
@@ -40,8 +41,8 @@ fn library_call_syscall_is_usable() {
                 contract_address: caller_address
             };
 
-            let executor_contract = declare("Executor").unwrap();
-            let executor_class_hash = executor_contract.class_hash;
+            let executor_contract = declare("Executor").unwrap().contract_class();
+            let executor_class_hash = executor_contract.class_hash.clone();
 
             let (executor_address, _) = executor_contract.deploy(@ArrayTrait::new()).unwrap();
             let executor_safe_dispatcher = IExecutorDispatcher {
@@ -251,7 +252,7 @@ fn keccak_syscall_in_contract() {
             use option::OptionTrait;
             use traits::TryInto;
             use starknet::ContractAddress;
-            use snforge_std::{ declare, ContractClassTrait };
+            use snforge_std::{ declare, DeclareResultTrait, ContractClassTrait };
 
             #[starknet::interface]
             trait IHelloKeccak<TContractState> {
@@ -260,7 +261,7 @@ fn keccak_syscall_in_contract() {
 
             #[test]
             fn keccak_syscall_in_contract() {
-                let contract = declare("HelloKeccak").unwrap();
+                let contract = declare("HelloKeccak").unwrap().contract_class();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IHelloKeccakDispatcher { contract_address };
 
@@ -296,7 +297,7 @@ fn compare_keccak_from_contract_with_plain_keccak() {
             use starknet::ContractAddress;
             use starknet::syscalls::keccak_syscall;
             use starknet::SyscallResultTrait;
-            use snforge_std::{ declare, ContractClassTrait };
+            use snforge_std::{ declare, DeclareResultTrait, ContractClassTrait };
 
             #[starknet::interface]
             trait IHelloKeccak<TContractState> {
@@ -305,7 +306,7 @@ fn compare_keccak_from_contract_with_plain_keccak() {
 
             #[test]
             fn compare_keccak_from_contract_with_plain_keccak() {
-                let contract = declare("HelloKeccak").unwrap();
+                let contract = declare("HelloKeccak").unwrap().contract_class();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IHelloKeccakDispatcher { contract_address };
 

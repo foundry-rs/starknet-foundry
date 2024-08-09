@@ -1,4 +1,5 @@
-use snforge_std::{declare, ContractClassTrait};
+use core::clone::Clone;
+use snforge_std::{declare, ContractClassTrait, DeclareResultTrait};
 
 use trace_resources::{
     trace_info_checker::{ITraceInfoCheckerDispatcherTrait, ITraceInfoCheckerDispatcher},
@@ -7,10 +8,10 @@ use trace_resources::{
 
 #[test]
 fn test_call() {
-    let empty_hash = declare("Empty").unwrap().class_hash;
-    let proxy = declare("TraceInfoProxy").unwrap();
-    let checker = declare("TraceInfoChecker").unwrap();
-    let dummy = declare("TraceDummy").unwrap();
+    let empty_hash = declare("Empty").unwrap().contract_class().class_hash.clone();
+    let proxy = declare("TraceInfoProxy").unwrap().contract_class();
+    let checker = declare("TraceInfoChecker").unwrap().contract_class().clone();
+    let dummy = declare("TraceDummy").unwrap().contract_class();
 
     trace_resources::use_builtins_and_syscalls(empty_hash, 7);
 
