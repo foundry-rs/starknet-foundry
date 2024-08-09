@@ -1,4 +1,6 @@
-use crate::helpers::constants::{ACCOUNT_FILE_PATH, CONTRACTS_DIR, MAP_CONTRACT_ADDRESS_SEPOLIA};
+use crate::helpers::constants::{
+    ACCOUNT_FILE_PATH, CONTRACTS_DIR, MAP_CONTRACT_ADDRESS_SEPOLIA, MAP_CONTRACT_CLASS_HASH_SEPOLIA,
+};
 use crate::helpers::fixtures::copy_directory_to_tempdir;
 use crate::helpers::runner::runner;
 use indoc::formatdoc;
@@ -30,16 +32,67 @@ async fn test_happy_case() {
         "verify",
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
-        "--contract-name",
+        "--class-name",
         "Map",
         "--verifier",
-        "walnut",
+        "voyager",
         "--network",
         "sepolia",
     ];
 
     let snapbox = runner(&args)
-        .env("WALNUT_API_URL", mock_server.uri())
+        .env("VOYAGER_API_URL", mock_server.uri())
+        .current_dir(contract_path.path())
+        .stdin("Y");
+
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        formatdoc!(
+            r"
+        command: verify
+        message: {}
+        ",
+            verifier_response
+        ),
+    );
+}
+
+#[tokio::test]
+async fn test_happy_case_class_hash() {
+    let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
+
+    let mock_server = MockServer::start().await;
+
+    let verifier_response = "Contract successfully verified";
+
+    Mock::given(method("POST"))
+        .and(path("/v1/sn_sepolia/verify"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .append_header("content-type", "text/plain")
+                .set_body_string(verifier_response),
+        )
+        .mount(&mock_server)
+        .await;
+
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "verify",
+        "--class-hash",
+        MAP_CONTRACT_CLASS_HASH_SEPOLIA,
+        "--class-name",
+        "Map",
+        "--verifier",
+        "voyager",
+        "--network",
+        "sepolia",
+    ];
+
+    let snapbox = runner(&args)
+        .env("VOYAGER_API_URL", mock_server.uri())
         .current_dir(contract_path.path())
         .stdin("Y");
 
@@ -81,16 +134,16 @@ async fn test_failed_verification() {
         "verify",
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
-        "--contract-name",
+        "--class-name",
         "Map",
         "--verifier",
-        "walnut",
+        "voyager",
         "--network",
         "sepolia",
     ];
 
     let snapbox = runner(&args)
-        .env("WALNUT_API_URL", mock_server.uri())
+        .env("VOYAGER_API_URL", mock_server.uri())
         .current_dir(contract_path.path())
         .stdin("Y");
 
@@ -118,10 +171,10 @@ async fn test_verification_abort() {
         "verify",
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
-        "--contract-name",
+        "--class-name",
         "nonexistent",
         "--verifier",
-        "walnut",
+        "voyager",
         "--network",
         "sepolia",
     ];
@@ -151,10 +204,10 @@ async fn test_wrong_contract_name_passed() {
         "verify",
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
-        "--contract-name",
+        "--class-name",
         "nonexistent",
         "--verifier",
-        "walnut",
+        "voyager",
         "--network",
         "sepolia",
     ];
@@ -169,6 +222,37 @@ async fn test_wrong_contract_name_passed() {
             r"
         command: verify
         error: Contract named 'nonexistent' was not found
+        "
+        ),
+    );
+}
+
+#[tokio::test]
+async fn test_no_class_hash_or_contract_address_provided() {
+    let contract_path = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
+
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "verify",
+        "--class-name",
+        "Map",
+        "--verifier",
+        "voyager",
+        "--network",
+        "sepolia",
+    ];
+
+    let snapbox = runner(&args).current_dir(contract_path.path()).stdin("Y");
+
+    let output = snapbox.assert().success();
+
+    assert_stderr_contains(
+        output,
+        formatdoc!(
+            r"
+        command: verify
+        error: Either contract_address or class_hash must be provided
         "
         ),
     );
@@ -198,17 +282,17 @@ async fn test_happy_case_with_confirm_verification_flag() {
         "verify",
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
-        "--contract-name",
+        "--class-name",
         "Map",
         "--verifier",
-        "walnut",
+        "voyager",
         "--network",
         "sepolia",
         "--confirm-verification",
     ];
 
     let snapbox = runner(&args)
-        .env("WALNUT_API_URL", mock_server.uri())
+        .env("VOYAGER_API_URL", mock_server.uri())
         .current_dir(contract_path.path());
 
     let output = snapbox.assert().success();
@@ -249,10 +333,10 @@ async fn test_happy_case_specify_package() {
         "verify",
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
-        "--contract-name",
+        "--class-name",
         "supercomplexcode",
         "--verifier",
-        "walnut",
+        "voyager",
         "--network",
         "sepolia",
         "--package",
@@ -260,7 +344,7 @@ async fn test_happy_case_specify_package() {
     ];
 
     let snapbox = runner(&args)
-        .env("WALNUT_API_URL", mock_server.uri())
+        .env("VOYAGER_API_URL", mock_server.uri())
         .current_dir(tempdir.path())
         .stdin("Y");
 
@@ -302,10 +386,10 @@ async fn test_worskpaces_package_specified_virtual_fibonacci() {
         "verify",
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
-        "--contract-name",
+        "--class-name",
         "FibonacciContract",
         "--verifier",
-        "walnut",
+        "voyager",
         "--network",
         "sepolia",
         "--package",
@@ -313,7 +397,7 @@ async fn test_worskpaces_package_specified_virtual_fibonacci() {
     ];
 
     let snapbox = runner(&args)
-        .env("WALNUT_API_URL", mock_server.uri())
+        .env("VOYAGER_API_URL", mock_server.uri())
         .current_dir(tempdir.path())
         .stdin("Y");
 
@@ -341,10 +425,10 @@ async fn test_worskpaces_package_no_contract() {
         "verify",
         "--contract-address",
         MAP_CONTRACT_ADDRESS_SEPOLIA,
-        "--contract-name",
+        "--class-name",
         "nonexistent",
         "--verifier",
-        "walnut",
+        "voyager",
         "--network",
         "sepolia",
         "--package",

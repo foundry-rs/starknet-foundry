@@ -24,7 +24,7 @@ use sncast::{
 };
 use starknet::core::utils::get_selector_from_name;
 use starknet_commands::account::list::print_account_list;
-use starknet_commands::verify::Verify;
+use starknet_commands::verification::verify::Verify;
 use tokio::runtime::Runtime;
 
 mod starknet_commands;
@@ -465,9 +465,10 @@ async fn run_async_command(
                 },
             )
             .expect("Failed to build contract");
-            let mut result = starknet_commands::verify::verify(
+            let mut result = starknet_commands::verification::verify::verify(
                 verify.contract_address,
-                verify.contract_name,
+                verify.class_hash,
+                verify.class_name,
                 verify.verifier,
                 verify.network,
                 verify.confirm_verification,
