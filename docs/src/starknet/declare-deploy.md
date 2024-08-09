@@ -1,14 +1,13 @@
 # Joining the Declaration and Deployment Together
 
-`sncast` allows declaring and deploying contracts through dedicated commands. However, sometimes contracts are meant to be only instantiated once, thus the standard way of declaration and deployment is unnecessarily time-consuming.
-
-The `declare-deploy` command allows performing both actions at once.
+`sncast` allows declaring and deploying contracts through dedicated commands.
+The `declare-deploy` command simplifies this pipeline by performing these two actions one after the other. It is used to declare a contract and deploy it immediately.
 
 For detailed description, see [declare-deploy command reference](../appendix/sncast/declare-deploy.md).
 
 ## Examples
 
-Command operates under all the circumstances `declare` and `deploy` would do when invoked separately.
+Command operates under all the circumstances [`declare`](./declare.md) and [`deploy`](./deploy.md) would do when invoked separately.
 
 ### General Example
 

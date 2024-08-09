@@ -1,15 +1,14 @@
 # `declare-deploy`
-Send subsequent declare and deploy transactions of Cairo contract to Starknet at once.
+Declare a contract and deploy it to Starknet immediately.
 
-> 📝 **Note**
+>  ⚠️ **Warning**
 > This command relies on auto-estimation and does not allow specifying max fees explicitly.
 
-> 📝 **Note**
+> ⚠️ **Warning**
 > Only a `fee-token` can be specified. Transaction versions for both declaration and deployment are inferred from token type.
 
 ## Required Common Arguments — Passed By CLI or Specified in `snfoundry.toml`
 
-* [`url`](./common.md#--url--u-rpc_url)
 * [`account`](./common.md#--account--a-account_name)
 
 ## `--contract-name, -c <CONTRACT_NAME>`
