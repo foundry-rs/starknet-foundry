@@ -73,14 +73,13 @@ impl Deploy {
         let contract_name = self
             .contract_name
             .clone()
-            .ok_or(anyhow!("Contract name and class hash unspecified"))?;
+            .ok_or_else(|| anyhow!("Contract name and class hash unspecified"))?;
 
         let artifacts = read_manifest_and_build_artifacts(&self.args.package, json, profile)?;
 
-        let contract_artifacts = artifacts.get(&contract_name).ok_or(anyhow!(
-            "No artifacts found for contract: {}",
-            contract_name
-        ))?;
+        let contract_artifacts = artifacts
+            .get(&contract_name)
+            .ok_or_else(|| anyhow!("No artifacts found for contract: {}", contract_name))?;
 
         contract_artifacts.try_into()
     }

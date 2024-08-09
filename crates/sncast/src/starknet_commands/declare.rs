@@ -151,12 +151,9 @@ pub async fn declare(
     artifacts: &HashMap<String, StarknetContractArtifacts>,
     wait_config: WaitForTx,
 ) -> Result<DeclareResponse, StarknetCommandError> {
-    let contract_artifacts =
-        artifacts
-            .get(&declare.contract)
-            .ok_or(StarknetCommandError::ContractArtifactsNotFound(
-                ErrorData::new(declare.contract.clone()),
-            ))?;
+    let contract_artifacts = artifacts.get(&declare.contract).ok_or_else(|| {
+        StarknetCommandError::ContractArtifactsNotFound(ErrorData::new(declare.contract.clone()))
+    })?;
 
     let contract = contract_artifacts.try_into()?;
 
