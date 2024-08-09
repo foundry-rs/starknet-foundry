@@ -168,13 +168,13 @@ mod tests {
     #[test]
     #[should_panic(expected = "Arguments only_ignored and include_ignored cannot be both true")]
     fn from_flags_only_ignored_and_include_ignored_both_true() {
-        let _ = TestsFilter::from_flags(None, false, true, true, false, Default::default());
+        let _ = TestsFilter::from_flags(None, false, true, true, false, Default::default(), None);
     }
 
     #[test]
     #[should_panic(expected = "Argument test_name_filter cannot be None with exact_match")]
     fn from_flags_exact_match_true_without_test_filter_name() {
-        let _ = TestsFilter::from_flags(None, true, false, false, false, Default::default());
+        let _ = TestsFilter::from_flags(None, true, false, false, false, Default::default(), None);
     }
 
     #[test]
@@ -243,6 +243,7 @@ mod tests {
             false,
             false,
             Default::default(),
+            None
         );
 
         let mut filtered = mocked_tests.clone();
@@ -272,6 +273,7 @@ mod tests {
             false,
             false,
             Default::default(),
+            None
         );
 
         let mut filtered = mocked_tests.clone();
@@ -300,6 +302,7 @@ mod tests {
             false,
             false,
             Default::default(),
+            None
         );
 
         let mut filtered = mocked_tests.clone();
@@ -366,6 +369,7 @@ mod tests {
             false,
             false,
             Default::default(),
+            None
         );
 
         let mut filtered = mocked_tests.clone();
@@ -380,6 +384,7 @@ mod tests {
             false,
             false,
             Default::default(),
+            None
         );
 
         let mut filtered = mocked_tests.clone();
@@ -456,6 +461,7 @@ mod tests {
             false,
             false,
             Default::default(),
+            None
         );
 
         let mut filtered = mocked_tests.clone();
@@ -470,6 +476,7 @@ mod tests {
             false,
             false,
             Default::default(),
+            None
         );
 
         let mut filtered = mocked_tests.clone();
@@ -544,6 +551,7 @@ mod tests {
             false,
             false,
             Default::default(),
+            None
         );
 
         let mut filtered = mocked_tests.clone();
@@ -558,6 +566,7 @@ mod tests {
             false,
             false,
             Default::default(),
+            None
         );
 
         let mut filtered = mocked_tests.clone();
@@ -572,6 +581,7 @@ mod tests {
             false,
             false,
             Default::default(),
+            None
         );
 
         let mut filtered = mocked_tests.clone();
@@ -600,6 +610,7 @@ mod tests {
             false,
             false,
             Default::default(),
+            None
         );
 
         let mut filtered = mocked_tests.clone();
@@ -628,6 +639,7 @@ mod tests {
             false,
             false,
             Default::default(),
+            None
         );
 
         let mut filtered = mocked_tests.clone();
@@ -642,6 +654,7 @@ mod tests {
             false,
             false,
             Default::default(),
+            None
         );
 
         let mut filtered = mocked_tests.clone();
@@ -723,7 +736,7 @@ mod tests {
         };
 
         let tests_filter =
-            TestsFilter::from_flags(None, false, true, false, false, Default::default());
+            TestsFilter::from_flags(None, false, true, false, false, Default::default(), None);
         let mut filtered = mocked_tests;
         tests_filter.filter_tests(&mut filtered.test_cases).unwrap();
 
@@ -818,7 +831,7 @@ mod tests {
         };
 
         let tests_filter =
-            TestsFilter::from_flags(None, false, false, true, false, Default::default());
+            TestsFilter::from_flags(None, false, false, true, false, Default::default(), None);
         let mut filtered = mocked_tests;
         tests_filter.filter_tests(&mut filtered.test_cases).unwrap();
 
