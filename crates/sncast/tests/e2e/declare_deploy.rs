@@ -92,23 +92,10 @@ fn test_happy_case_specify_package() {
     let tempdir = duplicate_contract_directory_with_salt(
         CONTRACTS_DIR.to_string() + "/multiple_packages",
         "whatever",
-        "dupa",
+        "salty",
     );
 
     let accounts_file = &get_accounts_path(ACCOUNT_FILE_PATH)[..];
-
-    let args = vec![
-        "--accounts-file",
-        accounts_file,
-        "account",
-        "create",
-        "--url",
-        URL,
-        "--name",
-        "dupa",
-    ];
-
-    runner(&args).current_dir(tempdir.path());
 
     let args = vec![
         "--accounts-file",
