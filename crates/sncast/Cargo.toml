@@ -53,6 +53,7 @@ starknet-crypto.workspace = true
 async-trait.workspace = true
 serde_path_to_error.workspace = true
 walkdir.workspace = true
+regex.workspace = true
 
 [dev-dependencies]
 ctor.workspace = true

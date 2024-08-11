@@ -1,4 +1,5 @@
 use crate::handle_rpc_error;
+use crate::helpers::data_transformer::sierra_abi::parse_expr;
 use anyhow::{bail, Context, Result};
 use cairo_lang_parser::utils::SimpleParserDatabase;
 use cairo_lang_syntax::node::ast::{
@@ -6,7 +7,7 @@ use cairo_lang_syntax::node::ast::{
 };
 use cairo_lang_syntax::node::{SyntaxNode, TypedSyntaxNode};
 use conversions::byte_array::ByteArray;
-use conversions::serde::serialize::{BufferWriter, CairoSerialize};
+use conversions::serde::serialize::{BufferWriter, CairoSerialize, SerializeToFeltVec};
 use conversions::u256::CairoU256;
 use num_bigint::BigUint;
 use starknet::core::types::contract::{AbiEntry, AbiFunction, StateMutability};
@@ -399,11 +400,20 @@ pub async fn transform_input_calldata(
                 )
             }
 
-            todo!();
+            let parsed_exprs = called_function
+                .inputs
+                .iter()
+                .zip(arguments_expr_list)
+                .map(|(param, arg)| parse_expr(arg, param.r#type.clone(), &abi, &db))
+                .collect::<Result<Vec<AllowedCalldataArguments>>>()?;
+
+            Ok(parsed_exprs
+                .iter()
+                .flat_map(SerializeToFeltVec::serialize_to_vec)
+                .collect::<Vec<Felt>>())
         }
         ContractClass::Legacy(_legacy_class) => {
-            todo!("Finish adding legacy ABI handling");
+            bail!("Cairo-like expressions are not available for Cairo0 contracts")
         }
-    };
-    todo!()
+    }
 }
