@@ -141,7 +141,8 @@ async fn test_invalid_class_hash() {
         Class with hash [..] is not declared.
         " })))
         command: script run
-        status: success
+        [..]
+            "Couldn't retrieve contract class with hash: 0xdddd"
         "#},
     );
 }
@@ -178,7 +179,9 @@ async fn test_invalid_call_data() {
         Execution failed. Failure reason: [..] ('Failed to deserialize param #2').
         " })))
         command: script run
-        status: success
+
+            "Invalid number of arguments, passed 1, expected 2"
+        status: script panicked
         "#},
     );
 }

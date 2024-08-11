@@ -36,7 +36,7 @@ async fn test_happy_case(account: &str) {
         "--function",
         "put",
         "--calldata",
-        "0x1 0x2",
+        "{0x1, 0x2}",
         "--max-fee",
         "99999999999999999",
         "--fee-token",
@@ -70,7 +70,7 @@ async fn test_happy_case_human_readable() {
         "--function",
         "put",
         "--calldata",
-        "0x1 0x2",
+        "{0x1, 0x2}",
         "--max-fee",
         "99999999999999999",
         "--fee-token",
@@ -116,7 +116,7 @@ async fn test_happy_case_strk(class_hash: Felt, account_type: AccountType) {
         "--function",
         "put",
         "--calldata",
-        "0x1 0x2",
+        "{0x1, 0x2}",
         "--max-fee",
         "99999999999999999",
         "--fee-token",
@@ -152,7 +152,7 @@ async fn test_happy_case_versions(version: &str) {
         "--function",
         "put",
         "--calldata",
-        "0x1 0x2",
+        "{0x1, 0x2}",
         "--max-fee",
         "99999999999999999",
         "--version",
@@ -196,7 +196,7 @@ async fn test_happy_case_strk_different_fees(
         "--function",
         "put",
         "--calldata",
-        "0x1 0x2",
+        "{0x1, 0x2}",
         "--fee-token",
         "strk",
     ];
@@ -241,7 +241,7 @@ async fn test_invalid_version_and_token_combination(fee_token: &str, version: &s
         "--function",
         "put",
         "--calldata",
-        "0x1 0x2",
+        "{0x1, 0x2}",
         "--max-fee",
         "99999999999999999",
         "--version",
@@ -334,7 +334,7 @@ fn test_wrong_calldata() {
         "--function",
         "put",
         "--calldata",
-        "0x1",
+        "{0x1}",
         "--fee-token",
         "eth",
     ];
@@ -344,10 +344,10 @@ fn test_wrong_calldata() {
 
     assert_stderr_contains(
         output,
-        indoc! {r"
+        indoc! {r#"
         command: invoke
-        error: An error occurred in the called contract[..]Failed to deserialize param #2[..]
-        "},
+        error: Failed to serialize input calldata "{0x1}": Invalid number of arguments, passed 1, expected 2
+        "#},
     );
 }
 
@@ -367,8 +367,7 @@ fn test_too_low_max_fee() {
         "--function",
         "put",
         "--calldata",
-        "0x1",
-        "0x2",
+        "{0x1, 0x2}",
         "--max-fee",
         "1",
         "--fee-token",

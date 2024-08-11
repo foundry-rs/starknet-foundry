@@ -16,7 +16,7 @@ fn main() {
     let deploy_nonce = get_nonce('pending');
     let deploy_result = deploy(
         class_hash,
-        array![0x2],
+        Option::Some("{ 0x2 }"),
         Option::Some(salt),
         true,
         FeeSettings::Eth(EthFeeSettings { max_fee: Option::Some(max_fee) }),

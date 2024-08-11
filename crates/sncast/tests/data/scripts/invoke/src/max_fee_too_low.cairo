@@ -13,7 +13,7 @@ fn main() {
     let invoke_result = invoke(
         map_contract_address,
         selector!("put"),
-        array![0x10, 0x1],
+        Option::Some("{ 0x10, 0x1 }"),
         FeeSettings::Eth(EthFeeSettings { max_fee: Option::Some(1) }),
         Option::None
     )

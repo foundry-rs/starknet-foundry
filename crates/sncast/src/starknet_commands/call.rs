@@ -1,9 +1,11 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use clap::Args;
+use sncast::handle_rpc_error;
+use sncast::helpers::data_transformer::transform_input_calldata;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::structs::CallResponse;
-use starknet::core::types::{BlockId, Felt, FunctionCall};
+use starknet::core::types::{BlockId, BlockTag, Felt, FunctionCall};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::{JsonRpcClient, Provider};
 
@@ -18,9 +20,9 @@ pub struct Call {
     #[clap(short, long)]
     pub function: String,
 
-    /// Arguments of the called function (list of hex)
-    #[clap(short, long, value_delimiter = ' ', num_args = 1..)]
-    pub calldata: Vec<Felt>,
+    /// Arguments of the called function - Cairo-like expression
+    #[clap(short, long)]
+    pub calldata: Option<String>,
 
     /// Block identifier on which call should be performed.
     /// Possible values: pending, latest, block hash (0x prefixed string)
@@ -36,14 +38,37 @@ pub struct Call {
 pub async fn call(
     contract_address: Felt,
     entry_point_selector: Felt,
-    calldata: Vec<Felt>,
+    calldata: Option<String>,
     provider: &JsonRpcClient<HttpTransport>,
     block_id: &BlockId,
 ) -> Result<CallResponse, StarknetCommandError> {
+    let transformed_calldata = match calldata {
+        Some(calldata) => {
+            let contract_class_hash = provider
+                .get_class_hash_at(BlockId::Tag(BlockTag::Latest), contract_address)
+                .await
+                .map_err(handle_rpc_error)
+                .context(format!(
+                    "Couldn't retrieve class hash of the contract with address: {contract_address:#x}",
+                ))?;
+            transform_input_calldata(
+                &calldata,
+                &entry_point_selector,
+                contract_class_hash,
+                provider,
+            )
+            .await
+            .context(format!(
+                r#"Failed to serialize input calldata "{calldata}""#
+            ))?
+        }
+        None => vec![],
+    };
+
     let function_call = FunctionCall {
         contract_address,
         entry_point_selector,
-        calldata,
+        calldata: transformed_calldata,
     };
     let res = provider.call(function_call, block_id).await;
 

@@ -25,7 +25,7 @@ fn main() {
     let deploy_nonce = get_nonce('pending');
     deploy(
         nonexistent_class_hash,
-        ArrayTrait::new(),
+        Option::None,
         Option::Some(salt),
         true,
         FeeSettings::Eth(EthFeeSettings { max_fee: Option::Some(max_fee) }),
@@ -37,7 +37,7 @@ fn main() {
     invoke(
         map_contract_address,
         selector!("put"),
-        array![0x1, 0x2],
+        Option::Some("{0x1, 0x2}"),
         FeeSettings::Eth(EthFeeSettings { max_fee: Option::Some(max_fee) }),
         Option::Some(invoke_nonce)
     )

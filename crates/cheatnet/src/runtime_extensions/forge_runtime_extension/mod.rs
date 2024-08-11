@@ -37,7 +37,7 @@ use cairo_vm::vm::{
 use cairo_vm::Felt252;
 use conversions::byte_array::ByteArray;
 use conversions::felt252::TryInferFormat;
-use conversions::serde::deserialize::{BufferReader, CairoDeserialize};
+use conversions::serde::deserialize::BufferReader;
 use conversions::serde::serialize::CairoSerialize;
 use conversions::u256::CairoU256;
 use runtime::{

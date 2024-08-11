@@ -239,10 +239,12 @@ async fn run_async_command(
 
             let block_id = get_block_id(&call.block_id)?;
 
+            let selector = get_selector_from_name(&call.function)
+                .context("Failed to convert entry point selector to FieldElement")?;
+
             let result = starknet_commands::call::call(
                 call.contract_address,
-                get_selector_from_name(&call.function)
-                    .context("Failed to convert entry point selector to FieldElement")?,
+                selector,
                 call.calldata,
                 &provider,
                 block_id.as_ref(),

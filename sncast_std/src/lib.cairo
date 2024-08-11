@@ -114,7 +114,7 @@ impl DisplayCallResult of Display<CallResult> {
 }
 
 pub fn call(
-    contract_address: ContractAddress, function_selector: felt252, calldata: Array::<felt252>
+    contract_address: ContractAddress, function_selector: felt252, calldata: Option<ByteArray>
 ) -> Result<CallResult, ScriptCommandError> {
     let contract_address_felt: felt252 = contract_address.into();
     let mut inputs = array![contract_address_felt, function_selector];
@@ -211,7 +211,7 @@ pub struct StrkFeeSettings {
 
 pub fn deploy(
     class_hash: ClassHash,
-    constructor_calldata: Array::<felt252>,
+    constructor_calldata: Option<ByteArray>,
     salt: Option<felt252>,
     unique: bool,
     fee_settings: FeeSettings,
@@ -263,7 +263,7 @@ impl DisplayInvokeResult of Display<InvokeResult> {
 pub fn invoke(
     contract_address: ContractAddress,
     entry_point_selector: felt252,
-    calldata: Array::<felt252>,
+    calldata: Option<ByteArray>,
     fee_settings: FeeSettings,
     nonce: Option<felt252>
 ) -> Result<InvokeResult, ScriptCommandError> {

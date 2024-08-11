@@ -10,7 +10,7 @@ fn main() {
 
     let deploy_result = deploy(
         class_hash,
-        array![0x2, 0x2, 0x0],
+        Option::Some("{ 0x2, 0x2 }"),
         Option::Some(salt),
         true,
         FeeSettings::Strk(

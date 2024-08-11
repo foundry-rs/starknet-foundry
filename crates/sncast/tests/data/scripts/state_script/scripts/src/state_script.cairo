@@ -19,7 +19,7 @@ fn main() {
     let deploy_nonce = get_nonce('pending');
     let deploy_result = deploy(
         class_hash,
-        ArrayTrait::new(),
+        Option::None,
         Option::Some(salt),
         true,
         FeeSettings::Eth(EthFeeSettings { max_fee: Option::Some(max_fee) }),
@@ -32,14 +32,14 @@ fn main() {
     let invoke_result = invoke(
         deploy_result.contract_address,
         selector!("put"),
-        array![0x1, 0x2],
+        Option::Some("{0x1, 0x2}"),
         FeeSettings::Eth(EthFeeSettings { max_fee: Option::Some(max_fee) }),
         Option::Some(invoke_nonce)
     )
         .expect('state invoke failed');
     assert(invoke_result.transaction_hash != 0, invoke_result.transaction_hash);
 
-    let call_result = call(deploy_result.contract_address, selector!("get"), array![0x1])
+    let call_result = call(deploy_result.contract_address, selector!("get"), Option::Some("{ 0x1 }"))
         .expect('state call failed');
     assert(call_result.data == array![0x2], *call_result.data.at(0));
 }

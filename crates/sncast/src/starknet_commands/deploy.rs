@@ -1,5 +1,6 @@
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
 use clap::{Args, ValueEnum};
+use sncast::helpers::data_transformer::transform_input_calldata;
 use sncast::helpers::error::token_not_supported_for_deployment;
 use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken, PayableTransaction};
 use sncast::helpers::rpc::RpcArgs;
@@ -11,7 +12,7 @@ use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{Account, ConnectedAccount, SingleOwnerAccount};
 use starknet::contract::ContractFactory;
 use starknet::core::types::Felt;
-use starknet::core::utils::get_udc_deployed_address;
+use starknet::core::utils::{get_selector_from_name, get_udc_deployed_address};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
@@ -23,9 +24,9 @@ pub struct Deploy {
     #[clap(short = 'g', long)]
     pub class_hash: Felt,
 
-    /// Calldata for the contract constructor
-    #[clap(short, long, value_delimiter = ' ', num_args = 1..)]
-    pub constructor_calldata: Vec<Felt>,
+    /// Calldata for the contract constructor - Cairo-like expression
+    #[clap(short, long)]
+    pub constructor_calldata: Option<String>,
 
     /// Salt for the address
     #[clap(short, long)]
@@ -73,12 +74,25 @@ pub async fn deploy(
         .try_into_fee_settings(account.provider(), account.block_id())
         .await?;
 
+    let transformed_calldata = match deploy.constructor_calldata {
+        Some(calldata) => transform_input_calldata(
+            &calldata,
+            &get_selector_from_name("constructor").unwrap(),
+            deploy.class_hash,
+            account.provider(),
+        )
+        .await
+        .context(format!(
+            r#"Failed to serialize input calldata "{calldata}""#
+        ))?,
+        None => vec![],
+    };
+
     let salt = extract_or_generate_salt(deploy.salt);
     let factory = ContractFactory::new(deploy.class_hash, account);
     let result = match fee_settings {
         FeeSettings::Eth { max_fee } => {
-            let execution =
-                factory.deploy_v1(deploy.constructor_calldata.clone(), salt, deploy.unique);
+            let execution = factory.deploy_v1(transformed_calldata.clone(), salt, deploy.unique);
             let execution = match max_fee {
                 None => execution,
                 Some(max_fee) => execution.max_fee(max_fee),
@@ -93,8 +107,7 @@ pub async fn deploy(
             max_gas,
             max_gas_unit_price,
         } => {
-            let execution =
-                factory.deploy_v3(deploy.constructor_calldata.clone(), salt, deploy.unique);
+            let execution = factory.deploy_v3(transformed_calldata.clone(), salt, deploy.unique);
 
             let execution = match max_gas {
                 None => execution,
@@ -121,7 +134,7 @@ pub async fn deploy(
                     salt,
                     deploy.class_hash,
                     &udc_uniqueness(deploy.unique, account.address()),
-                    &deploy.constructor_calldata,
+                    &transformed_calldata,
                 ),
                 transaction_hash: result.transaction_hash,
             },

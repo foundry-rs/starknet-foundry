@@ -74,7 +74,9 @@ async fn test_contract_does_not_exist() {
         Requested contract address [..] is not deployed.
         " })))
         command: script run
-        status: success
+        [..]
+            "Couldn't retrieve class hash of the contract with address: 0x123"
+        status: script panicked
         "#},
     );
 }
@@ -111,7 +113,9 @@ fn test_wrong_function_name() {
         Entry point EntryPointSelector([..]) not found in contract.
         " })))
         command: script run
-        status: success
+        [..]
+            "Failed to serialize input calldata "{ 0x10, 0x1 }""
+        status: script panicked
         "#},
     );
 }
@@ -148,7 +152,9 @@ fn test_wrong_calldata() {
         Execution failed. Failure reason: [..] ('Failed to deserialize param #2').
         " })))
         command: script run
-        status: success
+        [..]
+            "Failed to serialize input calldata "{ 0x10 }""
+        status: script panicked
         "#},
     );
 }

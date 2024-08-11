@@ -34,9 +34,9 @@ use scarb_metadata::{Metadata, PackageMetadata};
 use semver::{Comparator, Op, Version, VersionReq};
 use shared::print::print_as_warning;
 use shared::utils::build_readable_text;
-use sncast::get_nonce;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::SCRIPT_LIB_ARTIFACT_NAME;
+use sncast::helpers::data_transformer::transform_input_calldata;
 use sncast::helpers::fee::ScriptFeeSettings;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::ScriptRunResponse;
@@ -44,10 +44,12 @@ use sncast::state::hashing::{
     generate_declare_tx_id, generate_deploy_tx_id, generate_invoke_tx_id,
 };
 use sncast::state::state_file::StateManager;
+use sncast::{get_nonce, handle_rpc_error};
 use starknet::accounts::{Account, SingleOwnerAccount};
-use starknet::core::types::{BlockId, BlockTag::Pending};
+use starknet::core::types::{BlockId, BlockTag, BlockTag::Pending};
+use starknet::core::utils::get_selector_from_name;
 use starknet::providers::jsonrpc::HttpTransport;
-use starknet::providers::JsonRpcClient;
+use starknet::providers::{JsonRpcClient, Provider};
 use starknet::signers::LocalWallet;
 use std::collections::HashMap;
 use std::fs;
@@ -104,12 +106,12 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
             "call" => {
                 let contract_address = input_reader.read()?;
                 let function_selector = input_reader.read()?;
-                let calldata_felts = input_reader.read()?;
+                let calldata = input_reader.read::<Option<ByteArray>>()?.map(Into::into);
 
                 let call_result = self.tokio_runtime.block_on(call::call(
                     contract_address,
                     function_selector,
-                    calldata_felts,
+                    calldata,
                     self.provider,
                     &BlockId::Tag(Pending),
                 ));
@@ -156,7 +158,9 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
             }
             "deploy" => {
                 let class_hash = input_reader.read()?;
-                let constructor_calldata = input_reader.read()?;
+
+                let constructor_calldata =
+                    input_reader.read::<Option<ByteArray>>()?.map(Into::into);
                 let salt = input_reader.read()?;
                 let unique = input_reader.read()?;
                 let fee_args = input_reader.read::<ScriptFeeSettings>()?.into();
@@ -173,8 +177,19 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     rpc: RpcArgs::default(),
                 };
 
+                // Have to call that because of deploy_tx_id
+                let transformed_calldata = match &deploy.constructor_calldata {
+                    Some(calldata) => self.tokio_runtime.block_on(transform_input_calldata(
+                        calldata,
+                        &get_selector_from_name("constructor").unwrap(),
+                        deploy.class_hash,
+                        self.provider,
+                    )),
+                    None => Ok(vec![]),
+                }?;
+
                 let deploy_tx_id =
-                    generate_deploy_tx_id(class_hash, &deploy.constructor_calldata, salt, unique);
+                    generate_deploy_tx_id(class_hash, &transformed_calldata, salt, unique);
 
                 if let Some(success_output) =
                     self.state.get_output_if_success(deploy_tx_id.as_str())
@@ -202,7 +217,8 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
             "invoke" => {
                 let contract_address = input_reader.read()?;
                 let function_selector = input_reader.read()?;
-                let calldata: Vec<_> = input_reader.read()?;
+                let calldata: Option<String> =
+                    input_reader.read::<Option<ByteArray>>()?.map(Into::into);
                 let fee_args = input_reader.read::<ScriptFeeSettings>()?.into();
                 let nonce = input_reader.read()?;
 
@@ -215,9 +231,36 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     version: None,
                     rpc: RpcArgs::default(),
                 };
+                let contract_class_hash = self.tokio_runtime.block_on(
+                    self.provider
+                        .get_class_hash_at(BlockId::Tag(BlockTag::Latest), contract_address)
+                )
+                    .map_err(handle_rpc_error)
+                    .context(format!(
+                        "Couldn't retrieve class hash of the contract with address: {contract_address:#x}",
+                    ))?;
 
-                let invoke_tx_id =
-                    generate_invoke_tx_id(contract_address, function_selector, &calldata);
+                // Have to call that because of deploy_tx_id
+                let transformed_calldata = match &invoke.calldata {
+                    Some(calldata) => self
+                        .tokio_runtime
+                        .block_on(transform_input_calldata(
+                            calldata,
+                            &function_selector,
+                            contract_class_hash,
+                            self.provider,
+                        ))
+                        .context(format!(
+                            r#"Failed to serialize input calldata "{calldata}""#
+                        )),
+                    None => Ok(vec![]),
+                }?;
+
+                let invoke_tx_id = generate_invoke_tx_id(
+                    contract_address,
+                    function_selector,
+                    &transformed_calldata,
+                );
 
                 if let Some(success_output) =
                     self.state.get_output_if_success(invoke_tx_id.as_str())
@@ -380,23 +423,29 @@ pub fn run(
         },
     };
 
-    match runner.run_function(
+    let ranfn = runner.run_function(
         func,
         &mut cast_runtime,
         hints_dict,
         assembled_program.bytecode.iter(),
         builtins,
-    ) {
-        Ok(result) => match result.value {
-            RunResultValue::Success(data) => Ok(ScriptRunResponse {
-                status: "success".to_string(),
-                message: build_readable_text(&data),
-            }),
-            RunResultValue::Panic(panic_data) => Ok(ScriptRunResponse {
-                status: "script panicked".to_string(),
-                message: build_readable_text(&panic_data),
-            }),
-        },
+    );
+
+    match ranfn {
+        Ok(result) => {
+            dbg!(&result.value);
+
+            match result.value {
+                RunResultValue::Success(data) => Ok(ScriptRunResponse {
+                    status: "success".to_string(),
+                    message: build_readable_text(&data),
+                }),
+                RunResultValue::Panic(panic_data) => Ok(ScriptRunResponse {
+                    status: "script panicked".to_string(),
+                    message: build_readable_text(&panic_data),
+                }),
+            }
+        }
         Err(err) => Err(err.into()),
     }
 }

@@ -361,6 +361,8 @@ fn map_functions_to_selectors(abi: &[AbiEntry]) -> HashMap<Felt, AbiFunction> {
     map
 }
 
+// TODO Add a different error to print nicer error when using cast scripts
+// Right now the error is ScriptCommandError::UnknownError
 pub async fn transform_input_calldata(
     input_calldata: &str,
     function_selector: &Felt,

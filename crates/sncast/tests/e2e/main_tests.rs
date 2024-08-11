@@ -84,7 +84,7 @@ async fn test_happy_case_from_cli_with_sncast_config() {
         "--function",
         "get",
         "--calldata",
-        "0x0",
+        "{0x0}",
         "--block-id",
         "latest",
     ];
@@ -111,7 +111,7 @@ async fn test_happy_case_mixed() {
         "--function",
         "get",
         "--calldata",
-        "0x0",
+        "{0x0}",
         "--block-id",
         "latest",
     ];

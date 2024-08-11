@@ -11,7 +11,7 @@ fn main() {
     invoke(
         map_contract_address,
         selector!("put"),
-        array![0x10, 0x1],
+        Option::Some("{0x10, 0x1}"),
         FeeSettings::Eth(EthFeeSettings { max_fee: Option::None }),
         Option::None
     )

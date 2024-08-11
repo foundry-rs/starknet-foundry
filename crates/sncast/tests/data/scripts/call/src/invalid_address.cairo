@@ -3,7 +3,7 @@ use sncast_std::{call, CallResult, ScriptCommandError, ProviderError, StarknetEr
 fn main() {
     let eth = 0x049;
     let call_err: ScriptCommandError = call(
-        eth.try_into().expect('bad address'), selector!("decimals"), array![]
+        eth.try_into().expect('bad address'), selector!("decimals"), Option::None
     )
         .unwrap_err();
 
