@@ -4633,6 +4633,7 @@ dependencies = [
  "fs_extra",
  "indoc",
  "itertools 0.12.1",
+ "num-bigint",
  "num-traits 0.2.19",
  "primitive-types",
  "project-root",
