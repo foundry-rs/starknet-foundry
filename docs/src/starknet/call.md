@@ -22,7 +22,7 @@ $ sncast \
   --url http://127.0.0.1:5050 \
   --contract-address 0x4a739ab73aa3cac01f9da5d55f49fb67baee4919224454a2e3f85b16462a911 \
   --function "some_function" \
-  --calldata 1 2 3
+  --calldata {1, 2, 3}
 
 command: call
 response: [0x1, 0x23, 0x4]
@@ -39,7 +39,7 @@ You can call a contract at the specific block by passing `--block-id` argument.
 $ sncast call \
   --contract-address 0x4a739ab73aa3cac01f9da5d55f49fb67baee4919224454a2e3f85b16462a911 \
   --function "some_function" \
-  --calldata 1 2 3 \
+  --calldata {1, 2, 3}
   --block-id 1234
 
 command: call

@@ -2,7 +2,7 @@
 
 > `pub fn deploy(
     class_hash: ClassHash,
-    constructor_calldata: Array::<felt252>,
+    constructor_calldata: Option<ByteArray>,
     salt: Option<felt252>,
     unique: bool,
     fee_settings: FeeSettings,
@@ -39,7 +39,20 @@ pub struct StrkFeeSettings {
 ```
 
 - `class_hash` - class hash of a contract to deploy.
-- `constructor_calldata` - calldata for the contract constructor.
+- `constructor_calldata` - calldata for the contract constructor in form of Cairo-like expression. Should be in format `"{ arguments }"`.
+  Supported argument types:
+
+| Argument type                       | Valid expressions                                                  |
+|-------------------------------------|--------------------------------------------------------------------|
+| numerical value (felt, u8, i8 etc.) | `0x1`, `2_u8`, `-3`                                                |
+| shortstring                         | `'value'`                                                          |
+| string (ByteArray)                  | `"value"`                                                          |
+| boolean value                       | `true`, `false`                                                    |
+| struct                              | `Struct { field_one: 0x1 }`, `path::to::Struct { field_one: 0x1 }` |
+| enum                                | `Enum::One`, `Enum::Two(123)`, `path::to::Enum::Three`             |
+| array                               | `array![0x1, 0x2, 0x3]`                                            |
+| tuple                               | `(0x1, array![2], Struct { field: 'three' })`                      |
+
 - `salt` - salt for the contract address.
 - `unique` - determines if salt should be further modified with the account address.
 - `fee_settings` - fee settings for the transaction. Can be `Eth` or `Strk`. Read more about it [here](../../starknet/fees-and-versions.md) 
@@ -58,7 +71,7 @@ fn main() {
 
     let deploy_result = deploy(
         class_hash,
-        ArrayTrait::new(),
+        Option::None,
         Option::Some(salt),
         true,
         FeeSettings::Eth(EthFeeSettings {max_fee: Option::Some(max_fee)}),
