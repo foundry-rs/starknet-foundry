@@ -1,5 +1,5 @@
 use crate::build_trace_data::test_sierra_program_path::VersionedProgramPath;
-use crate::forge_config::{ExecutionDataToSave, ForgeConfig, TestRunnerConfig};
+use crate::forge_config::{is_vm_trace_needed, ExecutionDataToSave, ForgeConfig, TestRunnerConfig};
 use crate::fuzzer::RandomFuzzer;
 use crate::running::{run_fuzz_test, run_test};
 use crate::test_case_summary::TestCaseSummary;
@@ -51,7 +51,7 @@ pub trait TestCaseFilter {
     fn should_be_run(&self, test_case: &TestCaseWithResolvedConfig) -> bool;
 }
 
-pub fn maybe_save_execution_data(
+pub fn maybe_save_trace_and_profile(
     result: &AnyTestCaseSummary,
     execution_data_to_save: ExecutionDataToSave,
 ) -> Result<()> {
@@ -59,15 +59,11 @@ pub fn maybe_save_execution_data(
         name, trace_data, ..
     }) = result
     {
-        match execution_data_to_save {
-            ExecutionDataToSave::Trace => {
-                save_trace_data(name, trace_data)?;
-            }
-            ExecutionDataToSave::TraceAndProfile => {
-                let trace_path = save_trace_data(name, trace_data)?;
+        if is_vm_trace_needed(execution_data_to_save) {
+            let trace_path = save_trace_data(name, trace_data)?;
+            if execution_data_to_save.profile {
                 run_profiler(name, &trace_path)?;
             }
-            ExecutionDataToSave::None => {}
         }
     }
     Ok(())
@@ -79,12 +75,7 @@ pub fn maybe_save_versioned_program(
     versioned_programs_dir: &Utf8Path,
     package_name: &str,
 ) -> Result<Option<VersionedProgramPath>> {
-    let save_versioned_program = match execution_data_to_save {
-        ExecutionDataToSave::Trace | ExecutionDataToSave::TraceAndProfile => true,
-        ExecutionDataToSave::None => false,
-    };
-
-    let maybe_versioned_program_path = if save_versioned_program {
+    let maybe_versioned_program_path = if is_vm_trace_needed(execution_data_to_save) {
         Some(VersionedProgramPath::save_versioned_program(
             &test_target.sierra_program.program.clone().into_artifact(),
             test_target.tests_location,

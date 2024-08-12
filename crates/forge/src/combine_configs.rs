@@ -123,7 +123,7 @@ mod tests {
                 }),
                 output_config: Arc::new(OutputConfig {
                     detailed_resources: false,
-                    execution_data_to_save: ExecutionDataToSave::None,
+                    execution_data_to_save: ExecutionDataToSave::default(),
                     versioned_programs_dir: Default::default(),
                 }),
             }
@@ -171,7 +171,10 @@ mod tests {
                 }),
                 output_config: Arc::new(OutputConfig {
                     detailed_resources: true,
-                    execution_data_to_save: ExecutionDataToSave::TraceAndProfile,
+                    execution_data_to_save: ExecutionDataToSave {
+                        trace: true,
+                        profile: true,
+                    },
                     versioned_programs_dir: Default::default(),
                 }),
             }
@@ -219,7 +222,10 @@ mod tests {
                 }),
                 output_config: Arc::new(OutputConfig {
                     detailed_resources: true,
-                    execution_data_to_save: ExecutionDataToSave::TraceAndProfile,
+                    execution_data_to_save: ExecutionDataToSave {
+                        trace: true,
+                        profile: true,
+                    },
                     versioned_programs_dir: Default::default(),
                 }),
             }
