@@ -98,7 +98,7 @@ pub fn run(project_name: &str) -> Result<()> {
             .current_dir(current_dir)
             .arg("new")
             .arg(&project_path)
-            .arg("--snforge")
+            .env("SCARB_INIT_TEST_RUNNER", "cairo-test")
             .run()
             .context("Failed to initialize a new project")?;
     }

@@ -97,10 +97,12 @@ async fn test_same_salt_and_class_hash_deployed_twice() {
     assert_stdout_contains(
         output,
         indoc! {r#"
-        ScriptCommandError::WaitForTransactionError(WaitForTransactionError::TransactionError(TransactionError::Reverted(ErrorData { msg: "Error in the called contract ([..]):
-        Got an exception while executing a hint.
-        Error in the called contract ([..]):
-        Got an exception while executing a hint: Requested ContractAddress(PatriciaKey(StarkFelt("[..]"))) is unavailable for deployment.
+        [..]
+        ScriptCommandError::WaitForTransactionError(WaitForTransactionError::TransactionError(TransactionError::Reverted(ErrorData { msg: "Transaction execution has failed:
+        [..]
+        [..]: Error in the contract class constructor ([..]):
+        Requested ContractAddress(PatriciaKey([..])) is unavailable for deployment.
+        " })))
         command: script run
         status: success
         "#},
@@ -132,14 +134,12 @@ async fn test_invalid_class_hash() {
     assert_stdout_contains(
         output,
         indoc! {r#"
-        ScriptCommandError::WaitForTransactionError(WaitForTransactionError::TransactionError(TransactionError::Reverted(ErrorData { msg: "Error in the called contract ([..]):
-        Got an exception while executing a hint.
-        Error in the called contract ([..]):
-        Got an exception while executing a hint: Class with hash ClassHash(
-            StarkFelt(
-                "[..]",
-            ),
-        ) is not declared.
+        [..]
+        ScriptCommandError::WaitForTransactionError(WaitForTransactionError::TransactionError(TransactionError::Reverted(ErrorData { msg: "Transaction execution has failed:
+        [..]
+        [..]: Error in the contract class constructor ([..]):
+        Class with hash [..] is not declared.
+        " })))
         command: script run
         status: success
         "#},
@@ -171,10 +171,12 @@ async fn test_invalid_call_data() {
     assert_stdout_contains(
         output,
         indoc! {r#"
-        ScriptCommandError::WaitForTransactionError(WaitForTransactionError::TransactionError(TransactionError::Reverted(ErrorData { msg: "Error in the called contract ([..]):
-        Got an exception while executing a hint.
-        Error in the called contract ([..]):
-        Got an exception while executing a hint: Execution failed. Failure reason: [..] ('Failed to deserialize param #2').
+        [..]
+        ScriptCommandError::WaitForTransactionError(WaitForTransactionError::TransactionError(TransactionError::Reverted(ErrorData { msg: "Transaction execution has failed:
+        [..]
+        [..]: Error in the contract class constructor ([..]):
+        Execution failed. Failure reason: [..] ('Failed to deserialize param #2').
+        " })))
         command: script run
         status: success
         "#},
