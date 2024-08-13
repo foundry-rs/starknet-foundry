@@ -66,6 +66,7 @@ fn init_scarb_project(script_name: &str, script_root_dir: &Utf8PathBuf) -> Resul
             "--quiet",
             script_root_dir.as_str(),
         ])
+        .env("SCARB_INIT_TEST_RUNNER", "cairo-test")
         .run()
         .context("Failed to init Scarb project")?;
 

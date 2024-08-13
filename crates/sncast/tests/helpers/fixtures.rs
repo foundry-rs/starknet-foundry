@@ -3,6 +3,7 @@ use crate::helpers::runner::runner;
 use anyhow::Context;
 use camino::{Utf8Path, Utf8PathBuf};
 use conversions::string::IntoHexStr;
+use core::str;
 use fs_extra::dir::{copy, CopyOptions};
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
@@ -255,7 +256,10 @@ fn parse_output<T: DeserializeOwned>(output: &[u8]) -> T {
             Err(_) => continue,
         }
     }
-    panic!("Failed to deserialize stdout JSON to struct");
+
+    let output = unsafe { str::from_utf8_unchecked(output) };
+
+    panic!("Failed to deserialize stdout JSON to struct:\n{output}");
 }
 
 #[derive(Deserialize)]

@@ -127,13 +127,13 @@ async fn test_happy_case_versions(version: &str) {
     assert!(matches!(receipt, Declare(_)));
 }
 
-#[test_case(Some("99999999999999999"), None, None; "max_fee")]
-#[test_case(None, Some("9999"), None; "max_gas")]
-#[test_case(None, None, Some("999999999999"); "max_gas_unit_price")]
+#[test_case(Some("100000000000000000"), None, None; "max_fee")]
+#[test_case(None, Some("100000"), None; "max_gas")]
+#[test_case(None, None, Some("100000000000000"); "max_gas_unit_price")]
 #[test_case(None, None, None; "none")]
-#[test_case(Some("99999999999999999"), None, Some("999999999999"); "max_fee_max_gas_unit_price")]
-#[test_case(None, Some("9999"), Some("999999999999"); "max_gas_max_gas_unit_price")]
-#[test_case(Some("999999999999999"), Some("9999"), None; "max_fee_max_gas")]
+#[test_case(Some("10000000000000000000"), None, Some("100000000000000"); "max_fee_max_gas_unit_price")]
+#[test_case(None, Some("100000"), Some("100000000000000"); "max_gas_max_gas_unit_price")]
+#[test_case(Some("100000000000000000"), Some("100000"), None; "max_fee_max_gas")]
 #[tokio::test]
 async fn test_happy_case_strk_different_fees(
     max_fee: Option<&str>,
@@ -181,7 +181,9 @@ async fn test_happy_case_strk_different_fees(
     }
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().success().get_output().stdout.clone();
+    let output = snapbox.assert().success();
+
+    let output = output.get_output().stdout.clone();
 
     let hash = get_transaction_hash(&output);
     let receipt = get_transaction_receipt(hash).await;
@@ -220,6 +222,7 @@ async fn test_invalid_version_and_token_combination(fee_token: &str, version: &s
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     let output = snapbox.assert().failure();
+
     assert_stderr_contains(
         output,
         format!("Error: {fee_token} fee token is not supported for {version} declaration."),
@@ -277,6 +280,8 @@ async fn test_contract_already_declared() {
         "--fee-token",
         "eth",
     ];
+
+    runner(&args).current_dir(tempdir.path()).assert().success();
 
     let snapbox = runner(&args).current_dir(tempdir.path());
     let output = snapbox.assert().success();
