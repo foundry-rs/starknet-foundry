@@ -65,6 +65,7 @@ impl RunForPackageArgs {
             args.detailed_resources,
             args.save_trace_data,
             args.build_profile,
+            args.generate_coverage,
             args.max_n_steps,
             contracts_data,
             cache_dir.clone(),

@@ -130,6 +130,10 @@ pub struct TestArgs {
     #[arg(long)]
     build_profile: bool,
 
+    /// Generate coverage report of all test which have passed and are not fuzz tests using the cairo-coverage
+    #[arg(short = 'c', long)]
+    generate_coverage: bool,
+
     /// Number of maximum steps during a single test. For fuzz tests this value is applied to each subtest separately.
     #[arg(long)]
     max_n_steps: Option<u32>,

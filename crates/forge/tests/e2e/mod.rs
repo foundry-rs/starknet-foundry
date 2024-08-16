@@ -9,6 +9,7 @@ mod env;
 mod fork_warning;
 mod forking;
 mod fuzzing;
+mod generate_coverage;
 mod io_operations;
 mod running;
 mod steps;

@@ -2,7 +2,8 @@ use anyhow::Result;
 use cairo_lang_runner::RunnerError;
 use forge_runner::{
     forge_config::ForgeConfig,
-    function_args, maybe_save_trace_and_profile, maybe_save_versioned_program,
+    function_args, maybe_generate_coverage, maybe_save_trace_and_profile,
+    maybe_save_versioned_program,
     package_tests::with_config_resolved::TestTargetWithResolvedConfig,
     printing::print_test_result,
     run_for_test_case,
@@ -99,6 +100,8 @@ pub async fn run_for_test_target(
 
         results.push(result);
     }
+
+    maybe_generate_coverage(forge_config.output_config.execution_data_to_save)?;
 
     let summary = TestTargetSummary {
         test_case_summaries: results,

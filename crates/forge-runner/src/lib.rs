@@ -1,4 +1,5 @@
 use crate::build_trace_data::test_sierra_program_path::VersionedProgramPath;
+use crate::coverage_api::run_coverage;
 use crate::forge_config::{is_vm_trace_needed, ExecutionDataToSave, ForgeConfig, TestRunnerConfig};
 use crate::fuzzer::RandomFuzzer;
 use crate::running::{run_fuzz_test, run_test};
@@ -22,6 +23,7 @@ use tokio::task::JoinHandle;
 use universal_sierra_compiler_api::AssembledProgramWithDebugInfo;
 
 pub mod build_trace_data;
+pub mod coverage_api;
 pub mod expected_result;
 pub mod forge_config;
 pub mod package_tests;
@@ -65,6 +67,13 @@ pub fn maybe_save_trace_and_profile(
                 run_profiler(name, &trace_path)?;
             }
         }
+    }
+    Ok(())
+}
+
+pub fn maybe_generate_coverage(execution_data_to_save: ExecutionDataToSave) -> Result<()> {
+    if execution_data_to_save.coverage {
+        run_coverage()?;
     }
     Ok(())
 }
