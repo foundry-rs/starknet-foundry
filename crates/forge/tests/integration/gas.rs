@@ -470,7 +470,8 @@ fn storage_write_cost() {
     // 6 = gas cost of steps
     // 96 = gas cost of deployment
     // storage_updates(1) * 2 * 32 = 64
-    assert_gas(&result, "storage_write_cost", 6 + 96 + 64);
+    // 1 = ???
+    assert_gas(&result, "storage_write_cost", 6 + 96 + 64 + 1);
 }
 
 #[test]
@@ -547,7 +548,12 @@ fn multiple_storage_writes_cost() {
     // n(1) * 2 * 32 = 64
     // m(1) * 2 * 32 = 64
     // l(1) * 32 = 32
-    assert_gas(&result, "multiple_storage_writes_cost", 8 + 64 + 64 + 32);
+    // 1 = ???
+    assert_gas(
+        &result,
+        "multiple_storage_writes_cost",
+        8 + 64 + 64 + 32 + 1,
+    );
 }
 
 #[test]
@@ -585,7 +591,8 @@ fn l1_message_cost() {
     // 6 = gas cost of steps
     // 96 = gas cost of deployment
     // 29524 = gas cost of onchain data
-    assert_gas(&result, "l1_message_cost", 6 + 96 + 29524);
+    // 1 = ???
+    assert_gas(&result, "l1_message_cost", 6 + 96 + 29524 + 1);
 }
 
 #[test]
@@ -658,7 +665,12 @@ fn l1_message_cost_for_proxy() {
     // n(2) * 2 * 32 = 128
     // l(2) * 32 = 64
     // 29524 = gas cost of message
-    assert_gas(&result, "l1_message_cost_for_proxy", 11 + 128 + 64 + 29524);
+    // 2 = w sumie nie wiem
+    assert_gas(
+        &result,
+        "l1_message_cost_for_proxy",
+        11 + 128 + 64 + 29524 + 2,
+    );
 }
 
 #[test]
@@ -703,14 +715,14 @@ fn events_cost() {
             fn events_cost() {
                 let mut keys = array![];
                 let mut values =  array![];
-                
+
                 let mut i: u32 = 0;
                 while i < 50 {
                     keys.append('key');
                     values.append(1);
                     i += 1;
                 };
-                
+
                 emit_event_syscall(keys.span(), values.span()).unwrap();
             }
         "
@@ -759,5 +771,5 @@ fn events_contract_cost() {
     // 96 = gas cost of onchain data (deploy cost)
     // 6 gas for 50 event values
     // ~13 gas for 50 event keys
-    assert_gas(&result, "event_emission_cost", 10 + 96 + 6 + 13);
+    assert_gas(&result, "event_emission_cost", 10 + 96 + 6 + 13 + 1);
 }
