@@ -85,13 +85,18 @@ pub async fn run_for_test_target(
     }
 
     let mut results = vec![];
+    let mut saved_trace_data_paths = vec![];
     let mut interrupted = false;
 
     while let Some(task) = tasks.next().await {
         let result = task??;
 
         print_test_result(&result, forge_config.output_config.detailed_resources);
-        maybe_save_trace_and_profile(&result, forge_config.output_config.execution_data_to_save)?;
+        maybe_save_trace_and_profile(
+            &result,
+            forge_config.output_config.execution_data_to_save,
+            &mut saved_trace_data_paths,
+        )?;
 
         if result.is_failed() && forge_config.test_runner_config.exit_first {
             interrupted = true;
@@ -101,7 +106,10 @@ pub async fn run_for_test_target(
         results.push(result);
     }
 
-    maybe_generate_coverage(forge_config.output_config.execution_data_to_save)?;
+    maybe_generate_coverage(
+        forge_config.output_config.execution_data_to_save,
+        &saved_trace_data_paths,
+    )?;
 
     let summary = TestTargetSummary {
         test_case_summaries: results,

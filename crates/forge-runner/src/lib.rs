@@ -16,6 +16,7 @@ use package_tests::with_config_resolved::{
 };
 use profiler_api::run_profiler;
 use std::collections::HashMap;
+use std::path::PathBuf;
 use std::sync::Arc;
 use test_case_summary::{AnyTestCaseSummary, Fuzzing};
 use tokio::sync::mpsc::{channel, Sender};
@@ -56,6 +57,7 @@ pub trait TestCaseFilter {
 pub fn maybe_save_trace_and_profile(
     result: &AnyTestCaseSummary,
     execution_data_to_save: ExecutionDataToSave,
+    saved_trace_data_paths: &mut Vec<PathBuf>,
 ) -> Result<()> {
     if let AnyTestCaseSummary::Single(TestCaseSummary::Passed {
         name, trace_data, ..
@@ -66,14 +68,18 @@ pub fn maybe_save_trace_and_profile(
             if execution_data_to_save.profile {
                 run_profiler(name, &trace_path)?;
             }
+            saved_trace_data_paths.push(trace_path);
         }
     }
     Ok(())
 }
 
-pub fn maybe_generate_coverage(execution_data_to_save: ExecutionDataToSave) -> Result<()> {
+pub fn maybe_generate_coverage(
+    execution_data_to_save: ExecutionDataToSave,
+    saved_trace_data_paths: &[PathBuf],
+) -> Result<()> {
     if execution_data_to_save.coverage {
-        run_coverage()?;
+        run_coverage(saved_trace_data_paths)?;
     }
     Ok(())
 }
