@@ -1,5 +1,6 @@
 use std::marker::PhantomData;
 
+use crate::constants::TEST_ADDRESS;
 use blockifier::execution::entry_point::{CallEntryPoint, CallType};
 use blockifier::execution::execution_utils::felt_from_ptr;
 use blockifier::execution::syscalls::{
@@ -13,8 +14,7 @@ use blockifier::execution::{
         SyscallResponseWrapper,
     },
 };
-
-use crate::constants::TEST_ADDRESS;
+use cairo_vm::types::relocatable::MaybeRelocatable;
 use cairo_vm::vm::{errors::hint_errors::HintError, vm_core::VirtualMachine};
 use runtime::{ExtendedRuntime, ExtensionLogic, SyscallHandlingResult, SyscallPtrAccess};
 use starknet_api::core::ContractAddress;
@@ -182,9 +182,14 @@ fn write_call_response(
 ) -> Result<(), HintError> {
     let response_wrapper: SyscallResponseWrapper<SingleSegmentResponse> = match call_result {
         CallResult::Success { ret_data } => {
-            let memory_segment_start_ptr = syscall_handler
-                .read_only_segments
-                .allocate(vm, &ret_data.iter().map(Into::into).collect())?;
+            let memory_segment_start_ptr = syscall_handler.read_only_segments.allocate(
+                vm,
+                &ret_data
+                    .clone()
+                    .into_iter()
+                    .map(MaybeRelocatable::Int)
+                    .collect::<Vec<MaybeRelocatable>>(),
+            )?;
 
             SyscallResponseWrapper::Success {
                 gas_counter,
