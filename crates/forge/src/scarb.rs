@@ -222,7 +222,7 @@ mod tests {
                 detailed_resources: false,
                 save_trace_data: false,
                 build_profile: false,
-                generate_coverage: false
+                coverage: false
             }
         );
     }
@@ -451,7 +451,7 @@ mod tests {
                 detailed_resources: false,
                 save_trace_data: false,
                 build_profile: false,
-                generate_coverage: false
+                coverage: false
             }
         );
     }

@@ -65,7 +65,7 @@ Saves execution traces of test cases which pass and are not fuzz tests. You can 
 Saves trace data and then builds profiles of test cases which pass and are not fuzz tests. 
 You need [cairo-profiler](https://github.com/software-mansion/cairo-profiler) installed on your system. You can set a custom path to cairo-profiler with `CAIRO_PROFILER` env variable. Profile can be read with pprof, more information: [cairo-profiler](https://github.com/software-mansion/cairo-profiler), [pprof](https://github.com/google/pprof?tab=readme-ov-file#building-pprof)
 
-## `-c`, `--generate-coverage`
+## `--coverage`
 
 Saves trace data and then generates coverage report of test cases which pass and are not fuzz tests.
 You need [cairo-coverage](https://github.com/software-mansion/cairo-coverage) installed on your system. You can set a custom path to cairo-coverage with `CAIRO_COVERAGE` env variable.

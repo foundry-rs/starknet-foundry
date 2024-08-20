@@ -38,11 +38,11 @@ pub struct ExecutionDataToSave {
 
 impl ExecutionDataToSave {
     #[must_use]
-    pub fn from_flags(save_trace_data: bool, build_profile: bool, generate_coverage: bool) -> Self {
+    pub fn from_flags(save_trace_data: bool, build_profile: bool, coverage: bool) -> Self {
         Self {
             trace: save_trace_data,
             profile: build_profile,
-            coverage: generate_coverage,
+            coverage,
         }
     }
 }

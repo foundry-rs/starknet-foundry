@@ -18,7 +18,7 @@ pub fn combine_configs(
     detailed_resources: bool,
     save_trace_data: bool,
     build_profile: bool,
-    generate_coverage: bool,
+    coverage: bool,
     max_n_steps: Option<u32>,
     contracts_data: ContractsData,
     cache_dir: Utf8PathBuf,
@@ -28,7 +28,7 @@ pub fn combine_configs(
     let execution_data_to_save = ExecutionDataToSave::from_flags(
         save_trace_data || forge_config_from_scarb.save_trace_data,
         build_profile || forge_config_from_scarb.build_profile,
-        generate_coverage || forge_config_from_scarb.generate_coverage,
+        coverage || forge_config_from_scarb.coverage,
     );
 
     ForgeConfig {
@@ -145,7 +145,7 @@ mod tests {
             detailed_resources: true,
             save_trace_data: true,
             build_profile: true,
-            generate_coverage: true,
+            coverage: true,
             max_n_steps: Some(1_000_000),
         };
 
@@ -199,7 +199,7 @@ mod tests {
             detailed_resources: false,
             save_trace_data: false,
             build_profile: false,
-            generate_coverage: false,
+            coverage: false,
             max_n_steps: Some(1234),
         };
         let config = combine_configs(

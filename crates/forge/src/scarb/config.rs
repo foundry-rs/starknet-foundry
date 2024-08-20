@@ -23,7 +23,7 @@ pub struct ForgeConfigFromScarb {
     /// Build profile of all test which have passed and are not fuzz tests
     pub build_profile: bool,
     /// Generate coverage report of all test which have passed and are not fuzz tests
-    pub generate_coverage: bool,
+    pub coverage: bool,
     /// Fork configuration profiles
     pub fork: Vec<ForkTarget>,
     /// Limit of steps
@@ -73,7 +73,7 @@ pub(crate) struct RawForgeConfig {
     pub build_profile: bool,
     #[serde(default)]
     /// Generate coverage report of all test which have passed and are not fuzz tests
-    pub generate_coverage: bool,
+    pub coverage: bool,
     #[serde(default)]
     /// Fork configuration profiles
     pub fork: Vec<RawForkTarget>,
@@ -143,7 +143,7 @@ impl TryFrom<RawForgeConfig> for ForgeConfigFromScarb {
             detailed_resources: value.detailed_resources,
             save_trace_data: value.save_trace_data,
             build_profile: value.build_profile,
-            generate_coverage: value.generate_coverage,
+            coverage: value.coverage,
             fork: fork_targets,
             max_n_steps: value.max_n_steps,
         })
