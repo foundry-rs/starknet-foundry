@@ -81,7 +81,7 @@ async fn test_same_contract_twice() {
     snapbox.assert().success().stdout_matches(indoc! {r#"
         ...
         success
-        ScriptCommandError::ProviderError(ProviderError::UnknownError(ErrorData { msg: "JSON-RPC error: code=-1, message="Class with hash ClassHash(StarkFelt("[..]")) is already declared."" }))
+        ScriptCommandError::ProviderError(ProviderError::UnknownError(ErrorData { msg: "JSON-RPC error: code=-1, message="Class with hash [..] is already declared."" }))
         command: script run
         status: success
     "#});

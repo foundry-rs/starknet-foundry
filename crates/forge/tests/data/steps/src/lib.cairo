@@ -14,30 +14,30 @@ mod tests {
     }
 
     #[test]
-    fn steps_5699625() {
+    fn steps_9999990() {
         let mut i = 0;
 
-        while i != 379_970 {
+        while i != 666_661 {
             i = i + 1;
             assert(1 + 1 == 2, 'who knows?');
         }
     }
 
     #[test]
-    fn steps_3999990() {
+    fn steps_10000005() {
         let mut i = 0;
 
-        while i != 266_661 {
+        while i != 666_662 {
             i = i + 1;
             assert(1 + 1 == 2, 'who knows?');
         }
     }
 
     #[test]
-    fn steps_4000005() {
+    fn steps_11250075() {
         let mut i = 0;
 
-        while i != 266_662 {
+        while i != 750_000 {
             i = i + 1;
             assert(1 + 1 == 2, 'who knows?');
         }

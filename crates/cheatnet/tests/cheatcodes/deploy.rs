@@ -305,7 +305,7 @@ fn deploy_invalid_class_hash() {
     assert!(matches!(
         output,
         Err(CheatcodeError::Unrecoverable(EnhancedHintError::Hint(HintError::CustomHint(msg))))
-        if msg.as_ref().contains(class_hash.to_string().as_str()),
+        if msg.as_ref().contains(class_hash.to_hex_string().trim_start_matches("0x")),
     ));
 }
 
