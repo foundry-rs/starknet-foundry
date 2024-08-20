@@ -66,7 +66,7 @@ fn init_scarb_project(script_name: &str, script_root_dir: &Utf8PathBuf) -> Resul
             "--quiet",
             script_root_dir.as_str(),
             "--test-runner",
-            "starknet-foundry"
+            "starknet-foundry",
         ])
         .run()
         .context("Failed to init Scarb project")?;
