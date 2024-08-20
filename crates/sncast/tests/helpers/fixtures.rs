@@ -257,9 +257,7 @@ fn parse_output<T: DeserializeOwned>(output: &[u8]) -> T {
         }
     }
 
-    let output = unsafe { str::from_utf8_unchecked(output) };
-
-    panic!("Failed to deserialize stdout JSON to struct:\n{output}");
+    panic!("Failed to deserialize stdout JSON to struct");
 }
 
 #[derive(Deserialize)]
