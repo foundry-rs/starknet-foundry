@@ -20,9 +20,9 @@ pub struct ForgeConfigFromScarb {
     pub detailed_resources: bool,
     /// Save execution traces of all test which have passed and are not fuzz tests
     pub save_trace_data: bool,
-    /// Build profile of all test which have passed and are not fuzz tests
+    /// Build profiles of all tests which have passed and are not fuzz tests
     pub build_profile: bool,
-    /// Generate coverage report of all test which have passed and are not fuzz tests
+    /// Generate a coverage report for the executed tests which have passed and are not fuzz tests
     pub coverage: bool,
     /// Fork configuration profiles
     pub fork: Vec<ForkTarget>,
@@ -69,10 +69,10 @@ pub(crate) struct RawForgeConfig {
     /// Save execution traces of all test which have passed and are not fuzz tests
     pub save_trace_data: bool,
     #[serde(default)]
-    /// Build profiles of all test which have passed and are not fuzz tests
+    /// Build profiles of all tests which have passed and are not fuzz tests
     pub build_profile: bool,
     #[serde(default)]
-    /// Generate coverage report of all test which have passed and are not fuzz tests
+    /// Generate a coverage report for the executed tests which have passed and are not fuzz tests
     pub coverage: bool,
     #[serde(default)]
     /// Fork configuration profiles
