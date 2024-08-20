@@ -98,7 +98,7 @@ pub fn run(project_name: &str) -> Result<()> {
             .current_dir(current_dir)
             .arg("new")
             .arg(&project_path)
-            .arg("--snforge")
+            .args(["--test-runner", "starknet-foundry"])
             .run()
             .context("Failed to initialize a new project")?;
     }
