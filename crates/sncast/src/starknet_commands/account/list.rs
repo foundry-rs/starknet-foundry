@@ -160,7 +160,7 @@ pub fn print_account_list(
     accounts_file: &Utf8PathBuf,
     display_private_keys: bool,
     numbers_format: NumbersFormat,
-    output_format: &OutputFormat,
+    output_format: OutputFormat,
 ) -> anyhow::Result<()> {
     check_account_file_exists(accounts_file)?;
 

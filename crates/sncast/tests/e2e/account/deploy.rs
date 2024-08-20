@@ -399,6 +399,9 @@ pub async fn test_valid_class_hash() {
     snapbox.assert().success().stdout_matches(indoc! {r"
         command: account deploy
         transaction_hash: [..]
+
+        To see invocation details, visit:
+        transaction: [..]
     "});
 }
 
@@ -427,6 +430,9 @@ pub async fn test_valid_no_max_fee() {
     snapbox.assert().success().stdout_matches(indoc! {r"
         command: account deploy
         transaction_hash: [..]
+
+        To see invocation details, visit:
+        transaction: [..]
     "});
 }
 
@@ -518,6 +524,9 @@ pub async fn test_happy_case_keystore(account_type: &str) {
     snapbox.assert().stdout_matches(indoc! {r"
         command: account deploy
         transaction_hash: 0x[..]
+
+        To see invocation details, visit:
+        transaction: [..]
     "});
 
     let contents = fs::read_to_string(tempdir.path().join(account_file)).unwrap();
@@ -790,5 +799,8 @@ pub async fn test_deploy_keystore_other_args() {
     snapbox.assert().stdout_matches(indoc! {r"
         command: account deploy
         transaction_hash: 0x[..]
+
+        To see invocation details, visit:
+        transaction: [..]
     "});
 }
