@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Changed
+
+- Bumped Cairo version to `2.7.0`
+- Max steps in tests (configured by argument `--max-n-steps`) now defaults to 10 million
+if not provided (changed from 4 million).
+
 ### Cast
 
 #### Changed
