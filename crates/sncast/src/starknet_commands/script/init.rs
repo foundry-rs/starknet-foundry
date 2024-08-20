@@ -65,8 +65,9 @@ fn init_scarb_project(script_name: &str, script_root_dir: &Utf8PathBuf) -> Resul
             "--no-vcs",
             "--quiet",
             script_root_dir.as_str(),
+            "--test-runner",
+            "starknet-foundry"
         ])
-        .env("SCARB_INIT_TEST_RUNNER", "cairo-test")
         .run()
         .context("Failed to init Scarb project")?;
 
