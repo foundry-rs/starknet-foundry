@@ -18,7 +18,7 @@ if not provided (changed from 4 million).
 ### Cast
 
 #### Added
-- Commands that commit transactions now display links to block explorers. When in human-readable mode, `invoke`, `declare`, `deploy`, `multicall run`, `account create` and `account deploy` will display additional information with an url. A new key in Cast congirutation - `block-explorer` determines which block explorer service the displayed link leads to
+- Commands that commit transactions now display links to block explorers. When in human-readable mode, `invoke`, `declare`, `deploy`, `multicall run`, `account create` and `account deploy` will display additional information with an url. A new key in Cast configuration - `block-explorer` determines which block explorer service the displayed link leads to. Possible options are:` StarkScan`, `Voyager`, `ViewBlock`, `OkLink`, `NftScan`.
 
 #### Changed
 - `account create` outputs hint about the type of the tokens required to prefund a newly created account with before deployment
