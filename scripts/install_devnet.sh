@@ -66,12 +66,8 @@ require_cmd tar
 get_architecture
 SYSTEM_TRIPLET="$RETVAL"
 
-if [ $SYSTEM_TRIPLET == "aarch64-apple-darwin" ]; then
-    SYSTEM_TRIPLET="aarch64-apple-darwin-2"  # temporary workaround for inconsistent binary names in repo
-fi
-
 mkdir -p "${DEVNET_INSTALL_DIR}"
-curl -L "${DEVNET_REPO}/releases/download/${DEVNET_VER}/starknet-devnet-${SYSTEM_TRIPLET}.tar" | tar -xv -C "${DEVNET_INSTALL_DIR}" || exit 1  # temporary change to .tar format without .gz
+curl -L "${DEVNET_REPO}/releases/download/${DEVNET_VER}/starknet-devnet-${SYSTEM_TRIPLET}.tar.gz" | tar -xz -C "${DEVNET_INSTALL_DIR}" || exit 1
 
 echo "All done!"
 exit 0
