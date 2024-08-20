@@ -15,10 +15,123 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Changed
 
+- Bumped Cairo version to `2.7.0`
+- Max steps in tests (configured by argument `--max-n-steps`) now defaults to 10 million
+if not provided (changed from 4 million).
+
+### Cast
+
+#### Changed
+- `account create` outputs hint about the type of the tokens required to prefund a newly created account with before deployment
+
+- `sncast` no longer expects `--url` as a common argument. It is now required specifically by commands that utilise it, i.e. `account add`, `account create`, `account delete`, `account deploy`, `multicall run`, `script run`, `call`, `declare`, `deploy`, `invoke`, `show-config`, `tx-status`.
+Commands that do not require `--url` anymore: `account list`, `multicall new`, `script init`, `verify`
+
+### Forge
+
+#### Changed
+- Fork tests now discover chain ID via provided RPC URL, defaulting to `SN_SEPOLIA`
+- `#[fork]` attribute parameters format. [Read more here](https://foundry-rs.github.io/starknet-foundry/snforge-advanced-features/fork-testing.html)
+- steps counting
+- Block tag changed name from `Latest`  to `latest`
+- `declare` cheatcode now returns `Result<DeclareResult, Array<felt252>>` [Read more here](https://foundry-rs.github.io/starknet-foundry/appendix/snforge-library/declare.html)
+
+## [0.27.0] - 2024-07-24
+
+### Forge
+
+#### Added
+
+- `spy_messages_to_l1()` for listening in on messages to L1 sent by your contracts. [Read more here](https://foundry-rs.github.io/starknet-foundry/testing/testing-messages-to-l1.html).
+
+#### Changed
+
+- Renamed global cheatcodes listed [here](https://foundry-rs.github.io/starknet-foundry/appendix/cheatcodes.html) - cheatcode invocations affecting the global scope and working indefinitely, already marked with a `_global` suffix, received a `start_` prefix
+
+### Cast
+
+#### Added
+
+- `verify` subcommand to verify contract (walnut APIs supported as of this version). [Read more here](https://foundry-rs.github.io/starknet-foundry/appendix/sncast/verify.html)
+- support for v3 transactions on account deploy, deploy, declare, invoke
+- Newest class hash for OpenZeppelin account contracts
+- `account list` subcommand for listing all available accounts [Read more here](https://foundry-rs.github.io/starknet-foundry/appendix/sncast/account/list.html)
+
+#### Changed
+
+- `multicall new` no longer prints generated template to stdout and now requires specifying output path. [Read more here](https://foundry-rs.github.io/starknet-foundry/appendix/sncast/multicall/new.html)
+
+## [0.26.0] - 2024-07-03
+
+### Forge
+
+#### Changed
+- Updated event testing - read more [here](./docs/src/testing/testing-events.md) on how it now works and [here](./docs/src/appendix/cheatcodes/spy_events.md)
+about updated `spy_events` cheatcode
+
+## [0.25.0] - 2024-06-12
+
+### Forge
+
+#### Changed
+
+- `SyscallResultStringErrorTrait::map_error_to_string` removed in favor of utility function (`snforge_std::byte_array::try_deserialize_bytearray_error`)
+
+### Cast
+
+#### Removed
+- `--class-hash` flag from `account deploy` command
+
+#### Added
+
+- `tx-status` subcommand to get transaction status. [Read more here](./docs/src/starknet/tx-status.md)
+- `tx_status` function to cast_std. [Read more here](./docs/src/appendix/sncast-library/tx_status.md)
+- Support for creating argent accounts
+- Support for creating braavos accounts
+
+## [0.24.0] - 2024-05-22
+
+### Forge
+
+#### Removed
+
+- `prank`, `warp`, `roll`, `elect`, `spoof` cheatcodes in favour of `cheat_execution_info`
+
+#### Added
+
+- `cheat_execution_info` cheatcode and per variable helpers for it
+
+### Cast
+
+#### Added
+
+- New required flag `--type` to `account add` command
+
+### Forge
+
+#### Changed
+
+- `SignerTrait::sign` now returns `Result` instead of failing the test
+
+- `L1HandlerTrait::execute()` takes source address and payloads as arguments [Read more here](https://foundry-rs.github.io/starknet-foundry/appendix/cheatcodes/l1_handler.html)
+
+- When calling to an address which does not exists, error is forwarded to cairo runtime instead of failing the test
+
+## [0.23.0] - 2024-05-08
+
+### Forge
+
+#### Removed
+
+- `event_name_hash` removal, in favour of `selector!` usage
+
+#### Changed
+
 - the tool now always compiles Sierra contract artifacts to CASM using
 [`USC`](https://github.com/software-mansion/universal-sierra-compiler) - before it used to consume CASM artifacts
 produced by Scarb if they were present. Setting up `casm = true` in `Scarb.toml` is no longer recommended - it may slow
 down the compilation.
+- The `replace_bytecode` cheatcode now returns `Result` with a possible `ReplaceBytecodeError`, since it may cause unexpected errors down the line when not handled properly
 
 ### Cast
 
@@ -30,7 +143,8 @@ produced by Scarb if they were present. Setting up `casm = true` in `Scarb.toml`
 down the compilation.
 
 #### Fixed
-- scripts built with release profile are now properly recognized and ran 
+
+- scripts built with release profile are now properly recognized and ran
 
 ## [0.22.0] - 2024-04-17
 
@@ -59,8 +173,8 @@ down the compilation.
 
 #### Added
 
-- sncast script idempotency feature - every action done by the script that alters the network state will be tracked in state file, 
-and won't be replayed if previously succeeded 
+- sncast script idempotency feature - every action done by the script that alters the network state will be tracked in state file,
+and won't be replayed if previously succeeded
 
 ## [0.20.1] - 2024-03-22
 
@@ -83,7 +197,7 @@ and won't be replayed if previously succeeded
 - Default `chain_id` has been changed from `SN_GOERLI` to `SN_SEPOLIA`
 - Supported RPC version is now 0.7.0
 - Gas calculation is in sync with starknet 0.13.1 (with EIP 4844 blob usage enabled)
-- Resources displayed (steps, builtins) now include OS costs of syscalls 
+- Resources displayed (steps, builtins) now include OS costs of syscalls
 
 ### Cast
 
@@ -251,7 +365,7 @@ binary, which will allow forge to be independent of sierra version
 #### Changed
 
 - maximum number of computational steps per call set to current Starknet limit (3M)
-- `mean` and `std deviation` fields are displayed for gas usage while running fuzzing tests 
+- `mean` and `std deviation` fields are displayed for gas usage while running fuzzing tests
 - Cairo edition in `snforge_std` and `sncast_std` set to `2023_10`
 - `snforge_std::signature` module with `stark_curve`, `secp256k1_curve` and `secp256r1_curve` submodules
 
@@ -267,7 +381,7 @@ binary, which will allow forge to be independent of sierra version
 
 - `assert_not_emitted` assert to check if an event was not emitted
 
-#### Changed 
+#### Changed
 
 - fields from `starknet::info::v2::TxInfo` are now part of `TxInfoMock` from `snforge_std::cheatcodes::tx_info`
 - consistent latest block numbers for each url are now used across the whole run when testing against forks
@@ -278,7 +392,7 @@ binary, which will allow forge to be independent of sierra version
 
 ### Cast
 
-#### Added 
+#### Added
 
 - add support for sepolia network
 - `--yes` option to `account delete` command that allows to skip confirmation prompt
@@ -325,7 +439,7 @@ binary, which will allow forge to be independent of sierra version
 - `--rerun-failed` option to run tests that failed during the last run.
 
 #### Changed
-- `start_warp` and `stop_warp` now take `CheatTarget` as the first argument instead of `ContractAddress`. Read more [here](./docs/src/appendix/cheatcodes/block_timestamp/start_warp.md). 
+- `start_warp` and `stop_warp` now take `CheatTarget` as the first argument instead of `ContractAddress`. Read more [here](./docs/src/appendix/cheatcodes/block_timestamp/start_warp.md).
 - `start_prank` and `stop_prank` now take `CheatTarget` as the first argument instead of `ContractAddress`. Read more [here](./docs/src/appendix/cheatcodes/caller_address/start_prank.md).
 - `start_roll` and `stop_roll` now take `CheatTarget` as the first argument instead of `ContractAddress`. Read more [here](./docs/src/appendix/cheatcodes/block_number/start_roll.md).
 
@@ -337,7 +451,7 @@ PS: Credits to @bllu404 for the help with the new interfaces for cheats!
 
 ### Cast
 
-### Added
+#### Added
 
 - MVP for cairo deployment scripts with declare, deploy, invoke and call
 
@@ -411,7 +525,7 @@ PS: Credits to @bllu404 for the help with the new interfaces for cheats!
 - updated Cairo version to 2.3.0 - compatible Scarb version is 2.3.0:
   - tests in `src` folder now have to be in a module annotated with `#[cfg(test)]`
 - `snforge_std::PrintTrait` will not convert values representing ASCII control characters to strings
-- separated `snforge` to subcommands: `snforge test`, `snforge init` and `snforge clean-cache`. 
+- separated `snforge` to subcommands: `snforge test`, `snforge init` and `snforge clean-cache`.
 Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/snforge.html).
 - `starknet::get_block_info` now returns correct block info in a forked block
 
@@ -424,11 +538,12 @@ Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/snforge.
 - `--hex-format` flag has been added
 
 #### Removed
+
 - `-i` short for `--int-format` is removed, now have to use the full form `--int-format`
 
 ## [0.8.3] - 2023-10-17
 
-### Forge 
+### Forge
 
 #### Changed
 
@@ -477,7 +592,7 @@ Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/snforge.
 
 #### Changed
 
-- dropped official support for cairo 1 compiled contracts. While they still should be working without any problems, 
+- dropped official support for cairo 1 compiled contracts. While they still should be working without any problems,
 from now on the only officially supported cairo compiler version is 2
 
 ## [0.7.1] - 2023-09-27
@@ -489,7 +604,7 @@ from now on the only officially supported cairo compiler version is 2
 - `var` library function for reading environmental variables
 
 #### Fixed
-- Using any concrete `block_id` when using forking mode, would lead to crashes 
+- Using any concrete `block_id` when using forking mode, would lead to crashes
 
 ## [0.7.0] - 2023-09-27
 

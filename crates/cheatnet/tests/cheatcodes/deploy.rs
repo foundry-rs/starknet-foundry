@@ -1,11 +1,11 @@
-use crate::common::assertions::assert_success;
+use crate::common::assertions::{assert_success, ClassHashAssert};
 use crate::common::state::create_cached_state;
 use crate::common::{
     call_contract, deploy_at_wrapper, deploy_contract, deploy_wrapper, felt_selector_from_name,
     get_contracts,
 };
-use cairo_felt::Felt252;
 use cairo_vm::vm::errors::hint_errors::HintError;
+use cairo_vm::Felt252;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     CallFailure, CallResult,
 };
@@ -24,7 +24,9 @@ fn deploy_at_predefined_address() {
 
     let contracts_data = get_contracts();
 
-    let class_hash = declare(&mut cached_state, "HelloStarknet", &contracts_data).unwrap();
+    let class_hash = declare(&mut cached_state, "HelloStarknet", &contracts_data)
+        .unwrap()
+        .unwrap_success();
     let contract_address = deploy_at_wrapper(
         &mut cached_state,
         &mut cheatnet_state,
@@ -41,7 +43,7 @@ fn deploy_at_predefined_address() {
         &mut cached_state,
         &mut cheatnet_state,
         &contract_address,
-        &selector,
+        selector,
         &[],
     );
 
@@ -55,7 +57,9 @@ fn deploy_two_at_the_same_address() {
 
     let contracts_data = get_contracts();
 
-    let class_hash = declare(&mut cached_state, "HelloStarknet", &contracts_data).unwrap();
+    let class_hash = declare(&mut cached_state, "HelloStarknet", &contracts_data)
+        .unwrap()
+        .unwrap_success();
     deploy_at_wrapper(
         &mut cached_state,
         &mut cheatnet_state,
@@ -87,8 +91,14 @@ fn call_predefined_contract_from_proxy_contract() {
 
     let contracts_data = get_contracts();
 
-    let class_hash = declare(&mut cached_state, "PrankChecker", &contracts_data).unwrap();
-    let prank_checker_address = deploy_at_wrapper(
+    let class_hash = declare(
+        &mut cached_state,
+        "CheatCallerAddressChecker",
+        &contracts_data,
+    )
+    .unwrap()
+    .unwrap_success();
+    let cheat_caller_address_checker_address = deploy_at_wrapper(
         &mut cached_state,
         &mut cheatnet_state,
         &class_hash,
@@ -97,21 +107,24 @@ fn call_predefined_contract_from_proxy_contract() {
     )
     .unwrap();
 
-    assert_eq!(prank_checker_address, ContractAddress::from(1_u8));
+    assert_eq!(
+        cheat_caller_address_checker_address,
+        ContractAddress::from(1_u8)
+    );
 
     let proxy_address = deploy_contract(
         &mut cached_state,
         &mut cheatnet_state,
-        "PrankCheckerProxy",
+        "CheatCallerAddressCheckerProxy",
         &[],
     );
-    let proxy_selector = felt_selector_from_name("get_prank_checkers_caller_address");
+    let proxy_selector = felt_selector_from_name("get_cheated_caller_address");
     let output = call_contract(
         &mut cached_state,
         &mut cheatnet_state,
         &proxy_address,
-        &proxy_selector,
-        &[prank_checker_address.into_()],
+        proxy_selector,
+        &[cheat_caller_address_checker_address.into_()],
     );
 
     assert_success(output, &[proxy_address.into_()]);
@@ -134,7 +147,7 @@ fn deploy_contract_on_predefined_address_after_its_usage() {
         &mut cached_state,
         &mut cheatnet_state,
         &proxy_address,
-        &proxy_selector,
+        proxy_selector,
         &[Felt252::from(323)],
     );
 
@@ -149,7 +162,9 @@ fn deploy_contract_on_predefined_address_after_its_usage() {
 
     let contracts_data = get_contracts();
 
-    let class_hash = declare(&mut cached_state, "SpyEventsChecker", &contracts_data).unwrap();
+    let class_hash = declare(&mut cached_state, "SpyEventsChecker", &contracts_data)
+        .unwrap()
+        .unwrap_success();
     deploy_at_wrapper(
         &mut cached_state,
         &mut cheatnet_state,
@@ -163,7 +178,7 @@ fn deploy_contract_on_predefined_address_after_its_usage() {
         &mut cached_state,
         &mut cheatnet_state,
         &proxy_address,
-        &proxy_selector,
+        proxy_selector,
         &[Felt252::from(323)],
     );
 
@@ -177,7 +192,9 @@ fn try_to_deploy_at_0() {
 
     let contracts_data = get_contracts();
 
-    let class_hash = declare(&mut cached_state, "HelloStarknet", &contracts_data).unwrap();
+    let class_hash = declare(&mut cached_state, "HelloStarknet", &contracts_data)
+        .unwrap()
+        .unwrap_success();
     let output = deploy_at_wrapper(
         &mut cached_state,
         &mut cheatnet_state,
@@ -200,7 +217,9 @@ fn deploy_calldata_no_constructor() {
 
     let contracts_data = get_contracts();
 
-    let class_hash = declare(&mut cached_state, "HelloStarknet", &contracts_data).unwrap();
+    let class_hash = declare(&mut cached_state, "HelloStarknet", &contracts_data)
+        .unwrap()
+        .unwrap_success();
 
     let output = deploy_wrapper(
         &mut cached_state,
@@ -224,7 +243,9 @@ fn deploy_missing_arguments_in_constructor() {
 
     let contracts_data = get_contracts();
 
-    let class_hash = declare(&mut cached_state, "ConstructorSimple2", &contracts_data).unwrap();
+    let class_hash = declare(&mut cached_state, "ConstructorSimple2", &contracts_data)
+        .unwrap()
+        .unwrap_success();
 
     let output = deploy_wrapper(
         &mut cached_state,
@@ -235,7 +256,7 @@ fn deploy_missing_arguments_in_constructor() {
 
     assert!(match output {
         Err(CheatcodeError::Unrecoverable(EnhancedHintError::Hint(HintError::CustomHint(msg)))) =>
-            msg.as_ref() == "0x4661696c656420746f20646573657269616c697a6520706172616d202332 ('Failed to deserialize param #2')",
+            msg.as_ref() == "\n    0x4661696c656420746f20646573657269616c697a6520706172616d202332 ('Failed to deserialize param #2')\n",
         _ => false,
     });
 }
@@ -247,7 +268,9 @@ fn deploy_too_many_arguments_in_constructor() {
 
     let contracts_data = get_contracts();
 
-    let class_hash = declare(&mut cached_state, "ConstructorSimple", &contracts_data).unwrap();
+    let class_hash = declare(&mut cached_state, "ConstructorSimple", &contracts_data)
+        .unwrap()
+        .unwrap_success();
 
     let output = deploy_wrapper(
         &mut cached_state,
@@ -258,7 +281,7 @@ fn deploy_too_many_arguments_in_constructor() {
 
     assert!(match output {
         Err(CheatcodeError::Unrecoverable(EnhancedHintError::Hint(HintError::CustomHint(msg)))) =>
-            msg.as_ref() == "0x496e70757420746f6f206c6f6e6720666f7220617267756d656e7473 ('Input too long for arguments')",
+            msg.as_ref() == "\n    0x496e70757420746f6f206c6f6e6720666f7220617267756d656e7473 ('Input too long for arguments')\n",
         _ => false,
     });
 }
@@ -282,7 +305,7 @@ fn deploy_invalid_class_hash() {
     assert!(matches!(
         output,
         Err(CheatcodeError::Unrecoverable(EnhancedHintError::Hint(HintError::CustomHint(msg))))
-        if msg.as_ref().contains(class_hash.to_string().as_str()),
+        if msg.as_ref().contains(class_hash.to_hex_string().trim_start_matches("0x")),
     ));
 }
 
@@ -304,7 +327,7 @@ fn deploy_invokes_constructor() {
         &mut cached_state,
         &mut cheatnet_state,
         &contract_address,
-        &selector,
+        selector,
         &[],
     );
 
@@ -318,7 +341,9 @@ fn deploy_at_invokes_constructor() {
 
     let contracts_data = get_contracts();
 
-    let class_hash = declare(&mut cached_state, "ConstructorSimple", &contracts_data).unwrap();
+    let class_hash = declare(&mut cached_state, "ConstructorSimple", &contracts_data)
+        .unwrap()
+        .unwrap_success();
 
     let contract_address = deploy_at_wrapper(
         &mut cached_state,
@@ -335,7 +360,7 @@ fn deploy_at_invokes_constructor() {
         &mut cached_state,
         &mut cheatnet_state,
         &contract_address,
-        &selector,
+        selector,
         &[],
     );
 

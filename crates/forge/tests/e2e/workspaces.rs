@@ -19,12 +19,12 @@ fn root_workspace_without_arguments() {
         Running 1 test(s) from src/
         [PASS] hello_workspaces::tests::test_simple [..]
         Running 2 test(s) from tests/
-        [FAIL] tests::test_failing::test_failing
+        [FAIL] hello_workspaces_integrationtest::test_failing::test_failing
         
         Failure data:
             0x6661696c696e6720636865636b ('failing check')
         
-        [FAIL] tests::test_failing::test_another_failing
+        [FAIL] hello_workspaces_integrationtest::test_failing::test_another_failing
 
         Failure data:
             0x6661696c696e6720636865636b ('failing check')
@@ -32,8 +32,8 @@ fn root_workspace_without_arguments() {
         Tests: 1 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:
-            tests::test_failing::test_failing
-            tests::test_failing::test_another_failing
+            hello_workspaces_integrationtest::test_failing::test_failing
+            hello_workspaces_integrationtest::test_failing::test_another_failing
         "},
     );
 }
@@ -59,10 +59,10 @@ fn root_workspace_specific_package() {
         Running 1 test(s) from src/
         [PASS] addition::tests::it_works [..]
         Running 4 test(s) from tests/
-        [PASS] tests::nested::simple_case [..]
-        [PASS] tests::nested::contract_test [..]
-        [PASS] tests::nested::test_nested::test_two [..]
-        [PASS] tests::nested::test_nested::test_two_and_two [..]
+        [PASS] addition_integrationtest::nested::simple_case [..]
+        [PASS] addition_integrationtest::nested::contract_test [..]
+        [PASS] addition_integrationtest::nested::test_nested::test_two [..]
+        [PASS] addition_integrationtest::nested::test_nested::test_two_and_two [..]
         Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         "},
     );
@@ -90,10 +90,10 @@ fn root_workspace_specific_package2() {
         [PASS] fibonacci::tests::it_works [..]
         [PASS] fibonacci::tests::contract_test [..]
         Running 4 test(s) from tests/
-        [PASS] tests::lib_test [..]
-        [PASS] tests::abc::abc_test [..]
-        [PASS] tests::abc::efg::efg_test [..]
-        [FAIL] tests::abc::efg::failing_test
+        [PASS] fibonacci_tests::lib_test [..]
+        [PASS] fibonacci_tests::abc::abc_test [..]
+        [PASS] fibonacci_tests::abc::efg::efg_test [..]
+        [FAIL] fibonacci_tests::abc::efg::failing_test
         
         Failure data:
             0x0 ('')
@@ -101,7 +101,7 @@ fn root_workspace_specific_package2() {
         Tests: 5 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:
-            tests::abc::efg::failing_test
+            fibonacci_tests::abc::efg::failing_test
         "},
     );
 }
@@ -126,7 +126,7 @@ fn root_workspace_specific_package_and_name() {
         Collected 1 test(s) from addition package
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
-        [PASS] tests::nested::simple_case [..]
+        [PASS] addition_integrationtest::nested::simple_case [..]
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 4 filtered out
         "},
     );
@@ -152,12 +152,12 @@ fn root_workspace_specify_root_package() {
         Running 1 test(s) from src/
         [PASS] hello_workspaces::tests::test_simple [..]
         Running 2 test(s) from tests/
-        [FAIL] tests::test_failing::test_failing
+        [FAIL] hello_workspaces_integrationtest::test_failing::test_failing
         
         Failure data:
             0x6661696c696e6720636865636b ('failing check')
         
-        [FAIL] tests::test_failing::test_another_failing
+        [FAIL] hello_workspaces_integrationtest::test_failing::test_another_failing
 
         Failure data:
             0x6661696c696e6720636865636b ('failing check')
@@ -165,8 +165,8 @@ fn root_workspace_specify_root_package() {
         Tests: 1 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:
-            tests::test_failing::test_failing
-            tests::test_failing::test_another_failing
+            hello_workspaces_integrationtest::test_failing::test_failing
+            hello_workspaces_integrationtest::test_failing::test_another_failing
         "},
     );
 }
@@ -192,10 +192,10 @@ fn root_workspace_inside_nested_package() {
         Running 1 test(s) from src/
         [PASS] addition::tests::it_works [..]
         Running 4 test(s) from tests/
-        [PASS] tests::nested::simple_case [..]
-        [PASS] tests::nested::contract_test [..]
-        [PASS] tests::nested::test_nested::test_two [..]
-        [PASS] tests::nested::test_nested::test_two_and_two [..]
+        [PASS] addition_integrationtest::nested::simple_case [..]
+        [PASS] addition_integrationtest::nested::contract_test [..]
+        [PASS] addition_integrationtest::nested::test_nested::test_two [..]
+        [PASS] addition_integrationtest::nested::test_nested::test_two_and_two [..]
         Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         "},
     );
@@ -222,10 +222,10 @@ fn root_workspace_for_entire_workspace() {
         Running 1 test(s) from src/
         [PASS] addition::tests::it_works [..]
         Running 4 test(s) from tests/
-        [PASS] tests::nested::simple_case [..]
-        [PASS] tests::nested::contract_test [..]
-        [PASS] tests::nested::test_nested::test_two [..]
-        [PASS] tests::nested::test_nested::test_two_and_two [..]
+        [PASS] addition_integrationtest::nested::simple_case [..]
+        [PASS] addition_integrationtest::nested::contract_test [..]
+        [PASS] addition_integrationtest::nested::test_nested::test_two [..]
+        [PASS] addition_integrationtest::nested::test_nested::test_two_and_two [..]
         Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         
         
@@ -234,10 +234,10 @@ fn root_workspace_for_entire_workspace() {
         [PASS] fibonacci::tests::it_works [..]
         [PASS] fibonacci::tests::contract_test [..]
         Running 4 test(s) from tests/
-        [PASS] tests::lib_test [..]
-        [PASS] tests::abc::abc_test [..]
-        [PASS] tests::abc::efg::efg_test [..]
-        [FAIL] tests::abc::efg::failing_test
+        [PASS] fibonacci_tests::lib_test [..]
+        [PASS] fibonacci_tests::abc::abc_test [..]
+        [PASS] fibonacci_tests::abc::efg::efg_test [..]
+        [FAIL] fibonacci_tests::abc::efg::failing_test
         
         Failure data:
             0x0 ('')
@@ -249,12 +249,12 @@ fn root_workspace_for_entire_workspace() {
         Running 1 test(s) from src/
         [PASS] hello_workspaces::tests::test_simple [..]
         Running 2 test(s) from tests/
-        [FAIL] tests::test_failing::test_failing
+        [FAIL] hello_workspaces_integrationtest::test_failing::test_failing
         
         Failure data:
             0x6661696c696e6720636865636b ('failing check')
         
-        [FAIL] tests::test_failing::test_another_failing
+        [FAIL] hello_workspaces_integrationtest::test_failing::test_another_failing
 
         Failure data:
             0x6661696c696e6720636865636b ('failing check')
@@ -262,9 +262,9 @@ fn root_workspace_for_entire_workspace() {
         Tests: 1 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:
-            tests::abc::efg::failing_test
-            tests::test_failing::test_failing
-            tests::test_failing::test_another_failing
+            fibonacci_tests::abc::efg::failing_test
+            hello_workspaces_integrationtest::test_failing::test_failing
+            hello_workspaces_integrationtest::test_failing::test_another_failing
         "},
     );
 }
@@ -294,10 +294,10 @@ fn root_workspace_for_entire_workspace_inside_package() {
         Running 1 test(s) from src/
         [PASS] addition::tests::it_works [..]
         Running 4 test(s) from tests/
-        [PASS] tests::nested::simple_case [..]
-        [PASS] tests::nested::contract_test [..]
-        [PASS] tests::nested::test_nested::test_two [..]
-        [PASS] tests::nested::test_nested::test_two_and_two [..]
+        [PASS] addition_integrationtest::nested::simple_case [..]
+        [PASS] addition_integrationtest::nested::contract_test [..]
+        [PASS] addition_integrationtest::nested::test_nested::test_two [..]
+        [PASS] addition_integrationtest::nested::test_nested::test_two_and_two [..]
         Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         
         
@@ -306,10 +306,10 @@ fn root_workspace_for_entire_workspace_inside_package() {
         [PASS] fibonacci::tests::it_works [..]
         [PASS] fibonacci::tests::contract_test [..]
         Running 4 test(s) from tests/
-        [PASS] tests::lib_test [..]
-        [PASS] tests::abc::abc_test [..]
-        [PASS] tests::abc::efg::efg_test [..]
-        [FAIL] tests::abc::efg::failing_test
+        [PASS] fibonacci_tests::lib_test [..]
+        [PASS] fibonacci_tests::abc::abc_test [..]
+        [PASS] fibonacci_tests::abc::efg::efg_test [..]
+        [FAIL] fibonacci_tests::abc::efg::failing_test
         
         Failure data:
             0x0 ('')
@@ -321,12 +321,12 @@ fn root_workspace_for_entire_workspace_inside_package() {
         Running 1 test(s) from src/
         [PASS] hello_workspaces::tests::test_simple [..]
         Running 2 test(s) from tests/
-        [FAIL] tests::test_failing::test_failing
+        [FAIL] hello_workspaces_integrationtest::test_failing::test_failing
         
         Failure data:
             0x6661696c696e6720636865636b ('failing check')
         
-        [FAIL] tests::test_failing::test_another_failing
+        [FAIL] hello_workspaces_integrationtest::test_failing::test_another_failing
 
         Failure data:
             0x6661696c696e6720636865636b ('failing check')
@@ -334,9 +334,9 @@ fn root_workspace_for_entire_workspace_inside_package() {
         Tests: 1 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:
-            tests::abc::efg::failing_test
-            tests::test_failing::test_failing
-            tests::test_failing::test_another_failing
+            fibonacci_tests::abc::efg::failing_test
+            hello_workspaces_integrationtest::test_failing::test_failing
+            hello_workspaces_integrationtest::test_failing::test_another_failing
         "},
     );
 }
@@ -389,10 +389,10 @@ fn virtual_workspace_without_arguments() {
         [PASS] fibonacci2::tests::it_works [..]
         [PASS] fibonacci2::tests::contract_test [..]
         Running 4 test(s) from tests/
-        [PASS] tests::lib_test [..]
-        [PASS] tests::abc::abc_test [..]
-        [PASS] tests::abc::efg::efg_test [..]
-        [FAIL] tests::abc::efg::failing_test
+        [PASS] fibonacci2_tests::lib_test [..]
+        [PASS] fibonacci2_tests::abc::abc_test [..]
+        [PASS] fibonacci2_tests::abc::efg::efg_test [..]
+        [FAIL] fibonacci2_tests::abc::efg::failing_test
         
         Failure data:
             0x0 ('')
@@ -404,14 +404,14 @@ fn virtual_workspace_without_arguments() {
         Running 1 test(s) from src/
         [PASS] subtraction::tests::it_works [..]
         Running 4 test(s) from tests/
-        [PASS] tests::nested::simple_case [..]
-        [PASS] tests::nested::contract_test [..]
-        [PASS] tests::nested::test_nested::test_two [..]
-        [PASS] tests::nested::test_nested::test_two_and_two [..]
+        [PASS] subtraction_integrationtest::nested::simple_case [..]
+        [PASS] subtraction_integrationtest::nested::contract_test [..]
+        [PASS] subtraction_integrationtest::nested::test_nested::test_two [..]
+        [PASS] subtraction_integrationtest::nested::test_nested::test_two_and_two [..]
         Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:
-            tests::abc::efg::failing_test
+            fibonacci2_tests::abc::efg::failing_test
         "},
     );
 }
@@ -434,10 +434,10 @@ fn virtual_workspace_specify_package() {
         Running 1 test(s) from src/
         [PASS] subtraction::tests::it_works [..]
         Running 4 test(s) from tests/
-        [PASS] tests::nested::simple_case [..]
-        [PASS] tests::nested::contract_test [..]
-        [PASS] tests::nested::test_nested::test_two [..]
-        [PASS] tests::nested::test_nested::test_two_and_two [..]
+        [PASS] subtraction_integrationtest::nested::simple_case [..]
+        [PASS] subtraction_integrationtest::nested::contract_test [..]
+        [PASS] subtraction_integrationtest::nested::test_nested::test_two [..]
+        [PASS] subtraction_integrationtest::nested::test_nested::test_two_and_two [..]
         Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         "},
     );
@@ -461,10 +461,10 @@ fn virtual_workspace_specific_package2() {
         [PASS] fibonacci2::tests::it_works [..]
         [PASS] fibonacci2::tests::contract_test [..]
         Running 4 test(s) from tests/
-        [PASS] tests::lib_test [..]
-        [PASS] tests::abc::abc_test [..]
-        [PASS] tests::abc::efg::efg_test [..]
-        [FAIL] tests::abc::efg::failing_test
+        [PASS] fibonacci2_tests::lib_test [..]
+        [PASS] fibonacci2_tests::abc::abc_test [..]
+        [PASS] fibonacci2_tests::abc::efg::efg_test [..]
+        [FAIL] fibonacci2_tests::abc::efg::failing_test
         
         Failure data:
             0x0 ('')
@@ -472,7 +472,7 @@ fn virtual_workspace_specific_package2() {
         Tests: 5 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:
-            tests::abc::efg::failing_test
+            fibonacci2_tests::abc::efg::failing_test
         "},
     );
 }
@@ -497,7 +497,7 @@ fn virtual_workspace_specific_package_and_name() {
         Collected 1 test(s) from subtraction package
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
-        [PASS] tests::nested::simple_case [..]
+        [PASS] subtraction_integrationtest::nested::simple_case [..]
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 4 filtered out
         "},
     );
@@ -523,10 +523,10 @@ fn virtual_workspace_inside_nested_package() {
         Running 1 test(s) from src/
         [PASS] subtraction::tests::it_works [..]
         Running 4 test(s) from tests/
-        [PASS] tests::nested::simple_case [..]
-        [PASS] tests::nested::contract_test [..]
-        [PASS] tests::nested::test_nested::test_two [..]
-        [PASS] tests::nested::test_nested::test_two_and_two [..]
+        [PASS] subtraction_integrationtest::nested::simple_case [..]
+        [PASS] subtraction_integrationtest::nested::contract_test [..]
+        [PASS] subtraction_integrationtest::nested::test_nested::test_two [..]
+        [PASS] subtraction_integrationtest::nested::test_nested::test_two_and_two [..]
         Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         "},
     );
@@ -552,10 +552,10 @@ fn virtual_workspace_for_entire_workspace() {
         [PASS] fibonacci2::tests::it_works [..]
         [PASS] fibonacci2::tests::contract_test [..]
         Running 4 test(s) from tests/
-        [PASS] tests::lib_test [..]
-        [PASS] tests::abc::abc_test [..]
-        [PASS] tests::abc::efg::efg_test [..]
-        [FAIL] tests::abc::efg::failing_test
+        [PASS] fibonacci2_tests::lib_test [..]
+        [PASS] fibonacci2_tests::abc::abc_test [..]
+        [PASS] fibonacci2_tests::abc::efg::efg_test [..]
+        [FAIL] fibonacci2_tests::abc::efg::failing_test
         
         Failure data:
             0x0 ('')
@@ -567,14 +567,14 @@ fn virtual_workspace_for_entire_workspace() {
         Running 1 test(s) from src/
         [PASS] subtraction::tests::it_works [..]
         Running 4 test(s) from tests/
-        [PASS] tests::nested::simple_case [..]
-        [PASS] tests::nested::contract_test [..]
-        [PASS] tests::nested::test_nested::test_two [..]
-        [PASS] tests::nested::test_nested::test_two_and_two [..]
+        [PASS] subtraction_integrationtest::nested::simple_case [..]
+        [PASS] subtraction_integrationtest::nested::contract_test [..]
+        [PASS] subtraction_integrationtest::nested::test_nested::test_two [..]
+        [PASS] subtraction_integrationtest::nested::test_nested::test_two_and_two [..]
         Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:
-            tests::abc::efg::failing_test
+            fibonacci2_tests::abc::efg::failing_test
         "},
     );
 }
@@ -600,10 +600,10 @@ fn virtual_workspace_for_entire_workspace_inside_package() {
         [PASS] fibonacci2::tests::it_works [..]
         [PASS] fibonacci2::tests::contract_test [..]
         Running 4 test(s) from tests/
-        [PASS] tests::lib_test [..]
-        [PASS] tests::abc::abc_test [..]
-        [PASS] tests::abc::efg::efg_test [..]
-        [FAIL] tests::abc::efg::failing_test
+        [PASS] fibonacci2_tests::lib_test [..]
+        [PASS] fibonacci2_tests::abc::abc_test [..]
+        [PASS] fibonacci2_tests::abc::efg::efg_test [..]
+        [FAIL] fibonacci2_tests::abc::efg::failing_test
         
         Failure data:
             0x0 ('')
@@ -615,14 +615,14 @@ fn virtual_workspace_for_entire_workspace_inside_package() {
         Running 1 test(s) from src/
         [PASS] subtraction::tests::it_works [..]
         Running 4 test(s) from tests/
-        [PASS] tests::nested::simple_case [..]
-        [PASS] tests::nested::contract_test [..]
-        [PASS] tests::nested::test_nested::test_two [..]
-        [PASS] tests::nested::test_nested::test_two_and_two [..]
+        [PASS] subtraction_integrationtest::nested::simple_case [..]
+        [PASS] subtraction_integrationtest::nested::contract_test [..]
+        [PASS] subtraction_integrationtest::nested::test_nested::test_two [..]
+        [PASS] subtraction_integrationtest::nested::test_nested::test_two_and_two [..]
         Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:
-            tests::abc::efg::failing_test
+            fibonacci2_tests::abc::efg::failing_test
         "},
     );
 }

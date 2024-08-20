@@ -1,10 +1,8 @@
 use anyhow::Result;
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
-use blockifier::execution::execution_utils::felt_to_stark_felt;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::execution::syscalls::SyscallResult;
 use blockifier::state::errors::StateError;
-use cairo_felt::Felt252;
 use cairo_lang_casm::hints::{Hint, StarknetHint};
 use cairo_lang_casm::operand::{CellRef, ResOperand};
 use cairo_lang_runner::casm_run::{
@@ -24,16 +22,19 @@ use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cairo_vm::vm::vm_core::VirtualMachine;
 use conversions::byte_array::ByteArray;
-use conversions::felt252::SerializeAsFelt252Vec;
+use conversions::serde::deserialize::BufferReadError;
+use conversions::serde::deserialize::BufferReader;
+use conversions::serde::serialize::raw::RawFeltVec;
+use conversions::serde::serialize::{CairoSerialize, SerializeToFeltVec};
+use indoc::indoc;
 use starknet_api::StarknetApiError;
+use starknet_types_core::felt::Felt as Felt252;
 use std::any::Any;
 use std::collections::HashMap;
 use std::io;
 use thiserror::Error;
-use utils::BufferReader;
 
 pub mod starknet;
-pub mod utils;
 
 // from core/src/starknet/testing.cairo
 const CAIRO_TEST_CHEATCODES: [&str; 14] = [
@@ -101,7 +102,7 @@ impl<'a> SignalPropagator for StarknetRuntime<'a> {
     fn propagate_cheatcode_signal(&mut self, _selector: &str, _inputs: &[Felt252]) {}
 }
 
-pub fn parse_selector(selector: &BigIntAsHex) -> Result<String, HintError> {
+fn parse_selector(selector: &BigIntAsHex) -> Result<String, HintError> {
     let selector = &selector.value.to_bytes_be().1;
     let selector = std::str::from_utf8(selector)
         .map_err(|_| CustomHint(Box::from("Failed to parse the cheatcode selector")))?;
@@ -184,16 +185,16 @@ impl<Extension: ExtensionLogic> HintProcessorLogic for ExtendedRuntime<Extension
         constants: &HashMap<String, Felt252>,
     ) -> Result<(), HintError> {
         let maybe_extended_hint = hint_data.downcast_ref::<Hint>();
-        if let Some(Hint::Starknet(starknet_hint)) = maybe_extended_hint {
-            if let StarknetHint::Cheatcode {
-                selector,
-                input_start,
-                input_end,
-                output_start,
-                output_end,
-            } = starknet_hint
-            {
-                return self.execute_cheatcode_hint(
+
+        match maybe_extended_hint {
+            Some(Hint::Starknet(starknet_hint)) => match starknet_hint {
+                StarknetHint::Cheatcode {
+                    selector,
+                    input_start,
+                    input_end,
+                    output_start,
+                    output_end,
+                } => self.execute_cheatcode_hint(
                     vm,
                     exec_scopes,
                     hint_data,
@@ -205,14 +206,15 @@ impl<Extension: ExtensionLogic> HintProcessorLogic for ExtendedRuntime<Extension
                         output_start,
                         output_end,
                     },
-                );
-            } else if let StarknetHint::SystemCall { system } = starknet_hint {
-                return self.execute_syscall_hint(vm, exec_scopes, hint_data, constants, system);
-            }
+                ),
+                StarknetHint::SystemCall { system } => {
+                    self.execute_syscall_hint(vm, exec_scopes, hint_data, constants, system)
+                }
+            },
+            _ => self
+                .extended_runtime
+                .execute_hint(vm, exec_scopes, hint_data, constants),
         }
-
-        self.extended_runtime
-            .execute_hint(vm, exec_scopes, hint_data, constants)
     }
 
     fn compile_hint(
@@ -265,10 +267,11 @@ impl<Extension: ExtensionLogic> ExtendedRuntime<Extension> {
                 );
                 return res;
             }
-            Ok(CheatcodeHandlingResult::Handled(res)) => Ok(res),
-            Err(err) => Err(ByteArray::from(err.to_string().as_str()).serialize_no_magic()),
+            // it is serialized again to add `Result` discriminator
+            Ok(CheatcodeHandlingResult::Handled(res)) => Ok(RawFeltVec::new(res)),
+            Err(err) => Err(ByteArray::from(err.to_string().as_str())),
         }
-        .serialize_as_felt252_vec();
+        .serialize_to_vec();
 
         let mut buffer = MemBuffer::new_segment(vm);
         let result_start = buffer.ptr;
@@ -300,11 +303,13 @@ impl<Extension: ExtensionLogic> ExtendedRuntime<Extension> {
         self.verify_syscall_ptr(system_ptr)?;
 
         // We peek into memory to check the selector
-        let selector = DeprecatedSyscallSelector::try_from(felt_to_stark_felt(
-            &vm.get_integer(*self.get_mut_syscall_ptr()).unwrap(),
-        ))?;
+        let selector = DeprecatedSyscallSelector::try_from(
+            vm.get_integer(*self.get_mut_syscall_ptr())
+                .unwrap()
+                .into_owned(),
+        )?;
 
-        if let SyscallHandlingResult::Handled(()) =
+        if let SyscallHandlingResult::Handled =
             self.extension
                 .override_system_call(selector, vm, &mut self.extended_runtime)?
         {
@@ -382,7 +387,7 @@ impl<Extension: ExtensionLogic> ResourceTracker for ExtendedRuntime<Extension> {
 #[derive(Debug)]
 pub enum SyscallHandlingResult {
     Forwarded,
-    Handled(()),
+    Handled,
 }
 
 #[allow(dead_code)]
@@ -393,8 +398,8 @@ pub enum CheatcodeHandlingResult {
 }
 
 impl CheatcodeHandlingResult {
-    pub fn from_serializable(serializable: impl SerializeAsFelt252Vec) -> Self {
-        Self::Handled(serializable.serialize_as_felt252_vec())
+    pub fn from_serializable(serializable: impl CairoSerialize) -> Self {
+        Self::Handled(serializable.serialize_to_vec())
     }
 }
 
@@ -463,4 +468,18 @@ pub enum EnhancedHintError {
     StarknetApi(#[from] StarknetApiError),
     #[error("Failed to parse {path} file")]
     FileParsing { path: String },
+}
+
+impl From<BufferReadError> for EnhancedHintError {
+    fn from(value: BufferReadError) -> Self {
+        EnhancedHintError::Anyhow(
+            anyhow::Error::from(value)
+                .context(
+                    indoc!(r"
+                        Reading from buffer failed, this can be caused by calling starknet::testing::cheatcode with invalid arguments.
+                        Probably `snforge_std`/`sncast_std` version is incompatible, check above for incompatibility warning.
+                    ")
+                )
+        )
+    }
 }

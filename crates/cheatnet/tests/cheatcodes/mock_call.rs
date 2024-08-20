@@ -1,3 +1,5 @@
+use super::test_environment::TestEnvironment;
+use crate::common::assertions::ClassHashAssert;
 use crate::common::state::create_cached_state;
 use crate::common::{call_contract, deploy_wrapper};
 use crate::common::{felt_selector_from_name, recover_data};
@@ -5,14 +7,12 @@ use crate::{
     common::assertions::assert_success,
     common::{deploy_contract, get_contracts},
 };
-use cairo_felt::Felt252;
+use cairo_vm::Felt252;
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::declare;
 use cheatnet::state::{CheatSpan, CheatnetState};
 use conversions::IntoConv;
 use starknet::core::utils::get_selector_from_name;
 use starknet_api::core::ContractAddress;
-
-use super::test_environment::TestEnvironment;
 
 trait MockCallTrait {
     fn mock_call(
@@ -21,12 +21,6 @@ trait MockCallTrait {
         function_name: &str,
         ret_data: &[u128],
         span: CheatSpan,
-    );
-    fn start_mock_call(
-        &mut self,
-        contract_address: &ContractAddress,
-        function_name: &str,
-        ret_data: &[u128],
     );
     fn stop_mock_call(&mut self, contract_address: &ContractAddress, function_name: &str);
 }
@@ -46,21 +40,6 @@ impl MockCallTrait for TestEnvironment {
             function_selector.into_(),
             &ret_data,
             span,
-        );
-    }
-
-    fn start_mock_call(
-        &mut self,
-        contract_address: &ContractAddress,
-        function_name: &str,
-        ret_data: &[u128],
-    ) {
-        let ret_data: Vec<Felt252> = ret_data.iter().map(|x| Felt252::from(*x)).collect();
-        let function_selector = get_selector_from_name(function_name).unwrap();
-        self.cheatnet_state.start_mock_call(
-            *contract_address,
-            function_selector.into_(),
-            &ret_data,
         );
     }
 
@@ -96,7 +75,7 @@ fn mock_call_simple() {
         &mut cached_state,
         &mut cheatnet_state,
         &contract_address,
-        &selector,
+        selector,
         &[],
     );
 
@@ -128,7 +107,7 @@ fn mock_call_stop() {
         &mut cached_state,
         &mut cheatnet_state,
         &contract_address,
-        &selector,
+        selector,
         &[],
     );
 
@@ -140,7 +119,7 @@ fn mock_call_stop() {
         &mut cached_state,
         &mut cheatnet_state,
         &contract_address,
-        &selector,
+        selector,
         &[],
     );
 
@@ -167,7 +146,7 @@ fn mock_call_stop_no_start() {
         &mut cached_state,
         &mut cheatnet_state,
         &contract_address,
-        &selector,
+        selector,
         &[],
     );
 
@@ -189,28 +168,28 @@ fn mock_call_double() {
     let selector = felt_selector_from_name("get_thing");
 
     let ret_data = [Felt252::from(123)];
-    cheatnet_state.start_mock_call(contract_address, selector.clone(), &ret_data);
+    cheatnet_state.start_mock_call(contract_address, selector, &ret_data);
 
     let ret_data = [Felt252::from(999)];
-    cheatnet_state.start_mock_call(contract_address, selector.clone(), &ret_data);
+    cheatnet_state.start_mock_call(contract_address, selector, &ret_data);
 
     let output = call_contract(
         &mut cached_state,
         &mut cheatnet_state,
         &contract_address,
-        &selector,
+        selector,
         &[],
     );
 
     assert_success(output, &ret_data);
 
-    cheatnet_state.stop_mock_call(contract_address, selector.clone());
+    cheatnet_state.stop_mock_call(contract_address, selector);
 
     let output = call_contract(
         &mut cached_state,
         &mut cheatnet_state,
         &contract_address,
-        &selector,
+        selector,
         &[],
     );
 
@@ -242,7 +221,7 @@ fn mock_call_double_call() {
         &mut cached_state,
         &mut cheatnet_state,
         &contract_address,
-        &selector,
+        selector,
         &[],
     );
 
@@ -252,7 +231,7 @@ fn mock_call_double_call() {
         &mut cached_state,
         &mut cheatnet_state,
         &contract_address,
-        &selector,
+        selector,
         &[],
     );
 
@@ -283,7 +262,7 @@ fn mock_call_proxy() {
         &mut cached_state,
         &mut cheatnet_state,
         &contract_address,
-        &selector,
+        selector,
         &[],
     );
 
@@ -300,7 +279,7 @@ fn mock_call_proxy() {
         &mut cached_state,
         &mut cheatnet_state,
         &proxy_address,
-        &proxy_selector,
+        proxy_selector,
         &[contract_address.into_()],
     );
 
@@ -331,7 +310,7 @@ fn mock_call_proxy_with_other_syscall() {
         &mut cached_state,
         &mut cheatnet_state,
         &contract_address,
-        &selector,
+        selector,
         &[],
     );
 
@@ -348,7 +327,7 @@ fn mock_call_proxy_with_other_syscall() {
         &mut cached_state,
         &mut cheatnet_state,
         &proxy_address,
-        &proxy_selector,
+        proxy_selector,
         &[contract_address.into_()],
     );
 
@@ -380,7 +359,7 @@ fn mock_call_inner_call_no_effect() {
         &mut cached_state,
         &mut cheatnet_state,
         &contract_address,
-        &selector,
+        selector,
         &[],
     );
 
@@ -392,7 +371,7 @@ fn mock_call_inner_call_no_effect() {
         &mut cached_state,
         &mut cheatnet_state,
         &contract_address,
-        &selector,
+        selector,
         &[],
     );
 
@@ -405,7 +384,9 @@ fn mock_call_library_call_no_effect() {
     let mut cheatnet_state = CheatnetState::default();
 
     let contracts_data = get_contracts();
-    let class_hash = declare(&mut cached_state, "MockChecker", &contracts_data).unwrap();
+    let class_hash = declare(&mut cached_state, "MockChecker", &contracts_data)
+        .unwrap()
+        .unwrap_success();
 
     let contract_address = deploy_wrapper(
         &mut cached_state,
@@ -434,7 +415,7 @@ fn mock_call_library_call_no_effect() {
         &mut cached_state,
         &mut cheatnet_state,
         &lib_call_address,
-        &lib_call_selector,
+        lib_call_selector,
         &[class_hash.into_()],
     );
 
@@ -447,7 +428,9 @@ fn mock_call_before_deployment() {
     let mut cheatnet_state = CheatnetState::default();
 
     let contracts_data = get_contracts();
-    let class_hash = declare(&mut cached_state, "MockChecker", &contracts_data).unwrap();
+    let class_hash = declare(&mut cached_state, "MockChecker", &contracts_data)
+        .unwrap()
+        .unwrap_success();
 
     let precalculated_address =
         cheatnet_state.precalculate_address(&class_hash, &[Felt252::from(420)]);
@@ -474,7 +457,7 @@ fn mock_call_before_deployment() {
         &mut cached_state,
         &mut cheatnet_state,
         &contract_address,
-        &selector,
+        selector,
         &[],
     );
 
@@ -506,7 +489,7 @@ fn mock_call_not_implemented() {
         &mut cached_state,
         &mut cheatnet_state,
         &contract_address,
-        &selector,
+        selector,
         &[],
     );
 
@@ -520,7 +503,9 @@ fn mock_call_in_constructor() {
 
     let contracts_data = get_contracts();
 
-    let class_hash = declare(&mut cached_state, "HelloStarknet", &contracts_data).unwrap();
+    let class_hash = declare(&mut cached_state, "HelloStarknet", &contracts_data)
+        .unwrap()
+        .unwrap_success();
     let balance_contract_address =
         deploy_wrapper(&mut cached_state, &mut cheatnet_state, &class_hash, &[]).unwrap();
     let ret_data = [Felt252::from(223)];
@@ -530,7 +515,9 @@ fn mock_call_in_constructor() {
         &ret_data,
     );
 
-    let class_hash = declare(&mut cached_state, "ConstructorMockChecker", &contracts_data).unwrap();
+    let class_hash = declare(&mut cached_state, "ConstructorMockChecker", &contracts_data)
+        .unwrap()
+        .unwrap_success();
     let contract_address = deploy_wrapper(
         &mut cached_state,
         &mut cheatnet_state,
@@ -545,7 +532,7 @@ fn mock_call_in_constructor() {
         &mut cached_state,
         &mut cheatnet_state,
         &contract_address,
-        &selector,
+        selector,
         &[],
     );
     let output_data = recover_data(output);
@@ -585,7 +572,7 @@ fn mock_call_two_methods() {
         &mut cached_state,
         &mut cheatnet_state,
         &contract_address,
-        &selector1,
+        selector1,
         &[],
     );
 
@@ -595,7 +582,7 @@ fn mock_call_two_methods() {
         &mut cached_state,
         &mut cheatnet_state,
         &contract_address,
-        &selector2,
+        selector2,
         &[],
     );
 
@@ -622,7 +609,7 @@ fn mock_call_nonexisting_contract() {
         &mut cached_state,
         &mut cheatnet_state,
         &contract_address,
-        &selector,
+        selector,
         &[],
     );
 

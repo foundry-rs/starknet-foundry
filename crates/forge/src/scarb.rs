@@ -1,14 +1,20 @@
-use crate::compiled_raw::CompiledTestCrateRaw;
-use crate::scarb::config::{ForgeConfig, RawForgeConfig};
+use crate::scarb::config::{ForgeConfigFromScarb, RawForgeConfig};
 use anyhow::{Context, Result};
+use cairo_lang_sierra::program::VersionedProgram;
 use camino::Utf8Path;
 use configuration::PackageConfig;
+use forge_runner::package_tests::raw::TestTargetRaw;
+use forge_runner::package_tests::TestTargetLocation;
 use scarb_api::ScarbCommand;
+use scarb_metadata::{PackageMetadata, TargetMetadata};
 use scarb_ui::args::{FeaturesSpec, PackagesFilter};
+use std::collections::HashMap;
+use std::fs::read_to_string;
+use std::io::ErrorKind;
 
 pub mod config;
 
-impl PackageConfig for ForgeConfig {
+impl PackageConfig for ForgeConfigFromScarb {
     fn tool_name() -> &'static str {
         "snforge"
     }
@@ -43,7 +49,8 @@ pub fn build_test_artifacts_with_scarb(
     features_spec: FeaturesSpec,
 ) -> Result<()> {
     ScarbCommand::new_with_stdio()
-        .arg("snforge-test-collector")
+        .arg("build")
+        .arg("--test")
         .packages_filter(filter)
         .features_spec(features_spec)
         .run()
@@ -51,22 +58,71 @@ pub fn build_test_artifacts_with_scarb(
     Ok(())
 }
 
-pub(crate) fn load_test_artifacts(
-    snforge_target_dir_path: &Utf8Path,
-    package_name: &str,
-) -> Result<Vec<CompiledTestCrateRaw>> {
-    let snforge_test_artifact_path =
-        snforge_target_dir_path.join(format!("{package_name}.snforge_sierra.json"));
-    let test_crates = serde_json::from_str::<Vec<CompiledTestCrateRaw>>(&std::fs::read_to_string(
-        snforge_test_artifact_path,
-    )?)?;
-    Ok(test_crates)
+/// collecting by name allow us to dedup targets
+/// we do it because they use same sierra and we display them without distinction anyway
+fn test_targets_by_name(package: &PackageMetadata) -> HashMap<String, &TargetMetadata> {
+    fn test_target_name(target: &TargetMetadata) -> String {
+        // this is logic copied from scarb: https://github.com/software-mansion/scarb/blob/90ab01cb6deee48210affc2ec1dc94d540ab4aea/extensions/scarb-cairo-test/src/main.rs#L115
+        target
+            .params
+            .get("group-id") // by unit tests grouping
+            .and_then(|v| v.as_str())
+            .map(ToString::to_string)
+            .unwrap_or(target.name.clone()) // else by integration test name
+    }
+
+    package
+        .targets
+        .iter()
+        .filter(|target| target.kind == "test")
+        .map(|target| (test_target_name(target), target))
+        .collect()
+}
+
+pub fn load_test_artifacts(
+    target_dir: &Utf8Path,
+    package: &PackageMetadata,
+) -> Result<Vec<TestTargetRaw>> {
+    let mut targets = vec![];
+
+    let dedup_targets = test_targets_by_name(package);
+
+    for (target_name, target) in dedup_targets {
+        let tests_location =
+            if target.params.get("test-type").and_then(|v| v.as_str()) == Some("unit") {
+                TestTargetLocation::Lib
+            } else {
+                TestTargetLocation::Tests
+            };
+
+        let target_file = format!("{target_name}.test.sierra.json");
+
+        match read_to_string(target_dir.join(target_file)) {
+            Ok(value) => {
+                let versioned_program = serde_json::from_str::<VersionedProgram>(&value)?;
+
+                let sierra_program = match versioned_program {
+                    VersionedProgram::V1 { program, .. } => program,
+                };
+
+                let test_target = TestTargetRaw {
+                    sierra_program,
+                    tests_location,
+                };
+
+                targets.push(test_target);
+            }
+            Err(err) if err.kind() == ErrorKind::NotFound => {}
+            Err(err) => Err(err)?,
+        }
+    }
+
+    Ok(targets)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::compiled_raw::RawForkParams;
     use crate::scarb::config::ForkTarget;
     use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
     use assert_fs::TempDir;
@@ -101,10 +157,6 @@ mod tests {
                 [package]
                 name = "{}"
                 version = "0.1.0"
-
-                [[target.starknet-contract]]
-                sierra = true
-                casm = true
 
                 [dependencies]
                 starknet = "2.4.0"
@@ -142,7 +194,7 @@ mod tests {
             .run()
             .unwrap();
 
-        let config = load_package_config::<ForgeConfig>(
+        let config = load_package_config::<ForgeConfigFromScarb>(
             &scarb_metadata,
             &scarb_metadata.workspace.members[0],
         )
@@ -150,32 +202,26 @@ mod tests {
 
         assert_eq!(
             config,
-            ForgeConfig {
+            ForgeConfigFromScarb {
                 exit_first: false,
                 fork: vec![
                     ForkTarget::new(
                         "FIRST_FORK_NAME".to_string(),
-                        RawForkParams {
-                            url: "http://some.rpc.url".to_string(),
-                            block_id_type: "number".to_string(),
-                            block_id_value: "1".to_string(),
-                        },
+                        "http://some.rpc.url".to_string(),
+                        "number".to_string(),
+                        "1".to_string(),
                     ),
                     ForkTarget::new(
                         "SECOND_FORK_NAME".to_string(),
-                        RawForkParams {
-                            url: "http://some.rpc.url".to_string(),
-                            block_id_type: "hash".to_string(),
-                            block_id_value: "1".to_string(),
-                        },
+                        "http://some.rpc.url".to_string(),
+                        "hash".to_string(),
+                        "1".to_string(),
                     ),
                     ForkTarget::new(
                         "THIRD_FORK_NAME".to_string(),
-                        RawForkParams {
-                            url: "http://some.rpc.url".to_string(),
-                            block_id_type: "tag".to_string(),
-                            block_id_value: "Latest".to_string(),
-                        },
+                        "http://some.rpc.url".to_string(),
+                        "tag".to_string(),
+                        "Latest".to_string(),
                     )
                 ],
                 fuzzer_runs: None,
@@ -197,7 +243,7 @@ mod tests {
             .run()
             .unwrap();
 
-        let result = load_package_config::<ForgeConfig>(
+        let result = load_package_config::<ForgeConfigFromScarb>(
             &scarb_metadata,
             &PackageId::from(String::from("12345679")),
         );
@@ -226,7 +272,7 @@ mod tests {
             .run()
             .unwrap();
 
-        let config = load_package_config::<ForgeConfig>(
+        let config = load_package_config::<ForgeConfigFromScarb>(
             &scarb_metadata,
             &scarb_metadata.workspace.members[0],
         )
@@ -262,7 +308,7 @@ mod tests {
             .current_dir(temp.path())
             .run()
             .unwrap();
-        let err = load_package_config::<ForgeConfig>(
+        let err = load_package_config::<ForgeConfigFromScarb>(
             &scarb_metadata,
             &scarb_metadata.workspace.members[0],
         )
@@ -294,7 +340,7 @@ mod tests {
             .current_dir(temp.path())
             .run()
             .unwrap();
-        let err = load_package_config::<ForgeConfig>(
+        let err = load_package_config::<ForgeConfigFromScarb>(
             &scarb_metadata,
             &scarb_metadata.workspace.members[0],
         )
@@ -325,7 +371,7 @@ mod tests {
             .run()
             .unwrap();
 
-        let err = load_package_config::<ForgeConfig>(
+        let err = load_package_config::<ForgeConfigFromScarb>(
             &scarb_metadata,
             &scarb_metadata.workspace.members[0],
         )
@@ -358,7 +404,7 @@ mod tests {
             .run()
             .unwrap();
 
-        let err = load_package_config::<ForgeConfig>(
+        let err = load_package_config::<ForgeConfigFromScarb>(
             &scarb_metadata,
             &scarb_metadata.workspace.members[0],
         )
@@ -390,7 +436,7 @@ mod tests {
             .unwrap();
 
         env::set_var("ENV_URL_FORK234980670176", "http://some.rpc.url_from_env");
-        let config = load_package_config::<ForgeConfig>(
+        let config = load_package_config::<ForgeConfigFromScarb>(
             &scarb_metadata,
             &scarb_metadata.workspace.members[0],
         )
@@ -398,15 +444,13 @@ mod tests {
 
         assert_eq!(
             config,
-            ForgeConfig {
+            ForgeConfigFromScarb {
                 exit_first: false,
                 fork: vec![ForkTarget::new(
                     "ENV_URL_FORK".to_string(),
-                    RawForkParams {
-                        url: "http://some.rpc.url_from_env".to_string(),
-                        block_id_type: "number".to_string(),
-                        block_id_value: "1".to_string(),
-                    },
+                    "http://some.rpc.url_from_env".to_string(),
+                    "number".to_string(),
+                    "1".to_string(),
                 )],
                 fuzzer_runs: None,
                 fuzzer_seed: None,

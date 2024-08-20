@@ -1,19 +1,25 @@
-use crate::helpers::constants::{
-    ACCOUNT_FILE_PATH, ARGENT_ACCOUNT_CLASS_HASH, DEVNET_OZ_CLASS_HASH_CAIRO_0, URL,
-};
+use crate::helpers::constants::{ACCOUNT_FILE_PATH, DEVNET_OZ_CLASS_HASH_CAIRO_0, URL};
+use crate::helpers::runner::runner;
 use anyhow::Context;
 use camino::{Utf8Path, Utf8PathBuf};
+use conversions::string::IntoHexStr;
+use core::str;
+use fs_extra::dir::{copy, CopyOptions};
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
 use serde_json::{json, Map, Value};
+use sncast::helpers::braavos::BraavosAccountFactory;
+use sncast::helpers::constants::{
+    ARGENT_CLASS_HASH, BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH,
+};
 use sncast::helpers::scarb_utils::get_package_metadata;
 use sncast::state::state_file::{
     ScriptTransactionEntry, ScriptTransactionOutput, ScriptTransactionStatus,
 };
-use sncast::{apply_optional, get_chain_id, get_keystore_password};
-use sncast::{get_account, get_provider, parse_number};
+use sncast::{apply_optional, get_chain_id, get_keystore_password, AccountType};
+use sncast::{get_account, get_provider};
 use starknet::accounts::{
-    Account, AccountFactory, ArgentAccountFactory, Call, Execution, OpenZeppelinAccountFactory,
+    Account, AccountFactory, ArgentAccountFactory, Call, ExecutionV1, OpenZeppelinAccountFactory,
 };
 use starknet::core::types::TransactionReceipt;
 use starknet::core::types::{FieldElement, InvokeTransactionResult};
@@ -27,7 +33,7 @@ use std::env;
 use std::fs;
 use std::fs::File;
 use std::io::{BufRead, Write};
-use tempfile::TempDir;
+use tempfile::{tempdir, TempDir};
 use toml::Table;
 use url::Url;
 
@@ -67,7 +73,16 @@ pub async fn deploy_cairo_0_account() {
     )
     .await;
 }
-
+pub async fn deploy_latest_oz_account() {
+    let (address, salt, private_key) = get_account_deployment_data("oz");
+    deploy_oz_account(
+        address.as_str(),
+        OZ_CLASS_HASH.into_hex_string().as_str(),
+        salt.as_str(),
+        private_key,
+    )
+    .await;
+}
 pub async fn deploy_argent_account() {
     let provider = get_provider(URL).expect("Failed to get the provider");
     let chain_id = get_chain_id(&provider)
@@ -77,9 +92,30 @@ pub async fn deploy_argent_account() {
     let (address, salt, private_key) = get_account_deployment_data("argent");
 
     let factory = ArgentAccountFactory::new(
-        parse_number(ARGENT_ACCOUNT_CLASS_HASH).expect("Failed to parse class hash"),
+        ARGENT_CLASS_HASH,
         chain_id,
         FieldElement::ZERO,
+        LocalWallet::from_signing_key(private_key),
+        provider,
+    )
+    .await
+    .expect("Failed to create Account Factory");
+
+    deploy_account_to_devnet(factory, address.as_str(), salt.as_str()).await;
+}
+
+pub async fn deploy_braavos_account() {
+    let provider = get_provider(URL).expect("Failed to get the provider");
+    let chain_id = get_chain_id(&provider)
+        .await
+        .expect("Failed to get chain id");
+
+    let (address, salt, private_key) = get_account_deployment_data("braavos");
+
+    let factory = BraavosAccountFactory::new(
+        BRAAVOS_CLASS_HASH,
+        BRAAVOS_BASE_ACCOUNT_CLASS_HASH,
+        chain_id,
         LocalWallet::from_signing_key(private_key),
         provider,
     )
@@ -96,7 +132,7 @@ async fn deploy_oz_account(address: &str, class_hash: &str, salt: &str, private_
         .expect("Failed to get chain id");
 
     let factory = OpenZeppelinAccountFactory::new(
-        parse_number(class_hash).expect("Failed to parse class hash"),
+        class_hash.parse().expect("Failed to parse class hash"),
         chain_id,
         LocalWallet::from_signing_key(private_key),
         provider,
@@ -110,7 +146,7 @@ async fn deploy_oz_account(address: &str, class_hash: &str, salt: &str, private_
 async fn deploy_account_to_devnet<T: AccountFactory + Sync>(factory: T, address: &str, salt: &str) {
     mint_token(address, u64::MAX).await;
     factory
-        .deploy(parse_number(salt).expect("Failed to parse salt"))
+        .deploy_v1(salt.parse().expect("Failed to parse salt"))
         .send()
         .await
         .expect("Failed to deploy account");
@@ -131,7 +167,9 @@ fn get_account_deployment_data(account: &str) -> (String, String, SigningKey) {
     let private_key = get_from_json_as_str(account_data, "private_key");
 
     let private_key = SigningKey::from_secret_scalar(
-        parse_number(private_key).expect("Failed to convert private key to FieldElement"),
+        private_key
+            .parse()
+            .expect("Failed to convert private key to FieldElement"),
     );
 
     (address.to_string(), salt.to_string(), private_key)
@@ -164,19 +202,21 @@ pub async fn invoke_contract(
     let mut calldata: Vec<FieldElement> = vec![];
 
     for value in constructor_calldata {
-        let value: FieldElement = parse_number(value).expect("Could not parse the calldata");
+        let value: FieldElement = value.parse().expect("Could not parse the calldata");
         calldata.push(value);
     }
 
     let call = Call {
-        to: parse_number(contract_address).expect("Could not parse the contract address"),
+        to: contract_address
+            .parse()
+            .expect("Could not parse the contract address"),
         selector: get_selector_from_name(entry_point_name)
             .unwrap_or_else(|_| panic!("Could not get selector from {entry_point_name}")),
         calldata,
     };
 
-    let execution = account.execute(vec![call]);
-    let execution = apply_optional(execution, max_fee, Execution::max_fee);
+    let execution = account.execute_v1(vec![call]);
+    let execution = apply_optional(execution, max_fee, ExecutionV1::max_fee);
 
     execution.send().await.unwrap()
 }
@@ -185,19 +225,22 @@ pub async fn invoke_contract(
 // but serde_json cannot serialize numbers this big
 pub async fn mint_token(recipient: &str, amount: u64) {
     let client = reqwest::Client::new();
-    let json = json!(
-        {
-            "address": recipient,
-            "amount": amount
-        }
-    );
-    client
-        .post("http://127.0.0.1:5055/mint")
-        .header("Content-Type", "application/json")
-        .body(json.to_string())
-        .send()
-        .await
-        .expect("Error occurred while minting tokens");
+    for unit in ["FRI", "WEI"] {
+        let json = json!(
+            {
+                "address": recipient,
+                "amount": amount,
+                "unit": unit,
+            }
+        );
+        client
+            .post("http://127.0.0.1:5055/mint")
+            .header("Content-Type", "application/json")
+            .body(json.to_string())
+            .send()
+            .await
+            .expect("Error occurred while minting tokens");
+    }
 }
 
 #[must_use]
@@ -213,6 +256,7 @@ fn parse_output<T: DeserializeOwned>(output: &[u8]) -> T {
             Err(_) => continue,
         }
     }
+
     panic!("Failed to deserialize stdout JSON to struct");
 }
 
@@ -228,7 +272,10 @@ struct TransactionHashOutput {
 #[must_use]
 pub fn get_transaction_hash(output: &[u8]) -> FieldElement {
     let output = parse_output::<TransactionHashOutput>(output);
-    parse_number(output.transaction_hash.as_str()).expect("Could not parse a number")
+    output
+        .transaction_hash
+        .parse()
+        .expect("Could not parse a number")
 }
 
 pub async fn get_transaction_receipt(tx_hash: FieldElement) -> TransactionReceipt {
@@ -421,17 +468,11 @@ pub fn get_deps_map_from_paths(
     deps
 }
 
-pub fn from_env(name: &str) -> Result<String, String> {
-    match env::var(name) {
-        Ok(value) => Ok(value),
-        Err(_) => Err(format!("Variable {name} not available in env!")),
-    }
-}
-
 pub fn get_address_from_keystore(
     keystore_path: impl AsRef<std::path::Path>,
     account_path: impl AsRef<std::path::Path>,
     password: &str,
+    account_type: &AccountType,
 ) -> FieldElement {
     let contents = std::fs::read_to_string(account_path).unwrap();
     let items: Map<String, serde_json::Value> = serde_json::from_str(&contents).unwrap();
@@ -449,20 +490,25 @@ pub fn get_address_from_keystore(
             .unwrap(),
     )
     .unwrap();
-    let oz_class_hash = FieldElement::from_hex_be(
-        deployment
-            .get("class_hash")
-            .and_then(serde_json::Value::as_str)
-            .unwrap(),
-    )
-    .unwrap();
+    let class_hash = match account_type {
+        AccountType::Braavos => BRAAVOS_BASE_ACCOUNT_CLASS_HASH,
+        AccountType::OpenZeppelin | AccountType::Argent => FieldElement::from_hex_be(
+            deployment
+                .get("class_hash")
+                .and_then(serde_json::Value::as_str)
+                .unwrap(),
+        )
+        .unwrap(),
+    };
 
-    get_contract_address(
-        salt,
-        oz_class_hash,
-        &[private_key.verifying_key().scalar()],
-        FieldElement::ZERO,
-    )
+    let calldata = match account_type {
+        AccountType::OpenZeppelin | AccountType::Braavos => {
+            vec![private_key.verifying_key().scalar()]
+        }
+        AccountType::Argent => vec![private_key.verifying_key().scalar(), FieldElement::ZERO],
+    };
+
+    get_contract_address(salt, class_hash, &calldata, FieldElement::ZERO)
 }
 #[must_use]
 pub fn get_accounts_path(relative_path_from_cargo_toml: &str) -> String {
@@ -494,7 +540,7 @@ pub fn assert_tx_entry_failed(
     assert_eq!(tx_entry.name, name);
     assert_eq!(tx_entry.status, status);
 
-    let ScriptTransactionOutput::ErrorResponse(response) = tx_entry.output.clone() else {
+    let ScriptTransactionOutput::ErrorResponse(response) = &tx_entry.output else {
         panic!("Wrong response")
     };
     for msg in msg_contains {
@@ -517,4 +563,78 @@ pub fn assert_tx_entry_success(tx_entry: &ScriptTransactionEntry, name: &str) {
     assert_eq!(expected_selector, name);
 
     assert!(tx_entry.timestamp > SCRIPT_ORIGIN_TIMESTAMP);
+}
+
+pub async fn create_and_deploy_oz_account() -> TempDir {
+    create_and_deploy_account(OZ_CLASS_HASH, AccountType::OpenZeppelin).await
+}
+pub async fn create_and_deploy_account(
+    class_hash: FieldElement,
+    account_type: AccountType,
+) -> TempDir {
+    let class_hash = &class_hash.into_hex_string();
+    let account_type = match account_type {
+        AccountType::OpenZeppelin => "oz",
+        AccountType::Argent => "argent",
+        AccountType::Braavos => "braavos",
+    };
+    let tempdir = tempdir().unwrap();
+    let accounts_file = "accounts.json";
+
+    let args = vec![
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "create",
+        "--url",
+        URL,
+        "--name",
+        "my_account",
+        "--class-hash",
+        class_hash,
+        "--type",
+        account_type,
+    ];
+
+    runner(&args).current_dir(tempdir.path()).assert().success();
+
+    let contents = fs::read_to_string(tempdir.path().join(accounts_file)).unwrap();
+    let items: Value = serde_json::from_str(&contents).unwrap();
+
+    mint_token(
+        items["alpha-sepolia"]["my_account"]["address"]
+            .as_str()
+            .unwrap(),
+        u64::MAX,
+    )
+    .await;
+
+    let args = vec![
+        "--accounts-file",
+        accounts_file,
+        "--json",
+        "account",
+        "deploy",
+        "--url",
+        URL,
+        "--name",
+        "my_account",
+        "--max-fee",
+        "99999999999999999",
+        "--fee-token",
+        "eth",
+    ];
+
+    runner(&args).current_dir(tempdir.path()).assert().success();
+
+    tempdir
+}
+
+pub fn join_tempdirs(from: &TempDir, to: &TempDir) {
+    copy(
+        from.path(),
+        to.path(),
+        &CopyOptions::new().overwrite(true).content_only(true),
+    )
+    .expect("Failed to copy the directory");
 }

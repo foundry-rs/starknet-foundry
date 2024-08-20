@@ -51,6 +51,8 @@ fn panicking_function() {
 
 #[cfg(test)]
 mod tests {
+    use super::panicking_function;
+    
     #[test]
     fn failing() {
         panicking_function();
@@ -79,67 +81,93 @@ Failures:
 Sometimes you want to mark a test as expected to fail. This is useful when you want to verify that an action fails as
 expected.
 
-To mark a test as expected to fail, use the `#[should_panic]` attribute. You can pass the expected failure message as an
-argument to the attribute to verify that the test fails with the expected message
-with `#[should_panic(expected: ('panic message', 'eventual second message',))]`.
+To mark a test as expected to fail, use the `#[should_panic]` attribute.
 
-```rust
-#[test]
-#[should_panic(expected: ('panic message', ))]
-fn should_panic_check_data() {
-    panic_with_felt252('panic message');
-}
-```
+You can specify the expected failure message in three ways:
+
+1. **With ByteArray**:
+   ```rust
+    #[test]
+    #[should_panic(expected: "This will panic")]
+    fn should_panic_exact() {
+        panic!("This will panic");
+    }
+
+    // here the expected message is a substring of the actual message
+    #[test]
+    #[should_panic(expected: "will panic")]
+    fn should_panic_expected_is_substring() {
+        panic!("This will panic");
+    }
+   ```
+   With this format, the expected error message needs to be a substring of the actual error message. This is particularly useful when the error message includes dynamic data such as a hash or address.
+
+2. **With felt**
+   ```rust
+    #[test]
+    #[should_panic(expected: 'panic message')]
+    fn should_panic_felt_matching() {
+       assert(1 != 1, 'panic message');
+    }
+   ```
+
+3. **With tuple of felts**:
+   ```rust
+    use core::panic_with_felt252;
+   
+    #[test]
+    #[should_panic(expected: ('panic message', ))]
+    fn should_panic_check_data() {
+        panic_with_felt252('panic message');
+    }
+
+    // works for multiple messages
+    #[test]
+    #[should_panic(expected: ('panic message', 'second message',))]
+    fn should_panic_multiple_messages() {
+        let mut arr = ArrayTrait::new();
+        arr.append('panic message');
+        arr.append('second message');
+        panic(arr);
+    }
+   ```
+   
 
 ```shell
 $ snforge test
 Collected 1 test(s) from package_name package
-Running 0 test(s) from src/
-Running 1 test(s) from tests/
-[PASS] tests::should_panic_check_data
+Running 1 test(s) from src/
+Running 0 test(s) from tests/
+[PASS] package_name::tests::should_panic_check_data
 Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ```
 
-## Ignoring Some Tests Unless Specifically Requested
+## Ignoring Tests
 
 Sometimes you may have tests that you want to exclude during most runs of `snforge test`.
 You can achieve it using `#[ignore]` - tests marked with this attribute will be skipped by default.
 
 ```rust
-#[test]
-#[ignore]
-fn ignored_test() {
-    // test code
+#[cfg(test)]
+mod tests {
+    #[test]
+    #[ignore]
+    fn ignored_test() {
+        // test code
+    }
 }
 ```
 
 ```shell
 $ snforge test
 Collected 1 test(s) from package_name package
-Running 0 test(s) from src/
-Running 1 test(s) from tests/
-[IGNORE] tests::ignored_test
+Running 1 test(s) from src/
+Running 0 test(s) from tests/
+[IGNORE] package_name::tests::ignored_test
 Tests: 0 passed, 0 failed, 0 skipped, 1 ignored, 0 filtered out
 ```
 
 To run only tests marked with the  `#[ignore]` attribute use `snforge test --ignored`. 
 To run all tests regardless of the `#[ignore]` attribute use `snforge test --include-ignored`.
 
-## Displaying Resources Used During Tests
 
-To track resources like `builtins` / `syscalls` that are used when running tests, use `snforge test --detailed-resources`.
-
-```shell
-$ snforge test --detailed-resources
-Collected 1 test(s) from package_name package
-Running 1 test(s) from src/
-[PASS] package_name::tests::resources (gas: ~2213)
-        steps: 881
-        memory holes: 36
-        builtins: ("range_check_builtin": 32)
-        syscalls: (StorageWrite: 1, StorageRead: 1, CallContract: 1)
-
-Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
-```
-
-For more information about how starknet-foundry calculates those, see [gas and resource estimation](gas-and-resource-estimation.md) section.

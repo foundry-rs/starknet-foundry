@@ -1,14 +1,8 @@
-use crate::{
-    test_case_summary::{AnyTestCaseSummary, FuzzingStatistics, TestCaseSummary},
-    RunnerConfig,
-};
+use crate::test_case_summary::{AnyTestCaseSummary, FuzzingStatistics, TestCaseSummary};
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use console::style;
 
-pub(crate) fn print_test_result(
-    any_test_result: &AnyTestCaseSummary,
-    runner_config: &RunnerConfig,
-) {
+pub fn print_test_result(any_test_result: &AnyTestCaseSummary, print_detailed_resources: bool) {
     if any_test_result.is_skipped() {
         return;
     }
@@ -45,7 +39,7 @@ pub(crate) fn print_test_result(
         _ => String::new(),
     };
 
-    let used_resources = match (runner_config.detailed_resources, any_test_result) {
+    let used_resources = match (print_detailed_resources, any_test_result) {
         (true, AnyTestCaseSummary::Single(TestCaseSummary::Passed { used_resources, .. })) => {
             format_detailed_resources(used_resources)
         }

@@ -1,12 +1,16 @@
-use crate::{felt252::SerializeAsFelt252Vec, string::TryFromHexStr};
-use cairo_felt::Felt252;
+use crate as conversions; // trick for CairoDeserialize macro
+use crate::serde::deserialize::{BufferReadError, BufferReadResult, BufferReader};
+use crate::{serde::serialize::SerializeToFeltVec, string::TryFromHexStr};
+use cairo_lang_runner::short_string::as_cairo_short_string_ex;
 use cairo_lang_utils::byte_array::{BYTES_IN_WORD, BYTE_ARRAY_MAGIC};
+use cairo_serde_macros::{CairoDeserialize, CairoSerialize};
+use starknet_types_core::felt::Felt as Felt252;
 
-#[derive(Clone)]
+#[derive(CairoDeserialize, CairoSerialize, Clone, Debug, PartialEq)]
 pub struct ByteArray {
     words: Vec<Felt252>,
-    pending_word_len: usize,
     pending_word: Felt252,
+    pending_word_len: usize,
 }
 
 impl From<&str> for ByteArray {
@@ -15,40 +19,21 @@ impl From<&str> for ByteArray {
         let remainder = chunks.remainder();
         let pending_word_len = remainder.len();
 
-        let words = chunks.map(Felt252::from_bytes_be).collect();
-        let pending_word = Felt252::from_bytes_be(remainder);
+        let words = chunks.map(Felt252::from_bytes_be_slice).collect();
+        let pending_word = Felt252::from_bytes_be_slice(remainder);
 
         Self {
             words,
-            pending_word_len,
             pending_word,
+            pending_word_len,
         }
-    }
-}
-
-impl SerializeAsFelt252Vec for ByteArray {
-    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
-        output.extend(self.serialize_no_magic());
-    }
-
-    fn serialize_as_felt252_vec(self) -> Vec<Felt252> {
-        let len = self.words.len().into();
-
-        let mut result = self.words;
-
-        result.insert(0, len);
-
-        result.push(self.pending_word);
-        result.push(self.pending_word_len.into());
-
-        result
     }
 }
 
 impl ByteArray {
     #[must_use]
-    pub fn serialize_with_magic(self) -> Vec<Felt252> {
-        let mut result = self.serialize_as_felt252_vec();
+    pub fn serialize_with_magic(&self) -> Vec<Felt252> {
+        let mut result = self.serialize_to_vec();
 
         result.insert(
             0,
@@ -58,8 +43,28 @@ impl ByteArray {
         result
     }
 
-    #[must_use]
-    pub fn serialize_no_magic(self) -> Vec<Felt252> {
-        self.serialize_as_felt252_vec()
+    pub fn deserialize_with_magic(value: &[Felt252]) -> BufferReadResult<ByteArray> {
+        if value.first()
+            == Some(&Felt252::try_from_hex_str(&format!("0x{BYTE_ARRAY_MAGIC}")).unwrap())
+        {
+            BufferReader::new(&value[1..]).read()
+        } else {
+            Err(BufferReadError::ParseFailed)
+        }
+    }
+}
+
+impl From<ByteArray> for String {
+    fn from(value: ByteArray) -> Self {
+        let full_words_string = value
+            .words
+            .iter()
+            .map(|word| as_cairo_short_string_ex(word, BYTES_IN_WORD).unwrap())
+            .collect::<String>();
+
+        let pending_word_string =
+            as_cairo_short_string_ex(&value.pending_word, value.pending_word_len).unwrap();
+
+        format!("{full_words_string}{pending_word_string}")
     }
 }

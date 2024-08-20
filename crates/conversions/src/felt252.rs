@@ -1,27 +1,17 @@
 use crate::{
     byte_array::ByteArray,
+    serde::serialize::SerializeToFeltVec,
     string::{TryFromDecStr, TryFromHexStr},
     FromConv, IntoConv,
 };
-use blockifier::execution::execution_utils::stark_felt_to_felt;
-use cairo_felt::{Felt252, ParseFeltError};
-use num_traits::Num;
 use starknet::core::types::FieldElement;
-use starknet_api::{
-    core::{ClassHash, ContractAddress, EntryPointSelector, Nonce},
-    hash::StarkFelt,
-};
+use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, Nonce};
+use starknet_types_core::felt::{Felt as Felt252, FromStrError};
 use std::vec;
 
 impl FromConv<FieldElement> for Felt252 {
     fn from_(value: FieldElement) -> Felt252 {
         Felt252::from_bytes_be(&value.to_bytes_be())
-    }
-}
-
-impl FromConv<StarkFelt> for Felt252 {
-    fn from_(value: StarkFelt) -> Felt252 {
-        stark_felt_to_felt(value)
     }
 }
 
@@ -53,8 +43,12 @@ impl<T> TryFromDecStr for T
 where
     T: FromConv<Felt252>,
 {
-    fn try_from_dec_str(value: &str) -> Result<T, ParseFeltError> {
-        from_string(value, 10)
+    fn try_from_dec_str(value: &str) -> Result<T, FromStrError> {
+        if value.starts_with('-') {
+            return Err(FromStrError);
+        }
+
+        Felt252::from_dec_str(value).map(T::from_)
     }
 }
 
@@ -62,40 +56,32 @@ impl<T> TryFromHexStr for T
 where
     T: FromConv<Felt252>,
 {
-    fn try_from_hex_str(value: &str) -> Result<T, ParseFeltError> {
-        let value = value.strip_prefix("0x").ok_or(ParseFeltError)?;
+    fn try_from_hex_str(value: &str) -> Result<T, FromStrError> {
+        if !value.starts_with("0x") {
+            return Err(FromStrError);
+        }
 
-        from_string(value, 16)
-    }
-}
-
-fn from_string<T>(value: &str, radix: u32) -> Result<T, ParseFeltError>
-where
-    T: FromConv<Felt252>,
-{
-    match Felt252::from_str_radix(value, radix) {
-        Ok(felt) => Ok(T::from_(felt)),
-        _ => Err(ParseFeltError),
+        Felt252::from_hex(value).map(T::from_)
     }
 }
 
 pub trait FromShortString<T>: Sized {
-    fn from_short_string(short_string: &str) -> Result<T, ParseFeltError>;
+    fn from_short_string(short_string: &str) -> Result<T, FromStrError>;
 }
 
 impl FromShortString<Felt252> for Felt252 {
-    fn from_short_string(short_string: &str) -> Result<Felt252, ParseFeltError> {
+    fn from_short_string(short_string: &str) -> Result<Felt252, FromStrError> {
         if short_string.len() <= 31 && short_string.is_ascii() {
-            Ok(Felt252::from_bytes_be(short_string.as_bytes()))
+            Ok(Felt252::from_bytes_be_slice(short_string.as_bytes()))
         } else {
-            Err(ParseFeltError)
+            Err(FromStrError)
         }
     }
 }
 
 pub trait TryInferFormat: Sized {
     /// Parses value from `hex string`, `dec string`, `quotted cairo shortstring `and `quotted cairo string`
-    fn infer_format_and_parse(value: &str) -> Result<Vec<Self>, ParseFeltError>;
+    fn infer_format_and_parse(value: &str) -> Result<Vec<Self>, FromStrError>;
 }
 
 fn resolve(value: &str) -> String {
@@ -103,7 +89,7 @@ fn resolve(value: &str) -> String {
 }
 
 impl TryInferFormat for Felt252 {
-    fn infer_format_and_parse(value: &str) -> Result<Vec<Self>, ParseFeltError> {
+    fn infer_format_and_parse(value: &str) -> Result<Vec<Self>, FromStrError> {
         if value.starts_with('\'') && value.ends_with('\'') {
             let value = resolve(value).replace("\\'", "'");
 
@@ -111,78 +97,11 @@ impl TryInferFormat for Felt252 {
         } else if value.starts_with('"') && value.ends_with('"') {
             let value = resolve(value).replace("\\\"", "\"");
 
-            Ok(ByteArray::from(value.as_str()).serialize_no_magic())
+            Ok(ByteArray::from(value.as_str()).serialize_to_vec())
         } else {
             Felt252::try_from_hex_str(value)
                 .or_else(|_| Felt252::try_from_dec_str(value))
                 .map(|felt| vec![felt])
         }
-    }
-}
-
-pub trait SerializeAsFelt252Vec: Sized {
-    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>);
-    fn serialize_as_felt252_vec(self) -> Vec<Felt252> {
-        let mut result = vec![];
-        self.serialize_into_felt252_vec(&mut result);
-        result
-    }
-}
-
-impl SerializeAsFelt252Vec for Vec<Felt252> {
-    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
-        output.extend(self);
-    }
-
-    fn serialize_as_felt252_vec(self) -> Vec<Felt252> {
-        self
-    }
-}
-
-impl<T: SerializeAsFelt252Vec, E: SerializeAsFelt252Vec> SerializeAsFelt252Vec for Result<T, E> {
-    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
-        match self {
-            Ok(val) => {
-                output.push(Felt252::from(0));
-                val.serialize_into_felt252_vec(output);
-            }
-            Err(err) => {
-                output.push(Felt252::from(1));
-                err.serialize_into_felt252_vec(output);
-            }
-        }
-    }
-}
-
-impl<T> SerializeAsFelt252Vec for T
-where
-    T: IntoConv<Felt252>,
-{
-    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
-        output.push(self.into_());
-    }
-
-    fn serialize_as_felt252_vec(self) -> Vec<Felt252> {
-        vec![self.into_()]
-    }
-}
-
-impl SerializeAsFelt252Vec for &str {
-    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
-        output.extend(self.serialize_as_felt252_vec());
-    }
-
-    fn serialize_as_felt252_vec(self) -> Vec<Felt252> {
-        ByteArray::from(self).serialize_no_magic()
-    }
-}
-
-impl SerializeAsFelt252Vec for String {
-    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
-        self.as_str().serialize_into_felt252_vec(output);
-    }
-
-    fn serialize_as_felt252_vec(self) -> Vec<Felt252> {
-        self.as_str().serialize_as_felt252_vec()
     }
 }

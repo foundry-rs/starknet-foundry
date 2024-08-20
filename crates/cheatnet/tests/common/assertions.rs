@@ -1,7 +1,9 @@
-use cairo_felt::Felt252;
+use cairo_vm::Felt252;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     CallFailure, CallResult,
 };
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::declare::DeclareResult;
+use starknet_api::core::ClassHash;
 
 #[inline]
 pub fn assert_success(call_contract_output: CallResult, expected_data: &[Felt252]) {
@@ -32,4 +34,19 @@ pub fn assert_error(call_contract_output: CallResult, expected_data: impl Into<S
         )
         if msg == expected_data.into(),
     ));
+}
+
+pub trait ClassHashAssert {
+    fn unwrap_success(self) -> ClassHash;
+}
+
+impl ClassHashAssert for DeclareResult {
+    fn unwrap_success(self) -> ClassHash {
+        match self {
+            DeclareResult::Success(class_hash) => class_hash,
+            DeclareResult::AlreadyDeclared(class_hash) => {
+                panic!("Class hash {class_hash} is already declared")
+            }
+        }
+    }
 }

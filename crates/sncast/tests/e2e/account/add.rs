@@ -5,24 +5,29 @@ use crate::helpers::constants::{
 use crate::helpers::runner::runner;
 use camino::Utf8PathBuf;
 use configuration::CONFIG_FILENAME;
+use conversions::string::IntoHexStr;
 use indoc::{formatdoc, indoc};
 use serde_json::json;
 use shared::test_utils::output_assert::assert_stderr_contains;
 use std::fs::{self, File};
 use tempfile::tempdir;
+use test_case::test_case;
 
+#[test_case("oz", "open_zeppelin"; "oz_account_type")]
+#[test_case("argent", "argent"; "argent_account_type")]
+#[test_case("braavos", "braavos"; "braavos_account_type")]
 #[tokio::test]
-pub async fn test_happy_case() {
+pub async fn test_happy_case(input_account_type: &str, saved_type: &str) {
     let tempdir = tempdir().expect("Unable to create a temporary directory");
     let accounts_file = "accounts.json";
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "account",
         "add",
+        "--url",
+        URL,
         "--name",
         "my_account_add",
         "--address",
@@ -31,6 +36,8 @@ pub async fn test_happy_case() {
         "0x456",
         "--class-hash",
         DEVNET_OZ_CLASS_HASH_CAIRO_0,
+        "--type",
+        input_account_type,
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -55,6 +62,7 @@ pub async fn test_happy_case() {
                     "legacy": true,
                     "private_key": "0x456",
                     "public_key": "0x5f679dacd8278105bd3b84a15548fe84079068276b0e84d6cc093eb5430f063",
+                    "type": saved_type
                   }
                 }
             }
@@ -68,18 +76,20 @@ pub async fn test_existent_account_address() {
     let accounts_file = "accounts.json";
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "account",
         "add",
+        "--url",
+        URL,
         "--name",
         "my_account_add",
         "--address",
         DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS,
         "--private-key",
         "0x456",
+        "--type",
+        "oz",
     ];
 
     runner(&args).current_dir(tempdir.path()).assert();
@@ -94,11 +104,12 @@ pub async fn test_existent_account_address() {
                 "alpha-sepolia": {
                   "my_account_add": {
                     "address": DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS,
-                    "class_hash": DEVNET_OZ_CLASS_HASH_CAIRO_1,
+                    "class_hash": &DEVNET_OZ_CLASS_HASH_CAIRO_1.into_hex_string(),
                     "deployed": true,
                     "legacy": false,
                     "private_key": "0x456",
-                    "public_key": "0x5f679dacd8278105bd3b84a15548fe84079068276b0e84d6cc093eb5430f063"
+                    "public_key": "0x5f679dacd8278105bd3b84a15548fe84079068276b0e84d6cc093eb5430f063",
+                    "type": "open_zeppelin"
                   }
                 }
             }
@@ -112,12 +123,12 @@ pub async fn test_existent_account_address_and_incorrect_class_hash() {
     let accounts_file = "accounts.json";
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "account",
         "add",
+        "--url",
+        URL,
         "--name",
         "my_account_add",
         "--address",
@@ -126,6 +137,8 @@ pub async fn test_existent_account_address_and_incorrect_class_hash() {
         "0x456",
         "--class-hash",
         DEVNET_OZ_CLASS_HASH_CAIRO_0,
+        "--type",
+        "oz",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -142,12 +155,12 @@ pub async fn test_nonexistent_account_address_and_nonexistent_class_hash() {
     let accounts_file = "accounts.json";
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "account",
         "add",
+        "--url",
+        URL,
         "--name",
         "my_account_add",
         "--address",
@@ -156,6 +169,8 @@ pub async fn test_nonexistent_account_address_and_nonexistent_class_hash() {
         "0x456",
         "--class-hash",
         "0x101",
+        "--type",
+        "oz",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -172,18 +187,20 @@ pub async fn test_nonexistent_account_address() {
     let accounts_file = "accounts.json";
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "account",
         "add",
+        "--url",
+        URL,
         "--name",
         "my_account_add",
         "--address",
         "0x123",
         "--private-key",
         "0x456",
+        "--type",
+        "oz",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -200,12 +217,12 @@ pub async fn test_happy_case_add_profile() {
     let accounts_file = "accounts.json";
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "account",
         "add",
+        "--url",
+        URL,
         "--name",
         "my_account_add",
         "--address",
@@ -218,6 +235,8 @@ pub async fn test_happy_case_add_profile() {
         "0x3",
         "--class-hash",
         DEVNET_OZ_CLASS_HASH_CAIRO_0,
+        "--type",
+        "oz",
         "--add-profile",
         "my_account_add",
     ];
@@ -245,7 +264,8 @@ pub async fn test_happy_case_add_profile() {
                     "private_key": "0x2",
                     "public_key": "0x759ca09377679ecd535a81e83039658bf40959283187c654c5416f439403cf5",
                     "salt": "0x3",
-                    "legacy": true
+                    "legacy": true,
+                    "type": "open_zeppelin"
                   }
                 }
             }
@@ -264,18 +284,20 @@ pub async fn test_detect_deployed() {
     let accounts_file = "accounts.json";
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "account",
         "add",
+        "--url",
+        URL,
         "--name",
         "my_account_add",
         "--address",
         DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS,
         "--private-key",
         "0x5",
+        "--type",
+        "oz",
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
@@ -295,11 +317,12 @@ pub async fn test_detect_deployed() {
                 "alpha-sepolia": {
                   "my_account_add": {
                     "address": DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS,
-                    "class_hash": DEVNET_OZ_CLASS_HASH_CAIRO_1,
+                    "class_hash": &DEVNET_OZ_CLASS_HASH_CAIRO_1.into_hex_string(),
                     "deployed": true,
                     "private_key": "0x5",
                     "public_key": "0x788435d61046d3eec54d77d25bd194525f4fa26ebe6575536bc6f656656b74c",
-                    "legacy": false
+                    "legacy": false,
+                    "type": "open_zeppelin"
                   }
                 }
             }
@@ -310,10 +333,10 @@ pub async fn test_detect_deployed() {
 #[tokio::test]
 pub async fn test_invalid_public_key() {
     let args = vec![
-        "--url",
-        URL,
         "account",
         "add",
+        "--url",
+        URL,
         "--name",
         "my_account_add",
         "--address",
@@ -322,6 +345,8 @@ pub async fn test_invalid_public_key() {
         "0x456",
         "--public-key",
         "0x457",
+        "--type",
+        "oz",
     ];
 
     let snapbox = runner(&args);
@@ -338,7 +363,7 @@ pub async fn test_invalid_public_key() {
 
 #[tokio::test]
 pub async fn test_missing_arguments() {
-    let args = vec!["--url", URL, "account", "add", "--name", "my_account_add"];
+    let args = vec!["account", "add", "--url", URL, "--name", "my_account_add"];
 
     let snapbox = runner(&args);
     let output = snapbox.assert().failure();
@@ -348,6 +373,7 @@ pub async fn test_missing_arguments() {
         indoc! {r"
         error: the following required arguments were not provided:
           --address <ADDRESS>
+          --type <ACCOUNT_TYPE>
           <--private-key <PRIVATE_KEY>|--private-key-file <PRIVATE_KEY_FILE_PATH>>
         "},
     );
@@ -362,12 +388,12 @@ pub async fn test_private_key_from_file() {
     fs::write(temp_dir.path().join(private_key_file), "0x456").unwrap();
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "account",
         "add",
+        "--url",
+        URL,
         "--name",
         "my_account_add",
         "--address",
@@ -376,6 +402,8 @@ pub async fn test_private_key_from_file() {
         private_key_file,
         "--class-hash",
         DEVNET_OZ_CLASS_HASH_CAIRO_0,
+        "--type",
+        "oz",
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
@@ -400,6 +428,7 @@ pub async fn test_private_key_from_file() {
                     "private_key": "0x456",
                     "public_key": "0x5f679dacd8278105bd3b84a15548fe84079068276b0e84d6cc093eb5430f063",
                     "class_hash": DEVNET_OZ_CLASS_HASH_CAIRO_0,
+                    "type": "open_zeppelin"
                   }
                 }
             }
@@ -434,16 +463,18 @@ pub async fn test_accept_only_one_private_key() {
 #[tokio::test]
 pub async fn test_invalid_private_key_file_path() {
     let args = vec![
-        "--url",
-        URL,
         "account",
         "add",
+        "--url",
+        URL,
         "--name",
         "my_account_add",
         "--address",
         "0x123",
         "--private-key-file",
         "my_private_key",
+        "--type",
+        "oz",
     ];
 
     let snapbox = runner(&args);
@@ -470,18 +501,20 @@ pub async fn test_invalid_private_key_in_file() {
     .unwrap();
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         "accounts.json",
         "account",
         "add",
+        "--url",
+        URL,
         "--name",
         "my_account_add",
         "--address",
         "0x123",
         "--private-key-file",
         private_key_file,
+        "--type",
+        "oz",
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
@@ -505,18 +538,20 @@ pub async fn test_private_key_as_int_in_file() {
     fs::write(temp_dir.path().join(private_key_file), "1110").unwrap();
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "account",
         "add",
+        "--url",
+        URL,
         "--name",
         "my_account_add",
         "--address",
         DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS,
         "--private-key-file",
         private_key_file,
+        "--type",
+        "oz",
     ];
 
     runner(&args)
@@ -538,7 +573,8 @@ pub async fn test_private_key_as_int_in_file() {
                     "legacy": false,
                     "private_key": "0x456",
                     "public_key": "0x5f679dacd8278105bd3b84a15548fe84079068276b0e84d6cc093eb5430f063",
-                    "class_hash": DEVNET_OZ_CLASS_HASH_CAIRO_1
+                    "class_hash": &DEVNET_OZ_CLASS_HASH_CAIRO_1.into_hex_string(),
+                    "type": "open_zeppelin"
                   }
                 }
             }
@@ -553,18 +589,20 @@ pub async fn test_empty_config_add_profile() {
     let accounts_file = "accounts.json";
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "account",
         "add",
+        "--url",
+        URL,
         "--name",
         "my_account_add",
         "--address",
         DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS,
         "--private-key",
         "0x456",
+        "--type",
+        "oz",
         "--add-profile",
         "random",
     ];

@@ -1,6 +1,7 @@
 use anyhow::{Context, Result};
 use blockifier::blockifier::block::BlockInfo;
-use camino::Utf8PathBuf;
+use cairo_vm::Felt252;
+use camino::{Utf8Path, Utf8PathBuf};
 use fs2::FileExt;
 use regex::Regex;
 use runtime::starknet::context::SerializableBlockInfo;
@@ -8,7 +9,6 @@ use serde::{Deserialize, Serialize};
 use starknet::core::types::ContractClass;
 use starknet_api::block::BlockNumber;
 use starknet_api::core::{ClassHash, ContractAddress, Nonce};
-use starknet_api::hash::StarkFelt;
 use starknet_api::state::StorageKey;
 use std::collections::HashMap;
 use std::fs;
@@ -21,7 +21,7 @@ pub const CACHE_VERSION: usize = 3;
 #[derive(Serialize, Deserialize, Debug)]
 struct ForkCacheContent {
     cache_version: usize,
-    storage_at: HashMap<ContractAddress, HashMap<StorageKey, StarkFelt>>,
+    storage_at: HashMap<ContractAddress, HashMap<StorageKey, Felt252>>,
     nonce_at: HashMap<ContractAddress, Nonce>,
     class_hash_at: HashMap<ContractAddress, ClassHash>,
     compiled_contract_class: HashMap<ClassHash, ContractClass>,
@@ -70,11 +70,12 @@ impl ForkCacheContent {
         self.compiled_contract_class
             .extend(other.compiled_contract_class.clone());
         if other.block_info.is_some() {
-            self.block_info = other.block_info.clone();
+            self.block_info.clone_from(&other.block_info);
         }
     }
 }
 
+#[allow(clippy::to_string_trait_impl)]
 impl ToString for ForkCacheContent {
     fn to_string(&self) -> String {
         serde_json::to_string(self).expect("Could not serialize json cache")
@@ -97,7 +98,7 @@ impl ForkCache {
     pub(crate) fn load_or_new(
         url: &Url,
         block_number: BlockNumber,
-        cache_dir: &str,
+        cache_dir: &Utf8Path,
     ) -> Result<Self> {
         let cache_file = cache_file_path_from_fork_config(url, block_number, cache_dir)?;
         let mut file = OpenOptions::new()
@@ -156,7 +157,7 @@ impl ForkCache {
         &self,
         contract_address: &ContractAddress,
         key: &StorageKey,
-    ) -> Option<StarkFelt> {
+    ) -> Option<Felt252> {
         self.fork_cache_content
             .storage_at
             .get(contract_address)?
@@ -168,7 +169,7 @@ impl ForkCache {
         &mut self,
         contract_address: ContractAddress,
         key: StorageKey,
-        value: StarkFelt,
+        value: Felt252,
     ) {
         self.fork_cache_content
             .storage_at
@@ -239,14 +240,14 @@ impl ForkCache {
 fn cache_file_path_from_fork_config(
     url: &Url,
     BlockNumber(block_number): BlockNumber,
-    cache_dir: &str,
+    cache_dir: &Utf8Path,
 ) -> Result<Utf8PathBuf> {
     let re = Regex::new(r"[^a-zA-Z0-9]").unwrap();
 
     // replace non-alphanumeric characters with underscores
     let sanitized_path = re.replace_all(url.as_str(), "_");
 
-    let cache_file_path = Utf8PathBuf::from(cache_dir).join(format!(
+    let cache_file_path = cache_dir.join(format!(
         "{sanitized_path}_{block_number}_v{CACHE_VERSION}.json"
     ));
 

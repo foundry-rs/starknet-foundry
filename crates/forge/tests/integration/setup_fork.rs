@@ -1,27 +1,30 @@
-use indoc::formatdoc;
+use indoc::{formatdoc, indoc};
+use std::num::NonZeroU32;
 use std::path::Path;
-use std::path::PathBuf;
-use std::process::Command;
-use std::process::Stdio;
 use std::sync::Arc;
 
 use camino::Utf8PathBuf;
 use forge::block_number_map::BlockNumberMap;
-use forge::run;
+use forge::run_tests::package::run_for_package;
 use forge::scarb::config::ForkTarget;
 use forge::test_filter::TestsFilter;
 use tempfile::tempdir;
 use tokio::runtime::Runtime;
 
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
-use forge::compiled_raw::RawForkParams;
-use forge_runner::{RunnerConfig, RunnerParams};
-use shared::command::CommandExt;
+use forge::run_tests::package::RunForPackageArgs;
+use forge::scarb::load_test_artifacts;
+use forge_runner::build_trace_data::test_sierra_program_path::VERSIONED_PROGRAMS_DIR;
+use forge_runner::forge_config::{
+    ExecutionDataToSave, ForgeConfig, OutputConfig, TestRunnerConfig,
+};
+use forge_runner::CACHE_DIR;
+use scarb_api::metadata::MetadataCommandExt;
+use scarb_api::ScarbCommand;
+use shared::test_utils::node_url::node_rpc_url;
 use test_utils::runner::{assert_case_output_contains, assert_failed, assert_passed, Contract};
 use test_utils::running_tests::run_test_case;
 use test_utils::test_case;
-
-const TESTNET_RPC_URL: &str = "http://188.34.188.184:7070/rpc/v0_7";
 
 #[test]
 fn fork_simple_decorator() {
@@ -43,7 +46,7 @@ fn fork_simple_decorator() {
             }}
 
             #[test]
-            #[fork(url: "{}", block_id: BlockId::Number(54060))]
+            #[fork(url: "{}", block_number: 54060)]
             fn fork_simple_decorator() {{
                 let dispatcher = IHelloStarknetDispatcher {{
                     contract_address: contract_address_const::<0x202de98471a4fae6bcbabb96cab00437d381abc58b02509043778074d6781e9>()
@@ -58,7 +61,7 @@ fn fork_simple_decorator() {
                 assert(balance == 100, 'Balance should be 100');
             }}
         "#,
-        TESTNET_RPC_URL
+        node_rpc_url()
     ).as_str());
 
     let result = run_test_case(&test);
@@ -68,7 +71,7 @@ fn fork_simple_decorator() {
 
 #[test]
 fn fork_aliased_decorator() {
-    let test = test_case!(formatdoc!(
+    let test = test_case!(indoc!(
         r#"
             use result::ResultTrait;
             use array::ArrayTrait;
@@ -79,17 +82,17 @@ fn fork_aliased_decorator() {
             use starknet::contract_address_const;
 
             #[starknet::interface]
-            trait IHelloStarknet<TContractState> {{
+            trait IHelloStarknet<TContractState> {
                 fn increase_balance(ref self: TContractState, amount: felt252);
                 fn get_balance(self: @TContractState) -> felt252;
-            }}
+            }
 
             #[test]
             #[fork("FORK_NAME_FROM_SCARB_TOML")]
-            fn fork_aliased_decorator() {{
-                let dispatcher = IHelloStarknetDispatcher {{
+            fn fork_aliased_decorator() {
+                let dispatcher = IHelloStarknetDispatcher {
                     contract_address: contract_address_const::<0x202de98471a4fae6bcbabb96cab00437d381abc58b02509043778074d6781e9>()
-                }};
+                };
 
                 let balance = dispatcher.get_balance();
                 assert(balance == 0, 'Balance should be 0');
@@ -98,47 +101,76 @@ fn fork_aliased_decorator() {
 
                 let balance = dispatcher.get_balance();
                 assert(balance == 100, 'Balance should be 100');
-            }}
+            }
         "#
-    ).as_str());
+    ));
 
     let rt = Runtime::new().expect("Could not instantiate Runtime");
 
-    Command::new("scarb")
+    ScarbCommand::new_with_stdio()
         .current_dir(test.path().unwrap())
-        .arg("snforge-test-collector")
-        .stdout(Stdio::inherit())
-        .stderr(Stdio::inherit())
-        .output_checked()
+        .arg("build")
+        .arg("--test")
+        .run()
         .unwrap();
 
+    let metadata = ScarbCommand::metadata()
+        .current_dir(test.path().unwrap())
+        .run()
+        .unwrap();
+
+    let package = metadata
+        .packages
+        .iter()
+        .find(|p| p.name == "test_package")
+        .unwrap();
+
+    let raw_test_targets =
+        load_test_artifacts(&test.path().unwrap().join("target/dev"), package).unwrap();
+
     let result = rt
-        .block_on(run(
-            &String::from("test_package"),
-            &test.path().unwrap().join("target/dev/snforge"),
-            &TestsFilter::from_flags(None, false, false, false, false, Default::default()),
-            Arc::new(RunnerConfig::new(
-                Utf8PathBuf::from_path_buf(PathBuf::from(tempdir().unwrap().path())).unwrap(),
-                false,
-                256.try_into().unwrap(),
-                12345,
-                false,
-                false,
-                false,
-                None,
-            )),
-            Arc::new(RunnerParams::new(
-                ContractsData::try_from(test.contracts().unwrap()).unwrap(),
-                test.env().clone(),
-            )),
-            &[ForkTarget::new(
-                "FORK_NAME_FROM_SCARB_TOML".to_string(),
-                RawForkParams {
-                    url: TESTNET_RPC_URL.to_string(),
-                    block_id_type: "Tag".to_string(),
-                    block_id_value: "Latest".to_string(),
-                },
-            )],
+        .block_on(run_for_package(
+            RunForPackageArgs {
+                test_targets: raw_test_targets,
+                package_name: "test_package".to_string(),
+                tests_filter: TestsFilter::from_flags(
+                    None,
+                    false,
+                    false,
+                    false,
+                    false,
+                    Default::default(),
+                ),
+                forge_config: Arc::new(ForgeConfig {
+                    test_runner_config: Arc::new(TestRunnerConfig {
+                        exit_first: false,
+                        fuzzer_runs: NonZeroU32::new(256).unwrap(),
+                        fuzzer_seed: 12345,
+                        max_n_steps: None,
+                        is_vm_trace_needed: false,
+                        cache_dir: Utf8PathBuf::from_path_buf(tempdir().unwrap().into_path())
+                            .unwrap()
+                            .join(CACHE_DIR),
+                        contracts_data: ContractsData::try_from(test.contracts().unwrap()).unwrap(),
+                        environment_variables: test.env().clone(),
+                    }),
+                    output_config: Arc::new(OutputConfig {
+                        detailed_resources: false,
+                        execution_data_to_save: ExecutionDataToSave::None,
+                        versioned_programs_dir: Utf8PathBuf::from_path_buf(
+                            tempdir().unwrap().into_path(),
+                        )
+                        .unwrap()
+                        .join(VERSIONED_PROGRAMS_DIR),
+                    }),
+                }),
+                fork_targets: vec![ForkTarget::new(
+                    "FORK_NAME_FROM_SCARB_TOML".to_string(),
+                    node_rpc_url().to_string(),
+                    "tag".to_string(),
+                    "latest".to_string(),
+                )],
+            },
             &mut BlockNumberMap::default(),
         ))
         .expect("Runner fail");
@@ -158,7 +190,7 @@ fn fork_cairo0_contract() {
             }}
 
             #[test]
-            #[fork(url: "{}", block_id: BlockId::Number(54060))]
+            #[fork(url: "{}", block_number: 54060)]
             fn fork_cairo0_contract() {{
                 let contract_address = contract_address_const::<0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7>();
 
@@ -168,7 +200,7 @@ fn fork_cairo0_contract() {
                 assert(total_supply == 88730316280408105750094, 'Wrong total supply');
             }}
         "#,
-        TESTNET_RPC_URL
+        node_rpc_url()
     ).as_str());
 
     let result = run_test_case(&test);
@@ -183,7 +215,7 @@ fn get_block_info_in_forked_block() {
             use starknet::ContractAddress;
             use starknet::ContractAddressIntoFelt252;
             use starknet::contract_address_const;
-            use snforge_std::{{ BlockTag, BlockId, declare, ContractClassTrait }};
+            use snforge_std::{{ BlockTag, BlockId, declare, ContractClassTrait, DeclareResultTrait }};
 
             #[starknet::interface]
             trait IBlockInfoChecker<TContractState> {{
@@ -193,7 +225,7 @@ fn get_block_info_in_forked_block() {
             }}
 
             #[test]
-            #[fork(url: "{TESTNET_RPC_URL}", block_id: BlockId::Number(54060))]
+            #[fork(url: "{node_rpc_url}", block_number: 54060)]
             fn test_fork_get_block_info_contract_on_testnet() {{
                 let dispatcher = IBlockInfoCheckerDispatcher {{
                     contract_address: contract_address_const::<0x3d80c579ad7d83ff46634abe8f91f9d2080c5c076d4f0f59dd810f9b3f01164>()
@@ -210,7 +242,7 @@ fn get_block_info_in_forked_block() {
             }}
 
             #[test]
-            #[fork(url: "{TESTNET_RPC_URL}", block_id: BlockId::Number(54060))]
+            #[fork(url: "{node_rpc_url}", block_number: 54060)]
             fn test_fork_get_block_info_test_state() {{
                 let block_info = starknet::get_block_info().unbox();
                 assert(block_info.block_timestamp == 1711645884, block_info.block_timestamp.into());
@@ -220,9 +252,9 @@ fn get_block_info_in_forked_block() {
             }}
 
             #[test]
-            #[fork(url: "{TESTNET_RPC_URL}", block_id: BlockId::Number(54060))]
+            #[fork(url: "{node_rpc_url}", block_number: 54060)]
             fn test_fork_get_block_info_contract_deployed() {{
-                let contract = declare("BlockInfoChecker").unwrap();
+                let contract = declare("BlockInfoChecker").unwrap().contract_class();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IBlockInfoCheckerDispatcher {{ contract_address }};
 
@@ -237,13 +269,14 @@ fn get_block_info_in_forked_block() {
             }}
 
             #[test]
-            #[fork(url: "{TESTNET_RPC_URL}", block_id: BlockId::Tag(BlockTag::Latest))]
+            #[fork(url: "{node_rpc_url}", block_tag: latest)]
             fn test_fork_get_block_info_latest_block() {{
                 let block_info = starknet::get_block_info().unbox();
                 assert(block_info.block_timestamp > 1711645884, block_info.block_timestamp.into());
                 assert(block_info.block_number > 54060, block_info.block_number.into());
             }}
-        "#
+        "#,
+        node_rpc_url = node_rpc_url()
     ).as_str(),
     Contract::from_code_path(
         "BlockInfoChecker".to_string(),
@@ -260,11 +293,12 @@ fn fork_get_block_info_fails() {
     let test = test_case!(formatdoc!(
         r#"
             #[test]
-            #[fork(url: "{TESTNET_RPC_URL}", block_id: BlockId::Number(999999999999))]
+            #[fork(url: "{}", block_number: 999999999999)]
             fn fork_get_block_info_fails() {{
                 starknet::get_block_info();
             }}
-        "#
+        "#,
+        node_rpc_url()
     )
     .as_str());
 
@@ -295,7 +329,7 @@ fn incompatible_abi() {
             }}
 
             #[test]
-            #[fork(url: "{TESTNET_RPC_URL}", block_id: BlockId::Tag(BlockTag::Latest))]
+            #[fork(url: "{}", block_tag: latest)]
             fn test_forking_functionality() {{
                 let gov_contract_addr: starknet::ContractAddress = 0x66e4b798c66160bd5fd04056938e5c9f65d67f183dfab9d7d0d2ed9413276fe.try_into().unwrap();
                 let dispatcher = IResponseWith2FeltsDispatcher {{ contract_address: gov_contract_addr }};
@@ -303,6 +337,7 @@ fn incompatible_abi() {
                 assert(propdetails.payload == 8, 'payload not match');
             }}
         "#,
+        node_rpc_url()
     )
     .as_str());
 

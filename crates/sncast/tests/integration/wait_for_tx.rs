@@ -9,8 +9,9 @@ use crate::helpers::constants::{
     MAP_CONTRACT_DECLARE_TX_HASH_SEPOLIA,
 };
 use camino::Utf8PathBuf;
+use conversions::string::IntoHexStr;
 use sncast::{get_account, ValidatedWaitParams};
-use sncast::{handle_wait_for_tx, parse_number, wait_for_tx, WaitForTx};
+use sncast::{handle_wait_for_tx, wait_for_tx, WaitForTx};
 use starknet::contract::ContractFactory;
 use starknet::core::types::FieldElement;
 
@@ -19,7 +20,7 @@ async fn test_happy_path() {
     let provider = create_test_provider();
     let res = wait_for_tx(
         &provider,
-        parse_number(MAP_CONTRACT_DECLARE_TX_HASH_SEPOLIA).unwrap(),
+        MAP_CONTRACT_DECLARE_TX_HASH_SEPOLIA.parse().unwrap(),
         ValidatedWaitParams::default(),
     )
     .await;
@@ -40,12 +41,9 @@ async fn test_rejected_transaction() {
     .await
     .expect("Could not get the account");
 
-    let factory = ContractFactory::new(
-        parse_number(MAP_CONTRACT_CLASS_HASH_SEPOLIA).unwrap(),
-        account,
-    );
+    let factory = ContractFactory::new(MAP_CONTRACT_CLASS_HASH_SEPOLIA.parse().unwrap(), account);
     let deployment = factory
-        .deploy(Vec::new(), FieldElement::ONE, false)
+        .deploy_v1(Vec::new(), FieldElement::ONE, false)
         .max_fee(FieldElement::ONE);
     let resp = deployment.send().await.unwrap_err();
 
@@ -61,7 +59,7 @@ async fn test_wait_for_reverted_transaction() {
 
     let transaction_hash = invoke_contract(
         ACCOUNT,
-        UDC_ADDRESS,
+        UDC_ADDRESS.into_hex_string().as_str(),
         "deployContract",
         Some(max_fee.into()),
         &[
@@ -89,7 +87,7 @@ async fn test_wait_for_nonexistent_tx() {
     let provider = create_test_provider();
     wait_for_tx(
         &provider,
-        parse_number("0x123456789").expect("Could not parse a number"),
+        "0x123456789".parse().expect("Could not parse a number"),
         ValidatedWaitParams::new(1, 3),
     )
     .await
@@ -102,7 +100,7 @@ async fn test_happy_path_handle_wait_for_tx() {
     let provider = create_test_provider();
     let res = handle_wait_for_tx(
         &provider,
-        parse_number(MAP_CONTRACT_DECLARE_TX_HASH_SEPOLIA).unwrap(),
+        MAP_CONTRACT_DECLARE_TX_HASH_SEPOLIA.parse().unwrap(),
         1,
         WaitForTx {
             wait: true,
@@ -120,7 +118,7 @@ async fn test_wait_for_wrong_retry_values() {
     let provider = create_test_provider();
     wait_for_tx(
         &provider,
-        parse_number(MAP_CONTRACT_DECLARE_TX_HASH_SEPOLIA).unwrap(),
+        MAP_CONTRACT_DECLARE_TX_HASH_SEPOLIA.parse().unwrap(),
         ValidatedWaitParams::new(2, 1),
     )
     .await
@@ -133,7 +131,7 @@ async fn test_wait_for_wrong_retry_values_timeout_zero() {
     let provider = create_test_provider();
     wait_for_tx(
         &provider,
-        parse_number(MAP_CONTRACT_DECLARE_TX_HASH_SEPOLIA).unwrap(),
+        MAP_CONTRACT_DECLARE_TX_HASH_SEPOLIA.parse().unwrap(),
         ValidatedWaitParams::new(2, 0),
     )
     .await
@@ -146,7 +144,7 @@ async fn test_wait_for_wrong_retry_values_interval_zero() {
     let provider = create_test_provider();
     wait_for_tx(
         &provider,
-        parse_number(MAP_CONTRACT_DECLARE_TX_HASH_SEPOLIA).unwrap(),
+        MAP_CONTRACT_DECLARE_TX_HASH_SEPOLIA.parse().unwrap(),
         ValidatedWaitParams::new(0, 1),
     )
     .await

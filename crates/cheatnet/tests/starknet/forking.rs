@@ -1,16 +1,16 @@
-use crate::common::assertions::{assert_error, assert_success};
+use crate::common::assertions::{assert_error, assert_panic, assert_success};
 use crate::common::cache::{purge_cache, read_cache};
 use crate::common::state::{create_fork_cached_state, create_fork_cached_state_at};
 use crate::common::{call_contract, deploy_contract, deploy_wrapper, felt_selector_from_name};
-use blockifier::state::cached_state::{
-    CachedState, GlobalContractCache, GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST,
-};
-use cairo_felt::Felt252;
+use blockifier::state::cached_state::CachedState;
 use cairo_vm::vm::errors::hint_errors::HintError;
+use cairo_vm::Felt252;
+use camino::Utf8Path;
 use cheatnet::constants::build_testing_state;
 use cheatnet::forking::{cache::CACHE_VERSION, state::ForkStateReader};
 use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
 use cheatnet::state::{BlockInfoReader, CheatnetState, ExtendedStateReader};
+use conversions::byte_array::ByteArray;
 use conversions::string::TryFromHexStr;
 use conversions::IntoConv;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
@@ -18,7 +18,6 @@ use runtime::EnhancedHintError;
 use serde_json::Value;
 use starknet_api::block::BlockNumber;
 use starknet_api::core::ContractAddress;
-use starknet_api::hash::StarkFelt;
 use tempfile::TempDir;
 
 #[test]
@@ -37,7 +36,7 @@ fn fork_simple() {
         &mut cached_fork_state,
         &mut cheatnet_state,
         &contract_address,
-        &selector,
+        selector,
         &[],
     );
     assert_success(output, &[Felt252::from(0)]);
@@ -47,7 +46,7 @@ fn fork_simple() {
         &mut cached_fork_state,
         &mut cheatnet_state,
         &contract_address,
-        &selector,
+        selector,
         &[Felt252::from(100)],
     );
 
@@ -56,7 +55,7 @@ fn fork_simple() {
         &mut cached_fork_state,
         &mut cheatnet_state,
         &contract_address,
-        &selector,
+        selector,
         &[],
     );
     assert_success(output, &[Felt252::from(100)]);
@@ -75,13 +74,13 @@ fn try_calling_nonexistent_contract() {
         &mut cached_fork_state,
         &mut cheatnet_state,
         &contract_address,
-        &selector,
+        selector,
         &[],
     );
-    assert_error(
-        output,
-        "Contract not deployed at address: 0x0000000000000000000000000000000000000000000000000000000000000001"
-    );
+
+    let msg = "Contract not deployed at address: 0x1";
+    let panic_data_felts: Vec<Felt252> = ByteArray::from(msg).serialize_with_magic();
+    assert_panic(output, &panic_data_felts);
 }
 
 #[test]
@@ -90,7 +89,7 @@ fn try_deploying_undeclared_class() {
     let mut cached_fork_state = create_fork_cached_state(cache_dir.path().to_str().unwrap());
     let mut cheatnet_state = CheatnetState::default();
 
-    let class_hash = StarkFelt::ONE.into_();
+    let class_hash = Felt252::ONE.into_();
 
     assert!(match deploy_wrapper(
         &mut cached_fork_state,
@@ -126,21 +125,20 @@ fn test_forking_at_block_number() {
             &mut cached_state_before_delopy,
             &mut cheatnet_state,
             &contract_address,
-            &selector,
+            selector,
             &[],
         );
 
-        assert_error(
-            output,
-            "Contract not deployed at address: 0x0202de98471a4fae6bcbabb96cab00437d381abc58b02509043778074d6781e9"
-        );
+        let msg = "Contract not deployed at address: 0x202de98471a4fae6bcbabb96cab00437d381abc58b02509043778074d6781e9";
+        let panic_data_felts: Vec<Felt252> = ByteArray::from(msg).serialize_with_magic();
+        assert_panic(output, &panic_data_felts);
 
         let selector = felt_selector_from_name("get_balance");
         let output = call_contract(
             &mut cached_state_after_deploy,
             &mut cheatnet_state,
             &contract_address,
-            &selector,
+            selector,
             &[],
         );
 
@@ -173,7 +171,7 @@ fn call_forked_contract_from_other_contract() {
         &mut cached_fork_state,
         &mut cheatnet_state,
         &contract_address,
-        &selector,
+        selector,
         &[forked_contract_address],
     );
     assert_success(output, &[Felt252::from(0)]);
@@ -202,8 +200,8 @@ fn library_call_on_forked_class_hash() {
         &mut cached_fork_state,
         &mut cheatnet_state,
         &contract_address,
-        &selector,
-        &[forked_class_hash.clone()],
+        selector,
+        &[forked_class_hash],
     );
     assert_success(output, &[Felt252::from(0)]);
 
@@ -211,7 +209,7 @@ fn library_call_on_forked_class_hash() {
         &mut cached_fork_state,
         &mut cheatnet_state,
         &contract_address,
-        &felt_selector_from_name("set_balance"),
+        felt_selector_from_name("set_balance"),
         &[Felt252::from(100)],
     );
 
@@ -219,7 +217,7 @@ fn library_call_on_forked_class_hash() {
         &mut cached_fork_state,
         &mut cheatnet_state,
         &contract_address,
-        &selector,
+        selector,
         &[forked_class_hash],
     );
     assert_success(output, &[Felt252::from(100)]);
@@ -253,7 +251,7 @@ fn call_forked_contract_from_constructor() {
         &mut cached_fork_state,
         &mut cheatnet_state,
         &contract_address,
-        &selector,
+        selector,
         &[forked_class_hash],
     );
     assert_success(output, &[Felt252::from(0)]);
@@ -287,8 +285,8 @@ fn call_forked_contract_get_block_info_via_proxy() {
         &mut cached_fork_state,
         &mut cheatnet_state,
         &contract_address,
-        &selector,
-        &[forked_contract_address.clone()],
+        selector,
+        &[forked_contract_address],
     );
     assert_success(output, &[Felt252::from(53_655)]);
 
@@ -297,8 +295,8 @@ fn call_forked_contract_get_block_info_via_proxy() {
         &mut cached_fork_state,
         &mut cheatnet_state,
         &contract_address,
-        &selector,
-        &[forked_contract_address.clone()],
+        selector,
+        &[forked_contract_address],
     );
     assert_success(output, &[Felt252::from(1_711_548_115)]);
 
@@ -307,7 +305,7 @@ fn call_forked_contract_get_block_info_via_proxy() {
         &mut cached_fork_state,
         &mut cheatnet_state,
         &contract_address,
-        &selector,
+        selector,
         &[forked_contract_address],
     );
     assert_success(
@@ -347,8 +345,8 @@ fn call_forked_contract_get_block_info_via_libcall() {
         &mut cached_fork_state,
         &mut cheatnet_state,
         &contract_address,
-        &selector,
-        &[forked_class_hash.clone()],
+        selector,
+        &[forked_class_hash],
     );
     assert_success(output, &[Felt252::from(53_669)]);
 
@@ -357,8 +355,8 @@ fn call_forked_contract_get_block_info_via_libcall() {
         &mut cached_fork_state,
         &mut cheatnet_state,
         &contract_address,
-        &selector,
-        &[forked_class_hash.clone()],
+        selector,
+        &[forked_class_hash],
     );
     assert_success(output, &[Felt252::from(1_711_551_518)]);
 
@@ -367,7 +365,7 @@ fn call_forked_contract_get_block_info_via_libcall() {
         &mut cached_fork_state,
         &mut cheatnet_state,
         &contract_address,
-        &selector,
+        selector,
         &[forked_class_hash],
     );
     assert_success(
@@ -399,7 +397,7 @@ fn using_specified_block_nb_is_cached() {
             &mut cached_state,
             &mut cheatnet_state,
             &contract_address,
-            &selector,
+            selector,
             &[],
         );
 
@@ -477,7 +475,7 @@ fn test_cache_merging() {
             &mut cached_state,
             &mut cheatnet_state,
             &contract_address,
-            &selector,
+            selector,
             &[],
         );
 
@@ -592,7 +590,7 @@ fn test_cached_block_info_merging() {
             &mut cached_state,
             &mut cheatnet_state,
             &contract_address,
-            &selector,
+            selector,
             &[],
         );
 
@@ -644,21 +642,18 @@ fn test_cached_block_info_merging() {
 #[test]
 fn test_calling_nonexistent_url() {
     let temp_dir = TempDir::new().unwrap();
-    let nonexistent_url = "http://188.34.188.184:9546".parse().unwrap();
-    let mut cached_fork_state = CachedState::new(
-        ExtendedStateReader {
-            dict_state_reader: build_testing_state(),
-            fork_state_reader: Some(
-                ForkStateReader::new(
-                    nonexistent_url,
-                    BlockNumber(1),
-                    temp_dir.path().to_str().unwrap(),
-                )
-                .unwrap(),
-            ),
-        },
-        GlobalContractCache::new(GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST),
-    );
+    let nonexistent_url = "http://nonexistent-node-address.com".parse().unwrap();
+    let mut cached_fork_state = CachedState::new(ExtendedStateReader {
+        dict_state_reader: build_testing_state(),
+        fork_state_reader: Some(
+            ForkStateReader::new(
+                nonexistent_url,
+                BlockNumber(1),
+                Utf8Path::from_path(temp_dir.path()).unwrap(),
+            )
+            .unwrap(),
+        ),
+    });
 
     let mut cheatnet_state = CheatnetState::default();
 
@@ -672,7 +667,7 @@ fn test_calling_nonexistent_url() {
         &mut cached_fork_state,
         &mut cheatnet_state,
         &contract_address,
-        &selector,
+        selector,
         &[],
     );
 

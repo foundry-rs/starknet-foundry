@@ -1,13 +1,11 @@
-use cairo_felt::Felt252;
 use camino::Utf8PathBuf;
-use conversions::felt252::SerializeAsFelt252Vec;
-use conversions::FromConv;
+use conversions::serde::serialize::CairoSerialize;
 use serde::{Deserialize, Serialize, Serializer};
 use starknet::core::types::FieldElement;
 
 pub struct Decimal(pub u64);
 
-#[derive(Clone, Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, CairoSerialize, PartialEq)]
 pub struct Felt(pub FieldElement);
 
 impl Serialize for Decimal {
@@ -39,62 +37,31 @@ where
 
 pub trait CommandResponse: Serialize {}
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, CairoSerialize, Clone)]
 pub struct CallResponse {
     pub response: Vec<Felt>,
 }
 impl CommandResponse for CallResponse {}
 
-impl SerializeAsFelt252Vec for CallResponse {
-    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
-        output.push(Felt252::from(self.response.len()));
-        output.extend(self.response.iter().map(|el| Felt252::from_(el.0)));
-    }
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, CairoSerialize, Clone, Debug, PartialEq)]
 pub struct InvokeResponse {
     pub transaction_hash: Felt,
 }
 impl CommandResponse for InvokeResponse {}
 
-impl SerializeAsFelt252Vec for InvokeResponse {
-    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
-        output.push(Felt252::from_(self.transaction_hash.0));
-    }
-}
-
-#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
 pub struct DeployResponse {
     pub contract_address: Felt,
     pub transaction_hash: Felt,
 }
 impl CommandResponse for DeployResponse {}
 
-impl SerializeAsFelt252Vec for DeployResponse {
-    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
-        output.extend([
-            Felt252::from_(self.contract_address.0),
-            Felt252::from_(self.transaction_hash.0),
-        ]);
-    }
-}
-
-#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
 pub struct DeclareResponse {
     pub class_hash: Felt,
     pub transaction_hash: Felt,
 }
 impl CommandResponse for DeclareResponse {}
-
-impl SerializeAsFelt252Vec for DeclareResponse {
-    fn serialize_into_felt252_vec(self, output: &mut Vec<Felt252>) {
-        output.extend([
-            Felt252::from_(self.class_hash.0),
-            Felt252::from_(self.transaction_hash.0),
-        ]);
-    }
-}
 
 #[derive(Serialize)]
 pub struct AccountCreateResponse {
@@ -155,3 +122,32 @@ pub struct ScriptInitResponse {
 }
 
 impl CommandResponse for ScriptInitResponse {}
+
+#[derive(Serialize, CairoSerialize)]
+pub enum FinalityStatus {
+    Received,
+    Rejected,
+    AcceptedOnL2,
+    AcceptedOnL1,
+}
+
+#[derive(Serialize, CairoSerialize)]
+pub enum ExecutionStatus {
+    Succeeded,
+    Reverted,
+}
+
+#[derive(Serialize, CairoSerialize)]
+pub struct TransactionStatusResponse {
+    pub finality_status: FinalityStatus,
+    pub execution_status: Option<ExecutionStatus>,
+}
+
+impl CommandResponse for TransactionStatusResponse {}
+
+#[derive(Serialize)]
+pub struct VerifyResponse {
+    pub message: String,
+}
+
+impl CommandResponse for VerifyResponse {}

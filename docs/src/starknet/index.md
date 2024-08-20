@@ -6,7 +6,7 @@ Starknet Foundry `sncast` is a command line tool for performing Starknet RPC cal
 > At the moment, `sncast` only supports contracts written in [Cairo](https://github.com/starkware-libs/cairo) v1 and v2.
 
 > ⚠️ **Warning**
-> Currently, only OpenZeppelin accounts are supported.
+> Currently, support is only provided for accounts that use the default signature based on the [Stark curve](https://docs.starknet.io/documentation/architecture_and_concepts/Cryptography/stark-curve).
 
 ## How to Use `sncast`
 
@@ -29,8 +29,8 @@ Let's use `sncast` to call a contract's function:
 
 ```shell
 $ sncast --account myuser \
-    --url http://127.0.0.1:5050 \
     call \
+    --url http://127.0.0.1:5050 \
     --contract-address 0x38b7b9507ccf73d79cb42c2cc4e58cf3af1248f342112879bfdf5aa4f606cc9 \
     --function get \
     --calldata 0x0 \
@@ -49,9 +49,9 @@ Let's invoke a transaction and wait for it to be `ACCEPTED_ON_L2`.
 
 ```shell
 $ sncast --account myuser \
-    --url http://127.0.0.1:5050 \
     --wait \
     deploy \
+	--url http://127.0.0.1:5050 \
     --class-hash 0x8448a68b5ea1affc45e3fd4b8b480ea36a51dc34e337a16d2567d32d0c6f8a
    
 Transaction hash: 0x3062310a1e40d4b66d8987ba7447d1c7317381d0295d62cb12f2fe3f11e6983

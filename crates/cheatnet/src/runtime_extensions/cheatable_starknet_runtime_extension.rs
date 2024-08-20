@@ -11,10 +11,9 @@ use blockifier::execution::syscalls::{
 use blockifier::execution::{
     common_hints::HintExecutionResult,
     deprecated_syscalls::DeprecatedSyscallSelector,
-    execution_utils::felt_to_stark_felt,
     syscalls::hint_processor::{SyscallExecutionError, SyscallHintProcessor},
 };
-use cairo_felt::Felt252;
+use cairo_vm::Felt252;
 use cairo_vm::{
     types::relocatable::Relocatable,
     vm::{
@@ -22,8 +21,8 @@ use cairo_vm::{
         vm_core::VirtualMachine,
     },
 };
+use conversions::string::TryFromHexStr;
 use runtime::{ExtendedRuntime, ExtensionLogic, StarknetRuntime, SyscallHandlingResult};
-use starknet_api::hash::StarkFelt;
 
 pub type SyscallSelector = DeprecatedSyscallSelector;
 
@@ -52,7 +51,7 @@ impl<'a> ExtensionLogic for CheatableStarknetRuntimeExtension<'a> {
                     cheated_syscalls::get_execution_info_syscall,
                     SyscallSelector::GetExecutionInfo,
                 )
-                .map(|()| SyscallHandlingResult::Handled(())),
+                .map(|()| SyscallHandlingResult::Handled),
 
             SyscallSelector::CallContract => self
                 .execute_syscall(
@@ -61,7 +60,7 @@ impl<'a> ExtensionLogic for CheatableStarknetRuntimeExtension<'a> {
                     cheated_syscalls::call_contract_syscall,
                     SyscallSelector::CallContract,
                 )
-                .map(|()| SyscallHandlingResult::Handled(())),
+                .map(|()| SyscallHandlingResult::Handled),
             SyscallSelector::LibraryCall => self
                 .execute_syscall(
                     syscall_handler,
@@ -69,7 +68,7 @@ impl<'a> ExtensionLogic for CheatableStarknetRuntimeExtension<'a> {
                     cheated_syscalls::library_call_syscall,
                     SyscallSelector::LibraryCall,
                 )
-                .map(|()| SyscallHandlingResult::Handled(())),
+                .map(|()| SyscallHandlingResult::Handled),
             SyscallSelector::Deploy => self
                 .execute_syscall(
                     syscall_handler,
@@ -77,7 +76,7 @@ impl<'a> ExtensionLogic for CheatableStarknetRuntimeExtension<'a> {
                     cheated_syscalls::deploy_syscall,
                     SyscallSelector::Deploy,
                 )
-                .map(|()| SyscallHandlingResult::Handled(())),
+                .map(|()| SyscallHandlingResult::Handled),
             _ => Ok(SyscallHandlingResult::Forwarded),
         }
     }
@@ -89,17 +88,19 @@ impl<'a> ExtensionLogic for CheatableStarknetRuntimeExtension<'a> {
         extended_runtime: &mut Self::Runtime,
     ) {
         let syscall_handler = &extended_runtime.hint_handler;
-        if let SyscallSelector::EmitEvent = selector {
-            syscall_hooks::emit_event_hook(syscall_handler, self.cheatnet_state);
+        match selector {
+            SyscallSelector::EmitEvent => {
+                syscall_hooks::emit_event_hook(syscall_handler, self.cheatnet_state);
+            }
+            SyscallSelector::SendMessageToL1 => {
+                syscall_hooks::send_message_to_l1_syscall_hook(
+                    syscall_handler,
+                    self.cheatnet_state,
+                );
+            }
+            _ => {}
         }
     }
-}
-
-pub fn stark_felt_from_ptr_immutable(
-    vm: &VirtualMachine,
-    ptr: &Relocatable,
-) -> Result<StarkFelt, VirtualMachineError> {
-    Ok(felt_to_stark_felt(&felt_from_ptr_immutable(vm, ptr)?))
 }
 
 pub fn felt_from_ptr_immutable(
@@ -158,8 +159,8 @@ impl CheatableStarknetRuntimeExtension<'_> {
 
         if gas_counter < required_gas {
             //  Out of gas failure.
-            let out_of_gas_error =
-                StarkFelt::try_from(OUT_OF_GAS_ERROR).map_err(SyscallExecutionError::from)?;
+            let out_of_gas_error = TryFromHexStr::try_from_hex_str(OUT_OF_GAS_ERROR)
+                .map_err(SyscallExecutionError::from)?;
             let response: SyscallResponseWrapper<Response> = SyscallResponseWrapper::Failure {
                 gas_counter,
                 error_data: vec![out_of_gas_error],

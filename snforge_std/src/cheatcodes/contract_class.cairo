@@ -1,3 +1,4 @@
+use core::clone::Clone;
 use core::serde::Serde;
 use core::traits::TryInto;
 use starknet::{ContractAddress, ClassHash, testing::cheatcode, SyscallResult};
@@ -5,9 +6,15 @@ use super::super::byte_array::byte_array_as_felt_array;
 use super::super::_cheatcode::handle_cheatcode;
 use core::traits::Into;
 
-#[derive(Drop, Clone, Copy)]
+#[derive(Drop, Serde, Copy)]
 struct ContractClass {
     class_hash: ClassHash,
+}
+
+#[derive(Drop, Serde, Clone)]
+enum DeclareResult {
+    Success: ContractClass,
+    AlreadyDeclared: ContractClass,
 }
 
 trait ContractClassTrait {
@@ -15,6 +22,7 @@ trait ContractClassTrait {
     /// The precalculated address is only correct for the very next deployment
     /// The `constructor_calldata` has a direct impact on the resulting contract address
     /// `self` - an instance of the struct `ContractClass` which is obtained by calling `declare`
+    /// and unpacking `DeclareResult`
     /// `constructor_calldata` - serialized calldata for the deploy constructor
     /// Returns the precalculated `ContractAddress`
     fn precalculate_address(
@@ -23,17 +31,21 @@ trait ContractClassTrait {
 
     /// Deploys a contract
     /// `self` - an instance of the struct `ContractClass` which is obtained by calling `declare`
-    /// `constructor_calldata` - serialized calldata for the constructor
-    /// Returns the address the contract was deployed at and serialized constructor return data, or panic data if it failed
+    /// and unpacking `DeclareResult`
+    /// `constructor_calldata` - calldata for the constructor, serialized with `Serde`
+    /// Returns the address the contract was deployed at and serialized constructor return data, or
+    /// panic data if it failed
     fn deploy(
         self: @ContractClass, constructor_calldata: @Array::<felt252>
     ) -> SyscallResult<(ContractAddress, Span<felt252>)>;
 
     /// Deploys a contract at a given address
     /// `self` - an instance of the struct `ContractClass` which is obtained by calling `declare`
+    /// and unpacking `DeclareResult`
     /// `constructor_calldata` - serialized calldata for the constructor
     /// `contract_address` - address the contract should be deployed at
-    /// Returns the address the contract was deployed at and serialized constructor return data, or panic data if it failed
+    /// Returns the address the contract was deployed at and serialized constructor return data, or
+    /// panic data if it failed
     fn deploy_at(
         self: @ContractClass,
         constructor_calldata: @Array::<felt252>,
@@ -50,10 +62,11 @@ impl ContractClassImpl of ContractClassTrait {
     fn precalculate_address(
         self: @ContractClass, constructor_calldata: @Array::<felt252>
     ) -> ContractAddress {
-        let mut inputs: Array::<felt252> = _prepare_calldata(self.class_hash, constructor_calldata);
+        let mut inputs = _prepare_calldata(self.class_hash, constructor_calldata);
 
-        let outputs = handle_cheatcode(cheatcode::<'precalculate_address'>(inputs.span()));
-        (*outputs[0]).try_into().unwrap()
+        let mut outputs = handle_cheatcode(cheatcode::<'precalculate_address'>(inputs.span()));
+
+        Serde::deserialize(ref outputs).unwrap()
     }
 
     fn deploy(
@@ -62,17 +75,8 @@ impl ContractClassImpl of ContractClassTrait {
         let mut inputs = _prepare_calldata(self.class_hash, constructor_calldata);
 
         let mut outputs = handle_cheatcode(cheatcode::<'deploy'>(inputs.span()));
-        let exit_code = *outputs.pop_front().unwrap();
 
-        if exit_code == 0 {
-            let contract_address_felt = *outputs.pop_front().unwrap();
-            let contract_address = contract_address_felt.try_into().unwrap();
-            let retdata = Serde::<Span<felt252>>::deserialize(ref outputs).unwrap();
-            SyscallResult::Ok((contract_address, retdata))
-        } else {
-            let panic_data = Serde::<Array<felt252>>::deserialize(ref outputs).unwrap();
-            SyscallResult::Err(panic_data)
-        }
+        Serde::deserialize(ref outputs).unwrap()
     }
 
     fn deploy_at(
@@ -84,17 +88,8 @@ impl ContractClassImpl of ContractClassTrait {
         inputs.append(contract_address.into());
 
         let mut outputs = handle_cheatcode(cheatcode::<'deploy_at'>(inputs.span()));
-        let exit_code = *outputs.pop_front().unwrap();
 
-        if exit_code == 0 {
-            let contract_address_felt = *outputs.pop_front().unwrap();
-            let contract_address = contract_address_felt.try_into().unwrap();
-            let retdata = Serde::<Span<felt252>>::deserialize(ref outputs).unwrap();
-            SyscallResult::Ok((contract_address, retdata))
-        } else {
-            let panic_data = Serde::<Array<felt252>>::deserialize(ref outputs).unwrap();
-            SyscallResult::Err(panic_data)
-        }
+        Serde::deserialize(ref outputs).unwrap()
     }
 
     fn new<T, +Into<T, ClassHash>>(class_hash: T) -> ContractClass {
@@ -102,39 +97,46 @@ impl ContractClassImpl of ContractClassTrait {
     }
 }
 
+trait DeclareResultTrait {
+    /// Gets inner `ContractClass`
+    /// `self` - an instance of the struct `DeclareResult` which is obtained by calling `declare`
+    // Returns the `@ContractClass`
+    fn contract_class(self: @DeclareResult) -> @ContractClass;
+}
+
+impl DeclareResultImpl of DeclareResultTrait {
+    fn contract_class(self: @DeclareResult) -> @ContractClass {
+        match self {
+            DeclareResult::Success(contract_class) => contract_class,
+            DeclareResult::AlreadyDeclared(contract_class) => contract_class
+        }
+    }
+}
+
 /// Declares a contract
-/// `contract` - name of a contract as Cairo string. It is a name of the contract (part after mod keyword) e.g. "HelloStarknet"
-/// Returns the `ContractClass` which was declared or panic data if declaration failed
-fn declare(contract: ByteArray) -> Result<ContractClass, Array<felt252>> {
+/// `contract` - name of a contract as Cairo string. It is a name of the contract (part after mod
+/// keyword) e.g. "HelloStarknet"
+/// Returns the `DeclareResult` that encapsulated possible outcomes in the enum:
+/// - `Success`: Contains the successfully declared `ContractClass`.
+/// - `AlreadyDeclared`: Contains `ContractClass` and signals that the contract has already been
+/// declared.
+fn declare(contract: ByteArray) -> Result<DeclareResult, Array<felt252>> {
     let mut span = handle_cheatcode(
         cheatcode::<'declare'>(byte_array_as_felt_array(@contract).span())
     );
 
-    let exit_code = *span.pop_front().unwrap();
-
-    if exit_code == 0 {
-        let result = *span.pop_front().unwrap();
-        let class_hash = result.try_into().unwrap();
-        let contract_class = ContractClass { class_hash };
-        Result::Ok(contract_class)
-    } else {
-        let panic_data = Serde::<Array<felt252>>::deserialize(ref span).unwrap();
-        Result::Err(panic_data)
-    }
+    Serde::deserialize(ref span).unwrap()
 }
 
 /// Retrieves a class hash of a contract deployed under the given address
 /// `contract_address` - target contract address
 /// Returns the `ClassHash` under given address
 fn get_class_hash(contract_address: ContractAddress) -> ClassHash {
-    let contract_address_felt: felt252 = contract_address.into();
+    let mut span = handle_cheatcode(
+        cheatcode::<'get_class_hash'>(array![contract_address.into()].span())
+    );
 
-    // Expecting a buffer with one felt252, being the class hash.
-    let buf = handle_cheatcode(cheatcode::<'get_class_hash'>(array![contract_address_felt].span()));
-    match (*buf[0]).try_into() {
-        Option::Some(hash) => hash,
-        Option::None => panic!("Invalid class hash value")
-    }
+    Serde::deserialize(ref span).unwrap()
 }
 
 fn _prepare_calldata(

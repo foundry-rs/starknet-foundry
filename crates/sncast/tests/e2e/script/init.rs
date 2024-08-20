@@ -45,6 +45,9 @@ fn test_script_init_happy_case() {
             [dependencies]
             sncast_std = {{ git = "https://github.com/foundry-rs/starknet-foundry", tag = "v{cast_version}" }}
             starknet = ">={cairo_version}"
+
+            [dev-dependencies]
+            cairo_test = "{cairo_version}"
         "#
     );
 

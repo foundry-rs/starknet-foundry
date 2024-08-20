@@ -12,12 +12,14 @@ use blockifier::execution::{
     syscalls::hint_processor::{SyscallCounter, SyscallHintProcessor},
 };
 use blockifier::state::errors::StateError;
-use cairo_felt::Felt252;
-use cairo_lang_runner::casm_run::format_next_item;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
-use conversions::{byte_array::ByteArray, IntoConv};
+use cairo_vm::Felt252;
+use conversions::{
+    byte_array::ByteArray, serde::serialize::CairoSerialize, string::IntoHexStr, FromConv, IntoConv,
+};
 use serde::{Deserialize, Serialize};
-use starknet_api::transaction::EventContent;
+use shared::utils::build_readable_text;
+use starknet_api::{core::EntryPointSelector, transaction::EventContent};
 use starknet_api::{
     core::{ClassHash, ContractAddress},
     deprecated_contract_class::EntryPointType,
@@ -33,7 +35,7 @@ pub struct UsedResources {
 }
 
 /// Enum representing possible call execution result, along with the data
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, CairoSerialize, Serialize, Deserialize)]
 pub enum CallResult {
     Success { ret_data: Vec<Felt252> },
     Failure(CallFailure),
@@ -42,7 +44,7 @@ pub enum CallResult {
 /// Enum representing possible call failure and its type.
 /// `Panic` - Recoverable, meant to be caught by the user.
 /// `Error` - Unrecoverable, equivalent of panic! in rust.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, CairoSerialize, Serialize, Deserialize)]
 pub enum CallFailure {
     Panic { panic_data: Vec<Felt252> },
     Error { msg: String },
@@ -62,54 +64,39 @@ impl CallFailure {
     ) -> Self {
         match err {
             EntryPointExecutionError::ExecutionFailed { error_data } => {
-                let err_data: Vec<Felt252> = error_data
+                let err_data: Vec<_> = error_data
                     .iter()
-                    .map(|data| Felt252::from_bytes_be(data.bytes()))
+                    .map(|data| Felt252::from_(*data))
                     .collect();
 
-                // blockifier/src/execution_utils:274 (format_panic_data) (modified)
-                let err_data_str = {
-                    let mut felts = error_data.iter().map(|felt| (*felt).into_());
-                    let mut items = Vec::new();
-                    while let Some(item) = format_next_item(&mut felts) {
-                        items.push(item.quote_if_string());
-                    }
-                    if let [item] = &items[..] {
-                        item.clone()
-                    } else {
-                        items.join("\n")
-                    }
-                };
+                let err_data_str = build_readable_text(&err_data).unwrap_or_default();
 
-                for invalid_calldata_msg in [
-                    "Failed to deserialize param #",
-                    "Input too long for arguments",
-                ] {
-                    if err_data_str.contains(invalid_calldata_msg) {
-                        return CallFailure::Error { msg: err_data_str };
+                if err_data_str.contains("Failed to deserialize param #")
+                    || err_data_str.contains("Input too long for arguments")
+                {
+                    CallFailure::Error { msg: err_data_str }
+                } else {
+                    CallFailure::Panic {
+                        panic_data: err_data,
                     }
-                }
-
-                CallFailure::Panic {
-                    panic_data: err_data,
                 }
             }
             EntryPointExecutionError::PreExecutionError(PreExecutionError::EntryPointNotFound(
                 selector,
             )) => {
-                let selector_hash = selector.0;
+                let selector_hash = selector.into_hex_string();
                 let msg = match starknet_identifier {
                     AddressOrClassHash::ContractAddress(address) => format!(
                         "Entry point selector {selector_hash} not found in contract {}",
-                        address.0.key()
+                        address.into_hex_string()
                     ),
                     AddressOrClassHash::ClassHash(class_hash) => format!(
-                        "Entry point selector {selector_hash} not found for class hash {class_hash}"
+                        "Entry point selector {selector_hash} not found for class hash {}",
+                        class_hash.into_hex_string()
                     ),
                 };
 
-                let panic_data_felts: Vec<Felt252> =
-                    ByteArray::from(msg.as_str()).serialize_with_magic();
+                let panic_data_felts = ByteArray::from(msg.as_str()).serialize_with_magic();
 
                 CallFailure::Panic {
                     panic_data: panic_data_felts,
@@ -118,9 +105,14 @@ impl CallFailure {
             EntryPointExecutionError::PreExecutionError(
                 PreExecutionError::UninitializedStorageAddress(contract_address),
             ) => {
-                let address = contract_address.0.key().to_string();
-                let msg = format!("Contract not deployed at address: {address}");
-                CallFailure::Error { msg }
+                let address_str = contract_address.into_hex_string();
+                let msg = format!("Contract not deployed at address: {address_str}");
+
+                let panic_data_felts = ByteArray::from(msg.as_str()).serialize_with_magic();
+
+                CallFailure::Panic {
+                    panic_data: panic_data_felts,
+                }
             }
             EntryPointExecutionError::StateError(StateError::StateReadError(msg)) => {
                 CallFailure::Error { msg: msg.clone() }
@@ -173,7 +165,7 @@ pub fn call_l1_handler(
     syscall_handler: &mut SyscallHintProcessor,
     cheatnet_state: &mut CheatnetState,
     contract_address: &ContractAddress,
-    entry_point_selector: &Felt252,
+    entry_point_selector: EntryPointSelector,
     calldata: &[Felt252],
 ) -> CallResult {
     let calldata = create_execute_calldata(calldata);
@@ -182,7 +174,7 @@ pub fn call_l1_handler(
         class_hash: None,
         code_address: Some(*contract_address),
         entry_point_type: EntryPointType::L1Handler,
-        entry_point_selector: entry_point_selector.clone().into_(),
+        entry_point_selector,
         calldata,
         storage_address: *contract_address,
         caller_address: ContractAddress::default(),

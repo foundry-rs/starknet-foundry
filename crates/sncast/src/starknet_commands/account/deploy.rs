@@ -1,11 +1,22 @@
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
-use clap::Args;
+use clap::{Args, ValueEnum};
 use serde_json::Map;
-use sncast::helpers::constants::{KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH};
+use sncast::helpers::braavos::BraavosAccountFactory;
+use sncast::helpers::constants::{BRAAVOS_BASE_ACCOUNT_CLASS_HASH, KEYSTORE_PASSWORD_ENV_VAR};
+use sncast::helpers::error::token_not_supported_for_deployment;
+use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken, PayableTransaction};
+use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::{Felt, InvokeResponse};
-use starknet::accounts::AccountFactoryError;
-use starknet::accounts::{AccountFactory, OpenZeppelinAccountFactory};
+use sncast::{
+    apply_optional, chain_id_to_network_name, check_account_file_exists,
+    get_account_data_from_accounts_file, get_account_data_from_keystore, get_keystore_password,
+    handle_rpc_error, handle_wait_for_tx, impl_payable_transaction, AccountType, WaitForTx,
+};
+use starknet::accounts::{
+    AccountDeploymentV1, AccountDeploymentV3, AccountFactory, OpenZeppelinAccountFactory,
+};
+use starknet::accounts::{AccountFactoryError, ArgentAccountFactory};
 use starknet::core::types::BlockTag::Pending;
 use starknet::core::types::{BlockId, FieldElement, StarknetError::ClassHashNotFound};
 use starknet::core::utils::get_contract_address;
@@ -14,11 +25,6 @@ use starknet::providers::ProviderError::StarknetError;
 use starknet::providers::{JsonRpcClient, Provider};
 use starknet::signers::{LocalWallet, SigningKey};
 
-use sncast::{
-    chain_id_to_network_name, check_account_file_exists, get_keystore_password,
-    handle_account_factory_error, handle_rpc_error, handle_wait_for_tx, parse_number, WaitForTx,
-};
-
 #[derive(Args, Debug)]
 #[command(about = "Deploy an account to the Starknet")]
 pub struct Deploy {
@@ -26,53 +32,65 @@ pub struct Deploy {
     #[clap(short, long)]
     pub name: Option<String>,
 
-    /// Max fee for the transaction
-    #[clap(short, long)]
-    pub max_fee: Option<FieldElement>,
+    #[clap(flatten)]
+    pub fee_args: FeeArgs,
 
-    /// Custom open zeppelin contract class hash of declared contract
+    /// Version of the account deployment (can be inferred from fee token)
     #[clap(short, long)]
-    pub class_hash: Option<FieldElement>,
+    pub version: Option<AccountDeployVersion>,
+
+    #[clap(flatten)]
+    pub rpc: RpcArgs,
 }
+
+#[derive(ValueEnum, Debug, Clone)]
+pub enum AccountDeployVersion {
+    V1,
+    V3,
+}
+
+impl_payable_transaction!(Deploy, token_not_supported_for_deployment,
+    AccountDeployVersion::V1 => FeeToken::Eth,
+    AccountDeployVersion::V3 => FeeToken::Strk
+);
 
 #[allow(clippy::too_many_arguments)]
 pub async fn deploy(
     provider: &JsonRpcClient<HttpTransport>,
     accounts_file: Utf8PathBuf,
-    name: String,
+    deploy_args: Deploy,
     chain_id: FieldElement,
-    max_fee: Option<FieldElement>,
     wait_config: WaitForTx,
-    class_hash: Option<FieldElement>,
+    account: &str,
     keystore_path: Option<Utf8PathBuf>,
-    account_path: Option<Utf8PathBuf>,
 ) -> Result<InvokeResponse> {
-    if let Some(keystore_path_) = keystore_path {
-        let account_path_ = account_path
-            .context("Argument `--account` must be passed and be a path when using `--keystore`")?;
+    let fee_args = deploy_args
+        .fee_args
+        .clone()
+        .fee_token(deploy_args.token_from_version());
 
+    if let Some(keystore_path_) = keystore_path {
         deploy_from_keystore(
             provider,
             chain_id,
-            max_fee,
+            fee_args,
             wait_config,
+            account,
             keystore_path_,
-            account_path_,
         )
         .await
     } else {
-        if name == String::default() {
-            bail!("No --name value passed")
-        }
+        let account_name = deploy_args
+            .name
+            .ok_or_else(|| anyhow!("Required argument `--name` not provided"))?;
         check_account_file_exists(&accounts_file)?;
         deploy_from_accounts_file(
             provider,
             accounts_file,
-            name,
+            account_name,
             chain_id,
-            max_fee,
+            fee_args,
             wait_config,
-            class_hash,
         )
         .await
     }
@@ -81,67 +99,61 @@ pub async fn deploy(
 async fn deploy_from_keystore(
     provider: &JsonRpcClient<HttpTransport>,
     chain_id: FieldElement,
-    max_fee: Option<FieldElement>,
+    fee_args: FeeArgs,
     wait_config: WaitForTx,
+    account: &str,
     keystore_path: Utf8PathBuf,
-    account_path: Utf8PathBuf,
 ) -> Result<InvokeResponse> {
-    let contents =
-        std::fs::read_to_string(account_path.clone()).context("Failed to read account file")?;
-    let mut items: Map<String, serde_json::Value> = serde_json::from_str(&contents)
-        .map_err(|_| anyhow!("Failed to parse account file at {account_path}"))?;
+    let account_data = get_account_data_from_keystore(account, &keystore_path)?;
 
-    let deployment = items
-        .get("deployment")
-        .context("Failed to find deployment field in account JSON file")?;
-
-    let status = deployment
-        .get("status")
-        .and_then(serde_json::Value::as_str)
-        .context("Failed to get status from account JSON file")?;
-
-    if status == "deployed" {
+    let is_deployed = account_data
+        .deployed
+        .ok_or_else(|| anyhow!("Failed to get status key from account JSON file"))?;
+    if is_deployed {
         bail!("Account already deployed");
     }
 
-    let salt = FieldElement::from_hex_be(
-        deployment
-            .get("salt")
-            .and_then(serde_json::Value::as_str)
-            .context("Failed to get salt from account JSON file")?,
-    )?;
-    let oz_class_hash = FieldElement::from_hex_be(
-        deployment
-            .get("class_hash")
-            .and_then(serde_json::Value::as_str)
-            .context("Failed to get class_hash from account JSON file")?,
-    )?;
-
-    if !keystore_path.exists() {
-        bail!("Failed to read keystore file");
-    }
     let private_key = SigningKey::from_keystore(
         keystore_path,
         get_keystore_password(KEYSTORE_PASSWORD_ENV_VAR)?.as_str(),
     )?;
-    let public_key: FieldElement = {
-        let pk = items
-            .get("variant")
-            .and_then(|v| v.get("public_key"))
-            .and_then(serde_json::Value::as_str)
-            .context("No public_key in account JSON file")?;
-        parse_number(pk)?
-    };
+    let public_key = account_data.public_key;
+
     if public_key != private_key.verifying_key().scalar() {
         bail!("Public key and private key from keystore do not match");
     }
 
-    let address = get_contract_address(
-        salt,
-        oz_class_hash,
-        &[private_key.verifying_key().scalar()],
-        FieldElement::ZERO,
-    );
+    let salt = account_data
+        .salt
+        .context("Failed to get salt from keystore")?;
+
+    let account_type = account_data
+        .account_type
+        .context("Failed to get account type from keystore")?;
+    let class_hash = account_data
+        .class_hash
+        .context("Failed to get class hash from keystore")?;
+
+    let address = match account_type {
+        AccountType::Argent => get_contract_address(
+            salt,
+            class_hash,
+            &[private_key.verifying_key().scalar(), FieldElement::ZERO],
+            FieldElement::ZERO,
+        ),
+        AccountType::OpenZeppelin => get_contract_address(
+            salt,
+            class_hash,
+            &[private_key.verifying_key().scalar()],
+            chain_id,
+        ),
+        AccountType::Braavos => get_contract_address(
+            salt,
+            BRAAVOS_BASE_ACCOUNT_CLASS_HASH,
+            &[private_key.verifying_key().scalar()],
+            chain_id,
+        ),
+    };
 
     let result = if provider
         .get_class_hash_at(BlockId::Tag(Pending), address)
@@ -152,29 +164,20 @@ async fn deploy_from_keystore(
             transaction_hash: Felt(FieldElement::ZERO),
         }
     } else {
-        deploy_oz_account(
+        get_deployment_result(
             provider,
-            oz_class_hash,
+            account_type,
+            class_hash,
             private_key,
             salt,
             chain_id,
-            max_fee,
+            fee_args,
             wait_config,
         )
         .await?
     };
 
-    items["deployment"]["status"] = serde_json::Value::from("deployed");
-    items.get_mut("deployment").and_then(|deployment| {
-        deployment
-            .as_object_mut()
-            .expect("Failed to get deployment as an object")
-            .remove("salt")
-    });
-    items["deployment"]["address"] = format!("{address:#x}").into();
-
-    std::fs::write(&account_path, serde_json::to_string_pretty(&items).unwrap())
-        .context("Failed to write to account file")?;
+    update_keystore_account(account, address)?;
 
     Ok(result)
 }
@@ -184,110 +187,130 @@ async fn deploy_from_accounts_file(
     accounts_file: Utf8PathBuf,
     name: String,
     chain_id: FieldElement,
-    max_fee: Option<FieldElement>,
+    fee_args: FeeArgs,
     wait_config: WaitForTx,
-    class_hash: Option<FieldElement>,
 ) -> Result<InvokeResponse> {
-    let network_name = chain_id_to_network_name(chain_id);
+    let account_data = get_account_data_from_accounts_file(&name, chain_id, &accounts_file)?;
 
-    let contents =
-        std::fs::read_to_string(accounts_file.clone()).context("Failed to read accounts file")?;
-    let mut items: serde_json::Value = serde_json::from_str(&contents)
-        .with_context(|| format!("Failed to parse accounts file at = {accounts_file}"))?;
+    let private_key = SigningKey::from_secret_scalar(account_data.private_key);
 
-    if items[&network_name].is_null() {
-        bail!("No accounts defined for network {}", network_name);
-    }
-    if items[&network_name][&name].is_null() {
-        bail!("Account with name {name} does not exist")
-    }
-    let account = &items[&network_name][&name];
-
-    let private_key = SigningKey::from_secret_scalar(
-        parse_number(
-            account
-                .get("private_key")
-                .and_then(serde_json::Value::as_str)
-                .context("Failed to get private key from accounts file")?,
-        )
-        .context("Failed to parse private key")?,
-    );
-
-    let oz_class_hash = {
-        if let Some(class_hash_) = class_hash {
-            class_hash_
-        } else if let Some(class_hash_) = account
-            .get("class_hash")
-            .and_then(serde_json::Value::as_str)
-        {
-            FieldElement::from_hex_be(class_hash_)
-                .expect("Failed to parse account class hash from accounts file")
-        } else {
-            FieldElement::from_hex_be(OZ_CLASS_HASH).expect("Failed to parse OZ class hash")
-        }
-    };
-
-    let result = deploy_oz_account(
+    let result = get_deployment_result(
         provider,
-        oz_class_hash,
+        account_data
+            .account_type
+            .context("Failed to get account type from accounts file")?,
+        account_data
+            .class_hash
+            .context("Failed to get class hash from accounts file")?,
         private_key,
-        parse_number(
-            account
-                .get("salt")
-                .and_then(serde_json::Value::as_str)
-                .context("Failed to get salt from accounts file")?,
-        )
-        .context("Failed to parse salt")?,
+        account_data
+            .salt
+            .context("Failed to get salt from accounts file")?,
         chain_id,
-        max_fee,
+        fee_args,
         wait_config,
     )
     .await?;
 
-    items[&network_name][&name]["deployed"] = serde_json::Value::from(true);
-    std::fs::write(accounts_file, serde_json::to_string_pretty(&items).unwrap())
-        .context("Failed to write to accounts file")?;
+    update_account_in_accounts_file(accounts_file, &name, chain_id)?;
 
     Ok(result)
 }
 
-async fn deploy_oz_account(
+#[allow(clippy::too_many_arguments)]
+async fn get_deployment_result(
     provider: &JsonRpcClient<HttpTransport>,
-    oz_class_hash: FieldElement,
+    account_type: AccountType,
+    class_hash: FieldElement,
     private_key: SigningKey,
     salt: FieldElement,
     chain_id: FieldElement,
-    max_fee: Option<FieldElement>,
+    fee_args: FeeArgs,
     wait_config: WaitForTx,
 ) -> Result<InvokeResponse> {
-    let factory = OpenZeppelinAccountFactory::new(
-        oz_class_hash,
-        chain_id,
-        LocalWallet::from_signing_key(private_key),
-        provider,
-    )
-    .await?;
+    match account_type {
+        AccountType::Argent => {
+            let factory = ArgentAccountFactory::new(
+                class_hash,
+                chain_id,
+                FieldElement::ZERO,
+                LocalWallet::from_signing_key(private_key),
+                provider,
+            )
+            .await?;
 
-    let deployment = factory.deploy(salt);
-    let deploy_max_fee = if let Some(max_fee) = max_fee {
-        max_fee
-    } else {
-        match deployment.estimate_fee().await {
-            Ok(max_fee) => max_fee.overall_fee,
-            Err(error) => return Err(handle_account_factory_error(error)),
+            deploy_account(factory, provider, salt, fee_args, wait_config, class_hash).await
+        }
+        AccountType::OpenZeppelin => {
+            let factory = OpenZeppelinAccountFactory::new(
+                class_hash,
+                chain_id,
+                LocalWallet::from_signing_key(private_key),
+                provider,
+            )
+            .await?;
+
+            deploy_account(factory, provider, salt, fee_args, wait_config, class_hash).await
+        }
+        AccountType::Braavos => {
+            let factory = BraavosAccountFactory::new(
+                class_hash,
+                BRAAVOS_BASE_ACCOUNT_CLASS_HASH,
+                chain_id,
+                LocalWallet::from_signing_key(private_key),
+                provider,
+            )
+            .await?;
+
+            deploy_account(factory, provider, salt, fee_args, wait_config, class_hash).await
+        }
+    }
+}
+
+async fn deploy_account<T>(
+    account_factory: T,
+    provider: &JsonRpcClient<HttpTransport>,
+    salt: FieldElement,
+    fee_args: FeeArgs,
+    wait_config: WaitForTx,
+    class_hash: FieldElement,
+) -> Result<InvokeResponse>
+where
+    T: AccountFactory + Sync,
+{
+    let fee_settings = fee_args
+        .try_into_fee_settings(account_factory.provider(), account_factory.block_id())
+        .await?;
+    let result = match fee_settings {
+        FeeSettings::Eth { max_fee } => {
+            let deployment = account_factory.deploy_v1(salt);
+            let deployment = apply_optional(deployment, max_fee, AccountDeploymentV1::max_fee);
+            deployment.send().await
+        }
+        FeeSettings::Strk {
+            max_gas,
+            max_gas_unit_price,
+        } => {
+            let deployment = account_factory.deploy_v3(salt);
+            let deployment = apply_optional(deployment, max_gas, AccountDeploymentV3::gas);
+            let deployment = apply_optional(
+                deployment,
+                max_gas_unit_price,
+                AccountDeploymentV3::gas_price,
+            );
+            deployment.send().await
         }
     };
-    let result = deployment.max_fee(deploy_max_fee).send().await;
 
     match result {
         Err(AccountFactoryError::Provider(error)) => match error {
             StarknetError(ClassHashNotFound) => Err(anyhow!(
                 "Provided class hash {:#x} does not exist",
-                oz_class_hash,
+                class_hash,
             )),
             _ => Err(handle_rpc_error(error)),
         },
-        Err(_) => Err(anyhow!("Unknown RPC error")),
+        Err(_) => Err(anyhow!("Unknown AccountFactoryError")),
         Ok(result) => {
             let return_value = InvokeResponse {
                 transaction_hash: Felt(result.transaction_hash),
@@ -306,4 +329,44 @@ async fn deploy_oz_account(
             Ok(return_value)
         }
     }
+}
+
+fn update_account_in_accounts_file(
+    accounts_file: Utf8PathBuf,
+    account_name: &str,
+    chain_id: FieldElement,
+) -> Result<()> {
+    let network_name = chain_id_to_network_name(chain_id);
+
+    let contents =
+        std::fs::read_to_string(accounts_file.clone()).context("Failed to read accounts file")?;
+    let mut items: serde_json::Value = serde_json::from_str(&contents)
+        .with_context(|| format!("Failed to parse accounts file at = {accounts_file}"))?;
+    items[&network_name][account_name]["deployed"] = serde_json::Value::from(true);
+    std::fs::write(accounts_file, serde_json::to_string_pretty(&items).unwrap())
+        .context("Failed to write to accounts file")?;
+
+    Ok(())
+}
+
+fn update_keystore_account(account: &str, address: FieldElement) -> Result<()> {
+    let account_path = Utf8PathBuf::from(account.to_string());
+    let contents =
+        std::fs::read_to_string(account_path.clone()).context("Failed to read account file")?;
+    let mut items: Map<String, serde_json::Value> = serde_json::from_str(&contents)
+        .map_err(|_| anyhow!("Failed to parse account file at {account_path}"))?;
+
+    items["deployment"]["status"] = serde_json::Value::from("deployed");
+    items
+        .get_mut("deployment")
+        .and_then(|deployment| deployment.as_object_mut())
+        .expect("Failed to get deployment as an object")
+        .retain(|key, _| key != "salt" && key != "context");
+
+    items["deployment"]["address"] = format!("{address:#x}").into();
+
+    std::fs::write(&account_path, serde_json::to_string_pretty(&items).unwrap())
+        .context("Failed to write to account file")?;
+
+    Ok(())
 }

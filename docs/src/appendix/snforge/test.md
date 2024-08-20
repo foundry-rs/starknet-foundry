@@ -69,7 +69,7 @@ You need [cairo-profiler](https://github.com/software-mansion/cairo-profiler) in
 
 Number of maximum steps during a single test. For fuzz tests this value is applied to each subtest separately.
 
-##  `-F`, `--features` `<FEATURES>`        
+##  `-F`, `--features` `<FEATURES>`
 Comma separated list of features to activate.
 
 ## `--all-features`

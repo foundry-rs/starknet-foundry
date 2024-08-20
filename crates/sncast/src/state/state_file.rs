@@ -5,9 +5,8 @@ use crate::response::structs::{DeclareResponse, DeployResponse, InvokeResponse};
 use crate::state::hashing::generate_id;
 use crate::WaitForTransactionError;
 use anyhow::{anyhow, Context, Result};
-use cairo_felt::Felt252;
 use camino::Utf8PathBuf;
-use conversions::felt252::SerializeAsFelt252Vec;
+use conversions::serde::serialize::{BufferWriter, CairoSerialize};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
@@ -202,17 +201,23 @@ impl From<DeployResponse> for ScriptTransactionOutput {
     }
 }
 
-#[must_use]
-pub fn serialize_as_script_function_result(output: ScriptTransactionOutput) -> Vec<Felt252> {
-    let res = match output {
-        ScriptTransactionOutput::InvokeResponse(val) => val.serialize_as_felt252_vec(),
-        ScriptTransactionOutput::DeclareResponse(val) => val.serialize_as_felt252_vec(),
-        ScriptTransactionOutput::DeployResponse(val) => val.serialize_as_felt252_vec(),
-        ScriptTransactionOutput::ErrorResponse(_) => {
-            panic!("Cannot return ErrorResponse as script function response")
+impl CairoSerialize for ScriptTransactionOutput {
+    fn serialize(&self, output: &mut BufferWriter) {
+        match self {
+            ScriptTransactionOutput::InvokeResponse(val) => {
+                Ok::<_, StarknetCommandError>(val).serialize(output);
+            }
+            ScriptTransactionOutput::DeclareResponse(val) => {
+                Ok::<_, StarknetCommandError>(val).serialize(output);
+            }
+            ScriptTransactionOutput::DeployResponse(val) => {
+                Ok::<_, StarknetCommandError>(val).serialize(output);
+            }
+            ScriptTransactionOutput::ErrorResponse(_) => {
+                panic!("Cannot return ErrorResponse as script function response")
+            }
         }
-    };
-    Ok::<Vec<Felt252>, StarknetCommandError>(res).serialize_as_felt252_vec()
+    }
 }
 
 #[derive(Clone, Deserialize, Serialize, Debug, PartialEq)]

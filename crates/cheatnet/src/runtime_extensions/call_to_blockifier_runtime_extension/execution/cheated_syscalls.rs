@@ -48,7 +48,7 @@ pub fn get_execution_info_syscall(
 ) -> SyscallResult<GetExecutionInfoResponse> {
     let execution_info_ptr = syscall_handler.get_or_allocate_execution_info_segment(vm)?;
 
-    let cheated_data = cheatnet_state.get_cheated_data(&syscall_handler.storage_address());
+    let cheated_data = cheatnet_state.get_cheated_data(syscall_handler.storage_address());
 
     let ptr_cheated_exec_info = get_cheated_exec_info_ptr(vm, execution_info_ptr, &cheated_data);
 
@@ -92,7 +92,7 @@ pub fn deploy_syscall(
         cheatnet_state,
         syscall_handler.resources,
         syscall_handler.context,
-        ctor_context,
+        &ctor_context,
         request.constructor_calldata,
         *remaining_gas,
     )?;
@@ -115,7 +115,7 @@ pub fn execute_deployment(
     cheatnet_state: &mut CheatnetState,
     resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
-    ctor_context: ConstructorContext,
+    ctor_context: &ConstructorContext,
     constructor_calldata: Calldata,
     remaining_gas: u64,
 ) -> EntryPointExecutionResult<CallInfo> {

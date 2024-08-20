@@ -1,13 +1,15 @@
 use crate::build_trace_data::build_profiler_call_trace;
-use crate::compiled_runnable::TestCaseRunnable;
+use crate::build_trace_data::test_sierra_program_path::VersionedProgramPath;
 use crate::expected_result::{ExpectedPanicValue, ExpectedTestResult};
 use crate::gas::check_available_gas;
-use cairo_felt::Felt252;
+use crate::package_tests::with_config_resolved::TestCaseWithResolvedConfig;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{RunResult, RunResultValue};
+use cairo_vm::Felt252;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::state::CallTrace as InternalCallTrace;
+use conversions::byte_array::ByteArray;
 use num_traits::Pow;
 use shared::utils::build_readable_text;
 use std::cell::RefCell;
@@ -206,19 +208,21 @@ impl TestCaseSummary<Fuzzing> {
 
 impl TestCaseSummary<Single> {
     #[must_use]
+    #[allow(clippy::too_many_arguments)]
     pub(crate) fn from_run_result_and_info(
         run_result: RunResult,
-        test_case: &TestCaseRunnable,
+        test_case: &TestCaseWithResolvedConfig,
         arguments: Vec<Felt252>,
         gas: u128,
         used_resources: UsedResources,
         call_trace: &Rc<RefCell<InternalCallTrace>>,
         contracts_data: &ContractsData,
+        maybe_versioned_program_path: &Option<VersionedProgramPath>,
     ) -> Self {
         let name = test_case.name.clone();
-        let msg = extract_result_data(&run_result, &test_case.expected_result);
+        let msg = extract_result_data(&run_result, &test_case.config.expected_result);
         match run_result.value {
-            RunResultValue::Success(_) => match &test_case.expected_result {
+            RunResultValue::Success(_) => match &test_case.config.expected_result {
                 ExpectedTestResult::Success => {
                     let summary = TestCaseSummary::Passed {
                         name,
@@ -227,9 +231,13 @@ impl TestCaseSummary<Single> {
                         test_statistics: (),
                         gas_info: gas,
                         used_resources,
-                        trace_data: build_profiler_call_trace(call_trace, contracts_data),
+                        trace_data: build_profiler_call_trace(
+                            call_trace,
+                            contracts_data,
+                            maybe_versioned_program_path,
+                        ),
                     };
-                    check_available_gas(&test_case.available_gas, summary)
+                    check_available_gas(&test_case.config.available_gas, summary)
                 }
                 ExpectedTestResult::Panics(_) => TestCaseSummary::Failed {
                     name,
@@ -238,7 +246,7 @@ impl TestCaseSummary<Single> {
                     test_statistics: (),
                 },
             },
-            RunResultValue::Panic(value) => match &test_case.expected_result {
+            RunResultValue::Panic(value) => match &test_case.config.expected_result {
                 ExpectedTestResult::Success => TestCaseSummary::Failed {
                     name,
                     msg,
@@ -246,7 +254,7 @@ impl TestCaseSummary<Single> {
                     test_statistics: (),
                 },
                 ExpectedTestResult::Panics(panic_expectation) => match panic_expectation {
-                    ExpectedPanicValue::Exact(expected) if &value != expected => {
+                    ExpectedPanicValue::Exact(expected) if !is_matching(&value, expected) => {
                         TestCaseSummary::Failed {
                             name,
                             msg,
@@ -261,7 +269,11 @@ impl TestCaseSummary<Single> {
                         test_statistics: (),
                         gas_info: gas,
                         used_resources,
-                        trace_data: build_profiler_call_trace(call_trace, contracts_data),
+                        trace_data: build_profiler_call_trace(
+                            call_trace,
+                            contracts_data,
+                            maybe_versioned_program_path,
+                        ),
                     },
                 },
             },
@@ -274,6 +286,20 @@ fn join_short_strings(data: &[Felt252]) -> String {
         .map(|felt| as_cairo_short_string(felt).unwrap_or_default())
         .collect::<Vec<String>>()
         .join(", ")
+}
+
+fn is_matching(data: &[Felt252], pattern: &[Felt252]) -> bool {
+    let data_str = convert_felts_to_byte_array_string(data);
+    let pattern_str = convert_felts_to_byte_array_string(pattern);
+
+    if let (Some(data), Some(pattern)) = (data_str, pattern_str) {
+        data.contains(&pattern) // If both data and pattern are byte arrays, pattern should be a substring of data
+    } else {
+        data == pattern // Otherwise, data should be equal to pattern
+    }
+}
+fn convert_felts_to_byte_array_string(data: &[Felt252]) -> Option<String> {
+    ByteArray::deserialize_with_magic(data).map(Into::into).ok()
 }
 
 /// Returns a string with the data that was produced by the test case.
@@ -305,10 +331,12 @@ fn extract_result_data(run_result: &RunResult, expectation: &ExpectedTestResult)
             };
 
             match expected_data {
-                Some(expected) if expected == panic_data => None,
+                Some(expected) if is_matching(panic_data, expected) => None,
                 Some(expected) => {
-                    let panic_string = join_short_strings(panic_data);
-                    let expected_string = join_short_strings(expected);
+                    let panic_string = convert_felts_to_byte_array_string(panic_data)
+                        .unwrap_or_else(|| join_short_strings(panic_data));
+                    let expected_string = convert_felts_to_byte_array_string(expected)
+                        .unwrap_or_else(|| join_short_strings(expected));
 
                     Some(format!(
                         "\n    Incorrect panic data\n    {}\n    {}\n",

@@ -10,7 +10,7 @@ fn precalculate_address() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use snforge_std::{ declare, ContractClass, ContractClassTrait };
+        use snforge_std::{ declare, ContractClass, ContractClassTrait, DeclareResultTrait };
         use array::ArrayTrait;
         use traits::Into;
         use traits::TryInto;
@@ -20,7 +20,7 @@ fn precalculate_address() {
         fn precalculate_address() {
             let mut calldata = ArrayTrait::new();
 
-            let contract = declare("HelloStarknet").unwrap();
+            let contract = declare("HelloStarknet").unwrap().contract_class();
             let contract_address_pre = contract.precalculate_address(@calldata);
             let (contract_address, _) = contract.deploy(@calldata).unwrap();
             let contract_address_pre2 = contract.precalculate_address(@calldata);

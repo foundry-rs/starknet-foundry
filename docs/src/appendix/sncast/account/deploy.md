@@ -1,21 +1,39 @@
 # `deploy`
 Deploy previously created account to Starknet.
 
-## Required Common Arguments — Passed By CLI or Specified in `snfoundry.toml`
-
-* [`url`](../common.md#--url--u-rpc_url)
-
 ## `--name, -n <ACCOUNT_NAME>`
 Required.
 
 Name of the (previously created) account to be deployed.
 
+## `--url, -u <RPC_URL>`
+Optional.
+
+Starknet RPC node url address.
+
+Overrides url from `snfoundry.toml`.
+
 ## `--max-fee, -m <MAX_FEE>`
 Optional.
 
-Maximum fee for the `deploy_account` transaction. When not used, defaults to auto-estimation.
+Maximum fee for the `deploy_account` transaction in Fri or Wei depending on fee token or transaction version. When not used, defaults to auto-estimation.
 
-## `--class-hash, -c`
+## `--fee-token <FEE_TOKEN>`
+Optional. Required if `--version` is not provided.
+
+Token used for fee payment. Possible values: ETH, STRK.
+
+## `--max-gas <MAX_GAS>`
 Optional.
 
-Class hash of a custom OpenZeppelin account contract declared to the network.
+Maximum gas for the `deploy_account` transaction. When not used, defaults to auto-estimation. (Only for STRK fee payment)
+
+## ` --max-gas-unit-price <MAX_GAS_UNIT_PRICE>`
+Optional.
+
+Maximum gas unit price for the `deploy_account` transaction paid in Fri. When not used, defaults to auto-estimation. (Only for STRK fee payment)
+
+## `--version, -v <VERSION>`
+Optional. Required if `--fee-token` is not provided.
+
+Version of the account deployment transaction. Possible values: v1, v3.

@@ -21,17 +21,17 @@ use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
 use starknet_api::{
     core::ClassHash,
     deprecated_contract_class::EntryPointType,
-    hash::StarkFelt,
     transaction::{Calldata, TransactionVersion},
 };
 use std::collections::HashSet;
 use std::rc::Rc;
 use blockifier::execution::deprecated_syscalls::hint_processor::SyscallCounter;
-use cairo_felt::Felt252;
-use cairo_vm::vm::trace::trace_entry::TraceEntry;
+use cairo_vm::Felt252;
+use cairo_vm::vm::trace::trace_entry::RelocatedTraceEntry;
 use conversions::FromConv;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{AddressOrClassHash, CallResult};
 use crate::runtime_extensions::common::sum_syscall_counters;
+use conversions::string::TryFromHexStr;
 
 // blockifier/src/execution/entry_point.rs:180 (CallEntryPoint::execute)
 #[allow(clippy::too_many_lines)]
@@ -49,9 +49,9 @@ pub fn execute_call_entry_point(
             .top_cheated_data()
             .clone()
     } else {
-        let contract_address = &entry_point.storage_address;
+        let contract_address = entry_point.storage_address;
         let cheated_data_ = cheatnet_state.create_cheated_data(contract_address);
-        cheatnet_state.update_cheats(contract_address);
+        cheatnet_state.update_cheats(&contract_address);
         cheated_data_
     };
 
@@ -109,11 +109,10 @@ pub fn execute_call_entry_point(
     // endregion
 
     // Hack to prevent version 0 attack on argent accounts.
-    if context.tx_context.tx_info.version() == TransactionVersion(StarkFelt::from(0_u8))
+    if context.tx_context.tx_info.version() == TransactionVersion(Felt252::from(0_u8))
         && class_hash
-            == ClassHash(
-                StarkFelt::try_from(FAULTY_CLASS_HASH).expect("A class hash must be a felt."),
-            )
+            == TryFromHexStr::try_from_hex_str(FAULTY_CLASS_HASH)
+                .expect("A class hash must be a felt.")
     {
         return Err(PreExecutionError::FraudAttempt.into());
     }
@@ -168,7 +167,7 @@ fn remove_syscall_resources_and_exit_success_call(
     context: &mut EntryPointExecutionContext,
     resources: &mut ExecutionResources,
     cheatnet_state: &mut CheatnetState,
-    vm_trace: Option<Vec<TraceEntry>>,
+    vm_trace: Option<Vec<RelocatedTraceEntry>>,
 ) {
     let versioned_constants = context.tx_context.block_context.versioned_constants();
     // We don't want the syscall resources to pollute the results
@@ -212,7 +211,7 @@ pub fn execute_constructor_entry_point(
     cheatnet_state: &mut CheatnetState,
     resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
-    ctor_context: ConstructorContext,
+    ctor_context: &ConstructorContext,
     calldata: Calldata,
     remaining_gas: u64,
 ) -> EntryPointExecutionResult<CallInfo> {
@@ -251,7 +250,7 @@ pub fn execute_constructor_entry_point(
 fn get_mocked_function_cheat_status<'a>(
     call: &CallEntryPoint,
     cheatnet_state: &'a mut CheatnetState,
-) -> Option<&'a mut CheatStatus<Vec<StarkFelt>>> {
+) -> Option<&'a mut CheatStatus<Vec<Felt252>>> {
     if call.call_type == CallType::Delegate {
         return None;
     }
@@ -262,7 +261,7 @@ fn get_mocked_function_cheat_status<'a>(
         .and_then(|contract_functions| contract_functions.get_mut(&call.entry_point_selector))
 }
 
-fn mocked_call_info(call: CallEntryPoint, ret_data: Vec<StarkFelt>) -> CallInfo {
+fn mocked_call_info(call: CallEntryPoint, ret_data: Vec<Felt252>) -> CallInfo {
     CallInfo {
         call,
         execution: CallExecution {

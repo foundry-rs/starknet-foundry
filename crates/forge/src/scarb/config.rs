@@ -1,4 +1,3 @@
-use crate::compiled_raw::RawForkParams;
 use anyhow::{bail, Result};
 use itertools::Itertools;
 use serde::Deserialize;
@@ -10,7 +9,7 @@ use std::{
 #[allow(clippy::module_name_repetitions)]
 #[allow(clippy::struct_excessive_bools)]
 #[derive(Debug, PartialEq, Default)]
-pub struct ForgeConfig {
+pub struct ForgeConfigFromScarb {
     /// Should runner exit after first failed test
     pub exit_first: bool,
     /// How many runs should fuzzer execute
@@ -29,26 +28,24 @@ pub struct ForgeConfig {
     pub max_n_steps: Option<u32>,
 }
 
+#[non_exhaustive]
 #[derive(Debug, PartialEq, Clone)]
 pub struct ForkTarget {
-    name: String,
-    params: RawForkParams,
+    pub name: String,
+    pub url: String,
+    pub block_id_type: String,
+    pub block_id_value: String,
 }
 
 impl ForkTarget {
     #[must_use]
-    pub fn new(name: String, params: RawForkParams) -> Self {
-        Self { name, params }
-    }
-
-    #[must_use]
-    pub fn name(&self) -> &str {
-        &self.name
-    }
-
-    #[must_use]
-    pub fn params(&self) -> &RawForkParams {
-        &self.params
+    pub fn new(name: String, url: String, block_id_type: String, block_id_value: String) -> Self {
+        Self {
+            name,
+            url,
+            block_id_type,
+            block_id_value,
+        }
     }
 }
 
@@ -115,7 +112,7 @@ fn validate_raw_fork_config(raw_config: RawForgeConfig) -> Result<RawForgeConfig
     Ok(raw_config)
 }
 
-impl TryFrom<RawForgeConfig> for ForgeConfig {
+impl TryFrom<RawForgeConfig> for ForgeConfigFromScarb {
     type Error = anyhow::Error;
 
     fn try_from(value: RawForgeConfig) -> Result<Self, Self::Error> {
@@ -128,15 +125,13 @@ impl TryFrom<RawForgeConfig> for ForgeConfig {
 
             fork_targets.push(ForkTarget::new(
                 raw_fork_target.name,
-                RawForkParams {
-                    url: raw_fork_target.url,
-                    block_id_type: block_id_type.to_string(),
-                    block_id_value: block_id_value.clone(),
-                },
+                raw_fork_target.url,
+                block_id_type.to_string(),
+                block_id_value.clone(),
             ));
         }
 
-        Ok(ForgeConfig {
+        Ok(ForgeConfigFromScarb {
             exit_first: value.exit_first,
             fuzzer_runs: value.fuzzer_runs,
             fuzzer_seed: value.fuzzer_seed,

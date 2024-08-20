@@ -1,66 +1,19 @@
 # `replace_bytecode`
 
-> `fn replace_bytecode(contract: ContractAddress, new_class: ClassHash)`
+> `fn replace_bytecode(contract: ContractAddress, new_class: ClassHash) -> Result<(), ReplaceBytecodeError>`
 
-Replaces class for given contract.
+Replaces class for given contract address.
+The `new_class` hash has to be declared in order for the replacement class to execute the code when interacting with the contract.
+Returns `Result::Ok` if the replacement succeeded, and a `ReplaceBytecodeError` with appropriate error type otherwise
 
-- `contract` - address specifying which contracts to cheat on
-- `new_class` - class that will be used now for given contract
-
-For contract implementation:
-
-```rust
-// ...
-#[storage]
-struct Storage {
-    value: felt252
-}
-
-#[abi(embed_v0)]
-impl IContractA of super::IContract<ContractState> {
-    fn get(self: @ContractState) -> felt252 {
-        self.value.read()
-    }
-
-    fn set(ref self: ContractState, value: felt252) {
-        self.value.write(value);
-    }
-}
-// ...
-```
-Replacement contract
-```rust
-// ...
-#[storage]
-struct Storage {
-    value: felt252
-}
-
-#[abi(embed_v0)]
-impl IContractB of super::IContract<ContractState> {
-    fn get(self: @ContractState) -> felt252 {
-        self.value.read() + 100
-    }
-
-    fn set(ref self: ContractState, value: felt252) {
-        self.value.write(value);
-    }
-}
-// ...
-```
-
-We can use `replace_bytecode` in a test to change the class hash for contracts:
+## ReplaceBytecodeError
+An enum with appropriate type of replacement failure
 
 ```rust
-use snforge_std::{replace_bytecode, CheatTarget};
-
-#[test]
-fn test_replace_bytecode() {
-    // ...
-
-    dispatcher.set(50);
-    replace_bytecode(contract_address, new_class_hash);
-
-    assert(dispatcher.get() == 150, 'wrong value');
+pub enum ReplaceBytecodeError {
+    /// Means that the contract does not exist, and thus bytecode cannot be replaced
+    ContractNotDeployed,
+    /// Means that the given class for replacement is not declared
+    UndeclaredClassHash,
 }
 ```

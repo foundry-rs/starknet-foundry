@@ -22,8 +22,13 @@ contracts from within Cairo, its interface, internals and feature set can change
 >
 > Example:
 >
->```cairo
->  let declare_result = declare("Map", Option::Some(max_fee), Option::Some(nonce)).expect('declare failed');
+>```rust
+>      let declare_result = declare(
+>        "Map",
+>        FeeSettings::Eth(EthFeeSettings { max_fee: Option::Some(max_fee) }),
+>        Option::Some(nonce)
+>    )
+>        .expect('declare failed');
 >```
 
 Some of the planned features that will be included in future versions are:
@@ -171,7 +176,7 @@ For more details, see [init command](../appendix/sncast/script/init.md).
 
 This example shows how to call an already deployed contract. Please find full example with contract deployment [here](#full-example-with-contract-deployment).
 
-```cairo
+```rust
 use sncast_std::{invoke, call, CallResult};
 
 fn main() {
@@ -212,8 +217,8 @@ To run the script, do:
 
 ```shell
 $ sncast \
-  --url http://127.0.0.1:5050 \
   script run my_script
+  --url http://127.0.0.1:5050 \
 
 command: script run
 status: success
@@ -223,38 +228,50 @@ status: success
 
 This example script declares, deploys and interacts with an example [map contract](https://github.com/foundry-rs/starknet-foundry/tree/master/crates/sncast/tests/data/contracts/map):
 
-```cairo
+```rust
 use sncast_std::{
-    declare, deploy, invoke, call, DeclareResult, DeployResult, InvokeResult, CallResult, get_nonce, DisplayContractAddress, DisplayClassHash
+    declare, deploy, invoke, call, DeclareResult, DeployResult, InvokeResult, CallResult, get_nonce,
+    FeeSettings, EthFeeSettings
 };
 
 fn main() {
     let max_fee = 99999999999999999;
     let salt = 0x3;
 
-    let declare_result = declare("Map", Option::Some(max_fee), Option::None).expect('contract already declared');
+    let declare_nonce = get_nonce('latest');
+    let declare_result = declare(
+        "Map",
+        FeeSettings::Eth(EthFeeSettings { max_fee: Option::Some(max_fee) }),
+        Option::Some(declare_nonce)
+    )
+        .expect('map declare failed');
 
-    let nonce = get_nonce('latest');
     let class_hash = declare_result.class_hash;
-
-    println!("Class hash of the declared contract: {}", declare_result.class_hash);
-
+    let deploy_nonce = get_nonce('pending');
     let deploy_result = deploy(
-        class_hash, ArrayTrait::new(), Option::Some(salt), true, Option::Some(max_fee), Option::Some(nonce)
-    ).expect('deploy failed');
-
-    println!("Deployed the contract to address: {}", deploy_result.contract_address);
+        class_hash,
+        ArrayTrait::new(),
+        Option::Some(salt),
+        true,
+        FeeSettings::Eth(EthFeeSettings { max_fee: Option::Some(max_fee) }),
+        Option::Some(deploy_nonce)
+    )
+        .expect('map deploy failed');
+    assert(deploy_result.transaction_hash != 0, deploy_result.transaction_hash);
 
     let invoke_nonce = get_nonce('pending');
     let invoke_result = invoke(
-        deploy_result.contract_address, selector!("put"), array![0x1, 0x2], Option::Some(max_fee), Option::Some(invoke_nonce)
-    ).expect('invoke failed');
+        deploy_result.contract_address,
+        selector!("put"),
+        array![0x1, 0x2],
+        FeeSettings::Eth(EthFeeSettings { max_fee: Option::Some(max_fee) }),
+        Option::Some(invoke_nonce)
+    )
+        .expect('map invoke failed');
+    assert(invoke_result.transaction_hash != 0, invoke_result.transaction_hash);
 
-    println!("Invoke tx hash is: {}", invoke_result.transaction_hash);
-
-    let call_result = call(deploy_result.contract_address, selector!("get"), array![0x1]).expect('call failed');
-
-    println!("Call result: {}", call_result);
+    let call_result = call(deploy_result.contract_address, selector!("get"), array![0x1])
+        .expect('map call failed');
     assert(call_result.data == array![0x2], *call_result.data.at(0));
 }
 ```
@@ -282,7 +299,7 @@ version = "0.1.0"
 
 [dependencies]
 starknet = ">=2.3.0"
-sncast_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.22.0" }
+sncast_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.27.0" }
 map = { path = "../contracts" }
 
 [lib]
@@ -290,8 +307,6 @@ sierra = true
 casm = true
 
 [[target.starknet-contract]]
-sierra = true
-casm = true
 build-external-contracts = [
     "map::Map"
 ]
@@ -303,9 +318,9 @@ To run the script, do:
 
 ```shell
 $ sncast \
-  --url http://127.0.0.1:5050 \
   --account example_user \
-  script run map_script
+  script run map_script \
+  --url http://127.0.0.1:5050
 
 Class hash of the declared contract: 685896493695476540388232336434993540241192267040651919145140488413686992233
 ...
@@ -323,9 +338,9 @@ and only `call` functions are being executed (as they do not change the network 
 
 ```shell
 $ sncast \
-  --url http://127.0.0.1:5050 \
   --account example_user \
-  script run map_script
+  script run map_script \
+  --url http://127.0.0.1:5050
 
 Class hash of the declared contract: 1922774777685257258886771026518018305931014651657879651971507142160195873652
 Deployed the contract to address: 3478557462226312644848472512920965457566154264259286784215363579593349825684
@@ -339,9 +354,10 @@ whereas, when we run the same script once again with `--no-state-file` flag set,
 
 ```shell
 $ sncast \
-  --url http://127.0.0.1:5050 \
   --account example_user \
-  script run map_script --no-state-file
+  script run map_script \
+  --url http://127.0.0.1:5050 \
+  --no-state-file
 
 command: script run
 message:
@@ -360,14 +376,19 @@ Script errors implement `Debug` trait, allowing the error to be printed to stdou
 
 ```rust
 use sncast_std::{
-    get_nonce, declare, DeclareResult, ScriptCommandError, ProviderError, StarknetError
+    get_nonce, declare, DeclareResult, ScriptCommandError, ProviderError, StarknetError,
+    FeeSettings, EthFeeSettings
 };
 
 fn main() {
     let max_fee = 9999999999999999999999999999999999;
 
     let declare_nonce = get_nonce('latest');
-    let declare_result = declare("Map", Option::Some(max_fee), Option::Some(declare_nonce))
+    let declare_result = declare(
+        "Map",
+        FeeSettings::Eth(EthFeeSettings { max_fee: Option::Some(max_fee) }),
+        Option::Some(declare_nonce)
+    )
         .unwrap_err();
     println!("{:?}", declare_result);
 
@@ -378,6 +399,7 @@ fn main() {
         'ohno'
     )
 }
+
 ```
 
 stdout:

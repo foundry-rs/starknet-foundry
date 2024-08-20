@@ -1,12 +1,16 @@
-use crate::starknet_commands::invoke::execute_calls;
+use crate::starknet_commands::invoke::{execute_calls, InvokeVersion};
+use anyhow::anyhow;
 use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
 use serde::Deserialize;
 use sncast::helpers::constants::UDC_ADDRESS;
+use sncast::helpers::error::token_not_supported_for_invoke;
+use sncast::helpers::fee::{FeeArgs, FeeToken, PayableTransaction};
+use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::handle_starknet_command_error;
 use sncast::response::structs::InvokeResponse;
-use sncast::{extract_or_generate_salt, parse_number, udc_uniqueness, WaitForTx};
+use sncast::{extract_or_generate_salt, impl_payable_transaction, udc_uniqueness, WaitForTx};
 use starknet::accounts::{Account, Call, SingleOwnerAccount};
 use starknet::core::types::FieldElement;
 use starknet::core::utils::{get_selector_from_name, get_udc_deployed_address};
@@ -15,22 +19,31 @@ use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
 use std::collections::HashMap;
 
-#[derive(Args, Debug)]
+#[derive(Args, Debug, Clone)]
 #[command(about = "Execute a multicall from a .toml file", long_about = None)]
 pub struct Run {
     /// Path to the toml file with declared operations
     #[clap(short = 'p', long = "path")]
     pub path: Utf8PathBuf,
 
-    /// Max fee for the transaction. If not provided, max fee will be automatically estimated
+    #[clap(flatten)]
+    pub fee_args: FeeArgs,
+
+    /// Version of invoke (can be inferred from fee token)
     #[clap(short, long)]
-    pub max_fee: Option<FieldElement>,
+    pub version: Option<InvokeVersion>,
+
+    #[clap(flatten)]
+    pub rpc: RpcArgs,
 }
 
-#[allow(dead_code)]
+impl_payable_transaction!(Run, token_not_supported_for_invoke,
+    InvokeVersion::V1 => FeeToken::Eth,
+    InvokeVersion::V3 => FeeToken::Strk
+);
+
 #[derive(Deserialize, Debug)]
 struct DeployCall {
-    call_type: String,
     class_hash: FieldElement,
     inputs: Vec<String>,
     unique: bool,
@@ -38,24 +51,23 @@ struct DeployCall {
     id: String,
 }
 
-#[allow(dead_code)]
 #[derive(Deserialize, Debug)]
 struct InvokeCall {
-    call_type: String,
     contract_address: String,
     function: String,
     inputs: Vec<String>,
 }
 
 pub async fn run(
-    path: &Utf8PathBuf,
+    run: Run,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
-    max_fee: Option<FieldElement>,
     wait_config: WaitForTx,
 ) -> Result<InvokeResponse> {
-    let contents = std::fs::read_to_string(path)?;
+    let fee_args = run.fee_args.clone().fee_token(run.token_from_version());
+
+    let contents = std::fs::read_to_string(&run.path)?;
     let items_map: HashMap<String, Vec<toml::Value>> =
-        toml::from_str(&contents).with_context(|| format!("Failed to parse {path}"))?;
+        toml::from_str(&contents).with_context(|| format!("Failed to parse {}", run.path))?;
 
     let mut contracts = HashMap::new();
     let mut parsed_calls: Vec<Call> = vec![];
@@ -83,7 +95,7 @@ pub async fn run(
                 calldata.extend(&parsed_inputs);
 
                 parsed_calls.push(Call {
-                    to: parse_number(UDC_ADDRESS)?,
+                    to: UDC_ADDRESS,
                     selector: get_selector_from_name("deployContract")?,
                     calldata,
                 });
@@ -107,7 +119,8 @@ pub async fn run(
                 let calldata = parse_inputs(&invoke_call.inputs, &contracts)?;
 
                 parsed_calls.push(Call {
-                    to: parse_number(contract_address)
+                    to: contract_address
+                        .parse()
                         .context("Failed to parse contract address to FieldElement")?,
                     selector: get_selector_from_name(&invoke_call.function)?,
                     calldata,
@@ -120,7 +133,7 @@ pub async fn run(
         }
     }
 
-    execute_calls(account, parsed_calls, max_fee, None, wait_config)
+    execute_calls(account, parsed_calls, fee_args, None, wait_config)
         .await
         .map_err(handle_starknet_command_error)
 }
@@ -132,8 +145,11 @@ fn parse_inputs(
     let mut parsed_inputs = Vec::new();
     for input in inputs {
         let current_input = contracts.get(input).unwrap_or(input);
-        parsed_inputs
-            .push(parse_number(current_input).context("Failed to parse input to FieldElement")?);
+        parsed_inputs.push(
+            current_input
+                .parse()
+                .context("Failed to parse input to FieldElement")?,
+        );
     }
 
     Ok(parsed_inputs)

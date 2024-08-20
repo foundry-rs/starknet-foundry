@@ -1,0 +1,12 @@
+[package]
+name = "cairo-serde-macros"
+version = "1.0.0"
+edition.workspace = true
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = "2.0.68"
+quote = "1.0.36"
+proc-macro2 = "1.0.86"

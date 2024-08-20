@@ -62,33 +62,32 @@ This code contains some caveats:
 
 That function returns the contract address of the test.
 It is useful, when you want to:
-- Mock the context (`prank`, `warp`, `roll`, `spoof`)
+- Mock the context (`cheat_caller_address`, `cheat_block_timestamp`, `cheat_block_number`, ...)
 - Spy for events emitted in the test
 
 Example usages:
 #### 1. Mocking the context info
-Example for `roll`, same can be implemented for `prank`/`spoof`/`warp`/`elect` etc.
+Example for `cheat_block_number`, same can be implemented for `cheat_caller_address`/`cheat_block_timestamp`/`elect` etc.
 
 ```rust
 use result::ResultTrait;
 use box::BoxTrait;
 use starknet::ContractAddress;
 use snforge_std::{
-    CheatTarget,
-    start_roll, stop_roll,
+    start_cheat_block_number, stop_cheat_block_number,
     test_address
 };
 
 #[test]
-fn test_roll_test_state() {
+fn test_cheat_block_number_test_state() {
     let test_address: ContractAddress = test_address();
     let old_block_number = starknet::get_block_info().unbox().block_number;
 
-    start_roll(CheatTarget::One(test_address), 234);
+    start_cheat_block_number(test_address, 234);
     let new_block_number = starknet::get_block_info().unbox().block_number;
     assert(new_block_number == 234, 'Wrong block number');
 
-    stop_roll(CheatTarget::One(test_address));
+    stop_cheat_block_number(test_address);
     let new_block_number = starknet::get_block_info().unbox().block_number;
     assert(new_block_number == old_block_number, 'Block num did not change back');
 }
@@ -133,13 +132,13 @@ You can implement this test:
 use array::ArrayTrait;
 use snforge_std::{ 
     declare, ContractClassTrait, spy_events, 
-    EventSpy, EventFetcher, 
-    EventAssertions, Event, SpyOn, test_address 
+    EventSpy, EventSpyTrait, EventSpyAssertionsTrait, 
+    Event, test_address 
 };
 #[test]
 fn test_expect_event() {
     let contract_address = test_address();
-    let mut spy = spy_events(SpyOn::One(contract_address));
+    let mut spy = spy_events();
     
     let mut testing_state = Emitter::contract_state_for_testing();
     Emitter::emit_event(ref testing_state);
@@ -161,14 +160,13 @@ use array::ArrayTrait;
 use result::ResultTrait;
 use starknet::SyscallResultTrait;
 use starknet::ContractAddress;
-use snforge_std::{ declare, ContractClassTrait, spy_events, EventSpy, EventFetcher,
-    event_name_hash, EventAssertions, Event, SpyOn, test_address };
+use snforge_std::{ declare, ContractClassTrait, spy_events, EventSpy, EventSpyTrait,
+    EventSpyAssertionsTrait, Event, test_address };
 
 #[test]
 fn test_expect_events_simple() {
     let test_address = test_address();
-    let mut spy = spy_events(SpyOn::One(test_address));
-    assert(spy._id == 0, 'Id should be 0');
+    let mut spy = spy_events();
 
     starknet::emit_event_syscall(array![1234].span(), array![2345].span()).unwrap_syscall();
 
@@ -221,7 +219,7 @@ We use the `SafeLibraryDispatcher` like this:
 ```rust
 use result::ResultTrait;
 use starknet::{ ClassHash, library_call_syscall, ContractAddress };
-use snforge_std::{ declare };
+use snforge_std::{ declare, DeclareResultTrait };
 
 #[starknet::interface]
 trait ILibraryContract<TContractState> {
@@ -237,7 +235,7 @@ trait ILibraryContract<TContractState> {
 
 #[test]
 fn test_library_calls() {
-    let class_hash = declare("LibraryContract").class_hash;
+    let class_hash = declare("LibraryContract").unwrap().contract_class().class_hash;
     let lib_dispatcher = ILibraryContractSafeLibraryDispatcher { class_hash };
     let value = lib_dispatcher.get_value().unwrap();
     assert(value == 0, 'Incorrect state');

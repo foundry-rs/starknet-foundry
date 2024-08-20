@@ -1,10 +1,12 @@
+use core::clone::Clone;
+use snforge_std::cheatcodes::contract_class::DeclareResultTrait;
 use snforge_std::{declare, ContractClassTrait, L1HandlerTrait};
 
 #[test]
 fn test_l1_handler() {
-    let empty_hash = declare("Empty").unwrap().class_hash;
-    let proxy = declare("TraceInfoProxy").unwrap();
-    let checker = declare("TraceInfoChecker").unwrap();
+    let empty_hash = declare("Empty").unwrap().contract_class().class_hash.clone();
+    let proxy = declare("TraceInfoProxy").unwrap().contract_class();
+    let checker = declare("TraceInfoChecker").unwrap().contract_class();
 
     trace_resources::use_builtins_and_syscalls(empty_hash, 7);
 
@@ -15,8 +17,5 @@ fn test_l1_handler() {
 
     let mut l1_handler = L1HandlerTrait::new(checker_address, selector!("handle_l1_message"));
 
-    l1_handler.from_address = 123;
-    l1_handler.payload = array![proxy_address.into(), empty_hash.into(), 2].span();
-
-    l1_handler.execute().unwrap();
+    l1_handler.execute(123, array![proxy_address.into(), empty_hash.into(), 2].span()).unwrap();
 }

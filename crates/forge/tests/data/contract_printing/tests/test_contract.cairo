@@ -1,3 +1,4 @@
+use snforge_std::cheatcodes::contract_class::DeclareResultTrait;
 use array::ArrayTrait;
 use result::ResultTrait;
 use option::OptionTrait;
@@ -13,7 +14,7 @@ use contract_printing::IHelloStarknetDispatcher;
 use contract_printing::IHelloStarknetDispatcherTrait;
 
 fn deploy_contract(name: ByteArray) -> ContractAddress {
-    let contract = declare(name).unwrap();
+    let contract = declare(name).unwrap().contract_class();
     let (address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
     address
 }

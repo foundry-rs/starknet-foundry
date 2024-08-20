@@ -1,7 +1,10 @@
+use snforge_std::cheatcodes::contract_class::DeclareResultTrait;
 use starknet::ContractAddress;
 use starknet::Felt252TryIntoContractAddress;
 
-use snforge_std::{declare, ContractClassTrait, test_address, start_prank, stop_prank, CheatTarget};
+use snforge_std::{
+    declare, ContractClassTrait, test_address, start_cheat_caller_address, stop_cheat_caller_address
+};
 
 use erc20_package::erc20::IERC20Dispatcher;
 use erc20_package::erc20::IERC20DispatcherTrait;
@@ -14,7 +17,7 @@ const INITIAL_SUPPLY: u256 = 10;
 fn deploy_erc20(
     name: felt252, symbol: felt252, decimals: u8, initial_supply: u256, recipient: ContractAddress
 ) -> ContractAddress {
-    let contract = declare("ERC20").unwrap();
+    let contract = declare("ERC20").unwrap().contract_class();
 
     let mut constructor_calldata: Array::<felt252> = array![name, symbol, decimals.into()];
 
@@ -44,7 +47,7 @@ fn complex() {
     let spender_balance = dispatcher.balance_of(spender);
     assert(spender_balance == 2, 'invalid spender balance');
 
-    start_prank(CheatTarget::One(erc20_address), spender);
+    start_cheat_caller_address(erc20_address, spender);
 
     // GetExecutionInfo: 1, StorageRead: 2, StorageWrite: 2, EmitEvent: 1
     dispatcher.increase_allowance(test_address(), 2);
@@ -53,7 +56,7 @@ fn complex() {
     let allowance = dispatcher.allowance(spender, test_address());
     assert(allowance == 2, 'invalid allowance');
 
-    stop_prank(CheatTarget::One(erc20_address));
+    stop_cheat_caller_address(erc20_address);
 
     // GetExecutionInfo: 1, StorageRead: 6, StorageWrite: 6, EmitEvent: 2
     dispatcher.transfer_from(spender, test_address(), 2);

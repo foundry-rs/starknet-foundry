@@ -80,33 +80,42 @@ jobs:
       - name: Run Cheatnet tests
         run: cargo test --release -p cheatnet
 
+  test-forge-scarb-plugin:
+    name: Test Forge Scarb Plugin
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
+      - uses: software-mansion/setup-scarb@v1.3.2
+      - uses: software-mansion/setup-universal-sierra-compiler@v1
+      - name: Run Forge Scarb Plugin tests
+        run: cargo test --release -p snforge-scarb-plugin
+
   test-cast:
     name: Test Cast
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@dc6353516c68da0f06325f42ad880f76a5e77ec9
+      - uses: dtolnay/rust-toolchain@21dc36fb71dd22e3317045c0c31a3f4249868b17
         with:
           toolchain: stable
       - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
-        with:
-          cache-directories: crates/sncast/tests/utils/devnet
       - name: Install starknet-devnet-rs
         run: ./scripts/install_devnet.sh
       - uses: software-mansion/setup-scarb@v1.3.2
+        with:
+          scarb-version: "2.7.0"
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - name: Run tests
-        env:
-          NODE_URL: ${{ secrets.NODE_URL }}
-        run: |
-          SEPOLIA_RPC_URL="${NODE_URL}:7070/rpc/v0_7" cargo test --release -p sncast
+        run: cargo test --release -p sncast
 
   test-conversions:
     name: Test Conversions
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@dc6353516c68da0f06325f42ad880f76a5e77ec9
+      - uses: dtolnay/rust-toolchain@21dc36fb71dd22e3317045c0c31a3f4249868b17
         with:
           toolchain: stable
       - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
@@ -128,6 +137,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+      - uses: software-mansion/setup-universal-sierra-compiler@v1
       - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
       - uses: software-mansion/setup-scarb@v1.3.2
       - uses: software-mansion/setup-universal-sierra-compiler@v1
@@ -154,7 +164,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@dc6353516c68da0f06325f42ad880f76a5e77ec9
+      - uses: dtolnay/rust-toolchain@21dc36fb71dd22e3317045c0c31a3f4249868b17
         with:
           toolchain: stable
       - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
@@ -168,7 +178,7 @@ jobs:
       RUSTFLAGS: "-Dwarnings"
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@dc6353516c68da0f06325f42ad880f76a5e77ec9
+      - uses: dtolnay/rust-toolchain@21dc36fb71dd22e3317045c0c31a3f4249868b17
         with:
           toolchain: stable
       - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
@@ -180,7 +190,7 @@ jobs:
     env:
       MDBOOK_VERSION: 0.4.31
     steps:
-      - uses: dtolnay/rust-toolchain@dc6353516c68da0f06325f42ad880f76a5e77ec9
+      - uses: dtolnay/rust-toolchain@21dc36fb71dd22e3317045c0c31a3f4249868b17
         with:
           toolchain: stable
       - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
@@ -188,6 +198,9 @@ jobs:
       - name: Install mdBook
         run: |
           cargo install --version ${MDBOOK_VERSION} mdbook
+      - name: Install mdBook Link-Check
+        run: |
+          cargo install mdbook-linkcheck
       - name: Build with mdBook
         run: mdbook build
         working-directory: ./docs
@@ -198,4 +211,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: typos-action
-        uses: crate-ci/typos@v1.19.0
+        uses: crate-ci/typos@v1.23.6

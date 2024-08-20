@@ -15,7 +15,7 @@ $ rustup update
 ```
 
 ### Scarb
-You can read more about installing Scarb [here](https://docs.swmansion.com/scarb/download.html)
+You can read more about installing Scarb [here](https://docs.swmansion.com/scarb/download.html).
 
 Please make sure you're using Scarb installed via [asdf](https://asdf-vm.com/) - otherwise some tests may fail.
 > To verify, run:
@@ -28,8 +28,11 @@ Please make sure you're using Scarb installed via [asdf](https://asdf-vm.com/) -
 > $HOME/.asdf/shims/scarb
 > ```
 > 
-> If you previously installed scarb using official installer, you may need to remove this installation or modify your PATH to make sure asdf installed one is always used.
+> If you previously installed scarb using an official installer, you may need to remove this installation or modify your PATH to make sure asdf installed one is always used.
 
+### cairo-profiler
+You can read more
+about installing `cairo-profiler` [here](https://github.com/software-mansion/cairo-profiler?tab=readme-ov-file#installation).
 
 > ❗️ **Warning**
 > 
@@ -42,9 +45,6 @@ Please make sure you're using Scarb installed via [asdf](https://asdf-vm.com/) -
 
 ### Starknet Devnet
 To install it run `./scripts/install_devnet.sh`
-
-To run `sncast` tests, it is required to set `SEPOLIA_RPC_URL` environment variable, which is
-used to fork the Sepolia testnet network in the devnet tests. This variable can be set in the `.env` file.
 
 ### Universal sierra compiler
 Install the latest [universal-sierra-compiler](https://github.com/software-mansion/universal-sierra-compiler) version.

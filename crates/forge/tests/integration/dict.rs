@@ -9,31 +9,31 @@ fn using_dict() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use snforge_std::{ declare, ContractClass, ContractClassTrait };
+        use snforge_std::{ declare, ContractClass, ContractClassTrait, DeclareResultTrait };
         use array::ArrayTrait;
-        
+
         #[starknet::interface]
         trait IDictUsingContract<TContractState> {
-            fn get_unique(self: @TContractState) -> u8; 
-            fn write_unique(self: @TContractState, values: Array<felt252>); 
+            fn get_unique(self: @TContractState) -> u8;
+            fn write_unique(self: @TContractState, values: Array<felt252>);
         }
-        
+
         #[test]
         fn using_dict() {
-            let contract = declare("DictUsingContract").unwrap();
+            let contract = declare("DictUsingContract").unwrap().contract_class();
             let numbers = array![1, 2, 3, 3, 3, 3 ,3, 4, 4, 4, 4, 4, 5, 5, 5, 5];
             let mut inputs: Array<felt252> = array![];
             numbers.serialize(ref inputs);
-            
+
             let (contract_address, _) = contract.deploy(@inputs).unwrap();
             let dispatcher = IDictUsingContractDispatcher { contract_address };
-            
+
             let unq = dispatcher.get_unique();
             assert(unq == 5, 'wrong unique count');
 
             numbers.serialize(ref inputs);
             dispatcher.write_unique(array![1, 2, 3, 3, 3, 3 ,3, 4, 4, 4, 4, 4]);
-            
+
             let unq = dispatcher.get_unique();
             assert(unq == 4, 'wrong unique count');
         }
