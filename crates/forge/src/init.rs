@@ -98,7 +98,7 @@ pub fn run(project_name: &str) -> Result<()> {
             .current_dir(current_dir)
             .arg("new")
             .arg(&project_path)
-            .args(["--test-runner", "starknet-foundry"])
+            .env("SCARB_INIT_TEST_RUNNER", "starknet-foundry")
             .run()
             .context("Failed to initialize a new project")?;
     }
