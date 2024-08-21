@@ -286,7 +286,7 @@ fn build_profiler_deprecated_syscall_selector(
         DeprecatedSyscallSelector::StorageRead => ProfilerDeprecatedSyscallSelector::StorageRead,
         DeprecatedSyscallSelector::StorageWrite => ProfilerDeprecatedSyscallSelector::StorageWrite,
         DeprecatedSyscallSelector::Sha256ProcessBlock => {
-            todo!("Add support for Sha256ProcessBlock in profiler")
+            ProfilerDeprecatedSyscallSelector::Sha256ProcessBlock
         }
     }
 }
