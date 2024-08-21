@@ -3,13 +3,13 @@ use features::{IContractDispatcher, IContractDispatcherTrait};
 
 #[cfg(feature: 'snforge_test_only')]
 fn mock_in_tests() -> felt252 {
-    69
+    999
 }
 
 #[test]
 #[cfg(feature: 'snforge_test_only')]
 fn test_mock_function() {
-    assert(mock_in_tests() == 69, '');
+    assert(mock_in_tests() == 999, '');
 }
 
 #[test]
@@ -20,5 +20,5 @@ fn test_mock_contract() {
         .deploy(@array![])
         .unwrap();
     let response_result = IContractDispatcher { contract_address }.response();
-    assert(response_result == 420, '');
+    assert(response_result == 1234, '');
 }

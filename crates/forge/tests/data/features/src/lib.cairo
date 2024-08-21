@@ -18,5 +18,5 @@ mod MockContract {
 }
 
 fn some_func() -> felt252 {
-    420
+    1234
 }
