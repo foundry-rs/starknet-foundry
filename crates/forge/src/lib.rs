@@ -134,7 +134,7 @@ pub struct TestArgs {
     #[arg(long)]
     max_n_steps: Option<u32>,
 
-    /// Specify Scarb features to enable
+    /// Specify features to enable
     #[command(flatten)]
     pub features: FeaturesSpec,
 }

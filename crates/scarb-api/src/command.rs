@@ -96,8 +96,8 @@ impl ScarbCommand {
     }
 
     /// Pass features specification filter to `scarb` call.
-    pub fn features_spec(&mut self, features_spec: FeaturesSpec) -> &mut Self {
-        self.envs(features_spec.to_env_vars());
+    pub fn features(&mut self, features: FeaturesSpec) -> &mut Self {
+        self.envs(features.to_env_vars());
         self
     }
 

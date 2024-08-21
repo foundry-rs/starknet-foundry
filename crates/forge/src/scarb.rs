@@ -31,14 +31,11 @@ impl PackageConfig for ForgeConfigFromScarb {
     }
 }
 
-pub fn build_contracts_with_scarb(
-    filter: PackagesFilter,
-    features_spec: FeaturesSpec,
-) -> Result<()> {
+pub fn build_contracts_with_scarb(filter: PackagesFilter, features: FeaturesSpec) -> Result<()> {
     ScarbCommand::new_with_stdio()
         .arg("build")
         .packages_filter(filter)
-        .features_spec(features_spec)
+        .features(features)
         .run()
         .context("Failed to build contracts with Scarb")?;
     Ok(())
@@ -46,13 +43,13 @@ pub fn build_contracts_with_scarb(
 
 pub fn build_test_artifacts_with_scarb(
     filter: PackagesFilter,
-    features_spec: FeaturesSpec,
+    features: FeaturesSpec,
 ) -> Result<()> {
     ScarbCommand::new_with_stdio()
         .arg("build")
         .arg("--test")
         .packages_filter(filter)
-        .features_spec(features_spec)
+        .features(features)
         .run()
         .context("Failed to build test artifacts with Scarb")?;
     Ok(())
