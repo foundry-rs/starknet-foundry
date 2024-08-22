@@ -1,14 +1,15 @@
 # Conditional Compilation
 
 It is possible to build some contracts solely for testing purposes.
-This can be achieved by leveraging [Scarb features](../snforge-advanced-features/fork-testing.md).
+This can be achieved by leveraging [Scarb features](https://docs.swmansion.com/scarb/docs/reference/conditional-compilation.html#features).
 Configuration in `Scarb.toml` is done in the same manner as described in the Scarb documentation.
-Additionally, the `snforge test` command exposes the following flags: [--features](../appendix/snforge/test.md#-f---features-features),
+Additionally, for utilizing features the `snforge test` command exposes the following flags, aligned with `scarb` flags:
+[--features](../appendix/snforge/test.md#-f---features-features),
 [--all-features](../appendix/snforge/test.md#--all-features) and [--no-default-features](../appendix/snforge/test.md#--no-default-features).
 
 ## Contracts
 
-Firstly, define a contract in the `src` directory with a `#cfg(feature: (...))` attribute:
+Firstly, define a contract in the `src` directory with a `#[cfg(feature: "...")]` attribute:
 
 ```rust
 #[starknet::interface]
@@ -31,11 +32,15 @@ mod MockContract {
 }
 ```
 
-Next, create a test with the same attribute:
+> 📝 **Note**
+> To declare mock contracts in tests, these contracts should be defined within the package and not in the `tests` directory.
+> This requirement is due to the way snforge [collects contracts](../testing/contracts-collection.md).
+
+
+Next, create a test that uses the above contract:
 
 ```rust
 #[test]
-#[cfg(feature: 'snforge_test_only')]
 fn test_mock_contract() {
     let (contract_address, _) = declare("MockContract")
         .unwrap()
@@ -60,11 +65,11 @@ Then, tests can be executed with:
 snforge test --features snforge_test_only
 ```
 
-If `snforge test` is run without features enabled, it won't execute the previous test or build any artifacts for the `MockContract`.
+If `snforge test` is run without features enabled, it won't build any artifacts for the `MockContract` and all tests that use this contract will fail.
 
 ## Functions
 
-Similarly, we can conditionally compile some functions created in the `tests` directory:
+Similarly, other parts of the code can also be conditionally compiled:
 
 ```rust
 #[cfg(feature: 'snforge_test_only')]
@@ -73,7 +78,6 @@ fn mock_function() -> u32 {
 }
 
 #[test]
-#[cfg(feature: 'snforge_test_only')]
 fn test_using_mock_function() {
     assert!(mock_function() == 2, '');
 }
