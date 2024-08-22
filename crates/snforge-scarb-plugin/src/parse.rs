@@ -16,7 +16,7 @@ pub fn parse<T: AttributeInfo>(
     code: &str,
 ) -> Result<(SimpleParserDatabase, FunctionWithBody), Diagnostic> {
     let simple_db = SimpleParserDatabase::default();
-    let code = Arc::new(code.to_string());
+    let code: Arc<str> = Arc::from(code);
     let db: &dyn SyntaxGroup = simple_db.upcast();
     // TODO(#2357): Use `db.parse_virtual` here instead of creating the virtual file manually
     let virtual_file = db.intern_file(FileLongId::Virtual(VirtualFile {
@@ -27,7 +27,7 @@ pub fn parse<T: AttributeInfo>(
         kind: FileKind::Module,
     }));
     let mut diagnostics = DiagnosticsBuilder::default();
-    let elements = Parser::parse_file(&simple_db, &mut diagnostics, virtual_file, code.as_str())
+    let elements = Parser::parse_file(&simple_db, &mut diagnostics, virtual_file, &code)
         .items(db)
         .elements(db);
 
