@@ -2,7 +2,7 @@ use crate::scarb::config::ForgeConfigFromScarb;
 use camino::Utf8PathBuf;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use forge_runner::forge_config::{
-    is_vm_trace_needed, ExecutionDataToSave, ForgeConfig, OutputConfig, TestRunnerConfig,
+    ExecutionDataToSave, ForgeConfig, OutputConfig, TestRunnerConfig,
 };
 use rand::{thread_rng, RngCore};
 use std::env;
@@ -39,7 +39,7 @@ pub fn combine_configs(
                 .or(forge_config_from_scarb.fuzzer_seed)
                 .unwrap_or_else(|| thread_rng().next_u64()),
             max_n_steps: max_n_steps.or(forge_config_from_scarb.max_n_steps),
-            is_vm_trace_needed: is_vm_trace_needed(execution_data_to_save),
+            is_vm_trace_needed: execution_data_to_save.is_vm_trace_needed(),
             cache_dir,
             contracts_data,
             environment_variables: env::vars().collect(),

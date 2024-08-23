@@ -43,11 +43,10 @@ impl ExecutionDataToSave {
             profile: build_profile,
         }
     }
-}
-
-#[must_use]
-pub fn is_vm_trace_needed(execution_data_to_save: ExecutionDataToSave) -> bool {
-    execution_data_to_save.trace || execution_data_to_save.profile
+    #[must_use]
+    pub fn is_vm_trace_needed(&self) -> bool {
+        self.trace || self.profile
+    }
 }
 
 /// This struct should be constructed on demand to pass only relevant information from

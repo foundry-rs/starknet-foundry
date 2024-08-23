@@ -1,5 +1,5 @@
 use crate::build_trace_data::test_sierra_program_path::VersionedProgramPath;
-use crate::forge_config::{is_vm_trace_needed, ExecutionDataToSave, ForgeConfig, TestRunnerConfig};
+use crate::forge_config::{ExecutionDataToSave, ForgeConfig, TestRunnerConfig};
 use crate::fuzzer::RandomFuzzer;
 use crate::running::{run_fuzz_test, run_test};
 use crate::test_case_summary::TestCaseSummary;
@@ -59,7 +59,7 @@ pub fn maybe_save_trace_and_profile(
         name, trace_data, ..
     }) = result
     {
-        if is_vm_trace_needed(execution_data_to_save) {
+        if execution_data_to_save.is_vm_trace_needed() {
             let trace_path = save_trace_data(name, trace_data)?;
             if execution_data_to_save.profile {
                 run_profiler(name, &trace_path)?;
@@ -75,7 +75,7 @@ pub fn maybe_save_versioned_program(
     versioned_programs_dir: &Utf8Path,
     package_name: &str,
 ) -> Result<Option<VersionedProgramPath>> {
-    let maybe_versioned_program_path = if is_vm_trace_needed(execution_data_to_save) {
+    let maybe_versioned_program_path = if execution_data_to_save.is_vm_trace_needed() {
         Some(VersionedProgramPath::save_versioned_program(
             &test_target.sierra_program.program.clone().into_artifact(),
             test_target.tests_location,
