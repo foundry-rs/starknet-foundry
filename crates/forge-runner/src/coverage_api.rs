@@ -20,7 +20,6 @@ pub fn run_coverage(saved_trace_data_paths: &[PathBuf]) -> Result<()> {
         .iter()
         .map(|trace_data_path| {
             trace_data_path
-                .as_path()
                 .to_str()
                 .expect("Failed to convert trace data path to string")
         })
@@ -35,7 +34,6 @@ pub fn run_coverage(saved_trace_data_paths: &[PathBuf]) -> Result<()> {
         .output_checked()
         .with_context(|| {
             "cairo-coverage failed to generate coverage - inspect the errors above for more info"
-                .to_string()
         })?;
 
     Ok(())
