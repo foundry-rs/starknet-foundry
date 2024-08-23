@@ -92,11 +92,14 @@ pub async fn run_for_test_target(
         let result = task??;
 
         print_test_result(&result, forge_config.output_config.detailed_resources);
-        maybe_save_trace_and_profile(
+
+        let trace_path = maybe_save_trace_and_profile(
             &result,
             forge_config.output_config.execution_data_to_save,
-            &mut saved_trace_data_paths,
         )?;
+        if let Some(path) = trace_path {
+            saved_trace_data_paths.push(path);
+        }
 
         if result.is_failed() && forge_config.test_runner_config.exit_first {
             interrupted = true;

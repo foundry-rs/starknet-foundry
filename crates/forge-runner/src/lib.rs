@@ -57,8 +57,7 @@ pub trait TestCaseFilter {
 pub fn maybe_save_trace_and_profile(
     result: &AnyTestCaseSummary,
     execution_data_to_save: ExecutionDataToSave,
-    saved_trace_data_paths: &mut Vec<PathBuf>,
-) -> Result<()> {
+) -> Result<Option<PathBuf>> {
     if let AnyTestCaseSummary::Single(TestCaseSummary::Passed {
         name, trace_data, ..
     }) = result
@@ -68,10 +67,10 @@ pub fn maybe_save_trace_and_profile(
             if execution_data_to_save.profile {
                 run_profiler(name, &trace_path)?;
             }
-            saved_trace_data_paths.push(trace_path);
+            return Ok(Some(trace_path));
         }
     }
-    Ok(())
+    Ok(None)
 }
 
 pub fn maybe_generate_coverage(
