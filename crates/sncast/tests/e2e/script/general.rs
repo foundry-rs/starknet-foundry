@@ -7,7 +7,7 @@ use crate::helpers::fixtures::{
 use crate::helpers::runner::runner;
 use camino::Utf8PathBuf;
 use indoc::indoc;
-use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
+use shared::test_utils::output_assert::assert_stderr_contains;
 use sncast::get_default_state_file_name;
 use sncast::state::state_file::{read_txs_from_state_file, ScriptTransactionStatus};
 use tempfile::tempdir;
@@ -135,7 +135,7 @@ async fn test_incompatible_sncast_std_version() {
 
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
-        [WARNING] Package sncast_std version does not meet the recommended version requirement =0.27.0, it might result in unexpected behaviour
+        [WARNING] Package sncast_std version does not meet the recommended version requirement =0.28.0, it might result in unexpected behaviour
         ...
     "});
 }
@@ -287,16 +287,13 @@ async fn test_no_account_passed() {
     let args = vec!["script", "run", &script_name, "--url", URL];
 
     let snapbox = runner(&args).current_dir(SCRIPTS_DIR.to_owned() + "/map_script/scripts");
-    let output = snapbox.assert().success();
-
-    assert_stdout_contains(
-        output,
-        indoc! {r#"
+    snapbox.assert().success().stdout_matches(indoc! {r#"
+        ...
         command: script run
-        message: 
+        message:[..]
             "Account not defined. Please ensure the correct account is passed to `script run` command"
-        "#},
-    );
+        ...
+    "#});
 }
 
 #[tokio::test]
@@ -443,7 +440,7 @@ async fn test_state_file_contains_all_failed_txs() {
         deploy_tx_entry,
         "deploy",
         ScriptTransactionStatus::Fail,
-        vec!["Class with hash ClassHash", "is not declared"],
+        vec!["Class with hash 0x", "is not declared"],
     );
 
     let invoke_tx_entry = tx_entries_after_first_run

@@ -1,7 +1,12 @@
 use camino::Utf8PathBuf;
 use conversions::serde::serialize::CairoSerialize;
+use indoc::formatdoc;
 use serde::{Deserialize, Serialize, Serializer};
 use starknet::core::types::FieldElement;
+
+use crate::helpers::block_explorer::LinkProvider;
+
+use super::explorer_link::OutputLink;
 
 pub struct Decimal(pub u64);
 
@@ -151,3 +156,52 @@ pub struct VerifyResponse {
 }
 
 impl CommandResponse for VerifyResponse {}
+
+impl OutputLink for InvokeResponse {
+    const TITLE: &'static str = "invocation";
+
+    fn format_links(&self, provider: Box<dyn LinkProvider>) -> String {
+        format!(
+            "transaction: {}",
+            provider.transaction(self.transaction_hash.0)
+        )
+    }
+}
+
+impl OutputLink for DeployResponse {
+    const TITLE: &'static str = "deployment";
+
+    fn format_links(&self, provider: Box<dyn LinkProvider>) -> String {
+        formatdoc!(
+            "
+            contract: {}
+            transaction: {}
+            ",
+            provider.contract(self.contract_address.0),
+            provider.transaction(self.transaction_hash.0)
+        )
+    }
+}
+
+impl OutputLink for DeclareResponse {
+    const TITLE: &'static str = "declaration";
+
+    fn format_links(&self, provider: Box<dyn LinkProvider>) -> String {
+        formatdoc!(
+            "
+            class: {}
+            transaction: {}
+            ",
+            provider.class(self.class_hash.0),
+            provider.transaction(self.transaction_hash.0)
+        )
+    }
+}
+
+impl OutputLink for AccountCreateResponse {
+    const TITLE: &'static str = "account creation";
+
+    fn format_links(&self, provider: Box<dyn LinkProvider>) -> String {
+        format!("account: {}", provider.contract(self.address.0))
+    }
+}

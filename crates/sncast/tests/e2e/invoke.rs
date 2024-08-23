@@ -7,7 +7,7 @@ use crate::helpers::fixtures::{
 };
 use crate::helpers::runner::runner;
 use indoc::indoc;
-use shared::test_utils::output_assert::assert_stderr_contains;
+use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 use sncast::helpers::constants::{ARGENT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH};
 use sncast::AccountType;
 use starknet::core::types::TransactionReceipt::Invoke;
@@ -51,6 +51,48 @@ async fn test_happy_case(account: &str) {
     let receipt = get_transaction_receipt(hash).await;
 
     assert!(matches!(receipt, Invoke(_)));
+}
+
+#[tokio::test]
+async fn test_happy_case_human_readable() {
+    let tempdir = create_and_deploy_account(OZ_CLASS_HASH, AccountType::OpenZeppelin).await;
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "--int-format",
+        "invoke",
+        "--url",
+        URL,
+        "--contract-address",
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--function",
+        "put",
+        "--calldata",
+        "0x1 0x2",
+        "--max-fee",
+        "99999999999999999",
+        "--fee-token",
+        "eth",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {
+            "
+            command: invoke
+            transaction_hash: [..]
+
+            To see invocation details, visit:
+            transaction: [..]
+            "
+        },
+    );
 }
 
 #[test_case(DEVNET_OZ_CLASS_HASH_CAIRO_0.parse().unwrap(), AccountType::OpenZeppelin; "cairo_0_class_hash")]

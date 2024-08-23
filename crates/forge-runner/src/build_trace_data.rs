@@ -285,6 +285,9 @@ fn build_profiler_deprecated_syscall_selector(
         }
         DeprecatedSyscallSelector::StorageRead => ProfilerDeprecatedSyscallSelector::StorageRead,
         DeprecatedSyscallSelector::StorageWrite => ProfilerDeprecatedSyscallSelector::StorageWrite,
+        DeprecatedSyscallSelector::Sha256ProcessBlock => {
+            ProfilerDeprecatedSyscallSelector::Sha256ProcessBlock
+        }
     }
 }
 

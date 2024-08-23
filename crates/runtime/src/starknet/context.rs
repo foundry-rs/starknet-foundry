@@ -1,4 +1,5 @@
 use blockifier::blockifier::block::{BlockInfo, GasPrices};
+use blockifier::bouncer::BouncerConfig;
 use blockifier::context::{BlockContext, ChainInfo, FeeTokenAddresses, TransactionContext};
 use blockifier::execution::common_hints::ExecutionMode;
 use blockifier::execution::entry_point::EntryPointExecutionContext;
@@ -6,11 +7,6 @@ use blockifier::transaction::objects::{
     CommonAccountFields, CurrentTransactionInfo, TransactionInfo,
 };
 use blockifier::versioned_constants::VersionedConstants;
-use starknet_types_core::felt::Felt;
-use std::collections::BTreeMap;
-use std::num::NonZeroU128;
-use std::sync::Arc;
-
 use cairo_vm::vm::runners::cairo_runner::RunResources;
 use conversions::string::TryFromHexStr;
 use serde::{Deserialize, Serialize};
@@ -23,6 +19,10 @@ use starknet_api::{
     felt, patricia_key,
     transaction::{TransactionHash, TransactionSignature, TransactionVersion},
 };
+use starknet_types_core::felt::Felt;
+use std::collections::BTreeMap;
+use std::num::NonZeroU128;
+use std::sync::Arc;
 
 pub const DEFAULT_CHAIN_ID: &str = "SN_SEPOLIA";
 pub const DEFAULT_BLOCK_NUMBER: u64 = 2000;
@@ -35,16 +35,17 @@ fn default_chain_id() -> ChainId {
 
 #[must_use]
 pub fn build_block_context(block_info: &BlockInfo, chain_id: Option<ChainId>) -> BlockContext {
-    BlockContext::new_unchecked(
-        block_info,
-        &ChainInfo {
+    BlockContext::new(
+        block_info.clone(),
+        ChainInfo {
             chain_id: chain_id.unwrap_or_else(default_chain_id),
             fee_token_addresses: FeeTokenAddresses {
                 strk_fee_token_address: contract_address!(ERC20_CONTRACT_ADDRESS),
                 eth_fee_token_address: contract_address!(ERC20_CONTRACT_ADDRESS),
             },
         },
-        VersionedConstants::latest_constants(), // 0.13.1
+        VersionedConstants::latest_constants().clone(), // 0.13.1
+        BouncerConfig::default(),
     )
 }
 
