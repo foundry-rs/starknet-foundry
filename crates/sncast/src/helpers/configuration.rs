@@ -4,6 +4,8 @@ use camino::Utf8PathBuf;
 use configuration::GlobalConfig;
 use serde::{Deserialize, Serialize};
 
+use super::block_explorer;
+
 #[derive(Default, Deserialize, Serialize, Clone, Debug, PartialEq)]
 pub struct CastConfig {
     #[serde(default)]
@@ -26,6 +28,13 @@ pub struct CastConfig {
         rename(serialize = "wait-params", deserialize = "wait-params")
     )]
     pub wait_params: ValidatedWaitParams,
+
+    #[serde(
+        default,
+        rename(serialize = "block-explorer", deserialize = "block-explorer")
+    )]
+    /// A block explorer service, used to display links to transaction details
+    pub block_explorer: Option<block_explorer::Service>,
 }
 
 impl GlobalConfig for CastConfig {

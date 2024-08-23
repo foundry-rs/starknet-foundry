@@ -45,13 +45,10 @@ impl ExecutionDataToSave {
             coverage,
         }
     }
-}
-
-#[must_use]
-pub fn is_vm_trace_needed(execution_data_to_save: ExecutionDataToSave) -> bool {
-    execution_data_to_save.trace
-        || execution_data_to_save.profile
-        || execution_data_to_save.coverage
+    #[must_use]
+    pub fn is_vm_trace_needed(&self) -> bool {
+        self.trace || self.profile || self.coverage
+    }
 }
 
 /// This struct should be constructed on demand to pass only relevant information from
