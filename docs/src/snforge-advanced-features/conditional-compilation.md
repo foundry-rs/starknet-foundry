@@ -9,7 +9,7 @@ Additionally, for utilizing features the `snforge test` command exposes the foll
 
 ## Contracts
 
-Firstly, define a contract in the `src` directory with a `#[cfg(feature: "...")]` attribute:
+Firstly, define a contract in the `src` directory with a `#[cfg(feature: '<FEATURE_NAME>')]` attribute:
 
 ```rust
 #[starknet::interface]
@@ -65,7 +65,7 @@ Then, tests can be executed with:
 snforge test --features snforge_test_only
 ```
 
-If `snforge test` is run without features enabled, it won't build any artifacts for the `MockContract` and all tests that use this contract will fail.
+If `snforge test` is run without the above feature enabled, it won't build any artifacts for the `MockContract` and all tests that use this contract will fail.
 
 ## Functions
 
