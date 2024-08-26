@@ -156,7 +156,7 @@ fn fork_aliased_decorator() {
                     }),
                     output_config: Arc::new(OutputConfig {
                         detailed_resources: false,
-                        execution_data_to_save: ExecutionDataToSave::None,
+                        execution_data_to_save: ExecutionDataToSave::default(),
                         versioned_programs_dir: Utf8PathBuf::from_path_buf(
                             tempdir().unwrap().into_path(),
                         )
