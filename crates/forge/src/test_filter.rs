@@ -1,6 +1,8 @@
 use crate::shared_cache::FailedTestsCache;
 use anyhow::Result;
-use forge_runner::{package_tests::with_config_resolved::TestCaseWithResolvedConfig, TestCaseFilter};
+use forge_runner::{
+    package_tests::with_config_resolved::TestCaseWithResolvedConfig, TestCaseFilter,
+};
 
 #[derive(Debug, PartialEq)]
 // Specifies what tests should be included
@@ -84,7 +86,7 @@ impl TestsFilter {
         test_cases: &mut Vec<TestCaseWithResolvedConfig>,
     ) -> Result<()> {
         match &self.name_filter {
-            NameFilter::All => {}
+            NameFilter::All | NameFilter::Exclude(_) => {}
             NameFilter::Match(filter) => {
                 test_cases.retain(|tc| tc.name.contains(filter));
             }
@@ -92,8 +94,6 @@ impl TestsFilter {
             NameFilter::ExactMatch(name) => {
                 test_cases.retain(|tc| tc.name == *name);
             }
-
-            NameFilter::Exclude(_) => {}
         };
 
         if self.last_failed_filter {
@@ -243,7 +243,7 @@ mod tests {
             false,
             false,
             Default::default(),
-            None
+            None,
         );
 
         let mut filtered = mocked_tests.clone();
@@ -273,7 +273,7 @@ mod tests {
             false,
             false,
             Default::default(),
-            None
+            None,
         );
 
         let mut filtered = mocked_tests.clone();
@@ -302,7 +302,7 @@ mod tests {
             false,
             false,
             Default::default(),
-            None
+            None,
         );
 
         let mut filtered = mocked_tests.clone();
@@ -369,7 +369,7 @@ mod tests {
             false,
             false,
             Default::default(),
-            None
+            None,
         );
 
         let mut filtered = mocked_tests.clone();
@@ -384,7 +384,7 @@ mod tests {
             false,
             false,
             Default::default(),
-            None
+            None,
         );
 
         let mut filtered = mocked_tests.clone();
@@ -461,7 +461,7 @@ mod tests {
             false,
             false,
             Default::default(),
-            None
+            None,
         );
 
         let mut filtered = mocked_tests.clone();
@@ -476,7 +476,7 @@ mod tests {
             false,
             false,
             Default::default(),
-            None
+            None,
         );
 
         let mut filtered = mocked_tests.clone();
@@ -551,7 +551,7 @@ mod tests {
             false,
             false,
             Default::default(),
-            None
+            None,
         );
 
         let mut filtered = mocked_tests.clone();
@@ -566,7 +566,7 @@ mod tests {
             false,
             false,
             Default::default(),
-            None
+            None,
         );
 
         let mut filtered = mocked_tests.clone();
@@ -581,7 +581,7 @@ mod tests {
             false,
             false,
             Default::default(),
-            None
+            None,
         );
 
         let mut filtered = mocked_tests.clone();
@@ -610,7 +610,7 @@ mod tests {
             false,
             false,
             Default::default(),
-            None
+            None,
         );
 
         let mut filtered = mocked_tests.clone();
@@ -639,7 +639,7 @@ mod tests {
             false,
             false,
             Default::default(),
-            None
+            None,
         );
 
         let mut filtered = mocked_tests.clone();
@@ -654,7 +654,7 @@ mod tests {
             false,
             false,
             Default::default(),
-            None
+            None,
         );
 
         let mut filtered = mocked_tests.clone();

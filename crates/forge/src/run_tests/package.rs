@@ -11,7 +11,7 @@ use crate::{
         load_test_artifacts,
     },
     shared_cache::FailedTestsCache,
-    test_filter::{TestsFilter, NameFilter},
+    test_filter::TestsFilter,
     warn::{
         warn_if_available_gas_used_with_incompatible_scarb_version,
         warn_if_incompatible_rpc_version,
@@ -39,7 +39,6 @@ pub struct RunForPackageArgs {
     pub forge_config: Arc<ForgeConfig>,
     pub fork_targets: Vec<ForkTarget>,
     pub package_name: String,
-    pub exclude_filter: Option<NameFilter>
 }
 
 impl RunForPackageArgs {
@@ -83,15 +82,12 @@ impl RunForPackageArgs {
             args.exclude_filter.clone(),
         );
 
-        let exclude_filter = args.exclude_filter.clone().map(NameFilter::Exclude);
-
         Ok(RunForPackageArgs {
             test_targets: raw_test_targets,
             forge_config,
             tests_filter: test_filter,
             fork_targets: forge_config_from_scarb.fork,
             package_name: package.name,
-            exclude_filter,
         })
     }
 }
@@ -125,7 +121,6 @@ pub async fn run_for_package(
         tests_filter,
         fork_targets,
         package_name,
-        exclude_filter,
     }: RunForPackageArgs,
     block_number_map: &mut BlockNumberMap,
 ) -> Result<Vec<TestTargetSummary>> {
@@ -135,11 +130,6 @@ pub async fn run_for_package(
 
     for test_target in &mut test_targets {
         tests_filter.filter_tests(&mut test_target.test_cases)?;
-
-        // Exclude tests based on the exclude_filter option
-        if let Some(NameFilter::Exclude(filter)) = &exclude_filter {
-            test_target.test_cases.retain(|tc| !tc.name.contains(filter));
-        }
     }
 
     warn_if_available_gas_used_with_incompatible_scarb_version(&test_targets)?;

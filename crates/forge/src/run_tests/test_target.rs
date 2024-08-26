@@ -1,3 +1,4 @@
+use crate::test_filter::TestsFilter;
 use anyhow::Result;
 use cairo_lang_runner::RunnerError;
 use forge_runner::{
@@ -13,7 +14,6 @@ use forge_runner::{
 use futures::{stream::FuturesUnordered, StreamExt};
 use std::{collections::HashMap, sync::Arc};
 use tokio::sync::mpsc::channel;
-use crate::test_filter::TestsFilter;
 
 #[non_exhaustive]
 pub enum TestTargetRunResult {
@@ -61,6 +61,7 @@ pub async fn run_for_test_target(
 
         if !tests_filter.should_be_run(&case) {
             tasks.push(tokio::task::spawn(async {
+                // TODO TestCaseType should also be encoded in the test case definition
                 Ok(AnyTestCaseSummary::Single(TestCaseSummary::Ignored {
                     name: case_name,
                 }))

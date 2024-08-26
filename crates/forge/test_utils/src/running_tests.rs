@@ -80,7 +80,6 @@ pub fn run_test_case(test: &TestCase) -> Vec<TestTargetSummary> {
                 }),
             }),
             fork_targets: vec![],
-            exclude_filter: None,
         },
         &mut BlockNumberMap::default(),
     ))

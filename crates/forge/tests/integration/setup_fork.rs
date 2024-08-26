@@ -171,7 +171,6 @@ fn fork_aliased_decorator() {
                     "tag".to_string(),
                     "latest".to_string(),
                 )],
-                exclude_filter: None,
             },
             &mut BlockNumberMap::default(),
         ))
