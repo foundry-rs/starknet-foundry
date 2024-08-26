@@ -396,6 +396,49 @@ fn with_include_ignored_flag_and_filter() {
 }
 
 #[test]
+fn with_exclude_filter_flag() {
+    let temp = setup_package("simple_package");
+
+    // Exclude the test "test_failing"
+    let output = test_runner(&temp)
+        .arg("--exclude-filter")
+        .arg("test_failing")
+        .assert()
+        .code(1); // Assuming no other test fails
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+        
+        Collected 12 test(s) from simple_package package
+        Running 2 test(s) from src/
+        [IGNORE] simple_package::tests::ignored_test
+        [PASS] simple_package::tests::test_fib [..]
+        [IGNORE] simple_package_integrationtest::ext_function_test::ignored_test
+        [PASS] simple_package_integrationtest::test_simple::test_two (gas: ~1)
+        [FAIL] simple_package_integrationtest::test_simple::test_another_failing
+
+        Failure data:
+            0x6661696c696e6720636865636b ('failing check')
+
+        [PASS] simple_package_integrationtest::ext_function_test::test_my_test (gas: ~1)
+        [PASS] simple_package_integrationtest::test_simple::test_simple (gas: ~1)
+        [PASS] simple_package_integrationtest::ext_function_test::test_simple (gas: ~1)
+        [PASS] simple_package_integrationtest::without_prefix::five (gas: ~1)
+        [PASS] simple_package_integrationtest::test_simple::test_two_and_two (gas: ~1)
+        [PASS] simple_package_integrationtest::test_simple::test_simple2 (gas: ~1)
+        [PASS] simple_package_integrationtest::contract::call_and_invoke (gas: ~170)
+        Tests: 9 passed, 1 failed, 0 skipped, 2 ignored, 1 filtered out
+
+        Failures:
+            simple_package_integrationtest::test_simple::test_another_failing
+        "},
+    );
+}
+
+#[test]
 fn with_rerun_failed_flag_without_cache() {
     let temp = setup_package("simple_package");
 

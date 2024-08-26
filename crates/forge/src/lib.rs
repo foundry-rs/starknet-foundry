@@ -133,6 +133,10 @@ pub struct TestArgs {
     /// Number of maximum steps during a single test. For fuzz tests this value is applied to each subtest separately.
     #[arg(long)]
     max_n_steps: Option<u32>,
+
+    /// Exclude tests matching the specified filter pattern
+    #[arg(long)]
+    exclude_filter: Option<String>,
 }
 
 pub enum ExitStatus {

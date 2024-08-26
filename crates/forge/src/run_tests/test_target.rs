@@ -1,3 +1,4 @@
+use crate::test_filter::TestsFilter;
 use anyhow::Result;
 use cairo_lang_runner::RunnerError;
 use forge_runner::{
@@ -23,7 +24,7 @@ pub enum TestTargetRunResult {
 pub async fn run_for_test_target(
     tests: TestTargetWithResolvedConfig,
     forge_config: Arc<ForgeConfig>,
-    tests_filter: &impl TestCaseFilter,
+    tests_filter: &TestsFilter,
     package_name: &str,
 ) -> Result<TestTargetRunResult> {
     let sierra_program = &tests.sierra_program.program;
@@ -52,6 +53,11 @@ pub async fn run_for_test_target(
 
     for case in tests.test_cases {
         let case_name = case.name.clone();
+
+        // Check if the test case should be excluded
+        if tests_filter.is_excluded(&case) {
+            continue;
+        }
 
         if !tests_filter.should_be_run(&case) {
             tasks.push(tokio::task::spawn(async {

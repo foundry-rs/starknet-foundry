@@ -79,6 +79,7 @@ impl RunForPackageArgs {
             args.include_ignored,
             args.rerun_failed,
             FailedTestsCache::new(cache_dir),
+            args.exclude_filter.clone(),
         );
 
         Ok(RunForPackageArgs {
