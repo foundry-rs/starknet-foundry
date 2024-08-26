@@ -15,7 +15,7 @@ use contract_printing::IHelloStarknetDispatcherTrait;
 
 fn deploy_contract(name: ByteArray) -> ContractAddress {
     let contract = declare(name).unwrap().contract_class();
-    let (address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+    let (address, _) = contract.deploy([].span()).unwrap();
     address
 }
 

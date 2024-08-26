@@ -15,7 +15,7 @@ fn test_failed_lib_call() {
     let empty_hash = declare("Empty").unwrap().contract_class().class_hash.clone();
     let proxy_hash = declare("TraceInfoProxy").unwrap().contract_class().class_hash.clone();
     let checker = declare("TraceInfoChecker").unwrap().contract_class().clone();
-    let (checker_address, _) = checker.deploy(@array![]).unwrap();
+    let (checker_address, _) = checker.deploy([].span()).unwrap();
 
     trace_resources::use_builtins_and_syscalls(empty_hash, 7);
 

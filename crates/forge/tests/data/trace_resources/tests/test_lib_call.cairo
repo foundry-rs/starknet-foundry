@@ -16,8 +16,8 @@ fn test_lib_call() {
 
     trace_resources::use_builtins_and_syscalls(empty_hash, 7);
 
-    let (checker_address, _) = checker.deploy(@array![]).unwrap();
-    let (dummy_address, _) = dummy.deploy(@array![]).unwrap();
+    let (checker_address, _) = checker.deploy([].span()).unwrap();
+    let (dummy_address, _) = dummy.deploy([].span()).unwrap();
 
     let proxy_lib_dispatcher = ITraceInfoProxyLibraryDispatcher { class_hash: proxy_hash };
 

@@ -12,9 +12,9 @@ use trace_info::{
 fn test_trace() {
     let sc = declare("SimpleContract").unwrap().contract_class();
 
-    let (contract_address_A, _) = sc.deploy(@array![]).unwrap();
-    let (contract_address_B, _) = sc.deploy(@array![]).unwrap();
-    let (contract_address_C, _) = sc.deploy(@array![]).unwrap();
+    let (contract_address_A, _) = sc.deploy([].span()).unwrap();
+    let (contract_address_B, _) = sc.deploy([].span()).unwrap();
+    let (contract_address_C, _) = sc.deploy([].span()).unwrap();
 
     let calls = array![
         RecursiveCall {
