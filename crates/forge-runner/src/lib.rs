@@ -77,7 +77,7 @@ pub fn maybe_save_versioned_program(
 ) -> Result<Option<VersionedProgramPath>> {
     let maybe_versioned_program_path = if execution_data_to_save.is_vm_trace_needed() {
         Some(VersionedProgramPath::save_versioned_program(
-            &test_target.sierra_program.program.clone().into_artifact(),
+            &test_target.sierra_program.clone().into(),
             test_target.tests_location,
             versioned_programs_dir,
             package_name,
