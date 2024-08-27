@@ -125,19 +125,17 @@ pub async fn declare_compiled(
     };
 
     match result {
-        Ok(result) => {
-            let wait = handle_wait_for_tx(
-                account.provider(),
-                result.transaction_hash,
-                DeclareResponse {
-                    class_hash: Felt(result.class_hash),
-                    transaction_hash: Felt(result.transaction_hash),
-                },
-                wait_config,
-            );
-
-            wait.await.map_err(StarknetCommandError::from)
-        }
+        Ok(result) => handle_wait_for_tx(
+            account.provider(),
+            result.transaction_hash,
+            DeclareResponse {
+                class_hash: Felt(result.class_hash),
+                transaction_hash: Felt(result.transaction_hash),
+            },
+            wait_config,
+        )
+        .await
+        .map_err(StarknetCommandError::from),
 
         Err(Provider(error)) => Err(StarknetCommandError::ProviderError(error.into())),
 

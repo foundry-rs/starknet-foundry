@@ -86,7 +86,7 @@ impl Deploy {
 
     pub fn resolved_with_class_hash(mut self, value: FieldElement) -> DeployResolved {
         self.class_hash = Some(value);
-        self.into()
+        self.try_into().unwrap()
     }
 }
 
@@ -100,8 +100,10 @@ pub struct DeployResolved {
     pub version: Option<DeployVersion>,
 }
 
-impl From<Deploy> for DeployResolved {
-    fn from(deploy: Deploy) -> Self {
+impl TryFrom<Deploy> for DeployResolved {
+    type Error = anyhow::Error;
+
+    fn try_from(deploy: Deploy) -> Result<Self, Self::Error> {
         let Deploy {
             class_hash,
             args:
@@ -117,15 +119,17 @@ impl From<Deploy> for DeployResolved {
             ..
         } = deploy;
 
-        DeployResolved {
-            class_hash: class_hash.unwrap(),
+        let class_hash = class_hash.ok_or_else(|| anyhow!("Class hash unspecified"))?;
+
+        Ok(DeployResolved {
+            class_hash,
             constructor_calldata,
             salt,
             unique,
             fee_args,
             nonce,
             version,
-        }
+        })
     }
 }
 

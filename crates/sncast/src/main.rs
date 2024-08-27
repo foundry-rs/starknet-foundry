@@ -225,7 +225,7 @@ async fn run_async_command(
             .await?;
 
             let deploy: DeployResolved = if deploy.class_hash.is_some() {
-                deploy.into()
+                deploy.try_into().unwrap()
             } else {
                 let contract =
                     deploy.build_artifacts_and_get_compiled_contract(cli.json, &cli.profile)?;
