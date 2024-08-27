@@ -6,6 +6,7 @@ mod collection;
 mod color;
 mod components;
 mod env;
+mod features;
 mod fork_warning;
 mod forking;
 mod fuzzing;
