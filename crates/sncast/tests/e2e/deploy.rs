@@ -452,8 +452,11 @@ fn test_happy_case_by_name() {
 
 #[tokio::test]
 async fn test_by_name_undeclared() {
-    let tempdir =
-        duplicate_contract_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "dupa");
+    let tempdir = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/map",
+        "put",
+        "undeclared",
+    );
     let accounts_file = get_accounts_path(ACCOUNT_FILE_PATH);
 
     let args = vec![
