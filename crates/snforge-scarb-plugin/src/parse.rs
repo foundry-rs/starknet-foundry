@@ -22,7 +22,7 @@ pub fn parse<T: AttributeInfo>(
     let virtual_file = db.intern_file(FileLongId::Virtual(VirtualFile {
         parent: None,
         name: "test_function".into(),
-        content: code.clone(),
+        content: Arc::from(code.as_str()),
         code_mappings: Default::default(),
         kind: FileKind::Module,
     }));

@@ -53,6 +53,49 @@ async fn test_happy_case_eth(account: &str) {
     assert!(matches!(receipt, Deploy(_)));
 }
 
+#[tokio::test]
+async fn test_happy_case_human_readable() {
+    let tempdir = create_and_deploy_account(OZ_CLASS_HASH, AccountType::OpenZeppelin).await;
+
+    let args = vec![
+        "--accounts-file",
+        "accounts.json",
+        "--account",
+        "my_account",
+        "--int-format",
+        "deploy",
+        "--url",
+        URL,
+        "--class-hash",
+        MAP_CONTRACT_CLASS_HASH_SEPOLIA,
+        "--salt",
+        "0x2",
+        "--unique",
+        "--max-fee",
+        "99999999999999999",
+        "--fee-token",
+        "eth",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {
+            "
+            command: deploy
+            contract_address: [..]
+            transaction_hash: [..]
+
+            To see deployment details, visit:
+            contract: [..]
+            transaction: [..]
+            "
+        },
+    );
+}
+
 #[test_case(DEVNET_OZ_CLASS_HASH_CAIRO_0.parse().unwrap(), AccountType::OpenZeppelin; "cairo_0_class_hash")]
 #[test_case(OZ_CLASS_HASH, AccountType::OpenZeppelin; "cairo_1_class_hash")]
 #[test_case(ARGENT_CLASS_HASH, AccountType::Argent; "argent_class_hash")]
