@@ -202,8 +202,8 @@ pub fn package_matches_version_requirement(
         .filter(|package| package.name == name);
 
     match (packages.next(), packages.next()) {
-        (None, None) => Ok(true),
         (Some(package), None) => Ok(version_req.matches(&package.version)),
+        (None, None) => Err(anyhow!("Package {name} is not present in dependencies.")),
         _ => Err(anyhow!("Package {name} is duplicated in dependencies")),
     }
 }
@@ -246,7 +246,7 @@ mod tests {
                 [dependencies]
                 starknet = "2.4.0"
                 snforge_std = {{ path = "{}" }}
-                
+
                 [[target.starknet-contract]]
 
                 [[tool.snforge.fork]]
