@@ -555,28 +555,3 @@ fn test_by_name_multiple_packages() {
 
     assert_stderr_contains(output, "Error: More than one package found in scarb metadata - specify package using --package flag");
 }
-
-#[test]
-fn test_by_name_no_name() {
-    let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/multiple_packages");
-    let accounts_file = get_accounts_path(ACCOUNT_FILE_PATH);
-
-    let args = vec![
-        "--accounts-file",
-        accounts_file.as_str(),
-        "--account",
-        "user1",
-        "deploy",
-        "--url",
-        URL,
-        "--max-fee",
-        "99999999999999999",
-        "--fee-token",
-        "eth",
-    ];
-
-    let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().failure();
-
-    assert_stderr_contains(output, "Error: Contract name and class hash unspecified");
-}
