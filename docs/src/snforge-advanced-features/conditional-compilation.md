@@ -18,7 +18,7 @@ trait IMockContract<TContractState> {
 }
 
 #[starknet::contract]
-#[cfg(feature: 'snforge_test_only')]
+#[cfg(feature: 'enable_for_tests')]
 mod MockContract {
     #[storage]
     struct Storage {}
@@ -52,27 +52,28 @@ fn test_mock_contract() {
 }
 ```
 
-The `Scarb.toml` file needs to be updated:
+The `Scarb.toml` file needs to be updated so it includes the following lines:
 
 ```toml
 [features]
-snforge_test_only = []
+enable_for_tests = []
 ```
 
-Then, tests can be executed with:
+Then, to use the contract in tests `snforge test` must be provided with a flag defined above:
 
 ```
-snforge test --features snforge_test_only
+snforge test --features enable_for_tests
 ```
 
-If `snforge test` is run without the above feature enabled, it won't build any artifacts for the `MockContract` and all tests that use this contract will fail.
+> 📝 **Note**
+> If `snforge test` is run without the above feature enabled, it won't build any artifacts for the `MockContract` and all tests that use this contract will fail.
 
 ## Functions
 
-Similarly, other parts of the code can also be conditionally compiled:
+Features are not limited to conditionally compiling contracts and can be used with other parts of the code, like functions:
 
 ```rust
-#[cfg(feature: 'snforge_test_only')]
+#[cfg(feature: 'enable_for_tests')]
 fn mock_function() -> u32 {
     2
 }
