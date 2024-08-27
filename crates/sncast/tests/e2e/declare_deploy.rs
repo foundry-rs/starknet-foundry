@@ -88,6 +88,55 @@ fn test_happy_case_strk(account: &str) {
 }
 
 #[test]
+fn test_happy_case_human_readable() {
+    let tempdir = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/map",
+        "put",
+        "_human_readable",
+    );
+
+    let accounts_file = &get_accounts_path(ACCOUNT_FILE_PATH)[..];
+
+    let args = vec![
+        "--accounts-file",
+        accounts_file,
+        "--account",
+        "user17",
+        "--int-format",
+        "declare-deploy",
+        "--url",
+        URL,
+        "--contract-name",
+        MAP_CONTRACT_NAME,
+        "--fee-token",
+        "strk",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().success();
+
+    let expected = indoc!(
+        "
+        [..]
+        command: [..]
+        class_hash: [..]
+        contract_address: [..]
+        declare_transaction_hash: [..]
+        deploy_transaction_hash: [..]
+
+        To see declaration and deployment details, visit:
+        class: [..]
+        contract: [..]
+        declaration transaction: [..]
+        deployment transaction: [..]
+        "
+    );
+
+    assert_stdout_contains(output, expected);
+}
+
+#[test]
+#[ignore = "Expand the contract's code to more complex or wait for fix: https://github.com/xJonathanLEI/starknet-rs/issues/649#issue-2469861847"]
 fn test_happy_case_specify_package() {
     let tempdir = duplicate_contract_directory_with_salt(
         CONTRACTS_DIR.to_string() + "/multiple_packages",
@@ -342,6 +391,12 @@ fn test_no_scarb_profile() {
         contract_address: [..]
         declare_transaction_hash: [..]
         deploy_transaction_hash: [..]
+
+        To see declaration and deployment details, visit:
+        class: [..]
+        contract: [..]
+        declaration transaction: [..]
+        deployment transaction: [..]
         "
     );
 

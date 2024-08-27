@@ -1,6 +1,7 @@
 use camino::Utf8PathBuf;
 use conversions::serde::serialize::CairoSerialize;
 use indoc::formatdoc;
+use itertools::Itertools;
 use serde::{Deserialize, Serialize, Serializer};
 use starknet::core::types::FieldElement;
 
@@ -225,6 +226,37 @@ impl OutputLink for DeclareResponse {
             provider.class(self.class_hash.0),
             provider.transaction(self.transaction_hash.0)
         )
+    }
+}
+
+impl OutputLink for DeclareDeployResponse {
+    const TITLE: &'static str = "declaration and deployment";
+
+    fn format_links(&self, provider: Box<dyn LinkProvider>) -> String {
+        let mut links = vec![];
+
+        if let Some(ref class_hash) = self.class_hash {
+            links.push(format!("class: {}", provider.class(class_hash.0)));
+        }
+
+        links.push(format!(
+            "contract: {}",
+            provider.contract(self.contract_address.0)
+        ));
+
+        if let Some(ref transaction_hash) = self.declare_transaction_hash {
+            links.push(format!(
+                "declaration transaction: {}",
+                provider.class(transaction_hash.0)
+            ));
+        }
+
+        links.push(format!(
+            "deployment transaction: {}",
+            provider.transaction(self.deploy_transaction_hash.0)
+        ));
+
+        links.iter().join("\n")
     }
 }
 

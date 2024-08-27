@@ -11,7 +11,6 @@ use sncast::response::print::{print_command_result, OutputFormat};
 
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand};
-use configuration::load_global_config;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
 use sncast::helpers::fee::PayableTransaction;
@@ -20,7 +19,6 @@ use sncast::helpers::scarb_utils::{
     get_scarb_metadata_with_deps, read_manifest_and_build_artifacts, BuildConfig,
 };
 use sncast::response::errors::handle_starknet_command_error;
-use sncast::response::print::{print_command_result, OutputFormat};
 use sncast::response::structs::DeclareDeployResponse;
 use sncast::{
     chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_default_state_file_name,
@@ -229,7 +227,7 @@ async fn run_async_command(
             } else {
                 let contract =
                     deploy.build_artifacts_and_get_compiled_contract(cli.json, &cli.profile)?;
-                let class_hash = contract.class_hash;
+                let class_hash = contract.sierra_class_hash;
 
                 if !contract.is_declared(&provider).await? {
                     bail!("Contract with class hash {:x} is not declared", class_hash);
@@ -244,7 +242,9 @@ async fn run_async_command(
                 .await
                 .map_err(handle_starknet_command_error);
 
-            print_command_result("deploy", &result, numbers_format, output_format)
+            print_command_result("deploy", &result, numbers_format, output_format)?;
+            print_block_explorer_link_if_allowed(&result, output_format, config.block_explorer);
+            Ok(())
         }
 
         Commands::DeclareDeploy(declare_deploy) => {
@@ -263,7 +263,7 @@ async fn run_async_command(
 
             let contract =
                 deploy.build_artifacts_and_get_compiled_contract(cli.json, &cli.profile)?;
-            let class_hash = contract.class_hash;
+            let class_hash = contract.sierra_class_hash;
 
             let needs_declaration = !contract.is_declared(&provider).await?;
 
@@ -294,17 +294,16 @@ async fn run_async_command(
             let deploy = deploy.resolved_with_class_hash(class_hash);
             deploy.validate()?;
 
-            let mut deploy_result =
-                starknet_commands::deploy::deploy(deploy, &account, wait_config)
-                    .await
-                    .map_err(handle_starknet_command_error);
+            let deploy_result = starknet_commands::deploy::deploy(deploy, &account, wait_config)
+                .await
+                .map_err(handle_starknet_command_error);
 
             if deploy_result.is_err() {
                 return print_command_result(
                     "declare-deploy",
-                    &mut deploy_result,
+                    &deploy_result,
                     numbers_format,
-                    &output_format,
+                    output_format,
                 );
             }
 
@@ -313,12 +312,7 @@ async fn run_async_command(
                 deploy_result.unwrap(),
             ));
 
-            print_command_result(
-                "declare-deploy",
-                &result,
-                numbers_format,
-                output_format,
-            )
+            print_command_result("declare-deploy", &result, numbers_format, output_format)?;
             print_block_explorer_link_if_allowed(&result, output_format, config.block_explorer);
             Ok(())
         }
