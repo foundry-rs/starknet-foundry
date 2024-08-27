@@ -109,6 +109,16 @@ pub fn run(project_name: &str) -> Result<()> {
         .current_dir(&project_path)
         .manifest_path(manifest_path.clone())
         .offline()
+        .arg("remove")
+        .arg("--dev")
+        .arg("cairo_test")
+        .run()
+        .context("Failed to remove cairo_test")?;
+
+    ScarbCommand::new_with_stdio()
+        .current_dir(&project_path)
+        .manifest_path(manifest_path.clone())
+        .offline()
         .arg("add")
         .arg("--dev")
         .arg("snforge_std")
