@@ -97,7 +97,11 @@ pub async fn declare_compiled(
         .try_into_fee_settings(account.provider(), account.block_id())
         .await?;
 
-    let CompiledContract { class, class_hash } = contract;
+    let CompiledContract {
+        class,
+        casm_class_hash: class_hash,
+        ..
+    } = contract;
 
     let result = match fee_settings {
         FeeSettings::Eth { max_fee } => {

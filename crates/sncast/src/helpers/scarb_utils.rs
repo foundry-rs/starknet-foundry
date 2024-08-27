@@ -8,7 +8,10 @@ use scarb_api::{
 use scarb_ui::args::PackagesFilter;
 use shared::{command::CommandExt, print::print_as_warning};
 use starknet::{
-    core::types::{contract::SierraClass, BlockId, FlattenedSierraClass},
+    core::types::{
+        contract::{CompiledClass, SierraClass},
+        BlockId, FlattenedSierraClass,
+    },
     providers::{jsonrpc::HttpTransport, JsonRpcClient, Provider, ProviderError},
 };
 use starknet_crypto::FieldElement;
@@ -202,27 +205,36 @@ pub fn read_manifest_and_build_artifacts(
 
 pub struct CompiledContract {
     pub class: FlattenedSierraClass,
-    pub class_hash: FieldElement,
+    pub sierra_class_hash: FieldElement,
+    pub casm_class_hash: FieldElement,
 }
 
 impl TryFrom<&StarknetContractArtifacts> for CompiledContract {
     type Error = anyhow::Error;
 
     fn try_from(artifacts: &StarknetContractArtifacts) -> Result<Self, Self::Error> {
-        let class = serde_json::from_str::<SierraClass>(&artifacts.sierra)
-            .context("Failed to parse sierra artifact")?
+        let sierra_class = serde_json::from_str::<SierraClass>(&artifacts.sierra)
+            .context("Failed to parse Sierra artifact")?
             .flatten()?;
 
-        let class_hash = class.class_hash();
+        let compiled_class = serde_json::from_str::<CompiledClass>(&artifacts.casm)
+            .context("Failed to parse CASM artifact")?;
 
-        Ok(Self { class, class_hash })
+        let sierra_class_hash = sierra_class.class_hash();
+        let casm_class_hash = compiled_class.class_hash()?;
+
+        Ok(Self {
+            class: sierra_class,
+            sierra_class_hash,
+            casm_class_hash,
+        })
     }
 }
 
 impl CompiledContract {
     pub async fn is_declared(&self, provider: &JsonRpcClient<HttpTransport>) -> Result<bool> {
         let block_id = BlockId::Tag(starknet::core::types::BlockTag::Pending);
-        let class_hash = self.class_hash;
+        let class_hash = self.sierra_class_hash;
 
         let response = provider.get_class(block_id, class_hash).await;
 
