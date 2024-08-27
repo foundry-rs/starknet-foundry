@@ -20,7 +20,7 @@ fn deploy_at_correct_address() {
         #[test]
         fn deploy_at_correct_address() {
             let contract = declare("CheatCallerAddressChecker").unwrap().contract_class();
-            let (cheat_caller_address_checker, _) = contract.deploy_at([].span()).unwrap();
+            let (cheat_caller_address_checker, _) = contract.deploy([].span()).unwrap();
 
             let contract = declare("Proxy").unwrap().contract_class();
             let deploy_at_address = 123;
