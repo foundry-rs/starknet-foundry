@@ -5320,7 +5320,6 @@ dependencies = [
  "regex",
  "scarb-api",
  "scarb-metadata",
- "semver",
  "serde",
  "serde_json",
  "shared",

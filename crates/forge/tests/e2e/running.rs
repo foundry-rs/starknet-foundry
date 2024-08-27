@@ -662,8 +662,8 @@ fn init_new_project_test() {
 
     runner(&temp).args(["init", "test_name"]).assert().success();
 
-    let manifest_path = temp.child("test_name/Scarb.toml");
-    let scarb_toml = std::fs::read_to_string(manifest_path.path()).unwrap();
+    let manifest_path = temp.join("test_name/Scarb.toml");
+    let scarb_toml = std::fs::read_to_string(manifest_path).unwrap();
 
     let expected = formatdoc!(
         r#"
