@@ -17,7 +17,7 @@ fn test_call() {
 
     let (checker_address, _) = checker.deploy([].span()).unwrap();
     let (proxy_address, _) = proxy
-        .deploy(@array![checker_address.into(), empty_hash.into(), 5])
+        .deploy([checker_address.into(), empty_hash.into(), 5].span())
         .unwrap();
     let (dummy_address, _) = dummy.deploy([].span()).unwrap();
 

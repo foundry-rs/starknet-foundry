@@ -132,7 +132,7 @@ use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, start_cheat_
 #[test]
 fn call_and_invoke() {
     let contract = declare("HelloStarknet").unwrap().contract_class();
-    let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+    let (contract_address, _) = contract.deploy([].span()).unwrap();
     let dispatcher = IHelloStarknetDispatcher { contract_address };
 
     let balance = dispatcher.get_balance();
@@ -229,7 +229,7 @@ fn mock_constructor_with_cheat_caller_address() {
 
 ### Setting Cheatcode Span
 
-Sometimes it's useful to have a cheatcode work only for a certain number of target calls. 
+Sometimes it's useful to have a cheatcode work only for a certain number of target calls.
 
 That's where [`CheatSpan`](../appendix/cheatcodes/cheat_span.md) comes in handy.
 
@@ -266,7 +266,7 @@ use snforge_std::{
 #[feature("safe_dispatcher")]
 fn call_and_invoke() {
     let contract = declare("HelloStarknet").unwrap().contract_class();
-    let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+    let (contract_address, _) = contract.deploy([].span()).unwrap();
     let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
 
     let balance = safe_dispatcher.get_balance().unwrap();

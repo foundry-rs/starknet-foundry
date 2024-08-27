@@ -25,7 +25,7 @@ fn spy_messages_to_l1_simple() {
 
             fn deploy_message_to_l1_checker()  -> IMessageToL1CheckerDispatcher {
                let declared = declare("MessageToL1Checker").unwrap().contract_class();
-               let (contract_address, _) = declared.deploy(@array![]).unwrap();
+               let (contract_address, _) = declared.deploy([].span()).unwrap();
 
                IMessageToL1CheckerDispatcher { contract_address }
             }
@@ -74,11 +74,11 @@ fn spy_messages_to_l1_fails() {
             use result::ResultTrait;
             use starknet::ContractAddress;
             use snforge_std::{
-                declare, ContractClassTrait, 
-                spy_messages_to_l1, 
+                declare, ContractClassTrait,
+                spy_messages_to_l1,
                 MessageToL1, MessageToL1SpyAssertionsTrait
             };
-            
+
 
             #[test]
             fn assert_sent_fails() {
@@ -88,7 +88,7 @@ fn spy_messages_to_l1_fails() {
                         (
                             0x123.try_into().unwrap(),
                             MessageToL1 {
-                                to_address: 0x123.try_into().unwrap(), 
+                                to_address: 0x123.try_into().unwrap(),
                                 payload: array![0x123, 0x420]
                             }
                         )
@@ -134,7 +134,7 @@ fn expect_three_messages_while_two_sent() {
 
             fn deploy_message_to_l1_checker()  -> IMessageToL1CheckerDispatcher {
                let declared = declare("MessageToL1Checker").unwrap().contract_class();
-               let (contract_address, _) = declared.deploy(@array![]).unwrap();
+               let (contract_address, _) = declared.deploy([].span()).unwrap();
 
                IMessageToL1CheckerDispatcher { contract_address }
             }
@@ -223,7 +223,7 @@ fn expect_two_messages_while_three_sent() {
 
             fn deploy_message_to_l1_checker()  -> IMessageToL1CheckerDispatcher {
                let declared = declare("MessageToL1Checker").unwrap().contract_class();
-               let (contract_address, _) = declared.deploy(@array![]).unwrap();
+               let (contract_address, _) = declared.deploy([].span()).unwrap();
 
                IMessageToL1CheckerDispatcher { contract_address }
             }
@@ -299,7 +299,7 @@ fn message_sent_but_wrong_data_asserted() {
 
             fn deploy_message_to_l1_checker()  -> IMessageToL1CheckerDispatcher {
                let declared = declare("MessageToL1Checker").unwrap().contract_class();
-               let (contract_address, _) = declared.deploy(@array![]).unwrap();
+               let (contract_address, _) = declared.deploy([].span()).unwrap();
 
                IMessageToL1CheckerDispatcher { contract_address }
             }
@@ -410,7 +410,7 @@ fn assert_not_sent_fails() {
 
             fn deploy_message_to_l1_checker()  -> IMessageToL1CheckerDispatcher {
                let declared = declare("MessageToL1Checker").unwrap().contract_class();
-               let (contract_address, _) = declared.deploy(@array![]).unwrap();
+               let (contract_address, _) = declared.deploy([].span()).unwrap();
 
                IMessageToL1CheckerDispatcher { contract_address }
             }
@@ -473,8 +473,8 @@ fn test_filtering() {
 
             fn deploy_message_to_l1_checkers()  -> (IMessageToL1CheckerDispatcher, IMessageToL1CheckerDispatcher) {
                let declared = declare("MessageToL1Checker").unwrap().contract_class();
-               let (contract_address_1, _) = declared.deploy(@array![]).unwrap();
-               let (contract_address_2, _) = declared.deploy(@array![]).unwrap();
+               let (contract_address_1, _) = declared.deploy([].span()).unwrap();
+               let (contract_address_2, _) = declared.deploy([].span()).unwrap();
 
                (
                     IMessageToL1CheckerDispatcher { contract_address: contract_address_1 },

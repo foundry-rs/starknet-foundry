@@ -255,7 +255,7 @@ fn get_block_info_in_forked_block() {
             #[fork(url: "{node_rpc_url}", block_number: 54060)]
             fn test_fork_get_block_info_contract_deployed() {{
                 let contract = declare("BlockInfoChecker").unwrap().contract_class();
-                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = contract.deploy([].span()).unwrap();
                 let dispatcher = IBlockInfoCheckerDispatcher {{ contract_address }};
 
                 let timestamp = dispatcher.read_block_timestamp();

@@ -22,7 +22,7 @@ fn mock_call_simple() {
             let calldata = array![420];
 
             let contract = declare("MockChecker").unwrap().contract_class();
-            let (contract_address, _) = contract.deploy(@calldata).unwrap();
+            let (contract_address, _) = contract.deploy(calldata.span()).unwrap();
 
             let dispatcher = IMockCheckerDispatcher { contract_address };
 
@@ -42,7 +42,7 @@ fn mock_call_simple() {
             let calldata = array![420];
 
             let contract = declare("MockChecker").unwrap().contract_class();
-            let (contract_address, _) = contract.deploy(@calldata).unwrap();
+            let (contract_address, _) = contract.deploy(calldata.span()).unwrap();
 
             let mock_ret_data = 421;
             start_mock_call(contract_address, selector!("get_thing"), mock_ret_data);
@@ -92,7 +92,7 @@ fn mock_call_complex_types() {
             let calldata = array![420];
 
             let contract = declare("MockChecker").unwrap().contract_class();
-            let (contract_address, _) = contract.deploy(@calldata).unwrap();
+            let (contract_address, _) = contract.deploy(calldata.span()).unwrap();
 
             let dispatcher = IMockCheckerDispatcher { contract_address };
 
@@ -110,7 +110,7 @@ fn mock_call_complex_types() {
             let calldata = array![420];
 
             let contract = declare("MockChecker").unwrap().contract_class();
-            let (contract_address, _) = contract.deploy(@calldata).unwrap();
+            let (contract_address, _) = contract.deploy(calldata.span()).unwrap();
 
             let dispatcher = IMockCheckerDispatcher { contract_address };
 
@@ -158,7 +158,7 @@ fn mock_calls() {
             let calldata = array![420];
 
             let contract = declare("MockChecker").unwrap().contract_class();
-            let (contract_address, _) = contract.deploy(@calldata).unwrap();
+            let (contract_address, _) = contract.deploy(calldata.span()).unwrap();
 
             let dispatcher = IMockCheckerDispatcher { contract_address };
 
@@ -178,7 +178,7 @@ fn mock_calls() {
             let calldata = array![420];
 
             let contract = declare("MockChecker").unwrap().contract_class();
-            let (contract_address, _) = contract.deploy(@calldata).unwrap();
+            let (contract_address, _) = contract.deploy(calldata.span()).unwrap();
 
             let dispatcher = IMockCheckerDispatcher { contract_address };
 

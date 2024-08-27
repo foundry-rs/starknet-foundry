@@ -12,9 +12,9 @@ fn storage_access_from_tests() {
         mod Contract {
             #[storage]
             struct Storage {
-                balance: felt252, 
+                balance: felt252,
             }
-            
+
             #[generate_trait]
             impl InternalImpl of InternalTrait {
                 fn internal_function(self: @ContractState) -> felt252 {
@@ -28,7 +28,7 @@ fn storage_access_from_tests() {
         fn storage_access_from_tests() {
             let mut state = Contract::contract_state_for_testing();
             state.balance.write(10);
-            
+
             let value = Contract::InternalImpl::internal_function(@state);
             assert(value == 10, 'Incorrect storage value');
         }
@@ -89,15 +89,15 @@ fn simple_syscalls() {
             let block_info = exec_info.block_info.unbox();
 
             let contract_cheat_block_number = declare("CheatBlockNumberChecker").unwrap().contract_class();
-            let (contract_address_cheat_block_number, _) = contract_cheat_block_number.deploy(@ArrayTrait::new()).unwrap();
+            let (contract_address_cheat_block_number, _) = contract_cheat_block_number.deploy([].span()).unwrap();
             let dispatcher_cheat_block_number = ICheatBlockNumberCheckerDispatcher { contract_address: contract_address_cheat_block_number };
 
             let contract_cheat_block_timestamp = declare("CheatBlockTimestampChecker").unwrap().contract_class();
-            let (contract_address_cheat_block_timestamp, _) = contract_cheat_block_timestamp.deploy(@ArrayTrait::new()).unwrap();
+            let (contract_address_cheat_block_timestamp, _) = contract_cheat_block_timestamp.deploy([].span()).unwrap();
             let dispatcher_cheat_block_timestamp = ICheatBlockTimestampCheckerDispatcher { contract_address: contract_address_cheat_block_timestamp };
 
             let contract_cheat_sequencer_address = declare("CheatSequencerAddressChecker").unwrap().contract_class();
-            let (contract_address_cheat_sequencer_address, _) = contract_cheat_sequencer_address.deploy(@ArrayTrait::new()).unwrap();
+            let (contract_address_cheat_sequencer_address, _) = contract_cheat_sequencer_address.deploy([].span()).unwrap();
             let dispatcher_cheat_sequencer_address = ICheatSequencerAddressCheckerDispatcher { contract_address: contract_address_cheat_sequencer_address };
 
             assert(dispatcher_cheat_block_number.get_block_number() == block_info.block_number, 'Invalid block number');
@@ -105,7 +105,7 @@ fn simple_syscalls() {
             assert(dispatcher_cheat_sequencer_address.get_sequencer_address() == block_info.sequencer_address, 'Invalid sequencer address');
 
             let contract = declare("CheatTxInfoChecker").unwrap().contract_class();
-            let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+            let (contract_address, _) = contract.deploy([].span()).unwrap();
             let dispatcher = ICheatTxInfoCheckerDispatcher { contract_address };
 
             let tx_info = exec_info.tx_info.unbox();
@@ -168,7 +168,7 @@ fn get_block_hash_syscall_in_dispatcher() {
         #[test]
         fn get_block_hash_syscall_in_dispatcher() {
             let block_hash_checker = declare("BlockHashChecker").unwrap().contract_class();
-            let (block_hash_checker_address, _) = block_hash_checker.deploy(@ArrayTrait::new()).unwrap();
+            let (block_hash_checker_address, _) = block_hash_checker.deploy([].span()).unwrap();
             let block_hash_checker_dispatcher = BlockHashCheckerDispatcher { contract_address: block_hash_checker_address };
 
             block_hash_checker_dispatcher.write_block();
@@ -284,7 +284,7 @@ fn disabled_syscalls() {
         use result::ResultTrait;
         use starknet::{ClassHash, deploy_syscall, replace_class_syscall, get_block_hash_syscall};
         use snforge_std::declare;
-        
+
         #[test]
         fn disabled_syscalls() {
             let value : ClassHash = 'xd'.try_into().unwrap();
@@ -348,7 +348,7 @@ fn cant_call_test_contract() {
         #[test]
         fn cant_call_test_contract() {
             let contract = declare("CallsBack").unwrap().contract_class();
-            let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+            let (contract_address, _) = contract.deploy([].span()).unwrap();
             let dispatcher = ICallsBackDispatcher { contract_address: contract_address };
             dispatcher.call_back(test_address());
         }
@@ -379,7 +379,7 @@ fn cant_call_test_contract() {
                     trait IDontExist<TContractState> {
                         fn test_calling_test_fails(ref self: TContractState);
                     }
-        
+
 
                     #[abi(embed_v0)]
                     impl CallsBackImpl of super::ICallsBack<ContractState> {
@@ -539,7 +539,7 @@ fn simple_cheatcodes() {
             assert(new_tx_info.transaction_hash == 421, 'Wrong transaction_hash');
 
             stop_cheat_transaction_hash(test_address);
-            
+
             let new_tx_info = starknet::get_tx_info().unbox();
             let new_tx_info_v2 = get_tx_info_v2().unbox();
 
@@ -616,23 +616,23 @@ fn spy_struct_events() {
             trait IEmitter<TContractState> {
               fn emit_event(ref self: TContractState);
             }
-                
+
             #[starknet::contract]
             mod Emitter {
                 use result::ResultTrait;
                 use starknet::ClassHash;
-                
+
                 #[event]
                 #[derive(Drop, starknet::Event)]
                 enum Event {
                     ThingEmitted: ThingEmitted
                 }
-                
+
                 #[derive(Drop, starknet::Event)]
                 struct ThingEmitted {
                     thing: felt252
                 }
-    
+
                 #[storage]
                 struct Storage {}
 
@@ -650,7 +650,7 @@ fn spy_struct_events() {
             fn spy_struct_events() {
                 let contract_address = test_address();
                 let mut spy = spy_events();
-                
+
                 let mut testing_state = Emitter::contract_state_for_testing();
                 Emitter::EmitterImpl::emit_event(ref testing_state);
 
@@ -726,14 +726,14 @@ fn caller_address_in_called_contract() {
         #[test]
         fn caller_address_in_called_contract() {
             let cheat_caller_address_checker = declare("CheatCallerAddressChecker").unwrap().contract_class();
-            let (contract_address_cheat_caller_address_checker, _) = cheat_caller_address_checker.deploy(@ArrayTrait::new()).unwrap();
+            let (contract_address_cheat_caller_address_checker, _) = cheat_caller_address_checker.deploy([].span()).unwrap();
             let dispatcher_cheat_caller_address_checker = ICheatCallerAddressCheckerDispatcher { contract_address: contract_address_cheat_caller_address_checker };
 
             assert(dispatcher_cheat_caller_address_checker.get_caller_address() == test_address().into(), 'Incorrect caller address');
 
 
             let constructor_cheat_caller_address_checker = declare("ConstructorCheatCallerAddressChecker").unwrap().contract_class();
-            let (contract_address_constructor_cheat_caller_address_checker, _) = constructor_cheat_caller_address_checker.deploy(@ArrayTrait::new()).unwrap();
+            let (contract_address_constructor_cheat_caller_address_checker, _) = constructor_cheat_caller_address_checker.deploy([].span()).unwrap();
             let dispatcher_constructor_cheat_caller_address_checker = IConstructorCheatCallerAddressCheckerDispatcher { contract_address: contract_address_constructor_cheat_caller_address_checker };
 
             assert(dispatcher_constructor_cheat_caller_address_checker.get_stored_caller_address() == test_address(), 'Incorrect caller address');
@@ -795,7 +795,7 @@ fn felt252_dict_usage() {
         #[starknet::contract]
         mod DictUsingContract {
             use core::num::traits::{One};
-            
+
             fn unique_count(mut ary: Array<felt252>) -> u32 {
                 let mut dict: Felt252Dict<felt252> = Default::default();
                 let mut counter = 0;
@@ -819,12 +819,12 @@ fn felt252_dict_usage() {
             struct Storage {
                 unique_count: u32
             }
-        
+
             #[constructor]
             fn constructor(ref self: ContractState, values: Array<felt252>) {
                 self.unique_count.write(unique_count(values));
             }
-        
+
             #[external(v0)]
             fn get_unique(self: @ContractState) -> u32 {
                 self.unique_count.read()
@@ -834,22 +834,22 @@ fn felt252_dict_usage() {
                 self.unique_count.write(unique_count(values));
             }
         }
-        
+
         #[test]
         fn test_dict_in_constructor() {
             let mut testing_state = DictUsingContract::contract_state_for_testing();
             DictUsingContract::constructor(
-                ref testing_state, 
+                ref testing_state,
                 array![1, 2, 3, 3, 3, 3 ,3, 4, 4, 4, 4, 4, 5, 5, 5, 5]
             );
-            
+
             assert(DictUsingContract::get_unique(@testing_state) == 5_u32, 'wrong unq ctor');
-            
+
             DictUsingContract::write_unique(
-                ref testing_state, 
+                ref testing_state,
                 array![1, 2, 3, 3, 3, 3 ,3, 4, 4, 4, 4, 4]
             );
-            
+
             assert(DictUsingContract::get_unique(@testing_state) == 4_u32, ' wrote wrong unq');
         }
         "

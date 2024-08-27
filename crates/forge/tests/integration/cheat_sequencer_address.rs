@@ -25,7 +25,7 @@ fn cheat_sequencer_address_basic() {
             #[test]
             fn test_stop_cheat_sequencer_address() {
                 let contract = declare("CheatSequencerAddressChecker").unwrap().contract_class();
-                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = contract.deploy([].span()).unwrap();
                 let dispatcher = ICheatSequencerAddressCheckerDispatcher { contract_address };
 
                 let old_sequencer_address = dispatcher.get_sequencer_address();
@@ -45,8 +45,8 @@ fn cheat_sequencer_address_basic() {
             fn test_cheat_sequencer_address_multiple() {
                 let contract = declare("CheatSequencerAddressChecker").unwrap().contract_class();
 
-                let (contract_address1, _) = contract.deploy(@ArrayTrait::new()).unwrap();
-                let (contract_address2, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address1, _) = contract.deploy([].span()).unwrap();
+                let (contract_address2, _) = contract.deploy([].span()).unwrap();
 
                 let cheat_sequencer_address_checker1 = ICheatSequencerAddressCheckerDispatcher { contract_address: contract_address1 };
                 let cheat_sequencer_address_checker2 = ICheatSequencerAddressCheckerDispatcher { contract_address: contract_address2 };
@@ -76,8 +76,8 @@ fn cheat_sequencer_address_basic() {
             fn test_cheat_sequencer_address_all() {
                 let contract = declare("CheatSequencerAddressChecker").unwrap().contract_class();
 
-                let (contract_address1, _) = contract.deploy(@ArrayTrait::new()).unwrap();
-                let (contract_address2, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address1, _) = contract.deploy([].span()).unwrap();
+                let (contract_address2, _) = contract.deploy([].span()).unwrap();
 
                 let cheat_sequencer_address_checker1 = ICheatSequencerAddressCheckerDispatcher { contract_address: contract_address1 };
                 let cheat_sequencer_address_checker2 = ICheatSequencerAddressCheckerDispatcher { contract_address: contract_address2 };
@@ -105,7 +105,7 @@ fn cheat_sequencer_address_basic() {
             #[test]
             fn test_cheat_sequencer_address_all_stop_one() {
                 let contract = declare("CheatSequencerAddressChecker").unwrap().contract_class();
-                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = contract.deploy([].span()).unwrap();
                 let dispatcher = ICheatSequencerAddressCheckerDispatcher { contract_address };
 
                 let target_seq_addr: felt252 = 123;
@@ -159,8 +159,8 @@ fn cheat_sequencer_address_complex() {
             fn test_cheat_sequencer_address_complex() {
                 let contract = declare("CheatSequencerAddressChecker").unwrap().contract_class();
 
-                let (contract_address1, _) = contract.deploy(@ArrayTrait::new()).unwrap();
-                let (contract_address2, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address1, _) = contract.deploy([].span()).unwrap();
+                let (contract_address2, _) = contract.deploy([].span()).unwrap();
 
                 let cheat_sequencer_address_checker1 = ICheatSequencerAddressCheckerDispatcher { contract_address: contract_address1 };
                 let cheat_sequencer_address_checker2 = ICheatSequencerAddressCheckerDispatcher { contract_address: contract_address2 };
@@ -233,7 +233,7 @@ fn cheat_sequencer_address_with_span() {
             }
 
             fn deploy_cheat_sequencer_address_checker() -> ICheatSequencerAddressCheckerDispatcher {
-                let (contract_address, _) = declare("CheatSequencerAddressChecker").unwrap().contract_class().deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = declare("CheatSequencerAddressChecker").unwrap().contract_class().deploy([].span()).unwrap();
                 ICheatSequencerAddressCheckerDispatcher { contract_address }
             }
 

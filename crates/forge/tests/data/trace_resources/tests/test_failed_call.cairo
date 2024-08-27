@@ -18,7 +18,7 @@ fn test_failed_call() {
 
     let (checker_address, _) = checker.deploy([].span()).unwrap();
     let (proxy_address, _) = proxy
-        .deploy(@array![checker_address.into(), empty_hash.into(), 1])
+        .deploy([checker_address.into(), empty_hash.into(), 1].span())
         .unwrap();
 
     let proxy_dispatcher = ITraceInfoProxySafeDispatcher { contract_address: proxy_address };

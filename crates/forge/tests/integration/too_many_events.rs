@@ -27,7 +27,7 @@ fn ok_events() {
 
             fn deploy_contract() -> ITooManyEventsDispatcher {{
                 let contract = declare("TooManyEvents").unwrap().contract_class();
-                let (contract_address, _) = contract.deploy(@array![]).unwrap();
+                let (contract_address, _) = contract.deploy([].span()).unwrap();
                 ITooManyEventsDispatcher {{ contract_address }}
             }}
 
@@ -95,7 +95,7 @@ fn too_many_events() {
 
             fn deploy_contract() -> ITooManyEventsDispatcher {{
                 let contract = declare("TooManyEvents").unwrap().contract_class();
-                let (contract_address, _) = contract.deploy(@array![]).unwrap();
+                let (contract_address, _) = contract.deploy([].span()).unwrap();
                 ITooManyEventsDispatcher {{ contract_address }}
             }}
 

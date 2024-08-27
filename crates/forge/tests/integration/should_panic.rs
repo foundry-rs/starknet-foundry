@@ -54,7 +54,7 @@ fn should_panic_unknown_entry_point() {
             #[should_panic]
             fn should_panic_with_no_expected_data() {
                 let contract = declare("HelloStarknet").unwrap().contract_class();
-                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = contract.deploy([].span()).unwrap();
 
                 match call_contract_syscall(
                     contract_address,
