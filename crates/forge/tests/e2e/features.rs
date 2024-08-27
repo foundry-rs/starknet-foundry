@@ -28,3 +28,20 @@ fn features() {
         "},
     );
 }
+
+#[test]
+fn compilation_fails_when_no_features_passed() {
+    let temp = setup_package("features");
+
+    let output = test_runner(&temp).assert().failure();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+        error: Function not found.
+    "},
+    );
+}

@@ -7,7 +7,6 @@ fn mock_in_tests() -> felt252 {
 }
 
 #[test]
-#[cfg(feature: 'snforge_test_only')]
 fn test_mock_function() {
     assert(mock_in_tests() == 999, '');
 }
