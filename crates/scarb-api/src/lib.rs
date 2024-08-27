@@ -328,12 +328,14 @@ mod tests {
             &VersionReq::parse("2.5").unwrap(),
         )
         .unwrap());
+
         assert!(package_matches_version_requirement(
             &scarb_metadata,
             "not_existing",
             &VersionReq::parse("2.5").unwrap(),
         )
-        .unwrap());
+        .is_err());
+
         assert!(!package_matches_version_requirement(
             &scarb_metadata,
             "starknet",
