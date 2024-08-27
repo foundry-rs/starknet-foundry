@@ -25,8 +25,8 @@ $ sncast --account myuser \
 
 results in declaration and deployment.
 
-> 📝 **Note**
+>  ⚠️ **Warning**
 > This command relies on auto-estimation and does not allow specifying max fees explicitly.
 
-> 📝 **Note**
+> ⚠️ **Warning**
 > Only a `fee-token` can be specified. Transaction versions for both declaration and deployment are inferred from token type.
