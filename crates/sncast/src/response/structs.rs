@@ -1,6 +1,7 @@
 use camino::Utf8PathBuf;
 use conversions::serde::serialize::CairoSerialize;
 use indoc::formatdoc;
+use itertools::Itertools;
 use serde::{Deserialize, Serialize, Serializer};
 use starknet::core::types::FieldElement;
 
@@ -128,6 +129,36 @@ pub struct ScriptInitResponse {
 
 impl CommandResponse for ScriptInitResponse {}
 
+#[derive(Serialize)]
+pub struct DeclareDeployResponse {
+    class_hash: Option<Felt>,
+    declare_transaction_hash: Option<Felt>,
+    contract_address: Felt,
+    deploy_transaction_hash: Felt,
+}
+
+impl DeclareDeployResponse {
+    #[must_use]
+    pub fn new(declare: &Option<DeclareResponse>, deploy: DeployResponse) -> Self {
+        let class_hash = declare.as_ref().map(|it| it.class_hash.clone());
+        let declare_transaction_hash = declare.as_ref().map(|it| it.transaction_hash.clone());
+
+        let DeployResponse {
+            contract_address,
+            transaction_hash: deploy_transaction_hash,
+        } = deploy;
+
+        Self {
+            class_hash,
+            declare_transaction_hash,
+            contract_address,
+            deploy_transaction_hash,
+        }
+    }
+}
+
+impl CommandResponse for DeclareDeployResponse {}
+
 #[derive(Serialize, CairoSerialize)]
 pub enum FinalityStatus {
     Received,
@@ -195,6 +226,37 @@ impl OutputLink for DeclareResponse {
             provider.class(self.class_hash.0),
             provider.transaction(self.transaction_hash.0)
         )
+    }
+}
+
+impl OutputLink for DeclareDeployResponse {
+    const TITLE: &'static str = "declaration and deployment";
+
+    fn format_links(&self, provider: Box<dyn LinkProvider>) -> String {
+        let mut links = vec![];
+
+        if let Some(ref class_hash) = self.class_hash {
+            links.push(format!("class: {}", provider.class(class_hash.0)));
+        }
+
+        links.push(format!(
+            "contract: {}",
+            provider.contract(self.contract_address.0)
+        ));
+
+        if let Some(ref transaction_hash) = self.declare_transaction_hash {
+            links.push(format!(
+                "declaration transaction: {}",
+                provider.class(transaction_hash.0)
+            ));
+        }
+
+        links.push(format!(
+            "deployment transaction: {}",
+            provider.transaction(self.deploy_transaction_hash.0)
+        ));
+
+        links.iter().join("\n")
     }
 }
 

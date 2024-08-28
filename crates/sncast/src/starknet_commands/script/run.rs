@@ -1,5 +1,5 @@
 use crate::starknet_commands::declare::Declare;
-use crate::starknet_commands::deploy::Deploy;
+use crate::starknet_commands::deploy::DeployResolved;
 use crate::starknet_commands::invoke::Invoke;
 use crate::starknet_commands::{call, declare, deploy, invoke, tx_status};
 use crate::{get_account, WaitForTx};
@@ -162,7 +162,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 let fee_args = input_reader.read::<ScriptFeeSettings>()?.into();
                 let nonce = input_reader.read()?;
 
-                let deploy = Deploy {
+                let deploy = DeployResolved {
                     class_hash,
                     constructor_calldata,
                     salt,
@@ -170,7 +170,6 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     fee_args,
                     nonce,
                     version: None,
-                    rpc: RpcArgs::default(),
                 };
 
                 let deploy_tx_id =

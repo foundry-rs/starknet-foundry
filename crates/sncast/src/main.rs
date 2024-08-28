@@ -4,7 +4,7 @@ use crate::starknet_commands::{
     account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,
     script::Script, tx_status::TxStatus,
 };
-use anyhow::{Context, Result};
+use anyhow::{bail, Context, Result};
 use configuration::load_global_config;
 use sncast::response::explorer_link::print_block_explorer_link_if_allowed;
 use sncast::response::print::{print_command_result, OutputFormat};
@@ -16,15 +16,18 @@ use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTEN
 use sncast::helpers::fee::PayableTransaction;
 use sncast::helpers::scarb_utils::{
     assert_manifest_path_exists, build, build_and_load_artifacts, get_package_metadata,
-    get_scarb_metadata_with_deps, BuildConfig,
+    get_scarb_metadata_with_deps, read_manifest_and_build_artifacts, BuildConfig,
 };
 use sncast::response::errors::handle_starknet_command_error;
+use sncast::response::structs::DeclareDeployResponse;
 use sncast::{
     chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_default_state_file_name,
     NumbersFormat, ValidatedWaitParams, WaitForTx,
 };
 use starknet::core::utils::get_selector_from_name;
 use starknet_commands::account::list::print_account_list;
+use starknet_commands::declare_deploy::DeclareDeploy;
+use starknet_commands::deploy::DeployResolved;
 use starknet_commands::verify::Verify;
 use tokio::runtime::Runtime;
 
@@ -118,6 +121,9 @@ enum Commands {
     /// Deploy a contract
     Deploy(Deploy),
 
+    // Declare a contract if it has not been yet and deploy it
+    DeclareDeploy(DeclareDeploy),
+
     /// Call a contract
     Call(Call),
 
@@ -191,17 +197,10 @@ async fn run_async_command(
                 config.keystore,
             )
             .await?;
-            let manifest_path = assert_manifest_path_exists()?;
-            let package_metadata = get_package_metadata(&manifest_path, &declare.package)?;
-            let artifacts = build_and_load_artifacts(
-                &package_metadata,
-                &BuildConfig {
-                    scarb_toml_path: manifest_path,
-                    json: cli.json,
-                    profile: cli.profile.unwrap_or("dev".to_string()),
-                },
-            )
-            .expect("Failed to build contract");
+
+            let artifacts =
+                read_manifest_and_build_artifacts(&declare.package, cli.json, &cli.profile)?;
+
             let result =
                 starknet_commands::declare::declare(declare, &account, &artifacts, wait_config)
                     .await
@@ -215,7 +214,6 @@ async fn run_async_command(
         Commands::Deploy(deploy) => {
             let provider = deploy.rpc.get_provider(&config).await?;
 
-            deploy.validate()?;
             let account = get_account(
                 &config.account,
                 &config.accounts_file,
@@ -224,11 +222,97 @@ async fn run_async_command(
             )
             .await?;
 
+            let deploy: DeployResolved = if deploy.class_hash.is_some() {
+                deploy.try_into().unwrap()
+            } else {
+                let contract =
+                    deploy.build_artifacts_and_get_compiled_contract(cli.json, &cli.profile)?;
+                let class_hash = contract.sierra_class_hash;
+
+                if !contract.is_declared(&provider).await? {
+                    bail!("Contract with class hash {:x} is not declared", class_hash);
+                }
+
+                deploy.resolved_with_class_hash(class_hash)
+            };
+
+            deploy.validate()?;
+
             let result = starknet_commands::deploy::deploy(deploy, &account, wait_config)
                 .await
                 .map_err(handle_starknet_command_error);
 
             print_command_result("deploy", &result, numbers_format, output_format)?;
+            print_block_explorer_link_if_allowed(&result, output_format, config.block_explorer);
+            Ok(())
+        }
+
+        Commands::DeclareDeploy(declare_deploy) => {
+            let provider = declare_deploy.rpc.get_provider(&config).await?;
+
+            let account = get_account(
+                &config.account,
+                &config.accounts_file,
+                &provider,
+                config.keystore,
+            )
+            .await?;
+
+            let declare = Declare::from(&declare_deploy);
+            let deploy = Deploy::from(declare_deploy);
+
+            let contract =
+                deploy.build_artifacts_and_get_compiled_contract(cli.json, &cli.profile)?;
+            let class_hash = contract.sierra_class_hash;
+
+            let needs_declaration = !contract.is_declared(&provider).await?;
+
+            let declare_result = if needs_declaration {
+                let result = crate::starknet_commands::declare::declare_compiled(
+                    declare,
+                    &account,
+                    contract,
+                    wait_config,
+                )
+                .await
+                .map_err(handle_starknet_command_error);
+
+                if result.is_err() {
+                    return print_command_result(
+                        "declare-deploy",
+                        &result,
+                        numbers_format,
+                        output_format,
+                    );
+                }
+
+                Some(result.unwrap())
+            } else {
+                None
+            };
+
+            let deploy = deploy.resolved_with_class_hash(class_hash);
+            deploy.validate()?;
+
+            let deploy_result = starknet_commands::deploy::deploy(deploy, &account, wait_config)
+                .await
+                .map_err(handle_starknet_command_error);
+
+            if deploy_result.is_err() {
+                return print_command_result(
+                    "declare-deploy",
+                    &deploy_result,
+                    numbers_format,
+                    output_format,
+                );
+            }
+
+            let result = Ok(DeclareDeployResponse::new(
+                &declare_result,
+                deploy_result.unwrap(),
+            ));
+
+            print_command_result("declare-deploy", &result, numbers_format, output_format)?;
             print_block_explorer_link_if_allowed(&result, output_format, config.block_explorer);
             Ok(())
         }
