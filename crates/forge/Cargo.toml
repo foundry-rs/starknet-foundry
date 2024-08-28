@@ -5,6 +5,9 @@ edition.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[features]
+smoke = []
+
 [dependencies]
 anyhow.workspace = true
 blockifier.workspace = true
@@ -61,6 +64,7 @@ num-integer.workspace = true
 url.workspace = true
 trace-data.workspace = true
 fs_extra.workspace = true
+project-root.workspace = true
 
 [[bin]]
 name = "snforge"

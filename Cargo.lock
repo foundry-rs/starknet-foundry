@@ -2112,6 +2112,7 @@ dependencies = [
  "num-integer",
  "num-traits 0.2.19",
  "openssl",
+ "project-root",
  "rand",
  "rayon",
  "regex",
