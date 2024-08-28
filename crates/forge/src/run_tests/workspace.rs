@@ -42,8 +42,8 @@ pub async fn run_for_workspace(args: TestArgs) -> Result<ExitStatus> {
 
     let filter = PackagesFilter::generate_for::<Metadata>(packages.iter());
 
-    build_test_artifacts_with_scarb(filter.clone())?;
-    build_contracts_with_scarb(filter)?;
+    build_test_artifacts_with_scarb(filter.clone(), args.features.clone())?;
+    build_contracts_with_scarb(filter, args.features.clone())?;
 
     let mut block_number_map = BlockNumberMap::default();
     let mut all_failed_tests = vec![];

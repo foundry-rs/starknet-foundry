@@ -7,6 +7,7 @@ mod color;
 mod components;
 mod coverage;
 mod env;
+mod features;
 mod fork_warning;
 mod forking;
 mod fuzzing;

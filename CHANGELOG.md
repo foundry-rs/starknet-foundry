@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
+#### Added
+
+- support for Scarb features in `snforge test` - flags the same as in Scarb. Read more [here](https://docs.swmansion.com/scarb/docs/reference/conditional-compilation.html#features)
+
 #### Changed
 
 - Bumped Cairo version to `2.7.0`
