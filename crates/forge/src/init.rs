@@ -106,19 +106,7 @@ pub fn run(project_name: &str) -> Result<()> {
 
     let version = env!("CARGO_PKG_VERSION");
 
-    if let core::result::Result::Ok(path) = env::var("DEV_SNFORGE_STD_PATH") {
-        ScarbCommand::new_with_stdio()
-            .current_dir(&project_path)
-            .manifest_path(manifest_path.clone())
-            .offline()
-            .arg("add")
-            .arg("--dev")
-            .arg("snforge_std")
-            .arg("--path")
-            .arg(path)
-            .run()
-            .context("Failed to add snforge_std")?;
-    } else {
+    if env::var("DEV_DISABLE_SNFORGE_STD_DEPENDENCY").is_err() {
         ScarbCommand::new_with_stdio()
             .current_dir(&project_path)
             .manifest_path(manifest_path.clone())
