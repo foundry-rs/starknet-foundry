@@ -9,7 +9,7 @@ use shared::test_utils::output_assert::assert_stdout_contains;
 use snapbox::assert_matches;
 use std::{fs, path::Path, str::FromStr};
 use test_utils::{get_local_snforge_std_absolute_path, tempdir_with_tool_versions};
-use toml_edit::{value, DocumentMut, Formatted, InlineTable, Item, Value};
+use toml_edit::{value, DocumentMut, Item};
 
 #[test]
 fn simple_package() {
@@ -660,7 +660,17 @@ fn with_exit_first_flag() {
 fn init_new_project_test() {
     let temp = tempdir_with_tool_versions().unwrap();
 
-    runner(&temp).args(["init", "test_name"]).assert().success();
+    runner(&temp)
+        .args(["init", "test_name"])
+        .env(
+            "DEV_SNFORGE_STD_PATH",
+            get_local_snforge_std_absolute_path()
+                .unwrap()
+                .to_str()
+                .unwrap(),
+        )
+        .assert()
+        .success();
 
     let manifest_path = temp.join("test_name/Scarb.toml");
     let scarb_toml = std::fs::read_to_string(manifest_path.clone()).unwrap();
@@ -678,7 +688,7 @@ fn init_new_project_test() {
             starknet = "[..]"
 
             [dev-dependencies]
-            snforge_std = {{ git = "https://github.com/foundry-rs/starknet-foundry", tag = "[..]" }}
+            snforge_std = {{ path = [..] }}
 
             [[target.starknet-contract]]
             sierra = true
@@ -689,28 +699,6 @@ fn init_new_project_test() {
     );
 
     assert_matches(&expected, &scarb_toml);
-
-    let mut scarb_toml = DocumentMut::from_str(&scarb_toml).unwrap();
-
-    let dependencies = scarb_toml
-        .get_mut("dev-dependencies")
-        .unwrap()
-        .as_table_mut()
-        .unwrap();
-
-    let local_snforge_std = get_local_snforge_std_absolute_path()
-        .unwrap()
-        .to_str()
-        .unwrap()
-        .to_string();
-
-    let mut snforge_std = InlineTable::new();
-    snforge_std.insert("path", Value::String(Formatted::new(local_snforge_std)));
-
-    dependencies.remove("snforge_std");
-    dependencies.insert("snforge_std", Item::Value(Value::InlineTable(snforge_std)));
-
-    std::fs::write(manifest_path, scarb_toml.to_string()).unwrap();
 
     let output = test_runner(&temp)
         .current_dir(temp.child(Path::new("test_name")))
@@ -737,9 +725,20 @@ fn init_new_project_test() {
 #[test]
 #[cfg(feature = "smoke")]
 fn test_init_project_with_custom_snforge_dependency_git() {
+    use toml_edit::{Formatted, InlineTable, Value};
     let temp = tempdir_with_tool_versions().unwrap();
 
-    runner(&temp).args(["init", "test_name"]).assert().success();
+    runner(&temp)
+        .args(["init", "test_name"])
+        .env(
+            "DEV_SNFORGE_STD_PATH",
+            get_local_snforge_std_absolute_path()
+                .unwrap()
+                .to_str()
+                .unwrap(),
+        )
+        .assert()
+        .success();
 
     let manifest_path = temp.child("test_name/Scarb.toml");
 

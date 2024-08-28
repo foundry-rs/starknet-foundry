@@ -2,6 +2,7 @@ use crate::CAIRO_EDITION;
 use anyhow::{anyhow, Context, Ok, Result};
 use include_dir::{include_dir, Dir};
 use scarb_api::ScarbCommand;
+use std::env;
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::Path;
@@ -105,19 +106,33 @@ pub fn run(project_name: &str) -> Result<()> {
 
     let version = env!("CARGO_PKG_VERSION");
 
-    ScarbCommand::new_with_stdio()
-        .current_dir(&project_path)
-        .manifest_path(manifest_path.clone())
-        .offline()
-        .arg("add")
-        .arg("--dev")
-        .arg("snforge_std")
-        .arg("--git")
-        .arg("https://github.com/foundry-rs/starknet-foundry.git")
-        .arg("--tag")
-        .arg(format!("v{version}"))
-        .run()
-        .context("Failed to add snforge_std")?;
+    if let core::result::Result::Ok(path) = env::var("DEV_SNFORGE_STD_PATH") {
+        ScarbCommand::new_with_stdio()
+            .current_dir(&project_path)
+            .manifest_path(manifest_path.clone())
+            .offline()
+            .arg("add")
+            .arg("--dev")
+            .arg("snforge_std")
+            .arg("--path")
+            .arg(path)
+            .run()
+            .context("Failed to add snforge_std")?;
+    } else {
+        ScarbCommand::new_with_stdio()
+            .current_dir(&project_path)
+            .manifest_path(manifest_path.clone())
+            .offline()
+            .arg("add")
+            .arg("--dev")
+            .arg("snforge_std")
+            .arg("--git")
+            .arg("https://github.com/foundry-rs/starknet-foundry.git")
+            .arg("--tag")
+            .arg(format!("v{version}"))
+            .run()
+            .context("Failed to add snforge_std")?;
+    }
 
     let cairo_version = ScarbCommand::version().run()?.cairo;
 
