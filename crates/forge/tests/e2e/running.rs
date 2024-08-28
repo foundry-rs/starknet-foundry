@@ -669,7 +669,6 @@ fn init_new_project_test() {
     let manifest_path = temp.join("test_name/Scarb.toml");
     let scarb_toml = std::fs::read_to_string(manifest_path.clone()).unwrap();
 
-    // TODO: Delete [dev-dependencies] from assertion as https://github.com/foundry-rs/starknet-foundry/pull/2404#issue-2489959797 gets merged
     let expected = formatdoc!(
         r#"
             [package]
@@ -683,7 +682,6 @@ fn init_new_project_test() {
             starknet = "[..]"
 
             [dev-dependencies]
-            snforge_std = {{ [..] }}
 
             [[target.starknet-contract]]
             sierra = true

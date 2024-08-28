@@ -103,16 +103,16 @@ pub fn run(project_name: &str) -> Result<()> {
             .run()
             .context("Failed to initialize a new project")?;
     }
-  
+
     ScarbCommand::new_with_stdio()
-      .current_dir(&project_path)
-      .manifest_path(manifest_path.clone())
-      .offline()
-      .arg("remove")
-      .arg("--dev")
-      .arg("cairo_test")
-      .run()
-      .context("Failed to remove cairo_test")?;
+        .current_dir(&project_path)
+        .manifest_path(manifest_path.clone())
+        .offline()
+        .arg("remove")
+        .arg("--dev")
+        .arg("cairo_test")
+        .run()
+        .context("Failed to remove cairo_test")?;
 
     let version = env!("CARGO_PKG_VERSION");
 
