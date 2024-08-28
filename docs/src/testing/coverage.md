@@ -20,3 +20,13 @@ If you want `snforge` to call `cairo-coverage` on generated files automatically,
 ```shell
 $ snforge test --coverage
 ```
+
+> 📝 **Note**
+> To generate trace data files, it is required to use [Scarb](https://github.com/software-mansion/scarb) version `2.8.0` or higher and include the following in your `Scarb.toml` file:
+> ```toml
+> [cairo]
+> unstable-add-statements-code-locations-debug-info = true
+> unstable-add-statements-functions-debug-info = true
+> inlining-strategy = "avoid"
+> ```
+> For more information about these sections, please refer to the [Scarb documentation](https://docs.swmansion.com/scarb/docs/reference/manifest.html#cairo).
