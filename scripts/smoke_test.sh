@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 RPC_URL="$1"
 SNFORGE_PATH="$2"
