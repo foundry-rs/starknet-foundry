@@ -7,7 +7,7 @@ use forge_runner::package_tests::raw::TestTargetRaw;
 use forge_runner::package_tests::TestTargetLocation;
 use scarb_api::ScarbCommand;
 use scarb_metadata::{PackageMetadata, TargetMetadata};
-use scarb_ui::args::PackagesFilter;
+use scarb_ui::args::{FeaturesSpec, PackagesFilter};
 use std::collections::HashMap;
 use std::fs::read_to_string;
 use std::io::ErrorKind;
@@ -31,20 +31,25 @@ impl PackageConfig for ForgeConfigFromScarb {
     }
 }
 
-pub fn build_contracts_with_scarb(filter: PackagesFilter) -> Result<()> {
+pub fn build_contracts_with_scarb(filter: PackagesFilter, features: FeaturesSpec) -> Result<()> {
     ScarbCommand::new_with_stdio()
         .arg("build")
         .packages_filter(filter)
+        .features(features)
         .run()
         .context("Failed to build contracts with Scarb")?;
     Ok(())
 }
 
-pub fn build_test_artifacts_with_scarb(filter: PackagesFilter) -> Result<()> {
+pub fn build_test_artifacts_with_scarb(
+    filter: PackagesFilter,
+    features: FeaturesSpec,
+) -> Result<()> {
     ScarbCommand::new_with_stdio()
         .arg("build")
         .arg("--test")
         .packages_filter(filter)
+        .features(features)
         .run()
         .context("Failed to build test artifacts with Scarb")?;
     Ok(())

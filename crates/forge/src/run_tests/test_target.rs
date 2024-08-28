@@ -2,7 +2,7 @@ use anyhow::Result;
 use cairo_lang_runner::RunnerError;
 use forge_runner::{
     forge_config::ForgeConfig,
-    function_args, maybe_save_execution_data, maybe_save_versioned_program,
+    function_args, maybe_save_trace_and_profile, maybe_save_versioned_program,
     package_tests::with_config_resolved::TestTargetWithResolvedConfig,
     printing::print_test_result,
     run_for_test_case,
@@ -90,7 +90,7 @@ pub async fn run_for_test_target(
         let result = task??;
 
         print_test_result(&result, forge_config.output_config.detailed_resources);
-        maybe_save_execution_data(&result, forge_config.output_config.execution_data_to_save)?;
+        maybe_save_trace_and_profile(&result, forge_config.output_config.execution_data_to_save)?;
 
         if result.is_failed() && forge_config.test_runner_config.exit_first {
             interrupted = true;
