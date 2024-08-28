@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Support for Scarb features in `snforge test` - flags the same as in Scarb. Read more [here](https://docs.swmansion.com/scarb/docs/reference/conditional-compilation.html#features)
 
-#### Changed
+#### Fixed
 
 - `snforge init` no longer emits warnings
 
