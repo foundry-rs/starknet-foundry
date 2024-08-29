@@ -36,12 +36,9 @@ impl ParseFromExpr<Expr> for Felt {
         expr: &Expr,
         arg_name: &str,
     ) -> Result<Self, Diagnostic> {
-        // panic!("Dupa zbita");
         match expr {
             Expr::ShortString(string) => {
-                // let string = string.string_value(db).unwrap();
                 let string = string.text(db).trim_matches('\'').to_string();
-
                 Ok(Self::ShortString(ShortString(string)))
             }
             Expr::Literal(string) => {
@@ -127,14 +124,10 @@ impl ParseFromExpr<Expr> for ShortString {
         expr: &Expr,
         arg_name: &str,
     ) -> Result<Self, Diagnostic> {
-        // panic!("Dupa zbita");
         match expr {
-            // Expr::ShortString(string) => match string.string_value(db) {
-            //     None => Err(T::error(format!("<{arg_name}> is not a valid string"))),
-            //     Some(string) => Ok(ShortString(string)),
-            // },
             Expr::ShortString(string) => {
-                Ok(ShortString(string.text(db).trim_matches('\'').to_string()))
+                let string = string.text(db).trim_matches('\'').to_string();
+                Ok(ShortString(string))
             }
             _ => Err(T::error(format!(
                 "<{arg_name}> invalid type, should be: double quotted string"
