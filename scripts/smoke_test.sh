@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+export DEV_DISABLE_SNFORGE_STD_DEPENDENCY=true
+
 RPC_URL="$1"
 SNFORGE_PATH="$2"
 SNCAST_PATH="$3"
