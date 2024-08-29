@@ -5,7 +5,7 @@ use super::_cheatcode::handle_cheatcode;
 
 /// Tree-like structure which contains all of the starknet calls and sub-calls along with the
 /// results
-#[derive(Drop, Serde, PartialEq)]
+#[derive(Drop, Serde, PartialEq, Clone, Debug)]
 struct CallTrace {
     entry_point: CallEntryPoint,
     /// All the calls that happened in the scope of `entry_point`
@@ -14,7 +14,7 @@ struct CallTrace {
 }
 
 /// A single function entry point summary
-#[derive(Drop, Serde, PartialEq)]
+#[derive(Drop, Serde, PartialEq, Clone, Debug)]
 struct CallEntryPoint {
     entry_point_type: EntryPointType,
     /// Hashed selector of the invoked function
@@ -29,7 +29,7 @@ struct CallEntryPoint {
 }
 
 /// Type of the function being invoked
-#[derive(Drop, Serde, PartialEq)]
+#[derive(Drop, Serde, PartialEq, Clone, Debug)]
 enum EntryPointType {
     /// Constructor of a contract
     Constructor,
@@ -40,7 +40,7 @@ enum EntryPointType {
 }
 
 /// Denotes type of the call
-#[derive(Drop, Serde, PartialEq)]
+#[derive(Drop, Serde, PartialEq, Clone, Debug)]
 enum CallType {
     /// Regular call
     Call,
@@ -49,7 +49,7 @@ enum CallType {
 }
 
 /// Result of a contract or a library call
-#[derive(Drop, Serde, PartialEq)]
+#[derive(Drop, Serde, PartialEq, Clone, Debug)]
 enum CallResult {
     /// A successful call with it's result
     Success: Array<felt252>,
@@ -58,7 +58,7 @@ enum CallResult {
 }
 
 /// Represents a pre-processed failure of a call
-#[derive(Drop, Serde, PartialEq)]
+#[derive(Drop, Serde, PartialEq, Clone, Debug)]
 enum CallFailure {
     /// Contains raw panic data
     Panic: Array<felt252>,
