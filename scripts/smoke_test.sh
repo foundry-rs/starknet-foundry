@@ -13,7 +13,6 @@ REVISION="$5"
 
 $SNFORGE_PATH init my_project
 pushd my_project || exit
-scarb remove --dev snforge_std
 scarb add --dev snforge_std --git "$REPO_URL" --rev "$REVISION"
 $SNFORGE_PATH test || exit
 popd || exit
