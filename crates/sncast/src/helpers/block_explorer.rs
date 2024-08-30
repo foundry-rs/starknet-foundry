@@ -40,15 +40,15 @@ pub struct StarkScan;
 
 impl LinkProvider for StarkScan {
     fn transaction(&self, hash: FieldElement) -> String {
-        format!("{STARKSCAN}/{hash:x}")
+        format!("{STARKSCAN}/{hash:#x}")
     }
 
     fn class(&self, hash: FieldElement) -> String {
-        format!("{STARKSCAN}/{hash:x}")
+        format!("{STARKSCAN}/{hash:#x}")
     }
 
     fn contract(&self, address: FieldElement) -> String {
-        format!("{STARKSCAN}/{address:x}")
+        format!("{STARKSCAN}/{address:#x}")
     }
 }
 
@@ -56,15 +56,15 @@ pub struct Voyager;
 
 impl LinkProvider for Voyager {
     fn transaction(&self, hash: FieldElement) -> String {
-        format!("{VOYAGER}/tx/{hash:x}")
+        format!("{VOYAGER}/tx/{hash:#x}")
     }
 
     fn class(&self, hash: FieldElement) -> String {
-        format!("{VOYAGER}/class/{hash:x}")
+        format!("{VOYAGER}/class/{hash:#x}")
     }
 
     fn contract(&self, address: FieldElement) -> String {
-        format!("{VOYAGER}/contract/{address:x}")
+        format!("{VOYAGER}/contract/{address:#x}")
     }
 }
 
@@ -72,15 +72,15 @@ pub struct ViewBlock;
 
 impl LinkProvider for ViewBlock {
     fn transaction(&self, hash: FieldElement) -> String {
-        format!("{VIEWBLOCK}/tx/{hash:x}")
+        format!("{VIEWBLOCK}/tx/{hash:#x}")
     }
 
     fn class(&self, hash: FieldElement) -> String {
-        format!("{VIEWBLOCK}/class/{hash:x}")
+        format!("{VIEWBLOCK}/class/{hash:#x}")
     }
 
     fn contract(&self, address: FieldElement) -> String {
-        format!("{VIEWBLOCK}/contract/{address:x}")
+        format!("{VIEWBLOCK}/contract/{address:#x}")
     }
 }
 
@@ -88,15 +88,15 @@ pub struct OkLink;
 
 impl LinkProvider for OkLink {
     fn transaction(&self, hash: FieldElement) -> String {
-        format!("{OKLINK}/tx/{hash:x}")
+        format!("{OKLINK}/tx/{hash:#x}")
     }
 
     fn class(&self, hash: FieldElement) -> String {
-        format!("{OKLINK}/class/{hash:x}")
+        format!("{OKLINK}/class/{hash:#x}")
     }
 
     fn contract(&self, address: FieldElement) -> String {
-        format!("{OKLINK}/contract/{address:x}")
+        format!("{OKLINK}/contract/{address:#x}")
     }
 }
 
@@ -104,14 +104,14 @@ pub struct NftScan;
 
 impl LinkProvider for NftScan {
     fn transaction(&self, hash: FieldElement) -> String {
-        format!("{NFTSCAN}/{hash:x}")
+        format!("{NFTSCAN}/{hash:#x}")
     }
 
     fn class(&self, hash: FieldElement) -> String {
-        format!("{NFTSCAN}/{hash:x}")
+        format!("{NFTSCAN}/{hash:#x}")
     }
 
     fn contract(&self, address: FieldElement) -> String {
-        format!("{NFTSCAN}/{address:x}")
+        format!("{NFTSCAN}/{address:#x}")
     }
 }
