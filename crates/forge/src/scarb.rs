@@ -218,7 +218,7 @@ mod tests {
                         "THIRD_FORK_NAME".to_string(),
                         "http://some.rpc.url".to_string(),
                         "tag".to_string(),
-                        "Latest".to_string(),
+                        "latest".to_string(),
                     )
                 ],
                 fuzzer_runs: None,
@@ -406,7 +406,7 @@ mod tests {
             &scarb_metadata.workspace.members[0],
         )
         .unwrap_err();
-        assert!(format!("{err:?}").contains("block_id.tag can only be equal to Latest"));
+        assert!(format!("{err:?}").contains("block_id.tag can only be equal to latest"));
     }
 
     #[test]

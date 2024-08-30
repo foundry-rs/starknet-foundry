@@ -104,8 +104,8 @@ fn validate_raw_fork_config(raw_config: RawForgeConfig) -> Result<RawForgeConfig
             bail!("block_id = {block_id_key} is not valid. Possible values are = \"number\", \"hash\" and \"tag\"");
         }
 
-        if block_id_key == "tag" && block_id_value != "Latest" {
-            bail!("block_id.tag can only be equal to Latest");
+        if block_id_key == "tag" && block_id_value != "latest" {
+            bail!("block_id.tag can only be equal to latest");
         }
     }
 
