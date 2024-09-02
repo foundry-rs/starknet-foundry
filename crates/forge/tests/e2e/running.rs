@@ -6,9 +6,10 @@ use camino::Utf8PathBuf;
 use forge::CAIRO_EDITION;
 use indoc::{formatdoc, indoc};
 use shared::test_utils::output_assert::assert_stdout_contains;
-use std::{env, fs, path::Path, str::FromStr};
-use test_utils::tempdir_with_tool_versions;
-use toml_edit::{value, DocumentMut, Item};
+use snapbox::assert_matches;
+use std::{fs, path::Path, str::FromStr};
+use test_utils::{get_local_snforge_std_absolute_path, tempdir_with_tool_versions};
+use toml_edit::{value, DocumentMut, Formatted, InlineTable, Item, Value};
 
 #[test]
 fn simple_package() {
@@ -655,79 +656,74 @@ fn with_exit_first_flag() {
     );
 }
 
-// TODO (2274): This test has inherently flawed logic, needs to be re-written
-#[ignore]
 #[test]
 fn init_new_project_test() {
     let temp = tempdir_with_tool_versions().unwrap();
 
-    runner(&temp).args(["init", "test_name"]).assert().success();
-    let manifest_path = temp.child("test_name/Scarb.toml");
+    runner(&temp)
+        .args(["init", "test_name"])
+        .env("DEV_DISABLE_SNFORGE_STD_DEPENDENCY", "true")
+        .assert()
+        .success();
 
-    let generated_toml = std::fs::read_to_string(manifest_path.path()).unwrap();
-    let version = env!("CARGO_PKG_VERSION");
-    let expected_toml = formatdoc!(
+    let manifest_path = temp.join("test_name/Scarb.toml");
+    let scarb_toml = std::fs::read_to_string(manifest_path.clone()).unwrap();
+
+    let expected = formatdoc!(
         r#"
             [package]
             name = "test_name"
             version = "0.1.0"
-            edition = "{}"
+            edition = "{CAIRO_EDITION}"
 
             # See more keys and their definitions at https://docs.swmansion.com/scarb/docs/reference/manifest.html
 
             [dependencies]
-            starknet = "2.6.4"
+            starknet = "[..]"
 
             [dev-dependencies]
-            snforge_std = {{ git = "https://github.com/foundry-rs/starknet-foundry", tag = "v{}" }}
 
             [[target.starknet-contract]]
             sierra = true
 
             [scripts]
             test = "snforge test"
-        "#,
-        CAIRO_EDITION,
-        version,
+        "#
     );
 
-    assert_eq!(generated_toml, expected_toml);
+    assert_matches(&expected, &scarb_toml);
 
-    let remote_url = get_remote_url();
-    let branch = get_current_branch();
-    manifest_path
-        .write_str(&formatdoc!(
-            r#"
-        [package]
-        name = "test_name"
-        version = "0.1.0"
+    let mut scarb_toml = DocumentMut::from_str(&scarb_toml).unwrap();
 
-        [[target.starknet-contract]]
-
-        [dependencies]
-        starknet = "2.5.4"
-
-        [dev-dependencies]
-        snforge_std = {{ git = "https://github.com/{}", branch = "{}" }}
-        "#,
-            remote_url,
-            branch
-        ))
+    let dependencies = scarb_toml
+        .get_mut("dev-dependencies")
+        .unwrap()
+        .as_table_mut()
         .unwrap();
 
-    // Check if template works with current version of snforge_std
+    let local_snforge_std = get_local_snforge_std_absolute_path()
+        .unwrap()
+        .to_str()
+        .unwrap()
+        .to_string();
+
+    let mut snforge_std = InlineTable::new();
+    snforge_std.insert("path", Value::String(Formatted::new(local_snforge_std)));
+
+    dependencies.remove("snforge_std");
+    dependencies.insert("snforge_std", Item::Value(Value::InlineTable(snforge_std)));
+
+    std::fs::write(manifest_path, scarb_toml.to_string()).unwrap();
+
     let output = test_runner(&temp)
         .current_dir(temp.child(Path::new("test_name")))
         .assert()
         .success();
-    assert_stdout_contains(
-        output,
-        formatdoc!(
-            r"
-        [..]Updating git repository https://github.com/{}
+
+    let expected = indoc!(
+        r"
         [..]Compiling test_name v0.1.0[..]
         [..]Finished[..]
-
 
         Collected 2 test(s) from test_name package
         Running 0 test(s) from src/
@@ -735,10 +731,68 @@ fn init_new_project_test() {
         [PASS] test_name_integrationtest::test_contract::test_increase_balance [..]
         [PASS] test_name_integrationtest::test_contract::test_cannot_increase_balance_with_zero_value [..]
         Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
-    ",
-            remote_url.trim_end_matches(".git")
-        ),
+        "
     );
+
+    assert_stdout_contains(output, expected);
+}
+
+#[test]
+#[cfg(feature = "smoke")]
+fn test_init_project_with_custom_snforge_dependency_git() {
+    let temp = tempdir_with_tool_versions().unwrap();
+
+    runner(&temp)
+        .args(["init", "test_name"])
+        .env("DEV_DISABLE_SNFORGE_STD_DEPENDENCY", "true")
+        .assert()
+        .success();
+
+    let manifest_path = temp.child("test_name/Scarb.toml");
+
+    let scarb_toml = std::fs::read_to_string(manifest_path.path()).unwrap();
+    let mut scarb_toml = DocumentMut::from_str(&scarb_toml).unwrap();
+
+    let dependencies = scarb_toml
+        .get_mut("dev-dependencies")
+        .unwrap()
+        .as_table_mut()
+        .unwrap();
+
+    let branch = get_current_branch();
+    let remote_url = format!("https://github.com/{}", get_remote_url());
+
+    let mut snforge_std = InlineTable::new();
+    snforge_std.insert("git", Value::String(Formatted::new(remote_url.clone())));
+    snforge_std.insert("branch", Value::String(Formatted::new(branch)));
+
+    dependencies.remove("snforge_std");
+    dependencies.insert("snforge_std", Item::Value(Value::InlineTable(snforge_std)));
+
+    std::fs::write(manifest_path.path(), scarb_toml.to_string()).unwrap();
+
+    let output = test_runner(&temp)
+        .current_dir(temp.child(Path::new("test_name")))
+        .assert()
+        .success();
+
+    let expected = formatdoc!(
+        r"
+        [..]Updating git repository {}
+        [..]Compiling test_name v0.1.0[..]
+        [..]Finished[..]
+
+        Collected 2 test(s) from test_name package
+        Running 0 test(s) from src/
+        Running 2 test(s) from tests/
+        [PASS] test_name_integrationtest::test_contract::test_increase_balance [..]
+        [PASS] test_name_integrationtest::test_contract::test_cannot_increase_balance_with_zero_value [..]
+        Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+        ",
+        remote_url.trim_end_matches(".git")
+    );
+
+    assert_stdout_contains(output, expected);
 }
 
 #[test]

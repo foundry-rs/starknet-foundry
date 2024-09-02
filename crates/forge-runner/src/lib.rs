@@ -40,7 +40,7 @@ pub mod running;
 
 pub const CACHE_DIR: &str = ".snfoundry_cache";
 
-const BUILTINS: [&str; 8] = [
+const BUILTINS: [&str; 11] = [
     "Pedersen",
     "RangeCheck",
     "Bitwise",
@@ -49,6 +49,9 @@ const BUILTINS: [&str; 8] = [
     "SegmentArena",
     "GasBuiltin",
     "System",
+    "RangeCheck96",
+    "AddMod",
+    "MulMod",
 ];
 
 pub trait TestCaseFilter {
