@@ -3,7 +3,7 @@ use crate::{
     cairo_expression::CairoExpression,
 };
 use cairo_lang_macro::Diagnostic;
-use cairo_lang_syntax::node::{ast::Expr, db::SyntaxGroup};
+use cairo_lang_syntax::node::{ast::Expr, db::SyntaxGroup, Terminal};
 use num_bigint::BigInt;
 use url::Url;
 
@@ -38,8 +38,7 @@ impl ParseFromExpr<Expr> for Felt {
     ) -> Result<Self, Diagnostic> {
         match expr {
             Expr::ShortString(string) => {
-                let string = string.string_value(db).unwrap();
-
+                let string = string.text(db).trim_matches('\'').to_string();
                 Ok(Self::ShortString(ShortString(string)))
             }
             Expr::Literal(string) => {
@@ -118,6 +117,7 @@ impl ParseFromExpr<Expr> for String {
         }
     }
 }
+
 impl ParseFromExpr<Expr> for ShortString {
     fn parse_from_expr<T: AttributeInfo>(
         db: &dyn SyntaxGroup,
@@ -125,10 +125,10 @@ impl ParseFromExpr<Expr> for ShortString {
         arg_name: &str,
     ) -> Result<Self, Diagnostic> {
         match expr {
-            Expr::ShortString(string) => match string.string_value(db) {
-                None => Err(T::error(format!("<{arg_name}> is not a valid string"))),
-                Some(string) => Ok(ShortString(string)),
-            },
+            Expr::ShortString(string) => {
+                let string = string.text(db).trim_matches('\'').to_string();
+                Ok(ShortString(string))
+            }
             _ => Err(T::error(format!(
                 "<{arg_name}> invalid type, should be: double quotted string"
             ))),
