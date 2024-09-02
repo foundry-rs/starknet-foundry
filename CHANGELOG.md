@@ -28,6 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.28.0] - 2024-08-21
 
+### Forge
+
 #### Changed
 
 - Bumped Cairo version to `2.7.0`
