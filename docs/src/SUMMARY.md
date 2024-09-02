@@ -24,6 +24,7 @@
 * [Test Collection](testing/test-collection.md)
 * [Contract Collection](testing/contracts-collection.md)
 * [Gas and VM Resources Estimation](testing/gas-and-resource-estimation.md)
+* [Coverage](testing/coverage.md)
 
 # `snforge` Advanced Features
 * [Fork Testing](snforge-advanced-features/fork-testing.md)
