@@ -91,6 +91,35 @@ fn work_with_expected_short_string() {
 }
 
 #[test]
+fn work_with_expected_short_string_escaped() {
+    let item = TokenStream::new(EMPTY_FN.into());
+    let args = TokenStream::new(r"(expected: 'can\'t')".into());
+
+    let result = should_panic(args, item);
+
+    assert_diagnostics(&result, &[]);
+
+    assert_output(
+        &result,
+        r"
+            fn empty_fn() {
+                if snforge_std::_cheatcode::_is_config_run() {
+                    let mut data = array![];
+
+                    snforge_std::_config_types::ShouldPanicConfig {
+                        expected: snforge_std::_config_types::Expected::ShortString('can\'t')
+                    }
+                    .serialize(ref data);
+
+                    starknet::testing::cheatcode::<'set_config_should_panic'>(data.span());
+                    return;
+                }
+            }
+        ",
+    );
+}
+
+#[test]
 fn work_with_expected_tuple() {
     let item = TokenStream::new(EMPTY_FN.into());
     let args = TokenStream::new(r"(expected: ('panic data', ' or not'))".into());
