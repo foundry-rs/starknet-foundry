@@ -1,5 +1,11 @@
 # Direct Storage Access
 
+> ⚠️ **Warning**
+> 
+> This guide is outdated for cairo 2.7.0. 
+> If you want to use pre 2.7.0 versions, it is still up-to-date. 
+> This guide will be updated in the future: https://github.com/foundry-rs/starknet-foundry/issues/2439
+
 In some instances, it's not possible for contracts to expose API that we'd like to use in order to initialize 
 the contracts before running some tests. For those cases `snforge` exposes storage-related cheatcodes,
 which allow manipulating the storage directly (reading and writing).
@@ -163,7 +169,7 @@ fn store_in_complex_mapping() {
 
 ## Example with `storage_address_from_base`
 
-This example uses `storage_address_from_base` with `address` function of the [storage variable](https://book.cairo-lang.org/ch14-01-contract-storage.html#addresses-of-storage-variables).
+This example uses `storage_address_from_base` with `address` function of the storage variable.
 
 To retrieve storage address of a given `field`, you need to import `{field_name}ContractMemberStateTrait` from the contract.
 
