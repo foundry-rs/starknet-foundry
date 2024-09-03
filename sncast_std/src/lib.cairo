@@ -135,7 +135,7 @@ pub fn call(
     result_data
 }
 
-#[derive(Drop, Clone, Debug, Serde)]
+#[derive(Drop, Copy, Debug, Serde)]
 pub struct DeclareResult {
     pub class_hash: ClassHash,
     pub transaction_hash: felt252,
@@ -174,7 +174,7 @@ pub fn declare(
     result_data
 }
 
-#[derive(Drop, Clone, Debug, Serde)]
+#[derive(Drop, Copy, Debug, Serde)]
 pub struct DeployResult {
     pub contract_address: ContractAddress,
     pub transaction_hash: felt252,
@@ -190,18 +190,18 @@ impl DisplayDeployResult of Display<DeployResult> {
         )
     }
 }
-#[derive(Drop, Clone, Debug, Serde, PartialEq)]
+#[derive(Drop, Copy, Debug, Serde, PartialEq)]
 pub enum FeeSettings {
     Eth: EthFeeSettings,
     Strk: StrkFeeSettings
 }
 
-#[derive(Drop, Clone, Debug, Serde, PartialEq)]
+#[derive(Drop, Copy, Debug, Serde, PartialEq)]
 pub struct EthFeeSettings {
     pub max_fee: Option<felt252>,
 }
 
-#[derive(Drop, Clone, Debug, Serde, PartialEq)]
+#[derive(Drop, Copy, Debug, Serde, PartialEq)]
 pub struct StrkFeeSettings {
     pub max_fee: Option<felt252>,
     pub max_gas: Option<u64>,
@@ -300,7 +300,7 @@ pub fn get_nonce(block_tag: felt252) -> felt252 {
     *buf[0]
 }
 
-#[derive(Drop, Clone, Debug, Serde, PartialEq)]
+#[derive(Drop, Copy, Debug, Serde, PartialEq)]
 pub enum FinalityStatus {
     Received,
     Rejected,
@@ -338,7 +338,7 @@ pub impl DisplayExecutionStatus of Display<ExecutionStatus> {
 }
 
 
-#[derive(Drop, Clone, Debug, Serde, PartialEq)]
+#[derive(Drop, Copy, Debug, Serde, PartialEq)]
 pub struct TxStatusResult {
     pub finality_status: FinalityStatus,
     pub execution_status: Option<ExecutionStatus>
