@@ -1,16 +1,13 @@
 use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
 use assert_fs::TempDir;
 use camino::Utf8PathBuf;
-// use fs_extra::dir::{copy, CopyOptions};
 use indoc::formatdoc;
 use shared::command::CommandExt;
 use shared::test_utils::node_url::node_rpc_url;
 use snapbox::cmd::{cargo_bin, Command as SnapboxCommand};
-// use std::fs::{create_dir_all, remove_dir_all};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::str::FromStr;
-// use std::sync::LazyLock;
 use std::{env, fs};
 use test_utils::tempdir_with_tool_versions;
 use toml_edit::{value, DocumentMut};
