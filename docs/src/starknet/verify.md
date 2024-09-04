@@ -26,15 +26,15 @@ Then run:
 ```shell
 $ sncast \
     verify \
-    --contract-address 0x8448a68b5ea1affc45e3fd4b8b480ea36a51dc34e337a16d2567d32d0c6f8b \
+    --contract-address 0x01e4ebe3278ab4633a9d0d3f5c4290001f29bc3179a70e570b6817dd7f8264fa \
     --contract-name SimpleBalance \
     --verifier walnut \
-    --network mainnet
+    --network sepolia
 
 You are about to submit the entire workspace's code to the third-party chosen verifier at walnut, and the code will be publicly available through walnut's APIs. Are you sure? (Y/n) Y
 
 command: verify
-message: Contract has been successfully verified. You can check the verification status at the following link: https://api.walnut.dev/v1/sn_main/classes/0x03498e7edbc5f953315db118401fe7ea1eef637f63c56b45bd54e35150929ca3
+message: Contract verification has started. You can check the verification status at the following link: https://api.walnut.dev/v1/verification/77f1d905-fdb4-4280-b7d6-57cd029d1259/status.
 ```
 
 > 📝 **Note**
