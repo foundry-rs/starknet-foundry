@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - Derived `Debug` and `Clone` on `trace.cairo` items
+- `--coverage` flag to the `test` command. Saves trace data and then generates coverage report of test cases which pass and are not fuzz tests. You need [cairo-coverage](https://github.com/software-mansion/cairo-coverage) installed on your system.
 
 ## [0.29.0] - 2024-08-28
 

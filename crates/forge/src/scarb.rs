@@ -226,7 +226,8 @@ mod tests {
                 max_n_steps: None,
                 detailed_resources: false,
                 save_trace_data: false,
-                build_profile: false
+                build_profile: false,
+                coverage: false
             }
         );
     }
@@ -454,7 +455,8 @@ mod tests {
                 max_n_steps: None,
                 detailed_resources: false,
                 save_trace_data: false,
-                build_profile: false
+                build_profile: false,
+                coverage: false
             }
         );
     }

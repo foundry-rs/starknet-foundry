@@ -1,9 +1,10 @@
 use crate::build_trace_data::test_sierra_program_path::VersionedProgramPath;
+use crate::coverage_api::run_coverage;
 use crate::forge_config::{ExecutionDataToSave, ForgeConfig, TestRunnerConfig};
 use crate::fuzzer::RandomFuzzer;
 use crate::running::{run_fuzz_test, run_test};
 use crate::test_case_summary::TestCaseSummary;
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use build_trace_data::save_trace_data;
 use cairo_lang_sierra::program::{ConcreteTypeLongId, Function, TypeDeclaration};
 use camino::Utf8Path;
@@ -14,7 +15,9 @@ use package_tests::with_config_resolved::{
     TestCaseWithResolvedConfig, TestTargetWithResolvedConfig,
 };
 use profiler_api::run_profiler;
+use shared::print::print_as_warning;
 use std::collections::HashMap;
+use std::path::PathBuf;
 use std::sync::Arc;
 use test_case_summary::{AnyTestCaseSummary, Fuzzing};
 use tokio::sync::mpsc::{channel, Sender};
@@ -22,6 +25,7 @@ use tokio::task::JoinHandle;
 use universal_sierra_compiler_api::AssembledProgramWithDebugInfo;
 
 pub mod build_trace_data;
+pub mod coverage_api;
 pub mod expected_result;
 pub mod forge_config;
 pub mod package_tests;
@@ -57,7 +61,7 @@ pub trait TestCaseFilter {
 pub fn maybe_save_trace_and_profile(
     result: &AnyTestCaseSummary,
     execution_data_to_save: ExecutionDataToSave,
-) -> Result<()> {
+) -> Result<Option<PathBuf>> {
     if let AnyTestCaseSummary::Single(TestCaseSummary::Passed {
         name, trace_data, ..
     }) = result
@@ -67,6 +71,21 @@ pub fn maybe_save_trace_and_profile(
             if execution_data_to_save.profile {
                 run_profiler(name, &trace_path)?;
             }
+            return Ok(Some(trace_path));
+        }
+    }
+    Ok(None)
+}
+
+pub fn maybe_generate_coverage(
+    execution_data_to_save: ExecutionDataToSave,
+    saved_trace_data_paths: &[PathBuf],
+) -> Result<()> {
+    if execution_data_to_save.coverage {
+        if saved_trace_data_paths.is_empty() {
+            print_as_warning(&anyhow!("No trace data to generate coverage from"));
+        } else {
+            run_coverage(saved_trace_data_paths)?;
         }
     }
     Ok(())
