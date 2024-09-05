@@ -88,6 +88,19 @@ jobs:
       - name: nextest partition ${{ matrix.partition }}/8
         run: cargo nextest run --partition 'count:${{ matrix.partition }}/8' --archive-file 'nextest-archive.tar.zst' e2e
 
+  test-forge-init:
+    name: Test Forge / init
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
+      - uses: software-mansion/setup-scarb@v1.3.2
+        with:
+          scarb-version: "2.8.1"
+      - uses: software-mansion/setup-universal-sierra-compiler@v1
+      - run: cargo test --package forge --test main e2e::running::init_new_project
+
   test-forge-runner:
     name: Test Forge Runner
     runs-on: ubuntu-latest

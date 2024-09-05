@@ -1,13 +1,16 @@
 use super::common::runner::{
-    get_current_branch, get_remote_url, runner, setup_package, test_runner,
+    get_current_branch, get_remote_url, runner, setup_package, snforge_test_bin_path, test_runner,
 };
 use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
+use assert_fs::TempDir;
 use camino::Utf8PathBuf;
 use forge::CAIRO_EDITION;
 use indoc::{formatdoc, indoc};
 use shared::test_utils::output_assert::assert_stdout_contains;
 use snapbox::assert_matches;
-use std::{fs, path::Path, str::FromStr};
+use snapbox::cmd::Command as SnapboxCommand;
+use std::ffi::OsString;
+use std::{env, fs, iter, path::Path, str::FromStr};
 use test_utils::{get_local_snforge_std_absolute_path, tempdir_with_tool_versions};
 use toml_edit::{value, DocumentMut, Formatted, InlineTable, Item, Value};
 
@@ -657,17 +660,42 @@ fn with_exit_first_flag() {
 }
 
 #[test]
-fn init_new_project_test() {
+fn init_new_project() {
     let temp = tempdir_with_tool_versions().unwrap();
 
-    runner(&temp)
-        .args(["init", "test_name"])
-        .env("DEV_DISABLE_SNFORGE_STD_DEPENDENCY", "true")
+    runner(&temp).args(["init", "test_name"]).assert().success();
+
+    validate_init(&temp);
+}
+
+#[test]
+fn init_new_project_from_scarb() {
+    let temp = tempdir_with_tool_versions().unwrap();
+
+    SnapboxCommand::new("scarb")
+        .current_dir(&temp)
+        .args(["new", "test_name"])
+        .env("SCARB_INIT_TEST_RUNNER", "starknet-foundry")
+        .env(
+            "PATH",
+            append_to_path_var(snforge_test_bin_path().parent().unwrap()),
+        )
         .assert()
         .success();
 
+    validate_init(&temp);
+}
+
+pub fn append_to_path_var(path: &Path) -> OsString {
+    let script_path = iter::once(path.to_path_buf());
+    let os_path = env::var_os("PATH").unwrap();
+    let other_paths = env::split_paths(&os_path);
+    env::join_paths(script_path.chain(other_paths)).unwrap()
+}
+
+fn validate_init(temp: &TempDir) {
     let manifest_path = temp.join("test_name/Scarb.toml");
-    let scarb_toml = std::fs::read_to_string(manifest_path.clone()).unwrap();
+    let scarb_toml = fs::read_to_string(manifest_path.clone()).unwrap();
 
     let expected = formatdoc!(
         r#"
@@ -682,6 +710,7 @@ fn init_new_project_test() {
             starknet = "[..]"
 
             [dev-dependencies]
+            snforge_std = {{ git = "https://github.com/foundry-rs/starknet-foundry", tag = "v[..]" }}
 
             [[target.starknet-contract]]
             sierra = true
@@ -715,7 +744,7 @@ fn init_new_project_test() {
 
     std::fs::write(manifest_path, scarb_toml.to_string()).unwrap();
 
-    let output = test_runner(&temp)
+    let output = test_runner(temp)
         .current_dir(temp.child(Path::new("test_name")))
         .assert()
         .success();
