@@ -88,8 +88,8 @@ jobs:
       - name: nextest partition ${{ matrix.partition }}/8
         run: cargo nextest run --partition 'count:${{ matrix.partition }}/8' --archive-file 'nextest-archive.tar.zst' e2e
 
-  test-forge-init:
-    name: Test Forge / init
+  test-coverage:
+    name: Test coverage
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -99,7 +99,12 @@ jobs:
         with:
           scarb-version: "2.8.1"
       - uses: software-mansion/setup-universal-sierra-compiler@v1
-      - run: cargo test --package forge --test main e2e::running::init_new_project
+
+      - name: Install cairo-coverage
+        run: |
+          curl -L https://raw.githubusercontent.com/software-mansion/cairo-coverage/main/scripts/install.sh | sh
+
+      - run: cargo test --package forge --features scarb_2_8_1 --test main e2e::coverage::test_coverage_project
 
   test-forge-runner:
     name: Test Forge Runner

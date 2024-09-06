@@ -2,7 +2,7 @@ use super::common::runner::{setup_package, test_runner};
 use forge_runner::coverage_api::{COVERAGE_DIR, OUTPUT_FILE_NAME};
 
 #[test]
-#[ignore] // TODO(#2426) this will only work for scarb 2.8.0 or above
+#[cfg_attr(not(feature = "scarb_2_8_1"), ignore)]
 fn test_coverage_project() {
     let temp = setup_package("coverage_project");
 
