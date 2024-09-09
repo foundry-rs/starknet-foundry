@@ -122,7 +122,7 @@ pub async fn declare(
             class_hash,
         }) => handle_wait_for_tx(
             account.provider(),
-            transaction_hash.clone(),
+            transaction_hash,
             DeclareResponse {
                 class_hash,
                 transaction_hash,

@@ -109,7 +109,7 @@ pub async fn execute_calls(
     match result {
         Ok(InvokeTransactionResult { transaction_hash }) => handle_wait_for_tx(
             account.provider(),
-            transaction_hash.clone(),
+            transaction_hash,
             InvokeResponse { transaction_hash },
             wait_config,
         )

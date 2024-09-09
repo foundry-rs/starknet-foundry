@@ -62,7 +62,7 @@ where
         // ref: https://github.com/myBraavos/braavos-account-cairo/blob/6efdfd597bb051e99c79a512fccd14ee2523c898/src/presets/braavos_base_account.cairo#L74
         let aux_data: Vec<Felt> = vec![
             // account_implementation
-            self.class_hash.clone(),
+            self.class_hash,
             // signer_type
             Felt::ZERO,
             // secp256r1_signer.x.low
@@ -82,7 +82,7 @@ where
             // stark_fee_rate
             Felt::ZERO,
             // chain_id
-            self.chain_id.clone(),
+            self.chain_id,
         ];
 
         let aux_hash = poseidon_hash_many(&aux_data[..]);

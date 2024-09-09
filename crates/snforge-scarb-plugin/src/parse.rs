@@ -12,6 +12,7 @@ use cairo_lang_utils::Upcast;
 use indoc::formatdoc;
 use std::sync::Arc;
 
+#[allow(clippy::skip_while_next)]
 pub fn parse<T: AttributeInfo>(
     code: &str,
 ) -> Result<(SimpleParserDatabase, FunctionWithBody), Diagnostic> {
