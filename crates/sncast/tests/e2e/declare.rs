@@ -230,7 +230,6 @@ async fn test_invalid_version_and_token_combination(fee_token: &str, version: &s
 }
 
 #[tokio::test]
-// #[ignore = "Expand the contract's code to more complex or wait for fix: https://github.com/xJonathanLEI/starknet-rs/issues/649#issue-2469861847"]
 async fn test_happy_case_specify_package() {
     let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/multiple_packages");
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
