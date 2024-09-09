@@ -2,7 +2,7 @@ use camino::Utf8PathBuf;
 use conversions::serde::serialize::CairoSerialize;
 use indoc::formatdoc;
 use serde::{Deserialize, Serialize, Serializer};
-use starknet::core::types::FieldElement;
+use starknet::core::types::Felt;
 
 use crate::helpers::block_explorer::LinkProvider;
 
@@ -10,8 +10,8 @@ use super::explorer_link::OutputLink;
 
 pub struct Decimal(pub u64);
 
-#[derive(Clone, Debug, Deserialize, CairoSerialize, PartialEq)]
-pub struct Felt(pub FieldElement);
+// #[derive(Clone, Debug, Deserialize, CairoSerialize, PartialEq)]
+// pub struct Felt(pub FieldElement);
 
 impl Serialize for Decimal {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -22,22 +22,22 @@ impl Serialize for Decimal {
     }
 }
 
-impl Serialize for Felt {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let val = self.0;
-        serializer.serialize_str(&format!("{val:#x}"))
-    }
-}
+// impl Serialize for Felt {
+//     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+//     where
+//         S: Serializer,
+//     {
+//         let val = self.0;
+//         serializer.serialize_str(&format!("{val:#x}"))
+//     }
+// }
 
 fn serialize_as_decimal<S>(value: &Felt, serializer: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,
 {
-    let val = value.0;
-    serializer.serialize_str(&format!("{val:#}"))
+    // let val = value.0;
+    serializer.serialize_str(&format!("{value:#}"))
 }
 
 pub trait CommandResponse: Serialize {}
@@ -163,7 +163,7 @@ impl OutputLink for InvokeResponse {
     fn format_links(&self, provider: Box<dyn LinkProvider>) -> String {
         format!(
             "transaction: {}",
-            provider.transaction(self.transaction_hash.0)
+            provider.transaction(self.transaction_hash)
         )
     }
 }
@@ -177,8 +177,8 @@ impl OutputLink for DeployResponse {
             contract: {}
             transaction: {}
             ",
-            provider.contract(self.contract_address.0),
-            provider.transaction(self.transaction_hash.0)
+            provider.contract(self.contract_address),
+            provider.transaction(self.transaction_hash)
         )
     }
 }
@@ -192,8 +192,8 @@ impl OutputLink for DeclareResponse {
             class: {}
             transaction: {}
             ",
-            provider.class(self.class_hash.0),
-            provider.transaction(self.transaction_hash.0)
+            provider.class(self.class_hash),
+            provider.transaction(self.transaction_hash)
         )
     }
 }
@@ -202,6 +202,6 @@ impl OutputLink for AccountCreateResponse {
     const TITLE: &'static str = "account creation";
 
     fn format_links(&self, provider: Box<dyn LinkProvider>) -> String {
-        format!("account: {}", provider.contract(self.address.0))
+        format!("account: {}", provider.contract(self.address))
     }
 }

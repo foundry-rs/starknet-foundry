@@ -4,7 +4,7 @@ use anyhow::Result;
 use itertools::Itertools;
 use serde::{Serialize, Serializer};
 use serde_json::Value;
-use starknet::core::types::FieldElement;
+use starknet::core::types::Felt;
 use std::{collections::HashMap, fmt::Display, str::FromStr};
 
 #[derive(Debug, Clone, Copy)]
@@ -84,7 +84,7 @@ impl Format for OutputValue {
     fn format_with(self, numbers: NumbersFormat) -> Self {
         match self {
             OutputValue::String(input) => {
-                if let Ok(field) = FieldElement::from_str(&input) {
+                if let Ok(field) = Felt::from_str(&input) {
                     return match numbers {
                         NumbersFormat::Decimal => OutputValue::String(format!("{field:#}")),
                         NumbersFormat::Hex => OutputValue::String(format!("{field:#x}")),

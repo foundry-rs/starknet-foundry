@@ -6,8 +6,8 @@ pub mod contract_address;
 pub mod entrypoint_selector;
 pub mod eth_address;
 pub mod felt252;
-pub mod field_element;
 pub mod nonce;
+pub mod primitive;
 pub mod serde;
 pub mod string;
 
@@ -15,11 +15,11 @@ pub trait FromConv<T>: Sized {
     fn from_(value: T) -> Self;
 }
 
-impl<T> FromConv<T> for T {
-    fn from_(value: T) -> Self {
-        value
-    }
-}
+// impl<T> FromConv<T> for T {
+//     fn from_(value: T) -> Self {
+//         value
+//     }
+// }
 
 pub trait IntoConv<T>: Sized {
     fn into_(self) -> T;

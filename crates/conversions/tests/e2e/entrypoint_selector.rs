@@ -3,7 +3,7 @@ mod tests_entrypoint_selector {
     use cairo_vm::utils::PRIME_STR;
     use conversions::string::{IntoDecStr, TryFromDecStr, TryFromHexStr};
     use conversions::{FromConv, IntoConv};
-    use starknet::core::types::FieldElement;
+    use starknet::core::types::Felt;
     use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, Nonce};
     use starknet_api::hash::StarkHash;
     use starknet_types_core::felt::Felt as Felt252;
@@ -27,7 +27,7 @@ mod tests_entrypoint_selector {
         );
         assert_eq!(
             entrypoint_selector,
-            FieldElement::from_(entrypoint_selector).into_()
+            Felt::from_(entrypoint_selector).into_()
         );
         assert_eq!(
             entrypoint_selector,
@@ -63,7 +63,7 @@ mod tests_entrypoint_selector {
         );
         assert_eq!(
             entrypoint_selector,
-            FieldElement::from_(entrypoint_selector).into_()
+            Felt::from_(entrypoint_selector).into_()
         );
         assert_eq!(
             entrypoint_selector,
@@ -90,7 +90,7 @@ mod tests_entrypoint_selector {
         );
         assert_eq!(
             entrypoint_selector,
-            FieldElement::from_(entrypoint_selector).into_()
+            Felt::from_(entrypoint_selector).into_()
         );
         assert_eq!(
             entrypoint_selector,

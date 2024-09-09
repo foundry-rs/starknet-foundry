@@ -3,7 +3,7 @@ mod tests_contract_address {
     use cairo_vm::utils::PRIME_STR;
     use conversions::string::{IntoDecStr, TryFromDecStr, TryFromHexStr};
     use conversions::{FromConv, IntoConv};
-    use starknet::core::types::FieldElement;
+    use starknet::core::types::Felt;
     use starknet_api::core::{ClassHash, EntryPointSelector, Nonce};
     use starknet_api::core::{ContractAddress, PatriciaKey};
     use starknet_api::hash::StarkHash;
@@ -16,10 +16,7 @@ mod tests_contract_address {
 
         assert_eq!(contract_address, ClassHash::from_(contract_address).into_(),);
         assert_eq!(contract_address, Felt252::from_(contract_address).into_());
-        assert_eq!(
-            contract_address,
-            FieldElement::from_(contract_address).into_()
-        );
+        assert_eq!(contract_address, Felt::from_(contract_address).into_());
         assert_eq!(contract_address, Nonce::from_(contract_address).into_());
         assert_eq!(
             contract_address,
@@ -40,10 +37,7 @@ mod tests_contract_address {
 
         assert_eq!(contract_address, ClassHash::from_(contract_address).into_(),);
         assert_eq!(contract_address, Felt252::from_(contract_address).into_());
-        assert_eq!(
-            contract_address,
-            FieldElement::from_(contract_address).into_()
-        );
+        assert_eq!(contract_address, Felt::from_(contract_address).into_());
         assert_eq!(contract_address, Nonce::from_(contract_address).into_());
         assert_eq!(
             contract_address,
@@ -65,10 +59,7 @@ mod tests_contract_address {
 
         assert_eq!(contract_address, ClassHash::from_(contract_address).into_(),);
         assert_eq!(contract_address, Felt252::from_(contract_address).into_());
-        assert_eq!(
-            contract_address,
-            FieldElement::from_(contract_address).into_()
-        );
+        assert_eq!(contract_address, Felt::from_(contract_address).into_());
         assert_eq!(contract_address, Nonce::from_(contract_address).into_());
         assert_eq!(
             contract_address,

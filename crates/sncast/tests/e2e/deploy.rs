@@ -11,8 +11,7 @@ use indoc::indoc;
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 use sncast::helpers::constants::{ARGENT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH};
 use sncast::AccountType;
-use starknet::core::types::TransactionReceipt::Deploy;
-use starknet_crypto::FieldElement;
+use starknet::core::types::{Felt, TransactionReceipt::Deploy};
 use test_case::test_case;
 
 #[test_case("oz_cairo_0"; "cairo_0_account")]
@@ -100,7 +99,7 @@ async fn test_happy_case_human_readable() {
 #[test_case(ARGENT_CLASS_HASH, AccountType::Argent; "argent_class_hash")]
 #[test_case(BRAAVOS_CLASS_HASH, AccountType::Braavos; "braavos_class_hash")]
 #[tokio::test]
-async fn test_happy_case_strk(class_hash: FieldElement, account_type: AccountType) {
+async fn test_happy_case_strk(class_hash: Felt, account_type: AccountType) {
     let tempdir = create_and_deploy_account(class_hash, account_type).await;
     let args = vec![
         "--accounts-file",

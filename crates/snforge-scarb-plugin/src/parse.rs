@@ -31,7 +31,11 @@ pub fn parse<T: AttributeInfo>(
         .items(db)
         .elements(db);
 
-    if let Some(ModuleItem::FreeFunction(func)) = elements.into_iter().next() {
+    if let Some(ModuleItem::FreeFunction(func)) = elements
+        .into_iter()
+        .skip_while(|element| matches!(element, ModuleItem::HeaderDoc(_)))
+        .next()
+    {
         Ok((simple_db, func))
     } else {
         Err(T::error("can be used only on a function"))

@@ -524,7 +524,7 @@ pub async fn test_invalid_private_key_in_file() {
         output,
         indoc! {r"
         command: account add
-        error: Failed to obtain private key from the file my_private_key: invalid character
+        error: Failed to obtain private key from the file my_private_key: Failed to create Felt from string
         "},
     );
 }

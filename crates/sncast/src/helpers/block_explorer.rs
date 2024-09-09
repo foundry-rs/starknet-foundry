@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use starknet_crypto::FieldElement;
+use starknet::core::types::Felt;
 
 const STARKSCAN: &str = "https://starkscan.co/search";
 const VOYAGER: &str = "https://voyager.online";
@@ -31,23 +31,23 @@ impl Service {
 }
 
 pub trait LinkProvider {
-    fn transaction(&self, hash: FieldElement) -> String;
-    fn class(&self, hash: FieldElement) -> String;
-    fn contract(&self, address: FieldElement) -> String;
+    fn transaction(&self, hash: Felt) -> String;
+    fn class(&self, hash: Felt) -> String;
+    fn contract(&self, address: Felt) -> String;
 }
 
 pub struct StarkScan;
 
 impl LinkProvider for StarkScan {
-    fn transaction(&self, hash: FieldElement) -> String {
+    fn transaction(&self, hash: Felt) -> String {
         format!("{STARKSCAN}/{hash:x}")
     }
 
-    fn class(&self, hash: FieldElement) -> String {
+    fn class(&self, hash: Felt) -> String {
         format!("{STARKSCAN}/{hash:x}")
     }
 
-    fn contract(&self, address: FieldElement) -> String {
+    fn contract(&self, address: Felt) -> String {
         format!("{STARKSCAN}/{address:x}")
     }
 }
@@ -55,15 +55,15 @@ impl LinkProvider for StarkScan {
 pub struct Voyager;
 
 impl LinkProvider for Voyager {
-    fn transaction(&self, hash: FieldElement) -> String {
+    fn transaction(&self, hash: Felt) -> String {
         format!("{VOYAGER}/tx/{hash:x}")
     }
 
-    fn class(&self, hash: FieldElement) -> String {
+    fn class(&self, hash: Felt) -> String {
         format!("{VOYAGER}/class/{hash:x}")
     }
 
-    fn contract(&self, address: FieldElement) -> String {
+    fn contract(&self, address: Felt) -> String {
         format!("{VOYAGER}/contract/{address:x}")
     }
 }
@@ -71,15 +71,15 @@ impl LinkProvider for Voyager {
 pub struct ViewBlock;
 
 impl LinkProvider for ViewBlock {
-    fn transaction(&self, hash: FieldElement) -> String {
+    fn transaction(&self, hash: Felt) -> String {
         format!("{VIEWBLOCK}/tx/{hash:x}")
     }
 
-    fn class(&self, hash: FieldElement) -> String {
+    fn class(&self, hash: Felt) -> String {
         format!("{VIEWBLOCK}/class/{hash:x}")
     }
 
-    fn contract(&self, address: FieldElement) -> String {
+    fn contract(&self, address: Felt) -> String {
         format!("{VIEWBLOCK}/contract/{address:x}")
     }
 }
@@ -87,15 +87,15 @@ impl LinkProvider for ViewBlock {
 pub struct OkLink;
 
 impl LinkProvider for OkLink {
-    fn transaction(&self, hash: FieldElement) -> String {
+    fn transaction(&self, hash: Felt) -> String {
         format!("{OKLINK}/tx/{hash:x}")
     }
 
-    fn class(&self, hash: FieldElement) -> String {
+    fn class(&self, hash: Felt) -> String {
         format!("{OKLINK}/class/{hash:x}")
     }
 
-    fn contract(&self, address: FieldElement) -> String {
+    fn contract(&self, address: Felt) -> String {
         format!("{OKLINK}/contract/{address:x}")
     }
 }
@@ -103,15 +103,15 @@ impl LinkProvider for OkLink {
 pub struct NftScan;
 
 impl LinkProvider for NftScan {
-    fn transaction(&self, hash: FieldElement) -> String {
+    fn transaction(&self, hash: Felt) -> String {
         format!("{NFTSCAN}/{hash:x}")
     }
 
-    fn class(&self, hash: FieldElement) -> String {
+    fn class(&self, hash: Felt) -> String {
         format!("{NFTSCAN}/{hash:x}")
     }
 
-    fn contract(&self, address: FieldElement) -> String {
+    fn contract(&self, address: Felt) -> String {
         format!("{NFTSCAN}/{address:x}")
     }
 }

@@ -10,8 +10,8 @@ use indoc::indoc;
 use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
 use sncast::helpers::constants::{ARGENT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH};
 use sncast::AccountType;
+use starknet::core::types::Felt;
 use starknet::core::types::TransactionReceipt::Declare;
-use starknet_crypto::FieldElement;
 use std::fs;
 use test_case::test_case;
 
@@ -57,7 +57,7 @@ async fn test_happy_case_eth(account: &str) {
 #[test_case(ARGENT_CLASS_HASH, AccountType::Argent; "argent_class_hash")]
 #[test_case(BRAAVOS_CLASS_HASH, AccountType::Braavos; "braavos_class_hash")]
 #[tokio::test]
-async fn test_happy_case_strk(class_hash: FieldElement, account_type: AccountType) {
+async fn test_happy_case_strk(class_hash: Felt, account_type: AccountType) {
     let contract_path = duplicate_contract_directory_with_salt(
         CONTRACTS_DIR.to_string() + "/map",
         "put",
@@ -228,8 +228,9 @@ async fn test_invalid_version_and_token_combination(fee_token: &str, version: &s
         format!("Error: {fee_token} fee token is not supported for {version} declaration."),
     );
 }
+
 #[tokio::test]
-#[ignore = "Expand the contract's code to more complex or wait for fix: https://github.com/xJonathanLEI/starknet-rs/issues/649#issue-2469861847"]
+// #[ignore = "Expand the contract's code to more complex or wait for fix: https://github.com/xJonathanLEI/starknet-rs/issues/649#issue-2469861847"]
 async fn test_happy_case_specify_package() {
     let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/multiple_packages");
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");

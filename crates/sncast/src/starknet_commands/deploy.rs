@@ -4,13 +4,13 @@ use sncast::helpers::error::token_not_supported_for_deployment;
 use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken, PayableTransaction};
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::StarknetCommandError;
-use sncast::response::structs::{DeployResponse, Felt};
+use sncast::response::structs::DeployResponse;
 use sncast::{extract_or_generate_salt, impl_payable_transaction, udc_uniqueness};
 use sncast::{handle_wait_for_tx, WaitForTx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{Account, ConnectedAccount, SingleOwnerAccount};
 use starknet::contract::ContractFactory;
-use starknet::core::types::FieldElement;
+use starknet::core::types::Felt;
 use starknet::core::utils::get_udc_deployed_address;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
@@ -21,15 +21,15 @@ use starknet::signers::LocalWallet;
 pub struct Deploy {
     /// Class hash of contract to deploy
     #[clap(short = 'g', long)]
-    pub class_hash: FieldElement,
+    pub class_hash: Felt,
 
     /// Calldata for the contract constructor
     #[clap(short, long, value_delimiter = ' ', num_args = 1..)]
-    pub constructor_calldata: Vec<FieldElement>,
+    pub constructor_calldata: Vec<Felt>,
 
     /// Salt for the address
     #[clap(short, long)]
-    pub salt: Option<FieldElement>,
+    pub salt: Option<Felt>,
 
     /// If true, salt will be modified with an account address
     #[clap(long)]
@@ -40,7 +40,7 @@ pub struct Deploy {
 
     /// Nonce of the transaction. If not provided, nonce will be set automatically
     #[clap(short, long)]
-    pub nonce: Option<FieldElement>,
+    pub nonce: Option<Felt>,
 
     /// Version of the deployment (can be inferred from fee token)
     #[clap(short, long)]
@@ -117,13 +117,13 @@ pub async fn deploy(
             account.provider(),
             result.transaction_hash,
             DeployResponse {
-                contract_address: Felt(get_udc_deployed_address(
+                contract_address: get_udc_deployed_address(
                     salt,
                     deploy.class_hash,
                     &udc_uniqueness(deploy.unique, account.address()),
                     &deploy.constructor_calldata,
-                )),
-                transaction_hash: Felt(result.transaction_hash),
+                ),
+                transaction_hash: result.transaction_hash,
             },
             wait_config,
         )

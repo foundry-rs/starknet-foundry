@@ -1,7 +1,7 @@
 use super::{BufferWriter, CairoSerialize};
 use crate::{byte_array::ByteArray, IntoConv};
 use blockifier::execution::entry_point::{CallEntryPoint, CallType};
-use starknet::core::types::{ContractErrorData, FieldElement, TransactionExecutionErrorData};
+use starknet::core::types::{ContractErrorData, TransactionExecutionErrorData};
 use starknet_api::core::EthAddress;
 use starknet_api::{
     core::{ClassHash, ContractAddress, EntryPointSelector, Nonce},
@@ -216,7 +216,7 @@ macro_rules! impl_serialize_for_tuple {
 }
 
 impl_serialize_for_felt_type!(Felt252);
-impl_serialize_for_felt_type!(FieldElement);
+// impl_serialize_for_felt_type!(Felt);
 impl_serialize_for_felt_type!(ClassHash);
 impl_serialize_for_felt_type!(ContractAddress);
 impl_serialize_for_felt_type!(Nonce);
