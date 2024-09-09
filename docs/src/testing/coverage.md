@@ -24,7 +24,7 @@ $ snforge test --coverage
 > 📝 **Note**
 > To generate trace data files, it is required to use [Scarb](https://github.com/software-mansion/scarb) version `2.8.0` or higher and include the following in your `Scarb.toml` file:
 > ```toml
-> [cairo]
+> [profile.dev.cairo]
 > unstable-add-statements-code-locations-debug-info = true
 > unstable-add-statements-functions-debug-info = true
 > inlining-strategy = "avoid"
