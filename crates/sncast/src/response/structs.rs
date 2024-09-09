@@ -1,17 +1,12 @@
+use super::explorer_link::OutputLink;
+use crate::helpers::block_explorer::LinkProvider;
 use camino::Utf8PathBuf;
 use conversions::serde::serialize::CairoSerialize;
 use indoc::formatdoc;
 use serde::{Deserialize, Serialize, Serializer};
 use starknet::core::types::Felt;
 
-use crate::helpers::block_explorer::LinkProvider;
-
-use super::explorer_link::OutputLink;
-
 pub struct Decimal(pub u64);
-
-// #[derive(Clone, Debug, Deserialize, CairoSerialize, PartialEq)]
-// pub struct Felt(pub FieldElement);
 
 impl Serialize for Decimal {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -21,16 +16,6 @@ impl Serialize for Decimal {
         serializer.serialize_str(&self.0.to_string())
     }
 }
-
-// impl Serialize for Felt {
-//     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-//     where
-//         S: Serializer,
-//     {
-//         let val = self.0;
-//         serializer.serialize_str(&format!("{val:#x}"))
-//     }
-// }
 
 fn serialize_as_decimal<S>(value: &Felt, serializer: S) -> Result<S::Ok, S::Error>
 where

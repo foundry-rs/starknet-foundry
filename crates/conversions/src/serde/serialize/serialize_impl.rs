@@ -216,7 +216,6 @@ macro_rules! impl_serialize_for_tuple {
 }
 
 impl_serialize_for_felt_type!(Felt252);
-// impl_serialize_for_felt_type!(Felt);
 impl_serialize_for_felt_type!(ClassHash);
 impl_serialize_for_felt_type!(ContractAddress);
 impl_serialize_for_felt_type!(Nonce);

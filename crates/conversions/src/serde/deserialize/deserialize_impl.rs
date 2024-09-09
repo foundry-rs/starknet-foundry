@@ -95,7 +95,6 @@ macro_rules! impl_deserialize_for_num_type {
     };
 }
 
-// impl_deserialize_for_felt_type!(Felt);
 impl_deserialize_for_felt_type!(ClassHash);
 impl_deserialize_for_felt_type!(ContractAddress);
 impl_deserialize_for_felt_type!(Nonce);
