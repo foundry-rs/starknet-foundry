@@ -88,7 +88,7 @@ fn set_cairo_edition(document: &mut DocumentMut, cairo_edition: &str) {
 fn add_assert_macros(document: &mut DocumentMut, scarb: &Version) {
     let version = match scarb.cmp(&MINIMAL_SCARB_FOR_CORRESPONDING_ASSERT_MACROS) {
         Ordering::Less => &DEFAULT_ASSERT_MACROS,
-        _ => &scarb,
+        _ => scarb,
     };
 
     let dependencies = document
