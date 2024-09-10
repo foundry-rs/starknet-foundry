@@ -53,7 +53,7 @@ fn update_config(config_path: &Path, scarb: &Version) -> Result<()> {
     add_target_to_toml(&mut document);
     set_cairo_edition(&mut document, CAIRO_EDITION);
     add_test_script(&mut document);
-    add_assert_macros(&mut document, scarb);
+    add_assert_macros(&mut document, scarb)?;
 
     fs::write(config_path, document.to_string())?;
 
@@ -84,23 +84,20 @@ fn set_cairo_edition(document: &mut DocumentMut, cairo_edition: &str) {
     document["package"]["edition"] = value(cairo_edition);
 }
 
-fn add_assert_macros(document: &mut DocumentMut, scarb: &Version) {
+fn add_assert_macros(document: &mut DocumentMut, scarb: &Version) -> Result<()> {
     let version = if scarb < &MINIMAL_SCARB_FOR_CORRESPONDING_ASSERT_MACROS {
         &DEFAULT_ASSERT_MACROS
     } else {
         scarb
     };
 
-    if let Some(ref mut dependencies) = document.get_mut("dev-dependencies") {
-        dependencies
-            .as_table_mut()
-            .unwrap()
-            .insert("assert_macros", value(version.to_string()));
-    } else {
-        let mut dependencies = Table::new();
-        dependencies.insert("assert_macros", value(version.to_string()));
-        document.insert("dev-dependencies", Item::Table(dependencies));
-    }
+    document
+        .get_mut("dev-dependencies")
+        .and_then(|dep| dep.as_table_mut())
+        .context("Failed to get dev-dependencies from Scarb.toml")?
+        .insert("assert_macros", value(version.to_string()));
+
+    Ok(())
 }
 
 fn extend_gitignore(path: &Path) -> Result<()> {
