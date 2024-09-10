@@ -3,7 +3,6 @@ use anyhow::{anyhow, Context, Ok, Result};
 use include_dir::{include_dir, Dir};
 use scarb_api::ScarbCommand;
 use semver::Version;
-use std::cmp::Ordering;
 use std::env;
 use std::fs::{self, OpenOptions};
 use std::io::Write;
@@ -86,18 +85,22 @@ fn set_cairo_edition(document: &mut DocumentMut, cairo_edition: &str) {
 }
 
 fn add_assert_macros(document: &mut DocumentMut, scarb: &Version) {
-    let version = match scarb.cmp(&MINIMAL_SCARB_FOR_CORRESPONDING_ASSERT_MACROS) {
-        Ordering::Less => &DEFAULT_ASSERT_MACROS,
-        _ => scarb,
+    let version = if scarb < &MINIMAL_SCARB_FOR_CORRESPONDING_ASSERT_MACROS {
+        &DEFAULT_ASSERT_MACROS
+    } else {
+        scarb
     };
 
-    let dependencies = document
-        .get_mut("dev-dependencies")
-        .unwrap()
-        .as_table_mut()
-        .unwrap();
-
-    dependencies.insert("assert_macros", value(version.to_string()));
+    if let Some(ref mut dependencies) = document.get_mut("dev-dependencies") {
+        dependencies
+            .as_table_mut()
+            .unwrap()
+            .insert("assert_macros", value(version.to_string()));
+    } else {
+        let mut dependencies = Table::new();
+        dependencies.insert("assert_macros", value(version.to_string()));
+        document.insert("dev-dependencies", Item::Table(dependencies));
+    }
 }
 
 fn extend_gitignore(path: &Path) -> Result<()> {
