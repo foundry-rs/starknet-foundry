@@ -664,7 +664,7 @@ async fn test_no_scarb_profile() {
         output,
         indoc! {"
             [..]
-            [WARNING] Profile profile5 does not exist in scarb, using default 'dev' profile.
+            [WARNING] Profile profile5 does not exist in scarb, using 'release' profile.
             command: declare
             class_hash: [..]
             transaction_hash: [..]

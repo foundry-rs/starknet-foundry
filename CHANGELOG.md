@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast
+
+#### Changed
+
+- `declare` and `verify` commands now use the Scarb `release` profile instead of the `dev` profile as the default for building artifacts
+
 ## [0.30.0] - 2024-09-04
 
 ### Forge
