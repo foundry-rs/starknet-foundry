@@ -18,6 +18,7 @@ pub fn combine_configs(
     detailed_resources: bool,
     save_trace_data: bool,
     build_profile: bool,
+    coverage: bool,
     max_n_steps: Option<u32>,
     contracts_data: ContractsData,
     cache_dir: Utf8PathBuf,
@@ -27,6 +28,7 @@ pub fn combine_configs(
     let execution_data_to_save = ExecutionDataToSave::from_flags(
         save_trace_data || forge_config_from_scarb.save_trace_data,
         build_profile || forge_config_from_scarb.build_profile,
+        coverage || forge_config_from_scarb.coverage,
     );
 
     ForgeConfig {
@@ -65,6 +67,7 @@ mod tests {
             false,
             false,
             false,
+            false,
             None,
             Default::default(),
             Default::default(),
@@ -75,6 +78,7 @@ mod tests {
             false,
             None,
             None,
+            false,
             false,
             false,
             false,
@@ -99,6 +103,7 @@ mod tests {
             false,
             None,
             None,
+            false,
             false,
             false,
             false,
@@ -140,6 +145,7 @@ mod tests {
             detailed_resources: true,
             save_trace_data: true,
             build_profile: true,
+            coverage: true,
             max_n_steps: Some(1_000_000),
         };
 
@@ -147,6 +153,7 @@ mod tests {
             false,
             None,
             None,
+            false,
             false,
             false,
             false,
@@ -174,6 +181,7 @@ mod tests {
                     execution_data_to_save: ExecutionDataToSave {
                         trace: true,
                         profile: true,
+                        coverage: true,
                     },
                     versioned_programs_dir: Default::default(),
                 }),
@@ -191,12 +199,14 @@ mod tests {
             detailed_resources: false,
             save_trace_data: false,
             build_profile: false,
+            coverage: false,
             max_n_steps: Some(1234),
         };
         let config = combine_configs(
             true,
             Some(NonZeroU32::new(100).unwrap()),
             Some(32),
+            true,
             true,
             true,
             true,
@@ -225,6 +235,7 @@ mod tests {
                     execution_data_to_save: ExecutionDataToSave {
                         trace: true,
                         profile: true,
+                        coverage: true,
                     },
                     versioned_programs_dir: Default::default(),
                 }),

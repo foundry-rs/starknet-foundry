@@ -1,56 +1,30 @@
 use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
 use assert_fs::TempDir;
 use camino::Utf8PathBuf;
-use fs_extra::dir::{copy, CopyOptions};
 use indoc::formatdoc;
 use shared::command::CommandExt;
 use shared::test_utils::node_url::node_rpc_url;
 use snapbox::cmd::{cargo_bin, Command as SnapboxCommand};
-use std::fs::{create_dir_all, remove_dir_all};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::str::FromStr;
-use std::sync::LazyLock;
 use std::{env, fs};
 use test_utils::tempdir_with_tool_versions;
 use toml_edit::{value, DocumentMut};
 use walkdir::WalkDir;
 
-/// To avoid rebuilding `snforge_std` and associated plugin for each test, we cache it in a directory and copy it to the e2e test temp directory.
-static BASE_CACHE_DIR: LazyLock<PathBuf> =
-    LazyLock::new(|| init_base_cache_dir().expect("Failed to initialize base cache directory"));
-
-fn init_base_cache_dir() -> anyhow::Result<PathBuf> {
-    let cache_dir_path = env::current_dir()?.join(".forge_e2e_cache");
-    if cache_dir_path.exists() {
-        remove_dir_all(&cache_dir_path)?;
-    }
-    create_dir_all(&cache_dir_path)?;
-    let cache_dir_path = cache_dir_path.canonicalize()?;
-
-    let snforge_std = PathBuf::from("../../snforge_std").canonicalize()?;
-
-    SnapboxCommand::new("scarb")
-        .arg("build")
-        .current_dir(snforge_std.as_path())
-        .env("SCARB_CACHE", &cache_dir_path)
-        .assert()
-        .success();
-
-    Ok(cache_dir_path)
+pub(crate) fn runner(temp_dir: &TempDir) -> SnapboxCommand {
+    SnapboxCommand::new(snforge_test_bin_path()).current_dir(temp_dir)
 }
 
-pub(crate) fn runner(temp_dir: &TempDir) -> SnapboxCommand {
-    copy(
-        BASE_CACHE_DIR.as_path(),
-        temp_dir.path(),
-        &CopyOptions::new().overwrite(true).content_only(true),
-    )
-    .unwrap();
-
-    SnapboxCommand::new(cargo_bin!("snforge"))
-        .env("SCARB_CACHE", temp_dir.path())
-        .current_dir(temp_dir)
+// If ran on CI, we want to get the nextest's built binary
+pub fn snforge_test_bin_path() -> PathBuf {
+    if env::var("NEXTEST").unwrap_or("0".to_string()) == "1" {
+        let snforge_nextest_env =
+            env::var("NEXTEST_BIN_EXE_snforge").expect("No snforge binary for nextest found");
+        return PathBuf::from(snforge_nextest_env);
+    }
+    cargo_bin!("snforge").to_path_buf()
 }
 
 pub(crate) fn test_runner(temp_dir: &TempDir) -> SnapboxCommand {

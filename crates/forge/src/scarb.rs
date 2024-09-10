@@ -172,7 +172,7 @@ mod tests {
                 [[tool.snforge.fork]]
                 name = "THIRD_FORK_NAME"
                 url = "http://some.rpc.url"
-                block_id.tag = "Latest"
+                block_id.tag = "latest"
                 "#,
                 package_name,
                 snforge_std_path
@@ -218,7 +218,7 @@ mod tests {
                         "THIRD_FORK_NAME".to_string(),
                         "http://some.rpc.url".to_string(),
                         "tag".to_string(),
-                        "Latest".to_string(),
+                        "latest".to_string(),
                     )
                 ],
                 fuzzer_runs: None,
@@ -226,7 +226,8 @@ mod tests {
                 max_n_steps: None,
                 detailed_resources: false,
                 save_trace_data: false,
-                build_profile: false
+                build_profile: false,
+                coverage: false
             }
         );
     }
@@ -406,7 +407,7 @@ mod tests {
             &scarb_metadata.workspace.members[0],
         )
         .unwrap_err();
-        assert!(format!("{err:?}").contains("block_id.tag can only be equal to Latest"));
+        assert!(format!("{err:?}").contains("block_id.tag can only be equal to latest"));
     }
 
     #[test]
@@ -454,7 +455,8 @@ mod tests {
                 max_n_steps: None,
                 detailed_resources: false,
                 save_trace_data: false,
-                build_profile: false
+                build_profile: false,
+                coverage: false
             }
         );
     }

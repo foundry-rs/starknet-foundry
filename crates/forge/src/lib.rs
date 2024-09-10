@@ -126,9 +126,13 @@ pub struct TestArgs {
     #[arg(long)]
     save_trace_data: bool,
 
-    /// Build profiles of all test which have passed and are not fuzz tests using the cairo-profiler
+    /// Build profiles of all tests which have passed and are not fuzz tests using the cairo-profiler
     #[arg(long)]
     build_profile: bool,
+
+    /// Generate a coverage report for the executed tests which have passed and are not fuzz tests using the cairo-coverage
+    #[arg(long)]
+    coverage: bool,
 
     /// Number of maximum steps during a single test. For fuzz tests this value is applied to each subtest separately.
     #[arg(long)]
