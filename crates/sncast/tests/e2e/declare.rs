@@ -230,7 +230,7 @@ async fn test_invalid_version_and_token_combination(fee_token: &str, version: &s
 }
 
 #[tokio::test]
-#[ignore = "#2352"]
+#[ignore = "#2459"]
 async fn test_happy_case_specify_package() {
     let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/multiple_packages");
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
