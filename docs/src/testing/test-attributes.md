@@ -36,7 +36,7 @@ Moreover, it can be used with either a tuple of shortstrings or a string for ass
 
 Asserting the panic data can be done with multiple types of inputs:
 
-`ByteArray`:
+ByteArray:
 
 ```rust
 #[should_panic(expected: "No such file or directory (os error 2)")]
@@ -51,7 +51,7 @@ Shortstring:
 Array of shortstrings:
 
 ```rust
-# [should_panic(expected: ('panic message', 'second message', )]
+#[should_panic(expected: ('panic message', 'second message', )]
 ```
 
 Asserting that the function panics (any with any panic data):
