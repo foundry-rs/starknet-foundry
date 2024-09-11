@@ -26,12 +26,17 @@ The `verify` command will perform following actions:
 
 #### Parameters
 
-#### `--contract-name`
+#### `--class-name`
 
 Required.
 Name of the contract to be submitted for verification.
 
 #### `--contract-address`
+
+Required.
+Address of the contract to be submitted for verification.
+
+#### `--class-hash`
 
 Required.
 Address of the contract to be submitted for verification.
@@ -61,10 +66,13 @@ To implement contract verification for a specific explorer, it is required to im
 #### Request
 
 - `ContractAddress` - `ContractAddress`
-- `ContractName` - `String`
+- `ClassHash` - `String`
+- `ClassName` - `String`
 - `SourceCode` - collection of file records (`.cairo` files  + `Scarb.toml`):
   - `FilePath` - `String`
   - `FileContent` - `String`
+
+Note: `ContractAddress` and `ClassHash` are mutually exclusive. One of them must be provided.
 
 #### Response
 
@@ -81,8 +89,9 @@ A sample request in the Voyager API adapter implementation will look as follows:
 const url = `${voyager.testnet.url}/contract/`
 
 const payload = serde_json::json!({
-        "contract_address": "0x0",
-        "contract_name": "balance",
+        "contract_address": "0x0", // this is optional if class_hash is provided
+        "class_hash": "0x0", // this is optional if contract_address is provided
+        "class_name": "balance",
         "source_code": {
             "Scarb.toml" : {
                 """

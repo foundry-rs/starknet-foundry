@@ -1,5 +1,5 @@
 use crate::{common::assertions::assert_success, common::get_contracts};
-use cairo_felt::Felt252;
+use cairo_vm::Felt252;
 use cheatnet::state::CheatSpan;
 use conversions::IntoConv;
 use starknet_api::core::ContractAddress;
@@ -180,7 +180,9 @@ fn cheat_block_timestamp_all_simple() {
 
     let contract_address = test_env.deploy("CheatBlockTimestampChecker", &[]);
 
-    test_env.cheatnet_state.cheat_block_timestamp_global(123);
+    test_env
+        .cheatnet_state
+        .start_cheat_block_timestamp_global(123);
 
     let output = test_env.call_contract(&contract_address, "get_block_timestamp", &[]);
     assert_success(output, &[Felt252::from(123)]);
@@ -192,7 +194,9 @@ fn cheat_block_timestamp_all_then_one() {
 
     let contract_address = test_env.deploy("CheatBlockTimestampChecker", &[]);
 
-    test_env.cheatnet_state.cheat_block_timestamp_global(321);
+    test_env
+        .cheatnet_state
+        .start_cheat_block_timestamp_global(321);
 
     test_env.start_cheat_block_timestamp(contract_address, 123);
 
@@ -208,7 +212,9 @@ fn cheat_block_timestamp_one_then_all() {
 
     test_env.start_cheat_block_timestamp(contract_address, 123);
 
-    test_env.cheatnet_state.cheat_block_timestamp_global(321);
+    test_env
+        .cheatnet_state
+        .start_cheat_block_timestamp_global(321);
 
     let output = test_env.call_contract(&contract_address, "get_block_timestamp", &[]);
     assert_success(output, &[Felt252::from(321)]);
@@ -223,7 +229,9 @@ fn cheat_block_timestamp_all_stop() {
 
     let contract_address = test_env.deploy_wrapper(&cheat_block_timestamp_checker, &[]);
 
-    test_env.cheatnet_state.cheat_block_timestamp_global(123);
+    test_env
+        .cheatnet_state
+        .start_cheat_block_timestamp_global(123);
 
     assert_success(
         test_env.call_contract(&contract_address, "get_block_timestamp", &[]),

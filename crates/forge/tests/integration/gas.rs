@@ -39,12 +39,13 @@ fn deploy_syscall_cost() {
     let test = test_case!(
         indoc!(
             r#"
-            use snforge_std::declare;
+            use core::clone::Clone;
+            use snforge_std::{declare, DeclareResultTrait};
             use starknet::{SyscallResult, deploy_syscall};
 
             #[test]
             fn deploy_syscall_cost() {
-                let contract = declare("GasConstructorChecker").unwrap();
+                let contract = declare("GasConstructorChecker").unwrap().contract_class().clone();
                 let (address, _) = deploy_syscall(contract.class_hash, 0, array![].span(), false).unwrap();
                 assert(address != 0.try_into().unwrap(), 'wrong deployed addr');
             }
@@ -72,11 +73,11 @@ fn snforge_std_deploy_cost() {
     let test = test_case!(
         indoc!(
             r#"
-            use snforge_std::{ declare, ContractClassTrait };
-            
+            use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait };
+
             #[test]
             fn deploy_cost() {
-                let contract = declare("GasConstructorChecker").unwrap();
+                let contract = declare("GasConstructorChecker").unwrap().contract_class();
                 let (address, _) = contract.deploy(@array![]).unwrap();
                 assert(address != 0.try_into().unwrap(), 'wrong deployed addr');
             }
@@ -92,10 +93,9 @@ fn snforge_std_deploy_cost() {
     let result = run_test_case(&test);
 
     assert_passed(&result);
-    println!("{result:#?}");
     // 96 = gas cost of onchain data (deploy cost)
-    // int(4406 & 0.0025) = 12 = steps cost
-    assert_gas(&result, "deploy_cost", 96 + 12);
+    // int(5.12 * 2) = 11 = keccak cost
+    assert_gas(&result, "deploy_cost", 96 + 11);
 }
 
 #[test]
@@ -120,7 +120,7 @@ fn contract_keccak_cost() {
     let test = test_case!(
         indoc!(
             r#"
-            use snforge_std::{ declare, ContractClassTrait };
+            use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait };
 
             #[starknet::interface]
             trait IGasChecker<TContractState> {
@@ -129,7 +129,7 @@ fn contract_keccak_cost() {
 
             #[test]
             fn contract_keccak_cost() {
-                let contract = declare("GasChecker").unwrap();
+                let contract = declare("GasChecker").unwrap().contract_class();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IGasCheckerDispatcher { contract_address };
 
@@ -177,7 +177,7 @@ fn contract_range_check_cost() {
     let test = test_case!(
         indoc!(
             r#"
-            use snforge_std::{ declare, ContractClassTrait };
+            use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait };
 
             #[starknet::interface]
             trait IGasChecker<TContractState> {
@@ -186,7 +186,7 @@ fn contract_range_check_cost() {
 
             #[test]
             fn contract_range_check_cost() {
-                let contract = declare("GasChecker").unwrap();
+                let contract = declare("GasChecker").unwrap().contract_class();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IGasCheckerDispatcher { contract_address };
 
@@ -233,7 +233,7 @@ fn contract_bitwise_cost() {
     let test = test_case!(
         indoc!(
             r#"
-            use snforge_std::{ declare, ContractClassTrait };
+            use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait };
 
             #[starknet::interface]
             trait IGasChecker<TContractState> {
@@ -242,7 +242,7 @@ fn contract_bitwise_cost() {
 
             #[test]
             fn contract_bitwise_cost() {
-                let contract = declare("GasChecker").unwrap();
+                let contract = declare("GasChecker").unwrap().contract_class();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IGasCheckerDispatcher { contract_address };
 
@@ -289,7 +289,7 @@ fn contract_pedersen_cost() {
     let test = test_case!(
         indoc!(
             r#"
-            use snforge_std::{ declare, ContractClassTrait };
+            use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait };
 
             #[starknet::interface]
             trait IGasChecker<TContractState> {
@@ -298,7 +298,7 @@ fn contract_pedersen_cost() {
 
             #[test]
             fn contract_pedersen_cost() {
-                let contract = declare("GasChecker").unwrap();
+                let contract = declare("GasChecker").unwrap().contract_class();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IGasCheckerDispatcher { contract_address };
 
@@ -345,7 +345,7 @@ fn contract_poseidon_cost() {
     let test = test_case!(
         indoc!(
             r#"
-            use snforge_std::{ declare, ContractClassTrait };
+            use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait };
 
             #[starknet::interface]
             trait IGasChecker<TContractState> {
@@ -354,7 +354,7 @@ fn contract_poseidon_cost() {
 
             #[test]
             fn contract_poseidon_cost() {
-                let contract = declare("GasChecker").unwrap();
+                let contract = declare("GasChecker").unwrap().contract_class();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IGasCheckerDispatcher { contract_address };
 
@@ -403,7 +403,7 @@ fn contract_ec_op_cost() {
     let test = test_case!(
         indoc!(
             r#"
-            use snforge_std::{ declare, ContractClassTrait };
+            use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait };
 
             #[starknet::interface]
             trait IGasChecker<TContractState> {
@@ -412,7 +412,7 @@ fn contract_ec_op_cost() {
 
             #[test]
             fn contract_ec_op_cost() {
-                let contract = declare("GasChecker").unwrap();
+                let contract = declare("GasChecker").unwrap().contract_class();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IGasCheckerDispatcher { contract_address };
 
@@ -440,7 +440,7 @@ fn storage_write_cost() {
     let test = test_case!(
         indoc!(
             r#"
-            use snforge_std::{ declare, ContractClassTrait };
+            use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait };
 
             #[starknet::interface]
             trait IGasChecker<TContractState> {
@@ -449,7 +449,7 @@ fn storage_write_cost() {
 
             #[test]
             fn storage_write_cost() {
-                let contract = declare("GasChecker").unwrap();
+                let contract = declare("GasChecker").unwrap().contract_class();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IGasCheckerDispatcher { contract_address };
 
@@ -467,7 +467,7 @@ fn storage_write_cost() {
     let result = run_test_case(&test);
 
     assert_passed(&result);
-    // 7 = gas cost of steps
+    // 2491 * 0.0025 = 6,2275 ~ 7 = gas cost of steps
     // 96 = gas cost of deployment
     // storage_updates(1) * 2 * 32 = 64
     assert_gas(&result, "storage_write_cost", 7 + 96 + 64);
@@ -485,7 +485,6 @@ fn storage_write_from_test_cost() {
             }
         }
 
-        use tests::test_case::Contract::balanceContractMemberStateTrait;
 
         #[test]
         fn storage_write_from_test_cost() {
@@ -512,7 +511,7 @@ fn multiple_storage_writes_cost() {
     let test = test_case!(
         indoc!(
             r#"
-            use snforge_std::{ declare, ContractClassTrait };
+            use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait };
 
             #[starknet::interface]
             trait IGasChecker<TContractState> {
@@ -521,7 +520,7 @@ fn multiple_storage_writes_cost() {
 
             #[test]
             fn multiple_storage_writes_cost() {
-                let contract = declare("GasChecker").unwrap();
+                let contract = declare("GasChecker").unwrap().contract_class();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IGasCheckerDispatcher { contract_address };
 
@@ -540,7 +539,7 @@ fn multiple_storage_writes_cost() {
     let result = run_test_case(&test);
 
     assert_passed(&result);
-    // 9 = gas cost of steps
+    // 3470 * 0.0025 = 8.675 ~ 9 = gas cost of steps
     // l = number of class hash updates
     // n = unique contracts updated
     // m = unique(!) values updated
@@ -556,7 +555,7 @@ fn l1_message_cost() {
     let test = test_case!(
         indoc!(
             r#"
-            use snforge_std::{ declare, ContractClassTrait };
+            use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait };
 
             #[starknet::interface]
             trait IGasChecker<TContractState> {
@@ -565,7 +564,7 @@ fn l1_message_cost() {
 
             #[test]
             fn l1_message_cost() {
-                let contract = declare("GasChecker").unwrap();
+                let contract = declare("GasChecker").unwrap().contract_class();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IGasCheckerDispatcher { contract_address };
 
@@ -583,9 +582,10 @@ fn l1_message_cost() {
     let result = run_test_case(&test);
 
     assert_passed(&result);
-    // 7 = gas cost of steps
+    // 2533 * 0.0025 = 6.3325 ~ 7 = gas cost of steps
     // 96 = gas cost of deployment
     // 29524 = gas cost of onchain data
+    // 1 = ???
     assert_gas(&result, "l1_message_cost", 7 + 96 + 29524);
 }
 
@@ -614,7 +614,7 @@ fn l1_message_cost_for_proxy() {
         indoc!(
             r#"
             use starknet::ContractAddress;
-            use snforge_std::{ declare, ContractClassTrait };
+            use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait };
 
             #[starknet::interface]
             trait IGasCheckerProxy<TContractState> {
@@ -626,10 +626,10 @@ fn l1_message_cost_for_proxy() {
 
             #[test]
             fn l1_message_cost_for_proxy() {
-                let contract = declare("GasChecker").unwrap();
+                let contract = declare("GasChecker").unwrap().contract_class();
                 let (gas_checker_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
 
-                let contract = declare("GasCheckerProxy").unwrap();
+                let contract = declare("GasCheckerProxy").unwrap().contract_class();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IGasCheckerProxyDispatcher { contract_address };
 
@@ -652,7 +652,7 @@ fn l1_message_cost_for_proxy() {
     let result = run_test_case(&test);
 
     assert_passed(&result);
-    // 13 = gas cost of steps
+    // 4870 * 0.0025 = 12,175 ~ 13 = gas cost of steps
     // l = number of class hash updates
     // n = unique contracts updated
     // So, as per formula:
@@ -667,13 +667,13 @@ fn l1_handler_cost() {
     let test = test_case!(
         indoc!(
             r#"
-            use snforge_std::{ declare, ContractClassTrait, L1HandlerTrait };
+            use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait, L1HandlerTrait };
 
             #[test]
             fn l1_handler_cost() {
-                let contract = declare("GasChecker").unwrap();
+                let contract = declare("GasChecker").unwrap().contract_class();
                 let (contract_address, _) = contract.deploy(@array![]).unwrap();
-                
+
                 let mut l1_handler = L1HandlerTrait::new(contract_address, selector!("handle_l1_message"));
 
                 l1_handler.execute(123, array![].span()).unwrap();
@@ -704,14 +704,14 @@ fn events_cost() {
             fn events_cost() {
                 let mut keys = array![];
                 let mut values =  array![];
-                
+
                 let mut i: u32 = 0;
                 while i < 50 {
                     keys.append('key');
                     values.append(1);
                     i += 1;
                 };
-                
+
                 emit_event_syscall(keys.span(), values.span()).unwrap();
             }
         "
@@ -720,10 +720,10 @@ fn events_cost() {
     let result = run_test_case(&test);
 
     assert_passed(&result);
-    // 2991 steps and memholes * 0.0025 ~= 8
+    // 156 range_check_builtin ~= 7
     // 6 gas for 50 event values
     // ~13 gas for 50 event keys
-    assert_gas(&result, "events_cost", 8 + 6 + 13);
+    assert_gas(&result, "events_cost", 7 + 6 + 13);
 }
 
 #[test]
@@ -731,7 +731,7 @@ fn events_contract_cost() {
     let test = test_case!(
         indoc!(
             r#"
-            use snforge_std::{ declare, ContractClassTrait };
+            use snforge_std::{ declare, ContractClassTrait, DeclareResultTrait };
 
             #[starknet::interface]
             trait IGasChecker<TContractState> {
@@ -740,7 +740,7 @@ fn events_contract_cost() {
 
             #[test]
             fn event_emission_cost() {
-                let (contract_address, _) = declare("GasChecker").unwrap().deploy(@array![]).unwrap();
+                let (contract_address, _) = declare("GasChecker").unwrap().contract_class().deploy(@array![]).unwrap();
                 let dispatcher = IGasCheckerDispatcher { contract_address };
 
                 dispatcher.emit_event(50);
@@ -756,9 +756,9 @@ fn events_contract_cost() {
 
     let result = run_test_case(&test);
     assert_passed(&result);
-    // 14 = gas cost of steps
+    // 4038 * 0.0025 = 10,095 ~ 11 = gas cost of steps
     // 96 = gas cost of onchain data (deploy cost)
     // 6 gas for 50 event values
     // ~13 gas for 50 event keys
-    assert_gas(&result, "event_emission_cost", 14 + 96 + 6 + 13);
+    assert_gas(&result, "event_emission_cost", 11 + 96 + 6 + 13);
 }

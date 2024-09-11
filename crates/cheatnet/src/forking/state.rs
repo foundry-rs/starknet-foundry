@@ -9,6 +9,7 @@ use blockifier::state::errors::StateError::{self, StateReadError, UndeclaredClas
 use blockifier::state::state_api::{StateReader, StateResult};
 use cairo_lang_starknet_classes::casm_contract_class::CasmContractClass;
 use cairo_lang_utils::bigint::BigUintAsHex;
+use cairo_vm::Felt252;
 use camino::Utf8Path;
 use conversions::{FromConv, IntoConv};
 use flate2::read::GzDecoder;
@@ -18,14 +19,14 @@ use starknet::core::types::{
     BlockId, ContractClass as ContractClassStarknet, FieldElement, MaybePendingBlockWithTxHashes,
     StarknetError,
 };
+use starknet::core::utils::parse_cairo_short_string;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::{JsonRpcClient, Provider, ProviderError};
 use starknet_api::block::{BlockNumber, BlockTimestamp};
-use starknet_api::core::{ClassHash, CompiledClassHash, ContractAddress, Nonce};
+use starknet_api::core::{ChainId, ClassHash, CompiledClassHash, ContractAddress, Nonce};
 use starknet_api::deprecated_contract_class::{
     ContractClass as DeprecatedContractClass, EntryPoint, EntryPointType,
 };
-use starknet_api::hash::StarkFelt;
 use starknet_api::state::StorageKey;
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -53,6 +54,12 @@ impl ForkStateReader {
             block_number,
             runtime: Runtime::new().expect("Could not instantiate Runtime"),
         })
+    }
+
+    pub fn chain_id(&self) -> Result<ChainId> {
+        let id = self.runtime.block_on(self.client.chain_id())?;
+        let id = parse_cairo_short_string(&id)?;
+        Ok(ChainId::from(id))
     }
 
     fn block_id(&self) -> BlockId {
@@ -114,7 +121,7 @@ impl StateReader for ForkStateReader {
         &self,
         contract_address: ContractAddress,
         key: StorageKey,
-    ) -> StateResult<StarkFelt> {
+    ) -> StateResult<Felt252> {
         if let Some(cache_hit) = self.cache.borrow().get_storage_at(&contract_address, &key) {
             return Ok(cache_hit);
         }

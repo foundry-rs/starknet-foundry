@@ -1,10 +1,10 @@
-use cairo_felt::Felt252;
 use cairo_lang_runner::casm_run::format_next_item;
+use starknet_types_core::felt::Felt as Felt252;
 
 /// Helper function to build readable text from a run data.
 #[must_use]
 pub fn build_readable_text(data: &[Felt252]) -> Option<String> {
-    let mut data_iter = data.iter().cloned();
+    let mut data_iter = data.iter().copied();
     let mut items = Vec::new();
 
     while let Some(item) = format_next_item(&mut data_iter) {

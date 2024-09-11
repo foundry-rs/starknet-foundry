@@ -5,7 +5,8 @@ use super::{
 /// Changes the transaction signature for the given contract address and span.
 /// - `contract_address` - instance of `ContractAddress` specifying which contract to cheat
 /// - `signature` - transaction signature to be set
-/// - `span` - instance of `CheatSpan` specifying the number of contract calls with the cheat applied
+/// - `span` - instance of `CheatSpan` specifying the number of contract calls with the cheat
+/// applied
 fn cheat_signature(contract_address: ContractAddress, signature: Span<felt252>, span: CheatSpan) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
@@ -19,7 +20,7 @@ fn cheat_signature(contract_address: ContractAddress, signature: Span<felt252>, 
 
 /// Changes the transaction signature.
 /// - `signature` - transaction signature to be set
-fn cheat_signature_global(signature: Span<felt252>) {
+fn start_cheat_signature_global(signature: Span<felt252>) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info.tx_info.signature = Operation::StartGlobal(signature);
@@ -27,7 +28,7 @@ fn cheat_signature_global(signature: Span<felt252>) {
     cheat_execution_info(execution_info);
 }
 
-/// Cancels the `cheat_signature_global`.
+/// Cancels the `start_cheat_signature_global`.
 fn stop_cheat_signature_global() {
     let mut execution_info: ExecutionInfoMock = Default::default();
 

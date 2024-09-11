@@ -29,8 +29,8 @@ Let's use `sncast` to call a contract's function:
 
 ```shell
 $ sncast --account myuser \
-    --url http://127.0.0.1:5050 \
     call \
+    --url http://127.0.0.1:5050 \
     --contract-address 0x38b7b9507ccf73d79cb42c2cc4e58cf3af1248f342112879bfdf5aa4f606cc9 \
     --function get \
     --calldata 0x0 \
@@ -49,9 +49,9 @@ Let's invoke a transaction and wait for it to be `ACCEPTED_ON_L2`.
 
 ```shell
 $ sncast --account myuser \
-    --url http://127.0.0.1:5050 \
     --wait \
     deploy \
+	--url http://127.0.0.1:5050 \
     --class-hash 0x8448a68b5ea1affc45e3fd4b8b480ea36a51dc34e337a16d2567d32d0c6f8a
    
 Transaction hash: 0x3062310a1e40d4b66d8987ba7447d1c7317381d0295d62cb12f2fe3f11e6983
@@ -69,6 +69,10 @@ Received transaction. Status: Pending
 command: deploy
 contract_address: 0x1d91599ec661e97fdcbb10c642a1c4f920986f1a7a9659d157d0db09baaa29e
 transaction_hash: 0x3062310a1e40d4b66d8987ba7447d1c7317381d0295d62cb12f2fe3f11e6983
+
+To see deployment details, visit:
+contract: https://starkscan.co/search/0x1d91599ec6...
+transaction: https://starkscan.co/search/0x3062310a1e...
 ```
 
 As you can see command waited for the transaction until it was `ACCEPTED_ON_L2`.

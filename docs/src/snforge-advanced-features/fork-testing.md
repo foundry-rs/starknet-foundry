@@ -15,28 +15,31 @@ There are two ways of configuring a fork:
 
 ### Configure a Fork in the Attribute
 
-It is possible to pass `url` and `block_id` arguments to the `fork` attribute:
-- `url` - RPC URL (short string)
-- `block_id` - id of block which will be pin to fork (`BlockId` enum)
+It is possible to pass `url` and only one of `block_number`, `block_hash`, `block_tag` arguments to the `fork` attribute:
+- `url` - RPC URL (string)
+- `block_number` - number of block which fork will be pinned to
+- `block_hash` - hash of block which fork will be pinned to
+- `block_tag` - tag of block which fork will be pinned to. Currently only `latest` is supported
 
-```rust
-enum BlockId {
-    Tag: BlockTag,
-    Hash: felt252,
-    Number: u64,
-}
-
-enum BlockTag {
-    Latest,
-}
-```
 
 ```rust
 use snforge_std::BlockId;
 
 #[test]
-#[fork(url: "http://your.rpc.url", block_id: BlockId::Number(123))]
+#[fork(url: "http://your.rpc.url", block_number: 123)]
 fn test_using_forked_state() {
+    // ...
+}
+
+#[test]
+#[fork(url: "http://your.rpc.url", block_hash: 0x123456)]
+fn test_using_forked_state2() {
+    // ...
+}
+
+#[test]
+#[fork(url: "http://your.rpc.url", block_tag: latest)]
+fn test_using_forked_state3() {
     // ...
 }
 ```
@@ -53,7 +56,7 @@ the same fork in tests.
 [[tool.snforge.fork]]
 name = "SOME_NAME"
 url = "http://your.rpc.url"
-block_id.tag = "Latest"
+block_id.tag = "latest"
 
 [[tool.snforge.fork]]
 name = "SOME_SECOND_NAME"

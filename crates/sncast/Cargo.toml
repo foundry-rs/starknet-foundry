@@ -37,7 +37,7 @@ cairo-lang-utils.workspace = true
 cairo-lang-sierra.workspace = true
 itertools.workspace = true
 num-traits.workspace = true
-cairo-felt.workspace = true
+starknet-types-core.workspace = true
 cairo-vm.workspace = true
 blockifier.workspace = true
 semver.workspace = true
@@ -47,6 +47,7 @@ base16ct.workspace = true
 starknet-crypto.workspace = true
 async-trait.workspace = true
 serde_path_to_error.workspace = true
+walkdir.workspace = true
 
 [dev-dependencies]
 ctor.workspace = true
@@ -56,6 +57,7 @@ project-root.workspace = true
 tempfile.workspace = true
 test-case.workspace = true
 fs_extra.workspace = true
+wiremock.workspace = true
 
 [[bin]]
 name = "sncast"

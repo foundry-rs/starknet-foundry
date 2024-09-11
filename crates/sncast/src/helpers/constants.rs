@@ -18,7 +18,7 @@ inputs = []
 pub const UDC_ADDRESS: FieldElement =
     felt!("0x041a78e741e5af2fec34b695679bc6891742439f7afb8484ecd7766661ad02bf");
 pub const OZ_CLASS_HASH: FieldElement =
-    felt!("0x061dac032f228abef9c6626f995015233097ae253a7f72d68552db02f2971b8f");
+    felt!("0x00e2eb8f5672af4e6a4e8a8f1b44989685e668489b0a25437733756c5a34a1d6");
 pub const ARGENT_CLASS_HASH: FieldElement =
     felt!("0x029927c8af6bccf3f6fda035981e765a7bdbf18a2dc0d630494f8758aa908e2b");
 

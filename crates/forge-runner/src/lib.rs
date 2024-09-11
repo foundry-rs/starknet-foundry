@@ -1,21 +1,23 @@
 use crate::build_trace_data::test_sierra_program_path::VersionedProgramPath;
+use crate::coverage_api::run_coverage;
 use crate::forge_config::{ExecutionDataToSave, ForgeConfig, TestRunnerConfig};
 use crate::fuzzer::RandomFuzzer;
 use crate::running::{run_fuzz_test, run_test};
 use crate::test_case_summary::TestCaseSummary;
 use anyhow::{anyhow, Result};
 use build_trace_data::save_trace_data;
-use cairo_lang_sierra::ids::ConcreteTypeId;
-use cairo_lang_sierra::program::Function;
+use cairo_lang_sierra::program::{ConcreteTypeLongId, Function, TypeDeclaration};
 use camino::Utf8Path;
+use cheatnet::runtime_extensions::forge_config_extension::config::RawFuzzerConfig;
 use futures::stream::FuturesUnordered;
 use futures::StreamExt;
-use package_tests::raw::RawFuzzerConfig;
 use package_tests::with_config_resolved::{
     TestCaseWithResolvedConfig, TestTargetWithResolvedConfig,
 };
 use profiler_api::run_profiler;
-use smol_str::SmolStr;
+use shared::print::print_as_warning;
+use std::collections::HashMap;
+use std::path::PathBuf;
 use std::sync::Arc;
 use test_case_summary::{AnyTestCaseSummary, Fuzzing};
 use tokio::sync::mpsc::{channel, Sender};
@@ -23,6 +25,7 @@ use tokio::task::JoinHandle;
 use universal_sierra_compiler_api::AssembledProgramWithDebugInfo;
 
 pub mod build_trace_data;
+pub mod coverage_api;
 pub mod expected_result;
 pub mod forge_config;
 pub mod package_tests;
@@ -33,11 +36,11 @@ pub mod test_target_summary;
 mod fuzzer;
 mod gas;
 pub mod printing;
-mod running;
+pub mod running;
 
 pub const CACHE_DIR: &str = ".snfoundry_cache";
 
-const BUILTINS: [&str; 8] = [
+const BUILTINS: [&str; 11] = [
     "Pedersen",
     "RangeCheck",
     "Bitwise",
@@ -46,29 +49,43 @@ const BUILTINS: [&str; 8] = [
     "SegmentArena",
     "GasBuiltin",
     "System",
+    "RangeCheck96",
+    "AddMod",
+    "MulMod",
 ];
 
 pub trait TestCaseFilter {
     fn should_be_run(&self, test_case: &TestCaseWithResolvedConfig) -> bool;
 }
 
-pub fn maybe_save_execution_data(
+pub fn maybe_save_trace_and_profile(
     result: &AnyTestCaseSummary,
     execution_data_to_save: ExecutionDataToSave,
-) -> Result<()> {
+) -> Result<Option<PathBuf>> {
     if let AnyTestCaseSummary::Single(TestCaseSummary::Passed {
         name, trace_data, ..
     }) = result
     {
-        match execution_data_to_save {
-            ExecutionDataToSave::Trace => {
-                save_trace_data(name, trace_data)?;
-            }
-            ExecutionDataToSave::TraceAndProfile => {
-                let trace_path = save_trace_data(name, trace_data)?;
+        if execution_data_to_save.is_vm_trace_needed() {
+            let trace_path = save_trace_data(name, trace_data)?;
+            if execution_data_to_save.profile {
                 run_profiler(name, &trace_path)?;
             }
-            ExecutionDataToSave::None => {}
+            return Ok(Some(trace_path));
+        }
+    }
+    Ok(None)
+}
+
+pub fn maybe_generate_coverage(
+    execution_data_to_save: ExecutionDataToSave,
+    saved_trace_data_paths: &[PathBuf],
+) -> Result<()> {
+    if execution_data_to_save.coverage {
+        if saved_trace_data_paths.is_empty() {
+            print_as_warning(&anyhow!("No trace data to generate coverage from"));
+        } else {
+            run_coverage(saved_trace_data_paths)?;
         }
     }
     Ok(())
@@ -80,12 +97,7 @@ pub fn maybe_save_versioned_program(
     versioned_programs_dir: &Utf8Path,
     package_name: &str,
 ) -> Result<Option<VersionedProgramPath>> {
-    let save_versioned_program = match execution_data_to_save {
-        ExecutionDataToSave::Trace | ExecutionDataToSave::TraceAndProfile => true,
-        ExecutionDataToSave::None => false,
-    };
-
-    let maybe_versioned_program_path = if save_versioned_program {
+    let maybe_versioned_program_path = if execution_data_to_save.is_vm_trace_needed() {
         Some(VersionedProgramPath::save_versioned_program(
             &test_target.sierra_program.clone().into(),
             test_target.tests_location,
@@ -101,7 +113,7 @@ pub fn maybe_save_versioned_program(
 
 #[must_use]
 pub fn run_for_test_case(
-    args: Vec<ConcreteTypeId>,
+    args: Vec<ConcreteTypeLongId>,
     case: Arc<TestCaseWithResolvedConfig>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
     forge_config: Arc<ForgeConfig>,
@@ -136,8 +148,25 @@ pub fn run_for_test_case(
     }
 }
 
+fn argument_type_name(arg: &ConcreteTypeLongId) -> &str {
+    let name = arg.generic_id.0.as_str();
+
+    if name == "Struct" {
+        if let cairo_lang_sierra::program::GenericArg::UserType(
+            cairo_lang_sierra::ids::UserTypeId { ref debug_name, .. },
+        ) = arg.generic_args[0]
+        {
+            debug_name.as_ref().unwrap().as_str()
+        } else {
+            name
+        }
+    } else {
+        name
+    }
+}
+
 fn run_with_fuzzing(
-    args: Vec<ConcreteTypeId>,
+    args: Vec<ConcreteTypeLongId>,
     case: Arc<TestCaseWithResolvedConfig>,
     casm_program: Arc<AssembledProgramWithDebugInfo>,
     test_runner_config: Arc<TestRunnerConfig>,
@@ -150,27 +179,19 @@ fn run_with_fuzzing(
         }
 
         let (fuzzing_send, mut fuzzing_rec) = channel(1);
-        let args = args
-            .iter()
-            .map(|arg| {
-                arg.debug_name
-                    .as_ref()
-                    .ok_or_else(|| anyhow!("Type {arg:?} does not have a debug name"))
-                    .map(SmolStr::as_str)
-            })
-            .collect::<Result<Vec<_>>>()?;
+        let arg_types = args.iter().map(argument_type_name).collect::<Vec<_>>();
 
         let (fuzzer_runs, fuzzer_seed) = match case.config.fuzzer_config {
-            Some(RawFuzzerConfig {
-                fuzzer_runs,
-                fuzzer_seed,
-            }) => (fuzzer_runs, fuzzer_seed),
+            Some(RawFuzzerConfig { runs, seed }) => (
+                runs.unwrap_or(test_runner_config.fuzzer_runs),
+                seed.unwrap_or(test_runner_config.fuzzer_seed),
+            ),
             _ => (
                 test_runner_config.fuzzer_runs,
                 test_runner_config.fuzzer_seed,
             ),
         };
-        let mut fuzzer = RandomFuzzer::create(fuzzer_seed, fuzzer_runs, &args)?;
+        let mut fuzzer = RandomFuzzer::create(fuzzer_seed, fuzzer_runs, &arg_types)?;
 
         let mut tasks = FuturesUnordered::new();
 
@@ -227,17 +248,23 @@ fn run_with_fuzzing(
     })
 }
 
+#[allow(clippy::implicit_hasher)]
 #[must_use]
-pub fn function_args(function: &Function) -> Vec<&ConcreteTypeId> {
-    let builtins: Vec<_> = BUILTINS
-        .iter()
-        .map(|builtin| Some(SmolStr::new(builtin)))
-        .collect();
-
+pub fn function_args(
+    function: &Function,
+    type_declarations: &HashMap<u64, &TypeDeclaration>,
+) -> Vec<ConcreteTypeLongId> {
     function
         .signature
         .param_types
         .iter()
-        .filter(|pt| !builtins.contains(&pt.debug_name))
+        .filter_map(|pt| match type_declarations.get(&pt.id) {
+            Some(ty_declaration)
+                if !BUILTINS.contains(&ty_declaration.long_id.generic_id.0.as_str()) =>
+            {
+                Some(ty_declaration.long_id.clone())
+            }
+            _ => None,
+        })
         .collect()
 }

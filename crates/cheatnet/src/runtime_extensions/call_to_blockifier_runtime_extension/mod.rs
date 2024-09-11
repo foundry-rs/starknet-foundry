@@ -1,5 +1,6 @@
 use std::marker::PhantomData;
 
+use crate::constants::TEST_ADDRESS;
 use blockifier::execution::entry_point::{CallEntryPoint, CallType};
 use blockifier::execution::execution_utils::felt_from_ptr;
 use blockifier::execution::syscalls::{
@@ -13,15 +14,11 @@ use blockifier::execution::{
         SyscallResponseWrapper,
     },
 };
-
-use crate::constants::TEST_ADDRESS;
+use cairo_vm::types::relocatable::MaybeRelocatable;
 use cairo_vm::vm::{errors::hint_errors::HintError, vm_core::VirtualMachine};
-use conversions::FromConv;
 use runtime::{ExtendedRuntime, ExtensionLogic, SyscallHandlingResult, SyscallPtrAccess};
-use starknet_api::core::{ContractAddress, PatriciaKey};
+use starknet_api::core::ContractAddress;
 use starknet_api::deprecated_contract_class::EntryPointType;
-use starknet_api::hash::{StarkFelt, StarkHash};
-use starknet_api::{contract_address, patricia_key};
 
 use crate::state::CheatnetState;
 
@@ -34,6 +31,7 @@ use crate::runtime_extensions::call_to_blockifier_runtime_extension::{
 };
 
 use super::cheatable_starknet_runtime_extension::CheatableStarknetRuntime;
+use conversions::string::TryFromHexStr;
 
 pub mod execution;
 pub mod panic_data;
@@ -111,7 +109,7 @@ impl ExecuteCall for CallContractRequest {
             entry_point_selector: self.function_selector,
             calldata: self.calldata,
             storage_address: contract_address,
-            caller_address: contract_address!(TEST_ADDRESS),
+            caller_address: TryFromHexStr::try_from_hex_str(TEST_ADDRESS).unwrap(),
             call_type: CallType::Call,
             initial_gas: u64::MAX,
         };
@@ -139,7 +137,7 @@ impl ExecuteCall for LibraryCallRequest {
             entry_point_type: EntryPointType::External,
             entry_point_selector: self.function_selector,
             calldata: self.calldata,
-            storage_address: contract_address!(TEST_ADDRESS),
+            storage_address: TryFromHexStr::try_from_hex_str(TEST_ADDRESS).unwrap(),
             caller_address: ContractAddress::default(),
             call_type: CallType::Delegate,
             initial_gas: u64::MAX,
@@ -184,9 +182,14 @@ fn write_call_response(
 ) -> Result<(), HintError> {
     let response_wrapper: SyscallResponseWrapper<SingleSegmentResponse> = match call_result {
         CallResult::Success { ret_data } => {
-            let memory_segment_start_ptr = syscall_handler
-                .read_only_segments
-                .allocate(vm, &ret_data.iter().map(Into::into).collect())?;
+            let memory_segment_start_ptr = syscall_handler.read_only_segments.allocate(
+                vm,
+                &ret_data
+                    .clone()
+                    .into_iter()
+                    .map(MaybeRelocatable::Int)
+                    .collect::<Vec<MaybeRelocatable>>(),
+            )?;
 
             SyscallResponseWrapper::Success {
                 gas_counter,
@@ -201,10 +204,7 @@ fn write_call_response(
         CallResult::Failure(failure_type) => match failure_type {
             CallFailure::Panic { panic_data } => SyscallResponseWrapper::Failure {
                 gas_counter,
-                error_data: panic_data
-                    .iter()
-                    .map(|el| StarkFelt::from_(el.clone()))
-                    .collect(),
+                error_data: panic_data,
             },
             CallFailure::Error { msg } => return Err(HintError::CustomHint(Box::from(msg))),
         },

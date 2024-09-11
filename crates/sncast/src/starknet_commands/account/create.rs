@@ -12,13 +12,14 @@ use sncast::helpers::constants::{
     ARGENT_CLASS_HASH, BRAAVOS_BASE_ACCOUNT_CLASS_HASH, BRAAVOS_CLASS_HASH,
     CREATE_KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH,
 };
+use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::{AccountCreateResponse, Felt};
 use sncast::{
     check_class_hash_exists, check_if_legacy_contract, extract_or_generate_salt, get_chain_id,
     get_keystore_password, handle_account_factory_error,
 };
 use starknet::accounts::{
-    AccountDeployment, AccountFactory, ArgentAccountFactory, OpenZeppelinAccountFactory,
+    AccountDeploymentV1, AccountFactory, ArgentAccountFactory, OpenZeppelinAccountFactory,
 };
 use starknet::core::types::{FeeEstimate, FieldElement};
 use starknet::providers::jsonrpc::HttpTransport;
@@ -47,6 +48,9 @@ pub struct Create {
     /// Custom contract class hash of declared contract
     #[clap(short, long, requires = "account_type")]
     pub class_hash: Option<FieldElement>,
+
+    #[clap(flatten)]
+    pub rpc: RpcArgs,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -128,7 +132,7 @@ pub async fn create(
             "--add-profile flag was not set. No profile added to snfoundry.toml".to_string()
         },
         message: if account_json["deployed"] == json!(false) {
-            "Account successfully created. Prefund generated address with at least <max_fee> tokens. It is good to send more in the case of higher demand.".to_string()
+            "Account successfully created. Prefund generated address with at least <max_fee> STRK tokens or an equivalent amount of ETH tokens. It is good to send more in the case of higher demand.".to_string()
         } else {
             "Account already deployed".to_string()
         },
@@ -197,12 +201,12 @@ async fn get_address_and_deployment_fee<T>(
 where
     T: AccountFactory + Sync,
 {
-    let deployment = account_factory.deploy(salt);
+    let deployment = account_factory.deploy_v1(salt);
     Ok((deployment.address(), get_deployment_fee(&deployment).await?))
 }
 
 async fn get_deployment_fee<'a, T>(
-    account_deployment: &AccountDeployment<'a, T>,
+    account_deployment: &AccountDeploymentV1<'a, T>,
 ) -> Result<FeeEstimate>
 where
     T: AccountFactory + Sync,

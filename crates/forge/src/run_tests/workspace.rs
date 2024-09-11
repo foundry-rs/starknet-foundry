@@ -32,9 +32,8 @@ pub async fn run_for_workspace(args: TestArgs) -> Result<ExitStatus> {
     let scarb_metadata = ScarbCommand::metadata().inherit_stderr().run()?;
     warn_if_snforge_std_not_compatible(&scarb_metadata)?;
 
-    let snforge_target_dir_path = target_dir_for_workspace(&scarb_metadata)
-        .join(&scarb_metadata.current_profile)
-        .join("snforge");
+    let snforge_target_dir_path =
+        target_dir_for_workspace(&scarb_metadata).join(&scarb_metadata.current_profile);
 
     let packages: Vec<PackageMetadata> = args
         .packages_filter
@@ -43,8 +42,8 @@ pub async fn run_for_workspace(args: TestArgs) -> Result<ExitStatus> {
 
     let filter = PackagesFilter::generate_for::<Metadata>(packages.iter());
 
-    build_test_artifacts_with_scarb(filter.clone())?;
-    build_contracts_with_scarb(filter)?;
+    build_test_artifacts_with_scarb(filter.clone(), args.features.clone())?;
+    build_contracts_with_scarb(filter, args.features.clone())?;
 
     let mut block_number_map = BlockNumberMap::default();
     let mut all_failed_tests = vec![];

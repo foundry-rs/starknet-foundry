@@ -1,23 +1,22 @@
 #[cfg(test)]
 mod tests_nonce {
-    use cairo_felt::{Felt252, PRIME_STR};
+    use cairo_vm::utils::PRIME_STR;
     use conversions::string::{IntoDecStr, TryFromDecStr, TryFromHexStr};
     use conversions::{FromConv, IntoConv};
-    use num_traits::Bounded;
     use starknet::core::types::FieldElement;
     use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, Nonce};
-    use starknet_api::hash::{StarkFelt, StarkHash};
+    use starknet_api::hash::StarkHash;
+    use starknet_types_core::felt::Felt as Felt252;
 
     #[test]
     fn test_nonce_conversions_happy_case() {
-        let felt: StarkFelt = StarkFelt::new([1u8; 32]).unwrap();
+        let felt = Felt252::from_bytes_be(&[1u8; 32]);
         let nonce = Nonce(felt);
 
         assert_eq!(nonce, ClassHash::from_(nonce).into_());
         assert_eq!(nonce, ContractAddress::from_(nonce).into_());
         assert_eq!(nonce, Felt252::from_(nonce).into_());
         assert_eq!(nonce, FieldElement::from_(nonce).into_());
-        assert_eq!(nonce, StarkFelt::from_(nonce).into_());
         assert_eq!(nonce, StarkHash::from_(nonce).into_());
         assert_eq!(nonce, EntryPointSelector::from_(nonce).into_());
 
@@ -29,14 +28,13 @@ mod tests_nonce {
 
     #[test]
     fn test_nonce_conversions_zero() {
-        let felt: StarkFelt = StarkFelt::new([0u8; 32]).unwrap();
+        let felt = Felt252::ZERO;
         let nonce = Nonce(felt);
 
         assert_eq!(nonce, ClassHash::from_(nonce).into_());
         assert_eq!(nonce, ContractAddress::from_(nonce).into_());
         assert_eq!(nonce, Felt252::from_(nonce).into_());
         assert_eq!(nonce, FieldElement::from_(nonce).into_());
-        assert_eq!(nonce, StarkFelt::from_(nonce).into_());
         assert_eq!(nonce, StarkHash::from_(nonce).into_());
         assert_eq!(nonce, EntryPointSelector::from_(nonce).into_());
 
@@ -48,12 +46,11 @@ mod tests_nonce {
 
     #[test]
     fn test_nonce_conversions_limit() {
-        let mut nonce: Nonce = Felt252::max_value().into_();
+        let mut nonce: Nonce = Felt252::MAX.into_();
 
         assert_eq!(nonce, Felt252::from_(nonce).into_());
         assert_eq!(nonce, FieldElement::from_(nonce).into_());
         assert_eq!(nonce, ClassHash::from_(nonce).into_());
-        assert_eq!(nonce, StarkFelt::from_(nonce).into_());
         assert_eq!(nonce, StarkHash::from_(nonce).into_());
         assert_eq!(nonce, EntryPointSelector::from_(nonce).into_());
 

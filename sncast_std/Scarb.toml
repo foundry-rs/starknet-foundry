@@ -1,7 +1,4 @@
 [package]
 name = "sncast_std"
-version = "0.25.0"
+version = "0.30.0"
 edition = "2023_11"
-
-[dependencies]
-starknet = "2.4.0"

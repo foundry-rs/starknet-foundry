@@ -1,16 +1,14 @@
-use std::collections::HashMap;
-use std::fs;
-
+use crate::starknet_commands::declare::Declare;
+use crate::starknet_commands::deploy::Deploy;
+use crate::starknet_commands::invoke::Invoke;
 use crate::starknet_commands::{call, declare, deploy, invoke, tx_status};
-use crate::{get_account, get_nonce, WaitForTx};
+use crate::{get_account, WaitForTx};
 use anyhow::{anyhow, Context, Result};
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::entry_point::CallEntryPoint;
 use blockifier::execution::execution_utils::ReadOnlySegments;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
-use blockifier::state::cached_state::{
-    CachedState, GlobalContractCache, GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST,
-};
+use blockifier::state::cached_state::CachedState;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{build_hints_dict, RunResultValue, SierraCasmRunner};
 use cairo_lang_sierra::program::VersionedProgram;
@@ -36,8 +34,11 @@ use scarb_metadata::{Metadata, PackageMetadata};
 use semver::{Comparator, Op, Version, VersionReq};
 use shared::print::print_as_warning;
 use shared::utils::build_readable_text;
+use sncast::get_nonce;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::SCRIPT_LIB_ARTIFACT_NAME;
+use sncast::helpers::fee::ScriptFeeSettings;
+use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::ScriptRunResponse;
 use sncast::state::hashing::{
     generate_declare_tx_id, generate_deploy_tx_id, generate_invoke_tx_id,
@@ -48,6 +49,8 @@ use starknet::core::types::{BlockId, BlockTag::Pending};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
+use std::collections::HashMap;
+use std::fs;
 use tokio::runtime::Runtime;
 
 type ScriptStarknetContractArtifacts = StarknetContractArtifacts;
@@ -65,6 +68,9 @@ pub struct Run {
     /// Do not use the state file
     #[clap(long)]
     pub no_state_file: bool,
+
+    #[clap(flatten)]
+    pub rpc: RpcArgs,
 }
 
 pub struct CastScriptExtension<'a> {
@@ -110,11 +116,20 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 Ok(CheatcodeHandlingResult::from_serializable(call_result))
             }
             "declare" => {
-                let contract_name: String = input_reader.read::<ByteArray>()?.into();
-                let max_fee = input_reader.read()?;
+                let contract: String = input_reader.read::<ByteArray>()?.into();
+                let fee_args = input_reader.read::<ScriptFeeSettings>()?.into();
                 let nonce = input_reader.read()?;
 
-                let declare_tx_id = generate_declare_tx_id(contract_name.as_str());
+                let declare = Declare {
+                    contract: contract.clone(),
+                    fee_args,
+                    nonce,
+                    package: None,
+                    version: None,
+                    rpc: RpcArgs::default(),
+                };
+
+                let declare_tx_id = generate_declare_tx_id(contract.as_str());
 
                 if let Some(success_output) =
                     self.state.get_output_if_success(declare_tx_id.as_str())
@@ -123,10 +138,8 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 }
 
                 let declare_result = self.tokio_runtime.block_on(declare::declare(
-                    &contract_name,
-                    max_fee,
+                    declare,
                     self.account()?,
-                    nonce,
                     self.artifacts,
                     WaitForTx {
                         wait: true,
@@ -143,15 +156,25 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
             }
             "deploy" => {
                 let class_hash = input_reader.read()?;
-                let constructor_calldata: Vec<_> = input_reader.read()?;
-
+                let constructor_calldata = input_reader.read()?;
                 let salt = input_reader.read()?;
                 let unique = input_reader.read()?;
-                let max_fee = input_reader.read()?;
+                let fee_args = input_reader.read::<ScriptFeeSettings>()?.into();
                 let nonce = input_reader.read()?;
 
+                let deploy = Deploy {
+                    class_hash,
+                    constructor_calldata,
+                    salt,
+                    unique,
+                    fee_args,
+                    nonce,
+                    version: None,
+                    rpc: RpcArgs::default(),
+                };
+
                 let deploy_tx_id =
-                    generate_deploy_tx_id(class_hash, &constructor_calldata, salt, unique);
+                    generate_deploy_tx_id(class_hash, &deploy.constructor_calldata, salt, unique);
 
                 if let Some(success_output) =
                     self.state.get_output_if_success(deploy_tx_id.as_str())
@@ -160,13 +183,8 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 }
 
                 let deploy_result = self.tokio_runtime.block_on(deploy::deploy(
-                    class_hash,
-                    constructor_calldata,
-                    salt,
-                    unique,
-                    max_fee,
+                    deploy,
                     self.account()?,
-                    nonce,
                     WaitForTx {
                         wait: true,
                         wait_params: self.config.wait_params,
@@ -185,8 +203,18 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 let contract_address = input_reader.read()?;
                 let function_selector = input_reader.read()?;
                 let calldata: Vec<_> = input_reader.read()?;
-                let max_fee = input_reader.read()?;
+                let fee_args = input_reader.read::<ScriptFeeSettings>()?.into();
                 let nonce = input_reader.read()?;
+
+                let invoke = Invoke {
+                    contract_address,
+                    function: String::new(),
+                    calldata: calldata.clone(),
+                    fee_args,
+                    nonce,
+                    version: None,
+                    rpc: RpcArgs::default(),
+                };
 
                 let invoke_tx_id =
                     generate_invoke_tx_id(contract_address, function_selector, &calldata);
@@ -198,12 +226,9 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 }
 
                 let invoke_result = self.tokio_runtime.block_on(invoke::invoke(
-                    contract_address,
+                    invoke,
                     function_selector,
-                    calldata,
-                    max_fee,
                     self.account()?,
-                    nonce,
                     WaitForTx {
                         wait: true,
                         wait_params: self.config.wait_params,
@@ -308,12 +333,9 @@ pub fn run(
         .assemble_ex(&entry_code, &footer);
 
     // hint processor
-    let mut context = build_context(&SerializableBlockInfo::default().into());
+    let mut context = build_context(&SerializableBlockInfo::default().into(), None);
 
-    let mut blockifier_state = CachedState::new(
-        DictStateReader::default(),
-        GlobalContractCache::new(GLOBAL_CONTRACT_CACHE_SIZE_FOR_TEST),
-    );
+    let mut blockifier_state = CachedState::new(DictStateReader::default());
     let mut execution_resources = ExecutionResources::default();
 
     let syscall_handler = SyscallHintProcessor::new(
@@ -358,10 +380,8 @@ pub fn run(
         },
     };
 
-    let mut vm = VirtualMachine::new(true);
-    match runner.run_function_with_vm(
+    match runner.run_function(
         func,
-        &mut vm,
         &mut cast_runtime,
         hints_dict,
         assembled_program.bytecode.iter(),

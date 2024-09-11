@@ -20,13 +20,17 @@
 * [Using Cheatcodes](testing/using-cheatcodes.md)
 * [Testing Events](testing/testing-events.md)
 * [Test Attributes](testing/test-attributes.md)
+* [Testing Messages to L1](testing/testing-messages-to-l1.md)
+* [Testing Workspaces](testing/testing-workspaces.md)
 * [Test Collection](testing/test-collection.md)
 * [Contract Collection](testing/contracts-collection.md)
 * [Gas and VM Resources Estimation](testing/gas-and-resource-estimation.md)
+* [Coverage](testing/coverage.md)
 
 # `snforge` Advanced Features
 * [Fork Testing](snforge-advanced-features/fork-testing.md)
 * [Fuzz Testing](snforge-advanced-features/fuzz-testing.md)
+* [Conditional Compilation](snforge-advanced-features/conditional-compilation.md)
 * [Direct Storage Access](snforge-advanced-features/storage-cheatcodes.md)
 * [Profiling](snforge-advanced-features/profiling.md)
 
@@ -42,6 +46,8 @@
 * [Performing Multicall](starknet/multicall.md)
 * [Cairo Deployment Scripts](starknet/script.md)
 * [Inspecting Transactions](starknet/tx-status.md)
+* [Fees and Versions](starknet/fees-and-versions.md)
+* [Verifying Contracts](starknet/verify.md)
 
 ---
 
@@ -81,9 +87,11 @@
     * [replace_bytecode](appendix/cheatcodes/replace_bytecode.md)
     * [l1_handler](appendix/cheatcodes/l1_handler.md)
     * [spy_events](appendix/cheatcodes/spy_events.md)
+    * [spy_messages_to_l1](appendix/cheatcodes/spy_messages_to_l1.md)
     * [store](appendix/cheatcodes/store.md)
     * [load](appendix/cheatcodes/load.md)
 * [`snforge` Library Reference](appendix/snforge-library.md)
+    * [byte_array](appendix/snforge-library/byte_array.md)
     * [declare](appendix/snforge-library/declare.md)
     * [contract_class](appendix/snforge-library/contract_class.md)
     * [get_call_trace](appendix/snforge-library/get_call_trace.md)
@@ -97,6 +105,7 @@
         * [create](appendix/sncast/account/create.md)
         * [deploy](appendix/sncast/account/deploy.md)
         * [delete](appendix/sncast/account/delete.md)
+        * [list](appendix/sncast/account/list.md)
     * [declare](appendix/sncast/declare.md)
     * [deploy](appendix/sncast/deploy.md)
     * [invoke](appendix/sncast/invoke.md)
@@ -109,6 +118,7 @@
         * [init](appendix/sncast/script/init.md)
         * [run](appendix/sncast/script/run.md)
     * [tx-status](appendix/sncast/tx-status.md)
+    * [verify](appendix/sncast/verify.md)
 * [`sncast` Library Functions References](appendix/sncast-library.md)
     * [declare](appendix/sncast-library/declare.md)
     * [deploy](appendix/sncast-library/deploy.md)

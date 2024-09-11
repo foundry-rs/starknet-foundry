@@ -1,4 +1,4 @@
-use cairo_felt::Felt252;
+use starknet_types_core::felt::Felt as Felt252;
 use thiserror::Error;
 
 pub use cairo_serde_macros::CairoDeserialize;
@@ -31,7 +31,7 @@ impl<'b> BufferReader<'b> {
     }
 
     pub fn read_felt(&mut self) -> BufferReadResult<Felt252> {
-        let felt = self.buffer.get(self.idx).cloned();
+        let felt = self.buffer.get(self.idx).copied();
 
         self.idx += 1;
 

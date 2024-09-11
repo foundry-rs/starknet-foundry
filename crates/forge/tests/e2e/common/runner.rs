@@ -5,7 +5,7 @@ use indoc::formatdoc;
 use shared::command::CommandExt;
 use shared::test_utils::node_url::node_rpc_url;
 use snapbox::cmd::{cargo_bin, Command as SnapboxCommand};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::str::FromStr;
 use std::{env, fs};
@@ -14,9 +14,17 @@ use toml_edit::{value, DocumentMut};
 use walkdir::WalkDir;
 
 pub(crate) fn runner(temp_dir: &TempDir) -> SnapboxCommand {
-    SnapboxCommand::new(cargo_bin!("snforge"))
-        .env("SCARB_CACHE", temp_dir.path())
-        .current_dir(temp_dir)
+    SnapboxCommand::new(snforge_test_bin_path()).current_dir(temp_dir)
+}
+
+// If ran on CI, we want to get the nextest's built binary
+pub fn snforge_test_bin_path() -> PathBuf {
+    if env::var("NEXTEST").unwrap_or("0".to_string()) == "1" {
+        let snforge_nextest_env =
+            env::var("NEXTEST_BIN_EXE_snforge").expect("No snforge binary for nextest found");
+        return PathBuf::from(snforge_nextest_env);
+    }
+    cargo_bin!("snforge").to_path_buf()
 }
 
 pub(crate) fn test_runner(temp_dir: &TempDir) -> SnapboxCommand {

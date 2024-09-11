@@ -24,10 +24,8 @@ use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::Contr
 use configuration::load_package_config;
 use forge_runner::{
     forge_config::ForgeConfig,
-    package_tests::{
-        raw::TestTargetRaw, with_config::TestTargetWithConfig,
-        with_config_resolved::TestTargetWithResolvedConfig,
-    },
+    package_tests::{raw::TestTargetRaw, with_config_resolved::TestTargetWithResolvedConfig},
+    running::with_config::test_target_with_config,
     test_case_summary::AnyTestCaseSummary,
     test_target_summary::TestTargetSummary,
 };
@@ -36,7 +34,7 @@ use scarb_metadata::{Metadata, PackageMetadata};
 use std::sync::Arc;
 
 pub struct RunForPackageArgs {
-    pub test_targets: Vec<TestTargetWithConfig>,
+    pub test_targets: Vec<TestTargetRaw>,
     pub tests_filter: TestsFilter,
     pub forge_config: Arc<ForgeConfig>,
     pub fork_targets: Vec<ForkTarget>,
@@ -52,7 +50,7 @@ impl RunForPackageArgs {
         snforge_target_dir_path: &Utf8Path,
         versioned_programs_dir: Utf8PathBuf,
     ) -> Result<RunForPackageArgs> {
-        let raw_test_targets = load_test_artifacts(snforge_target_dir_path, &package.name)?;
+        let raw_test_targets = load_test_artifacts(snforge_target_dir_path, &package)?;
 
         let contracts =
             get_contracts_artifacts_and_source_sierra_paths(scarb_metadata, &package.id, None)?;
@@ -67,6 +65,7 @@ impl RunForPackageArgs {
             args.detailed_resources,
             args.save_trace_data,
             args.build_profile,
+            args.coverage,
             args.max_n_steps,
             contracts_data,
             cache_dir.clone(),
@@ -84,16 +83,35 @@ impl RunForPackageArgs {
         );
 
         Ok(RunForPackageArgs {
-            test_targets: raw_test_targets
-                .into_iter()
-                .map(TestTargetRaw::with_config)
-                .collect(),
+            test_targets: raw_test_targets,
             forge_config,
             tests_filter: test_filter,
             fork_targets: forge_config_from_scarb.fork,
             package_name: package.name,
         })
     }
+}
+
+async fn test_package_with_config_resolved(
+    test_targets: Vec<TestTargetRaw>,
+    fork_targets: &[ForkTarget],
+    block_number_map: &mut BlockNumberMap,
+) -> Result<Vec<TestTargetWithResolvedConfig>> {
+    let mut test_targets_with_resolved_config = Vec::with_capacity(test_targets.len());
+
+    for test_target in test_targets {
+        let test_target = test_target_with_config(test_target)?;
+
+        let test_target = resolve_config(test_target, fork_targets, block_number_map).await?;
+
+        test_targets_with_resolved_config.push(test_target);
+    }
+
+    Ok(test_targets_with_resolved_config)
+}
+
+fn sum_test_cases(test_targets: &[TestTargetWithResolvedConfig]) -> usize {
+    test_targets.iter().map(|tc| tc.test_cases.len()).sum()
 }
 
 pub async fn run_for_package(
@@ -106,33 +124,18 @@ pub async fn run_for_package(
     }: RunForPackageArgs,
     block_number_map: &mut BlockNumberMap,
 ) -> Result<Vec<TestTargetSummary>> {
-    let mut test_targets_with_resolved_config: Vec<TestTargetWithResolvedConfig> =
-        Vec::with_capacity(test_targets.len());
+    let mut test_targets =
+        test_package_with_config_resolved(test_targets, &fork_targets, block_number_map).await?;
+    let all_tests = sum_test_cases(&test_targets);
 
-    for test_target in test_targets {
-        let test_target = resolve_config(test_target, &fork_targets, block_number_map).await?;
-
-        test_targets_with_resolved_config.push(test_target);
+    for test_target in &mut test_targets {
+        tests_filter.filter_tests(&mut test_target.test_cases)?;
     }
-
-    let all_tests: usize = test_targets_with_resolved_config
-        .iter()
-        .map(|tc| tc.test_cases.len())
-        .sum();
-
-    let test_targets = test_targets_with_resolved_config
-        .into_iter()
-        .map(|mut tc| {
-            tests_filter.filter_tests(&mut tc.test_cases)?;
-            Ok(tc)
-        })
-        .collect::<Result<Vec<TestTargetWithResolvedConfig>>>()?;
-    let not_filtered: usize = test_targets.iter().map(|tc| tc.test_cases.len()).sum();
-    let filtered = all_tests - not_filtered;
 
     warn_if_available_gas_used_with_incompatible_scarb_version(&test_targets)?;
     warn_if_incompatible_rpc_version(&test_targets).await?;
 
+    let not_filtered = sum_test_cases(&test_targets);
     pretty_printing::print_collected_tests_count(not_filtered, &package_name);
 
     let mut summaries = vec![];
@@ -162,6 +165,7 @@ pub async fn run_for_package(
         }
     }
 
+    let filtered = all_tests - not_filtered;
     pretty_printing::print_test_summary(&summaries, filtered);
 
     let any_fuzz_test_was_run = summaries.iter().any(|test_target_summary| {

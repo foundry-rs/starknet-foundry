@@ -14,7 +14,7 @@ fn spy_events_simple() {
             use result::ResultTrait;
             use starknet::ContractAddress;
             use snforge_std::{
-                declare, ContractClassTrait, spy_events, Event,
+                declare, ContractClassTrait, DeclareResultTrait, spy_events, Event,
                 EventSpy, EventSpyTrait, EventSpyAssertionsTrait, EventsFilterTrait
             };
 
@@ -44,7 +44,7 @@ fn spy_events_simple() {
 
             #[test]
             fn spy_events_simple() {
-                let contract = declare("SpyEventsChecker").unwrap();
+                let contract = declare("SpyEventsChecker").unwrap().contract_class();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
 
@@ -86,7 +86,7 @@ fn assert_emitted_fails() {
             use result::ResultTrait;
             use starknet::ContractAddress;
             use snforge_std::{
-                declare, ContractClassTrait, spy_events, Event,
+                declare, DeclareResultTrait, ContractClassTrait, spy_events, Event,
                 EventSpy, EventSpyTrait, EventSpyAssertionsTrait, EventsFilterTrait
             };
 
@@ -116,7 +116,7 @@ fn assert_emitted_fails() {
 
             #[test]
             fn assert_emitted_fails() {
-                let contract = declare("SpyEventsChecker").unwrap();
+                let contract = declare("SpyEventsChecker").unwrap().contract_class();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
 
@@ -163,7 +163,7 @@ fn expect_three_events_while_two_emitted() {
             use starknet::contract_address_const;
             use starknet::ContractAddress;
             use snforge_std::{
-                declare, ContractClassTrait, spy_events, Event,
+                declare, ContractClassTrait, DeclareResultTrait, spy_events, Event,
                 EventSpy, EventSpyTrait, EventSpyAssertionsTrait, EventsFilterTrait
             };
 
@@ -209,7 +209,7 @@ fn expect_three_events_while_two_emitted() {
 
             #[test]
             fn expect_three_events_while_two_emitted() {
-                let contract = declare("SpyEventsChecker").unwrap();
+                let contract = declare("SpyEventsChecker").unwrap().contract_class();
                 let (contract_address, _) = contract.deploy(@array![]).unwrap();
                 let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
 
@@ -276,7 +276,7 @@ fn expect_two_events_while_three_emitted() {
             use starknet::contract_address_const;
             use starknet::ContractAddress;
             use snforge_std::{
-                declare, ContractClassTrait, spy_events, Event,
+                declare, ContractClassTrait, DeclareResultTrait, spy_events, Event,
                 EventSpy, EventSpyTrait, EventSpyAssertionsTrait, EventsFilterTrait
             };
 
@@ -319,7 +319,7 @@ fn expect_two_events_while_three_emitted() {
 
             #[test]
             fn expect_two_events_while_three_emitted() {
-                let contract = declare("SpyEventsChecker").unwrap();
+                let contract = declare("SpyEventsChecker").unwrap().contract_class();
                 let (contract_address, _) = contract.deploy(@array![]).unwrap();
                 let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
 
@@ -368,7 +368,7 @@ fn event_emitted_wrong_data_asserted() {
             use result::ResultTrait;
             use starknet::ContractAddress;
             use snforge_std::{
-                declare, ContractClassTrait, spy_events, Event,
+                declare, ContractClassTrait, DeclareResultTrait, spy_events, Event,
                 EventSpy, EventSpyTrait, EventSpyAssertionsTrait, EventsFilterTrait
             };
 
@@ -398,7 +398,7 @@ fn event_emitted_wrong_data_asserted() {
 
             #[test]
             fn event_emitted_wrong_data_asserted() {
-                let contract = declare("SpyEventsChecker").unwrap();
+                let contract = declare("SpyEventsChecker").unwrap().contract_class();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
 
@@ -449,7 +449,7 @@ fn emit_unnamed_event() {
             use starknet::contract_address_const;
             use starknet::ContractAddress;
             use snforge_std::{
-                declare, ContractClassTrait, spy_events, Event,
+                declare, ContractClassTrait, DeclareResultTrait, spy_events, Event,
                 EventSpy, EventSpyTrait, EventSpyAssertionsTrait, EventsFilterTrait
             };
 
@@ -460,7 +460,7 @@ fn emit_unnamed_event() {
 
             #[test]
             fn emit_unnamed_event() {
-                let contract = declare("SpyEventsChecker").unwrap();
+                let contract = declare("SpyEventsChecker").unwrap().contract_class();
                 let (contract_address, _) = contract.deploy(@array![]).unwrap();
                 let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
 
@@ -497,7 +497,7 @@ fn assert_not_emitted_pass() {
             use result::ResultTrait;
             use starknet::ContractAddress;
             use snforge_std::{
-                declare, ContractClassTrait, spy_events, Event,
+                declare, ContractClassTrait, DeclareResultTrait, spy_events, Event,
                 EventSpy, EventSpyTrait, EventSpyAssertionsTrait, EventsFilterTrait
             };
 
@@ -527,7 +527,7 @@ fn assert_not_emitted_pass() {
 
             #[test]
             fn assert_not_emitted_pass() {
-                let contract = declare("SpyEventsChecker").unwrap();
+                let contract = declare("SpyEventsChecker").unwrap().contract_class();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
 
@@ -566,7 +566,7 @@ fn assert_not_emitted_fails() {
             use result::ResultTrait;
             use starknet::ContractAddress;
             use snforge_std::{
-                declare, ContractClassTrait, spy_events, Event,
+                declare, DeclareResultTrait, ContractClassTrait, spy_events, Event,
                 EventSpy, EventSpyTrait, EventSpyAssertionsTrait, EventsFilterTrait
             };
 
@@ -596,7 +596,7 @@ fn assert_not_emitted_fails() {
 
             #[test]
             fn assert_not_emitted_fails() {
-                let contract = declare("SpyEventsChecker").unwrap();
+                let contract = declare("SpyEventsChecker").unwrap().contract_class();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
 
@@ -641,7 +641,7 @@ fn capture_cairo0_event() {
             use result::ResultTrait;
             use starknet::{{ContractAddress, contract_address_const}};
             use snforge_std::{{
-                declare, ContractClassTrait, spy_events, Event,
+                declare, ContractClassTrait, DeclareResultTrait, spy_events, Event,
                 EventSpy, EventSpyTrait, EventSpyAssertionsTrait, EventsFilterTrait
             }};
 
@@ -677,10 +677,10 @@ fn capture_cairo0_event() {
             }}
 
             #[test]
-            #[fork(url: "{}", block_id: BlockId::Tag(BlockTag::Latest))]
+            #[fork(url: "{}", block_tag: latest)]
             fn capture_cairo0_event() {{
                 let cairo0_contract_address = contract_address_const::<0x2c77ca97586968c6651a533bd5f58042c368b14cf5f526d2f42f670012e10ac>();
-                let contract = declare("SpyEventsChecker").unwrap();
+                let contract = declare("SpyEventsChecker").unwrap().contract_class();
                 let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ISpyEventsCheckerDispatcher {{ contract_address }};
 
@@ -741,7 +741,7 @@ fn test_filtering() {
             use result::ResultTrait;
             use starknet::ContractAddress;
             use snforge_std::{
-                declare, ContractClassTrait, spy_events, Event,
+                declare, ContractClassTrait, DeclareResultTrait, spy_events, Event,
                 EventSpy, EventSpyTrait, EventSpyAssertionsTrait, EventsFilterTrait
             };
 
@@ -771,7 +771,7 @@ fn test_filtering() {
 
             #[test]
             fn filter_events() {
-                let contract = declare("SpyEventsChecker").unwrap();
+                let contract = declare("SpyEventsChecker").unwrap().contract_class();
                 let (first_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
                 let (second_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
 

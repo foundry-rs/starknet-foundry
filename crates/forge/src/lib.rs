@@ -3,7 +3,7 @@ use clap::{Parser, Subcommand, ValueEnum};
 use forge_runner::CACHE_DIR;
 use run_tests::workspace::run_for_workspace;
 use scarb_api::{metadata::MetadataCommandExt, ScarbCommand};
-use scarb_ui::args::PackagesFilter;
+use scarb_ui::args::{FeaturesSpec, PackagesFilter};
 use std::{fs, num::NonZeroU32, thread::available_parallelism};
 use tokio::runtime::Builder;
 use universal_sierra_compiler_api::UniversalSierraCompilerCommand;
@@ -126,13 +126,21 @@ pub struct TestArgs {
     #[arg(long)]
     save_trace_data: bool,
 
-    /// Build profiles of all test which have passed and are not fuzz tests using the cairo-profiler
+    /// Build profiles of all tests which have passed and are not fuzz tests using the cairo-profiler
     #[arg(long)]
     build_profile: bool,
+
+    /// Generate a coverage report for the executed tests which have passed and are not fuzz tests using the cairo-coverage
+    #[arg(long)]
+    coverage: bool,
 
     /// Number of maximum steps during a single test. For fuzz tests this value is applied to each subtest separately.
     #[arg(long)]
     max_n_steps: Option<u32>,
+
+    /// Specify features to enable
+    #[command(flatten)]
+    pub features: FeaturesSpec,
 }
 
 pub enum ExitStatus {

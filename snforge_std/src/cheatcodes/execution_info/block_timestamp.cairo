@@ -5,7 +5,8 @@ use super::{
 /// Changes the block timestamp for the given contract address and span.
 /// - `contract_address` - instance of `ContractAddress` specifying which contract to cheat
 /// - `block_timestamp` - block timestamp to be set
-/// - `span` - instance of `CheatSpan` specifying the number of contract calls with the cheat applied
+/// - `span` - instance of `CheatSpan` specifying the number of contract calls with the cheat
+/// applied
 fn cheat_block_timestamp(contract_address: ContractAddress, block_timestamp: u64, span: CheatSpan) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
@@ -21,7 +22,7 @@ fn cheat_block_timestamp(contract_address: ContractAddress, block_timestamp: u64
 
 /// Changes the block timestamp.
 /// - `block_timestamp` - block timestamp to be set
-fn cheat_block_timestamp_global(block_timestamp: u64) {
+fn start_cheat_block_timestamp_global(block_timestamp: u64) {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
     execution_info.block_info.block_timestamp = Operation::StartGlobal(block_timestamp);
@@ -29,7 +30,7 @@ fn cheat_block_timestamp_global(block_timestamp: u64) {
     cheat_execution_info(execution_info);
 }
 
-/// Cancels the `cheat_block_timestamp_global`.
+/// Cancels the `start_cheat_block_timestamp_global`.
 fn stop_cheat_block_timestamp_global() {
     let mut execution_info: ExecutionInfoMock = Default::default();
 
@@ -45,7 +46,8 @@ fn start_cheat_block_timestamp(contract_address: ContractAddress, block_timestam
     cheat_block_timestamp(contract_address, block_timestamp, CheatSpan::Indefinite);
 }
 
-/// Cancels the `cheat_block_timestamp` / `start_cheat_block_timestamp` for the given contract_address.
+/// Cancels the `cheat_block_timestamp` / `start_cheat_block_timestamp` for the given
+/// contract_address.
 /// - `contract_address` - instance of `ContractAddress` specifying which contract to stop cheating
 fn stop_cheat_block_timestamp(contract_address: ContractAddress) {
     let mut execution_info: ExecutionInfoMock = Default::default();

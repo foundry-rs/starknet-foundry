@@ -1,19 +1,17 @@
 #[cfg(test)]
 mod tests_contract_address {
-    use cairo_felt::{Felt252, PRIME_STR};
+    use cairo_vm::utils::PRIME_STR;
     use conversions::string::{IntoDecStr, TryFromDecStr, TryFromHexStr};
     use conversions::{FromConv, IntoConv};
     use starknet::core::types::FieldElement;
     use starknet_api::core::{ClassHash, EntryPointSelector, Nonce};
+    use starknet_api::core::{ContractAddress, PatriciaKey};
     use starknet_api::hash::StarkHash;
-    use starknet_api::{
-        core::{ContractAddress, PatriciaKey},
-        hash::StarkFelt,
-    };
+    use starknet_types_core::felt::Felt as Felt252;
 
     #[test]
     fn test_contract_address_conversions_happy_case() {
-        let felt: StarkFelt = StarkFelt::new([1u8; 32]).unwrap();
+        let felt = Felt252::from_bytes_be(&[1u8; 32]);
         let contract_address = ContractAddress(PatriciaKey::try_from(felt).unwrap());
 
         assert_eq!(contract_address, ClassHash::from_(contract_address).into_(),);
@@ -27,7 +25,6 @@ mod tests_contract_address {
             contract_address,
             EntryPointSelector::from_(contract_address).into_()
         );
-        assert_eq!(contract_address, StarkFelt::from_(contract_address).into_());
         assert_eq!(contract_address, StarkHash::from_(contract_address).into_());
 
         assert_eq!(
@@ -38,7 +35,7 @@ mod tests_contract_address {
 
     #[test]
     fn test_contract_address_conversions_zero() {
-        let felt: StarkFelt = StarkFelt::new([0u8; 32]).unwrap();
+        let felt = Felt252::ZERO;
         let contract_address = ContractAddress(PatriciaKey::try_from(felt).unwrap());
 
         assert_eq!(contract_address, ClassHash::from_(contract_address).into_(),);
@@ -52,7 +49,6 @@ mod tests_contract_address {
             contract_address,
             EntryPointSelector::from_(contract_address).into_()
         );
-        assert_eq!(contract_address, StarkFelt::from_(contract_address).into_());
         assert_eq!(contract_address, StarkHash::from_(contract_address).into_());
 
         assert_eq!(
@@ -78,7 +74,6 @@ mod tests_contract_address {
             contract_address,
             EntryPointSelector::from_(contract_address).into_()
         );
-        assert_eq!(contract_address, StarkFelt::from_(contract_address).into_());
         assert_eq!(contract_address, StarkHash::from_(contract_address).into_());
 
         // Unknown source for this value, founded by try and error(cairo-lang-runner-2.2.0/src/short_string.rs).

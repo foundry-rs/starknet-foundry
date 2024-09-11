@@ -2,7 +2,7 @@ use crate::scarb::config::ForgeConfigFromScarb;
 use camino::Utf8PathBuf;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use forge_runner::forge_config::{
-    is_vm_trace_needed, ExecutionDataToSave, ForgeConfig, OutputConfig, TestRunnerConfig,
+    ExecutionDataToSave, ForgeConfig, OutputConfig, TestRunnerConfig,
 };
 use rand::{thread_rng, RngCore};
 use std::env;
@@ -18,6 +18,7 @@ pub fn combine_configs(
     detailed_resources: bool,
     save_trace_data: bool,
     build_profile: bool,
+    coverage: bool,
     max_n_steps: Option<u32>,
     contracts_data: ContractsData,
     cache_dir: Utf8PathBuf,
@@ -27,6 +28,7 @@ pub fn combine_configs(
     let execution_data_to_save = ExecutionDataToSave::from_flags(
         save_trace_data || forge_config_from_scarb.save_trace_data,
         build_profile || forge_config_from_scarb.build_profile,
+        coverage || forge_config_from_scarb.coverage,
     );
 
     ForgeConfig {
@@ -39,7 +41,7 @@ pub fn combine_configs(
                 .or(forge_config_from_scarb.fuzzer_seed)
                 .unwrap_or_else(|| thread_rng().next_u64()),
             max_n_steps: max_n_steps.or(forge_config_from_scarb.max_n_steps),
-            is_vm_trace_needed: is_vm_trace_needed(execution_data_to_save),
+            is_vm_trace_needed: execution_data_to_save.is_vm_trace_needed(),
             cache_dir,
             contracts_data,
             environment_variables: env::vars().collect(),
@@ -65,6 +67,7 @@ mod tests {
             false,
             false,
             false,
+            false,
             None,
             Default::default(),
             Default::default(),
@@ -75,6 +78,7 @@ mod tests {
             false,
             None,
             None,
+            false,
             false,
             false,
             false,
@@ -102,6 +106,7 @@ mod tests {
             false,
             false,
             false,
+            false,
             None,
             Default::default(),
             Default::default(),
@@ -123,7 +128,7 @@ mod tests {
                 }),
                 output_config: Arc::new(OutputConfig {
                     detailed_resources: false,
-                    execution_data_to_save: ExecutionDataToSave::None,
+                    execution_data_to_save: ExecutionDataToSave::default(),
                     versioned_programs_dir: Default::default(),
                 }),
             }
@@ -140,6 +145,7 @@ mod tests {
             detailed_resources: true,
             save_trace_data: true,
             build_profile: true,
+            coverage: true,
             max_n_steps: Some(1_000_000),
         };
 
@@ -147,6 +153,7 @@ mod tests {
             false,
             None,
             None,
+            false,
             false,
             false,
             false,
@@ -171,7 +178,11 @@ mod tests {
                 }),
                 output_config: Arc::new(OutputConfig {
                     detailed_resources: true,
-                    execution_data_to_save: ExecutionDataToSave::TraceAndProfile,
+                    execution_data_to_save: ExecutionDataToSave {
+                        trace: true,
+                        profile: true,
+                        coverage: true,
+                    },
                     versioned_programs_dir: Default::default(),
                 }),
             }
@@ -188,12 +199,14 @@ mod tests {
             detailed_resources: false,
             save_trace_data: false,
             build_profile: false,
+            coverage: false,
             max_n_steps: Some(1234),
         };
         let config = combine_configs(
             true,
             Some(NonZeroU32::new(100).unwrap()),
             Some(32),
+            true,
             true,
             true,
             true,
@@ -219,7 +232,11 @@ mod tests {
                 }),
                 output_config: Arc::new(OutputConfig {
                     detailed_resources: true,
-                    execution_data_to_save: ExecutionDataToSave::TraceAndProfile,
+                    execution_data_to_save: ExecutionDataToSave {
+                        trace: true,
+                        profile: true,
+                        coverage: true,
+                    },
                     versioned_programs_dir: Default::default(),
                 }),
             }

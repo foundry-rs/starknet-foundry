@@ -5,6 +5,7 @@ use assert_fs::{
     TempDir,
 };
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
+use cairo_vm::types::builtin_name::BuiltinName;
 use camino::Utf8PathBuf;
 use forge_runner::{
     test_case_summary::{AnyTestCaseSummary, TestCaseSummary},
@@ -73,7 +74,7 @@ impl Contract {
                 sierra = true
 
                 [dependencies]
-                starknet = "2.4.0"
+                starknet = "2.6.4"
                 "#,
             ))
             .unwrap();
@@ -144,6 +145,7 @@ impl<'a> TestCase {
                 [dependencies]
                 starknet = "2.4.0"
                 snforge_std = {{ path = "{}" }}
+                assert_macros = "0.1.0"
                 "#,
                 snforge_std_path
             ))
@@ -327,18 +329,16 @@ pub fn assert_syscall(
 pub fn assert_builtin(
     result: &[TestTargetSummary],
     test_case_name: &str,
-    builtin: &str,
+    builtin: BuiltinName,
     expected_count: usize,
 ) {
     let test_name_suffix = format!("::{test_case_name}");
-    let builtin = builtin.to_string();
-
     let result = TestCase::find_test_result(result);
 
     assert!(result.test_case_summaries.iter().any(|any_case| {
         match any_case {
             AnyTestCaseSummary::Fuzzing(_) => {
-                panic!("Cannot use assert_builtin! for fuzzing tests")
+                panic!("Cannot use assert_builtin for fuzzing tests")
             }
             AnyTestCaseSummary::Single(case) => match case {
                 TestCaseSummary::Passed { used_resources, .. } => {

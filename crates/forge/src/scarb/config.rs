@@ -1,5 +1,4 @@
 use anyhow::{bail, Result};
-use forge_runner::package_tests::raw::RawForkParams;
 use itertools::Itertools;
 use serde::Deserialize;
 use std::{
@@ -21,34 +20,34 @@ pub struct ForgeConfigFromScarb {
     pub detailed_resources: bool,
     /// Save execution traces of all test which have passed and are not fuzz tests
     pub save_trace_data: bool,
-    /// Builds profile of all test which have passed and are not fuzz tests
+    /// Build profiles of all tests which have passed and are not fuzz tests
     pub build_profile: bool,
+    /// Generate a coverage report for the executed tests which have passed and are not fuzz tests
+    pub coverage: bool,
     /// Fork configuration profiles
     pub fork: Vec<ForkTarget>,
     /// Limit of steps
     pub max_n_steps: Option<u32>,
 }
 
+#[non_exhaustive]
 #[derive(Debug, PartialEq, Clone)]
 pub struct ForkTarget {
-    name: String,
-    params: RawForkParams,
+    pub name: String,
+    pub url: String,
+    pub block_id_type: String,
+    pub block_id_value: String,
 }
 
 impl ForkTarget {
     #[must_use]
-    pub fn new(name: String, params: RawForkParams) -> Self {
-        Self { name, params }
-    }
-
-    #[must_use]
-    pub fn name(&self) -> &str {
-        &self.name
-    }
-
-    #[must_use]
-    pub fn params(&self) -> &RawForkParams {
-        &self.params
+    pub fn new(name: String, url: String, block_id_type: String, block_id_value: String) -> Self {
+        Self {
+            name,
+            url,
+            block_id_type,
+            block_id_value,
+        }
     }
 }
 
@@ -70,8 +69,11 @@ pub(crate) struct RawForgeConfig {
     /// Save execution traces of all test which have passed and are not fuzz tests
     pub save_trace_data: bool,
     #[serde(default)]
-    /// Builds profiles of all test which have passed and are not fuzz tests
+    /// Build profiles of all tests which have passed and are not fuzz tests
     pub build_profile: bool,
+    #[serde(default)]
+    /// Generate a coverage report for the executed tests which have passed and are not fuzz tests
+    pub coverage: bool,
     #[serde(default)]
     /// Fork configuration profiles
     pub fork: Vec<RawForkTarget>,
@@ -107,8 +109,8 @@ fn validate_raw_fork_config(raw_config: RawForgeConfig) -> Result<RawForgeConfig
             bail!("block_id = {block_id_key} is not valid. Possible values are = \"number\", \"hash\" and \"tag\"");
         }
 
-        if block_id_key == "tag" && block_id_value != "Latest" {
-            bail!("block_id.tag can only be equal to Latest");
+        if block_id_key == "tag" && block_id_value != "latest" {
+            bail!("block_id.tag can only be equal to latest");
         }
     }
 
@@ -128,11 +130,9 @@ impl TryFrom<RawForgeConfig> for ForgeConfigFromScarb {
 
             fork_targets.push(ForkTarget::new(
                 raw_fork_target.name,
-                RawForkParams {
-                    url: raw_fork_target.url,
-                    block_id_type: block_id_type.to_string(),
-                    block_id_value: block_id_value.clone(),
-                },
+                raw_fork_target.url,
+                block_id_type.to_string(),
+                block_id_value.clone(),
             ));
         }
 
@@ -143,6 +143,7 @@ impl TryFrom<RawForgeConfig> for ForgeConfigFromScarb {
             detailed_resources: value.detailed_resources,
             save_trace_data: value.save_trace_data,
             build_profile: value.build_profile,
+            coverage: value.coverage,
             fork: fork_targets,
             max_n_steps: value.max_n_steps,
         })

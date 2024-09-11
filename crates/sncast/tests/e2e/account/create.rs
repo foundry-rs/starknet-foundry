@@ -1,5 +1,5 @@
-use crate::helpers::constants::{DEVNET_OZ_CLASS_HASH_CAIRO_0, URL};
-use crate::helpers::fixtures::{copy_file, default_cli_args};
+use crate::helpers::constants::{ACCOUNT_FILE_PATH, DEVNET_OZ_CLASS_HASH_CAIRO_0, URL};
+use crate::helpers::fixtures::copy_file;
 use crate::helpers::runner::runner;
 use configuration::copy_config_to_tempdir;
 use indoc::indoc;
@@ -26,12 +26,12 @@ pub async fn test_happy_case(account_type: &str) {
     let accounts_file = "accounts.json";
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "account",
         "create",
+        "--url",
+        URL,
         "--name",
         "my_account",
         "--salt",
@@ -50,7 +50,10 @@ pub async fn test_happy_case(account_type: &str) {
         add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
         address: 0x[..]
         max_fee: [..]
-        message: Account successfully created. Prefund generated address with at least <max_fee> tokens. It is good to send more in the case of higher demand.
+        message: Account successfully created. Prefund generated address with at least <max_fee> STRK tokens or an equivalent amount of ETH tokens. It is good to send more in the case of higher demand.
+
+        To see account creation details, visit:
+        account: [..]
         "},
     );
 
@@ -83,12 +86,12 @@ pub async fn test_invalid_class_hash() {
     let accounts_file = "accounts.json";
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "account",
         "create",
+        "--url",
+        URL,
         "--type",
         "oz",
         "--class-hash",
@@ -117,12 +120,12 @@ pub async fn test_happy_case_generate_salt() {
     let accounts_file = "accounts.json";
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "account",
         "create",
+        "--url",
+        URL,
         "--name",
         "my_account",
         "--class-hash",
@@ -139,6 +142,9 @@ pub async fn test_happy_case_generate_salt() {
         address: 0x[..]
         max_fee: [..]
         message: Account successfully created[..]
+
+        To see account creation details, visit:
+        account: [..]
         "});
 
     let contents = fs::read_to_string(temp_dir.path().join(accounts_file))
@@ -160,12 +166,12 @@ pub async fn test_happy_case_add_profile() {
     let accounts_file = "accounts.json";
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "account",
         "create",
+        "--url",
+        URL,
         "--name",
         "my_account",
         "--add-profile",
@@ -196,12 +202,12 @@ pub async fn test_happy_case_accounts_file_already_exists() {
         temp_dir.path().join(accounts_file),
     );
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "account",
         "create",
+        "--url",
+        URL,
         "--name",
         "my_account",
         "--salt",
@@ -216,6 +222,9 @@ pub async fn test_happy_case_accounts_file_already_exists() {
         address: 0x[..]
         max_fee: [..]
         message: Account successfully created[..]
+
+        To see account creation details, visit:
+        account: [..]
         "});
 
     let contents = fs::read_to_string(temp_dir.path().join(accounts_file))
@@ -231,12 +240,12 @@ pub async fn test_profile_already_exists() {
     let accounts_file = "accounts.json";
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_file,
         "account",
         "create",
+        "--url",
+        URL,
         "--name",
         "myprofile",
         "--add-profile",
@@ -257,10 +266,18 @@ pub async fn test_profile_already_exists() {
 
 #[tokio::test]
 pub async fn test_account_already_exists() {
-    let mut args = default_cli_args();
-    args.append(&mut vec![
-        "account", "create", "--name", "user1", "--salt", "0x1",
-    ]);
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "account",
+        "create",
+        "--url",
+        URL,
+        "--name",
+        "user1",
+        "--salt",
+        "0x1",
+    ];
 
     let snapbox = runner(&args);
     let output = snapbox.assert().success();
@@ -285,14 +302,14 @@ pub async fn test_happy_case_keystore(account_type: &str) {
     env::set_var(CREATE_KEYSTORE_PASSWORD_ENV_VAR, "123");
 
     let args = vec![
-        "--url",
-        URL,
         "--keystore",
         keystore_file,
         "--account",
         account_file,
         "account",
         "create",
+        "--url",
+        URL,
         "--type",
         account_type,
     ];
@@ -305,6 +322,9 @@ pub async fn test_happy_case_keystore(account_type: &str) {
         address: 0x[..]
         max_fee: [..]
         message: Account successfully created[..]
+
+        To see account creation details, visit:
+        account: [..]
     "});
 
     assert!(temp_dir.path().join(keystore_file).exists());
@@ -313,7 +333,7 @@ pub async fn test_happy_case_keystore(account_type: &str) {
         .expect("Unable to read created file");
 
     assert_matches(
-        get_keystore_account_pattern(&account_type.parse().unwrap(), None),
+        get_keystore_account_pattern(account_type.parse().unwrap(), None),
         contents,
     );
 }
@@ -327,8 +347,6 @@ pub async fn test_happy_case_keystore_add_profile() {
     env::set_var(CREATE_KEYSTORE_PASSWORD_ENV_VAR, "123");
 
     let args = vec![
-        "--url",
-        URL,
         "--accounts-file",
         accounts_json_file,
         "--keystore",
@@ -337,6 +355,8 @@ pub async fn test_happy_case_keystore_add_profile() {
         account_file,
         "account",
         "create",
+        "--url",
+        URL,
         "--add-profile",
         "with_keystore",
     ];
@@ -372,12 +392,12 @@ pub async fn test_keystore_without_account() {
     env::set_var(CREATE_KEYSTORE_PASSWORD_ENV_VAR, "123");
 
     let args = vec![
-        "--url",
-        URL,
         "--keystore",
         keystore_file,
         "account",
         "create",
+        "--url",
+        URL,
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
@@ -406,14 +426,14 @@ pub async fn test_keystore_file_already_exists() {
     env::set_var(CREATE_KEYSTORE_PASSWORD_ENV_VAR, "123");
 
     let args = vec![
-        "--url",
-        URL,
         "--keystore",
         keystore_file,
         "--account",
         account_file,
         "account",
         "create",
+        "--url",
+        URL,
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
@@ -443,14 +463,14 @@ pub async fn test_keystore_account_file_already_exists() {
     env::set_var(CREATE_KEYSTORE_PASSWORD_ENV_VAR, "123");
 
     let args = vec![
-        "--url",
-        URL,
         "--keystore",
         keystore_file,
         "--account",
         account_file,
         "account",
         "create",
+        "--url",
+        URL,
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
@@ -474,8 +494,6 @@ pub async fn test_happy_case_keystore_int_format() {
     env::set_var(CREATE_KEYSTORE_PASSWORD_ENV_VAR, "123");
 
     let args = vec![
-        "--url",
-        URL,
         "--keystore",
         keystore_file,
         "--account",
@@ -483,6 +501,8 @@ pub async fn test_happy_case_keystore_int_format() {
         "--int-format",
         "account",
         "create",
+        "--url",
+        URL,
         "--class-hash",
         DEVNET_OZ_CLASS_HASH_CAIRO_0,
         "--type",
@@ -497,6 +517,9 @@ pub async fn test_happy_case_keystore_int_format() {
         address: [..]
         max_fee: [..]
         message: Account successfully created[..]
+
+        To see account creation details, visit:
+        account: [..]
     "});
 
     let contents = fs::read_to_string(temp_dir.path().join(account_file))
@@ -516,8 +539,6 @@ pub async fn test_happy_case_keystore_hex_format() {
     env::set_var(CREATE_KEYSTORE_PASSWORD_ENV_VAR, "123");
 
     let args = vec![
-        "--url",
-        URL,
         "--keystore",
         keystore_file,
         "--account",
@@ -525,6 +546,8 @@ pub async fn test_happy_case_keystore_hex_format() {
         "--hex-format",
         "account",
         "create",
+        "--url",
+        URL,
     ];
 
     let snapbox = runner(&args).current_dir(temp_dir.path());
@@ -535,6 +558,9 @@ pub async fn test_happy_case_keystore_hex_format() {
         address: 0x[..]
         max_fee: 0x[..]
         message: Account successfully created[..]
+
+        To see account creation details, visit:
+        account: [..]
     "});
 
     let contents = fs::read_to_string(temp_dir.path().join(account_file))
@@ -552,9 +578,9 @@ fn get_formatted_account_type(account_type: &str) -> &str {
     }
 }
 
-fn get_keystore_account_pattern(account_type: &AccountType, class_hash: Option<&str>) -> String {
+fn get_keystore_account_pattern(account_type: AccountType, class_hash: Option<&str>) -> String {
     let account_json = match account_type {
-        AccountType::Oz => {
+        AccountType::OpenZeppelin => {
             json!(
                 {
                     "version": 1,

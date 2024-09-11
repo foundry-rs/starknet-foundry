@@ -1,8 +1,8 @@
-use super::common::runner::setup_package;
-use snapbox::cmd::{cargo_bin, Command as SnapboxCommand, OutputAssert};
+use super::common::runner::{setup_package, snforge_test_bin_path};
+use snapbox::cmd::{Command as SnapboxCommand, OutputAssert};
 
 fn runner_color(value: &str) -> SnapboxCommand {
-    SnapboxCommand::new(cargo_bin!("snforge"))
+    SnapboxCommand::new(snforge_test_bin_path())
         .arg("test")
         .arg("--color")
         .arg(value)
@@ -26,6 +26,7 @@ fn color_always() {
 }
 
 #[test]
+#[ignore] // TODO(2356): Fix this test, compiling of snforge_scarb_plugin is causing issues, but only in CI
 fn color_never() {
     let temp = setup_package("simple_package");
     let snapbox = runner_color("never");

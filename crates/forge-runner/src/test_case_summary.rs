@@ -3,12 +3,13 @@ use crate::build_trace_data::test_sierra_program_path::VersionedProgramPath;
 use crate::expected_result::{ExpectedPanicValue, ExpectedTestResult};
 use crate::gas::check_available_gas;
 use crate::package_tests::with_config_resolved::TestCaseWithResolvedConfig;
-use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{RunResult, RunResultValue};
+use cairo_vm::Felt252;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::state::CallTrace as InternalCallTrace;
+use conversions::byte_array::ByteArray;
 use num_traits::Pow;
 use shared::utils::build_readable_text;
 use std::cell::RefCell;
@@ -253,7 +254,7 @@ impl TestCaseSummary<Single> {
                     test_statistics: (),
                 },
                 ExpectedTestResult::Panics(panic_expectation) => match panic_expectation {
-                    ExpectedPanicValue::Exact(expected) if &value != expected => {
+                    ExpectedPanicValue::Exact(expected) if !is_matching(&value, expected) => {
                         TestCaseSummary::Failed {
                             name,
                             msg,
@@ -287,6 +288,20 @@ fn join_short_strings(data: &[Felt252]) -> String {
         .join(", ")
 }
 
+fn is_matching(data: &[Felt252], pattern: &[Felt252]) -> bool {
+    let data_str = convert_felts_to_byte_array_string(data);
+    let pattern_str = convert_felts_to_byte_array_string(pattern);
+
+    if let (Some(data), Some(pattern)) = (data_str, pattern_str) {
+        data.contains(&pattern) // If both data and pattern are byte arrays, pattern should be a substring of data
+    } else {
+        data == pattern // Otherwise, data should be equal to pattern
+    }
+}
+fn convert_felts_to_byte_array_string(data: &[Felt252]) -> Option<String> {
+    ByteArray::deserialize_with_magic(data).map(Into::into).ok()
+}
+
 /// Returns a string with the data that was produced by the test case.
 /// If the test was expected to fail with specific data e.g. `#[should_panic(expected: ('data',))]`
 /// and failed to do so, it returns a string comparing the panic data and the expected data.
@@ -316,10 +331,12 @@ fn extract_result_data(run_result: &RunResult, expectation: &ExpectedTestResult)
             };
 
             match expected_data {
-                Some(expected) if expected == panic_data => None,
+                Some(expected) if is_matching(panic_data, expected) => None,
                 Some(expected) => {
-                    let panic_string = join_short_strings(panic_data);
-                    let expected_string = join_short_strings(expected);
+                    let panic_string = convert_felts_to_byte_array_string(panic_data)
+                        .unwrap_or_else(|| join_short_strings(panic_data));
+                    let expected_string = convert_felts_to_byte_array_string(expected)
+                        .unwrap_or_else(|| join_short_strings(expected));
 
                     Some(format!(
                         "\n    Incorrect panic data\n    {}\n    {}\n",

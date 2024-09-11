@@ -29,32 +29,25 @@ pub struct OutputConfig {
     pub versioned_programs_dir: Utf8PathBuf,
 }
 
-#[derive(Debug, PartialEq, Clone, Copy)]
-pub enum ExecutionDataToSave {
-    None,
-    Trace,
-    /// Profile data requires saved trace data
-    TraceAndProfile,
+#[derive(Debug, PartialEq, Clone, Copy, Default)]
+pub struct ExecutionDataToSave {
+    pub trace: bool,
+    pub profile: bool,
+    pub coverage: bool,
 }
 
 impl ExecutionDataToSave {
     #[must_use]
-    pub fn from_flags(save_trace_data: bool, build_profile: bool) -> Self {
-        if build_profile {
-            return ExecutionDataToSave::TraceAndProfile;
+    pub fn from_flags(save_trace_data: bool, build_profile: bool, coverage: bool) -> Self {
+        Self {
+            trace: save_trace_data,
+            profile: build_profile,
+            coverage,
         }
-        if save_trace_data {
-            return ExecutionDataToSave::Trace;
-        }
-        ExecutionDataToSave::None
     }
-}
-
-#[must_use]
-pub fn is_vm_trace_needed(execution_data_to_save: ExecutionDataToSave) -> bool {
-    match execution_data_to_save {
-        ExecutionDataToSave::Trace | ExecutionDataToSave::TraceAndProfile => true,
-        ExecutionDataToSave::None => false,
+    #[must_use]
+    pub fn is_vm_trace_needed(&self) -> bool {
+        self.trace || self.profile || self.coverage
     }
 }
 

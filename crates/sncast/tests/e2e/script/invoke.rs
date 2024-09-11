@@ -7,6 +7,7 @@ use test_case::test_case;
 
 #[test_case("oz_cairo_0"; "cairo_0_account")]
 #[test_case("oz_cairo_1"; "cairo_1_account")]
+#[test_case("oz"; "oz_account")]
 #[test_case("argent"; "argent_account")]
 #[test_case("braavos"; "braavos_account")]
 #[tokio::test]
@@ -21,11 +22,11 @@ async fn test_max_fee_too_low(account: &str) {
         accounts_json_path.as_str(),
         "--account",
         account,
-        "--url",
-        URL,
         "script",
         "run",
         &script_name,
+        "--url",
+        URL,
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
@@ -53,11 +54,11 @@ async fn test_contract_does_not_exist() {
         accounts_json_path.as_str(),
         "--account",
         "user4",
-        "--url",
-        URL,
         "script",
         "run",
         &script_name,
+        "--url",
+        URL,
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
@@ -66,8 +67,12 @@ async fn test_contract_does_not_exist() {
     assert_stdout_contains(
         output,
         indoc! {r#"
-        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::ContractError(ErrorData { msg: "Error in the called contract ([..]):
-        Got an exception while executing a hint: Requested contract address ContractAddress(PatriciaKey(StarkFelt("[..]"))) is not deployed.
+        [..]
+        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::ContractError(ErrorData { msg: "Transaction execution has failed:
+        [..]
+        [..]: Error in the called contract ([..]):
+        Requested contract address [..] is not deployed.
+        " })))
         command: script run
         status: success
         "#},
@@ -86,11 +91,11 @@ fn test_wrong_function_name() {
         accounts_json_path.as_str(),
         "--account",
         "user4",
-        "--url",
-        URL,
         "script",
         "run",
         &script_name,
+        "--url",
+        URL,
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
@@ -99,8 +104,12 @@ fn test_wrong_function_name() {
     assert_stdout_contains(
         output,
         indoc! {r#"
-        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::ContractError(ErrorData { msg: "Error in the called contract ([..]):
-        Got an exception while executing a hint: Entry point EntryPointSelector(StarkFelt("[..]")) not found in contract.
+        [..]
+        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::ContractError(ErrorData { msg: "Transaction execution has failed:
+        [..]
+        [..]: Error in the called contract ([..]):
+        Entry point EntryPointSelector([..]) not found in contract.
+        " })))
         command: script run
         status: success
         "#},
@@ -119,11 +128,11 @@ fn test_wrong_calldata() {
         accounts_json_path.as_str(),
         "--account",
         "user4",
-        "--url",
-        URL,
         "script",
         "run",
         &script_name,
+        "--url",
+        URL,
     ];
 
     let snapbox = runner(&args).current_dir(script_dir.path());
@@ -132,8 +141,12 @@ fn test_wrong_calldata() {
     assert_stdout_contains(
         output,
         indoc! {r#"
-        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::ContractError(ErrorData { msg: "Error in the called contract ([..]):
-        Got an exception while executing a hint: Execution failed. Failure reason: [..] ('Failed to deserialize param #2').
+        [..]
+        ScriptCommandError::ProviderError(ProviderError::StarknetError(StarknetError::ContractError(ErrorData { msg: "Transaction execution has failed:
+        [..]
+        [..]: Error in the called contract ([..]):
+        Execution failed. Failure reason: [..] ('Failed to deserialize param #2').
+        " })))
         command: script run
         status: success
         "#},

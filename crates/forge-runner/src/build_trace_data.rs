@@ -10,18 +10,16 @@ use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::entry_point::{CallEntryPoint, CallType};
 use blockifier::execution::syscalls::hint_processor::SyscallCounter;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
-use cairo_vm::vm::trace::trace_entry::TraceEntry;
+use cairo_vm::vm::trace::trace_entry::RelocatedTraceEntry;
 use camino::Utf8PathBuf;
 use cheatnet::constants::{TEST_CONTRACT_CLASS_HASH, TEST_ENTRY_POINT_SELECTOR};
 use cheatnet::runtime_extensions::forge_runtime_extension::contracts_data::ContractsData;
 use cheatnet::state::{CallTrace, CallTraceNode};
+use conversions::string::TryFromHexStr;
 use conversions::IntoConv;
-use itertools::Itertools;
 use starknet::core::utils::get_selector_from_name;
-use starknet_api::class_hash;
 use starknet_api::core::{ClassHash, EntryPointSelector};
 use starknet_api::deprecated_contract_class::EntryPointType;
-use starknet_api::hash::StarkHash;
 use trace_data::{
     CairoExecutionInfo, CallEntryPoint as ProfilerCallEntryPoint, CallTrace as ProfilerCallTrace,
     CallTraceNode as ProfilerCallTraceNode, CallType as ProfilerCallType, CasmLevelInfo,
@@ -33,7 +31,7 @@ use trace_data::{
 
 pub mod test_sierra_program_path;
 
-pub const TRACE_DIR: &str = ".snfoundry_trace";
+pub const TRACE_DIR: &str = "snfoundry_trace";
 
 pub const TEST_CODE_CONTRACT_NAME: &str = "SNFORGE_TEST_CODE";
 pub const TEST_CODE_FUNCTION_NAME: &str = "SNFORGE_TEST_CODE_FUNCTION";
@@ -46,12 +44,10 @@ pub fn build_profiler_call_trace(
     let value = value.borrow();
 
     let entry_point = build_profiler_call_entry_point(value.entry_point.clone(), contracts_data);
-    let vm_trace = value.vm_trace.as_ref().map(|trace_data| {
-        trace_data
-            .iter()
-            .map(build_profiler_trace_entry)
-            .collect_vec()
-    });
+    let vm_trace = value
+        .vm_trace
+        .as_ref()
+        .map(|trace_data| trace_data.iter().map(build_profiler_trace_entry).collect());
     let cairo_execution_info = build_cairo_execution_info(
         &value.entry_point,
         vm_trace,
@@ -148,7 +144,11 @@ pub fn build_profiler_execution_resources(
         vm_resources: VmExecutionResources {
             n_steps: execution_resources.n_steps,
             n_memory_holes: execution_resources.n_memory_holes,
-            builtin_instance_counter: execution_resources.builtin_instance_counter,
+            builtin_instance_counter: execution_resources
+                .builtin_instance_counter
+                .into_iter()
+                .map(|(key, value)| (key.to_str_with_suffix().to_owned(), value))
+                .collect(),
         },
         syscall_counter: profiler_syscall_counter,
     }
@@ -187,7 +187,7 @@ fn get_contract_name(
     class_hash: Option<ClassHash>,
     contracts_data: &ContractsData,
 ) -> Option<String> {
-    if class_hash == Some(class_hash!(TEST_CONTRACT_CLASS_HASH)) {
+    if class_hash == Some(TryFromHexStr::try_from_hex_str(TEST_CONTRACT_CLASS_HASH).unwrap()) {
         Some(String::from(TEST_CODE_CONTRACT_NAME))
     } else {
         class_hash
@@ -285,6 +285,9 @@ fn build_profiler_deprecated_syscall_selector(
         }
         DeprecatedSyscallSelector::StorageRead => ProfilerDeprecatedSyscallSelector::StorageRead,
         DeprecatedSyscallSelector::StorageWrite => ProfilerDeprecatedSyscallSelector::StorageWrite,
+        DeprecatedSyscallSelector::Sha256ProcessBlock => {
+            ProfilerDeprecatedSyscallSelector::Sha256ProcessBlock
+        }
     }
 }
 
@@ -295,7 +298,7 @@ fn build_profiler_call_type(value: CallType) -> ProfilerCallType {
     }
 }
 
-fn build_profiler_trace_entry(value: &TraceEntry) -> ProfilerTraceEntry {
+fn build_profiler_trace_entry(value: &RelocatedTraceEntry) -> ProfilerTraceEntry {
     ProfilerTraceEntry {
         pc: value.pc,
         ap: value.ap,
