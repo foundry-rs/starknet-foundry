@@ -51,7 +51,7 @@ Shortstring:
 Array of shortstrings:
 
 ```rust
-#[should_panic(expected: ('panic message', 'second message', )]
+# [should_panic(expected: ('panic message', 'second message', )]
 ```
 
 Asserting that the function panics (any with any panic data):
@@ -81,8 +81,8 @@ Read more about fork testing [here](../snforge-advanced-features/fork-testing.md
 
 #### Usage
 
-Configures the fork endpoint with given URL/ID of a URL and a reference point for forking - block number,
-block hash, or a named tag (only "latest" being supported).
+Configures the fork endpoint with a given URL and a reference point for forking, which can be a block number, block
+hash, or a named tag (only "latest" is supported).
 
 | Reference Type | Example Usage                                                   |
 |----------------|-----------------------------------------------------------------|
