@@ -84,23 +84,11 @@ Read more about fork testing [here](../snforge-advanced-features/fork-testing.md
 Configures the fork endpoint with given URL/ID of a URL and a reference point for forking - block number,
 block hash, or a named tag (only "latest" being supported).
 
-Usage with `block_number` as the reference:
-
-```rust
-#[fork(url: "http://example.com", block_number: 123)]
-```
-
-Usage with `block_hash` as the reference:
-
-```rust
-#[fork(url: "http://example.com", block_hash: 0x123deadbeef)]
-```
-
-Usage with `block_tag` as the reference:
-
-```rust
-#[fork(url: "http://example.com", block_tag: latest)]
-```
+| Reference Type | Example Usage                                                   |
+|----------------|-----------------------------------------------------------------|
+| `block_number` | `#[fork(url: "http://example.com", block_number: 123)]`         |
+| `block_hash`   | `#[fork(url: "http://example.com", block_hash: 0x123deadbeef)]` |
+| `block_tag`    | `#[fork(url: "http://example.com", block_tag: latest)]`         |
 
 You can also define your frequently used fork configs in your `Scarb.toml`:
 
