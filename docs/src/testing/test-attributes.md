@@ -48,7 +48,7 @@ Shortstring:
 #[should_panic(expected: 'panic message')]
 ```
 
-Array of shortstrings:
+Tuple of shortstrings:
 
 ```rust
 #[should_panic(expected: ('panic message', 'second message', )]
