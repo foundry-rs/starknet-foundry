@@ -1,7 +1,7 @@
 ## Test Attributes
 
 
-`snforge` allows setting some test attributes for test cases, in order to modify their behavior. 
+`snforge` allows setting test attributes for test cases in order to modify their behavior. 
 
 Currently, those attributes are supported:
  
@@ -35,7 +35,7 @@ Moreover, it can be used with either a tuple of shortstrings or a string for ass
 #### Usage
 Asserting the panic data can be done with multiple types of inputs:
 
-Bytearray: 
+`ByteArray`: 
 ```rust
 #[should_panic(expected: "No such file or directory (os error 2)")]
 ```
@@ -95,15 +95,15 @@ Usage with `block_tag` as the reference:
 #[fork(url: "http://example.com", block_tag: latest)]
 ```
 
-Or if you define fork config in your `Scarb.toml` like this:
+You can also define your frequently used fork configs in your `Scarb.toml`:
 ```toml
 [[tool.snforge.fork]]
 name = "TESTNET"
 url = "http://your.rpc.url"
-block_id.tag = "Latest"
+block_id.tag = "latest"
 ```
 
-You can reference it by the name in the tag, so you don't have to repeat yourself.
+Then, instead of repeating them inside the attribute, you can reference them by the given name of the config declared in `Scarb.toml`:
 ```rust
 #[fork("TESTNET")] 
 ```
@@ -123,9 +123,11 @@ Configures how many runs will be performed, and the starting seed (for repeatabi
 #[fuzzer(runs: 10, seed: 123)]
 ```
 
-Both parameters (or just one of them as well) can be omitted like this:
+Any parameter of `fuzzer` attribute can be omitted:
 ```rust
 #[fuzzer]
+#[fuzzer(runs: 10)]
+#[fuzzer(seed: 123)]
 ```
 And will be filled in with default values in that case.
 
