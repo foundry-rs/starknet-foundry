@@ -51,7 +51,7 @@ Shortstring:
 Array of shortstrings:
 
 ```rust
-# [should_panic(expected: ('panic message', 'second message', )]
+#[should_panic(expected: ('panic message', 'second message', )]
 ```
 
 Asserting that the function panics (any with any panic data):
