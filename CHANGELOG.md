@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast
+
+- Explorer links displayed upon committing transations are now properly formatted
+
 ## [0.29.0] - 2024-08-28
 
 ### Forge
