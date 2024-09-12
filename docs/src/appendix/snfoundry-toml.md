@@ -22,7 +22,6 @@ The required fields are:
 - [`url`](#url)
 - [`account`](#account)
 - [`accounts_file`](#accounts_file)
-- [`wait_params`](#wait_params)
 
 ### `url`
 
@@ -62,7 +61,7 @@ keystore = "path/to/keystore"
 
 ### `wait_params`
 
-The `wait_params` field specifies the parameters for waiting during transactions.
+The `wait_params` field specifies the parameters for waiting during transactions. This is an optional field with default values of `timeout = 300` and `retry_interval = 5`.
 
 ```toml
 [sncast.myprofile]
