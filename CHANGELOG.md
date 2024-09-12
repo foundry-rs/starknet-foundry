@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Fixed
 
-- Explorer links displayed upon committing transations are now properly formatted
+- Explorer links displayed upon committing transactions are now properly formatted
 
 ### Forge
 
