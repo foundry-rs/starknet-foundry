@@ -2,6 +2,7 @@ use crate::CAIRO_EDITION;
 use anyhow::{anyhow, Context, Ok, Result};
 use include_dir::{include_dir, Dir};
 use scarb_api::ScarbCommand;
+use semver::Version;
 use std::env;
 use std::fs::{self, OpenOptions};
 use std::io::Write;
@@ -9,6 +10,9 @@ use std::path::Path;
 use toml_edit::{value, ArrayOfTables, DocumentMut, Item, Table};
 
 static TEMPLATE: Dir = include_dir!("starknet_forge_template");
+
+const DEFAULT_ASSERT_MACROS: Version = Version::new(0, 1, 0);
+const MINIMAL_SCARB_FOR_CORRESPONDING_ASSERT_MACROS: Version = Version::new(2, 8, 0);
 
 fn overwrite_files_from_scarb_template(
     dir_to_overwrite: &str,
@@ -40,7 +44,7 @@ fn replace_project_name(contents: &[u8], project_name: &str) -> Result<Vec<u8>> 
     Ok(contents.into_bytes())
 }
 
-fn update_config(config_path: &Path) -> Result<()> {
+fn update_config(config_path: &Path, scarb: &Version) -> Result<()> {
     let config_file = fs::read_to_string(config_path)?;
     let mut document = config_file
         .parse::<DocumentMut>()
@@ -49,6 +53,7 @@ fn update_config(config_path: &Path) -> Result<()> {
     add_target_to_toml(&mut document);
     set_cairo_edition(&mut document, CAIRO_EDITION);
     add_test_script(&mut document);
+    add_assert_macros(&mut document, scarb)?;
 
     fs::write(config_path, document.to_string())?;
 
@@ -79,6 +84,22 @@ fn set_cairo_edition(document: &mut DocumentMut, cairo_edition: &str) {
     document["package"]["edition"] = value(cairo_edition);
 }
 
+fn add_assert_macros(document: &mut DocumentMut, scarb: &Version) -> Result<()> {
+    let version = if scarb < &MINIMAL_SCARB_FOR_CORRESPONDING_ASSERT_MACROS {
+        &DEFAULT_ASSERT_MACROS
+    } else {
+        scarb
+    };
+
+    document
+        .get_mut("dev-dependencies")
+        .and_then(|dep| dep.as_table_mut())
+        .context("Failed to get dev-dependencies from Scarb.toml")?
+        .insert("assert_macros", value(version.to_string()));
+
+    Ok(())
+}
+
 fn extend_gitignore(path: &Path) -> Result<()> {
     let mut file = OpenOptions::new()
         .append(true)
@@ -102,19 +123,20 @@ pub fn run(project_name: &str) -> Result<()> {
             .env("SCARB_INIT_TEST_RUNNER", "cairo-test")
             .run()
             .context("Failed to initialize a new project")?;
+
+        ScarbCommand::new_with_stdio()
+            .current_dir(&project_path)
+            .manifest_path(manifest_path.clone())
+            .offline()
+            .arg("remove")
+            .arg("--dev")
+            .arg("cairo_test")
+            .run()
+            .context("Failed to remove cairo_test")?;
     }
 
-    ScarbCommand::new_with_stdio()
-        .current_dir(&project_path)
-        .manifest_path(manifest_path.clone())
-        .offline()
-        .arg("remove")
-        .arg("--dev")
-        .arg("cairo_test")
-        .run()
-        .context("Failed to remove cairo_test")?;
-
     let version = env!("CARGO_PKG_VERSION");
+    let cairo_version = ScarbCommand::version().run()?.cairo;
 
     if env::var("DEV_DISABLE_SNFORGE_STD_DEPENDENCY").is_err() {
         ScarbCommand::new_with_stdio()
@@ -132,8 +154,6 @@ pub fn run(project_name: &str) -> Result<()> {
             .context("Failed to add snforge_std")?;
     }
 
-    let cairo_version = ScarbCommand::version().run()?.cairo;
-
     ScarbCommand::new_with_stdio()
         .current_dir(&project_path)
         .manifest_path(manifest_path.clone())
@@ -143,7 +163,7 @@ pub fn run(project_name: &str) -> Result<()> {
         .run()
         .context("Failed to add starknet")?;
 
-    update_config(&project_path.join("Scarb.toml"))?;
+    update_config(&project_path.join("Scarb.toml"), &cairo_version)?;
     extend_gitignore(&project_path)?;
     overwrite_files_from_scarb_template("src", &project_path, project_name)?;
     overwrite_files_from_scarb_template("tests", &project_path, project_name)?;

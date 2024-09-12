@@ -33,19 +33,21 @@ pub struct OutputConfig {
 pub struct ExecutionDataToSave {
     pub trace: bool,
     pub profile: bool,
+    pub coverage: bool,
 }
 
 impl ExecutionDataToSave {
     #[must_use]
-    pub fn from_flags(save_trace_data: bool, build_profile: bool) -> Self {
+    pub fn from_flags(save_trace_data: bool, build_profile: bool, coverage: bool) -> Self {
         Self {
             trace: save_trace_data,
             profile: build_profile,
+            coverage,
         }
     }
     #[must_use]
     pub fn is_vm_trace_needed(&self) -> bool {
-        self.trace || self.profile
+        self.trace || self.profile || self.coverage
     }
 }
 
