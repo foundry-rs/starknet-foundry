@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use starknet_crypto::FieldElement;
+use starknet::core::types::Felt;
 
 use crate::{response::explorer_link::ExplorerError, Network};
 
@@ -33,9 +33,9 @@ impl Service {
 }
 
 pub trait LinkProvider {
-    fn transaction(&self, hash: FieldElement) -> String;
-    fn class(&self, hash: FieldElement) -> String;
-    fn contract(&self, address: FieldElement) -> String;
+    fn transaction(&self, hash: Felt) -> String;
+    fn class(&self, hash: Felt) -> String;
+    fn contract(&self, address: Felt) -> String;
 }
 
 const fn network_mixin(network: Network) -> &'static str {
@@ -50,21 +50,21 @@ pub struct StarkScan {
 }
 
 impl LinkProvider for StarkScan {
-    fn transaction(&self, hash: FieldElement) -> String {
+    fn transaction(&self, hash: Felt) -> String {
         format!(
             "https://{}{STARKSCAN}/{hash:#x}",
             network_mixin(self.network)
         )
     }
 
-    fn class(&self, hash: FieldElement) -> String {
+    fn class(&self, hash: Felt) -> String {
         format!(
             "https://{}{STARKSCAN}/{hash:#x}",
             network_mixin(self.network)
         )
     }
 
-    fn contract(&self, address: FieldElement) -> String {
+    fn contract(&self, address: Felt) -> String {
         format!(
             "https://{}{STARKSCAN}/{address:#x}",
             network_mixin(self.network)
@@ -77,21 +77,21 @@ pub struct Voyager {
 }
 
 impl LinkProvider for Voyager {
-    fn transaction(&self, hash: FieldElement) -> String {
+    fn transaction(&self, hash: Felt) -> String {
         format!(
             "https://{}{VOYAGER}/tx/{hash:#x}",
             network_mixin(self.network)
         )
     }
 
-    fn class(&self, hash: FieldElement) -> String {
+    fn class(&self, hash: Felt) -> String {
         format!(
             "https://{}{VOYAGER}/class/{hash:#x}",
             network_mixin(self.network)
         )
     }
 
-    fn contract(&self, address: FieldElement) -> String {
+    fn contract(&self, address: Felt) -> String {
         format!(
             "https://{}{VOYAGER}/contract/{address:#x}",
             network_mixin(self.network)
@@ -102,15 +102,15 @@ impl LinkProvider for Voyager {
 pub struct ViewBlock;
 
 impl LinkProvider for ViewBlock {
-    fn transaction(&self, hash: FieldElement) -> String {
+    fn transaction(&self, hash: Felt) -> String {
         format!("{VIEWBLOCK}/tx/{hash:#x}")
     }
 
-    fn class(&self, hash: FieldElement) -> String {
+    fn class(&self, hash: Felt) -> String {
         format!("{VIEWBLOCK}/class/{hash:#x}")
     }
 
-    fn contract(&self, address: FieldElement) -> String {
+    fn contract(&self, address: Felt) -> String {
         format!("{VIEWBLOCK}/contract/{address:#x}")
     }
 }
@@ -118,15 +118,15 @@ impl LinkProvider for ViewBlock {
 pub struct OkLink;
 
 impl LinkProvider for OkLink {
-    fn transaction(&self, hash: FieldElement) -> String {
+    fn transaction(&self, hash: Felt) -> String {
         format!("{OKLINK}/tx/{hash:#x}")
     }
 
-    fn class(&self, hash: FieldElement) -> String {
+    fn class(&self, hash: Felt) -> String {
         format!("{OKLINK}/class/{hash:#x}")
     }
 
-    fn contract(&self, address: FieldElement) -> String {
+    fn contract(&self, address: Felt) -> String {
         format!("{OKLINK}/contract/{address:#x}")
     }
 }
@@ -134,15 +134,15 @@ impl LinkProvider for OkLink {
 pub struct NftScan;
 
 impl LinkProvider for NftScan {
-    fn transaction(&self, hash: FieldElement) -> String {
+    fn transaction(&self, hash: Felt) -> String {
         format!("{NFTSCAN}/{hash:#x}")
     }
 
-    fn class(&self, hash: FieldElement) -> String {
+    fn class(&self, hash: Felt) -> String {
         format!("{NFTSCAN}/{hash:#x}")
     }
 
-    fn contract(&self, address: FieldElement) -> String {
+    fn contract(&self, address: Felt) -> String {
         format!("{NFTSCAN}/{address:#x}")
     }
 }

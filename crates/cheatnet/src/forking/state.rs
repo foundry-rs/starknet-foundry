@@ -16,7 +16,7 @@ use flate2::read::GzDecoder;
 use num_bigint::BigUint;
 use runtime::starknet::context::SerializableGasPrices;
 use starknet::core::types::{
-    BlockId, ContractClass as ContractClassStarknet, FieldElement, MaybePendingBlockWithTxHashes,
+    BlockId, ContractClass as ContractClassStarknet, Felt, MaybePendingBlockWithTxHashes,
     StarknetError,
 };
 use starknet::core::utils::parse_cairo_short_string;
@@ -127,8 +127,8 @@ impl StateReader for ForkStateReader {
         }
 
         match self.runtime.block_on(self.client.get_storage_at(
-            FieldElement::from_(contract_address),
-            FieldElement::from_(*key.0.key()),
+            Felt::from_(contract_address),
+            Felt::from_(*key.0.key()),
             self.block_id(),
         )) {
             Ok(value) => {
@@ -152,7 +152,7 @@ impl StateReader for ForkStateReader {
 
         match self.runtime.block_on(
             self.client
-                .get_nonce(self.block_id(), FieldElement::from_(contract_address)),
+                .get_nonce(self.block_id(), Felt::from_(contract_address)),
         ) {
             Ok(nonce) => {
                 let nonce = nonce.into_();
@@ -178,7 +178,7 @@ impl StateReader for ForkStateReader {
 
         match self.runtime.block_on(
             self.client
-                .get_class_hash_at(self.block_id(), FieldElement::from_(contract_address)),
+                .get_class_hash_at(self.block_id(), Felt::from_(contract_address)),
         ) {
             Ok(class_hash) => {
                 let class_hash = class_hash.into_();
@@ -209,7 +209,7 @@ impl StateReader for ForkStateReader {
             } else {
                 match self.runtime.block_on(
                     self.client
-                        .get_class(self.block_id(), FieldElement::from_(class_hash)),
+                        .get_class(self.block_id(), Felt::from_(class_hash)),
                 ) {
                     Ok(contract_class) => {
                         Ok(cache.insert_compiled_contract_class(class_hash, contract_class))

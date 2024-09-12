@@ -1,8 +1,10 @@
 use anyhow::{bail, ensure, Result};
 use clap::{Args, ValueEnum};
 use conversions::serde::deserialize::CairoDeserialize;
-use starknet::core::types::{BlockId, FieldElement};
+use conversions::TryIntoConv;
+use starknet::core::types::{BlockId, Felt};
 use starknet::providers::Provider;
+use starknet_types_core::felt::NonZeroFelt;
 
 #[derive(Args, Debug, Clone)]
 pub struct FeeArgs {
@@ -12,15 +14,15 @@ pub struct FeeArgs {
 
     /// Max fee for the transaction. If not provided, will be automatically estimated.
     #[clap(short, long)]
-    pub max_fee: Option<FieldElement>,
+    pub max_fee: Option<Felt>,
 
     /// Max gas amount. If not provided, will be automatically estimated. (Only for STRK fee payment)
     #[clap(long)]
-    pub max_gas: Option<FieldElement>,
+    pub max_gas: Option<Felt>,
 
     /// Max gas price in Fri. If not provided, will be automatically estimated. (Only for STRK fee payment)
     #[clap(long)]
-    pub max_gas_unit_price: Option<FieldElement>,
+    pub max_gas_unit_price: Option<Felt>,
 }
 
 impl From<ScriptFeeSettings> for FeeArgs {
@@ -88,31 +90,44 @@ impl FeeArgs {
                         bail!("--max-fee should be greater than or equal to --max-gas-unit-price")
                     }
                     (None, _, _) => FeeSettings::Strk {
-                        max_gas: self.max_gas.map(TryInto::try_into).transpose()?,
+                        max_gas: self.max_gas.map(TryIntoConv::try_into_).transpose()?,
                         max_gas_unit_price: self
                             .max_gas_unit_price
-                            .map(TryInto::try_into)
+                            .map(TryIntoConv::try_into_)
                             .transpose()?,
                     },
                     (Some(max_fee), None, Some(max_gas_unit_price)) => FeeSettings::Strk {
-                        max_gas: Some(max_fee.floor_div(max_gas_unit_price).try_into()?),
-                        max_gas_unit_price: Some(max_gas_unit_price.try_into()?),
+                        max_gas: Some(
+                            max_fee
+                                .floor_div(&NonZeroFelt::from_felt_unchecked(max_gas_unit_price))
+                                .try_into_()?,
+                        ),
+                        max_gas_unit_price: Some(max_gas_unit_price.try_into_()?),
                     },
                     (Some(max_fee), Some(max_gas), None) => FeeSettings::Strk {
-                        max_gas: Some(max_gas.try_into()?),
-                        max_gas_unit_price: Some(max_fee.floor_div(max_gas).try_into()?),
+                        max_gas: Some(max_gas.try_into_()?),
+                        max_gas_unit_price: Some(
+                            max_fee
+                                .floor_div(&NonZeroFelt::from_felt_unchecked(max_gas))
+                                .try_into_()?,
+                        ),
                     },
                     (Some(max_fee), None, None) => {
-                        let max_gas_unit_price: u128 = provider
+                        let max_gas_unit_price = provider
                             .get_block_with_tx_hashes(block_id)
                             .await?
                             .l1_gas_price()
-                            .price_in_fri
-                            .try_into()?;
+                            .price_in_fri;
 
                         FeeSettings::Strk {
-                            max_gas: Some(max_fee.floor_div(max_gas_unit_price.into()).try_into()?),
-                            max_gas_unit_price: Some(max_gas_unit_price),
+                            max_gas: Some(
+                                max_fee
+                                    .floor_div(&NonZeroFelt::from_felt_unchecked(
+                                        max_gas_unit_price,
+                                    ))
+                                    .try_into_()?,
+                            ),
+                            max_gas_unit_price: Some(max_gas_unit_price.try_into_()?),
                         }
                     }
                 };
@@ -134,10 +149,10 @@ pub enum FeeToken {
 #[derive(Debug, PartialEq, CairoDeserialize)]
 pub enum ScriptFeeSettings {
     Eth {
-        max_fee: Option<FieldElement>,
+        max_fee: Option<Felt>,
     },
     Strk {
-        max_fee: Option<FieldElement>,
+        max_fee: Option<Felt>,
         max_gas: Option<u64>,
         max_gas_unit_price: Option<u128>,
     },
@@ -146,7 +161,7 @@ pub enum ScriptFeeSettings {
 #[derive(Debug, PartialEq)]
 pub enum FeeSettings {
     Eth {
-        max_fee: Option<FieldElement>,
+        max_fee: Option<Felt>,
     },
     Strk {
         max_gas: Option<u64>,

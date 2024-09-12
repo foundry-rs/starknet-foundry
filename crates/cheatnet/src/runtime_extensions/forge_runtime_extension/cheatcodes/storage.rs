@@ -2,10 +2,11 @@ use blockifier::state::state_api::State;
 use cairo_vm::Felt252;
 use conversions::{FromConv, IntoConv};
 use starknet::core::crypto::pedersen_hash;
-use starknet::core::types::FieldElement;
+use starknet::core::types::Felt;
 use starknet_api::core::{ContractAddress, PatriciaKey};
 use starknet_api::hash::StarkHash;
 use starknet_api::state::StorageKey;
+use starknet_types_core::felt::NonZeroFelt;
 
 ///
 /// # Arguments
@@ -50,14 +51,15 @@ pub fn load(
 /// For details see:
 /// <https://docs.starknet.io/documentation/architecture_and_concepts/Smart_Contracts/contract-storage>
 #[must_use]
-fn normalize_storage_address(address: FieldElement) -> FieldElement {
-    let modulus: Felt252 = Felt252::from(2).pow(251_u128) - Felt252::from(256);
-    address % modulus.into_()
+fn normalize_storage_address(address: Felt) -> Felt {
+    let modulus =
+        NonZeroFelt::from_felt_unchecked(Felt252::from(2).pow(251_u128) - Felt252::from(256));
+    address.mod_floor(&modulus)
 }
 
 #[must_use]
 pub fn calculate_variable_address(selector: Felt252, key: Option<&[Felt252]>) -> Felt252 {
-    let mut address: FieldElement = selector.into_();
+    let mut address: Felt = selector.into_();
     match key {
         None => address.into_(),
         Some(key) => {
