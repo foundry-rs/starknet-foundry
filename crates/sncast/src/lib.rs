@@ -1,19 +1,22 @@
+use crate::helpers::constants::{DEFAULT_STATE_FILE_SUFFIX, WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
+use crate::response::errors::SNCastProviderError;
 use anyhow::{anyhow, bail, Context, Error, Result};
 use camino::Utf8PathBuf;
 use clap::ValueEnum;
+use conversions::serde::serialize::CairoSerialize;
 use helpers::constants::{KEYSTORE_PASSWORD_ENV_VAR, UDC_ADDRESS};
 use rand::rngs::OsRng;
 use rand::RngCore;
+use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::{Deserializer, Value};
-use starknet::core::{
-  types::{
-      BlockId, BlockTag,
-      BlockTag::{Latest, Pending},
-      ContractClass, ContractErrorData, Felt,
-      StarknetError::{ClassHashNotFound, ContractNotFound, TransactionHashNotFound},
-  },
-  macros::felt
+use shared::rpc::create_rpc_client;
+use starknet::accounts::{AccountFactory, AccountFactoryError};
+use starknet::core::types::{
+    BlockId, BlockTag,
+    BlockTag::{Latest, Pending},
+    ContractClass, ContractErrorData, Felt,
+    StarknetError::{ClassHashNotFound, ContractNotFound, TransactionHashNotFound},
 };
 use starknet::core::utils::UdcUniqueness::{NotUnique, Unique};
 use starknet::core::utils::{UdcUniqueSettings, UdcUniqueness};
@@ -26,12 +29,6 @@ use starknet::{
     },
     signers::{LocalWallet, SigningKey},
 };
-use crate::helpers::constants::{DEFAULT_STATE_FILE_SUFFIX, WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
-use crate::response::errors::SNCastProviderError;
-use conversions::serde::serialize::CairoSerialize;
-use serde::de::DeserializeOwned;
-use shared::rpc::create_rpc_client;
-use starknet::accounts::{AccountFactory, AccountFactoryError};
 use std::str::FromStr;
 use std::thread::sleep;
 use std::time::Duration;
@@ -71,8 +68,11 @@ impl Display for AccountType {
     }
 }
 
-pub const MAINNET: Felt = felt!("0x534e5f4d41494e");
-pub const SEPOLIA: Felt = felt!("0x534e5f5345504f4c4941");
+pub const MAINNET: Felt =
+    Felt::from_hex_unchecked(const_hex::const_encode::<7, true>(b"SN_MAIN").as_str());
+
+pub const SEPOLIA: Felt =
+    Felt::from_hex_unchecked(const_hex::const_encode::<10, true>(b"SN_SEPOLIA").as_str());
 
 #[derive(ValueEnum, Clone, Copy, Debug)]
 pub enum Network {

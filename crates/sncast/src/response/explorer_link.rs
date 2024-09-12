@@ -1,7 +1,7 @@
 use super::print::OutputFormat;
 use crate::helpers::block_explorer::{LinkProvider, Service};
 use shared::print::print_as_warning;
-use starknet::core::types::FieldElement;
+use starknet::core::types::Felt;
 
 pub trait OutputLink {
     const TITLE: &'static str;
@@ -20,7 +20,7 @@ pub enum ExplorerError {
 pub fn print_block_explorer_link_if_allowed<T: OutputLink>(
     result: &anyhow::Result<T>,
     output_format: OutputFormat,
-    chain_id: FieldElement,
+    chain_id: Felt,
     explorer_service: Option<Service>,
 ) {
     if let (Ok(response), OutputFormat::Human) = (result, output_format) {

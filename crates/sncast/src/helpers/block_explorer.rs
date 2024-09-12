@@ -151,10 +151,7 @@ impl LinkProvider for NftScan {
 mod tests {
     use crate::{
         helpers::block_explorer::Service,
-        response::{
-            explorer_link::OutputLink,
-            structs::{DeployResponse, Felt},
-        },
+        response::{explorer_link::OutputLink, structs::DeployResponse},
         Network,
     };
     use regex::Regex;
@@ -162,21 +159,21 @@ mod tests {
     use test_case::test_case;
 
     const MAINNET_RESPONSE: DeployResponse = DeployResponse {
-        contract_address: Felt(felt!(
+        contract_address: felt!(
             "0x03241d40a2af53a34274dd411e090ccac1ea80e0380a0303fe76d71b046cfecb"
-        )),
-        transaction_hash: Felt(felt!(
+        ),
+        transaction_hash: felt!(
             "0x7605291e593e0c6ad85681d09e27a601befb85033bdf1805aabf5d84617cf68"
-        )),
+        ),
     };
 
     const SEPOLIA_RESPONSE: DeployResponse = DeployResponse {
-        contract_address: Felt(felt!(
+        contract_address: felt!(
             "0x0716b5f1e3bd760c489272fd6530462a09578109049e26e3f4c70492676eae17"
-        )),
-        transaction_hash: Felt(felt!(
+        ),
+        transaction_hash: felt!(
             "0x1cde70aae10f79d2d1289c923a1eeca7b81a2a6691c32551ec540fa2cb29c33"
-        )),
+        ),
     };
 
     async fn assert_valid_links(input: &str) {
