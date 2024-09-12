@@ -148,6 +148,7 @@ where
     }
 
     fn is_signer_interactive(&self) -> bool {
-        false
+        self.signer
+            .is_interactive(SignerInteractivityContext::Other)
     }
 }
