@@ -1,8 +1,5 @@
 use super::print::OutputFormat;
-use crate::{
-    helpers::block_explorer::{LinkProvider, Service},
-    Network,
-};
+use crate::helpers::block_explorer::{LinkProvider, Service};
 use shared::print::print_as_warning;
 use starknet::core::types::FieldElement;
 
@@ -12,7 +9,7 @@ pub trait OutputLink {
     fn format_links(&self, provider: Box<dyn LinkProvider>) -> String;
 }
 
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, PartialEq, Eq, thiserror::Error)]
 pub enum ExplorerError {
     #[error("The chosen block explorer service is not available for Sepolia Network")]
     SepoliaNotSupported,
@@ -27,12 +24,9 @@ pub fn print_block_explorer_link_if_allowed<T: OutputLink>(
     explorer_service: Option<Service>,
 ) {
     if let (Ok(response), OutputFormat::Human) = (result, output_format) {
-        let network: Network = match chain_id.try_into() {
-            Ok(network) => network,
-            Err(_) => {
-                print_as_warning(&ExplorerError::UnrecognizedNetwork.into());
-                return;
-            }
+        let Ok(network) = chain_id.try_into() else {
+            print_as_warning(&ExplorerError::UnrecognizedNetwork.into());
+            return;
         };
 
         match explorer_service.unwrap_or_default().as_provider(network) {

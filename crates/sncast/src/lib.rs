@@ -85,10 +85,12 @@ impl TryFrom<FieldElement> for Network {
     type Error = anyhow::Error;
 
     fn try_from(value: FieldElement) -> std::result::Result<Self, Self::Error> {
-        match value {
-            MAINNET => Ok(Network::Mainnet),
-            SEPOLIA => Ok(Network::Sepolia),
-            _ => bail!("Given network is neither Mainnet nor Sepolia"),
+        if value == MAINNET {
+            Ok(Network::Mainnet)
+        } else if value == SEPOLIA {
+            Ok(Network::Sepolia)
+        } else {
+            bail!("Given network is neither Mainnet nor Sepolia")
         }
     }
 }
