@@ -9,7 +9,7 @@ use serde_json::{Deserializer, Value};
 use starknet::core::types::{
     BlockId, BlockTag,
     BlockTag::{Latest, Pending},
-    ContractClass, ContractErrorData, FieldElement,
+    ContractClass, ContractErrorData, Felt,
     StarknetError::{ClassHashNotFound, ContractNotFound, TransactionHashNotFound},
 };
 use starknet::core::utils::UdcUniqueness::{NotUnique, Unique};
@@ -77,12 +77,12 @@ pub enum Network {
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct AccountData {
-    pub private_key: FieldElement,
-    pub public_key: FieldElement,
-    pub address: Option<FieldElement>,
-    pub salt: Option<FieldElement>,
+    pub private_key: Felt,
+    pub public_key: Felt,
+    pub address: Option<Felt>,
+    pub salt: Option<Felt>,
     pub deployed: Option<bool>,
-    pub class_hash: Option<FieldElement>,
+    pub class_hash: Option<Felt>,
     pub legacy: Option<bool>,
 
     #[serde(default, rename(serialize = "type", deserialize = "type"))]
@@ -177,7 +177,7 @@ pub fn get_provider(url: &str) -> Result<JsonRpcClient<HttpTransport>> {
     create_rpc_client(url)
 }
 
-pub async fn get_chain_id(provider: &JsonRpcClient<HttpTransport>) -> Result<FieldElement> {
+pub async fn get_chain_id(provider: &JsonRpcClient<HttpTransport>) -> Result<Felt> {
     provider
         .chain_id()
         .await
@@ -192,7 +192,7 @@ pub fn get_keystore_password(env_var: &str) -> std::io::Result<String> {
 }
 
 #[must_use]
-pub fn chain_id_to_network_name(chain_id: FieldElement) -> String {
+pub fn chain_id_to_network_name(chain_id: Felt) -> String {
     let decoded = decode_chain_id(chain_id);
 
     match &decoded[..] {
@@ -204,7 +204,7 @@ pub fn chain_id_to_network_name(chain_id: FieldElement) -> String {
 }
 
 #[must_use]
-pub fn decode_chain_id(chain_id: FieldElement) -> String {
+pub fn decode_chain_id(chain_id: Felt) -> String {
     let non_zero_bytes: Vec<u8> = chain_id
         .to_bytes_be()
         .iter()
@@ -218,8 +218,8 @@ pub fn decode_chain_id(chain_id: FieldElement) -> String {
 pub async fn get_nonce(
     provider: &JsonRpcClient<HttpTransport>,
     block_id: &str,
-    address: FieldElement,
-) -> Result<FieldElement> {
+    address: Felt,
+) -> Result<Felt> {
     provider
         .get_nonce(
             get_block_id(block_id).context("Failed to obtain block id")?,
@@ -249,7 +249,7 @@ pub async fn get_account<'a>(
 
 async fn build_account(
     account_data: AccountData,
-    chain_id: FieldElement,
+    chain_id: Felt,
     provider: &JsonRpcClient<HttpTransport>,
 ) -> Result<SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>> {
     let signer = LocalWallet::from(SigningKey::from_secret_scalar(account_data.private_key));
@@ -273,8 +273,8 @@ async fn build_account(
 }
 
 async fn verify_account_address(
-    address: FieldElement,
-    chain_id: FieldElement,
+    address: Felt,
+    chain_id: Felt,
     provider: &JsonRpcClient<HttpTransport>,
 ) -> Result<()> {
     match provider.get_nonce(BlockId::Tag(Pending), address).await {
@@ -294,7 +294,7 @@ async fn verify_account_address(
 
 pub async fn check_class_hash_exists(
     provider: &JsonRpcClient<HttpTransport>,
-    class_hash: FieldElement,
+    class_hash: Felt,
 ) -> Result<()> {
     match provider.get_class(BlockId::Tag(BlockTag::Latest), class_hash).await {
         Ok(_) => Ok(()),
@@ -320,7 +320,7 @@ pub fn get_account_data_from_keystore(
 
     let account_info: Value = read_and_parse_json_file(&path_to_account)?;
 
-    let parse_to_felt = |pointer: &str| -> Option<FieldElement> {
+    let parse_to_felt = |pointer: &str| -> Option<Felt> {
         get_string_value_from_json(&account_info, pointer).and_then(|value| value.parse().ok())
     };
 
@@ -353,7 +353,7 @@ pub fn get_account_data_from_keystore(
         account_type,
     })
 }
-fn get_braavos_account_public_key(account_info: &Value) -> Result<Option<FieldElement>> {
+fn get_braavos_account_public_key(account_info: &Value) -> Result<Option<Felt>> {
     get_string_value_from_json(account_info, "/variant/multisig/status")
         .filter(|status| status == "off")
         .context("Braavos accounts cannot be deployed with multisig on")?;
@@ -376,7 +376,7 @@ fn get_string_value_from_json(json: &Value, pointer: &str) -> Option<String> {
 }
 pub fn get_account_data_from_accounts_file(
     name: &str,
-    chain_id: FieldElement,
+    chain_id: Felt,
     path: &Utf8PathBuf,
 ) -> Result<AccountData> {
     raise_if_empty(name, "Account name")?;
@@ -407,8 +407,8 @@ pub fn read_and_parse_json_file<T: DeserializeOwned>(path: &Utf8PathBuf) -> Resu
 
 async fn get_account_encoding(
     legacy: Option<bool>,
-    class_hash: Option<FieldElement>,
-    address: FieldElement,
+    class_hash: Option<Felt>,
+    address: Felt,
     provider: &JsonRpcClient<HttpTransport>,
 ) -> Result<ExecutionEncoding> {
     if let Some(legacy) = legacy {
@@ -420,8 +420,8 @@ async fn get_account_encoding(
 }
 
 pub async fn check_if_legacy_contract(
-    class_hash: Option<FieldElement>,
-    address: FieldElement,
+    class_hash: Option<Felt>,
+    address: Felt,
     provider: &JsonRpcClient<HttpTransport>,
 ) -> Result<bool> {
     let contract_class = match class_hash {
@@ -435,8 +435,8 @@ pub async fn check_if_legacy_contract(
 
 pub async fn get_class_hash_by_address(
     provider: &JsonRpcClient<HttpTransport>,
-    address: FieldElement,
-) -> Result<Option<FieldElement>> {
+    address: Felt,
+) -> Result<Option<Felt>> {
     match provider
         .get_class_hash_at(BlockId::Tag(Pending), address)
         .await
@@ -467,7 +467,7 @@ pub fn get_block_id(value: &str) -> Result<BlockId> {
     match value {
         "pending" => Ok(BlockId::Tag(Pending)),
         "latest" => Ok(BlockId::Tag(Latest)),
-        _ if value.starts_with("0x") => Ok(BlockId::Hash(FieldElement::from_hex_be(value)?)),
+        _ if value.starts_with("0x") => Ok(BlockId::Hash(Felt::from_hex(value)?)),
         _ => match value.parse::<u64>() {
             Ok(value) => Ok(BlockId::Number(value)),
             Err(_) => Err(anyhow::anyhow!(
@@ -517,7 +517,7 @@ pub enum WaitForTransactionError {
 
 pub async fn wait_for_tx(
     provider: &JsonRpcClient<HttpTransport>,
-    tx_hash: FieldElement,
+    tx_hash: Felt,
     wait_params: ValidatedWaitParams,
 ) -> Result<&str, WaitForTransactionError> {
     println!("Transaction hash = {tx_hash:#x}");
@@ -561,7 +561,7 @@ pub async fn wait_for_tx(
 
 async fn get_revert_reason(
     provider: &JsonRpcClient<HttpTransport>,
-    tx_hash: FieldElement,
+    tx_hash: Felt,
 ) -> Result<&str, WaitForTransactionError> {
     let receipt_with_block_info = provider
         .get_transaction_receipt(tx_hash)
@@ -600,7 +600,7 @@ where
 
 pub async fn handle_wait_for_tx<T>(
     provider: &JsonRpcClient<HttpTransport>,
-    transaction_hash: FieldElement,
+    transaction_hash: Felt,
     return_value: T,
     wait_config: WaitForTx,
 ) -> Result<T, WaitForTransactionError> {
@@ -647,12 +647,12 @@ pub fn check_keystore_and_account_files_exist(
 }
 
 #[must_use]
-pub fn extract_or_generate_salt(salt: Option<FieldElement>) -> FieldElement {
-    salt.unwrap_or(FieldElement::from(OsRng.next_u64()))
+pub fn extract_or_generate_salt(salt: Option<Felt>) -> Felt {
+    salt.unwrap_or(Felt::from(OsRng.next_u64()))
 }
 
 #[must_use]
-pub fn udc_uniqueness(unique: bool, account_address: FieldElement) -> UdcUniqueness {
+pub fn udc_uniqueness(unique: bool, account_address: Felt) -> UdcUniqueness {
     if unique {
         Unique(UdcUniqueSettings {
             deployer_address: account_address,
@@ -687,7 +687,7 @@ mod tests {
     use starknet::core::types::{
         BlockId,
         BlockTag::{Latest, Pending},
-        FieldElement,
+        Felt,
     };
     use starknet::core::utils::UdcUniqueSettings;
     use starknet::core::utils::UdcUniqueness::{NotUnique, Unique};
@@ -709,7 +709,7 @@ mod tests {
         assert_eq!(
             block,
             BlockId::Hash(
-                FieldElement::from_hex_be(
+                Felt::from_hex(
                     "0x0000000000000000000000000000000000000000000000000000000000000000"
                 )
                 .unwrap()
@@ -736,38 +736,36 @@ mod tests {
     fn test_generate_salt() {
         let salt = extract_or_generate_salt(None);
 
-        assert!(salt >= FieldElement::ZERO);
+        assert!(salt >= Felt::ZERO);
     }
 
     #[test]
     fn test_extract_salt() {
-        let salt = extract_or_generate_salt(Some(FieldElement::THREE));
+        let salt = extract_or_generate_salt(Some(Felt::THREE));
 
-        assert_eq!(salt, FieldElement::THREE);
+        assert_eq!(salt, Felt::THREE);
     }
 
     #[test]
     fn test_udc_uniqueness_unique() {
-        let uniqueness = udc_uniqueness(true, FieldElement::ONE);
+        let uniqueness = udc_uniqueness(true, Felt::ONE);
 
         assert!(matches!(uniqueness, Unique(UdcUniqueSettings { .. })));
     }
 
     #[test]
     fn test_udc_uniqueness_not_unique() {
-        let uniqueness = udc_uniqueness(false, FieldElement::ONE);
+        let uniqueness = udc_uniqueness(false, Felt::ONE);
 
         assert!(matches!(uniqueness, NotUnique));
     }
 
     #[test]
     fn test_chain_id_to_network_name() {
-        let network_name_katana = chain_id_to_network_name(
-            FieldElement::from_byte_slice_be("KATANA".as_bytes()).unwrap(),
-        );
-        let network_name_sepolia = chain_id_to_network_name(
-            FieldElement::from_byte_slice_be("SN_SEPOLIA".as_bytes()).unwrap(),
-        );
+        let network_name_katana =
+            chain_id_to_network_name(Felt::from_bytes_be_slice("KATANA".as_bytes()));
+        let network_name_sepolia =
+            chain_id_to_network_name(Felt::from_bytes_be_slice("SN_SEPOLIA".as_bytes()));
         assert_eq!(network_name_katana, "KATANA");
         assert_eq!(network_name_sepolia, "alpha-sepolia");
     }
@@ -776,7 +774,7 @@ mod tests {
     fn test_get_account_data_from_accounts_file() {
         let account = get_account_data_from_accounts_file(
             "user1",
-            FieldElement::from_byte_slice_be("SN_SEPOLIA".as_bytes()).unwrap(),
+            Felt::from_bytes_be_slice("SN_SEPOLIA".as_bytes()),
             &Utf8PathBuf::from("tests/data/accounts/accounts.json"),
         )
         .unwrap();
@@ -860,7 +858,7 @@ mod tests {
     fn test_get_account_data_wrong_chain_id() {
         let account = get_account_data_from_accounts_file(
             "user1",
-            FieldElement::from_hex_be("0x435553544f4d5f434841494e5f4944")
+            Felt::from_hex("0x435553544f4d5f434841494e5f4944")
                 .expect("Failed to convert chain id from hex"),
             &Utf8PathBuf::from("tests/data/accounts/accounts.json"),
         );

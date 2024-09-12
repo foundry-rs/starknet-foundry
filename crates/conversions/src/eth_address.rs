@@ -1,5 +1,4 @@
-use crate::{from_thru_felt252, FromConv};
-use starknet::core::types::FieldElement;
+use crate::FromConv;
 use starknet_api::core::EthAddress;
 use starknet_types_core::felt::Felt as Felt252;
 
@@ -14,5 +13,3 @@ impl FromConv<EthAddress> for Felt252 {
         value.into()
     }
 }
-
-from_thru_felt252!(FieldElement, EthAddress);

@@ -6,11 +6,10 @@ use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken, PayableTransaction};
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::structs::DeclareResponse;
-use sncast::response::structs::Felt;
 use sncast::{apply_optional, handle_wait_for_tx, impl_payable_transaction, ErrorData, WaitForTx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{ConnectedAccount, DeclarationV2, DeclarationV3};
-use starknet::core::types::FieldElement;
+use starknet::core::types::{DeclareTransactionResult, Felt};
 use starknet::{
     accounts::{Account, SingleOwnerAccount},
     core::types::contract::{CompiledClass, SierraClass},
@@ -32,7 +31,7 @@ pub struct Declare {
 
     /// Nonce of the transaction. If not provided, nonce will be set automatically
     #[clap(short, long)]
-    pub nonce: Option<FieldElement>,
+    pub nonce: Option<Felt>,
 
     /// Specifies scarb package to be used
     #[clap(long)]
@@ -118,12 +117,15 @@ pub async fn declare(
     };
 
     match declared {
-        Ok(result) => handle_wait_for_tx(
+        Ok(DeclareTransactionResult {
+            transaction_hash,
+            class_hash,
+        }) => handle_wait_for_tx(
             account.provider(),
-            result.transaction_hash,
+            transaction_hash,
             DeclareResponse {
-                class_hash: Felt(result.class_hash),
-                transaction_hash: Felt(result.transaction_hash),
+                class_hash,
+                transaction_hash,
             },
             wait_config,
         )

@@ -8,7 +8,7 @@ mod tests_felt252 {
     use conversions::string::{IntoDecStr, TryFromDecStr, TryFromHexStr};
     use conversions::{FromConv, IntoConv};
     use itertools::chain;
-    use starknet::core::types::FieldElement;
+    use starknet::core::types::Felt;
     use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, Nonce};
     use starknet_api::hash::StarkHash;
     use starknet_types_core::felt::Felt as Felt252;
@@ -19,7 +19,7 @@ mod tests_felt252 {
 
         assert_eq!(felt, ClassHash::from_(felt).into_());
         assert_eq!(felt, ContractAddress::from_(felt).into_());
-        assert_eq!(felt, FieldElement::from_(felt).into_());
+        assert_eq!(felt, Felt::from_(felt).into_());
         assert_eq!(felt, Nonce::from_(felt).into_());
         assert_eq!(felt, EntryPointSelector::from_(felt).into_());
         assert_eq!(felt, StarkHash::from_(felt).into_());
@@ -36,7 +36,7 @@ mod tests_felt252 {
 
         assert_eq!(felt, ClassHash::from_(felt).into_());
         assert_eq!(felt, ContractAddress::from_(felt).into_());
-        assert_eq!(felt, FieldElement::from_(felt).into_());
+        assert_eq!(felt, Felt::from_(felt).into_());
         assert_eq!(felt, Nonce::from_(felt).into_());
         assert_eq!(felt, EntryPointSelector::from_(felt).into_());
         assert_eq!(felt, StarkHash::from_(felt).into_());
@@ -53,7 +53,7 @@ mod tests_felt252 {
 
         assert_eq!(felt, Nonce::from_(felt).into_());
         assert_eq!(felt, EntryPointSelector::from_(felt).into_());
-        assert_eq!(felt, FieldElement::from_(felt).into_());
+        assert_eq!(felt, Felt::from_(felt).into_());
         assert_eq!(felt, ClassHash::from_(felt).into_());
         assert_eq!(felt, StarkHash::from_(felt).into_());
 

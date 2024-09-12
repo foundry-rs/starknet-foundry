@@ -310,9 +310,10 @@ fn verify_version(version: u8) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::response::structs::Felt;
     use crate::state::state_file::ScriptTransactionOutput::ErrorResponse;
     use camino::Utf8PathBuf;
+    use conversions::string::TryFromHexStr;
+    use starknet::core::types::Felt;
     use tempfile::TempDir;
 
     #[test]
@@ -405,8 +406,8 @@ mod tests {
         let transaction = ScriptTransactionEntry {
             name: "declare".to_string(),
             output: ScriptTransactionOutput::DeclareResponse(DeclareResponse {
-                class_hash: Felt("0x123".parse().unwrap()),
-                transaction_hash: Felt("0x321".parse().unwrap()),
+                class_hash: Felt::try_from_hex_str("0x123").unwrap(),
+                transaction_hash: Felt::try_from_hex_str("0x321").unwrap(),
             }),
             status: ScriptTransactionStatus::Success,
             timestamp: 0,
@@ -442,8 +443,8 @@ mod tests {
         let transaction1 = ScriptTransactionEntry {
             name: "declare".to_string(),
             output: ScriptTransactionOutput::DeclareResponse(DeclareResponse {
-                class_hash: Felt("0x1".parse().unwrap()),
-                transaction_hash: Felt("0x2".parse().unwrap()),
+                class_hash: Felt::try_from_hex_str("0x1").unwrap(),
+                transaction_hash: Felt::try_from_hex_str("0x2").unwrap(),
             }),
             status: ScriptTransactionStatus::Success,
             timestamp: 0,
@@ -457,7 +458,7 @@ mod tests {
         let transaction2 = ScriptTransactionEntry {
             name: "invoke".to_string(),
             output: ScriptTransactionOutput::InvokeResponse(InvokeResponse {
-                transaction_hash: Felt("0x3".parse().unwrap()),
+                transaction_hash: Felt::try_from_hex_str("0x3").unwrap(),
             }),
             status: ScriptTransactionStatus::Success,
             timestamp: 1,
@@ -513,8 +514,8 @@ mod tests {
         let transaction1 = ScriptTransactionEntry {
             name: "declare".to_string(),
             output: ScriptTransactionOutput::DeclareResponse(DeclareResponse {
-                class_hash: Felt("0x1".parse().unwrap()),
-                transaction_hash: Felt("0x2".parse().unwrap()),
+                class_hash: Felt::try_from_hex_str("0x1").unwrap(),
+                transaction_hash: Felt::try_from_hex_str("0x2").unwrap(),
             }),
             status: ScriptTransactionStatus::Success,
             timestamp: 2,
@@ -527,7 +528,7 @@ mod tests {
         let transaction2 = ScriptTransactionEntry {
             name: "invoke".to_string(),
             output: ScriptTransactionOutput::InvokeResponse(InvokeResponse {
-                transaction_hash: Felt("0x3".parse().unwrap()),
+                transaction_hash: Felt::try_from_hex_str("0x3").unwrap(),
             }),
             status: ScriptTransactionStatus::Success,
             timestamp: 3,
@@ -589,8 +590,8 @@ mod tests {
         let new_transaction = ScriptTransactionEntry {
             name: "deploy".to_string(),
             output: ScriptTransactionOutput::DeployResponse(DeployResponse {
-                transaction_hash: Felt("0x3".parse().unwrap()),
-                contract_address: Felt("0x333".parse().unwrap()),
+                transaction_hash: Felt::try_from_hex_str("0x3").unwrap(),
+                contract_address: Felt::try_from_hex_str("0x333").unwrap(),
             }),
             status: ScriptTransactionStatus::Success,
             timestamp: 1,

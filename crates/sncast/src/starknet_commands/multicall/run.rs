@@ -11,8 +11,8 @@ use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::handle_starknet_command_error;
 use sncast::response::structs::InvokeResponse;
 use sncast::{extract_or_generate_salt, impl_payable_transaction, udc_uniqueness, WaitForTx};
-use starknet::accounts::{Account, Call, SingleOwnerAccount};
-use starknet::core::types::FieldElement;
+use starknet::accounts::{Account, SingleOwnerAccount};
+use starknet::core::types::{Call, Felt};
 use starknet::core::utils::{get_selector_from_name, get_udc_deployed_address};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
@@ -44,10 +44,10 @@ impl_payable_transaction!(Run, token_not_supported_for_invoke,
 
 #[derive(Deserialize, Debug)]
 struct DeployCall {
-    class_hash: FieldElement,
+    class_hash: Felt,
     inputs: Vec<String>,
     unique: bool,
-    salt: Option<FieldElement>,
+    salt: Option<Felt>,
     id: String,
 }
 
@@ -87,7 +87,7 @@ pub async fn run(
                 let mut calldata = vec![
                     deploy_call.class_hash,
                     salt,
-                    FieldElement::from(u8::from(deploy_call.unique)),
+                    Felt::from(u8::from(deploy_call.unique)),
                     deploy_call.inputs.len().into(),
                 ];
 
@@ -121,7 +121,7 @@ pub async fn run(
                 parsed_calls.push(Call {
                     to: contract_address
                         .parse()
-                        .context("Failed to parse contract address to FieldElement")?,
+                        .context("Failed to parse contract address to Felt")?,
                     selector: get_selector_from_name(&invoke_call.function)?,
                     calldata,
                 });
@@ -138,17 +138,14 @@ pub async fn run(
         .map_err(handle_starknet_command_error)
 }
 
-fn parse_inputs(
-    inputs: &Vec<String>,
-    contracts: &HashMap<String, String>,
-) -> Result<Vec<FieldElement>> {
+fn parse_inputs(inputs: &Vec<String>, contracts: &HashMap<String, String>) -> Result<Vec<Felt>> {
     let mut parsed_inputs = Vec::new();
     for input in inputs {
         let current_input = contracts.get(input).unwrap_or(input);
         parsed_inputs.push(
             current_input
                 .parse()
-                .context("Failed to parse input to FieldElement")?,
+                .context("Failed to parse input to Felt")?,
         );
     }
 
