@@ -1,4 +1,3 @@
-// use super::felt::Primitive;
 use anyhow::{bail, ensure, Result};
 use clap::{Args, ValueEnum};
 use conversions::serde::deserialize::CairoDeserialize;
