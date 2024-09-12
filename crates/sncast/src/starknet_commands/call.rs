@@ -46,7 +46,6 @@ pub async fn call(
         calldata,
     };
     let res = provider.call(function_call, block_id).await;
-    // .map(|v| v.into_iter().map(Felt).collect());
 
     match res {
         Ok(response) => Ok(CallResponse { response }),

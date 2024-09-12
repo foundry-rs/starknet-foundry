@@ -15,6 +15,12 @@ pub trait FromConv<T>: Sized {
     fn from_(value: T) -> Self;
 }
 
+impl<T> FromConv<T> for T {
+    fn from_(value: T) -> Self {
+        value
+    }
+}
+
 pub trait IntoConv<T>: Sized {
     fn into_(self) -> T;
 }

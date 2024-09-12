@@ -21,7 +21,6 @@ fn serialize_as_decimal<S>(value: &Felt, serializer: S) -> Result<S::Ok, S::Erro
 where
     S: Serializer,
 {
-    // let val = value.0;
     serializer.serialize_str(&format!("{value:#}"))
 }
 

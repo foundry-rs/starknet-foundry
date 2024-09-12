@@ -12,7 +12,6 @@ use cairo_lang_utils::Upcast;
 use indoc::formatdoc;
 use std::sync::Arc;
 
-#[allow(clippy::skip_while_next)]
 pub fn parse<T: AttributeInfo>(
     code: &str,
 ) -> Result<(SimpleParserDatabase, FunctionWithBody), Diagnostic> {
@@ -32,15 +31,17 @@ pub fn parse<T: AttributeInfo>(
         .items(db)
         .elements(db);
 
-    if let Some(ModuleItem::FreeFunction(func)) = elements
+    elements
         .into_iter()
-        .skip_while(|element| matches!(element, ModuleItem::HeaderDoc(_)))
-        .next()
-    {
-        Ok((simple_db, func))
-    } else {
-        Err(T::error("can be used only on a function"))
-    }
+        .find_map(|element| {
+            if let ModuleItem::FreeFunction(func) = element {
+                Some(func)
+            } else {
+                None
+            }
+        })
+        .map(|func| (simple_db, func))
+        .ok_or_else(|| T::error("can be used only on a function"))
 }
 
 struct InternalCollector;
