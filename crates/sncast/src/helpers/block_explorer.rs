@@ -1,8 +1,10 @@
 use serde::{Deserialize, Serialize};
 use starknet_crypto::FieldElement;
 
-const STARKSCAN: &str = "https://starkscan.co/search";
-const VOYAGER: &str = "https://voyager.online";
+use crate::{response::explorer_link::ExplorerError, Network};
+
+const STARKSCAN: &str = "starkscan.co/search";
+const VOYAGER: &str = "voyager.online";
 const VIEWBLOCK: &str = "https://viewblock.io/starknet";
 const OKLINK: &str = "https://www.oklink.com/starknet";
 const NFTSCAN: &str = "https://starknet.nftscan.com";
@@ -19,13 +21,14 @@ pub enum Service {
 
 impl Service {
     #[must_use]
-    pub fn as_provider(&self) -> Box<dyn LinkProvider> {
-        match self {
-            Service::StarkScan => Box::new(StarkScan),
-            Service::Voyager => Box::new(Voyager),
-            Service::ViewBlock => Box::new(ViewBlock),
-            Service::OkLink => Box::new(OkLink),
-            Service::NftScan => Box::new(NftScan),
+    pub fn as_provider(&self, network: Network) -> Result<Box<dyn LinkProvider>, ExplorerError> {
+        match (self, network) {
+            (Service::StarkScan, _) => Ok(Box::new(StarkScan { network })),
+            (Service::Voyager, _) => Ok(Box::new(Voyager { network })),
+            (Service::ViewBlock, Network::Mainnet) => Ok(Box::new(ViewBlock)),
+            (Service::OkLink, Network::Mainnet) => Ok(Box::new(OkLink)),
+            (Service::NftScan, Network::Mainnet) => Ok(Box::new(NftScan)),
+            (_, Network::Sepolia) => Err(ExplorerError::SepoliaNotSupported),
         }
     }
 }
@@ -36,35 +39,64 @@ pub trait LinkProvider {
     fn contract(&self, address: FieldElement) -> String;
 }
 
-pub struct StarkScan;
-
-impl LinkProvider for StarkScan {
-    fn transaction(&self, hash: FieldElement) -> String {
-        format!("{STARKSCAN}/{hash:#x}")
-    }
-
-    fn class(&self, hash: FieldElement) -> String {
-        format!("{STARKSCAN}/{hash:#x}")
-    }
-
-    fn contract(&self, address: FieldElement) -> String {
-        format!("{STARKSCAN}/{address:#x}")
+const fn network_mixin(network: Network) -> &'static str {
+    match network {
+        Network::Mainnet => "",
+        Network::Sepolia => "sepolia.",
     }
 }
 
-pub struct Voyager;
+pub struct StarkScan {
+    network: Network,
+}
 
-impl LinkProvider for Voyager {
+impl LinkProvider for StarkScan {
     fn transaction(&self, hash: FieldElement) -> String {
-        format!("{VOYAGER}/tx/{hash:#x}")
+        format!(
+            "https://{}{STARKSCAN}/{hash:#x}",
+            network_mixin(self.network)
+        )
     }
 
     fn class(&self, hash: FieldElement) -> String {
-        format!("{VOYAGER}/class/{hash:#x}")
+        format!(
+            "https://{}{STARKSCAN}/{hash:#x}",
+            network_mixin(self.network)
+        )
     }
 
     fn contract(&self, address: FieldElement) -> String {
-        format!("{VOYAGER}/contract/{address:#x}")
+        format!(
+            "https://{}{STARKSCAN}/{address:#x}",
+            network_mixin(self.network)
+        )
+    }
+}
+
+pub struct Voyager {
+    network: Network,
+}
+
+impl LinkProvider for Voyager {
+    fn transaction(&self, hash: FieldElement) -> String {
+        format!(
+            "https://{}{VOYAGER}/tx/{hash:#x}",
+            network_mixin(self.network)
+        )
+    }
+
+    fn class(&self, hash: FieldElement) -> String {
+        format!(
+            "https://{}{VOYAGER}/class/{hash:#x}",
+            network_mixin(self.network)
+        )
+    }
+
+    fn contract(&self, address: FieldElement) -> String {
+        format!(
+            "https://{}{VOYAGER}/contract/{address:#x}",
+            network_mixin(self.network)
+        )
     }
 }
 

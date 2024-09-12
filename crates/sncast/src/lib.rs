@@ -6,12 +6,6 @@ use rand::rngs::OsRng;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
 use serde_json::{Deserializer, Value};
-use starknet::core::types::{
-    BlockId, BlockTag,
-    BlockTag::{Latest, Pending},
-    ContractClass, ContractErrorData, FieldElement,
-    StarknetError::{ClassHashNotFound, ContractNotFound, TransactionHashNotFound},
-};
 use starknet::core::utils::UdcUniqueness::{NotUnique, Unique};
 use starknet::core::utils::{UdcUniqueSettings, UdcUniqueness};
 use starknet::{
@@ -22,6 +16,15 @@ use starknet::{
         ProviderError::StarknetError,
     },
     signers::{LocalWallet, SigningKey},
+};
+use starknet::{
+    core::types::{
+        BlockId,
+        BlockTag::{self, Latest, Pending},
+        ContractClass, ContractErrorData, FieldElement,
+        StarknetError::{ClassHashNotFound, ContractNotFound, TransactionHashNotFound},
+    },
+    macros::felt,
 };
 
 use crate::helpers::constants::{DEFAULT_STATE_FILE_SUFFIX, WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
@@ -69,10 +72,25 @@ impl Display for AccountType {
     }
 }
 
-#[derive(ValueEnum, Clone, Debug)]
+pub const MAINNET: FieldElement = felt!("0x534e5f4d41494e");
+pub const SEPOLIA: FieldElement = felt!("0x534e5f5345504f4c4941");
+
+#[derive(ValueEnum, Clone, Copy, Debug)]
 pub enum Network {
     Mainnet,
     Sepolia,
+}
+
+impl TryFrom<FieldElement> for Network {
+    type Error = anyhow::Error;
+
+    fn try_from(value: FieldElement) -> std::result::Result<Self, Self::Error> {
+        match value {
+            MAINNET => Ok(Network::Mainnet),
+            SEPOLIA => Ok(Network::Sepolia),
+            _ => bail!("Given network is neither Mainnet nor Sepolia"),
+        }
+    }
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
