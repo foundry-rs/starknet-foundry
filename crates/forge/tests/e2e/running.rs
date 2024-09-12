@@ -711,6 +711,7 @@ fn validate_init(temp: &TempDir) {
 
             [dev-dependencies]
             snforge_std = {{ git = "https://github.com/foundry-rs/starknet-foundry", tag = "v[..]" }}
+            assert_macros = "[..]"
 
             [[target.starknet-contract]]
             sierra = true
