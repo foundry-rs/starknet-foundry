@@ -6,7 +6,7 @@ use starknet::{
     },
     core::types::{BlockId, BlockTag, Felt},
     providers::Provider,
-    signers::Signer,
+    signers::{Signer, SignerInteractivityContext},
 };
 use starknet_crypto::poseidon_hash_many;
 
