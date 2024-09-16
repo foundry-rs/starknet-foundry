@@ -8,6 +8,7 @@ use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::Path;
 use toml_edit::{value, ArrayOfTables, DocumentMut, Item, Table};
+use indoc::formatdoc;
 
 static TEMPLATE: Dir = include_dir!("starknet_forge_template");
 
@@ -112,10 +113,11 @@ fn extend_gitignore(path: &Path) -> Result<()> {
 pub fn run(project_name: &str) -> Result<()> {
     let current_dir = std::env::current_dir().context("Failed to get current directory")?;
     let project_path = current_dir.join(project_name);
-    let manifest_path = project_path.join("Scarb.toml");
+    let scarb_manifest_path = project_path.join("Scarb.toml");
+    let snfoundry_manifest_path = project_path.join("snfoundry.toml");
 
     // if there is no Scarb.toml run `scarb new`
-    if !manifest_path.is_file() {
+    if !scarb_manifest_path.is_file() {
         ScarbCommand::new_with_stdio()
             .current_dir(current_dir)
             .arg("new")
@@ -126,7 +128,7 @@ pub fn run(project_name: &str) -> Result<()> {
 
         ScarbCommand::new_with_stdio()
             .current_dir(&project_path)
-            .manifest_path(manifest_path.clone())
+            .manifest_path(scarb_manifest_path.clone())
             .offline()
             .arg("remove")
             .arg("--dev")
@@ -135,13 +137,30 @@ pub fn run(project_name: &str) -> Result<()> {
             .context("Failed to remove cairo_test")?;
     }
 
+    if !snfoundry_manifest_path.is_file() {
+        fs::write(&snfoundry_manifest_path, formatdoc! {r#"
+            # [sncast.myprofile1]
+            # url = "http://127.0.0.1:5055/rpc"
+            # account = "mainuser"
+            # accounts_file = "../account-file"
+            # keystore = "~/keystore"
+            # wait_params = {{ timeout = 500, retry_interval = 10 }}
+            # block_explorer = "StarkScan"
+
+            # [sncast.dev]
+            # url = "http://127.0.0.1:5056/rpc"
+            # account = "devuser"
+        "#
+        })?;
+    }
+
     let version = env!("CARGO_PKG_VERSION");
     let cairo_version = ScarbCommand::version().run()?.cairo;
 
     if env::var("DEV_DISABLE_SNFORGE_STD_DEPENDENCY").is_err() {
         ScarbCommand::new_with_stdio()
             .current_dir(&project_path)
-            .manifest_path(manifest_path.clone())
+            .manifest_path(scarb_manifest_path.clone())
             .offline()
             .arg("add")
             .arg("--dev")
@@ -156,7 +175,7 @@ pub fn run(project_name: &str) -> Result<()> {
 
     ScarbCommand::new_with_stdio()
         .current_dir(&project_path)
-        .manifest_path(manifest_path.clone())
+        .manifest_path(scarb_manifest_path.clone())
         .offline()
         .arg("add")
         .arg(format!("starknet@{cairo_version}"))
@@ -170,7 +189,7 @@ pub fn run(project_name: &str) -> Result<()> {
 
     // Fetch to create lock file.
     ScarbCommand::new_with_stdio()
-        .manifest_path(manifest_path)
+        .manifest_path(scarb_manifest_path)
         .arg("fetch")
         .run()
         .context("Failed to fetch created project")?;

@@ -96,5 +96,5 @@ block_explorer = "StarkScan"
 
 [sncast.dev]
 url = "http://127.0.0.1:5056/rpc"
-account = "secondaryuser"
+account = "devuser"
 ```
