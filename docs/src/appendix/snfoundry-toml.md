@@ -2,10 +2,9 @@
 
 The `snfoundry.toml` file is not included in every package by default. If you want to use it, you need to create it yourself. 
 This file allows you to specify sncast settings. It is written in the [TOML](https://toml.io/) format. 
-It contains metadata needed to configure sncast settings. 
-It should be placed in the root of your project. 
+It contains metadata needed to configure sncast settings and should be placed in the root of your project. 
 
-Manifest file can contain the following sections:
+Schema of the `snfoundry.toml` file:
 
 ## `[sncast.<profile-name>]`
 
