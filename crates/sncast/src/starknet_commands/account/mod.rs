@@ -11,7 +11,7 @@ use configuration::{
 };
 use serde_json::json;
 use sncast::{chain_id_to_network_name, decode_chain_id, helpers::configuration::CastConfig};
-use starknet::{core::types::FieldElement, signers::SigningKey};
+use starknet::{core::types::Felt, signers::SigningKey};
 use std::{fmt, fs::OpenOptions, io::Write};
 use toml::Value;
 
@@ -60,12 +60,12 @@ impl fmt::Display for AccountType {
 
 pub fn prepare_account_json(
     private_key: &SigningKey,
-    address: FieldElement,
+    address: Felt,
     deployed: bool,
     legacy: bool,
     account_type: &AccountType,
-    class_hash: Option<FieldElement>,
-    salt: Option<FieldElement>,
+    class_hash: Option<Felt>,
+    salt: Option<Felt>,
 ) -> serde_json::Value {
     let mut account_json = json!({
         "private_key": format!("{:#x}", private_key.secret_scalar()),
@@ -90,7 +90,7 @@ pub fn prepare_account_json(
 pub fn write_account_to_accounts_file(
     account: &str,
     accounts_file: &Utf8PathBuf,
-    chain_id: FieldElement,
+    chain_id: Felt,
     account_json: serde_json::Value,
 ) -> Result<()> {
     if !accounts_file.exists() {

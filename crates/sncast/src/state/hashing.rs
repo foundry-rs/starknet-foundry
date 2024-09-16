@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 use sha3::Digest;
 use sha3::Sha3_256;
-use starknet::core::types::FieldElement;
+use starknet::core::types::Felt;
 use std::vec;
 
 trait SerialiseAsBytes {
@@ -37,7 +37,7 @@ impl SerialiseAsBytes for str {
     }
 }
 
-impl SerialiseAsBytes for FieldElement {
+impl SerialiseAsBytes for Felt {
     fn serialise_as_bytes(&self) -> Vec<u8> {
         self.to_bytes_be().to_vec()
     }
@@ -65,9 +65,9 @@ pub fn generate_declare_tx_id(contract_name: &str) -> String {
 
 #[must_use]
 pub fn generate_deploy_tx_id(
-    class_hash: FieldElement,
-    constructor_calldata: &[FieldElement],
-    salt: Option<FieldElement>,
+    class_hash: Felt,
+    constructor_calldata: &[Felt],
+    salt: Option<Felt>,
     unique: bool,
 ) -> String {
     let bytes = [
@@ -82,9 +82,9 @@ pub fn generate_deploy_tx_id(
 
 #[must_use]
 pub fn generate_invoke_tx_id(
-    contract_address: FieldElement,
-    function_selector: FieldElement,
-    calldata: &[FieldElement],
+    contract_address: Felt,
+    function_selector: Felt,
+    calldata: &[Felt],
 ) -> String {
     let bytes = [
         contract_address.serialise_as_bytes(),
@@ -101,7 +101,7 @@ mod tests {
         generate_declare_tx_id, generate_deploy_tx_id, generate_id, generate_invoke_tx_id,
     };
     use conversions::IntoConv;
-    use starknet::core::types::FieldElement;
+    use starknet::core::types::Felt;
     use starknet_types_core::felt::Felt as Felt252;
 
     #[test]
@@ -125,13 +125,13 @@ mod tests {
 
     #[test]
     fn deploy() {
-        let class_hash: FieldElement = Felt252::from_dec_str(
+        let class_hash: Felt = Felt252::from_dec_str(
             "3372465304726137760522924034754430320558984443503992760655017624209518336998",
         )
         .unwrap()
         .into_();
-        let constructor_calldata = vec![FieldElement::from(12u32), FieldElement::from(4u32)];
-        let salt = Some(FieldElement::from(89u32));
+        let constructor_calldata = vec![Felt::from(12u32), Felt::from(4u32)];
+        let salt = Some(Felt::from(89u32));
         let unique = true;
 
         let hash = generate_deploy_tx_id(class_hash, &constructor_calldata, salt, unique);
@@ -148,8 +148,8 @@ mod tests {
         )
         .unwrap()
         .into_();
-        let function_selector = FieldElement::from(890u32);
-        let calldata = vec![FieldElement::from(1809u32), FieldElement::from(14u32)];
+        let function_selector = Felt::from(890u32);
+        let calldata = vec![Felt::from(1809u32), Felt::from(14u32)];
         let hash = generate_invoke_tx_id(contract_address, function_selector, &calldata);
         assert_eq!(
             hash,
