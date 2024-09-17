@@ -16,6 +16,7 @@ struct InlineForkConfig {
     block: BlockId
 }
 
+#[derive(Drop, Serde)]
 struct MixedForkConfig {
     name: ByteArray,
     block: BlockId
