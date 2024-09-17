@@ -6,7 +6,7 @@ With `cairo-coverage`, you can generate a coverage report that can later be anal
 ## Installation and usage
 
 In order to run coverage report with `cairo-coverage` you need to install it first. 
-Please refer to the instructions in the readme on how to do this:  
+Please refer to the instructions provided in the README for guidance:
 https://github.com/software-mansion/cairo-coverage#installation
 
 Usage details and limitations are also described there - make sure to check it out as well.  
