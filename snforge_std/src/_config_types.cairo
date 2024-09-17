@@ -24,7 +24,7 @@ struct MixedForkConfig {
 #[derive(Drop, Serde)]
 enum ForkConfig {
     Inline: InlineForkConfig,
-    Named: ByteArray
+    Named: ByteArray,
     Mixed: MixedForkConfig
 }
 
