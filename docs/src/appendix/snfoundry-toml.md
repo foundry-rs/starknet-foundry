@@ -86,15 +86,16 @@ block_explorer = "StarkScan"
 ## Example file structure
 
 ```toml
-[sncast.main]
-url = "http://127.0.0.1:5055/rpc"
-account = "mainuser"
-accounts_file = "../account-file"
-keystore = "~/keystore"
-wait_params = { timeout = 500, retry_interval = 10 }
-block_explorer = "StarkScan"
+# [sncast.main]
+# [sncast.myprofile1]
+# url = "http://127.0.0.1:5055/rpc"
+# account = "mainuser"
+# accounts_file = "../account-file"
+# keystore = "~/keystore"
+# wait_params = {{ timeout = 500, retry_interval = 10 }}
+# block_explorer = "StarkScan"
 
-[sncast.dev]
-url = "http://127.0.0.1:5056/rpc"
-account = "devuser"
+# [sncast.dev]
+# url = "http://127.0.0.1:5056/rpc"
+# account = "devuser"
 ```
