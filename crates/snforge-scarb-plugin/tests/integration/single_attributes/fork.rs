@@ -15,9 +15,10 @@ fn fails_without_block() {
         &[
            Diagnostic::error(formatdoc!(
                 "
-                    Both options failed
+                    All options failed
                     First variant: exactly one of <block_hash> | <block_number> | <block_tag> should be specified, got 0
-                    Second variant: #[fork] can be used with unnamed attributes only
+                    Second variant: #[fork] can be used with mixed attributes only
+                    Third variant: #[fork] can be used with unnamed attributes only
                     Resolve at least one of them
                 "
             ))
@@ -36,9 +37,10 @@ fn fails_without_url() {
         &result,
         &[Diagnostic::error(formatdoc!(
             "
-                Both options failed
+                All options failed
                 First variant: <url> argument is missing
-                Second variant: #[fork] can be used with unnamed attributes only
+                Second variant: #[fork] can be used with mixed attributes only
+                Third variant: #[fork] can be used with unnamed attributes only
                 Resolve at least one of them
             "
         ))],
@@ -54,15 +56,15 @@ fn fails_without_args() {
 
     assert_diagnostics(
         &result,
-        &[
-          Diagnostic::error(formatdoc!(
+        &[Diagnostic::error(formatdoc!(
             "
-                Both options failed
+                All options failed
                 First variant: exactly one of <block_hash> | <block_number> | <block_tag> should be specified, got 0
-                Second variant: #[fork] expected 1 arguments, got: 0
+                Second variant: #[fork] can be used with mixed attributes only
+                Third variant: #[fork] expected 1 arguments, got: 0
                 Resolve at least one of them
-            "))
-        ],
+            "
+        ))],
     );
 }
 
@@ -77,9 +79,10 @@ fn fails_with_invalid_url() {
         &result,
         &[Diagnostic::error(formatdoc!(
             "
-                Both options failed
+                All options failed
                 First variant: #[fork] <url> is not a valid url
-                Second variant: #[fork] can be used with unnamed attributes only
+                Second variant: #[fork] can be used with mixed attributes only
+                Third variant: #[fork] can be used with unnamed attributes only
                 Resolve at least one of them
             "
         ))],
