@@ -1,6 +1,7 @@
 use crate::CAIRO_EDITION;
 use anyhow::{anyhow, Context, Ok, Result};
 use include_dir::{include_dir, Dir};
+use indoc::formatdoc;
 use scarb_api::ScarbCommand;
 use semver::Version;
 use std::env;
@@ -8,7 +9,6 @@ use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::Path;
 use toml_edit::{value, ArrayOfTables, DocumentMut, Item, Table};
-use indoc::formatdoc;
 
 static TEMPLATE: Dir = include_dir!("starknet_forge_template");
 
@@ -138,7 +138,9 @@ pub fn run(project_name: &str) -> Result<()> {
     }
 
     if !snfoundry_manifest_path.is_file() {
-        fs::write(&snfoundry_manifest_path, formatdoc! {r#"
+        fs::write(
+            &snfoundry_manifest_path,
+            formatdoc! {r#"
             # [sncast.myprofile1]
             # url = "http://127.0.0.1:5055/rpc"
             # account = "mainuser"
@@ -151,7 +153,8 @@ pub fn run(project_name: &str) -> Result<()> {
             # url = "http://127.0.0.1:5056/rpc"
             # account = "devuser"
         "#
-        })?;
+            },
+        )?;
     }
 
     let version = env!("CARGO_PKG_VERSION");
