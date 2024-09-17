@@ -30,7 +30,11 @@ impl AttributeCollector for ForkCollector {
         args: Arguments,
         _warns: &mut Vec<Diagnostic>,
     ) -> Result<String, Diagnostics> {
-        let expr = branch(inline_args(db, &args), || from_file_args(db, &args))?;
+        let expr = branch(
+            inline_args(db, &args),
+            || mixed_args(db, &args),
+            || from_file_args(db, &args),
+        )?;
 
         Ok(expr)
     }
@@ -75,6 +79,34 @@ fn from_file_args(db: &dyn SyntaxGroup, args: &Arguments) -> Result<String, Diag
 
     Ok(format!(
         r#"snforge_std::_config_types::ForkConfig::Named({name})"#
+    ))
+}
+
+fn mixed_args(db: &dyn SyntaxGroup, args: &Arguments) -> Result<String, Diagnostic> {
+    let named_args = args.named_only::<ForkCollector>()?;
+    let &[arg] = args
+        .unnamed_only::<ForkCollector>()?
+        .of_length::<1, ForkCollector>()?;
+
+    let block_id = named_args.one_of_once(&[
+        BlockIdVariants::Hash,
+        BlockIdVariants::Number,
+        BlockIdVariants::Tag,
+    ])?;
+
+    let block_id = BlockId::parse_from_expr::<ForkCollector>(db, &block_id, block_id.0.as_ref())?;
+    let name = String::parse_from_expr::<ForkCollector>(db, arg, "0")?;
+
+    let block_id = block_id.as_cairo_expression();
+    let name = name.as_cairo_expression();
+
+    Ok(formatdoc!(
+        "
+            snforge_std::_config_types::ForkConfig::Mixed(
+                block: {block_id},
+                name: {name}
+            )
+        "
     ))
 }
 

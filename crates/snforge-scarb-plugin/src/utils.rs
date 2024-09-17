@@ -10,21 +10,29 @@ fn higher_severity(a: Severity, b: Severity) -> Severity {
 
 pub fn branch(
     left: Result<String, Diagnostic>,
+    middle: impl Fn() -> Result<String, Diagnostic>,
     right: impl Fn() -> Result<String, Diagnostic>,
 ) -> Result<String, Diagnostic> {
-    left.or_else(|error| {
-        right().map_err(|next_error| Diagnostic {
-            severity: higher_severity(error.severity, next_error.severity),
-            message: formatdoc!(
-                "
-                    Both options failed
-                    First variant: {}
-                    Second variant: {}
-                    Resolve at least one of them
-                ",
-                error.message,
-                next_error.message
-            ),
+    left.or_else(|left_error| {
+        middle().or_else(|middle_error| {
+            right().map_err(|right_error| Diagnostic {
+                severity: higher_severity(
+                    higher_severity(left_error.severity, middle_error.severity),
+                    right_error.severity,
+                ),
+                message: formatdoc!(
+                    "
+                        All options failed
+                        First variant: {}
+                        Second variant: {}
+                        Third variant: {}
+                        Resolve at least one of them
+                    ",
+                    left_error.message,
+                    middle_error.message,
+                    right_error.message
+                ),
+            })
         })
     })
 }

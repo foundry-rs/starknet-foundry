@@ -16,10 +16,16 @@ struct InlineForkConfig {
     block: BlockId
 }
 
+struct MixedForkConfig {
+    name: ByteArray,
+    block: BlockId
+}
+
 #[derive(Drop, Serde)]
 enum ForkConfig {
     Inline: InlineForkConfig,
     Named: ByteArray
+    Mixed: MixedForkConfig
 }
 
 #[derive(Drop, Serde)]

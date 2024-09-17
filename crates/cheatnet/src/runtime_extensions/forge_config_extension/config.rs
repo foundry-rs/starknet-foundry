@@ -26,9 +26,16 @@ pub struct InlineForkConfig {
 }
 
 #[derive(Debug, Clone, CairoDeserialize, PartialEq)]
+pub struct MixedForkConfig {
+    pub name: ByteArray,
+    pub block: BlockId,
+}
+
+#[derive(Debug, Clone, CairoDeserialize, PartialEq)]
 pub enum RawForkConfig {
     Inline(InlineForkConfig),
     Named(ByteArray),
+    Mixed(MixedForkConfig),
 }
 
 // fuzzer
