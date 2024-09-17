@@ -2154,6 +2154,7 @@ dependencies = [
  "trace-data",
  "universal-sierra-compiler-api",
  "url",
+ "which",
 ]
 
 [[package]]

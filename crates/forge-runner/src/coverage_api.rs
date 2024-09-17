@@ -1,7 +1,8 @@
-use anyhow::{Context, Result};
+use anyhow::{ensure, Context, Result};
 use shared::command::CommandExt;
 use std::process::Stdio;
 use std::{env, fs, path::PathBuf, process::Command};
+use which::which;
 
 pub const COVERAGE_DIR: &str = "coverage";
 pub const OUTPUT_FILE_NAME: &str = "coverage.lcov";
@@ -11,6 +12,11 @@ pub fn run_coverage(saved_trace_data_paths: &[PathBuf]) -> Result<()> {
         .map(PathBuf::from)
         .ok()
         .unwrap_or_else(|| PathBuf::from("cairo-coverage"));
+
+    ensure!(
+        which(coverage.as_os_str()).is_ok(),
+        "The 'cairo-coverage' binary was not found in PATH. Perhaps you didn't install it? Check out docs for more info"
+    );
 
     let dir_to_save_coverage = PathBuf::from(COVERAGE_DIR);
     fs::create_dir_all(&dir_to_save_coverage).context("Failed to create a coverage dir")?;
