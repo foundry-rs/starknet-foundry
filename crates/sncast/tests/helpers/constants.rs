@@ -1,4 +1,4 @@
-use starknet::core::types::FieldElement;
+use starknet::core::types::Felt;
 use starknet::macros::felt;
 
 pub const ACCOUNT: &str = "user1";
@@ -22,7 +22,7 @@ pub const DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS: &str =
     "0x691a61b12a7105b1372cc377f135213c11e8400a546f6b0e7ea0296046690ce";
 
 // OpenZeppelin account contract v0.8.1
-pub const DEVNET_OZ_CLASS_HASH_CAIRO_1: FieldElement =
+pub const DEVNET_OZ_CLASS_HASH_CAIRO_1: Felt =
     felt!("0x061dac032f228abef9c6626f995015233097ae253a7f72d68552db02f2971b8f");
 
 pub const MAP_CONTRACT_ADDRESS_SEPOLIA: &str =

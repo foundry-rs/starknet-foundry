@@ -3,7 +3,7 @@ mod tests_nonce {
     use cairo_vm::utils::PRIME_STR;
     use conversions::string::{IntoDecStr, TryFromDecStr, TryFromHexStr};
     use conversions::{FromConv, IntoConv};
-    use starknet::core::types::FieldElement;
+    use starknet::core::types::Felt;
     use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, Nonce};
     use starknet_api::hash::StarkHash;
     use starknet_types_core::felt::Felt as Felt252;
@@ -16,7 +16,7 @@ mod tests_nonce {
         assert_eq!(nonce, ClassHash::from_(nonce).into_());
         assert_eq!(nonce, ContractAddress::from_(nonce).into_());
         assert_eq!(nonce, Felt252::from_(nonce).into_());
-        assert_eq!(nonce, FieldElement::from_(nonce).into_());
+        assert_eq!(nonce, Felt::from_(nonce).into_());
         assert_eq!(nonce, StarkHash::from_(nonce).into_());
         assert_eq!(nonce, EntryPointSelector::from_(nonce).into_());
 
@@ -34,7 +34,7 @@ mod tests_nonce {
         assert_eq!(nonce, ClassHash::from_(nonce).into_());
         assert_eq!(nonce, ContractAddress::from_(nonce).into_());
         assert_eq!(nonce, Felt252::from_(nonce).into_());
-        assert_eq!(nonce, FieldElement::from_(nonce).into_());
+        assert_eq!(nonce, Felt::from_(nonce).into_());
         assert_eq!(nonce, StarkHash::from_(nonce).into_());
         assert_eq!(nonce, EntryPointSelector::from_(nonce).into_());
 
@@ -49,7 +49,7 @@ mod tests_nonce {
         let mut nonce: Nonce = Felt252::MAX.into_();
 
         assert_eq!(nonce, Felt252::from_(nonce).into_());
-        assert_eq!(nonce, FieldElement::from_(nonce).into_());
+        assert_eq!(nonce, Felt::from_(nonce).into_());
         assert_eq!(nonce, ClassHash::from_(nonce).into_());
         assert_eq!(nonce, StarkHash::from_(nonce).into_());
         assert_eq!(nonce, EntryPointSelector::from_(nonce).into_());

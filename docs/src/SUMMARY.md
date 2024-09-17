@@ -15,6 +15,7 @@
 
 * [Running Tests](testing/running-tests.md)
 * [Writing Tests](testing/testing.md)
+* [Test Attributes](testing/test-attributes.md)
 * [Testing Smart Contracts](testing/contracts.md)
 * [Testing Contracts' Internals](testing/testing_contract_internals.md)
 * [Using Cheatcodes](testing/using-cheatcodes.md)
@@ -27,6 +28,7 @@
 * [Coverage](testing/coverage.md)
 
 # `snforge` Advanced Features
+
 * [Fork Testing](snforge-advanced-features/fork-testing.md)
 * [Fuzz Testing](snforge-advanced-features/fuzz-testing.md)
 * [Conditional Compilation](snforge-advanced-features/conditional-compilation.md)
@@ -34,6 +36,7 @@
 * [Profiling](snforge-advanced-features/profiling.md)
 
 --- 
+
 # `sncast` Overview
 
 * [Outline](starknet/index.md)
