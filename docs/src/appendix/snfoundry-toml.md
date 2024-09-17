@@ -69,7 +69,8 @@ wait_params = { timeout = 300, retry-interval = 5 }
 
 ### `block_explorer`
 
-The `block_explorer` field specifies the block explorer service used to display links to transaction details.
+The `block_explorer` field specifies the block explorer service used to display links to transaction details. 
+The `Sepolia Testnet` is supported only by `Voyager` and `StarkScan` block explorers.
 
 | Value     | URL                                    |
 |-----------|----------------------------------------|
