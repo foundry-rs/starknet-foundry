@@ -3,6 +3,14 @@
 Coverage reporting allows developers to gain comprehensive insights into how their code is executed.
 With `cairo-coverage`, you can generate a coverage report that can later be analyzed for detailed coverage statistics.
 
+## Installation and usage
+
+In order to run coverage report with `cairo-coverage` you need to install it first. 
+Please refer to the instructions provided in the README for guidance:
+https://github.com/software-mansion/cairo-coverage#installation
+
+Usage details and limitations are also described there - make sure to check it out as well.  
+
 ## Integration with [cairo-coverage](https://github.com/software-mansion/cairo-coverage)
 
 `snforge` is able to produce a file with a trace for each passing test (excluding fuzz tests).
