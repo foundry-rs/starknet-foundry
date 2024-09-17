@@ -3,6 +3,8 @@
 The `snfoundry.toml` file, present in each package, is called its manifest. 
 This file allows you to specify sncast settings. It is written in the [TOML](https://toml.io/) format. 
 It contains metadata needed to configure sncast settings and should be placed in the root of your project. 
+If `snfoundry.toml` is not found in the root directory, sncast will look in all parent directories. 
+If it is not found, default values will be used.
 
 Schema of the `snfoundry.toml` file:
 
