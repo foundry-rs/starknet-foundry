@@ -84,7 +84,7 @@ fn from_file_args(db: &dyn SyntaxGroup, args: &Arguments) -> Result<String, Diag
 }
 
 fn mixed_args(db: &dyn SyntaxGroup, args: &Arguments) -> Result<String, Diagnostic> {
-    args.assert_mixed()?;
+    args.assert_mixed::<ForkCollector>()?;
     let arg = UnnamedArgs::new(&args.unnamed).of_length::<1, ForkCollector>()?[0];
 
     let block_id = args.named.one_of_once(&[
