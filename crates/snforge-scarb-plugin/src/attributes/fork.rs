@@ -1,4 +1,5 @@
 use self::block_id::{BlockId, BlockIdVariants};
+use crate::args::unnamed::UnnamedArgs;
 use crate::{
     args::Arguments,
     attributes::{AttributeCollector, AttributeInfo, AttributeTypeData},
@@ -83,12 +84,10 @@ fn from_file_args(db: &dyn SyntaxGroup, args: &Arguments) -> Result<String, Diag
 }
 
 fn mixed_args(db: &dyn SyntaxGroup, args: &Arguments) -> Result<String, Diagnostic> {
-    let named_args = args.named_only::<ForkCollector>()?;
-    let &[arg] = args
-        .unnamed_only::<ForkCollector>()?
-        .of_length::<1, ForkCollector>()?;
+    args.assert_mixed()?;
+    let arg = UnnamedArgs::new(&args.unnamed).of_length::<1, ForkCollector>()?[0];
 
-    let block_id = named_args.one_of_once(&[
+    let block_id = args.named.one_of_once(&[
         BlockIdVariants::Hash,
         BlockIdVariants::Number,
         BlockIdVariants::Tag,
