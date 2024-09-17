@@ -19,8 +19,7 @@ accounts_file = "../account-file"
 wait_params = { timeout = 300, retry_interval = 5 }
 ```
 
-There is no required fields in the profile section, it depends more on the arguments that the user wants to have 
-provided in advance
+There are no required fields in the profile section. It's up to user which arguments do they want to provide in advance and which specify via CLI.
 
 ### `url`
 
@@ -43,7 +42,7 @@ accounts_file = "path/to/accounts.json"
 
 ### `account`
 
-The `account` field specifies the account to be used for transactions. This should be a valid account name listed in `accounts_file`.
+The `account` field specifies which account from the `accounts_file` to use for transactions.
 
 ```toml
 [sncast.myprofile]
@@ -74,7 +73,7 @@ The `block_explorer` field specifies the block explorer service used to display 
 
 | Value     | URL                                    |
 |-----------|----------------------------------------|
-| StarkScan | `https://starkscan.co/search`          |
+| StarkScan | `https://starkscan.co`          |
 | Voyager   | `https://voyager.online`               |
 | ViewBlock | `https://viewblock.io/starknet`        |
 | OkLink    | `https://www.oklink.com/starknet`      |
