@@ -1,7 +1,6 @@
 # The Manifest Format
 
-The `snfoundry.toml` file, present in each package, is called its manifest. 
-This file allows you to specify sncast settings. It is written in the [TOML](https://toml.io/) format. 
+The `snfoundry.toml` contains the project's manifest and allows specifying sncast settings.
 It contains metadata needed to configure sncast settings and should be placed in the root of your project. 
 If `snfoundry.toml` is not found in the root directory, sncast will look in all parent directories. 
 If it is not found, default values will be used.
@@ -19,7 +18,7 @@ accounts_file = "../account-file"
 wait_params = { timeout = 300, retry_interval = 5 }
 ```
 
-There are no required fields in the profile section. It's up to user which arguments do they want to provide in advance and which specify via CLI.
+All fields are optional and do not have to be provided. In case a field is not defined in a manifest file, it must be provided in CLI when executing a relevant `sncast` command.
 
 ### `url`
 
