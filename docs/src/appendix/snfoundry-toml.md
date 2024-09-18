@@ -14,8 +14,6 @@ Schema of the `snfoundry.toml` file:
 [sncast.myprofile]
 url = "http://127.0.0.1:5055/rpc"
 account = "user1"
-accounts_file = "../account-file"
-wait_params = { timeout = 300, retry_interval = 5 }
 ```
 
 All fields are optional and do not have to be provided. In case a field is not defined in a manifest file, it must be provided in CLI when executing a relevant `sncast` command.
