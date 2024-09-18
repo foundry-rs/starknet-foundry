@@ -153,6 +153,38 @@ fn accepts_inline_config() {
 }
 
 #[test]
+fn overriding_config() {
+    let item = TokenStream::new(EMPTY_FN.into());
+    let args = TokenStream::new(r#"("MAINNET", block_number: 23)"#.into());
+
+    let result = fork(args, item);
+
+    assert_diagnostics(&result, &[]);
+
+    assert_output(
+        &result,
+        r#"
+            fn empty_fn() {
+                if snforge_std::_cheatcode::_is_config_run() {
+
+                    let mut data = array![];
+
+                    snforge_std::_config_types::ForkConfig::Mixed(
+                        block: snforge_std::_config_types::BlockId::BlockNumber(0x17),
+                        name: "MAINNET"
+                        )
+                    .serialize(ref data);
+
+                    starknet::testing::cheatcode::<'set_config_fork'>(data.span());
+
+                    return;
+                }
+            }
+        "#,
+    );
+}
+
+#[test]
 fn is_used_once() {
     let item = TokenStream::new(formatdoc!(
         "
