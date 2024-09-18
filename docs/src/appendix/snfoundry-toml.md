@@ -1,7 +1,7 @@
 # The Manifest Format
 
 The `snfoundry.toml` contains the project's manifest and allows specifying sncast settings.
-It contains metadata needed to configure sncast settings and should be placed in the root of your project. 
+You can configure sncast settings and place arguments in it to not have to provide them in CLI along with the commands.
 If `snfoundry.toml` is not found in the root directory, sncast will look in all parent directories. 
 If it is not found, default values will be used.
 
