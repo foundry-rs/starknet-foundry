@@ -60,6 +60,7 @@ keystore = "path/to/keystore"
 ### `wait_params`
 
 The `wait_params` field specifies the parameters for waiting during transactions. Default values are `timeout = 300` and `retry_interval = 5`.
+This is used while waiting for transaction. Txs will be fetched every 5s with timeout of 300s - so 60 attempts.
 
 ```toml
 [sncast.myprofile]
