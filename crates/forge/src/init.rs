@@ -7,7 +7,7 @@ use semver::Version;
 use std::env;
 use std::fs::{self, OpenOptions};
 use std::io::Write;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use toml_edit::{value, ArrayOfTables, DocumentMut, Item, Table};
 
 static TEMPLATE: Dir = include_dir!("starknet_forge_template");
@@ -15,16 +15,25 @@ static TEMPLATE: Dir = include_dir!("starknet_forge_template");
 const DEFAULT_ASSERT_MACROS: Version = Version::new(0, 1, 0);
 const MINIMAL_SCARB_FOR_CORRESPONDING_ASSERT_MACROS: Version = Version::new(2, 8, 0);
 
-const SNFOUNDRY_TOML_TEMPLATE: &str = r#"# Visit https://foundry-rs.github.io/starknet-foundry/appendix/snfoundry-toml.html for more information
+fn create_snfoundry_manifest(path: &PathBuf) -> Result<()> {
+    fs::write(
+        path,
+        formatdoc! {r#"
+        # Visit https://foundry-rs.github.io/starknet-foundry/appendix/snfoundry-toml.html for more information
 
-# [sncast.myprofile1]                                    # Define a profile name
-# url = "http://127.0.0.1:5050/"                         # Url of the RPC provider
-# accounts_file = "../account-file"                      # Path to the file with the account data
-# account = "mainuser"                                   # Account that will be used for the transactions
-# keystore = "~/keystore"                                # Path to the keystore file
-# wait_params = { timeout = 500, retry_interval = 10 } # Wait parameters
-# block_explorer = "StarkScan"                           # Block explorer service
-"#;
+        # [sncast.myprofile1]                                    # Define a profile name
+        # url = "http://127.0.0.1:5050/"                         # Url of the RPC provider
+        # accounts_file = "../account-file"                      # Path to the file with the account data
+        # account = "mainuser"                                   # Account that will be used for the transactions
+        # keystore = "~/keystore"                                # Path to the keystore file
+        # wait_params = {{ timeout = 500, retry_interval = 10 }}   # Wait parameters
+        # block_explorer = "StarkScan"                           # Block explorer service
+        "#
+        },
+    )?;
+
+    Ok(())
+}
 
 fn overwrite_files_from_scarb_template(
     dir_to_overwrite: &str,
@@ -149,7 +158,7 @@ pub fn run(project_name: &str) -> Result<()> {
     }
 
     if !snfoundry_manifest_path.is_file() {
-        fs::write(&snfoundry_manifest_path, SNFOUNDRY_TOML_TEMPLATE)?;
+        create_snfoundry_manifest(&snfoundry_manifest_path)?;
     }
 
     let version = env!("CARGO_PKG_VERSION");
