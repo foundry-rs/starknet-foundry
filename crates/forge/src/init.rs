@@ -15,6 +15,17 @@ static TEMPLATE: Dir = include_dir!("starknet_forge_template");
 const DEFAULT_ASSERT_MACROS: Version = Version::new(0, 1, 0);
 const MINIMAL_SCARB_FOR_CORRESPONDING_ASSERT_MACROS: Version = Version::new(2, 8, 0);
 
+const SNFOUNDRY_TOML_TEMPLATE: &str = r#"# Visit https://foundry-rs.github.io/starknet-foundry/appendix/snfoundry-toml.html for more information
+
+# [sncast.myprofile1]                                    # Define a profile name
+# url = "http://127.0.0.1:5050/"                         # Url of the RPC provider
+# accounts_file = "../account-file"                      # Path to the file with the account data
+# account = "mainuser"                                   # Account that will be used for the transactions
+# keystore = "~/keystore"                                # Path to the keystore file
+# wait_params = { timeout = 500, retry_interval = 10 } # Wait parameters
+# block_explorer = "StarkScan"                           # Block explorer service
+"#;
+
 fn overwrite_files_from_scarb_template(
     dir_to_overwrite: &str,
     base_path: &Path,
@@ -138,23 +149,7 @@ pub fn run(project_name: &str) -> Result<()> {
     }
 
     if !snfoundry_manifest_path.is_file() {
-        fs::write(
-            &snfoundry_manifest_path,
-            formatdoc! {r#"
-            # [sncast.myprofile1]
-            # url = "http://127.0.0.1:5055/rpc"
-            # account = "mainuser"
-            # accounts_file = "../account-file"
-            # keystore = "~/keystore"
-            # wait_params = {{ timeout = 500, retry_interval = 10 }}
-            # block_explorer = "StarkScan"
-
-            # [sncast.dev]
-            # url = "http://127.0.0.1:5056/rpc"
-            # account = "devuser"
-        "#
-            },
-        )?;
+        fs::write(&snfoundry_manifest_path, SNFOUNDRY_TOML_TEMPLATE)?;
     }
 
     let version = env!("CARGO_PKG_VERSION");

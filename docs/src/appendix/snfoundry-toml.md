@@ -12,7 +12,7 @@ If it is not found, default values will be used.
 
 ```toml
 [sncast.myprofile]
-url = "http://127.0.0.1:5055/rpc"
+url = "http://127.0.0.1:5055/"
 account = "user1"
 ```
 
@@ -57,8 +57,8 @@ keystore = "path/to/keystore"
 
 #### `wait_params`
 
-The `wait_params` field specifies the parameters for waiting during transactions. Default values are `timeout = 300` and `retry_interval = 5`.
-This is used while waiting for transaction. Txs will be fetched every 5s with timeout of 300s - so 60 attempts.
+The `wait_params` field defines the waiting parameters for transactions. By default, timeout is set to 300 seconds and retry_interval to 5 seconds. 
+This means transactions will be checked every `5 seconds`, with a total of `60 attempts` before timing out.
 
 ```toml
 [sncast.myprofile]
@@ -86,7 +86,6 @@ block_explorer = "StarkScan"
 #### Example file structure
 
 ```toml
-# [sncast.main]
 # [sncast.myprofile1]
 # url = "http://127.0.0.1:5055/rpc"
 # account = "mainuser"
