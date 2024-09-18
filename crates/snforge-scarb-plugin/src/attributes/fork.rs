@@ -33,7 +33,7 @@ impl AttributeCollector for ForkCollector {
     ) -> Result<String, Diagnostics> {
         let expr = branch(
             inline_args(db, &args),
-            || mixed_args(db, &args),
+            || overridden_args(db, &args),
             || from_file_args(db, &args),
         )?;
 
@@ -83,8 +83,7 @@ fn from_file_args(db: &dyn SyntaxGroup, args: &Arguments) -> Result<String, Diag
     ))
 }
 
-fn mixed_args(db: &dyn SyntaxGroup, args: &Arguments) -> Result<String, Diagnostic> {
-    args.assert_mixed::<ForkCollector>()?;
+fn overridden_args(db: &dyn SyntaxGroup, args: &Arguments) -> Result<String, Diagnostic> {
     let arg = UnnamedArgs::new(&args.unnamed).of_length::<1, ForkCollector>()?[0];
 
     let block_id = args.named.one_of_once(&[
@@ -101,7 +100,7 @@ fn mixed_args(db: &dyn SyntaxGroup, args: &Arguments) -> Result<String, Diagnost
 
     Ok(formatdoc!(
         "
-            snforge_std::_config_types::ForkConfig::Mixed(
+            snforge_std::_config_types::ForkConfig::Overridden(
                 block: {block_id},
                 name: {name}
             )

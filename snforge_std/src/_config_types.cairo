@@ -17,7 +17,7 @@ struct InlineForkConfig {
 }
 
 #[derive(Drop, Serde)]
-struct MixedForkConfig {
+struct OverriddenForkConfig {
     name: ByteArray,
     block: BlockId
 }
@@ -26,7 +26,7 @@ struct MixedForkConfig {
 enum ForkConfig {
     Inline: InlineForkConfig,
     Named: ByteArray,
-    Mixed: MixedForkConfig
+    Overridden: OverriddenForkConfig
 }
 
 #[derive(Drop, Serde)]

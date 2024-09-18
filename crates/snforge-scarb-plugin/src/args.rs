@@ -76,15 +76,6 @@ impl Arguments {
     }
 
     #[inline]
-    pub fn assert_mixed<T: AttributeInfo>(&self) -> Result<(), Diagnostic> {
-        if self.shorthand.is_empty() && !self.named.is_empty() && !self.unnamed.is_empty() {
-            Ok(())
-        } else {
-            Err(T::error("can be used with mixed attributes only"))
-        }
-    }
-
-    #[inline]
     pub fn unnamed_only<T: AttributeInfo>(&self) -> Result<UnnamedArgs, Diagnostic> {
         if self.shorthand.is_empty() && self.named.is_empty() {
             Ok(UnnamedArgs::new(&self.unnamed))

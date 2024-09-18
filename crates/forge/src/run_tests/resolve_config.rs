@@ -129,13 +129,13 @@ fn replace_id_with_params(
                 block: block_id,
             })
         }
-        RawForkConfig::Mixed(mixed) => {
+        RawForkConfig::Overridden(overridden) => {
             let fork_target_from_runner_config =
-                get_fork_target_from_runner_config(fork_targets, &mixed.name)?;
+                get_fork_target_from_runner_config(fork_targets, &overridden.name)?;
 
             Ok(InlineForkConfig {
                 url: fork_target_from_runner_config.url.parse()?,
-                block: mixed.block,
+                block: overridden.block,
             })
         }
     }

@@ -17,7 +17,7 @@ fn fails_without_block() {
                 "
                     All options failed
                     First variant: exactly one of <block_hash> | <block_number> | <block_tag> should be specified, got 0
-                    Second variant: #[fork] can be used with mixed attributes only
+                    Second variant: #[fork] expected 1 arguments, got: 0
                     Third variant: #[fork] can be used with unnamed attributes only
                     Resolve at least one of them
                 "
@@ -39,7 +39,7 @@ fn fails_without_url() {
             "
                 All options failed
                 First variant: <url> argument is missing
-                Second variant: #[fork] can be used with mixed attributes only
+                Second variant: #[fork] expected 1 arguments, got: 0
                 Third variant: #[fork] can be used with unnamed attributes only
                 Resolve at least one of them
             "
@@ -60,7 +60,7 @@ fn fails_without_args() {
             "
                 All options failed
                 First variant: exactly one of <block_hash> | <block_number> | <block_tag> should be specified, got 0
-                Second variant: #[fork] can be used with mixed attributes only
+                Second variant: #[fork] expected 1 arguments, got: 0
                 Third variant: #[fork] expected 1 arguments, got: 0
                 Resolve at least one of them
             "
@@ -81,7 +81,7 @@ fn fails_with_invalid_url() {
             "
                 All options failed
                 First variant: #[fork] <url> is not a valid url
-                Second variant: #[fork] can be used with mixed attributes only
+                Second variant: #[fork] expected 1 arguments, got: 0
                 Third variant: #[fork] can be used with unnamed attributes only
                 Resolve at least one of them
             "
@@ -169,7 +169,7 @@ fn overriding_config() {
 
                     let mut data = array![];
 
-                    snforge_std::_config_types::ForkConfig::Mixed(
+                    snforge_std::_config_types::ForkConfig::Overridden(
                         block: snforge_std::_config_types::BlockId::BlockNumber(0x17),
                         name: "MAINNET"
                         )
