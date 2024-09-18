@@ -5,9 +5,9 @@ It contains metadata needed to configure sncast settings and should be placed in
 If `snfoundry.toml` is not found in the root directory, sncast will look in all parent directories. 
 If it is not found, default values will be used.
 
-Schema of the `snfoundry.toml` file:
+## `snfoundry.toml` contents
 
-## `[sncast.<profile-name>]`
+### `[sncast.<profile-name>]`
 
 
 ```toml
@@ -18,7 +18,7 @@ account = "user1"
 
 All fields are optional and do not have to be provided. In case a field is not defined in a manifest file, it must be provided in CLI when executing a relevant `sncast` command.
 
-### `url`
+#### `url`
 
 The `url` field specifies the address of RPC provider.
 
@@ -27,7 +27,7 @@ The `url` field specifies the address of RPC provider.
 url = "http://example.com"
 ```
 
-### `accounts_file`
+#### `accounts_file`
 
 The `accounts_file` field specifies the path to a file containing account information. 
 If not provided, the default path is `~/.starknet_accounts/starknet_open_zeppelin_accounts.json`.
@@ -37,7 +37,7 @@ If not provided, the default path is `~/.starknet_accounts/starknet_open_zeppeli
 accounts_file = "path/to/accounts.json"
 ```
 
-### `account`
+#### `account`
 
 The `account` field specifies which account from the `accounts_file` to use for transactions.
 
@@ -46,7 +46,7 @@ The `account` field specifies which account from the `accounts_file` to use for 
 account = "user-dev"
 ```
 
-### `keystore`
+#### `keystore`
 
 The `keystore` field specifies the path to the keystore file.
 
@@ -55,7 +55,7 @@ The `keystore` field specifies the path to the keystore file.
 keystore = "path/to/keystore"
 ```
 
-### `wait_params`
+#### `wait_params`
 
 The `wait_params` field specifies the parameters for waiting during transactions. Default values are `timeout = 300` and `retry_interval = 5`.
 This is used while waiting for transaction. Txs will be fetched every 5s with timeout of 300s - so 60 attempts.
@@ -65,7 +65,7 @@ This is used while waiting for transaction. Txs will be fetched every 5s with ti
 wait_params = { timeout = 300, retry-interval = 5 }
 ```
 
-### `block_explorer`
+#### `block_explorer`
 
 The `block_explorer` field specifies the block explorer service used to display links to transaction details. 
 The `Sepolia Testnet` is supported only by `Voyager` and `StarkScan` block explorers.
@@ -83,7 +83,7 @@ The `Sepolia Testnet` is supported only by `Voyager` and `StarkScan` block explo
 block_explorer = "StarkScan"
 ```
 
-## Example file structure
+#### Example file structure
 
 ```toml
 # [sncast.main]
