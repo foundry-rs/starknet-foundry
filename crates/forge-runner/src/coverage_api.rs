@@ -15,7 +15,7 @@ pub fn run_coverage(saved_trace_data_paths: &[PathBuf]) -> Result<()> {
 
     ensure!(
         which(coverage.as_os_str()).is_ok(),
-        "The 'cairo-coverage' binary was not found in PATH. Perhaps you didn't install it? Check out docs for more info"
+        "The 'cairo-coverage' binary was not found in PATH. It may not have been installed. Please refer to the documentation for installation instructions."
     );
 
     let dir_to_save_coverage = PathBuf::from(COVERAGE_DIR);
