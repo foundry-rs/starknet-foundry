@@ -1,20 +1,18 @@
 # The Manifest Format
 
 The `snfoundry.toml` contains the project's manifest and allows specifying sncast settings.
-You can configure sncast settings and place arguments in it to not have to provide them in CLI along with the commands.
-If `snfoundry.toml` is not found in the root directory, sncast will look in all parent directories. 
+You can configure sncast settings and arguments instead of providing them in the CLI along with the commands.
+If `snfoundry.toml` is not found in the root directory, sncast will look for it in all parent directories. 
 If it is not found, default values will be used.
 
-## `snfoundry.toml` contents
+## `snfoundry.toml` Contents
 
 ### `[sncast.<profile-name>]`
 
 
 ```toml
 [sncast.myprofile]
-url = "http://127.0.0.1:5055/"
-account = "user1"
-```
+# ...
 
 All fields are optional and do not have to be provided. In case a field is not defined in a manifest file, it must be provided in CLI when executing a relevant `sncast` command.
 
@@ -57,7 +55,7 @@ keystore = "path/to/keystore"
 
 #### `wait_params`
 
-The `wait_params` field defines the waiting parameters for transactions. By default, timeout is set to `300 seconds` and retry_interval to `5 seconds`. 
+The `wait_params` field defines the waiting parameters for transactions. By default, timeout (in seconds) is set to `300` and retry_interval (in seconds) to `5`. 
 This means transactions will be checked every `5 seconds`, with a total of `60 attempts` before timing out.
 
 ```toml
@@ -83,7 +81,7 @@ The `Sepolia Testnet` is supported only by `Voyager` and `StarkScan` block explo
 block_explorer = "StarkScan"
 ```
 
-#### Example file structure
+#### Complete Example of `snfoundry.toml` File
 
 ```toml
 [sncast.myprofile1]
