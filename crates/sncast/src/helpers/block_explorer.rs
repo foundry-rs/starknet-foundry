@@ -38,7 +38,7 @@ pub trait LinkProvider {
     fn contract(&self, address: Felt) -> String;
 }
 
-const fn network_mixin(network: Network) -> &'static str {
+const fn network_subdomain(network: Network) -> &'static str {
     match network {
         Network::Mainnet => "",
         Network::Sepolia => "sepolia.",
@@ -53,21 +53,21 @@ impl LinkProvider for StarkScan {
     fn transaction(&self, hash: Felt) -> String {
         format!(
             "https://{}{STARKSCAN}/{hash:#x}",
-            network_mixin(self.network)
+            network_subdomain(self.network)
         )
     }
 
     fn class(&self, hash: Felt) -> String {
         format!(
             "https://{}{STARKSCAN}/{hash:#x}",
-            network_mixin(self.network)
+            network_subdomain(self.network)
         )
     }
 
     fn contract(&self, address: Felt) -> String {
         format!(
             "https://{}{STARKSCAN}/{address:#x}",
-            network_mixin(self.network)
+            network_subdomain(self.network)
         )
     }
 }
@@ -80,21 +80,21 @@ impl LinkProvider for Voyager {
     fn transaction(&self, hash: Felt) -> String {
         format!(
             "https://{}{VOYAGER}/tx/{hash:#x}",
-            network_mixin(self.network)
+            network_subdomain(self.network)
         )
     }
 
     fn class(&self, hash: Felt) -> String {
         format!(
             "https://{}{VOYAGER}/class/{hash:#x}",
-            network_mixin(self.network)
+            network_subdomain(self.network)
         )
     }
 
     fn contract(&self, address: Felt) -> String {
         format!(
             "https://{}{VOYAGER}/contract/{address:#x}",
-            network_mixin(self.network)
+            network_subdomain(self.network)
         )
     }
 }
