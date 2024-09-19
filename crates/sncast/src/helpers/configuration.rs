@@ -35,6 +35,16 @@ pub struct CastConfig {
     )]
     /// A block explorer service, used to display links to transaction details
     pub block_explorer: Option<block_explorer::Service>,
+
+    #[serde(
+        default = "show_explorer_links_default",
+        rename(serialize = "show-explorer-link", deserialize = "show-explorer-link")
+    )]
+    pub show_explorer_links: bool,
+}
+
+const fn show_explorer_links_default() -> bool {
+    true
 }
 
 impl GlobalConfig for CastConfig {

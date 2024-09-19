@@ -213,6 +213,7 @@ async fn run_async_command(
                 &result,
                 output_format,
                 provider.chain_id().await?,
+                config.show_explorer_links,
                 config.block_explorer,
             );
             Ok(())
@@ -239,6 +240,7 @@ async fn run_async_command(
                 &result,
                 output_format,
                 provider.chain_id().await?,
+                config.show_explorer_links,
                 config.block_explorer,
             );
             Ok(())
@@ -291,6 +293,7 @@ async fn run_async_command(
                 &result,
                 output_format,
                 provider.chain_id().await?,
+                config.show_explorer_links,
                 config.block_explorer,
             );
             Ok(())
@@ -336,6 +339,7 @@ async fn run_async_command(
                         &result,
                         output_format,
                         provider.chain_id().await?,
+                        config.show_explorer_links,
                         config.block_explorer,
                     );
                 }
@@ -389,6 +393,7 @@ async fn run_async_command(
                     &result,
                     output_format,
                     provider.chain_id().await?,
+                    config.show_explorer_links,
                     config.block_explorer,
                 );
                 Ok(())
@@ -417,6 +422,7 @@ async fn run_async_command(
                     &result,
                     output_format,
                     provider.chain_id().await?,
+                    config.show_explorer_links,
                     config.block_explorer,
                 );
                 Ok(())
