@@ -48,7 +48,7 @@ This will generate a coverage report in the `coverage` directory named `coverage
 ## Coverage report
 
 `cairo-coverage` generates coverage data as an `.lcov` file. A summary report with aggregated data can be produced by one of many tools that accept the `lcov` format.
-In this example we will use the `genhtml` tool from the `lcov` package to generate an HTML report.
+In this example we will use the `genhtml` tool from the [lcov package](https://github.com/linux-test-project/lcov/tree/master) to generate an HTML report.
 
 Run the following command in the directory containing your `coverage.lcov` file:
 

@@ -1,4 +1,5 @@
 use anyhow::{ensure, Context, Result};
+use indoc::indoc;
 use shared::command::CommandExt;
 use std::process::Stdio;
 use std::{env, fs, path::PathBuf, process::Command};
@@ -15,7 +16,11 @@ pub fn run_coverage(saved_trace_data_paths: &[PathBuf]) -> Result<()> {
 
     ensure!(
         which(coverage.as_os_str()).is_ok(),
-        "The 'cairo-coverage' binary was not found in PATH. It may not have been installed. Please refer to the documentation for installation instructions."
+        indoc! {
+            r"The 'cairo-coverage' binary was not found in PATH. It may not have been installed.
+            Please refer to the documentation for installation instructions:
+            https://github.com/software-mansion/cairo-coverage/blob/main/README.md"
+        }
     );
 
     let dir_to_save_coverage = PathBuf::from(COVERAGE_DIR);
