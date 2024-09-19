@@ -27,27 +27,24 @@ pub fn print_block_explorer_link_if_allowed<T: OutputLink>(
     output_format: OutputFormat,
     chain_id: Felt,
     show_links: bool,
-    explorer_service: Option<Service>,
+    explorer: Option<Service>,
 ) {
     if !show_links {
         return;
     }
-
     if output_format != OutputFormat::Human {
         return;
+    }
+    let Some(explorer) = explorer else {
+        return;
     };
-
     let Ok(response) = result else {
         return;
     };
-
     let Ok(network) = chain_id.try_into() else {
         return;
     };
-
-    let Ok(provider) = explorer_service.unwrap_or_default().as_provider(network) else {
-        return;
-    };
-
-    response.print_links(provider);
+    if let Ok(provider) = explorer.as_provider(network) {
+        response.print_links(provider);
+    }
 }
