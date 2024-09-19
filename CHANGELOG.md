@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Cast
 
+#### Changed
+
+- `declare` and `verify` commands now use the Scarb `release` profile instead of the `dev` profile as the default for building artifacts
+
 #### Fixed
 
 - Explorer links displayed upon committing transactions are now properly formatted

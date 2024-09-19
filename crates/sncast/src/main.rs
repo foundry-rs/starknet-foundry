@@ -199,8 +199,9 @@ async fn run_async_command(
                 &BuildConfig {
                     scarb_toml_path: manifest_path,
                     json: cli.json,
-                    profile: cli.profile.unwrap_or("dev".to_string()),
+                    profile: cli.profile.unwrap_or("release".to_string()),
                 },
+                false,
             )
             .expect("Failed to build contract");
             let result =
@@ -487,8 +488,9 @@ async fn run_async_command(
                 &BuildConfig {
                     scarb_toml_path: manifest_path.clone(),
                     json: cli.json,
-                    profile: cli.profile.unwrap_or("dev".to_string()),
+                    profile: cli.profile.unwrap_or("release".to_string()),
                 },
+                false,
             )
             .expect("Failed to build contract");
             let result = starknet_commands::verify::verify(
@@ -540,6 +542,7 @@ fn run_script_command(
                     json: cli.json,
                     profile: cli.profile.clone().unwrap_or("dev".to_string()),
                 },
+                true,
             )
             .expect("Failed to build artifacts");
             // TODO(#2042): remove duplicated compilation
@@ -550,6 +553,7 @@ fn run_script_command(
                     json: cli.json,
                     profile: "dev".to_string(),
                 },
+                "dev",
             )
             .expect("Failed to build script");
             let metadata_with_deps = get_scarb_metadata_with_deps(&manifest_path)?;

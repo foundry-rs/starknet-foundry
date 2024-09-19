@@ -123,7 +123,11 @@ pub struct BuildConfig {
     pub profile: String,
 }
 
-pub fn build(package: &PackageMetadata, config: &BuildConfig) -> Result<(), ScarbCommandError> {
+pub fn build(
+    package: &PackageMetadata,
+    config: &BuildConfig,
+    default_profile: &str,
+) -> Result<(), ScarbCommandError> {
     let filter = PackagesFilter::generate_for::<Metadata>([package].into_iter());
 
     let mut cmd = ScarbCommand::new_with_stdio();
@@ -132,7 +136,7 @@ pub fn build(package: &PackageMetadata, config: &BuildConfig) -> Result<(), Scar
     let profile = if metadata.profiles.contains(&config.profile) {
         &config.profile
     } else {
-        "dev"
+        default_profile
     };
     cmd.arg("--profile")
         .arg(profile)
@@ -149,8 +153,12 @@ pub fn build(package: &PackageMetadata, config: &BuildConfig) -> Result<(), Scar
 pub fn build_and_load_artifacts(
     package: &PackageMetadata,
     config: &BuildConfig,
+    build_for_script: bool,
 ) -> Result<HashMap<String, StarknetContractArtifacts>> {
-    build(package, config).map_err(|e| anyhow!(format!("Failed to build using scarb; {e}")))?;
+    // TODO (#2042): Remove this logic, always use release as default
+    let default_profile = if build_for_script { "dev" } else { "release" };
+    build(package, config, default_profile)
+        .map_err(|e| anyhow!(format!("Failed to build using scarb; {e}")))?;
 
     let metadata = get_scarb_metadata_with_deps(&config.scarb_toml_path)?;
     if metadata.profiles.contains(&config.profile) {
@@ -165,14 +173,16 @@ pub fn build_and_load_artifacts(
     } else {
         let profile = &config.profile;
         print_as_warning(&anyhow!(
-            "Profile {profile} does not exist in scarb, using default 'dev' profile."
+            "Profile {profile} does not exist in scarb, using '{default_profile}' profile."
         ));
-        Ok(
-            get_contracts_artifacts_and_source_sierra_paths(&metadata, &package.id, None)?
-                .into_iter()
-                .map(|(name, (artifacts, _))| (name, artifacts))
-                .collect(),
-        )
+        Ok(get_contracts_artifacts_and_source_sierra_paths(
+            &metadata,
+            &package.id,
+            Some(default_profile),
+        )?
+        .into_iter()
+        .map(|(name, (artifacts, _))| (name, artifacts))
+        .collect())
     }
 }
 
