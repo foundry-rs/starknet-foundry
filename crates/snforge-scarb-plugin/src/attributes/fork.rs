@@ -30,11 +30,9 @@ impl AttributeCollector for ForkCollector {
         args: Arguments,
         _warns: &mut Vec<Diagnostic>,
     ) -> Result<String, Diagnostics> {
-        let expr = branch(
-            inline_args(db, &args),
-            || overridden_args(db, &args),
-            || from_file_args(db, &args),
-        )?;
+        let expr = branch(inline_args(db, &args), || {
+            branch(overridden_args(db, &args), || from_file_args(db, &args))
+        })?;
 
         Ok(expr)
     }

@@ -10,29 +10,35 @@ fn higher_severity(a: Severity, b: Severity) -> Severity {
 
 pub fn branch(
     left: Result<String, Diagnostic>,
-    middle: impl Fn() -> Result<String, Diagnostic>,
     right: impl Fn() -> Result<String, Diagnostic>,
 ) -> Result<String, Diagnostic> {
-    left.or_else(|left_error| {
-        middle().or_else(|middle_error| {
-            right().map_err(|right_error| Diagnostic {
-                severity: higher_severity(
-                    higher_severity(left_error.severity, middle_error.severity),
-                    right_error.severity,
-                ),
+    left.or_else(|error| {
+        right().map_err(|next_error| {
+            let next_message = if next_error.message.contains("All options failed") {
+                let mut lines: Vec<&str> = next_error.message.lines().collect();
+                lines = lines[1..lines.len() - 1].to_vec();
+                let mut next_message = lines.join("\n");
+                if let Some(pos) = next_message.find("- variant: ") {
+                    next_message.replace_range(pos..pos + 11, "");
+                }
+                next_message
+            } else {
+                next_error.message.clone()
+            };
+
+            Diagnostic {
+                severity: higher_severity(error.severity, next_error.severity),
                 message: formatdoc!(
                     "
                         All options failed
-                        First variant: {}
-                        Second variant: {}
-                        Third variant: {}
+                        - variant: {}
+                        - variant: {}
                         Resolve at least one of them
                     ",
-                    left_error.message,
-                    middle_error.message,
-                    right_error.message
+                    error.message,
+                    next_message
                 ),
-            })
+            }
         })
     })
 }
