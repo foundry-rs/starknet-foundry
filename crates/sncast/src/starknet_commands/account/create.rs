@@ -13,7 +13,7 @@ use sncast::helpers::constants::{
     CREATE_KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH,
 };
 use sncast::helpers::rpc::RpcArgs;
-use sncast::response::structs::AccountCreateResponse;
+use sncast::response::structs::{AccountCreateResponse, Address};
 use sncast::{
     check_class_hash_exists, check_if_legacy_contract, extract_or_generate_salt, get_chain_id,
     get_keystore_password, handle_account_factory_error,
@@ -77,7 +77,7 @@ pub async fn create(
     let (account_json, max_fee) =
         generate_account(provider, salt, class_hash, &account_type).await?;
 
-    let address = account_json["address"]
+    let address: Felt = account_json["address"]
         .as_str()
         .context("Invalid address")?
         .parse()?;
@@ -121,7 +121,7 @@ pub async fn create(
     }
 
     Ok(AccountCreateResponse {
-        address,
+        address: Address(address),
         max_fee,
         add_profile: if add_profile.is_some() {
             format!(

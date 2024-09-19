@@ -35,6 +35,13 @@ impl Serialize for Address {
         serializer.serialize_str(&format!("{:#064x}", &self.0))
     }
 }
+
+impl LowerHex for Address {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 pub trait CommandResponse: Serialize {}
 
 #[derive(Serialize, CairoSerialize, Clone)]
@@ -65,7 +72,7 @@ impl CommandResponse for DeclareResponse {}
 
 #[derive(Serialize)]
 pub struct AccountCreateResponse {
-    pub address: Felt,
+    pub address: Address,
     #[serde(serialize_with = "crate::response::structs::serialize_as_decimal")]
     pub max_fee: Felt,
     pub add_profile: String,
