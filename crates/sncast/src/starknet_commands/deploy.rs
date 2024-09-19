@@ -122,7 +122,8 @@ pub async fn deploy(
                     deploy.class_hash,
                     &udc_uniqueness(deploy.unique, account.address()),
                     &deploy.constructor_calldata,
-                ),
+                )
+                .into(),
                 transaction_hash: result.transaction_hash,
             },
             wait_config,

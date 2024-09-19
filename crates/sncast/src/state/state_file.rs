@@ -310,6 +310,7 @@ fn verify_version(version: u8) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::response::structs::Address;
     use crate::state::state_file::ScriptTransactionOutput::ErrorResponse;
     use camino::Utf8PathBuf;
     use conversions::string::TryFromHexStr;
@@ -406,7 +407,7 @@ mod tests {
         let transaction = ScriptTransactionEntry {
             name: "declare".to_string(),
             output: ScriptTransactionOutput::DeclareResponse(DeclareResponse {
-                class_hash: Felt::try_from_hex_str("0x123").unwrap(),
+                class_hash: Address(Felt::try_from_hex_str("0x123").unwrap()),
                 transaction_hash: Felt::try_from_hex_str("0x321").unwrap(),
             }),
             status: ScriptTransactionStatus::Success,
@@ -443,7 +444,7 @@ mod tests {
         let transaction1 = ScriptTransactionEntry {
             name: "declare".to_string(),
             output: ScriptTransactionOutput::DeclareResponse(DeclareResponse {
-                class_hash: Felt::try_from_hex_str("0x1").unwrap(),
+                class_hash: Address(Felt::try_from_hex_str("0x1").unwrap()),
                 transaction_hash: Felt::try_from_hex_str("0x2").unwrap(),
             }),
             status: ScriptTransactionStatus::Success,
@@ -514,7 +515,7 @@ mod tests {
         let transaction1 = ScriptTransactionEntry {
             name: "declare".to_string(),
             output: ScriptTransactionOutput::DeclareResponse(DeclareResponse {
-                class_hash: Felt::try_from_hex_str("0x1").unwrap(),
+                class_hash: Address(Felt::try_from_hex_str("0x1").unwrap()),
                 transaction_hash: Felt::try_from_hex_str("0x2").unwrap(),
             }),
             status: ScriptTransactionStatus::Success,
@@ -591,7 +592,7 @@ mod tests {
             name: "deploy".to_string(),
             output: ScriptTransactionOutput::DeployResponse(DeployResponse {
                 transaction_hash: Felt::try_from_hex_str("0x3").unwrap(),
-                contract_address: Felt::try_from_hex_str("0x333").unwrap(),
+                contract_address: Address(Felt::try_from_hex_str("0x333").unwrap()),
             }),
             status: ScriptTransactionStatus::Success,
             timestamp: 1,

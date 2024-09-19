@@ -5,6 +5,8 @@ use conversions::serde::serialize::CairoSerialize;
 use indoc::formatdoc;
 use serde::{Deserialize, Serialize, Serializer};
 use starknet::core::types::Felt;
+use std::fmt;
+use std::fmt::{Formatter, LowerHex};
 
 pub struct Decimal(pub u64);
 
@@ -42,6 +44,12 @@ impl LowerHex for Address {
     }
 }
 
+impl From<Felt> for Address {
+    fn from(value: Felt) -> Self {
+        Self(value)
+    }
+}
+
 pub trait CommandResponse: Serialize {}
 
 #[derive(Serialize, CairoSerialize, Clone)]
@@ -58,14 +66,14 @@ impl CommandResponse for InvokeResponse {}
 
 #[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
 pub struct DeployResponse {
-    pub contract_address: Felt,
+    pub contract_address: Address,
     pub transaction_hash: Felt,
 }
 impl CommandResponse for DeployResponse {}
 
 #[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
 pub struct DeclareResponse {
-    pub class_hash: Felt,
+    pub class_hash: Address,
     pub transaction_hash: Felt,
 }
 impl CommandResponse for DeclareResponse {}
