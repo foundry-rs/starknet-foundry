@@ -153,7 +153,7 @@ fn accepts_inline_config() {
 }
 
 #[test]
-fn overriding_config_1() {
+fn overriding_config_name_first() {
     let item = TokenStream::new(EMPTY_FN.into());
     let args = TokenStream::new(r#"("MAINNET", block_number: 23)"#.into());
 

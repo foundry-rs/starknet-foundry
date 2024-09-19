@@ -2,12 +2,12 @@ use self::block_id::{BlockId, BlockIdVariants};
 use crate::{
     args::Arguments,
     attributes::{AttributeCollector, AttributeInfo, AttributeTypeData},
+    branch,
     cairo_expression::CairoExpression,
     config_statement::extend_with_config_cheatcodes,
     types::ParseFromExpr,
-    utils::branch,
 };
-use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream};
+use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, Severity, TokenStream};
 use cairo_lang_syntax::node::db::SyntaxGroup;
 use indoc::formatdoc;
 use url::Url;
@@ -30,9 +30,11 @@ impl AttributeCollector for ForkCollector {
         args: Arguments,
         _warns: &mut Vec<Diagnostic>,
     ) -> Result<String, Diagnostics> {
-        let expr = branch(inline_args(db, &args), || {
-            branch(overridden_args(db, &args), || from_file_args(db, &args))
-        })?;
+        let expr = branch!(
+            inline_args(db, &args),
+            overridden_args(db, &args),
+            from_file_args(db, &args)
+        )?;
 
         Ok(expr)
     }

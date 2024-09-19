@@ -1,44 +1,48 @@
 use cairo_lang_macro::{Diagnostic, Severity};
 use indoc::formatdoc;
 
-fn higher_severity(a: Severity, b: Severity) -> Severity {
+pub fn higher_severity(a: Severity, b: Severity) -> Severity {
     match (a, b) {
         (Severity::Warning, Severity::Warning) => Severity::Warning,
         _ => Severity::Error,
     }
 }
+pub fn format_error_message(variants: &[Diagnostic]) -> String {
+    let formatted_variants: Vec<String> = variants
+        .iter()
+        .map(|variant| format!("- variant: {}", variant.message))
+        .collect();
 
-pub fn branch(
-    left: Result<String, Diagnostic>,
-    right: impl Fn() -> Result<String, Diagnostic>,
-) -> Result<String, Diagnostic> {
-    left.or_else(|error| {
-        right().map_err(|next_error| {
-            let next_message = if next_error.message.contains("All options failed") {
-                let mut lines: Vec<&str> = next_error.message.lines().collect();
-                lines = lines[1..lines.len() - 1].to_vec();
-                let mut next_message = lines.join("\n");
-                if let Some(pos) = next_message.find("- variant: ") {
-                    next_message.replace_range(pos..pos + 11, "");
-                }
-                next_message
-            } else {
-                next_error.message.clone()
-            };
+    formatdoc! {"
+        All options failed
+        {}
+        Resolve at least one of them
+    ", formatted_variants.join("\n")}
+}
 
-            Diagnostic {
-                severity: higher_severity(error.severity, next_error.severity),
-                message: formatdoc!(
-                    "
-                        All options failed
-                        - variant: {}
-                        - variant: {}
-                        Resolve at least one of them
-                    ",
-                    error.message,
-                    next_message
-                ),
-            }
-        })
-    })
+#[macro_export]
+macro_rules! branch {
+    ($($result:expr),+) => {{
+        let mut messages = Vec::new();
+        let mut result = None;
+
+        $(
+            if result.is_none() {match $result {
+                Ok(val) => {
+                    result = Some(val);
+                },
+                Err(err) => {
+                    messages.push(err);
+                },
+            }}
+        )+
+        if let Some(result) = result {
+            Ok(result)
+        } else {
+            Err(Diagnostic {
+                message: crate::utils::format_error_message(&messages),
+                severity: messages.into_iter().fold(Severity::Warning, |acc, x| crate::utils::higher_severity(acc, x.severity))
+            })
+        }
+    }};
 }
