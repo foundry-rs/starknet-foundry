@@ -182,8 +182,8 @@ mod tests {
             &[ForkTarget {
                 name: "SOME_NAME".to_string(),
                 url: "unparsable_url".to_string(),
-                block_id_type: "Tag".to_string(),
-                block_id_value: "Latest".to_string(),
+                block_id_type: "tag".to_string(),
+                block_id_value: "latest".to_string(),
             }],
             &mut BlockNumberMap::default()
         )
