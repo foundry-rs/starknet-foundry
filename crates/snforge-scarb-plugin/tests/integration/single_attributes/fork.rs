@@ -185,7 +185,7 @@ fn overriding_config_name_first() {
 }
 
 #[test]
-fn overriding_config_2() {
+fn overriding_config_name_second() {
     let item = TokenStream::new(EMPTY_FN.into());
     let args = TokenStream::new(r#"(block_number: 23, "MAINNET")"#.into());
 
