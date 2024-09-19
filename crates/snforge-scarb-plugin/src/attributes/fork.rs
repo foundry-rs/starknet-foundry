@@ -73,7 +73,7 @@ fn from_file_args(db: &dyn SyntaxGroup, args: &Arguments) -> Result<String, Diag
         .unnamed_only::<ForkCollector>()?
         .of_length::<1, ForkCollector>()?;
 
-    let name = String::parse_from_expr::<ForkCollector>(db, arg, "0")?;
+    let name = String::parse_from_expr::<ForkCollector>(db, arg.1, arg.0.to_string().as_str())?;
 
     let name = name.as_cairo_expression();
 
@@ -92,7 +92,7 @@ fn overridden_args(db: &dyn SyntaxGroup, args: &Arguments) -> Result<String, Dia
     ])?;
 
     let block_id = BlockId::parse_from_expr::<ForkCollector>(db, &block_id, block_id.0.as_ref())?;
-    let name = String::parse_from_expr::<ForkCollector>(db, arg, "0")?;
+    let name = String::parse_from_expr::<ForkCollector>(db, arg.1, arg.0.to_string().as_str())?;
 
     let block_id = block_id.as_cairo_expression();
     let name = name.as_cairo_expression();

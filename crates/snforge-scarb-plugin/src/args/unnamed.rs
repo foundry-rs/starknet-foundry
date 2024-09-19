@@ -3,10 +3,10 @@ use cairo_lang_macro::Diagnostic;
 use cairo_lang_syntax::node::ast::Expr;
 use std::{collections::HashMap, ops::Deref};
 
-pub struct UnnamedArgs<'a>(Vec<&'a Expr>);
+pub struct UnnamedArgs<'a>(Vec<(usize, &'a Expr)>);
 
 impl<'a> Deref for UnnamedArgs<'a> {
-    type Target = Vec<&'a Expr>;
+    type Target = Vec<(usize, &'a Expr)>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -19,7 +19,7 @@ impl UnnamedArgs<'_> {
 
         args.sort_by(|(a, _), (b, _)| a.cmp(b));
 
-        let args = args.into_iter().map(|(_, expr)| expr).collect();
+        let args = args.into_iter().map(|(&pos, expr)| (pos, expr)).collect();
 
         UnnamedArgs(args)
     }
@@ -28,7 +28,7 @@ impl UnnamedArgs<'_> {
 impl<'a> UnnamedArgs<'a> {
     pub fn of_length<const N: usize, T: AttributeInfo>(
         &self,
-    ) -> Result<&[&'a Expr; N], Diagnostic> {
+    ) -> Result<&[(usize, &'a Expr); N], Diagnostic> {
         self.as_slice()
             .try_into()
             .map_err(|_| T::error(format!("expected {} arguments, got: {}", N, self.len())))
