@@ -5,7 +5,7 @@ With `cairo-coverage`, you can generate a coverage report that can later be anal
 
 ## Prerequisites
 
-`cairo-coverage` relies on debug information provided by Scarb. To generate the necessary debug information, you need to have:
+`cairo-coverage` relies on debug information provided by Scarb. To generate the necessary debug information, you need to install:
 
 1. [Scarb](https://github.com/software-mansion/scarb) version `2.8.0` or higher
 2. `Scarb.toml` file with the following Cairo compiler configuration:
