@@ -24,10 +24,10 @@ fn create_snfoundry_manifest(path: &PathBuf) -> Result<()> {
         # [sncast.myprofile1]                                    # Define a profile name
         # url = "http://127.0.0.1:5050/"                         # Url of the RPC provider
         # accounts_file = "../account-file"                      # Path to the file with the account data
-        # account = "mainuser"                                   # Account that will be used for the transactions
+        # account = "mainuser"                                   # Account from `accounts_file` or default account file that will be used for the transactions
         # keystore = "~/keystore"                                # Path to the keystore file
         # wait_params = {{ timeout = 500, retry_interval = 10 }}   # Wait parameters
-        # block_explorer = "StarkScan"                           # Block explorer service
+        # block_explorer = "StarkScan"                           # Block explorer service used to display links to transaction details
         "#
         },
     )?;

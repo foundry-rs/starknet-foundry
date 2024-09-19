@@ -57,7 +57,7 @@ keystore = "path/to/keystore"
 
 #### `wait_params`
 
-The `wait_params` field defines the waiting parameters for transactions. By default, timeout is set to 300 seconds and retry_interval to 5 seconds. 
+The `wait_params` field defines the waiting parameters for transactions. By default, timeout is set to `300 seconds` and retry_interval to `5 seconds`. 
 This means transactions will be checked every `5 seconds`, with a total of `60 attempts` before timing out.
 
 ```toml
