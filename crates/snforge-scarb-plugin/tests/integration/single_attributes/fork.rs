@@ -16,9 +16,9 @@ fn fails_without_block() {
            Diagnostic::error(formatdoc!(
                 "
                     All options failed
-                    First variant: exactly one of <block_hash> | <block_number> | <block_tag> should be specified, got 0
-                    Second variant: #[fork] expected 1 arguments, got: 0
-                    Third variant: #[fork] can be used with unnamed attributes only
+                    - variant: exactly one of <block_hash> | <block_number> | <block_tag> should be specified, got 0
+                    - variant: #[fork] expected 1 arguments, got: 0
+                    - variant: #[fork] can be used with unnamed attributes only
                     Resolve at least one of them
                 "
             ))
@@ -59,9 +59,9 @@ fn fails_without_args() {
         &[Diagnostic::error(formatdoc!(
             "
                 All options failed
-                - variant: <url> argument is missing
+                - variant: exactly one of <block_hash> | <block_number> | <block_tag> should be specified, got 0
                 - variant: #[fork] expected 1 arguments, got: 0
-                - variant: #[fork] can be used with unnamed attributes only
+                - variant: #[fork] expected 1 arguments, got: 0
                 Resolve at least one of them
             "
         ))],
@@ -80,9 +80,9 @@ fn fails_with_invalid_url() {
         &[Diagnostic::error(formatdoc!(
             "
                 All options failed
-                - variant: exactly one of <block_hash> | <block_number> | <block_tag> should be specified, got 0
+                - variant: #[fork] <url> is not a valid url
                 - variant: #[fork] expected 1 arguments, got: 0
-                - variant: #[fork] expected 1 arguments, got: 0
+                - variant: #[fork] can be used with unnamed attributes only
                 Resolve at least one of them
             "
         ))],
