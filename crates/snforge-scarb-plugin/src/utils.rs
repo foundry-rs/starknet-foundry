@@ -27,15 +27,18 @@ macro_rules! branch {
         let mut result = None;
 
         $(
-            if result.is_none() {match $result {
-                Ok(val) => {
-                    result = Some(val);
-                },
-                Err(err) => {
-                    messages.push(err);
-                },
-            }}
+            if result.is_none() {
+                match $result {
+                    Ok(val) => {
+                        result = Some(val);
+                    },
+                    Err(err) => {
+                        messages.push(err);
+                    },
+                }
+            }
         )+
+
         if let Some(result) = result {
             Ok(result)
         } else {
