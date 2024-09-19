@@ -24,6 +24,17 @@ where
     serializer.serialize_str(&format!("{value:#}"))
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Deserialize, CairoSerialize)]
+pub struct Address(pub Felt);
+
+impl Serialize for Address {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(&format!("{:#064x}", &self.0))
+    }
+}
 pub trait CommandResponse: Serialize {}
 
 #[derive(Serialize, CairoSerialize, Clone)]
