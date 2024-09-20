@@ -48,7 +48,7 @@ macro_rules! branch {
         } else {
             Err(Diagnostic {
                 message: $crate::utils::format_error_message(&messages),
-                severity: messages.into_iter().fold(Severity::Warning, |acc, x| $crate::utils::higher_severity(acc, x.severity))
+                severity: messages.into_iter().fold(Severity::Warning, |acc, diagnostic| $crate::utils::higher_severity(acc, diagnostic.severity))
             })
         }
     }};
