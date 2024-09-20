@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Fixed
 
 - `sncast declare` no longer fails for flat contracts (i.e. CASM artifacts with `bytecode_segment_lengths` being a number)
+- Addresses outputted when calling `sncast account create`, `sncast deploy` and `sncast declare` are now padded to the correct length and prefixed with `0x0`
 
 ### Forge
 
