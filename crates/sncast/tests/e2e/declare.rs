@@ -52,6 +52,44 @@ async fn test_happy_case_eth(account: &str) {
     assert!(matches!(receipt, Declare(_)));
 }
 
+#[tokio::test]
+async fn test_happy_case_human_readable() {
+    let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
+
+    let args = vec![
+        "--accounts-file",
+        accounts_json_path.as_str(),
+        "--account",
+        "user0",
+        "declare",
+        "--url",
+        URL,
+        "--contract-name",
+        "Map",
+        "--max-fee",
+        "99999999999999999",
+        "--fee-token",
+        "strk",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let output = snapbox.assert().success();
+
+    assert_stdout_contains(
+        output,
+        indoc! {r"
+        command: declare
+        class_hash: 0x0[..]
+        transaction_hash: 0x[..]
+        
+        To see declaration details, visit:
+        class: https://[..]
+        transaction: https://[..]
+    " },
+    );
+}
+
 #[test_case(DEVNET_OZ_CLASS_HASH_CAIRO_0.parse().unwrap(), AccountType::OpenZeppelin; "cairo_0_class_hash")]
 #[test_case(OZ_CLASS_HASH, AccountType::OpenZeppelin; "cairo_1_class_hash")]
 #[test_case(ARGENT_CLASS_HASH, AccountType::Argent; "argent_class_hash")]
