@@ -20,6 +20,10 @@ pub fn format_error_message(variants: &[Diagnostic]) -> String {
     ", formatted_variants.join("\n")}
 }
 
+/// The `branch` macro is used to evaluate multiple expressions and return the first successful result.
+/// If all expressions fail, it collects the error messages and returns a combined error.
+///
+/// This macro is used instead of a function because it can perform lazy evaluation and has better readability.
 #[macro_export]
 macro_rules! branch {
     ($($result:expr),+) => {{
