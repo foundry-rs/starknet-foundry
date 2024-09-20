@@ -100,8 +100,10 @@ fn overridden_args(db: &dyn SyntaxGroup, args: &Arguments) -> Result<String, Dia
     Ok(formatdoc!(
         "
             snforge_std::_config_types::ForkConfig::Overridden(
-                block: {block_id},
-                name: {name}
+                snforge_std::_config_types::OverriddenForkConfig {{
+                    block: {block_id},
+                    name: {name}
+                }}
             )
         "
     ))

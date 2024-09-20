@@ -170,9 +170,11 @@ fn overriding_config_name_first() {
                     let mut data = array![];
 
                     snforge_std::_config_types::ForkConfig::Overridden(
-                        block: snforge_std::_config_types::BlockId::BlockNumber(0x17),
-                        name: "MAINNET"
-                        )
+                        snforge_std::_config_types::OverriddenForkConfig {
+                            block: snforge_std::_config_types::BlockId::BlockNumber(0x17),
+                            name: "MAINNET"
+                        }
+                     )
                     .serialize(ref data);
 
                     starknet::testing::cheatcode::<'set_config_fork'>(data.span());
@@ -202,9 +204,11 @@ fn overriding_config_name_second() {
                     let mut data = array![];
 
                     snforge_std::_config_types::ForkConfig::Overridden(
-                        block: snforge_std::_config_types::BlockId::BlockNumber(0x17),
-                        name: "MAINNET"
-                        )
+                        snforge_std::_config_types::OverriddenForkConfig {
+                            block: snforge_std::_config_types::BlockId::BlockNumber(0x17),
+                            name: "MAINNET"
+                        }
+                    )
                     .serialize(ref data);
 
                     starknet::testing::cheatcode::<'set_config_fork'>(data.span());
