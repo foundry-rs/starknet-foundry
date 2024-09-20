@@ -1,7 +1,7 @@
 use crate::{block_number_map::BlockNumberMap, scarb::config::ForkTarget};
 use anyhow::{anyhow, Result};
 use cheatnet::runtime_extensions::forge_config_extension::config::{
-    BlockId, InlineForkConfig, RawForkConfig,
+    BlockId, InlineForkConfig, OverriddenForkConfig, RawForkConfig,
 };
 use conversions::byte_array::ByteArray;
 use forge_runner::package_tests::{
@@ -129,14 +129,13 @@ fn replace_id_with_params(
                 block: block_id,
             })
         }
-        RawForkConfig::Overridden(overridden) => {
+        RawForkConfig::Overridden(OverriddenForkConfig { name, block }) => {
             let fork_target_from_runner_config =
-                get_fork_target_from_runner_config(fork_targets, &overridden.name)?;
+                get_fork_target_from_runner_config(fork_targets, &name)?;
 
-            Ok(InlineForkConfig {
-                url: fork_target_from_runner_config.url.parse()?,
-                block: overridden.block,
-            })
+            let url = fork_target_from_runner_config.url.parse()?;
+
+            Ok(InlineForkConfig { url, block })
         }
     }
 }
