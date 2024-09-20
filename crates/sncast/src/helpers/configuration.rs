@@ -56,7 +56,7 @@ impl Default for CastConfig {
             accounts_file: Utf8PathBuf::default(),
             keystore: None,
             wait_params: ValidatedWaitParams::default(),
-            block_explorer: Some(block_explorer::Service::StarkScan),
+            block_explorer: Some(block_explorer::Service::default()),
             show_explorer_links: true,
         }
     }

@@ -35,16 +35,14 @@ pub fn print_block_explorer_link_if_allowed<T: OutputLink>(
     if output_format != OutputFormat::Human {
         return;
     }
-    let Some(explorer) = explorer else {
-        return;
-    };
     let Ok(response) = result else {
         return;
     };
     let Ok(network) = chain_id.try_into() else {
         return;
     };
-    if let Ok(provider) = explorer.as_provider(network) {
+
+    if let Ok(provider) = explorer.unwrap_or_default().as_provider(network) {
         response.print_links(provider);
     }
 }
