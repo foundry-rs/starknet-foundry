@@ -54,14 +54,19 @@ async fn test_happy_case_eth(account: &str) {
 
 #[tokio::test]
 async fn test_happy_case_human_readable() {
-    let tempdir = copy_directory_to_tempdir(CONTRACTS_DIR.to_string() + "/map");
-    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
+    let contract_path = duplicate_contract_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/map",
+        "put",
+        "human_readable",
+    );
+    let tempdir = create_and_deploy_oz_account().await;
+    join_tempdirs(&contract_path, &tempdir);
 
     let args = vec![
         "--accounts-file",
-        accounts_json_path.as_str(),
+        "accounts.json",
         "--account",
-        "user0",
+        "my_account",
         "declare",
         "--url",
         URL,
