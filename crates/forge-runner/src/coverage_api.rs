@@ -13,6 +13,12 @@ pub const OUTPUT_FILE_NAME: &str = "coverage.lcov";
 
 const MINIMAL_SCARB_VERSION: Version = Version::new(2, 8, 0);
 
+const CAIRO_COVERAGE_REQUIRED_ENTRIES: [(&str, &str); 3] = [
+    ("unstable-add-statements-functions-debug-info", "true"),
+    ("unstable-add-statements-code-locations-debug-info", "true"),
+    ("inlining-strategy", "\"avoid\""),
+];
+
 pub fn run_coverage(saved_trace_data_paths: &[PathBuf]) -> Result<()> {
     let coverage = env::var("CAIRO_COVERAGE")
         .map(PathBuf::from)
@@ -64,13 +70,9 @@ pub fn can_coverage_be_generated(scarb_metadata: &Metadata) -> Result<()> {
         .and_then(|profile| profile.get("cairo"))
         .and_then(|cairo| cairo.as_table())
         .is_some_and(|profile_cairo| {
-            [
-                ("unstable-add-statements-functions-debug-info", "true"),
-                ("unstable-add-statements-code-locations-debug-info", "true"),
-                ("inlining-strategy", "\"avoid\""),
-            ]
-            .iter()
-            .all(|(key, value)| contains_entry_with_value(profile_cairo, key, value))
+            CAIRO_COVERAGE_REQUIRED_ENTRIES
+                .iter()
+                .all(|(key, value)| contains_entry_with_value(profile_cairo, key, value))
         });
 
     ensure!(
