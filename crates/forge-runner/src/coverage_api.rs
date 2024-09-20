@@ -1,12 +1,17 @@
 use anyhow::{ensure, Context, Result};
-use indoc::indoc;
+use indoc::{formatdoc, indoc};
+use scarb_api::metadata::Metadata;
+use semver::Version;
 use shared::command::CommandExt;
 use std::process::Stdio;
 use std::{env, fs, path::PathBuf, process::Command};
+use toml_edit::{DocumentMut, Table};
 use which::which;
 
 pub const COVERAGE_DIR: &str = "coverage";
 pub const OUTPUT_FILE_NAME: &str = "coverage.lcov";
+
+const MINIMAL_SCARB_VERSION: Version = Version::new(2, 8, 0);
 
 pub fn run_coverage(saved_trace_data_paths: &[PathBuf]) -> Result<()> {
     let coverage = env::var("CAIRO_COVERAGE")
@@ -48,4 +53,51 @@ pub fn run_coverage(saved_trace_data_paths: &[PathBuf]) -> Result<()> {
         })?;
 
     Ok(())
+}
+
+pub fn can_coverage_be_generated(scarb_metadata: &Metadata) -> Result<()> {
+    let manifest = fs::read_to_string(&scarb_metadata.runtime_manifest)?.parse::<DocumentMut>()?;
+
+    let has_need_entries = manifest
+        .get("profile")
+        .and_then(|profile| profile.get(&scarb_metadata.current_profile))
+        .and_then(|profile| profile.get("cairo"))
+        .and_then(|cairo| cairo.as_table())
+        .is_some_and(|profile_cairo| {
+            [
+                ("unstable-add-statements-functions-debug-info", "true"),
+                ("unstable-add-statements-code-locations-debug-info", "true"),
+                ("inlining-strategy", "\"avoid\""),
+            ]
+            .iter()
+            .all(|(key, value)| contains_entry_with_value(profile_cairo, key, value))
+        });
+
+    ensure!(
+        has_need_entries,
+        formatdoc! {
+            "Scarb.toml must have the following Cairo compiler configuration to run coverage:
+
+            [profile.{profile}.cairo]
+            unstable-add-statements-functions-debug-info = true
+            unstable-add-statements-code-locations-debug-info = true
+            inlining-strategy = \"avoid\"
+            ... other entries ...
+            ",
+            profile = scarb_metadata.current_profile
+        },
+    );
+
+    ensure!(
+        scarb_metadata.app_version_info.version >= MINIMAL_SCARB_VERSION,
+        "Coverage generation requires scarb version >= {MINIMAL_SCARB_VERSION}",
+    );
+
+    Ok(())
+}
+
+fn contains_entry_with_value(table: &Table, key: &str, value: &str) -> bool {
+    table
+        .get(key)
+        .map_or(false, |entry| entry.to_string().trim() == value)
 }
