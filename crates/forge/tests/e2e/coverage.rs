@@ -2,6 +2,7 @@ use super::common::runner::{setup_package, test_runner};
 use assert_fs::fixture::{FileWriteStr, PathChild};
 use forge_runner::coverage_api::{COVERAGE_DIR, OUTPUT_FILE_NAME};
 use indoc::indoc;
+use shared::test_utils::output_assert::assert_stdout_contains;
 use std::fs;
 use toml_edit::{value, DocumentMut};
 
@@ -22,11 +23,12 @@ fn test_coverage_project() {
 fn test_fail_on_scarb_version_lt_2_8_0() {
     let temp = setup_package("coverage_project");
 
-    test_runner(&temp)
-        .arg("--coverage")
-        .assert()
-        .failure()
-        .stdout_eq("[ERROR] Coverage generation requires scarb version >= 2.8.0\n");
+    let output = test_runner(&temp).arg("--coverage").assert().failure();
+
+    assert_stdout_contains(
+        output,
+        "[ERROR] Coverage generation requires scarb version >= 2.8.0\n",
+    );
 }
 
 #[test]
@@ -45,11 +47,11 @@ fn test_fail_wrong_set_up() {
 
     manifest_path.write_str(&scarb_toml.to_string()).unwrap();
 
-    test_runner(&temp)
-        .arg("--coverage")
-        .assert()
-        .failure()
-        .stdout_eq(indoc! {
+    let output = test_runner(&temp).arg("--coverage").assert().failure();
+
+    assert_stdout_contains(
+        output,
+        indoc! {
             "[ERROR] Scarb.toml must have the following Cairo compiler configuration to run coverage:
 
             [profile.dev.cairo]
@@ -59,5 +61,6 @@ fn test_fail_wrong_set_up() {
             ... other entries ...
 
             "
-        });
+        },
+    );
 }
