@@ -1,3 +1,4 @@
+use crate::attributes::{ValidArgs, ValidArgsTypes};
 use crate::{
     args::Arguments,
     attributes::{AttributeCollector, AttributeInfo, AttributeTypeData},
@@ -16,6 +17,10 @@ impl AttributeInfo for AvailableGasCollector {
 
 impl AttributeTypeData for AvailableGasCollector {
     const CHEATCODE_NAME: &'static str = "set_config_available_gas";
+}
+
+impl ValidArgs for AvailableGasCollector {
+    const VALID_ARGS: ValidArgsTypes<'_> = ValidArgsTypes::Unnamed;
 }
 
 impl AttributeCollector for AvailableGasCollector {

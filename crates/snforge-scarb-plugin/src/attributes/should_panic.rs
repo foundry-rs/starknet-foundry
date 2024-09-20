@@ -1,4 +1,5 @@
 use self::expected::Expected;
+use crate::attributes::{ValidArgs, ValidArgsTypes, ValidNamedArgs};
 use crate::{
     args::Arguments,
     attributes::{AttributeCollector, AttributeInfo, AttributeTypeData},
@@ -19,6 +20,11 @@ impl AttributeInfo for ShouldPanicCollector {
 
 impl AttributeTypeData for ShouldPanicCollector {
     const CHEATCODE_NAME: &'static str = "set_config_should_panic";
+}
+
+impl ValidArgs for ShouldPanicCollector {
+    const VALID_ARGS: ValidArgsTypes<'_> =
+        ValidArgsTypes::Named(ValidNamedArgs::Restricted(&["expected"]));
 }
 
 impl AttributeCollector for ShouldPanicCollector {

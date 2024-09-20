@@ -1,4 +1,4 @@
-use super::{AttributeInfo, AttributeTypeData};
+use super::{AttributeInfo, AttributeTypeData, ValidArgs, ValidArgsTypes};
 use crate::{
     args::Arguments, attributes::AttributeCollector,
     config_statement::extend_with_config_cheatcodes,
@@ -14,6 +14,10 @@ impl AttributeInfo for IgnoreCollector {
 
 impl AttributeTypeData for IgnoreCollector {
     const CHEATCODE_NAME: &'static str = "set_config_ignore";
+}
+
+impl ValidArgs for IgnoreCollector {
+    const VALID_ARGS: ValidArgsTypes<'_> = ValidArgsTypes::None;
 }
 
 impl AttributeCollector for IgnoreCollector {

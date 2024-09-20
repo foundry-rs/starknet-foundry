@@ -18,7 +18,25 @@ pub trait AttributeTypeData {
     const CHEATCODE_NAME: &'static str;
 }
 
-pub trait AttributeCollector: AttributeInfo + AttributeTypeData {
+pub enum ValidNamedArgs<'a> {
+    All,
+    Restricted(&'a [&'a str]),
+}
+
+pub enum ValidArgsTypes<'a> {
+    Named(ValidNamedArgs<'a>),
+    Unnamed,
+    Both {
+        valid_named_args: ValidNamedArgs<'a>,
+    },
+    None,
+}
+
+pub trait ValidArgs {
+    const VALID_ARGS: ValidArgsTypes<'_>;
+}
+
+pub trait AttributeCollector: AttributeInfo + AttributeTypeData + ValidArgs {
     fn args_into_config_expression(
         db: &dyn SyntaxGroup,
         args: Arguments,
