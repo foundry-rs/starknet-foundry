@@ -186,7 +186,7 @@ fn fork_aliased_decorator_overrding() {
 
             #[test]
             #[fork("FORK_NAME_FROM_SCARB_TOML", block_number: 2137)]
-            fn test_increase_balance() {
+            fn test_get_block_number() {
                 let execution_info = get_execution_info_syscall().unwrap().deref();
                 let block_info = execution_info.block_info.deref();
                 let block_number = block_info.block_number;
