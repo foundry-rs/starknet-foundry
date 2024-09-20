@@ -5,6 +5,8 @@ With `cairo-coverage`, you can generate a coverage report that can later be anal
 
 ## Prerequisites
 
+`cairo-coverage` relies on debug information provided by Scarb. To generate the necessary debug information, you need to have:
+
 1. [Scarb](https://github.com/software-mansion/scarb) version `2.8.0` or higher
 2. `Scarb.toml` file with the following Cairo compiler configuration:
 ```toml
@@ -40,3 +42,18 @@ If you want `snforge` to call `cairo-coverage` on generated files automatically,
 ```shell
 $ snforge test --coverage
 ```
+
+This will generate a coverage report in the `coverage` directory named `coverage.lcov`.
+
+## Coverage report
+
+`cairo-coverage` generates coverage data as an `.lcov` file. A summary report with aggregated data can be produced by one of many tools that accept the `lcov` format.
+In this example we will use the `genhtml` tool from the [lcov package](https://github.com/linux-test-project/lcov/tree/master) to generate an HTML report.
+
+Run the following command in the directory containing your `coverage.lcov` file:
+
+```shell
+$ genhtml -o coverage_report coverage.lcov
+```
+
+You can now open the `index.html` file in the `coverage_report` directory to see the generated coverage report.
