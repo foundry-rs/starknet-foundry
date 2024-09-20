@@ -87,6 +87,28 @@ fn fails_with_invalid_url() {
 }
 
 #[test]
+fn fails_with_unknown_argument() {
+    let item = TokenStream::new(EMPTY_FN.into());
+    let args = TokenStream::new(
+        r#"(url: "http://example.com", block_number: 23, unknow_arg: "value")"#.into(),
+    );
+
+    let result = fork(args, item);
+
+    assert_diagnostics(
+        &result,
+        &[Diagnostic::error(formatdoc!(
+            "
+                Both options failed
+                First variant: #[fork] unsupported named argument \"unknow_arg\" provided
+                Second variant: #[fork] can be used with unnamed attributes only
+                Resolve at least one of them
+            "
+        ))],
+    );
+}
+
+#[test]
 fn accepts_string() {
     let item = TokenStream::new(EMPTY_FN.into());
     let args = TokenStream::new(r#"("test")"#.into());

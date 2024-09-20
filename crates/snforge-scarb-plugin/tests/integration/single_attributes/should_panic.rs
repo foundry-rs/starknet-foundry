@@ -149,6 +149,21 @@ fn work_with_expected_tuple() {
 }
 
 #[test]
+fn fail_with_unknown_args() {
+    let item = TokenStream::new(EMPTY_FN.into());
+    let args = TokenStream::new("(unknown_arg: 'value')".into());
+
+    let result = should_panic(args, item);
+
+    assert_diagnostics(
+        &result,
+        &[Diagnostic::error(
+            "#[should_panic] unsupported named argument \"unknown_arg\" provided",
+        )],
+    );
+}
+
+#[test]
 fn is_used_once() {
     let item = TokenStream::new(formatdoc!(
         "
