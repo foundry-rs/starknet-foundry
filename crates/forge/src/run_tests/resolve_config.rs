@@ -160,7 +160,7 @@ mod tests {
             &[ForkTarget::new(
                 "definitely_non_existing".to_string(),
                 "https://not_taken.com".to_string(),
-                "Number".to_string(),
+                "number".to_string(),
                 "120".to_string(),
             )],
             &mut BlockNumberMap::default()

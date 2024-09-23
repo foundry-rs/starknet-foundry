@@ -1,4 +1,5 @@
 use anyhow::{bail, Result};
+use cheatnet::runtime_extensions::forge_config_extension::config::BlockId;
 use itertools::Itertools;
 use serde::Deserialize;
 use std::{
@@ -6,7 +7,6 @@ use std::{
     num::NonZeroU32,
 };
 use url::Url;
-use cheatnet::runtime_extensions::forge_config_extension::config::BlockId;
 
 #[allow(clippy::module_name_repetitions)]
 #[allow(clippy::struct_excessive_bools)]
@@ -37,7 +37,7 @@ pub struct ForgeConfigFromScarb {
 pub struct ForkTarget {
     pub name: String,
     pub url: Url,
-    pub block_id: BlockId
+    pub block_id: BlockId,
 }
 
 impl ForkTarget {
@@ -47,11 +47,17 @@ impl ForkTarget {
             name,
             url: Url::parse(&url).expect("Failed to parse fork url"),
             block_id: match block_id_type.as_str() {
-                "number" => BlockId::BlockNumber(block_id_value.parse().expect("Failed to parse block number")),
-                "hash" => BlockId::BlockHash(block_id_value.parse().expect("Failed to parse block hash")),
+                "number" => BlockId::BlockNumber(
+                    block_id_value
+                        .parse()
+                        .expect("Failed to parse block number"),
+                ),
+                "hash" => {
+                    BlockId::BlockHash(block_id_value.parse().expect("Failed to parse block hash"))
+                }
                 "tag" => BlockId::BlockTag,
                 _ => panic!("block_id must be one of (number | hash | tag)"),
-            }
+            },
         }
     }
 }
