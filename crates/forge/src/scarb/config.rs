@@ -54,7 +54,10 @@ impl ForkTarget {
                     .parse()
                     .map_err(|_| anyhow!("Failed to parse block hash"))?,
             ),
-            "tag" => BlockId::BlockTag,
+            "tag" => match block_id_value {
+                "latest" => BlockId::BlockTag,
+                _ => return Err(anyhow!("block_id.tag can only be equal to 'latest'")),
+            }
             _ => return Err(anyhow!("block_id must be one of (number | hash | tag)")),
         };
 
