@@ -10,6 +10,7 @@ pub mod nonce;
 pub mod primitive;
 pub mod serde;
 pub mod string;
+pub mod u256;
 
 pub trait FromConv<T>: Sized {
     fn from_(value: T) -> Self;
