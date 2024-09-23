@@ -26,7 +26,7 @@ impl AttributeCollector for AvailableGasCollector {
     ) -> Result<String, Diagnostics> {
         let &[arg] = args.unnamed_only::<Self>()?.of_length::<1, Self>()?;
 
-        let gas = Number::parse_from_expr::<Self>(db, arg, "0")?;
+        let gas = Number::parse_from_expr::<Self>(db, arg.1, arg.0.to_string().as_str())?;
 
         let gas = gas.as_cairo_expression();
 
