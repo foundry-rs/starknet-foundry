@@ -10,7 +10,6 @@ use forge_runner::package_tests::{
         TestTargetWithResolvedConfig,
     },
 };
-use num_bigint::BigInt;
 use starknet_api::block::BlockNumber;
 
 pub async fn resolve_config(
@@ -77,27 +76,6 @@ async fn resolve_fork_config(
     Ok(Some(ResolvedForkConfig { url, block_number }))
 }
 
-fn parse_block_id(fork_target: &ForkTarget) -> Result<BlockId> {
-    let block_id = match fork_target.block_id_type.as_str() {
-        "number" => BlockId::BlockNumber(fork_target.block_id_value.parse()?),
-        "hash" => {
-            let block_hash = fork_target.block_id_value.parse::<BigInt>()?;
-
-            BlockId::BlockHash(block_hash.into())
-        }
-        "tag" => {
-            if fork_target.block_id_value == "latest" {
-                BlockId::BlockTag
-            } else {
-                Err(anyhow!(r#"only "latest" block tag is supported"#))?
-            }
-        }
-        _ => Err(anyhow!("block_id must be one of (number | hash | tag)"))?,
-    };
-
-    Ok(block_id)
-}
-
 fn replace_id_with_params(
     raw_fork_config: RawForkConfig,
     fork_targets: &[ForkTarget],
@@ -114,10 +92,10 @@ fn replace_id_with_params(
                     anyhow!("Fork configuration named = {name} not found in the Scarb.toml")
                 })?;
 
-            let block_id = parse_block_id(fork_target_from_runner_config)?;
+            let block_id = fork_target_from_runner_config.block_id.clone();
 
             Ok(InlineForkConfig {
-                url: fork_target_from_runner_config.url.parse()?,
+                url: fork_target_from_runner_config.url.clone(),
                 block: block_id,
             })
         }
@@ -179,12 +157,12 @@ mod tests {
 
         assert!(resolve_config(
             mocked_tests,
-            &[ForkTarget {
-                name: "SOME_NAME".to_string(),
-                url: "unparsable_url".to_string(),
-                block_id_type: "tag".to_string(),
-                block_id_value: "latest".to_string(),
-            }],
+            &[ForkTarget::new(
+                "SOME_NAME".to_string(),
+                "unparsable_url".to_string(),
+                "tag".to_string(),
+                "latest".to_string()
+            )],
             &mut BlockNumberMap::default()
         )
         .await

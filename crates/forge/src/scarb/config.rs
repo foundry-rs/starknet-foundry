@@ -5,6 +5,8 @@ use std::{
     collections::{HashMap, HashSet},
     num::NonZeroU32,
 };
+use url::Url;
+use cheatnet::runtime_extensions::forge_config_extension::config::BlockId;
 
 #[allow(clippy::module_name_repetitions)]
 #[allow(clippy::struct_excessive_bools)]
@@ -34,9 +36,8 @@ pub struct ForgeConfigFromScarb {
 #[derive(Debug, PartialEq, Clone)]
 pub struct ForkTarget {
     pub name: String,
-    pub url: String,
-    pub block_id_type: String,
-    pub block_id_value: String,
+    pub url: Url,
+    pub block_id: BlockId
 }
 
 impl ForkTarget {
@@ -44,9 +45,13 @@ impl ForkTarget {
     pub fn new(name: String, url: String, block_id_type: String, block_id_value: String) -> Self {
         Self {
             name,
-            url,
-            block_id_type,
-            block_id_value,
+            url: Url::parse(&url).expect("Failed to parse fork url"),
+            block_id: match block_id_type.as_str() {
+                "number" => BlockId::BlockNumber(block_id_value.parse().expect("Failed to parse block number")),
+                "hash" => BlockId::BlockHash(block_id_value.parse().expect("Failed to parse block hash")),
+                "tag" => BlockId::BlockTag,
+                _ => panic!("block_id must be one of (number | hash | tag)"),
+            }
         }
     }
 }
