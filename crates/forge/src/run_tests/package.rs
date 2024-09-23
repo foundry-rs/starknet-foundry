@@ -56,7 +56,10 @@ impl RunForPackageArgs {
             scarb_metadata,
             &package.id,
             None,
-            !should_compile_starknet_contract_target(&scarb_metadata.app_version_info.version),
+            !should_compile_starknet_contract_target(
+                &scarb_metadata.app_version_info.version,
+                args.no_optimization,
+            ),
         )?;
         let contracts_data = ContractsData::try_from(contracts)?;
 

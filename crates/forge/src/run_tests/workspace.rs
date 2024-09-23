@@ -42,6 +42,7 @@ pub async fn run_for_workspace(args: TestArgs) -> Result<ExitStatus> {
         filter.clone(),
         args.features.clone(),
         &scarb_metadata.app_version_info.version,
+        args.no_optimization,
     )?;
 
     let mut block_number_map = BlockNumberMap::default();

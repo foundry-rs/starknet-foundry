@@ -36,16 +36,20 @@ impl PackageConfig for ForgeConfigFromScarb {
 }
 
 #[must_use]
-pub fn should_compile_starknet_contract_target(scarb_version: &Version) -> bool {
-    *scarb_version < MINIMAL_SCARB_VERSION_TO_OPTIMIZE_COMPILATION
+pub fn should_compile_starknet_contract_target(
+    scarb_version: &Version,
+    no_optimization: bool,
+) -> bool {
+    *scarb_version < MINIMAL_SCARB_VERSION_TO_OPTIMIZE_COMPILATION || no_optimization
 }
 
 pub fn build_artifacts_with_scarb(
     filter: PackagesFilter,
     features: FeaturesSpec,
     scarb_version: &Version,
+    no_optimization: bool,
 ) -> Result<()> {
-    if should_compile_starknet_contract_target(scarb_version) {
+    if should_compile_starknet_contract_target(scarb_version, no_optimization) {
         build_contracts_with_scarb(filter.clone(), features.clone())?;
     }
     build_test_artifacts_with_scarb(filter, features)?;
@@ -245,7 +249,7 @@ mod tests {
                 detailed_resources: false,
                 save_trace_data: false,
                 build_profile: false,
-                coverage: false
+                coverage: false,
             }
         );
     }
@@ -474,7 +478,7 @@ mod tests {
                 detailed_resources: false,
                 save_trace_data: false,
                 build_profile: false,
-                coverage: false
+                coverage: false,
             }
         );
     }
