@@ -64,7 +64,12 @@ pub fn run_coverage(saved_trace_data_paths: &[PathBuf]) -> Result<()> {
 pub fn can_coverage_be_generated(scarb_metadata: &Metadata) -> Result<()> {
     let manifest = fs::read_to_string(&scarb_metadata.runtime_manifest)?.parse::<DocumentMut>()?;
 
-    let has_need_entries = manifest
+    ensure!(
+        scarb_metadata.app_version_info.version >= MINIMAL_SCARB_VERSION,
+        "Coverage generation requires scarb version >= {MINIMAL_SCARB_VERSION}",
+    );
+
+    let has_needed_entries = manifest
         .get("profile")
         .and_then(|profile| profile.get(&scarb_metadata.current_profile))
         .and_then(|profile| profile.get("cairo"))
@@ -76,7 +81,7 @@ pub fn can_coverage_be_generated(scarb_metadata: &Metadata) -> Result<()> {
         });
 
     ensure!(
-        has_need_entries,
+        has_needed_entries,
         formatdoc! {
             "Scarb.toml must have the following Cairo compiler configuration to run coverage:
 
@@ -88,11 +93,6 @@ pub fn can_coverage_be_generated(scarb_metadata: &Metadata) -> Result<()> {
             ",
             profile = scarb_metadata.current_profile
         },
-    );
-
-    ensure!(
-        scarb_metadata.app_version_info.version >= MINIMAL_SCARB_VERSION,
-        "Coverage generation requires scarb version >= {MINIMAL_SCARB_VERSION}",
     );
 
     Ok(())
