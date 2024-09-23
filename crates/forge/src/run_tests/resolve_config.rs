@@ -1,8 +1,9 @@
 use crate::{block_number_map::BlockNumberMap, scarb::config::ForkTarget};
 use anyhow::{anyhow, Result};
 use cheatnet::runtime_extensions::forge_config_extension::config::{
-    BlockId, InlineForkConfig, RawForkConfig,
+    BlockId, InlineForkConfig, OverriddenForkConfig, RawForkConfig,
 };
+use conversions::byte_array::ByteArray;
 use forge_runner::package_tests::{
     with_config::TestTargetWithConfig,
     with_config_resolved::{
@@ -76,6 +77,19 @@ async fn resolve_fork_config(
     Ok(Some(ResolvedForkConfig { url, block_number }))
 }
 
+fn get_fork_target_from_runner_config<'a>(
+    fork_targets: &'a [ForkTarget],
+    name: &ByteArray,
+) -> Result<&'a ForkTarget> {
+    fork_targets
+        .iter()
+        .find(|fork| fork.name == String::from(name.clone()))
+        .ok_or_else(|| {
+            let name = String::from(name.clone());
+            anyhow!("Fork configuration named = {name} not found in the Scarb.toml")
+        })
+}
+
 fn replace_id_with_params(
     raw_fork_config: RawForkConfig,
     fork_targets: &[ForkTarget],
@@ -83,14 +97,8 @@ fn replace_id_with_params(
     match raw_fork_config {
         RawForkConfig::Inline(raw_fork_params) => Ok(raw_fork_params),
         RawForkConfig::Named(name) => {
-            let fork_target_from_runner_config = fork_targets
-                .iter()
-                .find(|fork| fork.name == String::from(name.clone()))
-                .ok_or_else(|| {
-                    let name = String::from(name);
-
-                    anyhow!("Fork configuration named = {name} not found in the Scarb.toml")
-                })?;
+            let fork_target_from_runner_config =
+                get_fork_target_from_runner_config(fork_targets, &name)?;
 
             let block_id = fork_target_from_runner_config.block_id.clone();
 
@@ -98,6 +106,14 @@ fn replace_id_with_params(
                 url: fork_target_from_runner_config.url.clone(),
                 block: block_id,
             })
+        }
+        RawForkConfig::Overridden(OverriddenForkConfig { name, block }) => {
+            let fork_target_from_runner_config =
+                get_fork_target_from_runner_config(fork_targets, &name)?;
+
+            let url = fork_target_from_runner_config.url.clone();
+
+            Ok(InlineForkConfig { url, block })
         }
     }
 }

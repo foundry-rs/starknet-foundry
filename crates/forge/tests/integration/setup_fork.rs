@@ -180,6 +180,97 @@ fn fork_aliased_decorator() {
 }
 
 #[test]
+fn fork_aliased_decorator_overrding() {
+    let test = test_case!(indoc!(
+        r#"
+            use starknet::syscalls::get_execution_info_syscall;
+
+            #[test]
+            #[fork("FORK_NAME_FROM_SCARB_TOML", block_number: 2137)]
+            fn test_get_block_number() {
+                let execution_info = get_execution_info_syscall().unwrap().deref();
+                let block_info = execution_info.block_info.deref();
+                let block_number = block_info.block_number;
+
+                assert(block_number == 2137, 'Invalid block');
+            }
+        "#
+    ));
+
+    let rt = Runtime::new().expect("Could not instantiate Runtime");
+
+    ScarbCommand::new_with_stdio()
+        .current_dir(test.path().unwrap())
+        .arg("build")
+        .arg("--test")
+        .run()
+        .unwrap();
+
+    let metadata = ScarbCommand::metadata()
+        .current_dir(test.path().unwrap())
+        .run()
+        .unwrap();
+
+    let package = metadata
+        .packages
+        .iter()
+        .find(|p| p.name == "test_package")
+        .unwrap();
+
+    let raw_test_targets =
+        load_test_artifacts(&test.path().unwrap().join("target/dev"), package).unwrap();
+
+    let result = rt
+        .block_on(run_for_package(
+            RunForPackageArgs {
+                test_targets: raw_test_targets,
+                package_name: "test_package".to_string(),
+                tests_filter: TestsFilter::from_flags(
+                    None,
+                    false,
+                    false,
+                    false,
+                    false,
+                    Default::default(),
+                ),
+                forge_config: Arc::new(ForgeConfig {
+                    test_runner_config: Arc::new(TestRunnerConfig {
+                        exit_first: false,
+                        fuzzer_runs: NonZeroU32::new(256).unwrap(),
+                        fuzzer_seed: 12345,
+                        max_n_steps: None,
+                        is_vm_trace_needed: false,
+                        cache_dir: Utf8PathBuf::from_path_buf(tempdir().unwrap().into_path())
+                            .unwrap()
+                            .join(CACHE_DIR),
+                        contracts_data: ContractsData::try_from(test.contracts().unwrap()).unwrap(),
+                        environment_variables: test.env().clone(),
+                    }),
+                    output_config: Arc::new(OutputConfig {
+                        detailed_resources: false,
+                        execution_data_to_save: ExecutionDataToSave::default(),
+                        versioned_programs_dir: Utf8PathBuf::from_path_buf(
+                            tempdir().unwrap().into_path(),
+                        )
+                        .unwrap()
+                        .join(VERSIONED_PROGRAMS_DIR),
+                    }),
+                }),
+                fork_targets: vec![ForkTarget::new(
+                    "FORK_NAME_FROM_SCARB_TOML".to_string(),
+                    node_rpc_url().to_string(),
+                    "number".to_string(),
+                    "12341234".to_string(),
+                )],
+            },
+            &mut BlockNumberMap::default(),
+        ))
+        .expect("Runner fail");
+
+    assert_passed(&result);
+}
+
+#[test]
 fn fork_cairo0_contract() {
     let test = test_case!(formatdoc!(
         r#"
