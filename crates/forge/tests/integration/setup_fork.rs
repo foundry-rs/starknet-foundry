@@ -258,10 +258,10 @@ fn fork_aliased_decorator_overrding() {
                 }),
                 fork_targets: vec![ForkTarget::new(
                     "FORK_NAME_FROM_SCARB_TOML".to_string(),
-                    node_rpc_url().to_string(),
-                    "number".to_string(),
-                    "12341234".to_string(),
-                )],
+                    node_rpc_url().as_str(),
+                    "number",
+                    "12341234",
+                ).unwrap()],
             },
             &mut BlockNumberMap::default(),
         ))
