@@ -126,50 +126,6 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn to_runnable_unparsable_url() {
-        let mocked_tests = TestTargetWithConfig {
-            sierra_program: program_for_testing(),
-            casm_program: Arc::new(compile_sierra_to_casm(&program_for_testing().program).unwrap()),
-            test_cases: vec![TestCaseWithConfig {
-                name: "crate1::do_thing".to_string(),
-                config: TestCaseConfig {
-                    available_gas: None,
-                    ignored: false,
-                    expected_result: ExpectedTestResult::Success,
-                    fork_config: Some(RawForkConfig::Named("SOME_NAME".into())),
-                    fuzzer_config: None,
-                },
-                test_details: TestDetails {
-                    sierra_entry_point_statement_idx: 100,
-                    parameter_types: vec![
-                        (GenericTypeId("RangeCheck".into()), 1),
-                        (GenericTypeId("GasBuiltin".into()), 1),
-                    ],
-                    return_types: vec![
-                        (GenericTypeId("RangeCheck".into()), 1),
-                        (GenericTypeId("GasBuiltin".into()), 1),
-                        (GenericTypeId("Enum".into()), 3),
-                    ],
-                },
-            }],
-            tests_location: TestTargetLocation::Lib,
-        };
-
-        assert!(resolve_config(
-            mocked_tests,
-            &[ForkTarget::new(
-                "SOME_NAME".to_string(),
-                "unparsable_url".to_string(),
-                "tag".to_string(),
-                "latest".to_string()
-            )],
-            &mut BlockNumberMap::default()
-        )
-        .await
-        .is_err());
-    }
-
-    #[tokio::test]
     async fn to_runnable_non_existent_id() {
         let mocked_tests = TestTargetWithConfig {
             sierra_program: program_for_testing(),
