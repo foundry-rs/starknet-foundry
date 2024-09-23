@@ -166,6 +166,7 @@ pub fn build_and_load_artifacts(
             &metadata,
             &package.id,
             Some(&config.profile),
+            false,
         )?
         .into_iter()
         .map(|(name, (artifacts, _))| (name, artifacts))
@@ -179,6 +180,7 @@ pub fn build_and_load_artifacts(
             &metadata,
             &package.id,
             Some(default_profile),
+            false,
         )?
         .into_iter()
         .map(|(name, (artifacts, _))| (name, artifacts))

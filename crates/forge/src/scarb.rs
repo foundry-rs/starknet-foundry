@@ -8,11 +8,15 @@ use forge_runner::package_tests::TestTargetLocation;
 use scarb_api::ScarbCommand;
 use scarb_metadata::{PackageMetadata, TargetMetadata};
 use scarb_ui::args::{FeaturesSpec, PackagesFilter};
+use semver::Version;
 use std::collections::HashMap;
 use std::fs::read_to_string;
 use std::io::ErrorKind;
 
 pub mod config;
+
+// TODO: Temporary set to 2.8.2, update to 2.8.3 after scarb release and before the PR merge
+const MINIMAL_SCARB_VERSION_TO_OPTIMIZE_COMPILATION: Version = Version::new(2, 8, 2);
 
 impl PackageConfig for ForgeConfigFromScarb {
     fn tool_name() -> &'static str {
@@ -31,7 +35,24 @@ impl PackageConfig for ForgeConfigFromScarb {
     }
 }
 
-pub fn build_contracts_with_scarb(filter: PackagesFilter, features: FeaturesSpec) -> Result<()> {
+#[must_use]
+pub fn should_compile_starknet_contract_target(scarb_version: &Version) -> bool {
+    *scarb_version < MINIMAL_SCARB_VERSION_TO_OPTIMIZE_COMPILATION
+}
+
+pub fn build_artifacts_with_scarb(
+    filter: PackagesFilter,
+    features: FeaturesSpec,
+    scarb_version: &Version,
+) -> Result<()> {
+    if should_compile_starknet_contract_target(scarb_version) {
+        build_contracts_with_scarb(filter.clone(), features.clone())?;
+    }
+    build_test_artifacts_with_scarb(filter, features)?;
+    Ok(())
+}
+
+fn build_contracts_with_scarb(filter: PackagesFilter, features: FeaturesSpec) -> Result<()> {
     ScarbCommand::new_with_stdio()
         .arg("build")
         .packages_filter(filter)
@@ -41,10 +62,7 @@ pub fn build_contracts_with_scarb(filter: PackagesFilter, features: FeaturesSpec
     Ok(())
 }
 
-pub fn build_test_artifacts_with_scarb(
-    filter: PackagesFilter,
-    features: FeaturesSpec,
-) -> Result<()> {
+fn build_test_artifacts_with_scarb(filter: PackagesFilter, features: FeaturesSpec) -> Result<()> {
     ScarbCommand::new_with_stdio()
         .arg("build")
         .arg("--test")
