@@ -23,6 +23,6 @@ Changes the caller address for the given target.
 Cancels the `cheat_caller_address` / `start_cheat_caller_address` for the given target.
 
 ## `stop_cheat_caller_address_global`
-> `fn stop_cheat_caller_address_global(target: ContractAddress)`
+> `fn stop_cheat_caller_address_global()`
 
 Cancels the `start_cheat_caller_address_global`.
