@@ -162,7 +162,8 @@ mod tests {
                 "https://not_taken.com",
                 "number",
                 "120",
-            )],
+            )
+            .unwrap()],
             &mut BlockNumberMap::default()
         )
         .await

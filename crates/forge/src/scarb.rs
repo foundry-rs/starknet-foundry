@@ -207,19 +207,22 @@ mod tests {
                         "http://some.rpc.url",
                         "number",
                         "1",
-                    ),
+                    )
+                    .unwrap(),
                     ForkTarget::new(
                         "SECOND_FORK_NAME".to_string(),
                         "http://some.rpc.url",
                         "hash",
                         "1",
-                    ),
+                    )
+                    .unwrap(),
                     ForkTarget::new(
                         "THIRD_FORK_NAME".to_string(),
                         "http://some.rpc.url",
                         "tag",
                         "latest",
                     )
+                    .unwrap()
                 ],
                 fuzzer_runs: None,
                 fuzzer_seed: None,
@@ -449,7 +452,8 @@ mod tests {
                     "http://some.rpc.url_from_env",
                     "number",
                     "1",
-                )],
+                )
+                .unwrap()],
                 fuzzer_runs: None,
                 fuzzer_seed: None,
                 max_n_steps: None,

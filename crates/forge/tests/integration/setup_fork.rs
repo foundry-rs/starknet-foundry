@@ -169,7 +169,8 @@ fn fork_aliased_decorator() {
                     node_rpc_url().as_str(),
                     "tag",
                     "latest",
-                )],
+                )
+                .unwrap()],
             },
             &mut BlockNumberMap::default(),
         ))

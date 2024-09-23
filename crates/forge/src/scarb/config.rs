@@ -1,4 +1,4 @@
-use anyhow::{bail, Result};
+use anyhow::{anyhow, bail, Result};
 use cheatnet::runtime_extensions::forge_config_extension::config::BlockId;
 use itertools::Itertools;
 use serde::Deserialize;
@@ -41,24 +41,28 @@ pub struct ForkTarget {
 }
 
 impl ForkTarget {
-    #[must_use]
-    pub fn new(name: String, url: &str, block_id_type: &str, block_id_value: &str) -> Self {
-        Self {
+    pub fn new(name: String, url: &str, block_id_type: &str, block_id_value: &str) -> Result<Self> {
+        let parsed_url = Url::parse(url).map_err(|_| anyhow!("Failed to parse fork url"))?;
+        let block_id = match block_id_type {
+            "number" => BlockId::BlockNumber(
+                block_id_value
+                    .parse()
+                    .map_err(|_| anyhow!("Failed to parse block number"))?,
+            ),
+            "hash" => BlockId::BlockHash(
+                block_id_value
+                    .parse()
+                    .map_err(|_| anyhow!("Failed to parse block hash"))?,
+            ),
+            "tag" => BlockId::BlockTag,
+            _ => return Err(anyhow!("block_id must be one of (number | hash | tag)")),
+        };
+
+        Ok(Self {
             name,
-            url: Url::parse(url).expect("Failed to parse fork url"),
-            block_id: match block_id_type {
-                "number" => BlockId::BlockNumber(
-                    block_id_value
-                        .parse()
-                        .expect("Failed to parse block number"),
-                ),
-                "hash" => {
-                    BlockId::BlockHash(block_id_value.parse().expect("Failed to parse block hash"))
-                }
-                "tag" => BlockId::BlockTag,
-                _ => panic!("block_id must be one of (number | hash | tag)"),
-            },
-        }
+            url: parsed_url,
+            block_id,
+        })
     }
 }
 
@@ -144,7 +148,7 @@ impl TryFrom<RawForgeConfig> for ForgeConfigFromScarb {
                 raw_fork_target.url.as_str(),
                 block_id_type,
                 block_id_value,
-            ));
+            )?);
         }
 
         Ok(ForgeConfigFromScarb {
