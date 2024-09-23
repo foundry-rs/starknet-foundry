@@ -151,7 +151,7 @@ fn work_with_expected_tuple() {
 #[test]
 fn fail_with_unknown_args() {
     let item = TokenStream::new(EMPTY_FN.into());
-    let args = TokenStream::new("(unknown_arg: 'value')".into());
+    let args = TokenStream::new("(expected: 'abc', unknown_arg: 'value')".into());
 
     let result = should_panic(args, item);
 
