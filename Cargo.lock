@@ -2133,6 +2133,7 @@ dependencies = [
  "flatten-serde-json",
  "fs4",
  "futures",
+ "indoc",
  "itertools 0.12.1",
  "num-bigint",
  "num-integer",
@@ -2154,6 +2155,7 @@ dependencies = [
  "trace-data",
  "universal-sierra-compiler-api",
  "url",
+ "which",
 ]
 
 [[package]]

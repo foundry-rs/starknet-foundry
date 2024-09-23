@@ -1,18 +1,39 @@
 use crate::CAIRO_EDITION;
 use anyhow::{anyhow, Context, Ok, Result};
 use include_dir::{include_dir, Dir};
+use indoc::formatdoc;
 use scarb_api::ScarbCommand;
 use semver::Version;
 use std::env;
 use std::fs::{self, OpenOptions};
 use std::io::Write;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use toml_edit::{value, ArrayOfTables, DocumentMut, Item, Table};
 
 static TEMPLATE: Dir = include_dir!("starknet_forge_template");
 
 const DEFAULT_ASSERT_MACROS: Version = Version::new(0, 1, 0);
 const MINIMAL_SCARB_FOR_CORRESPONDING_ASSERT_MACROS: Version = Version::new(2, 8, 0);
+
+fn create_snfoundry_manifest(path: &PathBuf) -> Result<()> {
+    fs::write(
+        path,
+        formatdoc! {r#"
+        # Visit https://foundry-rs.github.io/starknet-foundry/appendix/snfoundry-toml.html for more information
+
+        # [sncast.myprofile1]                                    # Define a profile name
+        # url = "http://127.0.0.1:5050/"                         # Url of the RPC provider
+        # accounts_file = "../account-file"                      # Path to the file with the account data
+        # account = "mainuser"                                   # Account from `accounts_file` or default account file that will be used for the transactions
+        # keystore = "~/keystore"                                # Path to the keystore file
+        # wait_params = {{ timeout = 500, retry_interval = 10 }}   # Wait for submitted transaction parameters
+        # block_explorer = "StarkScan"                           # Block explorer service used to display links to transaction details
+        "#
+        },
+    )?;
+
+    Ok(())
+}
 
 fn overwrite_files_from_scarb_template(
     dir_to_overwrite: &str,
@@ -112,10 +133,11 @@ fn extend_gitignore(path: &Path) -> Result<()> {
 pub fn run(project_name: &str) -> Result<()> {
     let current_dir = std::env::current_dir().context("Failed to get current directory")?;
     let project_path = current_dir.join(project_name);
-    let manifest_path = project_path.join("Scarb.toml");
+    let scarb_manifest_path = project_path.join("Scarb.toml");
+    let snfoundry_manifest_path = project_path.join("snfoundry.toml");
 
     // if there is no Scarb.toml run `scarb new`
-    if !manifest_path.is_file() {
+    if !scarb_manifest_path.is_file() {
         ScarbCommand::new_with_stdio()
             .current_dir(current_dir)
             .arg("new")
@@ -126,7 +148,7 @@ pub fn run(project_name: &str) -> Result<()> {
 
         ScarbCommand::new_with_stdio()
             .current_dir(&project_path)
-            .manifest_path(manifest_path.clone())
+            .manifest_path(scarb_manifest_path.clone())
             .offline()
             .arg("remove")
             .arg("--dev")
@@ -135,13 +157,17 @@ pub fn run(project_name: &str) -> Result<()> {
             .context("Failed to remove cairo_test")?;
     }
 
+    if !snfoundry_manifest_path.is_file() {
+        create_snfoundry_manifest(&snfoundry_manifest_path)?;
+    }
+
     let version = env!("CARGO_PKG_VERSION");
     let cairo_version = ScarbCommand::version().run()?.cairo;
 
     if env::var("DEV_DISABLE_SNFORGE_STD_DEPENDENCY").is_err() {
         ScarbCommand::new_with_stdio()
             .current_dir(&project_path)
-            .manifest_path(manifest_path.clone())
+            .manifest_path(scarb_manifest_path.clone())
             .offline()
             .arg("add")
             .arg("--dev")
@@ -156,7 +182,7 @@ pub fn run(project_name: &str) -> Result<()> {
 
     ScarbCommand::new_with_stdio()
         .current_dir(&project_path)
-        .manifest_path(manifest_path.clone())
+        .manifest_path(scarb_manifest_path.clone())
         .offline()
         .arg("add")
         .arg(format!("starknet@{cairo_version}"))
@@ -170,7 +196,7 @@ pub fn run(project_name: &str) -> Result<()> {
 
     // Fetch to create lock file.
     ScarbCommand::new_with_stdio()
-        .manifest_path(manifest_path)
+        .manifest_path(scarb_manifest_path)
         .arg("fetch")
         .run()
         .context("Failed to fetch created project")?;
