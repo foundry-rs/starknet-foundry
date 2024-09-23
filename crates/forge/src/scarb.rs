@@ -204,21 +204,21 @@ mod tests {
                 fork: vec![
                     ForkTarget::new(
                         "FIRST_FORK_NAME".to_string(),
-                        "http://some.rpc.url".to_string(),
-                        "number".to_string(),
-                        "1".to_string(),
+                        "http://some.rpc.url",
+                        "number",
+                        "1",
                     ),
                     ForkTarget::new(
                         "SECOND_FORK_NAME".to_string(),
-                        "http://some.rpc.url".to_string(),
-                        "hash".to_string(),
-                        "1".to_string(),
+                        "http://some.rpc.url",
+                        "hash",
+                        "1",
                     ),
                     ForkTarget::new(
                         "THIRD_FORK_NAME".to_string(),
-                        "http://some.rpc.url".to_string(),
-                        "tag".to_string(),
-                        "latest".to_string(),
+                        "http://some.rpc.url",
+                        "tag",
+                        "latest",
                     )
                 ],
                 fuzzer_runs: None,
@@ -446,9 +446,9 @@ mod tests {
                 exit_first: false,
                 fork: vec![ForkTarget::new(
                     "ENV_URL_FORK".to_string(),
-                    "http://some.rpc.url_from_env".to_string(),
-                    "number".to_string(),
-                    "1".to_string(),
+                    "http://some.rpc.url_from_env",
+                    "number",
+                    "1",
                 )],
                 fuzzer_runs: None,
                 fuzzer_seed: None,

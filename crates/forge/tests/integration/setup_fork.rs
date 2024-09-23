@@ -166,9 +166,9 @@ fn fork_aliased_decorator() {
                 }),
                 fork_targets: vec![ForkTarget::new(
                     "FORK_NAME_FROM_SCARB_TOML".to_string(),
-                    node_rpc_url().to_string(),
-                    "tag".to_string(),
-                    "latest".to_string(),
+                    node_rpc_url().as_str(),
+                    "tag",
+                    "latest",
                 )],
             },
             &mut BlockNumberMap::default(),

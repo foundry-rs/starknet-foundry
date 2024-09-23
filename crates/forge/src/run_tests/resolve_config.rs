@@ -159,9 +159,9 @@ mod tests {
             mocked_tests,
             &[ForkTarget::new(
                 "definitely_non_existing".to_string(),
-                "https://not_taken.com".to_string(),
-                "number".to_string(),
-                "120".to_string(),
+                "https://not_taken.com",
+                "number",
+                "120",
             )],
             &mut BlockNumberMap::default()
         )

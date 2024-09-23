@@ -42,11 +42,11 @@ pub struct ForkTarget {
 
 impl ForkTarget {
     #[must_use]
-    pub fn new(name: String, url: String, block_id_type: String, block_id_value: String) -> Self {
+    pub fn new(name: String, url: &str, block_id_type: &str, block_id_value: &str) -> Self {
         Self {
             name,
-            url: Url::parse(&url).expect("Failed to parse fork url"),
-            block_id: match block_id_type.as_str() {
+            url: Url::parse(url).expect("Failed to parse fork url"),
+            block_id: match block_id_type {
                 "number" => BlockId::BlockNumber(
                     block_id_value
                         .parse()
@@ -141,9 +141,9 @@ impl TryFrom<RawForgeConfig> for ForgeConfigFromScarb {
 
             fork_targets.push(ForkTarget::new(
                 raw_fork_target.name,
-                raw_fork_target.url,
-                block_id_type.to_string(),
-                block_id_value.clone(),
+                raw_fork_target.url.as_str(),
+                block_id_type,
+                block_id_value,
             ));
         }
 
