@@ -101,3 +101,7 @@ the [contribution guidelines](./CONTRIBUTING.md).
 
 Check out [development guide](https://foundry-rs.github.io/starknet-foundry/development/environment-setup.html) for
 local environment setup guide.
+
+### Contributors
+
+<img src="https://markupgo.com/github/foundry-rs/starknet-foundry/contributors?count=0&circleSize=40&circleRadius=40&center=true" width="100%" /> 
