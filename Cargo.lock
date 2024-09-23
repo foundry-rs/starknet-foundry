@@ -4637,6 +4637,7 @@ dependencies = [
  "project-root",
  "promptly",
  "rand",
+ "regex",
  "reqwest",
  "rpassword",
  "runtime",
