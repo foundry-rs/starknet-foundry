@@ -167,3 +167,125 @@ impl TryFrom<RawForgeConfig> for ForgeConfigFromScarb {
         })
     }
 }
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use url::Url;
+    use num_bigint::BigInt;
+
+    #[test]
+    fn test_fork_target_new_valid_number() {
+        let name = "TestFork".to_string();
+        let url = "http://example.com";
+        let block_id_type = "number";
+        let block_id_value = "123";
+
+        let fork_target = ForkTarget::new(name.clone(), url, block_id_type, block_id_value).unwrap();
+
+        assert_eq!(fork_target.name, name);
+        assert_eq!(fork_target.url, Url::parse(url).unwrap());
+        if let BlockId::BlockNumber(number) = fork_target.block_id {
+            assert_eq!(number, 123);
+        } else {
+            panic!("Expected BlockId::BlockNumber");
+        }
+    }
+
+    #[test]
+    fn test_fork_target_new_valid_hash() {
+        let name = "TestFork".to_string();
+        let url = "http://example.com";
+        let block_id_type = "hash";
+        let block_id_value = "0x1";
+
+        let fork_target = ForkTarget::new(name.clone(), url, block_id_type, block_id_value).unwrap();
+
+        assert_eq!(fork_target.name, name);
+        assert_eq!(fork_target.url, Url::parse(url).unwrap());
+        if let BlockId::BlockHash(hash) = fork_target.block_id {
+            assert_eq!(hash.to_bigint(), BigInt::from(1));
+        } else {
+            panic!("Expected BlockId::BlockHash");
+        }
+    }
+
+    #[test]
+    fn test_fork_target_new_valid_tag() {
+        let name = "TestFork".to_string();
+        let url = "http://example.com";
+        let block_id_type = "tag";
+        let block_id_value = "latest";
+
+        let fork_target = ForkTarget::new(name.clone(), url, block_id_type, block_id_value).unwrap();
+
+        assert_eq!(fork_target.name, name);
+        assert_eq!(fork_target.url, Url::parse(url).unwrap());
+        if let BlockId::BlockTag = fork_target.block_id {
+            // Expected variant
+        } else {
+            panic!("Expected BlockId::BlockTag");
+        }
+    }
+
+    #[test]
+    fn test_fork_target_new_invalid_url() {
+        let name = "TestFork".to_string();
+        let url = "invalid_url";
+        let block_id_type = "number";
+        let block_id_value = "123";
+
+        let result = ForkTarget::new(name, url, block_id_type, block_id_value);
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err().to_string(), "Failed to parse fork url");
+    }
+
+    #[test]
+    fn test_fork_target_new_invalid_block_id_type() {
+        let name = "TestFork".to_string();
+        let url = "http://example.com";
+        let block_id_type = "invalid_type";
+        let block_id_value = "123";
+
+        let result = ForkTarget::new(name, url, block_id_type, block_id_value);
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err().to_string(), "block_id must be one of (number | hash | tag)");
+    }
+
+    #[test]
+    fn test_fork_target_new_invalid_block_id_value_number() {
+        let name = "TestFork".to_string();
+        let url = "http://example.com";
+        let block_id_type = "number";
+        let block_id_value = "invalid_number";
+
+        let result = ForkTarget::new(name, url, block_id_type, block_id_value);
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err().to_string(), "Failed to parse block number");
+    }
+
+    #[test]
+    fn test_fork_target_new_invalid_block_id_value_hash() {
+        let name = "TestFork".to_string();
+        let url = "http://example.com";
+        let block_id_type = "hash";
+        let block_id_value = "invalid_hash";
+
+        let result = ForkTarget::new(name, url, block_id_type, block_id_value);
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err().to_string(), "Failed to parse block hash");
+    }
+
+    #[test]
+    fn test_fork_target_new_invalid_block_id_value_tag() {
+        let name = "TestFork".to_string();
+        let url = "http://example.com";
+        let block_id_type = "tag";
+        let block_id_value = "invalid_tag";
+
+        let result = ForkTarget::new(name, url, block_id_type, block_id_value);
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err().to_string(), "block_id.tag can only be equal to 'latest'");
+    }
+}
