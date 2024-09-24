@@ -22,24 +22,29 @@ Do the following to start interacting with the Starknet:
 
 - create account with the `sncast account create` command
 
-    ```shell
+```shell
 $ sncast \
-	account create \
-  --url http://127.0.0.1:5050 \
-	--name some-name
-      
-Account successfully created. Prefund generated address with at least 432300000000 tokens. It is good to send more in the case of higher demand, max_fee * 2 = 864600000000
+    account create \
+    --url http://127.0.0.1:5050 \
+    --name some-name
+```
+```shell
 command: account create
-max_fee: 0x64a7168300
-address: 0x7a949e83b243068d0cbedd8d5b8b32fafea66c54de23c40e68b126b5c845b61
+add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
+address: 0x34ae54182d04754d8043189afd315a808d4bea1a63862b3b05aa78b37756d7b
+max_fee: 180527346330500
+message: Account successfully created. Prefund generated address with at least <max_fee> STRK tokens or an equivalent amount of ETH tokens. It is good to send more in the case of higher demand.
 
 To see account creation details, visit:
-account: https://starkscan.co/search/0x7a949e83b2...
+account: https://starkscan.co/search/34ae54182d04754d8043189afd315a808d4bea1a63862b3b05aa78b37756d7b
 ```
 
-    You can also pass common `--accounts-file` argument with a path to (existing or not existing) file where you want to save account info.
-    
-    For a detailed CLI description, see [account create command reference](../appendix/sncast/account/create.md).
+
+You can also pass common `--accounts-file` argument with a path to (existing or not existing) file where you want to save account info.
+By default, the account info is saved in `~/.starknet_accounts/starknet_open_zeppelin_accounts.json`.
+
+
+For a detailed CLI description, see [account create command reference](../appendix/sncast/account/create.md).
 
 
 - prefund generated address with tokens
@@ -54,18 +59,18 @@ account: https://starkscan.co/search/0x7a949e83b2...
 
 ```shell
 $ sncast \
-	account deploy
-  --url http://127.0.0.1:5050 \
+	account deploy \
+        --url http://127.0.0.1:5050 \
 	--name some-name \
 	--fee-token strk \
 	--max-fee 9999999999999
-    
+	
 command: account deploy
 transaction_hash: 0x20b20896ce63371ef015d66b4dd89bf18c5510a840b4a85a43a983caa6e2579
-    
+
 To see invocation details, visit:
 transaction: https://starkscan.co/search/0x20b20896ce...
-    ```
+```
   
     Note that you don't have to pass `url`, `accounts-file` and `network` parameters if `add-profile` flag
     was set in the `account create` command. Just pass `profile` argument with the account name.
@@ -119,6 +124,9 @@ List all accounts saved in `accounts file`, grouped based on the networks they a
 
 ```shell
 $ sncast --accounts-file my-account-file.json account list
+```
+
+```
 Available accounts (at <current-directory>/my-account-file.json):
 - user0
 public key: 0x2f91ed13f8f0f7d39b942c80bfcd3d0967809d99e0cc083606cbe59033d2b39
@@ -130,10 +138,13 @@ legacy: false
 
 - user1
 [...]
-
+```
 To show private keys too, run with --display-private-keys or -p
-
+```shell
 $ sncast --accounts-file my-account-file.json account list --display-private-keys
+```
+
+```shell
 Available accounts (at <current-directory>/my-account-file.json):
 - user0
 private key: 0x1e9038bdc68ce1d27d54205256988e85
