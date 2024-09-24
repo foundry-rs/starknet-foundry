@@ -2,7 +2,7 @@ use super::common::runner::{setup_package, test_runner};
 use forge_runner::coverage_api::{COVERAGE_DIR, OUTPUT_FILE_NAME};
 
 #[test]
-#[cfg_attr(not(feature = "scarb_2_8_1"), ignore)]
+#[cfg_attr(not(feature = "scarb_2_8_3"), ignore)]
 fn test_coverage_project() {
     let temp = setup_package("coverage_project");
 
