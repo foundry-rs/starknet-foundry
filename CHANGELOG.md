@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Fixed
 
+- Explorer links displayed upon committing transactions are now properly formatted
 - `sncast declare` no longer fails for flat contracts (i.e. CASM artifacts with `bytecode_segment_lengths` being a number)
 
 ### Forge
