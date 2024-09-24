@@ -1,4 +1,4 @@
-use crate::response::structs::Address;
+use crate::response::structs::PaddedFelt;
 use serde::{Deserialize, Serialize};
 use starknet::core::types::Felt;
 
@@ -33,8 +33,8 @@ impl Service {
 
 pub trait LinkProvider {
     fn transaction(&self, hash: Felt) -> String;
-    fn class(&self, hash: Address) -> String;
-    fn contract(&self, address: Address) -> String;
+    fn class(&self, hash: PaddedFelt) -> String;
+    fn contract(&self, address: PaddedFelt) -> String;
 }
 
 pub struct StarkScan;
@@ -44,11 +44,11 @@ impl LinkProvider for StarkScan {
         format!("{STARKSCAN}/{hash:x}")
     }
 
-    fn class(&self, hash: Address) -> String {
+    fn class(&self, hash: PaddedFelt) -> String {
         format!("{STARKSCAN}/{hash:x}")
     }
 
-    fn contract(&self, address: Address) -> String {
+    fn contract(&self, address: PaddedFelt) -> String {
         format!("{STARKSCAN}/{address:x}")
     }
 }
@@ -60,11 +60,11 @@ impl LinkProvider for Voyager {
         format!("{VOYAGER}/tx/{hash:x}")
     }
 
-    fn class(&self, hash: Address) -> String {
+    fn class(&self, hash: PaddedFelt) -> String {
         format!("{VOYAGER}/class/{hash:x}")
     }
 
-    fn contract(&self, address: Address) -> String {
+    fn contract(&self, address: PaddedFelt) -> String {
         format!("{VOYAGER}/contract/{address:x}")
     }
 }
@@ -76,11 +76,11 @@ impl LinkProvider for ViewBlock {
         format!("{VIEWBLOCK}/tx/{hash:x}")
     }
 
-    fn class(&self, hash: Address) -> String {
+    fn class(&self, hash: PaddedFelt) -> String {
         format!("{VIEWBLOCK}/class/{hash:x}")
     }
 
-    fn contract(&self, address: Address) -> String {
+    fn contract(&self, address: PaddedFelt) -> String {
         format!("{VIEWBLOCK}/contract/{address:x}")
     }
 }
@@ -92,11 +92,11 @@ impl LinkProvider for OkLink {
         format!("{OKLINK}/tx/{hash:x}")
     }
 
-    fn class(&self, hash: Address) -> String {
+    fn class(&self, hash: PaddedFelt) -> String {
         format!("{OKLINK}/class/{hash:x}")
     }
 
-    fn contract(&self, address: Address) -> String {
+    fn contract(&self, address: PaddedFelt) -> String {
         format!("{OKLINK}/contract/{address:x}")
     }
 }
@@ -108,11 +108,11 @@ impl LinkProvider for NftScan {
         format!("{NFTSCAN}/{hash:x}")
     }
 
-    fn class(&self, hash: Address) -> String {
+    fn class(&self, hash: PaddedFelt) -> String {
         format!("{NFTSCAN}/{hash:x}")
     }
 
-    fn contract(&self, address: Address) -> String {
+    fn contract(&self, address: PaddedFelt) -> String {
         format!("{NFTSCAN}/{address:x}")
     }
 }

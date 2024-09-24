@@ -27,9 +27,9 @@ where
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Deserialize, CairoSerialize)]
-pub struct Address(pub Felt);
+pub struct PaddedFelt(pub Felt);
 
-impl Serialize for Address {
+impl Serialize for PaddedFelt {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -38,13 +38,13 @@ impl Serialize for Address {
     }
 }
 
-impl LowerHex for Address {
+impl LowerHex for PaddedFelt {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
-impl From<Felt> for Address {
+impl From<Felt> for PaddedFelt {
     fn from(value: Felt) -> Self {
         Self(value)
     }
@@ -66,21 +66,21 @@ impl CommandResponse for InvokeResponse {}
 
 #[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
 pub struct DeployResponse {
-    pub contract_address: Address,
+    pub contract_address: PaddedFelt,
     pub transaction_hash: Felt,
 }
 impl CommandResponse for DeployResponse {}
 
 #[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
 pub struct DeclareResponse {
-    pub class_hash: Address,
+    pub class_hash: PaddedFelt,
     pub transaction_hash: Felt,
 }
 impl CommandResponse for DeclareResponse {}
 
 #[derive(Serialize)]
 pub struct AccountCreateResponse {
-    pub address: Address,
+    pub address: PaddedFelt,
     #[serde(serialize_with = "crate::response::structs::serialize_as_decimal")]
     pub max_fee: Felt,
     pub add_profile: String,

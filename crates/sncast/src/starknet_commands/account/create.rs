@@ -13,7 +13,7 @@ use sncast::helpers::constants::{
     CREATE_KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH,
 };
 use sncast::helpers::rpc::RpcArgs;
-use sncast::response::structs::{AccountCreateResponse, Address};
+use sncast::response::structs::{AccountCreateResponse, PaddedFelt};
 use sncast::{
     check_class_hash_exists, check_if_legacy_contract, extract_or_generate_salt, get_chain_id,
     get_keystore_password, handle_account_factory_error,
@@ -121,7 +121,7 @@ pub async fn create(
     }
 
     Ok(AccountCreateResponse {
-        address: Address(address),
+        address: PaddedFelt(address),
         max_fee,
         add_profile: if add_profile.is_some() {
             format!(
