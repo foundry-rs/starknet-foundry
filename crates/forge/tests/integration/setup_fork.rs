@@ -165,7 +165,7 @@ fn fork_aliased_decorator() {
                     }),
                 }),
                 fork_targets: vec![ForkTarget::new(
-                    "FORK_NAME_FROM_SCARB_TOML".to_string(),
+                    "FORK_NAME_FROM_SCARB_TOML",
                     node_rpc_url().as_str(),
                     "tag",
                     "latest",
@@ -257,7 +257,7 @@ fn fork_aliased_decorator_overrding() {
                     }),
                 }),
                 fork_targets: vec![ForkTarget::new(
-                    "FORK_NAME_FROM_SCARB_TOML".to_string(),
+                    "FORK_NAME_FROM_SCARB_TOML",
                     node_rpc_url().as_str(),
                     "number",
                     "12341234",

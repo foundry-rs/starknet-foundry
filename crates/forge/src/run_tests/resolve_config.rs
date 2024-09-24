@@ -174,7 +174,7 @@ mod tests {
         assert!(resolve_config(
             mocked_tests,
             &[ForkTarget::new(
-                "definitely_non_existing".to_string(),
+                "definitely_non_existing",
                 "https://not_taken.com",
                 "number",
                 "120",

@@ -202,27 +202,12 @@ mod tests {
             ForgeConfigFromScarb {
                 exit_first: false,
                 fork: vec![
-                    ForkTarget::new(
-                        "FIRST_FORK_NAME".to_string(),
-                        "http://some.rpc.url",
-                        "number",
-                        "1",
-                    )
-                    .unwrap(),
-                    ForkTarget::new(
-                        "SECOND_FORK_NAME".to_string(),
-                        "http://some.rpc.url",
-                        "hash",
-                        "1",
-                    )
-                    .unwrap(),
-                    ForkTarget::new(
-                        "THIRD_FORK_NAME".to_string(),
-                        "http://some.rpc.url",
-                        "tag",
-                        "latest",
-                    )
-                    .unwrap()
+                    ForkTarget::new("FIRST_FORK_NAME", "http://some.rpc.url", "number", "1",)
+                        .unwrap(),
+                    ForkTarget::new("SECOND_FORK_NAME", "http://some.rpc.url", "hash", "1",)
+                        .unwrap(),
+                    ForkTarget::new("THIRD_FORK_NAME", "http://some.rpc.url", "tag", "latest",)
+                        .unwrap()
                 ],
                 fuzzer_runs: None,
                 fuzzer_seed: None,
@@ -448,7 +433,7 @@ mod tests {
             ForgeConfigFromScarb {
                 exit_first: false,
                 fork: vec![ForkTarget::new(
-                    "ENV_URL_FORK".to_string(),
+                    "ENV_URL_FORK",
                     "http://some.rpc.url_from_env",
                     "number",
                     "1",

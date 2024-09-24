@@ -41,7 +41,7 @@ pub struct ForkTarget {
 }
 
 impl ForkTarget {
-    pub fn new(name: String, url: &str, block_id_type: &str, block_id_value: &str) -> Result<Self> {
+    pub fn new(name: &str, url: &str, block_id_type: &str, block_id_value: &str) -> Result<Self> {
         let parsed_url = Url::parse(url).map_err(|_| anyhow!("Failed to parse fork url"))?;
         let block_id = match block_id_type {
             "number" => BlockId::BlockNumber(
@@ -62,7 +62,7 @@ impl ForkTarget {
         };
 
         Ok(Self {
-            name,
+            name: name.to_string(),
             url: parsed_url,
             block_id,
         })
@@ -147,7 +147,7 @@ impl TryFrom<RawForgeConfig> for ForgeConfigFromScarb {
                 raw_fork_target.block_id.iter().exactly_one().unwrap();
 
             fork_targets.push(ForkTarget::new(
-                raw_fork_target.name,
+                raw_fork_target.name.as_str(),
                 raw_fork_target.url.as_str(),
                 block_id_type,
                 block_id_value,
@@ -168,21 +168,20 @@ impl TryFrom<RawForgeConfig> for ForgeConfigFromScarb {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use url::Url;
     use num_bigint::BigInt;
+    use url::Url;
 
     #[test]
     fn test_fork_target_new_valid_number() {
-        let name = "TestFork".to_string();
+        let name = "TestFork";
         let url = "http://example.com";
         let block_id_type = "number";
         let block_id_value = "123";
 
-        let fork_target = ForkTarget::new(name.clone(), url, block_id_type, block_id_value).unwrap();
+        let fork_target = ForkTarget::new(name, url, block_id_type, block_id_value).unwrap();
 
         assert_eq!(fork_target.name, name);
         assert_eq!(fork_target.url, Url::parse(url).unwrap());
@@ -195,12 +194,12 @@ mod tests {
 
     #[test]
     fn test_fork_target_new_valid_hash() {
-        let name = "TestFork".to_string();
+        let name = "TestFork";
         let url = "http://example.com";
         let block_id_type = "hash";
         let block_id_value = "0x1";
 
-        let fork_target = ForkTarget::new(name.clone(), url, block_id_type, block_id_value).unwrap();
+        let fork_target = ForkTarget::new(name, url, block_id_type, block_id_value).unwrap();
 
         assert_eq!(fork_target.name, name);
         assert_eq!(fork_target.url, Url::parse(url).unwrap());
@@ -213,12 +212,12 @@ mod tests {
 
     #[test]
     fn test_fork_target_new_valid_tag() {
-        let name = "TestFork".to_string();
+        let name = "TestFork";
         let url = "http://example.com";
         let block_id_type = "tag";
         let block_id_value = "latest";
 
-        let fork_target = ForkTarget::new(name.clone(), url, block_id_type, block_id_value).unwrap();
+        let fork_target = ForkTarget::new(name, url, block_id_type, block_id_value).unwrap();
 
         assert_eq!(fork_target.name, name);
         assert_eq!(fork_target.url, Url::parse(url).unwrap());
@@ -231,7 +230,7 @@ mod tests {
 
     #[test]
     fn test_fork_target_new_invalid_url() {
-        let name = "TestFork".to_string();
+        let name = "TestFork";
         let url = "invalid_url";
         let block_id_type = "number";
         let block_id_value = "123";
@@ -243,49 +242,61 @@ mod tests {
 
     #[test]
     fn test_fork_target_new_invalid_block_id_type() {
-        let name = "TestFork".to_string();
+        let name = "TestFork";
         let url = "http://example.com";
         let block_id_type = "invalid_type";
         let block_id_value = "123";
 
         let result = ForkTarget::new(name, url, block_id_type, block_id_value);
         assert!(result.is_err());
-        assert_eq!(result.unwrap_err().to_string(), "block_id must be one of (number | hash | tag)");
+        assert_eq!(
+            result.unwrap_err().to_string(),
+            "block_id must be one of (number | hash | tag)"
+        );
     }
 
     #[test]
     fn test_fork_target_new_invalid_block_id_value_number() {
-        let name = "TestFork".to_string();
+        let name = "TestFork";
         let url = "http://example.com";
         let block_id_type = "number";
         let block_id_value = "invalid_number";
 
         let result = ForkTarget::new(name, url, block_id_type, block_id_value);
         assert!(result.is_err());
-        assert_eq!(result.unwrap_err().to_string(), "Failed to parse block number");
+        assert_eq!(
+            result.unwrap_err().to_string(),
+            "Failed to parse block number"
+        );
     }
 
     #[test]
     fn test_fork_target_new_invalid_block_id_value_hash() {
-        let name = "TestFork".to_string();
+        let name = "TestFork";
         let url = "http://example.com";
         let block_id_type = "hash";
         let block_id_value = "invalid_hash";
 
         let result = ForkTarget::new(name, url, block_id_type, block_id_value);
         assert!(result.is_err());
-        assert_eq!(result.unwrap_err().to_string(), "Failed to parse block hash");
+        assert_eq!(
+            result.unwrap_err().to_string(),
+            "Failed to parse block hash"
+        );
     }
 
     #[test]
     fn test_fork_target_new_invalid_block_id_value_tag() {
-        let name = "TestFork".to_string();
+        let name = "TestFork";
         let url = "http://example.com";
         let block_id_type = "tag";
         let block_id_value = "invalid_tag";
 
         let result = ForkTarget::new(name, url, block_id_type, block_id_value);
         assert!(result.is_err());
-        assert_eq!(result.unwrap_err().to_string(), "block_id.tag can only be equal to 'latest'");
+        assert_eq!(
+            result.unwrap_err().to_string(),
+            "block_id.tag can only be equal to 'latest'"
+        );
     }
 }
