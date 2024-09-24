@@ -261,7 +261,8 @@ fn fork_aliased_decorator_overrding() {
                     node_rpc_url().as_str(),
                     "number",
                     "12341234",
-                ).unwrap()],
+                )
+                .unwrap()],
             },
             &mut BlockNumberMap::default(),
         ))
