@@ -304,7 +304,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
+    #[cfg_attr(not(feature = "scarb_2_8_3"), ignore)]
     fn get_starknet_artifacts_path_for_test_build() {
         let temp = setup_package("basic_package");
 
@@ -327,6 +327,46 @@ mod tests {
             path,
             temp.path()
                 .join("target/dev/basic_package_unittest.test.starknet_artifacts.json")
+        );
+    }
+
+    #[test]
+    #[cfg_attr(not(feature = "scarb_2_8_3"), ignore)]
+    fn get_starknet_artifacts_path_for_test_build_with_tests_dir() {
+        let temp = setup_package("basic_package");
+        let tests_dir = temp.join("tests");
+        fs::create_dir(&tests_dir).unwrap();
+
+        temp.child(tests_dir.join("test.cairo"))
+            .write_str(indoc!(
+                r"
+                #[test]
+                fn mock_test() {
+                    assert!(true);
+                }
+            "
+            ))
+            .unwrap();
+
+        ScarbCommand::new_with_stdio()
+            .current_dir(temp.path())
+            .arg("build")
+            .arg("--test")
+            .run()
+            .unwrap();
+
+        let path = get_starknet_artifacts_path(
+            &Utf8PathBuf::from_path_buf(temp.to_path_buf().join("target")).unwrap(),
+            "basic_package",
+            "dev",
+            true,
+        )
+        .unwrap();
+
+        assert_eq!(
+            path,
+            temp.path()
+                .join("target/dev/basic_package_integrationtest.test.starknet_artifacts.json")
         );
     }
 
