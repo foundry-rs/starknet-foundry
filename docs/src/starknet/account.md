@@ -41,7 +41,7 @@ account: https://starkscan.co/search/34ae54182d04754d8043189afd315a808d4bea1a638
 
 
 You can also pass common `--accounts-file` argument with a path to (existing or not existing) file where you want to save account info.
-By default, the account info is saved in `~/.starknet_accounts/starknet_open_zeppelin_accounts.json`.
+By default, the account details are saved in `~/.starknet_accounts/starknet_open_zeppelin_accounts.json`.
 
 
 For a detailed CLI description, see [account create command reference](../appendix/sncast/account/create.md).
