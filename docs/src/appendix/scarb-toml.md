@@ -12,7 +12,7 @@ The `scarb.toml` contains the package manifest that is needed in package compila
 Allows to configure `snforge` settings. All fields are optional.
 
 #### `exit_first`
-Stop test execution immediately upon the first failure.
+The `exit_first` fields specifies whether to stop test execution immediately upon the first failure.
 ```toml
 [tool.snforge]
 exit_first = true
@@ -36,7 +36,7 @@ fuzzer_seed = 1111
 [[tool.snforge.fork]]
 # ...
 ```
-Allows to configure forked tests. All fields are required.
+Allows to configure forked tests. While in use, all below fields must be set at the same time.
 
 #### `name`
 The `name` field specifies the name of the fork.
@@ -73,7 +73,7 @@ block_id.number = "123"
 ```
 
 ### `[profile.<dev|release>.cairo]`
-Adjust Cairo compiler configuration parameters when compiling this package. These options are not taken into consideration when this package is used as a dependency for another package.
+Adjust Cairo compiler configuration parameters when compiling this package. These options are not taken into consideration when this package is used as a dependency for another package. All fields are optional.
 
 ```toml
 [profile.dev.cairo]
@@ -111,7 +111,7 @@ inlining-strategy = "avoid"
 ```
 
 ### `[features]`
-A package defines a set of named features in the `[features]` section of `Scarb.toml` file. Each defined feature can list other features that should be enabled with it.
+A package defines a set of named features in the `[features]` section of `Scarb.toml` file. Each defined feature can list other features that should be enabled with it. All fields are optional.
 ```toml
 [features]
 # ...
@@ -141,7 +141,7 @@ enable_for_tests = []
 ```
 
 ### `[[target.starknet-contract]]`
-Scarb supports registering targets that are handled by Scarb extensions. Such targets are called external.
+Scarb supports registering targets that are handled by Scarb extensions. Such targets are called external. All fields are optional.
 ```toml
 [[target.starknet-contract]]
 # ...
