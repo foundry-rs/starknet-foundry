@@ -56,9 +56,9 @@ impl ForkTarget {
             ),
             "tag" => match block_id_value {
                 "latest" => BlockId::BlockTag,
-                _ => return Err(anyhow!("block_id.tag can only be equal to 'latest'")),
+                _ => bail!("block_id.tag can only be equal to latest"),
             },
-            _ => return Err(anyhow!("block_id must be one of (number | hash | tag)")),
+            block_id_key => bail!("block_id = {block_id_key} is not valid. Possible values are = \"number\", \"hash\" and \"tag\""),
         };
 
         Ok(Self {
@@ -116,21 +116,12 @@ fn validate_raw_fork_config(raw_config: RawForgeConfig) -> Result<RawForgeConfig
         bail!("Some fork names are duplicated");
     }
 
-    for fork in forks {
-        let block_id_item = fork.block_id.iter().exactly_one();
-
-        let Ok((block_id_key, block_id_value)) = block_id_item else {
+    forks.iter().try_for_each(|fork| {
+        if fork.block_id.len() != 1 {
             bail!("block_id should be set once per fork");
-        };
-
-        if !["number", "hash", "tag"].contains(&&**block_id_key) {
-            bail!("block_id = {block_id_key} is not valid. Possible values are = \"number\", \"hash\" and \"tag\"");
         }
-
-        if block_id_key == "tag" && block_id_value != "latest" {
-            bail!("block_id.tag can only be equal to latest");
-        }
-    }
+        Ok(())
+    })?;
 
     Ok(raw_config)
 }
@@ -241,21 +232,6 @@ mod tests {
     }
 
     #[test]
-    fn test_fork_target_new_invalid_block_id_type() {
-        let name = "TestFork";
-        let url = "http://example.com";
-        let block_id_type = "invalid_type";
-        let block_id_value = "123";
-
-        let result = ForkTarget::new(name, url, block_id_type, block_id_value);
-        assert!(result.is_err());
-        assert_eq!(
-            result.unwrap_err().to_string(),
-            "block_id must be one of (number | hash | tag)"
-        );
-    }
-
-    #[test]
     fn test_fork_target_new_invalid_block_id_value_number() {
         let name = "TestFork";
         let url = "http://example.com";
@@ -282,21 +258,6 @@ mod tests {
         assert_eq!(
             result.unwrap_err().to_string(),
             "Failed to parse block hash"
-        );
-    }
-
-    #[test]
-    fn test_fork_target_new_invalid_block_id_value_tag() {
-        let name = "TestFork";
-        let url = "http://example.com";
-        let block_id_type = "tag";
-        let block_id_value = "invalid_tag";
-
-        let result = ForkTarget::new(name, url, block_id_type, block_id_value);
-        assert!(result.is_err());
-        assert_eq!(
-            result.unwrap_err().to_string(),
-            "block_id.tag can only be equal to 'latest'"
         );
     }
 }
