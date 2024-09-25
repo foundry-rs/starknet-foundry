@@ -6,7 +6,11 @@ use serde::{Deserialize, Serialize};
 
 use super::block_explorer;
 
-#[derive(Default, Deserialize, Serialize, Clone, Debug, PartialEq)]
+const fn show_explorer_links_default() -> bool {
+    true
+}
+
+#[derive(Deserialize, Serialize, Clone, Debug, PartialEq)]
 pub struct CastConfig {
     #[serde(default)]
     /// RPC url
@@ -35,6 +39,27 @@ pub struct CastConfig {
     )]
     /// A block explorer service, used to display links to transaction details
     pub block_explorer: Option<block_explorer::Service>,
+
+    #[serde(
+        default = "show_explorer_links_default",
+        rename(serialize = "show-explorer-links", deserialize = "show-explorer-links")
+    )]
+    /// Print links pointing to pages with transaction details in the chosen block explorer
+    pub show_explorer_links: bool,
+}
+
+impl Default for CastConfig {
+    fn default() -> Self {
+        Self {
+            url: String::default(),
+            account: String::default(),
+            accounts_file: Utf8PathBuf::default(),
+            keystore: None,
+            wait_params: ValidatedWaitParams::default(),
+            block_explorer: Some(block_explorer::Service::default()),
+            show_explorer_links: true,
+        }
+    }
 }
 
 impl GlobalConfig for CastConfig {
