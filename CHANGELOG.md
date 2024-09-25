@@ -27,7 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Changed
 
-- `snforge` now validates if your project will generate needed debug info for `cairo-coverage` when running  `--coverage` flag
+- `snforge` now validates if your project is setup to generate debug info needed for `cairo-coverage` when running  `--coverage` flag
 
 ## [0.30.0] - 2024-09-04
 
