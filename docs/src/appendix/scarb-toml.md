@@ -148,14 +148,14 @@ Scarb supports registering targets that are handled by Scarb extensions. Such ta
 ```
 
 #### `sierra`
-The `sierra` fields specifies wheter Sierra codegen should be enabled.
+The `sierra` fields specifies whether Sierra codegen should be enabled.
 ```toml
 [[target.starknet-contract]]
 sierra = true
 ```
 
 #### `casm`
-The `casm` fields specifies wheter Casm codegen should be enabled.
+The `casm` fields specifies whether Casm codegen should be enabled.
 ```toml
 [[target.starknet-contract]]
 casm = true
