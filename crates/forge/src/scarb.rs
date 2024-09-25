@@ -124,6 +124,7 @@ mod tests {
     use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
     use assert_fs::TempDir;
     use camino::Utf8PathBuf;
+    use cheatnet::runtime_extensions::forge_config_extension::config::BlockId;
     use configuration::load_package_config;
     use indoc::{formatdoc, indoc};
     use scarb_api::metadata::MetadataCommandExt;
@@ -131,7 +132,6 @@ mod tests {
     use std::env;
     use std::str::FromStr;
     use test_utils::tempdir_with_tool_versions;
-    use cheatnet::runtime_extensions::forge_config_extension::config::BlockId;
 
     fn setup_package(package_name: &str) -> TempDir {
         let temp = tempdir_with_tool_versions().unwrap();
@@ -425,7 +425,8 @@ mod tests {
         let forge_config = load_package_config::<ForgeConfigFromScarb>(
             &scarb_metadata,
             &scarb_metadata.workspace.members[0],
-        ).unwrap();
+        )
+        .unwrap();
         assert_eq!(forge_config.fork[0].block_id, BlockId::BlockTag);
     }
 
