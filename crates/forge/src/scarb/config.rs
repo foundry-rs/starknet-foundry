@@ -10,7 +10,7 @@ pub const SCARB_MANIFEST_TEMPLATE_CONTENT: &str = r#"
 # Visit https://foundry-rs.github.io/starknet-foundry/appendix/scarb-toml.html for more information
 
 # [tool.snforge]                                             # Define `snforge` tool section
-# exit_first = true                                          # Stop test execution immediately upon the first failure
+# exit_first = true                                          # Stop tests execution immediately upon the first failure
 # fuzzer_runs = 1234                                         # Number of runs of the random fuzzer
 # fuzzer_seed = 1111                                         # Seed for the random fuzzer
 

@@ -12,7 +12,7 @@ The `scarb.toml` contains the package manifest that is needed in package compila
 Allows to configure `snforge` settings. All fields are optional.
 
 #### `exit_first`
-The `exit_first` fields specifies whether to stop test execution immediately upon the first failure.
+The `exit_first` fields specifies whether to stop tests execution immediately upon the first failure.
 ```toml
 [tool.snforge]
 exit_first = true
