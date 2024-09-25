@@ -3,7 +3,7 @@ use core::serde::Serde;
 use starknet::{ContractAddress, testing::cheatcode, SyscallResult};
 use super::super::_cheatcode::handle_cheatcode;
 
-#[derive(Drop, Clone)]
+#[derive(Drop, Copy)]
 struct L1Handler {
     target: ContractAddress,
     selector: felt252,

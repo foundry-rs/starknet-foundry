@@ -20,7 +20,7 @@ fn store_load_simple() {
 
             fn deploy_contract() -> IHelloStarknetDispatcher {
                 let contract = declare("HelloStarknet").unwrap().contract_class();
-                let (contract_address, _) = contract.deploy(@array![]).unwrap();
+                let (contract_address, _) = contract.deploy([].span()).unwrap();
                 IHelloStarknetDispatcher { contract_address }
             }
 
@@ -71,7 +71,7 @@ fn store_load_wrong_selector() {
 
             fn deploy_contract() -> IHelloStarknetDispatcher {
                 let contract = declare("HelloStarknet").unwrap().contract_class();
-                let (contract_address, _) = contract.deploy(@array![]).unwrap();
+                let (contract_address, _) = contract.deploy([].span()).unwrap();
                 IHelloStarknetDispatcher { contract_address }
             }
 
@@ -121,7 +121,7 @@ fn store_load_wrong_data_length() {
 
             fn deploy_contract() -> IHelloStarknetDispatcher {
                 let contract = declare("HelloStarknet").unwrap().contract_class();
-                let (contract_address, _) = contract.deploy(@array![]).unwrap();
+                let (contract_address, _) = contract.deploy([].span()).unwrap();
                 IHelloStarknetDispatcher { contract_address }
             }
 
@@ -168,7 +168,7 @@ fn store_load_max_boundaries_input() {
 
             fn deploy_contract() -> IHelloStarknetDispatcher {
                 let contract = declare("HelloStarknet").unwrap().contract_class();
-                let (contract_address, _) = contract.deploy(@array![]).unwrap();
+                let (contract_address, _) = contract.deploy([].span()).unwrap();
                 IHelloStarknetDispatcher { contract_address }
             }
 
@@ -288,7 +288,7 @@ fn store_load_structure() {
 
             fn deploy_contract() -> IStorageTesterDispatcher {
                 let contract = declare("StorageTester").unwrap().contract_class();
-                let (contract_address, _) = contract.deploy(@array![]).unwrap();
+                let (contract_address, _) = contract.deploy([].span()).unwrap();
                 IStorageTesterDispatcher { contract_address }
             }
 
@@ -369,7 +369,7 @@ fn store_load_felt_to_structure() {
 
             fn deploy_contract() -> IStorageTesterDispatcher {
                 let contract = declare("StorageTester").unwrap().contract_class();
-                let (contract_address, _) = contract.deploy(@array![]).unwrap();
+                let (contract_address, _) = contract.deploy([].span()).unwrap();
                 IStorageTesterDispatcher { contract_address }
             }
 
@@ -424,7 +424,7 @@ fn store_load_structure_to_felt() {
             r#"
             use starknet::ContractAddress;
             use snforge_std::{ declare, ContractClassTrait, store, load, map_entry_address, DeclareResultTrait };
-            
+
             #[derive(Serde, Copy, Drop, starknet::Store, Hash)]
             struct NestedKey {
                 c: felt252
@@ -451,7 +451,7 @@ fn store_load_structure_to_felt() {
 
             fn deploy_contract() -> IStorageTesterDispatcher {
                 let contract = declare("StorageTester").unwrap().contract_class();
-                let (contract_address, _) = contract.deploy(@array![]).unwrap();
+                let (contract_address, _) = contract.deploy([].span()).unwrap();
                 IStorageTesterDispatcher { contract_address }
             }
 
@@ -513,7 +513,7 @@ fn store_load_felt_to_felt() {
 
             fn deploy_contract() -> IStorageTesterDispatcher {
                 let contract = declare("StorageTester").unwrap().contract_class();
-                let (contract_address, _) = contract.deploy(@array![]).unwrap();
+                let (contract_address, _) = contract.deploy([].span()).unwrap();
                 IStorageTesterDispatcher { contract_address }
             }
 
@@ -580,7 +580,7 @@ fn fork_store_load() {
                 assert(balance == 0, 'Balance should be 0');
                 let result = load(dispatcher.contract_address, selector!("balance"), 1);
                 assert(*result.at(0) == 0, 'Wrong balance loaded');
-                
+
                 store(dispatcher.contract_address, selector!("balance"), array![100].span());
 
                 let balance = dispatcher.get_balance();

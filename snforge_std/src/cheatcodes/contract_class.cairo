@@ -7,14 +7,20 @@ use super::super::_cheatcode::handle_cheatcode;
 use core::traits::Into;
 
 #[derive(Drop, Serde, Copy)]
-struct ContractClass {
+pub struct ContractClass {
     class_hash: ClassHash,
 }
 
-#[derive(Drop, Serde, Clone)]
-enum DeclareResult {
+#[derive(Drop, Serde, Copy)]
+pub enum DeclareResult {
     Success: ContractClass,
     AlreadyDeclared: ContractClass,
+}
+
+impl ContractClassIntoClassHash of Into<ContractClass, ClassHash> {
+    fn into(self: ContractClass) -> ClassHash {
+        self.class_hash
+    }
 }
 
 trait ContractClassTrait {
@@ -26,7 +32,7 @@ trait ContractClassTrait {
     /// `constructor_calldata` - serialized calldata for the deploy constructor
     /// Returns the precalculated `ContractAddress`
     fn precalculate_address(
-        self: @ContractClass, constructor_calldata: @Array::<felt252>
+        self: @ContractClass, constructor_calldata: Span<felt252>
     ) -> ContractAddress;
 
     /// Deploys a contract
@@ -36,7 +42,7 @@ trait ContractClassTrait {
     /// Returns the address the contract was deployed at and serialized constructor return data, or
     /// panic data if it failed
     fn deploy(
-        self: @ContractClass, constructor_calldata: @Array::<felt252>
+        self: @ContractClass, constructor_calldata: Span<felt252>
     ) -> SyscallResult<(ContractAddress, Span<felt252>)>;
 
     /// Deploys a contract at a given address
@@ -47,20 +53,21 @@ trait ContractClassTrait {
     /// Returns the address the contract was deployed at and serialized constructor return data, or
     /// panic data if it failed
     fn deploy_at(
-        self: @ContractClass,
-        constructor_calldata: @Array::<felt252>,
-        contract_address: ContractAddress
+        self: @ContractClass, constructor_calldata: Span<felt252>, contract_address: ContractAddress
     ) -> SyscallResult<(ContractAddress, Span<felt252>)>;
 
     /// Utility method for creating a new `ContractClass` instance
     /// `class_hash` - a numeric value that can be converted into the class hash of `ContractClass`
     /// Returns the created `ContractClass`
     fn new<T, +Into<T, ClassHash>>(class_hash: T) -> ContractClass;
+
+    /// Returns the class hash of the contract
+    fn class_hash(self: @ContractClass) -> ClassHash;
 }
 
 impl ContractClassImpl of ContractClassTrait {
     fn precalculate_address(
-        self: @ContractClass, constructor_calldata: @Array::<felt252>
+        self: @ContractClass, constructor_calldata: Span<felt252>
     ) -> ContractAddress {
         let mut inputs = _prepare_calldata(self.class_hash, constructor_calldata);
 
@@ -70,7 +77,7 @@ impl ContractClassImpl of ContractClassTrait {
     }
 
     fn deploy(
-        self: @ContractClass, constructor_calldata: @Array::<felt252>
+        self: @ContractClass, constructor_calldata: Span<felt252>
     ) -> SyscallResult<(ContractAddress, Span<felt252>)> {
         let mut inputs = _prepare_calldata(self.class_hash, constructor_calldata);
 
@@ -80,9 +87,7 @@ impl ContractClassImpl of ContractClassTrait {
     }
 
     fn deploy_at(
-        self: @ContractClass,
-        constructor_calldata: @Array::<felt252>,
-        contract_address: ContractAddress
+        self: @ContractClass, constructor_calldata: Span<felt252>, contract_address: ContractAddress
     ) -> SyscallResult<(ContractAddress, Span<felt252>)> {
         let mut inputs = _prepare_calldata(self.class_hash, constructor_calldata);
         inputs.append(contract_address.into());
@@ -94,6 +99,10 @@ impl ContractClassImpl of ContractClassTrait {
 
     fn new<T, +Into<T, ClassHash>>(class_hash: T) -> ContractClass {
         ContractClass { class_hash: class_hash.into() }
+    }
+
+    fn class_hash(self: @ContractClass) -> ClassHash {
+        *self.class_hash
     }
 }
 
@@ -133,16 +142,16 @@ fn declare(contract: ByteArray) -> Result<DeclareResult, Array<felt252>> {
 /// Returns the `ClassHash` under given address
 fn get_class_hash(contract_address: ContractAddress) -> ClassHash {
     let mut span = handle_cheatcode(
-        cheatcode::<'get_class_hash'>(array![contract_address.into()].span())
+        cheatcode::<'get_class_hash'>([contract_address.into()].span())
     );
 
     Serde::deserialize(ref span).unwrap()
 }
 
 fn _prepare_calldata(
-    class_hash: @ClassHash, constructor_calldata: @Array::<felt252>
-) -> Array::<felt252> {
-    let class_hash: felt252 = class_hash.clone().into();
+    class_hash: @ClassHash, constructor_calldata: Span<felt252>
+) -> Array<felt252> {
+    let class_hash: felt252 = (*class_hash).into();
     let mut inputs: Array::<felt252> = array![class_hash];
     constructor_calldata.serialize(ref inputs);
     inputs

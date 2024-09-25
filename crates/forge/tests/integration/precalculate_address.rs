@@ -21,10 +21,10 @@ fn precalculate_address() {
             let mut calldata = ArrayTrait::new();
 
             let contract = declare("HelloStarknet").unwrap().contract_class();
-            let contract_address_pre = contract.precalculate_address(@calldata);
-            let (contract_address, _) = contract.deploy(@calldata).unwrap();
-            let contract_address_pre2 = contract.precalculate_address(@calldata);
-            let (contract_address2, _) = contract.deploy(@calldata).unwrap();
+            let contract_address_pre = contract.precalculate_address(calldata.span());
+            let (contract_address, _) = contract.deploy(calldata.span()).unwrap();
+            let contract_address_pre2 = contract.precalculate_address(calldata.span());
+            let (contract_address2, _) = contract.deploy(calldata.span()).unwrap();
 
             assert(contract_address_pre == contract_address, 'must be eq');
             assert(contract_address_pre2 == contract_address2, 'must be eq');

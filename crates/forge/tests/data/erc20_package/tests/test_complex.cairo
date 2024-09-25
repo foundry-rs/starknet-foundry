@@ -27,7 +27,7 @@ fn deploy_erc20(
     constructor_calldata.append_span(initial_supply_serialized.span());
     constructor_calldata.append(recipient.into());
 
-    let (address, _) = contract.deploy(@constructor_calldata).unwrap();
+    let (address, _) = contract.deploy(constructor_calldata.span()).unwrap();
     address
 }
 

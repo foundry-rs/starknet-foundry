@@ -3,7 +3,10 @@ use traits::Into;
 use starknet::ClassHashIntoFelt252;
 use starknet::ContractAddress;
 use starknet::Felt252TryIntoContractAddress;
-use snforge_std::{declare, ContractAddress, ContractClassTrait, start_cheat_caller_address, start_cheat_block_number, start_cheat_block_timestamp};
+use snforge_std::{
+    declare, ContractClassTrait, start_cheat_caller_address,
+    start_cheat_block_number, start_cheat_block_timestamp
+};
 
 #[starknet::interface]
 trait IHelloStarknet<TContractState> {
@@ -17,7 +20,7 @@ trait IHelloStarknet<TContractState> {
 fn declare_and_interact() {
     assert(1 == 1, 'simple check');
     let contract = declare("HelloStarknet").unwrap();
-    let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+    let (contract_address, _) = contract.deploy([].span()).unwrap();
     let dispatcher = IHelloStarknetDispatcher { contract_address };
 
     dispatcher.get_balance();

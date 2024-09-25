@@ -30,7 +30,7 @@ fn library_call_syscall_is_usable() {
 
         fn deploy_contract(name: ByteArray) -> ContractAddress {
             let contract = declare(name).unwrap().contract_class();
-            let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+            let (contract_address, _) = contract.deploy([].span()).unwrap();
             contract_address
         }
 
@@ -44,7 +44,7 @@ fn library_call_syscall_is_usable() {
             let executor_contract = declare("Executor").unwrap().contract_class();
             let executor_class_hash = executor_contract.class_hash.clone();
 
-            let (executor_address, _) = executor_contract.deploy(@ArrayTrait::new()).unwrap();
+            let (executor_address, _) = executor_contract.deploy([].span()).unwrap();
             let executor_safe_dispatcher = IExecutorDispatcher {
                 contract_address: executor_address
             };
@@ -262,7 +262,7 @@ fn keccak_syscall_in_contract() {
             #[test]
             fn keccak_syscall_in_contract() {
                 let contract = declare("HelloKeccak").unwrap().contract_class();
-                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = contract.deploy([].span()).unwrap();
                 let dispatcher = IHelloKeccakDispatcher { contract_address };
 
                 let res = dispatcher.run_keccak(array![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]);
@@ -307,7 +307,7 @@ fn compare_keccak_from_contract_with_plain_keccak() {
             #[test]
             fn compare_keccak_from_contract_with_plain_keccak() {
                 let contract = declare("HelloKeccak").unwrap().contract_class();
-                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = contract.deploy([].span()).unwrap();
                 let dispatcher = IHelloKeccakDispatcher { contract_address };
 
                 let input = array![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17];

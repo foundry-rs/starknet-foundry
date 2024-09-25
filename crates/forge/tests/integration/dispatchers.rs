@@ -28,7 +28,7 @@ fn simple_call_and_invoke() {
         #[test]
         fn simple_call_and_invoke() {
             let contract = declare("HelloStarknet").unwrap().contract_class();
-            let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+            let (contract_address, _) = contract.deploy([].span()).unwrap();
             let dispatcher = IHelloStarknetDispatcher { contract_address };
 
             let balance = dispatcher.get_balance();
@@ -96,7 +96,7 @@ fn advanced_types() {
             calldata.append(1234);      // recipient
 
             let contract = declare("ERC20").unwrap().contract_class();
-            let (contract_address, _) = contract.deploy(@calldata).unwrap();
+            let (contract_address, _) = contract.deploy(calldata.span()).unwrap();
             let dispatcher = IERC20Dispatcher { contract_address };
             let user_address: ContractAddress = 1234.try_into().unwrap();
             let other_user_address: ContractAddress = 9999.try_into().unwrap();
@@ -152,7 +152,7 @@ fn handling_errors() {
         #[feature("safe_dispatcher")]
         fn handling_execution_errors() {
             let contract = declare("HelloStarknet").unwrap().contract_class();
-            let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+            let (contract_address, _) = contract.deploy([].span()).unwrap();
             let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
 
             match safe_dispatcher.do_a_panic() {
@@ -230,7 +230,7 @@ fn handling_bytearray_based_errors() {
         #[feature("safe_dispatcher")]
         fn handling_errors() {
             let contract = declare("HelloStarknet").unwrap().contract_class();
-            let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+            let (contract_address, _) = contract.deploy([].span()).unwrap();
             let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
 
             let panic_data = safe_dispatcher.do_a_panic_with_bytearray().unwrap_err();
@@ -305,7 +305,7 @@ fn serding() {
         #[test]
         fn serding() {
             let contract = declare("Serding").unwrap().contract_class();
-            let (contract_address, _) = contract.deploy( @ArrayTrait::new()).unwrap();
+            let (contract_address, _) = contract.deploy([].span()).unwrap();
 
             let dispatcher = ISerdingDispatcher {
                 contract_address
@@ -363,7 +363,7 @@ fn proxy_storage() {
 
         fn deploy_contract(name: ByteArray) -> ContractAddress {
             let contract = declare(name).unwrap().contract_class();
-            let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+            let (contract_address, _) = contract.deploy([].span()).unwrap();
             contract_address
         }
 
@@ -527,7 +527,7 @@ fn proxy_dispatcher_panic() {
 
         fn deploy_contract(name: ByteArray, constructor_calldata: @Array<felt252>) -> ContractAddress {
             let contract = declare(name).unwrap();
-            let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+            let (contract_address, _) = contract.deploy([].span()).unwrap();
             contract_address
         }
 
@@ -643,7 +643,7 @@ fn nonexistent_method_call() {
 
         fn deploy_contract(name: ByteArray, constructor_calldata: @Array<felt252>) -> ContractAddress {
             let contract = declare(name).unwrap().contract_class();
-            let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+            let (contract_address, _) = contract.deploy([].span()).unwrap();
             contract_address
         }
 
@@ -704,7 +704,7 @@ fn nonexistent_libcall_function() {
 
         fn deploy_contract(name: ByteArray) -> ContractAddress {
             let contract = declare(name).unwrap().contract_class();
-            let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+            let (contract_address, _) = contract.deploy([].span()).unwrap();
             contract_address
         }
 
@@ -831,7 +831,7 @@ fn nonexistent_class_libcall() {
 
         fn deploy_contract(name: ByteArray) -> ContractAddress {
             let contract = declare(name).unwrap().contract_class();
-            let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+            let (contract_address, _) = contract.deploy([].span()).unwrap();
             contract_address
         }
 

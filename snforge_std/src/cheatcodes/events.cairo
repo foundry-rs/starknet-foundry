@@ -1,7 +1,7 @@
 use core::array::ArrayTrait;
 use core::option::OptionTrait;
-use starknet::testing::cheatcode;
-use starknet::ContractAddress;
+use core::starknet::testing::cheatcode;
+use core::starknet::ContractAddress;
 use super::super::_cheatcode::handle_cheatcode;
 
 /// Creates `EventSpy` instance that spies on all events emitted after its creation.

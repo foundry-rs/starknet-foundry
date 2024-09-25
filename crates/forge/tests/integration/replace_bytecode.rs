@@ -21,7 +21,7 @@ fn override_entrypoint() {
             fn override_entrypoint() {
                 let contract = declare("ReplaceBytecodeA").unwrap().contract_class();
                 let contract_b_class = declare("ReplaceBytecodeB").unwrap().contract_class().class_hash.clone();
-                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = contract.deploy([].span()).unwrap();
                 let dispatcher = IReplaceBytecodeDispatcher { contract_address };
 
                 assert(dispatcher.get() == 2137, '');
@@ -72,7 +72,7 @@ fn libcall_in_cheated() {
                 let contract = declare("ReplaceBytecodeA").unwrap().contract_class();
                 let contract_b_class = declare("ReplaceBytecodeB").unwrap().contract_class().clone().class_hash;
                 let lib = declare("Lib").unwrap().contract_class().clone().class_hash;
-                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = contract.deploy([].span()).unwrap();
                 let dispatcher = IReplaceBytecodeDispatcher { contract_address };
 
                 assert(dispatcher.libcall(lib) == 123456789, '');
@@ -154,7 +154,7 @@ fn class_hash_not_declared() {
             fn class_hash_not_declared() {
                 let contract = declare("ReplaceBytecodeA").unwrap().contract_class();
                 let undeclared_class_hash: ClassHash = 0x5.try_into().unwrap();
-                let (contract_address, _) = contract.deploy(@array![]).unwrap();
+                let (contract_address, _) = contract.deploy([].span()).unwrap();
 
                 match replace_bytecode(contract_address, undeclared_class_hash) {
                     Result::Ok(()) => {

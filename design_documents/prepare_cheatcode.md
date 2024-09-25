@@ -86,7 +86,7 @@ This could be remedied by having separate counters for all `class_hashe`es, but 
 ```cairo
 mod HelloStarknet {
     // ...
-    
+
     #[constructor]
     fn constructor(ref self: ContractState) {
         let timestamp = starknet::get_block_timestamp();
@@ -98,16 +98,16 @@ mod HelloStarknet {
 fn call_and_invoke() {
     // Declare the contract
     let class_hash = declare("HelloStarknet");
-    
+
     // Prepare contract for deployment
     let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
-    
+
     // Precalculate the address
     let contract_address = precalulucate_address(prepared);
-    
+
     // Warp the address
     start_warp(contract_address, 1234);
-    
+
     // Deploy with warped constructor
     let contract_address = deploy(prepared).unwrap();
     let dispatcher = IHelloStarknetDispatcher { contract_address };
@@ -122,10 +122,10 @@ any steps introduced.
 fn call_and_invoke() {
     // Declare the contract
     let class_hash = declare("HelloStarknet");
-    
+
     // Prepare contract for deployment
     let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
-        
+
     // Deploy
     let contract_address = deploy(prepared).unwrap();
     let dispatcher = IHelloStarknetDispatcher { contract_address };
@@ -176,7 +176,7 @@ Same problems as [indicated here](#known-problems-with-this-solution) apply to P
 ```cairo
 mod HelloStarknet {
     // ...
-    
+
     #[constructor]
     fn constructor(ref self: ContractState) {
         let timestamp = starknet::get_block_timestamp();
@@ -188,15 +188,15 @@ mod HelloStarknet {
 fn call_and_invoke() {
     // Declare the contract
     let contract = declare("HelloStarknet");
-        
+
     // Precalculate the address
     let contract_address = contract.precalulucate_address(@ArrayTrait::new());
-    
+
     // Warp the address
     start_warp(contract_address, 1234);
-    
+
     // Deploy with warped constructor
-    let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+    let contract_address = contract.deploy([].span()).unwrap();
     let dispatcher = IHelloStarknetDispatcher { contract_address };
 }
 ```

@@ -17,7 +17,7 @@ fn error_handling() {
         fn error_handling() {
             let contract = declare("PanickingConstructor").unwrap().contract_class();
 
-            match contract.deploy(@ArrayTrait::new()) {
+            match contract.deploy([].span()) {
                 Result::Ok(_) => panic_with_felt252('Should have panicked'),
                 Result::Err(panic_data) => {
                     assert(*panic_data.at(0_usize) == 'PANIK', *panic_data.at(0_usize));
@@ -97,7 +97,7 @@ fn constructor_retdata_span() {
         fn constructor_retdata_span() {
             let contract = declare("ConstructorRetdata").unwrap().contract_class();
 
-            let (_contract_address, retdata) = contract.deploy(@ArrayTrait::new()).unwrap();
+            let (_contract_address, retdata) = contract.deploy([].span()).unwrap();
             assert_eq!(retdata, array![3, 2, 3, 4].span());
         }
     "#
@@ -109,10 +109,10 @@ fn constructor_retdata_span() {
                 #[starknet::contract]
                 mod ConstructorRetdata {
                     use array::ArrayTrait;
-                
+
                     #[storage]
                     struct Storage {}
-                
+
                     #[constructor]
                     fn constructor(ref self: ContractState) -> Span<felt252> {
                         array![2, 3, 4].span()
@@ -141,7 +141,7 @@ fn constructor_retdata_felt() {
         fn constructor_retdata_felt() {
             let contract = declare("ConstructorRetdata").unwrap().contract_class();
 
-            let (_contract_address, retdata) = contract.deploy(@ArrayTrait::new()).unwrap();
+            let (_contract_address, retdata) = contract.deploy([].span()).unwrap();
             assert_eq!(retdata, array![5].span());
         }
     "#
@@ -153,10 +153,10 @@ fn constructor_retdata_felt() {
                 #[starknet::contract]
                 mod ConstructorRetdata {
                     use array::ArrayTrait;
-                
+
                     #[storage]
                     struct Storage {}
-                
+
                     #[constructor]
                     fn constructor(ref self: ContractState) -> felt252 {
                         5
@@ -185,7 +185,7 @@ fn constructor_retdata_struct() {
         fn constructor_retdata_struct() {
             let contract = declare("ConstructorRetdata").unwrap().contract_class();
 
-            let (_contract_address, retdata) = contract.deploy(@ArrayTrait::new()).unwrap();
+            let (_contract_address, retdata) = contract.deploy([].span()).unwrap();
             assert_eq!(retdata, array![0, 6, 2, 7, 8, 9].span());
         }
     "#
@@ -197,10 +197,10 @@ fn constructor_retdata_struct() {
                 #[starknet::contract]
                 mod ConstructorRetdata {
                     use array::ArrayTrait;
-                
+
                     #[storage]
                     struct Storage {}
-                
+
                     #[derive(Serde, Drop)]
                     struct Retdata {
                         a: felt252,

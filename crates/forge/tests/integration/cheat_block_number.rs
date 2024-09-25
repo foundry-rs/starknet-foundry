@@ -28,7 +28,7 @@ fn cheat_block_number_basic() {
             #[test]
             fn test_stop_cheat_block_number() {
                 let contract = declare("CheatBlockNumberChecker").unwrap().contract_class();
-                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = contract.deploy([].span()).unwrap();
                 let dispatcher = ICheatBlockNumberCheckerDispatcher { contract_address };
 
                 let old_block_number = dispatcher.get_block_number();
@@ -48,8 +48,8 @@ fn cheat_block_number_basic() {
             fn test_cheat_block_number_multiple() {
                 let contract = declare("CheatBlockNumberChecker").unwrap().contract_class();
 
-                let (contract_address1, _) = contract.deploy(@ArrayTrait::new()).unwrap();
-                let (contract_address2, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address1, _) = contract.deploy([].span()).unwrap();
+                let (contract_address2, _) = contract.deploy([].span()).unwrap();
 
                 let cheat_block_number_checker1 = ICheatBlockNumberCheckerDispatcher { contract_address: contract_address1 };
                 let cheat_block_number_checker2 = ICheatBlockNumberCheckerDispatcher { contract_address: contract_address2 };
@@ -77,8 +77,8 @@ fn cheat_block_number_basic() {
             fn test_cheat_block_number_all() {
                 let contract = declare("CheatBlockNumberChecker").unwrap().contract_class();
 
-                let (contract_address1, _) = contract.deploy(@ArrayTrait::new()).unwrap();
-                let (contract_address2, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address1, _) = contract.deploy([].span()).unwrap();
+                let (contract_address2, _) = contract.deploy([].span()).unwrap();
 
                 let cheat_block_number_checker1 = ICheatBlockNumberCheckerDispatcher { contract_address: contract_address1 };
                 let cheat_block_number_checker2 = ICheatBlockNumberCheckerDispatcher { contract_address: contract_address2 };
@@ -106,7 +106,7 @@ fn cheat_block_number_basic() {
             #[test]
             fn test_cheat_block_number_all_stop_one() {
                 let contract = declare("CheatBlockNumberChecker").unwrap().contract_class();
-                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = contract.deploy([].span()).unwrap();
                 let dispatcher = ICheatBlockNumberCheckerDispatcher { contract_address };
 
                 let old_block_number = dispatcher.get_block_number();
@@ -155,7 +155,7 @@ fn cheat_block_number_complex() {
 
             fn deploy_cheat_block_number_checker()  -> ICheatBlockNumberCheckerDispatcher {
                 let contract = declare("CheatBlockNumberChecker").unwrap().contract_class();
-                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = contract.deploy([].span()).unwrap();
                 ICheatBlockNumberCheckerDispatcher { contract_address }
             }
 
@@ -163,8 +163,8 @@ fn cheat_block_number_complex() {
             fn cheat_block_number_complex() {
                 let contract = declare("CheatBlockNumberChecker").unwrap().contract_class();
 
-                let (contract_address1, _) = contract.deploy(@ArrayTrait::new()).unwrap();
-                let (contract_address2, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address1, _) = contract.deploy([].span()).unwrap();
+                let (contract_address2, _) = contract.deploy([].span()).unwrap();
 
                 let cheat_block_number_checker1 = ICheatBlockNumberCheckerDispatcher { contract_address: contract_address1 };
                 let cheat_block_number_checker2 = ICheatBlockNumberCheckerDispatcher { contract_address: contract_address2 };
@@ -237,7 +237,7 @@ fn cheat_block_number_with_span() {
             }
 
             fn deploy_cheat_block_number_checker() -> ICheatBlockNumberCheckerDispatcher {
-                let (contract_address, _) = declare("CheatBlockNumberChecker").unwrap().contract_class().deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = declare("CheatBlockNumberChecker").unwrap().contract_class().deploy([].span()).unwrap();
                 ICheatBlockNumberCheckerDispatcher { contract_address }
             }
 

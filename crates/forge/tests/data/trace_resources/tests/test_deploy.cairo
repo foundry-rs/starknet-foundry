@@ -11,9 +11,9 @@ fn test_deploy() {
 
     trace_resources::use_builtins_and_syscalls(empty_hash, 7);
 
-    let (checker_address, _) = checker.deploy(@array![]).unwrap();
+    let (checker_address, _) = checker.deploy([].span()).unwrap();
 
-    proxy.deploy(@array![checker_address.into(), empty_hash.into(), 1]).unwrap();
+    proxy.deploy([checker_address.into(), empty_hash.into(), 1].span()).unwrap();
 
     deploy_syscall(
         proxy.class_hash, 0, array![checker_address.into(), empty_hash.into(), 2].span(), false
@@ -21,7 +21,7 @@ fn test_deploy() {
         .unwrap_syscall();
 
     proxy
-        .deploy_at(@array![checker_address.into(), empty_hash.into(), 3], 123.try_into().unwrap())
+        .deploy_at([checker_address.into(), empty_hash.into(), 3].span(), 123.try_into().unwrap())
         .unwrap();
 
     deploy_syscall(

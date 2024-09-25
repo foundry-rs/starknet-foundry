@@ -25,7 +25,7 @@ fn cheat_caller_address() {
             #[test]
             fn test_stop_cheat_caller_address() {
                 let contract = declare("CheatCallerAddressChecker").unwrap().contract_class();
-                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = contract.deploy([].span()).unwrap();
                 let dispatcher = ICheatCallerAddressCheckerDispatcher { contract_address };
 
                 let target_caller_address: felt252 = 123;
@@ -47,7 +47,7 @@ fn cheat_caller_address() {
             #[test]
             fn test_cheat_caller_address_all() {
                 let contract = declare("CheatCallerAddressChecker").unwrap().contract_class();
-                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = contract.deploy([].span()).unwrap();
                 let dispatcher = ICheatCallerAddressCheckerDispatcher { contract_address };
 
                 let target_caller_address: felt252 = 123;
@@ -69,7 +69,7 @@ fn cheat_caller_address() {
             #[test]
             fn test_cheat_caller_address_all_stop_one() {
                 let contract = declare("CheatCallerAddressChecker").unwrap().contract_class();
-                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = contract.deploy([].span()).unwrap();
                 let dispatcher = ICheatCallerAddressCheckerDispatcher { contract_address };
 
                 let target_caller_address: felt252 = 123;
@@ -92,8 +92,8 @@ fn cheat_caller_address() {
             fn test_cheat_caller_address_multiple() {
                 let contract = declare("CheatCallerAddressChecker").unwrap().contract_class();
 
-                let (contract_address1, _) = contract.deploy(@ArrayTrait::new()).unwrap();
-                let (contract_address2, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address1, _) = contract.deploy([].span()).unwrap();
+                let (contract_address2, _) = contract.deploy([].span()).unwrap();
 
                 let dispatcher1 = ICheatCallerAddressCheckerDispatcher { contract_address: contract_address1 };
                 let dispatcher2 = ICheatCallerAddressCheckerDispatcher { contract_address: contract_address2 };
@@ -155,7 +155,7 @@ fn cheat_caller_address_with_span() {
             }
 
             fn deploy_cheat_caller_address_checker() -> ICheatCallerAddressCheckerDispatcher {
-                let (contract_address, _) = declare("CheatCallerAddressChecker").unwrap().contract_class().deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = declare("CheatCallerAddressChecker").unwrap().contract_class().deploy([].span()).unwrap();
                 ICheatCallerAddressCheckerDispatcher { contract_address }
             }
 

@@ -7,7 +7,7 @@ pub mod SpyEventsChecker {
     // ...
     #[storage]
     struct Storage {}
-    
+
     #[event]
     #[derive(Drop, starknet::Event)]
     pub enum Event {
@@ -18,7 +18,7 @@ pub mod SpyEventsChecker {
     pub struct FirstEvent {
         pub some_data: felt252
     }
-    
+
     #[external(v0)]
     fn emit_one_event(ref self: ContractState, some_data: felt252) {
         self.emit(FirstEvent { some_data });
@@ -37,7 +37,7 @@ See the below code for reference:
 use snforge_std::{
     declare, ContractClassTrait, DeclareResultTrait
     spy_events,
-    EventSpyAssertionsTrait,  // Add for assertions on the EventSpy 
+    EventSpyAssertionsTrait,  // Add for assertions on the EventSpy
 };
 
 use SpyEventsChecker;
@@ -50,7 +50,7 @@ trait ISpyEventsChecker<TContractState> {
 #[test]
 fn test_simple_assertions() {
     let contract = declare("SpyEventsChecker").unwrap().contract_class();
-    let (contract_address, _) = contract.deploy(@array![]).unwrap();
+    let (contract_address, _) = contract.deploy([].span()).unwrap();
     let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
 
     let mut spy = spy_events();  // Ad. 1
@@ -70,7 +70,7 @@ fn test_simple_assertions() {
 
 Let's go through the code:
 
-1. After contract deployment, we created the spy using `spy_events` cheatcode. From this moment all emitted events 
+1. After contract deployment, we created the spy using `spy_events` cheatcode. From this moment all emitted events
 will be spied.
 2. Asserting is done using the `assert_emitted` method. It takes an array snapshot of `(ContractAddress, event)`
 tuples we expect that were emitted.
@@ -97,11 +97,11 @@ spy.assert_not_emitted(@array![
 ]);
 ```
 
-Note that both the event name and event data are checked. 
+Note that both the event name and event data are checked.
 If a function emitted an event with the same name but a different payload, the `assert_not_emitted` function will pass.
 
 ## Asserting the events manually
-If you wish to assert the data manually, you can do that on the `Events` structure. 
+If you wish to assert the data manually, you can do that on the `Events` structure.
 Simply call `get_events()` on your `EventSpy` and access `events`  field on the returned `Events` value.
 Then, you can access the events and assert data by yourself.
 
@@ -110,7 +110,7 @@ use snforge_std::{
     declare, ContractClassTrait, DeclareResultTrait,
     spy_events,
     EventSpyAssertionsTrait,
-    EventSpyTrait,  // Add for fetching events directly  
+    EventSpyTrait,  // Add for fetching events directly
     Event,          // A structure describing a raw `Event`
 };
 
@@ -122,7 +122,7 @@ trait ISpyEventsChecker<TContractState> {
 #[test]
 fn test_complex_assertions() {
     let contract = declare("SpyEventsChecker").unwrap().contract_class();
-    let (contract_address, _) = contract.deploy(@array![]).unwrap();
+    let (contract_address, _) = contract.deploy([].span()).unwrap();
     let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
 
     let mut spy = spy_events(); // Ad 1.
@@ -158,7 +158,7 @@ Since `events` is an array holding a tuple of `ContractAddress` and `Event`, we 
 ## Filtering Events
 
 Sometimes, when you assert the events manually, you might not want to get all the events, but only ones from
-a particular address. You can address that by using the method `emitted_by` on the `Events` structure. 
+a particular address. You can address that by using the method `emitted_by` on the `Events` structure.
 
 ```rust
 use snforge_std::{
@@ -167,7 +167,7 @@ use snforge_std::{
     EventSpyAssertionsTrait,
     EventSpyTrait,
     Event,
-    EventsFilterTrait, // Add for filtering the Events object (result of `get_events`) 
+    EventsFilterTrait, // Add for filtering the Events object (result of `get_events`)
 };
 
 use SpyEventsChecker;
@@ -180,8 +180,8 @@ trait ISpyEventsChecker<TContractState> {
 #[test]
 fn test_assertions_with_filtering() {
     let contract = declare("SpyEventsChecker").unwrap().contract_class();
-    let (first_address, _) = contract.deploy(@array![]).unwrap();
-    let (second_address, _) = contract.deploy(@array![]).unwrap();
+    let (first_address, _) = contract.deploy([].span()).unwrap();
+    let (second_address, _) = contract.deploy([].span()).unwrap();
 
     let first_dispatcher = ISpyEventsCheckerDispatcher { contract_address: first_address };
     let second_dispatcher = ISpyEventsCheckerDispatcher { contract_address: second_address };
@@ -250,7 +250,7 @@ trait ISpyEventsChecker<TContractState> {
 #[test]
 fn test_nonstandard_events() {
     let contract = declare("SpyEventsChecker").unwrap().contract_class();
-    let (contract_address, _) = contract.deploy(@array![]).unwrap();
+    let (contract_address, _) = contract.deploy([].span()).unwrap();
     let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
 
     let mut spy = spy_events();

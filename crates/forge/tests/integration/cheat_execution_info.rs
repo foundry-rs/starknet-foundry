@@ -26,7 +26,7 @@ fn start_and_stop_cheat_transaction_hash_single_attribute() {
             #[test]
             fn start_cheat_transaction_hash_single_attribute() {
                 let contract = declare("CheatTxInfoChecker").unwrap().contract_class();
-                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = contract.deploy([].span()).unwrap();
                 let dispatcher = ICheatTxInfoCheckerDispatcher { contract_address };
 
                 let tx_info_before = dispatcher.get_tx_info();
@@ -46,7 +46,7 @@ fn start_and_stop_cheat_transaction_hash_single_attribute() {
             #[test]
             fn test_cheat_transaction_hash_all_stop_one() {
                 let contract = declare("CheatTxInfoChecker").unwrap().contract_class();
-                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = contract.deploy([].span()).unwrap();
                 let dispatcher = ICheatTxInfoCheckerDispatcher { contract_address };
 
                 let tx_info_before = dispatcher.get_tx_info();
@@ -138,7 +138,7 @@ fn start_cheat_execution_info_all_attributes_mocked() {
             #[test]
             fn start_cheat_execution_info_all_attributes_mocked() {
                 let contract = declare("CheatTxInfoChecker").unwrap().contract_class();
-                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = contract.deploy([].span()).unwrap();
                 let dispatcher = ICheatTxInfoCheckerDispatcher { contract_address };
 
                 let mut execution_info_mock: ExecutionInfoMock = Default::default();
@@ -294,7 +294,7 @@ fn start_cheat_transaction_hash_cancel_mock_by_setting_attribute_to_none() {
             #[test]
             fn start_cheat_transaction_hash_cancel_mock_by_setting_attribute_to_none() {
                 let contract = declare("CheatTxInfoChecker").unwrap().contract_class();
-                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = contract.deploy([].span()).unwrap();
                 let dispatcher = ICheatTxInfoCheckerDispatcher { contract_address };
 
                 let tx_info_before_mock = dispatcher.get_tx_info();
@@ -372,10 +372,10 @@ fn start_cheat_transaction_hash_multiple() {
             fn start_cheat_transaction_hash_multiple() {
                 let contract = declare("CheatTxInfoChecker").unwrap().contract_class();
 
-                let (contract_address_1, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address_1, _) = contract.deploy([].span()).unwrap();
                 let dispatcher_1 = ICheatTxInfoCheckerDispatcher { contract_address: contract_address_1 };
 
-                let (contract_address_2, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address_2, _) = contract.deploy([].span()).unwrap();
                 let dispatcher_2 = ICheatTxInfoCheckerDispatcher { contract_address: contract_address_2 };
 
                 start_cheat_transaction_hash(contract_address_1, 421);
@@ -438,7 +438,7 @@ fn start_cheat_execution_info_all() {
             #[test]
             fn start_cheat_execution_info_all_one_param() {
                 let contract = declare("CheatTxInfoChecker").unwrap().contract_class();
-                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = contract.deploy([].span()).unwrap();
                 let dispatcher = ICheatTxInfoCheckerDispatcher { contract_address };
 
                 let mut execution_info_mock: ExecutionInfoMock = Default::default();
@@ -452,7 +452,7 @@ fn start_cheat_execution_info_all() {
             #[test]
             fn start_cheat_execution_info_all_multiple_params() {
                 let contract = declare("CheatTxInfoChecker").unwrap().contract_class();
-                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = contract.deploy([].span()).unwrap();
                 let dispatcher = ICheatTxInfoCheckerDispatcher { contract_address };
 
                 let mut execution_info_mock: ExecutionInfoMock = Default::default();
@@ -556,8 +556,8 @@ fn start_cheat_transaction_hash_complex() {
             #[test]
             fn start_cheat_transaction_hash_complex() {
                 let contract = declare("CheatTxInfoChecker").unwrap().contract_class();
-                let (contract_address_1, _) = contract.deploy(@array![]).unwrap();
-                let (contract_address_2, _) = contract.deploy(@array![]).unwrap();
+                let (contract_address_1, _) = contract.deploy([].span()).unwrap();
+                let (contract_address_2, _) = contract.deploy([].span()).unwrap();
 
                 let dispatcher_1 = ICheatTxInfoCheckerDispatcher { contract_address: contract_address_1 };
                 let dispatcher_2 = ICheatTxInfoCheckerDispatcher { contract_address: contract_address_2 };
@@ -618,7 +618,7 @@ fn cheat_transaction_hash_with_span() {
             }
 
             fn deploy_cheat_transaction_hash_checker() -> ICheatTxInfoCheckerDispatcher {
-                let (contract_address, _) = declare("CheatTxInfoChecker").unwrap().contract_class().deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = declare("CheatTxInfoChecker").unwrap().contract_class().deploy([].span()).unwrap();
                 ICheatTxInfoCheckerDispatcher { contract_address }
             }
 

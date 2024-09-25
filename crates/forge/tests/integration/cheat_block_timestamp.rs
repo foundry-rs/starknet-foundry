@@ -27,7 +27,7 @@ fn cheat_block_timestamp_basic() {
 
             fn deploy_cheat_block_timestamp_checker()  -> ICheatBlockTimestampCheckerDispatcher {
                 let contract = declare("CheatBlockTimestampChecker").unwrap().contract_class();
-                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = contract.deploy([].span()).unwrap();
                 ICheatBlockTimestampCheckerDispatcher { contract_address }
             }
 
@@ -69,8 +69,8 @@ fn cheat_block_timestamp_basic() {
             fn cheat_block_timestamp_multiple() {
                 let contract = declare("CheatBlockTimestampChecker").unwrap().contract_class();
 
-                let (contract_address1, _) = contract.deploy(@ArrayTrait::new()).unwrap();
-                let (contract_address2, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address1, _) = contract.deploy([].span()).unwrap();
+                let (contract_address2, _) = contract.deploy([].span()).unwrap();
 
                 let cheat_block_timestamp_checker1 = ICheatBlockTimestampCheckerDispatcher { contract_address: contract_address1 };
                 let cheat_block_timestamp_checker2 = ICheatBlockTimestampCheckerDispatcher { contract_address: contract_address2 };
@@ -101,8 +101,8 @@ fn cheat_block_timestamp_basic() {
             fn cheat_block_timestamp_all() {
                 let contract = declare("CheatBlockTimestampChecker").unwrap().contract_class();
 
-                let (contract_address1, _) = contract.deploy(@ArrayTrait::new()).unwrap();
-                let (contract_address2, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address1, _) = contract.deploy([].span()).unwrap();
+                let (contract_address2, _) = contract.deploy([].span()).unwrap();
 
                 let cheat_block_timestamp_checker1 = ICheatBlockTimestampCheckerDispatcher { contract_address: contract_address1 };
                 let cheat_block_timestamp_checker2 = ICheatBlockTimestampCheckerDispatcher { contract_address: contract_address2 };
@@ -163,7 +163,7 @@ fn cheat_block_timestamp_complex() {
 
             fn deploy_cheat_block_timestamp_checker()  -> ICheatBlockTimestampCheckerDispatcher {
                 let contract = declare("CheatBlockTimestampChecker").unwrap().contract_class();
-                let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = contract.deploy([].span()).unwrap();
                 ICheatBlockTimestampCheckerDispatcher { contract_address }
             }
 
@@ -171,8 +171,8 @@ fn cheat_block_timestamp_complex() {
             fn cheat_block_timestamp_complex() {
                 let contract = declare("CheatBlockTimestampChecker").unwrap().contract_class();
 
-                let (contract_address1, _) = contract.deploy(@ArrayTrait::new()).unwrap();
-                let (contract_address2, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address1, _) = contract.deploy([].span()).unwrap();
+                let (contract_address2, _) = contract.deploy([].span()).unwrap();
 
                 let cheat_block_timestamp_checker1 = ICheatBlockTimestampCheckerDispatcher { contract_address: contract_address1 };
                 let cheat_block_timestamp_checker2 = ICheatBlockTimestampCheckerDispatcher { contract_address: contract_address2 };
@@ -245,7 +245,7 @@ fn cheat_block_timestamp_with_span() {
             }
 
             fn deploy_cheat_block_timestamp_checker() -> ICheatBlockTimestampCheckerDispatcher {
-                let (contract_address, _) = declare("CheatBlockTimestampChecker").unwrap().contract_class().deploy(@ArrayTrait::new()).unwrap();
+                let (contract_address, _) = declare("CheatBlockTimestampChecker").unwrap().contract_class().deploy([].span()).unwrap();
                 ICheatBlockTimestampCheckerDispatcher { contract_address }
             }
 
