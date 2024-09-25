@@ -719,7 +719,6 @@ fn validate_init(temp: &TempDir) {
 
             [scripts]
             test = "snforge test"
-
             {SCARB_MANIFEST_TEMPLATE_CONTENT}
             "#
     );
