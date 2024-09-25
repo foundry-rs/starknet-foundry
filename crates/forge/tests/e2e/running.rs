@@ -671,7 +671,7 @@ fn init_new_project() {
 
     runner(&temp).args(["init", "test_name"]).assert().success();
 
-    validate_init(&temp, CLITool::Snforge);
+    validate_init(&temp, &CLITool::Snforge);
 }
 
 #[test]
@@ -689,7 +689,7 @@ fn init_new_project_from_scarb() {
         .assert()
         .success();
 
-    validate_init(&temp, CLITool::Scarb);
+    validate_init(&temp, &CLITool::Scarb);
 }
 
 pub fn append_to_path_var(path: &Path) -> OsString {
@@ -699,7 +699,7 @@ pub fn append_to_path_var(path: &Path) -> OsString {
     env::join_paths(script_path.chain(other_paths)).unwrap()
 }
 
-fn validate_init(temp: &TempDir, cli_tool: CLITool) {
+fn validate_init(temp: &TempDir, cli_tool: &CLITool) {
     let manifest_path = temp.join("test_name/Scarb.toml");
     let scarb_toml = fs::read_to_string(manifest_path.clone()).unwrap();
 
@@ -707,7 +707,7 @@ fn validate_init(temp: &TempDir, cli_tool: CLITool) {
         CLITool::Snforge => format!("\n{SCARB_MANIFEST_TEMPLATE_CONTENT}")
             .trim_end()
             .to_string(),
-        CLITool::Scarb => "".to_string(),
+        CLITool::Scarb => String::new(),
     };
 
     let expected = formatdoc!(
