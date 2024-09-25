@@ -104,7 +104,7 @@ jobs:
         run: |
           curl -L https://raw.githubusercontent.com/software-mansion/cairo-coverage/main/scripts/install.sh | sh
 
-      - run: cargo test --package forge --features scarb_2_8_1 --test main e2e::coverage::test_coverage_project
+      - run: cargo test --package forge --features scarb_2_8_1 --test main e2e::coverage
 
   test-forge-runner:
     name: Test Forge Runner
