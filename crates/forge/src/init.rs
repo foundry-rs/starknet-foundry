@@ -45,7 +45,7 @@ fn add_template_to_scarb_manifest(path: &PathBuf) -> Result<()> {
         .open(path)
         .context("Failed to open Scarb.toml")?;
 
-    file.write_all(format!("{SCARB_MANIFEST_TEMPLATE_CONTENT}").as_bytes())
+    file.write_all(SCARB_MANIFEST_TEMPLATE_CONTENT.as_bytes())
         .context("Failed to write to Scarb.toml")?;
     Ok(())
 }
