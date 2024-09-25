@@ -131,6 +131,7 @@ mod tests {
     use std::env;
     use std::str::FromStr;
     use test_utils::tempdir_with_tool_versions;
+    use cheatnet::runtime_extensions::forge_config_extension::config::BlockId;
 
     fn setup_package(package_name: &str) -> TempDir {
         let temp = tempdir_with_tool_versions().unwrap();
@@ -396,6 +397,36 @@ mod tests {
         )
         .unwrap_err();
         assert!(format!("{err:?}").contains("block_id.tag can only be equal to latest"));
+    }
+
+    #[test]
+    fn get_forge_config_for_package_with_block_tag() {
+        let temp = setup_package("simple_package");
+        let content = indoc!(
+            r#"
+            [package]
+            name = "simple_package"
+            version = "0.1.0"
+
+            [[tool.snforge.fork]]
+            name = "SAME_NAME"
+            url = "http://some.rpc.url"
+            block_id.tag = "latest"
+            "#
+        );
+        temp.child("Scarb.toml").write_str(content).unwrap();
+
+        let scarb_metadata = ScarbCommand::metadata()
+            .inherit_stderr()
+            .current_dir(temp.path())
+            .run()
+            .unwrap();
+
+        let forge_config = load_package_config::<ForgeConfigFromScarb>(
+            &scarb_metadata,
+            &scarb_metadata.workspace.members[0],
+        ).unwrap();
+        assert_eq!(forge_config.fork[0].block_id, BlockId::BlockTag);
     }
 
     #[test]
