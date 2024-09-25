@@ -1,5 +1,9 @@
 # Conditional Compilation
 
+> 📝 **Note**
+> For more detailed guide on Scarb conditional compilation, please refer to [Scarb documentation](https://docs.swmansion.com/scarb/docs/reference/conditional-compilation.html)
+
+
 It is possible to build some contracts solely for testing purposes.
 This can be achieved by leveraging [Scarb features](https://docs.swmansion.com/scarb/docs/reference/conditional-compilation.html#features).
 Configuration in `Scarb.toml` is done in the same manner as described in the Scarb documentation.
@@ -12,24 +16,7 @@ Additionally, for utilizing features the `snforge test` command exposes the foll
 Firstly, define a contract in the `src` directory with a `#[cfg(feature: '<FEATURE_NAME>')]` attribute:
 
 ```rust
-#[starknet::interface]
-trait IMockContract<TContractState> {
-    fn response(self: @TContractState) -> u32;
-}
-
-#[starknet::contract]
-#[cfg(feature: 'enable_for_tests')]
-mod MockContract {
-    #[storage]
-    struct Storage {}
-
-    #[abi(embed_v0)]
-    impl IContractImpl of super::IContract<ContractState> {
-        fn response(self: @ContractState) -> u32 {
-            1
-        }
-    }
-}
+{{#include ../../listings/snforge_advanced_features/crates/conditional_compilation/src/lib.cairo}}
 ```
 
 > 📝 **Note**
@@ -40,16 +27,7 @@ mod MockContract {
 Next, create a test that uses the above contract:
 
 ```rust
-#[test]
-fn test_mock_contract() {
-    let (contract_address, _) = declare("MockContract")
-        .unwrap()
-        .contract_class()
-        .deploy(@array![])
-        .unwrap();
-    let response_result = IContractDispatcher { contract_address }.response();
-    assert(response_result == 1, '');
-}
+{{#include ../../listings/snforge_advanced_features/crates/conditional_compilation/tests/test.cairo}}
 ```
 
 The `Scarb.toml` file needs to be updated so it includes the following lines:
@@ -65,6 +43,14 @@ Then, to use the contract in tests `snforge test` must be provided with a flag d
 snforge test --features enable_for_tests
 ```
 
+Also, we can specify which features are going to be enabled by default:
+
+```toml
+[features]
+default = ["enable_for_tests"]
+enable_for_tests = []
+```
+
 > 📝 **Note**
 > If `snforge test` is run without the above feature enabled, it won't build any artifacts for the `MockContract` and all tests that use this contract will fail.
 
@@ -73,13 +59,5 @@ snforge test --features enable_for_tests
 Features are not limited to conditionally compiling contracts and can be used with other parts of the code, like functions:
 
 ```rust
-#[cfg(feature: 'enable_for_tests')]
-fn mock_function() -> u32 {
-    2
-}
-
-#[test]
-fn test_using_mock_function() {
-    assert!(mock_function() == 2, '');
-}
+{{#include ../../listings/snforge_advanced_features/crates/conditional_compilation/src/function.cairo}}
 ```
