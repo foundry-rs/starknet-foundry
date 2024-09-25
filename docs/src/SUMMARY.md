@@ -130,3 +130,4 @@
     * [tx_status](appendix/sncast-library/tx_status.md)
     * [errors](appendix/sncast-library/errors.md)
 * [ `snfoundry.toml` Reference](appendix/snfoundry-toml.md)
+* [ `Scarb.toml` Reference](appendix/scarb-toml.md)
