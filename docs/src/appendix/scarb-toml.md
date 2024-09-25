@@ -221,6 +221,11 @@ name = "SOME_SECOND_NAME"
 url = "http://your.second.rpc.url"
 block_id.number = "123"
 
+[[tool.snforge.fork]]
+name = "SOME_THIRD_NAME"
+url = "http://your.third.rpc.url"
+block_id.hash = "0x123"
+
 [profile.dev.cairo]
 unstable-add-statements-code-locations-debug-info = true
 unstable-add-statements-functions-debug-info = true
