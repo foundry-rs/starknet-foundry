@@ -1,5 +1,5 @@
 use crate::CAIRO_EDITION;
-use anyhow::{anyhow, Context, Ok, Result};
+use anyhow::{anyhow, bail, Context, Ok, Result};
 use include_dir::{include_dir, Dir};
 use indoc::formatdoc;
 use scarb_api::ScarbCommand;
@@ -32,6 +32,53 @@ fn create_snfoundry_manifest(path: &PathBuf) -> Result<()> {
         },
     )?;
 
+    Ok(())
+}
+
+fn add_template_to_scarb_manifest(path: &PathBuf) -> Result<()> {
+    let template_content = formatdoc! {r#"
+    # Visit https://foundry-rs.github.io/starknet-foundry/appendix/scarb-toml.html for more information
+
+    # [tool.snforge]                                             # Define `snforge` tool section
+    # exit_first = true                                          # Stop test execution immediately upon the first failure.
+    # fuzzer_runs = 1234                                         # Number of runs of the random fuzzer
+    # fuzzer_seed = 1111                                         # Seed for the random fuzzer
+
+    # [[tool.snforge.fork]]                                      # Define forked tests section
+    # name = "SOME_NAME"                                         # Fork name
+    # url = "http://your.rpc.url"                                # Url of the RPC provider
+    # block_id.tag = "latest"                                    # Block to fork from (block tag)
+
+    # [[tool.snforge.fork]]
+    # name = "SOME_SECOND_NAME"
+    # url = "http://your.second.rpc.url"                         
+    # block_id.number = "123"                                    # Block to fork from (block number)
+
+    # [[tool.snforge.fork]]
+    # name = "SOME_THIRD_NAME"
+    # url = "http://your.third.rpc.url"
+    # block_id.hash = "0x123"                                    # Block to fork from (block hash)
+
+    # [profile.dev.cairo]                                        # Define Cairo compiler configuration section
+    # unstable-add-statements-code-locations-debug-info = true   # Scarb will add a mapping between Sierra statement indexes and locations in the code to debug info
+    # unstable-add-statements-functions-debug-info = true        # Scarb will a add mapping between Sierra statement indexes and vectors of fully qualified paths of Cairo functions to debug info
+    # inlining-strategy = "avoid"                                # Compiler will only inline function annotated with `#[inline(always)]` attribute
+
+    # [features]                                                 # Define features section
+    # enable_for_tests = []                                      # Feature name and list of other features that should be enabled with it
+    "#
+    };
+
+    if !path.exists() {
+        bail!("Scarb.toml not found");
+    }
+
+    let mut file = OpenOptions::new()
+        .append(true)
+        .open(path)
+        .context("Failed to open Scarb.toml")?;
+
+    write!(file, "\n{}", template_content).context("Failed to write to Scarb.toml")?;
     Ok(())
 }
 
@@ -155,6 +202,8 @@ pub fn run(project_name: &str) -> Result<()> {
             .arg("cairo_test")
             .run()
             .context("Failed to remove cairo_test")?;
+
+        add_template_to_scarb_manifest(&scarb_manifest_path)?;
     }
 
     if !snfoundry_manifest_path.is_file() {
