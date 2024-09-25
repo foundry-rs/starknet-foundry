@@ -103,7 +103,7 @@ $ sncast \
     --accounts-file my-account-file.json \
     account delete \
     --name some-name \
-    --url http://127.0.0.1:5050
+    --url http://127.0.0.1:5050 \
     --network alpha-sepolia
 ```
 
@@ -170,30 +170,10 @@ with `--class-hash` flag:
 $ sncast \
     account create \
     --name some-name \
+    --url http://127.0.0.1:5050 \
     --class-hash 0x00e2eb8f5672af4e6a4e8a8f1b44989685e668489b0a25437733756c5a34a1d6
 ```
-```
-Account successfully created. Prefund generated address with at least 432300000000 tokens. It is good to send more in the case of higher demand, max_fee * 2 = 864600000000
-command: account create
-max_fee: 0x64a7168300
-address: 0x7a949e83b243068d0cbedd8d5b8b32fafea66c54de23c40e68b126b5c845b61
 
-To see account creation details, visit:
-account: https://starkscan.co/search/0x7a949e83b2...
-```
-```shell
-$ sncast \
-  account deploy \
-  --name some-name \
-  --max-fee 864600000000
-```
-```
-command: account deploy
-transaction_hash: 0x20b20896ce63371ef015d66b4dd89bf18c5510a840b4a85a43a983caa6e2579
-
-To see invocaton details, visit:
-transaction: https://starkscan.co/search/0x20b20896ce...
-```
 
 ### Using Keystore and Starkli Account
 
