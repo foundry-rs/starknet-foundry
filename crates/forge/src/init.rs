@@ -10,6 +10,7 @@ use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use toml_edit::{value, ArrayOfTables, DocumentMut, Item, Table};
+
 static TEMPLATE: Dir = include_dir!("starknet_forge_template");
 
 const DEFAULT_ASSERT_MACROS: Version = Version::new(0, 1, 0);
