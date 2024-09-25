@@ -36,6 +36,10 @@ fn create_snfoundry_manifest(path: &PathBuf) -> Result<()> {
 }
 
 fn add_template_to_scarb_manifest(path: &PathBuf) -> Result<()> {
+    if !path.exists() {
+        bail!("Scarb.toml not found");
+    }
+
     let template_content = formatdoc! {r#"
     # Visit https://foundry-rs.github.io/starknet-foundry/appendix/scarb-toml.html for more information
 
@@ -69,16 +73,13 @@ fn add_template_to_scarb_manifest(path: &PathBuf) -> Result<()> {
     "#
     };
 
-    if !path.exists() {
-        bail!("Scarb.toml not found");
-    }
-
     let mut file = OpenOptions::new()
         .append(true)
         .open(path)
         .context("Failed to open Scarb.toml")?;
 
-    write!(file, "\n{template_content}").context("Failed to write to Scarb.toml")?;
+    file.write_all(format!("\n{}", template_content).as_bytes())
+        .context("Failed to write to Scarb.toml")?;
     Ok(())
 }
 
