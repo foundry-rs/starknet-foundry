@@ -7,6 +7,7 @@ use crate::{
 use anyhow::{Context, Result};
 use forge_runner::{
     build_trace_data::test_sierra_program_path::VERSIONED_PROGRAMS_DIR,
+    coverage_api::can_coverage_be_generated,
     test_case_summary::{AnyTestCaseSummary, TestCaseSummary},
 };
 use forge_runner::{test_target_summary::TestTargetSummary, CACHE_DIR};
@@ -26,6 +27,11 @@ pub async fn run_for_workspace(args: TestArgs) -> Result<ExitStatus> {
     }
 
     let scarb_metadata = ScarbCommand::metadata().inherit_stderr().run()?;
+
+    if args.coverage {
+        can_coverage_be_generated(&scarb_metadata)?;
+    }
+
     warn_if_snforge_std_not_compatible(&scarb_metadata)?;
 
     let snforge_target_dir_path =

@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Fixed
 
+- Explorer links displayed upon committing transactions are now properly formatted
 - `sncast declare` no longer fails for flat contracts (i.e. CASM artifacts with `bytecode_segment_lengths` being a number)
 
 ### Forge
@@ -28,6 +29,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - For Scarb >= `2.8.3` contract artifacts are built as part of the test target now. This process speeds up the compilation time. It can be disabled using the [--no-optimization flag](https://foundry-rs.github.io/starknet-foundry/appendix/snforge/test.html#--no-optimization)
+
+
+#### Changed
+
+- `snforge` now validates if your project is setup to generate debug info needed for `cairo-coverage` when running  `--coverage` flag
 
 ## [0.30.0] - 2024-09-04
 
