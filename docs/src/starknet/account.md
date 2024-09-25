@@ -55,13 +55,13 @@ For a detailed CLI description, see [account create command reference](../append
 
  >💡 **Info**
 > When deploying on a Sepolia test network, you can also fund your account with artificial tokens via the [Starknet Faucet](https://starknet-faucet.vercel.app)
-
+>![image](images/starknet-faucet-sepolia.png)
 - deploy account with the `sncast account deploy` command
 
 ```shell
 $ sncast \
 	account deploy \
-        --url http://127.0.0.1:5050 \
+    --url http://127.0.0.1:5050 \
 	--name some-name \
 	--fee-token strk \
 	--max-fee 9999999999999
@@ -75,7 +75,7 @@ To see invocation details, visit:
 transaction: https://starkscan.co/search/0x20b20896ce...
 ```
 
-Note that you don't have to pass `url`, `accounts-file` and `network` parameters if `add-profile` flag
+Note that you don't have to pass `url`, `accounts-file` parameters if `add-profile` flag
 was set in the `account create` command. Just pass `profile` argument with the account name.
 
 For a detailed CLI description, see [account deploy command reference](../appendix/sncast/account/deploy.md).
@@ -90,20 +90,10 @@ Salt will not be randomly generated if it's specified with `--salt`.
 ```shell
 $ sncast \
     account create \
+    --url http://127.0.0.1:5050 \
     --name some-name \
     --salt 0x1
 ```
-
-```
-Account successfully created. Prefund generated address with at least 432300000000 tokens. It is good to send more in the case of higher demand, max_fee * 2 = 864600000000
-command: account create
-max_fee: 0x64a7168300
-address: 0x7a949e83b243068d0cbedd8d5b8b32fafea66c54de23c40e68b126b5c845b61
-
-To see account creation details, visit:
-account: https://starkscan.co/search/0x7ad0d6e449...
-```
-
 ### `account delete`
 
 Delete an account from `accounts-file` and its associated Scarb profile.
@@ -113,12 +103,12 @@ $ sncast \
     --accounts-file my-account-file.json \
     account delete \
     --name some-name \
+    --url http://127.0.0.1:5050
     --network alpha-sepolia
 ```
 
 ```
-Do you want to remove account some-name from network alpha-sepolia? (Y/n)
-Y
+Do you want to remove the account some-name deployed to network alpha-sepolia from local file my-account-file.json? (Y/n): Y
 command: account delete
 result: Account successfully removed
 ```
@@ -128,6 +118,10 @@ For a detailed CLI description, see [account delete command reference](../append
 ### `account list`
 
 List all accounts saved in `accounts file`, grouped based on the networks they are defined on.
+
+```shell
+$ sncast account list
+```
 
 ```shell
 $ sncast --accounts-file my-account-file.json account list
