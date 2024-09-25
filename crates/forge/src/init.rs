@@ -78,7 +78,7 @@ fn add_template_to_scarb_manifest(path: &PathBuf) -> Result<()> {
         .open(path)
         .context("Failed to open Scarb.toml")?;
 
-    write!(file, "\n{}", template_content).context("Failed to write to Scarb.toml")?;
+    write!(file, "\n{template_content}").context("Failed to write to Scarb.toml")?;
     Ok(())
 }
 
