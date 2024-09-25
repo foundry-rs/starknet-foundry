@@ -1,3 +1,4 @@
+use crate::scarb::config::SCARB_MANIFEST_TEMPLATE_CONTENT;
 use crate::CAIRO_EDITION;
 use anyhow::{anyhow, bail, Context, Ok, Result};
 use include_dir::{include_dir, Dir};
@@ -9,7 +10,6 @@ use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use toml_edit::{value, ArrayOfTables, DocumentMut, Item, Table};
-
 static TEMPLATE: Dir = include_dir!("starknet_forge_template");
 
 const DEFAULT_ASSERT_MACROS: Version = Version::new(0, 1, 0);
@@ -40,45 +40,12 @@ fn add_template_to_scarb_manifest(path: &PathBuf) -> Result<()> {
         bail!("Scarb.toml not found");
     }
 
-    let template_content = formatdoc! {r#"
-    # Visit https://foundry-rs.github.io/starknet-foundry/appendix/scarb-toml.html for more information
-
-    # [tool.snforge]                                             # Define `snforge` tool section
-    # exit_first = true                                          # Stop test execution immediately upon the first failure
-    # fuzzer_runs = 1234                                         # Number of runs of the random fuzzer
-    # fuzzer_seed = 1111                                         # Seed for the random fuzzer
-
-    # [[tool.snforge.fork]]                                      # Define forked tests section
-    # name = "SOME_NAME"                                         # Fork name
-    # url = "http://your.rpc.url"                                # Url of the RPC provider
-    # block_id.tag = "latest"                                    # Block to fork from (block tag)
-
-    # [[tool.snforge.fork]]
-    # name = "SOME_SECOND_NAME"
-    # url = "http://your.second.rpc.url"                         
-    # block_id.number = "123"                                    # Block to fork from (block number)
-
-    # [[tool.snforge.fork]]
-    # name = "SOME_THIRD_NAME"
-    # url = "http://your.third.rpc.url"
-    # block_id.hash = "0x123"                                    # Block to fork from (block hash)
-
-    # [profile.dev.cairo]                                        # Define Cairo compiler configuration section
-    # unstable-add-statements-code-locations-debug-info = true   # Scarb will add a mapping between Sierra statement indexes and locations in the code to debug info
-    # unstable-add-statements-functions-debug-info = true        # Scarb will a add mapping between Sierra statement indexes and vectors of fully qualified paths of Cairo functions to debug info
-    # inlining-strategy = "avoid"                                # Compiler will only inline function annotated with `#[inline(always)]` attribute
-
-    # [features]                                                 # Define features section
-    # enable_for_tests = []                                      # Feature name and list of other features that should be enabled with it
-    "#
-    };
-
     let mut file = OpenOptions::new()
         .append(true)
         .open(path)
         .context("Failed to open Scarb.toml")?;
 
-    file.write_all(format!("\n{template_content}").as_bytes())
+    file.write_all(format!("{SCARB_MANIFEST_TEMPLATE_CONTENT}").as_bytes())
         .context("Failed to write to Scarb.toml")?;
     Ok(())
 }
