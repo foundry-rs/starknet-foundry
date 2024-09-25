@@ -184,11 +184,12 @@ Accounts created and deployed with [starkli](https://book.starkli.rs/accounts#ac
 
 ```shell
 $ sncast \
-    --keystore path/to/keystore.json \
-    --account path/to/account.json  \
+    --keystore keystore.json \
+    --account account.json  \
     declare \
 	--url http://127.0.0.1:5050 \
-    --contract-name my_contract
+    --contract-name my_contract \
+    --fee-token eth
 ```
 
 #### Importing an Account
@@ -217,10 +218,7 @@ $ sncast \
     --keystore my_key.json \
     --account my_account.json \
     account create
-    --url http://127.0.0.1:5050 \
-
-To see account creation details, visit:
-transaction: https://starkscan.co/search/...
+    --url http://127.0.0.1:5050 
 ```
 
 The command above will generate a keystore file containing the private key, as well as an account file containing the openzeppelin account info that can later be used with starkli.
