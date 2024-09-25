@@ -116,12 +116,12 @@ fn validate_raw_fork_config(raw_config: RawForgeConfig) -> Result<RawForgeConfig
         bail!("Some fork names are duplicated");
     }
 
-    forks.iter().try_for_each(|fork| {
-        if fork.block_id.len() != 1 {
-            bail!("block_id should be set once per fork");
-        }
-        Ok(())
-    })?;
+    forks
+        .iter()
+        .try_for_each(|fork| match fork.block_id.len() {
+            1 => Ok(()),
+            _ => bail!("block_id should be set once per fork"),
+        })?;
 
     Ok(raw_config)
 }
