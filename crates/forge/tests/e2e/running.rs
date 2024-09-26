@@ -660,18 +660,13 @@ fn with_exit_first_flag() {
     );
 }
 
-enum CLITool {
-    Scarb,
-    Snforge,
-}
-
 #[test]
 fn init_new_project() {
     let temp = tempdir_with_tool_versions().unwrap();
 
     runner(&temp).args(["init", "test_name"]).assert().success();
 
-    validate_init(&temp, &CLITool::Snforge);
+    validate_init(&temp);
 }
 
 #[test]
@@ -689,7 +684,7 @@ fn init_new_project_from_scarb() {
         .assert()
         .success();
 
-    validate_init(&temp, &CLITool::Scarb);
+    validate_init(&temp);
 }
 
 pub fn append_to_path_var(path: &Path) -> OsString {
@@ -699,16 +694,9 @@ pub fn append_to_path_var(path: &Path) -> OsString {
     env::join_paths(script_path.chain(other_paths)).unwrap()
 }
 
-fn validate_init(temp: &TempDir, cli_tool: &CLITool) {
+fn validate_init(temp: &TempDir) {
     let manifest_path = temp.join("test_name/Scarb.toml");
     let scarb_toml = fs::read_to_string(manifest_path.clone()).unwrap();
-
-    let appended_content = match cli_tool {
-        CLITool::Snforge => format!("\n{SCARB_MANIFEST_TEMPLATE_CONTENT}")
-            .trim_end()
-            .to_string(),
-        CLITool::Scarb => String::new(),
-    };
 
     let expected = formatdoc!(
         r#"
@@ -730,9 +718,11 @@ fn validate_init(temp: &TempDir, cli_tool: &CLITool) {
             sierra = true
 
             [scripts]
-            test = "snforge test"{appended_content}
+            test = "snforge test"
+            {SCARB_MANIFEST_TEMPLATE_CONTENT}
         "#
-    );
+    ).trim_end()
+    .to_string()+ "\n";
 
     assert_matches(&expected, &scarb_toml);
 

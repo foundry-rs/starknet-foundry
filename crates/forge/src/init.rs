@@ -171,9 +171,9 @@ pub fn run(project_name: &str) -> Result<()> {
             .arg("cairo_test")
             .run()
             .context("Failed to remove cairo_test")?;
-
-        add_template_to_scarb_manifest(&scarb_manifest_path)?;
     }
+
+    add_template_to_scarb_manifest(&scarb_manifest_path)?;
 
     if !snfoundry_manifest_path.is_file() {
         create_snfoundry_manifest(&snfoundry_manifest_path)?;
