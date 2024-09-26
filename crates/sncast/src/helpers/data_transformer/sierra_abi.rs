@@ -21,7 +21,7 @@ use std::ops::Neg;
 pub(super) fn build_representation(
     expression: Expr,
     expected_type: &str,
-    abi: &Vec<AbiEntry>,
+    abi: &[AbiEntry],
     db: &SimpleParserDatabase,
 ) -> Result<AllowedCalldataArguments> {
     match expression {
@@ -49,7 +49,7 @@ trait SupportedCalldataKind {
     fn transform(
         &self,
         expected_type: &str,
-        abi: &Vec<AbiEntry>,
+        abi: &[AbiEntry],
         db: &SimpleParserDatabase,
     ) -> Result<AllowedCalldataArguments>;
 }
@@ -58,7 +58,7 @@ impl SupportedCalldataKind for ExprStructCtorCall {
     fn transform(
         &self,
         expected_type: &str,
-        abi: &Vec<AbiEntry>,
+        abi: &[AbiEntry],
         db: &SimpleParserDatabase,
     ) -> Result<AllowedCalldataArguments> {
         let struct_path: Vec<String> = split(&self.path(db), db)?;
@@ -128,7 +128,7 @@ impl SupportedCalldataKind for TerminalLiteralNumber {
     fn transform(
         &self,
         expected_type: &str,
-        _abi: &Vec<AbiEntry>,
+        _abi: &[AbiEntry],
         db: &SimpleParserDatabase,
     ) -> Result<AllowedCalldataArguments> {
         let (value, suffix) = self
@@ -150,7 +150,7 @@ impl SupportedCalldataKind for ExprUnary {
     fn transform(
         &self,
         expected_type: &str,
-        _abi: &Vec<AbiEntry>,
+        _abi: &[AbiEntry],
         db: &SimpleParserDatabase,
     ) -> Result<AllowedCalldataArguments> {
         let (value, suffix) = match self.expr(db) {
@@ -186,7 +186,7 @@ impl SupportedCalldataKind for ExprUnary {
         }
 
         Ok(AllowedCalldataArguments::SingleArgument(
-            CalldataSingleArgument::try_new(&proper_param_type, &value.neg().to_string())?,
+            CalldataSingleArgument::try_new(proper_param_type, &value.neg().to_string())?,
         ))
     }
 }
@@ -195,7 +195,7 @@ impl SupportedCalldataKind for TerminalShortString {
     fn transform(
         &self,
         expected_type: &str,
-        _abi: &Vec<AbiEntry>,
+        _abi: &[AbiEntry],
         db: &SimpleParserDatabase,
     ) -> Result<AllowedCalldataArguments> {
         let value = self
@@ -203,7 +203,7 @@ impl SupportedCalldataKind for TerminalShortString {
             .context("Invalid shortstring passed as an argument")?;
 
         Ok(AllowedCalldataArguments::SingleArgument(
-            CalldataSingleArgument::try_new(&expected_type, &value)?,
+            CalldataSingleArgument::try_new(expected_type, &value)?,
         ))
     }
 }
@@ -212,7 +212,7 @@ impl SupportedCalldataKind for TerminalString {
     fn transform(
         &self,
         expected_type: &str,
-        _abi: &Vec<AbiEntry>,
+        _abi: &[AbiEntry],
         db: &SimpleParserDatabase,
     ) -> Result<AllowedCalldataArguments> {
         let value = self
@@ -220,7 +220,7 @@ impl SupportedCalldataKind for TerminalString {
             .context("Invalid string passed as an argument")?;
 
         Ok(AllowedCalldataArguments::SingleArgument(
-            CalldataSingleArgument::try_new(&expected_type, &value)?,
+            CalldataSingleArgument::try_new(expected_type, &value)?,
         ))
     }
 }
@@ -229,14 +229,14 @@ impl SupportedCalldataKind for TerminalFalse {
     fn transform(
         &self,
         expected_type: &str,
-        _abi: &Vec<AbiEntry>,
+        _abi: &[AbiEntry],
         db: &SimpleParserDatabase,
     ) -> Result<AllowedCalldataArguments> {
         // Could use terminal_false.boolean_value(db) and simplify try_new()
         let value = self.text(db).to_string();
 
         Ok(AllowedCalldataArguments::SingleArgument(
-            CalldataSingleArgument::try_new(&expected_type, &value)?,
+            CalldataSingleArgument::try_new(expected_type, &value)?,
         ))
     }
 }
@@ -245,13 +245,13 @@ impl SupportedCalldataKind for TerminalTrue {
     fn transform(
         &self,
         expected_type: &str,
-        _abi: &Vec<AbiEntry>,
+        _abi: &[AbiEntry],
         db: &SimpleParserDatabase,
     ) -> Result<AllowedCalldataArguments> {
         let value = self.text(db).to_string();
 
         Ok(AllowedCalldataArguments::SingleArgument(
-            CalldataSingleArgument::try_new(&expected_type, &value)?,
+            CalldataSingleArgument::try_new(expected_type, &value)?,
         ))
     }
 }
@@ -260,7 +260,7 @@ impl SupportedCalldataKind for ExprPath {
     fn transform(
         &self,
         expected_type: &str,
-        abi: &Vec<AbiEntry>,
+        abi: &[AbiEntry],
         db: &SimpleParserDatabase,
     ) -> Result<AllowedCalldataArguments> {
         // Enums with no value - Enum::Variant
@@ -268,7 +268,7 @@ impl SupportedCalldataKind for ExprPath {
         let (enum_variant_name, enum_path) = enum_path_with_variant.split_last().unwrap();
         let enum_path_joined = enum_path.join("::");
 
-        validate_path_argument(&expected_type, enum_path, &enum_path_joined)?;
+        validate_path_argument(expected_type, enum_path, &enum_path_joined)?;
 
         let (enum_position, enum_variant) =
             find_enum_variant_position(enum_variant_name, enum_path, abi)?;
@@ -292,7 +292,7 @@ impl SupportedCalldataKind for ExprFunctionCall {
     fn transform(
         &self,
         expected_type: &str,
-        abi: &Vec<AbiEntry>,
+        abi: &[AbiEntry],
         db: &SimpleParserDatabase,
     ) -> Result<AllowedCalldataArguments> {
         // Enums with value - Enum::Variant(10)
@@ -300,7 +300,7 @@ impl SupportedCalldataKind for ExprFunctionCall {
         let (enum_variant_name, enum_path) = enum_path_with_variant.split_last().unwrap();
         let enum_path_joined = enum_path.join("::");
 
-        validate_path_argument(&expected_type, enum_path, &enum_path_joined)?;
+        validate_path_argument(expected_type, enum_path, &enum_path_joined)?;
 
         let (enum_position, enum_variant) =
             find_enum_variant_position(enum_variant_name, enum_path, abi)?;
@@ -324,7 +324,7 @@ impl SupportedCalldataKind for ExprInlineMacro {
     fn transform(
         &self,
         expected_type: &str,
-        abi: &Vec<AbiEntry>,
+        abi: &[AbiEntry],
         db: &SimpleParserDatabase,
     ) -> Result<AllowedCalldataArguments> {
         // array![] calls
@@ -360,7 +360,7 @@ impl SupportedCalldataKind for ExprListParenthesized {
     fn transform(
         &self,
         expected_type: &str,
-        abi: &Vec<AbiEntry>,
+        abi: &[AbiEntry],
         db: &SimpleParserDatabase,
     ) -> Result<AllowedCalldataArguments> {
         // Regex capturing types between the parentheses, e.g.: for "(core::felt252, core::u8)"

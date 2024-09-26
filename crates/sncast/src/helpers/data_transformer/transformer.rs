@@ -14,7 +14,7 @@ use starknet::core::utils::get_selector_from_name;
 use std::collections::HashMap;
 
 pub fn transform(
-    calldata: &Vec<String>,
+    calldata: &[String],
     class_definition: ContractClass,
     function_selector: &Felt,
 ) -> Result<Vec<Felt>> {
@@ -57,9 +57,9 @@ pub fn transform(
 }
 
 fn process_as_cairo_expressions(
-    calldata: &Vec<String>,
+    calldata: &[String],
     function: &AbiFunction,
-    abi: &Vec<AbiEntry>,
+    abi: &[AbiEntry],
     db: &SimpleParserDatabase,
 ) -> Result<Vec<Felt>> {
     let n_inputs = function.inputs.len();
@@ -77,8 +77,8 @@ fn process_as_cairo_expressions(
         .iter()
         .zip(calldata)
         .map(|(parameter, value)| {
-            let expr = parse(value, &db)?;
-            let representation = build_representation(expr, &parameter.r#type, &abi, &db)?;
+            let expr = parse(value, db)?;
+            let representation = build_representation(expr, &parameter.r#type, abi, db)?;
             Ok(representation.serialize_to_vec())
         })
         .flatten_ok()
@@ -86,8 +86,8 @@ fn process_as_cairo_expressions(
 }
 
 fn process_as_serialized(
-    calldata: &Vec<String>,
-    abi: &Vec<AbiEntry>,
+    calldata: &[String],
+    abi: &[AbiEntry],
     db: &SimpleParserDatabase,
 ) -> Result<Vec<Felt>> {
     calldata

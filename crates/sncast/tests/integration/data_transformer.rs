@@ -93,7 +93,7 @@ async fn test_happy_case_complex_function_cairo_expressions_input_only() -> anyh
     Ok(())
 }
 
-#[allow(unreachable_code, unused_variables)]
+#[allow(unreachable_code, unused_variables, clippy::diverging_sub_expression)]
 #[ignore = "Prepare serialized data by-hand"]
 #[tokio::test]
 async fn test_happy_case_complex_function_serialized_input_only() -> anyhow::Result<()> {
@@ -110,7 +110,7 @@ async fn test_happy_case_complex_function_serialized_input_only() -> anyhow::Res
     Ok(())
 }
 
-#[allow(unreachable_code, unused_variables)]
+#[allow(unreachable_code, unused_variables, clippy::diverging_sub_expression)]
 #[ignore = "Prepare serialized data by-hand"]
 #[tokio::test]
 async fn test_happy_case_complex_function_mixed_input() -> anyhow::Result<()> {
@@ -152,7 +152,7 @@ async fn test_happy_case_numeric_type_suffix() -> anyhow::Result<()> {
 
     let output = transform(&simulated_cli_input, contract_class, &selector)?;
 
-    assert_eq!(output, vec![Felt::from(1010101_u32)]);
+    assert_eq!(output, vec![Felt::from(1_010_101_u32)]);
 
     Ok(())
 }
