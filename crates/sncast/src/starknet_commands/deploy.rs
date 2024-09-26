@@ -78,7 +78,7 @@ pub async fn deploy(
 
     let contract_class = get_contract_class(deploy.class_hash, account.provider()).await?;
     // let selector = get_selector_from_name("constructor")
-    //     .context("Couldn't retreive constructor from contract class")?;
+    //     .context("Couldn't retrieve constructor from contract class")?;
 
     let selector = get_selector_from_name("constructor").unwrap();
 

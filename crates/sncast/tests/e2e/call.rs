@@ -84,7 +84,7 @@ async fn test_contract_does_not_exist() {
         output,
         indoc! {r"
         command: call
-        error: Couldn't retreive class hash of a contract with address 0x1
+        error: Couldn't retrieve class hash of a contract with address 0x1
         "},
     );
 }

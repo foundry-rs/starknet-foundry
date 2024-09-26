@@ -73,7 +73,7 @@ pub async fn invoke(
     let class_hash = get_class_hash_by_address(account.provider(), contract_address)
         .await?
         .with_context(|| {
-            format!("Couldn't retreive class hash of a contract with address {contract_address:#x}")
+            format!("Couldn't retrieve class hash of a contract with address {contract_address:#x}")
         })?;
 
     let contract_class = get_contract_class(class_hash, account.provider()).await?;
