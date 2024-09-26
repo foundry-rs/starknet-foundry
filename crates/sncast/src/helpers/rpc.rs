@@ -6,7 +6,7 @@ use starknet::providers::{jsonrpc::HttpTransport, JsonRpcClient};
 #[derive(Args, Clone, Debug, Default)]
 pub struct RpcArgs {
     /// RPC provider url address; overrides url from snfoundry.toml
-    #[clap(short, long)]
+    #[clap(short, long, global = true)]
     pub url: Option<String>,
 }
 
