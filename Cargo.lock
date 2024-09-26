@@ -4712,7 +4712,7 @@ dependencies = [
 
 [[package]]
 name = "snforge-scarb-plugin"
-version = "0.1.0"
+version = "0.30.0"
 dependencies = [
  "cairo-lang-diagnostics",
  "cairo-lang-filesystem",
