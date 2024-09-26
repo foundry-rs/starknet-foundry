@@ -168,10 +168,15 @@ mod tests {
                 [[tool.snforge.fork]]
                 name = "SECOND_FORK_NAME"
                 url = "http://some.rpc.url"
-                block_id.hash = "1"
+                block_id.hash = "0xa"
 
                 [[tool.snforge.fork]]
                 name = "THIRD_FORK_NAME"
+                url = "http://some.rpc.url"
+                block_id.hash = "10"
+
+                [[tool.snforge.fork]]
+                name = "FOURTH_FORK_NAME"
                 url = "http://some.rpc.url"
                 block_id.tag = "latest"
                 "#,
@@ -205,9 +210,11 @@ mod tests {
                 fork: vec![
                     ForkTarget::new("FIRST_FORK_NAME", "http://some.rpc.url", "number", "1",)
                         .unwrap(),
-                    ForkTarget::new("SECOND_FORK_NAME", "http://some.rpc.url", "hash", "1",)
+                    ForkTarget::new("SECOND_FORK_NAME", "http://some.rpc.url", "hash", "10",)
                         .unwrap(),
-                    ForkTarget::new("THIRD_FORK_NAME", "http://some.rpc.url", "tag", "latest",)
+                    ForkTarget::new("THIRD_FORK_NAME", "http://some.rpc.url", "hash", "0xa",)
+                        .unwrap(),
+                    ForkTarget::new("FOURTH_FORK_NAME", "http://some.rpc.url", "tag", "latest",)
                         .unwrap()
                 ],
                 fuzzer_runs: None,
