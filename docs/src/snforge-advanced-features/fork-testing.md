@@ -79,7 +79,7 @@ In some cases you may want to override `block_id` defined in the `Scarb.toml` fi
 You can do it by passing `block_number`, `block_hash`, `block_tag` arguments to the `fork` attribute.
 
 ```rust
-#[fork("SEPOLIA", block_number: 654321)]
+{{#include ../../listings/snforge_advanced_features/crates/fork_testing/tests/overridden_name.cairo}}
 ```
 
 ## Testing Forked Contracts
