@@ -15,8 +15,7 @@ use std::io::ErrorKind;
 
 pub mod config;
 
-// TODO: Temporary set to 2.8.2, update to 2.8.3 after scarb release and before the PR merge
-const MINIMAL_SCARB_VERSION_TO_OPTIMIZE_COMPILATION: Version = Version::new(2, 8, 2);
+const MINIMAL_SCARB_VERSION_TO_OPTIMIZE_COMPILATION: Version = Version::new(2, 8, 3);
 
 impl PackageConfig for ForgeConfigFromScarb {
     fn tool_name() -> &'static str {

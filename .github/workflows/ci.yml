@@ -97,7 +97,7 @@ jobs:
       - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
       - uses: software-mansion/setup-scarb@v1.3.2
         with:
-          scarb-version: "2.8.2"
+          scarb-version: "2.8.3"
       - uses: software-mansion/setup-universal-sierra-compiler@v1
 
       - name: Install cairo-coverage
@@ -115,7 +115,7 @@ jobs:
       - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
       - uses: software-mansion/setup-scarb@v1.3.2
         with:
-          scarb-version: "nightly-2024-09-21"
+          scarb-version: "2.8.3"
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - run: |
           cargo test --package forge --features scarb_2_8_3 e2e::contract_artifacts
