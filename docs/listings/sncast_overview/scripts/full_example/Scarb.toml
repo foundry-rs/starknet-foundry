@@ -8,10 +8,10 @@ edition = "2024_07"
 [dependencies]
 snforge_std.workspace = true
 sncast_std.workspace = true
-map = { path = "../../crates/map" }
+map3 = { path = "../../crates/map3" }
 
 [[target.starknet-contract]]
-build-external-contracts = ["map::MapContract"]
+build-external-contracts = ["map3::MapContract"]
 
 [[target.lib]]
 sierra = true
