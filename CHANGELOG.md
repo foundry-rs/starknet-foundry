@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - `declare` and `verify` commands now use the Scarb `release` profile instead of the `dev` profile as the default for building artifacts
+- StarkScan links now point to specific pages for transactions, contracts and classes.
 
 #### Fixed
 
