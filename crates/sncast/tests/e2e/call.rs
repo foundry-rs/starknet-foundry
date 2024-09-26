@@ -84,7 +84,7 @@ async fn test_contract_does_not_exist() {
         output,
         indoc! {r"
         command: call
-        error: There is no contract at the specified address
+        error: Couldn't retreive class hash of a contract with address 0x1
         "},
     );
 }
@@ -108,10 +108,10 @@ fn test_wrong_function_name() {
 
     assert_stderr_contains(
         output,
-        indoc! {r"
+        indoc! {r#"
         command: call
-        error: An error occurred [..]Entry point[..]not found in contract[..]
-        "},
+        error: Function with selector "[..]" not found in ABI of the contract
+        "#},
     );
 }
 

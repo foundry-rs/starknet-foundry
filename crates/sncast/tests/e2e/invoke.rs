@@ -284,7 +284,7 @@ async fn test_contract_does_not_exist() {
         output,
         indoc! {r"
         command: invoke
-        error: An error occurred in the called contract[..]Requested contract address[..]is not deployed[..]
+        error: Couldn't retreive class hash of a contract with address 0x1
         "},
     );
 }
@@ -312,10 +312,10 @@ fn test_wrong_function_name() {
 
     assert_stderr_contains(
         output,
-        indoc! {r"
+        indoc! {r#"
         command: invoke
-        error: An error occurred in the called contract[..]Entry point[..]not found in contract[..]
-        "},
+        error: Function with selector "[..]" not found in ABI of the contract
+        "#},
     );
 }
 

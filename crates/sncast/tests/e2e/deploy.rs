@@ -8,7 +8,7 @@ use crate::helpers::fixtures::{
 };
 use crate::helpers::runner::runner;
 use indoc::indoc;
-use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains};
+use shared::test_utils::output_assert::{assert_stderr_contains, assert_stdout_contains, AsOutput};
 use sncast::helpers::constants::{ARGENT_CLASS_HASH, BRAAVOS_CLASS_HASH, OZ_CLASS_HASH};
 use sncast::AccountType;
 use starknet::core::types::{Felt, TransactionReceipt::Deploy};
@@ -298,17 +298,19 @@ fn test_wrong_calldata() {
         "--class-hash",
         CONSTRUCTOR_WITH_PARAMS_CONTRACT_CLASS_HASH_SEPOLIA,
         "--constructor-calldata",
-        "0x1 0x1",
+        "0x1 0x2 0x3 0x4",
     ];
 
     let snapbox = runner(&args);
     let output = snapbox.assert().success();
 
+    println!("{}\n{}", output.as_stdout(), output.as_stderr());
+
     assert_stderr_contains(
         output,
         indoc! {r"
         command: deploy
-        error: An error occurred in the called contract[..]Failed to deserialize param #2[..]
+        error: An error occurred in the called contract[..]('Input too long for arguments')[..]
         "},
     );
 }
@@ -336,7 +338,7 @@ async fn test_contract_not_declared() {
         output,
         indoc! {r"
         command: deploy
-        error: An error occurred in the called contract[..]Class with hash[..]is not declared[..]
+        error: Couldn't retrieve contract class with hash: 0x1: Provided class hash does not exist
         "},
     );
 }

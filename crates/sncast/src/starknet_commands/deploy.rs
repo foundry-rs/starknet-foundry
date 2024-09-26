@@ -1,17 +1,20 @@
 use anyhow::{anyhow, Result};
 use clap::{Args, ValueEnum};
+use sncast::helpers::data_transformer::transformer::transform;
 use sncast::helpers::error::token_not_supported_for_deployment;
 use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken, PayableTransaction};
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::structs::DeployResponse;
-use sncast::{extract_or_generate_salt, impl_payable_transaction, udc_uniqueness};
+use sncast::{
+    extract_or_generate_salt, get_contract_class, impl_payable_transaction, udc_uniqueness,
+};
 use sncast::{handle_wait_for_tx, WaitForTx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{Account, ConnectedAccount, SingleOwnerAccount};
 use starknet::contract::ContractFactory;
 use starknet::core::types::Felt;
-use starknet::core::utils::get_udc_deployed_address;
+use starknet::core::utils::{get_selector_from_name, get_udc_deployed_address};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
@@ -23,9 +26,9 @@ pub struct Deploy {
     #[clap(short = 'g', long)]
     pub class_hash: Felt,
 
-    /// Calldata for the contract constructor
+    /// Calldata for the contract constructor, either entirely serialized or entirely written as Cairo-like expression strings
     #[clap(short, long, value_delimiter = ' ', num_args = 1..)]
-    pub constructor_calldata: Vec<Felt>,
+    pub constructor_calldata: Option<Vec<String>>,
 
     /// Salt for the address
     #[clap(short, long)]
@@ -73,12 +76,24 @@ pub async fn deploy(
         .try_into_fee_settings(account.provider(), account.block_id())
         .await?;
 
+    let contract_class = get_contract_class(deploy.class_hash, account.provider()).await?;
+    // let selector = get_selector_from_name("constructor")
+    //     .context("Couldn't retreive constructor from contract class")?;
+
+    let selector = get_selector_from_name("constructor").unwrap();
+
+    let constructor_calldata = deploy.constructor_calldata;
+
+    let serialized_calldata = match constructor_calldata {
+        Some(ref data) => transform(data, contract_class, &selector)?,
+        None => vec![],
+    };
+
     let salt = extract_or_generate_salt(deploy.salt);
     let factory = ContractFactory::new(deploy.class_hash, account);
     let result = match fee_settings {
         FeeSettings::Eth { max_fee } => {
-            let execution =
-                factory.deploy_v1(deploy.constructor_calldata.clone(), salt, deploy.unique);
+            let execution = factory.deploy_v1(serialized_calldata.clone(), salt, deploy.unique);
             let execution = match max_fee {
                 None => execution,
                 Some(max_fee) => execution.max_fee(max_fee),
@@ -93,8 +108,7 @@ pub async fn deploy(
             max_gas,
             max_gas_unit_price,
         } => {
-            let execution =
-                factory.deploy_v3(deploy.constructor_calldata.clone(), salt, deploy.unique);
+            let execution = factory.deploy_v3(serialized_calldata.clone(), salt, deploy.unique);
 
             let execution = match max_gas {
                 None => execution,
@@ -121,7 +135,7 @@ pub async fn deploy(
                     salt,
                     deploy.class_hash,
                     &udc_uniqueness(deploy.unique, account.address()),
-                    &deploy.constructor_calldata,
+                    &serialized_calldata,
                 ),
                 transaction_hash: result.transaction_hash,
             },

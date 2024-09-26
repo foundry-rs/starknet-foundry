@@ -1,11 +1,15 @@
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
 use clap::{Args, ValueEnum};
+use sncast::helpers::data_transformer::transformer::transform;
 use sncast::helpers::error::token_not_supported_for_invoke;
 use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken, PayableTransaction};
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::structs::InvokeResponse;
-use sncast::{apply_optional, handle_wait_for_tx, impl_payable_transaction, WaitForTx};
+use sncast::{
+    apply_optional, get_class_hash_by_address, get_contract_class, handle_wait_for_tx,
+    impl_payable_transaction, WaitForTx,
+};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{Account, ConnectedAccount, ExecutionV1, ExecutionV3, SingleOwnerAccount};
 use starknet::core::types::{Call, Felt, InvokeTransactionResult};
@@ -24,9 +28,9 @@ pub struct Invoke {
     #[clap(short, long)]
     pub function: String,
 
-    /// Calldata for the invoked function
+    /// Calldata for the invoked function, either entirely serialized or entirely written as Cairo-like expression strings
     #[clap(short, long, value_delimiter = ' ', num_args = 1..)]
-    pub calldata: Vec<Felt>,
+    pub calldata: Vec<String>,
 
     #[clap(flatten)]
     pub fee_args: FeeArgs,
@@ -65,10 +69,21 @@ pub async fn invoke(
         .clone()
         .fee_token(invoke.token_from_version());
 
+    let contract_address = invoke.contract_address;
+    let class_hash = get_class_hash_by_address(account.provider(), contract_address)
+        .await?
+        .with_context(|| {
+            format!("Couldn't retreive class hash of a contract with address {contract_address:#x}")
+        })?;
+
+    let contract_class = get_contract_class(class_hash, account.provider()).await?;
+
+    let calldata = transform(&invoke.calldata, contract_class, &function_selector)?;
+
     let call = Call {
         to: invoke.contract_address,
         selector: function_selector,
-        calldata: invoke.calldata.clone(),
+        calldata,
     };
 
     execute_calls(account, vec![call], fee_args, invoke.nonce, wait_config).await
