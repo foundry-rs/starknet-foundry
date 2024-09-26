@@ -29,12 +29,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for overriding fork configuration in test attribute with a different block ID, tag, or hash.
 - `--no-optimization` flag that can be used to build contracts using the [starknet contract target](https://docs.swmansion.com/scarb/docs/extensions/starknet/contract-target.html#starknet-contract-target. This is the default behavior when using Scarb < 2.8.3
 
-### Changed
-
-- For Scarb >= `2.8.3` contract artifacts are built as part of the test target now. This process speeds up the compilation time, but the behavior of the contracts potentially may not be 100% consistent with the real networks. It can be disabled using the [--no-optimization flag](https://foundry-rs.github.io/starknet-foundry/appendix/snforge/test.html#--no-optimization)
-
 #### Changed
 
+- For Scarb >= `2.8.3` contract artifacts are built as part of the test target now. This process speeds up the compilation time, but the behavior of the contracts potentially may not be 100% consistent with the real networks. It can be disabled using the [--no-optimization flag](https://foundry-rs.github.io/starknet-foundry/appendix/snforge/test.html#--no-optimization)
 - `snforge` now validates if your project is setup to generate debug info needed for `cairo-coverage` when running  `--coverage` flag
 
 ### `snforge_scarb_plugin`
