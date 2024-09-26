@@ -2,7 +2,7 @@
 
 ## Overview
 
-> ⚠️⚠️⚠️ Highly experimental code, a subject to change  ⚠️⚠️⚠️
+> ⚠️⚠️⚠️ Highly experimental code, a subject to change ⚠️⚠️⚠️
 
 Starknet Foundry cast can be used to run deployment scripts written in Cairo, using `script run` subcommand.
 It aims to provide similar functionality to Foundry's `forge script`.
@@ -22,14 +22,14 @@ contracts from within Cairo, its interface, internals and feature set can change
 >
 > Example:
 >
->```rust
+> ```rust
 >      let declare_result = declare(
 >        "Map",
 >        FeeSettings::Eth(EthFeeSettings { max_fee: Option::Some(max_fee) }),
 >        Option::Some(nonce)
 >    )
 >        .expect('declare failed');
->```
+> ```
 
 Some of the planned features that will be included in future versions are:
 
@@ -54,6 +54,7 @@ to the state file afterwards.
 To prevent sncast from using the state file, you can set [the --no-state-file flag](../appendix/sncast/script/run.md#--no-state-file).
 
 A state file is typically named in a following manner:
+
 ```
 {script name}_{network name}_state.json
 ```
@@ -64,6 +65,7 @@ As sncast scripts are just regular scarb packages, there are multiple ways to in
 Most common directory structures include:
 
 ### 1. `scripts` directory with all the scripts in the same workspace with cairo contracts (default for `sncast script init`)
+
 ```shell
 $ tree
 .
@@ -81,12 +83,13 @@ $ tree
 
 > 📝 **Note**
 > You should add `scripts` to `members` field in your top-level Scarb.toml to be able to run the script from
-anywhere in the workspace - otherwise you will have to run the script from within its directory. To learn more consult
-[Scarb documentation](https://docs.swmansion.com/scarb/docs/reference/workspaces.html#members).
+> anywhere in the workspace - otherwise you will have to run the script from within its directory. To learn more consult
+> [Scarb documentation](https://docs.swmansion.com/scarb/docs/reference/workspaces.html#members).
 
 You can also have multiple scripts as separate packages, or multiple modules inside one package, like so:
 
 #### 1a. multiple scripts in one package
+
 ```shell
 $ tree
 .
@@ -142,6 +145,7 @@ $ tree
 ```
 
 ### 2. scripts disjointed from the workspace with cairo contracts
+
 ```shell
 $ tree
 .
@@ -218,7 +222,7 @@ status: success
 This example script declares, deploys and interacts with an example `MapContract`:
 
 ```rust
-{{#include ../../listings/sncast_overview/crates/map/src/lib.cairo}}
+{{#include ../../listings/sncast_overview/crates/map3/src/lib.cairo}}
 ```
 
 We prepare a script:

@@ -194,7 +194,8 @@ mod tests {
 
     #[test]
     fn test_get_scarb_metadata() {
-        let metadata = get_scarb_metadata(&"tests/data/contracts/map/Scarb.toml".into());
+        let metadata =
+            get_scarb_metadata(&"tests/data/contracts/constructor_with_params/Scarb.toml".into());
         assert!(metadata.is_ok());
     }
 
@@ -208,9 +209,12 @@ mod tests {
 
     #[test]
     fn test_get_package_metadata_happy_default() {
-        let metadata =
-            get_package_metadata(&"tests/data/contracts/map/Scarb.toml".into(), &None).unwrap();
-        assert_eq!(metadata.name, "map");
+        let metadata = get_package_metadata(
+            &"tests/data/contracts/constructor_with_params/Scarb.toml".into(),
+            &None,
+        )
+        .unwrap();
+        assert_eq!(metadata.name, "constructor_with_params");
     }
 
     #[test]
