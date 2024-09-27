@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast
+
+#### Added
+
+- It's possible to pass common arguments both before and after subcommand name
+
 ## [0.31.0] - 2024-09-26
 
 ### Cast
