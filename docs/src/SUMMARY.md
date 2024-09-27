@@ -17,7 +17,7 @@
 * [Writing Tests](testing/testing.md)
 * [Test Attributes](testing/test-attributes.md)
 * [Testing Smart Contracts](testing/contracts.md)
-* [Testing Contracts' Internals](testing/testing_contract_internals.md)
+* [Testing Contracts' Internals](testing/testing-contract-internals.md)
 * [Using Cheatcodes](testing/using-cheatcodes.md)
 * [Testing Events](testing/testing-events.md)
 * [Testing Messages to L1](testing/testing-messages-to-l1.md)
@@ -35,7 +35,7 @@
 * [Direct Storage Access](snforge-advanced-features/storage-cheatcodes.md)
 * [Profiling](snforge-advanced-features/profiling.md)
 
---- 
+---
 
 # `sncast` Overview
 
@@ -57,7 +57,7 @@
 
 * [Environment Setup](development/environment-setup.md)
 
---- 
+---
 
 # Appendix
 
