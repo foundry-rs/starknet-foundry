@@ -17,6 +17,7 @@ The `exit_first` fields specifies whether to stop tests execution immediately up
 [tool.snforge]
 exit_first = true
 ```
+See more about [stopping test execution after first failed test](https://foundry-rs.github.io/starknet-foundry/testing/running-tests.html#stopping-test-execution-after-first-failed-test).
 
 #### `fuzzer_runs`
 The `fuzzer_runs` field specifies the number of runs of the random fuzzer.
@@ -30,6 +31,7 @@ The `fuzzer_seed` field specifies the seed for the random fuzzer.
 fuzzer_runs = 1234
 fuzzer_seed = 1111
 ```
+See more about [fuzzer](https://foundry-rs.github.io/starknet-foundry/testing/test-attributes.html#fuzzer).
 
 ### `[[tool.snforge.fork]]`
 ```toml
@@ -71,6 +73,7 @@ name = "SOME_SECOND_NAME"
 url = "http://your.second.rpc.url"
 block_id.number = "123"
 ```
+See more about [fork testing](https://foundry-rs.github.io/starknet-foundry/testing/test-attributes.html#fork).
 
 ### `[profile.<dev|release>.cairo]`
 Adjust Cairo compiler configuration parameters when compiling this package. These options are not taken into consideration when this package is used as a dependency for another package. All fields are optional.
@@ -81,7 +84,7 @@ Adjust Cairo compiler configuration parameters when compiling this package. Thes
 ```
 
 #### `unstable-add-statements-code-locations-debug-info`
-If enabled, during the project compilation Scarb will add a mapping between Sierra statement indexes and locations in the code to debug info. A statement index maps to a vector consisting of code fragment which caused the statement to be generated and all code fragments that were inlined or generated along the way. By default, this flag is disabled.
+See [`unstable-add-statements-code-locations-debug-info`](https://docs.swmansion.com/scarb/docs/reference/manifest.html#unstable-add-statements-code-locations-debug-info) in Scarb docs.
 
 ```toml
 [profile.dev.cairo]
@@ -89,14 +92,14 @@ unstable-add-statements-code-locations-debug-info = true
 ```
 
 #### `unstable-add-statements-functions-debug-info`
-If enabled, during the project compilation Scarb will a add mapping between Sierra statement indexes and vectors of fully qualified paths of Cairo functions to debug info. A statement index maps to a vector consisting of a function which caused the statement to be generated and all functions that were inlined or generated along the way. By default, this flag is disabled.
+See [`unstable-add-statements-functions-debug-info`](https://docs.swmansion.com/scarb/docs/reference/manifest.html#unstable-add-statements-functions-debug-info) in Scarb docs.
 ```toml
 [profile.dev.cairo]
 unstable-add-statements-functions-debug-info = true
 ```
 
 #### `inlining-strategy`
-This field is responsible for setting the inlining strategy to be used by compiler when building the package. The possible values are `default` or `avoid`. If avoid strategy is set, the compiler will only inline function annotated with `#[inline(always)]` attribute.
+See [`inlining-strategy`](https://docs.swmansion.com/scarb/docs/reference/manifest.html#inlining-strategy) in Scarb docs.
 ```toml
 [profile.dev.cairo]
 inlining-strategy = "avoid"
@@ -134,11 +137,13 @@ mod MockContract {
 }
 ```
 
-The update Scarb.toml so it includes the following lines:
+Then update Scarb.toml so it includes the following lines:
 ```toml
 [features]
 enable_for_tests = []
 ```
+
+See [features](https://docs.swmansion.com/scarb/docs/reference/conditional-compilation.html#features) in Scarb docs.
 
 ### `[[target.starknet-contract]]`
 Scarb supports registering targets that are handled by Scarb extensions. Such targets are called external. All fields are optional.
@@ -160,6 +165,8 @@ The `casm` fields specifies whether Casm codegen should be enabled.
 [[target.starknet-contract]]
 casm = true
 ```
+
+See more about [targets](https://docs.swmansion.com/scarb/docs/reference/targets.html) in scarb docs.
 
 
 #### `build-external-contracts`
