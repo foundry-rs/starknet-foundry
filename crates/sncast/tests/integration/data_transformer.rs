@@ -27,53 +27,95 @@ async fn init_class() -> ContractClass {
         .unwrap()
 }
 
-// #[tokio::test]
-// async fn test_happy_case_simple_function_with_maunally_serialized_input() -> anyhow::Result<()> {
-//     let serialized_calldata: Vec<Felt> = vec![100.into()];
-//     let simulated_cli_input: Vec<FeltOrString> = serialized_calldata
-//         .clone()
-//         .into_iter()
-//         .map(From::from)
-//         .collect();
-
-//     let contract_class = CLASS.get_or_init(init_class).await.to_owned();
-
-//     let result = transform(
-//         simulated_cli_input,
-//         contract_class,
-//         &get_selector_from_name("simple_fn").unwrap(),
-//     )
-//     .await?;
-
-//     assert_eq!(result, serialized_calldata);
-
-//     Ok(())
-// }
-
 #[tokio::test]
-async fn test_happy_case_tuple_function() -> anyhow::Result<()> {
-    let simulated_cli_input = vec![String::from("(2137_felt252, 1_u8, Enum::One)")];
-
+async fn test_happy_case_simple_cairo_expressions_input() -> anyhow::Result<()> {
     let contract_class = CLASS.get_or_init(init_class).await.to_owned();
 
-    transform(
-        &simulated_cli_input,
+    let input = vec![String::from("100")];
+
+    let result = transform(
+        &input,
         contract_class,
-        &get_selector_from_name("tuple_fn").unwrap(),
+        &get_selector_from_name("simple_fn").unwrap(),
     )?;
+
+    let expected_output: Vec<Felt> = vec![100.into()];
+
+    assert_eq!(result, expected_output);
 
     Ok(())
 }
 
 #[tokio::test]
-async fn test_happy_case_complex_function_cairo_expressions_input_only() -> anyhow::Result<()> {
+async fn test_happy_case_simple_function_serialized_input() -> anyhow::Result<()> {
+    let contract_class = CLASS.get_or_init(init_class).await.to_owned();
+
+    let input = vec![String::from("0x64")];
+
+    let result = transform(
+        &input,
+        contract_class,
+        &get_selector_from_name("simple_fn").unwrap(),
+    )?;
+
+    let expected_output: Vec<Felt> = vec![100.into()];
+
+    assert_eq!(result, expected_output);
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_happy_case_tuple_function_cairo_expression_input() -> anyhow::Result<()> {
+    let contract_class = CLASS.get_or_init(init_class).await.to_owned();
+
+    let input = vec![String::from("(2137_felt252, 1_u8, Enum::One)")];
+
+    let result = transform(
+        &input,
+        contract_class,
+        &get_selector_from_name("tuple_fn").unwrap(),
+    )?;
+
+    let expected_output: Vec<Felt> = vec![2137.into(), 1.into(), 0.into()];
+
+    assert_eq!(result, expected_output);
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_happy_case_tuple_function_serialized_input() -> anyhow::Result<()> {
+    let contract_class = CLASS.get_or_init(init_class).await.to_owned();
+
+    let input = vec![
+        String::from("0x859"),
+        String::from("0x1"),
+        String::from("0x0"),
+    ];
+
+    let result = transform(
+        &input,
+        contract_class,
+        &get_selector_from_name("tuple_fn").unwrap(),
+    )?;
+
+    let expected_output: Vec<Felt> = vec![2137.into(), 1.into(), 0.into()];
+
+    assert_eq!(result, expected_output);
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_happy_case_complex_function_cairo_expressions_input() -> anyhow::Result<()> {
     let max_u256 = U256::max_value().to_string();
 
     let simulated_cli_input = vec![
         "array![array![0x2137, 0x420], array![0x420, 0x2137]]",
         "8_u8",
         "-270",
-        "\"some string\"",
+        "\"some_string\"",
         "(0x69, 100)",
         "true",
         &max_u256,
@@ -84,45 +126,99 @@ async fn test_happy_case_complex_function_cairo_expressions_input_only() -> anyh
 
     let contract_class = CLASS.get_or_init(init_class).await.to_owned();
 
-    transform(
+    let result = transform(
         &simulated_cli_input,
         contract_class,
         &get_selector_from_name("complex_fn").unwrap(),
     )?;
+
+    let expected_output: Vec<Felt> = vec![
+        "2",
+        "2",
+        "8503",
+        "1056",
+        "2",
+        "1056",
+        "8503",
+        "8",
+        "3618502788666131213697322783095070105623107215331596699973092056135872020211",
+        "0",
+        "139552669935068984642203239",
+        "11",
+        "105",
+        "100",
+        "1",
+        "340282366920938463463374607431768211455",
+        "340282366920938463463374607431768211455",
+    ]
+    .into_iter()
+    .map(Felt::from_dec_str)
+    .collect::<Result<_, _>>()
+    .unwrap();
+
+    assert_eq!(result, expected_output);
 
     Ok(())
 }
 
-#[allow(unreachable_code, unused_variables, clippy::diverging_sub_expression)]
-#[ignore = "Prepare serialized data by-hand"]
 #[tokio::test]
-async fn test_happy_case_complex_function_serialized_input_only() -> anyhow::Result<()> {
-    let simulated_cli_input: Vec<String> = todo!();
-
+async fn test_happy_case_complex_function_serialized_input() -> anyhow::Result<()> {
     let contract_class = CLASS.get_or_init(init_class).await.to_owned();
 
-    transform(
-        &simulated_cli_input,
+    let input: Vec<String> = [
+        "0x2",
+        "0x2",
+        "0x2137",
+        "0x420",
+        "0x2",
+        "0x420",
+        "0x2137",
+        "0x8",
+        "0x800000000000010fffffffffffffffffffffffffffffffffffffffffffffef3",
+        "0x0",
+        "0x736f6d655f737472696e67",
+        "0xb",
+        "0x69",
+        "0x64",
+        "0x1",
+        "0xffffffffffffffffffffffffffffffff",
+        "0xffffffffffffffffffffffffffffffff",
+    ]
+    .into_iter()
+    .map(String::from)
+    .collect();
+
+    let result = transform(
+        &input,
         contract_class,
         &get_selector_from_name("complex_fn").unwrap(),
     )?;
 
-    Ok(())
-}
+    let expected_output: Vec<Felt> = vec![
+        "2",
+        "2",
+        "8503",
+        "1056",
+        "2",
+        "1056",
+        "8503",
+        "8",
+        "3618502788666131213697322783095070105623107215331596699973092056135872020211",
+        "0",
+        "139552669935068984642203239",
+        "11",
+        "105",
+        "100",
+        "1",
+        "340282366920938463463374607431768211455",
+        "340282366920938463463374607431768211455",
+    ]
+    .into_iter()
+    .map(Felt::from_dec_str)
+    .collect::<Result<_, _>>()
+    .unwrap();
 
-#[allow(unreachable_code, unused_variables, clippy::diverging_sub_expression)]
-#[ignore = "Prepare serialized data by-hand"]
-#[tokio::test]
-async fn test_happy_case_complex_function_mixed_input() -> anyhow::Result<()> {
-    let simulated_cli_input: Vec<String> = todo!();
-
-    let contract_class = CLASS.get_or_init(init_class).await.to_owned();
-
-    transform(
-        &simulated_cli_input,
-        contract_class,
-        &get_selector_from_name("complex_fn").unwrap(),
-    )?;
+    assert_eq!(result, expected_output);
 
     Ok(())
 }
