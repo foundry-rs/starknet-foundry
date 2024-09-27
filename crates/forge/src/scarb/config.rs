@@ -30,9 +30,9 @@ pub const SCARB_MANIFEST_TEMPLATE_CONTENT: &str = r#"
 # block_id.hash = "0x123"                                    # Block to fork from (block hash)
 
 # [profile.dev.cairo]                                        # Define Cairo compiler configuration section
-# unstable-add-statements-code-locations-debug-info = true   # Scarb will add a mapping between Sierra statement indexes and locations in the code to debug info
-# unstable-add-statements-functions-debug-info = true        # Scarb will a add mapping between Sierra statement indexes and vectors of fully qualified paths of Cairo functions to debug info
-# inlining-strategy = "avoid"                                # Compiler will only inline function annotated with `#[inline(always)]` attribute
+# unstable-add-statements-code-locations-debug-info = true   # Scarb will add a mapping between Sierra statement indexes and locations in the code to debug info, needed for coverage
+# unstable-add-statements-functions-debug-info = true        # Scarb will a add mapping between Sierra statement indexes and vectors of fully qualified paths of Cairo functions to debug info, needed for coverage and profiler inlines
+# inlining-strategy = "avoid"                                # Compiler will only inline function annotated with `#[inline(always)]` attribute, needed for coverage
 
 # [features]                                                 # Define features section
 # enable_for_tests = []                                      # Feature name and list of other features that should be enabled with it
