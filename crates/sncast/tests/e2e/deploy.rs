@@ -332,13 +332,12 @@ async fn test_contract_not_declared() {
     ];
 
     let snapbox = runner(&args);
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: deploy
-        error: Couldn't retrieve contract class with hash: 0x1: Provided class hash does not exist
+        Error: Couldn't retrieve contract class with hash: 0x1
         "},
     );
 }

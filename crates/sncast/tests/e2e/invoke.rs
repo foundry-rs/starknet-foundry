@@ -278,13 +278,12 @@ async fn test_contract_does_not_exist() {
     ];
 
     let snapbox = runner(&args);
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: invoke
-        error: Couldn't retrieve class hash of a contract with address 0x1
+        Error: Couldn't retrieve class hash of a contract with address 0x1
         "},
     );
 }
@@ -308,14 +307,11 @@ fn test_wrong_function_name() {
     ];
 
     let snapbox = runner(&args);
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
-        indoc! {r#"
-        command: invoke
-        error: Function with selector "[..]" not found in ABI of the contract
-        "#},
+        r#"Error: Function with selector "[..]" not found in ABI of the contract"#,
     );
 }
 

@@ -344,8 +344,8 @@ async fn run_async_command(
 
             let class_hash = get_class_hash_by_address(&provider, contract_address)
                 .await
-                .with_context(|| format!("Failed to retrieve class hash of a contract at address {contract_address:#x}"))?
-                .with_context(|| format!("Failed to retrieve class hash of a contract at address {contract_address:#x}"))?;
+                .with_context(|| format!("Couldn't retrieve class hash of a contract with address {contract_address:#x}"))?
+                .with_context(|| format!("Couldn't retrieve class hash of a contract with address {contract_address:#x}"))?;
 
             let contract_class = get_contract_class(class_hash, &provider).await?;
 

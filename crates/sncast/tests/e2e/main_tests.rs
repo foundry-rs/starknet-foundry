@@ -27,14 +27,11 @@ async fn test_happy_case_from_sncast_config() {
     ];
 
     let snapbox = runner(&args).current_dir(tempdir.path());
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
-        indoc! {r"
-        command: call
-        error: There is no contract at the specified address
-        "},
+        "Error: Couldn't retrieve class hash of a contract with address 0x0",
     );
 }
 
@@ -55,14 +52,11 @@ async fn test_happy_case_from_cli_no_scarb() {
     ];
 
     let snapbox = runner(&args);
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
-        indoc! {r"
-        command: call
-        error: There is no contract at the specified address
-        "},
+        "Error: Couldn't retrieve class hash of a contract with address 0x0",
     );
 }
 
