@@ -76,6 +76,8 @@ block_id.number = "123"
 See more about [fork testing](https://foundry-rs.github.io/starknet-foundry/testing/test-attributes.html#fork).
 
 ### `[profile.<dev|release>.cairo]`
+By default, these arguments do not need to be defined. Only set them to use [profiler](https://foundry-rs.github.io/starknet-foundry/snforge-advanced-features/profiling.html#profiling) or [coverage](https://foundry-rs.github.io/starknet-foundry/testing/coverage.html#coverage).
+
 Adjust Cairo compiler configuration parameters when compiling this package. These options are not taken into consideration when this package is used as a dependency for another package. All fields are optional.
 
 ```toml
