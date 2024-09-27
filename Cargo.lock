@@ -1460,6 +1460,7 @@ dependencies = [
  "ctor",
  "indoc",
  "itertools 0.12.1",
+ "num-bigint",
  "num-traits 0.2.19",
  "regex",
  "serde",

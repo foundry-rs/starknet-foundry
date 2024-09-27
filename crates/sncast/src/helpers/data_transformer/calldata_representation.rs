@@ -1,12 +1,12 @@
-use anyhow::{bail, ensure, Context};
+use anyhow::{bail, Context};
 use conversions::{
     byte_array::ByteArray,
     serde::serialize::{BufferWriter, CairoSerialize},
     u256::CairoU256,
     u512::CairoU512,
 };
-use num_bigint::BigUint;
 use starknet::core::types::Felt;
+use std::str::FromStr;
 
 #[derive(Debug)]
 pub(super) struct CalldataStructField(AllowedCalldataArguments);
@@ -66,104 +66,62 @@ pub(super) enum CalldataSingleArgument {
     ByteArray(ByteArray),
 }
 
-fn single_value_parsing_error_msg(
-    value: &str,
-    parsing_type: &str,
-    append_message: Option<&str>,
-) -> String {
-    let mut message = format!(r#"Failed to parse value "{value}" into type "{parsing_type}""#);
-    if let Some(append_msg) = append_message {
-        message += append_msg;
+fn neat_parsing_error_message(value: &str, parsing_type: &str, reason: Option<&str>) -> String {
+    match reason {
+        Some(message) => {
+            format!(r#"Failed to parse value "{value}" into type "{parsing_type}": {message}"#)
+        }
+        None => format!(r#"Failed to parse value "{value}" into type "{parsing_type}""#),
     }
-    message
 }
 
-macro_rules! parse_with_type {
-    ($id:ident, $type:ty) => {
-        $id.parse::<$type>()
-            .context(single_value_parsing_error_msg($id, stringify!($type), None))?
-    };
+#[inline(always)]
+fn parse_with_type<T: FromStr>(value: &str) -> anyhow::Result<T>
+where
+    <T as FromStr>::Err: std::error::Error + Send + Sync + 'static,
+{
+    value
+        .parse::<T>()
+        .context(neat_parsing_error_message(value, stringify!(T), None))
 }
 
 impl CalldataSingleArgument {
-    pub(super) fn try_new(type_str_with_path: &str, value: &str) -> anyhow::Result<Self> {
+    pub(super) fn try_new(type_with_path: &str, value: &str) -> anyhow::Result<Self> {
         // TODO add all corelib types
-        let type_str = type_str_with_path
+        let type_str = type_with_path
             .split("::")
             .last()
             .context("Couldn't parse parameter type from ABI")?;
+
         match type_str {
-            "u8" => Ok(Self::U8(parse_with_type!(value, u8))),
-            "u16" => Ok(Self::U16(parse_with_type!(value, u16))),
-            "u32" => Ok(Self::U32(parse_with_type!(value, u32))),
-            "u64" => Ok(Self::U64(parse_with_type!(value, u64))),
-            "u128" => Ok(Self::U128(parse_with_type!(value, u128))),
-            "u256" => {
-                let num: BigUint = value.parse().with_context(|| {
-                    single_value_parsing_error_msg(value, type_str_with_path, None)
-                })?;
-
-                let bytes = num.to_bytes_be();
-
-                ensure!(
-                    bytes.len() <= 32,
-                    single_value_parsing_error_msg(
-                        value,
-                        "u256",
-                        Some(": number too large to fit in 32 bytes")
-                    )
-                );
-
-                let mut result = [0u8; 32];
-                let start = 32 - bytes.len();
-                result[start..].copy_from_slice(&bytes);
-
-                Ok(Self::U256(CairoU256::from_bytes(&result)))
-            }
-            "u512" => {
-                let num: BigUint = value.parse().with_context(|| {
-                    single_value_parsing_error_msg(value, type_str_with_path, None)
-                })?;
-
-                let bytes = num.to_bytes_be();
-
-                ensure!(
-                    bytes.len() <= 32,
-                    single_value_parsing_error_msg(
-                        value,
-                        "u512",
-                        Some(": number too large to fit in 64 bytes")
-                    )
-                );
-
-                let mut result = [0u8; 64];
-                let start = 64 - bytes.len();
-                result[start..].copy_from_slice(&bytes);
-
-                Ok(Self::U512(CairoU512::from_bytes(&result)))
-            }
-            "i8" => Ok(Self::I8(parse_with_type!(value, i8))),
-            "i16" => Ok(Self::I16(parse_with_type!(value, i16))),
-            "i32" => Ok(Self::I32(parse_with_type!(value, i32))),
-            "i64" => Ok(Self::I64(parse_with_type!(value, i64))),
-            "i128" => Ok(Self::I128(parse_with_type!(value, i128))),
+            "u8" => Ok(Self::U8(parse_with_type(value)?)),
+            "u16" => Ok(Self::U16(parse_with_type(value)?)),
+            "u32" => Ok(Self::U32(parse_with_type(value)?)),
+            "u64" => Ok(Self::U64(parse_with_type(value)?)),
+            "u128" => Ok(Self::U128(parse_with_type(value)?)),
+            "u256" => Ok(Self::U256(parse_with_type(value)?)),
+            "u512" => Ok(Self::U512(parse_with_type(value)?)),
+            "i8" => Ok(Self::I8(parse_with_type(value)?)),
+            "i16" => Ok(Self::I16(parse_with_type(value)?)),
+            "i32" => Ok(Self::I32(parse_with_type(value)?)),
+            "i64" => Ok(Self::I64(parse_with_type(value)?)),
+            "i128" => Ok(Self::I128(parse_with_type(value)?)),
             // TODO check if bytes31 is actually a felt
             // (e.g. alexandria_data_structures::bit_array::BitArray uses that)
             // https://github.com/starkware-libs/cairo/blob/bf48e658b9946c2d5446eeb0c4f84868e0b193b5/corelib/src/bytes_31.cairo#L14
             // There is `bytes31_try_from_felt252`, which means it isn't always a valid felt?
             "felt252" | "felt" | "ContractAddress" | "ClassHash" | "bytes31" => {
-                let felt = Felt::from_dec_str(value).with_context(|| {
-                    single_value_parsing_error_msg(value, type_str_with_path, None)
-                })?;
+                let felt = Felt::from_dec_str(value)
+                    .with_context(|| neat_parsing_error_message(value, type_with_path, None))?;
                 Ok(Self::Felt(felt))
             }
-            "bool" => Ok(Self::Bool(parse_with_type!(value, bool))),
+            "bool" => Ok(Self::Bool(parse_with_type(value)?)),
             "ByteArray" => Ok(Self::ByteArray(ByteArray::from(value))),
             _ => {
-                bail!(single_value_parsing_error_msg(
+                bail!(neat_parsing_error_message(
                     value,
-                    type_str_with_path,
-                    Some(&format!(": unsupported type {type_str_with_path}"))
+                    type_with_path,
+                    Some(&format!("unsupported type {type_with_path}"))
                 ))
             }
         }

@@ -1,5 +1,7 @@
-use crate as conversions; // trick for CairoDeserialize macro
+use crate as conversions; // Must be imported because of derive macros
 use cairo_serde_macros::{CairoDeserialize, CairoSerialize};
+use num_bigint::{BigUint, ParseBigIntError};
+use std::str::FromStr;
 
 #[derive(CairoDeserialize, CairoSerialize, Debug)]
 pub struct CairoU512 {
@@ -30,5 +32,31 @@ impl CairoU512 {
         result[00..16].copy_from_slice(&self.limb_3.to_be_bytes());
 
         result
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, thiserror::Error)]
+pub enum ParseCairoU512Error {
+    #[error(transparent)]
+    InvalidString(#[from] ParseBigIntError),
+    #[error("Number is too large to fit in 64 bytes")]
+    Overflow,
+}
+
+impl FromStr for CairoU512 {
+    type Err = ParseCairoU512Error;
+
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        let bytes = input.parse::<BigUint>()?.to_bytes_be();
+
+        if bytes.len() > 64 {
+            return Err(ParseCairoU512Error::Overflow);
+        }
+
+        let mut result = [0u8; 64];
+        let start = 64 - bytes.len();
+        result[start..].copy_from_slice(&bytes);
+
+        Ok(CairoU512::from_bytes(&result))
     }
 }
