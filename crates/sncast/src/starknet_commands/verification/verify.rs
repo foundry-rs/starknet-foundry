@@ -8,7 +8,7 @@ use promptly::prompt;
 use scarb_api::StarknetContractArtifacts;
 use sncast::response::structs::VerifyResponse;
 use sncast::Network;
-use starknet::core::types::FieldElement;
+use starknet::core::types::Felt;
 use std::collections::HashMap;
 use std::fmt;
 
@@ -16,10 +16,10 @@ use std::fmt;
 #[command(about = "Verify a contract through a block explorer")]
 pub struct Verify {
     #[clap(short = 'a', long)]
-    pub contract_address: Option<FieldElement>,
+    pub contract_address: Option<Felt>,
 
     #[clap(short = 'x', long)]
-    pub class_hash: Option<FieldElement>,
+    pub class_hash: Option<Felt>,
 
     #[clap(short, long)]
     pub class_name: String,
@@ -55,8 +55,8 @@ impl fmt::Display for Verifier {
 // disable too many arguments clippy warning
 #[allow(clippy::too_many_arguments)]
 pub async fn verify(
-    contract_address: Option<FieldElement>,
-    class_hash: Option<FieldElement>,
+    contract_address: Option<Felt>,
+    class_hash: Option<Felt>,
     class_name: String,
     verifier: Verifier,
     network: Network,

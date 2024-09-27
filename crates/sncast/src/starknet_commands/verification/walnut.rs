@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use camino::Utf8PathBuf;
 use sncast::response::structs::VerifyResponse;
 use sncast::Network;
-use starknet::core::types::FieldElement;
+use starknet::core::types::Felt;
 use std::env;
 
 pub struct WalnutVerificationInterface {
@@ -24,8 +24,8 @@ impl VerificationInterface for WalnutVerificationInterface {
 
     async fn verify(
         &self,
-        contract_address: Option<FieldElement>,
-        class_hash: Option<FieldElement>,
+        contract_address: Option<Felt>,
+        class_hash: Option<Felt>,
         class_name: String,
     ) -> Result<VerifyResponse> {
         let file_data = self.base.read_workspace_files()?;

@@ -5,7 +5,7 @@ use reqwest::StatusCode;
 use serde::Serialize;
 use sncast::response::structs::VerifyResponse;
 use sncast::Network;
-use starknet::core::types::FieldElement;
+use starknet::core::types::Felt;
 use std::ffi::OsStr;
 use walkdir::WalkDir;
 
@@ -14,8 +14,8 @@ pub trait VerificationInterface {
     fn new(network: Network, workspace_dir: Utf8PathBuf) -> Self;
     async fn verify(
         &self,
-        contract_address: Option<FieldElement>,
-        class_hash: Option<FieldElement>,
+        contract_address: Option<Felt>,
+        class_hash: Option<Felt>,
         class_name: String,
     ) -> Result<VerifyResponse>;
     fn gen_explorer_url(&self) -> Result<String>;
@@ -84,7 +84,7 @@ impl BaseVerificationInterface {
 #[derive(Serialize, Debug)]
 pub struct VerificationPayload {
     pub class_name: String,
-    pub contract_address: Option<FieldElement>,
-    pub class_hash: Option<FieldElement>,
+    pub contract_address: Option<Felt>,
+    pub class_hash: Option<Felt>,
     pub source_code: serde_json::Value,
 }

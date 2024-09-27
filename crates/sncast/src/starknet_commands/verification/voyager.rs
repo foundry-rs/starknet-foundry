@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use camino::Utf8PathBuf;
 use sncast::response::structs::VerifyResponse;
 use sncast::Network;
-use starknet::core::types::FieldElement;
+use starknet::core::types::Felt;
 use std::env;
 
 pub struct VoyagerVerificationInterface {
@@ -24,8 +24,8 @@ impl VerificationInterface for VoyagerVerificationInterface {
 
     async fn verify(
         &self,
-        contract_address: Option<FieldElement>,
-        class_hash: Option<FieldElement>,
+        contract_address: Option<Felt>,
+        class_hash: Option<Felt>,
         class_name: String,
     ) -> Result<VerifyResponse> {
         let file_data = self.base.read_workspace_files()?;
@@ -41,12 +41,16 @@ impl VerificationInterface for VoyagerVerificationInterface {
     }
 
     fn gen_explorer_url(&self) -> Result<String> {
-        let api_base_url = env::var("VOYAGER_API_URL")
-            .unwrap_or_else(|_| "https://api.voyager.online/beta".to_string());
-        let path = match self.base.network {
-            Network::Mainnet => "/v1/sn_main/verify",
-            Network::Sepolia => "/v1/sn_sepolia/verify",
+        let custom_api_url = env::var("VOYAGER_API_URL");
+        if let Ok(custom_api_url) = custom_api_url {
+            return Ok(custom_api_url);
+        }
+
+        let api_verification_url = match self.base.network {
+            Network::Mainnet => "https://api.voyager.online/beta/class-verify-v2",
+            Network::Sepolia => "https://sepolia-api.voyager.online/beta/class-verify-v2",
         };
-        Ok(format!("{api_base_url}{path}"))
+
+        Ok(api_verification_url.to_string())
     }
 }
