@@ -160,7 +160,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 let constructor_calldata = input_reader.read::<Vec<Felt>>()?;
                 let salt = input_reader.read()?;
                 let unique = input_reader.read()?;
-                let fee_args: ScriptFeeSettings = input_reader.read::<ScriptFeeSettings>()?.into();
+                let fee_args: ScriptFeeSettings = input_reader.read()?;
                 let nonce = input_reader.read()?;
 
                 let deploy_tx_id =

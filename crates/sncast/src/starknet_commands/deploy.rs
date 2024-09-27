@@ -61,7 +61,7 @@ impl_payable_transaction!(Deploy, token_not_supported_for_deployment,
     DeployVersion::V3 => FeeToken::Strk
 );
 
-#[allow(clippy::ptr_arg)]
+#[allow(clippy::ptr_arg, clippy::too_many_arguments)]
 pub async fn deploy(
     class_hash: Felt,
     calldata: &Vec<Felt>,
@@ -118,7 +118,7 @@ pub async fn deploy(
                     salt,
                     class_hash,
                     &udc_uniqueness(unique, account.address()),
-                    &calldata,
+                    calldata,
                 ),
                 transaction_hash: result.transaction_hash,
             },
