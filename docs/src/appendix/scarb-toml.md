@@ -126,7 +126,7 @@ enable_for_tests = []
 
 #### Example of `Scarb.toml` allowing conditional contracts compilation
 Firstly, define a contract in the src directory with a `#[cfg(feature: '<FEATURE_NAME>')]` attribute:
-```cairo
+```rust
 #[starknet::contract]
 #[cfg(feature: 'enable_for_tests')]
 mod MockContract {
