@@ -38,7 +38,7 @@ See more about [fuzzer](https://foundry-rs.github.io/starknet-foundry/testing/te
 [[tool.snforge.fork]]
 # ...
 ```
-Allows to configure forked tests. While in use, all below fields must be set at the same time.
+Allows to configure forked tests. If defined, all fields outlined below must also be defined.
 
 #### `name`
 The `name` field specifies the name of the fork.
