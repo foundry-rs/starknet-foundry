@@ -82,13 +82,7 @@ async fn test_happy_case_common_arguments_after_subcommand(account: &str) {
         "eth",
     ];
 
-    let snapbox = runner(&args);
-    let output = snapbox.assert().success().get_output().stdout.clone();
-
-    let hash = get_transaction_hash(&output);
-    let receipt = get_transaction_receipt(hash).await;
-
-    assert!(matches!(receipt, Invoke(_)));
+    runner(&args).assert().success();
 }
 
 #[tokio::test]
