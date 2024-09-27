@@ -67,15 +67,13 @@ pub(super) enum CalldataSingleArgument {
 }
 
 fn neat_parsing_error_message(value: &str, parsing_type: &str, reason: Option<&str>) -> String {
-    match reason {
-        Some(message) => {
-            format!(r#"Failed to parse value "{value}" into type "{parsing_type}": {message}"#)
-        }
-        None => format!(r#"Failed to parse value "{value}" into type "{parsing_type}""#),
+    if let Some(message) = reason {
+        format!(r#"Failed to parse value "{value}" into type "{parsing_type}": {message}"#)
+    } else {
+        format!(r#"Failed to parse value "{value}" into type "{parsing_type}""#)
     }
 }
 
-#[inline(always)]
 fn parse_with_type<T: FromStr>(value: &str) -> anyhow::Result<T>
 where
     <T as FromStr>::Err: std::error::Error + Send + Sync + 'static,
