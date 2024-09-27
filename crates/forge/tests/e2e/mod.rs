@@ -5,6 +5,7 @@ mod build_trace_data;
 mod collection;
 mod color;
 mod components;
+mod contract_artifacts;
 mod coverage;
 mod env;
 mod features;

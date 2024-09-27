@@ -3,7 +3,7 @@ use starknet::core::types::Felt;
 
 use crate::{response::explorer_link::ExplorerError, Network};
 
-const STARKSCAN: &str = "starkscan.co/search";
+const STARKSCAN: &str = "starkscan.co";
 const VOYAGER: &str = "voyager.online";
 const VIEWBLOCK: &str = "https://viewblock.io/starknet";
 const OKLINK: &str = "https://www.oklink.com/starknet";
@@ -52,21 +52,21 @@ pub struct StarkScan {
 impl LinkProvider for StarkScan {
     fn transaction(&self, hash: Felt) -> String {
         format!(
-            "https://{}{STARKSCAN}/{hash:#x}",
+            "https://{}{STARKSCAN}/tx/{hash:#x}",
             network_subdomain(self.network)
         )
     }
 
     fn class(&self, hash: Felt) -> String {
         format!(
-            "https://{}{STARKSCAN}/{hash:#x}",
+            "https://{}{STARKSCAN}/class/{hash:#x}",
             network_subdomain(self.network)
         )
     }
 
     fn contract(&self, address: Felt) -> String {
         format!(
-            "https://{}{STARKSCAN}/{address:#x}",
+            "https://{}{STARKSCAN}/contract/{address:#x}",
             network_subdomain(self.network)
         )
     }

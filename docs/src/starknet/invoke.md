@@ -25,12 +25,12 @@ $ sncast \
   --contract-address 0x4a739ab73aa3cac01f9da5d55f49fb67baee4919224454a2e3f85b16462a911 \
   --function "some_function" \
   --calldata 1 2 0x1e
-  
+
 command: invoke
 transaction_hash: 0x7ad0d6e449e33b6581a4bb8df866c0fce3919a5ee05a30840ba521dafee217f
 
 To see invocation details, visit:
-transaction: https://starkscan.co/search/0x7ad0d6e449...
+transaction: https://starkscan.co/tx/0x7ad0d6e449...
 ```
 
 > 💡 **Info**
@@ -48,10 +48,10 @@ $ sncast invoke \
   --fee-token strk \
   --contract-address 0x4a739ab73aa3cac01f9da5d55f49fb67baee4919224454a2e3f85b16462a911 \
   --function "function_without_params"
-  
+
 command: invoke
 transaction_hash: 0x7ad0d6e449e33b6581a4bb8df866c0fce3919a5ee05a30840ba521dafee217f
 
 To see invocation details, visit:
-transaction: https://starkscan.co/search/0x7ad0d6e449...
+transaction: https://starkscan.co/tx/0x7ad0d6e449...
 ```

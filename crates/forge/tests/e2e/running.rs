@@ -151,7 +151,7 @@ fn with_failing_scarb_build() {
         output,
         indoc!(
             r"
-                [ERROR] Failed to build test artifacts with Scarb: `scarb` exited with error
+                [ERROR] Failed to build contracts with Scarb: `scarb` exited with error
             "
         ),
     );
@@ -664,9 +664,13 @@ fn with_exit_first_flag() {
 fn init_new_project() {
     let temp = tempdir_with_tool_versions().unwrap();
 
-    runner(&temp).args(["init", "test_name"]).assert().success();
+    runner(&temp)
+        .args(["init", "test_name"])
+        .env("DEV_DISABLE_SNFORGE_STD_DEPENDENCY", "true")
+        .assert()
+        .success();
 
-    validate_init(&temp);
+    validate_init(&temp, false);
 }
 
 #[test]
@@ -684,7 +688,7 @@ fn init_new_project_from_scarb() {
         .assert()
         .success();
 
-    validate_init(&temp);
+    validate_init(&temp, true);
 }
 
 pub fn append_to_path_var(path: &Path) -> OsString {
@@ -694,9 +698,15 @@ pub fn append_to_path_var(path: &Path) -> OsString {
     env::join_paths(script_path.chain(other_paths)).unwrap()
 }
 
-fn validate_init(temp: &TempDir) {
+fn validate_init(temp: &TempDir, validate_snforge_std: bool) {
     let manifest_path = temp.join("test_name/Scarb.toml");
     let scarb_toml = fs::read_to_string(manifest_path.clone()).unwrap();
+
+    let snforge_std_assert = if validate_snforge_std {
+        "\nsnforge_std = { git = \"https://github.com/foundry-rs/starknet-foundry\", tag = \"v[..]\" }"
+    } else {
+        ""
+    };
 
     let expected = formatdoc!(
         r#"
@@ -710,8 +720,7 @@ fn validate_init(temp: &TempDir) {
             [dependencies]
             starknet = "[..]"
 
-            [dev-dependencies]
-            snforge_std = {{ git = "https://github.com/foundry-rs/starknet-foundry", tag = "v[..]" }}
+            [dev-dependencies]{}
             assert_macros = "[..]"
 
             [[target.starknet-contract]]
@@ -720,7 +729,8 @@ fn validate_init(temp: &TempDir) {
             [scripts]
             test = "snforge test"
             {SCARB_MANIFEST_TEMPLATE_CONTENT}
-        "#
+        "#,
+        snforge_std_assert
     ).trim_end()
     .to_string()+ "\n";
 

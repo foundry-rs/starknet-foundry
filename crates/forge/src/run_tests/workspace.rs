@@ -1,12 +1,8 @@
 use super::package::RunForPackageArgs;
 use crate::{
-    block_number_map::BlockNumberMap,
-    pretty_printing,
-    run_tests::package::run_for_package,
-    scarb::{build_contracts_with_scarb, build_test_artifacts_with_scarb},
-    shared_cache::FailedTestsCache,
-    warn::warn_if_snforge_std_not_compatible,
-    ColorOption, ExitStatus, TestArgs,
+    block_number_map::BlockNumberMap, pretty_printing, run_tests::package::run_for_package,
+    scarb::build_artifacts_with_scarb, shared_cache::FailedTestsCache,
+    warn::warn_if_snforge_std_not_compatible, ColorOption, ExitStatus, TestArgs,
 };
 use anyhow::{Context, Result};
 use forge_runner::{
@@ -48,8 +44,12 @@ pub async fn run_for_workspace(args: TestArgs) -> Result<ExitStatus> {
 
     let filter = PackagesFilter::generate_for::<Metadata>(packages.iter());
 
-    build_test_artifacts_with_scarb(filter.clone(), args.features.clone())?;
-    build_contracts_with_scarb(filter, args.features.clone())?;
+    build_artifacts_with_scarb(
+        filter.clone(),
+        args.features.clone(),
+        &scarb_metadata.app_version_info.version,
+        args.no_optimization,
+    )?;
 
     let mut block_number_map = BlockNumberMap::default();
     let mut all_failed_tests = vec![];

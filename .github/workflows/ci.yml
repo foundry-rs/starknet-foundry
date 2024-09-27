@@ -97,14 +97,29 @@ jobs:
       - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
       - uses: software-mansion/setup-scarb@v1.3.2
         with:
-          scarb-version: "2.8.1"
+          scarb-version: "2.8.3"
       - uses: software-mansion/setup-universal-sierra-compiler@v1
 
       - name: Install cairo-coverage
         run: |
           curl -L https://raw.githubusercontent.com/software-mansion/cairo-coverage/main/scripts/install.sh | sh
 
-      - run: cargo test --package forge --features scarb_2_8_1 --test main e2e::coverage
+      - run: cargo test --package forge --features scarb_2_8_3 --test main e2e::coverage
+
+  test-contracts-artifacts:
+    name: Test contracts artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
+      - uses: software-mansion/setup-scarb@v1.3.2
+        with:
+          scarb-version: "2.8.3"
+      - uses: software-mansion/setup-universal-sierra-compiler@v1
+      - run: |
+          cargo test --package forge --features scarb_2_8_3 e2e::contract_artifacts
+          cargo test --package scarb-api --features scarb_2_8_3 get_starknet_artifacts_path
 
   test-forge-runner:
     name: Test Forge Runner

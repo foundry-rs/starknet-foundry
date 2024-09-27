@@ -8,11 +8,14 @@ use forge_runner::package_tests::TestTargetLocation;
 use scarb_api::ScarbCommand;
 use scarb_metadata::{PackageMetadata, TargetMetadata};
 use scarb_ui::args::{FeaturesSpec, PackagesFilter};
+use semver::Version;
 use std::collections::HashMap;
 use std::fs::read_to_string;
 use std::io::ErrorKind;
 
 pub mod config;
+
+const MINIMAL_SCARB_VERSION_TO_OPTIMIZE_COMPILATION: Version = Version::new(2, 8, 3);
 
 impl PackageConfig for ForgeConfigFromScarb {
     fn tool_name() -> &'static str {
@@ -31,7 +34,28 @@ impl PackageConfig for ForgeConfigFromScarb {
     }
 }
 
-pub fn build_contracts_with_scarb(filter: PackagesFilter, features: FeaturesSpec) -> Result<()> {
+#[must_use]
+pub fn should_compile_starknet_contract_target(
+    scarb_version: &Version,
+    no_optimization: bool,
+) -> bool {
+    *scarb_version < MINIMAL_SCARB_VERSION_TO_OPTIMIZE_COMPILATION || no_optimization
+}
+
+pub fn build_artifacts_with_scarb(
+    filter: PackagesFilter,
+    features: FeaturesSpec,
+    scarb_version: &Version,
+    no_optimization: bool,
+) -> Result<()> {
+    if should_compile_starknet_contract_target(scarb_version, no_optimization) {
+        build_contracts_with_scarb(filter.clone(), features.clone())?;
+    }
+    build_test_artifacts_with_scarb(filter, features)?;
+    Ok(())
+}
+
+fn build_contracts_with_scarb(filter: PackagesFilter, features: FeaturesSpec) -> Result<()> {
     ScarbCommand::new_with_stdio()
         .arg("build")
         .packages_filter(filter)
@@ -41,10 +65,7 @@ pub fn build_contracts_with_scarb(filter: PackagesFilter, features: FeaturesSpec
     Ok(())
 }
 
-pub fn build_test_artifacts_with_scarb(
-    filter: PackagesFilter,
-    features: FeaturesSpec,
-) -> Result<()> {
+fn build_test_artifacts_with_scarb(filter: PackagesFilter, features: FeaturesSpec) -> Result<()> {
     ScarbCommand::new_with_stdio()
         .arg("build")
         .arg("--test")
@@ -227,7 +248,7 @@ mod tests {
                 detailed_resources: false,
                 save_trace_data: false,
                 build_profile: false,
-                coverage: false
+                coverage: false,
             }
         );
     }
@@ -456,7 +477,7 @@ mod tests {
                 detailed_resources: false,
                 save_trace_data: false,
                 build_profile: false,
-                coverage: false
+                coverage: false,
             }
         );
     }

@@ -75,6 +75,13 @@ From this moment forks can be set using their name in the `fork` attribute.
 {{#include ../../listings/snforge_advanced_features/crates/fork_testing/tests/name.cairo}}
 ```
 
+In some cases you may want to override `block_id` defined in the `Scarb.toml` file.
+You can do it by passing `block_number`, `block_hash`, `block_tag` arguments to the `fork` attribute.
+
+```rust
+{{#include ../../listings/snforge_advanced_features/crates/fork_testing/tests/overridden_name.cairo}}
+```
+
 ## Testing Forked Contracts
 
 Once the fork is configured, the test will run on top of the forked state, meaning that it will have access to every contract deployed on the real network.

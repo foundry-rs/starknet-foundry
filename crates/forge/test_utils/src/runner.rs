@@ -97,12 +97,16 @@ impl Contract {
             .find(|package| package.name == "contract")
             .unwrap();
 
-        let contract =
-            get_contracts_artifacts_and_source_sierra_paths(&scarb_metadata, &package.id, None)
-                .unwrap()
-                .remove(&self.name)
-                .ok_or(anyhow!("there is no contract with name {}", self.name))?
-                .0;
+        let contract = get_contracts_artifacts_and_source_sierra_paths(
+            &scarb_metadata,
+            &package.id,
+            None,
+            false,
+        )
+        .unwrap()
+        .remove(&self.name)
+        .ok_or(anyhow!("there is no contract with name {}", self.name))?
+        .0;
 
         Ok((contract.sierra, contract.casm))
     }

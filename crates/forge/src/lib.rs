@@ -141,6 +141,10 @@ pub struct TestArgs {
     /// Specify features to enable
     #[command(flatten)]
     pub features: FeaturesSpec,
+
+    /// Build contracts separately in the scarb starknet contract target
+    #[arg(long)]
+    no_optimization: bool,
 }
 
 pub enum ExitStatus {
