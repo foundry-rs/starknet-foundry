@@ -1,10 +1,8 @@
-use anyhow::{Context, Result};
+use anyhow::Result;
 use clap::Args;
-use sncast::helpers::data_transformer::transformer::transform;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::structs::CallResponse;
-use sncast::{get_class_hash_by_address, get_contract_class};
 use starknet::core::types::{BlockId, Felt, FunctionCall};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::{JsonRpcClient, Provider};
@@ -38,20 +36,10 @@ pub struct Call {
 pub async fn call(
     contract_address: Felt,
     entry_point_selector: Felt,
-    calldata: Vec<String>,
+    calldata: Vec<Felt>,
     provider: &JsonRpcClient<HttpTransport>,
     block_id: &BlockId,
 ) -> Result<CallResponse, StarknetCommandError> {
-    let class_hash = get_class_hash_by_address(provider, contract_address)
-        .await?
-        .with_context(|| {
-            format!("Couldn't retrieve class hash of a contract with address {contract_address:#x}")
-        })?;
-
-    let contract_class = get_contract_class(class_hash, provider).await?;
-
-    let calldata = transform(&calldata, contract_class, &entry_point_selector)?;
-
     let function_call = FunctionCall {
         contract_address,
         entry_point_selector,

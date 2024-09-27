@@ -1,15 +1,12 @@
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, Result};
 use clap::{Args, ValueEnum};
-use sncast::helpers::data_transformer::transformer::transform;
+
 use sncast::helpers::error::token_not_supported_for_invoke;
 use sncast::helpers::fee::{FeeArgs, FeeSettings, FeeToken, PayableTransaction};
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::errors::StarknetCommandError;
 use sncast::response::structs::InvokeResponse;
-use sncast::{
-    apply_optional, get_class_hash_by_address, get_contract_class, handle_wait_for_tx,
-    impl_payable_transaction, WaitForTx,
-};
+use sncast::{apply_optional, handle_wait_for_tx, impl_payable_transaction, WaitForTx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{Account, ConnectedAccount, ExecutionV1, ExecutionV3, SingleOwnerAccount};
 use starknet::core::types::{Call, Felt, InvokeTransactionResult};
@@ -59,34 +56,21 @@ impl_payable_transaction!(Invoke, token_not_supported_for_invoke,
 );
 
 pub async fn invoke(
-    invoke: Invoke,
+    contract_address: Felt,
+    calldata: Vec<Felt>,
+    nonce: Option<Felt>,
+    fee_args: FeeArgs,
     function_selector: Felt,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     wait_config: WaitForTx,
 ) -> Result<InvokeResponse, StarknetCommandError> {
-    let fee_args = invoke
-        .fee_args
-        .clone()
-        .fee_token(invoke.token_from_version());
-
-    let contract_address = invoke.contract_address;
-    let class_hash = get_class_hash_by_address(account.provider(), contract_address)
-        .await?
-        .with_context(|| {
-            format!("Couldn't retrieve class hash of a contract with address {contract_address:#x}")
-        })?;
-
-    let contract_class = get_contract_class(class_hash, account.provider()).await?;
-
-    let calldata = transform(&invoke.calldata, contract_class, &function_selector)?;
-
     let call = Call {
-        to: invoke.contract_address,
+        to: contract_address,
         selector: function_selector,
         calldata,
     };
 
-    execute_calls(account, vec![call], fee_args, invoke.nonce, wait_config).await
+    execute_calls(account, vec![call], fee_args, nonce, wait_config).await
 }
 
 pub async fn execute_calls(

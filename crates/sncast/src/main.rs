@@ -6,6 +6,7 @@ use crate::starknet_commands::{
 };
 use anyhow::{Context, Result};
 use configuration::load_global_config;
+use sncast::helpers::data_transformer::transformer::transform;
 use sncast::response::explorer_link::print_block_explorer_link_if_allowed;
 use sncast::response::print::{print_command_result, OutputFormat};
 
@@ -20,9 +21,10 @@ use sncast::helpers::scarb_utils::{
 };
 use sncast::response::errors::handle_starknet_command_error;
 use sncast::{
-    chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_default_state_file_name,
-    NumbersFormat, ValidatedWaitParams, WaitForTx,
+    chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_class_hash_by_address,
+    get_contract_class, get_default_state_file_name, NumbersFormat, ValidatedWaitParams, WaitForTx,
 };
+use starknet::accounts::ConnectedAccount;
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::Provider;
 use starknet_commands::account::list::print_account_list;
@@ -224,6 +226,7 @@ async fn run_async_command(
             let provider = deploy.rpc.get_provider(&config).await?;
 
             deploy.validate()?;
+
             let account = get_account(
                 &config.account,
                 &config.accounts_file,
@@ -232,9 +235,36 @@ async fn run_async_command(
             )
             .await?;
 
-            let result = starknet_commands::deploy::deploy(deploy, &account, wait_config)
-                .await
-                .map_err(handle_starknet_command_error);
+            let fee_settings = deploy
+                .fee_args
+                .clone()
+                .fee_token(deploy.token_from_version())
+                .try_into_fee_settings(&provider, account.block_id())
+                .await?;
+
+            let constructor_calldata = deploy.constructor_calldata;
+
+            let selector = get_selector_from_name("constructor").unwrap();
+
+            let contract_class = get_contract_class(deploy.class_hash, &provider).await?;
+
+            let serialized_calldata = match constructor_calldata {
+                Some(ref data) => transform(data, contract_class, &selector)?,
+                None => vec![],
+            };
+
+            let result = starknet_commands::deploy::deploy(
+                deploy.class_hash,
+                &serialized_calldata,
+                deploy.salt,
+                deploy.unique,
+                fee_settings,
+                deploy.nonce,
+                &account,
+                wait_config,
+            )
+            .await
+            .map_err(handle_starknet_command_error);
 
             print_command_result("deploy", &result, numbers_format, output_format)?;
             print_block_explorer_link_if_allowed(
@@ -252,11 +282,26 @@ async fn run_async_command(
 
             let block_id = get_block_id(&call.block_id)?;
 
+            let class_hash = get_class_hash_by_address(&provider, call.contract_address)
+                .await?
+                .with_context(|| {
+                    format!(
+                        "Couldn't retrieve class hash of a contract with address {:#x}",
+                        call.contract_address
+                    )
+                })?;
+
+            let contract_class = get_contract_class(class_hash, &provider).await?;
+
+            let entry_point_selector = get_selector_from_name(&call.function)
+                .context("Failed to convert entry point selector to FieldElement")?;
+
+            let calldata = transform(&call.calldata, contract_class, &entry_point_selector)?;
+
             let result = starknet_commands::call::call(
                 call.contract_address,
-                get_selector_from_name(&call.function)
-                    .context("Failed to convert entry point selector to FieldElement")?,
-                call.calldata,
+                entry_point_selector,
+                calldata,
                 &provider,
                 block_id.as_ref(),
             )
@@ -268,9 +313,21 @@ async fn run_async_command(
         }
 
         Commands::Invoke(invoke) => {
-            let provider = invoke.rpc.get_provider(&config).await?;
-
             invoke.validate()?;
+
+            let fee_token = invoke.token_from_version();
+
+            let Invoke {
+                contract_address,
+                function,
+                calldata,
+                fee_args,
+                rpc,
+                nonce,
+                ..
+            } = invoke;
+
+            let provider = rpc.get_provider(&config).await?;
 
             let account = get_account(
                 &config.account,
@@ -279,10 +336,27 @@ async fn run_async_command(
                 config.keystore,
             )
             .await?;
+
+            let fee_args = fee_args.fee_token(fee_token);
+
+            let selector = get_selector_from_name(&function)
+                .context("Failed to convert entry point selector to FieldElement")?;
+
+            let class_hash = get_class_hash_by_address(&provider, contract_address)
+                .await
+                .with_context(|| format!("Failed to retrieve class hash of a contract at address {contract_address:#x}"))?
+                .with_context(|| format!("Failed to retrieve class hash of a contract at address {contract_address:#x}"))?;
+
+            let contract_class = get_contract_class(class_hash, &provider).await?;
+
+            let calldata = transform(&calldata, contract_class, &selector)?;
+
             let result = starknet_commands::invoke::invoke(
-                invoke.clone(),
-                get_selector_from_name(&invoke.function)
-                    .context("Failed to convert entry point selector to FieldElement")?,
+                contract_address,
+                calldata,
+                nonce,
+                fee_args,
+                selector,
                 &account,
                 wait_config,
             )

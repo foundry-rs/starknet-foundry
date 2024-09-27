@@ -1,6 +1,4 @@
 use crate::starknet_commands::declare::Declare;
-use crate::starknet_commands::deploy::Deploy;
-use crate::starknet_commands::invoke::Invoke;
 use crate::starknet_commands::{call, declare, deploy, invoke, tx_status};
 use crate::{get_account, WaitForTx};
 use anyhow::{anyhow, Context, Result};
@@ -34,9 +32,9 @@ use scarb_metadata::{Metadata, PackageMetadata};
 use semver::{Comparator, Op, Version, VersionReq};
 use shared::print::print_as_warning;
 use shared::utils::build_readable_text;
+use sncast::get_nonce;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::constants::SCRIPT_LIB_ARTIFACT_NAME;
-use sncast::helpers::data_transformer::transformer::transform;
 use sncast::helpers::fee::ScriptFeeSettings;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::ScriptRunResponse;
@@ -44,10 +42,9 @@ use sncast::state::hashing::{
     generate_declare_tx_id, generate_deploy_tx_id, generate_invoke_tx_id,
 };
 use sncast::state::state_file::StateManager;
-use sncast::{get_class_hash_by_address, get_contract_class, get_nonce};
 use starknet::accounts::{Account, SingleOwnerAccount};
+use starknet::core::types::Felt;
 use starknet::core::types::{BlockId, BlockTag::Pending};
-use starknet::core::utils::get_selector_from_name;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
@@ -106,11 +103,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
             "call" => {
                 let contract_address = input_reader.read()?;
                 let function_selector = input_reader.read()?;
-                let calldata = input_reader
-                    .read::<Vec<ByteArray>>()?
-                    .into_iter()
-                    .map(Into::into)
-                    .collect();
+                let calldata = input_reader.read::<Vec<Felt>>()?;
 
                 let call_result = self.tokio_runtime.block_on(call::call(
                     contract_address,
@@ -119,6 +112,7 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     self.provider,
                     &BlockId::Tag(Pending),
                 ));
+
                 Ok(CheatcodeHandlingResult::from_serializable(call_result))
             }
             "declare" => {
@@ -158,46 +152,19 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                     selector,
                     &declare_result,
                 )?;
+
                 Ok(CheatcodeHandlingResult::from_serializable(declare_result))
             }
             "deploy" => {
                 let class_hash = input_reader.read()?;
-
-                let constructor_calldata: Vec<String> = input_reader
-                    .read::<Vec<ByteArray>>()?
-                    .into_iter()
-                    .map(Into::into)
-                    .collect();
-
+                let constructor_calldata = input_reader.read::<Vec<Felt>>()?;
                 let salt = input_reader.read()?;
                 let unique = input_reader.read()?;
-                let fee_args = input_reader.read::<ScriptFeeSettings>()?.into();
+                let fee_args: ScriptFeeSettings = input_reader.read::<ScriptFeeSettings>()?.into();
                 let nonce = input_reader.read()?;
 
-                let deploy = Deploy {
-                    class_hash,
-                    constructor_calldata: Some(constructor_calldata.clone()),
-                    salt,
-                    unique,
-                    fee_args,
-                    nonce,
-                    version: None,
-                    rpc: RpcArgs::default(),
-                };
-
-                let contract_class = self
-                    .tokio_runtime
-                    .block_on(get_contract_class(class_hash, self.provider))?;
-
-                // Needed only by `generate_deploy_tx_id`
-                let serialized_calldata = transform(
-                    &constructor_calldata,
-                    contract_class,
-                    &get_selector_from_name("constructor").unwrap(),
-                )?;
-
                 let deploy_tx_id =
-                    generate_deploy_tx_id(class_hash, &serialized_calldata, salt, unique);
+                    generate_deploy_tx_id(class_hash, &constructor_calldata, salt, unique);
 
                 if let Some(success_output) =
                     self.state.get_output_if_success(deploy_tx_id.as_str())
@@ -206,7 +173,12 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 }
 
                 let deploy_result = self.tokio_runtime.block_on(deploy::deploy(
-                    deploy,
+                    class_hash,
+                    &constructor_calldata,
+                    salt,
+                    unique,
+                    fee_args.into(),
+                    nonce,
                     self.account()?,
                     WaitForTx {
                         wait: true,
@@ -226,46 +198,13 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 let contract_address = input_reader.read()?;
                 let function_selector = input_reader.read()?;
 
-                let calldata: Vec<String> = input_reader
-                    .read::<Vec<ByteArray>>()?
-                    .into_iter()
-                    .map(Into::into)
-                    .collect();
+                let calldata = input_reader.read::<Vec<Felt>>()?;
 
                 let fee_args = input_reader.read::<ScriptFeeSettings>()?.into();
                 let nonce = input_reader.read()?;
 
-                let invoke = Invoke {
-                    contract_address,
-                    function: String::new(),
-                    calldata: calldata.clone(),
-                    fee_args,
-                    nonce,
-                    version: None,
-                    rpc: RpcArgs::default(),
-                };
-
-                let contract_class = self.tokio_runtime.block_on(async {
-                    let class_hash = get_class_hash_by_address(self.provider, contract_address)
-                        .await
-                        .with_context(|| format!("Couldn't retrieve class hash of a contract with address {contract_address:#x}"))?
-                        .with_context(|| format!("Couldn't retrieve class hash of a contract with address {contract_address:#x}"))?;
-
-                    get_contract_class(class_hash, self.provider).await
-                })?;
-
-                // Needed only by `generate_invoke_tx_id`
-                let serialized_calldata = transform(
-                    &calldata,
-                    contract_class,
-                    &get_selector_from_name("constructor").unwrap(),
-                )?;
-
-                let invoke_tx_id = generate_invoke_tx_id(
-                    contract_address,
-                    function_selector,
-                    &serialized_calldata,
-                );
+                let invoke_tx_id =
+                    generate_invoke_tx_id(contract_address, function_selector, &calldata);
 
                 if let Some(success_output) =
                     self.state.get_output_if_success(invoke_tx_id.as_str())
@@ -274,7 +213,10 @@ impl<'a> ExtensionLogic for CastScriptExtension<'a> {
                 }
 
                 let invoke_result = self.tokio_runtime.block_on(invoke::invoke(
-                    invoke,
+                    contract_address,
+                    calldata,
+                    nonce,
+                    fee_args,
                     function_selector,
                     self.account()?,
                     WaitForTx {
