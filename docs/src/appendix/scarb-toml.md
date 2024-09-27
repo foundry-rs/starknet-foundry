@@ -1,6 +1,6 @@
 # The Manifest Format
 
-The `Scarb.toml` contains the package manifest that is needed in package compilation process. It can be used to provide configuration for Starknet Foundry Forge. Official docs can be found [here](https://doc.rust-lang.org/cargo/reference/manifest.html).
+The `Scarb.toml` contains the package manifest that is needed in package compilation process. It can be used to provide configuration for Starknet Foundry Forge. For more, see [official Scarb docs](https://doc.rust-lang.org/cargo/reference/manifest.html).
 
 ## `Scarb.toml` Contents
 
