@@ -58,7 +58,6 @@ async fn test_happy_case(account: &str) {
 #[test_case("argent"; "argent_account")]
 #[test_case("braavos"; "braavos_account")]
 #[tokio::test]
-
 async fn test_happy_case_common_arguments_after_subcommand(account: &str) {
     let args = vec![
         "invoke",
