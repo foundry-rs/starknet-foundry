@@ -21,3 +21,27 @@ described [here](https://docs.swmansion.com/scarb/docs/extensions/testing.html#u
 
 Last but not least, remember that in order to use Starknet Foundry, you must have Scarb
 [installed](https://docs.swmansion.com/scarb/download.html) and added to the `PATH` environment variable.
+
+
+### `assert_macros`
+> ⚠️ **Recommended only for development** ️⚠️
+> 
+>Assert macros package provides a set of macros that can be used to write assertions.
+In order to use it, your project must have the `assert_macros` dependency added to the `Scarb.toml` file.
+These macros are very expensive to run on Starknet, they generate huge amount of steps and are not recommended for production use. 
+They are only meant to be used in tests.
+For snforge `v0.31.0` and later, this dependency is added by default. But for earlier versions, you need to add it manually.
+
+```toml
+[dev-dependencies]
+snforge_std = ...
+assert_macros = "<scarb-version>"
+```
+
+Available assert macros are 
+- `assert_eq!`
+- `assert_ne!`
+- `assert_lt!`
+- `assert_le!`
+- `assert_gt!`
+- `assert_ge!`
