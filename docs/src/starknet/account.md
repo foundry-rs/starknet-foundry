@@ -40,7 +40,6 @@ account: https://starkscan.co/search/contract/34ae54182d04754d8043189afd315a808d
 
 For a detailed CLI description, see [account create command reference](../appendix/sncast/account/create.md).
 
-
 #### prefund generated address with tokens
 
 To deploy an account in the next step, you need to prefund it with either STRK or an equivalent amount of ETH tokens (read more about them [here](https://docs.starknet.io/architecture-and-concepts/economics-of-starknet/)).

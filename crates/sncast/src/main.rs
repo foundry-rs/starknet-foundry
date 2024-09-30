@@ -24,6 +24,7 @@ use sncast::{
     NumbersFormat, ValidatedWaitParams, WaitForTx,
 };
 use starknet::core::utils::get_selector_from_name;
+use starknet::providers::Provider;
 use starknet_commands::account::list::print_account_list;
 use starknet_commands::verify::Verify;
 use tokio::runtime::Runtime;
@@ -71,39 +72,39 @@ struct Cli {
     /// Account to be used for contract declaration;
     /// When using keystore (`--keystore`), this should be a path to account file
     /// When using accounts file, this should be an account name
-    #[clap(short = 'a', long)]
+    #[clap(short = 'a', long, global = true)]
     account: Option<String>,
 
     /// Path to the file holding accounts info
-    #[clap(short = 'f', long = "accounts-file")]
+    #[clap(short = 'f', long = "accounts-file", global = true)]
     accounts_file_path: Option<Utf8PathBuf>,
 
     /// Path to keystore file; if specified, --account should be a path to starkli JSON account file
-    #[clap(short, long)]
+    #[clap(short, long, global = true)]
     keystore: Option<Utf8PathBuf>,
 
     /// If passed, values will be displayed as integers
-    #[clap(long, conflicts_with = "hex_format")]
+    #[clap(long, conflicts_with = "hex_format", global = true)]
     int_format: bool,
 
     /// If passed, values will be displayed as hex
-    #[clap(long, conflicts_with = "int_format")]
+    #[clap(long, conflicts_with = "int_format", global = true)]
     hex_format: bool,
 
     /// If passed, output will be displayed in json format
-    #[clap(short, long)]
+    #[clap(short, long, global = true)]
     json: bool,
 
     /// If passed, command will wait until transaction is accepted or rejected
-    #[clap(short = 'w', long)]
+    #[clap(short = 'w', long, global = true)]
     wait: bool,
 
     /// Adjusts the time after which --wait assumes transaction was not received or rejected
-    #[clap(long)]
+    #[clap(long, global = true)]
     wait_timeout: Option<u16>,
 
     /// Adjusts the time between consecutive attempts to fetch transaction by --wait flag
-    #[clap(long)]
+    #[clap(long, global = true)]
     wait_retry_interval: Option<u8>,
 
     #[command(subcommand)]
@@ -209,7 +210,13 @@ async fn run_async_command(
                     .map_err(handle_starknet_command_error);
 
             print_command_result("declare", &result, numbers_format, output_format)?;
-            print_block_explorer_link_if_allowed(&result, output_format, config.block_explorer);
+            print_block_explorer_link_if_allowed(
+                &result,
+                output_format,
+                provider.chain_id().await?,
+                config.show_explorer_links,
+                config.block_explorer,
+            );
             Ok(())
         }
 
@@ -230,7 +237,13 @@ async fn run_async_command(
                 .map_err(handle_starknet_command_error);
 
             print_command_result("deploy", &result, numbers_format, output_format)?;
-            print_block_explorer_link_if_allowed(&result, output_format, config.block_explorer);
+            print_block_explorer_link_if_allowed(
+                &result,
+                output_format,
+                provider.chain_id().await?,
+                config.show_explorer_links,
+                config.block_explorer,
+            );
             Ok(())
         }
 
@@ -277,7 +290,13 @@ async fn run_async_command(
             .map_err(handle_starknet_command_error);
 
             print_command_result("invoke", &result, numbers_format, output_format)?;
-            print_block_explorer_link_if_allowed(&result, output_format, config.block_explorer);
+            print_block_explorer_link_if_allowed(
+                &result,
+                output_format,
+                provider.chain_id().await?,
+                config.show_explorer_links,
+                config.block_explorer,
+            );
             Ok(())
         }
 
@@ -320,6 +339,8 @@ async fn run_async_command(
                     print_block_explorer_link_if_allowed(
                         &result,
                         output_format,
+                        provider.chain_id().await?,
+                        config.show_explorer_links,
                         config.block_explorer,
                     );
                 }
@@ -369,7 +390,13 @@ async fn run_async_command(
                 .await;
 
                 print_command_result("account create", &result, numbers_format, output_format)?;
-                print_block_explorer_link_if_allowed(&result, output_format, config.block_explorer);
+                print_block_explorer_link_if_allowed(
+                    &result,
+                    output_format,
+                    provider.chain_id().await?,
+                    config.show_explorer_links,
+                    config.block_explorer,
+                );
                 Ok(())
             }
 
@@ -392,7 +419,13 @@ async fn run_async_command(
                 .await;
 
                 print_command_result("account deploy", &result, numbers_format, output_format)?;
-                print_block_explorer_link_if_allowed(&result, output_format, config.block_explorer);
+                print_block_explorer_link_if_allowed(
+                    &result,
+                    output_format,
+                    provider.chain_id().await?,
+                    config.show_explorer_links,
+                    config.block_explorer,
+                );
                 Ok(())
             }
 

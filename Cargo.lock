@@ -1401,6 +1401,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32b13ea120a812beba79e34316b3942a857c86ec1593cb34f27bb28272ce2cca"
 
 [[package]]
+name = "const-hex"
+version = "1.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "94fb8a24a26d37e1ffd45343323dc9fe6654ceea44c12f2fcb3d7ac29e610bc6"
+dependencies = [
+ "cfg-if",
+ "cpufeatures",
+ "hex",
+ "proptest",
+ "serde",
+]
+
+[[package]]
 name = "const-oid"
 version = "0.9.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2038,7 +2051,7 @@ checksum = "00b0228411908ca8685dba7fc2cdd70ec9990a6e753e89b6ac91a84c40fbaf4b"
 
 [[package]]
 name = "forge"
-version = "0.30.0"
+version = "0.31.0"
 dependencies = [
  "anyhow",
  "ark-ff",
@@ -2108,7 +2121,7 @@ dependencies = [
 
 [[package]]
 name = "forge_runner"
-version = "0.30.0"
+version = "0.31.0"
 dependencies = [
  "anyhow",
  "bimap",
@@ -2142,6 +2155,7 @@ dependencies = [
  "rayon",
  "runtime",
  "scarb-api",
+ "semver",
  "serde",
  "serde_json",
  "shared",
@@ -2152,6 +2166,7 @@ dependencies = [
  "thiserror",
  "tokio",
  "tokio-util",
+ "toml_edit",
  "trace-data",
  "universal-sierra-compiler-api",
  "url",
@@ -2991,6 +3006,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d8adc4bb1803a324070e64a98ae98f38934d91957a99cfb3a43dcbc01bc56439"
 
 [[package]]
+name = "libm"
+version = "0.2.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4ec2a862134d2a7d32d7983ddcdd1c4923530833c9f2ea1a44fc5fa473989058"
+
+[[package]]
 name = "libredox"
 version = "0.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3300,6 +3321,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "071dfc062690e90b734c0b2273ce72ad0ffa95f0c74596bc250dcfd960262841"
 dependencies = [
  "autocfg",
+ "libm",
 ]
 
 [[package]]
@@ -3753,6 +3775,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "proptest"
+version = "1.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b4c2511913b88df1637da85cc8d96ec8e43a3f8bb8ccb71ee1ac240d6f3df58d"
+dependencies = [
+ "bitflags 2.6.0",
+ "lazy_static",
+ "num-traits 0.2.19",
+ "rand",
+ "rand_chacha",
+ "rand_xorshift",
+ "regex-syntax",
+ "unarray",
+]
+
+[[package]]
 name = "quote"
 version = "1.0.37"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3805,6 +3843,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ec0be4795e2f6a28069bec0b5ff3e2ac9bafc99e6a9a7dc3547996c5c816922c"
 dependencies = [
  "getrandom",
+]
+
+[[package]]
+name = "rand_xorshift"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d25bf25ec5ae4a3f1b92f929810509a2f53d7dca2f50b794ff57e3face536c8f"
+dependencies = [
+ "rand_core",
 ]
 
 [[package]]
@@ -4608,7 +4655,7 @@ dependencies = [
 
 [[package]]
 name = "sncast"
-version = "0.30.0"
+version = "0.31.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -4624,6 +4671,7 @@ dependencies = [
  "clap",
  "configuration",
  "console",
+ "const-hex",
  "conversions",
  "ctor",
  "fs_extra",
@@ -4634,6 +4682,7 @@ dependencies = [
  "project-root",
  "promptly",
  "rand",
+ "regex",
  "reqwest",
  "rpassword",
  "runtime",
@@ -4663,7 +4712,7 @@ dependencies = [
 
 [[package]]
 name = "snforge-scarb-plugin"
-version = "0.1.0"
+version = "0.31.0"
 dependencies = [
  "cairo-lang-diagnostics",
  "cairo-lang-filesystem",
@@ -5486,6 +5535,12 @@ dependencies = [
  "hex",
  "static_assertions",
 ]
+
+[[package]]
+name = "unarray"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "eaea85b334db583fe3274d12b4cd1880032beab409c0d774be044d4480ab9a94"
 
 [[package]]
 name = "unescaper"

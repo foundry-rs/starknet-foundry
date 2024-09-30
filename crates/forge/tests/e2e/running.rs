@@ -150,7 +150,7 @@ fn with_failing_scarb_build() {
         output,
         indoc!(
             r"
-                [ERROR] Failed to build test artifacts with Scarb: `scarb` exited with error
+                [ERROR] Failed to build contracts with Scarb: `scarb` exited with error
             "
         ),
     );
@@ -663,9 +663,13 @@ fn with_exit_first_flag() {
 fn init_new_project() {
     let temp = tempdir_with_tool_versions().unwrap();
 
-    runner(&temp).args(["init", "test_name"]).assert().success();
+    runner(&temp)
+        .args(["init", "test_name"])
+        .env("DEV_DISABLE_SNFORGE_STD_DEPENDENCY", "true")
+        .assert()
+        .success();
 
-    validate_init(&temp);
+    validate_init(&temp, false);
 }
 
 #[test]
@@ -683,7 +687,7 @@ fn init_new_project_from_scarb() {
         .assert()
         .success();
 
-    validate_init(&temp);
+    validate_init(&temp, true);
 }
 
 pub fn append_to_path_var(path: &Path) -> OsString {
@@ -693,9 +697,15 @@ pub fn append_to_path_var(path: &Path) -> OsString {
     env::join_paths(script_path.chain(other_paths)).unwrap()
 }
 
-fn validate_init(temp: &TempDir) {
+fn validate_init(temp: &TempDir, validate_snforge_std: bool) {
     let manifest_path = temp.join("test_name/Scarb.toml");
     let scarb_toml = fs::read_to_string(manifest_path.clone()).unwrap();
+
+    let snforge_std_assert = if validate_snforge_std {
+        "\nsnforge_std = { git = \"https://github.com/foundry-rs/starknet-foundry\", tag = \"v[..]\" }"
+    } else {
+        ""
+    };
 
     let expected = formatdoc!(
         r#"
@@ -709,8 +719,7 @@ fn validate_init(temp: &TempDir) {
             [dependencies]
             starknet = "[..]"
 
-            [dev-dependencies]
-            snforge_std = {{ git = "https://github.com/foundry-rs/starknet-foundry", tag = "v[..]" }}
+            [dev-dependencies]{}
             assert_macros = "[..]"
 
             [[target.starknet-contract]]
@@ -718,7 +727,8 @@ fn validate_init(temp: &TempDir) {
 
             [scripts]
             test = "snforge test"
-        "#
+        "#,
+        snforge_std_assert
     );
 
     assert_matches(&expected, &scarb_toml);
@@ -951,7 +961,6 @@ fn printing_in_contracts() {
 }
 
 #[test]
-#[ignore] //TODO(#2253) unignore when there exists previous version that supports new attributes
 fn incompatible_snforge_std_version_warning() {
     let temp = setup_package("steps");
     let manifest_path = temp.child("Scarb.toml");
@@ -963,7 +972,7 @@ fn incompatible_snforge_std_version_warning() {
     scarb_toml["dev-dependencies"]["snforge_std"]["path"] = Item::None;
     scarb_toml["dev-dependencies"]["snforge_std"]["git"] =
         value("https://github.com/foundry-rs/starknet-foundry.git");
-    scarb_toml["dev-dependencies"]["snforge_std"]["tag"] = value("v0.10.1");
+    scarb_toml["dev-dependencies"]["snforge_std"]["tag"] = value("v0.28.0");
     manifest_path.write_str(&scarb_toml.to_string()).unwrap();
 
     let output = test_runner(&temp).assert().failure();
@@ -980,22 +989,22 @@ fn incompatible_snforge_std_version_warning() {
         Collected 4 test(s) from steps package
         Running 4 test(s) from src/
         [PASS] steps::tests::steps_570030 [..]
-        [FAIL] steps::tests::steps_4000005
+        [FAIL] steps::tests::steps_10000005
 
         Failure data:
             Could not reach the end of the program. RunResources has no remaining steps.
 
-        [FAIL] steps::tests::steps_5699625
+        [FAIL] steps::tests::steps_11250075
 
         Failure data:
             Could not reach the end of the program. RunResources has no remaining steps.
 
-        [PASS] steps::tests::steps_3999990 [..]
+        [PASS] steps::tests::steps_9999990 [..]
         Tests: 2 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
 
         Failures:
-            steps::tests::steps_4000005
-            steps::tests::steps_5699625
+            steps::tests::steps_10000005
+            steps::tests::steps_11250075
         "},
     );
 }

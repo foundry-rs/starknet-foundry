@@ -11,7 +11,6 @@ use forge_runner::package_tests::{
         TestTargetWithResolvedConfig,
     },
 };
-use num_bigint::BigInt;
 use starknet_api::block::BlockNumber;
 
 pub async fn resolve_config(
@@ -78,27 +77,6 @@ async fn resolve_fork_config(
     Ok(Some(ResolvedForkConfig { url, block_number }))
 }
 
-fn parse_block_id(fork_target: &ForkTarget) -> Result<BlockId> {
-    let block_id = match fork_target.block_id_type.as_str() {
-        "number" => BlockId::BlockNumber(fork_target.block_id_value.parse()?),
-        "hash" => {
-            let block_hash = fork_target.block_id_value.parse::<BigInt>()?;
-
-            BlockId::BlockHash(block_hash.into())
-        }
-        "tag" => {
-            if fork_target.block_id_value == "latest" {
-                BlockId::BlockTag
-            } else {
-                Err(anyhow!(r#"only "latest" block tag is supported"#))?
-            }
-        }
-        _ => Err(anyhow!("block_id must be one of (number | hash | tag)"))?,
-    };
-
-    Ok(block_id)
-}
-
 fn get_fork_target_from_runner_config<'a>(
     fork_targets: &'a [ForkTarget],
     name: &ByteArray,
@@ -122,10 +100,10 @@ fn replace_id_with_params(
             let fork_target_from_runner_config =
                 get_fork_target_from_runner_config(fork_targets, &name)?;
 
-            let block_id = parse_block_id(fork_target_from_runner_config)?;
+            let block_id = fork_target_from_runner_config.block_id.clone();
 
             Ok(InlineForkConfig {
-                url: fork_target_from_runner_config.url.parse()?,
+                url: fork_target_from_runner_config.url.clone(),
                 block: block_id,
             })
         }
@@ -133,7 +111,7 @@ fn replace_id_with_params(
             let fork_target_from_runner_config =
                 get_fork_target_from_runner_config(fork_targets, &name)?;
 
-            let url = fork_target_from_runner_config.url.parse()?;
+            let url = fork_target_from_runner_config.url.clone();
 
             Ok(InlineForkConfig { url, block })
         }
@@ -161,50 +139,6 @@ mod tests {
             },
             debug_info: None,
         }
-    }
-
-    #[tokio::test]
-    async fn to_runnable_unparsable_url() {
-        let mocked_tests = TestTargetWithConfig {
-            sierra_program: program_for_testing(),
-            casm_program: Arc::new(compile_sierra_to_casm(&program_for_testing().program).unwrap()),
-            test_cases: vec![TestCaseWithConfig {
-                name: "crate1::do_thing".to_string(),
-                config: TestCaseConfig {
-                    available_gas: None,
-                    ignored: false,
-                    expected_result: ExpectedTestResult::Success,
-                    fork_config: Some(RawForkConfig::Named("SOME_NAME".into())),
-                    fuzzer_config: None,
-                },
-                test_details: TestDetails {
-                    sierra_entry_point_statement_idx: 100,
-                    parameter_types: vec![
-                        (GenericTypeId("RangeCheck".into()), 1),
-                        (GenericTypeId("GasBuiltin".into()), 1),
-                    ],
-                    return_types: vec![
-                        (GenericTypeId("RangeCheck".into()), 1),
-                        (GenericTypeId("GasBuiltin".into()), 1),
-                        (GenericTypeId("Enum".into()), 3),
-                    ],
-                },
-            }],
-            tests_location: TestTargetLocation::Lib,
-        };
-
-        assert!(resolve_config(
-            mocked_tests,
-            &[ForkTarget {
-                name: "SOME_NAME".to_string(),
-                url: "unparsable_url".to_string(),
-                block_id_type: "Tag".to_string(),
-                block_id_value: "Latest".to_string(),
-            }],
-            &mut BlockNumberMap::default()
-        )
-        .await
-        .is_err());
     }
 
     #[tokio::test]
@@ -240,11 +174,12 @@ mod tests {
         assert!(resolve_config(
             mocked_tests,
             &[ForkTarget::new(
-                "definitely_non_existing".to_string(),
-                "https://not_taken.com".to_string(),
-                "Number".to_string(),
-                "120".to_string(),
-            )],
+                "definitely_non_existing",
+                "https://not_taken.com",
+                "number",
+                "120",
+            )
+            .unwrap()],
             &mut BlockNumberMap::default()
         )
         .await

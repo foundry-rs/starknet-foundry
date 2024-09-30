@@ -7,7 +7,7 @@ use serde_json::Value;
 use starknet::core::types::Felt;
 use std::{collections::HashMap, fmt::Display, str::FromStr};
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum OutputFormat {
     Json,
     Human,

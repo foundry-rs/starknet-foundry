@@ -1,5 +1,5 @@
 [package]
-name = "map"
+name = "map1"
 version = "0.2.0"
 
 [dependencies]
@@ -9,4 +9,3 @@ starknet = ">=2.4.0"
 
 [lib]
 sierra = false
-

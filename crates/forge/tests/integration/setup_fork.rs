@@ -165,11 +165,12 @@ fn fork_aliased_decorator() {
                     }),
                 }),
                 fork_targets: vec![ForkTarget::new(
-                    "FORK_NAME_FROM_SCARB_TOML".to_string(),
-                    node_rpc_url().to_string(),
-                    "tag".to_string(),
-                    "latest".to_string(),
-                )],
+                    "FORK_NAME_FROM_SCARB_TOML",
+                    node_rpc_url().as_str(),
+                    "tag",
+                    "latest",
+                )
+                .unwrap()],
             },
             &mut BlockNumberMap::default(),
         ))
@@ -256,11 +257,12 @@ fn fork_aliased_decorator_overrding() {
                     }),
                 }),
                 fork_targets: vec![ForkTarget::new(
-                    "FORK_NAME_FROM_SCARB_TOML".to_string(),
-                    node_rpc_url().to_string(),
-                    "number".to_string(),
-                    "12341234".to_string(),
-                )],
+                    "FORK_NAME_FROM_SCARB_TOML",
+                    node_rpc_url().as_str(),
+                    "number",
+                    "12341234",
+                )
+                .unwrap()],
             },
             &mut BlockNumberMap::default(),
         ))
@@ -365,6 +367,26 @@ fn get_block_info_in_forked_block() {
                 let block_info = starknet::get_block_info().unbox();
                 assert(block_info.block_timestamp > 1711645884, block_info.block_timestamp.into());
                 assert(block_info.block_number > 54060, block_info.block_number.into());
+            }}
+
+            #[test]
+            #[fork(url: "{node_rpc_url}", block_hash: 0x06ae121e46f5375f93b00475fb130348ae38148e121f84b0865e17542e9485de)]
+            fn test_fork_get_block_info_block_hash() {{
+                let block_info = starknet::get_block_info().unbox();
+                assert(block_info.block_timestamp == 1711645884, block_info.block_timestamp.into());
+                assert(block_info.block_number == 54060, block_info.block_number.into());
+                let expected_sequencer_addr = contract_address_const::<0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8>();
+                assert(block_info.sequencer_address == expected_sequencer_addr, block_info.sequencer_address.into());
+            }}
+
+            #[test]
+            #[fork(url: "{node_rpc_url}", block_hash: 3021433528476416000728121069095289682281028310523383289416465162415092565470)]
+            fn test_fork_get_block_info_block_hash_with_number() {{
+                let block_info = starknet::get_block_info().unbox();
+                assert(block_info.block_timestamp == 1711645884, block_info.block_timestamp.into());
+                assert(block_info.block_number == 54060, block_info.block_number.into());
+                let expected_sequencer_addr = contract_address_const::<0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8>();
+                assert(block_info.sequencer_address == expected_sequencer_addr, block_info.sequencer_address.into());
             }}
         "#,
         node_rpc_url = node_rpc_url()
