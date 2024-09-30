@@ -27,18 +27,18 @@ $ sncast \
 	account create \
   --url http://127.0.0.1:5050 \
 	--name some-name
-      
+
 Account successfully created. Prefund generated address with at least 432300000000 tokens. It is good to send more in the case of higher demand, max_fee * 2 = 864600000000
 command: account create
 max_fee: 0x64a7168300
 address: 0x7a949e83b243068d0cbedd8d5b8b32fafea66c54de23c40e68b126b5c845b61
 
 To see account creation details, visit:
-account: https://starkscan.co/search/0x7a949e83b2...
+account: https://starkscan.co/tx/0x7a949e83b2...
 ```
 
     You can also pass common `--accounts-file` argument with a path to (existing or not existing) file where you want to save account info.
-    
+
     For a detailed CLI description, see [account create command reference](../appendix/sncast/account/create.md).
 
 
@@ -59,17 +59,17 @@ $ sncast \
 	--name some-name \
 	--fee-token strk \
 	--max-fee 9999999999999
-    
+
 command: account deploy
 transaction_hash: 0x20b20896ce63371ef015d66b4dd89bf18c5510a840b4a85a43a983caa6e2579
-    
+
 To see invocation details, visit:
-transaction: https://starkscan.co/search/0x20b20896ce...
+transaction: https://starkscan.co/tx/0x20b20896ce...
     ```
-  
+
     Note that you don't have to pass `url`, `accounts-file` and `network` parameters if `add-profile` flag
     was set in the `account create` command. Just pass `profile` argument with the account name.
-    
+
     For a detailed CLI description, see [account deploy command reference](../appendix/sncast/account/deploy.md).
 
 > 💡 **Info**
@@ -84,14 +84,14 @@ $ sncast \
     account create \
     --name some-name \
     --salt 0x1
-  
+
 Account successfully created. Prefund generated address with at least 432300000000 tokens. It is good to send more in the case of higher demand, max_fee * 2 = 864600000000
 command: account create
 max_fee: 0x64a7168300
 address: 0x7a949e83b243068d0cbedd8d5b8b32fafea66c54de23c40e68b126b5c845b61
 
 To see account creation details, visit:
-account: https://starkscan.co/search/0x7ad0d6e449...
+account: https://starkscan.co/tx/0x7ad0d6e449...
 ```
 
 ### `account delete`
@@ -104,7 +104,7 @@ $ sncast \
     account delete \
     --name some-name \
     --network alpha-sepolia
-  
+
 Do you want to remove account some-name from network alpha-sepolia? (Y/n)
 Y
 command: account delete
@@ -166,7 +166,7 @@ max_fee: 0x64a7168300
 address: 0x7a949e83b243068d0cbedd8d5b8b32fafea66c54de23c40e68b126b5c845b61
 
 To see account creation details, visit:
-account: https://starkscan.co/search/0x7a949e83b2...
+account: https://starkscan.co/tx/0x7a949e83b2...
 
 $ sncast \
   account deploy \
@@ -177,7 +177,7 @@ command: account deploy
 transaction_hash: 0x20b20896ce63371ef015d66b4dd89bf18c5510a840b4a85a43a983caa6e2579
 
 To see invocaton details, visit:
-transaction: https://starkscan.co/search/0x20b20896ce...
+transaction: https://starkscan.co/tx/0x20b20896ce...
 ```
 
 ### Using Keystore and Starkli Account
@@ -225,7 +225,7 @@ $ sncast \
     --url http://127.0.0.1:5050 \
 
 To see account creation details, visit:
-transaction: https://starkscan.co/search/...
+transaction: https://starkscan.co/tx/...
 ```
 
 The command above will generate a keystore file containing the private key, as well as an account file containing the openzeppelin account info that can later be used with starkli.
