@@ -16,7 +16,7 @@ using [cheatcodes](../appendix/cheatcodes.md).
 
 > ⚠️ **Warning**
 > 
-> These examples make use of `assert_macros`, so it's recommended to get familiar with them first. [Learn more about `assert_macros`](../testing.md#writing-assertions-and-assert_macros-package)
+> These examples make use of `assert_macros`, so it's recommended to get familiar with them first. [Learn more about `assert_macros`](testing.md#writing-assertions-and-assert_macros-package)
 
 ## The Test Contract
 
