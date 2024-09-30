@@ -38,11 +38,6 @@ To see account creation details, visit:
 account: https://starkscan.co/search/contract/34ae54182d04754d8043189afd315a808d4bea1a63862b3b05aa78b37756d7b
 ```
 
-
-You can also pass common `--accounts-file` argument with a path to (existing or not existing) file where you want to save account info.
-By default, the account details are saved in `~/.starknet_accounts/starknet_open_zeppelin_accounts.json`.
-
-
 For a detailed CLI description, see [account create command reference](../appendix/sncast/account/create.md).
 
 
@@ -71,28 +66,10 @@ To see invocation details, visit:
 transaction: https://starkscan.co/search/0x20b20896ce...
 ```
 
-Note that you don't have to pass `url`, `accounts-file` parameters if `add-profile` flag
-was set in the `account create` command. Just pass `profile` argument with the account name.
-
 For a detailed CLI description, see [account deploy command reference](../appendix/sncast/account/deploy.md).
 
 > 💡 **Info**
 > You can also choose to pay in Ether by setting `--fee-token` to `eth`.
-
-### `account create` With Salt Argument
-
-Salt will not be randomly generated if it's specified with `--salt`.
-
-```shell
-$ sncast \
-    account create \
-    --url http://127.0.0.1:5050 \
-    --name some-name \
-    --salt 0x1
-```
-### `account delete`
-
-Delete an account from `accounts-file` and its associated Scarb profile. If you pass this command, you will be asked to confirm the deletion.
 
 ```shell
 $ sncast \
@@ -104,10 +81,6 @@ $ sncast \
 ```
 
 For a detailed CLI description, see [account delete command reference](../appendix/sncast/account/delete.md).
-
-### `account list`
-
-List all accounts saved in `accounts file`, grouped based on the networks they are defined on.
 
 ```shell
 $ sncast account list
@@ -162,6 +135,41 @@ $ sncast \
     --class-hash 0x00e2eb8f5672af4e6a4e8a8f1b44989685e668489b0a25437733756c5a34a1d6
 ```
 
+
+## Advanced Use Cases
+
+### Additional features delivered with `account add/create`
+
+#### Specifying [`--accounts-file`](../appendix/sncast/account/create.md#create)
+
+Account information such as `private_key`, `class_hash`, `address` etc. will be saved to the file specified by `--accounts-file` argument, 
+which is `~/.starknet_accounts/starknet_open_zeppelin_accounts.json` by default.
+
+#### Specifying [`--add-profile`](../appendix/sncast/account/create.md#--add-profile-name)
+
+When the `--add-profile` flag is used, you won't need to include the `--url` or `--accounts-file` parameters 
+(the latter being necessary if your account information was stored in a custom file).
+Simply use the `--profile` argument followed by the account name in subsequent requests.
+
+### [`account list`](../appendix/sncast/account/list.md)
+
+List all accounts saved in `accounts file`, grouped based on the networks they are defined on.
+
+### [`account create`](../appendix/sncast/account/create.md) With Salt Argument
+
+Salt will not be randomly generated if it's specified with `--salt`.
+
+```shell
+$ sncast \
+    account create \
+    --url http://127.0.0.1:5050 \
+    --name some-name \
+    --salt 0x1
+```
+
+### `account delete`
+
+Delete an account from `accounts-file` and its associated Scarb profile. If you pass this command, you will be asked to confirm the deletion.
 
 ### Using Keystore and Starkli Account
 
