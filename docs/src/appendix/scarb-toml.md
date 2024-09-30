@@ -13,11 +13,12 @@ Allows to configure `snforge` settings. All fields are optional.
 
 #### `exit_first`
 The `exit_first` fields specifies whether to stop tests execution immediately upon the first failure.
+See more about [stopping test execution after first failed test](https://foundry-rs.github.io/starknet-foundry/testing/running-tests.html#stopping-test-execution-after-first-failed-test).
+
 ```toml
 [tool.snforge]
 exit_first = true
 ```
-See more about [stopping test execution after first failed test](https://foundry-rs.github.io/starknet-foundry/testing/running-tests.html#stopping-test-execution-after-first-failed-test).
 
 #### `fuzzer_runs`
 The `fuzzer_runs` field specifies the number of runs of the random fuzzer.
@@ -26,12 +27,13 @@ The `fuzzer_runs` field specifies the number of runs of the random fuzzer.
 The `fuzzer_seed` field specifies the seed for the random fuzzer.
 
 #### Example of fuzzer configuration
+See more about [fuzzer](https://foundry-rs.github.io/starknet-foundry/testing/test-attributes.html#fuzzer).
+
 ```toml
 [tool.snforge]
 fuzzer_runs = 1234
 fuzzer_seed = 1111
 ```
-See more about [fuzzer](https://foundry-rs.github.io/starknet-foundry/testing/test-attributes.html#fuzzer).
 
 ### `[[tool.snforge.fork]]`
 ```toml
@@ -39,6 +41,8 @@ See more about [fuzzer](https://foundry-rs.github.io/starknet-foundry/testing/te
 # ...
 ```
 Allows to configure forked tests. If defined, all fields outlined below must also be defined.
+
+See more about [fork testing](https://foundry-rs.github.io/starknet-foundry/testing/test-attributes.html#fork).
 
 #### `name`
 The `name` field specifies the name of the fork.
@@ -56,12 +60,14 @@ url = "http://your.rpc.url"
 
 #### `block_id.<tag|number|hash>`
 The `block_id` field specifies the block to fork from. It can be specified by `tag`, `number` or `hash`.
+
 ```toml
 [[tool.snforge.fork]]
 block_id.hash = "0x123"
 ```
 
 #### Example configuration with two forks
+
 ```toml
 [[tool.snforge.fork]]
 name = "SOME_NAME"
@@ -73,7 +79,6 @@ name = "SOME_SECOND_NAME"
 url = "http://your.second.rpc.url"
 block_id.number = "123"
 ```
-See more about [fork testing](https://foundry-rs.github.io/starknet-foundry/testing/test-attributes.html#fork).
 
 ### `[profile.<dev|release>.cairo]`
 By default, these arguments do not need to be defined. Only set them to use [profiler](https://foundry-rs.github.io/starknet-foundry/snforge-advanced-features/profiling.html#profiling) or [coverage](https://foundry-rs.github.io/starknet-foundry/testing/coverage.html#coverage).
@@ -124,6 +129,7 @@ A package defines a set of named features in the `[features]` section of `Scarb.
 
 #### `<feature-name>`
 The `<feature-name>` field specifies the name of the feature and list of other features that should be enabled with it.
+See [features](https://docs.swmansion.com/scarb/docs/reference/conditional-compilation.html#features) in Scarb docs.
 ```toml
 [features]
 enable_for_tests = []
@@ -145,10 +151,11 @@ Then update Scarb.toml so it includes the following lines:
 enable_for_tests = []
 ```
 
-See [features](https://docs.swmansion.com/scarb/docs/reference/conditional-compilation.html#features) in Scarb docs.
-
 ### `[[target.starknet-contract]]`
 Scarb supports registering targets that are handled by Scarb extensions. Such targets are called external. All fields are optional.
+
+See more about [targets](https://docs.swmansion.com/scarb/docs/reference/targets.html) in scarb docs.
+
 ```toml
 [[target.starknet-contract]]
 # ...
@@ -162,14 +169,13 @@ sierra = true
 ```
 
 #### `casm`
+
 The `casm` fields specifies whether Casm codegen should be enabled.
+
 ```toml
 [[target.starknet-contract]]
 casm = true
 ```
-
-See more about [targets](https://docs.swmansion.com/scarb/docs/reference/targets.html) in scarb docs.
-
 
 #### `build-external-contracts`
 The `build-external-contracts` accepts a list of strings, each of which is a reference to a contract defined in a dependency. The package that implements this contracts need to be declared as a dependency of the project in `[dependencies]`.
