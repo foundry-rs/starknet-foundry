@@ -14,7 +14,7 @@ pub const SCARB_MANIFEST_TEMPLATE_CONTENT: &str = r#"
 # fuzzer_runs = 1234                                         # Number of runs of the random fuzzer
 # fuzzer_seed = 1111                                         # Seed for the random fuzzer
 
-# [[tool.snforge.fork]]                                      # Define forked tests section
+# [[tool.snforge.fork]]                                      # Used for fork testing
 # name = "SOME_NAME"                                         # Fork name
 # url = "http://your.rpc.url"                                # Url of the RPC provider
 # block_id.tag = "latest"                                    # Block to fork from (block tag)
@@ -34,7 +34,7 @@ pub const SCARB_MANIFEST_TEMPLATE_CONTENT: &str = r#"
 # unstable-add-statements-functions-debug-info = true        # Should be used if you want to use coverage/profiler
 # inlining-strategy = "avoid"                                # Should be used if you want to use coverage
 
-# [features]                                                 # Define features section
+# [features]                                                 # Used for conditional compilation
 # enable_for_tests = []                                      # Feature name and list of other features that should be enabled with it
 "#;
 
