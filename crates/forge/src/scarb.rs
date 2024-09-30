@@ -145,6 +145,7 @@ mod tests {
     use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
     use assert_fs::TempDir;
     use camino::Utf8PathBuf;
+    use cheatnet::runtime_extensions::forge_config_extension::config::BlockId;
     use configuration::load_package_config;
     use indoc::{formatdoc, indoc};
     use scarb_api::metadata::MetadataCommandExt;
@@ -188,10 +189,15 @@ mod tests {
                 [[tool.snforge.fork]]
                 name = "SECOND_FORK_NAME"
                 url = "http://some.rpc.url"
-                block_id.hash = "1"
+                block_id.hash = "0xa"
 
                 [[tool.snforge.fork]]
                 name = "THIRD_FORK_NAME"
+                url = "http://some.rpc.url"
+                block_id.hash = "10"
+
+                [[tool.snforge.fork]]
+                name = "FOURTH_FORK_NAME"
                 url = "http://some.rpc.url"
                 block_id.tag = "latest"
                 "#,
@@ -223,24 +229,14 @@ mod tests {
             ForgeConfigFromScarb {
                 exit_first: false,
                 fork: vec![
-                    ForkTarget::new(
-                        "FIRST_FORK_NAME".to_string(),
-                        "http://some.rpc.url".to_string(),
-                        "number".to_string(),
-                        "1".to_string(),
-                    ),
-                    ForkTarget::new(
-                        "SECOND_FORK_NAME".to_string(),
-                        "http://some.rpc.url".to_string(),
-                        "hash".to_string(),
-                        "1".to_string(),
-                    ),
-                    ForkTarget::new(
-                        "THIRD_FORK_NAME".to_string(),
-                        "http://some.rpc.url".to_string(),
-                        "tag".to_string(),
-                        "latest".to_string(),
-                    )
+                    ForkTarget::new("FIRST_FORK_NAME", "http://some.rpc.url", "number", "1",)
+                        .unwrap(),
+                    ForkTarget::new("SECOND_FORK_NAME", "http://some.rpc.url", "hash", "10",)
+                        .unwrap(),
+                    ForkTarget::new("THIRD_FORK_NAME", "http://some.rpc.url", "hash", "0xa",)
+                        .unwrap(),
+                    ForkTarget::new("FOURTH_FORK_NAME", "http://some.rpc.url", "tag", "latest",)
+                        .unwrap()
                 ],
                 fuzzer_runs: None,
                 fuzzer_seed: None,
@@ -432,6 +428,37 @@ mod tests {
     }
 
     #[test]
+    fn get_forge_config_for_package_with_block_tag() {
+        let temp = setup_package("simple_package");
+        let content = indoc!(
+            r#"
+            [package]
+            name = "simple_package"
+            version = "0.1.0"
+
+            [[tool.snforge.fork]]
+            name = "SAME_NAME"
+            url = "http://some.rpc.url"
+            block_id.tag = "latest"
+            "#
+        );
+        temp.child("Scarb.toml").write_str(content).unwrap();
+
+        let scarb_metadata = ScarbCommand::metadata()
+            .inherit_stderr()
+            .current_dir(temp.path())
+            .run()
+            .unwrap();
+
+        let forge_config = load_package_config::<ForgeConfigFromScarb>(
+            &scarb_metadata,
+            &scarb_metadata.workspace.members[0],
+        )
+        .unwrap();
+        assert_eq!(forge_config.fork[0].block_id, BlockId::BlockTag);
+    }
+
+    #[test]
     fn get_forge_config_resolves_env_variables() {
         let temp = setup_package("simple_package");
         let content = indoc!(
@@ -466,11 +493,12 @@ mod tests {
             ForgeConfigFromScarb {
                 exit_first: false,
                 fork: vec![ForkTarget::new(
-                    "ENV_URL_FORK".to_string(),
-                    "http://some.rpc.url_from_env".to_string(),
-                    "number".to_string(),
-                    "1".to_string(),
-                )],
+                    "ENV_URL_FORK",
+                    "http://some.rpc.url_from_env",
+                    "number",
+                    "1",
+                )
+                .unwrap()],
                 fuzzer_runs: None,
                 fuzzer_seed: None,
                 max_n_steps: None,
