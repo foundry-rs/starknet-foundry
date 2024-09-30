@@ -267,7 +267,7 @@ mod tests {
                 [[tool.snforge.fork]]
                 name = "THIRD_FORK_NAME"
                 url = "http://some.rpc.url"
-                block_id.tag = "Latest"
+                block_id.tag = "latest"
                 "#,
                 package_name,
                 snforge_std_path
