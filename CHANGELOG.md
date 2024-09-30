@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - It's possible to pass common arguments both before and after subcommand name, e.g. both `sncast --account default declare --contract_name name ...` and `sncast declare --account default --contract_name name ...` are allowed now.
 
+#### Changed
+
+- Addresses outputted when calling `sncast account create`, `sncast deploy` and `sncast declare` are now padded to 64 characters length and prefixed with `0x0`
+
 ## [0.31.0] - 2024-09-26
 
 ### Cast
@@ -26,7 +30,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Explorer links displayed upon committing transactions are now properly formatted
 - `sncast declare` no longer fails for flat contracts (i.e. CASM artifacts with `bytecode_segment_lengths` being a number)
-- Addresses outputted when calling `sncast account create`, `sncast deploy` and `sncast declare` are now padded to the correct length and prefixed with `0x0`
 
 ### Forge
 
