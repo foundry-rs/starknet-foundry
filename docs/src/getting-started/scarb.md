@@ -26,9 +26,9 @@ Last but not least, remember that in order to use Starknet Foundry, you must hav
 ### `assert_macros`
 > ⚠️ **Recommended only for development** ️⚠️
 > 
->Assert macros package provides a set of macros that can be used to write assertions.
+>Assert macros package provides a set of macros that can be used to write assertions such as `assert_eq!`.
 In order to use it, your project must have the `assert_macros` dependency added to the `Scarb.toml` file.
-These macros are very expensive to run on Starknet, they generate a huge amount of steps and are not recommended for production use. 
+These macros are very expensive to run on Starknet, as they result a huge amount of steps and are not recommended for production use. 
 They are only meant to be used in tests.
 For snforge `v0.31.0` and later, this dependency is added by default. But for earlier versions, you need to add it manually.
 
