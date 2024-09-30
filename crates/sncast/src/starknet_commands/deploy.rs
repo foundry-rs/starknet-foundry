@@ -125,7 +125,7 @@ pub async fn deploy(
                     &deploy.constructor_calldata,
                 )
                 .into_(),
-                transaction_hash: result.transaction_hash,
+                transaction_hash: result.transaction_hash.into_(),
             },
             wait_config,
         )

@@ -1,6 +1,7 @@
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use clap::{Args, ValueEnum};
+use conversions::IntoConv;
 use serde_json::Map;
 use sncast::helpers::braavos::BraavosAccountFactory;
 use sncast::helpers::constants::{BRAAVOS_BASE_ACCOUNT_CLASS_HASH, KEYSTORE_PASSWORD_ENV_VAR};
@@ -161,7 +162,7 @@ async fn deploy_from_keystore(
         .is_ok()
     {
         InvokeResponse {
-            transaction_hash: Felt::ZERO,
+            transaction_hash: Felt::ZERO.into_(),
         }
     } else {
         get_deployment_result(
@@ -313,7 +314,7 @@ where
         Err(_) => Err(anyhow!("Unknown AccountFactoryError")),
         Ok(result) => {
             let return_value = InvokeResponse {
-                transaction_hash: result.transaction_hash,
+                transaction_hash: result.transaction_hash.into_(),
             };
             if let Err(message) = handle_wait_for_tx(
                 provider,

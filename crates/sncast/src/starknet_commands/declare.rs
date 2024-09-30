@@ -126,7 +126,7 @@ pub async fn declare(
             transaction_hash,
             DeclareResponse {
                 class_hash: class_hash.into_(),
-                transaction_hash,
+                transaction_hash: transaction_hash.into_(),
             },
             wait_config,
         )

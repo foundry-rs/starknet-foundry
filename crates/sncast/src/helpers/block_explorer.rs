@@ -1,7 +1,6 @@
 use crate::{response::explorer_link::ExplorerError, Network};
 use conversions::padded_felt::PaddedFelt;
 use serde::{Deserialize, Serialize};
-use starknet::core::types::Felt;
 
 const STARKSCAN: &str = "starkscan.co";
 const VOYAGER: &str = "voyager.online";
@@ -33,7 +32,7 @@ impl Service {
 }
 
 pub trait LinkProvider {
-    fn transaction(&self, hash: Felt) -> String;
+    fn transaction(&self, hash: PaddedFelt) -> String;
     fn class(&self, hash: PaddedFelt) -> String;
     fn contract(&self, address: PaddedFelt) -> String;
 }
@@ -50,7 +49,7 @@ pub struct StarkScan {
 }
 
 impl LinkProvider for StarkScan {
-    fn transaction(&self, hash: Felt) -> String {
+    fn transaction(&self, hash: PaddedFelt) -> String {
         format!(
             "https://{}{STARKSCAN}/tx/{hash:#x}",
             network_subdomain(self.network)
@@ -77,7 +76,7 @@ pub struct Voyager {
 }
 
 impl LinkProvider for Voyager {
-    fn transaction(&self, hash: Felt) -> String {
+    fn transaction(&self, hash: PaddedFelt) -> String {
         format!(
             "https://{}{VOYAGER}/tx/{hash:#x}",
             network_subdomain(self.network)
@@ -102,7 +101,7 @@ impl LinkProvider for Voyager {
 pub struct ViewBlock;
 
 impl LinkProvider for ViewBlock {
-    fn transaction(&self, hash: Felt) -> String {
+    fn transaction(&self, hash: PaddedFelt) -> String {
         format!("{VIEWBLOCK}/tx/{hash:#x}")
     }
 
@@ -118,7 +117,7 @@ impl LinkProvider for ViewBlock {
 pub struct OkLink;
 
 impl LinkProvider for OkLink {
-    fn transaction(&self, hash: Felt) -> String {
+    fn transaction(&self, hash: PaddedFelt) -> String {
         format!("{OKLINK}/tx/{hash:#x}")
     }
 
@@ -134,7 +133,7 @@ impl LinkProvider for OkLink {
 pub struct NftScan;
 
 impl LinkProvider for NftScan {
-    fn transaction(&self, hash: Felt) -> String {
+    fn transaction(&self, hash: PaddedFelt) -> String {
         format!("{NFTSCAN}/{hash:#x}")
     }
 
@@ -163,18 +162,18 @@ mod tests {
         contract_address: PaddedFelt(felt!(
             "0x03241d40a2af53a34274dd411e090ccac1ea80e0380a0303fe76d71b046cfecb"
         )),
-        transaction_hash: felt!(
+        transaction_hash: PaddedFelt(felt!(
             "0x7605291e593e0c6ad85681d09e27a601befb85033bdf1805aabf5d84617cf68"
-        ),
+        )),
     };
 
     const SEPOLIA_RESPONSE: DeployResponse = DeployResponse {
         contract_address: PaddedFelt(felt!(
             "0x0716b5f1e3bd760c489272fd6530462a09578109049e26e3f4c70492676eae17"
         )),
-        transaction_hash: felt!(
+        transaction_hash: PaddedFelt(felt!(
             "0x1cde70aae10f79d2d1289c923a1eeca7b81a2a6691c32551ec540fa2cb29c33"
-        ),
+        )),
     };
 
     async fn assert_valid_links(input: &str) {

@@ -35,21 +35,21 @@ impl CommandResponse for CallResponse {}
 
 #[derive(Serialize, Deserialize, CairoSerialize, Clone, Debug, PartialEq)]
 pub struct InvokeResponse {
-    pub transaction_hash: Felt,
+    pub transaction_hash: PaddedFelt,
 }
 impl CommandResponse for InvokeResponse {}
 
 #[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
 pub struct DeployResponse {
     pub contract_address: PaddedFelt,
-    pub transaction_hash: Felt,
+    pub transaction_hash: PaddedFelt,
 }
 impl CommandResponse for DeployResponse {}
 
 #[derive(Clone, Serialize, Deserialize, CairoSerialize, Debug, PartialEq)]
 pub struct DeclareResponse {
     pub class_hash: PaddedFelt,
-    pub transaction_hash: Felt,
+    pub transaction_hash: PaddedFelt,
 }
 impl CommandResponse for DeclareResponse {}
 
