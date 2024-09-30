@@ -20,13 +20,14 @@ exit_first = true
 ```
 
 #### `fuzzer_runs`
-The `fuzzer_runs` field specifies the number of runs of the random fuzzer.
+The `fuzzer_runs` field specifies the number of runs of the random fuzzer. 
 
 #### `fuzzer_seed`
 The `fuzzer_seed` field specifies the seed for the random fuzzer.
 
-#### Example of fuzzer configuration
 See more about [fuzzer](https://foundry-rs.github.io/starknet-foundry/testing/test-attributes.html#fuzzer).
+
+#### Example of fuzzer configuration
 
 ```toml
 [tool.snforge]
@@ -173,7 +174,7 @@ casm = true
 ```
 
 #### `build-external-contracts`
-The `build-external-contracts` allows to use contracts from your dependencies inside your tests. It accepts a list of strings, each of which is a reference to a contract defined in a dependency. The package that implements this contracts need to be declared as a dependency of the project in `[dependencies]`. See more about [compiling external contracts](https://docs.swmansion.com/scarb/docs/extensions/starknet/contract-target.html#compiling-external-contracts) in Scarb documentation.
+The `build-external-contracts` allows to use contracts from your dependencies inside your tests. It accepts a list of strings, each of which is a reference to a contract defined in a dependency. You need to add dependency which implements this contracts to your Scarb.toml. See more about [compiling external contracts](https://docs.swmansion.com/scarb/docs/extensions/starknet/contract-target.html#compiling-external-contracts) in Scarb documentation. 
 
 ```toml
 [[target.starknet-contract]]
