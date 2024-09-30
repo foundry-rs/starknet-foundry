@@ -145,7 +145,9 @@ mod tests {
     async fn to_runnable_non_existent_id() {
         let mocked_tests = TestTargetWithConfig {
             sierra_program: program_for_testing(),
-            casm_program: Arc::new(compile_sierra_to_casm(&program_for_testing().program).unwrap()),
+            casm_program: Arc::new(
+                compile_sierra_to_casm(&program_for_testing().program, None).unwrap(),
+            ),
             test_cases: vec![TestCaseWithConfig {
                 name: "crate1::do_thing".to_string(),
                 config: TestCaseConfig {

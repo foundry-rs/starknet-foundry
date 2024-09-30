@@ -52,7 +52,7 @@ impl StarknetContractArtifacts {
         let sierra = fs::read_to_string(sierra_path)?;
 
         let casm = compile_sierra_at_path(
-            starknet_contract.artifacts.sierra.as_str(),
+            &starknet_contract.artifacts.sierra,
             Some(base_path.as_std_path()),
             &SierraType::Contract,
         )?;

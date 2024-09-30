@@ -39,6 +39,7 @@ pub fn test_target_with_config(test_target_raw: TestTargetRaw) -> Result<TestTar
 
     let casm_program = Arc::new(compile_sierra_to_casm(
         &test_target_raw.sierra_program.program,
+        Some(&test_target_raw.sierra_file_path),
     )?);
 
     let sierra_program_registry =

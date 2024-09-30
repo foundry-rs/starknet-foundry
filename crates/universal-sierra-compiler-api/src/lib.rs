@@ -1,6 +1,7 @@
 use anyhow::{Context, Result};
 use cairo_lang_casm::hints::Hint;
 use cairo_lang_sierra::program::Program;
+use camino::Utf8PathBuf;
 use num_bigint::BigInt;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -37,12 +38,20 @@ pub struct AssembledCairoProgramWithSerde {
     pub hints: Vec<(usize, Vec<Hint>)>,
 }
 
-pub fn compile_sierra_to_casm(sierra_program: &Program) -> Result<AssembledProgramWithDebugInfo> {
-    let assembled_with_info_raw = compile_sierra(
-        &serde_json::to_value(sierra_program)?,
-        None,
-        &SierraType::Raw,
-    )?;
+pub fn compile_sierra_to_casm(
+    sierra_program: &Program,
+    sierra_file_path: Option<&Utf8PathBuf>,
+) -> Result<AssembledProgramWithDebugInfo> {
+    let assembled_with_info_raw = if let Some(sierra_file_path) = sierra_file_path {
+        compile_sierra_at_path(sierra_file_path, None, &SierraType::Raw)?
+    } else {
+        compile_sierra(
+            &serde_json::to_value(sierra_program)?,
+            None,
+            &SierraType::Raw,
+        )?
+    };
+
     let assembled_with_info: AssembledProgramWithDebugInfo =
         serde_json::from_str(&assembled_with_info_raw)?;
 
@@ -58,14 +67,14 @@ pub fn compile_sierra(
     let _ = temp_sierra_file.write(serde_json::to_vec(sierra_contract_class)?.as_slice())?;
 
     compile_sierra_at_path(
-        temp_sierra_file.path().to_str().unwrap(),
+        &Utf8PathBuf::from(temp_sierra_file.path().to_string_lossy().to_string()),
         current_dir,
         sierra_type,
     )
 }
 
 pub fn compile_sierra_at_path(
-    sierra_file_path: &str,
+    sierra_file_path: &Utf8PathBuf,
     current_dir: Option<&Path>,
     sierra_type: &SierraType,
 ) -> Result<String> {
@@ -79,7 +88,7 @@ pub fn compile_sierra_at_path(
         .args(vec![
             &("compile-".to_string() + &sierra_type.to_string()),
             "--sierra-path",
-            sierra_file_path,
+            sierra_file_path.as_str(),
         ])
         .command()
         .output_checked()
