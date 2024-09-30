@@ -26,8 +26,8 @@ fn call_and_invoke_global() {
 
     let balance_a = dispatcher_a.get_balance();
     let balance_b = dispatcher_b.get_balance();
-    assert(balance_a == 100, 'balance_a == 100');
-    assert(balance_b == 100, 'balance_b = 100');
+    assert_eq!(balance_a, 100);
+    assert_eq!(balance_b, 100);
 
     // Cancel the cheat
     stop_cheat_caller_address_global();
