@@ -35,7 +35,7 @@ max_fee: 180527346330500
 message: Account successfully created. Prefund generated address with at least <max_fee> STRK tokens or an equivalent amount of ETH tokens. It is good to send more in the case of higher demand.
 
 To see account creation details, visit:
-account: https://starkscan.co/search/34ae54182d04754d8043189afd315a808d4bea1a63862b3b05aa78b37756d7b
+account: https://starkscan.co/search/contract/34ae54182d04754d8043189afd315a808d4bea1a63862b3b05aa78b37756d7b
 ```
 
 
