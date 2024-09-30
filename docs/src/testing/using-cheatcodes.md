@@ -14,6 +14,10 @@ When testing smart contracts, often there are parts of code that are dependent o
 Instead of trying to replicate these conditions in tests, you can emulate them
 using [cheatcodes](../appendix/cheatcodes.md).
 
+> ⚠️ **Warning**
+> 
+> These examples make use of `assert_macros`, so it's recommended to get familiar with them first. [Learn more about `assert_macros`](../testing.md#writing-assertions-and-assert_macros-package)
+
 ## The Test Contract
 
 In this tutorial, we will be using the following Starknet contract:
