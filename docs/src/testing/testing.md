@@ -106,14 +106,14 @@ Tests: 0 passed, 0 failed, 0 skipped, 1 ignored, 0 filtered out
 To run only tests marked with the  `#[ignore]` attribute use `snforge test --ignored`.
 To run all tests regardless of the `#[ignore]` attribute use `snforge test --include-ignored`.
 
-## `assert_macros`
+## Writing Assertions and `assert_macros` Package
 > ⚠️ **Recommended only for development** ️⚠️
 > 
 >***Assert macros package provides a set of macros that can be used to write assertions such as `assert_eq!`.
 In order to use it, your project must have the `assert_macros` dependency added to the `Scarb.toml` file.
 These macros are very expensive to run on Starknet, as they result a huge amount of steps and are not recommended for production use. 
 They are only meant to be used in tests.
-For snforge `v0.31.0` and later, this dependency is added by default. But for earlier versions, you need to add it manually.***
+For snforge `v0.31.0` and later, this dependency is added automatically when creating a project using `snforge init`. But for earlier versions, you need to add it manually.***
 
 ```toml
 [dev-dependencies]
