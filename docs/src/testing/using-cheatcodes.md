@@ -100,7 +100,7 @@ We see that the second `increase_balance` fails since we cancelled the cheatcode
 
 ### Cheating Addresses Globally
 
-In case you want to cheat the caller address for all contracts, you can use the global cheatcode which has the `_global` suffix. Note, that we don't specify target, nor the span, because this cheatcode type is global and indefinite.
+In case you want to cheat the caller address for all contracts, you can use the global cheatcode which has the `_global` suffix. Note, that we don't specify target, nor the span, because this cheatcode type works globally and indefinitely.
 For more see [Cheating Globally](../appendix/cheatcodes/global.md).
 
 ```rust
