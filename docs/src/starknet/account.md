@@ -92,7 +92,7 @@ $ sncast \
 ```
 ### `account delete`
 
-Delete an account from `accounts-file` and its associated Scarb profile.
+Delete an account from `accounts-file` and its associated Scarb profile. If you pass this command, you will be asked to confirm the deletion.
 
 ```shell
 $ sncast \
@@ -101,10 +101,6 @@ $ sncast \
     --name some-name \
     --url http://127.0.0.1:5050 \
     --network alpha-sepolia
-
-Do you want to remove the account some-name deployed to network alpha-sepolia from local file my-account-file.json? (Y/n): Y
-command: account delete
-result: Account successfully removed
 ```
 
 For a detailed CLI description, see [account delete command reference](../appendix/sncast/account/delete.md).
