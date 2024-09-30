@@ -310,9 +310,9 @@ fn verify_version(version: u8) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::response::structs::PaddedFelt;
     use crate::state::state_file::ScriptTransactionOutput::ErrorResponse;
     use camino::Utf8PathBuf;
+    use conversions::padded_felt::PaddedFelt;
     use conversions::string::TryFromHexStr;
     use starknet::core::types::Felt;
     use tempfile::TempDir;

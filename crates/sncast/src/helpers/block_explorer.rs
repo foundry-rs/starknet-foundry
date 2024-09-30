@@ -1,8 +1,7 @@
-use crate::response::structs::PaddedFelt;
+use crate::{response::explorer_link::ExplorerError, Network};
+use conversions::padded_felt::PaddedFelt;
 use serde::{Deserialize, Serialize};
 use starknet::core::types::Felt;
-
-use crate::{response::explorer_link::ExplorerError, Network};
 
 const STARKSCAN: &str = "starkscan.co";
 const VOYAGER: &str = "voyager.online";
@@ -155,23 +154,24 @@ mod tests {
         response::{explorer_link::OutputLink, structs::DeployResponse},
         Network,
     };
+    use conversions::padded_felt::PaddedFelt;
     use regex::Regex;
     use starknet::macros::felt;
     use test_case::test_case;
 
     const MAINNET_RESPONSE: DeployResponse = DeployResponse {
-        contract_address: felt!(
+        contract_address: PaddedFelt(felt!(
             "0x03241d40a2af53a34274dd411e090ccac1ea80e0380a0303fe76d71b046cfecb"
-        ),
+        )),
         transaction_hash: felt!(
             "0x7605291e593e0c6ad85681d09e27a601befb85033bdf1805aabf5d84617cf68"
         ),
     };
 
     const SEPOLIA_RESPONSE: DeployResponse = DeployResponse {
-        contract_address: felt!(
+        contract_address: PaddedFelt(felt!(
             "0x0716b5f1e3bd760c489272fd6530462a09578109049e26e3f4c70492676eae17"
-        ),
+        )),
         transaction_hash: felt!(
             "0x1cde70aae10f79d2d1289c923a1eeca7b81a2a6691c32551ec540fa2cb29c33"
         ),

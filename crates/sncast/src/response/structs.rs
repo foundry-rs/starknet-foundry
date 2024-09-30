@@ -1,12 +1,11 @@
 use super::explorer_link::OutputLink;
 use crate::helpers::block_explorer::LinkProvider;
 use camino::Utf8PathBuf;
+use conversions::padded_felt::PaddedFelt;
 use conversions::serde::serialize::CairoSerialize;
 use indoc::formatdoc;
 use serde::{Deserialize, Serialize, Serializer};
 use starknet::core::types::Felt;
-use std::fmt;
-use std::fmt::{Formatter, LowerHex};
 
 pub struct Decimal(pub u64);
 
@@ -24,30 +23,6 @@ where
     S: Serializer,
 {
     serializer.serialize_str(&format!("{value:#}"))
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Deserialize, CairoSerialize)]
-pub struct PaddedFelt(pub Felt);
-
-impl Serialize for PaddedFelt {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        serializer.serialize_str(&format!("{:#064x}", &self.0))
-    }
-}
-
-impl LowerHex for PaddedFelt {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        fmt::LowerHex::fmt(&self.0, f)
-    }
-}
-
-impl From<Felt> for PaddedFelt {
-    fn from(value: Felt) -> Self {
-        Self(value)
-    }
 }
 
 pub trait CommandResponse: Serialize {}
