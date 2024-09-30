@@ -150,7 +150,7 @@ enable_for_tests = []
 ```
 
 ### `[[target.starknet-contract]]`
-Scarb supports registering targets that are handled by Scarb extensions. Such targets are called external. All fields are optional. See more about [targets](https://docs.swmansion.com/scarb/docs/reference/targets.html) in Scarb documentation.
+The `starknet-contract` target allows to build the package as a Starknet Contract. See more about [Starknet Contract Target](https://docs.swmansion.com/scarb/docs/extensions/starknet/contract-target.html#starknet-contract-target) in Scarb documentation.
 
 ```toml
 [[target.starknet-contract]]
@@ -158,7 +158,7 @@ Scarb supports registering targets that are handled by Scarb extensions. Such ta
 ```
 
 #### `sierra`
-The `sierra` fields specifies whether Sierra codegen should be enabled.
+See more about [Sierra contract class generation](https://docs.swmansion.com/scarb/docs/extensions/starknet/contract-target.html#sierra-contract-class-generation) in Scarb documentation.
 ```toml
 [[target.starknet-contract]]
 sierra = true
@@ -166,7 +166,7 @@ sierra = true
 
 #### `casm`
 
-The `casm` fields specifies whether Casm codegen should be enabled.
+See more about [CASM contract class generation](https://docs.swmansion.com/scarb/docs/extensions/starknet/contract-target.html#casm-contract-class-generation) in Scarb documentation.
 
 ```toml
 [[target.starknet-contract]]
