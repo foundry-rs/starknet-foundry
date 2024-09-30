@@ -1,6 +1,6 @@
 # The Manifest Format
 
-The `Scarb.toml` contains the package manifest that is needed in package compilation process. It can be used to provide configuration for Starknet Foundry Forge. For more, see [official Scarb docs](https://docs.swmansion.com/scarb/docs/reference/manifest.html).
+The `Scarb.toml` contains the package manifest that is needed in package compilation process. It can be used to provide configuration for Starknet Foundry Forge. For more, see [official Scarb documentation](https://docs.swmansion.com/scarb/docs/reference/manifest.html).
 
 ## `Scarb.toml` Contents
 
@@ -12,8 +12,7 @@ The `Scarb.toml` contains the package manifest that is needed in package compila
 Allows to configure `snforge` settings. All fields are optional.
 
 #### `exit_first`
-The `exit_first` fields specifies whether to stop tests execution immediately upon the first failure.
-See more about [stopping test execution after first failed test](https://foundry-rs.github.io/starknet-foundry/testing/running-tests.html#stopping-test-execution-after-first-failed-test).
+The `exit_first` fields specifies whether to stop tests execution immediately upon the first failure. See more about [stopping test execution after first failed test](https://foundry-rs.github.io/starknet-foundry/testing/running-tests.html#stopping-test-execution-after-first-failed-test).
 
 ```toml
 [tool.snforge]
@@ -40,9 +39,7 @@ fuzzer_seed = 1111
 [[tool.snforge.fork]]
 # ...
 ```
-Allows to configure forked tests. If defined, all fields outlined below must also be defined.
-
-See more about [fork testing](https://foundry-rs.github.io/starknet-foundry/testing/test-attributes.html#fork).
+Allows to configure forked tests. If defined, all fields outlined below must also be defined. See more about [fork testing](https://foundry-rs.github.io/starknet-foundry/testing/test-attributes.html#fork).
 
 #### `name`
 The `name` field specifies the name of the fork.
@@ -91,7 +88,7 @@ Adjust Cairo compiler configuration parameters when compiling this package. Thes
 ```
 
 #### `unstable-add-statements-code-locations-debug-info`
-See [`unstable-add-statements-code-locations-debug-info`](https://docs.swmansion.com/scarb/docs/reference/manifest.html#unstable-add-statements-code-locations-debug-info) in Scarb docs.
+See [`unstable-add-statements-code-locations-debug-info`](https://docs.swmansion.com/scarb/docs/reference/manifest.html#unstable-add-statements-code-locations-debug-info) in Scarb documentation.
 
 ```toml
 [profile.dev.cairo]
@@ -99,14 +96,14 @@ unstable-add-statements-code-locations-debug-info = true
 ```
 
 #### `unstable-add-statements-functions-debug-info`
-See [`unstable-add-statements-functions-debug-info`](https://docs.swmansion.com/scarb/docs/reference/manifest.html#unstable-add-statements-functions-debug-info) in Scarb docs.
+See [`unstable-add-statements-functions-debug-info`](https://docs.swmansion.com/scarb/docs/reference/manifest.html#unstable-add-statements-functions-debug-info) in Scarb documentation.
 ```toml
 [profile.dev.cairo]
 unstable-add-statements-functions-debug-info = true
 ```
 
 #### `inlining-strategy`
-See [`inlining-strategy`](https://docs.swmansion.com/scarb/docs/reference/manifest.html#inlining-strategy) in Scarb docs.
+See [`inlining-strategy`](https://docs.swmansion.com/scarb/docs/reference/manifest.html#inlining-strategy) in Scarb documentation.
 ```toml
 [profile.dev.cairo]
 inlining-strategy = "avoid"
@@ -129,7 +126,7 @@ A package defines a set of named features in the `[features]` section of `Scarb.
 
 #### `<feature-name>`
 The `<feature-name>` field specifies the name of the feature and list of other features that should be enabled with it.
-See [features](https://docs.swmansion.com/scarb/docs/reference/conditional-compilation.html#features) in Scarb docs.
+See [features](https://docs.swmansion.com/scarb/docs/reference/conditional-compilation.html#features) in Scarb documentation.
 ```toml
 [features]
 enable_for_tests = []
@@ -152,9 +149,7 @@ enable_for_tests = []
 ```
 
 ### `[[target.starknet-contract]]`
-Scarb supports registering targets that are handled by Scarb extensions. Such targets are called external. All fields are optional.
-
-See more about [targets](https://docs.swmansion.com/scarb/docs/reference/targets.html) in scarb docs.
+Scarb supports registering targets that are handled by Scarb extensions. Such targets are called external. All fields are optional. See more about [targets](https://docs.swmansion.com/scarb/docs/reference/targets.html) in Scarb documentation.
 
 ```toml
 [[target.starknet-contract]]
@@ -178,7 +173,8 @@ casm = true
 ```
 
 #### `build-external-contracts`
-The `build-external-contracts` accepts a list of strings, each of which is a reference to a contract defined in a dependency. The package that implements this contracts need to be declared as a dependency of the project in `[dependencies]`.
+The `build-external-contracts` allows to use contracts from your dependencies inside your tests. It accepts a list of strings, each of which is a reference to a contract defined in a dependency. The package that implements this contracts need to be declared as a dependency of the project in `[dependencies]`. See more about [compiling external contracts](https://docs.swmansion.com/scarb/docs/extensions/starknet/contract-target.html#compiling-external-contracts) in Scarb documentation.
+
 ```toml
 [[target.starknet-contract]]
 build-external-contracts = ["openzeppelin::account::account::Account"]
