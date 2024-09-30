@@ -27,9 +27,7 @@ $ sncast \
     account create \
     --url http://127.0.0.1:5050 \
     --name some-name
-```
 
-```
 command: account create
 add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
 address: 0x34ae54182d04754d8043189afd315a808d4bea1a63862b3b05aa78b37756d7b
@@ -65,9 +63,7 @@ $ sncast \
 	--name some-name \
 	--fee-token strk \
 	--max-fee 9999999999999
-```
 
-```
 command: account deploy
 transaction_hash: 0x20b20896ce63371ef015d66b4dd89bf18c5510a840b4a85a43a983caa6e2579
 
@@ -105,9 +101,7 @@ $ sncast \
     --name some-name \
     --url http://127.0.0.1:5050 \
     --network alpha-sepolia
-```
 
-```
 Do you want to remove the account some-name deployed to network alpha-sepolia from local file my-account-file.json? (Y/n): Y
 command: account delete
 result: Account successfully removed
@@ -143,9 +137,7 @@ legacy: false
 To show private keys too, run with `--display-private-keys` or `-p`
 ```shell
 $ sncast --accounts-file my-account-file.json account list --display-private-keys
-```
 
-```shell
 Available accounts (at <current-directory>/my-account-file.json):
 - user0
 private key: 0x1e9038bdc68ce1d27d54205256988e85
