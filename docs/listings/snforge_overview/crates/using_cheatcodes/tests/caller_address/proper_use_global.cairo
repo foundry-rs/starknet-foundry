@@ -14,8 +14,8 @@ fn call_and_invoke_global() {
 
     let balance_a = dispatcher_a.get_balance();
     let balance_b = dispatcher_b.get_balance();
-    assert(balance_a == 0, 'balance_a == 0');
-    assert(balance_b == 0, 'balance_b == 0');
+    assert_eq!(balance_a, 0);
+    assert_eq!(balance_b, 0);
 
     // Change the caller address to 123, both targets a and b will be affected
     // global cheatcodes work indefinitely until stopped
