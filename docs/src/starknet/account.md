@@ -137,7 +137,7 @@ $ sncast \
 
 ## Advanced Use Cases
 
-### Additional features delivered with `account add/create`
+### Additional features provided with `account add/create`
 
 #### Specifying [`--accounts-file`](../appendix/sncast/account/create.md#create)
 
