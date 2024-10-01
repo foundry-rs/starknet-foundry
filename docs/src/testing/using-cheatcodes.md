@@ -102,6 +102,15 @@ Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 4 filtered out
 
 We see that the second `increase_balance` fails since we cancelled the cheatcode.
 
+### Cheating Addresses Globally
+
+In case you want to cheat the caller address for all contracts, you can use the global cheatcode which has the `_global` suffix. Note, that we don't specify target, nor the span, because this cheatcode type works globally and indefinitely.
+For more see [Cheating Globally](../appendix/cheatcodes/global.md).
+
+```rust
+{{#include ../../listings/snforge_overview/crates/using_cheatcodes/tests/caller_address/proper_use_global.cairo}}
+```
+
 ### Cheating the Constructor
 
 Most of the cheatcodes like `cheat_caller_address`, `mock_call`, `cheat_block_timestamp`, `cheat_block_number`, `elect` do work in the constructor of the contracts.
