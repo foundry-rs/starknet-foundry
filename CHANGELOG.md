@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - It's possible to pass common arguments both before and after subcommand name, e.g. both `sncast --account default declare --contract_name name ...` and `sncast declare --account default --contract_name name ...` are allowed now.
+- Fixed `account delete` command. Now it isn't required to pass `--url` each time. It is needed to provide neither `--url` or `--network` argument only.
 
 ## [0.31.0] - 2024-09-26
 
