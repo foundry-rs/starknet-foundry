@@ -87,19 +87,6 @@ $ sncast \
 
 ## Advanced Use Cases
 
-### Additional features provided with `account add/create`
-
-#### Specifying [`--accounts-file`](../appendix/sncast/account/create.md#create)
-
-Account information such as `private_key`, `class_hash`, `address` etc. will be saved to the file specified by `--accounts-file` argument, 
-which is `~/.starknet_accounts/starknet_open_zeppelin_accounts.json` by default.
-
-#### Specifying [`--add-profile`](../appendix/sncast/account/create.md#--add-profile-name)
-
-When the `--add-profile` flag is used, you won't need to include the `--url` or `--accounts-file` parameters 
-(the latter being necessary if your account information was stored in a custom file).
-Simply use the `--profile` argument followed by the account name in subsequent requests.
-
 ### [`account create`](../appendix/sncast/account/create.md) With Salt Argument
 
 Salt will not be randomly generated if it's specified with `--salt`.
@@ -167,6 +154,19 @@ $ sncast \
 ```
 
 For a detailed CLI description, see [account delete command reference](../appendix/sncast/account/delete.md).
+
+### Additional features provided with `account add/create`
+
+#### Specifying [`--accounts-file`](../appendix/sncast/account/create.md#create)
+
+Account information such as `private_key`, `class_hash`, `address` etc. will be saved to the file specified by `--accounts-file` argument, 
+which is `~/.starknet_accounts/starknet_open_zeppelin_accounts.json` by default.
+
+#### Specifying [`--add-profile`](../appendix/sncast/account/create.md#--add-profile-name)
+
+When the `--add-profile` flag is used, you won't need to include the `--url` or `--accounts-file` parameters 
+(the latter being necessary if your account information was stored in a custom file).
+Simply use the `--profile` argument followed by the account name in subsequent requests.
 
 ### Using Keystore and Starkli Account
 
