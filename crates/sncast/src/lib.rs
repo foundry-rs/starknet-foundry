@@ -266,6 +266,19 @@ pub async fn get_account<'a>(
     Ok(account)
 }
 
+pub async fn get_contract_class(
+    class_hash: Felt,
+    provider: &JsonRpcClient<HttpTransport>,
+) -> Result<ContractClass> {
+    provider
+        .get_class(BlockId::Tag(BlockTag::Latest), class_hash)
+        .await
+        .map_err(handle_rpc_error)
+        .context(format!(
+            "Couldn't retrieve contract class with hash: {class_hash:#x}"
+        ))
+}
+
 async fn build_account(
     account_data: AccountData,
     chain_id: Felt,
