@@ -71,16 +71,6 @@ For a detailed CLI description, see [account deploy command reference](../append
 > You can also choose to pay in Ether by setting `--fee-token` to `eth`.
 
 ```shell
-$ sncast \
-    --accounts-file my-account-file.json \
-    account delete \
-    --name some-name \
-    --network alpha-sepolia
-```
-
-For a detailed CLI description, see [account delete command reference](../appendix/sncast/account/delete.md).
-
-```shell
 $ sncast account list
 ```
 
@@ -168,6 +158,16 @@ $ sncast \
 ### `account delete`
 
 Delete an account from `accounts-file` and its associated Scarb profile. If you pass this command, you will be asked to confirm the deletion.
+
+```shell
+$ sncast \
+    --accounts-file my-account-file.json \
+    account delete \
+    --name some-name \
+    --network alpha-sepolia
+```
+
+For a detailed CLI description, see [account delete command reference](../appendix/sncast/account/delete.md).
 
 ### Using Keystore and Starkli Account
 
