@@ -777,7 +777,7 @@ async fn test_happy_case_enum_function_nested_struct_variant_serialized_input() 
 }
 
 #[tokio::test]
-async fn test_enum_funcion_invalid_variant_cairo_expression_input() {
+async fn test_enum_function_invalid_variant_cairo_expression_input() {
     let contract_class = CLASS.get_or_init(init_class).await.to_owned();
 
     let input = vec![String::from("Enum::InvalidVariant")];
