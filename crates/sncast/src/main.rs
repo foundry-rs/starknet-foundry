@@ -72,7 +72,7 @@ struct Cli {
     /// Account to be used for contract declaration;
     /// When using keystore (`--keystore`), this should be a path to account file
     /// When using accounts file, this should be an account name
-    #[clap(short = 'a', long, global = true)]
+    #[clap(long, global = true)]
     account: Option<String>,
 
     /// Path to the file holding accounts info
