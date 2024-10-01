@@ -37,10 +37,7 @@ pub(super) fn build_representation(
         Expr::InlineMacro(item) => item.transform(expected_type, abi, db),
         Expr::Tuple(item) => item.transform(expected_type, abi, db),
         _ => {
-            bail!(
-                r#"Invalid argument type: unsupported expression for type "{}""#,
-                expected_type
-            )
+            bail!(r#"Invalid argument type: unsupported expression for type "{expected_type}""#)
         }
     }
 }

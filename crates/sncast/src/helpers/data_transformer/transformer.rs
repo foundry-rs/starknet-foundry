@@ -40,18 +40,19 @@ pub fn transform(
 
     let db = SimpleParserDatabase::default();
 
-    let result_for_cairo_like = process_as_cairo_expressions(calldata, function, &abi, &db)
-        .context("Error while processing Cairo-like calldata");
+    let result_for_cairo_expression_input =
+        process_as_cairo_expressions(calldata, function, &abi, &db)
+            .context("Error while processing Cairo-like calldata");
 
-    if result_for_cairo_like.is_ok() {
-        return result_for_cairo_like;
+    if result_for_cairo_expression_input.is_ok() {
+        return result_for_cairo_expression_input;
     }
 
-    let result_for_already_serialized = process_as_serialized(calldata, &abi, &db)
+    let result_for_serialized_input = process_as_serialized(calldata, &abi, &db)
         .context("Error while processing serialized calldata");
 
-    match result_for_already_serialized {
-        Err(_) => result_for_cairo_like,
+    match result_for_serialized_input {
+        Err(_) => result_for_cairo_expression_input,
         ok => ok,
     }
 }
@@ -68,8 +69,8 @@ fn process_as_cairo_expressions(
     ensure!(
         n_inputs == n_arguments,
         "Invalid number of arguments: passed {}, expected {}",
+        n_arguments,
         n_inputs,
-        n_arguments
     );
 
     function

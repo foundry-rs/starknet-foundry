@@ -6,7 +6,7 @@ use conversions::{
     u512::CairoU512,
 };
 use starknet::core::types::Felt;
-use std::str::FromStr;
+use std::{any::type_name, str::FromStr};
 
 #[derive(Debug)]
 pub(super) struct CalldataStructField(AllowedCalldataArguments);
@@ -80,7 +80,7 @@ where
 {
     value
         .parse::<T>()
-        .context(neat_parsing_error_message(value, stringify!(T), None))
+        .context(neat_parsing_error_message(value, type_name::<T>(), None))
 }
 
 impl CalldataSingleArgument {
