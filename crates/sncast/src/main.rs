@@ -430,12 +430,8 @@ async fn run_async_command(
             }
 
             account::Commands::Delete(delete) => {
-                let provider = delete.rpc.get_provider(&config).await?;
-
-                let network_name = match delete.network {
-                    Some(network) => network,
-                    None => chain_id_to_network_name(get_chain_id(&provider).await?),
-                };
+                let network_name =
+                    starknet_commands::account::delete::get_network_name(&delete, &config).await?;
 
                 let result = starknet_commands::account::delete::delete(
                     &delete.name,
