@@ -170,7 +170,7 @@ jobs:
           scarb-version: "2.7.0"
       - uses: software-mansion/setup-universal-sierra-compiler@v1
       - name: Run tests
-        run: cargo test --release -p sncast
+        run: cargo test -p sncast
 
   test-conversions:
     name: Test Conversions
