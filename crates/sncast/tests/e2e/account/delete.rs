@@ -11,12 +11,35 @@ pub fn test_no_accounts_in_network() {
         ACCOUNT_FILE_PATH,
         "account",
         "delete",
-        "--url",
-        URL,
         "--name",
         "user99",
         "--network",
         "my-custom-network",
+    ];
+
+    let snapbox = runner(&args);
+    let output = snapbox.assert().success();
+
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        command: account delete
+        error: No accounts defined for network = my-custom-network
+        "},
+    );
+}
+
+#[test]
+pub fn test_no_accounts_in_network_url() {
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "account",
+        "delete",
+        "--url",
+        URL,
+        "--name",
+        "user99",
     ];
 
     let snapbox = runner(&args);
@@ -68,8 +91,6 @@ pub fn test_delete_abort() {
         &accounts_file_name,
         "account",
         "delete",
-        "--url",
-        URL,
         "--name",
         "user3",
         "--network",
@@ -101,12 +122,37 @@ pub fn test_happy_case() {
         &accounts_file_name,
         "account",
         "delete",
-        "--url",
-        URL,
         "--name",
         "user3",
         "--network",
         "custom-network",
+    ];
+
+    // Run test with an affirmative user input
+    let snapbox = runner(&args).current_dir(temp_dir.path()).stdin("Y");
+
+    snapbox.assert().success().stdout_matches(indoc! {r"
+        command: account delete
+        result: Account successfully removed
+    "});
+}
+
+#[test]
+pub fn test_happy_case_url() {
+    // Creating dummy accounts test file
+    let accounts_file_name = "temp_accounts.json";
+    let temp_dir = create_tempdir_with_accounts_file(accounts_file_name, true);
+
+    // Now delete dummy account
+    let args = vec![
+        "--accounts-file",
+        &accounts_file_name,
+        "account",
+        "delete",
+        "--url",
+        URL,
+        "--name",
+        "user3",
     ];
 
     // Run test with an affirmative user input
@@ -157,8 +203,6 @@ pub fn test_happy_case_with_yes_flag() {
         &accounts_file_name,
         "account",
         "delete",
-        "--url",
-        URL,
         "--name",
         "user3",
         "--network",
@@ -175,4 +219,36 @@ pub fn test_happy_case_with_yes_flag() {
         command: account delete
         result: Account successfully removed
     "});
+}
+
+#[test]
+pub fn test_redundant_arguments() {
+    // Creating dummy accounts test file
+    let accounts_file_name = "temp_accounts.json";
+    let temp_dir = create_tempdir_with_accounts_file(accounts_file_name, true);
+
+    // Now delete dummy account
+    let args = vec![
+        "--accounts-file",
+        &accounts_file_name,
+        "account",
+        "delete",
+        "--url",
+        URL,
+        "--name",
+        "user3",
+        "--network",
+        "custom-network",
+    ];
+
+    // Run test with an affirmative user input
+    let snapbox = runner(&args).current_dir(temp_dir.path()).stdin("Y");
+
+    let output = snapbox.assert().failure();
+    assert_stderr_contains(
+        output,
+        indoc! {r"
+        Error: Provide either `rpc` or `network`
+        "},
+    );
 }
