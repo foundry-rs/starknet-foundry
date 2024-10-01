@@ -1,6 +1,8 @@
 use std::convert::Infallible;
 
+mod biguint;
 pub mod byte_array;
+pub mod bytes31;
 pub mod class_hash;
 pub mod contract_address;
 pub mod entrypoint_selector;
@@ -10,6 +12,10 @@ pub mod nonce;
 pub mod primitive;
 pub mod serde;
 pub mod string;
+pub mod u256;
+pub mod u384;
+pub mod u512;
+pub mod u96;
 
 pub trait FromConv<T>: Sized {
     fn from_(value: T) -> Self;
