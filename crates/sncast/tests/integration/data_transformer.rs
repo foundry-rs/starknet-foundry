@@ -1,6 +1,4 @@
 use core::fmt;
-use std::u32;
-
 use itertools::Itertools;
 use primitive_types::U256;
 use shared::rpc::create_rpc_client;
@@ -8,6 +6,7 @@ use sncast::helpers::data_transformer::transformer::transform;
 use starknet::core::types::{BlockId, BlockTag, ContractClass, Felt};
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::Provider;
+use std::ops::Not;
 use test_case::test_case;
 use tokio::sync::OnceCell;
 
@@ -38,10 +37,9 @@ trait Contains<T: fmt::Debug + Eq> {
 impl Contains<&str> for anyhow::Error {
     fn assert_contains(&self, value: &str) {
         self.chain()
-            .into_iter()
-            .find(|err| err.to_string().contains(value))
-            .is_none()
-            .then(|| panic!("{value:?}\nnot found in\n{:#?}", self));
+            .any(|err| err.to_string().contains(value))
+            .not()
+            .then(|| panic!("{value:?}\nnot found in\n{self:#?}"));
     }
 }
 
