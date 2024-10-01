@@ -7,6 +7,7 @@ use conversions::serde::serialize::CairoSerialize;
 use helpers::constants::{KEYSTORE_PASSWORD_ENV_VAR, UDC_ADDRESS};
 use rand::rngs::OsRng;
 use rand::RngCore;
+use response::errors::SNCastStarknetError;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::{Deserializer, Value};
@@ -270,13 +271,22 @@ pub async fn get_contract_class(
     class_hash: Felt,
     provider: &JsonRpcClient<HttpTransport>,
 ) -> Result<ContractClass> {
-    provider
+    let result = provider
         .get_class(BlockId::Tag(BlockTag::Latest), class_hash)
-        .await
-        .map_err(handle_rpc_error)
-        .context(format!(
-            "Couldn't retrieve contract class with hash: {class_hash:#x}"
-        ))
+        .await;
+
+    if let Err(ProviderError::StarknetError(ClassHashNotFound)) = result {
+        // Imitate error thrown on chain to achieve particular error message (Issue #2554)
+        let artificial_transaction_revert_error = SNCastProviderError::StarknetError(
+            SNCastStarknetError::ContractError(ContractErrorData {
+                revert_error: format!("Class with hash {class_hash:#x} is not declared"),
+            }),
+        );
+
+        return Err(handle_rpc_error(artificial_transaction_revert_error));
+    }
+
+    result.map_err(handle_rpc_error)
 }
 
 async fn build_account(
@@ -468,15 +478,25 @@ pub async fn check_if_legacy_contract(
 pub async fn get_class_hash_by_address(
     provider: &JsonRpcClient<HttpTransport>,
     address: Felt,
-) -> Result<Option<Felt>> {
-    match provider
+) -> Result<Felt> {
+    let result = provider
         .get_class_hash_at(BlockId::Tag(Pending), address)
-        .await
-    {
-        Ok(class_hash) => Ok(Some(class_hash)),
-        Err(StarknetError(ContractNotFound)) => Ok(None),
-        Err(err) => Err(handle_rpc_error(err)),
+        .await;
+
+    if let Err(ProviderError::StarknetError(ContractNotFound)) = result {
+        // Imitate error thrown on chain to achieve particular error message (Issue #2554)
+        let artificial_transaction_revert_error = SNCastProviderError::StarknetError(
+            SNCastStarknetError::ContractError(ContractErrorData {
+                revert_error: format!("Requested contract address {address:#x} is not deployed",),
+            }),
+        );
+
+        return Err(handle_rpc_error(artificial_transaction_revert_error));
     }
+
+    result.map_err(handle_rpc_error).with_context(|| {
+        format!("Couldn't retrieve class hash of a contract with address {address:#x}")
+    })
 }
 
 #[must_use]

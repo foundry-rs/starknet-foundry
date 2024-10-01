@@ -30,6 +30,32 @@ fn test_happy_case() {
     "});
 }
 
+#[test]
+fn test_happy_case_cairo_expression_calldata() {
+    let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "call",
+        "--url",
+        URL,
+        "--contract-address",
+        MAP_CONTRACT_ADDRESS_SEPOLIA,
+        "--function",
+        "put",
+        "--calldata",
+        "0x0_felt252, 0x2137",
+        "--block-id",
+        "latest",
+    ];
+
+    let snapbox = runner(&args);
+
+    snapbox.assert().success().stdout_eq(indoc! {r"
+        command: call
+        response: []
+    "});
+}
+
 #[tokio::test]
 async fn test_call_after_storage_changed() {
     invoke_contract(
@@ -78,14 +104,11 @@ async fn test_contract_does_not_exist() {
     ];
 
     let snapbox = runner(&args);
-    let output = snapbox.assert().success();
+    let output = snapbox.assert().failure();
 
     assert_stderr_contains(
         output,
-        indoc! {r"
-        command: call
-        error: There is no contract at the specified address
-        "},
+        "Error: An error occurred in the called contract[..]Requested contract address[..]is not deployed[..]",
     );
 }
 
