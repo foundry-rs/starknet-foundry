@@ -75,7 +75,6 @@ $ sncast \
     --accounts-file my-account-file.json \
     account delete \
     --name some-name \
-    --url http://127.0.0.1:5050 \
     --network alpha-sepolia
 ```
 
