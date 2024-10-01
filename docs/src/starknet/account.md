@@ -20,7 +20,7 @@ To remove an account from the accounts file, you can use  `sncast account delete
 
 Do the following to start interacting with the Starknet:
 
-#### create account with the `sncast account create` command
+#### Create account with the `sncast account create` command
 
 ```shell
 $ sncast \
@@ -40,7 +40,7 @@ account: https://starkscan.co/search/contract/34ae54182d04754d8043189afd315a808d
 
 For a detailed CLI description, see [account create command reference](../appendix/sncast/account/create.md).
 
-#### prefund generated address with tokens
+#### Prefund generated address with tokens
 
 To deploy an account in the next step, you need to prefund it with either STRK or an equivalent amount of ETH tokens (read more about them [here](https://docs.starknet.io/architecture-and-concepts/economics-of-starknet/)).
 You can do it both by sending tokens from another starknet account or by bridging them with [StarkGate](https://starkgate.starknet.io/).
@@ -48,7 +48,7 @@ You can do it both by sending tokens from another starknet account or by bridgin
  >💡 **Info**
 > When deploying on a Sepolia test network, you can also fund your account with artificial tokens via the [Starknet Faucet](https://starknet-faucet.vercel.app)
 >![image](images/starknet-faucet-sepolia.png)
-#### deploy account with the `sncast account deploy` command
+#### Deploy account with the `sncast account deploy` command
 
 ```shell
 $ sncast \
