@@ -23,6 +23,7 @@ use sncast::{
     chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_default_state_file_name,
     NumbersFormat, ValidatedWaitParams, WaitForTx,
 };
+use starknet::accounts::ConnectedAccount;
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::Provider;
 use starknet_commands::account::list::print_account_list;
@@ -221,9 +222,19 @@ async fn run_async_command(
         }
 
         Commands::Deploy(deploy) => {
-            let provider = deploy.rpc.get_provider(&config).await?;
-
             deploy.validate()?;
+
+            let fee_token = deploy.token_from_version();
+
+            let Deploy {
+                constructor_calldata,
+                fee_args,
+                rpc,
+                ..
+            } = deploy;
+
+            let provider = rpc.get_provider(&config).await?;
+
             let account = get_account(
                 &config.account,
                 &config.accounts_file,
@@ -232,9 +243,24 @@ async fn run_async_command(
             )
             .await?;
 
-            let result = starknet_commands::deploy::deploy(deploy, &account, wait_config)
-                .await
-                .map_err(handle_starknet_command_error);
+            let fee_settings = fee_args
+                .clone()
+                .fee_token(fee_token)
+                .try_into_fee_settings(&provider, account.block_id())
+                .await?;
+
+            let result = starknet_commands::deploy::deploy(
+                deploy.class_hash,
+                &constructor_calldata,
+                deploy.salt,
+                deploy.unique,
+                fee_settings,
+                deploy.nonce,
+                &account,
+                wait_config,
+            )
+            .await
+            .map_err(handle_starknet_command_error);
 
             print_command_result("deploy", &result, numbers_format, output_format)?;
             print_block_explorer_link_if_allowed(
@@ -247,16 +273,24 @@ async fn run_async_command(
             Ok(())
         }
 
-        Commands::Call(call) => {
-            let provider = call.rpc.get_provider(&config).await?;
+        Commands::Call(Call {
+            contract_address,
+            function,
+            calldata,
+            block_id,
+            rpc,
+        }) => {
+            let provider = rpc.get_provider(&config).await?;
 
-            let block_id = get_block_id(&call.block_id)?;
+            let block_id = get_block_id(&block_id)?;
+
+            let entry_point_selector = get_selector_from_name(&function)
+                .context("Failed to convert entry point selector to FieldElement")?;
 
             let result = starknet_commands::call::call(
-                call.contract_address,
-                get_selector_from_name(&call.function)
-                    .context("Failed to convert entry point selector to FieldElement")?,
-                call.calldata,
+                contract_address,
+                entry_point_selector,
+                calldata,
                 &provider,
                 block_id.as_ref(),
             )
@@ -268,9 +302,21 @@ async fn run_async_command(
         }
 
         Commands::Invoke(invoke) => {
-            let provider = invoke.rpc.get_provider(&config).await?;
-
             invoke.validate()?;
+
+            let fee_token = invoke.token_from_version();
+
+            let Invoke {
+                contract_address,
+                function,
+                calldata,
+                fee_args,
+                rpc,
+                nonce,
+                ..
+            } = invoke;
+
+            let provider = rpc.get_provider(&config).await?;
 
             let account = get_account(
                 &config.account,
@@ -279,10 +325,18 @@ async fn run_async_command(
                 config.keystore,
             )
             .await?;
+
+            let fee_args = fee_args.fee_token(fee_token);
+
+            let selector = get_selector_from_name(&function)
+                .context("Failed to convert entry point selector to FieldElement")?;
+
             let result = starknet_commands::invoke::invoke(
-                invoke.clone(),
-                get_selector_from_name(&invoke.function)
-                    .context("Failed to convert entry point selector to FieldElement")?,
+                contract_address,
+                calldata,
+                nonce,
+                fee_args,
+                selector,
                 &account,
                 wait_config,
             )
