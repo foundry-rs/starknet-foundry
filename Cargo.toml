@@ -8,6 +8,7 @@ members = [
     "crates/cheatnet",
     "crates/conversions",
     "crates/conversions/cairo-serde-macros",
+    "crates/data-transformer",
     "crates/runtime",
     "crates/scarb-api",
     "crates/configuration",

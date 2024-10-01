@@ -28,6 +28,7 @@ indoc.workspace = true
 tempfile.workspace = true
 runtime = { path = "../runtime" }
 conversions = { path = "../conversions" }
+data-transformer = { path = "../data-transformer" }
 configuration = { path = "../configuration" }
 shared = { path = "../shared" }
 cairo-lang-runner.workspace = true
