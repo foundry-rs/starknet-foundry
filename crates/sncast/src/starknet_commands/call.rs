@@ -18,9 +18,9 @@ pub struct Call {
     #[clap(short, long)]
     pub function: String,
 
-    /// Arguments of the called function (list of hex)
+    /// Arguments of the called function (serialized as a series of felts or written as comma-separated expressions in Cairo syntax)
     #[clap(short, long, value_delimiter = ' ', num_args = 1..)]
-    pub calldata: Vec<Felt>,
+    pub calldata: Option<Vec<String>>,
 
     /// Block identifier on which call should be performed.
     /// Possible values: pending, latest, block hash (0x prefixed string)

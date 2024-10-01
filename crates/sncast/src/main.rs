@@ -6,6 +6,7 @@ use crate::starknet_commands::{
 };
 use anyhow::{Context, Result};
 use configuration::load_global_config;
+use data_transformer::Calldata;
 use sncast::response::explorer_link::print_block_explorer_link_if_allowed;
 use sncast::response::print::{print_command_result, OutputFormat};
 
@@ -20,8 +21,8 @@ use sncast::helpers::scarb_utils::{
 };
 use sncast::response::errors::handle_starknet_command_error;
 use sncast::{
-    chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_default_state_file_name,
-    NumbersFormat, ValidatedWaitParams, WaitForTx,
+    chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_class_hash_by_address,
+    get_contract_class, get_default_state_file_name, NumbersFormat, ValidatedWaitParams, WaitForTx,
 };
 use starknet::accounts::ConnectedAccount;
 use starknet::core::utils::get_selector_from_name;
@@ -249,9 +250,19 @@ async fn run_async_command(
                 .try_into_fee_settings(&provider, account.block_id())
                 .await?;
 
+            // safe to unwrap because "constructor" is a standardized name
+            let selector = get_selector_from_name("constructor").unwrap();
+
+            let contract_class = get_contract_class(deploy.class_hash, &provider).await?;
+
+            let serialized_calldata = constructor_calldata
+                .map(|data| Calldata::from(data).serialized(contract_class, &selector))
+                .transpose()?
+                .unwrap_or_default();
+
             let result = starknet_commands::deploy::deploy(
                 deploy.class_hash,
-                &constructor_calldata,
+                &serialized_calldata,
                 deploy.salt,
                 deploy.unique,
                 fee_settings,
@@ -283,14 +294,21 @@ async fn run_async_command(
             let provider = rpc.get_provider(&config).await?;
 
             let block_id = get_block_id(&block_id)?;
+            let class_hash = get_class_hash_by_address(&provider, contract_address).await?;
+            let contract_class = get_contract_class(class_hash, &provider).await?;
 
-            let entry_point_selector = get_selector_from_name(&function)
+            let selector = get_selector_from_name(&function)
                 .context("Failed to convert entry point selector to FieldElement")?;
+
+            let serialized_calldata = calldata
+                .map(|data| Calldata::from(data).serialized(contract_class, &selector))
+                .transpose()?
+                .unwrap_or_default();
 
             let result = starknet_commands::call::call(
                 contract_address,
-                entry_point_selector,
-                calldata,
+                selector,
+                serialized_calldata,
                 &provider,
                 block_id.as_ref(),
             )
@@ -331,9 +349,17 @@ async fn run_async_command(
             let selector = get_selector_from_name(&function)
                 .context("Failed to convert entry point selector to FieldElement")?;
 
+            let class_hash = get_class_hash_by_address(&provider, contract_address).await?;
+            let contract_class = get_contract_class(class_hash, &provider).await?;
+
+            let serialized_calldata = calldata
+                .map(|data| Calldata::from(data).serialized(contract_class, &selector))
+                .transpose()?
+                .unwrap_or_default();
+
             let result = starknet_commands::invoke::invoke(
                 contract_address,
-                calldata,
+                serialized_calldata,
                 nonce,
                 fee_args,
                 selector,

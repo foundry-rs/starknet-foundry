@@ -23,9 +23,9 @@ pub struct Deploy {
     #[clap(short = 'g', long)]
     pub class_hash: Felt,
 
-    /// Calldata for the contract constructor
+    /// Arguments of the called function (serialized as a series of felts or written as comma-separated expressions in Cairo syntax)
     #[clap(short, long, value_delimiter = ' ', num_args = 1..)]
-    pub constructor_calldata: Vec<Felt>,
+    pub constructor_calldata: Option<Vec<String>>,
 
     /// Salt for the address
     #[clap(short, long)]

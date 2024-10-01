@@ -24,9 +24,9 @@ pub struct Invoke {
     #[clap(short, long)]
     pub function: String,
 
-    /// Calldata for the invoked function
+    /// Arguments of the called function (serialized as a series of felts or written as comma-separated expressions in Cairo syntax)
     #[clap(short, long, value_delimiter = ' ', num_args = 1..)]
-    pub calldata: Vec<Felt>,
+    pub calldata: Option<Vec<String>>,
 
     #[clap(flatten)]
     pub fee_args: FeeArgs,
