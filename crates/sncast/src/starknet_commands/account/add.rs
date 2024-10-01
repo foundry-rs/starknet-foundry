@@ -22,7 +22,7 @@ pub struct Add {
     pub name: String,
 
     /// Address of the account
-    #[clap(short, long, requires = "private_key_input")]
+    #[clap(long, requires = "private_key_input")]
     pub address: Felt,
 
     /// Type of the account
@@ -59,7 +59,6 @@ pub struct Add {
 }
 
 pub async fn add(
-    rpc_url: &str,
     account: &str,
     accounts_file: &Utf8PathBuf,
     provider: &JsonRpcClient<HttpTransport>,
@@ -116,7 +115,7 @@ pub async fn add(
 
     if add.add_profile.is_some() {
         let config = CastConfig {
-            url: rpc_url.into(),
+            url: add.rpc.url.clone().unwrap_or_default(),
             account: account.into(),
             accounts_file: accounts_file.into(),
             ..Default::default()

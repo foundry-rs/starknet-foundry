@@ -55,19 +55,16 @@ pub struct Create {
 
 #[allow(clippy::too_many_arguments)]
 pub async fn create(
-    rpc_url: &str,
     account: &str,
     accounts_file: &Utf8PathBuf,
     keystore: Option<Utf8PathBuf>,
     provider: &JsonRpcClient<HttpTransport>,
     chain_id: Felt,
-    account_type: AccountType,
-    salt: Option<Felt>,
-    add_profile: Option<String>,
-    class_hash: Option<Felt>,
+    create: &Create,
 ) -> Result<AccountCreateResponse> {
-    let salt = extract_or_generate_salt(salt);
-    let class_hash = class_hash.unwrap_or(match account_type {
+    let add_profile = create.add_profile.clone();
+    let salt = extract_or_generate_salt(create.salt);
+    let class_hash = create.class_hash.unwrap_or(match create.account_type {
         AccountType::Oz => OZ_CLASS_HASH,
         AccountType::Argent => ARGENT_CLASS_HASH,
         AccountType::Braavos => BRAAVOS_CLASS_HASH,
@@ -75,7 +72,7 @@ pub async fn create(
     check_class_hash_exists(provider, class_hash).await?;
 
     let (account_json, max_fee) =
-        generate_account(provider, salt, class_hash, &account_type).await?;
+        generate_account(provider, salt, class_hash, &create.account_type).await?;
 
     let address = account_json["address"]
         .as_str()
@@ -100,7 +97,7 @@ pub async fn create(
             private_key,
             salt,
             class_hash,
-            &account_type,
+            &create.account_type,
             &keystore,
             &account_path,
             legacy,
@@ -111,13 +108,13 @@ pub async fn create(
 
     if add_profile.is_some() {
         let config = CastConfig {
-            url: rpc_url.into(),
+            url: create.rpc.url.clone().unwrap_or_default(),
             account: account.into(),
             accounts_file: accounts_file.into(),
             keystore,
             ..Default::default()
         };
-        add_created_profile_to_configuration(&add_profile, &config, &None)?;
+        add_created_profile_to_configuration(&create.add_profile, &config, &None)?;
     }
 
     Ok(AccountCreateResponse {

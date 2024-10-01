@@ -352,7 +352,6 @@ async fn run_async_command(
             account::Commands::Add(add) => {
                 let provider = add.rpc.get_provider(&config).await?;
                 let result = starknet_commands::account::add::add(
-                    &config.url,
                     &add.name.clone(),
                     &config.accounts_file,
                     &provider,
@@ -371,21 +370,18 @@ async fn run_async_command(
                 let account = if config.keystore.is_none() {
                     create
                         .name
+                        .clone()
                         .context("Required argument `--name` not provided")?
                 } else {
                     config.account
                 };
                 let result = starknet_commands::account::create::create(
-                    &config.url,
                     &account,
                     &config.accounts_file,
                     config.keystore,
                     &provider,
                     chain_id,
-                    create.account_type,
-                    create.salt,
-                    create.add_profile,
-                    create.class_hash,
+                    &create,
                 )
                 .await;
 
