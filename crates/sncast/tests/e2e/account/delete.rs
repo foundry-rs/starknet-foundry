@@ -49,7 +49,7 @@ pub fn test_no_accounts_in_network_url() {
         output,
         indoc! {r"
         command: account delete
-        error: No accounts defined for network = my-custom-network
+        error: Account with name user99 does not exist
         "},
     );
 }
@@ -152,7 +152,7 @@ pub fn test_happy_case_url() {
         "--url",
         URL,
         "--name",
-        "user3",
+        "user0",
     ];
 
     // Run test with an affirmative user input
