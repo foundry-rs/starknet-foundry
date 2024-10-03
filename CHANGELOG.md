@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - Short option for `--accounts-file` flag has been removed.
-- `--contract-address` flag has now a short option `-d` instead of `-a`.
+- Short option for `--contract-address` is now `-d` instead of `-a`.
 
 ## [0.31.0] - 2024-09-26
 
