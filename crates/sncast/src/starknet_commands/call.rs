@@ -11,7 +11,7 @@ use starknet::providers::{JsonRpcClient, Provider};
 #[command(about = "Call a contract instance on Starknet", long_about = None)]
 pub struct Call {
     /// Address of the called contract (hex)
-    #[clap(short = 'a', long)]
+    #[clap(short = 'd', long)]
     pub contract_address: Felt,
 
     /// Name of the contract function to be called
