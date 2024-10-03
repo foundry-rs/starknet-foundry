@@ -72,39 +72,39 @@ struct Cli {
     /// Account to be used for contract declaration;
     /// When using keystore (`--keystore`), this should be a path to account file
     /// When using accounts file, this should be an account name
-    #[clap(short = 'a', long, global = true)]
+    #[clap(short = 'a', long)]
     account: Option<String>,
 
     /// Path to the file holding accounts info
-    #[clap(long = "accounts-file", global = true)]
+    #[clap(long = "accounts-file")]
     accounts_file_path: Option<Utf8PathBuf>,
 
     /// Path to keystore file; if specified, --account should be a path to starkli JSON account file
-    #[clap(short, long, global = true)]
+    #[clap(short, long)]
     keystore: Option<Utf8PathBuf>,
 
     /// If passed, values will be displayed as integers
-    #[clap(long, conflicts_with = "hex_format", global = true)]
+    #[clap(long, conflicts_with = "hex_format")]
     int_format: bool,
 
     /// If passed, values will be displayed as hex
-    #[clap(long, conflicts_with = "int_format", global = true)]
+    #[clap(long, conflicts_with = "int_format")]
     hex_format: bool,
 
     /// If passed, output will be displayed in json format
-    #[clap(short, long, global = true)]
+    #[clap(short, long)]
     json: bool,
 
     /// If passed, command will wait until transaction is accepted or rejected
-    #[clap(short = 'w', long, global = true)]
+    #[clap(short = 'w', long)]
     wait: bool,
 
     /// Adjusts the time after which --wait assumes transaction was not received or rejected
-    #[clap(long, global = true)]
+    #[clap(long)]
     wait_timeout: Option<u16>,
 
     /// Adjusts the time between consecutive attempts to fetch transaction by --wait flag
-    #[clap(long, global = true)]
+    #[clap(long)]
     wait_retry_interval: Option<u8>,
 
     #[command(subcommand)]

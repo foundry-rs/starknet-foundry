@@ -9,10 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Cast
 
-#### Added
-
-- It's possible to pass common arguments both before and after subcommand name, e.g. both `sncast --account default declare --contract_name name ...` and `sncast declare --account default --contract_name name ...` are allowed now.
-
 #### Changed
 
 - Short option for `--accounts-file` flag has been removed.

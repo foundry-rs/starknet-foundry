@@ -52,38 +52,6 @@ async fn test_happy_case(account: &str) {
     assert!(matches!(receipt, Invoke(_)));
 }
 
-#[test_case("oz_cairo_0"; "cairo_0_account")]
-#[test_case("oz_cairo_1"; "cairo_1_account")]
-#[test_case("oz"; "oz_account")]
-#[test_case("argent"; "argent_account")]
-#[test_case("braavos"; "braavos_account")]
-#[tokio::test]
-async fn test_happy_case_common_arguments_after_subcommand(account: &str) {
-    let args = vec![
-        "invoke",
-        "--accounts-file",
-        ACCOUNT_FILE_PATH,
-        "--account",
-        account,
-        "--int-format",
-        "--json",
-        "--url",
-        URL,
-        "--contract-address",
-        MAP_CONTRACT_ADDRESS_SEPOLIA,
-        "--function",
-        "put",
-        "--calldata",
-        "0x1 0x2",
-        "--max-fee",
-        "99999999999999999",
-        "--fee-token",
-        "eth",
-    ];
-
-    runner(&args).assert().success();
-}
-
 #[tokio::test]
 async fn test_happy_case_human_readable() {
     let tempdir = create_and_deploy_account(OZ_CLASS_HASH, AccountType::OpenZeppelin).await;
