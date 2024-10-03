@@ -22,7 +22,7 @@ pub struct Add {
     pub name: String,
 
     /// Address of the account
-    #[clap(long, requires = "private_key_input")]
+    #[clap(short, long, requires = "private_key_input")]
     pub address: Felt,
 
     /// Type of the account
