@@ -24,4 +24,4 @@ num-bigint.workspace = true
 
 [dev-dependencies]
 lazy_static = "1.4.0"
-regex = "1.10.6"
+regex = "1.11.0"
