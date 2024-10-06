@@ -7,4 +7,4 @@ members = [
 version = "0.1.0"
 
 [workspace.dependencies]
-starknet = "2.4.0"
+starknet = "2.8.2"

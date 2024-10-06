@@ -6,6 +6,7 @@ pub trait ISimpleContract<TContractState> {
 
 #[starknet::contract]
 pub mod SimpleContract {
+    use starknet::storage::{StoragePointerWriteAccess, StoragePointerReadAccess};
     #[storage]
     struct Storage {
         balance: felt252,

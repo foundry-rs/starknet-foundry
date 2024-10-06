@@ -1,7 +1,4 @@
-use sncast_std::{
-    declare, deploy, invoke, call, DeclareResult, DeployResult, InvokeResult, CallResult, get_nonce,
-    FeeSettings, EthFeeSettings
-};
+use sncast_std::{declare, deploy, invoke, call, get_nonce, FeeSettings, EthFeeSettings};
 
 fn main() {
     let max_fee = 999999999999999;

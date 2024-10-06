@@ -594,7 +594,7 @@ fn with_exit_first() {
             version = "0.1.0"
 
             [dependencies]
-            starknet = "2.4.0"
+            starknet = "2.8.2"
             snforge_std = {{ path = "{}" }}
 
             [tool.snforge]

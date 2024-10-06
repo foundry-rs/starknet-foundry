@@ -108,30 +108,30 @@ pub(crate) fn setup_hello_workspace() -> TempDir {
                 members = [
                     "crates/*",
                 ]
-                
+
                 [workspace.scripts]
                 test = "snforge"
-                
+
                 [workspace.tool.snforge]
 
-                
+
                 [workspace.dependencies]
-                starknet = "2.4.0"
+                starknet = "2.8.2"
                 snforge_std = {{ path = "{}" }}
-                
+
                 [workspace.package]
                 version = "0.1.0"
-                
+
                 [package]
                 name = "hello_workspaces"
                 version.workspace = true
-                
+
                 [scripts]
                 test.workspace = true
-                
+
                 [tool]
                 snforge.workspace = true
-                
+
                 [dependencies]
                 starknet.workspace = true
                 fibonacci = {{ path = "crates/fibonacci" }}
@@ -165,22 +165,22 @@ pub(crate) fn setup_virtual_workspace() -> TempDir {
                 members = [
                     "dummy_name/*",
                 ]
-                
+
                 [workspace.scripts]
                 test = "snforge"
-                
+
                 [workspace.tool.snforge]
-                
+
                 [workspace.dependencies]
-                starknet = "2.4.0"
+                starknet = "2.8.2"
                 snforge_std = {{ path = "{}" }}
-                
+
                 [workspace.package]
                 version = "0.1.0"
-                
+
                 [scripts]
                 test.workspace = true
-                
+
                 [tool]
                 snforge.workspace = true
                 "#,

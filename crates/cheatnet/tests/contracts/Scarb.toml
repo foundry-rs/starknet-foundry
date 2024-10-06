@@ -6,7 +6,7 @@ version = "0.1.0"
 [[target.starknet-contract]]
 
 [dependencies]
-starknet = "2.4.0"
+starknet = "2.8.2"
 
 [tool.snforge]
 # exit_first = true

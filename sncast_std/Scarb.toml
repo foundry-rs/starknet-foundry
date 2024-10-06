@@ -1,4 +1,4 @@
 [package]
 name = "sncast_std"
 version = "0.31.0"
-edition = "2023_11"
+edition = "2024_07"
