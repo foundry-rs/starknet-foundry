@@ -18,7 +18,7 @@ mod shared_cache;
 pub mod test_filter;
 mod warn;
 
-pub const CAIRO_EDITION: &str = "2023_11";
+pub const CAIRO_EDITION: &str = "2024_07";
 
 #[derive(Parser, Debug)]
 #[command(

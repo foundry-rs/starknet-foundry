@@ -14,6 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Short option for `--accounts-file` flag has been removed.
 - Short option for `--contract-address` is now `-d` instead of `-a`.
 
+### Forge
+
+#### Changed
+
+- Cairo Edition set `2024_07`
+
 ## [0.31.0] - 2024-09-26
 
 ### Cast
