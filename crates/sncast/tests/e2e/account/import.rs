@@ -25,11 +25,11 @@ pub async fn test_happy_case(input_account_type: &str, saved_type: &str) {
         "--accounts-file",
         accounts_file,
         "account",
-        "add",
+        "import",
         "--url",
         URL,
         "--name",
-        "my_account_add",
+        "my_account_import",
         "--address",
         "0x123",
         "--private-key",
@@ -43,7 +43,7 @@ pub async fn test_happy_case(input_account_type: &str, saved_type: &str) {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().stdout_matches(indoc! {r"
-        command: account add
+        command: account import
         add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
     "});
 
@@ -55,7 +55,7 @@ pub async fn test_happy_case(input_account_type: &str, saved_type: &str) {
         json!(
             {
                 "alpha-sepolia": {
-                  "my_account_add": {
+                  "my_account_import": {
                     "address": "0x123",
                     "class_hash": DEVNET_OZ_CLASS_HASH_CAIRO_0,
                     "deployed": false,
@@ -79,11 +79,11 @@ pub async fn test_existent_account_address() {
         "--accounts-file",
         accounts_file,
         "account",
-        "add",
+        "import",
         "--url",
         URL,
         "--name",
-        "my_account_add",
+        "my_account_import",
         "--address",
         DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS,
         "--private-key",
@@ -102,7 +102,7 @@ pub async fn test_existent_account_address() {
         json!(
             {
                 "alpha-sepolia": {
-                  "my_account_add": {
+                  "my_account_import": {
                     "address": DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS,
                     "class_hash": &DEVNET_OZ_CLASS_HASH_CAIRO_1.into_hex_string(),
                     "deployed": true,
@@ -126,11 +126,11 @@ pub async fn test_existent_account_address_and_incorrect_class_hash() {
         "--accounts-file",
         accounts_file,
         "account",
-        "add",
+        "import",
         "--url",
         URL,
         "--name",
-        "my_account_add",
+        "my_account_import",
         "--address",
         DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS,
         "--private-key",
@@ -144,7 +144,7 @@ pub async fn test_existent_account_address_and_incorrect_class_hash() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().stderr_matches(formatdoc! {r"
-        command: account add
+        command: account import
         error: Incorrect class hash {} for account address {}
     ", DEVNET_OZ_CLASS_HASH_CAIRO_0, DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS});
 }
@@ -158,11 +158,11 @@ pub async fn test_nonexistent_account_address_and_nonexistent_class_hash() {
         "--accounts-file",
         accounts_file,
         "account",
-        "add",
+        "import",
         "--url",
         URL,
         "--name",
-        "my_account_add",
+        "my_account_import",
         "--address",
         "0x202",
         "--private-key",
@@ -176,7 +176,7 @@ pub async fn test_nonexistent_account_address_and_nonexistent_class_hash() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().stderr_matches(indoc! {r"
-        command: account add
+        command: account import
         error: Class with hash 0x101 is not declared, try using --class-hash with a hash of the declared class
     "});
 }
@@ -190,11 +190,11 @@ pub async fn test_nonexistent_account_address() {
         "--accounts-file",
         accounts_file,
         "account",
-        "add",
+        "import",
         "--url",
         URL,
         "--name",
-        "my_account_add",
+        "my_account_import",
         "--address",
         "0x123",
         "--private-key",
@@ -206,7 +206,7 @@ pub async fn test_nonexistent_account_address() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().stderr_matches(indoc! {r"
-        command: account add
+        command: account import
         error: There is no contract at the specified address
     "});
 }
@@ -220,11 +220,11 @@ pub async fn test_happy_case_add_profile() {
         "--accounts-file",
         accounts_file,
         "account",
-        "add",
+        "import",
         "--url",
         URL,
         "--name",
-        "my_account_add",
+        "my_account_import",
         "--address",
         "0x1",
         "--private-key",
@@ -244,7 +244,7 @@ pub async fn test_happy_case_add_profile() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().stdout_matches(indoc! {r"
-        command: account add
+        command: account import
         add_profile: Profile my_account_add successfully added to snfoundry.toml
     "});
     let current_dir_utf8 = Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap();
@@ -257,7 +257,7 @@ pub async fn test_happy_case_add_profile() {
         json!(
             {
                 "alpha-sepolia": {
-                  "my_account_add": {
+                  "my_account_import": {
                     "address": "0x1",
                     "class_hash": DEVNET_OZ_CLASS_HASH_CAIRO_0,
                     "deployed": false,
@@ -288,11 +288,11 @@ pub async fn test_detect_deployed() {
         "--accounts-file",
         accounts_file,
         "account",
-        "add",
+        "import",
         "--url",
         URL,
         "--name",
-        "my_account_add",
+        "my_account_import",
         "--address",
         DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS,
         "--private-key",
@@ -304,7 +304,7 @@ pub async fn test_detect_deployed() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().stdout_matches(indoc! {r"
-        command: account add
+        command: account import
         add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
     "});
 
@@ -316,7 +316,7 @@ pub async fn test_detect_deployed() {
         json!(
             {
                 "alpha-sepolia": {
-                  "my_account_add": {
+                  "my_account_import": {
                     "address": DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS,
                     "class_hash": &DEVNET_OZ_CLASS_HASH_CAIRO_1.into_hex_string(),
                     "deployed": true,
@@ -335,11 +335,11 @@ pub async fn test_detect_deployed() {
 pub async fn test_invalid_public_key() {
     let args = vec![
         "account",
-        "add",
+        "import",
         "--url",
         URL,
         "--name",
-        "my_account_add",
+        "my_account_import",
         "--address",
         "0x123",
         "--private-key",
@@ -356,7 +356,7 @@ pub async fn test_invalid_public_key() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: account add
+        command: account import
         error: The private key does not match the public key
         "},
     );
@@ -364,7 +364,14 @@ pub async fn test_invalid_public_key() {
 
 #[tokio::test]
 pub async fn test_missing_arguments() {
-    let args = vec!["account", "add", "--url", URL, "--name", "my_account_add"];
+    let args = vec![
+        "account",
+        "import",
+        "--url",
+        URL,
+        "--name",
+        "my_account_import",
+    ];
 
     let snapbox = runner(&args);
     let output = snapbox.assert().failure();
@@ -392,11 +399,11 @@ pub async fn test_private_key_from_file() {
         "--accounts-file",
         accounts_file,
         "account",
-        "add",
+        "import",
         "--url",
         URL,
         "--name",
-        "my_account_add",
+        "my_account_import",
         "--address",
         "0x123",
         "--private-key-file",
@@ -410,7 +417,7 @@ pub async fn test_private_key_from_file() {
     let snapbox = runner(&args).current_dir(temp_dir.path());
 
     snapbox.assert().stdout_matches(indoc! {r"
-        command: account add
+        command: account import
         add_profile: --add-profile flag was not set. No profile added to snfoundry.toml
     "});
 
@@ -422,7 +429,7 @@ pub async fn test_private_key_from_file() {
         json!(
             {
                 "alpha-sepolia": {
-                  "my_account_add": {
+                  "my_account_import": {
                     "address": "0x123",
                     "deployed": false,
                     "legacy": true,
@@ -441,9 +448,9 @@ pub async fn test_private_key_from_file() {
 pub async fn test_accept_only_one_private_key() {
     let args = vec![
         "account",
-        "add",
+        "import",
         "--name",
-        "my_account_add",
+        "my_account_import",
         "--address",
         "0x123",
         "--private-key",
@@ -465,11 +472,11 @@ pub async fn test_accept_only_one_private_key() {
 pub async fn test_invalid_private_key_file_path() {
     let args = vec![
         "account",
-        "add",
+        "import",
         "--url",
         URL,
         "--name",
-        "my_account_add",
+        "my_account_import",
         "--address",
         "0x123",
         "--private-key-file",
@@ -484,7 +491,7 @@ pub async fn test_invalid_private_key_file_path() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: account add
+        command: account import
         error: Failed to obtain private key from the file my_private_key: No such file or directory (os error 2)
         "},
     );
@@ -505,11 +512,11 @@ pub async fn test_invalid_private_key_in_file() {
         "--accounts-file",
         "accounts.json",
         "account",
-        "add",
+        "import",
         "--url",
         URL,
         "--name",
-        "my_account_add",
+        "my_account_import",
         "--address",
         "0x123",
         "--private-key-file",
@@ -524,7 +531,7 @@ pub async fn test_invalid_private_key_in_file() {
     assert_stderr_contains(
         output,
         indoc! {r"
-        command: account add
+        command: account import
         error: Failed to obtain private key from the file my_private_key: Failed to create Felt from string
         "},
     );
@@ -542,11 +549,11 @@ pub async fn test_private_key_as_int_in_file() {
         "--accounts-file",
         accounts_file,
         "account",
-        "add",
+        "import",
         "--url",
         URL,
         "--name",
-        "my_account_add",
+        "my_account_import",
         "--address",
         DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS,
         "--private-key-file",
@@ -568,7 +575,7 @@ pub async fn test_private_key_as_int_in_file() {
         json!(
             {
                 "alpha-sepolia": {
-                  "my_account_add": {
+                  "my_account_import": {
                     "address": DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS,
                     "deployed": true,
                     "legacy": false,
@@ -593,11 +600,11 @@ pub async fn test_empty_config_add_profile() {
         "--accounts-file",
         accounts_file,
         "account",
-        "add",
+        "import",
         "--url",
         URL,
         "--name",
-        "my_account_add",
+        "my_account_import",
         "--address",
         DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS,
         "--private-key",
@@ -611,7 +618,7 @@ pub async fn test_empty_config_add_profile() {
     let snapbox = runner(&args).current_dir(tempdir.path());
 
     snapbox.assert().stdout_matches(indoc! {r"
-        command: account add
+        command: account import
         add_profile: Profile random successfully added to snfoundry.toml
     "});
     let current_dir_utf8 = Utf8PathBuf::try_from(tempdir.path().to_path_buf()).unwrap();
