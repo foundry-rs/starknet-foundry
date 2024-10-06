@@ -198,11 +198,11 @@ $ sncast \
 
 #### Importing an Account
 
-To import an account into the file holding the accounts info (`~/.starknet_accounts/starknet_open_zeppelin_accounts.json` by default), use the `account add` command.
+To import an account into the file holding the accounts info (`~/.starknet_accounts/starknet_open_zeppelin_accounts.json` by default), use the `account import` command.
 
 ```shell
 $ sncast \
-    account add \
+    account import \
 	--url http://127.0.0.1:5050 \
     --name my_imported_account \
     --address 0x1 \
@@ -211,7 +211,7 @@ $ sncast \
     --type oz
 ```
 
-For a detailed CLI description, see [account add command reference](../appendix/sncast/account/add.md).
+For a detailed CLI description, see [account import command reference](../appendix/sncast/account/import.md).
 
 ### Creating an Account With Starkli-Style Keystore
 

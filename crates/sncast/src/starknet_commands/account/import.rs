@@ -7,7 +7,7 @@ use camino::Utf8PathBuf;
 use clap::Args;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
-use sncast::response::structs::AccountAddResponse;
+use sncast::response::structs::AccountImportResponse;
 use sncast::{check_class_hash_exists, get_chain_id};
 use sncast::{check_if_legacy_contract, get_class_hash_by_address};
 use starknet::core::types::Felt;
@@ -16,8 +16,8 @@ use starknet::signers::SigningKey;
 
 #[derive(Args, Debug)]
 #[command(about = "Add an account to the accounts file")]
-pub struct Add {
-    /// Name of the account to be added
+pub struct Import {
+    /// Name of the account to be imported
     #[clap(short, long)]
     pub name: String,
 
@@ -58,36 +58,36 @@ pub struct Add {
     pub rpc: RpcArgs,
 }
 
-pub async fn add(
+pub async fn import(
     account: &str,
     accounts_file: &Utf8PathBuf,
     provider: &JsonRpcClient<HttpTransport>,
-    add: &Add,
-) -> Result<AccountAddResponse> {
-    let private_key = match &add.private_key_file_path {
+    import: &Import,
+) -> Result<AccountImportResponse> {
+    let private_key = match &import.private_key_file_path {
         Some(file_path) => get_private_key_from_file(file_path)
             .with_context(|| format!("Failed to obtain private key from the file {file_path}"))?,
-        None => add
+        None => import
             .private_key
             .expect("Failed to parse provided private key"),
     };
     let private_key = &SigningKey::from_secret_scalar(private_key);
-    if let Some(public_key) = &add.public_key {
+    if let Some(public_key) = &import.public_key {
         ensure!(
             public_key == &private_key.verifying_key().scalar(),
             "The private key does not match the public key"
         );
     }
 
-    let fetched_class_hash = get_class_hash_by_address(provider, add.address).await?;
+    let fetched_class_hash = get_class_hash_by_address(provider, import.address).await?;
     let deployed = fetched_class_hash.is_some();
-    let class_hash = match (fetched_class_hash, add.class_hash) {
+    let class_hash = match (fetched_class_hash, import.class_hash) {
         (Some(from_provider), Some(from_user)) => {
             ensure!(
                 from_provider == from_user,
                 "Incorrect class hash {:#x} for account address {:#x}",
                 from_user,
-                add.address
+                import.address
             );
             fetched_class_hash
         }
@@ -98,36 +98,39 @@ pub async fn add(
         _ => fetched_class_hash,
     };
 
-    let legacy = check_if_legacy_contract(class_hash, add.address, provider).await?;
+    let legacy = check_if_legacy_contract(class_hash, import.address, provider).await?;
 
     let account_json = prepare_account_json(
         private_key,
-        add.address,
+        import.address,
         deployed,
         legacy,
-        &add.account_type,
+        &import.account_type,
         class_hash,
-        add.salt,
+        import.salt,
     );
 
     let chain_id = get_chain_id(provider).await?;
     write_account_to_accounts_file(account, accounts_file, chain_id, account_json.clone())?;
 
-    if add.add_profile.is_some() {
+    if import.add_profile.is_some() {
         let config = CastConfig {
-            url: add.rpc.url.clone().unwrap_or_default(),
+            url: import.rpc.url.clone().unwrap_or_default(),
             account: account.into(),
             accounts_file: accounts_file.into(),
             ..Default::default()
         };
-        add_created_profile_to_configuration(&add.add_profile, &config, &None)?;
+        add_created_profile_to_configuration(&import.add_profile, &config, &None)?;
     }
 
-    Ok(AccountAddResponse {
-        add_profile: if add.add_profile.is_some() {
+    Ok(AccountImportResponse {
+        add_profile: if import.add_profile.is_some() {
             format!(
                 "Profile {} successfully added to snfoundry.toml",
-                add.add_profile.clone().expect("Failed to get profile name")
+                import
+                    .add_profile
+                    .clone()
+                    .expect("Failed to get profile name")
             )
         } else {
             "--add-profile flag was not set. No profile added to snfoundry.toml".to_string()

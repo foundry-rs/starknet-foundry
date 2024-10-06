@@ -104,7 +104,7 @@
 * [`sncast` Commands](appendix/sncast.md)
     * [common flags](appendix/sncast/common.md)
     * [account](appendix/sncast/account/account.md)
-        * [add](appendix/sncast/account/add.md)
+        * [import](appendix/sncast/account/import.md)
         * [create](appendix/sncast/account/create.md)
         * [deploy](appendix/sncast/account/deploy.md)
         * [delete](appendix/sncast/account/delete.md)
