@@ -41,10 +41,6 @@ pub struct Import {
     #[clap(long = "private-key-file", group = "private_key_input")]
     pub private_key_file_path: Option<Utf8PathBuf>,
 
-    /// Account public key
-    #[clap(long)]
-    pub public_key: Option<Felt>,
-
     /// Salt for the address
     #[clap(short, long)]
     pub salt: Option<Felt>,
@@ -72,12 +68,6 @@ pub async fn import(
             .expect("Failed to parse provided private key"),
     };
     let private_key = &SigningKey::from_secret_scalar(private_key);
-    if let Some(public_key) = &import.public_key {
-        ensure!(
-            public_key == &private_key.verifying_key().scalar(),
-            "The private key does not match the public key"
-        );
-    }
 
     let fetched_class_hash = get_class_hash_by_address(provider, import.address).await?;
     let deployed = fetched_class_hash.is_some();

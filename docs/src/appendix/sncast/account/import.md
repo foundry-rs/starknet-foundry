@@ -41,12 +41,6 @@ Optional. Required if `--private-key-file` is not passed.
 
 Path to the file holding account private key.
 
-## `--public-key <PUBLIC_KEY>`
-Optional.
-
-Account public key.
-If not passed, will be computed from `--private-key`.
-
 ## `--salt, -s <SALT>`
 Optional.
 

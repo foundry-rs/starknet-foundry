@@ -229,8 +229,6 @@ pub async fn test_happy_case_add_profile() {
         "0x1",
         "--private-key",
         "0x2",
-        "--public-key",
-        "0x759ca09377679ecd535a81e83039658bf40959283187c654c5416f439403cf5",
         "--salt",
         "0x3",
         "--class-hash",
@@ -344,8 +342,6 @@ pub async fn test_invalid_public_key() {
         "0x123",
         "--private-key",
         "0x456",
-        "--public-key",
-        "0x457",
         "--type",
         "oz",
     ];
