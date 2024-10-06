@@ -6,9 +6,11 @@ pub trait IHelloStarknet<TContractState> {
 
 #[starknet::contract]
 mod HelloStarknet {
+    use core::starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
+
     #[storage]
     struct Storage {
-        balance: felt252, 
+        balance: felt252,
     }
 
     #[abi(embed_v0)]
