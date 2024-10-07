@@ -76,7 +76,7 @@ pub async fn import(
         (None, None) => &get_private_key_from_input(),
     };
     let private_key = &SigningKey::from_secret_scalar(*private_key);
-
+    // TODO: Add salt validation
     let fetched_class_hash = get_class_hash_by_address(provider, import.address).await?;
     let deployed = fetched_class_hash.is_some();
     let class_hash = match (fetched_class_hash, import.class_hash) {
