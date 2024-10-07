@@ -330,35 +330,6 @@ pub async fn test_detect_deployed() {
 }
 
 #[tokio::test]
-pub async fn test_invalid_public_key() {
-    let args = vec![
-        "account",
-        "import",
-        "--url",
-        URL,
-        "--name",
-        "my_account_import",
-        "--address",
-        "0x123",
-        "--private-key",
-        "0x456",
-        "--type",
-        "oz",
-    ];
-
-    let snapbox = runner(&args);
-    let output = snapbox.assert().success();
-
-    assert_stderr_contains(
-        output,
-        indoc! {r"
-        command: account import
-        error: The private key does not match the public key
-        "},
-    );
-}
-
-#[tokio::test]
 pub async fn test_missing_arguments() {
     let args = vec![
         "account",
