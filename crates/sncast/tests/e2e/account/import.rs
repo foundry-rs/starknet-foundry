@@ -226,7 +226,7 @@ pub async fn test_happy_case_add_profile() {
         "--name",
         "my_account_import",
         "--address",
-        "0x1",
+        "0x721c21e0cc9d37aec8e176797effd1be222aff6db25f068040adefabb7cfb6d",
         "--private-key",
         "0x2",
         "--salt",
@@ -256,7 +256,7 @@ pub async fn test_happy_case_add_profile() {
             {
                 "alpha-sepolia": {
                   "my_account_import": {
-                    "address": "0x1",
+                    "address": "0x721c21e0cc9d37aec8e176797effd1be222aff6db25f068040adefabb7cfb6d",
                     "class_hash": DEVNET_OZ_CLASS_HASH_CAIRO_0,
                     "deployed": false,
                     "private_key": "0x2",
@@ -273,7 +273,7 @@ pub async fn test_happy_case_add_profile() {
     let contents = fs::read_to_string(current_dir_utf8.join("snfoundry.toml"))
         .expect("Unable to read snfoundry.toml");
     assert!(contents.contains("[sncast.my_account_add]"));
-    assert!(contents.contains("account = \"my_account_add\""));
+    assert!(contents.contains("account = \"my_account_import\""));
     assert!(contents.contains(&format!("url = \"{URL}\"")));
 }
 
@@ -595,4 +595,38 @@ pub async fn test_empty_config_add_profile() {
     assert!(contents.contains("[sncast.random]"));
     assert!(contents.contains("account = \"my_account_add\""));
     assert!(contents.contains(&format!("url = \"{URL}\"")));
+}
+
+#[tokio::test]
+pub async fn test_invalid_address_and_salt() {
+    let tempdir = tempdir().expect("Unable to create a temporary directory");
+    let accounts_file = "accounts.json";
+
+    let args = vec![
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "import",
+        "--url",
+        URL,
+        "--name",
+        "my_account_import",
+        "--address",
+        "0x123",
+        "--private-key",
+        "0x456",
+        "--salt",
+        "0x789",
+        "--class-hash",
+        DEVNET_OZ_CLASS_HASH_CAIRO_0,
+        "--type",
+        "oz",
+    ];
+
+    let snapbox = runner(&args).current_dir(tempdir.path());
+    let computed_address = "0xaf550326d32c8106ef08d25cbc0dba06e5cd10a2201c2e9bc5ad4cbbce45e6";
+    snapbox.assert().stderr_matches(formatdoc! {r"
+        command: account import
+        error: Computed address {computed_address} does not match the provided address 0x123
+    "});
 }

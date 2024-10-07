@@ -9,11 +9,13 @@ use conversions::string::TryFromHexStr;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::AccountImportResponse;
-use sncast::{check_class_hash_exists, get_chain_id};
+use sncast::{check_class_hash_exists, get_chain_id, AccountType as SNCastAccountType};
 use sncast::{check_if_legacy_contract, get_class_hash_by_address};
 use starknet::core::types::Felt;
 use starknet::providers::jsonrpc::{HttpTransport, JsonRpcClient};
 use starknet::signers::SigningKey;
+
+use super::deploy::compute_account_address;
 
 #[derive(Args, Debug)]
 #[command(about = "Add an account to the accounts file")]
@@ -76,7 +78,7 @@ pub async fn import(
         (None, None) => &get_private_key_from_input(),
     };
     let private_key = &SigningKey::from_secret_scalar(*private_key);
-    // TODO: Add salt validation
+
     let fetched_class_hash = get_class_hash_by_address(provider, import.address).await?;
     let deployed = fetched_class_hash.is_some();
     let class_hash = match (fetched_class_hash, import.class_hash) {
@@ -96,6 +98,30 @@ pub async fn import(
         _ => fetched_class_hash,
     };
 
+    let chain_id = get_chain_id(provider).await?;
+    if import.salt.is_some() && class_hash.is_some() {
+        let sncast_account_type = match import.account_type {
+            AccountType::Argent => SNCastAccountType::Argent,
+            AccountType::Braavos => SNCastAccountType::Braavos,
+            AccountType::Oz => SNCastAccountType::OpenZeppelin,
+        };
+        let computed_address = compute_account_address(
+            import.salt.unwrap(),
+            &private_key,
+            class_hash.unwrap(),
+            sncast_account_type,
+            chain_id,
+        );
+        if computed_address != import.address {
+            ensure!(
+                computed_address == import.address,
+                "Computed address {:#x} does not match the provided address {:#x}",
+                computed_address,
+                import.address
+            )
+        }
+    }
+
     let legacy = check_if_legacy_contract(class_hash, import.address, provider).await?;
 
     let account_json = prepare_account_json(
@@ -108,7 +134,6 @@ pub async fn import(
         import.salt,
     );
 
-    let chain_id = get_chain_id(provider).await?;
     write_account_to_accounts_file(account, accounts_file, chain_id, account_json.clone())?;
 
     if import.add_profile.is_some() {
