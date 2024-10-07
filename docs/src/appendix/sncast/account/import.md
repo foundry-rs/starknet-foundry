@@ -32,12 +32,12 @@ Optional.
 Class hash of the account.
 
 ## `--private-key <PRIVATE_KEY>`
-Optional. Required if `--private-key-file` is not passed.
+Optional.
 
 Account private key.
 
 ## `--private-key-file <PRIVATE_KEY_FILE_PATH>`
-Optional. Required if `--private-key-file` is not passed.
+Optional. If neither `--private-key` nor `--private-key-file` is passed, the user will be prompted to enter the account private key.
 
 Path to the file holding account private key.
 

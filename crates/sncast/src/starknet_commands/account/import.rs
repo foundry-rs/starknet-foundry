@@ -2,9 +2,10 @@ use crate::starknet_commands::account::{
     add_created_profile_to_configuration, prepare_account_json, write_account_to_accounts_file,
     AccountType,
 };
-use anyhow::{ensure, Context, Result};
+use anyhow::{bail, ensure, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
+use conversions::string::TryFromHexStr;
 use sncast::helpers::configuration::CastConfig;
 use sncast::helpers::rpc::RpcArgs;
 use sncast::response::structs::AccountImportResponse;
@@ -22,7 +23,7 @@ pub struct Import {
     pub name: String,
 
     /// Address of the account
-    #[clap(short, long, requires = "private_key_input")]
+    #[clap(short, long)]
     pub address: Felt,
 
     /// Type of the account
@@ -60,14 +61,21 @@ pub async fn import(
     provider: &JsonRpcClient<HttpTransport>,
     import: &Import,
 ) -> Result<AccountImportResponse> {
-    let private_key = match &import.private_key_file_path {
-        Some(file_path) => get_private_key_from_file(file_path)
-            .with_context(|| format!("Failed to obtain private key from the file {file_path}"))?,
-        None => import
-            .private_key
-            .expect("Failed to parse provided private key"),
+    let private_key = match (&import.private_key, &import.private_key_file_path) {
+        (Some(_), Some(_)) => {
+            bail!(
+                "Both private key and private key file path were provided. Please provide only one"
+            )
+        }
+        (Some(passed_private_key), None) => passed_private_key,
+        (None, Some(passed_private_key_file_path)) => &{
+            get_private_key_from_file(passed_private_key_file_path).with_context(|| {
+                format!("Failed to obtain private key from the file {passed_private_key_file_path}")
+            })?
+        },
+        (None, None) => &get_private_key_from_input(),
     };
-    let private_key = &SigningKey::from_secret_scalar(private_key);
+    let private_key = &SigningKey::from_secret_scalar(*private_key);
 
     let fetched_class_hash = get_class_hash_by_address(provider, import.address).await?;
     let deployed = fetched_class_hash.is_some();
@@ -131,4 +139,10 @@ pub async fn import(
 fn get_private_key_from_file(file_path: &Utf8PathBuf) -> Result<Felt> {
     let private_key_string = std::fs::read_to_string(file_path.clone())?;
     Ok(private_key_string.parse()?)
+}
+
+fn get_private_key_from_input() -> Felt {
+    let private_key =
+        rpassword::prompt_password("Enter private key: ").expect("Failed to read private key");
+    Felt::try_from_hex_str(&private_key).expect("Failed to parse private key into Felt")
 }
