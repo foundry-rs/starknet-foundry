@@ -107,7 +107,7 @@ pub async fn import(
         };
         let computed_address = compute_account_address(
             import.salt.unwrap(),
-            &private_key,
+            private_key,
             class_hash.unwrap(),
             sncast_account_type,
             chain_id,
@@ -118,7 +118,7 @@ pub async fn import(
                 "Computed address {:#x} does not match the provided address {:#x}",
                 computed_address,
                 import.address
-            )
+            );
         }
     }
 

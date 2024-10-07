@@ -359,7 +359,7 @@ pub fn compute_account_address(
     account_type: AccountType,
     chain_id: Felt,
 ) -> Felt {
-    let computed_address = match account_type {
+    match account_type {
         AccountType::Argent => get_contract_address(
             salt,
             class_hash,
@@ -378,6 +378,5 @@ pub fn compute_account_address(
             &[private_key.verifying_key().scalar()],
             chain_id,
         ),
-    };
-    computed_address
+    }
 }
