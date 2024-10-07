@@ -4722,6 +4722,7 @@ dependencies = [
  "cairo-lang-syntax",
  "cairo-lang-utils",
  "indoc",
+ "itertools 0.12.1",
  "lazy_static",
  "num-bigint",
  "regex",

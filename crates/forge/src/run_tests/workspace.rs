@@ -44,11 +44,32 @@ pub async fn run_for_workspace(args: TestArgs) -> Result<ExitStatus> {
 
     let filter = PackagesFilter::generate_for::<Metadata>(packages.iter());
 
+    let tests_filter = args.test_filter.clone();
+
+    let tests_filter = match tests_filter {
+        Some(tests_filter) => {
+            let tests_filter_parts = tests_filter.split("::");
+            if let Some(last) = tests_filter_parts.last() {
+                if last == tests_filter {
+                    Some(tests_filter)
+                } else {
+                    None
+                }
+            } else {
+                None
+            }
+        }
+        None => {
+            None
+        }
+    };
+
     build_artifacts_with_scarb(
         filter.clone(),
         args.features.clone(),
         &scarb_metadata.app_version_info.version,
         args.no_optimization,
+        tests_filter,
     )?;
 
     let mut block_number_map = BlockNumberMap::default();

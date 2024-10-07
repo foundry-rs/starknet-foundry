@@ -47,12 +47,17 @@ pub fn build_artifacts_with_scarb(
     features: FeaturesSpec,
     scarb_version: &Version,
     no_optimization: bool,
+    tests_filter: Option<String>,
 ) -> Result<()> {
     if should_compile_starknet_contract_target(scarb_version, no_optimization) {
         build_contracts_with_scarb(filter.clone(), features.clone())?;
     }
-    build_test_artifacts_with_scarb(filter, features)?;
+    build_test_artifacts_with_scarb(filter, features, tests_filter.map(to_tests_filter))?;
     Ok(())
+}
+
+fn to_tests_filter(tests_filter: String) -> String {
+    tests_filter + ","
 }
 
 fn build_contracts_with_scarb(filter: PackagesFilter, features: FeaturesSpec) -> Result<()> {
@@ -65,12 +70,24 @@ fn build_contracts_with_scarb(filter: PackagesFilter, features: FeaturesSpec) ->
     Ok(())
 }
 
-fn build_test_artifacts_with_scarb(filter: PackagesFilter, features: FeaturesSpec) -> Result<()> {
-    ScarbCommand::new_with_stdio()
+fn build_test_artifacts_with_scarb(
+    filter: PackagesFilter,
+    features: FeaturesSpec,
+    tests_filter: Option<String>,
+) -> Result<()> {
+    let mut command = ScarbCommand::new_with_stdio();
+    command
         .arg("build")
         .arg("--test")
         .packages_filter(filter)
-        .features(features)
+        .features(features);
+
+    if let Some(tests_filter) = tests_filter {
+        // TODO use const
+        command.env("SNFORGE_TEST_FILTER_NAMES", tests_filter);
+    }
+
+    command
         .run()
         .context("Failed to build test artifacts with Scarb")?;
     Ok(())

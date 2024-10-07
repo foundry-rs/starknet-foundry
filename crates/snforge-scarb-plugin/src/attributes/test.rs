@@ -4,8 +4,10 @@ use crate::{
     common::{into_proc_macro_result, with_parsed_values},
 };
 use cairo_lang_macro::{Diagnostic, Diagnostics, ProcMacroResult, TokenStream};
-use cairo_lang_syntax::node::{ast::FunctionWithBody, db::SyntaxGroup, TypedSyntaxNode};
+use cairo_lang_syntax::node::{ast::FunctionWithBody, db::SyntaxGroup, Terminal, TypedSyntaxNode};
 use indoc::formatdoc;
+use itertools::Itertools;
+use std::env;
 
 struct TestCollector;
 
@@ -34,6 +36,30 @@ fn test_internal(
     let config = InternalConfigStatementCollector::ATTR_NAME;
 
     let func_item = func.as_syntax_node().get_text(db);
+    let name = func.declaration(db).name(db).text(db).to_string();
+
+    // TODO use const
+    let tests_to_run = env::var("SNFORGE_TEST_FILTER_NAMES");
+
+    if let Ok(tests_to_run) = tests_to_run {
+        let mut tests_to_run = tests_to_run.split(',');
+        if tests_to_run.contains(&name.as_str()) {
+            return Ok(formatdoc!(
+                "
+            #[snforge_internal_test_executable]
+            #[{config}]
+            {func_item}
+        "
+            ));
+        }
+
+        return Ok(formatdoc!(
+            "
+            #[{config}]
+            {func_item}
+        "
+        ));
+    }
 
     let result = formatdoc!(
         "
