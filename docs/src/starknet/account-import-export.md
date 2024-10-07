@@ -1,10 +1,10 @@
 # Importing And Exporting Accounts
 
-You can export your account from wallet (Argent, Braavos) and import it into the file holding the accounts info (`~/.starknet_accounts/starknet_open_zeppelin_accounts.json` by default).
+You can export your account (more precisely its private key) from wallet (Argent, Braavos) and import it into the file holding the accounts info (`~/.starknet_accounts/starknet_open_zeppelin_accounts.json` by default).
 
 ## Exporting an Account
 
-This section shows how to export your private key from wallets.
+This section shows how to export your private key from specific wallets.
 
 ### Examples
 
@@ -63,7 +63,7 @@ This section shows how to export your private key from wallets.
 <br/>
 <img src="./img/braavos_export_5.png" width="300"/>
 
-## Importing an Account
+## Importing an Accountx
 
 ### Examples
 
@@ -81,9 +81,9 @@ $ sncast \
     --type oz
 ```
 
-#### Entering Private Key in Interactive, Obscured Mode
+#### Passing Private Key in an Interactive, Obscured Mode
 
-If you don't want to pass the private key as an argument (because of visibility), you can skip `--private-key` flag. You will be prompted to enter the private key in interactive mode.
+If you don't want to pass the private key in the command (because of visibility aspect), you can skip `--private-key` flag. You will be prompted to enter the private key in interactive mode.
 
 ```shell
 $ sncast \

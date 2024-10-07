@@ -349,7 +349,6 @@ pub async fn test_missing_arguments() {
         error: the following required arguments were not provided:
           --address <ADDRESS>
           --type <ACCOUNT_TYPE>
-          <--private-key <PRIVATE_KEY>|--private-key-file <PRIVATE_KEY_FILE_PATH>>
         "},
     );
 }
