@@ -593,7 +593,7 @@ pub async fn test_empty_config_add_profile() {
     let contents = fs::read_to_string(current_dir_utf8.join("snfoundry.toml"))
         .expect("Unable to read snfoundry.toml");
     assert!(contents.contains("[sncast.random]"));
-    assert!(contents.contains("account = \"my_account_add\""));
+    assert!(contents.contains("account = \"my_account_import\""));
     assert!(contents.contains(&format!("url = \"{URL}\"")));
 }
 
