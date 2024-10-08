@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Cast
 
+#### Added
+
+- Warning while using common arguments that will be deprecated in the future.
+
 #### Changed
 
 - Short option for `--accounts-file` flag has been removed.
