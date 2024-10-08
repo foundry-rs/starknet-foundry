@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Short option for `--accounts-file` flag has been removed.
 - Short option for `--contract-address` is now `-d` instead of `-a`.
 
-#### Fixded
+#### Fixed
 - `account delete` command. Now it isn't required to pass `--url` each time. It is needed to provide neither `--url` or `--network` argument only.
 
 ## [0.31.0] - 2024-09-26
