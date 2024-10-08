@@ -670,6 +670,8 @@ pub async fn test_invalid_address_computation() {
         "0x456",
         "--salt",
         "0x789",
+        "--class-hash",
+        DEVNET_OZ_CLASS_HASH_CAIRO_0,
         "--type",
         "oz",
     ];
