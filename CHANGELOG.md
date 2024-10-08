@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Short option for `--contract-address` is now `-d` instead of `-a`.
 
 #### Fixed
-- `account delete` command. Now it isn't required to pass `--url` each time. It is needed to provide neither `--url` or `--network` argument only.
+- `account delete` command: It is no longer necessary to provide the `--url` argument each time. You must provide either the `--url` or `--network` argument, but not both, as they are mutually exclusive.
 
 ## [0.31.0] - 2024-09-26
 
