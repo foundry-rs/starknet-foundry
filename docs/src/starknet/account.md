@@ -141,7 +141,7 @@ legacy: false
 [...]
 ```
 
-### `account delete`
+### [`account delete`](../appendix/sncast/account/delete.md)
 
 Delete an account from `accounts-file` and its associated Scarb profile. If you pass this command, you will be asked to confirm the deletion.
 
