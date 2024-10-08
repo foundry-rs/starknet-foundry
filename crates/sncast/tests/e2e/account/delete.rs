@@ -137,33 +137,6 @@ pub fn test_happy_case_url() {
 }
 
 #[test]
-pub fn test_happy_case_without_network_args() {
-    // Creating dummy accounts test file
-    let accounts_file_name = "temp_accounts.json";
-    let temp_dir = create_tempdir_with_accounts_file(accounts_file_name, true);
-
-    // Now delete dummy account
-    let args = vec![
-        "--accounts-file",
-        &accounts_file_name,
-        "account",
-        "delete",
-        "--url",
-        URL,
-        "--name",
-        "user0",
-    ];
-
-    // Run test with an affirmative user input
-    let snapbox = runner(&args).current_dir(temp_dir.path()).stdin("Y");
-
-    snapbox.assert().success().stdout_matches(indoc! {r"
-        command: account delete
-        result: Account successfully removed
-    "});
-}
-
-#[test]
 pub fn test_happy_case_with_yes_flag() {
     // Creating dummy accounts test file
     let accounts_file_name = "temp_accounts.json";
