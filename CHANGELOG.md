@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Fixed
 - `account delete` command: It is no longer necessary to provide the `--url` argument each time. Either the `--url` or `--network` argument must be provided, but not both, as they are mutually exclusive.
 
+#### Changed
+
+- Addresses outputted when calling `sncast account create`, `sncast deploy` and `sncast declare` are now padded to 64 characters length and prefixed with `0x0`
+
 ## [0.31.0] - 2024-09-26
 
 ### Cast
