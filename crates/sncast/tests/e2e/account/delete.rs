@@ -197,7 +197,7 @@ pub fn test_happy_case_with_yes_flag() {
 }
 
 #[test]
-pub fn test_conflicting_arguments() {
+pub fn test_accept_only_url_or_network() {
     let accounts_file_name = "temp_accounts.json";
     let temp_dir = create_tempdir_with_accounts_file(accounts_file_name, true);
 
